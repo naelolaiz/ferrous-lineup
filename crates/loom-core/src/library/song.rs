@@ -40,6 +40,9 @@ pub struct Part {
     /// part before: only its end is heard. Notes outside the part are
     /// left out.
     pub voices: &'static [i32],
+    /// A time signature of its own, for a part in another time than the
+    /// rest of the song. The demo puts a time marker where it starts.
+    pub time: Option<TimeSignature>,
 }
 
 impl Part {
@@ -51,6 +54,7 @@ impl Part {
             chords,
             left: "",
             voices: &[0],
+            time: None,
         }
     }
 
@@ -60,6 +64,16 @@ impl Part {
 
     const fn with_voices(self, voices: &'static [i32]) -> Part {
         Part { voices, ..self }
+    }
+
+    /// The same part in another time signature than the song's, such as
+    /// a verse in 3/4 in a song in 4/4.
+    #[allow(dead_code)] // until a song changes time signature
+    const fn in_time(self, time: TimeSignature) -> Part {
+        Part {
+            time: Some(time),
+            ..self
+        }
     }
 
     pub fn melody(&self) -> Melody {
@@ -123,6 +137,11 @@ pub struct Song {
 impl Song {
     pub fn scale(&self) -> Scale {
         Scale::new(self.tonic, self.mode)
+    }
+
+    /// The time signature `part` is in: its own, or else the song's.
+    pub fn part_time(&self, part: &Part) -> TimeSignature {
+        part.time.unwrap_or(self.time)
     }
 
     pub fn part(&self, name: &str) -> Option<&'static Part> {
@@ -236,8 +255,8 @@ mod tests {
     #[test]
     fn every_bar_of_every_part_adds_up() {
         for song in SONGS {
-            let bar = song.time.steps_per_bar();
             for part in song.parts {
+                let bar = song.part_time(part).steps_per_bar();
                 let what = format!("{}, {}", song.name, part.name);
                 for text in [part.melody, part.left] {
                     if text.is_empty() {

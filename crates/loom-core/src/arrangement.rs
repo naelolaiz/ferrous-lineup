@@ -312,6 +312,45 @@ mod tests {
     }
 
     #[test]
+    fn a_repeated_section_keeps_its_time_signature() {
+        use crate::{TimeMarker, TimeSignature};
+        // Two bars of 4/4, then a section of two bars of 3/4 played
+        // twice, then 4/4 again.
+        let waltz = TimeSignature::new(3, 4);
+        let mut project = Project::template();
+        project.add_clip(Clip::new(0, 0, 0).repeated(2));
+        project.set_time_marker(TimeMarker::new(32, waltz));
+        project.set_time_marker(TimeMarker::new(56, TimeSignature::COMMON));
+        let mut waltzes = Section::new("Waltz", 32, 24);
+        waltzes.repeats = 2;
+        project.add_section(waltzes);
+        project.add_clip(Clip::new(0, 0, 56));
+
+        assert_eq!(project.song_length(), 72);
+        let song = project.arrangement();
+        assert_eq!(song.length, 96);
+        let played = project.played_meter(&song);
+        let bars: Vec<(usize, TimeSignature)> = played
+            .bars()
+            .take(7)
+            .map(|bar| (bar.start, bar.time))
+            .collect();
+        let common = TimeSignature::COMMON;
+        assert_eq!(
+            bars,
+            [
+                (0, common),
+                (16, common),
+                (32, waltz),
+                (44, waltz),
+                (56, waltz),
+                (68, waltz),
+                (80, common)
+            ]
+        );
+    }
+
+    #[test]
     fn a_loop_region_plays_only_its_part() {
         let mut project = Project::demo();
         project.set_loop_region(Some(LoopRegion::new(48, 80)));

@@ -11,7 +11,9 @@
 //! `ScrollArea::show_viewport` tells us on every frame.
 //!
 //! Above the bar numbers is the section strip, where the song's structure
-//! is marked; [`sections`] draws it and the loop region.
+//! is marked; [`sections`] draws it and the loop region. A right-click on
+//! the bar numbers changes the time signature from that bar on, like a
+//! time marker in FL Studio.
 
 mod sections;
 
@@ -20,8 +22,8 @@ use eframe::egui::{
     pos2, vec2,
 };
 use loom_core::{
-    Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Pass, Pattern, Project,
-    STEPS_PER_BAR, Section, TimeSignature,
+    Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Meter, Pass, Pattern, Project,
+    STEPS_PER_BAR, Section, TimeMarker,
 };
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, Tried};
@@ -73,6 +75,11 @@ pub enum PlaylistAction {
     UnrollSection(usize),
     /// Loop part of the song, or (with `None`) the whole song again.
     SetLoop(Option<LoopRegion>),
+    /// Change the time signature from a bar on (a right-click on the bar
+    /// numbers).
+    SetTimeMarker(TimeMarker),
+    /// Take away the change of time signature on this step.
+    RemoveTimeMarker(usize),
     /// Something picked in the Library tab.
     Library(LibraryAction),
 }
@@ -108,6 +115,8 @@ const HEADER: Color32 = Color32::from_rgb(66, 76, 83);
 const HEADER_TEXT: Color32 = Color32::from_rgb(226, 232, 236);
 const RULER: Color32 = Color32::from_rgb(36, 42, 46);
 const RULER_TEXT: Color32 = Color32::from_rgb(190, 200, 206);
+/// The time signatures written on the bar numbers.
+const TIME_TEXT: Color32 = Color32::from_rgb(236, 190, 98);
 const SONG_END: Color32 = Color32::from_rgb(170, 180, 186);
 const PLAYHEAD: Color32 = Color32::from_rgb(118, 214, 108);
 const CLIP_TEXT: Color32 = Color32::from_rgb(20, 22, 26);
@@ -144,16 +153,6 @@ pub enum Snap {
 impl Snap {
     const ALL: [Snap; 3] = [Snap::Bar, Snap::Beat, Snap::Step];
 
-    /// How many steps apart the snap points are, which depends on the
-    /// time signature: a bar of 3/4 is 12 steps, a beat of 6/8 is 6.
-    fn steps(self, time: TimeSignature) -> usize {
-        match self {
-            Snap::Bar => time.steps_per_bar(),
-            Snap::Beat => time.steps_per_beat(),
-            Snap::Step => 1,
-        }
-    }
-
     fn label(self) -> &'static str {
         match self {
             Snap::Bar => "Bar",
@@ -162,10 +161,26 @@ impl Snap {
         }
     }
 
-    /// The snap point at or before `step`.
-    fn floor(self, step: usize, time: TimeSignature) -> usize {
-        let steps = self.steps(time);
-        step / steps * steps
+    /// The snap point at or before `step`. Where the bars and beats are
+    /// depends on the time signature there: a bar of 3/4 is 12 steps, a
+    /// beat of 6/8 is 6.
+    fn floor(self, step: usize, meter: &Meter) -> usize {
+        match self {
+            Snap::Bar => meter.floor_to_bar(step),
+            Snap::Beat => meter.floor_to_beat(step),
+            Snap::Step => step,
+        }
+    }
+
+    /// The snap point after the one at or before `step`: the end of the
+    /// bar, beat or step that `step` is in.
+    fn next(self, step: usize, meter: &Meter) -> usize {
+        let bar = meter.bar_at(step);
+        match self {
+            Snap::Bar => bar.end(),
+            Snap::Beat => (meter.floor_to_beat(step) + bar.time.steps_per_beat()).min(bar.end()),
+            Snap::Step => step + 1,
+        }
     }
 }
 
@@ -325,14 +340,11 @@ impl PlaylistView {
                 actions.push(PlaylistAction::AddSection(next_section(project)));
             }
             if let Some(region) = project.playlist().loop_region() {
-                let bars =
-                    |step: usize| step as f32 / project.time_signature.steps_per_bar() as f32;
-                let text = egui::RichText::new(format!(
-                    "🔁 Looping bars {}–{}  ✖",
-                    bars(region.start) + 1.0,
-                    bars(region.end)
-                ))
-                .color(sections::LOOP);
+                let meter = project.meter();
+                let first = meter.bar_at(region.start).number + 1;
+                let last = meter.bar_at(region.end.saturating_sub(1)).number + 1;
+                let text = egui::RichText::new(format!("🔁 Looping bars {first}–{last}  ✖"))
+                    .color(sections::LOOP);
                 if ui
                     .button(text)
                     .on_hover_text("Song mode loops this part. Click to play the whole song again.")
@@ -376,11 +388,12 @@ impl PlaylistView {
         let spare = tracks.len() < MAX_TRACKS;
         let rows = tracks.len() + usize::from(spare);
         let song_length = project.song_length();
-        let time = project.time_signature;
+        let meter = project.meter();
         // The grid ends on a bar line, some empty bars after the song.
-        let steps = time.round_up_to_bar(
-            (song_length + EXTRA_BARS * time.steps_per_bar()).max(MIN_BARS * STEPS_PER_BAR),
-        );
+        let extra = meter
+            .bar(meter.bar_at(song_length).number + EXTRA_BARS)
+            .start;
+        let steps = meter.round_up_to_bar(extra.max(MIN_BARS * STEPS_PER_BAR));
         let size = vec2(
             HEADER_WIDTH + steps as f32 * STEP_WIDTH,
             SECTION_HEIGHT + RULER_HEIGHT + rows as f32 * TRACK_HEIGHT,
@@ -412,7 +425,7 @@ impl PlaylistView {
         self.handle_input(ui, &response, layout, cells, project, current, actions);
 
         let painter = ui.painter_at(visible);
-        paint_tracks(&painter, layout, steps, time);
+        paint_tracks(&painter, layout, steps, &meter);
         if let Some(region) = project.playlist().loop_region() {
             // A light shade over the part of the song that loops.
             let shade = Rect::from_x_y_ranges(
@@ -438,7 +451,7 @@ impl PlaylistView {
             layout,
             visible,
             steps,
-            time,
+            &meter,
             song_length,
             playhead,
         );
@@ -605,7 +618,7 @@ impl PlaylistView {
             .filter(|pos| primary_pressed && response.hovered() && cells.contains(*pos));
         if let Some(pos) = pressed_at {
             let (track, step) = layout.cell_at(pos);
-            let time = project.time_signature;
+            let meter = project.meter();
             match clip_at(project, layout, pos) {
                 Some(index) => {
                     let clip = clips[index];
@@ -620,7 +633,7 @@ impl PlaylistView {
                     }
                 }
                 None => {
-                    let start = self.snap.floor(step, time);
+                    let start = self.snap.floor(step, &meter);
                     actions.push(PlaylistAction::AddClip(Clip::new(current, track, start)));
                     // The new clip goes at the end of the list.
                     self.drag = Some(ClipDrag {
@@ -694,7 +707,7 @@ impl PlaylistView {
             let (track, step) = layout.cell_at(pos);
             let start = self
                 .snap
-                .floor(step.saturating_sub(drag.grab), project.time_signature);
+                .floor(step.saturating_sub(drag.grab), &project.meter());
             if (track, start) != (clip.track, clip.start) {
                 actions.push(PlaylistAction::MoveClip {
                     index: drag.index,
@@ -728,13 +741,14 @@ fn picker(ui: &mut Ui, project: &Project, current: usize, actions: &mut Vec<Play
 /// of the song, if that is sooner) right after the last section.
 fn next_section(project: &Project) -> Section {
     let playlist = project.playlist();
-    let bar = project.time_signature.steps_per_bar();
+    let meter = project.meter();
     let start = playlist.sections().last().map_or(0, Section::end);
+    let four_bars = meter.bar(meter.bar_at(start).number + 4).start;
     let song_end = project.song_length();
     let length = if song_end > start {
-        (song_end - start).min(4 * bar)
+        song_end.min(four_bars) - start
     } else {
-        4 * bar
+        four_bars - start
     };
     Section::new(playlist.suggested_section_name(), start, length)
 }
@@ -752,7 +766,7 @@ fn clip_at(project: &Project, layout: Layout, pos: Pos2) -> Option<usize> {
 }
 
 /// Row backgrounds and the lines for beats and bars, `steps` long.
-fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, time: TimeSignature) {
+fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) {
     let right = layout.x(steps);
     for track in 0..layout.rows() {
         let top = layout.track_top(track);
@@ -767,17 +781,20 @@ fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, time: TimeSigna
         painter.rect_filled(row, 0.0, color);
     }
     let bottom = layout.track_top(layout.rows());
-    for step in (0..=steps).filter(|&step| time.is_beat_start(step)) {
-        let color = if time.is_bar_start(step) {
-            BAR_LINE
-        } else {
-            BEAT_LINE
-        };
-        painter.vline(
-            layout.x(step),
-            layout.origin.y..=bottom,
-            Stroke::new(1.0, color),
-        );
+    for bar in meter.bars().take_while(|bar| bar.start <= steps) {
+        let beat = bar.time.steps_per_beat();
+        for step in (bar.start..bar.end().min(steps + 1)).step_by(beat) {
+            let color = if step == bar.start {
+                BAR_LINE
+            } else {
+                BEAT_LINE
+            };
+            painter.vline(
+                layout.x(step),
+                layout.origin.y..=bottom,
+                Stroke::new(1.0, color),
+            );
+        }
     }
 }
 
@@ -891,7 +908,7 @@ fn paint_ruler(
     layout: Layout,
     visible: Rect,
     steps: usize,
-    time: TimeSignature,
+    meter: &Meter,
     song_length: usize,
     playhead: Option<usize>,
 ) {
@@ -904,22 +921,33 @@ fn paint_ruler(
         pos2(visible.left() + HEADER_WIDTH, ruler.top()),
         ruler.max,
     ));
-    let bar_steps = time.steps_per_bar();
-    for bar in 0..steps / bar_steps {
-        let x = layout.x(bar * bar_steps);
-        let color = if bar * bar_steps < song_length {
+    // The time signature is written where the song starts and where it
+    // changes, after the bar number.
+    let changes: Vec<usize> = meter.markers().iter().map(|marker| marker.start).collect();
+    for bar in meter.bars().take_while(|bar| bar.end() <= steps) {
+        let x = layout.x(bar.start);
+        let color = if bar.start < song_length {
             HEADER_TEXT
         } else {
             RULER_TEXT
         };
         ruler_painter.vline(x, ruler.y_range(), Stroke::new(1.0, BAR_LINE));
-        ruler_painter.text(
+        let number = ruler_painter.text(
             pos2(x + 3.0, ruler.center().y),
             Align2::LEFT_CENTER,
-            (bar + 1).to_string(),
+            (bar.number + 1).to_string(),
             FontId::proportional(11.0),
             color,
         );
+        if bar.start == 0 || changes.contains(&bar.start) {
+            ruler_painter.text(
+                pos2(number.right() + 4.0, ruler.center().y),
+                Align2::LEFT_CENTER,
+                bar.time.to_string(),
+                FontId::proportional(10.0),
+                TIME_TEXT,
+            );
+        }
     }
     if let Some(step) = playhead {
         let x = layout.x(step);

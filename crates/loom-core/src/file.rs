@@ -32,6 +32,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::meter::TimeMarker;
 use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
 use crate::playlist::{Clip, LoopRegion, MAX_TRACKS, Section, Track};
 use crate::project::{Channel, ChannelKind, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource};
@@ -57,7 +58,11 @@ pub const EXTENSION: &str = "loom";
 /// Format 4 added the song's structure: clips that repeat their pattern,
 /// named sections that can repeat, and a loop region. Older versions
 /// would play every repeat once, so a song that uses them needs format 4.
-pub const FORMAT_VERSION: u32 = 4;
+///
+/// Format 5 added time markers, which change the time signature partway
+/// through a song. Older versions would draw every bar in the first time
+/// signature, so a song with markers needs format 5.
+pub const FORMAT_VERSION: u32 = 5;
 
 /// The oldest format that can hold `project`.
 ///
@@ -84,7 +89,9 @@ pub fn format_for(project: &Project) -> u32 {
     let has_structure = !playlist.sections().is_empty()
         || playlist.loop_region().is_some()
         || playlist.clips().iter().any(|clip| clip.repeats != 1);
-    if has_structure {
+    if !playlist.time_markers().is_empty() {
+        5
+    } else if has_structure {
         4
     } else if uses_new_drums || has_long_patterns || has_time_signature {
         3
@@ -114,6 +121,9 @@ struct ProjectFile {
     sections: Vec<Section>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     loop_region: Option<LoopRegion>,
+    /// Left out when the time signature never changes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    time_markers: Vec<TimeMarker>,
 }
 
 /// A pattern as it is written in a file.
@@ -224,6 +234,7 @@ impl From<&Project> for ProjectFile {
             clips: project.playlist().clips().to_vec(),
             sections: project.playlist().sections().to_vec(),
             loop_region: project.playlist().loop_region(),
+            time_markers: project.playlist().time_markers().to_vec(),
         }
     }
 }
@@ -315,6 +326,15 @@ impl TryFrom<ProjectFile> for Project {
         }
         if !project.set_loop_region(file.loop_region) {
             return invalid("its loop region is empty or too long".to_string());
+        }
+        for marker in file.time_markers {
+            if marker.start == 0 || !project.set_time_marker(marker) {
+                return invalid(format!(
+                    "its change to {} at step {} is too late, too long or on the first step",
+                    marker.time,
+                    marker.start + 1
+                ));
+            }
         }
         project.remove_blank_tracks();
         Ok(project)
@@ -409,10 +429,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 5 might have fields we have never heard of. Only the
+        // Format 6 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 5, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(5)), "{error}");
+        let error = from_text("(format: 6, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(6)), "{error}");
     }
 
     #[test]
@@ -497,6 +517,25 @@ mod tests {
         assert!(text.contains("repeats: 2"), "{text}");
         assert!(text.contains("loop_region"), "{text}");
         assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn time_markers_need_format_five() {
+        let mut project = Project::demo();
+        assert!(project.set_time_marker(TimeMarker::new(64, TimeSignature::new(3, 4))));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 5,"), "{text}");
+        assert!(text.contains("time_markers"), "{text}");
+        let loaded = from_text(&text).unwrap();
+        assert_eq!(loaded.meter(), project.meter());
+
+        // A marker on step 0 is the project's own time signature.
+        let broken = text.replace(
+            "start: 64,\n            time",
+            "start: 0,\n            time",
+        );
+        assert_ne!(broken, text, "{text}");
+        assert!(from_text(&broken).is_err());
     }
 
     #[test]
