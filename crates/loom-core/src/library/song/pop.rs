@@ -74,10 +74,11 @@ pub(super) const OLD_MACDONALD: Song = Song {
     parts: &[Part::new(
         "Song",
         "G5:4 G5 G5 D5 | E5 E5 D5:8 | B5:4 B5 A5 A5 | G5:12 D5:4 | \
-         G5:4 G5 G5 D5 | E5 E5 D5:8 | B5:4 B5 A5 A5 | G5:12 D5:4 | \
-         D5:2 D5 G5:4 G5 G5 | D5:2 D5 G5:4 G5 G5 | G5:2 G5 G5:4 G5:2 G5 G5:4 | G5:2 G5 G5 G5 G5:4 G5 | \
+         G5:4 G5 G5 D5 | E5 E5 D5:8 | B5:4 B5 A5 A5 | G5:12 D5:2 D5 | \
+         G5:4 G5 G5 D5:2 D5 | G5:4 G5 G5:8 | G5:2 G5 G5:4 G5:2 G5 G5:4 | G5:2 G5 G5 G5 G5:4 G5 | \
          G5:4 G5 G5 D5 | E5 E5 D5:8 | B5:4 B5 A5 A5 | G5:16",
-        "I | IV I | I V | I | I | IV I | I V | I | I | I | I | I | I | IV I | I V | I",
+        "I | IV I | I V | I | I | IV I | I V | I | I IV I I | I IV I I | I IV I I | I IV I I | \
+         I | IV I | I V | I",
     )],
     form: &["Song", "Song", "Song"],
     drums_from: 0,

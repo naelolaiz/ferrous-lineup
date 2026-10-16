@@ -84,13 +84,13 @@ pub(super) const OH_SUSANNA: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     parts: &[
-        Part::new("Intro", "-:16 | -:12 C5:2 D5", "I | V7"),
+        Part::new("Intro", "-:16 | -:14 C5:1 D5", "I | V7"),
         Part::new(
             "Song",
-            "E5:2 G5 G5 A5 G5 E5 C5 D5 | E5 E5 D5 C5 D5:4 C5:2 D5 | \
-             E5 G5 G5 A5 G5 E5 C5 D5 | E5 E5 D5 D5 C5:8 | \
-             F5:4 F5 A5:6 A5:2 | G5 G5 E5 C5 D5:4 C5:2 D5 | \
-             E5 G5 G5 A5 G5 E5 C5 D5 | E5 E5 D5 D5 C5:4 C5:2 D5",
+            "E5:2 G5 G5 A5 G5 E5 C5:3 D5:1 | E5:2 E5 D5 C5 D5:6 C5:1 D5 | \
+             E5:2 G5 G5 A5 G5 E5 C5:3 D5:1 | E5:2 E5 D5 D5 C5:8 | \
+             F5:4 F5 A5:2 A5:4 A5:2 | G5 G5 E5 C5 D5:6 C5:1 D5 | \
+             E5:2 G5 G5 A5 G5 E5 C5:3 D5:1 | E5:2 E5 D5 D5 C5:6 C5:1 D5",
             "I | I V | I | V7 I | IV | I V | I | V7 I",
         ),
     ],
@@ -138,11 +138,11 @@ pub(super) const CLEMENTINE: Song = Song {
     bass: Bass::Waltz,
     rhythm: "Waltz",
     parts: &[
-        Part::new("Pickup", "-:8 C5:2 C5", "I"),
+        Part::new("Pickup", "-:8 C5:3 C5:1", "I"),
         Part::new(
             "Verse",
-            "C5:6 G4:2 E5:2 E5 | E5:6 C5:2 C5 E5 | G5:6 G5:2 F5 E5 | D5:8 D5:2 E5 | \
-             F5:6 F5:2 E5 D5 | E5:6 C5:2 C5 E5 | D5:6 G4:2 B4 D5 | C5:8 C5:2 C5",
+            "C5:4 G4 E5:3 E5:1 | E5:4 C5 C5:3 E5:1 | G5:6 G5:2 F5 E5 | D5:8 D5:3 E5:1 | \
+             F5:4 F5 E5:3 D5:1 | E5:4 C5 C5:3 E5:1 | D5:4 G4 B4:2 D5 | C5:8 C5:3 C5:1",
             "I | I | I | V7 | V7 | I | V7 | I",
         ),
     ],
@@ -167,9 +167,9 @@ pub(super) const CAMPTOWN_RACES: Song = Song {
     rhythm: "Country train",
     parts: &[Part::new(
         "Song",
-        "G5:2 G5 E5 G5 A5 G5 E5:4 | E5 D5 E5 D5 | G5:2 G5 E5 G5 A5 G5 E5:4 | D5 E5:2 D5 C5:8 | \
-         C5:3 C5:1 E5:2 G5 C6:8 | A5:3 A5:1 C6:2 A5 G5:8 | G5:2 G5 E5 G5 A5 G5 E5:4 | \
-         D5 E5:2 D5 C5:8",
+        "G5:2 G5 E5 G5 A5 G5 E5:4 | E5:2 D5:6 E5:2 D5:6 | G5:2 G5 E5 G5 A5 G5 E5:4 | \
+         D5:2 D5:1 D5 E5:2 D5 C5:8 | C5:2 C5:1 C5 E5:2 G5 C6:8 | A5:2 A5:1 A5 C6:2 A5 G5:8 | \
+         G5:2 G5 E5:1 E5 G5 G5 A5:2 G5 E5:4 | D5:2 D5:1 D5 E5:2 D5 C5:8",
         "I | V7 | I | V7 I | I | IV I | I | V7 I",
     )],
     form: &["Song", "Song", "Song"],
