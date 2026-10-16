@@ -1,0 +1,466 @@
+//! Saving projects to files and loading them back.
+//!
+//! A project file is plain text in RON ("Rusty Object Notation"), a
+//! format that looks like Rust's own struct and enum syntax:
+//!
+//! ```text
+//! (
+//!     format: 1,
+//!     tempo: 130.0,
+//!     scale: (root: C, kind: Major),
+//!     channels: [
+//!         (name: "Kick", kind: Sampler(Builtin(Kick)), volume: 0.8, muted: false),
+//!         ...
+//! ```
+//!
+//! The `serde` crate does the work. `#[derive(Serialize, Deserialize)]`
+//! writes the code that turns a struct into text and back, field by
+//! field, and the `ron` crate decides what the text looks like.
+//!
+//! The file has its own struct, [`ProjectFile`], instead of saving
+//! [`Project`] directly. `Project` has rules to keep (one row of notes
+//! per channel, clips that point at real patterns), and a file could
+//! break any of them. So loading reads a `ProjectFile`, which accepts
+//! anything shaped right, and then builds the `Project` through its
+//! normal methods, which check everything, as if a user had clicked it
+//! all in.
+
+use std::fmt;
+use std::fs;
+use std::io;
+use std::path::Path;
+
+use serde::{Deserialize, Serialize};
+
+use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
+use crate::playlist::{Clip, MAX_TRACKS, Track};
+use crate::project::{Channel, ChannelKind, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource};
+use crate::{Scale, Tempo, TimeSignature};
+
+/// The file name extension of Ferrous Loom projects, without the dot.
+pub const EXTENSION: &str = "loom";
+
+/// The version of the file layout. A later version of Ferrous Loom that
+/// changes the layout will raise this, so it knows how to read old files
+/// and so this version can refuse files it would misread.
+///
+/// Format 2 (step 7) added channels that play an external MIDI synth.
+/// A project without one is still written as format 1, which is exactly
+/// the same text, so older versions of Ferrous Loom can open it. See
+/// [`format_for`].
+///
+/// Format 3 (step 8) added nine built-in drums, patterns longer than
+/// four bars, and time signatures. Older versions would not know the
+/// drums, would cut the long patterns short without a word, and would
+/// draw a waltz in bars of four, so those projects need format 3.
+pub const FORMAT_VERSION: u32 = 3;
+
+/// The oldest format that can hold `project`.
+///
+/// Writing the lowest version that works, instead of always the newest,
+/// means a file only becomes unreadable to an older Ferrous Loom when it
+/// really uses something that version does not know.
+pub fn format_for(project: &Project) -> u32 {
+    let uses_new_drums = project.channels().iter().any(|channel| {
+        matches!(
+            channel.kind,
+            ChannelKind::Sampler(SampleSource::Builtin(drum)) if drum.is_new_in_format_3()
+        )
+    });
+    let has_long_patterns = project
+        .patterns()
+        .iter()
+        .any(|pattern| pattern.length() > MAX_STEPS_BEFORE_FORMAT_3);
+    let uses_midi_out = project
+        .channels()
+        .iter()
+        .any(|channel| matches!(channel.kind, ChannelKind::MidiOut { .. }));
+    let has_time_signature = !project.time_signature.is_common();
+    if uses_new_drums || has_long_patterns || has_time_signature {
+        3
+    } else if uses_midi_out {
+        2
+    } else {
+        1
+    }
+}
+
+/// A project as it is written in a file.
+#[derive(Debug, Serialize, Deserialize)]
+struct ProjectFile {
+    format: u32,
+    tempo: Tempo,
+    scale: Scale,
+    /// Left out for 4/4, so those files read exactly as before. A file
+    /// without it is in 4/4: `default` fills in `TimeSignature::default()`.
+    #[serde(default, skip_serializing_if = "TimeSignature::is_common")]
+    time_signature: TimeSignature,
+    channels: Vec<Channel>,
+    patterns: Vec<PatternFile>,
+    tracks: Vec<Track>,
+    clips: Vec<Clip>,
+}
+
+/// A pattern as it is written in a file.
+#[derive(Debug, Serialize, Deserialize)]
+struct PatternFile {
+    name: String,
+    length: usize,
+    /// One list of notes per channel, in the order of `channels`.
+    notes: Vec<Vec<NoteEvent>>,
+}
+
+/// Just the first field of a file, read before anything else.
+///
+/// Fields that a struct does not list are skipped while reading, so this
+/// reads the version of any project file, even one from a future version
+/// whose other fields this code would not understand.
+#[derive(Deserialize)]
+struct Header {
+    format: u32,
+}
+
+/// Everything that can go wrong while saving or loading.
+#[derive(Debug)]
+pub enum FileError {
+    /// The file could not be read or written: missing, no permission, disk full...
+    Io(io::Error),
+    /// The text is not a valid project file. The error says where.
+    Parse(ron::error::SpannedError),
+    /// The project could not be turned into text (should never happen).
+    Write(ron::Error),
+    /// The file was saved by a newer version of Ferrous Loom.
+    NewerFormat(u32),
+    /// The file is shaped right, but what it says does not make sense,
+    /// such as a clip that plays a pattern that does not exist.
+    Invalid(String),
+}
+
+impl fmt::Display for FileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FileError::Io(err) => write!(f, "{err}"),
+            FileError::Parse(err) => write!(f, "not a valid project file: {err}"),
+            FileError::Write(err) => write!(f, "could not write the project: {err}"),
+            FileError::NewerFormat(version) => write!(
+                f,
+                "this file uses format {version}, made by a newer version of Ferrous Loom \
+                 (this one reads up to format {FORMAT_VERSION})"
+            ),
+            FileError::Invalid(reason) => write!(f, "the project file is damaged: {reason}"),
+        }
+    }
+}
+
+impl std::error::Error for FileError {
+    /// The lower-level error this one wraps, if any.
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            FileError::Io(err) => Some(err),
+            FileError::Parse(err) => Some(err),
+            FileError::Write(err) => Some(err),
+            FileError::NewerFormat(_) | FileError::Invalid(_) => None,
+        }
+    }
+}
+
+// These `From` implementations let the `?` operator turn the errors of
+// `std::fs` and `ron` into a `FileError` on its own.
+
+impl From<io::Error> for FileError {
+    fn from(err: io::Error) -> Self {
+        FileError::Io(err)
+    }
+}
+
+impl From<ron::error::SpannedError> for FileError {
+    fn from(err: ron::error::SpannedError) -> Self {
+        FileError::Parse(err)
+    }
+}
+
+impl From<ron::Error> for FileError {
+    fn from(err: ron::Error) -> Self {
+        FileError::Write(err)
+    }
+}
+
+impl From<&Project> for ProjectFile {
+    fn from(project: &Project) -> Self {
+        let channels = project.channels().len();
+        ProjectFile {
+            format: format_for(project),
+            tempo: project.tempo,
+            scale: project.scale,
+            time_signature: project.time_signature,
+            channels: project.channels().to_vec(),
+            patterns: project
+                .patterns()
+                .iter()
+                .map(|pattern| PatternFile {
+                    name: pattern.name.clone(),
+                    length: pattern.length(),
+                    notes: (0..channels)
+                        .map(|channel| pattern.notes(channel).to_vec())
+                        .collect(),
+                })
+                .collect(),
+            tracks: project.playlist().tracks().to_vec(),
+            clips: project.playlist().clips().to_vec(),
+        }
+    }
+}
+
+impl TryFrom<ProjectFile> for Project {
+    type Error = FileError;
+
+    fn try_from(file: ProjectFile) -> Result<Self, Self::Error> {
+        let invalid = |reason: String| Err(FileError::Invalid(reason));
+
+        let mut project = Project::empty();
+        project.tempo = file.tempo;
+        project.scale = file.scale;
+        if file.time_signature.steps_per_bar() > MAX_STEPS {
+            return invalid(format!(
+                "its time signature {} is too long",
+                file.time_signature
+            ));
+        }
+        project.time_signature = file.time_signature;
+
+        if file.channels.len() > MAX_CHANNELS {
+            return invalid(format!("it has more than {MAX_CHANNELS} channels"));
+        }
+        let channels = file.channels.len();
+        for channel in file.channels {
+            project.add_channel(channel);
+        }
+
+        if file.patterns.is_empty() || file.patterns.len() > MAX_PATTERNS {
+            return invalid(format!("it must have 1 to {MAX_PATTERNS} patterns"));
+        }
+        for (index, saved) in file.patterns.into_iter().enumerate() {
+            // `Project::empty` already has one pattern; add the others.
+            if index > 0 {
+                project.add_pattern();
+            }
+            let Some(pattern) = project.pattern_mut(index) else {
+                return invalid(format!("pattern {} could not be added", index + 1));
+            };
+            pattern.name = saved.name;
+            pattern.set_length(saved.length);
+            if saved.notes.len() != channels {
+                return invalid(format!(
+                    "pattern \"{}\" has notes for {} channels, but there are {channels}",
+                    pattern.name,
+                    saved.notes.len()
+                ));
+            }
+            for (channel, notes) in saved.notes.into_iter().enumerate() {
+                for note in notes {
+                    if pattern.add_note(channel, note).is_none() {
+                        return invalid(format!(
+                            "pattern \"{}\" has a note that does not fit, or a duplicate, \
+                             at step {} on channel {}",
+                            pattern.name,
+                            note.start + 1,
+                            channel + 1
+                        ));
+                    }
+                }
+            }
+        }
+
+        if file.tracks.is_empty() || file.tracks.len() > MAX_TRACKS {
+            return invalid(format!("it must have 1 to {MAX_TRACKS} playlist tracks"));
+        }
+        project.replace_tracks(file.tracks);
+        for (index, clip) in file.clips.into_iter().enumerate() {
+            if project.add_clip(clip).is_none() {
+                return invalid(format!(
+                    "clip {} (pattern {}, track {}) does not fit in the playlist",
+                    index + 1,
+                    clip.pattern + 1,
+                    clip.track + 1
+                ));
+            }
+        }
+        Ok(project)
+    }
+}
+
+/// Turns a project into the text of a project file.
+pub fn to_text(project: &Project) -> Result<String, FileError> {
+    // Pretty-printed, so the file can be read (and fixed) by a person.
+    // Things nested deeper than 5 levels go on one line, so each note
+    // takes one line instead of one line per field.
+    let style = ron::ser::PrettyConfig::new().depth_limit(5);
+    let mut text = ron::ser::to_string_pretty(&ProjectFile::from(project), style)?;
+    text.push('\n');
+    Ok(text)
+}
+
+/// Reads a project from the text of a project file.
+pub fn from_text(text: &str) -> Result<Project, FileError> {
+    let header: Header = ron::from_str(text)?;
+    if header.format > FORMAT_VERSION {
+        return Err(FileError::NewerFormat(header.format));
+    }
+    let file: ProjectFile = ron::from_str(text)?;
+    Project::try_from(file)
+}
+
+/// Saves a project to a file, replacing the file if it exists.
+///
+/// The text is first written to a temporary file next to it, which is
+/// then renamed. Renaming is a single step for the operating system, so
+/// if the computer crashes halfway, the old file is still intact.
+pub fn save(project: &Project, path: &Path) -> Result<(), FileError> {
+    let text = to_text(project)?;
+    let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
+    fs::write(&temporary, text)?;
+    fs::rename(&temporary, path)?;
+    Ok(())
+}
+
+/// Loads a project from a file.
+pub fn load(path: &Path) -> Result<Project, FileError> {
+    let text = fs::read_to_string(path)?;
+    from_text(&text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Note;
+    use crate::project::Drum;
+
+    #[test]
+    fn the_demo_survives_a_round_trip() {
+        let demo = Project::demo();
+        let text = to_text(&demo).unwrap();
+        assert!(text.contains("tempo: 130.0"), "{text}");
+        assert!(text.contains("kind: Sampler(Builtin(Kick))"), "{text}");
+        let loaded = from_text(&text).unwrap();
+        assert_eq!(loaded, demo);
+    }
+
+    #[test]
+    fn saving_and_loading_a_file() {
+        let mut project = Project::template();
+        project.tempo = Tempo::new(97.5);
+        project
+            .pattern_mut(0)
+            .unwrap()
+            .add_note(4, NoteEvent::new(Note::A4, 2, 3));
+        let path = std::env::temp_dir().join(format!("loom-test-{}.loom", std::process::id()));
+        save(&project, &path).unwrap();
+        let loaded = load(&path);
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!(loaded.unwrap(), project);
+    }
+
+    #[test]
+    fn a_missing_file_is_an_io_error() {
+        let result = load(Path::new("/this/file/does/not/exist.loom"));
+        assert!(matches!(result, Err(FileError::Io(_))));
+    }
+
+    #[test]
+    fn rubbish_is_a_parse_error() {
+        let error = from_text("this is not a project").unwrap_err();
+        assert!(matches!(error, FileError::Parse(_)));
+        assert!(error.to_string().starts_with("not a valid project file"));
+    }
+
+    #[test]
+    fn files_from_the_future_are_refused() {
+        // Format 4 might have fields we have never heard of. Only the
+        // header is read, so the rest does not matter.
+        let error = from_text("(format: 4, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(4)), "{error}");
+    }
+
+    #[test]
+    fn midi_out_channels_need_format_two() {
+        let mut project = Project::template();
+        assert!(to_text(&project).unwrap().contains("format: 1,"));
+
+        project.add_channel(Channel::midi_out(4)).unwrap();
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 2,"), "{text}");
+        assert!(
+            text.contains("MidiOut(\n                channel: 4,"),
+            "{text}"
+        );
+        assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn new_drums_and_long_patterns_need_format_three() {
+        let mut project = Project::template();
+        project.add_channel(Channel::midi_out(0)).unwrap();
+        assert!(to_text(&project).unwrap().contains("format: 2,"));
+
+        let mut drums = project.clone();
+        drums.add_channel(Channel::drum(Drum::Conga)).unwrap();
+        let text = to_text(&drums).unwrap();
+        assert!(text.contains("format: 3,"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), drums);
+
+        let mut long = project;
+        long.pattern_mut(0).unwrap().set_length(192);
+        long.pattern_mut(0)
+            .unwrap()
+            .add_note(4, NoteEvent::new(Note::C4, 180, 12));
+        let text = to_text(&long).unwrap();
+        assert!(text.contains("format: 3,"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), long);
+    }
+
+    #[test]
+    fn time_signatures_other_than_four_four_need_format_three() {
+        let mut project = Project::template();
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("time_signature"), "4/4 is left out: {text}");
+        assert_eq!(
+            from_text(&text).unwrap().time_signature,
+            TimeSignature::COMMON
+        );
+
+        project.time_signature = TimeSignature::new(3, 4);
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 3,"), "{text}");
+        assert!(text.contains("beats: 3"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn values_out_of_range_are_clamped() {
+        let text = to_text(&Project::empty()).unwrap();
+        let text = text.replace("tempo: 130.0", "tempo: 9000.0");
+        let project = from_text(&text).unwrap();
+        assert_eq!(project.tempo.bpm(), Tempo::MAX);
+    }
+
+    #[test]
+    fn broken_rules_are_reported() {
+        let text = to_text(&Project::demo()).unwrap();
+
+        // A clip that plays pattern 99.
+        let broken = text.replacen("pattern: 0,", "pattern: 98,", 1);
+        let error = from_text(&broken).unwrap_err();
+        assert!(matches!(error, FileError::Invalid(_)), "{error}");
+        assert!(error.to_string().contains("pattern 99"), "{error}");
+
+        // A pattern with notes for fewer channels than the project has.
+        let mut file: ProjectFile = ron::from_str(&text).unwrap();
+        file.patterns[0].notes.pop();
+        let error = Project::try_from(file).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("\"Beat\" has notes for 4 channels")
+        );
+    }
+}

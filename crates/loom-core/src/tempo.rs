@@ -1,11 +1,18 @@
 //! Song tempo.
 
+use serde::{Deserialize, Serialize};
+
 /// A tempo in beats per minute (BPM), always inside `Tempo::MIN..=Tempo::MAX`.
 ///
 /// The field is private, so the only way to build a `Tempo` is through
 /// [`Tempo::new`], which clamps the value. That guarantees every `Tempo`
 /// in the program is valid.
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+///
+/// The same goes for project files: a tempo is saved as a plain number,
+/// and reading it back goes through `From<f32>`, which calls
+/// [`Tempo::new`]. A file that says `tempo: 9000.0` loads as 522 BPM.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[serde(from = "f32", into = "f32")]
 pub struct Tempo {
     bpm: f32,
 }
@@ -40,6 +47,18 @@ impl Tempo {
     /// How many audio samples one beat lasts at the given sample rate.
     pub fn samples_per_beat(self, sample_rate: u32) -> f64 {
         sample_rate as f64 * self.seconds_per_beat() as f64
+    }
+}
+
+impl From<f32> for Tempo {
+    fn from(bpm: f32) -> Self {
+        Tempo::new(bpm)
+    }
+}
+
+impl From<Tempo> for f32 {
+    fn from(tempo: Tempo) -> Self {
+        tempo.bpm
     }
 }
 
