@@ -3,7 +3,7 @@
 use super::*;
 
 const CANON_TUNE: &str = "F#5:4 E5 D5 C#5 | B4 A4 B4 C#5 | D5 C#5 B4 A4 | G4 F#4 G4 E4 | \
-     D5:2 F#5 A5 G5 F#5 D5 F#5 E5 | D5 B4 D5 A4 G4 B4 A4 G4";
+     D4:2 F#4 A4 G4 F#4 D4 F#4 E4 | D4 B3 D4 A4 G4 B4 A4 G4";
 const CANON_GROUND: &str = "I V vi iii | IV I IV V";
 const CANON_CHORDS: &str =
     "I V vi iii | IV I IV V | I V vi iii | IV I IV V | I V vi iii | IV I IV V";
@@ -50,7 +50,7 @@ pub(super) const FUR_ELISE: Song = Song {
         Part::new(
             "A",
             "E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 G#4 B4 | C5:2 -:1 E4 E5 D#5 | \
-             E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 C5 B4 | A4:2 -:2 E5:1 D#5",
+             E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 C5 B4 | A4:4 E5:1 D#5",
             "",
         )
         .with_left(
@@ -70,10 +70,13 @@ pub(super) const FUR_ELISE: Song = Song {
         Part::new(
             "B",
             "E5:3 G4:1 F5 E5 | D5:3 F4:1 E5 D5 | C5:3 E4:1 D5 C5 | B4:2 -:1 E4:1 E5 -:1 | \
-             -:1 E5 E6 -:2 D#5:1 | E5:1 -:2 D#5:1 E5 D#5",
+             -:1 E5 E6 -:2 D#5:1 | E5:2 -:1 D#5:1 E5 D#5",
             "",
         )
-        .with_left("C3:1 G3 C4 -:3 | G2:1 G3 B3 -:3 | A2:1 E3 A3 -:3 | E2:1 E3 -:4 | -:6 | -:6"),
+        .with_left(
+            "C3:1 G3 C4 -:3 | G2:1 G3 B3 -:3 | A2:1 E3 A3 -:3 | E2:1 E3 E4 -:2 E4:1 | \
+             E5:1 -:2 D#5:1 E5 -:1 | -:1 D#5:1 E5 -:3",
+        ),
         Part::new(
             "A to the end",
             "E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 G#4 B4 | C5:2 -:1 E4 E5 D#5 | \
@@ -91,6 +94,10 @@ pub(super) const FUR_ELISE: Song = Song {
             the left hand answers with broken chords. In 3/8: three eighth notes to the bar.",
 };
 
+/// Grieg keeps the bass on the key note while the theme climbs; only the
+/// fourth bar lands on the chord of the third.
+const MOUNTAIN_CHORDS: &str = "i | i | i | bIII | i | i | i | bIII";
+
 pub(super) const MOUNTAIN_KING: Song = Song {
     name: "In the Hall of the Mountain King",
     origin: "Edvard Grieg, Peer Gynt, 1875",
@@ -103,19 +110,33 @@ pub(super) const MOUNTAIN_KING: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Epic toms",
-    parts: &[Part::new(
-        "Theme",
-        "B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
-         B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8 | \
-         B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
-         B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8",
-        "i | II7 bII | i | bIII | i | II7 bII | i | bIII",
-    )],
-    form: &["Theme", "Theme", "Theme", "Theme"],
-    drums_from: 1,
-    about: "Trolls creeping up the B minor scale. The second bar slips through two chords \
-            from outside the key, C sharp major and C major. In the original the music keeps \
-            getting faster; try raising the tempo while it plays.",
+    parts: &[
+        Part::new(
+            "Theme",
+            "B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8",
+            MOUNTAIN_CHORDS,
+        ),
+        // The theme a fifth higher, on F sharp major with its sixth, D,
+        // left flat: the augmented chord in the even bars.
+        Part::new(
+            "Higher",
+            "F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8",
+            "I | I+ | I | I+ | I | I+ | I | I+",
+        )
+        .in_key(FSharp, Major),
+    ],
+    form: &["Theme", "Theme", "Higher", "Higher", "Theme", "Theme"],
+    drums_from: 0,
+    about: "Trolls creeping up the B minor scale, over a bass that stays on B. Then the \
+            whole theme moves up a fifth onto F sharp, major but with its sixth left flat, \
+            as it does in Grieg's score, before it comes back. In the original the music \
+            keeps getting faster; try raising the tempo while it plays.",
 };
 
 pub(super) const MINUET: Song = Song {
@@ -145,7 +166,7 @@ pub(super) const MINUET: Song = Song {
              A4:2 B4 C#5 D5 E5 F#5 | G5:4 F#5 E5 | F#5:4 A4 C#5 | D5:12 | \
              D5:4 G4:2 F#4 G4:4 | E5:4 G4:2 F#4 G4:4 | D5:4 C5 B4 | A4:2 G4 F#4 G4 A4:4 | \
              D4:2 E4 F#4 G4 A4 B4 | C5:4 B4 A4 | B4:2 D5 G4:4 F#4 | G4:12",
-            "I | V | I | II | II | II7 | vii | V | I | vi | I | V | V | ii | I V | I",
+            "I | V | vi | II | II | I V II | V | V | I | IV | I | V | V | IV I V | I V | I",
         ),
     ],
     form: &["A", "A", "B", "B"],
@@ -167,25 +188,29 @@ pub(super) const BLUE_DANUBE: Song = Song {
     bass: Bass::Waltz,
     rhythm: "Waltz",
     parts: &[
+        Part::new("Pickup", "-:8 D4:4", "I"),
         Part::new(
             "A",
-            "D4:4 D4 F#4 | A4:12 | -:4 A5 A5 | -:4 F#5 F#5 | D4:4 D4 F#4 | A4:12 | -:4 A5 A5 | \
-             -:4 G5 G5 | C#4:4 C#4 E4 | B4:12 | -:4 B5 B5 | -:4 G5 G5 | C#4:4 C#4 E4 | B4:12 | \
-             -:4 B5 B5 | -:4 F#5 F#5",
-            "I | I | I | I | I | I | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7",
+            "D4:4 F#4 A4 | A4:8 A5:4 | A5:8 F#5:4 | F#5:8 D4:4 | D4:4 F#4 A4 | A4:8 A5:4 | \
+             A5:8 G5:4 | G5:8 C#4:4 | C#4:4 E4 B4 | B4:8 B5:4 | B5:8 G5:4 | G5:8 C#4:4 | \
+             C#4:4 E4 B4 | B4:8 B5:4 | B5:8 F#5:4 | F#5:8 D4:4",
+            "I | I | I | I | I | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | I | I | I",
         ),
         Part::new(
             "B",
-            "D4:4 D4 F#4 | A4:12 | -:4 D6 D6 | -:4 A5 A5 | D4:4 D4 F#4 | A4:12 | -:4 D6 D6 | \
-             -:4 B5 B5 | A4:4 C#5 E5 | D5:12",
-            "I | I | I | I | I | I | I | IV | V7 | I",
+            "D4:4 F#4 A4 | D5:8 D6:4 | D6:8 A5:4 | A5:8 D4:4 | D4:4 F#4 A4 | D5:8 D6:4 | \
+             D6:8 B5:4 | B5:8 E4:4 | E4:4 G4 B4 | B4:12 | B4:4 G#4 A4 | F#5:12 | F#5:4 D5 F#4 | \
+             F#4:8 E4:4 | B4:8 A4:4 | D4:6 D5:2 D5:4 | D5:4 -:4 D4:4",
+            "I | I | I | I | I | IV | IV | IV | IV | V7 | V7 | I | I | IV | V7 | I | I",
         ),
     ],
-    form: &["A", "B", "A", "B"],
+    form: &["Pickup", "A", "B", "A", "B"],
     drums_from: 1,
-    about: "The waltz climbs the D major chord, D F sharp A, and answers with two quick \
-            notes high above. The second time it climbs the A7 chord instead, C sharp E G: \
-            the same shape over the dominant.",
+    about: "The waltz climbs the D major chord, D F sharp A, from a pickup on the third \
+            beat, and answers with two high notes: one on the third beat, one on the next \
+            downbeat. The second time it climbs the A7 chord instead, C sharp E G: the same \
+            shape over the dominant. The B strain leaps up to the high D, as in the piano \
+            score.",
 };
 
 pub(super) const BRAHMS_LULLABY: Song = Song {
@@ -202,8 +227,8 @@ pub(super) const BRAHMS_LULLABY: Song = Song {
     rhythm: "",
     parts: &[Part::new(
         "Lullaby",
-        "-:8 E5:2 E5 | G5:8 E5:2 E5 | G5:8 E5:2 G5 | C6:4 B5:6 A5:2 | A5:4 G5 D5:2 E5 | \
-         F5:4 D5 D5:2 E5 | F5:8 D5:2 F5 | B5:2 A5 G5:4 B5 | C6:8 C5:2 C5 | C6:8 A5:2 F5 | \
+        "-:8 E5:2 E5 | G5:6 E5:2 E5:4 | G5:4 -:4 E5:2 G5 | C6:4 B5:6 A5:2 | A5:4 G5 D5:2 E5 | \
+         F5:4 D5 D5:2 E5 | F5:4 -:4 D5:2 F5 | B5:2 A5 G5:4 B5 | C6:4 -:4 C5:2 C5 | C6:8 A5:2 F5 | \
          G5:8 E5:2 C5 | F5:4 G5 A5 | G5:8 C5:2 C5 | C6:8 A5:2 F5 | G5:8 E5:2 C5 | \
          F5:4 E5 D5 | C5:12",
         "I | I | I | V7 | V7 | V7 | V7 | V7 | I | IV | I | IV | I | IV | I | V7 | I",
@@ -251,9 +276,9 @@ pub(super) const NEW_WORLD: Song = Song {
     rhythm: "",
     parts: &[Part::new(
         "Largo",
-        "E5:6 G5:2 G5:8 | E5:6 D5:2 C5:8 | D5:4 E5 G5 E5 | D5:16 | E5:6 G5:2 G5:8 | \
-         E5:6 D5:2 C5:8 | D5:4 E5 D5 C5 | C5:16",
-        "I | I | IV | V | I | I | V7 | I",
+        "E5:6 G5:2 G5:8 | E5:6 D5:2 C5:8 | D5:6 E5:2 G5:6 E5:2 | D5:16 | E5:6 G5:2 G5:8 | \
+         E5:6 D5:2 C5:8 | D5:4 E5:4 D5:6 C5:2 | C5:16",
+        "I | I | IV | V | I | I | IV V7 | I",
     )],
     form: &["Largo", "Largo"],
     drums_from: 0,
@@ -283,7 +308,7 @@ pub(super) const SHCHEDRYK: Song = Song {
         Part::new(
             "Melody",
             "D6:4 C6:2 D6 Bb5:4 | D6:4 C6:2 D6 Bb5:4 | D6:4 C6:2 D6 Bb5:4 | D6:4 C6:2 D6 Bb5:4 | \
-             G6:2 G6 G6 F6 Eb6:4 | D6:2 D6 D6 C6 Bb5:4 | C6:2 C6 C6 D6 C6:4 | G5:4 F#5:2 G5 D5:4",
+             G6:4 G6:2 G6 F6 Eb6 | D6:4 D6:2 D6 C6 Bb5 | C6:4 C6:2 C6 D6 C6 | G5:4 G5:2 G5 G5:4",
             "",
         )
         .with_left(
@@ -309,16 +334,19 @@ pub(super) const FUNERAL_MARCH: Song = Song {
     tempo: 56.0,
     comping: Comping::Held,
     bass: Bass::Held,
-    rhythm: "",
+    rhythm: "March",
     parts: &[Part::new(
         "March",
-        "Bb4:4 Bb4:3 Bb4:1 Bb4:8 | Db5:6 C5:2 C5:6 Bb4:2 | Bb4:6 A4:2 Bb4:8 | \
-         Bb4:4 Bb4:3 Bb4:1 Bb4:8 | Db5:6 C5:2 C5:6 Bb4:2 | Bb4:6 A4:2 Bb4:8",
-        "i | i V7 | V7 i | i | i V7 | V7 i",
+        "Bb4:4 Bb4:3 Bb4:1 Bb4:8 | Bb4:4 Bb4:3 Bb4:1 Bb4:8 | Bb4:4 Bb4:3 Bb4:1 Bb4:4 Db5:3 C5:1 | \
+         C5:3 Bb4:1 Bb4:3 Bb4:1 Bb4:8 | Db5:4 Db5:3 Db5:1 Db5:4 F5:3 Eb5:1 | \
+         Eb5:3 Db5:1 Db5:3 Db5:1 Db5:8 | Bb5:3 Ab5:1 Gb5:3 F5:1 F5:4 Db5:4 | \
+         Bb5:3 Ab5:1 Gb5:3 F5:1 F5:4 Db5:4",
+        "i bVI i bVI | i bVI i bVI | i bVI i bVI | i bVI i bVI | i bVI i bVI | i bVI i bVI | \
+         i bVI i bVI | i bVI i bVI",
     )],
     form: &["March", "March"],
     drums_from: 0,
-    about: "The slowest of marches in B flat minor: the same note four times, then a short \
-            climb and fall around it. A natural is the leading note, borrowed from the \
-            harmonic minor for the F7 chord.",
+    about: "The slowest of marches in B flat minor: one note, again and again, over a bass \
+            that rocks between B flat and G flat on every beat, two bare fifths without a \
+            third. The tune climbs a step at a time, to D flat, then to F.",
 };

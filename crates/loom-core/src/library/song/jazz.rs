@@ -20,7 +20,7 @@ pub(super) const JINGLE_BELLS: Song = Song {
             "D5:4 B5 A5 G5 | D5:12 D5:2 D5 | D5:4 B5 A5 G5 | E5:16 | \
              E5:4 C6 B5 A5 | F#5:16 | D6:4 D6 C6 A5 | B5:16 | \
              D5:4 B5 A5 G5 | D5:16 | D5:4 B5 A5 G5 | E5:12 E5:4 | \
-             E5:4 C6 B5 A5 | D6 D6 D6 D6 | E6 D6 C6 A5 | G5:16",
+             E5:4 C6 B5 A5 | D6 D6 D6:6 D6:2 | E6:4 D6 C6 A5 | G5:16",
             "I | I | I | IV | IV | V | V7 | I | I | I | I | IV | IV | V | V7 | I",
         ),
         Part::new(
@@ -54,12 +54,12 @@ pub(super) const SAINTS: Song = Song {
         "Chorus",
         "-:4 C5:4 E5 F5 | G5:16 | -:4 C5:4 E5 F5 | G5:16 | \
          -:4 C5:4 E5 F5 | G5:8 E5:8 | C5:8 E5:8 | D5:16 | \
-         -:4 E5:4 E5 D5 | C5:12 C5:4 | E5:8 G5:8 | G5:8 F5:8 | \
-         -:4 E5:4 F5 G5 | E5:8 C5:8 | D5:16 | C5:16",
-        "I | I | I | I | I | I | I | V7 | I7 | IV | I | V7 | I | I | V7 | I",
+         -:4 E5:4 E5 D5 | C5:12 C5:4 | E5:8 G5:8 | G5:4 F5:12 | \
+         -:8 E5:4 F5 | G5:8 E5:8 | C5:8 D5:8 | C5:16",
+        "I | I | I | I | I | I | I | V7 | V7 | I | I7 | IV | IV | I | ii7 V7 | I",
     )],
     form: &["Chorus", "Chorus", "Chorus"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The New Orleans brass band classic. The tune starts with only four notes, C E F \
             G, and the tuba plays two beats to the bar.",
 };
@@ -75,25 +75,25 @@ pub(super) const ENTERTAINER: Song = Song {
     tempo: 76.0,
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
-    rhythm: "",
+    rhythm: "Two-step",
     parts: &[
-        Part::new("Pickup", "-:12 D5:2 D#5", "V7"),
+        Part::new("Pickup", "-:12 D5:2 D#5", "V"),
         Part::new(
             "A",
-            "E5:2 C6:4 E5:2 C6:4 E5:2 C6 | _:6 C6:2 D6 D#6 E6 C6 | D6 E6:4 B5:2 D6:4 C6 | \
-             _:8 -:4 D5:2 D#5 | E5:2 C6:4 E5:2 C6:4 E5:2 C6 | _:8 -:2 A5:2 G5 F#5 | \
-             A5 C6 E6:4 D6:2 C6 A5 D6 | _:8 -:4 D5:2 D#5 | \
-             E5:2 C6:4 E5:2 C6:4 E5:2 C6 | _:6 C6:2 D6 D#6 E6 C6 | D6 E6:4 B5:2 D6:4 C6 | \
-             _:8 -:4 C6:2 D6 | E6 C6 D6 E6 -:2 C6 D6 C6 | E6 C6 D6 E6 -:2 C6 D6 C6 | \
-             E6 C6 D6 E6 -:2 B5 D6:4 | C6:8 -:4 D5:2 D#5",
-            "I | I | V7 I | I | I | I II7 | II7 | V7 | I | I | V7 I | I | I | I7 IV | I V7 | I",
+            "E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:10 C6:2 D6 D#6 | E6:2 C6 D6 E6:4 B5:2 D6:4 | \
+             C6:12 D5:2 D#5 | E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:12 A5:2 G5 | \
+             F#5:2 A5 C6 E6:4 D6:2 C6 A5 | D6:12 D5:2 D#5 | \
+             E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:10 C6:2 D6 D#6 | E6:2 C6 D6 E6:4 B5:2 D6:4 | \
+             C6:12 C6:2 D6 | E6:2 C6 D6 E6:4 C6:2 D6 C6 | E6:2 C6 D6 E6:4 C6:2 D6 C6 | \
+             E6:2 C6 D6 E6:4 B5:2 D6:4 | C6:12 D5:2 D#5",
+            "I | IV I | I V7 | I | I | IV | II7 | V7 | I | IV I | I V7 | I | I7 | IV iv | I V7 | I",
         ),
     ],
     form: &["Pickup", "A", "A"],
-    drums_from: 0,
+    drums_from: 1,
     about: "Ragtime, the piano music jazz grew out of: the left hand keeps a steady \
             oom-pah, bass then chord, while the right hand pushes against it, landing \
-            between the beats.",
+            between the beats and holding on across them.",
 };
 
 pub(super) const HAPPY_BIRTHDAY: Song = Song {
@@ -115,7 +115,7 @@ pub(super) const HAPPY_BIRTHDAY: Song = Song {
         "I | I | V7 | V7 | I | I7 | IV | I V7 | I",
     )],
     form: &["Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The most sung song in the world, as a jazz waltz: three beats to the bar with a \
             swing ride. Each line climbs a little higher, a fourth, then a fifth, then an \
             octave, for the name.",

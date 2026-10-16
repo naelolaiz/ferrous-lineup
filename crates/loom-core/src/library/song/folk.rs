@@ -29,7 +29,7 @@ pub(super) const FRERE_JACQUES: Song = Song {
             .with_voices(&[-6, -4, -2]),
     ],
     form: &["Alone", "Round", "Round again", "Last voices"],
-    drums_from: 1,
+    drums_from: 0,
     about: "A round: four voices sing the same tune, each two bars after the last. It works \
             because every two bars of the tune fit the same chord.",
 };
@@ -45,14 +45,14 @@ pub(super) const GREENSLEEVES: Song = Song {
     tempo: 96.0,
     comping: Comping::Arp3,
     bass: Bass::Waltz,
-    rhythm: "",
+    rhythm: "Waltz",
     parts: &[
         Part::new("Intro", "-:12 | -:8 A4:4", "i | V"),
         Part::new(
             "Verse",
-            "C5:8 D5:4 | E5:6 F5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
+            "C5:8 D5:4 | E5:6 F#5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
              C5:8 A4:4 | A4:6 G#4:2 A4:4 | B4:8 G#4:4 | E4:8 A4:4 | \
-             C5:8 D5:4 | E5:6 F5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
+             C5:8 D5:4 | E5:6 F#5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
              C5:6 B4:2 A4:4 | G#4:6 F#4:2 G#4:4 | A4:12 | _:12",
             "i | bIII | bVII | v | i | V | V | i | i | bIII | bVII | v | i | V | i | i",
         ),
@@ -66,7 +66,7 @@ pub(super) const GREENSLEEVES: Song = Song {
         ),
     ],
     form: &["Intro", "Verse", "Chorus", "Verse", "Chorus"],
-    drums_from: 0,
+    drums_from: 1,
     about: "A minor key that borrows a major V (E major) to lead home, in a lilting 3/4. \
             Listen for the A held over E in the sixth bar, resolving to G sharp.",
 };
@@ -84,13 +84,13 @@ pub(super) const OH_SUSANNA: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     parts: &[
-        Part::new("Intro", "-:16 | -:12 C5:2 D5", "I | V7"),
+        Part::new("Intro", "-:16 | -:14 C5:1 D5", "I | V7"),
         Part::new(
             "Song",
-            "E5:2 G5 G5 A5 G5 E5 C5 D5 | E5 E5 D5 C5 D5:4 C5:2 D5 | \
-             E5 G5 G5 A5 G5 E5 C5 D5 | E5 E5 D5 D5 C5:8 | \
-             F5:4 F5 A5:6 A5:2 | G5 G5 E5 C5 D5:4 C5:2 D5 | \
-             E5 G5 G5 A5 G5 E5 C5 D5 | E5 E5 D5 D5 C5:4 C5:2 D5",
+            "E5:2 G5 G5 A5 G5 E5 C5:3 D5:1 | E5:2 E5 D5 C5 D5:6 C5:1 D5 | \
+             E5:2 G5 G5 A5 G5 E5 C5:3 D5:1 | E5:2 E5 D5 D5 C5:8 | \
+             F5:4 F5 A5:2 A5:4 A5:2 | G5 G5 E5 C5 D5:6 C5:1 D5 | \
+             E5:2 G5 G5 A5 G5 E5 C5:3 D5:1 | E5:2 E5 D5 D5 C5:6 C5:1 D5",
             "I | I V | I | V7 I | IV | I V | I | V7 I",
         ),
     ],
@@ -111,13 +111,14 @@ pub(super) const SCARBOROUGH_FAIR: Song = Song {
     tempo: 96.0,
     comping: Comping::Arp3,
     bass: Bass::Waltz,
-    rhythm: "",
+    rhythm: "Jazz waltz",
     parts: &[Part::new(
         "Verse",
         "D5:8 D5:4 | A5:8 A5:4 | E5:6 F5:2 E5:4 | D5:12 | -:4 A5:4 C6 | D6:8 C6:4 | \
-         A5:4 B5 G5 | A5:12 | -:4 D6:4 D6 | D6:8 C6:4 | A5:8 A5:4 | G5:4 F5 E5 | C5:12 | \
-         D5:4 A5 G5 | F5:4 E5 D5:2 C5 | D5:12",
-        "i | i | bVII | i | i | bIII | IV | i | i | bVII | i | bVII | bVII | i | bVII | i",
+         A5:4 B5 G5 | A5:12 | _:8 D6:4 | D6:8 D6:4 | C6:8 A5:4 | A5:4 G5 F5 | E5:4 C5:8 | \
+         _:12 | D5:8 A5:4 | G5:8 F5:4 | E5:4 D5 C5 | D5:12 | _:12",
+        "i | i | bVII | i | bIII | i | IV | i | i | i | bIII | bIII | bVII | bVII | i | bVII | \
+         bVII | i | i",
     )],
     form: &["Verse", "Verse", "Verse"],
     drums_from: 0,
@@ -137,13 +138,16 @@ pub(super) const CLEMENTINE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
-    parts: &[Part::new(
-        "Verse",
-        "C5:6 G4:2 E5:2 E5 | E5:6 C5:2 C5 E5 | G5:6 G5:2 F5 E5 | D5:8 D5:2 E5 | \
-         F5:6 F5:2 E5 D5 | E5:6 C5:2 C5 E5 | D5:6 G4:2 B4 D5 | C5:8 C5:2 C5",
-        "I | I | I | V7 | V7 | I | V7 | I",
-    )],
-    form: &["Verse", "Verse", "Verse"],
+    parts: &[
+        Part::new("Pickup", "-:8 C5:3 C5:1", "I"),
+        Part::new(
+            "Verse",
+            "C5:4 G4 E5:3 E5:1 | E5:4 C5 C5:3 E5:1 | G5:6 G5:2 F5 E5 | D5:8 D5:3 E5:1 | \
+             F5:4 F5 E5:3 D5:1 | E5:4 C5 C5:3 E5:1 | D5:4 G4 B4:2 D5 | C5:8 C5:3 C5:1",
+            "I | I | I | V7 | V7 | I | V7 | I",
+        ),
+    ],
+    form: &["Pickup", "Verse", "Verse", "Verse"],
     drums_from: 1,
     about: "A gold-rush ballad as a country waltz: the bass on beat one, the chord on two \
             and three. The first line climbs the C major chord, C E G, and the second walks \
@@ -161,16 +165,16 @@ pub(super) const CAMPTOWN_RACES: Song = Song {
     tempo: 120.0,
     comping: Comping::Strum,
     bass: Bass::RootFifth,
-    rhythm: "Two-step",
+    rhythm: "Country train",
     parts: &[Part::new(
         "Song",
-        "G5:2 G5 E5 G5 A5 G5 E5:4 | E5 D5 E5 D5 | G5:2 G5 E5 G5 A5 G5 E5:4 | D5 E5:2 D5 C5:8 | \
-         C5:3 C5:1 E5:2 G5 C6:8 | A5:3 A5:1 C6:2 A5 G5:8 | G5:2 G5 E5 G5 A5 G5 E5:4 | \
-         D5 E5:2 D5 C5:8",
+        "G5:2 G5 E5 G5 A5 G5 E5:4 | E5:2 D5:6 E5:2 D5:6 | G5:2 G5 E5 G5 A5 G5 E5:4 | \
+         D5:2 D5:1 D5 E5:2 D5 C5:8 | C5:2 C5:1 C5 E5:2 G5 C6:8 | A5:2 A5:1 A5 C6:2 A5 G5:8 | \
+         G5:2 G5 E5:1 E5 G5 G5 A5:2 G5 E5:4 | D5:2 D5:1 D5 E5:2 D5 C5:8",
         "I | V7 | I | V7 I | I | IV I | I | V7 I",
     )],
     form: &["Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Foster's tune uses only the major pentatonic, C D E G A. The boom-chick of \
             the two-step puts the bass on beats one and three, the snare on two and four.",
 };
@@ -198,7 +202,7 @@ pub(super) const ROW_YOUR_BOAT: Song = Song {
         Part::new("Last voices", ROW_TUNE, ROW_CHORDS).with_voices(&[-6, -4, -2]),
     ],
     form: &["Alone", "Round", "Round again", "Last voices"],
-    drums_from: 1,
+    drums_from: 0,
     about: "A round in 6/8 that never leaves the home chord, which is why any voice can \
             start anywhere. \"Merrily\" jumps to the top C and comes down the chord: C G E C.",
 };
@@ -214,7 +218,7 @@ pub(super) const SILENT_NIGHT: Song = Song {
     tempo: 84.0,
     comping: Comping::Arp3,
     bass: Bass::Held,
-    rhythm: "",
+    rhythm: "Six-eight",
     parts: &[
         Part::new(
             "Verse",
@@ -256,7 +260,7 @@ pub(super) const WE_WISH_YOU: Song = Song {
         "I | I | IV | II7 | V | III7 | vi | IV V | I | I | V | V | V | I | V | IV V | I",
     )],
     form: &["Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Each \"we wish you a merry Christmas\" starts a step higher, over a new chord: \
             C, then A7, then B7. A7 and B7 are secondary dominants, each borrowed to lead to \
             the chord after it.",

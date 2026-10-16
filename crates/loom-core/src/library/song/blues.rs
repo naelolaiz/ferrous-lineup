@@ -52,7 +52,7 @@ pub(super) const ROLLING_BOOGIE: Song = Song {
         TWELVE_BAR,
     )],
     form: &["Chorus", "Chorus", "Chorus"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Boogie-woogie piano: the left hand walks up and down each chord in a rolling \
             line (root, third, fifth, sixth, seventh) while the right hand plays short blues \
             riffs on top.",
@@ -69,7 +69,7 @@ pub(super) const MINOR_MOOD: Song = Song {
     tempo: 100.0,
     comping: Comping::Charleston,
     bass: Bass::Walking,
-    rhythm: "Swing",
+    rhythm: "Jazz ballad",
     parts: &[Part::new(
         "Chorus",
         "-:4 A4:2 C5 D5:4 E5 | G5:6 E5:2 D5:4 C5 | A4:12 -:4 | -:16 | \
@@ -78,7 +78,7 @@ pub(super) const MINOR_MOOD: Song = Song {
         "i7 | i7 | i7 | i7 | iv7 | iv7 | i7 | i7 | bVI7 | V7 | i7 | V7",
     )],
     form: &["Chorus", "Chorus", "Chorus"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The blues in a minor key, with a walking bass. In bar 9 the F7 chord (bVI7) \
             darkens everything before the E7, the V7, turns back home.",
 };

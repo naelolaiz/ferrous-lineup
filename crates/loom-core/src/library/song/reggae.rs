@@ -21,7 +21,7 @@ pub(super) const MARY_HAD_A_LITTLE_LAMB: Song = Song {
         "I | I | V | I | I | I | V | I",
     )],
     form: &["Tune", "Tune", "Tune", "Tune"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Ska, Jamaica's music before reggae: fast, with the guitar chords between the \
             beats and a walking bass. A three-note tune, E D C, is all it takes.",
 };
@@ -40,12 +40,12 @@ pub(super) const THIS_OLD_MAN: Song = Song {
     rhythm: "One drop",
     parts: &[Part::new(
         "Song",
-        "G5:4 E5 G5:8 | G5:4 E5 G5:8 | A5:4 G5 F5 E5 | D5 E5 F5:8 | \
-         E5:2 F5 G5:4 C5:2 C5 C5 C5 | C5 D5 E5 F5 G5:4 G5 | G5 D5 D5 F5 | E5 D5 C5:8",
+        "G5:4 E5 G5:8 | G5:4 E5 G5:8 | A5:4 G5 F5 E5 | D5 E5 F5:4 E5:2 F5 | \
+         G5:4 C5:4 C5:2 C5 C5:4 | C5:2 D5 E5 F5 G5:8 | G5:4 D5 D5 F5 | E5 D5 C5:8",
         "I | I | IV | V7 | I | I | V7 | I",
     )],
     form: &["Song", "Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "In the one drop, beat one is empty: the kick and the rim land together on beat \
             three, and the guitar only plays between the beats. That space is reggae.",
 };
@@ -75,7 +75,7 @@ pub(super) const VALLEY_DUB: Song = Song {
         ),
     ],
     form: &["A", "A", "B", "A", "B"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Two chords of A Dorian, Am7 and D7, for heavy roots reggae. The F sharp in the \
             tune is the raised sixth that makes Dorian different from plain minor.",
 };

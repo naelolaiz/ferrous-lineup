@@ -365,7 +365,11 @@ impl LoomApp {
                 self.file.pending = None;
                 self.perform(ctx, pending);
             }
-            Some(Choice::Cancel) => self.file.pending = None,
+            // Nothing happens, which is easy to miss: say so.
+            Some(Choice::Cancel) => {
+                self.file.pending = None;
+                self.notice = Some(format!("Cancelled: \"{name}\" stays open as it is."));
+            }
             None => {}
         }
     }
