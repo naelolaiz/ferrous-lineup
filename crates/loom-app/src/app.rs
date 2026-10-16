@@ -25,7 +25,7 @@ use loom_audio::{
     AudioEngine, ChannelNotes, Command, Instrument, PlayMode, SampleCache, SampleData,
 };
 use loom_core::{
-    Channel, ChannelKind, DEFAULT_VELOCITY, History, MidiMessage, Note, Pattern, Project,
+    Channel, ChannelKind, DEFAULT_VELOCITY, History, MidiMessage, Note, Pass, Pattern, Project,
     SampleSource, Tempo,
 };
 
@@ -232,11 +232,14 @@ impl LoomApp {
         }
     }
 
-    /// The song: the clips on tracks that are not muted, and its length.
+    /// The song as song mode plays it: the clips on tracks that are not
+    /// muted, with every repeat unrolled, cut to the loop region if one
+    /// is set.
     fn song_command(&self) -> Command {
+        let song = self.project.playback_arrangement();
         Command::SetSong {
-            clips: self.project.playlist().audible_clips().collect(),
-            length: self.project.song_length(),
+            plays: song.plays,
+            length: song.length,
         }
     }
 
@@ -502,6 +505,33 @@ impl LoomApp {
             PlaylistAction::AddTrack => {
                 self.edit("add track", |project| project.add_track());
             }
+            PlaylistAction::SetClipRepeats { index, repeats } => {
+                self.edit("repeat clip", |project| {
+                    project.set_clip_repeats(index, repeats)
+                });
+            }
+            PlaylistAction::AddSection(section) => {
+                self.edit("add section", |project| project.add_section(section));
+            }
+            PlaylistAction::SetSection { index, section } => {
+                self.edit("change section", |project| {
+                    project.set_section(index, section)
+                });
+            }
+            PlaylistAction::RemoveSection(index) => {
+                self.edit("delete section", |project| project.remove_section(index));
+            }
+            PlaylistAction::DuplicateSection(index) => {
+                self.edit("duplicate section", |project| {
+                    project.duplicate_section(index, 1)
+                });
+            }
+            PlaylistAction::UnrollSection(index) => {
+                self.edit("write out repeats", |project| project.unroll_section(index));
+            }
+            PlaylistAction::SetLoop(region) => {
+                self.edit("set loop", |project| project.set_loop_region(region));
+            }
             PlaylistAction::Library(action) => self.try_from_library(action),
         }
     }
@@ -749,7 +779,10 @@ impl LoomApp {
         let step = self.playhead()?;
         match self.mode {
             PlayMode::Pattern => Some(step),
-            PlayMode::Song => self.project.pattern_step_in_song(self.pattern, step),
+            PlayMode::Song => {
+                let (step, _) = self.song_position()?;
+                self.project.pattern_step_in_song(self.pattern, step)
+            }
         }
     }
 
@@ -759,17 +792,27 @@ impl LoomApp {
             (Some(step), PlayMode::Pattern) => {
                 self.project.chord_notes_in_pattern(self.pattern, step)
             }
-            (Some(step), PlayMode::Song) => self.project.chord_notes_in_song(step),
+            (Some(_), PlayMode::Song) => match self.song_position() {
+                Some((step, _)) => self.project.chord_notes_in_song(step),
+                None => Vec::new(),
+            },
             (None, _) => Vec::new(),
         }
     }
 
-    /// The song step being played, for the playlist (song mode only).
-    fn song_playhead(&self) -> Option<usize> {
-        match self.mode {
-            PlayMode::Song => self.playhead(),
-            PlayMode::Pattern => None,
+    /// Where the song is, in song mode: the step of the playlist's
+    /// timeline being played, and which time round it is if it repeats.
+    /// The audio thread counts steps of the song as played, so a chorus
+    /// played twice counts twice; the arrangement turns that back into a
+    /// place in the playlist.
+    fn song_position(&self) -> Option<(usize, Pass)> {
+        if self.mode != PlayMode::Song {
+            return None;
         }
+        let step = self.playhead()?;
+        let song = self.project.playback_arrangement();
+        let pass = *song.pass_at(step)?;
+        Some((pass.from + (step - pass.start), pass))
     }
 
     fn keyboard_shortcuts(&mut self, ctx: &egui::Context) {
@@ -842,11 +885,11 @@ impl eframe::App for LoomApp {
             self.apply_harmony(action);
         }
 
-        let song_playhead = self.song_playhead();
+        let song_position = self.song_position();
         let tried = self.tried();
         let playlist = egui::CentralPanel::default_margins().show(ui, |ui| {
             self.playlist
-                .show(ui, &self.project, self.pattern, song_playhead, tried)
+                .show(ui, &self.project, self.pattern, song_position, tried)
         });
         // The windows stay over the playlist, so they never hide the
         // toolbar, the harmony keys or the status bar.

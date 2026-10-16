@@ -44,7 +44,11 @@ progression, then a beat comes in, and a drum fill ends it. The playlist
 arranges patterns into a song: click to place a clip of the selected
 pattern, drag clips around, right-click to delete, and double-click a
 clip to edit it: melodies and chords open in the piano roll, drums in
-the channel rack. **F6** shows or hides
+the channel rack. Drag a clip's right edge to repeat its pattern. Drag
+along the strip above the bar numbers to mark sections (Intro, Verse,
+Chorus…), and click a section to rename it, play it several times in a
+row, loop it or copy it. Drag along the bar numbers to loop part of the
+song. **F6** shows or hides
 the channel rack, where you click steps and drop WAV files to use your
 own sounds. **F7** shows the piano roll, on the selected pattern: when
 the channel has no notes there, it says so and offers the patterns that
