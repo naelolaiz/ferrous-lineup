@@ -12,7 +12,7 @@ use crate::pattern::{MAX_STEPS, NoteEvent, Pattern};
 use crate::playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Section, Track,
 };
-use crate::{Note, Tempo};
+use crate::{DRUM_CHANNEL, Note, Tempo, tools};
 
 /// The most channels a project can have. The audio thread reserves room
 /// for this many up front so that adding a channel never allocates.
@@ -157,6 +157,18 @@ impl Channel {
             muted: false,
         }
     }
+
+    /// Whether the channel plays tunes, so its notes follow a change of
+    /// key. Built-in drums and the MIDI drum channel do not.
+    pub fn is_pitched(&self) -> bool {
+        !matches!(
+            self.kind,
+            ChannelKind::Sampler(SampleSource::Builtin(_))
+                | ChannelKind::MidiOut {
+                    channel: DRUM_CHANNEL
+                }
+        )
+    }
 }
 
 /// Everything the user is working on, and everything a project file saves.
@@ -294,6 +306,35 @@ impl Project {
     }
 
     // ----- Channels -----
+
+    /// Changes the key, and moves the notes of every pitched channel in
+    /// every pattern into it (see [`tools::change_key`]). Drums and
+    /// step-sequencer steps stay as they are. Changing to the key the
+    /// project is already in changes nothing.
+    pub fn change_key(&mut self, scale: Scale) {
+        let from = self.scale;
+        if from == scale {
+            return;
+        }
+        let pitched: Vec<bool> = self.channels.iter().map(Channel::is_pitched).collect();
+        for pattern in &mut self.patterns {
+            for (channel, _) in pitched.iter().enumerate().filter(|(_, p)| **p) {
+                let notes: Vec<NoteEvent> = pattern
+                    .notes(channel)
+                    .iter()
+                    .map(|note| match note.is_step() {
+                        true => *note,
+                        false => NoteEvent {
+                            pitch: tools::change_key(note.pitch, from, scale),
+                            ..*note
+                        },
+                    })
+                    .collect();
+                pattern.set_notes(channel, notes);
+            }
+        }
+        self.scale = scale;
+    }
 
     pub fn channels(&self) -> &[Channel] {
         &self.channels
@@ -977,6 +1018,38 @@ mod tests {
     const CHORDS: usize = 1;
     const FILL: usize = 2;
     const SYNTH: usize = 4;
+
+    #[test]
+    fn a_new_key_moves_every_tune_but_not_the_drums() {
+        use crate::{PitchClass, ScaleKind};
+        let mut project = Project::demo();
+        let before = project.clone();
+        let d_minor = Scale::new(PitchClass::D, ScaleKind::NaturalMinor);
+        project.change_key(d_minor);
+        assert_eq!(project.scale, d_minor);
+        for (index, pattern) in project.patterns().iter().enumerate() {
+            let old = before.pattern(index).unwrap();
+            for (channel, kind) in project.channels().iter().enumerate() {
+                let expected: Vec<NoteEvent> = old
+                    .notes(channel)
+                    .iter()
+                    .map(|note| match kind.is_pitched() && !note.is_step() {
+                        true => NoteEvent {
+                            pitch: tools::change_key(note.pitch, before.scale, d_minor),
+                            ..*note
+                        },
+                        false => *note,
+                    })
+                    .collect();
+                assert_eq!(pattern.notes(channel), expected);
+            }
+        }
+        assert_ne!(project, before, "the demo has tunes to move");
+        // The key it is already in changes nothing.
+        let again = project.clone();
+        project.change_key(d_minor);
+        assert_eq!(project, again);
+    }
 
     #[test]
     fn the_chord_playing_is_found_under_the_melody() {

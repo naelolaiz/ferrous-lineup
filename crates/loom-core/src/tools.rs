@@ -104,6 +104,40 @@ pub fn snap_to_scale(notes: &[NoteEvent], scale: Scale) -> Vec<NoteEvent> {
         .collect()
 }
 
+/// Where `note` goes when the song changes key from `from` to `to`, the
+/// way a musician would play it in the new key.
+///
+/// A new root moves every note by the same number of semitones, up or
+/// down, whichever is nearer (C to G goes down a fourth, not up a fifth).
+/// A new mode then moves each note of the old scale to the same degree
+/// of the new one: from C major to C minor, E, A and B become Eb, Ab and
+/// Bb, and C, D, F and G stay. Notes outside the old scale (a borrowed
+/// chord, or a part in a key of its own) only take the new root, so
+/// they keep their distance from it. Between scales of different sizes,
+/// such as major and pentatonic, there are no matching degrees, so a
+/// note of the old scale that is not in the new one moves to the nearest
+/// one that is. A note that would leave the MIDI range stays put.
+pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
+    let up = from.root.semitones_up_to(to.root) as i32;
+    let shift = if up > 6 { up - 12 } else { up };
+    let Some(moved) = note.transpose(shift) else {
+        return note;
+    };
+    // The old scale moved to the new root, so `moved` can be compared
+    // with it degree by degree.
+    let old = Scale::new(to.root, from.kind);
+    let Some(degree) = old.degree_of(moved.pitch_class()) else {
+        return moved;
+    };
+    let (old_steps, new_steps) = (from.kind.intervals(), to.kind.intervals());
+    if old_steps.len() == new_steps.len() {
+        let offset = new_steps[degree] as i32 - old_steps[degree] as i32;
+        moved.transpose(offset).unwrap_or(moved)
+    } else {
+        nearest_in_key(moved, to)
+    }
+}
+
 /// `note` moved up by octaves until it is above `ceiling`.
 fn above(note: Note, ceiling: Note) -> Option<Note> {
     let mut note = note;
@@ -290,6 +324,38 @@ mod tests {
         );
         assert_eq!(shift(&notes, -5, 16), None, "before the start");
         assert_eq!(shift(&notes, 8, 16), None, "past the end");
+    }
+
+    #[test]
+    fn a_new_key_moves_notes_the_nearer_way() {
+        use PitchClass::*;
+        let key = |root, kind| Scale::new(root, kind);
+        let moved = |midi, from, to| change_key(Note::new(midi), from, to).midi();
+        // C to D goes up a tone; C to G goes down a fourth.
+        assert_eq!(moved(60, C_MAJOR, key(D, ScaleKind::Major)), 62);
+        assert_eq!(moved(64, C_MAJOR, key(G, ScaleKind::Major)), 59);
+        // C major to C minor: E, A and B go down; C, D, F and G stay.
+        let minor = key(C, ScaleKind::NaturalMinor);
+        let scale: Vec<u8> = [60, 62, 64, 65, 67, 69, 71]
+            .iter()
+            .map(|&m| moved(m, C_MAJOR, minor))
+            .collect();
+        assert_eq!(scale, [60, 62, 63, 65, 67, 68, 70]);
+        // And back again.
+        assert_eq!(moved(63, minor, C_MAJOR), 64);
+        // A note outside the scale only takes the new root.
+        assert_eq!(moved(66, C_MAJOR, minor), 66);
+        assert_eq!(moved(66, C_MAJOR, key(D, ScaleKind::NaturalMinor)), 68);
+        // Key and mode at once: E in C major is the third, so it is F in
+        // D minor.
+        assert_eq!(moved(64, C_MAJOR, key(D, ScaleKind::NaturalMinor)), 65);
+        // Major to pentatonic: F and B are not in it, so they move to the
+        // nearest note that is.
+        let pentatonic = key(C, ScaleKind::MajorPentatonic);
+        assert_eq!(moved(65, C_MAJOR, pentatonic), 64);
+        assert_eq!(moved(71, C_MAJOR, pentatonic), 72);
+        // A note that would leave the MIDI range stays put.
+        assert_eq!(moved(127, C_MAJOR, key(D, ScaleKind::Major)), 127);
     }
 
     #[test]
