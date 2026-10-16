@@ -53,10 +53,12 @@ development you can drop it to build faster.
 
 You should see this window:
 
-![The Ferrous Loom channel rack](images/step-2-rack.png)
+![Ferrous Loom with the channel rack and the piano roll](images/step-3-piano-roll.png)
 
-Press **Space** or click **▶ Play** to hear the demo beat. The status bar at
-the bottom shows which sound card is in use, or why audio could not start.
+Press **Space** or click **▶ Play** to hear the demo: a beat and a chord
+progression. The piano roll opens on the Loom Osc channel; **F7** hides
+and shows it. The status bar at the bottom shows which sound card is in
+use, or why audio could not start.
 
 ## 4. Run the tests
 
