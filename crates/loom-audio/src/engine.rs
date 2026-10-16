@@ -3,33 +3,82 @@
 //! The audio thread is special: the sound card asks it for a new block of
 //! samples every few milliseconds, and if it is late you hear a click or a
 //! dropout. So the code that runs there must never wait: no locks, no file
-//! or network access, no memory allocation, no printing.
+//! or network access, no memory allocation or freeing, no printing.
 //!
 //! The UI therefore never touches the audio state directly. It sends
 //! [`Command`] messages through a lock-free ring buffer (`rtrb`), and the
-//! audio thread applies them at the start of each block.
+//! audio thread applies them at the start of each block. Two things travel
+//! the other way: the current step (through an atomic integer, for the
+//! playhead in the UI) and old instruments that need freeing (through a
+//! second ring buffer, so the memory is freed on the UI thread).
 
 use std::fmt;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
+use loom_core::{MAX_CHANNELS, MAX_STEPS, Sequencer, StepRow, Tempo};
 
-use crate::synth::TestTone;
+use crate::dsp::Smoothed;
+use crate::instrument::Instrument;
 
 /// How many commands can wait in the queue before `send` starts failing.
 /// The audio thread empties the queue every few milliseconds, so this is
 /// far more than the UI will ever send in that time.
 const COMMAND_QUEUE_SIZE: usize = 1024;
 
+/// How many old instruments can wait to be freed by the UI thread.
+const TRASH_QUEUE_SIZE: usize = 256;
+
+/// The value of the playhead while stopped.
+const NO_STEP: usize = usize::MAX;
+
+/// How long volume changes take to settle, in seconds.
+const VOLUME_SMOOTHING: f32 = 0.01;
+
 /// A message from the UI thread to the audio thread.
-#[derive(Debug, Clone, Copy, PartialEq)]
+///
+/// Channel numbers are positions in the rack, counted from 0, and must
+/// match the UI's list exactly: the UI sends `AddChannel` and
+/// `RemoveChannel` whenever its own list changes.
+#[derive(Debug)]
 pub enum Command {
-    /// Switch the test tone on (`true`) or off (`false`).
-    SetToneOn(bool),
-    /// Set the test tone pitch, in hertz.
-    SetFrequency(f32),
-    /// Set the test tone volume, from 0.0 to 1.0.
-    SetVolume(f32),
+    /// Start the pattern from step 0.
+    Play,
+    /// Stop playback. Sounds already playing ring out.
+    Stop,
+    SetTempo(Tempo),
+    SetPatternLength(usize),
+    SetMasterVolume(f32),
+    /// Add a channel at the bottom of the rack.
+    AddChannel {
+        instrument: Instrument,
+        steps: StepRow,
+        volume: f32,
+        muted: bool,
+    },
+    RemoveChannel(usize),
+    /// Replace a channel's instrument, for example after loading a sample.
+    SetInstrument {
+        channel: usize,
+        instrument: Instrument,
+    },
+    SetStep {
+        channel: usize,
+        step: usize,
+        on: bool,
+    },
+    SetVolume {
+        channel: usize,
+        volume: f32,
+    },
+    SetMuted {
+        channel: usize,
+        muted: bool,
+    },
+    /// Play a channel once right now, as when clicking its name.
+    Preview(usize),
 }
 
 /// What the engine found when it opened the sound card.
@@ -79,6 +128,8 @@ pub struct AudioEngine {
     // The stream is never read, but it must be kept: dropping it stops audio.
     _stream: cpal::Stream,
     commands: rtrb::Producer<Command>,
+    trash: rtrb::Consumer<Instrument>,
+    playhead: Arc<AtomicUsize>,
     info: EngineInfo,
 }
 
@@ -101,24 +152,36 @@ impl AudioEngine {
             channels: config.channels,
         };
 
-        let (producer, consumer) = rtrb::RingBuffer::new(COMMAND_QUEUE_SIZE);
+        let (command_producer, command_consumer) = rtrb::RingBuffer::new(COMMAND_QUEUE_SIZE);
+        let (trash_producer, trash_consumer) = rtrb::RingBuffer::new(TRASH_QUEUE_SIZE);
+        let playhead = Arc::new(AtomicUsize::new(NO_STEP));
+
+        let audio_thread = AudioThread::new(
+            config.sample_rate,
+            config.channels as usize,
+            command_consumer,
+            trash_producer,
+            Arc::clone(&playhead),
+        );
 
         // The sound card decides the sample type. We pick the matching
         // version of the generic `build_stream` function for each one.
         let stream = match sample_format {
-            SampleFormat::F32 => build_stream::<f32>(&device, config, consumer),
-            SampleFormat::F64 => build_stream::<f64>(&device, config, consumer),
-            SampleFormat::I16 => build_stream::<i16>(&device, config, consumer),
-            SampleFormat::I32 => build_stream::<i32>(&device, config, consumer),
-            SampleFormat::U16 => build_stream::<u16>(&device, config, consumer),
-            SampleFormat::U8 => build_stream::<u8>(&device, config, consumer),
+            SampleFormat::F32 => build_stream::<f32>(&device, config, audio_thread),
+            SampleFormat::F64 => build_stream::<f64>(&device, config, audio_thread),
+            SampleFormat::I16 => build_stream::<i16>(&device, config, audio_thread),
+            SampleFormat::I32 => build_stream::<i32>(&device, config, audio_thread),
+            SampleFormat::U16 => build_stream::<u16>(&device, config, audio_thread),
+            SampleFormat::U8 => build_stream::<u8>(&device, config, audio_thread),
             other => return Err(EngineError::UnsupportedFormat(other)),
         }?;
         stream.play().map_err(EngineError::Play)?;
 
         Ok(AudioEngine {
             _stream: stream,
-            commands: producer,
+            commands: command_producer,
+            trash: trash_consumer,
+            playhead,
             info,
         })
     }
@@ -128,6 +191,22 @@ impl AudioEngine {
     /// Returns `false` if the queue was full and the command was dropped.
     pub fn send(&mut self, command: Command) -> bool {
         self.commands.push(command).is_ok()
+    }
+
+    /// The step being played right now, or `None` when stopped.
+    pub fn playhead(&self) -> Option<usize> {
+        match self.playhead.load(Ordering::Relaxed) {
+            NO_STEP => None,
+            step => Some(step),
+        }
+    }
+
+    /// Frees the instruments the audio thread has finished with.
+    /// Call this regularly from the UI thread, for example once per frame.
+    pub fn collect_garbage(&mut self) {
+        while let Ok(old_instrument) = self.trash.pop() {
+            drop(old_instrument);
+        }
     }
 
     /// Details about the open device.
@@ -143,13 +222,11 @@ impl AudioEngine {
 fn build_stream<T>(
     device: &cpal::Device,
     config: StreamConfig,
-    commands: rtrb::Consumer<Command>,
+    mut audio_thread: AudioThread,
 ) -> Result<cpal::Stream, EngineError>
 where
     T: SizedSample + FromSample<f32>,
 {
-    let mut audio_thread = AudioThread::new(config.sample_rate, config.channels as usize, commands);
-
     // This closure is the audio callback. `move` gives it ownership of
     // `audio_thread`, and cpal runs it on the audio thread.
     let data_callback = move |output: &mut [T], _: &cpal::OutputCallbackInfo| {
@@ -165,23 +242,129 @@ where
         .map_err(EngineError::BuildStream)
 }
 
-/// Everything the audio callback owns: the instruments and the end of the
-/// command queue that receives messages from the UI.
+/// One row of the channel rack, as the audio thread sees it.
+struct ChannelState {
+    instrument: Instrument,
+    steps: StepRow,
+    volume: Smoothed,
+    muted: bool,
+}
+
+/// Everything the audio callback owns.
 ///
 /// Keeping this in a struct (instead of loose variables inside the
 /// closure) lets the tests below run it without a sound card.
 struct AudioThread {
-    tone: TestTone,
-    channels: usize,
+    sample_rate: u32,
+    output_channels: usize,
+    /// Reserved with room for `MAX_CHANNELS`, so `push` never allocates.
+    channels: Vec<ChannelState>,
+    sequencer: Sequencer,
+    playing: bool,
+    master_volume: Smoothed,
     commands: rtrb::Consumer<Command>,
+    trash: rtrb::Producer<Instrument>,
+    playhead: Arc<AtomicUsize>,
 }
 
 impl AudioThread {
-    fn new(sample_rate: u32, channels: usize, commands: rtrb::Consumer<Command>) -> Self {
+    fn new(
+        sample_rate: u32,
+        output_channels: usize,
+        commands: rtrb::Consumer<Command>,
+        trash: rtrb::Producer<Instrument>,
+        playhead: Arc<AtomicUsize>,
+    ) -> Self {
         AudioThread {
-            tone: TestTone::new(sample_rate),
-            channels,
+            sample_rate,
+            output_channels,
+            channels: Vec::with_capacity(MAX_CHANNELS),
+            sequencer: Sequencer::new(Tempo::default(), sample_rate, 16),
+            playing: false,
+            master_volume: Smoothed::new(0.8, VOLUME_SMOOTHING, sample_rate),
             commands,
+            trash,
+            playhead,
+        }
+    }
+
+    /// Hands an instrument to the UI thread to be freed there.
+    fn throw_away(&mut self, instrument: Instrument) {
+        // If the trash queue is full, the instrument is freed here after
+        // all. That should never happen, because the UI empties it every frame.
+        let _ = self.trash.push(instrument);
+    }
+
+    fn apply(&mut self, command: Command) {
+        match command {
+            Command::Play => {
+                self.sequencer.reset();
+                self.playing = true;
+            }
+            Command::Stop => {
+                self.playing = false;
+                self.playhead.store(NO_STEP, Ordering::Relaxed);
+            }
+            Command::SetTempo(tempo) => self.sequencer.set_tempo(tempo),
+            Command::SetPatternLength(length) => self.sequencer.set_length(length),
+            Command::SetMasterVolume(volume) => self.master_volume.set(volume),
+            Command::AddChannel {
+                instrument,
+                steps,
+                volume,
+                muted,
+            } => {
+                if self.channels.len() < MAX_CHANNELS {
+                    self.channels.push(ChannelState {
+                        instrument,
+                        steps,
+                        volume: Smoothed::new(volume, VOLUME_SMOOTHING, self.sample_rate),
+                        muted,
+                    });
+                } else {
+                    self.throw_away(instrument);
+                }
+            }
+            Command::RemoveChannel(index) => {
+                if index < self.channels.len() {
+                    let removed = self.channels.remove(index);
+                    self.throw_away(removed.instrument);
+                }
+            }
+            Command::SetInstrument {
+                channel,
+                instrument,
+            } => match self.channels.get_mut(channel) {
+                Some(state) => {
+                    let old = std::mem::replace(&mut state.instrument, instrument);
+                    self.throw_away(old);
+                }
+                None => self.throw_away(instrument),
+            },
+            Command::SetStep { channel, step, on } => {
+                if let Some(cell) = self
+                    .channels
+                    .get_mut(channel)
+                    .and_then(|state| state.steps.get_mut(step))
+                {
+                    *cell = on;
+                }
+            }
+            Command::SetVolume { channel, volume } => {
+                if let Some(state) = self.channels.get_mut(channel) {
+                    state.volume.set(volume);
+                }
+            }
+            Command::SetMuted { channel, muted } => {
+                if let Some(state) = self.channels.get_mut(channel) {
+                    state.muted = muted;
+                }
+            }
+            Command::Preview(channel) => {
+                if let Some(state) = self.channels.get_mut(channel) {
+                    state.instrument.trigger(self.sample_rate);
+                }
+            }
         }
     }
 
@@ -191,15 +374,29 @@ impl AudioThread {
         T: SizedSample + FromSample<f32>,
     {
         while let Ok(command) = self.commands.pop() {
-            match command {
-                Command::SetToneOn(on) => self.tone.set_on(on),
-                Command::SetFrequency(hz) => self.tone.set_frequency(hz),
-                Command::SetVolume(volume) => self.tone.set_volume(volume),
-            }
+            self.apply(command);
         }
-        for frame in output.chunks_mut(self.channels) {
-            let sample = T::from_sample(self.tone.next_sample());
-            frame.fill(sample);
+
+        for frame in output.chunks_mut(self.output_channels) {
+            if self.playing
+                && let Some(step) = self.sequencer.tick()
+            {
+                self.playhead.store(step, Ordering::Relaxed);
+                for channel in &mut self.channels {
+                    if channel.steps[step % MAX_STEPS] && !channel.muted {
+                        channel.instrument.trigger(self.sample_rate);
+                    }
+                }
+            }
+
+            let mut mix = 0.0;
+            for channel in &mut self.channels {
+                let volume = channel.volume.next_value();
+                mix += channel.instrument.next_sample() * volume;
+            }
+            // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
+            let sample = (mix * self.master_volume.next_value()).tanh();
+            frame.fill(T::from_sample(sample));
         }
     }
 }
@@ -207,36 +404,159 @@ impl AudioThread {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::instrument::Sampler;
+    use crate::sample::SampleData;
+
+    const RATE: u32 = 48_000;
+
+    struct Harness {
+        audio: AudioThread,
+        commands: rtrb::Producer<Command>,
+        trash: rtrb::Consumer<Instrument>,
+        playhead: Arc<AtomicUsize>,
+    }
+
+    fn harness() -> Harness {
+        let (commands, command_consumer) = rtrb::RingBuffer::new(64);
+        let (trash_producer, trash) = rtrb::RingBuffer::new(64);
+        let playhead = Arc::new(AtomicUsize::new(NO_STEP));
+        let audio = AudioThread::new(RATE, 1, command_consumer, trash_producer, playhead.clone());
+        Harness {
+            audio,
+            commands,
+            trash,
+            playhead,
+        }
+    }
+
+    /// A sampler whose sound is a constant 0.5 for 10 frames.
+    fn click() -> Instrument {
+        Instrument::Sampler(Sampler::new(Arc::new(SampleData::new(vec![0.5; 10], RATE))))
+    }
+
+    fn steps(on: &[usize]) -> StepRow {
+        let mut row = [false; MAX_STEPS];
+        for &step in on {
+            row[step] = true;
+        }
+        row
+    }
+
+    fn add(h: &mut Harness, on: &[usize], muted: bool) {
+        h.commands
+            .push(Command::AddChannel {
+                instrument: click(),
+                steps: steps(on),
+                volume: 1.0,
+                muted,
+            })
+            .unwrap();
+    }
+
+    fn render(h: &mut Harness, frames: usize) -> Vec<f32> {
+        let mut buffer = vec![0.0_f32; frames];
+        h.audio.process(&mut buffer);
+        buffer
+    }
 
     #[test]
-    fn commands_reach_the_audio_thread() {
-        let (mut producer, consumer) = rtrb::RingBuffer::new(8);
-        let mut audio_thread = AudioThread::new(48_000, 2, consumer);
-        let mut buffer = vec![0.0_f32; 1024];
+    fn silent_while_stopped() {
+        let mut h = harness();
+        add(&mut h, &[0], false);
+        assert!(render(&mut h, 1_000).iter().all(|&s| s == 0.0));
+        assert_eq!(h.playhead.load(Ordering::Relaxed), NO_STEP);
+    }
 
-        audio_thread.process(&mut buffer);
-        assert!(buffer.iter().all(|&s| s == 0.0), "should start silent");
+    #[test]
+    fn plays_steps_on_time() {
+        let mut h = harness();
+        add(&mut h, &[0, 1], false);
+        h.commands
+            .push(Command::SetTempo(Tempo::new(120.0)))
+            .unwrap();
+        h.commands.push(Command::Play).unwrap();
 
-        producer.push(Command::SetToneOn(true)).unwrap();
-        audio_thread.process(&mut buffer);
-        assert!(
-            buffer.iter().any(|&s| s != 0.0),
-            "should play after SetToneOn(true)"
-        );
+        // At 120 BPM a step lasts 6000 frames: hits at frame 0 and 6000.
+        let out = render(&mut h, 7_000);
+        assert!(out[0] != 0.0, "step 0 should sound at once");
+        assert!(out[100..6_000].iter().all(|&s| s == 0.0));
+        assert!(out[6_000] != 0.0, "step 1 should sound at frame 6000");
+        assert_eq!(h.playhead.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn muted_channels_are_silent() {
+        let mut h = harness();
+        add(&mut h, &[0], true);
+        h.commands.push(Command::Play).unwrap();
+        assert!(render(&mut h, 1_000).iter().all(|&s| s == 0.0));
+    }
+
+    #[test]
+    fn steps_can_be_changed_while_playing() {
+        let mut h = harness();
+        add(&mut h, &[], false);
+        h.commands
+            .push(Command::SetTempo(Tempo::new(120.0)))
+            .unwrap();
+        h.commands.push(Command::Play).unwrap();
+        render(&mut h, 100);
+        h.commands
+            .push(Command::SetStep {
+                channel: 0,
+                step: 1,
+                on: true,
+            })
+            .unwrap();
+        let out = render(&mut h, 6_000);
+        assert!(out[5_900] != 0.0, "the new step should play at frame 6000");
+    }
+
+    #[test]
+    fn replaced_instruments_go_to_the_trash() {
+        let mut h = harness();
+        add(&mut h, &[], false);
+        h.commands
+            .push(Command::SetInstrument {
+                channel: 0,
+                instrument: click(),
+            })
+            .unwrap();
+        h.commands.push(Command::RemoveChannel(0)).unwrap();
+        render(&mut h, 10);
+        let mut thrown_away = 0;
+        while h.trash.pop().is_ok() {
+            thrown_away += 1;
+        }
+        assert_eq!(thrown_away, 2, "the old and the removed instrument");
+    }
+
+    #[test]
+    fn preview_plays_without_the_sequencer() {
+        let mut h = harness();
+        add(&mut h, &[], false);
+        h.commands.push(Command::Preview(0)).unwrap();
+        assert!(render(&mut h, 10)[0] != 0.0);
     }
 
     #[test]
     fn converts_to_integer_samples() {
-        let (mut producer, consumer) = rtrb::RingBuffer::new(8);
-        let mut audio_thread = AudioThread::new(48_000, 1, consumer);
-        producer.push(Command::SetVolume(1.0)).unwrap();
-        producer.push(Command::SetToneOn(true)).unwrap();
-
-        let mut buffer = vec![0_i16; 4800];
-        audio_thread.process(&mut buffer);
-        assert!(
-            buffer.iter().any(|&s| s > 10_000),
-            "16-bit samples should use the full range"
-        );
+        let (mut commands, consumer) = rtrb::RingBuffer::new(8);
+        let (trash, _trash_consumer) = rtrb::RingBuffer::new(8);
+        let playhead = Arc::new(AtomicUsize::new(NO_STEP));
+        let mut audio = AudioThread::new(RATE, 1, consumer, trash, playhead);
+        commands
+            .push(Command::AddChannel {
+                instrument: click(),
+                steps: steps(&[0]),
+                volume: 1.0,
+                muted: false,
+            })
+            .unwrap();
+        commands.push(Command::SetMasterVolume(1.0)).unwrap();
+        commands.push(Command::Play).unwrap();
+        let mut buffer = vec![0_i16; 10];
+        audio.process(&mut buffer);
+        assert!(buffer[0] > 10_000, "got {}", buffer[0]);
     }
 }
