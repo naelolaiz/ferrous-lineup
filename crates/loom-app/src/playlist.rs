@@ -179,6 +179,8 @@ pub struct PlaylistView {
     drag: Option<ClipDrag>,
     tab: Tab,
     library: LibraryBrowser,
+    /// Whether the Patterns and Library panel on the left is shown.
+    pub browser_open: bool,
 }
 
 impl PlaylistView {
@@ -188,6 +190,7 @@ impl PlaylistView {
             drag: None,
             tab: Tab::Patterns,
             library: LibraryBrowser::new(),
+            browser_open: true,
         }
     }
 
@@ -210,11 +213,12 @@ impl PlaylistView {
     ) -> Vec<PlaylistAction> {
         let mut actions = Vec::new();
 
+        let mut browser_open = self.browser_open;
         egui::Panel::left("pattern-picker")
             .resizable(true)
             .default_size(PICKER_WIDTH)
             .size_range(140.0..=420.0)
-            .show(ui, |ui| {
+            .show_collapsible(ui, &mut browser_open, |ui| {
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut self.tab, Tab::Patterns, "Patterns");
@@ -231,6 +235,7 @@ impl PlaylistView {
                     }
                 }
             });
+        self.browser_open = browser_open;
 
         let current_name = project.pattern(current).map_or("", |p| p.name.as_str());
         ui.horizontal(|ui| {
@@ -253,9 +258,12 @@ impl PlaylistView {
                 actions.push(PlaylistAction::AddTrack);
             }
             ui.separator();
-            ui.weak(format!(
+            // Cut short with "…" when the window is narrow; the whole
+            // sentence shows when you point at it.
+            let help = format!(
                 "Click to place \"{current_name}\". Drag clips to move them, right-click to delete."
-            ));
+            );
+            ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate());
         });
 
         egui::ScrollArea::both()

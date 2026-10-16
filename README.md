@@ -74,6 +74,13 @@ hear it in your key. **File > Demos** opens 16 well-known songs in the
 public domain, from *Ode to Joy* to *Für Elise*, and every style as a
 short song.
 
+Too small or too big? **Ctrl+Plus** and **Ctrl+Minus** zoom everything
+(⌘ on a Mac) and **Ctrl+0** goes back to 100%; the same zoom is in the
+**View** menu and at the right end of the status bar. The View menu also
+shows or hides each window and panel, and **Alt+F8** hides the Patterns
+and Library panel to give the playlist more room. The zoom, the window
+size and where you left the windows are remembered for next time.
+
 Ready-built programs for all three systems are attached to every CI run
 as `ferrous-loom-linux`, `ferrous-loom-macos` and `ferrous-loom-windows`.
 They are not signed yet, so macOS and Windows warn before the first start.
