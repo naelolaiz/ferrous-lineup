@@ -268,8 +268,17 @@ impl LoomApp {
         });
     }
 
-    /// Plays from the cursor, or stops and goes back to the marker.
+    /// Plays from the cursor, or stops and goes back to the marker. A
+    /// cursor or marker past the end of the loop (left there by a longer
+    /// pattern, or a song that got shorter) goes back to the start.
     fn set_playing(&mut self, playing: bool) {
+        let length = self.loop_length();
+        if self.marker >= length {
+            self.marker = 0;
+        }
+        if self.cursor >= length {
+            self.cursor = 0;
+        }
         if playing {
             self.send(Command::Seek(self.cursor));
             self.send(Command::Play);
@@ -384,8 +393,27 @@ impl LoomApp {
 
     fn select_pattern(&mut self, pattern: usize) {
         if pattern < self.project.patterns().len() {
+            if pattern != self.pattern {
+                self.rewind_for_new_pattern();
+            }
             self.pattern = pattern;
             self.send(Command::SelectPattern(pattern));
+        }
+    }
+
+    /// In pattern mode, the cursor and the marker are steps of the
+    /// selected pattern. When another one is selected, they go back to its
+    /// start, so Play does not begin part way through it. While playing,
+    /// playback carries on where it is, and only Stop goes back to the
+    /// start.
+    fn rewind_for_new_pattern(&mut self) {
+        if self.mode != PlayMode::Pattern {
+            return;
+        }
+        self.marker = 0;
+        if !self.playing {
+            self.cursor = 0;
+            self.send(Command::Seek(0));
         }
     }
 
