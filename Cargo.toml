@@ -15,7 +15,7 @@ loom-audio = { path = "crates/loom-audio" }
 cpal = "0.18"
 rtrb = "0.4"
 hound = "3.5"
-eframe = "0.37"
+eframe = { version = "0.37", features = ["persistence"] }
 serde = { version = "1", features = ["derive"] }
 ron = "0.12"
 rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
