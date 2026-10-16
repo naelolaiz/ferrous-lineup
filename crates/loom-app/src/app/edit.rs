@@ -76,8 +76,9 @@ impl LoomApp {
                     let length = self.project.patterns()[index].length();
                     self.send(Command::InsertPattern { index, length });
                     // A new pattern (added, cloned, or brought back by
-                    // undo) is the one you want to see.
+                    // undo) is the one you want to see, from its start.
                     self.pattern = index;
+                    self.rewind_for_new_pattern();
                     patterns_moved = true;
                 }
                 Change::RemoveChannel(index) => {
