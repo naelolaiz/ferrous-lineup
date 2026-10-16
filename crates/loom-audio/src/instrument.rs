@@ -16,6 +16,13 @@ use crate::sample::{SampleCache, SampleData, SampleError};
 
 /// How many notes the Loom Osc can play at once.
 pub const SYNTH_VOICES: usize = 16;
+/// Sounds longer than this, in seconds, stop when playback stops.
+const LONG_SAMPLE_SECONDS: u64 = 10;
+
+/// How fast a stopped long sound fades out: its level is multiplied by
+/// this every frame, which takes it to silence in about 15 ms.
+const FADE_FACTOR: f32 = 0.99;
+
 /// How many hits a sampler can play at once.
 pub const SAMPLER_VOICES: usize = 8;
 
@@ -84,7 +91,7 @@ impl Instrument {
     /// Lets go of every held note, as when playback stops.
     pub fn release_all(&mut self) {
         match self {
-            Instrument::Sampler(_) => {}
+            Instrument::Sampler(sampler) => sampler.release_all(),
             Instrument::Synth(synth) => synth.release_all(),
             Instrument::MidiOut(midi_out) => midi_out.release_all(),
         }
@@ -173,6 +180,8 @@ struct SamplerVoice {
     increment: f64,
     gain: f32,
     started: u64,
+    /// While stopping: how loud the voice still is, falling to silence.
+    fading: Option<f32>,
 }
 
 impl Voice for SamplerVoice {
@@ -199,6 +208,14 @@ impl SamplerVoice {
         let fraction = (position - index as f64) as f32;
         let sample = frames[index] + (frames[index + 1] - frames[index]) * fraction;
         self.position = Some(position + self.increment);
+        if let Some(level) = self.fading {
+            let level = level * FADE_FACTOR;
+            if level < 0.001 {
+                self.position = None;
+            }
+            self.fading = Some(level);
+            return sample * self.gain * level;
+        }
         sample * self.gain
     }
 }
@@ -224,7 +241,21 @@ impl Sampler {
             increment: rate_ratio * pitch_ratio,
             gain: velocity_gain(velocity),
             started: self.notes_started,
+            fading: None,
         };
+    }
+
+    /// Fades out the voices playing a long sound, such as a whole song
+    /// imported as a recording, so that it stops with the transport.
+    /// Short sounds (drum hits) still ring out.
+    pub fn release_all(&mut self) {
+        let long = self.sample.frames().len() as u64
+            > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS;
+        if long {
+            for voice in self.voices.iter_mut().filter(|voice| !voice.is_idle()) {
+                voice.fading.get_or_insert(1.0);
+            }
+        }
     }
 
     pub fn next_sample(&mut self) -> f32 {

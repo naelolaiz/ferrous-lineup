@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/loom-core", "crates/loom-audio", "crates/loom-app"]
+members = ["crates/loom-core", "crates/loom-audio", "crates/loom-listen", "crates/loom-app"]
 
 [workspace.package]
 version = "0.1.0"
@@ -12,6 +12,7 @@ rust-version = "1.88"
 [workspace.dependencies]
 loom-core = { path = "crates/loom-core" }
 loom-audio = { path = "crates/loom-audio" }
+loom-listen = { path = "crates/loom-listen" }
 cpal = "0.18"
 rtrb = "0.4"
 hound = "3.5"
@@ -20,3 +21,7 @@ serde = { version = "1", features = ["derive"] }
 ron = "0.12"
 rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
 midir = "0.11"
+symphonia = { version = "0.6", default-features = false, features = ["mp3", "wav", "pcm", "flac", "ogg", "vorbis"] }
+realfft = "3.5"
+beat-track-rs = "0.1.2"
+bpm-key = { version = "0.1", default-features = false }
