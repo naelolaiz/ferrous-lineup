@@ -9,15 +9,24 @@
 //! the top stay in place while the clips scroll under them: they are
 //! drawn at the edge of the *visible* part of the scroll area, which
 //! `ScrollArea::show_viewport` tells us on every frame.
+//!
+//! Above the bar numbers is the section strip, where the song's structure
+//! is marked; [`sections`] draws it and the loop region.
+
+mod sections;
 
 use eframe::egui::{
     self, Align2, Color32, FontId, Painter, Pos2, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     pos2, vec2,
 };
-use loom_core::{Clip, MAX_SONG_STEPS, MAX_TRACKS, Pattern, Project, STEPS_PER_BAR, TimeSignature};
+use loom_core::{
+    Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Pass, Pattern, Project,
+    STEPS_PER_BAR, Section, TimeSignature,
+};
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, Tried};
 use crate::widgets;
+use sections::Strips;
 
 /// Something the user asked the playlist to do.
 #[derive(Debug, Clone, PartialEq)]
@@ -31,12 +40,29 @@ pub enum PlaylistAction {
         start: usize,
     },
     RemoveClip(usize),
+    /// Play the clip's pattern this many times in a row.
+    SetClipRepeats {
+        index: usize,
+        repeats: usize,
+    },
     ToggleTrackMute(usize),
     RenameTrack {
         track: usize,
         name: String,
     },
     AddTrack,
+    AddSection(Section),
+    /// Rename, move, resize or repeat a section.
+    SetSection {
+        index: usize,
+        section: Section,
+    },
+    RemoveSection(usize),
+    DuplicateSection(usize),
+    /// Turn a section's repeats into separate copies.
+    UnrollSection(usize),
+    /// Loop part of the song, or (with `None`) the whole song again.
+    SetLoop(Option<LoopRegion>),
     /// Something picked in the Library tab.
     Library(LibraryAction),
 }
@@ -51,6 +77,10 @@ enum Tab {
 const PICKER_WIDTH: f32 = 210.0;
 const HEADER_WIDTH: f32 = 116.0;
 const RULER_HEIGHT: f32 = 20.0;
+/// The strip above the bar numbers with the song's sections.
+const SECTION_HEIGHT: f32 = 22.0;
+/// How close to a clip's right edge the pointer must be to repeat it.
+const CLIP_EDGE: f32 = 6.0;
 const TRACK_HEIGHT: f32 = 36.0;
 /// How wide one step is, in pixels. A bar of 4/4 is 16 steps: 72 pixels.
 const STEP_WIDTH: f32 = 4.5;
@@ -73,6 +103,8 @@ const PLAYHEAD: Color32 = Color32::from_rgb(255, 152, 48);
 const CLIP_TEXT: Color32 = Color32::from_rgb(20, 22, 26);
 const CLIP_NOTES: Color32 = Color32::from_rgb(232, 236, 242);
 const SELECTED_OUTLINE: Color32 = Color32::from_rgb(245, 245, 250);
+/// The lines between the times round of a clip that repeats.
+const REPEAT_LINE: Color32 = Color32::from_rgb(20, 22, 26);
 
 /// The colours patterns are drawn in, chosen by pattern number.
 const PALETTE: [Color32; 8] = [
@@ -129,10 +161,13 @@ impl Snap {
 
 /// A clip being dragged. `grab` is how many steps after the clip's start
 /// the pointer took hold of it, so the clip does not jump under the pointer.
+/// A clip taken by its right edge is not moved but stretched: it repeats
+/// its pattern as many times as fit up to the pointer.
 #[derive(Debug, Clone, Copy)]
 struct ClipDrag {
     index: usize,
     grab: usize,
+    stretch: bool,
 }
 
 /// Where the grid of tracks and steps is on screen.
@@ -146,6 +181,13 @@ struct Layout {
 impl Layout {
     fn x(self, step: usize) -> f32 {
         self.origin.x + step as f32 * STEP_WIDTH
+    }
+
+    /// The step under `x`, clamped to the song.
+    fn step_at(self, x: f32) -> usize {
+        ((x - self.origin.x) / STEP_WIDTH)
+            .floor()
+            .clamp(0.0, (MAX_SONG_STEPS - 1) as f32) as usize
     }
 
     fn track_top(self, track: usize) -> f32 {
@@ -166,10 +208,7 @@ impl Layout {
         let track = ((pos.y - self.origin.y) / TRACK_HEIGHT)
             .floor()
             .clamp(0.0, last_track) as usize;
-        let step = ((pos.x - self.origin.x) / STEP_WIDTH)
-            .floor()
-            .clamp(0.0, (MAX_SONG_STEPS - 1) as f32) as usize;
-        (track, step)
+        (track, self.step_at(pos.x))
     }
 }
 
@@ -177,6 +216,7 @@ impl Layout {
 pub struct PlaylistView {
     snap: Snap,
     drag: Option<ClipDrag>,
+    strips: Strips,
     tab: Tab,
     library: LibraryBrowser,
     /// Whether the Patterns and Library panel on the left is shown.
@@ -188,6 +228,7 @@ impl PlaylistView {
         PlaylistView {
             snap: Snap::Bar,
             drag: None,
+            strips: Strips::default(),
             tab: Tab::Patterns,
             library: LibraryBrowser::new(),
             browser_open: true,
@@ -200,15 +241,15 @@ impl PlaylistView {
     }
 
     /// Draws the pattern picker and the playlist. `current` is the
-    /// selected pattern; `playhead` is the song step being played, if
-    /// the song is playing; `tried` is what the library put in the
-    /// selected pattern, if it was the library.
+    /// selected pattern; `playhead` is the step of the playlist being
+    /// played, and which time round, if the song is playing; `tried` is
+    /// what the library put in the selected pattern, if it was the library.
     pub fn show(
         &mut self,
         ui: &mut Ui,
         project: &Project,
         current: usize,
-        playhead: Option<usize>,
+        playhead: Option<(usize, Pass)>,
         tried: Tried,
     ) -> Vec<PlaylistAction> {
         let mut actions = Vec::new();
@@ -257,11 +298,37 @@ impl PlaylistView {
             {
                 actions.push(PlaylistAction::AddTrack);
             }
+            if ui
+                .button("➕ Section")
+                .on_hover_text("Mark the next stretch of the song as a section")
+                .clicked()
+            {
+                actions.push(PlaylistAction::AddSection(next_section(project)));
+            }
+            if let Some(region) = project.playlist().loop_region() {
+                let bars =
+                    |step: usize| step as f32 / project.time_signature.steps_per_bar() as f32;
+                let text = egui::RichText::new(format!(
+                    "🔁 Looping bars {}–{}  ✖",
+                    bars(region.start) + 1.0,
+                    bars(region.end)
+                ))
+                .color(sections::LOOP);
+                if ui
+                    .button(text)
+                    .on_hover_text("Song mode loops this part. Click to play the whole song again.")
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::SetLoop(None));
+                }
+            }
             ui.separator();
             // Cut short with "…" when the window is narrow; the whole
             // sentence shows when you point at it.
             let help = format!(
-                "Click to place \"{current_name}\". Drag clips to move them, right-click to delete."
+                "Click to place \"{current_name}\". Drag clips to move them, drag a clip's \
+                 right edge to repeat it, right-click to delete. Drag along the top strip to \
+                 mark a section, along the bar numbers to loop."
             );
             ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate());
         });
@@ -281,9 +348,11 @@ impl PlaylistView {
         viewport: Rect,
         project: &Project,
         current: usize,
-        playhead: Option<usize>,
+        playhead: Option<(usize, Pass)>,
         actions: &mut Vec<PlaylistAction>,
     ) {
+        let pass = playhead.map(|(_, pass)| pass);
+        let playhead = playhead.map(|(step, _)| step);
         let tracks = project.playlist().tracks();
         let song_length = project.song_length();
         let time = project.time_signature;
@@ -293,7 +362,7 @@ impl PlaylistView {
         );
         let size = vec2(
             HEADER_WIDTH + steps as f32 * STEP_WIDTH,
-            RULER_HEIGHT + tracks.len() as f32 * TRACK_HEIGHT,
+            SECTION_HEIGHT + RULER_HEIGHT + tracks.len() as f32 * TRACK_HEIGHT,
         );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
 
@@ -302,12 +371,19 @@ impl PlaylistView {
         // visible part in screen coordinates, where everything is drawn.
         let visible = viewport.translate(rect.min.to_vec2());
         let layout = Layout {
-            origin: pos2(rect.left() + HEADER_WIDTH, rect.top() + RULER_HEIGHT),
+            origin: pos2(
+                rect.left() + HEADER_WIDTH,
+                rect.top() + SECTION_HEIGHT + RULER_HEIGHT,
+            ),
             tracks: tracks.len(),
         };
-        // The part of the grid not hidden under the track names or the ruler.
+        // The part of the grid not hidden under the track names, the
+        // sections or the ruler.
         let cells = Rect::from_min_max(
-            pos2(visible.left() + HEADER_WIDTH, visible.top() + RULER_HEIGHT),
+            pos2(
+                visible.left() + HEADER_WIDTH,
+                visible.top() + SECTION_HEIGHT + RULER_HEIGHT,
+            ),
             visible.max,
         );
 
@@ -315,6 +391,14 @@ impl PlaylistView {
 
         let painter = ui.painter_at(visible);
         paint_tracks(&painter, layout, steps, time);
+        if let Some(region) = project.playlist().loop_region() {
+            // A light shade over the part of the song that loops.
+            let shade = Rect::from_x_y_ranges(
+                layout.x(region.start)..=layout.x(region.end),
+                cells.top()..=layout.track_top(tracks.len()).min(cells.bottom()),
+            );
+            painter.rect_filled(shade, 0.0, sections::LOOP.gamma_multiply(0.06));
+        }
         paint_clips(&painter, layout, cells, project, current);
         // Lines from the ruler down to the last track.
         let lines = cells.top()..=layout.track_top(tracks.len()).min(cells.bottom());
@@ -336,6 +420,21 @@ impl PlaylistView {
             song_length,
             playhead,
         );
+
+        // The two strips at the top, right of the corner.
+        let left = visible.left() + HEADER_WIDTH;
+        let strip = Rect::from_min_max(
+            pos2(left, visible.top()),
+            pos2(visible.right(), visible.top() + SECTION_HEIGHT),
+        );
+        let ruler = Rect::from_min_max(
+            pos2(left, strip.bottom()),
+            pos2(visible.right(), strip.bottom() + RULER_HEIGHT),
+        );
+        self.strips
+            .sections(ui, layout, strip, project, self.snap, pass, actions);
+        self.strips
+            .loop_ruler(ui, layout, ruler, project, self.snap, actions);
     }
 
     /// The column of track names on the left, which stays put when the
@@ -437,9 +536,11 @@ impl PlaylistView {
             match clip_at(project, layout, pos) {
                 Some(index) => {
                     let clip = clips[index];
+                    let rect = layout.clip_rect(&clip, project.clip_length(&clip));
                     self.drag = Some(ClipDrag {
                         index,
                         grab: step.saturating_sub(clip.start),
+                        stretch: pos.x > rect.right() - CLIP_EDGE,
                     });
                     if clip.pattern != current {
                         actions.push(PlaylistAction::SelectPattern(clip.pattern));
@@ -452,6 +553,7 @@ impl PlaylistView {
                     self.drag = Some(ClipDrag {
                         index: clips.len(),
                         grab: step - start,
+                        stretch: false,
                     });
                 }
             }
@@ -466,10 +568,39 @@ impl PlaylistView {
             actions.push(PlaylistAction::RemoveClip(index));
         }
 
+        // The right edge of a clip stretches it: show it with the cursor.
+        if let Some(pos) = hovered
+            && self.drag.is_none_or(|drag| drag.stretch)
+            && clip_at(project, layout, pos).is_some_and(|index| {
+                let clip = &clips[index];
+                pos.x > layout.clip_rect(clip, project.clip_length(clip)).right() - CLIP_EDGE
+            })
+        {
+            ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
+        }
+
         if !primary_down {
             self.drag = None;
         }
         if let Some(drag) = self.drag
+            && drag.stretch
+            && let Some(pos) = pointer
+            && let Some(clip) = clips.get(drag.index)
+        {
+            // As many whole patterns as reach the pointer, the nearest.
+            let pattern_length = project.pattern(clip.pattern).map_or(0, Pattern::length);
+            let reach = (pos.x - layout.x(clip.start)) / STEP_WIDTH;
+            let repeats = (reach / pattern_length.max(1) as f32)
+                .round()
+                .clamp(1.0, MAX_REPEATS as f32) as usize;
+            if repeats != clip.repeats {
+                actions.push(PlaylistAction::SetClipRepeats {
+                    index: drag.index,
+                    repeats,
+                });
+            }
+            ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
+        } else if let Some(drag) = self.drag
             && let Some(pos) = pointer
             && let Some(clip) = clips.get(drag.index)
         {
@@ -504,6 +635,21 @@ fn picker(ui: &mut Ui, project: &Project, current: usize, actions: &mut Vec<Play
             });
         }
     });
+}
+
+/// The section the "➕ Section" button adds: four bars (or up to the end
+/// of the song, if that is sooner) right after the last section.
+fn next_section(project: &Project) -> Section {
+    let playlist = project.playlist();
+    let bar = project.time_signature.steps_per_bar();
+    let start = playlist.sections().last().map_or(0, Section::end);
+    let song_end = project.song_length();
+    let length = if song_end > start {
+        (song_end - start).min(4 * bar)
+    } else {
+        4 * bar
+    };
+    Section::new(playlist.suggested_section_name(), start, length)
 }
 
 /// The index of the clip under `pos`. Later clips are drawn on top, so
@@ -562,15 +708,35 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
         painter.rect_filled(rect, 3.0, color.gamma_multiply(0.45));
         let title = Rect::from_min_size(rect.min, vec2(rect.width(), CLIP_TITLE));
         painter.rect_filled(title, 3.0, color);
+        let name = if clip.repeats > 1 {
+            format!("{}  ×{}", pattern.name, clip.repeats)
+        } else {
+            pattern.name.clone()
+        };
         painter.with_clip_rect(title.intersect(cells)).text(
             title.left_center() + vec2(3.0, 0.0),
             Align2::LEFT_CENTER,
-            &pattern.name,
+            name,
             FontId::proportional(10.5),
             CLIP_TEXT,
         );
-        let body = Rect::from_min_max(pos2(rect.left(), title.bottom()), rect.max).shrink(2.0);
-        paint_clip_notes(&painter.with_clip_rect(cells), body, pattern);
+        // The notes, once for each time round, with a line between them.
+        let round = pattern.length() as f32 * STEP_WIDTH;
+        let notes_painter = painter.with_clip_rect(cells.intersect(rect));
+        for repeat in 0..clip.repeats {
+            let left = rect.left() + repeat as f32 * round;
+            if repeat > 0 {
+                notes_painter.vline(left, rect.y_range(), Stroke::new(1.0, REPEAT_LINE));
+            }
+            let body = Rect::from_min_max(
+                pos2(left, title.bottom()),
+                pos2(left + round, rect.bottom()),
+            )
+            .shrink(2.0);
+            if body.intersects(cells) {
+                paint_clip_notes(&notes_painter, body, pattern);
+            }
+        }
 
         if clip.pattern == current {
             painter.rect_stroke(
@@ -635,7 +801,10 @@ fn paint_ruler(
     song_length: usize,
     playhead: Option<usize>,
 ) {
-    let ruler = Rect::from_min_size(visible.min, vec2(visible.width(), RULER_HEIGHT));
+    let ruler = Rect::from_min_size(
+        visible.min + vec2(0.0, SECTION_HEIGHT),
+        vec2(visible.width(), RULER_HEIGHT),
+    );
     painter.rect_filled(ruler, 0.0, RULER);
     let ruler_painter = painter.with_clip_rect(Rect::from_min_max(
         pos2(visible.left() + HEADER_WIDTH, ruler.top()),
@@ -667,13 +836,23 @@ fn paint_ruler(
             Stroke::NONE,
         ));
     }
-    // The corner above the track names.
-    let corner = Rect::from_min_size(visible.min, vec2(HEADER_WIDTH, RULER_HEIGHT));
+    // The corner above the track names, which names the two strips.
+    let corner = Rect::from_min_size(
+        visible.min,
+        vec2(HEADER_WIDTH, SECTION_HEIGHT + RULER_HEIGHT),
+    );
     painter.rect_filled(corner, 0.0, RULER);
     painter.text(
-        pos2(corner.left() + 6.0, corner.center().y),
+        pos2(corner.left() + 6.0, corner.top() + SECTION_HEIGHT / 2.0),
         Align2::LEFT_CENTER,
-        "Tracks",
+        "Sections",
+        FontId::proportional(11.0),
+        RULER_TEXT,
+    );
+    painter.text(
+        pos2(corner.left() + 6.0, ruler.center().y),
+        Align2::LEFT_CENTER,
+        "Bars · Tracks",
         FontId::proportional(11.0),
         RULER_TEXT,
     );
