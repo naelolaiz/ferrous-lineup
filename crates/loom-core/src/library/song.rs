@@ -185,12 +185,14 @@ const COMMON: TimeSignature = TimeSignature::COMMON;
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
+const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 
 mod blues;
 mod classical;
 mod electronic;
 mod flamenco;
 mod folk;
+mod folklore;
 mod hiphop;
 mod jazz;
 mod latin;
