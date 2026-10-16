@@ -6,6 +6,7 @@
 //! final chord with a crash at the end. Every demo is an ordinary
 //! project, to take apart and change.
 
+use crate::meter::{TimeMarker, TimeSignature};
 use crate::playlist::Clip;
 use crate::project::Project;
 use crate::tempo::Tempo;
@@ -13,7 +14,7 @@ use crate::tempo::Tempo;
 use super::apply::{self, LEAD};
 use super::chart::accompany;
 use super::comping::Bass;
-use super::rhythm::{FILLS, Rhythm};
+use super::rhythm::{FILLS, RHYTHMS, Rhythm};
 use super::song::{Part, Song};
 use super::style::Style;
 use crate::pattern::NoteEvent;
@@ -148,12 +149,13 @@ fn melody_notes(part: &Part, bar: usize, length: usize) -> Vec<NoteEvent> {
 
 /// A demo project of a song: one pattern per part with the melody, the
 /// chords and the bass, drum patterns, and the parts arranged in order.
+/// A part in a time signature of its own gets a time marker where it
+/// starts, and one back where the song's time comes again.
 pub fn song_demo(song: &Song) -> Project {
     let mut project = Project::empty();
     project.tempo = Tempo::new(song.tempo);
     project.time_signature = song.time;
     project.scale = song.scale();
-    let bar = song.time.steps_per_bar();
 
     let lead = apply::synth_named(&mut project, LEAD);
     let keys = apply::synth_named(&mut project, apply::KEYS);
@@ -166,6 +168,8 @@ pub fn song_demo(song: &Song) -> Project {
     // which the first part uses.
     let mut patterns = Vec::new();
     for (number, part) in song.parts.iter().enumerate() {
+        let time = song.part_time(part);
+        let bar = time.steps_per_bar();
         let length = part.length(bar);
         let index = if number == 0 {
             if let Some(pattern) = project.pattern_mut(0) {
@@ -194,27 +198,47 @@ pub fn song_demo(song: &Song) -> Project {
                 pattern.set_notes(bass, bass_line);
             }
         }
-        patterns.push((part.name, index, length));
+        patterns.push((part.name, index, length, time));
     }
 
     // A drum pattern for each part, with a fill at the end of long ones.
+    // Patterns without clips are counted in the project's time signature,
+    // so it is the part's own while its drums are written.
     let rhythm = Rhythm::named(song.rhythm);
     let mut drums = Vec::new();
     if let Some(rhythm) = rhythm {
-        for &(name, _, length) in &patterns {
-            let long = length >= 4 * bar;
+        for &(name, _, length, time) in &patterns {
+            let Some(rhythm) = rhythm_in(rhythm, time) else {
+                continue;
+            };
+            project.time_signature = time;
+            let long = length >= 4 * time.steps_per_bar();
             let index = drum_pattern(&mut project, &format!("{name} drums"), length, rhythm, long);
             drums.push((name, index));
         }
     }
+    // The ending is a bar of the last part's time.
+    let last_time = song
+        .form
+        .last()
+        .and_then(|name| song.part(name))
+        .map_or(song.time, |part| song.part_time(part));
+    project.time_signature = last_time;
     let end = ending(&mut project, rhythm.is_some());
+    project.time_signature = song.time;
     name_tracks(&mut project, "Song", "Drums");
 
     let mut at = 0;
+    let mut time_here = song.time;
     for (entry, name) in song.form.iter().enumerate() {
-        let Some(&(_, pattern, length)) = patterns.iter().find(|(part, ..)| part == name) else {
+        let Some(&(_, pattern, length, time)) = patterns.iter().find(|(part, ..)| part == name)
+        else {
             continue;
         };
+        if time != time_here {
+            project.set_time_marker(TimeMarker::new(at, time));
+            time_here = time;
+        }
         project.add_clip(Clip::new(pattern, SONG_TRACK, at));
         if entry >= song.drums_from
             && let Some(&(_, drum)) = drums.iter().find(|(part, _)| part == name)
@@ -228,10 +252,23 @@ pub fn song_demo(song: &Song) -> Project {
     project
 }
 
+/// The rhythm to play in a part in `time`: the song's own if it is in
+/// that time, or else one of the same genre that is, or any that is.
+fn rhythm_in(rhythm: &'static Rhythm, time: TimeSignature) -> Option<&'static Rhythm> {
+    if rhythm.time == time {
+        return Some(rhythm);
+    }
+    let in_time = || RHYTHMS.iter().filter(move |other| other.time == time);
+    in_time()
+        .find(|other| other.genre == rhythm.genre)
+        .or_else(|| in_time().next())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::file::{from_text, to_text};
+    use crate::library::song::Part;
     use crate::library::{SONGS, STYLES};
     use crate::pattern::MAX_STEPS;
 
@@ -271,6 +308,57 @@ mod tests {
             let notes: usize = project.patterns().iter().map(|p| p.notes(lead).len()).sum();
             assert!(notes >= 8, "{}: the melody is there", song.name);
         }
+    }
+
+    #[test]
+    fn a_part_in_its_own_time_gets_time_markers() {
+        // A song in 4/4 with one waltz part: three bars of 3/4.
+        let song = SONGS
+            .iter()
+            .find(|song| song.time == TimeSignature::COMMON && !song.rhythm.is_empty())
+            .unwrap();
+        let waltz = TimeSignature::new(3, 4);
+        let waltz_part = Part {
+            name: "Waltz",
+            melody: "C5:12 | E5:12 | G5:12",
+            chords: "I | IV | V",
+            left: "",
+            voices: &[0],
+            time: Some(waltz),
+        };
+        let first = song.form[0];
+        let parts: &'static [Part] =
+            Box::leak(vec![*song.part(first).unwrap(), waltz_part].into_boxed_slice());
+        let form: &'static [&'static str] =
+            Box::leak(vec![first, "Waltz", first].into_boxed_slice());
+        let song = Song {
+            parts,
+            form,
+            drums_from: 0,
+            ..*song
+        };
+        let project = song_demo(&song);
+        let first_length = song.part(first).unwrap().length(16);
+        let markers: Vec<(usize, TimeSignature)> = project
+            .playlist()
+            .time_markers()
+            .iter()
+            .map(|marker| (marker.start, marker.time))
+            .collect();
+        assert_eq!(
+            markers,
+            [
+                (first_length, waltz),
+                (first_length + 36, TimeSignature::COMMON)
+            ]
+        );
+        let drums = project
+            .patterns()
+            .iter()
+            .position(|pattern| pattern.name == "Waltz drums")
+            .expect("the waltz has drums");
+        assert_eq!(project.pattern_time(drums), waltz);
+        assert_eq!(project.patterns()[drums].length(), 36);
     }
 
     #[test]

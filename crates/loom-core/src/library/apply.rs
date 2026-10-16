@@ -199,7 +199,7 @@ pub fn write_rhythm(project: &mut Project, pattern: usize, rhythm: &Rhythm) -> b
         };
         rows.push((drum, channel));
     }
-    let bar = project.time_signature.steps_per_bar();
+    let bar = project.pattern_time(pattern).steps_per_bar();
     let old = drum_channels(project);
     let Some(target) = project.pattern_mut(pattern) else {
         return false;
@@ -223,7 +223,7 @@ pub fn write_fill(project: &mut Project, pattern: usize, fill: &Rhythm, at: usiz
         };
         rows.push((drum, channel));
     }
-    let bar = project.time_signature.steps_per_bar();
+    let bar = project.pattern_time(pattern).steps_per_bar();
     let old = drum_channels(project);
     let Some(target) = project.pattern_mut(pattern) else {
         return false;
@@ -306,7 +306,12 @@ pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bas
     let old_bass = find_synth(project, BASS)
         .map(|channel| target.notes(channel).to_vec())
         .unwrap_or_default();
-    let heard = hear_chords(&old_chords, &old_bass, length, project.time_signature);
+    let heard = hear_chords(
+        &old_chords,
+        &old_bass,
+        length,
+        project.pattern_time(pattern),
+    );
     let played: Vec<_> = heard
         .iter()
         .filter_map(|stretch| stretch.chord.map(|chord| (chord, stretch)))
@@ -404,7 +409,6 @@ fn drums_in(
 /// the time signature and the melody.
 pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
     let (comping, bass) = feel(rhythm);
-    let bar = project.time_signature.steps_per_bar();
     let has_drums = |project: &Project, pattern: usize| {
         let length = project.pattern(pattern).map_or(0, |p| p.length());
         !drums_in(project, pattern, 0, length).is_empty()
@@ -417,6 +421,7 @@ pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
             continue;
         };
         let length = target.length();
+        let bar = project.pattern_time(pattern).steps_per_bar();
         let ending = (0..target.rows())
             .flat_map(|channel| target.notes(channel))
             .all(|note| note.start == 0);

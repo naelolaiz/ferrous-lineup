@@ -13,6 +13,7 @@
 //! time signature, and every channel of the project gets a track of its own.
 
 use crate::arrangement::Play;
+use crate::meter::{Meter, TimeMarker};
 use crate::midi::{DRUM_CHANNEL, MidiMessage};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 use crate::{Note, STEPS_PER_BEAT};
@@ -29,7 +30,8 @@ pub const TICKS_PER_STEP: u32 = TICKS_PER_BEAT as u32 / STEPS_PER_BEAT;
 /// clips and sections written out.
 pub fn song_to_midi(project: &Project) -> Vec<u8> {
     let song = project.arrangement();
-    write_file(project, &song.plays, song.length)
+    let meter = project.played_meter(&song);
+    write_file(project, &meter, &song.plays, song.length)
 }
 
 /// One pattern, from its first step, as pattern mode loops it.
@@ -43,7 +45,8 @@ pub fn pattern_to_midi(project: &Project, pattern: usize) -> Vec<u8> {
         skip: 0,
         length,
     };
-    write_file(project, &[play], length)
+    let meter = Meter::steady(project.pattern_time(pattern));
+    write_file(project, &meter, &[play], length)
 }
 
 /// The note General MIDI drum sets play for each built-in drum.
@@ -66,12 +69,12 @@ pub fn general_midi_drum(drum: Drum) -> Note {
 }
 
 /// Writes a file with the pieces of patterns `placed` for every channel,
-/// lasting `length` steps.
-fn write_file(project: &Project, placed: &[Play], length: usize) -> Vec<u8> {
+/// lasting `length` steps, with bars counted in `meter`.
+fn write_file(project: &Project, meter: &Meter, placed: &[Play], length: usize) -> Vec<u8> {
     let midi_channels = midi_channels(project.channels());
     let end = length as u32 * TICKS_PER_STEP;
 
-    let mut tracks = vec![tempo_track(project, end)];
+    let mut tracks = vec![tempo_track(project, meter, end)];
     for (index, channel) in project.channels().iter().enumerate() {
         if channel.muted {
             continue;
@@ -174,8 +177,8 @@ fn channel_events(
     events
 }
 
-/// The first track: the song's name, tempo and time signature.
-fn tempo_track(project: &Project, end: u32) -> Vec<u8> {
+/// The first track: the song's name, tempo and time signatures.
+fn tempo_track(project: &Project, meter: &Meter, end: u32) -> Vec<u8> {
     let mut track = TrackWriter::default();
     track.meta(0, TRACK_NAME, b"Ferrous Loom");
     // The tempo is written as microseconds per beat, in three bytes.
@@ -185,11 +188,23 @@ fn tempo_track(project: &Project, end: u32) -> Vec<u8> {
     // The time signature: beats to the bar, then the beat's note as a
     // power of two (2 for a quarter, 2^2 = 4; 3 for an eighth), then the
     // MIDI clocks per metronome click (24 per quarter note, 6 per step),
-    // and 8 thirty-seconds per quarter.
-    let signature = project.time_signature;
-    let unit_power = signature.unit.max(1).ilog2() as u8;
-    let clocks = (signature.steps_per_beat() * 6).min(255) as u8;
-    track.meta(0, TIME_SIGNATURE, &[signature.beats, unit_power, clocks, 8]);
+    // and 8 thirty-seconds per quarter. A song that changes time
+    // signature gets one of these at every change.
+    let first = TimeMarker::new(0, meter.first());
+    for marker in std::iter::once(first).chain(meter.markers().iter().copied()) {
+        let tick = marker.start as u32 * TICKS_PER_STEP;
+        if tick > end {
+            break;
+        }
+        let signature = marker.time;
+        let unit_power = signature.unit.max(1).ilog2() as u8;
+        let clocks = (signature.steps_per_beat() * 6).min(255) as u8;
+        track.meta(
+            tick,
+            TIME_SIGNATURE,
+            &[signature.beats, unit_power, clocks, 8],
+        );
+    }
     track.finish(end)
 }
 
@@ -381,6 +396,25 @@ mod tests {
         assert!(
             tracks[0].contains(&(0, vec![0xFF, 0x58, 4, 6, 3, 36, 8])),
             "6/8"
+        );
+    }
+
+    #[test]
+    fn every_change_of_time_signature_is_written() {
+        let mut project = project();
+        project.add_clip(crate::Clip::new(0, 0, 0).repeated(4));
+        project.set_time_marker(TimeMarker::new(32, crate::TimeSignature::new(3, 4)));
+        let tracks = read(&song_to_midi(&project));
+        let signatures: Vec<&(u32, Vec<u8>)> = tracks[0]
+            .iter()
+            .filter(|(_, event)| event[..2] == [0xFF, 0x58])
+            .collect();
+        assert_eq!(
+            signatures,
+            [
+                &(0, vec![0xFF, 0x58, 4, 4, 2, 24, 8]),
+                &(32 * 24, vec![0xFF, 0x58, 4, 3, 2, 24, 8])
+            ]
         );
     }
 
