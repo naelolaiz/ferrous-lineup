@@ -215,8 +215,8 @@ impl Strips {
         }
     }
 
-    /// The loop region on the bar ruler: drag to set it. `ruler` is the
-    /// strip with the bar numbers.
+    /// The bar ruler: click to move the playhead there, drag to set the
+    /// loop region. `ruler` is the strip with the bar numbers.
     pub(super) fn loop_ruler(
         &mut self,
         ui: &mut Ui,
@@ -229,10 +229,25 @@ impl Strips {
         let time = project.time_signature;
         let unit = snap.steps(time);
         let response = ui
-            .interact(ruler, ui.scope_id().with("loop-ruler"), Sense::drag())
-            .on_hover_text("Drag along the bar numbers to loop that part of the song");
+            .interact(
+                ruler,
+                ui.scope_id().with("loop-ruler"),
+                Sense::click_and_drag(),
+            )
+            .on_hover_text(
+                "Click the bar numbers to move the playhead there. Drag along them to loop \
+                 that part of the song",
+            );
         let region = project.playlist().loop_region();
         let painter = ui.painter_at(ruler);
+
+        if response.clicked()
+            && let Some(pos) = response.interact_pointer_pos()
+        {
+            actions.push(PlaylistAction::Seek(
+                snap.floor(layout.step_at(pos.x), time),
+            ));
+        }
 
         if response.drag_started()
             && let Some(pos) = press_origin(ui)

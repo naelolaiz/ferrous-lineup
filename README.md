@@ -7,7 +7,7 @@ arrange them into songs, and learn harmony along the way.
 > Ferrous Loom is an independent project. It is not affiliated with
 > Image-Line or FL Studio.
 
-![Ferrous Loom with the playlist and the harmony keys](screenshots/step-8-harmony-keys.png)
+![Ferrous Loom with the playlist, the channel rack and the harmony keys](screenshots/main-window.png)
 
 ## Status
 

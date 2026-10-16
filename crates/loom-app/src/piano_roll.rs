@@ -88,14 +88,14 @@ const INVERSIONS: [&str; 6] = [
     "5th inversion",
 ];
 
-const ROOT_ROW: Color32 = Color32::from_rgb(70, 58, 52);
-const SCALE_ROW: Color32 = Color32::from_rgb(52, 56, 64);
-const OTHER_ROW: Color32 = Color32::from_rgb(36, 39, 45);
-const ROW_LINE: Color32 = Color32::from_rgb(30, 32, 37);
-const OCTAVE_LINE: Color32 = Color32::from_rgb(20, 21, 25);
-const STEP_LINE: Color32 = Color32::from_rgb(44, 47, 54);
-const BEAT_LINE: Color32 = Color32::from_rgb(68, 72, 82);
-const BAR_LINE: Color32 = Color32::from_rgb(110, 116, 130);
+const ROOT_ROW: Color32 = Color32::from_rgb(78, 70, 60);
+const SCALE_ROW: Color32 = Color32::from_rgb(60, 70, 76);
+const OTHER_ROW: Color32 = Color32::from_rgb(44, 51, 56);
+const ROW_LINE: Color32 = Color32::from_rgb(36, 42, 46);
+const OCTAVE_LINE: Color32 = Color32::from_rgb(22, 26, 29);
+const STEP_LINE: Color32 = Color32::from_rgb(52, 60, 66);
+const BEAT_LINE: Color32 = Color32::from_rgb(34, 40, 44);
+const BAR_LINE: Color32 = Color32::from_rgb(20, 24, 27);
 const WHITE_KEY: Color32 = Color32::from_rgb(222, 224, 228);
 const BLACK_KEY: Color32 = Color32::from_rgb(40, 42, 46);
 const KEY_TEXT: Color32 = Color32::from_rgb(60, 62, 68);
@@ -112,7 +112,7 @@ const OTHER_CHANNEL: Color32 = Color32::from_rgba_premultiplied(70, 76, 90, 110)
 const OTHER_CHANNEL_BORDER: Color32 = Color32::from_rgb(120, 128, 146);
 const SELECTION_BOX: Color32 = Color32::from_rgba_premultiplied(40, 60, 90, 60);
 const PLAYHEAD: Color32 = Color32::from_rgba_premultiplied(64, 38, 12, 60);
-const LANE_BACKGROUND: Color32 = Color32::from_rgb(30, 32, 37);
+const LANE_BACKGROUND: Color32 = Color32::from_rgb(36, 42, 46);
 const LANE_CHORD: Color32 = Color32::from_rgb(72, 88, 120);
 const LANE_TEXT: Color32 = Color32::from_rgb(235, 238, 245);
 const NO_NOTES_BACKGROUND: Color32 = Color32::from_rgb(70, 52, 30);
