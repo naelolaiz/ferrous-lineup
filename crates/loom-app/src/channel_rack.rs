@@ -9,7 +9,7 @@
 use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Rect, Ui};
-use loom_core::{Drum, MAX_CHANNELS, MAX_STEPS, Project};
+use loom_core::{Drum, MAX_CHANNELS, Project};
 
 use crate::widgets;
 
@@ -31,6 +31,7 @@ pub enum RackAction {
     },
     ToggleMute(usize),
     Remove(usize),
+    OpenPianoRoll(usize),
     AddDrum(Drum),
     AddSynth,
     /// Load a WAV file into a channel, or into a new channel if `None`.
@@ -81,6 +82,10 @@ pub fn show(ui: &mut Ui, project: &Project, playhead: Option<usize>) -> Vec<Rack
                     actions.push(RackAction::Preview(index));
                 }
                 name.context_menu(|ui| {
+                    if ui.button("Piano roll").clicked() {
+                        actions.push(RackAction::OpenPianoRoll(index));
+                        ui.close();
+                    }
                     if ui.button("Remove channel").clicked() {
                         actions.push(RackAction::Remove(index));
                         ui.close();
@@ -88,20 +93,31 @@ pub fn show(ui: &mut Ui, project: &Project, playhead: Option<usize>) -> Vec<Rack
                 });
 
                 ui.add_space(6.0);
-                let steps = project.steps(index).copied().unwrap_or([false; MAX_STEPS]);
-                for (step, &on) in steps.iter().enumerate().take(length) {
-                    let beat_group = step / 4;
-                    let response = widgets::step_button(ui, on, beat_group, playhead == Some(step));
-                    if response.clicked() {
-                        actions.push(RackAction::ToggleStep {
-                            channel: index,
-                            step,
-                        });
-                    } else if response.secondary_clicked() {
-                        actions.push(RackAction::ClearStep {
-                            channel: index,
-                            step,
-                        });
+                // Plain steps are shown as buttons; melodies and chords as
+                // a small preview of the piano roll.
+                if project.pattern().is_step_row(index) {
+                    for step in 0..length {
+                        let on = project.pattern().is_on(index, step);
+                        let beat_group = step / 4;
+                        let response =
+                            widgets::step_button(ui, on, beat_group, playhead == Some(step));
+                        if response.clicked() {
+                            actions.push(RackAction::ToggleStep {
+                                channel: index,
+                                step,
+                            });
+                        } else if response.secondary_clicked() {
+                            actions.push(RackAction::ClearStep {
+                                channel: index,
+                                step,
+                            });
+                        }
+                    }
+                } else {
+                    let preview = widgets::mini_roll(ui, project.notes(index), length, playhead)
+                        .on_hover_text("Click to open the piano roll");
+                    if preview.clicked() {
+                        actions.push(RackAction::OpenPianoRoll(index));
                     }
                 }
             });

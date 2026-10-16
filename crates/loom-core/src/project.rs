@@ -1,8 +1,9 @@
-//! The project: channels, the pattern and the tempo, kept in sync.
+//! The project: channels, the pattern, the tempo and the key, kept in sync.
 
 use std::path::PathBuf;
 
-use crate::pattern::{PATTERN_LENGTHS, Pattern, StepRow};
+use crate::harmony::Scale;
+use crate::pattern::{NoteEvent, Pattern};
 use crate::{Note, Tempo};
 
 /// The most channels a project can have. The audio thread reserves room
@@ -45,10 +46,11 @@ pub enum SampleSource {
 /// What kind of instrument a channel is.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChannelKind {
-    /// Plays a recorded or built-in sound from start to end on each step.
+    /// Plays a recorded or built-in sound from start to end for each
+    /// note, faster for higher notes and slower for lower ones.
     Sampler(SampleSource),
-    /// The built-in "Loom Osc" synthesizer, playing one note on each step.
-    Synth { note: Note },
+    /// The built-in "Loom Osc" synthesizer, which can play chords.
+    Synth,
 }
 
 /// One row of the channel rack.
@@ -76,7 +78,7 @@ impl Channel {
     pub fn synth() -> Self {
         Channel {
             name: "Loom Osc".to_string(),
-            kind: ChannelKind::Synth { note: Note::C4 },
+            kind: ChannelKind::Synth,
             volume: 0.6,
             muted: false,
         }
@@ -91,6 +93,8 @@ impl Channel {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Project {
     pub tempo: Tempo,
+    /// The key the piano roll highlights and names chords in.
+    pub scale: Scale,
     channels: Vec<Channel>,
     pattern: Pattern,
 }
@@ -100,27 +104,48 @@ impl Project {
     pub fn empty() -> Self {
         Project {
             tempo: Tempo::default(),
+            scale: Scale::default(),
             channels: Vec::new(),
-            pattern: Pattern::new(0, PATTERN_LENGTHS[0]),
+            pattern: Pattern::new(0, 16),
         }
     }
 
-    /// The starting project: four drums with a simple beat, and a synth.
+    /// The starting project: two bars of a simple beat, and the Loom Osc
+    /// playing the chords C, Am, F and G (I, vi, IV, V in C major).
     pub fn demo() -> Self {
         let mut project = Project::empty();
+        project.pattern.set_length(32);
         for drum in [Drum::Kick, Drum::Clap, Drum::HiHat, Drum::Snare] {
             project.add_channel(Channel::drum(drum));
         }
-        project.add_channel(Channel::synth());
+        let synth = project.add_channel(Channel::synth()).unwrap_or(0);
 
         let beat: [(usize, &[usize]); 3] = [
             (0, &[0, 4, 8, 12]),  // kick: four on the floor
             (1, &[4, 12]),        // clap: beats 2 and 4
             (2, &[2, 6, 10, 14]), // hat: the off-beats
         ];
-        for (channel, steps) in beat {
-            for &step in steps {
-                project.pattern.set(channel, step, true);
+        for bar_start in [0, 16] {
+            for (channel, steps) in beat {
+                for &step in steps {
+                    project.pattern.set(channel, bar_start + step, true);
+                }
+            }
+        }
+
+        // Each chord lasts half a bar: a bass note and three chord notes,
+        // chosen so that each chord moves as little as possible from the
+        // last one (good "voice leading").
+        let chords: [[u8; 4]; 4] = [
+            [48, 60, 64, 67], // C:  C3, C4 E4 G4
+            [45, 57, 60, 64], // Am: A2, A3 C4 E4
+            [41, 57, 60, 65], // F:  F2, A3 C4 F4
+            [43, 59, 62, 67], // G:  G2, B3 D4 G4
+        ];
+        for (i, chord) in chords.iter().enumerate() {
+            for &midi in chord {
+                let note = NoteEvent::new(Note::new(midi), i * 8, 8);
+                project.pattern.add_note(synth, note);
             }
         }
         project
@@ -138,9 +163,9 @@ impl Project {
         &self.pattern
     }
 
-    /// The steps of one channel.
-    pub fn steps(&self, channel: usize) -> Option<&StepRow> {
-        self.pattern.row(channel)
+    /// The notes of one channel.
+    pub fn notes(&self, channel: usize) -> &[NoteEvent] {
+        self.pattern.notes(channel)
     }
 
     /// Flips one step and returns its new value.
@@ -153,11 +178,26 @@ impl Project {
         self.pattern.set(channel, step, on)
     }
 
+    /// Adds a note; see [`Pattern::add_note`].
+    pub fn add_note(&mut self, channel: usize, note: NoteEvent) -> Option<usize> {
+        self.pattern.add_note(channel, note)
+    }
+
+    /// Removes a note; see [`Pattern::remove_note`].
+    pub fn remove_note(&mut self, channel: usize, index: usize) -> Option<NoteEvent> {
+        self.pattern.remove_note(channel, index)
+    }
+
+    /// Replaces a note; see [`Pattern::replace_note`].
+    pub fn replace_note(&mut self, channel: usize, index: usize, note: NoteEvent) -> bool {
+        self.pattern.replace_note(channel, index, note)
+    }
+
     pub fn set_pattern_length(&mut self, length: usize) {
         self.pattern.set_length(length);
     }
 
-    /// Adds a channel at the bottom of the rack, with no steps on.
+    /// Adds a channel at the bottom of the rack, with no notes.
     /// Returns its index, or `None` if the rack is full.
     pub fn add_channel(&mut self, channel: Channel) -> Option<usize> {
         if self.channels.len() >= MAX_CHANNELS {
@@ -168,7 +208,7 @@ impl Project {
         Some(self.channels.len() - 1)
     }
 
-    /// Removes a channel and its steps. Returns the removed channel.
+    /// Removes a channel and its notes. Returns the removed channel.
     pub fn remove_channel(&mut self, index: usize) -> Option<Channel> {
         if index >= self.channels.len() {
             return None;
@@ -194,8 +234,26 @@ mod tests {
         assert_eq!(project.channels().len(), 5);
         assert_eq!(project.channels()[0].name, "Kick");
         assert!(project.pattern().is_on(0, 0));
+        assert!(project.pattern().is_on(0, 16), "the beat repeats in bar 2");
         assert!(project.pattern().is_on(1, 4));
         assert!(!project.pattern().is_on(3, 0), "snare starts empty");
+    }
+
+    #[test]
+    fn demo_plays_a_chord_progression() {
+        use crate::harmony::analyze;
+        let project = Project::demo();
+        let synth = 4;
+        assert!(!project.pattern().is_step_row(synth));
+        let chords: Vec<String> = [0, 8, 16, 24]
+            .into_iter()
+            .map(|step| {
+                analyze(project.pattern().sounding_at(synth, step))
+                    .label(project.scale.spelling())
+                    .unwrap()
+            })
+            .collect();
+        assert_eq!(chords, ["C", "Am", "F", "G"]);
     }
 
     #[test]
@@ -203,7 +261,7 @@ mod tests {
         let mut project = Project::demo();
         let new = project.add_channel(Channel::drum(Drum::Snare)).unwrap();
         assert_eq!(project.pattern().rows(), project.channels().len());
-        assert!(!project.pattern().is_on(new, 0), "new rows start empty");
+        assert!(project.notes(new).is_empty(), "new rows start empty");
 
         // Removing the kick moves the clap's steps up to row 0.
         let removed = project.remove_channel(0).unwrap();

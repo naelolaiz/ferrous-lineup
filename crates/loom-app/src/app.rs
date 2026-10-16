@@ -6,9 +6,10 @@ use std::sync::Arc;
 use eframe::egui;
 use loom_audio::instrument::Sampler;
 use loom_audio::{AudioEngine, Command, Instrument, SampleData};
-use loom_core::{Channel, ChannelKind, MAX_STEPS, PATTERN_LENGTHS, Project, SampleSource, Tempo};
+use loom_core::{Channel, ChannelKind, PATTERN_LENGTHS, Project, SampleSource, Tempo};
 
 use crate::channel_rack::{self, RackAction};
+use crate::piano_roll::{PianoRoll, RollAction};
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
@@ -28,6 +29,7 @@ pub struct LoomApp {
     project: Project,
     playing: bool,
     master_volume: f32,
+    piano_roll: PianoRoll,
     /// The last problem to show in the status bar, such as a bad WAV file.
     message: Option<String>,
 }
@@ -42,11 +44,21 @@ impl LoomApp {
             Err(err) => Audio::Unavailable(err.to_string()),
         };
 
+        let project = Project::demo();
+        // Open the piano roll on the first synth, so the demo chords show.
+        let synth = project
+            .channels()
+            .iter()
+            .position(|channel| channel.kind == ChannelKind::Synth);
+        let mut piano_roll = PianoRoll::new(synth.unwrap_or(0));
+        piano_roll.open = synth.is_some();
+
         let mut app = LoomApp {
             audio,
-            project: Project::demo(),
+            project,
             playing: false,
             master_volume: 0.8,
+            piano_roll,
             message: None,
         };
         app.send_whole_project();
@@ -92,18 +104,20 @@ impl LoomApp {
     /// Sends channel `index` of the project to the audio thread as a new channel.
     fn send_new_channel(&mut self, index: usize) {
         let channel = self.project.channels()[index].clone();
-        let steps = self
-            .project
-            .steps(index)
-            .copied()
-            .unwrap_or([false; MAX_STEPS]);
+        let notes = self.project.notes(index).to_vec();
         let instrument = self.build_instrument(&channel.kind);
         self.send(Command::AddChannel {
             instrument,
-            steps,
+            notes,
             volume: channel.volume,
             muted: channel.muted,
         });
+    }
+
+    /// Sends a fresh copy of a channel's notes to the audio thread.
+    fn send_notes(&mut self, channel: usize) {
+        let notes = self.project.notes(channel).to_vec();
+        self.send(Command::SetNotes { channel, notes });
     }
 
     fn set_playing(&mut self, playing: bool) {
@@ -119,17 +133,13 @@ impl LoomApp {
     fn apply(&mut self, action: RackAction) {
         match action {
             RackAction::ToggleStep { channel, step } => {
-                if let Some(on) = self.project.toggle_step(channel, step) {
-                    self.send(Command::SetStep { channel, step, on });
+                if self.project.toggle_step(channel, step).is_some() {
+                    self.send_notes(channel);
                 }
             }
             RackAction::ClearStep { channel, step } => {
                 if self.project.set_step(channel, step, false) {
-                    self.send(Command::SetStep {
-                        channel,
-                        step,
-                        on: false,
-                    });
+                    self.send_notes(channel);
                 }
             }
             RackAction::Preview(channel) => self.send(Command::Preview(channel)),
@@ -149,11 +159,48 @@ impl LoomApp {
             RackAction::Remove(channel) => {
                 if self.project.remove_channel(channel).is_some() {
                     self.send(Command::RemoveChannel(channel));
+                    self.piano_roll.channel_removed(channel);
                 }
             }
+            RackAction::OpenPianoRoll(channel) => self.piano_roll.open_for(channel),
             RackAction::AddDrum(drum) => self.add_channel(Channel::drum(drum)),
             RackAction::AddSynth => self.add_channel(Channel::synth()),
             RackAction::LoadSample { channel, path } => self.load_sample(channel, path),
+        }
+    }
+
+    /// Applies one action from the piano roll to the project and the audio thread.
+    fn apply_roll(&mut self, action: RollAction) {
+        match action {
+            RollAction::AddNotes { channel, notes } => {
+                let mut added = false;
+                for note in notes {
+                    added |= self.project.add_note(channel, note).is_some();
+                }
+                if added {
+                    self.send_notes(channel);
+                }
+            }
+            RollAction::RemoveNote { channel, index } => {
+                if self.project.remove_note(channel, index).is_some() {
+                    self.send_notes(channel);
+                }
+            }
+            RollAction::ReplaceNote {
+                channel,
+                index,
+                note,
+            } => {
+                if self.project.replace_note(channel, index, note) {
+                    self.send_notes(channel);
+                }
+            }
+            RollAction::Preview { channel, pitches } => {
+                for pitch in pitches {
+                    self.send(Command::PreviewNote { channel, pitch });
+                }
+            }
+            RollAction::SetScale(scale) => self.project.scale = scale,
         }
     }
 
@@ -196,7 +243,7 @@ impl LoomApp {
                 if self.project.add_channel(new_channel).is_some() {
                     self.send(Command::AddChannel {
                         instrument,
-                        steps: [false; MAX_STEPS],
+                        notes: Vec::new(),
                         volume: 0.8,
                         muted: false,
                     });
@@ -242,6 +289,10 @@ impl LoomApp {
                 self.project.set_pattern_length(length);
                 self.send(Command::SetPatternLength(length));
             }
+
+            ui.separator();
+            ui.toggle_value(&mut self.piano_roll.open, "🎹 Piano roll")
+                .on_hover_text("Shortcut: F7");
 
             ui.separator();
             let volume_slider = egui::Slider::new(&mut self.master_volume, 0.0..=1.0)
@@ -298,6 +349,9 @@ impl eframe::App for LoomApp {
         if !typing && ui.ctx().input(|input| input.key_pressed(egui::Key::Space)) {
             self.set_playing(!self.playing);
         }
+        if ui.ctx().input(|input| input.key_pressed(egui::Key::F7)) {
+            self.piano_roll.open = !self.piano_roll.open;
+        }
         if self.playing {
             // Keep redrawing so the playhead moves.
             ui.ctx().request_repaint();
@@ -316,6 +370,12 @@ impl eframe::App for LoomApp {
             .inner;
         for action in actions {
             self.apply(action);
+        }
+
+        // The piano roll is a floating window on top of the panels.
+        let roll_actions = self.piano_roll.show(ui.ctx(), &self.project, playhead);
+        for action in roll_actions {
+            self.apply_roll(action);
         }
     }
 }
