@@ -24,10 +24,15 @@ const MINI_ROLL_NOTE: Color32 = Color32::from_rgb(118, 214, 140);
 
 pub const STEP_SIZE: egui::Vec2 = vec2(20.0, 28.0);
 
+/// The size of a step button in `ui`, which grows with its window's zoom.
+pub fn step_size(ui: &Ui) -> egui::Vec2 {
+    STEP_SIZE * zoom(ui)
+}
+
 /// One step of the sequencer. `beat_group` is 0 or 1 and picks the
 /// background color; `is_playhead` outlines the step that is playing.
 pub fn step_button(ui: &mut Ui, on: bool, beat_group: usize, is_playhead: bool) -> Response {
-    let (rect, response) = ui.allocate_exact_size(STEP_SIZE, Sense::click());
+    let (rect, response) = ui.allocate_exact_size(step_size(ui), Sense::click());
 
     if ui.is_rect_visible(rect) {
         let mut fill = if on {
@@ -66,7 +71,9 @@ pub fn step_button(ui: &mut Ui, on: bool, beat_group: usize, is_playhead: bool) 
 /// A round knob for a value from 0.0 to 1.0. Drag up or down to turn it;
 /// double-click to reset it to `default`.
 pub fn knob(ui: &mut Ui, value: &mut f32, default: f32) -> Response {
-    let (rect, mut response) = ui.allocate_exact_size(vec2(24.0, 24.0), Sense::click_and_drag());
+    let zoom = zoom(ui);
+    let (rect, mut response) =
+        ui.allocate_exact_size(vec2(24.0, 24.0) * zoom, Sense::click_and_drag());
 
     if response.dragged() {
         let delta = -response.drag_delta().y * 0.005;
@@ -81,7 +88,7 @@ pub fn knob(ui: &mut Ui, value: &mut f32, default: f32) -> Response {
     if ui.is_rect_visible(rect) {
         let painter = ui.painter();
         let center = rect.center();
-        let radius = 9.0;
+        let radius = 9.0 * zoom;
         let visuals = ui.style().interact(&response);
         painter.circle_filled(center, radius, visuals.bg_fill);
         painter.circle_stroke(center, radius, visuals.bg_stroke);
@@ -99,10 +106,11 @@ pub fn knob(ui: &mut Ui, value: &mut f32, default: f32) -> Response {
 
 /// A small light that is green while the channel is enabled.
 pub fn mute_light(ui: &mut Ui, enabled: bool) -> Response {
-    let (rect, response) = ui.allocate_exact_size(vec2(14.0, 24.0), Sense::click());
+    let zoom = zoom(ui);
+    let (rect, response) = ui.allocate_exact_size(vec2(14.0, 24.0) * zoom, Sense::click());
     if ui.is_rect_visible(rect) {
         let color = if enabled { LED_ON } else { LED_OFF };
-        ui.painter().circle_filled(rect.center(), 4.5, color);
+        ui.painter().circle_filled(rect.center(), 4.5 * zoom, color);
     }
     response
 }
@@ -118,8 +126,9 @@ pub fn mini_roll(
     // Step buttons have a gap between them, so one step takes up the
     // button's width plus the gap. The preview must line up with them.
     let gap = ui.spacing().item_spacing.x;
-    let step_width = STEP_SIZE.x + gap;
-    let size = vec2(step_width * length as f32 - gap, STEP_SIZE.y);
+    let step_size = step_size(ui);
+    let step_width = step_size.x + gap;
+    let size = vec2(step_width * length as f32 - gap, step_size.y);
     let (rect, response) = ui.allocate_exact_size(size, Sense::click());
     if !ui.is_rect_visible(rect) {
         return response;
@@ -158,8 +167,42 @@ pub fn mini_roll(
     if let Some(step) = playhead.filter(|&step| step < length) {
         let x = rect.left() + step as f32 * step_width;
         let column =
-            Rect::from_min_max(pos2(x, inner.top()), pos2(x + STEP_SIZE.x, inner.bottom()));
+            Rect::from_min_max(pos2(x, inner.top()), pos2(x + step_size.x, inner.bottom()));
         painter.rect_stroke(column, 2.0, Stroke::new(2.0, PLAYHEAD), StrokeKind::Inside);
     }
     response
+}
+
+/// Scales the text and spacing of a window's contents by `scale`, and
+/// remembers it for [`zoom`]. Called first thing inside the window.
+pub fn zoom_contents(ui: &mut egui::Ui, scale: f32) {
+    ui.ctx()
+        .data_mut(|data| data.insert_temp(egui::Id::unique(("scale", ui.layer_id())), scale));
+    if scale == 1.0 {
+        return;
+    }
+    let style = ui.style_mut();
+    for font in style.text_styles.values_mut() {
+        font.size *= scale;
+    }
+    let spacing = &mut style.spacing;
+    spacing.item_spacing *= scale;
+    spacing.button_padding *= scale;
+    spacing.interact_size *= scale;
+    spacing.indent *= scale;
+    spacing.slider_width *= scale;
+    spacing.combo_width *= scale;
+    spacing.text_edit_width *= scale;
+    spacing.icon_width *= scale;
+    spacing.icon_width_inner *= scale;
+    spacing.icon_spacing *= scale;
+    spacing.combo_height *= scale;
+}
+
+/// How much bigger than usual the window `ui` is in should draw what it
+/// draws itself: 1.0 unless [`zoom_contents`] said otherwise.
+pub fn zoom(ui: &egui::Ui) -> f32 {
+    ui.ctx()
+        .data(|data| data.get_temp(egui::Id::unique(("scale", ui.layer_id()))))
+        .unwrap_or(1.0)
 }

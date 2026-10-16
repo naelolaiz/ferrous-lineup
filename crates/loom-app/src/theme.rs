@@ -189,9 +189,9 @@ pub fn lcd_frame(
 /// `clicked()`.
 pub fn light_button(ui: &mut Ui, text: &str, on: bool, color: Option<Color32>) -> Response {
     let light = color.unwrap_or(ACCENT);
-    // A lone symbol (play, stop, record) is drawn bigger, on a square
-    // button.
-    let icon = text.chars().count() == 1;
+    // A symbol with no letters (play, stop, record) is drawn bigger, on
+    // a square button.
+    let icon = !text.chars().any(char::is_alphanumeric);
     let mut text = RichText::new(text);
     if icon {
         text = text.size(16.0);

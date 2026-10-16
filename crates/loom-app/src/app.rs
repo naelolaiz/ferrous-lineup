@@ -25,16 +25,17 @@ use loom_audio::{
     AudioEngine, ChannelNotes, Command, Instrument, PlayMode, SampleCache, SampleData,
 };
 use loom_core::{
-    Channel, ChannelKind, DEFAULT_VELOCITY, History, MidiMessage, Note, Pattern, Project,
+    Channel, ChannelKind, DEFAULT_VELOCITY, History, MidiMessage, Note, Pass, Pattern, Project,
     SampleSource, Tempo,
 };
 
 use crate::channel_rack::{self, RackAction};
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
 use crate::midi::Midi;
-use crate::piano_roll::{PianoRoll, RollAction};
+use crate::piano_roll::{self, PianoRoll, RollAction};
 use crate::playlist::{self, PlaylistAction, PlaylistView};
 use crate::theme::{self, HintBar};
+use crate::widgets;
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
@@ -96,6 +97,15 @@ pub struct LoomApp {
     notice: Option<String>,
     /// The line at the top that says what the thing under the mouse does.
     hint_bar: HintBar,
+    /// A window to show in front of the others on the next frame.
+    bring_to_front: Option<egui::Id>,
+    /// The part of the screen the zoom keys zoom: the one clicked last.
+    zoom_area: view::Area,
+}
+
+/// The id of the channel rack window.
+fn rack_id() -> egui::Id {
+    egui::Id::unique("channel-rack")
 }
 
 impl LoomApp {
@@ -104,6 +114,10 @@ impl LoomApp {
     /// otherwise the demo song is.
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         theme::apply(&cc.egui_ctx);
+        // The zoom keys zoom one part of the screen at a time, not all of
+        // it as egui would (see view.rs).
+        cc.egui_ctx
+            .options_mut(|options| options.zoom_with_keyboard = false);
 
         let mut audio = match AudioEngine::start() {
             Ok(engine) => Audio::Running(Box::new(engine)),
@@ -140,6 +154,8 @@ impl LoomApp {
             message: None,
             notice: None,
             hint_bar: HintBar::default(),
+            bring_to_front: None,
+            zoom_area: view::Area::Main,
         };
         app.send_whole_project();
         if let Some(path) = path {
@@ -227,11 +243,14 @@ impl LoomApp {
         }
     }
 
-    /// The song: the clips on tracks that are not muted, and its length.
+    /// The song as song mode plays it: the clips on tracks that are not
+    /// muted, with every repeat unrolled, cut to the loop region if one
+    /// is set.
     fn song_command(&self) -> Command {
+        let song = self.project.playback_arrangement();
         Command::SetSong {
-            clips: self.project.playlist().audible_clips().collect(),
-            length: self.project.song_length(),
+            plays: song.plays,
+            length: song.length,
         }
     }
 
@@ -281,7 +300,7 @@ impl LoomApp {
     fn loop_length(&self) -> usize {
         let length = match self.mode {
             PlayMode::Pattern => self.project.patterns()[self.pattern].length(),
-            PlayMode::Song => self.project.song_length(),
+            PlayMode::Song => self.project.playback_arrangement().length,
         };
         if length == 0 {
             self.project.time_signature.steps_per_bar()
@@ -327,6 +346,36 @@ impl LoomApp {
             self.marker = 0;
             self.send(Command::SetMode(mode));
         }
+    }
+
+    /// Opens the editor that suits a pattern, as a double-click on one of
+    /// its clips does: the piano roll when it has melodies or chords, on
+    /// the channel that plays them, and the channel rack for drums.
+    fn edit_clip(&mut self, pattern: usize) {
+        self.select_pattern(pattern);
+        let Some(notes) = self.project.pattern(pattern) else {
+            return;
+        };
+        let current = self.piano_roll.channel();
+        let melodic = |channel| notes.notes(channel).iter().any(|note| !note.is_step());
+        let channel = if melodic(current) {
+            Some(current)
+        } else {
+            piano_roll::busiest_channel(notes)
+        };
+        match channel {
+            Some(channel) => {
+                self.piano_roll.open_for(channel);
+                self.bring_to_front = Some(PianoRoll::id());
+            }
+            None => self.show_rack(),
+        }
+    }
+
+    /// Opens the channel rack and brings it in front of the other windows.
+    fn show_rack(&mut self) {
+        self.rack_open = true;
+        self.bring_to_front = Some(rack_id());
     }
 
     fn select_pattern(&mut self, pattern: usize) {
@@ -391,6 +440,7 @@ impl LoomApp {
                 self.edit("delete channel", |project| project.remove_channel(channel));
             }
             RackAction::OpenPianoRoll(channel) => self.piano_roll.open_for(channel),
+            RackAction::SelectPattern(pattern) => self.select_pattern(pattern),
             RackAction::AddDrum(drum) => self.add_channel(Channel::drum(drum)),
             RackAction::AddSynth => self.add_channel(Channel::synth()),
             RackAction::AddMidiOut => self.add_channel(Channel::midi_out(0)),
@@ -456,6 +506,8 @@ impl LoomApp {
                 }
             }
             RollAction::SetScale(scale) => self.edit("change key", |project| project.scale = scale),
+            RollAction::SelectPattern(pattern) => self.select_pattern(pattern),
+            RollAction::OpenRack => self.show_rack(),
         }
     }
 
@@ -506,6 +558,7 @@ impl LoomApp {
                     project.move_clip(index, track, start)
                 });
             }
+            PlaylistAction::EditClip(pattern) => self.edit_clip(pattern),
             PlaylistAction::RemoveClip(index) => {
                 self.edit("delete clips", |project| project.remove_clip(index));
             }
@@ -537,7 +590,42 @@ impl LoomApp {
             }
             PlaylistAction::Seek(step) => {
                 self.set_mode(PlayMode::Song);
+                // The playlist's timeline counts a repeated stretch once;
+                // the audio thread counts every time round.
+                let song = self.project.playback_arrangement();
+                let step = song
+                    .passes
+                    .iter()
+                    .find(|pass| (pass.from..pass.from + pass.length).contains(&step))
+                    .map_or(0, |pass| pass.start + (step - pass.from));
                 self.seek(step);
+            }
+            PlaylistAction::SetClipRepeats { index, repeats } => {
+                self.edit("repeat clip", |project| {
+                    project.set_clip_repeats(index, repeats)
+                });
+            }
+            PlaylistAction::AddSection(section) => {
+                self.edit("add section", |project| project.add_section(section));
+            }
+            PlaylistAction::SetSection { index, section } => {
+                self.edit("change section", |project| {
+                    project.set_section(index, section)
+                });
+            }
+            PlaylistAction::RemoveSection(index) => {
+                self.edit("delete section", |project| project.remove_section(index));
+            }
+            PlaylistAction::DuplicateSection(index) => {
+                self.edit("duplicate section", |project| {
+                    project.duplicate_section(index, 1)
+                });
+            }
+            PlaylistAction::UnrollSection(index) => {
+                self.edit("write out repeats", |project| project.unroll_section(index));
+            }
+            PlaylistAction::SetLoop(region) => {
+                self.edit("set loop", |project| project.set_loop_region(region));
             }
             PlaylistAction::Library(action) => self.try_from_library(action),
         }
@@ -625,7 +713,7 @@ impl LoomApp {
                     self.skip_bars(-1);
                 }
                 let (icon, text) = if self.playing {
-                    ("⏸", "Pause: stop here, and carry on from here next time")
+                    ("❚❚", "Pause: stop here, and carry on from here next time")
                 } else {
                     ("▶", "Play from the playhead (Space)")
                 };
@@ -670,7 +758,7 @@ impl LoomApp {
             {
                 self.edit("change tempo", |project| project.tempo = Tempo::new(bpm));
             }
-            let position = theme::lcd(ui, "BAR : BEAT : STEP", &self.position_text(), 104.0);
+            let position = theme::lcd(ui, "BAR : BEAT : STEP", &self.position_text(), 92.0);
             theme::hint(
                 position,
                 "Where the playhead is: in the pattern (PAT) or the song (SONG). Click the \
@@ -680,7 +768,7 @@ impl LoomApp {
             theme::group(ui, |ui| self.pattern_selector(ui));
 
             theme::group(ui, |ui| {
-                let rack = theme::light_button(ui, "▦ Channel rack", self.rack_open, None);
+                let rack = theme::light_button(ui, "▦ Rack", self.rack_open, None);
                 if theme::hint(rack, "Show or hide the channel rack: the steps (F6)").clicked() {
                     self.rack_open = !self.rack_open;
                 }
@@ -708,10 +796,10 @@ impl LoomApp {
             theme::group(ui, |ui| {
                 // The label goes first, as its own widget, so the slider
                 // and its name wrap to the next row together.
-                ui.label(egui::RichText::new("MASTER").small().color(theme::TEXT_DIM));
+                ui.label(egui::RichText::new("VOL").small().color(theme::TEXT_DIM));
                 let volume_slider =
                     egui::Slider::new(&mut self.master_volume, 0.0..=1.0).show_value(false);
-                let volume = ui.add_sized([90.0, 22.0], volume_slider);
+                let volume = ui.add_sized([70.0, 22.0], volume_slider);
                 let text = format!("Master volume: {:.0}%", self.master_volume * 100.0);
                 if theme::hint(volume, text).changed() {
                     self.send(Command::SetMasterVolume(self.master_volume));
@@ -887,7 +975,10 @@ impl LoomApp {
         let step = self.playhead()?;
         match self.mode {
             PlayMode::Pattern => Some(step),
-            PlayMode::Song => self.project.pattern_step_in_song(self.pattern, step),
+            PlayMode::Song => {
+                let (step, _) = self.song_position()?;
+                self.project.pattern_step_in_song(self.pattern, step)
+            }
         }
     }
 
@@ -897,18 +988,28 @@ impl LoomApp {
             (Some(step), PlayMode::Pattern) => {
                 self.project.chord_notes_in_pattern(self.pattern, step)
             }
-            (Some(step), PlayMode::Song) => self.project.chord_notes_in_song(step),
+            (Some(_), PlayMode::Song) => match self.song_position() {
+                Some((step, _)) => self.project.chord_notes_in_song(step),
+                None => Vec::new(),
+            },
             (None, _) => Vec::new(),
         }
     }
 
-    /// The song step being played, for the playlist (song mode only).
-    /// While stopped, it is where Play will start.
-    fn song_playhead(&self) -> Option<usize> {
-        match self.mode {
-            PlayMode::Song => self.playhead().or(Some(self.cursor)),
-            PlayMode::Pattern => None,
+    /// Where the song is, in song mode: the step of the playlist's
+    /// timeline being played (or where Play starts, while stopped), and which time round it is if it repeats.
+    /// The audio thread counts steps of the song as played, so a chorus
+    /// played twice counts twice; the arrangement turns that back into a
+    /// place in the playlist.
+    fn song_position(&self) -> Option<(usize, Pass)> {
+        if self.mode != PlayMode::Song {
+            return None;
         }
+        // While stopped, where Play will start.
+        let step = self.playhead().unwrap_or(self.cursor);
+        let song = self.project.playback_arrangement();
+        let pass = *song.pass_at(step)?;
+        Some((pass.from + (step - pass.start), pass))
     }
 
     fn keyboard_shortcuts(&mut self, ctx: &egui::Context) {
@@ -937,6 +1038,7 @@ impl LoomApp {
             });
         }
         self.view_shortcuts(ctx);
+        self.zoom_shortcuts(ctx);
         self.file_shortcuts(ctx);
         if !typing {
             // While typing, Ctrl+Z belongs to the text field.
@@ -1004,11 +1106,11 @@ impl eframe::App for LoomApp {
             self.apply_harmony(action);
         }
 
-        let song_playhead = self.song_playhead();
+        let song_position = self.song_position();
         let tried = self.tried();
         let playlist = egui::CentralPanel::default_margins().show(ui, |ui| {
             self.playlist
-                .show(ui, &self.project, self.pattern, song_playhead, tried)
+                .show(ui, &self.project, self.pattern, song_position, tried)
         });
         // The windows stay over the playlist, so they never hide the
         // toolbar, the harmony keys or the status bar.
@@ -1022,13 +1124,30 @@ impl eframe::App for LoomApp {
         let playhead = self.pattern_playhead();
         let mut rack_open = self.rack_open;
         let pattern_name = &self.project.patterns()[self.pattern].name;
+        if let Some(id) = self.bring_to_front.take() {
+            ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, id));
+        }
+        // The rack opens as big as its rows, up to the size of the
+        // playlist; it can be resized, and scrolls when made smaller.
+        let rack_scale = Self::window_scale(&ctx, view::Area::Rack);
+        let natural =
+            channel_rack::natural_size(&ctx.global_style(), &self.project, self.pattern, 1.0)
+                * rack_scale;
+        // A window's default size is its outside: the contents, the frame
+        // around them and the title bar.
+        let style = ctx.global_style();
+        let frame = style.spacing.window_margin.sum();
+        let title = style.text_styles[&egui::TextStyle::Heading].size + 2.0 * frame.y;
+        let rack_size = natural + frame + egui::vec2(0.0, title);
         let rack_actions = egui::Window::new(format!("Channel rack · {pattern_name}"))
-            .id(egui::Id::unique("channel-rack"))
+            .id(rack_id())
             .open(&mut rack_open)
             .default_pos([240.0, 380.0])
+            .default_size(rack_size.min(area.size() - egui::vec2(40.0, 80.0)))
             .constrain_to(area)
-            .resizable(false)
+            .resizable(true)
             .show(&ctx, |ui| {
+                widgets::zoom_contents(ui, rack_scale);
                 let selected = self.piano_roll.channel();
                 channel_rack::show(ui, &self.project, self.pattern, selected, playhead)
             })
@@ -1041,9 +1160,16 @@ impl eframe::App for LoomApp {
 
         let held = self.live.held_pitches();
         self.piano_roll.hints = self.harmony_keys.hints;
-        let roll_actions =
-            self.piano_roll
-                .show(&ctx, &self.project, self.pattern, playhead, &held, area);
+        let roll_scale = Self::window_scale(&ctx, view::Area::PianoRoll);
+        let roll_actions = self.piano_roll.show(
+            &ctx,
+            &self.project,
+            self.pattern,
+            playhead,
+            &held,
+            area,
+            roll_scale,
+        );
         for action in roll_actions {
             self.apply_roll(action);
         }
