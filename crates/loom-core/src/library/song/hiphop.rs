@@ -75,14 +75,15 @@ pub(super) const PRELUDE_IN_C: Song = Song {
         "C4:2 E4 G4 C5 E5 G4 C5 E5 | C4 D4 A4 D5 F5 A4 D5 F5 | B3 D4 G4 D5 F5 G4 D5 F5 | \
          C4 E4 G4 C5 E5 G4 C5 E5 | C4 E4 A4 E5 A5 A4 E5 A5 | C4 D4 F#4 A4 D5 F#4 A4 D5 | \
          B3 D4 G4 D5 G5 G4 D5 G5 | B3 C4 E4 G4 C5 E4 G4 C5 | A3 C4 E4 G4 C5 E4 G4 C5 | \
-         D3 A3 D4 F#4 C5 D4 F#4 C5 | G3 B3 D4 G4 B4 D4 G4 B4 | B3 D4 G4 D5 F5 G4 D5 F5",
-        "I | ii7 | V7 | I | vi | II7 | V | Imaj7 | vi7 | II7 | V | V7",
+         D3 A3 D4 F#4 C5 D4 F#4 C5 | G3 B3 D4 G4 B4 D4 G4 B4 | G3 Bb3 E4 G4 C#5 E4 G4 C#5",
+        "I | ii7 | V7 | I | vi | II7 | V | Imaj7 | vi7 | II7 | V | #iv°7",
     )],
     form: &["Prelude", "Prelude", "Prelude"],
     drums_from: 0,
     about: "Bach's prelude has no tune at all: each bar is one chord, broken into the same \
             rising figure. That makes it a perfect sample for a hip hop beat. Listen to how \
-            each chord changes as few notes as it can.",
+            each chord changes as few notes as it can. Bar 12 is the diminished seventh on \
+            C sharp, over a G in the bass, that Bach uses to slip towards D minor.",
 };
 
 pub(super) const SAKURA: Song = Song {
