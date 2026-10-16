@@ -1,0 +1,10 @@
+[package]
+name = "loom-core"
+description = "Music data types and theory for Ferrous Loom (no audio, no UI)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
