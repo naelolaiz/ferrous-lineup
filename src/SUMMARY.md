@@ -60,6 +60,7 @@
   - [Only the tracks you use](step-8/only-the-tracks-you-use.md)
   - [Changing time signature partway through](step-8/time-markers.md)
   - [Changing key: moving the song, and snapping to the scale](step-8/changing-key.md)
+  - [The accompaniment follows your chords](step-8/chord-follow.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
