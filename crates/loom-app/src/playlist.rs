@@ -31,6 +31,8 @@ pub enum PlaylistAction {
         start: usize,
     },
     RemoveClip(usize),
+    /// Open the editor for a clip's pattern (a double-click on the clip).
+    EditClip(usize),
     ToggleTrackMute(usize),
     RenameTrack {
         track: usize,
@@ -261,7 +263,7 @@ impl PlaylistView {
             // Cut short with "…" when the window is narrow; the whole
             // sentence shows when you point at it.
             let help = format!(
-                "Click to place \"{current_name}\". Drag clips to move them, right-click to delete."
+                "Click to place \"{current_name}\". Double-click a clip to edit it, drag to move it, right-click to delete."
             );
             ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate());
         });
@@ -455,6 +457,20 @@ impl PlaylistView {
                     });
                 }
             }
+        }
+
+        // A double-click opens the clip's pattern in its editor.
+        let double_clicked = ui.input(|input| {
+            input
+                .pointer
+                .button_double_clicked(egui::PointerButton::Primary)
+        });
+        if double_clicked
+            && response.hovered()
+            && let Some(pos) = pointer.filter(|pos| cells.contains(*pos))
+            && let Some(index) = clip_at(project, layout, pos)
+        {
+            actions.push(PlaylistAction::EditClip(clips[index].pattern));
         }
 
         // Deleting follows the pointer, so a right-drag sweeps clips away.
