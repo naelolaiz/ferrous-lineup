@@ -52,6 +52,7 @@
   - [The library: knowledge as data](step-8/library.md)
   - [From the library to patterns and demos](step-8/patterns-and-demos.md)
   - [Fitting any window: wrapping, zoom and remembering](step-8/fitting-the-window.md)
+  - [Finding your notes: empty patterns, double-clicks and a zoom for each window](step-8/finding-your-notes.md)
   - [Exercises](step-8/exercises.md)
 
 ---

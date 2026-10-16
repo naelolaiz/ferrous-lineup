@@ -102,3 +102,14 @@ Which other settings would you remember the same way? Whether the
 channel rack is open is one.
 
 *Practices:* Cargo features, serde derives, the `eframe::App` trait.
+
+## 8. Zoom the popups too (loom-app, small)
+
+Zoom the piano roll to 150% and open its Draw menu: the menu is drawn at
+the main window's size. A popup is a layer of its own, so it never sees
+the style the window's contents changed (see [Finding your
+notes](finding-your-notes.md)). Find where egui lets you change the
+style of a popup or a combo box, and give it the window's scale.
+
+*Practices:* reading a library's source, egui's layers and styles.
+
