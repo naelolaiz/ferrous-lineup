@@ -32,6 +32,7 @@ pub(super) enum Pending {
     Open,
     OpenPath(PathBuf),
     Demo(Demo),
+    Import,
     Quit,
 }
 
@@ -115,6 +116,14 @@ impl LoomApp {
                 ui.close();
             }
             self.demos_menu(ui);
+            if ui
+                .button("Import recording…")
+                .on_hover_text("Open an MP3 or WAV file and add chords that follow it")
+                .clicked()
+            {
+                self.request(&ctx, Pending::Import);
+                ui.close();
+            }
             ui.separator();
             if ui.add(item("Save", SAVE)).clicked() {
                 self.save();
@@ -206,6 +215,7 @@ impl LoomApp {
             }
             Pending::OpenPath(path) => self.open_now(path),
             Pending::Demo(demo) => self.open_demo(demo),
+            Pending::Import => self.import_recording(),
             Pending::Quit => {
                 self.file.quitting = true;
                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -214,6 +224,10 @@ impl LoomApp {
     }
 
     fn open_now(&mut self, path: PathBuf) {
+        if loom_listen::is_audio_file(&path) {
+            self.import_path(path);
+            return;
+        }
         match file::load(&path) {
             Ok(project) => self.replace_project(project, Some(path)),
             Err(err) => self.message = Some(format!("Could not open {}: {err}", path.display())),
