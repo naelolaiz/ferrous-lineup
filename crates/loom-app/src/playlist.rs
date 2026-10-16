@@ -14,8 +14,9 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Painter, Pos2, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     pos2, vec2,
 };
-use loom_core::{Clip, MAX_SONG_STEPS, MAX_TRACKS, Pattern, Project, STEPS_PER_BAR};
+use loom_core::{Clip, MAX_SONG_STEPS, MAX_TRACKS, Pattern, Project, STEPS_PER_BAR, TimeSignature};
 
+use crate::library_browser::{LibraryAction, LibraryBrowser, Tried};
 use crate::widgets;
 
 /// Something the user asked the playlist to do.
@@ -36,18 +37,26 @@ pub enum PlaylistAction {
         name: String,
     },
     AddTrack,
+    /// Something picked in the Library tab.
+    Library(LibraryAction),
 }
 
-const PICKER_WIDTH: f32 = 140.0;
+/// The two tabs of the panel on the left.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Tab {
+    Patterns,
+    Library,
+}
+
+const PICKER_WIDTH: f32 = 210.0;
 const HEADER_WIDTH: f32 = 116.0;
 const RULER_HEIGHT: f32 = 20.0;
 const TRACK_HEIGHT: f32 = 36.0;
-/// How wide one step is, in pixels. A bar is 16 steps: 72 pixels.
+/// How wide one step is, in pixels. A bar of 4/4 is 16 steps: 72 pixels.
 const STEP_WIDTH: f32 = 4.5;
-const BAR_WIDTH: f32 = STEP_WIDTH * STEPS_PER_BAR as f32;
-/// The playlist always shows at least this many bars...
+/// The playlist is always at least as wide as this many bars of 4/4...
 const MIN_BARS: usize = 32;
-/// ...and this many empty bars after the end of the song, to add more.
+/// ...and has this many empty bars after the end of the song, to add more.
 const EXTRA_BARS: usize = 16;
 /// The height of the strip at the top of a clip with the pattern's name.
 const CLIP_TITLE: f32 = 13.0;
@@ -93,10 +102,12 @@ pub enum Snap {
 impl Snap {
     const ALL: [Snap; 3] = [Snap::Bar, Snap::Beat, Snap::Step];
 
-    fn steps(self) -> usize {
+    /// How many steps apart the snap points are, which depends on the
+    /// time signature: a bar of 3/4 is 12 steps, a beat of 6/8 is 6.
+    fn steps(self, time: TimeSignature) -> usize {
         match self {
-            Snap::Bar => STEPS_PER_BAR,
-            Snap::Beat => 4,
+            Snap::Bar => time.steps_per_bar(),
+            Snap::Beat => time.steps_per_beat(),
             Snap::Step => 1,
         }
     }
@@ -110,8 +121,9 @@ impl Snap {
     }
 
     /// The snap point at or before `step`.
-    fn floor(self, step: usize) -> usize {
-        step / self.steps() * self.steps()
+    fn floor(self, step: usize, time: TimeSignature) -> usize {
+        let steps = self.steps(time);
+        step / steps * steps
     }
 }
 
@@ -165,6 +177,8 @@ impl Layout {
 pub struct PlaylistView {
     snap: Snap,
     drag: Option<ClipDrag>,
+    tab: Tab,
+    library: LibraryBrowser,
 }
 
 impl PlaylistView {
@@ -172,25 +186,51 @@ impl PlaylistView {
         PlaylistView {
             snap: Snap::Bar,
             drag: None,
+            tab: Tab::Patterns,
+            library: LibraryBrowser::new(),
         }
+    }
+
+    /// Whether trying something from the library also sets its tempo.
+    pub fn library_tempo(&self) -> bool {
+        self.library.use_tempo
     }
 
     /// Draws the pattern picker and the playlist. `current` is the
     /// selected pattern; `playhead` is the song step being played, if
-    /// the song is playing.
+    /// the song is playing; `tried` is what the library put in the
+    /// selected pattern, if it was the library.
     pub fn show(
         &mut self,
         ui: &mut Ui,
         project: &Project,
         current: usize,
         playhead: Option<usize>,
+        tried: Tried,
     ) -> Vec<PlaylistAction> {
         let mut actions = Vec::new();
 
         egui::Panel::left("pattern-picker")
-            .resizable(false)
-            .exact_size(PICKER_WIDTH)
-            .show(ui, |ui| picker(ui, project, current, &mut actions));
+            .resizable(true)
+            .default_size(PICKER_WIDTH)
+            .size_range(140.0..=420.0)
+            .show(ui, |ui| {
+                ui.add_space(4.0);
+                ui.horizontal(|ui| {
+                    ui.selectable_value(&mut self.tab, Tab::Patterns, "Patterns");
+                    ui.selectable_value(&mut self.tab, Tab::Library, "📚 Library")
+                        .on_hover_text("Harmony styles and rhythms by genre");
+                });
+                ui.separator();
+                match self.tab {
+                    Tab::Patterns => picker(ui, project, current, &mut actions),
+                    Tab::Library => {
+                        if let Some(action) = self.library.show(ui, project, tried) {
+                            actions.push(PlaylistAction::Library(action));
+                        }
+                    }
+                }
+            });
 
         let current_name = project.pattern(current).map_or("", |p| p.name.as_str());
         ui.horizontal(|ui| {
@@ -238,9 +278,13 @@ impl PlaylistView {
     ) {
         let tracks = project.playlist().tracks();
         let song_length = project.song_length();
-        let bars = (song_length / STEPS_PER_BAR + EXTRA_BARS).max(MIN_BARS);
+        let time = project.time_signature;
+        // The grid ends on a bar line, some empty bars after the song.
+        let steps = time.round_up_to_bar(
+            (song_length + EXTRA_BARS * time.steps_per_bar()).max(MIN_BARS * STEPS_PER_BAR),
+        );
         let size = vec2(
-            HEADER_WIDTH + bars as f32 * BAR_WIDTH,
+            HEADER_WIDTH + steps as f32 * STEP_WIDTH,
             RULER_HEIGHT + tracks.len() as f32 * TRACK_HEIGHT,
         );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
@@ -262,7 +306,7 @@ impl PlaylistView {
         self.handle_input(ui, &response, layout, cells, project, current, actions);
 
         let painter = ui.painter_at(visible);
-        paint_tracks(&painter, layout, bars);
+        paint_tracks(&painter, layout, steps, time);
         paint_clips(&painter, layout, cells, project, current);
         // Lines from the ruler down to the last track.
         let lines = cells.top()..=layout.track_top(tracks.len()).min(cells.bottom());
@@ -275,7 +319,15 @@ impl PlaylistView {
         }
 
         self.track_headers(ui, &painter, layout, visible, cells, project, actions);
-        paint_ruler(&painter, layout, visible, bars, song_length, playhead);
+        paint_ruler(
+            &painter,
+            layout,
+            visible,
+            steps,
+            time,
+            song_length,
+            playhead,
+        );
     }
 
     /// The column of track names on the left, which stays put when the
@@ -373,6 +425,7 @@ impl PlaylistView {
             .filter(|pos| primary_pressed && response.hovered() && cells.contains(*pos));
         if let Some(pos) = pressed_at {
             let (track, step) = layout.cell_at(pos);
+            let time = project.time_signature;
             match clip_at(project, layout, pos) {
                 Some(index) => {
                     let clip = clips[index];
@@ -385,7 +438,7 @@ impl PlaylistView {
                     }
                 }
                 None => {
-                    let start = self.snap.floor(step);
+                    let start = self.snap.floor(step, time);
                     actions.push(PlaylistAction::AddClip(Clip::new(current, track, start)));
                     // The new clip goes at the end of the list.
                     self.drag = Some(ClipDrag {
@@ -413,7 +466,9 @@ impl PlaylistView {
             && let Some(clip) = clips.get(drag.index)
         {
             let (track, step) = layout.cell_at(pos);
-            let start = self.snap.floor(step.saturating_sub(drag.grab));
+            let start = self
+                .snap
+                .floor(step.saturating_sub(drag.grab), project.time_signature);
             if (track, start) != (clip.track, clip.start) {
                 actions.push(PlaylistAction::MoveClip {
                     index: drag.index,
@@ -428,9 +483,6 @@ impl PlaylistView {
 /// The list of patterns on the left. Clicking one selects it: the channel
 /// rack shows it, pattern mode plays it and new clips use it.
 fn picker(ui: &mut Ui, project: &Project, current: usize, actions: &mut Vec<PlaylistAction>) {
-    ui.add_space(4.0);
-    ui.strong("Patterns");
-    ui.add_space(2.0);
     egui::ScrollArea::vertical().show(ui, |ui| {
         for (index, pattern) in project.patterns().iter().enumerate() {
             ui.horizontal(|ui| {
@@ -458,19 +510,26 @@ fn clip_at(project: &Project, layout: Layout, pos: Pos2) -> Option<usize> {
     })
 }
 
-/// Row backgrounds and the lines for beats and bars.
-fn paint_tracks(painter: &Painter, layout: Layout, bars: usize) {
-    let right = layout.x(bars * STEPS_PER_BAR);
+/// Row backgrounds and the lines for beats and bars, `steps` long.
+fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, time: TimeSignature) {
+    let right = layout.x(steps);
     for track in 0..layout.tracks {
         let top = layout.track_top(track);
         let row = Rect::from_min_max(pos2(layout.origin.x, top), pos2(right, top + TRACK_HEIGHT));
         painter.rect_filled(row, 0.0, ROW[track % 2]);
     }
     let bottom = layout.track_top(layout.tracks);
-    for beat in 0..=bars * 4 {
-        let color = if beat % 4 == 0 { BAR_LINE } else { BEAT_LINE };
-        let x = layout.x(beat * 4);
-        painter.vline(x, layout.origin.y..=bottom, Stroke::new(1.0, color));
+    for step in (0..=steps).filter(|&step| time.is_beat_start(step)) {
+        let color = if time.is_bar_start(step) {
+            BAR_LINE
+        } else {
+            BEAT_LINE
+        };
+        painter.vline(
+            layout.x(step),
+            layout.origin.y..=bottom,
+            Stroke::new(1.0, color),
+        );
     }
 }
 
@@ -563,7 +622,8 @@ fn paint_ruler(
     painter: &Painter,
     layout: Layout,
     visible: Rect,
-    bars: usize,
+    steps: usize,
+    time: TimeSignature,
     song_length: usize,
     playhead: Option<usize>,
 ) {
@@ -573,9 +633,10 @@ fn paint_ruler(
         pos2(visible.left() + HEADER_WIDTH, ruler.top()),
         ruler.max,
     ));
-    for bar in 0..bars {
-        let x = layout.x(bar * STEPS_PER_BAR);
-        let color = if bar * STEPS_PER_BAR < song_length {
+    let bar_steps = time.steps_per_bar();
+    for bar in 0..steps / bar_steps {
+        let x = layout.x(bar * bar_steps);
+        let color = if bar * bar_steps < song_length {
             HEADER_TEXT
         } else {
             RULER_TEXT

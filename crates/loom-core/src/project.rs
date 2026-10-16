@@ -6,8 +6,9 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::harmony::Scale;
+use crate::meter::TimeSignature;
 use crate::pattern::{NoteEvent, Pattern};
-use crate::playlist::{Clip, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Track, round_up_to_bar};
+use crate::playlist::{Clip, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Track};
 use crate::{Note, Tempo};
 
 /// The most channels a project can have. The audio thread reserves room
@@ -22,17 +23,45 @@ pub const MAX_PATTERNS: usize = 99;
 const NEW_PATTERN_LENGTH: usize = 16;
 
 /// The built-in drum sounds, synthesized by the audio engine.
+///
+/// The first four came with step 2. The others came with the rhythm
+/// library of step 8, which needs them for rock fills, jazz, and Latin
+/// grooves; a project that uses them is saved as format 3 (see
+/// [`format_for`](crate::file::format_for)).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Drum {
     Kick,
     Snare,
     Clap,
     HiHat,
+    OpenHat,
+    Rim,
+    LowTom,
+    HighTom,
+    Ride,
+    Crash,
+    Cowbell,
+    Shaker,
+    Conga,
 }
 
 impl Drum {
     /// All drums, in the order they appear in menus.
-    pub const ALL: [Drum; 4] = [Drum::Kick, Drum::Snare, Drum::Clap, Drum::HiHat];
+    pub const ALL: [Drum; 13] = [
+        Drum::Kick,
+        Drum::Snare,
+        Drum::Clap,
+        Drum::HiHat,
+        Drum::OpenHat,
+        Drum::Rim,
+        Drum::LowTom,
+        Drum::HighTom,
+        Drum::Ride,
+        Drum::Crash,
+        Drum::Cowbell,
+        Drum::Shaker,
+        Drum::Conga,
+    ];
 
     /// A short display name.
     pub fn name(self) -> &'static str {
@@ -41,7 +70,22 @@ impl Drum {
             Drum::Snare => "Snare",
             Drum::Clap => "Clap",
             Drum::HiHat => "Hat",
+            Drum::OpenHat => "Open hat",
+            Drum::Rim => "Rim",
+            Drum::LowTom => "Low tom",
+            Drum::HighTom => "High tom",
+            Drum::Ride => "Ride",
+            Drum::Crash => "Crash",
+            Drum::Cowbell => "Cowbell",
+            Drum::Shaker => "Shaker",
+            Drum::Conga => "Conga",
         }
+    }
+
+    /// Whether this drum was added in step 8, so a project using it
+    /// cannot be opened by older versions of Ferrous Loom.
+    pub fn is_new_in_format_3(self) -> bool {
+        !matches!(self, Drum::Kick | Drum::Snare | Drum::Clap | Drum::HiHat)
     }
 }
 
@@ -125,6 +169,9 @@ pub struct Project {
     pub tempo: Tempo,
     /// The key the piano roll highlights and names chords in.
     pub scale: Scale,
+    /// How many beats make a bar. It only changes where bar lines are
+    /// drawn and how long new patterns are, never the notes.
+    pub time_signature: TimeSignature,
     channels: Vec<Channel>,
     patterns: Vec<Pattern>,
     playlist: Playlist,
@@ -136,6 +183,7 @@ impl Project {
         Project {
             tempo: Tempo::default(),
             scale: Scale::default(),
+            time_signature: TimeSignature::COMMON,
             channels: Vec::new(),
             patterns: vec![Pattern::new("Pattern 1", 0, NEW_PATTERN_LENGTH)],
             playlist: Playlist::new(),
@@ -285,11 +333,12 @@ impl Project {
     }
 
     /// Adds an empty pattern at the end of the list, named "Pattern 2",
-    /// "Pattern 3" and so on. Returns its index, or `None` if there are
-    /// already [`MAX_PATTERNS`].
+    /// "Pattern 3" and so on, one bar long (16 steps in 4/4, 12 in 3/4).
+    /// Returns its index, or `None` if there are already [`MAX_PATTERNS`].
     pub fn add_pattern(&mut self) -> Option<usize> {
         let name = format!("Pattern {}", self.patterns.len() + 1);
-        self.push_pattern(Pattern::new(name, self.channels.len(), NEW_PATTERN_LENGTH))
+        let length = self.time_signature.steps_per_bar();
+        self.push_pattern(Pattern::new(name, self.channels.len(), length))
     }
 
     /// Adds a copy of a pattern at the end of the list and returns its index.
@@ -400,7 +449,8 @@ impl Project {
     }
 
     /// The length of the song in steps: up to the end of the last clip,
-    /// rounded up to a whole bar. An empty playlist has length 0.
+    /// rounded up to a whole bar of the time signature. An empty playlist
+    /// has length 0.
     pub fn song_length(&self) -> usize {
         let end = self
             .playlist
@@ -409,7 +459,49 @@ impl Project {
             .map(|clip| clip.start + self.clip_length(clip))
             .max()
             .unwrap_or(0);
-        round_up_to_bar(end)
+        self.time_signature.round_up_to_bar(end)
+    }
+
+    /// The notes held during `step` of pattern `pattern` by the channels
+    /// that accompany: see [`Project::chord_notes_in_song`].
+    pub fn chord_notes_in_pattern(&self, pattern: usize, step: usize) -> Vec<Note> {
+        let mut parts = Vec::new();
+        self.collect_parts(pattern, step, &mut parts);
+        chord_notes(parts)
+    }
+
+    /// The notes held during `song_step` of the song by the channels that
+    /// play chords, so the harmony keys can show which chord is playing.
+    ///
+    /// Only synths and MIDI Out channels that are not muted count, and of
+    /// those only the ones holding two notes or more: a melody or a bass
+    /// line plays one note at a time, and its passing notes would hide
+    /// the chord. If no channel holds two notes, all the notes count.
+    pub fn chord_notes_in_song(&self, song_step: usize) -> Vec<Note> {
+        let mut parts = Vec::new();
+        for clip in self.playlist.audible_clips() {
+            if (clip.start..clip.start + self.clip_length(&clip)).contains(&song_step) {
+                self.collect_parts(clip.pattern, song_step - clip.start, &mut parts);
+            }
+        }
+        chord_notes(parts)
+    }
+
+    /// Adds the notes each melodic channel holds at `step` of `pattern`
+    /// to `parts`, one list per channel.
+    fn collect_parts(&self, pattern: usize, step: usize, parts: &mut Vec<Vec<Note>>) {
+        let Some(pattern) = self.patterns.get(pattern) else {
+            return;
+        };
+        for (index, channel) in self.channels.iter().enumerate() {
+            let melodic = matches!(
+                channel.kind,
+                ChannelKind::Synth | ChannelKind::MidiOut { .. }
+            );
+            if melodic && !channel.muted {
+                parts.push(pattern.sounding_at(index, step).collect());
+            }
+        }
     }
 
     /// Where `pattern` is during `song_step` of the song, if one of its
@@ -421,6 +513,22 @@ impl Project {
             .filter(|clip| clip.pattern == pattern)
             .find(|clip| (clip.start..clip.start + self.clip_length(clip)).contains(&song_step))
             .map(|clip| song_step - clip.start)
+    }
+}
+
+/// The notes of the parts that hold two notes or more, or of all the
+/// parts if none does.
+fn chord_notes(parts: Vec<Vec<Note>>) -> Vec<Note> {
+    let chords: Vec<Note> = parts
+        .iter()
+        .filter(|part| part.len() >= 2)
+        .flatten()
+        .copied()
+        .collect();
+    if chords.is_empty() {
+        parts.into_iter().flatten().collect()
+    } else {
+        chords
     }
 }
 
@@ -439,6 +547,27 @@ mod tests {
     const CHORDS: usize = 1;
     const FILL: usize = 2;
     const SYNTH: usize = 4;
+
+    #[test]
+    fn the_chord_playing_is_found_under_the_melody() {
+        let mut project = Project::demo();
+        let spelling = project.scale.spelling();
+        let label = |notes: Vec<Note>| analyze(notes).label(spelling);
+        let first = label(project.chord_notes_in_pattern(CHORDS, 0));
+        assert!(first.is_some());
+        // The chords clip starts the song.
+        assert_eq!(label(project.chord_notes_in_song(0)), first);
+        // A melody note on another synth does not change the chord.
+        let lead = project.add_channel(Channel::synth()).unwrap();
+        let note = NoteEvent::new(Note::new(86), 0, 4);
+        project.pattern_mut(CHORDS).unwrap().add_note(lead, note);
+        assert_eq!(label(project.chord_notes_in_song(0)), first);
+        // Muted channels are not heard.
+        project.channel_mut(SYNTH).unwrap().muted = true;
+        assert_eq!(project.chord_notes_in_song(0), [Note::new(86)]);
+        // Nothing plays past the end of the song.
+        assert!(project.chord_notes_in_song(10_000).is_empty());
+    }
 
     #[test]
     fn demo_has_a_beat() {

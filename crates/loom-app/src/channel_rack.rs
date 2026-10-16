@@ -149,7 +149,11 @@ pub fn show(
                     if pattern.is_step_row(index) {
                         for step in 0..length {
                             let on = pattern.is_on(index, step);
-                            let beat_group = step / 4;
+                            // Beats alternate colours, so you can count them,
+                            // starting again in every bar so all bars look
+                            // alike: in 3/4, dark, light, dark.
+                            let time = project.time_signature;
+                            let beat_group = step % time.steps_per_bar() / time.steps_per_beat();
                             let response =
                                 widgets::step_button(ui, on, beat_group, playhead == Some(step));
                             if response.clicked() {

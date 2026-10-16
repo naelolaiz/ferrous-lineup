@@ -8,8 +8,9 @@
 use eframe::egui::{self, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use loom_core::NoteEvent;
 
-/// Step colors. Steps are grouped in fours (one beat each), and the
-/// groups alternate colors so you can count beats at a glance.
+/// Step colors. Steps are grouped by beats (four steps in 4/4, six in
+/// 6/8), and the groups alternate colors so you can count beats at a
+/// glance.
 const STEP_OFF: [Color32; 2] = [Color32::from_rgb(58, 62, 72), Color32::from_rgb(84, 62, 70)];
 const STEP_ON: Color32 = Color32::from_rgb(226, 230, 238);
 const PLAYHEAD: Color32 = Color32::from_rgb(255, 152, 48);

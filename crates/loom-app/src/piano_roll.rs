@@ -15,7 +15,7 @@ use loom_core::harmony::{Harmony, analyze, next_chords};
 use loom_core::tools::{self, ArpeggioOrder};
 use loom_core::{
     Chord, ChordQuality, ChordStamp, Note, NoteEvent, Pattern, PitchClass, Project, Scale,
-    ScaleKind, Spelling, tidy_notes,
+    ScaleKind, Spelling, TimeSignature, tidy_notes,
 };
 
 /// Something the user asked the piano roll to do.
@@ -183,6 +183,7 @@ struct Grid {
     rect: Rect,
     step_width: f32,
     length: usize,
+    time: TimeSignature,
 }
 
 impl Grid {
@@ -269,6 +270,9 @@ pub struct PianoRoll {
     has_keyboard: bool,
     /// Where the window was drawn last frame.
     window_rect: Option<Rect>,
+    /// The project's time signature, which says where the bar and beat
+    /// lines go. Copied from the project on every frame.
+    time: TimeSignature,
 }
 
 impl PianoRoll {
@@ -293,6 +297,7 @@ impl PianoRoll {
             last_step: None,
             has_keyboard: false,
             window_rect: None,
+            time: TimeSignature::COMMON,
         }
     }
 
@@ -418,6 +423,7 @@ impl PianoRoll {
         actions: &mut Vec<RollAction>,
     ) {
         let scale = project.scale;
+        self.time = project.time_signature;
         // Selected notes that are no longer there are forgotten.
         let notes = pattern.notes(self.channel);
         self.selection.retain(|note| notes.contains(note));
@@ -791,6 +797,7 @@ impl PianoRoll {
             rect: Rect::from_min_max(pos2(rect.left() + KEY_WIDTH, rect.top()), rect.max),
             step_width,
             length,
+            time: self.time,
         };
         if let Some(pos) = response.hover_pos()
             && lane.rect.contains(pos)
@@ -870,6 +877,7 @@ impl PianoRoll {
             rect: Rect::from_min_max(pos2(rect.left() + KEY_WIDTH, rect.top()), rect.max),
             step_width,
             length,
+            time: self.time,
         };
 
         let notes = pattern.notes(self.channel);
@@ -1202,6 +1210,7 @@ impl PianoRoll {
             rect: Rect::from_min_max(pos2(rect.left() + KEY_WIDTH, rect.top()), rect.max),
             step_width,
             length,
+            time: self.time,
         };
         let notes = pattern.notes(self.channel);
 
@@ -1239,8 +1248,12 @@ impl PianoRoll {
             ui.visuals().weak_text_color(),
         );
         painter.rect_filled(lane.rect, 2.0, LANE_BACKGROUND);
-        for step in (0..=length).step_by(4) {
-            let color = if step % 16 == 0 { BAR_LINE } else { STEP_LINE };
+        for step in (0..=length).filter(|&step| lane.time.is_beat_start(step)) {
+            let color = if lane.time.is_bar_start(step) {
+                BAR_LINE
+            } else {
+                STEP_LINE
+            };
             painter.vline(lane.x(step), lane.rect.y_range(), Stroke::new(1.0, color));
         }
         let bar_width = (step_width * 0.4).clamp(2.0, 8.0);
@@ -1479,7 +1492,7 @@ fn note_at(notes: &[NoteEvent], grid: Grid, pos: Pos2) -> Option<usize> {
 }
 
 /// "C" for white keys, "C#/Db" for black keys.
-fn both_names(pitch_class: PitchClass) -> String {
+pub(crate) fn both_names(pitch_class: PitchClass) -> String {
     let sharp = pitch_class.name(Spelling::Sharps);
     let flat = pitch_class.name(Spelling::Flats);
     if sharp == flat {
@@ -1545,8 +1558,8 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
 fn paint_step_lines(painter: &Painter, grid: Grid) {
     for step in 0..=grid.length {
         let color = match step {
-            s if s % 16 == 0 => BAR_LINE,
-            s if s % 4 == 0 => BEAT_LINE,
+            s if grid.time.is_bar_start(s) => BAR_LINE,
+            s if grid.time.is_beat_start(s) => BEAT_LINE,
             _ => STEP_LINE,
         };
         painter.vline(grid.x(step), grid.rect.y_range(), Stroke::new(1.0, color));

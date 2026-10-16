@@ -13,6 +13,7 @@ use loom_core::{Project, file};
 
 use super::LoomApp;
 use super::export::MidiExport;
+use super::library::Demo;
 use crate::channel_rack::is_project_file;
 use crate::piano_roll::PianoRoll;
 
@@ -30,6 +31,7 @@ pub(super) enum Pending {
     New,
     Open,
     OpenPath(PathBuf),
+    Demo(Demo),
     Quit,
 }
 
@@ -112,6 +114,7 @@ impl LoomApp {
                 self.request(&ctx, Pending::Open);
                 ui.close();
             }
+            self.demos_menu(ui);
             ui.separator();
             if ui.add(item("Save", SAVE)).clicked() {
                 self.save();
@@ -182,7 +185,7 @@ impl LoomApp {
     }
 
     /// Does `action` now if nothing would be lost, or asks first.
-    fn request(&mut self, ctx: &egui::Context, action: Pending) {
+    pub(super) fn request(&mut self, ctx: &egui::Context, action: Pending) {
         if self.has_unsaved_changes() {
             self.file.pending = Some(action);
         } else {
@@ -202,6 +205,7 @@ impl LoomApp {
                 }
             }
             Pending::OpenPath(path) => self.open_now(path),
+            Pending::Demo(demo) => self.open_demo(demo),
             Pending::Quit => {
                 self.file.quitting = true;
                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -217,8 +221,9 @@ impl LoomApp {
     }
 
     /// Swaps in another project and tells the audio thread about it.
-    fn replace_project(&mut self, project: Project, path: Option<PathBuf>) {
+    pub(super) fn replace_project(&mut self, project: Project, path: Option<PathBuf>) {
         self.project = project;
+        self.auditions.clear();
         self.file.saved = self.project.clone();
         self.file.path = path;
         self.pattern = 0;

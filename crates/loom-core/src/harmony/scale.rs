@@ -193,6 +193,14 @@ impl Scale {
         self.chord_on(degree, 4)
     }
 
+    /// The ninth chord (five notes) built on a degree of the scale, if it
+    /// is one Ferrous Loom knows. On some degrees the ninth is only a
+    /// semitone above the root an octave up (E G B D F in C major), which
+    /// clashes, and there is no such chord.
+    pub fn ninth(self, degree: usize) -> Option<Chord> {
+        self.chord_on(degree, 5)
+    }
+
     fn chord_on(self, degree: usize, count: usize) -> Option<Chord> {
         let root = self.pitch_classes().nth(degree)?;
         let notes = self.stack_thirds(Note::new(60 + root.semitone()), count)?;

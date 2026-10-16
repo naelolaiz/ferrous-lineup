@@ -32,10 +32,10 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::pattern::NoteEvent;
+use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
 use crate::playlist::{Clip, MAX_TRACKS, Track};
-use crate::project::{Channel, ChannelKind, MAX_CHANNELS, MAX_PATTERNS, Project};
-use crate::{Scale, Tempo};
+use crate::project::{Channel, ChannelKind, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource};
+use crate::{Scale, Tempo, TimeSignature};
 
 /// The file name extension of Ferrous Loom projects, without the dot.
 pub const EXTENSION: &str = "loom";
@@ -48,7 +48,12 @@ pub const EXTENSION: &str = "loom";
 /// A project without one is still written as format 1, which is exactly
 /// the same text, so older versions of Ferrous Loom can open it. See
 /// [`format_for`].
-pub const FORMAT_VERSION: u32 = 2;
+///
+/// Format 3 (step 8) added nine built-in drums, patterns longer than
+/// four bars, and time signatures. Older versions would not know the
+/// drums, would cut the long patterns short without a word, and would
+/// draw a waltz in bars of four, so those projects need format 3.
+pub const FORMAT_VERSION: u32 = 3;
 
 /// The oldest format that can hold `project`.
 ///
@@ -56,11 +61,28 @@ pub const FORMAT_VERSION: u32 = 2;
 /// means a file only becomes unreadable to an older Ferrous Loom when it
 /// really uses something that version does not know.
 pub fn format_for(project: &Project) -> u32 {
+    let uses_new_drums = project.channels().iter().any(|channel| {
+        matches!(
+            channel.kind,
+            ChannelKind::Sampler(SampleSource::Builtin(drum)) if drum.is_new_in_format_3()
+        )
+    });
+    let has_long_patterns = project
+        .patterns()
+        .iter()
+        .any(|pattern| pattern.length() > MAX_STEPS_BEFORE_FORMAT_3);
     let uses_midi_out = project
         .channels()
         .iter()
         .any(|channel| matches!(channel.kind, ChannelKind::MidiOut { .. }));
-    if uses_midi_out { 2 } else { 1 }
+    let has_time_signature = !project.time_signature.is_common();
+    if uses_new_drums || has_long_patterns || has_time_signature {
+        3
+    } else if uses_midi_out {
+        2
+    } else {
+        1
+    }
 }
 
 /// A project as it is written in a file.
@@ -69,6 +91,10 @@ struct ProjectFile {
     format: u32,
     tempo: Tempo,
     scale: Scale,
+    /// Left out for 4/4, so those files read exactly as before. A file
+    /// without it is in 4/4: `default` fills in `TimeSignature::default()`.
+    #[serde(default, skip_serializing_if = "TimeSignature::is_common")]
+    time_signature: TimeSignature,
     channels: Vec<Channel>,
     patterns: Vec<PatternFile>,
     tracks: Vec<Track>,
@@ -166,6 +192,7 @@ impl From<&Project> for ProjectFile {
             format: format_for(project),
             tempo: project.tempo,
             scale: project.scale,
+            time_signature: project.time_signature,
             channels: project.channels().to_vec(),
             patterns: project
                 .patterns()
@@ -193,6 +220,13 @@ impl TryFrom<ProjectFile> for Project {
         let mut project = Project::empty();
         project.tempo = file.tempo;
         project.scale = file.scale;
+        if file.time_signature.steps_per_bar() > MAX_STEPS {
+            return invalid(format!(
+                "its time signature {} is too long",
+                file.time_signature
+            ));
+        }
+        project.time_signature = file.time_signature;
 
         if file.channels.len() > MAX_CHANNELS {
             return invalid(format!("it has more than {MAX_CHANNELS} channels"));
@@ -299,6 +333,7 @@ pub fn load(path: &Path) -> Result<Project, FileError> {
 mod tests {
     use super::*;
     use crate::Note;
+    use crate::project::Drum;
 
     #[test]
     fn the_demo_survives_a_round_trip() {
@@ -340,10 +375,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 3 might have fields we have never heard of. Only the
+        // Format 4 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 3, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(3)), "{error}");
+        let error = from_text("(format: 4, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(4)), "{error}");
     }
 
     #[test]
@@ -358,6 +393,45 @@ mod tests {
             text.contains("MidiOut(\n                channel: 4,"),
             "{text}"
         );
+        assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn new_drums_and_long_patterns_need_format_three() {
+        let mut project = Project::template();
+        project.add_channel(Channel::midi_out(0)).unwrap();
+        assert!(to_text(&project).unwrap().contains("format: 2,"));
+
+        let mut drums = project.clone();
+        drums.add_channel(Channel::drum(Drum::Conga)).unwrap();
+        let text = to_text(&drums).unwrap();
+        assert!(text.contains("format: 3,"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), drums);
+
+        let mut long = project;
+        long.pattern_mut(0).unwrap().set_length(192);
+        long.pattern_mut(0)
+            .unwrap()
+            .add_note(4, NoteEvent::new(Note::C4, 180, 12));
+        let text = to_text(&long).unwrap();
+        assert!(text.contains("format: 3,"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), long);
+    }
+
+    #[test]
+    fn time_signatures_other_than_four_four_need_format_three() {
+        let mut project = Project::template();
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("time_signature"), "4/4 is left out: {text}");
+        assert_eq!(
+            from_text(&text).unwrap().time_signature,
+            TimeSignature::COMMON
+        );
+
+        project.time_signature = TimeSignature::new(3, 4);
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 3,"), "{text}");
+        assert!(text.contains("beats: 3"), "{text}");
         assert_eq!(from_text(&text).unwrap(), project);
     }
 
