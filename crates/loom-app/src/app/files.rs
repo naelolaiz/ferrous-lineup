@@ -12,6 +12,7 @@ use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
 use loom_core::{Project, file};
 
 use super::LoomApp;
+use super::export::MidiExport;
 use crate::channel_rack::is_project_file;
 use crate::piano_roll::PianoRoll;
 
@@ -75,13 +76,14 @@ impl FileState {
         )
     }
 
-    /// A name for an exported WAV file: "song.wav" for "song.loom".
-    pub(super) fn export_name(&self) -> String {
+    /// A name for an exported file: "song.wav" for "song.loom", when
+    /// `extension` is "wav".
+    pub(super) fn export_name(&self, extension: &str) -> String {
         let stem = self.path.as_deref().and_then(Path::file_stem).map_or_else(
             || "Untitled".to_string(),
             |stem| stem.to_string_lossy().into_owned(),
         );
-        format!("{stem}.wav")
+        format!("{stem}.{extension}")
     }
 }
 
@@ -126,6 +128,23 @@ impl LoomApp {
                 .on_disabled_hover_text("Put some clips in the playlist first");
             if export.clicked() {
                 self.export_song();
+                ui.close();
+            }
+            let has_song = self.project.song_length() > 0;
+            let song_midi = ui
+                .add_enabled(has_song, egui::Button::new("Export song as MIDI…"))
+                .on_hover_text("Save the notes of the song, to open in another studio")
+                .on_disabled_hover_text("Put some clips in the playlist first");
+            if song_midi.clicked() {
+                self.export_midi(MidiExport::Song);
+                ui.close();
+            }
+            if ui
+                .button("Export pattern as MIDI…")
+                .on_hover_text("Save the notes of the selected pattern")
+                .clicked()
+            {
+                self.export_midi(MidiExport::Pattern);
                 ui.close();
             }
             ui.separator();

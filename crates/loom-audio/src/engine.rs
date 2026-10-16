@@ -17,20 +17,30 @@
 //! notes of every channel in every pattern, the length of every pattern,
 //! and the song (the clips of the playlist). In pattern mode it loops the
 //! selected pattern; in song mode it plays the clips.
+//!
+//! Since step 7 there are two more ways in and out, for MIDI:
+//!
+//! - Keys played on a MIDI keyboard arrive through a third ring buffer,
+//!   [`LiveInput`], which the thread that receives them from the keyboard
+//!   fills. They go straight to the audio thread, not through the UI, so
+//!   a key sounds within one block of being pressed.
+//! - MIDI Out channels make MIDI messages instead of sound. They leave
+//!   through a fourth ring buffer, [`MidiOutput`], for a thread that
+//!   sends them to the MIDI port, because sending can wait.
 
 use std::fmt;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
 use loom_core::{
-    Clip, DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, Note, NoteEvent, STEP_NOTE, STEPS_PER_BAR,
-    STEPS_PER_BEAT, Sequencer, Tempo,
+    Clip, DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, MidiMessage, Note, NoteEvent, STEP_NOTE,
+    STEPS_PER_BAR, STEPS_PER_BEAT, Sequencer, Tempo,
 };
 
 use crate::dsp::Smoothed;
-use crate::instrument::Instrument;
+use crate::instrument::{HELD, Instrument};
 
 /// How many commands can wait in the queue before `send` starts failing.
 /// The audio thread empties the queue every few milliseconds, so this is
@@ -42,8 +52,20 @@ const COMMAND_QUEUE_SIZE: usize = 1024;
 /// loading a project throws away every channel, so this is generous.
 pub(crate) const TRASH_QUEUE_SIZE: usize = 1024;
 
+/// How many keys from a MIDI keyboard can wait for the next block. Ten
+/// fingers and a sustain-happy pianist are nowhere near it.
+const LIVE_QUEUE_SIZE: usize = 256;
+
+/// How many MIDI messages can wait for the thread that sends them.
+const MIDI_OUT_QUEUE_SIZE: usize = 1024;
+
 /// The value of the playhead while stopped.
 pub(crate) const NO_STEP: usize = usize::MAX;
+
+/// The value of the playback position while stopped. The position is an
+/// `f64` kept in an `AtomicU64` (there is no atomic float type), as its
+/// 64 bits; these bits are a "not a number" that a position never is.
+pub(crate) const NO_POSITION: u64 = u64::MAX;
 
 /// How long volume changes take to settle, in seconds.
 const VOLUME_SMOOTHING: f32 = 0.01;
@@ -182,6 +204,11 @@ pub enum Command {
         channel: usize,
         pitch: Note,
     },
+    /// A key went down or up on the typing keyboard. Keys from a MIDI
+    /// keyboard take the faster way, through [`LiveInput`].
+    Live(MidiMessage),
+    /// Choose the channel that keys play: the one selected in the UI.
+    SetLiveChannel(usize),
     /// Stop, and remove every channel, pattern and clip, before a new
     /// project is sent.
     Clear,
@@ -235,6 +262,56 @@ impl fmt::Display for EngineError {
 
 impl std::error::Error for EngineError {}
 
+/// Reads a playback position stored as the bits of an `f64`.
+fn load_position(position: &AtomicU64) -> Option<f64> {
+    match position.load(Ordering::Relaxed) {
+        NO_POSITION => None,
+        bits => Some(f64::from_bits(bits)),
+    }
+}
+
+/// The way in for keys played on a MIDI keyboard.
+///
+/// It is the producer end of a ring buffer whose consumer is the audio
+/// thread. There can be only one producer, so this is a value to move to
+/// the one thread that receives the keyboard's messages, not a method on
+/// [`AudioEngine`].
+pub struct LiveInput {
+    notes: rtrb::Producer<MidiMessage>,
+    position: Arc<AtomicU64>,
+}
+
+impl LiveInput {
+    /// Plays (or lets go of) a key on the live channel. Returns `false`
+    /// if the queue was full and the key was lost.
+    pub fn send(&mut self, message: MidiMessage) -> bool {
+        self.notes.push(message).is_ok()
+    }
+
+    /// Where playback is, in steps (see [`Sequencer::position`]), or
+    /// `None` when stopped. Recording uses it to place the key.
+    pub fn position(&self) -> Option<f64> {
+        load_position(&self.position)
+    }
+}
+
+/// The way out for the messages that MIDI Out channels make, to be moved
+/// to the thread that sends them to a MIDI port.
+pub struct MidiOutput(rtrb::Consumer<MidiMessage>);
+
+impl MidiOutput {
+    /// The oldest message waiting, if any.
+    pub fn pop(&mut self) -> Option<MidiMessage> {
+        self.0.pop().ok()
+    }
+
+    /// Whether the audio thread is gone (the engine was dropped), so no
+    /// more messages will come.
+    pub fn is_abandoned(&self) -> bool {
+        self.0.is_abandoned()
+    }
+}
+
 /// A running connection to the sound card.
 ///
 /// Sound keeps playing for as long as this value is alive. When it is
@@ -245,6 +322,9 @@ pub struct AudioEngine {
     commands: rtrb::Producer<Command>,
     trash: rtrb::Consumer<Garbage>,
     playhead: Arc<AtomicUsize>,
+    position: Arc<AtomicU64>,
+    live_input: Option<LiveInput>,
+    midi_output: Option<MidiOutput>,
     info: EngineInfo,
 }
 
@@ -269,15 +349,25 @@ impl AudioEngine {
 
         let (command_producer, command_consumer) = rtrb::RingBuffer::new(COMMAND_QUEUE_SIZE);
         let (trash_producer, trash_consumer) = rtrb::RingBuffer::new(TRASH_QUEUE_SIZE);
+        let (live_producer, live_consumer) = rtrb::RingBuffer::new(LIVE_QUEUE_SIZE);
+        let (midi_producer, midi_consumer) = rtrb::RingBuffer::new(MIDI_OUT_QUEUE_SIZE);
         let playhead = Arc::new(AtomicUsize::new(NO_STEP));
+        let position = Arc::new(AtomicU64::new(NO_POSITION));
 
-        let audio_thread = AudioThread::new(
+        let mut audio_thread = AudioThread::new(
             config.sample_rate,
             config.channels as usize,
             command_consumer,
             trash_producer,
             Arc::clone(&playhead),
+            Arc::clone(&position),
         );
+        audio_thread.live_input = Some(live_consumer);
+        audio_thread.midi_out = Some(midi_producer);
+        let live_input = LiveInput {
+            notes: live_producer,
+            position: Arc::clone(&position),
+        };
 
         // The sound card decides the sample type. We pick the matching
         // version of the generic `build_stream` function for each one.
@@ -297,6 +387,9 @@ impl AudioEngine {
             commands: command_producer,
             trash: trash_consumer,
             playhead,
+            position,
+            live_input: Some(live_input),
+            midi_output: Some(MidiOutput(midi_consumer)),
             info,
         })
     }
@@ -314,6 +407,22 @@ impl AudioEngine {
             NO_STEP => None,
             step => Some(step),
         }
+    }
+
+    /// Where playback is, in steps with a fraction, or `None` when stopped.
+    pub fn position(&self) -> Option<f64> {
+        load_position(&self.position)
+    }
+
+    /// The way in for a MIDI keyboard. It can be taken once; after that
+    /// this returns `None`.
+    pub fn take_live_input(&mut self) -> Option<LiveInput> {
+        self.live_input.take()
+    }
+
+    /// The way out for MIDI Out channels. It can be taken once.
+    pub fn take_midi_output(&mut self) -> Option<MidiOutput> {
+        self.midi_output.take()
     }
 
     /// Frees the instruments and note lists the audio thread has finished
@@ -396,6 +505,19 @@ pub(crate) struct AudioThread {
     commands: rtrb::Consumer<Command>,
     trash: rtrb::Producer<Garbage>,
     playhead: Arc<AtomicUsize>,
+    /// The sequencer's position, stored after every block.
+    position: Arc<AtomicU64>,
+    /// Keys from a MIDI keyboard. `None` when there is no keyboard to
+    /// listen to, as when exporting a WAV file.
+    live_input: Option<rtrb::Consumer<MidiMessage>>,
+    /// Where MIDI Out channels send their messages, if anywhere.
+    midi_out: Option<rtrb::Producer<MidiMessage>>,
+    /// The channel that keys play.
+    live_channel: usize,
+    /// For each of the 128 notes whose key is down, the channel it went
+    /// down on. The key must come up on the same channel, even if
+    /// another one has been selected in between, or the note would never end.
+    live_keys: [Option<usize>; 128],
 }
 
 impl AudioThread {
@@ -405,6 +527,7 @@ impl AudioThread {
         commands: rtrb::Consumer<Command>,
         trash: rtrb::Producer<Garbage>,
         playhead: Arc<AtomicUsize>,
+        position: Arc<AtomicU64>,
     ) -> Self {
         AudioThread {
             sample_rate,
@@ -421,6 +544,11 @@ impl AudioThread {
             commands,
             trash,
             playhead,
+            position,
+            live_input: None,
+            midi_out: None,
+            live_channel: 0,
+            live_keys: [None; 128],
         }
     }
 
@@ -517,6 +645,9 @@ impl AudioThread {
                     muted,
                 };
                 if self.channels.len() < MAX_CHANNELS {
+                    // The channels are about to move, and `live_keys`
+                    // knows them by position.
+                    self.release_live_keys();
                     // `insert` moves the channels after `index` along by
                     // one, inside the room reserved up front.
                     self.channels
@@ -527,7 +658,9 @@ impl AudioThread {
             }
             Command::RemoveChannel(index) => {
                 if index < self.channels.len() {
-                    let removed = self.channels.remove(index);
+                    self.release_live_keys();
+                    let mut removed = self.channels.remove(index);
+                    silence(&mut removed.instrument, &mut self.midi_out);
                     self.throw_away(Garbage::Channel(removed));
                 }
             }
@@ -536,7 +669,8 @@ impl AudioThread {
                 instrument,
             } => match self.channels.get_mut(channel) {
                 Some(state) => {
-                    let old = std::mem::replace(&mut state.instrument, instrument);
+                    let mut old = std::mem::replace(&mut state.instrument, instrument);
+                    silence(&mut old, &mut self.midi_out);
                     self.throw_away(Garbage::Instrument(old));
                 }
                 None => self.throw_away(Garbage::Instrument(instrument)),
@@ -564,11 +698,14 @@ impl AudioThread {
             }
             Command::Preview(channel) => self.preview(channel, STEP_NOTE),
             Command::PreviewNote { channel, pitch } => self.preview(channel, pitch),
+            Command::Live(message) => self.play_live(message),
+            Command::SetLiveChannel(channel) => self.live_channel = channel,
             Command::Clear => {
                 self.stop();
                 // `pop` takes the last channel out of the list; `while let`
                 // keeps going until there are none left.
-                while let Some(channel) = self.channels.pop() {
+                while let Some(mut channel) = self.channels.pop() {
+                    silence(&mut channel.instrument, &mut self.midi_out);
                     self.throw_away(Garbage::Channel(channel));
                 }
                 // `clear` empties the list but keeps its memory: nothing is freed.
@@ -595,8 +732,64 @@ impl AudioThread {
     fn stop(&mut self) {
         self.playing = false;
         self.playhead.store(NO_STEP, Ordering::Relaxed);
+        self.position.store(NO_POSITION, Ordering::Relaxed);
+        // This lets go of the keys that are down too.
         for channel in &mut self.channels {
             channel.instrument.release_all();
+        }
+        self.live_keys = [None; 128];
+    }
+
+    /// Plays a key from a keyboard (typing or MIDI) on the live channel.
+    ///
+    /// Live notes play like a preview: on a muted channel too, and
+    /// whether or not the sequencer is playing.
+    fn play_live(&mut self, message: MidiMessage) {
+        match message {
+            MidiMessage::NoteOn {
+                pitch, velocity, ..
+            } => {
+                // A key that is already down (on both keyboards at once,
+                // say) comes up first.
+                self.release_live(pitch);
+                let channel = self.live_channel;
+                if let Some(state) = self.channels.get_mut(channel) {
+                    state
+                        .instrument
+                        .note_on(pitch, velocity, HELD, self.sample_rate);
+                    self.live_keys[usize::from(pitch.midi())] = Some(channel);
+                }
+            }
+            MidiMessage::NoteOff { pitch, .. } => self.release_live(pitch),
+        }
+    }
+
+    /// Lets go of a key, on the channel it went down on.
+    fn release_live(&mut self, pitch: Note) {
+        if let Some(channel) = self.live_keys[usize::from(pitch.midi())].take()
+            && let Some(state) = self.channels.get_mut(channel)
+        {
+            state.instrument.note_off(pitch);
+        }
+    }
+
+    /// Lets go of every key that is down.
+    fn release_live_keys(&mut self) {
+        for midi in 0..=127 {
+            self.release_live(Note::new(midi));
+        }
+    }
+
+    /// Passes on the messages MIDI Out channels made during this block.
+    fn send_midi(&mut self) {
+        for channel in &mut self.channels {
+            // The closure changes `self.midi_out` while `self.channels` is
+            // borrowed: two different fields again.
+            channel.instrument.send_midi(|message| {
+                if let Some(out) = &mut self.midi_out {
+                    let _ = out.push(message);
+                }
+            });
         }
     }
 
@@ -645,13 +838,18 @@ impl AudioThread {
         }
     }
 
-    /// Applies waiting commands, then fills `output` with samples.
+    /// Applies waiting commands and keys, then fills `output` with samples.
     pub(crate) fn process<T>(&mut self, output: &mut [T])
     where
         T: SizedSample + FromSample<f32>,
     {
         while let Ok(command) = self.commands.pop() {
             self.apply(command);
+        }
+        // `as_mut` turns `&mut Option<Consumer>` into `Option<&mut Consumer>`,
+        // and `and_then` asks it for a key only if there is a consumer.
+        while let Some(message) = self.live_input.as_mut().and_then(|keys| keys.pop().ok()) {
+            self.play_live(message);
         }
 
         for frame in output.chunks_mut(self.output_channels) {
@@ -671,7 +869,28 @@ impl AudioThread {
             let sample = (mix * self.master_volume.next_value()).tanh();
             frame.fill(T::from_sample(sample));
         }
+
+        self.send_midi();
+        if self.playing {
+            let position = self.sequencer.position().to_bits();
+            self.position.store(position, Ordering::Relaxed);
+        }
     }
+}
+
+/// Ends the notes an instrument has playing on an external synth, before
+/// the instrument is thrown away. A synth only stops a note when it is
+/// told to, so without this the notes would hang there for ever.
+///
+/// A plain function, so the caller can pass a field of the audio thread
+/// while it holds an instrument taken out of another one.
+fn silence(instrument: &mut Instrument, midi_out: &mut Option<rtrb::Producer<MidiMessage>>) {
+    instrument.release_all();
+    instrument.send_midi(|message| {
+        if let Some(out) = midi_out {
+            let _ = out.push(message);
+        }
+    });
 }
 
 /// How long a step is, and the sample rate the instruments run at.
@@ -719,7 +938,7 @@ fn start_pattern_notes(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::instrument::{Sampler, Synth};
+    use crate::instrument::{MidiOut, Sampler, Synth};
     use crate::sample::SampleData;
 
     const RATE: u32 = 48_000;
@@ -729,6 +948,7 @@ mod tests {
         commands: rtrb::Producer<Command>,
         trash: rtrb::Consumer<Garbage>,
         playhead: Arc<AtomicUsize>,
+        position: Arc<AtomicU64>,
     }
 
     /// An audio thread with one empty pattern, 16 steps long, at 120 BPM.
@@ -736,12 +956,21 @@ mod tests {
         let (commands, command_consumer) = rtrb::RingBuffer::new(64);
         let (trash_producer, trash) = rtrb::RingBuffer::new(64);
         let playhead = Arc::new(AtomicUsize::new(NO_STEP));
-        let audio = AudioThread::new(RATE, 1, command_consumer, trash_producer, playhead.clone());
+        let position = Arc::new(AtomicU64::new(NO_POSITION));
+        let audio = AudioThread::new(
+            RATE,
+            1,
+            command_consumer,
+            trash_producer,
+            playhead.clone(),
+            position.clone(),
+        );
         let mut h = Harness {
             audio,
             commands,
             trash,
             playhead,
+            position,
         };
         send(
             &mut h,
@@ -1118,6 +1347,160 @@ mod tests {
         // (72 bytes since `InsertChannel` got its `index`, in step 5.)
         let size = std::mem::size_of::<Command>();
         assert!(size <= 80, "a command takes {size} bytes");
+    }
+
+    fn key_down(pitch: Note) -> MidiMessage {
+        MidiMessage::NoteOn {
+            channel: 0,
+            pitch,
+            velocity: 100,
+        }
+    }
+
+    fn key_up(pitch: Note) -> MidiMessage {
+        MidiMessage::NoteOff { channel: 0, pitch }
+    }
+
+    fn voices(h: &Harness, channel: usize) -> usize {
+        h.audio.channels[channel].instrument.voices_playing()
+    }
+
+    #[test]
+    fn keys_play_the_live_channel_until_they_come_up() {
+        let mut h = harness();
+        add_synth(&mut h, &[]);
+        add_synth(&mut h, &[]);
+        send(&mut h, Command::SetLiveChannel(1));
+        send(&mut h, Command::Live(key_down(Note::A4)));
+        // Held far longer than a preview (one beat, 24 000 frames).
+        render(&mut h, 48_000);
+        assert_eq!((voices(&h, 0), voices(&h, 1)), (0, 1));
+        send(&mut h, Command::Live(key_up(Note::A4)));
+        render(&mut h, 48_000);
+        assert_eq!(voices(&h, 1), 0);
+    }
+
+    #[test]
+    fn a_key_comes_up_on_the_channel_it_went_down_on() {
+        let mut h = harness();
+        add_synth(&mut h, &[]);
+        add_synth(&mut h, &[]);
+        send(&mut h, Command::Live(key_down(Note::C4)));
+        send(&mut h, Command::SetLiveChannel(1));
+        send(&mut h, Command::Live(key_up(Note::C4)));
+        render(&mut h, 48_000);
+        assert_eq!(voices(&h, 0), 0, "the note on channel 0 has ended");
+    }
+
+    #[test]
+    fn a_key_up_leaves_the_sequencers_notes_alone() {
+        let mut h = harness();
+        add_synth(&mut h, &[NoteEvent::new(Note::C4, 0, 16)]);
+        send(&mut h, Command::Play);
+        send(&mut h, Command::Live(key_down(Note::C4)));
+        render(&mut h, 100);
+        assert_eq!(voices(&h, 0), 2);
+        send(&mut h, Command::Live(key_up(Note::C4)));
+        render(&mut h, 48_000);
+        assert_eq!(voices(&h, 0), 1, "the pattern's C4 is still held");
+    }
+
+    #[test]
+    fn keys_from_a_midi_keyboard_skip_the_command_queue() {
+        let mut h = harness();
+        add_synth(&mut h, &[]);
+        let (mut keys, consumer) = rtrb::RingBuffer::new(8);
+        h.audio.live_input = Some(consumer);
+        keys.push(key_down(Note::C4)).unwrap();
+        keys.push(key_down(Note::A4)).unwrap();
+        render(&mut h, 10);
+        assert_eq!(voices(&h, 0), 2);
+    }
+
+    #[test]
+    fn removing_channels_lets_go_of_their_keys() {
+        let mut h = harness();
+        add_synth(&mut h, &[]);
+        add_synth(&mut h, &[]);
+        send(&mut h, Command::SetLiveChannel(1));
+        send(&mut h, Command::Live(key_down(Note::C4)));
+        // Channel 1 is now channel 0. Its key must not stay down.
+        send(&mut h, Command::RemoveChannel(0));
+        render(&mut h, 48_000);
+        assert_eq!(voices(&h, 0), 0);
+        assert!(h.audio.live_keys.iter().all(Option::is_none));
+    }
+
+    #[test]
+    fn the_position_is_shared_while_playing() {
+        let mut h = harness();
+        render(&mut h, 100);
+        assert_eq!(load_position(&h.position), None);
+        send(&mut h, Command::Play);
+        render(&mut h, STEP * 5 / 2);
+        assert_eq!(load_position(&h.position), Some(2.5));
+        send(&mut h, Command::Stop);
+        render(&mut h, 1);
+        assert_eq!(load_position(&h.position), None);
+    }
+
+    /// Adds a MIDI Out channel on MIDI channel 3, and a queue to read what it sends.
+    fn add_midi_out(h: &mut Harness, notes: &[NoteEvent]) -> rtrb::Consumer<MidiMessage> {
+        let (producer, consumer) = rtrb::RingBuffer::new(64);
+        h.audio.midi_out = Some(producer);
+        send(
+            h,
+            Command::InsertChannel {
+                index: AT_END,
+                instrument: Instrument::MidiOut(MidiOut::new(3)),
+                notes: ChannelNotes::new([notes.to_vec()]),
+                volume: 1.0,
+                muted: false,
+            },
+        );
+        consumer
+    }
+
+    fn received(out: &mut rtrb::Consumer<MidiMessage>) -> Vec<MidiMessage> {
+        std::iter::from_fn(|| out.pop().ok()).collect()
+    }
+
+    #[test]
+    fn midi_out_channels_send_their_notes() {
+        let mut h = harness();
+        let mut out = add_midi_out(&mut h, &[NoteEvent::new(Note::A4, 1, 2)]);
+        send(&mut h, Command::Play);
+        let silence = render(&mut h, STEP + 10);
+        assert!(silence.iter().all(|&s| s == 0.0), "no sound of its own");
+        let on = MidiMessage::NoteOn {
+            channel: 3,
+            pitch: Note::A4,
+            velocity: DEFAULT_VELOCITY,
+        };
+        assert_eq!(received(&mut out), [on]);
+        // Two steps later, the note-off.
+        render(&mut h, 2 * STEP);
+        let off = MidiMessage::NoteOff {
+            channel: 3,
+            pitch: Note::A4,
+        };
+        assert_eq!(received(&mut out), [off]);
+    }
+
+    #[test]
+    fn removing_a_midi_out_ends_its_notes() {
+        let mut h = harness();
+        let mut out = add_midi_out(&mut h, &[]);
+        send(&mut h, Command::Live(key_down(Note::C4)));
+        render(&mut h, 10);
+        assert_eq!(received(&mut out).len(), 1);
+        send(&mut h, Command::RemoveChannel(0));
+        render(&mut h, 10);
+        let off = MidiMessage::NoteOff {
+            channel: 3,
+            pitch: Note::C4,
+        };
+        assert_eq!(received(&mut out), [off]);
     }
 
     #[test]

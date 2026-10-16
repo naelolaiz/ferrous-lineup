@@ -95,6 +95,7 @@ const BAR_LINE: Color32 = Color32::from_rgb(110, 116, 130);
 const WHITE_KEY: Color32 = Color32::from_rgb(222, 224, 228);
 const BLACK_KEY: Color32 = Color32::from_rgb(40, 42, 46);
 const KEY_TEXT: Color32 = Color32::from_rgb(60, 62, 68);
+const KEY_HELD: Color32 = Color32::from_rgb(255, 152, 48);
 const SCALE_MARK: Color32 = Color32::from_rgb(120, 190, 255);
 const ROOT_MARK: Color32 = Color32::from_rgb(255, 152, 48);
 const NOTE: Color32 = Color32::from_rgb(118, 214, 140);
@@ -119,6 +120,15 @@ enum Drag {
     Move { index: usize, grab: usize },
     /// Changing a note's length by dragging its right end.
     Resize { index: usize },
+}
+
+/// Where the chord that next-chord hints follow comes from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ChordAt {
+    /// The chord at a step of the pattern.
+    Step(usize),
+    /// The keys held down on a keyboard.
+    Keys,
 }
 
 impl Drag {
@@ -154,6 +164,16 @@ enum Tool {
     Delete,
     SelectAll,
     SelectNone,
+}
+
+/// What the grid needs to know besides the notes, gathered in one value
+/// so the drawing functions do not need a long list of arguments.
+#[derive(Debug, Clone, Copy)]
+struct View<'a> {
+    scale: Scale,
+    step_width: f32,
+    playhead: Option<usize>,
+    held: &'a [Note],
 }
 
 /// Where the grid is on screen, and how to turn steps and pitches into
@@ -276,6 +296,18 @@ impl PianoRoll {
         }
     }
 
+    /// The channel shown: the selected channel, which keyboards play.
+    pub fn channel(&self) -> usize {
+        self.channel
+    }
+
+    /// Shows another channel, without opening the window.
+    pub fn select(&mut self, channel: usize) {
+        let open = self.open;
+        self.open_for(channel);
+        self.open = open;
+    }
+
     /// Opens the piano roll on a channel.
     pub fn open_for(&mut self, channel: usize) {
         if channel != self.channel {
@@ -316,13 +348,15 @@ impl PianoRoll {
 
     /// Draws the window, if it is open, and returns what the user did.
     /// It shows the notes of the selected channel in pattern `pattern`;
-    /// `playhead` is the step of that pattern being played, if any.
+    /// `playhead` is the step of that pattern being played, if any, and
+    /// `held` the keys held down on a keyboard.
     pub fn show(
         &mut self,
         ctx: &egui::Context,
         project: &Project,
         pattern: usize,
         playhead: Option<usize>,
+        held: &[Note],
     ) -> Vec<RollAction> {
         let mut actions = Vec::new();
         let (Some(channel), Some(pattern_notes)) = (
@@ -364,7 +398,7 @@ impl PianoRoll {
         .default_pos([150.0, 160.0])
         .default_size([1060.0, 580.0])
         .show(ctx, |ui| {
-            self.contents(ui, project, pattern_notes, playhead, &mut actions)
+            self.contents(ui, project, pattern_notes, playhead, held, &mut actions)
         });
         self.window_rect = window.map(|window| window.response.rect);
         self.open = open;
@@ -380,6 +414,7 @@ impl PianoRoll {
         project: &Project,
         pattern: &Pattern,
         playhead: Option<usize>,
+        held: &[Note],
         actions: &mut Vec<RollAction>,
     ) {
         let scale = project.scale;
@@ -400,9 +435,16 @@ impl PianoRoll {
         }
 
         let tool = self.toolbar(ui, scale, others.is_empty(), actions);
-        let current = self.last_step.or(playhead).and_then(|step| {
+        // A chord held on a keyboard comes first: it is what you are
+        // thinking about right now.
+        let held_chord = match analyze(held.iter().copied()) {
+            Harmony::Chord { chord, .. } => Some((ChordAt::Keys, chord)),
+            _ => None,
+        };
+        let current = held_chord.or_else(|| {
+            let step = self.last_step.or(playhead)?;
             match analyze(sounding(pattern, &heard, step)) {
-                Harmony::Chord { chord, .. } => Some((step, chord)),
+                Harmony::Chord { chord, .. } => Some((ChordAt::Step(step), chord)),
                 _ => None,
             }
         });
@@ -410,12 +452,17 @@ impl PianoRoll {
 
         // The step under the pointer was found while drawing the last
         // frame; one frame late is too fast for anyone to notice.
-        let info = match self.hovered_step.or(playhead) {
-            Some(step) => {
-                let harmony = analyze(sounding(pattern, &heard, step));
-                format!("Step {}: {}", step + 1, harmony.describe(scale))
+        let info = if held.is_empty() {
+            match self.hovered_step.or(playhead) {
+                Some(step) => {
+                    let harmony = analyze(sounding(pattern, &heard, step));
+                    format!("Step {}: {}", step + 1, harmony.describe(scale))
+                }
+                None => "Point at a step to name the chord there.".to_string(),
             }
-            None => "Point at a step to name the chord there.".to_string(),
+        } else {
+            let harmony = analyze(held.iter().copied());
+            format!("Keys down: {}", harmony.describe(scale))
         };
         ui.label(info);
         ui.add_space(2.0);
@@ -436,7 +483,13 @@ impl PianoRoll {
             .max_height(grid_height)
             .show(ui, |ui| {
                 let ghosts = if self.ghosts { &others[..] } else { &[] };
-                self.grid(ui, pattern, ghosts, scale, step_width, playhead, actions)
+                let view = View {
+                    scale,
+                    step_width,
+                    playhead,
+                    held,
+                };
+                self.grid(ui, pattern, ghosts, view, actions)
             });
         ui.add_space(4.0);
         self.velocity_lane(ui, pattern, step_width, actions);
@@ -625,13 +678,13 @@ impl PianoRoll {
     }
 
     /// Buttons for the seven chords of the key, to hear how they sound.
-    /// The chords that often follow `current` (the chord at the last step
-    /// pointed at) are highlighted.
+    /// The chords that often follow `current` (the chord held on a
+    /// keyboard, or at the last step pointed at) are highlighted.
     fn chords_in_key(
         &self,
         ui: &mut Ui,
         scale: Scale,
-        current: Option<(usize, Chord)>,
+        current: Option<(ChordAt, Chord)>,
         actions: &mut Vec<RollAction>,
     ) {
         if !scale.is_heptatonic() {
@@ -679,9 +732,15 @@ impl PianoRoll {
             }
         });
         let hint = match current {
-            None => "Point at a chord in the grid to see which chords often follow it.".to_string(),
-            Some((step, chord)) => {
+            None => "Point at a chord in the grid, or hold one on a keyboard, to see which \
+                     chords often follow it."
+                .to_string(),
+            Some((at, chord)) => {
                 let name = chord.name(spelling);
+                let place = match at {
+                    ChordAt::Step(step) => format!("at step {}", step + 1),
+                    ChordAt::Keys => "on the keys".to_string(),
+                };
                 let numeral = scale
                     .roman_numeral(chord)
                     .map(|numeral| format!(" ({numeral})"))
@@ -699,14 +758,13 @@ impl PianoRoll {
                         | ScaleKind::NaturalMinor
                         | ScaleKind::HarmonicMinor
                         | ScaleKind::MelodicMinor => {
-                            format!("{name} at step {} has a root outside the key.", step + 1)
+                            format!("{name} {place} has a root outside the key.")
                         }
                         _ => "Next-chord hints are given in major and minor keys.".to_string(),
                     }
                 } else {
                     format!(
-                        "After {name}{numeral} at step {}, try: {}. Hover the highlighted chords to see why.",
-                        step + 1,
+                        "After {name}{numeral} {place}, try: {}. Hover the highlighted chords to see why.",
                         next.join(", ")
                     )
                 }
@@ -790,17 +848,20 @@ impl PianoRoll {
     }
 
     /// The keyboard and the note grid, inside the scroll area.
-    #[allow(clippy::too_many_arguments)]
     fn grid(
         &mut self,
         ui: &mut Ui,
         pattern: &Pattern,
         ghosts: &[usize],
-        scale: Scale,
-        step_width: f32,
-        playhead: Option<usize>,
+        view: View,
         actions: &mut Vec<RollAction>,
     ) {
+        let View {
+            scale,
+            step_width,
+            playhead,
+            held,
+        } = view;
         let length = pattern.length();
         let rows = (HIGHEST - LOWEST + 1) as f32;
         let size = vec2(KEY_WIDTH + step_width * length as f32, rows * ROW_HEIGHT);
@@ -827,7 +888,7 @@ impl PianoRoll {
         let hit = self.handle_input(ui, &response, grid, pattern, scale, actions);
 
         let painter = ui.painter_at(rect);
-        paint_rows(&painter, grid, scale);
+        paint_rows(&painter, grid, scale, held);
         paint_step_lines(&painter, grid);
         if let Some(step) = playhead.filter(|&step| step < length) {
             let x = grid.x(step);
@@ -1429,8 +1490,9 @@ fn both_names(pitch_class: PitchClass) -> String {
 }
 
 /// Paints the keyboard and the row backgrounds. Rows of notes in the key
-/// are lighter, and the key's root is tinted, so the scale shows at a glance.
-fn paint_rows(painter: &Painter, grid: Grid, scale: Scale) {
+/// are lighter, and the key's root is tinted, so the scale shows at a
+/// glance. Keys held down on a keyboard light up.
+fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
     for midi in LOWEST..=HIGHEST {
         let pitch_class = PitchClass::from_semitone(midi);
         let top = grid.row_top(midi);
@@ -1455,7 +1517,9 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale) {
         painter.hline(row.x_range(), row.bottom(), Stroke::new(1.0, line));
 
         let key = Rect::from_min_size(pos2(grid.keys().left(), top), vec2(KEY_WIDTH, ROW_HEIGHT));
-        let key_fill = if pitch_class.is_black_key() {
+        let key_fill = if held.contains(&Note::new(midi)) {
+            KEY_HELD
+        } else if pitch_class.is_black_key() {
             BLACK_KEY
         } else {
             WHITE_KEY

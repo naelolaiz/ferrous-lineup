@@ -141,11 +141,12 @@ impl LoomApp {
     }
 
     /// Called at the end of each frame. While a mouse button is held (a
-    /// drag) or a text field has the keyboard (typing a name), changes
-    /// join one undo step; once both are let go, the step ends.
+    /// drag), a text field has the keyboard (typing a name) or a take is
+    /// being recorded, changes join one undo step; once all of them are
+    /// over, the step ends.
     pub(super) fn end_frame_for_undo(&mut self, ctx: &egui::Context) {
         let holding = ctx.input(|input| input.pointer.any_down());
-        if !holding && !ctx.text_edit_focused() {
+        if !holding && !ctx.text_edit_focused() && !self.is_recording() {
             self.history.close();
         }
     }

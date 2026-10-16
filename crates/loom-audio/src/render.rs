@@ -9,9 +9,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::{AtomicU64, AtomicUsize};
 
-use crate::engine::{AudioThread, Command, Garbage, NO_STEP, TRASH_QUEUE_SIZE};
+use crate::engine::{AudioThread, Command, Garbage, NO_POSITION, NO_STEP, TRASH_QUEUE_SIZE};
 
 /// How many frames are made and written at a time.
 const BLOCK_FRAMES: usize = 4_096;
@@ -35,6 +35,7 @@ impl Renderer {
         let (commands, command_consumer) = rtrb::RingBuffer::new(1);
         let (trash_producer, trash) = rtrb::RingBuffer::new(TRASH_QUEUE_SIZE);
         let playhead = Arc::new(AtomicUsize::new(NO_STEP));
+        let position = Arc::new(AtomicU64::new(NO_POSITION));
         let channels = channels.max(1);
         Renderer {
             audio: AudioThread::new(
@@ -43,6 +44,7 @@ impl Renderer {
                 command_consumer,
                 trash_producer,
                 playhead,
+                position,
             ),
             sample_rate,
             channels,

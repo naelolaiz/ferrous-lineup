@@ -61,6 +61,21 @@ impl Sequencer {
         self.length
     }
 
+    /// Where playback is, in steps, with the fraction of the step that
+    /// has passed: 4.5 is halfway through step 4. Recording uses it to
+    /// place a key played between two steps on the nearer one.
+    ///
+    /// Before the first tick, and right after a reset, this is the start
+    /// of the step that is about to fire.
+    pub fn position(&self) -> f64 {
+        if self.frames_until_next <= 0.0 {
+            return self.next_step as f64;
+        }
+        let current = (self.next_step + self.length - 1) % self.length;
+        let passed = 1.0 - self.frames_until_next / self.frames_per_step;
+        current as f64 + passed.clamp(0.0, 1.0)
+    }
+
     /// Goes back to the start, so step 0 fires on the next tick.
     pub fn reset(&mut self) {
         self.frames_until_next = 0.0;
@@ -133,6 +148,20 @@ mod tests {
         run(&mut sequencer, 10_000);
         sequencer.reset();
         assert_eq!(sequencer.tick(), Some(0));
+    }
+
+    #[test]
+    fn position_counts_fractions_of_a_step() {
+        let mut sequencer = Sequencer::new(Tempo::new(120.0), 48_000, 4);
+        assert_eq!(sequencer.position(), 0.0);
+        run(&mut sequencer, 1_500); // a quarter of step 0
+        assert_eq!(sequencer.position(), 0.25);
+        run(&mut sequencer, 6_000 * 3); // a quarter of step 3
+        assert_eq!(sequencer.position(), 3.25);
+        run(&mut sequencer, 4_500); // just before step 0 comes round again
+        assert_eq!(sequencer.position(), 0.0);
+        run(&mut sequencer, 3_000);
+        assert_eq!(sequencer.position(), 0.5);
     }
 
     #[test]

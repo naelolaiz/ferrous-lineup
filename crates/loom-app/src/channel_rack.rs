@@ -10,7 +10,7 @@
 use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Rect, Ui};
-use loom_core::{Drum, MAX_CHANNELS, Project, file};
+use loom_core::{ChannelKind, Drum, MAX_CHANNELS, Project, file};
 
 use crate::widgets;
 
@@ -35,6 +35,13 @@ pub enum RackAction {
     OpenPianoRoll(usize),
     AddDrum(Drum),
     AddSynth,
+    /// Add a channel that plays an external synth.
+    AddMidiOut,
+    /// Change the MIDI channel (0 to 15) of a MIDI Out channel.
+    SetMidiChannel {
+        channel: usize,
+        midi_channel: u8,
+    },
     /// Load a WAV file into a channel, or into a new channel if `None`.
     LoadSample {
         channel: Option<usize>,
@@ -46,11 +53,14 @@ const NAME_WIDTH: f32 = 110.0;
 const DROP_HIGHLIGHT: Color32 = Color32::from_rgba_premultiplied(255, 152, 48, 40);
 
 /// Draws the rack for pattern `pattern` and returns what the user did
-/// this frame. `playhead` is the step of that pattern being played, if any.
+/// this frame. `selected` is the selected channel, which the piano roll
+/// shows and the keyboards play; `playhead` is the step of the pattern
+/// being played, if any.
 pub fn show(
     ui: &mut Ui,
     project: &Project,
     pattern: usize,
+    selected: usize,
     playhead: Option<usize>,
 ) -> Vec<RackAction> {
     let mut actions = Vec::new();
@@ -95,10 +105,13 @@ pub fn show(
 
                     let name = egui::Button::new(&channel.name)
                         .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y))
+                        .selected(index == selected)
                         .truncate();
                     let name = ui.add(name).on_hover_text(
-                    "Click to hear it. Right-click for options. Drop a WAV file here to load it.",
-                );
+                        "Click to hear it and select it: the piano roll shows the selected \
+                         channel, and keyboards play it. Right-click for options. Drop a WAV \
+                         file here to load it.",
+                    );
                     if name.clicked() {
                         actions.push(RackAction::Preview(index));
                     }
@@ -106,6 +119,23 @@ pub fn show(
                         if ui.button("Piano roll").clicked() {
                             actions.push(RackAction::OpenPianoRoll(index));
                             ui.close();
+                        }
+                        if let ChannelKind::MidiOut { channel: current } = channel.kind {
+                            ui.menu_button("MIDI channel", |ui| {
+                                for midi_channel in 0..16 {
+                                    let label = format!("{}", midi_channel + 1);
+                                    if ui
+                                        .selectable_label(current == midi_channel, label)
+                                        .clicked()
+                                    {
+                                        actions.push(RackAction::SetMidiChannel {
+                                            channel: index,
+                                            midi_channel,
+                                        });
+                                        ui.close();
+                                    }
+                                }
+                            });
                         }
                         if ui.button("Remove channel").clicked() {
                             actions.push(RackAction::Remove(index));
@@ -159,6 +189,17 @@ pub fn show(
                     ui.separator();
                     if ui.button("Loom Osc (synth)").clicked() {
                         actions.push(RackAction::AddSynth);
+                        ui.close();
+                    }
+                    if ui
+                        .button("MIDI Out (external synth)")
+                        .on_hover_text(
+                            "Plays its notes on a synth outside Ferrous Loom: pick where in \
+                             MIDI > Output.",
+                        )
+                        .clicked()
+                    {
+                        actions.push(RackAction::AddMidiOut);
                         ui.close();
                     }
                 });
