@@ -1,7 +1,9 @@
 //! Recorded sounds: loading them from WAV files and holding them in memory.
 
+use std::collections::HashMap;
 use std::fmt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 /// A mono sound held in memory, ready to play.
 ///
@@ -85,6 +87,49 @@ impl fmt::Display for SampleError {
 
 impl std::error::Error for SampleError {}
 
+/// Samples already loaded from files, by path.
+///
+/// Building an instrument for a sample file reads it from the disk. With
+/// undo, the same channel can come and go many times, and an export
+/// builds every instrument again, so each file is read once and then
+/// shared: an `Arc` lets every sampler that plays it point to the same
+/// memory.
+#[derive(Debug, Default)]
+pub struct SampleCache {
+    loaded: HashMap<PathBuf, Arc<SampleData>>,
+}
+
+impl SampleCache {
+    pub fn new() -> Self {
+        SampleCache::default()
+    }
+
+    /// The sound in `path`, read from the file the first time and from
+    /// memory after that.
+    pub fn get(&mut self, path: &Path) -> Result<Arc<SampleData>, SampleError> {
+        // A `HashMap<PathBuf, _>` can be searched with a `&Path`, because
+        // `PathBuf` implements `Borrow<Path>`: no `PathBuf` is built here.
+        if let Some(sample) = self.loaded.get(path) {
+            return Ok(Arc::clone(sample));
+        }
+        self.reload(path)
+    }
+
+    /// Reads the file again even if it was read before, for when the
+    /// user drops it again (it may have changed). A file that cannot be
+    /// read is not remembered, so the next try reads it again.
+    pub fn reload(&mut self, path: &Path) -> Result<Arc<SampleData>, SampleError> {
+        let sample = Arc::new(SampleData::load_wav(path)?);
+        self.loaded.insert(path.to_path_buf(), Arc::clone(&sample));
+        Ok(sample)
+    }
+
+    /// Forgets every sample, for example when another project is opened.
+    pub fn clear(&mut self) {
+        self.loaded.clear();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,5 +168,34 @@ mod tests {
     fn missing_file_is_an_error() {
         let result = SampleData::load_wav(Path::new("/no/such/file.wav"));
         assert!(matches!(result, Err(SampleError::Wav(_))));
+    }
+
+    #[test]
+    fn the_cache_reads_each_file_once() {
+        let path = write_test_wav("ferrous-loom-test-cache.wav");
+        let mut cache = SampleCache::new();
+        let first = cache.get(&path).unwrap();
+        let second = cache.get(&path).unwrap();
+        let reloaded = cache.reload(&path).unwrap();
+        std::fs::remove_file(&path).ok();
+
+        // `Arc::ptr_eq` asks whether two `Arc`s point to the same memory.
+        assert!(
+            Arc::ptr_eq(&first, &second),
+            "the second get shares the first"
+        );
+        assert!(
+            !Arc::ptr_eq(&first, &reloaded),
+            "reload reads the file again"
+        );
+        assert!(Arc::ptr_eq(&reloaded, &cache.get(&path).unwrap()));
+    }
+
+    #[test]
+    fn the_cache_does_not_remember_failures() {
+        let mut cache = SampleCache::new();
+        let path = Path::new("/no/such/file.wav");
+        assert!(cache.get(path).is_err());
+        assert!(cache.loaded.is_empty());
     }
 }

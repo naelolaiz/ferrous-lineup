@@ -30,6 +30,11 @@ impl Smoothed {
         self.target
     }
 
+    /// Jumps straight to the target, with no smoothing.
+    pub fn settle(&mut self) {
+        self.current = self.target;
+    }
+
     /// Moves one sample toward the target and returns the new value.
     pub fn next_value(&mut self) -> f32 {
         self.current += (self.target - self.current) * self.coefficient;

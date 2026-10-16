@@ -206,6 +206,15 @@ impl PianoRoll {
         self.drag = None;
     }
 
+    /// Called after a channel was inserted above or at the one shown (by
+    /// undo, for example), so the piano roll keeps showing the same channel.
+    pub fn channel_inserted(&mut self, inserted: usize) {
+        if inserted <= self.channel {
+            self.channel += 1;
+        }
+        self.drag = None;
+    }
+
     /// Draws the window, if it is open, and returns what the user did.
     /// It shows the notes of the selected channel in pattern `pattern`;
     /// `playhead` is the step of that pattern being played, if any.
