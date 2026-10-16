@@ -30,7 +30,7 @@ You can read it three ways, all of them offline:
 | Step | What gets built | Rust topics |
 |------|-----------------|-------------|
 | 1 | Window, audio engine, test tone, CI | Cargo, crates, modules, structs, enums, traits, closures, threads, errors |
-| 2 | Channel rack and step sequencer | Sharing data between threads, traits for instruments, sample-accurate timing |
+| 2 | Channel rack and step sequencer | Arrays, `Option` combinators, `Arc`, atomics, closures as `FnMut`, custom widgets, sample-accurate timing |
 | 3 | Piano roll with harmony helpers | Enums and pattern matching for music theory, iterators |
 | 4 | Playlist, saving projects, macOS and Windows builds | Serialization with serde, error handling, cross-platform builds |
 

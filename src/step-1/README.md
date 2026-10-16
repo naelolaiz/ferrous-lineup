@@ -1,5 +1,10 @@
 # Step 1: The foundation
 
+> The code shown in step 1's chapters is the code as it was at the end of
+> step 1. Later steps changed some of it (the test tone, for example, was
+> replaced in step 2). To read the step 1 version of the code, run
+> `git checkout step-1-foundation`, or browse that branch on GitHub.
+
 Step 1 builds the skeleton that every later feature hangs on:
 
 - a **window** with a transport bar (play button, tempo, test tone controls)

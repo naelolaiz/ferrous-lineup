@@ -16,8 +16,9 @@ cargo --version
 rustc --version
 ```
 
-Ferrous Loom needs Rust 1.85 or newer, because it uses the 2024 edition of
-the language (more on editions in the next chapter).
+Ferrous Loom needs Rust 1.88 or newer. It uses the 2024 edition of the
+language (more on editions in the next chapter) and `if let` chains, which
+arrived in 1.88. If your Rust is older, `rustup update` fixes it.
 
 ## 2. Install the Linux system libraries
 
@@ -52,9 +53,9 @@ development you can drop it to build faster.
 
 You should see this window:
 
-![The Ferrous Loom window after step 1](images/step-1-window.png)
+![The Ferrous Loom channel rack](images/step-2-rack.png)
 
-Press **Space** or click **▶ Play** to hear a test tone. The status bar at
+Press **Space** or click **▶ Play** to hear the demo beat. The status bar at
 the bottom shows which sound card is in use, or why audio could not start.
 
 ## 4. Run the tests
