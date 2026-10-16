@@ -25,7 +25,8 @@ use std::time::Duration;
 use eframe::egui;
 use loom_audio::{LiveInput, MidiOutput};
 use loom_core::midi::all_notes_off;
-use loom_core::{MidiMessage, Note, Scale, tools};
+use loom_core::{Channel, ChannelKind, MidiMessage, Note, SampleSource, Scale, tools};
+use loom_core::{general_midi_drum, midi_channels};
 use midir::{Ignore, MidiInput, MidiInputConnection, MidiOutputConnection};
 
 /// The name Ferrous Loom shows to other MIDI programs.
@@ -43,6 +44,36 @@ pub struct Played {
     /// In steps of the loop (see `Sequencer::position`), or `None` when
     /// stopped.
     pub position: Option<f64>,
+}
+
+/// Where a channel's notes go out when every channel is sent to the
+/// MIDI port: its MIDI channel (0 to 15) and, for a drum, the one note
+/// it plays.
+pub type Route = (u8, Option<Note>);
+
+/// The route of each channel when every channel is sent, as File >
+/// Export MIDI writes them: drums on channel 10, as the notes of a
+/// General MIDI drum set, and the others on channels 1, 2, 3 and so on.
+/// MIDI Out channels send their notes themselves, so they have none.
+pub fn routes(channels: &[Channel]) -> Vec<Option<Route>> {
+    channels
+        .iter()
+        .zip(midi_channels(channels))
+        .map(|(channel, midi_channel)| match &channel.kind {
+            ChannelKind::MidiOut { .. } => None,
+            ChannelKind::Sampler(SampleSource::Builtin(drum)) => {
+                Some((midi_channel, Some(general_midi_drum(*drum))))
+            }
+            _ => Some((midi_channel, None)),
+        })
+        .collect()
+}
+
+/// Whether a port belongs to Ferrous Loom itself. On Linux, the port it
+/// sends from shows up in the list of inputs (and the one it listens on
+/// in the outputs): picking it would send every note round in a loop.
+fn is_own(name: &str) -> bool {
+    name.starts_with(&format!("{CLIENT_NAME}:"))
 }
 
 /// A MIDI port that can be picked from the menu.
@@ -144,6 +175,8 @@ pub struct Midi {
     /// The output connection, shared with the sending thread.
     output: Arc<Mutex<Option<MidiOutputConnection>>>,
     live: Option<Arc<Mutex<LiveInput>>>,
+    /// Whether the sending thread is running.
+    sending: bool,
     to_ui: mpsc::Sender<Played>,
     from_keyboard: mpsc::Receiver<Played>,
     ctx: egui::Context,
@@ -159,10 +192,11 @@ impl Midi {
         let output = Arc::new(Mutex::new(None));
         // Opening a client is the test: it fails when the system has no MIDI.
         let unavailable = MidiInput::new(CLIENT_NAME).err().map(|err| err.to_string());
+        let mut sending = false;
         if unavailable.is_none()
             && let Some(messages) = messages
         {
-            start_sending(messages, Arc::clone(&output));
+            sending = start_sending(messages, Arc::clone(&output));
         }
         let mut midi = Midi {
             unavailable,
@@ -172,6 +206,7 @@ impl Midi {
             output_port: None,
             output,
             live: live.map(|live| Arc::new(Mutex::new(live))),
+            sending,
             to_ui,
             from_keyboard,
             ctx: ctx.clone(),
@@ -202,7 +237,7 @@ impl Midi {
                 .ports()
                 .iter()
                 .filter_map(|port| {
-                    let name = midi_in.port_name(port).ok()?;
+                    let name = midi_in.port_name(port).ok().filter(|name| !is_own(name))?;
                     Some(Port {
                         id: port.id(),
                         name,
@@ -215,7 +250,7 @@ impl Midi {
                 .ports()
                 .iter()
                 .filter_map(|port| {
-                    let name = midi_out.port_name(port).ok()?;
+                    let name = midi_out.port_name(port).ok().filter(|name| !is_own(name))?;
                     Some(Port {
                         id: port.id(),
                         name,
@@ -236,6 +271,12 @@ impl Midi {
     /// The input port that is connected, if any.
     pub fn input(&self) -> Option<&Port> {
         self.input.as_ref().map(|(port, _)| port)
+    }
+
+    /// Whether messages can reach the output at all: the sending thread
+    /// only runs while audio does, because the audio thread makes them.
+    pub fn can_send(&self) -> bool {
+        self.sending
     }
 
     /// The output port that is connected, if any.
@@ -314,7 +355,11 @@ impl Midi {
 }
 
 /// Starts the thread that sends MIDI Out messages to the output port.
-fn start_sending(mut messages: MidiOutput, output: Arc<Mutex<Option<MidiOutputConnection>>>) {
+/// Returns whether it started.
+fn start_sending(
+    mut messages: MidiOutput,
+    output: Arc<Mutex<Option<MidiOutputConnection>>>,
+) -> bool {
     let sender = move || {
         while !messages.is_abandoned() {
             thread::sleep(SEND_INTERVAL);
@@ -329,7 +374,44 @@ fn start_sending(mut messages: MidiOutput, output: Arc<Mutex<Option<MidiOutputCo
         }
     };
     // If the thread cannot start, MIDI Out stays silent; nothing else breaks.
-    let _ = thread::Builder::new()
+    thread::Builder::new()
         .name("midi-out".to_string())
-        .spawn(sender);
+        .spawn(sender)
+        .is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use loom_core::{DRUM_CHANNEL, Drum};
+
+    #[test]
+    fn every_channel_but_midi_outs_gets_a_route() {
+        let channels = [
+            Channel::drum(Drum::Kick),
+            Channel::synth(),
+            Channel::midi_out(6),
+            Channel::drum(Drum::HiHat),
+            Channel::synth(),
+        ];
+        let kick = general_midi_drum(Drum::Kick);
+        let hat = general_midi_drum(Drum::HiHat);
+        assert_eq!(
+            routes(&channels),
+            [
+                Some((DRUM_CHANNEL, Some(kick))),
+                Some((0, None)),
+                None,
+                Some((DRUM_CHANNEL, Some(hat))),
+                Some((1, None)),
+            ]
+        );
+    }
+
+    #[test]
+    fn its_own_ports_are_left_out() {
+        assert!(is_own("Ferrous Loom:output 130:0"));
+        assert!(!is_own("Midi Through:Midi Through Port-0 14:0"));
+        assert!(!is_own("Ferrous Loomish Synth:in 20:0"));
+    }
 }

@@ -1,5 +1,7 @@
 //! The instruments a channel can play: a sampler, the Loom Osc synth,
-//! and a MIDI Out that has an external synth play the notes.
+//! and a MIDI Out that has an external synth play the notes. A sampler
+//! or a synth can also be [`Echoed`]: it plays as usual and sends its
+//! notes to the MIDI port too.
 //!
 //! The sampler and the synth are *polyphonic*: they have a fixed number
 //! of voices, and each note that starts takes one. That is what lets the
@@ -41,6 +43,9 @@ pub enum Instrument {
     Sampler(Sampler),
     Synth(Synth),
     MidiOut(MidiOut),
+    /// Boxed, because an enum cannot hold itself directly: its size
+    /// would have no end.
+    Echoed(Box<Echoed>),
 }
 
 impl Instrument {
@@ -64,6 +69,22 @@ impl Instrument {
         })
     }
 
+    /// This instrument, with its notes also sent through MIDI on
+    /// `channel` (0 to 15). With a `pitch`, every note goes out as that
+    /// note: a drum is one note of a General MIDI drum set, whatever note
+    /// its steps are on. A MIDI Out already sends its notes, so it is
+    /// given back as it is.
+    pub fn echoed(self, channel: u8, pitch: Option<Note>) -> Self {
+        match self {
+            Instrument::MidiOut(_) | Instrument::Echoed(_) => self,
+            inner => Instrument::Echoed(Box::new(Echoed {
+                inner,
+                midi: MidiOut::new(channel),
+                pitch,
+            })),
+        }
+    }
+
     /// Starts playing a note.
     ///
     /// `gate` is how many frames the note is held for, or [`HELD`]. The
@@ -75,6 +96,11 @@ impl Instrument {
             Instrument::Sampler(sampler) => sampler.note_on(pitch, velocity, output_rate),
             Instrument::Synth(synth) => synth.note_on(pitch, velocity, gate),
             Instrument::MidiOut(midi_out) => midi_out.note_on(pitch, velocity, gate),
+            Instrument::Echoed(echoed) => {
+                echoed.inner.note_on(pitch, velocity, gate, output_rate);
+                let sent = echoed.pitch.unwrap_or(pitch);
+                echoed.midi.note_on(sent, velocity, gate);
+            }
         }
     }
 
@@ -85,6 +111,10 @@ impl Instrument {
             Instrument::Sampler(_) => {} // samples always play to the end
             Instrument::Synth(synth) => synth.note_off(pitch),
             Instrument::MidiOut(midi_out) => midi_out.note_off(pitch),
+            Instrument::Echoed(echoed) => {
+                echoed.inner.note_off(pitch);
+                echoed.midi.note_off(echoed.pitch.unwrap_or(pitch));
+            }
         }
     }
 
@@ -94,6 +124,10 @@ impl Instrument {
             Instrument::Sampler(sampler) => sampler.release_all(),
             Instrument::Synth(synth) => synth.release_all(),
             Instrument::MidiOut(midi_out) => midi_out.release_all(),
+            Instrument::Echoed(echoed) => {
+                echoed.inner.release_all();
+                echoed.midi.release_all();
+            }
         }
     }
 
@@ -103,15 +137,22 @@ impl Instrument {
             Instrument::Sampler(sampler) => sampler.next_sample(),
             Instrument::Synth(synth) => synth.next_sample(),
             Instrument::MidiOut(midi_out) => midi_out.next_sample(),
+            // The MIDI side makes no sound, but its clock must run.
+            Instrument::Echoed(echoed) => {
+                echoed.midi.next_sample();
+                echoed.inner.next_sample()
+            }
         }
     }
 
     /// Hands the MIDI messages made since the last call to `send`, which
-    /// gets each one in order. Only a MIDI Out has any. The audio thread
-    /// calls this once per block.
+    /// gets each one in order. Only a MIDI Out or an echoed instrument
+    /// has any. The audio thread calls this once per block.
     pub fn send_midi(&mut self, send: impl FnMut(MidiMessage)) {
-        if let Instrument::MidiOut(midi_out) = self {
-            midi_out.flush(send);
+        match self {
+            Instrument::MidiOut(midi_out) => midi_out.flush(send),
+            Instrument::Echoed(echoed) => echoed.midi.flush(send),
+            _ => {}
         }
     }
 
@@ -122,8 +163,20 @@ impl Instrument {
             Instrument::Sampler(sampler) => sampler.voices.iter().filter(|v| !v.is_idle()).count(),
             Instrument::Synth(synth) => synth.voices.iter().filter(|v| !v.is_idle()).count(),
             Instrument::MidiOut(midi_out) => midi_out.notes_sounding(),
+            Instrument::Echoed(echoed) => echoed.inner.voices_playing(),
         }
     }
+}
+
+/// A sampler or synth that also sends its notes to the MIDI port, so an
+/// external synth can play along: what MIDI > Output > "Send every
+/// channel" turns on.
+#[derive(Debug, Clone)]
+pub struct Echoed {
+    inner: Instrument,
+    midi: MidiOut,
+    /// The note every note goes out as, for a drum.
+    pitch: Option<Note>,
 }
 
 /// Turns a MIDI velocity (1..=127) into a volume from 0.0 to 1.0.
@@ -792,5 +845,53 @@ mod tests {
     fn missing_file_reports_an_error() {
         let kind = ChannelKind::Sampler(SampleSource::File("/no/such.wav".into()));
         assert!(Instrument::for_channel(&kind, RATE, &mut SampleCache::new()).is_err());
+    }
+
+    /// Everything an instrument has sent through MIDI so far.
+    fn sent_by(instrument: &mut Instrument) -> Vec<MidiMessage> {
+        let mut messages = Vec::new();
+        instrument.send_midi(|message| messages.push(message));
+        messages
+    }
+
+    #[test]
+    fn an_echoed_synth_sounds_and_sends_its_notes() {
+        let mut echoed = synth().echoed(4, None);
+        echoed.note_on(Note::new(64), 90, 100, RATE);
+        assert!(render(&mut echoed, 1_000).iter().any(|&s| s != 0.0));
+        let on = MidiMessage::NoteOn {
+            channel: 4,
+            pitch: Note::new(64),
+            velocity: 90,
+        };
+        let off = MidiMessage::NoteOff {
+            channel: 4,
+            pitch: Note::new(64),
+        };
+        assert_eq!(sent_by(&mut echoed), [on, off], "the gate was 100 frames");
+    }
+
+    #[test]
+    fn an_echoed_drum_sends_its_own_note_and_lets_go_of_held_keys() {
+        let kind = ChannelKind::Sampler(SampleSource::Builtin(loom_core::Drum::Kick));
+        let kick = Instrument::for_channel(&kind, RATE, &mut SampleCache::new()).unwrap();
+        let mut echoed = kick.echoed(9, Some(Note::new(36)));
+        // A key held on the typing keyboard: the step note, C4.
+        echoed.note_on(STEP_NOTE, 100, HELD, RATE);
+        echoed.note_off(STEP_NOTE);
+        let pitches: Vec<(bool, u8, u8)> = sent_by(&mut echoed)
+            .into_iter()
+            .map(|message| match message {
+                MidiMessage::NoteOn { channel, pitch, .. } => (true, channel, pitch.midi()),
+                MidiMessage::NoteOff { channel, pitch } => (false, channel, pitch.midi()),
+            })
+            .collect();
+        assert_eq!(pitches, [(true, 9, 36), (false, 9, 36)]);
+    }
+
+    #[test]
+    fn echoing_a_midi_out_changes_nothing() {
+        let midi_out = Instrument::MidiOut(MidiOut::new(2));
+        assert!(matches!(midi_out.echoed(5, None), Instrument::MidiOut(_)));
     }
 }

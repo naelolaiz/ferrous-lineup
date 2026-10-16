@@ -15,7 +15,7 @@ use loom_core::{DEFAULT_VELOCITY, MidiMessage, Note, Pattern, Scale, tools};
 
 use super::follow::Follow;
 use super::{Audio, LoomApp};
-use crate::midi::{Midi, Played, Port};
+use crate::midi::{self, Midi, Played, Port, Route};
 use crate::theme;
 
 /// The typing keyboard, laid out like a piano on the letter keys, as in
@@ -93,6 +93,13 @@ pub(super) struct Live {
     menu_was_open: bool,
     /// Chord follow: the accompaniment plays the chord the keys hold.
     pub(super) follow: Follow,
+    /// Whether every channel plays on the MIDI output, not only the MIDI
+    /// Out channels.
+    send_all: bool,
+    /// The route each channel of the audio thread was last given, or
+    /// `None` when that is not known (some channels changed) and they all
+    /// have to be sent again.
+    routes_sent: Option<Vec<Option<Route>>>,
 }
 
 impl Live {
@@ -106,6 +113,8 @@ impl Live {
             channel_sent: None,
             menu_was_open: false,
             follow: Follow::default(),
+            send_all: true,
+            routes_sent: Some(Vec::new()),
         }
     }
 
@@ -124,6 +133,23 @@ impl Live {
     pub(super) fn resend_channel(&mut self) {
         self.channel_sent = None;
     }
+
+    /// Notes that the audio thread's channels changed: they were all made
+    /// again, without routes, or some moved. `channels` is how many there
+    /// are now.
+    pub(super) fn channels_changed(&mut self, channels: usize) {
+        let any_routed = match &self.routes_sent {
+            Some(routes) => routes.iter().any(Option::is_some),
+            None => true,
+        };
+        // Channels with no route need nothing sent again: new ones come
+        // without one.
+        self.routes_sent = if any_routed {
+            None
+        } else {
+            Some(vec![None; channels])
+        };
+    }
 }
 
 impl LoomApp {
@@ -136,6 +162,7 @@ impl LoomApp {
             self.live.channel_sent = Some(channel);
         }
         self.live.midi.snap_to(self.snap_scale());
+        self.send_routes();
         self.typing_keyboard(ctx);
         for played in self.live.midi.played() {
             self.key_played(played);
@@ -327,6 +354,39 @@ impl LoomApp {
         }
     }
 
+    /// Gives each channel of the audio thread its route to the MIDI
+    /// output, when "Send every channel" is on and a port is connected,
+    /// and takes them away again when not. Only the channels whose route
+    /// changed get a new instrument.
+    fn send_routes(&mut self) {
+        let channels = self.project.channels();
+        let wanted = if self.live.send_all && self.live.midi.output().is_some() {
+            midi::routes(channels)
+        } else {
+            vec![None; channels.len()]
+        };
+        if self.live.routes_sent.as_ref() == Some(&wanted) {
+            return;
+        }
+        let sent = self.live.routes_sent.take();
+        let sample_rate = self.sample_rate();
+        for (channel, route) in wanted.iter().enumerate() {
+            if sent.as_ref().and_then(|sent| sent.get(channel)) == Some(route) {
+                continue;
+            }
+            let kind = self.project.channels()[channel].kind.clone();
+            let mut instrument = self.build_instrument(&kind, sample_rate);
+            if let Some((midi_channel, pitch)) = *route {
+                instrument = instrument.echoed(midi_channel, pitch);
+            }
+            self.send(Command::SetInstrument {
+                channel,
+                instrument,
+            });
+        }
+        self.live.routes_sent = Some(wanted);
+    }
+
     /// The MIDI menu, next to the Edit menu.
     pub(super) fn midi_menu(&mut self, ui: &mut egui::Ui) {
         let response = ui.menu_button("MIDI", |ui| {
@@ -378,13 +438,25 @@ impl LoomApp {
             ui.close();
         }
         ui.separator();
-        ui.label("Output: where MIDI Out channels play");
+        ui.label("Output: an external synth to play");
         let current = self.live.midi.output().cloned();
         if let Some(choice) = pick_port(ui, self.live.midi.outputs(), current.as_ref()) {
             if let Err(err) = self.live.midi.connect_output(choice.as_ref()) {
                 self.message = Some(format!("Could not connect: {err}"));
             }
             ui.close();
+        }
+        ui.checkbox(&mut self.live.send_all, "Send every channel")
+            .on_hover_text(
+                "On: every channel plays on the output too, on the MIDI channels File > \
+                 Export MIDI uses: drums on channel 10 as a General MIDI drum set, the others \
+                 on 1, 2, 3 and so on. Off: only MIDI Out channels play there, as in FL Studio.",
+            );
+        if !self.live.midi.can_send() {
+            ui.colored_label(
+                ui.visuals().warn_fg_color,
+                "Nothing is sent while audio is unavailable",
+            );
         }
     }
 
