@@ -20,8 +20,7 @@ screen said "this is the chorus". This page adds three things:
   that part while you work on it.
 
 ![The chorus is marked "×2". While the song plays it the second time, the
-section says "▶ 2 of 2". The fill clip repeats its one-bar pattern three
-times.](../images/step-8-sections-playing.png)
+section says "▶ 2 of 2".](../images/step-8-sections-playing.png)
 
 ## Using it
 

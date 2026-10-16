@@ -38,7 +38,7 @@ to write next:
 Every tool is one undo step, and every drag is one step too, however far
 it goes.
 
-![The suggestions after a C chord, and the reason for one of them. The grey notes are ghost notes from the Bass channel.](../images/step-6-suggestions.png)
+![Pointing at the C chord: the line above the grid says what often comes after it, and those chord buttons light up.](../images/step-6-suggestions.png)
 
 ![The Tools menu, with the A minor chord selected (white borders)](../images/step-6-tools.png)
 

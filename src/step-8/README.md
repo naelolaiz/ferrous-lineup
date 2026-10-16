@@ -47,9 +47,9 @@ and a library to go with them:
 - **patterns up to sixteen bars long**, so a whole twelve-bar blues fits
   in one pattern.
 
-![The harmony keys while the demo song plays. F (IV) is held down, in orange on the keyboard; the song is playing A minor, in blue. After IV, the keys outlined in yellow (I, ii and V) often come next.](../images/step-8-harmony-keys.png)
+![The harmony keys while the demo song plays. F (IV) is held down, in orange on the keyboard; the song is playing A minor, in blue. The keys outlined in yellow are the chords that often come after IV.](../images/step-8-harmony-keys.png)
 
-![The Library tab. Bossa nova has just been tried: it is playing in its own pattern, and its tooltip shows its chords in C major. The harmony keys follow it: Dm7 is playing, so ii is lit, and V and vii° are outlined as the chords that often come next.](../images/step-8-library.png)
+![The Library tab. Bossa nova has just been tried: it is in its own pattern, and its tooltip shows its chords in C major, its tempo and its rhythm.](../images/step-8-library.png)
 
 ![File > Demos: the starting song, the songs, and every style by genre](../images/step-8-demos.png)
 

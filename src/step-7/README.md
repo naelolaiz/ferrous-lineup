@@ -30,7 +30,7 @@ it, both ways:
 
 ![Holding A minor on the typing keyboard. The three keys light up in orange, the line above the grid names the chord, and the chords that often follow it are highlighted.](../images/step-7-held.png)
 
-![A take of C, Am, F and G, recorded with the typing keyboard at 90 BPM. The Am came in a little late, so it starts on step 6 instead of step 5: recording moves each note to the nearest step, not to where you meant it.](../images/step-7-take.png)
+![A take of C, Am, F and G, one chord a beat, recorded with the typing keyboard while a one-bar pattern looped. The chords came in a little late, and the G spilled over into the next time round, so it shows at both ends: recording moves each note to the nearest step, not to where you meant it.](../images/step-7-take.png)
 
 ![A MIDI Out channel in the rack, and its MIDI channel menu](../images/step-7-midi-out.png)
 

@@ -77,7 +77,7 @@ song's form. *Für Elise* has no drums at all, and its left hand is
 written out note by note instead of being made from chords, because
 Beethoven's left hand *is* the accompaniment.
 
-![Für Elise from File > Demos: a pattern per part, placed in the order of the song's form. It is in 3/8, so the rack has six steps to the bar, and in A harmonic minor, which the harmony keys show with its own seven chords.](../images/step-8-fur-elise.png)
+![Für Elise from File > Demos: a pattern per part, placed in the order of the song's form. It is in 3/8, so a bar has six steps, and in A harmonic minor, which the harmony keys show with its own seven chords.](../images/step-8-fur-elise.png)
 
 Both return an ordinary `Project`. A demo is not special in any way:
 you can change it, save it and take it apart like anything you made.
