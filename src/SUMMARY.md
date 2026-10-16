@@ -54,6 +54,7 @@
   - [Fitting any window: wrapping, zoom and remembering](step-8/fitting-the-window.md)
   - [Finding your notes: empty patterns, double-clicks and a zoom for each window](step-8/finding-your-notes.md)
   - [Song structure: sections, repeats and loops](step-8/song-structure.md)
+  - [A clearer look, a real transport, and editing tracks](step-8/look-and-transport.md)
   - [Exercises](step-8/exercises.md)
 
 ---

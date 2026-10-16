@@ -113,3 +113,15 @@ style of a popup or a combo box, and give it the window's scale.
 
 *Practices:* reading a library's source, egui's layers and styles.
 
+## 9. Hints everywhere (loom-app, small)
+
+Only the toolbar and the harmony keys give the hint bar something to
+say (see [A clearer look](look-and-transport.md)). The channel rack,
+the playlist and the piano roll still use plain `on_hover_text`. Change
+them to `theme::hint`, and make the hint bar show the current zoom or
+the pattern's name when nothing is under the mouse. Why does
+`theme::hint` take the `Response` by value and give it back, instead of
+taking `&Response`?
+
+*Practices:* ownership through a function, egui's `Response`, reading
+someone else's module before changing it.
