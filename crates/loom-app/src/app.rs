@@ -26,8 +26,8 @@ use loom_audio::{
     AudioEngine, ChannelNotes, Command, Instrument, PlayMode, SampleCache, SampleData,
 };
 use loom_core::{
-    Channel, ChannelKind, DEFAULT_VELOCITY, History, MidiMessage, Note, Pass, Pattern, Project,
-    SampleSource, Tempo,
+    Channel, ChannelKind, DEFAULT_VELOCITY, History, Meter, MidiMessage, Note, Pass, Pattern,
+    Project, SampleSource, Tempo,
 };
 
 use crate::channel_rack::{self, RackAction};
@@ -335,19 +335,32 @@ impl LoomApp {
     /// Moves the playhead by `bars` bars (back if negative), to the start
     /// of a bar.
     fn skip_bars(&mut self, bars: isize) {
-        let per_bar = self.project.time_signature.steps_per_bar().max(1);
+        let meter = self.meter();
         let here = self.playhead().unwrap_or(self.cursor);
-        let bar = (here / per_bar) as isize;
+        let bar = meter.bar_at(here);
+        let number = bar.number as isize;
         // Going back from inside a bar first goes to its start.
-        let target = if bars < 0 && !here.is_multiple_of(per_bar) {
-            bar + bars + 1
+        let target = if bars < 0 && bar.start != here {
+            number + bars + 1
         } else {
-            bar + bars
+            number + bars
         };
         if target < 0 {
             self.seek(0);
         } else {
-            self.seek(target as usize * per_bar);
+            self.seek(meter.bar(target as usize).start);
+        }
+    }
+
+    /// Where the bars are in what is playing: the song as it plays, with
+    /// every change of time signature, or the selected pattern, in the
+    /// time signature it is used in.
+    fn meter(&self) -> Meter {
+        match self.mode {
+            PlayMode::Pattern => Meter::steady(self.project.pattern_time(self.pattern)),
+            PlayMode::Song => self
+                .project
+                .played_meter(&self.project.playback_arrangement()),
         }
     }
 
@@ -659,6 +672,16 @@ impl LoomApp {
             PlaylistAction::SetLoop(region) => {
                 self.edit("set loop", |project| project.set_loop_region(region));
             }
+            PlaylistAction::SetTimeMarker(marker) => {
+                self.edit("change time signature", |project| {
+                    project.set_time_marker(marker)
+                });
+            }
+            PlaylistAction::RemoveTimeMarker(start) => {
+                self.edit("remove time signature change", |project| {
+                    project.remove_time_marker(start)
+                });
+            }
             PlaylistAction::Library(action) => self.try_from_library(action),
         }
     }
@@ -843,13 +866,8 @@ impl LoomApp {
     /// The playhead as bar, beat and step, all counted from 1, for the
     /// song position display. Stopped, it shows the start.
     fn position_text(&self) -> String {
-        let time = self.project.time_signature;
         let step = self.playhead().unwrap_or(self.cursor);
-        let per_bar = time.steps_per_bar().max(1);
-        let per_beat = time.steps_per_beat().max(1);
-        let bar = step / per_bar + 1;
-        let beat = step % per_bar / per_beat + 1;
-        let sub = step % per_beat + 1;
+        let (bar, beat, sub) = self.meter().position(step);
         format!("{bar:>3}:{beat:02}:{sub:02}")
     }
 
@@ -918,7 +936,7 @@ impl LoomApp {
 
         let length = self.project.patterns()[self.pattern].length();
         let mut new_length = length;
-        let time = self.project.time_signature;
+        let time = self.project.pattern_time(self.pattern);
         let length_combo = egui::ComboBox::from_id_salt("pattern-length")
             .selected_text(time.describe_length(length))
             .show_ui(ui, |ui| {

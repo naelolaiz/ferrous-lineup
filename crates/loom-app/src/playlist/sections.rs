@@ -10,7 +10,9 @@
 //!   choose how many times it plays, loop it, copy it or delete it.
 //! - Drag along the bar numbers to loop that part of the song. The
 //!   "Looping bars…" button in the toolbar, or a section's menu, stops it.
-//!   A plain click on the bar numbers is left free for other uses.
+//!   A plain click on the bar numbers moves the playhead there.
+//! - Right-click the bar numbers to change the time signature from that
+//!   bar on, or to take a change away.
 //!
 //! While a section or a loop is being dragged, only an outline of where
 //! it will land is drawn. The project changes once, when the button comes
@@ -21,7 +23,9 @@ use eframe::egui::{
     self, Align2, Color32, CursorIcon, FontId, Painter, PopupCloseBehavior, Rect, Response, Sense,
     Stroke, StrokeKind, Ui, pos2, vec2,
 };
-use loom_core::{LoopRegion, MAX_REPEATS, Pass, Project, SECTION_NAMES, Section};
+use loom_core::{
+    LoopRegion, MAX_REPEATS, Pass, Project, SECTION_NAMES, Section, TimeMarker, TimeSignature,
+};
 
 use super::{Layout, PlaylistAction, Snap};
 
@@ -76,6 +80,8 @@ enum Drag {
 #[derive(Debug, Default)]
 pub(super) struct Strips {
     drag: Option<Drag>,
+    /// The bar whose time signature menu is open, by its first step.
+    time_menu: usize,
 }
 
 impl Strips {
@@ -96,8 +102,7 @@ impl Strips {
         let painter = ui.painter_at(strip);
         painter.rect_filled(strip, 0.0, STRIP);
         let sections = project.playlist().sections();
-        let time = project.time_signature;
-        let unit = snap.steps(time);
+        let meter = project.meter();
 
         // The empty strip, under the sections: dragging on it marks a new one.
         let background = ui.interact(strip, ui.scope_id().with("section-strip"), Sense::drag());
@@ -113,7 +118,7 @@ impl Strips {
         if background.drag_started()
             && let Some(pos) = press_origin(ui)
         {
-            let from = snap.floor(layout.step_at(pos.x), time);
+            let from = snap.floor(layout.step_at(pos.x), &meter);
             self.drag = Some(Drag::New { from });
         }
         background.on_hover_text("Drag to mark a section of the song");
@@ -164,17 +169,17 @@ impl Strips {
             let step = layout.step_at(pos.x);
             let planned = match *drag {
                 Drag::New { from } => {
-                    let to = snap.floor(step, time) + unit;
+                    let to = snap.next(step, &meter);
                     let (start, end) = if to > from {
                         (from, to)
                     } else {
-                        (snap.floor(step, time), from + unit)
+                        (snap.floor(step, &meter), snap.next(from, &meter))
                     };
                     let name = project.playlist().suggested_section_name();
                     Some((None, Section::new(name, start, end - start)))
                 }
                 Drag::Move { index, grab } => sections.get(index).map(|section| {
-                    let start = snap.floor(step.saturating_sub(grab), time);
+                    let start = snap.floor(step.saturating_sub(grab), &meter);
                     (
                         Some(index),
                         Section {
@@ -184,7 +189,9 @@ impl Strips {
                     )
                 }),
                 Drag::Resize { index } => sections.get(index).map(|section| {
-                    let end = (snap.floor(step, time) + unit).max(section.start + unit);
+                    let end = snap
+                        .next(step, &meter)
+                        .max(snap.next(section.start, &meter));
                     let length = end - section.start;
                     (
                         Some(index),
@@ -226,8 +233,7 @@ impl Strips {
         snap: Snap,
         actions: &mut Vec<PlaylistAction>,
     ) {
-        let time = project.time_signature;
-        let unit = snap.steps(time);
+        let meter = project.meter();
         let response = ui
             .interact(
                 ruler,
@@ -236,8 +242,15 @@ impl Strips {
             )
             .on_hover_text(
                 "Click the bar numbers to move the playhead there. Drag along them to loop \
-                 that part of the song",
+                 that part of the song. Right-click to change the time signature from that bar on",
             );
+        if response.secondary_clicked()
+            && let Some(pos) = response.interact_pointer_pos()
+        {
+            self.time_menu = meter.floor_to_bar(layout.step_at(pos.x));
+        }
+        let at = self.time_menu;
+        response.context_menu(|ui| time_menu(ui, project, at, actions));
         let region = project.playlist().loop_region();
         let painter = ui.painter_at(ruler);
 
@@ -245,7 +258,7 @@ impl Strips {
             && let Some(pos) = response.interact_pointer_pos()
         {
             actions.push(PlaylistAction::Seek(
-                snap.floor(layout.step_at(pos.x), time),
+                snap.floor(layout.step_at(pos.x), &meter),
             ));
         }
 
@@ -253,7 +266,7 @@ impl Strips {
             && let Some(pos) = press_origin(ui)
         {
             self.drag = Some(Drag::Loop {
-                from: snap.floor(layout.step_at(pos.x), time),
+                from: snap.floor(layout.step_at(pos.x), &meter),
             });
         }
 
@@ -261,11 +274,11 @@ impl Strips {
         let released = ui.input(|input| input.pointer.any_released());
         if let (Some(Drag::Loop { from }), Some(pos)) = (&self.drag, pointer) {
             let step = layout.step_at(pos.x);
-            let to = snap.floor(step, time) + unit;
+            let to = snap.next(step, &meter);
             let planned = if to > *from {
                 LoopRegion::new(*from, to)
             } else {
-                LoopRegion::new(snap.floor(step, time), from + unit)
+                LoopRegion::new(snap.floor(step, &meter), snap.next(*from, &meter))
             };
             paint_loop(&painter, layout, ruler, planned, true);
             if released {
@@ -275,6 +288,58 @@ impl Strips {
         } else if let Some(region) = region {
             paint_loop(&painter, layout, ruler, region, false);
         }
+    }
+}
+
+/// The menu on the bar numbers: the time signature from the bar that
+/// starts on step `at` on.
+fn time_menu(ui: &mut Ui, project: &Project, at: usize, actions: &mut Vec<PlaylistAction>) {
+    let meter = project.meter();
+    let bar = meter.bar_at(at);
+    let marker = project
+        .playlist()
+        .time_markers()
+        .iter()
+        .find(|marker| marker.start == at);
+    ui.label(format!("Time signature from bar {}", bar.number + 1));
+    ui.horizontal_wrapped(|ui| {
+        ui.set_max_width(220.0);
+        for time in TimeSignature::ALL {
+            if ui
+                .selectable_label(bar.time == time, time.to_string())
+                .clicked()
+            {
+                actions.push(PlaylistAction::SetTimeMarker(TimeMarker::new(at, time)));
+                ui.close();
+            }
+        }
+    });
+    if at == 0 {
+        ui.weak("Bar 1 sets the time signature the song starts in.");
+    }
+    if marker.is_some() {
+        ui.separator();
+        let back = meter.time_at(at.saturating_sub(1));
+        if ui
+            .button(format!("Remove this change (back to {back})"))
+            .clicked()
+        {
+            actions.push(PlaylistAction::RemoveTimeMarker(at));
+            ui.close();
+        }
+    }
+}
+
+/// How long a section is: in bars if it starts and ends on bar lines,
+/// counted in whatever time signatures it crosses, or else in steps.
+fn describe_length(project: &Project, section: &Section) -> String {
+    let meter = project.meter();
+    if !meter.is_bar_start(section.start) || !meter.is_bar_start(section.end()) {
+        return format!("{} steps", section.length);
+    }
+    match meter.bar_at(section.end()).number - meter.bar_at(section.start).number {
+        1 => "1 bar".to_string(),
+        bars => format!("{bars} bars"),
     }
 }
 
@@ -399,8 +464,7 @@ fn section_menu(
                         ..section.clone()
                     }));
                 }
-                let bars = section.length as f32 / project.time_signature.steps_per_bar() as f32;
-                ui.weak(format!("({bars} bars each time)"));
+                ui.weak(format!("({} each time)", describe_length(project, section)));
             })
             .response
             .on_hover_text(
