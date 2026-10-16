@@ -57,6 +57,7 @@ where each one first appears in real code.
 | **`From` / `Into`** | Conversion traits: implementing `From<A> for B` also gives `a.into()`. The `?` operator uses `From` to convert errors. | [Many patterns](step-4/patterns.md) |
 | **`FromIterator`** | The trait behind `collect()`; implement it to collect into your own type. | [Pitch classes and scales](step-3/theory.md) |
 | **Generic** | Code written for a placeholder type `T`, filled in at compile time. | [loom-audio](step-1/audio-engine.md) |
+| **Glob import** | `use super::*;` brings in every name the other module can see, including a parent's private items when used from a child. Two glob imports that bring the same name make it ambiguous. | [More demos](step-8/more-demos.md#use-super-and-what-children-can-see) |
 | **`HashMap<K, V>`** | A map from keys to values that finds a key in about the same time however many entries it holds. | [What changed](step-5/diff.md) |
 | **`if let` / `while let`** | Run a block if (or while) a value matches one pattern. | [loom-app](step-1/window.md) |
 | **`ilog2`** | The integer base-2 logarithm: how many times a number can be halved before reaching 1. `8u8.ilog2()` is 3. It panics on 0. | [Time signatures](step-8/time-signatures.md#in-midi-files) |

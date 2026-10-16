@@ -29,10 +29,13 @@ and a library to go with them:
   (marcato, síncopa, milonga, habanera and the tango vals). Click a
   style to hear it in your key, click another to swap, and **Ctrl+Z**
   takes it back. Hover over a style to see its chords in your key,
-- **demos** under **File > Demos**: **16 well-known songs** that are in
-  the public domain, from *Ode to Joy* and *Für Elise* to *Korobeiniki*
+- **demos** under **File > Demos**: **62 songs**, sorted by genre,
+  from *Ode to Joy* and *Für Elise* to *Korobeiniki*, the *Habanera*
   and *When the Saints Go Marching In*, each with its melody, chords,
-  bass and drums. And every harmony style as a short song,
+  bass and drums. Most are in the public domain; genres with few free
+  classics, like tango and flamenco, get new tunes written for them
+  ([More demos](more-demos.md)). And every harmony style as a short
+  song,
 - **nine new drums**, made by the synthesizer like the first four:
   open hi-hat, rim, low and high toms, ride, crash, cowbell, shaker and
   conga,
@@ -98,7 +101,8 @@ of replacing it.
       comping.rs     rhythms for chords and bass lines
       style.rs       78 harmony styles
       rhythm.rs      49 rhythms and 6 fills, one text line per drum
-      song.rs        16 public-domain songs
+      song.rs        the Song type and SONGS, 62 songs
+      song/          one file of songs per genre
       apply.rs       writing styles and rhythms into patterns
       demo.rs        whole demo projects
     project.rs:     the time signature, nine new drums, the chord at a step

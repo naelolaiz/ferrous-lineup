@@ -60,10 +60,11 @@ says which minor-key chord each one is.
 
 ## 5. A song of your own (loom-core, medium)
 
-Add a song in the public domain to `SONGS`. Some that are not in the
-library yet: *Brahms' Lullaby* (3/4), *Yankee Doodle*, *Scarborough
-Fair* (the traditional tune, in Dorian), *La Paloma* (a habanera from
-1863, so it can use `Comping::Habanera`).
+Add a song in the public domain to the right genre file in
+`library/song/`, and to `SONGS`. Some that are not in the library yet:
+*La Paloma* (a habanera from 1863, so it can use `Comping::Habanera`),
+*O Sole Mio* (1898), *Shenandoah* (a sea shanty), *Danny Boy* (the
+Londonderry Air, 3/4).
 
 Write the melody bar by bar, with `|` between bars, and let the tests
 tell you which bars do not add up. Then open it from **File > Demos**.
