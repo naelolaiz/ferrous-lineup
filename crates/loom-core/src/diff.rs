@@ -420,7 +420,7 @@ mod tests {
         let before = Project::demo();
         let mut after = before.clone();
         after.tempo = Tempo::new(90.0);
-        after.move_clip(0, 3, 16 * 20);
+        after.move_clip(0, 1, 16 * 20);
         assert_eq!(
             check_both_ways(&before, &after),
             vec![Change::Tempo, Change::Song]

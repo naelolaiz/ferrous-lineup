@@ -186,6 +186,9 @@ struct Layout {
     /// The top-left corner of step 0 of track 0.
     origin: Pos2,
     tracks: usize,
+    /// Whether there is an empty row below the last track, where a clip
+    /// starts a new track. There is unless the playlist is full.
+    spare: bool,
 }
 
 impl Layout {
@@ -212,9 +215,15 @@ impl Layout {
         )
     }
 
-    /// The track and step under a point, clamped to the grid.
+    /// The rows drawn: the tracks, and the spare row if there is one.
+    fn rows(self) -> usize {
+        self.tracks + usize::from(self.spare)
+    }
+
+    /// The track and step under a point, clamped to the grid. Below the
+    /// last track that is the spare row, the track a clip there makes.
     fn cell_at(self, pos: Pos2) -> (usize, usize) {
-        let last_track = self.tracks.saturating_sub(1) as f32;
+        let last_track = self.rows().saturating_sub(1) as f32;
         let track = ((pos.y - self.origin.y) / TRACK_HEIGHT)
             .floor()
             .clamp(0.0, last_track) as usize;
@@ -364,6 +373,8 @@ impl PlaylistView {
         let pass = playhead.map(|(_, pass)| pass);
         let playhead = playhead.map(|(step, _)| step);
         let tracks = project.playlist().tracks();
+        let spare = tracks.len() < MAX_TRACKS;
+        let rows = tracks.len() + usize::from(spare);
         let song_length = project.song_length();
         let time = project.time_signature;
         // The grid ends on a bar line, some empty bars after the song.
@@ -372,7 +383,7 @@ impl PlaylistView {
         );
         let size = vec2(
             HEADER_WIDTH + steps as f32 * STEP_WIDTH,
-            SECTION_HEIGHT + RULER_HEIGHT + tracks.len() as f32 * TRACK_HEIGHT,
+            SECTION_HEIGHT + RULER_HEIGHT + rows as f32 * TRACK_HEIGHT,
         );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
 
@@ -386,6 +397,7 @@ impl PlaylistView {
                 rect.top() + SECTION_HEIGHT + RULER_HEIGHT,
             ),
             tracks: tracks.len(),
+            spare,
         };
         // The part of the grid not hidden under the track names, the
         // sections or the ruler.
@@ -405,13 +417,13 @@ impl PlaylistView {
             // A light shade over the part of the song that loops.
             let shade = Rect::from_x_y_ranges(
                 layout.x(region.start)..=layout.x(region.end),
-                cells.top()..=layout.track_top(tracks.len()).min(cells.bottom()),
+                cells.top()..=layout.track_top(rows).min(cells.bottom()),
             );
             painter.rect_filled(shade, 0.0, sections::LOOP.gamma_multiply(0.06));
         }
         paint_clips(&painter, layout, cells, project, current);
         // Lines from the ruler down to the last track.
-        let lines = cells.top()..=layout.track_top(tracks.len()).min(cells.bottom());
+        let lines = cells.top()..=layout.track_top(rows).min(cells.bottom());
         if let Some(step) = playhead {
             painter.vline(layout.x(step), lines.clone(), Stroke::new(2.0, PLAYHEAD));
         }
@@ -533,12 +545,34 @@ impl PlaylistView {
                 }
             });
         }
+
+        // The spare row's header: a button that adds the track, for those
+        // who would rather not place a clip there to make one.
+        if layout.spare {
+            let top = layout.track_top(layout.tracks);
+            let row =
+                Rect::from_min_size(pos2(column.left(), top), vec2(HEADER_WIDTH, TRACK_HEIGHT));
+            if row.top() >= cells.top() && row.top() <= visible.bottom() {
+                let button = egui::Button::new(
+                    egui::RichText::new("➕ New track").color(HEADER_TEXT.gamma_multiply(0.6)),
+                )
+                .frame(false);
+                if ui
+                    .put(row.shrink2(vec2(6.0, 6.0)), button)
+                    .on_hover_text("Add a track here, or place a clip on this row to add one")
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::AddTrack);
+                }
+            }
+        }
     }
 
     /// Reads the mouse over the grid.
     ///
     /// - left click on empty space: place a clip of the selected pattern;
-    ///   keep the button down to drag it
+    ///   keep the button down to drag it. On the spare row below the last
+    ///   track, the clip adds a track
     /// - left drag a clip: move it (and select its pattern)
     /// - right click (or right drag over) clips: delete them
     #[allow(clippy::too_many_arguments)]
@@ -720,12 +754,19 @@ fn clip_at(project: &Project, layout: Layout, pos: Pos2) -> Option<usize> {
 /// Row backgrounds and the lines for beats and bars, `steps` long.
 fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, time: TimeSignature) {
     let right = layout.x(steps);
-    for track in 0..layout.tracks {
+    for track in 0..layout.rows() {
         let top = layout.track_top(track);
         let row = Rect::from_min_max(pos2(layout.origin.x, top), pos2(right, top + TRACK_HEIGHT));
-        painter.rect_filled(row, 0.0, ROW[track % 2]);
+        let color = ROW[track % 2];
+        // The spare row is fainter: it is not a track yet.
+        let color = if track < layout.tracks {
+            color
+        } else {
+            color.gamma_multiply(0.5)
+        };
+        painter.rect_filled(row, 0.0, color);
     }
-    let bottom = layout.track_top(layout.tracks);
+    let bottom = layout.track_top(layout.rows());
     for step in (0..=steps).filter(|&step| time.is_beat_start(step)) {
         let color = if time.is_bar_start(step) {
             BAR_LINE

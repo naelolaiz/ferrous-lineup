@@ -194,8 +194,17 @@ impl Project {
         }
     }
 
-    /// What File > New starts from: the drum kit and a Loom Osc, with no notes.
+    /// What File > New starts from: the drum kit and a Loom Osc, with no
+    /// notes, and one playlist track. Placing a clip on the empty row
+    /// below the last track adds another.
     pub fn template() -> Self {
+        let mut project = Project::kit();
+        project.remove_unused_tracks();
+        project
+    }
+
+    /// An empty project with the drum kit and a Loom Osc in the rack.
+    fn kit() -> Self {
         let mut project = Project::empty();
         for drum in [Drum::Kick, Drum::Clap, Drum::HiHat, Drum::Snare] {
             project.add_channel(Channel::drum(drum));
@@ -214,7 +223,7 @@ impl Project {
     /// The chords play alone for two bars, then the beat comes in, and
     /// the fill replaces the beat in the last bar.
     pub fn demo() -> Self {
-        let mut project = Project::template();
+        let mut project = Project::kit();
         let (kick, clap, hat, snare, synth) = (0, 1, 2, 3, 4);
 
         let beat = 0;
@@ -279,6 +288,7 @@ impl Project {
             project.add_clip(Clip::new(beat, drum_track, bar * 16));
         }
         project.add_clip(Clip::new(fill, drum_track, 7 * 16));
+        project.remove_unused_tracks();
         project
     }
 
@@ -460,10 +470,56 @@ impl Project {
         self.playlist.tracks = tracks;
     }
 
-    /// Whether a clip could be placed in the playlist.
+    /// Drops the empty tracks at the bottom of the playlist, keeping at
+    /// least one. Projects are built on a playlist of [`crate::playlist::DEFAULT_TRACKS`]
+    /// rows; this leaves only the ones the song uses, so a demo with a
+    /// melody and drums opens with two tracks.
+    pub fn remove_unused_tracks(&mut self) {
+        self.trim_tracks(|_, _| true);
+    }
+
+    /// Like [`Project::remove_unused_tracks`], but only drops tracks that
+    /// are as a new track starts: called "Track N" for their row, and not
+    /// muted. Files saved before tracks were trimmed carry sixteen of
+    /// those; a track someone renamed or muted stays.
+    pub(crate) fn remove_blank_tracks(&mut self) {
+        self.trim_tracks(|index, track| *track == Track::numbered(index + 1));
+    }
+
+    fn trim_tracks(&mut self, drop: impl Fn(usize, &Track) -> bool) {
+        let tracks = &mut self.playlist.tracks;
+        let used = self
+            .playlist
+            .clips
+            .iter()
+            .map(|clip| clip.track + 1)
+            .max()
+            .unwrap_or(0)
+            .max(1);
+        while tracks.len() > used {
+            let last = tracks.len() - 1;
+            if !drop(last, &tracks[last]) {
+                break;
+            }
+            tracks.pop();
+        }
+    }
+
+    /// Adds a track if `track` is the row just below the last one, which
+    /// [`Project::clip_fits`] allows so a clip can start a new track.
+    fn open_track(&mut self, track: usize) {
+        let tracks = &mut self.playlist.tracks;
+        if track == tracks.len() {
+            tracks.push(Track::numbered(track + 1));
+        }
+    }
+
+    /// Whether a clip could be placed in the playlist: on a track, or on
+    /// the row just below the last track, if there is room for one more.
     fn clip_fits(&self, clip: Clip) -> bool {
+        let tracks = self.playlist.tracks.len();
         clip.pattern < self.patterns.len()
-            && clip.track < self.playlist.tracks.len()
+            && (clip.track < tracks || (clip.track == tracks && tracks < MAX_TRACKS))
             && clip.start < MAX_SONG_STEPS
             && (1..=MAX_REPEATS).contains(&clip.repeats)
     }
@@ -484,6 +540,7 @@ impl Project {
         if !self.clip_fits(clip) || self.clip_taken(&clip, None) {
             return None;
         }
+        self.open_track(clip.track);
         self.playlist.clips.push(clip);
         Some(self.playlist.clips.len() - 1)
     }
@@ -503,6 +560,7 @@ impl Project {
         if !self.clip_fits(moved) || self.clip_taken(&moved, Some(index)) {
             return false;
         }
+        self.open_track(track);
         self.playlist.clips[index] = moved;
         true
     }
@@ -986,11 +1044,46 @@ mod tests {
             "no track 99"
         );
         assert!(project.add_clip(Clip::new(0, 0, MAX_SONG_STEPS)).is_none());
-        assert!(project.move_clip(0, 3, 32));
-        assert_eq!(project.playlist().clips()[0], Clip::new(0, 3, 32));
+        assert!(!project.move_clip(0, 3, 32), "no track 3");
+        assert!(project.move_clip(0, 0, 32));
+        assert_eq!(project.playlist().clips()[0], Clip::new(0, 0, 32));
         assert!(!project.move_clip(0, 99, 0));
-        assert_eq!(project.remove_clip(0), Some(Clip::new(0, 3, 32)));
+        assert_eq!(project.remove_clip(0), Some(Clip::new(0, 0, 32)));
         assert_eq!(project.remove_clip(0), None);
+    }
+
+    #[test]
+    fn a_clip_below_the_last_track_adds_a_track() {
+        let mut project = Project::template();
+        assert_eq!(project.playlist().tracks().len(), 1);
+        assert!(project.add_clip(Clip::new(0, 1, 0)).is_some());
+        assert_eq!(project.playlist().tracks().len(), 2);
+        assert_eq!(project.playlist().tracks()[1].name, "Track 2");
+        // Moving a clip there does the same.
+        assert!(project.move_clip(0, 2, 16));
+        assert_eq!(project.playlist().tracks().len(), 3);
+        assert!(
+            project.add_clip(Clip::new(0, 4, 0)).is_none(),
+            "one row at a time"
+        );
+    }
+
+    #[test]
+    fn projects_have_only_the_tracks_they_use() {
+        assert_eq!(Project::template().playlist().tracks().len(), 1);
+        let names: Vec<String> = Project::demo()
+            .playlist()
+            .tracks()
+            .iter()
+            .map(|track| track.name.clone())
+            .collect();
+        assert_eq!(names, ["Chords", "Drums"]);
+
+        // Empty tracks in the middle stay: only the bottom is trimmed.
+        let mut project = Project::empty();
+        project.add_clip(Clip::new(0, 2, 0));
+        project.remove_unused_tracks();
+        assert_eq!(project.playlist().tracks().len(), 3);
     }
 
     #[test]
