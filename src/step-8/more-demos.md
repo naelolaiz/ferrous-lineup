@@ -177,3 +177,127 @@ checks came with them:
 - **each song's drums are in its time signature**: a waltz song asking
   for a 4/4 rhythm would play a bar of drums that does not line up
   with its bars, which no other test would notice.
+
+## True to the score
+
+The first batch of songs was written from memory, and memory is a poor
+copyist. Played against their drums, several demos sounded a beat
+early, some chords were plain wrong, and pieces that change key in the
+original stayed in one key throughout. Every melody was then checked
+against a reference transcription, and 26 songs were corrected. Three
+of the fixes needed a change to the library itself, and one to the app.
+
+### Pickups go in a part of their own
+
+Many tunes begin before their first bar: the three short notes before
+"La cucaracha", the "Una mattina" of Bella Ciao, the "In a" of
+Clementine. Those notes are a *pickup* (an *anacrusis*), and the first
+stressed syllable lands on the downbeat of bar one. The old data put
+the pickup at the start of bar one, which pushed the whole melody a
+beat early against the drums and the chord changes, so a song sounded
+fine on its own and wrong as soon as the drums came in.
+
+A pickup is now a one-bar part of its own, nearly all rest:
+
+```rust
+Part::new("Pickup", "-:12 D5:2 C#5", "i"),
+```
+
+In 4/4 a bar is 16 steps, so a 12-step rest followed by two eighth
+notes puts the pickup in the last beat, and the first real bar of the
+next part begins on the downbeat. The form names the pickup first,
+`&["Pickup", "Aria", ...]`, and the drums come in after it, which is
+the next change.
+
+### Drums from bar one
+
+`Song` has a `drums_from` field: the entry of `form` at which the drum
+clips start. The first batch set it to 1 for every song, the idea being
+that the melody plays alone for a pass before the drums join. In
+practice the first thing heard was a whole chorus of silence from the
+drum track, long enough to think the demo had not loaded a rhythm at
+all. Every song now starts its drums at entry 0, or at entry 1 when
+entry 0 is a pickup or an intro. The check in `song_demo` is unchanged:
+
+```rust
+if entry >= song.drums_from
+    && let Some(&(_, drum)) = drums.iter().find(|(part, _)| part == name)
+{
+    project.add_clip(Clip::new(drum, DRUM_TRACK, at));
+}
+```
+
+`&&` followed by `let` is a *let chain*: the second condition both
+tests whether this part has a drum pattern and binds it to `drum` in
+one go. Seven piano and choral pieces keep `rhythm: ""`: a Chopin
+prelude with a drum kit is nobody's idea of an improvement.
+
+### A part in another key
+
+In the Hall of the Mountain King climbs from B minor to F sharp major
+for its second half; the Turkish March has a refrain in A major; Bizet's
+Habanera turns from D minor to D major each time its refrain comes
+round. The chords of those parts cannot be written as numerals in the
+song's key without lying, so a `Part` may now carry a key of its own,
+just as [time markers](time-markers.md) let it carry a time signature:
+
+```rust
+pub struct Part {
+    ...
+    pub time: Option<TimeSignature>,
+    pub key: Option<(PitchClass, ScaleKind)>,
+}
+
+impl Part {
+    const fn in_key(self, tonic: PitchClass, mode: ScaleKind) -> Part {
+        Part {
+            key: Some((tonic, mode)),
+            ..self
+        }
+    }
+}
+```
+
+`..self` is *struct update syntax*: every field not named is copied
+from `self`, so `in_key` changes one field and keeps the rest. It can
+be `const` because it only moves values around, which lets a song stay
+a `const` with `.in_key(FSharp, Major)` at the end of one of its parts.
+
+The song answers which key a part is in:
+
+```rust
+pub fn part_scale(&self, part: &Part) -> Scale {
+    match part.key {
+        Some((tonic, mode)) => Scale::new(tonic, mode),
+        None => self.scale(),
+    }
+}
+```
+
+and `song_demo` uses that part's tonic when it accompanies the chart,
+`accompany(&part.spans(bar), tonic, ...)`, so `I` in the F sharp major
+part is an F sharp chord. The project itself keeps the song's main key,
+as a score keeps its key signature, and the test that melodies stay
+mostly in key now checks each part against its own scale rather than
+the song's.
+
+### Cancelling means staying
+
+Loading a demo while the current project has unsaved changes asks
+"Save changes?", with Save, Don't save and Cancel. Cancel, Escape and a
+click outside the dialog all did nothing, which was correct, and
+silent. With nothing to look at, it was easy to believe the demo had
+loaded and kept the old rhythm. Now Cancel says so in the notice bar:
+
+```rust
+Some(Choice::Cancel) => {
+    self.file.pending = None;
+    self.notice = Some(format!("Cancelled: \"{name}\" stays open as it is."));
+}
+```
+
+`{name}` inside `format!` reads a variable of that name from the
+surrounding scope, so there is no need to pass it as an argument. The
+load itself was already as thorough as FL Studio's: `replace_project`
+clears the engine and sends it every pattern, clip and rhythm of the new
+project, so nothing of the previous one survives a load.
