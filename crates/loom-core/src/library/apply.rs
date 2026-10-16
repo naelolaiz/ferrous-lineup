@@ -43,7 +43,7 @@ fn plays_notes(channel: &Channel) -> bool {
 }
 
 /// The first synth channel called `name`.
-fn find_synth(project: &Project, name: &str) -> Option<usize> {
+pub(super) fn find_synth(project: &Project, name: &str) -> Option<usize> {
     project
         .channels()
         .iter()
@@ -258,7 +258,7 @@ pub fn write_fill(project: &mut Project, pattern: usize, fill: &Rhythm, at: usiz
 /// any: the synth called "Keys" if it plays there; otherwise the first
 /// other channel that plays notes there, is not the bass or the lead,
 /// and plays three notes at once somewhere, as chords do.
-fn heard_chords_channel(project: &Project, pattern: usize) -> Option<usize> {
+pub(super) fn heard_chords_channel(project: &Project, pattern: usize) -> Option<usize> {
     let notes = project.pattern(pattern)?;
     let plays = |index: usize| !notes.notes(index).is_empty();
     if let Some(keys) = find_synth(project, KEYS)

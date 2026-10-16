@@ -131,6 +131,7 @@ impl LoomApp {
             let last = self.project.patterns().len() - 1;
             self.select_pattern(self.pattern.min(last));
         }
+        self.follow_project_changed();
     }
 
     /// Called at the start of each frame. A press of a mouse button
