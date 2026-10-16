@@ -23,5 +23,4 @@ rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
 midir = "0.11"
 symphonia = { version = "0.6", default-features = false, features = ["mp3", "wav", "pcm", "flac", "ogg", "vorbis"] }
 realfft = "3.5"
-beat-track-rs = "0.1.2"
 bpm-key = { version = "0.1", default-features = false }

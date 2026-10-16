@@ -16,7 +16,7 @@ harmony keys light up with the chord that is playing.
 | Job | How | Why |
 |-----|-----|-----|
 | Decoding MP3, WAV, FLAC, Ogg | [Symphonia](https://crates.io/crates/symphonia) 0.6 | Pure Rust, no system library on any platform |
-| Beats and tempo | [beat-track-rs](https://crates.io/crates/beat-track-rs) 0.1.2 (Ellis 2007 dynamic programming, librosa's parameters) | Best beat placement of the crates tried, and fast |
+| Beats and tempo | our own `beats` module: the Ellis (2007) dynamic-programming tracker with librosa's parameters, a port of [beat-track-rs](https://crates.io/crates/beat-track-rs) 0.1.2 | Best beat placement of the crates tried; the port gives the same beats on every test file, ten times faster, without the crate's second copy of Symphonia |
 | Key | [bpm-key](https://crates.io/crates/bpm-key) 0.1 (Krumhansl-Kessler profiles) | Right most often, fastest |
 | Chords per beat | our own `chroma` and `chords` modules: a log-magnitude FFT chroma, chord templates, and Viterbi smoothing | No crate did this well (see below) |
 | Meter and bar 1 | our own `meter` module: where chord changes land | Nothing available does it |
@@ -33,7 +33,7 @@ wrong, and time for a 2-minute song:
 
 | Crate | Right | Half or double | Wrong | Time |
 |-------|-------|----------------|-------|------|
-| beat-track-rs | 20 | 8 | 1 | 0.5–1.3 s |
+| beat-track-rs (now the `beats` module; same results, 0.06–0.17 s) | 20 | 8 | 1 | 0.5–1.3 s |
 | bpm-key | 20 | 9 | 0 | 0.2–0.5 s |
 | stratum-dsp | 19 | 7 | 3 | 1.7–7.5 s |
 
@@ -78,11 +78,8 @@ the recording's clip.
 - Separating the melody from the chords, so a tune played in single
   notes is followed by its implied harmony rather than by nothing.
 
-## Before this could merge
+## Rough edges
 
-- beat-track-rs depends on Symphonia 0.5 with every codec, so the
-  workspace builds two Symphonias. Its beat tracker is about 300 lines;
-  porting it (or asking upstream to make decoding optional) would fix that.
 - The recording is saved again as a 32-bit WAV next to the original, with
   silence in front so bar 1 falls on a bar line. A sampler that can start
   at an offset would make the copy unnecessary.
