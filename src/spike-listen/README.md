@@ -28,8 +28,9 @@ from one kind of data to the next:
 
 1. **Decode** (`decode.rs`): the file becomes samples, with the
    [Symphonia](https://crates.io/crates/symphonia) crate.
-2. **Beats** (`lib.rs`, with the `beat-track-rs` crate): when each beat
-   falls, in seconds, and the tempo.
+2. **Beats** (`beats.rs`): when each beat falls, in seconds, and the
+   tempo. The spike used the `beat-track-rs` crate here; once it was
+   merged, the crate was replaced by our own port (see below).
 3. **Key** (with the `bpm-key` crate): the key the recording is in.
 4. **Chords** (`chroma.rs` and `chords.rs`, our own): which chord sounds
    from each beat to the next.
@@ -133,6 +134,40 @@ known, this names 79% of beats right (root and major/minor family). The
 method, got 68% on the same recordings; the difference is mostly the
 smoothing and the key prior.
 
+### Beats: onsets, autocorrelation and dynamic programming
+
+`beats::track` is the beat tracker of Ellis (2007), in three stages.
+First the *onset envelope*: a spectrogram on the *mel scale* (bands
+spaced the way the ear hears them, narrow at the bottom and wide at the
+top), in decibels, and for each frame the sum of every band's increase
+since the previous frame. Decreases do not count: a note dying away is
+not an onset. The envelope peaks on every drum hit and note start.
+
+Then the tempo: the envelope is compared with itself shifted by every
+possible beat length (its *autocorrelation*). At the right shift, peaks
+land on peaks. Shifts near 120 BPM get a head start, because trackers
+otherwise pick half or double the tempo as readily as the tempo itself.
+
+Then the beats, by dynamic programming again: the best score for a beat
+at frame `i` is its onset strength plus the best score of a beat about
+one beat length earlier, minus a penalty for how far from one beat
+length that is. Each frame remembers the earlier beat it chose, and the
+strongest final score is traced back to the start. The autocorrelation
+only knows whole frames, so the tempo it reports is a little quantized;
+`lib.rs` fits a straight line through the beat times afterwards
+(`tempo_of`, a least-squares fit) to get the tempo the project is set to.
+
+This module started as the `beat-track-rs` crate, which proved the
+approach. But the crate also decodes files, so it brought a second copy
+of Symphonia (an older version, with every codec) and `ndarray` into
+every build. Its tracker is about 250 lines, so after the spike was
+merged it was ported into `beats.rs`, in the project's own style and on
+the `realfft` crate the chroma already used. A comparison program ran
+both on all 38 test recordings: the same tempo and the same beats on
+every one, about ten times faster, and 285 lines fewer in `Cargo.lock`.
+A crate that proves an approach and is then replaced by a small port is
+a good outcome for a spike.
+
 ### Meter: where the bars are
 
 Chords mostly change on the first beat of a bar. `meter::guess` counts,
@@ -188,11 +223,12 @@ written beside them (Ferrous Loom can export WAV, and
 every candidate on them, plus seven Creative Commons recordings with
 librosa as the reference. The crate's README has the tables. In short:
 
-- **Beats**: `beat-track-rs` (a port of the Ellis beat tracker, with
-  librosa's parameters) put its beats on the grid in 27 of 29 songs and
-  takes about a second. `stratum-dsp` finds the tempo about as often but
-  its beat grid drifts. Half- and double-tempo confusions happen to all
-  of them, as they do to every tempo tracker.
+- **Beats**: `beat-track-rs` (the Ellis beat tracker, with librosa's
+  parameters) put its beats on the grid in 27 of 29 songs and takes
+  about a second. `stratum-dsp` finds the tempo about as often but its
+  beat grid drifts. Half- and double-tempo confusions happen to all of
+  them, as they do to every tempo tracker. The winner was then ported
+  into `beats.rs`, as described above.
 - **Key**: `bpm-key` was right 24 times out of 29, `stratum-dsp` 13.
 - **Chords**: no crate did well enough, hence our own 300 lines.
 
