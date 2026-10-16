@@ -293,7 +293,10 @@ impl TryFrom<ProjectFile> for Project {
         }
         project.replace_tracks(file.tracks);
         for (index, clip) in file.clips.into_iter().enumerate() {
-            if project.add_clip(clip).is_none() {
+            // A file names all its tracks: a clip below them is a mistake,
+            // not a new track as it is when placed by hand.
+            let on_a_track = clip.track < project.playlist().tracks().len();
+            if !on_a_track || project.add_clip(clip).is_none() {
                 return invalid(format!(
                     "clip {} (pattern {}, track {}) does not fit in the playlist",
                     index + 1,
@@ -313,6 +316,7 @@ impl TryFrom<ProjectFile> for Project {
         if !project.set_loop_region(file.loop_region) {
             return invalid("its loop region is empty or too long".to_string());
         }
+        project.remove_blank_tracks();
         Ok(project)
     }
 }
@@ -537,5 +541,36 @@ mod tests {
                 .to_string()
                 .contains("\"Beat\" has notes for 4 channels")
         );
+    }
+
+    #[test]
+    fn old_files_open_with_only_the_tracks_they_use() {
+        // Files used to be saved with sixteen tracks, most of them empty.
+        let mut file = ProjectFile::from(&Project::demo());
+        file.tracks
+            .extend((3..=16).map(crate::playlist::Track::numbered));
+        // A track someone renamed is kept, and so are the ones above it.
+        file.tracks[5].name = "Keep me".to_string();
+        let project = Project::try_from(file).unwrap();
+        let names: Vec<&str> = project
+            .playlist()
+            .tracks()
+            .iter()
+            .map(|track| track.name.as_str())
+            .collect();
+        assert_eq!(
+            names,
+            [
+                "Chords", "Drums", "Track 3", "Track 4", "Track 5", "Keep me"
+            ]
+        );
+    }
+
+    #[test]
+    fn clips_below_the_tracks_are_reported() {
+        let mut file = ProjectFile::from(&Project::demo());
+        file.clips[0].track = file.tracks.len();
+        let error = Project::try_from(file).unwrap_err();
+        assert!(error.to_string().contains("does not fit"), "{error}");
     }
 }

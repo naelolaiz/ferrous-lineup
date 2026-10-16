@@ -195,6 +195,7 @@ pub fn follow(analysis: &Analysis, lead_in: LeadIn, wav: PathBuf, title: &str) -
     if let Some(track) = project.track_mut(HARMONY_TRACK) {
         track.name = "Harmony".to_string();
     }
+    project.remove_unused_tracks();
     project
 }
 
