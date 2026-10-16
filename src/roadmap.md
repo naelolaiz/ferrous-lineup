@@ -9,6 +9,7 @@
 | 5. Undo and export | Done | Undo and redo for every change, one diff-based path to the audio thread, a sample cache, WAV export in the background |
 | 6. Harmony tools | Done | Selecting and moving groups of notes, a Tools menu (transpose, move in key, snap to the key, invert, arpeggiate), stamped inversions, seven more chord types, next-chord suggestions with secondary dominants, ghost notes from the other channels, a velocity lane |
 | 7. MIDI | Done | MIDI keyboards in, external synths out (MIDI Out channels), a typing keyboard, chords named as you play, recording takes, `.mid` export of songs and patterns, file format 2 |
+| 8. Harmony keys and library | Done | The harmony keys (the seven chords of the key, coloured by function, with next-chord suggestions and the chord playing), time signatures, 78 harmony styles and 49 rhythms in 13 genres including tango, 16 public-domain songs, demos, nine new drums, patterns up to sixteen bars, file format 3 |
 
 The four steps planned at the start are done: Ferrous Loom runs on
 Linux, macOS and Windows, using the same code on all three. Step 5 added
@@ -20,7 +21,10 @@ explains why. Step 7 came from a question, "does it have MIDI, in and
 out?" Now it does, both ways, and it names the chord you hold down. It
 was built on a computer with no MIDI system, so real MIDI
 hardware has not been tried yet; [step 7](step-7/README.md#how-it-was-tested)
-says what was tested.
+says what was tested. Step 8 added what a pattern-based studio is
+known for when you learn harmony: a row of chord keys, one for each
+chord of the key. A library of styles, rhythms and songs came with it,
+to hear how each genre uses those chords.
 
 ## Ideas for what comes next
 
@@ -38,6 +42,9 @@ smaller to bigger:
 - **Finer timing**: notes that start between steps, for strumming,
   swing and notes played slightly early or late.
 - **Even more harmony help**: borrowed chords and modulations
-  explained, a "voice leading" view, chords named over a whole beat.
+  explained (exercise 4 of step 8 starts it), a "voice leading" view,
+  chords named over a whole beat.
+- **Time signature changes** in the middle of a song (exercise 6 of
+  step 8).
 - **Packaging**: icons, a macOS `.app` bundle, a Windows installer, and
   double-clicking `.loom` files to open them.

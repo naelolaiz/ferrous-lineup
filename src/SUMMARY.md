@@ -46,6 +46,12 @@
   - [Live keys: threads in and out](step-7/live.md)
   - [Recording: from a key to a note](step-7/recording.md)
   - [Exercises](step-7/exercises.md)
+- [Step 8: Harmony keys, a library of styles, and demos](step-8/README.md)
+  - [The harmony keys](step-8/harmony-keys.md)
+  - [Time signatures](step-8/time-signatures.md)
+  - [The library: knowledge as data](step-8/library.md)
+  - [From the library to patterns and demos](step-8/patterns-and-demos.md)
+  - [Exercises](step-8/exercises.md)
 
 ---
 

@@ -36,6 +36,7 @@ You can read it three ways, all of them offline:
 | 5 | Undo and redo, WAV export | Generics without bounds, `VecDeque`, `mem::swap`, `FnOnce`, `fn` pointers, testing against a model, `HashMap` and `Borrow`, threads, `move` closures, `JoinHandle` |
 | 6 | Harmony tools: selections, transposing, arpeggios, inversions, suggestions, ghost notes, velocities | Pure functions, collecting `Option`s, `checked_add_signed`, `find_map`, `cycle`, `step_by` and `zip`, knowledge as `const` tables, `Option::take` against the borrow checker, `flat_map` and lifetimes on returned iterators |
 | 7 | MIDI in and out: keyboards, external synths, recording, `.mid` files | Slice patterns, byte strings and `to_be_bytes`, an `f64` in an `AtomicU64`, `Option::as_mut`, `Mutex` and poisoning, `mpsc` channels, `thread::Builder`, closures that capture fields, `Box` for a large enum variant, float `as` casts |
+| 8 | Harmony keys, time signatures, a library of styles, rhythms and songs, demos | Knowledge as data, `macro_rules!`, constant promotion, `static` tables, struct update syntax, `Display`, `is_multiple_of` and `ilog2`, serde field attributes, enum variants with data, `&'static` references in actions, comparing snapshots with `PartialEq` |
 
 The [Roadmap](roadmap.md) chapter keeps this table up to date.
 

@@ -31,14 +31,17 @@ where each one first appears in real code.
 | **Closure captures fields** | Since the 2021 edition, a closure that uses `self.midi_out` borrows only that field, not all of `self`, so other fields can be borrowed at the same time. | [Live keys](step-7/live.md) |
 | **Collecting `Option`s** | Collecting an iterator of `Option<T>` into an `Option<Vec<T>>` gives `Some` of all the values, or `None` as soon as one item is `None`. `Result` works the same way. | [Tools](step-6/tools.md) |
 | **`const fn`** | A function simple enough to run while compiling, so it can be used to set a `const`. | [Saving](step-4/saving.md) |
+| **Constant promotion** | Writing `&[1, 2, 3]` of plain constant values gives a `&'static` borrow, because the compiler stores the values with the program. A function call inside the brackets, even a `const fn`, is not promoted. | [The library](step-8/library.md#macro_rules-and-why-not-a-function) |
 | **`Copy`** | A marker trait for small values that are copied instead of moved, like numbers and `Note`; `let held = list[i];` then copies the item out. | [loom-core](step-1/loom-core.md) |
 | **Crate** | One library or program; the unit Cargo builds and publishes. | [Workspace](step-1/workspace.md) |
 | **`cycle`** | Repeats an iterator forever. Safe because iterators are lazy: something else, like `zip`, decides when to stop. | [Tools](step-6/tools.md) |
+| **Declarative macro (`macro_rules!`)** | A macro defined by patterns: `macro_rules! hit { ($at:expr, ...) => { ... } }` matches what it is given and pastes it into a template, before the code is compiled. | [The library](step-8/library.md#macro_rules-and-why-not-a-function) |
 | **`Default`** | A trait for "the default value" of a type; on an enum, `#[derive(Default)]` needs `#[default]` on one variant. | [Pitch classes and scales](step-3/theory.md) |
 | **Deref coercion** | Rust turning `&Vec<T>` into `&[T]` (or `&String` into `&str`) automatically where needed. | [Steps to notes](step-3/notes.md) |
 | **Dereference (`*`)** | Follow a reference to the value it points at, to read or write it. | [Patterns](step-2/project.md) |
 | **Derive** | `#[derive(Trait)]` asks the compiler to implement common traits automatically. | [loom-core](step-1/loom-core.md) |
 | **Derive macro** | Code that writes a trait implementation for a type; serde's `#[derive(Serialize)]` comes from a crate, not from the compiler. | [Saving](step-4/saving.md) |
+| **`Display`** | The trait behind `{}` in `format!` and behind `to_string()`. Implement its `fmt` method once, and every place writes the value the same way. | [Time signatures](step-8/time-signatures.md) |
 | **Disjoint borrows** | Borrowing two different fields of a struct at once, even one mutably; allowed because they cannot overlap. | [Voices](step-3/voices.md) |
 | **`drain(..)`** | Takes every item out of a `Vec`, in order, and keeps the `Vec`'s memory for later. | [Live keys](step-7/live.md) |
 | **`dyn Trait`** | A trait object: some type implementing `Trait`, chosen at run time. | [loom-app](step-1/window.md) |
@@ -56,9 +59,11 @@ where each one first appears in real code.
 | **Generic** | Code written for a placeholder type `T`, filled in at compile time. | [loom-audio](step-1/audio-engine.md) |
 | **`HashMap<K, V>`** | A map from keys to values that finds a key in about the same time however many entries it holds. | [What changed](step-5/diff.md) |
 | **`if let` / `while let`** | Run a block if (or while) a value matches one pattern. | [loom-app](step-1/window.md) |
+| **`ilog2`** | The integer base-2 logarithm: how many times a number can be halved before reaching 1. `8u8.ilog2()` is 3. It panics on 0. | [Time signatures](step-8/time-signatures.md#in-midi-files) |
 | **`impl Trait`** | As an argument type: any type with this trait. As a return type: one type with this trait, left unnamed. | [Pitch classes and scales](step-3/theory.md) |
 | **Inner attribute (`#![...]`)** | An attribute that applies to the thing it is written inside, such as the whole crate at the top of `main.rs`. | [Linux, macOS and Windows](step-4/platforms.md) |
 | **Invariant** | A rule that is always true about a value, usually protected by private fields. | [Patterns](step-2/project.md) |
+| **`is_multiple_of`** | `a.is_multiple_of(b)` is the clear way to write `a % b == 0`, and does not panic when `b` is 0. | [Time signatures](step-8/time-signatures.md) |
 | **`is_some_and`** | `true` if an `Option` is `Some` and its value passes a test, `false` for `None`. | [Many patterns](step-4/patterns.md) |
 | **Iterator** | A lazy sequence of values, transformed with methods like `map`, `filter`, `count`. | [Tests](step-1/ci.md) |
 | **`Iterator::eq`** | Compares two iterators item by item, stopping at the first difference, without collecting them into lists. | [What changed](step-5/diff.md) |
@@ -104,10 +109,12 @@ where each one first appears in real code.
 | **`saturating_sub`** | Subtraction that stops at the smallest value (0 for `usize`) instead of overflowing. | [Voices](step-3/voices.md) |
 | **`Send`** | A marker trait: values of this type can be moved to another thread. | [loom-audio](step-1/audio-engine.md) |
 | **serde** | The usual crate for turning Rust values into text or bytes and back, through the `Serialize` and `Deserialize` traits. | [Saving](step-4/saving.md) |
+| **serde field attributes** | `#[serde(default)]` fills in a missing field with its `Default` when reading; `#[serde(skip_serializing_if = "path")]` leaves a field out when writing if that function says so. | [Time signatures](step-8/time-signatures.md#in-files-format-3) |
 | **Slice** | A borrowed view of part of an array or `Vec`: `&[T]` or `&mut [T]`. | [loom-audio](step-1/audio-engine.md) |
 | **Slice pattern** | `let [a, b, c, ..] = *bytes else { ... }`: matches a slice by its shape, naming the first items, so no indexing can panic. | [MIDI messages](step-7/messages.md) |
 | **State machine** | Code that keeps a current state, often an enum, and moves between states as things happen. | [Voices](step-3/voices.md) |
 | **`'static`** | A lifetime meaning "lives as long as needed"; for closures, "borrows nothing temporary". | [loom-audio](step-1/audio-engine.md) |
+| **`static` item** | `static NAME: T = ...;` is one value at one fixed address for the whole program. A `const` is pasted in wherever it is used instead. | [The library](step-8/library.md#styles) |
 | **`step_by`** | Takes every n-th item of an iterator: `(0..8).step_by(2)` is 0, 2, 4, 6. | [Tools](step-6/tools.md) |
 | **Struct update syntax** | `NoteEvent { length: 2, ..note }`: a new struct with some fields changed and the rest taken from `note`. | [Steps to notes](step-3/notes.md) |
 | **Target** | The kind of system a program is compiled for, like `x86_64-pc-windows-gnu`; `rustup target add` installs Rust's library for one. | [Linux, macOS and Windows](step-4/platforms.md) |

@@ -98,6 +98,14 @@ turns the letter keys into a piano; **● Rec** records what you play. The
 status bar at the bottom shows which sound card is in use, or why audio
 could not start, and names the chord you hold down.
 
+Above the status bar are the **harmony keys**: the key and the time
+signature, and a big key for each chord of the key. Hold one down, or
+press **1** to **7**, to play its chord. The **Library** tab next to the
+pattern list has harmony styles and rhythms by genre to try with one
+click, and **File > Demos** opens whole songs: try *Für Elise* or
+*Frère Jacques*, press nothing, and watch the harmony keys follow the
+chords.
+
 To open a project straight away, give its file to the program:
 
 ```sh
