@@ -33,6 +33,7 @@ You can read it three ways, all of them offline:
 | 2 | Channel rack and step sequencer | Arrays, `Option` combinators, `Arc`, atomics, closures as `FnMut`, custom widgets, sample-accurate timing |
 | 3 | Piano roll with harmony helpers | Enums and pattern matching for music theory, bit sets, iterators, your own traits and generics, state machines |
 | 4 | Playlist, saving projects, macOS and Windows builds | Keeping rules across lists, serde and derive macros, error enums, newtypes, trait objects, `cfg` and features, a CI matrix |
+| 5 | Undo and redo, WAV export | Generics without bounds, `VecDeque`, `mem::swap`, `FnOnce`, `fn` pointers, testing against a model, `HashMap` and `Borrow`, threads, `move` closures, `JoinHandle` |
 
 The [Roadmap](roadmap.md) chapter keeps this table up to date.
 

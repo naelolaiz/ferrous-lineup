@@ -100,3 +100,12 @@ crates/loom-app/src/main.rs          a file to open, no console on Windows
 The chapters follow the data: first patterns and the playlist in
 `loom-core`, then how the audio thread plays a song, then files, then the
 windows on screen, and last the other operating systems.
+
+> **Changed in step 5.** The code links in these chapters point to the
+> latest code, which step 5 changed in a few places. The audio thread's
+> `AddPattern` and `AddChannel` became `InsertPattern` and
+> `InsertChannel`, which take a position (`ChannelNotes::push_empty`
+> became `insert_empty`). The app no longer sends commands from each
+> action: every change goes through `edit`, which compares the project
+> before and after. And `Instrument::for_channel` takes a `SampleCache`.
+> [Step 5](../step-5/README.md) explains why.

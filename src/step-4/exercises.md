@@ -77,6 +77,9 @@ code.
 
 ## 6. Export the song as a WAV file (loom-audio, harder)
 
+*Step 5 builds this; try it yourself before reading
+[its chapter](../step-5/export.md).*
+
 The engine's tests already play songs without a sound card: they create
 an `AudioThread`, send it commands and call `process` on a buffer. Use
 the same idea for File > Export WAV. Build a separate `AudioThread` on

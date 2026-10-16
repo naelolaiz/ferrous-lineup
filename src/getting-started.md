@@ -85,7 +85,8 @@ chords, then a beat comes in, and a drum fill ends it before it loops.
 The playlist fills the window; **F6** shows and hides the channel rack,
 **F7** the piano roll, and **L** switches between playing the song and
 looping the selected pattern. **Ctrl+S** (⌘S on a Mac) saves the
-project. The status bar at the bottom shows which sound card is in use,
+project, **Ctrl+Z** undoes the last change and **Ctrl+Shift+Z** redoes
+it, and **File > Export WAV…** saves the song as a sound file. The status bar at the bottom shows which sound card is in use,
 or why audio could not start.
 
 To open a project straight away, give its file to the program:

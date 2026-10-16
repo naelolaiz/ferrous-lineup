@@ -31,6 +31,11 @@
   - [The playlist window](step-4/playlist-ui.md)
   - [Linux, macOS and Windows](step-4/platforms.md)
   - [Exercises](step-4/exercises.md)
+- [Step 5: Undo, redo, and exporting the song](step-5/README.md)
+  - [Undo and redo: a history of copies](step-5/history.md)
+  - [Telling the audio thread what changed](step-5/diff.md)
+  - [Exporting the song as a WAV file](step-5/export.md)
+  - [Exercises](step-5/exercises.md)
 
 ---
 
