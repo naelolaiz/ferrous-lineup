@@ -46,6 +46,9 @@ and a library to go with them:
   typing keyboard becomes the chord of the accompaniment, as on an
   arranger keyboard ([The accompaniment follows your
   chords](chord-follow.md)),
+- **MIDI Out for every channel**: pick a synth in MIDI > Output and
+  the whole song plays on it, drums on channel 10, without adding MIDI
+  Out channels first ([MIDI Out for every channel](midi-out-every-channel.md)),
 - **nine new drums**, made by the synthesizer like the first four:
   open hi-hat, rim, low and high toms, ride, crash, cowbell, shaker and
   conga,
@@ -74,6 +77,7 @@ and a library to go with them:
 | click a rhythm after a style | play the style's chords and bass the way the rhythm goes |
 | right-click a rhythm, Play the whole song in this rhythm | give the whole song new drums, and play its chords and bass again to match |
 | MIDI > Accompaniment follows chords, then hold a chord while playing | play the chords and bass in the chord you hold |
+| MIDI > Output, pick a synth (Send every channel is on) | play every channel on the external synth too, drums on channel 10 |
 | File > Demos | open a song or a style as a whole project, and play it |
 | Ctrl+Plus, Ctrl+Minus, Ctrl+0, or the zoom at the bottom right | make everything bigger or smaller, or 100% again |
 | View menu, or **Alt+F8** | show or hide each window, and the Patterns and Library panel |
