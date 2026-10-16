@@ -56,9 +56,9 @@ impl LibraryBrowser {
                 "Trying a style or a rhythm also sets the tempo it is usually played at",
             );
         ui.weak(
-            "Click to play it in a pattern. Click another to swap. Right-click a rhythm to \
-             play the whole song in it, as a click does while the song plays. Ctrl+Z takes \
-             it back.",
+            "Click to play it in a pattern. Click another to swap. While the song plays, a \
+             click plays the whole song that way instead, and the song carries on. Right-click \
+             a rhythm to do that while stopped. Ctrl+Z takes it back.",
         );
         ui.add_space(2.0);
 
@@ -175,7 +175,7 @@ fn rhythm_label(ui: &mut Ui, rhythm: &'static Rhythm, tried: Tried) -> Option<Li
         rhythm.bars(),
         if rhythm.bars() == 1 { "" } else { "s" },
         if is_fill {
-            ""
+            "\n\nWhile the song plays, a click puts this fill in the last bar of its drums."
         } else {
             "\n\nRight-click to play the whole song in this rhythm. While the song plays, \
              a click does that too."
@@ -232,7 +232,8 @@ fn describe_style(style: &Style, tonic: loom_core::PitchClass) -> String {
         format!(" · drums: {}", style.rhythm)
     };
     format!(
-        "{}\n\nIn {}: {}\n{}\n\n{} · {} BPM · {} bars{rhythm}",
+        "{}\n\nIn {}: {}\n{}\n\n{} · {} BPM · {} bars{rhythm}\n\nWhile the song plays, a \
+         click plays the whole song this way, keeping its chords.",
         style.about,
         scale.name(),
         style.chord_names(tonic),
