@@ -121,13 +121,43 @@ pub fn apply(ctx: &egui::Context) {
 
 /// A group of controls in the toolbar, inside a dark rounded frame.
 pub fn group<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
-    egui::Frame::new()
-        .fill(GROUP)
-        .stroke(Stroke::new(1.0, OUTLINE))
-        .corner_radius(4)
-        .inner_margin(Margin::symmetric(4, 3))
-        .show(ui, |ui| ui.horizontal(add).inner)
-        .inner
+    wrapping(ui, |ui| {
+        egui::Frame::new()
+            .fill(GROUP)
+            .stroke(Stroke::new(1.0, OUTLINE))
+            .corner_radius(4)
+            .inner_margin(Margin::symmetric(4, 3))
+            .show(ui, |ui| ui.horizontal(add).inner)
+    })
+    .inner
+}
+
+/// Draws a frame as one piece in a wrapping row: when it was too wide for
+/// what is left of the row last time, it starts a new row first.
+///
+/// A wrapping layout only wraps single widgets. A frame is drawn into the
+/// rest of the row and only measured afterwards, so without this, a group
+/// that does not fit runs off the edge instead of moving down. Its width
+/// from the frame before is kept in egui's memory, under an id from its
+/// place in the toolbar.
+fn wrapping<R>(
+    ui: &mut Ui,
+    add: impl FnOnce(&mut Ui) -> egui::InnerResponse<R>,
+) -> egui::InnerResponse<R> {
+    let id = ui.next_auto_id().with("wrapping");
+    let last_width = ui.ctx().data(|data| data.get_temp::<f32>(id));
+    let row_started = ui.cursor().min.x > ui.max_rect().min.x;
+    if let Some(width) = last_width
+        && ui.layout().main_wrap
+        && row_started
+        && width > ui.available_size_before_wrap().x
+    {
+        ui.end_row();
+    }
+    let response = add(ui);
+    let width = response.response.rect.width();
+    ui.ctx().data_mut(|data| data.insert_temp(id, width));
+    response
 }
 
 /// A small black display, like the ones on hardware, showing `value` with
@@ -150,38 +180,40 @@ pub fn lcd_frame(
     width: f32,
     add: impl FnOnce(&mut Ui) -> Response,
 ) -> Response {
-    egui::Frame::new()
-        .fill(LCD)
-        .stroke(Stroke::new(1.0, OUTLINE))
-        .corner_radius(3)
-        .inner_margin(Margin::symmetric(6, 1))
-        .show(ui, |ui| {
-            ui.set_width(width);
-            ui.spacing_mut().item_spacing.y = 0.0;
-            ui.vertical(|ui| {
-                ui.label(
-                    RichText::new(label)
-                        .font(FontId::proportional(9.0))
-                        .color(LCD_LABEL),
-                );
-                let visuals = &mut ui.visuals_mut().widgets;
-                for state in [
-                    &mut visuals.inactive,
-                    &mut visuals.hovered,
-                    &mut visuals.active,
-                ] {
-                    state.bg_fill = LCD;
-                    state.weak_bg_fill = LCD;
-                    state.bg_stroke = Stroke::NONE;
-                    state.fg_stroke.color = LCD_TEXT;
-                }
-                ui.style_mut().override_font_id = Some(FontId::monospace(16.0));
-                ui.spacing_mut().button_padding = vec2(0.0, 0.0);
-                add(ui)
+    wrapping(ui, |ui| {
+        egui::Frame::new()
+            .fill(LCD)
+            .stroke(Stroke::new(1.0, OUTLINE))
+            .corner_radius(3)
+            .inner_margin(Margin::symmetric(6, 1))
+            .show(ui, |ui| {
+                ui.set_width(width);
+                ui.spacing_mut().item_spacing.y = 0.0;
+                ui.vertical(|ui| {
+                    ui.label(
+                        RichText::new(label)
+                            .font(FontId::proportional(9.0))
+                            .color(LCD_LABEL),
+                    );
+                    let visuals = &mut ui.visuals_mut().widgets;
+                    for state in [
+                        &mut visuals.inactive,
+                        &mut visuals.hovered,
+                        &mut visuals.active,
+                    ] {
+                        state.bg_fill = LCD;
+                        state.weak_bg_fill = LCD;
+                        state.bg_stroke = Stroke::NONE;
+                        state.fg_stroke.color = LCD_TEXT;
+                    }
+                    ui.style_mut().override_font_id = Some(FontId::monospace(16.0));
+                    ui.spacing_mut().button_padding = vec2(0.0, 0.0);
+                    add(ui)
+                })
+                .inner
             })
-            .inner
-        })
-        .inner
+    })
+    .inner
 }
 
 /// A toolbar button that stays lit while `on`, in the accent colour or in
