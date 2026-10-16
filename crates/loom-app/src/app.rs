@@ -228,6 +228,7 @@ impl LoomApp {
         self.send(Command::SetMode(self.mode));
         self.live.resend_channel();
         self.live.follow.forget();
+        self.live.channels_changed(self.project.channels().len());
     }
 
     /// The command that inserts channel `index` of the project, with its

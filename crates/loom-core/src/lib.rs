@@ -35,7 +35,7 @@ pub use harmony::{Chord, ChordQuality, ChordStamp, Harmony, PitchSet, Scale, Sca
 pub use history::History;
 pub use meter::{Bar, Meter, TimeMarker, TimeSignature};
 pub use midi::{DRUM_CHANNEL, MidiMessage};
-pub use midi_file::{pattern_to_midi, song_to_midi};
+pub use midi_file::{general_midi_drum, midi_channels, pattern_to_midi, song_to_midi};
 pub use pattern::{DEFAULT_VELOCITY, MAX_STEPS, NoteEvent, Pattern, STEP_NOTE, tidy_notes};
 pub use pitch::{Note, PitchClass, Spelling};
 pub use playlist::{

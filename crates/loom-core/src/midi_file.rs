@@ -109,7 +109,7 @@ fn write_file(project: &Project, meter: &Meter, placed: &[Play], length: usize) 
 /// MIDI Out channels keep the channel they were given. Every other
 /// channel gets the next free one, skipping 10; after 15 of them, the
 /// channels are used again from the start.
-fn midi_channels(channels: &[Channel]) -> Vec<u8> {
+pub fn midi_channels(channels: &[Channel]) -> Vec<u8> {
     let mut melodic = (0..16u8).filter(|&channel| channel != DRUM_CHANNEL).cycle();
     channels
         .iter()

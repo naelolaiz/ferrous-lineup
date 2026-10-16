@@ -61,6 +61,7 @@ impl LoomApp {
     fn sync_audio(&mut self, before: &Project) {
         let sample_rate = self.sample_rate();
         let mut patterns_moved = false;
+        let mut channels_changed = false;
         for change in diff(before, &self.project) {
             match change {
                 Change::RemovePattern(index) => {
@@ -83,11 +84,13 @@ impl LoomApp {
                 }
                 Change::RemoveChannel(index) => {
                     self.send(Command::RemoveChannel(index));
+                    channels_changed = true;
                     self.piano_roll.channel_removed(index);
                 }
                 Change::InsertChannel(index) => {
                     let command = self.channel_command(index, sample_rate);
                     self.send(command);
+                    channels_changed = true;
                     self.piano_roll.channel_inserted(index);
                 }
                 Change::Instrument(channel) => {
@@ -97,6 +100,7 @@ impl LoomApp {
                         channel,
                         instrument,
                     });
+                    channels_changed = true;
                 }
                 Change::Volume(channel) => {
                     let volume = self.project.channels()[channel].volume;
@@ -124,6 +128,9 @@ impl LoomApp {
                     self.send(command);
                 }
             }
+        }
+        if channels_changed {
+            self.live.channels_changed(self.project.channels().len());
         }
         if patterns_moved {
             // The audio thread's selected pattern was counted in the old
