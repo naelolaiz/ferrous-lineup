@@ -50,6 +50,10 @@ pub enum RollAction {
         pitches: Vec<Note>,
     },
     SetScale(Scale),
+    /// Show another pattern: one where the channel has notes.
+    SelectPattern(usize),
+    /// Open the channel rack, where drum steps are edited.
+    OpenRack,
 }
 
 /// The range of notes shown, from C1 to B7.
@@ -111,6 +115,8 @@ const PLAYHEAD: Color32 = Color32::from_rgba_premultiplied(64, 38, 12, 60);
 const LANE_BACKGROUND: Color32 = Color32::from_rgb(30, 32, 37);
 const LANE_CHORD: Color32 = Color32::from_rgb(72, 88, 120);
 const LANE_TEXT: Color32 = Color32::from_rgb(235, 238, 245);
+const NO_NOTES_BACKGROUND: Color32 = Color32::from_rgb(70, 52, 30);
+const NO_NOTES_TEXT: Color32 = Color32::from_rgb(150, 156, 170);
 
 /// A drag that started on a note and lasts until the mouse button is released.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -184,13 +190,15 @@ struct Grid {
     step_width: f32,
     length: usize,
     time: TimeSignature,
+    /// The piano roll's zoom, which every size is multiplied by.
+    zoom: f32,
 }
 
 impl Grid {
     /// The keyboard, just left of the grid.
     fn keys(self) -> Rect {
         Rect::from_min_max(
-            pos2(self.rect.left() - KEY_WIDTH, self.rect.top()),
+            pos2(self.rect.left() - KEY_WIDTH * self.zoom, self.rect.top()),
             pos2(self.rect.left(), self.rect.bottom()),
         )
     }
@@ -210,7 +218,7 @@ impl Grid {
 
     /// The y coordinate of the top of a pitch's row (high notes at the top).
     fn row_top(self, midi: u8) -> f32 {
-        self.rect.top() + (HIGHEST - midi) as f32 * ROW_HEIGHT
+        self.rect.top() + (HIGHEST - midi) as f32 * ROW_HEIGHT * self.zoom
     }
 
     fn note_rect(self, note: &NoteEvent) -> Rect {
@@ -218,14 +226,14 @@ impl Grid {
         let end = note.end().min(self.length);
         Rect::from_min_max(
             pos2(self.x(note.start), top),
-            pos2(self.x(end), top + ROW_HEIGHT),
+            pos2(self.x(end), top + ROW_HEIGHT * self.zoom),
         )
     }
 
     /// The step and pitch under a point. Points outside the grid give the
     /// nearest cell, so a drag can go past the edges.
     fn cell_at(self, pos: Pos2) -> (usize, Note) {
-        let row = ((pos.y - self.rect.top()) / ROW_HEIGHT)
+        let row = ((pos.y - self.rect.top()) / (ROW_HEIGHT * self.zoom))
             .floor()
             .clamp(0.0, (HIGHEST - LOWEST) as f32) as u8;
         (self.step_at(pos.x), Note::new(HIGHEST - row))
@@ -259,6 +267,15 @@ pub struct PianoRoll {
     arpeggio_rate: usize,
     /// Scroll to the channel's notes the next time the grid is drawn.
     scroll_to_notes: bool,
+    /// The lowest and highest pitch in view when the grid was last drawn.
+    in_view: Option<(u8, u8)>,
+    /// A pitch to bring back to the middle of the view the next time the
+    /// grid is drawn: the one that was there before zooming.
+    keep_in_middle: Option<u8>,
+    /// Whether the window was open last frame, to notice it opening.
+    was_open: bool,
+    /// How much bigger than usual everything is drawn: the window's zoom.
+    zoom: f32,
     /// The step the pointer is over, if any, to name the chord there.
     hovered_step: Option<usize>,
     /// The last step the pointer was over. Unlike `hovered_step`, it stays
@@ -296,6 +313,10 @@ impl PianoRoll {
             arpeggio: ArpeggioOrder::Up,
             arpeggio_rate: 1,
             scroll_to_notes: true,
+            in_view: None,
+            keep_in_middle: None,
+            was_open: false,
+            zoom: 1.0,
             hovered_step: None,
             last_step: None,
             has_keyboard: false,
@@ -303,6 +324,11 @@ impl PianoRoll {
             time: TimeSignature::COMMON,
             hints: HintLevel::default(),
         }
+    }
+
+    /// The id of the piano roll window.
+    pub fn id() -> egui::Id {
+        egui::Id::unique("piano-roll")
     }
 
     /// The channel shown: the selected channel, which keyboards play.
@@ -359,7 +385,9 @@ impl PianoRoll {
     /// It shows the notes of the selected channel in pattern `pattern`;
     /// `playhead` is the step of that pattern being played, if any, and
     /// `held` the keys held down on a keyboard. The window stays inside
-    /// `area`, the part of the main window the playlist uses.
+    /// `area`, the part of the main window the playlist uses. Its contents
+    /// are drawn `zoom` times bigger than usual.
+    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
         ctx: &egui::Context,
@@ -368,21 +396,36 @@ impl PianoRoll {
         playhead: Option<usize>,
         held: &[Note],
         area: egui::Rect,
+        zoom: f32,
     ) -> Vec<RollAction> {
         let mut actions = Vec::new();
-        let (Some(channel), Some(pattern_notes)) = (
-            project.channels().get(self.channel),
-            project.pattern(pattern),
-        ) else {
+        if zoom != self.zoom {
+            // Zooming keeps the same notes in the middle of the view.
+            self.keep_in_middle = self.in_view.map(|(low, high)| low / 2 + high / 2);
+            self.zoom = zoom;
+        }
+        let Some(pattern_notes) = project.pattern(pattern) else {
             self.open = false;
             return actions;
         };
-        if pattern != self.pattern {
+        let opened = self.open && !self.was_open;
+        let new_pattern = pattern != self.pattern;
+        if new_pattern {
             self.pattern = pattern;
             self.scroll_to_notes = true;
             self.selection.clear();
             self.stop_dragging();
         }
+        if opened || new_pattern {
+            self.follow_notes(pattern_notes);
+        }
+        if opened {
+            self.scroll_to_notes = true;
+        }
+        let Some(channel) = project.channels().get(self.channel) else {
+            self.open = false;
+            return actions;
+        };
 
         // A click inside the window gives it the keyboard; a click
         // anywhere else takes the keyboard away again.
@@ -404,20 +447,113 @@ impl PianoRoll {
             "Piano roll · {} · {}",
             pattern_notes.name, channel.name
         ))
-        .id(egui::Id::unique("piano-roll"))
+        .id(Self::id())
         .open(&mut open)
         .default_pos([150.0, 160.0])
         .default_size([1060.0, 580.0])
         .constrain_to(area)
         .show(ctx, |ui| {
+            crate::widgets::zoom_contents(ui, zoom);
             self.contents(ui, project, pattern_notes, playhead, held, &mut actions)
         });
         self.window_rect = window.map(|window| window.response.rect);
         self.open = open;
+        self.was_open = open;
         if !open {
             self.has_keyboard = false;
         }
         actions
+    }
+
+    /// When the channel shown has no notes in `pattern` but another
+    /// channel plays a melody or chords there, shows that channel instead,
+    /// so the piano roll never opens on an empty grid when there is
+    /// something to see.
+    fn follow_notes(&mut self, pattern: &Pattern) {
+        if !pattern.notes(self.channel).is_empty() {
+            return;
+        }
+        if let Some(channel) = busiest_channel(pattern) {
+            self.channel = channel;
+            self.selection.clear();
+            self.scroll_to_notes = true;
+        }
+    }
+
+    /// Said above the grid when the channel has no notes in the pattern:
+    /// what is going on, and buttons to go where the notes are.
+    fn no_notes(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        pattern: &Pattern,
+        actions: &mut Vec<RollAction>,
+    ) {
+        let channel = project
+            .channels()
+            .get(self.channel)
+            .map_or("This channel", |channel| channel.name.as_str());
+        // Other patterns where this channel has notes.
+        let elsewhere: Vec<(usize, &str)> = project
+            .patterns()
+            .iter()
+            .enumerate()
+            .filter(|&(index, other)| {
+                index != self.pattern && !other.notes(self.channel).is_empty()
+            })
+            .map(|(index, other)| (index, other.name.as_str()))
+            .collect();
+        // Other channels with notes in this pattern.
+        let others: Vec<(usize, &str, bool)> = (0..pattern.rows())
+            .filter(|&other| other != self.channel && !pattern.notes(other).is_empty())
+            .filter_map(|other| {
+                let name = project.channels().get(other)?.name.as_str();
+                Some((other, name, pattern.is_step_row(other)))
+            })
+            .collect();
+        let mut switch_to = None;
+        egui::Frame::new()
+            .fill(NO_NOTES_BACKGROUND)
+            .corner_radius(4.0)
+            .inner_margin(egui::Margin::symmetric(8, 4))
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.strong(format!(
+                        "{channel} has no notes in \"{}\". Click the grid to draw some.",
+                        pattern.name
+                    ));
+                    if !elsewhere.is_empty() {
+                        ui.label(format!("{channel} plays in:"));
+                        for &(index, name) in &elsewhere {
+                            if ui
+                                .button(name)
+                                .on_hover_text(format!("Show the pattern \"{name}\""))
+                                .clicked()
+                            {
+                                actions.push(RollAction::SelectPattern(index));
+                            }
+                        }
+                    }
+                    let melodies: Vec<_> = others.iter().filter(|other| !other.2).collect();
+                    if !melodies.is_empty() {
+                        ui.label("Notes here are on:");
+                        for &&(index, name, _) in &melodies {
+                            if ui.button(name).clicked() {
+                                switch_to = Some(index);
+                            }
+                        }
+                    }
+                    if others.iter().any(|other| other.2) {
+                        ui.label("The drums in this pattern are edited in the");
+                        if ui.button("Channel rack").clicked() {
+                            actions.push(RollAction::OpenRack);
+                        }
+                    }
+                });
+            });
+        if let Some(channel) = switch_to {
+            self.open_for(channel);
+        }
     }
 
     fn contents(
@@ -478,10 +614,14 @@ impl PianoRoll {
             format!("Keys down: {}", harmony.describe(scale))
         };
         ui.label(info);
+        if notes.is_empty() {
+            self.no_notes(ui, project, pattern, actions);
+        }
         ui.add_space(2.0);
 
         let length = pattern.length();
-        let step_width = ((ui.available_width() - KEY_WIDTH) / length as f32).max(8.0);
+        let step_width =
+            ((ui.available_width() - KEY_WIDTH * self.zoom) / length as f32).max(8.0 * self.zoom);
         self.hovered_step = None;
 
         self.chord_lane(ui, pattern, &heard, scale, step_width, playhead);
@@ -489,9 +629,12 @@ impl PianoRoll {
         // for it: the lane, the gap, and egui's spacing between widgets.
         // Taking even a pixel too much would make the window grow a
         // little on every frame.
-        let below = VELOCITY_HEIGHT + 4.0 + 2.0 * ui.spacing().item_spacing.y;
+        let below = (VELOCITY_HEIGHT + 4.0) * self.zoom + 2.0 * ui.spacing().item_spacing.y;
         let grid_height = (ui.available_height() - below).max(96.0);
+        // Not animated: after a zoom, the notes that were in the middle
+        // must be there again on the very next frame.
         egui::ScrollArea::vertical()
+            .animated(false)
             .auto_shrink(false)
             .max_height(grid_height)
             .show(ui, |ui| {
@@ -504,7 +647,7 @@ impl PianoRoll {
                 };
                 self.grid(ui, pattern, ghosts, view, actions)
             });
-        ui.add_space(4.0);
+        ui.add_space(4.0 * self.zoom);
         self.velocity_lane(ui, pattern, step_width, actions);
 
         if let Some(step) = self.hovered_step {
@@ -821,13 +964,18 @@ impl PianoRoll {
     ) {
         let length = pattern.length();
         let spelling = scale.spelling();
-        let width = KEY_WIDTH + step_width * length as f32;
-        let (rect, response) = ui.allocate_exact_size(vec2(width, LANE_HEIGHT), Sense::hover());
+        let width = KEY_WIDTH * self.zoom + step_width * length as f32;
+        let (rect, response) =
+            ui.allocate_exact_size(vec2(width, LANE_HEIGHT * self.zoom), Sense::hover());
         let lane = Grid {
-            rect: Rect::from_min_max(pos2(rect.left() + KEY_WIDTH, rect.top()), rect.max),
+            rect: Rect::from_min_max(
+                pos2(rect.left() + KEY_WIDTH * self.zoom, rect.top()),
+                rect.max,
+            ),
             step_width,
             length,
             time: self.time,
+            zoom: self.zoom,
         };
         if let Some(pos) = response.hover_pos()
             && lane.rect.contains(pos)
@@ -840,7 +988,7 @@ impl PianoRoll {
             pos2(rect.left() + 4.0, rect.center().y),
             Align2::LEFT_CENTER,
             "Chords",
-            FontId::proportional(11.0),
+            FontId::proportional(11.0 * self.zoom),
             ui.visuals().weak_text_color(),
         );
         painter.rect_filled(lane.rect, 2.0, LANE_BACKGROUND);
@@ -864,7 +1012,7 @@ impl PianoRoll {
                     chord_rect.center(),
                     Align2::CENTER_CENTER,
                     label,
-                    FontId::proportional(12.0),
+                    FontId::proportional(12.0 * self.zoom),
                     LANE_TEXT,
                 );
             }
@@ -901,16 +1049,26 @@ impl PianoRoll {
         } = view;
         let length = pattern.length();
         let rows = (HIGHEST - LOWEST + 1) as f32;
-        let size = vec2(KEY_WIDTH + step_width * length as f32, rows * ROW_HEIGHT);
+        let size = vec2(
+            KEY_WIDTH * self.zoom + step_width * length as f32,
+            rows * ROW_HEIGHT * self.zoom,
+        );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
         let grid = Grid {
-            rect: Rect::from_min_max(pos2(rect.left() + KEY_WIDTH, rect.top()), rect.max),
+            rect: Rect::from_min_max(
+                pos2(rect.left() + KEY_WIDTH * self.zoom, rect.top()),
+                rect.max,
+            ),
             step_width,
             length,
             time: self.time,
+            zoom: self.zoom,
         };
 
         let notes = pattern.notes(self.channel);
+        // Whether the view jumps this frame. It moves only after the grid
+        // is drawn, so what is in view now is not worth remembering.
+        let jumping = self.scroll_to_notes || self.keep_in_middle.is_some();
         if self.scroll_to_notes {
             // Centre the view between the lowest and highest note, or on
             // middle C when there are no notes yet.
@@ -919,15 +1077,39 @@ impl PianoRoll {
             let highest = pitches().max().unwrap_or(Note::C4.midi());
             let middle = lowest / 2 + highest / 2;
             let top = grid.row_top(middle.clamp(LOWEST, HIGHEST));
-            let target = Rect::from_min_size(pos2(rect.left(), top), vec2(1.0, ROW_HEIGHT));
+            let target =
+                Rect::from_min_size(pos2(rect.left(), top), vec2(1.0, ROW_HEIGHT * self.zoom));
             ui.scroll_to_rect(target, Some(Align::Center));
             self.scroll_to_notes = false;
+            self.keep_in_middle = None;
+        } else if let Some(pitch) = self.keep_in_middle.take() {
+            let top = grid.row_top(pitch.clamp(LOWEST, HIGHEST));
+            let target = Rect::from_min_size(pos2(rect.left(), top), vec2(1.0, ROW_HEIGHT));
+            ui.scroll_to_rect(target, Some(Align::Center));
+        }
+        let visible = ui.clip_rect().intersect(rect);
+        if !jumping {
+            self.in_view = Some((
+                grid.cell_at(visible.left_bottom() - vec2(0.0, 1.0))
+                    .1
+                    .midi(),
+                grid.cell_at(visible.left_top()).1.midi(),
+            ));
         }
         let hit = self.handle_input(ui, &response, grid, pattern, scale, actions);
 
         let painter = ui.painter_at(rect);
         paint_rows(&painter, grid, scale, held);
         paint_step_lines(&painter, grid);
+        if notes.is_empty() {
+            painter.text(
+                visible.center() + vec2(KEY_WIDTH / 2.0 * self.zoom, 0.0),
+                Align2::CENTER_CENTER,
+                "No notes here yet: click to draw one",
+                FontId::proportional(18.0 * self.zoom),
+                NO_NOTES_TEXT,
+            );
+        }
         if let Some(step) = playhead.filter(|&step| step < length) {
             let x = grid.x(step);
             let column = Rect::from_min_max(
@@ -1081,7 +1263,8 @@ impl PianoRoll {
                     match hit {
                         Some(index) => {
                             let note = notes[index];
-                            let near_end = pos.x > grid.note_rect(&note).right() - EDGE_GRAB;
+                            let near_end =
+                                pos.x > grid.note_rect(&note).right() - EDGE_GRAB * self.zoom;
                             let selected = self.selection.contains(&note);
                             if selected && !near_end {
                                 self.group_drag = Some(GroupDrag {
@@ -1233,14 +1416,20 @@ impl PianoRoll {
         actions: &mut Vec<RollAction>,
     ) {
         let length = pattern.length();
-        let width = KEY_WIDTH + step_width * length as f32;
-        let (rect, response) =
-            ui.allocate_exact_size(vec2(width, VELOCITY_HEIGHT), Sense::click_and_drag());
+        let width = KEY_WIDTH * self.zoom + step_width * length as f32;
+        let (rect, response) = ui.allocate_exact_size(
+            vec2(width, VELOCITY_HEIGHT * self.zoom),
+            Sense::click_and_drag(),
+        );
         let lane = Grid {
-            rect: Rect::from_min_max(pos2(rect.left() + KEY_WIDTH, rect.top()), rect.max),
+            rect: Rect::from_min_max(
+                pos2(rect.left() + KEY_WIDTH * self.zoom, rect.top()),
+                rect.max,
+            ),
             step_width,
             length,
             time: self.time,
+            zoom: self.zoom,
         };
         let notes = pattern.notes(self.channel);
 
@@ -1274,7 +1463,7 @@ impl PianoRoll {
             pos2(rect.left() + 4.0, rect.top() + 8.0),
             Align2::LEFT_CENTER,
             "Velocity",
-            FontId::proportional(11.0),
+            FontId::proportional(11.0 * self.zoom),
             ui.visuals().weak_text_color(),
         );
         painter.rect_filled(lane.rect, 2.0, LANE_BACKGROUND);
@@ -1464,7 +1653,7 @@ impl PianoRoll {
                     rect.left_center() + vec2(3.0, 0.0),
                     Align2::LEFT_CENTER,
                     note.pitch.name(spelling),
-                    FontId::proportional(10.0),
+                    FontId::proportional(10.0 * self.zoom),
                     NOTE_TEXT,
                 );
             }
@@ -1544,7 +1733,7 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
 
         let row = Rect::from_min_size(
             pos2(grid.rect.left(), top),
-            vec2(grid.rect.width(), ROW_HEIGHT),
+            vec2(grid.rect.width(), ROW_HEIGHT * grid.zoom),
         );
         let fill = match (is_root, in_scale) {
             (true, _) => ROOT_ROW,
@@ -1559,7 +1748,10 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
         };
         painter.hline(row.x_range(), row.bottom(), Stroke::new(1.0, line));
 
-        let key = Rect::from_min_size(pos2(grid.keys().left(), top), vec2(KEY_WIDTH, ROW_HEIGHT));
+        let key = Rect::from_min_size(
+            pos2(grid.keys().left(), top),
+            vec2(KEY_WIDTH, ROW_HEIGHT) * grid.zoom,
+        );
         let key_fill = if held.contains(&Note::new(midi)) {
             KEY_HELD
         } else if pitch_class.is_black_key() {
@@ -1577,7 +1769,7 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
                 pos2(key.left() + 4.0, key.center().y),
                 Align2::LEFT_CENTER,
                 Note::new(midi).to_string(),
-                FontId::proportional(10.0),
+                FontId::proportional(10.0 * grid.zoom),
                 KEY_TEXT,
             );
         }
@@ -1593,5 +1785,145 @@ fn paint_step_lines(painter: &Painter, grid: Grid) {
             _ => STEP_LINE,
         };
         painter.vline(grid.x(step), grid.rect.y_range(), Stroke::new(1.0, color));
+    }
+}
+
+/// The channel with the most melody or chord notes in a pattern, if any
+/// channel has some. Drum channels, whose notes are plain steps, are left
+/// out: the channel rack is the place for them.
+pub fn busiest_channel(pattern: &Pattern) -> Option<usize> {
+    (0..pattern.rows())
+        .map(|channel| {
+            let melodic = pattern.notes(channel).iter().filter(|note| !note.is_step());
+            (channel, melodic.count())
+        })
+        .filter(|&(_, count)| count > 0)
+        .max_by_key(|&(channel, count)| (count, std::cmp::Reverse(channel)))
+        .map(|(channel, _)| channel)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CHORDS: usize = 1;
+    const SYNTH: usize = 4;
+
+    /// Draws piano rolls without a window, a frame at a time.
+    struct Screen {
+        ctx: egui::Context,
+        frame: usize,
+    }
+
+    impl Screen {
+        fn new() -> Self {
+            Screen {
+                ctx: egui::Context::default(),
+                frame: 0,
+            }
+        }
+
+        /// Draws `frames` frames of `roll` showing `pattern` of `project`.
+        fn run(
+            &mut self,
+            roll: &mut PianoRoll,
+            project: &Project,
+            pattern: usize,
+            zoom: f32,
+            frames: usize,
+        ) {
+            let screen = Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 800.0));
+            for _ in 0..frames {
+                // Scrolling is animated, so time must pass.
+                let input = egui::RawInput {
+                    screen_rect: Some(screen),
+                    time: Some(self.frame as f64 * 0.1),
+                    ..Default::default()
+                };
+                self.frame += 1;
+                let mut output = self.ctx.run_pass(input, |ctx| {
+                    roll.show(ctx, project, pattern, None, &[], screen, zoom);
+                });
+                // Nothing is drawn, so the font textures are never uploaded.
+                output.textures_delta.clear();
+            }
+        }
+    }
+
+    /// Draws `frames` frames of a piano roll on `pattern` of the demo song.
+    fn run(roll: &mut PianoRoll, project: &Project, pattern: usize, frames: usize) {
+        Screen::new().run(roll, project, pattern, 1.0, frames);
+    }
+
+    /// The pitch in the middle of the view.
+    fn middle(roll: &PianoRoll) -> u8 {
+        let (lowest, highest) = roll.in_view.expect("the grid was drawn");
+        lowest / 2 + highest / 2
+    }
+
+    #[test]
+    fn zooming_keeps_the_middle() {
+        let project = Project::demo();
+        let mut roll = PianoRoll::new(SYNTH);
+        roll.open = true;
+        let mut screen = Screen::new();
+        screen.run(&mut roll, &project, CHORDS, 1.0, 20);
+        let before = middle(&roll);
+        for zoom in [1.1, 1.2, 1.3] {
+            screen.run(&mut roll, &project, CHORDS, zoom, 1);
+        }
+        screen.run(&mut roll, &project, CHORDS, 1.3, 5);
+        assert!(
+            middle(&roll).abs_diff(before) <= 1,
+            "{before} became {}",
+            middle(&roll)
+        );
+    }
+
+    #[test]
+    fn follows_the_channel_with_notes() {
+        let project = Project::demo();
+        // Opened on the kick, which plays nothing in "Chords".
+        let mut roll = PianoRoll::new(0);
+        roll.open = true;
+        run(&mut roll, &project, CHORDS, 2);
+        assert_eq!(roll.channel(), SYNTH);
+    }
+
+    #[test]
+    fn stays_on_its_channel_when_no_other_has_melodies() {
+        let project = Project::demo();
+        let mut roll = PianoRoll::new(SYNTH);
+        roll.open = true;
+        run(&mut roll, &project, 0, 2);
+        assert_eq!(roll.channel(), SYNTH);
+    }
+
+    #[test]
+    fn opens_scrolled_to_the_notes() {
+        let project = Project::demo();
+        let mut roll = PianoRoll::new(SYNTH);
+        roll.open = true;
+        run(&mut roll, &project, CHORDS, 20);
+        // The chords go from F2 (41) to G4 (67).
+        let (lowest, highest) = roll.in_view.expect("the grid was drawn");
+        assert!(
+            lowest <= 41 && highest >= 67,
+            "in view: {lowest}..={highest}"
+        );
+    }
+
+    #[test]
+    fn empty_pattern_shows_middle_c() {
+        let project = Project::demo();
+        let mut roll = PianoRoll::new(SYNTH);
+        run(&mut roll, &project, 0, 3);
+        roll.open = true;
+        run(&mut roll, &project, 0, 20);
+        let (lowest, highest) = roll.in_view.expect("the grid was drawn");
+        assert!(
+            lowest <= 60 && highest >= 60,
+            "in view: {lowest}..={highest}"
+        );
     }
 }
