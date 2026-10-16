@@ -11,7 +11,7 @@ use eframe::egui::{
     self, Align, Align2, Color32, FontId, Key, KeyboardShortcut, Modifiers, Painter, Pos2, Rect,
     Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2,
 };
-use loom_core::harmony::{Harmony, analyze, next_chords};
+use loom_core::harmony::{Harmony, HintLevel, analyze, next_chords};
 use loom_core::tools::{self, ArpeggioOrder};
 use loom_core::{
     Chord, ChordQuality, ChordStamp, Note, NoteEvent, Pattern, PitchClass, Project, Scale,
@@ -273,6 +273,9 @@ pub struct PianoRoll {
     /// The project's time signature, which says where the bar and beat
     /// lines go. Copied from the project on every frame.
     time: TimeSignature,
+    /// How much the next-chord hints explain. Set by the app from the
+    /// harmony keys bar, where it is chosen.
+    pub hints: HintLevel,
 }
 
 impl PianoRoll {
@@ -298,6 +301,7 @@ impl PianoRoll {
             has_keyboard: false,
             window_rect: None,
             time: TimeSignature::COMMON,
+            hints: HintLevel::default(),
         }
     }
 
@@ -708,11 +712,13 @@ impl PianoRoll {
                 };
                 let numeral = scale.roman_numeral(chord).unwrap_or_default();
                 let text = format!("{numeral} · {}", chord.name(spelling));
-                let mut hint = format!(
-                    "{} {}. Click to hear it. Pick \"Chord in key\" under Draw to place chords like it.",
-                    chord.root.name(spelling),
-                    chord.quality.name()
-                );
+                let full_name = format!("{} {}", chord.root.name(spelling), chord.quality.name());
+                let mut hint = match self.hints {
+                    HintLevel::Detailed => format!(
+                        "{full_name}. Click to hear it. Pick \"Chord in key\" under Draw to place chords like it."
+                    ),
+                    _ => format!("{full_name}. Click to hear it."),
+                };
                 let suggestion = suggestions.iter().find(|s| s.degree == degree);
                 if let Some(suggestion) = suggestion {
                     // In minor keys the suggested V is major, while the
@@ -722,10 +728,16 @@ impl PianoRoll {
                     } else {
                         format!(", played as {}", suggestion.chord.name(spelling))
                     };
-                    hint = format!(
-                        "Often comes next{played_as}. {}\n\n{hint}",
-                        suggestion.reason
-                    );
+                    hint = match self.hints {
+                        HintLevel::Detailed => format!(
+                            "Often comes next{played_as}. {}\n\n{hint}",
+                            suggestion.reason
+                        ),
+                        HintLevel::Short => {
+                            format!("Often next{played_as}: {}.\n\n{hint}", suggestion.short)
+                        }
+                        HintLevel::Minimal => format!("Often next{played_as}.\n\n{hint}"),
+                    };
                 }
                 let button = egui::Button::new(text).selected(suggestion.is_some());
                 if ui.add(button).on_hover_text(hint).clicked() {
@@ -738,9 +750,15 @@ impl PianoRoll {
             }
         });
         let hint = match current {
-            None => "Point at a chord in the grid, or hold one on a keyboard, to see which \
-                     chords often follow it."
-                .to_string(),
+            None => match self.hints {
+                HintLevel::Detailed => "Point at a chord in the grid, or hold one on a keyboard, \
+                                        to see which chords often follow it."
+                    .to_string(),
+                HintLevel::Short => {
+                    "Point at or hold a chord to see what often follows.".to_string()
+                }
+                HintLevel::Minimal => String::new(),
+            },
             Some((at, chord)) => {
                 let name = chord.name(spelling);
                 let place = match at {
@@ -758,25 +776,34 @@ impl PianoRoll {
                         format!("{} ({numeral})", s.chord.name(spelling))
                     })
                     .collect();
-                if next.is_empty() {
-                    match scale.kind {
-                        ScaleKind::Major
+                let major_or_minor = matches!(
+                    scale.kind,
+                    ScaleKind::Major
                         | ScaleKind::NaturalMinor
                         | ScaleKind::HarmonicMinor
-                        | ScaleKind::MelodicMinor => {
-                            format!("{name} {place} has a root outside the key.")
-                        }
-                        _ => "Next-chord hints are given in major and minor keys.".to_string(),
+                        | ScaleKind::MelodicMinor
+                );
+                match (self.hints, next.is_empty(), major_or_minor) {
+                    (HintLevel::Minimal, true, true) => format!("{name}: root outside the key"),
+                    (_, true, true) => format!("{name} {place} has a root outside the key."),
+                    (HintLevel::Minimal, true, false) => String::new(),
+                    (_, true, false) => {
+                        "Next-chord hints are given in major and minor keys.".to_string()
                     }
-                } else {
-                    format!(
+                    (HintLevel::Detailed, false, _) => format!(
                         "After {name}{numeral} {place}, try: {}. Hover the highlighted chords to see why.",
                         next.join(", ")
-                    )
+                    ),
+                    (HintLevel::Short, false, _) => {
+                        format!("After {name}{numeral}, try: {}.", next.join(", "))
+                    }
+                    (HintLevel::Minimal, false, _) => format!("Next: {}", next.join(", ")),
                 }
             }
         };
-        ui.weak(hint);
+        if !hint.is_empty() {
+            ui.weak(hint);
+        }
     }
 
     /// The strip above the grid that names the chord at every step.

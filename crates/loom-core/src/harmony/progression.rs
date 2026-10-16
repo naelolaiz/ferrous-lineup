@@ -8,7 +8,7 @@
 //! fifth sound strongest of all. Knowing them helps you guess what comes
 //! next in a song, and choose on purpose when to surprise.
 
-use super::{Chord, ChordQuality, Scale, ScaleKind};
+use super::{Chord, ChordQuality, HintLevel, Scale, ScaleKind};
 
 /// A chord that often follows another one, and why.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,122 +16,250 @@ pub struct Suggestion {
     /// The degree of the key the chord is built on, from 0 (the tonic).
     pub degree: usize,
     pub chord: Chord,
+    /// Why, in a sentence: "IV to V: a step up to the dominant, ready to
+    /// come home."
     pub reason: &'static str,
+    /// The same reason in a few words: "step up to the dominant".
+    pub short: &'static str,
+}
+
+impl Suggestion {
+    /// The reason at `level`: the sentence, the few words, or nothing.
+    pub fn why(&self, level: HintLevel) -> Option<&'static str> {
+        match level {
+            HintLevel::Detailed => Some(self.reason),
+            HintLevel::Short => Some(self.short),
+            HintLevel::Minimal => None,
+        }
+    }
+}
+
+/// A move from one degree of the key to another (`to`), with its reason
+/// in a few words and in a sentence.
+struct Move {
+    to: usize,
+    short: &'static str,
+    reason: &'static str,
+}
+
+/// A `const fn` can be called where a constant is built, such as in the
+/// tables below, to keep each move on one line.
+const fn go(to: usize, short: &'static str, reason: &'static str) -> Move {
+    Move { to, short, reason }
 }
 
 /// For each degree of a major key, the degrees that often come next.
-const MAJOR: [&[(usize, &str)]; 7] = [
+const MAJOR: [&[Move]; 7] = [
     // I
     &[
-        (3, "I to IV: moving away from home, toward the dominant."),
-        (4, "I to V: tension that wants to come back to I."),
-        (
+        go(
+            3,
+            "away from home",
+            "I to IV: moving away from home, toward the dominant.",
+        ),
+        go(
+            4,
+            "tension, wants to go home",
+            "I to V: tension that wants to come back to I.",
+        ),
+        go(
             5,
+            "relative minor, darker",
             "I to vi: the relative minor, the same notes with a darker colour.",
         ),
-        (1, "I to ii: a minor chord that leads on to V."),
+        go(
+            1,
+            "leads on to V",
+            "I to ii: a minor chord that leads on to V.",
+        ),
     ],
     // ii
     &[
-        (
+        go(
             4,
+            "root falls a fifth (ii V I)",
             "ii to V: the root falls a fifth. ii, V, I is everywhere, from jazz to pop.",
         ),
-        (6, "ii to vii°: another chord that leads home to I."),
+        go(
+            6,
+            "also leads home",
+            "ii to vii°: another chord that leads home to I.",
+        ),
     ],
     // iii
     &[
-        (5, "iii to vi: the root falls a fifth."),
-        (3, "iii to IV: a step up to the subdominant."),
+        go(
+            5,
+            "root falls a fifth",
+            "iii to vi: the root falls a fifth.",
+        ),
+        go(
+            3,
+            "step up to the subdominant",
+            "iii to IV: a step up to the subdominant.",
+        ),
     ],
     // IV
     &[
-        (4, "IV to V: a step up to the dominant, ready to come home."),
-        (0, "IV to I: the \"amen\" (plagal) cadence."),
-        (
+        go(
+            4,
+            "step up to the dominant",
+            "IV to V: a step up to the dominant, ready to come home.",
+        ),
+        go(
+            0,
+            "amen (plagal) cadence",
+            "IV to I: the \"amen\" (plagal) cadence.",
+        ),
+        go(
             1,
+            "both lead on to V",
             "IV to ii: two chords that lead away from home, then on to V.",
         ),
     ],
     // V
     &[
-        (
+        go(
             0,
+            "strongest ending",
             "V to I: the strongest ending. The leading tone rises to the root.",
         ),
-        (
+        go(
             5,
+            "deceptive cadence",
             "V to vi: the \"deceptive\" cadence. You expect I and get its relative minor.",
         ),
     ],
     // vi
     &[
-        (1, "vi to ii: the root falls a fifth."),
-        (
+        go(1, "root falls a fifth", "vi to ii: the root falls a fifth."),
+        go(
             3,
+            "as in I V vi IV",
             "vi to IV, as in the I, V, vi, IV progression of countless songs.",
         ),
-        (4, "vi to V: on to the dominant."),
+        go(4, "on to the dominant", "vi to V: on to the dominant."),
     ],
     // vii°
     &[
-        (
+        go(
             0,
+            "resolves home, like V7",
             "vii° to I: vii° is V7 without its root, so it resolves home too.",
         ),
-        (2, "vii° to iii: the root falls a fifth."),
+        go(
+            2,
+            "root falls a fifth",
+            "vii° to iii: the root falls a fifth.",
+        ),
     ],
 ];
 
 /// For each degree of a minor key, the degrees that often come next.
-const MINOR: [&[(usize, &str)]; 7] = [
+const MINOR: [&[Move]; 7] = [
     // i
     &[
-        (3, "i to iv: the minor subdominant, moving away from home."),
-        (5, "i to VI: a bright major chord, a third below home."),
-        (
+        go(
+            3,
+            "minor subdominant, away from home",
+            "i to iv: the minor subdominant, moving away from home.",
+        ),
+        go(
+            5,
+            "bright major chord",
+            "i to VI: a bright major chord, a third below home.",
+        ),
+        go(
             6,
+            "step below home, rock and film",
             "i to VII: the major chord a step below home, common in rock and film music.",
         ),
-        (4, "i to V: tension that wants to come back to i."),
+        go(
+            4,
+            "tension, wants to go home",
+            "i to V: tension that wants to come back to i.",
+        ),
     ],
     // ii°
-    &[(4, "ii° to V: the root falls a fifth, toward home.")],
+    &[go(
+        4,
+        "root falls a fifth",
+        "ii° to V: the root falls a fifth, toward home.",
+    )],
     // III
     &[
-        (5, "III to VI: the root falls a fifth."),
-        (3, "III to iv: a step up to the subdominant."),
+        go(
+            5,
+            "root falls a fifth",
+            "III to VI: the root falls a fifth.",
+        ),
+        go(
+            3,
+            "step up to the subdominant",
+            "III to iv: a step up to the subdominant.",
+        ),
     ],
     // iv
     &[
-        (4, "iv to V: a step up to the dominant."),
-        (0, "iv to i: the minor plagal cadence."),
-        (6, "iv to VII: then on to III or back to i."),
+        go(
+            4,
+            "step up to the dominant",
+            "iv to V: a step up to the dominant.",
+        ),
+        go(
+            0,
+            "minor plagal cadence",
+            "iv to i: the minor plagal cadence.",
+        ),
+        go(
+            6,
+            "then on to III or i",
+            "iv to VII: then on to III or back to i.",
+        ),
     ],
     // V (or v)
     &[
-        (
+        go(
             0,
+            "back home",
             "V to i: back home. The pull is strongest when V is major (its third is the leading tone).",
         ),
-        (5, "V to VI: the deceptive cadence of minor keys."),
+        go(
+            5,
+            "deceptive cadence",
+            "V to VI: the deceptive cadence of minor keys.",
+        ),
     ],
     // VI
     &[
-        (6, "VI to VII: rising step by step, toward i."),
-        (3, "VI to iv: on to the subdominant."),
-        (1, "VI to ii°: the root falls a fifth."),
+        go(
+            6,
+            "rising toward i",
+            "VI to VII: rising step by step, toward i.",
+        ),
+        go(
+            3,
+            "on to the subdominant",
+            "VI to iv: on to the subdominant.",
+        ),
+        go(
+            1,
+            "root falls a fifth",
+            "VI to ii°: the root falls a fifth.",
+        ),
     ],
     // VII
     &[
-        (
+        go(
             2,
+            "V of the relative major",
             "VII to III: VII is the dominant of III, the relative major.",
         ),
-        (0, "VII to i: a step up to home."),
+        go(0, "step up to home", "VII to i: a step up to home."),
     ],
 ];
 
+const SECONDARY_DOMINANT_SHORT: &str = "secondary dominant: V of the chord a fifth down";
 const SECONDARY_DOMINANT: &str = "Not in the key: a major or dominant chord here acts as a \
     \"secondary dominant\". It is the V of the chord a fifth below, and pulls to it as V pulls to I.";
 
@@ -185,17 +313,19 @@ pub fn next_chords(scale: Scale, current: Chord) -> Vec<Suggestion> {
             degree: target_degree,
             chord,
             reason: SECONDARY_DOMINANT,
+            short: SECONDARY_DOMINANT_SHORT,
         }];
     }
 
     let table = if minor { &MINOR } else { &MAJOR };
     table[degree]
         .iter()
-        .filter_map(|&(degree, reason)| {
+        .filter_map(|step| {
             Some(Suggestion {
-                degree,
-                chord: chord_on(degree)?,
-                reason,
+                degree: step.to,
+                chord: chord_on(step.to)?,
+                reason: step.reason,
+                short: step.short,
             })
         })
         .collect()
@@ -269,6 +399,22 @@ mod tests {
             let suggestions = next_chords(c_major, chord);
             assert_eq!(names(&suggestions), [target], "{chord:?}");
             assert_eq!(suggestions[0].reason, SECONDARY_DOMINANT);
+        }
+    }
+
+    #[test]
+    fn short_reasons_are_shorter() {
+        for scale in [
+            Scale::new(C, ScaleKind::Major),
+            Scale::new(A, ScaleKind::NaturalMinor),
+        ] {
+            for degree in 0..7 {
+                for s in next_chords(scale, scale.triad(degree).unwrap()) {
+                    assert!(s.short.len() < s.reason.len(), "{:?}", s.short);
+                    assert_eq!(s.why(HintLevel::Short), Some(s.short));
+                    assert_eq!(s.why(HintLevel::Minimal), None);
+                }
+            }
         }
     }
 

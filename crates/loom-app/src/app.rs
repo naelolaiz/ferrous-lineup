@@ -809,6 +809,7 @@ impl eframe::App for LoomApp {
         }
 
         let held = self.live.held_pitches();
+        self.piano_roll.hints = self.harmony_keys.hints;
         let roll_actions = self
             .piano_roll
             .show(&ctx, &self.project, self.pattern, playhead, &held);
