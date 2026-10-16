@@ -184,7 +184,7 @@ impl HarmonyKeys {
                         None => format!("{hover}\n\n{often} next."),
                     };
                 }
-                let response = response.on_hover_text(hover);
+                let response = crate::theme::hint(response, hover);
                 if response.is_pointer_button_down_on() {
                     pressed = Some(index);
                 }
@@ -468,7 +468,22 @@ fn chord_key(
         color.gamma_multiply(0.45)
     };
     let painter = ui.painter();
-    painter.rect_filled(rect, 6.0, fill);
+    // A pad: a dark edge at the bottom, the colour, and a lighter band
+    // across the top.
+    painter.rect_filled(rect, 6.0, fill.gamma_multiply(0.55));
+    let body = Rect::from_min_max(rect.min, rect.max - vec2(0.0, 3.0));
+    painter.rect_filled(body, 6.0, fill);
+    let band = Rect::from_min_size(body.min, vec2(body.width(), 30.0));
+    painter.rect_filled(
+        band,
+        egui::CornerRadius {
+            nw: 6,
+            ne: 6,
+            sw: 0,
+            se: 0,
+        },
+        Color32::from_white_alpha(if lit { 40 } else { 18 }),
+    );
     match rank {
         Some(0) => {
             painter.rect_stroke(rect, 6.0, Stroke::new(3.0, SUGGESTED), StrokeKind::Inside);

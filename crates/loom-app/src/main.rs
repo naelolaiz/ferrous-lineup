@@ -19,6 +19,7 @@ mod library_browser;
 mod midi;
 mod piano_roll;
 mod playlist;
+mod theme;
 mod widgets;
 
 use std::path::PathBuf;

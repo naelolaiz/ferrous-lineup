@@ -15,6 +15,7 @@ use loom_core::{DEFAULT_VELOCITY, MidiMessage, Note, Pattern};
 
 use super::{Audio, LoomApp};
 use crate::midi::{Midi, Played, Port};
+use crate::theme;
 
 /// The typing keyboard, laid out like a piano on the letter keys, as in
 /// other studios. Z X C V B N M are the white keys from C4, and S D G H J
@@ -52,9 +53,6 @@ const TYPING_KEYS: &[(Key, u8)] = &[
     (Key::Num0, 87),
     (Key::P, 88),
 ];
-
-/// The colour of the Rec button while recording is armed.
-const REC_ARMED: egui::Color32 = egui::Color32::from_rgb(176, 40, 40);
 
 /// The note a key of the typing keyboard plays, if it plays one.
 fn typing_note(key: Key) -> Option<Note> {
@@ -302,15 +300,10 @@ impl LoomApp {
 
     /// The Rec button, next to Play. It turns red while recording is armed.
     pub(super) fn record_button(&mut self, ui: &mut egui::Ui) {
-        let button = if self.live.recording {
-            let text = egui::RichText::new("● Rec").color(egui::Color32::WHITE);
-            egui::Button::new(text).fill(REC_ARMED)
-        } else {
-            egui::Button::new("● Rec")
-        };
+        let button = theme::light_button(ui, "⏺", self.live.recording, Some(theme::RED));
         let hover = "Record what you play on a MIDI or typing keyboard into the channel the \
                      piano roll shows, while the pattern plays. Switches to pattern mode.";
-        if ui.add(button).on_hover_text(hover).clicked() {
+        if theme::hint(button, hover).clicked() {
             self.toggle_recording();
         }
     }

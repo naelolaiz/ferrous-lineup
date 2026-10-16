@@ -61,15 +61,15 @@ const EXTRA_BARS: usize = 16;
 /// The height of the strip at the top of a clip with the pattern's name.
 const CLIP_TITLE: f32 = 13.0;
 
-const ROW: [Color32; 2] = [Color32::from_rgb(40, 44, 52), Color32::from_rgb(36, 40, 47)];
-const BEAT_LINE: Color32 = Color32::from_rgb(48, 52, 61);
-const BAR_LINE: Color32 = Color32::from_rgb(66, 71, 82);
-const HEADER: Color32 = Color32::from_rgb(30, 33, 39);
-const HEADER_TEXT: Color32 = Color32::from_rgb(205, 210, 220);
-const RULER: Color32 = Color32::from_rgb(26, 28, 33);
-const RULER_TEXT: Color32 = Color32::from_rgb(150, 156, 168);
-const SONG_END: Color32 = Color32::from_rgb(120, 126, 140);
-const PLAYHEAD: Color32 = Color32::from_rgb(255, 152, 48);
+const ROW: [Color32; 2] = [Color32::from_rgb(55, 64, 70), Color32::from_rgb(50, 58, 64)];
+const BEAT_LINE: Color32 = Color32::from_rgb(45, 52, 57);
+const BAR_LINE: Color32 = Color32::from_rgb(30, 35, 39);
+const HEADER: Color32 = Color32::from_rgb(66, 76, 83);
+const HEADER_TEXT: Color32 = Color32::from_rgb(226, 232, 236);
+const RULER: Color32 = Color32::from_rgb(36, 42, 46);
+const RULER_TEXT: Color32 = Color32::from_rgb(190, 200, 206);
+const SONG_END: Color32 = Color32::from_rgb(170, 180, 186);
+const PLAYHEAD: Color32 = Color32::from_rgb(118, 214, 108);
 const CLIP_TEXT: Color32 = Color32::from_rgb(20, 22, 26);
 const CLIP_NOTES: Color32 = Color32::from_rgb(232, 236, 242);
 const SELECTED_OUTLINE: Color32 = Color32::from_rgb(245, 245, 250);
