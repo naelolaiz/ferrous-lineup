@@ -13,13 +13,16 @@
 //! - [`style`]: harmony styles, a progression with its way of playing.
 //! - [`rhythm`]: drum patterns, one line per drum.
 //! - [`song`]: well-known songs in the public domain, with their melodies.
-//! - [`apply`]: writing a style or a rhythm into a pattern.
+//! - [`listen`]: hearing which chords a pattern's notes play.
+//! - [`apply`]: writing a style or a rhythm into a pattern, and changing
+//!   the rhythm of a whole song, chords and bass included.
 //! - [`demo`]: whole projects, arranged from styles, rhythms and songs.
 
 pub mod apply;
 pub mod chart;
 pub mod comping;
 pub mod demo;
+pub mod listen;
 pub mod numeral;
 pub mod rhythm;
 pub mod song;

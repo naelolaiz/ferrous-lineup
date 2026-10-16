@@ -16,6 +16,9 @@ pub enum LibraryAction {
     Style(&'static Style),
     /// Play this rhythm (or fill) on the drums.
     Rhythm(&'static Rhythm),
+    /// Play the whole song in this rhythm: its drums, and its chords and
+    /// bass played the way the rhythm goes.
+    RhythmInSong(&'static Rhythm),
 }
 
 /// What the selected pattern was made from, if the library made it, to
@@ -52,7 +55,10 @@ impl LibraryBrowser {
             .on_hover_text(
                 "Trying a style or a rhythm also sets the tempo it is usually played at",
             );
-        ui.weak("Click to play it in a pattern. Click another to swap. Ctrl+Z takes it back.");
+        ui.weak(
+            "Click to play it in a pattern. Click another to swap. Right-click a rhythm to \
+             play the whole song in it. Ctrl+Z takes it back.",
+        );
         ui.add_space(2.0);
 
         let filter = self.filter.trim().to_lowercase();
@@ -155,21 +161,44 @@ fn group(
     header.show(ui, add);
 }
 
-/// One rhythm in the list. Returns it if it was clicked.
+/// One rhythm in the list. Returns it if it was clicked, or picked for
+/// the whole song from its menu. Fills have no menu: they are one bar.
 fn rhythm_label(ui: &mut Ui, rhythm: &'static Rhythm, tried: Tried) -> Option<LibraryAction> {
     let selected = tried.rhythm == Some(rhythm);
+    let is_fill = FILLS.contains(rhythm);
     let hover = format!(
-        "{}\n\n{} · {} BPM · {} bar{}",
+        "{}\n\n{} · {} BPM · {} bar{}{}",
         rhythm.about,
         rhythm.time,
         rhythm.tempo,
         rhythm.bars(),
-        if rhythm.bars() == 1 { "" } else { "s" }
+        if rhythm.bars() == 1 { "" } else { "s" },
+        if is_fill {
+            ""
+        } else {
+            "\n\nRight-click to play the whole song in this rhythm."
+        }
     );
-    ui.selectable_label(selected, label(rhythm.name, rhythm.time))
-        .on_hover_text(hover)
-        .clicked()
-        .then_some(LibraryAction::Rhythm(rhythm))
+    let response = ui
+        .selectable_label(selected, label(rhythm.name, rhythm.time))
+        .on_hover_text(hover);
+    let mut picked = response.clicked().then_some(LibraryAction::Rhythm(rhythm));
+    if !is_fill {
+        response.context_menu(|ui| {
+            if ui
+                .button("Play the whole song in this rhythm")
+                .on_hover_text(
+                    "Every pattern with drums gets this rhythm, and the chords and bass \
+                     are played the way it goes, keeping the same chords",
+                )
+                .clicked()
+            {
+                picked = Some(LibraryAction::RhythmInSong(rhythm));
+                ui.close();
+            }
+        });
+    }
+    picked
 }
 
 /// The name, with the time signature after it unless it is 4/4.
