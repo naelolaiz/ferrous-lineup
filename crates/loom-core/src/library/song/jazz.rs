@@ -77,23 +77,23 @@ pub(super) const ENTERTAINER: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     parts: &[
-        Part::new("Pickup", "-:12 D5:2 D#5", "V7"),
+        Part::new("Pickup", "-:12 D5:2 D#5", "V"),
         Part::new(
             "A",
-            "E5:2 C6:4 E5:2 C6:4 E5:2 C6 | _:6 C6:2 D6 D#6 E6 C6 | D6 E6:4 B5:2 D6:4 C6 | \
-             _:8 -:4 D5:2 D#5 | E5:2 C6:4 E5:2 C6:4 E5:2 C6 | _:8 -:2 A5:2 G5 F#5 | \
-             A5 C6 E6:4 D6:2 C6 A5 D6 | _:8 -:4 D5:2 D#5 | \
-             E5:2 C6:4 E5:2 C6:4 E5:2 C6 | _:6 C6:2 D6 D#6 E6 C6 | D6 E6:4 B5:2 D6:4 C6 | \
-             _:8 -:4 C6:2 D6 | E6 C6 D6 E6 -:2 C6 D6 C6 | E6 C6 D6 E6 -:2 C6 D6 C6 | \
-             E6 C6 D6 E6 -:2 B5 D6:4 | C6:8 -:4 D5:2 D#5",
-            "I | I | V7 I | I | I | I II7 | II7 | V7 | I | I | V7 I | I | I | I7 IV | I V7 | I",
+            "E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:10 C6:2 D6 D#6 | E6:2 C6 D6 E6:4 B5:2 D6:4 | \
+             C6:12 D5:2 D#5 | E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:12 A5:2 G5 | \
+             F#5:2 A5 C6 E6:4 D6:2 C6 A5 | D6:12 D5:2 D#5 | \
+             E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:10 C6:2 D6 D#6 | E6:2 C6 D6 E6:4 B5:2 D6:4 | \
+             C6:12 C6:2 D6 | E6:2 C6 D6 E6:4 C6:2 D6 C6 | E6:2 C6 D6 E6:4 C6:2 D6 C6 | \
+             E6:2 C6 D6 E6:4 B5:2 D6:4 | C6:12 D5:2 D#5",
+            "I | IV I | I V7 | I | I | IV | II7 | V7 | I | IV I | I V7 | I | I7 | IV iv | I V7 | I",
         ),
     ],
     form: &["Pickup", "A", "A"],
     drums_from: 1,
     about: "Ragtime, the piano music jazz grew out of: the left hand keeps a steady \
             oom-pah, bass then chord, while the right hand pushes against it, landing \
-            between the beats.",
+            between the beats and holding on across them.",
 };
 
 pub(super) const HAPPY_BIRTHDAY: Song = Song {
