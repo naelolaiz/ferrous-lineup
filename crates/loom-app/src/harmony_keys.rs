@@ -3,7 +3,9 @@
 //! On the left, the key and the time signature of the project. In the
 //! middle, a big key for each of the seven chords of the key, coloured by
 //! what the chord does (home, away, tension); hold one down to play its
-//! chord, and the chords that often come next light up. On the right, a
+//! chord, and the chords that often come next are outlined, the most
+//! usual one brightest. The hint line below can explain in sentences, in
+//! a few words, or not at all (see [`HintLevel`]). On the right, a
 //! keyboard showing the notes of the scale and the notes playing.
 //!
 //! Like the other views, [`HarmonyKeys::show`] does not change anything
@@ -14,7 +16,7 @@ use eframe::egui::{
     pos2, vec2,
 };
 use loom_core::harmony::keys::{self, ChordKey, ChordSize, Function};
-use loom_core::harmony::{Harmony, analyze, next_chords};
+use loom_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords};
 use loom_core::{Chord, Note, PitchClass, Project, Scale, ScaleKind, Spelling, TimeSignature};
 
 use crate::piano_roll::both_names;
@@ -89,6 +91,8 @@ const DIGITS: [Key; 7] = [
 /// What the harmony keys bar remembers between frames.
 pub struct HarmonyKeys {
     pub open: bool,
+    /// How much the hints explain, here and in the piano roll.
+    pub hints: HintLevel,
     size: ChordSize,
     down: Option<Down>,
     /// The notes of the last chord played (without the bass), so the next
@@ -103,6 +107,7 @@ impl HarmonyKeys {
     pub fn new() -> Self {
         HarmonyKeys {
             open: true,
+            hints: HintLevel::default(),
             size: ChordSize::Triads,
             down: None,
             last_voicing: None,
@@ -160,13 +165,22 @@ impl HarmonyKeys {
             ui.vertical(|ui| self.settings(ui, project, &mut actions));
             ui.separator();
             for (index, key) in chord_keys.iter().enumerate() {
-                let suggestion = suggestions.iter().find(|s| s.degree == key.degree);
+                // The rank of the key among the suggestions: 0 for the
+                // most usual next chord.
+                let rank = suggestions.iter().position(|s| s.degree == key.degree);
                 let lit =
                     playing == Some(index) || self.down.as_ref().is_some_and(|d| d.key == index);
-                let response = chord_key(ui, key, scale.spelling(), lit, suggestion.is_some());
-                let mut hover = describe_key(key, scale.spelling());
-                if let Some(suggestion) = suggestion {
-                    hover = format!("{hover}\n\nOften comes next. {}", suggestion.reason);
+                let response = chord_key(ui, key, scale.spelling(), lit, rank);
+                let mut hover = describe_key(key, scale.spelling(), self.hints);
+                if let Some(rank) = rank {
+                    let often = if rank == 0 { "Most often" } else { "Often" };
+                    hover = match suggestions[rank].why(self.hints) {
+                        Some(why) if self.hints == HintLevel::Detailed => {
+                            format!("{hover}\n\n{often} comes next. {why}")
+                        }
+                        Some(why) => format!("{hover}\n\n{often} next: {why}."),
+                        None => format!("{hover}\n\n{often} next."),
+                    };
                 }
                 let response = response.on_hover_text(hover);
                 if response.is_pointer_button_down_on() {
@@ -177,7 +191,6 @@ impl HarmonyKeys {
             piano(ui, scale, held, heard);
         });
 
-        let spelling = scale.spelling();
         let suggests = matches!(
             keys::chord_scale(scale).kind,
             ScaleKind::Major
@@ -185,29 +198,33 @@ impl HarmonyKeys {
                 | ScaleKind::HarmonicMinor
                 | ScaleKind::MelodicMinor
         );
-        let hint = match (self.last_chord, suggestions.first()) {
-            (Some(chord), Some(next)) => format!(
-                "After {}, {} often comes next: {}",
-                chord.name(spelling),
-                next.chord.name(spelling),
-                next.reason
-            ),
-            (Some(chord), None) if suggests && keys::key_for(&chord_keys, chord).is_none() => {
-                format!(
-                    "{} is not one of the seven chords of {}: it comes from outside the key.",
-                    chord.name(spelling),
-                    scale.name()
-                )
-            }
-            _ if !suggests => {
-                "Suggestions of what comes next are given in major and minor keys.".to_string()
-            }
-            _ => format!(
-                "Hold a key (or 1 to 7) to play its chord on \"{channel_name}\". With Rec on, \
-                 the chords are recorded. Lit keys are chords that often come next."
-            ),
-        };
-        ui.weak(hint);
+        let outside = suggests
+            && self
+                .last_chord
+                .is_some_and(|chord| keys::key_for(&chord_keys, chord).is_none());
+        ui.horizontal(|ui| {
+            egui::ComboBox::from_id_salt("harmony-hints")
+                .width(78.0)
+                .selected_text(self.hints.label())
+                .show_ui(ui, |ui| {
+                    for level in HintLevel::ALL {
+                        ui.selectable_value(&mut self.hints, level, level.label())
+                            .on_hover_text(level.description());
+                    }
+                })
+                .response
+                .on_hover_text("How much the hints explain, here and in the piano roll");
+            let hint = hint_line(
+                self.hints,
+                scale,
+                self.last_chord,
+                &suggestions,
+                suggests,
+                outside,
+                channel_name,
+            );
+            ui.weak(hint);
+        });
 
         self.follow_mouse(pressed, &chord_keys, &mut actions);
         self.follow_digits(ui, digits, &chord_keys, &mut actions);
@@ -370,15 +387,70 @@ impl HarmonyKeys {
     }
 }
 
+/// The line of text under the keys: what often comes after the last
+/// chord, at the chosen level of detail. `suggests` says whether the key
+/// is one that gets suggestions (major or minor), and `outside` whether
+/// the last chord is not one of the key's seven.
+fn hint_line(
+    level: HintLevel,
+    scale: Scale,
+    last_chord: Option<Chord>,
+    suggestions: &[Suggestion],
+    suggests: bool,
+    outside: bool,
+    channel_name: &str,
+) -> String {
+    let spelling = scale.spelling();
+    match (last_chord, suggestions.first()) {
+        (Some(chord), Some(next)) => {
+            let (from, to) = (chord.name(spelling), next.chord.name(spelling));
+            match level {
+                HintLevel::Detailed => {
+                    format!("After {from}, {to} often comes next: {}", next.reason)
+                }
+                HintLevel::Short => format!("{from} → {to}: {}", next.short),
+                HintLevel::Minimal => format!("{from} → {to}"),
+            }
+        }
+        (Some(chord), None) if outside => match level {
+            HintLevel::Detailed => format!(
+                "{} is not one of the seven chords of {}: it comes from outside the key.",
+                chord.name(spelling),
+                scale.name()
+            ),
+            _ => format!("{}: outside the key", chord.name(spelling)),
+        },
+        _ if !suggests => match level {
+            HintLevel::Detailed => {
+                "Suggestions of what comes next are given in major and minor keys.".to_string()
+            }
+            HintLevel::Short => "Suggestions in major and minor keys only.".to_string(),
+            HintLevel::Minimal => String::new(),
+        },
+        _ => match level {
+            HintLevel::Detailed => format!(
+                "Hold a key (or 1 to 7) to play its chord on \"{channel_name}\". With Rec on, \
+                 the chords are recorded. Outlined keys are chords that often come next, \
+                 the brightest the most usual."
+            ),
+            HintLevel::Short => {
+                format!("Hold a key or press 1 to 7 to play on \"{channel_name}\".")
+            }
+            HintLevel::Minimal => String::new(),
+        },
+    }
+}
+
 /// One harmony key: the numeral, the chord's name and its function, on
 /// the function's colour. Bright while it plays; outlined when it is a
-/// chord that often comes next.
+/// chord that often comes next: thick and bright for the most usual one
+/// (`rank` 0), thin and dim for the others.
 fn chord_key(
     ui: &mut Ui,
     key: &ChordKey,
     spelling: Spelling,
     lit: bool,
-    suggested: bool,
+    rank: Option<usize>,
 ) -> Response {
     let (rect, response) = ui.allocate_exact_size(KEY_SIZE, Sense::click());
     ui.add_space(KEY_GAP - ui.spacing().item_spacing.x);
@@ -395,8 +467,15 @@ fn chord_key(
     };
     let painter = ui.painter();
     painter.rect_filled(rect, 6.0, fill);
-    if suggested {
-        painter.rect_stroke(rect, 6.0, Stroke::new(2.5, SUGGESTED), StrokeKind::Inside);
+    match rank {
+        Some(0) => {
+            painter.rect_stroke(rect, 6.0, Stroke::new(3.0, SUGGESTED), StrokeKind::Inside);
+        }
+        Some(_) => {
+            let dim = SUGGESTED.gamma_multiply(0.45);
+            painter.rect_stroke(rect, 6.0, Stroke::new(1.5, dim), StrokeKind::Inside);
+        }
+        None => {}
     }
     painter.text(
         rect.center_top() + vec2(0.0, 18.0),
@@ -422,9 +501,10 @@ fn chord_key(
     response
 }
 
-/// The tooltip of a harmony key: "V: G major (G B D), the dominant:
-/// tension, pulls back home to I."
-fn describe_key(key: &ChordKey, spelling: Spelling) -> String {
+/// The tooltip of a harmony key, at `level`: "V: G major (G B D). The
+/// dominant: tension, pulls back home to I.", "V: G major (G B D),
+/// dominant: tension. Key 5." or just "V: G major (G B D)".
+fn describe_key(key: &ChordKey, spelling: Spelling, level: HintLevel) -> String {
     let notes: Vec<&str> = key
         .chord
         .pitch_set()
@@ -432,15 +512,26 @@ fn describe_key(key: &ChordKey, spelling: Spelling) -> String {
         .map(|pitch_class| pitch_class.name(spelling))
         .collect();
     let digit = key.degree + 1;
-    format!(
-        "{}: {} {} ({}). The {}: {}.\nHold to play; key {digit} on the computer keyboard too.",
+    let chord = format!(
+        "{}: {} {} ({})",
         key.numeral,
         key.chord.root.name(spelling),
         key.chord.quality.name(),
         notes.join(" "),
-        key.function.name(),
-        key.function.feel(),
-    )
+    );
+    match level {
+        HintLevel::Detailed => format!(
+            "{chord}. The {}: {}.\nHold to play; key {digit} on the computer keyboard too.",
+            key.function.name(),
+            key.function.feel(),
+        ),
+        HintLevel::Short => format!(
+            "{chord}, {}: {}. Key {digit}.",
+            key.function.name(),
+            key.function.short_feel(),
+        ),
+        HintLevel::Minimal => chord,
+    }
 }
 
 /// What a time signature means, for its tooltip.
@@ -534,4 +625,24 @@ fn scale_dot(painter: &Painter, scale: Scale, pitch_class: PitchClass, key: Rect
         SCALE_DOT
     };
     painter.circle_filled(pos2(key.center().x, key.top() + y - 6.0), 2.5, color);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use loom_core::ChordQuality;
+
+    #[test]
+    fn the_hint_line_gets_shorter_by_level() {
+        let c = Scale::new(PitchClass::C, ScaleKind::Major);
+        let f = Chord::new(PitchClass::F, ChordQuality::Major);
+        let next = next_chords(c, f);
+        let line = |level| hint_line(level, c, Some(f), &next, true, false, "Piano");
+        assert_eq!(
+            line(HintLevel::Detailed),
+            "After F, G often comes next: IV to V: a step up to the dominant, ready to come home."
+        );
+        assert_eq!(line(HintLevel::Short), "F → G: step up to the dominant");
+        assert_eq!(line(HintLevel::Minimal), "F → G");
+    }
 }

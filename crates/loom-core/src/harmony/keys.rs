@@ -79,6 +79,15 @@ impl Function {
             Function::Dominant => "tension: pulls back home to I",
         }
     }
+
+    /// The feel in one word.
+    pub fn short_feel(self) -> &'static str {
+        match self {
+            Function::Tonic => "home",
+            Function::Subdominant => "away",
+            Function::Dominant => "tension",
+        }
+    }
 }
 
 /// One of the harmony keys.
