@@ -20,7 +20,7 @@ pub(super) const JINGLE_BELLS: Song = Song {
             "D5:4 B5 A5 G5 | D5:12 D5:2 D5 | D5:4 B5 A5 G5 | E5:16 | \
              E5:4 C6 B5 A5 | F#5:16 | D6:4 D6 C6 A5 | B5:16 | \
              D5:4 B5 A5 G5 | D5:16 | D5:4 B5 A5 G5 | E5:12 E5:4 | \
-             E5:4 C6 B5 A5 | D6 D6 D6 D6 | E6 D6 C6 A5 | G5:16",
+             E5:4 C6 B5 A5 | D6 D6 D6:6 D6:2 | E6:4 D6 C6 A5 | G5:16",
             "I | I | I | IV | IV | V | V7 | I | I | I | I | IV | IV | V | V7 | I",
         ),
         Part::new(
@@ -54,9 +54,9 @@ pub(super) const SAINTS: Song = Song {
         "Chorus",
         "-:4 C5:4 E5 F5 | G5:16 | -:4 C5:4 E5 F5 | G5:16 | \
          -:4 C5:4 E5 F5 | G5:8 E5:8 | C5:8 E5:8 | D5:16 | \
-         -:4 E5:4 E5 D5 | C5:12 C5:4 | E5:8 G5:8 | G5:8 F5:8 | \
-         -:4 E5:4 F5 G5 | E5:8 C5:8 | D5:16 | C5:16",
-        "I | I | I | I | I | I | I | V7 | I7 | IV | I | V7 | I | I | V7 | I",
+         -:4 E5:4 E5 D5 | C5:12 C5:4 | E5:8 G5:8 | G5:4 F5:12 | \
+         -:8 E5:4 F5 | G5:8 E5:8 | C5:8 D5:8 | C5:16",
+        "I | I | I | I | I | I | I | V7 | V7 | I | I7 | IV | IV | I | ii7 V7 | I",
     )],
     form: &["Chorus", "Chorus", "Chorus"],
     drums_from: 0,

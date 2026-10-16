@@ -300,7 +300,7 @@ pub(super) const SHCHEDRYK: Song = Song {
         Part::new(
             "Melody",
             "D6:4 C6:2 D6 Bb5:4 | D6:4 C6:2 D6 Bb5:4 | D6:4 C6:2 D6 Bb5:4 | D6:4 C6:2 D6 Bb5:4 | \
-             G6:2 G6 G6 F6 Eb6:4 | D6:2 D6 D6 C6 Bb5:4 | C6:2 C6 C6 D6 C6:4 | G5:4 F#5:2 G5 D5:4",
+             G6:4 G6:2 G6 F6 Eb6 | D6:4 D6:2 D6 C6 Bb5 | C6:4 C6:2 C6 D6 C6 | G5:4 G5:2 G5 G5:4",
             "",
         )
         .with_left(
