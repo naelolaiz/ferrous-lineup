@@ -62,6 +62,10 @@ pub enum ChannelKind {
     Sampler(SampleSource),
     /// The built-in "Loom Osc" synthesizer, which can play chords.
     Synth,
+    /// Makes no sound itself: sends its notes out through MIDI, to an
+    /// external synth or another program, on MIDI channel `channel`
+    /// (0 to 15, shown as 1 to 16).
+    MidiOut { channel: u8 },
 }
 
 /// One row of the channel rack.
@@ -91,6 +95,18 @@ impl Channel {
             name: "Loom Osc".to_string(),
             kind: ChannelKind::Synth,
             volume: 0.6,
+            muted: false,
+        }
+    }
+
+    /// A channel that sends its notes to the MIDI output, on MIDI channel
+    /// `channel` (counted from 0).
+    pub fn midi_out(channel: u8) -> Self {
+        let channel = channel.min(15);
+        Channel {
+            name: format!("MIDI Out {}", channel + 1),
+            kind: ChannelKind::MidiOut { channel },
+            volume: 0.8,
             muted: false,
         }
     }

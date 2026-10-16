@@ -14,6 +14,7 @@
 
 mod app;
 mod channel_rack;
+mod midi;
 mod piano_roll;
 mod playlist;
 mod widgets;

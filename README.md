@@ -21,6 +21,7 @@ Early development. Runs on Linux, macOS and Windows.
 | 4 | Playlist, saving, macOS and Windows | Done |
 | 5 | Undo and redo, WAV export | Done |
 | 6 | Harmony tools: selections, arpeggios, inversions, suggestions, ghost notes, velocities | Done |
+| 7 | MIDI in and out: keyboards, external synths, recording, chord names as you play, `.mid` export | Done |
 
 ## Build and run
 
@@ -52,6 +53,14 @@ buttons light up with the chords that often come next.
 undoes any change and **Ctrl+Shift+Z** redoes it, and **File > Export
 WAV…** saves the song as a sound file.
 
+The **MIDI** menu connects a MIDI keyboard, which plays the channel
+selected in the channel rack, and an output port for **MIDI Out**
+channels, which play an external synth. No MIDI keyboard? Turn on
+**Typing keyboard to piano** there, and the letter keys play notes. The
+status bar names the chord you hold down, and **● Rec** records what
+you play into the pattern while it loops. **File > Export song as
+MIDI…** writes a `.mid` file that other studios can open.
+
 Ready-built programs for all three systems are attached to every CI run
 as `ferrous-loom-linux`, `ferrous-loom-macos` and `ferrous-loom-windows`.
 They are not signed yet, so macOS and Windows warn before the first start.
@@ -60,9 +69,9 @@ They are not signed yet, so macOS and Windows warn before the first start.
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, tempo, patterns, the playlist, project files, undo history and project diffs, the sequencer clock. No audio, no UI. |
-| `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, and offline rendering to WAV files. |
-| `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`. |
+| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, tempo, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording. No audio, no UI. |
+| `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
+| `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`, with MIDI through `midir`. |
 
 ## License
 

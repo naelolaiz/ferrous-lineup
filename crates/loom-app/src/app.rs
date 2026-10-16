@@ -3,8 +3,8 @@
 //! The playlist fills the window, as in other pattern-based studios. The
 //! channel rack and the piano roll are windows on top of it, opened with
 //! F6 and F7. Opening and saving files lives in the [`files`] module,
-//! undo and redo in [`edit`], and saving the song as a WAV file in
-//! [`export`].
+//! undo and redo in [`edit`], saving the song as a WAV or MIDI file in
+//! [`export`], and playing and recording on a keyboard in [`live`].
 //!
 //! Every change to the project goes through [`LoomApp::edit`], which
 //! records it for undo and tells the audio thread what changed.
@@ -12,6 +12,7 @@
 mod edit;
 mod export;
 mod files;
+mod live;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -26,6 +27,7 @@ use loom_core::{
 };
 
 use crate::channel_rack::{self, RackAction};
+use crate::midi::Midi;
 use crate::piano_roll::{PianoRoll, RollAction};
 use crate::playlist::{self, PlaylistAction, PlaylistView};
 
@@ -37,7 +39,9 @@ const FALLBACK_SAMPLE_RATE: u32 = 48_000;
 /// The app still runs without audio (for example on a machine with no
 /// sound card), and shows the reason in the status bar.
 enum Audio {
-    Running(AudioEngine),
+    /// Boxed: the engine is much bigger than a `String`, and every
+    /// `Audio` would otherwise take as much room as the biggest variant.
+    Running(Box<AudioEngine>),
     Unavailable(String),
 }
 
@@ -71,6 +75,8 @@ pub struct LoomApp {
     samples: SampleCache,
     /// The WAV export running in the background, if any.
     export: Option<export::Export>,
+    /// MIDI, the typing keyboard, and recording.
+    live: live::Live,
     /// The last problem to show in the status bar, such as a bad WAV file.
     message: Option<String>,
     /// The last piece of good news for the status bar ("Exported song.wav").
@@ -84,10 +90,16 @@ impl LoomApp {
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         cc.egui_ctx.set_theme(egui::Theme::Dark);
 
-        let audio = match AudioEngine::start() {
-            Ok(engine) => Audio::Running(engine),
+        let mut audio = match AudioEngine::start() {
+            Ok(engine) => Audio::Running(Box::new(engine)),
             Err(err) => Audio::Unavailable(err.to_string()),
         };
+        // The engine's ways in and out for MIDI go to the MIDI threads.
+        let (live_input, midi_output) = match &mut audio {
+            Audio::Running(engine) => (engine.take_live_input(), engine.take_midi_output()),
+            Audio::Unavailable(_) => (None, None),
+        };
+        let midi = Midi::new(&cc.egui_ctx, live_input, midi_output);
 
         let project = Project::demo();
         let piano_roll = PianoRoll::new(first_synth(&project));
@@ -105,6 +117,7 @@ impl LoomApp {
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
+            live: live::Live::new(midi),
             message: None,
             notice: None,
         };
@@ -172,6 +185,7 @@ impl LoomApp {
         }
         self.send(Command::SelectPattern(self.pattern));
         self.send(Command::SetMode(self.mode));
+        self.live.resend_channel();
     }
 
     /// The command that inserts channel `index` of the project, with its
@@ -212,6 +226,10 @@ impl LoomApp {
     }
 
     fn set_playing(&mut self, playing: bool) {
+        if !playing {
+            // Before the audio thread forgets where it was.
+            self.finish_recording();
+        }
         self.playing = playing;
         self.send(if playing {
             Command::Play
@@ -222,6 +240,7 @@ impl LoomApp {
 
     fn set_mode(&mut self, mode: PlayMode) {
         if mode != self.mode {
+            self.finish_recording();
             self.mode = mode;
             self.send(Command::SetMode(mode));
         }
@@ -265,7 +284,12 @@ impl LoomApp {
                     pattern.set(channel, step, false);
                 });
             }
-            RackAction::Preview(channel) => self.send(Command::Preview(channel)),
+            RackAction::Preview(channel) => {
+                // Clicking a channel also selects it, for the piano roll
+                // and the keyboards.
+                self.piano_roll.select(channel);
+                self.send(Command::Preview(channel));
+            }
             RackAction::SetVolume { channel, volume } => {
                 self.edit("change volume", |project| {
                     if let Some(state) = project.channel_mut(channel) {
@@ -286,6 +310,25 @@ impl LoomApp {
             RackAction::OpenPianoRoll(channel) => self.piano_roll.open_for(channel),
             RackAction::AddDrum(drum) => self.add_channel(Channel::drum(drum)),
             RackAction::AddSynth => self.add_channel(Channel::synth()),
+            RackAction::AddMidiOut => self.add_channel(Channel::midi_out(0)),
+            RackAction::SetMidiChannel {
+                channel,
+                midi_channel,
+            } => {
+                self.edit("change MIDI channel", |project| {
+                    if let Some(state) = project.channel_mut(channel) {
+                        // A name nobody changed follows the channel number.
+                        if let ChannelKind::MidiOut { channel: old } = state.kind
+                            && state.name == Channel::midi_out(old).name
+                        {
+                            state.name = Channel::midi_out(midi_channel).name;
+                        }
+                        state.kind = ChannelKind::MidiOut {
+                            channel: midi_channel,
+                        };
+                    }
+                });
+            }
             RackAction::LoadSample { channel, path } => self.load_sample(channel, path),
         }
     }
@@ -417,12 +460,14 @@ impl LoomApp {
         ui.horizontal(|ui| {
             self.file_menu(ui);
             self.edit_menu(ui);
+            self.midi_menu(ui);
             ui.separator();
 
             let label = if self.playing { "⏹ Stop" } else { "▶ Play" };
             if ui.button(label).on_hover_text("Shortcut: Space").clicked() {
                 self.set_playing(!self.playing);
             }
+            self.record_button(ui);
             let mut mode = self.mode;
             ui.selectable_value(&mut mode, PlayMode::Pattern, "PAT")
                 .on_hover_text("Loop the selected pattern (L switches)");
@@ -546,6 +591,10 @@ impl LoomApp {
                     );
                 }
             }
+            if let Some(chord) = self.held_chord() {
+                ui.separator();
+                ui.label(chord);
+            }
             if let Some(export) = &self.export {
                 ui.separator();
                 ui.add(
@@ -632,6 +681,7 @@ impl eframe::App for LoomApp {
         let ctx = ui.ctx().clone();
         self.start_frame_for_undo(&ctx);
         self.keyboard_shortcuts(&ctx);
+        self.live_input(&ctx);
         self.handle_dropped_files(&ctx);
         self.check_export(&ctx);
         if self.playing {
@@ -663,7 +713,8 @@ impl eframe::App for LoomApp {
             .default_pos([170.0, 380.0])
             .resizable(false)
             .show(&ctx, |ui| {
-                channel_rack::show(ui, &self.project, self.pattern, playhead)
+                let selected = self.piano_roll.channel();
+                channel_rack::show(ui, &self.project, self.pattern, selected, playhead)
             })
             .and_then(|window| window.inner)
             .unwrap_or_default();
@@ -672,9 +723,10 @@ impl eframe::App for LoomApp {
             self.apply(action);
         }
 
+        let held = self.live.held_pitches();
         let roll_actions = self
             .piano_roll
-            .show(&ctx, &self.project, self.pattern, playhead);
+            .show(&ctx, &self.project, self.pattern, playhead, &held);
         for action in roll_actions {
             self.apply_roll(action);
         }

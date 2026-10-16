@@ -16,3 +16,4 @@ loom-core.workspace = true
 loom-audio.workspace = true
 eframe.workspace = true
 rfd.workspace = true
+midir.workspace = true

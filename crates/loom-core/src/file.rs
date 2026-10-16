@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::pattern::NoteEvent;
 use crate::playlist::{Clip, MAX_TRACKS, Track};
-use crate::project::{Channel, MAX_CHANNELS, MAX_PATTERNS, Project};
+use crate::project::{Channel, ChannelKind, MAX_CHANNELS, MAX_PATTERNS, Project};
 use crate::{Scale, Tempo};
 
 /// The file name extension of Ferrous Loom projects, without the dot.
@@ -43,7 +43,25 @@ pub const EXTENSION: &str = "loom";
 /// The version of the file layout. A later version of Ferrous Loom that
 /// changes the layout will raise this, so it knows how to read old files
 /// and so this version can refuse files it would misread.
-pub const FORMAT_VERSION: u32 = 1;
+///
+/// Format 2 (step 7) added channels that play an external MIDI synth.
+/// A project without one is still written as format 1, which is exactly
+/// the same text, so older versions of Ferrous Loom can open it. See
+/// [`format_for`].
+pub const FORMAT_VERSION: u32 = 2;
+
+/// The oldest format that can hold `project`.
+///
+/// Writing the lowest version that works, instead of always the newest,
+/// means a file only becomes unreadable to an older Ferrous Loom when it
+/// really uses something that version does not know.
+pub fn format_for(project: &Project) -> u32 {
+    let uses_midi_out = project
+        .channels()
+        .iter()
+        .any(|channel| matches!(channel.kind, ChannelKind::MidiOut { .. }));
+    if uses_midi_out { 2 } else { 1 }
+}
 
 /// A project as it is written in a file.
 #[derive(Debug, Serialize, Deserialize)]
@@ -145,7 +163,7 @@ impl From<&Project> for ProjectFile {
     fn from(project: &Project) -> Self {
         let channels = project.channels().len();
         ProjectFile {
-            format: FORMAT_VERSION,
+            format: format_for(project),
             tempo: project.tempo,
             scale: project.scale,
             channels: project.channels().to_vec(),
@@ -322,10 +340,25 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 2 might have fields we have never heard of. Only the
+        // Format 3 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 2, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(2)), "{error}");
+        let error = from_text("(format: 3, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(3)), "{error}");
+    }
+
+    #[test]
+    fn midi_out_channels_need_format_two() {
+        let mut project = Project::template();
+        assert!(to_text(&project).unwrap().contains("format: 1,"));
+
+        project.add_channel(Channel::midi_out(4)).unwrap();
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 2,"), "{text}");
+        assert!(
+            text.contains("MidiOut(\n                channel: 4,"),
+            "{text}"
+        );
+        assert_eq!(from_text(&text).unwrap(), project);
     }
 
     #[test]

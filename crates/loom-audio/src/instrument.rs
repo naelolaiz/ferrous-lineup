@@ -1,12 +1,14 @@
-//! The instruments a channel can play: a sampler and the Loom Osc synth.
+//! The instruments a channel can play: a sampler, the Loom Osc synth,
+//! and a MIDI Out that has an external synth play the notes.
 //!
-//! Both are *polyphonic*: they have a fixed number of voices, and each
-//! note that starts takes one. That is what lets the synth play chords
-//! and lets a drum hit ring on while the next one starts.
+//! The sampler and the synth are *polyphonic*: they have a fixed number
+//! of voices, and each note that starts takes one. That is what lets the
+//! synth play chords and lets a drum hit ring on while the next one
+//! starts.
 
 use std::sync::Arc;
 
-use loom_core::{ChannelKind, Note, STEP_NOTE, SampleSource};
+use loom_core::{ChannelKind, MidiMessage, Note, STEP_NOTE, SampleSource};
 
 use crate::drums;
 use crate::dsp::LowPass;
@@ -17,15 +19,21 @@ pub const SYNTH_VOICES: usize = 16;
 /// How many hits a sampler can play at once.
 pub const SAMPLER_VOICES: usize = 8;
 
+/// A gate that never runs out: the note is held until [`Instrument::note_off`].
+/// Notes played on a keyboard use it, because nobody knows how long a key
+/// will be held when it goes down.
+pub const HELD: u32 = u32::MAX;
+
 /// The sound-making part of a channel.
 ///
 /// An enum instead of a trait object (`Box<dyn Instrument>`): there are
-/// only two kinds, the audio thread can `match` on them without any
-/// pointer indirection, and creating one never needs a `Box`.
+/// only three kinds, and the audio thread can `match` on them without any
+/// pointer indirection.
 #[derive(Debug, Clone)]
 pub enum Instrument {
     Sampler(Sampler),
     Synth(Synth),
+    MidiOut(MidiOut),
 }
 
 impl Instrument {
@@ -45,26 +53,40 @@ impl Instrument {
                 Instrument::Sampler(Sampler::new(samples.get(path)?))
             }
             ChannelKind::Synth => Instrument::Synth(Synth::new(sample_rate)),
+            ChannelKind::MidiOut { channel } => Instrument::MidiOut(MidiOut::new(*channel)),
         })
     }
 
     /// Starts playing a note.
     ///
-    /// `gate` is how many frames the note is held for. The synth starts
-    /// fading out when it ends; the sampler ignores it and always plays
-    /// its sound to the end, like a drum machine.
+    /// `gate` is how many frames the note is held for, or [`HELD`]. The
+    /// synth starts fading out when it ends, and the MIDI Out sends a
+    /// note-off; the sampler ignores it and always plays its sound to the
+    /// end, like a drum machine.
     pub fn note_on(&mut self, pitch: Note, velocity: u8, gate: u32, output_rate: u32) {
         match self {
             Instrument::Sampler(sampler) => sampler.note_on(pitch, velocity, output_rate),
             Instrument::Synth(synth) => synth.note_on(pitch, velocity, gate),
+            Instrument::MidiOut(midi_out) => midi_out.note_on(pitch, velocity, gate),
+        }
+    }
+
+    /// Lets go of a note that was started with the [`HELD`] gate, as when
+    /// a key comes up.
+    pub fn note_off(&mut self, pitch: Note) {
+        match self {
+            Instrument::Sampler(_) => {} // samples always play to the end
+            Instrument::Synth(synth) => synth.note_off(pitch),
+            Instrument::MidiOut(midi_out) => midi_out.note_off(pitch),
         }
     }
 
     /// Lets go of every held note, as when playback stops.
     pub fn release_all(&mut self) {
         match self {
-            Instrument::Sampler(_) => {} // samples always play to the end
+            Instrument::Sampler(_) => {}
             Instrument::Synth(synth) => synth.release_all(),
+            Instrument::MidiOut(midi_out) => midi_out.release_all(),
         }
     }
 
@@ -73,14 +95,26 @@ impl Instrument {
         match self {
             Instrument::Sampler(sampler) => sampler.next_sample(),
             Instrument::Synth(synth) => synth.next_sample(),
+            Instrument::MidiOut(midi_out) => midi_out.next_sample(),
         }
     }
 
-    /// How many voices are making sound right now.
+    /// Hands the MIDI messages made since the last call to `send`, which
+    /// gets each one in order. Only a MIDI Out has any. The audio thread
+    /// calls this once per block.
+    pub fn send_midi(&mut self, send: impl FnMut(MidiMessage)) {
+        if let Instrument::MidiOut(midi_out) = self {
+            midi_out.flush(send);
+        }
+    }
+
+    /// How many voices are making sound right now. For a MIDI Out, how
+    /// many notes the external synth has been told to play.
     pub fn voices_playing(&self) -> usize {
         match self {
             Instrument::Sampler(sampler) => sampler.voices.iter().filter(|v| !v.is_idle()).count(),
             Instrument::Synth(synth) => synth.voices.iter().filter(|v| !v.is_idle()).count(),
+            Instrument::MidiOut(midi_out) => midi_out.notes_sounding(),
         }
     }
 }
@@ -260,11 +294,13 @@ enum Stage {
 
 #[derive(Debug, Clone)]
 struct SynthVoice {
+    /// The note being played, so `note_off` can find its voice.
+    pitch: Note,
     frequency: f32,
     phase: f32,
     filter: LowPass,
     gain: f32,
-    /// Frames left until the note is released.
+    /// Frames left until the note is released, or [`HELD`].
     gate: u32,
     stage: Stage,
     level: f32,
@@ -284,6 +320,7 @@ impl Voice for SynthVoice {
 impl SynthVoice {
     fn new(sample_rate: u32) -> Self {
         SynthVoice {
+            pitch: Note::C4,
             frequency: 0.0,
             phase: 0.0,
             filter: LowPass::new(2_500.0, sample_rate),
@@ -317,8 +354,9 @@ impl SynthVoice {
             }
         }
 
-        // Count down the gate while the note is held, then let go.
-        if matches!(self.stage, Stage::Attack | Stage::Decay) {
+        // Count down the gate while the note is held, then let go. A
+        // `HELD` gate is not counted: only `note_off` ends it.
+        if matches!(self.stage, Stage::Attack | Stage::Decay) && self.gate != HELD {
             match self.gate.checked_sub(1) {
                 Some(left) => self.gate = left,
                 None => self.stage = Stage::Release,
@@ -346,6 +384,7 @@ impl Synth {
     pub fn note_on(&mut self, pitch: Note, velocity: u8, gate: u32) {
         self.notes_started += 1;
         let voice = pick_voice(&mut self.voices[..]);
+        voice.pitch = pitch;
         voice.frequency = pitch.frequency();
         voice.gain = velocity_gain(velocity) * SYNTH_VOICE_GAIN;
         voice.gate = gate;
@@ -353,6 +392,19 @@ impl Synth {
         voice.started = self.notes_started;
         // The level, phase and filter carry on from where they were, so a
         // stolen voice does not jump (and click).
+    }
+
+    /// Releases the held notes of `pitch`. Notes of the same pitch that
+    /// the sequencer started keep their own gate.
+    pub fn note_off(&mut self, pitch: Note) {
+        for voice in self.voices.iter_mut() {
+            if voice.pitch == pitch
+                && voice.gate == HELD
+                && matches!(voice.stage, Stage::Attack | Stage::Decay)
+            {
+                voice.stage = Stage::Release;
+            }
+        }
     }
 
     pub fn release_all(&mut self) {
@@ -369,6 +421,150 @@ impl Synth {
             sum += voice.next_sample(&self.envelope, self.sample_rate);
         }
         sum
+    }
+}
+
+/// How many MIDI messages a MIDI Out can make in one block before the
+/// audio thread collects them. A block is a few milliseconds; even a
+/// sixteen-note chord starting while sixteen others end is only 32.
+const OUTBOX_SIZE: usize = 256;
+
+/// Plays nothing itself: it turns notes into MIDI messages for an external
+/// synth (a keyboard, a hardware sound module, or another program).
+///
+/// The audio thread may not talk to the MIDI system, which can take any
+/// amount of time. So the messages wait in an *outbox*, and once per
+/// block the audio thread passes them on to a queue that another thread
+/// empties into the MIDI port.
+#[derive(Debug, Clone)]
+pub struct MidiOut {
+    /// The MIDI channel, 0 to 15.
+    channel: u8,
+    /// Frames played so far: the clock that says when a note-off is due.
+    now: u64,
+    /// Boxed so an `Instrument` stays small, as the voices of the others are.
+    state: Box<MidiOutState>,
+}
+
+#[derive(Debug, Clone)]
+struct MidiOutState {
+    /// For each of the 128 MIDI notes, whether it is sounding and until when.
+    notes: [Sounding; 128],
+    /// Messages not yet collected, with room for [`OUTBOX_SIZE`] reserved
+    /// up front, so pushing never allocates.
+    outbox: Vec<MidiMessage>,
+}
+
+/// Whether a note of a MIDI Out is playing on the external synth.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Sounding {
+    Off,
+    /// Until this frame, when its note-off is due.
+    Until(u64),
+    /// Until `note_off`.
+    Held,
+}
+
+impl MidiOut {
+    /// A MIDI Out on `channel`, 0 to 15. Called on the UI thread: this is
+    /// where the outbox's memory is reserved.
+    pub fn new(channel: u8) -> Self {
+        MidiOut {
+            channel: channel.min(15),
+            now: 0,
+            state: Box::new(MidiOutState {
+                notes: [Sounding::Off; 128],
+                outbox: Vec::with_capacity(OUTBOX_SIZE),
+            }),
+        }
+    }
+
+    /// Adds a message to the outbox. If the outbox is full (it never
+    /// should be), the message is lost rather than growing the `Vec`.
+    fn post(&mut self, message: MidiMessage) {
+        let outbox = &mut self.state.outbox;
+        if outbox.len() < outbox.capacity() {
+            outbox.push(message);
+        }
+    }
+
+    fn note_off_message(&self, pitch: Note) -> MidiMessage {
+        MidiMessage::NoteOff {
+            channel: self.channel,
+            pitch,
+        }
+    }
+
+    pub fn note_on(&mut self, pitch: Note, velocity: u8, gate: u32) {
+        let slot = usize::from(pitch.midi());
+        // MIDI has one of each note per channel. If this one is already
+        // sounding, end it first, or the synth would hear "on, on, off"
+        // and the new note would stop at the old one's note-off.
+        if self.state.notes[slot] != Sounding::Off {
+            self.post(self.note_off_message(pitch));
+        }
+        self.post(MidiMessage::NoteOn {
+            channel: self.channel,
+            pitch,
+            velocity,
+        });
+        self.state.notes[slot] = if gate == HELD {
+            Sounding::Held
+        } else {
+            Sounding::Until(self.now + u64::from(gate))
+        };
+    }
+
+    pub fn note_off(&mut self, pitch: Note) {
+        let slot = usize::from(pitch.midi());
+        if self.state.notes[slot] == Sounding::Held {
+            self.post(self.note_off_message(pitch));
+            self.state.notes[slot] = Sounding::Off;
+        }
+    }
+
+    /// Ends every note that is sounding, held or not.
+    pub fn release_all(&mut self) {
+        for index in 0..128 {
+            if self.state.notes[index] != Sounding::Off {
+                self.post(self.note_off_message(Note::new(index as u8)));
+                self.state.notes[index] = Sounding::Off;
+            }
+        }
+    }
+
+    /// A MIDI Out makes no sound of its own, but it counts the frames.
+    pub fn next_sample(&mut self) -> f32 {
+        self.now += 1;
+        0.0
+    }
+
+    /// Posts the note-offs that are due, then hands over the outbox.
+    ///
+    /// Note-offs are checked once per block, not on every frame, so they
+    /// can be up to one block late: a few milliseconds, which nobody
+    /// hears at the end of a note.
+    pub fn flush(&mut self, mut send: impl FnMut(MidiMessage)) {
+        for index in 0..128 {
+            if let Sounding::Until(end) = self.state.notes[index]
+                && end <= self.now
+            {
+                self.post(self.note_off_message(Note::new(index as u8)));
+                self.state.notes[index] = Sounding::Off;
+            }
+        }
+        // `drain(..)` empties the `Vec` but keeps its memory for next time.
+        for message in self.state.outbox.drain(..) {
+            send(message);
+        }
+    }
+
+    fn notes_sounding(&self) -> usize {
+        self.state
+            .notes
+            .iter()
+            .filter(|&&sounding| sounding != Sounding::Off)
+            .count()
     }
 }
 
@@ -505,6 +701,60 @@ mod tests {
         sampler.note_on(STEP_NOTE, 127, 0, RATE);
         assert_eq!(sampler.voices_playing(), 2);
         assert_eq!(render(&mut sampler, 1)[0], 0.5, "both hits add up");
+    }
+
+    #[test]
+    fn held_notes_last_until_note_off() {
+        let mut synth = synth();
+        synth.note_on(Note::C4, 100, HELD, RATE);
+        synth.note_on(Note::new(64), 100, HELD, RATE);
+        render(&mut synth, 2 * RATE as usize);
+        assert_eq!(synth.voices_playing(), 2);
+        synth.note_off(Note::C4);
+        render(&mut synth, RATE as usize);
+        assert_eq!(synth.voices_playing(), 1, "E4 (64) is still held");
+    }
+
+    /// Everything a MIDI Out has made so far.
+    fn sent(midi_out: &mut MidiOut) -> Vec<MidiMessage> {
+        let mut messages = Vec::new();
+        midi_out.flush(|message| messages.push(message));
+        messages
+    }
+
+    #[test]
+    fn midi_out_ends_notes_after_their_gate() {
+        let mut midi_out = MidiOut::new(2);
+        midi_out.note_on(Note::C4, 90, 100);
+        let on = MidiMessage::NoteOn {
+            channel: 2,
+            pitch: Note::C4,
+            velocity: 90,
+        };
+        assert_eq!(sent(&mut midi_out), [on]);
+        (0..99).for_each(|_| _ = midi_out.next_sample());
+        assert_eq!(sent(&mut midi_out), [], "one frame early");
+        midi_out.next_sample();
+        let off = MidiMessage::NoteOff {
+            channel: 2,
+            pitch: Note::C4,
+        };
+        assert_eq!(sent(&mut midi_out), [off]);
+    }
+
+    #[test]
+    fn midi_out_ends_a_repeated_note_before_starting_it_again() {
+        let mut midi_out = MidiOut::new(0);
+        midi_out.note_on(Note::C4, 100, HELD);
+        midi_out.note_on(Note::C4, 100, HELD);
+        let kinds: Vec<bool> = sent(&mut midi_out)
+            .iter()
+            .map(|message| matches!(message, MidiMessage::NoteOn { .. }))
+            .collect();
+        assert_eq!(kinds, [true, false, true]);
+        midi_out.release_all();
+        assert_eq!(sent(&mut midi_out).len(), 1);
+        assert_eq!(midi_out.notes_sounding(), 0);
     }
 
     #[test]

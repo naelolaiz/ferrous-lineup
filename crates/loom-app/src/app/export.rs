@@ -1,10 +1,13 @@
-//! Saving the song as a WAV file, in the background.
+//! Saving the song as a WAV file, in the background, or as a MIDI file.
 //!
-//! The export plays the song through its own audio thread, a
+//! The WAV export plays the song through its own audio thread, a
 //! [`Renderer`], with its own copy of every instrument and note, so it
 //! cannot disturb what you hear. It runs on a thread of its own: a long
 //! song takes a few seconds to render, and the window keeps drawing (and
 //! the music keeps playing) meanwhile.
+//!
+//! A MIDI file holds only the notes, a few bytes each, so it is written
+//! at once.
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -15,6 +18,7 @@ use std::time::Duration;
 use eframe::egui;
 use loom_audio::{Command, PlayMode, Renderer, export_wav};
 use loom_core::sequencer::frames_per_step;
+use loom_core::{pattern_to_midi, song_to_midi};
 
 use super::LoomApp;
 
@@ -49,6 +53,15 @@ impl Export {
     }
 }
 
+/// What a MIDI export holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum MidiExport {
+    /// The whole song, as the playlist places the patterns.
+    Song,
+    /// The selected pattern, once.
+    Pattern,
+}
+
 fn file_name(path: &std::path::Path) -> String {
     path.file_name()
         .map_or_else(String::new, |name| name.to_string_lossy().into_owned())
@@ -68,7 +81,7 @@ impl LoomApp {
         }
         let Some(mut path) = rfd::FileDialog::new()
             .add_filter("WAV audio", &["wav"])
-            .set_file_name(self.file.export_name())
+            .set_file_name(self.file.export_name("wav"))
             .save_file()
         else {
             return;
@@ -120,6 +133,38 @@ impl LoomApp {
         });
         self.message = None;
         self.notice = None;
+    }
+
+    /// Asks where to save, then writes the song or the selected pattern
+    /// as a Standard MIDI File.
+    pub(super) fn export_midi(&mut self, what: MidiExport) {
+        let (bytes, name) = match what {
+            MidiExport::Song => (song_to_midi(&self.project), self.file.export_name("mid")),
+            MidiExport::Pattern => {
+                let pattern = &self.project.patterns()[self.pattern];
+                // A pattern name could hold a `/`, which a file name cannot.
+                let name = format!("{}.mid", pattern.name.replace(['/', '\\'], "-"));
+                (pattern_to_midi(&self.project, self.pattern), name)
+            }
+        };
+        let Some(mut path) = rfd::FileDialog::new()
+            .add_filter("MIDI file", &["mid", "midi"])
+            .set_file_name(name)
+            .save_file()
+        else {
+            return;
+        };
+        if path.extension().is_none() {
+            path.set_extension("mid");
+        }
+        let name = file_name(&path);
+        match std::fs::write(&path, bytes) {
+            Ok(()) => {
+                self.notice = Some(format!("Exported {name}"));
+                self.message = None;
+            }
+            Err(err) => self.message = Some(format!("Could not export {name}: {err}")),
+        }
     }
 
     /// Notices when the export has finished, and keeps the progress bar
