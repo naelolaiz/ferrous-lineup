@@ -14,6 +14,7 @@ mod export;
 mod files;
 mod library;
 mod live;
+mod view;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -494,12 +495,15 @@ impl LoomApp {
         self.message = None;
     }
 
-    /// The bar along the top: the file menu, transport, tempo, the
-    /// pattern selector, window buttons and master volume.
+    /// The bar along the top: the menus, transport, tempo, the pattern
+    /// selector, window buttons and master volume. When the window is too
+    /// narrow for all of it (or zoomed in), it wraps onto a second row
+    /// instead of running off the edge.
     fn transport_bar(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             self.file_menu(ui);
             self.edit_menu(ui);
+            self.view_menu(ui);
             self.midi_menu(ui);
             ui.separator();
 
@@ -540,10 +544,16 @@ impl LoomApp {
                 );
 
             ui.separator();
-            let volume_slider = egui::Slider::new(&mut self.master_volume, 0.0..=1.0)
-                .show_value(false)
-                .text("Master");
-            if ui.add(volume_slider).changed() {
+            // The label goes first, as its own widget, so the slider and
+            // its name wrap to the next row together.
+            ui.label("Master");
+            let volume_slider =
+                egui::Slider::new(&mut self.master_volume, 0.0..=1.0).show_value(false);
+            if ui
+                .add(volume_slider)
+                .on_hover_text(format!("Master volume: {:.0}%", self.master_volume * 100.0))
+                .changed()
+            {
                 self.send(Command::SetMasterVolume(self.master_volume));
             }
         });
@@ -620,45 +630,58 @@ impl LoomApp {
         }
     }
 
-    /// The bar along the bottom: which sound card is in use, and any problem.
+    /// The bar along the bottom: messages on the left, zoom on the right.
     fn status_bar(&self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
-            match &self.audio {
-                Audio::Running(engine) => {
-                    let info = engine.info();
-                    ui.label(format!(
-                        "Audio: {} · {} Hz · {} channels",
-                        info.device_name, info.sample_rate, info.channels
-                    ));
-                }
-                Audio::Unavailable(reason) => {
-                    ui.colored_label(
-                        ui.visuals().warn_fg_color,
-                        format!("Audio unavailable: {reason}"),
-                    );
-                }
+        // The zoom control goes in first, from the right, so it always
+        // has room; the messages get what is left, cut short with "…".
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+            view::zoom_control(ui);
+            ui.separator();
+            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
+                self.status_messages(ui);
+            });
+        });
+    }
+
+    /// Which sound card is in use, the chord held, an export running, and
+    /// the last piece of news or problem.
+    fn status_messages(&self, ui: &mut egui::Ui) {
+        match &self.audio {
+            Audio::Running(engine) => {
+                let info = engine.info();
+                ui.label(format!(
+                    "Audio: {} · {} Hz · {} channels",
+                    info.device_name, info.sample_rate, info.channels
+                ));
             }
-            if let Some(chord) = self.held_chord() {
-                ui.separator();
-                ui.label(chord);
-            }
-            if let Some(export) = &self.export {
-                ui.separator();
-                ui.add(
-                    egui::ProgressBar::new(export.progress())
-                        .desired_width(160.0)
-                        .text(format!("Exporting {}", export.file_name())),
+            Audio::Unavailable(reason) => {
+                ui.colored_label(
+                    ui.visuals().warn_fg_color,
+                    format!("Audio unavailable: {reason}"),
                 );
             }
-            if let Some(notice) = &self.notice {
-                ui.separator();
-                ui.label(notice);
-            }
-            if let Some(message) = &self.message {
-                ui.separator();
-                ui.colored_label(ui.visuals().error_fg_color, message);
-            }
-        });
+        }
+        if let Some(chord) = self.held_chord() {
+            ui.separator();
+            ui.label(chord);
+        }
+        if let Some(export) = &self.export {
+            ui.separator();
+            ui.add(
+                egui::ProgressBar::new(export.progress())
+                    .desired_width(160.0)
+                    .text(format!("Exporting {}", export.file_name())),
+            );
+        }
+        if let Some(notice) = &self.notice {
+            ui.separator();
+            ui.label(notice);
+        }
+        if let Some(message) = &self.message {
+            ui.separator();
+            ui.colored_label(ui.visuals().error_fg_color, message);
+        }
     }
 
     /// The step the sequencer is on, or `None` when stopped. In pattern
@@ -715,15 +738,7 @@ impl LoomApp {
                 PlayMode::Song => PlayMode::Pattern,
             });
         }
-        if pressed(egui::Key::F6) {
-            self.rack_open = !self.rack_open;
-        }
-        if pressed(egui::Key::F7) {
-            self.piano_roll.open = !self.piano_roll.open;
-        }
-        if pressed(egui::Key::F8) {
-            self.harmony_keys.open = !self.harmony_keys.open;
-        }
+        self.view_shortcuts(ctx);
         self.file_shortcuts(ctx);
         if !typing {
             // While typing, Ctrl+Z belongs to the text field.
@@ -778,12 +793,14 @@ impl eframe::App for LoomApp {
 
         let song_playhead = self.song_playhead();
         let tried = self.tried();
-        let playlist_actions = egui::CentralPanel::default_margins()
-            .show(ui, |ui| {
-                self.playlist
-                    .show(ui, &self.project, self.pattern, song_playhead, tried)
-            })
-            .inner;
+        let playlist = egui::CentralPanel::default_margins().show(ui, |ui| {
+            self.playlist
+                .show(ui, &self.project, self.pattern, song_playhead, tried)
+        });
+        // The windows stay over the playlist, so they never hide the
+        // toolbar, the harmony keys or the status bar.
+        let area = playlist.response.rect;
+        let playlist_actions = playlist.inner;
         for action in playlist_actions {
             self.apply_playlist(action);
         }
@@ -796,6 +813,7 @@ impl eframe::App for LoomApp {
             .id(egui::Id::unique("channel-rack"))
             .open(&mut rack_open)
             .default_pos([240.0, 380.0])
+            .constrain_to(area)
             .resizable(false)
             .show(&ctx, |ui| {
                 let selected = self.piano_roll.channel();
@@ -810,9 +828,9 @@ impl eframe::App for LoomApp {
 
         let held = self.live.held_pitches();
         self.piano_roll.hints = self.harmony_keys.hints;
-        let roll_actions = self
-            .piano_roll
-            .show(&ctx, &self.project, self.pattern, playhead, &held);
+        let roll_actions =
+            self.piano_roll
+                .show(&ctx, &self.project, self.pattern, playhead, &held, area);
         for action in roll_actions {
             self.apply_roll(action);
         }

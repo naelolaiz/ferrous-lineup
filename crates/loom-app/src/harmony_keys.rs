@@ -161,7 +161,9 @@ impl HarmonyKeys {
 
         ui.add_space(4.0);
         let mut pressed = None;
-        ui.horizontal(|ui| {
+        // Wrapped, so on a narrow window the little piano moves to a row
+        // of its own instead of running off the edge.
+        ui.horizontal_wrapped(|ui| {
             ui.vertical(|ui| self.settings(ui, project, &mut actions));
             ui.separator();
             for (index, key) in chord_keys.iter().enumerate() {
@@ -202,7 +204,7 @@ impl HarmonyKeys {
             && self
                 .last_chord
                 .is_some_and(|chord| keys::key_for(&chord_keys, chord).is_none());
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             egui::ComboBox::from_id_salt("harmony-hints")
                 .width(78.0)
                 .selected_text(self.hints.label())
