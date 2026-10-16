@@ -11,3 +11,4 @@ rust-version.workspace = true
 loom-core.workspace = true
 cpal.workspace = true
 rtrb.workspace = true
+hound.workspace = true

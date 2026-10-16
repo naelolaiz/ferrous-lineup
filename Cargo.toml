@@ -7,11 +7,12 @@ version = "0.1.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/naelolaiz/ferrous-loom"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [workspace.dependencies]
 loom-core = { path = "crates/loom-core" }
 loom-audio = { path = "crates/loom-audio" }
 cpal = "0.18"
 rtrb = "0.4"
+hound = "3.5"
 eframe = "0.37"
