@@ -314,6 +314,16 @@ impl LoomApp {
                     pattern.replace_note(channel, index, note);
                 });
             }
+            RollAction::ReplaceNotes {
+                channel,
+                old,
+                new,
+                label,
+            } => {
+                self.edit_pattern(label, |pattern| {
+                    pattern.replace_notes(channel, &old, &new);
+                });
+            }
             RollAction::Preview { channel, pitches } => {
                 for pitch in pitches {
                     self.send(Command::PreviewNote { channel, pitch });

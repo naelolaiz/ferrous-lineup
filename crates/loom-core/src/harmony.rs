@@ -5,13 +5,16 @@
 //! - [`Chord`] is a root and a [`ChordQuality`], such as "Am7".
 //! - [`analyze`] names a group of notes: a single note, an interval or a chord.
 //! - [`ChordStamp`] says what the piano roll places with one click.
+//! - [`next_chords`] suggests chords that often come next in a key.
 
 mod analysis;
 mod chord;
 mod pitch_set;
+mod progression;
 mod scale;
 
 pub use analysis::{Harmony, analyze, interval_name};
 pub use chord::{Chord, ChordQuality, ChordStamp};
 pub use pitch_set::PitchSet;
+pub use progression::{Suggestion, next_chords};
 pub use scale::{Scale, ScaleKind};

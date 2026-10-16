@@ -31,12 +31,19 @@ pub enum ChordQuality {
     Dominant9,
     Major9,
     Minor9,
+    Six9,
+    Dominant7Flat9,
+    Dominant7Sharp9,
+    Dominant11,
+    Minor11,
+    Dominant13,
+    Major13,
 }
 
 impl ChordQuality {
     /// All qualities. When several fit the same notes, the first one
     /// listed wins, so the simpler, more common chords come first.
-    pub const ALL: [ChordQuality; 21] = [
+    pub const ALL: [ChordQuality; 28] = [
         ChordQuality::Major,
         ChordQuality::Minor,
         ChordQuality::Diminished,
@@ -58,6 +65,13 @@ impl ChordQuality {
         ChordQuality::Dominant9,
         ChordQuality::Major9,
         ChordQuality::Minor9,
+        ChordQuality::Six9,
+        ChordQuality::Dominant7Flat9,
+        ChordQuality::Dominant7Sharp9,
+        ChordQuality::Dominant11,
+        ChordQuality::Minor11,
+        ChordQuality::Dominant13,
+        ChordQuality::Major13,
     ];
 
     /// The notes of the chord as semitones above the root, lowest first.
@@ -85,6 +99,17 @@ impl ChordQuality {
             Dominant9 => &[0, 4, 7, 10, 14],
             Major9 => &[0, 4, 7, 11, 14],
             Minor9 => &[0, 3, 7, 10, 14],
+            Six9 => &[0, 4, 7, 9, 14],
+            Dominant7Flat9 => &[0, 4, 7, 10, 13],
+            Dominant7Sharp9 => &[0, 4, 7, 10, 15],
+            // The eleventh is the fourth an octave up (17 = 12 + 5), and
+            // the thirteenth the sixth an octave up (21 = 12 + 9).
+            Dominant11 => &[0, 4, 7, 10, 14, 17],
+            Minor11 => &[0, 3, 7, 10, 14, 17],
+            // Players leave the eleventh out of thirteenth chords, because
+            // it clashes with the third; so does Ferrous Loom.
+            Dominant13 => &[0, 4, 7, 10, 14, 21],
+            Major13 => &[0, 4, 7, 11, 14, 21],
         }
     }
 
@@ -113,6 +138,13 @@ impl ChordQuality {
             Dominant9 => "9",
             Major9 => "maj9",
             Minor9 => "m9",
+            Six9 => "6/9",
+            Dominant7Flat9 => "7b9",
+            Dominant7Sharp9 => "7#9",
+            Dominant11 => "11",
+            Minor11 => "m11",
+            Dominant13 => "13",
+            Major13 => "maj13",
         }
     }
 
@@ -141,6 +173,13 @@ impl ChordQuality {
             Dominant9 => "dominant ninth",
             Major9 => "major ninth",
             Minor9 => "minor ninth",
+            Six9 => "six-nine",
+            Dominant7Flat9 => "dominant seventh flat ninth",
+            Dominant7Sharp9 => "dominant seventh sharp ninth",
+            Dominant11 => "dominant eleventh",
+            Minor11 => "minor eleventh",
+            Dominant13 => "dominant thirteenth",
+            Major13 => "major thirteenth",
         }
     }
 
@@ -159,6 +198,7 @@ impl ChordQuality {
                 | Diminished7
                 | MinorAdd9
                 | Minor9
+                | Minor11
         )
     }
 
@@ -177,6 +217,7 @@ impl ChordQuality {
             MinorMajor7 => "maj7",
             MinorAdd9 => "add9",
             Minor9 => "9",
+            Minor11 => "11",
             // Every other quality keeps its usual symbol, as in "IVmaj7".
             other => other.symbol(),
         }
