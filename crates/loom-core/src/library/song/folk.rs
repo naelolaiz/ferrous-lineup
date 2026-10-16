@@ -50,9 +50,9 @@ pub(super) const GREENSLEEVES: Song = Song {
         Part::new("Intro", "-:12 | -:8 A4:4", "i | V"),
         Part::new(
             "Verse",
-            "C5:8 D5:4 | E5:6 F5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
+            "C5:8 D5:4 | E5:6 F#5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
              C5:8 A4:4 | A4:6 G#4:2 A4:4 | B4:8 G#4:4 | E4:8 A4:4 | \
-             C5:8 D5:4 | E5:6 F5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
+             C5:8 D5:4 | E5:6 F#5:2 E5:4 | D5:8 B4:4 | G4:6 A4:2 B4:4 | \
              C5:6 B4:2 A4:4 | G#4:6 F#4:2 G#4:4 | A4:12 | _:12",
             "i | bIII | bVII | v | i | V | V | i | i | bIII | bVII | v | i | V | i | i",
         ),
@@ -115,9 +115,10 @@ pub(super) const SCARBOROUGH_FAIR: Song = Song {
     parts: &[Part::new(
         "Verse",
         "D5:8 D5:4 | A5:8 A5:4 | E5:6 F5:2 E5:4 | D5:12 | -:4 A5:4 C6 | D6:8 C6:4 | \
-         A5:4 B5 G5 | A5:12 | -:4 D6:4 D6 | D6:8 C6:4 | A5:8 A5:4 | G5:4 F5 E5 | C5:12 | \
-         D5:4 A5 G5 | F5:4 E5 D5:2 C5 | D5:12",
-        "i | i | bVII | i | i | bIII | IV | i | i | bVII | i | bVII | bVII | i | bVII | i",
+         A5:4 B5 G5 | A5:12 | _:8 D6:4 | D6:8 D6:4 | C6:8 A5:4 | A5:4 G5 F5 | E5:4 C5:8 | \
+         _:12 | D5:8 A5:4 | G5:8 F5:4 | E5:4 D5 C5 | D5:12 | _:12",
+        "i | i | bVII | i | bIII | i | IV | i | i | i | bIII | bIII | bVII | bVII | i | bVII | \
+         bVII | i | i",
     )],
     form: &["Verse", "Verse", "Verse"],
     drums_from: 0,

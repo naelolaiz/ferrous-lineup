@@ -22,7 +22,7 @@ pub(super) const AMAZING_GRACE: Song = Song {
              G5:8 B5:2 G5:2 | B5:8 A5:4 | D6:12 | _:8 B5:4 | \
              D6:8 B5:2 G5:2 | B5:8 A5:4 | G5:8 E5:4 | D5:8 D5:4 | \
              G5:8 B5:2 G5:2 | B5:8 A5:4 | G5:12 | _:8 D5:4",
-            "I | I | IV | I | I | I I V | V | V V I | I | I | IV | I | I | I I V | I | I",
+            "I | I | IV | I | I | I I V | V | V V I | I | I | IV | I | vi | V | I | I",
         ),
     ],
     form: &["Intro", "Verse", "Verse", "Verse"],
