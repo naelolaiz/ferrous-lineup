@@ -15,6 +15,6 @@ pub mod engine;
 pub mod instrument;
 pub mod sample;
 
-pub use engine::{AudioEngine, Command, EngineError, EngineInfo};
+pub use engine::{AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, PlayMode};
 pub use instrument::Instrument;
 pub use sample::{SampleData, SampleError};

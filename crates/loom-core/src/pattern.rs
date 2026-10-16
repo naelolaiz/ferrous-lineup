@@ -4,6 +4,11 @@
 //! start step and a length. The step sequencer and the piano roll are
 //! two views of the same notes. A step that is "on" in the channel rack
 //! is simply a note one step long, at the default pitch [`STEP_NOTE`].
+//!
+//! Since step 4, a project has many patterns, and the playlist arranges
+//! them into a song. Each pattern still holds notes for every channel.
+
+use serde::{Deserialize, Serialize};
 
 use crate::Note;
 
@@ -21,7 +26,7 @@ pub const STEP_NOTE: Note = Note::C4;
 pub const DEFAULT_VELOCITY: u8 = 100;
 
 /// One note of a pattern. Times are counted in steps (sixteenth notes).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct NoteEvent {
     pub pitch: Note,
     /// The step the note starts on, counted from 0.
@@ -76,17 +81,26 @@ impl NoteEvent {
     }
 }
 
-/// A pattern: a list of notes for each channel, and a length.
+/// A pattern: a name, a list of notes for each channel, and a length.
+///
+/// `name` is public because any name is fine. `length` and `rows` are
+/// private, because they have rules to keep: the length stays within
+/// 1..=[`MAX_STEPS`], and there is one row per channel of the project.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Pattern {
+    pub name: String,
     length: usize,
     rows: Vec<Vec<NoteEvent>>,
 }
 
 impl Pattern {
     /// Creates an empty pattern with `channels` rows and the given length.
-    pub fn new(channels: usize, length: usize) -> Self {
+    ///
+    /// `impl Into<String>` accepts anything that can become a `String`:
+    /// a `&str` such as `"Beat"`, a `String`, or the result of `format!`.
+    pub fn new(name: impl Into<String>, channels: usize, length: usize) -> Self {
         Pattern {
+            name: name.into(),
             length: length.clamp(1, MAX_STEPS),
             rows: vec![Vec::new(); channels],
         }
@@ -115,6 +129,19 @@ impl Pattern {
             Some(row) => row,
             None => &[],
         }
+    }
+
+    /// Whether the pattern has no notes at all.
+    pub fn is_empty(&self) -> bool {
+        self.rows.iter().all(Vec::is_empty)
+    }
+
+    /// Every note of every channel, with the channel it belongs to.
+    pub fn all_notes(&self) -> impl Iterator<Item = (usize, &NoteEvent)> {
+        self.rows
+            .iter()
+            .enumerate()
+            .flat_map(|(channel, row)| row.iter().map(move |note| (channel, note)))
     }
 
     /// Whether every note of the channel is a plain step, so the channel
@@ -173,21 +200,24 @@ impl Pattern {
     }
 
     /// Replaces a note, for example after it was moved or resized.
-    /// Returns `false` if there is no such note or the new one does not fit.
+    /// Returns `false` if there is no such note, the new one does not fit,
+    /// or another note of the same pitch already starts on the same step.
     pub fn replace_note(&mut self, channel: usize, index: usize, note: NoteEvent) -> bool {
         let Some(note) = note.fitted() else {
             return false;
         };
-        match self
-            .rows
-            .get_mut(channel)
-            .and_then(|row| row.get_mut(index))
-        {
-            Some(slot) => {
+        let Some(row) = self.rows.get_mut(channel) else {
+            return false;
+        };
+        let duplicate = row.iter().enumerate().any(|(other_index, other)| {
+            other_index != index && other.pitch == note.pitch && other.start == note.start
+        });
+        match row.get_mut(index) {
+            Some(slot) if !duplicate => {
                 *slot = note;
                 true
             }
-            None => false,
+            _ => false,
         }
     }
 
@@ -222,11 +252,12 @@ mod tests {
 
     #[test]
     fn starts_empty() {
-        let pattern = Pattern::new(2, 16);
+        let pattern = Pattern::new("Test", 2, 16);
         assert_eq!(pattern.rows(), 2);
         assert_eq!(pattern.length(), 16);
         assert!(!pattern.is_on(0, 0));
         assert!(pattern.notes(0).is_empty());
+        assert!(pattern.is_empty());
         assert!(
             pattern.notes(9).is_empty(),
             "missing channels have no notes"
@@ -235,7 +266,7 @@ mod tests {
 
     #[test]
     fn toggling_a_step() {
-        let mut pattern = Pattern::new(1, 16);
+        let mut pattern = Pattern::new("Test", 1, 16);
         assert_eq!(pattern.toggle(0, 3), Some(true));
         assert!(pattern.is_on(0, 3));
         assert_eq!(pattern.notes(0), &[NoteEvent::step(3)]);
@@ -246,7 +277,7 @@ mod tests {
 
     #[test]
     fn outside_the_grid_is_ignored() {
-        let mut pattern = Pattern::new(1, 16);
+        let mut pattern = Pattern::new("Test", 1, 16);
         assert_eq!(pattern.toggle(5, 0), None);
         assert_eq!(pattern.toggle(0, MAX_STEPS), None);
         assert!(!pattern.set(1, 0, true));
@@ -255,7 +286,7 @@ mod tests {
 
     #[test]
     fn length_is_clamped_and_keeps_hidden_notes() {
-        let mut pattern = Pattern::new(1, 32);
+        let mut pattern = Pattern::new("Test", 1, 32);
         pattern.set(0, 20, true);
         pattern.set_length(16);
         assert_eq!(pattern.length(), 16);
@@ -270,7 +301,7 @@ mod tests {
 
     #[test]
     fn steps_and_piano_roll_notes() {
-        let mut pattern = Pattern::new(1, 16);
+        let mut pattern = Pattern::new("Test", 1, 16);
         pattern.set(0, 0, true);
         assert!(pattern.is_step_row(0));
         let a4 = NoteEvent::new(Note::A4, 4, 2);
@@ -283,7 +314,7 @@ mod tests {
 
     #[test]
     fn adding_notes() {
-        let mut pattern = Pattern::new(1, 16);
+        let mut pattern = Pattern::new("Test", 1, 16);
         let note = NoteEvent::new(Note::C4, 2, 4);
         assert_eq!(pattern.add_note(0, note), Some(0));
         assert_eq!(pattern.add_note(0, note), None, "no duplicates");
@@ -297,19 +328,39 @@ mod tests {
 
     #[test]
     fn moving_and_removing_notes() {
-        let mut pattern = Pattern::new(1, 16);
+        let mut pattern = Pattern::new("Test", 1, 16);
         pattern.add_note(0, NoteEvent::new(Note::C4, 0, 4));
         let moved = NoteEvent::new(Note::A4, 8, 2);
         assert!(pattern.replace_note(0, 0, moved));
         assert_eq!(pattern.notes(0), &[moved]);
         assert!(!pattern.replace_note(0, 5, moved));
+        // A note cannot be moved on top of an identical one.
+        pattern.add_note(0, NoteEvent::new(Note::C4, 0, 4));
+        assert!(
+            !pattern.replace_note(0, 1, moved),
+            "A4 already starts on step 8"
+        );
+        pattern.remove_note(0, 1);
         assert_eq!(pattern.remove_note(0, 0), Some(moved));
         assert_eq!(pattern.remove_note(0, 0), None);
     }
 
     #[test]
+    fn all_notes_lists_every_channel() {
+        let mut pattern = Pattern::new("Test", 3, 16);
+        pattern.set(0, 0, true);
+        pattern.set(2, 4, true);
+        let found: Vec<(usize, usize)> = pattern
+            .all_notes()
+            .map(|(channel, note)| (channel, note.start))
+            .collect();
+        assert_eq!(found, vec![(0, 0), (2, 4)]);
+        assert!(!pattern.is_empty());
+    }
+
+    #[test]
     fn which_notes_sound_at_a_step() {
-        let mut pattern = Pattern::new(1, 16);
+        let mut pattern = Pattern::new("Test", 1, 16);
         pattern.add_note(0, NoteEvent::new(Note::new(60), 0, 4));
         pattern.add_note(0, NoteEvent::new(Note::new(64), 2, 4));
         let at = |step| {

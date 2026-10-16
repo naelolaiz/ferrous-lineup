@@ -1,10 +1,12 @@
 //! Scales and keys: which notes belong together.
 
+use serde::{Deserialize, Serialize};
+
 use super::{Chord, ChordQuality, PitchSet};
 use crate::{Note, PitchClass, Spelling};
 
 /// The kinds of scale the piano roll can highlight.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ScaleKind {
     Major,
     NaturalMinor,
@@ -101,7 +103,7 @@ impl ScaleKind {
 }
 
 /// A scale starting on a particular note: a key, like "A minor".
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Scale {
     pub root: PitchClass,
     pub kind: ScaleKind,

@@ -9,9 +9,14 @@
 //! [`Command`] messages through a lock-free ring buffer (`rtrb`), and the
 //! audio thread applies them at the start of each block. Two things travel
 //! the other way: the current step (through an atomic integer, for the
-//! playhead in the UI) and old instruments and note lists that need
+//! playhead in the UI) and old instruments, note lists and songs that need
 //! freeing (through a second ring buffer, so the memory is freed on the
 //! UI thread).
+//!
+//! The audio thread keeps its own copy of what it needs to play: the
+//! notes of every channel in every pattern, the length of every pattern,
+//! and the song (the clips of the playlist). In pattern mode it loops the
+//! selected pattern; in song mode it plays the clips.
 
 use std::fmt;
 use std::sync::Arc;
@@ -20,7 +25,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
 use loom_core::{
-    DEFAULT_VELOCITY, MAX_CHANNELS, Note, NoteEvent, STEP_NOTE, STEPS_PER_BEAT, Sequencer, Tempo,
+    Clip, DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, Note, NoteEvent, STEP_NOTE, STEPS_PER_BAR,
+    STEPS_PER_BEAT, Sequencer, Tempo,
 };
 
 use crate::dsp::Smoothed;
@@ -31,8 +37,10 @@ use crate::instrument::Instrument;
 /// far more than the UI will ever send in that time.
 const COMMAND_QUEUE_SIZE: usize = 1024;
 
-/// How many old instruments and note lists can wait to be freed by the UI thread.
-const TRASH_QUEUE_SIZE: usize = 256;
+/// How many old instruments and note lists can wait to be freed by the UI
+/// thread. Removing a pattern throws away one list per channel, and
+/// loading a project throws away every channel, so this is generous.
+const TRASH_QUEUE_SIZE: usize = 1024;
 
 /// The value of the playhead while stopped.
 const NO_STEP: usize = usize::MAX;
@@ -40,24 +48,103 @@ const NO_STEP: usize = usize::MAX;
 /// How long volume changes take to settle, in seconds.
 const VOLUME_SMOOTHING: f32 = 0.01;
 
+/// What the play button plays.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PlayMode {
+    /// Loop the selected pattern, to work on it.
+    #[default]
+    Pattern,
+    /// Play the playlist from the start, and loop at the end of the song.
+    Song,
+}
+
+/// The notes one channel plays in each pattern: list `p` holds its notes
+/// in pattern `p`.
+///
+/// When the UI adds a pattern, the audio thread adds an empty list to
+/// every channel. `Vec::new()` does not allocate (an empty `Vec` has no
+/// memory of its own yet), but pushing it onto the outer `Vec` would, if
+/// the outer `Vec` were full. So `ChannelNotes::new`, which runs on the
+/// UI thread, reserves room for [`MAX_PATTERNS`] lists up front. The
+/// field is private, so there is no other way to make one: the type
+/// itself guarantees the room is there.
+#[derive(Debug, Default)]
+pub struct ChannelNotes(Vec<Vec<NoteEvent>>);
+
+impl ChannelNotes {
+    /// One list per pattern, in pattern order.
+    pub fn new(lists: impl IntoIterator<Item = Vec<NoteEvent>>) -> Self {
+        let mut patterns = Vec::with_capacity(MAX_PATTERNS);
+        patterns.extend(lists.into_iter().take(MAX_PATTERNS));
+        ChannelNotes(patterns)
+    }
+
+    /// The notes in one pattern (none if there is no such pattern).
+    fn get(&self, pattern: usize) -> &[NoteEvent] {
+        self.0.get(pattern).map_or(&[], Vec::as_slice)
+    }
+
+    /// Adds an empty list for a new pattern, without allocating.
+    fn push_empty(&mut self) {
+        if self.0.len() < self.0.capacity() {
+            self.0.push(Vec::new());
+        }
+    }
+
+    /// Puts `notes` in place of a pattern's list and returns the old list,
+    /// or gives `notes` back if there is no such pattern. Either way, the
+    /// caller gets a list to throw away.
+    fn replace(&mut self, pattern: usize, notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
+        match self.0.get_mut(pattern) {
+            Some(list) => std::mem::replace(list, notes),
+            None => notes,
+        }
+    }
+
+    /// Takes out a pattern's list; the lists after it move down one place.
+    fn remove(&mut self, pattern: usize) -> Option<Vec<NoteEvent>> {
+        (pattern < self.0.len()).then(|| self.0.remove(pattern))
+    }
+}
+
 /// A message from the UI thread to the audio thread.
 ///
-/// Channel numbers are positions in the rack, counted from 0, and must
-/// match the UI's list exactly: the UI sends `AddChannel` and
-/// `RemoveChannel` whenever its own list changes.
+/// Channel and pattern numbers are positions in the UI's lists, counted
+/// from 0, and must match them exactly: the UI sends `AddChannel`,
+/// `RemoveChannel`, `AddPattern` and `RemovePattern` whenever its own
+/// lists change.
 #[derive(Debug)]
 pub enum Command {
-    /// Start the pattern from step 0.
+    /// Start playing from the beginning.
     Play,
     /// Stop playback. Sounds already playing ring out.
     Stop,
+    /// Switch between looping a pattern and playing the song. If playing,
+    /// starts again from the beginning.
+    SetMode(PlayMode),
+    /// Choose the pattern that pattern mode loops.
+    SelectPattern(usize),
     SetTempo(Tempo),
-    SetPatternLength(usize),
     SetMasterVolume(f32),
-    /// Add a channel at the bottom of the rack.
+    /// Add an empty pattern at the end of the list.
+    AddPattern {
+        length: usize,
+    },
+    RemovePattern(usize),
+    SetPatternLength {
+        pattern: usize,
+        length: usize,
+    },
+    /// Replace the song: the clips to play (only those on tracks that are
+    /// not muted) and the song's length in steps.
+    SetSong {
+        clips: Vec<Clip>,
+        length: usize,
+    },
+    /// Add a channel at the bottom of the rack, with its notes in every pattern.
     AddChannel {
         instrument: Instrument,
-        notes: Vec<NoteEvent>,
+        notes: ChannelNotes,
         volume: f32,
         muted: bool,
     },
@@ -67,9 +154,10 @@ pub enum Command {
         channel: usize,
         instrument: Instrument,
     },
-    /// Replace all the notes of a channel. The UI sends a fresh copy of
-    /// the list whenever a step or a note changes.
+    /// Replace all the notes of a channel in one pattern. The UI sends a
+    /// fresh copy of the list whenever a step or a note changes.
     SetNotes {
+        pattern: usize,
         channel: usize,
         notes: Vec<NoteEvent>,
     },
@@ -88,6 +176,9 @@ pub enum Command {
         channel: usize,
         pitch: Note,
     },
+    /// Stop, and remove every channel, pattern and clip, before a new
+    /// project is sent.
+    Clear,
 }
 
 /// Something the audio thread has finished with. It is sent back to the
@@ -95,6 +186,8 @@ pub enum Command {
 enum Garbage {
     Instrument(Instrument),
     Notes(Vec<NoteEvent>),
+    Channel(ChannelState),
+    Song(Vec<Clip>),
 }
 
 /// What the engine found when it opened the sound card.
@@ -226,6 +319,8 @@ impl AudioEngine {
             match garbage {
                 Garbage::Instrument(instrument) => drop(instrument),
                 Garbage::Notes(notes) => drop(notes),
+                Garbage::Channel(channel) => drop(channel),
+                Garbage::Song(clips) => drop(clips),
             }
         }
     }
@@ -266,7 +361,7 @@ where
 /// One row of the channel rack, as the audio thread sees it.
 struct ChannelState {
     instrument: Instrument,
-    notes: Vec<NoteEvent>,
+    notes: ChannelNotes,
     volume: Smoothed,
     muted: bool,
 }
@@ -280,6 +375,14 @@ struct AudioThread {
     output_channels: usize,
     /// Reserved with room for `MAX_CHANNELS`, so `push` never allocates.
     channels: Vec<ChannelState>,
+    /// The length of each pattern, in steps. Reserved with room for `MAX_PATTERNS`.
+    pattern_lengths: Vec<usize>,
+    /// The clips of the song, and its length in steps.
+    clips: Vec<Clip>,
+    song_length: usize,
+    mode: PlayMode,
+    /// The pattern that pattern mode loops.
+    pattern: usize,
     sequencer: Sequencer,
     playing: bool,
     master_volume: Smoothed,
@@ -300,7 +403,12 @@ impl AudioThread {
             sample_rate,
             output_channels,
             channels: Vec::with_capacity(MAX_CHANNELS),
-            sequencer: Sequencer::new(Tempo::default(), sample_rate, 16),
+            pattern_lengths: Vec::with_capacity(MAX_PATTERNS),
+            clips: Vec::new(),
+            song_length: 0,
+            mode: PlayMode::Pattern,
+            pattern: 0,
+            sequencer: Sequencer::new(Tempo::default(), sample_rate, STEPS_PER_BAR),
             playing: false,
             master_volume: Smoothed::new(0.8, VOLUME_SMOOTHING, sample_rate),
             commands,
@@ -316,6 +424,22 @@ impl AudioThread {
         let _ = self.trash.push(garbage);
     }
 
+    /// The length of a pattern, in steps (0 if there is no such pattern).
+    fn pattern_length(&self, pattern: usize) -> usize {
+        self.pattern_lengths.get(pattern).copied().unwrap_or(0)
+    }
+
+    /// Tells the sequencer how long the loop is: the selected pattern in
+    /// pattern mode, or the whole song. An empty song loops one silent bar.
+    fn update_loop_length(&mut self) {
+        let length = match self.mode {
+            PlayMode::Pattern => self.pattern_length(self.pattern),
+            PlayMode::Song => self.song_length,
+        };
+        let length = if length == 0 { STEPS_PER_BAR } else { length };
+        self.sequencer.set_length(length);
+    }
+
     /// How many frames a preview note is held for: one beat.
     fn preview_gate(&self) -> u32 {
         (self.sequencer.step_frames() * STEPS_PER_BEAT as f64) as u32
@@ -327,39 +451,71 @@ impl AudioThread {
                 self.sequencer.reset();
                 self.playing = true;
             }
-            Command::Stop => {
-                self.playing = false;
-                self.playhead.store(NO_STEP, Ordering::Relaxed);
-                for channel in &mut self.channels {
-                    channel.instrument.release_all();
-                }
+            Command::Stop => self.stop(),
+            Command::SetMode(mode) => {
+                self.mode = mode;
+                self.update_loop_length();
+                self.sequencer.reset();
+            }
+            Command::SelectPattern(pattern) => {
+                self.pattern = pattern;
+                self.update_loop_length();
             }
             Command::SetTempo(tempo) => self.sequencer.set_tempo(tempo),
-            Command::SetPatternLength(length) => self.sequencer.set_length(length),
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
+            Command::AddPattern { length } => {
+                if self.pattern_lengths.len() < MAX_PATTERNS {
+                    self.pattern_lengths.push(length);
+                    for channel in &mut self.channels {
+                        channel.notes.push_empty();
+                    }
+                }
+            }
+            Command::RemovePattern(pattern) => {
+                if pattern < self.pattern_lengths.len() {
+                    self.pattern_lengths.remove(pattern);
+                    for index in 0..self.channels.len() {
+                        if let Some(notes) = self.channels[index].notes.remove(pattern) {
+                            self.throw_away(Garbage::Notes(notes));
+                        }
+                    }
+                    self.update_loop_length();
+                }
+            }
+            Command::SetPatternLength { pattern, length } => {
+                if let Some(slot) = self.pattern_lengths.get_mut(pattern) {
+                    *slot = length;
+                    self.update_loop_length();
+                }
+            }
+            Command::SetSong { clips, length } => {
+                let old = std::mem::replace(&mut self.clips, clips);
+                self.throw_away(Garbage::Song(old));
+                self.song_length = length;
+                self.update_loop_length();
+            }
             Command::AddChannel {
                 instrument,
                 notes,
                 volume,
                 muted,
             } => {
+                let channel = ChannelState {
+                    instrument,
+                    notes,
+                    volume: Smoothed::new(volume, VOLUME_SMOOTHING, self.sample_rate),
+                    muted,
+                };
                 if self.channels.len() < MAX_CHANNELS {
-                    self.channels.push(ChannelState {
-                        instrument,
-                        notes,
-                        volume: Smoothed::new(volume, VOLUME_SMOOTHING, self.sample_rate),
-                        muted,
-                    });
+                    self.channels.push(channel);
                 } else {
-                    self.throw_away(Garbage::Instrument(instrument));
-                    self.throw_away(Garbage::Notes(notes));
+                    self.throw_away(Garbage::Channel(channel));
                 }
             }
             Command::RemoveChannel(index) => {
                 if index < self.channels.len() {
                     let removed = self.channels.remove(index);
-                    self.throw_away(Garbage::Instrument(removed.instrument));
-                    self.throw_away(Garbage::Notes(removed.notes));
+                    self.throw_away(Garbage::Channel(removed));
                 }
             }
             Command::SetInstrument {
@@ -372,13 +528,17 @@ impl AudioThread {
                 }
                 None => self.throw_away(Garbage::Instrument(instrument)),
             },
-            Command::SetNotes { channel, notes } => match self.channels.get_mut(channel) {
-                Some(state) => {
-                    let old = std::mem::replace(&mut state.notes, notes);
-                    self.throw_away(Garbage::Notes(old));
-                }
-                None => self.throw_away(Garbage::Notes(notes)),
-            },
+            Command::SetNotes {
+                pattern,
+                channel,
+                notes,
+            } => {
+                let old = match self.channels.get_mut(channel) {
+                    Some(state) => state.notes.replace(pattern, notes),
+                    None => notes,
+                };
+                self.throw_away(Garbage::Notes(old));
+            }
             Command::SetVolume { channel, volume } => {
                 if let Some(state) = self.channels.get_mut(channel) {
                     state.volume.set(volume);
@@ -391,6 +551,29 @@ impl AudioThread {
             }
             Command::Preview(channel) => self.preview(channel, STEP_NOTE),
             Command::PreviewNote { channel, pitch } => self.preview(channel, pitch),
+            Command::Clear => {
+                self.stop();
+                // `pop` takes the last channel out of the list; `while let`
+                // keeps going until there are none left.
+                while let Some(channel) = self.channels.pop() {
+                    self.throw_away(Garbage::Channel(channel));
+                }
+                // `clear` empties the list but keeps its memory: nothing is freed.
+                self.pattern_lengths.clear();
+                let old = std::mem::take(&mut self.clips);
+                self.throw_away(Garbage::Song(old));
+                self.song_length = 0;
+                self.pattern = 0;
+                self.update_loop_length();
+            }
+        }
+    }
+
+    fn stop(&mut self) {
+        self.playing = false;
+        self.playhead.store(NO_STEP, Ordering::Relaxed);
+        for channel in &mut self.channels {
+            channel.instrument.release_all();
         }
     }
 
@@ -403,24 +586,38 @@ impl AudioThread {
         }
     }
 
-    /// Starts the notes of every channel that begin on `step`.
+    /// Starts every note that begins on `step` of the loop.
+    ///
+    /// In pattern mode, `step` is a step of the selected pattern. In song
+    /// mode, it is a step of the song, and each clip playing then is asked
+    /// for the notes at its own step: a clip that started on song step 32
+    /// plays its pattern's step 2 on song step 34.
     fn start_notes(&mut self, step: usize) {
-        let step_frames = self.sequencer.step_frames();
-        let length = self.sequencer.length();
-        for channel in &mut self.channels {
-            if channel.muted {
-                continue;
+        let timing = Timing {
+            step_frames: self.sequencer.step_frames(),
+            sample_rate: self.sample_rate,
+        };
+        match self.mode {
+            PlayMode::Pattern => {
+                let length = self.pattern_length(self.pattern);
+                start_pattern_notes(&mut self.channels, self.pattern, step, length, timing);
             }
-            // `channel.notes` is borrowed to read while `channel.instrument`
-            // is borrowed to change. That is allowed: they are different
-            // fields of the struct, so the borrows do not overlap.
-            for note in channel.notes.iter().filter(|note| note.start == step) {
-                // A note that runs past the end of the pattern is cut there.
-                let steps_held = note.length.min(length.saturating_sub(step));
-                let gate = (steps_held as f64 * step_frames) as u32;
-                channel
-                    .instrument
-                    .note_on(note.pitch, note.velocity, gate, self.sample_rate);
+            PlayMode::Song => {
+                // `self.clips` is read while `self.channels` is changed: two
+                // different fields, so the borrows do not overlap.
+                for clip in &self.clips {
+                    let length = self.pattern_lengths.get(clip.pattern).copied().unwrap_or(0);
+                    if (clip.start..clip.start + length).contains(&step) {
+                        let local_step = step - clip.start;
+                        start_pattern_notes(
+                            &mut self.channels,
+                            clip.pattern,
+                            local_step,
+                            length,
+                            timing,
+                        );
+                    }
+                }
             }
         }
     }
@@ -454,6 +651,48 @@ impl AudioThread {
     }
 }
 
+/// How long a step is, and the sample rate the instruments run at.
+#[derive(Debug, Clone, Copy)]
+struct Timing {
+    step_frames: f64,
+    sample_rate: u32,
+}
+
+/// Starts the notes of one pattern that begin on its `step`.
+///
+/// This is a plain function, not a method, so that it borrows only the
+/// channels. Its caller can keep reading other fields of the audio thread
+/// (such as the clips) while the channels are being changed.
+fn start_pattern_notes(
+    channels: &mut [ChannelState],
+    pattern: usize,
+    step: usize,
+    length: usize,
+    timing: Timing,
+) {
+    for channel in channels {
+        if channel.muted {
+            continue;
+        }
+        // `channel.notes` is borrowed to read while `channel.instrument`
+        // is borrowed to change. That is allowed: they are different
+        // fields of the struct, so the borrows do not overlap.
+        for note in channel
+            .notes
+            .get(pattern)
+            .iter()
+            .filter(|note| note.start == step)
+        {
+            // A note that runs past the end of the pattern is cut there.
+            let steps_held = note.length.min(length.saturating_sub(step));
+            let gate = (steps_held as f64 * timing.step_frames) as u32;
+            channel
+                .instrument
+                .note_on(note.pitch, note.velocity, gate, timing.sample_rate);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -469,18 +708,29 @@ mod tests {
         playhead: Arc<AtomicUsize>,
     }
 
+    /// An audio thread with one empty pattern, 16 steps long, at 120 BPM.
     fn harness() -> Harness {
         let (commands, command_consumer) = rtrb::RingBuffer::new(64);
         let (trash_producer, trash) = rtrb::RingBuffer::new(64);
         let playhead = Arc::new(AtomicUsize::new(NO_STEP));
         let audio = AudioThread::new(RATE, 1, command_consumer, trash_producer, playhead.clone());
-        Harness {
+        let mut h = Harness {
             audio,
             commands,
             trash,
             playhead,
-        }
+        };
+        send(&mut h, Command::AddPattern { length: 16 });
+        send(&mut h, Command::SetTempo(Tempo::new(120.0)));
+        h
     }
+
+    fn send(h: &mut Harness, command: Command) {
+        h.commands.push(command).unwrap();
+    }
+
+    /// At 120 BPM and 48 kHz, one step lasts 6000 frames.
+    const STEP: usize = 6_000;
 
     /// A sampler whose sound is a constant 0.5 for 10 frames.
     fn click() -> Instrument {
@@ -491,15 +741,37 @@ mod tests {
         on.iter().map(|&step| NoteEvent::step(step)).collect()
     }
 
+    /// Adds a click channel with the given steps on in the first pattern.
     fn add(h: &mut Harness, on: &[usize], muted: bool) {
-        h.commands
-            .push(Command::AddChannel {
+        send(
+            h,
+            Command::AddChannel {
                 instrument: click(),
-                notes: steps(on),
+                notes: ChannelNotes::new([steps(on)]),
                 volume: 1.0,
                 muted,
-            })
-            .unwrap();
+            },
+        );
+    }
+
+    /// Adds a synth channel playing the given notes in the first pattern.
+    fn add_synth(h: &mut Harness, notes: &[NoteEvent]) {
+        send(
+            h,
+            Command::AddChannel {
+                instrument: Instrument::Synth(Synth::new(RATE)),
+                notes: ChannelNotes::new([notes.to_vec()]),
+                volume: 1.0,
+                muted: false,
+            },
+        );
+    }
+
+    /// The frames, in a block, where a new sound starts after silence.
+    fn onsets(out: &[f32]) -> Vec<usize> {
+        (0..out.len())
+            .filter(|&i| out[i] != 0.0 && (i == 0 || out[i - 1] == 0.0))
+            .collect()
     }
 
     fn render(h: &mut Harness, frames: usize) -> Vec<f32> {
@@ -520,10 +792,7 @@ mod tests {
     fn plays_steps_on_time() {
         let mut h = harness();
         add(&mut h, &[0, 1], false);
-        h.commands
-            .push(Command::SetTempo(Tempo::new(120.0)))
-            .unwrap();
-        h.commands.push(Command::Play).unwrap();
+        send(&mut h, Command::Play);
 
         // At 120 BPM a step lasts 6000 frames: hits at frame 0 and 6000.
         let out = render(&mut h, 7_000);
@@ -545,17 +814,16 @@ mod tests {
     fn steps_can_be_changed_while_playing() {
         let mut h = harness();
         add(&mut h, &[], false);
-        h.commands
-            .push(Command::SetTempo(Tempo::new(120.0)))
-            .unwrap();
-        h.commands.push(Command::Play).unwrap();
+        send(&mut h, Command::Play);
         render(&mut h, 100);
-        h.commands
-            .push(Command::SetNotes {
+        send(
+            &mut h,
+            Command::SetNotes {
+                pattern: 0,
                 channel: 0,
                 notes: steps(&[1]),
-            })
-            .unwrap();
+            },
+        );
         let out = render(&mut h, 6_000);
         assert!(out[5_900] != 0.0, "the new step should play at frame 6000");
     }
@@ -570,40 +838,38 @@ mod tests {
                 instrument: click(),
             })
             .unwrap();
-        h.commands
-            .push(Command::SetNotes {
+        send(
+            &mut h,
+            Command::SetNotes {
+                pattern: 0,
                 channel: 0,
                 notes: steps(&[0]),
-            })
-            .unwrap();
-        h.commands.push(Command::RemoveChannel(0)).unwrap();
+            },
+        );
+        send(&mut h, Command::RemoveChannel(0));
         render(&mut h, 10);
-        let (mut instruments, mut note_lists) = (0, 0);
+        let (mut instruments, mut note_lists, mut channels) = (0, 0, 0);
         while let Ok(garbage) = h.trash.pop() {
             match garbage {
                 Garbage::Instrument(_) => instruments += 1,
                 Garbage::Notes(_) => note_lists += 1,
+                Garbage::Channel(_) => channels += 1,
+                Garbage::Song(_) => {}
             }
         }
-        assert_eq!(instruments, 2, "the replaced and the removed instrument");
-        assert_eq!(note_lists, 2, "the replaced and the removed notes");
+        assert_eq!(instruments, 1, "the replaced instrument");
+        assert_eq!(note_lists, 1, "the replaced notes");
+        assert_eq!(
+            channels, 1,
+            "the removed channel, with its instrument and notes"
+        );
     }
 
     #[test]
     fn notes_are_held_for_their_length() {
         let mut h = harness();
-        h.commands
-            .push(Command::AddChannel {
-                instrument: Instrument::Synth(Synth::new(RATE)),
-                notes: vec![NoteEvent::new(Note::A4, 0, 2)],
-                volume: 1.0,
-                muted: false,
-            })
-            .unwrap();
-        h.commands
-            .push(Command::SetTempo(Tempo::new(120.0)))
-            .unwrap();
-        h.commands.push(Command::Play).unwrap();
+        add_synth(&mut h, &[NoteEvent::new(Note::A4, 0, 2)]);
+        send(&mut h, Command::Play);
         // Two steps at 120 BPM are 12 000 frames. The note is still held
         // just before that, and fades out (to silence) not long after.
         render(&mut h, 11_900);
@@ -616,15 +882,8 @@ mod tests {
     fn chords_play_all_their_notes() {
         let mut h = harness();
         let chord = [60, 64, 67].map(|midi| NoteEvent::new(Note::new(midi), 0, 4));
-        h.commands
-            .push(Command::AddChannel {
-                instrument: Instrument::Synth(Synth::new(RATE)),
-                notes: chord.to_vec(),
-                volume: 1.0,
-                muted: false,
-            })
-            .unwrap();
-        h.commands.push(Command::Play).unwrap();
+        add_synth(&mut h, &chord);
+        send(&mut h, Command::Play);
         render(&mut h, 10);
         assert_eq!(h.audio.channels[0].instrument.voices_playing(), 3);
     }
@@ -632,15 +891,8 @@ mod tests {
     #[test]
     fn stopping_releases_held_notes() {
         let mut h = harness();
-        h.commands
-            .push(Command::AddChannel {
-                instrument: Instrument::Synth(Synth::new(RATE)),
-                notes: vec![NoteEvent::new(Note::A4, 0, 16)],
-                volume: 1.0,
-                muted: false,
-            })
-            .unwrap();
-        h.commands.push(Command::Play).unwrap();
+        add_synth(&mut h, &[NoteEvent::new(Note::A4, 0, 16)]);
+        send(&mut h, Command::Play);
         render(&mut h, 1_000);
         h.commands.push(Command::Stop).unwrap();
         render(&mut h, 48_000);
@@ -655,6 +907,118 @@ mod tests {
         assert!(render(&mut h, 10)[0] != 0.0);
     }
 
+    /// Two patterns: the click plays step 0 of pattern 0 and step 2 of pattern 1.
+    fn two_patterns() -> Harness {
+        let mut h = harness();
+        send(&mut h, Command::AddPattern { length: 16 });
+        send(
+            &mut h,
+            Command::AddChannel {
+                instrument: click(),
+                notes: ChannelNotes::new([steps(&[0]), steps(&[2])]),
+                volume: 1.0,
+                muted: false,
+            },
+        );
+        h
+    }
+
+    #[test]
+    fn pattern_mode_plays_the_selected_pattern() {
+        let mut h = two_patterns();
+        send(&mut h, Command::SelectPattern(1));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 16 * STEP);
+        assert_eq!(onsets(&out), vec![2 * STEP]);
+    }
+
+    #[test]
+    fn song_mode_plays_the_clips() {
+        let mut h = two_patterns();
+        // Pattern 1 at bar 1, pattern 0 at bar 2: a two-bar song.
+        let clips = vec![Clip::new(1, 0, 0), Clip::new(0, 0, 16)];
+        send(&mut h, Command::SetSong { clips, length: 32 });
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 40 * STEP);
+        // Step 2 of the first clip, step 0 of the second, then the song
+        // loops back to the start: step 2 of the first clip again.
+        assert_eq!(onsets(&out), vec![2 * STEP, 16 * STEP, 34 * STEP]);
+        assert_eq!(
+            h.playhead.load(Ordering::Relaxed),
+            7,
+            "step 39 is step 7 of the second time round"
+        );
+    }
+
+    #[test]
+    fn clips_can_overlap() {
+        let mut h = two_patterns();
+        // Both patterns at once: steps 0 and 2.
+        let clips = vec![Clip::new(0, 0, 0), Clip::new(1, 1, 0)];
+        send(&mut h, Command::SetSong { clips, length: 16 });
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 16 * STEP);
+        assert_eq!(onsets(&out), vec![0, 2 * STEP]);
+    }
+
+    #[test]
+    fn removing_a_pattern_moves_the_next_one_down() {
+        let mut h = two_patterns();
+        send(&mut h, Command::RemovePattern(0));
+        send(&mut h, Command::Play);
+        // Pattern 1 is now pattern 0, and the selected pattern.
+        let out = render(&mut h, 16 * STEP);
+        assert_eq!(onsets(&out), vec![2 * STEP]);
+        assert!(matches!(h.trash.pop(), Ok(Garbage::Notes(_))));
+    }
+
+    #[test]
+    fn new_patterns_start_empty_in_every_channel() {
+        let mut h = two_patterns();
+        send(&mut h, Command::AddPattern { length: 16 });
+        send(&mut h, Command::SelectPattern(2));
+        send(&mut h, Command::Play);
+        render(&mut h, 10);
+        assert_eq!(h.audio.channels[0].notes.0.len(), 3);
+        assert!(onsets(&render(&mut h, 16 * STEP)).is_empty());
+    }
+
+    #[test]
+    fn channel_notes_have_room_for_every_pattern() {
+        let notes = ChannelNotes::new([Vec::new()]);
+        assert!(notes.0.capacity() >= MAX_PATTERNS);
+    }
+
+    #[test]
+    fn clear_throws_everything_away() {
+        let mut h = two_patterns();
+        send(
+            &mut h,
+            Command::SetSong {
+                clips: vec![Clip::new(0, 0, 0)],
+                length: 16,
+            },
+        );
+        send(&mut h, Command::Play);
+        send(&mut h, Command::Clear);
+        render(&mut h, 10);
+        assert!(h.audio.channels.is_empty());
+        assert!(h.audio.pattern_lengths.is_empty());
+        assert!(!h.audio.playing);
+        let mut kinds = Vec::new();
+        while let Ok(garbage) = h.trash.pop() {
+            kinds.push(match garbage {
+                Garbage::Channel(_) => "channel",
+                Garbage::Song(_) => "song",
+                Garbage::Instrument(_) | Garbage::Notes(_) => "other",
+            });
+        }
+        // The empty song from the start, the real one, then the channel and the song.
+        assert_eq!(kinds, ["song", "channel", "song"]);
+    }
+
     #[test]
     fn commands_stay_small() {
         // Every slot of the command queue is as big as the biggest
@@ -666,22 +1030,12 @@ mod tests {
 
     #[test]
     fn converts_to_integer_samples() {
-        let (mut commands, consumer) = rtrb::RingBuffer::new(8);
-        let (trash, _trash_consumer) = rtrb::RingBuffer::new(8);
-        let playhead = Arc::new(AtomicUsize::new(NO_STEP));
-        let mut audio = AudioThread::new(RATE, 1, consumer, trash, playhead);
-        commands
-            .push(Command::AddChannel {
-                instrument: click(),
-                notes: steps(&[0]),
-                volume: 1.0,
-                muted: false,
-            })
-            .unwrap();
-        commands.push(Command::SetMasterVolume(1.0)).unwrap();
-        commands.push(Command::Play).unwrap();
+        let mut h = harness();
+        add(&mut h, &[0], false);
+        send(&mut h, Command::SetMasterVolume(1.0));
+        send(&mut h, Command::Play);
         let mut buffer = vec![0_i16; 10];
-        audio.process(&mut buffer);
+        h.audio.process(&mut buffer);
         // About 10 000: half volume, times the default velocity, times
         // the master volume, which is still sliding up from 0.8.
         assert!(buffer[0] > 5_000, "got {}", buffer[0]);

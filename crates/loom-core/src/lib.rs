@@ -1,12 +1,15 @@
 //! Core music types for Ferrous Loom.
 //!
-//! This crate knows about notes, tempo, patterns, harmony and the project
-//! as a whole. It has no audio and no UI code, which keeps it small, fast
-//! to compile and easy to test with plain `cargo test`.
+//! This crate knows about notes, tempo, patterns, harmony, the playlist
+//! and the project as a whole, and how to save a project to a file. It
+//! has no audio and no UI code, which keeps it small, fast to compile and
+//! easy to test with plain `cargo test`.
 
+pub mod file;
 pub mod harmony;
 pub mod pattern;
 pub mod pitch;
+pub mod playlist;
 pub mod project;
 pub mod sequencer;
 pub mod tempo;
@@ -16,6 +19,7 @@ pub mod tempo;
 pub use harmony::{Chord, ChordQuality, ChordStamp, Harmony, PitchSet, Scale, ScaleKind};
 pub use pattern::{DEFAULT_VELOCITY, MAX_STEPS, NoteEvent, PATTERN_LENGTHS, Pattern, STEP_NOTE};
 pub use pitch::{Note, PitchClass, Spelling};
-pub use project::{Channel, ChannelKind, Drum, MAX_CHANNELS, Project, SampleSource};
+pub use playlist::{Clip, MAX_SONG_STEPS, MAX_TRACKS, Playlist, STEPS_PER_BAR, Track};
+pub use project::{Channel, ChannelKind, Drum, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource};
 pub use sequencer::{STEPS_PER_BEAT, Sequencer};
 pub use tempo::Tempo;
