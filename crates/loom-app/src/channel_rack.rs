@@ -70,6 +70,8 @@ pub fn show(
     let Some(pattern) = project.pattern(pattern) else {
         return actions;
     };
+    // The time signature where the pattern is used in the song.
+    let time = project.pattern_time(pattern_index);
     let mut row_rects: Vec<Rect> = Vec::with_capacity(project.channels().len());
     let length = pattern.length();
     let files_hovering = ui.ctx().input(|input| !input.raw.hovered_files.is_empty());
@@ -154,7 +156,6 @@ pub fn show(
                             // Beats alternate colours, so you can count them,
                             // starting again in every bar so all bars look
                             // alike: in 3/4, dark, light, dark.
-                            let time = project.time_signature;
                             let beat_group = step % time.steps_per_bar() / time.steps_per_beat();
                             let response =
                                 widgets::step_button(ui, on, beat_group, playhead == Some(step));

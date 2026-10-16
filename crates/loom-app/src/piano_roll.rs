@@ -566,7 +566,8 @@ impl PianoRoll {
         actions: &mut Vec<RollAction>,
     ) {
         let scale = project.scale;
-        self.time = project.time_signature;
+        // A pattern used where the song is in 3/4 is drawn in bars of 3/4.
+        self.time = project.pattern_time(self.pattern);
         // Selected notes that are no longer there are forgotten.
         let notes = pattern.notes(self.channel);
         self.selection.retain(|note| notes.contains(note));

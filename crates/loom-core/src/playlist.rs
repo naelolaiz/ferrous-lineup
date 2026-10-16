@@ -16,12 +16,15 @@
 //! - [`Section`]s name stretches of the song (Intro, Verse, Chorus...) and
 //!   can be played more than once, so a chorus written once is heard twice;
 //! - a [`LoopRegion`] makes song mode loop one part of the song while you
-//!   work on it.
+//!   work on it;
+//! - [`TimeMarker`]s change the time signature partway through the song.
 //!
 //! [`crate::arrangement`] turns all of this into the list of things the
 //! audio thread plays.
 
 use serde::{Deserialize, Serialize};
+
+use crate::meter::TimeMarker;
 
 /// Steps in one bar of 4/4 time: four beats of four steps.
 pub const STEPS_PER_BAR: usize = 16;
@@ -199,6 +202,8 @@ pub struct Playlist {
     /// Sorted by start, and never overlapping.
     pub(crate) sections: Vec<Section>,
     pub(crate) loop_region: Option<LoopRegion>,
+    /// Sorted by start, all after step 0, no two on the same step.
+    pub(crate) time_markers: Vec<TimeMarker>,
 }
 
 impl Playlist {
@@ -209,6 +214,7 @@ impl Playlist {
             clips: Vec::new(),
             sections: Vec::new(),
             loop_region: None,
+            time_markers: Vec::new(),
         }
     }
 
@@ -237,6 +243,12 @@ impl Playlist {
     /// The part of the song that song mode loops, if one is set.
     pub fn loop_region(&self) -> Option<LoopRegion> {
         self.loop_region
+    }
+
+    /// The changes of time signature after the start of the song, in
+    /// order. The song starts in the project's own time signature.
+    pub fn time_markers(&self) -> &[TimeMarker] {
+        &self.time_markers
     }
 
     /// A name for a new section: the first of [`SECTION_NAMES`] not used

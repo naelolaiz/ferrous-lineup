@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::arrangement::{Arrangement, arrange};
 use crate::harmony::Scale;
-use crate::meter::TimeSignature;
-use crate::pattern::{NoteEvent, Pattern};
+use crate::meter::{Meter, TimeMarker, TimeSignature};
+use crate::pattern::{MAX_STEPS, NoteEvent, Pattern};
 use crate::playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Section, Track,
 };
@@ -173,8 +173,9 @@ pub struct Project {
     pub tempo: Tempo,
     /// The key the piano roll highlights and names chords in.
     pub scale: Scale,
-    /// How many beats make a bar. It only changes where bar lines are
-    /// drawn and how long new patterns are, never the notes.
+    /// How many beats make a bar, from the start of the song until the
+    /// first time marker (see [`Project::meter`]). It only changes where
+    /// bar lines are drawn and how long new patterns are, never the notes.
     pub time_signature: TimeSignature,
     channels: Vec<Channel>,
     patterns: Vec<Pattern>,
@@ -590,8 +591,8 @@ impl Project {
     }
 
     /// The length of the playlist's timeline in steps: up to the end of
-    /// the last clip or section, rounded up to a whole bar of the time
-    /// signature. An empty playlist has length 0.
+    /// the last clip or section, rounded up to the next bar line. An
+    /// empty playlist has length 0.
     ///
     /// This is the song as drawn. With repeated sections, the song as
     /// played is longer: see [`Project::arrangement`].
@@ -603,7 +604,7 @@ impl Project {
             .map(|clip| clip.start + self.clip_length(clip));
         let sections = self.playlist.sections.iter().map(Section::end);
         let end = clips.chain(sections).max().unwrap_or(0);
-        self.time_signature.round_up_to_bar(end)
+        self.meter().round_up_to_bar(end)
     }
 
     /// The whole song as it plays, with every repeat unrolled. Exports
@@ -619,6 +620,88 @@ impl Project {
             Some(region) => arrange(self, region.start, region.end),
             None => self.arrangement(),
         }
+    }
+
+    // ----- Time signature changes -----
+
+    /// The time signatures along the playlist's timeline: the project's
+    /// own from the start, then each time marker.
+    pub fn meter(&self) -> Meter {
+        Meter::new(
+            self.time_signature,
+            self.playlist.time_markers.iter().copied(),
+        )
+    }
+
+    /// The time signatures of `arrangement` as it plays, in song steps:
+    /// a section in 3/4 that repeats is in 3/4 every time round. Exports
+    /// and the song position use this.
+    pub fn played_meter(&self, arrangement: &Arrangement) -> Meter {
+        let meter = self.meter();
+        let first = arrangement
+            .passes
+            .first()
+            .map_or(self.time_signature, |pass| meter.time_at(pass.from));
+        let mut markers = Vec::new();
+        for pass in &arrangement.passes {
+            markers.push(TimeMarker::new(pass.start, meter.time_at(pass.from)));
+            for marker in meter.markers() {
+                if marker.start > pass.from && marker.start < pass.from + pass.length {
+                    markers.push(TimeMarker::new(
+                        pass.start + marker.start - pass.from,
+                        marker.time,
+                    ));
+                }
+            }
+        }
+        Meter::new(first, markers).tidy()
+    }
+
+    /// The time signature a pattern is written in: the one where its
+    /// first clip starts, or the project's own if it has no clips. The
+    /// channel rack and the piano roll draw its bars in it.
+    pub fn pattern_time(&self, pattern: usize) -> TimeSignature {
+        self.playlist
+            .clips
+            .iter()
+            .filter(|clip| clip.pattern == pattern)
+            .map(|clip| clip.start)
+            .min()
+            .map_or(self.time_signature, |start| self.meter().time_at(start))
+    }
+
+    /// Changes the time signature from `marker.start` on. On step 0 it
+    /// changes the project's own time signature; anywhere else it adds a
+    /// marker, or replaces the one already there. Returns `false`,
+    /// changing nothing, if the marker is too late or its bars would not
+    /// fit in a pattern.
+    pub fn set_time_marker(&mut self, marker: TimeMarker) -> bool {
+        let time = marker.time;
+        if marker.start >= MAX_SONG_STEPS
+            || time.beats == 0
+            || time.unit == 0
+            || time.steps_per_bar() > MAX_STEPS
+        {
+            return false;
+        }
+        if marker.start == 0 {
+            self.time_signature = time;
+            return true;
+        }
+        let markers = &mut self.playlist.time_markers;
+        match markers.binary_search_by_key(&marker.start, |m| m.start) {
+            Ok(index) => markers[index] = marker,
+            Err(index) => markers.insert(index, marker),
+        }
+        true
+    }
+
+    /// Removes the time marker on step `start`, if there is one. The
+    /// bars after it go back to the time signature before it.
+    pub fn remove_time_marker(&mut self, start: usize) -> Option<TimeMarker> {
+        let markers = &mut self.playlist.time_markers;
+        let index = markers.iter().position(|marker| marker.start == start)?;
+        Some(markers.remove(index))
     }
 
     // ----- Sections and the loop region -----
@@ -685,6 +768,15 @@ impl Project {
             return false;
         };
         let room = section.length * copies;
+        // The time signatures inside the section, read before anything moves.
+        let meter = self.meter();
+        let opening = meter.time_at(section.start);
+        let inside_markers: Vec<TimeMarker> = meter
+            .markers()
+            .iter()
+            .filter(|marker| marker.start > section.start && marker.start < section.end())
+            .copied()
+            .collect();
         if copies == 0 || !self.make_room(section.end(), room) {
             return false;
         }
@@ -709,7 +801,13 @@ impl Project {
                 start: section.start + shift,
                 ..section.clone()
             });
+            // Each copy counts its bars like the section does.
+            self.set_time_marker(TimeMarker::new(section.start + shift, opening));
+            for marker in &inside_markers {
+                self.set_time_marker(TimeMarker::new(marker.start + shift, marker.time));
+            }
         }
+        self.playlist.time_markers = self.meter().tidy().markers().to_vec();
         true
     }
 
@@ -744,7 +842,11 @@ impl Project {
             || playlist
                 .sections
                 .iter()
-                .any(|section| section.start >= at && section.end() + steps > MAX_SONG_STEPS);
+                .any(|section| section.start >= at && section.end() + steps > MAX_SONG_STEPS)
+            || playlist
+                .time_markers
+                .iter()
+                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS);
         if too_late {
             return false;
         }
@@ -758,6 +860,9 @@ impl Project {
         }
         for section in &mut self.playlist.sections {
             shift(&mut section.start);
+        }
+        for marker in &mut self.playlist.time_markers {
+            shift(&mut marker.start);
         }
         if let Some(region) = &mut self.playlist.loop_region {
             shift(&mut region.start);
@@ -1171,6 +1276,45 @@ mod tests {
             .iter()
             .find(|c| c.pattern == FILL);
         assert_eq!(fill.map(|c| c.start), Some(7 * 16 + 32));
+    }
+
+    #[test]
+    fn copies_of_a_section_keep_its_time_signature() {
+        // Bars 3 and 4 in 3/4 (12 steps each), the rest in 4/4.
+        let waltz = TimeSignature::new(3, 4);
+        let mut project = Project::template();
+        project.set_time_marker(TimeMarker::new(32, waltz));
+        project.set_time_marker(TimeMarker::new(56, TimeSignature::COMMON));
+        let section = project.add_section(Section::new("Waltz", 32, 24)).unwrap();
+        assert!(project.duplicate_section(section, 1));
+        let markers: Vec<(usize, TimeSignature)> = project
+            .playlist()
+            .time_markers()
+            .iter()
+            .map(|marker| (marker.start, marker.time))
+            .collect();
+        // The copy carries on in 3/4, so it needs no marker of its own.
+        assert_eq!(markers, [(32, waltz), (80, TimeSignature::COMMON)]);
+    }
+
+    #[test]
+    fn time_markers_change_the_bars_from_where_they_are() {
+        let mut project = Project::demo();
+        let waltz = TimeSignature::new(3, 4);
+        assert!(project.set_time_marker(TimeMarker::new(64, waltz)));
+        assert_eq!(project.meter().bar(5).start, 76);
+        // The demo ends at step 128: 64 steps of 3/4 are 5⅓ bars.
+        assert_eq!(project.song_length(), 136);
+        // The beat clips from bar 5 on are in 3/4; the chords start in 4/4.
+        assert_eq!(project.pattern_time(CHORDS), TimeSignature::COMMON);
+        assert_eq!(project.pattern_time(FILL), waltz);
+        // Step 0 changes the project's own time signature.
+        assert!(project.set_time_marker(TimeMarker::new(0, waltz)));
+        assert_eq!(project.time_signature, waltz);
+        assert!(project.playlist().time_markers().len() == 1);
+        assert!(!project.set_time_marker(TimeMarker::new(16, TimeSignature::new(0, 4))));
+        assert_eq!(project.remove_time_marker(64).map(|m| m.time), Some(waltz));
+        assert!(project.playlist().time_markers().is_empty());
     }
 
     #[test]

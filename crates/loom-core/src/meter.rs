@@ -11,6 +11,11 @@
 //! signature mostly says how many steps a bar has, and where the beats
 //! fall inside it. The notes themselves never change: a time signature
 //! changes where the bar lines are drawn, not what is played.
+//!
+//! A song can change time signature partway through, like a hymn that
+//! goes from 4/4 to 3/4 for its last line. Each change is a
+//! [`TimeMarker`] on the playlist, as in FL Studio, and a [`Meter`]
+//! works out where every bar of such a song starts.
 
 use std::fmt;
 
@@ -132,6 +137,219 @@ impl fmt::Display for TimeSignature {
     }
 }
 
+/// A change of time signature partway through a song: from step `start`
+/// on, bars are counted in `time`. A new bar always starts on the marker.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct TimeMarker {
+    /// The step it starts on, counted from the start of the song.
+    pub start: usize,
+    pub time: TimeSignature,
+}
+
+impl TimeMarker {
+    pub fn new(start: usize, time: TimeSignature) -> Self {
+        TimeMarker { start, time }
+    }
+}
+
+/// One bar of a song: where it starts, how long it is, and its time
+/// signature.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Bar {
+    /// Counted from 0; the first bar is drawn as "1".
+    pub number: usize,
+    pub start: usize,
+    /// Steps. Shorter than a whole bar only right before a marker that
+    /// is not on a bar line.
+    pub length: usize,
+    pub time: TimeSignature,
+}
+
+impl Bar {
+    /// The step just after its last one: where the next bar starts.
+    pub fn end(&self) -> usize {
+        self.start + self.length
+    }
+
+    /// Whether `step` starts a beat of this bar.
+    pub fn is_beat_start(&self, step: usize) -> bool {
+        step >= self.start && (step - self.start).is_multiple_of(self.time.steps_per_beat())
+    }
+}
+
+/// The time signatures of a whole song: the one it starts in and every
+/// change after that.
+///
+/// A song with no changes is counted exactly like its [`TimeSignature`]
+/// alone. With changes, the bars of each stretch are counted from the
+/// marker that starts it:
+///
+/// ```text
+/// 4/4 from step 0, 3/4 from step 32:
+/// | 1: 16 steps | 2: 16 steps | 3: 12 steps | 4: 12 steps | ...
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Meter {
+    first: TimeSignature,
+    /// Sorted by start, all after step 0, no two on the same step.
+    markers: Vec<TimeMarker>,
+}
+
+impl Meter {
+    /// A meter that starts in `first` and changes at each of `markers`.
+    /// Markers on step 0 or on the same step as another are left out.
+    pub fn new(first: TimeSignature, markers: impl IntoIterator<Item = TimeMarker>) -> Self {
+        let mut markers: Vec<TimeMarker> = markers
+            .into_iter()
+            .filter(|marker| marker.start > 0)
+            .collect();
+        markers.sort_by_key(|marker| marker.start);
+        markers.dedup_by_key(|marker| marker.start);
+        Meter { first, markers }
+    }
+
+    /// A meter that never changes.
+    pub fn steady(time: TimeSignature) -> Self {
+        Meter {
+            first: time,
+            markers: Vec::new(),
+        }
+    }
+
+    /// The time signature the song starts in.
+    pub fn first(&self) -> TimeSignature {
+        self.first
+    }
+
+    /// The changes after the start, in order.
+    pub fn markers(&self) -> &[TimeMarker] {
+        &self.markers
+    }
+
+    /// The stretches of one time signature: (start, end, time). The last
+    /// one never ends.
+    fn stretches(&self) -> impl Iterator<Item = (usize, usize, TimeSignature)> + '_ {
+        let starts =
+            std::iter::once(TimeMarker::new(0, self.first)).chain(self.markers.iter().copied());
+        let ends = self
+            .markers
+            .iter()
+            .map(|marker| marker.start)
+            .chain(std::iter::once(usize::MAX));
+        starts
+            .zip(ends)
+            .map(|(from, end)| (from.start, end, from.time))
+    }
+
+    /// The time signature on `step`.
+    pub fn time_at(&self, step: usize) -> TimeSignature {
+        self.markers
+            .iter()
+            .take_while(|marker| marker.start <= step)
+            .last()
+            .map_or(self.first, |marker| marker.time)
+    }
+
+    /// The bar that `step` is in.
+    pub fn bar_at(&self, step: usize) -> Bar {
+        let mut bars_before = 0;
+        for (start, end, time) in self.stretches() {
+            let bar = time.steps_per_bar();
+            if step < end {
+                let index = (step - start) / bar;
+                let bar_start = start + index * bar;
+                return Bar {
+                    number: bars_before + index,
+                    start: bar_start,
+                    length: bar.min(end - bar_start),
+                    time,
+                };
+            }
+            bars_before += (end - start).div_ceil(bar);
+        }
+        unreachable!("the last stretch never ends")
+    }
+
+    /// Bar number `number`, counted from 0.
+    pub fn bar(&self, number: usize) -> Bar {
+        let mut bars_before = 0;
+        for (start, end, time) in self.stretches() {
+            let bar = time.steps_per_bar();
+            let here = (end - start).div_ceil(bar);
+            if number < bars_before + here {
+                let bar_start = start + (number - bars_before) * bar;
+                return Bar {
+                    number,
+                    start: bar_start,
+                    length: bar.min(end - bar_start),
+                    time,
+                };
+            }
+            bars_before += here;
+        }
+        unreachable!("the last stretch never ends")
+    }
+
+    /// Every bar from the start of the song, without end.
+    pub fn bars(&self) -> impl Iterator<Item = Bar> + '_ {
+        let mut next = 0;
+        std::iter::from_fn(move || {
+            let bar = self.bar_at(next);
+            next = bar.end();
+            Some(bar)
+        })
+    }
+
+    /// Whether `step` starts a bar.
+    pub fn is_bar_start(&self, step: usize) -> bool {
+        self.bar_at(step).start == step
+    }
+
+    /// Whether `step` starts a beat.
+    pub fn is_beat_start(&self, step: usize) -> bool {
+        self.bar_at(step).is_beat_start(step)
+    }
+
+    /// The start of the bar `step` is in.
+    pub fn floor_to_bar(&self, step: usize) -> usize {
+        self.bar_at(step).start
+    }
+
+    /// The start of the beat `step` is in.
+    pub fn floor_to_beat(&self, step: usize) -> usize {
+        let bar = self.bar_at(step);
+        let beat = bar.time.steps_per_beat();
+        bar.start + (step - bar.start) / beat * beat
+    }
+
+    /// `steps` rounded up to the next bar line.
+    pub fn round_up_to_bar(&self, steps: usize) -> usize {
+        let bar = self.bar_at(steps);
+        if bar.start == steps { steps } else { bar.end() }
+    }
+
+    /// Where `step` is, as bar, beat and step inside the beat, each
+    /// counted from 1: the way a song position is shown.
+    pub fn position(&self, step: usize) -> (usize, usize, usize) {
+        let bar = self.bar_at(step);
+        let beat = bar.time.steps_per_beat();
+        let offset = step - bar.start;
+        (bar.number + 1, offset / beat + 1, offset % beat + 1)
+    }
+
+    /// The markers that change nothing left out: those that keep the
+    /// time signature before them and fall on one of its bar lines.
+    pub fn tidy(&self) -> Meter {
+        let mut tidy = Meter::steady(self.first);
+        for &marker in &self.markers {
+            if tidy.time_at(marker.start) != marker.time || !tidy.is_bar_start(marker.start) {
+                tidy.markers.push(marker);
+            }
+        }
+        tidy
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -190,6 +408,72 @@ mod tests {
         assert_eq!(waltz.describe_length(12), "1 bar");
         assert_eq!(waltz.describe_length(48), "4 bars");
         assert_eq!(waltz.describe_length(16), "16 steps");
+    }
+
+    /// 4/4 for two bars, then 3/4.
+    fn hymn() -> Meter {
+        Meter::new(
+            TimeSignature::COMMON,
+            [TimeMarker::new(32, signature(3, 4))],
+        )
+    }
+
+    #[test]
+    fn a_steady_meter_counts_like_its_time_signature() {
+        let waltz = Meter::steady(signature(3, 4));
+        for step in 0..60 {
+            assert_eq!(waltz.is_bar_start(step), signature(3, 4).is_bar_start(step));
+            assert_eq!(
+                waltz.is_beat_start(step),
+                signature(3, 4).is_beat_start(step)
+            );
+        }
+        assert_eq!(waltz.round_up_to_bar(13), 24);
+        assert_eq!(waltz.bar(3).start, 36);
+    }
+
+    #[test]
+    fn bars_after_a_marker_are_counted_in_its_time() {
+        let hymn = hymn();
+        let starts: Vec<usize> = hymn.bars().take(5).map(|bar| bar.start).collect();
+        assert_eq!(starts, [0, 16, 32, 44, 56]);
+        assert_eq!(hymn.time_at(31), TimeSignature::COMMON);
+        assert_eq!(hymn.time_at(32), signature(3, 4));
+        assert_eq!(hymn.bar_at(50).number, 3);
+        assert_eq!(hymn.bar(3), hymn.bar_at(50));
+        assert_eq!(hymn.position(48), (4, 2, 1));
+        assert_eq!(hymn.round_up_to_bar(33), 44);
+        assert_eq!(hymn.floor_to_beat(51), 48);
+    }
+
+    #[test]
+    fn a_marker_off_the_bar_line_leaves_a_short_bar() {
+        let meter = Meter::new(
+            TimeSignature::COMMON,
+            [TimeMarker::new(20, signature(6, 8))],
+        );
+        let bars: Vec<(usize, usize)> = meter
+            .bars()
+            .take(4)
+            .map(|bar| (bar.start, bar.length))
+            .collect();
+        assert_eq!(bars, [(0, 16), (16, 4), (20, 12), (32, 12)]);
+        assert_eq!(meter.bar(2).start, 20);
+    }
+
+    #[test]
+    fn markers_that_change_nothing_are_tidied_away() {
+        let meter = Meter::new(
+            TimeSignature::COMMON,
+            [
+                TimeMarker::new(16, TimeSignature::COMMON),
+                TimeMarker::new(32, signature(3, 4)),
+                TimeMarker::new(44, signature(3, 4)),
+                TimeMarker::new(50, signature(3, 4)),
+            ],
+        );
+        let kept: Vec<usize> = meter.tidy().markers().iter().map(|m| m.start).collect();
+        assert_eq!(kept, [32, 50], "50 is not on a bar line of 3/4");
     }
 
     #[test]
