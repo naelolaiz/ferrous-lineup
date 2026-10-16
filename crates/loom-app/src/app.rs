@@ -552,7 +552,9 @@ impl LoomApp {
                     self.send(Command::PreviewNote { channel, pitch });
                 }
             }
-            RollAction::SetScale(scale) => self.edit("change key", |project| project.scale = scale),
+            RollAction::SetScale(scale) => {
+                self.edit("change key", |project| project.change_key(scale))
+            }
             RollAction::SelectPattern(pattern) => self.select_pattern(pattern),
             RollAction::OpenRack => self.show_rack(),
         }
@@ -562,7 +564,7 @@ impl LoomApp {
     fn apply_harmony(&mut self, action: HarmonyAction) {
         match action {
             HarmonyAction::SetScale(scale) => {
-                self.edit("change key", |project| project.scale = scale);
+                self.edit("change key", |project| project.change_key(scale));
             }
             HarmonyAction::SetTime(time) => {
                 self.edit("change time signature", |project| {

@@ -155,6 +155,10 @@ struct GroupDrag {
     originals: Vec<NoteEvent>,
     /// The notes as they are now, after the moves so far.
     moved: Vec<NoteEvent>,
+    /// Whether the notes have moved at all. With snap to scale on, notes
+    /// snap only once they are moved, as in FL Studio: dragging a
+    /// selection up a semitone and back down snaps it into the key.
+    edited: bool,
 }
 
 /// Something that changes the selected notes (or every note, when none
@@ -293,6 +297,13 @@ pub struct PianoRoll {
     /// How much the next-chord hints explain. Set by the app from the
     /// harmony keys bar, where it is chosen.
     pub hints: HintLevel,
+    /// Whether notes drawn or moved land on the notes of the key, like
+    /// FL Studio's "Snap to scale".
+    snap_to_scale: bool,
+    /// Whether notes played on the typing or MIDI keyboard are moved to
+    /// the nearest note of the key, like FL Studio's "Snap incoming MIDI".
+    /// The app reads it.
+    pub snap_played: bool,
 }
 
 impl PianoRoll {
@@ -323,6 +334,16 @@ impl PianoRoll {
             window_rect: None,
             time: TimeSignature::COMMON,
             hints: HintLevel::default(),
+            snap_to_scale: false,
+            snap_played: false,
+        }
+    }
+
+    /// `pitch`, moved to the nearest note of `scale` if snap to scale is on.
+    fn snapped(&self, pitch: Note, scale: Scale) -> Note {
+        match self.snap_to_scale {
+            true => tools::nearest_in_key(pitch, scale),
+            false => pitch,
         }
     }
 
@@ -684,7 +705,9 @@ impl PianoRoll {
                     for pitch_class in PitchClass::ALL {
                         ui.selectable_value(&mut root, pitch_class, both_names(pitch_class));
                     }
-                });
+                })
+                .response
+                .on_hover_text(KEY_HELP);
             let mut kind = scale.kind;
             egui::ComboBox::from_id_salt("scale-kind")
                 .selected_text(kind.name())
@@ -692,13 +715,16 @@ impl PianoRoll {
                     for option in ScaleKind::ALL {
                         ui.selectable_value(&mut kind, option, option.name());
                     }
-                });
+                })
+                .response
+                .on_hover_text(KEY_HELP);
             if root != scale.root || kind != scale.kind {
                 actions.push(RollAction::SetScale(Scale::new(root, kind)));
             }
             let spelling = scale.spelling();
             let names: Vec<&str> = scale.pitch_classes().map(|p| p.name(spelling)).collect();
             ui.weak(names.join(" "));
+            self.snap_button(ui);
 
             ui.separator();
             ui.label("Draw");
@@ -832,6 +858,26 @@ impl PianoRoll {
             item(ui, "Delete selected notes", Tool::Delete, Some(DELETE));
         });
         picked
+    }
+
+    /// FL Studio's snap to scale: a click turns it on and off, and a
+    /// right click opens its menu, which can also snap the notes played on
+    /// the keyboards.
+    fn snap_button(&mut self, ui: &mut Ui) {
+        ui.toggle_value(&mut self.snap_to_scale, "Snap to scale")
+            .on_hover_text(
+                "Notes you draw or move land on the notes of the key. Notes already \
+                 there stay put until you move them: to snap them all, select them \
+                 (Ctrl+A) and drag them up a semitone and back. Right-click for more.",
+            )
+            .context_menu(|ui| {
+                ui.checkbox(&mut self.snap_to_scale, "Snap notes you draw or move");
+                ui.checkbox(&mut self.snap_played, "Snap notes you play")
+                    .on_hover_text(
+                        "Keys played on the typing keyboard or a MIDI keyboard sound, \
+                         and are recorded, as the nearest note of the key.",
+                    );
+            });
     }
 
     /// Buttons for the seven chords of the key, to hear how they sound.
@@ -1149,7 +1195,7 @@ impl PianoRoll {
             && grid.rect.contains(pos)
         {
             let (step, pitch) = grid.cell_at(pos);
-            for stamp_pitch in self.stamp_notes(pitch, scale) {
+            for stamp_pitch in self.stamp_notes(self.snapped(pitch, scale), scale) {
                 let stamp = NoteEvent::new(stamp_pitch, step, self.note_length);
                 let stamp_rect = grid.note_rect(&stamp).shrink2(vec2(0.5, 1.0));
                 painter.rect_filled(stamp_rect, 2.0, STAMP_GHOST);
@@ -1273,6 +1319,7 @@ impl PianoRoll {
                                     from_pitch: pitch,
                                     originals: self.selection.clone(),
                                     moved: self.selection.clone(),
+                                    edited: false,
                                 });
                             } else {
                                 if !selected {
@@ -1294,7 +1341,7 @@ impl PianoRoll {
                         }
                         None => {
                             self.selection.clear();
-                            let pitches = self.stamp_notes(pitch, scale);
+                            let pitches = self.stamp_notes(self.snapped(pitch, scale), scale);
                             let new_notes: Vec<NoteEvent> = pitches
                                 .iter()
                                 .map(|&p| NoteEvent::new(p, step, self.note_length))
@@ -1344,8 +1391,14 @@ impl PianoRoll {
             let (step, pitch) = grid.cell_at(pos);
             let steps = step as isize - drag.from_step as isize;
             let semitones = i32::from(pitch.midi()) - i32::from(drag.from_pitch.midi());
+            drag.edited |= steps != 0 || semitones != 0;
+            let snap = self.snap_to_scale && drag.edited;
             let new = tools::shift(&drag.originals, steps, grid.length)
                 .and_then(|shifted| tools::transpose(&shifted, semitones))
+                .map(|moved| match snap {
+                    true => tools::snap_to_scale(&moved, scale),
+                    false => moved,
+                })
                 .filter(|moved| fits_view(moved));
             if let Some(new) = new
                 && new != drag.moved
@@ -1373,6 +1426,7 @@ impl PianoRoll {
             && let Some(&note) = notes.get(drag.index())
         {
             let (step, pitch) = grid.cell_at(pos);
+            let pitch = self.snapped(pitch, scale);
             let changed = match drag {
                 Drag::Move { grab, .. } => NoteEvent {
                     pitch,
@@ -1710,6 +1764,12 @@ fn note_at(notes: &[NoteEvent], grid: Grid, pos: Pos2) -> Option<usize> {
         .find(|(_, note)| grid.note_rect(note).contains(pos))
         .map(|(index, _)| index)
 }
+
+/// What the key menus say about changing the key, here and in the
+/// harmony keys bar.
+pub(crate) const KEY_HELP: &str = "The key of the song. A new key or mode moves the \
+    chords, bass and melody into it (the drums stay), so the song plays in the new key. \
+    Ctrl+Z puts them back.";
 
 /// "C" for white keys, "C#/Db" for black keys.
 pub(crate) fn both_names(pitch_class: PitchClass) -> String {

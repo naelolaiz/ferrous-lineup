@@ -19,7 +19,7 @@ use loom_core::harmony::keys::{self, ChordKey, ChordSize, Function};
 use loom_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords};
 use loom_core::{Chord, Note, PitchClass, Project, Scale, ScaleKind, Spelling, TimeSignature};
 
-use crate::piano_roll::both_names;
+use crate::piano_roll::{KEY_HELP, both_names};
 
 /// Something the user did in the harmony keys bar.
 #[derive(Debug, Clone, PartialEq)]
@@ -246,7 +246,9 @@ impl HarmonyKeys {
                     for pitch_class in PitchClass::ALL {
                         ui.selectable_value(&mut root, pitch_class, both_names(pitch_class));
                     }
-                });
+                })
+                .response
+                .on_hover_text(KEY_HELP);
             let mut kind = scale.kind;
             egui::ComboBox::from_id_salt("harmony-kind")
                 .width(110.0)
@@ -255,7 +257,9 @@ impl HarmonyKeys {
                     for option in ScaleKind::ALL {
                         ui.selectable_value(&mut kind, option, option.name());
                     }
-                });
+                })
+                .response
+                .on_hover_text(KEY_HELP);
             if root != scale.root || kind != scale.kind {
                 actions.push(HarmonyAction::SetScale(Scale::new(root, kind)));
             }
