@@ -17,7 +17,8 @@
 //! [`widgets::zoom_contents`]: crate::widgets::zoom_contents
 //! [`widgets::zoom`]: crate::widgets::zoom
 
-use eframe::egui::{self, Key, KeyboardShortcut, Modifiers, gui_zoom};
+use eframe::egui::gui_zoom::kb_shortcuts::{ZOOM_IN, ZOOM_IN_SECONDARY, ZOOM_OUT, ZOOM_RESET};
+use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
 
 use super::LoomApp;
 use crate::piano_roll::PianoRoll;
@@ -71,6 +72,13 @@ impl Area {
         }
     }
 
+    /// One step bigger or smaller, within [`ZOOM_RANGE`]. Every way of
+    /// zooming goes through here (the keys, the wheel, the View menu and
+    /// the status bar's buttons), so they all stop at the same sizes.
+    fn step_zoom(self, ctx: &egui::Context, bigger: bool) {
+        self.set_zoom(ctx, zoom_step(self.zoom(ctx), bigger));
+    }
+
     fn set_zoom(self, ctx: &egui::Context, zoom: f32) {
         let zoom = zoom.clamp(*ZOOM_RANGE.start(), *ZOOM_RANGE.end());
         match self {
@@ -97,13 +105,33 @@ impl LoomApp {
     pub(super) fn view_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button("View", |ui| {
             ui.label(format!("Zoom: {}", percent(ui.ctx().zoom_factor())));
-            // egui's own zoom buttons, with their shortcuts written beside them.
-            gui_zoom::zoom_menu_buttons(ui);
+            let ctx = ui.ctx().clone();
+            let zoom = Area::Main.zoom(&ctx);
+            let item = |text, shortcut| {
+                egui::Button::new(text).shortcut_text(ctx.format_shortcut(&shortcut))
+            };
+            if ui
+                .add_enabled(zoom < *ZOOM_RANGE.end(), item("Zoom In", ZOOM_IN))
+                .clicked()
+            {
+                Area::Main.step_zoom(&ctx, true);
+            }
+            if ui
+                .add_enabled(zoom > *ZOOM_RANGE.start(), item("Zoom Out", ZOOM_OUT))
+                .clicked()
+            {
+                Area::Main.step_zoom(&ctx, false);
+            }
+            if ui
+                .add_enabled(zoom != 1.0, item("Reset Zoom", ZOOM_RESET))
+                .clicked()
+            {
+                Area::Main.set_zoom(&ctx, 1.0);
+            }
             ui.weak(
                 "The channel rack and the piano roll have their own zoom:\n\
                  Ctrl+wheel over them, or Ctrl and +/− after clicking in them.",
             );
-            let ctx = ui.ctx().clone();
             for (area, name) in [
                 (Area::Rack, "Channel rack"),
                 (Area::PianoRoll, "Piano roll"),
@@ -167,14 +195,13 @@ impl LoomApp {
             area.set_zoom(ctx, zoom);
         }
 
-        use gui_zoom::kb_shortcuts::{ZOOM_IN, ZOOM_IN_SECONDARY, ZOOM_OUT, ZOOM_RESET};
         let pressed = |shortcut| ctx.input_mut(|input| input.consume_shortcut(&shortcut));
         let area = self.zoom_area;
         if pressed(ZOOM_IN) || pressed(ZOOM_IN_SECONDARY) {
-            area.set_zoom(ctx, zoom_step(area.zoom(ctx), true));
+            area.step_zoom(ctx, true);
         }
         if pressed(ZOOM_OUT) {
-            area.set_zoom(ctx, zoom_step(area.zoom(ctx), false));
+            area.step_zoom(ctx, false);
         }
         if pressed(ZOOM_RESET) {
             area.set_zoom(ctx, 1.0);
@@ -214,13 +241,10 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
     // The status bar lays this out right to left, so + comes first.
     if ui
         .add(small("+"))
-        .on_hover_text(format!(
-            "Zoom in ({})",
-            ctx.format_shortcut(&gui_zoom::kb_shortcuts::ZOOM_IN)
-        ))
+        .on_hover_text(format!("Zoom in ({})", ctx.format_shortcut(&ZOOM_IN)))
         .clicked()
     {
-        gui_zoom::zoom_in(&ctx);
+        Area::Main.step_zoom(&ctx, true);
     }
     egui::ComboBox::from_id_salt("zoom")
         .width(52.0)
@@ -229,7 +253,7 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
             for preset in ZOOM_PRESETS {
                 let chosen = (zoom - preset).abs() < 0.01;
                 if ui.selectable_label(chosen, percent(preset)).clicked() {
-                    ctx.set_zoom_factor(preset);
+                    Area::Main.set_zoom(&ctx, preset);
                 }
             }
         })
@@ -237,17 +261,14 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
         .on_hover_text(format!(
             "How big the main window is drawn. {} goes back to 100%. The channel rack \
              and the piano roll have their own zoom: Ctrl+wheel over them.",
-            ctx.format_shortcut(&gui_zoom::kb_shortcuts::ZOOM_RESET)
+            ctx.format_shortcut(&ZOOM_RESET)
         ));
     if ui
         .add(small("−"))
-        .on_hover_text(format!(
-            "Zoom out ({})",
-            ctx.format_shortcut(&gui_zoom::kb_shortcuts::ZOOM_OUT)
-        ))
+        .on_hover_text(format!("Zoom out ({})", ctx.format_shortcut(&ZOOM_OUT)))
         .clicked()
     {
-        gui_zoom::zoom_out(&ctx);
+        Area::Main.step_zoom(&ctx, false);
     }
     ui.weak("Zoom");
 }
@@ -275,5 +296,10 @@ mod tests {
     fn the_presets_grow_and_include_100_percent() {
         assert!(ZOOM_PRESETS.windows(2).all(|pair| pair[0] < pair[1]));
         assert!(ZOOM_PRESETS.contains(&1.0));
+        assert!(
+            ZOOM_PRESETS
+                .iter()
+                .all(|preset| ZOOM_RANGE.contains(preset))
+        );
     }
 }
