@@ -293,8 +293,10 @@ impl TryFrom<ProjectFile> for Project {
 pub fn to_text(project: &Project) -> Result<String, FileError> {
     // Pretty-printed, so the file can be read (and fixed) by a person.
     // Things nested deeper than 5 levels go on one line, so each note
-    // takes one line instead of one line per field.
-    let style = ron::ser::PrettyConfig::new().depth_limit(5);
+    // takes one line instead of one line per field. Lines always end in
+    // "\n" (RON would use "\r\n" on Windows), so a project is the same
+    // file on every system.
+    let style = ron::ser::PrettyConfig::new().depth_limit(5).new_line("\n");
     let mut text = ron::ser::to_string_pretty(&ProjectFile::from(project), style)?;
     text.push('\n');
     Ok(text)
@@ -379,6 +381,12 @@ mod tests {
         // header is read, so the rest does not matter.
         let error = from_text("(format: 4, sparkles: true)").unwrap_err();
         assert!(matches!(error, FileError::NewerFormat(4)), "{error}");
+    }
+
+    #[test]
+    fn lines_end_the_same_way_on_every_system() {
+        let text = to_text(&Project::template()).unwrap();
+        assert!(!text.contains('\r'));
     }
 
     #[test]
