@@ -6,9 +6,11 @@
 //! - [`analyze`] names a group of notes: a single note, an interval or a chord.
 //! - [`ChordStamp`] says what the piano roll places with one click.
 //! - [`next_chords`] suggests chords that often come next in a key.
+//! - [`keys`] are the harmony keys: the seven chords of a key, to play.
 
 mod analysis;
 mod chord;
+pub mod keys;
 mod pitch_set;
 mod progression;
 mod scale;

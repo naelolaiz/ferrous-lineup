@@ -107,6 +107,11 @@ impl Live {
         }
     }
 
+    /// Whether the letter and number keys play notes.
+    pub(super) fn typing(&self) -> bool {
+        self.typing
+    }
+
     /// The pitches held down right now.
     pub(super) fn held_pitches(&self) -> Vec<Note> {
         self.held.iter().map(|held| held.pitch).collect()
@@ -206,8 +211,8 @@ impl LoomApp {
         }
     }
 
-    /// Plays a key of the typing keyboard.
-    fn play_typed(&mut self, message: MidiMessage) {
+    /// Plays a key of the typing keyboard, or a note of a harmony key.
+    pub(super) fn play_typed(&mut self, message: MidiMessage) {
         self.send(Command::Live(message));
         let position = self.position();
         self.key_played(Played { message, position });

@@ -7,7 +7,7 @@ arrange them into songs, and learn harmony along the way.
 > Ferrous Loom is an independent project. It is not affiliated with
 > Image-Line or FL Studio.
 
-![Ferrous Loom with the playlist and the channel rack](screenshots/step-4-playlist.png)
+![Ferrous Loom with the playlist and the harmony keys](screenshots/step-8-harmony-keys.png)
 
 ## Status
 
@@ -22,6 +22,7 @@ Early development. Runs on Linux, macOS and Windows.
 | 5 | Undo and redo, WAV export | Done |
 | 6 | Harmony tools: selections, arpeggios, inversions, suggestions, ghost notes, velocities | Done |
 | 7 | MIDI in and out: keyboards, external synths, recording, chord names as you play, `.mid` export | Done |
+| 8 | Harmony keys, time signatures, a library of styles and rhythms, public-domain songs as demos | Done |
 
 ## Build and run
 
@@ -61,6 +62,18 @@ status bar names the chord you hold down, and **● Rec** records what
 you play into the pattern while it loops. **File > Export song as
 MIDI…** writes a `.mid` file that other studios can open.
 
+Along the bottom are the **harmony keys**: the key and time signature
+of the project, and a big key for each chord of the key (I to vii°),
+coloured by what it does: home, away or tension. Hold one, or press
+**1** to **7**, to play its chord; the chords that often come next
+light up, and while the music plays, the chord you hear lights up too.
+The **Library** tab next to the pattern list holds 78 harmony styles
+and 49 rhythms from pop, rock, blues, jazz, soul, hip hop, electronic,
+Latin, tango, flamenco, reggae, folk and classical music: click one to
+hear it in your key. **File > Demos** opens 16 well-known songs in the
+public domain, from *Ode to Joy* to *Für Elise*, and every style as a
+short song.
+
 Ready-built programs for all three systems are attached to every CI run
 as `ferrous-loom-linux`, `ferrous-loom-macos` and `ferrous-loom-windows`.
 They are not signed yet, so macOS and Windows warn before the first start.
@@ -69,7 +82,7 @@ They are not signed yet, so macOS and Windows warn before the first start.
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, tempo, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording. No audio, no UI. |
+| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
 | `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
 | `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`, with MIDI through `midir`. |
 

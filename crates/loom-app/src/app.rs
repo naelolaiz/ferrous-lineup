@@ -12,6 +12,7 @@
 mod edit;
 mod export;
 mod files;
+mod library;
 mod live;
 
 use std::path::PathBuf;
@@ -23,10 +24,12 @@ use loom_audio::{
     AudioEngine, ChannelNotes, Command, Instrument, PlayMode, SampleCache, SampleData,
 };
 use loom_core::{
-    Channel, ChannelKind, History, PATTERN_LENGTHS, Pattern, Project, SampleSource, Tempo,
+    Channel, ChannelKind, DEFAULT_VELOCITY, History, MidiMessage, Note, Pattern, Project,
+    SampleSource, Tempo,
 };
 
 use crate::channel_rack::{self, RackAction};
+use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
 use crate::midi::Midi;
 use crate::piano_roll::{PianoRoll, RollAction};
 use crate::playlist::{self, PlaylistAction, PlaylistView};
@@ -68,6 +71,9 @@ pub struct LoomApp {
     rack_open: bool,
     piano_roll: PianoRoll,
     playlist: PlaylistView,
+    harmony_keys: HarmonyKeys,
+    /// The patterns the library wrote, to rewrite on the next click.
+    auditions: Vec<library::Audition>,
     file: files::FileState,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
@@ -114,6 +120,8 @@ impl LoomApp {
             rack_open: true,
             piano_roll,
             playlist: PlaylistView::new(),
+            harmony_keys: HarmonyKeys::new(),
+            auditions: Vec::new(),
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
@@ -376,6 +384,37 @@ impl LoomApp {
         }
     }
 
+    /// Applies one action from the harmony keys bar.
+    fn apply_harmony(&mut self, action: HarmonyAction) {
+        match action {
+            HarmonyAction::SetScale(scale) => {
+                self.edit("change key", |project| project.scale = scale);
+            }
+            HarmonyAction::SetTime(time) => {
+                self.edit("change time signature", |project| {
+                    project.time_signature = time;
+                });
+            }
+            // The notes go the same way as the typing keyboard's: to the
+            // audio thread, which plays them on the selected channel, and
+            // to the recorder.
+            HarmonyAction::NoteOn(notes) => {
+                for pitch in notes {
+                    self.play_typed(MidiMessage::NoteOn {
+                        channel: 0,
+                        pitch,
+                        velocity: DEFAULT_VELOCITY,
+                    });
+                }
+            }
+            HarmonyAction::NoteOff(notes) => {
+                for pitch in notes {
+                    self.play_typed(MidiMessage::NoteOff { channel: 0, pitch });
+                }
+            }
+        }
+    }
+
     /// Applies one action from the playlist.
     fn apply_playlist(&mut self, action: PlaylistAction) {
         match action {
@@ -412,6 +451,7 @@ impl LoomApp {
             PlaylistAction::AddTrack => {
                 self.edit("add track", |project| project.add_track());
             }
+            PlaylistAction::Library(action) => self.try_from_library(action),
         }
     }
 
@@ -494,6 +534,10 @@ impl LoomApp {
                 .on_hover_text("Shortcut: F6");
             ui.toggle_value(&mut self.piano_roll.open, "🎹 Piano roll")
                 .on_hover_text("Shortcut: F7");
+            ui.toggle_value(&mut self.harmony_keys.open, "🎼 Harmony")
+                .on_hover_text(
+                    "The key, the time signature and a key for each chord. Shortcut: F8",
+                );
 
             ui.separator();
             let volume_slider = egui::Slider::new(&mut self.master_volume, 0.0..=1.0)
@@ -559,13 +603,16 @@ impl LoomApp {
 
         let length = self.project.patterns()[self.pattern].length();
         let mut new_length = length;
+        let time = self.project.time_signature;
         egui::ComboBox::from_id_salt("pattern-length")
-            .selected_text(format!("{length} steps"))
+            .selected_text(time.describe_length(length))
             .show_ui(ui, |ui| {
-                for option in PATTERN_LENGTHS {
-                    ui.selectable_value(&mut new_length, option, format!("{option} steps"));
+                for option in time.pattern_lengths() {
+                    ui.selectable_value(&mut new_length, option, time.describe_length(option));
                 }
-            });
+            })
+            .response
+            .on_hover_text(format!("How long the pattern is: {length} steps"));
         if new_length != length {
             self.edit_pattern("change pattern length", |pattern| {
                 pattern.set_length(new_length);
@@ -633,6 +680,17 @@ impl LoomApp {
         }
     }
 
+    /// The chord notes playing at the playhead, for the harmony keys.
+    fn chord_playing(&self) -> Vec<Note> {
+        match (self.playhead(), self.mode) {
+            (Some(step), PlayMode::Pattern) => {
+                self.project.chord_notes_in_pattern(self.pattern, step)
+            }
+            (Some(step), PlayMode::Song) => self.project.chord_notes_in_song(step),
+            (None, _) => Vec::new(),
+        }
+    }
+
     /// The song step being played, for the playlist (song mode only).
     fn song_playhead(&self) -> Option<usize> {
         match self.mode {
@@ -663,6 +721,9 @@ impl LoomApp {
         if pressed(egui::Key::F7) {
             self.piano_roll.open = !self.piano_roll.open;
         }
+        if pressed(egui::Key::F8) {
+            self.harmony_keys.open = !self.harmony_keys.open;
+        }
         self.file_shortcuts(ctx);
         if !typing {
             // While typing, Ctrl+Z belongs to the text field.
@@ -691,12 +752,36 @@ impl eframe::App for LoomApp {
 
         egui::Panel::top("transport").show(ui, |ui| self.transport_bar(ui));
         egui::Panel::bottom("status").show(ui, |ui| self.status_bar(ui));
+        // Added after the status bar, so it sits just above it.
+        let harmony_actions = if self.harmony_keys.open {
+            let held = self.live.held_pitches();
+            let channel = self.piano_roll.channel();
+            let channel_name = self
+                .project
+                .channels()
+                .get(channel)
+                .map_or("", |channel| channel.name.as_str());
+            let heard = self.chord_playing();
+            let digits = !self.live.typing() && !ctx.text_edit_focused();
+            egui::Panel::bottom("harmony-keys")
+                .show(ui, |ui| {
+                    self.harmony_keys
+                        .show(ui, &self.project, channel_name, &held, &heard, digits)
+                })
+                .inner
+        } else {
+            self.harmony_keys.release()
+        };
+        for action in harmony_actions {
+            self.apply_harmony(action);
+        }
 
         let song_playhead = self.song_playhead();
+        let tried = self.tried();
         let playlist_actions = egui::CentralPanel::default_margins()
             .show(ui, |ui| {
                 self.playlist
-                    .show(ui, &self.project, self.pattern, song_playhead)
+                    .show(ui, &self.project, self.pattern, song_playhead, tried)
             })
             .inner;
         for action in playlist_actions {
@@ -710,7 +795,7 @@ impl eframe::App for LoomApp {
         let rack_actions = egui::Window::new(format!("Channel rack · {pattern_name}"))
             .id(egui::Id::unique("channel-rack"))
             .open(&mut rack_open)
-            .default_pos([170.0, 380.0])
+            .default_pos([240.0, 380.0])
             .resizable(false)
             .show(&ctx, |ui| {
                 let selected = self.piano_roll.channel();

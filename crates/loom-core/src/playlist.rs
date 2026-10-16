@@ -110,11 +110,6 @@ impl Default for Playlist {
     }
 }
 
-/// Rounds a number of steps up to a whole number of bars.
-pub fn round_up_to_bar(steps: usize) -> usize {
-    steps.div_ceil(STEPS_PER_BAR) * STEPS_PER_BAR
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -135,13 +130,5 @@ mod tests {
         playlist.tracks[1].muted = true;
         let heard: Vec<Clip> = playlist.audible_clips().collect();
         assert_eq!(heard, vec![Clip::new(0, 0, 0)]);
-    }
-
-    #[test]
-    fn rounding_to_bars() {
-        assert_eq!(round_up_to_bar(0), 0);
-        assert_eq!(round_up_to_bar(1), 16);
-        assert_eq!(round_up_to_bar(16), 16);
-        assert_eq!(round_up_to_bar(17), 32);
     }
 }

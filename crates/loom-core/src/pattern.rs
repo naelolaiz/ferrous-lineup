@@ -12,11 +12,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::Note;
 
-/// The longest pattern supported, in steps.
-pub const MAX_STEPS: usize = 64;
+/// The longest pattern supported, in steps: sixteen bars.
+///
+/// Until step 8 this was 64 (four bars). It grew so that a whole
+/// twelve-bar blues fits in one pattern; patterns longer than 64 steps
+/// are saved as format 3 (see [`format_for`](crate::file::format_for)).
+pub const MAX_STEPS: usize = 256;
 
-/// The pattern lengths offered in the UI, in steps (sixteenth notes).
-pub const PATTERN_LENGTHS: [usize; 3] = [16, 32, 64];
+/// The longest pattern older versions of Ferrous Loom can hold.
+pub const MAX_STEPS_BEFORE_FORMAT_3: usize = 64;
 
 /// The pitch a step of the step sequencer plays. Samplers play their
 /// sound at its original speed at this pitch.
@@ -137,6 +141,23 @@ impl Pattern {
     /// The number of rows (one per channel).
     pub fn rows(&self) -> usize {
         self.rows.len()
+    }
+
+    /// Replaces all the notes of a channel. The notes are tidied first
+    /// (see [`tidy_notes`]). Returns `false`, changing nothing, if there
+    /// is no such channel.
+    pub fn set_notes(
+        &mut self,
+        channel: usize,
+        notes: impl IntoIterator<Item = NoteEvent>,
+    ) -> bool {
+        match self.rows.get_mut(channel) {
+            Some(row) => {
+                *row = tidy_notes(notes);
+                true
+            }
+            None => false,
+        }
     }
 
     /// The notes of one channel, in the order they were added. A channel

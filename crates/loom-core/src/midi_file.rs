@@ -49,6 +49,15 @@ pub fn general_midi_drum(drum: Drum) -> Note {
         Drum::Snare => 38,
         Drum::Clap => 39,
         Drum::HiHat => 42,
+        Drum::OpenHat => 46,
+        Drum::Rim => 37,
+        Drum::LowTom => 45,
+        Drum::HighTom => 50,
+        Drum::Ride => 51,
+        Drum::Crash => 49,
+        Drum::Cowbell => 56,
+        Drum::Shaker => 70,
+        Drum::Conga => 63,
     })
 }
 
@@ -164,9 +173,14 @@ fn tempo_track(project: &Project, end: u32) -> Vec<u8> {
     let micros = (60_000_000.0 / f64::from(project.tempo.bpm())).round() as u32;
     let micros = micros.min(0xFF_FFFF).to_be_bytes();
     track.meta(0, TEMPO, &micros[1..]);
-    // 4/4: four beats to the bar, a beat is a quarter note (2 = 2^2), 24
-    // MIDI clocks per metronome click, 8 thirty-seconds per quarter.
-    track.meta(0, TIME_SIGNATURE, &[4, 2, 24, 8]);
+    // The time signature: beats to the bar, then the beat's note as a
+    // power of two (2 for a quarter, 2^2 = 4; 3 for an eighth), then the
+    // MIDI clocks per metronome click (24 per quarter note, 6 per step),
+    // and 8 thirty-seconds per quarter.
+    let signature = project.time_signature;
+    let unit_power = signature.unit.max(1).ilog2() as u8;
+    let clocks = (signature.steps_per_beat() * 6).min(255) as u8;
+    track.meta(0, TIME_SIGNATURE, &[signature.beats, unit_power, clocks, 8]);
     track.finish(end)
 }
 
@@ -341,6 +355,23 @@ mod tests {
                 // Cut at the end of the pattern, as it is played.
                 &(16 * 24, vec![0x80, 69, 64]),
             ]
+        );
+    }
+
+    #[test]
+    fn the_time_signature_is_written() {
+        let mut project = project();
+        let tracks = read(&pattern_to_midi(&project, 0));
+        assert!(
+            tracks[0].contains(&(0, vec![0xFF, 0x58, 4, 4, 2, 24, 8])),
+            "4/4"
+        );
+        // 6/8: six eighths (2^3), a click every dotted quarter (36 clocks).
+        project.time_signature = crate::TimeSignature::new(6, 8);
+        let tracks = read(&pattern_to_midi(&project, 0));
+        assert!(
+            tracks[0].contains(&(0, vec![0xFF, 0x58, 4, 6, 3, 36, 8])),
+            "6/8"
         );
     }
 
