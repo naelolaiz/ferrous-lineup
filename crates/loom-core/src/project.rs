@@ -399,6 +399,61 @@ impl Project {
         Some(tracks.len() - 1)
     }
 
+    /// Inserts a new, empty track at `index` (at the bottom if `index` is
+    /// past the end), moving the tracks from there down one row with
+    /// their clips. Returns its index, or `None` if there are already
+    /// [`MAX_TRACKS`].
+    pub fn insert_track(&mut self, index: usize) -> Option<usize> {
+        let tracks = &mut self.playlist.tracks;
+        if tracks.len() >= MAX_TRACKS {
+            return None;
+        }
+        let index = index.min(tracks.len());
+        tracks.insert(index, Track::numbered(tracks.len() + 1));
+        for clip in &mut self.playlist.clips {
+            if clip.track >= index {
+                clip.track += 1;
+            }
+        }
+        Some(index)
+    }
+
+    /// Deletes track `index` and its clips; the tracks below move up one
+    /// row. The last track cannot be deleted: returns `false` then, or if
+    /// there is no such track.
+    pub fn remove_track(&mut self, index: usize) -> bool {
+        let tracks = &mut self.playlist.tracks;
+        if index >= tracks.len() || tracks.len() == 1 {
+            return false;
+        }
+        tracks.remove(index);
+        self.playlist.clips.retain(|clip| clip.track != index);
+        for clip in &mut self.playlist.clips {
+            if clip.track > index {
+                clip.track -= 1;
+            }
+        }
+        true
+    }
+
+    /// Swaps track `index` with the one below it, clips and all. Returns
+    /// `false` if either track does not exist.
+    pub fn swap_tracks(&mut self, index: usize) -> bool {
+        let below = index + 1;
+        if below >= self.playlist.tracks.len() {
+            return false;
+        }
+        self.playlist.tracks.swap(index, below);
+        for clip in &mut self.playlist.clips {
+            if clip.track == index {
+                clip.track = below;
+            } else if clip.track == below {
+                clip.track = index;
+            }
+        }
+        true
+    }
+
     /// Replaces all the tracks, for loading a file. Only for use inside
     /// this crate, while there are no clips yet that could point past the end.
     pub(crate) fn replace_tracks(&mut self, tracks: Vec<Track>) {
@@ -1066,5 +1121,49 @@ mod tests {
         let mut project = Project::demo();
         project.track_mut(1).unwrap().muted = true;
         assert_eq!(project.pattern_step_in_song(BEAT, 50), None);
+    }
+
+    #[test]
+    fn inserting_a_track_moves_the_clips_below_it() {
+        let mut project = Project::empty();
+        project.add_clip(Clip::new(0, 0, 0)).unwrap();
+        project.add_clip(Clip::new(0, 2, 0)).unwrap();
+        assert_eq!(project.insert_track(1), Some(1));
+        let tracks: Vec<usize> = project.playlist().clips().iter().map(|c| c.track).collect();
+        assert_eq!(tracks, vec![0, 3]);
+        assert_eq!(project.playlist().tracks().len(), 17);
+    }
+
+    #[test]
+    fn removing_a_track_removes_its_clips() {
+        let mut project = Project::empty();
+        project.add_clip(Clip::new(0, 0, 0)).unwrap();
+        project.add_clip(Clip::new(0, 1, 0)).unwrap();
+        project.add_clip(Clip::new(0, 2, 0)).unwrap();
+        assert!(project.remove_track(1));
+        let tracks: Vec<usize> = project.playlist().clips().iter().map(|c| c.track).collect();
+        assert_eq!(tracks, vec![0, 1]);
+        assert_eq!(project.playlist().tracks().len(), 15);
+    }
+
+    #[test]
+    fn the_last_track_stays() {
+        let mut project = Project::empty();
+        while project.playlist().tracks().len() > 1 {
+            assert!(project.remove_track(0));
+        }
+        assert!(!project.remove_track(0));
+    }
+
+    #[test]
+    fn swapping_tracks_swaps_their_clips() {
+        let mut project = Project::empty();
+        project.add_clip(Clip::new(0, 0, 0)).unwrap();
+        project.add_clip(Clip::new(0, 1, 4)).unwrap();
+        assert!(project.swap_tracks(0));
+        let clips = project.playlist().clips();
+        assert_eq!((clips[0].track, clips[1].track), (1, 0));
+        assert_eq!(project.playlist().tracks()[0].name, "Track 2");
+        assert!(!project.swap_tracks(15));
     }
 }
