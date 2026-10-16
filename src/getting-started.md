@@ -47,6 +47,10 @@ File dialogs use your desktop's portal, which GNOME and KDE already
 have. On a bare window manager, install `xdg-desktop-portal-gtk` or
 `zenity` to get them.
 
+MIDI goes through the ALSA *sequencer*. Desktop systems load it
+already; if Ferrous Loom's MIDI menu says **MIDI unavailable**, load it
+with `sudo modprobe snd-seq`.
+
 ### macOS
 
 Install Apple's command line tools, which bring the linker and the
@@ -89,8 +93,10 @@ project, **Ctrl+Z** undoes the last change and **Ctrl+Shift+Z** redoes
 it, and **File > Export WAV…** saves the song as a sound file. In the
 piano roll, **Ctrl+click** selects notes, the **arrow keys** move them,
 and the **Tools** menu lists everything else it can do to them, with
-its keys. The status bar at the bottom shows which sound card is in use,
-or why audio could not start.
+its keys. The **MIDI** menu connects a MIDI keyboard or synth, and
+turns the letter keys into a piano; **● Rec** records what you play. The
+status bar at the bottom shows which sound card is in use, or why audio
+could not start, and names the chord you hold down.
 
 To open a project straight away, give its file to the program:
 

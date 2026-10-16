@@ -4,6 +4,16 @@ authors = ["Ferrous Loom contributors"]
 language = "en"
 src = "src"
 
+# Each step's overview is a README.md, so it shows on GitHub. mdBook's
+# default "index" preprocessor would publish it as index.html, and links
+# to README.md from other chapters would break; without it, the page is
+# README.html and every link works in both places. "links" (for
+# {{#include}}) is the other default, kept on.
+[build]
+use-default-preprocessors = false
+
+[preprocessor.links]
+
 [output.html]
 default-theme = "navy"
 preferred-dark-theme = "navy"

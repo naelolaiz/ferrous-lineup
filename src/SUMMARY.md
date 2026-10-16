@@ -41,6 +41,11 @@
   - [More chords, inversions, and what comes next](step-6/harmony.md)
   - [The piano roll, grown up](step-6/piano-roll.md)
   - [Exercises](step-6/exercises.md)
+- [Step 7: MIDI in and out](step-7/README.md)
+  - [MIDI messages and MIDI files](step-7/messages.md)
+  - [Live keys: threads in and out](step-7/live.md)
+  - [Recording: from a key to a note](step-7/recording.md)
+  - [Exercises](step-7/exercises.md)
 
 ---
 
