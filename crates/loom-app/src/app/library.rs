@@ -9,6 +9,10 @@
 //! The app remembers every pattern the library wrote, not just the last,
 //! so that after Ctrl+Z brings back an earlier one, the next click still
 //! rewrites it.
+//!
+//! A rhythm picked after a style changes how the style's chords and bass
+//! are played, too, as in FL Studio. And a rhythm can be used for the
+//! whole song: see [`apply::use_rhythm`].
 
 use eframe::egui;
 use loom_audio::PlayMode;
@@ -80,6 +84,10 @@ impl LoomApp {
 
     /// Writes a style or a rhythm into a pattern, selects it and plays it.
     pub(super) fn try_from_library(&mut self, action: LibraryAction) {
+        if let LibraryAction::RhythmInSong(rhythm) = action {
+            self.use_rhythm_in_song(rhythm);
+            return;
+        }
         let reuse = self.unchanged_audition().cloned();
         let mut style = reuse.as_ref().and_then(|a| a.style);
         let mut rhythm = reuse.as_ref().and_then(|a| a.rhythm);
@@ -95,6 +103,7 @@ impl LoomApp {
                 rhythm = Some(picked);
                 rhythm_picked = true;
             }
+            LibraryAction::RhythmInSong(_) => return,
         }
 
         let name = match (style, rhythm) {
@@ -109,6 +118,9 @@ impl LoomApp {
         let selected = self.piano_roll.channel();
         let tonic = self.project.scale.root;
         let use_tempo = self.playlist.library_tempo();
+        // A rhythm that was picked, not the style's own, decides how the
+        // chords and bass are played.
+        let feel = rhythm.filter(|_| rhythm_picked);
         let written = self.edit("try from the library", |project| {
             let index = match target {
                 Some(index) => index,
@@ -122,7 +134,7 @@ impl LoomApp {
             match style {
                 // The style decides the bars: its time signature and length.
                 Some(style) => {
-                    apply::write_style(project, index, style, tonic, Some(selected));
+                    apply::write_style_played(project, index, style, tonic, Some(selected), feel);
                 }
                 // A rhythm alone brings its own.
                 None => {
@@ -163,6 +175,37 @@ impl LoomApp {
         if !self.playing {
             self.set_playing(true);
         }
+    }
+
+    /// Plays the whole song in `rhythm`: new drums, and the chords and
+    /// bass played the way the rhythm goes. One step to undo.
+    fn use_rhythm_in_song(&mut self, rhythm: &'static Rhythm) {
+        let use_tempo = self.playlist.library_tempo();
+        let change = self.edit("change the rhythm", |project| {
+            let change = apply::use_rhythm(project, rhythm);
+            if use_tempo && change != apply::RhythmChange::default() {
+                project.tempo = Tempo::new(rhythm.tempo);
+            }
+            change
+        });
+        if change == apply::RhythmChange::default() {
+            self.notice = Some(format!(
+                "There are no drums or chords to play in {} yet: click it to try it in a pattern.",
+                rhythm.name
+            ));
+            return;
+        }
+        let patterns = |count: usize| match count {
+            1 => "1 pattern".to_string(),
+            count => format!("{count} patterns"),
+        };
+        self.notice = Some(format!(
+            "The song now plays in {}: new drums in {}, chords and bass played again in {}. \
+             Ctrl+Z takes it back.",
+            rhythm.name,
+            patterns(change.drums),
+            patterns(change.harmony),
+        ));
     }
 
     /// The Demos submenu of the File menu.
