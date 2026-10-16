@@ -186,3 +186,79 @@ through (it matches "logically", so that Ctrl+Plus works on keyboards
 where + needs Shift). F8 would therefore also match Alt+F8, so
 `view_shortcuts` checks Alt+F8 first and only looks for F8 when it was
 not pressed.
+
+## When the groups stopped wrapping
+
+The new look (see [A clearer look, a real transport, and editing
+tracks](look-and-transport.md)) put the toolbar's buttons in groups, each
+inside a dark frame. After that, a zoomed-in window cut off the window
+buttons and the volume again, instead of moving them to a second row.
+
+The reason is how `horizontal_wrapped` decides to wrap. Before it places
+a widget, it asks how big the widget wants to be; if that is more than
+what is left of the row, it starts a new row. A frame cannot answer that
+question. `Frame::show` draws its contents into whatever room is left,
+and only knows its size afterwards. So the layout never got the chance
+to move it down.
+
+The fix, `wrapping` in
+[`crates/loom-app/src/theme.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/theme.rs),
+uses the frame before. egui redraws the whole window many times a
+second, so last time's width is a very good guess:
+
+```rust
+let id = ui.next_auto_id().with("wrapping");
+let last_width = ui.ctx().data(|data| data.get_temp::<f32>(id));
+let row_started = ui.cursor().min.x > ui.max_rect().min.x;
+if let Some(width) = last_width
+    && ui.layout().main_wrap
+    && row_started
+    && width > ui.available_size_before_wrap().x
+{
+    ui.end_row();
+}
+let response = add(ui);
+ui.ctx().data_mut(|data| data.insert_temp(id, response.response.rect.width()));
+```
+
+A few things to notice:
+
+- **`ui.next_auto_id()`** is the id egui would give the next widget. It
+  depends on how many widgets came before in this `Ui`, so it is the same
+  every frame as long as the toolbar is drawn in the same order. That
+  makes it a key for remembering something about one group.
+- **`data` and `data_mut`** are egui's memory: a map from ids to values of
+  any type. `get_temp::<f32>` asks for an `f32`; the `::<f32>` (the
+  "turbofish") tells Rust which type to look for, because nothing else in
+  the line says so.
+- **The `if let ... && ...` chain** (a "let chain", stable since Rust
+  1.88) only runs `end_row` when there is a width from last time, the
+  layout wraps, the row already has something in it, and the group does
+  not fit. The very first frame has no width yet, so the group may stick
+  out for one frame, which nobody sees.
+- **The function is generic over `R`**, whatever the group's contents
+  return, and takes the drawing as a closure, so both `group` and
+  `lcd_frame` wrap their frames in it without changing what they return.
+
+## Every zoom stops at the same sizes
+
+Ctrl and + or −, and Ctrl with the mouse wheel, zoom in steps of 10%
+between 50% and 300%. The View menu and the + and − at the end of the
+status bar used to call egui's own `gui_zoom::zoom_in` and `zoom_out`
+instead, which go from 20% to 500%. So the buttons went further than the
+keys, and the keys then jumped back into range.
+
+Now there is one function every way of zooming calls:
+
+```rust
+fn step_zoom(self, ctx: &egui::Context, bigger: bool) {
+    self.set_zoom(ctx, zoom_step(self.zoom(ctx), bigger));
+}
+```
+
+and `set_zoom` clamps to `ZOOM_RANGE` (`0.5..=3.0`). The View menu draws
+its own Zoom In, Zoom Out and Reset Zoom buttons, greyed out at the ends
+of the range, with their shortcuts beside them. egui's ready-made menu
+buttons hid the shortcuts, because the app turns off egui's own keyboard
+zoom so that it can zoom each window separately. A test checks that the
+sizes in the status bar's list are all inside the range too.
