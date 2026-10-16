@@ -251,6 +251,19 @@ mod tests {
     }
 
     #[test]
+    fn extended_chords() {
+        assert_eq!(label(&[48, 64, 67, 69, 74]).unwrap(), "C6/9");
+        assert_eq!(label(&[55, 59, 62, 65, 68]).unwrap(), "G7b9");
+        // E, G#, B, D and G: the "Hendrix chord".
+        assert_eq!(label(&[52, 56, 59, 62, 67]).unwrap(), "E7#9");
+        assert_eq!(label(&[55, 59, 62, 65, 69, 72]).unwrap(), "G11");
+        assert_eq!(label(&[45, 48, 52, 55, 59, 62]).unwrap(), "Am11");
+        assert_eq!(label(&[48, 64, 67, 71, 74, 81]).unwrap(), "Cmaj13");
+        // Thirteenth chords are often played without their fifth too.
+        assert_eq!(label(&[48, 64, 70, 74, 81]).unwrap(), "C13");
+    }
+
+    #[test]
     fn unknown_clusters() {
         assert_eq!(label(&[60, 61, 62]).unwrap(), "?");
     }

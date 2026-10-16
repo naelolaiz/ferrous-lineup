@@ -81,6 +81,23 @@ impl NoteEvent {
     }
 }
 
+/// Makes a group of notes fit in a pattern: each note is fitted to the
+/// grid (shortened if it runs past [`MAX_STEPS`], left out if it starts
+/// beyond it), and only the first of several notes with the same pitch
+/// and start is kept, because a pattern never holds two of those.
+pub fn tidy_notes(notes: impl IntoIterator<Item = NoteEvent>) -> Vec<NoteEvent> {
+    let mut tidy: Vec<NoteEvent> = Vec::new();
+    for note in notes.into_iter().filter_map(NoteEvent::fitted) {
+        let duplicate = tidy
+            .iter()
+            .any(|other| other.pitch == note.pitch && other.start == note.start);
+        if !duplicate {
+            tidy.push(note);
+        }
+    }
+    tidy
+}
+
 /// A pattern: a name, a list of notes for each channel, and a length.
 ///
 /// `name` is public because any name is fine. `length` and `rows` are
@@ -221,6 +238,59 @@ impl Pattern {
         }
     }
 
+    /// Whether [`Pattern::replace_notes`] would accept these notes: every
+    /// note of `old` is in the channel, and none of `new` starts on the
+    /// same step and pitch as a note that stays.
+    pub fn can_replace_notes(&self, channel: usize, old: &[NoteEvent], new: &[NoteEvent]) -> bool {
+        self.replaced(channel, old, new).is_some()
+    }
+
+    /// Takes the notes `old` out of a channel and puts `new` in their
+    /// place, all at once: this is how a group of notes is moved,
+    /// transposed or turned into an arpeggio. `new` is tidied first (see
+    /// [`tidy_notes`]). Returns `false`, changing nothing, if a note of
+    /// `old` is missing or a note of `new` would land on one that stays.
+    pub fn replace_notes(&mut self, channel: usize, old: &[NoteEvent], new: &[NoteEvent]) -> bool {
+        match self.replaced(channel, old, new) {
+            Some(notes) => {
+                self.rows[channel] = notes;
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// The channel's notes after replacing `old` with `new`, if that is
+    /// allowed. The notes that stay keep their order, and the new ones
+    /// come after them.
+    fn replaced(
+        &self,
+        channel: usize,
+        old: &[NoteEvent],
+        new: &[NoteEvent],
+    ) -> Option<Vec<NoteEvent>> {
+        let row = self.rows.get(channel)?;
+        if !old.iter().all(|note| row.contains(note)) {
+            return None;
+        }
+        let mut notes: Vec<NoteEvent> = row
+            .iter()
+            .filter(|note| !old.contains(note))
+            .copied()
+            .collect();
+        let new = tidy_notes(new.iter().copied());
+        let lands_on_another = new.iter().any(|note| {
+            notes
+                .iter()
+                .any(|other| other.pitch == note.pitch && other.start == note.start)
+        });
+        if lands_on_another {
+            return None;
+        }
+        notes.extend(new);
+        Some(notes)
+    }
+
     /// The pitches of a channel that are held during `step`.
     ///
     /// This returns an iterator instead of a `Vec`: nothing is collected
@@ -261,6 +331,55 @@ mod tests {
         assert!(
             pattern.notes(9).is_empty(),
             "missing channels have no notes"
+        );
+    }
+
+    #[test]
+    fn replacing_a_group_of_notes() {
+        let mut pattern = Pattern::new("Test", 1, 16);
+        let c = NoteEvent::new(Note::C4, 0, 4);
+        let e = NoteEvent::new(Note::new(64), 0, 4);
+        let g = NoteEvent::new(Note::new(67), 4, 4);
+        for note in [c, e, g] {
+            pattern.add_note(0, note);
+        }
+        let up = |note: NoteEvent| NoteEvent {
+            pitch: Note::new(note.pitch.midi() + 2),
+            ..note
+        };
+
+        // C and E move up a tone; G stays where it was.
+        assert!(pattern.replace_notes(0, &[c, e], &[up(c), up(e)]));
+        assert_eq!(pattern.notes(0), &[g, up(c), up(e)]);
+
+        // The old notes are gone now, so replacing them again fails.
+        assert!(!pattern.can_replace_notes(0, &[c], &[up(c)]));
+        // A note may not land on one that stays.
+        let onto_g = NoteEvent {
+            start: 4,
+            pitch: g.pitch,
+            ..c
+        };
+        assert!(!pattern.replace_notes(0, &[up(c)], &[onto_g]));
+        assert_eq!(
+            pattern.notes(0).len(),
+            3,
+            "a refused change changes nothing"
+        );
+        // Two new notes on the same step and pitch become one.
+        assert!(pattern.replace_notes(0, &[up(c), up(e)], &[c, c]));
+        assert_eq!(pattern.notes(0), &[g, c]);
+    }
+
+    #[test]
+    fn tidying_notes() {
+        let long = NoteEvent::new(Note::C4, MAX_STEPS - 2, 8);
+        let outside = NoteEvent::new(Note::C4, MAX_STEPS, 1);
+        let first = NoteEvent::new(Note::A4, 0, 2);
+        let same_place = NoteEvent::new(Note::A4, 0, 5);
+        assert_eq!(
+            tidy_notes([long, outside, first, same_place]),
+            vec![NoteEvent { length: 2, ..long }, first]
         );
     }
 

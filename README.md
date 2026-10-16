@@ -20,7 +20,7 @@ Early development. Runs on Linux, macOS and Windows.
 | 3 | Piano roll with harmony helpers | Done |
 | 4 | Playlist, saving, macOS and Windows | Done |
 | 5 | Undo and redo, WAV export | Done |
-| 6 | More harmony tools in the piano roll | Next |
+| 6 | Harmony tools: selections, arpeggios, inversions, suggestions, ghost notes, velocities | Done |
 
 ## Build and run
 
@@ -44,6 +44,10 @@ pattern, drag clips around, right-click to delete. **F6** shows or hides
 the channel rack, where you click steps and drop WAV files to use your
 own sounds. **F7** shows the piano roll: pick a key to highlight its notes,
 draw notes or whole chords, and watch the chord names above the grid.
+Select notes with Ctrl+click or a Ctrl+drag box, then move them with the
+arrow keys (Alt+↑ stays in the key), invert or arpeggiate them from the
+Tools menu, and set velocities in the lane under the grid. The chord
+buttons light up with the chords that often come next.
 **Ctrl+S** saves the project as a `.loom` file (⌘S on a Mac), **Ctrl+Z**
 undoes any change and **Ctrl+Shift+Z** redoes it, and **File > Export
 WAV…** saves the song as a sound file.
