@@ -12,6 +12,7 @@
 mod edit;
 mod export;
 mod files;
+mod follow;
 mod import;
 mod library;
 mod live;
@@ -226,6 +227,7 @@ impl LoomApp {
         self.send(Command::SelectPattern(self.pattern));
         self.send(Command::SetMode(self.mode));
         self.live.resend_channel();
+        self.live.follow.forget();
     }
 
     /// The command that inserts channel `index` of the project, with its

@@ -13,6 +13,7 @@ use loom_core::harmony::analyze;
 use loom_core::record::recorded_note;
 use loom_core::{DEFAULT_VELOCITY, MidiMessage, Note, Pattern};
 
+use super::follow::Follow;
 use super::{Audio, LoomApp};
 use crate::midi::{Midi, Played, Port};
 use crate::theme;
@@ -90,6 +91,8 @@ pub(super) struct Live {
     /// Whether the MIDI menu was open last frame, to look for new ports
     /// when it opens.
     menu_was_open: bool,
+    /// Chord follow: the accompaniment plays the chord the keys hold.
+    pub(super) follow: Follow,
 }
 
 impl Live {
@@ -102,6 +105,7 @@ impl Live {
             recording: false,
             channel_sent: None,
             menu_was_open: false,
+            follow: Follow::default(),
         }
     }
 
@@ -135,6 +139,7 @@ impl LoomApp {
         for played in self.live.midi.played() {
             self.key_played(played);
         }
+        self.follow_chords();
     }
 
     /// Where playback is, in steps with a fraction, or `None` when stopped.
@@ -241,6 +246,7 @@ impl LoomApp {
                 pitch, velocity, ..
             } => {
                 self.live.held.retain(|held| held.pitch != pitch);
+                self.live.follow.key_down();
                 let recorded_from = played.position.filter(|_| self.is_recording());
                 self.live.held.push(Held {
                     pitch,
@@ -333,6 +339,16 @@ impl LoomApp {
                     "Play notes with the letter keys: Z X C V B N M from C4, with S D G H J \
                      as the black keys, and Q to P from C5, with the numbers above them.",
                 );
+            ui.checkbox(&mut self.live.follow.on, "Accompaniment follows chords")
+                .on_hover_text(
+                    "While the music plays, the chord you hold on a MIDI or typing keyboard \
+                     becomes the chord of the accompaniment: the chords and bass line keep \
+                     their rhythm and move to your chord from their next note, as on an \
+                     arranger keyboard. One key plays its major chord, two keys a minor third \
+                     apart its minor chord. The last chord stays until you play another, and \
+                     the written notes come back when playback stops. The song itself does \
+                     not change.",
+                );
         });
         self.live.menu_was_open = response.inner.is_some();
     }
@@ -365,7 +381,16 @@ impl LoomApp {
             return None;
         }
         let harmony = analyze(self.live.held_pitches());
-        Some(format!("🎹 {}", harmony.describe(self.project.scale)))
+        let described = harmony.describe(self.project.scale);
+        let text = match self.live.follow.chord() {
+            Some(chord) => format!(
+                "🎹 {} · accompaniment in {}",
+                described.trim_end_matches('.'),
+                chord.name(self.project.scale.spelling())
+            ),
+            None => format!("🎹 {described}"),
+        };
+        Some(text)
     }
 }
 
