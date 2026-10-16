@@ -1,0 +1,9 @@
+[book]
+title = "Ferrous Loom: Building a Music Studio in Rust"
+authors = ["Ferrous Loom contributors"]
+language = "en"
+src = "src"
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
