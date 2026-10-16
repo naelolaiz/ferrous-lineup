@@ -173,6 +173,9 @@ impl LoomApp {
         });
         self.set_mode(PlayMode::Pattern);
         if !self.playing {
+            // What the library wrote plays from its start, not from where
+            // the last pattern was paused.
+            self.rewind_for_new_pattern();
             self.set_playing(true);
         }
     }
