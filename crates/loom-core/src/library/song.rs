@@ -185,7 +185,6 @@ const COMMON: TimeSignature = TimeSignature::COMMON;
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
-const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 
 mod blues;
 mod classical;
@@ -242,6 +241,20 @@ pub static SONGS: &[Song] = &[
     tango::TANGO_DEL_TELAR,
     tango::MILONGA_DEL_RIO,
     tango::VALS_DEL_PUERTO,
+    folklore::EL_CONDOR_PASA,
+    folklore::ALMA_LLANERA,
+    folklore::DOS_PALOMITAS,
+    folklore::ZAMBA_DEL_TELAR,
+    folklore::CHACARERA_DEL_PATIO,
+    folklore::GATO_DEL_ARROYO,
+    folklore::CHAMAME_DEL_ESTERO,
+    folklore::CUECA_DE_LA_CALETA,
+    folklore::MARINERA_DEL_CALLEJON,
+    folklore::BAMBUCO_DEL_PARAMO,
+    folklore::MALAMBO_DEL_FOGON,
+    folklore::VIDALA_DE_LA_QUEBRADA,
+    folklore::CARNAVALITO_DE_LA_QUEBRADA,
+    folklore::CANDOMBE_DEL_BARRIO,
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     reggae::MARY_HAD_A_LITTLE_LAMB,
