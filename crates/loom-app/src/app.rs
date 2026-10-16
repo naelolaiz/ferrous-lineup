@@ -2,8 +2,15 @@
 //!
 //! The playlist fills the window, as in other pattern-based studios. The
 //! channel rack and the piano roll are windows on top of it, opened with
-//! F6 and F7. Opening and saving files lives in the [`files`] module.
+//! F6 and F7. Opening and saving files lives in the [`files`] module,
+//! undo and redo in [`edit`], and saving the song as a WAV file in
+//! [`export`].
+//!
+//! Every change to the project goes through [`LoomApp::edit`], which
+//! records it for undo and tells the audio thread what changed.
 
+mod edit;
+mod export;
 mod files;
 
 use std::path::PathBuf;
@@ -11,8 +18,12 @@ use std::sync::Arc;
 
 use eframe::egui;
 use loom_audio::instrument::Sampler;
-use loom_audio::{AudioEngine, ChannelNotes, Command, Instrument, PlayMode, SampleData};
-use loom_core::{Channel, ChannelKind, PATTERN_LENGTHS, Pattern, Project, SampleSource, Tempo};
+use loom_audio::{
+    AudioEngine, ChannelNotes, Command, Instrument, PlayMode, SampleCache, SampleData,
+};
+use loom_core::{
+    Channel, ChannelKind, History, PATTERN_LENGTHS, Pattern, Project, SampleSource, Tempo,
+};
 
 use crate::channel_rack::{self, RackAction};
 use crate::piano_roll::{PianoRoll, RollAction};
@@ -54,8 +65,16 @@ pub struct LoomApp {
     piano_roll: PianoRoll,
     playlist: PlaylistView,
     file: files::FileState,
+    /// Earlier versions of the project, for undo and redo.
+    history: History<Project>,
+    /// Sample files already read, so undo and export do not read them again.
+    samples: SampleCache,
+    /// The WAV export running in the background, if any.
+    export: Option<export::Export>,
     /// The last problem to show in the status bar, such as a bad WAV file.
     message: Option<String>,
+    /// The last piece of good news for the status bar ("Exported song.wav").
+    notice: Option<String>,
 }
 
 impl LoomApp {
@@ -83,7 +102,11 @@ impl LoomApp {
             rack_open: true,
             piano_roll,
             playlist: PlaylistView::new(),
+            history: History::default(),
+            samples: SampleCache::new(),
+            export: None,
             message: None,
+            notice: None,
         };
         app.send_whole_project();
         if let Some(path) = path {
@@ -106,10 +129,11 @@ impl LoomApp {
         }
     }
 
-    /// Builds the instrument for a channel. If a sample file cannot be
-    /// loaded, the channel gets a silent sampler and the status bar says why.
-    fn build_instrument(&mut self, kind: &ChannelKind) -> Instrument {
-        match Instrument::for_channel(kind, self.sample_rate()) {
+    /// Builds the instrument for a channel, at `sample_rate`. If a sample
+    /// file cannot be loaded, the channel gets a silent sampler and the
+    /// status bar says why.
+    fn build_instrument(&mut self, kind: &ChannelKind, sample_rate: u32) -> Instrument {
+        match Instrument::for_channel(kind, sample_rate, &mut self.samples) {
             Ok(instrument) => instrument,
             Err(err) => {
                 self.message = Some(err.to_string());
@@ -118,28 +142,41 @@ impl LoomApp {
         }
     }
 
-    /// Tells the audio thread about the whole project, at startup and
-    /// after opening a file. Patterns go first, so each channel can bring
-    /// its notes for all of them.
-    fn send_whole_project(&mut self) {
-        self.send(Command::Clear);
-        self.send(Command::SetTempo(self.project.tempo));
-        self.send(Command::SetMasterVolume(self.master_volume));
-        for index in 0..self.project.patterns().len() {
-            let length = self.project.patterns()[index].length();
-            self.send(Command::AddPattern { length });
+    /// Everything an empty audio thread needs to play the project, with
+    /// instruments made for `sample_rate`: the tempo, the patterns, the
+    /// channels and the song. Patterns go first, so each channel can bring
+    /// its notes for all of them. Used at startup, after opening a file,
+    /// and to export the song.
+    fn project_commands(&mut self, sample_rate: u32) -> Vec<Command> {
+        let mut commands = vec![Command::SetTempo(self.project.tempo)];
+        for (index, pattern) in self.project.patterns().iter().enumerate() {
+            commands.push(Command::InsertPattern {
+                index,
+                length: pattern.length(),
+            });
         }
         for index in 0..self.project.channels().len() {
-            self.send_new_channel(index);
+            commands.push(self.channel_command(index, sample_rate));
+        }
+        commands.push(self.song_command());
+        commands
+    }
+
+    /// Tells the audio thread about the whole project, at startup and
+    /// after opening a file.
+    fn send_whole_project(&mut self) {
+        self.send(Command::Clear);
+        self.send(Command::SetMasterVolume(self.master_volume));
+        for command in self.project_commands(self.sample_rate()) {
+            self.send(command);
         }
         self.send(Command::SelectPattern(self.pattern));
         self.send(Command::SetMode(self.mode));
-        self.send_song();
     }
 
-    /// Sends channel `index` of the project to the audio thread as a new
-    /// channel, with its notes in every pattern.
-    fn send_new_channel(&mut self, index: usize) {
+    /// The command that inserts channel `index` of the project, with its
+    /// instrument and its notes in every pattern.
+    fn channel_command(&mut self, index: usize, sample_rate: u32) -> Command {
         let channel = self.project.channels()[index].clone();
         let notes = ChannelNotes::new(
             self.project
@@ -147,48 +184,31 @@ impl LoomApp {
                 .iter()
                 .map(|pattern| pattern.notes(index).to_vec()),
         );
-        let instrument = self.build_instrument(&channel.kind);
-        self.send(Command::AddChannel {
-            instrument,
+        Command::InsertChannel {
+            index,
+            instrument: self.build_instrument(&channel.kind, sample_rate),
             notes,
             volume: channel.volume,
             muted: channel.muted,
+        }
+    }
+
+    /// The song: the clips on tracks that are not muted, and its length.
+    fn song_command(&self) -> Command {
+        Command::SetSong {
+            clips: self.project.playlist().audible_clips().collect(),
+            length: self.project.song_length(),
+        }
+    }
+
+    /// Changes the selected pattern, as one undoable step called `label`.
+    fn edit_pattern(&mut self, label: &'static str, change: impl FnOnce(&mut Pattern)) {
+        let index = self.pattern;
+        self.edit(label, |project| {
+            if let Some(pattern) = project.pattern_mut(index) {
+                change(pattern);
+            }
         });
-    }
-
-    /// Sends a fresh copy of one channel's notes in the selected pattern.
-    fn send_notes(&mut self, channel: usize) {
-        self.send_pattern_notes(self.pattern, channel);
-    }
-
-    fn send_pattern_notes(&mut self, pattern: usize, channel: usize) {
-        if let Some(notes) = self
-            .project
-            .pattern(pattern)
-            .map(|p| p.notes(channel).to_vec())
-        {
-            self.send(Command::SetNotes {
-                pattern,
-                channel,
-                notes,
-            });
-        }
-    }
-
-    /// Sends the song: the clips on tracks that are not muted, and its length.
-    fn send_song(&mut self) {
-        let clips = self.project.playlist().audible_clips().collect();
-        let length = self.project.song_length();
-        self.send(Command::SetSong { clips, length });
-    }
-
-    /// Changes the selected pattern with `edit`. If `edit` says it changed
-    /// something, the channel's new notes are sent to the audio thread.
-    fn edit_notes(&mut self, channel: usize, edit: impl FnOnce(&mut Pattern) -> bool) {
-        let changed = self.project.pattern_mut(self.pattern).is_some_and(edit);
-        if changed {
-            self.send_notes(channel);
-        }
     }
 
     fn set_playing(&mut self, playing: bool) {
@@ -214,76 +234,54 @@ impl LoomApp {
         }
     }
 
+    // Adding, cloning and removing patterns only change the project. The
+    // edit tells the audio thread, and selects the new pattern (see
+    // `sync_audio` in `edit.rs`).
+
     fn add_pattern(&mut self) {
-        if let Some(index) = self.project.add_pattern() {
-            let length = self.project.patterns()[index].length();
-            self.send(Command::AddPattern { length });
-            self.select_pattern(index);
-        }
+        self.edit("add pattern", |project| project.add_pattern());
     }
 
     fn clone_pattern(&mut self) {
-        if let Some(index) = self.project.clone_pattern(self.pattern) {
-            let length = self.project.patterns()[index].length();
-            self.send(Command::AddPattern { length });
-            for channel in 0..self.project.channels().len() {
-                self.send_pattern_notes(index, channel);
-            }
-            self.select_pattern(index);
-        }
+        let index = self.pattern;
+        self.edit("clone pattern", |project| project.clone_pattern(index));
     }
 
     fn remove_pattern(&mut self) {
-        let removed = self.pattern;
-        if self.project.remove_pattern(removed).is_some() {
-            self.send(Command::RemovePattern(removed));
-            // Select the pattern that took its place, or the new last one.
-            let last = self.project.patterns().len() - 1;
-            self.select_pattern(removed.min(last));
-            self.send_song();
-        }
+        let index = self.pattern;
+        self.edit("delete pattern", |project| project.remove_pattern(index));
     }
 
-    fn set_pattern_length(&mut self, length: usize) {
-        if let Some(pattern) = self.project.pattern_mut(self.pattern) {
-            pattern.set_length(length);
-            self.send(Command::SetPatternLength {
-                pattern: self.pattern,
-                length,
-            });
-            // Clips are as long as their pattern, so the song may be longer now.
-            self.send_song();
-        }
-    }
-
-    /// Applies one action from the channel rack to the project and the audio thread.
+    /// Applies one action from the channel rack.
     fn apply(&mut self, action: RackAction) {
         match action {
             RackAction::ToggleStep { channel, step } => {
-                self.edit_notes(channel, |pattern| pattern.toggle(channel, step).is_some());
+                self.edit_pattern("change steps", |pattern| {
+                    pattern.toggle(channel, step);
+                });
             }
             RackAction::ClearStep { channel, step } => {
-                self.edit_notes(channel, |pattern| pattern.set(channel, step, false));
+                self.edit_pattern("change steps", |pattern| {
+                    pattern.set(channel, step, false);
+                });
             }
             RackAction::Preview(channel) => self.send(Command::Preview(channel)),
             RackAction::SetVolume { channel, volume } => {
-                if let Some(state) = self.project.channel_mut(channel) {
-                    state.volume = volume;
-                    self.send(Command::SetVolume { channel, volume });
-                }
+                self.edit("change volume", |project| {
+                    if let Some(state) = project.channel_mut(channel) {
+                        state.volume = volume;
+                    }
+                });
             }
             RackAction::ToggleMute(channel) => {
-                if let Some(state) = self.project.channel_mut(channel) {
-                    state.muted = !state.muted;
-                    let muted = state.muted;
-                    self.send(Command::SetMuted { channel, muted });
-                }
+                self.edit("mute channel", |project| {
+                    if let Some(state) = project.channel_mut(channel) {
+                        state.muted = !state.muted;
+                    }
+                });
             }
             RackAction::Remove(channel) => {
-                if self.project.remove_channel(channel).is_some() {
-                    self.send(Command::RemoveChannel(channel));
-                    self.piano_roll.channel_removed(channel);
-                }
+                self.edit("delete channel", |project| project.remove_channel(channel));
             }
             RackAction::OpenPianoRoll(channel) => self.piano_roll.open_for(channel),
             RackAction::AddDrum(drum) => self.add_channel(Channel::drum(drum)),
@@ -292,21 +290,19 @@ impl LoomApp {
         }
     }
 
-    /// Applies one action from the piano roll to the project and the audio thread.
+    /// Applies one action from the piano roll.
     fn apply_roll(&mut self, action: RollAction) {
         match action {
             RollAction::AddNotes { channel, notes } => {
-                self.edit_notes(channel, |pattern| {
-                    let mut added = false;
+                self.edit_pattern("add notes", |pattern| {
                     for note in notes {
-                        added |= pattern.add_note(channel, note).is_some();
+                        pattern.add_note(channel, note);
                     }
-                    added
                 });
             }
             RollAction::RemoveNote { channel, index } => {
-                self.edit_notes(channel, |pattern| {
-                    pattern.remove_note(channel, index).is_some()
+                self.edit_pattern("delete notes", |pattern| {
+                    pattern.remove_note(channel, index);
                 });
             }
             RollAction::ReplaceNote {
@@ -314,8 +310,8 @@ impl LoomApp {
                 index,
                 note,
             } => {
-                self.edit_notes(channel, |pattern| {
-                    pattern.replace_note(channel, index, note)
+                self.edit_pattern("change notes", |pattern| {
+                    pattern.replace_note(channel, index, note);
                 });
             }
             RollAction::Preview { channel, pitches } => {
@@ -323,99 +319,85 @@ impl LoomApp {
                     self.send(Command::PreviewNote { channel, pitch });
                 }
             }
-            RollAction::SetScale(scale) => self.project.scale = scale,
+            RollAction::SetScale(scale) => self.edit("change key", |project| project.scale = scale),
         }
     }
 
-    /// Applies one action from the playlist to the project and the audio thread.
+    /// Applies one action from the playlist.
     fn apply_playlist(&mut self, action: PlaylistAction) {
-        let song_changed = match action {
-            PlaylistAction::SelectPattern(pattern) => {
-                self.select_pattern(pattern);
-                false
+        match action {
+            PlaylistAction::SelectPattern(pattern) => self.select_pattern(pattern),
+            PlaylistAction::AddClip(clip) => {
+                self.edit("add clip", |project| project.add_clip(clip));
             }
-            PlaylistAction::AddClip(clip) => self.project.add_clip(clip).is_some(),
             PlaylistAction::MoveClip {
                 index,
                 track,
                 start,
-            } => self.project.move_clip(index, track, start),
-            PlaylistAction::RemoveClip(index) => self.project.remove_clip(index).is_some(),
-            PlaylistAction::ToggleTrackMute(track) => match self.project.track_mut(track) {
-                Some(track) => {
-                    track.muted = !track.muted;
-                    true
-                }
-                None => false,
-            },
+            } => {
+                self.edit("move clip", |project| {
+                    project.move_clip(index, track, start)
+                });
+            }
+            PlaylistAction::RemoveClip(index) => {
+                self.edit("delete clips", |project| project.remove_clip(index));
+            }
+            PlaylistAction::ToggleTrackMute(track) => {
+                self.edit("mute track", |project| {
+                    if let Some(track) = project.track_mut(track) {
+                        track.muted = !track.muted;
+                    }
+                });
+            }
             PlaylistAction::RenameTrack { track, name } => {
-                if let Some(track) = self.project.track_mut(track) {
-                    track.name = name;
-                }
-                false
+                self.edit("rename track", |project| {
+                    if let Some(track) = project.track_mut(track) {
+                        track.name = name;
+                    }
+                });
             }
             PlaylistAction::AddTrack => {
-                self.project.add_track();
-                false
+                self.edit("add track", |project| project.add_track());
             }
-        };
-        if song_changed {
-            self.send_song();
         }
     }
 
     fn add_channel(&mut self, channel: Channel) {
-        if let Some(index) = self.project.add_channel(channel) {
-            self.send_new_channel(index);
-        }
+        self.edit("add channel", |project| project.add_channel(channel));
     }
 
+    /// Loads a sample file into channel `channel`, or into a new channel.
     fn load_sample(&mut self, channel: Option<usize>, path: PathBuf) {
+        // Read the file now, to report a bad one before changing anything.
+        // It stays in the cache, so building the instrument does not
+        // read it again. `reload` because the file may have changed since
+        // it was last dropped.
+        if let Err(err) = self.samples.reload(&path) {
+            self.message = Some(format!("{}: {err}", path.display()));
+            return;
+        }
         let kind = ChannelKind::Sampler(SampleSource::File(path.clone()));
-        let instrument = match Instrument::for_channel(&kind, self.sample_rate()) {
-            Ok(instrument) => instrument,
-            Err(err) => {
-                self.message = Some(format!("{}: {err}", path.display()));
-                return;
-            }
-        };
         let name = path
             .file_stem()
             .map(|stem| stem.to_string_lossy().into_owned())
             .unwrap_or_else(|| "Sample".to_string());
 
-        match channel.and_then(|index| self.project.channel_mut(index).map(|c| (index, c))) {
-            Some((index, existing)) => {
-                existing.name = name;
-                existing.kind = kind;
-                self.send(Command::SetInstrument {
-                    channel: index,
-                    instrument,
-                });
-            }
-            None => {
-                let new_channel = Channel {
-                    name,
-                    kind,
-                    volume: 0.8,
-                    muted: false,
-                };
-                if let Some(index) = self.project.add_channel(new_channel) {
-                    let notes = ChannelNotes::new(
-                        self.project
-                            .patterns()
-                            .iter()
-                            .map(|pattern| pattern.notes(index).to_vec()),
-                    );
-                    self.send(Command::AddChannel {
-                        instrument,
-                        notes,
+        self.edit("load sample", |project| {
+            match channel.and_then(|index| project.channel_mut(index)) {
+                Some(existing) => {
+                    existing.name = name;
+                    existing.kind = kind;
+                }
+                None => {
+                    project.add_channel(Channel {
+                        name,
+                        kind,
                         volume: 0.8,
                         muted: false,
                     });
                 }
             }
-        }
+        });
         self.message = None;
     }
 
@@ -424,6 +406,7 @@ impl LoomApp {
     fn transport_bar(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             self.file_menu(ui);
+            self.edit_menu(ui);
             ui.separator();
 
             let label = if self.playing { "⏹ Stop" } else { "▶ Play" };
@@ -445,8 +428,7 @@ impl LoomApp {
                 .fixed_decimals(1)
                 .suffix(" BPM");
             if ui.add(tempo_field).on_hover_text("Tempo").changed() {
-                self.project.tempo = Tempo::new(bpm);
-                self.send(Command::SetTempo(self.project.tempo));
+                self.edit("change tempo", |project| project.tempo = Tempo::new(bpm));
             }
 
             ui.separator();
@@ -500,8 +482,10 @@ impl LoomApp {
         let menu = egui::containers::menu::MenuButton::new("⋯").config(stay_open);
         menu.ui(ui, |ui| {
             ui.label("Name");
-            if let Some(pattern) = self.project.pattern_mut(self.pattern) {
-                ui.text_edit_singleline(&mut pattern.name);
+            // The field edits a copy, so the change can go through `edit`.
+            let mut name = self.project.patterns()[self.pattern].name.clone();
+            if ui.text_edit_singleline(&mut name).changed() {
+                self.edit_pattern("rename pattern", |pattern| pattern.name = name);
             }
             if ui.button("Clone").clicked() {
                 self.clone_pattern();
@@ -528,7 +512,9 @@ impl LoomApp {
                 }
             });
         if new_length != length {
-            self.set_pattern_length(new_length);
+            self.edit_pattern("change pattern length", |pattern| {
+                pattern.set_length(new_length);
+            });
         }
     }
 
@@ -549,6 +535,18 @@ impl LoomApp {
                         format!("Audio unavailable: {reason}"),
                     );
                 }
+            }
+            if let Some(export) = &self.export {
+                ui.separator();
+                ui.add(
+                    egui::ProgressBar::new(export.progress())
+                        .desired_width(160.0)
+                        .text(format!("Exporting {}", export.file_name())),
+                );
+            }
+            if let Some(notice) = &self.notice {
+                ui.separator();
+                ui.label(notice);
             }
             if let Some(message) = &self.message {
                 ui.separator();
@@ -607,6 +605,10 @@ impl LoomApp {
             self.piano_roll.open = !self.piano_roll.open;
         }
         self.file_shortcuts(ctx);
+        if !typing {
+            // While typing, Ctrl+Z belongs to the text field.
+            self.edit_shortcuts(ctx);
+        }
     }
 }
 
@@ -618,8 +620,10 @@ impl eframe::App for LoomApp {
             engine.collect_garbage();
         }
         let ctx = ui.ctx().clone();
+        self.start_frame_for_undo(&ctx);
         self.keyboard_shortcuts(&ctx);
         self.handle_dropped_files(&ctx);
+        self.check_export(&ctx);
         if self.playing {
             // Keep redrawing so the playhead moves.
             ctx.request_repaint();
@@ -667,5 +671,6 @@ impl eframe::App for LoomApp {
 
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
+        self.end_frame_for_undo(&ctx);
     }
 }

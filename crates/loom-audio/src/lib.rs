@@ -8,13 +8,17 @@
 //! - [`engine`] opens the sound card with `cpal`, runs the sequencer and
 //!   the instruments on the audio thread, and receives [`Command`]s from
 //!   the UI thread.
+//! - [`render`] runs the same audio thread without a sound card, to save
+//!   a song as a WAV file.
 
 pub mod drums;
 pub mod dsp;
 pub mod engine;
 pub mod instrument;
+pub mod render;
 pub mod sample;
 
 pub use engine::{AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, PlayMode};
 pub use instrument::Instrument;
-pub use sample::{SampleData, SampleError};
+pub use render::{Renderer, export_wav};
+pub use sample::{SampleCache, SampleData, SampleError};

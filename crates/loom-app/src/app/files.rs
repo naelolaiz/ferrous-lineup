@@ -74,6 +74,15 @@ impl FileState {
             |name| name.to_string_lossy().into_owned(),
         )
     }
+
+    /// A name for an exported WAV file: "song.wav" for "song.loom".
+    pub(super) fn export_name(&self) -> String {
+        let stem = self.path.as_deref().and_then(Path::file_stem).map_or_else(
+            || "Untitled".to_string(),
+            |stem| stem.to_string_lossy().into_owned(),
+        );
+        format!("{stem}.wav")
+    }
 }
 
 /// A file dialog that shows project files.
@@ -108,6 +117,15 @@ impl LoomApp {
             }
             if ui.add(item("Save as…", SAVE_AS)).clicked() {
                 self.save_as();
+                ui.close();
+            }
+            ui.separator();
+            let export = ui
+                .add_enabled(self.can_export(), egui::Button::new("Export WAV…"))
+                .on_hover_text("Save the song as a sound file")
+                .on_disabled_hover_text("Put some clips in the playlist first");
+            if export.clicked() {
+                self.export_song();
                 ui.close();
             }
             ui.separator();
@@ -188,6 +206,11 @@ impl LoomApp {
         self.playing = false;
         self.piano_roll = PianoRoll::new(super::first_synth(&self.project));
         self.message = None;
+        self.notice = None;
+        // Undo cannot go back into another file, and its samples may
+        // not be needed any more.
+        self.history.clear();
+        self.samples.clear();
         self.send_whole_project();
     }
 

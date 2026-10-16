@@ -40,10 +40,10 @@ const COMMAND_QUEUE_SIZE: usize = 1024;
 /// How many old instruments and note lists can wait to be freed by the UI
 /// thread. Removing a pattern throws away one list per channel, and
 /// loading a project throws away every channel, so this is generous.
-const TRASH_QUEUE_SIZE: usize = 1024;
+pub(crate) const TRASH_QUEUE_SIZE: usize = 1024;
 
 /// The value of the playhead while stopped.
-const NO_STEP: usize = usize::MAX;
+pub(crate) const NO_STEP: usize = usize::MAX;
 
 /// How long volume changes take to settle, in seconds.
 const VOLUME_SMOOTHING: f32 = 0.01;
@@ -63,8 +63,8 @@ pub enum PlayMode {
 ///
 /// When the UI adds a pattern, the audio thread adds an empty list to
 /// every channel. `Vec::new()` does not allocate (an empty `Vec` has no
-/// memory of its own yet), but pushing it onto the outer `Vec` would, if
-/// the outer `Vec` were full. So `ChannelNotes::new`, which runs on the
+/// memory of its own yet), but inserting it into the outer `Vec` would,
+/// if the outer `Vec` were full. So `ChannelNotes::new`, which runs on the
 /// UI thread, reserves room for [`MAX_PATTERNS`] lists up front. The
 /// field is private, so there is no other way to make one: the type
 /// itself guarantees the room is there.
@@ -84,10 +84,11 @@ impl ChannelNotes {
         self.0.get(pattern).map_or(&[], Vec::as_slice)
     }
 
-    /// Adds an empty list for a new pattern, without allocating.
-    fn push_empty(&mut self) {
+    /// Adds an empty list for a new pattern at position `pattern`, without
+    /// allocating. The lists from there on move up one place.
+    fn insert_empty(&mut self, pattern: usize) {
         if self.0.len() < self.0.capacity() {
-            self.0.push(Vec::new());
+            self.0.insert(pattern.min(self.0.len()), Vec::new());
         }
     }
 
@@ -110,8 +111,8 @@ impl ChannelNotes {
 /// A message from the UI thread to the audio thread.
 ///
 /// Channel and pattern numbers are positions in the UI's lists, counted
-/// from 0, and must match them exactly: the UI sends `AddChannel`,
-/// `RemoveChannel`, `AddPattern` and `RemovePattern` whenever its own
+/// from 0, and must match them exactly: the UI sends `InsertChannel`,
+/// `RemoveChannel`, `InsertPattern` and `RemovePattern` whenever its own
 /// lists change.
 #[derive(Debug)]
 pub enum Command {
@@ -126,8 +127,10 @@ pub enum Command {
     SelectPattern(usize),
     SetTempo(Tempo),
     SetMasterVolume(f32),
-    /// Add an empty pattern at the end of the list.
-    AddPattern {
+    /// Add an empty pattern at position `index`; the patterns from there
+    /// on move up one place. An index past the end adds it at the end.
+    InsertPattern {
+        index: usize,
         length: usize,
     },
     RemovePattern(usize),
@@ -141,8 +144,11 @@ pub enum Command {
         clips: Vec<Clip>,
         length: usize,
     },
-    /// Add a channel at the bottom of the rack, with its notes in every pattern.
-    AddChannel {
+    /// Add a channel at position `index`, with its notes in every pattern.
+    /// The channels from there on move down one row. An index past the
+    /// end adds it at the bottom.
+    InsertChannel {
+        index: usize,
         instrument: Instrument,
         notes: ChannelNotes,
         volume: f32,
@@ -183,7 +189,7 @@ pub enum Command {
 
 /// Something the audio thread has finished with. It is sent back to the
 /// UI thread, because freeing memory is not allowed on the audio thread.
-enum Garbage {
+pub(crate) enum Garbage {
     Instrument(Instrument),
     Notes(Vec<NoteEvent>),
     Channel(ChannelState),
@@ -359,7 +365,7 @@ where
 }
 
 /// One row of the channel rack, as the audio thread sees it.
-struct ChannelState {
+pub(crate) struct ChannelState {
     instrument: Instrument,
     notes: ChannelNotes,
     volume: Smoothed,
@@ -369,8 +375,9 @@ struct ChannelState {
 /// Everything the audio callback owns.
 ///
 /// Keeping this in a struct (instead of loose variables inside the
-/// closure) lets the tests below run it without a sound card.
-struct AudioThread {
+/// closure) lets the tests below run it without a sound card, and lets
+/// [`Renderer`](crate::render::Renderer) play a song into a file.
+pub(crate) struct AudioThread {
     sample_rate: u32,
     output_channels: usize,
     /// Reserved with room for `MAX_CHANNELS`, so `push` never allocates.
@@ -392,7 +399,7 @@ struct AudioThread {
 }
 
 impl AudioThread {
-    fn new(
+    pub(crate) fn new(
         sample_rate: u32,
         output_channels: usize,
         commands: rtrb::Consumer<Command>,
@@ -445,7 +452,7 @@ impl AudioThread {
         (self.sequencer.step_frames() * STEPS_PER_BEAT as f64) as u32
     }
 
-    fn apply(&mut self, command: Command) {
+    pub(crate) fn apply(&mut self, command: Command) {
         match command {
             Command::Play => {
                 self.sequencer.reset();
@@ -463,12 +470,14 @@ impl AudioThread {
             }
             Command::SetTempo(tempo) => self.sequencer.set_tempo(tempo),
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
-            Command::AddPattern { length } => {
+            Command::InsertPattern { index, length } => {
                 if self.pattern_lengths.len() < MAX_PATTERNS {
-                    self.pattern_lengths.push(length);
+                    let index = index.min(self.pattern_lengths.len());
+                    self.pattern_lengths.insert(index, length);
                     for channel in &mut self.channels {
-                        channel.notes.push_empty();
+                        channel.notes.insert_empty(index);
                     }
+                    self.update_loop_length();
                 }
             }
             Command::RemovePattern(pattern) => {
@@ -494,7 +503,8 @@ impl AudioThread {
                 self.song_length = length;
                 self.update_loop_length();
             }
-            Command::AddChannel {
+            Command::InsertChannel {
+                index,
                 instrument,
                 notes,
                 volume,
@@ -507,7 +517,10 @@ impl AudioThread {
                     muted,
                 };
                 if self.channels.len() < MAX_CHANNELS {
-                    self.channels.push(channel);
+                    // `insert` moves the channels after `index` along by
+                    // one, inside the room reserved up front.
+                    self.channels
+                        .insert(index.min(self.channels.len()), channel);
                 } else {
                     self.throw_away(Garbage::Channel(channel));
                 }
@@ -569,6 +582,16 @@ impl AudioThread {
         }
     }
 
+    /// Puts every volume at its target at once. Smoothing avoids clicks
+    /// while sound is playing; before an export starts, it would only
+    /// make the first moment too loud or too quiet.
+    pub(crate) fn settle_volumes(&mut self) {
+        self.master_volume.settle();
+        for channel in &mut self.channels {
+            channel.volume.settle();
+        }
+    }
+
     fn stop(&mut self) {
         self.playing = false;
         self.playhead.store(NO_STEP, Ordering::Relaxed);
@@ -623,7 +646,7 @@ impl AudioThread {
     }
 
     /// Applies waiting commands, then fills `output` with samples.
-    fn process<T>(&mut self, output: &mut [T])
+    pub(crate) fn process<T>(&mut self, output: &mut [T])
     where
         T: SizedSample + FromSample<f32>,
     {
@@ -720,7 +743,13 @@ mod tests {
             trash,
             playhead,
         };
-        send(&mut h, Command::AddPattern { length: 16 });
+        send(
+            &mut h,
+            Command::InsertPattern {
+                index: 0,
+                length: 16,
+            },
+        );
         send(&mut h, Command::SetTempo(Tempo::new(120.0)));
         h
     }
@@ -731,6 +760,9 @@ mod tests {
 
     /// At 120 BPM and 48 kHz, one step lasts 6000 frames.
     const STEP: usize = 6_000;
+
+    /// An index past the end, to insert a channel at the bottom.
+    const AT_END: usize = usize::MAX;
 
     /// A sampler whose sound is a constant 0.5 for 10 frames.
     fn click() -> Instrument {
@@ -745,7 +777,8 @@ mod tests {
     fn add(h: &mut Harness, on: &[usize], muted: bool) {
         send(
             h,
-            Command::AddChannel {
+            Command::InsertChannel {
+                index: AT_END,
                 instrument: click(),
                 notes: ChannelNotes::new([steps(on)]),
                 volume: 1.0,
@@ -758,7 +791,8 @@ mod tests {
     fn add_synth(h: &mut Harness, notes: &[NoteEvent]) {
         send(
             h,
-            Command::AddChannel {
+            Command::InsertChannel {
+                index: AT_END,
                 instrument: Instrument::Synth(Synth::new(RATE)),
                 notes: ChannelNotes::new([notes.to_vec()]),
                 volume: 1.0,
@@ -910,10 +944,17 @@ mod tests {
     /// Two patterns: the click plays step 0 of pattern 0 and step 2 of pattern 1.
     fn two_patterns() -> Harness {
         let mut h = harness();
-        send(&mut h, Command::AddPattern { length: 16 });
         send(
             &mut h,
-            Command::AddChannel {
+            Command::InsertPattern {
+                index: 1,
+                length: 16,
+            },
+        );
+        send(
+            &mut h,
+            Command::InsertChannel {
+                index: 0,
                 instrument: click(),
                 notes: ChannelNotes::new([steps(&[0]), steps(&[2])]),
                 volume: 1.0,
@@ -977,12 +1018,62 @@ mod tests {
     #[test]
     fn new_patterns_start_empty_in_every_channel() {
         let mut h = two_patterns();
-        send(&mut h, Command::AddPattern { length: 16 });
+        send(
+            &mut h,
+            Command::InsertPattern {
+                index: 2,
+                length: 16,
+            },
+        );
         send(&mut h, Command::SelectPattern(2));
         send(&mut h, Command::Play);
         render(&mut h, 10);
         assert_eq!(h.audio.channels[0].notes.0.len(), 3);
         assert!(onsets(&render(&mut h, 16 * STEP)).is_empty());
+    }
+
+    #[test]
+    fn inserting_a_pattern_moves_the_later_ones_up() {
+        let mut h = two_patterns();
+        // A new, empty pattern 0: the old pattern 0 (a hit on step 0) is
+        // now pattern 1, and the old pattern 1 (step 2) is pattern 2.
+        send(
+            &mut h,
+            Command::InsertPattern {
+                index: 0,
+                length: 16,
+            },
+        );
+        send(&mut h, Command::SelectPattern(2));
+        send(&mut h, Command::Play);
+        assert_eq!(onsets(&render(&mut h, 16 * STEP)), vec![2 * STEP]);
+        assert_eq!(h.audio.pattern_lengths, vec![16, 16, 16]);
+        assert!(h.audio.channels[0].notes.get(0).is_empty());
+    }
+
+    #[test]
+    fn channels_can_be_inserted_between_others() {
+        let mut h = harness();
+        add(&mut h, &[0], false);
+        add(&mut h, &[2], false);
+        send(
+            &mut h,
+            Command::InsertChannel {
+                index: 1,
+                instrument: click(),
+                notes: ChannelNotes::new([steps(&[1])]),
+                volume: 1.0,
+                muted: false,
+            },
+        );
+        render(&mut h, 1);
+        let first_steps: Vec<usize> = h
+            .audio
+            .channels
+            .iter()
+            .map(|channel| channel.notes.get(0)[0].start)
+            .collect();
+        assert_eq!(first_steps, vec![0, 1, 2]);
     }
 
     #[test]
@@ -1024,8 +1115,9 @@ mod tests {
         // Every slot of the command queue is as big as the biggest
         // command. The instruments keep their voices in a `Box`, so a
         // command holds a pointer to them instead of all the voices.
+        // (72 bytes since `InsertChannel` got its `index`, in step 5.)
         let size = std::mem::size_of::<Command>();
-        assert!(size <= 64, "a command takes {size} bytes");
+        assert!(size <= 80, "a command takes {size} bytes");
     }
 
     #[test]

@@ -10,7 +10,7 @@ use loom_core::{ChannelKind, Note, STEP_NOTE, SampleSource};
 
 use crate::drums;
 use crate::dsp::LowPass;
-use crate::sample::{SampleData, SampleError};
+use crate::sample::{SampleCache, SampleData, SampleError};
 
 /// How many notes the Loom Osc can play at once.
 pub const SYNTH_VOICES: usize = 16;
@@ -30,14 +30,19 @@ pub enum Instrument {
 
 impl Instrument {
     /// Builds the instrument for a channel of the project. Drums are
-    /// synthesized and files are loaded here, on the calling thread.
-    pub fn for_channel(kind: &ChannelKind, sample_rate: u32) -> Result<Self, SampleError> {
+    /// synthesized and files are loaded here, on the calling thread; a
+    /// file that was loaded before comes from `samples`.
+    pub fn for_channel(
+        kind: &ChannelKind,
+        sample_rate: u32,
+        samples: &mut SampleCache,
+    ) -> Result<Self, SampleError> {
         Ok(match kind {
             ChannelKind::Sampler(SampleSource::Builtin(drum)) => {
                 Instrument::Sampler(Sampler::new(Arc::new(drums::render(*drum, sample_rate))))
             }
             ChannelKind::Sampler(SampleSource::File(path)) => {
-                Instrument::Sampler(Sampler::new(Arc::new(SampleData::load_wav(path)?)))
+                Instrument::Sampler(Sampler::new(samples.get(path)?))
             }
             ChannelKind::Synth => Instrument::Synth(Synth::new(sample_rate)),
         })
@@ -378,7 +383,7 @@ mod tests {
     }
 
     fn synth() -> Instrument {
-        Instrument::for_channel(&ChannelKind::Synth, RATE).unwrap()
+        Instrument::for_channel(&ChannelKind::Synth, RATE, &mut SampleCache::new()).unwrap()
     }
 
     /// Counts how often the signal changes sign: about twice per cycle.
@@ -505,6 +510,6 @@ mod tests {
     #[test]
     fn missing_file_reports_an_error() {
         let kind = ChannelKind::Sampler(SampleSource::File("/no/such.wav".into()));
-        assert!(Instrument::for_channel(&kind, RATE).is_err());
+        assert!(Instrument::for_channel(&kind, RATE, &mut SampleCache::new()).is_err());
     }
 }

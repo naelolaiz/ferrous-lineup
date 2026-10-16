@@ -19,6 +19,8 @@ Early development. Runs on Linux, macOS and Windows.
 | 2 | Channel rack, step sequencer, drum kit, sampler, synth | Done |
 | 3 | Piano roll with harmony helpers | Done |
 | 4 | Playlist, saving, macOS and Windows | Done |
+| 5 | Undo and redo, WAV export | Done |
+| 6 | More harmony tools in the piano roll | Next |
 
 ## Build and run
 
@@ -42,7 +44,9 @@ pattern, drag clips around, right-click to delete. **F6** shows or hides
 the channel rack, where you click steps and drop WAV files to use your
 own sounds. **F7** shows the piano roll: pick a key to highlight its notes,
 draw notes or whole chords, and watch the chord names above the grid.
-**Ctrl+S** saves the project as a `.loom` file (⌘S on a Mac).
+**Ctrl+S** saves the project as a `.loom` file (⌘S on a Mac), **Ctrl+Z**
+undoes any change and **Ctrl+Shift+Z** redoes it, and **File > Export
+WAV…** saves the song as a sound file.
 
 Ready-built programs for all three systems are attached to every CI run
 as `ferrous-loom-linux`, `ferrous-loom-macos` and `ferrous-loom-windows`.
@@ -52,8 +56,8 @@ They are not signed yet, so macOS and Windows warn before the first start.
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, tempo, patterns, the playlist, project files, the sequencer clock. No audio, no UI. |
-| `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth. |
+| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, tempo, patterns, the playlist, project files, undo history and project diffs, the sequencer clock. No audio, no UI. |
+| `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, and offline rendering to WAV files. |
 | `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`. |
 
 ## License
