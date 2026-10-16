@@ -4,13 +4,14 @@
 //! an MP3 or WAV file and building a harmony track that follows it.
 //!
 //! - [`decode`] reads the file into samples, with Symphonia.
-//! - [`analyze`] finds the beats (with the `beat-track-rs` crate), the
+//! - [`analyze`] finds the beats ([`beats`], the Ellis beat tracker), the
 //!   key (with the `bpm-key` crate), and the chord of every beat (our
 //!   own [`chroma`] and [`chords`] modules: no crate did this well).
 //! - [`meter`] guesses how many beats make a bar, and where bar 1 is.
 //! - [`arrange`] adds the recording and the chords to a project.
 
 pub mod arrange;
+pub mod beats;
 pub mod chords;
 pub mod chroma;
 pub mod decode;
@@ -61,12 +62,7 @@ impl Analysis {
 
 /// Listens to the whole recording. Takes a few seconds for a song.
 pub fn analyze(recording: &Recording) -> Analysis {
-    let beats = beat_track_rs::analyze_samples(
-        &recording.samples,
-        recording.sample_rate,
-        &beat_track_rs::Params::default(),
-    )
-    .beat_times_secs;
+    let beats = beats::track(&recording.samples, recording.sample_rate).times;
     let bpm = tempo_of(&beats);
 
     let scale = bpm_key::analyze(
