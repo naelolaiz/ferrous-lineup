@@ -34,6 +34,7 @@ use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
 use crate::midi::Midi;
 use crate::piano_roll::{PianoRoll, RollAction};
 use crate::playlist::{self, PlaylistAction, PlaylistView};
+use crate::theme::{self, HintBar};
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
@@ -88,6 +89,8 @@ pub struct LoomApp {
     message: Option<String>,
     /// The last piece of good news for the status bar ("Exported song.wav").
     notice: Option<String>,
+    /// The line at the top that says what the thing under the mouse does.
+    hint_bar: HintBar,
 }
 
 impl LoomApp {
@@ -95,7 +98,7 @@ impl LoomApp {
     /// is given (a file named on the command line), it is opened;
     /// otherwise the demo song is.
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
-        cc.egui_ctx.set_theme(egui::Theme::Dark);
+        theme::apply(&cc.egui_ctx);
 
         let mut audio = match AudioEngine::start() {
             Ok(engine) => Audio::Running(Box::new(engine)),
@@ -129,6 +132,7 @@ impl LoomApp {
             live: live::Live::new(midi),
             message: None,
             notice: None,
+            hint_bar: HintBar::default(),
         };
         app.send_whole_project();
         if let Some(path) = path {
@@ -495,68 +499,133 @@ impl LoomApp {
         self.message = None;
     }
 
-    /// The bar along the top: the menus, transport, tempo, the pattern
-    /// selector, window buttons and master volume. When the window is too
-    /// narrow for all of it (or zoomed in), it wraps onto a second row
-    /// instead of running off the edge.
-    fn transport_bar(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal_wrapped(|ui| {
+    /// The menu bar along the very top, with the hint bar beside it.
+    fn menu_bar(&mut self, ui: &mut egui::Ui) {
+        ui.horizontal(|ui| {
             self.file_menu(ui);
             self.edit_menu(ui);
             self.view_menu(ui);
             self.midi_menu(ui);
             ui.separator();
+            self.hint_bar.show(ui);
+        });
+    }
 
-            let label = if self.playing { "⏹ Stop" } else { "▶ Play" };
-            if ui.button(label).on_hover_text("Shortcut: Space").clicked() {
-                self.set_playing(!self.playing);
-            }
-            self.record_button(ui);
-            let mut mode = self.mode;
-            ui.selectable_value(&mut mode, PlayMode::Pattern, "PAT")
-                .on_hover_text("Loop the selected pattern (L switches)");
-            ui.selectable_value(&mut mode, PlayMode::Song, "SONG")
-                .on_hover_text("Play the playlist (L switches)");
-            self.set_mode(mode);
+    /// The toolbar under the menus: the transport, the tempo and song
+    /// position displays, the pattern selector, buttons for the windows
+    /// and the master volume, each in its own group. When the window is
+    /// too narrow for all of it (or zoomed in), the groups wrap onto a
+    /// second row instead of running off the edge.
+    fn transport_bar(&mut self, ui: &mut egui::Ui) {
+        ui.horizontal_wrapped(|ui| {
+            theme::group(ui, |ui| {
+                let mut mode = self.mode;
+                let pattern = theme::light_button(ui, "PAT", mode == PlayMode::Pattern, None);
+                if theme::hint(pattern, "Pattern mode: loop the selected pattern (L)").clicked() {
+                    mode = PlayMode::Pattern;
+                }
+                let song =
+                    theme::light_button(ui, "SONG", mode == PlayMode::Song, Some(theme::GREEN));
+                if theme::hint(song, "Song mode: play the playlist (L)").clicked() {
+                    mode = PlayMode::Song;
+                }
+                self.set_mode(mode);
+            });
 
-            ui.separator();
+            theme::group(ui, |ui| {
+                let play = theme::light_button(ui, "▶", self.playing, Some(theme::GREEN));
+                let text = if self.playing {
+                    "Playing. Click to stop (Space)"
+                } else {
+                    "Play (Space)"
+                };
+                if theme::hint(play, text).clicked() {
+                    self.set_playing(!self.playing);
+                }
+                let stop = theme::light_button(ui, "⏹", false, None);
+                if theme::hint(stop, "Stop and go back to the start (Space)").clicked() {
+                    self.set_playing(false);
+                }
+                self.record_button(ui);
+            });
+
             let mut bpm = self.project.tempo.bpm();
-            let tempo_field = egui::DragValue::new(&mut bpm)
-                .range(Tempo::MIN..=Tempo::MAX)
-                .speed(0.5)
-                .fixed_decimals(1)
-                .suffix(" BPM");
-            if ui.add(tempo_field).on_hover_text("Tempo").changed() {
+            let tempo = theme::lcd_frame(ui, "TEMPO", 62.0, |ui| {
+                ui.add(
+                    egui::DragValue::new(&mut bpm)
+                        .range(Tempo::MIN..=Tempo::MAX)
+                        .speed(0.5)
+                        .fixed_decimals(1),
+                )
+            });
+            if theme::hint(
+                tempo,
+                "Tempo in beats a minute. Drag up or down, or double-click to type",
+            )
+            .changed()
+            {
                 self.edit("change tempo", |project| project.tempo = Tempo::new(bpm));
             }
+            let position = theme::lcd(ui, "BAR : BEAT : STEP", &self.position_text(), 104.0);
+            theme::hint(
+                position,
+                "Where the playhead is: in the pattern (PAT) or the song (SONG)",
+            );
 
-            ui.separator();
-            self.pattern_selector(ui);
+            theme::group(ui, |ui| self.pattern_selector(ui));
 
-            ui.separator();
-            ui.toggle_value(&mut self.rack_open, "Channel rack")
-                .on_hover_text("Shortcut: F6");
-            ui.toggle_value(&mut self.piano_roll.open, "🎹 Piano roll")
-                .on_hover_text("Shortcut: F7");
-            ui.toggle_value(&mut self.harmony_keys.open, "🎼 Harmony")
-                .on_hover_text(
-                    "The key, the time signature and a key for each chord. Shortcut: F8",
-                );
+            theme::group(ui, |ui| {
+                let rack = theme::light_button(ui, "▦ Channel rack", self.rack_open, None);
+                if theme::hint(rack, "Show or hide the channel rack: the steps (F6)").clicked() {
+                    self.rack_open = !self.rack_open;
+                }
+                let roll = theme::light_button(ui, "🎹 Piano roll", self.piano_roll.open, None);
+                if theme::hint(
+                    roll,
+                    "Show or hide the piano roll: melodies and chords (F7)",
+                )
+                .clicked()
+                {
+                    self.piano_roll.open = !self.piano_roll.open;
+                }
+                let harmony = theme::light_button(ui, "🎼 Harmony", self.harmony_keys.open, None);
+                if theme::hint(
+                    harmony,
+                    "Show or hide the harmony keys: the key, the time signature and a key \
+                     for each chord (F8)",
+                )
+                .clicked()
+                {
+                    self.harmony_keys.open = !self.harmony_keys.open;
+                }
+            });
 
-            ui.separator();
-            // The label goes first, as its own widget, so the slider and
-            // its name wrap to the next row together.
-            ui.label("Master");
-            let volume_slider =
-                egui::Slider::new(&mut self.master_volume, 0.0..=1.0).show_value(false);
-            if ui
-                .add(volume_slider)
-                .on_hover_text(format!("Master volume: {:.0}%", self.master_volume * 100.0))
-                .changed()
-            {
-                self.send(Command::SetMasterVolume(self.master_volume));
-            }
+            theme::group(ui, |ui| {
+                // The label goes first, as its own widget, so the slider
+                // and its name wrap to the next row together.
+                ui.label(egui::RichText::new("MASTER").small().color(theme::TEXT_DIM));
+                let volume_slider =
+                    egui::Slider::new(&mut self.master_volume, 0.0..=1.0).show_value(false);
+                let volume = ui.add_sized([90.0, 22.0], volume_slider);
+                let text = format!("Master volume: {:.0}%", self.master_volume * 100.0);
+                if theme::hint(volume, text).changed() {
+                    self.send(Command::SetMasterVolume(self.master_volume));
+                }
+            });
         });
+    }
+
+    /// The playhead as bar, beat and step, all counted from 1, for the
+    /// song position display. Stopped, it shows the start.
+    fn position_text(&self) -> String {
+        let time = self.project.time_signature;
+        let step = self.playhead().unwrap_or(0);
+        let per_bar = time.steps_per_bar().max(1);
+        let per_beat = time.steps_per_beat().max(1);
+        let bar = step / per_bar + 1;
+        let beat = step % per_bar / per_beat + 1;
+        let sub = step % per_beat + 1;
+        format!("{bar:>3}:{beat:02}:{sub:02}")
     }
 
     /// Choosing, adding, cloning, renaming and deleting patterns, and the
@@ -565,7 +634,12 @@ impl LoomApp {
         let current = self.pattern;
         let mut selected = current;
         let name = self.project.patterns()[current].name.clone();
-        egui::ComboBox::from_id_salt("pattern")
+        ui.label(
+            egui::RichText::new("PATTERN")
+                .small()
+                .color(theme::TEXT_DIM),
+        );
+        let combo = egui::ComboBox::from_id_salt("pattern")
             .width(120.0)
             .selected_text(egui::RichText::new(name).color(playlist::pattern_color(current)))
             .show_ui(ui, |ui| {
@@ -575,13 +649,17 @@ impl LoomApp {
                     ui.selectable_value(&mut selected, index, text);
                 }
             })
-            .response
-            .on_hover_text("The pattern the channel rack shows");
+            .response;
+        theme::hint(
+            combo,
+            "The selected pattern: the channel rack and the piano roll show it, and new \
+             clips in the playlist use it",
+        );
         if selected != current {
             self.select_pattern(selected);
         }
 
-        if ui.button("➕").on_hover_text("New pattern").clicked() {
+        if theme::hint(ui.button("➕"), "Add a new, empty pattern").clicked() {
             self.add_pattern();
         }
         // Menus normally close on any click. This one has a text field, so
@@ -589,7 +667,7 @@ impl LoomApp {
         let stay_open = egui::containers::menu::MenuConfig::new()
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
         let menu = egui::containers::menu::MenuButton::new("⋯").config(stay_open);
-        menu.ui(ui, |ui| {
+        let (menu, _) = menu.ui(ui, |ui| {
             ui.label("Name");
             // The field edits a copy, so the change can go through `edit`.
             let mut name = self.project.patterns()[self.pattern].name.clone();
@@ -611,18 +689,23 @@ impl LoomApp {
             }
         });
 
+        theme::hint(menu, "Rename, clone or delete the selected pattern");
+
         let length = self.project.patterns()[self.pattern].length();
         let mut new_length = length;
         let time = self.project.time_signature;
-        egui::ComboBox::from_id_salt("pattern-length")
+        let length_combo = egui::ComboBox::from_id_salt("pattern-length")
             .selected_text(time.describe_length(length))
             .show_ui(ui, |ui| {
                 for option in time.pattern_lengths() {
                     ui.selectable_value(&mut new_length, option, time.describe_length(option));
                 }
             })
-            .response
-            .on_hover_text(format!("How long the pattern is: {length} steps"));
+            .response;
+        theme::hint(
+            length_combo,
+            format!("How long the selected pattern is: {length} steps"),
+        );
         if new_length != length {
             self.edit_pattern("change pattern length", |pattern| {
                 pattern.set_length(new_length);
@@ -765,8 +848,22 @@ impl eframe::App for LoomApp {
             ctx.request_repaint();
         }
 
-        egui::Panel::top("transport").show(ui, |ui| self.transport_bar(ui));
-        egui::Panel::bottom("status").show(ui, |ui| self.status_bar(ui));
+        self.hint_bar.start_frame(&ctx);
+        let bar = |fill| {
+            egui::Frame::new()
+                .fill(fill)
+                .inner_margin(egui::Margin::symmetric(6, 3))
+                .stroke(egui::Stroke::new(1.0, theme::OUTLINE))
+        };
+        egui::Panel::top("menu-bar")
+            .frame(bar(theme::BACKGROUND))
+            .show(ui, |ui| self.menu_bar(ui));
+        egui::Panel::top("transport")
+            .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(6, 5)))
+            .show(ui, |ui| self.transport_bar(ui));
+        egui::Panel::bottom("status")
+            .frame(bar(theme::BACKGROUND))
+            .show(ui, |ui| self.status_bar(ui));
         // Added after the status bar, so it sits just above it.
         let harmony_actions = if self.harmony_keys.open {
             let held = self.live.held_pitches();
@@ -779,6 +876,7 @@ impl eframe::App for LoomApp {
             let heard = self.chord_playing();
             let digits = !self.live.typing() && !ctx.text_edit_focused();
             egui::Panel::bottom("harmony-keys")
+                .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))
                 .show(ui, |ui| {
                     self.harmony_keys
                         .show(ui, &self.project, channel_name, &held, &heard, digits)

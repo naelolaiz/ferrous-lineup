@@ -11,12 +11,14 @@ use loom_core::NoteEvent;
 /// Step colors. Steps are grouped by beats (four steps in 4/4, six in
 /// 6/8), and the groups alternate colors so you can count beats at a
 /// glance.
-const STEP_OFF: [Color32; 2] = [Color32::from_rgb(58, 62, 72), Color32::from_rgb(84, 62, 70)];
-const STEP_ON: Color32 = Color32::from_rgb(226, 230, 238);
-const PLAYHEAD: Color32 = Color32::from_rgb(255, 152, 48);
+const STEP_OFF: [Color32; 2] = [Color32::from_rgb(70, 78, 84), Color32::from_rgb(98, 66, 70)];
+const STEP_ON: Color32 = Color32::from_rgb(222, 228, 232);
+/// The dark edge along the bottom of a step, so it looks like a raised pad.
+const STEP_EDGE: Color32 = Color32::from_rgb(26, 30, 33);
+const PLAYHEAD: Color32 = Color32::from_rgb(246, 150, 58);
 const LED_ON: Color32 = Color32::from_rgb(96, 220, 120);
 const LED_OFF: Color32 = Color32::from_rgb(70, 74, 80);
-const MINI_ROLL_BACKGROUND: Color32 = Color32::from_rgb(44, 52, 48);
+const MINI_ROLL_BACKGROUND: Color32 = Color32::from_rgb(40, 54, 48);
 const MINI_ROLL_LINE: Color32 = Color32::from_rgb(64, 74, 68);
 const MINI_ROLL_NOTE: Color32 = Color32::from_rgb(118, 214, 140);
 
@@ -37,7 +39,18 @@ pub fn step_button(ui: &mut Ui, on: bool, beat_group: usize, is_playhead: bool) 
             fill = fill.gamma_multiply(1.25);
         }
         let painter = ui.painter();
-        painter.rect_filled(rect.shrink(1.0), 3.0, fill);
+        let pad = rect.shrink(1.0);
+        painter.rect_filled(pad, 2.0, STEP_EDGE);
+        painter.rect_filled(
+            Rect::from_min_max(pad.min, pad.max - vec2(0.0, 2.0)),
+            2.0,
+            fill,
+        );
+        if on {
+            // A light strip along the top of a step that is on.
+            let shine = Rect::from_min_size(pad.min + vec2(2.0, 2.0), vec2(pad.width() - 4.0, 3.0));
+            painter.rect_filled(shine, 1.0, Color32::WHITE);
+        }
         if is_playhead {
             painter.rect_stroke(
                 rect.shrink(1.0),
