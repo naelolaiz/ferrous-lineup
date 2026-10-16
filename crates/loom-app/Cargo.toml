@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 loom-core.workspace = true
 loom-audio.workspace = true
+loom-listen.workspace = true
 eframe.workspace = true
 rfd.workspace = true
 midir.workspace = true

@@ -12,6 +12,7 @@
 mod edit;
 mod export;
 mod files;
+mod import;
 mod library;
 mod live;
 mod view;
@@ -83,6 +84,8 @@ pub struct LoomApp {
     samples: SampleCache,
     /// The WAV export running in the background, if any.
     export: Option<export::Export>,
+    /// A recording being listened to in the background, if any.
+    import: Option<import::Import>,
     /// MIDI, the typing keyboard, and recording.
     live: live::Live,
     /// The last problem to show in the status bar, such as a bad WAV file.
@@ -140,6 +143,7 @@ impl LoomApp {
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
+            import: None,
             live: live::Live::new(midi),
             message: None,
             notice: None,
@@ -854,6 +858,7 @@ impl eframe::App for LoomApp {
         self.live_input(&ctx);
         self.handle_dropped_files(&ctx);
         self.check_export(&ctx);
+        self.check_import(&ctx);
         if self.playing {
             // Keep redrawing so the playhead moves.
             ctx.request_repaint();
