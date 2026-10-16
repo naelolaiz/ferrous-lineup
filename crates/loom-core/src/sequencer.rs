@@ -51,6 +51,16 @@ impl Sequencer {
         }
     }
 
+    /// How many frames one step lasts at the current tempo.
+    pub fn step_frames(&self) -> f64 {
+        self.frames_per_step
+    }
+
+    /// How many steps are played before the pattern loops.
+    pub fn length(&self) -> usize {
+        self.length
+    }
+
     /// Goes back to the start, so step 0 fires on the next tick.
     pub fn reset(&mut self) {
         self.frames_until_next = 0.0;

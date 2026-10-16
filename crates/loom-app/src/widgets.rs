@@ -1,10 +1,12 @@
-//! Custom widgets for the channel rack: step buttons, knobs and mute lights.
+//! Custom widgets for the channel rack: step buttons, knobs, mute lights
+//! and the small piano roll preview.
 //!
 //! An egui widget is just a function that reserves some space, reads the
 //! mouse for that space and paints into it. It returns a [`Response`] so
 //! the caller can ask whether it was clicked, dragged or changed.
 
-use eframe::egui::{self, Color32, Response, Sense, Stroke, StrokeKind, Ui, vec2};
+use eframe::egui::{self, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
+use loom_core::NoteEvent;
 
 /// Step colors. Steps are grouped in fours (one beat each), and the
 /// groups alternate colors so you can count beats at a glance.
@@ -13,6 +15,9 @@ const STEP_ON: Color32 = Color32::from_rgb(226, 230, 238);
 const PLAYHEAD: Color32 = Color32::from_rgb(255, 152, 48);
 const LED_ON: Color32 = Color32::from_rgb(96, 220, 120);
 const LED_OFF: Color32 = Color32::from_rgb(70, 74, 80);
+const MINI_ROLL_BACKGROUND: Color32 = Color32::from_rgb(44, 52, 48);
+const MINI_ROLL_LINE: Color32 = Color32::from_rgb(64, 74, 68);
+const MINI_ROLL_NOTE: Color32 = Color32::from_rgb(118, 214, 140);
 
 pub const STEP_SIZE: egui::Vec2 = vec2(20.0, 28.0);
 
@@ -84,6 +89,63 @@ pub fn mute_light(ui: &mut Ui, enabled: bool) -> Response {
     if ui.is_rect_visible(rect) {
         let color = if enabled { LED_ON } else { LED_OFF };
         ui.painter().circle_filled(rect.center(), 4.5, color);
+    }
+    response
+}
+
+/// A small picture of a channel's notes, drawn in place of its steps when
+/// the channel plays melodies or chords. Clicking it opens the piano roll.
+pub fn mini_roll(
+    ui: &mut Ui,
+    notes: &[NoteEvent],
+    length: usize,
+    playhead: Option<usize>,
+) -> Response {
+    // Step buttons have a gap between them, so one step takes up the
+    // button's width plus the gap. The preview must line up with them.
+    let gap = ui.spacing().item_spacing.x;
+    let step_width = STEP_SIZE.x + gap;
+    let size = vec2(step_width * length as f32 - gap, STEP_SIZE.y);
+    let (rect, response) = ui.allocate_exact_size(size, Sense::click());
+    if !ui.is_rect_visible(rect) {
+        return response;
+    }
+
+    let painter = ui.painter();
+    let inner = rect.shrink(1.0);
+    let mut background = MINI_ROLL_BACKGROUND;
+    if response.hovered() {
+        background = background.gamma_multiply(1.25);
+    }
+    painter.rect_filled(inner, 3.0, background);
+    for beat in (4..length).step_by(4) {
+        let x = rect.left() + beat as f32 * step_width - gap / 2.0;
+        painter.vline(x, inner.y_range(), Stroke::new(1.0, MINI_ROLL_LINE));
+    }
+
+    // Fit the notes' pitch range into the height, at least an octave tall
+    // so a few close notes do not fill it from top to bottom.
+    let visible = || notes.iter().filter(|note| note.start < length);
+    let lowest = visible().map(|note| note.pitch.midi()).min().unwrap_or(0);
+    let highest = visible().map(|note| note.pitch.midi()).max().unwrap_or(0);
+    let span = (highest - lowest).max(12) as f32;
+    let centering = (span - (highest - lowest) as f32) / 2.0;
+    for note in visible() {
+        let position = (note.pitch.midi() - lowest) as f32 + centering;
+        let y = inner.bottom() - 3.0 - position / span * (inner.height() - 6.0);
+        let x_start = rect.left() + note.start as f32 * step_width + 1.0;
+        let x_end = rect.left() + note.end().min(length) as f32 * step_width - gap - 1.0;
+        painter.line_segment(
+            [pos2(x_start, y), pos2(x_end, y)],
+            Stroke::new(2.0, MINI_ROLL_NOTE),
+        );
+    }
+
+    if let Some(step) = playhead.filter(|&step| step < length) {
+        let x = rect.left() + step as f32 * step_width;
+        let column =
+            Rect::from_min_max(pos2(x, inner.top()), pos2(x + STEP_SIZE.x, inner.bottom()));
+        painter.rect_stroke(column, 2.0, Stroke::new(2.0, PLAYHEAD), StrokeKind::Inside);
     }
     response
 }

@@ -9,8 +9,9 @@
 //! [`Command`] messages through a lock-free ring buffer (`rtrb`), and the
 //! audio thread applies them at the start of each block. Two things travel
 //! the other way: the current step (through an atomic integer, for the
-//! playhead in the UI) and old instruments that need freeing (through a
-//! second ring buffer, so the memory is freed on the UI thread).
+//! playhead in the UI) and old instruments and note lists that need
+//! freeing (through a second ring buffer, so the memory is freed on the
+//! UI thread).
 
 use std::fmt;
 use std::sync::Arc;
@@ -18,7 +19,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
-use loom_core::{MAX_CHANNELS, MAX_STEPS, Sequencer, StepRow, Tempo};
+use loom_core::{
+    DEFAULT_VELOCITY, MAX_CHANNELS, Note, NoteEvent, STEP_NOTE, STEPS_PER_BEAT, Sequencer, Tempo,
+};
 
 use crate::dsp::Smoothed;
 use crate::instrument::Instrument;
@@ -28,7 +31,7 @@ use crate::instrument::Instrument;
 /// far more than the UI will ever send in that time.
 const COMMAND_QUEUE_SIZE: usize = 1024;
 
-/// How many old instruments can wait to be freed by the UI thread.
+/// How many old instruments and note lists can wait to be freed by the UI thread.
 const TRASH_QUEUE_SIZE: usize = 256;
 
 /// The value of the playhead while stopped.
@@ -54,7 +57,7 @@ pub enum Command {
     /// Add a channel at the bottom of the rack.
     AddChannel {
         instrument: Instrument,
-        steps: StepRow,
+        notes: Vec<NoteEvent>,
         volume: f32,
         muted: bool,
     },
@@ -64,10 +67,11 @@ pub enum Command {
         channel: usize,
         instrument: Instrument,
     },
-    SetStep {
+    /// Replace all the notes of a channel. The UI sends a fresh copy of
+    /// the list whenever a step or a note changes.
+    SetNotes {
         channel: usize,
-        step: usize,
-        on: bool,
+        notes: Vec<NoteEvent>,
     },
     SetVolume {
         channel: usize,
@@ -79,6 +83,18 @@ pub enum Command {
     },
     /// Play a channel once right now, as when clicking its name.
     Preview(usize),
+    /// Play one note on a channel right now, as when clicking a piano key.
+    PreviewNote {
+        channel: usize,
+        pitch: Note,
+    },
+}
+
+/// Something the audio thread has finished with. It is sent back to the
+/// UI thread, because freeing memory is not allowed on the audio thread.
+enum Garbage {
+    Instrument(Instrument),
+    Notes(Vec<NoteEvent>),
 }
 
 /// What the engine found when it opened the sound card.
@@ -128,7 +144,7 @@ pub struct AudioEngine {
     // The stream is never read, but it must be kept: dropping it stops audio.
     _stream: cpal::Stream,
     commands: rtrb::Producer<Command>,
-    trash: rtrb::Consumer<Instrument>,
+    trash: rtrb::Consumer<Garbage>,
     playhead: Arc<AtomicUsize>,
     info: EngineInfo,
 }
@@ -201,11 +217,16 @@ impl AudioEngine {
         }
     }
 
-    /// Frees the instruments the audio thread has finished with.
-    /// Call this regularly from the UI thread, for example once per frame.
+    /// Frees the instruments and note lists the audio thread has finished
+    /// with. Call this regularly from the UI thread, for example once per frame.
     pub fn collect_garbage(&mut self) {
-        while let Ok(old_instrument) = self.trash.pop() {
-            drop(old_instrument);
+        while let Ok(garbage) = self.trash.pop() {
+            // Dropping a value frees its memory. Here, on the UI thread,
+            // that is allowed to take as long as it needs.
+            match garbage {
+                Garbage::Instrument(instrument) => drop(instrument),
+                Garbage::Notes(notes) => drop(notes),
+            }
         }
     }
 
@@ -245,7 +266,7 @@ where
 /// One row of the channel rack, as the audio thread sees it.
 struct ChannelState {
     instrument: Instrument,
-    steps: StepRow,
+    notes: Vec<NoteEvent>,
     volume: Smoothed,
     muted: bool,
 }
@@ -263,7 +284,7 @@ struct AudioThread {
     playing: bool,
     master_volume: Smoothed,
     commands: rtrb::Consumer<Command>,
-    trash: rtrb::Producer<Instrument>,
+    trash: rtrb::Producer<Garbage>,
     playhead: Arc<AtomicUsize>,
 }
 
@@ -272,7 +293,7 @@ impl AudioThread {
         sample_rate: u32,
         output_channels: usize,
         commands: rtrb::Consumer<Command>,
-        trash: rtrb::Producer<Instrument>,
+        trash: rtrb::Producer<Garbage>,
         playhead: Arc<AtomicUsize>,
     ) -> Self {
         AudioThread {
@@ -288,11 +309,16 @@ impl AudioThread {
         }
     }
 
-    /// Hands an instrument to the UI thread to be freed there.
-    fn throw_away(&mut self, instrument: Instrument) {
-        // If the trash queue is full, the instrument is freed here after
-        // all. That should never happen, because the UI empties it every frame.
-        let _ = self.trash.push(instrument);
+    /// Hands something to the UI thread to be freed there.
+    fn throw_away(&mut self, garbage: Garbage) {
+        // If the trash queue is full, it is freed here after all. That
+        // should never happen, because the UI empties it every frame.
+        let _ = self.trash.push(garbage);
+    }
+
+    /// How many frames a preview note is held for: one beat.
+    fn preview_gate(&self) -> u32 {
+        (self.sequencer.step_frames() * STEPS_PER_BEAT as f64) as u32
     }
 
     fn apply(&mut self, command: Command) {
@@ -304,31 +330,36 @@ impl AudioThread {
             Command::Stop => {
                 self.playing = false;
                 self.playhead.store(NO_STEP, Ordering::Relaxed);
+                for channel in &mut self.channels {
+                    channel.instrument.release_all();
+                }
             }
             Command::SetTempo(tempo) => self.sequencer.set_tempo(tempo),
             Command::SetPatternLength(length) => self.sequencer.set_length(length),
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
             Command::AddChannel {
                 instrument,
-                steps,
+                notes,
                 volume,
                 muted,
             } => {
                 if self.channels.len() < MAX_CHANNELS {
                     self.channels.push(ChannelState {
                         instrument,
-                        steps,
+                        notes,
                         volume: Smoothed::new(volume, VOLUME_SMOOTHING, self.sample_rate),
                         muted,
                     });
                 } else {
-                    self.throw_away(instrument);
+                    self.throw_away(Garbage::Instrument(instrument));
+                    self.throw_away(Garbage::Notes(notes));
                 }
             }
             Command::RemoveChannel(index) => {
                 if index < self.channels.len() {
                     let removed = self.channels.remove(index);
-                    self.throw_away(removed.instrument);
+                    self.throw_away(Garbage::Instrument(removed.instrument));
+                    self.throw_away(Garbage::Notes(removed.notes));
                 }
             }
             Command::SetInstrument {
@@ -337,19 +368,17 @@ impl AudioThread {
             } => match self.channels.get_mut(channel) {
                 Some(state) => {
                     let old = std::mem::replace(&mut state.instrument, instrument);
-                    self.throw_away(old);
+                    self.throw_away(Garbage::Instrument(old));
                 }
-                None => self.throw_away(instrument),
+                None => self.throw_away(Garbage::Instrument(instrument)),
             },
-            Command::SetStep { channel, step, on } => {
-                if let Some(cell) = self
-                    .channels
-                    .get_mut(channel)
-                    .and_then(|state| state.steps.get_mut(step))
-                {
-                    *cell = on;
+            Command::SetNotes { channel, notes } => match self.channels.get_mut(channel) {
+                Some(state) => {
+                    let old = std::mem::replace(&mut state.notes, notes);
+                    self.throw_away(Garbage::Notes(old));
                 }
-            }
+                None => self.throw_away(Garbage::Notes(notes)),
+            },
             Command::SetVolume { channel, volume } => {
                 if let Some(state) = self.channels.get_mut(channel) {
                     state.volume.set(volume);
@@ -360,10 +389,38 @@ impl AudioThread {
                     state.muted = muted;
                 }
             }
-            Command::Preview(channel) => {
-                if let Some(state) = self.channels.get_mut(channel) {
-                    state.instrument.trigger(self.sample_rate);
-                }
+            Command::Preview(channel) => self.preview(channel, STEP_NOTE),
+            Command::PreviewNote { channel, pitch } => self.preview(channel, pitch),
+        }
+    }
+
+    fn preview(&mut self, channel: usize, pitch: Note) {
+        let gate = self.preview_gate();
+        if let Some(state) = self.channels.get_mut(channel) {
+            state
+                .instrument
+                .note_on(pitch, DEFAULT_VELOCITY, gate, self.sample_rate);
+        }
+    }
+
+    /// Starts the notes of every channel that begin on `step`.
+    fn start_notes(&mut self, step: usize) {
+        let step_frames = self.sequencer.step_frames();
+        let length = self.sequencer.length();
+        for channel in &mut self.channels {
+            if channel.muted {
+                continue;
+            }
+            // `channel.notes` is borrowed to read while `channel.instrument`
+            // is borrowed to change. That is allowed: they are different
+            // fields of the struct, so the borrows do not overlap.
+            for note in channel.notes.iter().filter(|note| note.start == step) {
+                // A note that runs past the end of the pattern is cut there.
+                let steps_held = note.length.min(length.saturating_sub(step));
+                let gate = (steps_held as f64 * step_frames) as u32;
+                channel
+                    .instrument
+                    .note_on(note.pitch, note.velocity, gate, self.sample_rate);
             }
         }
     }
@@ -382,11 +439,7 @@ impl AudioThread {
                 && let Some(step) = self.sequencer.tick()
             {
                 self.playhead.store(step, Ordering::Relaxed);
-                for channel in &mut self.channels {
-                    if channel.steps[step % MAX_STEPS] && !channel.muted {
-                        channel.instrument.trigger(self.sample_rate);
-                    }
-                }
+                self.start_notes(step);
             }
 
             let mut mix = 0.0;
@@ -404,7 +457,7 @@ impl AudioThread {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::instrument::Sampler;
+    use crate::instrument::{Sampler, Synth};
     use crate::sample::SampleData;
 
     const RATE: u32 = 48_000;
@@ -412,7 +465,7 @@ mod tests {
     struct Harness {
         audio: AudioThread,
         commands: rtrb::Producer<Command>,
-        trash: rtrb::Consumer<Instrument>,
+        trash: rtrb::Consumer<Garbage>,
         playhead: Arc<AtomicUsize>,
     }
 
@@ -434,19 +487,15 @@ mod tests {
         Instrument::Sampler(Sampler::new(Arc::new(SampleData::new(vec![0.5; 10], RATE))))
     }
 
-    fn steps(on: &[usize]) -> StepRow {
-        let mut row = [false; MAX_STEPS];
-        for &step in on {
-            row[step] = true;
-        }
-        row
+    fn steps(on: &[usize]) -> Vec<NoteEvent> {
+        on.iter().map(|&step| NoteEvent::step(step)).collect()
     }
 
     fn add(h: &mut Harness, on: &[usize], muted: bool) {
         h.commands
             .push(Command::AddChannel {
                 instrument: click(),
-                steps: steps(on),
+                notes: steps(on),
                 volume: 1.0,
                 muted,
             })
@@ -502,10 +551,9 @@ mod tests {
         h.commands.push(Command::Play).unwrap();
         render(&mut h, 100);
         h.commands
-            .push(Command::SetStep {
+            .push(Command::SetNotes {
                 channel: 0,
-                step: 1,
-                on: true,
+                notes: steps(&[1]),
             })
             .unwrap();
         let out = render(&mut h, 6_000);
@@ -513,7 +561,7 @@ mod tests {
     }
 
     #[test]
-    fn replaced_instruments_go_to_the_trash() {
+    fn replaced_things_go_to_the_trash() {
         let mut h = harness();
         add(&mut h, &[], false);
         h.commands
@@ -522,13 +570,81 @@ mod tests {
                 instrument: click(),
             })
             .unwrap();
+        h.commands
+            .push(Command::SetNotes {
+                channel: 0,
+                notes: steps(&[0]),
+            })
+            .unwrap();
         h.commands.push(Command::RemoveChannel(0)).unwrap();
         render(&mut h, 10);
-        let mut thrown_away = 0;
-        while h.trash.pop().is_ok() {
-            thrown_away += 1;
+        let (mut instruments, mut note_lists) = (0, 0);
+        while let Ok(garbage) = h.trash.pop() {
+            match garbage {
+                Garbage::Instrument(_) => instruments += 1,
+                Garbage::Notes(_) => note_lists += 1,
+            }
         }
-        assert_eq!(thrown_away, 2, "the old and the removed instrument");
+        assert_eq!(instruments, 2, "the replaced and the removed instrument");
+        assert_eq!(note_lists, 2, "the replaced and the removed notes");
+    }
+
+    #[test]
+    fn notes_are_held_for_their_length() {
+        let mut h = harness();
+        h.commands
+            .push(Command::AddChannel {
+                instrument: Instrument::Synth(Synth::new(RATE)),
+                notes: vec![NoteEvent::new(Note::A4, 0, 2)],
+                volume: 1.0,
+                muted: false,
+            })
+            .unwrap();
+        h.commands
+            .push(Command::SetTempo(Tempo::new(120.0)))
+            .unwrap();
+        h.commands.push(Command::Play).unwrap();
+        // Two steps at 120 BPM are 12 000 frames. The note is still held
+        // just before that, and fades out (to silence) not long after.
+        render(&mut h, 11_900);
+        assert_eq!(h.audio.channels[0].instrument.voices_playing(), 1);
+        render(&mut h, 48_000);
+        assert_eq!(h.audio.channels[0].instrument.voices_playing(), 0);
+    }
+
+    #[test]
+    fn chords_play_all_their_notes() {
+        let mut h = harness();
+        let chord = [60, 64, 67].map(|midi| NoteEvent::new(Note::new(midi), 0, 4));
+        h.commands
+            .push(Command::AddChannel {
+                instrument: Instrument::Synth(Synth::new(RATE)),
+                notes: chord.to_vec(),
+                volume: 1.0,
+                muted: false,
+            })
+            .unwrap();
+        h.commands.push(Command::Play).unwrap();
+        render(&mut h, 10);
+        assert_eq!(h.audio.channels[0].instrument.voices_playing(), 3);
+    }
+
+    #[test]
+    fn stopping_releases_held_notes() {
+        let mut h = harness();
+        h.commands
+            .push(Command::AddChannel {
+                instrument: Instrument::Synth(Synth::new(RATE)),
+                notes: vec![NoteEvent::new(Note::A4, 0, 16)],
+                volume: 1.0,
+                muted: false,
+            })
+            .unwrap();
+        h.commands.push(Command::Play).unwrap();
+        render(&mut h, 1_000);
+        h.commands.push(Command::Stop).unwrap();
+        render(&mut h, 48_000);
+        assert_eq!(h.audio.channels[0].instrument.voices_playing(), 0);
     }
 
     #[test]
@@ -540,6 +656,15 @@ mod tests {
     }
 
     #[test]
+    fn commands_stay_small() {
+        // Every slot of the command queue is as big as the biggest
+        // command. The instruments keep their voices in a `Box`, so a
+        // command holds a pointer to them instead of all the voices.
+        let size = std::mem::size_of::<Command>();
+        assert!(size <= 64, "a command takes {size} bytes");
+    }
+
+    #[test]
     fn converts_to_integer_samples() {
         let (mut commands, consumer) = rtrb::RingBuffer::new(8);
         let (trash, _trash_consumer) = rtrb::RingBuffer::new(8);
@@ -548,7 +673,7 @@ mod tests {
         commands
             .push(Command::AddChannel {
                 instrument: click(),
-                steps: steps(&[0]),
+                notes: steps(&[0]),
                 volume: 1.0,
                 muted: false,
             })
@@ -557,6 +682,8 @@ mod tests {
         commands.push(Command::Play).unwrap();
         let mut buffer = vec![0_i16; 10];
         audio.process(&mut buffer);
-        assert!(buffer[0] > 10_000, "got {}", buffer[0]);
+        // About 10 000: half volume, times the default velocity, times
+        // the master volume, which is still sliding up from 0.8.
+        assert!(buffer[0] > 5_000, "got {}", buffer[0]);
     }
 }

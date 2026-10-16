@@ -7,7 +7,7 @@ arrange them into songs, and learn harmony along the way.
 > Ferrous Loom is an independent project. It is not affiliated with
 > Image-Line or FL Studio.
 
-![The Ferrous Loom channel rack](screenshots/step-2-rack.png)
+![Ferrous Loom with the channel rack and the piano roll](screenshots/step-3-piano-roll.png)
 
 ## Status
 
@@ -17,8 +17,8 @@ Early development, Linux first.
 |------|----------|--------|
 | 1 | Window, audio engine, test tone, CI | Done |
 | 2 | Channel rack, step sequencer, drum kit, sampler, synth | Done |
-| 3 | Piano roll with harmony helpers | Next |
-| 4 | Playlist, saving, macOS and Windows | Planned |
+| 3 | Piano roll with harmony helpers | Done |
+| 4 | Playlist, saving, macOS and Windows | Next |
 
 ## Build and run (Linux)
 
@@ -30,15 +30,18 @@ sudo apt install build-essential pkg-config libasound2-dev \
 cargo run --release
 ```
 
-Press **Space** to play the demo beat. Click steps to change it, and drop
-WAV files on the channel rack to use your own sounds.
+Press **Space** to play the demo: a beat and a C, Am, F, G chord
+progression. Click steps to change the beat, and drop WAV files on the
+channel rack to use your own sounds. In the piano roll (**F7**), pick a
+key to highlight its notes, draw notes or whole chords, and watch the
+chord names above the grid.
 
 ## Project layout
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, tempo, patterns, the sequencer clock. No audio, no UI. |
-| `crates/loom-audio` | Real-time audio engine on top of `cpal`: drum synthesis, sampler, synth. |
+| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, tempo, patterns, the sequencer clock. No audio, no UI. |
+| `crates/loom-audio` | Real-time audio engine on top of `cpal`: drum synthesis, a pitched sampler, a polyphonic synth. |
 | `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`. |
 
 ## License
