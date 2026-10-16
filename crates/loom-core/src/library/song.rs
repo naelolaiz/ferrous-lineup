@@ -207,10 +207,16 @@ pub static SONGS: &[Song] = &[
     pop::LONDON_BRIDGE,
     pop::OLD_MACDONALD,
     pop::DECK_THE_HALLS,
+    pop::THREE_BLIND_MICE,
+    pop::SKIP_TO_MY_LOU,
+    pop::POP_GOES_THE_WEASEL,
     rock::DRUNKEN_SAILOR,
     rock::BELLA_CIAO,
     rock::BEETHOVENS_FIFTH,
     rock::YANKEE_DOODLE,
+    rock::WHISKEY_IN_THE_JAR,
+    rock::BATTLE_HYMN,
+    rock::WHEN_JOHNNY,
     blues::MIDNIGHT_SHUFFLE,
     blues::ROLLING_BOOGIE,
     blues::MINOR_MOOD,
@@ -269,6 +275,20 @@ pub static SONGS: &[Song] = &[
     folk::ROW_YOUR_BOAT,
     folk::SILENT_NIGHT,
     folk::WE_WISH_YOU,
+    folk::WILD_ROVER,
+    folk::SHENANDOAH,
+    folk::RED_RIVER_VALLEY,
+    folk::HOME_ON_THE_RANGE,
+    folk::DANNY_BOY,
+    folk::LOCH_LOMOND,
+    folk::WAYFARING_STRANGER,
+    folk::COTTON_EYED_JOE,
+    folk::OLD_JOE_CLARK,
+    folk::SOLDIERS_JOY,
+    folk::TURKEY_IN_THE_STRAW,
+    folk::IRISH_WASHERWOMAN,
+    folk::WALTZING_MATILDA,
+    folk::MOLLY_MALONE,
     classical::CANON,
     classical::FUR_ELISE,
     classical::MOUNTAIN_KING,
@@ -346,6 +366,26 @@ mod tests {
             }
         }
         assert!(SONGS.len() >= 60);
+    }
+
+    /// A comping written for four beats lands across the beats of a bar
+    /// of three, so a song in 3/4 or 6/8 plays one written for three, as
+    /// the styles do.
+    #[test]
+    fn songs_in_three_play_in_three() {
+        for song in SONGS {
+            if song.time.steps_per_bar() == 12 {
+                assert!(
+                    matches!(
+                        song.comping,
+                        Comping::Waltz | Comping::Sway | Comping::Arp3 | Comping::Held
+                    ),
+                    "{} is in three but plays {:?}",
+                    song.name,
+                    song.comping
+                );
+            }
+        }
     }
 
     #[test]
