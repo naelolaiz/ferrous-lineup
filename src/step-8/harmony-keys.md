@@ -240,3 +240,73 @@ channel holds a chord (a solo melody), all the notes count.
 The bar runs `analyze` from step 3 on these notes, and on the keys held
 down, which win. The chord found lights its key, and is what the
 suggestions from step 6, `next_chords`, start from.
+
+## How much the hints say
+
+![The hint line at its three levels: Detailed, Short and Minimal, after playing C](../images/step-8-hint-levels.png)
+
+After a chord, up to four keys can be outlined: every chord that often
+comes next. The most usual one gets a thick bright outline, the others
+a thin dim one, and the hint line talks about the bright one.
+
+The hint line, the keys' tooltips and the piano roll's "Chords in"
+row explain at one of three levels, picked in the small menu at the
+start of the hint line:
+
+| Level | After C, the hint line says |
+|---|---|
+| Detailed | After C, F often comes next: I to IV: moving away from home, toward the dominant. |
+| Short (the default) | C → F: away from home |
+| Minimal | C → F |
+
+The level is a small enum in `loom-core/src/harmony/hints.rs`. With
+`#[derive(Default)]`, the variant marked `#[default]` is the one
+`HintLevel::default()` returns:
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum HintLevel {
+    Detailed,
+    #[default]
+    Short,
+    Minimal,
+}
+```
+
+Each move in the tables of `progression.rs` now carries its reason
+twice, in a few words and in a sentence. The tables are constants, and
+a constant can only be built by code the compiler can run while
+compiling. A `const fn` is such code, so a tiny one keeps every move on
+one line:
+
+```rust
+const fn go(to: usize, short: &'static str, reason: &'static str) -> Move {
+    Move { to, short, reason }
+}
+
+// I
+&[
+    go(3, "away from home", "I to IV: moving away from home, toward the dominant."),
+    // ...
+],
+```
+
+`Suggestion::why(level)` then picks the words to show, and returns an
+`Option`, because at the Minimal level there are none:
+
+```rust
+pub fn why(&self, level: HintLevel) -> Option<&'static str> {
+    match level {
+        HintLevel::Detailed => Some(self.reason),
+        HintLevel::Short => Some(self.short),
+        HintLevel::Minimal => None,
+    }
+}
+```
+
+The menu lives in the harmony bar, but the piano roll needs the level
+too. Rather than sharing it through a reference, the app copies it into
+the piano roll every frame (`self.piano_roll.hints =
+self.harmony_keys.hints`). `HintLevel` is `Copy`, so that is as cheap as
+copying a number, and each view keeps owning its own state. The level
+is not saved: it starts at Short each time the app opens.

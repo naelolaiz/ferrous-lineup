@@ -88,3 +88,13 @@ a *meter map*: a list of `(bar, TimeSignature)` changes, sorted by bar.
 
 *Practices:* designing a data structure, binary search on sorted data,
 keeping files compatible.
+
+## 7. Remember the hint level (loom-app, medium)
+
+The hint level goes back to Short every time the app starts. eframe can
+save app settings between runs with its `persistence` feature: turn it
+on in `crates/loom-app/Cargo.toml`, give `HintLevel` serde's `Serialize`
+and `Deserialize`, store it in `App::save`, and read it back from
+`CreationContext::storage` when the app starts.
+
+*Practices:* Cargo features, serde derives, the `eframe::App` trait.
