@@ -33,6 +33,8 @@ pub enum RackAction {
     ToggleMute(usize),
     Remove(usize),
     OpenPianoRoll(usize),
+    /// Show another pattern in the rack.
+    SelectPattern(usize),
     AddDrum(Drum),
     AddSynth,
     /// Add a channel that plays an external synth.
@@ -64,6 +66,7 @@ pub fn show(
     playhead: Option<usize>,
 ) -> Vec<RackAction> {
     let mut actions = Vec::new();
+    let pattern_index = pattern;
     let Some(pattern) = project.pattern(pattern) else {
         return actions;
     };
@@ -72,17 +75,16 @@ pub fn show(
     let files_hovering = ui.ctx().input(|input| !input.raw.hovered_files.is_empty());
     let pointer = ui.ctx().input(|input| input.pointer.hover_pos());
 
-    // The rack window is as wide as a row, up to the size of the main
-    // window; beyond that, it scrolls. A row is the light, the knob, the
-    // name, a small gap and the steps, with spacing between them all.
-    let gap = ui.spacing().item_spacing.x;
-    let controls = 14.0 + 24.0 + NAME_WIDTH + 6.0 + 4.0 * gap;
-    let row_width = controls + length as f32 * (widgets::STEP_SIZE.x + gap);
-    let room = ui.ctx().content_rect().size() - egui::vec2(60.0, 120.0);
-    egui::ScrollArea::both()
-        .min_scrolled_width(row_width.min(room.x))
-        .max_width(room.x)
-        .max_height(room.y)
+    drums_elsewhere(ui, project, pattern, &mut actions);
+
+    // The rack scrolls when the window is smaller than its rows. When all
+    // the rows fit, the mouse wheel scrolls the steps sideways, without
+    // having to hold Shift.
+    let size = natural_size(ui.style(), project, pattern_index, widgets::zoom(ui));
+    ui.style_mut().always_scroll_the_only_direction = true;
+    let vertical = size.y > ui.available_height();
+    egui::ScrollArea::new([true, vertical])
+        .auto_shrink(false)
         .show(ui, |ui| {
             for (index, channel) in project.channels().iter().enumerate() {
                 let row = ui.horizontal(|ui| {
@@ -104,7 +106,7 @@ pub fn show(
                     }
 
                     let name = egui::Button::new(&channel.name)
-                        .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y))
+                        .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y) * widgets::zoom(ui))
                         .selected(index == selected)
                         .truncate();
                     let name = ui.add(name).on_hover_text(
@@ -143,7 +145,7 @@ pub fn show(
                         }
                     });
 
-                    ui.add_space(6.0);
+                    ui.add_space(6.0 * widgets::zoom(ui));
                     // Plain steps are shown as buttons; melodies and chords as
                     // a small preview of the piano roll.
                     if pattern.is_step_row(index) {
@@ -235,6 +237,86 @@ pub fn show(
     }
 
     actions
+}
+
+/// When a pattern has no drum steps but other patterns do, says so, with
+/// a button for each of those patterns. Songs often keep their drums in a
+/// pattern of their own ("A" and "A drums"), and without this the drum
+/// rows of "A" just look broken.
+fn drums_elsewhere(
+    ui: &mut Ui,
+    project: &Project,
+    pattern: &loom_core::Pattern,
+    actions: &mut Vec<RackAction>,
+) {
+    let with_drums = patterns_with_drums(project, pattern);
+    if with_drums.is_empty() {
+        return;
+    }
+    ui.horizontal_wrapped(|ui| {
+        ui.label(format!(
+            "No drum steps in \"{}\": click a step to add one. Drums are in:",
+            pattern.name
+        ));
+        for (index, name) in with_drums {
+            if ui.button(name).clicked() {
+                actions.push(RackAction::SelectPattern(index));
+            }
+        }
+    });
+}
+
+/// The patterns with drum steps, by index and name, when `pattern` has
+/// none; empty when it has some.
+fn patterns_with_drums<'a>(
+    project: &'a Project,
+    pattern: &loom_core::Pattern,
+) -> Vec<(usize, &'a str)> {
+    let has_steps = |pattern: &loom_core::Pattern| {
+        (0..pattern.rows()).any(|row| pattern.notes(row).iter().any(|note| note.is_step()))
+    };
+    if has_steps(pattern) {
+        return Vec::new();
+    }
+    project
+        .patterns()
+        .iter()
+        .enumerate()
+        .filter(|(_, other)| has_steps(other))
+        .map(|(index, other)| (index, other.name.as_str()))
+        .collect()
+}
+
+/// How big the rack is with nothing hidden: as wide as a row (the light,
+/// the knob, the name, a small gap and the steps, with spacing between
+/// them all) and as tall as all the rows, the "Add channel" button and
+/// the line that says where the drums are, if it is shown. `zoom` is the
+/// rack's zoom; `style` must already be scaled by it.
+pub fn natural_size(
+    style: &egui::Style,
+    project: &Project,
+    pattern: usize,
+    zoom: f32,
+) -> egui::Vec2 {
+    let Some(pattern) = project.pattern(pattern) else {
+        return egui::Vec2::ZERO;
+    };
+    let steps = pattern.length();
+    let gap = style.spacing.item_spacing;
+    let step = widgets::STEP_SIZE * zoom;
+    let controls = (14.0 + 24.0 + NAME_WIDTH + 6.0) * zoom + 4.0 * gap.x;
+    let width = controls + steps as f32 * (step.x + gap.x);
+    let rows = project.channels().len() as f32 * (step.y + gap.y);
+    let line = style.spacing.interact_size.y + gap.y;
+    let add_channel = 4.0 + line;
+    let hint = if patterns_with_drums(project, pattern).is_empty() {
+        0.0
+    } else {
+        line
+    };
+    // Room for a scroll bar, so one never covers the last row or step.
+    let bar = style.spacing.scroll.bar_width + style.spacing.scroll.bar_outer_margin;
+    egui::vec2(width + bar, hint + rows + add_channel + bar)
 }
 
 /// Whether a path ends in `.loom`.
