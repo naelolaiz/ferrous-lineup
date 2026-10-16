@@ -32,8 +32,9 @@ use loom_core::{
 use crate::channel_rack::{self, RackAction};
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
 use crate::midi::Midi;
-use crate::piano_roll::{PianoRoll, RollAction};
+use crate::piano_roll::{self, PianoRoll, RollAction};
 use crate::playlist::{self, PlaylistAction, PlaylistView};
+use crate::widgets;
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
@@ -88,6 +89,15 @@ pub struct LoomApp {
     message: Option<String>,
     /// The last piece of good news for the status bar ("Exported song.wav").
     notice: Option<String>,
+    /// A window to show in front of the others on the next frame.
+    bring_to_front: Option<egui::Id>,
+    /// The part of the screen the zoom keys zoom: the one clicked last.
+    zoom_area: view::Area,
+}
+
+/// The id of the channel rack window.
+fn rack_id() -> egui::Id {
+    egui::Id::unique("channel-rack")
 }
 
 impl LoomApp {
@@ -96,6 +106,10 @@ impl LoomApp {
     /// otherwise the demo song is.
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         cc.egui_ctx.set_theme(egui::Theme::Dark);
+        // The zoom keys zoom one part of the screen at a time, not all of
+        // it as egui would (see view.rs).
+        cc.egui_ctx
+            .options_mut(|options| options.zoom_with_keyboard = false);
 
         let mut audio = match AudioEngine::start() {
             Ok(engine) => Audio::Running(Box::new(engine)),
@@ -129,6 +143,8 @@ impl LoomApp {
             live: live::Live::new(midi),
             message: None,
             notice: None,
+            bring_to_front: None,
+            zoom_area: view::Area::Main,
         };
         app.send_whole_project();
         if let Some(path) = path {
@@ -258,6 +274,36 @@ impl LoomApp {
         }
     }
 
+    /// Opens the editor that suits a pattern, as a double-click on one of
+    /// its clips does: the piano roll when it has melodies or chords, on
+    /// the channel that plays them, and the channel rack for drums.
+    fn edit_clip(&mut self, pattern: usize) {
+        self.select_pattern(pattern);
+        let Some(notes) = self.project.pattern(pattern) else {
+            return;
+        };
+        let current = self.piano_roll.channel();
+        let melodic = |channel| notes.notes(channel).iter().any(|note| !note.is_step());
+        let channel = if melodic(current) {
+            Some(current)
+        } else {
+            piano_roll::busiest_channel(notes)
+        };
+        match channel {
+            Some(channel) => {
+                self.piano_roll.open_for(channel);
+                self.bring_to_front = Some(PianoRoll::id());
+            }
+            None => self.show_rack(),
+        }
+    }
+
+    /// Opens the channel rack and brings it in front of the other windows.
+    fn show_rack(&mut self) {
+        self.rack_open = true;
+        self.bring_to_front = Some(rack_id());
+    }
+
     fn select_pattern(&mut self, pattern: usize) {
         if pattern < self.project.patterns().len() {
             self.pattern = pattern;
@@ -320,6 +366,7 @@ impl LoomApp {
                 self.edit("delete channel", |project| project.remove_channel(channel));
             }
             RackAction::OpenPianoRoll(channel) => self.piano_roll.open_for(channel),
+            RackAction::SelectPattern(pattern) => self.select_pattern(pattern),
             RackAction::AddDrum(drum) => self.add_channel(Channel::drum(drum)),
             RackAction::AddSynth => self.add_channel(Channel::synth()),
             RackAction::AddMidiOut => self.add_channel(Channel::midi_out(0)),
@@ -385,6 +432,8 @@ impl LoomApp {
                 }
             }
             RollAction::SetScale(scale) => self.edit("change key", |project| project.scale = scale),
+            RollAction::SelectPattern(pattern) => self.select_pattern(pattern),
+            RollAction::OpenRack => self.show_rack(),
         }
     }
 
@@ -435,6 +484,7 @@ impl LoomApp {
                     project.move_clip(index, track, start)
                 });
             }
+            PlaylistAction::EditClip(pattern) => self.edit_clip(pattern),
             PlaylistAction::RemoveClip(index) => {
                 self.edit("delete clips", |project| project.remove_clip(index));
             }
@@ -782,6 +832,7 @@ impl LoomApp {
             });
         }
         self.view_shortcuts(ctx);
+        self.zoom_shortcuts(ctx);
         self.file_shortcuts(ctx);
         if !typing {
             // While typing, Ctrl+Z belongs to the text field.
@@ -852,13 +903,30 @@ impl eframe::App for LoomApp {
         let playhead = self.pattern_playhead();
         let mut rack_open = self.rack_open;
         let pattern_name = &self.project.patterns()[self.pattern].name;
+        if let Some(id) = self.bring_to_front.take() {
+            ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, id));
+        }
+        // The rack opens as big as its rows, up to the size of the
+        // playlist; it can be resized, and scrolls when made smaller.
+        let rack_scale = Self::window_scale(&ctx, view::Area::Rack);
+        let natural =
+            channel_rack::natural_size(&ctx.global_style(), &self.project, self.pattern, 1.0)
+                * rack_scale;
+        // A window's default size is its outside: the contents, the frame
+        // around them and the title bar.
+        let style = ctx.global_style();
+        let frame = style.spacing.window_margin.sum();
+        let title = style.text_styles[&egui::TextStyle::Heading].size + 2.0 * frame.y;
+        let rack_size = natural + frame + egui::vec2(0.0, title);
         let rack_actions = egui::Window::new(format!("Channel rack · {pattern_name}"))
-            .id(egui::Id::unique("channel-rack"))
+            .id(rack_id())
             .open(&mut rack_open)
             .default_pos([240.0, 380.0])
+            .default_size(rack_size.min(area.size() - egui::vec2(40.0, 80.0)))
             .constrain_to(area)
-            .resizable(false)
+            .resizable(true)
             .show(&ctx, |ui| {
+                widgets::zoom_contents(ui, rack_scale);
                 let selected = self.piano_roll.channel();
                 channel_rack::show(ui, &self.project, self.pattern, selected, playhead)
             })
@@ -871,9 +939,16 @@ impl eframe::App for LoomApp {
 
         let held = self.live.held_pitches();
         self.piano_roll.hints = self.harmony_keys.hints;
-        let roll_actions =
-            self.piano_roll
-                .show(&ctx, &self.project, self.pattern, playhead, &held, area);
+        let roll_scale = Self::window_scale(&ctx, view::Area::PianoRoll);
+        let roll_actions = self.piano_roll.show(
+            &ctx,
+            &self.project,
+            self.pattern,
+            playhead,
+            &held,
+            area,
+            roll_scale,
+        );
         for action in roll_actions {
             self.apply_roll(action);
         }
