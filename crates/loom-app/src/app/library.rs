@@ -12,12 +12,14 @@
 //!
 //! A rhythm picked after a style changes how the style's chords and bass
 //! are played, too, as in FL Studio. And a rhythm can be used for the
-//! whole song: see [`apply::use_rhythm`].
+//! whole song: see [`apply::use_rhythm`]. That is what a click on a
+//! rhythm does while the song plays, so the song carries on in the new
+//! rhythm instead of stopping for a pattern of its own.
 
 use eframe::egui;
 use loom_audio::PlayMode;
 use loom_core::library::demo::{song_demo, style_demo};
-use loom_core::library::{Genre, Rhythm, SONGS, STYLES, Song, Style, apply};
+use loom_core::library::{FILLS, Genre, Rhythm, SONGS, STYLES, Song, Style, apply};
 use loom_core::{Pattern, Project, Tempo};
 
 use super::LoomApp;
@@ -83,9 +85,27 @@ impl LoomApp {
     }
 
     /// Writes a style or a rhythm into a pattern, selects it and plays it.
+    /// While the song plays, a rhythm changes the song instead, and the
+    /// song carries on.
     pub(super) fn try_from_library(&mut self, action: LibraryAction) {
         if let LibraryAction::RhythmInSong(rhythm) = action {
-            self.use_rhythm_in_song(rhythm);
+            if !self.use_rhythm_in_song(rhythm) {
+                self.notice = Some(format!(
+                    "There are no drums or chords to play in {} yet: click it to try it in a pattern.",
+                    rhythm.name
+                ));
+            }
+            return;
+        }
+        // Taking over with a pattern of its own would stop the song. A
+        // song with nothing to change (no drums, no chords) still gets the
+        // rhythm in a pattern, so it can be heard.
+        if let LibraryAction::Rhythm(rhythm) = action
+            && self.playing
+            && self.mode == PlayMode::Song
+            && !FILLS.contains(rhythm)
+            && self.use_rhythm_in_song(rhythm)
+        {
             return;
         }
         let reuse = self.unchanged_audition().cloned();
@@ -181,8 +201,9 @@ impl LoomApp {
     }
 
     /// Plays the whole song in `rhythm`: new drums, and the chords and
-    /// bass played the way the rhythm goes. One step to undo.
-    fn use_rhythm_in_song(&mut self, rhythm: &'static Rhythm) {
+    /// bass played the way the rhythm goes. One step to undo. Returns
+    /// whether the song had anything to change.
+    fn use_rhythm_in_song(&mut self, rhythm: &'static Rhythm) -> bool {
         let use_tempo = self.playlist.library_tempo();
         let change = self.edit("change the rhythm", |project| {
             let change = apply::use_rhythm(project, rhythm);
@@ -192,11 +213,7 @@ impl LoomApp {
             change
         });
         if change == apply::RhythmChange::default() {
-            self.notice = Some(format!(
-                "There are no drums or chords to play in {} yet: click it to try it in a pattern.",
-                rhythm.name
-            ));
-            return;
+            return false;
         }
         let patterns = |count: usize| match count {
             1 => "1 pattern".to_string(),
@@ -209,6 +226,7 @@ impl LoomApp {
             patterns(change.drums),
             patterns(change.harmony),
         ));
+        true
     }
 
     /// The Demos submenu of the File menu.
