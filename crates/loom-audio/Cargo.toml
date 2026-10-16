@@ -1,0 +1,13 @@
+[package]
+name = "loom-audio"
+description = "Real-time audio engine for Ferrous Loom"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+loom-core.workspace = true
+cpal.workspace = true
+rtrb.workspace = true
