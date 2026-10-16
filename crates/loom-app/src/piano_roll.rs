@@ -12,7 +12,8 @@ use eframe::egui::{
 };
 use loom_core::harmony::analyze;
 use loom_core::{
-    ChordQuality, ChordStamp, Note, NoteEvent, PitchClass, Project, Scale, ScaleKind, Spelling,
+    ChordQuality, ChordStamp, Note, NoteEvent, Pattern, PitchClass, Project, Scale, ScaleKind,
+    Spelling,
 };
 
 /// Something the user asked the piano roll to do.
@@ -156,6 +157,8 @@ impl Grid {
 pub struct PianoRoll {
     pub open: bool,
     channel: usize,
+    /// The pattern shown last time, to notice when it changes.
+    pattern: usize,
     stamp: ChordStamp,
     /// The length of new notes, in steps. Resizing a note changes it, so
     /// the next note drawn is as long as the last one edited.
@@ -173,6 +176,7 @@ impl PianoRoll {
         PianoRoll {
             open: false,
             channel,
+            pattern: 0,
             stamp: ChordStamp::Single,
             note_length: 4,
             drag: None,
@@ -203,27 +207,43 @@ impl PianoRoll {
     }
 
     /// Draws the window, if it is open, and returns what the user did.
+    /// It shows the notes of the selected channel in pattern `pattern`;
+    /// `playhead` is the step of that pattern being played, if any.
     pub fn show(
         &mut self,
         ctx: &egui::Context,
         project: &Project,
+        pattern: usize,
         playhead: Option<usize>,
     ) -> Vec<RollAction> {
         let mut actions = Vec::new();
-        let Some(channel) = project.channels().get(self.channel) else {
+        let (Some(channel), Some(pattern_notes)) = (
+            project.channels().get(self.channel),
+            project.pattern(pattern),
+        ) else {
             self.open = false;
             return actions;
         };
+        if pattern != self.pattern {
+            self.pattern = pattern;
+            self.scroll_to_notes = true;
+            self.drag = None;
+        }
 
         // `open` is a copy: the window needs `&mut open` while the closure
         // below needs `&mut self`, and both cannot borrow `self` at once.
         let mut open = self.open;
-        egui::Window::new(format!("Piano roll · {}", channel.name))
-            .id(egui::Id::unique("piano-roll"))
-            .open(&mut open)
-            .default_pos([12.0, 246.0])
-            .default_size([1060.0, 486.0])
-            .show(ctx, |ui| self.contents(ui, project, playhead, &mut actions));
+        egui::Window::new(format!(
+            "Piano roll · {} · {}",
+            pattern_notes.name, channel.name
+        ))
+        .id(egui::Id::unique("piano-roll"))
+        .open(&mut open)
+        .default_pos([150.0, 200.0])
+        .default_size([1060.0, 500.0])
+        .show(ctx, |ui| {
+            self.contents(ui, project, pattern_notes, playhead, &mut actions)
+        });
         self.open = open;
         actions
     }
@@ -232,6 +252,7 @@ impl PianoRoll {
         &mut self,
         ui: &mut Ui,
         project: &Project,
+        pattern: &Pattern,
         playhead: Option<usize>,
         actions: &mut Vec<RollAction>,
     ) {
@@ -243,7 +264,7 @@ impl PianoRoll {
         // frame; one frame late is too fast for anyone to notice.
         let info = match self.hovered_step.or(playhead) {
             Some(step) => {
-                let harmony = analyze(project.pattern().sounding_at(self.channel, step));
+                let harmony = analyze(pattern.sounding_at(self.channel, step));
                 format!("Step {}: {}", step + 1, harmony.describe(scale))
             }
             None => "Point at a step to name the chord there.".to_string(),
@@ -251,15 +272,15 @@ impl PianoRoll {
         ui.label(info);
         ui.add_space(2.0);
 
-        let length = project.pattern().length();
+        let length = pattern.length();
         let step_width = ((ui.available_width() - KEY_WIDTH) / length as f32).max(8.0);
         self.hovered_step = None;
 
-        self.chord_lane(ui, project, step_width, playhead);
+        self.chord_lane(ui, pattern, scale, step_width, playhead);
         egui::ScrollArea::vertical()
             .auto_shrink(false)
             .show(ui, |ui| {
-                self.grid(ui, project, step_width, playhead, actions)
+                self.grid(ui, pattern, scale, step_width, playhead, actions)
             });
     }
 
@@ -357,12 +378,13 @@ impl PianoRoll {
     fn chord_lane(
         &mut self,
         ui: &mut Ui,
-        project: &Project,
+        pattern: &Pattern,
+        scale: Scale,
         step_width: f32,
         playhead: Option<usize>,
     ) {
-        let length = project.pattern().length();
-        let spelling = project.scale.spelling();
+        let length = pattern.length();
+        let spelling = scale.spelling();
         let width = KEY_WIDTH + step_width * length as f32;
         let (rect, response) = ui.allocate_exact_size(vec2(width, LANE_HEIGHT), Sense::hover());
         let lane = Grid {
@@ -389,7 +411,7 @@ impl PianoRoll {
         // Name the harmony at every step, then join runs of equal names:
         // `chunk_by` splits a slice wherever two neighbours differ.
         let labels: Vec<Option<String>> = (0..length)
-            .map(|step| analyze(project.pattern().sounding_at(self.channel, step)).label(spelling))
+            .map(|step| analyze(pattern.sounding_at(self.channel, step)).label(spelling))
             .collect();
         let mut start = 0;
         for run in labels.chunk_by(|a, b| a == b) {
@@ -429,12 +451,13 @@ impl PianoRoll {
     fn grid(
         &mut self,
         ui: &mut Ui,
-        project: &Project,
+        pattern: &Pattern,
+        scale: Scale,
         step_width: f32,
         playhead: Option<usize>,
         actions: &mut Vec<RollAction>,
     ) {
-        let length = project.pattern().length();
+        let length = pattern.length();
         let rows = (HIGHEST - LOWEST + 1) as f32;
         let size = vec2(KEY_WIDTH + step_width * length as f32, rows * ROW_HEIGHT);
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
@@ -444,7 +467,7 @@ impl PianoRoll {
             length,
         };
 
-        let notes = project.notes(self.channel);
+        let notes = pattern.notes(self.channel);
         if self.scroll_to_notes {
             // Centre the view between the lowest and highest note, or on
             // middle C when there are no notes yet.
@@ -457,10 +480,10 @@ impl PianoRoll {
             ui.scroll_to_rect(target, Some(Align::Center));
             self.scroll_to_notes = false;
         }
-        let hit = self.handle_input(ui, &response, grid, notes, project.scale, actions);
+        let hit = self.handle_input(ui, &response, grid, notes, scale, actions);
 
         let painter = ui.painter_at(rect);
-        paint_rows(&painter, grid, project.scale);
+        paint_rows(&painter, grid, scale);
         paint_step_lines(&painter, grid);
         if let Some(step) = playhead.filter(|&step| step < length) {
             let x = grid.x(step);
@@ -470,7 +493,7 @@ impl PianoRoll {
             );
             painter.rect_filled(column, 0.0, PLAYHEAD);
         }
-        self.paint_notes(&painter, grid, notes, project.scale);
+        self.paint_notes(&painter, grid, notes, scale);
 
         // Show what a click would place: a "ghost" of the note or chord.
         if self.drag.is_none()
@@ -479,7 +502,7 @@ impl PianoRoll {
             && grid.rect.contains(pos)
         {
             let (step, pitch) = grid.cell_at(pos);
-            for ghost_pitch in self.stamp.notes_at(pitch, project.scale) {
+            for ghost_pitch in self.stamp.notes_at(pitch, scale) {
                 let ghost = NoteEvent::new(ghost_pitch, step, self.note_length);
                 let ghost_rect = grid.note_rect(&ghost).shrink2(vec2(0.5, 1.0));
                 painter.rect_filled(ghost_rect, 2.0, GHOST);
@@ -506,7 +529,7 @@ impl PianoRoll {
         actions: &mut Vec<RollAction>,
     ) -> Option<usize> {
         let channel = self.channel;
-        let (primary_pressed, primary_down, secondary, pointer) = ui.input(|input| {
+        let (primary_pressed, primary_down, secondary, pointer, press_origin) = ui.input(|input| {
             let pointer = &input.pointer;
             (
                 pointer.primary_pressed(),
@@ -515,10 +538,16 @@ impl PianoRoll {
                 // so "pressed this frame" counts as well as "held down".
                 pointer.secondary_pressed() || pointer.secondary_down(),
                 pointer.interact_pos(),
+                pointer.press_origin(),
             )
         });
 
-        let hovered = response.hover_pos();
+        // On the frame the button goes down, look where it went down: the
+        // pointer may already have moved on, if the hand was quick.
+        let hovered = match response.hover_pos() {
+            Some(_) if primary_pressed => press_origin,
+            hover => hover,
+        };
         let hit = hovered.and_then(|pos| note_at(notes, grid, pos));
 
         if let Some(pos) = hovered {

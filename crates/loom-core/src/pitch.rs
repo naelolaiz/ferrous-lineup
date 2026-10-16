@@ -2,6 +2,8 @@
 
 use std::fmt;
 
+use serde::{Deserialize, Serialize};
+
 /// How to name the black keys: as sharps (C#) or as flats (Db).
 ///
 /// The same key has two names, and which one is right depends on the
@@ -21,7 +23,7 @@ pub enum Spelling {
 ///
 /// The variants are listed from C upwards, so `PitchClass::D as u8` is 2,
 /// the number of semitones above C.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum PitchClass {
     C,
     CSharp,
@@ -119,8 +121,25 @@ impl fmt::Display for PitchClass {
 /// MIDI note 60 is middle C (C4) and MIDI note 69 is A4, the 440 Hz
 /// tuning note. Wrapping the number in its own type (a "newtype") means
 /// the compiler will not let us mix up a note with, say, a velocity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+///
+/// In a project file a note is just its MIDI number. Reading one goes
+/// through `From<u8>`, which calls [`Note::new`], so a file cannot
+/// create a note above 127.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(from = "u8", into = "u8")]
 pub struct Note(u8);
+
+impl From<u8> for Note {
+    fn from(midi: u8) -> Self {
+        Note::new(midi)
+    }
+}
+
+impl From<Note> for u8 {
+    fn from(note: Note) -> Self {
+        note.0
+    }
+}
 
 impl Note {
     /// The lowest MIDI note.
