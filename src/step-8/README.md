@@ -59,7 +59,7 @@ and a library to go with them:
 |---------|----|
 | hold a harmony key, or **1** to **7** | play its chord on the selected channel |
 | Triads, 7ths, 9ths (under the key) | play three-, four- or five-note chords |
-| Key, Time (left of the harmony keys) | change the project's key and time signature |
+| Key, Time (left of the harmony keys) | change the project's key (which moves the song into it) and time signature |
 | **F8**, or the 🎼 Harmony button | show or hide the harmony keys |
 | ● Rec, Space, then hold harmony keys | record chords into the pattern |
 | Library tab, click a style | play it in a new pattern, in your key |
