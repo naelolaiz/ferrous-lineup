@@ -53,7 +53,7 @@ pub(super) const GYMNOPEDIE: Song = Song {
         ),
     ],
     form: &["Intro", "Melody", "Melody"],
-    drums_from: 2,
+    drums_from: 1,
     about: "Satie's slow dance rocks between two major seventh chords, Gmaj7 and Dmaj7, for \
             the whole piece.",
 };
@@ -75,20 +75,21 @@ pub(super) const PRELUDE_IN_C: Song = Song {
         "C4:2 E4 G4 C5 E5 G4 C5 E5 | C4 D4 A4 D5 F5 A4 D5 F5 | B3 D4 G4 D5 F5 G4 D5 F5 | \
          C4 E4 G4 C5 E5 G4 C5 E5 | C4 E4 A4 E5 A5 A4 E5 A5 | C4 D4 F#4 A4 D5 F#4 A4 D5 | \
          B3 D4 G4 D5 G5 G4 D5 G5 | B3 C4 E4 G4 C5 E4 G4 C5 | A3 C4 E4 G4 C5 E4 G4 C5 | \
-         D3 A3 D4 F#4 C5 D4 F#4 C5 | G3 B3 D4 G4 B4 D4 G4 B4 | B3 D4 G4 D5 F5 G4 D5 F5",
-        "I | ii7 | V7 | I | vi | II7 | V | Imaj7 | vi7 | II7 | V | V7",
+         D3 A3 D4 F#4 C5 D4 F#4 C5 | G3 B3 D4 G4 B4 D4 G4 B4 | G3 Bb3 E4 G4 C#5 E4 G4 C#5",
+        "I | ii7 | V7 | I | vi | II7 | V | Imaj7 | vi7 | II7 | V | #iv°7",
     )],
     form: &["Prelude", "Prelude", "Prelude"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Bach's prelude has no tune at all: each bar is one chord, broken into the same \
             rising figure. That makes it a perfect sample for a hip hop beat. Listen to how \
-            each chord changes as few notes as it can.",
+            each chord changes as few notes as it can. Bar 12 is the diminished seventh on \
+            C sharp, over a G in the bass, that Bach uses to slip towards D minor.",
 };
 
 pub(super) const SAKURA: Song = Song {
     name: "Sakura Sakura",
     origin: "Japanese folk song, Edo period",
-    feel: "Lo-fi",
+    feel: "R&B",
     genre: Genre::HipHop,
     tonic: A,
     mode: NaturalMinor,
@@ -96,7 +97,7 @@ pub(super) const SAKURA: Song = Song {
     tempo: 76.0,
     comping: Comping::Lazy,
     bass: Bass::Lazy,
-    rhythm: "Lo-fi",
+    rhythm: "R&B",
     parts: &[Part::new(
         "Song",
         "A4:4 A4 B4:8 | A4:4 A4 B4:8 | A4:4 B4 C5 B4 | A4 B4:2 A4 F4:8 | \
@@ -107,7 +108,7 @@ pub(super) const SAKURA: Song = Song {
          bVImaj7 | i7",
     )],
     form: &["Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The cherry blossom song uses five notes, A B C E F, from the miyako-bushi scale \
             of Japanese music. All five are in A minor, so lo-fi seventh chords sit right \
             under it.",
@@ -138,7 +139,7 @@ pub(super) const DIES_IRAE: Song = Song {
         ),
     ],
     form: &["Chant", "Chant", "Chant above", "Chant above", "Chant"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The medieval chant of the Day of Wrath, quoted by Berlioz, Liszt, Rachmaninoff \
             and countless film scores. Eight notes are enough to sound ominous, here over \
             trap hi-hats and a deep 808 bass.",

@@ -43,6 +43,10 @@ pub struct Part {
     /// A time signature of its own, for a part in another time than the
     /// rest of the song. The demo puts a time marker where it starts.
     pub time: Option<TimeSignature>,
+    /// The key this part is in, when it is not the song's. Its chords
+    /// are read in this key, so a piece that modulates has a part for
+    /// each key it visits.
+    pub key: Option<(PitchClass, ScaleKind)>,
 }
 
 impl Part {
@@ -55,6 +59,7 @@ impl Part {
             left: "",
             voices: &[0],
             time: None,
+            key: None,
         }
     }
 
@@ -72,6 +77,14 @@ impl Part {
     const fn in_time(self, time: TimeSignature) -> Part {
         Part {
             time: Some(time),
+            ..self
+        }
+    }
+
+    /// The same part in another key: a modulation.
+    const fn in_key(self, tonic: PitchClass, mode: ScaleKind) -> Part {
+        Part {
+            key: Some((tonic, mode)),
             ..self
         }
     }
@@ -142,6 +155,14 @@ impl Song {
     /// The time signature `part` is in: its own, or else the song's.
     pub fn part_time(&self, part: &Part) -> TimeSignature {
         part.time.unwrap_or(self.time)
+    }
+
+    /// The key `part` is in: its own, if it modulates, or the song's.
+    pub fn part_scale(&self, part: &Part) -> Scale {
+        match part.key {
+            Some((tonic, mode)) => Scale::new(tonic, mode),
+            None => self.scale(),
+        }
     }
 
     pub fn part(&self, name: &str) -> Option<&'static Part> {
@@ -330,22 +351,22 @@ mod tests {
         // borrowed leading notes), but a song with many is more likely
         // a typo, such as F written for F#.
         for song in SONGS {
-            let scale = song.scale();
-            let notes: Vec<_> = song
-                .parts
-                .iter()
-                .flat_map(|part| part.melody().notes)
-                .collect();
-            let inside = notes
-                .iter()
-                .filter(|note| scale.contains(note.pitch.pitch_class()))
-                .count();
+            let mut total = 0;
+            let mut inside = 0;
+            for part in song.parts {
+                let scale = song.part_scale(part);
+                for note in part.melody().notes {
+                    total += 1;
+                    if scale.contains(note.pitch.pitch_class()) {
+                        inside += 1;
+                    }
+                }
+            }
             assert!(
-                inside * 100 >= notes.len() * 80,
-                "{}: only {inside} of {} notes in {}",
+                inside * 100 >= total * 80,
+                "{}: only {inside} of {total} notes in {}",
                 song.name,
-                notes.len(),
-                scale.name()
+                song.scale().name()
             );
         }
     }
