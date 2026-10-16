@@ -85,27 +85,17 @@ impl LoomApp {
     }
 
     /// Writes a style or a rhythm into a pattern, selects it and plays it.
-    /// While the song plays, a rhythm changes the song instead, and the
-    /// song carries on.
+    /// While the song plays, it changes the song instead, and the song
+    /// carries on.
     pub(super) fn try_from_library(&mut self, action: LibraryAction) {
-        if let LibraryAction::RhythmInSong(rhythm) = action {
-            if !self.use_rhythm_in_song(rhythm) {
-                self.notice = Some(format!(
-                    "There are no drums or chords to play in {} yet: click it to try it in a pattern.",
-                    rhythm.name
-                ));
-            }
+        // Taking over with a pattern of its own would stop the song, so
+        // while the song plays, every click goes to the song.
+        if self.playing && self.mode == PlayMode::Song {
+            self.use_in_song(action);
             return;
         }
-        // Taking over with a pattern of its own would stop the song. A
-        // song with nothing to change (no drums, no chords) still gets the
-        // rhythm in a pattern, so it can be heard.
-        if let LibraryAction::Rhythm(rhythm) = action
-            && self.playing
-            && self.mode == PlayMode::Song
-            && !FILLS.contains(rhythm)
-            && self.use_rhythm_in_song(rhythm)
-        {
+        if let LibraryAction::RhythmInSong(_) = action {
+            self.use_in_song(action);
             return;
         }
         let reuse = self.unchanged_audition().cloned();
@@ -200,33 +190,77 @@ impl LoomApp {
         }
     }
 
-    /// Plays the whole song in `rhythm`: new drums, and the chords and
-    /// bass played the way the rhythm goes. One step to undo. Returns
-    /// whether the song had anything to change.
-    fn use_rhythm_in_song(&mut self, rhythm: &'static Rhythm) -> bool {
+    /// Plays the whole song the way a style, a rhythm or a fill goes, as
+    /// one step to undo, and says what changed. The song keeps its
+    /// chords, its melody and its place: see [`apply::use_style`],
+    /// [`apply::use_rhythm`] and [`apply::use_fill`].
+    fn use_in_song(&mut self, action: LibraryAction) {
         let use_tempo = self.playlist.library_tempo();
-        let change = self.edit("change the rhythm", |project| {
-            let change = apply::use_rhythm(project, rhythm);
-            if use_tempo && change != apply::RhythmChange::default() {
-                project.tempo = Tempo::new(rhythm.tempo);
+        let (name, tempo, label) = match action {
+            LibraryAction::Style(style) => (style.name, Some(style.tempo), "change the style"),
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
+                if FILLS.contains(rhythm) =>
+            {
+                // A fill is one bar: the song keeps its tempo.
+                (rhythm.name, None, "change the fill")
+            }
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
+                (rhythm.name, Some(rhythm.tempo), "change the rhythm")
+            }
+        };
+        let change = self.edit(label, |project| {
+            let change = match action {
+                LibraryAction::Style(style) => apply::use_style(project, style),
+                LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
+                    if FILLS.contains(rhythm) =>
+                {
+                    apply::use_fill(project, rhythm)
+                }
+                LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
+                    apply::use_rhythm(project, rhythm)
+                }
+            };
+            if use_tempo
+                && change != apply::RhythmChange::default()
+                && let Some(bpm) = tempo
+            {
+                project.tempo = Tempo::new(bpm);
             }
             change
         });
-        if change == apply::RhythmChange::default() {
-            return false;
-        }
         let patterns = |count: usize| match count {
             1 => "1 pattern".to_string(),
             count => format!("{count} patterns"),
         };
-        self.notice = Some(format!(
-            "The song now plays in {}: new drums in {}, chords and bass played again in {}. \
-             Ctrl+Z takes it back.",
-            rhythm.name,
-            patterns(change.drums),
-            patterns(change.harmony),
-        ));
-        true
+        let mut parts = Vec::new();
+        if change.drums > 0 {
+            parts.push(format!("new drums in {}", patterns(change.drums)));
+        }
+        if change.harmony > 0 {
+            parts.push(format!(
+                "chords and bass played again in {}",
+                patterns(change.harmony)
+            ));
+        }
+        let fill = matches!(
+            action,
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) if FILLS.contains(rhythm)
+        );
+        self.notice = Some(if fill && change.drums > 0 {
+            format!(
+                "{name} now plays in the last bar of {}. Ctrl+Z takes it back.",
+                patterns(change.drums)
+            )
+        } else if parts.is_empty() {
+            format!(
+                "{name} finds nothing to change in this song: it has no drums or chords for it."
+            )
+        } else {
+            format!(
+                "The song now plays {name}: {}. Ctrl+Z takes it back.",
+                parts.join(", ")
+            )
+        });
     }
 
     /// The Demos submenu of the File menu.

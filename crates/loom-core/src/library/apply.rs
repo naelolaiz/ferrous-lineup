@@ -355,7 +355,7 @@ pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bas
     true
 }
 
-/// What [`use_rhythm`] changed.
+/// What [`use_rhythm`], [`use_style`] or [`use_fill`] changed.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct RhythmChange {
     /// How many patterns got the new drums.
@@ -409,6 +409,78 @@ fn drums_in(
 /// the time signature and the melody.
 pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
     let (comping, bass) = feel(rhythm);
+    play_song(project, Some(rhythm), comping, bass)
+}
+
+/// Plays the whole song the way `style` goes: its rhythm on the drums,
+/// and its way of playing the chords and the bass. The song keeps its own
+/// chords, melody, key and time signature, as with [`use_rhythm`]. A
+/// style without a rhythm leaves the drums as they are.
+pub fn use_style(project: &mut Project, style: &Style) -> RhythmChange {
+    play_song(
+        project,
+        Rhythm::named(style.rhythm),
+        style.comping,
+        style.bass,
+    )
+}
+
+/// Puts `fill` in the last bar of every pattern with drums that is at
+/// least two bars long, in place of the drums there. If no pattern has
+/// drums, the fill goes with the chords, as with [`use_rhythm`]. Endings
+/// are left as they are. Only [`RhythmChange::drums`] is counted.
+pub fn use_fill(project: &mut Project, fill: &Rhythm) -> RhythmChange {
+    let patterns = project.patterns().len();
+    let length =
+        |project: &Project, pattern: usize| project.pattern(pattern).map_or(0, |p| p.length());
+    let has_drums = |project: &Project, pattern: usize| {
+        !drums_in(project, pattern, 0, length(project, pattern)).is_empty()
+    };
+    let any_drums = (0..patterns).any(|pattern| has_drums(project, pattern));
+    let mut change = RhythmChange::default();
+    for pattern in 0..patterns {
+        let length = length(project, pattern);
+        let bar = project.pattern_time(pattern).steps_per_bar();
+        if length < 2 * bar || is_ending(project, pattern) {
+            continue;
+        }
+        let takes_it = if any_drums {
+            has_drums(project, pattern)
+        } else {
+            heard_chords_channel(project, pattern).is_some()
+        };
+        if !takes_it {
+            continue;
+        }
+        let before = project.pattern(pattern).cloned();
+        if write_fill(project, pattern, fill, length - bar)
+            && project.pattern(pattern) != before.as_ref()
+        {
+            change.drums += 1;
+        }
+    }
+    change
+}
+
+/// Whether every note of pattern `pattern` starts on its first step, as
+/// in a final held chord with a crash.
+fn is_ending(project: &Project, pattern: usize) -> bool {
+    project.pattern(pattern).is_some_and(|target| {
+        (0..target.rows())
+            .flat_map(|channel| target.notes(channel))
+            .all(|note| note.start == 0)
+    })
+}
+
+/// Gives every pattern of the song the drums of `rhythm` (if any) and
+/// plays its chords and bass with `comping` and `bass`: the work of
+/// [`use_rhythm`] and [`use_style`].
+fn play_song(
+    project: &mut Project,
+    rhythm: Option<&Rhythm>,
+    comping: Comping,
+    bass: Bass,
+) -> RhythmChange {
     let has_drums = |project: &Project, pattern: usize| {
         let length = project.pattern(pattern).map_or(0, |p| p.length());
         !drums_in(project, pattern, 0, length).is_empty()
@@ -417,15 +489,11 @@ pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
     let any_drums = (0..patterns).any(|pattern| has_drums(project, pattern));
     let mut change = RhythmChange::default();
     for pattern in 0..patterns {
-        let Some(target) = project.pattern(pattern) else {
+        let Some(length) = project.pattern(pattern).map(|p| p.length()) else {
             continue;
         };
-        let length = target.length();
         let bar = project.pattern_time(pattern).steps_per_bar();
-        let ending = (0..target.rows())
-            .flat_map(|channel| target.notes(channel))
-            .all(|note| note.start == 0);
-        if ending {
+        if is_ending(project, pattern) {
             continue;
         }
         let drums = has_drums(project, pattern);
@@ -441,7 +509,9 @@ pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
         } else if !drums {
             continue;
         }
-        if drums || !any_drums {
+        if let Some(rhythm) = rhythm
+            && (drums || !any_drums)
+        {
             write_rhythm(project, pattern, rhythm);
             if fill && let Some(fill) = rhythm.fill() {
                 write_fill(project, pattern, fill, length - bar);
@@ -487,7 +557,7 @@ pub fn write_final_chord(project: &mut Project, pattern: usize, chord: Chord) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::library::{RHYTHMS, STYLES};
+    use crate::library::{FILLS, RHYTHMS, STYLES};
 
     #[test]
     fn styles_go_to_keys_and_bass() {
@@ -696,6 +766,103 @@ mod tests {
         );
         let snare = drum_channel(&mut project, Drum::Snare).unwrap();
         assert!(!project.pattern(0).unwrap().notes(snare).is_empty());
+    }
+
+    #[test]
+    fn a_whole_song_takes_a_style() {
+        let song = crate::library::SONGS
+            .iter()
+            .find(|song| song.name.starts_with("London Bridge"))
+            .unwrap();
+        let mut project = super::super::demo::song_demo(song);
+        let before = project.clone();
+        let lead = find_synth(&project, LEAD).unwrap();
+        let style = Style::named("House piano").unwrap();
+        let change = use_style(&mut project, style);
+        assert!(change.drums > 0 && change.harmony > 0, "{change:?}");
+        let kick = drum_channel(&mut project, Drum::Kick).unwrap();
+        for (old, new) in before.patterns().iter().zip(project.patterns()) {
+            assert_eq!(old.notes(lead), new.notes(lead), "the melody stays");
+            assert_eq!(old.length(), new.length());
+        }
+        // Four on the floor: a kick on every beat of the drum patterns.
+        let drums = project.pattern(1).unwrap();
+        let beats: Vec<usize> = drums.notes(kick).iter().map(|note| note.start).collect();
+        assert!(
+            (0..drums.length())
+                .step_by(4)
+                .all(|beat| beats.contains(&beat))
+        );
+        assert_eq!(project.time_signature, before.time_signature);
+        assert_eq!(project.scale, before.scale);
+    }
+
+    #[test]
+    fn a_fill_goes_in_the_last_bar_of_the_drums() {
+        let mut project = super::super::demo::style_demo(Style::named("Four chords").unwrap());
+        let before = project.clone();
+        let fill = FILLS[0];
+        let change = use_fill(&mut project, &fill);
+        assert!(change.drums > 0 && change.harmony == 0, "{change:?}");
+        let bar = project.time_signature.steps_per_bar();
+        for (old, new) in before.patterns().iter().zip(project.patterns()) {
+            for channel in 0..old.rows() {
+                let early = |notes: &[NoteEvent]| {
+                    notes
+                        .iter()
+                        .filter(|note| note.start < old.length().saturating_sub(bar))
+                        .copied()
+                        .collect::<Vec<_>>()
+                };
+                assert_eq!(early(old.notes(channel)), early(new.notes(channel)));
+            }
+        }
+    }
+
+    /// While the song plays, a click on any style, rhythm or fill in the
+    /// library changes the song. So each of them must find something to
+    /// change in every demo; otherwise the click would do nothing.
+    #[test]
+    fn every_demo_takes_every_kind_of_library_click() {
+        let demos: Vec<Project> = crate::library::SONGS
+            .iter()
+            .map(super::super::demo::song_demo)
+            .chain(STYLES.iter().map(super::super::demo::style_demo))
+            .collect();
+        // Every style, rhythm and fill is tried on at least one demo, and
+        // every demo gets one of each.
+        let tries = demos.len().max(STYLES.len()).max(RHYTHMS.len());
+        for index in 0..tries {
+            let demo = &demos[index % demos.len()];
+            let style = &STYLES[index % STYLES.len()];
+            let rhythm = &RHYTHMS[index % RHYTHMS.len()];
+            let fill = &FILLS[index % FILLS.len()];
+            let mut project = demo.clone();
+            assert_ne!(
+                use_style(&mut project, style),
+                RhythmChange::default(),
+                "{}",
+                style.name
+            );
+            let mut project = demo.clone();
+            assert_ne!(
+                use_rhythm(&mut project, rhythm),
+                RhythmChange::default(),
+                "{}",
+                rhythm.name
+            );
+            // A fill that is already in every place a fill can go changes
+            // nothing, so a second fill is tried before giving up.
+            let other = &FILLS[(index + 1) % FILLS.len()];
+            let fills =
+                |fill: &Rhythm| use_fill(&mut demo.clone(), fill) != RhythmChange::default();
+            assert!(
+                fills(fill) || fills(other),
+                "{} or {}",
+                fill.name,
+                other.name
+            );
+        }
     }
 
     #[test]
