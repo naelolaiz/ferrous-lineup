@@ -7,7 +7,7 @@ arrange them into songs, and learn harmony along the way.
 > Ferrous Loom is an independent project. It is not affiliated with
 > Image-Line or FL Studio.
 
-![Ferrous Loom with the playlist, the channel rack and the harmony keys](screenshots/main-window.png)
+![Ferrous Loom playing the demo song: the playlist with its Intro, Verse and Chorus sections, the channel rack, and the harmony keys](screenshots/main-window.png)
 
 ## Status
 
@@ -23,6 +23,7 @@ Early development. Runs on Linux, macOS and Windows.
 | 6 | Harmony tools: selections, arpeggios, inversions, suggestions, ghost notes, velocities | Done |
 | 7 | MIDI in and out: keyboards, external synths, recording, chord names as you play, `.mid` export | Done |
 | 8 | Harmony keys, time signatures, a library of styles and rhythms, public-domain songs as demos | Done |
+| Spike | Import a recording: tempo, key and chords heard from an MP3 or WAV file | Done |
 
 ## Build and run
 
@@ -40,7 +41,10 @@ cargo run --release
 ```
 
 Press **Space** to play the demo song: two bars of a C, Am, F, G chord
-progression, then a beat comes in, and a drum fill ends it. The playlist
+progression, then a beat comes in, and a drum fill ends it. The play
+button pauses while playing, and Stop goes back to where the playhead was
+put. **Home** goes to the start, **Page Up** and **Page Down** skip a bar
+back or forward, and clicking the bar numbers moves the playhead. The playlist
 arranges patterns into a song: click to place a clip of the selected
 pattern, drag clips around, right-click to delete, and double-click a
 clip to edit it: melodies and chords open in the piano roll, drums in
@@ -48,7 +52,8 @@ the channel rack. Drag a clip's right edge to repeat its pattern. Drag
 along the strip above the bar numbers to mark sections (Intro, Verse,
 Chorus…), and click a section to rename it, play it several times in a
 row, loop it or copy it. Drag along the bar numbers to loop part of the
-song. **F6** shows or hides
+song. Right-click a track's name to insert a track above or below it,
+move it up or down, or delete it. **F6** shows or hides
 the channel rack, where you click steps and drop WAV files to use your
 own sounds. **F7** shows the piano roll, on the selected pattern: when
 the channel has no notes there, it says so and offers the patterns that
@@ -78,11 +83,22 @@ light up, and while the music plays, the chord you hear lights up too.
 The **Library** tab next to the pattern list holds 78 harmony styles
 and 49 rhythms from pop, rock, blues, jazz, soul, hip hop, electronic,
 Latin, tango, flamenco, reggae, folk and classical music: click one to
-hear it in your key. **File > Demos** opens 62 songs with their
-melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
+hear it in your key. Pick a rhythm after a style, and the style's chords
+and bass are played the way that rhythm goes; right-click a rhythm and
+**Play the whole song in this rhythm** changes the drums, chords and bass
+of the whole song at once, keeping the melody. **File > Demos** opens
+62 songs with their melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
 *Für Elise* and the *Habanera*, and new tunes written to show off the
 blues, tango, flamenco and more. It also plays every style as a short
 song.
+
+**File > Import recording…** opens an MP3, WAV, FLAC or Ogg file (or
+drop it on the window) and listens to it: the tempo, time signature and
+key are set from the recording, which plays on its own channel, and a
+Harmony channel plays the chord heard on every beat, so the piano roll
+and the harmony keys follow along. This is an early experiment; see
+[`crates/loom-listen`](crates/loom-listen/README.md) for how it works and
+how often it is right.
 
 Too small or too big? The main window, the channel rack and the piano
 roll each have their own zoom. **Ctrl+Plus** and **Ctrl+Minus** (⌘ on a
@@ -98,12 +114,22 @@ Ready-built programs for all three systems are attached to every CI run
 as `ferrous-loom-linux`, `ferrous-loom-macos` and `ferrous-loom-windows`.
 They are not signed yet, so macOS and Windows warn before the first start.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![The piano roll on the chords of the demo song, with the chord names above the grid and the chords that often come next lit up](screenshots/piano-roll.png) | ![The Library tab: Bossa nova has just been tried, and its tooltip shows its chords in C major](screenshots/library.png) |
+| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 78 harmony styles and 49 rhythms to try in your key. |
+| ![A recording imported with File > Import recording: the chords heard on every beat in the piano roll](screenshots/import-recording.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
+| An imported recording, with the chords heard on every beat. | Right-click a track's name to insert, move or delete tracks. |
+
 ## Project layout
 
 | Path | Contents |
 |------|----------|
 | `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
 | `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
+| `crates/loom-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
 | `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`, with MIDI through `midir`. |
 
 ## License
