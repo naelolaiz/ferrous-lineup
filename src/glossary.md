@@ -14,6 +14,7 @@ where each one first appears in real code.
 | **Associated type** | A type that each implementation of a trait chooses, like `type Error = FileError;` in an `impl TryFrom`. | [Saving](step-4/saving.md) |
 | **Atomic** | A value (like `AtomicUsize`) that threads can read and write without a lock. | [Audio thread](step-2/realtime.md) |
 | **Bit operations** | `&` (and), `\|` (or), `!` (not), `<<` and `>>` (shift) work on the bits of an integer. | [Pitch classes and scales](step-3/theory.md) |
+| **`bool::then` / `then_some`** | Turn a condition into an `Option`: `cond.then_some(x)` is `Some(x)` if `cond` is true and `None` if not; `cond.then(\|\| ...)` only runs the closure when it is true. | [Tools](step-6/tools.md) |
 | **Borrow** | Using a value through a reference (`&T` shared, `&mut T` mutable) without taking ownership. | [loom-audio](step-1/audio-engine.md) |
 | **Borrow checker** | The part of the compiler that enforces: one `&mut` *or* any number of `&` at a time, and no reference outliving its value. | [loom-audio](step-1/audio-engine.md) |
 | **`Borrow` trait** | A promise that an owned type (like `PathBuf`) hashes and compares exactly like the type it holds (`Path`), so a `HashMap<PathBuf, _>` can be searched with a `&Path`. | [What changed](step-5/diff.md) |
@@ -21,10 +22,13 @@ where each one first appears in real code.
 | **Capacity** | How many items a `Vec` can hold before it must allocate more memory. | [Audio thread](step-2/realtime.md) |
 | **Cargo** | Rust's build tool and package manager. | [Workspace](step-1/workspace.md) |
 | **`cfg` / `cfg_attr`** | Conditional compilation: `#[cfg(target_os = "windows")]` keeps the next item only when the condition is true, and `cfg_attr` applies an attribute only then. | [Linux, macOS and Windows](step-4/platforms.md) |
+| **`checked_add_signed`** | Adds a signed number to an unsigned one, like `usize + isize`, and gives `None` instead of going below zero or overflowing. | [Tools](step-6/tools.md) |
 | **`chunk_by`** | Splits a slice into runs of neighbours that belong together, without copying. | [Piano roll window](step-3/piano-roll-ui.md) |
 | **Closure** | An anonymous function, `\|args\| body`, that can capture variables from its surroundings. | [loom-audio](step-1/audio-engine.md) |
+| **Collecting `Option`s** | Collecting an iterator of `Option<T>` into an `Option<Vec<T>>` gives `Some` of all the values, or `None` as soon as one item is `None`. `Result` works the same way. | [Tools](step-6/tools.md) |
 | **`const fn`** | A function simple enough to run while compiling, so it can be used to set a `const`. | [Saving](step-4/saving.md) |
 | **Crate** | One library or program; the unit Cargo builds and publishes. | [Workspace](step-1/workspace.md) |
+| **`cycle`** | Repeats an iterator forever. Safe because iterators are lazy: something else, like `zip`, decides when to stop. | [Tools](step-6/tools.md) |
 | **`Default`** | A trait for "the default value" of a type; on an enum, `#[derive(Default)]` needs `#[default]` on one variant. | [Pitch classes and scales](step-3/theory.md) |
 | **Deref coercion** | Rust turning `&Vec<T>` into `&[T]` (or `&String` into `&str`) automatically where needed. | [Steps to notes](step-3/notes.md) |
 | **Dereference (`*`)** | Follow a reference to the value it points at, to read or write it. | [Patterns](step-2/project.md) |
@@ -35,6 +39,8 @@ where each one first appears in real code.
 | **Edition** | A version of the language (2015, 2018, 2021, 2024) chosen per crate. | [Workspace](step-1/workspace.md) |
 | **Enum** | A type whose value is one of several variants, each of which can hold data. | [loom-audio](step-1/audio-engine.md) |
 | **Feature** | An optional part of a crate, turned on or off in `Cargo.toml`; features can only add, never take away. | [Saving](step-4/saving.md) |
+| **`find_map`** | Calls a closure on each item and returns the first `Some` it gives. | [Chords](step-3/chords.md) |
+| **`flat_map`** | Maps each item to an iterator and joins all of them into one iterator. | [The piano roll, grown up](step-6/piano-roll.md) |
 | **`fn` pointer** | The type of a plain function, like `fn(usize) -> Change`. Enum variants that hold data are such functions too: `Change::RemovePattern` builds a `Change` from a `usize`. | [What changed](step-5/diff.md) |
 | **`Fn` / `FnMut` / `FnOnce`** | The traits closures implement: only reads, mutates its captures, or can be called once. | [Instruments](step-2/instruments.md) |
 | **`From` / `Into`** | Conversion traits: implementing `From<A> for B` also gives `a.into()`. The `?` operator uses `From` to convert errors. | [Many patterns](step-4/patterns.md) |
@@ -74,6 +80,7 @@ where each one first appears in real code.
 | **Property-based test** | A test that checks a rule which must hold for any input ("following the changes gives the new project"), rather than one answer for one input. | [What changed](step-5/diff.md) |
 | **`pub(crate)`** | Visible everywhere inside the current crate, but not to other crates. | [Patterns](step-2/project.md) |
 | **`pub(super)`** | Visible to the parent module and everything inside it. | [Saving](step-4/saving.md) |
+| **Pure function** | A function whose result depends only on its arguments and that changes nothing else; the easiest kind of code to test. | [Tools](step-6/tools.md) |
 | **RAII / `Drop`** | Owning a value means owning its resource; dropping it releases the resource. | [loom-audio](step-1/audio-engine.md) |
 | **Range** | `a..b`, the numbers from `a` up to but not including `b`; a value with methods like `contains`. | [Steps to notes](step-3/notes.md) |
 | **`rem_euclid`** | A remainder that is never negative: `(-1_i32).rem_euclid(12)` is 11, while `-1 % 12` is -1. | [Pitch classes and scales](step-3/theory.md) |
@@ -86,6 +93,7 @@ where each one first appears in real code.
 | **Slice** | A borrowed view of part of an array or `Vec`: `&[T]` or `&mut [T]`. | [loom-audio](step-1/audio-engine.md) |
 | **State machine** | Code that keeps a current state, often an enum, and moves between states as things happen. | [Voices](step-3/voices.md) |
 | **`'static`** | A lifetime meaning "lives as long as needed"; for closures, "borrows nothing temporary". | [loom-audio](step-1/audio-engine.md) |
+| **`step_by`** | Takes every n-th item of an iterator: `(0..8).step_by(2)` is 0, 2, 4, 6. | [Tools](step-6/tools.md) |
 | **Struct update syntax** | `NoteEvent { length: 2, ..note }`: a new struct with some fields changed and the rest taken from `note`. | [Steps to notes](step-3/notes.md) |
 | **Target** | The kind of system a program is compiled for, like `x86_64-pc-windows-gnu`; `rustup target add` installs Rust's library for one. | [Linux, macOS and Windows](step-4/platforms.md) |
 | **Trait** | A set of methods a type promises to provide, like an interface. | [loom-core](step-1/loom-core.md) |
@@ -93,9 +101,11 @@ where each one first appears in real code.
 | **`TryFrom` / `TryInto`** | Conversions that can fail, returning a `Result`. | [Saving](step-4/saving.md) |
 | **Tuple** | A fixed group of values, possibly of different types, like `(usize, Note)`; it can be matched and taken apart. | [Pitch classes and scales](step-3/theory.md) |
 | **Tuple struct** | A struct whose fields have no names, like `struct Note(u8)`; the fields are read as `.0`, `.1`... | [loom-core](step-1/loom-core.md) |
+| **Turbofish (`::<>`)** | Writing a generic function's type out at the call, as in `collect::<Vec<Note>>()`, when Rust cannot work it out. | [loom-audio](step-1/audio-engine.md) |
 | **Type alias** | A second name for an existing type: `type StepRow = [bool; 64];`. | [Patterns](step-2/project.md) |
 | **`VecDeque<T>`** | A double-ended queue: a ring buffer that is cheap to add to and take from at both ends. | [Undo and redo](step-5/history.md) |
 | **Workspace** | A group of crates built together with one `Cargo.lock`. | [Workspace](step-1/workspace.md) |
+| **`zip`** | Pairs the items of two iterators, `(a, b)`, and stops when either runs out. | [What changed](step-5/diff.md) |
 
 ## Where to learn more
 

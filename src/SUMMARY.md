@@ -36,6 +36,11 @@
   - [Telling the audio thread what changed](step-5/diff.md)
   - [Exporting the song as a WAV file](step-5/export.md)
   - [Exercises](step-5/exercises.md)
+- [Step 6: Harmony tools](step-6/README.md)
+  - [Tools are plain functions](step-6/tools.md)
+  - [More chords, inversions, and what comes next](step-6/harmony.md)
+  - [The piano roll, grown up](step-6/piano-roll.md)
+  - [Exercises](step-6/exercises.md)
 
 ---
 

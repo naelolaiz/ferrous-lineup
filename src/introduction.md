@@ -34,6 +34,7 @@ You can read it three ways, all of them offline:
 | 3 | Piano roll with harmony helpers | Enums and pattern matching for music theory, bit sets, iterators, your own traits and generics, state machines |
 | 4 | Playlist, saving projects, macOS and Windows builds | Keeping rules across lists, serde and derive macros, error enums, newtypes, trait objects, `cfg` and features, a CI matrix |
 | 5 | Undo and redo, WAV export | Generics without bounds, `VecDeque`, `mem::swap`, `FnOnce`, `fn` pointers, testing against a model, `HashMap` and `Borrow`, threads, `move` closures, `JoinHandle` |
+| 6 | Harmony tools: selections, transposing, arpeggios, inversions, suggestions, ghost notes, velocities | Pure functions, collecting `Option`s, `checked_add_signed`, `find_map`, `cycle`, `step_by` and `zip`, knowledge as `const` tables, `Option::take` against the borrow checker, `flat_map` and lifetimes on returned iterators |
 
 The [Roadmap](roadmap.md) chapter keeps this table up to date.
 

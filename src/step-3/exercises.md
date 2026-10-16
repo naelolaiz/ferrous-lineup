@@ -2,6 +2,9 @@
 
 ## 1. More chords (loom-core, easy)
 
+*Step 6 adds both, and five more; try it yourself before reading
+[its chapter](../step-6/harmony.md#seven-new-chords).*
+
 Add `ChordQuality::Dominant13` (0, 4, 7, 10, 14, 21) or `Minor11`
 (0, 3, 7, 10, 14, 17). The compiler lists every `match` to update. Then
 run the tests: `no_two_qualities_have_the_same_notes` will tell you if
@@ -20,6 +23,10 @@ use these numbers all the time ("the 5 chord", "a flat 7").
 
 ## 3. Velocity with the arrow keys (loom-app, medium)
 
+*Step 6 edits velocity in a lane under the grid instead, and uses the
+arrow keys to move notes; [its chapter](../step-6/piano-roll.md#the-velocity-lane)
+shows how. The exercise is still a good one on its own.*
+
 `NoteEvent` has a `velocity`, but nothing edits it yet. When the pointer
 is over a note, make the up and down arrow keys change its velocity
 (`ui.input(|i| i.key_pressed(egui::Key::ArrowUp))`), send a
@@ -31,6 +38,9 @@ is over a note, make the up and down arrow keys change its velocity
 
 ## 4. Inversions (loom-core, medium)
 
+*Step 6 builds this; try it yourself before reading
+[its chapter](../step-6/tools.md#inversions).*
+
 Add an "Inversion" menu next to Draw (0, 1 or 2): inversion 1 moves the
 lowest note of a stamped chord up an octave, inversion 2 does it twice.
 Write it as a function `invert(notes: Vec<Note>, times: u8) -> Vec<Note>`
@@ -41,6 +51,10 @@ for the first inversion of C?
 use `analyze` to check your own output.
 
 ## 5. Snap to scale (loom-app, medium)
+
+*Step 6 builds the "nearest note in the scale" function, for a Tools
+menu item rather than a checkbox; see [its chapter](../step-6/tools.md#the-nearest-note-of-the-key-snapping).
+Step 6's exercise 5 adds the checkbox.*
 
 Add a "Snap to scale" checkbox. When it is on, a note dropped on a row
 outside the key moves to the nearest note of the key. Write the "nearest

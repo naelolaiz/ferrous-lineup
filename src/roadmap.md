@@ -7,16 +7,19 @@
 | 3. Piano roll and harmony | Done | Piano roll editor, notes with pitch and length, scale highlighting, chord stamping, live chord names and Roman numerals, polyphonic synth, pitched samplers |
 | 4. Playlist and saving | Done | Many patterns, the playlist with tracks and clips, pattern and song mode, `.loom` project files, macOS and Windows builds in CI |
 | 5. Undo and export | Done | Undo and redo for every change, one diff-based path to the audio thread, a sample cache, WAV export in the background |
-| 6. Harmony tools | Next | Ghost notes, snapping notes to the scale, chord inversions, strummed and arpeggiated chords, more chord types, a velocity lane, suggestions for the next chord |
+| 6. Harmony tools | Done | Selecting and moving groups of notes, a Tools menu (transpose, move in key, snap to the key, invert, arpeggiate), stamped inversions, seven more chord types, next-chord suggestions with secondary dominants, ghost notes from the other channels, a velocity lane |
 
 The four steps planned at the start are done: Ferrous Loom runs on
 Linux, macOS and Windows, using the same code on all three. Step 5 added
-two features every studio needs, undo and WAV export. Step 6 will bring
-the piano roll's harmony help closer to what a full studio offers.
+two features every studio needs, undo and WAV export. Step 6 brought the
+piano roll's harmony help closer to what a full studio offers. One
+planned tool, strumming, was left out, because it needs notes that start
+between steps; [step 6](step-6/README.md#what-is-not-here-strumming)
+explains why.
 
 ## Ideas for what comes next
 
-Beyond step 6, none of these are planned yet. They are the features a
+None of these are planned yet. They are the features a
 pattern-based studio usually has that Ferrous Loom does not, roughly from
 smaller to bigger:
 
@@ -27,7 +30,9 @@ smaller to bigger:
 - **Audio clips** in the playlist, next to pattern clips.
 - **MIDI input**, to play the Loom Osc from a keyboard, and MIDI file
   export of patterns.
+- **Finer timing**: notes that start between steps, for strumming,
+  swing and notes played slightly early or late.
 - **Even more harmony help**: borrowed chords and modulations
-  explained, a "voice leading" view.
+  explained, a "voice leading" view, chords named over a whole beat.
 - **Packaging**: icons, a macOS `.app` bundle, a Windows installer, and
   double-clicking `.loom` files to open them.
