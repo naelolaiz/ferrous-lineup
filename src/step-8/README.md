@@ -59,6 +59,8 @@ and a library to go with them:
 | Ctrl+Z | take it back |
 | Use their tempo (Library tab) | also set the style's usual tempo |
 | File > Demos | open a song or a style as a whole project, and play it |
+| Ctrl+Plus, Ctrl+Minus, Ctrl+0, or the zoom at the bottom right | make everything bigger or smaller, or 100% again |
+| View menu, or **Alt+F8** | show or hide each window, and the Patterns and Library panel |
 
 The number keys play the harmony keys only while the typing keyboard is
 off, because the typing keyboard uses them for black keys.
@@ -150,9 +152,11 @@ crates/loom-app/src/app/live.rs             play_typed is shared with the harmon
 crates/loom-app/src/playlist.rs             the Library tab, bars of any length
 crates/loom-app/src/channel_rack.rs         beat colours by time signature
 crates/loom-app/src/piano_roll.rs           bar and beat lines by time signature
+crates/loom-app/src/app/view.rs             the View menu and the zoom control (new)
 ```
 
 The chapters start with the harmony keys, the part you see first. Then
 time signatures, which everything else depends on. Then the library:
 how a style, a rhythm and a song are written as data, and how they
-become patterns and demos.
+become patterns and demos. The last chapter is about making every
+control fit, whatever the size of the window, and about zoom.

@@ -91,10 +91,14 @@ keeping files compatible.
 
 ## 7. Remember the hint level (loom-app, medium)
 
-The hint level goes back to Short every time the app starts. eframe can
-save app settings between runs with its `persistence` feature: turn it
-on in `crates/loom-app/Cargo.toml`, give `HintLevel` serde's `Serialize`
-and `Deserialize`, store it in `App::save`, and read it back from
-`CreationContext::storage` when the app starts.
+The hint level goes back to Short every time the app starts. eframe
+already saves egui's own memory between runs (the zoom and the window
+positions, see [Fitting any window](fitting-the-window.md)), because its
+`persistence` feature is on. The app's own settings need a little more:
+give `HintLevel` serde's `Serialize` and `Deserialize`, store it in
+`App::save` with `eframe::set_value`, and read it back with
+`eframe::get_value` from `CreationContext::storage` when the app starts.
+Which other settings would you remember the same way? Whether the
+channel rack is open is one.
 
 *Practices:* Cargo features, serde derives, the `eframe::App` trait.

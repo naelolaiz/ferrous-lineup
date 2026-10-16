@@ -51,6 +51,7 @@
   - [Time signatures](step-8/time-signatures.md)
   - [The library: knowledge as data](step-8/library.md)
   - [From the library to patterns and demos](step-8/patterns-and-demos.md)
+  - [Fitting any window: wrapping, zoom and remembering](step-8/fitting-the-window.md)
   - [Exercises](step-8/exercises.md)
 
 ---
