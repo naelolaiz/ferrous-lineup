@@ -5,10 +5,13 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
+use crate::arrangement::{Arrangement, arrange};
 use crate::harmony::Scale;
 use crate::meter::TimeSignature;
 use crate::pattern::{NoteEvent, Pattern};
-use crate::playlist::{Clip, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Track};
+use crate::playlist::{
+    Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Section, Track,
+};
 use crate::{Note, Tempo};
 
 /// The most channels a project can have. The audio thread reserves room
@@ -163,7 +166,8 @@ impl Channel {
 ///
 /// - every pattern has one row of notes per channel, in the same order;
 /// - there is always at least one pattern;
-/// - every clip in the playlist refers to a pattern and a track that exist.
+/// - every clip in the playlist refers to a pattern and a track that exist;
+/// - sections are sorted and never overlap, and repeats stay in range.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Project {
     pub tempo: Tempo,
@@ -461,13 +465,23 @@ impl Project {
         clip.pattern < self.patterns.len()
             && clip.track < self.playlist.tracks.len()
             && clip.start < MAX_SONG_STEPS
+            && (1..=MAX_REPEATS).contains(&clip.repeats)
+    }
+
+    /// Whether a clip other than number `except` sits in the same place.
+    fn clip_taken(&self, clip: &Clip, except: Option<usize>) -> bool {
+        self.playlist
+            .clips
+            .iter()
+            .enumerate()
+            .any(|(index, other)| Some(index) != except && other.same_place(clip))
     }
 
     /// Adds a clip and returns its index. Returns `None` if its pattern
-    /// or track does not exist, it starts too late, or the very same clip
-    /// is already there.
+    /// or track does not exist, it starts too late, it repeats too often,
+    /// or a clip of the same pattern already starts there.
     pub fn add_clip(&mut self, clip: Clip) -> Option<usize> {
-        if !self.clip_fits(clip) || self.playlist.clips.contains(&clip) {
+        if !self.clip_fits(clip) || self.clip_taken(&clip, None) {
             return None;
         }
         self.playlist.clips.push(clip);
@@ -486,11 +500,24 @@ impl Project {
             start,
             ..clip
         };
-        if !self.clip_fits(moved) || self.playlist.clips.contains(&moved) {
+        if !self.clip_fits(moved) || self.clip_taken(&moved, Some(index)) {
             return false;
         }
         self.playlist.clips[index] = moved;
         true
+    }
+
+    /// Makes a clip play its pattern `repeats` times in a row. Returns
+    /// `false` if there is no such clip or `repeats` is not 1 to
+    /// [`MAX_REPEATS`].
+    pub fn set_clip_repeats(&mut self, index: usize, repeats: usize) -> bool {
+        match self.playlist.clips.get_mut(index) {
+            Some(clip) if (1..=MAX_REPEATS).contains(&repeats) => {
+                clip.repeats = repeats;
+                true
+            }
+            _ => false,
+        }
     }
 
     pub fn remove_clip(&mut self, index: usize) -> Option<Clip> {
@@ -498,23 +525,198 @@ impl Project {
         (index < clips.len()).then(|| clips.remove(index))
     }
 
-    /// How many steps a clip lasts: the length of its pattern.
+    /// How many steps a clip lasts: the length of its pattern, times
+    /// the number of times it repeats.
     pub fn clip_length(&self, clip: &Clip) -> usize {
-        self.patterns.get(clip.pattern).map_or(0, Pattern::length)
+        self.patterns.get(clip.pattern).map_or(0, Pattern::length) * clip.repeats
     }
 
-    /// The length of the song in steps: up to the end of the last clip,
-    /// rounded up to a whole bar of the time signature. An empty playlist
-    /// has length 0.
+    /// The length of the playlist's timeline in steps: up to the end of
+    /// the last clip or section, rounded up to a whole bar of the time
+    /// signature. An empty playlist has length 0.
+    ///
+    /// This is the song as drawn. With repeated sections, the song as
+    /// played is longer: see [`Project::arrangement`].
     pub fn song_length(&self) -> usize {
-        let end = self
+        let clips = self
             .playlist
             .clips
             .iter()
-            .map(|clip| clip.start + self.clip_length(clip))
-            .max()
-            .unwrap_or(0);
+            .map(|clip| clip.start + self.clip_length(clip));
+        let sections = self.playlist.sections.iter().map(Section::end);
+        let end = clips.chain(sections).max().unwrap_or(0);
         self.time_signature.round_up_to_bar(end)
+    }
+
+    /// The whole song as it plays, with every repeat unrolled. Exports
+    /// use this.
+    pub fn arrangement(&self) -> Arrangement {
+        arrange(self, 0, self.song_length())
+    }
+
+    /// What song mode plays: the loop region if one is set, or else the
+    /// whole song.
+    pub fn playback_arrangement(&self) -> Arrangement {
+        match self.playlist.loop_region {
+            Some(region) => arrange(self, region.start, region.end),
+            None => self.arrangement(),
+        }
+    }
+
+    // ----- Sections and the loop region -----
+
+    /// Whether `section` could be in the playlist, next to every section
+    /// but number `except`.
+    fn section_fits(&self, section: &Section, except: Option<usize>) -> bool {
+        section.length > 0
+            && section.end() <= MAX_SONG_STEPS
+            && (1..=MAX_REPEATS).contains(&section.repeats)
+            && !self
+                .playlist
+                .sections
+                .iter()
+                .enumerate()
+                .any(|(index, other)| Some(index) != except && other.overlaps(section))
+    }
+
+    /// Puts a section in its place in the sorted list and returns its index.
+    fn insert_section(&mut self, section: Section) -> usize {
+        let sections = &mut self.playlist.sections;
+        let index = sections.partition_point(|other| other.start < section.start);
+        sections.insert(index, section);
+        index
+    }
+
+    /// Adds a section and returns its index. Returns `None` if it is
+    /// empty, ends after [`MAX_SONG_STEPS`], or overlaps another section.
+    pub fn add_section(&mut self, section: Section) -> Option<usize> {
+        if !self.section_fits(&section, None) {
+            return None;
+        }
+        Some(self.insert_section(section))
+    }
+
+    /// Replaces a section: to rename it, move it, resize it or change
+    /// how often it repeats. Returns its new index (sections stay in
+    /// order), or `None`, changing nothing, if the new one would not fit.
+    pub fn set_section(&mut self, index: usize, section: Section) -> Option<usize> {
+        if index >= self.playlist.sections.len() || !self.section_fits(&section, Some(index)) {
+            return None;
+        }
+        self.playlist.sections.remove(index);
+        Some(self.insert_section(section))
+    }
+
+    /// Removes a section. The clips under it stay where they are.
+    pub fn remove_section(&mut self, index: usize) -> Option<Section> {
+        let sections = &mut self.playlist.sections;
+        (index < sections.len()).then(|| sections.remove(index))
+    }
+
+    /// Inserts `copies` copies of a section right after it: its clips
+    /// and its marker, with the same repeats. Everything after the
+    /// section moves later to make room. Returns `false`, changing
+    /// nothing, if there is no such section or the song would get too long.
+    ///
+    /// Only the clips that start inside the section are copied, and they
+    /// are copied whole. A clip that starts before the section and lasts
+    /// into it stays a single clip; one that starts inside it and lasts
+    /// past its end is copied whole too, so it can overlap the copy.
+    pub fn duplicate_section(&mut self, index: usize, copies: usize) -> bool {
+        let Some(section) = self.playlist.sections.get(index).cloned() else {
+            return false;
+        };
+        let room = section.length * copies;
+        if copies == 0 || !self.make_room(section.end(), room) {
+            return false;
+        }
+        let inside: Vec<Clip> = self
+            .playlist
+            .clips
+            .iter()
+            .filter(|clip| section.contains(clip.start))
+            .copied()
+            .collect();
+        for copy in 1..=copies {
+            let shift = copy * section.length;
+            for clip in &inside {
+                self.playlist.clips.push(Clip {
+                    start: clip.start + shift,
+                    ..*clip
+                });
+            }
+            let name = format!("{} {}", section.name, copy + 1);
+            self.insert_section(Section {
+                name,
+                start: section.start + shift,
+                ..section.clone()
+            });
+        }
+        true
+    }
+
+    /// Turns a repeated section into separate copies, one per repeat,
+    /// each played once, so each time round can be changed on its own.
+    /// The song sounds the same before and after.
+    pub fn unroll_section(&mut self, index: usize) -> bool {
+        let Some(repeats) = self.playlist.sections.get(index).map(|s| s.repeats) else {
+            return false;
+        };
+        if repeats < 2 {
+            return false;
+        }
+        self.playlist.sections[index].repeats = 1;
+        if self.duplicate_section(index, repeats - 1) {
+            true
+        } else {
+            self.playlist.sections[index].repeats = repeats;
+            false
+        }
+    }
+
+    /// Moves every clip, section and loop edge at or after step `at`
+    /// later by `steps`, leaving an empty gap. Returns `false`, changing
+    /// nothing, if something would end up too late.
+    fn make_room(&mut self, at: usize, steps: usize) -> bool {
+        let playlist = &self.playlist;
+        let too_late = playlist
+            .clips
+            .iter()
+            .any(|clip| clip.start >= at && clip.start + steps >= MAX_SONG_STEPS)
+            || playlist
+                .sections
+                .iter()
+                .any(|section| section.start >= at && section.end() + steps > MAX_SONG_STEPS);
+        if too_late {
+            return false;
+        }
+        let shift = |step: &mut usize| {
+            if *step >= at {
+                *step += steps;
+            }
+        };
+        for clip in &mut self.playlist.clips {
+            shift(&mut clip.start);
+        }
+        for section in &mut self.playlist.sections {
+            shift(&mut section.start);
+        }
+        if let Some(region) = &mut self.playlist.loop_region {
+            shift(&mut region.start);
+            shift(&mut region.end);
+            region.end = region.end.min(MAX_SONG_STEPS);
+        }
+        true
+    }
+
+    /// Sets or clears the part of the song that song mode loops. Returns
+    /// `false`, changing nothing, if the region is empty or too late.
+    pub fn set_loop_region(&mut self, region: Option<LoopRegion>) -> bool {
+        if region.is_some_and(|r| r.start >= r.end || r.end > MAX_SONG_STEPS) {
+            return false;
+        }
+        self.playlist.loop_region = region;
+        true
     }
 
     /// The notes held during `step` of pattern `pattern` by the channels
@@ -525,8 +727,8 @@ impl Project {
         chord_notes(parts)
     }
 
-    /// The notes held during `song_step` of the song by the channels that
-    /// play chords, so the harmony keys can show which chord is playing.
+    /// The notes held during timeline step `song_step` of the song (see
+    /// [`Arrangement::timeline_step`]) by the channels that play chords, so the harmony keys can show which chord is playing.
     ///
     /// Only synths and MIDI Out channels that are not muted count, and of
     /// those only the ones holding two notes or more: a melody or a bass
@@ -535,8 +737,8 @@ impl Project {
     pub fn chord_notes_in_song(&self, song_step: usize) -> Vec<Note> {
         let mut parts = Vec::new();
         for clip in self.playlist.audible_clips() {
-            if (clip.start..clip.start + self.clip_length(&clip)).contains(&song_step) {
-                self.collect_parts(clip.pattern, song_step - clip.start, &mut parts);
+            if let Some(step) = self.step_in_clip(&clip, song_step) {
+                self.collect_parts(clip.pattern, step, &mut parts);
             }
         }
         chord_notes(parts)
@@ -559,15 +761,25 @@ impl Project {
         }
     }
 
-    /// Where `pattern` is during `song_step` of the song, if one of its
-    /// clips is playing then: the step inside the pattern. The channel
+    /// Where `pattern` is during timeline step `song_step` of the song, if
+    /// one of its clips is playing then: the step inside the pattern. The channel
     /// rack and the piano roll use this to show the playhead in song mode.
     pub fn pattern_step_in_song(&self, pattern: usize, song_step: usize) -> Option<usize> {
         self.playlist
             .audible_clips()
             .filter(|clip| clip.pattern == pattern)
-            .find(|clip| (clip.start..clip.start + self.clip_length(clip)).contains(&song_step))
-            .map(|clip| song_step - clip.start)
+            .find_map(|clip| self.step_in_clip(&clip, song_step))
+    }
+
+    /// The step of its pattern that `clip` plays on timeline step `step`,
+    /// if it is playing then. A clip that repeats its pattern starts it
+    /// again at step 0 each time round.
+    fn step_in_clip(&self, clip: &Clip, step: usize) -> Option<usize> {
+        let pattern_length = self.patterns.get(clip.pattern).map_or(0, Pattern::length);
+        let end = clip.start + pattern_length * clip.repeats;
+        (clip.start..end)
+            .contains(&step)
+            .then(|| (step - clip.start) % pattern_length)
     }
 }
 
@@ -790,6 +1002,118 @@ mod tests {
         assert_eq!(project.song_length(), 32);
         project.pattern_mut(0).unwrap().set_length(64);
         assert_eq!(project.song_length(), 80, "clips grow with their pattern");
+    }
+
+    #[test]
+    fn clips_can_repeat_their_pattern() {
+        let mut project = Project::template();
+        project.add_clip(Clip::new(0, 0, 16));
+        assert!(project.set_clip_repeats(0, 3));
+        assert!(!project.set_clip_repeats(0, 0));
+        assert!(!project.set_clip_repeats(0, MAX_REPEATS + 1));
+        assert_eq!(project.song_length(), 64);
+        // Each time round, the pattern starts again.
+        assert_eq!(project.pattern_step_in_song(0, 16), Some(0));
+        assert_eq!(project.pattern_step_in_song(0, 37), Some(5));
+        assert_eq!(project.pattern_step_in_song(0, 64), None);
+        // The same pattern cannot start in the same place twice, whatever
+        // its repeats.
+        assert!(project.add_clip(Clip::new(0, 0, 16).repeated(2)).is_none());
+    }
+
+    #[test]
+    fn sections_never_overlap_and_stay_in_order() {
+        let mut project = Project::demo();
+        assert_eq!(project.add_section(Section::new("Chorus", 64, 64)), Some(0));
+        assert_eq!(project.add_section(Section::new("Intro", 0, 32)), Some(0));
+        assert_eq!(project.add_section(Section::new("Verse", 32, 48)), None);
+        assert_eq!(project.add_section(Section::new("Empty", 32, 0)), None);
+        assert_eq!(project.add_section(Section::new("Verse", 32, 32)), Some(1));
+        let names: Vec<&str> = project
+            .playlist()
+            .sections()
+            .iter()
+            .map(|s| s.name.as_str())
+            .collect();
+        assert_eq!(names, ["Intro", "Verse", "Chorus"]);
+
+        let mut chorus = project.playlist().sections()[2].clone();
+        chorus.repeats = 4;
+        assert_eq!(project.set_section(2, chorus.clone()), Some(2));
+        chorus.start = 48;
+        assert_eq!(
+            project.set_section(2, chorus),
+            None,
+            "would cover the verse"
+        );
+        assert_eq!(project.playlist().sections()[2].start, 64);
+        assert_eq!(
+            project.remove_section(0).map(|s| s.name),
+            Some("Intro".into())
+        );
+    }
+
+    #[test]
+    fn sections_reach_past_the_last_clip() {
+        let mut project = Project::template();
+        project.add_section(Section::new("Outro", 0, 48));
+        assert_eq!(project.song_length(), 48);
+    }
+
+    #[test]
+    fn duplicating_a_section_makes_room_for_the_copy() {
+        let mut project = Project::demo();
+        let chorus = project.add_section(Section::new("Chorus", 32, 32)).unwrap();
+        let clips_before = project.playlist().clips().len();
+        assert!(project.duplicate_section(chorus, 1));
+        // The chorus covers one chords clip and two beat clips.
+        assert_eq!(project.playlist().clips().len(), clips_before + 3);
+        assert_eq!(project.song_length(), 128 + 32);
+        let copy = &project.playlist().sections()[1];
+        assert_eq!((copy.name.as_str(), copy.start), ("Chorus 2", 64));
+        // The fill moved along with the rest of the song.
+        let fill = project
+            .playlist()
+            .clips()
+            .iter()
+            .find(|c| c.pattern == FILL);
+        assert_eq!(fill.map(|c| c.start), Some(7 * 16 + 32));
+    }
+
+    #[test]
+    fn unrolling_a_section_sounds_the_same() {
+        let mut project = Project::demo();
+        let mut chorus = Section::new("Chorus", 32, 64);
+        chorus.repeats = 3;
+        let index = project.add_section(chorus).unwrap();
+        let before = project.arrangement();
+        assert!(project.unroll_section(index));
+        let after = project.arrangement();
+        assert_eq!(after.length, before.length);
+        assert_eq!(project.playlist().sections().len(), 3);
+        assert!(project.playlist().sections().iter().all(|s| s.repeats == 1));
+        // The same pieces of patterns start at the same moments.
+        let starts = |song: &Arrangement| {
+            let mut plays: Vec<(usize, usize, usize)> = song
+                .plays
+                .iter()
+                .map(|play| (play.start, play.pattern, play.length))
+                .collect();
+            plays.sort();
+            plays
+        };
+        assert_eq!(starts(&after), starts(&before));
+        assert!(!project.unroll_section(index), "nothing left to unroll");
+    }
+
+    #[test]
+    fn loop_regions_must_hold_something() {
+        let mut project = Project::demo();
+        assert!(!project.set_loop_region(Some(LoopRegion::new(32, 32))));
+        assert!(project.set_loop_region(Some(LoopRegion::new(32, 64))));
+        assert_eq!(project.playback_arrangement().length, 32);
+        assert!(project.set_loop_region(None));
+        assert_eq!(project.playback_arrangement().length, 128);
     }
 
     #[test]

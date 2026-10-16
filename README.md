@@ -42,9 +42,17 @@ cargo run --release
 Press **Space** to play the demo song: two bars of a C, Am, F, G chord
 progression, then a beat comes in, and a drum fill ends it. The playlist
 arranges patterns into a song: click to place a clip of the selected
-pattern, drag clips around, right-click to delete. **F6** shows or hides
+pattern, drag clips around, right-click to delete, and double-click a
+clip to edit it: melodies and chords open in the piano roll, drums in
+the channel rack. Drag a clip's right edge to repeat its pattern. Drag
+along the strip above the bar numbers to mark sections (Intro, Verse,
+Chorus…), and click a section to rename it, play it several times in a
+row, loop it or copy it. Drag along the bar numbers to loop part of the
+song. **F6** shows or hides
 the channel rack, where you click steps and drop WAV files to use your
-own sounds. **F7** shows the piano roll: pick a key to highlight its notes,
+own sounds. **F7** shows the piano roll, on the selected pattern: when
+the channel has no notes there, it says so and offers the patterns that
+do. Pick a key to highlight its notes,
 draw notes or whole chords, and watch the chord names above the grid.
 Select notes with Ctrl+click or a Ctrl+drag box, then move them with the
 arrow keys (Alt+↑ stays in the key), invert or arpeggiate them from the
@@ -74,9 +82,12 @@ hear it in your key. **File > Demos** opens 16 well-known songs in the
 public domain, from *Ode to Joy* to *Für Elise*, and every style as a
 short song.
 
-Too small or too big? **Ctrl+Plus** and **Ctrl+Minus** zoom everything
-(⌘ on a Mac) and **Ctrl+0** goes back to 100%; the same zoom is in the
-**View** menu and at the right end of the status bar. The View menu also
+Too small or too big? The main window, the channel rack and the piano
+roll each have their own zoom. **Ctrl+Plus** and **Ctrl+Minus** (⌘ on a
+Mac) zoom the one you clicked last and **Ctrl+0** takes it back to 100%;
+**Ctrl** with the mouse wheel zooms the one under the pointer. The main
+window's zoom is also in the **View** menu and at the right end of the
+status bar. The View menu also
 shows or hides each window and panel, and **Alt+F8** hides the Patterns
 and Library panel to give the playlist more room. The zoom, the window
 size and where you left the windows are remembered for next time.
