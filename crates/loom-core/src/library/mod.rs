@@ -16,12 +16,15 @@
 //! - [`listen`]: hearing which chords a pattern's notes play.
 //! - [`apply`]: writing a style or a rhythm into a pattern, and changing
 //!   the rhythm of a whole song, chords and bass included.
+//! - [`follow`]: the accompaniment playing whatever chord you hold, as on
+//!   an arranger keyboard.
 //! - [`demo`]: whole projects, arranged from styles, rhythms and songs.
 
 pub mod apply;
 pub mod chart;
 pub mod comping;
 pub mod demo;
+pub mod follow;
 pub mod listen;
 pub mod numeral;
 pub mod rhythm;
