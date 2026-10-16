@@ -1,5 +1,13 @@
 # Step 3: The piano roll and harmony
 
+> The code shown in step 3's chapters is the code as it was at the end of
+> step 3. Step 4 changed some of it: a project now holds many patterns,
+> so the note methods of `Project` (`add_note`, `replace_note`...) gave
+> way to `project.pattern_mut(index)`, `Command::SetNotes` also names the
+> pattern, and the piano roll edits the selected pattern. To read the
+> step 3 version of the code, run `git checkout step-3-piano-roll`, or
+> browse that branch on GitHub.
+
 Step 3 gives Ferrous Loom melodies and chords, and starts teaching harmony:
 
 - a **piano roll** window where you draw notes on a grid of pitches and

@@ -24,6 +24,13 @@
   - [Playing notes: voices and envelopes](step-3/voices.md)
   - [The piano roll window](step-3/piano-roll-ui.md)
   - [Exercises](step-3/exercises.md)
+- [Step 4: The playlist, saving, and three operating systems](step-4/README.md)
+  - [Many patterns, and a playlist to arrange them](step-4/patterns.md)
+  - [Playing a song on the audio thread](step-4/song-playback.md)
+  - [Saving and loading projects](step-4/saving.md)
+  - [The playlist window](step-4/playlist-ui.md)
+  - [Linux, macOS and Windows](step-4/platforms.md)
+  - [Exercises](step-4/exercises.md)
 
 ---
 

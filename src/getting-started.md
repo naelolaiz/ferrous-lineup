@@ -20,11 +20,16 @@ Ferrous Loom needs Rust 1.88 or newer. It uses the 2024 edition of the
 language (more on editions in the next chapter) and `if let` chains, which
 arrived in 1.88. If your Rust is older, `rustup update` fixes it.
 
-## 2. Install the Linux system libraries
+## 2. Install the system's build tools
 
-Rust downloads its own libraries (called *crates*) automatically, but a few
-crates talk to libraries that come with Linux itself: ALSA for sound and
-X11 or Wayland for windows. On Debian or Ubuntu:
+Rust downloads its own libraries (called *crates*) automatically, but it
+needs a linker from your system, and on Linux a few crates talk to
+libraries that come with the system itself: ALSA for sound and X11 or
+Wayland for windows.
+
+### Linux
+
+On Debian or Ubuntu:
 
 ```sh
 sudo apt install build-essential pkg-config libasound2-dev \
@@ -37,6 +42,26 @@ On Fedora:
 sudo dnf install gcc pkgconf-pkg-config alsa-lib-devel \
     libxkbcommon-devel libxkbcommon-x11 wayland-devel
 ```
+
+File dialogs use your desktop's portal, which GNOME and KDE already
+have. On a bare window manager, install `xdg-desktop-portal-gtk` or
+`zenity` to get them.
+
+### macOS
+
+Install Apple's command line tools, which bring the linker and the
+system libraries:
+
+```sh
+xcode-select --install
+```
+
+### Windows
+
+Download and run `rustup-init.exe` from <https://rustup.rs> instead of
+the `curl` command above. When it asks, let it install the Visual Studio
+Build Tools: Rust uses their linker. Then use the commands below in
+PowerShell or the Command Prompt.
 
 ## 3. Build and run
 
@@ -53,12 +78,33 @@ development you can drop it to build faster.
 
 You should see this window:
 
-![Ferrous Loom with the channel rack and the piano roll](images/step-3-piano-roll.png)
+![Ferrous Loom with the playlist and the channel rack](images/step-4-playlist.png)
 
-Press **Space** or click **▶ Play** to hear the demo: a beat and a chord
-progression. The piano roll opens on the Loom Osc channel; **F7** hides
-and shows it. The status bar at the bottom shows which sound card is in
-use, or why audio could not start.
+Press **Space** or click **▶ Play** to hear the demo song: two bars of
+chords, then a beat comes in, and a drum fill ends it before it loops.
+The playlist fills the window; **F6** shows and hides the channel rack,
+**F7** the piano roll, and **L** switches between playing the song and
+looping the selected pattern. **Ctrl+S** (⌘S on a Mac) saves the
+project. The status bar at the bottom shows which sound card is in use,
+or why audio could not start.
+
+To open a project straight away, give its file to the program:
+
+```sh
+cargo run --release -- my-song.loom
+```
+
+The `--` tells Cargo that what follows is for the program, not for Cargo.
+
+### Without building: the CI downloads
+
+Every CI run on GitHub builds the program for all three systems. On the
+run's page, under **Artifacts**, download `ferrous-loom-linux`,
+`ferrous-loom-macos` or `ferrous-loom-windows` and unzip it. On Linux and
+macOS, make it executable first with `chmod +x ferrous-loom`. These
+programs are not signed, so macOS and Windows will warn you before the
+first start; [Linux, macOS and Windows](step-4/platforms.md#what-is-not-there-yet)
+explains how to get past the warning.
 
 ## 4. Run the tests
 

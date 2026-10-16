@@ -3,8 +3,11 @@
 > The code shown in step 2's chapters is the code as it was at the end of
 > step 2. Step 3 changed some of it: patterns now hold notes instead of
 > `[bool; 64]` rows, `Command::SetStep` became `Command::SetNotes`, and
-> instruments got voices. To read the step 2 version of the code, run
-> `git checkout step-2-sequencer`, or browse that branch on GitHub.
+> instruments got voices. Step 4 changed more: a project holds many
+> patterns, so `SetNotes` also names the pattern, and the rack became a
+> floating window that shows the selected pattern. To read the step 2
+> version of the code, run `git checkout step-2-sequencer`, or browse
+> that branch on GitHub.
 
 Step 2 turns the test tone into a real, if small, drum machine:
 
