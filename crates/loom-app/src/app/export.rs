@@ -100,11 +100,14 @@ impl LoomApp {
         // added after it: enough for the tail, and one more, so the
         // export ends before the song would start again.
         let step_frames = frames_per_step(self.project.tempo, EXPORT_SAMPLE_RATE);
-        let song_length = self.project.song_length();
+        // The whole song, every repeat included, even when song mode only
+        // loops part of it.
+        let song = self.project.arrangement();
+        let song_length = song.length;
         let tail_frames = TAIL_SECONDS * f64::from(EXPORT_SAMPLE_RATE);
         let silent_steps = (tail_frames / step_frames).ceil() as usize + 1;
         renderer.send(Command::SetSong {
-            clips: self.project.playlist().audible_clips().collect(),
+            plays: song.plays,
             length: song_length + silent_steps,
         });
         renderer.send(Command::SetMode(PlayMode::Song));
