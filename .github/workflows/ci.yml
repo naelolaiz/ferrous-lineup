@@ -31,7 +31,7 @@ jobs:
             binary: target/release/ferrous-loom.exe
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # macOS and Windows come with their audio and window libraries.
       # Linux needs the development files for ALSA, xkbcommon and Wayland.
@@ -61,7 +61,7 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.binary }}
