@@ -288,7 +288,11 @@ mod tests {
         };
         assert_eq!(at(0), [SONG_TRACK], "the harmony alone");
         assert_eq!(at(64), [SONG_TRACK, DRUM_TRACK]);
-        assert_eq!(project.playlist().tracks().len(), 2, "only the tracks it uses");
+        assert_eq!(
+            project.playlist().tracks().len(),
+            2,
+            "only the tracks it uses"
+        );
         let names: Vec<&str> = project.patterns().iter().map(|p| p.name.as_str()).collect();
         assert_eq!(names, ["Harmony", "Drums", "Drums and fill", "Ending"]);
     }
