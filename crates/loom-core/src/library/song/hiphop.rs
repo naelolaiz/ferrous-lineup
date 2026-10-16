@@ -53,7 +53,7 @@ pub(super) const GYMNOPEDIE: Song = Song {
         ),
     ],
     form: &["Intro", "Melody", "Melody"],
-    drums_from: 2,
+    drums_from: 1,
     about: "Satie's slow dance rocks between two major seventh chords, Gmaj7 and Dmaj7, for \
             the whole piece.",
 };
@@ -79,7 +79,7 @@ pub(super) const PRELUDE_IN_C: Song = Song {
         "I | ii7 | V7 | I | vi | II7 | V | Imaj7 | vi7 | II7 | V | V7",
     )],
     form: &["Prelude", "Prelude", "Prelude"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Bach's prelude has no tune at all: each bar is one chord, broken into the same \
             rising figure. That makes it a perfect sample for a hip hop beat. Listen to how \
             each chord changes as few notes as it can.",
@@ -88,7 +88,7 @@ pub(super) const PRELUDE_IN_C: Song = Song {
 pub(super) const SAKURA: Song = Song {
     name: "Sakura Sakura",
     origin: "Japanese folk song, Edo period",
-    feel: "Lo-fi",
+    feel: "R&B",
     genre: Genre::HipHop,
     tonic: A,
     mode: NaturalMinor,
@@ -96,7 +96,7 @@ pub(super) const SAKURA: Song = Song {
     tempo: 76.0,
     comping: Comping::Lazy,
     bass: Bass::Lazy,
-    rhythm: "Lo-fi",
+    rhythm: "R&B",
     parts: &[Part::new(
         "Song",
         "A4:4 A4 B4:8 | A4:4 A4 B4:8 | A4:4 B4 C5 B4 | A4 B4:2 A4 F4:8 | \
@@ -107,7 +107,7 @@ pub(super) const SAKURA: Song = Song {
          bVImaj7 | i7",
     )],
     form: &["Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The cherry blossom song uses five notes, A B C E F, from the miyako-bushi scale \
             of Japanese music. All five are in A minor, so lo-fi seventh chords sit right \
             under it.",
@@ -138,7 +138,7 @@ pub(super) const DIES_IRAE: Song = Song {
         ),
     ],
     form: &["Chant", "Chant", "Chant above", "Chant above", "Chant"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The medieval chant of the Day of Wrath, quoted by Berlioz, Liszt, Rachmaninoff \
             and countless film scores. Eight notes are enough to sound ominous, here over \
             trap hi-hats and a deep 808 bass.",

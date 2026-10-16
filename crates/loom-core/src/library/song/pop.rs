@@ -30,7 +30,7 @@ pub(super) const AULD_LANG_SYNE: Song = Song {
         ),
     ],
     form: &["Intro", "Verse", "Chorus", "Verse", "Chorus"],
-    drums_from: 3,
+    drums_from: 1,
     about: "Sung at New Year all over the world. Like many Scottish tunes, it uses only the \
             five notes of the pentatonic scale: F G A C D.",
 };
@@ -54,7 +54,7 @@ pub(super) const LONDON_BRIDGE: Song = Song {
         "I | I | V7 | I | I | I | V7 | I",
     )],
     form: &["Tune", "Tune", "Tune", "Tune"],
-    drums_from: 1,
+    drums_from: 0,
     about: "A playground song over octave bass and offbeat stabs. The tune only needs two \
             chords: the home chord, and V7 at the end of each half.",
 };
@@ -77,10 +77,10 @@ pub(super) const OLD_MACDONALD: Song = Song {
          G5:4 G5 G5 D5 | E5 E5 D5:8 | B5:4 B5 A5 A5 | G5:12 D5:4 | \
          D5:2 D5 G5:4 G5 G5 | D5:2 D5 G5:4 G5 G5 | G5:2 G5 G5:4 G5:2 G5 G5:4 | G5:2 G5 G5 G5 G5:4 G5 | \
          G5:4 G5 G5 D5 | E5 E5 D5:8 | B5:4 B5 A5 A5 | G5:16",
-        "I | IV I | V | I | I | IV I | V | I | I | I | I | I | I | IV I | V | I",
+        "I | IV I | I V | I | I | IV I | I V | I | I | I | I | I | I | IV I | I V | I",
     )],
     form: &["Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The tresillo, 3 + 3 + 2, pushes the chords and the bass, as in West African pop. \
             \"E-I-E-I-O\" is B B A A G: the third, the second and home.",
 };
@@ -103,10 +103,10 @@ pub(super) const DECK_THE_HALLS: Song = Song {
          G5:6 F5:2 E5:4 D5 | C5 D5 E5 C5 | D5:2 E5 F5 D5 E5:6 D5:2 | C5:4 B4 C5:8 | \
          D5:6 E5:2 F5:4 D5 | E5:6 F5:2 G5:4 D5 | E5:2 F#5 G5:4 A5:2 B5 C6:4 | B5 A5 G5:8 | \
          G5:6 F5:2 E5:4 D5 | C5 D5 E5 C5 | A5:2 A5 A5 A5 G5:6 F5:2 | E5:4 D5 C5:8",
-        "I | I | ii I | V7 I | I | I | ii I | V7 I | V7 | I V | vi II7 | V | I | I | IV V7 | V7 I",
+        "I | I | ii I | I V7 I I | I | I | ii I | I V7 I I | V7 | I V | iii II7 | V | I | I | IV V7 | I V7 I I",
     )],
     form: &["Verse", "Verse", "Verse"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The third line steps out of C major: F sharp and the D7 chord lead to G, the key \
             of the dominant, for two bars, before the last line comes home.",
 };

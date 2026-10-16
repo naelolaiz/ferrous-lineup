@@ -21,7 +21,7 @@ pub(super) const HABANERA: Song = Song {
         "i | i | i | V7 i",
     )],
     form: &["Aria", "Aria", "Aria", "Aria"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Carmen's aria slides down one semitone at a time over the habanera rhythm, \
             long-short-long-long. The Cuban habanera crossed to Spain and to the River \
             Plate, where it grew into the tango.",
@@ -83,7 +83,7 @@ pub(super) const MILONGA_DEL_RIO: Song = Song {
         "I | I | V7 | V7 | V7 | V7 | I | I",
     )],
     form: &["Milonga", "Milonga", "Milonga", "Milonga"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The milonga is tango's quicker, happier cousin. The tune itself plays the \
             3 + 3 + 2 of the bass: two dotted notes and a short one, then a long note.",
 };
@@ -115,7 +115,7 @@ pub(super) const VALS_DEL_PUERTO: Song = Song {
         ),
     ],
     form: &["A", "B", "A", "B"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The tango orchestras' waltz, the vals criollo: fast, and felt as one beat to the \
             bar. Two bars of C, four of G7, two of C again: the simplest harmony, so the tune \
             can swing high and low.",

@@ -91,6 +91,10 @@ pub(super) const FUR_ELISE: Song = Song {
             the left hand answers with broken chords. In 3/8: three eighth notes to the bar.",
 };
 
+/// Grieg keeps the bass on the key note while the theme climbs; only the
+/// fourth bar lands on the chord of the third.
+const MOUNTAIN_CHORDS: &str = "i | i | i | bIII | i | i | i | bIII";
+
 pub(super) const MOUNTAIN_KING: Song = Song {
     name: "In the Hall of the Mountain King",
     origin: "Edvard Grieg, Peer Gynt, 1875",
@@ -103,19 +107,32 @@ pub(super) const MOUNTAIN_KING: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Epic toms",
-    parts: &[Part::new(
-        "Theme",
-        "B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
-         B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8 | \
-         B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
-         B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8",
-        "i | II7 bII | i | bIII | i | II7 bII | i | bIII",
-    )],
-    form: &["Theme", "Theme", "Theme", "Theme"],
-    drums_from: 1,
-    about: "Trolls creeping up the B minor scale. The second bar slips through two chords \
-            from outside the key, C sharp major and C major. In the original the music keeps \
-            getting faster; try raising the tempo while it plays.",
+    parts: &[
+        Part::new(
+            "Theme",
+            "B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8",
+            MOUNTAIN_CHORDS,
+        ),
+        // The same theme a fifth higher, in the key of the dominant.
+        Part::new(
+            "Higher",
+            "F#5:2 G#5 A5 B5 C#6 A5 C#6:4 | C6:2 G#5 C6:4 B5:2 G5 B5:4 | \
+             F#5:2 G#5 A5 B5 C#6 A5 C#6 F#6 | E6 C#6 A5 C#6 E6:8 | \
+             F#5:2 G#5 A5 B5 C#6 A5 C#6:4 | C6:2 G#5 C6:4 B5:2 G5 B5:4 | \
+             F#5:2 G#5 A5 B5 C#6 A5 C#6 F#6 | E6 C#6 A5 C#6 E6:8",
+            MOUNTAIN_CHORDS,
+        )
+        .in_key(FSharp, NaturalMinor),
+    ],
+    form: &["Theme", "Theme", "Higher", "Higher", "Theme", "Theme"],
+    drums_from: 0,
+    about: "Trolls creeping up the B minor scale, over a bass that stays on B. Then the \
+            whole theme moves up a fifth, to F sharp minor, as it does in Grieg's score, \
+            before it comes back. In the original the music keeps getting faster; try \
+            raising the tempo while it plays.",
 };
 
 pub(super) const MINUET: Song = Song {
@@ -182,7 +199,7 @@ pub(super) const BLUE_DANUBE: Song = Song {
         ),
     ],
     form: &["A", "B", "A", "B"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The waltz climbs the D major chord, D F sharp A, and answers with two quick \
             notes high above. The second time it climbs the A7 chord instead, C sharp E G: \
             the same shape over the dominant.",
@@ -309,7 +326,7 @@ pub(super) const FUNERAL_MARCH: Song = Song {
     tempo: 56.0,
     comping: Comping::Held,
     bass: Bass::Held,
-    rhythm: "",
+    rhythm: "March",
     parts: &[Part::new(
         "March",
         "Bb4:4 Bb4:3 Bb4:1 Bb4:8 | Db5:6 C5:2 C5:6 Bb4:2 | Bb4:6 A4:2 Bb4:8 | \

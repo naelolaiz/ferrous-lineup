@@ -29,7 +29,7 @@ pub(super) const FRERE_JACQUES: Song = Song {
             .with_voices(&[-6, -4, -2]),
     ],
     form: &["Alone", "Round", "Round again", "Last voices"],
-    drums_from: 1,
+    drums_from: 0,
     about: "A round: four voices sing the same tune, each two bars after the last. It works \
             because every two bars of the tune fit the same chord.",
 };
@@ -45,7 +45,7 @@ pub(super) const GREENSLEEVES: Song = Song {
     tempo: 96.0,
     comping: Comping::Arp3,
     bass: Bass::Waltz,
-    rhythm: "",
+    rhythm: "Waltz",
     parts: &[
         Part::new("Intro", "-:12 | -:8 A4:4", "i | V"),
         Part::new(
@@ -66,7 +66,7 @@ pub(super) const GREENSLEEVES: Song = Song {
         ),
     ],
     form: &["Intro", "Verse", "Chorus", "Verse", "Chorus"],
-    drums_from: 0,
+    drums_from: 1,
     about: "A minor key that borrows a major V (E major) to lead home, in a lilting 3/4. \
             Listen for the A held over E in the sixth bar, resolving to G sharp.",
 };
@@ -111,7 +111,7 @@ pub(super) const SCARBOROUGH_FAIR: Song = Song {
     tempo: 96.0,
     comping: Comping::Arp3,
     bass: Bass::Waltz,
-    rhythm: "",
+    rhythm: "Jazz waltz",
     parts: &[Part::new(
         "Verse",
         "D5:8 D5:4 | A5:8 A5:4 | E5:6 F5:2 E5:4 | D5:12 | -:4 A5:4 C6 | D6:8 C6:4 | \
@@ -137,13 +137,16 @@ pub(super) const CLEMENTINE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
-    parts: &[Part::new(
-        "Verse",
-        "C5:6 G4:2 E5:2 E5 | E5:6 C5:2 C5 E5 | G5:6 G5:2 F5 E5 | D5:8 D5:2 E5 | \
-         F5:6 F5:2 E5 D5 | E5:6 C5:2 C5 E5 | D5:6 G4:2 B4 D5 | C5:8 C5:2 C5",
-        "I | I | I | V7 | V7 | I | V7 | I",
-    )],
-    form: &["Verse", "Verse", "Verse"],
+    parts: &[
+        Part::new("Pickup", "-:8 C5:2 C5", "I"),
+        Part::new(
+            "Verse",
+            "C5:6 G4:2 E5:2 E5 | E5:6 C5:2 C5 E5 | G5:6 G5:2 F5 E5 | D5:8 D5:2 E5 | \
+             F5:6 F5:2 E5 D5 | E5:6 C5:2 C5 E5 | D5:6 G4:2 B4 D5 | C5:8 C5:2 C5",
+            "I | I | I | V7 | V7 | I | V7 | I",
+        ),
+    ],
+    form: &["Pickup", "Verse", "Verse", "Verse"],
     drums_from: 1,
     about: "A gold-rush ballad as a country waltz: the bass on beat one, the chord on two \
             and three. The first line climbs the C major chord, C E G, and the second walks \
@@ -161,7 +164,7 @@ pub(super) const CAMPTOWN_RACES: Song = Song {
     tempo: 120.0,
     comping: Comping::Strum,
     bass: Bass::RootFifth,
-    rhythm: "Two-step",
+    rhythm: "Country train",
     parts: &[Part::new(
         "Song",
         "G5:2 G5 E5 G5 A5 G5 E5:4 | E5 D5 E5 D5 | G5:2 G5 E5 G5 A5 G5 E5:4 | D5 E5:2 D5 C5:8 | \
@@ -170,7 +173,7 @@ pub(super) const CAMPTOWN_RACES: Song = Song {
         "I | V7 | I | V7 I | I | IV I | I | V7 I",
     )],
     form: &["Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Foster's tune uses only the major pentatonic, C D E G A. The boom-chick of \
             the two-step puts the bass on beats one and three, the snare on two and four.",
 };
@@ -198,7 +201,7 @@ pub(super) const ROW_YOUR_BOAT: Song = Song {
         Part::new("Last voices", ROW_TUNE, ROW_CHORDS).with_voices(&[-6, -4, -2]),
     ],
     form: &["Alone", "Round", "Round again", "Last voices"],
-    drums_from: 1,
+    drums_from: 0,
     about: "A round in 6/8 that never leaves the home chord, which is why any voice can \
             start anywhere. \"Merrily\" jumps to the top C and comes down the chord: C G E C.",
 };
@@ -214,7 +217,7 @@ pub(super) const SILENT_NIGHT: Song = Song {
     tempo: 84.0,
     comping: Comping::Arp3,
     bass: Bass::Held,
-    rhythm: "",
+    rhythm: "Six-eight",
     parts: &[
         Part::new(
             "Verse",
@@ -256,7 +259,7 @@ pub(super) const WE_WISH_YOU: Song = Song {
         "I | I | IV | II7 | V | III7 | vi | IV V | I | I | V | V | V | I | V | IV V | I",
     )],
     form: &["Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Each \"we wish you a merry Christmas\" starts a step higher, over a new chord: \
             C, then A7, then B7. A7 and B7 are secondary dominants, each borrowed to lead to \
             the chord after it.",

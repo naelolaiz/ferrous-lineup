@@ -29,7 +29,7 @@ pub(super) const DRUNKEN_SAILOR: Song = Song {
         ),
     ],
     form: &["Verse", "Chorus", "Verse", "Chorus"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Sailors sang shanties to pull ropes together. This one is Dorian: minor, but \
             with a B natural, the raised sixth, in the sixth bar.",
 };
@@ -45,7 +45,7 @@ pub(super) const BELLA_CIAO: Song = Song {
     tempo: 120.0,
     comping: Comping::Pulse,
     bass: Bass::Pulse,
-    rhythm: "Rock beat",
+    rhythm: "Rock ride",
     parts: &[Part::new(
         "Verse",
         "E4:2 A4 B4 C5 A4:8 | E4:2 A4 B4 C5 A4:8 | E4:2 A4 B4 C5:6 B4:2 A4 | C5:6 B4:2 A4 E5:6 | \
@@ -53,7 +53,7 @@ pub(super) const BELLA_CIAO: Song = Song {
         "i | i | i | i | iv | iv | i V | i",
     )],
     form: &["Verse", "Verse", "Verse", "Verse"],
-    drums_from: 1,
+    drums_from: 0,
     about: "A song of the rice-field workers of northern Italy, later of the resistance. The \
             fifth bar moves to the iv chord, D minor, which makes the tune climb.",
 };
@@ -69,7 +69,7 @@ pub(super) const BEETHOVENS_FIFTH: Song = Song {
     tempo: 108.0,
     comping: Comping::Pulse,
     bass: Bass::Pulse,
-    rhythm: "Rock beat",
+    rhythm: "Half-time rock",
     parts: &[Part::new(
         "Motif",
         "-:2 G4:2 G4 G4 Eb4:8 | -:2 F4:2 F4 F4 D4:8 | -:2 G4:2 G4 G4 Eb4 Ab4 Ab4 Ab4 | \
@@ -78,7 +78,7 @@ pub(super) const BEETHOVENS_FIFTH: Song = Song {
         "i | V7 | i iv | i | V iv | V7 | i | V7",
     )],
     form: &["Motif", "Motif", "Motif"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Four notes, short-short-short-long, are the whole idea: Beethoven builds the \
             movement by repeating them a step lower, then higher. A riff, long before rock.",
 };
@@ -86,7 +86,7 @@ pub(super) const BEETHOVENS_FIFTH: Song = Song {
 pub(super) const YANKEE_DOODLE: Song = Song {
     name: "Yankee Doodle",
     origin: "American folk song, 18th century",
-    feel: "Punk",
+    feel: "Rock and roll",
     genre: Genre::Rock,
     tonic: C,
     mode: Major,
@@ -94,7 +94,7 @@ pub(super) const YANKEE_DOODLE: Song = Song {
     tempo: 168.0,
     comping: Comping::Pulse,
     bass: Bass::Pulse,
-    rhythm: "Punk",
+    rhythm: "Rock beat",
     parts: &[Part::new(
         "Song",
         "C5:2 C5 D5 E5 C5 E5 D5:4 | C5:2 C5 D5 E5 C5:4 B4 | C5:2 C5 D5 E5 F5 E5 D5 C5 | \
@@ -103,7 +103,7 @@ pub(super) const YANKEE_DOODLE: Song = Song {
         "I | I V | I | V I | IV | V7 I | IV | V I",
     )],
     form: &["Song", "Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Three chords, fast and loud. The chorus starts on A over the IV chord, F, which \
             makes it sound like a new section even though the tune hardly changes.",
 };

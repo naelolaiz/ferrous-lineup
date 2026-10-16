@@ -59,7 +59,7 @@ pub(super) const SAINTS: Song = Song {
         "I | I | I | I | I | I | I | V7 | I7 | IV | I | V7 | I | I | V7 | I",
     )],
     form: &["Chorus", "Chorus", "Chorus"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The New Orleans brass band classic. The tune starts with only four notes, C E F \
             G, and the tuba plays two beats to the bar.",
 };
@@ -75,7 +75,7 @@ pub(super) const ENTERTAINER: Song = Song {
     tempo: 76.0,
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
-    rhythm: "",
+    rhythm: "Two-step",
     parts: &[
         Part::new("Pickup", "-:12 D5:2 D#5", "V7"),
         Part::new(
@@ -90,7 +90,7 @@ pub(super) const ENTERTAINER: Song = Song {
         ),
     ],
     form: &["Pickup", "A", "A"],
-    drums_from: 0,
+    drums_from: 1,
     about: "Ragtime, the piano music jazz grew out of: the left hand keeps a steady \
             oom-pah, bass then chord, while the right hand pushes against it, landing \
             between the beats.",
@@ -115,7 +115,7 @@ pub(super) const HAPPY_BIRTHDAY: Song = Song {
         "I | I | V7 | V7 | I | I7 | IV | I V7 | I",
     )],
     form: &["Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The most sung song in the world, as a jazz waltz: three beats to the bar with a \
             swing ride. Each line climbs a little higher, a fourth, then a fifth, then an \
             octave, for the name.",
