@@ -33,7 +33,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
-use crate::playlist::{Clip, MAX_TRACKS, Track};
+use crate::playlist::{Clip, LoopRegion, MAX_TRACKS, Section, Track};
 use crate::project::{Channel, ChannelKind, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource};
 use crate::{Scale, Tempo, TimeSignature};
 
@@ -53,7 +53,11 @@ pub const EXTENSION: &str = "loom";
 /// four bars, and time signatures. Older versions would not know the
 /// drums, would cut the long patterns short without a word, and would
 /// draw a waltz in bars of four, so those projects need format 3.
-pub const FORMAT_VERSION: u32 = 3;
+///
+/// Format 4 added the song's structure: clips that repeat their pattern,
+/// named sections that can repeat, and a loop region. Older versions
+/// would play every repeat once, so a song that uses them needs format 4.
+pub const FORMAT_VERSION: u32 = 4;
 
 /// The oldest format that can hold `project`.
 ///
@@ -76,7 +80,13 @@ pub fn format_for(project: &Project) -> u32 {
         .iter()
         .any(|channel| matches!(channel.kind, ChannelKind::MidiOut { .. }));
     let has_time_signature = !project.time_signature.is_common();
-    if uses_new_drums || has_long_patterns || has_time_signature {
+    let playlist = project.playlist();
+    let has_structure = !playlist.sections().is_empty()
+        || playlist.loop_region().is_some()
+        || playlist.clips().iter().any(|clip| clip.repeats != 1);
+    if has_structure {
+        4
+    } else if uses_new_drums || has_long_patterns || has_time_signature {
         3
     } else if uses_midi_out {
         2
@@ -99,6 +109,11 @@ struct ProjectFile {
     patterns: Vec<PatternFile>,
     tracks: Vec<Track>,
     clips: Vec<Clip>,
+    /// Left out when there are none, like `time_signature`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    sections: Vec<Section>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    loop_region: Option<LoopRegion>,
 }
 
 /// A pattern as it is written in a file.
@@ -207,6 +222,8 @@ impl From<&Project> for ProjectFile {
                 .collect(),
             tracks: project.playlist().tracks().to_vec(),
             clips: project.playlist().clips().to_vec(),
+            sections: project.playlist().sections().to_vec(),
+            loop_region: project.playlist().loop_region(),
         }
     }
 }
@@ -284,6 +301,17 @@ impl TryFrom<ProjectFile> for Project {
                     clip.track + 1
                 ));
             }
+        }
+        for section in file.sections {
+            if project.add_section(section.clone()).is_none() {
+                return invalid(format!(
+                    "section \"{}\" is empty, too long, repeats too often or overlaps another",
+                    section.name
+                ));
+            }
+        }
+        if !project.set_loop_region(file.loop_region) {
+            return invalid("its loop region is empty or too long".to_string());
         }
         Ok(project)
     }
@@ -377,10 +405,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 4 might have fields we have never heard of. Only the
+        // Format 5 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 4, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(4)), "{error}");
+        let error = from_text("(format: 5, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(5)), "{error}");
     }
 
     #[test]
@@ -441,6 +469,45 @@ mod tests {
         assert!(text.contains("format: 3,"), "{text}");
         assert!(text.contains("beats: 3"), "{text}");
         assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn song_structure_needs_format_four() {
+        let mut project = Project::demo();
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 1,"), "{text}");
+        assert!(
+            !text.contains("repeats") && !text.contains("sections"),
+            "{text}"
+        );
+
+        let mut chorus = Section::new("Chorus", 32, 64);
+        chorus.repeats = 2;
+        project.add_section(chorus);
+        project.add_section(Section::new("Outro", 96, 32));
+        project.set_clip_repeats(0, 2);
+        project.set_loop_region(Some(LoopRegion::new(32, 96)));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 4,"), "{text}");
+        assert!(text.contains("name: \"Chorus\""), "{text}");
+        assert!(text.contains("repeats: 2"), "{text}");
+        assert!(text.contains("loop_region"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn overlapping_sections_are_reported() {
+        let mut project = Project::demo();
+        project.add_section(Section::new("Verse", 0, 32));
+        project.add_section(Section::new("Chorus", 32, 32));
+        let text = to_text(&project).unwrap();
+        let broken = text.replace(
+            "start: 32,\n            length: 32",
+            "start: 16,\n            length: 32",
+        );
+        assert_ne!(broken, text, "{text}");
+        let error = from_text(&broken).unwrap_err();
+        assert!(error.to_string().contains("\"Chorus\""), "{error}");
     }
 
     #[test]

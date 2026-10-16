@@ -12,6 +12,7 @@
 //! module writes "format 1" files: the first track holds the tempo and the
 //! time signature, and every channel of the project gets a track of its own.
 
+use crate::arrangement::Play;
 use crate::midi::{DRUM_CHANNEL, MidiMessage};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 use crate::{Note, STEPS_PER_BEAT};
@@ -24,14 +25,11 @@ pub const TICKS_PER_BEAT: u16 = 96;
 pub const TICKS_PER_STEP: u32 = TICKS_PER_BEAT as u32 / STEPS_PER_BEAT;
 
 /// The whole song, as the playlist plays it: every clip on a track that
-/// is not muted, every channel that is not muted.
+/// is not muted, every channel that is not muted, with every repeat of
+/// clips and sections written out.
 pub fn song_to_midi(project: &Project) -> Vec<u8> {
-    let placed: Vec<(usize, usize)> = project
-        .playlist()
-        .audible_clips()
-        .map(|clip| (clip.pattern, clip.start))
-        .collect();
-    write_file(project, &placed, project.song_length())
+    let song = project.arrangement();
+    write_file(project, &song.plays, song.length)
 }
 
 /// One pattern, from its first step, as pattern mode loops it.
@@ -39,7 +37,13 @@ pub fn pattern_to_midi(project: &Project, pattern: usize) -> Vec<u8> {
     let length = project
         .pattern(pattern)
         .map_or(0, |pattern| pattern.length());
-    write_file(project, &[(pattern, 0)], length)
+    let play = Play {
+        pattern,
+        start: 0,
+        skip: 0,
+        length,
+    };
+    write_file(project, &[play], length)
 }
 
 /// The note General MIDI drum sets play for each built-in drum.
@@ -61,9 +65,9 @@ pub fn general_midi_drum(drum: Drum) -> Note {
     })
 }
 
-/// Writes a file with the patterns `placed` (pattern, first step) for
-/// every channel, lasting `length` steps.
-fn write_file(project: &Project, placed: &[(usize, usize)], length: usize) -> Vec<u8> {
+/// Writes a file with the pieces of patterns `placed` for every channel,
+/// lasting `length` steps.
+fn write_file(project: &Project, placed: &[Play], length: usize) -> Vec<u8> {
     let midi_channels = midi_channels(project.channels());
     let end = length as u32 * TICKS_PER_STEP;
 
@@ -119,15 +123,15 @@ fn channel_events(
     project: &Project,
     channel: usize,
     midi_channel: u8,
-    placed: &[(usize, usize)],
+    placed: &[Play],
 ) -> Vec<(u32, MidiMessage)> {
     let drum = match &project.channels()[channel].kind {
         ChannelKind::Sampler(SampleSource::Builtin(drum)) => Some(*drum),
         _ => None,
     };
     let mut events = Vec::new();
-    for &(pattern, first_step) in placed {
-        let Some(pattern) = project.pattern(pattern) else {
+    for play in placed {
+        let Some(pattern) = project.pattern(play.pattern) else {
             continue;
         };
         let length = pattern.length();
@@ -136,27 +140,32 @@ fn channel_events(
             .iter()
             .filter(|note| note.start < length)
         {
-            // As in the audio thread: a note that runs past the end of
-            // its pattern is cut there.
-            let held = note.length.min(length - note.start);
-            let on = (first_step + note.start) as u32 * TICKS_PER_STEP;
-            let off = on + held as u32 * TICKS_PER_STEP;
-            let pitch = drum.map_or(note.pitch, general_midi_drum);
-            events.push((
-                on,
-                MidiMessage::NoteOn {
-                    channel: midi_channel,
-                    pitch,
-                    velocity: note.velocity,
-                },
-            ));
-            events.push((
-                off,
-                MidiMessage::NoteOff {
-                    channel: midi_channel,
-                    pitch,
-                },
-            ));
+            for song_step in play.song_steps_of(note.start, length) {
+                // As in the audio thread: a note that runs past the end of
+                // its pattern, or of the piece being played, is cut there.
+                let held = note
+                    .length
+                    .min(length - note.start)
+                    .min(play.end() - song_step);
+                let on = song_step as u32 * TICKS_PER_STEP;
+                let off = on + held as u32 * TICKS_PER_STEP;
+                let pitch = drum.map_or(note.pitch, general_midi_drum);
+                events.push((
+                    on,
+                    MidiMessage::NoteOn {
+                        channel: midi_channel,
+                        pitch,
+                        velocity: note.velocity,
+                    },
+                ));
+                events.push((
+                    off,
+                    MidiMessage::NoteOff {
+                        channel: midi_channel,
+                        pitch,
+                    },
+                ));
+            }
         }
     }
     // At the same tick, notes end before new ones start, so a note
@@ -255,7 +264,7 @@ fn write_variable_length(out: &mut Vec<u8>, value: u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::playlist::Clip;
+    use crate::playlist::{Clip, Section};
     use crate::{NoteEvent, Tempo};
 
     fn variable_length(value: u32) -> Vec<u8> {
@@ -402,6 +411,23 @@ mod tests {
         // A muted channel is left out, as it is when the song plays.
         project.channel_mut(1).unwrap().muted = true;
         assert_eq!(read(&song_to_midi(&project)).len(), 2);
+    }
+
+    #[test]
+    fn repeats_are_written_out() {
+        let mut project = project();
+        project.add_clip(Clip::new(0, 0, 0).repeated(2));
+        let mut twice = Section::new("Twice", 0, 32);
+        twice.repeats = 2;
+        project.add_section(twice);
+        let tracks = read(&song_to_midi(&project));
+        let starts: Vec<u32> = tracks[1]
+            .iter()
+            .filter(|(_, e)| e[0] == 0x90 && e[1] == 60)
+            .map(|(tick, _)| *tick)
+            .collect();
+        // The clip plays its pattern twice, and the section plays twice.
+        assert_eq!(starts, [0, 16 * 24, 32 * 24, 48 * 24]);
     }
 
     #[test]

@@ -167,13 +167,12 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
     if before.tempo != after.tempo {
         changes.push(Change::Tempo);
     }
-    // `Iterator::eq` compares two iterators item by item, without
-    // collecting them into lists first.
-    let same_clips = before
-        .playlist()
-        .audible_clips()
-        .eq(after.playlist().audible_clips());
-    if !same_clips || before.song_length() != after.song_length() {
+    // What song mode plays: the clips, with their repeats and the
+    // sections' repeats unrolled, cut to the loop region if there is one.
+    // Only what the audio thread is sent counts, so renaming a section
+    // changes nothing.
+    let (old_song, new_song) = (before.playback_arrangement(), after.playback_arrangement());
+    if old_song.plays != new_song.plays || old_song.length != new_song.length {
         changes.push(Change::Song);
     }
     changes
@@ -182,7 +181,9 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Channel, ChannelKind, Clip, Drum, Note, NoteEvent, SampleSource, Tempo};
+    use crate::{
+        Channel, ChannelKind, Drum, LoopRegion, Note, NoteEvent, Play, SampleSource, Section, Tempo,
+    };
 
     /// What the audio thread knows about one channel.
     #[derive(Debug, Clone, PartialEq)]
@@ -201,7 +202,7 @@ mod tests {
         lengths: Vec<usize>,
         channels: Vec<ModelChannel>,
         tempo: Tempo,
-        clips: Vec<Clip>,
+        plays: Vec<Play>,
         song_length: usize,
     }
 
@@ -227,8 +228,8 @@ mod tests {
                     .map(|index| Model::channel(project, index))
                     .collect(),
                 tempo: project.tempo,
-                clips: project.playlist().audible_clips().collect(),
-                song_length: project.song_length(),
+                plays: project.playback_arrangement().plays,
+                song_length: project.playback_arrangement().length,
             }
         }
 
@@ -269,8 +270,9 @@ mod tests {
                 }
                 Change::Tempo => self.tempo = after.tempo,
                 Change::Song => {
-                    self.clips = after.playlist().audible_clips().collect();
-                    self.song_length = after.song_length();
+                    let song = after.playback_arrangement();
+                    self.plays = song.plays;
+                    self.song_length = song.length;
                 }
             }
         }
@@ -428,6 +430,29 @@ mod tests {
         let mut muted = before.clone();
         muted.track_mut(1).unwrap().muted = true;
         assert_eq!(check(&before, &muted), vec![Change::Song]);
+    }
+
+    #[test]
+    fn song_structure_changes_the_song() {
+        let before = Project::demo();
+        let mut after = before.clone();
+        let mut chorus = Section::new("Chorus", 32, 64);
+        chorus.repeats = 2;
+        after.add_section(chorus);
+        assert_eq!(check_both_ways(&before, &after), vec![Change::Song]);
+
+        // A section that plays once, and its name, change nothing heard.
+        let mut named = before.clone();
+        named.add_section(Section::new("Intro", 0, 32));
+        assert!(check_both_ways(&before, &named).is_empty());
+
+        let mut repeated = before.clone();
+        repeated.set_clip_repeats(0, 2);
+        assert_eq!(check_both_ways(&before, &repeated), vec![Change::Song]);
+
+        let mut looped = before.clone();
+        looped.set_loop_region(Some(LoopRegion::new(32, 64)));
+        assert_eq!(check_both_ways(&before, &looped), vec![Change::Song]);
     }
 
     #[test]

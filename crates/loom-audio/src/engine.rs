@@ -35,7 +35,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
 use loom_core::{
-    Clip, DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, MidiMessage, Note, NoteEvent, STEP_NOTE,
+    DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, MidiMessage, Note, NoteEvent, Play, STEP_NOTE,
     STEPS_PER_BAR, STEPS_PER_BEAT, Sequencer, Tempo,
 };
 
@@ -160,10 +160,11 @@ pub enum Command {
         pattern: usize,
         length: usize,
     },
-    /// Replace the song: the clips to play (only those on tracks that are
-    /// not muted) and the song's length in steps.
+    /// Replace the song: the pieces of patterns to play, with every
+    /// repeat already unrolled (see [`loom_core::Arrangement`]), and the
+    /// song's length in steps.
     SetSong {
-        clips: Vec<Clip>,
+        plays: Vec<Play>,
         length: usize,
     },
     /// Add a channel at position `index`, with its notes in every pattern.
@@ -220,7 +221,7 @@ pub(crate) enum Garbage {
     Instrument(Instrument),
     Notes(Vec<NoteEvent>),
     Channel(ChannelState),
-    Song(Vec<Clip>),
+    Song(Vec<Play>),
 }
 
 /// What the engine found when it opened the sound card.
@@ -493,8 +494,8 @@ pub(crate) struct AudioThread {
     channels: Vec<ChannelState>,
     /// The length of each pattern, in steps. Reserved with room for `MAX_PATTERNS`.
     pattern_lengths: Vec<usize>,
-    /// The clips of the song, and its length in steps.
-    clips: Vec<Clip>,
+    /// The pieces of patterns the song plays, and its length in steps.
+    plays: Vec<Play>,
     song_length: usize,
     mode: PlayMode,
     /// The pattern that pattern mode loops.
@@ -534,7 +535,7 @@ impl AudioThread {
             output_channels,
             channels: Vec::with_capacity(MAX_CHANNELS),
             pattern_lengths: Vec::with_capacity(MAX_PATTERNS),
-            clips: Vec::new(),
+            plays: Vec::new(),
             song_length: 0,
             mode: PlayMode::Pattern,
             pattern: 0,
@@ -625,8 +626,8 @@ impl AudioThread {
                     self.update_loop_length();
                 }
             }
-            Command::SetSong { clips, length } => {
-                let old = std::mem::replace(&mut self.clips, clips);
+            Command::SetSong { plays, length } => {
+                let old = std::mem::replace(&mut self.plays, plays);
                 self.throw_away(Garbage::Song(old));
                 self.song_length = length;
                 self.update_loop_length();
@@ -710,7 +711,7 @@ impl AudioThread {
                 }
                 // `clear` empties the list but keeps its memory: nothing is freed.
                 self.pattern_lengths.clear();
-                let old = std::mem::take(&mut self.clips);
+                let old = std::mem::take(&mut self.plays);
                 self.throw_away(Garbage::Song(old));
                 self.song_length = 0;
                 self.pattern = 0;
@@ -805,9 +806,10 @@ impl AudioThread {
     /// Starts every note that begins on `step` of the loop.
     ///
     /// In pattern mode, `step` is a step of the selected pattern. In song
-    /// mode, it is a step of the song, and each clip playing then is asked
-    /// for the notes at its own step: a clip that started on song step 32
-    /// plays its pattern's step 2 on song step 34.
+    /// mode, it is a step of the song, and each piece playing then is asked
+    /// for the notes at its own step: a piece that started on song step 32
+    /// plays its pattern's step 2 on song step 34, and step 2 again on
+    /// song step 50 if it repeats a 16-step pattern.
     fn start_notes(&mut self, step: usize) {
         let timing = Timing {
             step_frames: self.sequencer.step_frames(),
@@ -816,20 +818,28 @@ impl AudioThread {
         match self.mode {
             PlayMode::Pattern => {
                 let length = self.pattern_length(self.pattern);
-                start_pattern_notes(&mut self.channels, self.pattern, step, length, timing);
+                start_pattern_notes(
+                    &mut self.channels,
+                    self.pattern,
+                    step,
+                    length - step.min(length),
+                    timing,
+                );
             }
             PlayMode::Song => {
-                // `self.clips` is read while `self.channels` is changed: two
+                // `self.plays` is read while `self.channels` is changed: two
                 // different fields, so the borrows do not overlap.
-                for clip in &self.clips {
-                    let length = self.pattern_lengths.get(clip.pattern).copied().unwrap_or(0);
-                    if (clip.start..clip.start + length).contains(&step) {
-                        let local_step = step - clip.start;
+                for play in &self.plays {
+                    let length = self.pattern_lengths.get(play.pattern).copied().unwrap_or(0);
+                    if let Some(local_step) = play.pattern_step(step, length) {
+                        // Notes stop at the end of the pattern, or of the
+                        // piece, whichever comes first.
+                        let room = (length - local_step).min(play.end() - step);
                         start_pattern_notes(
                             &mut self.channels,
-                            clip.pattern,
+                            play.pattern,
                             local_step,
-                            length,
+                            room,
                             timing,
                         );
                     }
@@ -900,7 +910,9 @@ struct Timing {
     sample_rate: u32,
 }
 
-/// Starts the notes of one pattern that begin on its `step`.
+/// Starts the notes of one pattern that begin on its `step`. A note is
+/// held for `room` steps at most: up to the end of the pattern, or of the
+/// piece of the song that plays it.
 ///
 /// This is a plain function, not a method, so that it borrows only the
 /// channels. Its caller can keep reading other fields of the audio thread
@@ -909,7 +921,7 @@ fn start_pattern_notes(
     channels: &mut [ChannelState],
     pattern: usize,
     step: usize,
-    length: usize,
+    room: usize,
     timing: Timing,
 ) {
     for channel in channels {
@@ -926,7 +938,7 @@ fn start_pattern_notes(
             .filter(|note| note.start == step)
         {
             // A note that runs past the end of the pattern is cut there.
-            let steps_held = note.length.min(length.saturating_sub(step));
+            let steps_held = note.length.min(room);
             let gate = (steps_held as f64 * timing.step_frames) as u32;
             channel
                 .instrument
@@ -1206,8 +1218,8 @@ mod tests {
     fn song_mode_plays_the_clips() {
         let mut h = two_patterns();
         // Pattern 1 at bar 1, pattern 0 at bar 2: a two-bar song.
-        let clips = vec![Clip::new(1, 0, 0), Clip::new(0, 0, 16)];
-        send(&mut h, Command::SetSong { clips, length: 32 });
+        let plays = vec![whole(1, 0), whole(0, 16)];
+        send(&mut h, Command::SetSong { plays, length: 32 });
         send(&mut h, Command::SetMode(PlayMode::Song));
         send(&mut h, Command::Play);
         let out = render(&mut h, 40 * STEP);
@@ -1221,12 +1233,47 @@ mod tests {
         );
     }
 
+    /// All 16 steps of a pattern, once, from song step `start`.
+    fn whole(pattern: usize, start: usize) -> Play {
+        Play {
+            pattern,
+            start,
+            skip: 0,
+            length: 16,
+        }
+    }
+
+    #[test]
+    fn repeated_pieces_loop_their_pattern() {
+        let mut h = two_patterns();
+        // Pattern 1 (a note on step 2) three times, then the last half of
+        // it once more, as when a section starts halfway through a clip.
+        let plays = vec![
+            Play {
+                length: 48,
+                ..whole(1, 0)
+            },
+            Play {
+                pattern: 1,
+                start: 48,
+                skip: 8,
+                length: 8,
+            },
+        ];
+        send(&mut h, Command::SetSong { plays, length: 56 });
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 56 * STEP);
+        // The half piece starts after step 2, so it adds nothing.
+        assert_eq!(onsets(&out), vec![2 * STEP, 18 * STEP, 34 * STEP]);
+    }
+
     #[test]
     fn clips_can_overlap() {
         let mut h = two_patterns();
         // Both patterns at once: steps 0 and 2.
-        let clips = vec![Clip::new(0, 0, 0), Clip::new(1, 1, 0)];
-        send(&mut h, Command::SetSong { clips, length: 16 });
+        let plays = vec![whole(0, 0), whole(1, 0)];
+        send(&mut h, Command::SetSong { plays, length: 16 });
         send(&mut h, Command::SetMode(PlayMode::Song));
         send(&mut h, Command::Play);
         let out = render(&mut h, 16 * STEP);
@@ -1317,7 +1364,7 @@ mod tests {
         send(
             &mut h,
             Command::SetSong {
-                clips: vec![Clip::new(0, 0, 0)],
+                plays: vec![whole(0, 0)],
                 length: 16,
             },
         );
