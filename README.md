@@ -78,9 +78,11 @@ light up, and while the music plays, the chord you hear lights up too.
 The **Library** tab next to the pattern list holds 78 harmony styles
 and 49 rhythms from pop, rock, blues, jazz, soul, hip hop, electronic,
 Latin, tango, flamenco, reggae, folk and classical music: click one to
-hear it in your key. **File > Demos** opens 16 well-known songs in the
-public domain, from *Ode to Joy* to *Für Elise*, and every style as a
-short song.
+hear it in your key. **File > Demos** opens 62 songs with their
+melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
+*Für Elise* and the *Habanera*, and new tunes written to show off the
+blues, tango, flamenco and more. It also plays every style as a short
+song.
 
 Too small or too big? The main window, the channel rack and the piano
 roll each have their own zoom. **Ctrl+Plus** and **Ctrl+Minus** (⌘ on a

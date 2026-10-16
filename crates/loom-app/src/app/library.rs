@@ -179,16 +179,20 @@ impl LoomApp {
             }
             ui.separator();
             ui.menu_button("Songs", |ui| {
-                ui.weak("Well-known tunes, all in the public domain");
-                for song in SONGS {
-                    let hover = format!("{}\n\n{}", song.origin, song.about);
-                    if ui
-                        .button(format!("{} · {}", song.name, song.feel))
-                        .on_hover_text(hover)
-                        .clicked()
-                    {
-                        picked = Some(Demo::Song(song));
-                    }
+                ui.weak("Tunes with their melodies, free for everyone to use");
+                for genre in Genre::ALL {
+                    ui.menu_button(genre.name(), |ui| {
+                        for song in SONGS.iter().filter(|song| song.genre == genre) {
+                            let hover = format!("{}\n\n{}", song.origin, song.about);
+                            if ui
+                                .button(format!("{} · {}", song.name, song.feel))
+                                .on_hover_text(hover)
+                                .clicked()
+                            {
+                                picked = Some(Demo::Song(song));
+                            }
+                        }
+                    });
                 }
             });
             ui.menu_button("Styles", |ui| {
