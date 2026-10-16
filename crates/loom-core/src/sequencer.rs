@@ -82,6 +82,13 @@ impl Sequencer {
         self.next_step = 0;
     }
 
+    /// Jumps to `step`, so it fires on the next tick. A step past the end
+    /// wraps around, as playback would.
+    pub fn start_at(&mut self, step: usize) {
+        self.frames_until_next = 0.0;
+        self.next_step = step % self.length;
+    }
+
     /// Advances by one frame. Returns `Some(step)` if `step` starts on
     /// this frame, `None` otherwise.
     pub fn tick(&mut self) -> Option<usize> {
@@ -148,6 +155,16 @@ mod tests {
         run(&mut sequencer, 10_000);
         sequencer.reset();
         assert_eq!(sequencer.tick(), Some(0));
+    }
+
+    #[test]
+    fn start_at_jumps_and_wraps() {
+        let mut sequencer = Sequencer::new(Tempo::new(120.0), 48_000, 16);
+        run(&mut sequencer, 10_000);
+        sequencer.start_at(5);
+        assert_eq!(sequencer.tick(), Some(5));
+        sequencer.start_at(18);
+        assert_eq!(sequencer.tick(), Some(2));
     }
 
     #[test]

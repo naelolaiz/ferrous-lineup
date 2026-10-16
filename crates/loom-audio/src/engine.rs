@@ -138,12 +138,18 @@ impl ChannelNotes {
 /// lists change.
 #[derive(Debug)]
 pub enum Command {
-    /// Start playing from the beginning.
+    /// Start playing from the start position: the beginning, or where
+    /// the last [`Command::Seek`] put it.
     Play,
+    /// Move the playhead to this step (of the pattern in pattern mode, of
+    /// the song in song mode). While stopped, it is where `Play` starts;
+    /// while playing, playback jumps there.
+    Seek(usize),
     /// Stop playback. Sounds already playing ring out.
     Stop,
     /// Switch between looping a pattern and playing the song. If playing,
-    /// starts again from the beginning.
+    /// starts again from the beginning, and the start position goes back
+    /// to the beginning too.
     SetMode(PlayMode),
     /// Choose the pattern that pattern mode loops.
     SelectPattern(usize),
@@ -501,6 +507,8 @@ pub(crate) struct AudioThread {
     pattern: usize,
     sequencer: Sequencer,
     playing: bool,
+    /// Where `Play` starts, set by `Seek`.
+    start: usize,
     master_volume: Smoothed,
     commands: rtrb::Consumer<Command>,
     trash: rtrb::Producer<Garbage>,
@@ -540,6 +548,7 @@ impl AudioThread {
             pattern: 0,
             sequencer: Sequencer::new(Tempo::default(), sample_rate, STEPS_PER_BAR),
             playing: false,
+            start: 0,
             master_volume: Smoothed::new(0.8, VOLUME_SMOOTHING, sample_rate),
             commands,
             trash,
@@ -583,13 +592,25 @@ impl AudioThread {
     pub(crate) fn apply(&mut self, command: Command) {
         match command {
             Command::Play => {
-                self.sequencer.reset();
+                self.sequencer.start_at(self.start);
                 self.playing = true;
+            }
+            Command::Seek(step) => {
+                self.start = step;
+                if self.playing {
+                    // Notes that were playing would otherwise hang on
+                    // until the end they will now never reach.
+                    for channel in &mut self.channels {
+                        channel.instrument.release_all();
+                    }
+                    self.sequencer.start_at(step);
+                }
             }
             Command::Stop => self.stop(),
             Command::SetMode(mode) => {
                 self.mode = mode;
                 self.update_loop_length();
+                self.start = 0;
                 self.sequencer.reset();
             }
             Command::SelectPattern(pattern) => {
@@ -702,6 +723,7 @@ impl AudioThread {
             Command::SetLiveChannel(channel) => self.live_channel = channel,
             Command::Clear => {
                 self.stop();
+                self.start = 0;
                 // `pop` takes the last channel out of the list; `while let`
                 // keeps going until there are none left.
                 while let Some(mut channel) = self.channels.pop() {
@@ -1063,6 +1085,17 @@ mod tests {
         assert!(out[100..6_000].iter().all(|&s| s == 0.0));
         assert!(out[6_000] != 0.0, "step 1 should sound at frame 6000");
         assert_eq!(h.playhead.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn play_starts_where_seek_put_it() {
+        let mut h = harness();
+        add(&mut h, &[0, 2], false);
+        send(&mut h, Command::Seek(2));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 100);
+        assert!(out[0] != 0.0, "step 2 should sound at once");
+        assert_eq!(h.playhead.load(Ordering::Relaxed), 2);
     }
 
     #[test]

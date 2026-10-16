@@ -69,6 +69,11 @@ pub struct LoomApp {
     pattern: usize,
     mode: PlayMode,
     playing: bool,
+    /// Where playback starts or carries on from while stopped or paused:
+    /// a step of the pattern in pattern mode, of the song in song mode.
+    cursor: usize,
+    /// Where Stop goes back to: the last place the playhead was moved to.
+    marker: usize,
     master_volume: f32,
     rack_open: bool,
     piano_roll: PianoRoll,
@@ -120,6 +125,8 @@ impl LoomApp {
             pattern: 0,
             mode: PlayMode::Song,
             playing: false,
+            cursor: 0,
+            marker: 0,
             master_volume: 0.8,
             rack_open: true,
             piano_roll,
@@ -238,23 +245,86 @@ impl LoomApp {
         });
     }
 
+    /// Plays from the cursor, or stops and goes back to the marker.
     fn set_playing(&mut self, playing: bool) {
-        if !playing {
+        if playing {
+            self.send(Command::Seek(self.cursor));
+            self.send(Command::Play);
+            self.playing = true;
+        } else {
+            self.halt();
+            self.cursor = self.marker;
+            self.send(Command::Seek(self.cursor));
+        }
+    }
+
+    /// Stops where the playhead is, so Play carries on from there.
+    fn pause(&mut self) {
+        let here = self.playhead().unwrap_or(self.cursor);
+        self.halt();
+        self.cursor = here;
+        self.send(Command::Seek(here));
+    }
+
+    /// Stops the audio thread, finishing any recording first.
+    fn halt(&mut self) {
+        if self.playing {
             // Before the audio thread forgets where it was.
             self.finish_recording();
         }
-        self.playing = playing;
-        self.send(if playing {
-            Command::Play
+        self.playing = false;
+        self.send(Command::Stop);
+    }
+
+    /// How long the loop being played is: the selected pattern, or the
+    /// song (one bar when it is empty).
+    fn loop_length(&self) -> usize {
+        let length = match self.mode {
+            PlayMode::Pattern => self.project.patterns()[self.pattern].length(),
+            PlayMode::Song => self.project.song_length(),
+        };
+        if length == 0 {
+            self.project.time_signature.steps_per_bar()
         } else {
-            Command::Stop
-        });
+            length
+        }
+    }
+
+    /// Moves the playhead to `step`, which also becomes the marker that
+    /// Stop goes back to. While playing, playback jumps there. A step past
+    /// the end of the loop goes back to the start.
+    fn seek(&mut self, step: usize) {
+        let step = if step >= self.loop_length() { 0 } else { step };
+        self.marker = step;
+        self.cursor = step;
+        self.send(Command::Seek(step));
+    }
+
+    /// Moves the playhead by `bars` bars (back if negative), to the start
+    /// of a bar.
+    fn skip_bars(&mut self, bars: isize) {
+        let per_bar = self.project.time_signature.steps_per_bar().max(1);
+        let here = self.playhead().unwrap_or(self.cursor);
+        let bar = (here / per_bar) as isize;
+        // Going back from inside a bar first goes to its start.
+        let target = if bars < 0 && !here.is_multiple_of(per_bar) {
+            bar + bars + 1
+        } else {
+            bar + bars
+        };
+        if target < 0 {
+            self.seek(0);
+        } else {
+            self.seek(target as usize * per_bar);
+        }
     }
 
     fn set_mode(&mut self, mode: PlayMode) {
         if mode != self.mode {
             self.finish_recording();
             self.mode = mode;
+            self.cursor = 0;
+            self.marker = 0;
             self.send(Command::SetMode(mode));
         }
     }
@@ -456,6 +526,19 @@ impl LoomApp {
             PlaylistAction::AddTrack => {
                 self.edit("add track", |project| project.add_track());
             }
+            PlaylistAction::InsertTrack(index) => {
+                self.edit("insert track", |project| project.insert_track(index));
+            }
+            PlaylistAction::RemoveTrack(index) => {
+                self.edit("delete track", |project| project.remove_track(index));
+            }
+            PlaylistAction::SwapTracks(index) => {
+                self.edit("move track", |project| project.swap_tracks(index));
+            }
+            PlaylistAction::Seek(step) => {
+                self.set_mode(PlayMode::Song);
+                self.seek(step);
+            }
             PlaylistAction::Library(action) => self.try_from_library(action),
         }
     }
@@ -533,18 +616,39 @@ impl LoomApp {
             });
 
             theme::group(ui, |ui| {
-                let play = theme::light_button(ui, "▶", self.playing, Some(theme::GREEN));
-                let text = if self.playing {
-                    "Playing. Click to stop (Space)"
+                let start = theme::light_button(ui, "⏮", false, None);
+                if theme::hint(start, "Go to the start (Home)").clicked() {
+                    self.seek(0);
+                }
+                let back = theme::light_button(ui, "⏪", false, None);
+                if theme::hint(back, "Back one bar (Page Up)").clicked() {
+                    self.skip_bars(-1);
+                }
+                let (icon, text) = if self.playing {
+                    ("⏸", "Pause: stop here, and carry on from here next time")
                 } else {
-                    "Play (Space)"
+                    ("▶", "Play from the playhead (Space)")
                 };
+                let play = theme::light_button(ui, icon, self.playing, Some(theme::GREEN));
                 if theme::hint(play, text).clicked() {
-                    self.set_playing(!self.playing);
+                    if self.playing {
+                        self.pause();
+                    } else {
+                        self.set_playing(true);
+                    }
                 }
                 let stop = theme::light_button(ui, "⏹", false, None);
-                if theme::hint(stop, "Stop and go back to the start (Space)").clicked() {
+                if theme::hint(
+                    stop,
+                    "Stop and go back to where you last put the playhead (Space)",
+                )
+                .clicked()
+                {
                     self.set_playing(false);
+                }
+                let forward = theme::light_button(ui, "⏩", false, None);
+                if theme::hint(forward, "Forward one bar (Page Down)").clicked() {
+                    self.skip_bars(1);
                 }
                 self.record_button(ui);
             });
@@ -569,7 +673,8 @@ impl LoomApp {
             let position = theme::lcd(ui, "BAR : BEAT : STEP", &self.position_text(), 104.0);
             theme::hint(
                 position,
-                "Where the playhead is: in the pattern (PAT) or the song (SONG)",
+                "Where the playhead is: in the pattern (PAT) or the song (SONG). Click the \
+             playlist's bar numbers to move it",
             );
 
             theme::group(ui, |ui| self.pattern_selector(ui));
@@ -619,7 +724,7 @@ impl LoomApp {
     /// song position display. Stopped, it shows the start.
     fn position_text(&self) -> String {
         let time = self.project.time_signature;
-        let step = self.playhead().unwrap_or(0);
+        let step = self.playhead().unwrap_or(self.cursor);
         let per_bar = time.steps_per_bar().max(1);
         let per_beat = time.steps_per_beat().max(1);
         let bar = step / per_bar + 1;
@@ -798,9 +903,10 @@ impl LoomApp {
     }
 
     /// The song step being played, for the playlist (song mode only).
+    /// While stopped, it is where Play will start.
     fn song_playhead(&self) -> Option<usize> {
         match self.mode {
-            PlayMode::Song => self.playhead(),
+            PlayMode::Song => self.playhead().or(Some(self.cursor)),
             PlayMode::Pattern => None,
         }
     }
@@ -814,6 +920,15 @@ impl LoomApp {
         let pressed = |key| ctx.input_mut(|input| input.consume_key(egui::Modifiers::NONE, key));
         if !typing && pressed(egui::Key::Space) {
             self.set_playing(!self.playing);
+        }
+        if !typing && pressed(egui::Key::Home) {
+            self.seek(0);
+        }
+        if !typing && pressed(egui::Key::PageUp) {
+            self.skip_bars(-1);
+        }
+        if !typing && pressed(egui::Key::PageDown) {
+            self.skip_bars(1);
         }
         if !typing && pressed(egui::Key::L) {
             self.set_mode(match self.mode {
