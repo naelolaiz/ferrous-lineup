@@ -377,7 +377,7 @@ impl LoomApp {
             let kind = self.project.channels()[channel].kind.clone();
             let mut instrument = self.build_instrument(&kind, sample_rate);
             if let Some((midi_channel, pitch)) = *route {
-                instrument = instrument.echoed(midi_channel, pitch);
+                instrument = instrument.to_midi(midi_channel, pitch);
             }
             self.send(Command::SetInstrument {
                 channel,
@@ -448,7 +448,7 @@ impl LoomApp {
         }
         ui.checkbox(&mut self.live.send_all, "Send every channel")
             .on_hover_text(
-                "On: every channel plays on the output too, on the MIDI channels File > \
+                "On: every channel plays on the output instead of the speakers, on the MIDI channels File > \
                  Export MIDI uses: drums on channel 10 as a General MIDI drum set, the others \
                  on 1, 2, 3 and so on. Off: only MIDI Out channels play there, as in FL Studio.",
             );
