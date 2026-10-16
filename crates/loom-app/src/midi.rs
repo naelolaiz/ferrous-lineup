@@ -24,8 +24,8 @@ use std::time::Duration;
 
 use eframe::egui;
 use loom_audio::{LiveInput, MidiOutput};
-use loom_core::MidiMessage;
 use loom_core::midi::all_notes_off;
+use loom_core::{MidiMessage, Note, Scale, tools};
 use midir::{Ignore, MidiInput, MidiInputConnection, MidiOutputConnection};
 
 /// The name Ferrous Loom shows to other MIDI programs.
@@ -74,6 +74,44 @@ struct InputLink {
     live: Option<Arc<Mutex<LiveInput>>>,
     to_ui: mpsc::Sender<Played>,
     ctx: egui::Context,
+    /// The key to snap notes to, if snapping is on. Set by the UI.
+    snap: Arc<Mutex<Option<Scale>>>,
+    /// The keys down and the note each one plays, so a key let go after
+    /// the key of the song changed stops the note it started.
+    sounding: Vec<(Note, Note)>,
+}
+
+impl InputLink {
+    /// `message` with its note snapped to the key, if snapping is on.
+    fn snapped(&mut self, message: MidiMessage) -> MidiMessage {
+        match message {
+            MidiMessage::NoteOn {
+                channel,
+                pitch: key,
+                velocity,
+            } => {
+                let pitch = match *lock(&self.snap) {
+                    Some(scale) => tools::nearest_in_key(key, scale),
+                    None => key,
+                };
+                self.sounding.retain(|&(k, _)| k != key);
+                self.sounding.push((key, pitch));
+                MidiMessage::NoteOn {
+                    channel,
+                    pitch,
+                    velocity,
+                }
+            }
+            MidiMessage::NoteOff {
+                channel,
+                pitch: key,
+            } => {
+                let at = self.sounding.iter().position(|&(k, _)| k == key);
+                let pitch = at.map_or(key, |at| self.sounding.remove(at).1);
+                MidiMessage::NoteOff { channel, pitch }
+            }
+        }
+    }
 }
 
 /// Called by midir, on its own thread, for every message from the keyboard.
@@ -81,6 +119,7 @@ fn on_message(_microseconds: u64, bytes: &[u8], link: &mut InputLink) {
     let Some(message) = MidiMessage::parse(bytes) else {
         return;
     };
+    let message = link.snapped(message);
     let mut position = None;
     if let Some(live) = &link.live {
         let mut live = lock(live);
@@ -108,6 +147,8 @@ pub struct Midi {
     to_ui: mpsc::Sender<Played>,
     from_keyboard: mpsc::Receiver<Played>,
     ctx: egui::Context,
+    /// Shared with the input callback: the key to snap notes to, if any.
+    snap: Arc<Mutex<Option<Scale>>>,
 }
 
 impl Midi {
@@ -134,9 +175,16 @@ impl Midi {
             to_ui,
             from_keyboard,
             ctx: ctx.clone(),
+            snap: Arc::new(Mutex::new(None)),
         };
         midi.refresh_ports();
         midi
+    }
+
+    /// Snaps the notes of the MIDI keyboard to `scale` from now on, or
+    /// stops snapping them if `None`.
+    pub fn snap_to(&self, scale: Option<Scale>) {
+        *lock(&self.snap) = scale;
     }
 
     /// Why MIDI cannot be used, or `None` if it can.
@@ -216,6 +264,8 @@ impl Midi {
             live: self.live.clone(),
             to_ui: self.to_ui.clone(),
             ctx: self.ctx.clone(),
+            snap: Arc::clone(&self.snap),
+            sounding: Vec::new(),
         };
         let connection = midi_in
             .connect(&found, "input", on_message, link)

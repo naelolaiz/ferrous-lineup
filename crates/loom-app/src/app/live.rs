@@ -11,7 +11,7 @@ use eframe::egui::{self, Key};
 use loom_audio::{Command, PlayMode};
 use loom_core::harmony::analyze;
 use loom_core::record::recorded_note;
-use loom_core::{DEFAULT_VELOCITY, MidiMessage, Note, Pattern};
+use loom_core::{DEFAULT_VELOCITY, MidiMessage, Note, Pattern, Scale, tools};
 
 use super::{Audio, LoomApp};
 use crate::midi::{Midi, Played, Port};
@@ -131,10 +131,17 @@ impl LoomApp {
             self.send(Command::SetLiveChannel(channel));
             self.live.channel_sent = Some(channel);
         }
+        self.live.midi.snap_to(self.snap_scale());
         self.typing_keyboard(ctx);
         for played in self.live.midi.played() {
             self.key_played(played);
         }
+    }
+
+    /// The key that notes played on the keyboards snap to, if the piano
+    /// roll's "Snap notes you play" is on.
+    fn snap_scale(&self) -> Option<Scale> {
+        self.piano_roll.snap_played.then_some(self.project.scale)
     }
 
     /// Where playback is, in steps with a fraction, or `None` when stopped.
@@ -187,8 +194,12 @@ impl LoomApp {
                 .collect()
         });
         for (key, pressed) in keys {
-            let Some(pitch) = typing_note(key) else {
+            let Some(key_note) = typing_note(key) else {
                 continue;
+            };
+            let pitch = match self.snap_scale() {
+                Some(scale) => tools::nearest_in_key(key_note, scale),
+                None => key_note,
             };
             let down = self.live.typing_down.iter().position(|&(k, _)| k == key);
             match (pressed, down) {
@@ -201,7 +212,9 @@ impl LoomApp {
                     });
                 }
                 (false, Some(index)) => {
-                    self.live.typing_down.remove(index);
+                    // The note it started, which may not be `pitch` if
+                    // the key changed while it was held.
+                    let (_, pitch) = self.live.typing_down.remove(index);
                     self.play_typed(MidiMessage::NoteOff { channel: 0, pitch });
                 }
                 _ => {}
