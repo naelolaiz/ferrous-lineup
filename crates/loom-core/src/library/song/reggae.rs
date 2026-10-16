@@ -40,8 +40,8 @@ pub(super) const THIS_OLD_MAN: Song = Song {
     rhythm: "One drop",
     parts: &[Part::new(
         "Song",
-        "G5:4 E5 G5:8 | G5:4 E5 G5:8 | A5:4 G5 F5 E5 | D5 E5 F5:8 | \
-         E5:2 F5 G5:4 C5:2 C5 C5 C5 | C5 D5 E5 F5 G5:4 G5 | G5 D5 D5 F5 | E5 D5 C5:8",
+        "G5:4 E5 G5:8 | G5:4 E5 G5:8 | A5:4 G5 F5 E5 | D5 E5 F5:4 E5:2 F5 | \
+         G5:4 C5:4 C5:2 C5 C5:4 | C5:2 D5 E5 F5 G5:8 | G5:4 D5 D5 F5 | E5 D5 C5:8",
         "I | I | IV | V7 | I | I | V7 | I",
     )],
     form: &["Song", "Song", "Song", "Song"],

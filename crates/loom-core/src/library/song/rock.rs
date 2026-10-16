@@ -23,8 +23,8 @@ pub(super) const DRUNKEN_SAILOR: Song = Song {
         ),
         Part::new(
             "Chorus",
-            "A5:8 A5:8 | A5:4 D5 F5 A5 | G5:8 G5:8 | G5:4 C5 E5 G5 | \
-             A5:8 A5:8 | A5:4 B5 C6 D6 | C6 A5 G5 E5 | D5:8 D5:8",
+            "A5:8 A5:6 A5:2 | A5:4 D5 F5 A5 | G5:8 G5:6 G5:2 | G5:4 C5 E5 G5 | \
+             A5:8 A5:6 A5:2 | A5:4 B5 C6 D6 | C6 A5 G5 E5 | D5:8 D5:8",
             "i | i | bVII | bVII | i | i | bVII | i",
         ),
     ],
