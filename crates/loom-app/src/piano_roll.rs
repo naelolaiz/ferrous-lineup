@@ -358,7 +358,8 @@ impl PianoRoll {
     /// Draws the window, if it is open, and returns what the user did.
     /// It shows the notes of the selected channel in pattern `pattern`;
     /// `playhead` is the step of that pattern being played, if any, and
-    /// `held` the keys held down on a keyboard.
+    /// `held` the keys held down on a keyboard. The window stays inside
+    /// `area`, the part of the main window the playlist uses.
     pub fn show(
         &mut self,
         ctx: &egui::Context,
@@ -366,6 +367,7 @@ impl PianoRoll {
         pattern: usize,
         playhead: Option<usize>,
         held: &[Note],
+        area: egui::Rect,
     ) -> Vec<RollAction> {
         let mut actions = Vec::new();
         let (Some(channel), Some(pattern_notes)) = (
@@ -406,6 +408,7 @@ impl PianoRoll {
         .open(&mut open)
         .default_pos([150.0, 160.0])
         .default_size([1060.0, 580.0])
+        .constrain_to(area)
         .show(ctx, |ui| {
             self.contents(ui, project, pattern_notes, playhead, held, &mut actions)
         });
