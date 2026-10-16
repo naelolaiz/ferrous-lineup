@@ -23,7 +23,7 @@ pub(super) const ODE_TO_JOY: Song = Song {
         "I | V | I | I V | I | V | I | V I | V I | V I | V I | I V | I | V | I | V I",
     )],
     form: &["Theme", "Theme", "Theme"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The tune of the last movement of Beethoven's Ninth Symphony, over a house beat. \
             It moves almost only by step, which is why anyone can sing it.",
 };
@@ -55,7 +55,7 @@ pub(super) const KOROBEINIKI: Song = Song {
         ),
     ],
     form: &["A", "A", "B", "A"],
-    drums_from: 1,
+    drums_from: 0,
     about: "\"The Peddlers\", a song about travelling merchants, as 1980s synth music. The \
             minor tune leans on E major, the V chord of harmonic minor.",
 };
@@ -83,7 +83,7 @@ pub(super) const SYMPHONY_40: Song = Song {
         ),
     ],
     form: &["Pickup", "Theme", "Theme", "Theme", "Theme"],
-    drums_from: 2,
+    drums_from: 1,
     about: "Mozart's sighing two-note figure, a semitone falling from E flat to D, over the \
             fast broken beat and deep bass of drum and bass.",
 };
@@ -108,7 +108,7 @@ pub(super) const EINE_KLEINE: Song = Song {
         "I | I | V7 | V7 | I | I | V7 | V7 I",
     )],
     form: &["Theme", "Theme", "Theme", "Theme"],
-    drums_from: 1,
+    drums_from: 0,
     about: "\"A little night music\": the opening is nothing but the chords themselves, G \
             major and then D7, broken into notes that rocket upwards. Under it, the octave \
             bass and open hats of 1970s disco.",
@@ -133,7 +133,7 @@ pub(super) const TOCCATA: Song = Song {
         "i | V7 i | i | V7 i | i | V7 i | vii°7 | i",
     )],
     form: &["Toccata", "Toccata", "Toccata"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The organ's famous flourish, falling an octave at a time, as techno. Bar seven \
             climbs a diminished seventh chord, C sharp E G B flat: four notes a minor third \
             apart, the most restless chord there is.",
@@ -162,7 +162,7 @@ pub(super) const TURKISH_MARCH: Song = Song {
         ),
     ],
     form: &["Pickup", "Theme", "Theme", "Theme", "Theme"],
-    drums_from: 2,
+    drums_from: 1,
     about: "Each turn, B A G sharp A, circles a note from the semitone below it. Mozart was imitating \
             the Turkish military bands that were the fashion in Vienna. G sharp is the \
             leading note of A harmonic minor.",

@@ -182,7 +182,8 @@ pub fn song_demo(song: &Song) -> Project {
         };
         let melody = melody_notes(part, bar, length);
         let (chords, bass_line) = if part.left.is_empty() {
-            let backing = accompany(&part.spans(bar), song.tonic, song.comping, song.bass);
+            let tonic = song.part_scale(part).root;
+            let backing = accompany(&part.spans(bar), tonic, song.comping, song.bass);
             (backing.chords, backing.bass)
         } else {
             (part.left().notes, Vec::new())
@@ -325,6 +326,7 @@ mod tests {
             left: "",
             voices: &[0],
             time: Some(waltz),
+            key: None,
         };
         let first = song.form[0];
         let parts: &'static [Part] =

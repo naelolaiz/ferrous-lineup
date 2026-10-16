@@ -21,7 +21,7 @@ pub(super) const MARY_HAD_A_LITTLE_LAMB: Song = Song {
         "I | I | V | I | I | I | V | I",
     )],
     form: &["Tune", "Tune", "Tune", "Tune"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Ska, Jamaica's music before reggae: fast, with the guitar chords between the \
             beats and a walking bass. A three-note tune, E D C, is all it takes.",
 };
@@ -45,7 +45,7 @@ pub(super) const THIS_OLD_MAN: Song = Song {
         "I | I | IV | V7 | I | I | V7 | I",
     )],
     form: &["Song", "Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "In the one drop, beat one is empty: the kick and the rim land together on beat \
             three, and the guitar only plays between the beats. That space is reggae.",
 };
@@ -75,7 +75,7 @@ pub(super) const VALLEY_DUB: Song = Song {
         ),
     ],
     form: &["A", "A", "B", "A", "B"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Two chords of A Dorian, Am7 and D7, for heavy roots reggae. The F sharp in the \
             tune is the raised sixth that makes Dorian different from plain minor.",
 };

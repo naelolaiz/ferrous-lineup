@@ -21,7 +21,7 @@ pub(super) const LA_CUCARACHA: Song = Song {
         "I | I | I V7 | V7 | V7 | V7 | V7 I | I",
     )],
     form: &["Song", "Song", "Song", "Song"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The whole song needs two chords, the home chord and V7, here as Colombian \
             cumbia: chords on the offbeats, bass on the beats and a scraper in eighths.",
 };

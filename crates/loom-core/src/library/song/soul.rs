@@ -26,7 +26,7 @@ pub(super) const AMAZING_GRACE: Song = Song {
         ),
     ],
     form: &["Intro", "Verse", "Verse", "Verse"],
-    drums_from: 2,
+    drums_from: 1,
     about: "The whole melody uses five notes, G A B D E: the major pentatonic scale, which \
             is why it sounds so open.",
 };
@@ -52,7 +52,7 @@ pub(super) const JOY_TO_THE_WORLD: Song = Song {
         "I V7 | I | IV V | I | I | I | V7 | V7 IV | I V7 | I",
     )],
     form: &["Verse", "Verse", "Verse"],
-    drums_from: 1,
+    drums_from: 0,
     about: "The first line is just the C major scale, walking down from the top. Here it \
             gets the Motown treatment: piano on every beat, a busy bass, and the snare on \
             all four.",
@@ -116,7 +116,7 @@ pub(super) const SUNDAY_SEVENTH: Song = Song {
         ),
     ],
     form: &["Call", "Answer", "Call", "Answer"],
-    drums_from: 1,
+    drums_from: 0,
     about: "Lush seventh chords with two borrowed dominants: E7 pulls toward A minor and C7 \
             toward F. The tune follows them, with a G sharp over E7 and a B flat over C7.",
 };
