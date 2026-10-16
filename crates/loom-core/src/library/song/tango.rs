@@ -2,6 +2,9 @@
 
 use super::*;
 
+/// Bizet keeps a D in the bass; the G minor sixth chord sits on it.
+const HABANERA_CHORDS: &str = "i | i iv6 | iv6 | V7 i";
+
 pub(super) const HABANERA: Song = Song {
     name: "Habanera",
     origin: "Georges Bizet, Carmen, 1875",
@@ -14,17 +17,37 @@ pub(super) const HABANERA: Song = Song {
     comping: Comping::Habanera,
     bass: Bass::Habanera,
     rhythm: "Habanera",
-    parts: &[Part::new(
-        "Aria",
-        "D5:3 C#5:1 C5:2 C5 B4:3 Bb4:1 A4:4 | A4:3 Ab4:1 G4:2 G4 F4:3 E4:1 F4:2 E4 | \
-         D5:3 C#5:1 C5:2 C5 B4:3 Bb4:1 A4:4 | A4:3 G4:1 F4:2 E4 D4:8",
-        "i | i | i | V7 i",
-    )],
-    form: &["Aria", "Aria", "Aria", "Aria"],
-    drums_from: 0,
+    parts: &[
+        Part::new("Pickup", "-:12 D5:2 C#5", "i"),
+        Part::new(
+            "Aria",
+            "C5:2 C5:1 C5 B4:2 Bb4 A4 A4:1 A4 G#4:2 G4 | F4:1 G4 E4 F4 G4:2 F4 E4:4 D5:2 C#5 | \
+             C5:2 C5:1 C5 B4:2 Bb4 A4:1 A4 -:1 A4 G4:2 F4 | E4:1 F4 D4 E4 F4:2 E4 D4:4 D5:2 C#5",
+            HABANERA_CHORDS,
+        ),
+        Part::new(
+            "Aria end",
+            "C5:2 C5:1 C5 B4:2 Bb4 A4 A4:1 A4 G#4:2 G4 | F4:1 G4 E4 F4 G4:2 F4 E4:4 D5:2 C#5 | \
+             C5:2 C5:1 C5 B4:2 Bb4 A4:1 A4 -:1 A4 G4:2 F4 | E4:1 F4 D4 E4 F4:2 E4 D4:8",
+            HABANERA_CHORDS,
+        ),
+        Part::new(
+            "Refrain",
+            "D4:3 A4:1 D4:2 E4 F#4:3 A4:1 F#4:2 E4 | D4:3 E4:1 F#4:2 G4 A4:1 A4 A4 A4 B4:2 A4 | \
+             G4:3 B4:1 E4:2 F#4 G4:3 B4:1 G4:2 F#4 | E4:3 F#4:1 G4:2 A4 B4:1 B4 B4 B4 C#5:2 B4 | \
+             A4:3 A4:1 D5:2 E5 F#5:3 A4:1 F#4:2 E4 | D4:3 E4:1 F#4:2 G4 A4:1 A4 A4 A4 D5:2 C#5 | \
+             G4:3 B4:1 E5:2 F#5 G5:3 B4:1 G4:2 F#4 | E4:3 F#4:1 G4:2 A4 C#5:1 B4 G#4 A4 F#5:3 E5:1 | \
+             D5:3 A4:1 D5:2 -:10",
+            "I | I | ii | ii V7 | I | I | ii | ii V7 | I",
+        )
+        .in_key(D, Major),
+    ],
+    form: &["Pickup", "Aria", "Aria end", "Refrain", "Refrain"],
+    drums_from: 1,
     about: "Carmen's aria slides down one semitone at a time over the habanera rhythm, \
-            long-short-long-long. The Cuban habanera crossed to Spain and to the River \
-            Plate, where it grew into the tango.",
+            long-short-long-long, in D minor; then the refrain, \"L'amour est enfant de \
+            Bohème\", turns to D major. The Cuban habanera crossed to Spain and to the \
+            River Plate, where it grew into the tango.",
 };
 
 const TELAR_CHORDS: &str = "i | V7 | V7 | i | iv | i | V7 | i";

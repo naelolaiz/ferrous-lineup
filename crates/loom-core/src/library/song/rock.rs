@@ -46,14 +46,18 @@ pub(super) const BELLA_CIAO: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Rock ride",
-    parts: &[Part::new(
-        "Verse",
-        "E4:2 A4 B4 C5 A4:8 | E4:2 A4 B4 C5 A4:8 | E4:2 A4 B4 C5:6 B4:2 A4 | C5:6 B4:2 A4 E5:6 | \
-         E5:4 D5:2 E5 F5:8 | F5:4 E5:2 D5 F5:8 | E5:4 D5:2 C5 B4:4 E5 | C5 B4 A4:8",
-        "i | i | i | i | iv | iv | i V | i",
-    )],
-    form: &["Verse", "Verse", "Verse", "Verse"],
-    drums_from: 0,
+    parts: &[
+        Part::new("Pickup", "-:10 E4:2 A4 B4", "i"),
+        Part::new(
+            "Verse",
+            "C5:2 A4:8 E4:2 A4 B4 | C5:2 A4:8 E4:2 A4 B4 | C5:4 B4:2 A4 C5:4 B4:2 A4 | \
+             E5:4 E5 E5:2 E5 D5 E5 | F5:2 F5:8 F5:2 E5 D5 | F5:2 E5:8 E5:2 D5 C5 | \
+             B4:4 E5 C5 B4 | A4:8 -:2 E4:2 A4 B4",
+            "i | i | i | i | iv | i | V | i",
+        ),
+    ],
+    form: &["Pickup", "Verse", "Verse", "Verse", "Verse"],
+    drums_from: 1,
     about: "A song of the rice-field workers of northern Italy, later of the resistance. The \
             fifth bar moves to the iv chord, D minor, which makes the tune climb.",
 };
@@ -74,8 +78,8 @@ pub(super) const BEETHOVENS_FIFTH: Song = Song {
         "Motif",
         "-:2 G4:2 G4 G4 Eb4:8 | -:2 F4:2 F4 F4 D4:8 | -:2 G4:2 G4 G4 Eb4 Ab4 Ab4 Ab4 | \
          G4 Eb5 Eb5 Eb5 C5:8 | -:2 G4:2 G4 G4 D4 Ab4 Ab4 Ab4 | G4 F5 F5 F5 D5:8 | \
-         -:2 G4:2 G4 G4 Eb4:8 | -:2 F4:2 F4 F4 D4:8",
-        "i | V7 | i iv | i | V iv | V7 | i | V7",
+         D5:2 G5 G5 F5 Eb5:8 | D5:2 G5 G5 F5 Eb5:8 | D5:2 G5 G5 F5 Eb5:4 -:4 | C5:4 -:4 G5:8",
+        "i | V7 | i bVI | i | i vii°7 | V7 | V7 i | V7 i | V7 i | II7 V",
     )],
     form: &["Motif", "Motif", "Motif"],
     drums_from: 0,

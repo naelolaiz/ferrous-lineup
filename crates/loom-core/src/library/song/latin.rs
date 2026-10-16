@@ -14,16 +14,20 @@ pub(super) const LA_CUCARACHA: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::RootFifth,
     rhythm: "Cumbia",
-    parts: &[Part::new(
-        "Song",
-        "G4:2 G4 G4 C5:6 E5:4 | G4:2 G4 G4 C5:6 E5:4 | C5:2 C5 B4 B4 A4 A4 G4:4 | _:12 -:4 | \
-         G4:2 G4 G4 B4:6 D5:4 | G4:2 G4 G4 B4:6 D5:4 | G5:2 A5 G5 F5 E5 D5 C5:4 | _:12 -:4",
-        "I | I | I V7 | V7 | V7 | V7 | V7 I | I",
-    )],
-    form: &["Song", "Song", "Song", "Song"],
-    drums_from: 0,
+    parts: &[
+        Part::new("Pickup", "-:10 G4:2 G4 G4", "I"),
+        Part::new(
+            "Song",
+            "C5:6 E5:4 G4:2 G4 G4 | C5:6 E5:10 | -:2 C5:4 C5:2 B4 B4 A4 A4 | G4:8 -:2 G4:2 G4 G4 | \
+             B4:6 D5:4 G4:2 G4 G4 | B4:6 D5:10 | -:2 G5:4 A5:2 G5 F5 E5 D5 | C5:8 -:2 G4:2 G4 G4",
+            "I | I | I | V7 | V7 | V7 | V7 | I",
+        ),
+    ],
+    form: &["Pickup", "Song", "Song", "Song", "Song"],
+    drums_from: 1,
     about: "The whole song needs two chords, the home chord and V7, here as Colombian \
-            cumbia: chords on the offbeats, bass on the beats and a scraper in eighths.",
+            cumbia: chords on the offbeats, bass on the beats and a scraper in eighths. \
+            \"La cu-ca\" is a pickup; \"ra\" lands on the beat.",
 };
 
 pub(super) const RIO_AFTERNOON: Song = Song {

@@ -119,23 +119,24 @@ pub(super) const MOUNTAIN_KING: Song = Song {
              B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8",
             MOUNTAIN_CHORDS,
         ),
-        // The same theme a fifth higher, in the key of the dominant.
+        // The theme a fifth higher, on F sharp major with its sixth, D,
+        // left flat: the augmented chord in the even bars.
         Part::new(
             "Higher",
-            "F#5:2 G#5 A5 B5 C#6 A5 C#6:4 | C6:2 G#5 C6:4 B5:2 G5 B5:4 | \
-             F#5:2 G#5 A5 B5 C#6 A5 C#6 F#6 | E6 C#6 A5 C#6 E6:8 | \
-             F#5:2 G#5 A5 B5 C#6 A5 C#6:4 | C6:2 G#5 C6:4 B5:2 G5 B5:4 | \
-             F#5:2 G#5 A5 B5 C#6 A5 C#6 F#6 | E6 C#6 A5 C#6 E6:8",
-            MOUNTAIN_CHORDS,
+            "F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8",
+            "I | I+ | I | I+ | I | I+ | I | I+",
         )
-        .in_key(FSharp, NaturalMinor),
+        .in_key(FSharp, Major),
     ],
     form: &["Theme", "Theme", "Higher", "Higher", "Theme", "Theme"],
     drums_from: 0,
     about: "Trolls creeping up the B minor scale, over a bass that stays on B. Then the \
-            whole theme moves up a fifth, to F sharp minor, as it does in Grieg's score, \
-            before it comes back. In the original the music keeps getting faster; try \
-            raising the tempo while it plays.",
+            whole theme moves up a fifth onto F sharp, major but with its sixth left flat, \
+            as it does in Grieg's score, before it comes back. In the original the music \
+            keeps getting faster; try raising the tempo while it plays.",
 };
 
 pub(super) const MINUET: Song = Song {
