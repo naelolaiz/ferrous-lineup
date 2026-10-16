@@ -56,6 +56,7 @@
   - [Song structure: sections, repeats and loops](step-8/song-structure.md)
   - [A clearer look, a real transport, and editing tracks](step-8/look-and-transport.md)
   - [More demos: songs for every genre](step-8/more-demos.md)
+  - [A new rhythm for a song: hearing the chords](step-8/new-rhythm.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 

@@ -126,3 +126,20 @@ taking `&Response`?
 
 *Practices:* ownership through a function, egui's `Response`, reading
 someone else's module before changing it.
+
+## 10. Listen better (loom-core, medium)
+
+Hearing chords gets about 91% of the library right when every style is
+played in every way (see [A new rhythm for a song](new-rhythm.md)).
+Write that check as a test of your own: loop over `STYLES`, play each
+chart with every `Comping` and a few `Bass` lines using
+`chart::accompany`, call `hear_chords`, and count how often the chords
+come back as written. Print the combinations that fail most. Then try
+to raise the number: change one constant at the top of `listen.rs`, or
+listen to more of the bass line (a bass note held for a whole beat is
+probably a chord note). Keep `every_style_is_heard_as_its_chart`
+passing. Run it with `cargo test --release`: in release mode the same
+test runs many times faster.
+
+*Practices:* measuring before changing, nested loops over enums, tuning
+by tests.

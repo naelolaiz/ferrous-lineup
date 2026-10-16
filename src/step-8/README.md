@@ -36,6 +36,11 @@ and a library to go with them:
   classics, like tango and flamenco, get new tunes written for them
   ([More demos](more-demos.md)). And every harmony style as a short
   song,
+- **a new rhythm for a song**: pick a rhythm after a style, or
+  right-click a rhythm and play the whole song in it, and the chords
+  and bass follow the new rhythm, keeping the same chords, as in FL
+  Studio. Ferrous Loom works the chords out from the notes first
+  ([A new rhythm for a song](new-rhythm.md)),
 - **nine new drums**, made by the synthesizer like the first four:
   open hi-hat, rim, low and high toms, ride, crash, cowbell, shaker and
   conga,
@@ -61,6 +66,8 @@ and a library to go with them:
 | click another style or rhythm | swap it in the same pattern |
 | Ctrl+Z | take it back |
 | Use their tempo (Library tab) | also set the style's usual tempo |
+| click a rhythm after a style | play the style's chords and bass the way the rhythm goes |
+| right-click a rhythm, Play the whole song in this rhythm | give the whole song new drums, and play its chords and bass again to match |
 | File > Demos | open a song or a style as a whole project, and play it |
 | Ctrl+Plus, Ctrl+Minus, Ctrl+0, or the zoom at the bottom right | make everything bigger or smaller, or 100% again |
 | View menu, or **Alt+F8** | show or hide each window, and the Patterns and Library panel |
