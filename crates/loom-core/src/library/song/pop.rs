@@ -111,3 +111,111 @@ pub(super) const DECK_THE_HALLS: Song = Song {
     about: "The third line steps out of C major: F sharp and the D7 chord lead to G, the key \
             of the dominant, for two bars, before the last line comes home.",
 };
+
+// ---------------------------------------------------------------- Pop
+
+const THREE_BLIND_MICE_TUNE: &str = "B4:6 A4 | G4:6 -:6 | B4:6 A4 | G4:6 -:6 | D5:6 C5:4 C5:2 | B4:6 -:6 | \
+     D5:6 C5:4 C5:2 | B4:6 -:4 D5:2 | G5:4 G5:2 F#5 E5 F#5 | G5:4 D5:2 D5:4 D5:2 | \
+     G5:2 G5 G5 F#5 E5 F#5 | G5:4 D5:2 D5 D5 D5 | G5:4 G5:2 F#5 E5 F#5 | G5:2 D5 D5 D5:4 C5:2 | \
+     B4:6 A4 | G4:6 -:6";
+const THREE_BLIND_MICE_CHORDS: &str =
+    "I | I | I | I | I | I | I | I | I | I | I | I | I | I | I | I";
+
+// Source: https://raw.githubusercontent.com/yetist/music-score/e4732e0a659a3a017f7290d6217c9e455d8ed61f/abc/friendly-house-senior-choir.abc
+// (John Chambers' ABC of "The Everyday Song Book", 1927, no. 40; in G, up a fifth from the book's C)
+pub(super) const THREE_BLIND_MICE: Song = Song {
+    name: "Three Blind Mice",
+    origin: "English round, 17th century",
+    feel: "Round",
+    genre: Genre::Pop,
+    tonic: G,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 126.0,
+    comping: Comping::Arp3,
+    bass: Bass::Waltz,
+    rhythm: "Six-eight",
+    parts: &[
+        Part::new("Alone", THREE_BLIND_MICE_TUNE, THREE_BLIND_MICE_CHORDS),
+        Part::new("Round", THREE_BLIND_MICE_TUNE, THREE_BLIND_MICE_CHORDS).with_voices(&[0, 4, 8]),
+        // The second and third voices carry on from the part before.
+        Part::new(
+            "Round again",
+            THREE_BLIND_MICE_TUNE,
+            THREE_BLIND_MICE_CHORDS,
+        )
+        .with_voices(&[0, -12, 4, -8, 8]),
+        Part::new(
+            "Last voices",
+            THREE_BLIND_MICE_TUNE,
+            THREE_BLIND_MICE_CHORDS,
+        )
+        .with_voices(&[-12, -8]),
+    ],
+    form: &["Alone", "Round", "Round again", "Last voices"],
+    drums_from: 0,
+    about: "A round in 6/8 for three voices, each four bars behind the last. The tune walks \
+            down three notes, B A G, then four, D C C B, and when the voices overlap those \
+            steps fill in the G chord, which is why one chord is enough.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201212037.abc
+// (in C, down a tone from the source's D)
+pub(super) const SKIP_TO_MY_LOU: Song = Song {
+    name: "Skip to My Lou",
+    origin: "American play-party song, 19th century",
+    feel: "Country",
+    genre: Genre::Pop,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 116.0,
+    comping: Comping::Strum,
+    bass: Bass::RootFifth,
+    rhythm: "Country train",
+    parts: &[Part::new(
+        "Song",
+        "E5:4 E5:2 E5 C5 C5 C5:4 | E5:4 E5:2 E5 G5:8 | D5:4 D5:2 D5 B4 B4 B4:4 | D5:4 D5:2 D5 F5:8 | \
+         E5:4 E5:2 E5 C5 C5 C5:4 | E5:4 E5:2 E5 G5:8 | D5:4 E5:2 F5 E5:4 D5 | C5:8 C5",
+        "I | I | V7 | V7 | I | I | V7 | I",
+    )],
+    form: &["Song", "Song", "Song", "Song"],
+    drums_from: 0,
+    about: "A play-party song, sung for dancing where fiddles were frowned on. Two chords, C \
+            and G7, and a tune that gives each of them one bar: E E E C C C over C, then D D D \
+            B B B over G7.",
+};
+
+// Source: https://tunearch.org/wiki/Pop_Goes_the_Weasel (T. Westrop's 120 Country Dances, 1860s)
+pub(super) const POP_GOES_THE_WEASEL: Song = Song {
+    name: "Pop Goes the Weasel",
+    origin: "English dance tune, in print by the 1850s",
+    feel: "Pop",
+    genre: Genre::Pop,
+    tonic: G,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 138.0,
+    comping: Comping::Arp3,
+    bass: Bass::Waltz,
+    rhythm: "Six-eight",
+    parts: &[
+        Part::new(
+            "A",
+            "G4:4 B4:2 A4:4 C5:2 | B4:2 C5 D5 G4:4 -:2 | G4:4 B4:2 A4:4 C5:2 | B4:6 G4:4 -:2 | \
+             G4:4 B4:2 A4:4 C5:2 | B4:2 C5 D5 G4:4 -:2 | E5:4 -:2 A4:4 D5:2 | B4:6 G4:4 -:2",
+            "I V7 | I | I V7 | I | I V7 | I | IV V7 | I",
+        ),
+        Part::new(
+            "B",
+            "G5:4 F#5:2 E5 F#5 G5 | F#5:2 A5 F#5 D5:4 F#5:2 | G5:4 F#5:2 E5 F#5 G5 | F#5:6 D5 | \
+             C5:4 B4:2 C5:4 D5:2 | E5:4 F#5:2 G5:6 | E5:4 -:2 A4:4 D5:2 | B4:6 G4:4 -:2",
+            "I | V7 | I | V7 | IV | IV I | IV V7 | I",
+        ),
+    ],
+    form: &["A", "B", "A", "B"],
+    drums_from: 0,
+    about: "An English country dance before it was a nursery rhyme. Every phrase rocks \
+            between G and D7, and the \"pop\" is the jump up to E over the C chord, with a \
+            rest after it, in the seventh bar of each half.",
+};
