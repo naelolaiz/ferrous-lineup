@@ -228,6 +228,8 @@ impl LoomApp {
         self.file.path = path;
         self.pattern = 0;
         self.playing = false;
+        self.cursor = 0;
+        self.marker = 0;
         self.piano_roll = PianoRoll::new(super::first_synth(&self.project));
         self.message = None;
         self.notice = None;

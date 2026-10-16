@@ -37,6 +37,14 @@ pub enum PlaylistAction {
         name: String,
     },
     AddTrack,
+    /// Insert a new, empty track at this row.
+    InsertTrack(usize),
+    /// Delete a track and its clips.
+    RemoveTrack(usize),
+    /// Swap a track with the one below it.
+    SwapTracks(usize),
+    /// Move the playhead to this step of the song.
+    Seek(usize),
     /// Something picked in the Library tab.
     Library(LibraryAction),
 }
@@ -177,6 +185,10 @@ impl Layout {
 pub struct PlaylistView {
     snap: Snap,
     drag: Option<ClipDrag>,
+    /// While the mouse button is down after pressing on the ruler, the
+    /// step the playhead was last moved to: dragging moves it on, until
+    /// the button is let go.
+    scrubbing: Option<Option<usize>>,
     tab: Tab,
     library: LibraryBrowser,
     /// Whether the Patterns and Library panel on the left is shown.
@@ -188,6 +200,7 @@ impl PlaylistView {
         PlaylistView {
             snap: Snap::Bar,
             drag: None,
+            scrubbing: None,
             tab: Tab::Patterns,
             library: LibraryBrowser::new(),
             browser_open: true,
@@ -387,13 +400,42 @@ impl PlaylistView {
             let field = egui::TextEdit::singleline(&mut name)
                 .frame(egui::Frame::NONE)
                 .text_color(HEADER_TEXT);
-            if ui
+            let name_response = ui
                 .put(name_rect, field)
-                .on_hover_text("Click to rename")
-                .changed()
-            {
+                .on_hover_text("Click to rename. Right-click to insert, delete or move tracks");
+            if name_response.changed() {
                 actions.push(PlaylistAction::RenameTrack { track: index, name });
             }
+            let tracks = project.playlist().tracks().len();
+            name_response.context_menu(|ui| {
+                if ui.button("Insert track above").clicked() {
+                    actions.push(PlaylistAction::InsertTrack(index));
+                }
+                if ui.button("Insert track below").clicked() {
+                    actions.push(PlaylistAction::InsertTrack(index + 1));
+                }
+                ui.separator();
+                if ui
+                    .add_enabled(index > 0, egui::Button::new("Move up"))
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::SwapTracks(index - 1));
+                }
+                if ui
+                    .add_enabled(index + 1 < tracks, egui::Button::new("Move down"))
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::SwapTracks(index));
+                }
+                ui.separator();
+                if ui
+                    .add_enabled(tracks > 1, egui::Button::new("Delete track"))
+                    .on_hover_text("Deletes its clips too. Undo brings them back")
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::RemoveTrack(index));
+                }
+            });
         }
     }
 
@@ -466,8 +508,32 @@ impl PlaylistView {
             actions.push(PlaylistAction::RemoveClip(index));
         }
 
+        // The ruler: press or drag to move the playhead.
+        let ruler = Rect::from_min_max(
+            pos2(cells.left(), cells.top() - RULER_HEIGHT),
+            pos2(cells.right(), cells.top()),
+        );
+        if press_origin
+            .is_some_and(|pos| primary_pressed && response.hovered() && ruler.contains(pos))
+        {
+            self.scrubbing = Some(None);
+        }
+        if let Some(last) = self.scrubbing
+            && let Some(pos) = pointer
+        {
+            let (_, step) = layout.cell_at(pos);
+            let step = self.snap.floor(step, project.time_signature);
+            // Only when it changes: while playing, every seek restarts
+            // the step.
+            if last != Some(step) {
+                actions.push(PlaylistAction::Seek(step));
+                self.scrubbing = Some(Some(step));
+            }
+        }
+
         if !primary_down {
             self.drag = None;
+            self.scrubbing = None;
         }
         if let Some(drag) = self.drag
             && let Some(pos) = pointer
