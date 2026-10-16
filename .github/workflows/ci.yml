@@ -10,12 +10,33 @@ env:
 
 jobs:
   check:
-    name: Build and test (Linux)
-    runs-on: ubuntu-latest
+    name: Build and test (${{ matrix.name }})
+    # The same steps run on three operating systems. `fail-fast: false`
+    # lets the others finish when one fails, so you see every failure at once.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+            artifact: ferrous-loom-linux
+            binary: target/release/ferrous-loom
+          - name: macOS
+            os: macos-latest
+            artifact: ferrous-loom-macos
+            binary: target/release/ferrous-loom
+          - name: Windows
+            os: windows-latest
+            artifact: ferrous-loom-windows
+            binary: target/release/ferrous-loom.exe
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
+      # macOS and Windows come with their audio and window libraries.
+      # Linux needs the development files for ALSA, xkbcommon and Wayland.
       - name: Install system libraries
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libxkbcommon-dev libwayland-dev
@@ -26,7 +47,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      # Formatting is the same everywhere, so it is checked once.
       - name: Check formatting
+        if: runner.os == 'Linux'
         run: cargo fmt --all --check
 
       - name: Lint
@@ -40,5 +63,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ferrous-loom-linux
-          path: target/release/ferrous-loom
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.binary }}
