@@ -478,8 +478,8 @@ pub static STYLES: &[Style] = &[
         Blues,
         Mixolydian,
         "I7 | IV7 | I7 | VI7 | ii7 | V7 | I7 | V7",
-        Comping::Arp3,
-        Bass::Waltz,
+        Comping::Pulse,
+        Bass::Quarters,
         66.0,
         "Slow blues",
         "Eight bars in 12/8: four slow beats, each split in three. VI7 ii7 V7 is a turnaround borrowed from jazz.",
@@ -1151,7 +1151,7 @@ pub static STYLES: &[Style] = &[
         Latin,
         HarmonicMinor,
         "i | iv | V7 | V7",
-        Comping::ArpUpDown,
+        Comping::ArpUp,
         Bass::Tresillo,
         128.0,
         "Bachata",
@@ -1173,7 +1173,7 @@ pub static STYLES: &[Style] = &[
         Latin,
         Major,
         "Imaj7 | vi7 | ii7 | V7",
-        Comping::Montuno,
+        Comping::Stabs,
         Bass::Tumbao,
         116.0,
         "Cha-cha-chá",
@@ -1185,7 +1185,7 @@ pub static STYLES: &[Style] = &[
         HarmonicMinor,
         "i | iv | V7 | i",
         Comping::Montuno,
-        Bass::Tumbao,
+        Bass::Tresillo,
         98.0,
         "Salsa",
         "The salsa montuno in a minor key, over the son clave.",
@@ -1272,17 +1272,6 @@ pub static STYLES: &[Style] = &[
         "The new tango of the 1950s: one voice slides down A, G sharp, G, F sharp under a held A minor chord, a line cliché.",
     ),
     style(
-        "Candombe",
-        Tango,
-        Major,
-        "I | IV | V7 | I",
-        Comping::Offbeat,
-        Bass::Tresillo,
-        100.0,
-        "Candombe",
-        "From Montevideo, across the river from Buenos Aires: the African drums that the tango and the milonga grew up with.",
-    ),
-    style(
         "Vals in minor",
         Tango,
         HarmonicMinor,
@@ -1294,6 +1283,173 @@ pub static STYLES: &[Style] = &[
         "The tango waltz in a minor key: fast, felt in one, and wistful.",
     )
     .in_time(THREE_FOUR),
+    // ----- South American folklore -----
+    style(
+        "Zamba",
+        Folklore,
+        HarmonicMinor,
+        "i | iv | V7 | i | bIII | bVII | V7 | i",
+        Comping::Arp3,
+        Bass::Waltz,
+        84.0,
+        "Zamba",
+        "The slow Argentine dance of the handkerchiefs, in 6/8: a minor key that leans on \
+         its relative major for two bars before V7 brings it home.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Chacarera",
+        Folklore,
+        HarmonicMinor,
+        "i | V7 | i | V7 | iv | i | V7 | i",
+        Comping::Sway,
+        Bass::RootFifth,
+        132.0,
+        "Chacarera",
+        "Santiago del Estero's dance: eight bars of i and V7 with one iv, strummed in 6/8 \
+         while the bombo plays 3/4 against it.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Gato",
+        Folklore,
+        Major,
+        "I | V7 | V7 | I | I | V7 | V7 | I",
+        Comping::Waltz,
+        Bass::RootFifth,
+        126.0,
+        "Gato",
+        "The quickest of the old dances of the Pampas: two chords, bright and major, in a \
+         6/8 that keeps tipping into 3/4.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Malambo",
+        Folklore,
+        Major,
+        "I | V7 | I | V7",
+        Comping::Waltz,
+        Bass::Quarters,
+        144.0,
+        "Malambo",
+        "The gaucho's dance of stamping boots: one chord and its dominant, the bass in \
+         3/4, and all the interest in the feet.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Chamamé",
+        Folklore,
+        Major,
+        "I | V7 | V7 | I | IV | I | V7 | I",
+        Comping::Sway,
+        Bass::Waltz,
+        120.0,
+        "Chamamé",
+        "From Corrientes: the guitar's bass and chords move in 3/4 while the accordion and \
+         the drums play 6/8, so every bar is three against two.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Cueca",
+        Folklore,
+        Major,
+        "I | V7 | V7 | I | I | IV | V7 | I",
+        Comping::Waltz,
+        Bass::Waltz,
+        126.0,
+        "Cueca",
+        "Chile's national dance, a cousin of the zamba: faster, in a major key, with hand \
+         claps between the beats.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Marinera",
+        Folklore,
+        HarmonicMinor,
+        "i | iv | V7 | i | bIII | bVII | V7 | i",
+        Comping::Arp3,
+        Bass::Held,
+        120.0,
+        "Marinera",
+        "Peru's courtship dance for guitar and cajón: the zamba's minor-key chords at a \
+         brisker pace, with the cajón slapping across the beat.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Bambuco",
+        Folklore,
+        HarmonicMinor,
+        "i | V7 | i | bVI | bIII | V7 | i | i",
+        Comping::Arp3,
+        Bass::Waltz,
+        108.0,
+        "Bambuco",
+        "Colombia's Andean song: a minor key that visits bVI and bIII, over the tiple's 6/8 \
+         and a bass that avoids the downbeat.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Joropo",
+        Folklore,
+        Major,
+        "I | IV | V7 | I",
+        Comping::Arp3,
+        Bass::Waltz,
+        176.0,
+        "Joropo",
+        "The music of the Venezuelan and Colombian plains: harp arpeggios in a fast 3/4, \
+         three chords, and maracas that never stop.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Vidala",
+        Folklore,
+        NaturalMinor,
+        "i | bVII | bIII | i",
+        Comping::Sway,
+        Bass::Held,
+        72.0,
+        "Vidala",
+        "A slow song of Argentina's Andean north-west, sung to a hand drum: natural minor, \
+         with bVII and bIII instead of a dominant.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Carnavalito",
+        Folklore,
+        NaturalMinor,
+        "i | bVII | bIII | V7",
+        Comping::Strum,
+        Bass::RootFifth,
+        116.0,
+        "Carnavalito",
+        "The carnival dance of the Quebrada de Humahuaca: a pentatonic tune over a minor \
+         loop, with quena, charango and bombo.",
+    ),
+    style(
+        "Huayno",
+        Folklore,
+        NaturalMinor,
+        "i | bIII | i | V7",
+        Comping::Strum,
+        Bass::RootFifth,
+        100.0,
+        "Huayno",
+        "The Andean huayno of Peru and Bolivia: minor and its relative major, in a 2/4 with \
+         a long-short-short lilt.",
+    ),
+    style(
+        "Candombe",
+        Folklore,
+        Major,
+        "I | IV | V7 | I",
+        Comping::Offbeat,
+        Bass::Tresillo,
+        110.0,
+        "Candombe",
+        "From Montevideo, across the river from Buenos Aires: the drums that the tango and \
+         the milonga grew up with, under three plain chords.",
+    ),
     // ----- Flamenco -----
     style(
         "Andalusian cadence",
@@ -1511,53 +1667,6 @@ pub static STYLES: &[Style] = &[
         "A whirling southern Italian dance in fast 6/8, with a tambourine.",
     )
     .in_time(SIX_EIGHT),
-    style(
-        "Chacarera",
-        Folk,
-        HarmonicMinor,
-        "i | V7 | i | V7 | iv | i | V7 | i",
-        Comping::Arp3,
-        Bass::Waltz,
-        132.0,
-        "Chacarera",
-        "Argentine folk dance in 6/8, with the bombo drum playing on its head and its wooden rim.",
-    )
-    .in_time(SIX_EIGHT),
-    style(
-        "Klezmer",
-        Folk,
-        Phrygian,
-        "I | iv | bVII | I",
-        Comping::Offbeat,
-        Bass::RootFifth,
-        120.0,
-        "Two-step",
-        "Freygish, the Phrygian mode with a major chord on the tonic: E major and its G sharp against F, a step and a half.",
-    ),
-    style(
-        "Zamba",
-        Folk,
-        NaturalMinor,
-        "i | iv | V7 | i",
-        Comping::Arp3,
-        Bass::Waltz,
-        84.0,
-        "Six-eight",
-        "The Argentine zamba, a slow, graceful dance with handkerchiefs, in 6/8.",
-    )
-    .in_time(SIX_EIGHT),
-    // ----- Classical and film -----
-    style(
-        "Canon",
-        Classical,
-        Major,
-        "I V | vi iii | IV I | IV V",
-        Comping::Held,
-        Bass::Held,
-        70.0,
-        "",
-        "Pachelbel's ground bass: eight chords, repeated under ever more elaborate melodies.",
-    ),
     style(
         "Circle of fifths",
         Classical,

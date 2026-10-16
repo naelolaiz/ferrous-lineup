@@ -812,19 +812,6 @@ pub static RHYTHMS: &[Rhythm] = &[
     )
     .in_time(THREE_FOUR),
     rhythm(
-        "Candombe",
-        Tango,
-        100.0,
-        &[
-            (LowTom, "X... ..X. X... X..."),
-            (Conga, ".xx. .xx. .xx. .xx."),
-            (Rim, "x..x ..x. ..x. x..."),
-        ],
-        "",
-        "From Montevideo, across the river from Buenos Aires: drums of three sizes, and a \
-         stick on the wooden shell.",
-    ),
-    rhythm(
         "Tango nuevo",
         Tango,
         132.0,
@@ -835,6 +822,163 @@ pub static RHYTHMS: &[Rhythm] = &[
         ],
         "",
         "3 + 3 + 3 + 3 + 2 + 2 in sixteenths: the restless accents of the new tango of the 1950s.",
+    ),
+    // ----- South American folklore -----
+    rhythm(
+        "Zamba",
+        Folklore,
+        84.0,
+        &[(LowTom, "X..... X....."), (Rim, "....x. ..x.x.")],
+        "",
+        "The slow Argentine dance in 6/8: the bombo legüero's deep head on the two beats, \
+         its wooden rim between them.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Chacarera",
+        Folklore,
+        132.0,
+        &[(LowTom, "X..... x.x..."), (Rim, "....x. ..x.x.")],
+        "",
+        "Santiago del Estero's dance: the bombo plays 6/8 on the head and 3/4 on the rim at \
+         the same time, the two against three that the whole genre lives on.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Gato",
+        Folklore,
+        126.0,
+        &[
+            (LowTom, "X..... X..x.."),
+            (Rim, "..x.x. ..x..."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "A quick, bright 6/8 for the gato, the pericón, the cielito, the escondido and the \
+         other old dances of the Pampas.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Malambo",
+        Folklore,
+        144.0,
+        &[(LowTom, "X..x.. X..x.."), (Rim, "x.x.x. x.x.x.")],
+        "",
+        "The gaucho's solo dance: bombo and the dancer's boots, in 3 + 3 against the eighths.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Chamamé",
+        Folklore,
+        120.0,
+        &[(Kick, "X...x. ..x..."), (HiHat, "X.x.x. X.x.x.")],
+        "",
+        "From Corrientes: the guitars' bass walks in 3/4 while the accordion plays 6/8, \
+         three against two in every bar.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Cueca",
+        Folklore,
+        126.0,
+        &[
+            (Kick, "X..... X....."),
+            (Clap, "..X.X. ..X.X."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "Chile's handkerchief dance: guitar on the two beats, hand claps on the eighths between.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Marinera",
+        Folklore,
+        120.0,
+        &[
+            (LowTom, "X..x.. X....."),
+            (Snare, "....x. ..x.x."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "Peru's courtship dance on the cajón: a low tone, slaps that cross into 3/4, and \
+         the quijada's rattle.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Bambuco",
+        Folklore,
+        108.0,
+        &[
+            (Rim, "X..... X....."),
+            (Kick, "....X. ..X..."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "Colombia's bambuco: the tiple keeps 6/8 while the bass lands on the second and third \
+         beats of 3/4, never on the downbeat.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Joropo",
+        Folklore,
+        176.0,
+        &[
+            (Kick, "X... ..X. ...."),
+            (Shaker, "X.x. X.x. X.x."),
+            (Rim, ".... x... x..."),
+        ],
+        "",
+        "The Venezuelan and Colombian plains: maracas in 3/4, the bass in 6/8, and the cuatro \
+         strumming across both.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
+        "Vidala",
+        Folklore,
+        72.0,
+        &[(Snare, "X... o... o.o.")],
+        "",
+        "The caja, a small hand drum, under a slow song of the Andean north-west of Argentina.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
+        "Carnavalito",
+        Folklore,
+        116.0,
+        &[
+            (LowTom, "X... X... X... X..."),
+            (Snare, "x.xx x.xx x.xx x.xx"),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "",
+        "The carnival dance of the Quebrada de Humahuaca: bombo on every beat and the caja's \
+         long-short-short, in a quick 2/4 written here as pairs of bars.",
+    ),
+    rhythm(
+        "Huayno",
+        Folklore,
+        100.0,
+        &[
+            (LowTom, "X... x... X... x..."),
+            (Rim, "..x. ..x. ..x. ..x."),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "",
+        "The Andean huayno of Peru and Bolivia: a bombo on the beat, a tap off it, and the \
+         charango's steady strum; 2/4, written as pairs of bars.",
+    ),
+    rhythm(
+        "Candombe",
+        Folklore,
+        110.0,
+        &[
+            (Rim, "X..X ..X. X..X ..X."),
+            (LowTom, "X... ..X. X... X..."),
+            (Conga, ".xx. .xx. .xx. .xx."),
+        ],
+        "",
+        "Montevideo's candombe: the stick on the drum's wooden shell plays the clave, \
+         3 + 3 + 2 twice, under the piano, repique and chico drums.",
     ),
     // ----- Flamenco -----
     rhythm(
@@ -991,15 +1135,6 @@ pub static RHYTHMS: &[Rhythm] = &[
         ],
         "",
         "A whirling southern Italian dance in fast 6/8, with a tambourine.",
-    )
-    .in_time(SIX_EIGHT),
-    rhythm(
-        "Chacarera",
-        Folk,
-        132.0,
-        &[(Kick, "X..... X.X..."), (Rim, "..x.x. ....x.")],
-        "",
-        "Argentine folk dance in 6/8: the bombo drum, played on its head and on its wooden rim.",
     )
     .in_time(SIX_EIGHT),
     // ----- Classical and film -----
