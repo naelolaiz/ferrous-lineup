@@ -57,7 +57,8 @@ impl LibraryBrowser {
             );
         ui.weak(
             "Click to play it in a pattern. Click another to swap. Right-click a rhythm to \
-             play the whole song in it. Ctrl+Z takes it back.",
+             play the whole song in it, as a click does while the song plays. Ctrl+Z takes \
+             it back.",
         );
         ui.add_space(2.0);
 
@@ -176,7 +177,8 @@ fn rhythm_label(ui: &mut Ui, rhythm: &'static Rhythm, tried: Tried) -> Option<Li
         if is_fill {
             ""
         } else {
-            "\n\nRight-click to play the whole song in this rhythm."
+            "\n\nRight-click to play the whole song in this rhythm. While the song plays, \
+             a click does that too."
         }
     );
     let response = ui
