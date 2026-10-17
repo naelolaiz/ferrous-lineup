@@ -28,7 +28,7 @@ use loom_audio::{
 };
 use loom_core::{
     Channel, ChannelKind, DEFAULT_VELOCITY, History, Meter, MidiMessage, Note, Pass, Pattern,
-    Project, SampleSource, Tempo,
+    Project, SampleSource, Scale, Tempo,
 };
 
 use crate::channel_rack::{self, RackAction};
@@ -721,6 +721,16 @@ impl LoomApp {
                     project.remove_time_marker(start)
                 });
             }
+            PlaylistAction::SetKeyMarker(marker) => {
+                self.edit("change key from a bar", |project| {
+                    project.set_key_marker(marker)
+                });
+            }
+            PlaylistAction::RemoveKeyMarker(start) => {
+                self.edit("remove key change", |project| {
+                    project.remove_key_marker(start)
+                });
+            }
             PlaylistAction::SetTempoMarker(marker) => {
                 self.edit("change tempo", |project| project.set_tempo_marker(marker));
             }
@@ -1147,6 +1157,17 @@ impl LoomApp {
     /// The audio thread counts steps of the song as played, so a chorus
     /// played twice counts twice; the arrangement turns that back into a
     /// place in the playlist.
+    /// The key the music is in where you are: in song mode, the key at
+    /// the playhead (or where Play will start), which a key change in
+    /// the playlist moves on from; in pattern mode, the selected
+    /// pattern's.
+    fn key_here(&self) -> Scale {
+        match self.song_position() {
+            Some((step, _)) => self.project.key_at(step),
+            None => self.project.pattern_key(self.pattern),
+        }
+    }
+
     fn song_position(&self) -> Option<(usize, Pass)> {
         if self.mode != PlayMode::Song {
             return None;
@@ -1242,11 +1263,19 @@ impl eframe::App for LoomApp {
                 .map_or("", |channel| channel.name.as_str());
             let heard = self.chord_playing();
             let digits = !self.live.typing() && !ctx.text_edit_focused();
+            let here = self.key_here();
             egui::Panel::bottom("harmony-keys")
                 .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))
                 .show(ui, |ui| {
-                    self.harmony_keys
-                        .show(ui, &self.project, channel_name, &held, &heard, digits)
+                    self.harmony_keys.show(
+                        ui,
+                        &self.project,
+                        here,
+                        channel_name,
+                        &held,
+                        &heard,
+                        digits,
+                    )
                 })
                 .inner
         } else {

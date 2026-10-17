@@ -171,9 +171,10 @@ impl LoomApp {
     }
 
     /// The key that notes played on the keyboards snap to, if the piano
-    /// roll's "Snap notes you play" is on.
+    /// roll's "Snap notes you play" is on: the key where you are, after
+    /// any key change.
     fn snap_scale(&self) -> Option<Scale> {
-        self.piano_roll.snap_played.then_some(self.project.scale)
+        self.piano_roll.snap_played.then(|| self.key_here())
     }
 
     /// Where playback is, in steps with a fraction, or `None` when stopped.
@@ -466,12 +467,13 @@ impl LoomApp {
             return None;
         }
         let harmony = analyze(self.live.held_pitches());
-        let described = harmony.describe(self.project.scale);
+        let key = self.key_here();
+        let described = harmony.describe(key);
         let text = match self.live.follow.chord() {
             Some(chord) => format!(
                 "🎹 {} · accompaniment in {}",
                 described.trim_end_matches('.'),
-                self.project.scale.chord_name(chord)
+                key.chord_name(chord)
             ),
             None => format!("🎹 {described}"),
         };

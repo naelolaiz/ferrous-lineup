@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::arrangement::{Arrangement, arrange};
 use crate::harmony::Scale;
+use crate::key_map::{KeyMap, KeyMarker, moved_key};
 use crate::meter::{Meter, TimeMarker, TimeSignature};
 use crate::pattern::{MAX_STEPS, NoteEvent, Pattern};
 use crate::playlist::{
@@ -326,13 +327,31 @@ impl Project {
     /// would otherwise stop being steps. A one-step C4 among other notes
     /// is part of a tune, and moves with it. Changing to the key the
     /// project is already in changes nothing.
+    ///
+    /// The key changes later in the song move with it (see
+    /// [`moved_key`]), and a pattern played where the song is in another
+    /// key moves from that key to where it went: the A major march of a
+    /// song in A minor becomes a C major march when the song goes to C
+    /// minor.
     pub fn change_key(&mut self, scale: Scale) {
         let from = self.scale;
         if from == scale {
             return;
         }
+        let before: Vec<Scale> = (0..self.patterns.len())
+            .map(|pattern| self.pattern_key(pattern))
+            .collect();
+        self.scale = scale;
+        for marker in &mut self.playlist.key_markers {
+            marker.scale = moved_key(marker.scale, from, scale);
+        }
+        self.playlist.key_markers = self.key_map().tidy().markers().to_vec();
+        let after: Vec<Scale> = (0..self.patterns.len())
+            .map(|pattern| self.pattern_key(pattern))
+            .collect();
         let pitched: Vec<bool> = self.channels.iter().map(Channel::is_pitched).collect();
-        for pattern in &mut self.patterns {
+        for (index, pattern) in self.patterns.iter_mut().enumerate() {
+            let (old, new) = (before[index], after[index]);
             for (channel, _) in pitched.iter().enumerate().filter(|(_, p)| **p) {
                 if pattern.is_step_row(channel) {
                     continue;
@@ -341,14 +360,13 @@ impl Project {
                     .notes(channel)
                     .iter()
                     .map(|note| NoteEvent {
-                        pitch: tools::change_key(note.pitch, from, scale),
+                        pitch: tools::change_key(note.pitch, old, new),
                         ..*note
                     })
                     .collect();
                 pattern.set_notes(channel, notes);
             }
         }
-        self.scale = scale;
     }
 
     pub fn channels(&self) -> &[Channel] {
@@ -769,6 +787,61 @@ impl Project {
         Some(markers.remove(index))
     }
 
+    // ----- Key changes -----
+
+    /// The keys along the playlist's timeline: the project's own from
+    /// the start, then each key marker.
+    pub fn key_map(&self) -> KeyMap {
+        KeyMap::new(self.scale, self.playlist.key_markers.iter().copied())
+    }
+
+    /// The key on step `step` of the playlist's timeline.
+    pub fn key_at(&self, step: usize) -> Scale {
+        self.key_map().key_at(step)
+    }
+
+    /// The key a pattern is written in: the one where its first clip
+    /// starts, or the project's if it has no clips. The piano roll
+    /// highlights its notes and names its chords in it.
+    pub fn pattern_key(&self, pattern: usize) -> Scale {
+        self.playlist
+            .clips
+            .iter()
+            .filter(|clip| clip.pattern == pattern)
+            .map(|clip| clip.start)
+            .min()
+            .map_or(self.scale, |start| self.key_at(start))
+    }
+
+    /// Changes the key from `marker.start` on, without moving any note:
+    /// a modulation written into the song. On step 0 it changes the key
+    /// the song starts in; anywhere else it adds a marker, or replaces
+    /// the one already there. Returns `false`, changing nothing, if the
+    /// marker is too late.
+    pub fn set_key_marker(&mut self, marker: KeyMarker) -> bool {
+        if marker.start >= MAX_SONG_STEPS {
+            return false;
+        }
+        if marker.start == 0 {
+            self.scale = marker.scale;
+            return true;
+        }
+        let markers = &mut self.playlist.key_markers;
+        match markers.binary_search_by_key(&marker.start, |m| m.start) {
+            Ok(index) => markers[index] = marker,
+            Err(index) => markers.insert(index, marker),
+        }
+        true
+    }
+
+    /// Removes the key marker on step `start`, if there is one. The song
+    /// stays in the key before it.
+    pub fn remove_key_marker(&mut self, start: usize) -> Option<KeyMarker> {
+        let markers = &mut self.playlist.key_markers;
+        let index = markers.iter().position(|marker| marker.start == start)?;
+        Some(markers.remove(index))
+    }
+
     // ----- Tempo changes -----
 
     /// The tempo along the playlist's timeline: the project's own from
@@ -930,6 +1003,14 @@ impl Project {
             .filter(|marker| marker.start > section.start && marker.start < section.end())
             .copied()
             .collect();
+        let keys = self.key_map();
+        let opening_key = keys.key_at(section.start);
+        let inside_keys: Vec<KeyMarker> = keys
+            .markers()
+            .iter()
+            .filter(|marker| marker.start > section.start && marker.start < section.end())
+            .copied()
+            .collect();
         if copies == 0 || !self.make_room(section.end(), room) {
             return false;
         }
@@ -968,9 +1049,15 @@ impl Project {
                     ..*marker
                 });
             }
+            // And is in the same keys.
+            self.set_key_marker(KeyMarker::new(section.start + shift, opening_key));
+            for marker in &inside_keys {
+                self.set_key_marker(KeyMarker::new(marker.start + shift, marker.scale));
+            }
         }
         self.playlist.time_markers = self.meter().tidy().markers().to_vec();
         self.playlist.tempo_markers = self.tempo_map().tidy().markers().to_vec();
+        self.playlist.key_markers = self.key_map().tidy().markers().to_vec();
         true
     }
 
@@ -1036,6 +1123,10 @@ impl Project {
             || playlist
                 .tempo_markers
                 .iter()
+                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+            || playlist
+                .key_markers
+                .iter()
                 .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS);
         if too_late {
             return false;
@@ -1055,6 +1146,9 @@ impl Project {
             shift(&mut marker.start);
         }
         for marker in &mut self.playlist.tempo_markers {
+            shift(&mut marker.start);
+        }
+        for marker in &mut self.playlist.key_markers {
             shift(&mut marker.start);
         }
         if let Some(region) = &mut self.playlist.loop_region {

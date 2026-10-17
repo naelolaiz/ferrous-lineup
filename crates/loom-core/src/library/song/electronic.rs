@@ -147,6 +147,12 @@ pub(super) const TOCCATA: Song = Song {
             Picardy third.",
 };
 
+// Source: the Humdrum edition of the score,
+// https://raw.githubusercontent.com/craigsapp/mozart-piano-sonatas/master/kern/sonata11-3.krn
+// (K. 331, third movement, in 2/4; here two bars to the bar, with every repeat written
+// out, the right hand's top line as the melody and the left hand read as chords).
+// The key signature changes at bars 25 (three sharps), 65 (none) and 89 (three sharps);
+// under three sharps, bars 33-40 and 49-56 are in F sharp minor. Grace notes are left out.
 pub(super) const TURKISH_MARCH: Song = Song {
     name: "Turkish March",
     origin: "Wolfgang Amadeus Mozart, Piano Sonata No. 11, 1783",
@@ -162,6 +168,7 @@ pub(super) const TURKISH_MARCH: Song = Song {
     style: "Eurodance",
     parts: &[
         Part::new("Pickup", "-:12 B4:1 A4 G#4 A4", "i"),
+        // Bars 1-8, the first time: back to the start.
         Part::new(
             "Theme",
             "C5:2 -:2 D5:1 C5 B4 C5 E5:2 -:2 F5:1 E5 D#5 E5 | \
@@ -169,36 +176,198 @@ pub(super) const TURKISH_MARCH: Song = Song {
              B5:2 A5 G5 F#5 E5:4 B4:1 A4 G#4 A4",
             "i | i | v | v II V V",
         ),
+        // Bars 1-8 again, on to bar 9.
+        Part::new(
+            "Theme 2",
+            "C5:2 -:2 D5:1 C5 B4 C5 E5:2 -:2 F5:1 E5 D#5 E5 | \
+             B5:1 A5 G#5 A5 B5 A5 G#5 A5 C6:4 A5:2 C6 | B5:2 A5 G5 A5 B5 A5 G5 A5 | \
+             B5:2 A5 G5 F#5 E5:4 E5:2 F5",
+            "i | i | v | v v II II V V bIII iv",
+        ),
+        // Bars 9-16: a few bars around C major, the relative major, with
+        // no new key signature, then back to A minor's dominant.
+        Part::new(
+            "Middle",
+            "G5:2 G5 A5:1 G5 F5 E5 D5:4 E5:2 F5 | G5:2 G5 A5:1 G5 F5 E5 D5:4 C5:2 D5 | \
+             E5:2 E5 F5:1 E5 D5 C5 B4:4 C5:2 D5 | E5:2 E5 F5:1 E5 D5 C5 B4:4 B4:1 A4 G#4 A4",
+            "bIII bVII | bIII bVII | i V | i V",
+        ),
+        // Bars 17-24, the first time: back to bar 9. Bar 20 is an
+        // augmented sixth, F A D sharp, written here as the F7 it sounds like.
         Part::new(
             "Theme end",
             "C5:2 -:2 D5:1 C5 B4 C5 E5:2 -:2 F5:1 E5 D#5 E5 | \
              B5:1 A5 G#5 A5 B5 A5 G#5 A5 C6:4 A5:2 B5 | C6:2 B5 A5 G#5 A5 E5 F5 D5 | \
-             C5:4 B4:4 A4:4 -:4",
-            "i | i bVI | i ii° i ii° | i V i i",
+             C5:4 B4 A4 E5:2 F5",
+            "i | i bVI7 | i ii° i ii° | i i V V i i bIII iv",
         ),
-        Part::new("Refrain pickup", "-:12 A5:2 B5", "I").in_key(A, Major),
+        // Bars 17-24 again, on to the march.
         Part::new(
-            "Refrain",
+            "Theme end 2",
+            "C5:2 -:2 D5:1 C5 B4 C5 E5:2 -:2 F5:1 E5 D#5 E5 | \
+             B5:1 A5 G#5 A5 B5 A5 G#5 A5 C6:4 A5:2 B5 | C6:2 B5 A5 G#5 A5 E5 F5 D5 | \
+             C5:4 B4 A4 A5:2 B5",
+            "i | i bVI7 | i ii° i ii° | i V i i",
+        ),
+        // Bars 25-32 (and 57-64): three sharps, A major.
+        Part::new(
+            "March",
             "C#6:4 A5:2 B5 C#6 B5 A5 G#5 | F#5:2 G#5 A5 B5 G#5 E5 A5 B5 | \
              C#6:4 A5:2 B5 C#6 B5 A5 G#5 | F#5:2 B5 G#5 E5 A5:4 A5:2 B5",
-            "I | IV II7 V V | I | IV V I I",
+            "I | IV #iv° V V | I | IV V I I",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "March 2",
+            "C#6:4 A5:2 B5 C#6 B5 A5 G#5 | F#5:2 G#5 A5 B5 G#5 E5 A5 B5 | \
+             C#6:4 A5:2 B5 C#6 B5 A5 G#5 | F#5:2 B5 G#5 E5 A5:4 C#6:1 D6 C#6 B5",
+            "I | IV #iv° V V | I | IV V I I",
+        )
+        .in_key(A, Major),
+        // Bars 33-40: the same key signature, but F sharp minor, its
+        // relative minor, ending on C sharp minor.
+        Part::new(
+            "Episode",
+            "A5:1 B5 A5 G#5 F#5 A5 G#5 F#5 E#5 F#5 G#5 E#5 C#5 D#5 E#5 C#5 | \
+             F#5:1 E#5 F#5 G#5 A5 G#5 A5 B5 C#6 B#5 C#6 B#5 C#6 D6 C#6 B5 | \
+             A5:1 B5 A5 G#5 F#5 A5 G#5 F#5 E5 F#5 G#5 E5 C#5 D#5 E5 C#5 | \
+             D#5:1 E5 F#5 D#5 B#4 C#5 D#5 B#4 C#5:4 C#6:1 D6 C#6 B5",
+            "i V7 | i V | i v | II7 v",
+        )
+        .in_key(FSharp, HarmonicMinor),
+        Part::new(
+            "Episode 2",
+            "A5:1 B5 A5 G#5 F#5 A5 G#5 F#5 E#5 F#5 G#5 E#5 C#5 D#5 E#5 C#5 | \
+             F#5:1 E#5 F#5 G#5 A5 G#5 A5 B5 C#6 B#5 C#6 B#5 C#6 D6 C#6 B5 | \
+             A5:1 B5 A5 G#5 F#5 A5 G#5 F#5 E5 F#5 G#5 E5 C#5 D#5 E5 C#5 | \
+             D#5:1 E5 F#5 D#5 B#4 C#5 D#5 B#4 C#5:4 E5:1 D5 C#5 B4",
+            "i V7 | i V | i v | II7 v",
+        )
+        .in_key(FSharp, HarmonicMinor),
+        // Bars 41-48: scales in A major.
+        Part::new(
+            "Scales",
+            "A4:1 B4 C#5 D5 E5 F#5 G#5 A5 A5 G#5 F#5 E5 E5 D5 C#5 B4 | \
+             A4:1 B4 C#5 D5 E5 F#5 G#5 A5 A#5:2 B5 E5:1 D5 C#5 B4 | \
+             A4:1 B4 C#5 D5 E5 F#5 G#5 A5 A5 G#5 F#5 E5 E5 D5 C#5 B4 | \
+             C#5:1 E5 A4 C#5 B4 D5 G#4 B4 A4:4 C#6:1 D6 C#6 B5",
+            "I V7 | I V7 | I V7 | I vi ii V I I I I",
+        )
+        .in_key(A, Major),
+        // Bars 49-56: F sharp minor again, the first time back to bar 41.
+        Part::new(
+            "Episode end",
+            "A5:1 B5 A5 G#5 F#5 A5 G#5 F#5 E#5 F#5 G#5 E#5 C#5 D#5 E#5 C#5 | \
+             F#5:1 E#5 F#5 G#5 A5 G#5 A5 B5 C#6 B#5 C#6 B#5 C#6 B#5 C#6 A#5 | \
+             D6:1 C#6 D6 C#6 D6 C#6 D6 C#6 D6 C#6 B5 A5 G#5 A5 B5 G#5 | \
+             A5:1 B5 C#6 F#5 E#5 F#5 G#5 E#5 F#5:4 E5:1 D5 C#5 B4",
+            "i V7 | i V | iv ii° | i V7 i i",
+        )
+        .in_key(FSharp, HarmonicMinor),
+        Part::new(
+            "Episode end 2",
+            "A5:1 B5 A5 G#5 F#5 A5 G#5 F#5 E#5 F#5 G#5 E#5 C#5 D#5 E#5 C#5 | \
+             F#5:1 E#5 F#5 G#5 A5 G#5 A5 B5 C#6 B#5 C#6 B#5 C#6 B#5 C#6 A#5 | \
+             D6:1 C#6 D6 C#6 D6 C#6 D6 C#6 D6 C#6 B5 A5 G#5 A5 B5 G#5 | \
+             A5:1 B5 C#6 F#5 E#5 F#5 G#5 E#5 F#5:4 A5:2 B5",
+            "i V7 | i V | iv ii° | i V7 i i",
+        )
+        .in_key(FSharp, HarmonicMinor),
+        // Bars 57-64 again, on to bar 65, where the sharps go and the
+        // theme comes back in A minor.
+        Part::new(
+            "March to the theme",
+            "C#6:4 A5:2 B5 C#6 B5 A5 G#5 | F#5:2 G#5 A5 B5 G#5 E5 A5 B5 | \
+             C#6:4 A5:2 B5 C#6 B5 A5 G#5 | F#5:2 B5 G#5 E5 A5:4 B4:1 A4 G#4 A4",
+            "I | IV #iv° V V | I | IV V I I",
+        )
+        .in_key(A, Major),
+        // Bars 81-88 the second time, on to the finale.
+        Part::new(
+            "Theme end to the finale",
+            "C5:2 -:2 D5:1 C5 B4 C5 E5:2 -:2 F5:1 E5 D#5 E5 | \
+             B5:1 A5 G#5 A5 B5 A5 G#5 A5 C6:4 A5:2 B5 | C6:2 B5 A5 G#5 A5 E5 F5 D5 | \
+             C5:4 B4 A4 A4:1 A5 B4 B5",
+            "i | i bVI7 | i ii° i ii° | i V i i",
+        ),
+        // Bars 89-96: three sharps again, the march in broken octaves.
+        Part::new(
+            "Finale",
+            "C#5:1 C#6 -:2 A4:1 A5 B4 B5 C#5 C#6 B4 B5 A4 A5 G#4 G#5 | \
+             F#4:1 F#5 G#4 G#5 A4 A5 B4 B5 G#4 G#5 E4 E5 A4 A5 B4 B5 | \
+             C#5:1 C#6 -:2 A4:1 A5 B4 B5 C#5 C#6 B4 B5 A4 A5 G#4 G#5 | \
+             F#4:1 F#5 B4 B5 G#4 G#5 E4 E5 A5:4 A4:1 A5 B4 B5",
+            "I | IV #iv° V V | I | IV V I I",
+        )
+        .in_key(A, Major),
+        // Bars 89-95 again and the second ending, bar 97.
+        Part::new(
+            "Finale 2",
+            "C#5:1 C#6 -:2 A4:1 A5 B4 B5 C#5 C#6 B4 B5 A4 A5 G#4 G#5 | \
+             F#4:1 F#5 G#4 G#5 A4 A5 B4 B5 G#4 G#5 E4 E5 A4 A5 B4 B5 | \
+             C#5:1 C#6 -:2 A4:1 A5 B4 B5 C#5 C#6 B4 B5 A4 A5 G#4 G#5 | \
+             F#4:1 F#5 B4 B5 G#4 G#5 E4 E5 A5:4 C#6:3 C#6:1",
+            "I | IV #iv° V V | I | IV V I I",
+        )
+        .in_key(A, Major),
+        // Bars 98-113: the coda, its chords spread like a drum roll.
+        Part::new(
+            "Coda",
+            "C#6:8 C#6 | D6:1 C#6 B5 C#6 D6 C#6 B5 C#6 D6:8 | C#6:2 C#6 C#6 C#6 B5:6 E6:2 | \
+             C#6:8 C#6 | D6:1 C#6 B5 C#6 D6 C#6 B5 C#6 D6:8 | C#6:8 B5:2 B5 B5 B5 | \
+             A5:4 C#6:3 C#6:1 C#6:8 | C#6:8 D6:1 C#6 B5 C#6 D6 C#6 B5 C#6",
+            "I | I IV | I V | I | I IV | I V | I | I",
+        )
+        .in_key(A, Major),
+        // Bars 114-128.
+        Part::new(
+            "Last bars",
+            "D6:8 C#6:2 C#6 C#6 C#6 | B5:6 E6:2 C#6:8 | C#6:8 D6:1 C#6 B5 C#6 D6 C#6 B5 C#6 | \
+             D6:8 C#6 | B5:2 B5 B5 B5 A5:6 C#6:2 | A5:6 E6:2 A5:6 C#6:2 | \
+             A5:2 C#6 A5 E6 A5:4 A5 | A5:4 -:12",
+            "IV I | V I | I | IV I | V I | I | I | I",
         )
         .in_key(A, Major),
     ],
     form: &[
         "Pickup",
         "Theme",
-        "Theme",
+        "Theme 2",
+        "Middle",
         "Theme end",
-        "Refrain pickup",
-        "Refrain",
-        "Refrain",
+        "Middle",
+        "Theme end 2",
+        "March",
+        "March 2",
+        "Episode",
+        "Episode 2",
+        "Scales",
+        "Episode end",
+        "Scales",
+        "Episode end 2",
+        "March",
+        "March to the theme",
+        "Theme",
+        "Theme 2",
+        "Middle",
+        "Theme end",
+        "Middle",
+        "Theme end to the finale",
+        "Finale",
+        "Finale 2",
+        "Coda",
+        "Last bars",
     ],
     drums_from: 1,
     about: "Each turn, B A G sharp A, circles a note from the semitone below it. Mozart was \
-            imitating the Turkish military bands that were the fashion in Vienna. The theme \
-            is in A minor; the refrain that answers it turns to A major, the same key with \
-            its third raised, as in the sonata.",
+            imitating the Turkish military bands that were the fashion in Vienna. The rondo \
+            changes key as the sonata does. The theme is in A minor, with a few bars around \
+            C major in its middle. The loud march turns to A major, the same key with its \
+            third raised: the key signature gets three sharps. Under the same three sharps, \
+            the running passages are in F sharp minor, A major's relative minor, with a few \
+            bars of A major scales between them. The march comes back, the sharps go for the \
+            A minor theme, and the finale and the coda end in A major. Every repeat is \
+            played, and each bar here holds two bars of the score.",
 };
 
 // Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/folkinfo/abc_tune_folkinfo_1541.abc
