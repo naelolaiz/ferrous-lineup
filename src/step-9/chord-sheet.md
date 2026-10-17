@@ -124,7 +124,11 @@ each word alone. Instead, at each word it tries the longest run of
 words first, up to four, and takes the first that reads as a harmony:
 
 ```rust
-let longest = (at + 1..=words.len().min(at + MOST_WORDS))
+let holds_at = words[at..]
+    .iter()
+    .position(|word| matches!(*word, "/" | "."))
+    .map_or(words.len(), |offset| at + offset);
+let longest = (at + 1..=holds_at.min(at + MOST_WORDS))
     .rev()
     .find_map(|end| {
         HarmonyName::parse_in(&words[at..end].join(" "), key)
@@ -136,6 +140,12 @@ let longest = (at + 1..=words.len().min(at + MOST_WORDS))
 `(a..=b).rev()` counts down from `b` to `a`, and `find_map` stops at the
 first `Some`. So "Menor 3 T2 C" reads "Menor 3 T2 C" (not a harmony),
 then "Menor 3 T2" (a micromode), and goes on from "C".
+
+A run never goes past a `/` standing alone (`holds_at` is where the next
+one is), because that slash is a beat: "A E / B" is A, E held two beats,
+then B, not A and the slash chord E/B. That rule came later, when
+reading charts as text found the mistake
+([Chord sheets as text](text-chord-sheets.md#two-old-mistakes-found-by-a-round-trip)).
 
 ### When the text cannot be read
 
