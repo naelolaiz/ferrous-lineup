@@ -14,6 +14,7 @@ pub(super) const JINGLE_BELLS: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    style: "ii–V–I",
     parts: &[
         Part::new(
             "Verse",
@@ -50,6 +51,7 @@ pub(super) const SAINTS: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Swing",
+    style: "New Orleans",
     parts: &[Part::new(
         "Chorus",
         "-:4 C5:4 E5 F5 | G5:16 | -:4 C5:4 E5 F5 | G5:16 | \
@@ -76,6 +78,7 @@ pub(super) const ENTERTAINER: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    style: "New Orleans",
     parts: &[
         Part::new("Pickup", "-:12 D5:2 D#5", "V"),
         Part::new(
@@ -108,6 +111,7 @@ pub(super) const HAPPY_BIRTHDAY: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Waltz,
     rhythm: "Jazz waltz",
+    style: "Jazz waltz",
     parts: &[Part::new(
         "Song",
         "-:8 G4:3 G4:1 | A4:4 G4 C5 | B4:8 G4:3 G4:1 | A4:4 G4 D5 | C5:8 G4:3 G4:1 | \
@@ -133,6 +137,7 @@ pub(super) const TWO_FIVE_WALK: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    style: "ii–V–I",
     parts: &[Part::new(
         "Head",
         "-:2 D5:2 F5 A5 C6:4 A5 | B5:2 A5 G5 F5 E5 D5 B4:4 | C5 E5:2 G5 B5:8 | _:8 -:8 | \

@@ -16,6 +16,7 @@ pub(super) const MIDNIGHT_SHUFFLE: Song = Song {
     comping: Comping::Shuffle,
     bass: Bass::Boogie,
     rhythm: "Shuffle",
+    style: "Twelve-bar blues",
     parts: &[Part::new(
         "Chorus",
         "-:4 C5:3 D5:1 E5:4 G5 | A5:3 G5:1 E5:4 D5 C5 | A4:12 -:4 | -:16 | \
@@ -42,6 +43,7 @@ pub(super) const ROLLING_BOOGIE: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Boogie,
     rhythm: "Shuffle",
+    style: "Twelve-bar blues",
     parts: &[Part::new(
         "Chorus",
         "G5:3 Bb5:1 G5:3 F5:1 Eb5:3 C5:1 -:4 | C5:4 Eb5:3 C5:1 F5:4 -:4 | \
@@ -70,6 +72,7 @@ pub(super) const MINOR_MOOD: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Jazz ballad",
+    style: "Minor blues",
     parts: &[Part::new(
         "Chorus",
         "-:4 A4:2 C5 D5:4 E5 | G5:6 E5:2 D5:4 C5 | A4:12 -:4 | -:16 | \

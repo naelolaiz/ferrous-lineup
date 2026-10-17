@@ -20,6 +20,7 @@ pub(super) const CANON: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    style: "Hymn",
     parts: &[
         Part::new("Ground", "-:16 | -:16", CANON_GROUND),
         // Each violin starts two bars after the one before.
@@ -45,6 +46,7 @@ pub(super) const FUR_ELISE: Song = Song {
     comping: Comping::Held,
     bass: Bass::None,
     rhythm: "",
+    style: "",
     parts: &[
         Part::new("Pickup", "-:4 E5:1 D#5", "").with_left("-:6"),
         Part::new(
@@ -110,6 +112,7 @@ pub(super) const MOUNTAIN_KING: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Epic toms",
+    style: "Epic minor",
     parts: &[
         Part::new(
             "Theme",
@@ -151,6 +154,7 @@ pub(super) const MINUET: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "",
+    style: "Waltz",
     parts: &[
         Part::new(
             "A",
@@ -187,6 +191,7 @@ pub(super) const BLUE_DANUBE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    style: "Waltz",
     parts: &[
         Part::new("Pickup", "-:8 D4:4", "I"),
         Part::new(
@@ -225,6 +230,7 @@ pub(super) const BRAHMS_LULLABY: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Held,
     rhythm: "",
+    style: "Waltz",
     parts: &[Part::new(
         "Lullaby",
         "-:8 E5:2 E5 | G5:6 E5:2 E5:4 | G5:4 -:4 E5:2 G5 | C6:4 B5:6 A5:2 | A5:4 G5 D5:2 E5 | \
@@ -251,6 +257,7 @@ pub(super) const MORNING_MOOD: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "",
+    style: "Six-eight ballad",
     parts: &[Part::new(
         "Sunrise",
         "G5:2 E5 D5 C5 D5 E5 | G5:2 E5 D5 C5 D5:1 E5 D5 E5 | G5:2 E5 G5 A5 E5 A5 | G5:2 E5 D5 C5:6",
@@ -274,6 +281,7 @@ pub(super) const NEW_WORLD: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    style: "Hymn",
     parts: &[Part::new(
         "Largo",
         "E5:6 G5:2 G5:8 | E5:6 D5:2 C5:8 | D5:6 E5:2 G5:6 E5:2 | D5:16 | E5:6 G5:2 G5:8 | \
@@ -299,6 +307,7 @@ pub(super) const SHCHEDRYK: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    style: "",
     parts: &[
         Part::new(
             "Bells",
@@ -335,6 +344,7 @@ pub(super) const FUNERAL_MARCH: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "March",
+    style: "Epic minor",
     parts: &[Part::new(
         "March",
         "Bb4:4 Bb4:3 Bb4:1 Bb4:8 | Bb4:4 Bb4:3 Bb4:1 Bb4:8 | Bb4:4 Bb4:3 Bb4:1 Bb4:4 Db5:3 C5:1 | \

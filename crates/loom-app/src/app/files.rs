@@ -15,6 +15,7 @@ use super::LoomApp;
 use super::export::MidiExport;
 use super::library::Demo;
 use crate::channel_rack::is_project_file;
+use crate::library_browser::Tried;
 use crate::piano_roll::PianoRoll;
 
 const NEW: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::N);
@@ -238,6 +239,7 @@ impl LoomApp {
     pub(super) fn replace_project(&mut self, project: Project, path: Option<PathBuf>) {
         self.project = project;
         self.auditions.clear();
+        self.song_library = Tried::default();
         self.file.saved = self.project.clone();
         self.file.path = path;
         self.pattern = 0;

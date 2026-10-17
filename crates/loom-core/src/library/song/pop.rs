@@ -14,6 +14,7 @@ pub(super) const AULD_LANG_SYNE: Song = Song {
     comping: Comping::Ballad,
     bass: Bass::Held,
     rhythm: "Pop ballad",
+    style: "Piano ballad",
     parts: &[
         Part::new("Intro", "-:16 | -:12 C5:4", "I | V7"),
         Part::new(
@@ -47,6 +48,7 @@ pub(super) const LONDON_BRIDGE: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Octaves,
     rhythm: "Dance pop",
+    style: "Dance pop",
     parts: &[Part::new(
         "Tune",
         "G5:6 A5:2 G5:4 F5 | E5 F5 G5:8 | D5:4 E5 F5:8 | E5:4 F5 G5:8 | \
@@ -71,6 +73,7 @@ pub(super) const OLD_MACDONALD: Song = Song {
     comping: Comping::Tresillo,
     bass: Bass::Dembow,
     rhythm: "Afrobeats",
+    style: "Afropop",
     parts: &[Part::new(
         "Song",
         "G5:4 G5 G5 D5 | E5 E5 D5:8 | B5:4 B5 A5 A5 | G5:12 D5:4 | \
@@ -98,6 +101,7 @@ pub(super) const DECK_THE_HALLS: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Pop beat",
+    style: "Four chords",
     parts: &[Part::new(
         "Verse",
         "G5:6 F5:2 E5:4 D5 | C5 D5 E5 C5 | D5:2 E5 F5 D5 E5:6 D5:2 | C5:4 B4 C5:8 | \
@@ -135,6 +139,7 @@ pub(super) const THREE_BLIND_MICE: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Six-eight",
+    style: "Jig",
     parts: &[
         Part::new("Alone", THREE_BLIND_MICE_TUNE, THREE_BLIND_MICE_CHORDS),
         Part::new("Round", THREE_BLIND_MICE_TUNE, THREE_BLIND_MICE_CHORDS).with_voices(&[0, 4, 8]),
@@ -173,6 +178,7 @@ pub(super) const SKIP_TO_MY_LOU: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Country train",
+    style: "Country",
     parts: &[Part::new(
         "Song",
         "E5:4 E5:2 E5 C5 C5 C5:4 | E5:4 E5:2 E5 G5:8 | D5:4 D5:2 D5 B4 B4 B4:4 | D5:4 D5:2 D5 F5:8 | \
@@ -199,6 +205,7 @@ pub(super) const POP_GOES_THE_WEASEL: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Six-eight",
+    style: "Jig",
     parts: &[
         Part::new(
             "A",

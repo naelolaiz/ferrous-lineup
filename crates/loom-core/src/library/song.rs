@@ -139,6 +139,10 @@ pub struct Song {
     pub bass: Bass,
     /// A rhythm from [`super::RHYTHMS`], or "" for no drums.
     pub rhythm: &'static str,
+    /// The style in [`super::STYLES`] whose harmony and playing the song
+    /// is closest to, or "" for none. The library shows it, and the
+    /// rhythm, selected while the demo is open.
+    pub style: &'static str,
     pub parts: &'static [Part],
     /// The order the parts are played in, by name.
     pub form: &'static [&'static str],
@@ -389,6 +393,24 @@ mod tests {
     /// A comping written for four beats lands across the beats of a bar
     /// of three, so a song in 3/4 or 6/8 plays one written for three, as
     /// the styles do.
+    /// The style a song names is in the library and in the song's time
+    /// signature, so selecting it never changes the bars.
+    #[test]
+    fn every_song_names_a_real_style() {
+        for song in SONGS {
+            if song.style.is_empty() {
+                continue;
+            }
+            let style = crate::library::Style::named(song.style)
+                .unwrap_or_else(|| panic!("{}: no style called {}", song.name, song.style));
+            assert_eq!(
+                style.time, song.time,
+                "{}: {} is in another time",
+                song.name, song.style
+            );
+        }
+    }
+
     #[test]
     fn songs_in_three_play_in_three() {
         for song in SONGS {

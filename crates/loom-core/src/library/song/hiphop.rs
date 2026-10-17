@@ -14,6 +14,7 @@ pub(super) const TWINKLE: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "Lo-fi",
+    style: "Lo-fi",
     parts: &[Part::new(
         "Tune",
         "C5:4 C5 G5 G5 | A5 A5 G5:8 | F5:4 F5 E5 E5 | D5 D5 C5:8 | \
@@ -40,6 +41,7 @@ pub(super) const GYMNOPEDIE: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Waltz,
     rhythm: "Jazz waltz",
+    style: "Jazz waltz",
     parts: &[
         Part::new(
             "Intro",
@@ -70,6 +72,7 @@ pub(super) const PRELUDE_IN_C: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "Boom bap",
+    style: "Jazz rap",
     parts: &[Part::new(
         "Prelude",
         "C4:2 E4 G4 C5 E5 G4 C5 E5 | C4 D4 A4 D5 F5 A4 D5 F5 | B3 D4 G4 D5 F5 G4 D5 F5 | \
@@ -98,6 +101,7 @@ pub(super) const SAKURA: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "R&B",
+    style: "R&B minor",
     parts: &[Part::new(
         "Song",
         "A4:4 A4 B4:8 | A4:4 A4 B4:8 | A4:4 B4 C5 B4 | A4 B4:2 A4 F4:8 | \
@@ -126,6 +130,7 @@ pub(super) const DIES_IRAE: Song = Song {
     comping: Comping::Held,
     bass: Bass::Sub,
     rhythm: "Trap",
+    style: "Trap minor",
     parts: &[
         Part::new(
             "Chant",

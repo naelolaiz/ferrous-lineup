@@ -14,6 +14,7 @@ pub(super) const AMAZING_GRACE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    style: "Country waltz",
     parts: &[
         Part::new("Intro", "-:12 | -:8 D5:4", "I | V"),
         Part::new(
@@ -43,6 +44,7 @@ pub(super) const JOY_TO_THE_WORLD: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::Walking,
     rhythm: "Motown",
+    style: "Motown",
     parts: &[Part::new(
         "Verse",
         "C6:4 B5:3 A5:1 G5:6 F5:2 | E5:4 D5 C5:6 G5:2 | A5:6 A5:2 B5:6 B5:2 | \
@@ -70,6 +72,7 @@ pub(super) const DORIAN_STRUT: Song = Song {
     comping: Comping::Funk,
     bass: Bass::Funk,
     rhythm: "Funk",
+    style: "Funk vamp",
     parts: &[
         Part::new(
             "Riff",
@@ -102,6 +105,7 @@ pub(super) const SUNDAY_SEVENTH: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "Neo soul",
+    style: "Neo-soul",
     parts: &[
         Part::new(
             "Call",
@@ -135,6 +139,7 @@ pub(super) const WADE_IN_THE_WATER: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "Neo soul",
+    style: "R&B minor",
     parts: &[
         Part::new(
             "Chorus",
@@ -174,6 +179,7 @@ pub(super) const SWING_LOW: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Quarters,
     rhythm: "R&B",
+    style: "Soul",
     parts: &[
         Part::new(
             "Chorus",
@@ -213,6 +219,7 @@ pub(super) const DOWN_BY_THE_RIVERSIDE: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Walking,
     rhythm: "Motown",
+    style: "Motown",
     parts: &[
         Part::new("Pickup", "-:12 D5:2 C5:2", "I"),
         Part::new(
@@ -254,6 +261,7 @@ pub(super) const GO_DOWN_MOSES: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Quarters,
     rhythm: "R&B",
+    style: "R&B minor",
     parts: &[
         Part::new("Pickup", "-:12 G4:4", "i"),
         Part::new(
@@ -291,6 +299,7 @@ pub(super) const JOSHUA: Song = Song {
     comping: Comping::Funk,
     bass: Bass::Funk,
     rhythm: "Funk",
+    style: "Funk vamp",
     parts: &[
         Part::new(
             "Chorus",
@@ -329,6 +338,7 @@ pub(super) const MOTHERLESS_CHILD: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "Neo soul",
+    style: "R&B minor",
     parts: &[
         Part::new(
             "Verse",
@@ -373,6 +383,7 @@ pub(super) const NOBODY_KNOWS: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Quarters,
     rhythm: "R&B",
+    style: "Soul",
     parts: &[
         Part::new(
             "Chorus",
@@ -409,6 +420,7 @@ pub(super) const MICHAEL_ROW: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Walking,
     rhythm: "Motown",
+    style: "Motown",
     parts: &[
         Part::new("Pickup", "-:8 G4:4 B4:4", "I"),
         Part::new(
@@ -441,6 +453,7 @@ pub(super) const HIS_EYE_IS_ON_THE_SPARROW: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "Six-eight",
+    style: "Six-eight ballad",
     parts: &[
         Part::new(
             "Verse",
@@ -484,6 +497,7 @@ pub(super) const DEEP_RIVER: Song = Song {
     comping: Comping::Ballad,
     bass: Bass::Held,
     rhythm: "Neo soul",
+    style: "Neo-soul",
     parts: &[
         Part::new(
             "Verse",
@@ -522,6 +536,7 @@ pub(super) const CLOSER_WALK: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Walking,
     rhythm: "Swing",
+    style: "Gospel",
     parts: &[Part::new(
         "Verse",
         "G4:6 G#4:2 A4:2 E4:2 G4:2 F#4:2 | F4:16 | D5:6 C5:2 B4:2 G4:2 A4:2 C5:2 | A4:2 G4:14 | \
@@ -551,6 +566,7 @@ pub(super) const WILL_THE_CIRCLE: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Walking,
     rhythm: "Motown",
+    style: "Motown",
     parts: &[
         Part::new("Pickup", "-:12 E4:3 F4:1", "I"),
         Part::new(
@@ -589,6 +605,7 @@ pub(super) const O_HAPPY_DAY: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    style: "Country waltz",
     parts: &[
         Part::new("Pickup", "D4:4 G4:4 A4:4", "V I V"),
         Part::new(
@@ -632,6 +649,7 @@ pub(super) const STEAL_AWAY: Song = Song {
     comping: Comping::Ballad,
     bass: Bass::Held,
     rhythm: "Neo soul",
+    style: "Neo-soul",
     parts: &[
         Part::new(
             "Chorus",
@@ -669,6 +687,7 @@ pub(super) const WERE_YOU_THERE: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    style: "Gospel",
     parts: &[
         Part::new("Pickup", "-:8 D4:4 G4:4", "V"),
         Part::new(
@@ -702,6 +721,7 @@ pub(super) const ROLL_CALLED_UP_YONDER: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Walking,
     rhythm: "Motown",
+    style: "Motown",
     parts: &[
         Part::new("Pickup", "-:12 C5:3 D5:1", "I"),
         Part::new(
@@ -743,6 +763,7 @@ pub(super) const OLD_TIME_RELIGION: Song = Song {
     comping: Comping::Gospel,
     bass: Bass::Walking,
     rhythm: "Motown",
+    style: "Motown",
     parts: &[
         Part::new("Pickup", "-:8 G4:2 G4:2 A4:4", "I"),
         Part::new(
@@ -773,6 +794,7 @@ pub(super) const NEED_OF_PRAYER: Song = Song {
     comping: Comping::Funk,
     bass: Bass::Funk,
     rhythm: "Funk",
+    style: "Funk dominant",
     parts: &[
         Part::new("Pickup", "-:12 E5:4", "I"),
         Part::new(
