@@ -302,8 +302,12 @@ impl Scale {
     /// is used instead.
     ///
     /// A twelve-tone row or a pitch-class set has no letters of its own,
-    /// so its notes take their usual names (see [`NoteName::chromatic`]).
+    /// so its notes take their usual names (see [`NoteName::chromatic`]),
+    /// except a set that is a scale, which is spelled as that scale.
     pub fn spell(self, pitch_class: PitchClass) -> NoteName {
+        if let Some(scale) = self.set_as_scale() {
+            return scale.spell(pitch_class);
+        }
         if !self.kind.is_tonal() {
             return NoteName::chromatic(pitch_class);
         }
@@ -318,6 +322,23 @@ impl Scale {
         } else {
             name.simplified()
         }
+    }
+
+    /// The scale a pitch-class set is, if its notes are exactly those of
+    /// one of the scales of tonal music on its root: the set 7-35 on C is
+    /// C major, and on D it is D Dorian. Such a set is spelled as that
+    /// scale, so E major as a set keeps its G#, C# and D# rather than
+    /// the usual Ab and Eb.
+    fn set_as_scale(self) -> Option<Scale> {
+        let ScaleKind::Set(set) = self.kind else {
+            return None;
+        };
+        let semitones = set.semitones();
+        ScaleKind::ALL
+            .into_iter()
+            .filter(|&kind| kind != ScaleKind::Chromatic)
+            .find(|kind| kind.tonal_intervals() == semitones.as_slice())
+            .map(|kind| Scale::new(self.root, kind))
     }
 
     /// A note's name and octave, spelled in this key: in C# harmonic
@@ -368,6 +389,9 @@ impl Scale {
     /// Without a key (a row or a set) the root is written as
     /// [`Chord::root_name`] chooses.
     pub fn spell_root(self, chord: Chord) -> NoteName {
+        if let Some(scale) = self.set_as_scale() {
+            return scale.spell_root(chord);
+        }
         if !self.kind.is_tonal() {
             return chord.root_name();
         }
@@ -756,6 +780,44 @@ mod tests {
         assert!(!ScaleKind::Major.notes_follow(row));
         assert!(!set.notes_follow(ScaleKind::Major));
         assert!(set.notes_follow(set));
+    }
+
+    #[test]
+    fn a_set_that_is_a_scale_is_spelled_as_the_scale() {
+        let names = |scale: Scale| -> Vec<String> {
+            scale
+                .pitch_classes()
+                .map(|p| scale.spell(p).to_string())
+                .collect()
+        };
+        for (root, kind) in [
+            (PitchClass::E, ScaleKind::Major),
+            (PitchClass::CSharp, ScaleKind::Major),
+            (PitchClass::DSharp, ScaleKind::NaturalMinor),
+            (PitchClass::A, ScaleKind::HarmonicMinor),
+            (PitchClass::GSharp, ScaleKind::Major),
+            (PitchClass::F, ScaleKind::Major),
+            (PitchClass::D, ScaleKind::Dorian),
+            (PitchClass::E, ScaleKind::MajorPentatonic),
+        ] {
+            let key = Scale::new(root, kind);
+            let set = Scale::set(root, key.pitch_set());
+            assert_eq!(names(set), names(key), "{}", key.name());
+            assert_eq!(set.spell(root), key.spell(root));
+        }
+        assert_eq!(
+            names(Scale::set(
+                PitchClass::E,
+                Scale::new(PitchClass::E, ScaleKind::Major).pitch_set()
+            )),
+            ["E", "F#", "G#", "A", "B", "C#", "D#"]
+        );
+        // The same seven notes on D are D Dorian.
+        let on_d = Scale::set(PitchClass::D, Scale::default().pitch_set());
+        assert_eq!(names(on_d), ["D", "E", "F", "G", "A", "B", "C"]);
+        // A set that is no scale keeps the usual names.
+        let diminished = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 3, 6, 9]));
+        assert_eq!(names(diminished), ["C", "Eb", "F#", "A"]);
     }
 
     #[test]

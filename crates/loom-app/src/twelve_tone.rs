@@ -48,17 +48,28 @@ pub fn remembered_set(ctx: &egui::Context) -> PitchSet {
 }
 
 /// The key a key menu switches to when "pitch-class set" is picked
-/// while the key is `scale`, on `root`. From a row, it is the row's
-/// first group of three, where it is (Webern's Concerto row on C gives
-/// C B Eb, 3-3): the notes the harmony keys were playing, not a set from
-/// somewhere else. Otherwise it is the set used last, moved so it
-/// starts on `root`.
+/// while the key is `scale`, on `root`. The notes of the song stay as
+/// they are, so the set is the one they were already in: the notes the
+/// harmony keys were playing, not a set from somewhere else.
+///
+/// - From a key, it is the key's own scale: C major is the set 7-35 on
+///   C, and its keys are still C, Dm, Em, F, G, Am and Bdim, named as
+///   sets too (3-11, 3-10).
+/// - From a row, it is the row's first group of three, where it is
+///   (Webern's Concerto row on C gives C B Eb, 3-3).
+/// - From the chromatic scale, which holds every note and so says
+///   nothing about the harmony, it is the set used last, moved so it
+///   starts on `root`.
 fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
+    let up = scale.root.semitones_up_to(root);
     if let Some(group) = scale
         .tone_row()
         .and_then(|row| row.segments(3).first().copied())
     {
-        return Scale::set(root, group.transpose(scale.root.semitones_up_to(root)));
+        return Scale::set(root, group.transpose(up));
+    }
+    if scale.kind.is_tonal() && scale.kind != ScaleKind::Chromatic {
+        return Scale::set(root, scale.pitch_set().transpose(up));
     }
     let set = remembered_set(ctx);
     let start = set.normal_form().first().copied().unwrap_or(root);
@@ -160,7 +171,9 @@ pub fn kind_menu(
                 .selectable_label(is_set, "pitch-class set")
                 .on_hover_text(
                     "Any group of notes as a scale, such as the octatonic scale or a \
-                     chord with no name. Notes already written stay as they are.",
+                     chord with no name. Notes already written stay as they are: from a \
+                     key, the set is the key's own notes (C major is 7-35), so the harmony \
+                     keys still match the song.",
                 )
                 .clicked()
                 && !is_set
@@ -981,11 +994,58 @@ mod tests {
             .collect();
         assert_eq!(key.pitch_set(), group);
         assert_eq!(key.pitch_set().set_class().name(), "3-3");
-        // From a scale, with no set used yet: the diminished seventh chord.
+        // From a key, the key's own notes, so nothing has to move: D
+        // major is the set 7-35 on D.
         let d_major = Scale::new(PitchClass::D, ScaleKind::Major);
         let key = set_key(&ctx, d_major, PitchClass::D);
+        assert_eq!(key.root, PitchClass::D);
+        assert_eq!(key.pitch_set(), d_major.pitch_set());
+        assert_eq!(key.pitch_set().set_class().name(), "7-35");
+        // A minor too, and harmonic minor with its G#.
+        let a_minor = Scale::new(PitchClass::A, ScaleKind::NaturalMinor);
+        assert_eq!(
+            set_key(&ctx, a_minor, PitchClass::A).pitch_set(),
+            a_minor.pitch_set()
+        );
+        let harmonic = Scale::new(PitchClass::A, ScaleKind::HarmonicMinor);
+        let key = set_key(&ctx, harmonic, PitchClass::A);
+        assert_eq!(key.pitch_set(), harmonic.pitch_set());
+        assert_eq!(key.spell(PitchClass::GSharp).to_string(), "G#");
+        // From the chromatic scale, with no set used yet: the diminished
+        // seventh chord.
+        let chromatic = Scale::new(PitchClass::D, ScaleKind::Chromatic);
+        let key = set_key(&ctx, chromatic, PitchClass::D);
         assert_eq!(key.pitch_set().set_class().name(), "4-28");
         assert!(key.contains(PitchClass::D));
+    }
+
+    #[test]
+    fn a_key_as_a_set_keeps_its_chords() {
+        use loom_core::harmony::keys::{ChordSize, group_keys};
+        let ctx = egui::Context::default();
+        let c_major = Scale::new(PitchClass::C, ScaleKind::Major);
+        let key = set_key(&ctx, c_major, PitchClass::C);
+        let keys = group_keys(key, ChordSize::Triads).unwrap();
+        let described: Vec<String> = keys
+            .iter()
+            .map(|key| {
+                let names: Vec<String> = key.names.iter().map(|n| n.to_string()).collect();
+                let class = key.pitch_set().set_class().name();
+                format!("{} {} {class}", key.label, names.join(" "))
+            })
+            .collect();
+        assert_eq!(
+            described,
+            [
+                "C C E G 3-11",
+                "Dm D F A 3-11",
+                "Em E G B 3-11",
+                "F F A C 3-11",
+                "G G B D 3-11",
+                "Am A C E 3-11",
+                "Bdim B D F 3-10",
+            ]
+        );
     }
 
     #[test]
