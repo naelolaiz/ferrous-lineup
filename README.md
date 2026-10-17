@@ -150,6 +150,14 @@ your keyboard then plays that part's sound. Shift+click a second bar to
 select several, and **Loop bars** plays them over and over. The clicks
 never reach a saved song or a WAV export.
 
+The **Form** row above it shapes the whole performance. **Intro** puts
+2, 4 or 8 bars in front of the song, a turnaround that leads into its
+first chord (ii–V, or I–vi–ii–V), written on the sheet so you can
+change it. **Choruses** plays the tune that many times, shown once
+between repeat signs on the sheet and the playlist. **Ending** adds two
+bars on the key's tonic after the last chorus: one in the style, then
+the chord struck once and held, with a crash of the cymbal.
+
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's

@@ -257,6 +257,7 @@ fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
     }
     if let Some(band) = &mut project.band {
         band.end = song.step(band.end);
+        band.form.intro = song.step(band.form.intro);
     }
     // A chord changes on a beat, so it goes to the nearest one.
     for marker in &mut playlist_mut.chord_markers {
