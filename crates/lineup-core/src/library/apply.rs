@@ -474,7 +474,7 @@ pub fn use_fill(project: &mut Project, fill: &Rhythm) -> RhythmChange {
     for pattern in 0..patterns {
         let length = length(project, pattern);
         let bar = project.pattern_time(pattern).steps_per_bar();
-        if length < 2 * bar || is_ending(project, pattern) {
+        if length < 2 * bar || is_ending(project, pattern) || is_the_bands(project, pattern) {
             continue;
         }
         let takes_it = if any_drums {
@@ -493,6 +493,13 @@ pub fn use_fill(project: &mut Project, fill: &Rhythm) -> RhythmChange {
         }
     }
     change
+}
+
+/// Whether the band wrote pattern `pattern` (see [`crate::band`]).
+fn is_the_bands(project: &Project, pattern: usize) -> bool {
+    project
+        .pattern(pattern)
+        .is_some_and(|pattern| pattern.player.is_some())
 }
 
 /// Whether every note of pattern `pattern` starts on its first step, as
@@ -530,7 +537,8 @@ fn play_song(
             continue;
         };
         let bar = project.pattern_time(pattern).steps_per_bar();
-        if is_ending(project, pattern) {
+        // The band's parts follow the chord sheet and the band's style.
+        if is_ending(project, pattern) || is_the_bands(project, pattern) {
             continue;
         }
         let drums = has_drums(project, pattern);

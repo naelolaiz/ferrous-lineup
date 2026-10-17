@@ -25,7 +25,9 @@ impl LineupApp {
     /// `label` ("move clip"), and returns whatever `change` returns.
     ///
     /// If nothing actually changed (a clip moved onto itself, a step that
-    /// was already off), nothing is recorded or sent.
+    /// was already off), nothing is recorded or sent. If the change was
+    /// to the chord sheet, the key or the bars, the band plays it again
+    /// as part of the same step (see [`Project::follow_chord_sheet`]).
     pub(super) fn edit<R>(
         &mut self,
         label: &'static str,
@@ -33,6 +35,8 @@ impl LineupApp {
     ) -> R {
         let before = self.project.clone();
         let result = change(&mut self.project);
+        // The band plays what the chord sheet says now, in the same step.
+        self.project.follow_chord_sheet();
         if self.project != before {
             self.sync_audio(&before);
             // `before` is moved into the history here, after its last use.
@@ -78,12 +82,22 @@ impl LineupApp {
                     patterns_moved = true;
                 }
                 Change::InsertPattern(index) => {
-                    let length = self.project.patterns()[index].length();
+                    let pattern = &self.project.patterns()[index];
+                    let (length, bands) = (pattern.length(), pattern.player.is_some());
                     self.send(Command::InsertPattern { index, length });
-                    // A new pattern (added, cloned, or brought back by
-                    // undo) is the one you want to see, from its start.
-                    self.pattern = index;
-                    self.rewind_for_new_pattern();
+                    if bands {
+                        // A part the band wrote, as you typed a chord:
+                        // the pattern you had stays selected.
+                        if index <= self.pattern {
+                            self.pattern += 1;
+                        }
+                    } else {
+                        // A new pattern (added, cloned, or brought back
+                        // by undo) is the one you want to see, from its
+                        // start.
+                        self.pattern = index;
+                        self.rewind_for_new_pattern();
+                    }
                     patterns_moved = true;
                 }
                 Change::RemoveChannel(index) => {
