@@ -14,6 +14,7 @@ mod export;
 mod files;
 mod follow;
 mod import;
+mod key_finder;
 mod library;
 mod live;
 mod view;
@@ -108,6 +109,8 @@ pub struct LoomApp {
     export: Option<export::Export>,
     /// A recording being listened to in the background, if any.
     import: Option<import::Import>,
+    /// Find the key: the key worked out from the music.
+    key_finder: key_finder::KeyFinder,
     /// MIDI, the typing keyboard, and recording.
     live: live::Live,
     /// The last problem to show in the status bar, such as a bad WAV file.
@@ -177,6 +180,7 @@ impl LoomApp {
             samples: SampleCache::new(),
             export: None,
             import: None,
+            key_finder: key_finder::KeyFinder::default(),
             live: live::Live::new(midi),
             message: None,
             notice: None,
@@ -629,6 +633,12 @@ impl LoomApp {
                 for pitch in notes {
                     self.play_typed(MidiMessage::NoteOff { channel: 0, pitch });
                 }
+            }
+            HarmonyAction::MarkHeardKeys => {
+                let spans = self.song_keys_heard();
+                self.edit("mark the keys heard", |project| {
+                    project.mark_heard_keys(&spans);
+                });
             }
         }
     }
@@ -1262,6 +1272,9 @@ impl eframe::App for LoomApp {
             .show(ui, |ui| self.status_bar(ui));
         // Added after the status bar, so it sits just above it.
         let harmony_actions = if self.harmony_keys.open {
+            let seconds = ctx.input(|input| input.stable_dt).min(0.25);
+            self.find_key_live(seconds);
+            let key_heard = self.key_heard();
             let held = self.live.held_pitches();
             let channel = self.piano_roll.channel();
             let channel_name = self
@@ -1283,6 +1296,7 @@ impl eframe::App for LoomApp {
                         &held,
                         &heard,
                         digits,
+                        key_heard.as_ref(),
                     )
                 })
                 .inner

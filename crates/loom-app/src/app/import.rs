@@ -14,14 +14,15 @@ use std::time::Duration;
 
 use eframe::egui;
 use loom_audio::PlayMode;
+use loom_core::harmony::key_finding::KeySpan;
 use loom_core::{Project, midi_file};
 use loom_listen::{arrange, decode_file};
 
 use super::LoomApp;
 
-/// What the import thread gives back: the project and a summary of what
-/// it heard, or why it failed.
-type Outcome = Result<(Project, String), String>;
+/// What the import thread gives back: the project, a summary of what it
+/// heard and the key changes it heard (in song steps), or why it failed.
+type Outcome = Result<(Project, String, Vec<KeySpan>), String>;
 
 /// An import that is running.
 pub(super) struct Import {
@@ -58,6 +59,7 @@ fn listen(path: &Path) -> Outcome {
         .file_stem()
         .map_or_else(|| "Recording".into(), |stem| stem.to_string_lossy());
     let project = arrange::follow(&analysis, lead_in, wav, &title);
+    let keys = arrange::key_spans(&analysis, lead_in);
     let key = analysis
         .scale
         .map_or_else(|| "no clear key".to_string(), |scale| scale.name());
@@ -68,7 +70,7 @@ fn listen(path: &Path) -> Outcome {
         analysis.beats_per_bar,
         analysis.beats.len()
     );
-    Ok((project, summary))
+    Ok((project, summary, keys))
 }
 
 impl LoomApp {
@@ -112,8 +114,9 @@ impl LoomApp {
         }
         if let Some(import) = self.import.take() {
             match import.worker.join() {
-                Ok(Ok((project, summary))) => {
+                Ok(Ok((project, summary, keys))) => {
                     self.replace_project(project, None);
+                    self.key_finder.new_project(&self.project, keys);
                     self.notice = Some(summary);
                     self.set_mode(PlayMode::Song);
                 }

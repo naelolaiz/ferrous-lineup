@@ -18,7 +18,7 @@
 mod analysis;
 mod chord;
 mod hints;
-mod key_finding;
+pub mod key_finding;
 pub mod keys;
 mod micromode;
 mod pitch_set;
