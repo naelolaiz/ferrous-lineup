@@ -835,3 +835,394 @@ pub(super) const MOLLY_MALONE: Song = Song {
             beat to the bar. Two chords, C and G7, trade places every two bars, and the \
             chorus \"alive, alive, oh\" is the verse's second half sung again.",
 };
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201357840.abc
+// (Frank Nordberg's Musica Viva ABC, in A minor; the triplets are written as two
+// sixteenths and an eighth. Checked against the Wikifonia lead sheet,
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/UkranianfolkdancetuneAbrahamZeviZviIdelsohn1918HavaNagila.abc,
+// whose B B B in the fifth bar of the last part is followed here where Musica Viva has G G G.)
+pub(super) const HAVA_NAGILA: Song = Song {
+    name: "Hava Nagila",
+    origin: "Hasidic melody, traditional; arranged by Abraham Zevi Idelsohn, 1918",
+    feel: "Hora",
+    genre: Genre::Folk,
+    tonic: A,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 132.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Two-step",
+    style: "Polka",
+    parts: &[
+        Part::new(
+            "A",
+            "E4:4 E4 -:2 G#4 F4 E4 | G#4:4 G#4 -:2 B4 A4 G#4 | A4:4 A4 -:2 C5 B4 A4 | \
+             G#4:4 F4:1 E4 F4:2 G#4:8 | E4:4 E4 -:2 G#4 F4 E4 | G#4:4 G#4 -:2 B4 A4 G#4 | \
+             A4:4 A4 -:2 C5 B4 A4 | G#4:4 F4:1 E4 F4:2 E4:8",
+            "V | V | i | V iv V V | V | V | i | V iv V V",
+        ),
+        Part::new(
+            "B",
+            "G#4:2 G#4:4 F4:2 E4 E4 E4:4 | F4:2 F4:4 E4:2 D4 D4 D4:4 | \
+             D4:4 F4:3 E4:1 D4:2 D4 A4:4 | G#4:4 F4:1 E4 F4:2 G#4:8 | \
+             G#4:2 G#4:4 F4:2 E4 E4 E4:4 | F4:2 F4:4 E4:2 D4 D4 D4:4 | \
+             D4:4 F4:3 E4:1 D4:2 D4 A4:4 | G#4:4 F4:1 E4 F4:2 E4:8",
+            "V | iv | iv | V iv V V | V | iv | iv | V iv V V",
+        ),
+        Part::new(
+            "C",
+            "A4:8 A4 | A4:4 A4 A4 A4 | A4:1 A4 A4:2 C5:3 B4:1 A4:2 C5 B4 A4 | \
+             A4:1 A4 A4:2 C5:3 B4:1 A4:2 C5 B4 A4 | B4:1 B4 B4:2 D5:3 C5:1 B4:2 D5 C5 B4 | \
+             B4:1 B4 B4:2 D5:3 C5:1 B4:2 D5 C5 B4 | B4:1 B4 B4:2 E5:4 B4:1 B4 B4:2 E5:3 E4:1 | \
+             E4:2 E4 C5 B4 A4:8",
+            "i | i | i | i | bVII | bVII | V | V7 i",
+        ),
+    ],
+    form: &["A", "B", "C", "A", "B", "C"],
+    drums_from: 0,
+    about: "A Hasidic tune in the Jewish \"freygish\" mode: E F G sharp A B C D, the notes \
+            of A harmonic minor with E as home, so the first two parts circle the E major \
+            chord and lean on D minor. The last part, \"uru achim\", climbs to A minor and G \
+            and comes home to A with the E7 cadence, over a two-step oom-pah.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201333973.abc
+// (John Chambers' ABC with chords, in C; here in F, up a fourth. Checked against his ABC of
+// "The Everyday Song Book", 1927, no. 144, https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201230980.abc,
+// which has the same notes.)
+pub(super) const SANTA_LUCIA: Song = Song {
+    name: "Santa Lucia",
+    origin: "Neapolitan song, published by Teodoro Cottrau, 1849",
+    feel: "Waltz",
+    genre: Genre::Folk,
+    tonic: F,
+    mode: Major,
+    time: THREE_FOUR,
+    tempo: 104.0,
+    comping: Comping::Arp3,
+    bass: Bass::Waltz,
+    rhythm: "Waltz",
+    style: "Country waltz",
+    parts: &[
+        Part::new(
+            "A",
+            "C5:4 C5:6 F5:2 | F5:2 E5 E5:8 | Bb4:4 Bb4:6 D5:2 | D5:2 C5 C5:8 | A4:4 D5 C5 | \
+             C5:2 B4 Bb4:8 | Bb4:4 A4 G4 | D5:4 C5:8",
+            "I | V7 | IV | I | VI7 | ii | V7 | I",
+        ),
+        Part::new(
+            "B",
+            "A5:4 G5 F5 | E5:2 D5 G5:8 | G5:4 F5 D5 | B4:2 C5 F5:8 | \
+             A5:2 F5 F5 C5 C5 A4 | Bb4:2 G5 G5:8 | G5:4 D5:6 E5:2 | G5:4 F5:8",
+            "I | ii | IV | I | I | ii | V7 | V7 I I",
+        ),
+        Part::new(
+            "B end",
+            "A5:4 G5 F5 | E5:2 D5 G5:8 | G5:4 F5 D5 | B4:2 C5 F5:8 | \
+             A5:2 F5 F5 C5 C5 A4 | Bb4:2 G5 G5:8 | G5:4 A5:6 G5:2 | G5:4 F5:8",
+            "I | ii | IV | I | I | ii | V7 | V7 I I",
+        ),
+    ],
+    form: &["A", "A", "B", "B end"],
+    drums_from: 0,
+    about: "A Naples boat song, rocking in 3/4: almost every bar is a long note and a short \
+            one. D7 (VI7) in the fifth bar is a secondary dominant that leads to G minor, and \
+            the tune slides down a semitone at a time, C, B, B flat, to get there; in the \
+            second half B natural leans up into C, the fifth of the home chord.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201233923.abc
+// (John Chambers' 1999 ABC, "Tarantella Napoletana [Am,C]", parts A, B and C; his optional
+// D part is left out. Checked against the E minor set "48 bar Jigs 3", from Simon Ritchie,
+// in https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201293005.abc.)
+// Each strain ends in the pickup of the strain that follows it.
+pub(super) const TARANTELLA_NAPOLETANA: Song = Song {
+    name: "Tarantella napoletana",
+    origin: "Neapolitan dance, traditional",
+    feel: "Tarantella",
+    genre: Genre::Folk,
+    tonic: A,
+    mode: HarmonicMinor,
+    time: SIX_EIGHT,
+    tempo: 168.0,
+    comping: Comping::Arp3,
+    bass: Bass::Held,
+    rhythm: "Tarantella",
+    style: "Tarantella",
+    parts: &[
+        Part::new("Pickup", "-:6 A5:4 A5:2", "i"),
+        Part::new(
+            "A",
+            "E5:4 E5:2 A5:4 A5:2 | E5:6 E5:4 E5:2 | F5:6 F5:2 G5 F5 | F5:4 E5:2 E5 F5 E5 | \
+             E5:4 D5:2 D5 E5 D5 | D5:4 C5:2 C5 D5 C5 | B4:4 B4:2 C5:4 B4:2 | A4:4 -:2 A5:4 A5:2",
+            "i | i | iv | i | V7 | i | V7 | i",
+        ),
+        Part::new(
+            "A to B",
+            "E5:4 E5:2 A5:4 A5:2 | E5:6 E5:4 E5:2 | F5:6 F5:2 G5 F5 | F5:4 E5:2 E5 F5 E5 | \
+             E5:4 D5:2 D5 E5 D5 | D5:4 C5:2 C5 D5 C5 | B4:4 B4:2 C5:4 B4:2 | A4:4 -:2 A4:4 B4:2",
+            "i | i | iv | i | V7 | i | V7 | i",
+        ),
+        Part::new(
+            "B",
+            "C5:2 B4 C5 D5 C5 B4 | C5:2 B4 C5 D5 C5 B4 | C5:2 B4 A4 G#4 A4 B4 | A4:4 -:2 A4:4 B4:2 | \
+             C5:2 B4 C5 D5 C5 D5 | E5:2 D5 E5 F5 E5 D5 | C5:2 B4 A4 G#4 A4 B4 | A4:4 -:2 A4:4 B4:2",
+            "i iv | i iv | i V7 | i | i iv | i iv | i V7 | i",
+        ),
+        Part::new(
+            "B to A",
+            "C5:2 B4 C5 D5 C5 B4 | C5:2 B4 C5 D5 C5 B4 | C5:2 B4 A4 G#4 A4 B4 | A4:4 -:2 A4:4 B4:2 | \
+             C5:2 B4 C5 D5 C5 D5 | E5:2 D5 E5 F5 E5 D5 | C5:2 B4 A4 G#4 A4 B4 | A4:4 -:2 A5:4 A5:2",
+            "i iv | i iv | i V7 | i | i iv | i iv | i V7 | i",
+        ),
+        Part::new(
+            "A to C",
+            "E5:4 E5:2 A5:4 A5:2 | E5:6 E5:4 E5:2 | F5:6 F5:2 G5 F5 | F5:4 E5:2 E5 F5 E5 | \
+             E5:4 D5:2 D5 E5 D5 | D5:4 C5:2 C5 D5 C5 | B4:4 B4:2 C5:4 B4:2 | A4:4 -:2 G4:2 A4 B4",
+            "i | i | iv | i | V7 | i | V7 | i bVII7",
+        ),
+        Part::new(
+            "C",
+            "C5:2 B4 C5 E5 C5 E5 | G5:6 G5:2 A5 G5 | G5:4 F5:2 F5 G5 F5 | F5:4 E5:2 G4:2 A4 B4 | \
+             C5:2 B4 C5 E5 C5 E5 | G5:6 G5:2 F#5 G5 | B5:2 A5 G5 F5 E5 D5 | C5:4 -:2 G4:2 A4 B4",
+            "I | I | V7 | I V7 | I | I | V7 | I V7",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "C to A",
+            "C5:2 B4 C5 E5 C5 E5 | G5:6 G5:2 A5 G5 | G5:4 F5:2 F5 G5 F5 | F5:4 E5:2 G4:2 A4 B4 | \
+             C5:2 B4 C5 E5 C5 E5 | G5:6 G5:2 F#5 G5 | B5:2 A5 G5 F5 E5 D5 | C5:4 -:2 A5:4 A5:2",
+            "I | I | V7 | I V7 | I | I | V7 | I",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "A end",
+            "E5:4 E5:2 A5:4 A5:2 | E5:6 E5:4 E5:2 | F5:6 F5:2 G5 F5 | F5:4 E5:2 E5 F5 E5 | \
+             E5:4 D5:2 D5 E5 D5 | D5:4 C5:2 C5 D5 C5 | B4:4 B4:2 C5:4 B4:2 | A4:4 -:8",
+            "i | i | iv | i | V7 | i | V7 | i",
+        ),
+    ],
+    form: &[
+        "Pickup", "A", "A to B", "B", "B to A", "A", "A to C", "C", "C to A", "A end",
+    ],
+    drums_from: 1,
+    about: "The whirling dance of Naples, in a fast 6/8: two groups of three eighth notes \
+            to the bar, every strain starting on a pickup. The first strain falls from the \
+            high A down the A minor scale over A minor, D minor and E7; the second circles C, \
+            B and D with the G sharp of E7 pulling home; the third turns to C major, the \
+            relative major, and climbs to the high B.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201233923.abc
+// (John Chambers' 1999 ABC with chords, "Torna a Surriento [Dm,D]", tune 17 of the file;
+// here in G minor and G major, up a fourth.)
+pub(super) const TORNA_A_SURRIENTO: Song = Song {
+    name: "Torna a Surriento",
+    origin: "Ernesto De Curtis, words by Giambattista De Curtis, 1902",
+    feel: "Waltz",
+    genre: Genre::Folk,
+    tonic: G,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 112.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Tango vals",
+    style: "Vals in minor",
+    parts: &[
+        Part::new(
+            "A",
+            "G4:2 A4 Bb4 C5 D5 Bb4 | D5:4 D5:8 | C5:2 D5 Eb5 C5 Eb5 C5 | G5:4 G5:8 | \
+             G5:2 A5 Bb5 A5 G5 A5 | D5:4 D5:8 | C5:2 D5 C5 Bb4 A4 Bb4 | G4:8 -:4",
+            "i | i | iv | i | bVI | i | V7 | i",
+        ),
+        Part::new(
+            "B",
+            "G5:2 F#5 D5 E5 F#5 D5 | E5:4 E5:8 | F#5:2 E5 D5 E5 F#5 D5 | E5:4 E5:8 | \
+             B4:2 C5 D5 B4 A4 G4 | C5:4 C5:8 | D5:2 E5 F#5 E5 D5 F#5 | B4:8 -:4",
+            "I | ii | V7 | I | I | ii | V7 | I",
+        )
+        .in_key(G, Major),
+        Part::new(
+            "C",
+            "G5:2 F#5 D5 E5 F#5 D5 | E5:4 E5:8 | A5:2 G5 F#5 G5 A5 F#5 | G5:4 G5:8 | \
+             G5:2 A5 Bb5 A5 G5 A5 | D5:4 D5:8 | C5:2 D5 C5 Bb4 A4 Bb4 | G4:8 -:4",
+            "I | ii | V7 | bVI | iv | i | V7 | i",
+        ),
+        Part::new(
+            "D",
+            "G5:2 A5 F#5:6 E5:2 | G5:12 | -:2 F#5 G5 A5 F#5 E5 | D5:4 D5:8 | \
+             C5:4 Eb5 G5 | Bb5:6 A5:2 G5:4 | -:2 A5 F#5:6 G5:2 | G5:8 -:4",
+            "I | ii | V7 | I | iv | i | V7 | i",
+        ),
+    ],
+    form: &["A", "A", "B", "C", "D", "A", "A", "B", "C", "D"],
+    drums_from: 0,
+    about: "A Neapolitan song that moves between minor and major on the same home note: the \
+            verse is in G minor, and the second part turns to G major with A minor and D7. \
+            The minor comes back through E flat (bVI) and C minor (iv), chords borrowed from \
+            G minor, and the refrain \"Ma nun me lassà\" climbs to the high B flat before \
+            the last cadence.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201247709.abc
+// (John Chambers' ABC with chords, from the Rustic Roots collection, 2020, in G; here in C,
+// up a fourth. The turn A B A, an eighth-note triplet there, is written as sixteenth,
+// eighth, sixteenth.)
+pub(super) const ARIRANG: Song = Song {
+    name: "Arirang",
+    origin: "Korean folk song, traditional",
+    feel: "Waltz",
+    genre: Genre::Folk,
+    tonic: C,
+    mode: Major,
+    time: THREE_FOUR,
+    tempo: 92.0,
+    comping: Comping::Arp3,
+    bass: Bass::Waltz,
+    rhythm: "Waltz",
+    style: "Country waltz",
+    parts: &[
+        Part::new(
+            "A",
+            "G4:6 A4:2 G4 A4 | C5:6 D5:2 C5 D5 | E5:4 D5:1 E5:2 D5:1 C5:2 A4 | \
+             G4:6 A4:2 G4 A4 | C5:6 D5:2 C5 D5 | E5:2 D5 C5 A4 G4 A4 | C5:6 D5:2 C5:4 | C5:8 -:4",
+            "I | I | I | V | I | vi | IV | I",
+        ),
+        Part::new(
+            "B",
+            "G5:4 G5 G5 | G5:1 A5:2 G5:1 E5:2 D5 C5 D5 | E5:4 D5:1 E5:2 D5:1 C5:2 A4 | \
+             G4:6 A4:2 G4 A4 | C5:6 D5:2 C5 D5 | E5:2 D5 C5 A4 G4 A4 | C5:6 D5:2 C5:4 | C5:8 -:4",
+            "I | V | I | V | I | vi | IV | I",
+        ),
+    ],
+    form: &["A", "A", "B", "B"],
+    drums_from: 0,
+    about: "Korea's best-known folk song, in a slow 3/4. The tune uses only the five notes \
+            of the pentatonic scale, C D E G A, with no F and no B, so every chord under it \
+            is easy: C, G, A minor and F. Each line climbs from G to the C above; the second \
+            half starts high, on the G an octave up.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/folktunefinder/abc_tune_folktunefinder_84062.txt
+// (J. Coolegem's klezmer ABC, with chords, in C minor; here in G minor, up a fifth.)
+pub(super) const TUMBALALAIKA: Song = Song {
+    name: "Tumbalalaika",
+    origin: "Yiddish folk song, traditional",
+    feel: "Waltz",
+    genre: Genre::Folk,
+    tonic: G,
+    mode: NaturalMinor,
+    time: THREE_FOUR,
+    tempo: 132.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Waltz",
+    style: "Vals in minor",
+    parts: &[
+        Part::new(
+            "Verse",
+            "D5:8 D5:4 | D5:8 D5:4 | D5:4 C5 Bb4 | A4:12 | C5:8 C5:4 | C5:8 C5:4 | C5:4 Bb4 A4 | \
+             G4:12 | G4:4 Bb4 D5 | G5:8 G5:4 | Bb5:4 A5 G5 | D5:8 D5:4 | F5:4 D5 C5 | A4:8 A4:4 | \
+             C5:4 Bb4 A4 | G4:8 G4:4",
+            "i | i | i | V | V7 | V7 | V7 | i | i | i | i | I7 | iv | V | V7 | i",
+        ),
+        Part::new(
+            "Refrain",
+            "D5:6 D5:2 D5:4 | D5:6 D5:2 D5:4 | D5:4 C5 Bb4 | A4:8 A4:4 | C5:6 C5:2 C5:4 | \
+             C5:6 C5:2 C5:4 | C5:4 Bb4 A4 | G4:8 G4:4 | G4:4 Bb4 D5 | G5:8 G5:4 | Bb5:4 A5 G5 | \
+             D5:8 D5:4 | F5:4 D5 C5 | A4:8 A4:4 | C5:4 Bb4 A4 | G4:12",
+            "i | i | i | V | V7 | V7 | V7 | i | i | i | i | I7 | iv | V | V7 | i",
+        ),
+    ],
+    form: &["Verse", "Refrain", "Verse", "Refrain"],
+    drums_from: 0,
+    about: "A Yiddish riddle song as a slow minor waltz; the verse and the refrain \
+            \"tumbala, tumbala\" are one tune. It holds D over G minor and C over D7, each a \
+            step down, then climbs the G minor chord to the high B flat, where G7 (I7) borrows \
+            a major third to lead to C minor.",
+};
+
+// Source: https://raw.githubusercontent.com/zmk5566/Ruyi-Instrument/main/scrolls/%E8%8C%89%E8%8E%89%E8%8A%B1/1.abc
+// (an ABC of the Jiangsu folk song in C, whose last fourteen bars are the plain tune; here in
+// G, up a fifth. The first eight bars agree with the ABC, an octave higher, at
+// https://raw.githubusercontent.com/Juemuren/piano-lab/main/public/presets/%E8%8C%89%E8%8E%89%E8%8A%B1.abc.
+// Neither has chords.)
+pub(super) const MO_LI_HUA: Song = Song {
+    name: "Mo Li Hua (Jasmine Flower)",
+    origin: "Chinese folk song, Jiangsu, traditional",
+    feel: "Folk ballad",
+    genre: Genre::Folk,
+    tonic: G,
+    mode: MajorPentatonic,
+    time: COMMON,
+    tempo: 68.0,
+    comping: Comping::ArpUpDown,
+    bass: Bass::Held,
+    rhythm: "",
+    style: "Folk",
+    parts: &[
+        Part::new(
+            "Verse",
+            "B4:4 B4:2 D5 E5 G5 G5 E5 | D5:4 D5:2 E5 D5:8 | B4:4 B4:2 D5 E5 G5 G5 E5 | \
+             D5:4 D5:2 E5 D5:8 | D5:4 D5 D5 B4:2 D5 | E5:4 E5 D5:8 | \
+             B4:4 A4:2 B4 D5:4 B4:2 A4 | G4:4 G4:2 A4 G4:8",
+            "I IV | I | I IV | I | I | IV I | vi V | I",
+        ),
+        Part::new(
+            "Ending",
+            "B4:2 A4 G4 B4 A4:6 B4:2 | D5:4 E5:2 G5 D5:8 | A4:4 B4:2 D5 A5:4 G5:2 E5 | \
+             D5:8 E5:4 G5 | A5:6 G5:2 G5 A5 G5 E5 | D5:16",
+            "vi V | I | V IV | I IV | ii IV | I",
+        ),
+    ],
+    form: &["Verse", "Ending", "Verse", "Ending"],
+    drums_from: 0,
+    about: "China's best-known folk song, from Jiangsu, on the five notes of the major \
+            pentatonic scale, G A B D E: there is no C and no F sharp anywhere in it. The \
+            first line is sung twice before the tune climbs to the high A, and the song \
+            ends on D, the fifth, not on G, which leaves it floating. Here without drums.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/main/wikifonia-dataset/original-abc/JohannesBrahmsHungarianDanceNo.abc
+// (a Wikifonia lead sheet in G minor)
+pub(super) const HUNGARIAN_DANCE: Song = Song {
+    name: "Hungarian Dance No. 5",
+    origin: "Johannes Brahms, 1869",
+    feel: "Polka",
+    genre: Genre::Folk,
+    tonic: G,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 120.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Two-step",
+    style: "Polka",
+    parts: &[
+        Part::new(
+            "A",
+            "D4:6 G4:2 Bb4:6 G4:2 | F#4:6 G4:1 A4:1 G4:8 | Eb4:6 F4:1 G4:1 D4:8 | \
+             C4:1 Bb3:1 Bb3:1 A3:1 A3:3 D4:1 G3:8 | D4:6 G4:1 Bb4:1 D5:6 Bb4:2 | \
+             A4:6 Bb4:1 C5:1 Bb4:8 | Eb5:1 F5 G5 Eb5 D5 Eb5 F5 D5 C5 D5 Eb5 C5 Bb4 C5 D5 Bb4 | \
+             C5:1 Bb4 Bb4 A4 A4:3 D5:1 G4:6 -:2",
+            "i | iv i | iv i | V7 i | i | iv i | bVI v iv bIII | V7 i",
+        ),
+        Part::new(
+            "B",
+            "D5:4 D5:4 Eb5:6 D5:2 | -:2 C5:4 B4:1 C5:1 D5:1 C5:1 B4:1 D5:1 C5:2 -:2 | \
+             C5:4 C5:4 D5:6 C5:2 | -:2 Bb4:4 A4:1 Bb4:1 C5:1 Bb4:1 A4:1 C5:1 Bb4:2 -:2 | \
+             A4:4 A4:4 C5:2 Bb4:4 A4:2 | _:2 G4:4 F#4:1 G4:1 A4:1 G4:1 F#4:1 A4:1 G4:2 -:2 | \
+             D5:2 -:2 -:3 D4:1 E4:2 -:2 F#4:2 -:2 | G4:2 G4:4 F#4:1 G4:1 A4:1 G4:1 F#4:1 A4:1 G4:2 -:2 | \
+             Eb5:2 -:2 D5:2 -:2 G5:2 -:6",
+            "I7 | iv | bVII7 | bIII | V7 | bVI | V7 | i | iv6 V7 i i",
+        ),
+    ],
+    form: &["A", "A", "B"],
+    drums_from: 0,
+    about: "Brahms's best-known Hungarian dance, in G minor and in 2/4, with two of its \
+            bars to each bar here. The tune leans on F sharp, the raised seventh of \
+            harmonic minor. The second strain is a chain of dominant sevenths: G7 to C \
+            minor, F7 to B flat, D7 to E flat (a deceptive turn), then D7 home to G minor.",
+};
