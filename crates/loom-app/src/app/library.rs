@@ -94,6 +94,17 @@ impl Demo {
         }
     }
 
+    /// The name the title bar shows for the demo, such as "Für Elise".
+    pub(super) fn name(self) -> &'static str {
+        match self {
+            Demo::Start => "The starting song",
+            Demo::Song(song) => song.name,
+            Demo::Style(style) => style.name,
+            Demo::Row(style) => style.name,
+            Demo::Micromode(style) => style.name,
+        }
+    }
+
     pub(super) fn project(self) -> Project {
         match self {
             Demo::Start => Project::demo(),
@@ -699,6 +710,7 @@ impl LoomApp {
     /// style and rhythm selected in the library.
     pub(super) fn open_demo(&mut self, demo: Demo) {
         self.replace_project(demo.project(), None);
+        self.file.open_demo(demo);
         self.song_library = demo.library();
         self.set_mode(PlayMode::Song);
         self.set_playing(true);
