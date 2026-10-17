@@ -94,6 +94,10 @@ pub fn is_in(project: &Project, time: TimeSignature) -> bool {
 /// 4/4 are 384 steps in 12/8) is cut into patterns that do, and each of
 /// its clips into clips of those, one after the other.
 pub fn remeter(project: &mut Project, time: TimeSignature) -> bool {
+    project.moving_the_band(|project| remeter_song(project, time))
+}
+
+fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
     let bar = time.steps_per_bar();
     if is_in(project, time) || bar > MAX_STEPS {
         return false;
@@ -155,6 +159,8 @@ pub fn remeter(project: &mut Project, time: TimeSignature) -> bool {
             };
             let name = &project.patterns()[index].name;
             project.patterns[copy].name = format!("{name} ({})", piece + 1);
+            // A piece of the band's part is still the band's.
+            project.patterns[copy].player = project.patterns[index].player;
             indices.push(copy);
         }
         for (piece, &target) in indices.iter().enumerate() {
@@ -248,6 +254,9 @@ pub fn remeter(project: &mut Project, time: TimeSignature) -> bool {
     }
     for marker in &mut playlist_mut.key_markers {
         marker.start = song.step(marker.start);
+    }
+    if let Some(band) = &mut project.band {
+        band.end = song.step(band.end);
     }
     // A chord changes on a beat, so it goes to the nearest one.
     for marker in &mut playlist_mut.chord_markers {

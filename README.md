@@ -125,8 +125,21 @@ song plays, with the bass player's note after the slash, and in a set or
 a row with the sets or micromodes heard. While the song plays, the bar
 playing is framed in white. The sheet is saved with the project and
 follows key changes, re-metering and copied sections. It is an extra
-window: the playlist stays as it is. For now the sheet is for reading
-and writing; the band does not play it yet.
+window: the playlist stays as it is.
+
+**File > New** opens an empty chord sheet with a **band**: type chords
+and a piano, a bass and drums play them, written as patterns on their
+own tracks in the playlist. **🎷 Band** picks how they play, from the
+81 rhythms of the Library (a waltz puts the song in 3/4) and a few
+styles without drums (chorale, Alberti bass, arpeggios, sarabande), or
+**No band**. **Progression** writes a well-known progression from the
+selected bar, in the song's key, and **End the song here** (right-click
+a bar) says where the band stops. The band plays again whenever the
+sheet, the key or the bars change; a part you edit in the piano roll
+stays as you left it until you click **Play it again**. Picked over a
+demo, the band plays the demo's chords and mutes its own accompaniment
+until you pick **No band**. **File > New beat** is the old empty
+pattern with a drum kit.
 
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
