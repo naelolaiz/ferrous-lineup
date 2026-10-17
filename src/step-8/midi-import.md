@@ -26,7 +26,8 @@ project, ready to play:
 - every note keeps its **velocity** and its **exact time**, even when it
   falls between two steps;
 - the tempo changes become tempo markers, the time signatures time
-  markers, and the key signature the project's key;
+  markers, and the key signatures the project's key and
+  [key markers](key-changes.md);
 - the song is cut into patterns at bar lines and laid out on the
   playlist.
 
@@ -274,7 +275,7 @@ and gets `nudge: 0, trim: 0` for free.
 A note on the grid has both at 0, and the project file leaves them out
 (`#[serde(skip_serializing_if = "is_zero")]`), so files without
 off-grid notes look exactly as before. A project that has one is saved
-as **format 8**, so an older Ferrous Loom says "this file is newer"
+as **format 10**, so an older Ferrous Loom says "this file is newer"
 instead of quietly moving the notes onto the grid.
 
 The piano roll draws a nudged note where it really starts, and the
@@ -337,8 +338,9 @@ the notice counts it.
 
 The **program change** that chose each track's instrument is kept on
 its channel too, as `Channel::program`: 40 is a violin, 0 a grand piano.
-For now it names the channel; it is there for a later step that sends
-it to MIDI Out and writes it back into exported files.
+It names the channel, the Loom Osc plays a sound close to that
+instrument, and MIDI Out and the MIDI export send it on (see
+[every voice on its own channel](voices-and-instruments.md)).
 
 A channel's **volume** (controller 7) sets the rack channel's volume, so
 a quiet accompaniment stays quiet.
@@ -415,15 +417,19 @@ best-fitting key is most likely the key of the piece. When it is wrong,
 it is wrong the way a listener could be: it hears a closely related key,
 such as the relative minor.
 
-A file can also change key partway through, with more key signatures.
-A project has one key for now, so the import takes the first and the
-notice says how many changes it left out.
+A file can also change key partway through, with more key signatures:
+the *Rondo alla turca* goes from A minor to A major and back. The first
+key signature is the key the song starts in, and every later one that
+names a different key becomes a **key marker** on the playlist, as if
+you had added it yourself; the notice counts them ("9 key changes").
+Files often repeat the same signature at the start of every section,
+and `KeyMap::tidy` leaves those out.
 
 ## Writing the key into exported files
 
 Until now an exported MIDI file had no key signature, so importing it
 again could not know the key. The export now writes one at the start of
-the first track. `Scale::key_signature` works it out by going round the
+the first track, and another at every key marker. `Scale::key_signature` works it out by going round the
 **circle of fifths**: each fifth up from C adds a sharp (G has one, D
 two, A three...), each fifth down adds a flat (F has one, Bb two...).
 
@@ -466,8 +472,9 @@ FF 7F 26  7D "Ferrous Loom key (root:E,kind:Dorian)"
 
 (`26` is the length in hexadecimal: 38 bytes follow.)
 
-Other programs skip this event. Ferrous Loom reads it back and gets
-E Dorian, C♯ harmonic minor or a twelve-tone row exactly.
+It is written next to every key signature, at the start and at every
+key marker. Other programs skip this event. Ferrous Loom reads it back
+and gets E Dorian, C♯ harmonic minor or a twelve-tone row exactly.
 
 ## Testing it with every demo
 
@@ -475,8 +482,9 @@ The best test of an import is an export. `every_demo_comes_back_note_for_note`
 exports each of the 177 demo songs as a MIDI file, imports it, exports
 the result again, and compares the two files event by event: every note
 on with its key and velocity, every note off, every tempo change, time
-signature and key signature, each at the same tick. It also checks the
-imported project has exactly the demo's key. All 177 come back
+signature, key signature and program change, each at the same tick. It
+also checks the imported project has exactly the demo's key and key
+markers. All 177 come back
 identical, including the tempo changes and the subtly shaped
 velocities.
 
