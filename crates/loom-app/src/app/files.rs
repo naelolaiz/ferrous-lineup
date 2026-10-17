@@ -50,6 +50,10 @@ enum Choice {
 pub(super) struct FileState {
     /// Where the project was last opened from or saved to.
     path: Option<PathBuf>,
+    /// The demo's name, while the project is a demo that has not been
+    /// saved to a file yet. Demos are built into the app, so they are
+    /// read-only: Save asks for a new file, as Save As does.
+    demo: Option<&'static str>,
     /// A copy of the project as it was when last opened or saved. If the
     /// project differs from it, there are unsaved changes. Comparing the
     /// two (thanks to the derived `PartialEq`) means even undoing a change
@@ -63,9 +67,11 @@ pub(super) struct FileState {
 }
 
 impl FileState {
+    /// The app starts with the starting song, so that is the demo open.
     pub(super) fn new(project: &Project) -> Self {
         FileState {
             path: None,
+            demo: Some(Demo::Start.name()),
             saved: project.clone(),
             pending: None,
             quitting: false,
@@ -73,23 +79,60 @@ impl FileState {
         }
     }
 
-    /// The file's name, such as "song.loom", or "Untitled".
+    /// Remembers that the project now is `demo`, not a file.
+    pub(super) fn open_demo(&mut self, demo: Demo) {
+        self.path = None;
+        self.demo = Some(demo.name());
+    }
+
+    /// The file's name, such as "song.loom", the demo's name, such as
+    /// "Für Elise", or "Untitled".
     fn display_name(&self) -> String {
-        self.path.as_deref().and_then(Path::file_name).map_or_else(
-            || "Untitled".to_string(),
-            |name| name.to_string_lossy().into_owned(),
-        )
+        match (&self.path, self.demo) {
+            (Some(path), _) => file_name(path, Path::file_name),
+            (None, Some(demo)) => demo.to_string(),
+            (None, None) => "Untitled".to_string(),
+        }
+    }
+
+    /// The name without ".loom": "song" for "song.loom", "Für Elise" for
+    /// that demo.
+    fn stem(&self) -> String {
+        match (&self.path, self.demo) {
+            (Some(path), _) => file_name(path, Path::file_stem),
+            // A name such as "AC/DC" would be read as a folder.
+            (None, Some(demo)) => demo.replace(['/', '\\'], "-"),
+            (None, None) => "Untitled".to_string(),
+        }
     }
 
     /// A name for an exported file: "song.wav" for "song.loom", when
     /// `extension` is "wav".
     pub(super) fn export_name(&self, extension: &str) -> String {
-        let stem = self.path.as_deref().and_then(Path::file_stem).map_or_else(
-            || "Untitled".to_string(),
-            |stem| stem.to_string_lossy().into_owned(),
-        );
-        format!("{stem}.{extension}")
+        format!("{}.{extension}", self.stem())
     }
+
+    /// What the title bar shows: the name, a star when there are unsaved
+    /// changes, and whether it is a demo.
+    fn title(&self, changed: bool) -> String {
+        let star = if changed { "*" } else { "" };
+        let demo = if self.path.is_none() && self.demo.is_some() {
+            " (demo, read-only)"
+        } else {
+            ""
+        };
+        format!("{}{star}{demo} · Ferrous Loom", self.display_name())
+    }
+}
+
+/// One part of a path as text: `part` is `Path::file_name` or
+/// `Path::file_stem`. Both return an `Option`, because a path such as
+/// "/" has no name; "Untitled" stands in then.
+fn file_name(path: &Path, part: fn(&Path) -> Option<&std::ffi::OsStr>) -> String {
+    part(path).map_or_else(
+        || "Untitled".to_string(),
+        |name| name.to_string_lossy().into_owned(),
+    )
 }
 
 /// A file dialog that shows project files.
@@ -135,7 +178,13 @@ impl LoomApp {
                 ui.close();
             }
             ui.separator();
-            if ui.add(item("Save", SAVE)).clicked() {
+            let save = ui.add(item("Save", SAVE));
+            let save = if self.file.path.is_none() && self.file.demo.is_some() {
+                save.on_hover_text("Demos are read-only: this saves a copy to a new file")
+            } else {
+                save
+            };
+            if save.clicked() {
                 self.save();
                 ui.close();
             }
@@ -258,6 +307,7 @@ impl LoomApp {
         self.song_originals.clear();
         self.file.saved = self.project.clone();
         self.file.path = path;
+        self.file.demo = None;
         self.pattern = 0;
         self.playing = false;
         self.cursor = 0;
@@ -274,8 +324,9 @@ impl LoomApp {
         self.send_whole_project();
     }
 
-    /// Saves to the project's file, or asks for one if it has none yet.
-    /// Returns whether the project was saved.
+    /// Saves to the project's file, or asks for one if it has none yet,
+    /// as for a demo, which cannot be changed. Returns whether the project
+    /// was saved.
     fn save(&mut self) -> bool {
         match self.file.path.clone() {
             Some(path) => self.save_to(path),
@@ -285,10 +336,7 @@ impl LoomApp {
 
     /// Asks where to save, then saves. Returns whether the project was saved.
     fn save_as(&mut self) -> bool {
-        let suggested = match &self.file.path {
-            Some(_) => self.file.display_name(),
-            None => format!("Untitled.{}", file::EXTENSION),
-        };
+        let suggested = self.file.export_name(file::EXTENSION);
         let Some(mut path) = project_dialog().set_file_name(suggested).save_file() else {
             return false;
         };
@@ -303,6 +351,7 @@ impl LoomApp {
             Ok(()) => {
                 self.file.saved = self.project.clone();
                 self.file.path = Some(path);
+                self.file.demo = None;
                 self.message = None;
                 true
             }
@@ -394,18 +443,60 @@ impl LoomApp {
         }
     }
 
-    /// Shows the file name in the window's title bar, with a dot in front
-    /// when there are unsaved changes.
+    /// Shows the file or demo name in the window's title bar, with a star
+    /// after it when there are unsaved changes.
     pub(super) fn update_title(&mut self, ctx: &egui::Context) {
-        let changed = if self.has_unsaved_changes() {
-            "● "
-        } else {
-            ""
-        };
-        let title = format!("{changed}{} · Ferrous Loom", self.file.display_name());
+        let title = self.file.title(self.has_unsaved_changes());
         if title != self.file.title {
             ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
             self.file.title = title;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_demo_shows_its_name_and_a_star_once_changed() {
+        let mut state = FileState::new(&Project::template());
+        assert_eq!(
+            state.title(false),
+            "The starting song (demo, read-only) · Ferrous Loom"
+        );
+        let song = loom_core::library::SONGS
+            .iter()
+            .find(|song| song.name == "Für Elise")
+            .unwrap();
+        state.open_demo(Demo::Song(song));
+        assert_eq!(
+            state.title(false),
+            "Für Elise (demo, read-only) · Ferrous Loom"
+        );
+        assert_eq!(
+            state.title(true),
+            "Für Elise* (demo, read-only) · Ferrous Loom"
+        );
+        // Save suggests the demo's name for the new file.
+        assert_eq!(state.export_name(file::EXTENSION), "Für Elise.loom");
+    }
+
+    #[test]
+    fn a_saved_file_shows_its_file_name() {
+        let mut state = FileState::new(&Project::template());
+        state.path = Some(PathBuf::from("/music/song.loom"));
+        state.demo = None;
+        assert_eq!(state.title(true), "song.loom* · Ferrous Loom");
+        assert_eq!(state.export_name("wav"), "song.wav");
+        state.path = None;
+        assert_eq!(state.title(false), "Untitled · Ferrous Loom");
+    }
+
+    #[test]
+    fn a_slash_in_a_demo_name_does_not_become_a_folder() {
+        let mut state = FileState::new(&Project::template());
+        state.demo = Some("A/B");
+        assert_eq!(state.export_name("mid"), "A-B.mid");
     }
 }
