@@ -3,18 +3,16 @@ name: Release
 # Builds Ferrous Lineup for Linux, Windows and macOS (Apple Silicon and
 # Intel), packed with the README and the licence, ready to download.
 #
-# - Every push to main, and every manual run (Actions > Release > Run
-#   workflow), keeps the four packages as artifacts of the run.
+# - Every pull request, every push to main and every manual run (Actions
+#   > Release > Run workflow) keeps the packages as artifacts of the run:
+#   one per system, plus a Linux AppImage.
 # - Pushing a tag that starts with `v` (v0.2.0) also publishes them on a
 #   GitHub Release for that tag.
-# - A pull request that changes this file runs it too, so a broken
-#   release build shows up before it is merged.
 on:
   push:
     branches: [main]
     tags: ["v*"]
   pull_request:
-    paths: [.github/workflows/release.yml]
   workflow_dispatch:
 
 # Only reading the code is allowed by default. The job that publishes the
@@ -45,6 +43,7 @@ jobs:
             os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             platform: linux-x86_64
+            appimage: true
           # `crt-static` puts Microsoft's C runtime inside the .exe, so it
           # runs on a Windows without the Visual C++ Redistributable.
           - name: Windows x86_64
@@ -95,16 +94,21 @@ jobs:
         env:
           # Stops macOS's tar from adding hidden "._" files.
           COPYFILE_DISABLE: 1
+          # For a pull request GitHub builds a merge commit of its own;
+          # the label names the pull request's latest commit instead.
+          COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then
             label="$GITHUB_REF_NAME"
           else
-            label="${GITHUB_SHA::7}"
+            label="${COMMIT::7}"
           fi
           name="ferrous-lineup-$label-${{ matrix.platform }}"
           binary=ferrous-lineup
           if [[ "$RUNNER_OS" == Windows ]]; then binary+=.exe; fi
 
+          echo "LABEL=$label" >> "$GITHUB_ENV"
+          echo "NAME=$name" >> "$GITHUB_ENV"
           mkdir -p "dist/$name"
           cp "target/${{ matrix.target }}/release/$binary" README.md LICENSE "dist/$name/"
           cd dist
@@ -121,6 +125,64 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           path: ${{ env.PACKAGE }}
+          archive: false
+          if-no-files-found: error
+
+      # An AppImage is one file that runs on most Linux systems: the
+      # program, its icon and its menu entry, with a small starter program
+      # (the "runtime") in front. The tools are pinned to a version and
+      # checked against their SHA-256, so a release never builds with a
+      # tool that changed under it.
+      - name: Build the AppImage
+        if: matrix.appimage
+        env:
+          APPIMAGETOOL_URL: https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          APPIMAGETOOL_SHA256: ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+          RUNTIME_URL: https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64
+          RUNTIME_SHA256: 2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
+          # appimagetool is an AppImage too; this runs it without FUSE.
+          APPIMAGE_EXTRACT_AND_RUN: 1
+        run: |
+          sudo apt-get install -y libxkbcommon-x11-0 patchelf
+          curl -fsSL -o appimagetool "$APPIMAGETOOL_URL"
+          curl -fsSL -o runtime "$RUNTIME_URL"
+          echo "$APPIMAGETOOL_SHA256  appimagetool" | sha256sum --check
+          echo "$RUNTIME_SHA256  runtime" | sha256sum --check
+          chmod +x appimagetool
+
+          # The AppDir is the folder the AppImage is made from, laid out
+          # like a system's /usr. AppRun is what the AppImage starts.
+          install -Dm755 target/${{ matrix.target }}/release/ferrous-lineup AppDir/usr/bin/ferrous-lineup
+          install -Dm644 packaging/linux/ferrous-lineup.desktop AppDir/usr/share/applications/ferrous-lineup.desktop
+          install -Dm644 packaging/linux/ferrous-lineup.svg AppDir/usr/share/icons/hicolor/scalable/apps/ferrous-lineup.svg
+          ln -s usr/bin/ferrous-lineup AppDir/AppRun
+          ln -s usr/share/applications/ferrous-lineup.desktop AppDir/ferrous-lineup.desktop
+          ln -s usr/share/icons/hicolor/scalable/apps/ferrous-lineup.svg AppDir/ferrous-lineup.svg
+
+          # The window needs the keyboard library xkbcommon, which some
+          # systems lack (libxkbcommon-x11 above all), so the AppImage
+          # carries its own copies. The program opens it while it runs
+          # (dlopen); RUNPATH tells it to look in usr/lib before the system,
+          # and the library to find its own companions next to itself.
+          libdir=/usr/lib/x86_64-linux-gnu
+          for lib in libxkbcommon.so.0 libxkbcommon-x11.so.0 libxcb-xkb.so.1; do
+            install -Dm644 "$(readlink -f "$libdir/$lib")" "AppDir/usr/lib/$lib"
+          done
+          # $ORIGIN is for the loader, meaning "this file's folder", so the
+          # shell must not expand it: hence the single quotes.
+          # shellcheck disable=SC2016
+          patchelf --set-rpath '$ORIGIN/../lib' AppDir/usr/bin/ferrous-lineup
+          # shellcheck disable=SC2016
+          patchelf --set-rpath '$ORIGIN' AppDir/usr/lib/libxkbcommon-x11.so.0
+
+          appimage="dist/$NAME.AppImage"
+          ARCH=x86_64 VERSION="$LABEL" ./appimagetool --runtime-file runtime AppDir "$appimage"
+          echo "APPIMAGE=$appimage" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v7
+        if: matrix.appimage
+        with:
+          path: ${{ env.APPIMAGE }}
           archive: false
           if-no-files-found: error
 
