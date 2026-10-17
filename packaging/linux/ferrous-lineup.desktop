@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Ferrous Lineup
+GenericName=Backing band
+Comment=Play songs with a backing band and learn harmony
+Exec=ferrous-lineup %f
+Icon=ferrous-lineup
+Terminal=false
+Categories=AudioVideo;Audio;Music;
+Keywords=music;band;chords;harmony;sequencer;MIDI;
+StartupWMClass=ferrous-lineup
