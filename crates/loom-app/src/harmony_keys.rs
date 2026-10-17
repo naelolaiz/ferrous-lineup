@@ -162,24 +162,38 @@ impl HarmonyKeys {
             .collect()
     }
 
-    /// Draws the bar. `held` are the notes held down on any keyboard,
+    /// Draws the bar. `here` is the key the music is in where the
+    /// playhead is, which the chord keys follow: the song's own key, or
+    /// the one a key change in the playlist moved to. `held` are the
+    /// notes held down on any keyboard,
     /// harmony keys included, and `heard` the chord notes playing in the
     /// pattern or the song; `digits` says whether the number keys may
     /// play the harmony keys (not while they play notes on the typing
     /// keyboard, or a text field has the keyboard).
+    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
         ui: &mut Ui,
         project: &Project,
+        here: Scale,
         channel_name: &str,
         held: &[Note],
         heard: &[Note],
         digits: bool,
     ) -> Vec<HarmonyAction> {
-        let scale = project.scale;
+        let scale = here;
         let size = self.size_for(scale);
         if let Some(groups) = keys::group_keys(scale, size) {
-            return self.show_groups(ui, project, &groups, channel_name, held, heard, digits);
+            return self.show_groups(
+                ui,
+                project,
+                here,
+                &groups,
+                channel_name,
+                held,
+                heard,
+                digits,
+            );
         }
         let mut actions = Vec::new();
         let chord_keys = keys::chord_keys(scale, size);
@@ -208,7 +222,7 @@ impl HarmonyKeys {
         // Wrapped, so on a narrow window the little piano moves to a row
         // of its own instead of running off the edge.
         ui.horizontal_wrapped(|ui| {
-            ui.vertical(|ui| self.settings(ui, project, &mut actions));
+            ui.vertical(|ui| self.settings(ui, project, here, &mut actions));
             ui.separator();
             for (index, key) in chord_keys.iter().enumerate() {
                 let rank = suggestion_rank(&suggestions, &chord_keys, index);
@@ -278,6 +292,7 @@ impl HarmonyKeys {
         &mut self,
         ui: &mut Ui,
         project: &Project,
+        here: Scale,
         groups: &[GroupKey],
         channel_name: &str,
         held: &[Note],
@@ -285,12 +300,12 @@ impl HarmonyKeys {
         digits: bool,
     ) -> Vec<HarmonyAction> {
         let mut actions = Vec::new();
-        let scale = project.scale;
+        let scale = here;
         let heard_set: PitchSet = heard.iter().map(|note| note.pitch_class()).collect();
         let mut pressed = None;
         ui.add_space(4.0);
         ui.horizontal_wrapped(|ui| {
-            ui.vertical(|ui| self.settings(ui, project, &mut actions));
+            ui.vertical(|ui| self.settings(ui, project, here, &mut actions));
             ui.separator();
             for (index, group) in groups.iter().enumerate() {
                 let lit = self.down.as_ref().is_some_and(|d| d.key == index)
@@ -357,8 +372,16 @@ impl HarmonyKeys {
             .on_hover_text("How much the hints explain, here and in the piano roll");
     }
 
-    /// The key, the time signature and the size of the chords.
-    fn settings(&mut self, ui: &mut Ui, project: &Project, actions: &mut Vec<HarmonyAction>) {
+    /// The key, the time signature and the size of the chords. The key
+    /// menus are the key the song starts in; when the playhead is past a
+    /// key change, the key there is written under them.
+    fn settings(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        here: Scale,
+        actions: &mut Vec<HarmonyAction>,
+    ) {
         let scale = project.scale;
         ui.horizontal(|ui| {
             ui.strong("Key");
@@ -378,6 +401,14 @@ impl HarmonyKeys {
                 actions.push(HarmonyAction::SetScale(new));
             }
         });
+        if here != scale {
+            ui.label(egui::RichText::new(format!("Now in {}", here.name())).color(SUGGESTED))
+                .on_hover_text(
+                    "The song changes key here (see the key names on the playlist's bar \
+                     numbers), so the chord keys are this key's. The menus above are the key \
+                     the song starts in",
+                );
+        }
         ui.horizontal(|ui| {
             ui.strong("Time");
             let time = project.time_signature;
@@ -399,6 +430,7 @@ impl HarmonyKeys {
             }
             ui.weak(format!("{} steps a bar", time.steps_per_bar()));
         });
+        let scale = here;
         ui.horizontal(|ui| {
             let current = self.size_for(scale);
             for size in keys::chord_sizes(scale) {

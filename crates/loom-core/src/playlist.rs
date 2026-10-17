@@ -24,6 +24,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
 use crate::tempo::TempoMarker;
 
@@ -207,6 +208,8 @@ pub struct Playlist {
     pub(crate) time_markers: Vec<TimeMarker>,
     /// Sorted by start, all after step 0, no two on the same step.
     pub(crate) tempo_markers: Vec<TempoMarker>,
+    /// Sorted by start, all after step 0, no two on the same step.
+    pub(crate) key_markers: Vec<KeyMarker>,
 }
 
 impl Playlist {
@@ -219,6 +222,7 @@ impl Playlist {
             loop_region: None,
             time_markers: Vec::new(),
             tempo_markers: Vec::new(),
+            key_markers: Vec::new(),
         }
     }
 
@@ -258,6 +262,12 @@ impl Playlist {
     /// The changes of tempo, in order.
     pub fn tempo_markers(&self) -> &[TempoMarker] {
         &self.tempo_markers
+    }
+
+    /// The changes of key after the start of the song, in order. The
+    /// song starts in the project's own key.
+    pub fn key_markers(&self) -> &[KeyMarker] {
+        &self.key_markers
     }
 
     /// A name for a new section: the first of [`SECTION_NAMES`] not used
