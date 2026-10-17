@@ -83,7 +83,8 @@ pub enum Comping {
     Funk,
     /// On beat 1, then again just before beat 3, held: lazy lo-fi chords.
     Lazy,
-    /// Long-short pairs, the way blues and boogie players swing.
+    /// The chord on both eighths of each beat, the second one lighter:
+    /// with swing, the long-short "chunk-a" of blues and boogie players.
     Shuffle,
     /// Gospel piano: chords on the beats with quick pushes between them.
     Gospel,
@@ -202,7 +203,7 @@ impl Comping {
                 ],
             ),
             Comping::Lazy => (16, &[hit!(0, 6, All, 84), hit!(7, 9, All, 72)]),
-            Comping::Shuffle => (4, &[hit!(0, 3, All, 94), hit!(3, 1, Upper, 70)]),
+            Comping::Shuffle => (4, &[hit!(0, 2, All, 94), hit!(2, 2, All, 70)]),
             Comping::Gospel => (
                 16,
                 &[

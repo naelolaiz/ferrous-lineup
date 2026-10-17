@@ -522,8 +522,9 @@ pub(super) fn is_ending(project: &Project, pattern: usize) -> bool {
 }
 
 /// Puts the song in `time`, then gives every pattern of the song the
-/// drums of `rhythm` (if any) and plays its chords and bass with
-/// `comping` and `bass`: the work of [`use_rhythm`] and [`use_style`].
+/// drums of `rhythm` (if any) and its swing, and plays its chords and
+/// bass with `comping` and `bass`: the work of [`use_rhythm`] and
+/// [`use_style`].
 fn play_song(
     project: &mut Project,
     rhythm: Option<&Rhythm>,
@@ -572,6 +573,12 @@ fn play_song(
             }
             change.drums += 1;
         }
+    }
+    // The song now swings as much as the rhythm it plays.
+    if let Some(rhythm) = rhythm
+        && change.drums > 0
+    {
+        project.swing = rhythm.swing;
     }
     change
 }
