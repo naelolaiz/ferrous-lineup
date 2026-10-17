@@ -14,8 +14,9 @@ window over the playlist, which stays as it was.
 
 ![The chord sheet with the Rhythm changes demo: two choruses of eight bars, C A7 | Dm7 G7 and so on, with Roman numerals under each chord](../images/step-9-chord-sheet.png)
 
-For now the sheet is something to read and write: the band does not
-play it yet. That is the next change. What it already does is hold the
+In this change the sheet is something to read and write; the next
+change, [The band plays the chord sheet](band.md), puts a band behind
+it. What it already does is hold the
 song's harmony, name it in every way the app knows, follow the song when
 it changes, and write itself from what the song plays.
 

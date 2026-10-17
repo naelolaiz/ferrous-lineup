@@ -24,7 +24,8 @@ time:
    a row form, the other ways Ferrous Lineup names harmony
    ([The chord sheet: writing a song bar by bar](chord-sheet.md)),
 3. **the band plays the chord sheet**: styles split into "band styles"
-   (how to play) and "progressions" (what to play),
+   (how to play) and "progressions" (what to play)
+   ([The band plays the chord sheet](band.md)),
 4. **a practice bar**: count-in, tempo as a percentage, a toggle to play
    a part yourself,
 5. **song form**: choruses, an intro, an ending, and a second variation
