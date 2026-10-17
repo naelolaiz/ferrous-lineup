@@ -183,3 +183,114 @@ pub(super) const REVERIE: Song = Song {
             arrives; the quarter-note triplet in its third bar is written as 3 + 3 + 2 \
             sixteenths. In the score the left hand plays these chords as slow arpeggios.",
 };
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/SatieE/Gnossienne/no_1/no_1.ly
+// (Mutopia 2035, from the Salabert edition of 1913)
+pub(super) const GNOSSIENNE: Song = Song {
+    name: "Gnossienne No. 1",
+    origin: "Erik Satie, 1890",
+    feel: "Lo-fi",
+    genre: Genre::HipHop,
+    tonic: F,
+    mode: Dorian,
+    time: COMMON,
+    tempo: 70.0,
+    comping: Comping::Lazy,
+    bass: Bass::Held,
+    rhythm: "Lo-fi",
+    style: "Boom bap minor",
+    parts: &[
+        Part::new(
+            "Theme",
+            "-:4 C5:2 Eb5 D5:4 C5 | B4:8 B4 | -:4 C5:2 Eb5 D5:4 C5 | F5:8 F5 | \
+             -:4 C5:2 Eb5 D5:4 C5 | B4:8 G4 | G4:4 G4:10 -:2 | G4:4 F4:12 | _:16",
+            "i | i | i | i | i | i | v | i | i",
+        ),
+        Part::new(
+            "Shining",
+            "Bb4:8 G4 | Bb4:8 G4 | G4:4 F4:12 | _:16",
+            "iv | iv | i | i",
+        ),
+        Part::new(
+            "Questioning",
+            "-:2 C5 D5 E5 F5 G5 B5 G5 | F5:4 F5:12 | F5:8 E5 | C5:8 B4 | G4:4 F4:12 | _:16",
+            "i | i | i | i | i | i",
+        ),
+        Part::new(
+            "From the tip of the thought",
+            "-:4 C5:2 Eb5 D5:4 C5 | B4:16 | -:4 C5:2 Eb5 D5:4 C5 | F5:16",
+            "i | i | i | i",
+        ),
+    ],
+    form: &[
+        "Theme",
+        "Theme",
+        "Shining",
+        "Shining",
+        "Questioning",
+        "Questioning",
+        "Shining",
+        "Shining",
+        "From the tip of the thought",
+        "From the tip of the thought",
+        "Shining",
+        "Shining",
+        "Questioning",
+        "Questioning",
+        "Shining",
+        "Shining",
+    ],
+    drums_from: 0,
+    about: "Satie wrote it without bar lines or a time signature, over a left hand that is \
+            only ever three chords: F minor, B flat minor and, once, C minor. The key \
+            signature is F minor, but the tune's D natural sounds Dorian, and it leans on \
+            B natural below the C. The grace notes before almost every long note are left \
+            out. Three of the part names are Satie's instructions to the player: \"Très \
+            luisant\", \"Questionnez\", \"Du bout de la pensée\".",
+};
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/ChopinFF/O28/Chop-28-4/Chop-28-4.ly
+// (Mutopia 468, from the Peters edition of 1879)
+pub(super) const PRELUDE_IN_E_MINOR: Song = Song {
+    name: "Prelude in E minor",
+    origin: "Frédéric Chopin, Op. 28 No. 4, 1839",
+    feel: "Lo-fi",
+    genre: Genre::HipHop,
+    tonic: E,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 60.0,
+    comping: Comping::Pulse,
+    bass: Bass::Held,
+    rhythm: "Lo-fi",
+    style: "Boom bap minor",
+    parts: &[
+        Part::new("Pickup", "-:12 B3:3 B4:1", ""),
+        Part::new(
+            "A",
+            "B4:12 C5:4 | B4:12 C5:4 | B4:12 C5:4 | B4:12 Bb4:4 | A4:12 B4:4 | A4:12 B4:4 | \
+             A4:12 B4:3 A4:1 | A4:12 G#4:4 | _:4 A4:2 B4 D5 C5 E4 A4 | F#4:12 A4:4 | \
+             F#4:12 A4:4 | G4:2 F#4 C4 B3 D#4 F#4 D5:1 C5:2 B4:1",
+            "i | V7sus4 V7 | bII7 bII7 bvii #v°7 | I7 I7 i7 vi° | bVI iiø7 | iiø7 vii°7 | \
+             bVII7 | bvii7 v° | bVImaj7 iv iv iv | V7sus4 V7 iv iv | V7 iv | V7",
+        ),
+        Part::new(
+            "B",
+            "B4:12 C5:4 | B4:12 C5:4 | B4:12 C5:4 | B4:3 A#4:1 A#4:4 A5:4 F#5:3 E5:1 | \
+             E5:2 D#5 C6 D#5 D#5 E5 G5 B4 | D5:2 C5:2 E5:1 E4:2 A4:1 F#4:6 A4:2 | \
+             F#4:12 A4:4 | F#4:15 E4:1 | E4:12 F#4:4 | E4:12 F#4:4 | E4:8 -:8 | \
+             E4:8 D#4:8 | E4:16",
+            "i | V7sus4 bII7 | biiø7 #v°7 I7 I7 | i7 vi° #iv° iv | V ii° ii° ii° bIII+ i i i | \
+             iv iiø7 V7sus4 iv | V7sus4 iv | V7sus4 V7sus4 V V7 | bVI bVI bVI7 iv | \
+             V7sus4 I i i | bVI7 | Vsus4 V | i",
+        ),
+    ],
+    form: &["Pickup", "A", "B"],
+    drums_from: 1,
+    about: "The right hand hardly moves, B and C, then A and B, while the left hand repeats \
+            its chords in eighth notes and lets them sink by semitones, one note at a time. \
+            Many of those chords have no name of their own, so the chart gives the nearest \
+            chord that holds their notes: F, A and D sharp, B7 with its fifth lowered, \
+            becomes F7. The triplets in bars 12 and 18 are written as sixteenths, \
+            the turn and the grace notes are left out, and the G double sharp is an A.",
+};

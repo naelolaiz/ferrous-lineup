@@ -67,3 +67,48 @@ pub(super) const NOCHE_FRIGIA: Song = Song {
     about: "The Phrygian mode of the Spanish guitar: E F G A B C D, with a major chord on E \
             and its G sharp. F major, a semitone above home, keeps pulling back down to E.",
 };
+
+// Source: https://raw.githubusercontent.com/mrgrenier/guitar_music/master/albeniz.ly
+// (a LilyPond guitar transcription in E minor, written as guitar music is, an octave above
+// the sound; the first sixteen bars. Checked bar by bar against Goran Stefanovic's tablature
+// of Segovia's arrangement, https://raw.githubusercontent.com/baweaver/classtab/master/app/tabs/albeniz_isaac_op047_no5_espanola_asturias.txt.)
+// The chords are the pedal notes, E and B.
+pub(super) const ASTURIAS: Song = Song {
+    name: "Asturias (Leyenda)",
+    origin: "Isaac Albéniz, Cantos de España, 1892",
+    feel: "Flamenco minor",
+    genre: Genre::Flamenco,
+    tonic: E,
+    mode: NaturalMinor,
+    time: THREE_FOUR,
+    tempo: 132.0,
+    comping: Comping::Held,
+    bass: Bass::Held,
+    rhythm: "",
+    style: "La folia",
+    parts: &[
+        Part::new(
+            "On E",
+            "E4:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 G4 B4 | E4:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 G4 B4 | \
+             E4:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 G4 B4 | A4:1 B4 F#4 B4 G4 B4 A4 B4 F#4 B4 G4 B4 | \
+             E4:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 G4 B4 | E4:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 G4 B4 | \
+             E4:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 G4 B4 | A4:1 B4 F#4 B4 G4 B4 E4 B4 D4 B4 C4 B4",
+            "i | i | i | i | i | i | i | i",
+        ),
+        Part::new(
+            "On B",
+            "B3:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 F#4 B4 | B3:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 F#4 B4 | \
+             B3:1 B4 F#4 B4 A4 B4 B4 B4 C5 B4 D5 B4 | B4:1 B4 C5 B4 A4 B4 B4 B4 G4 B4 F#4 B4 | \
+             B3:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 F#4 B4 | B3:1 B4 B4 B4 C5 B4 A4 B4 B4 B4 F#4 B4 | \
+             B3:1 B4 A4 B4 B4 B4 C5 B4 D5 B4 B4 B4 | C5:1 B4 A4 B4 B4 B4 G4 B4 A4 B4 F#4 B4",
+            "V | V | V | V | V | V | V | V",
+        ),
+    ],
+    form: &["On E", "On B", "On E", "On B"],
+    drums_from: 0,
+    about: "Albéniz wrote it for piano in 1892, imitating the flamenco guitar, and on the \
+            guitar, in E minor, it became one of the instrument's best-known pieces. Every \
+            other sixteenth note is the same B, a pedal, while the tune moves under it, C B A \
+            B G; the second half plays the same figure over a low B, the dominant. Here \
+            without drums, over held chords.",
+};
