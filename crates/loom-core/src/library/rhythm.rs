@@ -159,6 +159,7 @@ impl Rhythm {
 
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
+const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 
 use Drum::*;
 use Genre::*;
@@ -266,6 +267,44 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Tom fill",
         "The backbeat with the eighths on the ride cymbal, for a bigger, washier sound.",
     ),
+    rhythm(
+        "Surf beat",
+        Rock,
+        160.0,
+        &[
+            (Kick, "X... X... X... X..."),
+            (Snare, ".... X... .... X..."),
+            (LowTom, "..x. ..x. ..x. .xx."),
+            (HiHat, "x.x. x.x. x.x. x.x."),
+        ],
+        "Tom fill",
+        "A kick on every beat and rumbling toms: 1960s surf rock.",
+    ),
+    rhythm(
+        "Rock and roll",
+        Rock,
+        168.0,
+        &[
+            (Kick, "X... ..x. X... ..x."),
+            (Snare, ".... X... .... X..."),
+            (Ride, "x..x x..x x..x x..x"),
+        ],
+        "Snare roll",
+        "The 1950s backbeat, with a long-short ride cymbal halfway between swing and straight.",
+    ),
+    rhythm(
+        "Metal",
+        Rock,
+        180.0,
+        &[
+            (Kick, "XxXx XxXx XxXx XxXx"),
+            (Snare, ".... X... .... X..."),
+            (Crash, "X... .... .... ...."),
+            (Ride, "x... x... x... x..."),
+        ],
+        "Tom fill",
+        "Two bass drums in sixteenths under a heavy backbeat.",
+    ),
     // ----- Blues -----
     rhythm(
         "Shuffle",
@@ -279,6 +318,19 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Snare roll",
         "Long-short pairs: each beat split unevenly, three sixteenths and one.",
     ),
+    rhythm(
+        "Slow blues",
+        Blues,
+        66.0,
+        &[
+            (Kick, "X..... ...... X..... ......"),
+            (Snare, "...... X..... ...... X....."),
+            (HiHat, "x.x.x. x.x.x. x.x.x. x.x.x."),
+        ],
+        "",
+        "Twelve-eight: four slow beats, each split in three, for the blues ballad.",
+    )
+    .in_time(TWELVE_EIGHT),
     // ----- Jazz -----
     rhythm(
         "Swing",
@@ -318,6 +370,18 @@ pub static RHYTHMS: &[Rhythm] = &[
         "The swing ride pattern in three beats.",
     )
     .in_time(THREE_FOUR),
+    rhythm(
+        "Second line",
+        Jazz,
+        100.0,
+        &[
+            (Kick, "X... ..X. X... ..X."),
+            (Snare, ".oxo X.o. .oxo X.ox"),
+            (Cowbell, "x... x... x... x..."),
+        ],
+        "Snare roll",
+        "New Orleans street parade drumming: a bass drum that answers itself under a busy snare.",
+    ),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",
@@ -368,6 +432,19 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Hip hop fill",
         "A clap on 2 and 4, a syncopated kick and a quick double hi-hat.",
     ),
+    rhythm(
+        "New jack swing",
+        Soul,
+        104.0,
+        &[
+            (Kick, "X..X ..X. X..X ..X."),
+            (Snare, ".... X... .... X..."),
+            (Clap, ".... X... .... X..."),
+            (HiHat, "x.xx x.xx x.xx x.xx"),
+        ],
+        "Hip hop fill",
+        "Late-1980s R&B: a hip hop kick and snare with a skipping hi-hat.",
+    ),
     // ----- Hip hop -----
     rhythm(
         "Boom bap",
@@ -404,6 +481,32 @@ pub static RHYTHMS: &[Rhythm] = &[
         ],
         "",
         "Half-time: the clap only on beat 3, with quick rolls on the hi-hat.",
+    ),
+    rhythm(
+        "Drill",
+        HipHop,
+        142.0,
+        &[
+            (Kick, "X... .... ..X. ..X."),
+            (Snare, ".... .... X... ...."),
+            (HiHat, "x..x ..x. x..x ..x."),
+            (Rim, "...x .... ...x ...."),
+        ],
+        "",
+        "Half-time, with a hi-hat in 3 + 3 + 2 and kicks that dodge the snare.",
+    ),
+    rhythm(
+        "G-funk",
+        HipHop,
+        92.0,
+        &[
+            (Kick, "X... ..x. X.X. ...."),
+            (Clap, ".... X... .... X..."),
+            (HiHat, "x.x. x.x. x.x. x.xx"),
+            (Shaker, "..x. ..x. ..x. ..x."),
+        ],
+        "Hip hop fill",
+        "1990s West Coast hip hop: a laid-back, funky kick and a clap on 2 and 4.",
     ),
     // ----- Electronic -----
     rhythm(
@@ -520,6 +623,31 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Tom fill",
         "A big 1980s backbeat, with a clap on top of the snare.",
     ),
+    rhythm(
+        "Moombahton",
+        Electronic,
+        108.0,
+        &[
+            (Kick, "X... X... X... X..."),
+            (Snare, "...X ..X. ...X ..X."),
+            (OpenHat, "..x. ..x. ..x. ..x."),
+        ],
+        "House build",
+        "House slowed down to reggaeton's tempo: four on the floor under a dembow snare.",
+    ),
+    rhythm(
+        "Electro",
+        Electronic,
+        128.0,
+        &[
+            (Kick, "X... .... ..X. ...."),
+            (Clap, ".... X... .... X..."),
+            (HiHat, "xoxo xoxo xoxo xoxo"),
+            (Cowbell, "..x. .... x... ..x."),
+        ],
+        "Snare roll",
+        "The drum machines of early-1980s electro: a broken kick, sixteenths on the hat, a cowbell.",
+    ),
     // ----- Latin -----
     rhythm(
         "Bossa nova",
@@ -584,6 +712,58 @@ pub static RHYTHMS: &[Rhythm] = &[
         "",
         "The dembow: a kick on every beat and a snare in 3 + 3 + 2.",
     ),
+    rhythm(
+        "Bolero",
+        Latin,
+        80.0,
+        &[
+            (Kick, "X... .... X... ...."),
+            (Rim, ".... x... .... x..."),
+            (Conga, "..o. ..hh ..o. hh.."),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "Latin fill",
+        "The slow Latin love song: soft bongos and maracas, and the rim on 2 and 4.",
+    ),
+    rhythm(
+        "Bachata",
+        Latin,
+        128.0,
+        &[
+            (Kick, "X... X... X... X..."),
+            (Conga, "x.hh x.h. x.hh x.hl"),
+            (Shaker, "xxxx xxxx xxxx xxxx"),
+        ],
+        "Latin fill",
+        "From the Dominican Republic: bongos in a steady pattern and the güira scraping every \
+         sixteenth.",
+    ),
+    rhythm(
+        "Merengue",
+        Latin,
+        132.0,
+        &[
+            (Kick, "X... X... X... X..."),
+            (LowTom, "X..x .x.x X..x .xxx"),
+            (Shaker, "x.xx x.xx x.xx x.xx"),
+        ],
+        "Latin fill",
+        "Fast and in two: the tambora drum's rolls and a scraper that never stops.",
+    ),
+    rhythm(
+        "Cha-cha-chá",
+        Latin,
+        116.0,
+        &[
+            (Kick, "X... .... X... ...."),
+            (Cowbell, "X... X... X... X..."),
+            (Conga, ".... ..h. ..hh h..."),
+            (Rim, ".... .... .... x.x."),
+        ],
+        "Latin fill",
+        "Named after its sound: the two quick notes and one long, \"cha-cha-chá\", on beat 4 and \
+         the next beat 1.",
+    ),
     // ----- Tango -----
     rhythm(
         "Tango marcato",
@@ -631,6 +811,175 @@ pub static RHYTHMS: &[Rhythm] = &[
         "A fast waltz: a strong one and two light beats.",
     )
     .in_time(THREE_FOUR),
+    rhythm(
+        "Tango nuevo",
+        Tango,
+        132.0,
+        &[
+            (Kick, "X..X ..X. .X.. ...."),
+            (Rim, ".... .... .... X.X."),
+            (Shaker, "x.xx x.xx x.xx x.xx"),
+        ],
+        "",
+        "3 + 3 + 3 + 3 + 2 + 2 in sixteenths: the restless accents of the new tango of the 1950s.",
+    ),
+    // ----- South American folklore -----
+    rhythm(
+        "Zamba",
+        Folklore,
+        84.0,
+        &[(LowTom, "X..... X....."), (Rim, "....x. ..x.x.")],
+        "",
+        "The slow Argentine dance in 6/8: the bombo legüero's deep head on the two beats, \
+         its wooden rim between them.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Chacarera",
+        Folklore,
+        132.0,
+        &[(LowTom, "X..... x.x..."), (Rim, "....x. ..x.x.")],
+        "",
+        "Santiago del Estero's dance: the bombo plays 6/8 on the head and 3/4 on the rim at \
+         the same time, the two against three that the whole genre lives on.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Gato",
+        Folklore,
+        126.0,
+        &[
+            (LowTom, "X..... X..x.."),
+            (Rim, "..x.x. ..x..."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "A quick, bright 6/8 for the gato, the pericón, the cielito, the escondido and the \
+         other old dances of the Pampas.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Malambo",
+        Folklore,
+        144.0,
+        &[(LowTom, "X..x.. X..x.."), (Rim, "x.x.x. x.x.x.")],
+        "",
+        "The gaucho's solo dance: bombo and the dancer's boots, in 3 + 3 against the eighths.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Chamamé",
+        Folklore,
+        120.0,
+        &[(Kick, "X...x. ..x..."), (HiHat, "X.x.x. X.x.x.")],
+        "",
+        "From Corrientes: the guitars' bass walks in 3/4 while the accordion plays 6/8, \
+         three against two in every bar.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Cueca",
+        Folklore,
+        126.0,
+        &[
+            (Kick, "X..... X....."),
+            (Clap, "..X.X. ..X.X."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "Chile's handkerchief dance: guitar on the two beats, hand claps on the eighths between.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Marinera",
+        Folklore,
+        120.0,
+        &[
+            (LowTom, "X..x.. X....."),
+            (Snare, "....x. ..x.x."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "Peru's courtship dance on the cajón: a low tone, slaps that cross into 3/4, and \
+         the quijada's rattle.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Bambuco",
+        Folklore,
+        108.0,
+        &[
+            (Rim, "X..... X....."),
+            (Kick, "....X. ..X..."),
+            (Shaker, "x.x.x. x.x.x."),
+        ],
+        "",
+        "Colombia's bambuco: the tiple keeps 6/8 while the bass lands on the second and third \
+         beats of 3/4, never on the downbeat.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Joropo",
+        Folklore,
+        176.0,
+        &[
+            (Kick, "X... ..X. ...."),
+            (Shaker, "X.x. X.x. X.x."),
+            (Rim, ".... x... x..."),
+        ],
+        "",
+        "The Venezuelan and Colombian plains: maracas in 3/4, the bass in 6/8, and the cuatro \
+         strumming across both.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
+        "Vidala",
+        Folklore,
+        72.0,
+        &[(Snare, "X... o... o.o.")],
+        "",
+        "The caja, a small hand drum, under a slow song of the Andean north-west of Argentina.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
+        "Carnavalito",
+        Folklore,
+        116.0,
+        &[
+            (LowTom, "X... X... X... X..."),
+            (Snare, "x.xx x.xx x.xx x.xx"),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "",
+        "The carnival dance of the Quebrada de Humahuaca: bombo on every beat and the caja's \
+         long-short-short, in a quick 2/4 written here as pairs of bars.",
+    ),
+    rhythm(
+        "Huayno",
+        Folklore,
+        100.0,
+        &[
+            (LowTom, "X... x... X... x..."),
+            (Rim, "..x. ..x. ..x. ..x."),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "",
+        "The Andean huayno of Peru and Bolivia: a bombo on the beat, a tap off it, and the \
+         charango's steady strum; 2/4, written as pairs of bars.",
+    ),
+    rhythm(
+        "Candombe",
+        Folklore,
+        110.0,
+        &[
+            (Rim, "X..X ..X. X..X ..X."),
+            (LowTom, "X... ..X. X... X..."),
+            (Conga, ".xx. .xx. .xx. .xx."),
+        ],
+        "",
+        "Montevideo's candombe: the stick on the drum's wooden shell plays the clave, \
+         3 + 3 + 2 twice, under the piano, repique and chico drums.",
+    ),
     // ----- Flamenco -----
     rhythm(
         "Rumba flamenca",
@@ -680,6 +1029,30 @@ pub static RHYTHMS: &[Rhythm] = &[
         ],
         "Snare roll",
         "A fast backbeat with the hi-hat on the offbeats, like the guitar.",
+    ),
+    rhythm(
+        "Rocksteady",
+        Reggae,
+        80.0,
+        &[
+            (Kick, "X... .... ..X. ...."),
+            (Rim, ".... X... .... X..."),
+            (HiHat, "..x. ..x. ..x. ..x."),
+        ],
+        "",
+        "Between ska and reggae, in the mid-1960s: slower, with the hi-hat between the beats.",
+    ),
+    rhythm(
+        "Dancehall",
+        Reggae,
+        96.0,
+        &[
+            (Kick, "X..X ..X. X..X ..X."),
+            (Snare, ".... X... .... X..."),
+            (HiHat, "x.x. x.x. x.x. x.x."),
+        ],
+        "",
+        "Digital Jamaican dance music: the kick in 3 + 3 + 2 under a snare on 2 and 4.",
     ),
     // ----- Country and folk -----
     rhythm(
@@ -737,6 +1110,31 @@ pub static RHYTHMS: &[Rhythm] = &[
         ],
         "",
         "Two beats to the bar, each made of three eighth notes.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Bluegrass",
+        Folk,
+        180.0,
+        &[
+            (Kick, "X... .... X... ...."),
+            (Snare, ".... x... .... x..."),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "",
+        "Fast and light, with the snare soft on 2 and 4 like the mandolin's chop.",
+    ),
+    rhythm(
+        "Tarantella",
+        Folk,
+        160.0,
+        &[
+            (Kick, "X..... X....."),
+            (Shaker, "x.x.x. x.x.x."),
+            (Rim, "..x.x. ..x.x."),
+        ],
+        "",
+        "A whirling southern Italian dance in fast 6/8, with a tambourine.",
     )
     .in_time(SIX_EIGHT),
     // ----- Classical and film -----

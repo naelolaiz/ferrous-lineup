@@ -33,6 +33,7 @@ use loom_core::{
 
 use crate::channel_rack::{self, RackAction};
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
+use crate::library_browser::Tried;
 use crate::midi::Midi;
 use crate::piano_roll::{self, PianoRoll, RollAction};
 use crate::playlist::{self, PlaylistAction, PlaylistView};
@@ -84,6 +85,13 @@ pub struct LoomApp {
     harmony_keys: HarmonyKeys,
     /// The patterns the library wrote, to rewrite on the next click.
     auditions: Vec<library::Audition>,
+    /// The style and rhythm the whole song plays: a demo's own, or the
+    /// last one the library gave the song. Shown selected in the library
+    /// when the selected pattern is not one the library wrote.
+    song_library: Tried,
+    /// The song's style and rhythm in versions of the project the library
+    /// changed, so undo and redo show the right ones selected.
+    song_versions: Vec<(Project, Tried)>,
     file: files::FileState,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
@@ -151,6 +159,8 @@ impl LoomApp {
             playlist: PlaylistView::new(),
             harmony_keys: HarmonyKeys::new(),
             auditions: Vec::new(),
+            song_library: Tried::default(),
+            song_versions: Vec::new(),
             history: History::default(),
             samples: SampleCache::new(),
             export: None,

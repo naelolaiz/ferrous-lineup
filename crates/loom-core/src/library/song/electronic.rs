@@ -14,6 +14,7 @@ pub(super) const ODE_TO_JOY: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Offbeat,
     rhythm: "Four on the floor",
+    style: "House piano",
     parts: &[Part::new(
         "Theme",
         "F#5:4 F#5 G5 A5 | A5 G5 F#5 E5 | D5 D5 E5 F#5 | F#5:6 E5:2 E5:8 | \
@@ -40,6 +41,7 @@ pub(super) const KOROBEINIKI: Song = Song {
     comping: Comping::Arp16,
     bass: Bass::Octaves16,
     rhythm: "Synthwave",
+    style: "Synthwave",
     parts: &[
         Part::new(
             "A",
@@ -72,6 +74,7 @@ pub(super) const SYMPHONY_40: Song = Song {
     comping: Comping::Held,
     bass: Bass::Sub,
     rhythm: "Drum and bass",
+    style: "Drum and bass",
     parts: &[
         Part::new("Pickup", "-:12 Eb5:2 D5", "i"),
         Part::new(
@@ -100,6 +103,7 @@ pub(super) const EINE_KLEINE: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Octaves,
     rhythm: "Disco",
+    style: "Disco",
     parts: &[Part::new(
         "Theme",
         "G5:4 -:2 D5:2 G5:4 -:2 D5:2 | G5:2 D5 G5 B5 D6:4 -:4 | C6:4 -:2 A5:2 C6:4 -:2 A5:2 | \
@@ -128,6 +132,7 @@ pub(super) const TOCCATA: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Offbeat,
     rhythm: "Techno",
+    style: "Techno minor",
     parts: &[Part::new(
         "Toccata",
         "A5:1 G5 A5:6 -:8 | G5:1 F5 E5 D5 C#5:4 D5:8 | A4:1 G4 A4:6 -:8 | E4:2 F4 C#4:4 D4:8 | \
@@ -154,6 +159,7 @@ pub(super) const TURKISH_MARCH: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Octaves,
     rhythm: "Breakbeat",
+    style: "Eurodance",
     parts: &[
         Part::new("Pickup", "-:12 B4:1 A4 G#4 A4", "i"),
         Part::new(

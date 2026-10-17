@@ -139,6 +139,10 @@ pub struct Song {
     pub bass: Bass,
     /// A rhythm from [`super::RHYTHMS`], or "" for no drums.
     pub rhythm: &'static str,
+    /// The style in [`super::STYLES`] whose harmony and playing the song
+    /// is closest to, or "" for none. The library shows it, and the
+    /// rhythm, selected while the demo is open.
+    pub style: &'static str,
     pub parts: &'static [Part],
     /// The order the parts are played in, by name.
     pub form: &'static [&'static str],
@@ -191,6 +195,7 @@ mod classical;
 mod electronic;
 mod flamenco;
 mod folk;
+mod folklore;
 mod hiphop;
 mod jazz;
 mod latin;
@@ -206,10 +211,17 @@ pub static SONGS: &[Song] = &[
     pop::LONDON_BRIDGE,
     pop::OLD_MACDONALD,
     pop::DECK_THE_HALLS,
+    pop::THREE_BLIND_MICE,
+    pop::SKIP_TO_MY_LOU,
+    pop::POP_GOES_THE_WEASEL,
     rock::DRUNKEN_SAILOR,
     rock::BELLA_CIAO,
     rock::BEETHOVENS_FIFTH,
     rock::YANKEE_DOODLE,
+    rock::WHISKEY_IN_THE_JAR,
+    rock::BATTLE_HYMN,
+    rock::WHEN_JOHNNY,
+    rock::TOREADOR_SONG,
     blues::MIDNIGHT_SHUFFLE,
     blues::ROLLING_BOOGIE,
     blues::MINOR_MOOD,
@@ -218,15 +230,35 @@ pub static SONGS: &[Song] = &[
     jazz::ENTERTAINER,
     jazz::HAPPY_BIRTHDAY,
     jazz::TWO_FIVE_WALK,
+    jazz::GOLLIWOGGS_CAKEWALK,
     soul::AMAZING_GRACE,
     soul::JOY_TO_THE_WORLD,
     soul::DORIAN_STRUT,
     soul::SUNDAY_SEVENTH,
+    soul::WADE_IN_THE_WATER,
+    soul::SWING_LOW,
+    soul::DOWN_BY_THE_RIVERSIDE,
+    soul::GO_DOWN_MOSES,
+    soul::JOSHUA,
+    soul::MOTHERLESS_CHILD,
+    soul::NOBODY_KNOWS,
+    soul::MICHAEL_ROW,
+    soul::HIS_EYE_IS_ON_THE_SPARROW,
+    soul::DEEP_RIVER,
+    soul::CLOSER_WALK,
+    soul::WILL_THE_CIRCLE,
+    soul::O_HAPPY_DAY,
+    soul::STEAL_AWAY,
+    soul::WERE_YOU_THERE,
+    soul::ROLL_CALLED_UP_YONDER,
+    soul::OLD_TIME_RELIGION,
+    soul::NEED_OF_PRAYER,
     hiphop::TWINKLE,
     hiphop::GYMNOPEDIE,
     hiphop::PRELUDE_IN_C,
     hiphop::SAKURA,
     hiphop::DIES_IRAE,
+    hiphop::REVERIE,
     electronic::ODE_TO_JOY,
     electronic::KOROBEINIKI,
     electronic::SYMPHONY_40,
@@ -240,6 +272,24 @@ pub static SONGS: &[Song] = &[
     tango::TANGO_DEL_TELAR,
     tango::MILONGA_DEL_RIO,
     tango::VALS_DEL_PUERTO,
+    tango::EL_CHOCLO,
+    tango::LA_CUMPARSITA,
+    tango::LA_PALOMA,
+    tango::GALLO_CIEGO,
+    folklore::EL_CONDOR_PASA,
+    folklore::ALMA_LLANERA,
+    folklore::DOS_PALOMITAS,
+    folklore::ZAMBA_DEL_TELAR,
+    folklore::CHACARERA_DEL_PATIO,
+    folklore::GATO_DEL_ARROYO,
+    folklore::CHAMAME_DEL_ESTERO,
+    folklore::CUECA_DE_LA_CALETA,
+    folklore::MARINERA_DEL_CALLEJON,
+    folklore::BAMBUCO_DEL_PARAMO,
+    folklore::MALAMBO_DEL_FOGON,
+    folklore::VIDALA_DE_LA_QUEBRADA,
+    folklore::CARNAVALITO_DE_LA_QUEBRADA,
+    folklore::CANDOMBE_DEL_BARRIO,
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     reggae::MARY_HAD_A_LITTLE_LAMB,
@@ -254,6 +304,20 @@ pub static SONGS: &[Song] = &[
     folk::ROW_YOUR_BOAT,
     folk::SILENT_NIGHT,
     folk::WE_WISH_YOU,
+    folk::WILD_ROVER,
+    folk::SHENANDOAH,
+    folk::RED_RIVER_VALLEY,
+    folk::HOME_ON_THE_RANGE,
+    folk::DANNY_BOY,
+    folk::LOCH_LOMOND,
+    folk::WAYFARING_STRANGER,
+    folk::COTTON_EYED_JOE,
+    folk::OLD_JOE_CLARK,
+    folk::SOLDIERS_JOY,
+    folk::TURKEY_IN_THE_STRAW,
+    folk::IRISH_WASHERWOMAN,
+    folk::WALTZING_MATILDA,
+    folk::MOLLY_MALONE,
     classical::CANON,
     classical::FUR_ELISE,
     classical::MOUNTAIN_KING,
@@ -264,6 +328,15 @@ pub static SONGS: &[Song] = &[
     classical::NEW_WORLD,
     classical::SHCHEDRYK,
     classical::FUNERAL_MARCH,
+    classical::LA_DONNA_E_MOBILE,
+    classical::JUPITER_HYMN,
+    classical::AVE_MARIA,
+    classical::PRELUDE_IN_C_SHARP_MINOR,
+    classical::WEDDING_MARCH,
+    classical::HALLELUJAH_CHORUS,
+    classical::GREAT_GATE_OF_KIEV,
+    classical::ANITRAS_DANCE,
+    classical::DIES_IRAE_MOZART,
 ];
 
 #[cfg(test)]
@@ -331,6 +404,44 @@ mod tests {
             }
         }
         assert!(SONGS.len() >= 60);
+    }
+
+    /// A comping written for four beats lands across the beats of a bar
+    /// of three, so a song in 3/4 or 6/8 plays one written for three, as
+    /// the styles do.
+    /// The style a song names is in the library and in the song's time
+    /// signature, so selecting it never changes the bars.
+    #[test]
+    fn every_song_names_a_real_style() {
+        for song in SONGS {
+            if song.style.is_empty() {
+                continue;
+            }
+            let style = crate::library::Style::named(song.style)
+                .unwrap_or_else(|| panic!("{}: no style called {}", song.name, song.style));
+            assert_eq!(
+                style.time, song.time,
+                "{}: {} is in another time",
+                song.name, song.style
+            );
+        }
+    }
+
+    #[test]
+    fn songs_in_three_play_in_three() {
+        for song in SONGS {
+            if song.time.steps_per_bar() == 12 {
+                assert!(
+                    matches!(
+                        song.comping,
+                        Comping::Waltz | Comping::Sway | Comping::Arp3 | Comping::Held
+                    ),
+                    "{} is in three but plays {:?}",
+                    song.name,
+                    song.comping
+                );
+            }
+        }
     }
 
     #[test]

@@ -53,6 +53,21 @@ pub(super) enum Demo {
 }
 
 impl Demo {
+    /// The style and rhythm the demo is made from.
+    fn library(self) -> Tried {
+        match self {
+            Demo::Start => Tried::default(),
+            Demo::Song(song) => Tried {
+                style: Style::named(song.style),
+                rhythm: Rhythm::named(song.rhythm),
+            },
+            Demo::Style(style) => Tried {
+                style: Some(style),
+                rhythm: Rhythm::named(style.rhythm),
+            },
+        }
+    }
+
     pub(super) fn project(self) -> Project {
         match self {
             Demo::Start => Project::demo(),
@@ -63,14 +78,41 @@ impl Demo {
 }
 
 impl LoomApp {
-    /// What the library put in the selected pattern, if it is unchanged.
+    /// What the library shows selected: what it put in the selected
+    /// pattern, if that is unchanged, or else the style and rhythm the
+    /// whole song plays, so a demo opens with its own selected, as in FL
+    /// Studio.
     pub(super) fn tried(&self) -> Tried {
         match self.unchanged_audition() {
             Some(audition) => Tried {
                 style: audition.style,
                 rhythm: audition.rhythm,
             },
-            None => Tried::default(),
+            None => self.song_library,
+        }
+    }
+
+    /// Remembers the style and rhythm the song plays in this version of
+    /// the project, for undo and redo.
+    fn remember_song_version(&mut self, project: Project, tried: Tried) {
+        self.song_versions
+            .retain(|(version, _)| *version != project);
+        if self.song_versions.len() == REMEMBERED {
+            self.song_versions.remove(0);
+        }
+        self.song_versions.push((project, tried));
+    }
+
+    /// After undo or redo, shows the style and rhythm this version of the
+    /// project plays, if the library changed it.
+    pub(super) fn restore_song_library(&mut self) {
+        if let Some((_, tried)) = self
+            .song_versions
+            .iter()
+            .rev()
+            .find(|(version, _)| *version == self.project)
+        {
+            self.song_library = *tried;
         }
     }
 
@@ -208,6 +250,8 @@ impl LoomApp {
                 (rhythm.name, Some(rhythm.tempo), "change the rhythm")
             }
         };
+        let song_library = self.song_library;
+        let before = self.project.clone();
         let change = self.edit(label, |project| {
             let change = match action {
                 LibraryAction::Style(style) => apply::use_style(project, style),
@@ -246,6 +290,24 @@ impl LoomApp {
             action,
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) if FILLS.contains(rhythm)
         );
+        // The song now plays what was picked, so the library shows it.
+        if change != apply::RhythmChange::default() {
+            self.song_library = match action {
+                LibraryAction::Style(style) => Tried {
+                    style: Some(style),
+                    ..song_library
+                },
+                LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) if !fill => {
+                    Tried {
+                        rhythm: Some(rhythm),
+                        ..song_library
+                    }
+                }
+                _ => song_library,
+            };
+            self.remember_song_version(before, song_library);
+            self.remember_song_version(self.project.clone(), self.song_library);
+        }
         self.notice = Some(if fill && change.drums > 0 {
             format!(
                 "{name} now plays in the last bar of {}. Ctrl+Z takes it back.",
@@ -312,10 +374,39 @@ impl LoomApp {
         }
     }
 
-    /// Opens a demo in place of the project, and plays it.
+    /// Opens a demo in place of the project, and plays it, with its
+    /// style and rhythm selected in the library.
     pub(super) fn open_demo(&mut self, demo: Demo) {
         self.replace_project(demo.project(), None);
+        self.song_library = demo.library();
         self.set_mode(PlayMode::Song);
         self.set_playing(true);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn demo_songs_select_their_style_and_rhythm() {
+        for song in SONGS {
+            let tried = Demo::Song(song).library();
+            assert_eq!(
+                tried.style.map(|s| s.name),
+                (!song.style.is_empty()).then_some(song.style)
+            );
+            assert_eq!(
+                tried.rhythm.map(|r| r.name),
+                (!song.rhythm.is_empty()).then_some(song.rhythm),
+                "{}",
+                song.name
+            );
+        }
+        let zamba = SONGS.iter().find(|s| s.name == "Zamba del telar").unwrap();
+        let tried = Demo::Song(zamba).library();
+        assert_eq!(tried.style.map(|s| s.name), Some("Zamba"));
+        assert_eq!(tried.rhythm.map(|r| r.name), Some("Zamba"));
+        assert_eq!(Demo::Start.library(), Tried::default());
     }
 }
