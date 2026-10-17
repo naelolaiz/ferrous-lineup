@@ -33,6 +33,12 @@ const OFFBEAT: usize = BEAT / 2;
 /// note of a triplet, two thirds of the way through the beat.
 const FULL_DELAY: usize = BEAT * 2 / 3 - OFFBEAT;
 
+/// How close to the second eighth a note must start to be played as it:
+/// less than a sixty-fourth note (6 ticks) either way. The strings of a
+/// strummed chord follow each other a tick apart, and a note played by
+/// hand is rarely exactly on time.
+const NEAR: usize = BEAT / 16;
+
 /// Whether eighth notes swing in `time`: in time signatures counted in
 /// quarter notes or longer ones, such as 4/4, 3/4 and 2/2. Where the
 /// eighth note is the beat (5/8, 7/8), or a beat is already three of
@@ -48,17 +54,17 @@ pub fn delay(swing: u8) -> usize {
 }
 
 /// `notes` as they are played with `swing`. A note that starts on the
-/// second eighth of a beat starts later, and a note that ends there ends
-/// later, so the eighth before it grows as it shrinks. Beats are counted
-/// from the start of the pattern. Every other note stays as it is,
-/// sixteenths and dotted rhythms included.
+/// second eighth of a beat (or very near it) starts later, and a note
+/// that ends there ends later, so the eighth before it grows as it
+/// shrinks. Beats are counted from the start of the pattern. Every other
+/// note stays as it is, sixteenths and dotted rhythms included.
 ///
 /// Drum `hits` sound to their end however long they are held, so only
 /// their starts move.
 pub fn swung(notes: &[NoteEvent], swing: u8, hits: bool) -> Vec<NoteEvent> {
     let late = delay(swing);
     let played = |tick: usize| match tick % BEAT {
-        OFFBEAT => tick + late,
+        offset if offset.abs_diff(OFFBEAT) < NEAR => tick + late,
         _ => tick,
     };
     notes
@@ -159,6 +165,22 @@ mod tests {
             NoteEvent::new(c4(), 11, 1),
         ];
         assert_eq!(swung(&notes, MAX_SWING, false), notes);
+    }
+
+    #[test]
+    fn a_strum_on_the_offbeat_moves_as_a_whole() {
+        // Three strings struck a tick apart, from the second eighth.
+        let strum: Vec<NoteEvent> = (0..3)
+            .map(|string| NoteEvent::exact(Note::new(60 + string * 4), 48 + string as usize, 48))
+            .collect();
+        let starts: Vec<usize> = swung(&strum, MAX_SWING, false)
+            .iter()
+            .map(NoteEvent::start_tick)
+            .collect();
+        assert_eq!(starts, [64, 65, 66]);
+        // A note a sixty-fourth or more from the offbeat is not on it.
+        let off = [NoteEvent::exact(c4(), 40, 2)];
+        assert_eq!(swung(&off, MAX_SWING, false), off);
     }
 
     #[test]

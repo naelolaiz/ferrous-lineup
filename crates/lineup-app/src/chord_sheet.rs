@@ -1305,8 +1305,13 @@ fn band_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction>) {
                         false => format!("{}  ({})", style.name, style.time),
                     };
                     let item = ui.selectable_label(current == Some(style), label);
+                    let extras = style.extras().describe();
+                    let with = match extras.is_empty() {
+                        true => String::new(),
+                        false => format!(" With {extras}."),
+                    };
                     let about = format!(
-                        "{} {}, about {} BPM.",
+                        "{} {}, about {} BPM.{with}",
                         style.about,
                         style.time,
                         style.tempo.round()
@@ -1321,8 +1326,8 @@ fn band_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction>) {
     });
     theme::hint(
         menu.response,
-        "The band plays the sheet: piano, bass and drums, in the style you pick. It plays \
-         again whenever the sheet changes",
+        "The band plays the sheet: piano, bass and drums, and in many styles a guitar, \
+         strings or an organ, in the style you pick. It plays again whenever the sheet changes",
     );
 }
 
@@ -1383,8 +1388,9 @@ fn variation_menu(
         let about = match variation {
             Variation::A => "plays the style as it is",
             Variation::B => {
-                "plays the style fuller: the drums on the ride cymbal, a busier bass or \
-                 piano where the style has one, a little louder. The drums fill into it"
+                "plays the style fuller: the drums on the ride cymbal, a busier bass, \
+                 piano or guitar, strings or an organ joining in where the style has them, \
+                 a little louder. The drums fill into it"
             }
         };
         let item = ui.radio(

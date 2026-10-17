@@ -287,7 +287,7 @@ impl Project {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::band::Player;
+    use crate::band::{BandStyle, Player};
     use crate::chord_sheet::read_bar;
     use crate::harmony::ScaleKind::*;
     use crate::pitch::PitchClass;
@@ -431,8 +431,8 @@ mod tests {
 
         // The last bar: one chord struck on the downbeat and held, over
         // a held root, and one crash of the cymbal.
-        let piano = project.band().unwrap().piano.unwrap();
-        let bass = project.band().unwrap().bass.unwrap();
+        let piano = project.player_channel(Player::Piano).unwrap();
+        let bass = project.player_channel(Player::Bass).unwrap();
         let last: Vec<(usize, usize)> = notes(&project, Player::Piano, piano)
             .into_iter()
             .filter(|&(at, _)| at >= 80)
@@ -494,7 +494,10 @@ mod tests {
 
     #[test]
     fn the_form_is_saved() {
+        // A style of piano, bass and drums alone, which format 14 holds.
+        let three = |project: &mut Project| project.set_band_style(BandStyle::named("Boom bap"));
         let mut project = song(&["C", "G7"]);
+        three(&mut project);
         project.set_intro(2);
         project.set_choruses(4);
         project.set_ending(true);
@@ -510,7 +513,8 @@ mod tests {
                 ending: true
             })
         );
-        let plain = song(&["C", "G7"]);
+        let mut plain = song(&["C", "G7"]);
+        three(&mut plain);
         assert_eq!(crate::file::format_for(&plain), 13);
     }
 
