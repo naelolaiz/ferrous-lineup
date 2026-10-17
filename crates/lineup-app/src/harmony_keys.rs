@@ -79,7 +79,7 @@ const PIANO_HEIGHT: f32 = 58.0;
 
 /// The colour of each function: blue for home, green for away, orange for
 /// tension; grey-blue for the chords of a mode, which have no function.
-fn function_color(function: Option<Function>) -> Color32 {
+pub(crate) fn function_color(function: Option<Function>) -> Color32 {
     match function {
         Some(Function::Tonic) => Color32::from_rgb(76, 136, 222),
         Some(Function::Subdominant) => Color32::from_rgb(86, 176, 110),
@@ -91,8 +91,8 @@ fn function_color(function: Option<Function>) -> Color32 {
 /// The colour of the keys of a mode.
 const MODE_COLOR: Color32 = Color32::from_rgb(92, 112, 150);
 
-const KEY_TEXT: Color32 = Color32::from_rgb(244, 246, 250);
-const KEY_TEXT_DIM: Color32 = Color32::from_rgb(196, 202, 214);
+pub(crate) const KEY_TEXT: Color32 = Color32::from_rgb(244, 246, 250);
+pub(crate) const KEY_TEXT_DIM: Color32 = Color32::from_rgb(196, 202, 214);
 const SUGGESTED: Color32 = Color32::from_rgb(255, 214, 92);
 /// The frame of the key whose chord is sounding now.
 const PLAYING: Color32 = Color32::from_rgb(255, 255, 255);
@@ -960,7 +960,7 @@ fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
 
 /// Frames the key whose chord is sounding now in thick white, so it
 /// stands out above every other mark on the bar.
-fn paint_playing(painter: &Painter, rect: Rect) {
+pub(crate) fn paint_playing(painter: &Painter, rect: Rect) {
     painter.rect_stroke(rect, 6.0, Stroke::new(3.0, PLAYING), StrokeKind::Inside);
 }
 

@@ -11,6 +11,7 @@
 //! Every change to the project goes through [`LineupApp::edit`], which
 //! records it for undo and tells the audio thread what changed.
 
+mod ear;
 mod edit;
 mod export;
 mod files;
@@ -38,6 +39,7 @@ use lineup_core::{
 
 use crate::channel_rack::{self, RackAction};
 use crate::chord_sheet::{ChordSheet, SheetAction};
+use crate::ear_training::EarTraining;
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
 use crate::library_browser::Tried;
 use crate::midi::Midi;
@@ -133,6 +135,8 @@ pub struct LineupApp {
     sounds: sounds::Sounds,
     /// The count-in, the metronome and the practice speed.
     practice: practice::Practice,
+    /// The ear-training window, an experiment.
+    ear_training: EarTraining,
     /// The last problem to show in the status bar, such as a bad WAV file.
     message: Option<String>,
     /// The last piece of good news for the status bar ("Exported song.wav").
@@ -208,6 +212,7 @@ impl LineupApp {
             live: live::Live::new(midi),
             sounds: sounds::Sounds::new(&cc.egui_ctx),
             practice: practice::Practice::new(&cc.egui_ctx),
+            ear_training: EarTraining::new(&cc.egui_ctx),
             message: None,
             notice: None,
             hint_bar: HintBar::default(),
@@ -1588,6 +1593,7 @@ impl eframe::App for LineupApp {
             self.apply_sheet(action);
         }
 
+        self.ear_training_window(&ctx, area);
         self.sound_font_window(&ctx);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);

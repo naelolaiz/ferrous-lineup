@@ -424,7 +424,7 @@ fn all_interval_from(notes: &mut Vec<u8>, random: &mut Random) -> Option<Vec<u8>
 
 /// A small random number generator ("SplitMix64"): good enough to
 /// shuffle notes, and it needs no library.
-struct Random(u64);
+pub(crate) struct Random(pub(crate) u64);
 
 impl Random {
     fn next(&mut self) -> u64 {
@@ -436,7 +436,7 @@ impl Random {
     }
 
     /// A number from 0 to `n - 1`.
-    fn below(&mut self, n: usize) -> usize {
+    pub(crate) fn below(&mut self, n: usize) -> usize {
         (self.next() % n as u64) as usize
     }
 }
