@@ -205,12 +205,18 @@ impl LoomApp {
                 Some(style) => {
                     apply::write_style_played(project, index, style, tonic, Some(selected), feel);
                 }
-                // A rhythm alone brings its own.
+                // A rhythm alone brings its own, to the song too if the
+                // song has nothing else in it.
                 None => {
                     if let Some(rhythm) = rhythm {
-                        project.time_signature = rhythm.time;
+                        let own = apply::song_has_music(project, index);
+                        if !own {
+                            project.time_signature = rhythm.time;
+                        }
                         let length = rhythm.bars() * rhythm.time.steps_per_bar();
-                        project.pattern_mut(index)?.set_length(length);
+                        let pattern = project.pattern_mut(index)?;
+                        pattern.time = own.then_some(rhythm.time);
+                        pattern.set_length(length);
                     }
                 }
             }
@@ -230,6 +236,32 @@ impl LoomApp {
             return;
         };
         self.select_pattern(pattern);
+        // A song with music of its own kept its key and time signature,
+        // which may not be the style's: say so.
+        if apply::song_has_music(&self.project, pattern) {
+            let (key, time) = match (style, rhythm) {
+                (Some(style), _) => (Some(style.scale(tonic)), style.time),
+                (None, Some(rhythm)) => (None, rhythm.time),
+                (None, None) => (None, self.project.time_signature),
+            };
+            let song = self.project.scale;
+            let mut differ = Vec::new();
+            if let Some(key) = key.filter(|key| *key != song) {
+                differ.push((key.name(), song.name()));
+            }
+            if time != self.project.time_signature {
+                differ.push((time.to_string(), self.project.time_signature.to_string()));
+            }
+            if !differ.is_empty() {
+                let (theirs, ours): (Vec<String>, Vec<String>) = differ.into_iter().unzip();
+                let name = &self.project.patterns()[pattern].name;
+                self.message = Some(format!(
+                    "\"{name}\" is in {}; the song stays in {}.",
+                    theirs.join(", "),
+                    ours.join(", ")
+                ));
+            }
+        }
         if self.auditions.len() == REMEMBERED {
             self.auditions.remove(0);
         }
@@ -418,7 +450,11 @@ impl LoomApp {
             ui.separator();
             ui.menu_button("Songs", |ui| {
                 ui.weak("Tunes with their melodies, free for everyone to use");
-                for genre in Genre::ALL {
+                // A genre with no songs gets no empty submenu.
+                for genre in Genre::ALL
+                    .into_iter()
+                    .filter(|&genre| SONGS.iter().any(|song| song.genre == genre))
+                {
                     ui.menu_button(genre.name(), |ui| {
                         for song in SONGS.iter().filter(|song| song.genre == genre) {
                             let hover = format!("{}\n\n{}", song.origin, song.about);
@@ -435,7 +471,10 @@ impl LoomApp {
             });
             ui.menu_button("Styles", |ui| {
                 ui.weak("Each harmony style as a short song");
-                for genre in Genre::ALL {
+                for genre in Genre::ALL
+                    .into_iter()
+                    .filter(|&genre| STYLES.iter().any(|style| style.genre == genre))
+                {
                     ui.menu_button(genre.name(), |ui| {
                         for style in STYLES.iter().filter(|style| style.genre == genre) {
                             if ui.button(style.name).on_hover_text(style.about).clicked() {

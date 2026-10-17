@@ -159,7 +159,7 @@ pub fn show(
                             let beat_group = step % time.steps_per_bar() / time.steps_per_beat();
                             let response =
                                 widgets::step_button(ui, on, beat_group, playhead == Some(step));
-                            if response.clicked() {
+                            if response.clicked() && !widgets::dismissing(ui.ctx()) {
                                 actions.push(RackAction::ToggleStep {
                                     channel: index,
                                     step,

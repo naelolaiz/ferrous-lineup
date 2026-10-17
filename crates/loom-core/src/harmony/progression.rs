@@ -7,13 +7,21 @@
 //! leads away from home toward the dominant, and roots that fall by a
 //! fifth sound strongest of all. Knowing them helps you guess what comes
 //! next in a song, and choose on purpose when to surprise.
+//!
+//! A chord is found in the tables by where its root is (how many
+//! semitones above the tonic) and by its kind of triad: major, minor or
+//! diminished. So G7 in C major is the V, but Gm is not: a minor chord
+//! on G has no leading tone, and does not do what V does. Major keys
+//! also know the chords they most often borrow from the minor key: iv,
+//! bIII, bVI and bVII.
 
-use super::{Chord, ChordQuality, HintLevel, Scale, ScaleKind};
+use super::{Chord, ChordFamily, ChordQuality, HintLevel, Scale, ScaleKind};
 
 /// A chord that often follows another one, and why.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Suggestion {
-    /// The degree of the key the chord is built on, from 0 (the tonic).
+    /// The degree of the scale the chord is built on, from 0 (the tonic).
+    /// Only chords whose root is a note of the scale are suggested.
     pub degree: usize,
     pub chord: Chord,
     /// Why, in a sentence: "IV to V: a step up to the dominant, ready to
@@ -34,229 +42,401 @@ impl Suggestion {
     }
 }
 
-/// A move from one degree of the key to another (`to`), with its reason
-/// in a few words and in a sentence.
+/// A move to the chord whose root is `to` semitones above the tonic,
+/// with its reason in a few words and in a sentence.
 struct Move {
-    to: usize,
+    to: u8,
     short: &'static str,
     reason: &'static str,
 }
 
 /// A `const fn` can be called where a constant is built, such as in the
 /// tables below, to keep each move on one line.
-const fn go(to: usize, short: &'static str, reason: &'static str) -> Move {
+const fn go(to: u8, short: &'static str, reason: &'static str) -> Move {
     Move { to, short, reason }
 }
 
-/// For each degree of a major key, the degrees that often come next.
-const MAJOR: [&[Move]; 7] = [
-    // I
-    &[
-        go(
-            3,
-            "away from home",
-            "I to IV: moving away from home, toward the dominant.",
-        ),
-        go(
-            4,
-            "tension, wants to go home",
-            "I to V: tension that wants to come back to I.",
-        ),
-        go(
-            5,
-            "relative minor, darker",
-            "I to vi: the relative minor, the same notes with a darker colour.",
-        ),
-        go(
-            1,
-            "leads on to V",
-            "I to ii: a minor chord that leads on to V.",
-        ),
-    ],
-    // ii
-    &[
-        go(
-            4,
-            "root falls a fifth (ii V I)",
-            "ii to V: the root falls a fifth. ii, V, I is everywhere, from jazz to pop.",
-        ),
-        go(
-            6,
-            "also leads home",
-            "ii to vii°: another chord that leads home to I.",
-        ),
-    ],
-    // iii
-    &[
-        go(
-            5,
-            "root falls a fifth",
-            "iii to vi: the root falls a fifth.",
-        ),
-        go(
-            3,
-            "step up to the subdominant",
-            "iii to IV: a step up to the subdominant.",
-        ),
-    ],
-    // IV
-    &[
-        go(
-            4,
-            "step up to the dominant",
-            "IV to V: a step up to the dominant, ready to come home.",
-        ),
-        go(
-            0,
-            "amen (plagal) cadence",
-            "IV to I: the \"amen\" (plagal) cadence.",
-        ),
-        go(
-            1,
-            "both lead on to V",
-            "IV to ii: two chords that lead away from home, then on to V.",
-        ),
-    ],
-    // V
-    &[
-        go(
-            0,
-            "strongest ending",
-            "V to I: the strongest ending. The leading tone rises to the root.",
-        ),
-        go(
-            5,
-            "deceptive cadence",
-            "V to vi: the \"deceptive\" cadence. You expect I and get its relative minor.",
-        ),
-    ],
-    // vi
-    &[
-        go(1, "root falls a fifth", "vi to ii: the root falls a fifth."),
-        go(
-            3,
-            "as in I V vi IV",
-            "vi to IV, as in the I, V, vi, IV progression of countless songs.",
-        ),
-        go(4, "on to the dominant", "vi to V: on to the dominant."),
-    ],
-    // vii°
-    &[
-        go(
-            0,
-            "resolves home, like V7",
-            "vii° to I: vii° is V7 without its root, so it resolves home too.",
-        ),
-        go(
-            2,
-            "root falls a fifth",
-            "vii° to iii: the root falls a fifth.",
-        ),
-    ],
+/// A chord of the key, found by its root (semitones above the tonic) and
+/// its kind of triad, and the moves that often follow it.
+struct Slot {
+    root: u8,
+    family: ChordFamily,
+    moves: &'static [Move],
+}
+
+const fn slot(root: u8, family: ChordFamily, moves: &'static [Move]) -> Slot {
+    Slot {
+        root,
+        family,
+        moves,
+    }
+}
+
+use ChordFamily::{Diminished, Major, Minor};
+
+/// The chords suggestions lead to, in a major key: the seven triads of
+/// the major scale, by their roots in semitones above the tonic.
+const MAJOR_CHORDS: [(u8, ChordQuality); 7] = [
+    (0, ChordQuality::Major),
+    (2, ChordQuality::Minor),
+    (4, ChordQuality::Minor),
+    (5, ChordQuality::Major),
+    (7, ChordQuality::Major),
+    (9, ChordQuality::Minor),
+    (11, ChordQuality::Diminished),
 ];
 
-/// For each degree of a minor key, the degrees that often come next.
-const MINOR: [&[Move]; 7] = [
-    // i
-    &[
-        go(
-            3,
-            "minor subdominant, away from home",
-            "i to iv: the minor subdominant, moving away from home.",
-        ),
-        go(
-            5,
-            "bright major chord",
-            "i to VI: a bright major chord, a third below home.",
-        ),
-        go(
-            6,
-            "step below home, rock and film",
-            "i to VII: the major chord a step below home, common in rock and film music.",
-        ),
-        go(
-            4,
-            "tension, wants to go home",
-            "i to V: tension that wants to come back to i.",
-        ),
-    ],
-    // ii°
-    &[go(
+/// The chords suggestions lead to, in a minor key: those of natural
+/// minor, but with a major V and the leading-tone vii° of harmonic
+/// minor, as most music in minor keys plays them.
+const MINOR_CHORDS: [(u8, ChordQuality); 8] = [
+    (0, ChordQuality::Minor),
+    (2, ChordQuality::Diminished),
+    (3, ChordQuality::Major),
+    (5, ChordQuality::Minor),
+    (7, ChordQuality::Major),
+    (8, ChordQuality::Major),
+    (10, ChordQuality::Major),
+    (11, ChordQuality::Diminished),
+];
+
+/// The chords of a major key, and the chords it borrows from the minor
+/// key, with the moves that often follow each.
+const MAJOR: &[Slot] = &[
+    slot(
+        0,
+        Major,
+        &[
+            go(
+                5,
+                "away from home",
+                "I to IV: moving away from home, toward the dominant.",
+            ),
+            go(
+                7,
+                "tension, wants to go home",
+                "I to V: tension that wants to come back to I.",
+            ),
+            go(
+                9,
+                "relative minor, darker",
+                "I to vi: the relative minor, a darker colour. It shares two of its three notes with I.",
+            ),
+            go(
+                2,
+                "leads on to V",
+                "I to ii: a minor chord that leads on to V.",
+            ),
+        ],
+    ),
+    slot(
+        2,
+        Minor,
+        &[
+            go(
+                7,
+                "root falls a fifth (ii V I)",
+                "ii to V: the root falls a fifth. ii, V, I is everywhere, from jazz to pop.",
+            ),
+            go(
+                11,
+                "also leads home",
+                "ii to vii°: another chord that leads home to I.",
+            ),
+        ],
+    ),
+    slot(
         4,
-        "root falls a fifth",
-        "ii° to V: the root falls a fifth, toward home.",
-    )],
-    // III
-    &[
-        go(
+        Minor,
+        &[
+            go(
+                9,
+                "root falls a fifth",
+                "iii to vi: the root falls a fifth.",
+            ),
+            go(
+                5,
+                "step up to the subdominant",
+                "iii to IV: a step up to the subdominant.",
+            ),
+        ],
+    ),
+    slot(
+        5,
+        Major,
+        &[
+            go(
+                7,
+                "step up to the dominant",
+                "IV to V: a step up to the dominant, ready to come home.",
+            ),
+            go(
+                0,
+                "amen (plagal) cadence",
+                "IV to I: the \"amen\" (plagal) cadence.",
+            ),
+            go(
+                2,
+                "both lead on to V",
+                "IV to ii: two chords that lead away from home, then on to V.",
+            ),
+        ],
+    ),
+    slot(
+        7,
+        Major,
+        &[
+            go(
+                0,
+                "strongest ending",
+                "V to I: the strongest ending. The leading tone rises to the root.",
+            ),
+            go(
+                9,
+                "deceptive cadence",
+                "V to vi: the \"deceptive\" cadence. You expect I and get its relative minor.",
+            ),
+        ],
+    ),
+    slot(
+        9,
+        Minor,
+        &[
+            go(2, "root falls a fifth", "vi to ii: the root falls a fifth."),
+            go(
+                5,
+                "as in I V vi IV",
+                "vi to IV, as in the I, V, vi, IV progression of countless songs.",
+            ),
+            go(7, "on to the dominant", "vi to V: on to the dominant."),
+        ],
+    ),
+    slot(
+        11,
+        Diminished,
+        &[
+            go(
+                0,
+                "resolves home, like V7",
+                "vii° to I: vii° is V7 without its root, so it resolves home too.",
+            ),
+            go(
+                4,
+                "root falls a fifth",
+                "vii° to iii: the root falls a fifth.",
+            ),
+        ],
+    ),
+    // Borrowed from the minor key.
+    slot(
+        5,
+        Minor,
+        &[
+            go(
+                0,
+                "minor plagal cadence",
+                "iv to I: the minor plagal cadence. The iv is borrowed from the minor key, and its flat sixth falls to the fifth of I.",
+            ),
+            go(7, "on to the dominant", "iv to V: on to the dominant."),
+        ],
+    ),
+    slot(
+        2,
+        Diminished,
+        &[go(
+            7,
+            "borrowed ii°, falls a fifth to V",
+            "ii° to V: the ii chord of the minor key, borrowed, falls a fifth to V, as in a minor ii, V, i.",
+        )],
+    ),
+    slot(
+        3,
+        Major,
+        &[go(
             5,
+            "step up to IV",
+            "bIII to IV: a step up from a chord borrowed from the minor key, as in rock's I bIII IV.",
+        )],
+    ),
+    slot(
+        8,
+        Major,
+        &[go(
+            7,
+            "slides down to V",
+            "bVI to V: the root slides down a semitone onto the dominant.",
+        )],
+    ),
+    slot(
+        10,
+        Major,
+        &[
+            go(
+                0,
+                "a step up to home",
+                "bVII to I: a whole step up to home, the rock cadence (and jazz's \"backdoor\").",
+            ),
+            go(
+                5,
+                "root falls a fifth",
+                "bVII to IV: the root falls a fifth, as in I, bVII, IV, I.",
+            ),
+        ],
+    ),
+];
+
+/// What often follows V in a minor key (or v, which the minor key's
+/// own scale gives).
+const MINOR_FIVE: &[Move] = &[
+    go(
+        0,
+        "back home",
+        "V to i: back home. The pull is strongest when V is major (its third is the leading tone).",
+    ),
+    go(
+        8,
+        "deceptive cadence",
+        "V to bVI: the deceptive cadence of minor keys.",
+    ),
+];
+
+/// The chords of a minor key, with the moves that often follow each.
+/// Melodic minor's ii and IV are here too.
+const MINOR: &[Slot] = &[
+    slot(
+        0,
+        Minor,
+        &[
+            go(
+                5,
+                "minor subdominant, away from home",
+                "i to iv: the minor subdominant, moving away from home.",
+            ),
+            go(
+                8,
+                "bright major chord",
+                "i to bVI: a bright major chord, a major third below home.",
+            ),
+            go(
+                10,
+                "step below home, rock and film",
+                "i to bVII: the major chord a whole step below home, common in rock and film music.",
+            ),
+            go(
+                7,
+                "tension, wants to go home",
+                "i to V: tension that wants to come back to i.",
+            ),
+        ],
+    ),
+    slot(
+        2,
+        Diminished,
+        &[go(
+            7,
             "root falls a fifth",
-            "III to VI: the root falls a fifth.",
-        ),
-        go(
-            3,
-            "step up to the subdominant",
-            "III to iv: a step up to the subdominant.",
-        ),
-    ],
-    // iv
-    &[
-        go(
-            4,
+            "ii° to V: the root falls a fifth, toward home.",
+        )],
+    ),
+    slot(
+        2,
+        Minor,
+        &[go(
+            7,
+            "root falls a fifth",
+            "ii to V: the root falls a fifth, toward home.",
+        )],
+    ),
+    slot(
+        3,
+        Major,
+        &[
+            go(
+                8,
+                "root falls a fifth",
+                "bIII to bVI: the root falls a fifth.",
+            ),
+            go(
+                5,
+                "step up to the subdominant",
+                "bIII to iv: a step up to the subdominant.",
+            ),
+        ],
+    ),
+    slot(
+        5,
+        Minor,
+        &[
+            go(
+                7,
+                "step up to the dominant",
+                "iv to V: a step up to the dominant.",
+            ),
+            go(
+                0,
+                "minor plagal cadence",
+                "iv to i: the minor plagal cadence.",
+            ),
+            go(
+                10,
+                "then on to bIII or i",
+                "iv to bVII: then on to bIII or back to i.",
+            ),
+        ],
+    ),
+    slot(
+        5,
+        Major,
+        &[go(
+            7,
             "step up to the dominant",
-            "iv to V: a step up to the dominant.",
-        ),
-        go(
+            "IV to V: a step up to the dominant. The raised sixth of melodic minor rises to the leading tone.",
+        )],
+    ),
+    slot(7, Major, MINOR_FIVE),
+    slot(7, Minor, MINOR_FIVE),
+    slot(
+        8,
+        Major,
+        &[
+            go(
+                10,
+                "rising toward i",
+                "bVI to bVII: rising step by step, toward i.",
+            ),
+            go(
+                5,
+                "on to the subdominant",
+                "bVI to iv: on to the subdominant.",
+            ),
+            go(
+                2,
+                "root falls a diminished fifth",
+                "bVI to ii°: the root falls a diminished fifth, the one fifth of the scale that is not perfect.",
+            ),
+        ],
+    ),
+    slot(
+        10,
+        Major,
+        &[
+            go(
+                3,
+                "V of the relative major",
+                "bVII to bIII: bVII is the dominant of bIII, the relative major.",
+            ),
+            go(0, "step up to home", "bVII to i: a whole step up to home."),
+        ],
+    ),
+    slot(
+        11,
+        Diminished,
+        &[go(
             0,
-            "minor plagal cadence",
-            "iv to i: the minor plagal cadence.",
-        ),
-        go(
-            6,
-            "then on to III or i",
-            "iv to VII: then on to III or back to i.",
-        ),
-    ],
-    // V (or v)
-    &[
-        go(
-            0,
-            "back home",
-            "V to i: back home. The pull is strongest when V is major (its third is the leading tone).",
-        ),
-        go(
-            5,
-            "deceptive cadence",
-            "V to VI: the deceptive cadence of minor keys.",
-        ),
-    ],
-    // VI
-    &[
-        go(
-            6,
-            "rising toward i",
-            "VI to VII: rising step by step, toward i.",
-        ),
-        go(
-            3,
-            "on to the subdominant",
-            "VI to iv: on to the subdominant.",
-        ),
-        go(
-            1,
-            "root falls a fifth",
-            "VI to ii°: the root falls a fifth.",
-        ),
-    ],
-    // VII
-    &[
-        go(
-            2,
-            "V of the relative major",
-            "VII to III: VII is the dominant of III, the relative major.",
-        ),
-        go(0, "step up to home", "VII to i: a step up to home."),
-    ],
+            "resolves home, like V7",
+            "vii° to i: the leading-tone chord is V7 without its root, so it resolves home too.",
+        )],
+    ),
 ];
 
 const SECONDARY_DOMINANT_SHORT: &str = "secondary dominant: V of the chord a fifth down";
@@ -265,70 +445,61 @@ const SECONDARY_DOMINANT: &str = "Not in the key: a major or dominant chord here
 
 /// The chords that often follow `current` in `scale`, the most usual first.
 ///
-/// Suggestions are given for major and minor keys. In minor keys they
-/// use the chords of the natural minor scale, but with a major V, as most
-/// music in minor keys does. Nothing is suggested for other scales, or
-/// when the chord's root is not in the key.
+/// Suggestions are given for major and minor keys (natural, harmonic or
+/// melodic). In minor keys they lead to the chords of natural minor,
+/// with a major V and the leading-tone vii°, as most music in minor
+/// keys plays them. Only chords whose root is a note of `scale` are
+/// suggested, so that each one is on a degree of the scale. Nothing is
+/// suggested for other scales, or for a chord the tables do not know,
+/// such as a minor chord on the fifth note of a major key.
 pub fn next_chords(scale: Scale, current: Chord) -> Vec<Suggestion> {
     let minor = match scale.kind {
         ScaleKind::Major => false,
         ScaleKind::NaturalMinor | ScaleKind::HarmonicMinor | ScaleKind::MelodicMinor => true,
         _ => return Vec::new(),
     };
-    let chord_on = |degree: usize| -> Option<Chord> {
-        if !minor {
-            return scale.triad(degree);
-        }
-        if degree == 4 {
-            let root = scale.pitch_classes().nth(4)?;
-            return Some(Chord::new(root, ChordQuality::Major));
-        }
-        Scale::new(scale.root, ScaleKind::NaturalMinor).triad(degree)
+    let chords: &[(u8, ChordQuality)] = if minor { &MINOR_CHORDS } else { &MAJOR_CHORDS };
+    // The key's chord with its root `to` semitones above the tonic, if
+    // that root is a note of the scale.
+    let suggest = |to: u8, short: &'static str, reason: &'static str| -> Option<Suggestion> {
+        let &(_, quality) = chords.iter().find(|(root, _)| *root == to)?;
+        let root = scale.root.transpose(i32::from(to));
+        Some(Suggestion {
+            degree: scale.degree_of(root)?,
+            chord: Chord::new(root, quality),
+            reason,
+            short,
+        })
     };
-    let Some(degree) = scale.degree_of(current.root) else {
-        return Vec::new();
-    };
+    let root = scale.root.semitones_up_to(current.root);
 
-    // A major chord on a degree where the key has none (D major in C) is
-    // most often the dominant of the chord a fifth below it (G).
-    let target = current.root.transpose(5);
-    let dominant_kind = matches!(
-        current.quality,
-        ChordQuality::Major
-            | ChordQuality::Dominant7
-            | ChordQuality::Dominant9
-            | ChordQuality::Dominant7Flat9
-            | ChordQuality::Dominant7Sharp9
-            | ChordQuality::Dominant11
-            | ChordQuality::Dominant13
-    );
+    // A major or dominant chord from outside the key, a fifth above one
+    // of the key's chords, is most often its dominant: D major in C
+    // major leads to G. (Not to the tonic: in a minor key, that is the
+    // key's own V, which is not "outside" it.)
+    let dominant_kind = current.quality == ChordQuality::Major || current.quality.is_dominant();
+    let target = (root + 5) % 12;
     if dominant_kind
-        && !scale.is_diatonic(current)
-        && let Some(target_degree) = scale.degree_of(target)
-        && target_degree != 0
-        && let Some(chord) = chord_on(target_degree)
-        && chord.quality != ChordQuality::Diminished
+        && !scale.is_chord_of_key(current)
+        && target != 0
+        && let Some(suggestion) = suggest(target, SECONDARY_DOMINANT_SHORT, SECONDARY_DOMINANT)
+        && suggestion.chord.quality != ChordQuality::Diminished
     {
-        return vec![Suggestion {
-            degree: target_degree,
-            chord,
-            reason: SECONDARY_DOMINANT,
-            short: SECONDARY_DOMINANT_SHORT,
-        }];
+        return vec![suggestion];
     }
 
-    let table = if minor { &MINOR } else { &MAJOR };
-    table[degree]
+    let table = if minor { MINOR } else { MAJOR };
+    let family = current.quality.family();
+    table
         .iter()
-        .filter_map(|step| {
-            Some(Suggestion {
-                degree: step.to,
-                chord: chord_on(step.to)?,
-                reason: step.reason,
-                short: step.short,
-            })
+        .find(|slot| slot.root == root && slot.family == family)
+        .map(|slot| {
+            slot.moves
+                .iter()
+                .filter_map(|step| suggest(step.to, step.short, step.reason))
+                .collect()
         })
-        .collect()
+        .unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -407,15 +578,53 @@ mod tests {
         for scale in [
             Scale::new(C, ScaleKind::Major),
             Scale::new(A, ScaleKind::NaturalMinor),
+            Scale::new(A, ScaleKind::HarmonicMinor),
+            Scale::new(A, ScaleKind::MelodicMinor),
         ] {
             for degree in 0..7 {
                 for s in next_chords(scale, scale.triad(degree).unwrap()) {
+                    // Every suggestion is on a note of the scale.
+                    assert_eq!(scale.degree_of(s.chord.root), Some(s.degree));
                     assert!(s.short.len() < s.reason.len(), "{:?}", s.short);
                     assert_eq!(s.why(HintLevel::Short), Some(s.short));
                     assert_eq!(s.why(HintLevel::Minimal), None);
                 }
             }
         }
+    }
+
+    #[test]
+    fn harmonic_and_melodic_minor_know_their_own_chords() {
+        let harmonic = Scale::new(A, ScaleKind::HarmonicMinor);
+        // vii° is the leading-tone chord: it goes home, not to bIII.
+        for quality in [ChordQuality::Diminished, ChordQuality::Diminished7] {
+            let after = next_chords(harmonic, major(GSharp, quality));
+            assert_eq!(names(&after), ["Am"]);
+            assert!(after[0].reason.starts_with("vii° to i"));
+        }
+        // G is not in A harmonic minor, so it is never suggested there.
+        let after_am = next_chords(harmonic, major(A, ChordQuality::Minor));
+        assert_eq!(names(&after_am), ["Dm", "F", "E"]);
+        let melodic = Scale::new(A, ScaleKind::MelodicMinor);
+        let after_bm = next_chords(melodic, major(B, ChordQuality::Minor));
+        assert!(after_bm[0].reason.starts_with("ii to V"));
+        let after_d = next_chords(melodic, major(D, ChordQuality::Major));
+        assert!(after_d[0].reason.starts_with("IV to V"));
+    }
+
+    #[test]
+    fn a_chord_must_be_the_kind_the_key_has() {
+        let c_major = Scale::new(C, ScaleKind::Major);
+        // Gm has no leading tone: it is not V.
+        assert!(next_chords(c_major, major(G, ChordQuality::Minor)).is_empty());
+        // Fm is the iv borrowed from C minor, which goes home or to V.
+        let after_fm = next_chords(c_major, major(F, ChordQuality::Minor));
+        assert_eq!(names(&after_fm), ["C", "G"]);
+        assert!(after_fm[0].reason.starts_with("iv to I"));
+        let after_bb = next_chords(c_major, major(ASharp, ChordQuality::Major));
+        assert_eq!(names(&after_bb), ["C", "F"]);
+        let after_ab = next_chords(c_major, major(GSharp, ChordQuality::Major));
+        assert_eq!(names(&after_ab), ["G"]);
     }
 
     #[test]

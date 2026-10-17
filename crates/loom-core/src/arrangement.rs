@@ -26,8 +26,9 @@ use crate::project::Project;
 ///
 /// The pattern loops for as long as the piece lasts, so a clip that
 /// repeats its pattern three times is one `Play` three patterns long.
-/// `skip` is not zero when a section or a loop region starts in the
-/// middle of a clip.
+/// `skip` is not zero when the song jumps into the middle of a clip: when
+/// a repeated section starts again, or a loop region starts, partway
+/// through it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Play {
     pub pattern: usize,
@@ -128,9 +129,18 @@ impl Arrangement {
 /// many times as its `repeats` say; the gaps between sections play once.
 /// Each time a piece plays, every audible clip under it adds a [`Play`]
 /// for the part of the clip inside the piece.
+///
+/// Where the song carries straight on across a section edge (into a
+/// section, or out of one after its last time round), a clip under the
+/// edge does not jump either: its part after the edge only makes its
+/// `Play` before the edge longer. So a note held across the edge sounds
+/// to its end, as it would with no section there. Only a real jump back,
+/// to play a section again, starts a new `Play` and cuts the notes.
 pub(crate) fn arrange(project: &Project, from: usize, to: usize) -> Arrangement {
     let mut arrangement = Arrangement::default();
     let clips: Vec<Clip> = project.playlist().audible_clips().collect();
+    // For each clip, the index of its last `Play` so far.
+    let mut last_play: Vec<Option<usize>> = vec![None; clips.len()];
     for (piece_from, piece_to, section, rounds) in pieces(project, from, to) {
         for round in 1..=rounds {
             let start = arrangement.length;
@@ -142,18 +152,32 @@ pub(crate) fn arrange(project: &Project, from: usize, to: usize) -> Arrangement 
                 round,
                 rounds,
             });
-            for clip in &clips {
+            for (index, clip) in clips.iter().enumerate() {
                 let clip_end = clip.start + project.clip_length(clip);
                 // The part of the clip inside the piece, if any.
                 let begin = clip.start.max(piece_from);
                 let end = clip_end.min(piece_to);
-                if begin < end {
-                    arrangement.plays.push(Play {
-                        pattern: clip.pattern,
-                        start: start + (begin - piece_from),
-                        skip: begin - clip.start,
-                        length: end - begin,
-                    });
+                if begin >= end {
+                    continue;
+                }
+                let play = Play {
+                    pattern: clip.pattern,
+                    start: start + (begin - piece_from),
+                    skip: begin - clip.start,
+                    length: end - begin,
+                };
+                // Does it carry on where the clip's last piece ended, both
+                // in the song and in the clip?
+                let carries_on = last_play[index].filter(|&previous| {
+                    let previous = arrangement.plays[previous];
+                    previous.end() == play.start && previous.skip + previous.length == play.skip
+                });
+                match carries_on {
+                    Some(previous) => arrangement.plays[previous].length += play.length,
+                    None => {
+                        last_play[index] = Some(arrangement.plays.len());
+                        arrangement.plays.push(play);
+                    }
                 }
             }
             arrangement.length += piece_to - piece_from;
@@ -308,7 +332,35 @@ mod tests {
             .iter()
             .map(|play| (play.start, play.skip, play.length))
             .collect();
-        assert_eq!(plays, [(0, 0, 32), (32, 32, 32), (64, 32, 32)]);
+        // The first time round, the song plays straight into the section,
+        // so the clip is not cut there: it is cut where the song jumps
+        // back to the start of the section, at song step 64.
+        assert_eq!(plays, [(0, 0, 64), (64, 32, 32)]);
+    }
+
+    #[test]
+    fn a_section_played_once_does_not_cut_a_clip() {
+        // A note held across bar 3 of a four-bar clip, and sections over
+        // its first two bars and its last bar, each played once: naming
+        // parts of the song changes nothing that is heard.
+        let mut project = Project::template();
+        project.pattern_mut(0).unwrap().set_length(64);
+        project.add_clip(Clip::new(0, 0, 0));
+        let plain = project.arrangement().plays;
+        project.add_section(Section::new("Intro", 0, 32));
+        project.add_section(Section::new("Outro", 48, 16));
+        let song = project.arrangement();
+        assert_eq!(song.passes.len(), 3);
+        assert_eq!(song.plays, plain);
+        assert_eq!(
+            song.plays,
+            [Play {
+                pattern: 0,
+                start: 0,
+                skip: 0,
+                length: 64
+            }]
+        );
     }
 
     #[test]

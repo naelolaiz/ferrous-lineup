@@ -40,7 +40,7 @@ use loom_core::{
 };
 
 use crate::dsp::Smoothed;
-use crate::instrument::{HELD, Instrument};
+use crate::instrument::{HELD, Instrument, Origin};
 
 /// How many commands can wait in the queue before `send` starts failing.
 /// The audio thread empties the queue every few milliseconds, so this is
@@ -153,6 +153,8 @@ pub enum Command {
     SetMode(PlayMode),
     /// Choose the pattern that pattern mode loops.
     SelectPattern(usize),
+    /// Change the tempo. Notes that are sounding keep their length in
+    /// steps: they end sooner or later, on the step they should.
     SetTempo(Tempo),
     SetMasterVolume(f32),
     /// Add an empty pattern at position `index`; the patterns from there
@@ -168,7 +170,9 @@ pub enum Command {
     },
     /// Replace the song: the pieces of patterns to play, with every
     /// repeat already unrolled (see [`loom_core::Arrangement`]), and the
-    /// song's length in steps.
+    /// song's length in steps. While the song plays, notes that the new
+    /// song no longer plays (their clip was taken away, or its track was
+    /// muted) stop.
     SetSong {
         plays: Vec<Play>,
         length: usize,
@@ -200,6 +204,9 @@ pub enum Command {
         channel: usize,
         volume: f32,
     },
+    /// Mute or unmute a channel. Muting it also stops the notes it is
+    /// playing, but not keys held on a keyboard: those play on a muted
+    /// channel too.
     SetMuted {
         channel: usize,
         muted: bool,
@@ -618,7 +625,7 @@ impl AudioThread {
                 self.pattern = pattern;
                 self.update_loop_length();
             }
-            Command::SetTempo(tempo) => self.sequencer.set_tempo(tempo),
+            Command::SetTempo(tempo) => self.set_tempo(tempo),
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
             Command::InsertPattern { index, length } => {
                 if self.pattern_lengths.len() < MAX_PATTERNS {
@@ -652,6 +659,9 @@ impl AudioThread {
                 self.throw_away(Garbage::Song(old));
                 self.song_length = length;
                 self.update_loop_length();
+                if self.playing && self.mode == PlayMode::Song {
+                    self.release_notes_left_out();
+                }
             }
             Command::InsertChannel {
                 index,
@@ -716,6 +726,10 @@ impl AudioThread {
             Command::SetMuted { channel, muted } => {
                 if let Some(state) = self.channels.get_mut(channel) {
                     state.muted = muted;
+                    if muted {
+                        // Every note of the song on this channel stops.
+                        state.instrument.release_unless(|_| false);
+                    }
                 }
             }
             Command::Preview(channel) => self.preview(channel, STEP_NOTE),
@@ -749,6 +763,40 @@ impl AudioThread {
         self.master_volume.settle();
         for channel in &mut self.channels {
             channel.volume.settle();
+        }
+    }
+
+    /// Changes the tempo, and stretches the notes that are sounding to
+    /// match, so each still ends on the step it should.
+    fn set_tempo(&mut self, tempo: Tempo) {
+        let before = self.sequencer.step_frames();
+        let next_step = self.sequencer.frames_to_next_step();
+        self.sequencer.set_tempo(tempo);
+        let stretch = self.sequencer.step_frames() / before;
+        for channel in &mut self.channels {
+            channel.instrument.tempo_changed(next_step, stretch);
+        }
+    }
+
+    /// Stops the notes that the new song, just received, no longer plays.
+    /// A note is still played if a piece of the new song plays its pattern
+    /// on the song step where the note started, at the same step of the
+    /// pattern: then nothing changed under it. Otherwise its clip was moved
+    /// or taken away, or its track was muted.
+    fn release_notes_left_out(&mut self) {
+        // The fields are borrowed one by one, so the closure can read the
+        // song while the channels are changed.
+        let plays = &self.plays;
+        let lengths = &self.pattern_lengths;
+        let still_played = |origin: Origin| {
+            let length = lengths.get(origin.pattern).copied().unwrap_or(0);
+            plays.iter().any(|play| {
+                play.pattern == origin.pattern
+                    && play.pattern_step(origin.song_step, length) == Some(origin.pattern_step)
+            })
+        };
+        for channel in &mut self.channels {
+            channel.instrument.release_unless(still_played);
         }
     }
 
@@ -842,8 +890,11 @@ impl AudioThread {
                 let length = self.pattern_length(self.pattern);
                 start_pattern_notes(
                     &mut self.channels,
-                    self.pattern,
-                    step,
+                    Origin {
+                        pattern: self.pattern,
+                        pattern_step: step,
+                        song_step: step,
+                    },
                     length - step.min(length),
                     timing,
                 );
@@ -859,8 +910,11 @@ impl AudioThread {
                         let room = (length - local_step).min(play.end() - step);
                         start_pattern_notes(
                             &mut self.channels,
-                            play.pattern,
-                            local_step,
+                            Origin {
+                                pattern: play.pattern,
+                                pattern_step: local_step,
+                                song_step: step,
+                            },
                             room,
                             timing,
                         );
@@ -932,20 +986,15 @@ struct Timing {
     sample_rate: u32,
 }
 
-/// Starts the notes of one pattern that begin on its `step`. A note is
-/// held for `room` steps at most: up to the end of the pattern, or of the
-/// piece of the song that plays it.
+/// Starts the notes of one pattern that begin on one of its steps, as
+/// `origin` says: which pattern, which step of it, and on which step of
+/// the song. A note is held for `room` steps at most: up to the end of the
+/// pattern, or of the piece of the song that plays it.
 ///
 /// This is a plain function, not a method, so that it borrows only the
 /// channels. Its caller can keep reading other fields of the audio thread
 /// (such as the clips) while the channels are being changed.
-fn start_pattern_notes(
-    channels: &mut [ChannelState],
-    pattern: usize,
-    step: usize,
-    room: usize,
-    timing: Timing,
-) {
+fn start_pattern_notes(channels: &mut [ChannelState], origin: Origin, room: usize, timing: Timing) {
     for channel in channels {
         if channel.muted {
             continue;
@@ -955,16 +1004,20 @@ fn start_pattern_notes(
         // fields of the struct, so the borrows do not overlap.
         for note in channel
             .notes
-            .get(pattern)
+            .get(origin.pattern)
             .iter()
-            .filter(|note| note.start == step)
+            .filter(|note| note.start == origin.pattern_step)
         {
             // A note that runs past the end of the pattern is cut there.
             let steps_held = note.length.min(room);
             let gate = (steps_held as f64 * timing.step_frames) as u32;
-            channel
-                .instrument
-                .note_on(note.pitch, note.velocity, gate, timing.sample_rate);
+            channel.instrument.note_on_from(
+                origin,
+                note.pitch,
+                note.velocity,
+                gate,
+                timing.sample_rate,
+            );
         }
     }
 }
@@ -974,6 +1027,7 @@ mod tests {
     use super::*;
     use crate::instrument::{MidiOut, Sampler, Synth};
     use crate::sample::SampleData;
+    use loom_core::{Channel, Clip, Project, Section};
 
     const RATE: u32 = 48_000;
 
@@ -1565,6 +1619,139 @@ mod tests {
             pitch: Note::A4,
         };
         assert_eq!(received(&mut out), [off]);
+    }
+
+    fn note_off(pitch: Note) -> MidiMessage {
+        MidiMessage::NoteOff { channel: 3, pitch }
+    }
+
+    #[test]
+    fn a_note_across_a_section_played_once_is_not_cut() {
+        // A note from step 28 to step 36 of a four-bar clip, under a
+        // section over the first two bars that is played once.
+        let mut project = Project::empty();
+        project.add_channel(Channel::midi_out(3));
+        let pattern = project.pattern_mut(0).unwrap();
+        pattern.set_length(64);
+        pattern.add_note(0, NoteEvent::new(Note::A4, 28, 8));
+        project.add_clip(Clip::new(0, 0, 0));
+        project.add_section(Section::new("Intro", 0, 32));
+        let song = project.arrangement();
+
+        let mut h = harness();
+        let mut out = add_midi_out(&mut h, project.patterns()[0].notes(0));
+        send(
+            &mut h,
+            Command::SetPatternLength {
+                pattern: 0,
+                length: 64,
+            },
+        );
+        send(
+            &mut h,
+            Command::SetSong {
+                plays: song.plays,
+                length: song.length,
+            },
+        );
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        // Past the end of the section, the note is still held...
+        render(&mut h, 36 * STEP - 10);
+        assert_eq!(received(&mut out).len(), 1, "only the note-on");
+        // ...and it ends on step 36.
+        render(&mut h, 20);
+        assert_eq!(received(&mut out), [note_off(Note::A4)]);
+    }
+
+    #[test]
+    fn muting_a_channel_stops_its_notes_but_not_keys_held_down() {
+        let mut h = harness();
+        add_synth(&mut h, &[NoteEvent::new(Note::A4, 0, 16)]);
+        send(&mut h, Command::Play);
+        send(&mut h, Command::Live(key_down(Note::C4)));
+        render(&mut h, 100);
+        assert_eq!(voices(&h, 0), 2);
+        send(
+            &mut h,
+            Command::SetMuted {
+                channel: 0,
+                muted: true,
+            },
+        );
+        // Long before the 16 steps of the A4 are over, it has faded out.
+        render(&mut h, 48_000);
+        assert_eq!(voices(&h, 0), 1, "only the key held down still sounds");
+    }
+
+    #[test]
+    fn notes_stop_when_the_song_no_longer_plays_them() {
+        let mut h = harness();
+        let mut out = add_midi_out(&mut h, &[NoteEvent::new(Note::A4, 0, 16)]);
+        let song = |plays: Vec<Play>| Command::SetSong { plays, length: 48 };
+        send(&mut h, song(vec![whole(0, 0), whole(0, 16)]));
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        render(&mut h, STEP);
+        assert_eq!(received(&mut out).len(), 1, "the note-on");
+        // The other clip moves: the note plays on.
+        send(&mut h, song(vec![whole(0, 0), whole(0, 32)]));
+        render(&mut h, STEP);
+        assert_eq!(received(&mut out), []);
+        // The note's own clip goes (its track was muted, say): it stops.
+        send(&mut h, song(vec![whole(0, 32)]));
+        render(&mut h, 10);
+        assert_eq!(received(&mut out), [note_off(Note::A4)]);
+    }
+
+    #[test]
+    fn a_recording_stops_when_its_track_is_muted() {
+        // A two-second sound started by one step, as an imported
+        // recording is.
+        let mut h = harness();
+        let recording = Sampler::new(Arc::new(SampleData::new(vec![0.5; 2 * 48_000], RATE)));
+        send(
+            &mut h,
+            Command::InsertChannel {
+                index: AT_END,
+                instrument: Instrument::Sampler(recording),
+                notes: ChannelNotes::new([steps(&[0])]),
+                volume: 1.0,
+                muted: false,
+            },
+        );
+        let plays = vec![whole(0, 0)];
+        send(&mut h, Command::SetSong { plays, length: 16 });
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        assert!(render(&mut h, 2 * STEP).iter().all(|&s| s != 0.0));
+        send(
+            &mut h,
+            Command::SetSong {
+                plays: Vec::new(),
+                length: 16,
+            },
+        );
+        let out = render(&mut h, 2_000);
+        assert_eq!(out[1_999], 0.0, "faded out");
+    }
+
+    #[test]
+    fn a_new_tempo_moves_the_end_of_the_notes_sounding() {
+        let mut h = harness();
+        let mut out = add_midi_out(&mut h, &[NoteEvent::new(Note::A4, 0, 8)]);
+        send(&mut h, Command::Play);
+        render(&mut h, STEP + STEP / 2); // halfway through step 1
+        received(&mut out);
+        // Half as fast. The rest of step 1 still takes the time it had
+        // left; each of steps 2 to 7 then takes twice as long.
+        send(&mut h, Command::SetTempo(Tempo::new(60.0)));
+        let to_step_8 = STEP / 2 + 6 * 2 * STEP;
+        render(&mut h, to_step_8 - 10);
+        assert_eq!(received(&mut out), [], "still held");
+        render(&mut h, 20);
+        assert_eq!(received(&mut out), [note_off(Note::A4)]);
+        assert_eq!(h.playhead.load(Ordering::Relaxed), 8, "on step 8");
     }
 
     #[test]

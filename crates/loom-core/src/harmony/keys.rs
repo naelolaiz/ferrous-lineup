@@ -15,13 +15,18 @@
 //! Most songs are these three jobs in turn: home, away, tension, home.
 //! The harmony keys are coloured by function, so you can see the pull.
 //!
+//! Functions belong to major and minor keys. The modes (Dorian,
+//! Phrygian, Lydian, Mixolydian, Locrian) have no dominant that pulls
+//! home the way V does, so their keys get no function: in C Locrian the
+//! chord on the fifth note is Gb major, which does not pull to C at all.
+//!
 //! Music without a key has no home and no functions. For a twelve-tone
 //! row or a pitch-class set, the keys play groups of its notes instead:
 //! see [`group_keys`].
 
-use super::{Chord, PitchSet, Scale, ScaleKind};
+use super::{Chord, Harmony, PitchSet, Scale, ScaleKind, analyze};
 use crate::library::voicing::voice;
-use crate::pitch::{Note, PitchClass};
+use crate::pitch::{Note, NoteName, PitchClass};
 
 /// How many notes of the scale each chord stacks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -80,7 +85,7 @@ impl Function {
         match self {
             Function::Tonic => "home: the music can rest here",
             Function::Subdominant => "away from home: leads on to the dominant",
-            Function::Dominant => "tension: pulls back home to I",
+            Function::Dominant => "tension: pulls back home to the tonic",
         }
     }
 
@@ -102,7 +107,9 @@ pub struct ChordKey {
     pub chord: Chord,
     /// The chord as a Roman numeral, such as "V7" or "vii°".
     pub numeral: String,
-    pub function: Function,
+    /// What the chord does in the key, or `None` in a mode, where the
+    /// chords have no functions (see the module documentation).
+    pub function: Option<Function>,
 }
 
 /// The seven-note scale the harmony keys take their chords from.
@@ -150,10 +157,22 @@ pub fn chord_keys(scale: Scale, size: ChordSize) -> Vec<ChordKey> {
                 degree,
                 chord,
                 numeral: scale.roman_numeral(chord)?,
-                function: Function::of(degree),
+                function: has_functions(scale.kind).then(|| Function::of(degree)),
             })
         })
         .collect()
+}
+
+/// Whether the chords of a scale do the jobs of tonic, subdominant and
+/// dominant: in major and minor keys, not in the modes.
+pub fn has_functions(kind: ScaleKind) -> bool {
+    matches!(
+        kind,
+        ScaleKind::Major
+            | ScaleKind::NaturalMinor
+            | ScaleKind::HarmonicMinor
+            | ScaleKind::MelodicMinor
+    )
 }
 
 /// The notes a harmony key plays: the chord voiced close to `previous`
@@ -180,12 +199,14 @@ pub fn play(chord: Chord, previous: Option<&[Note]>) -> (Vec<Note>, Vec<Note>) {
 }
 
 /// The harmony key of a chord played elsewhere, if it is one of the
-/// key's chords: the same root, and major or minor like the key's chord
-/// there. G7 lights V in C major; D7 lights nothing, because the key's
-/// chord on D is minor: D7 comes from outside the key.
+/// key's chords: the same root, and the same kind of triad (major,
+/// minor or diminished) as the key's chord there. G7 lights V in C
+/// major; D7 lights nothing, because the key's chord on D is minor: D7
+/// comes from outside the key. Bm lights nothing either, since the
+/// key's chord on B is diminished.
 pub fn key_for(keys: &[ChordKey], chord: Chord) -> Option<usize> {
     keys.iter().position(|key| {
-        key.chord.root == chord.root && key.chord.quality.is_minor() == chord.quality.is_minor()
+        key.chord.root == chord.root && key.chord.quality.family() == chord.quality.family()
     })
 }
 
@@ -193,14 +214,57 @@ pub fn key_for(keys: &[ChordKey], chord: Chord) -> Option<usize> {
 /// trichord of a twelve-tone row, or a chord stacked from a set's notes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GroupKey {
-    /// What the key is called: "1–3" for the first three notes of a row,
-    /// or the note a set's chord starts on.
+    /// What the key is called: "1–3" for the first three notes of a row;
+    /// for a set, the chord its notes make, such as "Cm/Eb", or its set
+    /// class, such as "3-5", if they make no chord with a name.
     pub label: String,
     /// The notes in the order they are stacked, lowest first.
     pub notes: Vec<PitchClass>,
+    /// How each note is written. Notes that make a chord are spelled as
+    /// that chord: Eb G C, not D# G C, for C minor over Eb.
+    pub names: Vec<NoteName>,
+    /// The chord the notes make when played from the lowest up, such as
+    /// "Cm/Eb", if it has a name.
+    pub chord: Option<String>,
 }
 
 impl GroupKey {
+    /// The key for `notes`, called `label` (for a set, `None` means "call
+    /// it by its chord, or else its set class").
+    fn new(scale: Scale, label: Option<String>, notes: Vec<PitchClass>) -> GroupKey {
+        let harmony = analyze(stacked(&notes));
+        let names = match harmony {
+            Harmony::Chord { chord, .. } => {
+                let root = scale.spell_root(chord);
+                notes
+                    .iter()
+                    .map(|&p| chord.spell_note(root, p).unwrap_or_else(|| scale.spell(p)))
+                    .collect()
+            }
+            _ => notes.iter().map(|&p| scale.spell(p)).collect(),
+        };
+        let chord = match harmony {
+            Harmony::Chord { .. } => harmony.label_in(scale),
+            _ => None,
+        };
+        let label = label.unwrap_or_else(|| {
+            chord.clone().unwrap_or_else(|| {
+                notes
+                    .iter()
+                    .copied()
+                    .collect::<PitchSet>()
+                    .set_class()
+                    .name()
+            })
+        });
+        GroupKey {
+            label,
+            notes,
+            names,
+            chord,
+        }
+    }
+
     pub fn pitch_set(&self) -> PitchSet {
         self.notes.iter().copied().collect()
     }
@@ -209,22 +273,42 @@ impl GroupKey {
     /// next one just above the one before, so a row's group sounds in the
     /// row's order from the bottom up.
     pub fn play(&self) -> Vec<Note> {
-        let mut played: Vec<Note> = Vec::with_capacity(self.notes.len());
-        for &pitch_class in &self.notes {
-            let note = match played.last() {
-                None => Note::new(55 + PitchClass::G.semitones_up_to(pitch_class)),
-                Some(&below) => {
-                    let up = match below.pitch_class().semitones_up_to(pitch_class) {
-                        0 => 12,
-                        gap => gap,
-                    };
-                    below.transpose(i32::from(up)).unwrap_or(below)
-                }
-            };
-            played.push(note);
-        }
-        played
+        stacked(&self.notes)
     }
+}
+
+/// `notes` stacked upwards: the first in the octave from G3, and each
+/// next one just above the one before.
+fn stacked(notes: &[PitchClass]) -> Vec<Note> {
+    let mut played: Vec<Note> = Vec::with_capacity(notes.len());
+    for &pitch_class in notes {
+        let note = match played.last() {
+            None => Note::new(55 + PitchClass::G.semitones_up_to(pitch_class)),
+            Some(&below) => {
+                let up = match below.pitch_class().semitones_up_to(pitch_class) {
+                    0 => 12,
+                    gap => gap,
+                };
+                below.transpose(i32::from(up)).unwrap_or(below)
+            }
+        };
+        played.push(note);
+    }
+    played
+}
+
+/// The chord sizes the harmony keys offer for `scale`: all three for a
+/// key or a row, and for a set only those it has enough notes for. A
+/// set of three notes makes three-note chords and nothing bigger.
+pub fn chord_sizes(scale: Scale) -> Vec<ChordSize> {
+    let notes = match scale.kind {
+        ScaleKind::Set(set) => set.len(),
+        _ => 12,
+    };
+    ChordSize::ALL
+        .into_iter()
+        .filter(|&size| size == ChordSize::Triads || size as usize + 3 <= notes)
+        .collect()
 }
 
 /// How many notes a group key of a row holds for each chord size:
@@ -247,6 +331,11 @@ pub fn row_group(size: ChordSize) -> usize {
 ///   of the set, as the chords of a key stack every other note of the
 ///   scale: three, four or five notes. A set with no more notes than
 ///   that plays all of them, starting from each in turn.
+///
+/// A set's keys are called by the chord their notes make, from the
+/// lowest up: the set C Eb G gives Cm, Cm/Eb (the same chord with Eb in
+/// the bass) and Cm/G. Groups with no chord name are called by their
+/// set class.
 pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
     let notes: Vec<PitchClass> = scale.pitch_classes().collect();
     match scale.kind {
@@ -256,9 +345,9 @@ pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
                 notes
                     .chunks(group)
                     .enumerate()
-                    .map(|(i, chunk)| GroupKey {
-                        label: format!("{}–{}", i * group + 1, i * group + chunk.len()),
-                        notes: chunk.to_vec(),
+                    .map(|(i, chunk)| {
+                        let label = format!("{}–{}", i * group + 1, i * group + chunk.len());
+                        GroupKey::new(scale, Some(label), chunk.to_vec())
                     })
                     .collect(),
             )
@@ -266,7 +355,6 @@ pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
         ScaleKind::Set(_) => {
             let len = notes.len();
             let count = size as usize + 3;
-            let spelling = scale.spelling();
             let stack = |start: usize| -> Vec<PitchClass> {
                 if len <= count {
                     // All the notes, from this one round.
@@ -289,10 +377,7 @@ pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
             };
             Some(
                 (0..len)
-                    .map(|start| GroupKey {
-                        label: notes[start].name(spelling).to_string(),
-                        notes: stack(start),
-                    })
+                    .map(|start| GroupKey::new(scale, None, stack(start)))
                     .collect(),
             )
         }
@@ -359,7 +444,15 @@ mod tests {
         let a = Scale::new(PitchClass::A, ScaleKind::NaturalMinor);
         assert_eq!(
             names(a, ChordSize::Triads),
-            ["i Am", "ii° Bdim", "III C", "iv Dm", "V E", "VI F", "VII G"]
+            [
+                "i Am",
+                "ii° Bdim",
+                "bIII C",
+                "iv Dm",
+                "V E",
+                "bVI F",
+                "bVII G"
+            ]
         );
         assert_eq!(names(a, ChordSize::Sevenths)[4], "V7 E7");
     }
@@ -439,12 +532,67 @@ mod tests {
     }
 
     #[test]
+    fn modes_have_no_functions() {
+        let locrian = chord_keys(
+            Scale::new(PitchClass::C, ScaleKind::Locrian),
+            ChordSize::Triads,
+        );
+        assert!(locrian.iter().all(|key| key.function.is_none()));
+        assert_eq!(locrian[4].numeral, "bV");
+        let minor = chord_keys(
+            Scale::new(PitchClass::A, ScaleKind::HarmonicMinor),
+            ChordSize::Triads,
+        );
+        assert_eq!(minor[6].function, Some(Function::Dominant));
+        // The blues borrows the chords of the minor key, functions too.
+        let blues = chord_keys(
+            Scale::new(PitchClass::A, ScaleKind::Blues),
+            ChordSize::Triads,
+        );
+        assert_eq!(blues[0].function, Some(Function::Tonic));
+    }
+
+    #[test]
+    fn a_diminished_key_is_not_lit_by_a_minor_chord() {
+        let c = Scale::new(PitchClass::C, ScaleKind::Major);
+        let keys = chord_keys(c, ChordSize::Sevenths);
+        let b_minor = Chord::new(PitchClass::B, ChordQuality::Minor);
+        assert_eq!(key_for(&keys, b_minor), None);
+        let b_dim = Chord::new(PitchClass::B, ChordQuality::Diminished);
+        assert_eq!(key_for(&keys, b_dim), Some(6));
+    }
+
+    #[test]
+    fn a_set_names_its_keys_by_their_chords() {
+        let minor = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 3, 7]));
+        let keys = group_keys(minor, ChordSize::Triads).unwrap();
+        let labels: Vec<&str> = keys.iter().map(|key| key.label.as_str()).collect();
+        assert_eq!(labels, ["Cm", "Cm/Eb", "Cm/G"]);
+        let names: Vec<String> = keys[1].names.iter().map(|n| n.to_string()).collect();
+        assert_eq!(names, ["Eb", "G", "C"]);
+        // A group with no chord name is called by its set class.
+        let viennese = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 6]));
+        let keys = group_keys(viennese, ChordSize::Triads).unwrap();
+        assert_eq!(keys[0].label, "3-5");
+        assert_eq!(keys[0].chord, None);
+        // A three-note set offers only three-note chords.
+        assert_eq!(chord_sizes(viennese), [ChordSize::Triads]);
+        let octatonic = Scale::set(
+            PitchClass::C,
+            PitchSet::from_semitones(&[0, 1, 3, 4, 6, 7, 9, 10]),
+        );
+        assert_eq!(chord_sizes(octatonic).len(), 3);
+        assert_eq!(chord_sizes(Scale::default()).len(), 3);
+    }
+
+    #[test]
     fn a_row_plays_its_trichords_in_order() {
         let row = crate::harmony::ROW_PRESETS[0].row;
         let keys = group_keys(Scale::row(row), ChordSize::Triads).unwrap();
         let labels: Vec<&str> = keys.iter().map(|key| key.label.as_str()).collect();
         assert_eq!(labels, ["1–3", "4–6", "7–9", "10–12"]);
         assert_eq!(keys[0].notes, [PitchClass::E, PitchClass::F, PitchClass::G]);
+        assert_eq!(keys[0].chord, None);
         let played: Vec<u8> = keys[0].play().iter().map(|n| n.midi()).collect();
         assert_eq!(played, [64, 65, 67]);
         assert_eq!(
@@ -454,6 +602,12 @@ mod tests {
             2
         );
         assert_eq!(group_keys(Scale::default(), ChordSize::Triads), None);
+        // The four triads of the "Four triads" row are chords, spelled as such.
+        let triads = crate::harmony::RowPreset::named("Four triads").unwrap().row;
+        let keys = group_keys(Scale::row(triads), ChordSize::Triads).unwrap();
+        let chords: Vec<String> = keys.iter().filter_map(|key| key.chord.clone()).collect();
+        assert_eq!(chords, ["C", "D", "Bbm", "G#m/B"]);
+        assert_eq!(keys[1].label, "4–6");
     }
 
     #[test]

@@ -9,7 +9,7 @@
 
 use eframe::egui::{
     self, Align, Align2, Color32, FontId, Key, KeyboardShortcut, Modifiers, Painter, Pos2, Rect,
-    Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2,
+    Response, Sense, Stroke, StrokeKind, Ui, Vec2, pos2, vec2,
 };
 use loom_core::harmony::keys::{self, ChordSize};
 use loom_core::harmony::{Harmony, HintLevel, analyze, next_chords};
@@ -19,6 +19,7 @@ use loom_core::{
     Scale, ScaleKind, Spelling, TimeSignature, tidy_notes,
 };
 
+use crate::theme;
 use crate::twelve_tone::{self, RowAction, RowWindow, SetAction, SetWindow};
 
 /// Something the user asked the piano roll to do.
@@ -65,6 +66,9 @@ const HIGHEST: u8 = 107;
 
 const ROW_HEIGHT: f32 = 12.0;
 const KEY_WIDTH: f32 = 54.0;
+/// The narrowest a step is at 100%, so a long pattern can still be read;
+/// it then scrolls sideways.
+const MIN_STEP_WIDTH: f32 = 8.0;
 const LANE_HEIGHT: f32 = 22.0;
 const VELOCITY_HEIGHT: f32 = 56.0;
 /// How close to a note's right end (in pixels) a click resizes it instead of moving it.
@@ -90,6 +94,15 @@ const INVERSIONS: [&str; 6] = [
     "4th inversion",
     "5th inversion",
 ];
+
+/// The same, short enough for the toolbar.
+const INVERSIONS_SHORT: [&str; 6] = [
+    "Root", "1st inv.", "2nd inv.", "3rd inv.", "4th inv.", "5th inv.",
+];
+
+/// Below this height (in points, under the toolbar) the piano roll
+/// leaves out its hint lines, to give the grid the room.
+const COMPACT_HEIGHT: f32 = 420.0;
 
 const ROOT_ROW: Color32 = Color32::from_rgb(78, 70, 60);
 const SCALE_ROW: Color32 = Color32::from_rgb(60, 70, 76);
@@ -194,21 +207,33 @@ struct View<'a> {
 /// pixels and back. It is `Copy`, so it can be handed around freely.
 #[derive(Debug, Clone, Copy)]
 struct Grid {
+    /// Where all the steps and rows are, even those scrolled out of view.
     rect: Rect,
     step_width: f32,
+    /// How tall a row (one pitch) is: the vertical zoom.
+    row_height: f32,
     length: usize,
     time: TimeSignature,
-    /// The piano roll's zoom, which every size is multiplied by.
-    zoom: f32,
+    /// The left edge of the keyboard. The keyboard stays at the left of
+    /// the view while the grid scrolls sideways under it.
+    keys_left: f32,
 }
 
 impl Grid {
-    /// The keyboard, just left of the grid.
+    /// The keyboard, at the left of the view.
     fn keys(self) -> Rect {
         Rect::from_min_max(
-            pos2(self.rect.left() - KEY_WIDTH * self.zoom, self.rect.top()),
-            pos2(self.rect.left(), self.rect.bottom()),
+            pos2(self.keys_left, self.rect.top()),
+            pos2(self.keys_left + KEY_WIDTH, self.rect.bottom()),
         )
+    }
+
+    /// The part of the grid not under the keyboard, where notes are drawn
+    /// and clicked.
+    fn cells(self) -> Rect {
+        let mut cells = self.rect;
+        cells.min.x = cells.min.x.max(self.keys().right());
+        cells
     }
 
     /// The x coordinate where `step` begins.
@@ -226,7 +251,7 @@ impl Grid {
 
     /// The y coordinate of the top of a pitch's row (high notes at the top).
     fn row_top(self, midi: u8) -> f32 {
-        self.rect.top() + (HIGHEST - midi) as f32 * ROW_HEIGHT * self.zoom
+        self.rect.top() + (HIGHEST - midi) as f32 * self.row_height
     }
 
     fn note_rect(self, note: &NoteEvent) -> Rect {
@@ -234,17 +259,51 @@ impl Grid {
         let end = note.end().min(self.length);
         Rect::from_min_max(
             pos2(self.x(note.start), top),
-            pos2(self.x(end), top + ROW_HEIGHT * self.zoom),
+            pos2(self.x(end), top + self.row_height),
         )
     }
 
     /// The step and pitch under a point. Points outside the grid give the
     /// nearest cell, so a drag can go past the edges.
     fn cell_at(self, pos: Pos2) -> (usize, Note) {
-        let row = ((pos.y - self.rect.top()) / (ROW_HEIGHT * self.zoom))
+        let row = ((pos.y - self.rect.top()) / self.row_height)
             .floor()
             .clamp(0.0, (HIGHEST - LOWEST) as f32) as u8;
         (self.step_at(pos.x), Note::new(HIGHEST - row))
+    }
+
+    /// The size of the text written on notes and keys, which grows and
+    /// shrinks with the rows.
+    fn text_size(self) -> f32 {
+        (self.row_height * 0.8).clamp(7.0, 14.0)
+    }
+}
+
+/// What the chord and velocity lanes need to line up with the grid.
+#[derive(Debug, Clone, Copy)]
+struct Lanes {
+    step_width: f32,
+    /// How far the grid is scrolled sideways, in pixels.
+    scroll_x: f32,
+    length: usize,
+}
+
+impl Lanes {
+    /// A lane in `rect`, its label where the keyboard is, its steps lined
+    /// up with the grid's.
+    fn grid(self, rect: Rect, time: TimeSignature) -> Grid {
+        let left = rect.left() + KEY_WIDTH - self.scroll_x;
+        Grid {
+            rect: Rect::from_min_max(
+                pos2(left, rect.top()),
+                pos2(left + self.step_width * self.length as f32, rect.bottom()),
+            ),
+            step_width: self.step_width,
+            row_height: rect.height(),
+            length: self.length,
+            time,
+            keys_left: rect.left(),
+        }
     }
 }
 
@@ -277,13 +336,20 @@ pub struct PianoRoll {
     scroll_to_notes: bool,
     /// The lowest and highest pitch in view when the grid was last drawn.
     in_view: Option<(u8, u8)>,
-    /// A pitch to bring back to the middle of the view the next time the
-    /// grid is drawn: the one that was there before zooming.
-    keep_in_middle: Option<u8>,
+    /// How far the grid was scrolled last frame, and where on screen its
+    /// view was: to keep the notes under the pointer in place when zooming.
+    scrolled: Vec2,
+    view_rect: Option<Rect>,
+    /// Where the "no notes here" message was drawn over the grid last
+    /// frame, so a click on it does not also draw a note under it.
+    banner: Option<Rect>,
+    /// Where to scroll the grid to the next time it is drawn.
+    scroll_to: Option<Vec2>,
     /// Whether the window was open last frame, to notice it opening.
     was_open: bool,
-    /// How much bigger than usual everything is drawn: the window's zoom.
-    zoom: f32,
+    /// How much wider and taller than usual the steps and rows are: the
+    /// piano roll's horizontal and vertical zoom.
+    zoom: Vec2,
     /// The step the pointer is over, if any, to name the chord there.
     hovered_step: Option<usize>,
     /// The last step the pointer was over. Unlike `hovered_step`, it stays
@@ -332,9 +398,12 @@ impl PianoRoll {
             arpeggio_rate: 1,
             scroll_to_notes: true,
             in_view: None,
-            keep_in_middle: None,
+            scrolled: Vec2::ZERO,
+            view_rect: None,
+            banner: None,
+            scroll_to: None,
             was_open: false,
-            zoom: 1.0,
+            zoom: Vec2::splat(1.0),
             hovered_step: None,
             last_step: None,
             has_keyboard: false,
@@ -361,6 +430,12 @@ impl PianoRoll {
         egui::Id::unique("piano-roll")
     }
 
+    /// Whether a window is one the piano roll opens: the row window or
+    /// the set browser.
+    pub fn owns(id: egui::Id) -> bool {
+        id == twelve_tone::row_window_id() || id == twelve_tone::set_window_id()
+    }
+
     /// The channel shown: the selected channel, which keyboards play.
     pub fn channel(&self) -> usize {
         self.channel
@@ -385,11 +460,15 @@ impl PianoRoll {
     }
 
     /// Keeps pointing at the same channel after channel `removed` is
-    /// deleted, or closes the window if it was this one.
-    pub fn channel_removed(&mut self, removed: usize) {
+    /// deleted, or closes the window if it was this one. `left` is how
+    /// many channels are left: the window then points at the channel
+    /// that took the removed one's place (or the last one), so it opens
+    /// again on a channel that is there.
+    pub fn channel_removed(&mut self, removed: usize, left: usize) {
         if removed == self.channel {
             self.open = false;
             self.selection.clear();
+            self.channel = self.channel.min(left.saturating_sub(1));
         } else if removed < self.channel {
             self.channel -= 1;
         }
@@ -415,8 +494,8 @@ impl PianoRoll {
     /// It shows the notes of the selected channel in pattern `pattern`;
     /// `playhead` is the step of that pattern being played, if any, and
     /// `held` the keys held down on a keyboard. The window stays inside
-    /// `area`, the part of the main window the playlist uses. Its contents
-    /// are drawn `zoom` times bigger than usual.
+    /// `area`, the part of the main window the playlist uses. Its steps
+    /// are `zoom.x` times wider than usual and its rows `zoom.y` times taller.
     #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
@@ -426,13 +505,11 @@ impl PianoRoll {
         playhead: Option<usize>,
         held: &[Note],
         area: egui::Rect,
-        zoom: f32,
+        zoom: Vec2,
     ) -> Vec<RollAction> {
         let mut actions = Vec::new();
         if zoom != self.zoom {
-            // Zooming keeps the same notes in the middle of the view.
-            self.keep_in_middle = self.in_view.map(|(low, high)| low / 2 + high / 2);
-            self.zoom = zoom;
+            self.zoom_to(ctx, zoom);
         }
         let Some(pattern_notes) = project.pattern(pattern) else {
             self.open = false;
@@ -459,13 +536,7 @@ impl PianoRoll {
 
         // A click inside the window gives it the keyboard; a click
         // anywhere else takes the keyboard away again.
-        let press = ctx.input(|input| {
-            input
-                .pointer
-                .any_pressed()
-                .then(|| input.pointer.press_origin())
-                .flatten()
-        });
+        let press = ctx.input(|input| crate::widgets::press_pos(input, None));
         if let Some(pos) = press {
             self.has_keyboard = self.window_rect.is_some_and(|rect| rect.contains(pos));
         }
@@ -480,10 +551,9 @@ impl PianoRoll {
         .id(Self::id())
         .open(&mut open)
         .default_pos([150.0, 160.0])
-        .default_size([1060.0, 580.0])
+        .default_size([1120.0, 580.0])
         .constrain_to(area)
         .show(ctx, |ui| {
-            crate::widgets::zoom_contents(ui, zoom);
             self.contents(ui, project, pattern_notes, playhead, held, &mut actions)
         });
         self.window_rect = window.map(|window| window.response.rect);
@@ -496,6 +566,27 @@ impl PianoRoll {
             self.post_tonal_windows(ctx, project, pattern_notes, held, area, &mut actions);
         }
         actions
+    }
+
+    /// Changes the zoom, keeping the step and the pitch under the pointer
+    /// where they are, or those in the middle of the view if the pointer
+    /// is elsewhere: as in FL Studio, you zoom into what you point at.
+    fn zoom_to(&mut self, ctx: &egui::Context, zoom: Vec2) {
+        let ratio = zoom / self.zoom;
+        self.zoom = zoom;
+        let Some(view) = self.view_rect else {
+            return;
+        };
+        let anchor = ctx
+            .pointer_hover_pos()
+            .filter(|pos| view.contains(*pos))
+            .unwrap_or(view.center())
+            - view.min;
+        // The grid starts after the keyboard, which does not stretch.
+        let from = self.scroll_to.unwrap_or(self.scrolled);
+        let x = KEY_WIDTH + (from.x + anchor.x - KEY_WIDTH) * ratio.x - anchor.x;
+        let y = (from.y + anchor.y) * ratio.y - anchor.y;
+        self.scroll_to = Some(vec2(x.max(0.0), y.max(0.0)));
     }
 
     /// The row window and the set browser, when they are open.
@@ -547,7 +638,7 @@ impl PianoRoll {
             } else {
                 held.iter().map(|note| note.pitch_class()).collect()
             };
-            for action in self.set_window.show(ctx, area, scale.spelling(), selected) {
+            for action in self.set_window.show(ctx, area, scale, selected) {
                 match action {
                     SetAction::Stamp(set) => {
                         self.stamp = ChordStamp::Set(set);
@@ -574,15 +665,20 @@ impl PianoRoll {
         }
     }
 
-    /// Said above the grid when the channel has no notes in the pattern:
-    /// what is going on, and buttons to go where the notes are.
+    /// Said over the top of the grid when the channel has no notes in the
+    /// pattern: what is going on, and buttons to go where the notes are.
+    /// Returns where it was drawn.
+    ///
+    /// It lies over the grid instead of taking a line above it, so the
+    /// grid does not jump up when the first note is drawn and the message
+    /// goes away: the note would land rows below where it was clicked.
     fn no_notes(
         &mut self,
         ui: &mut Ui,
         project: &Project,
         pattern: &Pattern,
         actions: &mut Vec<RollAction>,
-    ) {
+    ) -> Rect {
         let channel = project
             .channels()
             .get(self.channel)
@@ -606,7 +702,7 @@ impl PianoRoll {
             })
             .collect();
         let mut switch_to = None;
-        egui::Frame::new()
+        let frame = egui::Frame::new()
             .fill(NO_NOTES_BACKGROUND)
             .corner_radius(4.0)
             .inner_margin(egui::Margin::symmetric(8, 4))
@@ -648,6 +744,7 @@ impl PianoRoll {
         if let Some(channel) = switch_to {
             self.open_for(channel);
         }
+        frame.response.rect
     }
 
     fn contents(
@@ -679,6 +776,10 @@ impl PianoRoll {
         }
 
         let tool = self.toolbar(ui, scale, others.is_empty(), actions);
+        // In a short window the grid comes first: the hint and set lines
+        // move into the tooltip of the line naming the chord, so a small
+        // screen still shows a dozen rows of notes.
+        let compact = ui.available_height() < COMPACT_HEIGHT;
         // A chord held on a keyboard comes first: it is what you are
         // thinking about right now.
         let held_chord = match analyze(held.iter().copied()) {
@@ -692,7 +793,7 @@ impl PianoRoll {
                 _ => None,
             }
         });
-        self.chords_in_key(ui, scale, current, actions);
+        let next_hint = self.chords_in_key(ui, scale, current, compact, actions);
 
         // The step under the pointer was found while drawing the last
         // frame; one frame late is too fast for anyone to notice.
@@ -718,10 +819,9 @@ impl PianoRoll {
             let set: PitchSet = held.iter().map(|note| note.pitch_class()).collect();
             (format!("Keys down: {}", harmony.describe(scale)), set)
         };
-        ui.label(info);
+        let info = ui.label(info);
         // Any group of notes, chord or not, has a set class. Shown for
         // three notes or more, and for the selection.
-        let spelling = scale.spelling();
         let selected: PitchSet = self
             .selection
             .iter()
@@ -729,15 +829,33 @@ impl PianoRoll {
             .collect();
         let mut sets = Vec::new();
         if set.len() >= 3 {
-            sets.push(format!("Set: {}", twelve_tone::describe_set(set, spelling)));
+            sets.push(format!("Set: {}", twelve_tone::describe_set(set, scale)));
         }
         if selected.len() >= 2 && self.selection.len() >= 2 {
             sets.push(format!(
                 "Selected: {}",
-                twelve_tone::describe_set(selected, spelling)
+                twelve_tone::describe_set(selected, scale)
             ));
         }
-        if !sets.is_empty() {
+        // The line is always there, even empty, so the grid below does not
+        // jump up and down as the pointer moves over it.
+        if sets.is_empty() {
+            sets.push(match self.hints {
+                HintLevel::Minimal => " ".to_string(),
+                _ => "Set: point at three notes or more, or select some, to name their set."
+                    .to_string(),
+            });
+        }
+        if compact {
+            let sets = sets.join("\n");
+            let more: Vec<&str> = [next_hint.as_str(), sets.as_str()]
+                .into_iter()
+                .filter(|text| !text.trim().is_empty())
+                .collect();
+            if !more.is_empty() {
+                info.on_hover_text(more.join("\n\n"));
+            }
+        } else {
             ui.weak(sets.join("    ")).on_hover_text(
                 "Pitch-class set theory names any group of notes: its Forte number, its \
                      notes packed as tightly as they go (normal form), the same packed from 0 \
@@ -745,41 +863,82 @@ impl PianoRoll {
                      Sets... opens the list of every set.",
             );
         }
-        if notes.is_empty() {
-            self.no_notes(ui, project, pattern, actions);
-        }
         ui.add_space(2.0);
 
         let length = pattern.length();
-        let step_width =
-            ((ui.available_width() - KEY_WIDTH * self.zoom) / length as f32).max(8.0 * self.zoom);
+        // At 100% the whole pattern fits the window. Zooming in makes the
+        // steps wider, and the grid scrolls sideways (Shift+wheel).
+        let fit = ((ui.available_width() - KEY_WIDTH) / length as f32).max(MIN_STEP_WIDTH);
+        let step_width = fit * self.zoom.x;
         self.hovered_step = None;
 
-        self.chord_lane(ui, pattern, &heard, scale, step_width, playhead);
+        // The chord lane's place is taken now, but it is drawn after the
+        // grid, once it is known how far the grid is scrolled sideways.
+        let (lane_rect, lane_response) =
+            ui.allocate_exact_size(vec2(ui.available_width(), LANE_HEIGHT), Sense::hover());
         // The velocity lane goes below the grid, so the grid leaves room
         // for it: the lane, the gap, and egui's spacing between widgets.
         // Taking even a pixel too much would make the window grow a
         // little on every frame.
-        let below = (VELOCITY_HEIGHT + 4.0) * self.zoom + 2.0 * ui.spacing().item_spacing.y;
+        let below = VELOCITY_HEIGHT + 4.0 + 2.0 * ui.spacing().item_spacing.y;
         let grid_height = (ui.available_height() - below).max(96.0);
-        // Not animated: after a zoom, the notes that were in the middle
-        // must be there again on the very next frame.
-        egui::ScrollArea::vertical()
+        // Not animated: after a zoom, the notes that were under the
+        // pointer must be there again on the very next frame.
+        let grid_area = egui::ScrollArea::both()
+            .id_salt("piano-roll-grid")
             .animated(false)
             .auto_shrink(false)
-            .max_height(grid_height)
-            .show(ui, |ui| {
-                let ghosts = if self.ghosts { &others[..] } else { &[] };
-                let view = View {
-                    scale,
-                    step_width,
-                    playhead,
-                    held,
-                };
-                self.grid(ui, pattern, ghosts, view, actions)
-            });
-        ui.add_space(4.0 * self.zoom);
-        self.velocity_lane(ui, pattern, step_width, actions);
+            .max_height(grid_height);
+        let grid_area = match self.scroll_to.take() {
+            Some(offset) => grid_area.scroll_offset(offset),
+            None => grid_area,
+        };
+        crate::widgets::no_rubber_band(ui);
+        let output = grid_area.show(ui, |ui| {
+            let ghosts = if self.ghosts { &others[..] } else { &[] };
+            let view = View {
+                scale,
+                step_width,
+                playhead,
+                held,
+            };
+            self.grid(ui, pattern, ghosts, view, actions)
+        });
+        self.scrolled = output.state.clamped_offset();
+        self.view_rect = Some(output.inner_rect);
+        self.banner = notes.is_empty().then(|| {
+            // Drawn after the grid, so it is painted over it.
+            let view = output.inner_rect;
+            let place = Rect::from_min_max(
+                view.min + vec2(KEY_WIDTH + 6.0, 6.0),
+                pos2(view.right() - 6.0, view.bottom()),
+            );
+            let mut over = ui.new_child(
+                egui::UiBuilder::new()
+                    .max_rect(place)
+                    .layout(egui::Layout::top_down(Align::Min)),
+            );
+            self.no_notes(&mut over, project, pattern, actions)
+        });
+        // How far the grid was scrolled sideways when it was drawn, which
+        // the lanes above and below it follow.
+        let scroll_x = output.inner;
+        let lanes = Lanes {
+            step_width,
+            scroll_x,
+            length,
+        };
+        self.chord_lane(
+            ui,
+            (lane_rect, &lane_response),
+            pattern,
+            &heard,
+            scale,
+            lanes,
+            playhead,
+        );
+        ui.add_space(4.0);
+        self.velocity_lane(ui, pattern, lanes, actions);
 
         if let Some(step) = self.hovered_step {
             self.last_step = Some(step);
@@ -812,7 +971,7 @@ impl PianoRoll {
             let mut root = scale.root;
             egui::ComboBox::from_id_salt("scale-root")
                 .width(64.0)
-                .selected_text(root.name(scale.spelling()))
+                .selected_text(scale.spell(root).to_string())
                 .show_ui(ui, |ui| {
                     for pitch_class in PitchClass::ALL {
                         ui.selectable_value(&mut root, pitch_class, both_names(pitch_class));
@@ -829,8 +988,10 @@ impl PianoRoll {
                 }
                 actions.push(RollAction::SetScale(new));
             }
-            let spelling = scale.spelling();
-            let names: Vec<&str> = scale.pitch_classes().map(|p| p.name(spelling)).collect();
+            let names: Vec<String> = scale
+                .pitch_classes()
+                .map(|p| scale.spell(p).to_string())
+                .collect();
             ui.weak(names.join(" "));
             self.snap_button(ui);
             ui.toggle_value(&mut self.row_window.open, "Row…")
@@ -845,34 +1006,46 @@ impl PianoRoll {
                 );
 
             ui.separator();
-            ui.label("Draw");
-            egui::ComboBox::from_id_salt("chord-stamp")
-                .width(170.0)
-                .selected_text(self.stamp.label())
-                .show_ui(ui, |ui| {
-                    for stamp in ChordStamp::all() {
-                        if stamp == ChordStamp::Fixed(ChordQuality::ALL[0]) {
-                            ui.separator();
+            theme::keep_together(ui, 200.0, |ui| {
+                ui.label("Draw");
+                egui::ComboBox::from_id_salt("chord-stamp")
+                    .width(150.0)
+                    .truncate()
+                    .selected_text(self.stamp.label())
+                    .show_ui(ui, |ui| {
+                        for stamp in ChordStamp::all() {
+                            if stamp == ChordStamp::Fixed(ChordQuality::ALL[0]) {
+                                ui.separator();
+                            }
+                            ui.selectable_value(&mut self.stamp, stamp, stamp.label());
                         }
-                        ui.selectable_value(&mut self.stamp, stamp, stamp.label());
-                    }
-                    ui.separator();
-                    if let ChordStamp::Set(_) = self.stamp {
-                        let _ = ui.selectable_label(true, self.stamp.label());
-                    }
-                    if ui.button("A set from the set browser…").clicked() {
-                        self.set_window.open = true;
-                    }
-                })
-                .response
-                .on_hover_text("What a click on the grid places: one note, or a whole chord.");
+                        ui.separator();
+                        if let ChordStamp::Set(_) = self.stamp {
+                            let _ = ui.selectable_label(true, self.stamp.label());
+                        }
+                        if ui.button("A set from the set browser…").clicked() {
+                            self.set_window.open = true;
+                        }
+                    })
+                    .response
+                    .on_hover_text("What a click on the grid places: one note, or a whole chord.");
+            });
 
-            // A chord of n notes has n - 1 inversions.
+            // A chord of n notes has n - 1 inversions. A single note has
+            // none, but the list stays in its place, greyed out, so the
+            // toolbar does not rearrange itself when a chord is picked.
             let chord_size = self.stamp.notes_at(Note::C4, scale).len();
-            if chord_size > 1 {
+            let chord = chord_size > 1;
+            if chord {
                 self.inversion = self.inversion.min(chord_size - 1);
+            }
+            theme::keep_together(ui, 90.0, |ui| {
+                if !chord {
+                    ui.disable();
+                }
                 egui::ComboBox::from_id_salt("inversion")
-                    .selected_text(INVERSIONS[self.inversion])
+                    .width(76.0)
+                    .selected_text(INVERSIONS_SHORT[if chord { self.inversion } else { 0 }])
                     .show_ui(ui, |ui| {
                         for (times, name) in INVERSIONS.iter().enumerate().take(chord_size) {
                             ui.selectable_value(&mut self.inversion, times, *name);
@@ -883,35 +1056,41 @@ impl PianoRoll {
                         "Which note of the chord is lowest. Each inversion moves the \
                          lowest note up an octave, above the others. The note you click \
                          stays the root, and the chord is arranged around it.",
+                    )
+                    .on_disabled_hover_text(
+                        "A single note has no inversions: pick a chord under Draw to \
+                         choose which of its notes is lowest.",
                     );
-            }
+            });
 
-            ui.label("Length");
-            let length_name = NOTE_LENGTHS
-                .iter()
-                .find(|(steps, _)| *steps == self.note_length)
-                .map(|(_, name)| name.to_string())
-                .unwrap_or_else(|| format!("{} steps", self.note_length));
-            egui::ComboBox::from_id_salt("note-length")
-                .selected_text(length_name)
-                .show_ui(ui, |ui| {
-                    for (steps, name) in NOTE_LENGTHS {
-                        ui.selectable_value(&mut self.note_length, steps, name);
-                    }
-                });
+            // The label and its list wrap onto the next row together.
+            theme::keep_together(ui, 140.0, |ui| {
+                ui.label("Length");
+                let length_name = NOTE_LENGTHS
+                    .iter()
+                    .find(|(steps, _)| *steps == self.note_length)
+                    .map(|(_, name)| name.to_string())
+                    .unwrap_or_else(|| format!("{} steps", self.note_length));
+                egui::ComboBox::from_id_salt("note-length")
+                    .width(76.0)
+                    .selected_text(length_name)
+                    .show_ui(ui, |ui| {
+                        for (steps, name) in NOTE_LENGTHS {
+                            ui.selectable_value(&mut self.note_length, steps, name);
+                        }
+                    });
+            });
 
             ui.separator();
             if let Some(tool) = self.tools_menu(ui) {
                 picked = Some(tool);
             }
-            ui.add_enabled_ui(!alone, |ui| {
-                ui.checkbox(&mut self.ghosts, "Ghost notes")
-                    .on_hover_text(
-                        "Show the notes of the other channels faintly, and name the chords \
-                         all of them make together.",
-                    )
-                    .on_disabled_hover_text("No other channel plays melodies or chords yet.");
-            });
+            ui.add_enabled(!alone, egui::Checkbox::new(&mut self.ghosts, "Ghost notes"))
+                .on_hover_text(
+                    "Show the notes of the other channels faintly, and name the chords \
+                     all of them make together.",
+                )
+                .on_disabled_hover_text("No other channel plays melodies or chords yet.");
         });
         picked
     }
@@ -1013,16 +1192,16 @@ impl PianoRoll {
         ui: &mut Ui,
         scale: Scale,
         current: Option<(ChordAt, Chord)>,
+        compact: bool,
         actions: &mut Vec<RollAction>,
-    ) {
+    ) -> String {
         if let Some(groups) = keys::group_keys(scale, ChordSize::Triads) {
             self.groups_in_key(ui, scale, &groups, actions);
-            return;
+            return String::new();
         }
         if !scale.is_heptatonic() {
-            return;
+            return String::new();
         }
-        let spelling = scale.spelling();
         let suggestions = current
             .map(|(_, chord)| next_chords(scale, chord))
             .unwrap_or_default();
@@ -1033,8 +1212,8 @@ impl PianoRoll {
                     continue;
                 };
                 let numeral = scale.roman_numeral(chord).unwrap_or_default();
-                let text = format!("{numeral} · {}", chord.name(spelling));
-                let full_name = format!("{} {}", chord.root.name(spelling), chord.quality.name());
+                let text = format!("{numeral} · {}", scale.chord_name(chord));
+                let full_name = format!("{} {}", scale.spell_root(chord), chord.quality.name());
                 let mut hint = match self.hints {
                     HintLevel::Detailed => format!(
                         "{full_name}. Click to hear it. Pick \"Chord in key\" under Draw to place chords like it."
@@ -1048,7 +1227,7 @@ impl PianoRoll {
                     let played_as = if suggestion.chord == chord {
                         String::new()
                     } else {
-                        format!(", played as {}", suggestion.chord.name(spelling))
+                        format!(", played as {}", scale.chord_name(suggestion.chord))
                     };
                     hint = match self.hints {
                         HintLevel::Detailed => format!(
@@ -1082,7 +1261,7 @@ impl PianoRoll {
                 HintLevel::Minimal => String::new(),
             },
             Some((at, chord)) => {
-                let name = chord.name(spelling);
+                let name = scale.chord_name(chord);
                 let place = match at {
                     ChordAt::Step(step) => format!("at step {}", step + 1),
                     ChordAt::Keys => "on the keys".to_string(),
@@ -1095,19 +1274,23 @@ impl PianoRoll {
                     .iter()
                     .map(|s| {
                         let numeral = scale.roman_numeral(s.chord).unwrap_or_default();
-                        format!("{} ({numeral})", s.chord.name(spelling))
+                        format!("{} ({numeral})", scale.chord_name(s.chord))
                     })
                     .collect();
-                let major_or_minor = matches!(
-                    scale.kind,
-                    ScaleKind::Major
-                        | ScaleKind::NaturalMinor
-                        | ScaleKind::HarmonicMinor
-                        | ScaleKind::MelodicMinor
-                );
+                let major_or_minor = keys::has_functions(scale.kind);
+                // Why nothing is suggested: the root is not in the key, the
+                // chord is not one of the key's own, or nothing usually
+                // follows it.
+                let why = if !scale.contains(chord.root) {
+                    "has a root outside the key"
+                } else if !scale.is_chord_of_key(chord) {
+                    "is not one of the key's chords"
+                } else {
+                    "has no usual next chord here"
+                };
                 match (self.hints, next.is_empty(), major_or_minor) {
-                    (HintLevel::Minimal, true, true) => format!("{name}: root outside the key"),
-                    (_, true, true) => format!("{name} {place} has a root outside the key."),
+                    (HintLevel::Minimal, true, true) => format!("{name}: {why}"),
+                    (_, true, true) => format!("{name} {place} {why}."),
                     (HintLevel::Minimal, true, false) => String::new(),
                     (_, true, false) => {
                         "Next-chord hints are given in major and minor keys.".to_string()
@@ -1123,9 +1306,13 @@ impl PianoRoll {
                 }
             }
         };
+        if compact {
+            return hint;
+        }
         if !hint.is_empty() {
             ui.weak(hint);
         }
+        String::new()
     }
 
     /// For a row or a set, which have no chords of the key: buttons for
@@ -1138,7 +1325,6 @@ impl PianoRoll {
         groups: &[keys::GroupKey],
         actions: &mut Vec<RollAction>,
     ) {
-        let spelling = scale.spelling();
         ui.horizontal_wrapped(|ui| {
             let what = match scale.kind {
                 ScaleKind::Row(_) => format!("Trichords of {}", scale.name()),
@@ -1146,7 +1332,7 @@ impl PianoRoll {
             };
             ui.label(what);
             for group in groups {
-                let names: Vec<&str> = group.notes.iter().map(|p| p.name(spelling)).collect();
+                let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
                 let class = group.pitch_set().set_class();
                 let text = format!("{} · {}", group.label, names.join(" "));
                 let hover = format!(
@@ -1164,33 +1350,24 @@ impl PianoRoll {
         });
     }
 
-    /// The strip above the grid that names the chord at every step.
+    /// The strip above the grid that names the chord at every step, in
+    /// `rect`, the place taken for it.
+    #[allow(clippy::too_many_arguments)]
     fn chord_lane(
         &mut self,
         ui: &mut Ui,
+        (rect, response): (Rect, &Response),
         pattern: &Pattern,
         heard: &[usize],
         scale: Scale,
-        step_width: f32,
+        lanes: Lanes,
         playhead: Option<usize>,
     ) {
-        let length = pattern.length();
-        let spelling = scale.spelling();
-        let width = KEY_WIDTH * self.zoom + step_width * length as f32;
-        let (rect, response) =
-            ui.allocate_exact_size(vec2(width, LANE_HEIGHT * self.zoom), Sense::hover());
-        let lane = Grid {
-            rect: Rect::from_min_max(
-                pos2(rect.left() + KEY_WIDTH * self.zoom, rect.top()),
-                rect.max,
-            ),
-            step_width,
-            length,
-            time: self.time,
-            zoom: self.zoom,
-        };
+        let length = lanes.length;
+        let lane = lanes.grid(rect, self.time);
+        let cells = lane.cells();
         if let Some(pos) = response.hover_pos()
-            && lane.rect.contains(pos)
+            && cells.contains(pos)
         {
             self.hovered_step = Some(lane.cell_at(pos).0);
         }
@@ -1200,31 +1377,41 @@ impl PianoRoll {
             pos2(rect.left() + 4.0, rect.center().y),
             Align2::LEFT_CENTER,
             "Chords",
-            FontId::proportional(11.0 * self.zoom),
+            FontId::proportional(11.0),
             ui.visuals().weak_text_color(),
         );
-        painter.rect_filled(lane.rect, 2.0, LANE_BACKGROUND);
+        painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
+        let painter = painter.with_clip_rect(cells);
 
-        // Name the harmony at every step, then join runs of equal names:
-        // `chunk_by` splits a slice wherever two neighbours differ.
-        let labels: Vec<Option<String>> = (0..length)
-            .map(|step| analyze(sounding(pattern, heard, step)).label(spelling))
+        // Work out the harmony and the bass at every step, then join runs
+        // where both stay the same: `chunk_by` splits a slice wherever
+        // two neighbours differ. Two chords without a name both read "?",
+        // but stay two blocks.
+        let harmonies: Vec<_> = (0..length)
+            .map(|step| {
+                let bass = sounding(pattern, heard, step)
+                    .min()
+                    .map(|note| note.pitch_class());
+                (analyze(sounding(pattern, heard, step)), bass)
+            })
             .collect();
         let mut start = 0;
-        for run in labels.chunk_by(|a, b| a == b) {
+        for run in harmonies.chunk_by(|a, b| a == b) {
             let end = start + run.len();
-            if let Some(label) = &run[0] {
+            if let Some(label) = run[0].0.label_in(scale) {
                 let chord_rect = Rect::from_min_max(
                     pos2(lane.x(start), lane.rect.top()),
                     pos2(lane.x(end), lane.rect.bottom()),
                 )
                 .shrink2(vec2(1.0, 2.0));
                 painter.rect_filled(chord_rect, 3.0, LANE_CHORD);
+                // A long chord's name stays in view while it scrolls.
+                let shown = chord_rect.intersect(cells);
                 painter.with_clip_rect(chord_rect).text(
-                    chord_rect.center(),
+                    shown.center(),
                     Align2::CENTER_CENTER,
                     label,
-                    FontId::proportional(12.0 * self.zoom),
+                    FontId::proportional(12.0),
                     LANE_TEXT,
                 );
             }
@@ -1236,7 +1423,7 @@ impl PianoRoll {
             painter.rect_filled(
                 Rect::from_min_max(
                     pos2(x, lane.rect.top()),
-                    pos2(x + step_width, lane.rect.bottom()),
+                    pos2(x + lanes.step_width, lane.rect.bottom()),
                 ),
                 0.0,
                 PLAYHEAD,
@@ -1244,7 +1431,8 @@ impl PianoRoll {
         }
     }
 
-    /// The keyboard and the note grid, inside the scroll area.
+    /// The keyboard and the note grid, inside the scroll area. Returns how
+    /// far the grid is scrolled sideways, in pixels.
     fn grid(
         &mut self,
         ui: &mut Ui,
@@ -1252,7 +1440,7 @@ impl PianoRoll {
         ghosts: &[usize],
         view: View,
         actions: &mut Vec<RollAction>,
-    ) {
+    ) -> f32 {
         let View {
             scale,
             step_width,
@@ -1261,45 +1449,39 @@ impl PianoRoll {
         } = view;
         let length = pattern.length();
         let rows = (HIGHEST - LOWEST + 1) as f32;
-        let size = vec2(
-            KEY_WIDTH * self.zoom + step_width * length as f32,
-            rows * ROW_HEIGHT * self.zoom,
-        );
+        let row_height = ROW_HEIGHT * self.zoom.y;
+        let size = vec2(KEY_WIDTH + step_width * length as f32, rows * row_height);
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
+        let visible = ui.clip_rect().intersect(rect);
         let grid = Grid {
-            rect: Rect::from_min_max(
-                pos2(rect.left() + KEY_WIDTH * self.zoom, rect.top()),
-                rect.max,
-            ),
+            rect: Rect::from_min_max(pos2(rect.left() + KEY_WIDTH, rect.top()), rect.max),
             step_width,
+            row_height,
             length,
             time: self.time,
-            zoom: self.zoom,
+            keys_left: visible.left(),
         };
 
         let notes = pattern.notes(self.channel);
         // Whether the view jumps this frame. It moves only after the grid
         // is drawn, so what is in view now is not worth remembering.
-        let jumping = self.scroll_to_notes || self.keep_in_middle.is_some();
+        let jumping = self.scroll_to_notes;
         if self.scroll_to_notes {
             // Centre the view between the lowest and highest note, or on
-            // middle C when there are no notes yet.
+            // middle C when there are no notes yet, from the first step.
+            // The middle is that of the rows from the highest to the
+            // lowest: halving pitches would be a row off when they span an
+            // odd number of semitones.
             let pitches = || notes.iter().map(|note| note.pitch.midi());
             let lowest = pitches().min().unwrap_or(Note::C4.midi());
             let highest = pitches().max().unwrap_or(Note::C4.midi());
-            let middle = lowest / 2 + highest / 2;
-            let top = grid.row_top(middle.clamp(LOWEST, HIGHEST));
+            let top = grid.row_top(highest.clamp(LOWEST, HIGHEST));
+            let bottom = grid.row_top(lowest.clamp(LOWEST, HIGHEST)) + row_height;
             let target =
-                Rect::from_min_size(pos2(rect.left(), top), vec2(1.0, ROW_HEIGHT * self.zoom));
+                Rect::from_min_max(pos2(rect.left(), top), pos2(rect.left() + 1.0, bottom));
             ui.scroll_to_rect(target, Some(Align::Center));
             self.scroll_to_notes = false;
-            self.keep_in_middle = None;
-        } else if let Some(pitch) = self.keep_in_middle.take() {
-            let top = grid.row_top(pitch.clamp(LOWEST, HIGHEST));
-            let target = Rect::from_min_size(pos2(rect.left(), top), vec2(1.0, ROW_HEIGHT));
-            ui.scroll_to_rect(target, Some(Align::Center));
         }
-        let visible = ui.clip_rect().intersect(rect);
         if !jumping {
             self.in_view = Some((
                 grid.cell_at(visible.left_bottom() - vec2(0.0, 1.0))
@@ -1310,15 +1492,15 @@ impl PianoRoll {
         }
         let hit = self.handle_input(ui, &response, grid, pattern, scale, actions);
 
-        let painter = ui.painter_at(rect);
-        paint_rows(&painter, grid, scale, held);
+        let painter = ui.painter_at(visible);
+        paint_rows(&painter, grid, scale);
         paint_step_lines(&painter, grid);
         if notes.is_empty() {
             painter.text(
-                visible.center() + vec2(KEY_WIDTH / 2.0 * self.zoom, 0.0),
+                visible.center() + vec2(KEY_WIDTH / 2.0, 0.0),
                 Align2::CENTER_CENTER,
                 "No notes here yet: click to draw one",
-                FontId::proportional(18.0 * self.zoom),
+                FontId::proportional(18.0),
                 NO_NOTES_TEXT,
             );
         }
@@ -1357,7 +1539,7 @@ impl PianoRoll {
             && hit.is_none()
             && !ctrl
             && let Some(pos) = response.hover_pos()
-            && grid.rect.contains(pos)
+            && grid.cells().contains(pos)
         {
             let (step, pitch) = grid.cell_at(pos);
             for stamp_pitch in self.stamp_notes(self.snapped(pitch, scale), scale) {
@@ -1380,6 +1562,9 @@ impl PianoRoll {
                 StrokeKind::Inside,
             );
         }
+        // The keyboard goes on top, since the grid scrolls under it.
+        paint_keys(&painter, grid, scale, held);
+        visible.left() - rect.left()
     }
 
     /// The notes a click on `pitch` places, in the inversion chosen.
@@ -1422,6 +1607,7 @@ impl PianoRoll {
     ) -> Option<usize> {
         let channel = self.channel;
         let notes = pattern.notes(channel);
+        let dismissing = crate::widgets::dismissing(ui.ctx());
         let (primary_pressed, primary_down, secondary, pointer, press_origin, ctrl) =
             ui.input(|input| {
                 let pointer = &input.pointer;
@@ -1432,7 +1618,7 @@ impl PianoRoll {
                     // so "pressed this frame" counts as well as "held down".
                     pointer.secondary_pressed() || pointer.secondary_down(),
                     pointer.interact_pos(),
-                    pointer.press_origin(),
+                    crate::widgets::press_pos(input, Some(egui::PointerButton::Primary)),
                     input.modifiers.command,
                 )
             });
@@ -1440,10 +1626,17 @@ impl PianoRoll {
         // On the frame the button goes down, look where it went down: the
         // pointer may already have moved on, if the hand was quick.
         let hovered = match response.hover_pos() {
-            Some(_) if primary_pressed => press_origin,
+            Some(hover) if primary_pressed => press_origin.or(Some(hover)),
             hover => hover,
         };
-        let hit = hovered.and_then(|pos| note_at(notes, grid, pos));
+        // The "no notes here" message lies over the grid, and a click that
+        // closes a menu does nothing else.
+        let hovered = hovered
+            .filter(|pos| !self.banner.is_some_and(|banner| banner.contains(*pos)))
+            .filter(|_| !dismissing);
+        let hit = hovered
+            .filter(|pos| grid.cells().contains(*pos))
+            .and_then(|pos| note_at(notes, grid, pos));
 
         if let Some(pos) = hovered {
             if grid.keys().contains(pos) && primary_pressed {
@@ -1452,7 +1645,7 @@ impl PianoRoll {
                     channel,
                     pitches: vec![pitch],
                 });
-            } else if grid.rect.contains(pos) {
+            } else if grid.cells().contains(pos) {
                 let (step, pitch) = grid.cell_at(pos);
                 self.hovered_step = Some(step);
 
@@ -1475,8 +1668,11 @@ impl PianoRoll {
                     match hit {
                         Some(index) => {
                             let note = notes[index];
-                            let near_end =
-                                pos.x > grid.note_rect(&note).right() - EDGE_GRAB * self.zoom;
+                            // A short note keeps most of its length for
+                            // moving it.
+                            let rect = grid.note_rect(&note);
+                            let grab = EDGE_GRAB.min(rect.width() / 3.0);
+                            let near_end = pos.x > rect.right() - grab;
                             let selected = self.selection.contains(&note);
                             if selected && !near_end {
                                 self.group_drag = Some(GroupDrag {
@@ -1632,29 +1828,23 @@ impl PianoRoll {
         &mut self,
         ui: &mut Ui,
         pattern: &Pattern,
-        step_width: f32,
+        lanes: Lanes,
         actions: &mut Vec<RollAction>,
     ) {
-        let length = pattern.length();
-        let width = KEY_WIDTH * self.zoom + step_width * length as f32;
+        let length = lanes.length;
+        let step_width = lanes.step_width;
         let (rect, response) = ui.allocate_exact_size(
-            vec2(width, VELOCITY_HEIGHT * self.zoom),
+            vec2(ui.available_width(), VELOCITY_HEIGHT),
             Sense::click_and_drag(),
         );
-        let lane = Grid {
-            rect: Rect::from_min_max(
-                pos2(rect.left() + KEY_WIDTH * self.zoom, rect.top()),
-                rect.max,
-            ),
-            step_width,
-            length,
-            time: self.time,
-            zoom: self.zoom,
-        };
+        let lane = lanes.grid(rect, self.time);
+        let cells = lane.cells();
         let notes = pattern.notes(self.channel);
 
         if response.is_pointer_button_down_on()
+            && !crate::widgets::dismissing(ui.ctx())
             && let Some(pos) = response.interact_pointer_pos()
+            && (cells.contains(pos) || response.dragged())
         {
             let step = lane.step_at(pos.x);
             self.hovered_step = Some(step);
@@ -1683,10 +1873,11 @@ impl PianoRoll {
             pos2(rect.left() + 4.0, rect.top() + 8.0),
             Align2::LEFT_CENTER,
             "Velocity",
-            FontId::proportional(11.0 * self.zoom),
+            FontId::proportional(11.0),
             ui.visuals().weak_text_color(),
         );
-        painter.rect_filled(lane.rect, 2.0, LANE_BACKGROUND);
+        painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
+        let painter = painter.with_clip_rect(cells);
         for step in (0..=length).filter(|&step| lane.time.is_beat_start(step)) {
             let color = if lane.time.is_bar_start(step) {
                 BAR_LINE
@@ -1843,7 +2034,6 @@ impl PianoRoll {
     }
 
     fn paint_notes(&self, painter: &Painter, grid: Grid, notes: &[NoteEvent], scale: Scale) {
-        let spelling = scale.spelling();
         let visible = notes
             .iter()
             .enumerate()
@@ -1868,12 +2058,15 @@ impl PianoRoll {
             };
             painter.rect_filled(rect, 2.0, fill);
             painter.rect_stroke(rect, 2.0, Stroke::new(width, border), StrokeKind::Inside);
-            if rect.width() > 26.0 {
-                painter.with_clip_rect(rect).text(
-                    rect.left_center() + vec2(3.0, 0.0),
+            // The name stays in view when the start of the note is
+            // scrolled away under the keyboard.
+            let shown = rect.intersect(grid.cells());
+            if shown.width() > 26.0 {
+                painter.with_clip_rect(shown).text(
+                    shown.left_center() + vec2(3.0, 0.0),
                     Align2::LEFT_CENTER,
-                    note.pitch.name(spelling),
-                    FontId::proportional(10.0 * self.zoom),
+                    scale.note_name(note.pitch),
+                    FontId::proportional(grid.text_size()),
                     NOTE_TEXT,
                 );
             }
@@ -1947,10 +2140,9 @@ pub(crate) fn both_names(pitch_class: PitchClass) -> String {
     }
 }
 
-/// Paints the keyboard and the row backgrounds. Rows of notes in the key
-/// are lighter, and the key's root is tinted, so the scale shows at a
-/// glance. Keys held down on a keyboard light up.
-fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
+/// Paints the row backgrounds. Rows of notes in the key are lighter, and
+/// the key's root is tinted, so the scale shows at a glance.
+fn paint_rows(painter: &Painter, grid: Grid, scale: Scale) {
     for midi in LOWEST..=HIGHEST {
         let pitch_class = PitchClass::from_semitone(midi);
         let top = grid.row_top(midi);
@@ -1959,7 +2151,7 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
 
         let row = Rect::from_min_size(
             pos2(grid.rect.left(), top),
-            vec2(grid.rect.width(), ROW_HEIGHT * grid.zoom),
+            vec2(grid.rect.width(), grid.row_height),
         );
         let fill = match (is_root, in_scale) {
             (true, _) => ROOT_ROW,
@@ -1973,11 +2165,20 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
             ROW_LINE
         };
         painter.hline(row.x_range(), row.bottom(), Stroke::new(1.0, line));
+    }
+}
 
-        let key = Rect::from_min_size(
-            pos2(grid.keys().left(), top),
-            vec2(KEY_WIDTH, ROW_HEIGHT) * grid.zoom,
-        );
+/// Paints the keyboard at the left of the view, with dots on the notes of
+/// the key (or numbers, for a row). Keys held down on a keyboard light up.
+fn paint_keys(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
+    let keys = grid.keys();
+    painter.rect_filled(keys, 0.0, OCTAVE_LINE);
+    for midi in LOWEST..=HIGHEST {
+        let pitch_class = PitchClass::from_semitone(midi);
+        let top = grid.row_top(midi);
+        let in_scale = scale.contains(pitch_class);
+        let is_root = pitch_class == scale.root;
+        let key = Rect::from_min_size(pos2(keys.left(), top), vec2(KEY_WIDTH, grid.row_height));
         let key_fill = if held.contains(&Note::new(midi)) {
             KEY_HELD
         } else if pitch_class.is_black_key() {
@@ -1994,7 +2195,7 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
                 pos2(key.right() - 3.0, key.center().y),
                 Align2::RIGHT_CENTER,
                 place.to_string(),
-                FontId::monospace(9.0 * grid.zoom),
+                FontId::monospace(grid.text_size() - 1.0),
                 mark,
             );
         } else if in_scale {
@@ -2006,7 +2207,7 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
                 pos2(key.left() + 4.0, key.center().y),
                 Align2::LEFT_CENTER,
                 Note::new(midi).to_string(),
-                FontId::proportional(10.0 * grid.zoom),
+                FontId::proportional(grid.text_size()),
                 KEY_TEXT,
             );
         }
@@ -2066,7 +2267,7 @@ mod tests {
             roll: &mut PianoRoll,
             project: &Project,
             pattern: usize,
-            zoom: f32,
+            zoom: Vec2,
             frames: usize,
         ) {
             let screen = Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 800.0));
@@ -2089,7 +2290,7 @@ mod tests {
 
     /// Draws `frames` frames of a piano roll on `pattern` of the demo song.
     fn run(roll: &mut PianoRoll, project: &Project, pattern: usize, frames: usize) {
-        Screen::new().run(roll, project, pattern, 1.0, frames);
+        Screen::new().run(roll, project, pattern, Vec2::splat(1.0), frames);
     }
 
     /// The pitch in the middle of the view.
@@ -2104,12 +2305,12 @@ mod tests {
         let mut roll = PianoRoll::new(SYNTH);
         roll.open = true;
         let mut screen = Screen::new();
-        screen.run(&mut roll, &project, CHORDS, 1.0, 20);
+        screen.run(&mut roll, &project, CHORDS, Vec2::splat(1.0), 20);
         let before = middle(&roll);
-        for zoom in [1.1, 1.2, 1.3] {
-            screen.run(&mut roll, &project, CHORDS, zoom, 1);
+        for zoom in [1.1, 1.25, 1.5] {
+            screen.run(&mut roll, &project, CHORDS, vec2(zoom, zoom), 1);
         }
-        screen.run(&mut roll, &project, CHORDS, 1.3, 5);
+        screen.run(&mut roll, &project, CHORDS, Vec2::splat(1.5), 5);
         assert!(
             middle(&roll).abs_diff(before) <= 1,
             "{before} became {}",
