@@ -85,47 +85,81 @@ markers go.
 ## The Time box does it too
 
 At first only the library re-metered the song. Picking 3/4 in the Time
-box of the harmony keys (or in the menu on bar 1 of the playlist) still
-did what it always had: it changed the time signature and nothing else.
-Every note stayed on its step, so the song sounded exactly the same; only
-the bar lines were drawn in other places. A 4/4 tune "in 3/4" that way
-has its downbeats wandering through the bars, and nothing tells you why
-the music did not change.
+box of the harmony keys (or in the menu on bar 1 of the playlist) did
+what it always had: it changed the time signature and nothing else.
+Every note stayed on its step, and only the bar lines were drawn in other
+places.
 
-Now both re-meter the song, the same way a rhythm does: every bar
-squeezed or stretched into a bar of the new time signature, and the
-tempo scaled so each bar lasts as long as before. 4/4 at 124 becomes 3/4
-at 93. Two cases are different:
+The first fix made the Time box squeeze every bar, like a rhythm does.
+It still sounded exactly the same, and it is worth seeing why. The squeeze
+puts four quarter notes into three beats, and the tempo goes down so the
+bar lasts as long as before (see above). The two cancel out: every note,
+the drums included, still starts at the same moment, in seconds. The
+music was only *written* differently.
 
-- **A song with no notes at all** has nothing to squeeze, so it only
-  gets the new bars and keeps its tempo.
-- **A change partway through**, from the menu on any bar but the first,
-  still only changes the bars from there on: that is how you write a
-  hymn with a last line in 3/4.
+What you hear as a time signature is not the bar lines: it is where the
+strong and weak beats fall, and in a song that is mostly the drums and
+the way the chords are struck. A waltz is a waltz because of its "oom-pah-pah".
+So a time signature picked by hand now does what a click on a rhythm in
+the library does: it squeezes the bars *and* the song plays a rhythm in
+the new time signature, its chords and bass played the way that rhythm
+goes. Which rhythm? `Rhythm::for_time` picks, in this order:
 
-Both changes go through one method, `set_song_time`, which the Time box
-and the bar 1 menu call. It remembers the library's original like the
-rhythms do, so a rhythm picked afterwards still starts from the song as
-it was:
+1. A rhythm of the same kind as the one the song plays, in the new time
+   signature: El Choclo (a milonga) in 3/4 plays a tango vals, a zamba
+   in 3/4 stays South American folklore.
+2. The usual one for the time signature: a waltz for 3/4, a six-eight
+   for 6/8, a slow blues for 12/8, a pop beat for 4/4.
+3. For the time signatures the library has no rhythm in (5/4, 7/8,
+   2+2+3/8, any other), a basic beat made from the time signature itself.
 
-```rust
-let remetered = self.edit("change time signature", |project| {
-    if project.patterns().iter().all(Pattern::is_empty) {
-        project.time_signature = time;
-        false
-    } else {
-        remeter(project, time)
-    }
-});
+Going back to the time signature the song was in brings back the song
+as it was, its own drums included: the original stays the reference.
+
+You can check that it sounds different without trusting your ears. Export
+El Choclo before and after, and find the most regular gap between the
+attacks in the sound: before, the milonga's 3+3+2 accents repeat every
+0.805 seconds. With the first fix, still 0.805 seconds. Now, 0.715
+seconds: one quarter note at 84, the pulse of a 3/4 bar.
+
+A song with no notes at all has nothing to play differently, so it only
+gets the new bars and keeps its tempo. A change partway through, from the
+menu on any bar but the first, still only changes the bars from there on:
+that is how you write a hymn with a last line in 3/4.
+
+### A basic beat for any time signature
+
+The basic beat follows the beats of the bar. The kick plays the first
+beat. With two beats the snare plays the second; with three, the snare
+plays two light beats, as in a waltz; with four or more, the kick and the
+snare take turns. The hi-hat plays every eighth note, a little louder on
+the beats. 5/4 comes out as:
+
+```text
+Kick   "X.......x.......x..."
+Snare  "....X.......X......."
+Hi-hat "x.o.x.o.x.o.x.o.x.o."
 ```
 
-`Pattern::is_empty` is passed by name: `all` wants a function that takes
-a `&Pattern` and answers `bool`, and the method is exactly that, so no
-closure `|pattern| pattern.is_empty()` is needed.
+Eighth-note time signatures nobody grouped yet are played the way
+drummers feel them, in twos with a three at the end: 5/8 as 2+3 and 7/8
+as 2+2+3, which is three beats, one strong and two light.
 
-The bar 1 menu is routed in a `match` with a *guard*: `SetTimeMarker(marker)
-if marker.start == 0 => ...` takes only the markers on step 0, and the
-next arm, without the guard, takes all the others.
+### Rust corner: text made at run time where `'static` is expected
+
+The library's rhythms are written in the source, so a `Rhythm` holds
+`&'static str`: text that lives as long as the program. A basic beat is
+made while the app runs, from a `String`. `String::leak` turns a
+`String` into a `&'static str` by promising never to free it, and
+`Box::leak` and `Vec::leak` do the same for a value and a list. Leaking
+is fine here because each time signature makes its beat once: the beats
+are kept in a `static Mutex<Vec<&'static Rhythm>>` and found there the
+next time.
+
+`Mutex::new` can be called in a `static` because it is a `const fn`. If
+a thread panicked while holding the lock, `lock` returns an error that
+still carries the data; `unwrap_or_else(PoisonError::into_inner)` takes
+the data anyway, since a list of beats cannot be left half-written.
 
 ## Exact, between the steps
 
@@ -254,6 +288,6 @@ far into it, and goes to the same bar and the same fraction of it.
 4. Pause in the middle of the song, pick a waltz, then press Ctrl+Z and
    Ctrl+Y. The playhead stays on the same bar each time, and the tempo
    goes back and forth between the two.
-5. Press Ctrl+Z until the song is back in 4/4, then pick 3/4 in the Time
-   box. The song re-meters just as with the waltz, but keeps its drums:
-   the Time box changes the time signature, not the rhythm.
+5. Open El Choclo and pick 3/4 in the Time box. The status bar says the
+   song now plays Tango vals in 3/4, and you hear three beats to the bar.
+   Pick 5/4: a basic beat in five. Pick 4/4: El Choclo as it was.
