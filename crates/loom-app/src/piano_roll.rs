@@ -19,6 +19,7 @@ use loom_core::{
     Scale, ScaleKind, Spelling, TimeSignature, tidy_notes,
 };
 
+use crate::micromodes::{self, MicroAction, MicromodeWindow};
 use crate::theme;
 use crate::twelve_tone::{self, RowAction, RowWindow, SetAction, SetWindow};
 
@@ -377,6 +378,8 @@ pub struct PianoRoll {
     /// The twelve-tone row window and the set browser.
     row_window: RowWindow,
     set_window: SetWindow,
+    /// Kröpfl's micromodes, linked to the set browser.
+    micromode_window: MicromodeWindow,
 }
 
 impl PianoRoll {
@@ -414,6 +417,7 @@ impl PianoRoll {
             snap_played: false,
             row_window: RowWindow::new(),
             set_window: SetWindow::new(),
+            micromode_window: MicromodeWindow::new(),
         }
     }
 
@@ -430,10 +434,12 @@ impl PianoRoll {
         egui::Id::unique("piano-roll")
     }
 
-    /// Whether a window is one the piano roll opens: the row window or
-    /// the set browser.
+    /// Whether a window is one the piano roll opens: the row window, the
+    /// set browser or the micromode window.
     pub fn owns(id: egui::Id) -> bool {
-        id == twelve_tone::row_window_id() || id == twelve_tone::set_window_id()
+        id == twelve_tone::row_window_id()
+            || id == twelve_tone::set_window_id()
+            || id == micromodes::window_id()
     }
 
     /// The channel shown: the selected channel, which keyboards play.
@@ -629,15 +635,15 @@ impl PianoRoll {
                 }
             }
         }
+        let selected: PitchSet = if held.is_empty() {
+            self.selection
+                .iter()
+                .map(|note| note.pitch.pitch_class())
+                .collect()
+        } else {
+            held.iter().map(|note| note.pitch_class()).collect()
+        };
         if self.set_window.open {
-            let selected: PitchSet = if held.is_empty() {
-                self.selection
-                    .iter()
-                    .map(|note| note.pitch.pitch_class())
-                    .collect()
-            } else {
-                held.iter().map(|note| note.pitch_class()).collect()
-            };
             for action in self.set_window.show(ctx, area, scale, selected) {
                 match action {
                     SetAction::Stamp(set) => {
@@ -645,6 +651,30 @@ impl PianoRoll {
                         self.inversion = 0;
                     }
                     SetAction::UseAsKey(set) => actions.push(RollAction::SetScale(set)),
+                    SetAction::ShowMicromode(trio) => {
+                        self.micromode_window.pick(trio);
+                        self.micromode_window.open = true;
+                    }
+                    SetAction::OpenMicromodes => self.micromode_window.open = true,
+                }
+            }
+        }
+        if self.micromode_window.open {
+            for action in self.micromode_window.show(ctx, area, scale, selected) {
+                match action {
+                    MicroAction::Stamp(set) => {
+                        self.stamp = ChordStamp::Set(set);
+                        self.inversion = 0;
+                    }
+                    MicroAction::UseAsKey(set) => actions.push(RollAction::SetScale(set)),
+                    MicroAction::Hear(pitches) => actions.push(RollAction::Preview {
+                        channel: self.channel,
+                        pitches,
+                    }),
+                    MicroAction::ShowSet(set) => {
+                        self.set_window.pick(set);
+                        self.set_window.open = true;
+                    }
                 }
             }
         }
@@ -1003,6 +1033,11 @@ impl PianoRoll {
                 .on_hover_text(
                     "Pitch-class sets: every group of notes there is, by Forte number, to \
                      draw with or use as a scale",
+                );
+            ui.toggle_value(&mut self.micromode_window.open, "Micromodes…")
+                .on_hover_text(
+                    "Kröpfl's micromodes: the twelve groups of three notes, the smallest sets, \
+                     to hear, draw with or use as a key",
                 );
 
             ui.separator();

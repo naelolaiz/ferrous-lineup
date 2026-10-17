@@ -6,7 +6,9 @@
 //! it: which form, as a melody or as chords, how fast, in which octaves,
 //! and whether durations and dynamics follow the row too (see
 //! [`crate::serial`]). The rows are the ones in
-//! [`ROW_PRESETS`](crate::harmony::ROW_PRESETS) written for Ferrous Loom.
+//! [`ROW_PRESETS`](crate::harmony::ROW_PRESETS) written for Ferrous Loom,
+//! and the row of Webern's Concerto Op. 24 (the row only: the rhythm and
+//! the instruments are Ferrous Loom's).
 
 use crate::harmony::{RowForm, RowLabel, RowPreset, Scale, ToneRow};
 use crate::meter::TimeSignature;
@@ -178,7 +180,7 @@ impl RowStyle {
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 
 /// The twelve-tone styles of the library.
-pub static ROW_STYLES: [RowStyle; 6] = [
+pub static ROW_STYLES: [RowStyle; 7] = [
     RowStyle {
         name: "Row melody",
         about: "The row as a tune in eighth notes, then backwards: the simplest way to hear it.",
@@ -280,6 +282,28 @@ pub static ROW_STYLES: [RowStyle; 6] = [
                 .from(Register::Close, 36),
         ],
         rhythm: "Lo-fi",
+    },
+    RowStyle {
+        name: "Webern's trichords",
+        about: "The row of Webern's Concerto Op. 24 (1934), whose four groups of three notes \
+                are all one micromode, Menor 3. The melody leaps over three octaves, as \
+                Webern's lines do, while each group sounds as a chord under it. Webern gave \
+                the groups to oboe, flute, trumpet and clarinet; this rhythm is Ferrous \
+                Loom's.",
+        row: "Webern's Concerto",
+        tempo: 80.0,
+        time: TimeSignature::COMMON,
+        bars: 3,
+        voices: &[
+            voice(LEAD, RowForm::Prime)
+                .chain(Chain::FourForms)
+                .from(Register::Wide, 55),
+            voice(KEYS, RowForm::Prime)
+                .chain(Chain::FourForms)
+                .chords(3, 6)
+                .from(Register::Nearest, 48),
+        ],
+        rhythm: "",
     },
 ];
 
@@ -383,8 +407,35 @@ pub fn use_row_style(project: &mut Project, style: &RowStyle) -> RhythmChange {
         RowForm::RetrogradeInversion,
     ];
     let start = project.scale.root;
-    let rhythm = style.rhythm();
     let uses = |name: &str| style.voices.iter().any(|voice| voice.channel == name);
+    let change = take_over_harmony(
+        project,
+        &uses,
+        style.rhythm(),
+        |project, pattern, n, keys| {
+            write_voices(project, pattern, style, start, SECTIONS[n % 4], keys);
+        },
+    );
+    if change.harmony > 0 {
+        project.scale = Scale::row(style.row().starting_on(start));
+    }
+    change
+}
+
+/// What [`use_row_style`] does, for any style that writes the harmony
+/// without chords: in every pattern with chords, a bass line or a
+/// melody, the song's chords and bass go quiet unless the style `uses`
+/// that channel, then `write` writes the style into the pattern, with
+/// the number of patterns written so far (to vary them) and the channel
+/// for its chords: the one that played the song's chords, or a Keys
+/// channel. The drums take `rhythm`, if there is one, where there were
+/// drums. Endings stay as they are.
+pub(super) fn take_over_harmony(
+    project: &mut Project,
+    uses: &dyn Fn(&str) -> bool,
+    rhythm: Option<&Rhythm>,
+    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
+) -> RhythmChange {
     let mut change = RhythmChange::default();
     let mut written = 0;
     for pattern in 0..project.patterns().len() {
@@ -422,8 +473,7 @@ pub fn use_row_style(project: &mut Project, style: &RowStyle) -> RhythmChange {
                 None if uses(KEYS) => synth_named(project, KEYS),
                 None => None,
             };
-            let section = SECTIONS[written % 4];
-            write_voices(project, pattern, style, start, section, keys);
+            write(project, pattern, written, keys);
             if project.pattern(pattern) != before.as_ref() {
                 written += 1;
                 change.harmony += 1;
@@ -435,9 +485,6 @@ pub fn use_row_style(project: &mut Project, style: &RowStyle) -> RhythmChange {
         {
             change.drums += 1;
         }
-    }
-    if change.harmony > 0 {
-        project.scale = Scale::row(style.row().starting_on(start));
     }
     change
 }
@@ -477,7 +524,7 @@ mod tests {
             );
             assert!(!style.voices.is_empty());
         }
-        assert_eq!(ROW_PRESETS.len(), 7);
+        assert_eq!(ROW_PRESETS.len(), 8);
     }
 
     #[test]

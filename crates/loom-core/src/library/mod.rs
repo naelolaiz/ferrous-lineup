@@ -13,6 +13,7 @@
 //! - [`style`]: harmony styles, a progression with its way of playing.
 //! - [`rhythm`]: drum patterns, one line per drum.
 //! - [`rows`]: twelve-tone styles, ways of playing a row.
+//! - [`micromodes`]: styles in one of Kröpfl's micromodes.
 //! - [`song`]: well-known songs in the public domain, with their melodies.
 //! - [`listen`]: hearing which chords a pattern's notes play.
 //! - [`apply`]: writing a style or a rhythm into a pattern, and changing
@@ -27,6 +28,7 @@ pub mod comping;
 pub mod demo;
 pub mod follow;
 pub mod listen;
+pub mod micromodes;
 pub mod numeral;
 pub mod rhythm;
 pub mod rows;
@@ -35,6 +37,7 @@ pub mod style;
 pub mod voicing;
 
 pub use comping::{Bass, Comping};
+pub use micromodes::{MICROMODE_STYLES, MicromodeStyle};
 pub use rhythm::{FILLS, RHYTHMS, Rhythm};
 pub use rows::{ROW_STYLES, RowStyle};
 pub use song::{SONGS, Song};
