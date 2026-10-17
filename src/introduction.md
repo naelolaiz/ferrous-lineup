@@ -4,8 +4,8 @@
 plays songs with a backing band. It began as a pattern studio in the
 spirit of FL Studio, where you build short patterns in a step sequencer
 or a piano roll and arrange them into songs, and from step 9 on it grows
-toward the workflow of Band-in-a-Box: type the chords of a song, pick a
-style, and the band plays it. It also has a second goal: helping you
+toward a backing band: type the chords of a song, pick a style, and
+the band plays it. It also has a second goal: helping you
 **learn harmony** while you play, by showing you scales, chords and their
 names as you write.
 
@@ -53,8 +53,7 @@ The [Roadmap](roadmap.md) chapter keeps this table up to date.
 players of a band. The first name, Ferrous Loom, kept the "F L" initials
 of FL Studio, and a loom weaves threads together the way the playlist
 weaves patterns into a song. Ferrous Lineup is an independent project
-with no connection to PG Music or Band-in-a-Box, nor to Image-Line or FL
-Studio.
+with no connection to Image-Line or FL Studio.
 
 Ferrous Lineup is free software, released under the GNU General Public
 License, version 3 or later.

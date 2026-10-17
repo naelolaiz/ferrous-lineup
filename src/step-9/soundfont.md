@@ -14,8 +14,8 @@ sawtooth wave struck and filtered, a "violin" a sawtooth that swells in
 slowly. You can tell the parts apart, but nobody would take them for
 the real thing.
 
-Band-in-a-Box plays recordings of real instruments. This change lets
-Ferrous Lineup do the same, with a **SoundFont**.
+Backing-band programs play recordings of real instruments. This change
+lets Ferrous Lineup do the same, with a **SoundFont**.
 
 ## What you see
 

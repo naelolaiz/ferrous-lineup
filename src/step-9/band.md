@@ -60,8 +60,8 @@ their tempo** is ticked.
 In the library of [step 8](../step-8/library.md), a style is a bundle:
 a chart of chords, a way to comp them, a bass pattern and a rhythm.
 "Bossa nova" means Dm7 G7 Cmaj7 *and* the piano's syncopated chords
-*and* the bass on 1 and the "and" of 2 *and* the rim clicks. Band-in-a-Box
-separates the two halves. The chords are yours (the sheet); the style
+*and* the bass on 1 and the "and" of 2 *and* the rim clicks. A backing
+band separates the two halves. The chords are yours (the sheet); the style
 only says how to play them. So this change splits the library the same
 way, without changing it:
 
@@ -329,8 +329,8 @@ band only has to keep the number, not a copy of the sheet.
 
 ## A part you edit stays yours
 
-Band-in-a-Box writes its tracks fresh every time you press Play, so
-an edit to the bass line is lost the next time anything changes. Here,
+A band that writes its tracks fresh every time you press Play loses
+an edit to the bass line the next time anything changes. Here,
 a part you change by hand **freezes**: the band leaves it exactly as
 you left it, and the sheet says so:
 

@@ -10,8 +10,7 @@ numerals and colours on the harmony keys, set names in the twelve-tone
 window. Musicians also need to *hear* it: to tell a minor third from a
 major one, a diminished chord from a minor one, and the V of a song
 from its IV, without looking. That is a skill of its own, and it is
-learned the way Band-in-a-Box's ear-training games teach it: something
-plays, you name it, and you are told at once whether you were right.
+learned the way ear-training games teach it: something plays, you name it, and you are told at once whether you were right.
 
 This is item 13 of the plan. It is **experimental** and stays out of
 the way: it lives in its own window, which is closed until you open

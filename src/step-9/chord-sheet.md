@@ -6,8 +6,8 @@ Files: [`crates/lineup-core/src/chord_sheet.rs`](https://github.com/naelolaiz/fe
 [`crates/lineup-core/src/remeter.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/remeter.rs)
 and [`crates/lineup-app/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet.rs)
 
-In Band-in-a-Box the first thing you see is a grid of bars, and you
-type a song into it: "C", Tab, "Am7 D7", Tab. This change gives
+In a backing-band program the first thing you see is a grid of bars,
+and you type a song into it: "C", Tab, "Am7 D7", Tab. This change gives
 Ferrous Lineup that grid, the **chord sheet**. It opens with **F5**, the
 **📝 Chords** button in the toolbar or **View > Chord sheet**, as a
 window over the playlist, which stays as it was.

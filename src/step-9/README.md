@@ -2,10 +2,10 @@
 
 Ferrous Loom began as a pattern studio in the style of FL Studio: build
 loops in a step sequencer and a piano roll, then arrange them in a
-playlist. The program the project really set out to follow is a
-different one: **Band-in-a-Box**, by PG Music. There you type the chords
-of a song bar by bar, choose a style, press Play, and a band (bass,
-drums, piano, guitar, strings) plays the song in that style. Change the
+playlist. What the project really set out to be is something else: a
+**backing band**. You type the chords of a song bar by bar, choose a
+style, press Play, and a band (bass, drums, piano, guitar, strings)
+plays the song in that style. Change the
 style, the key or the tempo, and the band plays it again the new way.
 
 Most of a band was already inside the app. The library turns a
@@ -51,16 +51,14 @@ window beside them.
 
 ## Trying it
 
-Each change lands on a branch of its own, `band-in-a-box`, so it can be
-tried before it reaches `main`:
+The changes of this step were first tried on a branch of their own,
+and are now all on `main`:
 
 ```sh
-git fetch origin
-git checkout band-in-a-box
+git checkout main
+git pull
 cargo run --release
 ```
-
-`git checkout main` goes back to the app as it was.
 
 ## A new name
 
