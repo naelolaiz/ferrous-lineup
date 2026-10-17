@@ -30,13 +30,13 @@ pub(super) struct Import {
 }
 
 /// Where the recording is saved for the sampler: next to the original,
-/// as "song.ferrous-loom.wav", or in the temporary folder if that folder
+/// as "song.ferrous-lineup.wav", or in the temporary folder if that folder
 /// cannot be written to.
 fn wav_path(original: &Path) -> PathBuf {
     let stem = original
         .file_stem()
         .map_or_else(|| "recording".into(), |stem| stem.to_string_lossy());
-    let name = format!("{stem}.ferrous-loom.wav");
+    let name = format!("{stem}.ferrous-lineup.wav");
     original.with_file_name(&name)
 }
 
@@ -88,7 +88,7 @@ impl LoomApp {
     }
 
     /// Starts listening to the recording at `path`. Opening an audio file
-    /// (`ferrous-loom song.mp3`) comes here too.
+    /// (`ferrous-lineup song.mp3`) comes here too.
     pub(super) fn import_path(&mut self, path: PathBuf) {
         if self.import.is_some() {
             return;
@@ -147,7 +147,7 @@ impl LoomApp {
     }
 
     /// Makes a new project from the MIDI file at `path`, in song mode,
-    /// ready to play. Opening a MIDI file (`ferrous-loom song.mid`, or
+    /// ready to play. Opening a MIDI file (`ferrous-lineup song.mid`, or
     /// dropping it on the window) comes here too.
     pub(super) fn import_midi_path(&mut self, path: &Path) {
         let title = path

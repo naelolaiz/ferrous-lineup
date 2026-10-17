@@ -122,7 +122,7 @@ impl ChordQuality {
             Dominant11 => &[0, 4, 7, 10, 14, 17],
             Minor11 => &[0, 3, 7, 10, 14, 17],
             // Players leave the eleventh out of thirteenth chords, because
-            // it clashes with the third; so does Ferrous Loom.
+            // it clashes with the third; so does Ferrous Lineup.
             Dominant13 => &[0, 4, 7, 10, 14, 21],
             Major13 => &[0, 4, 7, 11, 14, 21],
         }

@@ -131,7 +131,7 @@ pub(super) const HAPPY_BIRTHDAY: Song = Song {
 
 pub(super) const TWO_FIVE_WALK: Song = Song {
     name: "Two-Five Walk",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Swing",
     genre: Genre::Jazz,
     tonic: C,
