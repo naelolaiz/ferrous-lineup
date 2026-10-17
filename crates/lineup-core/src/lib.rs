@@ -14,6 +14,7 @@ pub mod arrangement;
 pub mod band;
 pub mod chord_sheet;
 pub mod diff;
+pub mod ear_training;
 pub mod file;
 pub mod general_midi;
 pub mod harmony;
