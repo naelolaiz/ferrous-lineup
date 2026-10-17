@@ -6,17 +6,21 @@
 //! you see less time in more detail, and vertical zoom makes tracks and
 //! piano keys taller. Neither changes the size of the text or the menus.
 //!
-//! - Ctrl and the mouse wheel zooms horizontally, Alt and the wheel (or
-//!   Ctrl+Alt and the wheel) vertically, in the playlist, piano roll or
-//!   channel rack under the pointer. The step under the pointer stays
-//!   under the pointer.
-//! - Ctrl and + or − zooms horizontally, Alt and + or − vertically, in
-//!   the one you clicked last. Ctrl+0 takes both back to 100%.
-//! - The channel rack has one zoom for both directions, since its steps
-//!   are square buttons.
-//! - The View menu has all of these, and the interface size: how big the
-//!   text, buttons and menus are everywhere, for big or very sharp
-//!   screens. That is egui's own zoom.
+//! The same keys zoom whatever the pointer is over:
+//!
+//! - Ctrl and + or − (or the mouse wheel) zooms horizontally, and Alt
+//!   with the same keys (or the wheel) vertically, in the playlist, piano
+//!   roll or channel rack under the pointer. The step under the pointer stays
+//!   under the pointer. Ctrl+0 takes both back to 100%.
+//! - Anywhere else (the toolbars, the harmony keys, the status bar, the
+//!   Patterns and Library panel) the same keys change the interface
+//!   size: how big the text, buttons and menus are everywhere, for big or
+//!   very sharp screens. That is egui's own zoom.
+//! - The channel rack and the interface have one zoom for both
+//!   directions, so Ctrl and Alt do the same there.
+//! - With the pointer outside the window, the keys zoom what was clicked
+//!   last.
+//! - The View menu has all of these.
 //! - The status bar has buttons for the playlist's two zooms.
 //!
 //! The channel rack draws its contents bigger by scaling their text and
@@ -77,29 +81,67 @@ pub(crate) enum Axis {
     Vertical,
 }
 
+/// What the zoom keys and the wheel zoom: one of the areas, or the whole
+/// interface (text, buttons and menus) where no area has a zoom of its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) enum Target {
+    Area(Area),
+    #[default]
+    Interface,
+}
+
+impl Target {
+    /// What is zoomed at a point of the screen: the channel rack or the
+    /// piano roll over their windows, the playlist over the playlist, and
+    /// the interface over everything else (the toolbars, the harmony keys,
+    /// the status bar, the Patterns and Library panel, the row and set
+    /// windows, menus).
+    fn at(ctx: &egui::Context, pos: egui::Pos2, playlist: egui::Rect) -> Target {
+        match ctx.layer_id_at(pos) {
+            Some(layer) if layer.id == super::rack_id() => Target::Area(Area::Rack),
+            Some(layer) if layer.id == PianoRoll::id() => Target::Area(Area::PianoRoll),
+            Some(layer) if layer.order == egui::Order::Background && playlist.contains(pos) => {
+                Target::Area(Area::Main)
+            }
+            _ => Target::Interface,
+        }
+    }
+
+    /// One step bigger or smaller, one way. The rack and the interface
+    /// have one zoom, so both ways change it.
+    fn step(self, ctx: &egui::Context, axis: Axis, bigger: bool) {
+        match self {
+            Target::Area(area) => area.step_zoom(ctx, axis, bigger),
+            Target::Interface => {
+                ctx.set_zoom_factor(interface_step(ctx.zoom_factor(), bigger));
+            }
+        }
+    }
+
+    /// Multiplies the zoom by `factor`: a touchpad's smooth zoom.
+    fn scale(self, ctx: &egui::Context, axis: Axis, factor: f32) {
+        match self {
+            Target::Area(area) => area.set_zoom(ctx, axis, area.zoom(ctx, axis) * factor),
+            Target::Interface => {
+                let (low, high) = (
+                    INTERFACE_SIZES[0],
+                    INTERFACE_SIZES[INTERFACE_SIZES.len() - 1],
+                );
+                ctx.set_zoom_factor((ctx.zoom_factor() * factor).clamp(low, high));
+            }
+        }
+    }
+
+    fn reset(self, ctx: &egui::Context) {
+        match self {
+            Target::Area(area) => area.reset(ctx),
+            Target::Interface => ctx.set_zoom_factor(1.0),
+        }
+    }
+}
+
 impl Area {
     const ALL: [Area; 3] = [Area::Main, Area::PianoRoll, Area::Rack];
-
-    /// The area that contains a layer: one of the windows, or the main
-    /// window for everything else.
-    fn of(layer: egui::LayerId) -> Area {
-        if layer.id == super::rack_id() {
-            Area::Rack
-        } else if layer.id == PianoRoll::id() {
-            Area::PianoRoll
-        } else {
-            Area::Main
-        }
-    }
-
-    /// The area the zoom keys zoom after a click on a layer. A click in
-    /// the piano roll's row or set window counts as one in the piano roll.
-    fn clicked(layer: egui::LayerId) -> Area {
-        match PianoRoll::owns(layer.id) {
-            true => Area::PianoRoll,
-            false => Area::of(layer),
-        }
-    }
 
     fn name(self) -> &'static str {
         match self {
@@ -192,6 +234,24 @@ fn zoom_step(zoom: f32, bigger: bool) -> f32 {
     }
 }
 
+/// The next of the [`INTERFACE_SIZES`] above or below `size`.
+fn interface_step(size: f32, bigger: bool) -> f32 {
+    const CLOSE: f32 = 0.005;
+    let last = INTERFACE_SIZES[INTERFACE_SIZES.len() - 1];
+    if bigger {
+        INTERFACE_SIZES
+            .into_iter()
+            .find(|&step| step > size + CLOSE)
+            .unwrap_or(last)
+    } else {
+        INTERFACE_SIZES
+            .into_iter()
+            .rev()
+            .find(|&step| step < size - CLOSE)
+            .unwrap_or(INTERFACE_SIZES[0])
+    }
+}
+
 /// The zoom factor as a percentage, such as "125%".
 fn percent(zoom: f32) -> String {
     format!("{:.0}%", zoom * 100.0)
@@ -227,12 +287,12 @@ impl WheelZoom {
     /// Zooms one step for a turn of the wheel. Only one step a frame:
     /// on Linux (X11) one notch can arrive as two events, and a frame is
     /// short enough that a quick turn still zooms step by step.
-    fn apply(self, area: Area, ctx: &egui::Context, axis: Axis) {
+    fn apply(self, target: Target, ctx: &egui::Context, axis: Axis) {
         if self.notches != 0.0 {
-            area.step_zoom(ctx, axis, self.notches > 0.0);
+            target.step(ctx, axis, self.notches > 0.0);
         }
         if self.smooth != 1.0 {
-            area.set_zoom(ctx, axis, area.zoom(ctx, axis) * self.smooth);
+            target.scale(ctx, axis, self.smooth);
         }
     }
 }
@@ -261,8 +321,10 @@ impl LoomApp {
                 },
             );
             ui.weak(
-                "Ctrl+wheel zooms horizontally and Alt+wheel vertically\n\
-                 where the pointer is. The keys zoom where you clicked last.",
+                "Ctrl and + or − (or the wheel) zooms what the pointer is over:\n\
+                 the playlist, piano roll or channel rack, or the whole\n\
+                 interface over the toolbars and panels. Alt zooms tracks\n\
+                 and keys taller. Ctrl+0 goes back to 100%.",
             );
             ui.separator();
             let window = |open: &mut bool, text: &str, shortcut, ui: &mut egui::Ui| {
@@ -280,16 +342,21 @@ impl LoomApp {
         });
     }
 
-    /// Zooms the area the user is pointing at (a zoom key and the mouse
-    /// wheel) or last clicked in (the zoom keys), and nothing else.
+    /// Zooms what the pointer is over, with the zoom keys, the wheel or a
+    /// touchpad pinch: the playlist, the piano roll or the channel rack,
+    /// or the whole interface anywhere else. When the pointer is outside
+    /// the app's window, the keys zoom what was clicked last.
     /// Called at the start of each frame, before anything is drawn.
     pub(super) fn zoom_shortcuts(&mut self, ctx: &egui::Context) {
-        let area_at = |pos| ctx.layer_id_at(pos).map_or(Area::Main, Area::of);
-        let clicked_at = |pos| ctx.layer_id_at(pos).map_or(Area::Main, Area::clicked);
+        let playlist = self.playlist.area();
         let pressed_at = ctx.input(|input| crate::widgets::press_pos(input, None));
         if let Some(pos) = pressed_at {
-            self.zoom_area = clicked_at(pos);
+            self.zoom_target = Target::at(ctx, pos, playlist);
         }
+        let target = match ctx.pointer_hover_pos() {
+            Some(pos) => Target::at(ctx, pos, playlist),
+            None => self.zoom_target,
+        };
 
         // The wheel, read from its events: egui itself only knows one zoom
         // for both directions.
@@ -320,32 +387,29 @@ impl LoomApp {
             };
             (wide, tall, pinch)
         });
-        if let Some(pos) = ctx.pointer_hover_pos() {
-            let area = area_at(pos);
-            wide.apply(area, ctx, Axis::Horizontal);
-            tall.apply(area, ctx, Axis::Vertical);
+        if ctx.pointer_hover_pos().is_some() {
+            wide.apply(target, ctx, Axis::Horizontal);
+            tall.apply(target, ctx, Axis::Vertical);
             if pinch != 1.0 {
-                let zoom = area.zoom(ctx, Axis::Horizontal);
-                area.set_zoom(ctx, Axis::Horizontal, zoom * pinch);
+                target.scale(ctx, Axis::Horizontal, pinch);
             }
         }
 
         let pressed = |shortcut| ctx.input_mut(|input| input.consume_shortcut(&shortcut));
-        let area = self.zoom_area;
         if pressed(WIDER) || pressed(WIDER_2) {
-            area.step_zoom(ctx, Axis::Horizontal, true);
+            target.step(ctx, Axis::Horizontal, true);
         }
         if pressed(NARROWER) {
-            area.step_zoom(ctx, Axis::Horizontal, false);
+            target.step(ctx, Axis::Horizontal, false);
         }
         if pressed(TALLER) || pressed(TALLER_2) {
-            area.step_zoom(ctx, Axis::Vertical, true);
+            target.step(ctx, Axis::Vertical, true);
         }
         if pressed(SHORTER) {
-            area.step_zoom(ctx, Axis::Vertical, false);
+            target.step(ctx, Axis::Vertical, false);
         }
         if pressed(RESET) {
-            area.reset(ctx);
+            target.reset(ctx);
         }
     }
 
@@ -544,11 +608,20 @@ mod tests {
         let mut wheel = WheelZoom::none();
         wheel.add(MouseWheelUnit::Line, 1.0);
         wheel.add(MouseWheelUnit::Line, 1.0);
-        wheel.apply(Area::Main, &ctx, Axis::Horizontal);
+        wheel.apply(Target::Area(Area::Main), &ctx, Axis::Horizontal);
         assert_eq!(Area::Main.zoom(&ctx, Axis::Horizontal), 1.1);
         let mut wheel = WheelZoom::none();
         wheel.add(MouseWheelUnit::Line, -1.0);
-        wheel.apply(Area::Main, &ctx, Axis::Horizontal);
+        wheel.apply(Target::Area(Area::Main), &ctx, Axis::Horizontal);
         assert_eq!(Area::Main.zoom(&ctx, Axis::Horizontal), 1.0);
+    }
+
+    #[test]
+    fn the_interface_steps_through_its_sizes() {
+        assert_eq!(interface_step(1.0, true), 1.1);
+        assert_eq!(interface_step(1.0, false), 0.9);
+        assert_eq!(interface_step(1.17, true), 1.25);
+        assert_eq!(interface_step(2.0, true), 2.0);
+        assert_eq!(interface_step(0.75, false), 0.75);
     }
 }
