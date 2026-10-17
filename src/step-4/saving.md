@@ -467,7 +467,9 @@ enough to run at compile time.
 
 The window title shows the file's name and a dot for unsaved changes
 ("● song.loom · Ferrous Loom"). The app sends a `ViewportCommand::Title`
-only when the text changes, not on every frame.
+only when the text changes, not on every frame. (Later the dot became a
+star after the name, "song.loom*", and a demo shows its own name: see
+[A demo keeps its name](../step-8/demo-names.md).)
 
 ### Opening a file from outside
 

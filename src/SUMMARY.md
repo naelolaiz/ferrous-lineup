@@ -73,6 +73,7 @@
   - [Finding the key from the music (experimental)](step-8/finding-the-key.md)
   - [Any time signature, and irregular meters](step-8/any-time-signature.md)
   - [A rhythm in another time signature: re-metering the song](step-8/re-metering.md)
+  - [A demo keeps its name, and is saved as a copy](step-8/demo-names.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
