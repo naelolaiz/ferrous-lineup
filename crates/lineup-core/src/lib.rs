@@ -11,6 +11,7 @@
 //! small, fast to compile and easy to test with plain `cargo test`.
 
 pub mod arrangement;
+pub mod chord_sheet;
 pub mod diff;
 pub mod file;
 pub mod general_midi;
@@ -36,6 +37,7 @@ pub mod tools;
 // Re-export the main types so other crates can write `lineup_core::Note`
 // instead of `lineup_core::pitch::Note`.
 pub use arrangement::{Arrangement, Pass, Play};
+pub use chord_sheet::{ChordMarker, HarmonyName};
 pub use diff::{Change, diff};
 pub use harmony::{Chord, ChordQuality, ChordStamp, Harmony, PitchSet, Scale, ScaleKind};
 pub use history::History;

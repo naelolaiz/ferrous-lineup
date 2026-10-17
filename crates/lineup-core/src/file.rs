@@ -32,6 +32,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::chord_sheet::ChordMarker;
 use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
 use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
@@ -106,7 +107,11 @@ pub fn is_project(path: &Path) -> bool {
 /// 2+2+3. Older versions would read the 7/8 but draw a beat line on
 /// every eighth note, so a project with a grouping needs format 11. Any
 /// other time signature, such as 11/8 or 5/16, already fits in format 3.
-pub const FORMAT_VERSION: u32 = 11;
+///
+/// Format 12 added the chord sheet: the harmony of the song, bar by
+/// bar. Older versions would lose it without a word when saving, so a
+/// project with chords on its sheet needs format 12.
+pub const FORMAT_VERSION: u32 = 12;
 
 /// The oldest format that can hold `project`.
 ///
@@ -154,7 +159,9 @@ pub fn format_for(project: &Project) -> u32 {
             .time_markers()
             .iter()
             .any(|marker| marker.time.is_grouped());
-    if has_grouped_beats {
+    if !playlist.chord_markers().is_empty() {
+        12
+    } else if has_grouped_beats {
         11
     } else if has_notes_off_the_grid {
         10
@@ -210,6 +217,9 @@ struct ProjectFile {
     /// Left out when every note plays on the grid.
     #[serde(default, skip_serializing_if = "is_zero")]
     loose_timing: u8,
+    /// The chord sheet. Left out when it is empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    chord_markers: Vec<ChordMarker>,
 }
 
 fn is_zero(value: &u8) -> bool {
@@ -339,6 +349,7 @@ impl From<&Project> for ProjectFile {
             tempo_markers: project.playlist().tempo_markers().to_vec(),
             key_markers: project.playlist().key_markers().to_vec(),
             loose_timing: project.loose_timing,
+            chord_markers: project.playlist().chord_markers().to_vec(),
         }
     }
 }
@@ -466,6 +477,15 @@ impl TryFrom<ProjectFile> for Project {
                 ));
             }
         }
+        for marker in file.chord_markers {
+            if !project.set_chords(marker.start, marker.start + 1, &[marker]) {
+                return invalid(format!(
+                    "its chord {} at step {} is too late",
+                    marker.harmony,
+                    marker.start + 1
+                ));
+            }
+        }
         project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
         project.remove_blank_tracks();
         Ok(project)
@@ -573,10 +593,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 12 might have fields we have never heard of. Only the
+        // Format 13 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 12, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(12)), "{error}");
+        let error = from_text("(format: 13, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(13)), "{error}");
     }
 
     #[test]
@@ -732,6 +752,29 @@ mod tests {
         let loaded = from_text(&text).unwrap();
         assert_eq!(loaded, project);
         assert_eq!(loaded.key_at(64), g_major);
+    }
+
+    #[test]
+    fn the_chord_sheet_needs_format_twelve() {
+        let mut project = Project::demo();
+        let name = |text| crate::HarmonyName::parse(text).unwrap();
+        let chords = [
+            ChordMarker::new(0, name("C")),
+            ChordMarker::new(16, name("G7/B")),
+            ChordMarker::new(24, name("3-11 T2")),
+            ChordMarker::new(32, name("Menor 3 T2I")),
+            ChordMarker::new(48, name("N.C.")),
+        ];
+        assert!(project.set_chords(0, 64, &chords));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 12,"), "{text}");
+        assert!(text.contains("harmony: \"G7/B\""), "{text}");
+        let loaded = from_text(&text).unwrap();
+        assert_eq!(loaded, project);
+        assert_eq!(loaded.playlist().chord_markers(), chords);
+
+        let bad = text.replace("G7/B", "H7");
+        assert!(from_text(&bad).is_err());
     }
 
     #[test]

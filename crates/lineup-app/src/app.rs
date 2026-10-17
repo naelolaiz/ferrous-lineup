@@ -1,10 +1,11 @@
 //! The main window.
 //!
 //! The playlist fills the window, as in other pattern-based studios. The
-//! channel rack and the piano roll are windows on top of it, opened with
-//! F6 and F7. Opening and saving files lives in the [`files`] module,
-//! undo and redo in [`edit`], saving the song as a WAV or MIDI file in
-//! [`export`], and playing and recording on a keyboard in [`live`].
+//! chord sheet, the channel rack and the piano roll are windows on top of
+//! it, opened with F5, F6 and F7. Opening and saving files lives in the
+//! [`files`] module, undo and redo in [`edit`], saving the song as a WAV
+//! or MIDI file in [`export`], and playing and recording on a keyboard in
+//! [`live`].
 //!
 //! Every change to the project goes through [`LineupApp::edit`], which
 //! records it for undo and tells the audio thread what changed.
@@ -33,6 +34,7 @@ use lineup_core::{
 };
 
 use crate::channel_rack::{self, RackAction};
+use crate::chord_sheet::{ChordSheet, SheetAction};
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
 use crate::library_browser::Tried;
 use crate::midi::Midi;
@@ -42,7 +44,7 @@ use crate::theme::{self, HintBar};
 use crate::widgets;
 
 /// How wide the pattern list in the toolbar is.
-const PATTERN_LIST_WIDTH: f32 = 120.0;
+const PATTERN_LIST_WIDTH: f32 = 104.0;
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
@@ -91,6 +93,8 @@ pub struct LineupApp {
     piano_roll: PianoRoll,
     playlist: PlaylistView,
     harmony_keys: HarmonyKeys,
+    /// The song's harmony bar by bar, as a lead sheet writes it.
+    chord_sheet: ChordSheet,
     /// The patterns the library wrote, to rewrite on the next click.
     auditions: Vec<library::Audition>,
     /// The style and rhythm the whole song plays: a demo's own, or the
@@ -178,6 +182,7 @@ impl LineupApp {
             piano_roll,
             playlist: PlaylistView::new(),
             harmony_keys: HarmonyKeys::new(),
+            chord_sheet: ChordSheet::new(),
             auditions: Vec::new(),
             song_library: Tried::default(),
             song_versions: Vec::new(),
@@ -645,6 +650,41 @@ impl LineupApp {
         }
     }
 
+    /// Applies one action from the chord sheet.
+    fn apply_sheet(&mut self, action: SheetAction) {
+        match action {
+            SheetAction::SetChords {
+                start,
+                end,
+                markers,
+            } => {
+                self.edit("write chords", |project| {
+                    project.set_chords(start, end, &markers)
+                });
+            }
+            SheetAction::WriteHeardChords => {
+                let written = self.edit("name the song's chords", |project| {
+                    project.write_heard_chords()
+                });
+                if written == 0 {
+                    self.message = Some(
+                        "No chords to name: the song plays no chords yet. Type them in the \
+                         bars instead."
+                            .to_string(),
+                    );
+                } else {
+                    self.notice = Some(format!(
+                        "Wrote {written} chord{} on the chord sheet",
+                        if written == 1 { "" } else { "s" }
+                    ));
+                }
+            }
+            SheetAction::Seek(step) => self.apply_playlist(PlaylistAction::Seek(step)),
+            SheetAction::NoteOn(notes) => self.apply_harmony(HarmonyAction::NoteOn(notes)),
+            SheetAction::NoteOff(notes) => self.apply_harmony(HarmonyAction::NoteOff(notes)),
+        }
+    }
+
     /// Applies one action from the playlist.
     fn apply_playlist(&mut self, action: PlaylistAction) {
         match action {
@@ -932,6 +972,16 @@ impl LineupApp {
             theme::group(ui, |ui| self.pattern_selector(ui));
 
             theme::group(ui, |ui| {
+                let sheet = theme::light_button(ui, "📝 Chords", self.chord_sheet.open, None);
+                if theme::hint(
+                    sheet,
+                    "Show or hide the chord sheet: the song's harmony bar by bar, to read and \
+                     write (F5)",
+                )
+                .clicked()
+                {
+                    self.chord_sheet.open = !self.chord_sheet.open;
+                }
                 let rack = theme::light_button(ui, "▦ Rack", self.rack_open, None);
                 if theme::hint(rack, "Show or hide the channel rack: the steps (F6)").clicked() {
                     self.rack_open = !self.rack_open;
@@ -961,9 +1011,12 @@ impl LineupApp {
                 // The label goes first, as its own widget, so the slider
                 // and its name wrap to the next row together.
                 ui.label(egui::RichText::new("VOL").small().color(theme::TEXT_DIM));
+                // Shorter than egui's usual slider, so the toolbar fits
+                // on one row in a window 1280 points wide.
+                ui.spacing_mut().slider_width = 64.0;
                 let volume_slider =
                     egui::Slider::new(&mut self.master_volume, 0.0..=1.0).show_value(false);
-                let volume = ui.add_sized([70.0, 22.0], volume_slider);
+                let volume = ui.add_sized([64.0, 22.0], volume_slider);
                 let text = format!("Master volume: {:.0}%", self.master_volume * 100.0);
                 if theme::hint(volume, text).changed() {
                     self.send(Command::SetMasterVolume(self.master_volume));
@@ -1068,7 +1121,9 @@ impl LineupApp {
         let length = self.project.patterns()[self.pattern].length();
         let mut new_length = length;
         let time = self.project.pattern_time(self.pattern);
+        // As narrow as "16 bars" needs, so the toolbar fits on one row.
         let length_combo = egui::ComboBox::from_id_salt("pattern-length")
+            .width(64.0)
             .selected_text(time.describe_length(length))
             .show_ui(ui, |ui| {
                 for option in time.pattern_lengths() {
@@ -1290,7 +1345,10 @@ impl eframe::App for LineupApp {
                 .get(channel)
                 .map_or("", |channel| channel.name.as_str());
             let heard = self.chord_playing();
-            let digits = !self.live.typing() && !ctx.text_edit_focused();
+            // While the chord sheet has the keyboard, digits are sets
+            // and figures typed in a bar.
+            let digits =
+                !self.live.typing() && !ctx.text_edit_focused() && !self.chord_sheet.has_keyboard();
             let here = self.key_here();
             egui::Panel::bottom("harmony-keys")
                 .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))
@@ -1403,6 +1461,18 @@ impl eframe::App for LineupApp {
         );
         for action in roll_actions {
             self.apply_roll(action);
+        }
+
+        // The chord sheet is drawn last, so it opens over the others.
+        let playing = match (self.playing, self.song_position()) {
+            (true, Some((step, _))) => Some(step),
+            _ => None,
+        };
+        let sheet_actions =
+            self.chord_sheet
+                .show(&ctx, area, &self.project, playing, self.live.typing());
+        for action in sheet_actions {
+            self.apply_sheet(action);
         }
 
         self.unsaved_changes_dialog(&ctx);
