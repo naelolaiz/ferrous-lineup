@@ -6,6 +6,7 @@
 //!   from a SoundFont file, [`drums`] synthesizes the built-in drum kit and [`dsp`]
 //!   has the small filters and smoothers they share. They are plain
 //!   structs that compute samples, so they can be tested without a sound card.
+//! - `metronome` makes the metronome's clicks and times the count-in.
 //! - [`sample`] loads WAV files.
 //! - [`engine`] opens the sound card with `cpal`, runs the sequencer and
 //!   the instruments on the audio thread, and receives [`Command`]s from
@@ -17,6 +18,7 @@ pub mod drums;
 pub mod dsp;
 pub mod engine;
 pub mod instrument;
+mod metronome;
 pub mod render;
 pub mod sample;
 pub mod soundfont;

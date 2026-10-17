@@ -410,6 +410,45 @@ impl Project {
         self.band.as_ref()
     }
 
+    /// The track `player`'s part is on, if the band has written one.
+    pub fn player_track(&self, player: Player) -> Option<usize> {
+        self.playlist
+            .clips
+            .iter()
+            .find(|clip| self.patterns[clip.pattern].player == Some(player))
+            .map(|clip| clip.track)
+    }
+
+    /// Whether you play `player`'s part yourself: its track is muted, so
+    /// the band leaves it out.
+    pub fn you_play(&self, player: Player) -> bool {
+        self.player_track(player)
+            .is_some_and(|track| self.playlist.tracks[track].muted)
+    }
+
+    /// Leaves `player`'s part to you, by muting its track, or gives it
+    /// back to the band. The band goes on writing the part, so it is
+    /// there, up to date, when you give it back. Returns false if the
+    /// band has no part for the player yet.
+    pub fn set_you_play(&mut self, player: Player, you: bool) -> bool {
+        let Some(track) = self.player_track(player) else {
+            return false;
+        };
+        self.playlist.tracks[track].muted = you;
+        true
+    }
+
+    /// The channel `player` plays on, for the piano and the bass: the one
+    /// to play yourself when you take over the part.
+    pub fn player_channel(&self, player: Player) -> Option<usize> {
+        let band = self.band.as_ref()?;
+        match player {
+            Player::Piano => band.piano,
+            Player::Bass => band.bass,
+            Player::Drums => None,
+        }
+    }
+
     /// File > New: an empty chord sheet, and a band ready to play it in
     /// the [`DEFAULT_STYLE`].
     pub fn with_band() -> Self {
@@ -1336,6 +1375,37 @@ mod tests {
             .map(|track| track.name.as_str())
             .collect();
         assert_eq!(tracks, ["Piano", "Bass", "Drums"]);
+    }
+
+    #[test]
+    fn you_can_take_over_a_part() {
+        let mut project = Project::with_band();
+        assert!(!project.set_you_play(Player::Bass, true), "no part yet");
+        write(&mut project, &["C", "F", "G7", "C"]);
+        assert!(!project.you_play(Player::Bass));
+        assert!(project.set_you_play(Player::Bass, true));
+        assert!(project.you_play(Player::Bass));
+        // Its clips are left out of the song; the others still play.
+        let players: Vec<Option<Player>> = project
+            .playback_arrangement()
+            .plays
+            .iter()
+            .map(|play| project.patterns()[play.pattern].player)
+            .collect();
+        assert!(!players.contains(&Some(Player::Bass)));
+        assert!(players.contains(&Some(Player::Piano)));
+        // The band goes on writing the part, which is not frozen.
+        write(&mut project, &["C", "F", "G7", "Am"]);
+        assert_eq!(pitch_classes_at(&project, Player::Bass, 48), [9]);
+        assert!(!project.is_frozen(Player::Bass));
+        assert!(project.you_play(Player::Bass));
+        assert!(project.set_you_play(Player::Bass, false));
+        assert!(!project.you_play(Player::Bass));
+        assert_eq!(
+            project.player_channel(Player::Bass),
+            project.channels().iter().position(|c| c.name == "Bass")
+        );
+        assert_eq!(project.player_channel(Player::Drums), None);
     }
 
     #[test]

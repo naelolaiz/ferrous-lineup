@@ -35,12 +35,13 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
 use lineup_core::{
-    DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, MidiMessage, Note, NoteEvent, Play, STEP_NOTE,
-    STEPS_PER_BAR, STEPS_PER_BEAT, Sequencer, TICKS_PER_STEP, Tempo,
+    Click, DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, MidiMessage, Note, NoteEvent, Play,
+    STEP_NOTE, STEPS_PER_BAR, STEPS_PER_BEAT, Sequencer, TICKS_PER_STEP, Tempo,
 };
 
 use crate::dsp::Smoothed;
 use crate::instrument::{HELD, Instrument, Origin};
+use crate::metronome::{ClickVoice, click_at, count_in_bar};
 
 /// How many commands can wait in the queue before `send` starts failing.
 /// The audio thread empties the queue every few milliseconds, so this is
@@ -144,7 +145,8 @@ impl ChannelNotes {
 #[derive(Debug)]
 pub enum Command {
     /// Start playing from the start position: the beginning, or where
-    /// the last [`Command::Seek`] put it.
+    /// the last [`Command::Seek`] put it. With the count-in on, a bar of
+    /// clicks comes first.
     Play,
     /// Move the playhead to this step (of the pattern in pattern mode, of
     /// the song in song mode). While stopped, it is where `Play` starts;
@@ -237,6 +239,17 @@ pub enum Command {
     Live(MidiMessage),
     /// Choose the channel that keys play: the one selected in the UI.
     SetLiveChannel(usize),
+    /// What the metronome plays on each step of the song, in song steps
+    /// (see [`lineup_core::Project::played_clicks`]). Sent with
+    /// [`Command::SetSong`].
+    SetSongClicks(Vec<Click>),
+    /// What the metronome plays on each step of the selected pattern.
+    SetPatternClicks(Vec<Click>),
+    /// Turn the metronome on or off: a click on every beat while playing.
+    SetMetronome(bool),
+    /// Turn the count-in on or off: a bar of clicks before playback
+    /// starts, so you come in on time.
+    SetCountIn(bool),
     /// Stop, and remove every channel, pattern and clip, before a new
     /// project is sent.
     Clear,
@@ -250,6 +263,7 @@ pub(crate) enum Garbage {
     Channel(ChannelState),
     Song(Vec<Play>),
     Tempos(Vec<Tempo>),
+    Clicks(Vec<Click>),
 }
 
 /// What the engine found when it opened the sound card.
@@ -466,6 +480,7 @@ impl AudioEngine {
                 Garbage::Channel(channel) => drop(channel),
                 Garbage::Song(clips) => drop(clips),
                 Garbage::Tempos(tempos) => drop(tempos),
+                Garbage::Clicks(clicks) => drop(clicks),
             }
         }
     }
@@ -565,6 +580,29 @@ pub(crate) struct AudioThread {
     /// down on. The key must come up on the same channel, even if
     /// another one has been selected in between, or the note would never end.
     live_keys: [Option<usize>; 128],
+    /// What the metronome plays on each step of the song, and of the
+    /// selected pattern.
+    song_clicks: Vec<Click>,
+    pattern_clicks: Vec<Click>,
+    metronome: bool,
+    count_in: bool,
+    /// The count-in under way, if `Play` came with the count-in on.
+    counting: Option<CountIn>,
+    /// The count-in's own clock, so it runs at the tempo where playback
+    /// will start without moving the playhead.
+    counter: Sequencer,
+    click: ClickVoice,
+}
+
+/// A count-in under way: the bar it counts (where it starts in the
+/// loop's clicks, and how many steps it has), how many steps it lasts in
+/// all, and how many have gone by.
+#[derive(Debug, Clone, Copy)]
+struct CountIn {
+    bar: usize,
+    length: usize,
+    steps: usize,
+    counted: usize,
 }
 
 impl AudioThread {
@@ -603,6 +641,13 @@ impl AudioThread {
             midi_out: None,
             live_channel: 0,
             live_keys: [None; 128],
+            song_clicks: Vec::new(),
+            pattern_clicks: Vec::new(),
+            metronome: false,
+            count_in: false,
+            counting: None,
+            counter: Sequencer::new(Tempo::default(), sample_rate, STEPS_PER_BAR),
+            click: ClickVoice::new(sample_rate),
         }
     }
 
@@ -636,13 +681,14 @@ impl AudioThread {
 
     pub(crate) fn apply(&mut self, command: Command) {
         match command {
-            Command::Play => {
-                self.sequencer.start_at(self.start);
-                self.playing = true;
-            }
+            Command::Play => self.begin_play(),
             Command::Seek(step) => {
                 self.start = step;
                 self.pending.clear();
+                if self.counting.is_some() {
+                    // Counted again, into the bar playback now starts in.
+                    self.begin_play();
+                }
                 if self.playing {
                     // Notes that were playing would otherwise hang on
                     // until the end they will now never reach.
@@ -659,6 +705,9 @@ impl AudioThread {
                 self.update_loop_length();
                 self.start = 0;
                 self.sequencer.reset();
+                if self.counting.is_some() {
+                    self.begin_play();
+                }
             }
             Command::SelectPattern(pattern) => {
                 self.pattern = pattern;
@@ -792,6 +841,16 @@ impl AudioThread {
             Command::PreviewNote { channel, pitch } => self.preview(channel, pitch),
             Command::Live(message) => self.play_live(message),
             Command::SetLiveChannel(channel) => self.live_channel = channel,
+            Command::SetSongClicks(clicks) => {
+                let old = std::mem::replace(&mut self.song_clicks, clicks);
+                self.throw_away(Garbage::Clicks(old));
+            }
+            Command::SetPatternClicks(clicks) => {
+                let old = std::mem::replace(&mut self.pattern_clicks, clicks);
+                self.throw_away(Garbage::Clicks(old));
+            }
+            Command::SetMetronome(on) => self.metronome = on,
+            Command::SetCountIn(on) => self.count_in = on,
             Command::Clear => {
                 self.stop();
                 self.start = 0;
@@ -807,6 +866,8 @@ impl AudioThread {
                 self.throw_away(Garbage::Song(old));
                 let old = std::mem::take(&mut self.song_tempos);
                 self.throw_away(Garbage::Tempos(old));
+                let old = std::mem::take(&mut self.song_clicks);
+                self.throw_away(Garbage::Clicks(old));
                 self.song_length = 0;
                 self.pattern = 0;
                 self.update_loop_length();
@@ -873,8 +934,62 @@ impl AudioThread {
         }
     }
 
+    /// Starts playing from `start`, or, with the count-in on, starts
+    /// counting in first: the whole bar `start` is in, then on up to
+    /// `start`, so the beats run on into the music without a jump. From
+    /// beat 3 of a 4/4 bar that is "1 2 3 4 1 2", and the music starts on 3.
+    fn begin_play(&mut self) {
+        if !self.count_in {
+            self.sequencer.start_at(self.start);
+            self.playing = true;
+            return;
+        }
+        if self.playing {
+            self.stop();
+        }
+        let (bar, length) = count_in_bar(self.loop_clicks(), self.start);
+        let length = length.max(1);
+        let into_the_bar = self.start.saturating_sub(bar) % length;
+        self.counter.set_tempo(self.tempo_of_step(self.start));
+        self.counter.reset();
+        self.counting = Some(CountIn {
+            bar,
+            length,
+            steps: length + into_the_bar,
+            counted: 0,
+        });
+    }
+
+    /// What the metronome plays on each step of the loop.
+    fn loop_clicks(&self) -> &[Click] {
+        match self.mode {
+            PlayMode::Pattern => &self.pattern_clicks,
+            PlayMode::Song => &self.song_clicks,
+        }
+    }
+
+    /// Moves the count-in on by one frame, clicking when a step of it
+    /// starts. When the count is over, playback starts, on this same
+    /// frame.
+    fn count_in_frame(&mut self, mut count: CountIn) {
+        if self.counter.tick().is_none() {
+            return;
+        }
+        if count.counted == count.steps {
+            self.counting = None;
+            self.sequencer.start_at(self.start);
+            self.playing = true;
+            return;
+        }
+        let step = count.bar + count.counted % count.length;
+        self.click.strike(click_at(self.loop_clicks(), step));
+        count.counted += 1;
+        self.counting = Some(count);
+    }
+
     fn stop(&mut self) {
         self.playing = false;
+        self.counting = None;
         self.pending.clear();
         self.playhead.store(NO_STEP, Ordering::Relaxed);
         self.position.store(NO_POSITION, Ordering::Relaxed);
@@ -1018,6 +1133,9 @@ impl AudioThread {
         }
 
         for frame in output.chunks_mut(self.output_channels) {
+            if let Some(count) = self.counting {
+                self.count_in_frame(count);
+            }
             if self.playing {
                 // A step about to start plays at its own tempo, which is
                 // set before it starts, so it lasts as long as it should.
@@ -1030,6 +1148,9 @@ impl AudioThread {
                 if let Some(step) = self.sequencer.tick() {
                     self.playhead.store(step, Ordering::Relaxed);
                     self.start_notes(step);
+                    if self.metronome {
+                        self.click.strike(click_at(self.loop_clicks(), step));
+                    }
                 }
             }
             if !self.pending.is_empty() {
@@ -1042,6 +1163,7 @@ impl AudioThread {
                 let volume = channel.volume.next_value();
                 mix += channel.instrument.next_sample() * volume;
             }
+            mix += self.click.next_sample();
             // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
             let sample = (mix * self.master_volume.next_value()).tanh();
             frame.fill(T::from_sample(sample));
@@ -1409,7 +1531,7 @@ mod tests {
                 Garbage::Instrument(_) => instruments += 1,
                 Garbage::Notes(_) => note_lists += 1,
                 Garbage::Channel(_) => channels += 1,
-                Garbage::Song(_) | Garbage::Tempos(_) => {}
+                Garbage::Song(_) | Garbage::Tempos(_) | Garbage::Clicks(_) => {}
             }
         }
         assert_eq!(instruments, 1, "the replaced instrument");
@@ -1763,7 +1885,7 @@ mod tests {
             kinds.push(match garbage {
                 Garbage::Channel(_) => "channel",
                 Garbage::Song(_) => "song",
-                Garbage::Tempos(_) => continue,
+                Garbage::Tempos(_) | Garbage::Clicks(_) => continue,
                 Garbage::Instrument(_) | Garbage::Notes(_) => "other",
             });
         }
@@ -2079,5 +2201,119 @@ mod tests {
         // About 10 000: half volume, times the default velocity, times
         // the master volume, which is still sliding up from 0.8.
         assert!(buffer[0] > 5_000, "got {}", buffer[0]);
+    }
+
+    /// The clicks of a bar of 4/4: the bar on step 0, beats on 4, 8, 12.
+    fn four_four() -> Vec<Click> {
+        (0..16)
+            .map(|step| match step {
+                0 => Click::Bar,
+                step if step % 4 == 0 => Click::Beat,
+                _ => Click::None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn the_count_in_comes_before_the_music() {
+        let mut h = harness();
+        add(&mut h, &[0], false);
+        send(&mut h, Command::SetPatternClicks(four_four()));
+        send(&mut h, Command::SetCountIn(true));
+        send(&mut h, Command::Play);
+        let counted = render(&mut h, 16 * STEP);
+        // A click's first sample is sin(0) = 0, so it is heard one frame in.
+        assert_eq!(
+            onsets(&counted),
+            [1, 4 * STEP + 1, 8 * STEP + 1, 12 * STEP + 1]
+        );
+        assert_eq!(
+            h.playhead.load(Ordering::Relaxed),
+            NO_STEP,
+            "the playhead waits"
+        );
+        let out = render(&mut h, STEP);
+        assert_eq!(onsets(&out), [0], "the music starts right after the bar");
+        assert_eq!(h.playhead.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn the_count_in_runs_on_into_a_bar_started_in_the_middle() {
+        let mut h = harness();
+        add(&mut h, &[6], false);
+        send(&mut h, Command::SetPatternClicks(four_four()));
+        send(&mut h, Command::SetCountIn(true));
+        send(&mut h, Command::Seek(6));
+        send(&mut h, Command::Play);
+        // "1 2 3 4 1 2", then the music from step 6, halfway into beat 2.
+        let out = render(&mut h, 23 * STEP);
+        let clicks: Vec<usize> = [0, 4, 8, 12, 16, 20].map(|step| step * STEP + 1).into();
+        assert_eq!(onsets(&out), [clicks, vec![22 * STEP]].concat());
+    }
+
+    #[test]
+    fn stopping_ends_the_count_in() {
+        let mut h = harness();
+        add(&mut h, &[0], false);
+        send(&mut h, Command::SetCountIn(true));
+        send(&mut h, Command::Play);
+        render(&mut h, 2 * STEP);
+        send(&mut h, Command::Stop);
+        let out = render(&mut h, 20 * STEP);
+        assert!(out[STEP..].iter().all(|&s| s == 0.0));
+    }
+
+    #[test]
+    fn the_metronome_clicks_every_beat() {
+        let mut h = harness();
+        send(&mut h, Command::SetPatternClicks(four_four()));
+        send(&mut h, Command::SetMetronome(true));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 16 * STEP);
+        assert_eq!(onsets(&out), [1, 4 * STEP + 1, 8 * STEP + 1, 12 * STEP + 1]);
+        let loudest = |from: usize| {
+            out[from..from + 100]
+                .iter()
+                .fold(0.0_f32, |a, s| a.max(s.abs()))
+        };
+        assert!(
+            loudest(0) > loudest(4 * STEP),
+            "the first beat of the bar is louder"
+        );
+        // Off again: nothing more.
+        send(&mut h, Command::SetMetronome(false));
+        assert!(render(&mut h, 16 * STEP).iter().all(|&s| s == 0.0));
+    }
+
+    #[test]
+    fn the_metronome_follows_the_song_in_song_mode() {
+        let mut h = harness();
+        let plays = vec![whole(0, 0)];
+        send(&mut h, Command::SetSong { plays, length: 12 });
+        // A bar of 3/4.
+        let clicks = (0..12)
+            .map(|step| match step {
+                0 => Click::Bar,
+                step if step % 4 == 0 => Click::Beat,
+                _ => Click::None,
+            })
+            .collect();
+        send(&mut h, Command::SetSongClicks(clicks));
+        send(&mut h, Command::SetPatternClicks(four_four()));
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::SetMetronome(true));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 16 * STEP);
+        // The bar comes round again after three beats.
+        assert_eq!(onsets(&out), [1, 4 * STEP + 1, 8 * STEP + 1, 12 * STEP + 1]);
+        let loudest = |from: usize| {
+            out[from..from + 100]
+                .iter()
+                .fold(0.0_f32, |a, s| a.max(s.abs()))
+        };
+        assert!(
+            loudest(12 * STEP) > loudest(8 * STEP),
+            "step 12 is a new bar"
+        );
     }
 }

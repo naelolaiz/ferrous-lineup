@@ -41,6 +41,8 @@ pub const ON_ACCENT: Color32 = Color32::from_rgb(34, 24, 14);
 pub const GREEN: Color32 = Color32::from_rgb(118, 214, 108);
 /// The record button while recording.
 pub const RED: Color32 = Color32::from_rgb(226, 74, 66);
+/// The part of the song that loops, on the playlist and the chord sheet.
+pub const LOOP: Color32 = Color32::from_rgb(92, 196, 120);
 /// The displays for the tempo and the song position.
 pub const LCD: Color32 = Color32::from_rgb(16, 20, 22);
 pub const LCD_TEXT: Color32 = Color32::from_rgb(150, 230, 210);
