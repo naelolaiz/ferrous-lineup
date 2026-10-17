@@ -32,6 +32,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::band::{BandFile, Player};
 use crate::chord_sheet::ChordMarker;
 use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
@@ -115,7 +116,12 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 12 added the chord sheet: the harmony of the song, bar by
 /// bar. Older versions would lose it without a word when saving, so a
 /// project with chords on its sheet needs format 12.
-pub const FORMAT_VERSION: u32 = 12;
+///
+/// Format 13 added the band that plays the chord sheet, and the patterns
+/// it writes. Older versions would keep the band's patterns as plain
+/// ones and stop following the sheet, so a song with a band needs
+/// format 13.
+pub const FORMAT_VERSION: u32 = 13;
 
 /// The oldest format that can hold `project`.
 ///
@@ -163,7 +169,14 @@ pub fn format_for(project: &Project) -> u32 {
             .time_markers()
             .iter()
             .any(|marker| marker.time.is_grouped());
-    if !playlist.chord_markers().is_empty() {
+    let has_band = project.band().is_some()
+        || project
+            .patterns()
+            .iter()
+            .any(|pattern| pattern.player.is_some());
+    if has_band {
+        13
+    } else if !playlist.chord_markers().is_empty() {
         12
     } else if has_grouped_beats {
         11
@@ -224,6 +237,9 @@ struct ProjectFile {
     /// The chord sheet. Left out when it is empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     chord_markers: Vec<ChordMarker>,
+    /// The band that plays the sheet. Left out when there is none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    band: Option<BandFile>,
 }
 
 fn is_zero(value: &u8) -> bool {
@@ -242,6 +258,9 @@ struct PatternFile {
     /// Left out when the pattern takes the song's time signature.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     time: Option<TimeSignature>,
+    /// The band's player whose part it is. Left out for your own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    player: Option<Player>,
     length: usize,
     /// One list of notes per channel, in the order of `channels`.
     notes: Vec<Vec<NoteEvent>>,
@@ -339,6 +358,7 @@ impl From<&Project> for ProjectFile {
                     name: pattern.name.clone(),
                     color: (pattern.color != index).then_some(pattern.color),
                     time: pattern.time,
+                    player: pattern.player,
                     length: pattern.length(),
                     notes: (0..channels)
                         .map(|channel| pattern.notes(channel).to_vec())
@@ -354,6 +374,7 @@ impl From<&Project> for ProjectFile {
             key_markers: project.playlist().key_markers().to_vec(),
             loose_timing: project.loose_timing,
             chord_markers: project.playlist().chord_markers().to_vec(),
+            band: project.band().map(BandFile::from),
         }
     }
 }
@@ -409,6 +430,7 @@ impl TryFrom<ProjectFile> for Project {
                 return invalid(format!("pattern \"{}\" has too long a bar", pattern.name));
             }
             pattern.time = saved.time;
+            pattern.player = saved.player;
             pattern.set_length(saved.length);
             if saved.notes.len() != channels {
                 return invalid(format!(
@@ -494,6 +516,12 @@ impl TryFrom<ProjectFile> for Project {
                     marker.harmony,
                     marker.start + 1
                 ));
+            }
+        }
+        if let Some(band) = file.band {
+            match band.band(channels) {
+                Ok(band) => project.band = Some(band),
+                Err(reason) => return invalid(reason),
             }
         }
         project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
@@ -616,10 +644,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 13 might have fields we have never heard of. Only the
+        // Format 14 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 13, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(13)), "{error}");
+        let error = from_text("(format: 14, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(14)), "{error}");
     }
 
     #[test]
