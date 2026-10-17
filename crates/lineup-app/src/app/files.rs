@@ -140,6 +140,16 @@ fn file_name(path: &Path, part: fn(&Path) -> Option<&std::ffi::OsStr>) -> String
     )
 }
 
+/// Writes the chords a song plays on its chord sheet if the sheet is
+/// empty, so a song opens with its chords written, bar by bar (see
+/// [`Project::write_heard_chords`]). A demo built from a chart has them
+/// written already, from the chart.
+pub(super) fn fill_chord_sheet(project: &mut Project) {
+    if project.playlist().chord_markers().is_empty() && project.band().is_none() {
+        project.write_heard_chords();
+    }
+}
+
 /// A file dialog that shows project files, the old `.loom` ones too.
 fn project_dialog() -> rfd::FileDialog {
     let extensions = [file::EXTENSION, file::OLD_EXTENSION];
@@ -316,7 +326,8 @@ impl LineupApp {
     }
 
     /// Swaps in another project and tells the audio thread about it.
-    pub(super) fn replace_project(&mut self, project: Project, path: Option<PathBuf>) {
+    pub(super) fn replace_project(&mut self, mut project: Project, path: Option<PathBuf>) {
+        fill_chord_sheet(&mut project);
         self.project = project;
         self.auditions.clear();
         self.song_library = Tried::default();
