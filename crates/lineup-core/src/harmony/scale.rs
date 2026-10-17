@@ -324,6 +324,15 @@ impl Scale {
         }
     }
 
+    /// The key this scale names: itself, or for a pitch-class set whose
+    /// notes are exactly a scale on its root, that scale. Switching C
+    /// major to "pitch-class set" gives the set 7-35 on C, the same notes
+    /// under another name, so a change from it to C minor must move the
+    /// song as from C major (see [`crate::tools::change_key`]).
+    pub fn as_key(self) -> Scale {
+        self.set_as_scale().unwrap_or(self)
+    }
+
     /// The scale a pitch-class set is, if its notes are exactly those of
     /// one of the scales of tonal music on its root: the set 7-35 on C is
     /// C major, and on D it is D Dorian. Such a set is spelled as that
@@ -844,6 +853,20 @@ mod tests {
         // A set that is no scale keeps the usual names.
         let diminished = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 3, 6, 9]));
         assert_eq!(names(diminished), ["C", "Eb", "F#", "A"]);
+    }
+
+    #[test]
+    fn a_set_that_is_a_scale_names_that_key() {
+        let c_major = Scale::new(C, ScaleKind::Major);
+        assert_eq!(Scale::set(C, c_major.pitch_set()).as_key(), c_major);
+        let d_dorian = Scale::new(PitchClass::D, ScaleKind::Dorian);
+        assert_eq!(
+            Scale::set(PitchClass::D, c_major.pitch_set()).as_key(),
+            d_dorian
+        );
+        let diminished = Scale::set(C, PitchSet::from_semitones(&[0, 3, 6, 9]));
+        assert_eq!(diminished.as_key(), diminished);
+        assert_eq!(c_major.as_key(), c_major);
     }
 
     #[test]

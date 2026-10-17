@@ -1607,6 +1607,38 @@ mod tests {
     const SYNTH: usize = 4;
 
     #[test]
+    fn a_key_shown_as_a_set_moves_on_like_the_key() {
+        use crate::{PitchClass, ScaleKind};
+        // Major, then "pitch-class set" (the same notes), then minor ends
+        // where major then minor does.
+        let mut direct = Project::demo();
+        let mut through_set = direct.clone();
+        let c_minor = Scale::new(PitchClass::C, ScaleKind::NaturalMinor);
+        direct.change_key(c_minor);
+        let as_set = Scale::set(PitchClass::C, through_set.scale.pitch_set());
+        let before = through_set.clone();
+        through_set.change_key(as_set);
+        for (index, pattern) in through_set.patterns().iter().enumerate() {
+            for channel in 0..through_set.channels().len() {
+                assert_eq!(
+                    pattern.notes(channel),
+                    before.pattern(index).unwrap().notes(channel),
+                    "switching to the set moves nothing"
+                );
+            }
+        }
+        through_set.change_key(c_minor);
+        for (index, pattern) in through_set.patterns().iter().enumerate() {
+            for channel in 0..through_set.channels().len() {
+                assert_eq!(
+                    pattern.notes(channel),
+                    direct.pattern(index).unwrap().notes(channel)
+                );
+            }
+        }
+    }
+
+    #[test]
     fn a_new_key_moves_every_tune_but_not_the_drums() {
         use crate::{PitchClass, ScaleKind};
         let mut project = Project::demo();
