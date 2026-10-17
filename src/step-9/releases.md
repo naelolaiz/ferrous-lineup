@@ -8,31 +8,33 @@ build it. The CI workflow did attach the program it built to each run
 but only as a bare file, with no Intel Mac build, and nothing a person
 without a GitHub account could find. A second workflow, **Release**,
 now builds the program for four systems and packs each one to
-download:
+download, plus an AppImage for Linux:
 
 | Package | System |
 |---------|--------|
-| `ferrous-lineup-…-linux-x86_64.tar.gz` | Linux on a PC (Intel or AMD) |
+| `ferrous-lineup-…-linux-x86_64.AppImage` | Linux on a PC (Intel or AMD): one file, nothing to unpack |
+| `ferrous-lineup-…-linux-x86_64.tar.gz` | Linux on a PC, as a plain folder |
 | `ferrous-lineup-…-windows-x86_64.zip` | Windows on a PC |
 | `ferrous-lineup-…-macos-arm64.tar.gz` | Macs with Apple Silicon (M1 and later) |
 | `ferrous-lineup-…-macos-x86_64.tar.gz` | Macs with an Intel processor |
 
-Each package holds a folder with the program, the README and the
-licence. The `…` is the version for a release (`v0.1.0`), or the first
-seven characters of the commit for any other build (`1a2b3c4`), so you
-always know what you downloaded.
+Each `.zip` and `.tar.gz` holds a folder with the program, the README
+and the licence. The `…` is the version for a release (`v0.1.0`), or
+the first seven characters of the commit for any other build
+(`1a2b3c4`), so you always know what you downloaded.
 
 ## Where the downloads are
 
-- **Every push to main** runs the workflow. Open the repository's
-  **Actions** tab, choose **Release**, then the run. At the bottom of
-  the run's page, under **Artifacts**, are the four packages. Artifacts
-  need a GitHub login to download, and GitHub deletes them after 90
-  days.
-- **A manual run**: on the same page, **Run workflow** builds any
-  branch on demand.
-- **A tag** that starts with `v` also publishes the four packages on
-  the repository's **Releases** page, with a `SHA256SUMS.txt` beside
+- **Every pipeline** runs the workflow: each pull request, each push to
+  main, and each manual run (**Run workflow** on the workflow's page
+  builds any branch on demand). Open the repository's **Actions** tab,
+  choose **Release**, then the run, or click **Details** next to a
+  pull request's "Build" checks. At the bottom of the run's page, under
+  **Artifacts**, are the five packages, each one a download of its own.
+  Artifacts need a GitHub login to download, and GitHub deletes them
+  after 90 days.
+- **A tag** that starts with `v` also publishes the packages on the
+  repository's **Releases** page, with a `SHA256SUMS.txt` beside
   them. A release stays there for good, and anyone can download it,
   logged in or not.
 
@@ -93,15 +95,29 @@ None of the programs is **signed**: signing needs a paid certificate
 from Apple and from a Windows certificate authority. Both systems warn
 about an unsigned program the first time, and both let you run it.
 
-- **Linux**: unpack and start it:
+- **Linux, the AppImage**: a downloaded file is never executable, so
+  allow it once and start it:
+
+  ```sh
+  chmod +x ferrous-lineup-v0.2.0-linux-x86_64.AppImage
+  ./ferrous-lineup-v0.2.0-linux-x86_64.AppImage
+  ```
+
+  (In a file manager: **Properties > Permissions > Allow executing
+  file as program**, then double-click it.) An AppImage mounts itself
+  with FUSE, which desktop systems have; where FUSE is missing, as in
+  some containers, add `--appimage-extract-and-run`.
+- **Linux, the `.tar.gz`**: unpack and start it:
 
   ```sh
   tar -xzf ferrous-lineup-v0.2.0-linux-x86_64.tar.gz
   ./ferrous-lineup-v0.2.0-linux-x86_64/ferrous-lineup
   ```
 
-  It needs ALSA's library (`libasound2`, on every desktop Linux) and
-  loads the window and graphics libraries the desktop already has.
+  Both need ALSA's library (`libasound2`, on every desktop Linux) and
+  load the window and graphics libraries the desktop already has. The
+  plain folder also needs the keyboard library `libxkbcommon-x11-0`,
+  which the AppImage brings along.
 - **Windows**: unzip and double-click `ferrous-lineup.exe`. If a blue
   window says "Windows protected your PC", choose **More info**, then
   **Run anyway**.
@@ -256,13 +272,18 @@ program, the README and the licence into a folder, and packs it:
 if [[ "$GITHUB_REF_TYPE" == tag ]]; then
   label="$GITHUB_REF_NAME"         # v0.2.0
 else
-  label="${GITHUB_SHA::7}"         # 1a2b3c4
+  label="${COMMIT::7}"             # 1a2b3c4
 fi
 name="ferrous-lineup-$label-${{ matrix.platform }}"
 ```
 
-`${GITHUB_SHA::7}` is Bash for "the first seven characters": the short
-commit id, as `git log --oneline` shows it.
+`${COMMIT::7}` is Bash for "the first seven characters": the short
+commit id, as `git log --oneline` shows it. `COMMIT` is
+`${{ github.event.pull_request.head.sha || github.sha }}`: for a pull
+request, GitHub builds a merge commit of its own (the branch merged
+into main, to test what main would become), which you never see, so
+the name takes the branch's latest commit instead. `||` picks the first
+value that isn't empty.
 
 Windows gets a `.zip`, which Windows opens by itself. Linux and macOS
 get a `.tar.gz`, because a tar file keeps file permissions: the
@@ -283,6 +304,85 @@ By default an artifact is zipped on upload, so a `.tar.gz` would
 download as a zip holding a `.tar.gz`, and the zip would lose the
 executable bit anyway. With `archive: false` the file is stored as it
 is, and the artifact is named after the file.
+
+### The AppImage
+
+An **AppImage** is a program and everything it needs, packed into one
+file that starts like a program. The file is two things glued
+together: a small starter program, the **runtime**, followed by a
+compressed disk image (SquashFS) of a folder, the **AppDir**. When you
+start the AppImage, the runtime mounts the image as a folder (with
+FUSE, which lets a normal program provide a file system) and starts
+the program inside. Nothing is installed, so deleting the file
+uninstalls it.
+
+The AppDir is laid out like a system's `/usr`:
+
+```text
+AppDir/
+├── AppRun -> usr/bin/ferrous-lineup          what the runtime starts
+├── ferrous-lineup.desktop -> usr/share/…     the menu entry
+├── ferrous-lineup.svg -> usr/share/…         the icon
+└── usr/
+    ├── bin/ferrous-lineup
+    ├── lib/libxkbcommon.so.0, libxkbcommon-x11.so.0, libxcb-xkb.so.1
+    └── share/applications/…, share/icons/hicolor/scalable/apps/…
+```
+
+The **desktop entry**
+([`packaging/linux/ferrous-lineup.desktop`](https://github.com/naelolaiz/ferrous-lineup/blob/main/packaging/linux/ferrous-lineup.desktop))
+is the small text file every Linux menu reads: the app's name, its
+icon, its category, and how to start it (`Exec=ferrous-lineup %f`,
+where `%f` is a file to open). The icon
+([`packaging/linux/ferrous-lineup.svg`](https://github.com/naelolaiz/ferrous-lineup/blob/main/packaging/linux/ferrous-lineup.svg))
+is five players of a band in a line, in the app's orange. Tools that
+add AppImages to the menu (AppImageLauncher, for one) use both.
+
+`appimagetool` turns the AppDir into the AppImage. It and the runtime
+are downloaded from their GitHub releases, pinned to one version, and
+checked against the SHA-256 written in the workflow:
+
+```bash
+echo "$RUNTIME_SHA256  runtime" | sha256sum --check
+```
+
+If someone replaced the file on GitHub, the checksum would differ and
+the build would stop, rather than ship whatever the file had become.
+
+#### Bringing a library along
+
+The AppImage carries three libraries of its own. On a system without
+`libxkbcommon-x11`, the program stops before it opens a window:
+
+```text
+Library libxkbcommon-x11.so could not be loaded.
+```
+
+`ldd` didn't list it, because winit doesn't link the keyboard library
+when the program is built: it opens it with **`dlopen`** when the
+window is made, so one program works with X11 or Wayland, whichever is
+there. A library opened this way is searched for like any other, in
+this order (simplified): the folders in `LD_LIBRARY_PATH`, the
+**RUNPATH** written in the program, then the system's folders. So the
+workflow copies the libraries into `AppDir/usr/lib` and writes a
+RUNPATH into the program with `patchelf`:
+
+```bash
+patchelf --set-rpath '$ORIGIN/../lib' AppDir/usr/bin/ferrous-lineup
+patchelf --set-rpath '$ORIGIN' AppDir/usr/lib/libxkbcommon-x11.so.0
+```
+
+`$ORIGIN` means "the folder this file is in", worked out when the
+program starts, so the path holds wherever the AppImage is mounted.
+The second line lets `libxkbcommon-x11` find its own companions,
+`libxkbcommon` and `libxcb-xkb`, next to it. The single quotes keep the
+shell from replacing `$ORIGIN` with an (empty) variable.
+
+What the AppImage does **not** bring: the C library (glibc), ALSA, and
+the graphics drivers (OpenGL, Vulkan). Those must match the computer:
+a graphics driver belongs to its graphics card and kernel, and ALSA to
+the system's sound setup. The AppImage community keeps a list of such
+libraries, the *excludelist*, that an AppImage should never carry.
 
 ### Publishing: a job that waits for the others
 
@@ -306,7 +406,7 @@ password that expires when the job ends. At the top of the file,
 else, so a build step can't change the repository. Only this job
 asks for `contents: write`, which a release needs.
 
-The job downloads the four packages (each into a folder of its own
+The job downloads the five packages (each into a folder of its own
 name; `skip-decompress` keeps the Windows `.zip` from being unpacked),
 writes their checksums with `sha256sum`, and hands everything to `gh`,
 GitHub's command-line tool, which every GitHub machine has:
@@ -337,10 +437,10 @@ fi
 A release workflow only does its real work on a tag, which is a bad
 moment to find a typo. Two things catch mistakes earlier:
 
-- Pull requests that change `release.yml` run it too
-  (`pull_request: paths: [.github/workflows/release.yml]`), so the PR
-  that added it built all four packages before it was merged. Only the
-  `release` job is skipped, since a PR is not a tag.
+- Every pull request runs it, so the pull request that added it built
+  all the packages before it was merged, and a change that breaks the
+  Windows or the Mac build shows up on its pull request. Only the
+  `release` job is skipped, since a pull request is not a tag.
 - [actionlint](https://github.com/rhysd/actionlint) checks workflow
   files, and, with [ShellCheck](https://www.shellcheck.net) installed,
   the shell scripts inside them:
@@ -350,9 +450,10 @@ moment to find a typo. Two things catch mistakes earlier:
   actionlint .github/workflows/release.yml
   ```
 
-Finally, `concurrency` keeps one run per branch: when two pull requests
-are merged in a row, the run for the first is cancelled, since the
-second contains it. Tags are never cancelled.
+Finally, `concurrency` keeps one run per branch: when a pull request
+gets a new push, or two pull requests are merged into main in a row,
+the older run is cancelled, since the newer one contains it. Tags are
+never cancelled.
 
 ## Exercises
 
