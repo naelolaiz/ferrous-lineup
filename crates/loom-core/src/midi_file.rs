@@ -9,8 +9,9 @@
 //! The file is a header chunk (`MThd`) followed by one track chunk
 //! (`MTrk`) per track. A track is a list of events, each one after a
 //! *delta time*: the number of ticks since the event before it. This
-//! module writes "format 1" files: the first track holds the tempo and the
-//! time signature, and every channel of the project gets a track of its own.
+//! module writes "format 1" files: the first track holds the tempo, the
+//! time signature and the key, and every channel of the project gets a
+//! track of its own.
 
 use crate::arrangement::Play;
 use crate::meter::{Meter, TimeMarker};
@@ -202,7 +203,7 @@ fn channel_events(
     events
 }
 
-/// The first track: the song's name, tempo and time signatures.
+/// The first track: the song's name, tempo, time signatures and key.
 ///
 /// A song whose tempo changes gets a tempo event on every step where it
 /// changes: one for a sudden change, and one per step of a glide, which
@@ -245,6 +246,12 @@ fn tempo_track(project: &Project, meter: &Meter, tempos: &[Tempo], end: u32) -> 
             vec![signature.beats, unit_power, clocks, 8],
         ));
     }
+    // The key signature: sharps (negative for flats), then 0 for major
+    // or 1 for minor. A mode is written with the signature of the major
+    // key it comes from; a row or a set has none.
+    if let Some((sharps, minor)) = project.scale.key_signature() {
+        events.push((0, KEY_SIGNATURE, vec![sharps as u8, u8::from(minor)]));
+    }
     events.sort_by_key(|&(tick, ..)| tick);
     for (tick, kind, data) in events.into_iter().filter(|(tick, ..)| *tick <= end) {
         track.meta(tick, kind, &data);
@@ -257,6 +264,7 @@ const TRACK_NAME: u8 = 0x03;
 const END_OF_TRACK: u8 = 0x2F;
 const TEMPO: u8 = 0x51;
 const TIME_SIGNATURE: u8 = 0x58;
+const KEY_SIGNATURE: u8 = 0x59;
 
 /// Builds one track chunk, keeping the time of the last event so each
 /// new one can be written as a delta.
@@ -474,6 +482,33 @@ mod tests {
             tracks[0].contains(&(0, vec![0xFF, 0x58, 4, 6, 3, 36, 8])),
             "6/8"
         );
+    }
+
+    #[test]
+    fn the_key_signature_is_written() {
+        let mut project = project();
+        let signature = |project: &Project| -> Vec<Vec<u8>> {
+            read(&pattern_to_midi(project, 0))[0]
+                .iter()
+                .filter(|(_, event)| event[..2] == [0xFF, 0x59])
+                .map(|(_, event)| event.clone())
+                .collect()
+        };
+        assert_eq!(signature(&project), [vec![0xFF, 0x59, 2, 0, 0]], "C major");
+        project.scale = crate::Scale::new(crate::PitchClass::G, crate::ScaleKind::NaturalMinor);
+        assert_eq!(
+            signature(&project),
+            [vec![0xFF, 0x59, 2, 0xFE, 1]],
+            "G minor: two flats"
+        );
+        project.scale = crate::Scale::new(crate::PitchClass::E, crate::ScaleKind::Dorian);
+        assert_eq!(
+            signature(&project),
+            [vec![0xFF, 0x59, 2, 2, 0]],
+            "E Dorian: as D major"
+        );
+        project.scale = crate::Scale::row(crate::harmony::ROW_PRESETS[0].row);
+        assert!(signature(&project).is_empty(), "a row has no key signature");
     }
 
     #[test]
