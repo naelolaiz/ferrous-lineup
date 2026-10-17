@@ -70,6 +70,7 @@
   - [Key changes partway through, and the whole Turkish March](step-8/key-changes.md)
   - [Opening MIDI files](step-8/midi-import.md)
   - [Every voice on its own channel, with a real instrument](step-8/voices-and-instruments.md)
+  - [Finding the key from the music (experimental)](step-8/finding-the-key.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
