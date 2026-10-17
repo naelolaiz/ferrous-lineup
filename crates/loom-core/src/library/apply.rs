@@ -562,10 +562,8 @@ pub fn write_final_chord(project: &mut Project, pattern: usize, chord: Chord) ->
     };
     let length = target.length();
     let held = |pitch| NoteEvent {
-        pitch,
-        start: 0,
-        length,
         velocity: 90,
+        ..NoteEvent::new(pitch, 0, length)
     };
     target.set_notes(chords, voice(chord, None).into_iter().map(held));
     if let Some(bass) = bass {
