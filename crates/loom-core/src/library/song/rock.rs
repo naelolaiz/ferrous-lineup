@@ -272,3 +272,37 @@ pub(super) const TOREADOR_SONG: Song = Song {
             the dominant of the relative minor, before the band answers in clipped chords. \
             The opera's 2/4 bars go two to a bar here.",
 };
+
+// Source: https://abcnotation.com/tunePage?a=trillian.mit.edu%2F%7Ejc%2Fmusic%2Fabc%2Fmirror%2Fmusicaviva.com%2Ftunes%2Fusa%2Fhouse-of-the-rising-01%2F0000
+// (ABC transcribed by Frank Nordberg, musicaviva.com; written there in 3/4,
+// barred here in 6/8 with the same note values)
+pub(super) const HOUSE_OF_THE_RISING_SUN: Song = Song {
+    name: "House of the Rising Sun",
+    origin: "Traditional, American",
+    feel: "Six-eight",
+    genre: Genre::Rock,
+    tonic: D,
+    mode: NaturalMinor,
+    time: SIX_EIGHT,
+    tempo: 144.0,
+    comping: Comping::Arp3,
+    bass: Bass::Held,
+    rhythm: "Six-eight",
+    style: "Zamba",
+    parts: &[
+        Part::new("Pickup", "-:8 A4:4", "i"),
+        Part::new(
+            "Verse",
+            "D4:8 E4:2 D4 | F4:8 G4:2 G#4 | A4:8 F4:2 E4 | D4:8 A4:4 | \
+             D5:8 A4:4 | C5:8 A4:2 G4 | A4:12 | _:4 - A4:2 A4 | \
+             D5:8 D4:4 | F4:8 G4:4 | A4:2 A4:6 F4:2 E4 | D4:8 A4:4 | \
+             A4:8 A4:4 | A4:2 A3:6 F4:2 E4 | D4:12 | _:8 A4:4",
+            "i | i | V7 | i | i | bVII7 | bIII | V7 | i | i | i | bVI7 | i | V7 | i | i",
+        ),
+    ],
+    form: &["Pickup", "Verse", "Verse"],
+    drums_from: 1,
+    about: "A minor-key ballad with the chords picked out one note at a time. The tune \
+            climbs the D minor chord, D, F, A, to the high D, and the harmony moves round \
+            D minor, C7, F and A7, with B flat 7 (bVI7) shading the last line.",
+};
