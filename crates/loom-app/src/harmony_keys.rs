@@ -11,6 +11,10 @@
 //! all (see [`HintLevel`]). On the right, a keyboard showing the notes of
 //! the scale and the notes playing.
 //!
+//! Under it, the experimental Find the key option shows the key the
+//! music sounds like it is in, and the next best keys, fainter, when it
+//! is not clear, each with what the chord playing is in it.
+//!
 //! Like the other views, [`HarmonyKeys::show`] does not change anything
 //! itself: it returns [`HarmonyAction`]s for the app to carry out.
 
@@ -18,6 +22,7 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Key, Painter, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     pos2, vec2,
 };
+use loom_core::harmony::key_finding::{KeyGuess, read_chord};
 use loom_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
 use loom_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords};
 use loom_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
@@ -33,7 +38,27 @@ pub enum HarmonyAction {
     NoteOn(Vec<Note>),
     /// A harmony key came up: stop these notes.
     NoteOff(Vec<Note>),
+    /// Find the key: write the key changes heard in the song as key
+    /// markers.
+    MarkHeardKeys,
 }
+
+/// The key the music sounds like it is in, for Find the key.
+#[derive(Debug, Clone, PartialEq)]
+pub struct KeyHeard {
+    pub best: KeyGuess,
+    /// The keys that come close, best first; empty when the key is clear.
+    pub alternatives: Vec<KeyGuess>,
+    /// Where it was heard: "in the notes here", "in what you play"...
+    pub from: &'static str,
+    /// Whether the key changes heard in the whole song can be written
+    /// as key markers (in song mode, from the notes or a recording).
+    pub can_mark: bool,
+}
+
+const FIND_KEY_HELP: &str = "Experimental: works out the key from the music itself, \
+bar by bar, the way the key changes as the song goes on. When the key is not clear, \
+the closest other keys are shown too, fainter, with what the chord playing is in each.";
 
 const KEY_SIZE: egui::Vec2 = vec2(76.0, 66.0);
 const KEY_GAP: f32 = 4.0;
@@ -131,6 +156,8 @@ pub struct HarmonyKeys {
     /// The last chord played, here or on a MIDI keyboard, for the
     /// suggestions of what could come next.
     last_chord: Option<Chord>,
+    /// Whether Find the key is on.
+    pub find_key: bool,
 }
 
 impl HarmonyKeys {
@@ -142,6 +169,7 @@ impl HarmonyKeys {
             down: None,
             last_voicing: None,
             last_chord: None,
+            find_key: false,
         }
     }
 
@@ -180,6 +208,7 @@ impl HarmonyKeys {
         held: &[Note],
         heard: &[Note],
         digits: bool,
+        key_heard: Option<&KeyHeard>,
     ) -> Vec<HarmonyAction> {
         let scale = here;
         let size = self.size_for(scale);
@@ -267,6 +296,7 @@ impl HarmonyKeys {
             );
             ui.weak(hint);
         });
+        self.find_key_line(ui, key_heard, &mut actions);
 
         let plays: Vec<Play> = chord_keys
             .iter()
@@ -355,6 +385,80 @@ impl HarmonyKeys {
         self.follow_mouse(pressed, &plays, &mut actions);
         self.follow_digits(ui, digits, &plays, &mut actions);
         actions
+    }
+
+    /// The Find the key switch and, when it is on, the key heard: the
+    /// best key strong, the close ones after it, fainter, each with what
+    /// the last chord is in it.
+    fn find_key_line(
+        &mut self,
+        ui: &mut Ui,
+        heard: Option<&KeyHeard>,
+        actions: &mut Vec<HarmonyAction>,
+    ) {
+        ui.horizontal_wrapped(|ui| {
+            ui.toggle_value(&mut self.find_key, "🔍 Find the key")
+                .on_hover_text(FIND_KEY_HELP);
+            if !self.find_key {
+                return;
+            }
+            let Some(heard) = heard else {
+                ui.weak("Nothing to listen to yet.");
+                return;
+            };
+            ui.weak(format!("Sounds {}:", heard.from));
+            let reading = |guess: &KeyGuess| {
+                self.last_chord
+                    .and_then(|chord| {
+                        let reading = read_chord(chord, guess.key)?;
+                        Some(format!(
+                            "{} is {}",
+                            guess.key.chord_name(chord),
+                            reading.label()
+                        ))
+                    })
+                    .unwrap_or_default()
+            };
+            let share = |guess: &KeyGuess| (guess.share * 100.0).round();
+            let best = heard.best;
+            let text = egui::RichText::new(best.key.name()).strong().size(15.0);
+            let clear = if heard.alternatives.is_empty() {
+                "It is well ahead of every other key."
+            } else {
+                "Other keys come close, so they are shown too."
+            };
+            ui.label(text).on_hover_text(format!(
+                "The key that fits the notes best ({}% of the weight of all 24 keys). {clear}",
+                share(&best)
+            ));
+            let chord = reading(&best);
+            if !chord.is_empty() {
+                ui.label(chord);
+            }
+            for guess in &heard.alternatives {
+                ui.weak("·  or");
+                ui.label(egui::RichText::new(guess.key.name()).weak())
+                    .on_hover_text(format!(
+                        "Fits almost as well ({}% of the weight).",
+                        share(guess)
+                    ));
+                let chord = reading(guess);
+                if !chord.is_empty() {
+                    ui.weak(chord);
+                }
+            }
+            if heard.can_mark
+                && ui
+                    .small_button("Mark on the playlist")
+                    .on_hover_text(
+                        "Write the key changes heard in the whole song as key markers, \
+                         replacing the ones there. No note moves; Undo takes them back.",
+                    )
+                    .clicked()
+            {
+                actions.push(HarmonyAction::MarkHeardKeys);
+            }
+        });
     }
 
     /// How much the hints explain.
