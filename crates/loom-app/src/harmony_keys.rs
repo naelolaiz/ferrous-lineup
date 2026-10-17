@@ -15,9 +15,11 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Key, Painter, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     pos2, vec2,
 };
-use loom_core::harmony::keys::{self, ChordKey, ChordSize, Function};
+use loom_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
 use loom_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords};
-use loom_core::{Chord, Note, PitchClass, Project, Scale, ScaleKind, Spelling, TimeSignature};
+use loom_core::{
+    Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, Spelling, TimeSignature,
+};
 
 use crate::piano_roll::{KEY_HELP, both_names};
 
@@ -60,6 +62,19 @@ const SCALE_DOT: Color32 = Color32::from_rgb(76, 136, 222);
 const ROOT_DOT: Color32 = Color32::from_rgb(226, 124, 64);
 const HELD: Color32 = Color32::from_rgb(255, 152, 48);
 const HEARD: Color32 = Color32::from_rgb(132, 178, 240);
+
+/// The colour of the keys of a row or a set, which have no functions.
+const GROUP_COLOR: Color32 = Color32::from_rgb(128, 100, 196);
+
+/// What a harmony key plays when it goes down.
+struct Play {
+    /// The notes of the chord without the bass, for the next chord to
+    /// move smoothly from.
+    voicing: Vec<Note>,
+    notes: Vec<Note>,
+    /// The chord, for the keys of a key; none for a row or a set.
+    chord: Option<Chord>,
+}
 
 /// What is holding a harmony key down.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -139,8 +154,11 @@ impl HarmonyKeys {
         heard: &[Note],
         digits: bool,
     ) -> Vec<HarmonyAction> {
-        let mut actions = Vec::new();
         let scale = project.scale;
+        if let Some(groups) = keys::group_keys(scale, self.size) {
+            return self.show_groups(ui, project, &groups, channel_name, held, heard, digits);
+        }
+        let mut actions = Vec::new();
         let chord_keys = keys::chord_keys(scale, self.size);
 
         // A chord played on any keyboard, or else playing in the music,
@@ -205,17 +223,7 @@ impl HarmonyKeys {
                 .last_chord
                 .is_some_and(|chord| keys::key_for(&chord_keys, chord).is_none());
         ui.horizontal_wrapped(|ui| {
-            egui::ComboBox::from_id_salt("harmony-hints")
-                .width(78.0)
-                .selected_text(self.hints.label())
-                .show_ui(ui, |ui| {
-                    for level in HintLevel::ALL {
-                        ui.selectable_value(&mut self.hints, level, level.label())
-                            .on_hover_text(level.description());
-                    }
-                })
-                .response
-                .on_hover_text("How much the hints explain, here and in the piano roll");
+            self.hints_menu(ui);
             let hint = hint_line(
                 self.hints,
                 scale,
@@ -228,9 +236,110 @@ impl HarmonyKeys {
             ui.weak(hint);
         });
 
-        self.follow_mouse(pressed, &chord_keys, &mut actions);
-        self.follow_digits(ui, digits, &chord_keys, &mut actions);
+        let plays: Vec<Play> = chord_keys
+            .iter()
+            .map(|key| {
+                let (voicing, notes) = keys::play(key.chord, self.last_voicing.as_deref());
+                Play {
+                    voicing,
+                    notes,
+                    chord: Some(key.chord),
+                }
+            })
+            .collect();
+        self.follow_mouse(pressed, &plays, &mut actions);
+        self.follow_digits(ui, digits, &plays, &mut actions);
         actions
+    }
+
+    /// The bar for a twelve-tone row or a pitch-class set: a key for each
+    /// group of its notes (see [`keys::group_keys`]), all one colour,
+    /// since music without a key has no home, away or tension.
+    #[allow(clippy::too_many_arguments)]
+    fn show_groups(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        groups: &[GroupKey],
+        channel_name: &str,
+        held: &[Note],
+        heard: &[Note],
+        digits: bool,
+    ) -> Vec<HarmonyAction> {
+        let mut actions = Vec::new();
+        let scale = project.scale;
+        let spelling = scale.spelling();
+        let heard_set: PitchSet = heard.iter().map(|note| note.pitch_class()).collect();
+        let mut pressed = None;
+        ui.add_space(4.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.vertical(|ui| self.settings(ui, project, &mut actions));
+            ui.separator();
+            for (index, group) in groups.iter().enumerate() {
+                let lit = self.down.as_ref().is_some_and(|d| d.key == index)
+                    || (heard_set.len() >= 2 && group.pitch_set() == heard_set);
+                let response = group_key(ui, group, spelling, lit);
+                let response = crate::theme::hint(
+                    response,
+                    describe_group(group, spelling, index, self.hints),
+                );
+                if response.is_pointer_button_down_on() {
+                    pressed = Some(index);
+                }
+            }
+            ui.separator();
+            piano(ui, scale, held, heard);
+        });
+        ui.horizontal_wrapped(|ui| {
+            self.hints_menu(ui);
+            let keys = format!("1 to {}", groups.len().min(7));
+            let hint = match (self.hints, scale.kind) {
+                (HintLevel::Minimal, _) => String::new(),
+                (HintLevel::Short, ScaleKind::Row(_)) => {
+                    format!("The row's notes in groups, in order. Hold a key or press {keys}.")
+                }
+                (HintLevel::Short, _) => {
+                    format!("Chords stacked from the set's notes. Hold a key or press {keys}.")
+                }
+                (_, ScaleKind::Row(_)) => format!(
+                    "Twelve-tone music has no home chord: each key plays the next notes of \
+                     the row together, as twelve-tone composers build their chords. Hold one \
+                     (or press {keys}) to play on \"{channel_name}\". 3, 4 or 6 notes on the left."
+                ),
+                _ => format!(
+                    "Each key stacks every other note of the set, from one of its notes, as \
+                     the chords of a key stack every other note of the scale. Hold one (or \
+                     press {keys}) to play it."
+                ),
+            };
+            ui.weak(hint);
+        });
+        let plays: Vec<Play> = groups
+            .iter()
+            .map(|group| Play {
+                voicing: Vec::new(),
+                notes: group.play(),
+                chord: None,
+            })
+            .collect();
+        self.follow_mouse(pressed, &plays, &mut actions);
+        self.follow_digits(ui, digits, &plays, &mut actions);
+        actions
+    }
+
+    /// How much the hints explain.
+    fn hints_menu(&mut self, ui: &mut Ui) {
+        egui::ComboBox::from_id_salt("harmony-hints")
+            .width(78.0)
+            .selected_text(self.hints.label())
+            .show_ui(ui, |ui| {
+                for level in HintLevel::ALL {
+                    ui.selectable_value(&mut self.hints, level, level.label())
+                        .on_hover_text(level.description());
+                }
+            })
+            .response
+            .on_hover_text("How much the hints explain, here and in the piano roll");
     }
 
     /// The key, the time signature and the size of the chords.
@@ -249,19 +358,9 @@ impl HarmonyKeys {
                 })
                 .response
                 .on_hover_text(KEY_HELP);
-            let mut kind = scale.kind;
-            egui::ComboBox::from_id_salt("harmony-kind")
-                .width(110.0)
-                .selected_text(egui::RichText::new(kind.name()).strong())
-                .show_ui(ui, |ui| {
-                    for option in ScaleKind::ALL {
-                        ui.selectable_value(&mut kind, option, option.name());
-                    }
-                })
-                .response
-                .on_hover_text(KEY_HELP);
-            if root != scale.root || kind != scale.kind {
-                actions.push(HarmonyAction::SetScale(Scale::new(root, kind)));
+            if let Some(new) = crate::twelve_tone::kind_menu(ui, "harmony-kind", scale, root, 110.0)
+            {
+                actions.push(HarmonyAction::SetScale(new));
             }
         });
         ui.horizontal(|ui| {
@@ -287,12 +386,41 @@ impl HarmonyKeys {
         });
         ui.horizontal(|ui| {
             for size in ChordSize::ALL {
-                ui.selectable_value(&mut self.size, size, size.label())
-                    .on_hover_text(match size {
-                        ChordSize::Triads => "Three notes: every other note of the scale",
-                        ChordSize::Sevenths => "Four notes: the triad and its seventh",
-                        ChordSize::Ninths => "Five notes: the seventh chord and its ninth",
-                    });
+                let (label, hover) = match (scale.kind, size) {
+                    (ScaleKind::Row(_), _) => {
+                        let n = keys::row_group(size);
+                        let name = match n {
+                            3 => "trichords",
+                            4 => "tetrachords",
+                            _ => "hexachords",
+                        };
+                        (
+                            format!("{n} notes"),
+                            format!("The row in groups of {n}: {name}"),
+                        )
+                    }
+                    (ScaleKind::Set(_), _) => {
+                        let n = size as usize + 3;
+                        (
+                            format!("{n} notes"),
+                            format!("Chords of {n} notes of the set"),
+                        )
+                    }
+                    (_, ChordSize::Triads) => (
+                        size.label().to_string(),
+                        "Three notes: every other note of the scale".to_string(),
+                    ),
+                    (_, ChordSize::Sevenths) => (
+                        size.label().to_string(),
+                        "Four notes: the triad and its seventh".to_string(),
+                    ),
+                    (_, ChordSize::Ninths) => (
+                        size.label().to_string(),
+                        "Five notes: the seventh chord and its ninth".to_string(),
+                    ),
+                };
+                ui.selectable_value(&mut self.size, size, label)
+                    .on_hover_text(hover);
             }
         });
     }
@@ -302,7 +430,7 @@ impl HarmonyKeys {
     fn follow_mouse(
         &mut self,
         pressed: Option<usize>,
-        chord_keys: &[ChordKey],
+        plays: &[Play],
         actions: &mut Vec<HarmonyAction>,
     ) {
         let by_mouse = self
@@ -316,7 +444,7 @@ impl HarmonyKeys {
         if let Some(index) = pressed
             && self.down.is_none()
         {
-            self.press(index, Holder::Mouse, chord_keys, actions);
+            self.press(index, Holder::Mouse, plays, actions);
         }
     }
 
@@ -325,7 +453,7 @@ impl HarmonyKeys {
         &mut self,
         ui: &Ui,
         digits: bool,
-        chord_keys: &[ChordKey],
+        plays: &[Play],
         actions: &mut Vec<HarmonyAction>,
     ) {
         let by_digit = self
@@ -364,7 +492,7 @@ impl HarmonyKeys {
             let index = DIGITS.iter().position(|&digit| digit == key).unwrap_or(0);
             if pressed {
                 actions.extend(self.release());
-                self.press(index, holder, chord_keys, actions);
+                self.press(index, holder, plays, actions);
             } else if self.down.as_ref().is_some_and(|d| d.holder == holder) {
                 actions.extend(self.release());
             }
@@ -375,15 +503,17 @@ impl HarmonyKeys {
         &mut self,
         index: usize,
         holder: Holder,
-        chord_keys: &[ChordKey],
+        plays: &[Play],
         actions: &mut Vec<HarmonyAction>,
     ) {
-        let Some(key) = chord_keys.get(index) else {
+        let Some(play) = plays.get(index) else {
             return;
         };
-        let (voicing, notes) = keys::play(key.chord, self.last_voicing.as_deref());
-        self.last_voicing = Some(voicing);
-        self.last_chord = Some(key.chord);
+        let notes = play.notes.clone();
+        if let Some(chord) = play.chord {
+            self.last_voicing = Some(play.voicing.clone());
+            self.last_chord = Some(chord);
+        }
         actions.push(HarmonyAction::NoteOn(notes.clone()));
         self.down = Some(Down {
             key: index,
@@ -520,6 +650,78 @@ fn chord_key(
         KEY_TEXT_DIM,
     );
     response
+}
+
+/// A harmony key of a row or a set: which notes of the row it plays (or
+/// the note its chord starts on), the notes, and their set class.
+fn group_key(ui: &mut Ui, group: &GroupKey, spelling: Spelling, lit: bool) -> Response {
+    let names: Vec<&str> = group.notes.iter().map(|p| p.name(spelling)).collect();
+    // Hexachords need a wider key for their six names.
+    let width = (names.len() as f32 * 15.0 + 12.0).max(KEY_SIZE.x);
+    let (rect, response) = ui.allocate_exact_size(vec2(width, KEY_SIZE.y), Sense::click());
+    ui.add_space(KEY_GAP - ui.spacing().item_spacing.x);
+    if !ui.is_rect_visible(rect) {
+        return response;
+    }
+    let fill = if lit {
+        GROUP_COLOR
+    } else if response.hovered() {
+        GROUP_COLOR.gamma_multiply(0.7)
+    } else {
+        GROUP_COLOR.gamma_multiply(0.45)
+    };
+    let painter = ui.painter();
+    painter.rect_filled(rect, 6.0, fill.gamma_multiply(0.55));
+    let body = Rect::from_min_max(rect.min, rect.max - vec2(0.0, 3.0));
+    painter.rect_filled(body, 6.0, fill);
+    painter.text(
+        rect.center_top() + vec2(0.0, 16.0),
+        Align2::CENTER_CENTER,
+        &group.label,
+        FontId::proportional(17.0),
+        KEY_TEXT,
+    );
+    painter.text(
+        rect.center() + vec2(0.0, 9.0),
+        Align2::CENTER_CENTER,
+        names.join(" "),
+        FontId::proportional(12.0),
+        KEY_TEXT,
+    );
+    painter.text(
+        rect.center_bottom() - vec2(0.0, 9.0),
+        Align2::CENTER_CENTER,
+        group.pitch_set().set_class().name(),
+        FontId::proportional(10.0),
+        KEY_TEXT_DIM,
+    );
+    response
+}
+
+/// The tooltip of a key of a row or a set.
+fn describe_group(group: &GroupKey, spelling: Spelling, index: usize, level: HintLevel) -> String {
+    let names: Vec<&str> = group.notes.iter().map(|p| p.name(spelling)).collect();
+    let class = group.pitch_set().set_class();
+    let mut text = format!(
+        "{}: {} · set {}",
+        group.label,
+        names.join(" "),
+        class.name()
+    );
+    if let Some(nickname) = class.nickname() {
+        text += &format!(", {nickname}");
+    }
+    match level {
+        HintLevel::Detailed => format!(
+            "{text}.\nPrime form {}, interval vector {}. Hold to play; key {} on the computer \
+             keyboard too.",
+            class.prime_text(),
+            class.vector_text(),
+            index + 1
+        ),
+        HintLevel::Short => format!("{text}. Key {}.", index + 1),
+        HintLevel::Minimal => text,
+    }
 }
 
 /// The tooltip of a harmony key, at `level`: "V: G major (G B D). The

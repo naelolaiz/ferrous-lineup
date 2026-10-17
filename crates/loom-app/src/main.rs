@@ -20,6 +20,7 @@ mod midi;
 mod piano_roll;
 mod playlist;
 mod theme;
+mod twelve_tone;
 mod widgets;
 
 use std::path::PathBuf;

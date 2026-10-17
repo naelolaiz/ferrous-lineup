@@ -11,12 +11,15 @@ use eframe::egui::{
     self, Align, Align2, Color32, FontId, Key, KeyboardShortcut, Modifiers, Painter, Pos2, Rect,
     Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2,
 };
+use loom_core::harmony::keys::{self, ChordSize};
 use loom_core::harmony::{Harmony, HintLevel, analyze, next_chords};
 use loom_core::tools::{self, ArpeggioOrder};
 use loom_core::{
-    Chord, ChordQuality, ChordStamp, Note, NoteEvent, Pattern, PitchClass, Project, Scale,
-    ScaleKind, Spelling, TimeSignature, tidy_notes,
+    Chord, ChordQuality, ChordStamp, Note, NoteEvent, Pattern, PitchClass, PitchSet, Project,
+    Scale, ScaleKind, Spelling, TimeSignature, tidy_notes,
 };
+
+use crate::twelve_tone::{self, RowAction, RowWindow, SetAction, SetWindow};
 
 /// Something the user asked the piano roll to do.
 #[derive(Debug, Clone, PartialEq)]
@@ -101,6 +104,7 @@ const BLACK_KEY: Color32 = Color32::from_rgb(40, 42, 46);
 const KEY_TEXT: Color32 = Color32::from_rgb(60, 62, 68);
 const KEY_HELD: Color32 = Color32::from_rgb(255, 152, 48);
 const SCALE_MARK: Color32 = Color32::from_rgb(120, 190, 255);
+const ROW_MARK: Color32 = Color32::from_rgb(54, 96, 168);
 const ROOT_MARK: Color32 = Color32::from_rgb(255, 152, 48);
 const NOTE: Color32 = Color32::from_rgb(118, 214, 140);
 const NOTE_OUTSIDE: Color32 = Color32::from_rgb(240, 120, 110);
@@ -304,6 +308,9 @@ pub struct PianoRoll {
     /// the nearest note of the key, like FL Studio's "Snap incoming MIDI".
     /// The app reads it.
     pub snap_played: bool,
+    /// The twelve-tone row window and the set browser.
+    row_window: RowWindow,
+    set_window: SetWindow,
 }
 
 impl PianoRoll {
@@ -336,6 +343,8 @@ impl PianoRoll {
             hints: HintLevel::default(),
             snap_to_scale: false,
             snap_played: false,
+            row_window: RowWindow::new(),
+            set_window: SetWindow::new(),
         }
     }
 
@@ -483,7 +492,71 @@ impl PianoRoll {
         if !open {
             self.has_keyboard = false;
         }
+        if open {
+            self.post_tonal_windows(ctx, project, pattern_notes, held, area, &mut actions);
+        }
         actions
+    }
+
+    /// The row window and the set browser, when they are open.
+    fn post_tonal_windows(
+        &mut self,
+        ctx: &egui::Context,
+        project: &Project,
+        pattern: &Pattern,
+        held: &[Note],
+        area: egui::Rect,
+        actions: &mut Vec<RollAction>,
+    ) {
+        let scale = project.scale;
+        twelve_tone::remember(ctx, scale);
+        let length = pattern.length();
+        let visible: Vec<NoteEvent> = pattern
+            .notes(self.channel)
+            .iter()
+            .filter(|note| note.start < length)
+            .copied()
+            .collect();
+        if self.row_window.open {
+            // The notes a row is read from, in the order they start.
+            let mut drawn = if self.selection.is_empty() {
+                visible.clone()
+            } else {
+                self.selection.clone()
+            };
+            drawn.sort_by_key(|note| (note.start, note.pitch));
+            let drawn: Vec<Note> = drawn.iter().map(|note| note.pitch).collect();
+            for action in self.row_window.show(ctx, area, scale, &drawn, length) {
+                match action {
+                    RowAction::UseAsKey(row) => actions.push(RollAction::SetScale(row)),
+                    RowAction::Write(notes) => {
+                        let notes: Vec<NoteEvent> =
+                            notes.into_iter().filter(|n| fits_view(&[*n])).collect();
+                        self.selection.clear();
+                        self.replace(pattern, actions, "write a row", visible.clone(), notes);
+                    }
+                }
+            }
+        }
+        if self.set_window.open {
+            let selected: PitchSet = if held.is_empty() {
+                self.selection
+                    .iter()
+                    .map(|note| note.pitch.pitch_class())
+                    .collect()
+            } else {
+                held.iter().map(|note| note.pitch_class()).collect()
+            };
+            for action in self.set_window.show(ctx, area, scale.spelling(), selected) {
+                match action {
+                    SetAction::Stamp(set) => {
+                        self.stamp = ChordStamp::Set(set);
+                        self.inversion = 0;
+                    }
+                    SetAction::UseAsKey(set) => actions.push(RollAction::SetScale(set)),
+                }
+            }
+        }
     }
 
     /// When the channel shown has no notes in `pattern` but another
@@ -623,19 +696,55 @@ impl PianoRoll {
 
         // The step under the pointer was found while drawing the last
         // frame; one frame late is too fast for anyone to notice.
-        let info = if held.is_empty() {
+        let (info, set) = if held.is_empty() {
             match self.hovered_step.or(playhead) {
                 Some(step) => {
                     let harmony = analyze(sounding(pattern, &heard, step));
-                    format!("Step {}: {}", step + 1, harmony.describe(scale))
+                    let set: PitchSet = sounding(pattern, &heard, step)
+                        .map(|note| note.pitch_class())
+                        .collect();
+                    (
+                        format!("Step {}: {}", step + 1, harmony.describe(scale)),
+                        set,
+                    )
                 }
-                None => "Point at a step to name the chord there.".to_string(),
+                None => (
+                    "Point at a step to name the chord there.".to_string(),
+                    PitchSet::EMPTY,
+                ),
             }
         } else {
             let harmony = analyze(held.iter().copied());
-            format!("Keys down: {}", harmony.describe(scale))
+            let set: PitchSet = held.iter().map(|note| note.pitch_class()).collect();
+            (format!("Keys down: {}", harmony.describe(scale)), set)
         };
         ui.label(info);
+        // Any group of notes, chord or not, has a set class. Shown for
+        // three notes or more, and for the selection.
+        let spelling = scale.spelling();
+        let selected: PitchSet = self
+            .selection
+            .iter()
+            .map(|note| note.pitch.pitch_class())
+            .collect();
+        let mut sets = Vec::new();
+        if set.len() >= 3 {
+            sets.push(format!("Set: {}", twelve_tone::describe_set(set, spelling)));
+        }
+        if selected.len() >= 2 && self.selection.len() >= 2 {
+            sets.push(format!(
+                "Selected: {}",
+                twelve_tone::describe_set(selected, spelling)
+            ));
+        }
+        if !sets.is_empty() {
+            ui.weak(sets.join("    ")).on_hover_text(
+                "Pitch-class set theory names any group of notes: its Forte number, its \
+                     notes packed as tightly as they go (normal form), the same packed from 0 \
+                     with its inversion (prime form), and how many of each interval it holds. \
+                     Sets... opens the list of every set.",
+            );
+        }
         if notes.is_empty() {
             self.no_notes(ui, project, pattern, actions);
         }
@@ -696,6 +805,9 @@ impl PianoRoll {
     ) -> Option<Tool> {
         let mut picked = None;
         ui.horizontal_wrapped(|ui| {
+            // Each label stays whole and moves to the next line when it
+            // does not fit, rather than being squeezed into a column.
+            ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
             ui.label("Key");
             let mut root = scale.root;
             egui::ComboBox::from_id_salt("scale-root")
@@ -708,23 +820,29 @@ impl PianoRoll {
                 })
                 .response
                 .on_hover_text(KEY_HELP);
-            let mut kind = scale.kind;
-            egui::ComboBox::from_id_salt("scale-kind")
-                .selected_text(kind.name())
-                .show_ui(ui, |ui| {
-                    for option in ScaleKind::ALL {
-                        ui.selectable_value(&mut kind, option, option.name());
-                    }
-                })
-                .response
-                .on_hover_text(KEY_HELP);
-            if root != scale.root || kind != scale.kind {
-                actions.push(RollAction::SetScale(Scale::new(root, kind)));
+            if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", scale, root, 120.0) {
+                // Picking a row or a set opens the window to change it.
+                match new.kind {
+                    ScaleKind::Row(_) if scale.kind.is_tonal() => self.row_window.open = true,
+                    ScaleKind::Set(_) if scale.kind.is_tonal() => self.set_window.open = true,
+                    _ => {}
+                }
+                actions.push(RollAction::SetScale(new));
             }
             let spelling = scale.spelling();
             let names: Vec<&str> = scale.pitch_classes().map(|p| p.name(spelling)).collect();
             ui.weak(names.join(" "));
             self.snap_button(ui);
+            ui.toggle_value(&mut self.row_window.open, "Row…")
+                .on_hover_text(
+                    "Twelve-tone rows: type, draw or pick a row, see all its forms in the \
+                     matrix, and write them into the pattern",
+                );
+            ui.toggle_value(&mut self.set_window.open, "Sets…")
+                .on_hover_text(
+                    "Pitch-class sets: every group of notes there is, by Forte number, to \
+                     draw with or use as a scale",
+                );
 
             ui.separator();
             ui.label("Draw");
@@ -737,6 +855,13 @@ impl PianoRoll {
                             ui.separator();
                         }
                         ui.selectable_value(&mut self.stamp, stamp, stamp.label());
+                    }
+                    ui.separator();
+                    if let ChordStamp::Set(_) = self.stamp {
+                        let _ = ui.selectable_label(true, self.stamp.label());
+                    }
+                    if ui.button("A set from the set browser…").clicked() {
+                        self.set_window.open = true;
                     }
                 })
                 .response
@@ -890,6 +1015,10 @@ impl PianoRoll {
         current: Option<(ChordAt, Chord)>,
         actions: &mut Vec<RollAction>,
     ) {
+        if let Some(groups) = keys::group_keys(scale, ChordSize::Triads) {
+            self.groups_in_key(ui, scale, &groups, actions);
+            return;
+        }
         if !scale.is_heptatonic() {
             return;
         }
@@ -997,6 +1126,42 @@ impl PianoRoll {
         if !hint.is_empty() {
             ui.weak(hint);
         }
+    }
+
+    /// For a row or a set, which have no chords of the key: buttons for
+    /// its groups of notes, the row's trichords or the chords stacked
+    /// from the set, to hear how they sound.
+    fn groups_in_key(
+        &self,
+        ui: &mut Ui,
+        scale: Scale,
+        groups: &[keys::GroupKey],
+        actions: &mut Vec<RollAction>,
+    ) {
+        let spelling = scale.spelling();
+        ui.horizontal_wrapped(|ui| {
+            let what = match scale.kind {
+                ScaleKind::Row(_) => format!("Trichords of {}", scale.name()),
+                _ => format!("Chords of {}", scale.name()),
+            };
+            ui.label(what);
+            for group in groups {
+                let names: Vec<&str> = group.notes.iter().map(|p| p.name(spelling)).collect();
+                let class = group.pitch_set().set_class();
+                let text = format!("{} · {}", group.label, names.join(" "));
+                let hover = format!(
+                    "{}: set {}. Click to hear it.",
+                    names.join(" "),
+                    class.describe()
+                );
+                if ui.button(text).on_hover_text(hover).clicked() {
+                    actions.push(RollAction::Preview {
+                        channel: self.channel,
+                        pitches: group.play(),
+                    });
+                }
+            }
+        });
     }
 
     /// The strip above the grid that names the chord at every step.
@@ -1821,7 +1986,18 @@ fn paint_rows(painter: &Painter, grid: Grid, scale: Scale, held: &[Note]) {
             WHITE_KEY
         };
         painter.rect_filled(key.shrink2(vec2(0.0, 0.5)), 1.0, key_fill);
-        if in_scale {
+        if let ScaleKind::Row(_) = scale.kind {
+            // A row numbers its notes in order, 1 to 12, instead of dots.
+            let place = scale.degree_of(pitch_class).unwrap_or(0) + 1;
+            let mark = if is_root { ROOT_MARK } else { ROW_MARK };
+            painter.text(
+                pos2(key.right() - 3.0, key.center().y),
+                Align2::RIGHT_CENTER,
+                place.to_string(),
+                FontId::monospace(9.0 * grid.zoom),
+                mark,
+            );
+        } else if in_scale {
             let mark = if is_root { ROOT_MARK } else { SCALE_MARK };
             painter.circle_filled(pos2(key.right() - 7.0, key.center().y), 3.0, mark);
         }

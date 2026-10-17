@@ -117,7 +117,14 @@ pub fn snap_to_scale(notes: &[NoteEvent], scale: Scale) -> Vec<NoteEvent> {
 /// such as major and pentatonic, there are no matching degrees, so a
 /// note of the old scale that is not in the new one moves to the nearest
 /// one that is. A note that would leave the MIDI range stays put.
+///
+/// Between kinds that have nothing in common, such as a key and a
+/// twelve-tone row, the note stays where it is (see
+/// [`ScaleKind::notes_follow`](crate::ScaleKind::notes_follow)).
 pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
+    if !from.kind.notes_follow(to.kind) {
+        return note;
+    }
     let up = from.root.semitones_up_to(to.root) as i32;
     let shift = if up > 6 { up - 12 } else { up };
     let Some(moved) = note.transpose(shift) else {

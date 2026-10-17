@@ -2,10 +2,14 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{Chord, ChordQuality, PitchSet};
+use super::{Chord, ChordQuality, PitchSet, ToneRow};
 use crate::{Note, PitchClass, Spelling};
 
 /// The kinds of scale the piano roll can highlight.
+///
+/// Besides the scales of tonal music there are two kinds for music
+/// without a key: a twelve-tone row and a pitch-class set. They carry
+/// their notes with them, as semitones above the root.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ScaleKind {
     Major,
@@ -21,10 +25,19 @@ pub enum ScaleKind {
     MinorPentatonic,
     Blues,
     Chromatic,
+    /// A twelve-tone row, stored starting on C. The scale's root is the
+    /// note it starts on, so `E` with the row of Schoenberg's Suite is
+    /// its form `P4`. Its "degrees" are the places in the row, 1 to 12.
+    Row(ToneRow),
+    /// A pitch-class set used as a scale: its notes as semitones above
+    /// the root, the root among them. Any group of notes can be a scale
+    /// this way, from three notes to eleven.
+    Set(PitchSet),
 }
 
 impl ScaleKind {
-    /// All kinds, in the order the menu lists them.
+    /// The scales of tonal music, in the order the menu lists them. The
+    /// menus add the twelve-tone row and the pitch-class set after them.
     pub const ALL: [ScaleKind; 13] = [
         ScaleKind::Major,
         ScaleKind::NaturalMinor,
@@ -56,14 +69,45 @@ impl ScaleKind {
             ScaleKind::MinorPentatonic => "minor pentatonic",
             ScaleKind::Blues => "blues",
             ScaleKind::Chromatic => "chromatic",
+            ScaleKind::Row(_) => "twelve-tone row",
+            ScaleKind::Set(_) => "pitch-class set",
         }
     }
 
-    /// The notes of the scale as semitones above its root.
+    /// Whether this is a scale of tonal music, with a home note that the
+    /// others lean on, rather than a row or a set.
+    pub fn is_tonal(self) -> bool {
+        !matches!(self, ScaleKind::Row(_) | ScaleKind::Set(_))
+    }
+
+    /// Whether the notes of a song should move when its key changes from
+    /// this kind to `other`. Between the scales of tonal music they do,
+    /// as between two transpositions of the same row or two sets. Between
+    /// a key and a row, two different rows, or a key and a set, there is
+    /// nothing to move by: only what the piano roll highlights changes.
+    pub fn notes_follow(self, other: ScaleKind) -> bool {
+        match (self, other) {
+            (ScaleKind::Row(a), ScaleKind::Row(b)) => a == b,
+            (ScaleKind::Set(_), ScaleKind::Set(_)) => true,
+            (a, b) => a.is_tonal() && b.is_tonal(),
+        }
+    }
+
+    /// The notes of the scale as semitones above its root: for a row, in
+    /// the row's order.
     ///
     /// The major scale is the pattern of the white keys from C:
     /// whole, whole, half, whole, whole, whole, half step.
-    pub fn intervals(self) -> &'static [u8] {
+    pub fn intervals(self) -> Vec<u8> {
+        match self {
+            ScaleKind::Row(row) => row.semitones().to_vec(),
+            ScaleKind::Set(set) => set.semitones(),
+            kind => kind.tonal_intervals().to_vec(),
+        }
+    }
+
+    /// The notes of a tonal scale as semitones above its root.
+    fn tonal_intervals(self) -> &'static [u8] {
         match self {
             ScaleKind::Major => &[0, 2, 4, 5, 7, 9, 11],
             ScaleKind::NaturalMinor => &[0, 2, 3, 5, 7, 8, 10],
@@ -77,7 +121,9 @@ impl ScaleKind {
             ScaleKind::MajorPentatonic => &[0, 2, 4, 7, 9],
             ScaleKind::MinorPentatonic => &[0, 3, 5, 7, 10],
             ScaleKind::Blues => &[0, 3, 5, 6, 7, 10],
-            ScaleKind::Chromatic => &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            ScaleKind::Chromatic | ScaleKind::Row(_) | ScaleKind::Set(_) => {
+                &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            }
         }
     }
 
@@ -87,7 +133,11 @@ impl ScaleKind {
     /// semitones above D.
     fn relative_major(self) -> u8 {
         match self {
-            ScaleKind::Major | ScaleKind::MajorPentatonic | ScaleKind::Chromatic => 0,
+            ScaleKind::Major
+            | ScaleKind::MajorPentatonic
+            | ScaleKind::Chromatic
+            | ScaleKind::Row(_)
+            | ScaleKind::Set(_) => 0,
             ScaleKind::NaturalMinor
             | ScaleKind::HarmonicMinor
             | ScaleKind::MelodicMinor
@@ -114,12 +164,34 @@ impl Scale {
         Scale { root, kind }
     }
 
-    /// The pitch classes of the scale, from the root upwards.
+    /// A twelve-tone row as a scale: rooted on the note it starts on.
+    pub fn row(row: ToneRow) -> Self {
+        Scale::new(row.first(), ScaleKind::Row(row.starting_on(PitchClass::C)))
+    }
+
+    /// A pitch-class set as a scale on `root`. The root is added to the
+    /// set if it is not in it.
+    pub fn set(root: PitchClass, set: PitchSet) -> Self {
+        let mut relative = set.relative_to(root);
+        relative.insert(PitchClass::C);
+        Scale::new(root, ScaleKind::Set(relative))
+    }
+
+    /// The row this scale plays, starting on its root, if it is a row.
+    pub fn tone_row(self) -> Option<ToneRow> {
+        match self.kind {
+            ScaleKind::Row(row) => Some(row.starting_on(self.root)),
+            _ => None,
+        }
+    }
+
+    /// The pitch classes of the scale, from the root upwards: for a row,
+    /// in the row's order.
     pub fn pitch_classes(self) -> impl Iterator<Item = PitchClass> {
         self.kind
             .intervals()
-            .iter()
-            .map(move |&interval| self.root.transpose(interval as i32))
+            .into_iter()
+            .map(move |interval| self.root.transpose(interval as i32))
     }
 
     pub fn pitch_set(self) -> PitchSet {
@@ -127,7 +199,13 @@ impl Scale {
     }
 
     pub fn contains(self, pitch_class: PitchClass) -> bool {
-        self.pitch_set().contains(pitch_class)
+        match self.kind {
+            ScaleKind::Row(_) => true,
+            ScaleKind::Set(set) => {
+                set.contains(pitch_class.transpose(-(self.root.semitone() as i32)))
+            }
+            _ => self.pitch_set().contains(pitch_class),
+        }
     }
 
     /// Which note of the scale this is, counting the root as 0, or `None`
@@ -138,9 +216,10 @@ impl Scale {
     }
 
     /// Whether the scale has seven notes, like major, minor and the modes.
-    /// Chords in key and Roman numerals only make sense for these.
+    /// Chords in key and Roman numerals only make sense for these, so a
+    /// set of seven notes does not count.
     pub fn is_heptatonic(self) -> bool {
-        self.kind.intervals().len() == 7
+        self.kind.is_tonal() && self.kind.tonal_intervals().len() == 7
     }
 
     /// Whether this key is written with flats or with sharps.
@@ -156,9 +235,16 @@ impl Scale {
         }
     }
 
-    /// The name of the key, such as "Bb major" or "F# minor".
+    /// The name of the key, such as "Bb major" or "F# minor". A row is
+    /// named by its form, "row P4 (on E)", and a set by its set class,
+    /// "set 4-28 on C".
     pub fn name(self) -> String {
-        format!("{} {}", self.root.name(self.spelling()), self.kind.name())
+        let root = self.root.name(self.spelling());
+        match self.kind {
+            ScaleKind::Row(_) => format!("row P{} (on {root})", self.root.semitone()),
+            ScaleKind::Set(set) => format!("set {} on {root}", set.set_class().name()),
+            kind => format!("{root} {}", kind.name()),
+        }
     }
 
     /// Stacks `count` notes of the scale a third apart (every other note),
@@ -168,7 +254,7 @@ impl Scale {
         if !self.is_heptatonic() {
             return None;
         }
-        let intervals = self.kind.intervals();
+        let intervals = self.kind.tonal_intervals();
         let degree = self.degree_of(note.pitch_class())?;
         let notes = (0..count)
             .map(|i| {
@@ -370,6 +456,54 @@ mod tests {
             scale.stack_thirds(Note::new(61), 3).is_none(),
             "C# is not in C major"
         );
+    }
+
+    #[test]
+    fn rows_and_sets_as_scales() {
+        let row = crate::harmony::ROW_PRESETS[0].row;
+        let scale = Scale::row(row);
+        assert_eq!(scale.root, E);
+        assert_eq!(scale.tone_row(), Some(row));
+        assert_eq!(scale.name(), "row P4 (on E)");
+        // Every note is in a row; its degrees are the places in the row.
+        assert!(PitchClass::ALL.iter().all(|p| scale.contains(*p)));
+        assert_eq!(scale.degree_of(G), Some(2));
+        assert!(!scale.is_heptatonic());
+        assert_eq!(scale.triad(0), None);
+
+        let diminished = Scale::set(D, PitchSet::from_semitones(&[2, 5, 8, 11]));
+        assert_eq!(diminished.name(), "set 4-28 on D");
+        assert!(diminished.contains(F) && !diminished.contains(E));
+        assert_eq!(names(diminished), ["D", "F", "G#", "B"]);
+        // The root joins the set if it was not in it.
+        let added = Scale::set(C, PitchSet::from_semitones(&[4, 7]));
+        assert!(added.contains(C));
+        // A seven-note set has no chords of the key.
+        let seven = Scale::set(C, Scale::default().pitch_set());
+        assert!(!seven.is_heptatonic());
+    }
+
+    #[test]
+    fn notes_follow_only_between_related_kinds() {
+        let row = ScaleKind::Row(ToneRow::CHROMATIC);
+        let set = ScaleKind::Set(PitchSet::from_semitones(&[0, 3, 6, 9]));
+        assert!(ScaleKind::Major.notes_follow(ScaleKind::Dorian));
+        assert!(row.notes_follow(row));
+        assert!(!row.notes_follow(ScaleKind::Row(ToneRow::random(3))));
+        assert!(!ScaleKind::Major.notes_follow(row));
+        assert!(!set.notes_follow(ScaleKind::Major));
+        assert!(set.notes_follow(set));
+    }
+
+    #[test]
+    fn rows_and_sets_in_files() {
+        let scale = Scale::set(C, PitchSet::from_semitones(&[0, 3, 6, 9]));
+        let text = ron::to_string(&scale).unwrap();
+        assert_eq!(text, "(root:C,kind:Set(\"0 3 6 9\"))");
+        assert_eq!(ron::from_str::<Scale>(&text).unwrap(), scale);
+        let row = Scale::row(ToneRow::CHROMATIC);
+        let text = ron::to_string(&row).unwrap();
+        assert_eq!(ron::from_str::<Scale>(&text).unwrap(), row);
     }
 
     #[test]

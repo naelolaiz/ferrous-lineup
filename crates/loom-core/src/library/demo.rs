@@ -7,7 +7,7 @@
 //! project, to take apart and change.
 
 use crate::meter::{TimeMarker, TimeSignature};
-use crate::playlist::Clip;
+use crate::playlist::{Clip, Section};
 use crate::project::Project;
 use crate::tempo::Tempo;
 
@@ -15,6 +15,7 @@ use super::apply::{self, LEAD};
 use super::chart::accompany;
 use super::comping::Bass;
 use super::rhythm::{FILLS, RHYTHMS, Rhythm};
+use super::rows::{self, DEMO_SECTIONS, RowStyle};
 use super::song::{Part, Song};
 use super::style::Style;
 use crate::pattern::NoteEvent;
@@ -124,6 +125,55 @@ pub fn style_demo(style: &Style) -> Project {
         at += length;
     }
     project.add_clip(Clip::new(end, SONG_TRACK, at));
+    project.remove_unused_tracks();
+    project
+}
+
+/// A demo of a twelve-tone style: the piece as written (P), backwards
+/// (R), upside down (I) and both (RI), each a section of the song, and as
+/// written once more to end. With a rhythm, the drums come in after the
+/// first section, with a fill before the last.
+pub fn row_demo(style: &RowStyle) -> Project {
+    let mut project = Project::empty();
+    project.tempo = Tempo::new(style.tempo);
+    project.time_signature = style.time;
+    let length = style.length();
+    let mut patterns = Vec::new();
+    for (i, (form, name)) in DEMO_SECTIONS.iter().enumerate() {
+        let index = if i == 0 {
+            if let Some(pattern) = project.pattern_mut(0) {
+                pattern.name = name.to_string();
+            }
+            0
+        } else {
+            new_pattern(&mut project, name, length)
+        };
+        rows::write_section(&mut project, index, style, *form);
+        patterns.push((index, *name));
+    }
+    let drums = style.rhythm().map(|rhythm| {
+        let plain = drum_pattern(&mut project, "Drums", length, rhythm, false);
+        let fill = drum_pattern(&mut project, "Drums and fill", length, rhythm, true);
+        (plain, fill)
+    });
+    name_tracks(&mut project, "Row", "Drums");
+    let order = [0, 1, 2, 3, 0];
+    for (place, &which) in order.iter().enumerate() {
+        let (pattern, name) = patterns[which];
+        let at = place * length;
+        project.add_clip(Clip::new(pattern, SONG_TRACK, at));
+        project.add_section(Section::new(name, at, length));
+        if let Some((plain, fill)) = drums
+            && place > 0
+        {
+            let drums = if place + 2 == order.len() {
+                fill
+            } else {
+                plain
+            };
+            project.add_clip(Clip::new(drums, DRUM_TRACK, at));
+        }
+    }
     project.remove_unused_tracks();
     project
 }
@@ -293,6 +343,17 @@ mod tests {
             let project = style_demo(style);
             check(&project, style.name);
             assert_eq!(project.time_signature, style.time);
+        }
+    }
+
+    #[test]
+    fn every_row_style_makes_a_demo() {
+        for style in &crate::library::ROW_STYLES {
+            let project = row_demo(style);
+            check(&project, style.name);
+            assert_eq!(project.playlist().sections().len(), 5, "{}", style.name);
+            assert!(!project.scale.kind.is_tonal());
+            assert_eq!(crate::file::format_for(&project), 6);
         }
     }
 
