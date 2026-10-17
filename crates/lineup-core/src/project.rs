@@ -11,7 +11,7 @@ use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::harmony::{ChordSymbol, Harmony, Scale, analyze};
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
-use crate::meter::{Meter, TimeMarker, TimeSignature};
+use crate::meter::{Click, Meter, TimeMarker, TimeSignature};
 use crate::pattern::{NoteEvent, Pattern};
 use crate::playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Section, Track,
@@ -1044,6 +1044,23 @@ impl Project {
             .collect()
     }
 
+    /// What the metronome plays on every step of `arrangement`, in song
+    /// steps: a section played twice counts its bars twice.
+    pub fn played_clicks(&self, arrangement: &Arrangement) -> Vec<Click> {
+        let meter = self.played_meter(arrangement);
+        (0..arrangement.length)
+            .map(|step| meter.click(step))
+            .collect()
+    }
+
+    /// What the metronome plays on every step of pattern `pattern`, in
+    /// the time signature it is written in.
+    pub fn pattern_clicks(&self, pattern: usize) -> Vec<Click> {
+        let time = self.pattern_time(pattern);
+        let length = self.patterns.get(pattern).map_or(0, Pattern::length);
+        (0..length).map(|step| time.click(step)).collect()
+    }
+
     /// How many seconds `arrangement` lasts as it plays, tempo changes
     /// and all.
     pub fn played_seconds(&self, arrangement: &Arrangement) -> f64 {
@@ -1932,6 +1949,37 @@ mod tests {
             .collect();
         // The copy carries on in 3/4, so it needs no marker of its own.
         assert_eq!(markers, [(32, waltz), (80, TimeSignature::COMMON)]);
+    }
+
+    #[test]
+    fn the_metronome_counts_each_bar_in_its_own_time() {
+        // Bars 3 and 4 in 3/4, played twice; the rest in 4/4.
+        let mut project = Project::demo();
+        project.set_time_marker(TimeMarker::new(32, TimeSignature::new(3, 4)));
+        project.set_time_marker(TimeMarker::new(56, TimeSignature::COMMON));
+        project.add_section(Section {
+            repeats: 2,
+            ..Section::new("Waltz", 32, 24)
+        });
+        let song = project.arrangement();
+        let clicks = project.played_clicks(&song);
+        assert_eq!(clicks.len(), song.length);
+        let bars: Vec<usize> = (0..clicks.len())
+            .filter(|&step| clicks[step] == Click::Bar)
+            .take(8)
+            .collect();
+        // Two bars of 4/4, then the two waltz bars twice, then 4/4 again.
+        assert_eq!(bars, [0, 16, 32, 44, 56, 68, 80, 96]);
+        let beats = |from: usize, to: usize| {
+            (from..to)
+                .filter(|&step| clicks[step] == Click::Beat)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(beats(32, 44), [36, 40], "three beats in a waltz bar");
+        assert_eq!(beats(80, 96), [84, 88, 92]);
+        // A pattern counts in the time signature it is used in.
+        let pattern = project.pattern_clicks(BEAT);
+        assert_eq!(pattern.iter().filter(|&&c| c != Click::None).count(), 4);
     }
 
     #[test]
