@@ -60,7 +60,7 @@ enum Audio {
     Unavailable(String),
 }
 
-/// The first Loom Osc channel, where the piano roll opens; or the first
+/// The first Lineup Osc channel, where the piano roll opens; or the first
 /// channel if there is none.
 fn first_synth(project: &Project) -> usize {
     project

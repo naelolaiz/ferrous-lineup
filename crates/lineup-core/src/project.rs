@@ -111,7 +111,7 @@ pub enum ChannelKind {
     /// Plays a recorded or built-in sound from start to end for each
     /// note, faster for higher notes and slower for lower ones.
     Sampler(SampleSource),
-    /// The built-in "Loom Osc" synthesizer, which can play chords.
+    /// The built-in "Lineup Osc" synthesizer, which can play chords.
     Synth,
     /// Makes no sound itself: sends its notes out through MIDI, to an
     /// external synth or another program, on MIDI channel `channel`
@@ -130,7 +130,7 @@ pub struct Channel {
     /// The General MIDI instrument the channel plays, 0 to 127 (see
     /// [`general_midi`](crate::general_midi)), or `None` for none in
     /// particular. MIDI files and the MIDI output send it to the synth as
-    /// a program change; the Loom Osc picks a sound close to it.
+    /// a program change; the Lineup Osc picks a sound close to it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub program: Option<u8>,
 }
@@ -147,10 +147,10 @@ impl Channel {
         }
     }
 
-    /// A Loom Osc synth channel.
+    /// A Lineup Osc synth channel.
     pub fn synth() -> Self {
         Channel {
-            name: "Loom Osc".to_string(),
+            name: "Lineup Osc".to_string(),
             kind: ChannelKind::Synth,
             volume: 0.6,
             muted: false,
@@ -231,7 +231,7 @@ impl Project {
         }
     }
 
-    /// What File > New starts from: the drum kit and a Loom Osc, with no
+    /// What File > New starts from: the drum kit and a Lineup Osc, with no
     /// notes, and one playlist track. Placing a clip on the empty row
     /// below the last track adds another.
     pub fn template() -> Self {
@@ -240,7 +240,7 @@ impl Project {
         project
     }
 
-    /// An empty project with the drum kit and a Loom Osc in the rack.
+    /// An empty project with the drum kit and a Lineup Osc in the rack.
     fn kit() -> Self {
         let mut project = Project::empty();
         for drum in [Drum::Kick, Drum::Clap, Drum::HiHat, Drum::Snare] {
@@ -253,7 +253,7 @@ impl Project {
     /// The starting song: eight bars built from three patterns.
     ///
     /// - "Beat", one bar of drums.
-    /// - "Chords", two bars of the Loom Osc playing C, Am, F and G
+    /// - "Chords", two bars of the Lineup Osc playing C, Am, F and G
     ///   (I, vi, IV, V in C major).
     /// - "Fill", one bar of drums with a snare roll, to end the song.
     ///
