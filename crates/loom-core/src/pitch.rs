@@ -261,6 +261,12 @@ impl Letter {
     pub fn as_char(self) -> char {
         ['C', 'D', 'E', 'F', 'G', 'A', 'B'][self as usize]
     }
+
+    /// The letter written as `c`, in upper case: 'A' is A. Lower case
+    /// is refused, because in a chord symbol "b" is a flat.
+    pub fn from_char(c: char) -> Option<Letter> {
+        Self::ALL.into_iter().find(|letter| letter.as_char() == c)
+    }
 }
 
 /// The name of a note as musicians write it: a letter, and how many
@@ -332,6 +338,33 @@ impl NoteName {
     pub fn above(self, semitones: u8, letters: u8) -> NoteName {
         let pitch_class = self.pitch_class().transpose(i32::from(semitones));
         NoteName::with_letter(pitch_class, self.letter.up(i32::from(letters)))
+    }
+
+    /// Reads a note name at the start of `text`: a capital letter and at
+    /// most one sharp (`#` or `♯`) or flat (`b` or `♭`). Returns the name
+    /// and the rest of the text, so "F#m7" gives F# and "m7". Two sharps
+    /// or flats are not read, since chord symbols never use them: "Bbb"
+    /// is Bb and a "b" left over.
+    pub fn read(text: &str) -> Option<(NoteName, &str)> {
+        let mut chars = text.chars();
+        let letter = Letter::from_char(chars.next()?)?;
+        let rest = chars.as_str();
+        let mut chars = rest.chars();
+        let accidental = match chars.next() {
+            Some('#' | '♯') => 1,
+            Some('b' | '♭') => -1,
+            _ => return Some((NoteName::new(letter, 0), rest)),
+        };
+        Some((NoteName::new(letter, accidental), chars.as_str()))
+    }
+
+    /// Reads a whole note name, such as "C", "F#" or "Bb". Returns `None`
+    /// if anything is left over.
+    pub fn parse(text: &str) -> Option<NoteName> {
+        match NoteName::read(text)? {
+            (name, "") => Some(name),
+            _ => None,
+        }
     }
 
     /// The same key with one sharp or flat at most: Ebb becomes D and
@@ -473,5 +506,21 @@ mod tests {
         assert_eq!(NoteName::new(Letter::C, 0).above(9, 6).to_string(), "Bbb");
         assert_eq!(NoteName::new(Letter::E, -2).simplified().to_string(), "D");
         assert_eq!(NoteName::new(Letter::F, 2).simplified().to_string(), "G");
+    }
+
+    #[test]
+    fn reading_note_names() {
+        let read = |text| NoteName::read(text).map(|(name, rest)| (name.to_string(), rest));
+        assert_eq!(read("F#m7"), Some(("F#".to_string(), "m7")));
+        assert_eq!(read("Bb13"), Some(("Bb".to_string(), "13")));
+        assert_eq!(read("E♭maj7"), Some(("Eb".to_string(), "maj7")));
+        assert_eq!(read("Cm"), Some(("C".to_string(), "m")));
+        assert_eq!(read("Bbb"), Some(("Bb".to_string(), "b")));
+        assert_eq!(read("c"), None, "lower case is a flat, not a note");
+        assert_eq!(read("H"), None);
+        assert_eq!(read(""), None);
+        assert_eq!(NoteName::parse("Cb"), Some(NoteName::new(Letter::C, -1)));
+        assert_eq!(NoteName::parse("E#"), Some(NoteName::new(Letter::E, 1)));
+        assert_eq!(NoteName::parse("F#m"), None);
     }
 }
