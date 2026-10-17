@@ -1323,7 +1323,7 @@ impl Project {
     /// Moves every clip, section and loop edge at or after step `at`
     /// later by `steps`, leaving an empty gap. Returns `false`, changing
     /// nothing, if something would end up too late.
-    fn make_room(&mut self, at: usize, steps: usize) -> bool {
+    pub(crate) fn make_room(&mut self, at: usize, steps: usize) -> bool {
         let playlist = &self.playlist;
         let too_late = playlist
             .clips
@@ -1375,11 +1375,15 @@ impl Project {
         for marker in &mut self.playlist.chord_markers {
             shift(&mut marker.start);
         }
-        // A band that plays up to `at` plays on through the room made.
-        if let Some(band) = &mut self.band
-            && band.end >= at
-        {
-            band.end = (band.end + steps).min(MAX_SONG_STEPS);
+        // A band that plays up to `at` plays on through the room made,
+        // and room made inside its intro makes the intro longer.
+        if let Some(band) = &mut self.band {
+            if band.end >= at {
+                band.end = (band.end + steps).min(MAX_SONG_STEPS);
+            }
+            if band.form.intro > at {
+                band.form.intro += steps;
+            }
         }
         if let Some(region) = &mut self.playlist.loop_region {
             shift(&mut region.start);
@@ -1387,6 +1391,68 @@ impl Project {
             region.end = region.end.min(MAX_SONG_STEPS);
         }
         true
+    }
+
+    /// Takes the first `steps` steps out of the song, with the clips and
+    /// markers that start in them, and moves everything after them that
+    /// much earlier: the opposite of [`Project::make_room`] at the start.
+    /// The song then starts in the time signature, tempo, key and
+    /// harmony it had at step `steps`.
+    pub(crate) fn cut_start(&mut self, steps: usize) {
+        if steps == 0 {
+            return;
+        }
+        self.time_signature = self.meter().time_at(steps);
+        self.tempo = self.tempo_map().tempo_at(steps);
+        self.scale = self.key_at(steps);
+        let opening_chord = self
+            .chord_at(steps)
+            .map(|marker| ChordMarker::new(0, marker.harmony));
+        let playlist = &mut self.playlist;
+        playlist.clips.retain(|clip| clip.start >= steps);
+        for clip in &mut playlist.clips {
+            clip.start -= steps;
+        }
+        playlist.sections.retain(|section| section.end() > steps);
+        for section in &mut playlist.sections {
+            let end = section.end() - steps;
+            section.start = section.start.saturating_sub(steps);
+            section.length = end - section.start;
+        }
+        playlist.time_markers.retain(|marker| marker.start > steps);
+        for marker in &mut playlist.time_markers {
+            marker.start -= steps;
+        }
+        playlist.tempo_markers.retain(|marker| marker.start > steps);
+        for marker in &mut playlist.tempo_markers {
+            marker.start -= steps;
+        }
+        playlist.key_markers.retain(|marker| marker.start > steps);
+        for marker in &mut playlist.key_markers {
+            marker.start -= steps;
+        }
+        playlist
+            .chord_markers
+            .retain(|marker| marker.start >= steps);
+        for marker in &mut playlist.chord_markers {
+            marker.start -= steps;
+        }
+        if let Some(opening) = opening_chord
+            && playlist
+                .chord_markers
+                .first()
+                .is_none_or(|first| first.start > 0)
+        {
+            playlist.chord_markers.insert(0, opening);
+        }
+        playlist.loop_region = playlist
+            .loop_region
+            .filter(|region| region.end > steps)
+            .map(|region| LoopRegion::new(region.start.saturating_sub(steps), region.end - steps));
+        if let Some(band) = &mut self.band {
+            band.end = band.end.saturating_sub(steps);
+            band.form.intro = band.form.intro.saturating_sub(steps);
+        }
     }
 
     /// Sets or clears the part of the song that song mode loops. Returns

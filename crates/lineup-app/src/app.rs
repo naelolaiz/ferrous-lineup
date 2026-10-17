@@ -16,6 +16,7 @@ mod edit;
 mod export;
 mod files;
 mod follow;
+mod form;
 mod import;
 mod key_finder;
 mod library;
@@ -773,6 +774,7 @@ impl LineupApp {
             SheetAction::NoteOn(notes) => self.apply_harmony(HarmonyAction::NoteOn(notes)),
             SheetAction::NoteOff(notes) => self.apply_harmony(HarmonyAction::NoteOff(notes)),
             SheetAction::Practice(action) => self.apply_practice(action),
+            SheetAction::Form(action) => self.apply_form(action),
         }
     }
 
@@ -1577,10 +1579,7 @@ impl eframe::App for LineupApp {
         }
 
         // The chord sheet is drawn last, so it opens over the others.
-        let playing = match (self.playing, self.song_position()) {
-            (true, Some((step, _))) => Some(step),
-            _ => None,
-        };
+        let playing = self.song_position().filter(|_| self.playing);
         let sheet_actions = self.chord_sheet.show(
             &ctx,
             area,

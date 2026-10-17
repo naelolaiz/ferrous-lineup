@@ -14,6 +14,10 @@
 //! - Right-click the bar numbers to change the time signature from that
 //!   bar on, or to take a change away.
 //!
+//! When the band plays its chorus more than once (see the chord sheet's
+//! form row), repeat signs along the bottom of the section strip show
+//! where the song jumps back to.
+//!
 //! While a section or a loop is being dragged, only an outline of where
 //! it will land is drawn. The project changes once, when the button comes
 //! up, so a section dragged past another one cannot change places with
@@ -38,6 +42,8 @@ const STRIP: Color32 = Color32::from_rgb(22, 24, 29);
 const STRIP_HINT: Color32 = Color32::from_rgb(110, 116, 128);
 const SECTION_TEXT: Color32 = Color32::from_rgb(18, 20, 24);
 const GHOST: Color32 = Color32::from_rgb(245, 245, 250);
+/// The repeat signs of the band's chorus.
+const CHORUS: Color32 = Color32::from_rgb(170, 180, 192);
 pub(super) const LOOP: Color32 = crate::theme::LOOP;
 
 /// The colours of sections. A name always gets the same colour, so every
@@ -108,7 +114,8 @@ impl Strips {
 
         // The empty strip, under the sections: dragging on it marks a new one.
         let background = ui.interact(strip, ui.scope_id().with("section-strip"), Sense::drag());
-        if sections.is_empty() && self.drag.is_none() {
+        let repeats = paint_chorus(&painter, layout, strip, project, pass);
+        if sections.is_empty() && !repeats && self.drag.is_none() {
             painter.text(
                 pos2(strip.left() + 8.0, strip.center().y),
                 Align2::LEFT_CENTER,
@@ -429,6 +436,53 @@ fn paint_loop(painter: &Painter, layout: Layout, ruler: Rect, region: LoopRegion
     for x in [rect.left(), rect.right()] {
         painter.vline(x, rect.y_range(), Stroke::new(2.0, LOOP));
     }
+}
+
+/// The band's chorus, if it plays more than once: repeat signs at its
+/// ends, a line between them along the bottom of the strip, and how
+/// many times it plays, with which time it is while the song plays it.
+/// Returns whether there was one to draw.
+fn paint_chorus(
+    painter: &Painter,
+    layout: Layout,
+    strip: Rect,
+    project: &Project,
+    pass: Option<Pass>,
+) -> bool {
+    let (Some((start, end)), Some(form)) = (project.chorus(), project.form()) else {
+        return false;
+    };
+    if form.choruses < 2 {
+        return false;
+    }
+    let (left, right) = (layout.x(start), layout.x(end));
+    let line = Rect::from_min_max(
+        pos2(left, strip.bottom() - 2.0),
+        pos2(right, strip.bottom()),
+    );
+    painter.rect_filled(line, 0.0, CHORUS);
+    // The repeat signs: a thick line, a thin one and two dots, facing in.
+    let lines = strip.top() + 3.0..=strip.bottom();
+    let middle = strip.center().y;
+    for (edge, inward) in [(left, 1.0), (right, -1.0)] {
+        painter.vline(edge + inward * 1.5, lines.clone(), Stroke::new(3.0, CHORUS));
+        painter.vline(edge + inward * 5.0, lines.clone(), Stroke::new(1.0, CHORUS));
+        for y in [middle - 4.0, middle + 4.0] {
+            painter.circle_filled(pos2(edge + inward * 8.5, y), 1.6, CHORUS);
+        }
+    }
+    let mut label = format!("×{}", form.choruses);
+    if let Some((time, times)) = pass.and_then(|pass| pass.chorus) {
+        label = format!("▶ {time} of {times}   {label}");
+    }
+    painter.text(
+        pos2(right - 14.0, middle),
+        Align2::RIGHT_CENTER,
+        label,
+        FontId::proportional(11.5),
+        CHORUS,
+    );
+    true
 }
 
 /// One section: a coloured band with its name, "×2" if it repeats, and
