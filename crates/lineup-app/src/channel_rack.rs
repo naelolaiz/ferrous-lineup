@@ -395,7 +395,9 @@ pub fn natural_size(
 }
 
 /// Whether a path opens as a project: a `.lineup` or `.loom` file, or a
-/// MIDI file, which is imported.
+/// MIDI file or a chord sheet saved as text, which are imported.
 pub fn is_project_file(path: &std::path::Path) -> bool {
-    file::is_project(path) || lineup_core::midi_file::is_midi_file(path)
+    file::is_project(path)
+        || lineup_core::midi_file::is_midi_file(path)
+        || lineup_core::chord_sheet::text::is_text_file(path)
 }

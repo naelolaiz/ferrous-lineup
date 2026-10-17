@@ -175,6 +175,28 @@ changes, in WAV and MIDI exports too. Each style brings its own swing
 (Swing, Jazz ballad, Jazz waltz and Shuffle 100%, Rock and roll 50%), and
 remembers the amount you last set for it.
 
+**File > Import chord sheet…** reads a chord chart typed as text, the way
+charts are passed around in emails and forums (a `.txt` file, or drop it
+on the window): bar lines between the bars, a section's name in
+brackets over its bars, and a few settings at the top if you like.
+
+```text
+Title: Autumn Song
+Key: C major
+Tempo: 120
+Style: Bossa nova
+
+[Verse ×2]
+| C  | Am7 | Dm7 G7 | C |
+| F  | %   | G7     | C |
+```
+
+The chart becomes a new song with the band playing it and the chord
+sheet open; a mistake is reported with its line. **File > Export chord
+sheet…** writes the song's chord sheet the same way, lined up in
+columns, and in the chord sheet **Ctrl+C** and **Ctrl+V** copy and paste
+the selected bars as text, to and from a text editor or another song.
+
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's

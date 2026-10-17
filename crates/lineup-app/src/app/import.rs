@@ -163,6 +163,7 @@ impl LineupApp {
             Ok(imported) => {
                 let summary = imported.report.summary(&title, &imported.project);
                 self.replace_project(imported.project, None);
+                self.file.name_imported(&title);
                 self.set_mode(PlayMode::Song);
                 self.notice = Some(summary);
             }
