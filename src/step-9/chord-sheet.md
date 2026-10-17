@@ -168,12 +168,55 @@ the Micromodes and Sets windows use (see
 
 ## Writing what the song plays
 
-A song that already plays something, such as a demo or a song you
-built in the playlist, can have its sheet written for it: when the
-sheet is empty, a button **Write the chords the song plays** sits at
-its top. It walks the song beat by beat, asks which chord the band
-plays there, and writes a harmony wherever that changes. One undo takes
-it all back.
+A song opens with its chords already on the sheet, so the sheet is
+never blank for a song that plays chords. Where they come from depends
+on the song:
+
+- **A demo built from a chart** (the songs and styles in the Demos
+  menu) writes its own chart on the sheet, part by part, each part in
+  its own key. El Choclo's third strain, in A major, reads
+  A E7 | E7 A | F#7 Bm | B7 E7: the chart's VI7 ii | II7 V7 named in
+  A major. The ending's held chord is written too.
+- **Any other song** (the starting song, a file you saved before the
+  sheet existed, an imported MIDI file or recording) gets the chords
+  the app hears in it, as described below.
+
+Writing them when the song opens, before the app remembers the project
+as saved, means a demo does not come up as changed (no `*` in the
+title).
+
+A few pieces have their accompaniment written out note by note
+(Für Elise, Air on the G String, Rachmaninoff's Prelude in C-sharp
+minor, Shchedryk). They have no chart, and their arpeggios hold too few
+notes at once for a chord to be heard beat by beat, so their sheets
+still open nearly empty.
+
+```rust
+fn write_chart(project: &mut Project, at: usize, spans: &[ChordSpan], key: Scale) {
+    let Some(end) = spans.last().map(|span| at + span.start + span.length) else {
+        return;
+    };
+    let markers: Vec<ChordMarker> = spans
+        .iter()
+        .map(|span| ChordMarker::new(at + span.start, HarmonyName::Chord(span.chord.symbol_in(key))))
+        .collect();
+    project.set_chords(at, end, &markers);
+}
+```
+
+`let ... else` takes the end of the last span, or returns at once when
+the chart is empty (`spans.last()` is `None`). `symbol_in(key)` is the
+same function the Progression menu uses to name "V7" as A7 in D minor,
+so the sheet spells a demo's chords exactly as the band would read
+them.
+
+The button **Write the chords the song plays** at the top of the sheet
+writes them again from what the song plays now, in place of what the
+sheet says: use it after you change the notes. It walks the song beat
+by beat, asks which chord the band plays there, and writes a harmony
+wherever that changes. One undo takes it all back. While a band plays
+from the sheet the button is hidden, since the band's notes come from
+the sheet in the first place.
 
 Three details make the result read like a chart and not like an
 analysis:
