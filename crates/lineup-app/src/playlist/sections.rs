@@ -38,7 +38,7 @@ const STRIP: Color32 = Color32::from_rgb(22, 24, 29);
 const STRIP_HINT: Color32 = Color32::from_rgb(110, 116, 128);
 const SECTION_TEXT: Color32 = Color32::from_rgb(18, 20, 24);
 const GHOST: Color32 = Color32::from_rgb(245, 245, 250);
-pub(super) const LOOP: Color32 = Color32::from_rgb(92, 196, 120);
+pub(super) const LOOP: Color32 = crate::theme::LOOP;
 
 /// The colours of sections. A name always gets the same colour, so every
 /// chorus looks alike: the names in [`SECTION_NAMES`] each have their

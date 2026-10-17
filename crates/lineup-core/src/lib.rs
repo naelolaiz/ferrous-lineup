@@ -44,7 +44,7 @@ pub use diff::{Change, diff};
 pub use harmony::{Chord, ChordQuality, ChordStamp, Harmony, PitchSet, Scale, ScaleKind};
 pub use history::History;
 pub use key_map::{KeyMap, KeyMarker};
-pub use meter::{Bar, Meter, TimeMarker, TimeSignature};
+pub use meter::{Bar, Click, Meter, TimeMarker, TimeSignature};
 pub use midi::{DRUM_CHANNEL, MidiMessage};
 pub use midi_file::{general_midi_drum, midi_channels, pattern_to_midi, song_to_midi};
 pub use pattern::{
