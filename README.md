@@ -141,6 +141,16 @@ demo, the band plays the demo's chords and mutes its own accompaniment
 until you pick **No band**. **File > New beat** is the old empty
 pattern with a drum kit.
 
+To practise with the band, the chord sheet's second row (and the
+**Practice** menu) has a **Count-in** (a bar of clicks before the music
+starts), a **Metronome**, the **Speed** to play at (25% to 200% of the
+song's tempo, which the song itself keeps) and **Tap**, which sets the
+tempo from a few clicks on the beat. **You play** leaves the piano, the
+bass or the drums out of the band so you can play the part yourself;
+your keyboard then plays that part's sound. Shift+click a second bar to
+select several, and **Loop bars** plays them over and over. The clicks
+never reach a saved song or a WAV export.
+
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's

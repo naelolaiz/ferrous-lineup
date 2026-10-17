@@ -92,7 +92,7 @@ impl LineupApp {
 
         let mut renderer = Renderer::new(EXPORT_SAMPLE_RATE, EXPORT_CHANNELS);
         renderer.send(Command::SetMasterVolume(self.master_volume));
-        for command in self.project_commands(EXPORT_SAMPLE_RATE) {
+        for command in self.project_commands(EXPORT_SAMPLE_RATE, 1.0) {
             renderer.send(command);
         }
 

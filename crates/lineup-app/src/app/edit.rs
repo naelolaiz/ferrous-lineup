@@ -141,7 +141,11 @@ impl LineupApp {
                         notes,
                     });
                 }
-                Change::Tempo => self.send(Command::SetTempo(self.project.tempo)),
+                Change::Tempo => {
+                    let tempo =
+                        super::practice::at_speed(self.project.tempo, self.practice.speed());
+                    self.send(Command::SetTempo(tempo));
+                }
                 Change::LooseTiming => {
                     self.send(Command::SetLooseTiming(self.project.loose_timing));
                 }
