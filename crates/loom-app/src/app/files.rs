@@ -121,7 +121,7 @@ impl FileState {
         } else {
             ""
         };
-        format!("{}{star}{demo} · Ferrous Loom", self.display_name())
+        format!("{}{star}{demo} · Ferrous Lineup", self.display_name())
     }
 }
 
@@ -137,7 +137,7 @@ fn file_name(path: &Path, part: fn(&Path) -> Option<&std::ffi::OsStr>) -> String
 
 /// A file dialog that shows project files.
 fn project_dialog() -> rfd::FileDialog {
-    rfd::FileDialog::new().add_filter("Ferrous Loom project", &[file::EXTENSION])
+    rfd::FileDialog::new().add_filter("Ferrous Lineup project", &[file::EXTENSION])
 }
 
 impl LoomApp {
@@ -463,7 +463,7 @@ mod tests {
         let mut state = FileState::new(&Project::template());
         assert_eq!(
             state.title(false),
-            "The starting song (demo, read-only) · Ferrous Loom"
+            "The starting song (demo, read-only) · Ferrous Lineup"
         );
         let song = loom_core::library::SONGS
             .iter()
@@ -472,11 +472,11 @@ mod tests {
         state.open_demo(Demo::Song(song));
         assert_eq!(
             state.title(false),
-            "Für Elise (demo, read-only) · Ferrous Loom"
+            "Für Elise (demo, read-only) · Ferrous Lineup"
         );
         assert_eq!(
             state.title(true),
-            "Für Elise* (demo, read-only) · Ferrous Loom"
+            "Für Elise* (demo, read-only) · Ferrous Lineup"
         );
         // Save suggests the demo's name for the new file.
         assert_eq!(state.export_name(file::EXTENSION), "Für Elise.loom");
@@ -487,10 +487,10 @@ mod tests {
         let mut state = FileState::new(&Project::template());
         state.path = Some(PathBuf::from("/music/song.loom"));
         state.demo = None;
-        assert_eq!(state.title(true), "song.loom* · Ferrous Loom");
+        assert_eq!(state.title(true), "song.loom* · Ferrous Lineup");
         assert_eq!(state.export_name("wav"), "song.wav");
         state.path = None;
-        assert_eq!(state.title(false), "Untitled · Ferrous Loom");
+        assert_eq!(state.title(false), "Untitled · Ferrous Lineup");
     }
 
     #[test]

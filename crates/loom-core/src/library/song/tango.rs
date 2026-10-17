@@ -56,7 +56,7 @@ const TELAR_CHORDS: &str = "i | V7 | V7 | i | iv | i | V7 | i";
 
 pub(super) const TANGO_DEL_TELAR: Song = Song {
     name: "Tango del telar",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Tango",
     genre: Genre::Tango,
     tonic: A,
@@ -93,7 +93,7 @@ pub(super) const TANGO_DEL_TELAR: Song = Song {
 
 pub(super) const MILONGA_DEL_RIO: Song = Song {
     name: "Milonga del río",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Milonga",
     genre: Genre::Tango,
     tonic: C,
@@ -119,7 +119,7 @@ pub(super) const MILONGA_DEL_RIO: Song = Song {
 
 pub(super) const VALS_DEL_PUERTO: Song = Song {
     name: "Vals del puerto",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Tango vals",
     genre: Genre::Tango,
     tonic: C,

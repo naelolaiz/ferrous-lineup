@@ -1,4 +1,4 @@
-//! The real-time audio engine for Ferrous Loom.
+//! The real-time audio engine for Ferrous Lineup.
 //!
 //! - [`instrument`] holds the sound generators (the sampler and the Loom
 //!   Osc synth) and the MIDI Out, [`timbre`] the Loom Osc's sounds for the

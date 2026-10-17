@@ -1,6 +1,6 @@
 [package]
 name = "loom-app"
-description = "Ferrous Loom desktop application"
+description = "Ferrous Lineup desktop application"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [[bin]]
-name = "ferrous-loom"
+name = "ferrous-lineup"
 path = "src/main.rs"
 
 [dependencies]

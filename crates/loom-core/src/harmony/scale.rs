@@ -449,7 +449,7 @@ impl Scale {
     }
 
     /// The ninth chord (five notes) built on a degree of the scale, if it
-    /// is one Ferrous Loom knows. On some degrees the ninth is only a
+    /// is one Ferrous Lineup knows. On some degrees the ninth is only a
     /// semitone above the root an octave up (E G B D F in C major), which
     /// clashes, and there is no such chord.
     pub fn ninth(self, degree: usize) -> Option<Chord> {

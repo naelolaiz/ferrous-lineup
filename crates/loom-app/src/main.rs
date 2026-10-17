@@ -1,9 +1,9 @@
-//! Ferrous Loom: an open source pattern-based music studio.
+//! Ferrous Lineup: an open source music studio with a backing band.
 //!
 //! `main` only sets up the window. Everything you see is drawn by
 //! [`app::LoomApp`].
 //!
-//! Run `ferrous-loom song.loom` to open a project file straight away.
+//! Run `ferrous-lineup song.loom` to open a project file straight away.
 
 // On Windows, a program is either a "console" program, which opens a
 // terminal window, or a "windows" program, which does not. Release builds
@@ -35,14 +35,14 @@ fn main() -> eframe::Result {
 
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
-            .with_title("Ferrous Loom")
+            .with_title("Ferrous Lineup")
             .with_inner_size([1280.0, 800.0])
             .with_min_inner_size([800.0, 520.0]),
         ..Default::default()
     };
 
     eframe::run_native(
-        "Ferrous Loom",
+        "Ferrous Lineup",
         options,
         Box::new(|cc| Ok(Box::new(app::LoomApp::new(cc, path)))),
     )

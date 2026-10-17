@@ -7,7 +7,7 @@
 //! In 6/8 there are six eighth notes to the bar, felt as two groups of
 //! three.
 //!
-//! Ferrous Loom's grid is always sixteenth notes (steps), so a time
+//! Ferrous Lineup's grid is always sixteenth notes (steps), so a time
 //! signature mostly says how many steps a bar has, and where the beats
 //! fall inside it. The notes themselves never change: a time signature
 //! changes where the bar lines are drawn, not what is played.
@@ -188,7 +188,7 @@ impl TimeSignature {
         (usize::from(self.beats) * 16 / unit).max(1)
     }
 
-    /// Whether Ferrous Loom can count this time signature: a top number
+    /// Whether Ferrous Lineup can count this time signature: a top number
     /// from 1, a bottom number from [`UNITS`](Self::UNITS), and bars that
     /// fit in a pattern.
     pub fn is_valid(self) -> bool {
