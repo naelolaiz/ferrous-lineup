@@ -701,6 +701,22 @@ fn chord_key(
     response
 }
 
+/// The font size, at most `size`, at which `text` fits in `width`: a
+/// long chord name such as Cm(maj7)/Eb is written smaller instead of
+/// running over the edges of its key.
+fn fitting_size(ui: &Ui, text: &str, size: f32, width: f32) -> f32 {
+    let wide = ui
+        .painter()
+        .layout_no_wrap(text.to_string(), FontId::proportional(size), KEY_TEXT)
+        .size()
+        .x;
+    if wide <= width {
+        size
+    } else {
+        (size * width / wide).max(10.0)
+    }
+}
+
 /// A harmony key of a row or a set: its label (which notes of the row it
 /// plays, or for a set the chord they make), the notes, and underneath
 /// what the label does not already say (see [`group_footer`]).
@@ -728,7 +744,7 @@ fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
         rect.center_top() + vec2(0.0, 16.0),
         Align2::CENTER_CENTER,
         &group.label,
-        FontId::proportional(17.0),
+        FontId::proportional(fitting_size(ui, &group.label, 17.0, width - 8.0)),
         KEY_TEXT,
     );
     painter.text(

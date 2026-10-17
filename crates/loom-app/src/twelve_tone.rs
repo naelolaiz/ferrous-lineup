@@ -47,6 +47,24 @@ pub fn remembered_set(ctx: &egui::Context) -> PitchSet {
         .unwrap_or(PitchSet::from_semitones(&[0, 3, 6, 9]))
 }
 
+/// The key a key menu switches to when "pitch-class set" is picked
+/// while the key is `scale`, on `root`. From a row, it is the row's
+/// first group of three, where it is (Webern's Concerto row on C gives
+/// C B Eb, 3-3): the notes the harmony keys were playing, not a set from
+/// somewhere else. Otherwise it is the set used last, moved so it
+/// starts on `root`.
+fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
+    if let Some(group) = scale
+        .tone_row()
+        .and_then(|row| row.segments(3).first().copied())
+    {
+        return Scale::set(root, group.transpose(scale.root.semitones_up_to(root)));
+    }
+    let set = remembered_set(ctx);
+    let start = set.normal_form().first().copied().unwrap_or(root);
+    Scale::set(root, set.transpose(start.semitones_up_to(root)))
+}
+
 /// Remembers the row or set of `scale`, if it is one.
 pub fn remember(ctx: &egui::Context, scale: Scale) {
     match scale.kind {
@@ -147,9 +165,7 @@ pub fn kind_menu(
                 .clicked()
                 && !is_set
             {
-                let set = remembered_set(&ctx);
-                let start = set.normal_form().first().copied().unwrap_or(root);
-                picked = Some(Scale::set(root, set.transpose(start.semitones_up_to(root))));
+                picked = Some(set_key(&ctx, scale, root));
             }
         })
         .response;
@@ -952,6 +968,25 @@ impl SetWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_row_key_becomes_its_first_group_of_three() {
+        let ctx = egui::Context::default();
+        let webern = RowPreset::named("Webern's Concerto").unwrap().row;
+        let row = Scale::row(webern.starting_on(PitchClass::C));
+        let key = set_key(&ctx, row, PitchClass::C);
+        assert_eq!(key.root, PitchClass::C);
+        let group: PitchSet = [PitchClass::C, PitchClass::B, PitchClass::DSharp]
+            .into_iter()
+            .collect();
+        assert_eq!(key.pitch_set(), group);
+        assert_eq!(key.pitch_set().set_class().name(), "3-3");
+        // From a scale, with no set used yet: the diminished seventh chord.
+        let d_major = Scale::new(PitchClass::D, ScaleKind::Major);
+        let key = set_key(&ctx, d_major, PitchClass::D);
+        assert_eq!(key.pitch_set().set_class().name(), "4-28");
+        assert!(key.contains(PitchClass::D));
+    }
 
     #[test]
     fn a_set_is_spelled_as_the_key_spells_it() {
