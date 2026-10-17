@@ -30,8 +30,9 @@ time:
    tempo, a toggle to play a part yourself, and looping the bars you
    choose ([Practising with the band](practice.md)),
 5. **song form**: an intro, choruses and an ending
-   ([Song form: an intro, choruses and an ending](song-form.md)), then a
-   second variation of the style for other sections,
+   ([Song form: an intro, choruses and an ending](song-form.md)), and a
+   second variation of the style for the parts that need more energy
+   ([Variations a and b: the band digs in](variations.md)),
 6. **swing**, from straight to triplet,
 7. **real instrument sounds** from a SoundFont, and the band through
    MIDI out to an external synth. The SoundFont came early, before
