@@ -62,6 +62,7 @@
   - [Changing key: moving the song, and snapping to the scale](step-8/changing-key.md)
   - [The accompaniment follows your chords](step-8/chord-follow.md)
   - [MIDI Out for every channel](step-8/midi-out-every-channel.md)
+  - [South American folklore, and many more songs](step-8/folklore.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
