@@ -17,6 +17,7 @@ pub(super) const HABANERA: Song = Song {
     comping: Comping::Habanera,
     bass: Bass::Habanera,
     rhythm: "Habanera",
+    style: "Habanera",
     parts: &[
         Part::new("Pickup", "-:12 D5:2 C#5", "i"),
         Part::new(
@@ -64,6 +65,7 @@ pub(super) const TANGO_DEL_TELAR: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::Quarters,
     rhythm: "Tango marcato",
+    style: "Tango",
     parts: &[
         Part::new(
             "Tema",
@@ -99,6 +101,7 @@ pub(super) const MILONGA_DEL_RIO: Song = Song {
     comping: Comping::Tresillo,
     bass: Bass::Tresillo,
     rhythm: "Milonga",
+    style: "Milonga",
     parts: &[Part::new(
         "Milonga",
         "E5:3 E5 G5:2 C6:8 | B5:3 A5 G5:2 E5:8 | D5:3 D5 F5:2 B5:8 | A5:3 G5 F5:2 D5:8 | \
@@ -123,6 +126,7 @@ pub(super) const VALS_DEL_PUERTO: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Tango vals",
+    style: "Tango vals",
     parts: &[
         Part::new(
             "A",

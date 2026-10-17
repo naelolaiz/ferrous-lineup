@@ -14,6 +14,7 @@ pub(super) const LA_CUCARACHA: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::RootFifth,
     rhythm: "Cumbia",
+    style: "Cumbia",
     parts: &[
         Part::new("Pickup", "-:10 G4:2 G4 G4", "I"),
         Part::new(
@@ -42,6 +43,7 @@ pub(super) const RIO_AFTERNOON: Song = Song {
     comping: Comping::Bossa,
     bass: Bass::Bossa,
     rhythm: "Bossa nova",
+    style: "Bossa nova",
     parts: &[Part::new(
         "Tune",
         "E5:6 D5:2 E5:8 | B4:4 C5 E5 G5 | F#5:6 E5:2 D5:8 | C5:4 D5 F#5 A5 | \
@@ -67,6 +69,7 @@ pub(super) const CARNIVAL_MORNING: Song = Song {
     comping: Comping::Bossa,
     bass: Bass::Bossa,
     rhythm: "Samba",
+    style: "Samba",
     parts: &[
         Part::new(
             "A",

@@ -14,6 +14,7 @@ pub(super) const DRUNKEN_SAILOR: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Punk",
+    style: "Dark rock",
     parts: &[
         Part::new(
             "Verse",
@@ -46,6 +47,7 @@ pub(super) const BELLA_CIAO: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Rock ride",
+    style: "Dark rock",
     parts: &[
         Part::new("Pickup", "-:10 E4:2 A4 B4", "i"),
         Part::new(
@@ -74,6 +76,7 @@ pub(super) const BEETHOVENS_FIFTH: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Half-time rock",
+    style: "Aeolian climb",
     parts: &[Part::new(
         "Motif",
         "-:2 G4:2 G4 G4 Eb4:8 | -:2 F4:2 F4 F4 D4:8 | -:2 G4:2 G4 G4 Eb4 Ab4 Ab4 Ab4 | \
@@ -99,6 +102,7 @@ pub(super) const YANKEE_DOODLE: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Rock beat",
+    style: "Rock and roll",
     parts: &[Part::new(
         "Song",
         "C5:2 C5 D5 E5 C5 E5 D5:4 | C5:2 C5 D5 E5 C5:4 B4 | C5:2 C5 D5 E5 F5 E5 D5 C5 | \
@@ -128,6 +132,7 @@ pub(super) const WHISKEY_IN_THE_JAR: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Rock beat",
+    style: "Three-chord rock",
     parts: &[
         Part::new("Pickup", "-:14 D5:2", "I"),
         Part::new(
@@ -166,6 +171,7 @@ pub(super) const BATTLE_HYMN: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "March",
+    style: "Three-chord rock",
     parts: &[
         Part::new("Pickup", "-:14 A4:2", "I"),
         Part::new(
@@ -206,6 +212,7 @@ pub(super) const WHEN_JOHNNY: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Six-eight",
+    style: "Tarantella",
     parts: &[
         Part::new("Pickup", "-:10 A4:2", "i"),
         Part::new(

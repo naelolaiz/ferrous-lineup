@@ -14,6 +14,7 @@ pub(super) const MARY_HAD_A_LITTLE_LAMB: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Walking,
     rhythm: "Ska",
+    style: "Ska",
     parts: &[Part::new(
         "Tune",
         "E5:6 D5:2 C5:4 D5 | E5 E5 E5:8 | D5:4 D5 D5:8 | E5:4 G5 G5:8 | \
@@ -38,6 +39,7 @@ pub(super) const THIS_OLD_MAN: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Reggae,
     rhythm: "One drop",
+    style: "Reggae",
     parts: &[Part::new(
         "Song",
         "G5:4 E5 G5:8 | G5:4 E5 G5:8 | A5:4 G5 F5 E5 | D5 E5 F5:4 E5:2 F5 | \
@@ -62,6 +64,7 @@ pub(super) const VALLEY_DUB: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Reggae,
     rhythm: "Steppers",
+    style: "Roots minor",
     parts: &[
         Part::new(
             "A",
