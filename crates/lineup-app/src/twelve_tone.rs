@@ -1021,7 +1021,7 @@ mod tests {
 
     #[test]
     fn a_key_as_a_set_keeps_its_chords() {
-        use loom_core::harmony::keys::{ChordSize, group_keys};
+        use lineup_core::harmony::keys::{ChordSize, group_keys};
         let ctx = egui::Context::default();
         let c_major = Scale::new(PitchClass::C, ScaleKind::Major);
         let key = set_key(&ctx, c_major, PitchClass::C);
