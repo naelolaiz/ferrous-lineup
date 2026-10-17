@@ -376,7 +376,8 @@ fn rhythm_label(
                 .button("Play the whole song in this rhythm")
                 .on_hover_text(
                     "Every pattern with drums gets this rhythm, and the chords and bass \
-                     are played the way it goes, keeping the same chords",
+                     are played the way it goes, keeping the same chords. A rhythm in \
+                     another time signature puts the song in it, bar for bar.",
                 )
                 .clicked()
             {

@@ -11,10 +11,12 @@
 //! chords. That needs the chords, which a pattern does not store, so
 //! they are worked out from its notes first (see [`super::listen`]).
 
+use crate::TimeSignature;
 use crate::harmony::{Chord, ChordQuality, Scale};
 use crate::pattern::NoteEvent;
 use crate::pitch::PitchClass;
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
+use crate::remeter::remeter;
 
 use super::chart::accompany;
 use super::comping::{Bass, Comping};
@@ -382,6 +384,10 @@ pub struct RhythmChange {
     pub drums: usize,
     /// How many patterns had their chords and bass played again.
     pub harmony: usize,
+    /// The time signature the song was put into, bar for bar, to play in
+    /// the new rhythm (see [`remeter`](crate::remeter)), if it was in
+    /// another.
+    pub time: Option<TimeSignature>,
 }
 
 /// The drum notes of pattern `pattern` from step `from` for `steps`
@@ -425,21 +431,28 @@ pub(super) fn drums_in(
 /// If no pattern has drums, the drums go with the chords.
 ///
 /// A pattern whose notes all start on its first step, such as a final
-/// held chord with a crash, is an ending, and is left as it is. So are
-/// the time signature and the melody.
+/// held chord with a crash, is an ending, and is left as it is. So is the
+/// melody.
+///
+/// A rhythm in another time signature first puts the whole song in it,
+/// bar for bar ([`remeter`]): a waltz cut into 4/4 bars would lose its
+/// "one" every bar, so a 4/4 song played as a waltz becomes a song in
+/// 3/4, each bar's notes keeping their place in the bar.
 pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
     let (comping, bass) = feel(rhythm);
-    play_song(project, Some(rhythm), comping, bass)
+    play_song(project, Some(rhythm), rhythm.time, comping, bass)
 }
 
 /// Plays the whole song the way `style` goes: its rhythm on the drums,
 /// and its way of playing the chords and the bass. The song keeps its own
-/// chords, melody, key and time signature, as with [`use_rhythm`]. A
-/// style without a rhythm leaves the drums as they are.
+/// chords, melody and key, as with [`use_rhythm`], and takes the style's
+/// time signature the same way. A style without a rhythm leaves the drums
+/// as they are.
 pub fn use_style(project: &mut Project, style: &Style) -> RhythmChange {
     play_song(
         project,
         Rhythm::named(style.rhythm),
+        style.time,
         style.comping,
         style.bass,
     )
@@ -492,22 +505,26 @@ pub(super) fn is_ending(project: &Project, pattern: usize) -> bool {
     })
 }
 
-/// Gives every pattern of the song the drums of `rhythm` (if any) and
-/// plays its chords and bass with `comping` and `bass`: the work of
-/// [`use_rhythm`] and [`use_style`].
+/// Puts the song in `time`, then gives every pattern of the song the
+/// drums of `rhythm` (if any) and plays its chords and bass with
+/// `comping` and `bass`: the work of [`use_rhythm`] and [`use_style`].
 fn play_song(
     project: &mut Project,
     rhythm: Option<&Rhythm>,
+    time: TimeSignature,
     comping: Comping,
     bass: Bass,
 ) -> RhythmChange {
+    let mut change = RhythmChange::default();
+    if remeter(project, time) {
+        change.time = Some(time);
+    }
     let has_drums = |project: &Project, pattern: usize| {
         let length = project.pattern(pattern).map_or(0, |p| p.length());
         !drums_in(project, pattern, 0, length).is_empty()
     };
     let patterns = project.patterns().len();
     let any_drums = (0..patterns).any(|pattern| has_drums(project, pattern));
-    let mut change = RhythmChange::default();
     for pattern in 0..patterns {
         let Some(length) = project.pattern(pattern).map(|p| p.length()) else {
             continue;
@@ -801,7 +818,8 @@ mod tests {
             change,
             RhythmChange {
                 drums: 1,
-                harmony: 1
+                harmony: 1,
+                time: None,
             }
         );
         let snare = drum_channel(&mut project, Drum::Snare).unwrap();
@@ -901,6 +919,62 @@ mod tests {
                 "{} or {}",
                 fill.name,
                 other.name
+            );
+        }
+    }
+
+    /// A 4/4 song played with a waltz rhythm becomes a song in 3/4: as
+    /// many bars as before, each with the same melody notes in the same
+    /// order, and the waltz's own drums, whole, in every bar.
+    #[test]
+    fn a_waltz_puts_the_song_in_three_four() {
+        use crate::TimeSignature;
+        let song = crate::library::SONGS
+            .iter()
+            .find(|song| song.name == "Ode to Joy")
+            .unwrap();
+        let demo = super::super::demo::song_demo(song);
+        assert_eq!(demo.time_signature, TimeSignature::COMMON);
+        let waltz = Rhythm::named("Jazz waltz").unwrap();
+        let mut project = demo.clone();
+        let change = use_rhythm(&mut project, waltz);
+        let three_four = TimeSignature::new(3, 4);
+        assert_eq!(change.time, Some(three_four));
+        assert!(change.drums > 0 && change.harmony > 0, "{change:?}");
+        assert_eq!(project.time_signature, three_four);
+        assert_eq!(project.song_length() / 12, demo.song_length() / 16);
+        let melody = |project: &Project, bar: usize, steps: usize| {
+            let mut notes: Vec<(usize, crate::Note)> = Vec::new();
+            for clip in project.playlist().clips() {
+                let pattern = project.pattern(clip.pattern).unwrap();
+                let channel = (0..pattern.rows()).find(|&c| project.channels()[c].name == LEAD);
+                let Some(channel) = channel else { continue };
+                for note in pattern.notes(channel) {
+                    let at = clip.start + note.start;
+                    if (bar * steps..(bar + 1) * steps).contains(&at) {
+                        notes.push((note.start_tick() * 16 / steps, note.pitch));
+                    }
+                }
+            }
+            notes.sort();
+            notes
+        };
+        assert!(!melody(&demo, 0, 16).is_empty());
+        for bar in 0..demo.song_length() / 16 {
+            assert_eq!(
+                melody(&demo, bar, 16),
+                melody(&project, bar, 12),
+                "bar {bar}"
+            );
+        }
+        // Back to a 4/4 rhythm, the bars are sixteen steps again.
+        let change = use_rhythm(&mut project, Rhythm::named("Pop beat").unwrap());
+        assert_eq!(change.time, Some(TimeSignature::COMMON));
+        for bar in 0..demo.song_length() / 16 {
+            assert_eq!(
+                melody(&demo, bar, 16),
+                melody(&project, bar, 16),
+                "bar {bar}"
             );
         }
     }
