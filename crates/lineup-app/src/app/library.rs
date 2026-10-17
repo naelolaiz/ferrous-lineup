@@ -31,7 +31,7 @@ use lineup_core::library::{
     Song, Style, apply, micromodes, rows,
 };
 use lineup_core::remeter::remeter;
-use lineup_core::{Pattern, Project, Tempo, TimeSignature};
+use lineup_core::{BandStyle, Pattern, Project, Tempo, TimeSignature};
 
 use super::LineupApp;
 use super::files::Pending;
@@ -172,6 +172,11 @@ impl LineupApp {
     /// While the song plays, it changes the song instead, and the song
     /// carries on.
     pub(super) fn try_from_library(&mut self, action: LibraryAction) {
+        // With a band, a style or a rhythm is the band's new way of
+        // playing the chord sheet.
+        if self.project.band().is_some() && self.band_plays(action) {
+            return;
+        }
         // Taking over with a pattern of its own would stop the song, so
         // while the song plays, every click goes to the song.
         if self.playing && self.mode == PlayMode::Song {
@@ -748,6 +753,38 @@ impl LineupApp {
 }
 
 /// Whether `action` puts a fill in the song.
+impl LineupApp {
+    /// Has the band play the way a library style or rhythm goes. Returns
+    /// `false` for what a band does not play: fills, rows and micromode
+    /// styles.
+    fn band_plays(&mut self, action: LibraryAction) -> bool {
+        let style = match action {
+            _ if fill_picked(action) => return false,
+            LibraryAction::Style(style) => BandStyle::of_style(style),
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
+                BandStyle::named(rhythm.name)
+            }
+            LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => return false,
+        };
+        let Some(style) = style else {
+            return false;
+        };
+        let use_tempo = self.playlist.library_tempo();
+        self.edit("change the band", |project| {
+            let time = project.meter().first();
+            project.set_band_style(Some(style));
+            // As with a rhythm: a song put in another time signature
+            // keeps its pace, so only a song that stays in its time
+            // takes the style's tempo.
+            if use_tempo && project.meter().first() == time {
+                project.scale_tempo(Tempo::new(style.tempo));
+            }
+        });
+        self.notice = Some(format!("The band plays {}", style.name));
+        true
+    }
+}
+
 fn fill_picked(action: LibraryAction) -> bool {
     matches!(
         action,

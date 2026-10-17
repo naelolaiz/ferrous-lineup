@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::arrangement::{Arrangement, arrange};
+use crate::band::Band;
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::harmony::{ChordSymbol, Harmony, Scale, analyze};
@@ -212,9 +213,11 @@ pub struct Project {
     /// late, a different amount every time. 0, the default, plays every
     /// note exactly on its step. See [`MAX_LOOSE_TIMING`].
     pub loose_timing: u8,
-    channels: Vec<Channel>,
+    pub(crate) channels: Vec<Channel>,
     pub(crate) patterns: Vec<Pattern>,
     pub(crate) playlist: Playlist,
+    /// The band that plays the chord sheet, if the song has one.
+    pub(crate) band: Option<Band>,
 }
 
 impl Project {
@@ -228,6 +231,7 @@ impl Project {
             channels: Vec::new(),
             patterns: vec![Pattern::new("Pattern 1", 0, NEW_PATTERN_LENGTH)],
             playlist: Playlist::new(),
+            band: None,
         }
     }
 
@@ -345,7 +349,15 @@ impl Project {
     /// song in A minor becomes a C major march when the song goes to C
     /// minor. The chord sheet moves with the notes too (see
     /// [`HarmonyName::moved`]).
+    ///
+    /// The band's parts move too, and are then written again from the
+    /// moved sheet (see [`Project::follow_chord_sheet`]): moving with the
+    /// song is not an edit that freezes them.
     pub fn change_key(&mut self, scale: Scale) {
+        self.moving_the_band(|project| project.move_into_key(scale));
+    }
+
+    fn move_into_key(&mut self, scale: Scale) {
         let from = self.scale;
         if from == scale {
             return;
@@ -421,6 +433,15 @@ impl Project {
         for pattern in &mut self.patterns {
             pattern.remove_row(index);
         }
+        if let Some(band) = &mut self.band {
+            for channel in [&mut band.piano, &mut band.bass] {
+                *channel = match *channel {
+                    Some(own) if own == index => None,
+                    Some(own) if own > index => Some(own - 1),
+                    own => own,
+                };
+            }
+        }
         Some(self.channels.remove(index))
     }
 
@@ -458,6 +479,8 @@ impl Project {
     pub fn clone_pattern(&mut self, index: usize) -> Option<usize> {
         let mut copy = self.patterns.get(index)?.clone();
         copy.name = format!("{} copy", copy.name);
+        // A copy is yours, not the band's.
+        copy.player = None;
         self.push_pattern(copy)
     }
 
@@ -913,7 +936,8 @@ impl Project {
     /// Writes the harmonies of the steps from `start` to `end`, one or
     /// more bars of the chord sheet: the markers already there go, and
     /// `markers` take their place. Returns `false`, changing nothing, if
-    /// a marker is outside that stretch or the song.
+    /// a marker is outside that stretch or the song. With a band, the
+    /// band then plays at least to `end`.
     pub fn set_chords(&mut self, start: usize, end: usize, markers: &[ChordMarker]) -> bool {
         let end = end.min(MAX_SONG_STEPS);
         if markers
@@ -926,6 +950,11 @@ impl Project {
         chords.retain(|marker| !(start..end).contains(&marker.start));
         chords.extend_from_slice(markers);
         chord_sheet::tidy(chords, MAX_SONG_STEPS);
+        // The band plays every bar written, even one that only goes on
+        // with the chord before.
+        if let Some(band) = &mut self.band {
+            band.end = band.end.max(end);
+        }
         true
     }
 
@@ -1127,6 +1156,10 @@ impl Project {
     /// into it stays a single clip; one that starts inside it and lasts
     /// past its end is copied whole too, so it can overlap the copy.
     pub fn duplicate_section(&mut self, index: usize, copies: usize) -> bool {
+        self.moving_the_band(|project| project.copy_section(index, copies))
+    }
+
+    fn copy_section(&mut self, index: usize, copies: usize) -> bool {
         let Some(section) = self.playlist.sections.get(index).cloned() else {
             return false;
         };
@@ -1321,6 +1354,12 @@ impl Project {
         }
         for marker in &mut self.playlist.chord_markers {
             shift(&mut marker.start);
+        }
+        // A band that plays up to `at` plays on through the room made.
+        if let Some(band) = &mut self.band
+            && band.end >= at
+        {
+            band.end = (band.end + steps).min(MAX_SONG_STEPS);
         }
         if let Some(region) = &mut self.playlist.loop_region {
             shift(&mut region.start);

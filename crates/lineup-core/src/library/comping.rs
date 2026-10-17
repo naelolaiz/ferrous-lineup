@@ -7,6 +7,7 @@
 //! long it lasts, which notes of the chord it plays, and how hard.
 
 use crate::harmony::Chord;
+use crate::meter::Bar;
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
 
@@ -596,6 +597,8 @@ impl Bass {
 
 /// The beats of a walking bass line over `span` steps: the root first,
 /// a note leading into the next chord last, and chord notes between.
+/// A bar of three walks root, fifth, then the lead-in: the third would
+/// often be the lead-in itself (C to F: E, then E again).
 fn walk(span: usize) -> Vec<(usize, Tone)> {
     const MIDDLE: [Tone; 6] = [
         Tone::Third,
@@ -612,6 +615,8 @@ fn walk(span: usize) -> Vec<(usize, Tone)> {
                 Tone::Root
             } else if beat == beats - 1 {
                 Tone::Approach
+            } else if beats == 3 {
+                Tone::Fifth
             } else {
                 MIDDLE[(beat - 1) % MIDDLE.len()]
             };
@@ -689,6 +694,186 @@ fn nearest(from: Note, pitch_class: PitchClass) -> Note {
         Note::new(from.midi() + up)
     } else {
         Note::new(from.midi().saturating_sub(12 - up))
+    }
+}
+
+/// One harmony along a song, for [`Comping::play_in_bars`] and
+/// [`Bass::play_in_bars`]: from step `start` to step `end`, played with
+/// these notes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Played {
+    pub start: usize,
+    pub end: usize,
+    /// The notes the chords are played with, from low to high. Empty for
+    /// no chord: nothing plays.
+    pub voicing: Vec<Note>,
+    /// What the bass plays.
+    pub bass: BassPart,
+}
+
+/// What the bass plays under a harmony.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BassPart {
+    /// A chord: its line goes over the chord's notes from `note` (its
+    /// root, or a slash chord's bass), and may lead into `next`.
+    Chord {
+        chord: Chord,
+        note: Note,
+        next: PitchClass,
+    },
+    /// A group of notes with no root, such as a pitch-class set: the
+    /// bass keeps the rhythm of its line on this one note and its octave.
+    Pedal(Note),
+    /// Nothing.
+    Rest,
+}
+
+/// Where the hits of a pattern `period` steps long start in `bar`: at
+/// the bar's start if the pattern fits in a bar, so it starts again
+/// with every bar, as a player counts "one" again; a pattern longer than
+/// a bar (the bossa nova's two bars) goes on from the bar before, counted
+/// from bar 1.
+fn period_start(bar: &Bar, period: usize) -> usize {
+    if period <= bar.length {
+        return bar.start;
+    }
+    let bars = period.div_ceil(bar.length.max(1));
+    bar.start - (bar.number % bars) * bar.length
+}
+
+impl Comping {
+    /// Plays a song's harmonies this way, along its `bars`.
+    ///
+    /// [`Comping::play`] starts the pattern again at every chord, which
+    /// is right for a chart where chords change on the bar line. A song
+    /// whose chords change on beat 3, or on the "and" of 4, would then
+    /// shift the rhythm every time. Here the rhythm stays in step with
+    /// the bars, the way a band keeps its groove whatever the chords do,
+    /// and each hit plays the harmony sounding when it falls. A harmony
+    /// so short that no hit falls in it is struck once where it starts,
+    /// so no chord is skipped.
+    pub fn play_in_bars(self, bars: &[Bar], harmonies: &[Played]) -> Vec<NoteEvent> {
+        let mut notes = Vec::new();
+        if self == Comping::Held {
+            for harmony in harmonies {
+                notes.extend(self.play(
+                    &harmony.voicing,
+                    harmony.start,
+                    harmony.end - harmony.start,
+                ));
+            }
+            return notes;
+        }
+        let (period, hits) = self.pattern();
+        let mut struck = vec![false; harmonies.len()];
+        for bar in bars {
+            let from = period_start(bar, period);
+            for offset in (0..bar.end() - from).step_by(period) {
+                for hit in hits {
+                    let at = from + offset + hit.at;
+                    if at < bar.start || at >= bar.end() {
+                        continue;
+                    }
+                    let index = harmonies.partition_point(|harmony| harmony.start <= at);
+                    let Some(index) = index.checked_sub(1) else {
+                        continue;
+                    };
+                    let harmony = &harmonies[index];
+                    if at >= harmony.end {
+                        continue;
+                    }
+                    struck[index] = true;
+                    let length = hit.len.min(harmony.end - at).min(bar.end() - at);
+                    for pitch in pick(&harmony.voicing, hit.what) {
+                        notes.push(NoteEvent {
+                            velocity: hit.velocity,
+                            ..NoteEvent::new(pitch, at, length)
+                        });
+                    }
+                }
+            }
+        }
+        if let Some(first) = hits.first() {
+            for (harmony, _) in harmonies
+                .iter()
+                .zip(&struck)
+                .filter(|(_, struck)| !**struck)
+            {
+                let length = first.len.min(harmony.end - harmony.start);
+                for &pitch in &harmony.voicing {
+                    notes.push(NoteEvent {
+                        velocity: first.velocity,
+                        ..NoteEvent::new(pitch, harmony.start, length)
+                    });
+                }
+            }
+        }
+        notes.sort_by_key(|note| (note.start, note.pitch));
+        notes
+    }
+}
+
+impl Bass {
+    /// Plays the bass under a song's harmonies, along its `bars`.
+    ///
+    /// The line starts again where each harmony starts, so the root is
+    /// played on the change, and again at each bar line, or every other
+    /// one for a line two bars long (the waltz's root, then fifth), so
+    /// a chord held for many bars keeps the line in step with the bars.
+    pub fn play_in_bars(self, bars: &[Bar], harmonies: &[Played]) -> Vec<NoteEvent> {
+        let (period, _) = self.pattern();
+        // A held or walking bass has no pattern of its own to keep: it
+        // starts again with every bar, whatever the bar's length.
+        let period = match self {
+            Bass::None | Bass::Held | Bass::Walking => 0,
+            _ => period,
+        };
+        let mut notes = Vec::new();
+        for harmony in harmonies {
+            // Where the line starts again: the harmony's start, and the
+            // bar lines inside it where a period of the line begins.
+            let mut cuts = vec![harmony.start];
+            for bar in bars {
+                if bar.start > harmony.start
+                    && bar.start < harmony.end
+                    && period_start(bar, period.max(bar.length)) == bar.start
+                {
+                    cuts.push(bar.start);
+                }
+            }
+            cuts.push(harmony.end);
+            for (index, piece) in cuts.windows(2).enumerate() {
+                let (start, span) = (piece[0], piece[1] - piece[0]);
+                let last = index + 2 == cuts.len();
+                notes.extend(match harmony.bass {
+                    BassPart::Chord { chord, note, next } => {
+                        // Only the last piece leads into the next chord.
+                        let next = if last { next } else { note.pitch_class() };
+                        self.play_over(chord, note, next, start, span)
+                    }
+                    BassPart::Pedal(note) => self.pedal(note, start, span),
+                    BassPart::Rest => Vec::new(),
+                });
+            }
+        }
+        notes
+    }
+
+    /// The line's rhythm on one note: every tone of the line is `note`,
+    /// but its octave stays an octave. For a group of notes with no root,
+    /// whose third or fifth would not be in it.
+    fn pedal(self, note: Note, start: usize, span: usize) -> Vec<NoteEvent> {
+        let chord = Chord::new(note.pitch_class(), crate::harmony::ChordQuality::Major);
+        self.play_over(chord, note, note.pitch_class(), start, span)
+            .into_iter()
+            .map(|played| {
+                let octave = played.pitch.midi() == note.midi() + 12;
+                NoteEvent {
+                    pitch: if octave { played.pitch } else { note },
+                    ..played
+                }
+            })
+            .collect()
     }
 }
 
@@ -812,6 +997,10 @@ mod tests {
         let walk = pitches(Bass::Walking.play_over(c, e2, D, 0, 16));
         assert_eq!(walk.first(), Some(&40));
         assert_eq!(walk.last(), Some(&39), "Eb2 leads down into D2");
+        // In a bar of three: C2, G2, then E2 into F, not C2 E2 E2.
+        let c2 = Note::new(36);
+        let walk = pitches(Bass::Walking.play_over(c, c2, F, 0, 12));
+        assert_eq!(walk, [36, 43, 40]);
         // With the root in the bass, play_over is play.
         let g = Chord::new(G, Dominant7);
         for bass in [Bass::Walking, Bass::Boogie, Bass::Tumbao, Bass::Reggae] {

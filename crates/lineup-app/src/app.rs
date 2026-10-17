@@ -680,6 +680,53 @@ impl LineupApp {
                     ));
                 }
             }
+            SheetAction::SetBand(style) => {
+                let had = self.project.band().is_some();
+                self.edit("change the band", |project| project.set_band_style(style));
+                self.notice = match (style, self.project.band()) {
+                    (Some(style), Some(band)) if !had && band.muted() != &Default::default() => {
+                        // The channels muted, then the drum tracks.
+                        let muted: Vec<String> = [&band.muted().channels, &band.muted().tracks]
+                            .into_iter()
+                            .flatten()
+                            .cloned()
+                            .collect();
+                        let names = match muted.split_last() {
+                            Some((last, [])) => last.clone(),
+                            Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
+                            None => String::new(),
+                        };
+                        Some(format!(
+                            "The band plays {}; the song's own {names} {} muted",
+                            style.name,
+                            if muted.len() == 1 { "is" } else { "are" }
+                        ))
+                    }
+                    (Some(style), _) => Some(format!("The band plays {}", style.name)),
+                    (None, _) => Some("No band".to_string()),
+                };
+                if style.is_some() {
+                    self.set_mode(PlayMode::Song);
+                }
+            }
+            SheetAction::PlayAgain(player) => {
+                self.edit("play the part again", |project| project.play_again(player));
+            }
+            SheetAction::WriteProgression { style, from } => {
+                let bars = self.edit("write a progression", |project| {
+                    project.write_progression(style, from)
+                });
+                self.notice = Some(format!("Wrote {} from bar {}", style.name, from + 1));
+                if bars == 0 {
+                    self.message = Some("There is no room for it on the sheet.".to_string());
+                } else {
+                    // The next progression goes on after this one.
+                    self.chord_sheet.select(from + bars);
+                }
+            }
+            SheetAction::EndHere(bar) => {
+                self.edit("end the song", |project| project.end_song_at(bar));
+            }
             SheetAction::Seek(step) => self.apply_playlist(PlaylistAction::Seek(step)),
             SheetAction::NoteOn(notes) => self.apply_harmony(HarmonyAction::NoteOn(notes)),
             SheetAction::NoteOff(notes) => self.apply_harmony(HarmonyAction::NoteOff(notes)),

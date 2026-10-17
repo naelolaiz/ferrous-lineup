@@ -9,6 +9,7 @@
 use std::path::{Path, PathBuf};
 
 use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
+use lineup_audio::PlayMode;
 use lineup_core::{Project, file};
 
 use super::LineupApp;
@@ -17,6 +18,7 @@ use super::library::Demo;
 use crate::channel_rack::is_project_file;
 use crate::library_browser::Tried;
 use crate::piano_roll::PianoRoll;
+use crate::theme;
 
 const NEW: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::N);
 const OPEN: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::O);
@@ -29,7 +31,10 @@ const QUIT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Q)
 /// user to say what to do with unsaved changes.
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum Pending {
+    /// A chord sheet with a band.
     New,
+    /// An empty pattern and a drum kit.
+    NewBeat,
     Open,
     OpenPath(PathBuf),
     Demo(Demo),
@@ -153,8 +158,14 @@ impl LineupApp {
             egui::Button::new(text).shortcut_text(ctx.format_shortcut(&shortcut))
         };
         ui.menu_button("File", |ui| {
-            if ui.add(item("New", NEW)).clicked() {
+            let new = ui.add(item("New", NEW));
+            if theme::hint(new, "An empty chord sheet with a band to play it").clicked() {
                 self.request(&ctx, Pending::New);
+                ui.close();
+            }
+            let beat = ui.button("New beat");
+            if theme::hint(beat, "An empty pattern and a drum kit").clicked() {
+                self.request(&ctx, Pending::NewBeat);
                 ui.close();
             }
             if ui.add(item("Open…", OPEN)).clicked() {
@@ -264,7 +275,12 @@ impl LineupApp {
 
     fn perform(&mut self, ctx: &egui::Context, action: Pending) {
         match action {
-            Pending::New => self.replace_project(Project::template(), None),
+            Pending::New => {
+                self.replace_project(Project::with_band(), None);
+                self.chord_sheet.open = true;
+                self.set_mode(PlayMode::Song);
+            }
+            Pending::NewBeat => self.replace_project(Project::template(), None),
             Pending::Open => {
                 // This waits until the user picks a file or cancels. The
                 // window does not redraw meanwhile, but the music goes on:
