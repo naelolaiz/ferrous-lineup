@@ -111,6 +111,23 @@ of the whole song at once, keeping the melody. **File > Demos** opens
 blues, tango, flamenco and more. It also plays every style as a short
 song.
 
+**F5**, or **📝 Chords** in the toolbar, opens the **chord sheet**: the
+song's harmony bar by bar, four bars to a line and each section under
+its name, as a lead sheet writes it. Click a bar and type its harmony:
+chords (`Am7 D7`, `G7/B`, `F#m7b5`), Roman numerals in the key
+(`ii7 V7`), pitch-class sets (`3-11 T2`, `{0,1,4}`), micromodes
+(`Menor 3`), twelve-tone row forms (`P0`, `RI7`) or `N.C.`; a `/` holds
+the harmony before it one more beat (`C / / G7`). Under each chord is
+its numeral in the key, with the figures of an inversion (V⁶₅), and
+under each set its notes; hold the mouse down on a harmony to hear it.
+**Write the chords the song plays** fills an empty sheet from what the
+song plays, with the bass player's note after the slash, and in a set or
+a row with the sets or micromodes heard. While the song plays, the bar
+playing is framed in white. The sheet is saved with the project and
+follows key changes, re-metering and copied sections. It is an extra
+window: the playlist stays as it is. For now the sheet is for reading
+and writing; the band does not play it yet.
+
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's
@@ -180,6 +197,8 @@ They are not signed yet, so macOS and Windows warn before the first start.
 | A twelve-tone row and its matrix: P, I, R and RI on every note. | The pitch-class sets by Forte number, to draw with or use as a scale. |
 | ![The Micromodes window: the three families of Kröpfl's micromodes, Menor 3 drawn on a clock with its prime form do - do# - mi, and the micromodes in the selected C major chords](screenshots/micromodes.png) | ![The Sets window on 7-35, the diatonic scale, listing the micromodes inside its 35 groups of three](screenshots/micromodes-in-sets.png) |
 | Kröpfl's twelve micromodes, and the ones in the notes you select. | Every set lists its micromodes, and each one links back. |
+| ![The chord sheet over the playlist: Rhythm changes in C, two choruses of eight bars, each chord with its Roman numeral, and the hint bar describing A7 as V7/ii](screenshots/chord-sheet.png) | ![The chord sheet of a micromode demo in the set 3-3: every bar holds Menor 3 moved to other notes, with the notes under each name](screenshots/chord-sheet-micromodes.png) |
+| The chord sheet: the song's chords bar by bar, with their numerals. | A bar can hold a set, a micromode or a row form instead of a chord. |
 
 ## Project layout
 

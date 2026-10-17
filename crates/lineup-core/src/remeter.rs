@@ -22,8 +22,9 @@
 //! three beats stay even.
 //!
 //! Everything that is placed in the song moves with its bar: clips,
-//! sections, the loop, and the tempo and key markers. The time markers
-//! go, since the whole song is now in one time signature.
+//! sections, the loop, the tempo and key markers, and the chords of the
+//! chord sheet, which land on the nearest beat of the new bar. The time
+//! markers go, since the whole song is now in one time signature.
 //!
 //! Each bar also keeps how long it lasts. The tempo counts quarter notes,
 //! so a 3/4 bar at the same tempo would be over in three quarters of the
@@ -31,8 +32,9 @@
 //! in the same proportion: 4/4 at 112 becomes 3/4 at 84, and the song
 //! keeps its pace. Only where the beats fall changes.
 
+use crate::chord_sheet::{snap_to_beat, tidy};
 use crate::pattern::{MAX_STEPS, TICKS_PER_STEP};
-use crate::{Clip, Meter, NoteEvent, Project, Tempo, TempoMarker, TimeSignature};
+use crate::{Clip, MAX_SONG_STEPS, Meter, NoteEvent, Project, Tempo, TempoMarker, TimeSignature};
 
 /// Where a moment of a song goes when its bars change length: bar `n` of
 /// the old meter becomes bar `n` of the new time signature.
@@ -247,6 +249,11 @@ pub fn remeter(project: &mut Project, time: TimeSignature) -> bool {
     for marker in &mut playlist_mut.key_markers {
         marker.start = song.step(marker.start);
     }
+    // A chord changes on a beat, so it goes to the nearest one.
+    for marker in &mut playlist_mut.chord_markers {
+        marker.start = snap_to_beat(song.step(marker.start), time);
+    }
+    tidy(&mut playlist_mut.chord_markers, MAX_SONG_STEPS);
     // Two markers squeezed onto one step: the later one wins.
     playlist_mut.tempo_markers.dedup_by(|later, earlier| {
         later.start == earlier.start && {
@@ -361,6 +368,28 @@ mod tests {
         assert_eq!((tempo.start, tempo.glide), (48, 12));
         assert_eq!(project.playlist().key_markers()[0].start, 36);
         assert_eq!(project.song_length(), 24 * 3);
+    }
+
+    #[test]
+    fn chords_land_on_the_nearest_beat() {
+        let mut project = quarter_notes(2);
+        let name = |text| crate::HarmonyName::parse(text).unwrap();
+        let chords = [
+            crate::ChordMarker::new(0, name("C")),
+            crate::ChordMarker::new(8, name("G")),
+            crate::ChordMarker::new(28, name("F")),
+        ];
+        assert!(project.set_chords(0, 32, &chords));
+        assert!(remeter(&mut project, THREE_FOUR));
+        let starts: Vec<usize> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| marker.start)
+            .collect();
+        // Half a bar of 4/4 is a beat and a half of 3/4: G goes on to
+        // the third beat, and F, on the last beat, to the third too.
+        assert_eq!(starts, [0, 8, 20]);
     }
 
     #[test]

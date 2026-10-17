@@ -6,8 +6,9 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::arrangement::{Arrangement, arrange};
-use crate::harmony::Scale;
+use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
+use crate::harmony::{ChordSymbol, Harmony, Scale, analyze};
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
 use crate::meter::{Meter, TimeMarker, TimeSignature};
 use crate::pattern::{NoteEvent, Pattern};
@@ -342,7 +343,8 @@ impl Project {
     /// [`moved_key`]), and a pattern played where the song is in another
     /// key moves from that key to where it went: the A major march of a
     /// song in A minor becomes a C major march when the song goes to C
-    /// minor.
+    /// minor. The chord sheet moves with the notes too (see
+    /// [`HarmonyName::moved`]).
     pub fn change_key(&mut self, scale: Scale) {
         let from = self.scale;
         if from == scale {
@@ -351,11 +353,22 @@ impl Project {
         let before: Vec<Scale> = (0..self.patterns.len())
             .map(|pattern| self.pattern_key(pattern))
             .collect();
+        let chord_keys: Vec<Scale> = self
+            .playlist
+            .chord_markers
+            .iter()
+            .map(|marker| self.key_at(marker.start))
+            .collect();
         self.scale = scale;
         for marker in &mut self.playlist.key_markers {
             marker.scale = moved_key(marker.scale, from, scale);
         }
         self.playlist.key_markers = self.key_map().tidy().markers().to_vec();
+        // The chord sheet moves the way the notes do.
+        let keys = self.key_map();
+        for (marker, old) in self.playlist.chord_markers.iter_mut().zip(chord_keys) {
+            marker.harmony = marker.harmony.moved(old, keys.key_at(marker.start));
+        }
         let after: Vec<Scale> = (0..self.patterns.len())
             .map(|pattern| self.pattern_key(pattern))
             .collect();
@@ -887,6 +900,93 @@ impl Project {
         Some(markers.remove(index))
     }
 
+    // ----- The chord sheet -----
+
+    /// The harmony written for `step` of the song: the last chord marker
+    /// on or before it, or `None` before the first.
+    pub fn chord_at(&self, step: usize) -> Option<ChordMarker> {
+        let markers = &self.playlist.chord_markers;
+        let after = markers.partition_point(|marker| marker.start <= step);
+        after.checked_sub(1).map(|index| markers[index])
+    }
+
+    /// Writes the harmonies of the steps from `start` to `end`, one or
+    /// more bars of the chord sheet: the markers already there go, and
+    /// `markers` take their place. Returns `false`, changing nothing, if
+    /// a marker is outside that stretch or the song.
+    pub fn set_chords(&mut self, start: usize, end: usize, markers: &[ChordMarker]) -> bool {
+        let end = end.min(MAX_SONG_STEPS);
+        if markers
+            .iter()
+            .any(|marker| !(start..end).contains(&marker.start))
+        {
+            return false;
+        }
+        let chords = &mut self.playlist.chord_markers;
+        chords.retain(|marker| !(start..end).contains(&marker.start));
+        chords.extend_from_slice(markers);
+        chord_sheet::tidy(chords, MAX_SONG_STEPS);
+        true
+    }
+
+    /// Writes the chords the song plays onto the chord sheet, beat by
+    /// beat, as the harmony keys hear them (see
+    /// [`Project::chord_notes_in_song`]): a marker wherever the chord
+    /// changes, and where a section starts, as a chart writes the chord
+    /// again at the top of each part. A beat with no chord, or with notes
+    /// that make no chord the app knows, goes on with the chord before.
+    /// Chords are spelled in the key of the song where they play.
+    /// Returns how many were written; the sheet is replaced only if
+    /// there is at least one.
+    ///
+    /// In a key that is a set or a twelve-tone row, where chords have no
+    /// function, the notes heard together are written as a set, or as a
+    /// micromode when the key is one of Kröpfl's trichords (see
+    /// [`chord_sheet::heard_group`]).
+    ///
+    /// The note after the slash is the lowest note of the whole band,
+    /// the bass line included, as a lead sheet writes it: piano chords
+    /// voiced C E A over a bass playing A are Am, not Am/C. A lowest
+    /// note outside the chord, such as a passing note of the bass, is
+    /// left out, and the chord is written with its root.
+    pub fn write_heard_chords(&mut self) -> usize {
+        let meter = self.meter();
+        let keys = self.key_map();
+        let end = self.song_length();
+        let mut markers: Vec<ChordMarker> = Vec::new();
+        let beats = meter
+            .bars()
+            .take_while(|bar| bar.start < end)
+            .flat_map(|bar| bar.beat_starts().collect::<Vec<_>>());
+        for step in beats {
+            let key = keys.key_at(step);
+            let parts = self.parts_in_song(step);
+            let harmony = if chord_sheet::names_groups(key) {
+                let heard = chord_notes(parts)
+                    .iter()
+                    .map(|note| note.pitch_class())
+                    .collect();
+                match chord_sheet::heard_group(heard, key) {
+                    Some(group) => group,
+                    None => continue,
+                }
+            } else {
+                match heard_chord(parts, key) {
+                    Some(symbol) => HarmonyName::Chord(symbol),
+                    None => continue,
+                }
+            };
+            let section_starts = self.playlist.sections.iter().any(|s| s.start == step);
+            if section_starts || markers.last().is_none_or(|last| last.harmony != harmony) {
+                markers.push(ChordMarker::new(step, harmony));
+            }
+        }
+        if !markers.is_empty() {
+            self.playlist.chord_markers = markers.clone();
+        }
+        markers.len()
+    }
+
     // ----- Tempo changes -----
 
     /// The tempo along the playlist's timeline: the project's own from
@@ -1056,6 +1156,14 @@ impl Project {
             .filter(|marker| marker.start > section.start && marker.start < section.end())
             .copied()
             .collect();
+        let opening_chord = self.chord_at(section.start);
+        let inside_chords: Vec<ChordMarker> = self
+            .playlist
+            .chord_markers
+            .iter()
+            .filter(|marker| marker.start > section.start && marker.start < section.end())
+            .copied()
+            .collect();
         if copies == 0 || !self.make_room(section.end(), room) {
             return false;
         }
@@ -1099,6 +1207,17 @@ impl Project {
             for marker in &inside_keys {
                 self.set_key_marker(KeyMarker::new(marker.start + shift, marker.scale));
             }
+            // And has the same chords.
+            let copy_start = section.start + shift;
+            let chords: Vec<ChordMarker> = opening_chord
+                .map(|marker| ChordMarker::new(copy_start, marker.harmony))
+                .into_iter()
+                .chain(inside_chords.iter().map(|marker| ChordMarker {
+                    start: marker.start + shift,
+                    ..*marker
+                }))
+                .collect();
+            self.set_chords(copy_start, copy_start + section.length, &chords);
         }
         self.playlist.time_markers = self.meter().tidy().markers().to_vec();
         self.playlist.tempo_markers = self.tempo_map().tidy().markers().to_vec();
@@ -1172,6 +1291,10 @@ impl Project {
             || playlist
                 .key_markers
                 .iter()
+                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+            || playlist
+                .chord_markers
+                .iter()
                 .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS);
         if too_late {
             return false;
@@ -1194,6 +1317,9 @@ impl Project {
             shift(&mut marker.start);
         }
         for marker in &mut self.playlist.key_markers {
+            shift(&mut marker.start);
+        }
+        for marker in &mut self.playlist.chord_markers {
             shift(&mut marker.start);
         }
         if let Some(region) = &mut self.playlist.loop_region {
@@ -1230,13 +1356,19 @@ impl Project {
     /// line plays one note at a time, and its passing notes would hide
     /// the chord. If no channel holds two notes, all the notes count.
     pub fn chord_notes_in_song(&self, song_step: usize) -> Vec<Note> {
+        chord_notes(self.parts_in_song(song_step))
+    }
+
+    /// The notes held during timeline step `song_step` of the song by
+    /// each channel that plays notes, one list per channel and clip.
+    fn parts_in_song(&self, song_step: usize) -> Vec<Vec<Note>> {
         let mut parts = Vec::new();
         for clip in self.playlist.audible_clips() {
             if let Some(step) = self.step_in_clip(&clip, song_step) {
                 self.collect_parts(clip.pattern, step, &mut parts);
             }
         }
-        chord_notes(parts)
+        parts
     }
 
     /// Where the key changes along the playlist, worked out from the
@@ -1300,10 +1432,12 @@ impl Project {
             return;
         };
         for (index, channel) in self.channels.iter().enumerate() {
-            let melodic = matches!(
-                channel.kind,
-                ChannelKind::Synth | ChannelKind::MidiOut { .. }
-            );
+            // MIDI channel 10 plays drums, not notes.
+            let melodic = match channel.kind {
+                ChannelKind::Synth => true,
+                ChannelKind::MidiOut { channel } => channel != DRUM_CHANNEL,
+                ChannelKind::Sampler(_) => false,
+            };
             if melodic && !channel.muted {
                 parts.push(pattern.sounding_at(index, step).collect());
             }
@@ -1330,6 +1464,29 @@ impl Project {
             .contains(&step)
             .then(|| (step - clip.start) % pattern_length)
     }
+}
+
+/// The chord heard in `parts`, the notes each channel holds at one
+/// moment, spelled in `key`, with the band's lowest note after the slash
+/// when it is one of the chord's (see [`Project::write_heard_chords`]).
+fn heard_chord(parts: Vec<Vec<Note>>, key: Scale) -> Option<ChordSymbol> {
+    let lowest = parts.iter().flatten().min_by_key(|note| note.midi());
+    let lowest = lowest.map(|note| note.pitch_class());
+    let Harmony::Chord { chord, .. } = analyze(chord_notes(parts)) else {
+        return None;
+    };
+    let bass = lowest
+        .filter(|&low| chord.pitch_set().contains(low))
+        .unwrap_or(chord.root);
+    let root = key.spell_root(chord);
+    let symbol = ChordSymbol::new(root, chord.quality);
+    if bass == chord.root {
+        return Some(symbol);
+    }
+    let name = chord
+        .spell_note(root, bass)
+        .unwrap_or_else(|| key.spell(bass));
+    Some(symbol.over(name))
 }
 
 /// The notes of the parts that hold two notes or more, or of all the
@@ -1908,6 +2065,126 @@ mod tests {
             assert!(project.remove_track(0));
         }
         assert!(!project.remove_track(0));
+    }
+
+    fn harmony(text: &str) -> HarmonyName {
+        HarmonyName::parse(text).unwrap()
+    }
+
+    #[test]
+    fn the_chord_sheet_names_what_the_song_plays() {
+        let mut project = Project::demo();
+        let written = project.write_heard_chords();
+        let names: Vec<String> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .take(5)
+            .map(|marker| format!("{}@{}", marker.harmony, marker.start))
+            .collect();
+        assert_eq!(names, ["C@0", "Am@8", "F@16", "G@24", "C@32"]);
+        assert_eq!(written, project.playlist().chord_markers().len());
+        assert_eq!(project.chord_at(10).map(|m| m.harmony), Some(harmony("Am")));
+        assert_eq!(Project::template().chord_at(0), None);
+        // A song with no chords leaves the sheet as it was.
+        let mut empty = Project::template();
+        assert_eq!(empty.write_heard_chords(), 0);
+    }
+
+    #[test]
+    fn the_chord_sheet_takes_the_bass_from_the_bass_line() {
+        // The piano plays G B D as B D G and Am as C E A, over a bass
+        // line on the roots: the sheet says G and Am, not G/B and Am/C.
+        let style = crate::library::STYLES
+            .iter()
+            .find(|style| style.name == "Four chords")
+            .unwrap();
+        let mut project = crate::library::demo::style_demo(style);
+        project.write_heard_chords();
+        let names: Vec<String> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .take(4)
+            .map(|marker| marker.harmony.to_string())
+            .collect();
+        assert_eq!(names, ["C", "G", "Am", "F"]);
+    }
+
+    #[test]
+    fn a_song_in_a_set_is_written_in_sets_and_micromodes() {
+        // The Menor 3 demo is in the set 3-3 and plays the micromode
+        // Menor 3 moved about: C C# E, then C D# E (its inversion on 4).
+        let style = &crate::library::MICROMODE_STYLES[0];
+        let mut project = crate::library::demo::micromode_demo(style);
+        project.write_heard_chords();
+        let names: Vec<String> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .take(2)
+            .map(|marker| marker.harmony.to_string())
+            .collect();
+        assert_eq!(names, ["Menor 3", "Menor 3 T4I"]);
+        // In a twelve-tone row, what sounds together is a set.
+        let mut project = crate::library::demo::row_demo(&crate::library::ROW_STYLES[1]);
+        project.write_heard_chords();
+        let first = project.playlist().chord_markers()[0].harmony;
+        assert!(matches!(first, HarmonyName::Set(_)), "{first}");
+    }
+
+    #[test]
+    fn a_section_starts_with_its_chord_written_again() {
+        // Rhythm changes ends its eight bars on C and starts them again
+        // on C: the second chorus still opens with a C of its own.
+        let style = crate::library::STYLES
+            .iter()
+            .find(|style| style.name == "Rhythm changes")
+            .unwrap();
+        let mut project = crate::library::demo::style_demo(style);
+        project.write_heard_chords();
+        assert_eq!(project.chord_at(128).unwrap().start, 112);
+        project
+            .add_section(Section::new("Chorus 2", 128, 128))
+            .unwrap();
+        project.write_heard_chords();
+        let marker = project.chord_at(128).unwrap();
+        assert_eq!((marker.start, marker.harmony), (128, harmony("C")));
+    }
+
+    #[test]
+    fn a_bar_of_the_chord_sheet_is_written_whole() {
+        let mut project = Project::template();
+        let (c, g) = (harmony("C"), harmony("G7"));
+        assert!(project.set_chords(0, 16, &[ChordMarker::new(0, c), ChordMarker::new(8, g)]));
+        assert!(project.set_chords(16, 32, &[ChordMarker::new(16, c)]));
+        // Writing bar 1 again leaves bar 2 alone.
+        assert!(project.set_chords(0, 16, &[ChordMarker::new(0, g)]));
+        assert_eq!(
+            project.playlist().chord_markers(),
+            [ChordMarker::new(0, g), ChordMarker::new(16, c)]
+        );
+        // A marker outside the bar, or the song, changes nothing.
+        assert!(!project.set_chords(0, 16, &[ChordMarker::new(16, c)]));
+        let late = MAX_SONG_STEPS;
+        assert!(!project.set_chords(late, late + 16, &[ChordMarker::new(late, c)]));
+        assert_eq!(project.chord_at(15), Some(ChordMarker::new(0, g)));
+    }
+
+    #[test]
+    fn the_chord_sheet_follows_the_key_and_the_sections() {
+        use crate::{PitchClass, ScaleKind};
+        let mut project = Project::demo();
+        project.write_heard_chords();
+        project.change_key(Scale::new(PitchClass::D, ScaleKind::Major));
+        let at = |project: &Project, step| project.chord_at(step).unwrap().harmony.to_string();
+        assert_eq!(at(&project, 8), "Bm");
+        let chorus = project.add_section(Section::new("Chorus", 32, 32)).unwrap();
+        assert!(project.duplicate_section(chorus, 1));
+        // The copy has the chorus's chords, and the rest moved on.
+        assert_eq!(at(&project, 64), "D");
+        assert_eq!(at(&project, 64 + 24), "A");
+        assert_eq!(at(&project, 96 + 8), "Bm");
     }
 
     #[test]

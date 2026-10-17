@@ -33,6 +33,7 @@ use crate::piano_roll::PianoRoll;
 
 /// The keys that show and hide the windows and panels, as in other
 /// pattern-based studios.
+pub(super) const CHORD_SHEET: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F5);
 pub(super) const RACK: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F6);
 pub(super) const PIANO_ROLL: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F7);
 pub(super) const HARMONY: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F8);
@@ -272,6 +273,7 @@ impl LineupApp {
                     *open = !*open;
                 }
             };
+            window(&mut self.chord_sheet.open, "Chord sheet", CHORD_SHEET, ui);
             window(&mut self.rack_open, "Channel rack", RACK, ui);
             window(&mut self.piano_roll.open, "Piano roll", PIANO_ROLL, ui);
             window(&mut self.harmony_keys.open, "Harmony keys", HARMONY, ui);
@@ -354,7 +356,7 @@ impl LineupApp {
         Area::Rack.zoom(ctx, Axis::Horizontal)
     }
 
-    /// F6, F7, F8 and Alt+F8 show or hide the windows and panels.
+    /// F5, F6, F7, F8 and Alt+F8 show or hide the windows and panels.
     pub(super) fn view_shortcuts(&mut self, ctx: &egui::Context) {
         let pressed = |shortcut| ctx.input_mut(|input| input.consume_shortcut(&shortcut));
         // Alt+F8 is checked first, so it never counts as F8 as well.
@@ -362,6 +364,9 @@ impl LineupApp {
             self.playlist.browser_open = !self.playlist.browser_open;
         } else if pressed(HARMONY) {
             self.harmony_keys.open = !self.harmony_keys.open;
+        }
+        if pressed(CHORD_SHEET) {
+            self.chord_sheet.open = !self.chord_sheet.open;
         }
         if pressed(RACK) {
             self.rack_open = !self.rack_open;

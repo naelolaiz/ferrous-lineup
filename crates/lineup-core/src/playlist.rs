@@ -17,13 +17,16 @@
 //!   can be played more than once, so a chorus written once is heard twice;
 //! - a [`LoopRegion`] makes song mode loop one part of the song while you
 //!   work on it;
-//! - [`TimeMarker`]s change the time signature partway through the song.
+//! - [`TimeMarker`]s change the time signature partway through the song;
+//! - [`ChordMarker`]s write the song's harmony, bar by bar, as the chord
+//!   sheet shows it.
 //!
 //! [`crate::arrangement`] turns all of this into the list of things the
 //! audio thread plays.
 
 use serde::{Deserialize, Serialize};
 
+use crate::chord_sheet::ChordMarker;
 use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
 use crate::tempo::TempoMarker;
@@ -210,6 +213,9 @@ pub struct Playlist {
     pub(crate) tempo_markers: Vec<TempoMarker>,
     /// Sorted by start, all after step 0, no two on the same step.
     pub(crate) key_markers: Vec<KeyMarker>,
+    /// Sorted by start, no two on the same step. Unlike the other
+    /// markers, one can be on step 0: the song's first chord.
+    pub(crate) chord_markers: Vec<ChordMarker>,
 }
 
 impl Playlist {
@@ -223,6 +229,7 @@ impl Playlist {
             time_markers: Vec::new(),
             tempo_markers: Vec::new(),
             key_markers: Vec::new(),
+            chord_markers: Vec::new(),
         }
     }
 
@@ -268,6 +275,12 @@ impl Playlist {
     /// song starts in the project's own key.
     pub fn key_markers(&self) -> &[KeyMarker] {
         &self.key_markers
+    }
+
+    /// The harmonies of the chord sheet, in order. Each lasts until the
+    /// next; before the first, no harmony is written.
+    pub fn chord_markers(&self) -> &[ChordMarker] {
+        &self.chord_markers
     }
 
     /// A name for a new section: the first of [`SECTION_NAMES`] not used
