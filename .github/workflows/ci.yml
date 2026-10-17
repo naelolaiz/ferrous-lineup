@@ -19,16 +19,16 @@ jobs:
         include:
           - name: Linux
             os: ubuntu-latest
-            artifact: ferrous-loom-linux
-            binary: target/release/ferrous-loom
+            artifact: ferrous-lineup-linux
+            binary: target/release/ferrous-lineup
           - name: macOS
             os: macos-latest
-            artifact: ferrous-loom-macos
-            binary: target/release/ferrous-loom
+            artifact: ferrous-lineup-macos
+            binary: target/release/ferrous-lineup
           - name: Windows
             os: windows-latest
-            artifact: ferrous-loom-windows
-            binary: target/release/ferrous-loom.exe
+            artifact: ferrous-lineup-windows
+            binary: target/release/ferrous-lineup.exe
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5

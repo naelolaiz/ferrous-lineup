@@ -42,16 +42,16 @@ use crate::project::{
 use crate::tempo::TempoMarker;
 use crate::{Scale, Tempo, TimeSignature};
 
-/// The file name extension of Ferrous Loom projects, without the dot.
+/// The file name extension of Ferrous Lineup projects, without the dot.
 pub const EXTENSION: &str = "loom";
 
-/// The version of the file layout. A later version of Ferrous Loom that
+/// The version of the file layout. A later version of Ferrous Lineup that
 /// changes the layout will raise this, so it knows how to read old files
 /// and so this version can refuse files it would misread.
 ///
 /// Format 2 (step 7) added channels that play an external MIDI synth.
 /// A project without one is still written as format 1, which is exactly
-/// the same text, so older versions of Ferrous Loom can open it. See
+/// the same text, so older versions of Ferrous Lineup can open it. See
 /// [`format_for`].
 ///
 /// Format 3 (step 8) added nine built-in drums, patterns longer than
@@ -97,7 +97,7 @@ pub const FORMAT_VERSION: u32 = 11;
 /// The oldest format that can hold `project`.
 ///
 /// Writing the lowest version that works, instead of always the newest,
-/// means a file only becomes unreadable to an older Ferrous Loom when it
+/// means a file only becomes unreadable to an older Ferrous Lineup when it
 /// really uses something that version does not know.
 pub fn format_for(project: &Project) -> u32 {
     let uses_new_drums = project.channels().iter().any(|channel| {
@@ -238,7 +238,7 @@ pub enum FileError {
     Parse(ron::error::SpannedError),
     /// The project could not be turned into text (should never happen).
     Write(ron::Error),
-    /// The file was saved by a newer version of Ferrous Loom.
+    /// The file was saved by a newer version of Ferrous Lineup.
     NewerFormat(u32),
     /// The file is shaped right, but what it says does not make sense,
     /// such as a clip that plays a pattern that does not exist.
@@ -253,7 +253,7 @@ impl fmt::Display for FileError {
             FileError::Write(err) => write!(f, "could not write the project: {err}"),
             FileError::NewerFormat(version) => write!(
                 f,
-                "this file uses format {version}, made by a newer version of Ferrous Loom \
+                "this file uses format {version}, made by a newer version of Ferrous Lineup \
                  (this one reads up to format {FORMAT_VERSION})"
             ),
             FileError::Invalid(reason) => write!(f, "the project file is damaged: {reason}"),

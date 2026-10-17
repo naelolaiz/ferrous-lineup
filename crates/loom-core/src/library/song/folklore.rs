@@ -221,7 +221,7 @@ pub(super) const DOS_PALOMITAS: Song = Song {
 
 pub(super) const ZAMBA_DEL_TELAR: Song = Song {
     name: "Zamba del telar",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Zamba",
     genre: Genre::Folklore,
     tonic: A,
@@ -270,7 +270,7 @@ pub(super) const ZAMBA_DEL_TELAR: Song = Song {
 
 pub(super) const CHACARERA_DEL_PATIO: Song = Song {
     name: "Chacarera del patio",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Chacarera",
     genre: Genre::Folklore,
     tonic: E,
@@ -318,7 +318,7 @@ pub(super) const CHACARERA_DEL_PATIO: Song = Song {
 
 pub(super) const GATO_DEL_ARROYO: Song = Song {
     name: "Gato del arroyo",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Gato",
     genre: Genre::Folklore,
     tonic: G,
@@ -352,7 +352,7 @@ pub(super) const GATO_DEL_ARROYO: Song = Song {
 
 pub(super) const CHAMAME_DEL_ESTERO: Song = Song {
     name: "Chamamé del estero",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Chamamé",
     genre: Genre::Folklore,
     tonic: A,
@@ -391,7 +391,7 @@ pub(super) const CHAMAME_DEL_ESTERO: Song = Song {
 
 pub(super) const CUECA_DE_LA_CALETA: Song = Song {
     name: "Cueca de la caleta",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Cueca",
     genre: Genre::Folklore,
     tonic: D,
@@ -421,7 +421,7 @@ pub(super) const CUECA_DE_LA_CALETA: Song = Song {
 
 pub(super) const MARINERA_DEL_CALLEJON: Song = Song {
     name: "Marinera del callejón",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Marinera",
     genre: Genre::Folklore,
     tonic: D,
@@ -456,7 +456,7 @@ pub(super) const MARINERA_DEL_CALLEJON: Song = Song {
 
 pub(super) const BAMBUCO_DEL_PARAMO: Song = Song {
     name: "Bambuco del páramo",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Bambuco",
     genre: Genre::Folklore,
     tonic: E,
@@ -483,7 +483,7 @@ pub(super) const BAMBUCO_DEL_PARAMO: Song = Song {
 
 pub(super) const MALAMBO_DEL_FOGON: Song = Song {
     name: "Malambo del fogón",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Malambo",
     genre: Genre::Folklore,
     tonic: A,
@@ -511,7 +511,7 @@ pub(super) const MALAMBO_DEL_FOGON: Song = Song {
 
 pub(super) const VIDALA_DE_LA_QUEBRADA: Song = Song {
     name: "Vidala de la quebrada",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Vidala",
     genre: Genre::Folklore,
     tonic: A,
@@ -539,7 +539,7 @@ pub(super) const VIDALA_DE_LA_QUEBRADA: Song = Song {
 
 pub(super) const CARNAVALITO_DE_LA_QUEBRADA: Song = Song {
     name: "Carnavalito de la quebrada",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Carnavalito",
     genre: Genre::Folklore,
     tonic: A,
@@ -569,7 +569,7 @@ pub(super) const CARNAVALITO_DE_LA_QUEBRADA: Song = Song {
 
 pub(super) const CANDOMBE_DEL_BARRIO: Song = Song {
     name: "Candombe del barrio",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Candombe",
     genre: Genre::Folklore,
     tonic: C,

@@ -6,9 +6,9 @@
 //! it: which form, as a melody or as chords, how fast, in which octaves,
 //! and whether durations and dynamics follow the row too (see
 //! [`crate::serial`]). The rows are the ones in
-//! [`ROW_PRESETS`](crate::harmony::ROW_PRESETS) written for Ferrous Loom,
+//! [`ROW_PRESETS`](crate::harmony::ROW_PRESETS) written for Ferrous Lineup,
 //! and the row of Webern's Concerto Op. 24 (the row only: the rhythm and
-//! the instruments are Ferrous Loom's).
+//! the instruments are Ferrous Lineup's).
 
 use crate::harmony::{RowForm, RowLabel, RowPreset, Scale, ToneRow};
 use crate::meter::TimeSignature;

@@ -10,7 +10,7 @@
 //!
 //! The songs live in one file per genre, in the `song/` folder next to
 //! this one, and [`SONGS`] lists them all. Songs marked "Written for
-//! Ferrous Loom" are new tunes, written to show off a genre that has
+//! Ferrous Lineup" are new tunes, written to show off a genre that has
 //! few well-known tunes old enough to be free.
 
 use crate::general_midi as gm;

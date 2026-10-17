@@ -89,7 +89,7 @@ impl Drum {
     }
 
     /// Whether this drum was added in step 8, so a project using it
-    /// cannot be opened by older versions of Ferrous Loom.
+    /// cannot be opened by older versions of Ferrous Lineup.
     pub fn is_new_in_format_3(self) -> bool {
         !matches!(self, Drum::Kick | Drum::Snare | Drum::Clap | Drum::HiHat)
     }
@@ -98,7 +98,7 @@ impl Drum {
 /// Where a sampler channel gets its sound from.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum SampleSource {
-    /// One of the drums built into Ferrous Loom.
+    /// One of the drums built into Ferrous Lineup.
     Builtin(Drum),
     /// A WAV file on disk.
     File(PathBuf),

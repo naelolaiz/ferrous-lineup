@@ -29,8 +29,8 @@ use loom_core::{Channel, ChannelKind, MidiMessage, Note, SampleSource, Scale, to
 use loom_core::{general_midi_drum, midi_channels};
 use midir::{Ignore, MidiInput, MidiInputConnection, MidiOutputConnection};
 
-/// The name Ferrous Loom shows to other MIDI programs.
-const CLIENT_NAME: &str = "Ferrous Loom";
+/// The name Ferrous Lineup shows to other MIDI programs.
+const CLIENT_NAME: &str = "Ferrous Lineup";
 
 /// How long the sending thread sleeps before it looks for messages again.
 /// The queue has no way to wake a thread that waits on it, so the thread
@@ -69,7 +69,7 @@ pub fn routes(channels: &[Channel]) -> Vec<Option<Route>> {
         .collect()
 }
 
-/// Whether a port belongs to Ferrous Loom itself. On Linux, the port it
+/// Whether a port belongs to Ferrous Lineup itself. On Linux, the port it
 /// sends from shows up in the list of inputs (and the one it listens on
 /// in the outputs): picking it would send every note round in a loop.
 fn is_own(name: &str) -> bool {
@@ -412,8 +412,8 @@ mod tests {
 
     #[test]
     fn its_own_ports_are_left_out() {
-        assert!(is_own("Ferrous Loom:output 130:0"));
+        assert!(is_own("Ferrous Lineup:output 130:0"));
         assert!(!is_own("Midi Through:Midi Through Port-0 14:0"));
-        assert!(!is_own("Ferrous Loomish Synth:in 20:0"));
+        assert!(!is_own("Ferrous Lineupish Synth:in 20:0"));
     }
 }
