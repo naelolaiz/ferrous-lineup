@@ -366,7 +366,7 @@ pub struct RhythmChange {
 
 /// The drum notes of pattern `pattern` from step `from` for `steps`
 /// steps, by channel, starting from 0.
-fn drums_in(
+pub(super) fn drums_in(
     project: &Project,
     pattern: usize,
     from: usize,
@@ -464,7 +464,7 @@ pub fn use_fill(project: &mut Project, fill: &Rhythm) -> RhythmChange {
 
 /// Whether every note of pattern `pattern` starts on its first step, as
 /// in a final held chord with a crash.
-fn is_ending(project: &Project, pattern: usize) -> bool {
+pub(super) fn is_ending(project: &Project, pattern: usize) -> bool {
     project.pattern(pattern).is_some_and(|target| {
         (0..target.rows())
             .flat_map(|channel| target.notes(channel))

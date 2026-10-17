@@ -1,5 +1,7 @@
 //! A set of pitch classes packed into the bits of one integer.
 
+use serde::{Deserialize, Serialize};
+
 use crate::PitchClass;
 
 /// A set of pitch classes, stored as 12 bits of a `u16`.
@@ -8,7 +10,11 @@ use crate::PitchClass;
 /// to bit 11 for B. A C major chord (C, E, G) is the number
 /// `0b0000_1001_0001`: bits 0, 4 and 7. Sets this small are cheap to copy
 /// and compare, and comparing two chords is a single `==` on integers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+///
+/// In a project file a set is written as its semitones above C, such as
+/// `"0 3 6 9"`, which is easier to read than the number.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
 pub struct PitchSet(u16);
 
 /// The twelve bits that hold pitch classes.
@@ -25,6 +31,21 @@ impl PitchSet {
             .iter()
             .map(|&semitone| PitchClass::from_semitone(semitone))
             .collect()
+    }
+
+    /// The set whose bits are the low 12 bits of `bits`.
+    pub const fn from_bits(bits: u16) -> Self {
+        PitchSet(bits & ALL_BITS)
+    }
+
+    /// The set as a number: bit 0 for C, bit 1 for C# and so on.
+    pub const fn bits(self) -> u16 {
+        self.0
+    }
+
+    /// The semitones above C of the pitch classes in the set, lowest first.
+    pub fn semitones(self) -> Vec<u8> {
+        self.iter().map(PitchClass::semitone).collect()
     }
 
     /// Adds a pitch class (adding one that is already there does nothing).
@@ -73,6 +94,26 @@ impl PitchSet {
     /// which is how a minor triad looks when it starts on C.
     pub fn relative_to(self, root: PitchClass) -> PitchSet {
         self.transpose(12 - root.semitone())
+    }
+}
+
+impl TryFrom<String> for PitchSet {
+    type Error = String;
+
+    fn try_from(text: String) -> Result<Self, String> {
+        text.split_whitespace()
+            .map(|number| match number.parse::<u8>() {
+                Ok(semitone) if semitone < 12 => Ok(PitchClass::from_semitone(semitone)),
+                _ => Err(format!("\"{number}\" is not a pitch class from 0 to 11")),
+            })
+            .collect()
+    }
+}
+
+impl From<PitchSet> for String {
+    fn from(set: PitchSet) -> Self {
+        let numbers: Vec<String> = set.semitones().iter().map(u8::to_string).collect();
+        numbers.join(" ")
     }
 }
 

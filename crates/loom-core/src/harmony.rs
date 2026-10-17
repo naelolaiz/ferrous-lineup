@@ -8,6 +8,8 @@
 //! - [`next_chords`] suggests chords that often come next in a key.
 //! - [`HintLevel`] says how much the hints explain.
 //! - [`keys`] are the harmony keys: the seven chords of a key, to play.
+//! - [`ToneRow`] is a twelve-tone row, and [`SetClass`] names any group
+//!   of notes, chord or not: music after tonality.
 
 mod analysis;
 mod chord;
@@ -15,11 +17,15 @@ mod hints;
 pub mod keys;
 mod pitch_set;
 mod progression;
+mod row;
 mod scale;
+mod set_class;
 
 pub use analysis::{Harmony, analyze, interval_name};
 pub use chord::{Chord, ChordQuality, ChordStamp};
 pub use hints::HintLevel;
 pub use pitch_set::PitchSet;
 pub use progression::{Suggestion, next_chords};
+pub use row::{ROW_PRESETS, RowForm, RowLabel, RowPreset, ToneRow};
 pub use scale::{Scale, ScaleKind};
+pub use set_class::{SetClass, digits, pc_digit};
