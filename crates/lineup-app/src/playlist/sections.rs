@@ -9,7 +9,9 @@
 //!   shorter. A plain click (or a right-click) opens its menu: rename it,
 //!   choose how many times it plays, loop it, copy it or delete it.
 //! - Drag along the bar numbers to loop that part of the song. The
-//!   "Looping bars…" button in the toolbar, or a section's menu, stops it.
+//!   "Looping bars…" button in the toolbar stops it. A section's menu
+//!   has "Loop this section", ticked while that section loops: tick it to
+//!   loop the section, untick it to play the whole song again.
 //!   A plain click on the bar numbers moves the playhead there.
 //! - Right-click the bar numbers to change the time signature from that
 //!   bar on, or to take a change away.
@@ -591,9 +593,18 @@ fn section_menu(
             );
             ui.separator();
 
-            if ui.button("🔁 Loop this section").clicked() {
-                let region = LoopRegion::new(section.start, section.end());
-                actions.push(PlaylistAction::SetLoop(Some(region)));
+            // Ticked while song mode loops exactly this section.
+            let region = LoopRegion::new(section.start, section.end());
+            let mut looping = project.playlist().loop_region() == Some(region);
+            if ui
+                .checkbox(&mut looping, "🔁 Loop this section")
+                .on_hover_text(
+                    "Play only this section, over and over, until you untick it. \
+                     Without a loop, the whole song plays and starts again from bar 1.",
+                )
+                .clicked()
+            {
+                actions.push(PlaylistAction::SetLoop(looping.then_some(region)));
                 ui.close();
             }
             if ui
