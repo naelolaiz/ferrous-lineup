@@ -130,8 +130,9 @@ pub struct LineupApp {
     hint_bar: HintBar,
     /// A window to show in front of the others on the next frame.
     bring_to_front: Option<egui::Id>,
-    /// The part of the screen the zoom keys zoom: the one clicked last.
-    zoom_area: view::Area,
+    /// What was clicked last, which the zoom keys zoom while the pointer
+    /// is outside the window.
+    zoom_target: view::Target,
 }
 
 /// The id of the channel rack window.
@@ -145,8 +146,8 @@ impl LineupApp {
     /// otherwise the demo song is.
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         theme::apply(&cc.egui_ctx);
-        // The zoom keys zoom one part of the screen at a time, not all of
-        // it as egui would (see view.rs). Alt and the wheel zooms too, so
+        // The zoom keys zoom the part of the screen under the pointer, and
+        // the whole interface only elsewhere (see view.rs). Alt and the wheel zooms too, so
         // egui must not take it for scrolling: the scroll it smooths out
         // over the next frames would move the view after the zoom.
         cc.egui_ctx.options_mut(|options| {
@@ -197,7 +198,7 @@ impl LineupApp {
             notice: None,
             hint_bar: HintBar::default(),
             bring_to_front: None,
-            zoom_area: view::Area::Main,
+            zoom_target: view::Target::Interface,
         };
         app.send_whole_project();
         if let Some(path) = path {

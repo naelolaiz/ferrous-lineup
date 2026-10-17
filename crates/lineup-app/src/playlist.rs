@@ -294,6 +294,9 @@ pub struct PlaylistView {
     view_rect: Option<Rect>,
     /// Where to scroll the grid to the next time it is drawn.
     scroll_to: Option<Vec2>,
+    /// Where on screen the playlist was drawn last frame, beside the
+    /// Patterns and Library panel: where the zoom keys zoom the playlist.
+    area: Rect,
 }
 
 impl PlaylistView {
@@ -310,6 +313,7 @@ impl PlaylistView {
             scrolled: Vec2::ZERO,
             view_rect: None,
             scroll_to: None,
+            area: Rect::NOTHING,
         }
     }
 
@@ -332,6 +336,12 @@ impl PlaylistView {
         let from = self.scroll_to.unwrap_or(self.scrolled);
         let to = corner + (from + anchor - corner) * ratio - anchor;
         self.scroll_to = Some(to.max(Vec2::ZERO));
+    }
+
+    /// Where the playlist was drawn last frame, not counting the Patterns
+    /// and Library panel.
+    pub fn area(&self) -> Rect {
+        self.area
     }
 
     /// Whether trying something from the library also sets its tempo.
@@ -382,6 +392,7 @@ impl PlaylistView {
                 }
             });
         self.browser_open = browser_open;
+        self.area = ui.available_rect_before_wrap();
 
         let current_name = project.pattern(current).map_or("", |p| p.name.as_str());
         ui.horizontal(|ui| {

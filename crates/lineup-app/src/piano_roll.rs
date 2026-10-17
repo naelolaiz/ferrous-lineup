@@ -19,7 +19,7 @@ use lineup_core::{
     Scale, ScaleKind, Spelling, TICKS_PER_STEP, TimeSignature, tidy_notes,
 };
 
-use crate::micromodes::{self, MicroAction, MicromodeWindow};
+use crate::micromodes::{MicroAction, MicromodeWindow};
 use crate::theme;
 use crate::twelve_tone::{self, RowAction, RowWindow, SetAction, SetWindow};
 
@@ -438,14 +438,6 @@ impl PianoRoll {
     /// The id of the piano roll window.
     pub fn id() -> egui::Id {
         egui::Id::unique("piano-roll")
-    }
-
-    /// Whether a window is one the piano roll opens: the row window, the
-    /// set browser or the micromode window.
-    pub fn owns(id: egui::Id) -> bool {
-        id == twelve_tone::row_window_id()
-            || id == twelve_tone::set_window_id()
-            || id == micromodes::window_id()
     }
 
     /// The channel shown: the selected channel, which keyboards play.

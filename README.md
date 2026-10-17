@@ -167,15 +167,17 @@ exact time, even between two steps, and the tempo changes, time
 signatures and key come with it. The piano roll's Chords lane and the
 harmony keys then name the chords as it plays.
 
-Too small or too big? As in FL Studio, the playlist and the piano roll
-zoom each direction on its own: **Ctrl** with the mouse wheel makes bars
-and steps wider or narrower, and **Alt** with the wheel makes tracks and
-keys taller or shorter, around what is under the pointer. **Ctrl** or
-**Alt** with **+** and **−** (⌘ instead of Ctrl on a Mac) do the same in
-the window you clicked last, and **Ctrl+0** takes both back to 100%. The
-channel rack has one zoom for both directions. The playlist's two zooms
-are also at the right end of the status bar, and **View > Interface
-size** makes the text, buttons and menus bigger or smaller everywhere.
+Too small or too big? The same keys zoom whatever the pointer is over.
+Over the playlist or the piano roll, **Ctrl** with **+** and **−** or the
+mouse wheel (⌘ instead of Ctrl on a Mac) makes bars and steps wider or
+narrower, and **Alt** with the same keys or the wheel makes tracks and
+keys taller or shorter, around what is under the pointer. Over the
+channel rack they zoom its one size. Anywhere else (the toolbars, the
+harmony keys, the status bar, the Patterns and Library panel) they make
+the text, buttons and menus bigger or smaller everywhere, as **View >
+Interface size** does. **Ctrl+0** takes what is under the pointer back
+to 100%. The playlist's two zooms are also at the right end of the
+status bar.
 The View menu also shows or hides each window and panel, and **Alt+F8**
 hides the Patterns and Library panel to give the playlist more room. The
 zoom, the window size and where you left the windows are remembered for
