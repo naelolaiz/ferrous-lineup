@@ -23,6 +23,7 @@ mod library;
 mod live;
 mod practice;
 mod sounds;
+mod swing;
 mod view;
 
 use std::path::PathBuf;
@@ -136,6 +137,8 @@ pub struct LineupApp {
     sounds: sounds::Sounds,
     /// The count-in, the metronome and the practice speed.
     practice: practice::Practice,
+    /// The swing each style was last played with.
+    swings: swing::SwingMemory,
     /// The ear-training window, an experiment.
     ear_training: EarTraining,
     /// The last problem to show in the status bar, such as a bad WAV file.
@@ -213,6 +216,7 @@ impl LineupApp {
             live: live::Live::new(midi),
             sounds: sounds::Sounds::new(&cc.egui_ctx),
             practice: practice::Practice::new(&cc.egui_ctx),
+            swings: swing::SwingMemory::new(&cc.egui_ctx),
             ear_training: EarTraining::new(&cc.egui_ctx),
             message: None,
             notice: None,
@@ -306,11 +310,10 @@ impl LineupApp {
     /// instrument and its notes in every pattern.
     fn channel_command(&mut self, index: usize, sample_rate: u32) -> Command {
         let channel = self.project.channels()[index].clone();
+        // The notes as they are played, with the song's swing.
         let notes = ChannelNotes::new(
-            self.project
-                .patterns()
-                .iter()
-                .map(|pattern| pattern.notes(index).to_vec()),
+            (0..self.project.patterns().len())
+                .map(|pattern| self.project.played_notes(pattern, index).into_owned()),
         );
         Command::InsertChannel {
             index,
@@ -723,9 +726,17 @@ impl LineupApp {
                     ));
                 }
             }
+            SheetAction::SetSwing(swing) => self.set_swing(swing),
             SheetAction::SetBand(style) => {
                 let had = self.project.band().is_some();
-                self.edit("change the band", |project| project.set_band_style(style));
+                let swing = style.and_then(|style| self.swings.of(style.name));
+                self.edit("change the band", |project| {
+                    project.set_band_style(style);
+                    // The swing this style was last played with.
+                    if let Some(swing) = swing {
+                        project.swing = swing;
+                    }
+                });
                 self.notice = match (style, self.project.band()) {
                     (Some(style), Some(band)) if !had && band.muted() != &Default::default() => {
                         // The channels muted, then the drum tracks.
@@ -894,6 +905,7 @@ impl LineupApp {
             PlaylistAction::SetLooseTiming(ms) => {
                 self.edit("change loose timing", |project| project.loose_timing = ms);
             }
+            PlaylistAction::SetSwing(swing) => self.set_swing(swing),
             PlaylistAction::RemoveTempoMarker(start) => {
                 self.edit("remove tempo change", |project| {
                     project.remove_tempo_marker(start)
@@ -1426,6 +1438,7 @@ impl eframe::App for LineupApp {
         self.check_export(&ctx);
         self.check_sounds(&ctx);
         self.check_import(&ctx);
+        self.store_swings(&ctx);
         if self.playing {
             // Keep redrawing so the playhead moves.
             ctx.request_repaint();

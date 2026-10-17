@@ -34,6 +34,10 @@ pub struct Rhythm {
     /// The name of a fill in [`FILLS`] that ends a section, or "".
     pub fill: &'static str,
     pub about: &'static str,
+    /// How much its eighth notes swing (see [`crate::swing`]): 0 for
+    /// even eighths. A swing beat is written in even eighths, as in sheet
+    /// music, and played long-short by this much.
+    pub swing: u8,
 }
 
 /// One hit: how hard, and how many semitones up or down.
@@ -146,12 +150,17 @@ const fn rhythm(
         lines,
         fill,
         about,
+        swing: 0,
     }
 }
 
 impl Rhythm {
     const fn in_time(self, time: TimeSignature) -> Rhythm {
         Rhythm { time, ..self }
+    }
+
+    const fn swung(self, swing: u8) -> Rhythm {
+        Rhythm { swing, ..self }
     }
 }
 
@@ -285,11 +294,12 @@ pub static RHYTHMS: &[Rhythm] = &[
         &[
             (Kick, "X... ..x. X... ..x."),
             (Snare, ".... X... .... X..."),
-            (Ride, "x..x x..x x..x x..x"),
+            (Ride, "x.x. x.x. x.x. x.x."),
         ],
         "Snare roll",
         "The 1950s backbeat, with a long-short ride cymbal halfway between swing and straight.",
-    ),
+    )
+    .swung(50),
     rhythm(
         "Metal",
         Rock,
@@ -311,11 +321,12 @@ pub static RHYTHMS: &[Rhythm] = &[
         &[
             (Kick, "X... .... X... ...."),
             (Snare, ".... X... .... X..."),
-            (HiHat, "x..x x..x x..x x..x"),
+            (HiHat, "x.x. x.x. x.x. x.x."),
         ],
         "Snare roll",
-        "Long-short pairs: each beat split unevenly, three sixteenths and one.",
-    ),
+        "Long-short pairs: each beat split into a triplet's first two thirds and its last.",
+    )
+    .swung(100),
     rhythm(
         "Slow blues",
         Blues,
@@ -335,39 +346,42 @@ pub static RHYTHMS: &[Rhythm] = &[
         Jazz,
         140.0,
         &[
-            (Ride, "x... x..x x... x..x"),
+            (Ride, "x... x.x. x... x.x."),
             (HiHat, ".... x... .... x..."),
             (Kick, "o... .... o... ...."),
         ],
         "",
         "Ding, ding-a, ding, ding-a on the ride, and the hi-hat pedal on 2 and 4.",
-    ),
+    )
+    .swung(100),
     rhythm(
         "Jazz ballad",
         Jazz,
         68.0,
         &[
-            (Ride, "o... o..o o... o..o"),
+            (Ride, "o... o.o. o... o.o."),
             (Shaker, "o.o. o.o. o.o. o.o."),
             (HiHat, ".... x... .... x..."),
             (Kick, "o... .... .... ...."),
         ],
         "",
         "Brushes and a quiet ride: the drums only keep time.",
-    ),
+    )
+    .swung(100),
     rhythm(
         "Jazz waltz",
         Jazz,
         150.0,
         &[
-            (Ride, "x... x..x x..x"),
+            (Ride, "x... x.x. x.x."),
             (HiHat, ".... x... x..."),
             (Kick, "o... .... ...."),
         ],
         "",
         "The swing ride pattern in three beats.",
     )
-    .in_time(THREE_FOUR),
+    .in_time(THREE_FOUR)
+    .swung(100),
     rhythm(
         "Second line",
         Jazz,

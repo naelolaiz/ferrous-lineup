@@ -213,6 +213,10 @@ pub struct Project {
     /// late, a different amount every time. 0, the default, plays every
     /// note exactly on its step. See [`MAX_LOOSE_TIMING`].
     pub loose_timing: u8,
+    /// How long-short the eighth notes are played, from 0 (even) to
+    /// [`MAX_SWING`](crate::MAX_SWING) (a triplet's two thirds and one
+    /// third). The notes stay as written: see [`crate::swing`].
+    pub swing: u8,
     pub(crate) channels: Vec<Channel>,
     pub(crate) patterns: Vec<Pattern>,
     pub(crate) playlist: Playlist,
@@ -228,6 +232,7 @@ impl Project {
             scale: Scale::default(),
             time_signature: TimeSignature::COMMON,
             loose_timing: 0,
+            swing: 0,
             channels: Vec::new(),
             patterns: vec![Pattern::new("Pattern 1", 0, NEW_PATTERN_LENGTH)],
             playlist: Playlist::new(),

@@ -21,6 +21,7 @@ use crate::pitch::PitchClass;
 use super::Genre;
 use super::chart::{self, ChordSpan, Melody};
 use super::comping::{Bass, Comping};
+use super::rhythm::Rhythm;
 
 /// One section of a song, such as a verse or a chorus. Each part
 /// becomes one pattern.
@@ -225,6 +226,17 @@ pub struct Song {
 }
 
 impl Song {
+    /// How much the song swings (see [`crate::swing`]): as much as its
+    /// rhythm does, except in folk and classical music, whose eighths
+    /// stay even over any beat: Scarborough Fair keeps its even eighths
+    /// over the ride cymbal of a jazz waltz.
+    pub fn swing(&self) -> u8 {
+        match self.genre {
+            Genre::Folk | Genre::Classical => 0,
+            _ => Rhythm::named(self.rhythm).map_or(0, |rhythm| rhythm.swing),
+        }
+    }
+
     pub fn scale(&self) -> Scale {
         Scale::new(self.tonic, self.mode)
     }

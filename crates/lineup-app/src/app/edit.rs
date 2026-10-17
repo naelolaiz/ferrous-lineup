@@ -134,7 +134,7 @@ impl LineupApp {
                     self.send(Command::SetPatternLength { pattern, length });
                 }
                 Change::Notes { pattern, channel } => {
-                    let notes = self.project.patterns()[pattern].notes(channel).to_vec();
+                    let notes = self.project.played_notes(pattern, channel).into_owned();
                     self.send(Command::SetNotes {
                         pattern,
                         channel,

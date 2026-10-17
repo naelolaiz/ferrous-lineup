@@ -86,6 +86,8 @@ pub enum SheetAction {
     WriteHeardChords,
     /// Have the band play in this style, or stop it.
     SetBand(Option<&'static BandStyle>),
+    /// Swing the eighth notes this much, from 0 to `MAX_SWING`.
+    SetSwing(u8),
     /// Have the band play this part again, where it was edited.
     PlayAgain(Player),
     /// Write a progression's chords from this bar on.
@@ -285,6 +287,10 @@ impl ChordSheet {
             ui.weak(format!("· {}", project.time_signature));
             if project.band().is_some() {
                 ui.weak(format!("· {} BPM", project.tempo.bpm().round()));
+                ui.separator();
+                if let Some(swing) = crate::playlist::swing_control(ui, project) {
+                    actions.push(SheetAction::SetSwing(swing));
+                }
             }
             // A band plays from the sheet, so its own notes are not heard.
             if project.song_length() > 0 && (markers.is_empty() || project.band().is_none()) {
@@ -1224,7 +1230,6 @@ fn progression_menu(ui: &mut Ui, project: &Project, from: usize, actions: &mut V
     });
 }
 
-/// The two dots of a repeat sign, around the middle of a bar line.
 /// The variations of the band's style, in a bar's menu. They apply to
 /// the bars `selection` holds, when the bar right-clicked is one of
 /// them, or else from bar `number` on.
@@ -1268,6 +1273,7 @@ fn variation_menu(
     }
 }
 
+/// The two dots of a repeat sign, around the middle of a bar line.
 fn repeat_dots(painter: &egui::Painter, x: f32, middle: f32) {
     for y in [middle - 5.0, middle + 5.0] {
         painter.circle_filled(pos2(x, y), 1.8, BAR_LINE);

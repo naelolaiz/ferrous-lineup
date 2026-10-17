@@ -10,6 +10,8 @@
 //! Only what the audio thread plays is compared. Names, the key and the
 //! track names make no sound, so changing them gives no `Change`.
 
+use std::borrow::Cow;
+
 use crate::Project;
 
 /// One difference between two versions of a project.
@@ -147,7 +149,8 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
 
     // Pattern lengths, and the notes of every channel in every pattern.
     for (index, pattern) in after.patterns().iter().enumerate() {
-        let old_pattern = patterns.old_index(index).map(|old| &before.patterns()[old]);
+        let old_index = patterns.old_index(index);
+        let old_pattern = old_index.map(|old| &before.patterns()[old]);
         if let Some(old) = old_pattern
             && old.length() != pattern.length()
         {
@@ -157,9 +160,15 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
             let Some(old_channel) = channels.old_index(channel) else {
                 continue; // a new channel brought its notes with it
             };
-            // A new pattern starts with no notes in the audio thread.
-            let old_notes = old_pattern.map_or(&[][..], |old| old.notes(old_channel));
-            if old_notes != pattern.notes(channel) {
+            // The notes as they are played, with the song's swing: a
+            // new amount, or a pattern now in a time signature that does
+            // not swing, plays other notes. A new pattern starts with no
+            // notes in the audio thread.
+            let old_notes = match old_index {
+                Some(old) => before.played_notes(old, old_channel),
+                None => Cow::Borrowed(&[][..]),
+            };
+            if old_notes != after.played_notes(index, channel) {
                 changes.push(Change::Notes {
                     pattern: index,
                     channel,
@@ -227,10 +236,8 @@ mod tests {
                 program: channel.program,
                 volume: channel.volume,
                 muted: channel.muted,
-                notes: project
-                    .patterns()
-                    .iter()
-                    .map(|pattern| pattern.notes(index).to_vec())
+                notes: (0..project.patterns().len())
+                    .map(|pattern| project.played_notes(pattern, index).into_owned())
                     .collect(),
             }
         }
@@ -283,7 +290,7 @@ mod tests {
                 }
                 Change::Notes { pattern, channel } => {
                     self.channels[channel].notes[pattern] =
-                        after.patterns()[pattern].notes(channel).to_vec();
+                        after.played_notes(pattern, channel).into_owned();
                 }
                 Change::Tempo => self.tempo = after.tempo,
                 Change::LooseTiming => self.loose_timing = after.loose_timing,
@@ -459,6 +466,33 @@ mod tests {
         let mut loose = before.clone();
         loose.loose_timing = 10;
         assert_eq!(check_both_ways(&before, &loose), vec![Change::LooseTiming]);
+    }
+
+    #[test]
+    fn swing_plays_other_notes() {
+        let before = Project::demo();
+        let mut after = before.clone();
+        after.swing = 60;
+        let changes = check_both_ways(&before, &after);
+        assert!(!changes.is_empty());
+        assert!(
+            changes
+                .iter()
+                .all(|change| matches!(change, Change::Notes { .. })),
+            "{changes:?}"
+        );
+        // Only the channels with notes on the second eighth of a beat.
+        let offbeats = |pattern: usize, channel: usize| {
+            before.patterns()[pattern]
+                .notes(channel)
+                .iter()
+                .any(|note| note.start % 4 == 2 || note.end() % 4 == 2)
+        };
+        for change in changes {
+            if let Change::Notes { pattern, channel } = change {
+                assert!(offbeats(pattern, channel), "{pattern}, {channel}");
+            }
+        }
     }
 
     #[test]

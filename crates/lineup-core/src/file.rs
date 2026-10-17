@@ -41,6 +41,7 @@ use crate::playlist::{Clip, LoopRegion, MAX_TRACKS, Section, Track};
 use crate::project::{
     Channel, ChannelKind, MAX_CHANNELS, MAX_LOOSE_TIMING, MAX_PATTERNS, Project, SampleSource,
 };
+use crate::swing::MAX_SWING;
 use crate::tempo::TempoMarker;
 use crate::{Scale, Tempo, TimeSignature};
 
@@ -130,7 +131,10 @@ pub fn is_project(path: &Path) -> bool {
 /// from markers on the chord sheet. Older versions would play the whole
 /// song in the first one, so a song with variation markers needs
 /// format 15.
-pub const FORMAT_VERSION: u32 = 15;
+///
+/// Format 16 added swing: the eighth notes played long-short. Older
+/// versions would play them even, so a song with swing needs format 16.
+pub const FORMAT_VERSION: u32 = 16;
 
 /// The oldest format that can hold `project`.
 ///
@@ -184,7 +188,9 @@ pub fn format_for(project: &Project) -> u32 {
             .iter()
             .any(|pattern| pattern.player.is_some());
     let has_form = project.form().is_some_and(|form| !form.is_plain());
-    if !project.variations().is_empty() {
+    if project.swing > 0 {
+        16
+    } else if !project.variations().is_empty() {
         15
     } else if has_form {
         14
@@ -248,6 +254,9 @@ struct ProjectFile {
     /// Left out when every note plays on the grid.
     #[serde(default, skip_serializing_if = "is_zero")]
     loose_timing: u8,
+    /// Left out when the eighths are played even.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    swing: u8,
     /// The chord sheet. Left out when it is empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     chord_markers: Vec<ChordMarker>,
@@ -387,6 +396,7 @@ impl From<&Project> for ProjectFile {
             tempo_markers: project.playlist().tempo_markers().to_vec(),
             key_markers: project.playlist().key_markers().to_vec(),
             loose_timing: project.loose_timing,
+            swing: project.swing,
             chord_markers: project.playlist().chord_markers().to_vec(),
             band: project.band().map(BandFile::from),
         }
@@ -539,6 +549,7 @@ impl TryFrom<ProjectFile> for Project {
             }
         }
         project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
+        project.swing = file.swing.min(MAX_SWING);
         project.remove_blank_tracks();
         Ok(project)
     }
@@ -670,10 +681,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 16 might have fields we have never heard of. Only the
+        // Format 17 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 16, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(16)), "{error}");
+        let error = from_text("(format: 17, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(17)), "{error}");
     }
 
     #[test]
@@ -816,6 +827,21 @@ mod tests {
         let text = to_text(&loose).unwrap();
         assert!(text.contains("format: 7,"), "{text}");
         assert_eq!(from_text(&text).unwrap(), loose);
+    }
+
+    #[test]
+    fn swing_needs_format_sixteen() {
+        let mut project = plain_demo();
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("swing"), "{text}");
+        project.swing = 60;
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 16,"), "{text}");
+        assert!(text.contains("swing: 60"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+        // Too much swing from a file edited by hand is a triplet.
+        let text = text.replace("swing: 60", "swing: 250");
+        assert_eq!(from_text(&text).unwrap().swing, MAX_SWING);
     }
 
     #[test]
