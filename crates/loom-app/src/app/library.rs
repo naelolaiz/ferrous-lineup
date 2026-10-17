@@ -30,7 +30,8 @@ use loom_core::library::{
     FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, SONGS, STYLES,
     Song, Style, apply, micromodes, rows,
 };
-use loom_core::{Pattern, Project, Tempo};
+use loom_core::remeter::remeter;
+use loom_core::{Pattern, Project, Tempo, TimeSignature};
 
 use super::LoomApp;
 use super::files::Pending;
@@ -463,6 +464,35 @@ impl LoomApp {
                 parts.join(", ")
             )
         });
+    }
+
+    /// The Time box, and the time signature of bar 1: puts the song in
+    /// `time`. A song with notes is re-metered bar for bar, as a library
+    /// rhythm in `time` would (see [`loom_core::remeter`]), so it really
+    /// plays in the new time signature; an empty one just gets the new
+    /// bars.
+    pub(super) fn set_song_time(&mut self, time: TimeSignature) {
+        let original = self.song_original();
+        let before = self.project.clone();
+        let remetered = self.edit("change time signature", |project| {
+            if project.patterns().iter().all(Pattern::is_empty) {
+                project.time_signature = time;
+                false
+            } else {
+                remeter(project, time)
+            }
+        });
+        if !remetered {
+            return;
+        }
+        // The original stays the reference for the library's rhythms.
+        self.remember_original(original);
+        self.keep_place_in_song(&before);
+        self.notice = Some(format!(
+            "The song is now in {time} at {:.0} BPM: every bar squeezed or stretched, \
+             lasting as long as before. Ctrl+Z takes it back.",
+            self.project.tempo.bpm()
+        ));
     }
 
     /// The song as it was before the library changed it, if the library
