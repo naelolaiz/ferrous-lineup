@@ -15,6 +15,8 @@
 //! and toms. Spaces only make the line easier to read, and `|` separates
 //! bars when a rhythm is longer than one.
 
+use std::sync::{Mutex, PoisonError};
+
 use crate::meter::TimeSignature;
 use crate::pattern::{NoteEvent, STEP_NOTE};
 use crate::project::Drum;
@@ -131,6 +133,112 @@ impl Rhythm {
     pub fn fill(&self) -> Option<&'static Rhythm> {
         FILLS.iter().find(|fill| fill.name == self.fill)
     }
+}
+
+/// The rhythms a song in a time signature plays when nothing says which:
+/// the first one in the song's new time signature.
+const USUAL: [&str; 4] = ["Pop beat", "Waltz", "Six-eight", "Slow blues"];
+
+impl Rhythm {
+    /// The rhythm a song plays when its time signature is changed to
+    /// `time` by hand, while it played `like`: a rhythm of the same kind
+    /// in `time` if the library has one (a tango in 3/4 is a tango vals),
+    /// else the usual one in `time` (a waltz for 3/4), else a plain beat
+    /// made for `time` (see [`Rhythm::basic`]).
+    pub fn for_time(time: TimeSignature, like: Option<&Rhythm>) -> &'static Rhythm {
+        let in_time = |rhythm: &&'static Rhythm| rhythm.time == time;
+        RHYTHMS
+            .iter()
+            .filter(in_time)
+            .find(|rhythm| like.is_some_and(|like| like.genre == rhythm.genre))
+            .or_else(|| {
+                USUAL
+                    .iter()
+                    .filter_map(|name| Rhythm::named(name))
+                    .find(in_time)
+            })
+            .or_else(|| RHYTHMS.iter().find(in_time))
+            .unwrap_or_else(|| Rhythm::basic(time))
+    }
+
+    /// A plain beat for `time`, for the time signatures the library has
+    /// no rhythm in, such as 5/4 or 2+2+3/8. The kick plays the first
+    /// beat, and with four beats or more every other one; the snare
+    /// plays the beats between (with three beats, two light ones, as in
+    /// a waltz); the hi-hat plays every eighth note, a little louder on
+    /// the beats.
+    ///
+    /// The beat is made the first time `time` asks for it, and kept for
+    /// as long as the app runs: a [`Rhythm`] holds `'static` text, like
+    /// the ones written in [`RHYTHMS`].
+    pub fn basic(time: TimeSignature) -> &'static Rhythm {
+        static MADE: Mutex<Vec<&'static Rhythm>> = Mutex::new(Vec::new());
+        let mut made = MADE.lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(beat) = made.iter().find(|beat| beat.time == time) {
+            return beat;
+        }
+        let lines: Vec<(Drum, &'static str)> = basic_lines(time)
+            .into_iter()
+            .map(|(drum, line)| (drum, &*String::leak(line)))
+            .collect();
+        let beat: &'static Rhythm = Box::leak(Box::new(Rhythm {
+            name: "Basic beat",
+            genre: Genre::Pop,
+            time,
+            tempo: 100.0,
+            lines: Vec::leak(lines),
+            fill: "",
+            about: "A plain beat on the beats of the bar.",
+            swing: 0,
+        }));
+        made.push(beat);
+        beat
+    }
+}
+
+/// Where the beats of a bar of `time` start, as a drummer feels them:
+/// odd numbers of eighths and sixteenths that are not grouped yet (5/8,
+/// 7/8) are played in twos with a three at the end (2+3, 2+2+3).
+fn felt_beats(time: TimeSignature) -> Vec<usize> {
+    let beats = usize::from(time.beats);
+    if time.unit >= 8 && !time.is_grouped() && time.usual_groups() == 1 && beats > 3 {
+        let mut groups = vec![2; beats / 2];
+        if beats % 2 == 1
+            && let Some(last) = groups.last_mut()
+        {
+            *last = 3;
+        }
+        if let Some(grouped) = TimeSignature::grouped(&groups, time.unit) {
+            return grouped.beat_starts();
+        }
+    }
+    time.beat_starts()
+}
+
+/// The drum lines of [`Rhythm::basic`].
+fn basic_lines(time: TimeSignature) -> Vec<(Drum, String)> {
+    let bar = time.steps_per_bar();
+    let beats = felt_beats(time);
+    let mut kick = vec!['.'; bar];
+    let mut snare = vec!['.'; bar];
+    let mut hat = vec!['.'; bar];
+    for (index, &start) in beats.iter().enumerate() {
+        match (beats.len(), index) {
+            (_, 0) => kick[start] = 'X',
+            (2, _) => snare[start] = 'X',
+            (3, _) => snare[start] = 'o',
+            (_, index) if index % 2 == 0 => kick[start] = 'x',
+            _ => snare[start] = 'X',
+        }
+    }
+    for step in (0..bar).step_by(2) {
+        hat[step] = if beats.contains(&step) { 'x' } else { 'o' };
+    }
+    vec![
+        (Kick, kick.into_iter().collect()),
+        (Snare, snare.into_iter().collect()),
+        (HiHat, hat.into_iter().collect()),
+    ]
 }
 
 /// A shorter way to write a 4/4 rhythm in the tables below.
@@ -1255,6 +1363,57 @@ pub static FILLS: &[Rhythm] = &[
 mod tests {
     use super::*;
     use std::collections::HashSet;
+
+    fn named(name: &str) -> &'static Rhythm {
+        Rhythm::named(name).unwrap()
+    }
+
+    #[test]
+    fn a_new_time_signature_keeps_the_kind_of_rhythm() {
+        // A tango put in 3/4 by hand plays a tango vals.
+        let tango = named("Tango marcato");
+        assert_eq!(Rhythm::for_time(THREE_FOUR, Some(tango)).name, "Tango vals");
+        // Pop has no 3/4 rhythm: the usual waltz.
+        let pop = named("Pop beat");
+        assert_eq!(Rhythm::for_time(THREE_FOUR, Some(pop)).name, "Waltz");
+        assert_eq!(Rhythm::for_time(SIX_EIGHT, None).name, "Six-eight");
+        assert_eq!(
+            Rhythm::for_time(TimeSignature::COMMON, None).name,
+            "Pop beat"
+        );
+        // A zamba (6/8) in 3/4 stays South American folklore.
+        let zamba = named("Zamba");
+        assert_eq!(
+            Rhythm::for_time(THREE_FOUR, Some(zamba)).genre,
+            Genre::Folklore
+        );
+    }
+
+    #[test]
+    fn a_time_signature_with_no_rhythm_gets_a_basic_beat() {
+        let five_four = TimeSignature::new(5, 4);
+        let beat = Rhythm::for_time(five_four, Some(named("Pop beat")));
+        assert_eq!(beat.time, five_four);
+        let line = |beat: &Rhythm, drum: Drum| {
+            beat.lines
+                .iter()
+                .find(|(d, _)| *d == drum)
+                .map(|(_, line)| line.to_string())
+                .unwrap()
+        };
+        // Five beats: kick on 1, 3 and 5, snare on 2 and 4.
+        assert_eq!(line(beat, Kick), "X.......x.......x...");
+        assert_eq!(line(beat, Snare), "....X.......X.......");
+        assert_eq!(line(beat, HiHat), "x.o.x.o.x.o.x.o.x.o.");
+        // 7/8 is felt as 2+2+3: one strong beat and two light ones.
+        let beat = Rhythm::basic(TimeSignature::new(7, 8));
+        assert_eq!(line(beat, Kick), "X.............");
+        assert_eq!(line(beat, Snare), "....o...o.....");
+        assert_eq!(line(beat, HiHat), "x.o.x.o.x.o.o.");
+        // Made once, then kept.
+        assert!(std::ptr::eq(beat, Rhythm::basic(TimeSignature::new(7, 8))));
+        assert!(parse_line(&line(beat, HiHat)).is_some());
+    }
 
     #[test]
     fn every_line_is_whole_bars_of_known_characters() {

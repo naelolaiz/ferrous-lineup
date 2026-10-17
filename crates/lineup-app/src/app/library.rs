@@ -30,7 +30,6 @@ use lineup_core::library::{
     FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, SONGS, STYLES,
     Song, Style, apply, micromodes, rows,
 };
-use lineup_core::remeter::remeter;
 use lineup_core::{BandStyle, Pattern, Project, Tempo, TimeSignature};
 
 use super::LineupApp;
@@ -490,31 +489,52 @@ impl LineupApp {
     }
 
     /// The Time box, and the time signature of bar 1: puts the song in
-    /// `time`. A song with notes is re-metered bar for bar, as a library
-    /// rhythm in `time` would (see [`lineup_core::remeter`]), so it really
-    /// plays in the new time signature; an empty one just gets the new
-    /// bars.
+    /// `time`, so that it sounds in `time`.
+    ///
+    /// Squeezing the notes into the new bars is not enough: the tempo
+    /// keeps each bar as long as it was (see [`lineup_core::remeter`]),
+    /// so every note would still sound at the same moment. What makes 4/4
+    /// sound like 3/4 is the drums and the way the chords are played, so
+    /// the song plays a rhythm in `time`, as if it were picked in the
+    /// library: one of the kind the song plays if there is one (see
+    /// [`Rhythm::for_time`]). Back in the time signature the song was
+    /// in, it is the song as it was. An empty song just gets the new bars.
     pub(super) fn set_song_time(&mut self, time: TimeSignature) {
-        let original = self.song_original();
-        let before = self.project.clone();
-        let remetered = self.edit("change time signature", |project| {
-            if project.patterns().iter().all(Pattern::is_empty) {
+        if self.project.patterns().iter().all(Pattern::is_empty) {
+            self.edit("change time signature", |project| {
                 project.time_signature = time;
-                false
-            } else {
-                remeter(project, time)
-            }
-        });
-        if !remetered {
+            });
             return;
         }
-        // The original stays the reference for the library's rhythms.
-        self.remember_original(original);
+        let original = self.song_original();
+        if lineup_core::remeter::is_in(&original, time) {
+            self.back_to_original(original);
+            return;
+        }
+        let playing = self.song_library.rhythm.or_else(|| {
+            self.song_library
+                .style
+                .and_then(|style| Rhythm::named(style.rhythm))
+        });
+        let rhythm = Rhythm::for_time(time, playing);
+        self.use_in_song(LibraryAction::RhythmInSong(rhythm));
+    }
+
+    /// Puts back the song as it was before the library changed it, with
+    /// the style and rhythm it played then.
+    fn back_to_original(&mut self, original: Project) {
+        let before = self.project.clone();
+        let song_library = self.song_library;
+        self.edit("change time signature", |project| *project = original);
+        if self.project == before {
+            return;
+        }
         self.keep_place_in_song(&before);
+        self.remember_song_version(before, song_library);
+        self.restore_song_library();
         self.notice = Some(format!(
-            "The song is now in {time} at {:.0} BPM: every bar squeezed or stretched, \
-             lasting as long as before. Ctrl+Z takes it back.",
-            self.project.tempo.bpm()
+            "The song is back in {}, as it was. Ctrl+Z takes it back.",
+            self.project.time_signature
         ));
     }
 
