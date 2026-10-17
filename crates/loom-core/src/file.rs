@@ -35,7 +35,10 @@ use serde::{Deserialize, Serialize};
 use crate::meter::TimeMarker;
 use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
 use crate::playlist::{Clip, LoopRegion, MAX_TRACKS, Section, Track};
-use crate::project::{Channel, ChannelKind, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource};
+use crate::project::{
+    Channel, ChannelKind, MAX_CHANNELS, MAX_LOOSE_TIMING, MAX_PATTERNS, Project, SampleSource,
+};
+use crate::tempo::TempoMarker;
 use crate::{Scale, Tempo, TimeSignature};
 
 /// The file name extension of Ferrous Loom projects, without the dot.
@@ -66,7 +69,11 @@ pub const EXTENSION: &str = "loom";
 /// Format 6 added two kinds of key for music without one: a twelve-tone
 /// row and a pitch-class set. Older versions would not know them and could
 /// not open the file, so they are told it is newer instead.
-pub const FORMAT_VERSION: u32 = 6;
+///
+/// Format 7 added tempo changes through a song, and loose timing. Older
+/// versions would play the whole song at its first tempo, and every
+/// note on the grid, so a song that uses either needs format 7.
+pub const FORMAT_VERSION: u32 = 7;
 
 /// The oldest format that can hold `project`.
 ///
@@ -97,7 +104,9 @@ pub fn format_for(project: &Project) -> u32 {
     let has_structure = !playlist.sections().is_empty()
         || playlist.loop_region().is_some()
         || playlist.clips().iter().any(|clip| clip.repeats != 1);
-    if !project.scale.kind.is_tonal() {
+    if !playlist.tempo_markers().is_empty() || project.loose_timing > 0 {
+        7
+    } else if !project.scale.kind.is_tonal() {
         6
     } else if !playlist.time_markers().is_empty() {
         5
@@ -134,6 +143,16 @@ struct ProjectFile {
     /// Left out when the time signature never changes.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     time_markers: Vec<TimeMarker>,
+    /// Left out when the tempo never changes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    tempo_markers: Vec<TempoMarker>,
+    /// Left out when every note plays on the grid.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    loose_timing: u8,
+}
+
+fn is_zero(value: &u8) -> bool {
+    *value == 0
 }
 
 /// A pattern as it is written in a file.
@@ -256,6 +275,8 @@ impl From<&Project> for ProjectFile {
             sections: project.playlist().sections().to_vec(),
             loop_region: project.playlist().loop_region(),
             time_markers: project.playlist().time_markers().to_vec(),
+            tempo_markers: project.playlist().tempo_markers().to_vec(),
+            loose_timing: project.loose_timing,
         }
     }
 }
@@ -365,6 +386,16 @@ impl TryFrom<ProjectFile> for Project {
                 ));
             }
         }
+        for marker in file.tempo_markers {
+            if marker.start == 0 || !project.set_tempo_marker(marker) {
+                return invalid(format!(
+                    "its change to {} BPM at step {} is too late or on the first step",
+                    marker.tempo.bpm(),
+                    marker.start + 1
+                ));
+            }
+        }
+        project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
         project.remove_blank_tracks();
         Ok(project)
     }
@@ -471,10 +502,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 7 might have fields we have never heard of. Only the
+        // Format 8 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 7, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(7)), "{error}");
+        let error = from_text("(format: 8, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(8)), "{error}");
     }
 
     #[test]
@@ -578,6 +609,27 @@ mod tests {
         );
         assert_ne!(broken, text, "{text}");
         assert!(from_text(&broken).is_err());
+    }
+
+    #[test]
+    fn tempo_changes_and_loose_timing_need_format_seven() {
+        let mut project = Project::demo();
+        assert!(project.set_tempo_marker(TempoMarker::gliding(96, 90.0, 16)));
+        assert!(project.set_tempo_marker(TempoMarker::new(120, 130.0)));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 7,"), "{text}");
+        assert!(text.contains("tempo_markers"), "{text}");
+        assert!(text.contains("glide: 16"), "{text}");
+        assert!(!text.contains("loose_timing"), "{text}");
+        let loaded = from_text(&text).unwrap();
+        assert_eq!(loaded, project);
+        assert_eq!(loaded.tempo_map(), project.tempo_map());
+
+        let mut loose = Project::demo();
+        loose.loose_timing = 12;
+        let text = to_text(&loose).unwrap();
+        assert!(text.contains("format: 7,"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), loose);
     }
 
     #[test]

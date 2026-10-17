@@ -45,6 +45,8 @@ pub use playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, SECTION_NAMES,
     STEPS_PER_BAR, Section, Track,
 };
-pub use project::{Channel, ChannelKind, Drum, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource};
+pub use project::{
+    Channel, ChannelKind, Drum, MAX_CHANNELS, MAX_LOOSE_TIMING, MAX_PATTERNS, Project, SampleSource,
+};
 pub use sequencer::{STEPS_PER_BEAT, Sequencer};
-pub use tempo::Tempo;
+pub use tempo::{Tempo, TempoMap, TempoMarker};

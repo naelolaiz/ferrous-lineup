@@ -16,7 +16,7 @@ use crate::arrangement::Play;
 use crate::meter::{Meter, TimeMarker};
 use crate::midi::{DRUM_CHANNEL, MidiMessage};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
-use crate::{Note, STEPS_PER_BEAT};
+use crate::{Note, STEPS_PER_BEAT, Tempo};
 
 /// How many ticks one beat (a quarter note) is divided into. 96 is a
 /// common choice: it divides by 2, 3, 4, 8, 16 and 32.
@@ -31,7 +31,8 @@ pub const TICKS_PER_STEP: u32 = TICKS_PER_BEAT as u32 / STEPS_PER_BEAT;
 pub fn song_to_midi(project: &Project) -> Vec<u8> {
     let song = project.arrangement();
     let meter = project.played_meter(&song);
-    write_file(project, &meter, &song.plays, song.length)
+    let tempos = project.played_tempos(&song);
+    write_file(project, &meter, &tempos, &song.plays, song.length)
 }
 
 /// One pattern, from its first step, as pattern mode loops it.
@@ -46,7 +47,7 @@ pub fn pattern_to_midi(project: &Project, pattern: usize) -> Vec<u8> {
         length,
     };
     let meter = Meter::steady(project.pattern_time(pattern));
-    write_file(project, &meter, &[play], length)
+    write_file(project, &meter, &[], &[play], length)
 }
 
 /// The note General MIDI drum sets play for each built-in drum.
@@ -69,12 +70,19 @@ pub fn general_midi_drum(drum: Drum) -> Note {
 }
 
 /// Writes a file with the pieces of patterns `placed` for every channel,
-/// lasting `length` steps, with bars counted in `meter`.
-fn write_file(project: &Project, meter: &Meter, placed: &[Play], length: usize) -> Vec<u8> {
+/// lasting `length` steps, with bars counted in `meter`, and step `n` at
+/// `tempos[n]` (the project's tempo throughout if `tempos` is empty).
+fn write_file(
+    project: &Project,
+    meter: &Meter,
+    tempos: &[Tempo],
+    placed: &[Play],
+    length: usize,
+) -> Vec<u8> {
     let midi_channels = midi_channels(project.channels());
     let end = length as u32 * TICKS_PER_STEP;
 
-    let mut tracks = vec![tempo_track(project, meter, end)];
+    let mut tracks = vec![tempo_track(project, meter, tempos, end)];
     for (index, channel) in project.channels().iter().enumerate() {
         if channel.muted {
             continue;
@@ -195,13 +203,31 @@ fn channel_events(
 }
 
 /// The first track: the song's name, tempo and time signatures.
-fn tempo_track(project: &Project, meter: &Meter, end: u32) -> Vec<u8> {
+///
+/// A song whose tempo changes gets a tempo event on every step where it
+/// changes: one for a sudden change, and one per step of a glide, which
+/// is how a MIDI file writes a ritardando.
+fn tempo_track(project: &Project, meter: &Meter, tempos: &[Tempo], end: u32) -> Vec<u8> {
     let mut track = TrackWriter::default();
     track.meta(0, TRACK_NAME, b"Ferrous Loom");
+    // Every event of the track, with its tick, sorted by tick at the end.
+    let mut events: Vec<(u32, u8, Vec<u8>)> = Vec::new();
     // The tempo is written as microseconds per beat, in three bytes.
-    let micros = (60_000_000.0 / f64::from(project.tempo.bpm())).round() as u32;
-    let micros = micros.min(0xFF_FFFF).to_be_bytes();
-    track.meta(0, TEMPO, &micros[1..]);
+    let tempo_event = |tempo: Tempo| {
+        let micros = (60_000_000.0 / f64::from(tempo.bpm())).round() as u32;
+        micros.min(0xFF_FFFF).to_be_bytes()[1..].to_vec()
+    };
+    events.push((
+        0,
+        TEMPO,
+        tempo_event(tempos.first().copied().unwrap_or(project.tempo)),
+    ));
+    for (step, pair) in tempos.windows(2).enumerate() {
+        if pair[1] != pair[0] {
+            let tick = (step as u32 + 1) * TICKS_PER_STEP;
+            events.push((tick, TEMPO, tempo_event(pair[1])));
+        }
+    }
     // The time signature: beats to the bar, then the beat's note as a
     // power of two (2 for a quarter, 2^2 = 4; 3 for an eighth), then the
     // MIDI clocks per metronome click (24 per quarter note, 6 per step),
@@ -210,17 +236,18 @@ fn tempo_track(project: &Project, meter: &Meter, end: u32) -> Vec<u8> {
     let first = TimeMarker::new(0, meter.first());
     for marker in std::iter::once(first).chain(meter.markers().iter().copied()) {
         let tick = marker.start as u32 * TICKS_PER_STEP;
-        if tick > end {
-            break;
-        }
         let signature = marker.time;
         let unit_power = signature.unit.max(1).ilog2() as u8;
         let clocks = (signature.steps_per_beat() * 6).min(255) as u8;
-        track.meta(
+        events.push((
             tick,
             TIME_SIGNATURE,
-            &[signature.beats, unit_power, clocks, 8],
-        );
+            vec![signature.beats, unit_power, clocks, 8],
+        ));
+    }
+    events.sort_by_key(|&(tick, ..)| tick);
+    for (tick, kind, data) in events.into_iter().filter(|(tick, ..)| *tick <= end) {
+        track.meta(tick, kind, &data);
     }
     track.finish(end)
 }
@@ -297,7 +324,7 @@ fn write_variable_length(out: &mut Vec<u8>, value: u32) {
 mod tests {
     use super::*;
     use crate::playlist::{Clip, Section};
-    use crate::{NoteEvent, Tempo};
+    use crate::{NoteEvent, Tempo, TempoMarker};
 
     fn variable_length(value: u32) -> Vec<u8> {
         let mut out = Vec::new();
@@ -357,6 +384,39 @@ mod tests {
         }
         assert_eq!(at, file.len(), "nothing after the last track");
         tracks
+    }
+
+    #[test]
+    fn tempo_changes_are_written_where_they_happen() {
+        let mut project = project();
+        project.add_clip(Clip::new(0, 0, 0));
+        project.add_clip(Clip::new(0, 0, 16));
+        // A sudden change to 60 BPM on bar 2, then a glide back up to
+        // 100 over its last four steps.
+        project.set_tempo_marker(TempoMarker::new(16, 60.0));
+        project.set_tempo_marker(TempoMarker::gliding(28, 100.0, 4));
+        let tracks = read(&song_to_midi(&project));
+        let tempos: Vec<(u32, Vec<u8>)> = tracks[0]
+            .iter()
+            .filter(|(_, event)| event[..2] == [0xFF, 0x51])
+            .cloned()
+            .collect();
+        let micros = |bpm: f64| {
+            let m = (60_000_000.0 / bpm).round() as u32;
+            vec![0xFF, 0x51, 3, (m >> 16) as u8, (m >> 8) as u8, m as u8]
+        };
+        let step = TICKS_PER_STEP;
+        assert_eq!(
+            tempos,
+            vec![
+                (0, micros(120.0)),
+                (16 * step, micros(60.0)),
+                (28 * step, micros(70.0)),
+                (29 * step, micros(80.0)),
+                (30 * step, micros(90.0)),
+                (31 * step, micros(100.0)),
+            ]
+        );
     }
 
     /// A project with a Loom Osc and a kick, at 120 BPM, and one bar-long

@@ -224,7 +224,10 @@ impl LoomApp {
     /// its notes for all of them. Used at startup, after opening a file,
     /// and to export the song.
     fn project_commands(&mut self, sample_rate: u32) -> Vec<Command> {
-        let mut commands = vec![Command::SetTempo(self.project.tempo)];
+        let mut commands = vec![
+            Command::SetTempo(self.project.tempo),
+            Command::SetLooseTiming(self.project.loose_timing),
+        ];
         for (index, pattern) in self.project.patterns().iter().enumerate() {
             commands.push(Command::InsertPattern {
                 index,
@@ -234,7 +237,7 @@ impl LoomApp {
         for index in 0..self.project.channels().len() {
             commands.push(self.channel_command(index, sample_rate));
         }
-        commands.push(self.song_command());
+        commands.extend(self.song_commands());
         commands
     }
 
@@ -274,13 +277,17 @@ impl LoomApp {
 
     /// The song as song mode plays it: the clips on tracks that are not
     /// muted, with every repeat unrolled, cut to the loop region if one
-    /// is set.
-    fn song_command(&self) -> Command {
+    /// is set, and the tempo of each of its steps.
+    fn song_commands(&self) -> [Command; 2] {
         let song = self.project.playback_arrangement();
-        Command::SetSong {
-            plays: song.plays,
-            length: song.length,
-        }
+        let tempos = self.project.played_tempos(&song);
+        [
+            Command::SetSong {
+                plays: song.plays,
+                length: song.length,
+            },
+            Command::SetSongTempos(tempos),
+        ]
     }
 
     /// Changes the selected pattern, as one undoable step called `label`.
@@ -714,6 +721,17 @@ impl LoomApp {
                     project.remove_time_marker(start)
                 });
             }
+            PlaylistAction::SetTempoMarker(marker) => {
+                self.edit("change tempo", |project| project.set_tempo_marker(marker));
+            }
+            PlaylistAction::SetLooseTiming(ms) => {
+                self.edit("change loose timing", |project| project.loose_timing = ms);
+            }
+            PlaylistAction::RemoveTempoMarker(start) => {
+                self.edit("remove tempo change", |project| {
+                    project.remove_tempo_marker(start)
+                });
+            }
             PlaylistAction::Library(action) => self.try_from_library(action),
         }
     }
@@ -828,22 +846,46 @@ impl LoomApp {
                 self.record_button(ui);
             });
 
-            let mut bpm = self.project.tempo.bpm();
-            let tempo = theme::lcd_frame(ui, "TEMPO", 62.0, |ui| {
-                ui.add(
-                    egui::DragValue::new(&mut bpm)
-                        .range(Tempo::MIN..=Tempo::MAX)
-                        .speed(0.5)
-                        .fixed_decimals(1),
-                )
-            });
-            if theme::hint(
-                tempo,
-                "Tempo in beats a minute. Drag up or down, or double-click to type",
-            )
-            .changed()
-            {
-                self.edit("change tempo", |project| project.tempo = Tempo::new(bpm));
+            // While a song whose tempo changes plays, the box follows the
+            // tempo at the playhead, as FL Studio's does; stopped, it is
+            // the tempo the song starts at, to change.
+            let map = self.project.tempo_map();
+            let now = if map.is_steady() || !self.playing {
+                None
+            } else {
+                self.song_position()
+                    .map(|(step, _)| map.tempo_at(step).bpm())
+            };
+            if let Some(now) = now {
+                let lcd = theme::lcd(ui, "TEMPO NOW", &format!("{now:.1}"), 62.0);
+                theme::hint(
+                    lcd,
+                    "The tempo playing now: this song changes tempo (see the tempo strip at \
+                     the top of the playlist). Stop to change the tempo it starts at; every \
+                     change moves with it",
+                );
+            } else {
+                let mut bpm = self.project.tempo.bpm();
+                let tempo = theme::lcd_frame(ui, "TEMPO", 62.0, |ui| {
+                    ui.add(
+                        egui::DragValue::new(&mut bpm)
+                            .range(Tempo::MIN..=Tempo::MAX)
+                            .speed(0.5)
+                            .fixed_decimals(1),
+                    )
+                });
+                let text = if map.is_steady() {
+                    "Tempo in beats a minute. Drag up or down, or double-click to type"
+                } else {
+                    "The tempo the song starts at, in beats a minute. This song changes \
+                     tempo (see the tempo strip at the top of the playlist), and every \
+                     change moves with this one. Drag up or down, or double-click to type"
+                };
+                if theme::hint(tempo, text).changed() {
+                    self.edit("change tempo", |project| {
+                        project.scale_tempo(Tempo::new(bpm))
+                    });
+                }
             }
             let position = theme::lcd(ui, "BAR : BEAT : STEP", &self.position_text(), 92.0);
             theme::hint(

@@ -70,6 +70,11 @@ pub(crate) const NO_POSITION: u64 = u64::MAX;
 /// How long volume changes take to settle, in seconds.
 const VOLUME_SMOOTHING: f32 = 0.01;
 
+/// How many notes can wait to start late, with loose timing on. Each
+/// waits a few hundredths of a second at most, so even a dense song has
+/// only a few dozen waiting at once.
+const PENDING_NOTES: usize = 512;
+
 /// What the play button plays.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum PlayMode {
@@ -154,8 +159,17 @@ pub enum Command {
     /// Choose the pattern that pattern mode loops.
     SelectPattern(usize),
     /// Change the tempo. Notes that are sounding keep their length in
-    /// steps: they end sooner or later, on the step they should.
+    /// steps: they end sooner or later, on the step they should. With
+    /// [`Command::SetSongTempos`], this is the tempo of pattern mode only.
     SetTempo(Tempo),
+    /// The tempo of every step of the song, for a song whose tempo
+    /// changes: song step `n` plays at `tempos[n]`. An empty list (the
+    /// usual case) plays the whole song at the [`Command::SetTempo`]
+    /// tempo. Sent together with [`Command::SetSong`].
+    SetSongTempos(Vec<Tempo>),
+    /// How far off the grid notes may start, in milliseconds: each one
+    /// starts up to this much late. 0 plays every note on its step.
+    SetLooseTiming(u8),
     SetMasterVolume(f32),
     /// Add an empty pattern at position `index`; the patterns from there
     /// on move up one place. An index past the end adds it at the end.
@@ -235,6 +249,7 @@ pub(crate) enum Garbage {
     Notes(Vec<NoteEvent>),
     Channel(ChannelState),
     Song(Vec<Play>),
+    Tempos(Vec<Tempo>),
 }
 
 /// What the engine found when it opened the sound card.
@@ -450,6 +465,7 @@ impl AudioEngine {
                 Garbage::Notes(notes) => drop(notes),
                 Garbage::Channel(channel) => drop(channel),
                 Garbage::Song(clips) => drop(clips),
+                Garbage::Tempos(tempos) => drop(tempos),
             }
         }
     }
@@ -510,6 +526,21 @@ pub(crate) struct AudioThread {
     /// The pieces of patterns the song plays, and its length in steps.
     plays: Vec<Play>,
     song_length: usize,
+    /// The tempo of each step of the song, or none if it never changes.
+    song_tempos: Vec<Tempo>,
+    /// The tempo the user set: pattern mode's, and the song's when
+    /// `song_tempos` is empty.
+    tempo: Tempo,
+    /// The tempo the sequencer is running at right now.
+    tempo_now: Tempo,
+    /// How many frames late a note may start, with loose timing.
+    loose_frames: f64,
+    /// Notes waiting to start late. Reserved with room for
+    /// [`PENDING_NOTES`], so `push` never allocates.
+    pending: Vec<Pending>,
+    /// Frames played since the engine started: the clock pending notes
+    /// wait on.
+    now: u64,
     mode: PlayMode,
     /// The pattern that pattern mode loops.
     pattern: usize,
@@ -552,6 +583,12 @@ impl AudioThread {
             pattern_lengths: Vec::with_capacity(MAX_PATTERNS),
             plays: Vec::new(),
             song_length: 0,
+            song_tempos: Vec::new(),
+            tempo: Tempo::default(),
+            tempo_now: Tempo::default(),
+            loose_frames: 0.0,
+            pending: Vec::with_capacity(PENDING_NOTES),
+            now: 0,
             mode: PlayMode::Pattern,
             pattern: 0,
             sequencer: Sequencer::new(Tempo::default(), sample_rate, STEPS_PER_BAR),
@@ -605,6 +642,7 @@ impl AudioThread {
             }
             Command::Seek(step) => {
                 self.start = step;
+                self.pending.clear();
                 if self.playing {
                     // Notes that were playing would otherwise hang on
                     // until the end they will now never reach.
@@ -617,6 +655,7 @@ impl AudioThread {
             Command::Stop => self.stop(),
             Command::SetMode(mode) => {
                 self.mode = mode;
+                self.pending.clear();
                 self.update_loop_length();
                 self.start = 0;
                 self.sequencer.reset();
@@ -625,7 +664,20 @@ impl AudioThread {
                 self.pattern = pattern;
                 self.update_loop_length();
             }
-            Command::SetTempo(tempo) => self.set_tempo(tempo),
+            Command::SetTempo(tempo) => {
+                self.tempo = tempo;
+                // A song whose tempo changes sets it step by step.
+                if self.mode == PlayMode::Pattern || self.song_tempos.is_empty() {
+                    self.set_tempo(tempo);
+                }
+            }
+            Command::SetSongTempos(tempos) => {
+                let old = std::mem::replace(&mut self.song_tempos, tempos);
+                self.throw_away(Garbage::Tempos(old));
+            }
+            Command::SetLooseTiming(ms) => {
+                self.loose_frames = f64::from(ms) / 1000.0 * f64::from(self.sample_rate);
+            }
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
             Command::InsertPattern { index, length } => {
                 if self.pattern_lengths.len() < MAX_PATTERNS {
@@ -678,8 +730,9 @@ impl AudioThread {
                 };
                 if self.channels.len() < MAX_CHANNELS {
                     // The channels are about to move, and `live_keys`
-                    // knows them by position.
+                    // and the notes waiting to start know them by position.
                     self.release_live_keys();
+                    self.pending.clear();
                     // `insert` moves the channels after `index` along by
                     // one, inside the room reserved up front.
                     self.channels
@@ -691,6 +744,7 @@ impl AudioThread {
             Command::RemoveChannel(index) => {
                 if index < self.channels.len() {
                     self.release_live_keys();
+                    self.pending.clear();
                     let mut removed = self.channels.remove(index);
                     silence(&mut removed.instrument, &mut self.midi_out);
                     self.throw_away(Garbage::Channel(removed));
@@ -727,8 +781,10 @@ impl AudioThread {
                 if let Some(state) = self.channels.get_mut(channel) {
                     state.muted = muted;
                     if muted {
-                        // Every note of the song on this channel stops.
+                        // Every note of the song on this channel stops,
+                        // and those about to start never do.
                         state.instrument.release_unless(|_| false);
+                        self.pending.retain(|note| note.channel != channel);
                     }
                 }
             }
@@ -749,6 +805,8 @@ impl AudioThread {
                 self.pattern_lengths.clear();
                 let old = std::mem::take(&mut self.plays);
                 self.throw_away(Garbage::Song(old));
+                let old = std::mem::take(&mut self.song_tempos);
+                self.throw_away(Garbage::Tempos(old));
                 self.song_length = 0;
                 self.pattern = 0;
                 self.update_loop_length();
@@ -769,6 +827,7 @@ impl AudioThread {
     /// Changes the tempo, and stretches the notes that are sounding to
     /// match, so each still ends on the step it should.
     fn set_tempo(&mut self, tempo: Tempo) {
+        self.tempo_now = tempo;
         let before = self.sequencer.step_frames();
         let next_step = self.sequencer.frames_to_next_step();
         self.sequencer.set_tempo(tempo);
@@ -800,8 +859,23 @@ impl AudioThread {
         }
     }
 
+    /// The tempo step `step` of the loop plays at: the song's own for
+    /// that step, if its tempo changes, or else the tempo the user set.
+    fn tempo_of_step(&self, step: usize) -> Tempo {
+        match self.mode {
+            PlayMode::Song => self
+                .song_tempos
+                .get(step)
+                .or(self.song_tempos.last())
+                .copied()
+                .unwrap_or(self.tempo),
+            PlayMode::Pattern => self.tempo,
+        }
+    }
+
     fn stop(&mut self) {
         self.playing = false;
+        self.pending.clear();
         self.playhead.store(NO_STEP, Ordering::Relaxed);
         self.position.store(NO_POSITION, Ordering::Relaxed);
         // This lets go of the keys that are down too.
@@ -884,6 +958,8 @@ impl AudioThread {
         let timing = Timing {
             step_frames: self.sequencer.step_frames(),
             sample_rate: self.sample_rate,
+            loose_frames: self.loose_frames,
+            now: self.now,
         };
         match self.mode {
             PlayMode::Pattern => {
@@ -897,6 +973,7 @@ impl AudioThread {
                     },
                     length - step.min(length),
                     timing,
+                    &mut self.pending,
                 );
             }
             PlayMode::Song => {
@@ -917,6 +994,7 @@ impl AudioThread {
                             },
                             room,
                             timing,
+                            &mut self.pending,
                         );
                     }
                 }
@@ -939,12 +1017,24 @@ impl AudioThread {
         }
 
         for frame in output.chunks_mut(self.output_channels) {
-            if self.playing
-                && let Some(step) = self.sequencer.tick()
-            {
-                self.playhead.store(step, Ordering::Relaxed);
-                self.start_notes(step);
+            if self.playing {
+                // A step about to start plays at its own tempo, which is
+                // set before it starts, so it lasts as long as it should.
+                if let Some(step) = self.sequencer.due() {
+                    let tempo = self.tempo_of_step(step);
+                    if tempo != self.tempo_now {
+                        self.set_tempo(tempo);
+                    }
+                }
+                if let Some(step) = self.sequencer.tick() {
+                    self.playhead.store(step, Ordering::Relaxed);
+                    self.start_notes(step);
+                }
             }
+            if !self.pending.is_empty() {
+                self.start_pending();
+            }
+            self.now += 1;
 
             let mut mix = 0.0;
             for channel in &mut self.channels {
@@ -964,6 +1054,72 @@ impl AudioThread {
     }
 }
 
+impl AudioThread {
+    /// Starts the notes whose wait is over.
+    fn start_pending(&mut self) {
+        let mut index = 0;
+        while index < self.pending.len() {
+            let note = self.pending[index];
+            if note.at <= self.now {
+                // `swap_remove` puts the last note in this one's place
+                // instead of moving them all down: the order of the
+                // waiting notes does not matter.
+                self.pending.swap_remove(index);
+                if let Some(channel) = self.channels.get_mut(note.channel) {
+                    channel.instrument.note_on_from(
+                        note.origin,
+                        note.pitch,
+                        note.velocity,
+                        note.gate,
+                        self.sample_rate,
+                    );
+                }
+            } else {
+                index += 1;
+            }
+        }
+    }
+}
+
+/// A note of the song waiting to start, a little late, with loose timing.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Pending {
+    channel: usize,
+    origin: Origin,
+    pitch: Note,
+    velocity: u8,
+    gate: u32,
+    /// The frame it starts on, counted on [`AudioThread::now`]'s clock.
+    at: u64,
+}
+
+/// A number from 0 to 1 that looks random but is always the same for
+/// the same `seed`: the "SplitMix64" mixer, which scrambles the bits of
+/// a number so that seeds next to each other give unrelated results.
+///
+/// Loose timing uses it instead of a real random number so a song plays
+/// the same way every time, and a WAV export sounds like playback.
+fn scatter(seed: u64) -> f64 {
+    let mut x = seed.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    x = (x ^ (x >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    x ^= x >> 31;
+    // The top 53 bits, as many as an `f64` holds exactly.
+    (x >> 11) as f64 / (1u64 << 53) as f64
+}
+
+/// How many frames late a note starts, with loose timing of up to
+/// `loose_frames`. A player is late or early by the same amount for all
+/// the notes of a chord, give or take a little, so most of the delay is
+/// the same for every note a channel starts on a step, and a fifth of
+/// it differs from note to note.
+fn delay(loose_frames: f64, channel: usize, song_step: usize, pitch: Note) -> f64 {
+    let onset = ((song_step as u64) << 8) | channel as u64;
+    let together = scatter(onset);
+    let apart = scatter(onset ^ (u64::from(pitch.midi()) << 40));
+    loose_frames * (0.8 * together + 0.2 * apart)
+}
+
 /// Ends the notes an instrument has playing on an external synth, before
 /// the instrument is thrown away. A synth only stops a note when it is
 /// told to, so without this the notes would hang there for ever.
@@ -979,11 +1135,14 @@ fn silence(instrument: &mut Instrument, midi_out: &mut Option<rtrb::Producer<Mid
     });
 }
 
-/// How long a step is, and the sample rate the instruments run at.
+/// How long a step is, the sample rate the instruments run at, how
+/// loose the timing is, and the frame the step starts on.
 #[derive(Debug, Clone, Copy)]
 struct Timing {
     step_frames: f64,
     sample_rate: u32,
+    loose_frames: f64,
+    now: u64,
 }
 
 /// Starts the notes of one pattern that begin on one of its steps, as
@@ -991,11 +1150,20 @@ struct Timing {
 /// the song. A note is held for `room` steps at most: up to the end of the
 /// pattern, or of the piece of the song that plays it.
 ///
+/// With loose timing, a note that should start a little late goes to
+/// `pending` instead, to start when its time comes.
+///
 /// This is a plain function, not a method, so that it borrows only the
 /// channels. Its caller can keep reading other fields of the audio thread
 /// (such as the clips) while the channels are being changed.
-fn start_pattern_notes(channels: &mut [ChannelState], origin: Origin, room: usize, timing: Timing) {
-    for channel in channels {
+fn start_pattern_notes(
+    channels: &mut [ChannelState],
+    origin: Origin,
+    room: usize,
+    timing: Timing,
+    pending: &mut Vec<Pending>,
+) {
+    for (index, channel) in channels.iter_mut().enumerate() {
         if channel.muted {
             continue;
         }
@@ -1011,6 +1179,20 @@ fn start_pattern_notes(channels: &mut [ChannelState], origin: Origin, room: usiz
             // A note that runs past the end of the pattern is cut there.
             let steps_held = note.length.min(room);
             let gate = (steps_held as f64 * timing.step_frames) as u32;
+            let late = delay(timing.loose_frames, index, origin.song_step, note.pitch) as u64;
+            // A full list never grows (that would allocate): the note
+            // then starts on time.
+            if late > 0 && pending.len() < pending.capacity() {
+                pending.push(Pending {
+                    channel: index,
+                    origin,
+                    pitch: note.pitch,
+                    velocity: note.velocity,
+                    gate,
+                    at: timing.now + late,
+                });
+                continue;
+            }
             channel.instrument.note_on_from(
                 origin,
                 note.pitch,
@@ -1216,7 +1398,7 @@ mod tests {
                 Garbage::Instrument(_) => instruments += 1,
                 Garbage::Notes(_) => note_lists += 1,
                 Garbage::Channel(_) => channels += 1,
-                Garbage::Song(_) => {}
+                Garbage::Song(_) | Garbage::Tempos(_) => {}
             }
         }
         assert_eq!(instruments, 1, "the replaced instrument");
@@ -1318,6 +1500,61 @@ mod tests {
             7,
             "step 39 is step 7 of the second time round"
         );
+    }
+
+    #[test]
+    fn a_song_plays_each_step_at_its_own_tempo() {
+        let mut h = harness();
+        add(&mut h, &[0, 1, 2, 3], false);
+        send(
+            &mut h,
+            Command::SetSong {
+                plays: vec![whole(0, 0)],
+                length: 16,
+            },
+        );
+        // Steps 0 and 1 at 120 BPM, then 60 BPM: twice as long.
+        let tempos = [120.0, 120.0, 60.0, 60.0]
+            .into_iter()
+            .chain(std::iter::repeat_n(120.0, 12))
+            .map(Tempo::new)
+            .collect();
+        send(&mut h, Command::SetSongTempos(tempos));
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 6 * STEP);
+        assert_eq!(onsets(&out), vec![0, STEP, 2 * STEP, 4 * STEP]);
+    }
+
+    #[test]
+    fn pattern_mode_keeps_the_tempo_that_was_set() {
+        let mut h = harness();
+        add(&mut h, &[0, 1, 2], false);
+        send(&mut h, Command::SetSongTempos(vec![Tempo::new(30.0); 16]));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 3 * STEP);
+        assert_eq!(onsets(&out), vec![0, STEP, 2 * STEP]);
+    }
+
+    #[test]
+    fn loose_timing_starts_notes_a_little_late() {
+        let loose = |ms: u8| {
+            let mut h = harness();
+            add(&mut h, &[0, 4, 8, 12], false);
+            send(&mut h, Command::SetLooseTiming(ms));
+            send(&mut h, Command::Play);
+            onsets(&render(&mut h, 16 * STEP))
+        };
+        assert_eq!(loose(0), vec![0, 4 * STEP, 8 * STEP, 12 * STEP]);
+        let late = loose(20);
+        // 20 ms at 48 kHz is 960 frames.
+        assert_eq!(late.len(), 4);
+        for (onset, on_grid) in late.iter().zip([0, 4 * STEP, 8 * STEP, 12 * STEP]) {
+            assert!((on_grid..on_grid + 960).contains(onset), "{late:?}");
+        }
+        assert_ne!(late[1] - 4 * STEP, late[2] - 8 * STEP, "{late:?}");
+        // The same every time.
+        assert_eq!(loose(20), late);
     }
 
     /// All 16 steps of a pattern, once, from song step `start`.
@@ -1466,6 +1703,7 @@ mod tests {
             kinds.push(match garbage {
                 Garbage::Channel(_) => "channel",
                 Garbage::Song(_) => "song",
+                Garbage::Tempos(_) => continue,
                 Garbage::Instrument(_) | Garbage::Notes(_) => "other",
             });
         }
