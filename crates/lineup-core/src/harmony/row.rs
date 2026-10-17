@@ -542,7 +542,7 @@ pub const ROW_PRESETS: [RowPreset; 8] = [
         row: ToneRow([11, 10, 2, 3, 7, 6, 8, 4, 5, 0, 1, 9]),
     },
     RowPreset {
-        name: "Loom row",
+        name: "Lineup row",
         source: "Written for Ferrous Lineup",
         about: "Hexachordally combinatorial: its first six notes and the first six of I3 \
                 make all twelve, so the two forms can be played together without a note \
@@ -623,14 +623,14 @@ mod tests {
 
     #[test]
     fn every_form_is_found_again() {
-        let loom = RowPreset::named("Loom row").unwrap().row;
+        let lineup = RowPreset::named("Lineup row").unwrap().row;
         for form in RowForm::ALL {
             for n in 0..12 {
                 let label = RowLabel::new(form, n);
-                assert_eq!(loom.label_of(loom.form(label)), Some(label));
+                assert_eq!(lineup.label_of(lineup.form(label)), Some(label));
             }
         }
-        assert_eq!(loom.label_of(ToneRow::CHROMATIC), None);
+        assert_eq!(lineup.label_of(ToneRow::CHROMATIC), None);
     }
 
     #[test]
@@ -683,8 +683,8 @@ mod tests {
 
     #[test]
     fn combinatoriality() {
-        let loom = RowPreset::named("Loom row").unwrap().row;
-        let forms: Vec<String> = loom
+        let lineup = RowPreset::named("Lineup row").unwrap().row;
+        let forms: Vec<String> = lineup
             .combinatorial_forms()
             .iter()
             .map(|l| l.to_string())

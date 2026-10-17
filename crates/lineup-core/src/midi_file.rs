@@ -329,14 +329,16 @@ const SEQUENCER_SPECIFIC: u8 = 0x7F;
 
 /// The start of our own event: 0x7D is the maker's number set aside for
 /// programs that are not sold, then our name, so another program's
-/// 0x7D event is never mistaken for ours. The name is the app's first
-/// one, Ferrous Loom, so files written before the rename still give
-/// back their key.
-const SCALE_EVENT_START: &[u8] = b"\x7DFerrous Loom key ";
+/// 0x7D event is never mistaken for ours.
+const SCALE_EVENT_START: &[u8] = b"\x7DFerrous Lineup key ";
+
+/// How the event started while the app was called Ferrous Loom, so
+/// files written before the rename still give back their key.
+const OLD_SCALE_EVENT_START: &[u8] = b"\x7DFerrous Loom key ";
 
 /// The data of the sequencer-specific event that holds the exact key:
-/// 0x7D, "Ferrous Loom key " and then the key as a project file writes it,
-/// such as `(root:E,kind:Dorian)`.
+/// 0x7D, "Ferrous Lineup key " and then the key as a project file
+/// writes it, such as `(root:E,kind:Dorian)`.
 pub fn scale_event(scale: Scale) -> Vec<u8> {
     let mut data = SCALE_EVENT_START.to_vec();
     data.extend_from_slice(ron::to_string(&scale).unwrap_or_default().as_bytes());
@@ -345,7 +347,10 @@ pub fn scale_event(scale: Scale) -> Vec<u8> {
 
 /// The key a sequencer-specific event holds, if [`scale_event`] wrote it.
 pub fn scale_from_event(data: &[u8]) -> Option<Scale> {
-    let text = std::str::from_utf8(data.strip_prefix(SCALE_EVENT_START)?).ok()?;
+    let key = data
+        .strip_prefix(SCALE_EVENT_START)
+        .or_else(|| data.strip_prefix(OLD_SCALE_EVENT_START))?;
+    let text = std::str::from_utf8(key).ok()?;
     ron::from_str(text).ok()
 }
 
@@ -528,7 +533,7 @@ mod tests {
         );
     }
 
-    /// A project with a Loom Osc and a kick, at 120 BPM, and one bar-long
+    /// A project with a Lineup Osc and a kick, at 120 BPM, and one bar-long
     /// pattern.
     fn project() -> Project {
         let mut project = Project::empty();
@@ -650,7 +655,16 @@ mod tests {
             assert_eq!(written, [Some(scale)], "{scale:?}");
         }
         assert_eq!(scale_from_event(b"\x7DSomeone else"), None);
-        assert_eq!(scale_from_event(b"\x7DFerrous Loom key (root:"), None);
+        assert_eq!(scale_from_event(b"\x7DFerrous Lineup key (root:"), None);
+        // Files written before the rename give back their key too.
+        let old = b"\x7DFerrous Loom key (root:E,kind:Dorian)";
+        assert_eq!(
+            scale_from_event(old),
+            Some(crate::Scale::new(
+                crate::PitchClass::E,
+                crate::ScaleKind::Dorian
+            ))
+        );
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! The real-time audio engine for Ferrous Lineup.
 //!
-//! - [`instrument`] holds the sound generators (the sampler and the Loom
-//!   Osc synth) and the MIDI Out, [`timbre`] the Loom Osc's sounds for the
+//! - [`instrument`] holds the sound generators (the sampler and the Lineup
+//!   Osc synth) and the MIDI Out, [`timbre`] the Lineup Osc's sounds for the
 //!   General MIDI instruments, [`drums`] synthesizes the built-in drum kit and [`dsp`]
 //!   has the small filters and smoothers they share. They are plain
 //!   structs that compute samples, so they can be tested without a sound card.

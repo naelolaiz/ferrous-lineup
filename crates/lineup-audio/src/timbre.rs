@@ -1,7 +1,7 @@
-//! The sounds of the Loom Osc: one for each kind of General MIDI
+//! The sounds of the Lineup Osc: one for each kind of General MIDI
 //! instrument.
 //!
-//! The Loom Osc is a very small synth: one oscillator per note, a soft
+//! The Lineup Osc is a very small synth: one oscillator per note, a soft
 //! low-pass filter and a volume envelope. It cannot sound like a violin,
 //! but it can sound more like one than like a piano. Three things do most
 //! of the work:
@@ -16,7 +16,7 @@
 //! - The *filter*: a low cutoff makes a dark sound (a bass), a high one a
 //!   bright sound (a harpsichord).
 //!
-//! A channel with no General MIDI program keeps the Loom Osc's own sound.
+//! A channel with no General MIDI program keeps the Lineup Osc's own sound.
 
 /// The shape of one cycle of the oscillator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,7 +60,7 @@ impl Wave {
     }
 }
 
-/// Everything that makes one sound of the Loom Osc different from another.
+/// Everything that makes one sound of the Lineup Osc different from another.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Timbre {
     pub wave: Wave,
@@ -76,13 +76,13 @@ pub struct Timbre {
     pub release: f32,
     /// The low-pass filter's cutoff, in Hz: lower is darker.
     pub cutoff: f32,
-    /// How loud, compared with the Loom Osc's own sound.
+    /// How loud, compared with the Lineup Osc's own sound.
     pub gain: f32,
 }
 
 impl Timbre {
-    /// The Loom Osc's own sound: a bright, short-decaying sawtooth.
-    pub const LOOM_OSC: Timbre = Timbre {
+    /// The Lineup Osc's own sound: a bright, short-decaying sawtooth.
+    pub const LINEUP_OSC: Timbre = Timbre {
         wave: Wave::Saw,
         attack: 0.004,
         decay: 0.3,
@@ -118,11 +118,11 @@ impl Timbre {
         Timbre::new(wave, attack, 0.3, 0.85, release)
     }
 
-    /// The sound closest to General MIDI program `program`, or the Loom
+    /// The sound closest to General MIDI program `program`, or the Lineup
     /// Osc's own for `None`.
     pub fn for_program(program: Option<u8>) -> Timbre {
         let Some(program) = program else {
-            return Timbre::LOOM_OSC;
+            return Timbre::LINEUP_OSC;
         };
         let timbre = match program.min(127) {
             // Pianos.
@@ -160,9 +160,9 @@ impl Timbre {
             // Synth leads: the square one is a square.
             80 => Timbre {
                 wave: Wave::Square,
-                ..Timbre::LOOM_OSC
+                ..Timbre::LINEUP_OSC
             },
-            81..=87 => Timbre::LOOM_OSC,
+            81..=87 => Timbre::LINEUP_OSC,
             // Pads and atmospheres: slow in, slow out.
             88..=103 => Timbre::held(Wave::Saw, 0.4, 0.6).cutoff(1_500.0),
             // From other lands: bagpipe, fiddle and shanai are held, the
@@ -172,8 +172,8 @@ impl Timbre {
             104..=108 => Timbre::struck(Wave::Saw, 0.6, 0.15).cutoff(3_000.0),
             // Percussive sounds with a pitch: bells, steel drums, toms.
             112..=119 => Timbre::struck(Wave::Sine, 0.3, 0.1),
-            // Sound effects have no tune to play; the Loom Osc stands in.
-            _ => Timbre::LOOM_OSC,
+            // Sound effects have no tune to play; the Lineup Osc stands in.
+            _ => Timbre::LINEUP_OSC,
         };
         Timbre {
             gain: timbre.gain * timbre.wave.gain(),
@@ -188,8 +188,8 @@ mod tests {
     use lineup_core::general_midi;
 
     #[test]
-    fn no_program_keeps_the_loom_osc() {
-        assert_eq!(Timbre::for_program(None), Timbre::LOOM_OSC);
+    fn no_program_keeps_the_lineup_osc() {
+        assert_eq!(Timbre::for_program(None), Timbre::LINEUP_OSC);
     }
 
     #[test]
