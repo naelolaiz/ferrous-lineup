@@ -18,26 +18,57 @@
 //! works out where every bar of such a song starts.
 
 use std::fmt;
+use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
 use crate::pattern::MAX_STEPS;
 
-/// How beats are grouped into bars, such as 4/4 or 6/8.
+/// How beats are grouped into bars, such as 4/4, 6/8, or 7/8 counted
+/// "one two, one two, one two three" (2+2+3).
+///
+/// Any top number works, from 1 up to as many as fit in a pattern, and
+/// the bottom number is a whole, half, quarter, eighth or sixteenth
+/// note: 1, 2, 4, 8 or 16. Thirty-seconds would not fit the grid of
+/// sixteenth-note steps.
+///
+/// Irregular ("aksak", or additive) meters such as the 7/8 of Balkan
+/// dances group their notes into beats of two and three. The grouping is
+/// part of the time signature, written as the top number: 2+2+3/8.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(from = "SavedTime", into = "SavedTime")]
 pub struct TimeSignature {
     /// How many notes of `unit` length make a bar: the top number.
     pub beats: u8,
     /// Which note counts as a beat: 4 for quarter notes, 8 for eighths.
     /// The bottom number.
     pub unit: u8,
+    /// Where the felt beats start, when they are not the usual ones: bit
+    /// `i` is set when a beat starts on the bar's `i`-th `unit` note.
+    /// 0 means the usual beats (see [`TimeSignature::usual_groups`]).
+    ///
+    /// A `u64` keeps `TimeSignature` `Copy`, so it can be passed around
+    /// as freely as a number; a `Vec` could not be.
+    groups: u64,
+}
+
+/// One felt beat of a bar: which one it is and where it lies.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Beat {
+    /// Counted from 0: the first beat of the bar is 0.
+    pub index: usize,
+    /// The step it starts on, counted from the start of the bar.
+    pub start: usize,
+    /// How many steps it lasts.
+    pub length: usize,
 }
 
 impl TimeSignature {
     /// 4/4, "common time": four quarter-note beats to the bar.
     pub const COMMON: TimeSignature = TimeSignature::new(4, 4);
 
-    /// The time signatures the menu offers, from two beats to twelve.
+    /// The time signatures the menus offer with one click. Any other can
+    /// be typed in (see [`TimeSignature::from_str`](std::str::FromStr)).
     pub const ALL: [TimeSignature; 10] = [
         TimeSignature::new(2, 4),
         TimeSignature::new(3, 4),
@@ -51,10 +82,103 @@ impl TimeSignature {
         TimeSignature::new(12, 8),
     ];
 
+    /// The bottom numbers a time signature can have.
+    pub const UNITS: [u8; 5] = [1, 2, 4, 8, 16];
+
+    /// The most notes a grouped bar can have: one bit each in `groups`.
+    pub const MAX_GROUPED_BEATS: u8 = 64;
+
     /// A `const fn` can be called where Rust needs a value at compile
     /// time, such as in the `ALL` array above.
     pub const fn new(beats: u8, unit: u8) -> Self {
-        TimeSignature { beats, unit }
+        TimeSignature {
+            beats,
+            unit,
+            groups: 0,
+        }
+    }
+
+    /// A time signature whose beats are `groups` notes of `unit` long,
+    /// such as `[2, 2, 3]` and 8 for 2+2+3/8. The top number is their
+    /// sum. `None` if a group is empty or there are too many notes.
+    pub fn grouped(groups: &[u8], unit: u8) -> Option<Self> {
+        let total: usize = groups.iter().map(|&g| usize::from(g)).sum();
+        if groups.is_empty() || groups.contains(&0) || total > usize::from(Self::MAX_GROUPED_BEATS)
+        {
+            return None;
+        }
+        let mut mask = 0_u64;
+        let mut at = 0;
+        for &group in groups {
+            mask |= 1 << at;
+            at += usize::from(group);
+        }
+        let mut time = TimeSignature::new(total as u8, unit);
+        // The usual grouping is written the plain way, so 3+3/8 and 6/8
+        // are the same time signature.
+        if mask != time.usual_mask() {
+            time.groups = mask;
+        }
+        Some(time)
+    }
+
+    /// Whether the beats are grouped in some other way than the usual.
+    pub fn is_grouped(self) -> bool {
+        self.mask() != self.usual_mask()
+    }
+
+    /// The same top and bottom numbers, in the usual beats.
+    pub fn ungrouped(self) -> Self {
+        TimeSignature::new(self.beats, self.unit)
+    }
+
+    /// How many `unit` notes each beat has, in order: `[2, 2, 3]` for
+    /// 2+2+3/8, `[3, 3]` for 6/8, `[1, 1, 1]` for 3/4.
+    pub fn groups(self) -> Vec<u8> {
+        let mask = self.mask();
+        let beats = usize::from(self.beats);
+        let starts: Vec<usize> = (0..beats).filter(|&i| mask & (1 << i) != 0).collect();
+        starts
+            .iter()
+            .zip(starts.iter().skip(1).copied().chain([beats]))
+            .map(|(&from, to)| (to - from) as u8)
+            .collect()
+    }
+
+    /// How many `unit` notes a usual beat has. In 6/8, 9/8 and 12/8 the
+    /// eighth notes are felt in groups of three, so a beat is three
+    /// eighths (and the same for sixteenths: 6/16, 9/16, 12/16). Every
+    /// other time signature counts each note as a beat, including 5/8
+    /// and 7/8, until it is given a grouping such as 3+2/8.
+    pub fn usual_groups(self) -> u8 {
+        if self.unit >= 8 && self.beats.is_multiple_of(3) && self.beats > 3 {
+            3
+        } else {
+            1
+        }
+    }
+
+    /// The beat starts of the usual grouping, as in `groups`.
+    fn usual_mask(self) -> u64 {
+        let every = usize::from(self.usual_groups());
+        (0..usize::from(self.beats.min(Self::MAX_GROUPED_BEATS)))
+            .step_by(every)
+            .fold(0, |mask, i| mask | 1 << i)
+    }
+
+    /// The beat starts in use: `groups` if it fits the top number (it
+    /// always does unless `beats` was changed by hand), else the usual.
+    fn mask(self) -> u64 {
+        let fits = self.beats <= Self::MAX_GROUPED_BEATS
+            && self.groups & 1 == 1
+            && self.groups >> self.beats == 0;
+        if fits { self.groups } else { self.usual_mask() }
+    }
+
+    /// How many steps one `unit` note lasts: 4 for a quarter, 2 for an
+    /// eighth.
+    fn unit_steps(self) -> usize {
+        (16 / usize::from(self.unit.clamp(1, 16))).max(1)
     }
 
     /// How many steps (sixteenth notes) a bar lasts: 16 in 4/4, 12 in
@@ -64,21 +188,66 @@ impl TimeSignature {
         (usize::from(self.beats) * 16 / unit).max(1)
     }
 
-    /// How many steps each counted beat lasts, for drawing beat lines and
-    /// grouping the step buttons.
-    ///
-    /// In 3/4 and 4/4 that is a quarter note, four steps. In 6/8, 9/8
-    /// and 12/8 the eighth notes are felt in groups of three, so a beat
-    /// is three eighths, six steps. Other eighth-note signatures, like
-    /// 5/8 and 7/8, mix groups of two and three, so their lines go on
-    /// every eighth note.
-    pub fn steps_per_beat(self) -> usize {
-        let unit_steps = (16 / usize::from(self.unit.clamp(1, 16))).max(1);
-        if self.unit == 8 && self.beats.is_multiple_of(3) && self.beats > 3 {
-            unit_steps * 3
-        } else {
-            unit_steps
+    /// Whether Ferrous Loom can count this time signature: a top number
+    /// from 1, a bottom number from [`UNITS`](Self::UNITS), and bars that
+    /// fit in a pattern.
+    pub fn is_valid(self) -> bool {
+        self.beats > 0 && Self::UNITS.contains(&self.unit) && self.steps_per_bar() <= MAX_STEPS
+    }
+
+    /// The biggest top number that fits in a pattern over `unit`: 64 for
+    /// quarter notes, 128 for eighths.
+    pub fn max_beats(unit: u8) -> u8 {
+        let unit = usize::from(unit.clamp(1, 16));
+        (MAX_STEPS * unit / 16).min(usize::from(u8::MAX)) as u8
+    }
+
+    /// The steps, counted from the start of a bar, on which its beats
+    /// start: `[0, 4, 8]` in 3/4, `[0, 4, 8]` in 2+2+3/8 too, `[0, 6]`
+    /// in 6/8.
+    pub fn beat_starts(self) -> Vec<usize> {
+        let unit = self.unit_steps();
+        let bar = self.steps_per_bar();
+        let mut at = 0;
+        let mut starts = Vec::new();
+        for group in self.groups() {
+            if at >= bar {
+                break;
+            }
+            starts.push(at);
+            at += usize::from(group) * unit;
         }
+        if starts.is_empty() {
+            starts.push(0);
+        }
+        starts
+    }
+
+    /// The beat that `offset` steps into a bar is in. Offsets past the
+    /// end of the bar count on into the next one.
+    pub fn beat_at(self, offset: usize) -> Beat {
+        let bar = self.steps_per_bar();
+        let offset = offset % bar;
+        let starts = self.beat_starts();
+        let index = starts
+            .iter()
+            .rposition(|&start| start <= offset)
+            .unwrap_or(0);
+        let start = starts[index];
+        let end = starts.get(index + 1).copied().unwrap_or(bar);
+        Beat {
+            index,
+            start,
+            length: (end - start).max(1),
+        }
+    }
+
+    /// How many steps the first beat of a bar lasts: in 3/4 and 4/4 a
+    /// quarter note, four steps; in 6/8 three eighths, six steps; in
+    /// 3+2+2/8 also six. Other beats of a grouped bar may be shorter or
+    /// longer: see [`beat_at`](Self::beat_at).
+    pub fn first_beat(self) -> usize {
+        self.beat_at(0).length
     }
 
     /// Whether `step` starts a bar.
@@ -88,7 +257,8 @@ impl TimeSignature {
 
     /// Whether `step` starts a beat.
     pub fn is_beat_start(self, step: usize) -> bool {
-        (step % self.steps_per_bar()).is_multiple_of(self.steps_per_beat())
+        let offset = step % self.steps_per_bar();
+        self.beat_at(offset).start == offset
     }
 
     /// `steps` rounded up to a whole number of bars.
@@ -131,9 +301,96 @@ impl Default for TimeSignature {
 }
 
 impl fmt::Display for TimeSignature {
-    /// Written the usual way, "3/4".
+    /// Written the usual way, "3/4", with the grouping as the top number
+    /// if it has one: "2+2+3/8".
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}/{}", self.beats, self.unit)
+        if self.is_grouped() {
+            let groups: Vec<String> = self.groups().iter().map(u8::to_string).collect();
+            write!(f, "{}/{}", groups.join("+"), self.unit)
+        } else {
+            write!(f, "{}/{}", self.beats, self.unit)
+        }
+    }
+}
+
+impl FromStr for TimeSignature {
+    type Err = String;
+
+    /// Reads a time signature as it is written: "7/8", "2+2+3/8" or
+    /// "(2+2+3)/8". The error says what is wrong, for the menus to show.
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        let (top, bottom) = text
+            .split_once('/')
+            .ok_or("write it as two numbers, like 7/8")?;
+        let unit: u8 = bottom
+            .trim()
+            .parse()
+            .map_err(|_| "the bottom number must be a number")?;
+        if !Self::UNITS.contains(&unit) {
+            return Err("the bottom number must be 1, 2, 4, 8 or 16".to_string());
+        }
+        let top = top.trim().trim_start_matches('(').trim_end_matches(')');
+        let groups: Vec<u8> = top
+            .split('+')
+            .map(|group| group.trim().parse::<u8>())
+            .collect::<Result<_, _>>()
+            .map_err(|_| "the top number must be a number, or numbers joined by +")?;
+        if groups.contains(&0) {
+            return Err("the top number must be 1 or more".to_string());
+        }
+        let time = if let [beats] = groups[..] {
+            TimeSignature::new(beats, unit)
+        } else {
+            TimeSignature::grouped(&groups, unit).ok_or(format!(
+                "a grouped bar can have at most {} notes",
+                Self::MAX_GROUPED_BEATS
+            ))?
+        };
+        if time.steps_per_bar() > MAX_STEPS {
+            return Err(format!(
+                "a bar of {time} would not fit in a pattern (at most {}/{unit})",
+                Self::max_beats(unit)
+            ));
+        }
+        Ok(time)
+    }
+}
+
+/// How a time signature is written in project files: the two numbers,
+/// and the grouping only when it has one, as `groups: [2, 2, 3]`. So a
+/// file without groupings reads exactly as before.
+#[derive(Serialize, Deserialize)]
+struct SavedTime {
+    beats: u8,
+    unit: u8,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    groups: Vec<u8>,
+}
+
+impl From<TimeSignature> for SavedTime {
+    fn from(time: TimeSignature) -> Self {
+        SavedTime {
+            beats: time.beats,
+            unit: time.unit,
+            groups: if time.is_grouped() {
+                time.groups()
+            } else {
+                Vec::new()
+            },
+        }
+    }
+}
+
+impl From<SavedTime> for TimeSignature {
+    /// A grouping that does not add up to the top number is left out.
+    fn from(saved: SavedTime) -> Self {
+        let sum: usize = saved.groups.iter().map(|&g| usize::from(g)).sum();
+        if sum == usize::from(saved.beats) {
+            TimeSignature::grouped(&saved.groups, saved.unit)
+                .unwrap_or(TimeSignature::new(saved.beats, saved.unit))
+        } else {
+            TimeSignature::new(saved.beats, saved.unit)
+        }
     }
 }
 
@@ -173,7 +430,33 @@ impl Bar {
 
     /// Whether `step` starts a beat of this bar.
     pub fn is_beat_start(&self, step: usize) -> bool {
-        step >= self.start && (step - self.start).is_multiple_of(self.time.steps_per_beat())
+        step >= self.start
+            && step < self.start + self.time.steps_per_bar()
+            && self.time.is_beat_start(step - self.start)
+    }
+
+    /// The beat that `step`, inside this bar, is in. Its start is
+    /// counted from the start of the song. In a short bar, the last beat
+    /// ends with the bar.
+    pub fn beat_at(&self, step: usize) -> Beat {
+        let beat = self.time.beat_at(step.saturating_sub(self.start));
+        let start = self.start + beat.start;
+        Beat {
+            start,
+            length: beat.length.min(self.end().saturating_sub(start)).max(1),
+            ..beat
+        }
+    }
+
+    /// The steps on which this bar's beats start, counted from the start
+    /// of the song.
+    pub fn beat_starts(&self) -> impl Iterator<Item = usize> + '_ {
+        let end = self.end();
+        self.time
+            .beat_starts()
+            .into_iter()
+            .map(move |offset| self.start + offset)
+            .take_while(move |&step| step < end)
     }
 }
 
@@ -317,9 +600,13 @@ impl Meter {
 
     /// The start of the beat `step` is in.
     pub fn floor_to_beat(&self, step: usize) -> usize {
-        let bar = self.bar_at(step);
-        let beat = bar.time.steps_per_beat();
-        bar.start + (step - bar.start) / beat * beat
+        self.bar_at(step).beat_at(step).start
+    }
+
+    /// The end of the beat `step` is in: where the next one starts.
+    pub fn beat_end(&self, step: usize) -> usize {
+        let beat = self.bar_at(step).beat_at(step);
+        beat.start + beat.length
     }
 
     /// `steps` rounded up to the next bar line.
@@ -332,9 +619,8 @@ impl Meter {
     /// counted from 1: the way a song position is shown.
     pub fn position(&self, step: usize) -> (usize, usize, usize) {
         let bar = self.bar_at(step);
-        let beat = bar.time.steps_per_beat();
-        let offset = step - bar.start;
-        (bar.number + 1, offset / beat + 1, offset % beat + 1)
+        let beat = bar.beat_at(step);
+        (bar.number + 1, beat.index + 1, step - beat.start + 1)
     }
 
     /// The markers that change nothing left out: those that keep the
@@ -370,10 +656,80 @@ mod tests {
 
     #[test]
     fn eighths_in_threes_make_longer_beats() {
-        assert_eq!(signature(3, 4).steps_per_beat(), 4);
-        assert_eq!(signature(6, 8).steps_per_beat(), 6);
-        assert_eq!(signature(12, 8).steps_per_beat(), 6);
-        assert_eq!(signature(7, 8).steps_per_beat(), 2);
+        assert_eq!(signature(3, 4).first_beat(), 4);
+        assert_eq!(signature(6, 8).first_beat(), 6);
+        assert_eq!(signature(12, 8).first_beat(), 6);
+        assert_eq!(signature(7, 8).first_beat(), 2);
+        assert_eq!(signature(9, 16).beat_starts(), [0, 3, 6]);
+    }
+
+    fn typed(text: &str) -> TimeSignature {
+        text.parse().unwrap()
+    }
+
+    #[test]
+    fn any_numbers_can_be_typed() {
+        assert_eq!(typed("7/8"), signature(7, 8));
+        assert_eq!(typed(" 13 / 16 "), signature(13, 16));
+        assert_eq!(typed("1/1").steps_per_bar(), 16);
+        assert_eq!(typed("3/2").steps_per_bar(), 24);
+        assert_eq!(typed("64/4").steps_per_bar(), 256);
+        assert!("65/4".parse::<TimeSignature>().is_err(), "too long a bar");
+        assert!("7/6".parse::<TimeSignature>().is_err());
+        assert!("7/32".parse::<TimeSignature>().is_err());
+        assert!("0/4".parse::<TimeSignature>().is_err());
+        assert!("seven".parse::<TimeSignature>().is_err());
+        for time in TimeSignature::ALL {
+            assert_eq!(typed(&time.to_string()), time);
+        }
+    }
+
+    #[test]
+    fn irregular_meters_group_their_beats() {
+        let balkan = typed("2+2+3/8");
+        assert_eq!(balkan.beats, 7);
+        assert_eq!(balkan.steps_per_bar(), 14);
+        assert_eq!(balkan.groups(), [2, 2, 3]);
+        assert_eq!(balkan.beat_starts(), [0, 4, 8]);
+        assert_eq!(balkan.beat_at(9).length, 6);
+        assert_eq!(balkan.beat_at(9).index, 2);
+        assert_eq!(balkan.to_string(), "2+2+3/8");
+        assert_eq!(typed("(2+2+3)/8"), balkan);
+        assert_ne!(balkan, signature(7, 8));
+        assert_eq!(typed("3+2+2/8").first_beat(), 6);
+        let beats: Vec<usize> = (0..28).filter(|&s| balkan.is_beat_start(s)).collect();
+        assert_eq!(beats, [0, 4, 8, 14, 18, 22]);
+    }
+
+    #[test]
+    fn the_usual_grouping_is_written_plainly() {
+        assert_eq!(typed("3+3/8"), signature(6, 8));
+        assert_eq!(typed("1+1+1/4"), signature(3, 4));
+        assert!(!signature(6, 8).is_grouped());
+        assert_eq!(typed("2+2+3/8").ungrouped(), signature(7, 8));
+    }
+
+    #[test]
+    fn a_grouping_is_saved_only_when_there_is_one() {
+        let plain = ron::to_string(&signature(7, 8)).unwrap();
+        assert_eq!(plain, "(beats:7,unit:8)", "files read as before");
+        let grouped = ron::to_string(&typed("3+2+2/8")).unwrap();
+        assert_eq!(grouped, "(beats:7,unit:8,groups:[3,2,2])");
+        let back: TimeSignature = ron::from_str(&grouped).unwrap();
+        assert_eq!(back, typed("3+2+2/8"));
+        let wrong: TimeSignature = ron::from_str("(beats:7,unit:8,groups:[3,3])").unwrap();
+        assert_eq!(wrong, signature(7, 8), "a grouping that does not add up");
+    }
+
+    #[test]
+    fn a_meter_counts_grouped_beats() {
+        let meter = Meter::steady(typed("3+2+2/8"));
+        assert_eq!(meter.position(7), (1, 2, 2));
+        assert_eq!(meter.floor_to_beat(11), 10);
+        assert_eq!(meter.beat_end(6), 10);
+        assert_eq!(meter.position(14), (2, 1, 1));
+        let bar = meter.bar(1);
+        assert_eq!(bar.beat_starts().collect::<Vec<_>>(), [14, 20, 24]);
     }
 
     #[test]
