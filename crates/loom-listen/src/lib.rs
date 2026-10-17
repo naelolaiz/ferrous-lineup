@@ -8,6 +8,7 @@
 //!   key (with the `bpm-key` crate), and the chord of every beat (our
 //!   own [`chroma`] and [`chords`] modules: no crate did this well).
 //! - [`meter`] guesses how many beats make a bar, and where bar 1 is.
+//! - [`keys`] finds where the key changes, bar by bar.
 //! - [`arrange`] adds the recording and the chords to a project.
 
 pub mod arrange;
@@ -15,8 +16,10 @@ pub mod beats;
 pub mod chords;
 pub mod chroma;
 pub mod decode;
+pub mod keys;
 pub mod meter;
 
+use loom_core::harmony::key_finding::KeySpan;
 use loom_core::{Chord, PitchClass, Scale, ScaleKind};
 
 pub use decode::{DecodeError, Recording, decode_file};
@@ -48,6 +51,10 @@ pub struct Analysis {
     pub first_downbeat: usize,
     /// The key, if the recording has one.
     pub scale: Option<Scale>,
+    /// Where the key changes: the stretches in one key, with their
+    /// `start` and `end` in beats (indexes into `beats`), and every key
+    /// ranked for each.
+    pub keys: Vec<KeySpan>,
     /// The chord from each beat to the next, one per beat (`None` where
     /// there is no chord, such as during silence or drums alone).
     pub chords: Vec<Option<Chord>>,
@@ -94,6 +101,7 @@ pub fn analyze(recording: &Recording) -> Analysis {
         .collect();
     let chords = chords::chords_per_beat(&beat_chromas, scale);
     let (beats_per_bar, first_downbeat) = meter::guess(&chords);
+    let keys = keys::key_spans(&beat_chromas, beats_per_bar, first_downbeat);
 
     Analysis {
         beats,
@@ -101,6 +109,7 @@ pub fn analyze(recording: &Recording) -> Analysis {
         beats_per_bar,
         first_downbeat,
         scale,
+        keys,
         chords,
     }
 }

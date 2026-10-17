@@ -13,6 +13,7 @@
 
 use std::path::{Path, PathBuf};
 
+use loom_core::harmony::key_finding::KeySpan;
 use loom_core::library::voicing::voice;
 use loom_core::{
     Channel, ChannelKind, Chord, Clip, MAX_PATTERNS, MAX_SONG_STEPS, MAX_STEPS, Note, NoteEvent,
@@ -108,6 +109,26 @@ fn spans(analysis: &Analysis, lead_in: LeadIn) -> Vec<Span> {
         }
     }
     spans
+}
+
+/// The key changes of `analysis` placed in the project that [`follow`]
+/// builds: `start` and `end` in song steps instead of beats. Beats before
+/// the song starts are left out.
+pub fn key_spans(analysis: &Analysis, lead_in: LeadIn) -> Vec<KeySpan> {
+    let offset = lead_in.bars * analysis.beats_per_bar;
+    let step = |beat: usize| {
+        (beat + offset).saturating_sub(analysis.first_downbeat) * STEPS_PER_BEAT as usize
+    };
+    analysis
+        .keys
+        .iter()
+        .map(|span| KeySpan {
+            start: step(span.start),
+            end: step(span.end),
+            ..span.clone()
+        })
+        .filter(|span| span.end > span.start)
+        .collect()
 }
 
 /// A new project that plays the recording saved at `wav` (written by
@@ -216,6 +237,7 @@ mod tests {
             // Bar 1 starts on the third beat, at 1.3 s.
             first_downbeat: 2,
             scale: None,
+            keys: Vec::new(),
             chords: vec![g, g, c, c, c, c, g, g, g, g, None, c],
         }
     }

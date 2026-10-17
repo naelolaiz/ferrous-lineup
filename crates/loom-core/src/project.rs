@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::arrangement::{Arrangement, arrange};
 use crate::harmony::Scale;
+use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
 use crate::meter::{Meter, TimeMarker, TimeSignature};
 use crate::pattern::{MAX_STEPS, NoteEvent, Pattern};
@@ -866,6 +867,22 @@ impl Project {
         true
     }
 
+    /// Writes key changes heard in the music (see [`Project::heard_keys`])
+    /// into the song: the first span's key becomes the key the song
+    /// starts in, and each later span starts with a key marker. The key
+    /// markers that were there go. No note moves.
+    pub fn mark_heard_keys(&mut self, spans: &[KeySpan]) {
+        self.playlist.key_markers.clear();
+        for (index, span) in spans.iter().enumerate() {
+            let Some(key) = span.key() else {
+                continue;
+            };
+            let start = if index == 0 { 0 } else { span.start };
+            self.set_key_marker(KeyMarker::new(start, key));
+        }
+        self.playlist.key_markers = self.key_map().tidy().markers().to_vec();
+    }
+
     /// Removes the key marker on step `start`, if there is one. The song
     /// stays in the key before it.
     pub fn remove_key_marker(&mut self, start: usize) -> Option<KeyMarker> {
@@ -1224,6 +1241,60 @@ impl Project {
             }
         }
         chord_notes(parts)
+    }
+
+    /// Where the key changes along the playlist, worked out from the
+    /// notes alone (see [`crate::harmony::key_finding`]): the stretches
+    /// in one key, bar by bar, with their `start` and `end` in timeline
+    /// steps. The project's own key plays no part, so this is what an
+    /// imported song with no key signature sounds like it is in.
+    ///
+    /// Synths and MIDI Out channels that are not muted count, drums and
+    /// samplers (such as an imported recording) do not.
+    pub fn heard_keys(&self) -> Vec<KeySpan> {
+        let meter = self.meter();
+        let end = self.song_length();
+        let mut edges: Vec<usize> = meter
+            .bars()
+            .map(|bar| bar.start)
+            .take_while(|&start| start < end)
+            .collect();
+        edges.push(end);
+        let mut notes = Vec::new();
+        for clip in self.playlist.audible_clips() {
+            let Some(pattern) = self.patterns.get(clip.pattern) else {
+                continue;
+            };
+            let length = pattern.length();
+            for (index, channel) in self.channels.iter().enumerate() {
+                let melodic = match channel.kind {
+                    ChannelKind::Synth => true,
+                    ChannelKind::MidiOut { channel } => channel != DRUM_CHANNEL,
+                    ChannelKind::Sampler(_) => false,
+                };
+                if !melodic || channel.muted {
+                    continue;
+                }
+                for note in pattern
+                    .notes(index)
+                    .iter()
+                    .filter(|note| note.start < length)
+                {
+                    let held = note.length.min(length - note.start);
+                    for round in 0..clip.repeats {
+                        notes.push((note.pitch, clip.start + round * length + note.start, held));
+                    }
+                }
+            }
+        }
+        key_spans(&chromas_of_notes(notes, &edges))
+            .into_iter()
+            .map(|span| KeySpan {
+                start: edges[span.start],
+                end: edges[span.end],
+                ..span
+            })
+            .collect()
     }
 
     /// Adds the notes each melodic channel holds at `step` of `pattern`
