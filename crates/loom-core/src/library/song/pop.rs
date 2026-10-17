@@ -276,14 +276,16 @@ pub(super) const FUNICULI_FUNICULA: Song = Song {
             "Minor",
             "A4:12 | _:4 A4:2 B4:4 B4:2 | A4:4 A4:2 B4:4 B4:2 | A4:6 A4:6 | _:4 E4:2 E4:4 E4:2 | \
              E4:12 | _:2 -:2 E4:2 E4:4 E4:2 | E4:12 | _:2 -:8 C5:2",
-            "iii | iii III7 | iii III7 | iii | iii III7 | iii | iii III7 | iii | iii",
-        ),
+            "i | i V7 | i V7 | i | i V7 | i | i V7 | i | i",
+        )
+        .in_key(A, HarmonicMinor),
         Part::new(
             "Major",
             "C5:12 | _:4 C5:2 D5:4 D5:2 | C5:4 C5:2 D5:4 D5:2 | C5:6 C5:6 | _:4 G4:2 G4:4 G4:2 | \
              G4:12 | _:2 -:2 G4:2 G4:4 G4:2 | G4:12 | _:2 -:10",
-            "V | V II7 | V II7 | V | V II7 | V | V II7 | V | V",
-        ),
+            "I | I V7 | I V7 | I | I V7 | I | I V7 | I | I",
+        )
+        .in_key(C, Major),
         Part::new(
             "Chorus",
             "E5:6 D5:2 -:4 | E5:6 D5:2 -:4 | F5:4 E5:2 D5:4 F5:2 | E5:8 -:4 | \
@@ -298,8 +300,9 @@ pub(super) const FUNICULI_FUNICULA: Song = Song {
     ],
     drums_from: 1,
     about: "Written in 1880 for the funicular railway up Vesuvius, in a quick 6/8. The verse \
-            is a long high F and a fall to the low F; the middle sings the same shape on A \
-            over A minor and E7, and on C over C and G7. Then the chorus \"funiculì, \
+            is a long high F and a fall to the low F; the middle sings the same shape on A, \
+            turning to A minor with its own E7, and on C, in C major with G7: two short \
+            visits to other keys before C7 brings back F. Then the chorus \"funiculì, \
             funiculà\" bounces on E and D over C7, lands on F, and goes round again through \
             D7 and D minor before the last cadence.",
 };

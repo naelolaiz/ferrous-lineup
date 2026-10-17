@@ -419,15 +419,15 @@ pub fn song_demo(song: &Song) -> Project {
             drums.push((name, index));
         }
     }
-    // The ending is a bar of the last part's time.
-    let last_time = song
-        .form
-        .last()
-        .and_then(|name| song.part(name))
-        .map_or(song.time, |part| song.part_time(part));
-    project.time_signature = last_time;
+    // The ending is a bar of the last part's time, on the home chord of
+    // the last part's key: a song that ends after a modulation ends in
+    // the new key.
+    let last_part = song.form.last().and_then(|name| song.part(name));
+    project.time_signature = last_part.map_or(song.time, |part| song.part_time(part));
+    project.scale = last_part.map_or(song.scale(), |part| song.part_scale(part));
     let end = ending(&mut project, rhythm.is_some());
     project.time_signature = song.time;
+    project.scale = song.scale();
     name_tracks(&mut project, "Song", "Drums");
 
     let mut at = 0;
@@ -627,6 +627,26 @@ mod tests {
         );
         let names: Vec<&str> = project.patterns().iter().map(|p| p.name.as_str()).collect();
         assert_eq!(names, ["Harmony", "Drums", "Drums and fill", "Ending"]);
+    }
+
+    #[test]
+    fn a_song_that_ends_after_a_modulation_ends_in_the_new_key() {
+        // Mozart's Dies irae, D minor, stops in A minor here.
+        let project = song_demo(Song::named("Dies irae (Mozart)").unwrap());
+        let end = project.song_length() - 16;
+        assert_eq!(project.key_at(end).root, PitchClass::A);
+        let ending = project
+            .patterns()
+            .iter()
+            .find(|p| p.name == "Ending")
+            .unwrap();
+        let mut heard: Vec<PitchClass> = (0..16)
+            .flat_map(|channel| ending.notes(channel))
+            .map(|note| note.pitch.pitch_class())
+            .collect();
+        heard.sort();
+        heard.dedup();
+        assert_eq!(heard, [PitchClass::C, PitchClass::E, PitchClass::A]);
     }
 
     #[test]
