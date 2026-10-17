@@ -61,7 +61,7 @@ const NAME_WIDTH: f32 = 110.0;
 const DROP_HIGHLIGHT: Color32 = Color32::from_rgba_premultiplied(255, 152, 48, 40);
 
 /// The "Instrument" submenu: the 128 General MIDI programs in their
-/// sixteen families, and "None" for the Loom Osc's own sound.
+/// sixteen families, and "None" for the Lineup Osc's own sound.
 fn instrument_menu(
     ui: &mut Ui,
     channel: usize,
@@ -74,7 +74,7 @@ fn instrument_menu(
     };
     ui.menu_button(label, |ui| {
         let none = ui
-            .selectable_label(current.is_none(), "None (the Loom Osc's own sound)")
+            .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
             .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
         if none.clicked() {
             actions.push(RackAction::SetProgram {
@@ -112,7 +112,7 @@ fn instrument_menu(
     .response
     .on_hover_text(
         "The General MIDI instrument this channel plays: sent to a MIDI synth as a \
-         program change, written in exported MIDI files, and imitated by the Loom Osc",
+         program change, written in exported MIDI files, and imitated by the Lineup Osc",
     );
 }
 
@@ -268,7 +268,7 @@ pub fn show(
                         }
                     }
                     ui.separator();
-                    if ui.button("Loom Osc (synth)").clicked() {
+                    if ui.button("Lineup Osc (synth)").clicked() {
                         actions.push(RackAction::AddSynth);
                         ui.close();
                     }

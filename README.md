@@ -15,7 +15,7 @@ open.
 > Ferrous Lineup is an independent project. It is not affiliated with
 > PG Music or Band-in-a-Box, nor with Image-Line or FL Studio.
 
-![Ferrous Lineup playing the demo song: the playlist with its Intro, Verse and Chorus sections, the channel rack, and the harmony keys](screenshots/main-window.png)
+![Ferrous Lineup playing the demo song: the playlist, the channel rack with the Lineup Osc, and the harmony keys lighting up the chord that sounds](screenshots/main-window.png)
 
 ## Status
 

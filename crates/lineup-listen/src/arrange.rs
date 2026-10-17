@@ -2,7 +2,7 @@
 //!
 //! The recording becomes a sampler channel whose one note, at the very
 //! start of the song, plays the whole file. The chords become notes on a
-//! Loom Osc channel called "Harmony", one pattern per 16 bars, laid one
+//! Lineup Osc channel called "Harmony", one pattern per 16 bars, laid one
 //! after another in the playlist. The tempo, time signature and key are
 //! set from the analysis, so the bar lines, the harmony keys and the
 //! piano roll all line up with the music.
