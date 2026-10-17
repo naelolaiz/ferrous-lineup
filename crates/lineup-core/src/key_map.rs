@@ -109,6 +109,7 @@ impl KeyMap {
 /// major march of a song in A minor stays major when the song goes to
 /// A Dorian).
 pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
+    let from = crate::tools::from_key(from, to);
     let up = from.root.semitones_up_to(to.root);
     let root = key.root.transpose(up as i32);
     let kind = if key.kind == from.kind && from.kind.is_tonal() && to.kind.is_tonal() {

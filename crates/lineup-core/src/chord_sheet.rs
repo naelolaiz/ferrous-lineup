@@ -268,6 +268,8 @@ impl HarmonyName {
     /// form moves with the row. When the notes of the song stay put (a
     /// key and a row have nothing to move by), so does the harmony.
     pub fn moved(self, from: Scale, to: Scale) -> HarmonyName {
+        // A key shown as a pitch-class set moves on as that key.
+        let from = tools::from_key(from, to);
         if from == to || !from.kind.notes_follow(to.kind) {
             return self;
         }
@@ -798,6 +800,13 @@ mod tests {
         // A key change to a row leaves everything where it is.
         let row = Scale::row(ToneRow::CHROMATIC);
         assert_eq!(moved("G7", row), "G7");
+        // C major shown as a pitch-class set keeps its chords, and from
+        // there to C minor they move as from C major.
+        let as_set = Scale::set(PitchClass::C, C_MAJOR.pitch_set());
+        assert_eq!(moved("Am", as_set), "Am");
+        let from_set = |text: &str, to| name(text).moved(as_set, to).to_string();
+        assert_eq!(from_set("C", c_minor), "Cm");
+        assert_eq!(from_set("Am", c_minor), "Ab");
     }
 
     fn bar_of(time: TimeSignature) -> Bar {
