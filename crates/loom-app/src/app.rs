@@ -208,8 +208,8 @@ impl LoomApp {
     /// Builds the instrument for a channel, at `sample_rate`. If a sample
     /// file cannot be loaded, the channel gets a silent sampler and the
     /// status bar says why.
-    fn build_instrument(&mut self, kind: &ChannelKind, sample_rate: u32) -> Instrument {
-        match Instrument::for_channel(kind, sample_rate, &mut self.samples) {
+    fn build_instrument(&mut self, channel: &Channel, sample_rate: u32) -> Instrument {
+        match Instrument::for_channel(channel, sample_rate, &mut self.samples) {
             Ok(instrument) => instrument,
             Err(err) => {
                 self.message = Some(err.to_string());
@@ -268,7 +268,7 @@ impl LoomApp {
         );
         Command::InsertChannel {
             index,
-            instrument: self.build_instrument(&channel.kind, sample_rate),
+            instrument: self.build_instrument(&channel, sample_rate),
             notes,
             volume: channel.volume,
             muted: channel.muted,
@@ -544,6 +544,13 @@ impl LoomApp {
                     }
                 });
             }
+            RackAction::SetProgram { channel, program } => {
+                self.edit("change instrument", |project| {
+                    if let Some(state) = project.channel_mut(channel) {
+                        state.program = program;
+                    }
+                });
+            }
             RackAction::LoadSample { channel, path } => self.load_sample(channel, path),
         }
     }
@@ -778,6 +785,7 @@ impl LoomApp {
                         kind,
                         volume: 0.8,
                         muted: false,
+                        program: None,
                     });
                 }
             }

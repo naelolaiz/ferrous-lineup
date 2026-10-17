@@ -14,6 +14,7 @@ pub(super) const TWINKLE: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "Lo-fi",
+    band: LO_FI,
     style: "Lo-fi",
     parts: &[Part::new(
         "Tune",
@@ -41,6 +42,11 @@ pub(super) const GYMNOPEDIE: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Waltz,
     rhythm: "Jazz waltz",
+    band: Band::new(
+        gm::ACOUSTIC_GRAND_PIANO,
+        gm::ELECTRIC_PIANO,
+        gm::FINGER_BASS,
+    ),
     style: "Jazz waltz",
     parts: &[
         Part::new(
@@ -72,6 +78,7 @@ pub(super) const PRELUDE_IN_C: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "Boom bap",
+    band: BOOM_BAP,
     style: "Jazz rap",
     parts: &[Part::new(
         "Prelude",
@@ -101,6 +108,7 @@ pub(super) const SAKURA: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "R&B",
+    band: Band::new(gm::KOTO, gm::ELECTRIC_PIANO, gm::FINGER_BASS),
     style: "R&B minor",
     parts: &[Part::new(
         "Song",
@@ -130,6 +138,7 @@ pub(super) const DIES_IRAE: Song = Song {
     comping: Comping::Held,
     bass: Bass::Sub,
     rhythm: "Trap",
+    band: TRAP,
     style: "Trap minor",
     parts: &[
         Part::new(
@@ -164,6 +173,7 @@ pub(super) const REVERIE: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "Lo-fi",
+    band: LO_FI,
     style: "Lo-fi",
     parts: &[
         Part::new("Intro", "-:16 | -:16", "IV | IV"),
@@ -198,6 +208,7 @@ pub(super) const GNOSSIENNE: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Held,
     rhythm: "Lo-fi",
+    band: LO_FI,
     style: "Boom bap minor",
     parts: &[
         Part::new(
@@ -263,6 +274,7 @@ pub(super) const PRELUDE_IN_E_MINOR: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Held,
     rhythm: "Lo-fi",
+    band: LO_FI,
     style: "Boom bap minor",
     parts: &[
         Part::new("Pickup", "-:12 B3:3 B4:1", ""),

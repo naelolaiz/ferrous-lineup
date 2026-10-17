@@ -141,6 +141,8 @@ impl InputLink {
                 let pitch = at.map_or(key, |at| self.sounding.remove(at).1);
                 MidiMessage::NoteOff { channel, pitch }
             }
+            // Never read from a keyboard (see `MidiMessage::parse`).
+            MidiMessage::ProgramChange { .. } => message,
         }
     }
 }

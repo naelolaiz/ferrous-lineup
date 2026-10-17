@@ -13,6 +13,7 @@
 //! Ferrous Loom" are new tunes, written to show off a genre that has
 //! few well-known tunes old enough to be free.
 
+use crate::general_midi as gm;
 use crate::harmony::{Scale, ScaleKind};
 use crate::meter::TimeSignature;
 use crate::pitch::PitchClass;
@@ -34,12 +35,14 @@ pub struct Part {
     /// accompaniment is part of the music. When there are any, the
     /// chords are not accompanied.
     pub left: &'static str,
-    /// Where copies of the melody start, in bars from the start of the
-    /// part. One voice is `[0]`. In a round, each voice is another copy
-    /// a few bars later. A negative start is a voice that began in the
-    /// part before: only its end is heard. Notes outside the part are
-    /// left out.
-    pub voices: &'static [i32],
+    /// Who sings the melody, and from which bar of the part: one
+    /// `(voice, bar)` for each copy. One voice is `[(1, 0)]`. In a round
+    /// or a canon, each voice sings the same tune a few bars after the
+    /// one before: `[(1, 0), (2, 2), (3, 4)]`. A negative bar is a voice
+    /// that began in the part before: only its end is heard. Notes
+    /// outside the part are left out. Voice 1 is the Lead channel; every
+    /// other voice gets a channel of its own, "Voice 2", "Voice 3"...
+    pub voices: &'static [(usize, i32)],
     /// A time signature of its own, for a part in another time than the
     /// rest of the song. The demo puts a time marker where it starts.
     pub time: Option<TimeSignature>,
@@ -52,6 +55,30 @@ pub struct Part {
     /// part is played. After the part, the song carries on at the tempo
     /// it got to.
     pub tempo: &'static [TempoMark],
+}
+
+/// The General MIDI instruments a song's channels play (see
+/// [`crate::general_midi`]): the melody (the Lead channel, and every other
+/// voice of a round or a canon), the chords or written-out accompaniment
+/// (Keys) and the bass. A piece from the concert hall gets the
+/// instruments it was written for, and a song dressed in a style gets
+/// that style's band.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Band {
+    pub lead: u8,
+    pub keys: u8,
+    pub bass: u8,
+}
+
+impl Band {
+    const fn new(lead: u8, keys: u8, bass: u8) -> Band {
+        Band { lead, keys, bass }
+    }
+
+    /// One instrument playing everything, such as a piano piece.
+    const fn solo(instrument: u8) -> Band {
+        Band::new(instrument, instrument, instrument)
+    }
 }
 
 /// A tempo marking in a score, inside a part. `at` counts steps from the
@@ -95,7 +122,7 @@ impl Part {
             melody,
             chords,
             left: "",
-            voices: &[0],
+            voices: &[(1, 0)],
             time: None,
             key: None,
             tempo: &[],
@@ -106,7 +133,7 @@ impl Part {
         Part { left, ..self }
     }
 
-    const fn with_voices(self, voices: &'static [i32]) -> Part {
+    const fn with_voices(self, voices: &'static [(usize, i32)]) -> Part {
         Part { voices, ..self }
     }
 
@@ -183,6 +210,8 @@ pub struct Song {
     pub bass: Bass,
     /// A rhythm from [`super::RHYTHMS`], or "" for no drums.
     pub rhythm: &'static str,
+    /// The instruments that play it.
+    pub band: Band,
     /// The style in [`super::STYLES`] whose harmony and playing the song
     /// is closest to, or "" for none. The library shows it, and the
     /// rhythm, selected while the demo is open.
@@ -213,6 +242,16 @@ impl Song {
         }
     }
 
+    /// How many voices sing the melody at most: 1, or more in a round.
+    pub fn voices(&self) -> usize {
+        self.parts
+            .iter()
+            .flat_map(|part| part.voices)
+            .map(|&(voice, _)| voice)
+            .max()
+            .unwrap_or(1)
+    }
+
     pub fn part(&self, name: &str) -> Option<&'static Part> {
         self.parts.iter().find(|part| part.name == name)
     }
@@ -234,6 +273,69 @@ const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
+
+// The bands the songs are dressed in, named after their style. Each is
+// melody, chords, bass. A piece from the concert hall names its own
+// instruments instead.
+const PIANO: Band = Band::solo(gm::ACOUSTIC_GRAND_PIANO);
+const CHOIR: Band = Band::solo(gm::CHOIR_AAHS);
+const SYNTHS: Band = Band::new(gm::SAW_LEAD, gm::WARM_PAD, gm::SYNTH_BASS);
+const DISCO: Band = Band::new(gm::STRING_ENSEMBLE, gm::ELECTRIC_PIANO, gm::FINGER_BASS);
+const BLUES_HARP: Band = Band::new(gm::HARMONICA, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+const BLUES_GUITAR: Band = Band::new(gm::JAZZ_GUITAR, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
+const SLOW_BLUES: Band = Band::new(gm::CLEAN_GUITAR, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+const GUITARS: Band = Band::new(gm::NYLON_GUITAR, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const SONG_AND_GUITAR: Band = Band::new(gm::VOICE_OOHS, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const CAROL: Band = Band::new(gm::CHOIR_AAHS, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const FLUTE_AND_GUITAR: Band = Band::new(gm::FLUTE, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const COUNTRY: Band = Band::new(gm::FIDDLE, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
+const BLUEGRASS: Band = Band::new(gm::FIDDLE, gm::BANJO, gm::ACOUSTIC_BASS);
+const FOLK: Band = Band::new(gm::FLUTE, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
+const JIG: Band = Band::new(gm::FIDDLE, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
+const ACCORDION_BAND: Band = Band::new(gm::ACCORDION, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const BALLAD: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::CELLO);
+const KLEZMER: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
+const POLKA: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::TUBA);
+const ANDEAN: Band = Band::new(gm::PAN_FLUTE, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const LLANERO: Band = Band::new(gm::HARP, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const FIDDLE_AND_GUITAR: Band = Band::new(gm::VIOLIN, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
+const CANDOMBE: Band = Band::new(gm::NYLON_GUITAR, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+const LO_FI: Band = Band::new(gm::ELECTRIC_PIANO, gm::ELECTRIC_PIANO, gm::FINGER_BASS);
+const BOOM_BAP: Band = Band::new(
+    gm::ACOUSTIC_GRAND_PIANO,
+    gm::ACOUSTIC_GRAND_PIANO,
+    gm::ACOUSTIC_BASS,
+);
+const TRAP: Band = Band::new(gm::CHOIR_AAHS, gm::STRING_ENSEMBLE, gm::SYNTH_BASS);
+const SWING: Band = Band::new(gm::ALTO_SAX, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
+const DIXIELAND: Band = Band::new(gm::TRUMPET, gm::ACOUSTIC_GRAND_PIANO, gm::TUBA);
+const JAZZ_WALTZ: Band = Band::new(gm::VIBRAPHONE, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
+const GYPSY_JAZZ: Band = Band::new(gm::VIOLIN, gm::JAZZ_GUITAR, gm::ACOUSTIC_BASS);
+const CUMBIA: Band = Band::new(gm::ACCORDION, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+const SAMBA: Band = Band::new(gm::FLUTE, gm::NYLON_GUITAR, gm::FINGER_BASS);
+const AFROBEATS: Band = Band::new(gm::MARIMBA, gm::ELECTRIC_PIANO, gm::SYNTH_BASS);
+const POP: Band = Band::new(gm::SQUARE_LEAD, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+const SKA: Band = Band::new(gm::TRUMPET, gm::CLEAN_GUITAR, gm::FINGER_BASS);
+const REGGAE: Band = Band::new(gm::CLEAN_GUITAR, gm::DRAWBAR_ORGAN, gm::FINGER_BASS);
+const ROCK: Band = Band::new(
+    gm::OVERDRIVEN_GUITAR,
+    gm::DISTORTION_GUITAR,
+    gm::FINGER_BASS,
+);
+const ROCK_AND_ROLL: Band = Band::new(gm::TENOR_SAX, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+const BRASS_BAND: Band = Band::new(gm::TRUMPET, gm::BRASS_SECTION, gm::TUBA);
+const GOSPEL: Band = Band::new(gm::CHOIR_AAHS, gm::DRAWBAR_ORGAN, gm::FINGER_BASS);
+const SOUL: Band = Band::new(gm::VOICE_OOHS, gm::DRAWBAR_ORGAN, gm::FINGER_BASS);
+const MOTOWN: Band = Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+const FUNK: Band = Band::new(gm::BRASS_SECTION, gm::CLAVINET, gm::SLAP_BASS);
+const NEO_SOUL: Band = Band::new(gm::VOICE_OOHS, gm::ELECTRIC_PIANO, gm::FINGER_BASS);
+const SPIRITUAL: Band = Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
+const TANGO: Band = Band::new(
+    gm::TANGO_ACCORDION,
+    gm::ACOUSTIC_GRAND_PIANO,
+    gm::ACOUSTIC_BASS,
+);
+const SALON: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
 
 mod blues;
 mod classical;

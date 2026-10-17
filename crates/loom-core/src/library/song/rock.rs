@@ -14,6 +14,7 @@ pub(super) const DRUNKEN_SAILOR: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Punk",
+    band: ROCK,
     style: "Dark rock",
     parts: &[
         Part::new(
@@ -47,6 +48,7 @@ pub(super) const BELLA_CIAO: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Rock ride",
+    band: ROCK,
     style: "Dark rock",
     parts: &[
         Part::new("Pickup", "-:10 E4:2 A4 B4", "i"),
@@ -76,6 +78,7 @@ pub(super) const BEETHOVENS_FIFTH: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Half-time rock",
+    band: ROCK,
     style: "Aeolian climb",
     parts: &[Part::new(
         "Motif",
@@ -107,6 +110,7 @@ pub(super) const YANKEE_DOODLE: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Rock beat",
+    band: ROCK_AND_ROLL,
     style: "Rock and roll",
     parts: &[Part::new(
         "Song",
@@ -137,6 +141,7 @@ pub(super) const WHISKEY_IN_THE_JAR: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Rock beat",
+    band: ROCK,
     style: "Three-chord rock",
     parts: &[
         Part::new("Pickup", "-:14 D5:2", "I"),
@@ -176,6 +181,7 @@ pub(super) const BATTLE_HYMN: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "March",
+    band: BRASS_BAND,
     style: "Three-chord rock",
     parts: &[
         Part::new("Pickup", "-:14 A4:2", "I"),
@@ -217,6 +223,7 @@ pub(super) const WHEN_JOHNNY: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Six-eight",
+    band: ROCK,
     style: "Tarantella",
     parts: &[
         Part::new("Pickup", "-:10 A4:2", "i"),
@@ -252,6 +259,7 @@ pub(super) const TOREADOR_SONG: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "March",
+    band: BRASS_BAND,
     style: "Three-chord rock",
     parts: &[
         Part::new(
@@ -293,6 +301,7 @@ pub(super) const HOUSE_OF_THE_RISING_SUN: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "Six-eight",
+    band: Band::new(gm::DRAWBAR_ORGAN, gm::CLEAN_GUITAR, gm::FINGER_BASS),
     style: "Zamba",
     parts: &[
         Part::new("Pickup", "-:8 A4:4", "i"),
@@ -327,6 +336,7 @@ pub(super) const WILLIAM_TELL: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Punk",
+    band: ROCK,
     style: "Surf rock",
     parts: &[
         Part::new("Pickup", "-:14 C4:1 C4:1", "I"),

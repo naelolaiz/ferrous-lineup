@@ -27,7 +27,8 @@ pub enum Change {
     RemoveChannel(usize),
     /// A channel was inserted at position `n`, with its notes in every pattern.
     InsertChannel(usize),
-    /// Channel `n` has another instrument (for example, a new sample).
+    /// Channel `n` has another instrument (for example, a new sample, or
+    /// another General MIDI program).
     Instrument(usize),
     Volume(usize),
     Muted(usize),
@@ -133,7 +134,7 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
         let Some(old) = channels.old_index(index).map(|old| &before.channels()[old]) else {
             continue; // a new channel arrives complete
         };
-        if old.kind != channel.kind {
+        if old.kind != channel.kind || old.program != channel.program {
             changes.push(Change::Instrument(index));
         }
         if old.volume != channel.volume {
@@ -198,6 +199,7 @@ mod tests {
     #[derive(Debug, Clone, PartialEq)]
     struct ModelChannel {
         kind: ChannelKind,
+        program: Option<u8>,
         volume: f32,
         muted: bool,
         /// One list per pattern.
@@ -222,6 +224,7 @@ mod tests {
             let channel = &project.channels()[index];
             ModelChannel {
                 kind: channel.kind.clone(),
+                program: channel.program,
                 volume: channel.volume,
                 muted: channel.muted,
                 notes: project
@@ -269,6 +272,7 @@ mod tests {
                 }
                 Change::Instrument(index) => {
                     self.channels[index].kind = after.channels()[index].kind.clone();
+                    self.channels[index].program = after.channels()[index].program;
                 }
                 Change::Volume(index) => {
                     self.channels[index].volume = after.channels()[index].volume
@@ -424,9 +428,15 @@ mod tests {
         after.channel_mut(1).unwrap().muted = true;
         after.channel_mut(2).unwrap().kind =
             ChannelKind::Sampler(SampleSource::Builtin(Drum::Snare));
+        after.channel_mut(3).unwrap().program = Some(crate::general_midi::VIOLIN);
         assert_eq!(
             check_both_ways(&before, &after),
-            vec![Change::Volume(0), Change::Muted(1), Change::Instrument(2)]
+            vec![
+                Change::Volume(0),
+                Change::Muted(1),
+                Change::Instrument(2),
+                Change::Instrument(3)
+            ]
         );
     }
 

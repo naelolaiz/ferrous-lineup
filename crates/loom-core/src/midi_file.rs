@@ -11,7 +11,8 @@
 //! *delta time*: the number of ticks since the event before it. This
 //! module writes "format 1" files: the first track holds the tempo, the
 //! time signature and the key, and every channel of the project gets a
-//! track of its own.
+//! track of its own, which starts with a program change when the channel
+//! has a General MIDI instrument.
 
 use crate::arrangement::Play;
 use crate::meter::{Meter, TimeMarker};
@@ -94,6 +95,16 @@ fn write_file(
         }
         let mut track = TrackWriter::default();
         track.meta(0, TRACK_NAME, channel.name.as_bytes());
+        // The instrument first, so the synth is ready before the first note.
+        if let Some(program) = channel.program
+            && midi_channels[index] != DRUM_CHANNEL
+        {
+            let change = MidiMessage::ProgramChange {
+                channel: midi_channels[index],
+                program,
+            };
+            track.event(0, &change.bytes());
+        }
         for (tick, message) in events {
             track.event(tick, &message.bytes());
         }
@@ -382,6 +393,8 @@ mod tests {
                 tick += delta;
                 let size = if data[i] == 0xFF {
                     3 + data[i + 2] as usize // FF, kind, length (one byte here), data
+                } else if data[i] & 0xF0 == 0xC0 {
+                    2 // a program change has one data byte
                 } else {
                     3
                 };
@@ -392,6 +405,22 @@ mod tests {
         }
         assert_eq!(at, file.len(), "nothing after the last track");
         tracks
+    }
+
+    #[test]
+    fn a_channel_with_an_instrument_starts_with_a_program_change() {
+        let mut project = project();
+        project.channel_mut(0).unwrap().program = Some(crate::general_midi::VIOLIN);
+        // A drum has no program: General MIDI drums are always channel 10.
+        project.channel_mut(1).unwrap().program = Some(crate::general_midi::CELLO);
+        project.add_clip(Clip::new(0, 0, 0));
+        let tracks = read(&song_to_midi(&project));
+        let synth = &tracks[1];
+        let first_note = synth.iter().position(|(_, e)| e[0] & 0xF0 == 0x90).unwrap();
+        let change = synth.iter().position(|(_, e)| *e == [0xC0, 40]).unwrap();
+        assert!(change < first_note);
+        assert_eq!(synth[change].0, 0);
+        assert!(tracks[2].iter().all(|(_, e)| e[0] & 0xF0 != 0xC0));
     }
 
     #[test]

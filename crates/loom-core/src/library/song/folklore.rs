@@ -21,6 +21,7 @@ pub(super) const EL_CONDOR_PASA: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Huayno",
+    band: ANDEAN,
     style: "Huayno",
     parts: &[
         Part::new("Pickup", "-:14 E4:2", "i"),
@@ -113,6 +114,7 @@ pub(super) const ALMA_LLANERA: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Joropo",
+    band: LLANERO,
     style: "Joropo",
     parts: &[
         Part::new(
@@ -168,6 +170,7 @@ pub(super) const DOS_PALOMITAS: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Huayno",
+    band: ANDEAN,
     style: "Huayno",
     parts: &[
         Part::new(
@@ -228,6 +231,7 @@ pub(super) const ZAMBA_DEL_TELAR: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Zamba",
+    band: GUITARS,
     style: "Zamba",
     parts: &[
         Part::new(
@@ -276,6 +280,7 @@ pub(super) const CHACARERA_DEL_PATIO: Song = Song {
     comping: Comping::Sway,
     bass: Bass::RootFifth,
     rhythm: "Chacarera",
+    band: FIDDLE_AND_GUITAR,
     style: "Chacarera",
     parts: &[
         Part::new(
@@ -323,6 +328,7 @@ pub(super) const GATO_DEL_ARROYO: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::RootFifth,
     rhythm: "Gato",
+    band: FIDDLE_AND_GUITAR,
     style: "Gato",
     parts: &[
         Part::new(
@@ -356,6 +362,7 @@ pub(super) const CHAMAME_DEL_ESTERO: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Waltz,
     rhythm: "Chamamé",
+    band: ACCORDION_BAND,
     style: "Chamamé",
     parts: &[
         Part::new(
@@ -394,6 +401,7 @@ pub(super) const CUECA_DE_LA_CALETA: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Cueca",
+    band: ACCORDION_BAND,
     style: "Cueca",
     parts: &[
         Part::new(
@@ -423,6 +431,7 @@ pub(super) const MARINERA_DEL_CALLEJON: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "Marinera",
+    band: GUITARS,
     style: "Marinera",
     parts: &[
         Part::new(
@@ -457,6 +466,7 @@ pub(super) const BAMBUCO_DEL_PARAMO: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Bambuco",
+    band: FLUTE_AND_GUITAR,
     style: "Bambuco",
     parts: &[Part::new(
         "Verse",
@@ -483,6 +493,7 @@ pub(super) const MALAMBO_DEL_FOGON: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Quarters,
     rhythm: "Malambo",
+    band: GUITARS,
     style: "Malambo",
     parts: &[Part::new(
         "Mudanza",
@@ -510,6 +521,7 @@ pub(super) const VIDALA_DE_LA_QUEBRADA: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Held,
     rhythm: "Vidala",
+    band: SONG_AND_GUITAR,
     style: "Vidala",
     parts: &[Part::new(
         "Copla",
@@ -537,6 +549,7 @@ pub(super) const CARNAVALITO_DE_LA_QUEBRADA: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Carnavalito",
+    band: ANDEAN,
     style: "Carnavalito",
     parts: &[Part::new(
         "A",
@@ -566,6 +579,7 @@ pub(super) const CANDOMBE_DEL_BARRIO: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Tresillo,
     rhythm: "Candombe",
+    band: CANDOMBE,
     style: "Candombe",
     parts: &[Part::new(
         "A",
