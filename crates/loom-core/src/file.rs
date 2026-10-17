@@ -88,7 +88,11 @@ pub fn format_for(project: &Project) -> u32 {
         .channels()
         .iter()
         .any(|channel| matches!(channel.kind, ChannelKind::MidiOut { .. }));
-    let has_time_signature = !project.time_signature.is_common();
+    let has_time_signature = !project.time_signature.is_common()
+        || project
+            .patterns()
+            .iter()
+            .any(|pattern| pattern.time.is_some());
     let playlist = project.playlist();
     let has_structure = !playlist.sections().is_empty()
         || playlist.loop_region().is_some()
@@ -136,6 +140,14 @@ struct ProjectFile {
 #[derive(Debug, Serialize, Deserialize)]
 struct PatternFile {
     name: String,
+    /// Left out when it is the pattern's place in the list, as it is for
+    /// every pattern until one is removed, so most files read exactly as
+    /// before. Older versions skip it and colour patterns by place.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    color: Option<usize>,
+    /// Left out when the pattern takes the song's time signature.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    time: Option<TimeSignature>,
     length: usize,
     /// One list of notes per channel, in the order of `channels`.
     notes: Vec<Vec<NoteEvent>>,
@@ -228,8 +240,11 @@ impl From<&Project> for ProjectFile {
             patterns: project
                 .patterns()
                 .iter()
-                .map(|pattern| PatternFile {
+                .enumerate()
+                .map(|(index, pattern)| PatternFile {
                     name: pattern.name.clone(),
+                    color: (pattern.color != index).then_some(pattern.color),
+                    time: pattern.time,
                     length: pattern.length(),
                     notes: (0..channels)
                         .map(|channel| pattern.notes(channel).to_vec())
@@ -282,6 +297,14 @@ impl TryFrom<ProjectFile> for Project {
                 return invalid(format!("pattern {} could not be added", index + 1));
             };
             pattern.name = saved.name;
+            pattern.color = saved.color.unwrap_or(index);
+            if saved
+                .time
+                .is_some_and(|time| time.steps_per_bar() > MAX_STEPS)
+            {
+                return invalid(format!("pattern \"{}\" has too long a bar", pattern.name));
+            }
+            pattern.time = saved.time;
             pattern.set_length(saved.length);
             if saved.notes.len() != channels {
                 return invalid(format!(
@@ -418,6 +441,19 @@ mod tests {
         let loaded = load(&path);
         std::fs::remove_file(&path).unwrap();
         assert_eq!(loaded.unwrap(), project);
+    }
+
+    #[test]
+    fn patterns_keep_their_colours_in_a_file() {
+        let mut project = Project::demo();
+        let text = to_text(&project).unwrap();
+        assert!(
+            !text.contains("color"),
+            "colours in their places are left out"
+        );
+        project.remove_pattern(0);
+        let text = to_text(&project).unwrap();
+        assert_eq!(from_text(&text).unwrap(), project);
     }
 
     #[test]

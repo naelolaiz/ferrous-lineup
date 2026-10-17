@@ -22,7 +22,7 @@ mod scale;
 mod set_class;
 
 pub use analysis::{Harmony, analyze, interval_name};
-pub use chord::{Chord, ChordQuality, ChordStamp};
+pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
 pub use hints::HintLevel;
 pub use pitch_set::PitchSet;
 pub use progression::{Suggestion, next_chords};

@@ -87,7 +87,8 @@ impl LoomApp {
                 Change::RemoveChannel(index) => {
                     self.send(Command::RemoveChannel(index));
                     channels_changed = true;
-                    self.piano_roll.channel_removed(index);
+                    self.piano_roll
+                        .channel_removed(index, self.project.channels().len());
                 }
                 Change::InsertChannel(index) => {
                     let command = self.channel_command(index, sample_rate);

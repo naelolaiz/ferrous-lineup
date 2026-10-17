@@ -40,6 +40,9 @@ use crate::playlist::{self, PlaylistAction, PlaylistView};
 use crate::theme::{self, HintBar};
 use crate::widgets;
 
+/// How wide the pattern list in the toolbar is.
+const PATTERN_LIST_WIDTH: f32 = 120.0;
+
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
 
@@ -80,6 +83,10 @@ pub struct LoomApp {
     marker: usize,
     master_volume: f32,
     rack_open: bool,
+    /// The size the rack's rows needed last frame. When it changes (more
+    /// steps, another channel, another pattern), the window is fitted to
+    /// the rows again.
+    rack_natural: egui::Vec2,
     piano_roll: PianoRoll,
     playlist: PlaylistView,
     harmony_keys: HarmonyKeys,
@@ -127,9 +134,13 @@ impl LoomApp {
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         theme::apply(&cc.egui_ctx);
         // The zoom keys zoom one part of the screen at a time, not all of
-        // it as egui would (see view.rs).
-        cc.egui_ctx
-            .options_mut(|options| options.zoom_with_keyboard = false);
+        // it as egui would (see view.rs). Alt and the wheel zooms too, so
+        // egui must not take it for scrolling: the scroll it smooths out
+        // over the next frames would move the view after the zoom.
+        cc.egui_ctx.options_mut(|options| {
+            options.zoom_with_keyboard = false;
+            options.input_options.zoom_modifier = egui::Modifiers::COMMAND | egui::Modifiers::ALT;
+        });
 
         let mut audio = match AudioEngine::start() {
             Ok(engine) => Audio::Running(Box::new(engine)),
@@ -155,6 +166,7 @@ impl LoomApp {
             marker: 0,
             master_volume: 0.8,
             rack_open: true,
+            rack_natural: egui::Vec2::ZERO,
             piano_roll,
             playlist: PlaylistView::new(),
             harmony_keys: HarmonyKeys::new(),
@@ -322,14 +334,14 @@ impl LoomApp {
     }
 
     /// How long the loop being played is: the selected pattern, or the
-    /// song (one bar when it is empty).
+    /// song (one bar of 4/4 when it is empty, as the engine plays it).
     fn loop_length(&self) -> usize {
         let length = match self.mode {
             PlayMode::Pattern => self.project.patterns()[self.pattern].length(),
             PlayMode::Song => self.project.playback_arrangement().length,
         };
         if length == 0 {
-            self.project.time_signature.steps_per_bar()
+            loom_core::STEPS_PER_BAR
         } else {
             length
         }
@@ -352,8 +364,13 @@ impl LoomApp {
         let here = self.playhead().unwrap_or(self.cursor);
         let bar = meter.bar_at(here);
         let number = bar.number as isize;
-        // Going back from inside a bar first goes to its start.
-        let target = if bars < 0 && bar.start != here {
+        // Going back from inside a bar first goes to its start. While
+        // playing, the playhead is never exactly on a bar line, so within
+        // the first beat of a bar it counts as being at its start: two
+        // quick presses go back two bars, as on a tape machine.
+        let into_bar = here - bar.start;
+        let at_start = into_bar == 0 || (self.playing && into_bar < bar.time.steps_per_beat());
+        let target = if bars < 0 && !at_start {
             number + bars + 1
         } else {
             number + bars
@@ -883,6 +900,13 @@ impl LoomApp {
     fn position_text(&self) -> String {
         let step = self.playhead().unwrap_or(self.cursor);
         let (bar, beat, sub) = self.meter().position(step);
+        // A loop plays from its own start, so its bars are counted from
+        // the bar it starts on, as the ruler numbers them.
+        let first = match (self.mode, self.project.playlist().loop_region()) {
+            (PlayMode::Song, Some(region)) => self.project.meter().bar_at(region.start).number,
+            _ => 0,
+        };
+        let bar = bar + first;
         format!("{bar:>3}:{beat:02}:{sub:02}")
     }
 
@@ -897,21 +921,36 @@ impl LoomApp {
                 .small()
                 .color(theme::TEXT_DIM),
         );
-        let combo = egui::ComboBox::from_id_salt("pattern")
-            .width(120.0)
-            .selected_text(egui::RichText::new(name).color(playlist::pattern_color(current)))
-            .show_ui(ui, |ui| {
-                for (index, pattern) in self.project.patterns().iter().enumerate() {
-                    let text =
-                        egui::RichText::new(&pattern.name).color(playlist::pattern_color(index));
-                    ui.selectable_value(&mut selected, index, text);
-                }
+        // A long name is cut short with "…" rather than widening the
+        // toolbar onto a second row; the hint gives it whole. `width` is
+        // only the narrowest the list can be, so it is given a space no
+        // wider than that to fit in.
+        let room = egui::vec2(PATTERN_LIST_WIDTH, ui.spacing().interact_size.y);
+        let combo = ui
+            .allocate_ui(room, |ui| {
+                egui::ComboBox::from_id_salt("pattern")
+                    .width(PATTERN_LIST_WIDTH)
+                    .truncate()
+                    .selected_text(
+                        egui::RichText::new(&name)
+                            .color(playlist::pattern_color(&self.project, current)),
+                    )
+                    .show_ui(ui, |ui| {
+                        for (index, pattern) in self.project.patterns().iter().enumerate() {
+                            let text = egui::RichText::new(&pattern.name)
+                                .color(playlist::pattern_color(&self.project, index));
+                            ui.selectable_value(&mut selected, index, text);
+                        }
+                    })
+                    .response
             })
-            .response;
+            .inner;
         theme::hint(
             combo,
-            "The selected pattern: the channel rack and the piano roll show it, and new \
-             clips in the playlist use it",
+            format!(
+                "The selected pattern, \"{name}\": the channel rack and the piano roll show \
+                 it, and new clips in the playlist use it"
+            ),
         );
         if selected != current {
             self.select_pattern(selected);
@@ -1120,6 +1159,9 @@ impl eframe::App for LoomApp {
             engine.collect_garbage();
         }
         let ctx = ui.ctx().clone();
+        // Before anything is drawn: whether a menu is open as the mouse
+        // button goes down.
+        widgets::track_dismissing(&ctx);
         self.start_frame_for_undo(&ctx);
         self.keyboard_shortcuts(&ctx);
         self.live_input(&ctx);
@@ -1174,9 +1216,19 @@ impl eframe::App for LoomApp {
 
         let song_position = self.song_position();
         let tried = self.tried();
+        let playlist_zoom = egui::vec2(
+            view::Area::Main.zoom(&ctx, view::Axis::Horizontal),
+            view::Area::Main.zoom(&ctx, view::Axis::Vertical),
+        );
         let playlist = egui::CentralPanel::default_margins().show(ui, |ui| {
-            self.playlist
-                .show(ui, &self.project, self.pattern, song_position, tried)
+            self.playlist.show(
+                ui,
+                &self.project,
+                self.pattern,
+                song_position,
+                tried,
+                playlist_zoom,
+            )
         });
         // The windows stay over the playlist, so they never hide the
         // toolbar, the harmony keys or the status bar.
@@ -1195,7 +1247,9 @@ impl eframe::App for LoomApp {
         }
         // The rack opens as big as its rows, up to the size of the
         // playlist; it can be resized, and scrolls when made smaller.
-        let rack_scale = Self::window_scale(&ctx, view::Area::Rack);
+        // When the rows grow or shrink (a longer pattern, a new channel),
+        // it is fitted to them again, so no step hides past its edge.
+        let rack_scale = Self::rack_scale(&ctx);
         let natural =
             channel_rack::natural_size(&ctx.global_style(), &self.project, self.pattern, 1.0)
                 * rack_scale;
@@ -1204,14 +1258,22 @@ impl eframe::App for LoomApp {
         let style = ctx.global_style();
         let frame = style.spacing.window_margin.sum();
         let title = style.text_styles[&egui::TextStyle::Heading].size + 2.0 * frame.y;
-        let rack_size = natural + frame + egui::vec2(0.0, title);
-        let rack_actions = egui::Window::new(format!("Channel rack · {pattern_name}"))
+        let rack_size =
+            (natural + frame + egui::vec2(0.0, title)).min(area.size() - egui::vec2(40.0, 80.0));
+        let mut rack = egui::Window::new(format!("Channel rack · {pattern_name}"))
             .id(rack_id())
             .open(&mut rack_open)
             .default_pos([240.0, 380.0])
-            .default_size(rack_size.min(area.size() - egui::vec2(40.0, 80.0)))
+            .default_size(rack_size)
             .constrain_to(area)
-            .resizable(true)
+            .resizable(true);
+        if natural != self.rack_natural {
+            if self.rack_natural != egui::Vec2::ZERO {
+                rack = rack.fixed_size(rack_size);
+            }
+            self.rack_natural = natural;
+        }
+        let rack_actions = rack
             .show(&ctx, |ui| {
                 widgets::zoom_contents(ui, rack_scale);
                 let selected = self.piano_roll.channel();
@@ -1226,7 +1288,10 @@ impl eframe::App for LoomApp {
 
         let held = self.live.held_pitches();
         self.piano_roll.hints = self.harmony_keys.hints;
-        let roll_scale = Self::window_scale(&ctx, view::Area::PianoRoll);
+        let roll_zoom = egui::vec2(
+            view::Area::PianoRoll.zoom(&ctx, view::Axis::Horizontal),
+            view::Area::PianoRoll.zoom(&ctx, view::Axis::Vertical),
+        );
         let roll_actions = self.piano_roll.show(
             &ctx,
             &self.project,
@@ -1234,7 +1299,7 @@ impl eframe::App for LoomApp {
             playhead,
             &held,
             area,
-            roll_scale,
+            roll_zoom,
         );
         for action in roll_actions {
             self.apply_roll(action);

@@ -486,15 +486,26 @@ fn section_menu(
                 actions.push(PlaylistAction::DuplicateSection(index));
                 ui.close();
             }
+            // A clip that starts before the section or ends after it
+            // cannot be cut at the section's edges, so the copies would
+            // not sound like the repeats.
+            let cut = project.section_cuts_a_clip(index);
             let unroll = ui
                 .add_enabled(
-                    section.repeats > 1,
+                    section.repeats > 1 && !cut,
                     egui::Button::new("⇶ Write out the repeats"),
                 )
                 .on_hover_text(
                     "Turn \"×3\" into three copies one after the other, \
                      so each time round can be changed on its own",
-                );
+                )
+                .on_disabled_hover_text(if cut {
+                    "A clip starts before this section or ends after it, so its repeats \
+                     can't be written out as copies. Move or shorten the clip to fit the \
+                     section first."
+                } else {
+                    "The section plays only once: there are no repeats to write out."
+                });
             if unroll.clicked() {
                 actions.push(PlaylistAction::UnrollSection(index));
                 ui.close();

@@ -10,7 +10,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::Note;
+use crate::{Note, TimeSignature};
 
 /// The longest pattern supported, in steps: sixteen bars.
 ///
@@ -110,6 +110,15 @@ pub fn tidy_notes(notes: impl IntoIterator<Item = NoteEvent>) -> Vec<NoteEvent> 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Pattern {
     pub name: String,
+    /// Which colour it is drawn in, counted along the app's palette. It
+    /// is given when the pattern is added to a project and stays with it,
+    /// so removing another pattern does not change it.
+    pub color: usize,
+    /// The time signature it is written in while no clip of the song
+    /// plays it, if not the song's: a waltz tried from the library is in
+    /// 3/4 even in a song in 4/4. Once it is in the song, the song's time
+    /// signature where it plays counts (see `Project::pattern_time`).
+    pub time: Option<TimeSignature>,
     length: usize,
     rows: Vec<Vec<NoteEvent>>,
 }
@@ -122,6 +131,8 @@ impl Pattern {
     pub fn new(name: impl Into<String>, channels: usize, length: usize) -> Self {
         Pattern {
             name: name.into(),
+            color: 0,
+            time: None,
             length: length.clamp(1, MAX_STEPS),
             rows: vec![Vec::new(); channels],
         }

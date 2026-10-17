@@ -471,7 +471,7 @@ impl LoomApp {
             Some(chord) => format!(
                 "🎹 {} · accompaniment in {}",
                 described.trim_end_matches('.'),
-                chord.name(self.project.scale.spelling())
+                self.project.scale.chord_name(chord)
             ),
             None => format!("🎹 {described}"),
         };

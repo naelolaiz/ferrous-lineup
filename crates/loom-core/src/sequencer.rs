@@ -56,6 +56,12 @@ impl Sequencer {
         self.frames_per_step
     }
 
+    /// How many frames are left until the next step starts: 0 if it starts
+    /// on the next tick. A change of tempo leaves these frames as they are.
+    pub fn frames_to_next_step(&self) -> f64 {
+        self.frames_until_next.max(0.0)
+    }
+
     /// How many steps are played before the pattern loops.
     pub fn length(&self) -> usize {
         self.length
@@ -179,6 +185,17 @@ mod tests {
         assert_eq!(sequencer.position(), 0.0);
         run(&mut sequencer, 3_000);
         assert_eq!(sequencer.position(), 0.5);
+    }
+
+    #[test]
+    fn a_new_tempo_waits_for_the_next_step() {
+        let mut sequencer = Sequencer::new(Tempo::new(120.0), 48_000, 16);
+        run(&mut sequencer, 1_500); // a quarter of step 0
+        assert_eq!(sequencer.frames_to_next_step(), 4_500.0);
+        sequencer.set_tempo(Tempo::new(60.0));
+        assert_eq!(sequencer.frames_to_next_step(), 4_500.0);
+        let fired = run(&mut sequencer, 4_500 + 12_000 + 1);
+        assert_eq!(fired, vec![(4_500, 1), (16_500, 2)]);
     }
 
     #[test]
