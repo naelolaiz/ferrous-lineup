@@ -766,3 +766,494 @@ pub(super) const DIES_IRAE_MOZART: Song = Song {
             then G minor, then A minor, each new key reached through a diminished seventh \
             chord. The soprano line, from the Mutopia full score.",
 };
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BeethovenLv/O13/pathetique-2/pathetique-2.ly
+// (Mutopia 295, from the Peters edition of 1910)
+const PATHETIQUE_CHORDS: &str = "I V7 | I V7 | I V vi II7 | V | V7 | I VI7 | ii V7 | V7 I";
+
+pub(super) const PATHETIQUE: Song = Song {
+    name: "Pathétique Adagio",
+    origin: "Ludwig van Beethoven, Piano Sonata No. 8, 1798",
+    feel: "Classical",
+    genre: Genre::Classical,
+    tonic: GSharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 72.0,
+    comping: Comping::Alberti,
+    bass: Bass::Held,
+    rhythm: "",
+    style: "Classical cadence",
+    parts: &[
+        Part::new(
+            "Theme",
+            "C4:8 Bb3:8 | Eb4:12 Db4:4 | C4:4 Eb4 Ab4 Bb4 | Eb4:12 E4:4 | \
+             F4:8 Bb3:6 C4:1 Db4:1 | Eb4:8 A3:8 | Db4:8 C4:2 Bb3 Ab3 G3 | Bb3:8 Ab3:4 -:4",
+            PATHETIQUE_CHORDS,
+        ),
+        Part::new(
+            "Theme higher",
+            "C5:8 Bb4:8 | Eb5:12 Db5:4 | C5:4 Eb5 Ab5 Bb5 | Eb5:12 E5:4 | \
+             F5:8 Bb4:6 C5:1 Db5:1 | Eb5:8 A4:8 | Db5:8 C5:2 Bb4 Ab4 G4 | Bb4:8 Ab4:4 -:4",
+            PATHETIQUE_CHORDS,
+        ),
+    ],
+    form: &["Theme", "Theme higher"],
+    drums_from: 0,
+    about: "The Adagio cantabile in A flat: a song in the middle of the piano, sung first in \
+            the tenor and then an octave higher, over an inner voice that murmurs in \
+            sixteenths (the Alberti comping here). Nearly every other beat is the dominant, \
+            E flat seven, until the F7 and B flat minor of the last bars lead home. Each 2/4 \
+            bar is written as one bar of 4/4 with the note values doubled, so the two \
+            thirty-second notes in the fifth bar fit.",
+};
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BeethovenLv/O27/moonlight/moonlight-lys/moonlight1-a4.ly
+// (Mutopia 276)
+pub(super) const MOONLIGHT_SONATA: Song = Song {
+    name: "Moonlight Sonata",
+    origin: "Ludwig van Beethoven, Piano Sonata No. 14, 1801",
+    feel: "Piano",
+    genre: Genre::Classical,
+    tonic: CSharp,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 56.0,
+    comping: Comping::ArpUp,
+    bass: Bass::Held,
+    rhythm: "",
+    style: "Neapolitan",
+    parts: &[
+        Part::new(
+            "Intro",
+            "-:16 | -:16 | -:16 | -:16 | -:12 G#4:3 G#4:1",
+            "i | i7 | bVI bII | V7 i Vsus4 V7 | i",
+        ),
+        Part::new(
+            "Theme",
+            "G#4:12 G#4:3 G#4:1 | G#4:8 A4:8 | G#4:8 F#4:4 B4:4 | E4:4 -:12",
+            "V7 | i iv | bIII bVII7 | bIII",
+        ),
+        Part::new(
+            "B minor",
+            "-:12 G4:3 G4:1 | G4:12 G4:3 G4:1 | G4:12 F#4:4 | F#4:8 G4:4 E4:4 | F#4:8 F#4:8",
+            "iv | bVI7 | bII iv viiø7 V7 | i i iv6 iv6 | i V",
+        )
+        .in_key(B, HarmonicMinor),
+        Part::new(
+            "E minor",
+            "B3:4 -:8 B4:4 | C5:12 A#4:4 | B4:12 B4:4 | C5:12 A#4:4 | B4:8 B4:8",
+            "v V | i | V | i | V iii°7",
+        )
+        .in_key(E, HarmonicMinor),
+        Part::new(
+            "F sharp minor",
+            "B4:8 A4:8 | G4:8 F#4:8 | C#4:8 C#4:4 C#4:4 | F#3:4 -:12",
+            "V7 i | bII #iv°7 | i i Vsus4 V | i",
+        )
+        .in_key(FSharp, HarmonicMinor),
+    ],
+    form: &["Intro", "Theme", "B minor", "E minor", "F sharp minor"],
+    drums_from: 0,
+    about: "The first 23 bars of the Adagio sostenuto, in C sharp minor as Beethoven wrote it. \
+            His right hand plays triplets under the tune from start to end; they do not fit \
+            in sixteenths, so the comping climbs the chords in eighth notes instead. In the \
+            third bar comes D major, the Neapolitan chord, and later C major plays the same \
+            part in B minor. The tune passes through E major, B minor and E minor, over a \
+            long B in the bass, and stops in F sharp minor.",
+};
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BachJS/BWV1068/bach-air/bach-air-lys/bach-air-notes.ly
+// (Mutopia 242, from the Bach-Gesellschaft edition: violin I and continuo)
+const AIR_ENDING: &str = "C#5:2 B4 B4:1 C#5 D5:6 C#5:2 B4 | A4:16";
+
+pub(super) const AIR_ON_THE_G_STRING: Song = Song {
+    name: "Air on the G String",
+    origin: "Johann Sebastian Bach, Orchestral Suite No. 3, about 1730",
+    feel: "Baroque",
+    genre: Genre::Classical,
+    tonic: D,
+    mode: Major,
+    time: COMMON,
+    tempo: 72.0,
+    comping: Comping::Held,
+    bass: Bass::Held,
+    rhythm: "",
+    style: "Hymn",
+    parts: &[
+        Part::new(
+            "A",
+            "F#5:16 | _:16 | _:4 B5:2 G5 E5 D5 C#5 D5 | C#5:8 A4 | A5:16 | \
+             _:2 F#5 C5 B4 E5 D#5 A5 G5 | G5:16 | _:2 E5 B4 A4 D5 C#5 G5 F#5 | \
+             F#5:12 G#5:2 A5 | D5:4 D5:1 E5 F#5:4 E5:2 E5 D5",
+            "",
+        )
+        .with_left(
+            "D3:4 D4 C#4 C#3 | B2:4 B3 A3 A2 | G2:4 G3 G#3 G#2 | A2:4 A3 G3 G2 | \
+             F#2:4 F#3 E3 E2 | D#2:4 D#3 B2 B3 | E2:4 E3 D3 D2 | C#2:4 C#3 A2 A3 | \
+             D3:4 D4 C#4 C#3 | B2:4 B3 G#3 E3",
+        ),
+        Part::new("First ending", AIR_ENDING, "")
+            .with_left("A3:4 D3 E3 E2 | A2:2 B2 C#3 D3 E3 G3 F#3 E3"),
+        Part::new("Second ending", AIR_ENDING, "").with_left("A3:4 D3 E3 E2 | A2:16"),
+        Part::new(
+            "B",
+            "C#5:10 D5:1 C#5 B4 C#5 A4:2 | A5:12 C5:4 | B4:4 B5:6 A5:2 G5 F#5 | \
+             G5:9 F#5:1 E5 D5 C#5:2 B4 | A#4:2 B4 C#5:6 D5:2 E5:4 | _:2 F#5 G5:8 F#5:4 | \
+             E5:2 D5 C#5 B4 C#5 D5:1 E5 D5:4 | B4:16 | D5:10 F#5:2 E5 D5 | B5:12 A5:2 G#5 | \
+             E5:2 A5 A4:4 B4:6 C#5:1 D5 | C#5:6 B4:2 A4:8",
+            "",
+        )
+        .with_left(
+            "A2:4 A3 G3 G2 | F#2:4 F#3 E3 E2 | D#2:4 D#3 F#3 B2 | E3:4 E4 D4 D3 | \
+             C#3:4 C#4 B3 B2 | A#2:4 B2 C#3 A#2 | B2:4 G3 E3 F#3 | B2:4 B3 A3 A2 | \
+             G#2:4 G#3 F#3 F#2 | E2:4 E3 D3 D2 | C#2:4 C#3 D3 E3 | A2:4 A3 G3 G2",
+        ),
+        Part::new(
+            "B end",
+            "D5:12 F#5:2 E5 | E5:12 G5:2 F#5 | F#5:12 A5:2 G5 | G5:16 | A4:10 C#5:2 E5 G5 | \
+             G5:2 E5 F#5:10 G5:1 A5 | D5:10 F#5:2 A5 C6 | B5:12 D5:4 | C#5:2 E5 G5:8 B4:4 | \
+             A4:4 E5:2 F#5:1 G5:3 F#5:4 E5:2 | D5:1 C#5 B4:4 C#5:2 D5:4 C#5:2 D5 | D5:16",
+            "",
+        )
+        .with_left(
+            "F#2:4 F#3 G3 G2 | G#2:4 G#3 A3 A2 | A#2:4 A#3 B3 B2 | E3:4 E4 D4 D3 | \
+             C#3:4 C#4 A3 C#4 | D4:4 D3 C3 C4 | B3:4 B2 A2 A3 | G3:4 G2 F#2 F#3 | \
+             E3:4 E2 D2 D3 | C#3:4 A2 D3 G3 | A3:4 G3 A3 A2 | D2:16",
+        ),
+    ],
+    form: &[
+        "A",
+        "First ending",
+        "A",
+        "Second ending",
+        "B",
+        "B end",
+        "B",
+        "B end",
+    ],
+    drums_from: 0,
+    about: "The first violin's long held notes, each one breaking into quick figures, over \
+            the continuo's bass in steady octave leaps, here on the Keys channel; the inner \
+            parts are left out. The bass walks down the D major scale under the first held \
+            F sharp, as in Pachelbel's Canon. Each bar of Bach's is written as two bars \
+            with the note values doubled, so his thirty-second notes fit in sixteenths.",
+};
+
+// Source: https://raw.githubusercontent.com/baobach/abc_search/main/database/abc/QmfHw5KYvE3na6LB6W77W5KqiSuhtgqPdkLmr4tuWFUowx.abc
+// (an ABC arrangement for two violins and cello; SBurrell23/Sheets danse-macabre.abc, in
+// A minor, has the same two themes)
+pub(super) const DANSE_MACABRE: Song = Song {
+    name: "Danse macabre",
+    origin: "Camille Saint-Saëns, 1874",
+    feel: "Waltz",
+    genre: Genre::Classical,
+    tonic: G,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 160.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Waltz",
+    style: "La folia",
+    parts: &[
+        Part::new(
+            "Tuning",
+            "Eb5:12 | A4:12 | Eb5:12 | A4:8 A4:4 | Eb5:2 Eb5:2 Eb5:4 A4:2 -:2 | \
+             Eb5:2 Eb5:2 Eb5:4 A4:2 -:2 | Eb5:4 A4:4 Eb5:4 | A4:4 Eb5:4 -:4",
+            "",
+        ),
+        Part::new(
+            "Skeletons",
+            "G4:4 G4:2 Bb4:2 G4:2 A4:2 | Bb4:4 A4:2 Bb4:2 G4:2 Bb4:2 | \
+             A4:2 G4:2 G4:2 Bb4:2 G4:2 A4:2 | Bb4:4 A4:2 Bb4:2 G4:2 Bb4:2",
+            "i | i | i | i",
+        ),
+        Part::new(
+            "A step lower",
+            "Ab4:4 Ab4:2 C5:2 Ab4:2 Bb4:2 | C5:4 Bb4:2 C5:2 Ab4:2 C5:2 | \
+             Bb4:2 Ab4:2 Ab4:2 C5:2 Ab4:2 Bb4:2 | C5:4 Ab4:2 C5:2 Bb4:2 Ab4:2",
+            "i7 | i7 | i7 | i7",
+        )
+        .in_key(F, NaturalMinor),
+        Part::new("Turn", "G4:4 -:4 D5:4", "i"),
+        Part::new(
+            "Waltz",
+            "G5:8 G5:4 | F5:8 F5:4 | E5:8 E5:4 | Eb5:8 Eb5:4 | D5:4 E5:4 G5:4 | F#5:4 E5:4 D5:4 | \
+             E5:8 E5:4 | F#5:4 -:4 D5:4 | G5:8 G5:4 | F5:8 F5:4 | E5:8 E5:4 | Eb5:8 Eb5:4 | \
+             D5:4 G5:4 Bb5:4 | A5:4 F#5:4 D5:4 | F#5:8 E5:4 | D5:4 -:8",
+            "i | i7 | i6 | i | IV | ii | ii | V7b9 | i | i7 | IV | i | bVI | V | II | V",
+        ),
+    ],
+    form: &[
+        "Tuning",
+        "Skeletons",
+        "A step lower",
+        "Skeletons",
+        "A step lower",
+        "Turn",
+        "Waltz",
+    ],
+    drums_from: 1,
+    about: "Death tunes his fiddle at midnight: the open A against an E flat, a tritone, \
+            the devil's interval. Then the skeletons dance, first a quick tune that circles \
+            G and B flat and is repeated a step lower, in F minor, then the violin's waltz, \
+            which slides down by semitones, G, F, E, E flat, D, over a bass that stays \
+            on G.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/main/wikifonia-dataset/original-abc/AntoninDvorakHumoresqueopus101no.abc
+// (Wikifonia lead sheet in G; bar 3 there has reversed dots, d<e d<g e<d, so it follows
+// https://raw.githubusercontent.com/SBurrell23/Sheets/main/songs/classical/humoresque.abc,
+// in C, which has the dotted pairs; the two agree on every other bar)
+pub(super) const HUMORESQUE: Song = Song {
+    name: "Humoresque",
+    origin: "Antonín Dvořák, Humoresques Op. 101 No. 7, 1894",
+    feel: "Piano",
+    genre: Genre::Classical,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 80.0,
+    comping: Comping::Quarters,
+    bass: Bass::Held,
+    rhythm: "",
+    style: "Classical cadence",
+    parts: &[
+        Part::new(
+            "Theme",
+            "G4:3 A4:1 G4:3 A4:1 B4:3 D5:1 E5:3 D5:1 | G5:3 F#5:1 A5:3 G5:1 F#5:3 A5:1 G5:3 E5:1 | \
+             D5:3 D5:1 E5:3 D5:1 G5:3 E5:1 D5:3 B4:1 | A4:15 -:1 | \
+             G4:3 A4:1 G4:3 A4:1 B4:3 D5:1 E5:3 D5:1 | G5:3 F#5:1 A5:3 G5:1 F#5:3 A5:1 G5:3 E5:1 | \
+             D5:3 D5:1 G5:3 G4:1 A4:4 D5:4 | G4:12 -:4",
+            "I | IV IV ii°7 IV | I | V7 | I | IV IV ii°7 IV | I V7 | I",
+        ),
+        Part::new(
+            "Middle",
+            "B4:4 B5:3 A5:1 A5:4 G5:4 | G5:4 F#5:3 E5:1 E5:4 D5:4 | D5:4 C5:2 E5:2 D5:4 C5:4 | \
+             B4:2 A4:2 G4:8 -:4 | B4:4 B5:3 A5:1 A5:4 G5:4 | G5:4 F#5:3 E5:1 E5:4 D5:4 | \
+             D5:2 C5:2 D5:2 E5:2 B4:2 A4:2 B4:2 C5:2 | B4:4 Bb4:8 A4:4",
+            "I | IV VI7 | ii V7 | I | I | IV VI7 | ii V7 | I i°7 i°7 V7",
+        ),
+        Part::new(
+            "Last theme",
+            "G4:3 A4:1 G4:3 A4:1 B4:3 D5:1 E5:3 D5:1 | G5:3 F#5:1 A5:3 G5:1 F#5:3 A5:1 G5:3 E5:1 | \
+             D5:3 D5:1 E5:3 D5:1 G5:3 E5:1 D5:3 B4:1 | A4:15 -:1 | \
+             G4:3 A4:1 G4:3 A4:1 B4:3 D5:1 E5:3 D5:1 | G5:3 F#5:1 A5:3 G5:1 F#5:3 A5:1 G5:3 E5:1 | \
+             D5:3 D5:1 Bb5:3 D5:1 C#5:3 B5:1 A5:3 E5:1 | G5:12 -:4",
+            "I | IV IV ii°7 IV | I | V7 | I | IV IV ii°7 IV | I i II7 V7 | I",
+        ),
+    ],
+    form: &["Theme", "Middle", "Last theme"],
+    drums_from: 0,
+    about: "Dvořák's little piano piece, in 2/4 with two of its bars to each bar here, \
+            moved from G flat major to G. Almost every beat is a dotted pair, long then \
+            short. The middle phrase drops the dots and ends on a chromatic slide, B, B flat, \
+            A; the last bars borrow a B flat from G minor before the tune comes home.",
+};
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/SchumannR/O15/SchumannOp15No07/SchumannOp15No07.ly
+// (Mutopia, the top voice; chords read from the other four voices; the top line agrees
+// note for note with https://raw.githubusercontent.com/SBurrell23/Sheets/main/songs/classical/traumerei.abc, in C)
+pub(super) const TRAUMEREI: Song = Song {
+    name: "Träumerei",
+    origin: "Robert Schumann, Kinderszenen Op. 15 No. 7, 1838",
+    feel: "Piano",
+    genre: Genre::Classical,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 56.0,
+    comping: Comping::Held,
+    bass: Bass::Held,
+    rhythm: "",
+    style: "Circle of fifths",
+    parts: &[
+        Part::new("Pickup", "-:12 C4:4", ""),
+        Part::new(
+            "Dream",
+            "F4:10 E4:2 F4:2 A4:2 | C5:2 F5:2 F5:8 E5:2 D5:2 | \
+             C5:2 F5:2 G4:2 A4:2 Bb4:2 D5:2 F4:2 G4:2 | A4:2 C5:2 G4:8 C4:4 | \
+             F4:10 E4:2 F4:2 A4:2 | C5:2 A5:2 A5:6 G5:2 F5:2 E5:2 | \
+             F5:2 A5:2 D5:2 F5:2 E5:6 Eb5:2 | D5:4 E5:4 C5:4 -:2 C4:2",
+            "I | I IV IV IV | I V7 V7 I | I V V7 V7 | I | I VI7 VI7 VI7 | vi vi V VI7 | \
+             II7 II7 V V7",
+        ),
+        Part::new(
+            "Middle",
+            "F4:10 E4:2 F4:2 A4:2 | C5:2 Eb5:2 Eb5:8 D5:2 C5:2 | \
+             Bb4:2 D5:2 G4:2 A4:2 Bb4:6 A4:2 | G4:6 D4:6 -:2 F4:2 | \
+             Bb4:10 A4:2 Bb4:2 D5:2 | F5:2 Bb5:2 Bb5:8 A5:2 G5:2 | \
+             F5:2 A5:2 D5:2 E5:2 F5:6 E5:2 | D5:6 A4:6 G4:4",
+            "I | v7 VI7b9 VI7b9 VI7 | ii VI7 ii ii | ii VI7 ii I | IV | ii7 III7b9 III7b9 III7 | \
+             vi III7 vi vi | vi III7 IV V7",
+        ),
+        Part::new(
+            "Dream again",
+            "F4:10 E4:2 F4:2 A4:2 | C5:2 F5:2 F5:8 E5:2 D5:2 | \
+             C5:2 F5:2 G4:2 A4:2 Bb4:2 D5:2 F4:2 G4:2 | A4:2 C5:2 G4:8 C4:4 | \
+             F4:10 E4:2 F4:2 A4:2 | C5:2 A5:2 A5:6 G5:2 F5:2 D5:2 | \
+             C5:2 F5:2 G4:2 A4:2 Bb4:2 D5:2 G4:2 A4:2 | Bb4:2 D5:2 D4:2 E4:2 F4:8",
+            "I | I IV IV IV | I V7 V7 I | I V V7 V7 | I | I II7 II7 II7 | I V7 V7 ii | \
+             ii V7 I I",
+        ),
+    ],
+    form: &["Pickup", "Dream", "Dream", "Middle", "Dream again"],
+    drums_from: 1,
+    about: "Schumann's daydream from his Scenes from Childhood. Every phrase starts the same \
+            way, a leap up to a long F, then a climb: to the F above it, then to A, and in the \
+            middle to E flat and to B flat. The middle phrases each lean on a secondary \
+            dominant, D7 or A7, with a flat ninth in the tune. The chords are the score's, \
+            simplified to one per beat; the grace notes are left out.",
+};
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BeethovenLv/O92/Symphony7_2/Symphony7_2-lys/violinotwo.ly
+// (Mutopia: the second violins, bars 27 to 74; violinoone.ly bars 51 to 74 for the theme
+// an octave up; chords from viola.ly, violoncello.ly and basso.ly, bars 3 to 26)
+pub(super) const SYMPHONY_7_ALLEGRETTO: Song = Song {
+    name: "Symphony No. 7, Allegretto",
+    origin: "Ludwig van Beethoven, 1812",
+    feel: "Processional",
+    genre: Genre::Classical,
+    tonic: A,
+    mode: NaturalMinor,
+    time: COMMON,
+    tempo: 76.0,
+    comping: Comping::Pulse,
+    bass: Bass::Pulse,
+    rhythm: "Epic toms",
+    style: "Epic minor",
+    parts: &[
+        Part::new(
+            "Theme",
+            "E4:4 E4:2 E4:2 E4:4 E4:4 | E4:4 E4:2 E4:2 E4:4 E4:4 | E4:4 E4:2 F#4:2 G4:4 G4:4 | \
+             G4:4 G4:2 G4:2 G4:4 -:4 | G4:4 G4:2 A4:2 B4:4 B4:4 | F#4:4 F#4:2 G#4:2 A4:4 A4:4 | \
+             E4:4 E4:2 E4:2 E4:4 E4:4 | E4:4 F#4:2 G#4:2 A4:4 -:4 | G4:4 G4:2 A4:2 B4:4 B4:4 | \
+             F#4:4 F#4:2 G#4:2 A4:4 A4:4 | E4:4 E4:2 E4:2 E4:4 E4:4 | E4:4 F#4:2 G#4:2 A4:4 -:4",
+            "i V | V i | i i7 | bVII bIII | bIII II | ii ii I i | i i V i | V i | bIII II | \
+             ii ii I i | i i V i | V i",
+        ),
+        Part::new(
+            "Counter-melody",
+            "C5:8 B4:8 | D5:6 C5:1 B4:1 B4:2 C5:2 C5:4 | C5:6 C5:1 D5:1 D#5:2 E5:2 E5:2 E5:2 | \
+             F5:6 E5:1 D5:1 D5:2 E5:2 E5:4 | E5:8 D#5:8 | \
+             D5:2 B4:1 C#5:1 D5:2 E5:1 D5:1 D5:2 C#5:2 C5:4 | C5:8 B4:4 C5:4 | \
+             D5:6 C5:1 B4:1 A4:2 A4:1 B4:1 C5:2 C5:1 D5:1 | E5:8 D#5:8 | \
+             D5:2 B4:1 C#5:1 D5:2 E5:1 D5:1 D5:2 C#5:2 C5:4 | C5:8 B4:4 C5:4 | \
+             D5:6 C5:1 B4:1 A4:4 -:4",
+            "i V | V i | i i7 | bVII bIII | bIII II | ii ii I i | i i V i | V i | bIII II | \
+             ii ii I i | i i V i | V i",
+        ),
+        Part::new(
+            "Theme above",
+            "E5:4 E5:2 E5:2 E5:4 E5:4 | E5:4 E5:2 E5:2 E5:4 E5:4 | E5:4 E5:2 F#5:2 G5:4 G5:4 | \
+             G5:4 G5:2 G5:2 G5:4 -:4 | G5:4 G5:2 A5:2 B5:4 B5:4 | F#5:4 F#5:2 G#5:2 A5:4 A5:4 | \
+             E5:4 E5:2 E5:2 E5:4 E5:4 | E5:4 F#5:2 G#5:2 A5:4 -:4 | G5:4 G5:2 A5:2 B5:4 B5:4 | \
+             F#5:4 F#5:2 G#5:2 A5:4 A5:4 | E5:4 E5:2 E5:2 E5:4 E5:4 | E5:4 F#5:2 G#5:2 A5:4 -:4",
+            "i V | V i | i i7 | bVII bIII | bIII II | ii ii I i | i i V i | V i | bIII II | \
+             ii ii I i | i i V i | V i",
+        ),
+    ],
+    form: &["Theme", "Counter-melody", "Theme above"],
+    drums_from: 1,
+    about: "The slow movement that made the first audience ask for it again. It is in 2/4, \
+            with two of its bars to each bar here. The theme is hardly a tune: one long and \
+            two short notes, then two long ones, mostly on E, over chords that move \
+            beneath it. When the theme comes back, Beethoven sets a singing counter-melody \
+            against it, just below; here that counter-melody, as the second violins play \
+            it, gets a turn of its own, between the theme and the theme an octave higher.",
+};
+
+// Source: https://raw.githubusercontent.com/baobach/abc_search/main/database/abc/QmXEX4PRkSRKpgibvKQTEkiErGaDjeYoEZvPQfas2Rs7Dy.abc
+// (an ABC piano score marked public domain; the melody and chords up to the trio, with the
+// tune an octave lower from bar 5 on, as in the Wikifonia lead sheet
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/main/wikifonia-dataset/original-abc/Joh.abc,
+// which has the same tune, with some notes held longer and D for F sharp in bars 29 and 30)
+pub(super) const RADETZKY_MARCH: Song = Song {
+    name: "Radetzky March",
+    origin: "Johann Strauss I, Op. 228, 1848",
+    feel: "March",
+    genre: Genre::Classical,
+    tonic: D,
+    mode: Major,
+    time: COMMON,
+    tempo: 112.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "March",
+    style: "Classical cadence",
+    parts: &[
+        Part::new(
+            "Intro",
+            "D5:2 D5:2 D5:2 -:2 D5:2 D5:2 D5:2 -:2 | F#5:4 E5:4 D5:6 C#5:2 | \
+             B4:2 A#4:2 B4:2 C#5:2 D5:4 E5:4 | A4:4 -:8 F#4:2 E#4:2",
+            "I | I | II7 | V",
+        ),
+        Part::new(
+            "March",
+            "F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 E4:2 -:2 D4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 F#4:2 | G4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 E4:2 | \
+             F#4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 F#4:2 | E4:2 -:2 C#5:4 D4:2 -:2 B4:4 | \
+             A4:2 -:2 A4:2 G#4:2 A4:2 B4:2 A4:2 G4:2",
+            "I | I | I | I | V7 | I | V II7 | V",
+        ),
+        Part::new(
+            "March end",
+            "F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 E4:2 -:2 D4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 F#4:2 | G#4:2 -:2 F#5:2 -:2 E5:8 | \
+             F#4:2 -:2 E5:2 -:2 D5:8 | C#5:6 B4:2 A4:2 G4:2 F#4:2 E4:2 | \
+             D4:4 D4:4 D4:4 D5:2 C#5:2",
+            "I | I | I | I | II7 | I | V7 | I",
+        ),
+        Part::new(
+            "Second theme",
+            "D5:2 -:2 D5:2 C#5:2 D5:2 -:2 D5:2 C#5:2 | D5:2 -:2 G5:2 -:2 B4:2 -:2 D5:2 C#5:2 | \
+             D5:2 -:2 D5:2 C#5:2 D5:2 -:2 D5:2 C#5:2 | D5:2 -:2 F#5:2 -:2 A4:2 -:2 A4:2 -:2 | \
+             A4:8 G4:2 -:2 B4:2 -:2 | B4:8 A4:2 -:2 D5:2 -:2 | \
+             C#5:2 -:2 C#5:2 B4:2 A4:2 -:2 G4:2 -:2 | B4:2 -:2 B4:2 A4:2 G4:2 -:2 F#4:2 -:2 | \
+             A4:8 G4:2 -:2 B4:2 -:2 | B4:8 A4:2 -:2 D5:2 -:2 | \
+             C#5:2 -:2 C#5:2 A#4:2 B4:2 -:2 D5:2 -:2 | C#5:2 -:2 C#5:2 A#4:2 B4:2 -:2 D5:2 -:2 | \
+             F#5:4 F#5:2 F#5:2 F#5:4 F#5:2 F#5:2 | F#5:4 F#4:2 F#4:2 F#4:4 F#4:2 F#4:2",
+            "IV | IV | I | I | V7 | I | V7 | I | V7 | I | III vi | III vi | III vi III vi | \
+             III vi III vi",
+        ),
+        Part::new(
+            "March again",
+            "F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 E4:2 -:2 D4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 F#4:2 | G4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 E4:2 | \
+             F#4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 F#4:2 | E4:2 -:2 C#5:4 D4:2 -:2 B4:4 | \
+             A4:2 -:2 A4:2 G#4:2 A4:2 B4:2 A4:2 G4:2",
+            "III | III | I | I | I | I | V7 | I | V II7 | V",
+        ),
+        Part::new(
+            "Last march end",
+            "F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 E4:2 -:2 D4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 F#4:2 E#4:2 F#4:2 -:2 F#4:2 E#4:2 | \
+             F#4:2 -:2 B4:2 -:2 A4:2 -:2 A4:2 F#4:2 | G#4:2 -:2 F#5:2 -:2 E5:8 | \
+             F#4:2 -:2 E5:2 -:2 D5:8 | C#5:6 B4:2 A4:2 G4:2 F#4:2 E4:2 | D4:4 D4:4 D4:4 -:4",
+            "I | I | I | I | II7 | I | V7 | I",
+        ),
+    ],
+    form: &[
+        "Intro",
+        "March",
+        "March end",
+        "Second theme",
+        "March again",
+        "Last march end",
+    ],
+    drums_from: 0,
+    about: "The march the Vienna New Year's Concert ends with, the audience clapping along. \
+            It is in cut time, one of its bars to each bar here. The tune taps on F sharp \
+            with the E sharp just below it. The second theme ends on F sharp major chords, \
+            and the tune comes back over them before D major returns. The trio is left out.",
+};

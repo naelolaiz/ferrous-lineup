@@ -1184,3 +1184,45 @@ pub(super) const MO_LI_HUA: Song = Song {
             first line is sung twice before the tune climbs to the high A, and the song \
             ends on D, the fifth, not on G, which leaves it floating. Here without drums.",
 };
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/main/wikifonia-dataset/original-abc/JohannesBrahmsHungarianDanceNo.abc
+// (a Wikifonia lead sheet in G minor)
+pub(super) const HUNGARIAN_DANCE: Song = Song {
+    name: "Hungarian Dance No. 5",
+    origin: "Johannes Brahms, 1869",
+    feel: "Polka",
+    genre: Genre::Folk,
+    tonic: G,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 120.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Two-step",
+    style: "Polka",
+    parts: &[
+        Part::new(
+            "A",
+            "D4:6 G4:2 Bb4:6 G4:2 | F#4:6 G4:1 A4:1 G4:8 | Eb4:6 F4:1 G4:1 D4:8 | \
+             C4:1 Bb3:1 Bb3:1 A3:1 A3:3 D4:1 G3:8 | D4:6 G4:1 Bb4:1 D5:6 Bb4:2 | \
+             A4:6 Bb4:1 C5:1 Bb4:8 | Eb5:1 F5 G5 Eb5 D5 Eb5 F5 D5 C5 D5 Eb5 C5 Bb4 C5 D5 Bb4 | \
+             C5:1 Bb4 Bb4 A4 A4:3 D5:1 G4:6 -:2",
+            "i | iv i | iv i | V7 i | i | iv i | bVI v iv bIII | V7 i",
+        ),
+        Part::new(
+            "B",
+            "D5:4 D5:4 Eb5:6 D5:2 | -:2 C5:4 B4:1 C5:1 D5:1 C5:1 B4:1 D5:1 C5:2 -:2 | \
+             C5:4 C5:4 D5:6 C5:2 | -:2 Bb4:4 A4:1 Bb4:1 C5:1 Bb4:1 A4:1 C5:1 Bb4:2 -:2 | \
+             A4:4 A4:4 C5:2 Bb4:4 A4:2 | _:2 G4:4 F#4:1 G4:1 A4:1 G4:1 F#4:1 A4:1 G4:2 -:2 | \
+             D5:2 -:2 -:3 D4:1 E4:2 -:2 F#4:2 -:2 | G4:2 G4:4 F#4:1 G4:1 A4:1 G4:1 F#4:1 A4:1 G4:2 -:2 | \
+             Eb5:2 -:2 D5:2 -:2 G5:2 -:6",
+            "I7 | iv | bVII7 | bIII | V7 | bVI | V7 | i | iv6 V7 i i",
+        ),
+    ],
+    form: &["A", "A", "B"],
+    drums_from: 0,
+    about: "Brahms's best-known Hungarian dance, in G minor and in 2/4, with two of its \
+            bars to each bar here. The tune leans on F sharp, the raised seventh of \
+            harmonic minor. The second strain is a chain of dominant sevenths: G7 to C \
+            minor, F7 to B flat, D7 to E flat (a deceptive turn), then D7 home to G minor.",
+};
