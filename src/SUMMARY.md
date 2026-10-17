@@ -91,6 +91,7 @@
   - [Ear training](step-9/ear-training.md)
   - [Chord sheets as text: to paste and share](step-9/text-chord-sheets.md)
   - [The lead sheet: the tune in notation](step-9/lead-sheet.md)
+  - [Release builds: a download for every system](step-9/releases.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
