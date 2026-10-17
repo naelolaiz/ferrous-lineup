@@ -286,7 +286,14 @@ impl LineupApp {
     fn perform(&mut self, ctx: &egui::Context, action: Pending) {
         match action {
             Pending::New => {
-                self.replace_project(Project::with_band(), None);
+                let mut project = Project::with_band();
+                if let Some(swing) = project
+                    .band()
+                    .and_then(|band| self.swings.of(band.style.name))
+                {
+                    project.swing = swing;
+                }
+                self.replace_project(project, None);
                 self.chord_sheet.open = true;
                 self.set_mode(PlayMode::Song);
             }

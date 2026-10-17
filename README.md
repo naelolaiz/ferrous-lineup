@@ -167,6 +167,14 @@ ballad's piano plays eighth notes), a little louder. The drums play a
 fill into each change and crash on its first beat, and a boxed letter
 marks it on the sheet and the playlist.
 
+**Swing**, next to the tempo on the sheet (and on the playlist), plays
+pairs of eighth notes long-short, as jazz, blues and shuffle players
+do: from *straight* (even) to 100%, the first two thirds and the last
+third of a triplet. The notes stay as written; only how they are played
+changes, in WAV and MIDI exports too. Each style brings its own swing
+(Swing, Jazz ballad, Jazz waltz and Shuffle 100%, Rock and roll 50%), and
+remembers the amount you last set for it.
+
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's

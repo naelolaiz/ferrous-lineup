@@ -20,9 +20,9 @@ pub(super) const MIDNIGHT_SHUFFLE: Song = Song {
     style: "Twelve-bar blues",
     parts: &[Part::new(
         "Chorus",
-        "-:4 C5:3 D5:1 E5:4 G5 | A5:3 G5:1 E5:4 D5 C5 | A4:12 -:4 | -:16 | \
-         -:4 C5:3 D5:1 E5:4 G5 | A5:3 G5:1 E5:4 D5 C5 | A4:12 -:4 | -:16 | \
-         E5:3 E5:1 G5:4 E5 D5 | D5:3 D5:1 C5:4 A4 C5 | A4:8 -:8 | -:4 E4:4 G4 G#4",
+        "-:4 C5:2 D5:2 E5:4 G5 | A5:2 G5:2 E5:4 D5 C5 | A4:12 -:4 | -:16 | \
+         -:4 C5:2 D5:2 E5:4 G5 | A5:2 G5:2 E5:4 D5 C5 | A4:12 -:4 | -:16 | \
+         E5:2 E5:2 G5:4 E5 D5 | D5:2 D5:2 C5:4 A4 C5 | A4:8 -:8 | -:4 E4:4 G4 G#4",
         TWELVE_BAR,
     )],
     form: &["Chorus", "Chorus", "Chorus"],
@@ -48,11 +48,11 @@ pub(super) const ROLLING_BOOGIE: Song = Song {
     style: "Twelve-bar blues",
     parts: &[Part::new(
         "Chorus",
-        "G5:3 Bb5:1 G5:3 F5:1 Eb5:3 C5:1 -:4 | C5:4 Eb5:3 C5:1 F5:4 -:4 | \
-         G5:3 Bb5:1 G5:3 F5:1 Eb5:3 C5:1 -:4 | C5:8 -:8 | \
-         C6:3 Bb5:1 G5:3 F5:1 Eb5:4 F5:4 | F5:8 -:8 | \
-         G5:3 Bb5:1 G5:3 F5:1 Eb5:3 C5:1 -:4 | C5:4 -:12 | \
-         G5:3 F#5:1 G5:3 Bb5:1 G5:8 | F5:3 F#5:1 F5:3 Eb5:1 C5:8 | C5:3 Eb5:1 C5:12 | -:8 G4:4 Bb4",
+        "G5:2 Bb5:2 G5:2 F5:2 Eb5:2 C5:2 -:4 | C5:4 Eb5:2 C5:2 F5:4 -:4 | \
+         G5:2 Bb5:2 G5:2 F5:2 Eb5:2 C5:2 -:4 | C5:8 -:8 | \
+         C6:2 Bb5:2 G5:2 F5:2 Eb5:4 F5:4 | F5:8 -:8 | \
+         G5:2 Bb5:2 G5:2 F5:2 Eb5:2 C5:2 -:4 | C5:4 -:12 | \
+         G5:2 F#5:2 G5:2 Bb5:2 G5:8 | F5:2 F#5:2 F5:2 Eb5:2 C5:8 | C5:2 Eb5:2 C5:12 | -:8 G4:4 Bb4",
         TWELVE_BAR,
     )],
     form: &["Chorus", "Chorus", "Chorus"],

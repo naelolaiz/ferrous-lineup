@@ -165,6 +165,7 @@ pub fn style_demo(style: &Style) -> Project {
     }
     project.add_clip(Clip::new(end, SONG_TRACK, at));
     write_ending(&mut project, at, style.time.steps_per_bar(), key);
+    project.swing = rhythm.map_or(0, |rhythm| rhythm.swing);
     project.remove_unused_tracks();
     project
 }
@@ -509,6 +510,7 @@ pub fn song_demo(song: &Song) -> Project {
     if let Some(bar) = last_bar(song, at) {
         broaden_the_end(&mut project, song, bar);
     }
+    project.swing = song.swing();
     project.remove_unused_tracks();
     project
 }

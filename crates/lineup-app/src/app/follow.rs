@@ -15,6 +15,7 @@
 use lineup_audio::Command;
 use lineup_core::harmony::Chord;
 use lineup_core::library::follow::{Accompaniment, chord_held};
+use lineup_core::swing;
 
 use super::LineupApp;
 
@@ -90,10 +91,13 @@ impl LineupApp {
         self.live.follow.heard = Some(heard);
         self.live.follow.chord = Some(chord);
         for moved in followed {
+            // Played with the song's swing, as the written notes are.
+            let swing = self.project.pattern_swing(moved.pattern);
+            let hits = self.project.plays_hits(moved.channel);
             self.send(Command::SetNotes {
                 pattern: moved.pattern,
                 channel: moved.channel,
-                notes: moved.notes,
+                notes: swing::swung(&moved.notes, swing, hits),
             });
         }
     }
@@ -102,14 +106,11 @@ impl LineupApp {
     fn restore_accompaniment(&mut self) {
         self.live.follow.chord = None;
         for (pattern, channel) in std::mem::take(&mut self.live.follow.moved) {
-            let Some(notes) = self
-                .project
-                .pattern(pattern)
-                .filter(|_| channel < self.project.channels().len())
-                .map(|pattern| pattern.notes(channel).to_vec())
-            else {
+            if pattern >= self.project.patterns().len() || channel >= self.project.channels().len()
+            {
                 continue;
-            };
+            }
+            let notes = self.project.played_notes(pattern, channel).into_owned();
             self.send(Command::SetNotes {
                 pattern,
                 channel,
