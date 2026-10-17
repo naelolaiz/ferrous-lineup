@@ -173,7 +173,8 @@ impl LineupApp {
         };
         let midi = Midi::new(&cc.egui_ctx, live_input, midi_output);
 
-        let project = Project::demo();
+        let mut project = Project::demo();
+        files::fill_chord_sheet(&mut project);
         let piano_roll = PianoRoll::new(first_synth(&project));
         let mut app = LineupApp {
             audio,
