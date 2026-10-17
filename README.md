@@ -95,15 +95,26 @@ song.
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's
-Suite Op. 25, Berg's *Lyric Suite* and Webern's Symphony Op. 21, all
-public domain now, or a few written for Ferrous Loom), see its matrix
+Suite Op. 25, Berg's *Lyric Suite*, and Webern's Symphony Op. 21 and
+Concerto Op. 24, all public domain now, or a few written for Ferrous
+Loom), see its matrix
 with all 48 forms (P, I, R and RI on every note), and write any of them
 into the pattern as a melody or as chords, with the durations, dynamics
 and octaves following the row too if you like. **Sets…** lists all 224
 pitch-class sets by Forte number, with their prime forms and interval
 vectors, to draw with or use as a scale, and selecting notes names their
 set. The Library's **Twelve-tone rows** and **File > Demos > Twelve-tone**
-play six ways of using a row.
+play seven ways of using a row.
+
+**Micromodes…** opens Francisco Kröpfl's twelve micromodes: the twelve
+groups of three notes (Forte's trichords, 3-1 to 3-12) in his three
+families, minor, major and chords. Each is drawn on a clock, with its
+prime form in solfège, its intervals and its hour on Peter Schat's Tone
+Clock, and can be heard, drawn with or used as the key. Selecting notes
+shows which micromodes they hold, and the Micromodes and Sets windows
+link to each other: a three-note set is a micromode, and every larger
+set is made of them. The Library's **Micromodes (Kröpfl)** and **File >
+Demos > Micromodes** play music made from one micromode.
 
 **File > Import recording…** opens an MP3, WAV, FLAC or Ogg file (or
 drop it on the window) and listens to it: the tempo, time signature and
@@ -141,12 +152,14 @@ They are not signed yet, so macOS and Windows warn before the first start.
 | An imported recording, with the chords heard on every beat. | Right-click a track's name to insert, move or delete tracks. |
 | ![The twelve-tone window beside the piano roll: the matrix of a row with all its forms, and the piano roll numbering the notes of the row](screenshots/twelve-tone-row.png) | ![The pitch-class set browser showing the octatonic scale, 8-28, beside the piano roll](screenshots/pitch-class-sets.png) |
 | A twelve-tone row and its matrix: P, I, R and RI on every note. | The pitch-class sets by Forte number, to draw with or use as a scale. |
+| ![The Micromodes window: the three families of Kröpfl's micromodes, Menor 3 drawn on a clock with its prime form do - do# - mi, and the micromodes in the selected C major chords](screenshots/micromodes.png) | ![The Sets window on 7-35, the diatonic scale, listing the micromodes inside its 35 groups of three](screenshots/micromodes-in-sets.png) |
+| Kröpfl's twelve micromodes, and the ones in the notes you select. | Every set lists its micromodes, and each one links back. |
 
 ## Project layout
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows and pitch-class sets, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
+| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
 | `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
 | `crates/loom-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
 | `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`, with MIDI through `midir`. |

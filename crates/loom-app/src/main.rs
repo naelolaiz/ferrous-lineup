@@ -16,6 +16,7 @@ mod app;
 mod channel_rack;
 mod harmony_keys;
 mod library_browser;
+mod micromodes;
 mod midi;
 mod piano_roll;
 mod playlist;
