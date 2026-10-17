@@ -21,7 +21,8 @@ time:
    and then a new name for the app ([A new name](new-name.md)),
 2. **a chord sheet**: a window of bars where you type the chords, stored
    in the project. A bar can also hold a pitch-class set, a micromode or
-   a row form, the other ways Ferrous Lineup names harmony,
+   a row form, the other ways Ferrous Lineup names harmony
+   ([The chord sheet: writing a song bar by bar](chord-sheet.md)),
 3. **the band plays the chord sheet**: styles split into "band styles"
    (how to play) and "progressions" (what to play),
 4. **a practice bar**: count-in, tempo as a percentage, a toggle to play
