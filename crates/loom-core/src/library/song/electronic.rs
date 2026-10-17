@@ -200,3 +200,52 @@ pub(super) const TURKISH_MARCH: Song = Song {
             is in A minor; the refrain that answers it turns to A major, the same key with \
             its third raised, as in the sonata.",
 };
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/folkinfo/abc_tune_folkinfo_1541.abc
+// (BBC "Singing Together", Spring 1975, in 2/4; here two bars to the bar, in A minor, up a
+// fourth from E minor. The two held bars with fermatas are written as a whole bar each.
+// The source has no chords: they come from the D minor ABC at
+// https://raw.githubusercontent.com/avnerdorman/abc-solfege-tool/main/songs/Kalinka_Dm.abc,
+// which has the same chorus and a slightly different verse.)
+pub(super) const KALINKA: Song = Song {
+    name: "Kalinka",
+    origin: "Ivan Larionov, 1860",
+    feel: "Techno",
+    genre: Genre::Electronic,
+    tonic: A,
+    mode: NaturalMinor,
+    time: COMMON,
+    tempo: 140.0,
+    comping: Comping::Stabs,
+    bass: Bass::Offbeat,
+    rhythm: "Techno",
+    style: "Techno minor",
+    parts: &[
+        Part::new("Intro", "E5:8 E5:8", "i"),
+        Part::new(
+            "Chorus",
+            "D5:4 B4:2 C5 D5:4 B4:2 C5 | D5:4 C5:2 B4 A4:4 E5:4 | \
+             D5:3 C5:1 B4:2 C5 D5:4 B4:2 C5 | D5:4 C5:2 B4 A4:4 E5:4 | \
+             D5:4 B4:2 C5 D5:4 B4:2 C5 | D5:4 C5:2 B4 A4:4 E5:4 | \
+             D5:3 C5:1 B4:2 C5 D5:4 B4:2 C5 | D5:4 C5:2 B4 A4:8",
+            "V7 | V7 i | V7 | V7 i | V7 | V7 i | V7 | V7 i",
+        ),
+        Part::new("Oh", "A5:8 G5:8", "i bVII7"),
+        Part::new(
+            "Verse",
+            "E5:2 G5 F5 E5:1 C5 C5:4 G4 | E5:2 G5 F5 E5:1 D5 C5:4 G4 | \
+             G4:4 A4:2 B4 D5 C5 B4 A4 | G4:4 G5 G5:8 | \
+             E5:2 G5 F5 E5:1 D5 C5:4 A4 | E5:2 G5 F5 E5:1 D5 C5:4 G4 | \
+             A4:4 A4:2 B4 D5 C5 B4 A4 | G5:4 F5 E5:8",
+            "bIII bVII7 bIII bIII | bIII bVII7 bIII bIII | bVI bVI IV7 IV7 | bVII | \
+             bIII bVII7 bIII bIII | bIII bVII7 bIII bIII | bVI bVI IV7 IV7 | bVII iv V7 V7",
+        ),
+    ],
+    form: &["Intro", "Chorus", "Oh", "Verse", "Intro", "Chorus"],
+    drums_from: 1,
+    about: "Larionov's song of 1860, sung everywhere as a Russian folk song, in 2/4 written \
+            two bars to the bar. The chorus hangs on E7 with C, the minor sixth, leaning on \
+            B, and lands on A minor every second bar; the slower verse turns to C major, the \
+            relative major, and comes back through D7 and E7. Here it is techno: a kick on \
+            every beat, stabs and an offbeat bass.",
+};
