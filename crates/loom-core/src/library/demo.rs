@@ -14,11 +14,13 @@ use crate::tempo::Tempo;
 use super::apply::{self, LEAD};
 use super::chart::accompany;
 use super::comping::Bass;
+use super::micromodes::{self, MicromodeStyle};
 use super::rhythm::{FILLS, RHYTHMS, Rhythm};
 use super::rows::{self, DEMO_SECTIONS, RowStyle};
 use super::song::{Part, Song};
 use super::style::Style;
 use crate::pattern::NoteEvent;
+use crate::pitch::PitchClass;
 
 /// About how many bars a style demo plays with the drums.
 const DEMO_BARS: usize = 32;
@@ -138,25 +140,73 @@ pub fn row_demo(style: &RowStyle) -> Project {
     project.tempo = Tempo::new(style.tempo);
     project.time_signature = style.time;
     let length = style.length();
+    let names = DEMO_SECTIONS.map(|(_, name)| name);
+    let patterns = section_patterns(&mut project, &names, length, |project, index, i| {
+        rows::write_section(project, index, style, DEMO_SECTIONS[i].0);
+    });
+    arrange_sections(&mut project, &patterns, length, style.rhythm(), "Row");
+    project
+}
+
+/// A demo of a micromode style: the walk from the micromode on the key
+/// note, from it upside down, from a tritone away, and from there upside
+/// down, each a section of the song, then the first once more. The key
+/// note is C. With a rhythm, the drums come in after the first section.
+pub fn micromode_demo(style: &MicromodeStyle) -> Project {
+    let mut project = Project::empty();
+    project.tempo = Tempo::new(style.tempo);
+    let length = style.length();
+    let names = micromodes::DEMO_SECTIONS.map(|(_, name)| name);
+    let patterns = section_patterns(&mut project, &names, length, |project, index, i| {
+        let start = micromodes::DEMO_SECTIONS[i].0;
+        micromodes::write_micromode_style(project, index, style, PitchClass::C, start, None);
+    });
+    project.scale = style.scale(PitchClass::C);
+    arrange_sections(&mut project, &patterns, length, style.rhythm(), "Micromode");
+    project
+}
+
+/// One pattern per section, named after it and `length` steps long, the
+/// first being the project's first pattern; `write` fills section `i`
+/// into pattern `index`.
+fn section_patterns(
+    project: &mut Project,
+    names: &[&'static str],
+    length: usize,
+    mut write: impl FnMut(&mut Project, usize, usize),
+) -> Vec<(usize, &'static str)> {
     let mut patterns = Vec::new();
-    for (i, (form, name)) in DEMO_SECTIONS.iter().enumerate() {
+    for (i, name) in names.iter().enumerate() {
         let index = if i == 0 {
             if let Some(pattern) = project.pattern_mut(0) {
                 pattern.name = name.to_string();
             }
             0
         } else {
-            new_pattern(&mut project, name, length)
+            new_pattern(project, name, length)
         };
-        rows::write_section(&mut project, index, style, *form);
+        write(project, index, i);
         patterns.push((index, *name));
     }
-    let drums = style.rhythm().map(|rhythm| {
-        let plain = drum_pattern(&mut project, "Drums", length, rhythm, false);
-        let fill = drum_pattern(&mut project, "Drums and fill", length, rhythm, true);
+    patterns
+}
+
+/// Arranges four section patterns as a song: each in turn, then the
+/// first again, each a section of the playlist. With a rhythm, the drums
+/// come in after the first section, with a fill before the last.
+fn arrange_sections(
+    project: &mut Project,
+    patterns: &[(usize, &'static str)],
+    length: usize,
+    rhythm: Option<&'static Rhythm>,
+    track: &str,
+) {
+    let drums = rhythm.map(|rhythm| {
+        let plain = drum_pattern(project, "Drums", length, rhythm, false);
+        let fill = drum_pattern(project, "Drums and fill", length, rhythm, true);
         (plain, fill)
     });
-    name_tracks(&mut project, "Row", "Drums");
+    name_tracks(project, track, "Drums");
     let order = [0, 1, 2, 3, 0];
     for (place, &which) in order.iter().enumerate() {
         let (pattern, name) = patterns[which];
@@ -175,7 +225,6 @@ pub fn row_demo(style: &RowStyle) -> Project {
         }
     }
     project.remove_unused_tracks();
-    project
 }
 
 /// The notes of a part's melody, one copy per voice, inside the part.
@@ -354,6 +403,21 @@ mod tests {
             assert_eq!(project.playlist().sections().len(), 5, "{}", style.name);
             assert!(!project.scale.kind.is_tonal());
             assert_eq!(crate::file::format_for(&project), 6);
+        }
+    }
+
+    #[test]
+    fn every_micromode_style_makes_a_demo() {
+        for style in &crate::library::MICROMODE_STYLES {
+            let project = micromode_demo(style);
+            check(&project, style.name);
+            assert_eq!(project.playlist().sections().len(), 5, "{}", style.name);
+            assert_eq!(project.time_signature, style.time);
+            let micromode = style.micromode();
+            assert_eq!(
+                crate::harmony::Micromode::of(project.scale.pitch_set()),
+                Some(micromode)
+            );
         }
     }
 

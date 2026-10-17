@@ -501,12 +501,15 @@ pub struct RowPreset {
 /// Rows to try: famous ones from works in the public domain, and some
 /// written for Ferrous Loom to show off what rows can do.
 ///
-/// The three famous works were published between 1925 and 1929, so in
+/// Three of the famous works were published between 1925 and 1929, so in
 /// the United States they are in the public domain (95 years after
 /// publication), and their composers died in 1951, 1935 and 1945, so they
 /// are in the public domain where copyright lasts 70 years after the
-/// author's death, too. Only the rows are used here: twelve notes each.
-pub const ROW_PRESETS: [RowPreset; 7] = [
+/// author's death, too. Webern's Concerto was published in 1948; it is in
+/// the public domain where copyright lasts 70 years after the author's
+/// death (Webern died in 1945). Only the rows are used here: twelve
+/// notes each.
+pub const ROW_PRESETS: [RowPreset; 8] = [
     RowPreset {
         name: "Schoenberg's Suite",
         source: "Arnold Schoenberg, Suite for Piano, Op. 25 (1925)",
@@ -528,6 +531,15 @@ pub const ROW_PRESETS: [RowPreset; 7] = [
         about: "A palindrome: read backwards it is the same row a tritone higher (R9 is P3). \
                 The second half mirrors the first.",
         row: ToneRow([9, 6, 7, 8, 4, 5, 11, 10, 2, 1, 0, 3]),
+    },
+    RowPreset {
+        name: "Webern's Concerto",
+        source: "Anton Webern, Concerto for nine instruments, Op. 24 (1934)",
+        about: "Four groups of three, all the same micromode, Menor 3 (a semitone and two \
+                thirds): B Bb D, Eb G F#, Ab E F, C C# A. The second group is the first \
+                backwards and upside down (RI), the third backwards (R), the fourth upside \
+                down (I).",
+        row: ToneRow([11, 10, 2, 3, 7, 6, 8, 4, 5, 0, 1, 9]),
     },
     RowPreset {
         name: "Loom row",

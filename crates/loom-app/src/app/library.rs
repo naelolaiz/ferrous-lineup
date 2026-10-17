@@ -18,9 +18,10 @@
 
 use eframe::egui;
 use loom_audio::PlayMode;
-use loom_core::library::demo::{row_demo, song_demo, style_demo};
+use loom_core::library::demo::{micromode_demo, row_demo, song_demo, style_demo};
 use loom_core::library::{
-    FILLS, Genre, ROW_STYLES, Rhythm, RowStyle, SONGS, STYLES, Song, Style, apply, rows,
+    FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, SONGS, STYLES,
+    Song, Style, apply, micromodes, rows,
 };
 use loom_core::{Pattern, Project, Tempo};
 
@@ -44,6 +45,7 @@ pub(super) struct Audition {
     /// that came with a style changes with the next style.
     rhythm_picked: bool,
     row_style: Option<&'static RowStyle>,
+    micromode_style: Option<&'static MicromodeStyle>,
 }
 
 /// A demo to open from the File menu.
@@ -54,6 +56,7 @@ pub(super) enum Demo {
     Song(&'static Song),
     Style(&'static Style),
     Row(&'static RowStyle),
+    Micromode(&'static MicromodeStyle),
 }
 
 impl Demo {
@@ -64,17 +67,22 @@ impl Demo {
             Demo::Song(song) => Tried {
                 style: Style::named(song.style),
                 rhythm: Rhythm::named(song.rhythm),
-                row_style: None,
+                ..Tried::default()
             },
             Demo::Style(style) => Tried {
                 style: Some(style),
                 rhythm: Rhythm::named(style.rhythm),
-                row_style: None,
+                ..Tried::default()
             },
             Demo::Row(style) => Tried {
-                style: None,
                 rhythm: style.rhythm(),
                 row_style: Some(style),
+                ..Tried::default()
+            },
+            Demo::Micromode(style) => Tried {
+                rhythm: style.rhythm(),
+                micromode_style: Some(style),
+                ..Tried::default()
             },
         }
     }
@@ -85,6 +93,7 @@ impl Demo {
             Demo::Song(song) => song_demo(song),
             Demo::Style(style) => style_demo(style),
             Demo::Row(style) => row_demo(style),
+            Demo::Micromode(style) => micromode_demo(style),
         }
     }
 }
@@ -100,6 +109,7 @@ impl LoomApp {
                 style: audition.style,
                 rhythm: audition.rhythm,
                 row_style: audition.row_style,
+                micromode_style: audition.micromode_style,
             },
             None => self.song_library,
         }
@@ -157,6 +167,10 @@ impl LoomApp {
             self.try_row_style(style);
             return;
         }
+        if let LibraryAction::MicromodeStyle(style) = action {
+            self.try_micromode_style(style);
+            return;
+        }
         let reuse = self.unchanged_audition().cloned();
         let mut style = reuse.as_ref().and_then(|a| a.style);
         let mut rhythm = reuse.as_ref().and_then(|a| a.rhythm);
@@ -172,7 +186,9 @@ impl LoomApp {
                 rhythm = Some(picked);
                 rhythm_picked = true;
             }
-            LibraryAction::RhythmInSong(_) | LibraryAction::RowStyle(_) => return,
+            LibraryAction::RhythmInSong(_)
+            | LibraryAction::RowStyle(_)
+            | LibraryAction::MicromodeStyle(_) => return,
         }
 
         let name = match (style, rhythm) {
@@ -272,6 +288,7 @@ impl LoomApp {
             rhythm,
             rhythm_picked,
             row_style: None,
+            micromode_style: None,
         });
         self.set_mode(PlayMode::Pattern);
         if !self.playing {
@@ -291,6 +308,9 @@ impl LoomApp {
         let (name, tempo, label) = match action {
             LibraryAction::Style(style) => (style.name, Some(style.tempo), "change the style"),
             LibraryAction::RowStyle(style) => (style.name, Some(style.tempo), "change the style"),
+            LibraryAction::MicromodeStyle(style) => {
+                (style.name, Some(style.tempo), "change the style")
+            }
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
                 if FILLS.contains(rhythm) =>
             {
@@ -307,6 +327,9 @@ impl LoomApp {
             let change = match action {
                 LibraryAction::Style(style) => apply::use_style(project, style),
                 LibraryAction::RowStyle(style) => rows::use_row_style(project, style),
+                LibraryAction::MicromodeStyle(style) => {
+                    micromodes::use_micromode_style(project, style)
+                }
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
                     if FILLS.contains(rhythm) =>
                 {
@@ -335,6 +358,7 @@ impl LoomApp {
         if change.harmony > 0 {
             let what = match action {
                 LibraryAction::RowStyle(_) => "the row instead of the chords",
+                LibraryAction::MicromodeStyle(_) => "the micromode instead of the chords",
                 _ => "chords and bass played again",
             };
             parts.push(format!("{what} in {}", patterns(change.harmony)));
@@ -349,12 +373,18 @@ impl LoomApp {
                 LibraryAction::Style(style) => Tried {
                     style: Some(style),
                     row_style: None,
+                    micromode_style: None,
                     ..song_library
                 },
                 LibraryAction::RowStyle(style) => Tried {
-                    style: None,
                     rhythm: style.rhythm().or(song_library.rhythm),
                     row_style: Some(style),
+                    ..Tried::default()
+                },
+                LibraryAction::MicromodeStyle(style) => Tried {
+                    rhythm: style.rhythm().or(song_library.rhythm),
+                    micromode_style: Some(style),
+                    ..Tried::default()
                 },
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) if !fill => {
                     Tried {
@@ -427,6 +457,59 @@ impl LoomApp {
             rhythm: style.rhythm(),
             rhythm_picked: false,
             row_style: Some(style),
+            micromode_style: None,
+        });
+        self.set_mode(PlayMode::Pattern);
+        if !self.playing {
+            self.rewind_for_new_pattern();
+            self.set_playing(true);
+        }
+    }
+
+    /// Writes a micromode style into a pattern and plays it, as
+    /// [`Self::try_row_style`] does for a row style. The micromode starts
+    /// on the project's key note.
+    fn try_micromode_style(&mut self, style: &'static MicromodeStyle) {
+        let target = self.unchanged_audition().map(|audition| audition.pattern);
+        let selected = self.piano_roll.channel();
+        let key = self.project.scale.root;
+        let use_tempo = self.playlist.library_tempo();
+        let written = self.edit("try from the library", |project| {
+            let index = match target {
+                Some(index) => index,
+                None => project.add_pattern()?,
+            };
+            let pattern = project.pattern_mut(index)?;
+            pattern.name = style.name.to_string();
+            for channel in 0..pattern.rows() {
+                pattern.set_notes(channel, []);
+            }
+            let start = micromodes::DEMO_SECTIONS[0].0;
+            micromodes::write_micromode_style(project, index, style, key, start, Some(selected));
+            if let Some(rhythm) = style.rhythm() {
+                apply::write_rhythm(project, index, rhythm);
+            }
+            if use_tempo {
+                project.tempo = Tempo::new(style.tempo);
+            }
+            Some((index, project.pattern(index)?.clone()))
+        });
+        let Some((pattern, written)) = written else {
+            self.message = Some("There is no room for another pattern.".to_string());
+            return;
+        };
+        self.select_pattern(pattern);
+        if self.auditions.len() == REMEMBERED {
+            self.auditions.remove(0);
+        }
+        self.auditions.push(Audition {
+            pattern,
+            written,
+            style: None,
+            rhythm: style.rhythm(),
+            rhythm_picked: false,
+            row_style: None,
+            micromode_style: Some(style),
         });
         self.set_mode(PlayMode::Pattern);
         if !self.playing {
@@ -490,6 +573,34 @@ impl LoomApp {
                     if ui.button(style.name).on_hover_text(style.about).clicked() {
                         picked = Some(Demo::Row(style));
                     }
+                }
+            });
+            ui.menu_button("Micromodes", |ui| {
+                ui.weak(
+                    "Each micromode style as a short piece: from the micromode, upside down, \
+                     a tritone away, upside down there, and back",
+                );
+                for style in &MICROMODE_STYLES {
+                    let micromode = style.micromode();
+                    let hover =
+                        format!("{}\n\n{}: {}", style.about, micromode.name, micromode.about);
+                    if ui
+                        .button(format!("{} · {}", style.name, micromode.name))
+                        .on_hover_text(hover)
+                        .clicked()
+                    {
+                        picked = Some(Demo::Micromode(style));
+                    }
+                }
+                ui.separator();
+                ui.weak("A famous row made of one micromode");
+                if let Some(style) = RowStyle::named("Webern's trichords")
+                    && ui
+                        .button(format!("{} · Menor 3", style.name))
+                        .on_hover_text(style.about)
+                        .clicked()
+                {
+                    picked = Some(Demo::Row(style));
                 }
             });
         });

@@ -5,7 +5,8 @@
 //! project to a file, what changed between two versions of a project,
 //! undo and redo, the piano roll's tools for changing many notes at once,
 //! MIDI note messages, MIDI files, turning keys played on a keyboard into
-//! notes, twelve-tone rows and serialism, and a library of styles,
+//! notes, twelve-tone rows and serialism, Kröpfl's micromodes, and a
+//! library of styles,
 //! rhythms and songs. It has no audio and no UI code, which keeps it
 //! small, fast to compile and easy to test with plain `cargo test`.
 
@@ -16,6 +17,7 @@ pub mod harmony;
 pub mod history;
 pub mod library;
 pub mod meter;
+pub mod micromodal;
 pub mod midi;
 pub mod midi_file;
 pub mod pattern;
