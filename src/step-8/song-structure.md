@@ -30,8 +30,11 @@ section says "▶ 2 of 2".](../images/step-8-sections-playing.png)
 - Drag a section to move it, or its right edge to resize it. It snaps like
   clips do (to bars, beats or steps).
 - Click a section (left or right button) for its menu: type a name or pick
-  one, choose how many times it plays with **−** and **+**, loop it,
-  duplicate it, write out its repeats, or delete it.
+  one, choose how many times it plays with **−** and **+**, duplicate it,
+  write out its repeats, or delete it. **Loop this section** is ticked
+  while song mode loops just that section; tick it to loop the section,
+  untick it to play the whole song again. Without a loop, song mode
+  plays the whole song and then starts again from bar 1.
 - Drag a clip by its right edge (the pointer turns into a double arrow) to
   repeat its pattern.
 - Drag along the bar numbers to loop that part. The green **Looping bars…**
