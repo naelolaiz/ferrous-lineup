@@ -245,6 +245,13 @@ colour four times in four instruments. Schat built harmonies the same
 way, from forms of one hour that together use all twelve notes; in his
 terms, Webern's row is made of hour III.
 
+Webern did not think in micromodes: the word came decades later. The
+Concerto is a twelve-tone piece, and Webern built its row from four
+forms of one group. "Menor 3" and "3-3" are later names for that group,
+the way a theorist would describe it. Cetta notes
+that Kröpfl, like the composers of Schoenberg's circle, favoured groups
+of three notes, which is why the two meet here.
+
 The row is now one of the famous rows in the Row window, as
 **Webern's Concerto**, and the Library and **File > Demos >
 Micromodes** have a style built on it, **Webern's trichords**: the row
@@ -892,7 +899,14 @@ except for the twelve notes of Webern's row.
 5. Click **Webern's trichords** under **Twelve-tone rows** in the
    Library. The key becomes Webern's row, and with **3 notes** chosen
    under the key, the harmony keys play its four groups of three: each
-   is labelled 3-3.
+   is labelled 3-3. Now switch the key menu from **twelve-tone row** to
+   **pitch-class set**: the key becomes the row's first group, C B Eb,
+   and the harmony keys play its forms, all 3-3. (Before this was
+   fixed, the switch gave the diminished seventh chord, the menu's
+   default set, and the keys showed 3-10: the harmony keys always play
+   chords of the *key*, not of the notes in the pattern. The function
+   `set_key` in `twelve_tone.rs` now takes a row's first group of three
+   instead.)
 6. Back on the starting song, while it plays, click **Fourths groove**
    in the Library: the song goes on in sus chords.
 
