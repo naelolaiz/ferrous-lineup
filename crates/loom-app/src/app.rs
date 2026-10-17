@@ -100,6 +100,11 @@ pub struct LoomApp {
     /// The song's style and rhythm in versions of the project the library
     /// changed, so undo and redo show the right ones selected.
     song_versions: Vec<(Project, Tried)>,
+    /// Versions of the song the library made, each with the song it
+    /// started from. A rhythm or a style picked for the whole song starts
+    /// again from that original, so flicking through rhythms in other
+    /// time signatures never squeezes an already squeezed song.
+    song_originals: Vec<(Project, Project)>,
     file: files::FileState,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
@@ -176,6 +181,7 @@ impl LoomApp {
             auditions: Vec::new(),
             song_library: Tried::default(),
             song_versions: Vec::new(),
+            song_originals: Vec::new(),
             history: History::default(),
             samples: SampleCache::new(),
             export: None,

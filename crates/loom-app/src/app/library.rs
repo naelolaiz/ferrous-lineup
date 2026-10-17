@@ -15,6 +15,13 @@
 //! whole song: see [`apply::use_rhythm`]. That is what a click on a
 //! rhythm does while the song plays, so the song carries on in the new
 //! rhythm instead of stopping for a pattern of its own.
+//!
+//! A rhythm or style in another time signature puts the whole song in
+//! it, bar for bar (see [`loom_core::remeter`]). Each squeeze or stretch
+//! loses a little (notes that met on one tick may part on the next), so
+//! the app remembers the song as it was before the library first changed
+//! it, and every rhythm or style picked after that starts again from that
+//! original: 4/4 to 3/4 to 6/8 and back to 4/4 gives back the 4/4 song.
 
 use eframe::egui;
 use loom_audio::PlayMode;
@@ -23,6 +30,7 @@ use loom_core::library::{
     FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, SONGS, STYLES,
     Song, Style, apply, micromodes, rows,
 };
+use loom_core::remeter::Remap;
 use loom_core::{Pattern, Project, Tempo};
 
 use super::LoomApp;
@@ -323,7 +331,18 @@ impl LoomApp {
         };
         let song_library = self.song_library;
         let before = self.project.clone();
+        let original = self.song_original();
+        // A rhythm or a style starts again from the song as it was before
+        // the library changed it. A fill or a twelve-tone or micromode
+        // style goes on top of what plays now.
+        let from_original = matches!(
+            action,
+            LibraryAction::Style(_) | LibraryAction::Rhythm(_) | LibraryAction::RhythmInSong(_)
+        ) && !fill_picked(action);
         let change = self.edit(label, |project| {
+            if from_original {
+                *project = original.clone();
+            }
             let change = match action {
                 LibraryAction::Style(style) => apply::use_style(project, style),
                 LibraryAction::RowStyle(style) => rows::use_row_style(project, style),
@@ -345,8 +364,20 @@ impl LoomApp {
             {
                 project.scale_tempo(Tempo::new(bpm));
             }
+            if change == apply::RhythmChange::default() {
+                // Nothing to play differently: the song stays as it is.
+                *project = before.clone();
+            }
             change
         });
+        if self.project != before {
+            self.remember_original(original);
+            self.keep_place_in_song(&before);
+        }
+        // The time signature the song changed to, back to its own
+        // included.
+        let new_time =
+            (self.project.meter() != before.meter()).then_some(self.project.time_signature);
         let patterns = |count: usize| match count {
             1 => "1 pattern".to_string(),
             count => format!("{count} patterns"),
@@ -363,10 +394,7 @@ impl LoomApp {
             };
             parts.push(format!("{what} in {}", patterns(change.harmony)));
         }
-        let fill = matches!(
-            action,
-            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) if FILLS.contains(rhythm)
-        );
+        let fill = fill_picked(action);
         // The song now plays what was picked, so the library shows it.
         if change != apply::RhythmChange::default() {
             self.song_library = match action {
@@ -402,6 +430,16 @@ impl LoomApp {
                 "{name} now plays in the last bar of {}. Ctrl+Z takes it back.",
                 patterns(change.drums)
             )
+        } else if let Some(time) = new_time {
+            let what = if parts.is_empty() {
+                String::new()
+            } else {
+                format!(": {}", parts.join(", "))
+            };
+            format!(
+                "The song now plays {name} in {time}, every bar squeezed or stretched into a \
+                 {time} bar{what}. Ctrl+Z takes it back."
+            )
         } else if parts.is_empty() {
             format!(
                 "{name} finds nothing to change in this song: it has no drums or chords for it."
@@ -412,6 +450,45 @@ impl LoomApp {
                 parts.join(", ")
             )
         });
+    }
+
+    /// The song as it was before the library changed it, if the library
+    /// made the project as it is now, or else the project itself.
+    fn song_original(&self) -> Project {
+        self.song_originals
+            .iter()
+            .rev()
+            .find(|(version, _)| *version == self.project)
+            .map_or_else(|| self.project.clone(), |(_, original)| original.clone())
+    }
+
+    /// Remembers that the project as it is now was made from `original`.
+    fn remember_original(&mut self, original: Project) {
+        let project = &self.project;
+        self.song_originals
+            .retain(|(version, _)| version != project);
+        if self.song_originals.len() == REMEMBERED {
+            self.song_originals.remove(0);
+        }
+        self.song_originals.push((self.project.clone(), original));
+    }
+
+    /// After the song changed time signature, keeps playing (or ready to
+    /// play) the same bar, and the same place in it, as before.
+    fn keep_place_in_song(&mut self, before: &Project) {
+        if self.mode != PlayMode::Song
+            || before.meter() == self.project.meter()
+            || !self.project.playlist().time_markers().is_empty()
+        {
+            return;
+        }
+        let played = before.played_meter(&before.playback_arrangement());
+        let remap = Remap::new(played, self.project.time_signature);
+        self.cursor = remap.step(self.cursor);
+        self.marker = remap.step(self.marker);
+        if let Some(step) = self.playhead() {
+            self.send(loom_audio::Command::Seek(remap.step(step)));
+        }
     }
 
     /// Writes a twelve-tone style into a pattern and plays it, as
@@ -618,6 +695,14 @@ impl LoomApp {
         self.set_mode(PlayMode::Song);
         self.set_playing(true);
     }
+}
+
+/// Whether `action` puts a fill in the song.
+fn fill_picked(action: LibraryAction) -> bool {
+    matches!(
+        action,
+        LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) if FILLS.contains(rhythm)
+    )
 }
 
 #[cfg(test)]
