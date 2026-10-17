@@ -5,7 +5,8 @@
 //! it, opened with F5, F6 and F7. Opening and saving files lives in the
 //! [`files`] module, undo and redo in [`edit`], saving the song as a WAV
 //! or MIDI file in [`export`], and playing and recording on a keyboard in
-//! [`live`].
+//! [`live`], and the count-in, metronome and practice speed in
+//! [`practice`].
 //!
 //! Every change to the project goes through [`LineupApp::edit`], which
 //! records it for undo and tells the audio thread what changed.
@@ -18,6 +19,7 @@ mod import;
 mod key_finder;
 mod library;
 mod live;
+mod practice;
 mod sounds;
 mod view;
 
@@ -129,6 +131,8 @@ pub struct LineupApp {
     live: live::Live,
     /// The SoundFont the instruments can play from.
     sounds: sounds::Sounds,
+    /// The count-in, the metronome and the practice speed.
+    practice: practice::Practice,
     /// The last problem to show in the status bar, such as a bad WAV file.
     message: Option<String>,
     /// The last piece of good news for the status bar ("Exported song.wav").
@@ -203,6 +207,7 @@ impl LineupApp {
             key_finder: key_finder::KeyFinder::default(),
             live: live::Live::new(midi),
             sounds: sounds::Sounds::new(&cc.egui_ctx),
+            practice: practice::Practice::new(&cc.egui_ctx),
             message: None,
             notice: None,
             hint_bar: HintBar::default(),
@@ -251,13 +256,14 @@ impl LineupApp {
     }
 
     /// Everything an empty audio thread needs to play the project, with
-    /// instruments made for `sample_rate`: the tempo, the patterns, the
-    /// channels and the song. Patterns go first, so each channel can bring
-    /// its notes for all of them. Used at startup, after opening a file,
-    /// and to export the song.
-    fn project_commands(&mut self, sample_rate: u32) -> Vec<Command> {
+    /// instruments made for `sample_rate` and the tempo at `speed` (1.0
+    /// for the song's own): the tempo, the patterns, the channels and the
+    /// song. Patterns go first, so each channel can bring its notes for
+    /// all of them. Used at startup, after opening a file, and to export
+    /// the song.
+    fn project_commands(&mut self, sample_rate: u32, speed: f32) -> Vec<Command> {
         let mut commands = vec![
-            Command::SetTempo(self.project.tempo),
+            Command::SetTempo(practice::at_speed(self.project.tempo, speed)),
             Command::SetLooseTiming(self.project.loose_timing),
         ];
         for (index, pattern) in self.project.patterns().iter().enumerate() {
@@ -269,7 +275,7 @@ impl LineupApp {
         for index in 0..self.project.channels().len() {
             commands.push(self.channel_command(index, sample_rate));
         }
-        commands.extend(self.song_commands());
+        commands.extend(self.song_commands_at(speed));
         commands
     }
 
@@ -278,9 +284,11 @@ impl LineupApp {
     fn send_whole_project(&mut self) {
         self.send(Command::Clear);
         self.send(Command::SetMasterVolume(self.master_volume));
-        for command in self.project_commands(self.sample_rate()) {
+        let speed = self.practice.speed();
+        for command in self.project_commands(self.sample_rate(), speed) {
             self.send(command);
         }
+        self.practice.resend();
         self.send(Command::SelectPattern(self.pattern));
         self.send(Command::SetMode(self.mode));
         self.live.resend_channel();
@@ -309,16 +317,29 @@ impl LineupApp {
 
     /// The song as song mode plays it: the clips on tracks that are not
     /// muted, with every repeat unrolled, cut to the loop region if one
-    /// is set, and the tempo of each of its steps.
-    fn song_commands(&self) -> [Command; 2] {
+    /// is set, the tempo of each of its steps at the practice speed, and
+    /// what the metronome plays on each.
+    fn song_commands(&self) -> [Command; 3] {
+        self.song_commands_at(self.practice.speed())
+    }
+
+    /// The song as song mode plays it, at `speed`.
+    fn song_commands_at(&self, speed: f32) -> [Command; 3] {
         let song = self.project.playback_arrangement();
-        let tempos = self.project.played_tempos(&song);
+        let tempos = self
+            .project
+            .played_tempos(&song)
+            .into_iter()
+            .map(|tempo| practice::at_speed(tempo, speed))
+            .collect();
+        let clicks = self.project.played_clicks(&song);
         [
             Command::SetSong {
                 plays: song.plays,
                 length: song.length,
             },
             Command::SetSongTempos(tempos),
+            Command::SetSongClicks(clicks),
         ]
     }
 
@@ -746,6 +767,7 @@ impl LineupApp {
             SheetAction::Seek(step) => self.apply_playlist(PlaylistAction::Seek(step)),
             SheetAction::NoteOn(notes) => self.apply_harmony(HarmonyAction::NoteOn(notes)),
             SheetAction::NoteOff(notes) => self.apply_harmony(HarmonyAction::NoteOff(notes)),
+            SheetAction::Practice(action) => self.apply_practice(action),
         }
     }
 
@@ -921,6 +943,7 @@ impl LineupApp {
             self.edit_menu(ui);
             self.view_menu(ui);
             self.sounds_menu(ui);
+            self.practice_menu(ui);
             self.midi_menu(ui);
             ui.separator();
             self.hint_bar.show(ui);
@@ -996,17 +1019,33 @@ impl LineupApp {
                 self.song_position()
                     .map(|(step, _)| map.tempo_at(step).bpm())
             };
+            // At a practice speed, the box still shows the song's own
+            // tempo, and says how fast it is played.
+            let speed = self.practice.view().speed;
+            let (at_speed, width, slower) = if speed == practice::FULL_SPEED {
+                (String::new(), 62.0, String::new())
+            } else {
+                (
+                    format!(" {speed}%"),
+                    80.0,
+                    format!(". You practise at {speed}% of it (Practice menu)"),
+                )
+            };
             if let Some(now) = now {
-                let lcd = theme::lcd(ui, "TEMPO NOW", &format!("{now:.1}"), 62.0);
+                let label = format!("TEMPO NOW{at_speed}");
+                let lcd = theme::lcd(ui, &label, &format!("{now:.1}"), width);
                 theme::hint(
                     lcd,
-                    "The tempo playing now: this song changes tempo (see the tempo strip at \
-                     the top of the playlist). Stop to change the tempo it starts at; every \
-                     change moves with it",
+                    format!(
+                        "The tempo playing now: this song changes tempo (see the tempo strip \
+                         at the top of the playlist). Stop to change the tempo it starts at; \
+                         every change moves with it{slower}"
+                    ),
                 );
             } else {
                 let mut bpm = self.project.tempo.bpm();
-                let tempo = theme::lcd_frame(ui, "TEMPO", 62.0, |ui| {
+                let label = format!("TEMPO{at_speed}");
+                let tempo = theme::lcd_frame(ui, &label, width, |ui| {
                     ui.add(
                         egui::DragValue::new(&mut bpm)
                             .range(Tempo::MIN..=Tempo::MAX)
@@ -1021,6 +1060,7 @@ impl LineupApp {
                      tempo (see the tempo strip at the top of the playlist), and every \
                      change moves with this one. Drag up or down, or double-click to type"
                 };
+                let text = format!("{text}{slower}");
                 if theme::hint(tempo, text).changed() {
                     self.edit("change tempo", |project| {
                         project.scale_tempo(Tempo::new(bpm))
@@ -1374,6 +1414,7 @@ impl eframe::App for LineupApp {
         self.start_frame_for_undo(&ctx);
         self.keyboard_shortcuts(&ctx);
         self.live_input(&ctx);
+        self.practice_frame(&ctx);
         self.handle_dropped_files(&ctx);
         self.check_export(&ctx);
         self.check_sounds(&ctx);
@@ -1535,9 +1576,14 @@ impl eframe::App for LineupApp {
             (true, Some((step, _))) => Some(step),
             _ => None,
         };
-        let sheet_actions =
-            self.chord_sheet
-                .show(&ctx, area, &self.project, playing, self.live.typing());
+        let sheet_actions = self.chord_sheet.show(
+            &ctx,
+            area,
+            &self.project,
+            playing,
+            self.live.typing(),
+            self.practice.view(),
+        );
         for action in sheet_actions {
             self.apply_sheet(action);
         }

@@ -78,6 +78,16 @@ impl<T> History<T> {
         self.open = false;
     }
 
+    /// Opens the newest step again, if it is called `label` and nothing
+    /// was undone since, so the next change joins it: taps of a tempo,
+    /// each a click of its own, make one step. Returns whether it did.
+    pub fn reopen(&mut self, label: &'static str) -> bool {
+        if self.redo.is_empty() && self.undo_label() == Some(label) {
+            self.open = true;
+        }
+        self.open
+    }
+
     /// Goes back one step. `current` is replaced with the state from
     /// before that step, and the state it had is kept for redo.
     ///
@@ -137,6 +147,23 @@ mod tests {
         history.record("change", *value);
         *value = new;
         history.close();
+    }
+
+    #[test]
+    fn a_step_can_be_reopened_by_its_name() {
+        let mut history = History::new(10);
+        let mut tempo = 120;
+        history.record("tap tempo", tempo);
+        tempo = 100;
+        history.close();
+        assert!(history.reopen("tap tempo"));
+        history.record("tap tempo", tempo);
+        tempo = 96;
+        history.close();
+        assert!(!history.reopen("move clip"), "another step is not reopened");
+        history.undo(&mut tempo);
+        assert_eq!(tempo, 120, "both taps undo together");
+        assert!(!history.reopen("tap tempo"), "nor one that was undone");
     }
 
     #[test]

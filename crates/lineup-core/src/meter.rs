@@ -52,6 +52,16 @@ pub struct TimeSignature {
     groups: u64,
 }
 
+/// What a metronome plays on a step: nothing, a beat, or the first beat
+/// of a bar, which it plays higher so you can hear where "one" is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Click {
+    #[default]
+    None,
+    Beat,
+    Bar,
+}
+
 /// One felt beat of a bar: which one it is and where it lies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Beat {
@@ -259,6 +269,19 @@ impl TimeSignature {
     pub fn is_beat_start(self, step: usize) -> bool {
         let offset = step % self.steps_per_bar();
         self.beat_at(offset).start == offset
+    }
+
+    /// What a metronome plays on `step`, counted from the start of a bar:
+    /// in 6/8 it clicks the two dotted quarters, in 2+2+3/8 the three
+    /// groups.
+    pub fn click(self, step: usize) -> Click {
+        if self.is_bar_start(step) {
+            Click::Bar
+        } else if self.is_beat_start(step) {
+            Click::Beat
+        } else {
+            Click::None
+        }
     }
 
     /// `steps` rounded up to a whole number of bars.
@@ -593,6 +616,18 @@ impl Meter {
         self.bar_at(step).is_beat_start(step)
     }
 
+    /// What a metronome plays on `step`.
+    pub fn click(&self, step: usize) -> Click {
+        let bar = self.bar_at(step);
+        if bar.start == step {
+            Click::Bar
+        } else if bar.is_beat_start(step) {
+            Click::Beat
+        } else {
+            Click::None
+        }
+    }
+
     /// The start of the bar `step` is in.
     pub fn floor_to_bar(&self, step: usize) -> usize {
         self.bar_at(step).start
@@ -699,6 +734,22 @@ mod tests {
         assert_eq!(typed("3+2+2/8").first_beat(), 6);
         let beats: Vec<usize> = (0..28).filter(|&s| balkan.is_beat_start(s)).collect();
         assert_eq!(beats, [0, 4, 8, 14, 18, 22]);
+    }
+
+    #[test]
+    fn the_metronome_clicks_the_felt_beats() {
+        let clicks = |time: TimeSignature| -> Vec<usize> {
+            (0..time.steps_per_bar())
+                .filter(|&step| time.click(step) != Click::None)
+                .collect()
+        };
+        assert_eq!(clicks(signature(4, 4)), [0, 4, 8, 12]);
+        // Two dotted quarters in 6/8, not six eighths.
+        assert_eq!(clicks(signature(6, 8)), [0, 6]);
+        assert_eq!(clicks(typed("2+2+3/8")), [0, 4, 8]);
+        assert_eq!(signature(3, 4).click(0), Click::Bar);
+        assert_eq!(signature(3, 4).click(4), Click::Beat);
+        assert_eq!(signature(3, 4).click(12), Click::Bar, "the next bar");
     }
 
     #[test]

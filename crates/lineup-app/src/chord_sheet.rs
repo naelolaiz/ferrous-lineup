@@ -12,7 +12,8 @@
 //!
 //! Click a bar and type to write its harmony; Enter takes it in, Tab
 //! goes on to the next bar. Holding the mouse down on a harmony plays
-//! it. The reading and writing of what is typed is in
+//! it. Shift+click (or Shift and an arrow) selects several bars, to loop
+//! them from the practice row ([`practice`]). The reading and writing of what is typed is in
 //! `lineup_core::chord_sheet`; this module draws and reads the keyboard
 //! and the mouse.
 
@@ -28,6 +29,10 @@ use lineup_core::{
 
 use crate::theme;
 use crate::twelve_tone::Front;
+
+mod practice;
+
+pub use practice::{PracticeAction, PracticeView, SPEEDS};
 
 /// The id of the window.
 pub(crate) fn window_id() -> egui::Id {
@@ -85,6 +90,8 @@ pub enum SheetAction {
     /// Play these notes now, as a harmony key does.
     NoteOn(Vec<Note>),
     NoteOff(Vec<Note>),
+    /// Something from the practice row.
+    Practice(PracticeAction),
 }
 
 /// A bar being typed in.
@@ -134,6 +141,8 @@ pub struct ChordSheet {
     pub open: bool,
     /// The bar the keyboard works on, by number.
     selected: Option<usize>,
+    /// The other end of a selection of several bars, made with Shift.
+    anchor: Option<usize>,
     editing: Option<Editing>,
     /// Why the last text typed could not be read, and in which bar.
     error: Option<(usize, String)>,
@@ -154,6 +163,7 @@ impl ChordSheet {
         ChordSheet {
             open: false,
             selected: None,
+            anchor: None,
             editing: None,
             error: None,
             sounding: Vec::new(),
@@ -188,6 +198,7 @@ impl ChordSheet {
         project: &Project,
         playing: Option<usize>,
         typing_keys: bool,
+        practice: PracticeView,
     ) -> Vec<SheetAction> {
         let mut actions = Vec::new();
         if !self.open {
@@ -202,12 +213,12 @@ impl ChordSheet {
             .id(window_id())
             .open(&mut open)
             .default_pos([260.0, 110.0])
-            .default_size([640.0, 420.0])
+            .default_size([760.0, 420.0])
             .min_width(360.0)
             .constrain_to(area)
             .resizable(true)
             .show(ctx, |ui| {
-                self.contents(ui, project, playing, typing_keys, &mut actions);
+                self.contents(ui, project, playing, typing_keys, practice, &mut actions);
             });
         self.open = open;
         if !self.open {
@@ -224,6 +235,7 @@ impl ChordSheet {
         project: &Project,
         playing: Option<usize>,
         typing_keys: bool,
+        practice: PracticeView,
         actions: &mut Vec<SheetAction>,
     ) {
         let markers = project.playlist().chord_markers();
@@ -250,6 +262,7 @@ impl ChordSheet {
                 }
             }
         });
+        practice::row(ui, project, practice, self.selected_bars(), actions);
         ui.weak(
             "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), \
              sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C.",
@@ -563,6 +576,22 @@ impl ChordSheet {
             .map(|name| (name.place, name.harmony))
             .collect();
 
+        // A selection of several bars is shaded, and the bars that loop
+        // have the loop's colour along their top.
+        if let Some((first, last)) = self.selected_bars()
+            && first < last
+            && (first..=last).contains(&bar.number)
+        {
+            painter.rect_filled(rect.shrink(1.0), 0.0, theme::ACCENT.gamma_multiply(0.12));
+        }
+        if let Some(region) = project.playlist().loop_region()
+            && bar.start < region.end
+            && bar.end() > region.start
+        {
+            let top = Rect::from_x_y_ranges(rect.x_range(), rect.top()..=rect.top() + 3.0);
+            painter.rect_filled(top, 0.0, theme::LOOP);
+        }
+
         if playing_here {
             painter.rect_stroke(
                 rect.shrink(1.5),
@@ -603,7 +632,8 @@ impl ChordSheet {
             start_typing: None,
         };
         if clicks.clicked || response.drag_started() {
-            self.selected = Some(bar.number);
+            let shift = ui.input(|input| input.modifiers.shift);
+            self.select_to(bar.number, shift);
             self.error = None;
         }
         if response.double_clicked() {
@@ -651,8 +681,28 @@ impl ChordSheet {
     /// written there.
     pub fn select(&mut self, bar: usize) {
         self.selected = Some(bar);
+        self.anchor = None;
         self.editing = None;
         self.reveal = true;
+    }
+
+    /// Selects `bar`; with `shift`, the bars from the one selected
+    /// before up to it.
+    fn select_to(&mut self, bar: usize, shift: bool) {
+        self.anchor = match (shift, self.anchor, self.selected) {
+            (false, ..) => None,
+            (true, Some(anchor), _) => Some(anchor),
+            (true, None, selected) => selected,
+        };
+        self.selected = Some(bar);
+    }
+
+    /// The first and the last bar selected, if any: one bar, or several
+    /// selected with Shift.
+    fn selected_bars(&self) -> Option<(usize, usize)> {
+        let selected = self.selected?;
+        let anchor = self.anchor.unwrap_or(selected);
+        Some((anchor.min(selected), anchor.max(selected)))
     }
 
     /// The bar a progression is written from: the selected one, or the
@@ -722,6 +772,7 @@ impl ChordSheet {
 
     fn start_editing(&mut self, bar: usize, text: String, fresh: Fresh) {
         self.selected = Some(bar);
+        self.anchor = None;
         self.editing = Some(Editing {
             bar,
             text,
@@ -899,20 +950,24 @@ impl ChordSheet {
             }
         }
         if let Some(bar) = moved_to {
-            self.selected = Some(bar);
+            let shift = ui.input(|input| input.modifiers.shift);
+            self.select_to(bar, shift);
             self.reveal = true;
             self.error = None;
             return;
         }
         if pressed(Key::Escape) {
             self.selected = None;
+            self.anchor = None;
             return;
         }
         if pressed(Key::Delete) || pressed(Key::Backspace) {
-            if let Some(cell) = cell_of(selected) {
+            // Every bar selected is cleared, as one change.
+            let (first, last) = self.selected_bars().unwrap_or((selected, selected));
+            if let (Some(first), Some(last)) = (cell_of(first), cell_of(last)) {
                 actions.push(SheetAction::SetChords {
-                    start: cell.bar.start,
-                    end: cell.bar.end(),
+                    start: first.bar.start,
+                    end: last.bar.end(),
                     markers: Vec::new(),
                 });
             }
