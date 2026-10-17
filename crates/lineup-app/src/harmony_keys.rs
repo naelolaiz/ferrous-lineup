@@ -24,7 +24,7 @@ use eframe::egui::{
 };
 use lineup_core::harmony::key_finding::{KeyGuess, read_chord};
 use lineup_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
-use lineup_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords};
+use lineup_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords, with_figures};
 use lineup_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
 
 use crate::piano_roll::{KEY_HELP, both_names};
@@ -157,6 +157,9 @@ pub struct HarmonyKeys {
     /// The last chord played, here or on a MIDI keyboard, for the
     /// suggestions of what could come next.
     last_chord: Option<Chord>,
+    /// The lowest note under the last chord: E when it was C/E, its first
+    /// inversion.
+    last_bass: Option<PitchClass>,
     /// Whether Find the key is on.
     pub find_key: bool,
 }
@@ -170,6 +173,7 @@ impl HarmonyKeys {
             down: None,
             last_voicing: None,
             last_chord: None,
+            last_bass: None,
             find_key: false,
         }
     }
@@ -179,6 +183,7 @@ impl HarmonyKeys {
     pub fn forget_chords(&mut self) {
         self.last_voicing = None;
         self.last_chord = None;
+        self.last_bass = None;
     }
 
     /// Lets go of the key that is down, if any. Called when the bar is
@@ -234,14 +239,17 @@ impl HarmonyKeys {
         // A chord played on any keyboard, or else playing in the music,
         // lights its key, and is what the suggestions follow.
         let chord_of = |notes: &[Note]| match analyze(notes.iter().copied()) {
-            Harmony::Chord { chord, .. } => Some(chord),
+            Harmony::Chord { chord, bass } => Some((chord, bass)),
             _ => None,
         };
         let played = chord_of(held).or_else(|| chord_of(heard));
-        if let Some(chord) = played {
+        if let Some((chord, bass)) = played {
             self.last_chord = Some(chord);
+            self.last_bass = Some(bass);
         }
-        let playing = played.and_then(|chord| keys::key_for(&chord_keys, chord));
+        let playing = played.and_then(|(chord, _)| keys::key_for(&chord_keys, chord));
+        // The key that plays shows the chord heard, inversion and all:
+        // I⁶ and C/E, or V⁴₂ and G7/F on the key of V.
         let suggestions = self
             .last_chord
             .map(|chord| next_chords(tonal, chord))
@@ -258,7 +266,8 @@ impl HarmonyKeys {
                 let rank = suggestion_rank(&suggestions, &chord_keys, index);
                 let lit =
                     playing == Some(index) || self.down.as_ref().is_some_and(|d| d.key == index);
-                let response = chord_key(ui, key, tonal, lit, rank);
+                let sounding = played.filter(|_| playing == Some(index));
+                let response = chord_key(ui, key, tonal, lit, sounding, rank);
                 let mut hover = describe_key(key, tonal, self.hints);
                 if let Some(rank) = rank {
                     let often = if rank == 0 { "Most often" } else { "Often" };
@@ -289,7 +298,8 @@ impl HarmonyKeys {
             let hint = hint_line(
                 self.hints,
                 tonal,
-                self.last_chord,
+                self.last_chord
+                    .map(|chord| (chord, self.last_bass.unwrap_or(chord.root))),
                 &suggestions,
                 suggests,
                 outside,
@@ -411,10 +421,12 @@ impl HarmonyKeys {
             let reading = |guess: &KeyGuess| {
                 self.last_chord
                     .and_then(|chord| {
-                        let reading = read_chord(chord, guess.key)?;
+                        let bass = self.last_bass.unwrap_or(chord.root);
+                        let reading =
+                            read_chord(chord, guess.key)?.inverted(chord.inversion_figures(bass));
                         Some(format!(
                             "{} is {}",
-                            guess.key.chord_name(chord),
+                            chord_label(chord, bass, guess.key),
                             reading.label()
                         ))
                     })
@@ -686,6 +698,7 @@ impl HarmonyKeys {
         if let Some(chord) = play.chord {
             self.last_voicing = Some(play.voicing.clone());
             self.last_chord = Some(chord);
+            self.last_bass = play.notes.iter().min().map(|note| note.pitch_class());
         }
         actions.push(HarmonyAction::NoteOn(notes.clone()));
         self.down = Some(Down {
@@ -719,15 +732,16 @@ fn suggestion_rank(
 fn hint_line(
     level: HintLevel,
     scale: Scale,
-    last_chord: Option<Chord>,
+    last: Option<(Chord, PitchClass)>,
     suggestions: &[Suggestion],
     suggests: bool,
     outside: bool,
     channel_name: &str,
 ) -> String {
-    match (last_chord, suggestions.first()) {
-        (Some(chord), Some(next)) => {
-            let (from, to) = (scale.chord_name(chord), scale.chord_name(next.chord));
+    match (last, suggestions.first()) {
+        (Some((chord, bass)), Some(next)) => {
+            let from = chord_label(chord, bass, scale);
+            let to = scale.chord_name(next.chord);
             match level {
                 HintLevel::Detailed => {
                     format!("After {from}, {to} often comes next: {}", next.reason)
@@ -736,13 +750,13 @@ fn hint_line(
                 HintLevel::Minimal => format!("{from} → {to}"),
             }
         }
-        (Some(chord), None) if outside => match level {
+        (Some((chord, bass)), None) if outside => match level {
             HintLevel::Detailed => format!(
                 "{} is not one of the seven chords of {}: it comes from outside the key.",
-                scale.chord_name(chord),
+                chord_label(chord, bass, scale),
                 scale.name()
             ),
-            _ => format!("{}: outside the key", scale.chord_name(chord)),
+            _ => format!("{}: outside the key", chord_label(chord, bass, scale)),
         },
         _ if !suggests => match level {
             HintLevel::Detailed => {
@@ -776,6 +790,7 @@ fn chord_key(
     key: &ChordKey,
     scale: Scale,
     lit: bool,
+    sounding: Option<(Chord, PitchClass)>,
     rank: Option<usize>,
 ) -> Response {
     let (rect, response) = ui.allocate_exact_size(KEY_SIZE, Sense::click());
@@ -823,18 +838,38 @@ fn chord_key(
             None => {}
         }
     }
+    // While it plays, it names the chord heard: with the figures of an
+    // inversion and the bass after a slash (I⁶, C/E), and with its
+    // seventh when the key of a triad lights for a seventh chord.
+    let (numeral, name) = match sounding {
+        Some((chord, bass)) => {
+            let numeral = if chord == key.chord {
+                Some(with_figures(&key.numeral, chord.inversion_figures(bass)))
+            } else {
+                scale.figured_numeral(chord, bass)
+            };
+            (
+                numeral.unwrap_or_else(|| key.numeral.clone()),
+                chord_label(chord, bass, scale),
+            )
+        }
+        None => (key.numeral.clone(), scale.chord_name(key.chord)),
+    };
+    let numeral_size = fitting_size(ui, &numeral, 20.0, rect.width() - 6.0);
+    let name_size = fitting_size(ui, &name, 13.0, rect.width() - 6.0);
+    let painter = ui.painter();
     painter.text(
         rect.center_top() + vec2(0.0, 18.0),
         Align2::CENTER_CENTER,
-        &key.numeral,
-        FontId::proportional(20.0),
+        numeral,
+        FontId::proportional(numeral_size),
         KEY_TEXT,
     );
     painter.text(
         rect.center() + vec2(0.0, 9.0),
         Align2::CENTER_CENTER,
-        scale.chord_name(key.chord),
-        FontId::proportional(13.0),
+        name,
+        FontId::proportional(name_size),
         KEY_TEXT,
     );
     if let Some(function) = key.function {
@@ -847,6 +882,14 @@ fn chord_key(
         );
     }
     response
+}
+
+/// The chord's name spelled in `scale`, with `bass` after a slash when
+/// it is one of the chord's notes other than the root: "C/E".
+fn chord_label(chord: Chord, bass: PitchClass, scale: Scale) -> String {
+    Harmony::Chord { chord, bass }
+        .label_in(scale)
+        .unwrap_or_else(|| scale.chord_name(chord))
 }
 
 /// The font size, at most `size`, at which `text` fits in `width`: a
@@ -1104,7 +1147,7 @@ mod tests {
         let c = Scale::new(PitchClass::C, ScaleKind::Major);
         let f = Chord::new(PitchClass::F, ChordQuality::Major);
         let next = next_chords(c, f);
-        let line = |level| hint_line(level, c, Some(f), &next, true, false, "Piano");
+        let line = |level| hint_line(level, c, Some((f, f.root)), &next, true, false, "Piano");
         assert_eq!(
             line(HintLevel::Detailed),
             "After F, G often comes next: IV to V: a step up to the dominant, ready to come home."
@@ -1121,7 +1164,7 @@ mod tests {
         let line = hint_line(
             HintLevel::Minimal,
             d_flat,
-            Some(iv),
+            Some((iv, iv.root)),
             &next,
             true,
             false,
