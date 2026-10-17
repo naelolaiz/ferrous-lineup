@@ -40,6 +40,7 @@ pub(super) enum Pending {
     Demo(Demo),
     Import,
     ImportMidi,
+    ImportChordSheet,
     Quit,
 }
 
@@ -59,6 +60,9 @@ pub(super) struct FileState {
     /// saved to a file yet. Demos are built into the app, so they are
     /// read-only: Save asks for a new file, as Save As does.
     demo: Option<&'static str>,
+    /// The name of a song made from another kind of file (a MIDI file, a
+    /// chord sheet as text), until it is saved.
+    name: Option<String>,
     /// A copy of the project as it was when last opened or saved. If the
     /// project differs from it, there are unsaved changes. Comparing the
     /// two (thanks to the derived `PartialEq`) means even undoing a change
@@ -77,6 +81,7 @@ impl FileState {
         FileState {
             path: None,
             demo: Some(Demo::Start.name()),
+            name: None,
             saved: project.clone(),
             pending: None,
             quitting: false,
@@ -90,25 +95,40 @@ impl FileState {
         self.demo = Some(demo.name());
     }
 
+    /// Names a song just made from another kind of file, until it is
+    /// saved: "Autumn Leaves" for a chord sheet with that title.
+    pub(super) fn name_imported(&mut self, name: &str) {
+        let name = name.trim();
+        self.name = (!name.is_empty()).then(|| name.to_string());
+    }
+
     /// The file's name, such as "song.lineup", the demo's name, such as
     /// "Für Elise", or "Untitled".
     fn display_name(&self) -> String {
+        match &self.path {
+            Some(path) => file_name(path, Path::file_name),
+            None => self.song_name().unwrap_or_else(|| "Untitled".to_string()),
+        }
+    }
+
+    /// The song's name, if it has one: the file's name without
+    /// ".lineup", the demo's name or the name of a song imported.
+    pub(super) fn song_name(&self) -> Option<String> {
         match (&self.path, self.demo) {
-            (Some(path), _) => file_name(path, Path::file_name),
-            (None, Some(demo)) => demo.to_string(),
-            (None, None) => "Untitled".to_string(),
+            (Some(path), _) => Some(file_name(path, Path::file_stem)),
+            (None, Some(demo)) => Some(demo.to_string()),
+            (None, None) => self.name.clone(),
         }
     }
 
     /// The name without ".lineup": "song" for "song.lineup", "Für Elise" for
     /// that demo.
     pub(super) fn stem(&self) -> String {
-        match (&self.path, self.demo) {
-            (Some(path), _) => file_name(path, Path::file_stem),
-            // A name such as "AC/DC" would be read as a folder.
-            (None, Some(demo)) => demo.replace(['/', '\\'], "-"),
-            (None, None) => "Untitled".to_string(),
-        }
+        // A name such as "AC/DC" would be read as a folder.
+        self.song_name().map_or_else(
+            || "Untitled".to_string(),
+            |name| name.replace(['/', '\\'], "-"),
+        )
     }
 
     /// A name for an exported file: "song.wav" for "song.lineup", when
@@ -199,6 +219,14 @@ impl LineupApp {
                 self.request(&ctx, Pending::ImportMidi);
                 ui.close();
             }
+            if ui
+                .button("Import chord sheet…")
+                .on_hover_text("Open a chord chart saved as text, as in | C | Am7 | Dm7 G7 |")
+                .clicked()
+            {
+                self.request(&ctx, Pending::ImportChordSheet);
+                ui.close();
+            }
             ui.separator();
             let save = ui.add(item("Save", SAVE));
             let save = if self.file.path.is_none() && self.file.demo.is_some() {
@@ -238,6 +266,14 @@ impl LineupApp {
                 .clicked()
             {
                 self.export_midi(MidiExport::Pattern);
+                ui.close();
+            }
+            if ui
+                .button("Export chord sheet…")
+                .on_hover_text("Save the chord sheet as text, to share or paste anywhere")
+                .clicked()
+            {
+                self.export_chord_sheet();
                 ui.close();
             }
             ui.separator();
@@ -310,6 +346,7 @@ impl LineupApp {
             Pending::Demo(demo) => self.open_demo(demo),
             Pending::Import => self.import_recording(),
             Pending::ImportMidi => self.import_midi(),
+            Pending::ImportChordSheet => self.import_chord_sheet(),
             Pending::Quit => {
                 self.file.quitting = true;
                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -324,6 +361,10 @@ impl LineupApp {
         }
         if lineup_core::midi_file::is_midi_file(&path) {
             self.import_midi_path(&path);
+            return;
+        }
+        if lineup_core::chord_sheet::text::is_text_file(&path) {
+            self.import_chord_sheet_path(&path);
             return;
         }
         match file::load(&path) {
@@ -343,6 +384,7 @@ impl LineupApp {
         self.file.saved = self.project.clone();
         self.file.path = path;
         self.file.demo = None;
+        self.file.name = None;
         self.pattern = 0;
         self.playing = false;
         self.cursor = 0;
@@ -387,6 +429,7 @@ impl LineupApp {
                 self.file.saved = self.project.clone();
                 self.file.path = Some(path);
                 self.file.demo = None;
+                self.file.name = None;
                 self.message = None;
                 true
             }
@@ -533,5 +576,21 @@ mod tests {
         let mut state = FileState::new(&Project::template());
         state.demo = Some("A/B");
         assert_eq!(state.export_name("mid"), "A-B.mid");
+    }
+
+    #[test]
+    fn an_imported_song_keeps_its_name_until_saved() {
+        let mut state = FileState::new(&Project::template());
+        state.demo = None;
+        assert_eq!(state.song_name(), None);
+        state.name_imported(" Autumn Leaves ");
+        assert_eq!(state.title(false), "Autumn Leaves · Ferrous Lineup");
+        assert_eq!(state.export_name(file::EXTENSION), "Autumn Leaves.lineup");
+        // Once saved, the file's name is the song's.
+        state.path = Some(PathBuf::from("/music/leaves.lineup"));
+        assert_eq!(state.song_name().as_deref(), Some("leaves"));
+        state.path = None;
+        state.name_imported("  ");
+        assert_eq!(state.title(false), "Untitled · Ferrous Lineup");
     }
 }

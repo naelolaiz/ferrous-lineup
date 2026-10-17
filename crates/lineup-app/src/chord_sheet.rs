@@ -17,7 +17,9 @@
 //! it. Shift+click (or Shift and an arrow) selects several bars, to loop
 //! them from the practice row ([`practice`]). A bar's menu (right-click)
 //! also chooses the variation of the band's style from that bar on, or
-//! for the bars selected; a boxed "a" or "b" marks where it changes. The
+//! for the bars selected; a boxed "a" or "b" marks where it changes.
+//! Ctrl+C copies the bars selected as text, "| Dm7 G7 | C |", and Ctrl+V
+//! writes text from the selected bar on (Ctrl+A selects every bar). The
 //! reading and writing of what is typed is in `lineup_core::chord_sheet`;
 //! this module draws and reads the keyboard and the mouse.
 
@@ -26,7 +28,7 @@ use eframe::egui::{
     vec2,
 };
 use lineup_core::band::{Ending, Variation};
-use lineup_core::chord_sheet::{read_bar, write_bar};
+use lineup_core::chord_sheet::{read_bar, text, write_bar};
 use lineup_core::library::{Genre, STYLES, Style};
 use lineup_core::{
     BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass, Player,
@@ -186,6 +188,8 @@ pub struct ChordSheet {
     editing: Option<Editing>,
     /// Why the last text typed could not be read, and in which bar.
     error: Option<(usize, String)>,
+    /// What the last copy or paste did, and whether it went wrong.
+    clipboard: Option<(String, bool)>,
     /// The notes of the harmony held down with the mouse.
     sounding: Vec<Note>,
     /// Whether the sheet had the keyboard in the last frame. The number
@@ -206,6 +210,7 @@ impl ChordSheet {
             anchor: None,
             editing: None,
             error: None,
+            clipboard: None,
             sounding: Vec::new(),
             focused: false,
             followed: None,
@@ -314,7 +319,10 @@ impl ChordSheet {
             "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), \
              sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C.",
         );
-        ui.weak("Each / holds the harmony before it one more beat, as in C / / G7.");
+        ui.weak(
+            "Each / holds the harmony before it one more beat, as in C / / G7. Ctrl+C and \
+             Ctrl+V copy and paste bars as text.",
+        );
         for player in Player::ALL {
             if project.is_frozen(player) {
                 ui.horizontal_wrapped(|ui| {
@@ -334,14 +342,20 @@ impl ChordSheet {
                 });
             }
         }
-        match &self.error {
-            Some((bar, error)) => {
+        match (&self.error, &self.clipboard) {
+            (Some((bar, error)), _) => {
                 ui.colored_label(
                     ui.visuals().error_fg_color,
                     format!("Bar {}: {error}", bar + 1),
                 );
             }
-            None => {
+            (None, Some((problem, true))) => {
+                ui.colored_label(ui.visuals().error_fg_color, problem);
+            }
+            (None, Some((done, false))) => {
+                ui.weak(done);
+            }
+            (None, None) => {
                 ui.weak(" ");
             }
         }
@@ -802,6 +816,7 @@ impl ChordSheet {
         self.selected = Some(bar);
         self.anchor = None;
         self.editing = None;
+        self.clipboard = None;
         self.reveal = true;
     }
 
@@ -814,6 +829,7 @@ impl ChordSheet {
             (true, None, selected) => selected,
         };
         self.selected = Some(bar);
+        self.clipboard = None;
     }
 
     /// The first and the last bar selected, if any: one bar, or several
@@ -911,6 +927,7 @@ impl ChordSheet {
     fn start_editing(&mut self, bar: usize, text: String, fresh: Fresh) {
         self.selected = Some(bar);
         self.anchor = None;
+        self.clipboard = None;
         self.editing = Some(Editing {
             bar,
             text,
@@ -1055,6 +1072,9 @@ impl ChordSheet {
         typing_keys: bool,
         actions: &mut Vec<SheetAction>,
     ) {
+        if self.clipboard_keys(ui, project, actions) {
+            return;
+        }
         let pressed = |key| ui.input(|input| input.key_pressed(key));
         let Some(selected) = self.selected else {
             if pressed(Key::ArrowRight) || pressed(Key::ArrowDown) {
@@ -1135,6 +1155,115 @@ impl ChordSheet {
         });
         if starts && !ui.input(|input| input.modifiers.command) {
             self.start_editing(selected, typed, Fresh::CursorAtEnd);
+        }
+    }
+}
+
+impl ChordSheet {
+    /// Ctrl+C, Ctrl+V and Ctrl+A, while the sheet has the keyboard.
+    /// Returns whether one of them was pressed.
+    fn clipboard_keys(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        actions: &mut Vec<SheetAction>,
+    ) -> bool {
+        let (copy, paste) = ui.input(|input| {
+            let mut copy = false;
+            let mut paste = None;
+            for event in &input.events {
+                match event {
+                    egui::Event::Copy => copy = true,
+                    egui::Event::Paste(text) => paste = Some(text.clone()),
+                    _ => {}
+                }
+            }
+            (copy, paste)
+        });
+        let all = ui.input_mut(|input| {
+            input.consume_shortcut(&egui::KeyboardShortcut::new(Modifiers::COMMAND, Key::A))
+        });
+        let bars = text::sheet_bars(project);
+        if all {
+            if bars > 0 {
+                self.anchor = Some(0);
+                self.selected = Some(bars - 1);
+                self.error = None;
+            }
+            return true;
+        }
+        if copy {
+            self.copy(ui.ctx(), project, bars);
+            return true;
+        }
+        if let Some(pasted) = paste {
+            self.paste(&pasted, project, actions);
+            return true;
+        }
+        false
+    }
+
+    /// Copies the bars selected as text, or the whole sheet when every bar
+    /// (or none) is selected: then with its key, time signature, tempo,
+    /// style and sections, as File > Export chord sheet writes it.
+    fn copy(&mut self, ctx: &egui::Context, project: &Project, bars: usize) {
+        let (first, last) = self.selected_bars().unwrap_or((0, bars.saturating_sub(1)));
+        let whole = first == 0 && last + 1 >= bars;
+        let copied = if whole {
+            text::write(project, None)
+        } else {
+            text::write_bars(project, first..last + 1)
+        };
+        ctx.copy_text(copied);
+        let count = if whole { bars } else { last + 1 - first };
+        self.error = None;
+        self.clipboard = Some((
+            format!(
+                "Copied {count} bar{} as text.",
+                if count == 1 { "" } else { "s" }
+            ),
+            false,
+        ));
+    }
+
+    /// Writes text from the selected bar on (or from the first bar): a
+    /// chart with bars between | signs, or what one bar would hold, as in
+    /// "Dm7 G7". The bars written are selected afterwards.
+    fn paste(&mut self, pasted: &str, project: &Project, actions: &mut Vec<SheetAction>) {
+        let first = self.selected_bars().map_or(0, |(first, _)| first);
+        self.error = None;
+        let written = if pasted.contains('|') || pasted.trim().lines().count() > 1 {
+            text::read(pasted)
+                .and_then(|sheet| text::paste(&sheet, project, first))
+                .map_err(|err| format!("The text pasted could not be read, {err}"))
+        } else {
+            let bar = project.meter().bar(first);
+            read_bar(pasted, &bar, project.key_map().key_at(bar.start))
+                .map(|markers| (bar.start..bar.end(), markers))
+                .map_err(|err| format!("Bar {}: {err}", first + 1))
+        };
+        match written {
+            Ok((steps, markers)) if !steps.is_empty() => {
+                let meter = project.meter();
+                let last = meter.bar_at(steps.end - 1).number;
+                let count = last + 1 - first;
+                actions.push(SheetAction::SetChords {
+                    start: steps.start,
+                    end: steps.end,
+                    markers,
+                });
+                self.anchor = (count > 1).then_some(first);
+                self.selected = Some(last);
+                self.reveal = true;
+                self.clipboard = Some((
+                    format!("Pasted {count} bar{}.", if count == 1 { "" } else { "s" }),
+                    false,
+                ));
+            }
+            Ok(_) => {
+                self.clipboard = Some(("The text pasted has no bars.".to_string(), true));
+            }
+            Err(problem) => self.clipboard = Some((problem, true)),
         }
     }
 }

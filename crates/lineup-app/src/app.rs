@@ -11,6 +11,7 @@
 //! Every change to the project goes through [`LineupApp::edit`], which
 //! records it for undo and tells the audio thread what changed.
 
+mod chord_text;
 mod ear;
 mod edit;
 mod export;
