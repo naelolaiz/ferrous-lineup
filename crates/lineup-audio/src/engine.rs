@@ -42,6 +42,7 @@ use lineup_core::{
 use crate::dsp::Smoothed;
 use crate::instrument::{HELD, Instrument, Origin};
 use crate::metronome::{ClickVoice, click_at, count_in_bar};
+use crate::phrase::Phrase;
 
 /// How many commands can wait in the queue before `send` starts failing.
 /// The audio thread empties the queue every few milliseconds, so this is
@@ -253,6 +254,11 @@ pub enum Command {
     /// Stop, and remove every channel, pattern and clip, before a new
     /// project is sent.
     Clear,
+    /// Play a phrase over whatever else is playing, in place of the
+    /// phrase playing before, if any: an ear-training question.
+    PlayPhrase(Box<Phrase>),
+    /// Let go of the phrase playing, and let it ring out.
+    StopPhrase,
 }
 
 /// Something the audio thread has finished with. It is sent back to the
@@ -264,6 +270,7 @@ pub(crate) enum Garbage {
     Song(Vec<Play>),
     Tempos(Vec<Tempo>),
     Clicks(Vec<Click>),
+    Phrase(Box<Phrase>),
 }
 
 /// What the engine found when it opened the sound card.
@@ -481,6 +488,7 @@ impl AudioEngine {
                 Garbage::Song(clips) => drop(clips),
                 Garbage::Tempos(tempos) => drop(tempos),
                 Garbage::Clicks(clicks) => drop(clicks),
+                Garbage::Phrase(phrase) => drop(phrase),
             }
         }
     }
@@ -592,6 +600,8 @@ pub(crate) struct AudioThread {
     /// will start without moving the playhead.
     counter: Sequencer,
     click: ClickVoice,
+    /// A phrase playing apart from the song, if any.
+    phrase: Option<Box<Phrase>>,
 }
 
 /// A count-in under way: the bar it counts (where it starts in the
@@ -648,6 +658,7 @@ impl AudioThread {
             counting: None,
             counter: Sequencer::new(Tempo::default(), sample_rate, STEPS_PER_BAR),
             click: ClickVoice::new(sample_rate),
+            phrase: None,
         }
     }
 
@@ -871,6 +882,16 @@ impl AudioThread {
                 self.song_length = 0;
                 self.pattern = 0;
                 self.update_loop_length();
+            }
+            Command::PlayPhrase(phrase) => {
+                if let Some(old) = self.phrase.replace(phrase) {
+                    self.throw_away(Garbage::Phrase(old));
+                }
+            }
+            Command::StopPhrase => {
+                if let Some(phrase) = &mut self.phrase {
+                    phrase.stop();
+                }
             }
         }
     }
@@ -1164,11 +1185,19 @@ impl AudioThread {
                 mix += channel.instrument.next_sample() * volume;
             }
             mix += self.click.next_sample();
+            if let Some(phrase) = &mut self.phrase {
+                mix += phrase.next_sample();
+            }
             // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
             let sample = (mix * self.master_volume.next_value()).tanh();
             frame.fill(T::from_sample(sample));
         }
 
+        if self.phrase.as_ref().is_some_and(|phrase| phrase.is_over())
+            && let Some(over) = self.phrase.take()
+        {
+            self.throw_away(Garbage::Phrase(over));
+        }
         self.send_midi();
         if self.playing {
             let position = self.sequencer.position().to_bits();
@@ -1531,7 +1560,8 @@ mod tests {
                 Garbage::Instrument(_) => instruments += 1,
                 Garbage::Notes(_) => note_lists += 1,
                 Garbage::Channel(_) => channels += 1,
-                Garbage::Song(_) | Garbage::Tempos(_) | Garbage::Clicks(_) => {}
+                Garbage::Song(_) | Garbage::Tempos(_) | Garbage::Clicks(_) | Garbage::Phrase(_) => {
+                }
             }
         }
         assert_eq!(instruments, 1, "the replaced instrument");
@@ -1582,6 +1612,50 @@ mod tests {
         add(&mut h, &[], false);
         h.commands.push(Command::Preview(0)).unwrap();
         assert!(render(&mut h, 10)[0] != 0.0);
+    }
+
+    fn phrase(start: f64) -> Box<Phrase> {
+        let note = crate::PhraseNote {
+            instrument: 0,
+            start,
+            length: 0.05,
+            pitch: Note::C4,
+            velocity: 100,
+        };
+        Box::new(Phrase::new(vec![click()], &[note], RATE))
+    }
+
+    #[test]
+    fn a_phrase_plays_without_the_song_and_is_thrown_away_after() {
+        let mut h = harness();
+        send(&mut h, Command::PlayPhrase(phrase(0.01)));
+        let out = render(&mut h, 1000);
+        assert_eq!(onsets(&out), [480]);
+        // It rings out for two seconds, then goes back to be freed.
+        render(&mut h, 2 * RATE as usize);
+        assert!(h.trash.pop().is_err());
+        render(&mut h, RATE as usize / 10);
+        assert!(matches!(h.trash.pop(), Ok(Garbage::Phrase(_))));
+        assert!(h.audio.phrase.is_none());
+    }
+
+    #[test]
+    fn a_new_phrase_takes_the_place_of_the_last() {
+        let mut h = harness();
+        send(&mut h, Command::PlayPhrase(phrase(0.5)));
+        send(&mut h, Command::PlayPhrase(phrase(0.01)));
+        let out = render(&mut h, RATE as usize);
+        assert_eq!(onsets(&out), [480]);
+        assert!(matches!(h.trash.pop(), Ok(Garbage::Phrase(_))));
+    }
+
+    #[test]
+    fn a_stopped_phrase_plays_nothing_more() {
+        let mut h = harness();
+        send(&mut h, Command::PlayPhrase(phrase(0.5)));
+        render(&mut h, 100);
+        send(&mut h, Command::StopPhrase);
+        assert!(onsets(&render(&mut h, RATE as usize)).is_empty());
     }
 
     /// Two patterns: the click plays step 0 of pattern 0 and step 2 of pattern 1.
@@ -1886,7 +1960,7 @@ mod tests {
                 Garbage::Channel(_) => "channel",
                 Garbage::Song(_) => "song",
                 Garbage::Tempos(_) | Garbage::Clicks(_) => continue,
-                Garbage::Instrument(_) | Garbage::Notes(_) => "other",
+                Garbage::Instrument(_) | Garbage::Notes(_) | Garbage::Phrase(_) => "other",
             });
         }
         // The empty song from the start, the real one, then the channel and the song.

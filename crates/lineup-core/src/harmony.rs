@@ -30,13 +30,14 @@ mod scale;
 mod set_class;
 mod symbol;
 
-pub use analysis::{Harmony, analyze, interval_name};
+pub use analysis::{Harmony, analyze, interval_name, spelled_interval_name};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
 pub use hints::HintLevel;
 pub use key_finding::key_fits;
 pub use micromode::{Micromode, MicromodeFamily, micromode_content, micromodes_in, trichords};
 pub use pitch_set::PitchSet;
 pub use progression::{Suggestion, next_chords};
+pub(crate) use row::Random;
 pub use row::{ROW_PRESETS, RowForm, RowLabel, RowPreset, ToneRow};
 pub use scale::{Scale, ScaleKind, with_figures};
 pub use set_class::{SetClass, digits, pc_digit};
