@@ -5,9 +5,9 @@
 //! project to a file, what changed between two versions of a project,
 //! undo and redo, the piano roll's tools for changing many notes at once,
 //! MIDI note messages, MIDI files, turning keys played on a keyboard into
-//! notes, and a library of styles, rhythms and songs. It has no audio and
-//! no UI code, which keeps it small, fast to compile and easy to test
-//! with plain `cargo test`.
+//! notes, twelve-tone rows and serialism, and a library of styles,
+//! rhythms and songs. It has no audio and no UI code, which keeps it
+//! small, fast to compile and easy to test with plain `cargo test`.
 
 pub mod arrangement;
 pub mod diff;
@@ -24,6 +24,7 @@ pub mod playlist;
 pub mod project;
 pub mod record;
 pub mod sequencer;
+pub mod serial;
 pub mod tempo;
 pub mod tools;
 

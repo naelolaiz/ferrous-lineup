@@ -282,6 +282,9 @@ pub enum ChordStamp {
     ScaleSeventh,
     /// A chord of a fixed quality, starting on the clicked note.
     Fixed(ChordQuality),
+    /// A pitch-class set, as semitones above the clicked note: any group
+    /// of notes, picked in the piano roll's set browser.
+    Set(PitchSet),
 }
 
 impl ChordStamp {
@@ -302,6 +305,9 @@ impl ChordStamp {
             ChordStamp::Single => "Single note".to_string(),
             ChordStamp::ScaleTriad => "Chord in key (triad)".to_string(),
             ChordStamp::ScaleSeventh => "Chord in key (seventh)".to_string(),
+            ChordStamp::Set(set) => {
+                format!("Set {} [{}]", set.set_class().name(), super::digits(set))
+            }
             ChordStamp::Fixed(quality) => {
                 let name = quality.name();
                 // Capitalize the first letter: "minor" becomes "Minor".
@@ -324,6 +330,11 @@ impl ChordStamp {
             ChordStamp::ScaleTriad => scale.stack_thirds(note, 3).unwrap_or_else(|| vec![note]),
             ChordStamp::ScaleSeventh => scale.stack_thirds(note, 4).unwrap_or_else(|| vec![note]),
             ChordStamp::Fixed(quality) => Chord::new(note.pitch_class(), quality).notes_from(note),
+            ChordStamp::Set(set) => set
+                .semitones()
+                .into_iter()
+                .filter_map(|up| note.transpose(i32::from(up)))
+                .collect(),
         }
     }
 }
@@ -421,6 +432,10 @@ mod tests {
         // A fixed stamp ignores the scale.
         let fixed = ChordStamp::Fixed(ChordQuality::Major).notes_at(d4, c_major);
         assert_eq!(midi(fixed), vec![62, 66, 69]);
+        // A set is placed above the clicked note, like a chord.
+        let viennese = ChordStamp::Set(PitchSet::from_semitones(&[0, 1, 6]));
+        assert_eq!(midi(viennese.notes_at(d4, c_major)), vec![62, 63, 68]);
+        assert_eq!(viennese.label(), "Set 3-5 [016]");
     }
 
     #[test]

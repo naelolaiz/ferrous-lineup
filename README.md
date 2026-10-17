@@ -92,6 +92,19 @@ of the whole song at once, keeping the melody. **File > Demos** opens
 blues, tango, flamenco and more. It also plays every style as a short
 song.
 
+For music without a home key, the key menus also offer a **twelve-tone
+row** and a **pitch-class set**. **Row…** in the piano roll opens the
+twelve-tone window: type, draw or pick a row (the rows of Schoenberg's
+Suite Op. 25, Berg's *Lyric Suite* and Webern's Symphony Op. 21, all
+public domain now, or a few written for Ferrous Loom), see its matrix
+with all 48 forms (P, I, R and RI on every note), and write any of them
+into the pattern as a melody or as chords, with the durations, dynamics
+and octaves following the row too if you like. **Sets…** lists all 224
+pitch-class sets by Forte number, with their prime forms and interval
+vectors, to draw with or use as a scale, and selecting notes names their
+set. The Library's **Twelve-tone rows** and **File > Demos > Twelve-tone**
+play six ways of using a row.
+
 **File > Import recording…** opens an MP3, WAV, FLAC or Ogg file (or
 drop it on the window) and listens to it: the tempo, time signature and
 key are set from the recording, which plays on its own channel, and a
@@ -122,12 +135,14 @@ They are not signed yet, so macOS and Windows warn before the first start.
 | The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 78 harmony styles and 49 rhythms to try in your key. |
 | ![A recording imported with File > Import recording: the chords heard on every beat in the piano roll](screenshots/import-recording.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
 | An imported recording, with the chords heard on every beat. | Right-click a track's name to insert, move or delete tracks. |
+| ![The twelve-tone window beside the piano roll: the matrix of a row with all its forms, and the piano roll numbering the notes of the row](screenshots/twelve-tone-row.png) | ![The pitch-class set browser showing the octatonic scale, 8-28, beside the piano roll](screenshots/pitch-class-sets.png) |
+| A twelve-tone row and its matrix: P, I, R and RI on every note. | The pitch-class sets by Forte number, to draw with or use as a scale. |
 
 ## Project layout
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
+| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows and pitch-class sets, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
 | `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
 | `crates/loom-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
 | `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`, with MIDI through `midir`. |
