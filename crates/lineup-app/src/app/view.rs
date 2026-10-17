@@ -336,6 +336,10 @@ impl LineupApp {
                 }
             };
             window(&mut self.chord_sheet.open, "Chord sheet", CHORD_SHEET, ui);
+            let lead = egui::Button::selectable(self.lead_sheet.open, "Lead sheet");
+            if ui.add(lead).clicked() {
+                self.lead_sheet.open = !self.lead_sheet.open;
+            }
             window(&mut self.rack_open, "Channel rack", RACK, ui);
             window(&mut self.piano_roll.open, "Piano roll", PIANO_ROLL, ui);
             window(&mut self.harmony_keys.open, "Harmony keys", HARMONY, ui);
