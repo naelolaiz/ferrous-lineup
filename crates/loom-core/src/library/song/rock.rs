@@ -231,3 +231,44 @@ pub(super) const WHEN_JOHNNY: Song = Song {
             D minor and F, its relative major, and the one major V, A, comes at the end of \
             each half.",
 };
+
+// Source: https://www.mutopiaproject.org/ftp/BizetG/prelude/prelude.ly
+// (the Carmen Prelude for piano, Schirmer 1895, whose middle section is
+// the Toreador refrain in F; written here in C, a fifth up)
+pub(super) const TOREADOR_SONG: Song = Song {
+    name: "Toreador Song",
+    origin: "Georges Bizet, Carmen, 1875",
+    feel: "March",
+    genre: Genre::Rock,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 116.0,
+    comping: Comping::Pulse,
+    bass: Bass::Pulse,
+    rhythm: "March",
+    style: "Three-chord rock",
+    parts: &[
+        Part::new(
+            "Refrain",
+            "G5:4 A5:3 G5:1 E5:4 E5:4 | E5:3 D5:1 E5:3 F5:1 E5:6 -:2 | F5:4 D5:3 G5:1 E5:6 -:2 | \
+             C5:4 A4:3 D5:1 G4:6 -:2 | D5:8 D5:2 A5:2 G5:2 F5:2 | E5:2 D5:2 E5:2 F5:2 E5:6 -:2 | \
+             B4:4 E5:4 E5:4 D#5:3 F#5:1 | B4:16 | _:2 A4:1 B4:1 G4:2 A4:2 D4:2 E4:2 F4:4 | \
+             _:2 E4:1 F4:1 C4:2 A4:2 G4:6 -:2",
+            "I | I | ii V7 I iii | vi II7 V V | ii | vi | iii VII7 | III | ii7 | V I",
+        ),
+        Part::new(
+            "Tutti",
+            "G5:2 -:2 A5:2 -:1 G5:1 E5:2 -:2 E5:2 -:2 | E5:2 -:1 D5:1 E5:2 -:1 F5:1 E5:6 -:2 | \
+             F5:2 -:2 D5:2 -:1 G5:1 E5:6 -:2 | C5:2 -:2 A4:2 -:1 D5:1 G4:6 -:2",
+            "I | I | ii V7 I I | vi II7 V V",
+        ),
+    ],
+    form: &["Refrain", "Tutti", "Refrain", "Tutti"],
+    drums_from: 0,
+    about: "The bullfighter's refrain, \"Toréador, en garde\", as a rock march; Bizet wrote \
+            it in F, here it is a fifth up in C so the low second half stays in range. \
+            Listen for the turn at \"et que l'amour t'attend\": E minor, then E major, \
+            the dominant of the relative minor, before the band answers in clipped chords. \
+            The opera's 2/4 bars go two to a bar here.",
+};

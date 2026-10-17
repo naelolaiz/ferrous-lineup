@@ -152,3 +152,48 @@ pub(super) const TWO_FIVE_WALK: Song = Song {
     about: "The ii-V-I, the progression jazz is made of, in sixteen bars. Each line spells \
             out its chord: up a Dm7, down a G7, landing on the major seventh of Cmaj7.",
 };
+
+// Source: https://raw.githubusercontent.com/DCMLab/debussy_childrens_corner/main/notes/l113-06_childrens_golliwoggs.tsv
+// (the note table of the DCML corpus score)
+pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
+    name: "Golliwogg's Cakewalk",
+    origin: "Claude Debussy, Children's Corner, 1908",
+    feel: "Ragtime",
+    genre: Genre::Jazz,
+    tonic: DSharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 108.0,
+    comping: Comping::Quarters,
+    bass: Bass::RootFifth,
+    rhythm: "Two-step",
+    style: "New Orleans",
+    parts: &[
+        // The run down three octaves, a bar's silence, and the vamp.
+        Part::new(
+            "Intro",
+            "-:8 Bb5:1 Ab5:2 Bb5:1 F5:2 Bb5:2 | Ab5:1 F5:2 Eb5:1 Cb5:4 -:1 Ab4:1 F4:1 Eb4:1 Cb4:4 | \
+             -:1 Ab3:1 F3:1 Eb3:1 Cb3:2 G3:2 -:8 | -:2 Bb3:2 -:2 Bb3:1 Bb3:1 -:2 Bb3:2 -:2 Bb3:2 | \
+             -:2 Bb3:1 Bb3:1 -:2 Bb3:2 -:2 Bb3:2 -:2 Bb3:2",
+            "I | I | I | I | I",
+        ),
+        Part::new(
+            "Theme",
+            "Bb4:1 Ab4:2 Bb4:1 F4:2 Bb4:2 Ab4:1 F4:2 Eb4:1 Cb4:2 Eb4:2 | Bb3:1 Bb3:2 C4:1 Bb3:2 Bb4:2 Bb3:8 | \
+             Bb3:1 Ab3:2 Bb3:1 C4:2 Ab3:2 Bb3:1 Ab3:2 Bb3:1 Cb4:2 Ab3:2 | \
+             Bb4:1 G4:2 F4:1 Eb4:2 D4:2 C4:2 G3:2 C4:2 D4:2 | \
+             Bb4:1 Ab4:2 Bb4:1 F4:2 Bb4:2 Ab4:1 F4:2 Eb4:1 Cb4:2 Eb4:2 | Bb3:1 Bb3:2 C4:1 Bb3:2 Bb4:2 Bb3:8 | \
+             Bb3:1 Bb3:2 C4:1 Bb3:2 Db4:2 Eb4:2 F4:2 Eb4:2 Gb4:2 | \
+             F4:1 F4:2 G4:1 F4:2 D5:2 Bb4:4 Bb5:2 -:2",
+            "I | I | I | I I vi V7 | I | I | bIII | II7 V",
+        ),
+    ],
+    form: &["Intro", "Theme", "Theme"],
+    drums_from: 1,
+    about: "A cakewalk, the strutting dance of ragtime, with Debussy's blue note: the C flat \
+            that keeps falling onto B flat on the off-beat. The second time round the tune \
+            slides into G flat major, the flat-three chord, and comes back through F7 and \
+            B flat. The piece is in 2/4, two of its bars to a bar here; the opening run falls \
+            through three octaves, and the low unison run in the fourth bar of the theme is \
+            written an octave up.",
+};
