@@ -17,10 +17,10 @@
 //!   playlist. A stretch that comes back note for note plays the same
 //!   pattern again.
 //! - **Tempo, time and key.** The tempo changes become tempo markers, the
-//!   time signature changes time markers, and the key signature the
-//!   project's key, as the file writes it. A file Ferrous Loom wrote also
-//!   holds the exact key, such as E Dorian, which a key signature cannot
-//!   say. A file without a key signature gets the key its notes fit best
+//!   time signature changes time markers, and the key signatures the
+//!   project's key and key markers, as the file writes them. A file
+//!   Ferrous Loom wrote also holds the exact key, such as E Dorian, which
+//!   a key signature cannot say. A file without a key signature gets the key its notes fit best
 //!   (see [`key_fits`]), and so does a file that says C major when its
 //!   notes clearly are in another key: many programs write C major when
 //!   nobody chose a key.
@@ -30,6 +30,7 @@ use std::collections::BTreeMap;
 use super::read::{EventKind, MidiFile, Timing, Track};
 use crate::general_midi;
 use crate::harmony::{Scale, ScaleKind, key_fits};
+use crate::key_map::{KeyMap, KeyMarker};
 use crate::meter::{Meter, TimeMarker, TimeSignature};
 use crate::pattern::{MAX_STEPS, NoteEvent, STEP_NOTE, TICKS_PER_STEP};
 use crate::playlist::{Clip, MAX_SONG_STEPS};
@@ -75,8 +76,8 @@ pub struct Report {
     /// Whether the key was worked out from the notes, because the file
     /// has no key signature, or a C major the notes clearly do not fit.
     pub key_from_notes: bool,
-    /// How many times the key signature changes after the first one. A
-    /// project has one key, so the piano roll only shows the first.
+    /// How many times the key changes after the first one: each change
+    /// is a key marker on the playlist.
     pub key_changes: usize,
     /// Notes that could not be kept: past the end of the longest song,
     /// beyond [`MAX_NOTES`], or a drum sound with no built-in drum.
@@ -120,7 +121,7 @@ impl Report {
         }
         if self.key_changes > 0 {
             text += &format!(
-                ". The key changes {} time{} later; the key shown is the first",
+                " ({} key change{})",
                 self.key_changes,
                 plural(self.key_changes)
             );
@@ -197,8 +198,7 @@ pub fn import(file: &MidiFile, title: &str) -> Result<Imported, ImportError> {
     let mut project = Project::empty();
     let tempo_changes = set_tempos(&mut project, tracks, &clock);
     let time_changes = set_meter(&mut project, tracks, &clock);
-    let (key, key_from_notes, key_changes) = choose_key(tracks, &parts);
-    project.scale = key;
+    let (key_from_notes, key_changes) = set_keys(&mut project, tracks, &parts, &clock);
 
     // ----- Channels -----
     name_parts(&mut parts);
@@ -752,64 +752,98 @@ fn song_events<T>(tracks: &[Track], pick: impl Fn(&EventKind) -> Option<T>) -> V
     events
 }
 
-/// The key of the song, whether it was worked out from the notes, and
-/// how many times the key signature changes after the first.
-fn choose_key(tracks: &[Track], parts: &[Part]) -> (Scale, bool, usize) {
+/// Sets the key the song starts in, and adds a key marker for every
+/// change of key signature after it. Returns whether the key was worked
+/// out from the notes, and how many times the key changes.
+fn set_keys(
+    project: &mut Project,
+    tracks: &[Track],
+    parts: &[Part],
+    clock: &Clock,
+) -> (bool, usize) {
+    let step = |tick: u64| (clock.tick(tick) + TICKS_PER_STEP / 2) / TICKS_PER_STEP;
     let signatures = song_events(tracks, |kind| match kind {
         EventKind::KeySignature { sharps, minor } => Some((*sharps, *minor)),
         _ => None,
     });
-    let mut changes = 0;
-    for pair in signatures.windows(2) {
-        if pair[1].1 != pair[0].1 {
-            changes += 1;
-        }
-    }
-    // A file Ferrous Loom wrote holds the exact key, mode and all.
     let exact = song_events(tracks, |kind| match kind {
         EventKind::ExactKey(scale) => Some(*scale),
         _ => None,
     });
-    if let Some(&(_, scale)) = exact.first() {
-        return (scale, false, changes);
+    // By step, the key from there on: the key signature as it is
+    // written, or the exact key (mode and all) that a file Ferrous Loom
+    // wrote holds next to each key signature.
+    let mut keys: BTreeMap<usize, Scale> = BTreeMap::new();
+    for &(tick, (sharps, minor)) in &signatures {
+        keys.insert(step(tick), signature_key(sharps, minor));
     }
+    for &(tick, scale) in &exact {
+        keys.insert(step(tick), scale);
+    }
+    let Some(&first) = keys.values().next() else {
+        // A file without a key signature: the key the notes fit best.
+        let best = best_key(parts, None);
+        project.scale = best.unwrap_or_default();
+        return (best.is_some(), 0);
+    };
+    // Many programs write "C major" into every file when nobody chose a
+    // key. So a C major that never changes gives way to another key
+    // that fits the notes clearly better.
+    let only_c_major = signatures
+        .iter()
+        .all(|&(_, signature)| signature == (0, false));
+    if exact.is_empty()
+        && only_c_major
+        && let Some(best) = best_key(parts, Some(first))
+    {
+        project.scale = best;
+        return (true, 0);
+    }
+    let markers = keys
+        .into_iter()
+        .map(|(start, scale)| KeyMarker::new(start, scale));
+    // `tidy` leaves out the signatures that change nothing: files often
+    // repeat the key at the start of every section.
+    let map = KeyMap::new(first, markers).tidy();
+    project.scale = map.first();
+    for &marker in map.markers() {
+        project.set_key_marker(marker);
+    }
+    (false, map.markers().len())
+}
+
+/// The key a key signature names: `sharps` sharps (flats if negative),
+/// major or minor.
+fn signature_key(sharps: i8, minor: bool) -> Scale {
+    let major = major_tonic(sharps);
+    if minor {
+        Scale::new(major.transpose(9), ScaleKind::NaturalMinor)
+    } else {
+        Scale::new(major, ScaleKind::Major)
+    }
+}
+
+/// The key the notes fit best, if it fits them clearly better than
+/// `than` (by [`CLEARLY_BETTER`]), or at all when there is nothing to
+/// compare with.
+fn best_key(parts: &[Part], than: Option<Scale>) -> Option<Scale> {
     let mut durations = [0.0; 12];
     for note in parts.iter().flat_map(|part| &part.notes) {
         durations[usize::from(note.pitch.pitch_class().semitone())] +=
             (note.end - note.start) as f64;
     }
     let fits = key_fits(&durations);
-    let best = fits.first().copied().filter(|&(_, fit)| fit > 0.0);
-    // Otherwise the key signature says it, as it is written: whoever
-    // wrote the file knew the key better than a guess. With one
-    // exception: many programs write "C major" into every file when
-    // nobody chose a key, so when another key fits the notes clearly
-    // better than C major, it is that one.
-    if let Some(&(_, (sharps, minor))) = signatures.first() {
-        let major = major_tonic(sharps);
-        let scale = if minor {
-            Scale::new(major.transpose(9), ScaleKind::NaturalMinor)
-        } else {
-            Scale::new(major, ScaleKind::Major)
-        };
-        let fit = |scale: Scale| {
-            fits.iter()
-                .find(|(other, _)| *other == scale)
-                .map_or(0.0, |(_, fit)| *fit)
-        };
-        if (sharps, minor) == (0, false)
-            && let Some((best, best_fit)) = best
-            && best_fit - fit(scale) > CLEARLY_BETTER
-        {
-            return (best, true, changes);
-        }
-        return (scale, false, changes);
-    }
-    // A file without a key signature: the key the notes fit best.
-    match best {
-        Some((best, _)) => (best, true, changes),
-        None => (Scale::default(), false, changes),
-    }
+    let fit = |scale: Scale| {
+        fits.iter()
+            .find(|(other, _)| *other == scale)
+            .map_or(0.0, |(_, fit)| *fit)
+    };
+    let &(best, best_fit) = fits.first()?;
+    let better = match than {
+        Some(than) => best != than && best_fit - fit(than) > CLEARLY_BETTER,
+        None => best_fit > 0.0,
+    };
+    better.then_some(best)
 }
 
 /// How much better another key must fit the notes than a file's C major
@@ -1197,6 +1231,104 @@ mod tests {
     }
 
     #[test]
+    fn every_change_of_key_signature_is_a_key_marker() {
+        // The Turkish March: A minor, A major from bar 3, A minor again
+        // from bar 5, where the file writes A minor twice.
+        let bar = 4 * 480;
+        let mut events = vec![
+            (
+                0,
+                EventKind::KeySignature {
+                    sharps: 0,
+                    minor: true,
+                },
+            ),
+            (
+                2 * bar,
+                EventKind::KeySignature {
+                    sharps: 3,
+                    minor: false,
+                },
+            ),
+            (
+                4 * bar,
+                EventKind::KeySignature {
+                    sharps: 0,
+                    minor: true,
+                },
+            ),
+            (
+                4 * bar,
+                EventKind::KeySignature {
+                    sharps: 0,
+                    minor: true,
+                },
+            ),
+            (
+                5 * bar,
+                EventKind::KeySignature {
+                    sharps: 0,
+                    minor: true,
+                },
+            ),
+        ];
+        events.extend((0..24).flat_map(|beat| note(0, 69, beat * 480, 480)));
+        events.sort_by_key(|(tick, _)| *tick);
+        let imported = import(&file(0, vec![events]));
+        let project = &imported.project;
+        let a = |kind| Scale::new(PitchClass::A, kind);
+        assert_eq!(project.scale, a(ScaleKind::NaturalMinor));
+        assert_eq!(
+            project.playlist().key_markers(),
+            [
+                KeyMarker::new(32, a(ScaleKind::Major)),
+                KeyMarker::new(64, a(ScaleKind::NaturalMinor)),
+            ]
+        );
+        assert_eq!(imported.report.key_changes, 2);
+        assert!(!imported.report.key_from_notes);
+        assert!(
+            imported
+                .report
+                .summary("March", project)
+                .contains("A minor (2 key changes)")
+        );
+    }
+
+    #[test]
+    fn exact_keys_change_too() {
+        let harmonic = Scale::new(PitchClass::A, ScaleKind::HarmonicMinor);
+        let major = Scale::new(PitchClass::A, ScaleKind::Major);
+        let bar = 4 * 480;
+        let mut events = vec![
+            (
+                0,
+                EventKind::KeySignature {
+                    sharps: 0,
+                    minor: true,
+                },
+            ),
+            (0, EventKind::ExactKey(harmonic)),
+            (
+                2 * bar,
+                EventKind::KeySignature {
+                    sharps: 3,
+                    minor: false,
+                },
+            ),
+            (2 * bar, EventKind::ExactKey(major)),
+        ];
+        events.extend((0..12).flat_map(|beat| note(0, 69, beat * 480, 480)));
+        events.sort_by_key(|(tick, _)| *tick);
+        let project = import(&file(0, vec![events])).project;
+        assert_eq!(project.scale, harmonic);
+        assert_eq!(
+            project.playlist().key_markers(),
+            [KeyMarker::new(32, major)]
+        );
+    }
+
+    #[test]
     fn a_file_from_ferrous_loom_keeps_its_exact_key() {
         // E Dorian is written with the signature of D major, and exactly
         // in an event of our own.
@@ -1374,7 +1506,8 @@ mod tests {
     fn every_demo_comes_back_note_for_note() {
         // Export every demo song as a MIDI file, import it, and export it
         // again: the two files must hold the same notes, velocities,
-        // tempo changes, time signatures and key, at the same ticks.
+        // instruments, tempo changes, time signatures and keys, at the
+        // same ticks.
         fn contents(bytes: &[u8]) -> Vec<(u64, String)> {
             let file = super::super::read::read(bytes).unwrap();
             let mut events: Vec<(u64, String)> = file
@@ -1390,6 +1523,9 @@ mod tests {
                         EventKind::Tempo(micros) => Some(format!("tempo {micros}")),
                         EventKind::TimeSignature { beats, unit } => {
                             Some(format!("time {beats}/{unit}"))
+                        }
+                        EventKind::Program { channel, program } => {
+                            Some(format!("program {channel} {program}"))
                         }
                         EventKind::KeySignature { sharps, minor } => {
                             Some(format!("key {sharps} {minor}"))
@@ -1408,6 +1544,12 @@ mod tests {
             let file = super::super::read::read(&exported).unwrap();
             let imported = super::import(&file, song.name).unwrap().project;
             assert_eq!(imported.scale, project.scale, "{}", song.name);
+            assert_eq!(
+                imported.playlist().key_markers(),
+                project.playlist().key_markers(),
+                "{}",
+                song.name
+            );
             assert_eq!(
                 contents(&crate::song_to_midi(&imported)),
                 contents(&exported),
