@@ -1,0 +1,22 @@
+[package]
+name = "lineup-app"
+description = "Ferrous Lineup desktop application"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "ferrous-lineup"
+path = "src/main.rs"
+
+[dependencies]
+lineup-core.workspace = true
+lineup-audio.workspace = true
+lineup-listen.workspace = true
+eframe.workspace = true
+rfd.workspace = true
+midir.workspace = true
+serde.workspace = true
+ureq.workspace = true
