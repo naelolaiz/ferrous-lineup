@@ -11,16 +11,18 @@
 //! ```
 //!
 //! In a chord chart, `|` separates bars, and the chords inside a bar
-//! share it equally: "IV V" is half a bar each. In a melody, each note is
+//! share it equally: "IV V" is half a bar each. Charts read with
+//! [`parse_chart_in`] may also name chords as lead sheets do, "C | G/B |
+//! Am", slash chords included. In a melody, each note is
 //! a name with its octave and, after a colon, its length in steps.
 
-use crate::harmony::Chord;
+use crate::harmony::{Chord, ChordSymbol};
 use crate::pattern::{DEFAULT_VELOCITY, NoteEvent};
 use crate::pitch::{Note, PitchClass};
 
 use super::comping::{Bass, Comping};
 use super::numeral::{self, RomanChord};
-use super::voicing::voice_progression;
+use super::voicing::{bass_line, voice_progression};
 
 /// One chord of a chart, with when it starts and how long it lasts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -37,12 +39,41 @@ pub struct ChordSpan {
 /// bar of `bar` steps cannot be shared equally between its chords. An
 /// empty chart has no chords.
 pub fn parse_chart(text: &str, bar: usize) -> Option<Vec<ChordSpan>> {
+    read_chart(text, bar, numeral::parse)
+}
+
+/// Reads a chord chart whose chords may also be written by name, as on
+/// a lead sheet: "C | G/B | Am | Am/G". A chord by name is counted from
+/// `tonic` (see [`RomanChord::from_symbol`]), so the chart is still
+/// played in any key, and numerals can be mixed in: "I | G7/B | vi".
+/// A chord by name starts with a capital letter from A to G; a numeral
+/// never does.
+pub fn parse_chart_in(text: &str, bar: usize, tonic: PitchClass) -> Option<Vec<ChordSpan>> {
+    read_chart(text, bar, |token| {
+        if token.starts_with(|c: char| ('A'..='G').contains(&c)) {
+            let symbol = ChordSymbol::parse(token).ok()?;
+            Some(RomanChord::from_symbol(symbol, tonic))
+        } else {
+            numeral::parse(token)
+        }
+    })
+}
+
+/// Reads a chart, each chord with `read`.
+fn read_chart(
+    text: &str,
+    bar: usize,
+    read: impl Fn(&str) -> Option<RomanChord>,
+) -> Option<Vec<ChordSpan>> {
     let mut spans: Vec<ChordSpan> = Vec::new();
     if text.trim().is_empty() {
         return Some(spans);
     }
     for (index, cell) in text.split('|').enumerate() {
-        let chords = numeral::parse_progression(cell)?;
+        let chords = cell
+            .split_whitespace()
+            .map(&read)
+            .collect::<Option<Vec<RomanChord>>>()?;
         if chords.is_empty() || !bar.is_multiple_of(chords.len()) {
             return None;
         }
@@ -165,22 +196,33 @@ pub struct Backing {
 
 /// Plays a chart in the key whose tonic is `tonic`: voices each chord
 /// smoothly from the last, plays the voicings in the rhythm of
-/// `comping`, and the roots in the rhythm of `bass`.
+/// `comping`, and the roots in the rhythm of `bass`. A slash chord's
+/// bass note is played instead of its root, and the line around it
+/// moves by step where it can (see [`bass_line`]).
 ///
 /// The bass line may lead into the next chord. After the last chord
 /// comes the first one again, because patterns loop.
 pub fn accompany(spans: &[ChordSpan], tonic: PitchClass, comping: Comping, bass: Bass) -> Backing {
     let chords: Vec<Chord> = spans.iter().map(|span| span.chord.in_key(tonic)).collect();
+    let basses: Vec<(PitchClass, bool)> = spans
+        .iter()
+        .map(|span| (span.chord.bass_in_key(tonic), span.chord.bass.is_some()))
+        .collect();
+    let line = bass_line(&basses);
     let voicings = voice_progression(&chords);
     let mut backing = Backing::default();
     for (index, span) in spans.iter().enumerate() {
-        let next = chords[(index + 1) % chords.len()];
+        let (next, _) = basses[(index + 1) % basses.len()];
         backing
             .chords
             .extend(comping.play(&voicings[index], span.start, span.length));
-        backing
-            .bass
-            .extend(bass.play(chords[index], next, span.start, span.length));
+        backing.bass.extend(bass.play_over(
+            chords[index],
+            line[index],
+            next,
+            span.start,
+            span.length,
+        ));
     }
     backing
 }
@@ -262,6 +304,51 @@ mod tests {
         assert_eq!(midi("G#9"), None);
         assert_eq!(parse_melody("C4:0"), None);
         assert_eq!(parse_melody("C4:x"), None);
+    }
+
+    #[test]
+    fn charts_can_name_their_chords() {
+        let named = parse_chart_in("Dm7 | G7 | Cmaj7 Am7", 16, PitchClass::C).unwrap();
+        let numerals = parse_chart("ii7 | V7 | Imaj7 vi7", 16).unwrap();
+        assert_eq!(named, numerals, "the same chords, counted from C");
+        let mixed = parse_chart_in("I | G7/B | vi", 16, PitchClass::C).unwrap();
+        let chords: Vec<(u8, Option<u8>)> = mixed
+            .iter()
+            .map(|span| (span.chord.semitones, span.chord.bass))
+            .collect();
+        assert_eq!(chords, [(0, None), (7, Some(11)), (9, None)]);
+        assert_eq!(parse_chart_in("C | H7", 16, PitchClass::C), None);
+        assert_eq!(parse_chart_in("C | Gxyz", 16, PitchClass::C), None);
+        // C and C/E are different chords, so both are played.
+        assert_eq!(
+            parse_chart_in("C | C/E", 16, PitchClass::C).unwrap().len(),
+            2
+        );
+    }
+
+    #[test]
+    fn slash_chords_walk_the_bass_down() {
+        let chart = "C | G/B | Am | Am/G | F | C/E | Dm | G";
+        let bass = |tonic: PitchClass| -> Vec<u8> {
+            let spans = parse_chart_in(chart, 16, PitchClass::C).unwrap();
+            let backing = accompany(&spans, tonic, Comping::Held, Bass::Held);
+            backing.bass.iter().map(|note| note.pitch.midi()).collect()
+        };
+        // C2 B1 A1 G1 F1 E1, then D2: D1 is below a bass guitar.
+        assert_eq!(bass(PitchClass::C), [36, 35, 33, 31, 29, 28, 38, 43]);
+        // In D the same line: D2 C#2 B1 A1 G1 F#1 E1, then A2.
+        assert_eq!(bass(PitchClass::D), [38, 37, 35, 33, 31, 30, 28, 45]);
+        // The chords above are G major, not B something: G/B is G with
+        // B in the bass.
+        let spans = parse_chart_in("G/B", 16, PitchClass::C).unwrap();
+        let backing = accompany(&spans, PitchClass::C, Comping::Held, Bass::Held);
+        let mut chord: Vec<u8> = backing
+            .chords
+            .iter()
+            .map(|note| note.pitch.pitch_class().semitone())
+            .collect();
+        chord.sort_unstable();
+        assert_eq!(chord, [2, 7, 11], "D, G and B");
     }
 
     #[test]

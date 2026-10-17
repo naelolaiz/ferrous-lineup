@@ -9,7 +9,7 @@
 //! closest to the last.
 
 use crate::harmony::Chord;
-use crate::pitch::Note;
+use crate::pitch::{Note, PitchClass};
 
 /// The lowest note a chord voicing may start on: F3.
 const LOWEST: u8 = 53;
@@ -19,6 +19,13 @@ const FIRST_CENTRE: f32 = 63.0;
 
 /// The bass plays the root of each chord between these notes: C2 to B2.
 const BASS_LOWEST: u8 = 36;
+
+/// How low a bass line may step down: E1, the lowest string of a bass
+/// guitar.
+const BASS_FLOOR: u8 = 28;
+
+/// How high a bass line may step up: D3.
+const BASS_CEILING: u8 = 50;
 
 /// The most notes a voicing keeps. Bigger chords drop notes, the way a
 /// pianist does: first the fifth, which adds little colour, then the
@@ -118,6 +125,48 @@ pub fn bass_root(chord: Chord) -> Note {
     Note::new(BASS_LOWEST + chord.root.semitone())
 }
 
+/// The note under each chord of a progression. Each entry of `basses`
+/// is a chord's lowest note (its root, or the bass of a slash chord)
+/// and whether it is a slash chord's bass.
+///
+/// A root is played between C2 and B2, as [`bass_root`] does. Slash
+/// chords are mostly written for the line their bass notes make: C G/B
+/// Am Am/G F walks down C, B, A, G, F. So the bass of a slash chord, and
+/// the chord after one, go the short way when they are a step (one or
+/// two semitones) from the note before, down to E1. Otherwise they are
+/// played between C2 and B2 too, and a progression with no slash chords
+/// keeps every root there.
+pub fn bass_line(basses: &[(PitchClass, bool)]) -> Vec<Note> {
+    let mut line: Vec<Note> = Vec::with_capacity(basses.len());
+    let mut slash_before = false;
+    for &(pitch_class, slash) in basses {
+        let usual = Note::new(BASS_LOWEST + pitch_class.semitone());
+        let stepped = match line.last() {
+            Some(&before) if slash || slash_before => step_to(before, pitch_class),
+            _ => None,
+        };
+        line.push(stepped.unwrap_or(usual));
+        slash_before = slash;
+    }
+    line
+}
+
+/// The note of `pitch_class` at most two semitones from `before`, if
+/// there is one between E1 and D3.
+fn step_to(before: Note, pitch_class: PitchClass) -> Option<Note> {
+    let up = before.pitch_class().semitones_up_to(pitch_class);
+    let note = if up <= 2 {
+        before.transpose(i32::from(up))
+    } else if up >= 10 {
+        before.transpose(i32::from(up) - 12)
+    } else {
+        None
+    }?;
+    (BASS_FLOOR..=BASS_CEILING)
+        .contains(&note.midi())
+        .then_some(note)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -126,6 +175,42 @@ mod tests {
 
     fn midi(notes: &[Note]) -> Vec<u8> {
         notes.iter().map(|note| note.midi()).collect()
+    }
+
+    #[test]
+    fn without_slash_chords_the_bass_plays_every_root_from_c2() {
+        let roots: Vec<(PitchClass, bool)> = [C, B, A, G, F, E, D, ASharp]
+            .into_iter()
+            .map(|root| (root, false))
+            .collect();
+        let line = bass_line(&roots);
+        let expected: Vec<Note> = roots
+            .iter()
+            .map(|&(root, _)| bass_root(Chord::new(root, Major)))
+            .collect();
+        assert_eq!(line, expected);
+    }
+
+    #[test]
+    fn slash_chords_make_the_bass_walk_by_step() {
+        // C G/B Am Am/G F C/E Dm G: down by step to E1, then up an
+        // octave, since D1 is below a bass guitar's lowest string.
+        let basses = [
+            (C, false),
+            (B, true),
+            (A, false),
+            (G, true),
+            (F, false),
+            (E, true),
+            (D, false),
+            (G, false),
+        ];
+        assert_eq!(midi(&bass_line(&basses)), [36, 35, 33, 31, 29, 28, 38, 43]);
+        // A bass a leap away is played where the roots are: F/C is a C
+        // under F, at C2.
+        assert_eq!(midi(&bass_line(&[(G, false), (C, true)])), [43, 36]);
+        // Stepping up from a high root goes past B2.
+        assert_eq!(midi(&bass_line(&[(B, false), (C, true)])), [47, 48]);
     }
 
     #[test]
