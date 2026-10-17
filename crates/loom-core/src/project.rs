@@ -809,6 +809,29 @@ impl Project {
         self.key_map().key_at(step)
     }
 
+    /// The keys of `arrangement` as it plays, in song steps: a section
+    /// that modulates modulates every time round. MIDI export uses this.
+    pub fn played_keys(&self, arrangement: &Arrangement) -> KeyMap {
+        let keys = self.key_map();
+        let first = arrangement
+            .passes
+            .first()
+            .map_or(self.scale, |pass| keys.key_at(pass.from));
+        let mut markers = Vec::new();
+        for pass in &arrangement.passes {
+            markers.push(KeyMarker::new(pass.start, keys.key_at(pass.from)));
+            for marker in keys.markers() {
+                if marker.start > pass.from && marker.start < pass.from + pass.length {
+                    markers.push(KeyMarker::new(
+                        pass.start + marker.start - pass.from,
+                        marker.scale,
+                    ));
+                }
+            }
+        }
+        KeyMap::new(first, markers).tidy()
+    }
+
     /// The key a pattern is written in: the one where its first clip
     /// starts, or the project's if it has no clips. The piano roll
     /// highlights its notes and names its chords in it.

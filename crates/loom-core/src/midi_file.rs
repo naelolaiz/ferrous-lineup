@@ -15,6 +15,7 @@
 //! has a General MIDI instrument.
 
 use crate::arrangement::Play;
+use crate::key_map::{KeyMap, KeyMarker};
 use crate::meter::{Meter, TimeMarker};
 use crate::midi::{DRUM_CHANNEL, MidiMessage};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
@@ -34,7 +35,8 @@ pub fn song_to_midi(project: &Project) -> Vec<u8> {
     let song = project.arrangement();
     let meter = project.played_meter(&song);
     let tempos = project.played_tempos(&song);
-    write_file(project, &meter, &tempos, &song.plays, song.length)
+    let keys = project.played_keys(&song);
+    write_file(project, &meter, &keys, &tempos, &song.plays, song.length)
 }
 
 /// One pattern, from its first step, as pattern mode loops it.
@@ -49,7 +51,8 @@ pub fn pattern_to_midi(project: &Project, pattern: usize) -> Vec<u8> {
         length,
     };
     let meter = Meter::steady(project.pattern_time(pattern));
-    write_file(project, &meter, &[], &[play], length)
+    let keys = KeyMap::new(project.pattern_key(pattern), []);
+    write_file(project, &meter, &keys, &[], &[play], length)
 }
 
 /// The note General MIDI drum sets play for each built-in drum.
@@ -72,11 +75,13 @@ pub fn general_midi_drum(drum: Drum) -> Note {
 }
 
 /// Writes a file with the pieces of patterns `placed` for every channel,
-/// lasting `length` steps, with bars counted in `meter`, and step `n` at
+/// lasting `length` steps, with bars counted in `meter`, in the keys of
+/// `keys`, and step `n` at
 /// `tempos[n]` (the project's tempo throughout if `tempos` is empty).
 fn write_file(
     project: &Project,
     meter: &Meter,
+    keys: &KeyMap,
     tempos: &[Tempo],
     placed: &[Play],
     length: usize,
@@ -84,7 +89,7 @@ fn write_file(
     let midi_channels = midi_channels(project.channels());
     let end = length as u32 * TICKS_PER_STEP;
 
-    let mut tracks = vec![tempo_track(project, meter, tempos, end)];
+    let mut tracks = vec![tempo_track(project, meter, keys, tempos, end)];
     for (index, channel) in project.channels().iter().enumerate() {
         if channel.muted {
             continue;
@@ -219,7 +224,13 @@ fn channel_events(
 /// A song whose tempo changes gets a tempo event on every step where it
 /// changes: one for a sudden change, and one per step of a glide, which
 /// is how a MIDI file writes a ritardando.
-fn tempo_track(project: &Project, meter: &Meter, tempos: &[Tempo], end: u32) -> Vec<u8> {
+fn tempo_track(
+    project: &Project,
+    meter: &Meter,
+    keys: &KeyMap,
+    tempos: &[Tempo],
+    end: u32,
+) -> Vec<u8> {
     let mut track = TrackWriter::default();
     track.meta(0, TRACK_NAME, b"Ferrous Loom");
     // Every event of the track, with its tick, sorted by tick at the end.
@@ -259,9 +270,14 @@ fn tempo_track(project: &Project, meter: &Meter, tempos: &[Tempo], end: u32) -> 
     }
     // The key signature: sharps (negative for flats), then 0 for major
     // or 1 for minor. A mode is written with the signature of the major
-    // key it comes from; a row or a set has none.
-    if let Some((sharps, minor)) = project.scale.key_signature() {
-        events.push((0, KEY_SIGNATURE, vec![sharps as u8, u8::from(minor)]));
+    // key it comes from; a row or a set has none. A song that changes
+    // key gets one at every change.
+    let first = KeyMarker::new(0, keys.first());
+    for marker in std::iter::once(first).chain(keys.markers().iter().copied()) {
+        if let Some((sharps, minor)) = marker.scale.key_signature() {
+            let tick = marker.start as u32 * TICKS_PER_STEP;
+            events.push((tick, KEY_SIGNATURE, vec![sharps as u8, u8::from(minor)]));
+        }
     }
     events.sort_by_key(|&(tick, ..)| tick);
     for (tick, kind, data) in events.into_iter().filter(|(tick, ..)| *tick <= end) {
@@ -538,6 +554,26 @@ mod tests {
         );
         project.scale = crate::Scale::row(crate::harmony::ROW_PRESETS[0].row);
         assert!(signature(&project).is_empty(), "a row has no key signature");
+    }
+
+    #[test]
+    fn every_change_of_key_is_written() {
+        let mut project = Project::demo();
+        let a_major = crate::Scale::new(crate::PitchClass::A, crate::ScaleKind::Major);
+        assert!(project.set_key_marker(KeyMarker::new(64, a_major)));
+        let signatures: Vec<(u32, Vec<u8>)> = read(&song_to_midi(&project))[0]
+            .iter()
+            .filter(|(_, event)| event[..2] == [0xFF, 0x59])
+            .cloned()
+            .collect();
+        assert_eq!(
+            signatures,
+            [
+                (0, vec![0xFF, 0x59, 2, 0, 0]),
+                (64 * TICKS_PER_STEP, vec![0xFF, 0x59, 2, 3, 0]),
+            ],
+            "C major, then A major's three sharps"
+        );
     }
 
     #[test]
