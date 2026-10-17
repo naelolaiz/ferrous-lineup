@@ -98,7 +98,9 @@ pub(super) const PRELUDE_IN_C: Song = Song {
         )
         .in_key(G, Major),
     ],
-    form: &["In C", "To G", "In C", "To G", "In C", "To G"],
+    // The demo stops after bar 12, where Bach heads for D minor; it ends
+    // on the opening bars instead, back home in C.
+    form: &["In C", "To G", "In C", "To G", "In C"],
     drums_from: 0,
     about: "Bach's prelude has no tune at all: each bar is one chord, broken into the same \
             rising figure. That makes it a perfect sample for a hip hop beat. Listen to how \
