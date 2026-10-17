@@ -27,13 +27,6 @@ is over**, the same as the mouse wheel already did.
 
 ![Ctrl and + with the pointer over the harmony keys: the whole interface is bigger.](../images/step-8-zoom-interface.png)
 
-The View menu says it too: every zoom key in it names where the pointer
-has to be, so the same Ctrl+Plus reads "over the playlist" in the
-playlist's submenu and "over the toolbars" in **Interface size**, which
-now also has Bigger, Smaller and Reset items.
-
-![View > Playlist zoom: each key names where to point.](../images/step-8-zoom-menu.png)
-
 If the pointer is outside the window (you clicked in the app and then
 moved away), the keys zoom what you clicked last, as before.
 
