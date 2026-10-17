@@ -1,19 +1,18 @@
 # Ferrous Lineup
 
 An open source music studio written in Rust, for playing songs with a
-backing band and learning harmony along the way. It is growing toward the
-workflow of Band-in-a-Box: type the chords of a song, pick a style, and a
-band (bass, drums, piano and more) plays it in any key and tempo. Inside
-is a pattern studio in the spirit of FL Studio, with a step sequencer, a
-piano roll and a playlist, where every part can be written or changed by
-hand.
+backing band and learning harmony along the way. Type the chords of a
+song, pick a style, and a band (bass, drums, piano and more) plays it in
+any key and tempo. Inside is a pattern studio in the spirit of FL
+Studio, with a step sequencer, a piano roll and a playlist, where every
+part can be written or changed by hand.
 
 Ferrous Lineup was called Ferrous Loom until October 2026. Its project
 files end in `.lineup` now, and the `.loom` files saved before still
 open.
 
 > Ferrous Lineup is an independent project. It is not affiliated with
-> PG Music or Band-in-a-Box, nor with Image-Line or FL Studio.
+> Image-Line or FL Studio.
 
 ![Ferrous Lineup playing the demo song: the playlist, the channel rack with the Lineup Osc, and the harmony keys lighting up the chord that sounds](screenshots/main-window.png)
 
