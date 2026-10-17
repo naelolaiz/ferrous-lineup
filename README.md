@@ -158,6 +158,15 @@ between repeat signs on the sheet and the playlist. **Ending** adds two
 bars on the key's tonic after the last chorus: one in the style, then
 the chord struck once and held, with a crash of the cymbal.
 
+Right-click a bar (or Shift+click to select several first) to pick
+**Variation a** or **Variation b** of the style from there. Variation b
+is the same style played fuller, the way a band digs into a chorus or a
+bridge: the drums move from the hi-hat to the ride, a busier bass or
+piano where the style has one (a jazz ballad's bass walks, a pop
+ballad's piano plays eighth notes), a little louder. The drums play a
+fill into each change and crash on its first beat, and a boxed letter
+marks it on the sheet and the playlist.
+
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's
