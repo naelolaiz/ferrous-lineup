@@ -5,7 +5,7 @@ track that follows it. **File > Import recording…**, or drop the file
 on the window, or `ferrous-lineup song.mp3`.
 
 What comes out is an ordinary project: the recording on a sampler
-channel, started once at the beginning of the song, and a "Harmony" Loom
+channel, started once at the beginning of the song, and a "Harmony" Lineup
 Osc channel with the chords heard on every beat, in patterns of 16 bars.
 The tempo, time signature and key are set from the recording, so the bar
 lines, the piano roll and the harmony keys line up with it, and the

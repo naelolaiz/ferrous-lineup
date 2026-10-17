@@ -404,7 +404,7 @@ mod tests {
 
     #[test]
     fn identical_channels_are_told_apart_by_their_notes() {
-        // Three Loom Osc channels with different notes. Removing the
+        // Three Lineup Osc channels with different notes. Removing the
         // middle one looks, by the channels alone, like removing the last.
         let mut before = Project::template();
         for midi in [60, 64, 67] {

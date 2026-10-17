@@ -50,6 +50,10 @@ pub const EXTENSION: &str = "lineup";
 /// Such files open as before, and saving one keeps its name.
 pub const OLD_EXTENSION: &str = "loom";
 
+/// What new synth channels were called while the app was called
+/// Ferrous Loom. Channels with this name open as "Lineup Osc".
+const OLD_SYNTH_NAME: &str = "Loom Osc";
+
 /// Whether `path` names a project file: one ending in `.lineup`, or in
 /// `.loom` from before the rename, in capitals or not.
 pub fn is_project(path: &Path) -> bool {
@@ -95,7 +99,7 @@ pub fn is_project(path: &Path) -> bool {
 /// format 8.
 ///
 /// Format 9 added a General MIDI instrument to channels. Older versions
-/// would play every Loom Osc with the same sound and send no program
+/// would play every Lineup Osc with the same sound and send no program
 /// changes, so a project with instruments needs format 9.
 ///
 /// Format 10 added notes that start or end between two steps, such as
@@ -375,7 +379,13 @@ impl TryFrom<ProjectFile> for Project {
             return invalid(format!("it has more than {MAX_CHANNELS} channels"));
         }
         let channels = file.channels.len();
-        for channel in file.channels {
+        for mut channel in file.channels {
+            // The synth was called the Loom Osc while the app was called
+            // Ferrous Loom; a channel still named after it takes the new
+            // name, as the synth it plays did.
+            if channel.kind == ChannelKind::Synth && channel.name == OLD_SYNTH_NAME {
+                channel.name = Channel::synth().name;
+            }
             project.add_channel(channel);
         }
 
@@ -548,6 +558,19 @@ mod tests {
         assert!(text.contains("kind: Sampler(Builtin(Kick))"), "{text}");
         let loaded = from_text(&text).unwrap();
         assert_eq!(loaded, demo);
+    }
+
+    #[test]
+    fn the_loom_osc_opens_as_the_lineup_osc() {
+        let demo = Project::demo();
+        let text = to_text(&demo).unwrap();
+        assert!(text.contains("name: \"Lineup Osc\""), "{text}");
+        let old = text.replace("name: \"Lineup Osc\"", "name: \"Loom Osc\"");
+        assert_eq!(from_text(&old).unwrap(), demo);
+        // A channel the user named so, but that is not the synth, keeps
+        // its name.
+        let kick = text.replace("name: \"Kick\"", "name: \"Loom Osc\"");
+        assert_eq!(from_text(&kick).unwrap().channels()[0].name, "Loom Osc");
     }
 
     #[test]

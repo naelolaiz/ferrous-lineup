@@ -22,22 +22,22 @@ use lineup_core::{
 
 /// Where the row and set last used are remembered.
 fn row_id() -> egui::Id {
-    egui::Id::unique("loom-last-row")
+    egui::Id::unique("lineup-last-row")
 }
 
 fn set_id() -> egui::Id {
-    egui::Id::unique("loom-last-set")
+    egui::Id::unique("lineup-last-set")
 }
 
 /// The row written for Ferrous Lineup, which the row window starts with.
-fn loom_row() -> ToneRow {
-    RowPreset::named("Loom row").map_or(ToneRow::CHROMATIC, |preset| preset.row)
+fn lineup_row() -> ToneRow {
+    RowPreset::named("Lineup row").map_or(ToneRow::CHROMATIC, |preset| preset.row)
 }
 
-/// The row a key menu switches to: the last one used, or the Loom row.
+/// The row a key menu switches to: the last one used, or the Lineup row.
 pub fn remembered_row(ctx: &egui::Context) -> ToneRow {
     ctx.data(|data| data.get_temp(row_id()))
-        .unwrap_or_else(loom_row)
+        .unwrap_or_else(lineup_row)
 }
 
 /// The set a key menu switches to: the last one used, or the diminished
@@ -300,7 +300,7 @@ pub struct RowWindow {
 
 impl RowWindow {
     pub fn new() -> Self {
-        let row = loom_row();
+        let row = lineup_row();
         RowWindow {
             open: false,
             row,
