@@ -54,8 +54,9 @@ Every push and pull request runs two jobs on GitHub's Linux machines:
    `cargo clippy -- -D warnings` (warnings count as errors), `cargo test` and
    a release build. The built program is attached to the run as the
    `ferrous-lineup-linux` download.
-2. **book**: builds this book with mdBook and attaches it as the
-   `ferrous-loom-book` download, which you can unzip and read offline.
+2. **book**: builds this book with mdBook and attaches it as a
+   download, which you can unzip and read offline. (The book later moved
+   out of the app's repository, and this job went with it.)
 
 A pull request shows a green check when both jobs pass. In step 4, the
 same workflow will add macOS and Windows machines.

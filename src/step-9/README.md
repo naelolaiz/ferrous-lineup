@@ -8,7 +8,7 @@ of a song bar by bar, choose a style, press Play, and a band (bass,
 drums, piano, guitar, strings) plays the song in that style. Change the
 style, the key or the tempo, and the band plays it again the new way.
 
-Most of a band was already inside Ferrous Loom. The library turns a
+Most of a band was already inside the app. The library turns a
 chord chart into voiced chords and a bass line in 145 styles, adds drums
 from 81 rhythms, fills and endings, and builds whole songs from charts
 ([The library: knowledge as data](../step-8/library.md)). What was

@@ -340,7 +340,7 @@ without collecting either into a `Vec` first.
 
 ### When the story is ambiguous
 
-Say there are three Loom Osc channels with the same settings but
+Say there are three Lineup Osc channels with the same settings but
 different notes, and you delete the middle one. Comparing the *channels*
 alone (name, instrument, volume, mute), the old list is `[Osc, Osc, Osc]`
 and the new one `[Osc, Osc]`, and the alignment cannot tell which one

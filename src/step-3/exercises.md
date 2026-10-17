@@ -67,7 +67,7 @@ of the UI.
 
 ## 6. A legato synth (lineup-audio, harder)
 
-Give the Loom Osc a "mono / legato" mode: only one voice plays, and a new
+Give the Lineup Osc a "mono / legato" mode: only one voice plays, and a new
 note changes that voice's pitch without restarting the envelope. Add a
 `glide` time so the pitch slides from the old note to the new one (use
 `dsp::Smoothed` for the frequency). How does `pick_voice` change? Which

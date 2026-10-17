@@ -98,7 +98,7 @@ gate runs out.
 ## Voices
 
 A **voice** is one note's worth of sound-making: its own oscillator, its
-own position in the envelope. The Loom Osc has 16 voices and a sampler
+own position in the envelope. The Lineup Osc has 16 voices and a sampler
 has 8. Each `note_on` takes a voice:
 
 ```rust

@@ -18,7 +18,7 @@ Step 2 turns the test tone into a real, if small, drum machine:
 - a **built-in drum kit** (kick, snare, clap, hi-hat) synthesized from
   scratch, so no sound files need to be shipped,
 - a **sampler** that plays WAV files you drag onto the rack,
-- the **Loom Osc**, a simple synth channel (a filtered sawtooth with a
+- the **Lineup Osc**, a simple synth channel (a filtered sawtooth with a
   pluck envelope) that step 3 will give melodies to.
 
 ![The channel rack playing the demo beat](../images/step-2-rack.png)
@@ -36,7 +36,7 @@ Step 2 turns the test tone into a real, if small, drum machine:
 | Click the green light | mute or unmute the channel |
 | Drop a `.wav` file on a channel | replace its sound with the file |
 | Drop a `.wav` file below the rows | add a new channel playing it |
-| ➕ Add channel | add a drum or a Loom Osc |
+| ➕ Add channel | add a drum or a Lineup Osc |
 
 ## What changed in the architecture
 
@@ -75,7 +75,7 @@ crates/lineup-core/src/project.rs     Project, Channel, ChannelKind, Drum
 crates/lineup-audio/src/dsp.rs        Smoothed, Noise, HighPass, LowPass
 crates/lineup-audio/src/drums.rs      the synthesized drum kit
 crates/lineup-audio/src/sample.rs     SampleData and WAV loading
-crates/lineup-audio/src/instrument.rs Instrument: Sampler and Synth (Loom Osc)
+crates/lineup-audio/src/instrument.rs Instrument: Sampler and Synth (Lineup Osc)
 crates/lineup-audio/src/engine.rs     new Commands, the trash queue, the playhead
 crates/lineup-app/src/channel_rack.rs the rack: rows, steps, drag and drop
 crates/lineup-app/src/widgets.rs      step button, knob and mute light
@@ -83,4 +83,4 @@ crates/lineup-app/src/app.rs          applies rack actions to project and audio
 ```
 
 The test tone from step 1 (`synth.rs`) is gone. Its click-free volume
-trick lives on as `dsp::Smoothed`, and its oscillator grew into the Loom Osc.
+trick lives on as `dsp::Smoothed`, and its oscillator grew into the Lineup Osc.

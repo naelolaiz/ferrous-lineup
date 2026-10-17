@@ -7,7 +7,7 @@ Files: [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferr
 and [`crates/lineup-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/widgets.rs)
 
 The first thing a new user did with the finished step 8 was press F7 on
-the demo song. The piano roll opened on "Beat · Loom Osc" and showed an
+the demo song. The piano roll opened on "Beat · Lineup Osc" and showed an
 empty grid. The song plays chords, the playlist shows them, so where were
 they?
 
@@ -23,7 +23,7 @@ the zoom, which the same user wanted for each window on its own.
 When the channel has no notes in the pattern, the piano roll now says so,
 above the grid and in the middle of it, and offers buttons:
 
-![The piano roll on "Beat": a coloured line says Loom Osc has no notes
+![The piano roll on "Beat": a coloured line says Lineup Osc has no notes
 there, with a button for "Chords", where it does, and one for the
 channel rack, where the drums of "Beat" are edited.](../images/step-8-no-notes.png)
 
@@ -80,7 +80,7 @@ pub fn busiest_channel(pattern: &Pattern) -> Option<usize> {
 tuple `(count, Reverse(channel))` breaks ties towards the lower channel
 number instead: `std::cmp::Reverse` wraps a value and flips its ordering.
 Drum steps are left out on purpose. In "Beat" no channel plays a melody,
-so the piano roll stays on Loom Osc and shows the message; it does not
+so the piano roll stays on Lineup Osc and shows the message; it does not
 jump to the kick drum, whose "notes" are all the same plain step.
 
 To notice the window *opening*, the piano roll remembers whether it was

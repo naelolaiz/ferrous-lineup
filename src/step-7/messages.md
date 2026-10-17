@@ -128,7 +128,7 @@ its length:
 ```text
   MThd  length 6  format 1  3 tracks  96 ticks per beat     the header
   MTrk  length …  name "Ferrous Lineup", tempo, time signature, end
-  MTrk  length …  name "Loom Osc", the notes of the synth, end
+  MTrk  length …  name "Lineup Osc", the notes of the synth, end
   MTrk  length …  name "Kick", the notes of the kick, end
 ```
 

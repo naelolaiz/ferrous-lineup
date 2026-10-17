@@ -12,7 +12,7 @@ rack they were one tangle of notes, and you could not mute the second
 violin to hear what the first one does. Frère Jacques, Row, Row, Row
 Your Boat and Three Blind Mice, the rounds, had the same problem.
 
-And every channel of every demo played the same sound: the Loom Osc's
+And every channel of every demo played the same sound: the Lineup Osc's
 sawtooth. A violin, a choir and a bass guitar all buzzed alike. Sent to
 a MIDI synth, everything came out as a piano, because nothing told the
 synth otherwise.
@@ -73,7 +73,7 @@ pub program: Option<u8>,
 ```
 
 `Option<u8>` because a channel can have no instrument in particular:
-then nothing is sent to a synth, and the Loom Osc keeps its own sound.
+then nothing is sent to a synth, and the Lineup Osc keeps its own sound.
 The two serde attributes keep old files readable: a file without the
 field reads as `None` (`default`), and a channel without an instrument
 writes no field at all (`skip_serializing_if`). Only a project that has
@@ -100,7 +100,7 @@ The instrument is used in three places:
        // ...then the note itself, as before
    ```
 
-3. **The Loom Osc** picks a sound close to it.
+3. **The Lineup Osc** picks a sound close to it.
 
 `MidiMessage::bytes` used to return `[u8; 3]`, since every note
 message is three bytes long. A program change is two, so it now returns
@@ -108,9 +108,9 @@ a small `MidiBytes` that derefs to a slice (`&[u8]`) of the right
 length. That is the `Deref` trait at work: wherever a `&[u8]` is
 expected, `&message.bytes()` is accepted as one.
 
-## Making the Loom Osc sound like an instrument
+## Making the Lineup Osc sound like an instrument
 
-The Loom Osc is tiny: one oscillator per note, a soft low-pass filter,
+The Lineup Osc is tiny: one oscillator per note, a soft low-pass filter,
 and a volume envelope (attack, decay, sustain, release). It can never
 sound like a real violin, but it can sound more like a violin than like
 a piano. `timbre.rs` changes three things by family:
@@ -139,7 +139,7 @@ pub struct Timbre {
 }
 ```
 
-`Timbre::for_program(None)` gives back the Loom Osc's own sound, with
+`Timbre::for_program(None)` gives back the Lineup Osc's own sound, with
 exactly the numbers it always had, so nothing changes for channels
 without an instrument.
 

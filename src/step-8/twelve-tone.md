@@ -337,7 +337,7 @@ pub fn combinatorial_forms(self) -> Vec<RowLabel> {
 
 The retrograde is left out because it always works (its first half is
 the row's second half), so it says nothing about the row. Schoenberg's
-Op. 25 row is combinatorial with I11; the Loom row, written for this
+Op. 25 row is combinatorial with I11; the Lineup row, written for this
 chapter, with I3. The **Hexachord pads** style plays exactly that: one
 half of the row as a chord, and the other six notes from I3 as a
 melody over it.
@@ -830,7 +830,7 @@ The Library has a new group, **Twelve-tone rows**, with six styles:
 
 | style | what it does |
 |-------|--------------|
-| Row melody | the Loom row as a tune in eighth notes, through P, R, I and RI |
+| Row melody | the Lineup row as a tune in eighth notes, through P, R, I and RI |
 | Triad chorale | the Four triads row as chords, over its retrograde in the bass: twelve-tone music that sounds almost tonal |
 | Hexachord pads | half the row as a chord, the other six notes from I3 as a melody: hexachordal combinatoriality |
 | Pointillism | single notes leaping over three octaves, durations and dynamics from the row, as in Webern |
@@ -1015,11 +1015,11 @@ The Row window also got taller than some screens. It now scrolls
 ## How it was tested
 
 - **Rows**: Schoenberg's four forms are checked note by note against
-  the published ones; every one of the 48 forms of the Loom row is
+  the published ones; every one of the 48 forms of the Lineup row is
   named again by `label_of`; every line of Berg's matrix is a P form
   and every column an I form; Webern's row is a palindrome (R9 is P3);
   Berg's row, the All the intervals row and fifty random all-interval
-  rows are all-interval; the Loom row is combinatorial with I3 only;
+  rows are all-interval; the Lineup row is combinatorial with I3 only;
   rows are read from names, numbers and the compact form, and wrong ones
   give the right message; random rows are rows, and the same seed gives
   the same row; a row with a note written twice cannot be read from a

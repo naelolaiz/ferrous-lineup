@@ -338,7 +338,7 @@ the notice counts it.
 
 The **program change** that chose each track's instrument is kept on
 its channel too, as `Channel::program`: 40 is a violin, 0 a grand piano.
-It names the channel, the Loom Osc plays a sound close to that
+It names the channel, the Lineup Osc plays a sound close to that
 instrument, and MIDI Out and the MIDI export send it on (see
 [every voice on its own channel](voices-and-instruments.md)).
 

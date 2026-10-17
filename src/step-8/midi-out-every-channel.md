@@ -31,7 +31,7 @@ writes, so a song sounds the same played live as from its MIDI file:
 | Channel in the rack | MIDI channel | Notes |
 |---------------------|--------------|-------|
 | a built-in drum (Kick, Hat...) | 10 | its General MIDI drum note: kick 36, snare 38, clap 39, closed hat 42... |
-| Loom Osc, or a sample from a file | 1, 2, 3... (10 is skipped) | the notes as written |
+| Lineup Osc, or a sample from a file | 1, 2, 3... (10 is skipped) | the notes as written |
 | a MIDI Out channel | the one you gave it | as before: it sends its notes itself |
 
 Channel 10 is where every General MIDI synth keeps its drum kit, and

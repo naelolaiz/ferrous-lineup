@@ -9,8 +9,8 @@ style, and the band plays it. It also has a second goal: helping you
 **learn harmony** while you play, by showing you scales, chords and their
 names as you write.
 
-Until step 9 the app was called **Ferrous Loom**, and a few things still
-carry that name ([A new name](step-9/new-name.md) says which and why).
+Until step 9 the app was called **Ferrous Loom** ([A new name](step-9/new-name.md)
+tells how it was renamed).
 
 This book has a third goal: it is a **Rust course built around a real
 project**. Every step of the project adds a chapter that explains:
@@ -26,10 +26,10 @@ a few exercises you can try on your own copy of the code.
 
 You can read it three ways, all of them offline:
 
-1. As plain Markdown files in the `docs/src` folder of the repository.
-2. As a website on your computer: run `mdbook build docs` and open
-   `docs/book/index.html` in a browser (see [Getting started](getting-started.md)).
-3. As the `ferrous-loom-book` download attached to every CI run on GitHub.
+1. As plain Markdown files, in the book's `src` folder.
+2. As a website on your computer: run `mdbook build` in the book's
+   folder and open `book/index.html` in a browser.
+3. As that website in a zip file, ready to unzip and open.
 
 ## The plan
 

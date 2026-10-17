@@ -135,7 +135,7 @@ optimizing.
   either, and allocate only when it must?
 - Undo while the song plays. When undo removes a channel, its ringing
   notes stop at once, because the channel goes to the trash. In the
-  "three identical Loom Osc" case from the diff chapter, the audio thread
+  "three identical Lineup Osc" case from the diff chapter, the audio thread
   removes the *last* channel and gives its notes to another one. Which
   channel's ringing note keeps sounding, and could you ever hear the
   difference?

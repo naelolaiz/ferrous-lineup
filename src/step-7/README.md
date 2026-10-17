@@ -151,8 +151,8 @@ Four ideas carry this step:
    in the pattern, to a fraction of a step. Each key is stamped with it
    as it arrives, and recording only has to round.
 4. **The file format only moves when it must.** A project with a MIDI
-   Out channel is written as format 2, which older versions of Ferrous
-   Loom refuse. Every other project is still written as format 1, so
+   Out channel is written as format 2, which older versions of the app
+   refuse. Every other project is still written as format 1, so
    they can still open it.
 
 ## Files in this step

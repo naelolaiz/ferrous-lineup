@@ -22,7 +22,7 @@ Step 3 gives Ferrous Lineup melodies and chords, and starts teaching harmony:
   "Am: A minor, chord vi of C major",
 - **chords in key**: seven buttons with the chords of the current key and
   their Roman numerals (I, ii, iii, IV, V, vi, vii°). Click one to hear it,
-- a **polyphonic** Loom Osc that plays chords, with notes held for their
+- a **polyphonic** Lineup Osc that plays chords, with notes held for their
   length, and samplers that play higher or lower with the note.
 
 ![The piano roll playing the demo progression](../images/step-3-piano-roll.png)

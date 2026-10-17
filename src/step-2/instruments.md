@@ -163,7 +163,7 @@ placeholders let the compiler fill in the types.
 The test writes a real WAV file to the system's temporary folder with
 `hound::WavWriter`, loads it back and checks the mono mix.
 
-## The Loom Osc
+## The Lineup Osc
 
 The synth channel generates a **sawtooth** wave, a ramp from -1 to 1 once
 per cycle, which is bright and buzzy because it is rich in harmonics. A

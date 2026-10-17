@@ -29,6 +29,9 @@ Everything a person sees or types, and the names of the files:
 | The track name in exported `.mid` files | `Ferrous Loom` | `Ferrous Lineup` |
 | The open and save dialogs | "Ferrous Loom project" | "Ferrous Lineup project" |
 | A decoded recording beside the original | `song.ferrous-loom.wav` | `song.ferrous-lineup.wav` |
+| The built-in synth | Loom Osc | Lineup Osc |
+| A row in the Twelve-tone window | Loom row | Lineup row |
+| The hidden key in exported `.mid` files | `Ferrous Loom key ` | `Ferrous Lineup key ` |
 | Messages, the README, the comments, this book | Ferrous Loom | Ferrous Lineup |
 
 ## Renaming a crate
@@ -102,21 +105,62 @@ two copies of the song, and the next time you opened the old one, it
 would not have your changes. The contents are the same either way; only
 the name differs.
 
-## What kept the old name
+## Names saved inside files
 
-- **The Loom Osc** synth and the **Loom row** are names of things inside
-  the app. They are saved in projects (a channel called "Loom Osc"), so a
-  new name would make old projects look different from new ones.
-- **The hidden key in MIDI files.** When Ferrous Lineup exports a
-  `.mid` file it writes the exact key, such as E Dorian, in an event of
-  its own that starts with the bytes `\x7DFerrous Loom key `
-  ([MIDI file import](../step-8/midi-import.md) reads it back). That
-  text is a tag, not a label: if the new version looked for
-  `Ferrous Lineup key `, every file exported before the rename would lose
-  its key on import. The tag stays, with a comment saying why.
-- **The repository** is still `naelolaiz/ferrous-loom` until it is
-  renamed on GitHub. GitHub sends the old address on to the new one, so
-  links keep working after that.
+The first version of the rename kept three things as they were, because
+their names are saved inside files: the **Loom Osc** synth (every
+project has a channel called "Loom Osc"), the **Loom row**, and the
+hidden key in exported MIDI files. That left "Loom" in every new
+project's channel rack, so they were renamed too, each with a way to
+read what was saved before.
+
+**The synth.** A channel's name is saved in the project, so an old
+project still has a channel called "Loom Osc". Reading a project file
+renames it, in
+[`file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs):
+
+```rust
+const OLD_SYNTH_NAME: &str = "Loom Osc";
+
+for mut channel in file.channels {
+    if channel.kind == ChannelKind::Synth && channel.name == OLD_SYNTH_NAME {
+        channel.name = Channel::synth().name;
+    }
+    project.add_channel(channel);
+}
+```
+
+`for mut channel in` takes each channel out of the file *by value* and
+lets the loop change it before handing it to the project: `mut` belongs
+to the loop variable, as in `let mut`. Only a synth with exactly the old
+name changes. A sampler you called "Loom Osc" yourself keeps its name,
+and so does a synth you renamed.
+
+**The row** is only a name in the app's list of rows. A project saves
+the row's twelve notes, not its name, so nothing old needs reading.
+
+**The hidden key in MIDI files.** When the app exports a `.mid` file it
+writes the exact key, such as E Dorian, in an event of its own that
+starts with the bytes `\x7DFerrous Lineup key `
+([MIDI file import](../step-8/midi-import.md) reads it back). Files
+exported before the rename start with `\x7DFerrous Loom key `, so
+[`midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs)
+accepts either:
+
+```rust
+let key = data
+    .strip_prefix(SCALE_EVENT_START)
+    .or_else(|| data.strip_prefix(OLD_SCALE_EVENT_START))?;
+```
+
+`strip_prefix` gives back what follows the prefix, or `None` if the data
+does not start with it. `or_else` tries the old prefix only when the new
+one is missing, and `?` gives up when neither is there. A test reads an
+old event and gets E Dorian back.
+
+**The repository** is still `naelolaiz/ferrous-loom` until it is
+renamed on GitHub. GitHub sends the old address on to the new one, so
+links keep working after that.
 
 ## Package name and program name
 
@@ -188,7 +232,7 @@ with "Ferrous Lineup" is someone else's.
    `midi.rs`, `midi_file.rs` and a few messages. Put it in one
    `pub const APP_NAME: &str` in `lineup-core` and use it everywhere.
    Which places cannot use it, because they need the old name on
-   purpose?
+   purpose? (Look for `OLD_` in the code.)
 2. Make Ctrl+S on a `.loom` file save it as `.lineup` instead, and
    delete the old file only once the new one is safely written. What
    should happen to the title, and to the file that was open?

@@ -379,7 +379,7 @@ renderer.send(Command::Play);
 (`InsertPattern`), every channel (`InsertChannel`, with its notes in all
 patterns) and the song. `send_whole_project`, which talks to the real
 audio thread, uses it too, so both are built the same way. The built-in
-drums are synthesized again at 44,100, the Loom Osc is made for that
+drums are synthesized again at 44,100, the Lineup Osc is made for that
 rate, and samplers get their sounds from the `SampleCache` of the
 previous chapter, so no file is read.
 

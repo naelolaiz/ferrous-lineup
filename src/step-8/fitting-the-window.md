@@ -153,7 +153,7 @@ eframe = { version = "0.37", features = ["persistence"] }
 
 With it, eframe also remembers the size and position of the main window.
 It writes a file called `app.ron` in the place each system keeps app data
-(on Linux, `~/.local/share/ferrousloom/`), every 30 seconds and when the
+(on Linux, `~/.local/share/ferrouslineup/`), every 30 seconds and when the
 window closes.
 
 Only egui's own memory is saved. The app's state, such as whether the

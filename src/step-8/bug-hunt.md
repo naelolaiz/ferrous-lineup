@@ -520,7 +520,7 @@ The theory part went through every hint and label:
   silent voice, else the oldest fading one, else the oldest of all.
 - **MIDI channels**: the channels given out for MIDI export and *Send
   every channel* skip those that MIDI Out channels already use, so a
-  Loom Osc no longer shares channel 1 with a MIDI Out on channel 1.
+  Lineup Osc no longer shares channel 1 with a MIDI Out on channel 1.
 - **Write out the repeats** is refused, with an explanation, when a
   clip lies partly inside the section: a clip always starts at the
   start of its pattern, so copies of the section could not sound like
