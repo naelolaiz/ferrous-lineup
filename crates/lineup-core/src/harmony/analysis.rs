@@ -1,6 +1,6 @@
 //! Naming what is being played: a note, an interval or a chord.
 
-use super::{Chord, ChordQuality, PitchSet, Scale};
+use super::{Chord, ChordQuality, PitchSet, Scale, with_figures};
 use crate::{Note, NoteName, PitchClass, Spelling};
 
 /// The names of the intervals within one octave, by size in semitones.
@@ -277,7 +277,9 @@ impl Harmony {
                 {
                     text += &format!(" with {bass} in the bass");
                 }
-                text += &match scale.roman_numeral(chord) {
+                // The numeral carries the inversion's figures: C/E is I⁶.
+                let figures = chord.inversion_figures(bass);
+                text += &match scale.figured_numeral(chord, bass) {
                     Some(numeral) if scale.is_diatonic(chord) => {
                         format!(", chord {numeral} of {key}.")
                     }
@@ -295,9 +297,15 @@ impl Harmony {
                             format!(", {numeral} borrowed from {}.", parallel.name())
                         }
                         (None, Some(target)) => format!(
-                            ", V{}/{} in {key}: a secondary dominant, the dominant of {}.",
-                            chord.quality.numeral_suffix(),
-                            scale.roman_numeral(target).unwrap_or_default(),
+                            ", {} in {key}: a secondary dominant, the dominant of {}.",
+                            with_figures(
+                                &format!(
+                                    "V{}/{}",
+                                    chord.quality.numeral_suffix(),
+                                    scale.roman_numeral(target).unwrap_or_default()
+                                ),
+                                figures
+                            ),
                             scale.chord_name(target)
                         ),
                         (None, None) => format!(", {numeral}, from outside {key}."),
@@ -429,7 +437,7 @@ mod tests {
         assert_eq!(describe(&[69]), "A: note 6 of C major.");
         assert_eq!(
             describe(&[64, 67, 72]),
-            "C/E: C major with E in the bass, chord I of C major."
+            "C/E: C major with E in the bass, chord I⁶ of C major."
         );
 
         let f_major = Scale::new(F, ScaleKind::Major);
@@ -448,6 +456,34 @@ mod tests {
 
     fn describe_in(scale: Scale, midi: &[u8]) -> String {
         analyze(notes(midi)).describe(scale)
+    }
+
+    #[test]
+    fn inversions_get_the_figures_of_figured_bass() {
+        let c = Scale::default();
+        // C major: root position, first and second inversion.
+        assert!(describe_in(c, &[60, 64, 67]).ends_with("chord I of C major."));
+        let first = describe_in(c, &[52, 60, 67]);
+        assert!(
+            first.starts_with("C/E: C major with E in the bass"),
+            "{first}"
+        );
+        assert!(first.ends_with("chord I⁶ of C major."), "{first}");
+        assert!(describe_in(c, &[55, 60, 64]).ends_with("chord I⁶₄ of C major."));
+        // G7 and its three inversions: V⁶₅, V⁴₃, V⁴₂.
+        assert!(describe_in(c, &[55, 59, 62, 65]).ends_with("chord V7 of C major."));
+        assert!(describe_in(c, &[59, 62, 65, 67]).ends_with("chord V⁶₅ of C major."));
+        assert!(describe_in(c, &[50, 65, 67, 71]).ends_with("chord V⁴₃ of C major."));
+        assert!(describe_in(c, &[53, 67, 71, 74]).ends_with("chord V⁴₂ of C major."));
+        // A secondary dominant keeps its target: E7/G# is V⁶₅/vi.
+        let e7 = describe_in(c, &[56, 62, 64, 71]);
+        assert!(e7.starts_with("E7/G#"), "{e7}");
+        assert!(e7.contains(", V⁶₅/vi in C major"), "{e7}");
+        // iiø7 in A minor, with its seventh in the bass.
+        let a = Scale::new(A, ScaleKind::NaturalMinor);
+        let half = describe_in(a, &[57, 59, 62, 65]);
+        assert!(half.starts_with("Bm7b5/A"), "{half}");
+        assert!(half.contains("chord iiø⁴₂ of A minor"), "{half}");
     }
 
     #[test]

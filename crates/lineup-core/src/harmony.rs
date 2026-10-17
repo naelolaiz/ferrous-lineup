@@ -38,6 +38,6 @@ pub use micromode::{Micromode, MicromodeFamily, micromode_content, micromodes_in
 pub use pitch_set::PitchSet;
 pub use progression::{Suggestion, next_chords};
 pub use row::{ROW_PRESETS, RowForm, RowLabel, RowPreset, ToneRow};
-pub use scale::{Scale, ScaleKind};
+pub use scale::{Scale, ScaleKind, with_figures};
 pub use set_class::{SetClass, digits, pc_digit};
 pub use symbol::ChordSymbol;

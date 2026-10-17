@@ -344,6 +344,49 @@ impl Chord {
             .collect()
     }
 
+    /// Which note of the chord `pitch_class` is, counted from the root as
+    /// [`ChordQuality::tones`] counts: 1 for the root, 3 for the third, 5
+    /// for the fifth, 7 for the seventh. `None` if it is not in the chord.
+    pub fn tone_of(self, pitch_class: PitchClass) -> Option<u8> {
+        let semitones = self.root.semitones_up_to(pitch_class);
+        self.quality
+            .intervals()
+            .iter()
+            .zip(self.quality.tones())
+            .find(|(interval, _)| **interval % 12 == semitones)
+            .map(|(_, &tone)| tone)
+    }
+
+    /// The figures of figured bass that say which inversion the chord is
+    /// in with `bass` lowest: a triad with its third in the bass is "⁶"
+    /// (the first inversion), with its fifth "⁶₄" (the second); a
+    /// seventh chord's three inversions are "⁶₅", "⁴₃" and "⁴₂". Empty in
+    /// root position, for a bass from outside the chord, and for chords
+    /// figured bass has no figures for (sus, sixth and ninth chords).
+    pub fn inversion_figures(self, bass: PitchClass) -> &'static str {
+        use ChordQuality::*;
+        let triad = matches!(self.quality, Major | Minor | Diminished | Augmented);
+        let seventh = matches!(
+            self.quality,
+            Dominant7
+                | Major7
+                | Minor7
+                | MinorMajor7
+                | HalfDiminished7
+                | Diminished7
+                | AugmentedMajor7
+                | Augmented7
+        );
+        match (self.tone_of(bass), triad, seventh) {
+            (Some(3), true, _) => "⁶",
+            (Some(5), true, _) => "⁶₄",
+            (Some(3), _, true) => "⁶₅",
+            (Some(5), _, true) => "⁴₃",
+            (Some(7), _, true) => "⁴₂",
+            _ => "",
+        }
+    }
+
     /// The chord symbol, such as "F#m7" or "Bbmaj7".
     pub fn name(self, spelling: Spelling) -> String {
         format!("{}{}", self.root.name(spelling), self.quality.symbol())

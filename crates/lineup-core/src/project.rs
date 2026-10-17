@@ -1401,6 +1401,23 @@ impl Project {
         chord_notes(self.parts_in_song(song_step))
     }
 
+    /// The notes the whole band holds while step `step` of pattern
+    /// `pattern` plays: where the pattern is first heard in the song, the
+    /// notes of every track then (see [`Project::chord_notes_in_song`]);
+    /// for a pattern not in the song, its own channels'. The piano roll
+    /// names the chord of all the tracks with these.
+    pub fn chord_notes_with_pattern(&self, pattern: usize, step: usize) -> Vec<Note> {
+        let first = self
+            .playlist
+            .audible_clips()
+            .filter(|clip| clip.pattern == pattern)
+            .min_by_key(|clip| clip.start);
+        match first {
+            Some(clip) => self.chord_notes_in_song(clip.start + step),
+            None => self.chord_notes_in_pattern(pattern, step),
+        }
+    }
+
     /// The notes held during timeline step `song_step` of the song by
     /// each channel that plays notes, one list per channel and clip.
     fn parts_in_song(&self, song_step: usize) -> Vec<Vec<Note>> {
@@ -1512,14 +1529,9 @@ impl Project {
 /// moment, spelled in `key`, with the band's lowest note after the slash
 /// when it is one of the chord's (see [`Project::write_heard_chords`]).
 fn heard_chord(parts: Vec<Vec<Note>>, key: Scale) -> Option<ChordSymbol> {
-    let lowest = parts.iter().flatten().min_by_key(|note| note.midi());
-    let lowest = lowest.map(|note| note.pitch_class());
-    let Harmony::Chord { chord, .. } = analyze(chord_notes(parts)) else {
+    let Harmony::Chord { chord, bass } = analyze(chord_notes(parts)) else {
         return None;
     };
-    let bass = lowest
-        .filter(|&low| chord.pitch_set().contains(low))
-        .unwrap_or(chord.root);
     let root = key.spell_root(chord);
     let symbol = ChordSymbol::new(root, chord.quality);
     if bass == chord.root {
@@ -1533,18 +1545,32 @@ fn heard_chord(parts: Vec<Vec<Note>>, key: Scale) -> Option<ChordSymbol> {
 
 /// The notes of the parts that hold two notes or more, or of all the
 /// parts if none does.
+///
+/// The lowest note of all the parts goes with them when it is one of
+/// their notes, lower down: a bass line playing E under a piano's C E G
+/// makes the whole band's chord C/E, its first inversion. A bass note
+/// from outside the chord (a passing note of a walking bass) is left
+/// out, so it does not hide the chord.
 fn chord_notes(parts: Vec<Vec<Note>>) -> Vec<Note> {
-    let chords: Vec<Note> = parts
+    let lowest = parts.iter().flatten().min().copied();
+    let mut chords: Vec<Note> = parts
         .iter()
         .filter(|part| part.len() >= 2)
         .flatten()
         .copied()
         .collect();
     if chords.is_empty() {
-        parts.into_iter().flatten().collect()
-    } else {
-        chords
+        return parts.into_iter().flatten().collect();
     }
+    if let Some(lowest) = lowest
+        && chords.iter().all(|note| lowest < *note)
+        && chords
+            .iter()
+            .any(|note| note.pitch_class() == lowest.pitch_class())
+    {
+        chords.push(lowest);
+    }
+    chords
 }
 
 impl Default for Project {
@@ -1608,6 +1634,28 @@ mod tests {
         project.change_key(Scale::new(PitchClass::G, ScaleKind::Major));
         let moved = project.pattern(1).unwrap().notes(channel);
         assert!(!moved.contains(&synth), "the C4 moved into G major");
+    }
+
+    #[test]
+    fn a_bass_line_under_the_chords_gives_their_inversion() {
+        let mut project = Project::demo();
+        let spelling = project.scale.spelling();
+        let label = |notes: Vec<Note>| analyze(notes).label(spelling);
+        let first = label(project.chord_notes_in_pattern(CHORDS, 0)).unwrap();
+        assert_eq!(first, "C");
+        let bass = project.add_channel(Channel::synth()).unwrap();
+        let chords = project.pattern_mut(CHORDS).unwrap();
+        // The bass plays E under C major: the band plays C/E.
+        chords.add_note(bass, NoteEvent::new(Note::new(28), 0, 4));
+        assert_eq!(label(project.chord_notes_in_song(0)).unwrap(), "C/E");
+        assert_eq!(
+            label(project.chord_notes_with_pattern(CHORDS, 0)).unwrap(),
+            "C/E"
+        );
+        // A D, not in the chord, is a passing note: still C.
+        let chords = project.pattern_mut(CHORDS).unwrap();
+        chords.set_notes(bass, vec![NoteEvent::new(Note::new(26), 0, 4)]);
+        assert_eq!(label(project.chord_notes_in_song(0)).unwrap(), "C");
     }
 
     #[test]

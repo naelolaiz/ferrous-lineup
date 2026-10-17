@@ -522,6 +522,15 @@ impl Scale {
         ))
     }
 
+    /// The Roman numeral of `chord` with `bass` lowest, with the figures
+    /// of figured bass for an inversion: C/E in C major is "I⁶", G7/F is
+    /// "V⁴₂". The figures stand in for a seventh chord's 7 ("V⁶₅", not
+    /// "V7⁶₅"). In root position it is [`Scale::roman_numeral`].
+    pub fn figured_numeral(self, chord: Chord, bass: PitchClass) -> Option<String> {
+        let numeral = self.roman_numeral(chord)?;
+        Some(with_figures(&numeral, chord.inversion_figures(bass)))
+    }
+
     /// Whether every note of the chord is in the scale.
     pub fn is_diatonic(self, chord: Chord) -> bool {
         chord.pitch_set().is_subset_of(self.pitch_set())
@@ -604,6 +613,23 @@ impl Default for Scale {
     fn default() -> Self {
         Scale::new(PitchClass::C, ScaleKind::Major)
     }
+}
+
+/// A numeral with inversion figures put in place of its 7: "V7" and
+/// "⁶₅" make "V⁶₅", "vii°7" and "⁴₂" make "vii°⁴₂", "I" and "⁶" make
+/// "I⁶". Used for secondary dominants too: "V7/vi" written as "V⁶₅/vi".
+pub fn with_figures(numeral: &str, figures: &str) -> String {
+    if figures.is_empty() {
+        return numeral.to_string();
+    }
+    // A secondary dominant's figures go on its own numeral, before the
+    // slash: V⁶₅/vi.
+    let (own, target) = match numeral.split_once('/') {
+        Some((own, target)) => (own, format!("/{target}")),
+        None => (numeral, String::new()),
+    };
+    let own = own.strip_suffix('7').unwrap_or(own);
+    format!("{own}{figures}{target}")
 }
 
 #[cfg(test)]
