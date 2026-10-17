@@ -167,6 +167,15 @@ exact time, even between two steps, and the tempo changes, time
 signatures and key come with it. The piano roll's Chords lane and the
 harmony keys then name the chords as it plays.
 
+**Sounds > SoundFont instruments** plays recordings of real instruments
+instead of the Lineup Osc: every channel with a General MIDI instrument
+(the demos' voices, the Library's piano and bass, the demo song's
+chords) and, with **SoundFont drums**, the drum kit. The first time, it
+offers to download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS),
+a free General MIDI SoundFont by S. Christian Collins (about 30 MB, kept
+for next time). **Choose SoundFont…** plays any other `.sf2` file
+instead. WAV export uses it too.
+
 Too small or too big? The same keys zoom whatever the pointer is over.
 Over the playlist or the piano roll, **Ctrl** with **+** and **−** or the
 mouse wheel (⌘ instead of Ctrl on a Mac) makes bars and steps wider or
@@ -207,7 +216,7 @@ They are not signed yet, so macOS and Windows warn before the first start.
 | Path | Contents |
 |------|----------|
 | `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
-| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
+| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, and offline rendering to WAV files. |
 | `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
 | `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
 
