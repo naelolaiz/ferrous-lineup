@@ -151,6 +151,16 @@ impl Area {
         }
     }
 
+    /// Where the pointer has to be for the zoom keys to zoom the area,
+    /// for the View menu: "Ctrl+Plus over the rack".
+    fn place(self) -> &'static str {
+        match self {
+            Area::Main => "playlist",
+            Area::Rack => "rack",
+            Area::PianoRoll => "piano roll",
+        }
+    }
+
     /// Whether the area zooms its two directions separately. The channel
     /// rack's steps are square buttons, so it zooms both at once.
     fn two_way(self) -> bool {
@@ -312,6 +322,24 @@ impl LoomApp {
                 format!("Interface size ({})", percent(ctx.zoom_factor())),
                 |ui| {
                     ui.weak("How big the text, buttons and menus are everywhere.");
+                    ui.weak("Its keys work with the pointer over the toolbars, the\nharmony keys, the status bar or the Patterns and Library panel.");
+                    let size = ctx.zoom_factor();
+                    let (low, high) = (INTERFACE_SIZES[0], INTERFACE_SIZES[INTERFACE_SIZES.len() - 1]);
+                    for (text, keys, enabled, bigger) in [
+                        ("Bigger", WIDER, size < high - 0.005, Some(true)),
+                        ("Smaller", NARROWER, size > low + 0.005, Some(false)),
+                        ("Reset to 100%", RESET, (size - 1.0).abs() > 0.005, None),
+                    ] {
+                        let keys = format!("{} over the toolbars", shortcut(keys));
+                        let button = egui::Button::new(text).shortcut_text(keys);
+                        if ui.add_enabled(enabled, button).clicked() {
+                            match bigger {
+                                Some(bigger) => Target::Interface.step(&ctx, Axis::Horizontal, bigger),
+                                None => Target::Interface.reset(&ctx),
+                            }
+                        }
+                    }
+                    ui.separator();
                     for size in INTERFACE_SIZES {
                         let chosen = (ctx.zoom_factor() - size).abs() < 0.01;
                         if ui.selectable_label(chosen, percent(size)).clicked() {
@@ -321,10 +349,7 @@ impl LoomApp {
                 },
             );
             ui.weak(
-                "Ctrl and + or − (or the wheel) zooms what the pointer is over:\n\
-                 the playlist, piano roll or channel rack, or the whole\n\
-                 interface over the toolbars and panels. Alt zooms tracks\n\
-                 and keys taller. Ctrl+0 goes back to 100%.",
+                "The zoom keys and the wheel zoom what the pointer is over.",
             );
             ui.separator();
             let window = |open: &mut bool, text: &str, shortcut, ui: &mut egui::Ui| {
@@ -456,7 +481,8 @@ fn zoom_title(ctx: &egui::Context, area: Area) -> String {
 fn zoom_items(ui: &mut egui::Ui, area: Area, shortcut: &dyn Fn(KeyboardShortcut) -> String) {
     let ctx = ui.ctx().clone();
     let item = |ui: &mut egui::Ui, text: &str, keys, axis, bigger| {
-        let button = egui::Button::new(text).shortcut_text(shortcut(keys));
+        let keys = format!("{} over the {}", shortcut(keys), area.place());
+        let button = egui::Button::new(text).shortcut_text(keys);
         if ui
             .add_enabled(area.can_step(&ctx, axis, bigger), button)
             .clicked()
@@ -497,7 +523,8 @@ fn zoom_items(ui: &mut egui::Ui, area: Area, shortcut: &dyn Fn(KeyboardShortcut)
         item(ui, "Zoom in", WIDER, Axis::Horizontal, true);
         item(ui, "Zoom out", NARROWER, Axis::Horizontal, false);
     }
-    let button = egui::Button::new("Reset to 100%").shortcut_text(shortcut(RESET));
+    let keys = format!("{} over the {}", shortcut(RESET), area.place());
+    let button = egui::Button::new("Reset to 100%").shortcut_text(keys);
     if ui.add_enabled(!area.is_reset(&ctx), button).clicked() {
         area.reset(&ctx);
     }
@@ -510,8 +537,16 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
     // The status bar lays this out right to left, so the vertical zoom
     // comes first, and + before −.
     for (axis, symbol, what) in [
-        (Axis::Vertical, "↕", "Taller or shorter tracks (Alt+wheel)"),
-        (Axis::Horizontal, "↔", "Wider or narrower bars (Ctrl+wheel)"),
+        (
+            Axis::Vertical,
+            "↕",
+            "Taller or shorter tracks (Alt+wheel over the playlist)",
+        ),
+        (
+            Axis::Horizontal,
+            "↔",
+            "Wider or narrower bars (Ctrl+wheel over the playlist)",
+        ),
     ] {
         let area = Area::Main;
         let zoom = area.zoom(&ctx, axis);
