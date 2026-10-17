@@ -184,7 +184,7 @@ pub static ROW_STYLES: [RowStyle; 7] = [
     RowStyle {
         name: "Row melody",
         about: "The row as a tune in eighth notes, then backwards: the simplest way to hear it.",
-        row: "Loom row",
+        row: "Lineup row",
         tempo: 96.0,
         time: TimeSignature::COMMON,
         bars: 3,
@@ -215,7 +215,7 @@ pub static ROW_STYLES: [RowStyle; 7] = [
         about: "Each bar holds half the row as a chord while the melody plays the other six \
                 notes from I3: every bar has all twelve notes. This is hexachordal \
                 combinatoriality.",
-        row: "Loom row",
+        row: "Lineup row",
         tempo: 84.0,
         time: THREE_FOUR,
         bars: 4,
@@ -268,7 +268,7 @@ pub static ROW_STYLES: [RowStyle; 7] = [
         name: "Twelve-tone lo-fi",
         about: "The row's trichords as chords over a lo-fi beat, its prime form in the bass: \
                 a row can groove too.",
-        row: "Loom row",
+        row: "Lineup row",
         tempo: 80.0,
         time: TimeSignature::COMMON,
         bars: 4,
@@ -289,7 +289,7 @@ pub static ROW_STYLES: [RowStyle; 7] = [
                 are all one micromode, Menor 3. The melody leaps over three octaves, as \
                 Webern's lines do, while each group sounds as a chord under it. Webern gave \
                 the groups to oboe, flute, trumpet and clarinet; this rhythm is Ferrous \
-                Loom's.",
+                Lineup's.",
         row: "Webern's Concerto",
         tempo: 80.0,
         time: TimeSignature::COMMON,

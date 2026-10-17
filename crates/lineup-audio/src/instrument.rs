@@ -1,4 +1,4 @@
-//! The instruments a channel can play: a sampler, the Loom Osc synth,
+//! The instruments a channel can play: a sampler, the Lineup Osc synth,
 //! and a MIDI Out that has an external synth play the notes. A sampler
 //! or a synth can also be turned into a MIDI Out when every channel is
 //! sent to the MIDI port (see [`Instrument::to_midi`]).
@@ -17,7 +17,7 @@ use crate::dsp::LowPass;
 use crate::sample::{SampleCache, SampleData, SampleError};
 use crate::timbre::{Timbre, Wave};
 
-/// How many notes the Loom Osc can play at once.
+/// How many notes the Lineup Osc can play at once.
 pub const SYNTH_VOICES: usize = 16;
 /// Sounds longer than this, in seconds, stop when playback stops.
 const LONG_SAMPLE_SECONDS: u64 = 10;
@@ -261,7 +261,7 @@ trait Voice {
 /// longest ago ("voice stealing"). Among the voices fading out, too, the
 /// oldest goes first.
 ///
-/// A fading voice is still busy for a while (the Loom Osc's release takes
+/// A fading voice is still busy for a while (the Lineup Osc's release takes
 /// most of a second to reach silence), but cutting its tail is far less
 /// noticeable than cutting a note that is still held, such as a long bass
 /// note under quick chords.
@@ -420,7 +420,7 @@ const SYNTH_VOICE_GAIN: f32 = 0.35;
 /// Below this volume (about -80 dB) a releasing voice counts as silent.
 const SILENT: f32 = 0.000_1;
 
-/// The Loom Osc: oscillators with a soft filter and an
+/// The Lineup Osc: oscillators with a soft filter and an
 /// attack-decay-sustain-release envelope, one per voice. Its [`Timbre`]
 /// says which wave, filter and envelope.
 #[derive(Debug, Clone)]
@@ -445,7 +445,7 @@ struct EnvelopeRates {
     /// The volume a held note settles at, after the decay.
     sustain: f32,
     wave: Wave,
-    /// How loud this timbre is, compared with the Loom Osc's own sound.
+    /// How loud this timbre is, compared with the Lineup Osc's own sound.
     gain: f32,
 }
 
@@ -565,12 +565,12 @@ impl SynthVoice {
 }
 
 impl Synth {
-    /// A Loom Osc with its own sound.
+    /// A Lineup Osc with its own sound.
     pub fn new(sample_rate: u32) -> Self {
-        Synth::with_timbre(sample_rate, Timbre::LOOM_OSC)
+        Synth::with_timbre(sample_rate, Timbre::LINEUP_OSC)
     }
 
-    /// A Loom Osc with the sound `timbre`.
+    /// A Lineup Osc with the sound `timbre`.
     pub fn with_timbre(sample_rate: u32, timbre: Timbre) -> Self {
         Synth {
             sample_rate: sample_rate as f32,
@@ -921,7 +921,7 @@ mod tests {
         let out = render(&mut synth, RATE as usize);
         assert!(out[..gate as usize].iter().any(|&s| s != 0.0));
         // After the release (10 time constants is plenty) it is silent.
-        let quiet_from = gate as usize + (10.0 * Timbre::LOOM_OSC.release * RATE as f32) as usize;
+        let quiet_from = gate as usize + (10.0 * Timbre::LINEUP_OSC.release * RATE as f32) as usize;
         assert!(out[quiet_from..].iter().all(|&s| s == 0.0));
         assert_eq!(synth.voices_playing(), 0);
     }
@@ -1224,7 +1224,7 @@ mod tests {
         piano.program = Some(lineup_core::general_midi::ACOUSTIC_GRAND_PIANO);
         let mut piano = Instrument::for_channel(&piano, RATE, &mut SampleCache::new()).unwrap();
         let mut osc = synth();
-        // A note held for four seconds: the piano dies away, the Loom Osc
+        // A note held for four seconds: the piano dies away, the Lineup Osc
         // keeps sounding.
         for instrument in [&mut piano, &mut osc] {
             instrument.note_on(Note::A4, 100, HELD, RATE);

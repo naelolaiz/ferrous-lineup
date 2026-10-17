@@ -622,9 +622,12 @@ mod tests {
         let style = Style::named("Four chords").unwrap();
         assert!(write_style(&mut project, 0, style, PitchClass::G, Some(0)));
         // The kick (channel 0) cannot play chords, so the template's
-        // Loom Osc gets them, and a Bass synth is added.
+        // Lineup Osc gets them, and a Bass synth is added.
         let names: Vec<&str> = project.channels().iter().map(|c| c.name.as_str()).collect();
-        assert_eq!(names, ["Kick", "Clap", "Hat", "Snare", "Loom Osc", "Bass"]);
+        assert_eq!(
+            names,
+            ["Kick", "Clap", "Hat", "Snare", "Lineup Osc", "Bass"]
+        );
         let pattern = project.pattern(0).unwrap();
         assert_eq!(pattern.length(), 64);
         assert!(!pattern.notes(4).is_empty() && !pattern.notes(5).is_empty());
