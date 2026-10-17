@@ -46,6 +46,7 @@ impl LoomApp {
         if self.history.undo(&mut self.project).is_some() {
             self.sync_audio(&before);
             self.restore_song_library();
+            self.keep_place_in_song(&before);
         }
     }
 
@@ -54,6 +55,7 @@ impl LoomApp {
         if self.history.redo(&mut self.project).is_some() {
             self.sync_audio(&before);
             self.restore_song_library();
+            self.keep_place_in_song(&before);
         }
     }
 

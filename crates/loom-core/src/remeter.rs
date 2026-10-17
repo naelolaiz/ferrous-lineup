@@ -24,9 +24,15 @@
 //! Everything that is placed in the song moves with its bar: clips,
 //! sections, the loop, and the tempo and key markers. The time markers
 //! go, since the whole song is now in one time signature.
+//!
+//! Each bar also keeps how long it lasts. The tempo counts quarter notes,
+//! so a 3/4 bar at the same tempo would be over in three quarters of the
+//! time, and the whole song would run faster. Instead the tempo goes down
+//! in the same proportion: 4/4 at 112 becomes 3/4 at 84, and the song
+//! keeps its pace. Only where the beats fall changes.
 
 use crate::pattern::{MAX_STEPS, TICKS_PER_STEP};
-use crate::{Clip, Meter, NoteEvent, Project, TimeSignature};
+use crate::{Clip, Meter, NoteEvent, Project, Tempo, TempoMarker, TimeSignature};
 
 /// Where a moment of a song goes when its bars change length: bar `n` of
 /// the old meter becomes bar `n` of the new time signature.
@@ -174,6 +180,32 @@ pub fn remeter(project: &mut Project, time: TimeSignature) -> bool {
         }
         pieces.push(indices);
     }
+
+    // Every bar keeps how long it lasts: the tempo changes as much as
+    // the bar's length in steps does, wherever the time signature
+    // changes too.
+    let meter = project.meter();
+    let tempos = project.tempo_map();
+    let ratio = |step: usize| bar as f32 / meter.time_at(step).steps_per_bar() as f32;
+    let mut markers: Vec<TempoMarker> = playlist
+        .tempo_markers()
+        .iter()
+        .map(|marker| TempoMarker {
+            tempo: Tempo::new(marker.tempo.bpm() * ratio(marker.start)),
+            ..*marker
+        })
+        .collect();
+    for change in meter.markers() {
+        let step = change.start;
+        let already = markers.iter().any(|marker| marker.start == step);
+        if !already && ratio(step) != ratio(step - 1) {
+            let bpm = tempos.tempo_at(step).bpm() * ratio(step);
+            markers.push(TempoMarker::new(step, bpm));
+        }
+    }
+    markers.sort_by_key(|marker| marker.start);
+    project.tempo = Tempo::new(project.tempo.bpm() * ratio(0));
+    project.playlist.tempo_markers = markers;
 
     // Everything on the playlist moves with its bar.
     let clips = &mut project.playlist.clips;
@@ -349,6 +381,47 @@ mod tests {
             [NoteEvent::new(Note::A4, 12, 12)]
         );
         assert_eq!(project.song_length(), 48);
+    }
+
+    #[test]
+    fn every_bar_lasts_as_long_as_before() {
+        let mut project = quarter_notes(4);
+        project.tempo = Tempo::new(112.0);
+        assert!(project.set_tempo_marker(TempoMarker::gliding(32, 100.0, 16)));
+        let seconds = |p: &Project| p.played_seconds(&p.arrangement());
+        let before = seconds(&project);
+        assert!(remeter(&mut project, THREE_FOUR));
+        assert_eq!(project.tempo.bpm(), 84.0);
+        assert_eq!(project.playlist().tempo_markers()[0].tempo.bpm(), 75.0);
+        assert!(
+            (seconds(&project) - before).abs() < 2e-3 * before,
+            "{} vs {before}",
+            seconds(&project)
+        );
+    }
+
+    #[test]
+    fn a_change_of_time_signature_keeps_its_pace_too() {
+        // Two bars of 4/4 at 120, two of 3/4: in 6/8 the 4/4 bars slow
+        // down to 90, and the 3/4 bars, already twelve steps, stay at 120.
+        let mut project = quarter_notes(2);
+        project.tempo = Tempo::new(120.0);
+        let mut waltz = Pattern::new("Waltz", 1, 24);
+        waltz.set_notes(0, [NoteEvent::new(Note::A4, 0, 12)]);
+        project.patterns.push(waltz);
+        project.add_clip(Clip::new(1, 0, 32)).unwrap();
+        assert!(project.set_time_marker(TimeMarker::new(32, THREE_FOUR)));
+        let seconds = |p: &Project| p.played_seconds(&p.arrangement());
+        let before = seconds(&project);
+        assert!(remeter(&mut project, SIX_EIGHT));
+        assert_eq!(project.tempo.bpm(), 90.0);
+        let marker = project.playlist().tempo_markers()[0];
+        assert_eq!((marker.start, marker.tempo.bpm()), (24, 120.0));
+        assert!(
+            (seconds(&project) - before).abs() < 2e-3 * before,
+            "{} vs {before}",
+            seconds(&project)
+        );
     }
 
     #[test]

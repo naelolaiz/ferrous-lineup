@@ -30,7 +30,6 @@ use loom_core::library::{
     FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, SONGS, STYLES,
     Song, Style, apply, micromodes, rows,
 };
-use loom_core::remeter::Remap;
 use loom_core::{Pattern, Project, Tempo};
 
 use super::LoomApp;
@@ -358,8 +357,11 @@ impl LoomApp {
                     apply::use_rhythm(project, rhythm)
                 }
             };
+            // A song put in another time signature keeps its pace (see
+            // `remeter`): the rhythm's own tempo would rush or drag it.
             if use_tempo
                 && change != apply::RhythmChange::default()
+                && change.time.is_none()
                 && let Some(bpm) = tempo
             {
                 project.scale_tempo(Tempo::new(bpm));
@@ -475,19 +477,25 @@ impl LoomApp {
 
     /// After the song changed time signature, keeps playing (or ready to
     /// play) the same bar, and the same place in it, as before.
-    fn keep_place_in_song(&mut self, before: &Project) {
-        if self.mode != PlayMode::Song
-            || before.meter() == self.project.meter()
-            || !self.project.playlist().time_markers().is_empty()
-        {
+    pub(super) fn keep_place_in_song(&mut self, before: &Project) {
+        if self.mode != PlayMode::Song || before.meter() == self.project.meter() {
             return;
         }
-        let played = before.played_meter(&before.playback_arrangement());
-        let remap = Remap::new(played, self.project.time_signature);
-        self.cursor = remap.step(self.cursor);
-        self.marker = remap.step(self.marker);
+        // Bar n, and the same part of it, in the song as it plays now.
+        let old = before.played_meter(&before.playback_arrangement());
+        let new = self
+            .project
+            .played_meter(&self.project.playback_arrangement());
+        let place = |step: usize| {
+            let bar = old.bar_at(step);
+            let into = (step - bar.start) as f64 / bar.length.max(1) as f64;
+            let target = new.bar(bar.number);
+            target.start + (into * target.length as f64).round() as usize
+        };
+        self.cursor = place(self.cursor);
+        self.marker = place(self.marker);
         if let Some(step) = self.playhead() {
-            self.send(loom_audio::Command::Seek(remap.step(step)));
+            self.send(loom_audio::Command::Seek(place(step)));
         }
     }
 
