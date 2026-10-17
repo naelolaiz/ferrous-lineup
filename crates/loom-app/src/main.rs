@@ -21,6 +21,7 @@ mod midi;
 mod piano_roll;
 mod playlist;
 mod theme;
+mod time_picker;
 mod twelve_tone;
 mod widgets;
 

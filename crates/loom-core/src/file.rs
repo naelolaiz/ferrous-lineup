@@ -87,7 +87,12 @@ pub const EXTENSION: &str = "loom";
 /// the triplets of an imported MIDI file (see [`NoteEvent::nudge`]).
 /// Older versions would move them onto the grid, so a project with one
 /// needs format 10.
-pub const FORMAT_VERSION: u32 = 10;
+///
+/// Format 11 added beats grouped in irregular ways, such as 7/8 counted
+/// 2+2+3. Older versions would read the 7/8 but draw a beat line on
+/// every eighth note, so a project with a grouping needs format 11. Any
+/// other time signature, such as 11/8 or 5/16, already fits in format 3.
+pub const FORMAT_VERSION: u32 = 11;
 
 /// The oldest format that can hold `project`.
 ///
@@ -126,7 +131,18 @@ pub fn format_for(project: &Project) -> u32 {
         .patterns()
         .iter()
         .any(|pattern| pattern.all_notes().any(|(_, note)| !note.is_on_grid()));
-    if has_notes_off_the_grid {
+    let has_grouped_beats = project.time_signature.is_grouped()
+        || project
+            .patterns()
+            .iter()
+            .any(|pattern| pattern.time.is_some_and(TimeSignature::is_grouped))
+        || playlist
+            .time_markers()
+            .iter()
+            .any(|marker| marker.time.is_grouped());
+    if has_grouped_beats {
+        11
+    } else if has_notes_off_the_grid {
         10
     } else if has_instruments {
         9
@@ -543,10 +559,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 11 might have fields we have never heard of. Only the
+        // Format 12 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 11, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(11)), "{error}");
+        let error = from_text("(format: 12, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(12)), "{error}");
     }
 
     #[test]
@@ -606,6 +622,24 @@ mod tests {
         let text = to_text(&project).unwrap();
         assert!(text.contains("format: 3,"), "{text}");
         assert!(text.contains("beats: 3"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn grouped_beats_need_format_eleven() {
+        let mut project = Project::template();
+        project.time_signature = "11/8".parse().unwrap();
+        let text = to_text(&project).unwrap();
+        assert!(
+            text.contains("format: 3,"),
+            "any numbers fit in format 3: {text}"
+        );
+
+        project.time_signature = "2+2+3/8".parse().unwrap();
+        assert!(project.set_time_marker(TimeMarker::new(28, "3+3+2+3/8".parse().unwrap())));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 11,"), "{text}");
+        assert!(text.contains("groups: ["), "{text}");
         assert_eq!(from_text(&text).unwrap(), project);
     }
 

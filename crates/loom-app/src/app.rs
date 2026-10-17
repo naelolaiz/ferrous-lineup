@@ -380,7 +380,7 @@ impl LoomApp {
         // the first beat of a bar it counts as being at its start: two
         // quick presses go back two bars, as on a tape machine.
         let into_bar = here - bar.start;
-        let at_start = into_bar == 0 || (self.playing && into_bar < bar.time.steps_per_beat());
+        let at_start = into_bar == 0 || (self.playing && into_bar < bar.time.first_beat());
         let target = if bars < 0 && !at_start {
             number + bars + 1
         } else {
