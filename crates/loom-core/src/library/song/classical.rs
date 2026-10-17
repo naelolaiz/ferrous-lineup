@@ -195,16 +195,23 @@ pub(super) const MINUET: Song = Song {
              C5:4 D5:2 C5 B4 A4 | B4:4 C5:2 B4 A4 G4 | A4:4 B4:2 A4 G4 F#4 | G4:12",
             "I | I | IV | I | ii | I | V | V | I | I | IV | I | ii | I | V | I",
         ),
+        // The first half of B is in D major: C sharp replaces C, and it
+        // ends on a D major cadence. The second half is back in G.
         Part::new(
-            "B",
+            "B in D",
             "B5:4 G5:2 A5 B5 G5 | A5:4 D5:2 E5 F#5 D5 | G5:4 E5:2 F#5 G5 D5 | C#5:4 B4:2 C#5 A4:4 | \
-             A4:2 B4 C#5 D5 E5 F#5 | G5:4 F#5 E5 | F#5:4 A4 C#5 | D5:12 | \
-             D5:4 G4:2 F#4 G4:4 | E5:4 G4:2 F#4 G4:4 | D5:4 C5 B4 | A4:2 G4 F#4 G4 A4:4 | \
+             A4:2 B4 C#5 D5 E5 F#5 | G5:4 F#5 E5 | F#5:4 A4 C#5 | D5:12",
+            "IV | I | ii | V | V | IV I V | I | I",
+        )
+        .in_key(D, Major),
+        Part::new(
+            "B in G",
+            "D5:4 G4:2 F#4 G4:4 | E5:4 G4:2 F#4 G4:4 | D5:4 C5 B4 | A4:2 G4 F#4 G4 A4:4 | \
              D4:2 E4 F#4 G4 A4 B4 | C5:4 B4 A4 | B4:2 D5 G4:4 F#4 | G4:12",
-            "I | V | vi | II | II | I V II | V | V | I | IV | I | V | V | IV I V | I V | I",
+            "I | IV | I | V | V | IV I V | I V | I",
         ),
     ],
-    form: &["A", "A", "B", "B"],
+    form: &["A", "A", "B in D", "B in G", "B in D", "B in G"],
     drums_from: 0,
     about: "From Anna Magdalena Bach's notebook, long thought to be by Bach himself. The B \
             part travels to D major, the key of the dominant, before coming home.",
@@ -808,17 +815,40 @@ pub(super) const DIES_IRAE_MOZART: Song = Song {
         ),
         Part::new(
             "Quantus tremor",
-            "F5:12 C5:4 | A4:4 F4:4 A4:4 C5:4 | Eb5:8 D5:8 | G5:12 D5:4 | B4:4 G4:4 B4:4 D5:4 | \
-             F5:8 E5:8 | E5:8 E5:8 | E5:8 D5:8 | D5:4 C5:4 B4:8 | A4:4 -:12",
-            "bIII | bIII | iii°7 | iv | iv | #iv°7 | v | bVII i | II7 | v",
+            "F5:12 C5:4 | A4:4 F4:4 A4:4 C5:4 | Eb5:8 D5:8 | G5:12 D5:4 | B4:4 G4:4 B4:4 D5:4",
+            "bIII | bIII | iii°7 | iv | iv",
         ),
+        // G sharp diminished seventh leads to A minor, and the second
+        // "Dies irae" stays there: the chorus sings it a fifth higher, to a
+        // new soprano line.
+        Part::new(
+            "Quantus tremor to A minor",
+            "F5:8 E5:8 | E5:8 E5:8 | E5:8 D5:8 | D5:4 C5:4 B4:8 | A4:4 -:12",
+            "vii°7 | i | bIII iv | V7 | i",
+        )
+        .in_key(A, HarmonicMinor),
+        Part::new(
+            "Dies irae in A minor",
+            "E5:8 E5:8 | E5:4 B4:4 -:8 | E5:8 E5:8 | E5:4 C5:4 -:4 A4:2 A4:2 | \
+             F5:4 E5:4 -:4 A4:2 A4:2 | D5:4 C5:4 E5:6 E5:2 | D5:4 C5:4 Bb4:4 A4:4 | \
+             A4:4 G#4:4 -:8 | -:16",
+            "i | i | V | i | iv i | V7 i | iv i bII i | V | V",
+        )
+        .in_key(A, HarmonicMinor),
     ],
-    form: &["Dies irae", "Quantus tremor", "Dies irae"],
+    form: &[
+        "Dies irae",
+        "Quantus tremor",
+        "Quantus tremor to A minor",
+        "Dies irae in A minor",
+    ],
     drums_from: 0,
     about: "The Day of Wrath as Mozart set it: D minor in bare octaves, D and A, the chorus \
             answering the strings' hammering. \"Quantus tremor\" climbs by step, F major, \
             then G minor, then A minor, each new key reached through a diminished seventh \
-            chord. The soprano line, from the Mutopia full score.",
+            chord. Then \"Dies irae\" comes back in A minor, with a new soprano line (the \
+            two bars the orchestra plays alone before it are left out). The soprano line, \
+            from the Mutopia full score.",
 };
 
 // Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BeethovenLv/O13/pathetique-2/pathetique-2.ly
@@ -885,11 +915,8 @@ pub(super) const MOONLIGHT_SONATA: Song = Song {
             "-:16 | -:16 | -:16 | -:16 | -:12 G#4:3 G#4:1",
             "i | i7 | bVI bII | V7 i Vsus4 V7 | i",
         ),
-        Part::new(
-            "Theme",
-            "G#4:12 G#4:3 G#4:1 | G#4:8 A4:8 | G#4:8 F#4:4 B4:4 | E4:4 -:12",
-            "V7 | i iv | bIII bVII7 | bIII",
-        ),
+        Part::new("Theme", "G#4:12 G#4:3 G#4:1 | G#4:8 A4:8", "V7 | i iv"),
+        Part::new("E major", "G#4:8 F#4:4 B4:4 | E4:4 -:12", "I V7 | I").in_key(E, Major),
         Part::new(
             "B minor",
             "-:12 G4:3 G4:1 | G4:12 G4:3 G4:1 | G4:12 F#4:4 | F#4:8 G4:4 E4:4 | F#4:8 F#4:8",
@@ -909,7 +936,14 @@ pub(super) const MOONLIGHT_SONATA: Song = Song {
         )
         .in_key(FSharp, HarmonicMinor),
     ],
-    form: &["Intro", "Theme", "B minor", "E minor", "F sharp minor"],
+    form: &[
+        "Intro",
+        "Theme",
+        "E major",
+        "B minor",
+        "E minor",
+        "F sharp minor",
+    ],
     drums_from: 0,
     about: "The first 23 bars of the Adagio sostenuto, in C sharp minor as Beethoven wrote it. \
             His right hand plays triplets under the tune from start to end; they do not fit \
@@ -956,22 +990,40 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
              F#2:4 F#3 E3 E2 | D#2:4 D#3 B2 B3 | E2:4 E3 D3 D2 | C#2:4 C#3 A2 A3 | \
              D3:4 D4 C#4 C#3 | B2:4 B3 G#3 E3",
         ),
+        // The A part ends in A major, the dominant: G sharp in bar 9, and
+        // a cadence in A.
         Part::new("First ending", AIR_ENDING, "")
-            .with_left("A3:4 D3 E3 E2 | A2:2 B2 C#3 D3 E3 G3 F#3 E3"),
-        Part::new("Second ending", AIR_ENDING, "").with_left("A3:4 D3 E3 E2 | A2:16"),
+            .with_left("A3:4 D3 E3 E2 | A2:2 B2 C#3 D3 E3 G3 F#3 E3")
+            .in_key(A, Major),
+        Part::new("Second ending", AIR_ENDING, "")
+            .with_left("A3:4 D3 E3 E2 | A2:16")
+            .in_key(A, Major),
+        // B goes through three keys: E minor (C and D sharp), B minor
+        // (A sharp, a cadence in bar 8) and A major (G sharp, a cadence in
+        // bar 12), before "B end" turns back to D.
         Part::new(
-            "B",
+            "B in E minor",
             "C#5:10 D5:1 C#5 B4 C#5 A4:2 | A5:12 C5:4 | B4:4 B5:6 A5:2 G5 F#5 | \
-             G5:9 F#5:1 E5 D5 C#5:2 B4 | A#4:2 B4 C#5:6 D5:2 E5:4 | _:2 F#5 G5:8 F#5:4 | \
-             E5:2 D5 C#5 B4 C#5 D5:1 E5 D5:4 | B4:16 | D5:10 F#5:2 E5 D5 | B5:12 A5:2 G#5 | \
-             E5:2 A5 A4:4 B4:6 C#5:1 D5 | C#5:6 B4:2 A4:8",
+             G5:9 F#5:1 E5 D5 C#5:2 B4",
             "",
         )
-        .with_left(
-            "A2:4 A3 G3 G2 | F#2:4 F#3 E3 E2 | D#2:4 D#3 F#3 B2 | E3:4 E4 D4 D3 | \
-             C#3:4 C#4 B3 B2 | A#2:4 B2 C#3 A#2 | B2:4 G3 E3 F#3 | B2:4 B3 A3 A2 | \
-             G#2:4 G#3 F#3 F#2 | E2:4 E3 D3 D2 | C#2:4 C#3 D3 E3 | A2:4 A3 G3 G2",
-        ),
+        .with_left("A2:4 A3 G3 G2 | F#2:4 F#3 E3 E2 | D#2:4 D#3 F#3 B2 | E3:4 E4 D4 D3")
+        .in_key(E, HarmonicMinor),
+        Part::new(
+            "B in B minor",
+            "A#4:2 B4 C#5:6 D5:2 E5:4 | _:2 F#5 G5:8 F#5:4 | \
+             E5:2 D5 C#5 B4 C#5 D5:1 E5 D5:4 | B4:16",
+            "",
+        )
+        .with_left("C#3:4 C#4 B3 B2 | A#2:4 B2 C#3 A#2 | B2:4 G3 E3 F#3 | B2:4 B3 A3 A2")
+        .in_key(B, HarmonicMinor),
+        Part::new(
+            "B in A major",
+            "D5:10 F#5:2 E5 D5 | B5:12 A5:2 G#5 | E5:2 A5 A4:4 B4:6 C#5:1 D5 | C#5:6 B4:2 A4:8",
+            "",
+        )
+        .with_left("G#2:4 G#3 F#3 F#2 | E2:4 E3 D3 D2 | C#2:4 C#3 D3 E3 | A2:4 A3 G3 G2")
+        .in_key(A, Major),
         Part::new("B end", AIR_B_END, "").with_left(AIR_B_END_LEFT),
         // The second time round is the end of the piece: the last note
         // has the Air's only fermata.
@@ -984,16 +1036,21 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
         "First ending",
         "A",
         "Second ending",
-        "B",
+        "B in E minor",
+        "B in B minor",
+        "B in A major",
         "B end",
-        "B",
+        "B in E minor",
+        "B in B minor",
+        "B in A major",
         "Last end",
     ],
     drums_from: 0,
     about: "The first violin's long held notes, each one breaking into quick figures, over \
             the continuo's bass in steady octave leaps, here on the Keys channel; the inner \
             parts are left out. The bass walks down the D major scale under the first held \
-            F sharp, as in Pachelbel's Canon. Each bar of Bach's is written as two bars \
+            F sharp, as in Pachelbel's Canon. The first half ends in A major; the second \
+            passes through E minor, B minor and A major before it finds D again. Each bar of Bach's is written as two bars \
             with the note values doubled, so his thirty-second notes fit in sixteenths.",
 };
 
