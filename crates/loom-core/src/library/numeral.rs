@@ -10,8 +10,12 @@
 //! lowers it by one. So the chords of a minor key are written i, ii°,
 //! bIII, iv, v, bVI, bVII. This is how most pop and jazz books write
 //! them, and it means one table of progressions works for every mode.
+//!
+//! A chord written by name, such as "Am7" or "G/B", becomes a
+//! [`RomanChord`] too once the key is known (see
+//! [`RomanChord::from_symbol`]), so charts can mix both.
 
-use crate::harmony::{Chord, ChordQuality};
+use crate::harmony::{Chord, ChordQuality, ChordSymbol, Scale};
 use crate::pitch::{PitchClass, Spelling};
 
 /// A chord relative to the tonic of a key: so many semitones above it,
@@ -25,12 +29,57 @@ pub struct RomanChord {
     /// front ("bII7") means it is written with flats, Db7 in C, not C#7.
     /// `None` means as the key is written.
     pub spelling: Option<Spelling>,
+    /// The bass note of a slash chord, in semitones above the tonic: in
+    /// C, the G/B of "C G/B Am" has 11, for B. `None` when the root is
+    /// in the bass.
+    pub bass: Option<u8>,
 }
 
 impl RomanChord {
     /// The chord in the key whose tonic is `tonic`.
     pub fn in_key(self, tonic: PitchClass) -> Chord {
         Chord::new(tonic.transpose(self.semitones as i32), self.quality)
+    }
+
+    /// The lowest note in the key whose tonic is `tonic`: the bass note
+    /// of a slash chord, or else the root.
+    pub fn bass_in_key(self, tonic: PitchClass) -> PitchClass {
+        tonic.transpose(i32::from(self.bass.unwrap_or(self.semitones)))
+    }
+
+    /// A chord written by name, counted from `tonic`: in A minor, Dm7 is
+    /// five semitones up (iv7) and E7/G# seven, with its bass eleven.
+    pub fn from_symbol(symbol: ChordSymbol, tonic: PitchClass) -> RomanChord {
+        let spelling = match symbol.root.accidental {
+            0 => None,
+            sharps if sharps > 0 => Some(Spelling::Sharps),
+            _ => Some(Spelling::Flats),
+        };
+        RomanChord {
+            semitones: tonic.semitones_up_to(symbol.root.pitch_class()),
+            quality: symbol.quality,
+            spelling,
+            bass: symbol
+                .bass
+                .map(|bass| tonic.semitones_up_to(bass.pitch_class())),
+        }
+    }
+
+    /// The chord's symbol in `key`, spelled as the key writes it: V7 in
+    /// D minor is A7, and with its third in the bass, A7/C#. A bass note
+    /// in the chord is spelled as the chord's own note, and one outside
+    /// it as the key spells it.
+    pub fn symbol_in(self, key: Scale) -> ChordSymbol {
+        let chord = self.in_key(key.root);
+        let root = key.spell_root(chord);
+        let symbol = ChordSymbol::new(root, self.quality);
+        match self.bass {
+            Some(_) => {
+                let bass = self.bass_in_key(key.root);
+                symbol.over(chord.spell_note(root, bass).unwrap_or(key.spell(bass)))
+            }
+            None => symbol,
+        }
     }
 }
 
@@ -117,6 +166,7 @@ pub fn parse(text: &str) -> Option<RomanChord> {
         semitones,
         quality,
         spelling,
+        bass: None,
     })
 }
 
@@ -180,5 +230,26 @@ mod tests {
             .collect();
         assert_eq!(names, ["Am", "G", "F", "E"]);
         assert_eq!(parse_progression("I V nope"), None);
+    }
+
+    #[test]
+    fn chords_by_name_are_counted_from_the_tonic() {
+        use crate::harmony::ScaleKind;
+        let symbol = |text: &str| ChordSymbol::parse(text).unwrap();
+        let a_minor = Scale::new(PitchClass::A, ScaleKind::HarmonicMinor);
+        let iv7 = RomanChord::from_symbol(symbol("Dm7"), PitchClass::A);
+        assert_eq!((iv7.semitones, iv7.quality, iv7.bass), (5, Minor7, None));
+        let v = RomanChord::from_symbol(symbol("E7/G#"), PitchClass::A);
+        assert_eq!((v.semitones, v.quality, v.bass), (7, Dominant7, Some(11)));
+        assert_eq!(v.bass_in_key(PitchClass::A), PitchClass::GSharp);
+        assert_eq!(v.symbol_in(a_minor).to_string(), "E7/G#");
+        // The same numerals in D minor: the third of A7 is C#, not Db.
+        let d_minor = Scale::new(PitchClass::D, ScaleKind::HarmonicMinor);
+        assert_eq!(v.symbol_in(d_minor).to_string(), "A7/C#");
+        // A bass outside the chord is spelled as the key spells it.
+        let over_g = RomanChord::from_symbol(symbol("F/G"), PitchClass::C);
+        let bb_major = Scale::new(PitchClass::ASharp, ScaleKind::Major);
+        assert_eq!(over_g.symbol_in(bb_major).to_string(), "Eb/F");
+        assert_eq!(parse("V7").unwrap().symbol_in(d_minor).to_string(), "A7");
     }
 }
