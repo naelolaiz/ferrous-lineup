@@ -31,7 +31,7 @@ Early development. Runs on Linux, macOS and Windows.
 | 7 | MIDI in and out: keyboards, external synths, recording, chord names as you play, `.mid` export | Done |
 | 8 | Harmony keys, time signatures, a library of styles and rhythms, public-domain songs as demos | Done |
 | Spike | Import a recording: tempo, key and chords heard from an MP3 or WAV file | Done |
-| 9 | The band: chord names, a chord sheet the band plays, song form, swing, instrument sounds | In progress |
+| 9 | The band: chord names, a chord sheet the band plays, song form, swing, instrument sounds, lead sheets | In progress |
 
 ## Build and run
 
@@ -222,6 +222,18 @@ on the harmony keys with the chord names hidden. Every answer is
 explained with its notes spelled out, and any answer can be played next
 to the right one. The song and its file are left as they are.
 
+**View > Lead sheet** writes the song out the way a band reads it: the
+tune in notation on one staff, the chord symbols above it, and the key
+and time signatures, sections and repeats, laid out on A4 or Letter
+pages. The melody is the channel called Lead (or else the highest one;
+any other can be picked), and every note is spelled for the key and the
+chord that sounds, so a G♯ over E7 stays G♯ and an A♭ over Fm stays A♭.
+**None: chords only** writes rhythm slashes under the chords instead.
+While the song plays, the bar that sounds lights up. **Export PDF…**
+saves the sheet to print or share, and **Print…** opens it in your PDF
+viewer. The music is drawn with the Bravura font and the words with
+Inter, both free fonts that come with the app.
+
 Too small or too big? The same keys zoom whatever the pointer is over.
 Over the playlist or the piano roll, **Ctrl** with **+** and **−** or the
 mouse wheel (⌘ instead of Ctrl on a Mac) makes bars and steps wider or
@@ -256,12 +268,14 @@ They are not signed yet, so macOS and Windows warn before the first start.
 | Kröpfl's twelve micromodes, and the ones in the notes you select. | Every set lists its micromodes, and each one links back. |
 | ![The chord sheet over the playlist: Rhythm changes in C, two choruses of eight bars, each chord with its Roman numeral, and the hint bar describing A7 as V7/ii](screenshots/chord-sheet.png) | ![The chord sheet of a micromode demo in the set 3-3: every bar holds Menor 3 moved to other notes, with the notes under each name](screenshots/chord-sheet-micromodes.png) |
 | The chord sheet: the song's chords bar by bar, with their numerals. | A bar can hold a set, a micromode or a row form instead of a chord. |
+| ![The lead sheet of I Got Rhythm in B flat major: the melody on a treble staff with the chord symbols above it, four bars to a line](screenshots/lead-sheet.png) | ![The same lead sheet with None: chords only picked, four slashes in every bar under the chord symbols](screenshots/lead-sheet-chords.png) |
+| The lead sheet: the tune in notation with its chords, ready to print. | Chords only: rhythm slashes for players who make up their own part. |
 
 ## Project layout
 
 | Path | Contents |
 |------|----------|
-| `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
+| `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, lead sheets laid out on pages, and the library of styles, rhythms and songs. No audio, no UI. |
 | `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, and offline rendering to WAV files. |
 | `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
 | `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
@@ -269,3 +283,9 @@ They are not signed yet, so macOS and Windows warn before the first start.
 ## License
 
 GPL-3.0-or-later. See [LICENSE](LICENSE).
+
+The lead sheet fonts in `crates/lineup-app/assets/fonts` are under the
+SIL Open Font License 1.1, with their licenses beside them:
+[Bravura](https://github.com/steinbergmedia/bravura) by Steinberg Media
+Technologies and [Inter](https://github.com/rsms/inter) by The Inter
+Project Authors.
