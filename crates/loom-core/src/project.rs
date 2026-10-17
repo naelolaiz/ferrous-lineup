@@ -10,7 +10,7 @@ use crate::harmony::Scale;
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
 use crate::meter::{Meter, TimeMarker, TimeSignature};
-use crate::pattern::{MAX_STEPS, NoteEvent, Pattern};
+use crate::pattern::{NoteEvent, Pattern};
 use crate::playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Section, Track,
 };
@@ -770,11 +770,7 @@ impl Project {
     /// fit in a pattern.
     pub fn set_time_marker(&mut self, marker: TimeMarker) -> bool {
         let time = marker.time;
-        if marker.start >= MAX_SONG_STEPS
-            || time.beats == 0
-            || time.unit == 0
-            || time.steps_per_bar() > MAX_STEPS
-        {
+        if marker.start >= MAX_SONG_STEPS || !time.is_valid() {
             return false;
         }
         if marker.start == 0 {

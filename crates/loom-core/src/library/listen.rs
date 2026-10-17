@@ -227,9 +227,11 @@ pub fn hear_chords(
     }
     let heard = Heard::new(chords, bass, length);
     let candidates = every_chord();
-    let beat = time.steps_per_beat().max(1);
     let bar = time.steps_per_bar().max(1);
-    let lines: Vec<usize> = (0..length).step_by(beat).chain([length]).collect();
+    let lines: Vec<usize> = (0..length)
+        .filter(|&step| time.is_beat_start(step))
+        .chain([length])
+        .collect();
 
     // best[i]: the best score for the beats before line i, and where its
     // last stretch starts and what it plays.

@@ -288,7 +288,9 @@ fn tempo_track(
         let tick = marker.start as u32 * TICKS_PER_STEP;
         let signature = marker.time;
         let unit_power = signature.unit.max(1).ilog2() as u8;
-        let clocks = (signature.steps_per_beat() * 6).min(255) as u8;
+        // A grouped bar, such as 2+2+3/8, has beats of different
+        // lengths, and MIDI has room for only one: it clicks every note.
+        let clocks = (signature.ungrouped().first_beat() * 6).min(255) as u8;
         events.push((
             tick,
             TIME_SIGNATURE,

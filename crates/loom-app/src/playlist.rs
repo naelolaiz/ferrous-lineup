@@ -204,7 +204,7 @@ impl Snap {
         let bar = meter.bar_at(step);
         match self {
             Snap::Bar => bar.end(),
-            Snap::Beat => (meter.floor_to_beat(step) + bar.time.steps_per_beat()).min(bar.end()),
+            Snap::Beat => meter.beat_end(step).min(bar.end()),
             Snap::Step => step + 1,
         }
     }
@@ -925,15 +925,18 @@ fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) 
     }
     let bottom = layout.track_top(layout.rows());
     for bar in meter.bars().take_while(|bar| bar.start <= steps) {
-        let beat = bar.time.steps_per_beat();
         // Zoomed far out, beat lines would melt into a grey blur: then
-        // only the bar lines are drawn.
-        let beat = if beat as f32 * layout.step_width < 4.0 {
-            bar.length.max(1)
+        // only the bar lines are drawn. The shortest beat decides, as the
+        // beats of a grouped bar such as 2+2+3/8 are not all as long.
+        let shortest = bar.time.groups().into_iter().min().unwrap_or(1);
+        let shortest =
+            usize::from(shortest) * bar.time.steps_per_bar() / usize::from(bar.time.beats.max(1));
+        let lines: Vec<usize> = if shortest as f32 * layout.step_width < 4.0 {
+            vec![bar.start]
         } else {
-            beat
+            bar.beat_starts().collect()
         };
-        for step in (bar.start..bar.end().min(steps + 1)).step_by(beat) {
+        for step in lines.into_iter().filter(|&step| step <= steps) {
             let color = if step == bar.start {
                 BAR_LINE
             } else {

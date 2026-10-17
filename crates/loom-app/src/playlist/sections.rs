@@ -25,10 +25,11 @@ use eframe::egui::{
 };
 use loom_core::{
     KeyMarker, LoopRegion, MAX_REPEATS, Pass, PitchClass, Project, SECTION_NAMES, Scale, ScaleKind,
-    Section, TimeMarker, TimeSignature,
+    Section, TimeMarker,
 };
 
 use super::{Layout, PlaylistAction, Snap};
+use crate::time_picker::time_picker;
 
 /// How close to a section's right edge the pointer must be to resize it.
 const EDGE: f32 = 6.0;
@@ -252,7 +253,11 @@ impl Strips {
             self.time_menu = meter.floor_to_bar(layout.step_at(pos.x));
         }
         let at = self.time_menu;
-        response.context_menu(|ui| time_menu(ui, project, at, actions));
+        // The menu holds fields to type a time signature in, so it must
+        // stay open while typing: only a click outside closes it.
+        egui::Popup::context_menu(&response)
+            .close_behavior(PopupCloseBehavior::CloseOnClickOutside)
+            .show(|ui| time_menu(ui, project, at, actions));
         let region = project.playlist().loop_region();
         let painter = ui.painter_at(ruler);
 
@@ -304,18 +309,9 @@ fn time_menu(ui: &mut Ui, project: &Project, at: usize, actions: &mut Vec<Playli
         .iter()
         .find(|marker| marker.start == at);
     ui.label(format!("Time signature from bar {}", bar.number + 1));
-    ui.horizontal_wrapped(|ui| {
-        ui.set_max_width(220.0);
-        for time in TimeSignature::ALL {
-            if ui
-                .selectable_label(bar.time == time, time.to_string())
-                .clicked()
-            {
-                actions.push(PlaylistAction::SetTimeMarker(TimeMarker::new(at, time)));
-                ui.close();
-            }
-        }
-    });
+    if let Some(time) = time_picker(ui, egui::Id::unique(("time-from", at)), bar.time) {
+        actions.push(PlaylistAction::SetTimeMarker(TimeMarker::new(at, time)));
+    }
     if at == 0 {
         ui.weak("Bar 1 sets the time signature the song starts in.");
     }

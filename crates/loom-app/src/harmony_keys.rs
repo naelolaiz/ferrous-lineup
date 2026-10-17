@@ -28,6 +28,7 @@ use loom_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords};
 use loom_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
 
 use crate::piano_roll::{KEY_HELP, both_names};
+use crate::time_picker::{describe_time, time_picker};
 
 /// Something the user did in the harmony keys bar.
 #[derive(Debug, Clone, PartialEq)]
@@ -516,20 +517,20 @@ impl HarmonyKeys {
         ui.horizontal(|ui| {
             ui.strong("Time");
             let time = project.time_signature;
-            let mut chosen = time;
+            let mut chosen = None;
+            // The list holds fields to type a time signature in, so it
+            // must stay open while typing: only a click outside closes it.
             egui::ComboBox::from_id_salt("harmony-time")
                 .width(56.0)
-                .height(320.0)
+                .height(420.0)
+                .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
                 .selected_text(egui::RichText::new(time.to_string()).strong())
                 .show_ui(ui, |ui| {
-                    for option in TimeSignature::ALL {
-                        ui.selectable_value(&mut chosen, option, option.to_string())
-                            .on_hover_text(describe_time(option));
-                    }
+                    chosen = time_picker(ui, egui::Id::unique("harmony-time-picker"), time);
                 })
                 .response
                 .on_hover_text(describe_time(time));
-            if chosen != time {
+            if let Some(chosen) = chosen.filter(|&chosen| chosen != time) {
                 actions.push(HarmonyAction::SetTime(chosen));
             }
             ui.weak(format!("{} steps a bar", time.steps_per_bar()));
@@ -1001,21 +1002,6 @@ fn describe_key(key: &ChordKey, scale: Scale, level: HintLevel) -> String {
         ),
         (HintLevel::Short, None) => format!("{chord}. Key {digit}."),
         (HintLevel::Minimal, _) => chord,
-    }
-}
-
-/// What a time signature means, for its tooltip.
-fn describe_time(time: TimeSignature) -> String {
-    let beats = time.beats;
-    match time.unit {
-        4 => format!("{beats} quarter-note beats to the bar"),
-        8 if time.steps_per_beat() == 6 => format!(
-            "{beats} eighth notes to the bar, felt as {} beats of three",
-            beats / 3
-        ),
-        8 if beats == 3 => "3 eighth notes to the bar, felt as one quick beat".to_string(),
-        8 => format!("{beats} eighth notes to the bar, in groups of two and three"),
-        _ => format!("{beats} beats of 1/{} to the bar", time.unit),
     }
 }
 
