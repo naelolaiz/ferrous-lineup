@@ -814,13 +814,13 @@ impl PianoRoll {
         // A chord held on a keyboard comes first: it is what you are
         // thinking about right now.
         let held_chord = match analyze(held.iter().copied()) {
-            Harmony::Chord { chord, .. } => Some((ChordAt::Keys, chord)),
+            Harmony::Chord { chord, bass } => Some((ChordAt::Keys, chord, bass)),
             _ => None,
         };
         let current = held_chord.or_else(|| {
             let step = self.last_step.or(playhead)?;
             match analyze(sounding(pattern, &heard, step)) {
-                Harmony::Chord { chord, .. } => Some((ChordAt::Step(step), chord)),
+                Harmony::Chord { chord, bass } => Some((ChordAt::Step(step), chord, bass)),
                 _ => None,
             }
         });
@@ -1265,7 +1265,7 @@ impl PianoRoll {
         &self,
         ui: &mut Ui,
         scale: Scale,
-        current: Option<(ChordAt, Chord)>,
+        current: Option<(ChordAt, Chord, PitchClass)>,
         compact: bool,
         actions: &mut Vec<RollAction>,
     ) -> String {
@@ -1277,7 +1277,7 @@ impl PianoRoll {
             return String::new();
         }
         let suggestions = current
-            .map(|(_, chord)| next_chords(scale, chord))
+            .map(|(_, chord, _)| next_chords(scale, chord))
             .unwrap_or_default();
         ui.horizontal_wrapped(|ui| {
             ui.label(format!("Chords in {}", scale.name()));
@@ -1334,14 +1334,17 @@ impl PianoRoll {
                 }
                 HintLevel::Minimal => String::new(),
             },
-            Some((at, chord)) => {
-                let name = scale.chord_name(chord);
+            Some((at, chord, bass)) => {
+                // Named as it sounds, inversion and all: "C/E (I⁶)".
+                let name = Harmony::Chord { chord, bass }
+                    .label_in(scale)
+                    .unwrap_or_else(|| scale.chord_name(chord));
                 let place = match at {
                     ChordAt::Step(step) => format!("at step {}", step + 1),
                     ChordAt::Keys => "on the keys".to_string(),
                 };
                 let numeral = scale
-                    .roman_numeral(chord)
+                    .figured_numeral(chord, bass)
                     .map(|numeral| format!(" ({numeral})"))
                     .unwrap_or_default();
                 let next: Vec<String> = suggestions
