@@ -83,11 +83,16 @@ pub(super) const BEETHOVENS_FIFTH: Song = Song {
          G4 Eb5 Eb5 Eb5 C5:8 | -:2 G4:2 G4 G4 D4 Ab4 Ab4 Ab4 | G4 F5 F5 F5 D5:8 | \
          D5:2 G5 G5 F5 Eb5:8 | D5:2 G5 G5 F5 Eb5:8 | D5:2 G5 G5 F5 Eb5:4 -:4 | C5:4 -:4 G5:8",
         "i | V7 | i bVI | i | i vii°7 | V7 | V7 i | V7 i | V7 i | II7 V",
-    )],
+    )
+    // The score's fermatas: the held E flat and D of the motif, and the
+    // G before the music breaks off again (bars 2, 5 and 21).
+    .with_tempo(&[fermata(8, 8), fermata(24, 8), fermata(152, 8)])],
     form: &["Motif", "Motif", "Motif"],
     drums_from: 0,
     about: "Four notes, short-short-short-long, are the whole idea: Beethoven builds the \
-            movement by repeating them a step lower, then higher. A riff, long before rock.",
+            movement by repeating them a step lower, then higher. A riff, long before rock. \
+            The long notes carry fermatas in the score: the music stops and waits on them, \
+            then rushes on.",
 };
 
 pub(super) const YANKEE_DOODLE: Song = Song {

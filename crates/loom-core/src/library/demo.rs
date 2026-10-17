@@ -9,15 +9,16 @@
 use crate::meter::{TimeMarker, TimeSignature};
 use crate::playlist::{Clip, Section};
 use crate::project::Project;
-use crate::tempo::Tempo;
+use crate::tempo::{Tempo, TempoMarker};
 
 use super::apply::{self, LEAD};
 use super::chart::accompany;
 use super::comping::Bass;
+use super::interpret::{self, Role};
 use super::micromodes::{self, MicromodeStyle};
 use super::rhythm::{FILLS, RHYTHMS, Rhythm};
 use super::rows::{self, DEMO_SECTIONS, RowStyle};
-use super::song::{Part, Song};
+use super::song::{Part, Song, TempoMark};
 use super::style::Style;
 use crate::pattern::NoteEvent;
 use crate::pitch::PitchClass;
@@ -131,6 +132,58 @@ pub fn style_demo(style: &Style) -> Project {
     project
 }
 
+/// Puts a tempo marking of a part that starts on step `part_start` on
+/// the playlist.
+fn mark_tempo(project: &mut Project, part_start: usize, mark: TempoMark) {
+    match mark {
+        TempoMark::At { at, bpm } => {
+            project.set_tempo_marker(TempoMarker::new(part_start + at, f32::from(bpm)));
+        }
+        TempoMark::Glide { at, bpm, over } => {
+            project.set_tempo_marker(TempoMarker::gliding(part_start + at, f32::from(bpm), over));
+        }
+        TempoMark::Fermata { at, steps } => {
+            let start = part_start + at;
+            let before = project.tempo_map().tempo_at(start).bpm();
+            // Twice as long is half as fast, for as long as the held
+            // note lasts; then on at the tempo before.
+            project.set_tempo_marker(TempoMarker::new(start, before / 2.0));
+            project.set_tempo_marker(TempoMarker::new(start + steps, before));
+        }
+    }
+}
+
+/// The genres whose demos slow down a little at the very end, as a
+/// player does where the music has no beat to keep: songs, hymns and
+/// concert pieces. Dance music and anything over a drum machine keeps
+/// its tempo to the last beat.
+fn ends_broadening(song: &Song) -> bool {
+    use super::Genre::*;
+    matches!(song.genre, Classical | Folk | Soul | Tango | Folklore)
+}
+
+/// The step the last bar of the song's last part starts on, when the
+/// song's last part ends on step `end`, and the part has no tempo
+/// markings of its own (the score then already says how it ends).
+fn last_bar(song: &Song, end: usize) -> Option<usize> {
+    let part = song.form.last().and_then(|name| song.part(name))?;
+    if !part.tempo.is_empty() {
+        return None;
+    }
+    end.checked_sub(song.part_time(part).steps_per_bar())
+}
+
+/// A *poco rit.*, a little slowing down, over the last bar of the music,
+/// to nine tenths of the tempo, which the final chord keeps.
+fn broaden_the_end(project: &mut Project, song: &Song, bar: usize) {
+    if !ends_broadening(song) || bar == 0 {
+        return;
+    }
+    let tempo = project.tempo_map().tempo_at(bar).bpm();
+    let length = project.meter().bar_at(bar).length;
+    project.set_tempo_marker(TempoMarker::gliding(bar, tempo * 0.9, length));
+}
+
 /// A demo of a twelve-tone style: the piece as written (P), backwards
 /// (R), upside down (I) and both (RI), each a section of the song, and as
 /// written once more to end. With a rhythm, the drums come in after the
@@ -227,9 +280,13 @@ fn arrange_sections(
     project.remove_unused_tracks();
 }
 
-/// The notes of a part's melody, one copy per voice, inside the part.
-fn melody_notes(part: &Part, bar: usize, length: usize) -> Vec<NoteEvent> {
-    let melody = part.melody();
+/// The notes of a part's melody, one copy per voice, inside the part,
+/// played with the accents of a performance (see [`interpret`]).
+fn melody_notes(song: &Song, part: &Part, time: TimeSignature, length: usize) -> Vec<NoteEvent> {
+    let bar = time.steps_per_bar();
+    let mut melody = part.melody();
+    let seed = interpret::seed(song.name, part.name, LEAD);
+    interpret::perform(&mut melody.notes, time, Role::Melody, seed);
     let mut notes = Vec::new();
     for &voice in part.voices {
         let offset = voice as isize * bar as isize;
@@ -279,14 +336,17 @@ pub fn song_demo(song: &Song) -> Project {
         } else {
             new_pattern(&mut project, part.name, length)
         };
-        let melody = melody_notes(part, bar, length);
-        let (chords, bass_line) = if part.left.is_empty() {
+        let melody = melody_notes(song, part, time, length);
+        let (mut chords, mut bass_line) = if part.left.is_empty() {
             let tonic = song.part_scale(part).root;
             let backing = accompany(&part.spans(bar), tonic, song.comping, song.bass);
             (backing.chords, backing.bass)
         } else {
             (part.left().notes, Vec::new())
         };
+        let seed = |channel| interpret::seed(song.name, part.name, channel);
+        interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
+        interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
         if let Some(pattern) = project.pattern_mut(index) {
             if let Some(lead) = lead {
                 pattern.set_notes(lead, melody);
@@ -339,6 +399,11 @@ pub fn song_demo(song: &Song) -> Project {
             project.set_time_marker(TimeMarker::new(at, time));
             time_here = time;
         }
+        if let Some(part) = song.part(name) {
+            for &mark in part.tempo {
+                mark_tempo(&mut project, at, mark);
+            }
+        }
         project.add_clip(Clip::new(pattern, SONG_TRACK, at));
         if entry >= song.drums_from
             && let Some(&(_, drum)) = drums.iter().find(|(part, _)| part == name)
@@ -348,6 +413,9 @@ pub fn song_demo(song: &Song) -> Project {
         at += length;
     }
     project.add_clip(Clip::new(end, SONG_TRACK, at));
+    if let Some(bar) = last_bar(song, at) {
+        broaden_the_end(&mut project, song, bar);
+    }
     project.remove_unused_tracks();
     project
 }
@@ -452,6 +520,7 @@ mod tests {
             voices: &[0],
             time: Some(waltz),
             key: None,
+            tempo: &[],
         };
         let first = song.form[0];
         let parts: &'static [Part] =
@@ -513,10 +582,70 @@ mod tests {
     }
 
     #[test]
+    fn tempo_markings_go_on_the_playlist() {
+        let mut project = Project::empty();
+        project.tempo = Tempo::new(100.0);
+        mark_tempo(&mut project, 32, TempoMark::At { at: 0, bpm: 120 });
+        mark_tempo(&mut project, 32, TempoMark::Fermata { at: 8, steps: 4 });
+        mark_tempo(
+            &mut project,
+            32,
+            TempoMark::Glide {
+                at: 16,
+                bpm: 60,
+                over: 8,
+            },
+        );
+        let map = project.tempo_map();
+        let bpm = |step| map.tempo_at(step).bpm();
+        assert_eq!(bpm(31), 100.0);
+        assert_eq!(bpm(32), 120.0);
+        // The fermata: half as fast for the four steps it holds.
+        assert_eq!((bpm(40), bpm(43), bpm(44)), (60.0, 60.0, 120.0));
+        assert_eq!(bpm(55), 60.0);
+    }
+
+    #[test]
+    fn songs_and_hymns_slow_down_a_little_at_the_end() {
+        let ends_at = |name: &str| {
+            let song = Song::named(name).unwrap();
+            let project = song_demo(song);
+            let map = project.tempo_map();
+            let end = project.song_length();
+            (song.tempo, map.tempo_at(end - 1).bpm())
+        };
+        // A hymn broadens to nine tenths of its tempo...
+        let (tempo, last) = ends_at("Amazing Grace");
+        assert!((last - tempo * 0.9).abs() < 0.01, "{tempo} {last}");
+        // ...a dance track does not.
+        let (tempo, last) = ends_at("Ode to Joy");
+        assert_eq!(last, tempo);
+    }
+
+    #[test]
+    fn every_demo_keeps_a_sensible_tempo() {
+        for song in SONGS {
+            let project = song_demo(song);
+            let map = project.tempo_map();
+            for marker in map.markers() {
+                let ratio = marker.tempo.bpm() / song.tempo;
+                assert!(
+                    (0.3..=2.5).contains(&ratio),
+                    "{}: {} BPM on step {}",
+                    song.name,
+                    marker.tempo.bpm(),
+                    marker.start
+                );
+                assert!(marker.start < project.song_length(), "{}", song.name);
+            }
+        }
+    }
+
+    #[test]
     fn a_round_has_its_voices_in_the_right_places() {
         let song = Song::named("Frère Jacques").unwrap();
         let round = song.part("Round").unwrap();
-        let notes = melody_notes(round, 16, 128);
+        let notes = melody_notes(song, round, TimeSignature::COMMON, 128);
         // Four voices, each starting on C5, two bars apart.
         let entries: Vec<usize> = notes
             .iter()
@@ -526,7 +655,7 @@ mod tests {
         assert!(entries.starts_with(&[0]) && entries.contains(&32) && entries.contains(&96));
         let last = song.part("Last voices").unwrap();
         assert!(
-            melody_notes(last, 16, 128)
+            melody_notes(song, last, TimeSignature::COMMON, 128)
                 .iter()
                 .all(|note| note.start < 96)
         );

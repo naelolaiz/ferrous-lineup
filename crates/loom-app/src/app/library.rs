@@ -242,7 +242,7 @@ impl LoomApp {
             if use_tempo {
                 let bpm = style.map_or_else(|| rhythm.map(|r| r.tempo), |s| Some(s.tempo));
                 if let Some(bpm) = bpm {
-                    project.tempo = Tempo::new(bpm);
+                    project.scale_tempo(Tempo::new(bpm));
                 }
             }
             Some((index, project.pattern(index)?.clone()))
@@ -343,7 +343,7 @@ impl LoomApp {
                 && change != apply::RhythmChange::default()
                 && let Some(bpm) = tempo
             {
-                project.tempo = Tempo::new(bpm);
+                project.scale_tempo(Tempo::new(bpm));
             }
             change
         });
@@ -438,7 +438,7 @@ impl LoomApp {
                 apply::write_rhythm(project, index, rhythm);
             }
             if use_tempo {
-                project.tempo = Tempo::new(style.tempo);
+                project.scale_tempo(Tempo::new(style.tempo));
             }
             Some((index, project.pattern(index)?.clone()))
         });
@@ -490,7 +490,7 @@ impl LoomApp {
                 apply::write_rhythm(project, index, rhythm);
             }
             if use_tempo {
-                project.tempo = Tempo::new(style.tempo);
+                project.scale_tempo(Tempo::new(style.tempo));
             }
             Some((index, project.pattern(index)?.clone()))
         });

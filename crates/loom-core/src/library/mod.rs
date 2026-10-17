@@ -27,6 +27,7 @@ pub mod chart;
 pub mod comping;
 pub mod demo;
 pub mod follow;
+pub mod interpret;
 pub mod listen;
 pub mod micromodes;
 pub mod numeral;

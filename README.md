@@ -75,6 +75,16 @@ status bar names the chord you hold down, and **● Rec** records what
 you play into the pattern while it loops. **File > Export song as
 MIDI…** writes a `.mid` file that other studios can open.
 
+The **tempo strip** at the top of the playlist draws the song's tempo as
+a line. Click it to change the tempo from that bar on, at once or
+gradually over a beat to eight bars, which is how a ritardando (slowing
+down) or an accelerando (speeding up) is written; WAV and MIDI exports
+play the changes too. **Loose**, next to it, makes notes land a few
+milliseconds off the grid, as when a person plays (off by default). The
+demos play like a performance: the tempo changes and fermatas their
+scores mark, a little slowing down at the end of songs and hymns, and
+velocities shaped by the beat and the phrase.
+
 Along the bottom are the **harmony keys**: the key and time signature
 of the project, and a big key for each chord of the key (I to vii°),
 coloured by what it does: home, away or tension. Hold one, or press

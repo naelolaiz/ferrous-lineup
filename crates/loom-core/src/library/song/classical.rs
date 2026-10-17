@@ -100,6 +100,22 @@ pub(super) const FUR_ELISE: Song = Song {
 /// fourth bar lands on the chord of the third.
 const MOUNTAIN_CHORDS: &str = "i | i | i | bIII | i | i | i | bIII";
 
+/// The theme, on B, and the same a fifth higher, on F sharp major with
+/// its sixth, D, left flat: the augmented chord in the even bars.
+const MOUNTAIN_THEME: &str = "B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
+             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8";
+const MOUNTAIN_HIGHER: &str = "F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
+             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8";
+const MOUNTAIN_HIGHER_CHORDS: &str = "I | I+ | I | I+ | I | I+ | I | I+";
+
+// Tempo marks from Grieg's own piano version: Source:
+// https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/GriegE/O46/Dans_l_antre_du_roi_de_la_montagne/Dans_l_antre_du_roi_de_la_montagne.ly
+// ("Alla marcia e molto marcato ♩=138", "Più vivo ♩=154" at bar 50,
+// "sempre stretto sin al fine" at bar 58).
 pub(super) const MOUNTAIN_KING: Song = Song {
     name: "In the Hall of the Mountain King",
     origin: "Edvard Grieg, Peer Gynt, 1875",
@@ -108,38 +124,43 @@ pub(super) const MOUNTAIN_KING: Song = Song {
     tonic: B,
     mode: NaturalMinor,
     time: COMMON,
-    tempo: 132.0,
+    tempo: 138.0,
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Epic toms",
     style: "Epic minor",
     parts: &[
-        Part::new(
-            "Theme",
-            "B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
-             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8 | \
-             B4:2 C#5 D5 E5 F#5 D5 F#5:4 | F5:2 C#5 F5:4 E5:2 C5 E5:4 | \
-             B4:2 C#5 D5 E5 F#5 D5 F#5 B5 | A5 F#5 D5 F#5 A5:8",
-            MOUNTAIN_CHORDS,
-        ),
-        // The theme a fifth higher, on F sharp major with its sixth, D,
-        // left flat: the augmented chord in the even bars.
-        Part::new(
-            "Higher",
-            "F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
-             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8 | \
-             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:2 A#5 C#6:4 | \
-             F#5:2 G#5 A#5 B5 C#6 A#5 C#6:4 | D6:2 A#5 D6:4 C#6:8",
-            "I | I+ | I | I+ | I | I+ | I | I+",
-        )
-        .in_key(FSharp, Major),
+        Part::new("Theme", MOUNTAIN_THEME, MOUNTAIN_CHORDS),
+        Part::new("Higher", MOUNTAIN_HIGHER, MOUNTAIN_HIGHER_CHORDS).in_key(FSharp, Major),
+        // "Più vivo": faster at once, at Grieg's own metronome mark.
+        Part::new("Più vivo", MOUNTAIN_THEME, MOUNTAIN_CHORDS).with_tempo(&[tempo(0, 154)]),
+        // "Sempre stretto sin al fine": pressing on faster and faster to
+        // the end. The score gives no number; each time round is about a
+        // tenth faster than the last.
+        Part::new("Stretto", MOUNTAIN_HIGHER, MOUNTAIN_HIGHER_CHORDS)
+            .in_key(FSharp, Major)
+            .with_tempo(&[glide(0, 165, 128)]),
+        Part::new("Stretto theme", MOUNTAIN_THEME, MOUNTAIN_CHORDS)
+            .with_tempo(&[glide(0, 177, 128)]),
     ],
-    form: &["Theme", "Theme", "Higher", "Higher", "Theme", "Theme"],
+    form: &[
+        "Theme",
+        "Higher",
+        "Theme",
+        "Theme",
+        "Higher",
+        "Theme",
+        "Più vivo",
+        "Stretto",
+        "Stretto theme",
+    ],
     drums_from: 0,
     about: "Trolls creeping up the B minor scale, over a bass that stays on B. Then the \
             whole theme moves up a fifth onto F sharp, major but with its sixth left flat, \
-            as it does in Grieg's score, before it comes back. In the original the music \
-            keeps getting faster; try raising the tempo while it plays.",
+            as it does in Grieg's score, in the score's order. The trolls get more and more \
+            excited: \"Più vivo\" jumps from 138 to 154 beats a minute, and then \"sempre \
+            stretto\", pressing on, speeds up bit by bit to the end. Watch the tempo strip \
+            at the top of the playlist.",
 };
 
 pub(super) const MINUET: Song = Song {
@@ -866,6 +887,12 @@ pub(super) const MOONLIGHT_SONATA: Song = Song {
 // Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BachJS/BWV1068/bach-air/bach-air-lys/bach-air-notes.ly
 // (Mutopia 242, from the Bach-Gesellschaft edition: violin I and continuo)
 const AIR_ENDING: &str = "C#5:2 B4 B4:1 C#5 D5:6 C#5:2 B4 | A4:16";
+const AIR_B_END: &str = "D5:12 F#5:2 E5 | E5:12 G5:2 F#5 | F#5:12 A5:2 G5 | G5:16 | A4:10 C#5:2 E5 G5 | \
+             G5:2 E5 F#5:10 G5:1 A5 | D5:10 F#5:2 A5 C6 | B5:12 D5:4 | C#5:2 E5 G5:8 B4:4 | \
+             A4:4 E5:2 F#5:1 G5:3 F#5:4 E5:2 | D5:1 C#5 B4:4 C#5:2 D5:4 C#5:2 D5 | D5:16";
+const AIR_B_END_LEFT: &str = "F#2:4 F#3 G3 G2 | G#2:4 G#3 A3 A2 | A#2:4 A#3 B3 B2 | E3:4 E4 D4 D3 | \
+             C#3:4 C#4 A3 C#4 | D4:4 D3 C3 C4 | B3:4 B2 A2 A3 | G3:4 G2 F#2 F#3 | \
+             E3:4 E2 D2 D3 | C#3:4 A2 D3 G3 | A3:4 G3 A3 A2 | D2:16";
 
 pub(super) const AIR_ON_THE_G_STRING: Song = Song {
     name: "Air on the G String",
@@ -909,18 +936,12 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
              C#3:4 C#4 B3 B2 | A#2:4 B2 C#3 A#2 | B2:4 G3 E3 F#3 | B2:4 B3 A3 A2 | \
              G#2:4 G#3 F#3 F#2 | E2:4 E3 D3 D2 | C#2:4 C#3 D3 E3 | A2:4 A3 G3 G2",
         ),
-        Part::new(
-            "B end",
-            "D5:12 F#5:2 E5 | E5:12 G5:2 F#5 | F#5:12 A5:2 G5 | G5:16 | A4:10 C#5:2 E5 G5 | \
-             G5:2 E5 F#5:10 G5:1 A5 | D5:10 F#5:2 A5 C6 | B5:12 D5:4 | C#5:2 E5 G5:8 B4:4 | \
-             A4:4 E5:2 F#5:1 G5:3 F#5:4 E5:2 | D5:1 C#5 B4:4 C#5:2 D5:4 C#5:2 D5 | D5:16",
-            "",
-        )
-        .with_left(
-            "F#2:4 F#3 G3 G2 | G#2:4 G#3 A3 A2 | A#2:4 A#3 B3 B2 | E3:4 E4 D4 D3 | \
-             C#3:4 C#4 A3 C#4 | D4:4 D3 C3 C4 | B3:4 B2 A2 A3 | G3:4 G2 F#2 F#3 | \
-             E3:4 E2 D2 D3 | C#3:4 A2 D3 G3 | A3:4 G3 A3 A2 | D2:16",
-        ),
+        Part::new("B end", AIR_B_END, "").with_left(AIR_B_END_LEFT),
+        // The second time round is the end of the piece: the last note
+        // has the Air's only fermata.
+        Part::new("Last end", AIR_B_END, "")
+            .with_left(AIR_B_END_LEFT)
+            .with_tempo(&[fermata(176, 16)]),
     ],
     form: &[
         "A",
@@ -930,7 +951,7 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
         "B",
         "B end",
         "B",
-        "B end",
+        "Last end",
     ],
     drums_from: 0,
     about: "The first violin's long held notes, each one breaking into quick figures, over \
@@ -1078,7 +1099,9 @@ pub(super) const TRAUMEREI: Song = Song {
              F5:2 A5:2 D5:2 F5:2 E5:6 Eb5:2 | D5:4 E5:4 C5:4 -:2 C4:2",
             "I | I IV IV IV | I V7 V7 I | I V V7 V7 | I | I VI7 VI7 VI7 | vi vi V VI7 | \
              II7 II7 V V7",
-        ),
+        )
+        // Back to the tempo after the repeat; "ritard." in bar 8.
+        .with_tempo(&[tempo(0, 56), glide(112, 42, 12)]),
         Part::new(
             "Middle",
             "F4:10 E4:2 F4:2 A4:2 | C5:2 Eb5:2 Eb5:8 D5:2 C5:2 | \
@@ -1087,7 +1110,9 @@ pub(super) const TRAUMEREI: Song = Song {
              F5:2 A5:2 D5:2 E5:2 F5:6 E5:2 | D5:6 A4:6 G4:4",
             "I | v7 VI7b9 VI7b9 VI7 | ii VI7 ii ii | ii VI7 ii I | IV | ii7 III7b9 III7b9 III7 | \
              vi III7 vi vi | vi III7 IV V7",
-        ),
+        )
+        // "a tempo" in bar 9; "ritard." in bar 16.
+        .with_tempo(&[tempo(0, 56), glide(120, 42, 8)]),
         Part::new(
             "Dream again",
             "F4:10 E4:2 F4:2 A4:2 | C5:2 F5:2 F5:8 E5:2 D5:2 | \
@@ -1096,15 +1121,25 @@ pub(super) const TRAUMEREI: Song = Song {
              C5:2 F5:2 G4:2 A4:2 Bb4:2 D5:2 G4:2 A4:2 | Bb4:2 D5:2 D4:2 E4:2 F4:8",
             "I | I IV IV IV | I V7 V7 I | I V V7 V7 | I | I II7 II7 II7 | I V7 V7 ii | \
              ii V7 I I",
-        ),
+        )
+        // "a tempo" in bar 17; the fermata on the high A in bar 22, then
+        // "ritardando" to the end and a fermata on the last chord.
+        .with_tempo(&[
+            tempo(0, 56),
+            fermata(84, 6),
+            glide(90, 42, 30),
+            fermata(120, 8),
+        ]),
     ],
     form: &["Pickup", "Dream", "Dream", "Middle", "Dream again"],
     drums_from: 1,
     about: "Schumann's daydream from his Scenes from Childhood. Every phrase starts the same \
             way, a leap up to a long F, then a climb: to the F above it, then to A, and in the \
             middle to E flat and to B flat. The middle phrases each lean on a secondary \
-            dominant, D7 or A7, with a flat ninth in the tune. The chords are the score's, \
-            simplified to one per beat; the grace notes are left out.",
+            dominant, D7 or A7, with a flat ninth in the tune. Each half slows down at its end \
+            (ritard.) and starts again in tempo, and the last phrase waits on its high A \
+            under a fermata. The chords are the score's, simplified to one per beat; the \
+            grace notes are left out.",
 };
 
 // Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BeethovenLv/O92/Symphony7_2/Symphony7_2-lys/violinotwo.ly

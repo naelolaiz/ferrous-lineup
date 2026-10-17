@@ -283,7 +283,16 @@ pub(super) const PRELUDE_IN_E_MINOR: Song = Song {
             "i | V7sus4 bII7 | biiø7 #v°7 I7 I7 | i7 vi° #iv° iv | V ii° ii° ii° bIII+ i i i | \
              iv iiø7 V7sus4 iv | V7sus4 iv | V7sus4 V7sus4 V V7 | bVI bVI bVI7 iv | \
              V7sus4 I i i | bVI7 | Vsus4 V | i",
-        ),
+        )
+        // "stretto" (pressing on) from bar 16 to the climax in bar 18, then
+        // back to the tempo; the fermata on the silence in bar 23 and on the
+        // last chord.
+        .with_tempo(&[
+            glide(54, 69, 34),
+            tempo(88, 60),
+            fermata(168, 8),
+            fermata(192, 16),
+        ]),
     ],
     form: &["Pickup", "A", "B"],
     drums_from: 1,
