@@ -40,7 +40,8 @@ time:
 10. **chord sheets as plain text**, to paste and share,
 11. **a lead sheet**: the melody in notation, the chords above it,
 12. **a soloist** and 13. **ear training**, both experimental and off by
-   default.
+   default. Ear training came early, in a window of its own
+   ([Ear training](ear-training.md)).
 
 Nothing goes away. The playlist with its tracks, the channel rack, the
 piano roll, the harmony keys, the twelve-tone rows, the pitch-class sets

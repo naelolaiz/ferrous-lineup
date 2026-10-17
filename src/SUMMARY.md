@@ -84,6 +84,7 @@
   - [Real instrument sounds: a SoundFont](step-9/soundfont.md)
   - [Practising with the band](step-9/practice.md)
   - [Inversions: which note is in the bass](step-9/inversions.md)
+  - [Ear training](step-9/ear-training.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
