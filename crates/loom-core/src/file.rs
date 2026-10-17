@@ -82,7 +82,12 @@ pub const EXTENSION: &str = "loom";
 /// Format 9 added a General MIDI instrument to channels. Older versions
 /// would play every Loom Osc with the same sound and send no program
 /// changes, so a project with instruments needs format 9.
-pub const FORMAT_VERSION: u32 = 9;
+///
+/// Format 10 added notes that start or end between two steps, such as
+/// the triplets of an imported MIDI file (see [`NoteEvent::nudge`]).
+/// Older versions would move them onto the grid, so a project with one
+/// needs format 10.
+pub const FORMAT_VERSION: u32 = 10;
 
 /// The oldest format that can hold `project`.
 ///
@@ -117,7 +122,13 @@ pub fn format_for(project: &Project) -> u32 {
     let has_structure = !playlist.sections().is_empty()
         || playlist.loop_region().is_some()
         || playlist.clips().iter().any(|clip| clip.repeats != 1);
-    if has_instruments {
+    let has_notes_off_the_grid = project
+        .patterns()
+        .iter()
+        .any(|pattern| pattern.all_notes().any(|(_, note)| !note.is_on_grid()));
+    if has_notes_off_the_grid {
+        10
+    } else if has_instruments {
         9
     } else if !playlist.key_markers().is_empty() {
         8
@@ -532,10 +543,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 10 might have fields we have never heard of. Only the
+        // Format 11 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 10, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(10)), "{error}");
+        let error = from_text("(format: 11, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(11)), "{error}");
     }
 
     #[test]
@@ -673,6 +684,22 @@ mod tests {
         let loaded = from_text(&text).unwrap();
         assert_eq!(loaded, project);
         assert_eq!(loaded.key_at(64), g_major);
+    }
+
+    #[test]
+    fn notes_off_the_grid_need_format_ten() {
+        let mut project = Project::demo();
+        let synth = 4;
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("nudge"), "notes on the grid read as before");
+        // A triplet note, 8 ticks late, held 32 ticks.
+        let triplet = crate::NoteEvent::exact(crate::Note::C4, 32, 32);
+        project.pattern_mut(0).unwrap().add_note(synth, triplet);
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 10,"), "{text}");
+        assert!(text.contains("nudge: 8"), "{text}");
+        assert!(text.contains("trim: 8"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
     }
 
     #[test]

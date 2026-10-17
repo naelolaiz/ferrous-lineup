@@ -42,7 +42,9 @@ pub use key_map::{KeyMap, KeyMarker};
 pub use meter::{Bar, Meter, TimeMarker, TimeSignature};
 pub use midi::{DRUM_CHANNEL, MidiMessage};
 pub use midi_file::{general_midi_drum, midi_channels, pattern_to_midi, song_to_midi};
-pub use pattern::{DEFAULT_VELOCITY, MAX_STEPS, NoteEvent, Pattern, STEP_NOTE, tidy_notes};
+pub use pattern::{
+    DEFAULT_VELOCITY, MAX_STEPS, NoteEvent, Pattern, STEP_NOTE, TICKS_PER_STEP, tidy_notes,
+};
 pub use pitch::{Letter, Note, NoteName, PitchClass, Spelling};
 pub use playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, SECTION_NAMES,

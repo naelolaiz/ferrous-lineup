@@ -19,14 +19,39 @@ use crate::key_map::{KeyMap, KeyMarker};
 use crate::meter::{Meter, TimeMarker};
 use crate::midi::{DRUM_CHANNEL, MidiMessage};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
-use crate::{Note, STEPS_PER_BEAT, Tempo};
+use crate::{Note, STEPS_PER_BEAT, Scale, Tempo};
+
+pub mod import;
+pub mod read;
 
 /// How many ticks one beat (a quarter note) is divided into. 96 is a
 /// common choice: it divides by 2, 3, 4, 8, 16 and 32.
 pub const TICKS_PER_BEAT: u16 = 96;
 
-/// How many ticks one step (a sixteenth note) lasts: 24.
-pub const TICKS_PER_STEP: u32 = TICKS_PER_BEAT as u32 / STEPS_PER_BEAT;
+/// How many ticks one step (a sixteenth note) lasts: 24, the same ticks
+/// a note's `nudge` and `trim` are counted in, so a note between two
+/// steps is written exactly where it plays.
+pub const TICKS_PER_STEP: u32 = crate::pattern::TICKS_PER_STEP as u32;
+
+// A check made while compiling: if someone changed one of the two
+// numbers and not the other, the build would stop here.
+const _: () = assert!(TICKS_PER_BEAT as u32 == TICKS_PER_STEP * STEPS_PER_BEAT);
+
+/// The file extensions of MIDI files: `.mid` and `.midi`, `.kar` for
+/// karaoke files (MIDI files with lyrics), and `.rmi` for MIDI files in a
+/// RIFF container.
+pub const EXTENSIONS: [&str; 4] = ["mid", "midi", "kar", "rmi"];
+
+/// Whether `path` names a MIDI file, going by its extension.
+pub fn is_midi_file(path: &std::path::Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| {
+            EXTENSIONS
+                .iter()
+                .any(|known| extension.eq_ignore_ascii_case(known))
+        })
+}
 
 /// The whole song, as the playlist plays it: every clip on a track that
 /// is not muted, every channel that is not muted, with every repeat of
@@ -188,12 +213,14 @@ fn channel_events(
             for song_step in play.song_steps_of(note.start, length) {
                 // As in the audio thread: a note that runs past the end of
                 // its pattern, or of the piece being played, is cut there.
-                let held = note
-                    .length
-                    .min(length - note.start)
-                    .min(play.end() - song_step);
-                let on = song_step as u32 * TICKS_PER_STEP;
-                let off = on + held as u32 * TICKS_PER_STEP;
+                let room = (length - note.start).min(play.end() - song_step);
+                let step = song_step as u32 * TICKS_PER_STEP;
+                let on = step + u32::from(note.nudge);
+                let off = if note.length <= room {
+                    on + note.ticks() as u32
+                } else {
+                    step + room as u32 * TICKS_PER_STEP
+                };
                 let pitch = drum.map_or(note.pitch, general_midi_drum);
                 events.push((
                     on,
@@ -274,10 +301,14 @@ fn tempo_track(
     // key gets one at every change.
     let first = KeyMarker::new(0, keys.first());
     for marker in std::iter::once(first).chain(keys.markers().iter().copied()) {
+        let tick = marker.start as u32 * TICKS_PER_STEP;
         if let Some((sharps, minor)) = marker.scale.key_signature() {
-            let tick = marker.start as u32 * TICKS_PER_STEP;
             events.push((tick, KEY_SIGNATURE, vec![sharps as u8, u8::from(minor)]));
         }
+        // A key signature cannot say "E Dorian" or "harmonic minor", so
+        // the exact key also goes in an event of our own, which other
+        // programs skip and Ferrous Loom reads back.
+        events.push((tick, SEQUENCER_SPECIFIC, scale_event(marker.scale)));
     }
     events.sort_by_key(|&(tick, ..)| tick);
     for (tick, kind, data) in events.into_iter().filter(|(tick, ..)| *tick <= end) {
@@ -292,6 +323,27 @@ const END_OF_TRACK: u8 = 0x2F;
 const TEMPO: u8 = 0x51;
 const TIME_SIGNATURE: u8 = 0x58;
 const KEY_SIGNATURE: u8 = 0x59;
+const SEQUENCER_SPECIFIC: u8 = 0x7F;
+
+/// The start of our own event: 0x7D is the maker's number set aside for
+/// programs that are not sold, then our name, so another program's
+/// 0x7D event is never mistaken for ours.
+const SCALE_EVENT_START: &[u8] = b"\x7DFerrous Loom key ";
+
+/// The data of the sequencer-specific event that holds the exact key:
+/// 0x7D, "Ferrous Loom key " and then the key as a project file writes it,
+/// such as `(root:E,kind:Dorian)`.
+pub fn scale_event(scale: Scale) -> Vec<u8> {
+    let mut data = SCALE_EVENT_START.to_vec();
+    data.extend_from_slice(ron::to_string(&scale).unwrap_or_default().as_bytes());
+    data
+}
+
+/// The key a sequencer-specific event holds, if [`scale_event`] wrote it.
+pub fn scale_from_event(data: &[u8]) -> Option<Scale> {
+    let text = std::str::from_utf8(data.strip_prefix(SCALE_EVENT_START)?).ok()?;
+    ron::from_str(text).ok()
+}
 
 /// Builds one track chunk, keeping the time of the last event so each
 /// new one can be written as a delta.
@@ -574,6 +626,27 @@ mod tests {
             ],
             "C major, then A major's three sharps"
         );
+    }
+
+    #[test]
+    fn the_exact_key_is_written_too() {
+        let mut project = project();
+        let scales = [
+            crate::Scale::new(crate::PitchClass::E, crate::ScaleKind::Dorian),
+            crate::Scale::new(crate::PitchClass::CSharp, crate::ScaleKind::HarmonicMinor),
+            crate::Scale::row(crate::harmony::ROW_PRESETS[0].row),
+        ];
+        for scale in scales {
+            project.scale = scale;
+            let written: Vec<Option<crate::Scale>> = read(&pattern_to_midi(&project, 0))[0]
+                .iter()
+                .filter(|(_, event)| event[..2] == [0xFF, 0x7F])
+                .map(|(_, event)| scale_from_event(&event[3..]))
+                .collect();
+            assert_eq!(written, [Some(scale)], "{scale:?}");
+        }
+        assert_eq!(scale_from_event(b"\x7DSomeone else"), None);
+        assert_eq!(scale_from_event(b"\x7DFerrous Loom key (root:"), None);
     }
 
     #[test]
