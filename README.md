@@ -144,11 +144,12 @@ To practise with the band, the chord sheet's second row (and the
 **Practice** menu) has a **Count-in** (a bar of clicks before the music
 starts), a **Metronome**, the **Speed** to play at (25% to 200% of the
 song's tempo, which the song itself keeps) and **Tap**, which sets the
-tempo from a few clicks on the beat. **You play** leaves the piano, the
-bass or the drums out of the band so you can play the part yourself;
-your keyboard then plays that part's sound. Shift+click a second bar to
-select several, and **Loop bars** plays them over and over. The clicks
-never reach a saved song or a WAV export.
+tempo from a few clicks on the beat. **You play** leaves a player (the
+piano, the bass, the drums, or a guitar, strings or organ) out of the
+band so you can play the part yourself; your keyboard then plays that
+part's sound. Shift+click a second bar to select several, and **Loop
+bars** plays them over and over. The clicks never reach a saved song or
+a WAV export.
 
 The **Form** row above it shapes the whole performance. **Intro** puts
 2, 4 or 8 bars in front of the song, a turnaround that leads into its
@@ -174,6 +175,17 @@ third of a triplet. The notes stay as written; only how they are played
 changes, in WAV and MIDI exports too. Each style brings its own swing
 (Swing, Jazz ballad, Jazz waltz and Shuffle 100%, Rock and roll 50%), and
 remembers the amount you last set for it.
+
+Many styles bring more players than the piano, the bass and the drums.
+A **guitar** plays the shapes a guitarist would (the open C or G of a
+chord book, barre chords in other keys, the bass lowest under a slash
+chord) and strums them: down-strokes up the strings, lighter up-strokes
+on the top four. Rock plays power chords, a swing band the guitar's
+"four to the bar", a shuffle the boogie line, reggae and soul a short
+chop on beats 2 and 4. **Strings** hold the chords in ballads, tangos
+and disco, and an **organ** bubbles in reggae or fills out a rock
+chorus; some join in only in variation b. Each has its own General MIDI
+instrument and track, and the style menu says who plays.
 
 **File > Import chord sheet…** reads a chord chart typed as text, the way
 charts are passed around in emails and forums (a `.txt` file, or drop it

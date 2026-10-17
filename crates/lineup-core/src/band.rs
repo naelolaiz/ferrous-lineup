@@ -1,9 +1,11 @@
-//! The band: a piano, a bass and drums that play the chord sheet.
+//! The band: a piano, a bass and drums that play the chord sheet, and in
+//! many styles a guitar, strings or an organ.
 //!
 //! The chord sheet says *what* the harmony is, bar by bar. A
 //! [`BandStyle`] says *how* to play it: the rhythm the piano strikes the
-//! chords in ([`Comping`]), the line the bass plays ([`Bass`]) and the
-//! drums ([`Rhythm`]). The band writes each player's part from the two,
+//! chords in ([`Comping`]), the line the bass plays ([`Bass`]), the
+//! drums ([`Rhythm`]) and what the players it adds play ([`Extras`]).
+//! The band writes each player's part from the two,
 //! into patterns of its own on the playlist, one track per player, and
 //! writes them again whenever the sheet, the key, the time signature or
 //! the style changes.
@@ -33,10 +35,14 @@ use crate::playlist::{Clip, MAX_SONG_STEPS, Track};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 use crate::tempo::Tempo;
 
+mod extras;
 mod form;
+mod guitar;
 mod variation;
 
+pub use extras::{Extra, Extras, PadPart};
 pub use form::{ENDING_BARS, Ending, Form, INTRO_BARS};
+pub use guitar::GuitarPart;
 pub use variation::{Variation, VariationMarker};
 pub(crate) use variation::{tidy as tidy_variations, variation_in};
 
@@ -46,10 +52,23 @@ pub enum Player {
     Piano,
     Bass,
     Drums,
+    Guitar,
+    Strings,
+    Organ,
 }
 
 impl Player {
-    pub const ALL: [Player; 3] = [Player::Piano, Player::Bass, Player::Drums];
+    /// How many there are.
+    pub const COUNT: usize = 6;
+
+    pub const ALL: [Player; Player::COUNT] = [
+        Player::Piano,
+        Player::Bass,
+        Player::Drums,
+        Player::Guitar,
+        Player::Strings,
+        Player::Organ,
+    ];
 
     /// Its name, which its playlist track and patterns are called by.
     pub fn name(self) -> &'static str {
@@ -57,6 +76,9 @@ impl Player {
             Player::Piano => "Piano",
             Player::Bass => "Bass",
             Player::Drums => "Drums",
+            Player::Guitar => "Guitar",
+            Player::Strings => "Strings",
+            Player::Organ => "Organ",
         }
     }
 
@@ -163,6 +185,27 @@ pub fn band_styles() -> &'static [BandStyle] {
 }
 
 impl BandStyle {
+    /// The players it adds to the piano, the bass and the drums.
+    pub fn extras(&self) -> Extras {
+        extras::of(self.name)
+    }
+
+    /// Who plays in it: the piano and the bass, the drums if it has
+    /// them, and the players it adds.
+    pub fn players(&self) -> Vec<Player> {
+        let extras = self.extras();
+        Player::ALL
+            .into_iter()
+            .filter(|player| match player {
+                Player::Piano | Player::Bass => true,
+                Player::Drums => self.rhythm.is_some(),
+                Player::Guitar => extras.guitar.is_some(),
+                Player::Strings => extras.strings.is_some(),
+                Player::Organ => extras.organ.is_some(),
+            })
+            .collect()
+    }
+
     /// How much it swings when it is picked (see [`crate::swing`]): as
     /// much as its drums do, and not at all without drums.
     pub fn swing(&self) -> u8 {
@@ -232,14 +275,13 @@ pub struct Band {
     /// The step the band plays up to: the end of the last bar written
     /// on the chord sheet, or of a bar typed after it.
     pub(crate) end: usize,
-    /// The channels of the piano and the bass. The drums play on the
-    /// built-in drum channels.
-    pub(crate) piano: Option<usize>,
-    pub(crate) bass: Option<usize>,
+    /// The channel each player plays on, by [`Player::index`]. The drums
+    /// play on the built-in drum channels, so theirs is `None`.
+    pub(crate) channels: [Option<usize>; Player::COUNT],
     /// For each player, a fingerprint of what the band last wrote for it,
     /// or `None` if it never has. A part that no longer matches its
     /// fingerprint was edited, and is frozen.
-    pub(crate) written: [Option<u64>; 3],
+    pub(crate) written: [Option<u64>; Player::COUNT],
     /// A fingerprint of what the parts were last written from: the chord
     /// sheet, the keys, the bars and the style.
     pub(crate) heard: Option<u64>,
@@ -260,9 +302,8 @@ impl Band {
         Band {
             style,
             end: 0,
-            piano: None,
-            bass: None,
-            written: [None; 3],
+            channels: [None; Player::COUNT],
+            written: [None; Player::COUNT],
             heard: None,
             muted: Muted::default(),
             since: 0,
@@ -273,6 +314,12 @@ impl Band {
 
     pub fn end(&self) -> usize {
         self.end
+    }
+
+    /// The channel `player` plays on: `None` for the drums, and for a
+    /// player the band has no part for.
+    pub fn channel(&self, player: Player) -> Option<usize> {
+        self.channels[player.index()]
     }
 
     /// The song's own channels and tracks the band muted.
@@ -290,7 +337,18 @@ pub(crate) struct BandFile {
     pub piano: Option<usize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bass: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guitar: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub strings: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub organ: Option<usize>,
+    /// The fingerprints of the piano, the bass and the drums.
     pub written: [Option<u64>; 3],
+    /// The fingerprints of the guitar, the strings and the organ, left
+    /// out when there are none, so a band of three reads as before.
+    #[serde(default, skip_serializing_if = "none_written")]
+    pub written_too: [Option<u64>; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heard: Option<u64>,
     #[serde(default)]
@@ -303,14 +361,23 @@ pub(crate) struct BandFile {
     pub variations: Vec<VariationMarker>,
 }
 
+fn none_written(written: &[Option<u64>; 3]) -> bool {
+    written.iter().all(Option::is_none)
+}
+
 impl From<&Band> for BandFile {
     fn from(band: &Band) -> Self {
+        let [piano, bass, drums, guitar, strings, organ] = band.written;
         BandFile {
             style: band.style.name.to_string(),
             end: band.end,
-            piano: band.piano,
-            bass: band.bass,
-            written: band.written,
+            piano: band.channel(Player::Piano),
+            bass: band.channel(Player::Bass),
+            guitar: band.channel(Player::Guitar),
+            strings: band.channel(Player::Strings),
+            organ: band.channel(Player::Organ),
+            written: [piano, bass, drums],
+            written_too: [guitar, strings, organ],
             heard: band.heard,
             muted: band.muted.clone(),
             since: band.since,
@@ -339,12 +406,20 @@ impl BandFile {
             )),
             index => Ok(index),
         };
+        let [piano, bass, drums] = self.written;
+        let [guitar, strings, organ] = self.written_too;
         Ok(Band {
             style,
             end: self.end,
-            piano: channel(self.piano)?,
-            bass: channel(self.bass)?,
-            written: self.written,
+            channels: [
+                channel(self.piano)?,
+                channel(self.bass)?,
+                None,
+                channel(self.guitar)?,
+                channel(self.strings)?,
+                channel(self.organ)?,
+            ],
+            written: [piano, bass, drums, guitar, strings, organ],
             heard: self.heard,
             muted: self.muted,
             since: self.since.min(channels),
@@ -387,9 +462,14 @@ impl Fingerprint {
 }
 
 /// The volumes of the band's channels: the bass under the melody, the
-/// piano further back.
+/// piano and the guitar further back, and pads behind them all.
 const PIANO_VOLUME: f32 = 0.45;
 const BASS_VOLUME: f32 = 0.7;
+const GUITAR_VOLUME: f32 = 0.4;
+const PAD_VOLUME: f32 = 0.3;
+
+/// How far above the piano's voicing the strings play: an octave.
+const STRINGS_OCTAVE: i32 = 12;
 
 /// How often the drums play a fill when nothing else says where: in the
 /// last bar of every eight, as most songs are built.
@@ -564,15 +644,10 @@ impl Project {
         true
     }
 
-    /// The channel `player` plays on, for the piano and the bass: the one
-    /// to play yourself when you take over the part.
+    /// The channel `player` plays on, for every player but the drums:
+    /// the one to play yourself when you take over the part.
     pub fn player_channel(&self, player: Player) -> Option<usize> {
-        let band = self.band.as_ref()?;
-        match player {
-            Player::Piano => band.piano,
-            Player::Bass => band.bass,
-            Player::Drums => None,
-        }
+        self.band.as_ref()?.channel(player)
     }
 
     /// File > New: an empty chord sheet, and a band ready to play it in
@@ -795,29 +870,83 @@ impl Project {
 
     // ----- Writing the parts -----
 
-    /// Makes sure the band has its channels: the piano and the bass (in
-    /// the instruments of its style), and the drums its rhythm plays.
+    /// Makes sure the band has its channels: the piano and the bass, the
+    /// guitar, strings and organ its style adds (each in the instrument
+    /// of its style), and the drums its rhythm plays.
     fn band_channels(&mut self) {
         let Some(band) = self.band.clone() else {
             return;
         };
         let style = band.style;
-        let piano = self.band_channel(
-            band.piano,
-            "Piano",
-            KEYS,
-            PIANO_VOLUME,
-            style.piano_program(),
-        );
-        let bass = self.band_channel(band.bass, "Bass", BASS, BASS_VOLUME, style.bass_program());
+        let extras = style.extras();
+        let mut channels = band.channels;
+        for player in Player::ALL {
+            let sound = match player {
+                Player::Piano => Some((KEYS, PIANO_VOLUME, style.piano_program())),
+                Player::Bass => Some((BASS, BASS_VOLUME, style.bass_program())),
+                Player::Drums => None,
+                Player::Guitar => extras
+                    .guitar
+                    .map(|guitar| (player.name(), GUITAR_VOLUME, guitar.program)),
+                Player::Strings => extras
+                    .strings
+                    .map(|strings| (player.name(), PAD_VOLUME, strings.program)),
+                Player::Organ => extras
+                    .organ
+                    .map(|organ| (player.name(), PAD_VOLUME, organ.program)),
+            };
+            if let Some((other, volume, program)) = sound {
+                channels[player.index()] =
+                    self.band_channel(band.channel(player), player.name(), other, volume, program);
+            }
+        }
         if let Some(rhythm) = style.rhythm {
             for drum in rhythm.drums() {
                 apply::drum_channel(self, drum);
             }
         }
         if let Some(band) = &mut self.band {
-            band.piano = piano;
-            band.bass = bass;
+            band.channels = channels;
+        }
+    }
+
+    /// Removes the channels and tracks of the players the band's style
+    /// does not have, of those just `rewritten`, once they play nothing:
+    /// after a change to a style without strings, the strings go. A part
+    /// you edited was not rewritten, and stays on its channel and track.
+    fn drop_unused_players(&mut self, rewritten: &[Player]) {
+        let Some(band) = self.band.clone() else {
+            return;
+        };
+        let players = band.style.players();
+        let gone: Vec<Player> = rewritten
+            .iter()
+            .copied()
+            .filter(|player| !players.contains(player))
+            .collect();
+        let mut channels: Vec<usize> = gone
+            .iter()
+            .filter_map(|&player| band.channel(player))
+            .filter(|&channel| {
+                channel >= band.since
+                    && self
+                        .patterns
+                        .iter()
+                        .all(|pattern| pattern.notes(channel).is_empty())
+            })
+            .collect();
+        channels.sort_unstable();
+        for channel in channels.into_iter().rev() {
+            self.remove_channel(channel);
+        }
+        for player in gone {
+            let empty = (0..self.playlist.tracks.len()).rev().find(|&track| {
+                self.playlist.tracks[track].name == player.name()
+                    && self.playlist.clips.iter().all(|clip| clip.track != track)
+            });
+            if let Some(track) = empty {
+                self.remove_track(track);
+            }
         }
     }
 
@@ -1038,14 +1167,17 @@ impl Project {
         let variations = band.variations.clone();
         let runs = runs(&bars, held, &variations);
         let style = band.style;
+        let extras = style.extras();
         let seed = |player: Player| interpret::seed("band", style.name, player.name());
         let time = meter.first();
-        let mut written = band.written;
+        // The variation the last bar of an ending is played in.
+        let held_in = held.map(|bar| variation::variation_in(&variations, bar.start));
+        let mut rewritten = Vec::new();
         for player in Player::ALL {
             if self.is_frozen(player) {
                 continue;
             }
-            let notes: Vec<(usize, NoteEvent)> = match player {
+            let notes: Vec<NoteEvent> = match player {
                 Player::Piano => {
                     let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
                         style.comping_in(variation).play_in_bars(bars, played)
@@ -1053,11 +1185,7 @@ impl Project {
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Comping::Held.play_in_bars(bars, played)
                     }));
-                    interpret::perform(&mut notes, time, Role::Accompaniment, seed(player));
-                    louder_in_b(&mut notes, &variations);
-                    band.piano.map_or_else(Vec::new, |channel| {
-                        notes.into_iter().map(|note| (channel, note)).collect()
-                    })
+                    notes
                 }
                 Player::Bass => {
                     let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
@@ -1066,16 +1194,67 @@ impl Project {
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Bass::Held.play_in_bars(bars, played)
                     }));
+                    notes
+                }
+                Player::Drums => Vec::new(),
+                Player::Guitar => {
+                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
+                        extras.guitar_in(variation).map_or_else(Vec::new, |guitar| {
+                            guitar::play(guitar.part, style.comping_in(variation), bars, played)
+                        })
+                    });
+                    if held_in
+                        .and_then(|variation| extras.guitar_in(variation))
+                        .is_some()
+                    {
+                        notes.extend(held_bar(held, &harmonies, |bars, played| {
+                            let ring = GuitarPart::Strum(Comping::Held);
+                            guitar::play(ring, Comping::Held, bars, played)
+                        }));
+                    }
+                    notes
+                }
+                Player::Strings | Player::Organ => {
+                    let octave = match player {
+                        Player::Strings => STRINGS_OCTAVE,
+                        _ => 0,
+                    };
+                    let pad_in = |variation| match player {
+                        Player::Strings => extras.strings_in(variation),
+                        _ => extras.organ_in(variation),
+                    };
+                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
+                        pad_in(variation)
+                            .map_or_else(Vec::new, |pad| pad.part.play(octave, bars, played))
+                    });
+                    if held_in.and_then(pad_in).is_some() {
+                        notes.extend(held_bar(held, &harmonies, |bars, played| {
+                            PadPart::Held.play(octave, bars, played)
+                        }));
+                    }
+                    notes
+                }
+            };
+            let notes = match (player, band.channel(player)) {
+                (Player::Drums, _) => self.drum_part(style, &bars, &chunks, end, held),
+                (_, Some(channel)) => {
+                    let mut notes = notes;
                     interpret::perform(&mut notes, time, Role::Accompaniment, seed(player));
                     louder_in_b(&mut notes, &variations);
-                    band.bass.map_or_else(Vec::new, |channel| {
-                        notes.into_iter().map(|note| (channel, note)).collect()
-                    })
+                    notes.into_iter().map(|note| (channel, note)).collect()
                 }
-                Player::Drums => self.drum_part(style, &bars, &chunks, end, held),
+                (_, None) => Vec::new(),
             };
             self.write_part(player, &chunks, notes);
-            written[player.index()] = Some(self.part_print(player));
+            rewritten.push(player);
+        }
+        self.drop_unused_players(&rewritten);
+        // Fingerprints last: dropping a channel renumbers the ones after it.
+        // A player the style does not have has no part to keep.
+        let players = style.players();
+        let mut written = band.written;
+        for player in rewritten {
+            written[player.index()] = players.contains(&player).then(|| self.part_print(player));
         }
         let heard = self.band_inputs();
         if let Some(band) = &mut self.band {
@@ -1405,9 +1584,12 @@ impl Project {
                     continue;
                 }
                 let from = start.max(chunk.start);
+                // A note cut at a chunk's edge starts or ends right on it.
                 let inside = NoteEvent {
                     start: from - chunk.start,
                     length: end.min(chunk.end()) - from,
+                    nudge: if from == start { note.nudge } else { 0 },
+                    trim: if end <= chunk.end() { note.trim } else { 0 },
                     ..note
                 };
                 match rows.iter_mut().find(|(row, _)| *row == channel) {
@@ -1610,6 +1792,9 @@ mod tests {
         assert_eq!(pitch_classes_at(&project, Player::Bass, 32), [2]);
         assert_eq!(pitch_classes_at(&project, Player::Bass, 40), [7]);
         assert!(!part(&project, Player::Drums).is_empty());
+        // Pop beat adds a strummed guitar, and strings only in variation b.
+        assert_eq!(pitch_classes_at(&project, Player::Guitar, 16), [0, 4, 9]);
+        assert!(part(&project, Player::Strings).is_empty());
         // Each player on a track of its own, called after it.
         let tracks: Vec<&str> = project
             .playlist()
@@ -1617,7 +1802,7 @@ mod tests {
             .iter()
             .map(|track| track.name.as_str())
             .collect();
-        assert_eq!(tracks, ["Piano", "Bass", "Drums"]);
+        assert_eq!(tracks, ["Piano", "Bass", "Drums", "Guitar"]);
     }
 
     #[test]
@@ -1678,7 +1863,7 @@ mod tests {
             .iter()
             .position(|p| p.player == Some(Player::Bass))
             .unwrap();
-        let bass = project.band().unwrap().bass.unwrap();
+        let bass = project.player_channel(Player::Bass).unwrap();
         project.pattern_mut(pattern).unwrap().remove_note(bass, 0);
         let edited = part(&project, Player::Bass);
         assert!(project.is_frozen(Player::Bass));
@@ -1705,7 +1890,7 @@ mod tests {
             .iter()
             .position(|p| p.player == Some(Player::Piano))
             .unwrap();
-        let piano = project.band().unwrap().piano.unwrap();
+        let piano = project.player_channel(Player::Piano).unwrap();
         project.pattern_mut(pattern).unwrap().remove_note(piano, 0);
         let text = crate::file::to_text(&project).unwrap();
         let loaded = crate::file::from_text(&text).unwrap();
@@ -1846,5 +2031,152 @@ mod tests {
             .count();
         assert!(drums <= 3, "{drums} drum patterns");
         assert_eq!(project.song_length(), 40 * 16);
+    }
+
+    /// A band in `style` playing `bars`.
+    fn band(style: &str, bars: &[&str]) -> Project {
+        let mut project = Project::with_band();
+        project.set_band_style(BandStyle::named(style));
+        write(&mut project, bars);
+        project
+    }
+
+    fn channel_names(project: &Project) -> Vec<&str> {
+        project
+            .channels()
+            .iter()
+            .map(|channel| channel.name.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn styles_bring_their_guitar_strings_and_organ() {
+        let pop = band("Pop ballad", &["C", "Am", "F", "G7"]);
+        assert_eq!(
+            pop.band().unwrap().style.players(),
+            [
+                Player::Piano,
+                Player::Bass,
+                Player::Drums,
+                Player::Guitar,
+                Player::Strings
+            ]
+        );
+        // Each on a channel of its own, in its General MIDI instrument:
+        // a steel-string guitar and slow strings.
+        let program = |player| {
+            let channel = pop.player_channel(player).unwrap();
+            pop.channels()[channel].program
+        };
+        assert_eq!(program(Player::Guitar), Some(25));
+        assert_eq!(program(Player::Strings), Some(49));
+        assert!(pop.player_channel(Player::Organ).is_none());
+        // The strings hold each chord an octave above the piano.
+        let piano = part(&pop, Player::Piano);
+        let strings = part(&pop, Player::Strings);
+        let at = |notes: &[(usize, usize, u8)], step| -> Vec<u8> {
+            notes
+                .iter()
+                .filter(|&&(at, ..)| at == step)
+                .map(|&(_, _, midi)| midi)
+                .collect()
+        };
+        let raised: Vec<u8> = at(&piano, 16).iter().map(|midi| midi + 12).collect();
+        assert_eq!(at(&strings, 16), raised);
+        assert_eq!(strings.iter().filter(|&&(at, ..)| at == 20).count(), 0);
+        // The guitar picks the chord one string at a time.
+        assert!(
+            part(&pop, Player::Guitar)
+                .iter()
+                .filter(|&&(at, ..)| at == 16)
+                .count()
+                == 1
+        );
+    }
+
+    #[test]
+    fn the_reggae_organ_bubbles() {
+        let reggae = band("One drop", &["C"]);
+        let organ = part(&reggae, Player::Organ);
+        let starts: Vec<usize> = {
+            let mut starts: Vec<usize> = organ.iter().map(|&(at, ..)| at).collect();
+            starts.dedup();
+            starts
+        };
+        // Between every beat, and on beats 2 and 4.
+        assert_eq!(starts, [2, 4, 6, 10, 12, 14]);
+        let lowest_at = |step| {
+            organ
+                .iter()
+                .filter(|&&(at, ..)| at == step)
+                .map(|&(_, _, midi)| midi)
+                .min()
+                .unwrap()
+        };
+        assert_eq!(lowest_at(4), lowest_at(2) + 12, "an octave higher");
+        // The guitar chops on 2 and 4.
+        let mut guitar: Vec<usize> = part(&reggae, Player::Guitar)
+            .iter()
+            .map(|&(at, ..)| at)
+            .collect();
+        guitar.dedup();
+        assert_eq!(guitar, [4, 12]);
+    }
+
+    #[test]
+    fn players_for_the_chorus_wait_for_variation_b() {
+        let mut pop = band("Pop beat", &["C", "Am", "F", "G7"]);
+        assert!(part(&pop, Player::Strings).is_empty());
+        pop.set_variation(32, None, Variation::B);
+        let strings = part(&pop, Player::Strings);
+        assert!(!strings.is_empty());
+        assert!(strings.iter().all(|&(at, ..)| at >= 32));
+    }
+
+    #[test]
+    fn a_style_without_a_guitar_lets_it_go_unless_you_edited_it() {
+        let mut project = band("Pop beat", &["C", "G"]);
+        assert!(channel_names(&project).contains(&"Guitar"));
+        project.set_band_style(BandStyle::named("Boom bap"));
+        assert!(part(&project, Player::Guitar).is_empty());
+        assert!(!channel_names(&project).contains(&"Guitar"));
+        assert!(
+            project
+                .playlist()
+                .tracks()
+                .iter()
+                .all(|track| track.name != "Guitar")
+        );
+        // The other parts were not edited by the change.
+        assert!(Player::ALL.iter().all(|&player| !project.is_frozen(player)));
+
+        // An edited guitar part stays, with its channel.
+        let mut project = band("Pop beat", &["C", "G"]);
+        let guitar = project.player_channel(Player::Guitar).unwrap();
+        let pattern = project
+            .patterns()
+            .iter()
+            .position(|pattern| pattern.player == Some(Player::Guitar))
+            .unwrap();
+        project.pattern_mut(pattern).unwrap().remove_note(guitar, 0);
+        assert!(project.is_frozen(Player::Guitar));
+        project.set_band_style(BandStyle::named("Boom bap"));
+        assert!(!part(&project, Player::Guitar).is_empty());
+        assert!(channel_names(&project).contains(&"Guitar"));
+    }
+
+    #[test]
+    fn a_bigger_band_is_saved() {
+        let mut project = band("Rock ride", &["E", "A", "B7", "E"]);
+        assert_eq!(crate::file::format_for(&project), 17);
+        let text = crate::file::to_text(&project).unwrap();
+        let loaded = crate::file::from_text(&text).unwrap();
+        assert_eq!(loaded, project);
+        assert!(Player::ALL.iter().all(|&player| !loaded.is_frozen(player)));
+        // A band of three is written as before.
+        project.set_band_style(BandStyle::named("Boom bap"));
+        let text = crate::file::to_text(&project).unwrap();
+        assert!(!text.contains("written_too"), "{text}");
+        assert_eq!(crate::file::format_for(&project), 13);
     }
 }

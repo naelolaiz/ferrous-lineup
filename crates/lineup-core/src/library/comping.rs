@@ -65,6 +65,9 @@ pub enum Comping {
     Quarters,
     /// Short chords between the beats: the reggae and ska "skank".
     Offbeat,
+    /// Short chords on beats 2 and 4, with the snare: the guitar's
+    /// "chop" in soul and reggae, the "chick" of country's boom-chick.
+    Backbeat,
     /// The jazz "Charleston": on beat 1, then just before beat 3.
     Charleston,
     /// Syncopated piano stabs, as in house music.
@@ -123,6 +126,7 @@ impl Comping {
             Comping::Pulse => (4, &[hit!(0, 2, All, 96), hit!(2, 2, All, 78)]),
             Comping::Quarters => (4, &[hit!(0, 2, All, 100)]),
             Comping::Offbeat => (4, &[hit!(2, 1, All, 92)]),
+            Comping::Backbeat => (8, &[hit!(4, 1, All, 96)]),
             Comping::Charleston => (16, &[hit!(0, 3, All, 96), hit!(6, 2, All, 86)]),
             Comping::Stabs => (
                 16,

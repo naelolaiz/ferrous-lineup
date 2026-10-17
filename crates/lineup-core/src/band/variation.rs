@@ -14,7 +14,9 @@
 //!   piano switches to it: a jazz bass playing "in two" walks in four, a
 //!   blues shuffle's bass plays the boogie line, a held bass in pop,
 //!   rock, soul or folk plays every beat, and a pop or rock ballad's
-//!   piano plays steady eighth notes.
+//!   piano plays steady eighth notes. A guitar letting chords ring or
+//!   picking them strums, and held power chords chug in eighths.
+//! - In some styles, strings or an organ join in only now.
 //! - Everyone plays a little louder.
 
 use serde::{Deserialize, Serialize};
@@ -430,7 +432,8 @@ mod tests {
 
     #[test]
     fn variations_are_saved() {
-        let mut project = song("Pop beat", &["C", "Am", "F", "G7"]);
+        // A style of piano, bass and drums alone, which format 15 holds.
+        let mut project = song("Boom bap", &["C", "Am", "F", "G7"]);
         project.set_variation(32, None, Variation::B);
         assert_eq!(crate::file::format_for(&project), 15);
         let text = crate::file::to_text(&project).unwrap();
