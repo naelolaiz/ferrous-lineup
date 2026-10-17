@@ -134,6 +134,12 @@ impl Live {
         self.channel_sent = None;
     }
 
+    /// Has every channel of the audio thread given its instrument again,
+    /// on the next frame: the SoundFont was turned on or off.
+    pub(super) fn instruments_changed(&mut self) {
+        self.routes_sent = None;
+    }
+
     /// Notes that the audio thread's channels changed: they were all made
     /// again, without routes, or some moved. `channels` is how many there
     /// are now.
