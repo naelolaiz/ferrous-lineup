@@ -32,6 +32,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
 use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
 use crate::playlist::{Clip, LoopRegion, MAX_TRACKS, Section, Track};
@@ -73,7 +74,11 @@ pub const EXTENSION: &str = "loom";
 /// Format 7 added tempo changes through a song, and loose timing. Older
 /// versions would play the whole song at its first tempo, and every
 /// note on the grid, so a song that uses either needs format 7.
-pub const FORMAT_VERSION: u32 = 7;
+///
+/// Format 8 added key changes through a song. Older versions would show
+/// the whole song in its first key, so a song with key markers needs
+/// format 8.
+pub const FORMAT_VERSION: u32 = 8;
 
 /// The oldest format that can hold `project`.
 ///
@@ -104,7 +109,9 @@ pub fn format_for(project: &Project) -> u32 {
     let has_structure = !playlist.sections().is_empty()
         || playlist.loop_region().is_some()
         || playlist.clips().iter().any(|clip| clip.repeats != 1);
-    if !playlist.tempo_markers().is_empty() || project.loose_timing > 0 {
+    if !playlist.key_markers().is_empty() {
+        8
+    } else if !playlist.tempo_markers().is_empty() || project.loose_timing > 0 {
         7
     } else if !project.scale.kind.is_tonal() {
         6
@@ -146,6 +153,9 @@ struct ProjectFile {
     /// Left out when the tempo never changes.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     tempo_markers: Vec<TempoMarker>,
+    /// Left out when the key never changes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    key_markers: Vec<KeyMarker>,
     /// Left out when every note plays on the grid.
     #[serde(default, skip_serializing_if = "is_zero")]
     loose_timing: u8,
@@ -276,6 +286,7 @@ impl From<&Project> for ProjectFile {
             loop_region: project.playlist().loop_region(),
             time_markers: project.playlist().time_markers().to_vec(),
             tempo_markers: project.playlist().tempo_markers().to_vec(),
+            key_markers: project.playlist().key_markers().to_vec(),
             loose_timing: project.loose_timing,
         }
     }
@@ -395,6 +406,15 @@ impl TryFrom<ProjectFile> for Project {
                 ));
             }
         }
+        for marker in file.key_markers {
+            if marker.start == 0 || !project.set_key_marker(marker) {
+                return invalid(format!(
+                    "its change to {} at step {} is too late or on the first step",
+                    marker.scale.name(),
+                    marker.start + 1
+                ));
+            }
+        }
         project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
         project.remove_blank_tracks();
         Ok(project)
@@ -502,10 +522,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 8 might have fields we have never heard of. Only the
+        // Format 9 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 8, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(8)), "{error}");
+        let error = from_text("(format: 9, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(9)), "{error}");
     }
 
     #[test]
@@ -630,6 +650,19 @@ mod tests {
         let text = to_text(&loose).unwrap();
         assert!(text.contains("format: 7,"), "{text}");
         assert_eq!(from_text(&text).unwrap(), loose);
+    }
+
+    #[test]
+    fn key_changes_need_format_eight() {
+        let mut project = Project::demo();
+        let g_major = Scale::new(crate::PitchClass::G, crate::ScaleKind::Major);
+        assert!(project.set_key_marker(KeyMarker::new(64, g_major)));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 8,"), "{text}");
+        assert!(text.contains("key_markers"), "{text}");
+        let loaded = from_text(&text).unwrap();
+        assert_eq!(loaded, project);
+        assert_eq!(loaded.key_at(64), g_major);
     }
 
     #[test]

@@ -23,8 +23,8 @@ use eframe::egui::{
     Vec2, pos2, vec2,
 };
 use loom_core::{
-    Clip, LoopRegion, MAX_LOOSE_TIMING, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Meter, Pass,
-    Pattern, Project, STEPS_PER_BAR, Section, TempoMarker, TimeMarker,
+    Clip, KeyMap, KeyMarker, LoopRegion, MAX_LOOSE_TIMING, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS,
+    Meter, Pass, Pattern, Project, STEPS_PER_BAR, Section, TempoMarker, TimeMarker,
 };
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, Tried};
@@ -82,6 +82,11 @@ pub enum PlaylistAction {
     SetTimeMarker(TimeMarker),
     /// Take away the change of time signature on this step.
     RemoveTimeMarker(usize),
+    /// Change the key from a bar on, without moving any note (a
+    /// right-click on the bar numbers).
+    SetKeyMarker(KeyMarker),
+    /// Take away the change of key on this step.
+    RemoveKeyMarker(usize),
     /// Change the tempo from a step on (a click on the tempo strip).
     SetTempoMarker(TempoMarker),
     /// Take away the change of tempo on this step.
@@ -134,6 +139,8 @@ const RULER: Color32 = Color32::from_rgb(36, 42, 46);
 const RULER_TEXT: Color32 = Color32::from_rgb(190, 200, 206);
 /// The time signatures written on the bar numbers.
 const TIME_TEXT: Color32 = Color32::from_rgb(236, 190, 98);
+/// The colour of the key names on the ruler.
+const KEY_TEXT: Color32 = Color32::from_rgb(140, 196, 250);
 const SONG_END: Color32 = Color32::from_rgb(170, 180, 186);
 const PLAYHEAD: Color32 = Color32::from_rgb(118, 214, 108);
 const CLIP_TEXT: Color32 = Color32::from_rgb(20, 22, 26);
@@ -527,6 +534,7 @@ impl PlaylistView {
             visible,
             steps,
             &meter,
+            &project.key_map(),
             song_length,
             playhead,
         );
@@ -1045,12 +1053,14 @@ fn paint_clip_notes(painter: &Painter, body: Rect, pattern: &Pattern, step_width
 
 /// The strip at the top with bar numbers, which stays put when the
 /// playlist scrolls down.
+#[allow(clippy::too_many_arguments)]
 fn paint_ruler(
     painter: &Painter,
     layout: Layout,
     visible: Rect,
     steps: usize,
     meter: &Meter,
+    keys: &KeyMap,
     song_length: usize,
     playhead: Option<usize>,
 ) {
@@ -1073,6 +1083,9 @@ fn paint_ruler(
         .into_iter()
         .find(|&every| bar_width * every as f32 >= BAR_NUMBER_WIDTH)
         .unwrap_or(64);
+    // Where the last text written ends: a long key name runs over the
+    // next bars, whose numbers are then left out.
+    let mut covered = f32::NEG_INFINITY;
     for bar in meter.bars().take_while(|bar| bar.end() <= steps) {
         let x = layout.x(bar.start);
         let color = if bar.start < song_length {
@@ -1081,10 +1094,15 @@ fn paint_ruler(
             RULER_TEXT
         };
         let change = bar.start == 0 || changes.contains(&bar.start);
-        if bar.number % every != 0 && !change {
+        // So is the key, where the song starts and where it modulates.
+        let key_change = bar.start == 0 || keys.markers().iter().any(|m| m.start == bar.start);
+        if bar.number % every != 0 && !change && !key_change {
             continue;
         }
         ruler_painter.vline(x, ruler.y_range(), Stroke::new(1.0, BAR_LINE));
+        if x < covered && !change && !key_change {
+            continue;
+        }
         let number = ruler_painter.text(
             pos2(x + 3.0, ruler.center().y),
             Align2::LEFT_CENTER,
@@ -1092,15 +1110,30 @@ fn paint_ruler(
             FontId::proportional(11.0),
             color,
         );
+        let mut right = number.right();
         if change {
-            ruler_painter.text(
-                pos2(number.right() + 4.0, ruler.center().y),
-                Align2::LEFT_CENTER,
-                bar.time.to_string(),
-                FontId::proportional(10.0),
-                TIME_TEXT,
-            );
+            right = ruler_painter
+                .text(
+                    pos2(right + 4.0, ruler.center().y),
+                    Align2::LEFT_CENTER,
+                    bar.time.to_string(),
+                    FontId::proportional(10.0),
+                    TIME_TEXT,
+                )
+                .right();
         }
+        if key_change {
+            right = ruler_painter
+                .text(
+                    pos2(right + 4.0, ruler.center().y),
+                    Align2::LEFT_CENTER,
+                    keys.key_at(bar.start).name(),
+                    FontId::proportional(10.0),
+                    KEY_TEXT,
+                )
+                .right();
+        }
+        covered = right + 4.0;
     }
     if let Some(step) = playhead {
         let x = layout.x(step);
