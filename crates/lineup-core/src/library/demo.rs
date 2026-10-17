@@ -6,6 +6,8 @@
 //! final chord with a crash at the end. Every demo is an ordinary
 //! project, to take apart and change.
 
+use crate::chord_sheet::{ChordMarker, HarmonyName};
+use crate::harmony::{ChordSymbol, Scale};
 use crate::key_map::KeyMarker;
 use crate::meter::{TimeMarker, TimeSignature};
 use crate::playlist::{Clip, Section};
@@ -13,7 +15,7 @@ use crate::project::Project;
 use crate::tempo::{Tempo, TempoMarker};
 
 use super::apply::{self, LEAD};
-use super::chart::accompany;
+use super::chart::{ChordSpan, accompany};
 use super::comping::Bass;
 use super::interpret::{self, Role};
 use super::micromodes::{self, MicromodeStyle};
@@ -86,6 +88,36 @@ fn ending(project: &mut Project, with_drums: bool) -> usize {
     index
 }
 
+/// Writes a chart's chords on the chord sheet, from step `at` on, named
+/// in `key`, so a demo opens with the chords it plays written there.
+fn write_chart(project: &mut Project, at: usize, spans: &[ChordSpan], key: Scale) {
+    let Some(end) = spans.last().map(|span| at + span.start + span.length) else {
+        return;
+    };
+    let markers: Vec<ChordMarker> = spans
+        .iter()
+        .map(|span| {
+            ChordMarker::new(
+                at + span.start,
+                HarmonyName::Chord(span.chord.symbol_in(key)),
+            )
+        })
+        .collect();
+    project.set_chords(at, end, &markers);
+}
+
+/// Writes the home chord of `key` on the chord sheet for the ending, a
+/// bar of `bar` steps from step `at`.
+fn write_ending(project: &mut Project, at: usize, bar: usize, key: Scale) {
+    let chord = apply::home_chord(key);
+    let symbol = ChordSymbol::new(key.spell_root(chord), chord.quality);
+    project.set_chords(
+        at,
+        at + bar,
+        &[ChordMarker::new(at, HarmonyName::Chord(symbol))],
+    );
+}
+
 /// A demo song built from a style: its harmony, its rhythm, fills and
 /// an ending, in the style's own key, tempo and time signature.
 pub fn style_demo(style: &Style) -> Project {
@@ -94,6 +126,7 @@ pub fn style_demo(style: &Style) -> Project {
     project.tempo = Tempo::new(style.tempo);
     project.time_signature = style.time;
     project.scale = style.scale(tonic);
+    let key = project.scale;
     if let Some(pattern) = project.pattern_mut(0) {
         pattern.name = "Harmony".to_string();
     }
@@ -117,10 +150,12 @@ pub fn style_demo(style: &Style) -> Project {
     // before the drums come in.
     if drums.is_some() && bars <= 4 {
         project.add_clip(Clip::new(harmony, SONG_TRACK, at));
+        write_chart(&mut project, at, &style.spans(), key);
         at += length;
     }
     for pass in 0..passes {
         project.add_clip(Clip::new(harmony, SONG_TRACK, at));
+        write_chart(&mut project, at, &style.spans(), key);
         if let Some((plain, fill)) = drums {
             let last = pass + 1 == passes;
             let pattern = if pass % 2 == 1 || last { fill } else { plain };
@@ -129,6 +164,7 @@ pub fn style_demo(style: &Style) -> Project {
         at += length;
     }
     project.add_clip(Clip::new(end, SONG_TRACK, at));
+    write_ending(&mut project, at, style.time.steps_per_bar(), key);
     project.remove_unused_tracks();
     project
 }
@@ -451,6 +487,9 @@ pub fn song_demo(song: &Song) -> Project {
             for &mark in part.tempo {
                 mark_tempo(&mut project, at, mark);
             }
+            // A part with its accompaniment written out has no chart:
+            // its chords are only heard (see `Project::heard_chords`).
+            write_chart(&mut project, at, &part.spans(time.steps_per_bar()), key);
         }
         project.add_clip(Clip::new(pattern, SONG_TRACK, at));
         if entry >= song.drums_from
@@ -461,6 +500,12 @@ pub fn song_demo(song: &Song) -> Project {
         at += length;
     }
     project.add_clip(Clip::new(end, SONG_TRACK, at));
+    if !project.playlist().chord_markers().is_empty() {
+        let (time, key) = last_part.map_or((song.time, song.scale()), |part| {
+            (song.part_time(part), song.part_scale(part))
+        });
+        write_ending(&mut project, at, time.steps_per_bar(), key);
+    }
     if let Some(bar) = last_bar(song, at) {
         broaden_the_end(&mut project, song, bar);
     }
@@ -630,6 +675,64 @@ mod tests {
         );
         let names: Vec<&str> = project.patterns().iter().map(|p| p.name.as_str()).collect();
         assert_eq!(names, ["Harmony", "Drums", "Drums and fill", "Ending"]);
+    }
+
+    #[test]
+    fn a_song_demo_opens_with_its_chart_on_the_chord_sheet() {
+        let project = song_demo(Song::named("El Choclo").unwrap());
+        // Bar `bar` (from 1), beat `beat` (from 1), in 4/4.
+        let chord = |bar: usize, beat: usize| {
+            let step = (bar - 1) * 16 + (beat - 1) * 4;
+            project.chord_at(step).unwrap().harmony.to_string()
+        };
+        // The pickup and the first strain, in A minor: i | i | i V7.
+        assert_eq!(chord(1, 1), "Am");
+        assert_eq!(chord(3, 3), "E7");
+        assert_eq!(chord(7, 1), "A7");
+        assert_eq!(chord(7, 3), "Dm");
+        // The second strain leans on C: bVII7 bIII is G7 C.
+        assert_eq!(chord(10, 1), "G7");
+        assert_eq!(chord(10, 3), "C");
+        // The third strain is in A major: VI7 ii | II7 V7 is F#7 Bm | B7 E7.
+        assert_eq!(chord(18, 1), "A");
+        assert_eq!(chord(20, 1), "F#7");
+        assert_eq!(chord(20, 3), "Bm");
+        assert_eq!(chord(21, 1), "B7");
+        assert_eq!(chord(21, 3), "E7");
+        // The ending holds the home chord of A major.
+        let end = project.song_length() - 1;
+        assert_eq!(project.chord_at(end).unwrap().harmony.to_string(), "A");
+    }
+
+    #[test]
+    fn a_style_demo_has_its_chart_on_the_chord_sheet_every_time_round() {
+        let style = STYLES
+            .iter()
+            .find(|s| s.name == "Twelve-bar blues")
+            .unwrap();
+        let project = style_demo(style);
+        let bar = style.time.steps_per_bar();
+        let spans = style.spans();
+        let key = project.scale;
+        let mut at = 0;
+        while at + style.length() <= project.song_length() - bar {
+            for span in &spans {
+                let marker = project.chord_at(at + span.start).unwrap();
+                assert_eq!(
+                    marker.harmony,
+                    HarmonyName::Chord(span.chord.symbol_in(key))
+                );
+            }
+            at += style.length();
+        }
+        assert!(at > style.length(), "the chart is written more than once");
+    }
+
+    #[test]
+    fn a_piece_with_its_accompaniment_written_out_has_no_chart_to_write() {
+        // Its chords are heard when it is opened instead.
+        let project = song_demo(Song::named("Für Elise").unwrap());
+        assert!(project.playlist().chord_markers().is_empty());
     }
 
     #[test]

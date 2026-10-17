@@ -235,13 +235,14 @@ impl ChordSheet {
             if project.band().is_some() {
                 ui.weak(format!("· {} BPM", project.tempo.bpm().round()));
             }
-            if markers.is_empty() && project.song_length() > 0 {
+            // A band plays from the sheet, so its own notes are not heard.
+            if project.song_length() > 0 && (markers.is_empty() || project.band().is_none()) {
                 let button = ui.button("Write the chords the song plays");
                 if theme::hint(
                     button,
                     "Fill the sheet with the chords heard in the song, beat by beat, as the \
-                     harmony keys hear them; in a set or a row, with the sets or micromodes \
-                     heard. You can change any of them afterwards",
+                     harmony keys hear them, in place of what it says now; in a set or a \
+                     row, with the sets or micromodes heard. Undo brings the sheet back",
                 )
                 .clicked()
                 {
