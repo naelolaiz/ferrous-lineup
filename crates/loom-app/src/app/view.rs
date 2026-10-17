@@ -60,7 +60,7 @@ const STEPS: [f32; 19] = [
 ];
 
 /// The interface sizes offered in the View menu.
-const INTERFACE_SIZES: [f32; 7] = [0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 2.0];
+const INTERFACE_SIZES: [f32; 11] = [0.5, 0.6, 0.67, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 2.0, 2.5];
 
 /// A part of the screen with its own zoom.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -621,7 +621,8 @@ mod tests {
         assert_eq!(interface_step(1.0, true), 1.1);
         assert_eq!(interface_step(1.0, false), 0.9);
         assert_eq!(interface_step(1.17, true), 1.25);
-        assert_eq!(interface_step(2.0, true), 2.0);
-        assert_eq!(interface_step(0.75, false), 0.75);
+        assert_eq!(interface_step(2.5, true), 2.5);
+        assert_eq!(interface_step(0.75, false), 0.67);
+        assert_eq!(interface_step(0.5, false), 0.5);
     }
 }
