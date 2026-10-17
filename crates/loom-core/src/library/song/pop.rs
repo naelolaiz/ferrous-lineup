@@ -370,3 +370,102 @@ pub(super) const ALOUETTE: Song = Song {
             and \"et la tête!\" is called and answered an octave apart over G7, holding a whole \
             bar before the chorus comes back.",
 };
+
+// Source: https://raw.githubusercontent.com/cuthbertLab/music21/master/music21/corpus/essenFolksong/fink0.abc
+// (tune X:58, from the Essen collection's copy of Fink's Musikalischer Hausschatz, 1843; the
+// kern copy https://raw.githubusercontent.com/annamatuszewska/The-Essen-Collection/main/krn/am_fink/am_deut058.krn
+// shows the stray D in bar 11 is a grace note; chords from the cello and violin parts of
+// https://raw.githubusercontent.com/cellist/Lilypond-Sheet-Music/master/Fl,%20Vl,%20Vlc/Mozart,%20Wolfgang%20Amadeus/Vogelfaenger/v3.ily)
+pub(super) const VOGELFAENGER: Song = Song {
+    name: "Der Vogelfänger bin ich ja",
+    origin: "Wolfgang Amadeus Mozart, The Magic Flute, 1791",
+    feel: "Two-step",
+    genre: Genre::Pop,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 84.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Two-step",
+    style: "Polka",
+    parts: &[
+        Part::new("Pickup", "-:14 B4:1 A4:1", ""),
+        Part::new(
+            "Verse",
+            "G4:2 G4:2 A4:1 G4:1 F#4:1 G4:1 A4:2 B4:2 A4:2 A4:1 F#4:1 | \
+             D4:2 D4:2 D5:3 D5:1 B4:2 A4:2 G4:2 B4:2 | \
+             A4:1 G4:1 F#4:1 G4:1 A4:1 G4:1 F#4:1 G4:1 A4:2 B4:2 A4:2 -:1 A4:1 | \
+             D5:3 D5:1 A4:3 A4:1 F#4:2 E4:2 D4:2 D4:1 F#4:1 | \
+             A4:2 A4:2 B4:1 A4:1 G4:1 A4:1 B4:2 A4:2 G4:2 D5:2 | \
+             F#4:3 F#4:1 A4:1 G4:1 F#4:1 G4:1 A4:2 B4:2 A4:2 G4:1 A4:1 | \
+             B4:3 B4:1 C5:1 B4:1 A4:1 B4:1 C5:2 D5:2 E5:2 C5:1 A4:1 | \
+             F#4:3 F#4:1 G4:1 F#4:1 E4:1 F#4:1 G4:1 B4:1 A4:1 F#4:1 G4:2 B4:1 A4:1",
+            "I V | V I | V | V II II7 V | V I | V7 I V V | I7 IV | V7 I",
+        ),
+        Part::new(
+            "Last verse",
+            "G4:2 G4:2 A4:1 G4:1 F#4:1 G4:1 A4:2 B4:2 A4:2 A4:1 F#4:1 | \
+             D4:2 D4:2 D5:3 D5:1 B4:2 A4:2 G4:2 B4:2 | \
+             A4:1 G4:1 F#4:1 G4:1 A4:1 G4:1 F#4:1 G4:1 A4:2 B4:2 A4:2 -:1 A4:1 | \
+             D5:3 D5:1 A4:3 A4:1 F#4:2 E4:2 D4:2 D4:1 F#4:1 | \
+             A4:2 A4:2 B4:1 A4:1 G4:1 A4:1 B4:2 A4:2 G4:2 D5:2 | \
+             F#4:3 F#4:1 A4:1 G4:1 F#4:1 G4:1 A4:2 B4:2 A4:2 G4:1 A4:1 | \
+             B4:3 B4:1 C5:1 B4:1 A4:1 B4:1 C5:2 D5:2 E5:2 C5:1 A4:1 | \
+             F#4:3 F#4:1 G4:1 F#4:1 E4:1 F#4:1 G4:1 B4:1 A4:1 F#4:1 G4:4",
+            "I V | V I | V | V II II7 V | V I | V7 I V V | I7 IV | V7 I",
+        ),
+    ],
+    form: &["Pickup", "Verse", "Verse", "Last verse"],
+    drums_from: 1,
+    about: "Papageno the bird-catcher introduces himself: \"The bird-catcher, that's me, \
+            always merry, heisa, hopsasa!\" It is in 2/4, with two of its bars to each bar \
+            here, and sung three times, once for each verse. The tune is the version in \
+            Fink's German songbook of 1843; between its lines the opera has Papageno's \
+            panpipes, five quick notes up, which are left out here, as is a grace note.",
+};
+
+// Source: https://raw.githubusercontent.com/mtgskynote/skynote-node/main/client-jb/public/xmlScores/violin/V_071_surprise_symphony.xml
+// (a violin study score in G, with doubled note values, moved down a fifth to Haydn's C and
+// halved here; its bar 9, which the guitar tab does not have, is left out; the guitar tab
+// https://raw.githubusercontent.com/hyperdrives/classtab/master/classtab/haydn_h01_94_symphony_94_in_g_surprise_2_andante.txt
+// has the same tune and gives the chords; the "easy version" in C,
+// https://raw.githubusercontent.com/baobach/abc_search/main/database/abc/QmdUauH9VqGnEtRTkQF4EXmh4Kk4UsEoMpLrsmwqs66Bip.abc,
+// agrees on the first half)
+pub(super) const SURPRISE_SYMPHONY: Song = Song {
+    name: "Surprise Symphony",
+    origin: "Joseph Haydn, Symphony No. 94, 1791",
+    feel: "Pop",
+    genre: Genre::Pop,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 96.0,
+    comping: Comping::Pulse,
+    bass: Bass::Octaves,
+    rhythm: "Pop beat",
+    style: "Four chords",
+    parts: &[
+        Part::new(
+            "Theme",
+            "C4:2 C4:2 E4:2 E4:2 G4:2 G4:2 E4:4 | F4:2 F4:2 D4:2 D4:2 B3:2 B3:2 G3:4 | \
+             C4:2 C4:2 E4:2 E4:2 G4:2 G4:2 E4:4 | C5:2 C5:2 F#4:2 F#4:2 G4:4 G3:2 -:2",
+            "I | V7 V | I | vi II7 V V",
+        ),
+        Part::new(
+            "Second half",
+            "F4:2 G3:2 E4:2 G3:2 D4:2 D4:2 D4:1 E4:1 F4:1 G4:1 | \
+             A4:2 G4:2 F4:2 E4:2 D4:2 D4:2 D4:3 D#4:1 | \
+             E4:2 E4:2 G4:2 G4:2 C5:2 C5:2 E5:4 | \
+             D5:2 D5:2 C5:1 B4:1 A4:1 B4:1 C5:2 C5:2 C5:2 -:2",
+            "V7 I V V | V7 V | I | ii V7 I I",
+        ),
+    ],
+    form: &["Theme", "Theme", "Second half", "Second half"],
+    drums_from: 0,
+    about: "The slow movement of Haydn's Symphony No. 94 opens with a tune as plain as a nursery \
+            rhyme, climbing and falling on the notes of its chords, C and G7, played very \
+            softly. It is in 2/4, with two of its bars to each bar here. The low G that ends the \
+            theme is where, when the theme is repeated, the whole orchestra suddenly crashes in, \
+            very loud: that is the surprise.",
+};

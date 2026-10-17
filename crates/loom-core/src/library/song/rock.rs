@@ -306,3 +306,46 @@ pub(super) const HOUSE_OF_THE_RISING_SUN: Song = Song {
             climbs the D minor chord, D, F, A, to the high D, and the harmony moves round \
             D minor, C7, F and A7, with B flat 7 (bVI7) shading the last line.",
 };
+
+// Source: https://raw.githubusercontent.com/arbitrary-dev/piano-sheets/master/src/rossini-william-tell.ly
+// (a piano fragment in F, written in 4/4 with doubled note values; the Nottingham Music
+// Database reel arrangement, jukedeck/nottingham-dataset reelsu-z.abc, has the same pitches)
+pub(super) const WILLIAM_TELL: Song = Song {
+    name: "William Tell Overture",
+    origin: "Gioachino Rossini, William Tell, 1829",
+    feel: "Punk",
+    genre: Genre::Rock,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 152.0,
+    comping: Comping::Pulse,
+    bass: Bass::Pulse,
+    rhythm: "Punk",
+    style: "Surf rock",
+    parts: &[
+        Part::new("Pickup", "-:14 C4:1 C4:1", "I"),
+        Part::new(
+            "Gallop",
+            "C4:2 C4:1 C4:1 C4:2 C4:1 C4:1 F4:2 G4:2 A4:2 C4:1 C4:1 | \
+             C4:2 C4:1 C4:1 C4:2 F4:1 A4:1 G4:2 E4:2 C4:2 C4:1 C4:1 | \
+             C4:2 C4:1 C4:1 C4:2 C4:1 C4:1 F4:2 G4:2 A4:2 F4:1 A4:1 | \
+             C5:4 -:1 Bb4:1 A4:1 G4:1 F4:2 A4:2 F4:2 C5:1 C5:1",
+            "I | I V | I | V I",
+        ),
+        Part::new(
+            "Gallop higher",
+            "C5:2 C5:1 C5:1 C5:2 C5:1 C5:1 F5:2 G5:2 A5:2 C5:1 C5:1 | \
+             C5:2 C5:1 C5:1 C5:2 F5:1 A5:1 G5:2 E5:2 C5:2 C5:1 C5:1 | \
+             C5:2 C5:1 C5:1 C5:2 C5:1 C5:1 F5:2 G5:2 A5:2 F5:1 A5:1 | \
+             C6:4 -:1 Bb5:1 A5:1 G5:1 F5:2 A5:2 F5:4",
+            "I | I V | I | V I",
+        ),
+    ],
+    form: &["Pickup", "Gallop", "Gallop higher"],
+    drums_from: 1,
+    about: "The cavalry charge at the end of the overture, the Lone Ranger's theme: one \
+            note in a galloping rhythm, two quick notes and a longer one, before the tune \
+            climbs F, G, A. Only I and V under it. In 2/4, two bars to a bar \
+            here, and played a second time an octave higher, as the piano fragment asks.",
+};
