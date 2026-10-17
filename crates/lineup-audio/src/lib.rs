@@ -2,7 +2,8 @@
 //!
 //! - [`instrument`] holds the sound generators (the sampler and the Lineup
 //!   Osc synth) and the MIDI Out, [`timbre`] the Lineup Osc's sounds for the
-//!   General MIDI instruments, [`drums`] synthesizes the built-in drum kit and [`dsp`]
+//!   General MIDI instruments, [`soundfont`] plays real instrument sounds
+//!   from a SoundFont file, [`drums`] synthesizes the built-in drum kit and [`dsp`]
 //!   has the small filters and smoothers they share. They are plain
 //!   structs that compute samples, so they can be tested without a sound card.
 //! - [`sample`] loads WAV files.
@@ -18,6 +19,7 @@ pub mod engine;
 pub mod instrument;
 pub mod render;
 pub mod sample;
+pub mod soundfont;
 pub mod timbre;
 
 pub use engine::{
@@ -26,4 +28,5 @@ pub use engine::{
 pub use instrument::Instrument;
 pub use render::{Renderer, export_wav};
 pub use sample::{SampleCache, SampleData, SampleError};
+pub use soundfont::{SoundFont, SoundFontError};
 pub use timbre::{Timbre, Wave};
