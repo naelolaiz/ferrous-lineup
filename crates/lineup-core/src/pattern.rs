@@ -8,6 +8,7 @@
 //! Since step 4, a project has many patterns, and the playlist arranges
 //! them into a song. Each pattern still holds notes for every channel.
 
+use crate::band::Player;
 use serde::{Deserialize, Serialize};
 
 use crate::{Note, TimeSignature};
@@ -229,6 +230,10 @@ pub struct Pattern {
     /// 3/4 even in a song in 4/4. Once it is in the song, the song's time
     /// signature where it plays counts (see `Project::pattern_time`).
     pub time: Option<TimeSignature>,
+    /// The band's player whose part it holds, if the band wrote it (see
+    /// [`crate::band`]). The band writes these patterns again when the
+    /// chord sheet changes.
+    pub player: Option<Player>,
     length: usize,
     rows: Vec<Vec<NoteEvent>>,
 }
@@ -243,6 +248,7 @@ impl Pattern {
             name: name.into(),
             color: 0,
             time: None,
+            player: None,
             length: length.clamp(1, MAX_STEPS),
             rows: vec![Vec::new(); channels],
         }

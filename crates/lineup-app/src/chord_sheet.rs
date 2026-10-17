@@ -20,7 +20,11 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Key, Modifiers, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2,
 };
 use lineup_core::chord_sheet::{read_bar, write_bar};
-use lineup_core::{Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Project};
+use lineup_core::library::{Genre, STYLES, Style};
+use lineup_core::{
+    BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Player, Project,
+    band_styles,
+};
 
 use crate::theme;
 use crate::twelve_tone::Front;
@@ -65,6 +69,17 @@ pub enum SheetAction {
     },
     /// Write the chords the song plays on the empty sheet.
     WriteHeardChords,
+    /// Have the band play in this style, or stop it.
+    SetBand(Option<&'static BandStyle>),
+    /// Have the band play this part again, where it was edited.
+    PlayAgain(Player),
+    /// Write a progression's chords from this bar on.
+    WriteProgression {
+        style: &'static Style,
+        from: usize,
+    },
+    /// End the song with this bar.
+    EndHere(usize),
     /// Move the playhead to this step of the playlist's timeline.
     Seek(usize),
     /// Play these notes now, as a harmony key does.
@@ -213,9 +228,14 @@ impl ChordSheet {
     ) {
         let markers = project.playlist().chord_markers();
         ui.horizontal_wrapped(|ui| {
+            band_menu(ui, project, actions);
+            progression_menu(ui, project, self.next_bar(project), actions);
             ui.label(egui::RichText::new(format!("Key: {}", project.scale.name())).strong());
             ui.weak(format!("· {}", project.time_signature));
-            if markers.is_empty() {
+            if project.band().is_some() {
+                ui.weak(format!("· {} BPM", project.tempo.bpm().round()));
+            }
+            if markers.is_empty() && project.song_length() > 0 {
                 let button = ui.button("Write the chords the song plays");
                 if theme::hint(
                     button,
@@ -234,6 +254,25 @@ impl ChordSheet {
              sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C.",
         );
         ui.weak("Each / holds the harmony before it one more beat, as in C / / G7.");
+        for player in Player::ALL {
+            if project.is_frozen(player) {
+                ui.horizontal_wrapped(|ui| {
+                    ui.colored_label(
+                        ui.visuals().warn_fg_color,
+                        format!(
+                            "✎ You edited the {}: the band keeps it as you left it.",
+                            player.name().to_lowercase()
+                        ),
+                    );
+                    let again = ui.small_button("Play it again");
+                    if theme::hint(again, "Have the band play this part from the sheet again")
+                        .clicked()
+                    {
+                        actions.push(SheetAction::PlayAgain(player));
+                    }
+                });
+            }
+        }
         match &self.error {
             Some((bar, error)) => {
                 ui.colored_label(
@@ -592,8 +631,46 @@ impl ChordSheet {
             if ui.button("Move the playhead here").clicked() {
                 actions.push(SheetAction::Seek(bar.start));
             }
+            if project.band().is_some() {
+                let end = ui.button("End the song here");
+                if theme::hint(
+                    end,
+                    "The band stops after this bar; chords after it are cleared",
+                )
+                .clicked()
+                {
+                    actions.push(SheetAction::EndHere(bar.number));
+                }
+            }
         });
         clicks
+    }
+
+    /// Selects `bar`, as a click on it does, so what comes next is
+    /// written there.
+    pub fn select(&mut self, bar: usize) {
+        self.selected = Some(bar);
+        self.editing = None;
+        self.reveal = true;
+    }
+
+    /// The bar a progression is written from: the selected one, or the
+    /// first after everything written.
+    fn next_bar(&self, project: &Project) -> usize {
+        if let Some(bar) = self.selected {
+            return bar;
+        }
+        let meter = project.meter();
+        let after_chords = project
+            .playlist()
+            .chord_markers()
+            .last()
+            .map_or(0, |last| meter.bar_at(last.start).number + 1);
+        let after_band = project.band().map_or(0, |band| match band.end() {
+            0 => 0,
+            end => meter.bar_at(end - 1).number + 1,
+        });
+        after_chords.max(after_band)
     }
 
     /// The lines of bars: as many as the song has, or as the chords
@@ -876,6 +953,88 @@ const KEEP_KEYS: egui::EventFilter = egui::EventFilter {
     vertical_arrows: true,
     escape: false,
 };
+
+/// The band's style, to pick from by genre, or no band.
+fn band_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction>) {
+    let current = project.band().map(|band| band.style);
+    let title = match current {
+        Some(style) => format!("🎷 Band: {}", style.name),
+        None => "🎷 Band: none".to_string(),
+    };
+    let menu = ui.menu_button(title, |ui| {
+        if ui.selectable_label(current.is_none(), "No band").clicked() {
+            actions.push(SheetAction::SetBand(None));
+            ui.close();
+        }
+        ui.separator();
+        for genre in Genre::ALL {
+            let styles: Vec<&'static BandStyle> = band_styles()
+                .iter()
+                .filter(|style| style.genre == genre)
+                .collect();
+            if styles.is_empty() {
+                continue;
+            }
+            ui.menu_button(genre.name(), |ui| {
+                for style in styles {
+                    let label = match style.time.is_common() {
+                        true => style.name.to_string(),
+                        false => format!("{}  ({})", style.name, style.time),
+                    };
+                    let item = ui.selectable_label(current == Some(style), label);
+                    let about = format!(
+                        "{} {}, about {} BPM.",
+                        style.about,
+                        style.time,
+                        style.tempo.round()
+                    );
+                    if theme::hint(item, about).clicked() {
+                        actions.push(SheetAction::SetBand(Some(style)));
+                        ui.close();
+                    }
+                }
+            });
+        }
+    });
+    theme::hint(
+        menu.response,
+        "The band plays the sheet: piano, bass and drums, in the style you pick. It plays \
+         again whenever the sheet changes",
+    );
+}
+
+/// The library's progressions, to write on the sheet from bar `from`.
+fn progression_menu(ui: &mut Ui, project: &Project, from: usize, actions: &mut Vec<SheetAction>) {
+    let tonal = project.scale.kind.is_tonal();
+    ui.add_enabled_ui(tonal, |ui| {
+        let menu = ui.menu_button("Progression", |ui| {
+            for genre in Genre::ALL {
+                let styles: Vec<&'static Style> =
+                    STYLES.iter().filter(|style| style.genre == genre).collect();
+                if styles.is_empty() {
+                    continue;
+                }
+                ui.menu_button(genre.name(), |ui| {
+                    for style in styles {
+                        let chords = style.chord_names(project.scale.root);
+                        let item = ui.button(style.name);
+                        if theme::hint(item, format!("{chords}. {}", style.about)).clicked() {
+                            actions.push(SheetAction::WriteProgression { style, from });
+                            ui.close();
+                        }
+                    }
+                });
+            }
+        });
+        let hint = format!(
+            "Write the chords of a well-known progression from bar {} on",
+            from + 1
+        );
+        theme::hint(menu.response, hint).on_disabled_hover_text(
+            "Progressions are chords in a key; this song is in a set or a row",
+        );
+    });
+}
 
 /// The harmonies written in `bar`.
 fn markers_in(project: &Project, bar: &Bar) -> Vec<ChordMarker> {
