@@ -230,7 +230,7 @@ pub fn show(
                             // Beats alternate colours, so you can count them,
                             // starting again in every bar so all bars look
                             // alike: in 3/4, dark, light, dark.
-                            let beat_group = step % time.steps_per_bar() / time.steps_per_beat();
+                            let beat_group = time.beat_at(step).index;
                             let response =
                                 widgets::step_button(ui, on, beat_group, playhead == Some(step));
                             if response.clicked() && !widgets::dismissing(ui.ctx()) {

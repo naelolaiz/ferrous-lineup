@@ -169,7 +169,7 @@ fn tempo_menu(
 ) {
     ui.set_min_width(250.0);
     let bar = meter.bar_at(at);
-    let beat = (at - bar.start) / bar.time.steps_per_beat() + 1;
+    let beat = bar.beat_at(at).index + 1;
     let marker = map
         .markers()
         .iter()
@@ -227,7 +227,7 @@ fn tempo_menu(
         }
         for (label, bars, of) in GLIDES {
             let glide = if bars == 0 {
-                bar.time.steps_per_beat()
+                bar.beat_at(at).length
             } else {
                 bars * bar.time.steps_per_bar() / of
             };
