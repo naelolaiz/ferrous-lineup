@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::arrangement::{Arrangement, arrange};
-use crate::band::Band;
+use crate::band::{Band, VariationMarker};
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::harmony::{ChordSymbol, Harmony, Scale, analyze};
@@ -1209,6 +1209,13 @@ impl Project {
             .filter(|marker| marker.start > section.start && marker.start < section.end())
             .copied()
             .collect();
+        let opening_variation = self.variation_at(section.start);
+        let inside_variations: Vec<VariationMarker> = self
+            .variations()
+            .iter()
+            .filter(|marker| marker.start > section.start && marker.start < section.end())
+            .copied()
+            .collect();
         let opening_chord = self.chord_at(section.start);
         let inside_chords: Vec<ChordMarker> = self
             .playlist
@@ -1271,6 +1278,19 @@ impl Project {
                 }))
                 .collect();
             self.set_chords(copy_start, copy_start + section.length, &chords);
+            // And plays the same variations of the band's style.
+            if let Some(band) = &mut self.band {
+                band.variations
+                    .push(VariationMarker::new(copy_start, opening_variation));
+                band.variations
+                    .extend(inside_variations.iter().map(|marker| VariationMarker {
+                        start: marker.start + shift,
+                        ..*marker
+                    }));
+            }
+        }
+        if let Some(band) = &mut self.band {
+            crate::band::tidy_variations(&mut band.variations);
         }
         self.playlist.time_markers = self.meter().tidy().markers().to_vec();
         self.playlist.tempo_markers = self.tempo_map().tidy().markers().to_vec();
@@ -1348,6 +1368,10 @@ impl Project {
             || playlist
                 .chord_markers
                 .iter()
+                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+            || self
+                .variations()
+                .iter()
                 .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS);
         if too_late {
             return false;
@@ -1383,6 +1407,9 @@ impl Project {
             }
             if band.form.intro > at {
                 band.form.intro += steps;
+            }
+            for marker in &mut band.variations {
+                shift(&mut marker.start);
             }
         }
         if let Some(region) = &mut self.playlist.loop_region {
@@ -1452,6 +1479,14 @@ impl Project {
         if let Some(band) = &mut self.band {
             band.end = band.end.saturating_sub(steps);
             band.form.intro = band.form.intro.saturating_sub(steps);
+            // The variation playing where the cut ends plays from the start.
+            let opening = crate::band::variation_in(&band.variations, steps);
+            band.variations.retain(|marker| marker.start > steps);
+            for marker in &mut band.variations {
+                marker.start -= steps;
+            }
+            band.variations.insert(0, VariationMarker::new(0, opening));
+            crate::band::tidy_variations(&mut band.variations);
         }
     }
 

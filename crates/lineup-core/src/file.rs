@@ -125,7 +125,12 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 14 added the band's song form: an intro, a chorus played more
 /// than once, and an ending. Older versions would play the song once,
 /// as written, so a song whose band plays a form needs format 14.
-pub const FORMAT_VERSION: u32 = 14;
+///
+/// Format 15 added the style's second variation, which the band plays
+/// from markers on the chord sheet. Older versions would play the whole
+/// song in the first one, so a song with variation markers needs
+/// format 15.
+pub const FORMAT_VERSION: u32 = 15;
 
 /// The oldest format that can hold `project`.
 ///
@@ -179,7 +184,9 @@ pub fn format_for(project: &Project) -> u32 {
             .iter()
             .any(|pattern| pattern.player.is_some());
     let has_form = project.form().is_some_and(|form| !form.is_plain());
-    if has_form {
+    if !project.variations().is_empty() {
+        15
+    } else if has_form {
         14
     } else if has_band {
         13
@@ -663,10 +670,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 15 might have fields we have never heard of. Only the
+        // Format 16 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 15, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(15)), "{error}");
+        let error = from_text("(format: 16, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(16)), "{error}");
     }
 
     #[test]

@@ -22,6 +22,7 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Painter, Pos2, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     Vec2, pos2, vec2,
 };
+use lineup_core::band::VariationMarker;
 use lineup_core::{
     Clip, KeyMap, KeyMarker, LoopRegion, MAX_LOOSE_TIMING, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS,
     Meter, Pass, Pattern, Project, STEPS_PER_BAR, Section, TempoMarker, TimeMarker,
@@ -546,6 +547,7 @@ impl PlaylistView {
             steps,
             &meter,
             &project.key_map(),
+            project.variations(),
             song_length,
             playhead,
         );
@@ -1075,6 +1077,7 @@ fn paint_ruler(
     steps: usize,
     meter: &Meter,
     keys: &KeyMap,
+    variations: &[VariationMarker],
     song_length: usize,
     playhead: Option<usize>,
 ) {
@@ -1110,11 +1113,17 @@ fn paint_ruler(
         let change = bar.start == 0 || changes.contains(&bar.start);
         // So is the key, where the song starts and where it modulates.
         let key_change = bar.start == 0 || keys.markers().iter().any(|m| m.start == bar.start);
-        if bar.number % every != 0 && !change && !key_change {
+        // And the band's variation, where it changes.
+        let variation = variations
+            .iter()
+            .find(|marker| marker.start == bar.start)
+            .map(|marker| marker.variation);
+        let marked = change || key_change || variation.is_some();
+        if bar.number % every != 0 && !marked {
             continue;
         }
         ruler_painter.vline(x, ruler.y_range(), Stroke::new(1.0, BAR_LINE));
-        if x < covered && !change && !key_change {
+        if x < covered && !marked {
             continue;
         }
         let number = ruler_painter.text(
@@ -1146,6 +1155,22 @@ fn paint_ruler(
                     KEY_TEXT,
                 )
                 .right();
+        }
+        if let Some(variation) = variation {
+            let letter = ruler_painter.text(
+                pos2(right + 7.0, ruler.center().y),
+                Align2::LEFT_CENTER,
+                variation.letter(),
+                FontId::proportional(10.0),
+                TIME_TEXT,
+            );
+            ruler_painter.rect_stroke(
+                letter.expand2(vec2(3.0, 0.0)),
+                2.0,
+                Stroke::new(1.0, TIME_TEXT),
+                StrokeKind::Middle,
+            );
+            right = letter.right() + 3.0;
         }
         covered = right + 4.0;
     }
