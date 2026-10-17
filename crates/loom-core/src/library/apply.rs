@@ -943,6 +943,10 @@ mod tests {
         assert!(change.drums > 0 && change.harmony > 0, "{change:?}");
         assert_eq!(project.time_signature, three_four);
         assert_eq!(project.song_length() / 12, demo.song_length() / 16);
+        // Every bar lasts as long as before: the song keeps its pace.
+        let seconds = |p: &Project| p.played_seconds(&p.arrangement());
+        assert_eq!(project.tempo.bpm(), demo.tempo.bpm() * 0.75);
+        assert!((seconds(&project) - seconds(&demo)).abs() < 2e-3 * seconds(&demo));
         let melody = |project: &Project, bar: usize, steps: usize| {
             let mut notes: Vec<(usize, crate::Note)> = Vec::new();
             for clip in project.playlist().clips() {
@@ -970,6 +974,7 @@ mod tests {
         // Back to a 4/4 rhythm, the bars are sixteen steps again.
         let change = use_rhythm(&mut project, Rhythm::named("Pop beat").unwrap());
         assert_eq!(change.time, Some(TimeSignature::COMMON));
+        assert_eq!(project.tempo.bpm(), demo.tempo.bpm());
         for bar in 0..demo.song_length() / 16 {
             assert_eq!(
                 melody(&demo, bar, 16),
