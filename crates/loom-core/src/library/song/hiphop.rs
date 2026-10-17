@@ -14,6 +14,7 @@ pub(super) const TWINKLE: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "Lo-fi",
+    style: "Lo-fi",
     parts: &[Part::new(
         "Tune",
         "C5:4 C5 G5 G5 | A5 A5 G5:8 | F5:4 F5 E5 E5 | D5 D5 C5:8 | \
@@ -40,6 +41,7 @@ pub(super) const GYMNOPEDIE: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Waltz,
     rhythm: "Jazz waltz",
+    style: "Jazz waltz",
     parts: &[
         Part::new(
             "Intro",
@@ -70,6 +72,7 @@ pub(super) const PRELUDE_IN_C: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "Boom bap",
+    style: "Jazz rap",
     parts: &[Part::new(
         "Prelude",
         "C4:2 E4 G4 C5 E5 G4 C5 E5 | C4 D4 A4 D5 F5 A4 D5 F5 | B3 D4 G4 D5 F5 G4 D5 F5 | \
@@ -98,6 +101,7 @@ pub(super) const SAKURA: Song = Song {
     comping: Comping::Lazy,
     bass: Bass::Lazy,
     rhythm: "R&B",
+    style: "R&B minor",
     parts: &[Part::new(
         "Song",
         "A4:4 A4 B4:8 | A4:4 A4 B4:8 | A4:4 B4 C5 B4 | A4 B4:2 A4 F4:8 | \
@@ -126,6 +130,7 @@ pub(super) const DIES_IRAE: Song = Song {
     comping: Comping::Held,
     bass: Bass::Sub,
     rhythm: "Trap",
+    style: "Trap minor",
     parts: &[
         Part::new(
             "Chant",
@@ -143,4 +148,38 @@ pub(super) const DIES_IRAE: Song = Song {
     about: "The medieval chant of the Day of Wrath, quoted by Berlioz, Liszt, Rachmaninoff \
             and countless film scores. Eight notes are enough to sound ominous, here over \
             trap hi-hats and a deep 808 bass.",
+};
+
+// Source: https://raw.githubusercontent.com/DCMLab/debussy_other_piano_pieces/main/notes/l068_reverie.tsv
+// (the note table of the DCML corpus score)
+pub(super) const REVERIE: Song = Song {
+    name: "Rêverie",
+    origin: "Claude Debussy, 1890",
+    feel: "Lo-fi",
+    genre: Genre::HipHop,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 70.0,
+    comping: Comping::Lazy,
+    bass: Bass::Lazy,
+    rhythm: "Lo-fi",
+    style: "Lo-fi",
+    parts: &[
+        Part::new("Intro", "-:16 | -:16", "IV | IV"),
+        Part::new(
+            "Theme",
+            "G5:8 D5:8 | _:4 E5:2 F5:2 G5:4 E5:2 D5:2 | E5:3 C5:3 E5:2 D5:8 | _:8 Bb4:4 D5:4 | \
+             E5:4 F5:4 C5:8 | _:8 G4:8 | A4:16 | _:16 | \
+             A5:8 E5:8 | _:4 C5:2 E5:2 D5:4 Bb4:2 G4:2 | A5:8 E5:8 | _:4 C5:2 E5:2 D5:4 Bb4:2 G4:2 | \
+             G5:8 D5:8 | _:4 Bb4:2 D5:2 C5:4 A4:2 G4:2 | A4:4 E4:2 A4:2 F4:4 D4:2 F4:2 | D4:8 C4:8",
+            "IV | IV | IV | IV | I | V7 | I | I | vi7 | I ii | vi7 | I ii | V7 | ii I | iii vi | ii7 V7",
+        ),
+    ],
+    form: &["Intro", "Theme", "Theme"],
+    drums_from: 0,
+    about: "Debussy's early piano piece as lo-fi hip hop. The tune floats for four bars over \
+            a B flat chord with a G and a C in it, the IV of F major, before F itself \
+            arrives; the quarter-note triplet in its third bar is written as 3 + 3 + 2 \
+            sixteenths. In the score the left hand plays these chords as slow arpeggios.",
 };

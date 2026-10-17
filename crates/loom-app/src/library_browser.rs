@@ -34,6 +34,15 @@ pub struct LibraryBrowser {
     filter: String,
     /// Whether trying a style or a rhythm also sets its usual tempo.
     pub use_tempo: bool,
+    /// The selection last drawn. When it changes (a demo was opened, or
+    /// something was tried), the genre holding what changed opens and it
+    /// scrolls into view.
+    shown: Tried,
+    /// Until when (in `ui` time) to keep scrolling the selection into
+    /// view, while its genre opens.
+    reveal_until: f64,
+    /// Whether that is the rhythm (only the rhythm changed) or the style.
+    reveal_rhythm: bool,
 }
 
 impl LibraryBrowser {
@@ -41,6 +50,9 @@ impl LibraryBrowser {
         LibraryBrowser {
             filter: String::new(),
             use_tempo: true,
+            shown: Tried::default(),
+            reveal_until: 0.0,
+            reveal_rhythm: false,
         }
     }
 
@@ -65,8 +77,23 @@ impl LibraryBrowser {
         let filter = self.filter.trim().to_lowercase();
         let searching = !filter.is_empty();
         let tonic = project.scale.root;
+        let now = ui.input(|i| i.time);
+        let new_style = tried.style.is_some() && tried.style != self.shown.style;
+        let new_rhythm = tried.rhythm.is_some() && tried.rhythm != self.shown.rhythm;
+        self.shown = tried;
+        if new_style || new_rhythm {
+            self.reveal_until = now + 0.5;
+            self.reveal_rhythm = !new_style;
+        }
+        let revealing = now < self.reveal_until;
+        if revealing {
+            ui.ctx().request_repaint();
+        }
+        let scroll_style = revealing && !self.reveal_rhythm;
+        let scroll_rhythm = revealing && self.reveal_rhythm;
         egui::ScrollArea::vertical().show(ui, |ui| {
-            section(ui, "Harmony styles", searching, |ui| {
+            let open = searching || new_style;
+            section(ui, "Harmony styles", open, |ui| {
                 for genre in Genre::ALL {
                     let styles: Vec<&'static Style> = STYLES
                         .iter()
@@ -75,12 +102,17 @@ impl LibraryBrowser {
                             matches(&filter, style.name, genre, style.time, style.about)
                         })
                         .collect();
-                    group(ui, "styles", genre, styles.len(), searching, |ui| {
+                    let open =
+                        searching || (new_style && tried.style.is_some_and(|s| s.genre == genre));
+                    group(ui, "styles", genre, styles.len(), open, |ui| {
                         for style in styles {
                             let selected = tried.style == Some(style);
                             let response = ui
                                 .selectable_label(selected, label(style.name, style.time))
                                 .on_hover_text(describe_style(style, tonic));
+                            if selected && scroll_style {
+                                response.scroll_to_me(None);
+                            }
                             if response.clicked() {
                                 picked = Some(LibraryAction::Style(style));
                             }
@@ -88,16 +120,22 @@ impl LibraryBrowser {
                     });
                 }
             });
-            section(ui, "Rhythms", searching, |ui| {
+            let open = searching || new_rhythm;
+            section(ui, "Rhythms", open, |ui| {
                 for genre in Genre::ALL {
                     let rhythms: Vec<&'static Rhythm> = RHYTHMS
                         .iter()
                         .filter(|rhythm| rhythm.genre == genre)
                         .filter(|r| matches(&filter, r.name, genre, r.time, r.about))
                         .collect();
-                    group(ui, "rhythms", genre, rhythms.len(), searching, |ui| {
+                    let open = searching
+                        || (new_rhythm
+                            && tried
+                                .rhythm
+                                .is_some_and(|r| r.genre == genre && !FILLS.contains(r)));
+                    group(ui, "rhythms", genre, rhythms.len(), open, |ui| {
                         for rhythm in rhythms {
-                            picked = picked.or(rhythm_label(ui, rhythm, tried));
+                            picked = picked.or(rhythm_label(ui, rhythm, tried, scroll_rhythm));
                         }
                     });
                 }
@@ -111,14 +149,16 @@ impl LibraryBrowser {
                 if !fills.is_empty() {
                     let header = egui::CollapsingHeader::new(format!("Fills ({})", fills.len()))
                         .id_salt("rhythms-fills");
-                    let header = if searching {
+                    let open = searching
+                        || (new_rhythm && tried.rhythm.is_some_and(|r| FILLS.contains(r)));
+                    let header = if open {
                         header.open(Some(true))
                     } else {
                         header
                     };
                     header.show(ui, |ui| {
                         for fill in fills {
-                            picked = picked.or(rhythm_label(ui, fill, tried));
+                            picked = picked.or(rhythm_label(ui, fill, tried, scroll_rhythm));
                         }
                     });
                 }
@@ -128,10 +168,11 @@ impl LibraryBrowser {
     }
 }
 
-/// A top-level part of the library, open at the start.
-fn section(ui: &mut Ui, title: &str, searching: bool, add: impl FnOnce(&mut Ui)) {
+/// A top-level part of the library, open at the start, and opened when
+/// `open` is true (while searching, or to show the selection).
+fn section(ui: &mut Ui, title: &str, open: bool, add: impl FnOnce(&mut Ui)) {
     let header = egui::CollapsingHeader::new(RichText::new(title).strong()).default_open(true);
-    let header = if searching {
+    let header = if open {
         header.open(Some(true))
     } else {
         header
@@ -139,14 +180,15 @@ fn section(ui: &mut Ui, title: &str, searching: bool, add: impl FnOnce(&mut Ui))
     header.show(ui, add);
 }
 
-/// The entries of one genre, under its name. Closed at the start, open
-/// while searching, and left out if nothing in it matches.
+/// The entries of one genre, under its name. Closed at the start, opened
+/// when `open` is true (while searching, or when it holds the selection),
+/// and left out if nothing in it matches.
 fn group(
     ui: &mut Ui,
     kind: &str,
     genre: Genre,
     count: usize,
-    searching: bool,
+    open: bool,
     add: impl FnOnce(&mut Ui),
 ) {
     if count == 0 {
@@ -154,7 +196,7 @@ fn group(
     }
     let header = egui::CollapsingHeader::new(format!("{} ({count})", genre.name()))
         .id_salt(format!("{kind}-{genre:?}"));
-    let header = if searching {
+    let header = if open {
         header.open(Some(true))
     } else {
         header
@@ -164,7 +206,13 @@ fn group(
 
 /// One rhythm in the list. Returns it if it was clicked, or picked for
 /// the whole song from its menu. Fills have no menu: they are one bar.
-fn rhythm_label(ui: &mut Ui, rhythm: &'static Rhythm, tried: Tried) -> Option<LibraryAction> {
+/// With `scroll`, a selected rhythm scrolls into view.
+fn rhythm_label(
+    ui: &mut Ui,
+    rhythm: &'static Rhythm,
+    tried: Tried,
+    scroll: bool,
+) -> Option<LibraryAction> {
     let selected = tried.rhythm == Some(rhythm);
     let is_fill = FILLS.contains(rhythm);
     let hover = format!(
@@ -184,6 +232,9 @@ fn rhythm_label(ui: &mut Ui, rhythm: &'static Rhythm, tried: Tried) -> Option<Li
     let response = ui
         .selectable_label(selected, label(rhythm.name, rhythm.time))
         .on_hover_text(hover);
+    if selected && scroll {
+        response.scroll_to_me(None);
+    }
     let mut picked = response.clicked().then_some(LibraryAction::Rhythm(rhythm));
     if !is_fill {
         response.context_menu(|ui| {
