@@ -246,8 +246,36 @@ suggestions from step 6, `next_chords`, start from.
 ![The hint line at its three levels: Detailed, Short and Minimal, after playing C](../images/step-8-hint-levels.png)
 
 After a chord, up to four keys can be outlined: every chord that often
-comes next. The most usual one gets a thick bright outline, the others
-a thin dim one, and the hint line talks about the bright one.
+comes next. The most usual one gets a slightly brighter outline than
+the others, and the hint line talks about it.
+
+### Now and next
+
+![The harmony keys at four moments of the starting song: the chord sounding (C, C, Am, F) is lit and framed in white; the chords that often come next have a thin yellow outline](../images/step-8-now-and-next.png)
+
+Two marks share the bar, and they must not be confused: the chord
+**sounding now**, and the chords that **may come next**. At first the
+next chord had the louder mark, a thick bright yellow frame, while the
+current one was only a little brighter. While a song played, the eye
+went to the frame, so the bar seemed to show the next chord and hide
+the one you were hearing. Now the chord sounding is lit and framed in
+thick white, and the suggestions are only a thin yellow line. A key
+that is sounding never gets the yellow line too, so each key carries
+one mark at most.
+
+Both kinds of key, the seven chords and the keys of a twelve-tone row
+or a pitch-class set, draw the frame with the same small function:
+
+```rust
+fn paint_playing(painter: &Painter, rect: Rect) {
+    painter.rect_stroke(rect, 6.0, Stroke::new(3.0, PLAYING), StrokeKind::Inside);
+}
+```
+
+`StrokeKind::Inside` draws the line inside the key's rectangle, so the
+frame never spills onto the gap between keys. Which key is sounding
+did not change: it is still worked out from the notes at the playhead,
+as above, so it follows tempo changes too.
 
 The hint line, the keys' tooltips and the piano roll's "Chords in"
 row explain at one of three levels, picked in the small menu at the
