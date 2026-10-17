@@ -95,6 +95,12 @@ impl Sequencer {
         self.next_step = step % self.length;
     }
 
+    /// The step that starts on the next tick, if one does. A new tempo
+    /// set before that tick is the tempo the whole step lasts at.
+    pub fn due(&self) -> Option<usize> {
+        (self.frames_until_next <= 0.0).then_some(self.next_step)
+    }
+
     /// Advances by one frame. Returns `Some(step)` if `step` starts on
     /// this frame, `None` otherwise.
     pub fn tick(&mut self) -> Option<usize> {

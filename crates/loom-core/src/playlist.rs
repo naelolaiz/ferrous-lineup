@@ -25,6 +25,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::meter::TimeMarker;
+use crate::tempo::TempoMarker;
 
 /// Steps in one bar of 4/4 time: four beats of four steps.
 pub const STEPS_PER_BAR: usize = 16;
@@ -204,6 +205,8 @@ pub struct Playlist {
     pub(crate) loop_region: Option<LoopRegion>,
     /// Sorted by start, all after step 0, no two on the same step.
     pub(crate) time_markers: Vec<TimeMarker>,
+    /// Sorted by start, all after step 0, no two on the same step.
+    pub(crate) tempo_markers: Vec<TempoMarker>,
 }
 
 impl Playlist {
@@ -215,6 +218,7 @@ impl Playlist {
             sections: Vec::new(),
             loop_region: None,
             time_markers: Vec::new(),
+            tempo_markers: Vec::new(),
         }
     }
 
@@ -249,6 +253,11 @@ impl Playlist {
     /// order. The song starts in the project's own time signature.
     pub fn time_markers(&self) -> &[TimeMarker] {
         &self.time_markers
+    }
+
+    /// The changes of tempo, in order.
+    pub fn tempo_markers(&self) -> &[TempoMarker] {
+        &self.tempo_markers
     }
 
     /// A name for a new section: the first of [`SECTION_NAMES`] not used

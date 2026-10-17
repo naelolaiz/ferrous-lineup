@@ -126,9 +126,13 @@ impl LoomApp {
                     });
                 }
                 Change::Tempo => self.send(Command::SetTempo(self.project.tempo)),
+                Change::LooseTiming => {
+                    self.send(Command::SetLooseTiming(self.project.loose_timing));
+                }
                 Change::Song => {
-                    let command = self.song_command();
-                    self.send(command);
+                    for command in self.song_commands() {
+                        self.send(command);
+                    }
                 }
             }
         }

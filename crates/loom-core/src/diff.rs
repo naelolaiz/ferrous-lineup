@@ -37,7 +37,10 @@ pub enum Change {
         channel: usize,
     },
     Tempo,
-    /// The clips that can be heard, or the song's length.
+    /// How loose the timing is.
+    LooseTiming,
+    /// The clips that can be heard, the song's length, or the tempo of
+    /// its steps.
     Song,
 }
 
@@ -167,12 +170,18 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
     if before.tempo != after.tempo {
         changes.push(Change::Tempo);
     }
+    if before.loose_timing != after.loose_timing {
+        changes.push(Change::LooseTiming);
+    }
     // What song mode plays: the clips, with their repeats and the
     // sections' repeats unrolled, cut to the loop region if there is one.
     // Only what the audio thread is sent counts, so renaming a section
     // changes nothing.
     let (old_song, new_song) = (before.playback_arrangement(), after.playback_arrangement());
-    if old_song.plays != new_song.plays || old_song.length != new_song.length {
+    if old_song.plays != new_song.plays
+        || old_song.length != new_song.length
+        || before.played_tempos(&old_song) != after.played_tempos(&new_song)
+    {
         changes.push(Change::Song);
     }
     changes
@@ -202,8 +211,10 @@ mod tests {
         lengths: Vec<usize>,
         channels: Vec<ModelChannel>,
         tempo: Tempo,
+        loose_timing: u8,
         plays: Vec<Play>,
         song_length: usize,
+        tempos: Vec<Tempo>,
     }
 
     impl Model {
@@ -228,8 +239,10 @@ mod tests {
                     .map(|index| Model::channel(project, index))
                     .collect(),
                 tempo: project.tempo,
+                loose_timing: project.loose_timing,
                 plays: project.playback_arrangement().plays,
                 song_length: project.playback_arrangement().length,
+                tempos: project.played_tempos(&project.playback_arrangement()),
             }
         }
 
@@ -269,8 +282,10 @@ mod tests {
                         after.patterns()[pattern].notes(channel).to_vec();
                 }
                 Change::Tempo => self.tempo = after.tempo,
+                Change::LooseTiming => self.loose_timing = after.loose_timing,
                 Change::Song => {
                     let song = after.playback_arrangement();
+                    self.tempos = after.played_tempos(&song);
                     self.plays = song.plays;
                     self.song_length = song.length;
                 }
@@ -413,6 +428,27 @@ mod tests {
             check_both_ways(&before, &after),
             vec![Change::Volume(0), Change::Muted(1), Change::Instrument(2)]
         );
+    }
+
+    #[test]
+    fn tempo_changes_and_loose_timing() {
+        let before = Project::demo();
+        let mut after = before.clone();
+        after.set_tempo_marker(crate::TempoMarker::gliding(64, 90.0, 32));
+        assert_eq!(check_both_ways(&before, &after), vec![Change::Song]);
+
+        // With a tempo change, the tempo box changes the tempo of the
+        // song's steps too.
+        let mut faster = after.clone();
+        faster.scale_tempo(Tempo::new(150.0));
+        assert_eq!(
+            check_both_ways(&after, &faster),
+            vec![Change::Tempo, Change::Song]
+        );
+
+        let mut loose = before.clone();
+        loose.loose_timing = 10;
+        assert_eq!(check_both_ways(&before, &loose), vec![Change::LooseTiming]);
     }
 
     #[test]
