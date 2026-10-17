@@ -17,6 +17,7 @@ mod channel_rack;
 mod chord_sheet;
 mod ear_training;
 mod harmony_keys;
+mod lead_sheet;
 mod library_browser;
 mod micromodes;
 mod midi;

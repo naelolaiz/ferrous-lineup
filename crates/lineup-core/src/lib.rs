@@ -20,6 +20,7 @@ pub mod general_midi;
 pub mod harmony;
 pub mod history;
 pub mod key_map;
+pub mod lead_sheet;
 pub mod library;
 pub mod meter;
 pub mod micromodal;

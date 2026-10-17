@@ -19,6 +19,7 @@ mod follow;
 mod form;
 mod import;
 mod key_finder;
+mod lead;
 mod library;
 mod live;
 mod practice;
@@ -43,6 +44,7 @@ use crate::channel_rack::{self, RackAction};
 use crate::chord_sheet::{ChordSheet, SheetAction};
 use crate::ear_training::EarTraining;
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
+use crate::lead_sheet::LeadSheetWindow;
 use crate::library_browser::Tried;
 use crate::midi::Midi;
 use crate::piano_roll::{self, PianoRoll, RollAction};
@@ -141,6 +143,7 @@ pub struct LineupApp {
     swings: swing::SwingMemory,
     /// The ear-training window, an experiment.
     ear_training: EarTraining,
+    lead_sheet: LeadSheetWindow,
     /// The last problem to show in the status bar, such as a bad WAV file.
     message: Option<String>,
     /// The last piece of good news for the status bar ("Exported song.wav").
@@ -218,6 +221,7 @@ impl LineupApp {
             practice: practice::Practice::new(&cc.egui_ctx),
             swings: swing::SwingMemory::new(&cc.egui_ctx),
             ear_training: EarTraining::new(&cc.egui_ctx),
+            lead_sheet: LeadSheetWindow::new(&cc.egui_ctx),
             message: None,
             notice: None,
             hint_bar: HintBar::default(),
@@ -1606,6 +1610,7 @@ impl eframe::App for LineupApp {
         }
 
         self.ear_training_window(&ctx, area);
+        self.lead_sheet_window(&ctx, area);
         self.sound_font_window(&ctx);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
