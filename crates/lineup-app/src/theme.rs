@@ -276,7 +276,7 @@ fn hint_id() -> egui::Id {
 
 /// What the hint bar shows when the mouse is over nothing with a hint.
 const DEFAULT_HINT: &str = "Space plays and stops · L switches pattern and song · \
-                            F6 channel rack · F7 piano roll · F8 harmony keys";
+                            F5 chord sheet · F6 channel rack · F7 piano roll · F8 harmony keys";
 
 /// The line at the top of the window that says what the thing under the
 /// mouse does.
