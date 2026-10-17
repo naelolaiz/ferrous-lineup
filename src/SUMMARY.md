@@ -64,6 +64,7 @@
   - [MIDI Out for every channel](step-8/midi-out-every-channel.md)
   - [South American folklore, and many more songs](step-8/folklore.md)
   - [Twelve-tone rows and pitch-class sets](step-8/twelve-tone.md)
+  - [A bug hunt: two-way zoom, notes spelled right, and playback](step-8/bug-hunt.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 

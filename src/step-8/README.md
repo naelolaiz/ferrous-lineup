@@ -60,6 +60,12 @@ and a library to go with them:
   conga,
 - **patterns up to sixteen bars long**, so a whole twelve-bar blues fits
   in one pattern.
+- **a bug hunt**: the playlist and the piano roll zoom horizontally and
+  vertically on their own, as in FL Studio; notes, scales and chords are
+  spelled with the right letters (E# in F# major, E#dim); hints and
+  harmony keys get their theory right in minor keys, modes and sets;
+  held notes survive section edges, muting and tempo changes; and many
+  small glitches are gone ([A bug hunt](bug-hunt.md)).
 
 ![The harmony keys while the demo song plays. F (IV) is held down, in orange on the keyboard; the song is playing A minor, in blue. The keys outlined in yellow are the chords that often come after IV.](../images/step-8-harmony-keys.png)
 
@@ -87,7 +93,8 @@ and a library to go with them:
 | File > Demos | open a song or a style as a whole project, and play it |
 | Key menu > twelve-tone row, or Row… in the piano roll | make a row the key, see its matrix, write its forms |
 | Sets… in the piano roll | look up any set, draw with it or use it as the key |
-| Ctrl+Plus, Ctrl+Minus, Ctrl+0, or the zoom at the bottom right | make everything bigger or smaller, or 100% again |
+| Ctrl+wheel, Alt+wheel (or Ctrl and Alt with + and −), the zooms at the bottom right | make bars and steps wider, or tracks and keys taller; Ctrl+0 for 100% again ([A bug hunt](bug-hunt.md)) |
+| View > Interface size | make text, buttons and menus bigger or smaller everywhere |
 | View menu, or **Alt+F8** | show or hide each window, and the Patterns and Library panel |
 
 The number keys play the harmony keys only while the typing keyboard is

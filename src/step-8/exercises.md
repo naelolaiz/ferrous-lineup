@@ -106,11 +106,13 @@ channel rack is open is one.
 
 ## 8. Zoom the popups too (loom-app, small)
 
-Zoom the piano roll to 150% and open its Draw menu: the menu is drawn at
-the main window's size. A popup is a layer of its own, so it never sees
-the style the window's contents changed (see [Finding your
+Zoom the channel rack to 150% and right-click a channel's name: the menu is
+drawn at the normal size. A popup is a layer of its own, so it never
+sees the style the window's contents changed (see [Finding your
 notes](finding-your-notes.md)). Find where egui lets you change the
-style of a popup or a combo box, and give it the window's scale.
+style of a popup or a combo box, and give it the window's scale. (The
+playlist and the piano roll no longer scale their text when they zoom:
+see [A bug hunt](bug-hunt.md).)
 
 *Practices:* reading a library's source, egui's layers and styles.
 
