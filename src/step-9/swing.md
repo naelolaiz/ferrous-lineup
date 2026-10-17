@@ -64,7 +64,7 @@ a sixteenth** is the closest a grid of sixteenths can get to swing, but
 it is harder than a triplet and sounds stiff, like a march. It is also
 a real rhythm of its own: "Hap-py" in Happy Birthday is written that
 way, and stays that way here, because swing only moves notes that sit
-exactly on the second eighth of a beat.
+on the second eighth of a beat (or a few ticks from it, see below).
 
 A **shuffle** is the blues' name for the same long-short feel, usually
 a full triplet, with the drummer's hi-hat or the guitar's chords
@@ -141,8 +141,8 @@ Adding half of 100 before dividing by 100 rounds to the nearest tick
 instead of always down: 50% is 8 ticks exactly, 70% is 11.2 and becomes
 11.
 
-`swung` then moves every start and end that falls exactly on an
-offbeat:
+`swung` then moves every start and end that falls on an offbeat. The
+first version matched it exactly:
 
 ```rust
 let played = |tick: usize| match tick % BEAT {
@@ -156,6 +156,27 @@ its value, 48. Had it been a lowercase name like `offbeat`, Rust would
 read it as a *new variable* that matches anything, and the `_` arm
 would never run. (The compiler warns about exactly that, and the
 naming convention, capitals for constants, keeps the two apart.)
+
+The band's guitar later needed "on the offbeat" to mean "close to it":
+a strum starts its strings a tick apart, 48, 49, 50..., and only the
+first string would have moved
+([A bigger band](bigger-band.md#strums-and-swing)). The arm is now a
+**match guard**:
+
+```rust
+const NEAR: usize = BEAT / 16; // 6 ticks, a sixty-fourth note
+
+let played = |tick: usize| match tick % BEAT {
+    offset if offset.abs_diff(OFFBEAT) < NEAR => tick + late,
+    _ => tick,
+};
+```
+
+Here `offset` *is* a new variable that matches anything, on purpose,
+and the `if` after it decides whether the arm applies. `abs_diff`
+gives the distance between two numbers whichever is bigger:
+`offset - OFFBEAT` on a `usize` below 48 would underflow and panic in a
+debug build.
 
 A note that ends on the offbeat ends later too, so the first eighth
 really is long, legato into the second. A drum hit is different: a
