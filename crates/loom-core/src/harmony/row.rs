@@ -492,14 +492,14 @@ fn parse_name(token: &str) -> Result<u8, String> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RowPreset {
     pub name: &'static str,
-    /// The composer and work, or "Written for Ferrous Loom".
+    /// The composer and work, or "Written for Ferrous Lineup".
     pub source: &'static str,
     pub about: &'static str,
     pub row: ToneRow,
 }
 
 /// Rows to try: famous ones from works in the public domain, and some
-/// written for Ferrous Loom to show off what rows can do.
+/// written for Ferrous Lineup to show off what rows can do.
 ///
 /// Three of the famous works were published between 1925 and 1929, so in
 /// the United States they are in the public domain (95 years after
@@ -543,7 +543,7 @@ pub const ROW_PRESETS: [RowPreset; 8] = [
     },
     RowPreset {
         name: "Loom row",
-        source: "Written for Ferrous Loom",
+        source: "Written for Ferrous Lineup",
         about: "Hexachordally combinatorial: its first six notes and the first six of I3 \
                 make all twelve, so the two forms can be played together without a note \
                 repeating before all twelve have sounded.",
@@ -551,20 +551,20 @@ pub const ROW_PRESETS: [RowPreset; 8] = [
     },
     RowPreset {
         name: "Four triads",
-        source: "Written for Ferrous Loom",
+        source: "Written for Ferrous Lineup",
         about: "Four triads in a row (C major, D major, Bb minor, G# minor) that still use \
                 every note once: twelve-tone music can sound almost tonal, as in Berg.",
         row: ToneRow([0, 4, 7, 2, 6, 9, 10, 1, 5, 11, 3, 8]),
     },
     RowPreset {
         name: "Mirror row",
-        source: "Written for Ferrous Loom",
+        source: "Written for Ferrous Lineup",
         about: "Like Webern's, a palindrome: backwards it is the same row a tritone higher.",
         row: ToneRow([0, 4, 3, 7, 8, 11, 5, 2, 1, 9, 10, 6]),
     },
     RowPreset {
         name: "All the intervals",
-        source: "Written for Ferrous Loom",
+        source: "Written for Ferrous Lineup",
         about: "An all-interval row: every step from one note to the next is a different size.",
         row: ToneRow([0, 2, 5, 4, 11, 9, 3, 7, 8, 1, 10, 6]),
     },

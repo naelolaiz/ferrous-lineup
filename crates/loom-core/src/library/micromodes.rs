@@ -7,7 +7,7 @@
 //! instrument plays the same walk, so the chords, the bass and the tune
 //! always share their three notes.
 //!
-//! The styles were written for Ferrous Loom. Kröpfl's own music, and his
+//! The styles were written for Ferrous Lineup. Kröpfl's own music, and his
 //! students', is still under copyright, so none of it is copied here.
 
 use crate::harmony::{Micromode, PitchSet, Scale};

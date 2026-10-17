@@ -6,7 +6,7 @@ const TWELVE_BAR: &str = "I7 | IV7 | I7 | I7 | IV7 | IV7 | I7 | I7 | V7 | IV7 | 
 
 pub(super) const MIDNIGHT_SHUFFLE: Song = Song {
     name: "Midnight Shuffle",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Shuffle",
     genre: Genre::Blues,
     tonic: A,
@@ -34,7 +34,7 @@ pub(super) const MIDNIGHT_SHUFFLE: Song = Song {
 
 pub(super) const ROLLING_BOOGIE: Song = Song {
     name: "Rolling Boogie",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Boogie-woogie",
     genre: Genre::Blues,
     tonic: C,
@@ -64,7 +64,7 @@ pub(super) const ROLLING_BOOGIE: Song = Song {
 
 pub(super) const MINOR_MOOD: Song = Song {
     name: "Minor Mood Blues",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Minor blues",
     genre: Genre::Blues,
     tonic: A,

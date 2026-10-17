@@ -1,6 +1,6 @@
 [package]
 name = "loom-audio"
-description = "Real-time audio engine for Ferrous Loom"
+description = "Real-time audio engine for Ferrous Lineup"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

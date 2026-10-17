@@ -64,7 +64,7 @@ pub(super) const JOY_TO_THE_WORLD: Song = Song {
 
 pub(super) const DORIAN_STRUT: Song = Song {
     name: "Dorian Strut",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Funk",
     genre: Genre::Soul,
     tonic: E,
@@ -98,7 +98,7 @@ pub(super) const DORIAN_STRUT: Song = Song {
 
 pub(super) const SUNDAY_SEVENTH: Song = Song {
     name: "Sunday Seventh",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Neo-soul",
     genre: Genre::Soul,
     tonic: C,

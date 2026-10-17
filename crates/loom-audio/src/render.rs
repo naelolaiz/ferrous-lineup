@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn exports_a_wav_file() {
         let path =
-            std::env::temp_dir().join(format!("ferrous-loom-export-{}.wav", std::process::id()));
+            std::env::temp_dir().join(format!("ferrous-lineup-export-{}.wav", std::process::id()));
         let mut renderer = clicking();
         let mut reported = Vec::new();
         let frames = BLOCK_FRAMES + 100;

@@ -1,4 +1,4 @@
-//! Core music types for Ferrous Loom.
+//! Core music types for Ferrous Lineup.
 //!
 //! This crate knows about notes, tempo, time signatures, patterns,
 //! harmony, the playlist and its sections, the project as a whole, how to save a

@@ -56,7 +56,7 @@ pub(super) const THIS_OLD_MAN: Song = Song {
 
 pub(super) const VALLEY_DUB: Song = Song {
     name: "Valley Dub",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Roots reggae",
     genre: Genre::Reggae,
     tonic: A,

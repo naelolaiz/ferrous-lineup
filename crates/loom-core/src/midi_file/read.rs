@@ -80,7 +80,7 @@ pub struct Event {
     pub kind: EventKind,
 }
 
-/// The events Ferrous Loom uses. Others (aftertouch, pitch bend, lyrics,
+/// The events Ferrous Lineup uses. Others (aftertouch, pitch bend, lyrics,
 /// system exclusive...) are read past and left out.
 #[derive(Debug, Clone, PartialEq)]
 pub enum EventKind {
@@ -104,7 +104,7 @@ pub enum EventKind {
     /// The key signature: `sharps` sharps (or flats, when negative) and
     /// whether the key is minor. Two flats and minor is G minor.
     KeySignature { sharps: i8, minor: bool },
-    /// The exact key, which only a file Ferrous Loom wrote holds: a key
+    /// The exact key, which only a file Ferrous Lineup wrote holds: a key
     /// signature cannot say "E Dorian" (see [`super::scale_event`]).
     ExactKey(Scale),
     /// The name of the track, often the instrument it plays.

@@ -6,7 +6,7 @@
 //! bass line carry on in A minor. The style is written once, in one
 //! chord, and the keyboard bends its notes into the chord you hold.
 //!
-//! Ferrous Loom does the same with the patterns of any project. It first
+//! Ferrous Lineup does the same with the patterns of any project. It first
 //! hears the chords each pattern already plays (see [`super::listen`]),
 //! once. Then, for each chord you hold, every note of the accompaniment
 //! is moved to the matching note of your chord:
