@@ -14,6 +14,7 @@ pub(super) const JINGLE_BELLS: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    band: SWING,
     style: "ii–V–I",
     parts: &[
         Part::new(
@@ -51,6 +52,7 @@ pub(super) const SAINTS: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Swing",
+    band: DIXIELAND,
     style: "New Orleans",
     parts: &[Part::new(
         "Chorus",
@@ -78,6 +80,7 @@ pub(super) const ENTERTAINER: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: PIANO,
     style: "New Orleans",
     parts: &[
         Part::new("Pickup", "-:12 D5:2 D#5", "V"),
@@ -111,6 +114,7 @@ pub(super) const HAPPY_BIRTHDAY: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Waltz,
     rhythm: "Jazz waltz",
+    band: JAZZ_WALTZ,
     style: "Jazz waltz",
     parts: &[Part::new(
         "Song",
@@ -137,6 +141,7 @@ pub(super) const TWO_FIVE_WALK: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    band: SWING,
     style: "ii–V–I",
     parts: &[Part::new(
         "Head",
@@ -167,6 +172,7 @@ pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: PIANO,
     style: "New Orleans",
     parts: &[
         // The run down three octaves, a bar's silence, and the vamp.
@@ -215,6 +221,7 @@ pub(super) const DARK_EYES: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Walking,
     rhythm: "Jazz waltz",
+    band: GYPSY_JAZZ,
     style: "Minor jazz waltz",
     parts: &[
         Part::new("Pickup", "-:4 F#4:4 G4", "V7"),
@@ -257,6 +264,7 @@ pub(super) const MAPLE_LEAF_RAG: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: PIANO,
     style: "New Orleans",
     parts: &[
         Part::new(
@@ -318,6 +326,7 @@ pub(super) const I_GOT_RHYTHM: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    band: SWING,
     style: "Rhythm changes",
     parts: &[
         Part::new(
@@ -364,6 +373,7 @@ pub(super) const BILL_BAILEY: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Second line",
+    band: DIXIELAND,
     style: "New Orleans",
     parts: &[
         Part::new(
@@ -405,6 +415,7 @@ pub(super) const SWANEE: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    band: SWING,
     style: "Turnaround",
     parts: &[
         Part::new(
@@ -446,6 +457,7 @@ pub(super) const AVALON: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    band: SWING,
     style: "ii–V–I",
     parts: &[
         Part::new("Pickup", "-:12 C4:4", "V7"),
@@ -487,6 +499,7 @@ pub(super) const BALLIN_THE_JACK: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Swing",
+    band: SWING,
     style: "Turnaround",
     parts: &[Part::new(
         "Chorus",
@@ -520,6 +533,7 @@ pub(super) const TWELFTH_STREET_RAG: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: PIANO,
     style: "New Orleans",
     parts: &[
         Part::new(
@@ -572,6 +586,7 @@ pub(super) const DILL_PICKLES: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: PIANO,
     style: "New Orleans",
     parts: &[
         Part::new("Pickup", "-:4 B4:4 C5 C#5", "V7"),
@@ -631,6 +646,7 @@ pub(super) const PINE_APPLE_RAG: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: PIANO,
     style: "New Orleans",
     parts: &[
         Part::new(
@@ -696,6 +712,7 @@ pub(super) const ELITE_SYNCOPATIONS: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: PIANO,
     style: "New Orleans",
     parts: &[
         Part::new(

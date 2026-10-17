@@ -281,16 +281,28 @@ fn arrange_sections(
     project.remove_unused_tracks();
 }
 
-/// The notes of a part's melody, one copy per voice, inside the part,
-/// played with the accents of a performance (see [`interpret`]).
-fn melody_notes(song: &Song, part: &Part, time: TimeSignature, length: usize) -> Vec<NoteEvent> {
+/// The notes of a part's melody for each voice that sings it, inside the
+/// part, played with the accents of a performance (see [`interpret`]):
+/// the first list is voice 1's, the second voice 2's, and so on, for
+/// `voices` voices. A round has a list per voice; a song, one.
+fn melody_notes(
+    song: &Song,
+    part: &Part,
+    time: TimeSignature,
+    length: usize,
+    voices: usize,
+) -> Vec<Vec<NoteEvent>> {
     let bar = time.steps_per_bar();
-    let mut melody = part.melody();
-    let seed = interpret::seed(song.name, part.name, LEAD);
-    interpret::perform(&mut melody.notes, time, Role::Melody, seed);
-    let mut notes = Vec::new();
-    for &voice in part.voices {
-        let offset = voice as isize * bar as isize;
+    let mut sung = vec![Vec::new(); voices];
+    for &(voice, start_bar) in part.voices {
+        let Some(notes) = voice.checked_sub(1).and_then(|index| sung.get_mut(index)) else {
+            continue;
+        };
+        // Each voice gets accents of its own, as each singer would.
+        let mut melody = part.melody();
+        let seed = interpret::seed(song.name, part.name, &voice_channel(voice));
+        interpret::perform(&mut melody.notes, time, Role::Melody, seed);
+        let offset = start_bar as isize * bar as isize;
         for note in &melody.notes {
             let start = note.start as isize + offset;
             if (0..length as isize).contains(&start) {
@@ -301,11 +313,26 @@ fn melody_notes(song: &Song, part: &Part, time: TimeSignature, length: usize) ->
             }
         }
     }
-    notes
+    for notes in &mut sung {
+        notes.sort_by_key(|note| (note.start, note.pitch));
+    }
+    sung
+}
+
+/// The channel voice `voice` of a melody sings on: the Lead channel for
+/// the first, "Voice 2", "Voice 3"... for the others.
+fn voice_channel(voice: usize) -> String {
+    if voice <= 1 {
+        LEAD.to_string()
+    } else {
+        format!("Voice {voice}")
+    }
 }
 
 /// A demo project of a song: one pattern per part with the melody, the
 /// chords and the bass, drum patterns, and the parts arranged in order.
+/// Each voice of a round or a canon sings on a channel of its own, and
+/// every channel plays the General MIDI instrument of the song's band.
 /// A part in a time signature of its own gets a time marker where it
 /// starts, and one back where the song's time comes again.
 pub fn song_demo(song: &Song) -> Project {
@@ -314,12 +341,24 @@ pub fn song_demo(song: &Song) -> Project {
     project.time_signature = song.time;
     project.scale = song.scale();
 
-    let lead = apply::synth_named(&mut project, LEAD);
+    let voices: Vec<Option<usize>> = (1..=song.voices())
+        .map(|voice| apply::synth_named(&mut project, &voice_channel(voice)))
+        .collect();
     let keys = apply::synth_named(&mut project, apply::KEYS);
     let bass = match song.bass {
         Bass::None => None,
         _ => apply::synth_named(&mut project, apply::BASS),
     };
+    let band = song.band;
+    for (channel, program) in voices
+        .iter()
+        .map(|&voice| (voice, band.lead))
+        .chain([(keys, band.keys), (bass, band.bass)])
+    {
+        if let Some(state) = channel.and_then(|channel| project.channel_mut(channel)) {
+            state.program = Some(program);
+        }
+    }
 
     // One pattern per part. `Project::empty` starts with one pattern,
     // which the first part uses.
@@ -337,7 +376,7 @@ pub fn song_demo(song: &Song) -> Project {
         } else {
             new_pattern(&mut project, part.name, length)
         };
-        let melody = melody_notes(song, part, time, length);
+        let melody = melody_notes(song, part, time, length, voices.len());
         let (mut chords, mut bass_line) = if part.left.is_empty() {
             let tonic = song.part_scale(part).root;
             let backing = accompany(&part.spans(bar), tonic, song.comping, song.bass);
@@ -349,8 +388,10 @@ pub fn song_demo(song: &Song) -> Project {
         interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
         interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
         if let Some(pattern) = project.pattern_mut(index) {
-            if let Some(lead) = lead {
-                pattern.set_notes(lead, melody);
+            for (&channel, notes) in voices.iter().zip(melody) {
+                if let Some(channel) = channel {
+                    pattern.set_notes(channel, notes);
+                }
             }
             if let Some(keys) = keys {
                 pattern.set_notes(keys, chords);
@@ -524,7 +565,7 @@ mod tests {
             melody: "C5:12 | E5:12 | G5:12",
             chords: "I | IV | V",
             left: "",
-            voices: &[0],
+            voices: &[(1, 0)],
             time: Some(waltz),
             key: None,
             tempo: &[],
@@ -651,20 +692,71 @@ mod tests {
     #[test]
     fn a_round_has_its_voices_in_the_right_places() {
         let song = Song::named("Frère Jacques").unwrap();
+        assert_eq!(song.voices(), 4);
         let round = song.part("Round").unwrap();
-        let notes = melody_notes(song, round, TimeSignature::COMMON, 128);
-        // Four voices, each starting on C5, two bars apart.
-        let entries: Vec<usize> = notes
-            .iter()
-            .filter(|note| note.pitch.midi() == 72 && note.start % 32 == 0)
-            .map(|note| note.start)
-            .collect();
-        assert!(entries.starts_with(&[0]) && entries.contains(&32) && entries.contains(&96));
+        let voices = melody_notes(song, round, TimeSignature::COMMON, 128, 4);
+        // Four voices, each starting on C5, two bars apart, each on its own.
+        for (voice, notes) in voices.iter().enumerate() {
+            let first = notes.first().unwrap();
+            assert_eq!((first.start, first.pitch.midi()), (voice * 32, 72));
+        }
+        // In the last part, the first voice has finished; the others
+        // sing their ends, voice 4 the longest.
         let last = song.part("Last voices").unwrap();
+        let voices = melody_notes(song, last, TimeSignature::COMMON, 128, 4);
+        assert!(voices[0].is_empty());
+        let ends: Vec<usize> = voices[1..]
+            .iter()
+            .map(|notes| notes.iter().map(|note| note.start).max().unwrap())
+            .collect();
         assert!(
-            melody_notes(song, last, TimeSignature::COMMON, 128)
-                .iter()
-                .all(|note| note.start < 96)
+            ends[0] < ends[1] && ends[1] < ends[2] && ends[2] < 96,
+            "{ends:?}"
         );
+    }
+
+    #[test]
+    fn every_voice_of_a_round_has_a_channel_and_every_channel_an_instrument() {
+        let canon = song_demo(Song::named("Canon in D").unwrap());
+        let names: Vec<(&str, Option<u8>)> = canon
+            .channels()
+            .iter()
+            .map(|channel| (channel.name.as_str(), channel.program))
+            .collect();
+        use crate::general_midi::{CELLO, HARPSICHORD, VIOLIN};
+        assert_eq!(
+            names,
+            [
+                (LEAD, Some(VIOLIN)),
+                ("Voice 2", Some(VIOLIN)),
+                ("Voice 3", Some(VIOLIN)),
+                (apply::KEYS, Some(HARPSICHORD)),
+                (apply::BASS, Some(CELLO)),
+            ]
+        );
+        // Each violin plays the tune once it has come in: the second two
+        // bars after the first, the third two bars after that.
+        let entries = canon
+            .patterns()
+            .iter()
+            .position(|pattern| pattern.name == "Entries")
+            .unwrap();
+        let first_note = |channel: usize| canon.patterns()[entries].notes(channel)[0].start;
+        assert_eq!((first_note(0), first_note(1), first_note(2)), (0, 32, 64));
+
+        for song in SONGS {
+            let project = song_demo(song);
+            let voices = project
+                .channels()
+                .iter()
+                .filter(|channel| channel.name.starts_with("Voice "))
+                .count();
+            assert_eq!(voices + 1, song.voices(), "{}", song.name);
+            for channel in project.channels() {
+                if channel.kind == crate::ChannelKind::Synth {
+                    assert!(channel.program.is_some(), "{}: {}", song.name, channel.name);
+                }
+            }
+        }
     }
 }

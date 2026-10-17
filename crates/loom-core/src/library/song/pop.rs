@@ -14,6 +14,7 @@ pub(super) const AULD_LANG_SYNE: Song = Song {
     comping: Comping::Ballad,
     bass: Bass::Held,
     rhythm: "Pop ballad",
+    band: BALLAD,
     style: "Piano ballad",
     parts: &[
         Part::new("Intro", "-:16 | -:12 C5:4", "I | V7"),
@@ -48,6 +49,7 @@ pub(super) const LONDON_BRIDGE: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Octaves,
     rhythm: "Dance pop",
+    band: SYNTHS,
     style: "Dance pop",
     parts: &[Part::new(
         "Tune",
@@ -73,6 +75,7 @@ pub(super) const OLD_MACDONALD: Song = Song {
     comping: Comping::Tresillo,
     bass: Bass::Dembow,
     rhythm: "Afrobeats",
+    band: AFROBEATS,
     style: "Afropop",
     parts: &[Part::new(
         "Song",
@@ -101,6 +104,7 @@ pub(super) const DECK_THE_HALLS: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Pop beat",
+    band: POP,
     style: "Four chords",
     parts: &[Part::new(
         "Verse",
@@ -139,23 +143,28 @@ pub(super) const THREE_BLIND_MICE: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Six-eight",
+    band: SONG_AND_GUITAR,
     style: "Jig",
     parts: &[
         Part::new("Alone", THREE_BLIND_MICE_TUNE, THREE_BLIND_MICE_CHORDS),
-        Part::new("Round", THREE_BLIND_MICE_TUNE, THREE_BLIND_MICE_CHORDS).with_voices(&[0, 4, 8]),
+        Part::new("Round", THREE_BLIND_MICE_TUNE, THREE_BLIND_MICE_CHORDS).with_voices(&[
+            (1, 0),
+            (2, 4),
+            (3, 8),
+        ]),
         // The second and third voices carry on from the part before.
         Part::new(
             "Round again",
             THREE_BLIND_MICE_TUNE,
             THREE_BLIND_MICE_CHORDS,
         )
-        .with_voices(&[0, -12, 4, -8, 8]),
+        .with_voices(&[(1, 0), (2, -12), (2, 4), (3, -8), (3, 8)]),
         Part::new(
             "Last voices",
             THREE_BLIND_MICE_TUNE,
             THREE_BLIND_MICE_CHORDS,
         )
-        .with_voices(&[-12, -8]),
+        .with_voices(&[(2, -12), (3, -8)]),
     ],
     form: &["Alone", "Round", "Round again", "Last voices"],
     drums_from: 0,
@@ -178,6 +187,7 @@ pub(super) const SKIP_TO_MY_LOU: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Country train",
+    band: COUNTRY,
     style: "Country",
     parts: &[Part::new(
         "Song",
@@ -205,6 +215,7 @@ pub(super) const POP_GOES_THE_WEASEL: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Six-eight",
+    band: POP,
     style: "Jig",
     parts: &[
         Part::new(
@@ -245,6 +256,7 @@ pub(super) const FUNICULI_FUNICULA: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Tarantella",
+    band: ACCORDION_BAND,
     style: "Six-eight ballad",
     parts: &[
         Part::new("Pickup", "-:10 C5:2", "I"),
@@ -306,6 +318,7 @@ pub(super) const AU_CLAIR_DE_LA_LUNE: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Pop beat",
+    band: POP,
     style: "Plagal pop",
     parts: &[
         Part::new(
@@ -342,6 +355,7 @@ pub(super) const ALOUETTE: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Pop beat",
+    band: POP,
     style: "Four chords",
     parts: &[
         Part::new(
@@ -388,6 +402,7 @@ pub(super) const VOGELFAENGER: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: Band::new(gm::PAN_FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS),
     style: "Polka",
     parts: &[
         Part::new("Pickup", "-:14 B4:1 A4:1", ""),
@@ -444,6 +459,7 @@ pub(super) const SURPRISE_SYMPHONY: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Octaves,
     rhythm: "Pop beat",
+    band: POP,
     style: "Four chords",
     parts: &[
         Part::new(

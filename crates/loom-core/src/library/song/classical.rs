@@ -20,13 +20,20 @@ pub(super) const CANON: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(gm::VIOLIN, gm::HARPSICHORD, gm::CELLO),
     style: "Hymn",
     parts: &[
         Part::new("Ground", "-:16 | -:16", CANON_GROUND),
         // Each violin starts two bars after the one before.
-        Part::new("Entries", CANON_TUNE, CANON_CHORDS).with_voices(&[0, 2, 4]),
-        Part::new("Canon", CANON_TUNE, CANON_CHORDS).with_voices(&[0, -4, 2, -2, 4]),
-        Part::new("Last entries", CANON_TUNE, CANON_CHORDS).with_voices(&[-4, -2]),
+        Part::new("Entries", CANON_TUNE, CANON_CHORDS).with_voices(&[(1, 0), (2, 2), (3, 4)]),
+        Part::new("Canon", CANON_TUNE, CANON_CHORDS).with_voices(&[
+            (1, 0),
+            (2, -4),
+            (2, 2),
+            (3, -2),
+            (3, 4),
+        ]),
+        Part::new("Last entries", CANON_TUNE, CANON_CHORDS).with_voices(&[(2, -4), (3, -2)]),
     ],
     form: &["Ground", "Entries", "Canon", "Canon", "Last entries"],
     drums_from: 0,
@@ -46,6 +53,7 @@ pub(super) const FUR_ELISE: Song = Song {
     comping: Comping::Held,
     bass: Bass::None,
     rhythm: "",
+    band: PIANO,
     style: "",
     parts: &[
         Part::new("Pickup", "-:4 E5:1 D#5", "").with_left("-:6"),
@@ -128,6 +136,7 @@ pub(super) const MOUNTAIN_KING: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Epic toms",
+    band: Band::new(gm::BASSOON, gm::PIZZICATO_STRINGS, gm::PIZZICATO_STRINGS),
     style: "Epic minor",
     parts: &[
         Part::new("Theme", MOUNTAIN_THEME, MOUNTAIN_CHORDS),
@@ -175,6 +184,7 @@ pub(super) const MINUET: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "",
+    band: Band::solo(gm::HARPSICHORD),
     style: "Waltz",
     parts: &[
         Part::new(
@@ -212,6 +222,7 @@ pub(super) const BLUE_DANUBE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: Band::new(gm::VIOLIN, gm::STRING_ENSEMBLE, gm::CONTRABASS),
     style: "Waltz",
     parts: &[
         Part::new("Pickup", "-:8 D4:4", "I"),
@@ -251,6 +262,11 @@ pub(super) const BRAHMS_LULLABY: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(
+        gm::VOICE_OOHS,
+        gm::ACOUSTIC_GRAND_PIANO,
+        gm::ACOUSTIC_GRAND_PIANO,
+    ),
     style: "Waltz",
     parts: &[Part::new(
         "Lullaby",
@@ -278,6 +294,7 @@ pub(super) const MORNING_MOOD: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(gm::FLUTE, gm::STRING_ENSEMBLE, gm::CELLO),
     style: "Six-eight ballad",
     parts: &[Part::new(
         "Sunrise",
@@ -302,6 +319,7 @@ pub(super) const NEW_WORLD: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(gm::ENGLISH_HORN, gm::STRING_ENSEMBLE, gm::CONTRABASS),
     style: "Hymn",
     parts: &[Part::new(
         "Largo",
@@ -328,6 +346,7 @@ pub(super) const SHCHEDRYK: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: CHOIR,
     style: "",
     parts: &[
         Part::new(
@@ -365,6 +384,7 @@ pub(super) const FUNERAL_MARCH: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "March",
+    band: PIANO,
     style: "Epic minor",
     parts: &[Part::new(
         "March",
@@ -396,6 +416,7 @@ pub(super) const LA_DONNA_E_MOBILE: Song = Song {
     comping: Comping::Sway,
     bass: Bass::Held,
     rhythm: "Six-eight",
+    band: Band::new(gm::VOICE_OOHS, gm::PIZZICATO_STRINGS, gm::CONTRABASS),
     style: "Six-eight ballad",
     parts: &[
         Part::new(
@@ -436,6 +457,7 @@ pub(super) const JUPITER_HYMN: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(gm::FRENCH_HORN, gm::STRING_ENSEMBLE, gm::CONTRABASS),
     style: "Waltz",
     parts: &[
         Part::new("Pickup", "-:8 A4:2 C5:2", "I"),
@@ -480,6 +502,11 @@ pub(super) const AVE_MARIA: Song = Song {
     comping: Comping::Arp16,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(
+        gm::VOICE_OOHS,
+        gm::ACOUSTIC_GRAND_PIANO,
+        gm::ACOUSTIC_GRAND_PIANO,
+    ),
     style: "Classical cadence",
     parts: &[
         Part::new("Intro", "-:16 | -:16", "I I I I7 | IV vii°7 I I"),
@@ -523,6 +550,7 @@ pub(super) const PRELUDE_IN_C_SHARP_MINOR: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "Epic toms",
+    band: PIANO,
     style: "Epic minor",
     parts: &[
         Part::new("Pickup", "-:8 A4:4 G#4:4", "").with_left("-:8 A2:4 G#2:4"),
@@ -574,6 +602,7 @@ pub(super) const WEDDING_MARCH: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Quarters,
     rhythm: "March",
+    band: Band::solo(gm::CHURCH_ORGAN),
     style: "Classical cadence",
     parts: &[
         Part::new(
@@ -618,6 +647,7 @@ pub(super) const HALLELUJAH_CHORUS: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(gm::CHOIR_AAHS, gm::STRING_ENSEMBLE, gm::CELLO),
     style: "Hymn",
     parts: &[
         Part::new(
@@ -672,6 +702,7 @@ pub(super) const GREAT_GATE_OF_KIEV: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "Epic toms",
+    band: Band::new(gm::TRUMPET, gm::BRASS_SECTION, gm::TUBA),
     style: "Hymn",
     parts: &[
         Part::new(
@@ -715,6 +746,7 @@ pub(super) const ANITRAS_DANCE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: Band::new(gm::VIOLIN, gm::PIZZICATO_STRINGS, gm::PIZZICATO_STRINGS),
     style: "La folia",
     parts: &[
         Part::new("Pickup", "-:8 E4:4", "i"),
@@ -764,6 +796,7 @@ pub(super) const DIES_IRAE_MOZART: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Epic toms",
+    band: Band::new(gm::CHOIR_AAHS, gm::STRING_ENSEMBLE, gm::CELLO),
     style: "Epic minor",
     parts: &[
         Part::new(
@@ -804,6 +837,7 @@ pub(super) const PATHETIQUE: Song = Song {
     comping: Comping::Alberti,
     bass: Bass::Held,
     rhythm: "",
+    band: PIANO,
     style: "Classical cadence",
     parts: &[
         Part::new(
@@ -843,6 +877,7 @@ pub(super) const MOONLIGHT_SONATA: Song = Song {
     comping: Comping::ArpUp,
     bass: Bass::Held,
     rhythm: "",
+    band: PIANO,
     style: "Neapolitan",
     parts: &[
         Part::new(
@@ -906,6 +941,7 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::new(gm::VIOLIN, gm::CELLO, gm::CONTRABASS),
     style: "Hymn",
     parts: &[
         Part::new(
@@ -976,6 +1012,7 @@ pub(super) const DANSE_MACABRE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: Band::new(gm::VIOLIN, gm::PIZZICATO_STRINGS, gm::CONTRABASS),
     style: "La folia",
     parts: &[
         Part::new(
@@ -1039,6 +1076,7 @@ pub(super) const HUMORESQUE: Song = Song {
     comping: Comping::Quarters,
     bass: Bass::Held,
     rhythm: "",
+    band: PIANO,
     style: "Classical cadence",
     parts: &[
         Part::new(
@@ -1088,6 +1126,7 @@ pub(super) const TRAUMEREI: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: PIANO,
     style: "Circle of fifths",
     parts: &[
         Part::new("Pickup", "-:12 C4:4", ""),
@@ -1157,6 +1196,7 @@ pub(super) const SYMPHONY_7_ALLEGRETTO: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Pulse,
     rhythm: "Epic toms",
+    band: Band::new(gm::VIOLA, gm::STRING_ENSEMBLE, gm::CONTRABASS),
     style: "Epic minor",
     parts: &[
         Part::new(
@@ -1216,6 +1256,7 @@ pub(super) const RADETZKY_MARCH: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::RootFifth,
     rhythm: "March",
+    band: Band::new(gm::VIOLIN, gm::FRENCH_HORN, gm::CONTRABASS),
     style: "Classical cadence",
     parts: &[
         Part::new(

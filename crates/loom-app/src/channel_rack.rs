@@ -10,7 +10,7 @@
 use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Rect, Ui};
-use loom_core::{ChannelKind, Drum, MAX_CHANNELS, Project, file};
+use loom_core::{ChannelKind, Drum, MAX_CHANNELS, Project, file, general_midi};
 
 use crate::widgets;
 
@@ -44,6 +44,12 @@ pub enum RackAction {
         channel: usize,
         midi_channel: u8,
     },
+    /// Change the General MIDI instrument of a synth or MIDI Out channel,
+    /// or take it away (`None`).
+    SetProgram {
+        channel: usize,
+        program: Option<u8>,
+    },
     /// Load a WAV file into a channel, or into a new channel if `None`.
     LoadSample {
         channel: Option<usize>,
@@ -53,6 +59,62 @@ pub enum RackAction {
 
 const NAME_WIDTH: f32 = 110.0;
 const DROP_HIGHLIGHT: Color32 = Color32::from_rgba_premultiplied(255, 152, 48, 40);
+
+/// The "Instrument" submenu: the 128 General MIDI programs in their
+/// sixteen families, and "None" for the Loom Osc's own sound.
+fn instrument_menu(
+    ui: &mut Ui,
+    channel: usize,
+    current: Option<u8>,
+    actions: &mut Vec<RackAction>,
+) {
+    let label = match current {
+        Some(program) => format!("Instrument: {}", general_midi::name(program)),
+        None => "Instrument".to_string(),
+    };
+    ui.menu_button(label, |ui| {
+        let none = ui
+            .selectable_label(current.is_none(), "None (the Loom Osc's own sound)")
+            .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
+        if none.clicked() {
+            actions.push(RackAction::SetProgram {
+                channel,
+                program: None,
+            });
+            ui.close();
+        }
+        ui.separator();
+        for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
+            let here = current.is_some_and(|program| general_midi::family(program) == family);
+            let family_label = if here {
+                format!("● {family_name}")
+            } else {
+                family_name.to_string()
+            };
+            ui.menu_button(family_label, |ui| {
+                for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
+                    let text =
+                        format!("{} {}", u16::from(program) + 1, general_midi::name(program));
+                    if ui
+                        .selectable_label(current == Some(program), text)
+                        .clicked()
+                    {
+                        actions.push(RackAction::SetProgram {
+                            channel,
+                            program: Some(program),
+                        });
+                        ui.close();
+                    }
+                }
+            });
+        }
+    })
+    .response
+    .on_hover_text(
+        "The General MIDI instrument this channel plays: sent to a MIDI synth as a \
+         program change, written in exported MIDI files, and imitated by the Loom Osc",
+    );
+}
 
 /// Draws the rack for pattern `pattern` and returns what the user did
 /// this frame. `selected` is the selected channel, which the piano roll
@@ -111,11 +173,17 @@ pub fn show(
                         .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y) * widgets::zoom(ui))
                         .selected(index == selected)
                         .truncate();
-                    let name = ui.add(name).on_hover_text(
-                        "Click to hear it and select it: the piano roll shows the selected \
-                         channel, and keyboards play it. Right-click for options. Drop a WAV \
-                         file here to load it.",
-                    );
+                    let hover = "Click to hear it and select it: the piano roll shows the \
+                                 selected channel, and keyboards play it. Right-click for \
+                                 options. Drop a WAV file here to load it.";
+                    let name = match channel.program {
+                        Some(program) => ui.add(name).on_hover_text(format!(
+                            "Plays: {} (General MIDI {})\n\n{hover}",
+                            general_midi::name(program),
+                            u16::from(program) + 1
+                        )),
+                        None => ui.add(name).on_hover_text(hover),
+                    };
                     if name.clicked() {
                         actions.push(RackAction::Preview(index));
                     }
@@ -123,6 +191,12 @@ pub fn show(
                         if ui.button("Piano roll").clicked() {
                             actions.push(RackAction::OpenPianoRoll(index));
                             ui.close();
+                        }
+                        if matches!(
+                            channel.kind,
+                            ChannelKind::Synth | ChannelKind::MidiOut { .. }
+                        ) {
+                            instrument_menu(ui, index, channel.program, &mut actions);
                         }
                         if let ChannelKind::MidiOut { channel: current } = channel.kind {
                             ui.menu_button("MIDI channel", |ui| {
