@@ -3,7 +3,15 @@
 use serde::{Deserialize, Serialize};
 
 use super::{Chord, ChordQuality, PitchSet, ToneRow};
-use crate::{Note, PitchClass, Spelling};
+use crate::{Note, NoteName, PitchClass, Spelling};
+
+/// How many letters above the tonic a note outside the scale is written,
+/// by how many semitones above the tonic it is. Notes a semitone or
+/// three, eight or ten semitones up are flats (b2, b3, b6, b7), six is
+/// a sharp fourth (#4), and nine and eleven are the major sixth and
+/// seventh: in A minor the raised notes are F# and G#, a sixth and a
+/// seventh above A.
+const CHROMATIC_LETTERS: [u8; 12] = [0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
 
 /// The kinds of scale the piano roll can highlight.
 ///
@@ -127,6 +135,21 @@ impl ScaleKind {
         }
     }
 
+    /// How many letters above the tonic each note of a tonal scale is
+    /// written, in the order of its intervals. A seven-note scale uses
+    /// each letter once. The pentatonic scales leave two letters out,
+    /// and the blues scale writes its "blue note" as a flat fifth: A C D
+    /// Eb E G.
+    fn letter_steps(self) -> &'static [u8] {
+        match self {
+            ScaleKind::MajorPentatonic => &[0, 1, 2, 4, 5],
+            ScaleKind::MinorPentatonic => &[0, 2, 3, 4, 6],
+            ScaleKind::Blues => &[0, 2, 3, 4, 4, 6],
+            ScaleKind::Chromatic | ScaleKind::Row(_) | ScaleKind::Set(_) => &CHROMATIC_LETTERS,
+            _ => &[0, 1, 2, 3, 4, 5, 6],
+        }
+    }
+
     /// How far above the root the major key with the same key signature
     /// starts. A minor has no sharps or flats, like C major, which is 3
     /// semitones higher; D Dorian also uses only white keys, and C is 10
@@ -222,11 +245,14 @@ impl Scale {
         self.kind.is_tonal() && self.kind.tonal_intervals().len() == 7
     }
 
-    /// Whether this key is written with flats or with sharps.
+    /// Whether this key's signature has flats or sharps, which is how
+    /// its tonic is written: Bb major, not A# major.
     ///
     /// Keys whose major key signature has flats (F, Bb, Eb, Ab, Db) use
-    /// flats; all others use sharps. This is a simplification: harmonic
-    /// minor keys, for example, mix both in real sheet music.
+    /// flats; all others use sharps. Naming every note with just sharps
+    /// or just flats is not enough, though: D harmonic minor has a Bb
+    /// and a C#, and F# major has an E#. [`Scale::spell`] names each
+    /// note properly.
     pub fn spelling(self) -> Spelling {
         use PitchClass::*;
         match self.root.transpose(self.kind.relative_major() as i32) {
@@ -235,11 +261,129 @@ impl Scale {
         }
     }
 
+    /// How a note is written in this key.
+    ///
+    /// A note of a seven-note scale takes the letter of its place in the
+    /// scale, so each letter comes once: F# major is F# G# A# B C# D# E#,
+    /// D harmonic minor is D E F G A Bb C#, and F Locrian is F Gb Ab Bb
+    /// Cb Db Eb. The pentatonic and blues scales follow the major or
+    /// minor scale they come from, with the blues note as a flat fifth.
+    ///
+    /// A note outside the scale is written from the tonic as musicians
+    /// most often meet it: a flat second, third, sixth or seventh, a
+    /// sharp fourth, and the major sixth and seventh, which in a minor
+    /// key are the raised notes of melodic and harmonic minor (C# in D
+    /// minor). If that would need two sharps or flats, the plain name
+    /// is used instead.
+    ///
+    /// A twelve-tone row or a pitch-class set has no letters of its own,
+    /// so its notes take their usual names (see [`NoteName::chromatic`]).
+    pub fn spell(self, pitch_class: PitchClass) -> NoteName {
+        if !self.kind.is_tonal() {
+            return NoteName::chromatic(pitch_class);
+        }
+        let name = NoteName::with_letter(
+            pitch_class,
+            self.tonic_name()
+                .letter
+                .up(i32::from(self.letters_above_tonic(pitch_class))),
+        );
+        if self.has_letter_for(pitch_class) {
+            name
+        } else {
+            name.simplified()
+        }
+    }
+
+    /// A note's name and octave, spelled in this key: in C# harmonic
+    /// minor, the note a semitone above B3 is "B#3", not "C4". See
+    /// [`Note::name_as`].
+    pub fn note_name(self, note: Note) -> String {
+        note.name_as(self.spell(note.pitch_class()))
+    }
+
+    /// The name of the tonic: the root, with sharps or flats as the key
+    /// signature has them (see [`Scale::spelling`]).
+    fn tonic_name(self) -> NoteName {
+        NoteName::plain(self.root, self.spelling())
+    }
+
+    /// Whether `pitch_class` is a note the scale gives a letter of its
+    /// own to.
+    pub(crate) fn has_letter_for(self, pitch_class: PitchClass) -> bool {
+        self.kind != ScaleKind::Chromatic && self.kind.is_tonal() && self.contains(pitch_class)
+    }
+
+    /// How many letters above the tonic `pitch_class` is written: its
+    /// place in the scale, or for a note outside it, see
+    /// [`CHROMATIC_LETTERS`].
+    fn letters_above_tonic(self, pitch_class: PitchClass) -> u8 {
+        let semitones = self.root.semitones_up_to(pitch_class);
+        if self.has_letter_for(pitch_class)
+            && let Some(place) = self
+                .kind
+                .tonal_intervals()
+                .iter()
+                .position(|&interval| interval == semitones)
+        {
+            return self.kind.letter_steps()[place];
+        }
+        CHROMATIC_LETTERS[semitones as usize]
+    }
+
+    /// How the root of `chord` is written in this key.
+    ///
+    /// A root in the scale is written as the scale writes it. A root
+    /// outside it is written from the tonic, as [`Scale::spell`] does
+    /// (Eb major in C major, the chord borrowed from C minor), unless
+    /// that would spell the chord with two sharps or flats on one note:
+    /// then the enharmonic name with fewer is used. In Db major, the
+    /// chord a semitone up is written D major rather than Ebb major.
+    ///
+    /// Without a key (a row or a set) the root is written as
+    /// [`Chord::root_name`] chooses.
+    pub fn spell_root(self, chord: Chord) -> NoteName {
+        if !self.kind.is_tonal() {
+            return chord.root_name();
+        }
+        let strict = NoteName::with_letter(
+            chord.root,
+            self.tonic_name()
+                .letter
+                .up(i32::from(self.letters_above_tonic(chord.root))),
+        );
+        if self.has_letter_for(chord.root) {
+            return strict;
+        }
+        let doubled = |root: NoteName| chord.spell(root).iter().any(|n| n.accidental.abs() >= 2);
+        if !doubled(strict) {
+            return strict;
+        }
+        let other = chord.root_name();
+        if doubled(other) {
+            strict.simplified()
+        } else {
+            other
+        }
+    }
+
+    /// The chord's symbol, spelled in this key: the chord on the third
+    /// note of A major is "C#m", and on the fourth of Db major "Gb".
+    pub fn chord_name(self, chord: Chord) -> String {
+        chord.name_from(self.spell_root(chord))
+    }
+
+    /// The chord's notes, spelled in this key, from the root up: in D
+    /// minor, A major is A C# E.
+    pub fn chord_notes(self, chord: Chord) -> Vec<NoteName> {
+        chord.spell(self.spell_root(chord))
+    }
+
     /// The name of the key, such as "Bb major" or "F# minor". A row is
     /// named by its form, "row P4 (on E)", and a set by its set class,
     /// "set 4-28 on C".
     pub fn name(self) -> String {
-        let root = self.root.name(self.spelling());
+        let root = self.spell(self.root);
         match self.kind {
             ScaleKind::Row(_) => format!("row P{} (on {root})", self.root.semitone()),
             ScaleKind::Set(set) => format!("set {} on {root}", set.set_class().name()),
@@ -297,25 +441,112 @@ impl Scale {
 
     /// The Roman numeral of a chord in this key, such as "vi" for A minor
     /// in C major or "V7" for G7. Upper case means a major third, lower
-    /// case a minor third. Returns `None` if the chord's root is not in
-    /// the scale or the scale does not have seven notes.
+    /// case a minor third. Returns `None` if the scale does not have
+    /// seven notes.
+    ///
+    /// Numerals count along the **major** scale of the tonic, as the
+    /// library's progressions do: a flat in front means the root is a
+    /// semitone lower than in the major scale. So the chords of A minor
+    /// are i, ii°, bIII, iv, v, bVI and bVII (C is a minor third above
+    /// A, where A major has C#), E Phrygian has its bII, and C Lydian
+    /// its #iv°. A chord from outside the key is numbered the same way:
+    /// Bb major in C major is bVII.
     pub fn roman_numeral(self, chord: Chord) -> Option<String> {
         const NUMERALS: [&str; 7] = ["I", "II", "III", "IV", "V", "VI", "VII"];
         if !self.is_heptatonic() {
             return None;
         }
-        let degree = self.degree_of(chord.root)?;
+        let letters = usize::from(self.letters_above_tonic(chord.root));
+        let in_major = ScaleKind::Major.tonal_intervals()[letters] as i8;
+        let semitones = self.root.semitones_up_to(chord.root) as i8;
+        // How far the root is from the major scale's note, from -6 to 5.
+        let shift = (semitones - in_major + 18).rem_euclid(12) - 6;
+        let accidentals = if shift < 0 { "b" } else { "#" }.repeat(shift.unsigned_abs() as usize);
         let numeral = if chord.quality.is_minor() {
-            NUMERALS[degree].to_lowercase()
+            NUMERALS[letters].to_lowercase()
         } else {
-            NUMERALS[degree].to_string()
+            NUMERALS[letters].to_string()
         };
-        Some(format!("{numeral}{}", chord.quality.numeral_suffix()))
+        Some(format!(
+            "{accidentals}{numeral}{}",
+            chord.quality.numeral_suffix()
+        ))
     }
 
     /// Whether every note of the chord is in the scale.
     pub fn is_diatonic(self, chord: Chord) -> bool {
         chord.pitch_set().is_subset_of(self.pitch_set())
+    }
+
+    /// If `chord` is a **secondary dominant** in this key, the chord it
+    /// is the dominant of. A major or dominant seventh chord from outside
+    /// the key, a fifth above one of the key's major or minor chords
+    /// (not the tonic), pulls to that chord as V pulls to I: in C major,
+    /// D major is the V of G ("V/V") and E7 the V7 of Am ("V7/vi").
+    ///
+    /// In minor keys the key's chords are those of natural minor.
+    pub fn secondary_dominant_target(self, chord: Chord) -> Option<Chord> {
+        use ChordQuality::*;
+        let dominant = chord.quality == Major || chord.quality.is_dominant();
+        if !dominant || !self.is_heptatonic() || self.is_chord_of_key(chord) {
+            return None;
+        }
+        let reference = match self.kind {
+            ScaleKind::HarmonicMinor | ScaleKind::MelodicMinor => {
+                Scale::new(self.root, ScaleKind::NaturalMinor)
+            }
+            _ => self,
+        };
+        let degree = reference.degree_of(chord.root.transpose(5))?;
+        let target = reference.triad(degree)?;
+        (degree != 0 && matches!(target.quality, Major | Minor)).then_some(target)
+    }
+
+    /// The key with the same tonic and the other mode, if this is a major
+    /// or a minor key: C minor for C major, A major for A minor. Chords
+    /// taken from it are **borrowed** chords ("modal mixture"), like the
+    /// Fm and the Bb of C major.
+    pub fn parallel(self) -> Option<Scale> {
+        let kind = match self.kind {
+            ScaleKind::Major => ScaleKind::NaturalMinor,
+            ScaleKind::NaturalMinor | ScaleKind::HarmonicMinor | ScaleKind::MelodicMinor => {
+                ScaleKind::Major
+            }
+            _ => return None,
+        };
+        Some(Scale::new(self.root, kind))
+    }
+
+    /// The parallel key `chord` is borrowed from, if it is not in this
+    /// key but is in that one. A major key borrows from both the
+    /// natural and the harmonic minor: Bb and Bdim7 in C major are both
+    /// borrowed from C minor.
+    pub fn borrowed_from(self, chord: Chord) -> Option<Scale> {
+        let parallel = self.parallel()?;
+        let harmonic = Scale::new(self.root, ScaleKind::HarmonicMinor);
+        let in_parallel = parallel.is_diatonic(chord)
+            || (self.kind == ScaleKind::Major && harmonic.is_diatonic(chord));
+        (!self.is_chord_of_key(chord) && in_parallel).then_some(parallel)
+    }
+
+    /// Whether the chord is one of the chords of this key: in the
+    /// scale, or, in a minor key, the dominant or the leading-tone chord
+    /// with the raised seventh of harmonic minor. E major and E7 belong
+    /// to A minor, and so does G#dim7: most music in minor keys raises G
+    /// to G# for them, so that the leading tone pulls up to A.
+    pub fn is_chord_of_key(self, chord: Chord) -> bool {
+        self.is_diatonic(chord) || self.uses_raised_seventh(chord)
+    }
+
+    /// Whether, in a natural minor key, `chord` is the V or vii° of
+    /// harmonic minor: built on the fifth or the raised seventh, with
+    /// the raised seventh in it.
+    pub fn uses_raised_seventh(self, chord: Chord) -> bool {
+        let harmonic = Scale::new(self.root, ScaleKind::HarmonicMinor);
+        self.kind == ScaleKind::NaturalMinor
+            && !self.is_diatonic(chord)
+            && harmonic.is_diatonic(chord)
+            && matches!(self.root.semitones_up_to(chord.root), 7 | 11)
     }
 }
 
@@ -331,9 +562,15 @@ mod tests {
     use super::*;
     use PitchClass::*;
 
-    fn names(scale: Scale) -> Vec<&'static str> {
-        let spelling = scale.spelling();
-        scale.pitch_classes().map(|p| p.name(spelling)).collect()
+    fn names(scale: Scale) -> Vec<String> {
+        scale
+            .pitch_classes()
+            .map(|p| scale.spell(p).to_string())
+            .collect()
+    }
+
+    fn line(scale: Scale) -> String {
+        names(scale).join(" ")
     }
 
     #[test]
@@ -474,7 +711,8 @@ mod tests {
         let diminished = Scale::set(D, PitchSet::from_semitones(&[2, 5, 8, 11]));
         assert_eq!(diminished.name(), "set 4-28 on D");
         assert!(diminished.contains(F) && !diminished.contains(E));
-        assert_eq!(names(diminished), ["D", "F", "G#", "B"]);
+        // A set has no letters of its own: its notes take their usual names.
+        assert_eq!(names(diminished), ["D", "F", "Ab", "B"]);
         // The root joins the set if it was not in it.
         let added = Scale::set(C, PitchSet::from_semitones(&[4, 7]));
         assert!(added.contains(C));
@@ -517,9 +755,211 @@ mod tests {
                 .unwrap(),
             "III"
         );
+        // Bb major is outside C major, a whole step below home: bVII.
         assert_eq!(
-            scale.roman_numeral(Chord::new(ASharp, ChordQuality::Major)),
-            None
+            scale
+                .roman_numeral(Chord::new(ASharp, ChordQuality::Major))
+                .unwrap(),
+            "bVII"
         );
+    }
+
+    #[test]
+    fn every_letter_once_in_seven_note_scales() {
+        assert_eq!(
+            line(Scale::new(FSharp, ScaleKind::Major)),
+            "F# G# A# B C# D# E#"
+        );
+        assert_eq!(
+            line(Scale::new(DSharp, ScaleKind::NaturalMinor)),
+            "D# E# F# G# A# B C#"
+        );
+        assert_eq!(
+            line(Scale::new(F, ScaleKind::Locrian)),
+            "F Gb Ab Bb Cb Db Eb"
+        );
+        assert_eq!(
+            line(Scale::new(GSharp, ScaleKind::Dorian)),
+            "G# A# B C# D# E# F#"
+        );
+        assert_eq!(
+            line(Scale::new(B, ScaleKind::Lydian)),
+            "B C# D# E# F# G# A#"
+        );
+        for kind in ScaleKind::ALL {
+            for root in PitchClass::ALL {
+                let scale = Scale::new(root, kind);
+                if !scale.is_heptatonic() {
+                    continue;
+                }
+                let mut letters: Vec<_> = scale
+                    .pitch_classes()
+                    .map(|p| scale.spell(p).letter)
+                    .collect();
+                letters.sort();
+                letters.dedup();
+                assert_eq!(letters.len(), 7, "{}", scale.name());
+                // Each name still names the right key.
+                assert!(
+                    scale
+                        .pitch_classes()
+                        .all(|p| scale.spell(p).pitch_class() == p)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn minor_keys_raise_their_sixth_and_seventh_with_sharps() {
+        assert_eq!(
+            line(Scale::new(D, ScaleKind::HarmonicMinor)),
+            "D E F G A Bb C#"
+        );
+        assert_eq!(
+            line(Scale::new(G, ScaleKind::MelodicMinor)),
+            "G A Bb C D E F#"
+        );
+        assert_eq!(
+            line(Scale::new(GSharp, ScaleKind::HarmonicMinor)),
+            "G# A# B C# D# E F##"
+        );
+        // Outside the scale, too: C# in D natural minor, G# in A minor.
+        let d_minor = Scale::new(D, ScaleKind::NaturalMinor);
+        assert_eq!(d_minor.spell(CSharp).to_string(), "C#");
+        assert_eq!(d_minor.spell(B).to_string(), "B");
+    }
+
+    #[test]
+    fn notes_outside_the_key_are_written_from_the_tonic() {
+        let c = Scale::default();
+        let outside: Vec<String> = [CSharp, DSharp, FSharp, GSharp, ASharp]
+            .iter()
+            .map(|&p| c.spell(p).to_string())
+            .collect();
+        assert_eq!(outside, ["Db", "Eb", "F#", "Ab", "Bb"]);
+        // No double flats outside the scale: in Db major, D is D.
+        assert_eq!(
+            Scale::new(CSharp, ScaleKind::Major).spell(D).to_string(),
+            "D"
+        );
+        assert_eq!(
+            line(Scale::new(C, ScaleKind::Chromatic)),
+            "C Db D Eb E F F# G Ab A Bb B"
+        );
+    }
+
+    #[test]
+    fn pentatonic_and_blues_scales_follow_major_and_minor() {
+        assert_eq!(line(Scale::new(A, ScaleKind::Blues)), "A C D Eb E G");
+        assert_eq!(line(Scale::new(E, ScaleKind::Blues)), "E G A Bb B D");
+        assert_eq!(
+            line(Scale::new(FSharp, ScaleKind::MajorPentatonic)),
+            "F# G# A# C# D#"
+        );
+        assert_eq!(
+            line(Scale::new(DSharp, ScaleKind::MinorPentatonic)),
+            "D# F# G# A# C#"
+        );
+    }
+
+    #[test]
+    fn notes_are_named_in_the_key_with_their_octave() {
+        // C# harmonic minor raises its seventh, B, to B#.
+        let c_sharp = Scale::new(PitchClass::CSharp, ScaleKind::HarmonicMinor);
+        assert_eq!(c_sharp.note_name(Note::new(60)), "B#3");
+        assert_eq!(c_sharp.note_name(Note::new(61)), "C#4");
+        let c = Scale::new(PitchClass::C, ScaleKind::Major);
+        assert_eq!(c.note_name(Note::new(61)), "Db4");
+        assert_eq!(c.note_name(Note::new(66)), "F#4");
+    }
+
+    #[test]
+    fn chords_are_spelled_in_the_key() {
+        let notes = |scale: Scale, chord| {
+            let names: Vec<String> = scale
+                .chord_notes(chord)
+                .iter()
+                .map(|n| n.to_string())
+                .collect();
+            names.join(" ")
+        };
+        let d_minor = Scale::new(D, ScaleKind::NaturalMinor);
+        assert_eq!(notes(d_minor, Chord::new(A, ChordQuality::Major)), "A C# E");
+        assert_eq!(
+            notes(d_minor, Chord::new(CSharp, ChordQuality::Diminished7)),
+            "C# E G Bb"
+        );
+        let f_sharp = Scale::new(FSharp, ScaleKind::Major);
+        assert_eq!(
+            f_sharp.chord_name(Chord::new(F, ChordQuality::Diminished)),
+            "E#dim"
+        );
+        assert_eq!(
+            notes(f_sharp, Chord::new(CSharp, ChordQuality::Major)),
+            "C# E# G#"
+        );
+        let c = Scale::default();
+        assert_eq!(c.chord_name(Chord::new(DSharp, ChordQuality::Major)), "Eb");
+        assert_eq!(c.chord_name(Chord::new(GSharp, ChordQuality::Major)), "Ab");
+        assert_eq!(notes(c, Chord::new(E, ChordQuality::Major)), "E G# B");
+        // In Db major the chord a semitone up is D major, not Ebb major.
+        let d_flat = Scale::new(CSharp, ScaleKind::Major);
+        assert_eq!(d_flat.chord_name(Chord::new(D, ChordQuality::Major)), "D");
+        assert_eq!(
+            d_flat
+                .roman_numeral(Chord::new(D, ChordQuality::Major))
+                .unwrap(),
+            "bII"
+        );
+        // A set spells a chord as simply as it can.
+        let set = Scale::set(C, PitchSet::from_semitones(&[0, 1, 5, 8]));
+        assert_eq!(
+            set.chord_name(Chord::new(CSharp, ChordQuality::Major)),
+            "Db"
+        );
+    }
+
+    #[test]
+    fn numerals_count_along_the_major_scale() {
+        let numerals = |root, kind| {
+            let scale = Scale::new(root, kind);
+            (0..7)
+                .map(|degree| scale.roman_numeral(scale.triad(degree).unwrap()).unwrap())
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        assert_eq!(
+            numerals(A, ScaleKind::NaturalMinor),
+            "i ii° bIII iv v bVI bVII"
+        );
+        assert_eq!(
+            numerals(A, ScaleKind::HarmonicMinor),
+            "i ii° bIII+ iv V bVI vii°"
+        );
+        assert_eq!(
+            numerals(A, ScaleKind::MelodicMinor),
+            "i ii bIII+ IV V vi° vii°"
+        );
+        assert_eq!(
+            numerals(E, ScaleKind::Phrygian),
+            "i bII bIII iv v° bVI bvii"
+        );
+        assert_eq!(numerals(C, ScaleKind::Lydian), "I II iii #iv° V vi vii");
+        assert_eq!(numerals(G, ScaleKind::Mixolydian), "I ii iii° IV v vi bVII");
+        assert_eq!(
+            numerals(B, ScaleKind::Locrian),
+            "i° bII biii iv bV bVI bvii"
+        );
+        assert_eq!(numerals(D, ScaleKind::Dorian), "i ii bIII IV v vi° bVII");
+    }
+
+    #[test]
+    fn minor_keys_own_the_raised_dominant() {
+        let a_minor = Scale::new(A, ScaleKind::NaturalMinor);
+        assert!(a_minor.is_chord_of_key(Chord::new(E, ChordQuality::Major)));
+        assert!(a_minor.is_chord_of_key(Chord::new(E, ChordQuality::Dominant7)));
+        assert!(a_minor.is_chord_of_key(Chord::new(GSharp, ChordQuality::Diminished7)));
+        assert!(!a_minor.is_chord_of_key(Chord::new(D, ChordQuality::Major)));
+        assert!(!Scale::default().is_chord_of_key(Chord::new(E, ChordQuality::Major)));
     }
 }

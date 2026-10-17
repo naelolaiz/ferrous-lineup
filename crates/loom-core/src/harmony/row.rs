@@ -34,7 +34,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use super::PitchSet;
-use crate::{Note, PitchClass, Spelling};
+use crate::{Note, NoteName, PitchClass, Spelling};
 
 /// A twelve-tone row: the twelve pitch classes, each once, in order.
 ///
@@ -269,9 +269,19 @@ impl ToneRow {
         .collect()
     }
 
-    /// The note names, such as "E F G Db Gb Eb Ab D B C A Bb".
+    /// The note names, such as "E F G Db Gb Eb Ab D B C A Bb", with the
+    /// black keys all sharps or all flats.
     pub fn names(self, spelling: Spelling) -> String {
         self.pitch_classes().map(|p| p.name(spelling)).join(" ")
+    }
+
+    /// The note names as twelve-tone music usually writes them, with no
+    /// key to follow: "E F G C# F# Eb Ab D B C A Bb". The black keys are
+    /// C#, Eb, F#, Ab and Bb (see [`NoteName::chromatic`]).
+    pub fn note_names(self) -> String {
+        self.pitch_classes()
+            .map(|p| NoteName::chromatic(p).to_string())
+            .join(" ")
     }
 
     /// The first twelve different pitch classes among `notes`, in order,
@@ -288,10 +298,10 @@ impl ToneRow {
             }
         }
         if order.len() < 12 {
-            let missing: Vec<&str> = seen
+            let missing: Vec<String> = seen
                 .complement()
                 .iter()
-                .map(|p| p.name(Spelling::Sharps))
+                .map(|p| NoteName::chromatic(p).to_string())
                 .collect();
             return Err(format!(
                 "A row needs all twelve notes; these have {}. Missing: {}.",
@@ -343,14 +353,14 @@ impl ToneRow {
         for &note in &notes {
             let pitch_class = PitchClass::from_semitone(note);
             if seen.contains(pitch_class) {
-                let missing: Vec<&str> = PitchSet::from_semitones(&notes)
+                let missing: Vec<String> = PitchSet::from_semitones(&notes)
                     .complement()
                     .iter()
-                    .map(|p| p.name(Spelling::Sharps))
+                    .map(|p| NoteName::chromatic(p).to_string())
                     .collect();
                 return Err(format!(
                     "{} comes twice, and {} is missing: each note once.",
-                    pitch_class.name(Spelling::Sharps),
+                    NoteName::chromatic(pitch_class),
                     missing.join(" ")
                 ));
             }
@@ -501,7 +511,8 @@ pub const ROW_PRESETS: [RowPreset; 7] = [
         name: "Schoenberg's Suite",
         source: "Arnold Schoenberg, Suite for Piano, Op. 25 (1925)",
         about: "One of the first pieces built entirely from one row. Its last four notes, \
-                B C A Bb, spell BACH backwards and scrambled: in German, B is Bb and H is B.",
+                B C A Bb, spell BACH backwards: in German, B is Bb and H is B, so BACH is \
+                Bb A C B, and the row ends H C A B.",
         row: ToneRow([4, 5, 7, 1, 6, 3, 8, 2, 11, 0, 9, 10]),
     },
     RowPreset {
@@ -529,7 +540,7 @@ pub const ROW_PRESETS: [RowPreset; 7] = [
     RowPreset {
         name: "Four triads",
         source: "Written for Ferrous Loom",
-        about: "Four triads in a row (C major, D major, Bb minor, Ab minor) that still use \
+        about: "Four triads in a row (C major, D major, Bb minor, G# minor) that still use \
                 every note once: twelve-tone music can sound almost tonal, as in Berg.",
         row: ToneRow([0, 4, 7, 2, 6, 9, 10, 1, 5, 11, 3, 8]),
     },
@@ -695,6 +706,8 @@ mod tests {
         let twice = ToneRow::parse("C C D D# E F F# G G# A A# B").unwrap_err();
         assert!(twice.contains("C comes twice"), "{twice}");
         assert!(twice.contains("C#"), "{twice}");
+        let schoenberg = RowPreset::named("Schoenberg's Suite").unwrap().row;
+        assert_eq!(schoenberg.note_names(), "E F G C# F# Eb Ab D B C A Bb");
         assert!(ToneRow::parse("C H D").is_err());
     }
 
@@ -729,10 +742,7 @@ mod tests {
     #[test]
     fn presets_are_what_they_say() {
         let triads = RowPreset::named("Four triads").unwrap().row;
-        assert_eq!(
-            triads.names(Spelling::Flats),
-            "C E G D Gb A Bb Db F B Eb Ab"
-        );
+        assert_eq!(triads.note_names(), "C E G D F# A Bb C# F B Eb Ab");
         for preset in ROW_PRESETS {
             assert!(
                 ToneRow::new(preset.row.semitones()).is_some(),

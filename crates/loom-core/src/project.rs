@@ -308,8 +308,11 @@ impl Project {
     // ----- Channels -----
 
     /// Changes the key, and moves the notes of every pitched channel in
-    /// every pattern into it (see [`tools::change_key`]). Drums and
-    /// step-sequencer steps stay as they are. Changing to the key the
+    /// every pattern into it (see [`tools::change_key`]). Drums stay as
+    /// they are, and so does a row of step-sequencer steps (a synth
+    /// played from the channel rack, every note a one-step C4), which
+    /// would otherwise stop being steps. A one-step C4 among other notes
+    /// is part of a tune, and moves with it. Changing to the key the
     /// project is already in changes nothing.
     pub fn change_key(&mut self, scale: Scale) {
         let from = self.scale;
@@ -319,15 +322,15 @@ impl Project {
         let pitched: Vec<bool> = self.channels.iter().map(Channel::is_pitched).collect();
         for pattern in &mut self.patterns {
             for (channel, _) in pitched.iter().enumerate().filter(|(_, p)| **p) {
+                if pattern.is_step_row(channel) {
+                    continue;
+                }
                 let notes: Vec<NoteEvent> = pattern
                     .notes(channel)
                     .iter()
-                    .map(|note| match note.is_step() {
-                        true => *note,
-                        false => NoteEvent {
-                            pitch: tools::change_key(note.pitch, from, scale),
-                            ..*note
-                        },
+                    .map(|note| NoteEvent {
+                        pitch: tools::change_key(note.pitch, from, scale),
+                        ..*note
                     })
                     .collect();
                 pattern.set_notes(channel, notes);
@@ -397,17 +400,20 @@ impl Project {
         self.push_pattern(Pattern::new(name, self.channels.len(), length))
     }
 
-    /// Adds a copy of a pattern at the end of the list and returns its index.
+    /// Adds a copy of a pattern at the end of the list and returns its
+    /// index. The copy gets a colour of its own, like any new pattern.
     pub fn clone_pattern(&mut self, index: usize) -> Option<usize> {
         let mut copy = self.patterns.get(index)?.clone();
         copy.name = format!("{} copy", copy.name);
         self.push_pattern(copy)
     }
 
-    fn push_pattern(&mut self, pattern: Pattern) -> Option<usize> {
+    /// Adds a pattern at the end, in the colour after the last pattern's.
+    fn push_pattern(&mut self, mut pattern: Pattern) -> Option<usize> {
         if self.patterns.len() >= MAX_PATTERNS {
             return None;
         }
+        pattern.color = self.patterns.last().map_or(0, |last| last.color + 1);
         self.patterns.push(pattern);
         Some(self.patterns.len() - 1)
     }
@@ -699,16 +705,22 @@ impl Project {
     }
 
     /// The time signature a pattern is written in: the one where its
-    /// first clip starts, or the project's own if it has no clips. The
-    /// channel rack and the piano roll draw its bars in it.
+    /// first clip starts, or if it has no clips, its own (see
+    /// [`Pattern::time`]) or the project's. The channel rack and the
+    /// piano roll draw its bars in it.
     pub fn pattern_time(&self, pattern: usize) -> TimeSignature {
+        let own = self
+            .patterns
+            .get(pattern)
+            .and_then(|pattern| pattern.time)
+            .unwrap_or(self.time_signature);
         self.playlist
             .clips
             .iter()
             .filter(|clip| clip.pattern == pattern)
             .map(|clip| clip.start)
             .min()
-            .map_or(self.time_signature, |start| self.meter().time_at(start))
+            .map_or(own, |start| self.meter().time_at(start))
     }
 
     /// Changes the time signature from `marker.start` on. On step 0 it
@@ -855,11 +867,15 @@ impl Project {
     /// Turns a repeated section into separate copies, one per repeat,
     /// each played once, so each time round can be changed on its own.
     /// The song sounds the same before and after.
+    ///
+    /// Returns `false`, changing nothing, if there is no such section, it
+    /// plays only once, the song would get too long, or a clip lies partly
+    /// inside it (see [`Project::section_cuts_a_clip`]).
     pub fn unroll_section(&mut self, index: usize) -> bool {
         let Some(repeats) = self.playlist.sections.get(index).map(|s| s.repeats) else {
             return false;
         };
-        if repeats < 2 {
+        if repeats < 2 || self.section_cuts_a_clip(index) {
             return false;
         }
         self.playlist.sections[index].repeats = 1;
@@ -869,6 +885,25 @@ impl Project {
             self.playlist.sections[index].repeats = repeats;
             false
         }
+    }
+
+    /// Whether a clip that can be heard lies partly inside section `index`
+    /// and partly outside it: it starts before the section and lasts into
+    /// it, or starts inside and lasts past its end.
+    ///
+    /// Such a section cannot be written out: a clip always starts at the
+    /// start of its pattern, so there is no clip that plays just the part
+    /// inside, and the copies would sound different from the repeats.
+    pub fn section_cuts_a_clip(&self, index: usize) -> bool {
+        let Some(section) = self.playlist.sections.get(index) else {
+            return false;
+        };
+        self.playlist.audible_clips().any(|clip| {
+            let end = clip.start + self.clip_length(&clip);
+            let overlaps = clip.start < section.end() && end > section.start;
+            let inside = clip.start >= section.start && end <= section.end();
+            overlaps && !inside
+        })
     }
 
     /// Moves every clip, section and loop edge at or after step `at`
@@ -1033,13 +1068,15 @@ mod tests {
                 let expected: Vec<NoteEvent> = old
                     .notes(channel)
                     .iter()
-                    .map(|note| match kind.is_pitched() && !note.is_step() {
-                        true => NoteEvent {
-                            pitch: tools::change_key(note.pitch, before.scale, d_minor),
-                            ..*note
+                    .map(
+                        |note| match kind.is_pitched() && !old.is_step_row(channel) {
+                            true => NoteEvent {
+                                pitch: tools::change_key(note.pitch, before.scale, d_minor),
+                                ..*note
+                            },
+                            false => *note,
                         },
-                        false => *note,
-                    })
+                    )
                     .collect();
                 assert_eq!(pattern.notes(channel), expected);
             }
@@ -1049,6 +1086,19 @@ mod tests {
         let again = project.clone();
         project.change_key(d_minor);
         assert_eq!(project, again);
+        // A one-step C4 drawn among a tune's notes moves with the tune.
+        let mut project = Project::demo();
+        let synth = crate::NoteEvent::new(crate::Note::C4, 3, 1);
+        let chords = project.pattern(1).unwrap().clone();
+        let channel = (0..chords.rows())
+            .find(|&channel| !chords.notes(channel).is_empty() && !chords.is_step_row(channel))
+            .unwrap();
+        let mut notes = chords.notes(channel).to_vec();
+        notes.push(synth);
+        project.pattern_mut(1).unwrap().set_notes(channel, notes);
+        project.change_key(Scale::new(PitchClass::G, ScaleKind::Major));
+        let moved = project.pattern(1).unwrap().notes(channel);
+        assert!(!moved.contains(&synth), "the C4 moved into G major");
     }
 
     #[test]
@@ -1196,6 +1246,11 @@ mod tests {
             Some(0),
             "the fill still plays"
         );
+        // Every pattern keeps its colour, and a new one takes the next.
+        let colors: Vec<usize> = project.patterns().iter().map(|p| p.color).collect();
+        assert_eq!(colors, [1, 2]);
+        let added = project.add_pattern().unwrap();
+        assert_eq!(project.patterns()[added].color, 3);
     }
 
     #[test]
@@ -1414,6 +1469,33 @@ mod tests {
         };
         assert_eq!(starts(&after), starts(&before));
         assert!(!project.unroll_section(index), "nothing left to unroll");
+    }
+
+    #[test]
+    fn a_section_that_cuts_a_clip_is_not_unrolled() {
+        // A four-bar clip, with its second bar played twice.
+        let mut project = Project::template();
+        project.pattern_mut(0).unwrap().set_length(64);
+        project.add_clip(Clip::new(0, 0, 0));
+        let mut verse = Section::new("Verse", 16, 16);
+        verse.repeats = 2;
+        let index = project.add_section(verse).unwrap();
+        assert!(project.section_cuts_a_clip(index));
+        let before = project.clone();
+        assert!(!project.unroll_section(index));
+        assert_eq!(project, before, "nothing changed");
+
+        // On a muted track, the clip is not heard, so it does not count.
+        project.track_mut(0).unwrap().muted = true;
+        assert!(!project.section_cuts_a_clip(index));
+        // A section around the whole clip does not cut it either.
+        let mut project = before;
+        let mut whole = Section::new("Whole", 0, 64);
+        whole.repeats = 2;
+        project.remove_section(index);
+        let index = project.add_section(whole).unwrap();
+        assert!(!project.section_cuts_a_clip(index));
+        assert!(project.unroll_section(index));
     }
 
     #[test]

@@ -248,6 +248,7 @@ impl LoomApp {
         self.cursor = 0;
         self.marker = 0;
         self.piano_roll = PianoRoll::new(super::first_synth(&self.project));
+        self.harmony_keys.forget_chords();
         self.message = None;
         self.notice = None;
         // Undo cannot go back into another file, and its samples may

@@ -33,6 +33,24 @@ pub const SAMPLER_VOICES: usize = 8;
 /// will be held when it goes down.
 pub const HELD: u32 = u32::MAX;
 
+/// Where in the song a note the sequencer started comes from.
+///
+/// Every note of the song is a note of some pattern, started on some step
+/// of the song. Each voice remembers that, so the audio thread can tell
+/// later whether the song still plays it: when its track is muted or its
+/// clip is taken away while it sounds, the note should stop (see
+/// [`Instrument::release_unless`]). Keys played on a keyboard and
+/// previews have no origin.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Origin {
+    /// The pattern the note belongs to.
+    pub pattern: usize,
+    /// The step of the pattern the note starts on.
+    pub pattern_step: usize,
+    /// The step of the song (of the pattern, in pattern mode) it started on.
+    pub song_step: usize,
+}
+
 /// The sound-making part of a channel.
 ///
 /// An enum instead of a trait object (`Box<dyn Instrument>`): there are
@@ -85,10 +103,34 @@ impl Instrument {
     /// note-off; the sampler ignores it and always plays its sound to the
     /// end, like a drum machine.
     pub fn note_on(&mut self, pitch: Note, velocity: u8, gate: u32, output_rate: u32) {
+        self.start(pitch, velocity, gate, output_rate, None);
+    }
+
+    /// Starts a note of the song: like [`Instrument::note_on`], but the
+    /// note remembers where in the song it comes from.
+    pub fn note_on_from(
+        &mut self,
+        origin: Origin,
+        pitch: Note,
+        velocity: u8,
+        gate: u32,
+        output_rate: u32,
+    ) {
+        self.start(pitch, velocity, gate, output_rate, Some(origin));
+    }
+
+    fn start(
+        &mut self,
+        pitch: Note,
+        velocity: u8,
+        gate: u32,
+        output_rate: u32,
+        origin: Option<Origin>,
+    ) {
         match self {
-            Instrument::Sampler(sampler) => sampler.note_on(pitch, velocity, output_rate),
-            Instrument::Synth(synth) => synth.note_on(pitch, velocity, gate),
-            Instrument::MidiOut(midi_out) => midi_out.note_on(pitch, velocity, gate),
+            Instrument::Sampler(sampler) => sampler.start(pitch, velocity, output_rate, origin),
+            Instrument::Synth(synth) => synth.start(pitch, velocity, gate, origin),
+            Instrument::MidiOut(midi_out) => midi_out.start(pitch, velocity, gate, origin),
         }
     }
 
@@ -108,6 +150,40 @@ impl Instrument {
             Instrument::Sampler(sampler) => sampler.release_all(),
             Instrument::Synth(synth) => synth.release_all(),
             Instrument::MidiOut(midi_out) => midi_out.release_all(),
+        }
+    }
+
+    /// Lets go of the notes of the song that `keep` turns down, given where
+    /// each one came from. Keys held on a keyboard and previews did not
+    /// come from the song, so they are left alone.
+    ///
+    /// The audio thread calls this when a channel is muted, and when the
+    /// song changes while notes sound, so that a note whose clip was taken
+    /// away or whose track was muted stops. A sampler fades such a sound
+    /// out quickly, however short it is.
+    pub fn release_unless(&mut self, keep: impl Fn(Origin) -> bool) {
+        match self {
+            Instrument::Sampler(sampler) => sampler.release_unless(keep),
+            Instrument::Synth(synth) => synth.release_unless(keep),
+            Instrument::MidiOut(midi_out) => midi_out.release_unless(keep),
+        }
+    }
+
+    /// Makes the notes being held end on time after a change of tempo, so
+    /// that each still lasts as many steps as it should.
+    ///
+    /// A note's length was turned into frames when it started. The step
+    /// that is playing keeps its length in frames (see
+    /// [`loom_core::Sequencer::set_tempo`]), so the frames up to the next
+    /// step, `next_step`, stay as they are; every frame after that is
+    /// multiplied by `stretch`, the new length of a step divided by the
+    /// old one. The sampler plays its sounds to the end, so it has nothing
+    /// to change.
+    pub fn tempo_changed(&mut self, next_step: f64, stretch: f64) {
+        match self {
+            Instrument::Sampler(_) => {}
+            Instrument::Synth(synth) => synth.tempo_changed(next_step, stretch),
+            Instrument::MidiOut(midi_out) => midi_out.tempo_changed(next_step, stretch),
         }
     }
 
@@ -144,30 +220,54 @@ fn velocity_gain(velocity: u8) -> f32 {
     velocity.min(127) as f32 / 127.0
 }
 
+/// How many frames a note has left after a change of tempo, if it had
+/// `left` at the old tempo: the frames up to the next step (`next_step`)
+/// stay as they are, and the rest are multiplied by `stretch`. Rounded to
+/// the nearest frame.
+fn stretched(left: f64, next_step: f64, stretch: f64) -> f64 {
+    if left <= next_step {
+        left
+    } else {
+        (next_step + (left - next_step) * stretch).round()
+    }
+}
+
 /// What every kind of voice can tell the voice allocator.
 trait Voice {
     /// Whether the voice is silent and free to play a new note.
     fn is_idle(&self) -> bool;
     /// When the voice's note started, as a count of notes started so far.
     fn started(&self) -> u64;
+    /// Whether the voice's note has ended and it is only fading out.
+    fn is_releasing(&self) -> bool;
 }
 
 /// Chooses the voice for a new note: a silent one if there is one,
-/// otherwise the one that started longest ago ("voice stealing").
+/// otherwise one that is only fading out, otherwise the one that started
+/// longest ago ("voice stealing"). Among the voices fading out, too, the
+/// oldest goes first.
+///
+/// A fading voice is still busy for a while (the Loom Osc's release takes
+/// most of a second to reach silence), but cutting its tail is far less
+/// noticeable than cutting a note that is still held, such as a long bass
+/// note under quick chords.
 ///
 /// The function is generic, so the same code serves both instruments: the
 /// compiler makes one copy for `SamplerVoice` and one for `SynthVoice`.
 fn pick_voice<V: Voice>(voices: &mut [V]) -> &mut V {
+    let oldest = |releasing: bool| {
+        voices
+            .iter()
+            .enumerate()
+            .filter(|(_, voice)| !releasing || voice.is_releasing())
+            .min_by_key(|(_, voice)| voice.started())
+            .map(|(index, _)| index)
+    };
     let index = voices
         .iter()
         .position(Voice::is_idle)
-        .or_else(|| {
-            voices
-                .iter()
-                .enumerate()
-                .min_by_key(|(_, voice)| voice.started())
-                .map(|(index, _)| index)
-        })
+        .or_else(|| oldest(true))
+        .or_else(|| oldest(false))
         .unwrap_or(0);
     &mut voices[index]
 }
@@ -195,6 +295,8 @@ struct SamplerVoice {
     started: u64,
     /// While stopping: how loud the voice still is, falling to silence.
     fading: Option<f32>,
+    /// Where in the song its note comes from, if it does.
+    origin: Option<Origin>,
 }
 
 impl Voice for SamplerVoice {
@@ -204,6 +306,10 @@ impl Voice for SamplerVoice {
 
     fn started(&self) -> u64 {
         self.started
+    }
+
+    fn is_releasing(&self) -> bool {
+        self.fading.is_some()
     }
 }
 
@@ -243,6 +349,10 @@ impl Sampler {
     }
 
     pub fn note_on(&mut self, pitch: Note, velocity: u8, output_rate: u32) {
+        self.start(pitch, velocity, output_rate, None);
+    }
+
+    fn start(&mut self, pitch: Note, velocity: u8, output_rate: u32, origin: Option<Origin>) {
         // Every semitone up plays the sample 2^(1/12) times faster.
         let semitones = pitch.midi() as f64 - STEP_NOTE.midi() as f64;
         let pitch_ratio = 2.0_f64.powf(semitones / 12.0);
@@ -255,6 +365,7 @@ impl Sampler {
             gain: velocity_gain(velocity),
             started: self.notes_started,
             fading: None,
+            origin,
         };
     }
 
@@ -266,6 +377,16 @@ impl Sampler {
             > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS;
         if long {
             for voice in self.voices.iter_mut().filter(|voice| !voice.is_idle()) {
+                voice.fading.get_or_insert(1.0);
+            }
+        }
+    }
+
+    /// Fades out the sounds of the song that `keep` turns down, long or
+    /// short (see [`Instrument::release_unless`]).
+    pub fn release_unless(&mut self, keep: impl Fn(Origin) -> bool) {
+        for voice in self.voices.iter_mut().filter(|voice| !voice.is_idle()) {
+            if voice.origin.is_some_and(|origin| !keep(origin)) {
                 voice.fading.get_or_insert(1.0);
             }
         }
@@ -349,6 +470,8 @@ struct SynthVoice {
     stage: Stage,
     level: f32,
     started: u64,
+    /// Where in the song its note comes from, if it does.
+    origin: Option<Origin>,
 }
 
 impl Voice for SynthVoice {
@@ -358,6 +481,10 @@ impl Voice for SynthVoice {
 
     fn started(&self) -> u64 {
         self.started
+    }
+
+    fn is_releasing(&self) -> bool {
+        self.stage == Stage::Release
     }
 }
 
@@ -373,7 +500,13 @@ impl SynthVoice {
             stage: Stage::Idle,
             level: 0.0,
             started: 0,
+            origin: None,
         }
+    }
+
+    /// Whether the note is still held: started, and not let go of yet.
+    fn is_held(&self) -> bool {
+        matches!(self.stage, Stage::Attack | Stage::Decay)
     }
 
     fn next_sample(&mut self, envelope: &EnvelopeRates, sample_rate: f32) -> f32 {
@@ -400,7 +533,7 @@ impl SynthVoice {
 
         // Count down the gate while the note is held, then let go. A
         // `HELD` gate is not counted: only `note_off` ends it.
-        if matches!(self.stage, Stage::Attack | Stage::Decay) && self.gate != HELD {
+        if self.is_held() && self.gate != HELD {
             match self.gate.checked_sub(1) {
                 Some(left) => self.gate = left,
                 None => self.stage = Stage::Release,
@@ -426,6 +559,10 @@ impl Synth {
     }
 
     pub fn note_on(&mut self, pitch: Note, velocity: u8, gate: u32) {
+        self.start(pitch, velocity, gate, None);
+    }
+
+    fn start(&mut self, pitch: Note, velocity: u8, gate: u32, origin: Option<Origin>) {
         self.notes_started += 1;
         let voice = pick_voice(&mut self.voices[..]);
         voice.pitch = pitch;
@@ -434,6 +571,7 @@ impl Synth {
         voice.gate = gate;
         voice.stage = Stage::Attack;
         voice.started = self.notes_started;
+        voice.origin = origin;
         // The level, phase and filter carry on from where they were, so a
         // stolen voice does not jump (and click).
     }
@@ -442,10 +580,7 @@ impl Synth {
     /// the sequencer started keep their own gate.
     pub fn note_off(&mut self, pitch: Note) {
         for voice in self.voices.iter_mut() {
-            if voice.pitch == pitch
-                && voice.gate == HELD
-                && matches!(voice.stage, Stage::Attack | Stage::Decay)
-            {
+            if voice.pitch == pitch && voice.gate == HELD && voice.is_held() {
                 voice.stage = Stage::Release;
             }
         }
@@ -453,8 +588,30 @@ impl Synth {
 
     pub fn release_all(&mut self) {
         for voice in self.voices.iter_mut() {
-            if matches!(voice.stage, Stage::Attack | Stage::Decay) {
+            if voice.is_held() {
                 voice.stage = Stage::Release;
+            }
+        }
+    }
+
+    /// Releases the held notes of the song that `keep` turns down (see
+    /// [`Instrument::release_unless`]).
+    pub fn release_unless(&mut self, keep: impl Fn(Origin) -> bool) {
+        for voice in self.voices.iter_mut() {
+            if voice.is_held() && voice.origin.is_some_and(|origin| !keep(origin)) {
+                voice.stage = Stage::Release;
+            }
+        }
+    }
+
+    /// Stretches the gates of the held notes after a change of tempo (see
+    /// [`Instrument::tempo_changed`]).
+    pub fn tempo_changed(&mut self, next_step: f64, stretch: f64) {
+        for voice in self.voices.iter_mut() {
+            if voice.is_held() && voice.gate != HELD {
+                let left = stretched(f64::from(voice.gate), next_step, stretch);
+                // Never as long as `HELD`, which would hold it for ever.
+                voice.gate = left.min(f64::from(HELD - 1)) as u32;
             }
         }
     }
@@ -496,6 +653,9 @@ pub struct MidiOut {
 struct MidiOutState {
     /// For each of the 128 MIDI notes, whether it is sounding and until when.
     notes: [Sounding; 128],
+    /// For each of the 128 MIDI notes, where in the song the note
+    /// sounding comes from, if it does.
+    origins: [Option<Origin>; 128],
     /// Messages not yet collected, with room for [`OUTBOX_SIZE`] reserved
     /// up front, so pushing never allocates.
     outbox: Vec<MidiMessage>,
@@ -521,6 +681,7 @@ impl MidiOut {
             now: 0,
             state: Box::new(MidiOutState {
                 notes: [Sounding::Off; 128],
+                origins: [None; 128],
                 outbox: Vec::with_capacity(OUTBOX_SIZE),
             }),
         }
@@ -549,6 +710,10 @@ impl MidiOut {
     }
 
     pub fn note_on(&mut self, pitch: Note, velocity: u8, gate: u32) {
+        self.start(pitch, velocity, gate, None);
+    }
+
+    fn start(&mut self, pitch: Note, velocity: u8, gate: u32, origin: Option<Origin>) {
         let pitch = self.pitch.unwrap_or(pitch);
         let slot = usize::from(pitch.midi());
         // MIDI has one of each note per channel. If this one is already
@@ -567,6 +732,7 @@ impl MidiOut {
         } else {
             Sounding::Until(self.now + u64::from(gate))
         };
+        self.state.origins[slot] = origin;
     }
 
     pub fn note_off(&mut self, pitch: Note) {
@@ -584,6 +750,31 @@ impl MidiOut {
             if self.state.notes[index] != Sounding::Off {
                 self.post(self.note_off_message(Note::new(index as u8)));
                 self.state.notes[index] = Sounding::Off;
+            }
+        }
+    }
+
+    /// Ends the notes of the song that `keep` turns down (see
+    /// [`Instrument::release_unless`]). A key held down is `Held`, with no
+    /// origin, so it stays.
+    pub fn release_unless(&mut self, keep: impl Fn(Origin) -> bool) {
+        for index in 0..128 {
+            let from_song =
+                self.state.origins[index].filter(|_| self.state.notes[index] != Sounding::Off);
+            if from_song.is_some_and(|origin| !keep(origin)) {
+                self.post(self.note_off_message(Note::new(index as u8)));
+                self.state.notes[index] = Sounding::Off;
+            }
+        }
+    }
+
+    /// Moves the note-offs that are due after a change of tempo (see
+    /// [`Instrument::tempo_changed`]).
+    pub fn tempo_changed(&mut self, next_step: f64, stretch: f64) {
+        for sounding in self.state.notes.iter_mut() {
+            if let Sounding::Until(end) = sounding {
+                let left = end.saturating_sub(self.now) as f64;
+                *end = self.now + stretched(left, next_step, stretch) as u64;
             }
         }
     }
@@ -702,6 +893,83 @@ mod tests {
             synth.note_on(Note::new(midi), 100, RATE, RATE);
         }
         assert_eq!(synth.voices_playing(), SYNTH_VOICES);
+    }
+
+    #[test]
+    fn voices_that_are_fading_out_are_stolen_first() {
+        let mut synth = Synth::new(RATE);
+        // A long bass note, then fifteen short notes: all sixteen voices.
+        synth.note_on(Note::new(36), 100, 10 * RATE);
+        for midi in 60..75 {
+            synth.note_on(Note::new(midi), 100, 100);
+        }
+        // The short notes have ended, but are still fading out.
+        (0..1_000).for_each(|_| _ = synth.next_sample());
+        assert!(synth.voices.iter().all(|voice| !voice.is_idle()));
+        // A new note takes one of them, not the bass that is still held.
+        synth.note_on(Note::new(80), 100, RATE);
+        let held = |midi| {
+            synth
+                .voices
+                .iter()
+                .any(|voice| voice.pitch == Note::new(midi) && voice.is_held())
+        };
+        assert!(held(36), "the bass is still held");
+        assert!(held(80));
+    }
+
+    #[test]
+    fn a_new_tempo_stretches_the_gates() {
+        let mut synth = Synth::new(RATE);
+        synth.note_on(Note::C4, 100, 1_000);
+        synth.note_on(Note::new(64), 100, 50);
+        synth.note_on(Note::new(67), 100, HELD);
+        // Twice as fast, 100 frames before the next step: the C4 keeps
+        // those 100 frames, then the other 900 take half as long.
+        synth.tempo_changed(100.0, 0.5);
+        let gates: Vec<u32> = synth.voices[..3].iter().map(|voice| voice.gate).collect();
+        assert_eq!(
+            gates,
+            [550, 50, HELD],
+            "a note ending before the step keeps its gate"
+        );
+    }
+
+    #[test]
+    fn a_new_tempo_moves_midi_note_offs() {
+        let mut midi_out = MidiOut::new(0);
+        midi_out.note_on(Note::C4, 100, 1_000);
+        sent(&mut midi_out);
+        (0..100).for_each(|_| _ = midi_out.next_sample());
+        // Half as fast, with the next step 300 frames away: the 900
+        // frames left become 300 + 600 * 2.
+        midi_out.tempo_changed(300.0, 2.0);
+        (0..1_499).for_each(|_| _ = midi_out.next_sample());
+        assert_eq!(sent(&mut midi_out), [], "one frame early");
+        midi_out.next_sample();
+        assert_eq!(sent(&mut midi_out).len(), 1);
+    }
+
+    #[test]
+    fn release_unless_lets_go_of_the_song_and_not_the_keys() {
+        let origin = |pattern| Origin {
+            pattern,
+            pattern_step: 0,
+            song_step: 0,
+        };
+        let mut midi_out = Instrument::MidiOut(MidiOut::new(0));
+        midi_out.note_on_from(origin(0), Note::C4, 100, 1_000, RATE);
+        midi_out.note_on_from(origin(1), Note::new(64), 100, 1_000, RATE);
+        midi_out.note_on(Note::new(67), 100, HELD, RATE);
+        sent_by(&mut midi_out);
+        // Only pattern 1 is still played.
+        midi_out.release_unless(|origin| origin.pattern == 1);
+        let off = MidiMessage::NoteOff {
+            channel: 0,
+            pitch: Note::C4,
+        };
+        assert_eq!(sent_by(&mut midi_out), [off]);
+        assert_eq!(midi_out.voices_playing(), 2, "E4 and the key held down");
     }
 
     #[test]
