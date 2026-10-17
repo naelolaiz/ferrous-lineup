@@ -189,6 +189,7 @@ const COMMON: TimeSignature = TimeSignature::COMMON;
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
+const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 
 mod blues;
 mod classical;
@@ -225,9 +226,15 @@ pub static SONGS: &[Song] = &[
     rock::BATTLE_HYMN,
     rock::WHEN_JOHNNY,
     rock::TOREADOR_SONG,
+    rock::HOUSE_OF_THE_RISING_SUN,
     blues::MIDNIGHT_SHUFFLE,
     blues::ROLLING_BOOGIE,
     blues::MINOR_MOOD,
+    blues::CARELESS_LOVE,
+    blues::FRANKIE_AND_JOHNNY,
+    blues::TROUBLE_IN_MIND,
+    blues::ST_JAMES_INFIRMARY,
+    blues::SEE_SEE_RIDER,
     jazz::JINGLE_BELLS,
     jazz::SAINTS,
     jazz::ENTERTAINER,
@@ -235,6 +242,16 @@ pub static SONGS: &[Song] = &[
     jazz::TWO_FIVE_WALK,
     jazz::GOLLIWOGGS_CAKEWALK,
     jazz::DARK_EYES,
+    jazz::MAPLE_LEAF_RAG,
+    jazz::I_GOT_RHYTHM,
+    jazz::BILL_BAILEY,
+    jazz::SWANEE,
+    jazz::AVALON,
+    jazz::BALLIN_THE_JACK,
+    jazz::TWELFTH_STREET_RAG,
+    jazz::DILL_PICKLES,
+    jazz::PINE_APPLE_RAG,
+    jazz::ELITE_SYNCOPATIONS,
     soul::AMAZING_GRACE,
     soul::JOY_TO_THE_WORLD,
     soul::DORIAN_STRUT,
