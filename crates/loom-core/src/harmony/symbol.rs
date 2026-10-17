@@ -143,7 +143,7 @@ impl ChordSymbol {
         };
         let Some(quality) = read_quality(quality_text) else {
             return Err(format!(
-                "\"{text}\": \"{quality_text}\" is not a kind of chord Ferrous Loom knows, \
+                "\"{text}\": \"{quality_text}\" is not a kind of chord Ferrous Lineup knows, \
                  such as m, 7, maj7, m7b5, sus4 or 13."
             ));
         };

@@ -390,7 +390,7 @@ pub fn chromas_of_notes(
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChordReading {
     /// The numeral, counted along the major scale of the tonic as
-    /// everywhere in Ferrous Loom (see [`Scale::roman_numeral`]): G7 in
+    /// everywhere in Ferrous Lineup (see [`Scale::roman_numeral`]): G7 in
     /// A minor is bVII7.
     pub numeral: String,
     /// What the chord does, when it is one of the key's chords.

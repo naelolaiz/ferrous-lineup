@@ -19,7 +19,7 @@
 //! - **Tempo, time and key.** The tempo changes become tempo markers, the
 //!   time signature changes time markers, and the key signatures the
 //!   project's key and key markers, as the file writes them. A file
-//!   Ferrous Loom wrote also holds the exact key, such as E Dorian, which
+//!   Ferrous Lineup wrote also holds the exact key, such as E Dorian, which
 //!   a key signature cannot say. A file without a key signature gets the key its notes fit best
 //!   (see [`key_fits`]), and so does a file that says C major when its
 //!   notes clearly are in another key: many programs write C major when
@@ -724,7 +724,7 @@ fn set_meter(project: &mut Project, tracks: &[Track], clock: &Clock) -> usize {
     project.playlist().time_markers().len()
 }
 
-/// A MIDI time signature as one Ferrous Loom can count: bars must be a
+/// A MIDI time signature as one Ferrous Lineup can count: bars must be a
 /// whole number of sixteenth-note steps. 6/32 is written 3/16; 3/32 has
 /// no such form and is left out.
 fn time_signature(beats: u8, unit: u8) -> Option<TimeSignature> {
@@ -771,7 +771,7 @@ fn set_keys(
         _ => None,
     });
     // By step, the key from there on: the key signature as it is
-    // written, or the exact key (mode and all) that a file Ferrous Loom
+    // written, or the exact key (mode and all) that a file Ferrous Lineup
     // wrote holds next to each key signature.
     let mut keys: BTreeMap<usize, Scale> = BTreeMap::new();
     for &(tick, (sharps, minor)) in &signatures {
@@ -1329,7 +1329,7 @@ mod tests {
     }
 
     #[test]
-    fn a_file_from_ferrous_loom_keeps_its_exact_key() {
+    fn a_file_from_ferrous_lineup_keeps_its_exact_key() {
         // E Dorian is written with the signature of D major, and exactly
         // in an event of our own.
         let dorian = Scale::new(PitchClass::E, ScaleKind::Dorian);

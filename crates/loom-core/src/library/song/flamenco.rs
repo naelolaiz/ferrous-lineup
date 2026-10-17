@@ -4,7 +4,7 @@ use super::*;
 
 pub(super) const RUMBA_DEL_SUR: Song = Song {
     name: "Rumba del sur",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Rumba flamenca",
     genre: Genre::Flamenco,
     tonic: A,
@@ -39,7 +39,7 @@ pub(super) const RUMBA_DEL_SUR: Song = Song {
 
 pub(super) const NOCHE_FRIGIA: Song = Song {
     name: "Noche frigia",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Rumba flamenca",
     genre: Genre::Flamenco,
     tonic: E,

@@ -2,7 +2,7 @@
 
 A spike: import an MP3 or WAV file, listen to it, and build a harmony
 track that follows it. **File > Import recording…**, or drop the file
-on the window, or `ferrous-loom song.mp3`.
+on the window, or `ferrous-lineup song.mp3`.
 
 What comes out is an ordinary project: the recording on a sampler
 channel, started once at the beginning of the song, and a "Harmony" Loom

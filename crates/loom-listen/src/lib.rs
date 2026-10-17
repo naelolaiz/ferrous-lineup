@@ -1,4 +1,4 @@
-//! Listening to a recording: what Ferrous Loom needs to play along with it.
+//! Listening to a recording: what Ferrous Lineup needs to play along with it.
 //!
 //! This crate is a spike (an experiment, to see what works) for importing
 //! an MP3 or WAV file and building a harmony track that follows it.

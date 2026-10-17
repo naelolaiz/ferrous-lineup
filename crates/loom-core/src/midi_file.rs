@@ -4,7 +4,7 @@
 //! A MIDI file holds notes, not sound: it says "C4 starts here, ends
 //! there, on channel 1", and the program that opens it chooses the
 //! instruments. That makes it the common language of music software, and
-//! the way to take a Ferrous Loom pattern into another studio.
+//! the way to take a Ferrous Lineup pattern into another studio.
 //!
 //! The file is a header chunk (`MThd`) followed by one track chunk
 //! (`MTrk`) per track. A track is a list of events, each one after a
@@ -259,7 +259,7 @@ fn tempo_track(
     end: u32,
 ) -> Vec<u8> {
     let mut track = TrackWriter::default();
-    track.meta(0, TRACK_NAME, b"Ferrous Loom");
+    track.meta(0, TRACK_NAME, b"Ferrous Lineup");
     // Every event of the track, with its tick, sorted by tick at the end.
     let mut events: Vec<(u32, u8, Vec<u8>)> = Vec::new();
     // The tempo is written as microseconds per beat, in three bytes.
@@ -309,7 +309,7 @@ fn tempo_track(
         }
         // A key signature cannot say "E Dorian" or "harmonic minor", so
         // the exact key also goes in an event of our own, which other
-        // programs skip and Ferrous Loom reads back.
+        // programs skip and Ferrous Lineup reads back.
         events.push((tick, SEQUENCER_SPECIFIC, scale_event(marker.scale)));
     }
     events.sort_by_key(|&(tick, ..)| tick);
@@ -329,7 +329,9 @@ const SEQUENCER_SPECIFIC: u8 = 0x7F;
 
 /// The start of our own event: 0x7D is the maker's number set aside for
 /// programs that are not sold, then our name, so another program's
-/// 0x7D event is never mistaken for ours.
+/// 0x7D event is never mistaken for ours. The name is the app's first
+/// one, Ferrous Loom, so files written before the rename still give
+/// back their key.
 const SCALE_EVENT_START: &[u8] = b"\x7DFerrous Loom key ";
 
 /// The data of the sequencer-specific event that holds the exact key:

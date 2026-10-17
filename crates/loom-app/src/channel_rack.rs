@@ -275,7 +275,7 @@ pub fn show(
                     if ui
                         .button("MIDI Out (external synth)")
                         .on_hover_text(
-                            "Plays its notes on a synth outside Ferrous Loom: pick where in \
+                            "Plays its notes on a synth outside Ferrous Lineup: pick where in \
                              MIDI > Output.",
                         )
                         .clicked()

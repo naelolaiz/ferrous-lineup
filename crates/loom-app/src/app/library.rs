@@ -59,7 +59,7 @@ pub(super) struct Audition {
 /// A demo to open from the File menu.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) enum Demo {
-    /// The song Ferrous Loom starts with.
+    /// The song Ferrous Lineup starts with.
     Start,
     Song(&'static Song),
     Style(&'static Style),
@@ -651,7 +651,7 @@ impl LoomApp {
         ui.menu_button("Demos", |ui| {
             if ui
                 .button("The starting song")
-                .on_hover_text("The beat and chords Ferrous Loom opens with")
+                .on_hover_text("The beat and chords Ferrous Lineup opens with")
                 .clicked()
             {
                 picked = Some(Demo::Start);

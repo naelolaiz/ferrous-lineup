@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn loads_and_mixes_to_mono() {
-        let path = write_test_wav("ferrous-loom-test-stereo.wav");
+        let path = write_test_wav("ferrous-lineup-test-stereo.wav");
         let sample = SampleData::load_wav(&path).unwrap();
         std::fs::remove_file(&path).ok();
 
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn the_cache_reads_each_file_once() {
-        let path = write_test_wav("ferrous-loom-test-cache.wav");
+        let path = write_test_wav("ferrous-lineup-test-cache.wav");
         let mut cache = SampleCache::new();
         let first = cache.get(&path).unwrap();
         let second = cache.get(&path).unwrap();

@@ -29,7 +29,7 @@ fn set_id() -> egui::Id {
     egui::Id::unique("loom-last-set")
 }
 
-/// The row written for Ferrous Loom, which the row window starts with.
+/// The row written for Ferrous Lineup, which the row window starts with.
 fn loom_row() -> ToneRow {
     RowPreset::named("Loom row").map_or(ToneRow::CHROMATIC, |preset| preset.row)
 }

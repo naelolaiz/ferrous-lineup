@@ -19,7 +19,7 @@ use crate::{Note, TimeSignature};
 /// are saved as format 3 (see [`format_for`](crate::file::format_for)).
 pub const MAX_STEPS: usize = 256;
 
-/// The longest pattern older versions of Ferrous Loom can hold.
+/// The longest pattern older versions of Ferrous Lineup can hold.
 pub const MAX_STEPS_BEFORE_FORMAT_3: usize = 64;
 
 /// The pitch a step of the step sequencer plays. Samplers play their
@@ -36,7 +36,7 @@ pub const DEFAULT_VELOCITY: u8 = 100;
 /// triplet fits three notes where the grid has two or four, a pianist
 /// plays a little ahead of the beat, and a MIDI file can put a note
 /// anywhere. 24 ticks to the step is 96 to the beat, the resolution of
-/// the MIDI files Ferrous Loom writes. It divides by 2, 3, 4, 6 and 8, so
+/// the MIDI files Ferrous Lineup writes. It divides by 2, 3, 4, 6 and 8, so
 /// eighth- and sixteenth-note triplets and thirty-second notes all land
 /// exactly on a tick.
 pub const TICKS_PER_STEP: usize = 24;

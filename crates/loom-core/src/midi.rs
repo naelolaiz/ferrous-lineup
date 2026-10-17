@@ -7,7 +7,7 @@
 //! their top bit set (128 and up); data bytes do not (0 to 127). That is
 //! why a MIDI note or velocity is never more than 127.
 //!
-//! Ferrous Loom reads only note messages. Everything else (knobs, pedals,
+//! Ferrous Lineup reads only note messages. Everything else (knobs, pedals,
 //! pitch bends, clock) is ignored. It also sends program changes, which
 //! choose the instrument a channel plays (see [`crate::general_midi`]).
 
@@ -17,7 +17,7 @@ use crate::Note;
 /// is 9 when counted from 0 as the bytes do.
 pub const DRUM_CHANNEL: u8 = 9;
 
-/// A message Ferrous Loom sends or reads. `channel` is 0 to 15 (shown to
+/// A message Ferrous Lineup sends or reads. `channel` is 0 to 15 (shown to
 /// people as 1 to 16).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MidiMessage {

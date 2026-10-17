@@ -34,7 +34,7 @@ pub(super) const LA_CUCARACHA: Song = Song {
 
 pub(super) const RIO_AFTERNOON: Song = Song {
     name: "Rio Afternoon",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Bossa nova",
     genre: Genre::Latin,
     tonic: C,
@@ -61,7 +61,7 @@ pub(super) const RIO_AFTERNOON: Song = Song {
 
 pub(super) const CARNIVAL_MORNING: Song = Song {
     name: "Carnival Morning",
-    origin: "Written for Ferrous Loom",
+    origin: "Written for Ferrous Lineup",
     feel: "Samba",
     genre: Genre::Latin,
     tonic: C,
