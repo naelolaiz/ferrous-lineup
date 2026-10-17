@@ -240,6 +240,10 @@ time signature, and endings. An ending is a pattern whose notes all
 start on its first step, like the held final chord with a crash that
 the demos end with. Turning that into a reggae skank would spoil it.
 
+(Later, a rhythm in *another* time signature got to change the time
+signature after all, bar for bar: see [Re-metering the
+song](re-metering.md).)
+
 Where the old drums had a fill in their last bar, the new rhythm's fill
 goes there. How do we know there was one? A fill is a last bar that
 plays like no bar before it:

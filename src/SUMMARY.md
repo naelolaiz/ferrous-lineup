@@ -72,6 +72,7 @@
   - [Every voice on its own channel, with a real instrument](step-8/voices-and-instruments.md)
   - [Finding the key from the music (experimental)](step-8/finding-the-key.md)
   - [Any time signature, and irregular meters](step-8/any-time-signature.md)
+  - [A rhythm in another time signature: re-metering the song](step-8/re-metering.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
