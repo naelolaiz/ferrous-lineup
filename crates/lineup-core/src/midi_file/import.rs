@@ -4,7 +4,7 @@
 //! turns the events into what a project holds:
 //!
 //! - **Channels.** Each track of the file that plays notes becomes a
-//!   channel of the rack, playing the Loom Osc. A file with a single track
+//!   channel of the rack, playing the Lineup Osc. A file with a single track
 //!   (format 0) keeps each instrument on a MIDI channel of its own, so
 //!   there each MIDI channel becomes a rack channel instead. The drums of
 //!   General MIDI's channel 10 become one channel per drum sound, like the
