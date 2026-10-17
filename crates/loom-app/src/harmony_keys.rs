@@ -3,8 +3,10 @@
 //! On the left, the key and the time signature of the project. In the
 //! middle, a big key for each of the seven chords of the key, coloured by
 //! what the chord does (home, away, tension; in a mode, which has no such
-//! jobs, all one colour); hold one down to play its chord, and the chords
-//! that often come next are outlined, the most usual one brightest. The
+//! jobs, all one colour); hold one down to play its chord. The chord
+//! sounding now is lit up and framed in white, so it is the first thing
+//! the eye finds; the chords that often come next only get a thin yellow
+//! outline, the most usual one a little brighter. The
 //! hint line below can explain in sentences, in a few words, or not at
 //! all (see [`HintLevel`]). On the right, a keyboard showing the notes of
 //! the scale and the notes playing.
@@ -66,6 +68,8 @@ const MODE_COLOR: Color32 = Color32::from_rgb(92, 112, 150);
 const KEY_TEXT: Color32 = Color32::from_rgb(244, 246, 250);
 const KEY_TEXT_DIM: Color32 = Color32::from_rgb(196, 202, 214);
 const SUGGESTED: Color32 = Color32::from_rgb(255, 214, 92);
+/// The frame of the key whose chord is sounding now.
+const PLAYING: Color32 = Color32::from_rgb(255, 255, 255);
 const WHITE_KEY: Color32 = Color32::from_rgb(214, 218, 226);
 const BLACK_KEY: Color32 = Color32::from_rgb(40, 42, 48);
 const KEY_BORDER: Color32 = Color32::from_rgb(90, 94, 104);
@@ -625,9 +629,11 @@ fn hint_line(
 }
 
 /// One harmony key: the numeral, the chord's name (spelled in `scale`)
-/// and its function, on the function's colour. Bright while it plays;
-/// outlined when it is a chord that often comes next: thick and bright
-/// for the most usual one (`rank` 0), thin and dim for the others.
+/// and its function, on the function's colour. While it plays it is
+/// bright and framed in white, the strongest mark on the bar. When it is
+/// a chord that often comes next it gets a thin yellow outline instead,
+/// brighter for the most usual one (`rank` 0): a hint of what may come,
+/// never louder than what is sounding.
 fn chord_key(
     ui: &mut Ui,
     key: &ChordKey,
@@ -665,15 +671,20 @@ fn chord_key(
         },
         Color32::from_white_alpha(if lit { 40 } else { 18 }),
     );
-    match rank {
-        Some(0) => {
-            painter.rect_stroke(rect, 6.0, Stroke::new(3.0, SUGGESTED), StrokeKind::Inside);
+    if lit {
+        paint_playing(painter, rect);
+    } else {
+        match rank {
+            Some(0) => {
+                let stroke = Stroke::new(1.5, SUGGESTED.gamma_multiply(0.8));
+                painter.rect_stroke(rect, 6.0, stroke, StrokeKind::Inside);
+            }
+            Some(_) => {
+                let stroke = Stroke::new(1.0, SUGGESTED.gamma_multiply(0.4));
+                painter.rect_stroke(rect, 6.0, stroke, StrokeKind::Inside);
+            }
+            None => {}
         }
-        Some(_) => {
-            let dim = SUGGESTED.gamma_multiply(0.45);
-            painter.rect_stroke(rect, 6.0, Stroke::new(1.5, dim), StrokeKind::Inside);
-        }
-        None => {}
     }
     painter.text(
         rect.center_top() + vec2(0.0, 18.0),
@@ -740,6 +751,9 @@ fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
     painter.rect_filled(rect, 6.0, fill.gamma_multiply(0.55));
     let body = Rect::from_min_max(rect.min, rect.max - vec2(0.0, 3.0));
     painter.rect_filled(body, 6.0, fill);
+    if lit {
+        paint_playing(painter, rect);
+    }
     painter.text(
         rect.center_top() + vec2(0.0, 16.0),
         Align2::CENTER_CENTER,
@@ -762,6 +776,12 @@ fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
         KEY_TEXT_DIM,
     );
     response
+}
+
+/// Frames the key whose chord is sounding now in thick white, so it
+/// stands out above every other mark on the bar.
+fn paint_playing(painter: &Painter, rect: Rect) {
+    painter.rect_stroke(rect, 6.0, Stroke::new(3.0, PLAYING), StrokeKind::Inside);
 }
 
 /// The small line at the bottom of a group key, saying what its label
