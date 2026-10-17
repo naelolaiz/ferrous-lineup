@@ -13,3 +13,6 @@ symphonia.workspace = true
 realfft.workspace = true
 bpm-key.workspace = true
 hound.workspace = true
+
+[dev-dependencies]
+loom-audio.workspace = true
