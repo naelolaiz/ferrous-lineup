@@ -193,6 +193,9 @@ crates/loom-app/src/app.rs                  the bar, the chord playing, F8
 crates/loom-app/src/app/files.rs            File > Demos
 crates/loom-app/src/app/live.rs             play_typed is shared with the harmony keys
 crates/loom-app/src/playlist.rs             the Library tab, bars of any length
+crates/loom-core/src/midi_file/read.rs      reading MIDI files (new)
+crates/loom-core/src/midi_file/import.rs    a MIDI file becomes a project (new)
+crates/loom-core/src/harmony/key_finding.rs the key of a piece from its notes (new)
 crates/loom-app/src/channel_rack.rs         beat colours by time signature
 crates/loom-app/src/piano_roll.rs           bar and beat lines by time signature
 crates/loom-app/src/app/view.rs             the View menu and the zoom control (new)
