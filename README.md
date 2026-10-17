@@ -1,13 +1,20 @@
-# Ferrous Loom
+# Ferrous Lineup
 
-An open source, pattern-based music studio written in Rust, inspired by the
-workflow of FL Studio. Build patterns in a step sequencer or piano roll,
-arrange them into songs, and learn harmony along the way.
+An open source music studio written in Rust, for playing songs with a
+backing band and learning harmony along the way. Type the chords of a
+song, pick a style, and a band (bass, drums, piano and more) plays it in
+any key and tempo. Inside is a pattern studio in the spirit of FL
+Studio, with a step sequencer, a piano roll and a playlist, where every
+part can be written or changed by hand.
 
-> Ferrous Loom is an independent project. It is not affiliated with
+Ferrous Lineup was called Ferrous Loom until October 2026. Its project
+files end in `.lineup` now, and the `.loom` files saved before still
+open.
+
+> Ferrous Lineup is an independent project. It is not affiliated with
 > Image-Line or FL Studio.
 
-![Ferrous Loom playing the demo song: the playlist with its Intro, Verse and Chorus sections, the channel rack, and the harmony keys](screenshots/main-window.png)
+![Ferrous Lineup playing the demo song: the playlist, the channel rack with the Lineup Osc, and the harmony keys lighting up the chord that sounds](screenshots/main-window.png)
 
 ## Status
 
@@ -24,6 +31,7 @@ Early development. Runs on Linux, macOS and Windows.
 | 7 | MIDI in and out: keyboards, external synths, recording, chord names as you play, `.mid` export | Done |
 | 8 | Harmony keys, time signatures, a library of styles and rhythms, public-domain songs as demos | Done |
 | Spike | Import a recording: tempo, key and chords heard from an MP3 or WAV file | Done |
+| 9 | The band: chord names, a chord sheet the band plays, song form, swing, instrument sounds | In progress |
 
 ## Build and run
 
@@ -63,7 +71,7 @@ Select notes with Ctrl+click or a Ctrl+drag box, then move them with the
 arrow keys (Alt+↑ stays in the key), invert or arpeggiate them from the
 Tools menu, and set velocities in the lane under the grid. The chord
 buttons light up with the chords that often come next.
-**Ctrl+S** saves the project as a `.loom` file (⌘S on a Mac), **Ctrl+Z**
+**Ctrl+S** saves the project as a `.lineup` file (⌘S on a Mac), **Ctrl+Z**
 undoes any change and **Ctrl+Shift+Z** redoes it, and **File > Export
 WAV…** saves the song as a sound file.
 
@@ -90,24 +98,64 @@ of the project, and a big key for each chord of the key (I to vii°),
 coloured by what it does: home, away or tension. Hold one, or press
 **1** to **7**, to play its chord; the chords that often come next
 light up, and while the music plays, the chord you hear lights up too.
-The **Library** tab next to the pattern list holds 78 harmony styles
-and 49 rhythms from pop, rock, blues, jazz, soul, hip hop, electronic,
+The **Library** tab next to the pattern list holds 145 harmony styles
+and 81 rhythms from pop, rock, blues, jazz, soul, hip hop, electronic,
 Latin, tango, flamenco, reggae, folk and classical music: click one to
 hear it in your key. Pick a rhythm after a style, and the style's chords
 and bass are played the way that rhythm goes; right-click a rhythm and
 **Play the whole song in this rhythm** changes the drums, chords and bass
 of the whole song at once, keeping the melody. **File > Demos** opens
-62 songs with their melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
+177 songs with their melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
 *Für Elise* and the *Habanera*, and new tunes written to show off the
 blues, tango, flamenco and more. It also plays every style as a short
 song.
+
+**F5**, or **📝 Chords** in the toolbar, opens the **chord sheet**: the
+song's harmony bar by bar, four bars to a line and each section under
+its name, as a lead sheet writes it. Click a bar and type its harmony:
+chords (`Am7 D7`, `G7/B`, `F#m7b5`), Roman numerals in the key
+(`ii7 V7`), pitch-class sets (`3-11 T2`, `{0,1,4}`), micromodes
+(`Menor 3`), twelve-tone row forms (`P0`, `RI7`) or `N.C.`; a `/` holds
+the harmony before it one more beat (`C / / G7`). Under each chord is
+its numeral in the key, with the figures of an inversion (V⁶₅), and
+under each set its notes; hold the mouse down on a harmony to hear it.
+**Write the chords the song plays** fills an empty sheet from what the
+song plays, with the bass player's note after the slash, and in a set or
+a row with the sets or micromodes heard. While the song plays, the bar
+playing is framed in white. The sheet is saved with the project and
+follows key changes, re-metering and copied sections. It is an extra
+window: the playlist stays as it is.
+
+**File > New** opens an empty chord sheet with a **band**: type chords
+and a piano, a bass and drums play them, written as patterns on their
+own tracks in the playlist. **🎷 Band** picks how they play, from the
+81 rhythms of the Library (a waltz puts the song in 3/4) and a few
+styles without drums (chorale, Alberti bass, arpeggios, sarabande), or
+**No band**. **Progression** writes a well-known progression from the
+selected bar, in the song's key, and **End the song here** (right-click
+a bar) says where the band stops. The band plays again whenever the
+sheet, the key or the bars change; a part you edit in the piano roll
+stays as you left it until you click **Play it again**. Picked over a
+demo, the band plays the demo's chords and mutes its own accompaniment
+until you pick **No band**. **File > New beat** is the old empty
+pattern with a drum kit.
+
+To practise with the band, the chord sheet's second row (and the
+**Practice** menu) has a **Count-in** (a bar of clicks before the music
+starts), a **Metronome**, the **Speed** to play at (25% to 200% of the
+song's tempo, which the song itself keeps) and **Tap**, which sets the
+tempo from a few clicks on the beat. **You play** leaves the piano, the
+bass or the drums out of the band so you can play the part yourself;
+your keyboard then plays that part's sound. Shift+click a second bar to
+select several, and **Loop bars** plays them over and over. The clicks
+never reach a saved song or a WAV export.
 
 For music without a home key, the key menus also offer a **twelve-tone
 row** and a **pitch-class set**. **Row…** in the piano roll opens the
 twelve-tone window: type, draw or pick a row (the rows of Schoenberg's
 Suite Op. 25, Berg's *Lyric Suite*, and Webern's Symphony Op. 21 and
 Concerto Op. 24, all public domain now, or a few written for Ferrous
-Loom), see its matrix
+Lineup), see its matrix
 with all 48 forms (P, I, R and RI on every note), and write any of them
 into the pattern as a melody or as chords, with the durations, dynamics
 and octaves following the row too if you like. **Sets…** lists all 224
@@ -131,7 +179,7 @@ drop it on the window) and listens to it: the tempo, time signature and
 key are set from the recording, which plays on its own channel, and a
 Harmony channel plays the chord heard on every beat, so the piano roll
 and the harmony keys follow along. This is an early experiment; see
-[`crates/loom-listen`](crates/loom-listen/README.md) for how it works and
+[`crates/lineup-listen`](crates/lineup-listen/README.md) for how it works and
 how often it is right.
 
 **File > Import MIDI file…** opens a `.mid` file (or drop it on the
@@ -140,6 +188,22 @@ channel 10 one channel per drum), every note keeps its velocity and its
 exact time, even between two steps, and the tempo changes, time
 signatures and key come with it. The piano roll's Chords lane and the
 harmony keys then name the chords as it plays.
+
+**Sounds > SoundFont instruments** plays recordings of real instruments
+instead of the Lineup Osc: every channel with a General MIDI instrument
+(the demos' voices, the Library's piano and bass, the demo song's
+chords) and, with **SoundFont drums**, the drum kit. The first time, it
+offers to download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS),
+a free General MIDI SoundFont by S. Christian Collins (about 30 MB, kept
+for next time). **Choose SoundFont…** plays any other `.sf2` file
+instead. WAV export uses it too.
+
+**View > Ear training** (experimental) asks questions to answer by ear:
+which interval two notes make, which kind of chord plays (with
+inversions if you like), and which chords of a key the band plays, named
+on the harmony keys with the chord names hidden. Every answer is
+explained with its notes spelled out, and any answer can be played next
+to the right one. The song and its file are left as they are.
 
 Too small or too big? The same keys zoom whatever the pointer is over.
 Over the playlist or the piano roll, **Ctrl** with **+** and **−** or the
@@ -158,7 +222,7 @@ zoom, the window size and where you left the windows are remembered for
 next time.
 
 Ready-built programs for all three systems are attached to every CI run
-as `ferrous-loom-linux`, `ferrous-loom-macos` and `ferrous-loom-windows`.
+as `ferrous-lineup-linux`, `ferrous-lineup-macos` and `ferrous-lineup-windows`.
 They are not signed yet, so macOS and Windows warn before the first start.
 
 ## Screenshots
@@ -166,22 +230,24 @@ They are not signed yet, so macOS and Windows warn before the first start.
 | | |
 |---|---|
 | ![The piano roll on the chords of the demo song, with the chord names above the grid and the chords that often come next lit up](screenshots/piano-roll.png) | ![The Library tab: Bossa nova has just been tried, and its tooltip shows its chords in C major](screenshots/library.png) |
-| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 78 harmony styles and 49 rhythms to try in your key. |
+| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 145 harmony styles and 81 rhythms to try in your key. |
 | ![A recording imported with File > Import recording: the chords heard on every beat in the piano roll](screenshots/import-recording.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
 | An imported recording, with the chords heard on every beat. | Right-click a track's name to insert, move or delete tracks. |
 | ![The twelve-tone window beside the piano roll: the matrix of a row with all its forms, and the piano roll numbering the notes of the row](screenshots/twelve-tone-row.png) | ![The pitch-class set browser showing the octatonic scale, 8-28, beside the piano roll](screenshots/pitch-class-sets.png) |
 | A twelve-tone row and its matrix: P, I, R and RI on every note. | The pitch-class sets by Forte number, to draw with or use as a scale. |
 | ![The Micromodes window: the three families of Kröpfl's micromodes, Menor 3 drawn on a clock with its prime form do - do# - mi, and the micromodes in the selected C major chords](screenshots/micromodes.png) | ![The Sets window on 7-35, the diatonic scale, listing the micromodes inside its 35 groups of three](screenshots/micromodes-in-sets.png) |
 | Kröpfl's twelve micromodes, and the ones in the notes you select. | Every set lists its micromodes, and each one links back. |
+| ![The chord sheet over the playlist: Rhythm changes in C, two choruses of eight bars, each chord with its Roman numeral, and the hint bar describing A7 as V7/ii](screenshots/chord-sheet.png) | ![The chord sheet of a micromode demo in the set 3-3: every bar holds Menor 3 moved to other notes, with the notes under each name](screenshots/chord-sheet-micromodes.png) |
+| The chord sheet: the song's chords bar by bar, with their numerals. | A bar can hold a set, a micromode or a row form instead of a chord. |
 
 ## Project layout
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
-| `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
-| `crates/loom-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
-| `crates/loom-app` | The desktop app (`ferrous-loom`), built with `egui`, with MIDI through `midir`. |
+| `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
+| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, and offline rendering to WAV files. |
+| `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
+| `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
 
 ## License
 
