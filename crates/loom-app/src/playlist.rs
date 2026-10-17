@@ -16,19 +16,21 @@
 //! time marker in FL Studio.
 
 mod sections;
+mod tempo;
 
 use eframe::egui::{
     self, Align2, Color32, FontId, Painter, Pos2, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     Vec2, pos2, vec2,
 };
 use loom_core::{
-    Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Meter, Pass, Pattern, Project,
-    STEPS_PER_BAR, Section, TimeMarker,
+    Clip, LoopRegion, MAX_LOOSE_TIMING, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Meter, Pass,
+    Pattern, Project, STEPS_PER_BAR, Section, TempoMarker, TimeMarker,
 };
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, Tried};
 use crate::widgets;
 use sections::Strips;
+use tempo::TempoStrip;
 
 /// Something the user asked the playlist to do.
 #[derive(Debug, Clone, PartialEq)]
@@ -80,6 +82,12 @@ pub enum PlaylistAction {
     SetTimeMarker(TimeMarker),
     /// Take away the change of time signature on this step.
     RemoveTimeMarker(usize),
+    /// Change the tempo from a step on (a click on the tempo strip).
+    SetTempoMarker(TempoMarker),
+    /// Take away the change of tempo on this step.
+    RemoveTempoMarker(usize),
+    /// How loose the timing is, in milliseconds.
+    SetLooseTiming(u8),
     /// Something picked in the Library tab.
     Library(LibraryAction),
 }
@@ -94,8 +102,12 @@ enum Tab {
 const PICKER_WIDTH: f32 = 210.0;
 const HEADER_WIDTH: f32 = 116.0;
 const RULER_HEIGHT: f32 = 20.0;
-/// The strip above the bar numbers with the song's sections.
+/// The strip at the top with the song's sections.
 const SECTION_HEIGHT: f32 = 22.0;
+/// The strip under it with the tempo.
+const TEMPO_HEIGHT: f32 = 28.0;
+/// The strips at the top, which stay put while the tracks scroll.
+const TOP: f32 = SECTION_HEIGHT + TEMPO_HEIGHT + RULER_HEIGHT;
 /// How close to a clip's right edge the pointer must be to repeat it.
 const CLIP_EDGE: f32 = 6.0;
 /// How tall a track is at 100%. The vertical zoom multiplies it.
@@ -261,6 +273,7 @@ pub struct PlaylistView {
     snap: Snap,
     drag: Option<ClipDrag>,
     strips: Strips,
+    tempo_strip: TempoStrip,
     tab: Tab,
     library: LibraryBrowser,
     /// Whether the Patterns and Library panel on the left is shown.
@@ -282,6 +295,7 @@ impl PlaylistView {
             snap: Snap::Bar,
             drag: None,
             strips: Strips::default(),
+            tempo_strip: TempoStrip::default(),
             tab: Tab::Patterns,
             library: LibraryBrowser::new(),
             browser_open: true,
@@ -307,7 +321,7 @@ impl PlaylistView {
             .unwrap_or(view.center())
             - view.min;
         // The track names, the sections and the ruler do not stretch.
-        let corner = vec2(HEADER_WIDTH, SECTION_HEIGHT + RULER_HEIGHT);
+        let corner = vec2(HEADER_WIDTH, TOP);
         let from = self.scroll_to.unwrap_or(self.scrolled);
         let to = corner + (from + anchor - corner) * ratio - anchor;
         self.scroll_to = Some(to.max(Vec2::ZERO));
@@ -389,6 +403,8 @@ impl PlaylistView {
             {
                 actions.push(PlaylistAction::AddSection(next_section(project)));
             }
+            ui.separator();
+            loose_timing(ui, project, &mut actions);
             if let Some(region) = project.playlist().loop_region() {
                 let meter = project.meter();
                 let first = meter.bar_at(region.start).number + 1;
@@ -459,7 +475,7 @@ impl PlaylistView {
         let steps = meter.round_up_to_bar(extra.max(MIN_BARS * STEPS_PER_BAR).max(fill));
         let size = vec2(
             HEADER_WIDTH + steps as f32 * step_width,
-            SECTION_HEIGHT + RULER_HEIGHT + rows as f32 * track_height,
+            TOP + rows as f32 * track_height,
         );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
 
@@ -468,10 +484,7 @@ impl PlaylistView {
         // visible part in screen coordinates, where everything is drawn.
         let visible = viewport.translate(rect.min.to_vec2());
         let layout = Layout {
-            origin: pos2(
-                rect.left() + HEADER_WIDTH,
-                rect.top() + SECTION_HEIGHT + RULER_HEIGHT,
-            ),
+            origin: pos2(rect.left() + HEADER_WIDTH, rect.top() + TOP),
             step_width,
             track_height,
             tracks: tracks.len(),
@@ -480,10 +493,7 @@ impl PlaylistView {
         // The part of the grid not hidden under the track names, the
         // sections or the ruler.
         let cells = Rect::from_min_max(
-            pos2(
-                visible.left() + HEADER_WIDTH,
-                visible.top() + SECTION_HEIGHT + RULER_HEIGHT,
-            ),
+            pos2(visible.left() + HEADER_WIDTH, visible.top() + TOP),
             visible.max,
         );
 
@@ -527,12 +537,18 @@ impl PlaylistView {
             pos2(left, visible.top()),
             pos2(visible.right(), visible.top() + SECTION_HEIGHT),
         );
-        let ruler = Rect::from_min_max(
+        let tempo = Rect::from_min_max(
             pos2(left, strip.bottom()),
-            pos2(visible.right(), strip.bottom() + RULER_HEIGHT),
+            pos2(visible.right(), strip.bottom() + TEMPO_HEIGHT),
+        );
+        let ruler = Rect::from_min_max(
+            pos2(left, tempo.bottom()),
+            pos2(visible.right(), tempo.bottom() + RULER_HEIGHT),
         );
         self.strips
             .sections(ui, layout, strip, project, self.snap, pass, actions);
+        self.tempo_strip
+            .show(ui, layout, tempo, project, self.snap, steps, actions);
         self.strips
             .loop_ruler(ui, layout, ruler, project, self.snap, actions);
     }
@@ -797,6 +813,41 @@ impl PlaylistView {
     }
 }
 
+/// How loose the timing is: how far off the grid notes may land as they
+/// play, from "off" to [`MAX_LOOSE_TIMING`] milliseconds.
+fn loose_timing(ui: &mut Ui, project: &Project, actions: &mut Vec<PlaylistAction>) {
+    let mut loose = project.loose_timing;
+    let label = ui.label("Loose");
+    let value = ui.add(
+        egui::DragValue::new(&mut loose)
+            .range(0..=MAX_LOOSE_TIMING)
+            .speed(0.2)
+            .custom_formatter(|ms, _| {
+                if ms == 0.0 {
+                    "off".to_string()
+                } else {
+                    format!("{ms:.0} ms")
+                }
+            })
+            .custom_parser(|text| {
+                let text = text.trim().trim_end_matches("ms").trim();
+                if text.eq_ignore_ascii_case("off") {
+                    Some(0.0)
+                } else {
+                    text.parse().ok()
+                }
+            }),
+    );
+    let text = "Loose timing: as the song plays, notes land up to this many milliseconds \
+                after their step, a different amount each time, as when a person plays. \
+                \"off\" plays every note exactly on the grid. Drag up or down, or \
+                double-click to type";
+    label.on_hover_text(text);
+    if value.on_hover_text(text).changed() {
+        actions.push(PlaylistAction::SetLooseTiming(loose));
+    }
+}
+
 /// The list of patterns on the left. Clicking one selects it: the channel
 /// rack shows it, pattern mode plays it and new clips use it.
 fn picker(ui: &mut Ui, project: &Project, current: usize, actions: &mut Vec<PlaylistAction>) {
@@ -1004,7 +1055,7 @@ fn paint_ruler(
     playhead: Option<usize>,
 ) {
     let ruler = Rect::from_min_size(
-        visible.min + vec2(0.0, SECTION_HEIGHT),
+        visible.min + vec2(0.0, SECTION_HEIGHT + TEMPO_HEIGHT),
         vec2(visible.width(), RULER_HEIGHT),
     );
     painter.rect_filled(ruler, 0.0, RULER);
@@ -1061,15 +1112,22 @@ fn paint_ruler(
         ));
     }
     // The corner above the track names, which names the two strips.
-    let corner = Rect::from_min_size(
-        visible.min,
-        vec2(HEADER_WIDTH, SECTION_HEIGHT + RULER_HEIGHT),
-    );
+    let corner = Rect::from_min_size(visible.min, vec2(HEADER_WIDTH, TOP));
     painter.rect_filled(corner, 0.0, RULER);
     painter.text(
         pos2(corner.left() + 6.0, corner.top() + SECTION_HEIGHT / 2.0),
         Align2::LEFT_CENTER,
         "Sections",
+        FontId::proportional(11.0),
+        RULER_TEXT,
+    );
+    painter.text(
+        pos2(
+            corner.left() + 6.0,
+            corner.top() + SECTION_HEIGHT + TEMPO_HEIGHT / 2.0,
+        ),
+        Align2::LEFT_CENTER,
+        "Tempo",
         FontId::proportional(11.0),
         RULER_TEXT,
     );

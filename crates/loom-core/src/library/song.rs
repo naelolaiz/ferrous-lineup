@@ -47,6 +47,44 @@ pub struct Part {
     /// are read in this key, so a piece that modulates has a part for
     /// each key it visits.
     pub key: Option<(PitchClass, ScaleKind)>,
+    /// The tempo markings of the score inside this part, in order. The
+    /// demo puts a tempo marker on the playlist for each, every time the
+    /// part is played. After the part, the song carries on at the tempo
+    /// it got to.
+    pub tempo: &'static [TempoMark],
+}
+
+/// A tempo marking in a score, inside a part. `at` counts steps from the
+/// start of the part.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TempoMark {
+    /// From `at` on, `bpm` beats a minute, at once: a new section with
+    /// a new tempo, such as "Più mosso" (more movement), "Adagio" or
+    /// "Tempo I" (the first tempo again).
+    At { at: usize, bpm: u16 },
+    /// From `at`, slowing down or speeding up bit by bit until `bpm`,
+    /// reached `over` steps later: "rit." or "rall." (slowing down),
+    /// "accel." or "stringendo" (speeding up).
+    Glide { at: usize, bpm: u16, over: usize },
+    /// A fermata (𝄐), the "bird's eye" over a note or a rest: from `at`,
+    /// for `steps` steps, the music waits, lasting twice as long; then
+    /// it carries on at the tempo before.
+    Fermata { at: usize, steps: usize },
+}
+
+/// A new tempo from `at`, at once.
+const fn tempo(at: usize, bpm: u16) -> TempoMark {
+    TempoMark::At { at, bpm }
+}
+
+/// A gradual change from `at`, reaching `bpm` after `over` steps.
+const fn glide(at: usize, bpm: u16, over: usize) -> TempoMark {
+    TempoMark::Glide { at, bpm, over }
+}
+
+/// A fermata from `at`, `steps` steps long.
+const fn fermata(at: usize, steps: usize) -> TempoMark {
+    TempoMark::Fermata { at, steps }
 }
 
 impl Part {
@@ -60,6 +98,7 @@ impl Part {
             voices: &[0],
             time: None,
             key: None,
+            tempo: &[],
         }
     }
 
@@ -79,6 +118,11 @@ impl Part {
             time: Some(time),
             ..self
         }
+    }
+
+    /// The same part with the tempo markings of the score.
+    const fn with_tempo(self, tempo: &'static [TempoMark]) -> Part {
+        Part { tempo, ..self }
     }
 
     /// The same part in another key: a modulation.

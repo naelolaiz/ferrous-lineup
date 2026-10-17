@@ -99,20 +99,27 @@ impl LoomApp {
         // The song loops when it reaches its end, so silent steps are
         // added after it: enough for the tail, and one more, so the
         // export ends before the song would start again.
-        let step_frames = frames_per_step(self.project.tempo, EXPORT_SAMPLE_RATE);
         // The whole song, every repeat included, even when song mode only
         // loops part of it.
         let song = self.project.arrangement();
         let song_length = song.length;
+        // The silent steps play at the tempo the song ends at: the
+        // audio thread plays steps past the end of the tempo list at
+        // its last tempo.
+        let tempos = self.project.played_tempos(&song);
+        let end_tempo = tempos.last().copied().unwrap_or(self.project.tempo);
+        let step_frames = frames_per_step(end_tempo, EXPORT_SAMPLE_RATE);
         let tail_frames = TAIL_SECONDS * f64::from(EXPORT_SAMPLE_RATE);
         let silent_steps = (tail_frames / step_frames).ceil() as usize + 1;
+        let song_frames = self.project.played_seconds(&song) * f64::from(EXPORT_SAMPLE_RATE);
         renderer.send(Command::SetSong {
             plays: song.plays,
             length: song_length + silent_steps,
         });
+        renderer.send(Command::SetSongTempos(tempos));
         renderer.send(Command::SetMode(PlayMode::Song));
         renderer.send(Command::Play);
-        let frames = (song_length as f64 * step_frames + tail_frames) as usize;
+        let frames = (song_frames + tail_frames) as usize;
 
         let done = Arc::new(AtomicUsize::new(0));
         // The thread gets its own `Arc` pointing to the same counter, and

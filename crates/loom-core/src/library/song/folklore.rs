@@ -43,13 +43,17 @@ pub(super) const EL_CONDOR_PASA: Song = Song {
              A5:6 G#5:2 A5:3 G#5:1 A5:3 G#5:1 | A5:12 C6:2 A5 | G5:12 A5:2 G5 | E5:12 D5:2 C5 | \
              A4:12 C5:4 | A4:12 E5:2 D5:1 C5 | A4:12 -:4",
             "bVI | bVI | bIII | bIII | bVI | bVI | bIII | bIII | i | i | i",
-        ),
+        )
+        // The Andante ends under a fermata.
+        .with_tempo(&[fermata(160, 12)]),
         Part::new(
             "Fuga A",
             "E5:1 A5 E5 A5 E5:2 D5 C5:1 A4:2 A4:5 | A4:1 B4 C5 D5 E5:2 G5 E5:8 | \
              E5:1 A5 E5 A5 E5:2 D5 C5:1 A4:2 G4:1 A4:4 | A4:1 B4 C5 D5 E5 D5 C5 B4 A4:8",
             "i | bIII | i | i",
-        ),
+        )
+        // "Allegro": the fuga is half as fast again as the Andante.
+        .with_tempo(&[tempo(0, 120)]),
         Part::new(
             "Fuga B",
             "E5:1 G5 E5 G5 D5:2 D5:1 G5 E5:8 | E5:1 G5 E5 G5 D5:1 G5:3 E5:4 E5 | \
@@ -69,7 +73,9 @@ pub(super) const EL_CONDOR_PASA: Song = Song {
             "Fuga end",
             "A5:4 G5:1 A5 G5 E5 G5 E5 D5 E5 D5 C5 D5 C5 | A4:2 G4 A4:12",
             "i | i",
-        ),
+        )
+        // The fermata on the flourish's first note.
+        .with_tempo(&[fermata(0, 4)]),
     ],
     form: &[
         "Pickup",

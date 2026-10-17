@@ -12,6 +12,7 @@ use crate::pattern::{MAX_STEPS, NoteEvent, Pattern};
 use crate::playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Section, Track,
 };
+use crate::tempo::{TempoMap, TempoMarker};
 use crate::{DRUM_CHANNEL, Note, Tempo, tools};
 
 /// The most channels a project can have. The audio thread reserves room
@@ -171,6 +172,11 @@ impl Channel {
     }
 }
 
+/// The most loose timing can be, in milliseconds. A good player is
+/// rarely more than a few hundredths of a second off the beat; much more
+/// than this sounds like a mistake, not a feel.
+pub const MAX_LOOSE_TIMING: u8 = 40;
+
 /// Everything the user is working on, and everything a project file saves.
 ///
 /// The fields that have rules are private, so they can only change
@@ -189,6 +195,11 @@ pub struct Project {
     /// first time marker (see [`Project::meter`]). It only changes where
     /// bar lines are drawn and how long new patterns are, never the notes.
     pub time_signature: TimeSignature,
+    /// How far off the grid notes may land as they play, in milliseconds,
+    /// to sound less like a machine: each note starts up to this much
+    /// late, a different amount every time. 0, the default, plays every
+    /// note exactly on its step. See [`MAX_LOOSE_TIMING`].
+    pub loose_timing: u8,
     channels: Vec<Channel>,
     patterns: Vec<Pattern>,
     playlist: Playlist,
@@ -201,6 +212,7 @@ impl Project {
             tempo: Tempo::default(),
             scale: Scale::default(),
             time_signature: TimeSignature::COMMON,
+            loose_timing: 0,
             channels: Vec::new(),
             patterns: vec![Pattern::new("Pattern 1", 0, NEW_PATTERN_LENGTH)],
             playlist: Playlist::new(),
@@ -757,6 +769,86 @@ impl Project {
         Some(markers.remove(index))
     }
 
+    // ----- Tempo changes -----
+
+    /// The tempo along the playlist's timeline: the project's own from
+    /// the start, then each tempo marker.
+    pub fn tempo_map(&self) -> TempoMap {
+        TempoMap::new(self.tempo, self.playlist.tempo_markers.iter().copied())
+    }
+
+    /// The tempo of every step of `arrangement` as it plays, in song
+    /// steps: a section that slows down at its end slows down every time
+    /// round. Empty when the tempo never changes, so the audio thread
+    /// simply plays the project's tempo.
+    pub fn played_tempos(&self, arrangement: &Arrangement) -> Vec<Tempo> {
+        let map = self.tempo_map();
+        if map.is_steady() {
+            return Vec::new();
+        }
+        (0..arrangement.length)
+            .map(|step| {
+                let timeline = arrangement.timeline_step(step).unwrap_or(step);
+                map.tempo_at(timeline)
+            })
+            .collect()
+    }
+
+    /// How many seconds `arrangement` lasts as it plays, tempo changes
+    /// and all.
+    pub fn played_seconds(&self, arrangement: &Arrangement) -> f64 {
+        let tempos = self.played_tempos(arrangement);
+        crate::tempo::seconds(arrangement.length, |step| {
+            tempos.get(step).copied().unwrap_or(self.tempo)
+        })
+    }
+
+    /// Changes the tempo from `marker.start` on, at once or gliding to it.
+    /// On step 0 it changes the project's own tempo (a glide from nothing
+    /// means nothing there, so it is sudden); anywhere else it adds a
+    /// marker, or replaces the one already there. Returns `false`,
+    /// changing nothing, if the marker is too late.
+    pub fn set_tempo_marker(&mut self, marker: TempoMarker) -> bool {
+        if marker.start >= MAX_SONG_STEPS {
+            return false;
+        }
+        if marker.start == 0 {
+            self.tempo = marker.tempo;
+            return true;
+        }
+        let marker = TempoMarker {
+            glide: marker.glide.min(MAX_SONG_STEPS - marker.start),
+            ..marker
+        };
+        let markers = &mut self.playlist.tempo_markers;
+        match markers.binary_search_by_key(&marker.start, |m| m.start) {
+            Ok(index) => markers[index] = marker,
+            Err(index) => markers.insert(index, marker),
+        }
+        true
+    }
+
+    /// Removes the tempo marker on step `start`, if there is one. The
+    /// song carries on at the tempo before it.
+    pub fn remove_tempo_marker(&mut self, start: usize) -> Option<TempoMarker> {
+        let markers = &mut self.playlist.tempo_markers;
+        let index = markers.iter().position(|marker| marker.start == start)?;
+        Some(markers.remove(index))
+    }
+
+    /// Sets the tempo the song starts at to `tempo`, and every tempo
+    /// change by the same proportion, so a song that slows down in the
+    /// middle still slows down as much, only from a faster or slower
+    /// start. This is what the tempo box in the toolbar does: to play a
+    /// whole song more slowly while learning it, say.
+    pub fn scale_tempo(&mut self, tempo: Tempo) {
+        let ratio = tempo.bpm() / self.tempo.bpm();
+        self.tempo = tempo;
+        for marker in &mut self.playlist.tempo_markers {
+            marker.tempo = Tempo::new(marker.tempo.bpm() * ratio);
+        }
+    }
+
     // ----- Sections and the loop region -----
 
     /// Whether `section` could be in the playlist, next to every section
@@ -830,6 +922,14 @@ impl Project {
             .filter(|marker| marker.start > section.start && marker.start < section.end())
             .copied()
             .collect();
+        let tempos = self.tempo_map();
+        let opening_tempo = tempos.tempo_at(section.start);
+        let inside_tempos: Vec<TempoMarker> = tempos
+            .markers()
+            .iter()
+            .filter(|marker| marker.start > section.start && marker.start < section.end())
+            .copied()
+            .collect();
         if copies == 0 || !self.make_room(section.end(), room) {
             return false;
         }
@@ -859,8 +959,18 @@ impl Project {
             for marker in &inside_markers {
                 self.set_time_marker(TimeMarker::new(marker.start + shift, marker.time));
             }
+            // And plays at the same tempo, slowing down or speeding up
+            // where it does.
+            self.set_tempo_marker(TempoMarker::new(section.start + shift, opening_tempo.bpm()));
+            for marker in &inside_tempos {
+                self.set_tempo_marker(TempoMarker {
+                    start: marker.start + shift,
+                    ..*marker
+                });
+            }
         }
         self.playlist.time_markers = self.meter().tidy().markers().to_vec();
+        self.playlist.tempo_markers = self.tempo_map().tidy().markers().to_vec();
         true
     }
 
@@ -922,6 +1032,10 @@ impl Project {
             || playlist
                 .time_markers
                 .iter()
+                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+            || playlist
+                .tempo_markers
+                .iter()
                 .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS);
         if too_late {
             return false;
@@ -938,6 +1052,9 @@ impl Project {
             shift(&mut section.start);
         }
         for marker in &mut self.playlist.time_markers {
+            shift(&mut marker.start);
+        }
+        for marker in &mut self.playlist.tempo_markers {
             shift(&mut marker.start);
         }
         if let Some(region) = &mut self.playlist.loop_region {
@@ -1423,6 +1540,59 @@ mod tests {
             .collect();
         // The copy carries on in 3/4, so it needs no marker of its own.
         assert_eq!(markers, [(32, waltz), (80, TimeSignature::COMMON)]);
+    }
+
+    #[test]
+    fn a_section_that_slows_down_slows_down_every_time_round() {
+        let mut project = Project::demo();
+        // Bars 3 to 4 repeat; their last bar slows from 120 to 60.
+        project.tempo = Tempo::new(120.0);
+        project.add_section(Section {
+            repeats: 2,
+            ..Section::new("Verse", 32, 32)
+        });
+        project.set_tempo_marker(TempoMarker::gliding(48, 60.0, 16));
+        project.set_tempo_marker(TempoMarker::new(64, 120.0));
+        let song = project.arrangement();
+        let tempos = project.played_tempos(&song);
+        assert_eq!(tempos.len(), song.length);
+        let bpm = |step: usize| tempos[step].bpm();
+        // First time round: steps 32..64; second: 64..96; then on.
+        assert_eq!((bpm(47), bpm(63)), (120.0, 60.0));
+        assert_eq!((bpm(64), bpm(79), bpm(95)), (120.0, 120.0, 60.0));
+        assert_eq!(bpm(96), 120.0);
+        // Two seconds a bar at 120 BPM; the slowing bars take longer.
+        assert!(project.played_seconds(&song) > song.length as f64 / 8.0);
+    }
+
+    #[test]
+    fn copies_of_a_section_keep_its_tempo_changes() {
+        let mut project = Project::demo();
+        project.tempo = Tempo::new(120.0);
+        project.add_section(Section::new("Verse", 0, 32));
+        project.set_tempo_marker(TempoMarker::gliding(16, 90.0, 16));
+        assert!(project.duplicate_section(0, 1));
+        let map = project.tempo_map();
+        assert_eq!(map.tempo_at(31).bpm(), 90.0);
+        // The copy starts at the section's tempo and slows down again.
+        assert_eq!(map.tempo_at(32).bpm(), 120.0);
+        assert_eq!(map.tempo_at(63).bpm(), 90.0);
+        assert_eq!(map.tempo_at(64).bpm(), 90.0);
+    }
+
+    #[test]
+    fn the_tempo_box_moves_every_change_with_it() {
+        let mut project = Project::demo();
+        project.tempo = Tempo::new(100.0);
+        project.set_tempo_marker(TempoMarker::new(32, 80.0));
+        project.scale_tempo(Tempo::new(50.0));
+        assert_eq!(project.tempo_map().tempo_at(32).bpm(), 40.0);
+        // A marker on step 0 is the song's own tempo.
+        assert!(project.set_tempo_marker(TempoMarker::gliding(0, 70.0, 16)));
+        assert_eq!(project.tempo.bpm(), 70.0);
+        assert_eq!(project.playlist().tempo_markers().len(), 1);
+        assert!(project.remove_tempo_marker(32).is_some());
+        assert!(project.tempo_map().is_steady());
     }
 
     #[test]
