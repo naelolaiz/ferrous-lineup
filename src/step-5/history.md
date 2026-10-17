@@ -1,7 +1,7 @@
 # Undo and redo: a history of copies
 
-Files: [`crates/lineup-core/src/history.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/history.rs)
-and [`crates/lineup-app/src/app/edit.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/edit.rs)
+Files: [`crates/lineup-core/src/history.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/history.rs)
+and [`crates/lineup-app/src/app/edit.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/edit.rs)
 
 ## Two ways to undo
 

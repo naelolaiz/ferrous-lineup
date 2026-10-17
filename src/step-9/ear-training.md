@@ -1,9 +1,9 @@
 # Ear training
 
-Files: [`crates/lineup-core/src/ear_training.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/ear_training.rs),
-[`crates/lineup-audio/src/phrase.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/phrase.rs),
-[`crates/lineup-app/src/ear_training.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/ear_training.rs)
-and [`crates/lineup-app/src/app/ear.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/ear.rs)
+Files: [`crates/lineup-core/src/ear_training.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/ear_training.rs),
+[`crates/lineup-audio/src/phrase.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/phrase.rs),
+[`crates/lineup-app/src/ear_training.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/ear_training.rs)
+and [`crates/lineup-app/src/app/ear.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ear.rs)
 
 Everything so far helps you *see* harmony: chord names on the sheet,
 numerals and colours on the harmony keys, set names in the twelve-tone
@@ -401,7 +401,7 @@ same way. **Stop** (closing the window) lets go of every note and drops
 the ones not started yet.
 
 The instruments come from `build_instrument`, the same function the
-channels use ([app/ear.rs](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/ear.rs)):
+channels use ([app/ear.rs](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ear.rs)):
 the piano is a channel with General MIDI program 0, the bass program
 33, the drums the built-in kit. So with **Sounds > SoundFont
 instruments** on, the questions play the SoundFont's piano, bass and

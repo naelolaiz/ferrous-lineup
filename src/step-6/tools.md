@@ -1,7 +1,7 @@
 # Tools are plain functions
 
-Files: [`crates/lineup-core/src/tools.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/tools.rs)
-and [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pattern.rs)
+Files: [`crates/lineup-core/src/tools.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/tools.rs)
+and [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/pattern.rs)
 
 ## Notes in, notes out
 

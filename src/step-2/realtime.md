@@ -1,6 +1,6 @@
 # The audio thread, grown up
 
-File: [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
+File: [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/engine.rs)
 
 Step 1's golden rule still holds: the audio thread must never wait, lock,
 allocate or free memory. Step 2 makes that rule harder to keep, because

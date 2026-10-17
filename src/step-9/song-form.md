@@ -1,12 +1,12 @@
 # Song form: an intro, choruses and an ending
 
-Files: [`crates/lineup-core/src/band/form.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/lineup-core/src/band/form.rs),
-[`crates/lineup-core/src/band.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/lineup-core/src/band.rs),
-[`crates/lineup-core/src/arrangement.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/lineup-core/src/arrangement.rs),
-[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/lineup-core/src/project.rs),
-[`crates/lineup-app/src/chord_sheet/form.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/lineup-app/src/chord_sheet/form.rs),
-[`crates/lineup-app/src/app/form.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/lineup-app/src/app/form.rs)
-and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/lineup-app/src/playlist/sections.rs)
+Files: [`crates/lineup-core/src/band/form.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/band/form.rs),
+[`crates/lineup-core/src/band.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/band.rs),
+[`crates/lineup-core/src/arrangement.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/arrangement.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/project.rs),
+[`crates/lineup-app/src/chord_sheet/form.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet/form.rs),
+[`crates/lineup-app/src/app/form.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/form.rs)
+and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/playlist/sections.rs)
 
 A band does not play a tune once and stop dead. It plays a few bars to
 set the key and the groove (the **intro**), then the tune, then the

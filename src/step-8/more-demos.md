@@ -1,8 +1,8 @@
 # More demos: songs for every genre
 
-Files: [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/song.rs),
-the genre files in [`crates/lineup-core/src/library/song/`](https://github.com/naelolaiz/ferrous-loom/tree/band-in-a-box/crates/lineup-core/src/library/song)
-and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
+Files: [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs),
+the genre files in [`crates/lineup-core/src/library/song/`](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-core/src/library/song)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
 The first demos were 16 songs. They were good to hear, but most of the
 library's genres had no song at all: there was a tango *style*, but no

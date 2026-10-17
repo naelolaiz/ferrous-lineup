@@ -1,8 +1,8 @@
 # The accompaniment follows your chords
 
-Files: [`crates/lineup-core/src/library/follow.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/follow.rs),
-[`crates/lineup-app/src/app/follow.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/follow.rs)
-and [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/live.rs)
+Files: [`crates/lineup-core/src/library/follow.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/follow.rs),
+[`crates/lineup-app/src/app/follow.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/follow.rs)
+and [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/live.rs)
 
 An **arranger keyboard** (the home keyboards with a "style" button)
 plays drums, chords and a bass line for you, and your left hand only

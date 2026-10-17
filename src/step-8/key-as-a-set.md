@@ -1,7 +1,7 @@
 # A key as a pitch-class set: the same notes, another name
 
-Files: [`crates/loom-app/src/twelve_tone.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/twelve_tone.rs),
-[`crates/loom-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/scale.rs)
+Files: [`crates/lineup-app/src/twelve_tone.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/twelve_tone.rs),
+[`crates/lineup-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/harmony/scale.rs)
 
 Play the starting song in C major and pick **pitch-class set** in the
 Key menu. Until now the menu took the last set you had used, or the

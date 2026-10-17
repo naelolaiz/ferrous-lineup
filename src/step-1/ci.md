@@ -46,7 +46,7 @@ Two more tools keep the code tidy:
 
 ## Continuous integration
 
-File: [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-loom/blob/main/.github/workflows/ci.yml)
+File: [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/.github/workflows/ci.yml)
 
 Every push and pull request runs two jobs on GitHub's Linux machines:
 

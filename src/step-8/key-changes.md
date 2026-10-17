@@ -1,10 +1,10 @@
 # Key changes partway through, and the whole Turkish March
 
-Files: [`crates/lineup-core/src/key_map.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/key_map.rs),
-[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
-[`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/demo.rs),
-[`crates/lineup-core/src/library/song/electronic.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/song/electronic.rs)
-and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/playlist/sections.rs)
+Files: [`crates/lineup-core/src/key_map.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/key_map.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/project.rs),
+[`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs),
+[`crates/lineup-core/src/library/song/electronic.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song/electronic.rs)
+and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/playlist/sections.rs)
 
 The question that started this: *"I don't see the modulation of the key
 signature in the Turkish March demo. Isn't there a modulation in the

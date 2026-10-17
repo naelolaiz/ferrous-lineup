@@ -1,6 +1,6 @@
 # One set of zoom keys that follows the pointer
 
-File: [`crates/loom-app/src/app/view.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/view.rs)
+File: [`crates/lineup-app/src/app/view.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/view.rs)
 
 The app has four zooms: the playlist (wider bars, taller tracks), the
 piano roll (the same two directions), the channel rack (one size) and the

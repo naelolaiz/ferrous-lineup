@@ -18,7 +18,7 @@ chord that is playing.
 The code lives in a new crate, `lineup-listen`, plus one file in the app
 (`app/import.rs`) and a small change to the sampler. This chapter
 explains how it works and what was learned. The crate's
-[`README.md`](https://github.com/naelolaiz/ferrous-loom/tree/band-in-a-box/crates/lineup-listen)
+[`README.md`](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-listen)
 has the detailed numbers from trying the alternatives.
 
 ## The pipeline

@@ -1,6 +1,6 @@
 # The piano roll, grown up
 
-File: [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/piano_roll.rs)
+File: [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/piano_roll.rs)
 
 The tools are plain functions, but something has to decide which notes
 they get, call them at the right moment, and show the result. That is

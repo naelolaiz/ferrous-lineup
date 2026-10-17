@@ -1,7 +1,7 @@
 # A demo keeps its name, and is saved as a copy
 
-Files: [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/files.rs)
-and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
+Files: [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/files.rs)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
 Open "Für Elise" from **File > Demos** and, until now, the window title
 said "Untitled". The app only knew two kinds of project: one that came

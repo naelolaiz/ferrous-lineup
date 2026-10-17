@@ -7,7 +7,7 @@ associated constants, traits and tests.
 
 ## `Note`: a newtype around a number
 
-File: [`crates/lineup-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pitch.rs)
+File: [`crates/lineup-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/pitch.rs)
 
 ### The music
 
@@ -103,7 +103,7 @@ type Rust uses for sizes and positions in memory.
 
 ## `Tempo`: keeping a value valid
 
-File: [`crates/lineup-core/src/tempo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/tempo.rs)
+File: [`crates/lineup-core/src/tempo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/tempo.rs)
 
 ```rust
 pub struct Tempo { bpm: f32 }

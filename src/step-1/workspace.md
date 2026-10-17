@@ -39,7 +39,7 @@ lineup-app ──▶ lineup-audio ──▶ lineup-core
 
 A **workspace** is a group of crates that are built together and share one
 `Cargo.lock` file and one `target/` output folder. Look at the top-level
-[`Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/main/Cargo.toml):
+[`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml):
 
 ```toml
 [workspace]
@@ -80,7 +80,7 @@ different editions work together fine.
 ## Modules
 
 Inside a crate, code is organized in **modules**. A module is usually one
-file. In [`crates/lineup-core/src/lib.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/lib.rs):
+file. In [`crates/lineup-core/src/lib.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/lib.rs):
 
 ```rust
 pub mod pitch;   // loads src/pitch.rs as the module `pitch`

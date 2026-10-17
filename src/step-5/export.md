@@ -1,7 +1,7 @@
 # Exporting the song as a WAV file
 
-Files: [`crates/lineup-audio/src/render.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/render.rs)
-and [`crates/lineup-app/src/app/export.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/export.rs)
+Files: [`crates/lineup-audio/src/render.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/render.rs)
+and [`crates/lineup-app/src/app/export.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/export.rs)
 
 ## What is in a WAV file
 

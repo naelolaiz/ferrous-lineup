@@ -1,7 +1,7 @@
 # lineup-app: the window
 
-Files: [`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/main.rs)
-and [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app.rs)
+Files: [`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/main.rs)
+and [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs)
 
 The window is drawn with [egui](https://github.com/emilk/egui), a GUI
 library written in Rust, and [eframe](https://docs.rs/eframe), egui's

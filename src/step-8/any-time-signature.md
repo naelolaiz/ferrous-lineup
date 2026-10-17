@@ -1,8 +1,8 @@
 # Any time signature, and irregular meters
 
-Files: [`crates/lineup-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/meter.rs),
-[`crates/lineup-app/src/time_picker.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/time_picker.rs),
-[`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs)
+Files: [`crates/lineup-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/meter.rs),
+[`crates/lineup-app/src/time_picker.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/time_picker.rs),
+[`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs)
 
 The menus used to offer ten time signatures, from 2/4 to 12/8. Music
 has many more: 11/8, 13/16, 7/4, 5/2. A time signature is just two

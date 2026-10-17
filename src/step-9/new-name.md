@@ -1,12 +1,12 @@
 # A new name
 
-Files: [`Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/Cargo.toml),
-[`crates/lineup-app/Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/Cargo.toml),
-[`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/main.rs),
-[`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/midi.rs),
-[`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs),
-[`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs)
-and [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/.github/workflows/ci.yml)
+Files: [`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml),
+[`crates/lineup-app/Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/Cargo.toml),
+[`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/main.rs),
+[`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/midi.rs),
+[`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs),
+[`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/midi_file.rs)
+and [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/.github/workflows/ci.yml)
 
 Ferrous Loom is now **Ferrous Lineup**. Renaming a program sounds like a
 search and replace, and mostly it is. The interesting parts are the
@@ -45,7 +45,7 @@ together.
 2. **Its `[package] name`**, in its own `Cargo.toml`, and every place
    that names it: the workspace's list of `members` and its
    `[workspace.dependencies]` in the top
-   [`Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/Cargo.toml),
+   [`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml),
    and the crates that depend on it:
 
    ```toml
@@ -72,7 +72,7 @@ you read says the same name as the window.
 Every song saved so far ends in `.loom`. A program that only knew
 `.lineup` would no longer see them in its Open dialog, and dropping one
 on the window would do nothing. So
-[`file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs)
+[`file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs)
 knows both:
 
 ```rust
@@ -117,7 +117,7 @@ read what was saved before.
 **The synth.** A channel's name is saved in the project, so an old
 project still has a channel called "Loom Osc". Reading a project file
 renames it, in
-[`file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs):
+[`file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs):
 
 ```rust
 const OLD_SYNTH_NAME: &str = "Loom Osc";
@@ -144,7 +144,7 @@ writes the exact key, such as E Dorian, in an event of its own that
 starts with the bytes `\x7DFerrous Lineup key `
 ([MIDI file import](../step-8/midi-import.md) reads it back). Files
 exported before the rename start with `\x7DFerrous Loom key `, so
-[`midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs)
+[`midi_file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/midi_file.rs)
 accepts either:
 
 ```rust
@@ -158,16 +158,16 @@ does not start with it. `or_else` tries the old prefix only when the new
 one is missing, and `?` gives up when neither is there. A test reads an
 old event and gets E Dorian back.
 
-**The repository** is still `naelolaiz/ferrous-loom` until it is
-renamed on GitHub. GitHub sends the old address on to the new one, so
-links keep working after that.
+**The repository** was renamed on GitHub too, from
+`naelolaiz/ferrous-loom` to `naelolaiz/ferrous-lineup`. GitHub sends the
+old address on to the new one, so old links keep working.
 
 ## Package name and program name
 
 The program is built from the package `lineup-app`, but the file Cargo
 writes is called `ferrous-lineup`. The two names live in different
 places of
-[`crates/lineup-app/Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/Cargo.toml):
+[`crates/lineup-app/Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/Cargo.toml):
 
 ```toml
 [package]

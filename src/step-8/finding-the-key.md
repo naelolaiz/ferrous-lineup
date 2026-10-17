@@ -1,10 +1,10 @@
 # Finding the key from the music (experimental)
 
-Files: [`crates/lineup-core/src/harmony/key_finding.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/key_finding.rs),
-[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
-[`crates/lineup-listen/src/keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-listen/src/keys.rs),
-[`crates/lineup-app/src/app/key_finder.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/key_finder.rs)
-and [`crates/lineup-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/harmony_keys.rs)
+Files: [`crates/lineup-core/src/harmony/key_finding.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/harmony/key_finding.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/project.rs),
+[`crates/lineup-listen/src/keys.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/keys.rs),
+[`crates/lineup-app/src/app/key_finder.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/key_finder.rs)
+and [`crates/lineup-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/harmony_keys.rs)
 
 The question that started this: *"Will the MIDI import (and the audio
 import) check for key changes on unknown new sources, or chords played by

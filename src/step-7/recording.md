@@ -1,8 +1,8 @@
 # Recording: from a key to a note
 
-Files: [`crates/lineup-core/src/record.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/record.rs),
-[`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/live.rs)
-and [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs)
+Files: [`crates/lineup-core/src/record.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/record.rs),
+[`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/live.rs)
+and [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs)
 
 The [last chapter](live.md) brought each key to the UI thread with the
 position it was played at. Recording is what the UI does with it: a key

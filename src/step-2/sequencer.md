@@ -1,6 +1,6 @@
 # The sequencer: timing to the sample
 
-File: [`crates/lineup-core/src/sequencer.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/sequencer.rs)
+File: [`crates/lineup-core/src/sequencer.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/sequencer.rs)
 
 ## The arithmetic
 

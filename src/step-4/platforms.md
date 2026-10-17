@@ -1,8 +1,8 @@
 # Linux, macOS and Windows
 
-Files: [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-loom/blob/main/.github/workflows/ci.yml),
-[`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/main.rs)
-and [`Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/main/Cargo.toml)
+Files: [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/.github/workflows/ci.yml),
+[`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/main.rs)
+and [`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml)
 
 The plan from the start was "Linux first, the others at the end, without
 a rewrite". Here is the whole change to the program's code for macOS and

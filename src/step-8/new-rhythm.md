@@ -1,9 +1,9 @@
 # A new rhythm for a song: hearing the chords
 
-Files: [`crates/lineup-core/src/library/listen.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/listen.rs),
-[`crates/lineup-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/apply.rs),
-[`crates/lineup-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/library_browser.rs)
-and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
+Files: [`crates/lineup-core/src/library/listen.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/listen.rs),
+[`crates/lineup-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/apply.rs),
+[`crates/lineup-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/library_browser.rs)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
 Until now, picking a rhythm in the Library only changed the drums. Put a
 reggae beat under a bossa nova and the piano went on playing bossa nova
