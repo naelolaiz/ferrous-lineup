@@ -1274,8 +1274,17 @@ impl Project {
             }
             // And has the same chords.
             let copy_start = section.start + shift;
+            // A harmony carried over from before the section has no
+            // marks of its own there; one that starts with the section
+            // keeps them.
             let chords: Vec<ChordMarker> = opening_chord
-                .map(|marker| ChordMarker::new(copy_start, marker.harmony))
+                .map(|marker| match marker.start == section.start {
+                    true => ChordMarker {
+                        start: copy_start,
+                        ..marker
+                    },
+                    false => ChordMarker::new(copy_start, marker.harmony),
+                })
                 .into_iter()
                 .chain(inside_chords.iter().map(|marker| ChordMarker {
                     start: marker.start + shift,
@@ -1439,7 +1448,10 @@ impl Project {
         self.scale = self.key_at(steps);
         let opening_chord = self
             .chord_at(steps)
-            .map(|marker| ChordMarker::new(0, marker.harmony));
+            .map(|marker| match marker.start == steps {
+                true => ChordMarker { start: 0, ..marker },
+                false => ChordMarker::new(0, marker.harmony),
+            });
         let playlist = &mut self.playlist;
         playlist.clips.retain(|clip| clip.start >= steps);
         for clip in &mut playlist.clips {

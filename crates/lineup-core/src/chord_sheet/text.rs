@@ -21,7 +21,8 @@
 //! Each bar holds what would be typed in a bar of the chord sheet (see
 //! [`read_bar`]): harmonies spread over the beats, "/" for a beat that
 //! goes on with the harmony before, and "%" (or nothing) for a bar that
-//! goes on with the bar before. A line can hold any number of bars;
+//! goes on with the bar before. A harmony keeps its marks: "C." is a
+//! shot, "C.." a hold, "C..." a rest and "^C" a push. A line can hold any number of bars;
 //! "||", "|:" and ":|" read as plain bar lines.
 //!
 //! The settings at the top are all optional. A line in square brackets
@@ -913,6 +914,20 @@ Style: Pop beat
                 )
         );
         assert_eq!(write_bars(&project, 1..3), "| Am7 | Dm7 G7 |\n");
+    }
+
+    #[test]
+    fn shots_holds_rests_and_pushes_go_through_text() {
+        let chart = "| C. | ^F | G7.. Am... | ^^C |\n";
+        let project = imported(chart);
+        let marks: Vec<String> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| format!("{}@{}", marker.text(), marker.start))
+            .collect();
+        assert_eq!(marks, ["C.@0", "^F@16", "G7..@32", "Am...@40", "^^C@48"]);
+        assert_eq!(write_bars(&project, 0..4), chart);
     }
 
     /// The chords of `project` with each moved to the nearest beat, as

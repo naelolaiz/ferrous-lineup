@@ -38,6 +38,7 @@ use crate::tempo::Tempo;
 mod extras;
 mod form;
 mod guitar;
+mod stops;
 mod variation;
 
 pub use extras::{Extra, Extras, PadPart};
@@ -610,6 +611,21 @@ fn held_bar(
     })
 }
 
+/// The bass's note under `played`, struck once and held to its end: the
+/// bass's part in a shot, a hold or a push.
+fn bass_struck(played: &Played) -> Vec<NoteEvent> {
+    match played.bass {
+        BassPart::Chord { note, .. } | BassPart::Pedal(note) => {
+            vec![NoteEvent::new(
+                note,
+                played.start,
+                played.end - played.start,
+            )]
+        }
+        BassPart::Rest => Vec::new(),
+    }
+}
+
 impl Project {
     /// The band, if the song has one.
     pub fn band(&self) -> Option<&Band> {
@@ -1162,6 +1178,7 @@ impl Project {
             markers.push(ChordMarker::new(ending.start, ending.harmony));
         }
         let harmonies = self.played_harmonies(&markers, parts_end);
+        let breaks = stops::Breaks::of(&markers, parts_end);
         // The last bar of an ending is one chord, struck and held.
         let held = ending.and_then(|_| bars.last().copied());
         let variations = band.variations.clone();
@@ -1172,6 +1189,7 @@ impl Project {
         let time = meter.first();
         // The variation the last bar of an ending is played in.
         let held_in = held.map(|bar| variation::variation_in(&variations, bar.start));
+        let variation_at = |step: usize| variation::variation_in(&variations, step);
         let mut rewritten = Vec::new();
         for player in Player::ALL {
             if self.is_frozen(player) {
@@ -1185,7 +1203,9 @@ impl Project {
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Comping::Held.play_in_bars(bars, played)
                     }));
-                    notes
+                    breaks.apply(notes, &harmonies, |played| {
+                        Comping::Held.play_in_bars(&bars, std::slice::from_ref(played))
+                    })
                 }
                 Player::Bass => {
                     let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
@@ -1194,7 +1214,7 @@ impl Project {
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Bass::Held.play_in_bars(bars, played)
                     }));
-                    notes
+                    breaks.apply(notes, &harmonies, bass_struck)
                 }
                 Player::Drums => Vec::new(),
                 Player::Guitar => {
@@ -1212,7 +1232,17 @@ impl Project {
                             guitar::play(ring, Comping::Held, bars, played)
                         }));
                     }
-                    notes
+                    breaks.apply(notes, &harmonies, |played| {
+                        match extras.guitar_in(variation_at(played.start)) {
+                            Some(_) => guitar::play(
+                                GuitarPart::Strum(Comping::Held),
+                                Comping::Held,
+                                &bars,
+                                std::slice::from_ref(played),
+                            ),
+                            None => Vec::new(),
+                        }
+                    })
                 }
                 Player::Strings | Player::Organ => {
                     let octave = match player {
@@ -1232,11 +1262,18 @@ impl Project {
                             PadPart::Held.play(octave, bars, played)
                         }));
                     }
-                    notes
+                    breaks.apply(notes, &harmonies, |played| {
+                        match pad_in(variation_at(played.start)) {
+                            Some(_) => {
+                                PadPart::Held.play(octave, &bars, std::slice::from_ref(played))
+                            }
+                            None => Vec::new(),
+                        }
+                    })
                 }
             };
             let notes = match (player, band.channel(player)) {
-                (Player::Drums, _) => self.drum_part(style, &bars, &chunks, end, held),
+                (Player::Drums, _) => self.drum_part(style, &bars, &chunks, end, held, &breaks),
                 (_, Some(channel)) => {
                     let mut notes = notes;
                     interpret::perform(&mut notes, time, Role::Accompaniment, seed(player));
@@ -1411,7 +1448,8 @@ impl Project {
     /// the intro and of the chorus, which ends at `end`. A change of
     /// variation starts with a crash, and variation b plays some drums on
     /// others, louder. With an ending, its `held` bar is one last hit of
-    /// the kick and the crash cymbal.
+    /// the kick and the crash cymbal, as are the shots, holds and pushes
+    /// of the chord sheet, its `breaks`.
     fn drum_part(
         &mut self,
         style: &BandStyle,
@@ -1419,6 +1457,7 @@ impl Project {
         chunks: &[Chunk],
         end: usize,
         held: Option<Bar>,
+        breaks: &stops::Breaks,
     ) -> Vec<(usize, NoteEvent)> {
         let Some(rhythm) = style.rhythm else {
             return Vec::new();
@@ -1451,6 +1490,12 @@ impl Project {
             .chain(fill.into_iter().flat_map(|fill| fill.drums()))
             .chain(last_hit.into_iter().flat_map(|hit| hit.drums()))
             .chain(crash.map(|_| Drum::Crash))
+            .chain(
+                (!breaks.is_empty())
+                    .then_some([Drum::Kick, Drum::Crash])
+                    .into_iter()
+                    .flatten(),
+            )
         {
             if let Some(channel) = apply::drum_channel(self, drum)
                 && !drums.contains(&(drum, channel))
@@ -1563,7 +1608,7 @@ impl Project {
                 }
             }
         }
-        notes
+        breaks.apply_to_drums(notes, channel_of(Drum::Kick), channel_of(Drum::Crash))
     }
 
     /// Puts `player`'s notes (on the song's timeline) into patterns, one
@@ -1803,6 +1848,42 @@ mod tests {
             .map(|track| track.name.as_str())
             .collect();
         assert_eq!(tracks, ["Piano", "Bass", "Drums", "Guitar"]);
+    }
+
+    #[test]
+    fn the_band_stops_and_pushes_where_the_sheet_says() {
+        let mut project = Project::with_band();
+        write(&mut project, &["C", "^F", "G7.", "Am...", "C"]);
+        let starts = |player| -> Vec<usize> {
+            let mut starts: Vec<usize> = part(&project, player)
+                .into_iter()
+                .map(|(at, ..)| at)
+                .collect();
+            starts.dedup();
+            starts
+        };
+        for player in [Player::Piano, Player::Bass, Player::Guitar, Player::Drums] {
+            let starts = starts(player);
+            // F comes in on the "and" of 4 in bar 1, and nobody plays on
+            // the beat it is written on: it is held over.
+            assert!(starts.contains(&14), "{player:?} pushes F: {starts:?}");
+            assert!(!starts.contains(&16), "{player:?} holds F over: {starts:?}");
+            // G7 is one shot on bar 3, and bar 4 rests: nothing else
+            // starts until bar 5.
+            assert!(starts.contains(&32), "{player:?} plays the shot");
+            assert!(
+                starts.iter().all(|&at| !(33..64).contains(&at)),
+                "{player:?} stops: {starts:?}"
+            );
+            assert!(starts.contains(&64), "{player:?} comes back");
+        }
+        // The shot is an eighth note, the whole chord.
+        let shot: Vec<(usize, usize, u8)> = part(&project, Player::Piano)
+            .into_iter()
+            .filter(|&(at, ..)| at == 32)
+            .collect();
+        assert_eq!(shot.len(), 4, "G B D F");
+        assert_eq!(pitch_classes_at(&project, Player::Piano, 14), [0, 5, 9]);
     }
 
     #[test]
