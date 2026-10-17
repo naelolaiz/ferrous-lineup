@@ -27,6 +27,7 @@ pub mod pitch;
 pub mod playlist;
 pub mod project;
 pub mod record;
+pub mod remeter;
 pub mod sequencer;
 pub mod serial;
 pub mod tempo;
