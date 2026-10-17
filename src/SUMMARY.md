@@ -82,6 +82,7 @@
   - [The chord sheet: writing a song bar by bar](step-9/chord-sheet.md)
   - [The band plays the chord sheet](step-9/band.md)
   - [Real instrument sounds: a SoundFont](step-9/soundfont.md)
+  - [Practising with the band](step-9/practice.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---

@@ -26,8 +26,9 @@ time:
 3. **the band plays the chord sheet**: styles split into "band styles"
    (how to play) and "progressions" (what to play)
    ([The band plays the chord sheet](band.md)),
-4. **a practice bar**: count-in, tempo as a percentage, a toggle to play
-   a part yourself,
+4. **a practice bar**: count-in, metronome, tempo as a percentage, tap
+   tempo, a toggle to play a part yourself, and looping the bars you
+   choose ([Practising with the band](practice.md)),
 5. **song form**: choruses, an intro, an ending, and a second variation
    of the style for other sections,
 6. **swing**, from straight to triplet,
