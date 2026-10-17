@@ -8,12 +8,14 @@ where each one first appears in real code.
 | **Anonymous lifetime (`'_`)** | A lifetime written without a name, meaning "the lifetime of the borrowed argument". | [Steps to notes](step-3/notes.md) |
 | **`Arc<T>`** | A shared, reference-counted pointer that is safe to use across threads; the data is freed when the last `Arc` goes. | [Instruments](step-2/instruments.md) |
 | **Array** | A fixed number of values stored inline, like `[bool; 64]`; the length is part of the type. | [Patterns](step-2/project.md) |
+| **Array `map`** | `[T; N]::map` calls a closure on each item of an array and gives back a new array of the same length, with no `Vec` and no `collect`. | [Twelve-tone rows](step-8/twelve-tone.md#every-form-from-one-function) |
 | **`array::from_fn`** | Builds an array by calling a closure once for each element. | [Voices](step-3/voices.md) |
 | **`as` cast** | Converts between number types, or a fieldless enum to its number: `PitchClass::D as u8` is 2. | [Pitch classes and scales](step-3/theory.md) |
 | **Associated function** | A function in an `impl` block without `self`, called as `Type::name()`. `Note::new` is one. | [loom-core](step-1/loom-core.md) |
 | **Associated type** | A type that each implementation of a trait chooses, like `type Error = FileError;` in an `impl TryFrom`. | [Saving](step-4/saving.md) |
 | **Atomic** | A value (like `AtomicUsize`) that threads can read and write without a lock. | [Audio thread](step-2/realtime.md) |
 | **`AtomicU64` for an `f64`** | There is no atomic float, but `f64::to_bits` turns a float into the `u64` with the same bits, and `f64::from_bits` turns it back, so an `AtomicU64` can share one. | [Live keys](step-7/live.md) |
+| **Backtracking** | Building an answer a piece at a time, and taking the last piece back when it leads nowhere; usually a function that calls itself. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
 | **Big-endian / `to_be_bytes`** | Writing a number's most significant byte first; `6u32.to_be_bytes()` is `[0, 0, 0, 6]`. MIDI files use it. | [MIDI messages](step-7/messages.md) |
 | **Bit operations** | `&` (and), `\|` (or), `!` (not), `<<` and `>>` (shift) work on the bits of an integer. | [Pitch classes and scales](step-3/theory.md) |
 | **`bool::then` / `then_some`** | Turn a condition into an `Option`: `cond.then_some(x)` is `Some(x)` if `cond` is true and `None` if not; `cond.then(\|\| ...)` only runs the closure when it is true. | [Tools](step-6/tools.md) |
@@ -27,12 +29,14 @@ where each one first appears in real code.
 | **`cfg` / `cfg_attr`** | Conditional compilation: `#[cfg(target_os = "windows")]` keeps the next item only when the condition is true, and `cfg_attr` applies an attribute only then. | [Linux, macOS and Windows](step-4/platforms.md) |
 | **`checked_add_signed`** | Adds a signed number to an unsigned one, like `usize + isize`, and gives `None` instead of going below zero or overflowing. | [Tools](step-6/tools.md) |
 | **`chunk_by`** | Splits a slice into runs of neighbours that belong together, without copying. | [Piano roll window](step-3/piano-roll-ui.md) |
+| **`chunks` / `chunks_exact`** | Split a slice into pieces of n items; `chunks_exact` leaves out a last piece that is too short. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
 | **Closure** | An anonymous function, `\|args\| body`, that can capture variables from its surroundings. | [loom-audio](step-1/audio-engine.md) |
 | **Closure captures fields** | Since the 2021 edition, a closure that uses `self.midi_out` borrows only that field, not all of `self`, so other fields can be borrowed at the same time. | [Live keys](step-7/live.md) |
 | **Collecting `Option`s** | Collecting an iterator of `Option<T>` into an `Option<Vec<T>>` gives `Some` of all the values, or `None` as soon as one item is `None`. `Result` works the same way. | [Tools](step-6/tools.md) |
 | **`const fn`** | A function simple enough to run while compiling, so it can be used to set a `const`. | [Saving](step-4/saving.md) |
 | **Constant promotion** | Writing `&[1, 2, 3]` of plain constant values gives a `&'static` borrow, because the compiler stores the values with the program. A function call inside the brackets, even a `const fn`, is not promoted. | [The library](step-8/library.md#macro_rules-and-why-not-a-function) |
 | **`Copy`** | A marker trait for small values that are copied instead of moved, like numbers and `Note`; `let held = list[i];` then copies the item out. | [loom-core](step-1/loom-core.md) |
+| **`count_ones`** | How many bits of an integer are 1: the size of a set stored as bits. | [Twelve-tone rows](step-8/twelve-tone.md#sets-in-bits) |
 | **Crate** | One library or program; the unit Cargo builds and publishes. | [Workspace](step-1/workspace.md) |
 | **`cycle`** | Repeats an iterator forever. Safe because iterators are lazy: something else, like `zip`, decides when to stop. | [Tools](step-6/tools.md) |
 | **Declarative macro (`macro_rules!`)** | A macro defined by patterns: `macro_rules! hit { ($at:expr, ...) => { ... } }` matches what it is given and pastes it into a template, before the code is compiled. | [The library](step-8/library.md#macro_rules-and-why-not-a-function) |
@@ -48,6 +52,7 @@ where each one first appears in real code.
 | **Edition** | A version of the language (2015, 2018, 2021, 2024) chosen per crate. | [Workspace](step-1/workspace.md) |
 | **Enum** | A type whose value is one of several variants, each of which can hold data. | [loom-audio](step-1/audio-engine.md) |
 | **Enum size** | An enum takes as much room as its biggest variant; putting a big variant's data in a `Box` keeps every value small. Clippy's `large_enum_variant` lint points it out. | [Live keys](step-7/live.md) |
+| **`expect`** | Like `unwrap`, but panics with the message given. It states a promise ("this is always `Some`"), best kept by a test. | [Twelve-tone rows](step-8/twelve-tone.md#the-table-of-224-classes-and-how-to-trust-it) |
 | **Feature** | An optional part of a crate, turned on or off in `Cargo.toml`; features can only add, never take away. | [Saving](step-4/saving.md) |
 | **`find_map`** | Calls a closure on each item and returns the first `Some` it gives. | [Chords](step-3/chords.md) |
 | **`flat_map`** | Maps each item to an iterator and joins all of them into one iterator. | [The piano roll, grown up](step-6/piano-roll.md) |
@@ -81,6 +86,7 @@ where each one first appears in real code.
 | **`mem::swap`** | Exchanges the values behind two `&mut` references, without copying either. | [Undo and redo](step-5/history.md) |
 | **`mem::take`** | Take a value out of a place, leaving the type's default (such as an empty `Vec`) behind. | [Song playback](step-4/song-playback.md) |
 | **Method** | A function in an `impl` block that takes `self`, `&self` or `&mut self`. | [loom-core](step-1/loom-core.md) |
+| **`min_by_key`** | The item of an iterator with the smallest key, or `None` if there are no items. | [Twelve-tone rows](step-8/twelve-tone.md#sets-in-bits) |
 | **Module** | A namespace inside a crate, usually one file, declared with `mod`. | [Workspace](step-1/workspace.md) |
 | **Monomorphization** | The compiler making a specialized copy of generic code for each type used. | [loom-audio](step-1/audio-engine.md) |
 | **Move** | Transferring ownership of a value; the old name becomes unusable. | [loom-audio](step-1/audio-engine.md) |
@@ -103,6 +109,7 @@ where each one first appears in real code.
 | **Pure function** | A function whose result depends only on its arguments and that changes nothing else; the easiest kind of code to test. | [Tools](step-6/tools.md) |
 | **RAII / `Drop`** | Owning a value means owning its resource; dropping it releases the resource. | [loom-audio](step-1/audio-engine.md) |
 | **Range** | `a..b`, the numbers from `a` up to but not including `b`; a value with methods like `contains`. | [Steps to notes](step-3/notes.md) |
+| **Recursion** | A function that calls itself on a smaller piece of the problem, until a piece is small enough to answer directly. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
 | **`rem_euclid`** | A remainder that is never negative: `(-1_i32).rem_euclid(12)` is 11, while `-1 % 12` is -1. | [Pitch classes and scales](step-3/theory.md) |
 | **`Result<T, E>`** | `Ok(value)` or `Err(error)`; Rust's way to return errors. | [loom-audio](step-1/audio-engine.md) |
 | **`retain`** | Keeps only the items of a `Vec` for which a closure returns `true`, in one pass. | [Steps to notes](step-3/notes.md) |
@@ -110,6 +117,7 @@ where each one first appears in real code.
 | **`saturating_sub`** | Subtraction that stops at the smallest value (0 for `usize`) instead of overflowing. | [Voices](step-3/voices.md) |
 | **`Send`** | A marker trait: values of this type can be moved to another thread. | [loom-audio](step-1/audio-engine.md) |
 | **serde** | The usual crate for turning Rust values into text or bytes and back, through the `Serialize` and `Deserialize` traits. | [Saving](step-4/saving.md) |
+| **serde container attributes** | `#[serde(try_from = "String", into = "String")]` on a type saves it as the `String` its `From` gives, and reads it back through its `TryFrom<String>`, so a value read from a file is checked like any other. | [Twelve-tone rows](step-8/twelve-tone.md#files-try_from-and-into) |
 | **serde field attributes** | `#[serde(default)]` fills in a missing field with its `Default` when reading; `#[serde(skip_serializing_if = "path")]` leaves a field out when writing if that function says so. | [Time signatures](step-8/time-signatures.md#in-files-format-3) |
 | **Slice** | A borrowed view of part of an array or `Vec`: `&[T]` or `&mut [T]`. | [loom-audio](step-1/audio-engine.md) |
 | **Slice pattern** | `let [a, b, c, ..] = *bytes else { ... }`: matches a slice by its shape, naming the first items, so no indexing can panic. | [MIDI messages](step-7/messages.md) |
@@ -128,6 +136,8 @@ where each one first appears in real code.
 | **Turbofish (`::<>`)** | Writing a generic function's type out at the call, as in `collect::<Vec<Note>>()`, when Rust cannot work it out. | [loom-audio](step-1/audio-engine.md) |
 | **Type alias** | A second name for an existing type: `type StepRow = [bool; 64];`. | [Patterns](step-2/project.md) |
 | **`VecDeque<T>`** | A double-ended queue: a ring buffer that is cheap to add to and take from at both ends. | [Undo and redo](step-5/history.md) |
+| **`windows`** | Every run of n neighbours of a slice, overlapping: `[1, 2, 3].windows(2)` gives `[1, 2]` and `[2, 3]`. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
+| **`wrapping_add` / `wrapping_mul`** | Arithmetic that wraps around on overflow instead of stopping a debug build, for when wrapping is what you want, as in random numbers. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
 | **Workspace** | A group of crates built together with one `Cargo.lock`. | [Workspace](step-1/workspace.md) |
 | **`zip`** | Pairs the items of two iterators, `(a, b)`, and stops when either runs out. | [What changed](step-5/diff.md) |
 

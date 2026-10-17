@@ -49,6 +49,12 @@ and a library to go with them:
 - **MIDI Out for every channel**: pick a synth in MIDI > Output and
   the whole song plays on it, drums on channel 10, without adding MIDI
   Out channels first ([MIDI Out for every channel](midi-out-every-channel.md)),
+- **music without a key**: a twelve-tone row or a pitch-class set as
+  the key, a window that shows a row's matrix with all 48 forms and
+  writes any of them into the pattern, serialism of durations,
+  dynamics and octaves, a browser of all 224 set classes, the set of
+  any notes you select, and twelve-tone styles and demos
+  ([Twelve-tone rows and pitch-class sets](twelve-tone.md)),
 - **nine new drums**, made by the synthesizer like the first four:
   open hi-hat, rim, low and high toms, ride, crash, cowbell, shaker and
   conga,
@@ -79,6 +85,8 @@ and a library to go with them:
 | MIDI > Accompaniment follows chords, then hold a chord while playing | play the chords and bass in the chord you hold |
 | MIDI > Output, pick a synth (Send every channel is on) | play every channel on the external synth too, drums on channel 10 |
 | File > Demos | open a song or a style as a whole project, and play it |
+| Key menu > twelve-tone row, or Row… in the piano roll | make a row the key, see its matrix, write its forms |
+| Sets… in the piano roll | look up any set, draw with it or use it as the key |
 | Ctrl+Plus, Ctrl+Minus, Ctrl+0, or the zoom at the bottom right | make everything bigger or smaller, or 100% again |
 | View menu, or **Alt+F8** | show or hide each window, and the Patterns and Library panel |
 
