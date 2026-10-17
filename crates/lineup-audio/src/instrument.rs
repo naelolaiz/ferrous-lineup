@@ -1,7 +1,7 @@
 //! The instruments a channel can play: a sampler, the Lineup Osc synth,
-//! and a MIDI Out that has an external synth play the notes. A sampler
-//! or a synth can also be turned into a MIDI Out when every channel is
-//! sent to the MIDI port (see [`Instrument::to_midi`]).
+//! a SoundFont's instrument, and a MIDI Out that has an external synth
+//! play the notes. Any of them can also be turned into a MIDI Out when
+//! every channel is sent to the MIDI port (see [`Instrument::to_midi`]).
 //!
 //! The sampler and the synth are *polyphonic*: they have a fixed number
 //! of voices, and each note that starts takes one. That is what lets the
@@ -10,11 +10,14 @@
 
 use std::sync::Arc;
 
-use lineup_core::{Channel, ChannelKind, MidiMessage, Note, STEP_NOTE, SampleSource};
+use lineup_core::{
+    Channel, ChannelKind, MidiMessage, Note, STEP_NOTE, SampleSource, general_midi_drum,
+};
 
 use crate::drums;
 use crate::dsp::LowPass;
 use crate::sample::{SampleCache, SampleData, SampleError};
+use crate::soundfont::{SoundFont, SoundFontPlayer};
 use crate::timbre::{Timbre, Wave};
 
 /// How many notes the Lineup Osc can play at once.
@@ -55,12 +58,13 @@ pub struct Origin {
 /// The sound-making part of a channel.
 ///
 /// An enum instead of a trait object (`Box<dyn Instrument>`): there are
-/// only three kinds, and the audio thread can `match` on them without any
+/// only four kinds, and the audio thread can `match` on them without any
 /// pointer indirection.
 #[derive(Debug, Clone)]
 pub enum Instrument {
     Sampler(Sampler),
     Synth(Synth),
+    SoundFont(SoundFontPlayer),
     MidiOut(MidiOut),
 }
 
@@ -90,6 +94,29 @@ impl Instrument {
                 Instrument::MidiOut(MidiOut::new(*number).with_program(channel.program))
             }
         })
+    }
+
+    /// The instrument for a channel played from `sound_font`, if the
+    /// SoundFont has one for it. A synth with a General MIDI program
+    /// plays that program, and a built-in drum plays the same drum of
+    /// the General MIDI drum kit when `drums` is true. A synth with the
+    /// Lineup Osc's own sound, a sample file and a MIDI Out have nothing
+    /// to play from a SoundFont: for them this is `None`, and
+    /// [`Instrument::for_channel`] builds them as usual.
+    pub fn from_sound_font(
+        channel: &Channel,
+        sample_rate: u32,
+        sound_font: &Arc<SoundFont>,
+        drums: bool,
+    ) -> Option<Self> {
+        let player = match &channel.kind {
+            ChannelKind::Synth => SoundFontPlayer::new(sound_font, sample_rate, channel.program?),
+            ChannelKind::Sampler(SampleSource::Builtin(drum)) if drums => {
+                SoundFontPlayer::drum(sound_font, sample_rate, general_midi_drum(*drum))
+            }
+            _ => None,
+        };
+        player.map(Instrument::SoundFont)
     }
 
     /// A MIDI Out on `channel` (0 to 15) in place of this instrument, so
@@ -144,6 +171,7 @@ impl Instrument {
         match self {
             Instrument::Sampler(sampler) => sampler.start(pitch, velocity, output_rate, origin),
             Instrument::Synth(synth) => synth.start(pitch, velocity, gate, origin),
+            Instrument::SoundFont(player) => player.start(pitch, velocity, gate, origin),
             Instrument::MidiOut(midi_out) => midi_out.start(pitch, velocity, gate, origin),
         }
     }
@@ -154,6 +182,7 @@ impl Instrument {
         match self {
             Instrument::Sampler(_) => {} // samples always play to the end
             Instrument::Synth(synth) => synth.note_off(pitch),
+            Instrument::SoundFont(player) => player.note_off(pitch),
             Instrument::MidiOut(midi_out) => midi_out.note_off(pitch),
         }
     }
@@ -163,6 +192,7 @@ impl Instrument {
         match self {
             Instrument::Sampler(sampler) => sampler.release_all(),
             Instrument::Synth(synth) => synth.release_all(),
+            Instrument::SoundFont(player) => player.release_all(),
             Instrument::MidiOut(midi_out) => midi_out.release_all(),
         }
     }
@@ -179,6 +209,7 @@ impl Instrument {
         match self {
             Instrument::Sampler(sampler) => sampler.release_unless(keep),
             Instrument::Synth(synth) => synth.release_unless(keep),
+            Instrument::SoundFont(player) => player.release_unless(keep),
             Instrument::MidiOut(midi_out) => midi_out.release_unless(keep),
         }
     }
@@ -197,6 +228,7 @@ impl Instrument {
         match self {
             Instrument::Sampler(_) => {}
             Instrument::Synth(synth) => synth.tempo_changed(next_step, stretch),
+            Instrument::SoundFont(player) => player.tempo_changed(next_step, stretch),
             Instrument::MidiOut(midi_out) => midi_out.tempo_changed(next_step, stretch),
         }
     }
@@ -206,6 +238,7 @@ impl Instrument {
         match self {
             Instrument::Sampler(sampler) => sampler.next_sample(),
             Instrument::Synth(synth) => synth.next_sample(),
+            Instrument::SoundFont(player) => player.next_sample(),
             Instrument::MidiOut(midi_out) => midi_out.next_sample(),
         }
     }
@@ -219,11 +252,13 @@ impl Instrument {
     }
 
     /// How many voices are making sound right now. For a MIDI Out, how
-    /// many notes the external synth has been told to play.
+    /// many notes the external synth has been told to play, and for a
+    /// SoundFont, how many notes its synthesizer has.
     pub fn voices_playing(&self) -> usize {
         match self {
             Instrument::Sampler(sampler) => sampler.voices.iter().filter(|v| !v.is_idle()).count(),
             Instrument::Synth(synth) => synth.voices.iter().filter(|v| !v.is_idle()).count(),
+            Instrument::SoundFont(player) => player.notes_sounding(),
             Instrument::MidiOut(midi_out) => midi_out.notes_sounding(),
         }
     }
@@ -754,7 +789,7 @@ impl MidiOut {
         self.start(pitch, velocity, gate, None);
     }
 
-    fn start(&mut self, pitch: Note, velocity: u8, gate: u32, origin: Option<Origin>) {
+    pub(crate) fn start(&mut self, pitch: Note, velocity: u8, gate: u32, origin: Option<Origin>) {
         if self.program_due
             && let Some(program) = self.program
         {
@@ -856,7 +891,7 @@ impl MidiOut {
         }
     }
 
-    fn notes_sounding(&self) -> usize {
+    pub(crate) fn notes_sounding(&self) -> usize {
         self.state
             .notes
             .iter()

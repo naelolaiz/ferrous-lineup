@@ -578,6 +578,18 @@ mod tests {
     use crate::Note;
     use crate::project::Drum;
 
+    /// The demo song with nothing that needs a newer format than 1: its
+    /// chords on the Lineup Osc's own sound instead of a piano.
+    fn plain_demo() -> Project {
+        let mut project = Project::demo();
+        for index in 0..project.channels().len() {
+            if let Some(channel) = project.channel_mut(index) {
+                channel.program = None;
+            }
+        }
+        project
+    }
+
     #[test]
     fn the_demo_survives_a_round_trip() {
         let demo = Project::demo();
@@ -590,7 +602,7 @@ mod tests {
 
     #[test]
     fn the_loom_osc_opens_as_the_lineup_osc() {
-        let demo = Project::demo();
+        let demo = plain_demo();
         let text = to_text(&demo).unwrap();
         assert!(text.contains("name: \"Lineup Osc\""), "{text}");
         let old = text.replace("name: \"Lineup Osc\"", "name: \"Loom Osc\"");
@@ -618,7 +630,7 @@ mod tests {
 
     #[test]
     fn patterns_keep_their_colours_in_a_file() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         let text = to_text(&project).unwrap();
         assert!(
             !text.contains("color"),
@@ -730,7 +742,7 @@ mod tests {
 
     #[test]
     fn song_structure_needs_format_four() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         let text = to_text(&project).unwrap();
         assert!(text.contains("format: 1,"), "{text}");
         assert!(
@@ -754,7 +766,7 @@ mod tests {
 
     #[test]
     fn time_markers_need_format_five() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         assert!(project.set_time_marker(TimeMarker::new(64, TimeSignature::new(3, 4))));
         let text = to_text(&project).unwrap();
         assert!(text.contains("format: 5,"), "{text}");
@@ -773,7 +785,7 @@ mod tests {
 
     #[test]
     fn tempo_changes_and_loose_timing_need_format_seven() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         assert!(project.set_tempo_marker(TempoMarker::gliding(96, 90.0, 16)));
         assert!(project.set_tempo_marker(TempoMarker::new(120, 130.0)));
         let text = to_text(&project).unwrap();
@@ -785,7 +797,7 @@ mod tests {
         assert_eq!(loaded, project);
         assert_eq!(loaded.tempo_map(), project.tempo_map());
 
-        let mut loose = Project::demo();
+        let mut loose = plain_demo();
         loose.loose_timing = 12;
         let text = to_text(&loose).unwrap();
         assert!(text.contains("format: 7,"), "{text}");
@@ -794,7 +806,7 @@ mod tests {
 
     #[test]
     fn key_changes_need_format_eight() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         let g_major = Scale::new(crate::PitchClass::G, crate::ScaleKind::Major);
         assert!(project.set_key_marker(KeyMarker::new(64, g_major)));
         let text = to_text(&project).unwrap();
@@ -807,7 +819,7 @@ mod tests {
 
     #[test]
     fn the_chord_sheet_needs_format_twelve() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         let name = |text| crate::HarmonyName::parse(text).unwrap();
         let chords = [
             ChordMarker::new(0, name("C")),
@@ -830,7 +842,7 @@ mod tests {
 
     #[test]
     fn notes_off_the_grid_need_format_ten() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         let synth = 4;
         let text = to_text(&project).unwrap();
         assert!(!text.contains("nudge"), "notes on the grid read as before");
@@ -846,7 +858,7 @@ mod tests {
 
     #[test]
     fn instruments_need_format_nine() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         let text = to_text(&project).unwrap();
         assert!(!text.contains("program"), "{text}");
         project.channel_mut(0).unwrap().program = Some(crate::general_midi::VIOLIN);
@@ -858,7 +870,7 @@ mod tests {
 
     #[test]
     fn rows_and_sets_need_format_six() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         project.scale = Scale::row(crate::harmony::ROW_PRESETS[0].row);
         let text = to_text(&project).unwrap();
         assert!(text.contains("format: 6,"), "{text}");
@@ -884,7 +896,7 @@ mod tests {
 
     #[test]
     fn overlapping_sections_are_reported() {
-        let mut project = Project::demo();
+        let mut project = plain_demo();
         project.add_section(Section::new("Verse", 0, 32));
         project.add_section(Section::new("Chorus", 32, 32));
         let text = to_text(&project).unwrap();
@@ -907,7 +919,7 @@ mod tests {
 
     #[test]
     fn broken_rules_are_reported() {
-        let text = to_text(&Project::demo()).unwrap();
+        let text = to_text(&plain_demo()).unwrap();
 
         // A clip that plays pattern 99.
         let broken = text.replacen("pattern: 0,", "pattern: 98,", 1);
@@ -929,7 +941,7 @@ mod tests {
     #[test]
     fn old_files_open_with_only_the_tracks_they_use() {
         // Files used to be saved with sixteen tracks, most of them empty.
-        let mut file = ProjectFile::from(&Project::demo());
+        let mut file = ProjectFile::from(&plain_demo());
         file.tracks
             .extend((3..=16).map(crate::playlist::Track::numbered));
         // A track someone renamed is kept, and so are the ones above it.
@@ -959,7 +971,7 @@ mod tests {
 
     #[test]
     fn clips_below_the_tracks_are_reported() {
-        let mut file = ProjectFile::from(&Project::demo());
+        let mut file = ProjectFile::from(&plain_demo());
         file.clips[0].track = file.tracks.len();
         let error = Project::try_from(file).unwrap_err();
         assert!(error.to_string().contains("does not fit"), "{error}");

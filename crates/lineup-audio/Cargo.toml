@@ -12,3 +12,4 @@ lineup-core.workspace = true
 cpal.workspace = true
 rtrb.workspace = true
 hound.workspace = true
+rustysynth.workspace = true
