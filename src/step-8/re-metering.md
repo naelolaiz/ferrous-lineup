@@ -39,26 +39,43 @@ in (beat 2) lands a quarter of the way in.
 So the song keeps its bars, its phrases and its chords bar by bar, and
 the new rhythm fits every bar exactly.
 
-It is worth hearing what this does to the melody, because it is not how
-a composer would rewrite a tune for a waltz:
+## Every bar lasts as long as before
 
-- **4/4 to 3/4.** Four quarter notes squeezed into three beats become
-  four notes three steps apart: four dotted eighth notes. Against the
-  waltz's three beats that is "four against three", a cross-rhythm. A
-  composer arranging "Ode to Joy" as a waltz would rather make one note
-  of each group longer (a half note and a quarter, say). The squeeze is
-  mechanical, the way a tape machine would do it.
-- **4/4 to 6/8.** This one sounds more natural. 6/8 is felt in two big
+The tempo counts quarter notes. A 3/4 bar has three of them, a 4/4 bar
+four, so at the same tempo a 3/4 bar is over in three quarters of the
+time and the whole song would rush. And with "Use their tempo" ticked it
+used to be worse: the song took the waltz's own tempo, so El Choclo went
+from 112 to 180 and ran about twice as fast.
+
+So the tempo goes down in the same proportion as the bar: 4/4 at 112
+becomes 3/4 at 84. A bar of 3/4 at 84 lasts exactly as long as a bar of
+4/4 at 112 (2.14 seconds), and the song takes exactly as long as before.
+Tempo changes inside the song (a ritardando at the end) are scaled the
+same way. "Use their tempo" does not apply when the time signature
+changes: the rhythm's own tempo would rush or drag the song.
+
+That has a nice consequence: **the melody sounds exactly as before**.
+Every note lasts as long in seconds and starts at the same moment. What
+changes is how it is *written* and *counted*, and what the drums and the
+accompaniment do around it:
+
+- **4/4 to 3/4.** Four quarter notes at 112 become four dotted eighth
+  notes at 84: the same sound, written another way. Against the waltz's
+  three beats, the melody's four notes are "four against three", a
+  cross-rhythm. A composer arranging "Ode to Joy" as a waltz would rather
+  rewrite it, making one note of each group longer (a half note and a
+  quarter, say). This is a mechanical change, not an arrangement.
+- **4/4 to 6/8.** This one fits more naturally. 6/8 is felt in two big
   beats (two dotted quarters), and 4/4 also falls into two halves. Beat 1
   and beat 3 land on the two beats of 6/8. Beats 2 and 4 land halfway
   through each 6/8 beat: two even notes in a beat of three eighths, which
   musicians call a *duplet*.
 - **3/4 to 4/4.** Three beats stretched over four: three even notes in a
-  4/4 bar are a *half-note triplet*.
-- **3/4 to 6/8 (or back).** Both bars are twelve steps, so no note moves.
-  Only the time signature changes, and with it where the beats are felt:
-  three beats of a quarter note, or two of a dotted quarter. The new
-  rhythm makes you hear the difference.
+  4/4 bar are a *half-note triplet*. The tempo goes up by a third.
+- **3/4 to 6/8 (or back).** Both bars are twelve steps, so no note moves
+  and the tempo stays. Only the time signature changes, and with it where
+  the beats are felt: three beats of a quarter note, or two of a dotted
+  quarter. The new rhythm makes you hear the difference.
 
 A song that already changes time signature partway through, like a hymn
 in 4/4 with a last line in 3/4, comes out in one time signature: every
@@ -153,7 +170,11 @@ squeeze, step 196 is no longer in bar 13 (in 3/4 it is in bar 17). So
 the app moves the playhead with the song: it builds a `Remap` from the
 meter of the song *as it was played* (repeats included) and sends the
 audio thread to the new place. The song carries on from bar 13, beat 2,
-in 3/4. The same happens to where Play starts and where Stop returns to.
+in 3/4. The same happens to where Play starts and where Stop returns to,
+and after Ctrl+Z and Ctrl+Y, which change the time signature back and
+forth too. That one does not use `Remap` (the song you undo to may have
+time markers of its own): it finds which bar the playhead is in, and how
+far into it, and goes to the same bar and the same fraction of it.
 
 ## Rust corner
 
@@ -176,10 +197,15 @@ in 3/4. The same happens to where Play starts and where Stop returns to.
 ## Try it
 
 1. Open "Ode to Joy" from File > Demos and play it. In the Library,
-   search "jazz waltz" and click the rhythm. The Time box says 3/4, and
-   the song carries on from the same bar.
+   search "jazz waltz" and click the rhythm. The Time box says 3/4, the
+   tempo goes from 124 to 93, the song carries on from the same bar, and
+   the melody sounds just as before: only the drums and the chords
+   change.
 2. Click "Zamba" (6/8), then "Pop beat" (4/4). The last one gives back
    the 4/4 song exactly. Ctrl+Z steps back through each of them.
 3. Change one note in the piano roll, then pick a 3/4 rhythm, then a
    4/4 one. Your note is still there: your edit made that version the new
    original.
+4. Pause in the middle of the song, pick a waltz, then press Ctrl+Z and
+   Ctrl+Y. The playhead stays on the same bar each time, and the tempo
+   goes back and forth between the two.
