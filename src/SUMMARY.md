@@ -88,6 +88,7 @@
   - [Variations a and b: the band digs in](step-9/variations.md)
   - [Inversions: which note is in the bass](step-9/inversions.md)
   - [Ear training](step-9/ear-training.md)
+  - [The lead sheet: the tune in notation](step-9/lead-sheet.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---

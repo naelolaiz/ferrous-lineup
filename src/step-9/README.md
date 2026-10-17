@@ -41,6 +41,7 @@ time:
 9. **rests, shots, holds and pushes** typed on the chord sheet,
 10. **chord sheets as plain text**, to paste and share,
 11. **a lead sheet**: the melody in notation, the chords above it,
+   ready to print ([The lead sheet: the tune in notation](lead-sheet.md)),
 12. **a soloist** and 13. **ear training**, both experimental and off by
    default. Ear training came early, in a window of its own
    ([Ear training](ear-training.md)).
