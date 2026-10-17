@@ -17,6 +17,11 @@
 //! timeline:   | Intro | Chorus ×2 | Outro |
 //! song:       | Intro | Chorus | Chorus | Outro |
 //! ```
+//!
+//! A band's song form repeats too: its chorus, all the bars written on
+//! the chord sheet after the intro, plays as many times as the form says
+//! (see [`crate::band::Form`]), with its sections repeating inside each
+//! time round.
 
 use crate::playlist::Clip;
 use crate::project::Project;
@@ -89,6 +94,9 @@ pub struct Pass {
     pub round: usize,
     /// ...out of this many.
     pub rounds: usize,
+    /// Which time round the band's chorus is, out of how many, when the
+    /// stretch is in a chorus that plays more than once.
+    pub chorus: Option<(usize, usize)>,
 }
 
 impl Pass {
@@ -130,6 +138,10 @@ impl Arrangement {
 /// Each time a piece plays, every audible clip under it adds a [`Play`]
 /// for the part of the clip inside the piece.
 ///
+/// A band's chorus that plays more than once is played again as a whole,
+/// pieces and all, if the stretch takes in all of it: a loop region
+/// inside it loops just the bars it has.
+///
 /// Where the song carries straight on across a section edge (into a
 /// section, or out of one after its last time round), a clip under the
 /// edge does not jump either: its part after the edge only makes its
@@ -141,7 +153,8 @@ pub(crate) fn arrange(project: &Project, from: usize, to: usize) -> Arrangement 
     let clips: Vec<Clip> = project.playlist().audible_clips().collect();
     // For each clip, the index of its last `Play` so far.
     let mut last_play: Vec<Option<usize>> = vec![None; clips.len()];
-    for (piece_from, piece_to, section, rounds) in pieces(project, from, to) {
+    for (piece, chorus) in played_pieces(project, from, to) {
+        let (piece_from, piece_to, section, rounds) = piece;
         for round in 1..=rounds {
             let start = arrangement.length;
             arrangement.passes.push(Pass {
@@ -151,6 +164,7 @@ pub(crate) fn arrange(project: &Project, from: usize, to: usize) -> Arrangement 
                 section,
                 round,
                 rounds,
+                chorus,
             });
             for (index, clip) in clips.iter().enumerate() {
                 let clip_end = clip.start + project.clip_length(clip);
@@ -186,9 +200,45 @@ pub(crate) fn arrange(project: &Project, from: usize, to: usize) -> Arrangement 
     arrangement
 }
 
+/// A piece of the timeline: (start, end, section, how many times it
+/// plays).
+type Piece = (usize, usize, Option<usize>, usize);
+
+/// The pieces of the timeline from `from` up to `to`, in the order they
+/// play, each with the time round of the band's chorus it is in, when
+/// the chorus plays more than once and the stretch takes in all of it.
+fn played_pieces(
+    project: &Project,
+    from: usize,
+    to: usize,
+) -> Vec<(Piece, Option<(usize, usize)>)> {
+    let once = |from, to| {
+        pieces(project, from, to)
+            .into_iter()
+            .filter(|&(start, end, ..)| start < end)
+            .map(|piece| (piece, None))
+    };
+    let Some((start, end, choruses)) = project
+        .repeated_chorus()
+        .filter(|&(start, end, _)| from <= start && end <= to)
+    else {
+        return once(from, to).collect();
+    };
+    let mut played: Vec<_> = once(from, start).collect();
+    for chorus in 1..=choruses {
+        played.extend(
+            pieces(project, start, end)
+                .into_iter()
+                .map(|piece| (piece, Some((chorus, choruses)))),
+        );
+    }
+    played.extend(once(end, to));
+    played
+}
+
 /// Cuts the timeline from `from` up to `to` at section edges: (start,
 /// end, section, how many times it plays) for each piece, in order.
-fn pieces(project: &Project, from: usize, to: usize) -> Vec<(usize, usize, Option<usize>, usize)> {
+fn pieces(project: &Project, from: usize, to: usize) -> Vec<Piece> {
     let mut pieces = Vec::new();
     let mut cursor = from;
     for (index, section) in project.playlist().sections().iter().enumerate() {

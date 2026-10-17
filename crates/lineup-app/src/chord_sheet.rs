@@ -3,7 +3,9 @@
 //!
 //! Bars are drawn four to a line, and each section of the playlist
 //! (Intro, Verse, Chorus…) starts a new line under its name, so the
-//! sheet reads like a printed chart. A bar shows its harmonies where
+//! sheet reads like a printed chart. So do the parts of the band's form
+//! ([`form`]): the intro, the chorus, between repeat signs when the band
+//! plays it more than once, and the ending. A bar shows its harmonies where
 //! their beats fall, each with a caption: the Roman numeral of a chord
 //! in the key, or the notes of a set or a micromode. A bar with nothing
 //! written goes on with the harmony before it, shown faintly. While the
@@ -20,18 +22,21 @@
 use eframe::egui::{
     self, Align2, Color32, FontId, Key, Modifiers, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2,
 };
+use lineup_core::band::Ending;
 use lineup_core::chord_sheet::{read_bar, write_bar};
 use lineup_core::library::{Genre, STYLES, Style};
 use lineup_core::{
-    BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Player, Project,
-    band_styles,
+    BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass, Player,
+    Project, band_styles,
 };
 
 use crate::theme;
 use crate::twelve_tone::Front;
 
+mod form;
 mod practice;
 
+pub use form::FormAction;
 pub use practice::{PracticeAction, PracticeView, SPEEDS};
 
 /// The id of the window.
@@ -63,6 +68,8 @@ const PLAYING: Color32 = Color32::WHITE;
 const GROUP_TEXT: Color32 = Color32::from_rgb(196, 176, 246);
 /// A harmony that goes on from an earlier bar.
 const GOING_ON: Color32 = Color32::from_rgb(92, 104, 112);
+/// The harmony of the band's ending, which is not written on the sheet.
+const ENDING: Color32 = Color32::from_rgb(150, 162, 170);
 
 /// Something done on the chord sheet.
 pub enum SheetAction {
@@ -92,6 +99,8 @@ pub enum SheetAction {
     NoteOff(Vec<Note>),
     /// Something from the practice row.
     Practice(PracticeAction),
+    /// Something from the form row.
+    Form(FormAction),
 }
 
 /// A bar being typed in.
@@ -134,6 +143,32 @@ struct BarClicks {
 struct Line {
     heading: Option<String>,
     bars: Vec<Bar>,
+}
+
+/// What the band's form puts on the sheet: the repeat signs around a
+/// chorus that plays more than once, and the ending.
+#[derive(Clone, Copy)]
+struct Marks {
+    /// The chorus's first step and the step after its last, if it
+    /// repeats.
+    repeat: Option<(usize, usize)>,
+    ending: Option<Ending>,
+}
+
+impl Marks {
+    fn of(project: &Project) -> Self {
+        let repeats = project.form().is_some_and(|form| form.choruses > 1);
+        Marks {
+            repeat: project.chorus().filter(|_| repeats),
+            ending: project.ending(),
+        }
+    }
+
+    /// The ending, if `bar` is in it.
+    fn ending_in(&self, bar: &Bar) -> Option<Ending> {
+        self.ending
+            .filter(|ending| (ending.start..ending.end).contains(&bar.start))
+    }
 }
 
 /// The chord sheet window.
@@ -188,7 +223,8 @@ impl ChordSheet {
     }
 
     /// Draws the window over `area`. `playing` is the step of the
-    /// playlist's timeline being played, while the song plays;
+    /// playlist's timeline being played, and the pass of the song it is
+    /// in, while the song plays;
     /// `typing_keys` says whether letters play notes (the typing
     /// keyboard), so they cannot start typing in a bar.
     pub fn show(
@@ -196,7 +232,7 @@ impl ChordSheet {
         ctx: &egui::Context,
         area: Rect,
         project: &Project,
-        playing: Option<usize>,
+        playing: Option<(usize, Pass)>,
         typing_keys: bool,
         practice: PracticeView,
     ) -> Vec<SheetAction> {
@@ -233,7 +269,7 @@ impl ChordSheet {
         &mut self,
         ui: &mut Ui,
         project: &Project,
-        playing: Option<usize>,
+        playing: Option<(usize, Pass)>,
         typing_keys: bool,
         practice: PracticeView,
         actions: &mut Vec<SheetAction>,
@@ -262,6 +298,8 @@ impl ChordSheet {
                 }
             }
         });
+        let round = playing.and_then(|(_, pass)| pass.chorus);
+        form::row(ui, project, round, actions);
         practice::row(ui, project, practice, self.selected_bars(), actions);
         ui.weak(
             "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), \
@@ -302,6 +340,7 @@ impl ChordSheet {
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
+                let playing = playing.map(|(step, _)| step);
                 self.sheet(ui, project, playing, typing_keys, actions);
             });
     }
@@ -361,6 +400,7 @@ impl ChordSheet {
         }
 
         let playing_bar = playing.map(|step| meter.bar_at(step).number);
+        let marks = Marks::of(project);
         let mut start_typing = None;
         let mut clicked = sheet.clicked();
         for cell in &cells {
@@ -374,6 +414,7 @@ impl ChordSheet {
                 &keys,
                 *cell,
                 (starts_section, ends_line),
+                marks,
                 playing,
                 actions,
             );
@@ -426,10 +467,12 @@ impl ChordSheet {
         keys: &KeyMap,
         cell: Cell,
         (starts_section, ends_line): (bool, bool),
+        marks: Marks,
         playing: Option<usize>,
         actions: &mut Vec<SheetAction>,
     ) -> BarClicks {
         let Cell { bar, rect, .. } = cell;
+        let ending = marks.ending_in(&bar);
         let id = ui.scope_id().with(("chord-sheet-bar", bar.number));
         let response = ui.interact(rect, id, Sense::click_and_drag());
         let key = keys.key_at(bar.start);
@@ -451,7 +494,8 @@ impl ChordSheet {
             .flatten();
 
         // The paper and the bar lines: a double one where a section
-        // starts, and the final bar line where the song ends.
+        // starts, repeat signs around a chorus played more than once, and
+        // the final bar line where the song ends.
         let fill = if response.hovered() {
             PAPER_HOVER
         } else {
@@ -459,18 +503,25 @@ impl ChordSheet {
         };
         painter.rect_filled(rect.shrink2(vec2(0.0, 0.5)), 0.0, fill);
         let line = Stroke::new(1.0, BAR_LINE);
+        let thick = Stroke::new(3.0, BAR_LINE);
+        let repeat_from = marks.repeat.is_some_and(|(start, _)| start == bar.start);
+        let repeat_to = marks.repeat.is_some_and(|(_, end)| end == bar.end());
         painter.vline(rect.left(), rect.y_range(), line);
-        if starts_section && bar.number > 0 {
+        if repeat_from {
+            painter.vline(rect.left() + 1.5, rect.y_range(), thick);
+            painter.vline(rect.left() + 5.0, rect.y_range(), line);
+            repeat_dots(painter, rect.left() + 8.5, rect.center().y);
+        } else if starts_section && bar.number > 0 {
             painter.vline(rect.left() + 3.0, rect.y_range(), line);
         }
         let song_end = project.song_length();
-        if song_end > 0 && bar.start < song_end && bar.end() >= song_end {
+        if repeat_to {
+            repeat_dots(painter, rect.right() - 8.5, rect.center().y);
             painter.vline(rect.right() - 5.0, rect.y_range(), line);
-            painter.vline(
-                rect.right() - 1.5,
-                rect.y_range(),
-                Stroke::new(3.0, BAR_LINE),
-            );
+            painter.vline(rect.right() - 1.5, rect.y_range(), thick);
+        } else if song_end > 0 && bar.start < song_end && bar.end() >= song_end {
+            painter.vline(rect.right() - 5.0, rect.y_range(), line);
+            painter.vline(rect.right() - 1.5, rect.y_range(), thick);
         } else if ends_line {
             painter.vline(rect.right(), rect.y_range(), line);
         }
@@ -506,14 +557,27 @@ impl ChordSheet {
                 FontId::proportional(SMALL_SIZE),
                 theme::ACCENT,
             );
+        } else if ending.is_some_and(|ending| ending.end == bar.end()) {
+            painter.text(
+                rect.right_top() + vec2(-PADDING - 6.0, 2.0),
+                Align2::RIGHT_TOP,
+                "held",
+                FontId::proportional(SMALL_SIZE),
+                ENDING,
+            );
         }
 
         // The harmonies, each where its beat falls. While the song
         // plays, the one sounding is the brightest thing on the sheet.
-        let sounding = playing.and_then(|step| project.chord_at(step));
+        let sounding = playing.and_then(|step| match marks.ending {
+            Some(ending) if (ending.start..ending.end).contains(&step) => {
+                Some(ChordMarker::new(ending.start, ending.harmony))
+            }
+            _ => project.chord_at(step),
+        });
         let playing_here = playing.is_some_and(|step| (bar.start..bar.end()).contains(&step));
-        let inner_left = rect.left() + PADDING;
-        let inner_right = rect.right() - PADDING;
+        let inner_left = rect.left() + PADDING + if repeat_from { 8.0 } else { 0.0 };
+        let inner_right = rect.right() - PADDING - if repeat_to { 8.0 } else { 0.0 };
         let x_of = |step: usize| {
             let along = (step - bar.start) as f32 / bar.length.max(1) as f32;
             inner_left + (inner_right - inner_left) * along
@@ -529,9 +593,13 @@ impl ChordSheet {
             .editing
             .as_ref()
             .is_some_and(|editing| editing.bar == bar.number);
-        let (going_on, shown) = match typed_in {
-            true => (None, Vec::new()),
-            false => (going_on, here.clone()),
+        // The ending's harmony is the band's, not written on the sheet.
+        let ending_marker = ending.map(|ending| ChordMarker::new(ending.start, ending.harmony));
+        let (going_on, shown) = match (typed_in, ending_marker) {
+            (true, _) => (None, Vec::new()),
+            (false, Some(marker)) if marker.start == bar.start => (None, vec![marker]),
+            (false, Some(marker)) => (Some(marker), Vec::new()),
+            (false, None) => (going_on, here.clone()),
         };
         let mut names: Vec<Name> = Vec::new();
         if let Some(marker) = going_on {
@@ -558,6 +626,7 @@ impl ChordSheet {
             let color = match (playing.is_some(), sounding == Some(*marker)) {
                 (true, true) => PLAYING,
                 (true, false) => theme::TEXT_DIM,
+                _ if ending.is_some() => ENDING,
                 _ if is_group(marker.harmony) => GROUP_TEXT,
                 _ if marker.harmony == HarmonyName::NoChord => theme::TEXT_DIM,
                 _ => theme::TEXT,
@@ -639,9 +708,14 @@ impl ChordSheet {
         if response.double_clicked() {
             clicks.start_typing = Some((bar.number, write_bar(&here, &bar)));
         }
-        let hint = match under(response.hover_pos()) {
-            Some(harmony) => harmony.describe(key),
-            None => format!(
+        let hint = match (under(response.hover_pos()), ending) {
+            (_, Some(_)) => format!(
+                "Bar {}, the band's ending: a bar on the key's tonic, then the chord struck \
+                 once and held. Type a chord here, and the chorus takes this bar in",
+                bar.number + 1
+            ),
+            (Some(harmony), None) => harmony.describe(key),
+            (None, None) => format!(
                 "Bar {}: click it and type its harmony, or double-click to change it. \
                  Right-click for more",
                 bar.number + 1
@@ -662,7 +736,7 @@ impl ChordSheet {
             if ui.button("Move the playhead here").clicked() {
                 actions.push(SheetAction::Seek(bar.start));
             }
-            if project.band().is_some() {
+            if project.band().is_some() && ending.is_none() {
                 let end = ui.button("End the song here");
                 if theme::hint(
                     end,
@@ -741,6 +815,9 @@ impl ChordSheet {
         }
         let count = (count.div_ceil(BARS_PER_LINE) + 1).max(2) * BARS_PER_LINE;
         let sections = project.playlist().sections();
+        let marks = Marks::of(project);
+        let form = project.form().filter(|form| !form.is_plain());
+        let chorus = project.chorus();
         let mut lines: Vec<Line> = Vec::new();
         let bars = meter
             .bars()
@@ -750,10 +827,26 @@ impl ChordSheet {
             let section = sections
                 .iter()
                 .find(|section| meter.bar_at(section.start).number == bar.number);
-            let heading = section.map(|section| match section.repeats {
+            let section = section.map(|section| match section.repeats {
                 1 => section.name.clone(),
                 repeats => format!("{} ×{repeats}", section.name),
             });
+            // The parts of the band's form, when it has more than one.
+            let part = form.and_then(|form| match chorus {
+                _ if form.intro > 0 && bar.start == 0 => Some("Intro".to_string()),
+                Some((start, _)) if start == bar.start => Some(match form.choruses {
+                    1 => "Chorus".to_string(),
+                    choruses => format!("Chorus ×{choruses}"),
+                }),
+                _ => marks
+                    .ending
+                    .filter(|ending| ending.start == bar.start)
+                    .map(|_| "Ending".to_string()),
+            });
+            let heading = match (part, section) {
+                (Some(part), Some(section)) => Some(format!("{part} · {section}")),
+                (part, section) => part.or(section),
+            };
             let full = lines
                 .last()
                 .is_none_or(|line| line.bars.len() == BARS_PER_LINE);
@@ -1090,6 +1183,13 @@ fn progression_menu(ui: &mut Ui, project: &Project, from: usize, actions: &mut V
             "Progressions are chords in a key; this song is in a set or a row",
         );
     });
+}
+
+/// The two dots of a repeat sign, around the middle of a bar line.
+fn repeat_dots(painter: &egui::Painter, x: f32, middle: f32) {
+    for y in [middle - 5.0, middle + 5.0] {
+        painter.circle_filled(pos2(x, y), 1.8, BAR_LINE);
+    }
 }
 
 /// The harmonies written in `bar`.
