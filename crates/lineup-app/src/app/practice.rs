@@ -228,7 +228,7 @@ impl LineupApp {
     }
 
     /// Leaves `player`'s part to you, or gives it back to the band. For
-    /// the piano and the bass, your keyboard then plays their sound.
+    /// every player but the drums, your keyboard then plays its sound.
     pub(super) fn set_you_play(&mut self, player: Player, you: bool) {
         let label = if you {
             "play a part yourself"

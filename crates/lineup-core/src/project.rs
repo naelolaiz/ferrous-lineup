@@ -442,7 +442,7 @@ impl Project {
             pattern.remove_row(index);
         }
         if let Some(band) = &mut self.band {
-            for channel in [&mut band.piano, &mut band.bass] {
+            for channel in &mut band.channels {
                 *channel = match *channel {
                     Some(own) if own == index => None,
                     Some(own) if own > index => Some(own - 1),

@@ -83,10 +83,15 @@ pub(super) fn row(
             act(PracticeAction::Tap(ui.input(|input| input.time)));
         }
 
-        if project.band().is_some() {
+        if let Some(band) = project.band() {
             ui.separator();
             ui.label("You play");
-            for player in Player::ALL {
+            // The style's players, and any other that still has a part:
+            // one you edited before changing the style.
+            let players = Player::ALL.into_iter().filter(|&player| {
+                band.style.players().contains(&player) || project.player_track(player).is_some()
+            });
+            for player in players {
                 let has_part = project.player_track(player).is_some();
                 let you = project.you_play(player);
                 let button = ui.add_enabled(has_part, egui::Button::selectable(you, player.name()));

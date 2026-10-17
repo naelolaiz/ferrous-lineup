@@ -134,7 +134,11 @@ pub fn is_project(path: &Path) -> bool {
 ///
 /// Format 16 added swing: the eighth notes played long-short. Older
 /// versions would play them even, so a song with swing needs format 16.
-pub const FORMAT_VERSION: u32 = 16;
+///
+/// Format 17 added the band's guitar, strings and organ. Older versions
+/// know only a piano, a bass and drums, and could not read their parts,
+/// so a song whose band has any of them needs format 17.
+pub const FORMAT_VERSION: u32 = 17;
 
 /// The oldest format that can hold `project`.
 ///
@@ -188,7 +192,19 @@ pub fn format_for(project: &Project) -> u32 {
             .iter()
             .any(|pattern| pattern.player.is_some());
     let has_form = project.form().is_some_and(|form| !form.is_plain());
-    if project.swing > 0 {
+    let has_bigger_band = project.patterns().iter().any(|pattern| {
+        matches!(
+            pattern.player,
+            Some(Player::Guitar | Player::Strings | Player::Organ)
+        )
+    }) || project.band().is_some_and(|band| {
+        [Player::Guitar, Player::Strings, Player::Organ]
+            .into_iter()
+            .any(|player| band.channel(player).is_some())
+    });
+    if has_bigger_band {
+        17
+    } else if project.swing > 0 {
         16
     } else if !project.variations().is_empty() {
         15
@@ -681,10 +697,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 17 might have fields we have never heard of. Only the
+        // Format 18 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 17, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(17)), "{error}");
+        let error = from_text("(format: 18, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(18)), "{error}");
     }
 
     #[test]
