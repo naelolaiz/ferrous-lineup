@@ -32,7 +32,8 @@ time:
    of the style for other sections,
 6. **swing**, from straight to triplet,
 7. **real instrument sounds** from a SoundFont, and the band through
-   MIDI out to an external synth,
+   MIDI out to an external synth. The SoundFont came early, before
+   items 4 to 6 ([Real instrument sounds: a SoundFont](soundfont.md)),
 8. **a bigger band**: guitar, strings, a second keyboard,
 9. **rests, shots, holds and pushes** typed on the chord sheet,
 10. **chord sheets as plain text**, to paste and share,
