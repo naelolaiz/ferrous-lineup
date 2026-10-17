@@ -1,0 +1,14 @@
+[package]
+name = "lineup-audio"
+description = "Real-time audio engine for Ferrous Lineup"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+lineup-core.workspace = true
+cpal.workspace = true
+rtrb.workspace = true
+hound.workspace = true
