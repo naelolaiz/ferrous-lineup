@@ -20,3 +20,5 @@ rfd.workspace = true
 midir.workspace = true
 serde.workspace = true
 ureq.workspace = true
+pdf-writer.workspace = true
+ttf-parser.workspace = true

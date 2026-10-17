@@ -102,7 +102,7 @@ impl FileState {
 
     /// The name without ".lineup": "song" for "song.lineup", "Für Elise" for
     /// that demo.
-    fn stem(&self) -> String {
+    pub(super) fn stem(&self) -> String {
         match (&self.path, self.demo) {
             (Some(path), _) => file_name(path, Path::file_stem),
             // A name such as "AC/DC" would be read as a folder.
