@@ -27,11 +27,13 @@ where each one first appears in real code.
 | **Capacity** | How many items a `Vec` can hold before it must allocate more memory. | [Audio thread](step-2/realtime.md) |
 | **Cargo** | Rust's build tool and package manager. | [Workspace](step-1/workspace.md) |
 | **`cfg` / `cfg_attr`** | Conditional compilation: `#[cfg(target_os = "windows")]` keeps the next item only when the condition is true, and `cfg_attr` applies an attribute only then. | [Linux, macOS and Windows](step-4/platforms.md) |
+| **`#[cfg(test)]` on an item** | Keeps one function (or `use`, or struct) only in test builds, so a helper that only the tests call does not warn as unused in a normal build. | [Micromodes](step-8/micromodes.md#checking-a-table-with-tests) |
 | **`checked_add_signed`** | Adds a signed number to an unsigned one, like `usize + isize`, and gives `None` instead of going below zero or overflowing. | [Tools](step-6/tools.md) |
 | **`chunk_by`** | Splits a slice into runs of neighbours that belong together, without copying. | [Piano roll window](step-3/piano-roll-ui.md) |
 | **`chunks` / `chunks_exact`** | Split a slice into pieces of n items; `chunks_exact` leaves out a last piece that is too short. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
 | **Closure** | An anonymous function, `\|args\| body`, that can capture variables from its surroundings. | [loom-audio](step-1/audio-engine.md) |
 | **Closure captures fields** | Since the 2021 edition, a closure that uses `self.midi_out` borrows only that field, not all of `self`, so other fields can be borrowed at the same time. | [Live keys](step-7/live.md) |
+| **`cmp::Reverse`** | Wraps a value so that it compares the other way round: sorting by `Reverse(count)` puts the largest count first. | [Micromodes](step-8/micromodes.md#counting-groups-of-three) |
 | **Collecting `Option`s** | Collecting an iterator of `Option<T>` into an `Option<Vec<T>>` gives `Some` of all the values, or `None` as soon as one item is `None`. `Result` works the same way. | [Tools](step-6/tools.md) |
 | **`const fn`** | A function simple enough to run while compiling, so it can be used to set a `const`. | [Saving](step-4/saving.md) |
 | **Constant promotion** | Writing `&[1, 2, 3]` of plain constant values gives a `&'static` borrow, because the compiler stores the values with the program. A function call inside the brackets, even a `const fn`, is not promoted. | [The library](step-8/library.md#macro_rules-and-why-not-a-function) |
@@ -47,6 +49,7 @@ where each one first appears in real code.
 | **Derive macro** | Code that writes a trait implementation for a type; serde's `#[derive(Serialize)]` comes from a crate, not from the compiler. | [Saving](step-4/saving.md) |
 | **`Display`** | The trait behind `{}` in `format!` and behind `to_string()`. Implement its `fmt` method once, and every place writes the value the same way. | [Time signatures](step-8/time-signatures.md) |
 | **Disjoint borrows** | Borrowing two different fields of a struct at once, even one mutably; allowed because they cannot overlap. | [Voices](step-3/voices.md) |
+| **`div_ceil`** | Integer division that rounds up: `16.div_ceil(6)` is 3, where `16 / 6` is 2. | [Micromodes](step-8/micromodes.md#the-walk-choosing-with-a-tuple) |
 | **`drain(..)`** | Takes every item out of a `Vec`, in order, and keeps the `Vec`'s memory for later. | [Live keys](step-7/live.md) |
 | **`dyn Trait`** | A trait object: some type implementing `Trait`, chosen at run time. | [loom-app](step-1/window.md) |
 | **Edition** | A version of the language (2015, 2018, 2021, 2024) chosen per crate. | [Workspace](step-1/workspace.md) |
@@ -102,6 +105,7 @@ where each one first appears in real code.
 | **`Option::take`** | Moves the value out of an `Option` and leaves `None` in its place; handy to take ownership of something stored in a field. | [WAV export](step-5/export.md) |
 | **Or-pattern** | `A \| B` in a pattern matches either `A` or `B`. | [Pitch classes and scales](step-3/theory.md) |
 | **Ownership** | Every value has exactly one owner, and is dropped when the owner goes away. | [loom-audio](step-1/audio-engine.md) |
+| **`partition`** | Splits an iterator in two by a closure, in one pass: the items it says yes to and the rest, each collected into its own collection. | [Micromodes](step-8/micromodes.md#textures) |
 | **Panic** | An unrecoverable error that stops the current thread (`panic!`, failed `assert!`). | [loom-core](step-1/loom-core.md) |
 | **Property-based test** | A test that checks a rule which must hold for any input ("following the changes gives the new project"), rather than one answer for one input. | [What changed](step-5/diff.md) |
 | **`pub(crate)`** | Visible everywhere inside the current crate, but not to other crates. | [Patterns](step-2/project.md) |
@@ -114,6 +118,7 @@ where each one first appears in real code.
 | **`Result<T, E>`** | `Ok(value)` or `Err(error)`; Rust's way to return errors. | [loom-audio](step-1/audio-engine.md) |
 | **`retain`** | Keeps only the items of a `Vec` for which a closure returns `true`, in one pass. | [Steps to notes](step-3/notes.md) |
 | **RON** | Rust Object Notation, a text format that looks like Rust's own struct syntax; Ferrous Loom's project files use it. | [Saving](step-4/saving.md) |
+| **`rposition`** | The index of the last item of a slice that matches, searching from the end; `position` searches from the start. | [Micromodes](step-8/micromodes.md#the-walk-choosing-with-a-tuple) |
 | **`saturating_sub`** | Subtraction that stops at the smallest value (0 for `usize`) instead of overflowing. | [Voices](step-3/voices.md) |
 | **`Send`** | A marker trait: values of this type can be moved to another thread. | [loom-audio](step-1/audio-engine.md) |
 | **serde** | The usual crate for turning Rust values into text or bytes and back, through the `Serialize` and `Deserialize` traits. | [Saving](step-4/saving.md) |
@@ -121,6 +126,7 @@ where each one first appears in real code.
 | **serde field attributes** | `#[serde(default)]` fills in a missing field with its `Default` when reading; `#[serde(skip_serializing_if = "path")]` leaves a field out when writing if that function says so. | [Time signatures](step-8/time-signatures.md#in-files-format-3) |
 | **Slice** | A borrowed view of part of an array or `Vec`: `&[T]` or `&mut [T]`. | [loom-audio](step-1/audio-engine.md) |
 | **Slice pattern** | `let [a, b, c, ..] = *bytes else { ... }`: matches a slice by its shape, naming the first items, so no indexing can panic. | [MIDI messages](step-7/messages.md) |
+| **Slice pattern with `@`** | `[first @ .., last]` matches a slice of two or more items and names everything but the last as the slice `first`. | [Micromodes](step-8/micromodes.md#checking-a-table-with-tests) |
 | **State machine** | Code that keeps a current state, often an enum, and moves between states as things happen. | [Voices](step-3/voices.md) |
 | **`'static`** | A lifetime meaning "lives as long as needed"; for closures, "borrows nothing temporary". | [loom-audio](step-1/audio-engine.md) |
 | **`static` item** | `static NAME: T = ...;` is one value at one fixed address for the whole program. A `const` is pasted in wherever it is used instead. | [The library](step-8/library.md#styles) |
@@ -132,6 +138,7 @@ where each one first appears in real code.
 | **Trait bound** | A requirement on a generic type, such as `T: FromSample<f32>`. | [loom-audio](step-1/audio-engine.md) |
 | **`TryFrom` / `TryInto`** | Conversions that can fail, returning a `Result`. | [Saving](step-4/saving.md) |
 | **Tuple** | A fixed group of values, possibly of different types, like `(usize, Note)`; it can be matched and taken apart. | [Pitch classes and scales](step-3/theory.md) |
+| **Tuple comparison** | Tuples compare item by item: the second item only decides when the first ones are equal. A tuple as a sort key gives tie-breaks in order. | [Micromodes](step-8/micromodes.md#the-walk-choosing-with-a-tuple) |
 | **Tuple struct** | A struct whose fields have no names, like `struct Note(u8)`; the fields are read as `.0`, `.1`... | [loom-core](step-1/loom-core.md) |
 | **Turbofish (`::<>`)** | Writing a generic function's type out at the call, as in `collect::<Vec<Note>>()`, when Rust cannot work it out. | [loom-audio](step-1/audio-engine.md) |
 | **Type alias** | A second name for an existing type: `type StepRow = [bool; 64];`. | [Patterns](step-2/project.md) |

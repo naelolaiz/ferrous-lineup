@@ -55,6 +55,12 @@ and a library to go with them:
   dynamics and octaves, a browser of all 224 set classes, the set of
   any notes you select, and twelve-tone styles and demos
   ([Twelve-tone rows and pitch-class sets](twelve-tone.md)),
+- **micromodes**: Francisco Kröpfl's twelve groups of three notes in
+  his three families, drawn on a clock, heard, drawn with or used as the
+  key; the micromodes inside any notes you select; the Sets and
+  Micromodes windows linked both ways; and micromode styles and demos,
+  with Webern's Concerto row, made of one micromode
+  ([Micromodes](micromodes.md)),
 - **nine new drums**, made by the synthesizer like the first four:
   open hi-hat, rim, low and high toms, ride, crash, cowbell, shaker and
   conga,
@@ -93,6 +99,7 @@ and a library to go with them:
 | File > Demos | open a song or a style as a whole project, and play it |
 | Key menu > twelve-tone row, or Row… in the piano roll | make a row the key, see its matrix, write its forms |
 | Sets… in the piano roll | look up any set, draw with it or use it as the key |
+| Micromodes… in the piano roll | see Kröpfl's twelve micromodes and the ones in the selected notes; hear one, draw with it or use it as the key |
 | Ctrl+wheel, Alt+wheel (or Ctrl and Alt with + and −), the zooms at the bottom right | make bars and steps wider, or tracks and keys taller; Ctrl+0 for 100% again ([A bug hunt](bug-hunt.md)) |
 | View > Interface size | make text, buttons and menus bigger or smaller everywhere |
 | View menu, or **Alt+F8** | show or hide each window, and the Patterns and Library panel |
