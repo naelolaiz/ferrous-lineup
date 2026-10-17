@@ -197,3 +197,48 @@ pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
             through three octaves, and the low unison run in the fourth bar of the theme is \
             written an octave up.",
 };
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/RussianFolkSongDarkEyes.abc
+// (the Wikifonia lead sheet in D minor, 3/4, with chords; here in C minor, down a tone, so
+// that the last high note fits. Checked against Frank Nordberg's Musica Viva ABC in G minor,
+// https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/folktunefinder/abc_tune_folktunefinder_151450.txt,
+// which differs in a few notes, such as the third note of the fifth bar.)
+pub(super) const DARK_EYES: Song = Song {
+    name: "Dark Eyes",
+    origin: "Florian Hermann, Valse hommage, op. 21, 1879; words by Yevhen Hrebinka",
+    feel: "Jazz waltz",
+    genre: Genre::Jazz,
+    tonic: C,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 160.0,
+    comping: Comping::Waltz,
+    bass: Bass::Walking,
+    rhythm: "Jazz waltz",
+    style: "Minor jazz waltz",
+    parts: &[
+        Part::new("Pickup", "-:4 F#4:4 G4", "V7"),
+        Part::new(
+            "A",
+            "Ab4:6 G4:2 G4:4 | -:4 F#4 G4 | Ab4:6 G4:2 G4:4 | -:4 G4 C5 | C5:6 B4:2 B4:4 | \
+             -:4 D5 Eb5 | D5:6 C5:2 C5:4 | -:4 C5 Eb5 | Eb5:6 D5:2 Ab4:4 | -:4 D5 Eb5 | \
+             D5:6 C5:2 G4:4 | -:4 F#4 G4 | Ab4:6 G4:2 G4:4 | -:4 D4 G4 | F4:6 Eb4:2 Eb4:4 | \
+             -:4 F#4 G4",
+            "V7 | V7 | i | i | V7 | V7 | i | i | iv | iv | i | i | V7 | V7 | i | i",
+        ),
+        Part::new(
+            "A end",
+            "Ab4:6 G4:2 G4:4 | -:4 F#4 G4 | Ab4:6 G4:2 G4:4 | -:4 G4 C5 | C5:6 B4:2 B4:4 | \
+             -:4 D5 Eb5 | D5:6 C5:2 C5:4 | -:4 C5 Eb5 | Eb5:6 D5:2 Ab4:4 | -:4 D5 Eb5 | \
+             D5:6 C5:2 G4:4 | -:4 F#4 G4 | Ab4:6 G4:2 G4:4 | -:4 D5 Eb5 | D5:6 C5:2 C5:4 | \
+             C6:4 -:8",
+            "V7 | V7 | i | i | V7 | V7 | i | i | iv | iv | i | i | V7 | V7 | i | i",
+        ),
+    ],
+    form: &["Pickup", "A", "A end"],
+    drums_from: 1,
+    about: "A piano waltz of 1879 that became Russia's best-known romance, and a gypsy-jazz \
+            standard. Every other bar starts with a rest on beat one and a two-note pickup into \
+            the next, the first leaning up a semitone, F sharp to G; the tune climbs in sequence over G7 and C \
+            minor, peaks on F minor (iv), and leaps up to the high C at the very end.",
+};
