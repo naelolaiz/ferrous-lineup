@@ -253,8 +253,8 @@ impl Project {
     /// The starting song: eight bars built from three patterns.
     ///
     /// - "Beat", one bar of drums.
-    /// - "Chords", two bars of the Lineup Osc playing C, Am, F and G
-    ///   (I, vi, IV, V in C major).
+    /// - "Chords", two bars of a piano playing C, Am, F and G (I, vi, IV,
+    ///   V in C major), on the Lineup Osc's channel.
     /// - "Fill", one bar of drums with a snare roll, to end the song.
     ///
     /// The chords play alone for two bars, then the beat comes in, and
@@ -295,6 +295,9 @@ impl Project {
                 pattern.add_note(synth, NoteEvent::new(Note::new(midi), i * 8, 8));
             }
         }
+        // The chords are a piano's: a SoundFont plays a real one, and the
+        // Lineup Osc a sound close to it.
+        project.channels[synth].program = Some(crate::general_midi::ACOUSTIC_GRAND_PIANO);
 
         let fill = project.add_pattern().unwrap_or(beat);
         let pattern = &mut project.patterns[fill];
