@@ -415,32 +415,10 @@ fn spell_set(set: PitchSet, key: Scale) -> String {
 }
 
 /// The Roman numeral of a chord in `key`, with the figures of figured
-/// bass for an inversion: a triad with its third in the bass is "⁶",
-/// with its fifth "⁶₄"; a seventh chord's inversions are "⁶₅", "⁴₃" and
-/// "⁴₂", written instead of its 7. `None` in a key without seven notes.
+/// bass for an inversion ("V⁶₅", see [`Scale::figured_numeral`]). `None`
+/// in a key without seven notes.
 fn numeral_with_figures(symbol: ChordSymbol, key: Scale) -> Option<String> {
-    let numeral = key.roman_numeral(symbol.chord())?;
-    let notes = symbol.quality.intervals().len();
-    let has_seventh = notes == 4
-        && symbol
-            .quality
-            .intervals()
-            .iter()
-            .any(|&i| (10..=11).contains(&i))
-        || symbol.quality == ChordQuality::Diminished7;
-    let figures = match (symbol.bass_in_chord(), notes, has_seventh) {
-        (Some(3), 3, _) => "⁶",
-        (Some(5), 3, _) => "⁶₄",
-        (Some(3), 4, true) => "⁶₅",
-        (Some(5), 4, true) => "⁴₃",
-        (Some(7), 4, true) => "⁴₂",
-        _ => "",
-    };
-    if figures.is_empty() {
-        return Some(numeral);
-    }
-    let numeral = numeral.strip_suffix('7').unwrap_or(&numeral);
-    Some(format!("{numeral}{figures}"))
+    key.figured_numeral(symbol.chord(), symbol.bass_pitch_class())
 }
 
 impl fmt::Display for HarmonyName {
