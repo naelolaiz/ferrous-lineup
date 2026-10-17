@@ -37,6 +37,8 @@ use crate::meter::{Bar, TimeSignature};
 use crate::pitch::{Note, NoteName, PitchClass};
 use crate::tools;
 
+pub mod text;
+
 /// The harmony of a bar, or of part of one, named in one of the ways
 /// the app knows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -506,8 +508,13 @@ pub fn read_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, S
             continue;
         }
         // The longest run of words that names a harmony, so "Menor 3 T2"
-        // is one micromode, not three things.
-        let longest = (at + 1..=words.len().min(at + MOST_WORDS))
+        // is one micromode, not three things. A "/" on its own is a beat,
+        // never part of a name: "E / B" is E held, then B, not E/B.
+        let holds_at = words[at..]
+            .iter()
+            .position(|word| matches!(*word, "/" | "."))
+            .map_or(words.len(), |offset| at + offset);
+        let longest = (at + 1..=holds_at.min(at + MOST_WORDS))
             .rev()
             .find_map(|end| {
                 HarmonyName::parse_in(&words[at..end].join(" "), key)
@@ -578,7 +585,12 @@ pub fn write_bar(markers: &[ChordMarker], bar: &Bar) -> String {
             None => words.push("/".to_string()),
         }
     }
-    while words.last().is_some_and(|word| word == "/") {
+    // A "/" at the end says nothing, as long as another "/" is left to
+    // say that the harmonies are placed by hand: "C G7 C /" must stay
+    // as it is, or it reads as three harmonies spread over the bar.
+    while words.last().is_some_and(|word| word == "/")
+        && words[..words.len() - 1].iter().any(|word| word == "/")
+    {
         words.pop();
     }
     words.join(" ")
@@ -844,6 +856,16 @@ mod tests {
         );
         // A bar that starts with a slash goes on with the chord before.
         assert_eq!(read("/ G7", common), [(4, "G7".to_string())]);
+        // A slash between two chords is a beat, not a slash chord.
+        assert_eq!(
+            read("A E / B", common),
+            [
+                (0, "A".to_string()),
+                (4, "E".to_string()),
+                (12, "B".to_string())
+            ]
+        );
+        assert_eq!(read("E/B", common), [(0, "E/B".to_string())]);
         // Names of several words, and numerals in the key.
         assert_eq!(
             read("Menor 3 T2 ii7", common),
@@ -876,6 +898,8 @@ mod tests {
                 "C / / G7",
                 "/ G7",
                 "C F G",
+                "C G7 C /",
+                "A E / B",
                 "",
                 "3-11 T2 Menor 3",
             ] {
@@ -895,6 +919,10 @@ mod tests {
         assert_eq!(write_bar(&markers, &bar), "C / / G7");
         let markers = read_bar("C / G7 /", &bar, C_MAJOR).unwrap();
         assert_eq!(write_bar(&markers, &bar), "C G7");
+        // Three harmonies on the first three beats are not the three
+        // spread over the bar (beats 1, 3 and 4).
+        let markers = read_bar("C G7 C /", &bar, C_MAJOR).unwrap();
+        assert_eq!(write_bar(&markers, &bar), "C G7 C /");
     }
 
     #[test]
