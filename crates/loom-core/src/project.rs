@@ -125,6 +125,12 @@ pub struct Channel {
     /// From 0.0 (silent) to 1.0 (full).
     pub volume: f32,
     pub muted: bool,
+    /// The General MIDI instrument the channel plays, 0 to 127 (see
+    /// [`general_midi`](crate::general_midi)), or `None` for none in
+    /// particular. MIDI files and the MIDI output send it to the synth as
+    /// a program change; the Loom Osc picks a sound close to it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub program: Option<u8>,
 }
 
 impl Channel {
@@ -135,6 +141,7 @@ impl Channel {
             kind: ChannelKind::Sampler(SampleSource::Builtin(drum)),
             volume: 0.8,
             muted: false,
+            program: None,
         }
     }
 
@@ -145,6 +152,7 @@ impl Channel {
             kind: ChannelKind::Synth,
             volume: 0.6,
             muted: false,
+            program: None,
         }
     }
 
@@ -157,6 +165,7 @@ impl Channel {
             kind: ChannelKind::MidiOut { channel },
             volume: 0.8,
             muted: false,
+            program: None,
         }
     }
 

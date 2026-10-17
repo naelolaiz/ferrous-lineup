@@ -305,6 +305,7 @@ impl LoomApp {
                     self.record(held, from, until);
                 }
             }
+            MidiMessage::ProgramChange { .. } => {}
         }
     }
 
@@ -375,10 +376,10 @@ impl LoomApp {
             if sent.as_ref().and_then(|sent| sent.get(channel)) == Some(route) {
                 continue;
             }
-            let kind = self.project.channels()[channel].kind.clone();
-            let mut instrument = self.build_instrument(&kind, sample_rate);
+            let state = self.project.channels()[channel].clone();
+            let mut instrument = self.build_instrument(&state, sample_rate);
             if let Some((midi_channel, pitch)) = *route {
-                instrument = instrument.to_midi(midi_channel, pitch);
+                instrument = instrument.to_midi(midi_channel, pitch, state.program);
             }
             self.send(Command::SetInstrument {
                 channel,

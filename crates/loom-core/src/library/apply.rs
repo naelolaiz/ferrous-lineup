@@ -56,9 +56,11 @@ pub fn synth_named(project: &mut Project, name: &str) -> Option<usize> {
     if let Some(index) = find_synth(project, name) {
         return Some(index);
     }
+    // The other voices of a round sing as loud as the first.
     let volume = match name {
         BASS => BASS_VOLUME,
         LEAD => LEAD_VOLUME,
+        _ if name.starts_with("Voice ") => LEAD_VOLUME,
         _ => KEYS_VOLUME,
     };
     project.add_channel(Channel {
@@ -66,6 +68,7 @@ pub fn synth_named(project: &mut Project, name: &str) -> Option<usize> {
         kind: ChannelKind::Synth,
         volume,
         muted: false,
+        program: None,
     })
 }
 

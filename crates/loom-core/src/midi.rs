@@ -7,8 +7,9 @@
 //! their top bit set (128 and up); data bytes do not (0 to 127). That is
 //! why a MIDI note or velocity is never more than 127.
 //!
-//! Ferrous Loom only needs notes, so only note messages are understood.
-//! Everything else (knobs, pedals, pitch bends, clock) is ignored.
+//! Ferrous Loom reads only note messages. Everything else (knobs, pedals,
+//! pitch bends, clock) is ignored. It also sends program changes, which
+//! choose the instrument a channel plays (see [`crate::general_midi`]).
 
 use crate::Note;
 
@@ -16,7 +17,8 @@ use crate::Note;
 /// is 9 when counted from 0 as the bytes do.
 pub const DRUM_CHANNEL: u8 = 9;
 
-/// A note message. `channel` is 0 to 15 (shown to people as 1 to 16).
+/// A message Ferrous Loom sends or reads. `channel` is 0 to 15 (shown to
+/// people as 1 to 16).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MidiMessage {
     NoteOn {
@@ -29,12 +31,35 @@ pub enum MidiMessage {
         channel: u8,
         pitch: Note,
     },
+    /// From now on, `channel` plays General MIDI program `program`, 0 to
+    /// 127. Only sent, never read: a keyboard choosing its own sound does
+    /// not change the channel it plays.
+    ProgramChange {
+        channel: u8,
+        program: u8,
+    },
+}
+
+/// The bytes of one message: two or three of them, as a slice.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MidiBytes {
+    bytes: [u8; 3],
+    len: usize,
+}
+
+impl std::ops::Deref for MidiBytes {
+    type Target = [u8];
+
+    fn deref(&self) -> &[u8] {
+        &self.bytes[..self.len]
+    }
 }
 
 /// The kinds of message, as the top four bits of the status byte.
 const NOTE_OFF: u8 = 0x80;
 const NOTE_ON: u8 = 0x90;
 const CONTROL_CHANGE: u8 = 0xB0;
+const PROGRAM_CHANGE: u8 = 0xC0;
 
 /// The bytes that tell every note on `channel` to stop: control change
 /// 123, "All Notes Off". Sent on all 16 channels before a port is let go,
@@ -72,23 +97,31 @@ impl MidiMessage {
         }
     }
 
-    /// The three bytes of the message, ready to send.
-    pub fn bytes(self) -> [u8; 3] {
-        match self {
+    /// The bytes of the message, ready to send: three for a note, two for
+    /// a program change.
+    pub fn bytes(self) -> MidiBytes {
+        let (bytes, len) = match self {
             MidiMessage::NoteOn {
                 channel,
                 pitch,
                 velocity,
-            } => [
-                NOTE_ON | (channel & 0x0F),
-                pitch.midi(),
-                velocity.clamp(1, 127),
-            ],
+            } => (
+                [
+                    NOTE_ON | (channel & 0x0F),
+                    pitch.midi(),
+                    velocity.clamp(1, 127),
+                ],
+                3,
+            ),
             // Velocity 64 is the usual "no particular speed" for a release.
             MidiMessage::NoteOff { channel, pitch } => {
-                [NOTE_OFF | (channel & 0x0F), pitch.midi(), 64]
+                ([NOTE_OFF | (channel & 0x0F), pitch.midi(), 64], 3)
             }
-        }
+            MidiMessage::ProgramChange { channel, program } => {
+                ([PROGRAM_CHANGE | (channel & 0x0F), program & 0x7F, 0], 2)
+            }
+        };
+        MidiBytes { bytes, len }
     }
 }
 
@@ -154,7 +187,12 @@ mod tests {
             channel: 0,
             pitch: Note::C4,
         };
-        assert_eq!(off.bytes(), [0x80, 60, 64]);
+        assert_eq!(*off.bytes(), [0x80, 60, 64]);
+        let violin = MidiMessage::ProgramChange {
+            channel: 3,
+            program: 40,
+        };
+        assert_eq!(*violin.bytes(), [0xC3, 40]);
         assert_eq!(all_notes_off(15), [0xBF, 123, 0]);
     }
 }

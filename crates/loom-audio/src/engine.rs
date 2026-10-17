@@ -906,6 +906,7 @@ impl AudioThread {
                 }
             }
             MidiMessage::NoteOff { pitch, .. } => self.release_live(pitch),
+            MidiMessage::ProgramChange { .. } => {}
         }
     }
 

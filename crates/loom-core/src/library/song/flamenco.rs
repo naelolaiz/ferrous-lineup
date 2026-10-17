@@ -14,6 +14,7 @@ pub(super) const RUMBA_DEL_SUR: Song = Song {
     comping: Comping::Rumba,
     bass: Bass::RootFifth,
     rhythm: "Rumba flamenca",
+    band: GUITARS,
     style: "Andalusian cadence",
     parts: &[
         Part::new(
@@ -48,6 +49,7 @@ pub(super) const NOCHE_FRIGIA: Song = Song {
     comping: Comping::Rumba,
     bass: Bass::RootFifth,
     rhythm: "Rumba flamenca",
+    band: GUITARS,
     style: "Phrygian flamenco",
     parts: &[
         Part::new(
@@ -85,6 +87,7 @@ pub(super) const ASTURIAS: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "",
+    band: Band::solo(gm::NYLON_GUITAR),
     style: "La folia",
     parts: &[
         Part::new(

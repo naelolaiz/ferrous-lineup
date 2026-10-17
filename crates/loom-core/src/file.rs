@@ -78,7 +78,11 @@ pub const EXTENSION: &str = "loom";
 /// Format 8 added key changes through a song. Older versions would show
 /// the whole song in its first key, so a song with key markers needs
 /// format 8.
-pub const FORMAT_VERSION: u32 = 8;
+///
+/// Format 9 added a General MIDI instrument to channels. Older versions
+/// would play every Loom Osc with the same sound and send no program
+/// changes, so a project with instruments needs format 9.
+pub const FORMAT_VERSION: u32 = 9;
 
 /// The oldest format that can hold `project`.
 ///
@@ -105,11 +109,17 @@ pub fn format_for(project: &Project) -> u32 {
             .patterns()
             .iter()
             .any(|pattern| pattern.time.is_some());
+    let has_instruments = project
+        .channels()
+        .iter()
+        .any(|channel| channel.program.is_some());
     let playlist = project.playlist();
     let has_structure = !playlist.sections().is_empty()
         || playlist.loop_region().is_some()
         || playlist.clips().iter().any(|clip| clip.repeats != 1);
-    if !playlist.key_markers().is_empty() {
+    if has_instruments {
+        9
+    } else if !playlist.key_markers().is_empty() {
         8
     } else if !playlist.tempo_markers().is_empty() || project.loose_timing > 0 {
         7
@@ -522,10 +532,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 9 might have fields we have never heard of. Only the
+        // Format 10 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 9, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(9)), "{error}");
+        let error = from_text("(format: 10, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(10)), "{error}");
     }
 
     #[test]
@@ -663,6 +673,18 @@ mod tests {
         let loaded = from_text(&text).unwrap();
         assert_eq!(loaded, project);
         assert_eq!(loaded.key_at(64), g_major);
+    }
+
+    #[test]
+    fn instruments_need_format_nine() {
+        let mut project = Project::demo();
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("program"), "{text}");
+        project.channel_mut(0).unwrap().program = Some(crate::general_midi::VIOLIN);
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 9,"), "{text}");
+        assert!(text.contains("program: Some(40)"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
     }
 
     #[test]

@@ -13,6 +13,7 @@
 pub mod arrangement;
 pub mod diff;
 pub mod file;
+pub mod general_midi;
 pub mod harmony;
 pub mod history;
 pub mod key_map;
