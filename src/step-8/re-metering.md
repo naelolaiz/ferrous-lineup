@@ -82,6 +82,51 @@ in 4/4 with a last line in 3/4, comes out in one time signature: every
 bar, whatever it was, becomes one bar of the new one, and the time
 markers go.
 
+## The Time box does it too
+
+At first only the library re-metered the song. Picking 3/4 in the Time
+box of the harmony keys (or in the menu on bar 1 of the playlist) still
+did what it always had: it changed the time signature and nothing else.
+Every note stayed on its step, so the song sounded exactly the same; only
+the bar lines were drawn in other places. A 4/4 tune "in 3/4" that way
+has its downbeats wandering through the bars, and nothing tells you why
+the music did not change.
+
+Now both re-meter the song, the same way a rhythm does: every bar
+squeezed or stretched into a bar of the new time signature, and the
+tempo scaled so each bar lasts as long as before. 4/4 at 124 becomes 3/4
+at 93. Two cases are different:
+
+- **A song with no notes at all** has nothing to squeeze, so it only
+  gets the new bars and keeps its tempo.
+- **A change partway through**, from the menu on any bar but the first,
+  still only changes the bars from there on: that is how you write a
+  hymn with a last line in 3/4.
+
+Both changes go through one method, `set_song_time`, which the Time box
+and the bar 1 menu call. It remembers the library's original like the
+rhythms do, so a rhythm picked afterwards still starts from the song as
+it was:
+
+```rust
+let remetered = self.edit("change time signature", |project| {
+    if project.patterns().iter().all(Pattern::is_empty) {
+        project.time_signature = time;
+        false
+    } else {
+        remeter(project, time)
+    }
+});
+```
+
+`Pattern::is_empty` is passed by name: `all` wants a function that takes
+a `&Pattern` and answers `bool`, and the method is exactly that, so no
+closure `|pattern| pattern.is_empty()` is needed.
+
+The bar 1 menu is routed in a `match` with a *guard*: `SetTimeMarker(marker)
+if marker.start == 0 => ...` takes only the markers on step 0, and the
+next arm, without the guard, takes all the others.
+
 ## Exact, between the steps
 
 Squeezing sixteen steps into twelve puts many notes between two steps:
@@ -209,3 +254,6 @@ far into it, and goes to the same bar and the same fraction of it.
 4. Pause in the middle of the song, pick a waltz, then press Ctrl+Z and
    Ctrl+Y. The playhead stays on the same bar each time, and the tempo
    goes back and forth between the two.
+5. Press Ctrl+Z until the song is back in 4/4, then pick 3/4 in the Time
+   box. The song re-meters just as with the waltz, but keeps its drums:
+   the Time box changes the time signature, not the rhythm.
