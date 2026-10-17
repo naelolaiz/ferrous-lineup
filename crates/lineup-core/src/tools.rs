@@ -144,7 +144,12 @@ pub fn snap_to_scale(notes: &[NoteEvent], scale: Scale) -> Vec<NoteEvent> {
 /// Between kinds that have nothing in common, such as a key and a
 /// twelve-tone row, the note stays where it is (see
 /// [`ScaleKind::notes_follow`](crate::ScaleKind::notes_follow)).
+///
+/// A pitch-class set that is a key's own scale (C major switched to
+/// "pitch-class set" is the set 7-35 on C) moves into a key as that key
+/// would: from it to C minor, E, A and B go down as from C major.
 pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
+    let from = from_key(from, to);
     if !from.kind.notes_follow(to.kind) {
         return note;
     }
@@ -165,6 +170,18 @@ pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
         moved.transpose(offset).unwrap_or(moved)
     } else {
         nearest_in_key(moved, to)
+    }
+}
+
+/// The key a change to `to` starts from: `from`, or, going from a
+/// pitch-class set into a key, the key the set's notes are (see
+/// [`Scale::as_key`]). Between two sets nothing changes, so a set picked
+/// in the set browser still moves the song into the next set picked.
+pub fn from_key(from: Scale, to: Scale) -> Scale {
+    if to.kind.is_tonal() {
+        from.as_key()
+    } else {
+        from
     }
 }
 
@@ -301,7 +318,7 @@ pub fn arpeggiate(notes: &[NoteEvent], order: ArpeggioOrder, rate: usize) -> Vec
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{PitchClass, ScaleKind};
+    use crate::{PitchClass, PitchSet, ScaleKind};
 
     #[test]
     fn quantizing_moves_notes_to_the_nearest_steps() {
@@ -401,6 +418,29 @@ mod tests {
         assert_eq!(moved(71, C_MAJOR, pentatonic), 72);
         // A note that would leave the MIDI range stays put.
         assert_eq!(moved(127, C_MAJOR, key(D, ScaleKind::Major)), 127);
+    }
+
+    #[test]
+    fn a_key_shown_as_a_set_moves_on_as_that_key() {
+        use PitchClass::*;
+        let moved = |midi, from, to| change_key(Note::new(midi), from, to).midi();
+        let as_set = Scale::set(C, C_MAJOR.pitch_set());
+        let minor = Scale::new(C, ScaleKind::NaturalMinor);
+        // C major to the set 7-35 on C: the same notes, nothing moves.
+        for m in [60, 62, 64, 65, 67, 69, 71] {
+            assert_eq!(moved(m, C_MAJOR, as_set), m);
+        }
+        // From that set to C minor: as from C major, E A B go down.
+        let scale: Vec<u8> = [60, 62, 64, 65, 67, 69, 71]
+            .iter()
+            .map(|&m| moved(m, as_set, minor))
+            .collect();
+        assert_eq!(scale, [60, 62, 63, 65, 67, 68, 70]);
+        // And to G major, as from C major: down a fourth.
+        assert_eq!(moved(64, as_set, Scale::new(G, ScaleKind::Major)), 59);
+        // A set that is no key still leaves the notes where they are.
+        let diminished = Scale::set(C, PitchSet::from_semitones(&[0, 3, 6, 9]));
+        assert_eq!(moved(63, diminished, minor), 63);
     }
 
     #[test]
