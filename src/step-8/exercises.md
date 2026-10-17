@@ -145,3 +145,26 @@ test runs many times faster.
 
 *Practices:* measuring before changing, nested loops over enums, tuning
 by tests.
+
+## 11. A tempo change on a pattern (loom-core, small)
+
+`TempoMark` puts a demo's markings on the playlist (see [Tempo changes,
+and playing like a person](tempo-and-feel.md)). The Toccata in D minor
+has six fermatas in the bars its demo plays, left out because the demo
+already writes those notes long. Shorten the notes back to what Bach
+wrote, add the fermatas with `.with_tempo`, and listen to both. Count
+each fermata's step from the start of the part. Does
+`every_demo_keeps_a_sensible_tempo` still pass? What would it take to
+make it fail?
+
+*Practices:* `const` slices of enums, counting steps in a bar.
+
+## 12. Lean on the highest note (loom-core, medium)
+
+The melody shaping in `library/interpret.rs` gives a note up to six
+velocity steps for its height in the phrase. Singers often lean on the
+single *highest* note of a phrase more than on the notes near it. Give
+that one note two more steps, and write the test first: in "Twinkle,
+twinkle", which note is it, and which phrase is it in?
+
+*Practices:* `Iterator::max_by_key`, writing a test before the code.

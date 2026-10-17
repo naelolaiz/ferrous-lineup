@@ -66,6 +66,7 @@
   - [Twelve-tone rows and pitch-class sets](step-8/twelve-tone.md)
   - [Micromodes: Kröpfl's twelve colours of three notes](step-8/micromodes.md)
   - [A bug hunt: two-way zoom, notes spelled right, and playback](step-8/bug-hunt.md)
+  - [Tempo changes, and playing like a person](step-8/tempo-and-feel.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
