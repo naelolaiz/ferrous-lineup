@@ -30,12 +30,15 @@ use crate::meter::{Bar, TimeSignature};
 use crate::pattern::{MAX_STEPS, NoteEvent};
 use crate::pitch::{Note, PitchClass};
 use crate::playlist::{Clip, MAX_SONG_STEPS, Track};
-use crate::project::{Channel, ChannelKind, Project, SampleSource};
+use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 use crate::tempo::Tempo;
 
 mod form;
+mod variation;
 
 pub use form::{ENDING_BARS, Ending, Form, INTRO_BARS};
+pub use variation::{Variation, VariationMarker};
+pub(crate) use variation::{tidy as tidy_variations, variation_in};
 
 /// One of the band's players.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -241,6 +244,9 @@ pub struct Band {
     pub(crate) since: usize,
     /// The intro, how many times the chorus plays, and the ending.
     pub(crate) form: Form,
+    /// Where the band changes between the style's two variations, in
+    /// order. Before the first, it plays variation a.
+    pub(crate) variations: Vec<VariationMarker>,
 }
 
 impl Band {
@@ -255,6 +261,7 @@ impl Band {
             muted: Muted::default(),
             since: 0,
             form: Form::default(),
+            variations: Vec::new(),
         }
     }
 
@@ -286,6 +293,8 @@ pub(crate) struct BandFile {
     pub since: usize,
     #[serde(default, skip_serializing_if = "Form::is_plain")]
     pub form: Form,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub variations: Vec<VariationMarker>,
 }
 
 impl From<&Band> for BandFile {
@@ -300,6 +309,7 @@ impl From<&Band> for BandFile {
             muted: band.muted.clone(),
             since: band.since,
             form: band.form,
+            variations: band.variations.clone(),
         }
     }
 }
@@ -336,6 +346,12 @@ impl BandFile {
                 intro: self.form.intro.min(self.end),
                 choruses: self.form.choruses.clamp(1, crate::playlist::MAX_REPEATS),
                 ending: self.form.ending,
+            },
+            variations: {
+                let mut markers = self.variations;
+                markers.retain(|marker| marker.start < MAX_SONG_STEPS);
+                variation::tidy(&mut markers);
+                markers
             },
         })
     }
@@ -443,24 +459,57 @@ fn cut(played: &[Played], start: usize, end: usize) -> Vec<Played> {
         .collect()
 }
 
-/// A player's notes over `bars` played with `play`, all but the `held`
-/// bar, if there is one: the last bar of an ending, played otherwise.
-fn played_with(
-    bars: &[Bar],
-    harmonies: &[Played],
-    held: Option<Bar>,
-    play: impl Fn(&[Bar], &[Played]) -> Vec<NoteEvent>,
-) -> Vec<NoteEvent> {
-    match held {
-        Some(held) => {
-            let before: Vec<Bar> = bars
-                .iter()
-                .filter(|bar| bar.end() <= held.start)
-                .copied()
-                .collect();
-            play(&before, &cut(harmonies, 0, held.start))
+/// A stretch of bars the band plays in one variation.
+struct Run {
+    bars: Vec<Bar>,
+    variation: Variation,
+}
+
+/// `bars` in runs of one variation each, as `markers` say, all but the
+/// `held` bar, if there is one: the last bar of an ending, played
+/// otherwise.
+fn runs(bars: &[Bar], held: Option<Bar>, markers: &[VariationMarker]) -> Vec<Run> {
+    let mut runs: Vec<Run> = Vec::new();
+    let played = bars
+        .iter()
+        .filter(|bar| held.is_none_or(|held| bar.start < held.start));
+    for &bar in played {
+        let variation = variation::variation_in(markers, bar.start);
+        match runs.last_mut() {
+            Some(run) if run.variation == variation => run.bars.push(bar),
+            _ => runs.push(Run {
+                bars: vec![bar],
+                variation,
+            }),
         }
-        None => play(bars, harmonies),
+    }
+    runs
+}
+
+/// A player's notes, run by run: each run played with `play` in its
+/// variation, from the harmonies inside it.
+fn played_in_runs(
+    runs: &[Run],
+    harmonies: &[Played],
+    play: impl Fn(Variation, &[Bar], &[Played]) -> Vec<NoteEvent>,
+) -> Vec<NoteEvent> {
+    let mut notes = Vec::new();
+    for run in runs {
+        let (Some(first), Some(last)) = (run.bars.first(), run.bars.last()) else {
+            continue;
+        };
+        let played = cut(harmonies, first.start, last.end());
+        notes.extend(play(run.variation, &run.bars, &played));
+    }
+    notes
+}
+
+/// Makes the notes that start in variation b louder.
+fn louder_in_b(notes: &mut [NoteEvent], markers: &[VariationMarker]) {
+    for note in notes {
+        if variation::variation_in(markers, note.start) == Variation::B {
+            note.velocity = variation::louder(note.velocity);
+        }
     }
 }
 
@@ -684,6 +733,7 @@ impl Project {
             .retain(|marker| marker.start < end);
         if let Some(band) = &mut self.band {
             band.end = end;
+            band.variations.retain(|marker| marker.start < end);
         }
         self.write_band();
         true
@@ -860,7 +910,9 @@ impl Project {
         if let Some(band) = &self.band {
             print.bytes(band.style.name.as_bytes());
             print.number(band.end);
-            print.bytes(format!("{:?}{:?}", band.form, self.ending()).as_bytes());
+            print.bytes(
+                format!("{:?}{:?}{:?}", band.form, self.ending(), band.variations).as_bytes(),
+            );
         }
         // What the band plays from only has to be compared within one
         // run of the app (a change means "write again"), so the debug
@@ -975,6 +1027,8 @@ impl Project {
         let harmonies = self.played_harmonies(&markers, parts_end);
         // The last bar of an ending is one chord, struck and held.
         let held = ending.and_then(|_| bars.last().copied());
+        let variations = band.variations.clone();
+        let runs = runs(&bars, held, &variations);
         let style = band.style;
         let seed = |player: Player| interpret::seed("band", style.name, player.name());
         let time = meter.first();
@@ -985,25 +1039,27 @@ impl Project {
             }
             let notes: Vec<(usize, NoteEvent)> = match player {
                 Player::Piano => {
-                    let mut notes = played_with(&bars, &harmonies, held, |bars, played| {
-                        style.comping.play_in_bars(bars, played)
+                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
+                        style.comping_in(variation).play_in_bars(bars, played)
                     });
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Comping::Held.play_in_bars(bars, played)
                     }));
                     interpret::perform(&mut notes, time, Role::Accompaniment, seed(player));
+                    louder_in_b(&mut notes, &variations);
                     band.piano.map_or_else(Vec::new, |channel| {
                         notes.into_iter().map(|note| (channel, note)).collect()
                     })
                 }
                 Player::Bass => {
-                    let mut notes = played_with(&bars, &harmonies, held, |bars, played| {
-                        style.bass.play_in_bars(bars, played)
+                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
+                        style.bass_in(variation).play_in_bars(bars, played)
                     });
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Bass::Held.play_in_bars(bars, played)
                     }));
                     interpret::perform(&mut notes, time, Role::Accompaniment, seed(player));
+                    louder_in_b(&mut notes, &variations);
                     band.bass.map_or_else(Vec::new, |channel| {
                         notes.into_iter().map(|note| (channel, note)).collect()
                     })
@@ -1021,8 +1077,9 @@ impl Project {
     }
 
     /// The stretches of the song one pattern of each player covers: the
-    /// bars cut where a section, the chorus or the ending starts or the
-    /// time signature changes, and wherever a pattern would grow too long.
+    /// bars cut where a section, the chorus, the ending or a variation
+    /// starts or the time signature changes, and wherever a pattern would
+    /// grow too long.
     fn chunks(&self, bars: &[Bar]) -> Vec<Chunk> {
         let mut edges: Vec<usize> = self
             .playlist
@@ -1033,6 +1090,7 @@ impl Project {
         if let Some((start, end)) = self.chorus() {
             edges.extend([start, end]);
         }
+        edges.extend(self.variations().iter().map(|marker| marker.start));
         let mut chunks: Vec<Chunk> = Vec::new();
         for bar in bars {
             let joins = chunks.last().is_some_and(|chunk| {
@@ -1162,9 +1220,11 @@ impl Project {
 
     /// The drums: the style's rhythm in every bar, started again at each
     /// stretch, with its fill in the last bar of every eight, the last
-    /// bar before a section, and the last bar of the intro and of the
-    /// chorus, which ends at `end`. With an ending, its `held` bar is one
-    /// last hit of the kick and the crash cymbal.
+    /// bar before a section or a change of variation, and the last bar of
+    /// the intro and of the chorus, which ends at `end`. A change of
+    /// variation starts with a crash, and variation b plays some drums on
+    /// others, louder. With an ending, its `held` bar is one last hit of
+    /// the kick and the crash cymbal.
     fn drum_part(
         &mut self,
         style: &BandStyle,
@@ -1178,11 +1238,32 @@ impl Project {
         };
         let fill = rhythm.fill();
         let last_hit = held.and_then(|_| Rhythm::named(LAST_HIT));
+        // A change of variation: the drums crash into it, and variation b
+        // plays some of the rhythm's drums on others (see
+        // `BandStyle::drum_in`).
+        let markers = self.variations().to_vec();
+        let changes: Vec<usize> = markers
+            .iter()
+            .map(|marker| marker.start)
+            .filter(|&start| start > 0 && start < end)
+            .collect();
+        let crash = (!changes.is_empty())
+            .then(|| Rhythm::named(LAST_HIT))
+            .flatten();
+        let in_b = markers
+            .iter()
+            .any(|marker| marker.variation == Variation::B);
+        let swapped = rhythm
+            .drums()
+            .map(|drum| style.drum_in(drum, Variation::B))
+            .filter(|_| in_b);
         let mut drums = Vec::new();
         for drum in rhythm
             .drums()
+            .chain(swapped)
             .chain(fill.into_iter().flat_map(|fill| fill.drums()))
             .chain(last_hit.into_iter().flat_map(|hit| hit.drums()))
+            .chain(crash.map(|_| Drum::Crash))
         {
             if let Some(channel) = apply::drum_channel(self, drum)
                 && !drums.contains(&(drum, channel))
@@ -1190,8 +1271,15 @@ impl Project {
                 drums.push((drum, channel));
             }
         }
-        // Where a part of the song starts: a section, or the chorus
-        // after the intro. Phrases of eight bars are counted from there.
+        let channel_of = |drum: Drum| {
+            drums
+                .iter()
+                .find(|(known, _)| *known == drum)
+                .map(|&(_, channel)| channel)
+        };
+        // Where a part of the song starts: a section, the chorus after
+        // the intro, or a change of variation. Phrases of eight bars are
+        // counted from there.
         let mut starts: Vec<usize> = self
             .playlist
             .sections
@@ -1199,6 +1287,7 @@ impl Project {
             .map(|section| section.start)
             .collect();
         starts.extend(self.chorus().map(|(start, _)| start));
+        starts.extend(&changes);
         starts.retain(|&start| start > 0);
         let phrase_start = |bar: &Bar| {
             starts
@@ -1229,10 +1318,42 @@ impl Project {
         let mut notes = Vec::new();
         for chunk in chunks {
             let bar = chunk.time.steps_per_bar();
-            for &(drum, channel) in &drums {
+            let variation = variation::variation_in(&markers, chunk.start);
+            for &(drum, _) in &drums {
+                let Some(channel) = channel_of(style.drum_in(drum, variation)) else {
+                    continue;
+                };
                 for note in rhythm.notes(drum, bar, chunk.length) {
                     let at = chunk.start + note.start;
                     if !in_a_fill(at) {
+                        let velocity = match variation {
+                            Variation::A => note.velocity,
+                            Variation::B => variation::louder(note.velocity),
+                        };
+                        notes.push((
+                            channel,
+                            NoteEvent {
+                                start: at,
+                                velocity,
+                                ..note
+                            },
+                        ));
+                    }
+                }
+            }
+        }
+        // The crash on the first beat of each change.
+        if let (Some(crash), Some(channel)) = (crash, channel_of(Drum::Crash)) {
+            let meter = self.meter();
+            for &start in &changes {
+                let bar = meter.bar_at(start);
+                for note in crash.notes(Drum::Crash, bar.time.steps_per_bar(), bar.length) {
+                    let at = bar.start + note.start;
+                    // A style that crashes there already crashes once.
+                    if !notes
+                        .iter()
+                        .any(|(other, played)| *other == channel && played.start == at)
+                    {
                         notes.push((channel, NoteEvent { start: at, ..note }));
                     }
                 }

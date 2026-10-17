@@ -3,7 +3,7 @@
 //! `lineup_core::band::Form`.
 
 use eframe::egui::{self, Ui};
-use lineup_core::band::INTRO_BARS;
+use lineup_core::band::{INTRO_BARS, Variation};
 use lineup_core::{MAX_REPEATS, Project};
 
 use super::SheetAction;
@@ -18,6 +18,13 @@ pub enum FormAction {
     Choruses(usize),
     /// Play an ending after the last chorus, or not.
     Ending(bool),
+    /// Play a variation of the style from step `start` up to `end`, or
+    /// to the end of the song without one.
+    Variation {
+        start: usize,
+        end: Option<usize>,
+        variation: Variation,
+    },
 }
 
 /// Draws the row, when the song has a band. `round` is which time the
