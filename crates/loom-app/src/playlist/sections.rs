@@ -24,7 +24,8 @@ use eframe::egui::{
     Stroke, StrokeKind, Ui, pos2, vec2,
 };
 use loom_core::{
-    LoopRegion, MAX_REPEATS, Pass, Project, SECTION_NAMES, Section, TimeMarker, TimeSignature,
+    KeyMarker, LoopRegion, MAX_REPEATS, Pass, PitchClass, Project, SECTION_NAMES, Scale, ScaleKind,
+    Section, TimeMarker, TimeSignature,
 };
 
 use super::{Layout, PlaylistAction, Snap};
@@ -242,7 +243,8 @@ impl Strips {
             )
             .on_hover_text(
                 "Click the bar numbers to move the playhead there. Drag along them to loop \
-                 that part of the song. Right-click to change the time signature from that bar on",
+                 that part of the song. Right-click to change the time signature or the key \
+                 from that bar on",
             );
         if response.secondary_clicked()
             && let Some(pos) = response.interact_pointer_pos()
@@ -325,6 +327,72 @@ fn time_menu(ui: &mut Ui, project: &Project, at: usize, actions: &mut Vec<Playli
             .clicked()
         {
             actions.push(PlaylistAction::RemoveTimeMarker(at));
+            ui.close();
+        }
+    }
+    ui.separator();
+    key_menu(ui, project, at, bar.number, actions);
+}
+
+/// The key half of the bar numbers' menu: a key change from the bar
+/// that starts on step `at` (number `bar`, counted from 0) on. It only
+/// changes what the key is called and shown as, never the notes, as a
+/// new key signature in a score does.
+fn key_menu(
+    ui: &mut Ui,
+    project: &Project,
+    at: usize,
+    bar: usize,
+    actions: &mut Vec<PlaylistAction>,
+) {
+    let keys = project.key_map();
+    let here = keys.key_at(at);
+    ui.label(format!("Key from bar {}: {}", bar + 1, here.name()));
+    if at == 0 {
+        ui.weak(
+            "Bar 1 is the key the song starts in: change it in the harmony keys or the \
+             piano roll, which also move the notes.",
+        );
+        return;
+    }
+    let marker = keys.markers().iter().find(|marker| marker.start == at);
+    // Twelve-tone rows and sets have no place in a key signature.
+    let kind = if here.kind.is_tonal() {
+        here.kind
+    } else {
+        ScaleKind::Major
+    };
+    ui.horizontal_wrapped(|ui| {
+        ui.set_max_width(260.0);
+        for root in PitchClass::ALL {
+            let key = Scale::new(root, kind);
+            if ui
+                .selectable_label(here == key, key.spell(root).to_string())
+                .clicked()
+            {
+                actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
+                ui.close();
+            }
+        }
+    });
+    ui.horizontal_wrapped(|ui| {
+        ui.set_max_width(260.0);
+        for kind in ScaleKind::ALL {
+            let key = Scale::new(here.root, kind);
+            if ui.selectable_label(here == key, kind.name()).clicked() {
+                actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
+                ui.close();
+            }
+        }
+    });
+    ui.weak("The notes stay as they are: this names the key they are in from here.");
+    if marker.is_some() {
+        let back = keys.key_at(at - 1);
+        if ui
+            .button(format!("Remove this key change (back to {})", back.name()))
+            .clicked()
+        {
+            actions.push(PlaylistAction::RemoveKeyMarker(at));
             ui.close();
         }
     }

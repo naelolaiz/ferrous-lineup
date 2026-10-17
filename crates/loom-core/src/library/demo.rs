@@ -6,6 +6,7 @@
 //! final chord with a crash at the end. Every demo is an ordinary
 //! project, to take apart and change.
 
+use crate::key_map::KeyMarker;
 use crate::meter::{TimeMarker, TimeSignature};
 use crate::playlist::{Clip, Section};
 use crate::project::Project;
@@ -400,6 +401,12 @@ pub fn song_demo(song: &Song) -> Project {
             time_here = time;
         }
         if let Some(part) = song.part(name) {
+            // A part in a key of its own is a modulation: the key changes
+            // where it starts, and changes back after it.
+            let key = song.part_scale(part);
+            if key != project.key_at(at) {
+                project.set_key_marker(KeyMarker::new(at, key));
+            }
             for &mark in part.tempo {
                 mark_tempo(&mut project, at, mark);
             }

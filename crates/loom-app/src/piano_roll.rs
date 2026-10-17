@@ -786,7 +786,9 @@ impl PianoRoll {
         held: &[Note],
         actions: &mut Vec<RollAction>,
     ) {
-        let scale = project.scale;
+        // A pattern played where the song has changed key is highlighted
+        // and its chords named in that key.
+        let scale = project.pattern_key(self.pattern);
         // A pattern used where the song is in 3/4 is drawn in bars of 3/4.
         self.time = project.pattern_time(self.pattern);
         // Selected notes that are no longer there are forgotten.
@@ -805,7 +807,7 @@ impl PianoRoll {
             heard.extend(&others);
         }
 
-        let tool = self.toolbar(ui, scale, others.is_empty(), actions);
+        let tool = self.toolbar(ui, project.scale, scale, others.is_empty(), actions);
         // In a short window the grid comes first: the hint and set lines
         // move into the tooltip of the line naming the chord, so a small
         // screen still shows a dozen rows of notes.
@@ -984,10 +986,13 @@ impl PianoRoll {
     }
 
     /// The row of menus at the top: key, scale, what to draw, how long,
-    /// and the tools. Returns the tool picked from the Tools menu.
+    /// and the tools. Returns the tool picked from the Tools menu. The key
+    /// menus are `song`'s, the key the song starts in; `scale` is the
+    /// pattern's, which differs where the song changes key.
     fn toolbar(
         &mut self,
         ui: &mut Ui,
+        song: Scale,
         scale: Scale,
         alone: bool,
         actions: &mut Vec<RollAction>,
@@ -998,10 +1003,10 @@ impl PianoRoll {
             // does not fit, rather than being squeezed into a column.
             ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
             ui.label("Key");
-            let mut root = scale.root;
+            let mut root = song.root;
             egui::ComboBox::from_id_salt("scale-root")
                 .width(64.0)
-                .selected_text(scale.spell(root).to_string())
+                .selected_text(song.spell(root).to_string())
                 .show_ui(ui, |ui| {
                     for pitch_class in PitchClass::ALL {
                         ui.selectable_value(&mut root, pitch_class, both_names(pitch_class));
@@ -1009,14 +1014,22 @@ impl PianoRoll {
                 })
                 .response
                 .on_hover_text(KEY_HELP);
-            if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", scale, root, 120.0) {
+            if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", song, root, 120.0) {
                 // Picking a row or a set opens the window to change it.
                 match new.kind {
-                    ScaleKind::Row(_) if scale.kind.is_tonal() => self.row_window.open = true,
-                    ScaleKind::Set(_) if scale.kind.is_tonal() => self.set_window.open = true,
+                    ScaleKind::Row(_) if song.kind.is_tonal() => self.row_window.open = true,
+                    ScaleKind::Set(_) if song.kind.is_tonal() => self.set_window.open = true,
                     _ => {}
                 }
                 actions.push(RollAction::SetScale(new));
+            }
+            if scale != song {
+                ui.label(egui::RichText::new(format!("This pattern: {}", scale.name())).strong())
+                    .on_hover_text(
+                        "The song changes key where this pattern plays (see the key names on \
+                         the playlist's bar numbers), so it is highlighted in that key. The \
+                         menus are the key the song starts in",
+                    );
             }
             let names: Vec<String> = scale
                 .pitch_classes()
