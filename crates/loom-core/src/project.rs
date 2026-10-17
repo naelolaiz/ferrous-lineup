@@ -212,8 +212,8 @@ pub struct Project {
     /// note exactly on its step. See [`MAX_LOOSE_TIMING`].
     pub loose_timing: u8,
     channels: Vec<Channel>,
-    patterns: Vec<Pattern>,
-    playlist: Playlist,
+    pub(crate) patterns: Vec<Pattern>,
+    pub(crate) playlist: Playlist,
 }
 
 impl Project {
