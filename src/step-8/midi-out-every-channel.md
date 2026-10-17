@@ -19,8 +19,9 @@ Nothing in the window says why, either. Someone reported exactly that:
 
 1. Open the **MIDI** menu and pick your synth under **Output**.
 2. Leave **Send every channel** ticked (it is on from the start).
-3. Play. Every channel plays on the synth as well as on the speakers.
-   Turn the volume (VOL) down to hear only the synth.
+3. Play. Every channel plays on the synth instead of the speakers, as
+   a MIDI Out channel does. Pick **None** as the output, or untick the
+   box, to hear Ferrous Loom's own sounds again.
 
 ![The MIDI menu: an output picked, and Send every channel](../images/step-8-midi-out-menu.png)
 
@@ -52,68 +53,47 @@ Two smaller things changed in the menu:
   be sent. The notes are made on the audio thread, so without audio no
   note is made.
 
-## An instrument wrapped in another
+## A channel turned into a MIDI Out
 
 `instrument.rs`
 
 The audio thread already had everything needed: `MidiOut` turns notes
 into messages and keeps them in an outbox, and once per block the audio
-thread hands the outbox on to the sending thread. What was missing was
-a way for a sampler or a synth to fill an outbox *as well as* making
-its sound.
-
-Instead of teaching the sampler and the synth about MIDI, a new kind of
-instrument holds one of them together with a `MidiOut`:
+thread hands the outbox on to the sending thread. So while every channel
+is sent, each sampler and synth is simply *replaced* by a `MidiOut`, and
+put back when it stops:
 
 ```rust
-pub enum Instrument {
-    Sampler(Sampler),
-    Synth(Synth),
-    MidiOut(MidiOut),
-    Echoed(Box<Echoed>),
-}
-
-pub struct Echoed {
-    inner: Instrument,
-    midi: MidiOut,
-    /// The note every note goes out as, for a drum.
-    pitch: Option<Note>,
+pub fn to_midi(self, channel: u8, pitch: Option<Note>) -> Self {
+    match self {
+        Instrument::MidiOut(_) => self,
+        _ => Instrument::MidiOut(MidiOut::new(channel).playing_as(pitch)),
+    }
 }
 ```
 
-Every method passes the call to both halves. Starting a note, for
-example:
+`to_midi` takes `self` by value: the old instrument is *moved* into the
+function and dropped there, and the caller gets the new one back. A MIDI
+Out channel already sends its notes, so it comes back unchanged.
+
+The one new thing a `MidiOut` learnt is a fixed note, for drums:
 
 ```rust
-Instrument::Echoed(echoed) => {
-    echoed.inner.note_on(pitch, velocity, gate, output_rate);
-    let sent = echoed.pitch.unwrap_or(pitch);
-    echoed.midi.note_on(sent, velocity, gate);
-}
+pub fn note_on(&mut self, pitch: Note, velocity: u8, gate: u32) {
+    let pitch = self.pitch.unwrap_or(pitch);
+    ...
 ```
 
 `unwrap_or(pitch)` reads "the drum's note if there is one, otherwise the
-note itself". The `MidiOut` half also ends each note when its gate runs
-out, exactly as a MIDI Out channel does, so a pattern's notes reach the
-synth with the right lengths.
+note itself". Writing `let pitch = ...` again *shadows* the parameter:
+from that line on, `pitch` means the new value, and the old one cannot
+be used by mistake. `note_off` does the same, so a held drum key lets go
+of the note it started. The `MidiOut` ends each note when its gate runs
+out, so a pattern's notes reach the synth with the right lengths.
 
-### Why the `Box`
-
-An `Echoed` contains an `Instrument`, and an `Instrument` can be an
-`Echoed`. Written without the `Box`, Rust refuses:
-
-```text
-error[E0072]: recursive type `Instrument` has infinite size
-```
-
-Rust must know how many bytes every value of a type takes. To fit an
-`Echoed`, an `Instrument` would need room for another `Instrument`
-inside, which needs room for another, with no end. A `Box` is a pointer
-to memory elsewhere: it is always the same size (8 bytes on a 64-bit
-computer), whatever it points to, so the loop is broken. The cost is one
-allocation, made on the UI thread when the instrument is built, and the
-old box goes back to the UI thread to be freed, like every other
-instrument the audio thread throws away.
+A first version kept the sampler or synth playing and added a `MidiOut`
+beside it, so the song sounded twice: through the speakers and on the
+synth. That is not what a MIDI output is for, so it was taken out.
 
 ## Routes: who goes where
 
@@ -172,14 +152,14 @@ if self.live.routes_sent.as_ref() == Some(&wanted) {
 Working out 32 routes at most is far cheaper than drawing the window,
 and comparing two `Vec`s with `==` compares them element by element,
 because tuples, `Option` and `Note` all implement `PartialEq`. Only
-when they differ does a channel get a new instrument, wrapped or plain,
+when they differ does a channel get a new instrument, a MIDI Out or its own,
 through `Command::SetInstrument`, and only the channels whose route
 changed.
 
 `routes_sent` is an `Option<Vec<...>>`: `None` means "not known".
 When channels are added, removed or reloaded, the audio thread gets
 plain instruments for them, and the ones that moved keep whatever they
-had. If any of them was wrapped, the app forgets what it sent, and the
+had. If any of them was a MIDI Out in place of its own instrument, the app forgets what it sent, and the
 next frame sends every channel again. That is rare (it takes a change
 to the rack), and it cannot go wrong.
 
