@@ -154,7 +154,7 @@ impl ScaleKind {
     /// starts. A minor has no sharps or flats, like C major, which is 3
     /// semitones higher; D Dorian also uses only white keys, and C is 10
     /// semitones above D.
-    fn relative_major(self) -> u8 {
+    pub(crate) fn relative_major(self) -> u8 {
         match self {
             ScaleKind::Major
             | ScaleKind::MajorPentatonic
@@ -259,6 +259,31 @@ impl Scale {
             F | ASharp | DSharp | GSharp | CSharp => Spelling::Flats,
             _ => Spelling::Sharps,
         }
+    }
+
+    /// The key signature this key is written with: how many sharps (or
+    /// flats, counted as negative), and whether the key is minor. The
+    /// modes take the signature of the major key they come from, so D
+    /// Dorian has none, like C major. A chromatic scale, a row or a set
+    /// has no key signature.
+    ///
+    /// The signature follows the names the app gives keys (see
+    /// [`Scale::spelling`]): F# major has six sharps, Db major five flats.
+    pub fn key_signature(self) -> Option<(i8, bool)> {
+        if !self.kind.is_tonal() || self.kind == ScaleKind::Chromatic {
+            return None;
+        }
+        let major = self.root.transpose(self.kind.relative_major() as i32);
+        // Going round the circle of fifths: each fifth up adds a sharp.
+        let fifths = (0..12i8)
+            .find(|&n| PitchClass::C.transpose(7 * i32::from(n)) == major)
+            .unwrap_or(0);
+        let sharps = match self.spelling() {
+            Spelling::Flats => fifths - 12,
+            Spelling::Sharps => fifths,
+        };
+        let minor = self.kind.relative_major() == 3;
+        Some((sharps, minor))
     }
 
     /// How a note is written in this key.
@@ -961,5 +986,45 @@ mod tests {
         assert!(a_minor.is_chord_of_key(Chord::new(GSharp, ChordQuality::Diminished7)));
         assert!(!a_minor.is_chord_of_key(Chord::new(D, ChordQuality::Major)));
         assert!(!Scale::default().is_chord_of_key(Chord::new(E, ChordQuality::Major)));
+    }
+
+    #[test]
+    fn signatures_of_all_keys() {
+        let signatures = |kind| -> Vec<Option<(i8, bool)>> {
+            (0..12)
+                .map(|n| Scale::new(PitchClass::C.transpose(n), kind).key_signature())
+                .collect()
+        };
+        // Sharps count up, flats count down, round the circle of fifths:
+        // C, Db, D, Eb, E, F, F#, G, Ab, A, Bb, B.
+        let major = [0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5];
+        assert_eq!(
+            signatures(ScaleKind::Major),
+            major.map(|sharps| Some((sharps, false)))
+        );
+        // A minor key has the signature of its relative major, 3
+        // semitones up: C minor has the three flats of Eb major. The
+        // harmonic and melodic minors are written with the same one.
+        let minor = [-3, 4, -1, 6, 1, -4, 3, -2, 5, 0, -5, 2];
+        for kind in [
+            ScaleKind::NaturalMinor,
+            ScaleKind::HarmonicMinor,
+            ScaleKind::MelodicMinor,
+        ] {
+            assert_eq!(
+                signatures(kind),
+                minor.map(|sharps| Some((sharps, true))),
+                "{kind:?}"
+            );
+        }
+        // D Dorian uses the white keys, like C major.
+        assert_eq!(
+            Scale::new(PitchClass::D, ScaleKind::Dorian).key_signature(),
+            Some((0, false))
+        );
+        assert_eq!(
+            Scale::new(PitchClass::C, ScaleKind::Chromatic).key_signature(),
+            None
+        );
     }
 }
