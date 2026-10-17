@@ -14,10 +14,14 @@
 //!
 //! Most songs are these three jobs in turn: home, away, tension, home.
 //! The harmony keys are coloured by function, so you can see the pull.
+//!
+//! Music without a key has no home and no functions. For a twelve-tone
+//! row or a pitch-class set, the keys play groups of its notes instead:
+//! see [`group_keys`].
 
-use super::{Chord, Scale, ScaleKind};
+use super::{Chord, PitchSet, Scale, ScaleKind};
 use crate::library::voicing::voice;
-use crate::pitch::Note;
+use crate::pitch::{Note, PitchClass};
 
 /// How many notes of the scale each chord stacks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -185,6 +189,117 @@ pub fn key_for(keys: &[ChordKey], chord: Chord) -> Option<usize> {
     })
 }
 
+/// A harmony key for music without a key: a group of notes, such as a
+/// trichord of a twelve-tone row, or a chord stacked from a set's notes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GroupKey {
+    /// What the key is called: "1–3" for the first three notes of a row,
+    /// or the note a set's chord starts on.
+    pub label: String,
+    /// The notes in the order they are stacked, lowest first.
+    pub notes: Vec<PitchClass>,
+}
+
+impl GroupKey {
+    pub fn pitch_set(&self) -> PitchSet {
+        self.notes.iter().copied().collect()
+    }
+
+    /// The notes to play: the first one in the octave from G3, and each
+    /// next one just above the one before, so a row's group sounds in the
+    /// row's order from the bottom up.
+    pub fn play(&self) -> Vec<Note> {
+        let mut played: Vec<Note> = Vec::with_capacity(self.notes.len());
+        for &pitch_class in &self.notes {
+            let note = match played.last() {
+                None => Note::new(55 + PitchClass::G.semitones_up_to(pitch_class)),
+                Some(&below) => {
+                    let up = match below.pitch_class().semitones_up_to(pitch_class) {
+                        0 => 12,
+                        gap => gap,
+                    };
+                    below.transpose(i32::from(up)).unwrap_or(below)
+                }
+            };
+            played.push(note);
+        }
+        played
+    }
+}
+
+/// How many notes a group key of a row holds for each chord size:
+/// trichords, tetrachords or hexachords, which divide the row evenly.
+pub fn row_group(size: ChordSize) -> usize {
+    match size {
+        ChordSize::Triads => 3,
+        ChordSize::Sevenths => 4,
+        ChordSize::Ninths => 6,
+    }
+}
+
+/// The harmony keys of a twelve-tone row or a pitch-class set, or `None`
+/// for the scales of tonal music, which have [`chord_keys`].
+///
+/// - A row is cut into groups in order: four trichords, three
+///   tetrachords or two hexachords. This is how twelve-tone composers
+///   most often turn a row into chords.
+/// - A set gets a chord on each of its notes, stacking every other note
+///   of the set, as the chords of a key stack every other note of the
+///   scale: three, four or five notes. A set with no more notes than
+///   that plays all of them, starting from each in turn.
+pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
+    let notes: Vec<PitchClass> = scale.pitch_classes().collect();
+    match scale.kind {
+        ScaleKind::Row(_) => {
+            let group = row_group(size);
+            Some(
+                notes
+                    .chunks(group)
+                    .enumerate()
+                    .map(|(i, chunk)| GroupKey {
+                        label: format!("{}–{}", i * group + 1, i * group + chunk.len()),
+                        notes: chunk.to_vec(),
+                    })
+                    .collect(),
+            )
+        }
+        ScaleKind::Set(_) => {
+            let len = notes.len();
+            let count = size as usize + 3;
+            let spelling = scale.spelling();
+            let stack = |start: usize| -> Vec<PitchClass> {
+                if len <= count {
+                    // All the notes, from this one round.
+                    return (0..len).map(|i| notes[(start + i) % len]).collect();
+                }
+                // Every other note; once that comes round to a note it
+                // already has (in a set with an even number of notes),
+                // the ones in between.
+                let mut chord = Vec::with_capacity(count);
+                for i in (0..len)
+                    .map(|i| start + 2 * i)
+                    .chain((0..len).map(|i| start + 2 * i + 1))
+                {
+                    let note = notes[i % len];
+                    if chord.len() < count && !chord.contains(&note) {
+                        chord.push(note);
+                    }
+                }
+                chord
+            };
+            Some(
+                (0..len)
+                    .map(|start| GroupKey {
+                        label: notes[start].name(spelling).to_string(),
+                        notes: stack(start),
+                    })
+                    .collect(),
+            )
+        }
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -321,5 +436,51 @@ mod tests {
             key_for(&keys, Chord::new(PitchClass::CSharp, ChordQuality::Major)),
             None
         );
+    }
+
+    #[test]
+    fn a_row_plays_its_trichords_in_order() {
+        let row = crate::harmony::ROW_PRESETS[0].row;
+        let keys = group_keys(Scale::row(row), ChordSize::Triads).unwrap();
+        let labels: Vec<&str> = keys.iter().map(|key| key.label.as_str()).collect();
+        assert_eq!(labels, ["1–3", "4–6", "7–9", "10–12"]);
+        assert_eq!(keys[0].notes, [PitchClass::E, PitchClass::F, PitchClass::G]);
+        let played: Vec<u8> = keys[0].play().iter().map(|n| n.midi()).collect();
+        assert_eq!(played, [64, 65, 67]);
+        assert_eq!(
+            group_keys(Scale::row(row), ChordSize::Ninths)
+                .unwrap()
+                .len(),
+            2
+        );
+        assert_eq!(group_keys(Scale::default(), ChordSize::Triads), None);
+    }
+
+    #[test]
+    fn a_set_stacks_every_other_note() {
+        // The octatonic scale on C: C C# D# E F# G A A#.
+        let octatonic = Scale::set(
+            PitchClass::C,
+            PitchSet::from_semitones(&[0, 1, 3, 4, 6, 7, 9, 10]),
+        );
+        let keys = group_keys(octatonic, ChordSize::Triads).unwrap();
+        assert_eq!(keys.len(), 8);
+        // Every other note from C: C D# F#, a diminished triad.
+        assert_eq!(keys[0].pitch_set().set_class().name(), "3-10");
+        // The whole-tone scale has only three every-other notes; the
+        // fourth is the next one.
+        let whole_tone = Scale::set(
+            PitchClass::C,
+            PitchSet::from_semitones(&[0, 2, 4, 6, 8, 10]),
+        );
+        let keys = group_keys(whole_tone, ChordSize::Sevenths).unwrap();
+        assert_eq!(keys[0].pitch_set(), PitchSet::from_semitones(&[0, 4, 8, 2]));
+        // A three-note set plays all three notes from each of them.
+        let viennese = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 6]));
+        let keys = group_keys(viennese, ChordSize::Sevenths).unwrap();
+        assert!(keys.iter().all(|key| key.notes.len() == 3));
+        let played: Vec<u8> = keys[1].play().iter().map(|n| n.midi()).collect();
+        // From C#: C# then F# above it, then C above that.
+        assert_eq!(played, [61, 66, 72]);
     }
 }

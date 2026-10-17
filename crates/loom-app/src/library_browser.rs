@@ -6,7 +6,7 @@
 //! into a pattern (see `app/library.rs`).
 
 use eframe::egui::{self, RichText, Ui};
-use loom_core::library::{FILLS, Genre, RHYTHMS, Rhythm, STYLES, Style};
+use loom_core::library::{FILLS, Genre, RHYTHMS, ROW_STYLES, Rhythm, RowStyle, STYLES, Style};
 use loom_core::{Project, TimeSignature};
 
 /// Something picked in the library.
@@ -19,6 +19,9 @@ pub enum LibraryAction {
     /// Play the whole song in this rhythm: its drums, and its chords and
     /// bass played the way the rhythm goes.
     RhythmInSong(&'static Rhythm),
+    /// Play this way of playing a twelve-tone row. The key becomes the
+    /// row, starting on the project's key note.
+    RowStyle(&'static RowStyle),
 }
 
 /// What the selected pattern was made from, if the library made it, to
@@ -27,6 +30,7 @@ pub enum LibraryAction {
 pub struct Tried {
     pub style: Option<&'static Style>,
     pub rhythm: Option<&'static Rhythm>,
+    pub row_style: Option<&'static RowStyle>,
 }
 
 /// What the library tab remembers between frames.
@@ -43,6 +47,8 @@ pub struct LibraryBrowser {
     reveal_until: f64,
     /// Whether that is the rhythm (only the rhythm changed) or the style.
     reveal_rhythm: bool,
+    /// Whether it is a twelve-tone style.
+    reveal_row: bool,
 }
 
 impl LibraryBrowser {
@@ -53,6 +59,7 @@ impl LibraryBrowser {
             shown: Tried::default(),
             reveal_until: 0.0,
             reveal_rhythm: false,
+            reveal_row: false,
         }
     }
 
@@ -80,16 +87,19 @@ impl LibraryBrowser {
         let now = ui.input(|i| i.time);
         let new_style = tried.style.is_some() && tried.style != self.shown.style;
         let new_rhythm = tried.rhythm.is_some() && tried.rhythm != self.shown.rhythm;
+        let new_row = tried.row_style.is_some() && tried.row_style != self.shown.row_style;
         self.shown = tried;
-        if new_style || new_rhythm {
+        if new_style || new_rhythm || new_row {
             self.reveal_until = now + 0.5;
-            self.reveal_rhythm = !new_style;
+            self.reveal_rhythm = !new_style && !new_row;
+            self.reveal_row = new_row;
         }
         let revealing = now < self.reveal_until;
         if revealing {
             ui.ctx().request_repaint();
         }
-        let scroll_style = revealing && !self.reveal_rhythm;
+        let scroll_row = revealing && self.reveal_row;
+        let scroll_style = revealing && !self.reveal_rhythm && !self.reveal_row;
         let scroll_rhythm = revealing && self.reveal_rhythm;
         egui::ScrollArea::vertical().show(ui, |ui| {
             let open = searching || new_style;
@@ -120,6 +130,8 @@ impl LibraryBrowser {
                     });
                 }
             });
+            let open = searching || new_row;
+            picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
             let open = searching || new_rhythm;
             section(ui, "Rhythms", open, |ui| {
                 for genre in Genre::ALL {
@@ -166,6 +178,60 @@ impl LibraryBrowser {
         });
         picked
     }
+}
+
+/// The twelve-tone styles, under the harmony styles, opened when `open`
+/// is true. Returns the one clicked, if any.
+fn row_styles(
+    ui: &mut Ui,
+    filter: &str,
+    open: bool,
+    tried: Tried,
+    scroll: bool,
+) -> Option<LibraryAction> {
+    let styles: Vec<&'static RowStyle> = ROW_STYLES
+        .iter()
+        .filter(|style| {
+            filter.is_empty()
+                || "twelve-tone rows serialism dodecaphony dodecafonismo".contains(filter)
+                || style.name.to_lowercase().contains(filter)
+                || style.about.to_lowercase().contains(filter)
+        })
+        .collect();
+    if styles.is_empty() {
+        return None;
+    }
+    let mut picked = None;
+    let header = egui::CollapsingHeader::new(RichText::new("Twelve-tone rows").strong());
+    let header = if open {
+        header.open(Some(true))
+    } else {
+        header
+    };
+    header.show(ui, |ui| {
+        for style in styles {
+            let rhythm = match style.rhythm {
+                "" => String::new(),
+                rhythm => format!(" · drums: {rhythm}"),
+            };
+            let hover = format!(
+                "{}\n\nRow: {}{rhythm} · {} · {} BPM\n\nThe key becomes the row, starting on the \
+                 key note. While the song plays, a click plays the whole song this way.",
+                style.about, style.row, style.time, style.tempo
+            );
+            let selected = tried.row_style == Some(style);
+            let response = ui
+                .selectable_label(selected, label(style.name, style.time))
+                .on_hover_text(hover);
+            if selected && scroll {
+                response.scroll_to_me(None);
+            }
+            if response.clicked() {
+                picked = Some(LibraryAction::RowStyle(style));
+            }
+        }
+    });
+    picked
 }
 
 /// A top-level part of the library, open at the start, and opened when

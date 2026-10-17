@@ -62,7 +62,11 @@ pub const EXTENSION: &str = "loom";
 /// Format 5 added time markers, which change the time signature partway
 /// through a song. Older versions would draw every bar in the first time
 /// signature, so a song with markers needs format 5.
-pub const FORMAT_VERSION: u32 = 5;
+///
+/// Format 6 added two kinds of key for music without one: a twelve-tone
+/// row and a pitch-class set. Older versions would not know them and could
+/// not open the file, so they are told it is newer instead.
+pub const FORMAT_VERSION: u32 = 6;
 
 /// The oldest format that can hold `project`.
 ///
@@ -89,7 +93,9 @@ pub fn format_for(project: &Project) -> u32 {
     let has_structure = !playlist.sections().is_empty()
         || playlist.loop_region().is_some()
         || playlist.clips().iter().any(|clip| clip.repeats != 1);
-    if !playlist.time_markers().is_empty() {
+    if !project.scale.kind.is_tonal() {
+        6
+    } else if !playlist.time_markers().is_empty() {
         5
     } else if has_structure {
         4
@@ -429,10 +435,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 6 might have fields we have never heard of. Only the
+        // Format 7 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 6, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(6)), "{error}");
+        let error = from_text("(format: 7, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(7)), "{error}");
     }
 
     #[test]
@@ -535,6 +541,32 @@ mod tests {
             "start: 0,\n            time",
         );
         assert_ne!(broken, text, "{text}");
+        assert!(from_text(&broken).is_err());
+    }
+
+    #[test]
+    fn rows_and_sets_need_format_six() {
+        let mut project = Project::demo();
+        project.scale = Scale::row(crate::harmony::ROW_PRESETS[0].row);
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 6,"), "{text}");
+        assert!(
+            text.contains("kind: Row(\"0 1 3 9 2 11 4 10 7 8 5 6\")"),
+            "{text}"
+        );
+        assert_eq!(from_text(&text).unwrap(), project);
+
+        project.scale = Scale::set(
+            crate::PitchClass::D,
+            crate::PitchSet::from_semitones(&[2, 5, 8, 11]),
+        );
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 6,"), "{text}");
+        assert!(text.contains("kind: Set(\"0 3 6 9\")"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+
+        // A row that repeats a note is not a row.
+        let broken = text.replace("Set(\"0 3 6 9\")", "Row(\"0 0 2 3 4 5 6 7 8 9 10 11\")");
         assert!(from_text(&broken).is_err());
     }
 

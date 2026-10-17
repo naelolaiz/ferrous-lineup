@@ -12,6 +12,7 @@
 //! - [`comping`]: rhythms for playing chords and bass lines.
 //! - [`style`]: harmony styles, a progression with its way of playing.
 //! - [`rhythm`]: drum patterns, one line per drum.
+//! - [`rows`]: twelve-tone styles, ways of playing a row.
 //! - [`song`]: well-known songs in the public domain, with their melodies.
 //! - [`listen`]: hearing which chords a pattern's notes play.
 //! - [`apply`]: writing a style or a rhythm into a pattern, and changing
@@ -28,12 +29,14 @@ pub mod follow;
 pub mod listen;
 pub mod numeral;
 pub mod rhythm;
+pub mod rows;
 pub mod song;
 pub mod style;
 pub mod voicing;
 
 pub use comping::{Bass, Comping};
 pub use rhythm::{FILLS, RHYTHMS, Rhythm};
+pub use rows::{ROW_STYLES, RowStyle};
 pub use song::{SONGS, Song};
 pub use style::{STYLES, Style};
 
