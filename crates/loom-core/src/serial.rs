@@ -227,14 +227,14 @@ pub fn write_row(row: ToneRow, writing: &RowWriting, length: usize) -> Vec<NoteE
 
 /// The note of `pitch_class` in the octave `octave` octaves above the
 /// one that starts at `low`.
-fn in_octave(pitch_class: PitchClass, low: Note, octave: u8) -> Note {
+pub(crate) fn in_octave(pitch_class: PitchClass, low: Note, octave: u8) -> Note {
     let up = low.pitch_class().semitones_up_to(pitch_class);
     let midi = u32::from(low.midi()) + u32::from(up) + 12 * u32::from(octave);
     Note::new(midi.min(127) as u8)
 }
 
 /// The note of `pitch_class` just above `lower`.
-fn above(pitch_class: PitchClass, lower: Note) -> Note {
+pub(crate) fn above(pitch_class: PitchClass, lower: Note) -> Note {
     let up = match lower.pitch_class().semitones_up_to(pitch_class) {
         0 => 12,
         gap => gap,
@@ -245,7 +245,7 @@ fn above(pitch_class: PitchClass, lower: Note) -> Note {
 /// The note of `pitch_class` nearest to `last` (up on a tritone), kept
 /// within two octaves above `low` so a line cannot wander off the
 /// keyboard.
-fn nearest(pitch_class: PitchClass, last: Note, low: Note) -> Note {
+pub(crate) fn nearest(pitch_class: PitchClass, last: Note, low: Note) -> Note {
     let up = i32::from(last.pitch_class().semitones_up_to(pitch_class));
     let step = if up > 6 { up - 12 } else { up };
     let note = last.transpose(step).unwrap_or(last);

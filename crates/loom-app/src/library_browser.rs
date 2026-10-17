@@ -6,7 +6,10 @@
 //! into a pattern (see `app/library.rs`).
 
 use eframe::egui::{self, RichText, Ui};
-use loom_core::library::{FILLS, Genre, RHYTHMS, ROW_STYLES, Rhythm, RowStyle, STYLES, Style};
+use loom_core::library::{
+    FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, RHYTHMS, ROW_STYLES, Rhythm, RowStyle, STYLES,
+    Style,
+};
 use loom_core::{Project, TimeSignature};
 
 /// Something picked in the library.
@@ -22,6 +25,9 @@ pub enum LibraryAction {
     /// Play this way of playing a twelve-tone row. The key becomes the
     /// row, starting on the project's key note.
     RowStyle(&'static RowStyle),
+    /// Play this micromode style. The key becomes its micromode, on the
+    /// project's key note.
+    MicromodeStyle(&'static MicromodeStyle),
 }
 
 /// What the selected pattern was made from, if the library made it, to
@@ -31,6 +37,7 @@ pub struct Tried {
     pub style: Option<&'static Style>,
     pub rhythm: Option<&'static Rhythm>,
     pub row_style: Option<&'static RowStyle>,
+    pub micromode_style: Option<&'static MicromodeStyle>,
 }
 
 /// What the library tab remembers between frames.
@@ -87,7 +94,9 @@ impl LibraryBrowser {
         let now = ui.input(|i| i.time);
         let new_style = tried.style.is_some() && tried.style != self.shown.style;
         let new_rhythm = tried.rhythm.is_some() && tried.rhythm != self.shown.rhythm;
-        let new_row = tried.row_style.is_some() && tried.row_style != self.shown.row_style;
+        let new_row = (tried.row_style.is_some() && tried.row_style != self.shown.row_style)
+            || (tried.micromode_style.is_some()
+                && tried.micromode_style != self.shown.micromode_style);
         self.shown = tried;
         if new_style || new_rhythm || new_row {
             self.reveal_until = now + 0.5;
@@ -139,6 +148,7 @@ impl LibraryBrowser {
             });
             let open = searching || new_row;
             picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
+            picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
             let open = searching || new_rhythm;
             section(ui, "Rhythms", open, |ui| {
                 for genre in Genre::ALL {
@@ -230,6 +240,62 @@ fn row_styles(
             }
             if response.clicked() {
                 picked = Some(LibraryAction::RowStyle(style));
+            }
+        }
+    });
+    picked
+}
+
+/// The micromode styles, under the twelve-tone styles, opened when
+/// `open` is true. Returns the one clicked, if any.
+fn micromode_styles(
+    ui: &mut Ui,
+    filter: &str,
+    open: bool,
+    tried: Tried,
+    scroll: bool,
+) -> Option<LibraryAction> {
+    let styles: Vec<&'static MicromodeStyle> = MICROMODE_STYLES
+        .iter()
+        .filter(|style| micromode_style_matches(filter, style))
+        .collect();
+    if styles.is_empty() {
+        return None;
+    }
+    let mut picked = None;
+    let header = egui::CollapsingHeader::new(RichText::new("Micromodes (Kröpfl)").strong());
+    let header = if open {
+        header.open(Some(true))
+    } else {
+        header
+    };
+    header.show(ui, |ui| {
+        for style in styles {
+            let micromode = style.micromode();
+            let rhythm = match style.rhythm {
+                "" => String::new(),
+                rhythm => format!(" · drums: {rhythm}"),
+            };
+            let hover = format!(
+                "{}\n\nMicromode: {} (set {}) · {}{rhythm} · {} · {} BPM\n\nThe key becomes the \
+                 micromode, starting on the key note. While the song plays, a click plays the \
+                 whole song this way.",
+                style.about,
+                micromode.full_name(),
+                micromode.set_class().name(),
+                style.walk.name(),
+                style.time,
+                style.tempo
+            );
+            let selected = tried.micromode_style == Some(style);
+            let response = ui
+                .selectable_label(selected, label(style.name, style.time))
+                .on_hover_text(hover);
+            if selected && scroll {
+                response.scroll_to_me(None);
+            }
+            if response.clicked() {
+                picked = Some(LibraryAction::MicromodeStyle(style));
             }
         }
     });
@@ -342,6 +408,18 @@ fn row_style_matches(filter: &str, style: &RowStyle) -> bool {
         || style.about.to_lowercase().contains(filter)
 }
 
+/// Whether a micromode style matches the search: by its name, what it
+/// says, or its micromode's name in Spanish or English.
+fn micromode_style_matches(filter: &str, style: &MicromodeStyle) -> bool {
+    let micromode = style.micromode();
+    filter.is_empty()
+        || names_a_word(filter, "micromodes micromodos kröpfl kropfl trichords")
+        || style.name.to_lowercase().contains(filter)
+        || style.about.to_lowercase().contains(filter)
+        || micromode.name.to_lowercase().contains(filter)
+        || micromode.english.to_lowercase().contains(filter)
+}
+
 /// Whether anything at all in the library matches the search.
 fn anything_matches(filter: &str) -> bool {
     STYLES
@@ -355,6 +433,9 @@ fn anything_matches(filter: &str) -> bool {
         || ROW_STYLES
             .iter()
             .any(|style| row_style_matches(filter, style))
+        || MICROMODE_STYLES
+            .iter()
+            .any(|style| micromode_style_matches(filter, style))
 }
 
 /// Whether `filter` is the start of one of `words` (at least three

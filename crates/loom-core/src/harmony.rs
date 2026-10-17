@@ -10,11 +10,14 @@
 //! - [`keys`] are the harmony keys: the seven chords of a key, to play.
 //! - [`ToneRow`] is a twelve-tone row, and [`SetClass`] names any group
 //!   of notes, chord or not: music after tonality.
+//! - [`Micromode`] is one of Francisco Kröpfl's twelve groups of three
+//!   notes, the smallest sets, which larger sets are made of.
 
 mod analysis;
 mod chord;
 mod hints;
 pub mod keys;
+mod micromode;
 mod pitch_set;
 mod progression;
 mod row;
@@ -24,6 +27,7 @@ mod set_class;
 pub use analysis::{Harmony, analyze, interval_name};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
 pub use hints::HintLevel;
+pub use micromode::{Micromode, MicromodeFamily, micromode_content, micromodes_in, trichords};
 pub use pitch_set::PitchSet;
 pub use progression::{Suggestion, next_chords};
 pub use row::{ROW_PRESETS, RowForm, RowLabel, RowPreset, ToneRow};

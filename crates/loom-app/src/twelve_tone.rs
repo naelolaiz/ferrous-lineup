@@ -11,9 +11,14 @@
 //! key menu can switch back to them after the key was a scale for a while.
 
 use eframe::egui::{self, Color32, RichText, Ui};
-use loom_core::harmony::{ROW_PRESETS, RowForm, RowLabel, SetClass, ToneRow, digits, pc_digit};
+use loom_core::harmony::{Micromode, micromodes_in};
+use loom_core::harmony::{
+    ROW_PRESETS, RowForm, RowLabel, RowPreset, SetClass, ToneRow, digits, pc_digit,
+};
 use loom_core::serial::{Chain, Register, RowWriting, write_row};
-use loom_core::{Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling};
+use loom_core::{
+    Chord, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
+};
 
 /// Where the row and set last used are remembered.
 fn row_id() -> egui::Id {
@@ -24,10 +29,15 @@ fn set_id() -> egui::Id {
     egui::Id::unique("loom-last-set")
 }
 
+/// The row written for Ferrous Loom, which the row window starts with.
+fn loom_row() -> ToneRow {
+    RowPreset::named("Loom row").map_or(ToneRow::CHROMATIC, |preset| preset.row)
+}
+
 /// The row a key menu switches to: the last one used, or the Loom row.
 pub fn remembered_row(ctx: &egui::Context) -> ToneRow {
     ctx.data(|data| data.get_temp(row_id()))
-        .unwrap_or(ROW_PRESETS[3].row)
+        .unwrap_or_else(loom_row)
 }
 
 /// The set a key menu switches to: the last one used, or the diminished
@@ -67,7 +77,7 @@ pub(crate) fn set_window_id() -> egui::Id {
 /// button opened it was clicked in the same frame and wants the top too,
 /// and then the new one can stay behind it.
 #[derive(Default)]
-struct Front {
+pub(crate) struct Front {
     /// The frame the window was last drawn in.
     drawn_in: u64,
     /// The frame it opened in.
@@ -76,7 +86,7 @@ struct Front {
 
 impl Front {
     /// Called each frame the window `id` is drawn, before it is.
-    fn keep(&mut self, ctx: &egui::Context, id: egui::Id) {
+    pub(crate) fn keep(&mut self, ctx: &egui::Context, id: egui::Id) {
         let frame = ctx.cumulative_pass_nr();
         if self.drawn_in + 1 < frame {
             self.opened_in = frame;
@@ -157,17 +167,25 @@ pub fn kind_menu(
 /// flats.
 pub trait NoteNames: Copy {
     fn note_name(self, pitch_class: PitchClass) -> NoteName;
+    /// The notes of a chord, from its root up.
+    fn chord_names(self, chord: Chord) -> Vec<NoteName>;
 }
 
 impl NoteNames for Scale {
     fn note_name(self, pitch_class: PitchClass) -> NoteName {
         self.spell(pitch_class)
     }
+    fn chord_names(self, chord: Chord) -> Vec<NoteName> {
+        self.chord_notes(chord)
+    }
 }
 
 impl NoteNames for Spelling {
     fn note_name(self, pitch_class: PitchClass) -> NoteName {
         NoteName::plain(pitch_class, self)
+    }
+    fn chord_names(self, chord: Chord) -> Vec<NoteName> {
+        chord.spell(NoteName::plain(chord.root, self))
     }
 }
 
@@ -211,7 +229,19 @@ pub fn describe_set(set: PitchSet, names: impl NoteNames) -> String {
     if let Some(nickname) = class.nickname() {
         text += &format!(" · {nickname}");
     }
+    if let Some(micromode) = Micromode::of(set) {
+        text += &format!(" · micromode {}", micromode.name);
+    }
     text
+}
+
+/// A set class's line in the list, with its micromode if it has three
+/// notes: "3-3 [014] <101100> · Menor 3".
+fn list_line(class: &SetClass) -> String {
+    match Micromode::of(class.prime) {
+        Some(micromode) => format!("{} · {}", class.describe(), micromode.name),
+        None => class.describe(),
+    }
 }
 
 /// Something done in the row window.
@@ -254,7 +284,7 @@ pub struct RowWindow {
 
 impl RowWindow {
     pub fn new() -> Self {
-        let row = ROW_PRESETS[3].row;
+        let row = loom_row();
         RowWindow {
             open: false,
             row,
@@ -498,11 +528,15 @@ impl RowWindow {
             ));
         }
         for size in [3, 4, 6] {
+            // Groups of three are micromodes too.
             let classes: Vec<String> = self
                 .row
                 .segments(size)
                 .iter()
-                .map(|set| set.set_class().name())
+                .map(|set| match Micromode::of(*set) {
+                    Some(micromode) => format!("{} ({})", set.set_class().name(), micromode.name),
+                    None => set.set_class().name(),
+                })
                 .collect();
             let name = match size {
                 3 => "Trichords",
@@ -634,6 +668,10 @@ pub enum SetAction {
     Stamp(PitchSet),
     /// Make this set the key.
     UseAsKey(Scale),
+    /// Show the micromode of these three notes in the micromode window.
+    ShowMicromode(PitchSet),
+    /// Open the micromode window.
+    OpenMicromodes,
 }
 
 /// The set browser: every set class, to look at, draw with or use as a
@@ -645,6 +683,9 @@ pub struct SetWindow {
     class: &'static SetClass,
     transposition: u8,
     inverted: bool,
+    /// Whether the list scrolls to the class shown, after it was picked
+    /// from elsewhere.
+    reveal: bool,
     front: Front,
 }
 
@@ -657,6 +698,7 @@ impl SetWindow {
             class: PitchSet::from_semitones(&[0, 4, 7]).set_class(),
             transposition: 0,
             inverted: false,
+            reveal: false,
             front: Front::default(),
         }
     }
@@ -670,9 +712,11 @@ impl SetWindow {
 
     /// Shows `set` in the browser: its class, and how it is moved from
     /// the prime form.
-    fn pick(&mut self, set: PitchSet) {
+    pub(crate) fn pick(&mut self, set: PitchSet) {
         self.class = set.set_class();
         self.size = set.len();
+        self.search.clear();
+        self.reveal = true;
         let (n, inverted) = self.class.prime.moved_to(set).unwrap_or((0, false));
         self.transposition = n;
         self.inverted = inverted;
@@ -691,11 +735,15 @@ impl SetWindow {
         let mut actions = Vec::new();
         let mut open = self.open;
         self.front.keep(ctx, set_window_id());
+        // A set shown from elsewhere comes to the front, to be seen.
+        if self.reveal {
+            ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, set_window_id()));
+        }
         egui::Window::new("Pitch-class sets")
             .id(set_window_id())
             .open(&mut open)
             .default_pos([320.0, 140.0])
-            .default_size([520.0, 520.0])
+            .default_size([560.0, 520.0])
             .constrain_to(area)
             .show(ctx, |ui| self.contents(ui, names, selected, &mut actions));
         self.open = open;
@@ -728,9 +776,19 @@ impl SetWindow {
             }
             ui.add(
                 egui::TextEdit::singleline(&mut self.search)
-                    .hint_text("🔍 triad, octatonic, 4-Z15…")
+                    .hint_text("🔍 triad, octatonic, menor 3…")
                     .desired_width(160.0),
             );
+            if ui
+                .button("Micromodes…")
+                .on_hover_text(
+                    "The twelve sets of three notes are Kröpfl's micromodes: see them, \
+                     with their names, families and sound",
+                )
+                .clicked()
+            {
+                actions.push(SetAction::OpenMicromodes);
+            }
         });
         let search = self.search.trim().to_lowercase();
         let classes: Vec<&'static SetClass> = SetClass::all()
@@ -743,6 +801,11 @@ impl SetWindow {
                         || class
                             .nickname()
                             .is_some_and(|n| n.to_lowercase().contains(&search))
+                        || Micromode::of(class.prime).is_some_and(|m| {
+                            m.name.to_lowercase().contains(&search)
+                                || m.english.to_lowercase().contains(&search)
+                                || "micromodes micromodos".contains(&search)
+                        })
                 }
             })
             .collect();
@@ -751,14 +814,19 @@ impl SetWindow {
             .auto_shrink([false, true])
             .show(ui, |ui| {
                 for class in classes {
-                    let text = RichText::new(class.describe()).monospace();
-                    if ui.selectable_label(self.class == class, text).clicked() {
+                    let text = RichText::new(list_line(class)).monospace();
+                    let response = ui.selectable_label(self.class == class, text);
+                    if self.reveal && self.class == class {
+                        response.scroll_to_me(Some(egui::Align::Center));
+                    }
+                    if response.clicked() {
                         self.class = class;
                         self.transposition = 0;
                         self.inverted = false;
                     }
                 }
             });
+        self.reveal = false;
         ui.separator();
         self.details(ui, names, actions);
     }
@@ -788,6 +856,7 @@ impl SetWindow {
         for fact in facts {
             ui.weak(fact);
         }
+        self.micromodes(ui, actions);
         ui.horizontal_wrapped(|ui| {
             ui.label("Move it up");
             egui::ComboBox::from_id_salt("set-transposition")
@@ -831,6 +900,50 @@ impl SetWindow {
                 && let Some(&root) = set.normal_form().first()
             {
                 actions.push(SetAction::UseAsKey(Scale::set(root, set)));
+            }
+        });
+    }
+
+    /// The micromodes the chosen set is, or holds: each a button to it in
+    /// the micromode window.
+    fn micromodes(&self, ui: &mut Ui, actions: &mut Vec<SetAction>) {
+        let set = self.chosen();
+        if let Some(micromode) = Micromode::of(set) {
+            ui.horizontal_wrapped(|ui| {
+                ui.weak("This is Kröpfl's micromode");
+                if ui
+                    .small_button(format!("{} →", micromode.full_name()))
+                    .on_hover_text(micromode.about)
+                    .clicked()
+                {
+                    actions.push(SetAction::ShowMicromode(set));
+                }
+            });
+            return;
+        }
+        let found = micromodes_in(set);
+        if found.is_empty() {
+            return;
+        }
+        let groups = set.len() * (set.len() - 1) * (set.len() - 2) / 6;
+        ui.horizontal_wrapped(|ui| {
+            ui.weak(format!(
+                "Micromodes inside, in its {groups} groups of three:"
+            ));
+            for (micromode, count) in found {
+                let text = crate::micromodes::found_text(micromode, count);
+                // One of the groups that is this micromode, to show.
+                let example = loom_core::harmony::trichords(set)
+                    .into_iter()
+                    .find(|trio| Micromode::of(*trio) == Some(micromode));
+                if ui
+                    .small_button(text)
+                    .on_hover_text(format!("{}: {}", micromode.full_name(), micromode.about))
+                    .clicked()
+                    && let Some(trio) = example
+                {
+                    actions.push(SetAction::ShowMicromode(trio));
+                }
             }
         });
     }
