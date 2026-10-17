@@ -92,6 +92,30 @@ impl LoomApp {
         }
     }
 
+    /// Remembers the style and rhythm the song plays in this version of
+    /// the project, for undo and redo.
+    fn remember_song_version(&mut self, project: Project, tried: Tried) {
+        self.song_versions
+            .retain(|(version, _)| *version != project);
+        if self.song_versions.len() == REMEMBERED {
+            self.song_versions.remove(0);
+        }
+        self.song_versions.push((project, tried));
+    }
+
+    /// After undo or redo, shows the style and rhythm this version of the
+    /// project plays, if the library changed it.
+    pub(super) fn restore_song_library(&mut self) {
+        if let Some((_, tried)) = self
+            .song_versions
+            .iter()
+            .rev()
+            .find(|(version, _)| *version == self.project)
+        {
+            self.song_library = *tried;
+        }
+    }
+
     /// What the library wrote in the selected pattern, if it is still
     /// exactly as the library left it.
     fn unchanged_audition(&self) -> Option<&Audition> {
@@ -227,6 +251,7 @@ impl LoomApp {
             }
         };
         let song_library = self.song_library;
+        let before = self.project.clone();
         let change = self.edit(label, |project| {
             let change = match action {
                 LibraryAction::Style(style) => apply::use_style(project, style),
@@ -280,6 +305,8 @@ impl LoomApp {
                 }
                 _ => song_library,
             };
+            self.remember_song_version(before, song_library);
+            self.remember_song_version(self.project.clone(), self.song_library);
         }
         self.notice = Some(if fill && change.drums > 0 {
             format!(

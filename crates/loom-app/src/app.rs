@@ -89,6 +89,9 @@ pub struct LoomApp {
     /// last one the library gave the song. Shown selected in the library
     /// when the selected pattern is not one the library wrote.
     song_library: Tried,
+    /// The song's style and rhythm in versions of the project the library
+    /// changed, so undo and redo show the right ones selected.
+    song_versions: Vec<(Project, Tried)>,
     file: files::FileState,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
@@ -157,6 +160,7 @@ impl LoomApp {
             harmony_keys: HarmonyKeys::new(),
             auditions: Vec::new(),
             song_library: Tried::default(),
+            song_versions: Vec::new(),
             history: History::default(),
             samples: SampleCache::new(),
             export: None,

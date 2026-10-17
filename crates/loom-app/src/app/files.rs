@@ -240,6 +240,7 @@ impl LoomApp {
         self.project = project;
         self.auditions.clear();
         self.song_library = Tried::default();
+        self.song_versions.clear();
         self.file.saved = self.project.clone();
         self.file.path = path;
         self.pattern = 0;
