@@ -15,14 +15,17 @@
 //! Click a bar and type to write its harmony; Enter takes it in, Tab
 //! goes on to the next bar. Holding the mouse down on a harmony plays
 //! it. Shift+click (or Shift and an arrow) selects several bars, to loop
-//! them from the practice row ([`practice`]). The reading and writing of what is typed is in
-//! `lineup_core::chord_sheet`; this module draws and reads the keyboard
-//! and the mouse.
+//! them from the practice row ([`practice`]). A bar's menu (right-click)
+//! also chooses the variation of the band's style from that bar on, or
+//! for the bars selected; a boxed "a" or "b" marks where it changes. The
+//! reading and writing of what is typed is in `lineup_core::chord_sheet`;
+//! this module draws and reads the keyboard and the mouse.
 
 use eframe::egui::{
-    self, Align2, Color32, FontId, Key, Modifiers, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2,
+    self, Align2, Color32, FontId, Key, Modifiers, Pos2, Rect, Sense, Stroke, StrokeKind, Ui, pos2,
+    vec2,
 };
-use lineup_core::band::Ending;
+use lineup_core::band::{Ending, Variation};
 use lineup_core::chord_sheet::{read_bar, write_bar};
 use lineup_core::library::{Genre, STYLES, Style};
 use lineup_core::{
@@ -540,13 +543,36 @@ impl ChordSheet {
             actions.push(SheetAction::Seek(bar.start));
         }
         let previous = (bar.number > 0).then(|| meter.bar(bar.number - 1));
+        let mut marks_right = number_rect.right();
         if previous.is_none_or(|previous| previous.time != bar.time) {
-            painter.text(
+            let time = painter.text(
                 number_rect.right_top() + vec2(6.0, 0.0),
                 Align2::LEFT_TOP,
                 bar.time.to_string(),
                 FontId::proportional(SMALL_SIZE),
                 theme::ACCENT,
+            );
+            marks_right = time.right();
+        }
+        // Where the band changes variation: its letter in a box, as a
+        // rehearsal mark is printed.
+        if let Some(marker) = project
+            .variations()
+            .iter()
+            .find(|marker| marker.start == bar.start)
+        {
+            let letter = painter.text(
+                pos2(marks_right + 9.0, number_rect.top()),
+                Align2::LEFT_TOP,
+                marker.variation.letter(),
+                FontId::proportional(SMALL_SIZE),
+                theme::ACCENT,
+            );
+            painter.rect_stroke(
+                letter.expand2(vec2(3.0, 0.5)),
+                2.0,
+                Stroke::new(1.0, theme::ACCENT),
+                StrokeKind::Middle,
             );
         }
         if bar.number > 0 && keys.key_at(bar.start - 1) != key {
@@ -700,7 +726,13 @@ impl ChordSheet {
             clicked: response.clicked() || response.secondary_clicked(),
             start_typing: None,
         };
-        if clicks.clicked || response.drag_started() {
+        // A right-click inside the bars selected keeps them selected, for
+        // the menu to act on.
+        let in_selection = self
+            .selected_bars()
+            .is_some_and(|(first, last)| first < last && (first..=last).contains(&bar.number));
+        let keeps_selection = response.secondary_clicked() && in_selection;
+        if (clicks.clicked || response.drag_started()) && !keeps_selection {
             let shift = ui.input(|input| input.modifiers.shift);
             self.select_to(bar.number, shift);
             self.error = None;
@@ -721,6 +753,9 @@ impl ChordSheet {
                 bar.number + 1
             ),
         };
+        let selection = self
+            .selected_bars()
+            .filter(|&(first, last)| first < last && (first..=last).contains(&bar.number));
         theme::hint(response, hint).context_menu(|ui| {
             if ui.button("Type in this bar").clicked() {
                 clicks.start_typing = Some((bar.number, write_bar(&here, &bar)));
@@ -735,6 +770,10 @@ impl ChordSheet {
             }
             if ui.button("Move the playhead here").clicked() {
                 actions.push(SheetAction::Seek(bar.start));
+            }
+            if project.band().is_some() {
+                ui.separator();
+                variation_menu(ui, project, meter, bar.number, selection, actions);
             }
             if project.band().is_some() && ending.is_none() {
                 let end = ui.button("End the song here");
@@ -1186,6 +1225,49 @@ fn progression_menu(ui: &mut Ui, project: &Project, from: usize, actions: &mut V
 }
 
 /// The two dots of a repeat sign, around the middle of a bar line.
+/// The variations of the band's style, in a bar's menu. They apply to
+/// the bars `selection` holds, when the bar right-clicked is one of
+/// them, or else from bar `number` on.
+fn variation_menu(
+    ui: &mut Ui,
+    project: &Project,
+    meter: &Meter,
+    number: usize,
+    selection: Option<(usize, usize)>,
+    actions: &mut Vec<SheetAction>,
+) {
+    let (start, end) = match selection {
+        Some((first, last)) => (meter.bar(first).start, Some(meter.bar(last).end())),
+        None => (meter.bar(number).start, None),
+    };
+    let playing = project.variation_at(start);
+    let bars = match selection {
+        Some((first, last)) => format!("Bars {}–{}: the band", first + 1, last + 1),
+        None => format!("From bar {} on, the band", number + 1),
+    };
+    for variation in [Variation::A, Variation::B] {
+        let about = match variation {
+            Variation::A => "plays the style as it is",
+            Variation::B => {
+                "plays the style fuller: the drums on the ride cymbal, a busier bass or \
+                 piano where the style has one, a little louder. The drums fill into it"
+            }
+        };
+        let item = ui.radio(
+            playing == variation,
+            format!("Variation {}", variation.letter()),
+        );
+        if theme::hint(item, format!("{bars} {about}")).clicked() {
+            actions.push(SheetAction::Form(FormAction::Variation {
+                start,
+                end,
+                variation,
+            }));
+            ui.close();
+        }
+    }
+}
+
 fn repeat_dots(painter: &egui::Painter, x: f32, middle: f32) {
     for y in [middle - 5.0, middle + 5.0] {
         painter.circle_filled(pos2(x, y), 1.8, BAR_LINE);

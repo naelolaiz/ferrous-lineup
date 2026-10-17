@@ -1,7 +1,10 @@
 //! The band's song form, from the chord sheet's form row: the intro,
-//! how many times the chorus plays, and the ending. The work is done by
-//! `lineup_core::band::Form` and the project's `set_intro`,
-//! `set_choruses` and `set_ending`.
+//! how many times the chorus plays, and the ending; and from a bar's
+//! menu, which variation of the style the band plays there. The work is
+//! done by `lineup_core::band::Form` and the project's `set_intro`,
+//! `set_choruses`, `set_ending` and `set_variation`.
+
+use lineup_core::band::Variation;
 
 use super::LineupApp;
 use crate::chord_sheet::FormAction;
@@ -28,6 +31,30 @@ impl LineupApp {
                     ),
                     (true, None) => "The band plays an ending once there are chords".to_string(),
                     (false, _) => "The band stops at the end of the last chorus".to_string(),
+                });
+            }
+            FormAction::Variation {
+                start,
+                end,
+                variation,
+            } => {
+                self.edit("variation", |project| {
+                    project.set_variation(start, end, variation)
+                });
+                let meter = self.project.meter();
+                let first = meter.bar_at(start).number + 1;
+                let bars = match end {
+                    Some(end) => format!(
+                        "Bars {first}–{}: the band",
+                        meter.bar_at(end - 1).number + 1
+                    ),
+                    None => format!("From bar {first} on, the band"),
+                };
+                self.notice = Some(match variation {
+                    Variation::A => format!("{bars} plays the style as it is"),
+                    Variation::B => {
+                        format!("{bars} plays the style fuller, with a fill before it")
+                    }
                 });
             }
         }
