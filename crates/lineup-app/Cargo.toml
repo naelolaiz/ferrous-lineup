@@ -18,3 +18,5 @@ lineup-listen.workspace = true
 eframe.workspace = true
 rfd.workspace = true
 midir.workspace = true
+serde.workspace = true
+ureq.workspace = true

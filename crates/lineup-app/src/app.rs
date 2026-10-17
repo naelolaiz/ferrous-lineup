@@ -18,6 +18,7 @@ mod import;
 mod key_finder;
 mod library;
 mod live;
+mod sounds;
 mod view;
 
 use std::path::PathBuf;
@@ -42,6 +43,10 @@ use crate::piano_roll::{self, PianoRoll, RollAction};
 use crate::playlist::{self, PlaylistAction, PlaylistView};
 use crate::theme::{self, HintBar};
 use crate::widgets;
+
+/// The app's name, in the title bar and for the folder its settings and
+/// downloads are kept in.
+pub const APP_NAME: &str = "Ferrous Lineup";
 
 /// How wide the pattern list in the toolbar is.
 const PATTERN_LIST_WIDTH: f32 = 104.0;
@@ -122,6 +127,8 @@ pub struct LineupApp {
     key_finder: key_finder::KeyFinder,
     /// MIDI, the typing keyboard, and recording.
     live: live::Live,
+    /// The SoundFont the instruments can play from.
+    sounds: sounds::Sounds,
     /// The last problem to show in the status bar, such as a bad WAV file.
     message: Option<String>,
     /// The last piece of good news for the status bar ("Exported song.wav").
@@ -194,6 +201,7 @@ impl LineupApp {
             import: None,
             key_finder: key_finder::KeyFinder::default(),
             live: live::Live::new(midi),
+            sounds: sounds::Sounds::new(&cc.egui_ctx),
             message: None,
             notice: None,
             hint_bar: HintBar::default(),
@@ -221,10 +229,17 @@ impl LineupApp {
         }
     }
 
-    /// Builds the instrument for a channel, at `sample_rate`. If a sample
-    /// file cannot be loaded, the channel gets a silent sampler and the
-    /// status bar says why.
+    /// Builds the instrument for a channel, at `sample_rate`: from the
+    /// SoundFont when it is on and has a sound for the channel. If a
+    /// sample file cannot be loaded, the channel gets a silent sampler and
+    /// the status bar says why.
     fn build_instrument(&mut self, channel: &Channel, sample_rate: u32) -> Instrument {
+        if let Some((sound_font, drums)) = self.sounds.in_use()
+            && let Some(instrument) =
+                Instrument::from_sound_font(channel, sample_rate, sound_font, drums)
+        {
+            return instrument;
+        }
         match Instrument::for_channel(channel, sample_rate, &mut self.samples) {
             Ok(instrument) => instrument,
             Err(err) => {
@@ -857,6 +872,7 @@ impl LineupApp {
             self.file_menu(ui);
             self.edit_menu(ui);
             self.view_menu(ui);
+            self.sounds_menu(ui);
             self.midi_menu(ui);
             ui.separator();
             self.hint_bar.show(ui);
@@ -1187,6 +1203,7 @@ impl LineupApp {
                     .text(format!("Exporting {}", export.file_name())),
             );
         }
+        self.sounds_status(ui);
         if let Some(notice) = &self.notice {
             ui.separator();
             ui.label(notice);
@@ -1311,6 +1328,7 @@ impl eframe::App for LineupApp {
         self.live_input(&ctx);
         self.handle_dropped_files(&ctx);
         self.check_export(&ctx);
+        self.check_sounds(&ctx);
         self.check_import(&ctx);
         if self.playing {
             // Keep redrawing so the playhead moves.
@@ -1476,6 +1494,7 @@ impl eframe::App for LineupApp {
             self.apply_sheet(action);
         }
 
+        self.sound_font_window(&ctx);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
         self.end_frame_for_undo(&ctx);
