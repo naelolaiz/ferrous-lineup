@@ -277,7 +277,7 @@ const SEQUENCER_SPECIFIC: u8 = 0x7F;
 const SCALE_EVENT_START: &[u8] = b"\x7DFerrous Loom key ";
 
 /// The data of the sequencer-specific event that holds the exact key:
-/// [`SCALE_EVENT_START`] and then the key as a project file writes it,
+/// 0x7D, "Ferrous Loom key " and then the key as a project file writes it,
 /// such as `(root:E,kind:Dorian)`.
 pub fn scale_event(scale: Scale) -> Vec<u8> {
     let mut data = SCALE_EVENT_START.to_vec();
