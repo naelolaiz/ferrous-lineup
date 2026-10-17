@@ -1,8 +1,8 @@
 # Many patterns, and a playlist to arrange them
 
-Files: [`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs),
-[`crates/loom-core/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/playlist.rs)
-and [`crates/loom-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pattern.rs)
+Files: [`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
+[`crates/lineup-core/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/playlist.rs)
+and [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pattern.rs)
 
 ## The shape of a project
 
@@ -150,8 +150,8 @@ pub(crate) fn remove_row(&mut self, channel: usize) { ... }
 ```
 
 `pub(crate)` means "public inside this crate only". `project.rs` can call
-them, because it is in `loom-core`; `loom-app` cannot, even with a
-`&mut Pattern` in its hands. Every method `loom-app` *can* call keeps the
+them, because it is in `lineup-core`; `lineup-app` cannot, even with a
+`&mut Pattern` in its hands. Every method `lineup-app` *can* call keeps the
 row count as it is. Privacy in Rust is about modules and crates, not
 about who holds a reference, and that lets one type give out a
 reference to another without giving away its rules.

@@ -1,13 +1,13 @@
 # The playlist window
 
-Files: [`crates/loom-app/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/playlist.rs)
-and [`crates/loom-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app.rs)
+Files: [`crates/lineup-app/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/playlist.rs)
+and [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app.rs)
 
 ## A new layout
 
 Pattern-based studios put the song at the centre: the playlist fills the
 main window, and the channel rack and piano roll float on top of it,
-coming and going with F6 and F7. Ferrous Loom now does the same. The
+coming and going with F6 and F7. Ferrous Lineup now does the same. The
 central panel shows the playlist, and the rack moved into an
 `egui::Window`, like the piano roll in step 3:
 
@@ -45,7 +45,7 @@ egui::ScrollArea::both()
 The app remembers which pattern is selected:
 
 ```rust
-pub struct LoomApp {
+pub struct LineupApp {
     // ...
     /// The selected pattern: the one the channel rack and the piano roll
     /// show, pattern mode plays, and new playlist clips use.

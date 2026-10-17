@@ -1,6 +1,6 @@
 # The piano roll, grown up
 
-File: [`crates/loom-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/piano_roll.rs)
+File: [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/piano_roll.rs)
 
 The tools are plain functions, but something has to decide which notes
 they get, call them at the right moment, and show the result. That is
@@ -187,7 +187,7 @@ button is held. Nothing in the piano roll had to know about that.
 ### Who gets the keys
 
 The arrow keys and Delete are useful in the piano roll, but Ferrous
-Loom has other windows, and a key that changes notes in a window you are
+Lineup has other windows, and a key that changes notes in a window you are
 not looking at would be a nasty surprise. So the piano roll only takes
 the keys after a click inside its window, until a click anywhere else:
 
@@ -278,7 +278,7 @@ enum Tool {
 ```
 
 and `use_tool` turns any `Tool` into a call to the right function in
-`loom_core::tools`, followed by `replace`. Whether a tool came from the
+`lineup_core::tools`, followed by `replace`. Whether a tool came from the
 menu or a key, it takes exactly the same path, so the two can never
 behave differently. The menu shows each tool's key next to it, written
 the way the system writes keys (`ctx.format_shortcut`), so it doubles as

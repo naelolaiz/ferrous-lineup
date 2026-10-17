@@ -2,7 +2,7 @@
 
 Pattern-based studios give you a row of big chord keys: one for each
 chord of the key you are in, so you can play a progression with one
-finger and *see* how harmony works. Step 8 adds them to Ferrous Loom,
+finger and *see* how harmony works. Step 8 adds them to Ferrous Lineup,
 and a library to go with them:
 
 - **the harmony keys**, along the bottom of the main window. On the
@@ -39,7 +39,7 @@ and a library to go with them:
 - **a new rhythm for a song**: pick a rhythm after a style, or
   right-click a rhythm and play the whole song in it, and the chords
   and bass follow the new rhythm, keeping the same chords, as in FL
-  Studio. Ferrous Loom works the chords out from the notes first
+  Studio. Ferrous Lineup works the chords out from the notes first
   ([A new rhythm for a song](new-rhythm.md)),
 - **the accompaniment follows your chords**: turn it on in the MIDI
   menu, and while the music plays, the chord you hold on a MIDI or
@@ -130,7 +130,7 @@ of replacing it.
 ## What changed in the architecture
 
 ```text
-  loom-core
+  lineup-core
     meter.rs (new):          TimeSignature: steps per bar and per beat
     harmony/keys.rs (new):   the seven chords of a key, their functions, playing them
     library/ (new):
@@ -149,10 +149,10 @@ of replacing it.
     file.rs:        format 3
     midi_file.rs:   the time signature and the new drums in .mid files
 
-  loom-audio
+  lineup-audio
     drums.rs:       nine new drum sounds
 
-  loom-app
+  lineup-app
     harmony_keys.rs (new):      the harmony keys bar
     library_browser.rs (new):   the Library tab
     app/library.rs (new):       trying styles and rhythms, the demos
@@ -171,34 +171,34 @@ Three ideas carry this step:
    rhythms in steps of a bar, so the same table plays in any key, and a
    rhythm keeps its place in any time signature.
 3. **The library only writes patterns.** Trying a style is an ordinary
-   edit through `LoomApp::edit`, so undo, saving, the audio thread and
+   edit through `LineupApp::edit`, so undo, saving, the audio thread and
    everything else work without knowing the library exists.
 
 ## Files in this step
 
 ```text
-crates/loom-core/src/meter.rs               TimeSignature (new)
-crates/loom-core/src/harmony/keys.rs        chord_keys, Function, ChordSize, play (new)
-crates/loom-core/src/harmony/scale.rs       Scale::ninth
-crates/loom-core/src/library/*.rs           the library (new)
-crates/loom-core/src/project.rs             time_signature, new drums, chord_notes_in_song
-crates/loom-core/src/pattern.rs             MAX_STEPS, set_notes
-crates/loom-core/src/file.rs                format 3
-crates/loom-core/src/midi_file.rs           time signature meta event, new drum notes
-crates/loom-audio/src/drums.rs              open hat, rim, toms, ride, crash, cowbell, shaker, conga
-crates/loom-app/src/harmony_keys.rs         the harmony keys bar (new)
-crates/loom-app/src/library_browser.rs      the Library tab (new)
-crates/loom-app/src/app/library.rs          auditions and demos (new)
-crates/loom-app/src/app.rs                  the bar, the chord playing, F8
-crates/loom-app/src/app/files.rs            File > Demos
-crates/loom-app/src/app/live.rs             play_typed is shared with the harmony keys
-crates/loom-app/src/playlist.rs             the Library tab, bars of any length
-crates/loom-core/src/midi_file/read.rs      reading MIDI files (new)
-crates/loom-core/src/midi_file/import.rs    a MIDI file becomes a project (new)
-crates/loom-core/src/harmony/key_finding.rs the key of a piece from its notes (new)
-crates/loom-app/src/channel_rack.rs         beat colours by time signature
-crates/loom-app/src/piano_roll.rs           bar and beat lines by time signature
-crates/loom-app/src/app/view.rs             the View menu and the zoom control (new)
+crates/lineup-core/src/meter.rs               TimeSignature (new)
+crates/lineup-core/src/harmony/keys.rs        chord_keys, Function, ChordSize, play (new)
+crates/lineup-core/src/harmony/scale.rs       Scale::ninth
+crates/lineup-core/src/library/*.rs           the library (new)
+crates/lineup-core/src/project.rs             time_signature, new drums, chord_notes_in_song
+crates/lineup-core/src/pattern.rs             MAX_STEPS, set_notes
+crates/lineup-core/src/file.rs                format 3
+crates/lineup-core/src/midi_file.rs           time signature meta event, new drum notes
+crates/lineup-audio/src/drums.rs              open hat, rim, toms, ride, crash, cowbell, shaker, conga
+crates/lineup-app/src/harmony_keys.rs         the harmony keys bar (new)
+crates/lineup-app/src/library_browser.rs      the Library tab (new)
+crates/lineup-app/src/app/library.rs          auditions and demos (new)
+crates/lineup-app/src/app.rs                  the bar, the chord playing, F8
+crates/lineup-app/src/app/files.rs            File > Demos
+crates/lineup-app/src/app/live.rs             play_typed is shared with the harmony keys
+crates/lineup-app/src/playlist.rs             the Library tab, bars of any length
+crates/lineup-core/src/midi_file/read.rs      reading MIDI files (new)
+crates/lineup-core/src/midi_file/import.rs    a MIDI file becomes a project (new)
+crates/lineup-core/src/harmony/key_finding.rs the key of a piece from its notes (new)
+crates/lineup-app/src/channel_rack.rs         beat colours by time signature
+crates/lineup-app/src/piano_roll.rs           bar and beat lines by time signature
+crates/lineup-app/src/app/view.rs             the View menu and the zoom control (new)
 ```
 
 The chapters start with the harmony keys, the part you see first. Then

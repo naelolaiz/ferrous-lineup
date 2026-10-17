@@ -1,10 +1,16 @@
 # Introduction
 
-**Ferrous Loom** is an open source music studio, written in Rust, inspired by
-the workflow of pattern-based studios such as FL Studio. You build short
-patterns in a step sequencer or a piano roll and arrange them into songs.
-It also has a second goal: helping you **learn harmony** while you play, by
-showing you scales, chords and their names as you write.
+**Ferrous Lineup** is an open source music studio, written in Rust, that
+plays songs with a backing band. It began as a pattern studio in the
+spirit of FL Studio, where you build short patterns in a step sequencer
+or a piano roll and arrange them into songs, and from step 9 on it grows
+toward the workflow of Band-in-a-Box: type the chords of a song, pick a
+style, and the band plays it. It also has a second goal: helping you
+**learn harmony** while you play, by showing you scales, chords and their
+names as you write.
+
+Until step 9 the app was called **Ferrous Loom**, and a few things still
+carry that name ([A new name](step-9/new-name.md) says which and why).
 
 This book has a third goal: it is a **Rust course built around a real
 project**. Every step of the project adds a chapter that explains:
@@ -37,15 +43,18 @@ You can read it three ways, all of them offline:
 | 6 | Harmony tools: selections, transposing, arpeggios, inversions, suggestions, ghost notes, velocities | Pure functions, collecting `Option`s, `checked_add_signed`, `find_map`, `cycle`, `step_by` and `zip`, knowledge as `const` tables, `Option::take` against the borrow checker, `flat_map` and lifetimes on returned iterators |
 | 7 | MIDI in and out: keyboards, external synths, recording, `.mid` files | Slice patterns, byte strings and `to_be_bytes`, an `f64` in an `AtomicU64`, `Option::as_mut`, `Mutex` and poisoning, `mpsc` channels, `thread::Builder`, closures that capture fields, `Box` for a large enum variant, float `as` casts |
 | 8 | Harmony keys, time signatures, a library of styles, rhythms and songs, demos | Knowledge as data, `macro_rules!`, constant promotion, `static` tables, struct update syntax, `Display`, `is_multiple_of` and `ilog2`, serde field attributes, enum variants with data, `&'static` references in actions, comparing snapshots with `PartialEq` |
+| 9 | The band: chord names, a chord sheet the band plays, song form, swing, instrument sounds | `FromStr` and `str::parse`, `rsplit_once`, closures as `impl Fn` parameters, `[[bin]]` targets, byte strings as file-format tags |
 
 The [Roadmap](roadmap.md) chapter keeps this table up to date.
 
 ## Name and license
 
-The name keeps the "F L" initials as a friendly nod to the original, but
-Ferrous Loom is an independent project with no connection to Image-Line or
-FL Studio. "Ferrous" means "made of iron", and rust is iron oxide; a loom
-weaves threads together, the way the playlist weaves patterns into a song.
+"Ferrous" means "made of iron", and rust is iron oxide; a lineup is the
+players of a band. The first name, Ferrous Loom, kept the "F L" initials
+of FL Studio, and a loom weaves threads together the way the playlist
+weaves patterns into a song. Ferrous Lineup is an independent project
+with no connection to PG Music or Band-in-a-Box, nor to Image-Line or FL
+Studio.
 
-Ferrous Loom is free software, released under the GNU General Public
+Ferrous Lineup is free software, released under the GNU General Public
 License, version 3 or later.

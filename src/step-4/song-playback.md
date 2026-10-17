@@ -1,6 +1,6 @@
 # Playing a song on the audio thread
 
-File: [`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
+File: [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
 
 The audio thread keeps its own copy of everything it plays, as in steps 2
 and 3, and the rules have not changed: no allocating, no freeing, no

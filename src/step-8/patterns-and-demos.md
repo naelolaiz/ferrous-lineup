@@ -1,9 +1,9 @@
 # From the library to patterns and demos
 
-Files: [`crates/loom-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/apply.rs),
-[`crates/loom-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/demo.rs),
-[`crates/loom-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/library_browser.rs)
-and [`crates/loom-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/library.rs)
+Files: [`crates/lineup-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/apply.rs),
+[`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/demo.rs),
+[`crates/lineup-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/library_browser.rs)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
 
 The tables of the last chapter know nothing about channels, patterns or
 playlists. This chapter connects them: first to a pattern, then to a

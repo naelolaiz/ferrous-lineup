@@ -1,18 +1,18 @@
 # Chord names: reading a lead sheet
 
-Files: [`crates/loom-core/src/harmony/symbol.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/loom-core/src/harmony/symbol.rs),
-[`crates/loom-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/loom-core/src/pitch.rs),
-[`crates/loom-core/src/library/numeral.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/loom-core/src/library/numeral.rs),
-[`crates/loom-core/src/library/chart.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/loom-core/src/library/chart.rs),
-[`crates/loom-core/src/library/voicing.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/loom-core/src/library/voicing.rs)
-and [`crates/loom-core/src/library/comping.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/loom-core/src/library/comping.rs)
+Files: [`crates/lineup-core/src/harmony/symbol.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/symbol.rs),
+[`crates/lineup-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pitch.rs),
+[`crates/lineup-core/src/library/numeral.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/numeral.rs),
+[`crates/lineup-core/src/library/chart.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/chart.rs),
+[`crates/lineup-core/src/library/voicing.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/voicing.rs)
+and [`crates/lineup-core/src/library/comping.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/comping.rs)
 
-Until now every chart in Ferrous Loom was written in Roman numerals:
+Until now every chart in Ferrous Lineup was written in Roman numerals:
 "I | V | vi | IV". That is how the library stores progressions, because
 one chart then works in every key. But a song you want the band to play
 comes on a **lead sheet**, and a lead sheet names its chords: "C | G/B |
 Am | Am/G". Before there can be a chord sheet to type into (the next
-change), Ferrous Loom has to read chord names the way musicians write
+change), Ferrous Lineup has to read chord names the way musicians write
 them. That is all this change does; there is nothing new on the screen
 yet.
 
@@ -47,7 +47,7 @@ read:
 Brackets and spaces are ignored, and the flat and sharp signs ♭ and ♯
 work as well as `b` and `#`. Upper and lower case matter in one place
 only, but it is an important one: **CM7** is a major seventh (C E G B)
-and **Cm7** a minor seventh (C Eb G Bb). When Ferrous Loom writes a chord
+and **Cm7** a minor seventh (C Eb G Bb). When Ferrous Lineup writes a chord
 back, it uses one way for each, the one the piano roll and the harmony
 keys already use: Cmaj7, Cm7, Cm7b5, Cdim7.
 
@@ -75,7 +75,7 @@ reason for the slashes, and it is what the band now plays (see
 [below](#the-band-plays-the-slash)).
 
 One slash is not a bass note: the one in **C6/9**, the six-nine chord.
-Ferrous Loom only takes what follows the last slash as a bass if it is a
+Ferrous Lineup only takes what follows the last slash as a bass if it is a
 note name, so "C6/9" is a six-nine chord and "C6/9/E" is a six-nine
 chord over E.
 
@@ -121,7 +121,7 @@ with `NoteName::above`, the same function that spells chords.
 
 One thing is done differently from a score. A chord symbol never has a
 double sharp or a double flat on its root: D#°7 in E minor moved to G#
-minor would strictly be F##°7, and Ferrous Loom writes it G°7, the same
+minor would strictly be F##°7, and Ferrous Lineup writes it G°7, the same
 keys, as lead sheets do. In a score, where every note of the chord is
 written out, F##°7 would be right.
 
@@ -169,8 +169,8 @@ You cannot hear it in the app yet; the chord sheet comes next. Until
 then the tests show it working:
 
 ```sh
-cargo test -p loom-core symbol
-cargo test -p loom-core slash
+cargo test -p lineup-core symbol
+cargo test -p lineup-core slash
 ```
 
 ## The code
@@ -291,7 +291,7 @@ it makes the whole chart `None`.
    Cadd9 with the D played low. Add "add2" to `SPELLINGS`. What is lost
    by reading it as `Add9`?
 2. **C5** is a "power chord": just C and G, no third. It is not in
-   `ChordQuality`. What else in Ferrous Loom would have to know about it
+   `ChordQuality`. What else in Ferrous Lineup would have to know about it
    (look at `ChordQuality::family`, the harmony keys and `is_minor`)?
 3. The **line cliché** keeps one chord while a single voice moves down
    by semitones: "Am | Am/G# | Am/G | Am/F#". Read it with

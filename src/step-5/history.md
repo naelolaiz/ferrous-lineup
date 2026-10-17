@@ -1,7 +1,7 @@
 # Undo and redo: a history of copies
 
-Files: [`crates/loom-core/src/history.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/history.rs)
-and [`crates/loom-app/src/app/edit.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/edit.rs)
+Files: [`crates/lineup-core/src/history.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/history.rs)
+and [`crates/lineup-app/src/app/edit.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/edit.rs)
 
 ## Two ways to undo
 
@@ -23,7 +23,7 @@ Undo puts the copy back. There is nothing to reverse, so there is nothing
 to reverse wrongly: whatever the change did, the copy is exactly what was
 there before. The cost is memory, and the time to make a copy.
 
-Ferrous Loom uses snapshots. A `NoteEvent` takes 24 bytes, and the demo
+Ferrous Lineup uses snapshots. A `NoteEvent` takes 24 bytes, and the demo
 song has 37 of them, so a copy of the whole demo project is a few
 kilobytes. Even a big project with 10,000 notes holds about 240 KB of
 notes, so 100 copies of it are about 24 MB, and making one copy takes far
@@ -33,7 +33,7 @@ project ever gets big enough to need it.)
 
 ## `History<T>`
 
-The history lives in `loom-core`, and it does not know about projects at
+The history lives in `lineup-core`, and it does not know about projects at
 all:
 
 ```rust

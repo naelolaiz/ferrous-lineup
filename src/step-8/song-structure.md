@@ -1,10 +1,10 @@
 # Song structure: sections, repeats and loops
 
-Files: [`crates/loom-core/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/playlist.rs),
-[`crates/loom-core/src/arrangement.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/arrangement.rs),
-[`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs),
-[`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
-and [`crates/loom-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/playlist/sections.rs)
+Files: [`crates/lineup-core/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/playlist.rs),
+[`crates/lineup-core/src/arrangement.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/arrangement.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
+[`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
+and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/playlist/sections.rs)
 
 Until now the playlist only knew clips. A song has more shape than that:
 an intro, a verse, a chorus heard twice, a beat that loops for eight
@@ -166,7 +166,7 @@ pub fn pattern_step(&self, step: usize, pattern_length: usize) -> Option<usize> 
 ```
 
 `%` wraps the step around the pattern, which is all that "repeat" means.
-Everything about names, rounds and loops stays in `loom-core`, where it
+Everything about names, rounds and loops stays in `lineup-core`, where it
 can be tested without a sound card. The audio thread stays small, and it
 still allocates nothing: the new `Vec<Play>` is built on the UI thread and
 the old one is sent back to be freed there, exactly as the clip list was.
@@ -221,7 +221,7 @@ pub repeats: usize,
 The new lists in the file (`sections`, `loop_region`) use the plain
 `#[serde(default)]` with `Vec::is_empty` and `Option::is_none`. So a
 project that uses none of this is written byte for byte as before, and an
-older Ferrous Loom opens it.
+older Ferrous Lineup opens it.
 
 An older version would also open a project that *does* use repeats: it
 skips fields it does not know. But it would play every repeat once, which
@@ -273,7 +273,7 @@ It shares its code with **Duplicate**: `make_room` moves everything after
 the section later, then the clips that start inside the section are
 copied into the gap. One thing to watch: clips are copied whole. The fill
 in the picture starts inside the chorus and runs past its end, so the
-original and its copy overlap. Ferrous Loom cannot cut a clip in two yet
+original and its copy overlap. Ferrous Lineup cannot cut a clip in two yet
 (a clip has no "start this far into the pattern"), which is exercise 3
 below.
 

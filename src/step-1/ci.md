@@ -4,7 +4,7 @@
 
 ```sh
 cargo test                 # every crate
-cargo test -p loom-core    # one crate
+cargo test -p lineup-core    # one crate
 cargo test frequency       # only tests whose name contains "frequency"
 ```
 
@@ -12,10 +12,10 @@ Step 1 has tests in four files:
 
 | File | What it checks |
 |------|----------------|
-| `loom-core/src/pitch.rs` | A4 is 440 Hz, middle C is 261.63 Hz, octaves double, note names |
-| `loom-core/src/tempo.rs` | Tempo clamps to its range, beat lengths are right |
-| `loom-audio/src/synth.rs` | The tone is silent when off, fades in without a click, stays within its volume, plays the right frequency |
-| `loom-audio/src/engine.rs` | Commands reach the audio thread; integer sample formats use their full range |
+| `lineup-core/src/pitch.rs` | A4 is 440 Hz, middle C is 261.63 Hz, octaves double, note names |
+| `lineup-core/src/tempo.rs` | Tempo clamps to its range, beat lengths are right |
+| `lineup-audio/src/synth.rs` | The tone is silent when off, fades in without a click, stays within its volume, plays the right frequency |
+| `lineup-audio/src/engine.rs` | Commands reach the audio thread; integer sample formats use their full range |
 
 The frequency test is a nice example of testing audio without listening
 to it. It renders one second of a 100 Hz tone and counts how often the
@@ -53,7 +53,7 @@ Every push and pull request runs two jobs on GitHub's Linux machines:
 1. **check**: installs the system libraries, then runs `cargo fmt --check`,
    `cargo clippy -- -D warnings` (warnings count as errors), `cargo test` and
    a release build. The built program is attached to the run as the
-   `ferrous-loom-linux` download.
+   `ferrous-lineup-linux` download.
 2. **book**: builds this book with mdBook and attaches it as the
    `ferrous-loom-book` download, which you can unzip and read offline.
 

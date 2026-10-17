@@ -1,7 +1,7 @@
 # MIDI messages and MIDI files
 
-Files: [`crates/loom-core/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi.rs)
-and [`crates/loom-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi_file.rs)
+Files: [`crates/lineup-core/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi.rs)
+and [`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs)
 
 ## Three bytes per key
 
@@ -22,10 +22,10 @@ down:
 A status byte always has its top bit set (128 and up), and a data byte
 never does (0 to 127). That is why a MIDI note number and a velocity are
 never more than 127, and why `Note` in step 1 used the same numbers: C4
-is 60 in Ferrous Loom because it is 60 in MIDI.
+is 60 in Ferrous Lineup because it is 60 in MIDI.
 
 There are many kinds of message: knobs and pedals ("control change"),
-pitch bends, clock ticks for keeping machines in time. Ferrous Loom only
+pitch bends, clock ticks for keeping machines in time. Ferrous Lineup only
 needs two, and `MidiMessage` has only two variants:
 
 ```rust
@@ -104,7 +104,7 @@ a note-off by the synth, so a note played "as softly as possible" would
 not be played at all.
 
 One other message is written, never read: control change 123, "All Notes
-Off". It tells a synth to stop every note on a channel. Ferrous Loom
+Off". It tells a synth to stop every note on a channel. Ferrous Lineup
 sends it on all 16 channels before it lets go of an output port, in
 case a note-off got lost on the way:
 
@@ -119,7 +119,7 @@ pub fn all_notes_off(channel: u8) -> [u8; 3] {
 A Standard MIDI File (`.mid`) holds the same messages, with times. It
 holds notes, not sound: "C4 starts here, ends there, on channel 1". The
 program that opens it chooses the instruments. That makes it the common
-language of music programs, and the way to take a Ferrous Loom pattern
+language of music programs, and the way to take a Ferrous Lineup pattern
 into another studio.
 
 The file is a list of *chunks*. Each one starts with four letters and
@@ -127,7 +127,7 @@ its length:
 
 ```text
   MThd  length 6  format 1  3 tracks  96 ticks per beat     the header
-  MTrk  length …  name "Ferrous Loom", tempo, time signature, end
+  MTrk  length …  name "Ferrous Lineup", tempo, time signature, end
   MTrk  length …  name "Loom Osc", the notes of the synth, end
   MTrk  length …  name "Kick", the notes of the kick, end
 ```
@@ -157,7 +157,7 @@ type written after the number), so `to_be_bytes` gives four bytes:
 ## Ticks and delta times
 
 Time in a MIDI file is counted in *ticks*, and the header says how many
-ticks make a beat. Ferrous Loom writes 96, which divides by 2, 3, 4, 8,
+ticks make a beat. Ferrous Lineup writes 96, which divides by 2, 3, 4, 8,
 16 and 32, so triplets and thirty-second notes would fit too. A step is
 a sixteenth note, a quarter of a beat, so it is 24 ticks:
 
@@ -342,6 +342,6 @@ fn drums_use_channel_ten_and_general_midi_notes() {
 `0x99` is note-on (`0x90`) on channel 10 (`0x09`), and tick 192 is step 8.
 A reader written by the same person who wrote the writer can share its
 mistakes, though. So the exported files were also opened with a program
-that knows nothing about Ferrous Loom, Python's `mido` library, which
+that knows nothing about Ferrous Lineup, Python's `mido` library, which
 read the demo song as six tracks lasting 14.769 seconds: 128 steps at
 130 BPM, as it should.

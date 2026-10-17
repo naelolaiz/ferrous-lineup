@@ -1,9 +1,9 @@
 # A new rhythm for a song: hearing the chords
 
-Files: [`crates/loom-core/src/library/listen.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/listen.rs),
-[`crates/loom-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/apply.rs),
-[`crates/loom-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/library_browser.rs)
-and [`crates/loom-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/library.rs)
+Files: [`crates/lineup-core/src/library/listen.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/listen.rs),
+[`crates/lineup-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/apply.rs),
+[`crates/lineup-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/library_browser.rs)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
 
 Until now, picking a rhythm in the Library only changed the drums. Put a
 reggae beat under a bossa nova and the piano went on playing bossa nova
@@ -11,7 +11,7 @@ over it. FL Studio does better: change the rhythm and the chords and
 the bass follow it. A band does the same when someone says "let's do
 this one as a reggae": same chords, new way of playing them.
 
-Now Ferrous Loom does it too, in two places:
+Now Ferrous Lineup does it too, in two places:
 
 - In the Library, a rhythm picked after a style changes how the style is
   played. "Four chords" with the "Salsa" rhythm comes out as a piano
@@ -39,7 +39,7 @@ library at all.
 We could have stored the chords next to the notes. But then every
 project file would need them, every edit in the piano roll would have
 to keep them up to date, and songs you played in by hand would still
-have none. So instead, Ferrous Loom does what a musician does when
+have none. So instead, Ferrous Lineup does what a musician does when
 someone plays them a song: it *listens* and works out the chords.
 
 ## Listening: a score for every chord

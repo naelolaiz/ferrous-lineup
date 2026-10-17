@@ -1,7 +1,7 @@
 # From steps to notes
 
-Files: [`crates/loom-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pattern.rs)
-and [`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs)
+Files: [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pattern.rs)
+and [`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs)
 
 In step 2 a pattern was a grid of on/off switches, one `[bool; 64]` row
 per channel. A piano roll needs more: each note has a pitch, a start and

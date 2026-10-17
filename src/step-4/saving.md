@@ -1,14 +1,14 @@
 # Saving and loading projects
 
-Files: [`crates/loom-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/file.rs)
-and [`crates/loom-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/files.rs)
+Files: [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs)
+and [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/files.rs)
 
 ## What a project file looks like
 
-A `.loom` file is plain text. Run this to see the demo song as a file:
+A `.lineup` file is plain text. Run this to see the demo song as a file:
 
 ```sh
-cargo run -p loom-core --example print_demo
+cargo run -p lineup-core --example print_demo
 ```
 
 (`examples/` is a Cargo convention: each file in a crate's `examples`
@@ -209,7 +209,7 @@ copies the data out with `to_vec()` and `map`. It cannot fail, so it is a
 pub const FORMAT_VERSION: u32 = 1;
 ```
 
-Every file starts with `format: 1`. One day, version 2 of Ferrous Loom
+Every file starts with `format: 1`. One day, version 2 of Ferrous Lineup
 may store something differently. It can then read old files by checking
 the number, and *this* version can refuse new files politely instead of
 misreading them. But a version-1 program cannot parse a version-2 file to
@@ -313,9 +313,9 @@ pub fn save(project: &Project, path: &Path) -> Result<(), FileError> {
 }
 ```
 
-Writing straight over `song.loom` has a nasty failure: if the program
+Writing straight over `song.lineup` has a nasty failure: if the program
 crashes or the disk fills up halfway, the file is half old, half new, and
-neither version can be loaded. Writing to `song.loom.tmp` first and then
+neither version can be loaded. Writing to `song.lineup.tmp` first and then
 renaming it over the original avoids that, because the operating system
 replaces a file by renaming in a single step. Either the rename happened
 and the new file is complete, or it did not and the old file is
@@ -329,17 +329,17 @@ collide, and delete the file afterwards.
 
 ## In the app: File menu, shortcuts and the title bar
 
-The app side is in `crates/loom-app/src/app/files.rs`. Its first lines
+The app side is in `crates/lineup-app/src/app/files.rs`. Its first lines
 explain an unusual layout:
 
 ```rust
 //! This is a child module of `app` (its file is `app/files.rs`), so it can
-//! use the private fields of [`LoomApp`]: in Rust, private means "visible
+//! use the private fields of [`LineupApp`]: in Rust, private means "visible
 //! in this module and the modules inside it".
 ```
 
 `app.rs` declares `mod files;`, and Rust looks for that module in
-`app/files.rs`. The file holds another `impl LoomApp` block. A type can
+`app/files.rs`. The file holds another `impl LineupApp` block. A type can
 have any number of `impl` blocks, in any modules of its crate, so a big
 type can be split by topic. Being a child of `app`, `files` sees the
 private fields `self.project`, `self.audio` and so on, which a sibling
@@ -354,7 +354,8 @@ Explorer dialog on Windows.
 
 ```rust
 fn project_dialog() -> rfd::FileDialog {
-    rfd::FileDialog::new().add_filter("Ferrous Loom project", &[file::EXTENSION])
+    let extensions = [file::EXTENSION, file::OLD_EXTENSION];
+    rfd::FileDialog::new().add_filter("Ferrous Lineup project", &extensions)
 }
 
 if let Some(path) = project_dialog().pick_file() {
@@ -466,9 +467,9 @@ is allowed because egui marked it as a `const fn`, a function simple
 enough to run at compile time.
 
 The window title shows the file's name and a dot for unsaved changes
-("● song.loom · Ferrous Loom"). The app sends a `ViewportCommand::Title`
+("● song.lineup · Ferrous Lineup"). The app sends a `ViewportCommand::Title`
 only when the text changes, not on every frame. (Later the dot became a
-star after the name, "song.loom*", and a demo shows its own name: see
+star after the name, "song.lineup*", and a demo shows its own name: see
 [A demo keeps its name](../step-8/demo-names.md).)
 
 ### Opening a file from outside
@@ -477,12 +478,12 @@ star after the name, "song.loom*", and a demo shows its own name: see
 let path = std::env::args_os().nth(1).map(PathBuf::from);
 ```
 
-`ferrous-loom song.loom` starts with the song open, which is also what a
+`ferrous-lineup song.lineup` starts with the song open, which is also what a
 file manager does when you double-click a file associated with the app.
 `args_os` returns the arguments as `OsString`s, exactly as the system
 gave them. `std::env::args` would panic on a file name that is not valid
 UTF-8, which Linux allows. `nth(1)` skips the first argument, which is
 the program's own name.
 
-A `.loom` file dropped on the window is opened too, after the same
+A `.lineup` file dropped on the window is opened too, after the same
 "Save changes?" question. Dropped WAV files still go to the channel rack.

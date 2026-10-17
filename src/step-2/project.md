@@ -1,7 +1,7 @@
 # Patterns and the project
 
-Files: [`crates/loom-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pattern.rs)
-and [`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs)
+Files: [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pattern.rs)
+and [`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs)
 
 ## The music
 
@@ -133,7 +133,7 @@ public because every `Tempo` is valid by construction, so nothing can
 break it.
 
 `Pattern::push_row` is declared `pub(crate)`: visible everywhere inside
-`loom-core`, but not to other crates. Only `Project` should add rows,
+`lineup-core`, but not to other crates. Only `Project` should add rows,
 and other crates cannot get around it.
 
 `channels()` returns `&[Channel]`, a **slice**, rather than `&Vec<Channel>`.

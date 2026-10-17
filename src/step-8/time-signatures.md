@@ -1,11 +1,11 @@
 # Time signatures
 
-Files: [`crates/loom-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/meter.rs),
-[`crates/loom-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/file.rs),
-[`crates/loom-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi_file.rs)
-and [`crates/loom-app/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/playlist.rs)
+Files: [`crates/lineup-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/meter.rs),
+[`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs),
+[`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs)
+and [`crates/lineup-app/src/playlist.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/playlist.rs)
 
-Until now every bar in Ferrous Loom had sixteen steps: four beats of
+Until now every bar in Ferrous Lineup had sixteen steps: four beats of
 four sixteenth notes. That is 4/4, and most pop music is in it. But a
 waltz counts *one two three*, a tango vals too, and *Greensleeves*,
 *Amazing Grace* and *Für Elise* are not in four either. The library
@@ -28,7 +28,7 @@ says how many make a bar:
 3/4 and 6/8 both have twelve steps to the bar, and the notes in them
 can be the same. What differs is how they are *counted*: three beats of
 four steps, or two beats of six. That is why a time signature in
-Ferrous Loom changes where lines are drawn, not what is played.
+Ferrous Lineup changes where lines are drawn, not what is played.
 
 ## `TimeSignature`
 
@@ -146,7 +146,7 @@ yes, and the field is left out, so a 4/4 project is written exactly as
 before. `default` works the other way, when reading: a file without
 the field gets `TimeSignature::default()`, which is 4/4. Together they
 mean old files open unchanged, and new 4/4 files can still be opened by
-older versions of Ferrous Loom.
+older versions of Ferrous Lineup.
 
 A project in another time signature is written as **format 3**, which
 older versions refuse, instead of opening a waltz and drawing it in

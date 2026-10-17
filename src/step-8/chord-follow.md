@@ -1,8 +1,8 @@
 # The accompaniment follows your chords
 
-Files: [`crates/loom-core/src/library/follow.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/follow.rs),
-[`crates/loom-app/src/app/follow.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/follow.rs)
-and [`crates/loom-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/live.rs)
+Files: [`crates/lineup-core/src/library/follow.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/follow.rs),
+[`crates/lineup-app/src/app/follow.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/follow.rs)
+and [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/live.rs)
 
 An **arranger keyboard** (the home keyboards with a "style" button)
 plays drums, chords and a bass line for you, and your left hand only
@@ -13,7 +13,7 @@ to the song.
 
 FL Studio has no such mode built in. Its forum has people asking for
 one, and the nearest thing it has is the arpeggiator of a channel, which
-turns one held chord into an arpeggio. Ferrous Loom goes further, and
+turns one held chord into an arpeggio. Ferrous Lineup goes further, and
 does what the arranger keyboard does with any song.
 
 ## How to use it
@@ -30,7 +30,7 @@ does what the arranger keyboard does with any song.
 
 ![Holding A and C: the accompaniment plays A minor](../images/step-8-follow-status.png)
 
-Like arranger keyboards, Ferrous Loom does not need the whole chord:
+Like arranger keyboards, Ferrous Lineup does not need the whole chord:
 
 | Keys held | Chord |
 |-----------|-------|
@@ -38,7 +38,7 @@ Like arranger keyboards, Ferrous Loom does not need the whole chord:
 | two keys a minor third apart, such as D and F | the minor chord on the lower one: Dm |
 | two keys a major third or a fifth apart | the major chord on the lower one |
 | two keys a minor seventh apart, such as G and F | the seventh chord: G7 |
-| three keys or more | the chord they make, any of the 28 Ferrous Loom knows |
+| three keys or more | the chord they make, any of the 28 Ferrous Lineup knows |
 
 The last chord stays when you let go, as the "memory" button of an
 arranger keyboard does, so you can play a chord and take your hand
@@ -54,7 +54,7 @@ only.
 
 `library/follow.rs`
 
-Before it can move anything, Ferrous Loom needs to know which chord
+Before it can move anything, Ferrous Lineup needs to know which chord
 each note was written for. That is the same problem as [A new rhythm
 for a song](new-rhythm.md), and it uses the same answer: `hear_chords`
 listens to each pattern and cuts it into stretches, each with a chord.
@@ -69,7 +69,7 @@ pub struct Accompaniment {
 
 Then every note of a stretch heard as, say, C major is moved into the
 held chord, say A minor. Arranger keyboards have a table for this,
-written by whoever made the style. Ferrous Loom works it out from what
+written by whoever made the style. Ferrous Lineup works it out from what
 each note *does* in its chord, its **role**:
 
 ```rust

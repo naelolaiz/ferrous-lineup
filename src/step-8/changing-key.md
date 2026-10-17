@@ -1,10 +1,10 @@
 # Changing key: moving the song, and snapping to the scale
 
-Files: [`crates/loom-core/src/tools.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/tools.rs),
-[`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs),
-[`crates/loom-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/piano_roll.rs),
-[`crates/loom-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/midi.rs)
-and [`crates/loom-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/live.rs)
+Files: [`crates/lineup-core/src/tools.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/tools.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
+[`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/piano_roll.rs),
+[`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/midi.rs)
+and [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/live.rs)
 
 Until now the **Key** and mode menus (left of the harmony keys, and at
 the top of the piano roll) only changed what you *saw*: which rows the
@@ -26,7 +26,7 @@ everything back in one go.
 In FL Studio the piano roll's key and scale menu never moves a note: it
 only highlights the scale and makes notes you draw or drag *snap* to it
 ("for safety", as its manual puts it). To move a whole song you transpose
-its patterns from the playlist. Ferrous Loom's key menu is the key of the
+its patterns from the playlist. Ferrous Lineup's key menu is the key of the
 whole song, the one the harmony keys and hints use, so it moves the song
 as well; and the piano roll gets FL Studio's snapping on top (below).
 

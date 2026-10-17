@@ -1,10 +1,10 @@
 # Key changes partway through, and the whole Turkish March
 
-Files: [`crates/loom-core/src/key_map.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/key_map.rs),
-[`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs),
-[`crates/loom-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/demo.rs),
-[`crates/loom-core/src/library/song/electronic.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/song/electronic.rs)
-and [`crates/loom-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/playlist/sections.rs)
+Files: [`crates/lineup-core/src/key_map.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/key_map.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
+[`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/demo.rs),
+[`crates/lineup-core/src/library/song/electronic.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/song/electronic.rs)
+and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/playlist/sections.rs)
 
 The question that started this: *"I don't see the modulation of the key
 signature in the Turkish March demo. Isn't there a modulation in the
@@ -76,7 +76,7 @@ sharps appearing at bar 25.
 
 Project files keep the markers in a `key_markers` list. A song with any
 is saved as format 8; one without stays at the older format, so older
-versions of Ferrous Loom can still open it.
+versions of Ferrous Lineup can still open it.
 
 ## Seeing it in the app
 

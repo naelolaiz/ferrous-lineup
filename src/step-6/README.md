@@ -79,7 +79,7 @@ which never deletes notes you have not selected.
 A guitarist strums a chord: the notes start one after the other, a few
 milliseconds apart, low to high. It was on the plan for this step, and
 it was left out on purpose, because a strum needs a finer clock than
-the one Ferrous Loom has.
+the one Ferrous Lineup has.
 
 A `NoteEvent` starts on a step, and a step is a sixteenth note: 115
 milliseconds at 130 BPM. A strum spreads the notes over 10 to 40
@@ -92,13 +92,13 @@ its own; exercise 6 explains how it could be done.
 ## What changed in the architecture
 
 ```text
-  loom-core
+  lineup-core
     tools.rs (new):               plain functions that change groups of notes
     harmony/progression.rs (new): next_chords: what often comes after a chord
     harmony/chord.rs:             seven new chord types
     pattern.rs:                   replace_notes, can_replace_notes, tidy_notes
 
-  loom-app
+  lineup-app
     piano_roll.rs: the selection, the Tools menu and keys, inversions,
                    suggestions, ghost notes, the velocity lane
     app.rs:        applies RollAction::ReplaceNotes through edit_pattern
@@ -108,7 +108,7 @@ Every tool takes the same path:
 
 ```text
   Alt+↑ with C, E, G selected
-    └▶ tools::transpose_in_key(&selection, scale, 1)   loom-core: notes in, notes out
+    └▶ tools::transpose_in_key(&selection, scale, 1)   lineup-core: notes in, notes out
          └▶ D, F, A
     └▶ RollAction::ReplaceNotes { old: [C, E, G], new: [D, F, A], label: "move notes in key" }
          └▶ app: edit_pattern("move notes in key", |pattern| pattern.replace_notes(...))
@@ -118,7 +118,7 @@ Every tool takes the same path:
 Four ideas carry this step:
 
 1. **Tools are plain functions.** Every tool is a function in
-   `loom-core` that takes some notes and returns new ones. It knows
+   `lineup-core` that takes some notes and returns new ones. It knows
    nothing about windows or mice, so it is tested on its own, and the
    piano roll only decides which notes to give it.
 2. **One action for every group change.** Moving a selection,
@@ -135,16 +135,16 @@ Four ideas carry this step:
 ## Files in this step
 
 ```text
-crates/loom-core/src/tools.rs               transpose, shift, in key, snap, invert, arpeggiate (new)
-crates/loom-core/src/harmony/progression.rs Suggestion and next_chords (new)
-crates/loom-core/src/harmony/chord.rs       6/9, 7b9, 7#9, 11, m11, 13, maj13
-crates/loom-core/src/harmony/analysis.rs    a test for the new chords
-crates/loom-core/src/pattern.rs             replace_notes, can_replace_notes, tidy_notes
-crates/loom-app/src/piano_roll.rs           selection, tools, ghost notes, velocity lane, suggestions
-crates/loom-app/src/app.rs                  RollAction::ReplaceNotes
+crates/lineup-core/src/tools.rs               transpose, shift, in key, snap, invert, arpeggiate (new)
+crates/lineup-core/src/harmony/progression.rs Suggestion and next_chords (new)
+crates/lineup-core/src/harmony/chord.rs       6/9, 7b9, 7#9, 11, m11, 13, maj13
+crates/lineup-core/src/harmony/analysis.rs    a test for the new chords
+crates/lineup-core/src/pattern.rs             replace_notes, can_replace_notes, tidy_notes
+crates/lineup-app/src/piano_roll.rs           selection, tools, ghost notes, velocity lane, suggestions
+crates/lineup-app/src/app.rs                  RollAction::ReplaceNotes
 ```
 
-The chapters start in `loom-core` with the tools, because they are the
+The chapters start in `lineup-core` with the tools, because they are the
 simplest code of the step, then the music theory behind inversions and
 suggestions, and end in the piano roll, where it all meets the mouse and
 the keyboard.

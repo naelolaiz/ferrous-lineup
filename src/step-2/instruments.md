@@ -1,14 +1,14 @@
 # Instruments: drums, sampler and synth
 
-Files: [`drums.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/drums.rs),
-[`dsp.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/dsp.rs),
-[`sample.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/sample.rs) and
-[`instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/instrument.rs)
-in `crates/loom-audio/src/`
+Files: [`drums.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/drums.rs),
+[`dsp.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/dsp.rs),
+[`sample.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/sample.rs) and
+[`instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/instrument.rs)
+in `crates/lineup-audio/src/`
 
 ## Synthesizing a drum kit
 
-Ferrous Loom ships no sound files: its drums are computed when a drum
+Ferrous Lineup ships no sound files: its drums are computed when a drum
 channel is created. Each drum is a few lines of math.
 
 | Drum | Recipe |
@@ -193,5 +193,5 @@ values. That is more open-ended, since anyone could add a new kind, but
 every `Box::new` allocates, and calls go through a pointer to a function
 table. With only two kinds, an enum is simpler: the audio thread
 `match`es on it, creating one never allocates, and the compiler checks
-that every kind is handled. If Ferrous Loom ever loads plugins, the trait
+that every kind is handled. If Ferrous Lineup ever loads plugins, the trait
 design will return.

@@ -1,14 +1,14 @@
 # Twelve-tone rows and pitch-class sets
 
-Files: [`crates/loom-core/src/harmony/row.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/row.rs),
-[`crates/loom-core/src/harmony/set_class.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/set_class.rs),
-[`crates/loom-core/src/harmony/pitch_set.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/pitch_set.rs),
-[`crates/loom-core/src/serial.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/serial.rs),
-[`crates/loom-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/scale.rs),
-[`crates/loom-core/src/library/rows.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/rows.rs)
-and [`crates/loom-app/src/twelve_tone.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/twelve_tone.rs)
+Files: [`crates/lineup-core/src/harmony/row.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/row.rs),
+[`crates/lineup-core/src/harmony/set_class.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/set_class.rs),
+[`crates/lineup-core/src/harmony/pitch_set.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/pitch_set.rs),
+[`crates/lineup-core/src/serial.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/serial.rs),
+[`crates/lineup-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/scale.rs),
+[`crates/lineup-core/src/library/rows.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/rows.rs)
+and [`crates/lineup-app/src/twelve_tone.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/twelve_tone.rs)
 
-Everything in Ferrous Loom so far assumed music in a key: a home note,
+Everything in Ferrous Lineup so far assumed music in a key: a home note,
 chords that lean towards it, harmony keys numbered I to vii°. A large
 part of the music of the 20th century has no key at all. This chapter
 adds the two main tools musicians use to think about it:
@@ -77,8 +77,8 @@ starting on C. A retrograde gets the number of the form it reverses:
 
 Some books number the forms differently, from the row's own first
 note, so that the row as written is always P0. Then Schoenberg's row is
-P0 and what Ferrous Loom calls I11 is I7 there. The forms are the same;
-only their numbers move. Ferrous Loom uses the first way (the note a
+P0 and what Ferrous Lineup calls I11 is I7 there. The forms are the same;
+only their numbers move. Ferrous Lineup uses the first way (the note a
 form starts on), because then a label tells you a note you can find
 on the keyboard.
 
@@ -350,7 +350,7 @@ about to go away.
 ### The rows to start from
 
 The **Famous and example rows** menu holds seven rows. Three come from
-famous pieces, and four were written for Ferrous Loom to show what a
+famous pieces, and four were written for Ferrous Lineup to show what a
 row can do: a combinatorial one, a row of four triads, a palindrome and
 an all-interval row.
 
@@ -405,7 +405,7 @@ Around 1950, Olivier Messiaen, Pierre Boulez and Milton Babbitt took
 the idea further: if the pitches follow a series, why not the
 durations, the dynamics and the octaves too? This is **integral** (or
 total) serialism. Real pieces map series to durations and dynamics in
-many ways; Ferrous Loom uses three simple ones, each reading a
+many ways; Ferrous Lineup uses three simple ones, each reading a
 different form of the row so that the four series do not move in step:
 
 - **Durations**: the row's numbers (each note's distance above the
@@ -542,7 +542,7 @@ the piano roll highlights.
 ### Format 6
 
 A project whose key is a row or a set is saved as **format 6**. Older
-versions of Ferrous Loom do not know these kinds, so they could not
+versions of Ferrous Lineup do not know these kinds, so they could not
 read the key; with the new number they say the file is from a newer
 version instead of failing in a confusing way. As always, `format_for`
 writes the lowest format a project needs, so projects in an ordinary
@@ -594,7 +594,7 @@ turn, and measure the span from the first note to the last:
 E and B tie with a span of 8, so compare the span to the note before
 last: B to E is 5, E to B is 7. The normal form is **B C E G**. (This
 tie-break, comparing from the end, is John Rahn's; Allen Forte compared
-from the start. They disagree for six classes. Ferrous Loom uses Rahn's,
+from the start. They disagree for six classes. Ferrous Lineup uses Rahn's,
 as most textbooks now do.)
 
 **Prime form** goes one step further: take the normal forms of the set
@@ -1064,31 +1064,31 @@ The Row window also got taller than some screens. It now scrolls
 
 ## Exercises
 
-1. **Distinct forms (loom-core, small).** Write a test that counts how
+1. **Distinct forms (lineup-core, small).** Write a test that counts how
    many of the 48 forms of a row are different (collect them into a
    `HashSet<ToneRow>`). Check that Webern's row has 24 and Schoenberg's
    48. Can any row have fewer than 24? (Hint: could a row be one of its
    own I forms? Write out what that means for each note, and you will
    find that at most two notes could fit.)
-2. **Derived rows (loom-core, medium).** Webern's Concerto, Op. 24,
+2. **Derived rows (lineup-core, medium).** Webern's Concerto, Op. 24,
    uses a row whose four trichords all belong to the same class, 3-3
    [014]. Add `ToneRow::is_derived(size)`, true when every segment of
    that size has the same set class, and a `random_derived` that builds
    one by backtracking, like `random_all_interval`.
-3. **Forte's way (loom-core, small).** For six classes, Forte's prime
+3. **Forte's way (lineup-core, small).** For six classes, Forte's prime
    form differs from Rahn's. Write `forte_prime()` that breaks ties
    from the start of the set instead of from the end, and show it in
    the set browser's details when it differs. Why can the trick of
    "the smallest number" not do this one directly? (Think about which
    bits a comparison looks at first.)
-4. **Multiplying by 5 (loom-core, medium).** Multiplying every pitch
+4. **Multiplying by 5 (lineup-core, medium).** Multiplying every pitch
    class by 5 (mod 12) turns the chromatic scale into the circle of
    fourths: 0 5 10 3 8 1 … This **M5** operation is a fifth way to
    transform a row or a set, used by some composers after Webern. Add
    `PitchSet::multiply` and a `ToneRow::multiply`, and find which set
    classes M5 turns into a different class. (Hint: the Z-related pairs
    are worth a look.)
-5. **A series of its own (loom-core and loom-app, medium).** In
+5. **A series of its own (lineup-core and lineup-app, medium).** In
    `write_row`, the durations always read the row's own numbers. Let
    the user type a second row, used only for the durations, and show
    both series in the window. `RowWriting` derives `Copy`; why does it

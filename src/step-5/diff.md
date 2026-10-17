@@ -1,8 +1,8 @@
 # Telling the audio thread what changed
 
-Files: [`crates/loom-core/src/diff.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/diff.rs),
-[`crates/loom-app/src/app/edit.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/edit.rs)
-and [`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
+Files: [`crates/lineup-core/src/diff.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/diff.rs),
+[`crates/lineup-app/src/app/edit.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/edit.rs)
+and [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
 
 ## The problem undo brings
 
@@ -26,7 +26,7 @@ ways to tell the audio thread about it:
    side door, with all the hand-written reverses we avoided.
 3. **Compare the project before and after**, and send only what differs.
 
-Ferrous Loom does the third, and then goes one step further: *normal*
+Ferrous Lineup does the third, and then goes one step further: *normal*
 edits use the same comparison too. No edit sends its own commands any
 more. This is what every change in the app looks like now:
 
@@ -105,7 +105,7 @@ none, nothing is sent and no undo step is recorded.
 
 ## `diff`: the list of changes
 
-The comparison lives in `loom-core`, which knows projects but nothing
+The comparison lives in `lineup-core`, which knows projects but nothing
 about the audio thread. It describes differences in the project's own
 words:
 

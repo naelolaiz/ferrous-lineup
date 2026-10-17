@@ -1,13 +1,13 @@
 # Tempo changes, and playing like a person
 
-Files: [`crates/loom-core/src/tempo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/tempo.rs),
-[`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs),
-[`crates/loom-core/src/library/interpret.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/interpret.rs),
-[`crates/loom-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/demo.rs),
-[`crates/loom-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/song.rs),
-[`crates/loom-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi_file.rs),
-[`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
-and [`crates/loom-app/src/playlist/tempo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/playlist/tempo.rs)
+Files: [`crates/lineup-core/src/tempo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/tempo.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
+[`crates/lineup-core/src/library/interpret.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/interpret.rs),
+[`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/demo.rs),
+[`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/song.rs),
+[`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs),
+[`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
+and [`crates/lineup-app/src/playlist/tempo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/playlist/tempo.rs)
 
 The question that started this chapter was simple: *are there tempo
 changes in any of the demos?* There were none. Every demo played from
@@ -205,7 +205,7 @@ stores the time *between* events.
 
 Project files save the markers as `tempo_markers`, and only when there
 are some. A file that uses tempo changes (or loose timing, below) is
-written as **format 7**. An older Ferrous Loom refuses it with "made by
+written as **format 7**. An older Ferrous Lineup refuses it with "made by
 a newer version" instead of playing the song at one tempo without a
 word.
 

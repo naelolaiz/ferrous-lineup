@@ -16,7 +16,7 @@ cargo --version
 rustc --version
 ```
 
-Ferrous Loom needs Rust 1.88 or newer. It uses the 2024 edition of the
+Ferrous Lineup needs Rust 1.88 or newer. It uses the 2024 edition of the
 language (more on editions in the next chapter) and `if let` chains, which
 arrived in 1.88. If your Rust is older, `rustup update` fixes it.
 
@@ -48,7 +48,7 @@ have. On a bare window manager, install `xdg-desktop-portal-gtk` or
 `zenity` to get them.
 
 MIDI goes through the ALSA *sequencer*. Desktop systems load it
-already; if Ferrous Loom's MIDI menu says **MIDI unavailable**, load it
+already; if Ferrous Lineup's MIDI menu says **MIDI unavailable**, load it
 with `sudo modprobe snd-seq`.
 
 ### macOS
@@ -82,7 +82,7 @@ development you can drop it to build faster.
 
 You should see this window:
 
-![Ferrous Loom with the playlist and the channel rack](images/step-4-playlist.png)
+![Ferrous Lineup with the playlist and the channel rack](images/step-4-playlist.png)
 
 Press **Space** or click **▶ Play** to hear the demo song: two bars of
 chords, then a beat comes in, and a drum fill ends it before it loops.
@@ -109,7 +109,7 @@ chords.
 To open a project straight away, give its file to the program:
 
 ```sh
-cargo run --release -- my-song.loom
+cargo run --release -- my-song.lineup
 ```
 
 The `--` tells Cargo that what follows is for the program, not for Cargo.
@@ -117,9 +117,9 @@ The `--` tells Cargo that what follows is for the program, not for Cargo.
 ### Without building: the CI downloads
 
 Every CI run on GitHub builds the program for all three systems. On the
-run's page, under **Artifacts**, download `ferrous-loom-linux`,
-`ferrous-loom-macos` or `ferrous-loom-windows` and unzip it. On Linux and
-macOS, make it executable first with `chmod +x ferrous-loom`. These
+run's page, under **Artifacts**, download `ferrous-lineup-linux`,
+`ferrous-lineup-macos` or `ferrous-lineup-windows` and unzip it. On Linux and
+macOS, make it executable first with `chmod +x ferrous-lineup`. These
 programs are not signed, so macOS and Windows will warn you before the
 first start; [Linux, macOS and Windows](step-4/platforms.md#what-is-not-there-yet)
 explains how to get past the warning.

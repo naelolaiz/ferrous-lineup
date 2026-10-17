@@ -1,13 +1,13 @@
 # MIDI Out for every channel
 
-Files: [`crates/loom-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/instrument.rs),
-[`crates/loom-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/midi.rs)
-and [`crates/loom-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/live.rs)
+Files: [`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/instrument.rs),
+[`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/midi.rs)
+and [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/live.rs)
 
 [Step 7](../step-7/live.md) built MIDI Out the way FL Studio does it: a
 channel of a special kind, *MIDI Out*, plays no sound and sends its notes
 to the port chosen in the MIDI menu. Every other channel stays inside
-Ferrous Loom.
+Ferrous Lineup.
 
 That is right, and it is also a trap. Plug in a synth, pick it in
 **MIDI > Output**, open a demo, press Play... and the synth says
@@ -21,7 +21,7 @@ Nothing in the window says why, either. Someone reported exactly that:
 2. Leave **Send every channel** ticked (it is on from the start).
 3. Play. Every channel plays on the synth instead of the speakers, as
    a MIDI Out channel does. Pick **None** as the output, or untick the
-   box, to hear Ferrous Loom's own sounds again.
+   box, to hear Ferrous Lineup's own sounds again.
 
 ![The MIDI menu: an output picked, and Send every channel](../images/step-8-midi-out-menu.png)
 
@@ -46,7 +46,7 @@ channels reach the port.
 
 Two smaller things changed in the menu:
 
-- The port lists leave out Ferrous Loom's own ports. On Linux, the port
+- The port lists leave out Ferrous Lineup's own ports. On Linux, the port
   the app sends from shows up as an *input* too, and picking it would
   send every note round in a circle.
 - If the audio engine could not start, the menu says that nothing can

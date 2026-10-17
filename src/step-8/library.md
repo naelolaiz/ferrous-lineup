@@ -1,7 +1,7 @@
 # The library: knowledge as data
 
-Files: [`crates/loom-core/src/library/`](https://github.com/naelolaiz/ferrous-loom/tree/main/crates/loom-core/src/library)
-and [`crates/loom-audio/src/drums.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/drums.rs)
+Files: [`crates/lineup-core/src/library/`](https://github.com/naelolaiz/ferrous-loom/tree/band-in-a-box/crates/lineup-core/src/library)
+and [`crates/lineup-audio/src/drums.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/drums.rs)
 
 A musician who sits down to play a bossa nova knows four things: the
 chords, how the guitar plays them, what the bass does, and the drum

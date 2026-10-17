@@ -1,11 +1,11 @@
 # Exercises
 
-## 1. A style of your own (loom-core, easy)
+## 1. A style of your own (lineup-core, easy)
 
 Add a style to `STYLES` in `library/style.rs`: a progression from a
 song you like, written in numerals. For example the "Pachelbel"
 progression, `I | V | vi | iii | IV | I | IV | V`, with
-`Comping::ArpUpDown` and `Bass::Held`. Run `cargo test -p loom-core`
+`Comping::ArpUpDown` and `Bass::Held`. Run `cargo test -p lineup-core`
 before you open the app: if a numeral is misspelled, or a bar cannot be
 shared by its chords, a test names the style.
 
@@ -15,7 +15,7 @@ same?
 
 *Practices:* `const fn` tables, struct literals, reading test failures.
 
-## 2. A chacarera (loom-core, easy)
+## 2. A chacarera (lineup-core, easy)
 
 The chacarera, a folk dance from the north of Argentina, is in 6/8 with
 a bass drum (the *bombo legüero*) that plays across the beats. Add it
@@ -32,7 +32,7 @@ come in two groups of six.
 
 *Practices:* the rhythm notation, `const` time signatures.
 
-## 3. Latch (loom-app, easy)
+## 3. Latch (lineup-app, easy)
 
 To record a long chord, you have to hold the harmony key for the whole
 chord. Add a **Latch** toggle next to Triads, 7ths and 9ths: while it
@@ -44,7 +44,7 @@ Look at `Down` and `Holder`. Could a latched chord be a third kind of
 
 *Practices:* enums with data, state machines.
 
-## 4. Borrowed chords (loom-core and loom-app, medium)
+## 4. Borrowed chords (lineup-core and lineup-app, medium)
 
 Songs in major keys often borrow chords from the minor key with the
 same tonic: iv (F minor in C), bVI (A♭), bVII (B♭) and bIII (E♭). This
@@ -58,7 +58,7 @@ says which minor-key chord each one is.
 
 *Practices:* reusing the library's numerals, egui layout.
 
-## 5. A song of your own (loom-core, medium)
+## 5. A song of your own (lineup-core, medium)
 
 Add a song in the public domain to the right genre file in
 `library/song/`, and to `SONGS`. Some that are not in the library yet:
@@ -73,7 +73,7 @@ notes confuse it?
 
 *Practices:* the melody notation, tests as a safety net for data.
 
-## 6. Changing time in the middle (loom-core, hard)
+## 6. Changing time in the middle (lineup-core, hard)
 
 A project has one time signature. Real songs sometimes change: a bar of
 2/4 at the end of a phrase, a chorus that goes from 4/4 to 3/4. Design
@@ -90,7 +90,7 @@ a *meter map*: a list of `(bar, TimeSignature)` changes, sorted by bar.
 *Practices:* designing a data structure, binary search on sorted data,
 keeping files compatible.
 
-## 7. Remember the hint level (loom-app, medium)
+## 7. Remember the hint level (lineup-app, medium)
 
 The hint level goes back to Short every time the app starts. eframe
 already saves egui's own memory between runs (the zoom and the window
@@ -104,7 +104,7 @@ channel rack is open is one.
 
 *Practices:* Cargo features, serde derives, the `eframe::App` trait.
 
-## 8. Zoom the popups too (loom-app, small)
+## 8. Zoom the popups too (lineup-app, small)
 
 Zoom the channel rack to 150% and right-click a channel's name: the menu is
 drawn at the normal size. A popup is a layer of its own, so it never
@@ -116,7 +116,7 @@ see [A bug hunt](bug-hunt.md).)
 
 *Practices:* reading a library's source, egui's layers and styles.
 
-## 9. Hints everywhere (loom-app, small)
+## 9. Hints everywhere (lineup-app, small)
 
 Only the toolbar and the harmony keys give the hint bar something to
 say (see [A clearer look](look-and-transport.md)). The channel rack,
@@ -129,7 +129,7 @@ taking `&Response`?
 *Practices:* ownership through a function, egui's `Response`, reading
 someone else's module before changing it.
 
-## 10. Listen better (loom-core, medium)
+## 10. Listen better (lineup-core, medium)
 
 Hearing chords gets about 91% of the library right when every style is
 played in every way (see [A new rhythm for a song](new-rhythm.md)).
@@ -146,7 +146,7 @@ test runs many times faster.
 *Practices:* measuring before changing, nested loops over enums, tuning
 by tests.
 
-## 11. A tempo change on a pattern (loom-core, small)
+## 11. A tempo change on a pattern (lineup-core, small)
 
 `TempoMark` puts a demo's markings on the playlist (see [Tempo changes,
 and playing like a person](tempo-and-feel.md)). The Toccata in D minor
@@ -159,7 +159,7 @@ make it fail?
 
 *Practices:* `const` slices of enums, counting steps in a bar.
 
-## 12. Lean on the highest note (loom-core, medium)
+## 12. Lean on the highest note (lineup-core, medium)
 
 The melody shaping in `library/interpret.rs` gives a note up to six
 velocity steps for its height in the phrase. Singers often lean on the

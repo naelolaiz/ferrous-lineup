@@ -41,10 +41,10 @@ Step 2 turns the test tone into a real, if small, drum machine:
 ## What changed in the architecture
 
 ```text
-  UI thread (loom-app)                         Audio thread (loom-audio)
+  UI thread (lineup-app)                         Audio thread (lineup-audio)
   ─────────────────────                        ─────────────────────────
-  Project (loom-core)                          AudioThread
-   ├─ tempo                 Command queue       ├─ Sequencer (loom-core)
+  Project (lineup-core)                          AudioThread
+   ├─ tempo                 Command queue       ├─ Sequencer (lineup-core)
    ├─ channels       ───────────────────▶       ├─ channels: Vec<ChannelState>
    └─ pattern                                   │    └─ Instrument + steps
                                                 │
@@ -69,17 +69,17 @@ Three new ideas carry this step:
 ## Files in this step
 
 ```text
-crates/loom-core/src/pattern.rs     Pattern: the grid of steps
-crates/loom-core/src/sequencer.rs   Sequencer: when does each step start?
-crates/loom-core/src/project.rs     Project, Channel, ChannelKind, Drum
-crates/loom-audio/src/dsp.rs        Smoothed, Noise, HighPass, LowPass
-crates/loom-audio/src/drums.rs      the synthesized drum kit
-crates/loom-audio/src/sample.rs     SampleData and WAV loading
-crates/loom-audio/src/instrument.rs Instrument: Sampler and Synth (Loom Osc)
-crates/loom-audio/src/engine.rs     new Commands, the trash queue, the playhead
-crates/loom-app/src/channel_rack.rs the rack: rows, steps, drag and drop
-crates/loom-app/src/widgets.rs      step button, knob and mute light
-crates/loom-app/src/app.rs          applies rack actions to project and audio
+crates/lineup-core/src/pattern.rs     Pattern: the grid of steps
+crates/lineup-core/src/sequencer.rs   Sequencer: when does each step start?
+crates/lineup-core/src/project.rs     Project, Channel, ChannelKind, Drum
+crates/lineup-audio/src/dsp.rs        Smoothed, Noise, HighPass, LowPass
+crates/lineup-audio/src/drums.rs      the synthesized drum kit
+crates/lineup-audio/src/sample.rs     SampleData and WAV loading
+crates/lineup-audio/src/instrument.rs Instrument: Sampler and Synth (Loom Osc)
+crates/lineup-audio/src/engine.rs     new Commands, the trash queue, the playhead
+crates/lineup-app/src/channel_rack.rs the rack: rows, steps, drag and drop
+crates/lineup-app/src/widgets.rs      step button, knob and mute light
+crates/lineup-app/src/app.rs          applies rack actions to project and audio
 ```
 
 The test tone from step 1 (`synth.rs`) is gone. Its click-free volume

@@ -8,7 +8,7 @@
 > step 3 version of the code, run `git checkout step-3-piano-roll`, or
 > browse that branch on GitHub.
 
-Step 3 gives Ferrous Loom melodies and chords, and starts teaching harmony:
+Step 3 gives Ferrous Lineup melodies and chords, and starts teaching harmony:
 
 - a **piano roll** window where you draw notes on a grid of pitches and
   steps, move them, stretch them and delete them,
@@ -54,7 +54,7 @@ picture of its notes instead.
 ## What changed in the architecture
 
 ```text
-  loom-core                                loom-audio
+  lineup-core                                lineup-audio
   ─────────                                ──────────
   harmony/  (new)                          Instrument
     PitchSet, Scale, Chord,                  ├─ Sampler: 8 voices, pitched
@@ -63,7 +63,7 @@ picture of its notes instead.
     Pattern: Vec<NoteEvent> per channel   ──SetNotes──▶  ChannelState.notes
     (steps are 1-step notes)                             (old list → trash queue)
 
-  loom-app
+  lineup-app
     piano_roll.rs (new): the window, its own state, RollActions
     channel_rack.rs: step buttons or a mini piano roll per row
 ```
@@ -82,20 +82,20 @@ Two ideas carry this step:
 ## Files in this step
 
 ```text
-crates/loom-core/src/pitch.rs              + PitchClass and Spelling
-crates/loom-core/src/harmony.rs            the harmony module (new)
-crates/loom-core/src/harmony/pitch_set.rs  PitchSet: 12 bits, one per pitch class
-crates/loom-core/src/harmony/scale.rs      ScaleKind, Scale, chords of a key
-crates/loom-core/src/harmony/chord.rs      ChordQuality, Chord, ChordStamp
-crates/loom-core/src/harmony/analysis.rs   analyze() and Harmony: naming notes
-crates/loom-core/src/pattern.rs            NoteEvent; patterns hold notes now
-crates/loom-core/src/project.rs            the key, note editing, the new demo
-crates/loom-audio/src/instrument.rs        voices, pitch, envelopes
-crates/loom-audio/src/engine.rs            SetNotes, PreviewNote, the Garbage enum
-crates/loom-app/src/piano_roll.rs          the piano roll window (new)
-crates/loom-app/src/channel_rack.rs        mini piano roll in the rack
-crates/loom-app/src/widgets.rs             + mini_roll widget
-crates/loom-app/src/app.rs                 applies piano roll actions
+crates/lineup-core/src/pitch.rs              + PitchClass and Spelling
+crates/lineup-core/src/harmony.rs            the harmony module (new)
+crates/lineup-core/src/harmony/pitch_set.rs  PitchSet: 12 bits, one per pitch class
+crates/lineup-core/src/harmony/scale.rs      ScaleKind, Scale, chords of a key
+crates/lineup-core/src/harmony/chord.rs      ChordQuality, Chord, ChordStamp
+crates/lineup-core/src/harmony/analysis.rs   analyze() and Harmony: naming notes
+crates/lineup-core/src/pattern.rs            NoteEvent; patterns hold notes now
+crates/lineup-core/src/project.rs            the key, note editing, the new demo
+crates/lineup-audio/src/instrument.rs        voices, pitch, envelopes
+crates/lineup-audio/src/engine.rs            SetNotes, PreviewNote, the Garbage enum
+crates/lineup-app/src/piano_roll.rs          the piano roll window (new)
+crates/lineup-app/src/channel_rack.rs        mini piano roll in the rack
+crates/lineup-app/src/widgets.rs             + mini_roll widget
+crates/lineup-app/src/app.rs                 applies piano roll actions
 ```
 
 The chapters go from the inside out: first the music theory, then notes

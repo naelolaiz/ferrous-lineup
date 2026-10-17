@@ -42,21 +42,21 @@ starting a new one forgets the history.
 
 The export plays the song once, from the first bar to the end of the last
 clip, then two more seconds so the last notes can ring out. The file is
-named after the project ("song.loom" suggests "song.wav"). Export WAV is
+named after the project ("song.lineup" suggests "song.wav"). Export WAV is
 greyed out when the playlist has no clips.
 
 ## What changed in the architecture
 
 ```text
-  loom-core
+  lineup-core
     history.rs (new): History<T>, copies of the project to undo and redo to
     diff.rs (new):    diff(before, after) -> Vec<Change>
 
-  loom-app
+  lineup-app
     app/edit.rs (new):   edit(), undo(), redo(), sync_audio(), the Edit menu
     app/export.rs (new): File > Export WAV, on a thread of its own
 
-  loom-audio
+  lineup-audio
     render.rs (new): Renderer and export_wav: the audio thread, without a sound card
     engine.rs:       InsertPattern and InsertChannel, at any position
     sample.rs:       SampleCache, so sample files are read once
@@ -99,18 +99,18 @@ Three ideas carry this step:
 ## Files in this step
 
 ```text
-crates/loom-core/src/history.rs        History<T>: undo and redo (new)
-crates/loom-core/src/diff.rs           Change and diff(): what changed between two projects (new)
-crates/loom-audio/src/render.rs        Renderer and export_wav (new)
-crates/loom-audio/src/engine.rs        InsertPattern, InsertChannel, settle_volumes
-crates/loom-audio/src/sample.rs        SampleCache
-crates/loom-audio/src/instrument.rs    Instrument::for_channel takes the cache
-crates/loom-audio/src/dsp.rs           Smoothed::settle
-crates/loom-app/src/app/edit.rs        edit, undo, redo, the Edit menu (new)
-crates/loom-app/src/app/export.rs      File > Export WAV (new)
-crates/loom-app/src/app.rs             every change goes through edit()
-crates/loom-app/src/app/files.rs       the Export WAV menu item; opening a file clears the history
-crates/loom-app/src/piano_roll.rs      follows its channel when one is inserted above it
+crates/lineup-core/src/history.rs        History<T>: undo and redo (new)
+crates/lineup-core/src/diff.rs           Change and diff(): what changed between two projects (new)
+crates/lineup-audio/src/render.rs        Renderer and export_wav (new)
+crates/lineup-audio/src/engine.rs        InsertPattern, InsertChannel, settle_volumes
+crates/lineup-audio/src/sample.rs        SampleCache
+crates/lineup-audio/src/instrument.rs    Instrument::for_channel takes the cache
+crates/lineup-audio/src/dsp.rs           Smoothed::settle
+crates/lineup-app/src/app/edit.rs        edit, undo, redo, the Edit menu (new)
+crates/lineup-app/src/app/export.rs      File > Export WAV (new)
+crates/lineup-app/src/app.rs             every change goes through edit()
+crates/lineup-app/src/app/files.rs       the Export WAV menu item; opening a file clears the history
+crates/lineup-app/src/piano_roll.rs      follows its channel when one is inserted above it
 ```
 
 The chapters go in the order a change travels: first the history that

@@ -1,6 +1,6 @@
 # Step 4: The playlist, saving, and three operating systems
 
-Step 4 turns Ferrous Loom from a pattern loop into a small song editor
+Step 4 turns Ferrous Lineup from a pattern loop into a small song editor
 that you can keep working on tomorrow, on Linux, macOS or Windows:
 
 - **many patterns**: make as many patterns as you like, name them, clone
@@ -12,7 +12,7 @@ that you can keep working on tomorrow, on Linux, macOS or Windows:
   many times; edit it once and every clip changes,
 - **pattern and song mode**: PAT loops the selected pattern while you work
   on it, SONG plays the playlist from the start and loops at the end,
-- **saving and loading** projects as `.loom` files, which are plain text
+- **saving and loading** projects as `.lineup` files, which are plain text
   you can read, with a dot in the window title when there are unsaved
   changes and a "Save changes?" question before anything is lost,
 - **macOS and Windows** builds, made and tested by CI on every push next
@@ -41,15 +41,15 @@ loops.
 | F6, or Channel rack | show or hide the channel rack |
 | F7, or 🎹 Piano roll | show or hide the piano roll |
 | Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S | new, open, save, save as (⌘ instead of Ctrl on a Mac) |
-| Drop a `.loom` file on the window | open it |
-| `ferrous-loom song.loom` | start with a file open |
+| Drop a `.lineup` file on the window | open it |
+| `ferrous-lineup song.lineup` | start with a file open |
 
 ![The pattern menu: rename, clone or delete](../images/step-4-pattern-menu.png)
 
 ## What changed in the architecture
 
 ```text
-  loom-core                                    loom-audio
+  lineup-core                                    lineup-audio
   ─────────                                    ──────────
   Project                                      AudioThread
     channels: Vec<Channel>                       channels[c].notes: ChannelNotes
@@ -59,7 +59,7 @@ loops.
   playlist.rs (new): Track, Clip                 mode: Pattern | Song
   file.rs (new): ProjectFile, save, load
 
-  loom-app
+  lineup-app
     playlist.rs (new): the playlist and the pattern picker
     app.rs: the playlist fills the window; rack and piano roll float
     app/files.rs (new): New, Open, Save, "Save changes?", the title
@@ -81,24 +81,24 @@ Three ideas carry this step:
 ## Files in this step
 
 ```text
-crates/loom-core/src/playlist.rs     Track, Clip, Playlist (new)
-crates/loom-core/src/project.rs      many patterns, the playlist, the demo song
-crates/loom-core/src/pattern.rs      patterns have names; no duplicate notes
-crates/loom-core/src/file.rs         project files: save, load, FileError (new)
-crates/loom-core/examples/print_demo.rs   prints the demo as a project file (new)
-crates/loom-core/src/{pitch,tempo}.rs and harmony/scale.rs   serde derives
-crates/loom-audio/src/engine.rs      ChannelNotes, PlayMode, song playback
-crates/loom-app/src/playlist.rs      the playlist window (new)
-crates/loom-app/src/app.rs           patterns, modes, the new layout
-crates/loom-app/src/app/files.rs     New, Open, Save, unsaved changes (new)
-crates/loom-app/src/channel_rack.rs  shows the selected pattern, in a window
-crates/loom-app/src/piano_roll.rs    edits the selected pattern
-crates/loom-app/src/main.rs          a file to open, no console on Windows
+crates/lineup-core/src/playlist.rs     Track, Clip, Playlist (new)
+crates/lineup-core/src/project.rs      many patterns, the playlist, the demo song
+crates/lineup-core/src/pattern.rs      patterns have names; no duplicate notes
+crates/lineup-core/src/file.rs         project files: save, load, FileError (new)
+crates/lineup-core/examples/print_demo.rs   prints the demo as a project file (new)
+crates/lineup-core/src/{pitch,tempo}.rs and harmony/scale.rs   serde derives
+crates/lineup-audio/src/engine.rs      ChannelNotes, PlayMode, song playback
+crates/lineup-app/src/playlist.rs      the playlist window (new)
+crates/lineup-app/src/app.rs           patterns, modes, the new layout
+crates/lineup-app/src/app/files.rs     New, Open, Save, unsaved changes (new)
+crates/lineup-app/src/channel_rack.rs  shows the selected pattern, in a window
+crates/lineup-app/src/piano_roll.rs    edits the selected pattern
+crates/lineup-app/src/main.rs          a file to open, no console on Windows
 .github/workflows/ci.yml             Linux, macOS and Windows jobs
 ```
 
 The chapters follow the data: first patterns and the playlist in
-`loom-core`, then how the audio thread plays a song, then files, then the
+`lineup-core`, then how the audio thread plays a song, then files, then the
 windows on screen, and last the other operating systems.
 
 > **Changed in step 5.** The code links in these chapters point to the

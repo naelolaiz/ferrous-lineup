@@ -1,9 +1,9 @@
 # The piano roll window
 
-Files: [`crates/loom-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/piano_roll.rs),
-[`crates/loom-app/src/channel_rack.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/channel_rack.rs),
-[`crates/loom-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/widgets.rs)
-and [`crates/loom-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app.rs)
+Files: [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/piano_roll.rs),
+[`crates/lineup-app/src/channel_rack.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/channel_rack.rs),
+[`crates/lineup-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/widgets.rs)
+and [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app.rs)
 
 ![The piano roll in F major: Bb is highlighted, B is not, and the B notes turn red](../images/step-3-f-major.png)
 
@@ -63,7 +63,7 @@ pub struct PianoRoll {
 ```
 
 It still never changes the project itself. `show` returns a list of
-actions, as the rack does, and `LoomApp::apply_roll` carries them out:
+actions, as the rack does, and `LineupApp::apply_roll` carries them out:
 
 ```rust
 pub enum RollAction {
@@ -283,7 +283,7 @@ called, because `min` and `max` each use one up.
 
 ## Wiring it into the app
 
-`LoomApp` owns a `PianoRoll`, opens it on the first synth channel at
+`LineupApp` owns a `PianoRoll`, opens it on the first synth channel at
 startup, and toggles it with F7 or the 🎹 button. After the panels are
 drawn:
 

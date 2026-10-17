@@ -1,6 +1,6 @@
 # Exercises
 
-## 1. Octave keys (loom-app, easy)
+## 1. Octave keys (lineup-app, easy)
 
 The typing keyboard covers C4 to E6. Add two keys that move it down and
 up by an octave, such as `-` and `=` (`Key::Minus` and `Key::Equals`),
@@ -15,7 +15,7 @@ worked out again from the key?
 *Practices:* `Note` arithmetic with `checked_add_signed` (step 6),
 remembering what was done instead of recomputing it.
 
-## 2. Softer and louder typing (loom-app, easy)
+## 2. Softer and louder typing (lineup-app, easy)
 
 Typed keys always play at `DEFAULT_VELOCITY`, so recorded takes from
 the typing keyboard all have the same velocity, while a MIDI keyboard's
@@ -29,7 +29,7 @@ Shift come up properly when Shift is let go first?
 
 *Practices:* egui sliders, keyboard modifiers.
 
-## 3. A metronome (loom-audio, medium)
+## 3. A metronome (lineup-audio, medium)
 
 Recording is much easier with a click on every beat. Add
 `Command::SetMetronome(bool)` and a "Metronome" checkbox next to Rec.
@@ -46,7 +46,7 @@ accident if it lived in a channel?
 *Practices:* a new command end to end, real-time sound without
 allocating.
 
-## 4. Notes across the loop (loom-core, medium)
+## 4. Notes across the loop (lineup-core, medium)
 
 [`recorded_note`](recording.md#what-it-cannot-know) has two limits.
 A note held across the end of the loop is cut there, and a key held for
@@ -81,9 +81,9 @@ studios you know handle it?
 
 *Practices:* designing behaviour before code, the playlist from step 4.
 
-## 6. Import MIDI files (loom-core, harder)
+## 6. Import MIDI files (lineup-core, harder)
 
-Ferrous Loom can write `.mid` files. Add `midi_file::read(bytes) ->
+Ferrous Lineup can write `.mid` files. Add `midi_file::read(bytes) ->
 Result<Project, MidiFileError>`, and **File > Import MIDI…**. The tests
 of `midi_file.rs` already have a small reader to start from, but files
 made by other programs need more:
@@ -105,7 +105,7 @@ started does it. What should happen to a note that never ends?
 *Practices:* parsing binary data with slice patterns, error types,
 `HashMap`.
 
-## 7. Latency compensation (loom-audio and loom-app, harder)
+## 7. Latency compensation (lineup-audio and lineup-app, harder)
 
 [Latency](recording.md#latency-what-you-hear-is-in-the-past) makes
 every recorded key a little late. cpal knows by how much: the audio
@@ -147,7 +147,7 @@ time as data.
   ignores in favour of the audio thread's position. When would midir's
   timestamp be more precise? Why can the two clocks not simply be
   compared?
-- Without the format check, a format 1 version of Ferrous Loom opening a
+- Without the format check, a format 1 version of Ferrous Lineup opening a
   file with a MIDI Out channel would fail anyway: serde has never heard
   of `MidiOut`. So why raise the format at all? Compare the two error
   messages the user would see.

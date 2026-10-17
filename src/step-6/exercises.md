@@ -1,13 +1,13 @@
 # Exercises
 
-## 1. Humanize velocities (loom-core, easy)
+## 1. Humanize velocities (lineup-core, easy)
 
 Notes that are all played exactly as hard sound mechanical. Add
 `tools::humanize(notes, amount, seed) -> Vec<NoteEvent>`, which moves
 each velocity up or down by a random amount of at most `amount`, kept
 within 1..=127, and a "Humanize velocity" item in the Tools menu.
 
-Ferrous Loom has no random number crate, and does not need one: a tiny
+Ferrous Lineup has no random number crate, and does not need one: a tiny
 generator such as *xorshift* is three lines of bit shifts on a `u32`
 (look it up, and use `wrapping_mul` or plain shifts so nothing
 overflows). Why does the function take a `seed` instead of making one
@@ -18,7 +18,7 @@ time?
 *Practices:* pure functions with an explicit seed, bit operations,
 `clamp`.
 
-## 2. Copy and paste (loom-app, easy)
+## 2. Copy and paste (lineup-app, easy)
 
 Make Ctrl+C copy the selected notes and Ctrl+V paste them at the last
 step the pointer was over (`last_step`). Store the copied notes with
@@ -33,7 +33,7 @@ already in the list?
 
 *Practices:* `KeyboardShortcut`, `Option<usize>`, reusing an action.
 
-## 3. Name chords over a beat (loom-core and loom-app, medium)
+## 3. Name chords over a beat (lineup-core and lineup-app, medium)
 
 After "Arpeggiate chords", the chord lane names each step on its own:
 "A", "A+C", "A5"... You can see this in the arpeggio screenshot of this
@@ -42,7 +42,7 @@ last beat. Add a choice to the chord lane, "per step" or "per beat",
 and in "per beat" mode name each beat (4 steps) from every note that
 *starts* in that beat (or is still held when it begins).
 
-Write the gathering part in `loom-core` as a function on `Pattern`, so
+Write the gathering part in `lineup-core` as a function on `Pattern`, so
 it can be tested: an arpeggio of C, E, G over one beat must be named C.
 What should happen when a beat holds the end of one chord and the start
 of the next?
@@ -50,7 +50,7 @@ of the next?
 *Practices:* ranges and `flat_map`, deciding what "at the same time"
 means, tests on music you know.
 
-## 4. Borrowed chords (loom-core, medium)
+## 4. Borrowed chords (lineup-core, medium)
 
 Play C, then Bb major, in C major. Bb is not in the key, so
 `next_chords` suggests nothing. But Bb major is a very common chord in C
@@ -70,7 +70,7 @@ buttons? Maybe the hint line is enough.
 
 *Practices:* falling back with `or_else`, tests as a specification.
 
-## 5. Draw in key (loom-app, medium)
+## 5. Draw in key (lineup-app, medium)
 
 Step 3's exercise 5 asked for a "snap to scale" switch. Step 6 built
 `tools::nearest_in_key` for the Tools menu; use it to add a "Draw in
@@ -81,7 +81,7 @@ places must show the snapped notes too, so the outline and the click still agree
 selection drag snap: each note on its own, or the whole group by the same
 amount? Try both and listen to a chord being dragged.
 
-*Practices:* reusing `loom-core` functions in the UI, keeping the
+*Practices:* reusing `lineup-core` functions in the UI, keeping the
 preview and the action in step.
 
 ## 6. Strumming (all three crates, harder)

@@ -1,15 +1,15 @@
 # Changing time signature partway through
 
-Files: [`crates/loom-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/meter.rs),
-[`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs),
-[`crates/loom-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi_file.rs)
-and [`crates/loom-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/playlist/sections.rs)
+Files: [`crates/lineup-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/meter.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
+[`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs)
+and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/playlist/sections.rs)
 
 [Time signatures](time-signatures.md) gave a project one time signature.
 Real music does not always keep one: a hymn's last line can stretch into
 3/4, a folk dance can switch between 6/8 and 3/4, a prog song changes
 every few bars. FL Studio handles this with *time markers* on the
-playlist, and now Ferrous Loom does too.
+playlist, and now Ferrous Lineup does too.
 
 Right-click the bar numbers and pick a time signature. From that bar on,
 bars are counted in it. The ruler writes the time signature at bar 1 and
@@ -131,7 +131,7 @@ none.
 ## In files
 
 Markers are saved as `time_markers` after the loop region. A project
-with markers is **format 5**: an older Ferrous Loom would skip the field
+with markers is **format 5**: an older Ferrous Lineup would skip the field
 it does not know and draw everything in the first time signature, so it
 should refuse the file instead. A project without markers leaves the
 field out and keeps its old format, so older versions can still open

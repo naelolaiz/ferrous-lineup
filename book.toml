@@ -1,6 +1,6 @@
 [book]
-title = "Ferrous Loom: Building a Music Studio in Rust"
-authors = ["Ferrous Loom contributors"]
+title = "Ferrous Lineup: Building a Music Studio in Rust"
+authors = ["Ferrous Lineup contributors"]
 language = "en"
 src = "src"
 

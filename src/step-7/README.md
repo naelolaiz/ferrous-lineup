@@ -2,7 +2,7 @@
 
 MIDI is how keyboards, synths and music programs talk to each other. It
 has been the same since 1983: a few bytes that say "this key went down,
-this hard" or "this key came up". Step 7 teaches Ferrous Loom to speak
+this hard" or "this key came up". Step 7 teaches Ferrous Lineup to speak
 it, both ways:
 
 - **play from a MIDI keyboard**: pick it under **MIDI > Input**, and its
@@ -99,7 +99,7 @@ are the first to try it.
 ## What changed in the architecture
 
 ```text
-  loom-core
+  lineup-core
     midi.rs (new):       MidiMessage, note-on and note-off, to bytes and back
     midi_file.rs (new):  song_to_midi and pattern_to_midi: Standard MIDI Files
     record.rs (new):     recorded_note: a key held down becomes a note on the grid
@@ -107,12 +107,12 @@ are the first to try it.
     sequencer.rs:        position(): where playback is, to a fraction of a step
     file.rs:             format 2, written only by projects that need it
 
-  loom-audio
+  lineup-audio
     instrument.rs:  held notes and note_off; the MidiOut instrument
     engine.rs:      the LiveInput and MidiOutput queues, Command::Live,
                     the shared playback position
 
-  loom-app
+  lineup-app
     midi.rs (new):      midir: ports, the input callback, the sending thread
     app/live.rs (new):  the MIDI menu, the typing keyboard, keys held, recording
     app/export.rs:      MIDI export
@@ -158,23 +158,23 @@ Four ideas carry this step:
 ## Files in this step
 
 ```text
-crates/loom-core/src/midi.rs           MidiMessage, DRUM_CHANNEL, all_notes_off (new)
-crates/loom-core/src/midi_file.rs      Standard MIDI File export (new)
-crates/loom-core/src/record.rs         recorded_note (new)
-crates/loom-core/src/project.rs        ChannelKind::MidiOut, Channel::midi_out
-crates/loom-core/src/sequencer.rs      Sequencer::position
-crates/loom-core/src/file.rs           FORMAT_VERSION 2 and format_for
-crates/loom-audio/src/instrument.rs    HELD, note_off, MidiOut
-crates/loom-audio/src/engine.rs        LiveInput, MidiOutput, Command::Live, live_keys
-crates/loom-audio/src/render.rs        the export's audio thread has no MIDI
-crates/loom-app/src/midi.rs            the midir wrapper (new)
-crates/loom-app/src/app/live.rs        typing keyboard, held keys, recording (new)
-crates/loom-app/src/app/export.rs      MIDI export
-crates/loom-app/src/app/files.rs       the File menu's MIDI items
-crates/loom-app/src/app/edit.rs        a take is one undo step
-crates/loom-app/src/app.rs             the MIDI menu, Rec, the selected channel
-crates/loom-app/src/channel_rack.rs    selection, MIDI Out channels
-crates/loom-app/src/piano_roll.rs      keys held, suggestions from the keys
+crates/lineup-core/src/midi.rs           MidiMessage, DRUM_CHANNEL, all_notes_off (new)
+crates/lineup-core/src/midi_file.rs      Standard MIDI File export (new)
+crates/lineup-core/src/record.rs         recorded_note (new)
+crates/lineup-core/src/project.rs        ChannelKind::MidiOut, Channel::midi_out
+crates/lineup-core/src/sequencer.rs      Sequencer::position
+crates/lineup-core/src/file.rs           FORMAT_VERSION 2 and format_for
+crates/lineup-audio/src/instrument.rs    HELD, note_off, MidiOut
+crates/lineup-audio/src/engine.rs        LiveInput, MidiOutput, Command::Live, live_keys
+crates/lineup-audio/src/render.rs        the export's audio thread has no MIDI
+crates/lineup-app/src/midi.rs            the midir wrapper (new)
+crates/lineup-app/src/app/live.rs        typing keyboard, held keys, recording (new)
+crates/lineup-app/src/app/export.rs      MIDI export
+crates/lineup-app/src/app/files.rs       the File menu's MIDI items
+crates/lineup-app/src/app/edit.rs        a take is one undo step
+crates/lineup-app/src/app.rs             the MIDI menu, Rec, the selected channel
+crates/lineup-app/src/channel_rack.rs    selection, MIDI Out channels
+crates/lineup-app/src/piano_roll.rs      keys held, suggestions from the keys
 ```
 
 The chapters follow a key on its way. First the bytes themselves, and

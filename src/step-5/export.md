@@ -1,12 +1,12 @@
 # Exporting the song as a WAV file
 
-Files: [`crates/loom-audio/src/render.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/render.rs)
-and [`crates/loom-app/src/app/export.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/export.rs)
+Files: [`crates/lineup-audio/src/render.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/render.rs)
+and [`crates/lineup-app/src/app/export.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/export.rs)
 
 ## What is in a WAV file
 
 A WAV file is a short header (44 bytes here) saying how the sound is
-stored, followed by the samples themselves. Ferrous Loom writes the most
+stored, followed by the samples themselves. Ferrous Lineup writes the most
 common kind:
 
 - **44,100 frames per second**, the rate of a CD, which every program
@@ -43,7 +43,7 @@ an export sounds exactly like playback: there is no second engine to keep
 in agreement with the first. (The engine's tests have done this since
 step 2: they never open a sound card either.)
 
-`loom-audio` wraps this up in a **`Renderer`**:
+`lineup-audio` wraps this up in a **`Renderer`**:
 
 ```rust
 pub struct Renderer {
@@ -61,7 +61,7 @@ pub struct Renderer {
 `AudioThread` stays `pub(crate)`: other crates cannot build one, call
 `process` on it, or reach its fields. They get the `Renderer`, whose
 methods keep the rules. Making the export a function *inside*
-`loom-audio` (step 4's exercise 6 asked about this) is what lets the
+`lineup-audio` (step 4's exercise 6 asked about this) is what lets the
 engine stay private.
 
 `AudioThread::new` wants the receiving end of a command queue, because on
@@ -389,7 +389,7 @@ and editing while it runs, and the export goes on with the song as it was
 when you chose Export WAV.
 
 The file name comes from the project's: `FileState::export_name` turns
-`song.loom` into `song.wav`, or suggests `Untitled.wav` for a project
+`song.lineup` into `song.wav`, or suggests `Untitled.wav` for a project
 that was never saved. If you type a name without an extension, `.wav` is
 added.
 

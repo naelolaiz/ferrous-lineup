@@ -1,7 +1,7 @@
 # Linux, macOS and Windows
 
 Files: [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-loom/blob/main/.github/workflows/ci.yml),
-[`crates/loom-app/src/main.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/main.rs)
+[`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/main.rs)
 and [`Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/main/Cargo.toml)
 
 The plan from the start was "Linux first, the others at the end, without
@@ -11,7 +11,7 @@ Windows: one line in `main.rs`. Everything else in this chapter is about
 
 ## Who talks to the operating system
 
-Ferrous Loom never calls the operating system for sound, windows or
+Ferrous Lineup never calls the operating system for sound, windows or
 dialogs itself. Four crates do:
 
 | Job | Crate | Linux | macOS | Windows |
@@ -99,7 +99,7 @@ Some are on unless you say otherwise: those are the `default` features.
 `rfd` normally turns on two: `xdg-portal`, which asks the Linux desktop to
 show its file dialog (over D-Bus, the desktop's message system, so there
 is no GTK to install), and `wayland`, which tells the portal which window
-the dialog belongs to, if the program says so. Ferrous Loom does not, so
+the dialog belongs to, if the program says so. Ferrous Lineup does not, so
 `default-features = false` drops `wayland`, and `features = ["xdg-portal"]`
 keeps the one that is needed. Fewer features means fewer crates to
 compile. On macOS and Windows the Linux feature makes no difference: the
@@ -121,7 +121,7 @@ The one line of new code for Windows is the first item in `main.rs`:
 On Windows, every program is either a *console* program, which opens a
 terminal window when started, or a *windows* program, which does not.
 Rust makes console programs unless told otherwise, so double-clicking
-`ferrous-loom.exe` would open an empty black window next to the app.
+`ferrous-lineup.exe` would open an empty black window next to the app.
 
 - `windows_subsystem = "windows"` asks for the second kind. On other
   systems the attribute does nothing.
@@ -164,16 +164,16 @@ check:
       include:
         - name: Linux
           os: ubuntu-latest
-          artifact: ferrous-loom-linux
-          binary: target/release/ferrous-loom
+          artifact: ferrous-lineup-linux
+          binary: target/release/ferrous-lineup
         - name: macOS
           os: macos-latest
-          artifact: ferrous-loom-macos
-          binary: target/release/ferrous-loom
+          artifact: ferrous-lineup-macos
+          binary: target/release/ferrous-lineup
         - name: Windows
           os: windows-latest
-          artifact: ferrous-loom-windows
-          binary: target/release/ferrous-loom.exe
+          artifact: ferrous-lineup-windows
+          binary: target/release/ferrous-lineup.exe
   runs-on: ${{ matrix.os }}
 ```
 
@@ -210,10 +210,10 @@ system can fail on another (a path with `/` in it, a file that cannot be
 renamed while open).
 
 Each job ends by uploading its program. On the page of a CI run, under
-**Artifacts**, there are now four downloads: `ferrous-loom-linux`,
-`ferrous-loom-macos`, `ferrous-loom-windows` and the book. GitHub puts
+**Artifacts**, there are now four downloads: `ferrous-lineup-linux`,
+`ferrous-lineup-macos`, `ferrous-lineup-windows` and the book. GitHub puts
 each in a zip file, and zip files made this way forget that the program
-was executable, so on Linux and macOS run `chmod +x ferrous-loom` after
+was executable, so on Linux and macOS run `chmod +x ferrous-lineup` after
 unzipping.
 
 ## Checking Windows code from Linux
@@ -264,10 +264,10 @@ Being honest about the limits:
   Windows computer is the real test.
 - The programs are not **signed**. macOS will refuse to open a
   downloaded one at first ("cannot be verified"); right-click it and
-  choose Open, or run `xattr -d com.apple.quarantine ferrous-loom`.
+  choose Open, or run `xattr -d com.apple.quarantine ferrous-lineup`.
   Windows SmartScreen will warn too; choose "More info", then "Run
   anyway". Signing needs paid certificates from Apple and others.
 - There is no installer, no icon, and no macOS `.app` bundle, so the Mac
   program is a file you start from the terminal, and double-clicking a
-  `.loom` file does not open it in Ferrous Loom on any system. Each of
+  `.lineup` file does not open it in Ferrous Lineup on any system. Each of
   these needs packaging work per system, which is a good later step.

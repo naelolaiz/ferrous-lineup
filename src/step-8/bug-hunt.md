@@ -1,20 +1,20 @@
 # A bug hunt: two-way zoom, notes spelled right, and playback
 
-Files: [`crates/loom-app/src/app/view.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/view.rs),
-[`crates/loom-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/piano_roll.rs),
-[`crates/loom-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/widgets.rs),
-[`crates/loom-app/src/theme.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/theme.rs),
-[`crates/loom-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pitch.rs),
-[`crates/loom-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/scale.rs),
-[`crates/loom-core/src/harmony/analysis.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/analysis.rs),
-[`crates/loom-core/src/harmony/chord.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/chord.rs),
-[`crates/loom-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/instrument.rs)
-and [`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
+Files: [`crates/lineup-app/src/app/view.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/view.rs),
+[`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/piano_roll.rs),
+[`crates/lineup-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/widgets.rs),
+[`crates/lineup-app/src/theme.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/theme.rs),
+[`crates/lineup-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pitch.rs),
+[`crates/lineup-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/scale.rs),
+[`crates/lineup-core/src/harmony/analysis.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/analysis.rs),
+[`crates/lineup-core/src/harmony/chord.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/chord.rs),
+[`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/instrument.rs)
+and [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
 
 After many features in a row, the request was the opposite of a
 feature: *find the bugs and fix them*. UI glitches, things that are hard
 to use, playback that does not sound right, and, above all, anything the
-app **shows or plays that is wrong**, because Ferrous Loom is meant for
+app **shows or plays that is wrong**, because Ferrous Lineup is meant for
 learning music. Two examples came with it: the piano roll "went crazy"
 with a pitch-class set as the key and the zoom, and the main window's
 zoom made *everything* bigger, instead of zooming the playlist
@@ -47,7 +47,7 @@ branch.
 In FL Studio the playlist and the piano roll zoom each direction on its
 own: **Ctrl and the wheel** makes bars and steps wider (less time on
 screen, in more detail), **Alt and the wheel** makes tracks and keys
-taller. Text and menus keep their size. Ferrous Loom now does the same:
+taller. Text and menus keep their size. Ferrous Lineup now does the same:
 
 | Do this | To |
 |---------|----|

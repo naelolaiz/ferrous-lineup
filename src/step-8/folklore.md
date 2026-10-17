@@ -198,7 +198,7 @@ chacareras and most of the cuecas are traditional, but no written
 transcription of them could be reached to check against, and writing
 them down from memory is exactly the mistake the first batch made. So
 each dance without a checked source got a new tune instead, written for
-Ferrous Loom and marked as such in its `origin`: Zamba del telar,
+Ferrous Lineup and marked as such in its `origin`: Zamba del telar,
 Chacarera del patio, Gato del arroyo and eight more. They are short and
 plain on purpose, so that the rhythm and the harmony of the dance are
 what you hear.

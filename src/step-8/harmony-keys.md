@@ -1,9 +1,9 @@
 # The harmony keys
 
-Files: [`crates/loom-core/src/harmony/keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/keys.rs),
-[`crates/loom-core/src/library/voicing.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/voicing.rs),
-[`crates/loom-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/harmony_keys.rs)
-and [`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs)
+Files: [`crates/lineup-core/src/harmony/keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/keys.rs),
+[`crates/lineup-core/src/library/voicing.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/voicing.rs),
+[`crates/lineup-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/harmony_keys.rs)
+and [`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs)
 
 ![The harmony keys bar: the key and time signature on the left, the seven chords of C major, and a keyboard with the notes of the scale](../images/step-8-harmony-bar.png)
 
@@ -44,7 +44,7 @@ harmonic minor scale is, so the keys take their V from there.
 
 ## The model: `chord_keys`
 
-The harmony keys are pure music theory, so they live in `loom-core`,
+The harmony keys are pure music theory, so they live in `lineup-core`,
 with tests, and know nothing about egui:
 
 ```rust
@@ -287,7 +287,7 @@ start of the hint line:
 | Short (the default) | C → F: away from home |
 | Minimal | C → F |
 
-The level is a small enum in `loom-core/src/harmony/hints.rs`. With
+The level is a small enum in `lineup-core/src/harmony/hints.rs`. With
 `#[derive(Default)]`, the variant marked `#[default]` is the one
 `HintLevel::default()` returns:
 

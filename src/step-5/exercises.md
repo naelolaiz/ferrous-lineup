@@ -1,6 +1,6 @@
 # Exercises
 
-## 1. An undo history window (loom-app, easy)
+## 1. An undo history window (lineup-app, easy)
 
 Add Edit > History…, a small window listing every step that can be
 undone or redone, newest at the top, with the current position marked.
@@ -16,7 +16,7 @@ chapter answer the last question.)
 
 *Practices:* iterators over private fields, `rev()`, reusing `diff`.
 
-## 2. Export one pattern (loom-app, easy)
+## 2. Export one pattern (lineup-app, easy)
 
 Add "Export pattern…" to the ⋯ pattern menu: it saves the selected
 pattern, played four times, as a WAV file.
@@ -33,7 +33,7 @@ other than `self.project`?
 
 *Practices:* working on a copy, making a function more general.
 
-## 3. Cancel an export (loom-audio and loom-app, medium)
+## 3. Cancel an export (lineup-audio and lineup-app, medium)
 
 Put a ✖ button next to the progress bar that stops the export, and
 deletes the unfinished `.tmp` file.
@@ -45,14 +45,14 @@ return whether to go on (`impl FnMut(usize) -> bool`, or the standard
 library's `ControlFlow`). What should `export_wav` return when it is
 cancelled: `Ok`, an error, or a new enum? What should the status bar say?
 
-While you are there: what happens today if you quit Ferrous Loom in the
+While you are there: what happens today if you quit Ferrous Lineup in the
 middle of an export? Which file is left behind, and how could quitting
 wait for the export, or cancel it, first?
 
 *Practices:* atomics as signals between threads, cleaning up after
 yourself, designing return types.
 
-## 4. Stems: one file per channel (loom-app, medium)
+## 4. Stems: one file per channel (lineup-app, medium)
 
 Musicians often want "stems": the song exported once per channel, each
 file holding only that channel, to mix elsewhere. Add File > Export
@@ -70,7 +70,7 @@ And what about two channels with the same name?
 
 *Practices:* `thread::scope`, file names from user text.
 
-## 5. Random edits for the diff (loom-core, medium)
+## 5. Random edits for the diff (lineup-core, medium)
 
 The diff tests check hand-picked cases. Write one that checks a thousand
 random ones: start from the demo, make a random edit (toggle a step, add
@@ -104,7 +104,7 @@ do? Is that a problem?
 
 *Practices:* property-based testing, reproducible randomness.
 
-## 6. Cheaper snapshots (loom-core, harder)
+## 6. Cheaper snapshots (lineup-core, harder)
 
 Every edit copies the whole project, every pattern included, even though
 a click on a step changes one pattern. Make the copies cheap by sharing

@@ -1,8 +1,8 @@
 # Music theory as types: pitch classes and scales
 
-Files: [`crates/loom-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pitch.rs),
-[`crates/loom-core/src/harmony/pitch_set.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/pitch_set.rs)
-and [`crates/loom-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/scale.rs)
+Files: [`crates/lineup-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pitch.rs),
+[`crates/lineup-core/src/harmony/pitch_set.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/pitch_set.rs)
+and [`crates/lineup-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/scale.rs)
 
 ## The music
 
@@ -29,7 +29,7 @@ D E F# G A B C#.
 The black keys have two names. The key between A and B is A# ("A sharp",
 a semitone above A) and also Bb ("B flat", a semitone below B). Which
 name is right depends on the key: F major's notes are F G A **Bb** C D E,
-because each letter is used once. Ferrous Loom follows that rule in a
+because each letter is used once. Ferrous Lineup follows that rule in a
 simple way: keys whose signature has flats (F, Bb, Eb, Ab, Db and their
 minor relatives) are written with flats, all others with sharps.
 

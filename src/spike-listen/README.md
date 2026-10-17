@@ -2,11 +2,11 @@
 
 A *spike* is an experiment: a branch that tries something out to learn
 whether it can work and how, without the polish a real step gets. This
-one asks: can Ferrous Loom take an MP3 or a WAV file, hear its tempo,
+one asks: can Ferrous Lineup take an MP3 or a WAV file, hear its tempo,
 key and chords, and play a harmony track along with it?
 
 It can, well enough to be useful. **File > Import recording…** (or
-dropping the file on the window, or `ferrous-loom song.mp3`) opens the
+dropping the file on the window, or `ferrous-lineup song.mp3`) opens the
 recording as a new project: the recording itself on a sampler channel,
 and a **Harmony** channel with the chord heard on every beat. The tempo,
 time signature and key are set from what was heard, so the bar lines
@@ -15,10 +15,10 @@ chord that is playing.
 
 ![Vibe Ace imported, with the harmony keys following its chords](../images/spike-listen-vibe-ace.png)
 
-The code lives in a new crate, `loom-listen`, plus one file in the app
+The code lives in a new crate, `lineup-listen`, plus one file in the app
 (`app/import.rs`) and a small change to the sampler. This chapter
 explains how it works and what was learned. The crate's
-[`README.md`](https://github.com/naelolaiz/ferrous-loom/tree/main/crates/loom-listen)
+[`README.md`](https://github.com/naelolaiz/ferrous-loom/tree/band-in-a-box/crates/lineup-listen)
 has the detailed numbers from trying the alternatives.
 
 ## The pipeline
@@ -38,7 +38,7 @@ from one kind of data to the next:
    which beat is the first downbeat.
 
 Then `arrange.rs` turns the result into a `Project`, with the same types
-the rest of Ferrous Loom uses: `Channel`, `Pattern`, `NoteEvent`, `Clip`.
+the rest of Ferrous Lineup uses: `Channel`, `Pattern`, `NoteEvent`, `Clip`.
 Nothing downstream knows the notes came from a recording.
 
 ### Decoding with Symphonia
@@ -192,7 +192,7 @@ the recording's first downbeat must fall on a bar line of the song. It
 rarely does, so `arrange::write_wav` saves the recording again with
 silence in front, the *lead-in*: exactly enough for the first downbeat to
 land on the start of the next whole bar. The copy sits next to the
-original as `song.ferrous-loom.wav`.
+original as `song.ferrous-lineup.wav`.
 
 One change outside the new crate: a sampler stopped playing to the end
 of its sound whatever happened, which is right for a drum hit and wrong
@@ -210,15 +210,15 @@ listened to. The project is swapped in with the same `replace_project`
 that File > Open uses.
 
 Opening an audio file from the command line or by dropping it on the
-window goes through the same place as a `.loom` file, `open_now`, which
-now checks `loom_listen::is_audio_file` first.
+window goes through the same place as a `.lineup` file, `open_now`, which
+now checks `lineup_listen::is_audio_file` first.
 
 ## Choosing the crates
 
 The useful question for a spike is not "does it work" but "what works
 best, and how do you know". For that, a small program rendered 29 demo
 songs from the library to WAV with their true tempo, key and chords
-written beside them (Ferrous Loom can export WAV, and
+written beside them (Ferrous Lineup can export WAV, and
 `Project::chord_notes_in_song` names the chord at any step), and ran
 every candidate on them, plus seven Creative Commons recordings with
 librosa as the reference. The crate's README has the tables. In short:

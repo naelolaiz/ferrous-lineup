@@ -1,7 +1,7 @@
 # Playing notes: voices and envelopes
 
-Files: [`crates/loom-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/instrument.rs)
-and [`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
+Files: [`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/instrument.rs)
+and [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
 
 In step 2, an instrument could only be *triggered*: start the sound
 again, always at the same pitch. To play chords and melodies it needs to
@@ -128,7 +128,7 @@ whose note started longest ago. Taking over a busy voice is called
 **voice stealing**; every hardware synth does it when you hold more notes
 than it has voices.
 
-This is the first **trait** Ferrous Loom defines itself. `SamplerVoice`
+This is the first **trait** Ferrous Lineup defines itself. `SamplerVoice`
 and `SynthVoice` are different structs, but both implement `Voice`, so
 one generic function serves both. `V: Voice` is the trait bound: the
 function may only call what the trait promises. The trait is private
@@ -268,7 +268,7 @@ the one before; the two overlap.
 
 ## Checking it by ear, without ears
 
-The container that builds Ferrous Loom has no speakers, so this step
+The container that builds Ferrous Lineup has no speakers, so this step
 was also checked by recording the app's output to a file and looking at
 its spectrum. During the first chord the strongest frequencies were
 131, 261, 329 and 392 Hz: C3, C4, E4 and G4, the notes of the demo's C

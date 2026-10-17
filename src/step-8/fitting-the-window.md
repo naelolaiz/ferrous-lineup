@@ -1,8 +1,8 @@
 # Fitting any window: wrapping, zoom and remembering
 
-Files: [`crates/loom-app/src/app/view.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/view.rs),
-[`crates/loom-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app.rs),
-[`crates/loom-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/harmony_keys.rs)
+Files: [`crates/lineup-app/src/app/view.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/view.rs),
+[`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app.rs),
+[`crates/lineup-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/harmony_keys.rs)
 and [`Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/main/Cargo.toml)
 
 By the end of step 8 the toolbar along the top held three menus, the
@@ -202,7 +202,7 @@ and only knows its size afterwards. So the layout never got the chance
 to move it down.
 
 The fix, `wrapping` in
-[`crates/loom-app/src/theme.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/theme.rs),
+[`crates/lineup-app/src/theme.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/theme.rs),
 uses the frame before. egui redraws the whole window many times a
 second, so last time's width is a very good guess:
 

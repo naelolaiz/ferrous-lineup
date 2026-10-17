@@ -1,6 +1,6 @@
 # Exercises
 
-## 1. Delete a track (loom-core, easy)
+## 1. Delete a track (lineup-core, easy)
 
 Tracks can be added and renamed, but not removed. Write
 `Project::remove_track(index)`, which removes the track and its clips,
@@ -13,7 +13,7 @@ add a "Delete track" item to a right-click menu on the track name
 *Practices:* `retain`, keeping rules that span two lists, the action
 pattern.
 
-## 2. Shift-drag to copy a clip (loom-app, easy)
+## 2. Shift-drag to copy a clip (lineup-app, easy)
 
 In pattern-based studios, holding Shift while dragging a clip copies it
 instead of moving it. In `PlaylistView::handle_input`, read the
@@ -27,7 +27,7 @@ learn it?
 
 *Practices:* reading egui input, reusing actions you already have.
 
-## 3. Pattern colours that are saved (loom-core and loom-app, medium)
+## 3. Pattern colours that are saved (lineup-core and lineup-app, medium)
 
 Pattern colours come from `pattern_color(index)` in `playlist.rs`, so a
 pattern changes colour when one before it is deleted. Give `Pattern` a
@@ -37,13 +37,13 @@ pattern changes colour when one before it is deleted. Give `Pattern` a
 Files saved before your change have no `color`, and loading them must
 still work: put `#[serde(default)]` on the new field of `PatternFile`, and
 add a test that loads a file without it. Does `FORMAT_VERSION` need to
-change? Ask yourself what an *older* Ferrous Loom does with a file that
+change? Ask yourself what an *older* Ferrous Lineup does with a file that
 has the new field.
 
 *Practices:* evolving a file format, `#[serde(default)]`, tests with
 hand-written file text.
 
-## 4. Open recent (loom-app, medium)
+## 4. Open recent (lineup-app, medium)
 
 Add an "Open recent" submenu to the File menu with the last five files
 opened or saved. The list must survive closing the app, so it has to be
@@ -52,7 +52,7 @@ stored somewhere, and each system has its own place for that (under
 `AppData` on Windows).
 
 eframe can do this for you. Turn on its `persistence` feature in
-`Cargo.toml`, read the list in `LoomApp::new` with
+`Cargo.toml`, read the list in `LineupApp::new` with
 `cc.storage.and_then(|storage| eframe::get_value(storage, "recent"))`,
 and write it by implementing `eframe::App::save` with
 `eframe::set_value`. `Vec<PathBuf>` already implements serde's traits.
@@ -61,10 +61,10 @@ What should happen when a recent file has been moved or deleted?
 *Practices:* features, `Option` chains, letting a crate handle the
 differences between systems.
 
-## 5. Start from any bar (loom-core and loom-audio, medium)
+## 5. Start from any bar (lineup-core and lineup-audio, medium)
 
 Clicking the playlist's ruler should move the playhead there, playing or
-not. Add `Sequencer::seek(step)` in `loom-core` with a test, a
+not. Add `Sequencer::seek(step)` in `lineup-core` with a test, a
 `Command::Seek(usize)` in the engine, and a `PlaylistAction::Seek` sent
 when the ruler is clicked. Where should the next step start: at once, or
 on the next step boundary? What should happen to notes that are already
@@ -75,7 +75,7 @@ seek position, or from the start?
 *Practices:* sample-accurate timing, deciding behaviour before writing
 code.
 
-## 6. Export the song as a WAV file (loom-audio, harder)
+## 6. Export the song as a WAV file (lineup-audio, harder)
 
 *Step 5 builds this; try it yourself before reading
 [its chapter](../step-5/export.md).*
@@ -92,7 +92,7 @@ last notes can ring out.
 Some things to work out: how do you send commands if `AudioThread::new`
 wants the consumer end of a ring buffer? Which parts of `engine.rs` must
 become public, and can you keep them `pub(crate)` by putting the export
-function in `loom-audio`? How long does exporting a three-minute song
+function in `lineup-audio`? How long does exporting a three-minute song
 take, and should the window keep drawing while it runs?
 
 *Practices:* reusing real-time code offline, API design across crates,
@@ -117,7 +117,7 @@ take, and should the window keep drawing while it runs?
   instead of deriving `Serialize` on `Project` itself. What would go wrong
   the day someone renames a field of `Project`, if the file used it
   directly?
-- An older Ferrous Loom refuses to open a file with a newer format number.
+- An older Ferrous Lineup refuses to open a file with a newer format number.
   Could it load what it understands and ignore the rest instead? When
   would that be helpful, and when would it quietly lose someone's work?
 - The UI sends the song's length along with its clips, instead of

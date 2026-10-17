@@ -1,11 +1,11 @@
 # Micromodes: Kröpfl's twelve colours of three notes
 
-Files: [`crates/loom-core/src/harmony/micromode.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/micromode.rs),
-[`crates/loom-core/src/micromodal.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/micromodal.rs),
-[`crates/loom-core/src/library/micromodes.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/micromodes.rs),
-[`crates/loom-core/src/library/rows.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/rows.rs),
-[`crates/loom-app/src/micromodes.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/micromodes.rs)
-and [`crates/loom-app/src/twelve_tone.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/twelve_tone.rs)
+Files: [`crates/lineup-core/src/harmony/micromode.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/micromode.rs),
+[`crates/lineup-core/src/micromodal.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/micromodal.rs),
+[`crates/lineup-core/src/library/micromodes.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/micromodes.rs),
+[`crates/lineup-core/src/library/rows.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/rows.rs),
+[`crates/lineup-app/src/micromodes.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/micromodes.rs)
+and [`crates/lineup-app/src/twelve_tone.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/twelve_tone.rs)
 
 The last chapter gave every group of notes a name: its pitch-class set.
 This one looks closely at the smallest groups that still have a
@@ -14,7 +14,7 @@ Argentine composer **Francisco Kröpfl** taught his students to hear
 them. He called them **micromodes** (*micromodos*): twelve small
 "modes" of three notes, each with a colour you learn to recognise.
 
-What Ferrous Loom gains:
+What Ferrous Lineup gains:
 
 - **Micromodes…** in the piano roll opens a window with Kröpfl's twelve
   micromodes in his three families. Each one is drawn on a clock, with
@@ -158,7 +158,7 @@ Cetta gives two examples of Menor 3: E, F and Ab, and F, D and Gb.
 That is the whole algorithm: the **normal form** (the closest order),
 moved to C, compared with its inversion, the more compact of the two
 winning. The set browser of the last chapter already does it, so
-Ferrous Loom finds the micromode of three notes by asking for their
+Ferrous Lineup finds the micromode of three notes by asking for their
 prime form and looking it up in the table.
 
 ### The same twelve, three times
@@ -177,7 +177,7 @@ mathematical, and Kröpfl's as built on how we *perceive* groups of
 notes, after the Gestalt psychologists; she finds that the two give
 very different results when you use them to analyse music. Forte
 counts every subset of every chord; Kröpfl listens for the groups the
-music makes you hear as a unit. Ferrous Loom shows both: the Forte
+music makes you hear as a unit. Ferrous Lineup shows both: the Forte
 number beside every micromode, and the micromodes beside every Forte
 set.
 
@@ -256,15 +256,15 @@ The row is now one of the famous rows in the Row window, as
 **Webern's Concerto**, and the Library and **File > Demos >
 Micromodes** have a style built on it, **Webern's trichords**: the row
 as a melody leaping over three octaves, with each group of three as a
-chord under it. The rhythm is Ferrous Loom's, not Webern's.
+chord under it. The rhythm is Ferrous Lineup's, not Webern's.
 
 **Why this one is allowed.** Only music in the public domain is copied
-into Ferrous Loom. Webern died in 1945, so his music is in the public
+into Ferrous Lineup. Webern died in 1945, so his music is in the public
 domain wherever copyright lasts 70 years after the author's death, and
 only the twelve notes of the row are used, never his score. Kröpfl died
 in 2021 and his students are alive, so their music is still under
 copyright, and none of it is in the app: the seven micromode styles
-were written for Ferrous Loom.
+were written for Ferrous Lineup.
 
 ## Music from one micromode
 
@@ -273,7 +273,7 @@ the micromode as "elemento mínimo de construcción melódico/armónica",
 the smallest building block of melody and harmony alike. The chords are
 forms of the micromode, and so are the groups of the melody, so the
 whole passage has one colour. The question is which form comes next.
-Ferrous Loom offers two answers, in `micromodal.rs`.
+Ferrous Lineup offers two answers, in `micromodal.rs`.
 
 ### Moving every note the same distance
 
@@ -323,7 +323,7 @@ round all twelve notes. The tests check each of these numbers.
 Several forms share two notes with the current one (for Menor 3 on C
 C# E there are three: A C C#, C D# E and C# E F), so the walk needs a
 rule to pick one. Ferrous
-Loom's rule, in order:
+Lineup's rule, in order:
 
 1. the form whose **new note** has not been heard for the longest
    time, so the music goes round all the notes it can reach,
@@ -912,32 +912,32 @@ except for the twelve notes of Webern's row.
 
 ## Exercises
 
-1. **The micromodes of a melody (loom-core, small).** Write
+1. **The micromodes of a melody (lineup-core, small).** Write
    `melody_micromodes(notes: &[PitchClass]) -> Vec<Option<&'static
    Micromode>>`, which names the micromode of every three notes in a
    row: notes 1–3, 2–4, 3–5 and so on (look up `windows` in the
    glossary). Why is the answer `None` for some windows? Test it on
    Webern's row: which windows besides the four groups are Menor 3?
-2. **Every colour at once (loom-core, small).** Loop over
+2. **Every colour at once (lineup-core, small).** Loop over
    `SetClass::all()` and find the smallest sets whose micromode content
    has no zero: sets that hold all twelve micromodes. How many notes do
    they need, and which are they? (A hint for the size: the augmented
    triad and Menor 1 must both fit.)
-3. **Schat's tonalities (loom-core, medium).** Webern's row splits the
+3. **Schat's tonalities (lineup-core, medium).** Webern's row splits the
    twelve notes into four forms of Menor 3. Write a backtracking search,
    like `random_all_interval` in the last chapter, that finds every way
    to split the twelve notes into four forms of one micromode, and
    count them for each of the twelve. One micromode cannot do it at
    all: which, and why? (Think about which notes the forms of each
    chord micromode can take.)
-4. **A walk that remembers more (loom-core, medium).** The common-tone
+4. **A walk that remembers more (lineup-core, medium).** The common-tone
    walk only remembers when each note and each form was last used.
    Make a walk that never uses a form again until it has used every
    form it can reach, and test that Menor 3 visits all 24 forms in 24
    steps. Is that always possible? (For which micromodes can a walk of
    "keep two notes" visit every form exactly once? This is a question
    about paths in a graph.)
-5. **Hear the family (loom-app, small).** Add a **▶** button next to
+5. **Hear the family (lineup-app, small).** Add a **▶** button next to
    each family's name in the Micromodes window that plays its
    micromodes one after another, from middle C. `MicroAction::Hear`
    plays notes together; what would you add to play them in turn? Look

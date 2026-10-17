@@ -1,8 +1,8 @@
 # More chords, inversions, and what comes next
 
-Files: [`crates/loom-core/src/harmony/chord.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/chord.rs),
-[`crates/loom-core/src/harmony/progression.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/progression.rs)
-and [`crates/loom-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/piano_roll.rs)
+Files: [`crates/lineup-core/src/harmony/chord.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/chord.rs),
+[`crates/lineup-core/src/harmony/progression.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/progression.rs)
+and [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/piano_roll.rs)
 
 This chapter is half music theory and half Rust. The theory is what the
 piano roll now teaches; the Rust is how that knowledge is stored as
@@ -32,7 +32,7 @@ root would sound like a cluster, not like a ninth chord.
 
 A thirteenth chord "should" contain the eleventh as well, seven notes in
 all, but players leave it out because it clashes with the third, a
-semitone below it. Ferrous Loom does the same, and says so in a comment
+semitone below it. Ferrous Lineup does the same, and says so in a comment
 next to the numbers. The chord *naming* goes one step further, as it has
 since step 3: if a chord of four notes or more is only missing its fifth,
 it is still named. So C, E, Bb, D, A is called C13.

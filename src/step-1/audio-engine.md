@@ -1,4 +1,4 @@
-# loom-audio: the real-time engine
+# lineup-audio: the real-time engine
 
 This is the most important chapter of step 1. The way audio works shapes
 the whole program, and it is also where Rust's ownership rules start to
@@ -32,7 +32,7 @@ This rule decides how the UI talks to the audio engine.
 
 ## Sending commands with a ring buffer
 
-File: [`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
+File: [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
 
 The UI never changes audio state directly. It sends small messages:
 
@@ -276,7 +276,7 @@ close, locks unlock and memory frees itself when its owner goes away.
 
 ## The test tone
 
-File: [`crates/loom-audio/src/synth.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/synth.rs)
+File: [`crates/lineup-audio/src/synth.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/synth.rs)
 
 `TestTone` generates a sine wave with a **phase accumulator**: `phase`
 goes from 0.0 to 1.0 once per cycle, and each sample advances it by

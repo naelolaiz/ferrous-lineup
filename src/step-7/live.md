@@ -1,14 +1,14 @@
 # Live keys: threads in and out
 
-Files: [`crates/loom-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/midi.rs),
-[`crates/loom-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/live.rs),
-[`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
-and [`crates/loom-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/instrument.rs)
+Files: [`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/midi.rs),
+[`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/live.rs),
+[`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
+and [`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/instrument.rs)
 
 Until now, every note came from the sequencer, which lives on the audio
 thread and knows each note's length before it starts. A key on a
 keyboard is different in two ways: it comes from outside, on a thread
-Ferrous Loom does not own, and nobody knows how long it will be held.
+Ferrous Lineup does not own, and nobody knows how long it will be held.
 This chapter follows a key from the cable to the speaker, and a MIDI Out
 note from the pattern to the cable.
 
@@ -350,8 +350,8 @@ a command under 80 bytes, and it would fail without the box.
 MIDI layer: ALSA on Linux, Core MIDI on macOS, Windows Multimedia on
 Windows. It is built the way `cpal` is: list the ports, open a
 connection to one, and the connection stays open for as long as the
-value is kept. Ferrous Loom wraps it in a `Midi` struct, in
-`loom-app/src/midi.rs`.
+value is kept. Ferrous Lineup wraps it in a `Midi` struct, in
+`lineup-app/src/midi.rs`.
 
 Ports are found again by an id that midir gives, a `String`, because
 the list of ports changes as devices are plugged in and out. The MIDI

@@ -1,6 +1,6 @@
 # The sequencer: timing to the sample
 
-File: [`crates/loom-core/src/sequencer.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/sequencer.rs)
+File: [`crates/lineup-core/src/sequencer.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/sequencer.rs)
 
 ## The arithmetic
 
@@ -50,10 +50,10 @@ Because a step is triggered on the exact frame where it begins, not at
 the start of the audio block that contains it, the timing does not depend
 on the sound card's buffer size. This is what "sample-accurate" means.
 
-## Why it lives in `loom-core`
+## Why it lives in `lineup-core`
 
 The sequencer has nothing to do with sound cards. It only counts. Putting
-it in `loom-core` means it is tested in milliseconds, without audio, and
+it in `lineup-core` means it is tested in milliseconds, without audio, and
 step 4's playlist can reuse it.
 
 ## Testing with iterators

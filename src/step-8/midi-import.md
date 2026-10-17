@@ -1,15 +1,15 @@
 # Opening MIDI files
 
-Files: [`crates/loom-core/src/midi_file/read.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi_file/read.rs),
-[`crates/loom-core/src/midi_file/import.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi_file/import.rs),
-[`crates/loom-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/midi_file.rs),
-[`crates/loom-core/src/harmony/key_finding.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/key_finding.rs),
-[`crates/loom-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/scale.rs),
-[`crates/loom-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pattern.rs),
-[`crates/loom-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/engine.rs)
-and [`crates/loom-app/src/app/import.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/import.rs)
+Files: [`crates/lineup-core/src/midi_file/read.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file/read.rs),
+[`crates/lineup-core/src/midi_file/import.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file/import.rs),
+[`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/midi_file.rs),
+[`crates/lineup-core/src/harmony/key_finding.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/key_finding.rs),
+[`crates/lineup-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/scale.rs),
+[`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pattern.rs),
+[`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/engine.rs)
+and [`crates/lineup-app/src/app/import.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/import.rs)
 
-Ferrous Loom could already *write* MIDI files (see
+Ferrous Lineup could already *write* MIDI files (see
 [MIDI messages and MIDI files](../step-7/messages.md)) and import a
 recording, but it could not *open* a MIDI file. That is a pity, because
 MIDI files are the easiest way to get real music into the app: almost
@@ -275,7 +275,7 @@ and gets `nudge: 0, trim: 0` for free.
 A note on the grid has both at 0, and the project file leaves them out
 (`#[serde(skip_serializing_if = "is_zero")]`), so files without
 off-grid notes look exactly as before. A project that has one is saved
-as **format 10**, so an older Ferrous Loom says "this file is newer"
+as **format 10**, so an older Ferrous Lineup says "this file is newer"
 instead of quietly moving the notes onto the grid.
 
 The piano roll draws a nudged note where it really starts, and the
@@ -463,17 +463,17 @@ whether it means D major or E Dorian. So the export also writes the
 exact key in a **sequencer-specific** meta event (`FF 7F`), the one
 place the standard leaves for a program's own data. It starts with the
 maker's number `7D`, set aside for programs that are not sold, then the
-words `Ferrous Loom key ` (so another program's `7D` event is never
+words `Ferrous Lineup key ` (so another program's `7D` event is never
 taken for ours), then the key the way a project file writes it:
 
 ```text
-FF 7F 26  7D "Ferrous Loom key (root:E,kind:Dorian)"
+FF 7F 26  7D "Ferrous Lineup key (root:E,kind:Dorian)"
 ```
 
 (`26` is the length in hexadecimal: 38 bytes follow.)
 
 It is written next to every key signature, at the start and at every
-key marker. Other programs skip this event. Ferrous Loom reads it back
+key marker. Other programs skip this event. Ferrous Lineup reads it back
 and gets E Dorian, C♯ harmonic minor or a twelve-tone row exactly.
 
 ## Testing it with every demo
@@ -504,4 +504,4 @@ digits of π) were opened in the app and played.
   steps**: does it sound better or worse?
 - Export a demo in a mode, such as *Scarborough Fair* in D Dorian, open
   the file in another program and look at its key signature. Then open
-  it again in Ferrous Loom: the key is D Dorian again.
+  it again in Ferrous Lineup: the key is D Dorian again.

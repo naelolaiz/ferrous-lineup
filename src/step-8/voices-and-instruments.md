@@ -1,9 +1,9 @@
 # Every voice on its own channel, with a real instrument
 
-Files: [`crates/loom-core/src/general_midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/general_midi.rs),
-[`crates/loom-audio/src/timbre.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-audio/src/timbre.rs),
-[`crates/loom-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/song.rs)
-and [`crates/loom-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/demo.rs)
+Files: [`crates/lineup-core/src/general_midi.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/general_midi.rs),
+[`crates/lineup-audio/src/timbre.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-audio/src/timbre.rs),
+[`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/song.rs)
+and [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/demo.rs)
 
 Open **Canon in D** before this change and look at the channel rack: one
 Lead channel holds all three violins. Pachelbel wrote three violin parts
@@ -78,7 +78,7 @@ The two serde attributes keep old files readable: a file without the
 field reads as `None` (`default`), and a channel without an instrument
 writes no field at all (`skip_serializing_if`). Only a project that has
 instruments is saved in the new file format, so older versions of
-Ferrous Loom still open everything else.
+Ferrous Lineup still open everything else.
 
 The instrument is used in three places:
 

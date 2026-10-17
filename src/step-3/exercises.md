@@ -1,6 +1,6 @@
 # Exercises
 
-## 1. More chords (loom-core, easy)
+## 1. More chords (lineup-core, easy)
 
 *Step 6 adds both, and five more; try it yourself before reading
 [its chapter](../step-6/harmony.md#seven-new-chords).*
@@ -13,7 +13,7 @@ big chords often look like other chords built on another root?
 
 *Practices:* exhaustive `match`, letting tests guard your data.
 
-## 2. Show the scale degree on the keys (loom-app, easy)
+## 2. Show the scale degree on the keys (lineup-app, easy)
 
 The keyboard marks notes of the key with a dot. Draw the degree number
 instead (1 for the root, 2, 3...), using `Scale::degree_of`. Musicians
@@ -21,7 +21,7 @@ use these numbers all the time ("the 5 chord", "a flat 7").
 
 *Practices:* `Option` in drawing code, `painter.text`.
 
-## 3. Velocity with the arrow keys (loom-app, medium)
+## 3. Velocity with the arrow keys (lineup-app, medium)
 
 *Step 6 edits velocity in a lane under the grid instead, and uses the
 arrow keys to move notes; [its chapter](../step-6/piano-roll.md#the-velocity-lane)
@@ -36,7 +36,7 @@ is over a note, make the up and down arrow keys change its velocity
 
 *Practices:* struct update syntax, reading egui input.
 
-## 4. Inversions (loom-core, medium)
+## 4. Inversions (lineup-core, medium)
 
 *Step 6 builds this; try it yourself before reading
 [its chapter](../step-6/tools.md#inversions).*
@@ -50,7 +50,7 @@ for the first inversion of C?
 *Practices:* `Vec` manipulation (`remove`, `push`, `sort`), tests that
 use `analyze` to check your own output.
 
-## 5. Snap to scale (loom-app, medium)
+## 5. Snap to scale (lineup-app, medium)
 
 *Step 6 builds the "nearest note in the scale" function, for a Tools
 menu item rather than a checkbox; see [its chapter](../step-6/tools.md#the-nearest-note-of-the-key-snapping).
@@ -58,14 +58,14 @@ Step 6's exercise 5 adds the checkbox.*
 
 Add a "Snap to scale" checkbox. When it is on, a note dropped on a row
 outside the key moves to the nearest note of the key. Write the "nearest
-note in the scale" function in `loom-core`, where it can be tested
+note in the scale" function in `lineup-core`, where it can be tested
 without a window. What should happen exactly halfway between two scale
 notes?
 
 *Practices:* searching with iterators (`min_by_key`), keeping logic out
 of the UI.
 
-## 6. A legato synth (loom-audio, harder)
+## 6. A legato synth (lineup-audio, harder)
 
 Give the Loom Osc a "mono / legato" mode: only one voice plays, and a new
 note changes that voice's pitch without restarting the envelope. Add a

@@ -1,12 +1,12 @@
 # Tools are plain functions
 
-Files: [`crates/loom-core/src/tools.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/tools.rs)
-and [`crates/loom-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pattern.rs)
+Files: [`crates/lineup-core/src/tools.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/tools.rs)
+and [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/pattern.rs)
 
 ## Notes in, notes out
 
 Every tool in the piano roll's Tools menu is a function in
-`loom_core::tools` with the same shape: it borrows some notes and returns
+`lineup_core::tools` with the same shape: it borrows some notes and returns
 new ones.
 
 ```rust

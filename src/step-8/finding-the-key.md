@@ -1,10 +1,10 @@
 # Finding the key from the music (experimental)
 
-Files: [`crates/loom-core/src/harmony/key_finding.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/harmony/key_finding.rs),
-[`crates/loom-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/project.rs),
-[`crates/loom-listen/src/keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-listen/src/keys.rs),
-[`crates/loom-app/src/app/key_finder.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/key_finder.rs)
-and [`crates/loom-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/harmony_keys.rs)
+Files: [`crates/lineup-core/src/harmony/key_finding.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/harmony/key_finding.rs),
+[`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/project.rs),
+[`crates/lineup-listen/src/keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-listen/src/keys.rs),
+[`crates/lineup-app/src/app/key_finder.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/key_finder.rs)
+and [`crates/lineup-app/src/harmony_keys.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/harmony_keys.rs)
 
 The question that started this: *"Will the MIDI import (and the audio
 import) check for key changes on unknown new sources, or chords played by
@@ -32,7 +32,7 @@ Psychologists measured this. Carol Krumhansl and Edward Kessler (1982)
 played a scale, then a single note, and asked listeners how well the note
 fitted. The answers make a *key profile*: twelve numbers, how much each
 note above the tonic belongs. Later, others counted notes in real scores
-instead. Ferrous Loom uses the profiles of Albrecht and Shanahan (2013),
+instead. Ferrous Lineup uses the profiles of Albrecht and Shanahan (2013),
 counted over 490 classical pieces:
 
 | note above the tonic | 1 | ♭2 | 2 | ♭3 | 3 | 4 | ♯4 | 5 | ♭6 | 6 | ♭7 | 7 |
@@ -103,7 +103,7 @@ C major, even in the middle of a C major song (D7 is the "V of V", a
 itself counted three times, its neighbours twice, the bars two away
 once.
 
-Then the same trick as for chords in `loom-listen` (see the spike
+Then the same trick as for chords in `lineup-listen` (see the spike
 chapter): **changing key costs a penalty**, 1.5 in units of correlation,
 and the *Viterbi algorithm* finds the sequence of keys with the best total
 score. For each bar and each key it keeps only the best way of arriving
@@ -168,7 +168,7 @@ that is the point of showing the alternatives. G7 is:
 
 `read_chord` works this out with what the app already knows about keys:
 the Roman numeral (counted along the major scale of the tonic, as
-everywhere in Ferrous Loom, so G in A minor is ♭VII, not VII), the
+everywhere in Ferrous Lineup, so G in A minor is ♭VII, not VII), the
 function of the chords of the key (tonic, subdominant, dominant), a
 dominant seventh heard as the dominant of the chord it resolves to, and
 the chords borrowed from the parallel key (A♭ in C major is ♭VI,
@@ -178,7 +178,7 @@ borrowed from C minor).
 
 ## In a recording
 
-A recording has no notes, only sound. `loom-listen` already measures the
+A recording has no notes, only sound. `lineup-listen` already measures the
 chroma of every beat for its chords; for keys, the beats are put together
 into bars and each bar's chroma stands for its notes. Two corrections
 mattered:
@@ -207,8 +207,8 @@ file without key signatures the key changes it really has.
 
 Measured on the library's demo songs, whose keys (and key markers) come
 from their scores. The reports are tests you can run yourself:
-`cargo test -p loom-core --test key_finding -- --ignored --nocapture` for
-the notes, and `cargo test --release -p loom-listen --test key_changes --
+`cargo test -p lineup-core --test key_finding -- --ignored --nocapture` for
+the notes, and `cargo test --release -p lineup-listen --test key_changes --
 --ignored --nocapture` for the demos rendered to audio.
 
 | | from the notes | from audio |

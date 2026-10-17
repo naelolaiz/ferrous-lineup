@@ -1,9 +1,9 @@
 # The channel rack UI
 
-Files: [`channel_rack.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/channel_rack.rs),
-[`widgets.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/widgets.rs) and
-[`app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app.rs)
-in `crates/loom-app/src/`
+Files: [`channel_rack.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/channel_rack.rs),
+[`widgets.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/widgets.rs) and
+[`app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app.rs)
+in `crates/lineup-app/src/`
 
 ## Writing your own widgets
 
@@ -129,7 +129,7 @@ true, or `None`. A file dropped on a row replaces that channel's sound; a
 file dropped anywhere else becomes a new channel named after the file
 (`path.file_stem()` is the file name without its extension).
 
-Loading happens in `LoomApp::load_sample`, on the UI thread, because
+Loading happens in `LineupApp::load_sample`, on the UI thread, because
 reading files is slow and must never happen on the audio thread. A
 broken file leaves the channel as it was and puts the reason in the
 status bar.

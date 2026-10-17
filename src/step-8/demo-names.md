@@ -1,7 +1,7 @@
 # A demo keeps its name, and is saved as a copy
 
-Files: [`crates/loom-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/files.rs)
-and [`crates/loom-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/library.rs)
+Files: [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/files.rs)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
 
 Open "Für Elise" from **File > Demos** and, until now, the window title
 said "Untitled". The app only knew two kinds of project: one that came
@@ -20,13 +20,13 @@ appears after the name, the way most programs mark unsaved changes:
 
 The star replaces the dot that used to stand in front of the name
 (["In the app: File menu, shortcuts and the title bar"](../step-4/saving.md#in-the-app-file-menu-shortcuts-and-the-title-bar)),
-for files as well: "song.loom*".
+for files as well: "song.lineup*".
 
 ## Why a demo is read-only
 
 A demo is not a file anywhere on your disk. It is Rust code, built into
 the program: `song_demo(song)` turns the notes written in
-`crates/loom-core/src/library/song/` into a `Project` each time you open
+`crates/lineup-core/src/library/song/` into a `Project` each time you open
 it. There is nothing to write your changes back to, and if there were,
 the next version of the app would bring its own copy anyway.
 
@@ -35,7 +35,7 @@ file. The dialog already has the demo's name in it:
 
 ![Save on Für Elise suggests "Für Elise.loom".](../images/step-8-demo-save-as.png)
 
-Once saved, the project is that file: the title shows "Für Elise.loom",
+Once saved, the project is that file: the title shows "Für Elise.lineup",
 "(demo, read-only)" goes away, and the next Save writes to the file
 without asking. The demo in the menu stays as it was. Exports (WAV, MIDI)
 suggest the demo's name too: "Für Elise.wav".
@@ -121,7 +121,7 @@ to move the `PathBuf` out of `self`, which a method that only has
 
 ### A function as a value
 
-The display name wants "Für Elise.loom" from a path, the export name
+The display name wants "Für Elise.lineup" from a path, the export name
 wants "Für Elise" (the stem). Both come from a method of `Path`, so the
 helper takes the method as an argument:
 
@@ -161,7 +161,7 @@ fn title(&self, changed: bool) -> String {
     } else {
         ""
     };
-    format!("{}{star}{demo} · Ferrous Loom", self.display_name())
+    format!("{}{star}{demo} · Ferrous Lineup", self.display_name())
 }
 ```
 
@@ -177,6 +177,6 @@ read-only)"), a step changed (star), **File > Demos > Songs > Classical
 and film > Für Elise** (the "Save changes?" dialog names "The starting
 song"), Don't save, the title "Für Elise (demo, read-only)" while it
 plays, a step changed (star), **File > Save** opening the system's save
-dialog with "Für Elise.loom", saving, the title turning into the file's
+dialog with "Für Elise.lineup", saving, the title turning into the file's
 name without a star, and a second Save writing the file without a
 dialog.

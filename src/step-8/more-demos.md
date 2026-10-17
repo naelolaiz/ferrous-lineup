@@ -1,8 +1,8 @@
 # More demos: songs for every genre
 
-Files: [`crates/loom-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/song.rs),
-the genre files in [`crates/loom-core/src/library/song/`](https://github.com/naelolaiz/ferrous-loom/tree/main/crates/loom-core/src/library/song)
-and [`crates/loom-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/library.rs)
+Files: [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/song.rs),
+the genre files in [`crates/lineup-core/src/library/song/`](https://github.com/naelolaiz/ferrous-loom/tree/band-in-a-box/crates/lineup-core/src/library/song)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
 
 The first demos were 16 songs. They were good to hear, but most of the
 library's genres had no song at all: there was a tango *style*, but no
@@ -31,7 +31,7 @@ something to listen to:
 | Country and folk | Frère Jacques, Greensleeves, Oh! Susanna, Scarborough Fair, Clementine, Camptown Races, Row Row Row Your Boat, Silent Night, We Wish You a Merry Christmas |
 | Classical and film | Canon in D, Für Elise, Mountain King, Minuet in G, The Blue Danube, Brahms' Lullaby, Morning Mood, New World Largo, Shchedryk, Funeral March |
 
-The ones marked \* say "Written for Ferrous Loom" in their tooltip.
+The ones marked \* say "Written for Ferrous Lineup" in their tooltip.
 Some genres have very few famous tunes old enough to be free: the great
 tangos, bossa novas and blues songs mostly date from the 1910s on, and
 their composers died too recently. Rather than leave those genres

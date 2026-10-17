@@ -5,9 +5,9 @@
 - [Getting started](getting-started.md)
 - [Step 1: The foundation](step-1/README.md)
   - [Cargo, workspaces and crates](step-1/workspace.md)
-  - [loom-core: notes and tempo](step-1/loom-core.md)
-  - [loom-audio: the real-time engine](step-1/audio-engine.md)
-  - [loom-app: the window](step-1/window.md)
+  - [lineup-core: notes and tempo](step-1/lineup-core.md)
+  - [lineup-audio: the real-time engine](step-1/audio-engine.md)
+  - [lineup-app: the window](step-1/window.md)
   - [Tests and continuous integration](step-1/ci.md)
   - [Exercises](step-1/exercises.md)
 - [Step 2: The channel rack](step-2/README.md)
@@ -78,6 +78,7 @@
   - [Exercises](step-8/exercises.md)
 - [Step 9: The band](step-9/README.md)
   - [Chord names: reading a lead sheet](step-9/chord-names.md)
+  - [A new name](step-9/new-name.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---

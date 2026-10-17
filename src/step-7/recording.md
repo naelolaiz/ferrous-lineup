@@ -1,8 +1,8 @@
 # Recording: from a key to a note
 
-Files: [`crates/loom-core/src/record.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/record.rs),
-[`crates/loom-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/live.rs)
-and [`crates/loom-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/file.rs)
+Files: [`crates/lineup-core/src/record.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/record.rs),
+[`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/live.rs)
+and [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs)
 
 The [last chapter](live.md) brought each key to the UI thread with the
 position it was played at. Recording is what the UI does with it: a key
@@ -84,7 +84,7 @@ only if both are `Some`.
 Nobody plays exactly on the step. A key that went down at 3.9 and came
 up at 6.2 was meant as a note from step 4 to step 6. Moving the ends of
 a note to the grid is called **quantizing**, and it is a plain function
-in `loom-core`, with no keyboard and no UI in sight:
+in `lineup-core`, with no keyboard and no UI in sight:
 
 ```rust
 pub fn recorded_note(pitch: Note, velocity: u8, from: f64, until: f64, length: usize) -> NoteEvent {
@@ -146,7 +146,7 @@ fn a_note_across_the_loop_end_is_cut_there() {
 `recorded(from, until)` is a helper in the test module that records a
 C4 in a 16-step pattern and returns `(start, length)`. Being able to
 write `15.7` instead of having to play a key at exactly that moment is
-why the function lives in `loom-core` and takes plain numbers.
+why the function lives in `lineup-core` and takes plain numbers.
 
 ### Floats into integers: `as`
 
@@ -284,7 +284,7 @@ callback ran and when its sound will be played. That is [exercise
 
 ## Format 2: only when needed
 
-A MIDI Out channel is a new kind of channel, and an older Ferrous Loom
+A MIDI Out channel is a new kind of channel, and an older Ferrous Lineup
 that reads `MidiOut(channel: 4)` in a project file would not know what
 it is. Step 4 planned for this: every file starts with its format
 number, and a version that sees a number higher than its own refuses

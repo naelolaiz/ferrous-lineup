@@ -1,8 +1,8 @@
 # Any time signature, and irregular meters
 
-Files: [`crates/loom-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/meter.rs),
-[`crates/loom-app/src/time_picker.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/time_picker.rs),
-[`crates/loom-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/file.rs)
+Files: [`crates/lineup-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/meter.rs),
+[`crates/lineup-app/src/time_picker.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/time_picker.rs),
+[`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/file.rs)
 
 The menus used to offer ten time signatures, from 2/4 to 12/8. Music
 has many more: 11/8, 13/16, 7/4, 5/2. A time signature is just two
@@ -32,7 +32,7 @@ Turkish for "limping": the long beat feels like a limp). Notice that
 4/4: the beats fall on notes 1, 4 and 7. Writing it 3+3+2 says so.
 
 A score writes the grouping in the time signature itself, as the top
-number: (2+2+3)/8. Ferrous Loom does the same, and shows it on the
+number: (2+2+3)/8. Ferrous Lineup does the same, and shows it on the
 playlist's ruler:
 
 ![The playlist's bar numbers: bar 5 starts a change to 3+3+3+2/16, eleven steps a bar.](../images/step-8-irregular-ruler.png)
@@ -47,7 +47,7 @@ playlist's ruler:
 - If something does not fit, the menu says so in red, for example "the
   groups add up to 8, not 11".
 
-There is no 32 at the bottom: Ferrous Loom's grid is sixteenth-note
+There is no 32 at the bottom: Ferrous Lineup's grid is sixteenth-note
 steps, and a bar of 7/32 would end in the middle of a step.
 
 ## A grouping inside a `Copy` type
@@ -149,7 +149,7 @@ check that every time signature survives `to_string` then `parse`.
 
 A project file stores a time signature as `(beats: 7, unit: 8)`. Files
 without a grouping must stay exactly like that, so older versions of
-Ferrous Loom keep opening them. The serde attribute
+Ferrous Lineup keep opening them. The serde attribute
 `#[serde(from = "SavedTime", into = "SavedTime")]` says: to save a
 `TimeSignature`, turn it into a `SavedTime` first, and to load one,
 read a `SavedTime` and turn it back:

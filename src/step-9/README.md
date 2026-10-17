@@ -18,9 +18,10 @@ time:
 
 1. **Chord names**: reading chords as lead sheets write them, "Am7",
    "F#m7b5", "G/B" ([Chord names: reading a lead sheet](chord-names.md)),
+   and then a new name for the app ([A new name](new-name.md)),
 2. **a chord sheet**: a window of bars where you type the chords, stored
    in the project. A bar can also hold a pitch-class set, a micromode or
-   a row form, the other ways Ferrous Loom names harmony,
+   a row form, the other ways Ferrous Lineup names harmony,
 3. **the band plays the chord sheet**: styles split into "band styles"
    (how to play) and "progressions" (what to play),
 4. **a practice bar**: count-in, tempo as a percentage, a toggle to play
@@ -57,7 +58,8 @@ cargo run --release
 
 ## A new name
 
-With the band at the front, the app will be called **Ferrous Lineup**:
+With the band at the front, the app is now called **Ferrous Lineup**:
 a lineup is the players of a band, and "ferrous" (made of iron, the
-metal that rusts) keeps the nod to Rust. The rename comes as a change of
-its own; until then the app and this book still say Ferrous Loom.
+metal that rusts) keeps the nod to Rust. The rename came as a change of
+its own, right after chord names; [A new name](new-name.md) shows what
+it touched and what kept the old name.

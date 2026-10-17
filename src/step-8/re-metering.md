@@ -1,8 +1,8 @@
 # A rhythm in another time signature: re-metering the song
 
-Files: [`crates/loom-core/src/remeter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/remeter.rs),
-[`crates/loom-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/library/apply.rs)
-and [`crates/loom-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app/library.rs)
+Files: [`crates/lineup-core/src/remeter.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/remeter.rs),
+[`crates/lineup-core/src/library/apply.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-core/src/library/apply.rs)
+and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-loom/blob/band-in-a-box/crates/lineup-app/src/app/library.rs)
 
 [A new rhythm for a song](new-rhythm.md) taught the whole song to play
 in another rhythm: new drums, and the chords and bass played the way the
@@ -225,7 +225,7 @@ far into it, and goes to the same bar and the same fraction of it.
 
 - **`pub(crate)`.** `remeter` rewrites the playlist's clips and markers
   directly, so the fields `patterns` and `playlist` of `Project` became
-  `pub(crate)`: visible to every module of `loom-core`, still hidden from
+  `pub(crate)`: visible to every module of `lineup-core`, still hidden from
   the app. The project's rules (every clip points at a pattern that
   exists) are kept by code inside the crate.
 - **`dedup_by`.** Two tempo markers one step apart in 2/4 can be
