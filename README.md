@@ -199,6 +199,13 @@ a free General MIDI SoundFont by S. Christian Collins (about 30 MB, kept
 for next time). **Choose SoundFont…** plays any other `.sf2` file
 instead. WAV export uses it too.
 
+**View > Ear training** (experimental) asks questions to answer by ear:
+which interval two notes make, which kind of chord plays (with
+inversions if you like), and which chords of a key the band plays, named
+on the harmony keys with the chord names hidden. Every answer is
+explained with its notes spelled out, and any answer can be played next
+to the right one. The song and its file are left as they are.
+
 Too small or too big? The same keys zoom whatever the pointer is over.
 Over the playlist or the piano roll, **Ctrl** with **+** and **−** or the
 mouse wheel (⌘ instead of Ctrl on a Mac) makes bars and steps wider or
