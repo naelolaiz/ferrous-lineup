@@ -618,11 +618,7 @@ impl LoomApp {
             HarmonyAction::SetScale(scale) => {
                 self.edit("change key", |project| project.change_key(scale));
             }
-            HarmonyAction::SetTime(time) => {
-                self.edit("change time signature", |project| {
-                    project.time_signature = time;
-                });
-            }
+            HarmonyAction::SetTime(time) => self.set_song_time(time),
             // The notes go the same way as the typing keyboard's: to the
             // audio thread, which plays them on the selected channel, and
             // to the recorder.
@@ -733,6 +729,11 @@ impl LoomApp {
             }
             PlaylistAction::SetLoop(region) => {
                 self.edit("set loop", |project| project.set_loop_region(region));
+            }
+            // Bar 1 is the time signature the song starts in, as in the
+            // Time box.
+            PlaylistAction::SetTimeMarker(marker) if marker.start == 0 => {
+                self.set_song_time(marker.time);
             }
             PlaylistAction::SetTimeMarker(marker) => {
                 self.edit("change time signature", |project| {
