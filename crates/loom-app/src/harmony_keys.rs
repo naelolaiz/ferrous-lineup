@@ -2,11 +2,12 @@
 //!
 //! On the left, the key and the time signature of the project. In the
 //! middle, a big key for each of the seven chords of the key, coloured by
-//! what the chord does (home, away, tension); hold one down to play its
-//! chord, and the chords that often come next are outlined, the most
-//! usual one brightest. The hint line below can explain in sentences, in
-//! a few words, or not at all (see [`HintLevel`]). On the right, a
-//! keyboard showing the notes of the scale and the notes playing.
+//! what the chord does (home, away, tension; in a mode, which has no such
+//! jobs, all one colour); hold one down to play its chord, and the chords
+//! that often come next are outlined, the most usual one brightest. The
+//! hint line below can explain in sentences, in a few words, or not at
+//! all (see [`HintLevel`]). On the right, a keyboard showing the notes of
+//! the scale and the notes playing.
 //!
 //! Like the other views, [`HarmonyKeys::show`] does not change anything
 //! itself: it returns [`HarmonyAction`]s for the app to carry out.
@@ -17,9 +18,7 @@ use eframe::egui::{
 };
 use loom_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
 use loom_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords};
-use loom_core::{
-    Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, Spelling, TimeSignature,
-};
+use loom_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
 
 use crate::piano_roll::{KEY_HELP, both_names};
 
@@ -36,21 +35,33 @@ pub enum HarmonyAction {
 
 const KEY_SIZE: egui::Vec2 = vec2(76.0, 66.0);
 const KEY_GAP: f32 = 4.0;
-/// The keyboard on the right: from C2, four octaves.
-const PIANO_LOWEST: u8 = 36;
-const PIANO_OCTAVES: u8 = 4;
-const WHITE_WIDTH: f32 = 11.0;
+/// The keyboard on the right: from C2, four octaves, with white keys
+/// 11 points wide. In a narrow window it gets smaller and shows fewer
+/// octaves, so it stays beside the chord keys instead of taking a row
+/// of its own: (lowest note, octaves, white key width), biggest first.
+const PIANO_SIZES: [(u8, u8, f32); 6] = [
+    (36, 4, 11.0),
+    (36, 4, 9.0),
+    (36, 3, 10.0),
+    (48, 2, 10.0),
+    (48, 2, 8.0),
+    (48, 2, 6.0),
+];
 const PIANO_HEIGHT: f32 = 58.0;
 
 /// The colour of each function: blue for home, green for away, orange for
-/// tension.
-fn function_color(function: Function) -> Color32 {
+/// tension; grey-blue for the chords of a mode, which have no function.
+fn function_color(function: Option<Function>) -> Color32 {
     match function {
-        Function::Tonic => Color32::from_rgb(76, 136, 222),
-        Function::Subdominant => Color32::from_rgb(86, 176, 110),
-        Function::Dominant => Color32::from_rgb(226, 124, 64),
+        Some(Function::Tonic) => Color32::from_rgb(76, 136, 222),
+        Some(Function::Subdominant) => Color32::from_rgb(86, 176, 110),
+        Some(Function::Dominant) => Color32::from_rgb(226, 124, 64),
+        None => MODE_COLOR,
     }
 }
+
+/// The colour of the keys of a mode.
+const MODE_COLOR: Color32 = Color32::from_rgb(92, 112, 150);
 
 const KEY_TEXT: Color32 = Color32::from_rgb(244, 246, 250);
 const KEY_TEXT_DIM: Color32 = Color32::from_rgb(196, 202, 214);
@@ -130,6 +141,13 @@ impl HarmonyKeys {
         }
     }
 
+    /// Forgets the chords played so far, for another song: its first
+    /// chord gets no "what comes next" from the last song's last chord.
+    pub fn forget_chords(&mut self) {
+        self.last_voicing = None;
+        self.last_chord = None;
+    }
+
     /// Lets go of the key that is down, if any. Called when the bar is
     /// closed, so no chord keeps playing.
     pub fn release(&mut self) -> Vec<HarmonyAction> {
@@ -155,11 +173,15 @@ impl HarmonyKeys {
         digits: bool,
     ) -> Vec<HarmonyAction> {
         let scale = project.scale;
-        if let Some(groups) = keys::group_keys(scale, self.size) {
+        let size = self.size_for(scale);
+        if let Some(groups) = keys::group_keys(scale, size) {
             return self.show_groups(ui, project, &groups, channel_name, held, heard, digits);
         }
         let mut actions = Vec::new();
-        let chord_keys = keys::chord_keys(scale, self.size);
+        let chord_keys = keys::chord_keys(scale, size);
+        // The key the chords are spelled in: for a pentatonic or blues
+        // scale, the major or minor key its chords come from.
+        let tonal = keys::chord_scale(scale);
 
         // A chord played on any keyboard, or else playing in the music,
         // lights its key, and is what the suggestions follow.
@@ -174,7 +196,7 @@ impl HarmonyKeys {
         let playing = played.and_then(|chord| keys::key_for(&chord_keys, chord));
         let suggestions = self
             .last_chord
-            .map(|chord| next_chords(keys::chord_scale(scale), chord))
+            .map(|chord| next_chords(tonal, chord))
             .unwrap_or_default();
 
         ui.add_space(4.0);
@@ -185,13 +207,11 @@ impl HarmonyKeys {
             ui.vertical(|ui| self.settings(ui, project, &mut actions));
             ui.separator();
             for (index, key) in chord_keys.iter().enumerate() {
-                // The rank of the key among the suggestions: 0 for the
-                // most usual next chord.
-                let rank = suggestions.iter().position(|s| s.degree == key.degree);
+                let rank = suggestion_rank(&suggestions, &chord_keys, index);
                 let lit =
                     playing == Some(index) || self.down.as_ref().is_some_and(|d| d.key == index);
-                let response = chord_key(ui, key, scale.spelling(), lit, rank);
-                let mut hover = describe_key(key, scale.spelling(), self.hints);
+                let response = chord_key(ui, key, tonal, lit, rank);
+                let mut hover = describe_key(key, tonal, self.hints);
                 if let Some(rank) = rank {
                     let often = if rank == 0 { "Most often" } else { "Often" };
                     hover = match suggestions[rank].why(self.hints) {
@@ -211,13 +231,7 @@ impl HarmonyKeys {
             piano(ui, scale, held, heard);
         });
 
-        let suggests = matches!(
-            keys::chord_scale(scale).kind,
-            ScaleKind::Major
-                | ScaleKind::NaturalMinor
-                | ScaleKind::HarmonicMinor
-                | ScaleKind::MelodicMinor
-        );
+        let suggests = keys::has_functions(tonal.kind);
         let outside = suggests
             && self
                 .last_chord
@@ -226,7 +240,7 @@ impl HarmonyKeys {
             self.hints_menu(ui);
             let hint = hint_line(
                 self.hints,
-                scale,
+                tonal,
                 self.last_chord,
                 &suggestions,
                 suggests,
@@ -268,7 +282,6 @@ impl HarmonyKeys {
     ) -> Vec<HarmonyAction> {
         let mut actions = Vec::new();
         let scale = project.scale;
-        let spelling = scale.spelling();
         let heard_set: PitchSet = heard.iter().map(|note| note.pitch_class()).collect();
         let mut pressed = None;
         ui.add_space(4.0);
@@ -278,11 +291,9 @@ impl HarmonyKeys {
             for (index, group) in groups.iter().enumerate() {
                 let lit = self.down.as_ref().is_some_and(|d| d.key == index)
                     || (heard_set.len() >= 2 && group.pitch_set() == heard_set);
-                let response = group_key(ui, group, spelling, lit);
-                let response = crate::theme::hint(
-                    response,
-                    describe_group(group, spelling, index, self.hints),
-                );
+                let response = group_key(ui, group, lit);
+                let response =
+                    crate::theme::hint(response, describe_group(group, index, self.hints));
                 if response.is_pointer_button_down_on() {
                     pressed = Some(index);
                 }
@@ -350,7 +361,7 @@ impl HarmonyKeys {
             let mut root = scale.root;
             egui::ComboBox::from_id_salt("harmony-root")
                 .width(56.0)
-                .selected_text(egui::RichText::new(root.name(scale.spelling())).strong())
+                .selected_text(egui::RichText::new(scale.spell(root).to_string()).strong())
                 .show_ui(ui, |ui| {
                     for pitch_class in PitchClass::ALL {
                         ui.selectable_value(&mut root, pitch_class, both_names(pitch_class));
@@ -385,7 +396,8 @@ impl HarmonyKeys {
             ui.weak(format!("{} steps a bar", time.steps_per_bar()));
         });
         ui.horizontal(|ui| {
-            for size in ChordSize::ALL {
+            let current = self.size_for(scale);
+            for size in keys::chord_sizes(scale) {
                 let (label, hover) = match (scale.kind, size) {
                     (ScaleKind::Row(_), _) => {
                         let n = keys::row_group(size);
@@ -399,12 +411,15 @@ impl HarmonyKeys {
                             format!("The row in groups of {n}: {name}"),
                         )
                     }
-                    (ScaleKind::Set(_), _) => {
-                        let n = size as usize + 3;
-                        (
-                            format!("{n} notes"),
-                            format!("Chords of {n} notes of the set"),
-                        )
+                    (ScaleKind::Set(set), _) => {
+                        // A set of two notes makes chords of two.
+                        let n = (size as usize + 3).min(set.len());
+                        let hover = if n == set.len() {
+                            format!("All {n} notes of the set, from each of them in turn")
+                        } else {
+                            format!("Chords of {n} notes of the set")
+                        };
+                        (format!("{n} notes"), hover)
                     }
                     (_, ChordSize::Triads) => (
                         size.label().to_string(),
@@ -419,10 +434,27 @@ impl HarmonyKeys {
                         "Five notes: the seventh chord and its ninth".to_string(),
                     ),
                 };
-                ui.selectable_value(&mut self.size, size, label)
-                    .on_hover_text(hover);
+                if ui
+                    .selectable_label(current == size, label)
+                    .on_hover_text(hover)
+                    .clicked()
+                {
+                    self.size = size;
+                }
             }
         });
+    }
+
+    /// The chord size to play in `scale`: the one chosen, or the biggest
+    /// the scale has if it has none that big (a set of three notes makes
+    /// no four-note chords). The choice is kept for the next scale.
+    fn size_for(&self, scale: Scale) -> ChordSize {
+        let sizes = keys::chord_sizes(scale);
+        if sizes.contains(&self.size) {
+            self.size
+        } else {
+            sizes.last().copied().unwrap_or_default()
+        }
     }
 
     /// Presses or releases keys with the mouse. `pressed` is the key the
@@ -523,10 +555,26 @@ impl HarmonyKeys {
     }
 }
 
+/// The rank of harmony key `index` among the suggestions: 0 if it plays
+/// the most usual next chord, `None` if it plays none of them. A
+/// suggestion counts for a key only if the key plays that chord: in A
+/// melodic minor, whose IV is D major, the suggestion Dm (iv) outlines
+/// no key.
+fn suggestion_rank(
+    suggestions: &[Suggestion],
+    chord_keys: &[ChordKey],
+    index: usize,
+) -> Option<usize> {
+    suggestions
+        .iter()
+        .position(|s| keys::key_for(chord_keys, s.chord) == Some(index))
+}
+
 /// The line of text under the keys: what often comes after the last
-/// chord, at the chosen level of detail. `suggests` says whether the key
-/// is one that gets suggestions (major or minor), and `outside` whether
-/// the last chord is not one of the key's seven.
+/// chord, at the chosen level of detail, with the chords spelled in
+/// `scale`. `suggests` says whether the key is one that gets suggestions
+/// (major or minor), and `outside` whether the last chord is not one of
+/// the key's seven.
 fn hint_line(
     level: HintLevel,
     scale: Scale,
@@ -536,10 +584,9 @@ fn hint_line(
     outside: bool,
     channel_name: &str,
 ) -> String {
-    let spelling = scale.spelling();
     match (last_chord, suggestions.first()) {
         (Some(chord), Some(next)) => {
-            let (from, to) = (chord.name(spelling), next.chord.name(spelling));
+            let (from, to) = (scale.chord_name(chord), scale.chord_name(next.chord));
             match level {
                 HintLevel::Detailed => {
                     format!("After {from}, {to} often comes next: {}", next.reason)
@@ -551,10 +598,10 @@ fn hint_line(
         (Some(chord), None) if outside => match level {
             HintLevel::Detailed => format!(
                 "{} is not one of the seven chords of {}: it comes from outside the key.",
-                chord.name(spelling),
+                scale.chord_name(chord),
                 scale.name()
             ),
-            _ => format!("{}: outside the key", chord.name(spelling)),
+            _ => format!("{}: outside the key", scale.chord_name(chord)),
         },
         _ if !suggests => match level {
             HintLevel::Detailed => {
@@ -577,14 +624,14 @@ fn hint_line(
     }
 }
 
-/// One harmony key: the numeral, the chord's name and its function, on
-/// the function's colour. Bright while it plays; outlined when it is a
-/// chord that often comes next: thick and bright for the most usual one
-/// (`rank` 0), thin and dim for the others.
+/// One harmony key: the numeral, the chord's name (spelled in `scale`)
+/// and its function, on the function's colour. Bright while it plays;
+/// outlined when it is a chord that often comes next: thick and bright
+/// for the most usual one (`rank` 0), thin and dim for the others.
 fn chord_key(
     ui: &mut Ui,
     key: &ChordKey,
-    spelling: Spelling,
+    scale: Scale,
     lit: bool,
     rank: Option<usize>,
 ) -> Response {
@@ -638,24 +685,27 @@ fn chord_key(
     painter.text(
         rect.center() + vec2(0.0, 9.0),
         Align2::CENTER_CENTER,
-        key.chord.name(spelling),
+        scale.chord_name(key.chord),
         FontId::proportional(13.0),
         KEY_TEXT,
     );
-    painter.text(
-        rect.center_bottom() - vec2(0.0, 9.0),
-        Align2::CENTER_CENTER,
-        key.function.name(),
-        FontId::proportional(10.0),
-        KEY_TEXT_DIM,
-    );
+    if let Some(function) = key.function {
+        painter.text(
+            rect.center_bottom() - vec2(0.0, 9.0),
+            Align2::CENTER_CENTER,
+            function.name(),
+            FontId::proportional(10.0),
+            KEY_TEXT_DIM,
+        );
+    }
     response
 }
 
-/// A harmony key of a row or a set: which notes of the row it plays (or
-/// the note its chord starts on), the notes, and their set class.
-fn group_key(ui: &mut Ui, group: &GroupKey, spelling: Spelling, lit: bool) -> Response {
-    let names: Vec<&str> = group.notes.iter().map(|p| p.name(spelling)).collect();
+/// A harmony key of a row or a set: its label (which notes of the row it
+/// plays, or for a set the chord they make), the notes, and underneath
+/// what the label does not already say (see [`group_footer`]).
+fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
+    let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
     // Hexachords need a wider key for their six names.
     let width = (names.len() as f32 * 15.0 + 12.0).max(KEY_SIZE.x);
     let (rect, response) = ui.allocate_exact_size(vec2(width, KEY_SIZE.y), Sense::click());
@@ -691,19 +741,39 @@ fn group_key(ui: &mut Ui, group: &GroupKey, spelling: Spelling, lit: bool) -> Re
     painter.text(
         rect.center_bottom() - vec2(0.0, 9.0),
         Align2::CENTER_CENTER,
-        group.pitch_set().set_class().name(),
+        group_footer(group),
         FontId::proportional(10.0),
         KEY_TEXT_DIM,
     );
     response
 }
 
-/// The tooltip of a key of a row or a set.
-fn describe_group(group: &GroupKey, spelling: Spelling, index: usize, level: HintLevel) -> String {
-    let names: Vec<&str> = group.notes.iter().map(|p| p.name(spelling)).collect();
+/// The small line at the bottom of a group key, saying what its label
+/// does not: "Eb · 3-11" for a row's group that makes a chord (the chord
+/// and the set class), "3-11" for a set's key called by its chord, and
+/// "[015]" (the prime form) for one called by its set class.
+fn group_footer(group: &GroupKey) -> String {
     let class = group.pitch_set().set_class();
+    if group.label == class.name() {
+        return class.prime_text();
+    }
+    match &group.chord {
+        Some(chord) if *chord != group.label => format!("{chord} · {}", class.name()),
+        _ => class.name(),
+    }
+}
+
+/// The tooltip of a key of a row or a set: "1–3: Eb G Bb, the chord Eb ·
+/// set 3-11, …" for a row, "Cm/Eb: Eb G C · set 3-11, …" for a set.
+fn describe_group(group: &GroupKey, index: usize, level: HintLevel) -> String {
+    let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
+    let class = group.pitch_set().set_class();
+    let chord = match &group.chord {
+        Some(chord) if *chord != group.label => format!(", the chord {chord}"),
+        _ => String::new(),
+    };
     let mut text = format!(
-        "{}: {} · set {}",
+        "{}: {}{chord} · set {}",
         group.label,
         names.join(" "),
         class.name()
@@ -724,36 +794,41 @@ fn describe_group(group: &GroupKey, spelling: Spelling, index: usize, level: Hin
     }
 }
 
-/// The tooltip of a harmony key, at `level`: "V: G major (G B D). The
-/// dominant: tension, pulls back home to I.", "V: G major (G B D),
-/// dominant: tension. Key 5." or just "V: G major (G B D)".
-fn describe_key(key: &ChordKey, spelling: Spelling, level: HintLevel) -> String {
-    let notes: Vec<&str> = key
-        .chord
-        .pitch_set()
+/// The tooltip of a harmony key, at `level`, with the notes spelled in
+/// `scale` from the root up: "V: G major (G B D). The dominant: tension:
+/// pulls back home to the tonic.", "V: G major (G B D), dominant:
+/// tension. Key 5." or just "V: G major (G B D)". A mode has no
+/// functions, so its keys say only the chord and the key to press.
+fn describe_key(key: &ChordKey, scale: Scale, level: HintLevel) -> String {
+    let notes: Vec<String> = scale
+        .chord_notes(key.chord)
         .iter()
-        .map(|pitch_class| pitch_class.name(spelling))
+        .map(ToString::to_string)
         .collect();
     let digit = key.degree + 1;
     let chord = format!(
         "{}: {} {} ({})",
         key.numeral,
-        key.chord.root.name(spelling),
+        scale.spell_root(key.chord),
         key.chord.quality.name(),
         notes.join(" "),
     );
-    match level {
-        HintLevel::Detailed => format!(
+    match (level, key.function) {
+        (HintLevel::Detailed, Some(function)) => format!(
             "{chord}. The {}: {}.\nHold to play; key {digit} on the computer keyboard too.",
-            key.function.name(),
-            key.function.feel(),
+            function.name(),
+            function.feel(),
         ),
-        HintLevel::Short => format!(
+        (HintLevel::Detailed, None) => {
+            format!("{chord}.\nHold to play; key {digit} on the computer keyboard too.")
+        }
+        (HintLevel::Short, Some(function)) => format!(
             "{chord}, {}: {}. Key {digit}.",
-            key.function.name(),
-            key.function.short_feel(),
+            function.name(),
+            function.short_feel(),
         ),
-        HintLevel::Minimal => chord,
+        (HintLevel::Short, None) => format!("{chord}. Key {digit}."),
+        (HintLevel::Minimal, _) => chord,
     }
 }
 
@@ -775,14 +850,23 @@ fn describe_time(time: TimeSignature) -> String {
 /// A small keyboard: dots on the notes of the scale (orange on its root),
 /// the notes held down lit, and the chord playing in the music shaded.
 fn piano(ui: &mut Ui, scale: Scale, held: &[Note], heard: &[Note]) {
-    let whites = 7 * usize::from(PIANO_OCTAVES);
-    let size = vec2(whites as f32 * WHITE_WIDTH, PIANO_HEIGHT);
+    // What is left of this row: in a wrapping row, `available_width`
+    // would be the whole width, as if on a row of its own.
+    let room = ui.max_rect().right() - ui.cursor().min.x;
+    let width = |&(_, octaves, white): &(u8, u8, f32)| 7.0 * f32::from(octaves) * white;
+    let (lowest, octaves, white_width) = PIANO_SIZES
+        .iter()
+        .copied()
+        .find(|size| width(size) <= room)
+        .unwrap_or(PIANO_SIZES[0]);
+    let whites = 7 * usize::from(octaves);
+    let size = vec2(whites as f32 * white_width, PIANO_HEIGHT);
     let (rect, _) = ui.allocate_exact_size(size, Sense::hover());
     if !ui.is_rect_visible(rect) {
         return;
     }
     let painter = ui.painter_at(rect.expand(1.0));
-    let notes = PIANO_LOWEST..PIANO_LOWEST + 12 * PIANO_OCTAVES;
+    let notes = lowest..lowest + 12 * octaves;
     let is_held = |midi: u8| held.iter().any(|note| note.midi() == midi);
     let is_heard = |midi: u8| heard.iter().any(|note| note.midi() == midi);
     let fill = |midi: u8, normal: Color32| {
@@ -801,17 +885,17 @@ fn piano(ui: &mut Ui, scale: Scale, held: &[Note], heard: &[Note]) {
     for midi in notes {
         let pitch_class = Note::new(midi).pitch_class();
         if pitch_class.is_black_key() {
-            let x = rect.left() + white as f32 * WHITE_WIDTH;
+            let x = rect.left() + white as f32 * white_width;
             let key = Rect::from_center_size(
                 pos2(x, rect.top() + PIANO_HEIGHT * 0.31),
-                vec2(WHITE_WIDTH * 0.62, PIANO_HEIGHT * 0.62),
+                vec2(white_width * 0.62, PIANO_HEIGHT * 0.62),
             );
             black_keys.push((midi, key));
             continue;
         }
         let key = Rect::from_min_size(
-            pos2(rect.left() + white as f32 * WHITE_WIDTH, rect.top()),
-            vec2(WHITE_WIDTH, PIANO_HEIGHT),
+            pos2(rect.left() + white as f32 * white_width, rect.top()),
+            vec2(white_width, PIANO_HEIGHT),
         );
         painter.rect_filled(key.shrink(0.5), 1.5, fill(midi, WHITE_KEY));
         painter.rect_stroke(key, 1.5, Stroke::new(1.0, KEY_BORDER), StrokeKind::Inside);
@@ -823,10 +907,12 @@ fn piano(ui: &mut Ui, scale: Scale, held: &[Note], heard: &[Note]) {
         let pitch_class = Note::new(midi).pitch_class();
         scale_dot(&painter, scale, pitch_class, key, PIANO_HEIGHT * 0.5);
     }
-    // The name of each C, so you can find your place.
-    for octave in 0..PIANO_OCTAVES {
-        let x = rect.left() + (f32::from(octave) * 7.0 + 0.5) * WHITE_WIDTH;
-        let c = Note::new(PIANO_LOWEST + 12 * octave);
+    // The name of each C, so you can find your place, where the keys are
+    // wide enough for it.
+    let named = if white_width >= 8.0 { octaves } else { 0 };
+    for octave in 0..named {
+        let x = rect.left() + (f32::from(octave) * 7.0 + 0.5) * white_width;
+        let c = Note::new(lowest + 12 * octave);
         painter.text(
             pos2(x, rect.bottom() - 4.0),
             Align2::CENTER_BOTTOM,
@@ -867,5 +953,114 @@ mod tests {
         );
         assert_eq!(line(HintLevel::Short), "F → G: step up to the dominant");
         assert_eq!(line(HintLevel::Minimal), "F → G");
+    }
+
+    #[test]
+    fn the_hint_line_spells_chords_in_the_key() {
+        let d_flat = Scale::new(PitchClass::CSharp, ScaleKind::Major);
+        let iv = Chord::new(PitchClass::FSharp, ChordQuality::Major);
+        let next = next_chords(d_flat, iv);
+        let line = hint_line(
+            HintLevel::Minimal,
+            d_flat,
+            Some(iv),
+            &next,
+            true,
+            false,
+            "Piano",
+        );
+        assert_eq!(line, "Gb → Ab");
+    }
+
+    #[test]
+    fn suggestions_outline_only_the_keys_that_play_them() {
+        // A melodic minor: after Am, Dm (iv) and E (V) often come next.
+        // The key on D plays D major, so only the key of V is outlined.
+        let a = Scale::new(PitchClass::A, ScaleKind::MelodicMinor);
+        let am = Chord::new(PitchClass::A, ChordQuality::Minor);
+        let next = next_chords(a, am);
+        let chord_keys = keys::chord_keys(a, ChordSize::Triads);
+        let ranks: Vec<Option<usize>> = (0..chord_keys.len())
+            .map(|index| suggestion_rank(&next, &chord_keys, index))
+            .collect();
+        assert_eq!(ranks, [None, None, None, None, Some(1), None, None]);
+    }
+
+    #[test]
+    fn a_key_lists_its_chord_from_the_root_up() {
+        let c = Scale::new(PitchClass::C, ScaleKind::Major);
+        let vii = &keys::chord_keys(c, ChordSize::Triads)[6];
+        assert_eq!(
+            describe_key(vii, c, HintLevel::Short),
+            "vii°: B diminished (B D F), dominant: tension. Key 7."
+        );
+        let sevenths = keys::chord_keys(c, ChordSize::Sevenths);
+        assert_eq!(
+            describe_key(&sevenths[1], c, HintLevel::Minimal),
+            "ii7: D minor seventh (D F A C)"
+        );
+        // Spelled in the key: Gb, not F#, in Db major.
+        let d_flat = Scale::new(PitchClass::CSharp, ScaleKind::Major);
+        let iv = &keys::chord_keys(d_flat, ChordSize::Triads)[3];
+        assert_eq!(
+            describe_key(iv, d_flat, HintLevel::Minimal),
+            "IV: Gb major (Gb Bb Db)"
+        );
+    }
+
+    #[test]
+    fn a_mode_has_no_functions_to_describe() {
+        let dorian = Scale::new(PitchClass::D, ScaleKind::Dorian);
+        let iv = &keys::chord_keys(dorian, ChordSize::Triads)[3];
+        assert_eq!(
+            describe_key(iv, dorian, HintLevel::Short),
+            "IV: G major (G B D). Key 4."
+        );
+        assert_eq!(function_color(iv.function), MODE_COLOR);
+    }
+
+    #[test]
+    fn a_set_offers_no_chords_bigger_than_itself() {
+        let keys = HarmonyKeys {
+            size: ChordSize::Ninths,
+            ..HarmonyKeys::new()
+        };
+        let triad = PitchSet::from_semitones(&[0, 3, 7]);
+        let set = Scale::set(PitchClass::C, triad);
+        assert_eq!(keys.size_for(set), ChordSize::Triads);
+        let tetrachord = PitchSet::from_semitones(&[0, 3, 6, 9]);
+        let set = Scale::set(PitchClass::C, tetrachord);
+        assert_eq!(keys.size_for(set), ChordSize::Sevenths);
+        let c = Scale::new(PitchClass::C, ScaleKind::Major);
+        assert_eq!(keys.size_for(c), ChordSize::Ninths);
+    }
+
+    #[test]
+    fn group_keys_say_what_their_label_does_not() {
+        let c_minor = PitchSet::from_semitones(&[0, 3, 7]);
+        let groups =
+            keys::group_keys(Scale::set(PitchClass::C, c_minor), ChordSize::Triads).unwrap();
+        assert_eq!(group_footer(&groups[1]), "3-11");
+        assert_eq!(
+            describe_group(&groups[1], 1, HintLevel::Minimal),
+            "Cm/Eb: Eb G C · set 3-11, major or minor triad"
+        );
+        let chromatic = PitchSet::from_semitones(&[0, 1, 2]);
+        let groups =
+            keys::group_keys(Scale::set(PitchClass::C, chromatic), ChordSize::Triads).unwrap();
+        assert_eq!(groups[0].label, "3-1");
+        assert_eq!(group_footer(&groups[0]), "[012]");
+        // A row's group: the chord its notes make, and their set class.
+        let row = loom_core::harmony::ROW_PRESETS
+            .iter()
+            .find(|preset| preset.name == "Four triads")
+            .unwrap()
+            .row;
+        let groups = keys::group_keys(Scale::row(row), ChordSize::Triads).unwrap();
+        assert_eq!(group_footer(&groups[0]), "C · 3-11");
+        assert_eq!(
+            describe_group(&groups[0], 0, HintLevel::Minimal),
+            "1–3: C E G, the chord C · set 3-11, major or minor triad"
+        );
     }
 }

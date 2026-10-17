@@ -113,15 +113,19 @@ and the harmony keys follow along. This is an early experiment; see
 [`crates/loom-listen`](crates/loom-listen/README.md) for how it works and
 how often it is right.
 
-Too small or too big? The main window, the channel rack and the piano
-roll each have their own zoom. **Ctrl+Plus** and **Ctrl+Minus** (⌘ on a
-Mac) zoom the one you clicked last and **Ctrl+0** takes it back to 100%;
-**Ctrl** with the mouse wheel zooms the one under the pointer. The main
-window's zoom is also in the **View** menu and at the right end of the
-status bar. The View menu also
-shows or hides each window and panel, and **Alt+F8** hides the Patterns
-and Library panel to give the playlist more room. The zoom, the window
-size and where you left the windows are remembered for next time.
+Too small or too big? As in FL Studio, the playlist and the piano roll
+zoom each direction on its own: **Ctrl** with the mouse wheel makes bars
+and steps wider or narrower, and **Alt** with the wheel makes tracks and
+keys taller or shorter, around what is under the pointer. **Ctrl** or
+**Alt** with **+** and **−** (⌘ instead of Ctrl on a Mac) do the same in
+the window you clicked last, and **Ctrl+0** takes both back to 100%. The
+channel rack has one zoom for both directions. The playlist's two zooms
+are also at the right end of the status bar, and **View > Interface
+size** makes the text, buttons and menus bigger or smaller everywhere.
+The View menu also shows or hides each window and panel, and **Alt+F8**
+hides the Patterns and Library panel to give the playlist more room. The
+zoom, the window size and where you left the windows are remembered for
+next time.
 
 Ready-built programs for all three systems are attached to every CI run
 as `ferrous-loom-linux`, `ferrous-loom-macos` and `ferrous-loom-windows`.

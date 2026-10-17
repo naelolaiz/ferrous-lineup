@@ -107,10 +107,27 @@ fn write_file(project: &Project, meter: &Meter, placed: &[Play], length: usize) 
 ///
 /// Built-in drums share channel 10, where General MIDI expects drums.
 /// MIDI Out channels keep the channel they were given. Every other
-/// channel gets the next free one, skipping 10; after 15 of them, the
-/// channels are used again from the start.
+/// channel gets the next free one: not 10, and not one a MIDI Out channel
+/// already plays on, or the two would share one sound on the synth and
+/// cut each other's notes short. When there are more channels than free
+/// ones, the free ones are used again from the start (or, if MIDI Out
+/// channels take all of them, every channel but 10 is).
 pub fn midi_channels(channels: &[Channel]) -> Vec<u8> {
-    let mut melodic = (0..16u8).filter(|&channel| channel != DRUM_CHANNEL).cycle();
+    let taken = |number: u8| {
+        channels
+            .iter()
+            .any(|channel| channel.kind == ChannelKind::MidiOut { channel: number })
+    };
+    let free: Vec<u8> = (0..16u8)
+        .filter(|&number| number != DRUM_CHANNEL && !taken(number))
+        .collect();
+    let mut melodic = if free.is_empty() {
+        (0..16u8).filter(|&number| number != DRUM_CHANNEL).collect()
+    } else {
+        free
+    }
+    .into_iter()
+    .cycle();
     channels
         .iter()
         .map(|channel| match channel.kind {
@@ -478,6 +495,44 @@ mod tests {
             .map(|(_, e)| e[0])
             .collect();
         assert_eq!(at_two_steps, [0x80, 0x90]);
+    }
+
+    #[test]
+    fn a_section_played_once_does_not_shorten_a_note() {
+        // A note from step 28 to step 36 of a four-bar pattern, and a
+        // section, played once, over the first two bars: the note still
+        // ends on step 36, as without the section.
+        let mut project = Project::empty();
+        project.add_channel(Channel::synth());
+        let pattern = project.pattern_mut(0).unwrap();
+        pattern.set_length(64);
+        pattern.add_note(0, NoteEvent::new(Note::new(48), 28, 8));
+        project.add_clip(Clip::new(0, 0, 0));
+        project.add_section(Section::new("Intro", 0, 32));
+        let tracks = read(&song_to_midi(&project));
+        let notes: Vec<_> = tracks[1].iter().filter(|(_, e)| e[0] != 0xFF).collect();
+        assert_eq!(
+            notes,
+            [
+                &(28 * 24, vec![0x90, 48, 100]),
+                &(36 * 24, vec![0x80, 48, 64])
+            ]
+        );
+    }
+
+    #[test]
+    fn other_channels_stay_off_the_midi_out_channels() {
+        let channels = [Channel::midi_out(0), Channel::synth(), Channel::midi_out(2)];
+        assert_eq!(midi_channels(&channels), [0, 1, 2]);
+        let channels = [Channel::synth(), Channel::synth(), Channel::midi_out(1)];
+        assert_eq!(midi_channels(&channels), [0, 2, 1]);
+        // MIDI Out channels on all fifteen: the others share them.
+        let mut channels: Vec<Channel> = (0..16)
+            .filter(|&number| number != DRUM_CHANNEL)
+            .map(Channel::midi_out)
+            .collect();
+        channels.push(Channel::synth());
+        assert_eq!(midi_channels(&channels).last(), Some(&0));
     }
 
     #[test]

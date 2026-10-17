@@ -101,6 +101,13 @@ impl LibraryBrowser {
         let scroll_row = revealing && self.reveal_row;
         let scroll_style = revealing && !self.reveal_rhythm && !self.reveal_row;
         let scroll_rhythm = revealing && self.reveal_rhythm;
+        if searching && !anything_matches(&filter) {
+            ui.label(format!(
+                "Nothing in the library matches \"{}\".",
+                self.filter.trim()
+            ));
+            ui.weak("Songs with melodies are in File ▸ Demos ▸ Songs.");
+        }
         egui::ScrollArea::vertical().show(ui, |ui| {
             let open = searching || new_style;
             section(ui, "Harmony styles", open, |ui| {
@@ -155,7 +162,7 @@ impl LibraryBrowser {
                     .iter()
                     .filter(|r| {
                         matches(&filter, r.name, r.genre, r.time, r.about)
-                            || "fills".contains(&filter)
+                            || names_a_word(&filter, "fill fills")
                     })
                     .collect();
                 if !fills.is_empty() {
@@ -191,12 +198,7 @@ fn row_styles(
 ) -> Option<LibraryAction> {
     let styles: Vec<&'static RowStyle> = ROW_STYLES
         .iter()
-        .filter(|style| {
-            filter.is_empty()
-                || "twelve-tone rows serialism dodecaphony dodecafonismo".contains(filter)
-                || style.name.to_lowercase().contains(filter)
-                || style.about.to_lowercase().contains(filter)
-        })
+        .filter(|style| row_style_matches(filter, style))
         .collect();
     if styles.is_empty() {
         return None;
@@ -327,6 +329,41 @@ fn label(name: &str, time: TimeSignature) -> String {
     } else {
         format!("{name}  ({time})")
     }
+}
+
+/// Whether a twelve-tone style matches the search.
+fn row_style_matches(filter: &str, style: &RowStyle) -> bool {
+    filter.is_empty()
+        || names_a_word(
+            filter,
+            "twelve-tone twelve tone rows serialism dodecaphony dodecafonismo",
+        )
+        || style.name.to_lowercase().contains(filter)
+        || style.about.to_lowercase().contains(filter)
+}
+
+/// Whether anything at all in the library matches the search.
+fn anything_matches(filter: &str) -> bool {
+    STYLES
+        .iter()
+        .any(|s| matches(filter, s.name, s.genre, s.time, s.about))
+        || RHYTHMS
+            .iter()
+            .chain(FILLS.iter())
+            .any(|r| matches(filter, r.name, r.genre, r.time, r.about))
+        || names_a_word(filter, "fill fills")
+        || ROW_STYLES
+            .iter()
+            .any(|style| row_style_matches(filter, style))
+}
+
+/// Whether `filter` is the start of one of `words` (at least three
+/// letters of it), so that "fil" finds the fills but "l" does not.
+fn names_a_word(filter: &str, words: &str) -> bool {
+    filter.chars().count() >= 3
+        && words
+            .split_whitespace()
+            .any(|word| word.starts_with(filter))
 }
 
 /// Whether an entry matches the search: its name, genre, time signature

@@ -206,3 +206,77 @@ pub fn zoom(ui: &egui::Ui) -> f32 {
         .data(|data| data.get_temp(egui::Id::unique(("scale", ui.layer_id()))))
         .unwrap_or(1.0)
 }
+
+/// Turns off "rubber-banding" for the scroll areas `ui` shows next:
+/// scrolling past the end of the contents, which then springs back.
+///
+/// A zoom changes how big the contents are and jumps the view to keep
+/// what is under the pointer in place. On that frame a scroll area still
+/// knows only the old size, so it would take the jump for scrolling past
+/// the end and spring part of the way back, moving the view after the
+/// zoom.
+pub fn no_rubber_band(ui: &mut egui::Ui) {
+    ui.spacing_mut().scroll.kinetic.rubber_band = false;
+}
+
+/// Keeps track of whether the mouse button now down went down while a
+/// menu or drop-down list was open. Called at the start of every frame.
+///
+/// egui closes a menu when you click outside it, but the click still
+/// reaches whatever is under the pointer. On the grids that would draw a
+/// note, place a clip or turn on a step just to close a menu; in FL
+/// Studio, as in most programs, that click only closes the menu. The
+/// grids ask [`dismissing`] and leave such a click alone, from the frame
+/// the button goes down to the frame it comes up.
+pub fn track_dismissing(ctx: &egui::Context) {
+    let id = dismissing_id();
+    let (pressed, down, released) = ctx.input(|input| {
+        (
+            press_pos(input, None).is_some(),
+            input.pointer.any_down(),
+            input.pointer.any_released(),
+        )
+    });
+    let open = egui::Popup::is_any_open(ctx);
+    ctx.data_mut(|data| {
+        let dismissing = data.get_temp_mut_or(id, false);
+        if pressed {
+            *dismissing = open;
+        } else if !down && !released {
+            *dismissing = false;
+        }
+    });
+}
+
+/// Whether the mouse button now down (or just released) went down to
+/// close a menu. See [`track_dismissing`].
+pub fn dismissing(ctx: &egui::Context) -> bool {
+    ctx.data(|data| data.get_temp(dismissing_id()))
+        .unwrap_or(false)
+}
+
+fn dismissing_id() -> egui::Id {
+    egui::Id::unique("press-closes-a-menu")
+}
+
+/// Where a mouse button went down this frame, if one did: only the
+/// primary (left) button, or `None` for any button.
+///
+/// egui's `press_origin` is forgotten when the button comes back up, and
+/// a quick tap (on a touchpad, say) can press and release within one
+/// frame. So the press is read from the frame's events instead, which
+/// also gives the place it went down, not where the pointer is now.
+pub fn press_pos(
+    input: &egui::InputState,
+    only: Option<egui::PointerButton>,
+) -> Option<egui::Pos2> {
+    input.events.iter().find_map(|event| match *event {
+        egui::Event::PointerButton {
+            pos,
+            button,
+            pressed: true,
+            ..
+        } if only.is_none_or(|only| only == button) => Some(pos),
+        _ => None,
+    })
+}

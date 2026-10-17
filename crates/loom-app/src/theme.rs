@@ -132,6 +132,18 @@ pub fn group<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
     .inner
 }
 
+/// Lays out `add` left to right as one piece of a wrapping row, so that
+/// a label and its list move to the next row together (see
+/// [`wrapping`]). Until the piece has been drawn once, `guess` stands in
+/// for its width.
+///
+/// In a window this matters even more than in the toolbar: a row that
+/// runs past the edge for a single frame makes egui widen the window for
+/// good.
+pub fn keep_together<R>(ui: &mut Ui, guess: f32, add: impl FnOnce(&mut Ui) -> R) -> R {
+    wrapping_from(ui, Some(guess), |ui| ui.horizontal(add)).inner
+}
+
 /// Draws a frame as one piece in a wrapping row: when it was too wide for
 /// what is left of the row last time, it starts a new row first.
 ///
@@ -144,8 +156,17 @@ fn wrapping<R>(
     ui: &mut Ui,
     add: impl FnOnce(&mut Ui) -> egui::InnerResponse<R>,
 ) -> egui::InnerResponse<R> {
+    wrapping_from(ui, None, add)
+}
+
+/// [`wrapping`], with a width to assume before the frame is first drawn.
+fn wrapping_from<R>(
+    ui: &mut Ui,
+    guess: Option<f32>,
+    add: impl FnOnce(&mut Ui) -> egui::InnerResponse<R>,
+) -> egui::InnerResponse<R> {
     let id = ui.next_auto_id().with("wrapping");
-    let last_width = ui.ctx().data(|data| data.get_temp::<f32>(id));
+    let last_width = ui.ctx().data(|data| data.get_temp::<f32>(id)).or(guess);
     let row_started = ui.cursor().min.x > ui.max_rect().min.x;
     if let Some(width) = last_width
         && ui.layout().main_wrap

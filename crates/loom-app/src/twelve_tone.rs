@@ -13,7 +13,7 @@
 use eframe::egui::{self, Color32, RichText, Ui};
 use loom_core::harmony::{ROW_PRESETS, RowForm, RowLabel, SetClass, ToneRow, digits, pc_digit};
 use loom_core::serial::{Chain, Register, RowWriting, write_row};
-use loom_core::{Note, NoteEvent, PitchClass, PitchSet, Scale, ScaleKind, Spelling};
+use loom_core::{Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling};
 
 /// Where the row and set last used are remembered.
 fn row_id() -> egui::Id {
@@ -54,11 +54,11 @@ pub fn remember(ctx: &egui::Context, scale: Scale) {
 }
 
 /// The ids of the two windows, to keep them in front (see [`Front`]).
-fn row_window_id() -> egui::Id {
+pub(crate) fn row_window_id() -> egui::Id {
     egui::Id::unique("twelve-tone-row-window")
 }
 
-fn set_window_id() -> egui::Id {
+pub(crate) fn set_window_id() -> egui::Id {
     egui::Id::unique("pitch-class-set-window")
 }
 
@@ -151,28 +151,60 @@ pub fn kind_menu(
     picked.filter(|new| *new != scale)
 }
 
-/// The text of a pitch class in the matrix: its name, or its number.
-fn cell_text(semitone: u8, numbers: bool, spelling: Spelling) -> String {
-    if numbers {
-        pc_digit(semitone).to_string()
-    } else {
-        PitchClass::from_semitone(semitone)
-            .name(spelling)
-            .to_string()
+/// How to write the notes of a set: a [`Scale`] writes them as the key
+/// does (in D minor, C# rather than Db; for a row or a set, with the usual
+/// names C# Eb F# Ab Bb), a bare [`Spelling`] with all sharps or all
+/// flats.
+pub trait NoteNames: Copy {
+    fn note_name(self, pitch_class: PitchClass) -> NoteName;
+}
+
+impl NoteNames for Scale {
+    fn note_name(self, pitch_class: PitchClass) -> NoteName {
+        self.spell(pitch_class)
     }
 }
 
-/// One line about a set: "4-28 [0369] diminished seventh chord".
-pub fn describe_set(set: PitchSet, spelling: Spelling) -> String {
+impl NoteNames for Spelling {
+    fn note_name(self, pitch_class: PitchClass) -> NoteName {
+        NoteName::plain(pitch_class, self)
+    }
+}
+
+/// The notes of `set` in its normal form, written by `names`.
+fn normal_names(set: PitchSet, names: impl NoteNames) -> String {
+    let names: Vec<String> = set
+        .normal_form()
+        .iter()
+        .map(|&p| names.note_name(p).to_string())
+        .collect();
+    names.join(" ")
+}
+
+/// The text of a pitch class in the matrix: its name, or its number. A
+/// row has no key, so its notes take their usual names (see
+/// [`NoteName::chromatic`]).
+fn cell_text(semitone: u8, numbers: bool) -> String {
+    if numbers {
+        pc_digit(semitone).to_string()
+    } else {
+        NoteName::chromatic(PitchClass::from_semitone(semitone)).to_string()
+    }
+}
+
+/// One line about a set: "4-28 · normal form C Eb F# A · …", its notes
+/// written by `names`: pass the key, so they are spelled as it spells
+/// them.
+pub fn describe_set(set: PitchSet, names: impl NoteNames) -> String {
     if set.is_empty() {
         return String::new();
     }
     let class = set.set_class();
-    let normal: Vec<&str> = set.normal_form().iter().map(|p| p.name(spelling)).collect();
+    let normal = normal_names(set, names);
     let mut text = format!(
         "{} · normal form {} · prime form {} · intervals {}",
         class.name(),
-        normal.join(" "),
+        normal,
         class.prime_text(),
         class.vector_text()
     );
@@ -226,7 +258,7 @@ impl RowWindow {
         RowWindow {
             open: false,
             row,
-            text: row.names(Spelling::Sharps),
+            text: row.note_names(),
             error: None,
             writing: RowWriting {
                 label: row.label(),
@@ -240,9 +272,9 @@ impl RowWindow {
     }
 
     /// Looks at another row, starting on its own `P` form.
-    fn set_row(&mut self, row: ToneRow, spelling: Spelling) {
+    fn set_row(&mut self, row: ToneRow) {
         self.row = row;
-        self.text = row.names(spelling);
+        self.text = row.note_names();
         self.error = None;
         self.writing.label = row.label();
     }
@@ -257,7 +289,7 @@ impl RowWindow {
         if let Some(row) = scale.tone_row() {
             match self.row.label_of(row) {
                 Some(label) => self.writing.label = label,
-                None => self.set_row(row, scale.spelling()),
+                None => self.set_row(row),
             }
         }
     }
@@ -288,7 +320,7 @@ impl RowWindow {
             .resizable([false, true])
             .vscroll(true)
             .show(ctx, |ui| {
-                self.contents(ui, scale.spelling(), drawn, length, &mut actions);
+                self.contents(ui, drawn, length, &mut actions);
             });
         self.open = open;
         if let Some(RowAction::UseAsKey(scale)) = actions.first() {
@@ -300,25 +332,24 @@ impl RowWindow {
     fn contents(
         &mut self,
         ui: &mut Ui,
-        spelling: Spelling,
         drawn: &[Note],
         length: usize,
         actions: &mut Vec<RowAction>,
     ) {
         ui.weak(
-            "All twelve notes in an order. Type them (E F G Db… or 4 5 7 1…), draw them in \
+            "All twelve notes in an order. Type them (E F G C#… or 4 5 7 1…), draw them in \
              the piano roll, or pick one. Click a label around the matrix to choose a form.",
         );
         ui.horizontal(|ui| {
             let edit = ui.add(
                 egui::TextEdit::singleline(&mut self.text)
                     .desired_width(260.0)
-                    .hint_text("E F G Db Gb Eb Ab D B C A Bb"),
+                    .hint_text("E F G C# F# Eb Ab D B C A Bb"),
             );
             let enter = edit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
             if ui.button("Use").clicked() || enter {
                 match ToneRow::parse(&self.text) {
-                    Ok(row) => self.set_row(row, spelling),
+                    Ok(row) => self.set_row(row),
                     Err(error) => self.error = Some(error),
                 }
             }
@@ -331,7 +362,7 @@ impl RowWindow {
                 .clicked()
             {
                 match ToneRow::from_notes(drawn.iter().copied()) {
-                    Ok(row) => self.set_row(row, spelling),
+                    Ok(row) => self.set_row(row),
                     Err(error) => self.error = Some(error),
                 }
             }
@@ -339,7 +370,7 @@ impl RowWindow {
         ui.horizontal(|ui| {
             if ui.button("🎲 Random").clicked() {
                 self.seed = self.seed.wrapping_add(1);
-                self.set_row(ToneRow::random(self.seed.wrapping_mul(7919)), spelling);
+                self.set_row(ToneRow::random(self.seed.wrapping_mul(7919)));
             }
             if ui
                 .button("🎲 All-interval")
@@ -347,13 +378,13 @@ impl RowWindow {
                 .clicked()
             {
                 self.seed = self.seed.wrapping_add(1);
-                self.set_row(ToneRow::random_all_interval(self.seed), spelling);
+                self.set_row(ToneRow::random_all_interval(self.seed));
             }
             ui.menu_button("Famous and example rows", |ui| {
                 for preset in ROW_PRESETS {
                     let hover = format!("{}\n\n{}", preset.source, preset.about);
                     if ui.button(preset.name).on_hover_text(hover).clicked() {
-                        self.set_row(preset.row, spelling);
+                        self.set_row(preset.row);
                         ui.close();
                     }
                 }
@@ -365,16 +396,16 @@ impl RowWindow {
             ui.colored_label(Color32::from_rgb(240, 120, 110), error);
         }
         ui.add_space(4.0);
-        self.matrix(ui, spelling);
+        self.matrix(ui);
         ui.add_space(4.0);
-        self.properties(ui, spelling);
+        self.properties(ui);
         ui.separator();
         self.write_options(ui, length, actions);
     }
 
     /// The 12×12 matrix with its labels: P on the left, R on the right,
     /// I along the top and RI along the bottom.
-    fn matrix(&mut self, ui: &mut Ui, spelling: Spelling) {
+    fn matrix(&mut self, ui: &mut Ui) {
         let matrix = self.row.matrix();
         let selected = self.writing.label;
         // Which line or column the selected form runs along.
@@ -405,7 +436,7 @@ impl RowWindow {
                 "{} {}: {}",
                 form.name(),
                 number,
-                self.row.form(label).names(spelling)
+                self.row.form(label).note_names()
             );
             if ui
                 .selectable_label(label == selected, text)
@@ -428,8 +459,7 @@ impl RowWindow {
                 for (i, line) in matrix.iter().enumerate() {
                     label(ui, RowForm::Prime, line[0]);
                     for (j, &cell) in line.iter().enumerate() {
-                        let mut text =
-                            RichText::new(cell_text(cell, numbers, spelling)).monospace();
+                        let mut text = RichText::new(cell_text(cell, numbers)).monospace();
                         if on_line(i, j) {
                             text = text.background_color(SELECTED).strong();
                         }
@@ -451,11 +481,9 @@ impl RowWindow {
     }
 
     /// What is special about the row.
-    fn properties(&self, ui: &mut Ui, spelling: Spelling) {
+    fn properties(&self, ui: &mut Ui) {
         let form = self.row.form(self.writing.label);
-        ui.label(
-            RichText::new(format!("{}: {}", self.writing.label, form.names(spelling))).strong(),
-        );
+        ui.label(RichText::new(format!("{}: {}", self.writing.label, form.note_names())).strong());
         let intervals: Vec<String> = self.row.intervals().iter().map(u8::to_string).collect();
         let mut facts = vec![format!("Steps up, in semitones: {}", intervals.join(" "))];
         if self.row.is_all_interval() {
@@ -651,12 +679,13 @@ impl SetWindow {
     }
 
     /// Draws the window. `selected` is the set of the selected notes (or
-    /// of the notes held on a keyboard), to analyse.
+    /// of the notes held on a keyboard), to analyse; `names` writes the
+    /// notes: pass the key, so they are spelled as it spells them.
     pub fn show(
         &mut self,
         ctx: &egui::Context,
         area: egui::Rect,
-        spelling: Spelling,
+        names: impl NoteNames,
         selected: PitchSet,
     ) -> Vec<SetAction> {
         let mut actions = Vec::new();
@@ -668,9 +697,7 @@ impl SetWindow {
             .default_pos([320.0, 140.0])
             .default_size([520.0, 520.0])
             .constrain_to(area)
-            .show(ctx, |ui| {
-                self.contents(ui, spelling, selected, &mut actions)
-            });
+            .show(ctx, |ui| self.contents(ui, names, selected, &mut actions));
         self.open = open;
         actions
     }
@@ -678,14 +705,14 @@ impl SetWindow {
     fn contents(
         &mut self,
         ui: &mut Ui,
-        spelling: Spelling,
+        names: impl NoteNames,
         selected: PitchSet,
         actions: &mut Vec<SetAction>,
     ) {
         if selected.len() >= 2 {
             ui.horizontal_wrapped(|ui| {
                 ui.label(RichText::new("Selected notes:").strong());
-                ui.label(describe_set(selected, spelling));
+                ui.label(describe_set(selected, names));
                 if ui.button("Show it").clicked() {
                     self.pick(selected);
                 }
@@ -733,10 +760,10 @@ impl SetWindow {
                 }
             });
         ui.separator();
-        self.details(ui, spelling, actions);
+        self.details(ui, names, actions);
     }
 
-    fn details(&mut self, ui: &mut Ui, spelling: Spelling, actions: &mut Vec<SetAction>) {
+    fn details(&mut self, ui: &mut Ui, names: impl NoteNames, actions: &mut Vec<SetAction>) {
         let class = self.class;
         ui.label(RichText::new(class.describe()).strong());
         let mut facts = Vec::new();
@@ -776,15 +803,13 @@ impl SetWindow {
             ui.checkbox(&mut self.inverted, "Inverted (I)")
                 .on_hover_text("Turn every interval upside down first");
             let set = self.chosen();
-            let names: Vec<&str> = set.normal_form().iter().map(|p| p.name(spelling)).collect();
+            let notes = normal_names(set, names);
             let label = if self.inverted {
                 format!("T{}I", self.transposition)
             } else {
                 format!("T{}", self.transposition)
             };
-            ui.label(
-                RichText::new(format!("{label}: {} ({})", names.join(" "), digits(set))).strong(),
-            );
+            ui.label(RichText::new(format!("{label}: {notes} ({})", digits(set))).strong());
         });
         ui.horizontal(|ui| {
             let set = self.chosen();
@@ -808,5 +833,33 @@ impl SetWindow {
                 actions.push(SetAction::UseAsKey(Scale::set(root, set)));
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_set_is_spelled_as_the_key_spells_it() {
+        let set = PitchSet::from_semitones(&[1, 5, 8]);
+        let normal = |text: String| text.split(" · ").nth(1).unwrap_or_default().to_string();
+        // In D minor, C# is the raised seventh and G# the sharp fourth.
+        let d_minor = Scale::new(PitchClass::D, ScaleKind::NaturalMinor);
+        assert_eq!(normal(describe_set(set, d_minor)), "normal form C# F G#");
+        // Without a key, the usual names.
+        let as_key = Scale::set(PitchClass::CSharp, set);
+        assert_eq!(normal(describe_set(set, as_key)), "normal form C# F Ab");
+        // A bare spelling still works as before.
+        assert_eq!(
+            normal(describe_set(set, Spelling::Flats)),
+            "normal form Db F Ab"
+        );
+    }
+
+    #[test]
+    fn the_matrix_uses_the_usual_names() {
+        let names: Vec<String> = (0..12).map(|n| cell_text(n, false)).collect();
+        assert_eq!(names.join(" "), "C C# D Eb E F F# G Ab A Bb B");
     }
 }

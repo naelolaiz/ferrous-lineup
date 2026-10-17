@@ -67,17 +67,15 @@ impl Style {
             .collect()
     }
 
-    /// The progression's chord names in a key, such as "Am – F – C – G".
-    /// Chords written with a flat, like bVII, are spelled with flats.
+    /// The progression's chord names in a key, such as "Am – F – C – G",
+    /// spelled as the key writes them (see [`Scale::chord_name`]):
+    /// chords written with a flat, like bVII, are spelled with flats, and
+    /// the V of D minor is A, with its C#.
     pub fn chord_names(&self, tonic: PitchClass) -> String {
-        let key = self.scale(tonic).spelling();
+        let scale = self.scale(tonic);
         self.spans()
             .iter()
-            .map(|span| {
-                span.chord
-                    .in_key(tonic)
-                    .name(span.chord.spelling.unwrap_or(key))
-            })
+            .map(|span| scale.chord_name(span.chord.in_key(tonic)))
             .collect::<Vec<_>>()
             .join(" – ")
     }
@@ -226,7 +224,8 @@ pub static STYLES: &[Style] = &[
         Bass::Held,
         70.0,
         "Pop ballad",
-        "The bass walks down the scale in the first half, as in Pachelbel's Canon.",
+        "The first six chords are those of Pachelbel's Canon: again and again, the root \
+         falls a fourth, then climbs a step.",
     ),
     style(
         "Dance pop",
@@ -1860,6 +1859,10 @@ mod tests {
         // The flat II of the bossa nova is a D flat in C, not a C sharp.
         let bossa = Style::named("Bossa nova").unwrap();
         assert!(bossa.chord_names(PitchClass::C).ends_with("Db7"));
+        // Spelled in the key: Db7, not C#7, in C; in Db major the flat II is D.
+        let four = Style::named("Four chords").unwrap();
+        assert_eq!(four.chord_names(PitchClass::FSharp), "F# – C# – D#m – B");
+        assert_eq!(four.chord_names(PitchClass::CSharp), "Db – Ab – Bbm – Gb");
         let backing = style.render(PitchClass::A);
         assert!(!backing.chords.is_empty() && !backing.bass.is_empty());
         let end = backing.chords.iter().map(|note| note.end()).max();

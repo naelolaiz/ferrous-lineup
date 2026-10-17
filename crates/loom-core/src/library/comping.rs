@@ -615,16 +615,20 @@ fn tone_note(tone: Tone, chord: Chord, next: Chord) -> Note {
     let intervals = chord.quality.intervals();
     let has = |interval: u8| intervals.contains(&interval);
     let up = |semitones: u8| Note::new(root.midi() + semitones);
+    // The chord's own fifth: flat in a diminished chord (Bdim: F, not
+    // F#), sharp in an augmented one.
+    let fifth = if has(6) {
+        6
+    } else if has(8) {
+        8
+    } else {
+        7
+    };
     match tone {
         Tone::Root => root,
-        Tone::Fifth => up(if has(6) {
-            6
-        } else if has(8) {
-            8
-        } else {
-            7
-        }),
-        Tone::LowFifth => Note::new(root.midi() - 5),
+        Tone::Fifth => up(fifth),
+        // The same fifth, an octave lower: under the root.
+        Tone::LowFifth => Note::new(root.midi().saturating_sub(12 - fifth)),
         Tone::Octave => up(12),
         Tone::Third => up(if has(3) {
             3
@@ -635,10 +639,15 @@ fn tone_note(tone: Tone, chord: Chord, next: Chord) -> Note {
         } else {
             2
         }),
+        // A chord's own seventh or sixth comes first: the double-flat
+        // seventh of a diminished seventh chord, the sixth of a minor
+        // sixth chord. Only a plain minor chord borrows the flat seventh.
         Tone::Seventh => up(if has(10) {
             10
         } else if has(11) {
             11
+        } else if has(9) {
+            9
         } else if has(3) {
             10
         } else {
@@ -729,6 +738,33 @@ mod tests {
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         // Fifth, root; fifth, then G (the next root, nearest to C2: G1).
         assert_eq!(pitches, [43, 36, 43, 31]);
+    }
+
+    #[test]
+    fn the_low_fifth_is_the_chords_own_fifth() {
+        // Bm7b5: the fifth under B is F, not F#.
+        let b = Chord::new(B, HalfDiminished7);
+        let notes = Bass::RootFifth.play(b, b, 0, 16);
+        let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
+        assert_eq!(pitches, [47, 41]);
+        // C: G under C.
+        let c = Chord::new(C, Major);
+        let notes = Bass::RootFifth.play(c, c, 0, 16);
+        let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
+        assert_eq!(pitches, [36, 31]);
+    }
+
+    #[test]
+    fn the_seventh_is_one_the_chord_has() {
+        let seventh =
+            |chord: Chord| tone_note(Tone::Seventh, chord, chord).midi() - bass_root(chord).midi();
+        // Am6 has F#, not G.
+        assert_eq!(seventh(Chord::new(A, Minor6)), 9);
+        // Cdim7 has its double-flat seventh, Bbb.
+        assert_eq!(seventh(Chord::new(C, Diminished7)), 9);
+        // A plain minor chord borrows the flat seventh.
+        assert_eq!(seventh(Chord::new(A, Minor)), 10);
+        assert_eq!(seventh(Chord::new(C, Major7)), 11);
     }
 
     #[test]

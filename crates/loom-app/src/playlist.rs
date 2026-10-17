@@ -19,7 +19,7 @@ mod sections;
 
 use eframe::egui::{
     self, Align2, Color32, FontId, Painter, Pos2, Rect, Response, Sense, Stroke, StrokeKind, Ui,
-    pos2, vec2,
+    Vec2, pos2, vec2,
 };
 use loom_core::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Meter, Pass, Pattern, Project,
@@ -98,9 +98,14 @@ const RULER_HEIGHT: f32 = 20.0;
 const SECTION_HEIGHT: f32 = 22.0;
 /// How close to a clip's right edge the pointer must be to repeat it.
 const CLIP_EDGE: f32 = 6.0;
+/// How tall a track is at 100%. The vertical zoom multiplies it.
 const TRACK_HEIGHT: f32 = 36.0;
-/// How wide one step is, in pixels. A bar of 4/4 is 16 steps: 72 pixels.
+/// How wide one step is at 100%, in pixels. A bar of 4/4 is 16 steps:
+/// 72 pixels. The horizontal zoom multiplies it.
 const STEP_WIDTH: f32 = 4.5;
+/// The narrowest a bar number may be written in: when bars are narrower,
+/// only every second, fourth or eighth bar is numbered.
+const BAR_NUMBER_WIDTH: f32 = 26.0;
 /// The playlist is always at least as wide as this many bars of 4/4...
 const MIN_BARS: usize = 32;
 /// ...and has this many empty bars after the end of the song, to add more.
@@ -137,9 +142,11 @@ const PALETTE: [Color32; 8] = [
     Color32::from_rgb(160, 142, 232),
 ];
 
-/// The colour of a pattern, in the picker and on its clips.
-pub fn pattern_color(pattern: usize) -> Color32 {
-    PALETTE[pattern % PALETTE.len()]
+/// The colour of pattern number `pattern`, in the picker and on its
+/// clips. Each pattern keeps its own (see [`loom_core::Pattern::color`]).
+pub fn pattern_color(project: &Project, pattern: usize) -> Color32 {
+    let color = project.pattern(pattern).map_or(pattern, |p| p.color);
+    PALETTE[color % PALETTE.len()]
 }
 
 /// Where clips land when placed or moved: on a bar line, a beat, or any step.
@@ -200,6 +207,9 @@ struct ClipDrag {
 struct Layout {
     /// The top-left corner of step 0 of track 0.
     origin: Pos2,
+    /// How wide a step is and how tall a track is: the zoom.
+    step_width: f32,
+    track_height: f32,
     tracks: usize,
     /// Whether there is an empty row below the last track, where a clip
     /// starts a new track. There is unless the playlist is full.
@@ -208,25 +218,25 @@ struct Layout {
 
 impl Layout {
     fn x(self, step: usize) -> f32 {
-        self.origin.x + step as f32 * STEP_WIDTH
+        self.origin.x + step as f32 * self.step_width
     }
 
     /// The step under `x`, clamped to the song.
     fn step_at(self, x: f32) -> usize {
-        ((x - self.origin.x) / STEP_WIDTH)
+        ((x - self.origin.x) / self.step_width)
             .floor()
             .clamp(0.0, (MAX_SONG_STEPS - 1) as f32) as usize
     }
 
     fn track_top(self, track: usize) -> f32 {
-        self.origin.y + track as f32 * TRACK_HEIGHT
+        self.origin.y + track as f32 * self.track_height
     }
 
     fn clip_rect(self, clip: &Clip, length: usize) -> Rect {
         let top = self.track_top(clip.track);
         Rect::from_min_max(
             pos2(self.x(clip.start), top),
-            pos2(self.x(clip.start + length), top + TRACK_HEIGHT),
+            pos2(self.x(clip.start + length), top + self.track_height),
         )
     }
 
@@ -239,7 +249,7 @@ impl Layout {
     /// last track that is the spare row, the track a clip there makes.
     fn cell_at(self, pos: Pos2) -> (usize, usize) {
         let last_track = self.rows().saturating_sub(1) as f32;
-        let track = ((pos.y - self.origin.y) / TRACK_HEIGHT)
+        let track = ((pos.y - self.origin.y) / self.track_height)
             .floor()
             .clamp(0.0, last_track) as usize;
         (track, self.step_at(pos.x))
@@ -255,6 +265,15 @@ pub struct PlaylistView {
     library: LibraryBrowser,
     /// Whether the Patterns and Library panel on the left is shown.
     pub browser_open: bool,
+    /// How much wider and taller than usual steps and tracks are: the
+    /// horizontal and vertical zoom.
+    zoom: Vec2,
+    /// How far the grid was scrolled last frame, and where on screen its
+    /// view was: to keep what is under the pointer in place when zooming.
+    scrolled: Vec2,
+    view_rect: Option<Rect>,
+    /// Where to scroll the grid to the next time it is drawn.
+    scroll_to: Option<Vec2>,
 }
 
 impl PlaylistView {
@@ -266,7 +285,32 @@ impl PlaylistView {
             tab: Tab::Patterns,
             library: LibraryBrowser::new(),
             browser_open: true,
+            zoom: Vec2::splat(1.0),
+            scrolled: Vec2::ZERO,
+            view_rect: None,
+            scroll_to: None,
         }
+    }
+
+    /// Changes the zoom, keeping the step and the track under the pointer
+    /// where they are, or those in the middle of the view if the pointer
+    /// is elsewhere.
+    fn zoom_to(&mut self, ctx: &egui::Context, zoom: Vec2) {
+        let ratio = zoom / self.zoom;
+        self.zoom = zoom;
+        let Some(view) = self.view_rect else {
+            return;
+        };
+        let anchor = ctx
+            .pointer_hover_pos()
+            .filter(|pos| view.contains(*pos))
+            .unwrap_or(view.center())
+            - view.min;
+        // The track names, the sections and the ruler do not stretch.
+        let corner = vec2(HEADER_WIDTH, SECTION_HEIGHT + RULER_HEIGHT);
+        let from = self.scroll_to.unwrap_or(self.scrolled);
+        let to = corner + (from + anchor - corner) * ratio - anchor;
+        self.scroll_to = Some(to.max(Vec2::ZERO));
     }
 
     /// Whether trying something from the library also sets its tempo.
@@ -278,6 +322,8 @@ impl PlaylistView {
     /// selected pattern; `playhead` is the step of the playlist being
     /// played, and which time round, if the song is playing; `tried` is
     /// what the library put in the selected pattern, if it was the library.
+    /// Steps are drawn `zoom.x` times wider than usual, tracks `zoom.y`
+    /// times taller.
     pub fn show(
         &mut self,
         ui: &mut Ui,
@@ -285,8 +331,12 @@ impl PlaylistView {
         current: usize,
         playhead: Option<(usize, Pass)>,
         tried: Tried,
+        zoom: Vec2,
     ) -> Vec<PlaylistAction> {
         let mut actions = Vec::new();
+        if zoom != self.zoom {
+            self.zoom_to(ui.ctx(), zoom);
+        }
 
         let mut browser_open = self.browser_open;
         egui::Panel::left("pattern-picker")
@@ -364,11 +414,19 @@ impl PlaylistView {
             ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate());
         });
 
-        egui::ScrollArea::both()
-            .auto_shrink(false)
-            .show_viewport(ui, |ui, viewport| {
-                self.grid(ui, viewport, project, current, playhead, &mut actions)
-            });
+        let area = egui::ScrollArea::both()
+            .id_salt("playlist")
+            .auto_shrink(false);
+        let area = match self.scroll_to.take() {
+            Some(offset) => area.scroll_offset(offset),
+            None => area,
+        };
+        widgets::no_rubber_band(ui);
+        let output = area.show_viewport(ui, |ui, viewport| {
+            self.grid(ui, viewport, project, current, playhead, &mut actions)
+        });
+        self.scrolled = output.state.clamped_offset();
+        self.view_rect = Some(output.inner_rect);
         actions
     }
 
@@ -393,10 +451,15 @@ impl PlaylistView {
         let extra = meter
             .bar(meter.bar_at(song_length).number + EXTRA_BARS)
             .start;
-        let steps = meter.round_up_to_bar(extra.max(MIN_BARS * STEPS_PER_BAR));
+        let step_width = STEP_WIDTH * self.zoom.x;
+        let track_height = TRACK_HEIGHT * self.zoom.y;
+        // The grid always reaches the right edge of the view: zoomed out,
+        // and after a zoom in that keeps a step far to the right in place.
+        let fill = ((viewport.right() - HEADER_WIDTH) / step_width).ceil() as usize;
+        let steps = meter.round_up_to_bar(extra.max(MIN_BARS * STEPS_PER_BAR).max(fill));
         let size = vec2(
-            HEADER_WIDTH + steps as f32 * STEP_WIDTH,
-            SECTION_HEIGHT + RULER_HEIGHT + rows as f32 * TRACK_HEIGHT,
+            HEADER_WIDTH + steps as f32 * step_width,
+            SECTION_HEIGHT + RULER_HEIGHT + rows as f32 * track_height,
         );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
 
@@ -409,6 +472,8 @@ impl PlaylistView {
                 rect.left() + HEADER_WIDTH,
                 rect.top() + SECTION_HEIGHT + RULER_HEIGHT,
             ),
+            step_width,
+            track_height,
             tracks: tracks.len(),
             spare,
         };
@@ -493,8 +558,10 @@ impl PlaylistView {
 
         for (index, track) in project.playlist().tracks().iter().enumerate() {
             let top = layout.track_top(index);
-            let row =
-                Rect::from_min_size(pos2(column.left(), top), vec2(HEADER_WIDTH, TRACK_HEIGHT));
+            let row = Rect::from_min_size(
+                pos2(column.left(), top),
+                vec2(HEADER_WIDTH, layout.track_height),
+            );
             // Only rows fully below the ruler get their buttons, so a row
             // half-hidden under the ruler cannot be clicked through it.
             if row.top() < cells.top() || row.top() > visible.bottom() {
@@ -504,7 +571,10 @@ impl PlaylistView {
 
             // Real widgets, placed with `ui.put` at a rectangle we choose:
             // a light to mute the track, and a frameless text field to rename it.
-            let light = Rect::from_min_size(row.min + vec2(4.0, 6.0), vec2(14.0, 24.0));
+            let light = Rect::from_center_size(
+                pos2(row.left() + 11.0, row.center().y),
+                vec2(14.0, 24.0f32.min(row.height() - 4.0)),
+            );
             let enabled = !track.muted;
             let light_response = ui
                 .put(light, |ui: &mut Ui| widgets::mute_light(ui, enabled))
@@ -513,9 +583,11 @@ impl PlaylistView {
                 actions.push(PlaylistAction::ToggleTrackMute(index));
             }
 
+            // One line of text, in the middle of the row however tall it is.
+            let line = (ui.text_style_height(&egui::TextStyle::Body) + 2.0).min(row.height() - 2.0);
             let name_rect = Rect::from_min_max(
-                pos2(light.right() + 4.0, row.top() + 8.0),
-                pos2(row.right() - 6.0, row.bottom() - 8.0),
+                pos2(light.right() + 4.0, row.center().y - line / 2.0),
+                pos2(row.right() - 6.0, row.center().y + line / 2.0),
             );
             let mut name = track.name.clone();
             let field = egui::TextEdit::singleline(&mut name)
@@ -563,8 +635,10 @@ impl PlaylistView {
         // who would rather not place a clip there to make one.
         if layout.spare {
             let top = layout.track_top(layout.tracks);
-            let row =
-                Rect::from_min_size(pos2(column.left(), top), vec2(HEADER_WIDTH, TRACK_HEIGHT));
+            let row = Rect::from_min_size(
+                pos2(column.left(), top),
+                vec2(HEADER_WIDTH, layout.track_height),
+            );
             if row.top() >= cells.top() && row.top() <= visible.bottom() {
                 let button = egui::Button::new(
                     egui::RichText::new("➕ New track").color(HEADER_TEXT.gamma_multiply(0.6)),
@@ -607,15 +681,18 @@ impl PlaylistView {
                 pointer.primary_down(),
                 pointer.secondary_pressed() || pointer.secondary_down(),
                 pointer.interact_pos(),
-                pointer.press_origin(),
+                widgets::press_pos(input, Some(egui::PointerButton::Primary)),
             )
         });
 
         // A press is handled where the button went down. A quick hand can
         // press and move in the same frame, and the clip or empty cell
         // under the pointer *now* may not be the one that was clicked.
-        let pressed_at = press_origin
-            .filter(|pos| primary_pressed && response.hovered() && cells.contains(*pos));
+        // A click that closes a menu does nothing else.
+        let dismissing = widgets::dismissing(ui.ctx());
+        let pressed_at = press_origin.filter(|pos| {
+            primary_pressed && !dismissing && response.hovered() && cells.contains(*pos)
+        });
         if let Some(pos) = pressed_at {
             let (track, step) = layout.cell_at(pos);
             let meter = project.meter();
@@ -662,6 +739,7 @@ impl PlaylistView {
         // Deleting follows the pointer, so a right-drag sweeps clips away.
         let hovered = response.hover_pos().filter(|pos| cells.contains(*pos));
         if secondary
+            && !dismissing
             && let Some(pos) = hovered
             && let Some(index) = clip_at(project, layout, pos)
         {
@@ -689,7 +767,7 @@ impl PlaylistView {
         {
             // As many whole patterns as reach the pointer, the nearest.
             let pattern_length = project.pattern(clip.pattern).map_or(0, Pattern::length);
-            let reach = (pos.x - layout.x(clip.start)) / STEP_WIDTH;
+            let reach = (pos.x - layout.x(clip.start)) / layout.step_width;
             let repeats = (reach / pattern_length.max(1) as f32)
                 .round()
                 .clamp(1.0, MAX_REPEATS as f32) as usize;
@@ -726,8 +804,11 @@ fn picker(ui: &mut Ui, project: &Project, current: usize, actions: &mut Vec<Play
         for (index, pattern) in project.patterns().iter().enumerate() {
             ui.horizontal(|ui| {
                 let (swatch, _) = ui.allocate_exact_size(vec2(10.0, 16.0), Sense::hover());
-                ui.painter()
-                    .rect_filled(swatch.shrink2(vec2(0.0, 2.0)), 2.0, pattern_color(index));
+                ui.painter().rect_filled(
+                    swatch.shrink2(vec2(0.0, 2.0)),
+                    2.0,
+                    pattern_color(project, index),
+                );
                 let label = ui.selectable_label(index == current, &pattern.name);
                 if label.clicked() && index != current {
                     actions.push(PlaylistAction::SelectPattern(index));
@@ -770,7 +851,10 @@ fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) 
     let right = layout.x(steps);
     for track in 0..layout.rows() {
         let top = layout.track_top(track);
-        let row = Rect::from_min_max(pos2(layout.origin.x, top), pos2(right, top + TRACK_HEIGHT));
+        let row = Rect::from_min_max(
+            pos2(layout.origin.x, top),
+            pos2(right, top + layout.track_height),
+        );
         let color = ROW[track % 2];
         // The spare row is fainter: it is not a track yet.
         let color = if track < layout.tracks {
@@ -783,6 +867,13 @@ fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) 
     let bottom = layout.track_top(layout.rows());
     for bar in meter.bars().take_while(|bar| bar.start <= steps) {
         let beat = bar.time.steps_per_beat();
+        // Zoomed far out, beat lines would melt into a grey blur: then
+        // only the bar lines are drawn.
+        let beat = if beat as f32 * layout.step_width < 4.0 {
+            bar.length.max(1)
+        } else {
+            beat
+        };
         for step in (bar.start..bar.end().min(steps + 1)).step_by(beat) {
             let color = if step == bar.start {
                 BAR_LINE
@@ -811,7 +902,7 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
         if !rect.intersects(cells) {
             continue;
         }
-        let mut color = pattern_color(clip.pattern);
+        let mut color = pattern_color(project, clip.pattern);
         if tracks.get(clip.track).is_some_and(|track| track.muted) {
             color = color.gamma_multiply(0.35);
         }
@@ -832,7 +923,7 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
             CLIP_TEXT,
         );
         // The notes, once for each time round, with a line between them.
-        let round = pattern.length() as f32 * STEP_WIDTH;
+        let round = pattern.length() as f32 * layout.step_width;
         let notes_painter = painter.with_clip_rect(cells.intersect(rect));
         for repeat in 0..clip.repeats {
             let left = rect.left() + repeat as f32 * round;
@@ -845,7 +936,7 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
             )
             .shrink(2.0);
             if body.intersects(cells) {
-                paint_clip_notes(&notes_painter, body, pattern);
+                paint_clip_notes(&notes_painter, body, pattern, layout.step_width);
             }
         }
 
@@ -865,7 +956,7 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
 /// A drum pattern (every channel plays plain steps) is drawn like a tiny
 /// channel rack: one line per channel that has notes. Anything else is
 /// drawn like a tiny piano roll: higher notes higher up.
-fn paint_clip_notes(painter: &Painter, body: Rect, pattern: &Pattern) {
+fn paint_clip_notes(painter: &Painter, body: Rect, pattern: &Pattern, step_width: f32) {
     let length = pattern.length();
     let notes = || pattern.all_notes().filter(|(_, note)| note.start < length);
     let channels = pattern.rows();
@@ -891,9 +982,9 @@ fn paint_clip_notes(painter: &Painter, body: Rect, pattern: &Pattern) {
 
     for (channel, note) in notes() {
         let y = body.bottom() - height(channel, note.pitch.midi()) * body.height();
-        let x_start = body.left() + note.start as f32 * STEP_WIDTH;
+        let x_start = body.left() + note.start as f32 * step_width;
         let held = note.length.min(length - note.start) as f32;
-        let x_end = (x_start + held * STEP_WIDTH - 1.0).max(x_start + 1.5);
+        let x_end = (x_start + held * step_width - 1.0).max(x_start + 1.5);
         painter.line_segment(
             [pos2(x_start, y), pos2(x_end, y)],
             Stroke::new(1.5, CLIP_NOTES),
@@ -924,6 +1015,13 @@ fn paint_ruler(
     // The time signature is written where the song starts and where it
     // changes, after the bar number.
     let changes: Vec<usize> = meter.markers().iter().map(|marker| marker.start).collect();
+    // Zoomed out, the bars get too narrow for their numbers: then every
+    // second, fourth, ... bar is numbered, as in FL Studio.
+    let bar_width = layout.step_width * STEPS_PER_BAR as f32;
+    let every = [1, 2, 4, 8, 16, 32]
+        .into_iter()
+        .find(|&every| bar_width * every as f32 >= BAR_NUMBER_WIDTH)
+        .unwrap_or(64);
     for bar in meter.bars().take_while(|bar| bar.end() <= steps) {
         let x = layout.x(bar.start);
         let color = if bar.start < song_length {
@@ -931,6 +1029,10 @@ fn paint_ruler(
         } else {
             RULER_TEXT
         };
+        let change = bar.start == 0 || changes.contains(&bar.start);
+        if bar.number % every != 0 && !change {
+            continue;
+        }
         ruler_painter.vline(x, ruler.y_range(), Stroke::new(1.0, BAR_LINE));
         let number = ruler_painter.text(
             pos2(x + 3.0, ruler.center().y),
@@ -939,7 +1041,7 @@ fn paint_ruler(
             FontId::proportional(11.0),
             color,
         );
-        if bar.start == 0 || changes.contains(&bar.start) {
+        if change {
             ruler_painter.text(
                 pos2(number.right() + 4.0, ruler.center().y),
                 Align2::LEFT_CENTER,

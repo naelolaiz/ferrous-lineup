@@ -171,17 +171,34 @@ pub fn write_style_played(
         Bass::None => find_synth(project, BASS),
         _ => synth_named(project, BASS),
     };
-    project.scale = style.scale(tonic);
-    project.time_signature = style.time;
+    // A song with music of its own keeps its key and time signature, and
+    // the pattern gets the style's time signature for itself, so its bars
+    // are drawn right. An empty song takes the style's.
+    let song_has_music = song_has_music(project, pattern);
+    if !song_has_music {
+        project.scale = style.scale(tonic);
+        project.time_signature = style.time;
+    }
     let Some(target) = project.pattern_mut(pattern) else {
         return false;
     };
+    target.time = song_has_music.then_some(style.time);
     target.set_length(style.length());
     target.set_notes(chords, backing.chords);
     if let Some(bass) = bass {
         target.set_notes(bass, backing.bass);
     }
     true
+}
+
+/// Whether the song plays anything but pattern `pattern`: then what the
+/// library writes there must not change the song's key or time signature.
+pub fn song_has_music(project: &Project, pattern: usize) -> bool {
+    project
+        .playlist()
+        .clips()
+        .iter()
+        .any(|clip| clip.pattern != pattern)
 }
 
 /// Writes a rhythm into pattern `pattern`, repeated to the pattern's
@@ -558,6 +575,28 @@ pub fn write_final_chord(project: &mut Project, pattern: usize, chord: Chord) ->
 mod tests {
     use super::*;
     use crate::library::{FILLS, RHYTHMS, STYLES};
+
+    #[test]
+    fn a_song_with_music_keeps_its_key_and_time() {
+        use crate::TimeSignature;
+        let waltz = STYLES.iter().find(|style| style.time.beats == 3).unwrap();
+        // The demo song plays its chords and drums: a waltz tried next to
+        // it is in 3/4 on its own, and the song stays as it was.
+        let mut project = Project::demo();
+        let before = (project.scale, project.time_signature);
+        let tried = project.add_pattern().unwrap();
+        assert!(write_style(&mut project, tried, waltz, PitchClass::C, None));
+        assert_eq!((project.scale, project.time_signature), before);
+        assert_eq!(project.pattern(tried).unwrap().time, Some(waltz.time));
+        assert_eq!(project.pattern_time(tried), waltz.time);
+        assert_eq!(project.pattern_time(0), TimeSignature::default());
+        // An empty song takes the style's key and time signature.
+        let mut empty = Project::empty();
+        assert!(write_style(&mut empty, 0, waltz, PitchClass::C, None));
+        assert_eq!(empty.time_signature, waltz.time);
+        assert_eq!(empty.pattern(0).unwrap().time, None);
+        assert_eq!(empty.scale, waltz.scale(PitchClass::C));
+    }
 
     #[test]
     fn styles_go_to_keys_and_bass() {
