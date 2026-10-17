@@ -33,7 +33,8 @@ time:
    ([Song form: an intro, choruses and an ending](song-form.md)), and a
    second variation of the style for the parts that need more energy
    ([Variations a and b: the band digs in](variations.md)),
-6. **swing**, from straight to triplet,
+6. **swing**, from straight to triplet
+   ([Swing: eighth notes played long-short](swing.md)),
 7. **real instrument sounds** from a SoundFont, and the band through
    MIDI out to an external synth. The SoundFont came early, before
    items 4 to 6 ([Real instrument sounds: a SoundFont](soundfont.md)),

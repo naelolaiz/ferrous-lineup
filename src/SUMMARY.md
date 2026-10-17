@@ -86,6 +86,7 @@
   - [Practising with the band](step-9/practice.md)
   - [Song form: an intro, choruses and an ending](step-9/song-form.md)
   - [Variations a and b: the band digs in](step-9/variations.md)
+  - [Swing: eighth notes played long-short](step-9/swing.md)
   - [Inversions: which note is in the bass](step-9/inversions.md)
   - [Ear training](step-9/ear-training.md)
   - [Chord sheets as text: to paste and share](step-9/text-chord-sheets.md)
