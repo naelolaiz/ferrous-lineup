@@ -1989,6 +1989,48 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4a5ff6bcca6c4867b1c4fd4ef63e4db7436ef363e0ad7531d1558856bae64f4"
 
 [[package]]
+name = "lineup-app"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "lineup-audio",
+ "lineup-core",
+ "lineup-listen",
+ "midir",
+ "rfd",
+]
+
+[[package]]
+name = "lineup-audio"
+version = "0.1.0"
+dependencies = [
+ "cpal",
+ "hound",
+ "lineup-core",
+ "rtrb",
+]
+
+[[package]]
+name = "lineup-core"
+version = "0.1.0"
+dependencies = [
+ "ron",
+ "serde",
+]
+
+[[package]]
+name = "lineup-listen"
+version = "0.1.0"
+dependencies = [
+ "bpm-key",
+ "hound",
+ "lineup-audio",
+ "lineup-core",
+ "realfft",
+ "symphonia",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2026,48 +2068,6 @@ name = "log"
 version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
-
-[[package]]
-name = "loom-app"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "loom-audio",
- "loom-core",
- "loom-listen",
- "midir",
- "rfd",
-]
-
-[[package]]
-name = "loom-audio"
-version = "0.1.0"
-dependencies = [
- "cpal",
- "hound",
- "loom-core",
- "rtrb",
-]
-
-[[package]]
-name = "loom-core"
-version = "0.1.0"
-dependencies = [
- "ron",
- "serde",
-]
-
-[[package]]
-name = "loom-listen"
-version = "0.1.0"
-dependencies = [
- "bpm-key",
- "hound",
- "loom-audio",
- "loom-core",
- "realfft",
- "symphonia",
-]
 
 [[package]]
 name = "mach2"

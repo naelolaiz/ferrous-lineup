@@ -9,7 +9,8 @@ piano roll and a playlist, where every part can be written or changed by
 hand.
 
 Ferrous Lineup was called Ferrous Loom until October 2026. Its project
-files still end in `.loom`.
+files end in `.lineup` now, and the `.loom` files saved before still
+open.
 
 > Ferrous Lineup is an independent project. It is not affiliated with
 > PG Music or Band-in-a-Box, nor with Image-Line or FL Studio.
@@ -71,7 +72,7 @@ Select notes with Ctrl+click or a Ctrl+drag box, then move them with the
 arrow keys (Alt+↑ stays in the key), invert or arpeggiate them from the
 Tools menu, and set velocities in the lane under the grid. The chord
 buttons light up with the chords that often come next.
-**Ctrl+S** saves the project as a `.loom` file (⌘S on a Mac), **Ctrl+Z**
+**Ctrl+S** saves the project as a `.lineup` file (⌘S on a Mac), **Ctrl+Z**
 undoes any change and **Ctrl+Shift+Z** redoes it, and **File > Export
 WAV…** saves the song as a sound file.
 
@@ -139,7 +140,7 @@ drop it on the window) and listens to it: the tempo, time signature and
 key are set from the recording, which plays on its own channel, and a
 Harmony channel plays the chord heard on every beat, so the piano roll
 and the harmony keys follow along. This is an early experiment; see
-[`crates/loom-listen`](crates/loom-listen/README.md) for how it works and
+[`crates/lineup-listen`](crates/lineup-listen/README.md) for how it works and
 how often it is right.
 
 **File > Import MIDI file…** opens a `.mid` file (or drop it on the
@@ -184,10 +185,10 @@ They are not signed yet, so macOS and Windows warn before the first start.
 
 | Path | Contents |
 |------|----------|
-| `crates/loom-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
-| `crates/loom-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
-| `crates/loom-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
-| `crates/loom-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
+| `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, and the library of styles, rhythms and songs. No audio, no UI. |
+| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, MIDI Out channels, live keys, and offline rendering to WAV files. |
+| `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
+| `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
 
 ## License
 

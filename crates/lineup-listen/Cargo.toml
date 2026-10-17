@@ -1,0 +1,18 @@
+[package]
+name = "lineup-listen"
+description = "Listening to recordings for Ferrous Lineup: decoding audio files and finding their tempo, beats, key and chords"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+lineup-core.workspace = true
+symphonia.workspace = true
+realfft.workspace = true
+bpm-key.workspace = true
+hound.workspace = true
+
+[dev-dependencies]
+lineup-audio.workspace = true
