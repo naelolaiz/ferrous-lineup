@@ -30,7 +30,7 @@
 use crate::pitch::{Note, PitchClass};
 
 use super::keys::Function;
-use super::{Chord, ChordQuality, Scale, ScaleKind};
+use super::{Chord, ChordQuality, Scale, ScaleKind, with_figures};
 
 /// How long each of the twelve notes sounds, C first: a *chroma* vector,
 /// in any unit (steps, seconds, energy). Only the proportions count.
@@ -402,6 +402,19 @@ pub struct ChordReading {
 }
 
 impl ChordReading {
+    /// The same reading with the figures of an inversion (see
+    /// [`Chord::inversion_figures`]) on its numerals: G7/F in C major
+    /// reads "V⁴₂, dominant", and E7/G# "III⁶₅ = V⁶₅/vi".
+    pub fn inverted(mut self, figures: &str) -> ChordReading {
+        self.numeral = with_figures(&self.numeral, figures);
+        if let Some(role) = &self.role
+            && role.starts_with('V')
+        {
+            self.role = Some(with_figures(role, figures));
+        }
+        self
+    }
+
     /// The reading in a few words: "V7, dominant", "bVII7 = V7/bIII",
     /// "III7 = V7/vi", "bVI, borrowed from C minor".
     pub fn label(&self) -> String {

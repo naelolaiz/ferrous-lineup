@@ -70,7 +70,8 @@ const KEY_WIDTH: f32 = 54.0;
 /// The narrowest a step is at 100%, so a long pattern can still be read;
 /// it then scrolls sideways.
 const MIN_STEP_WIDTH: f32 = 8.0;
-const LANE_HEIGHT: f32 = 22.0;
+/// Two rows of chords: the track's and all the tracks'.
+const LANE_HEIGHT: f32 = 32.0;
 const VELOCITY_HEIGHT: f32 = 56.0;
 /// How close to a note's right end (in pixels) a click resizes it instead of moving it.
 const EDGE_GRAB: f32 = 6.0;
@@ -830,12 +831,38 @@ impl PianoRoll {
         let (info, set) = if held.is_empty() {
             match self.hovered_step.or(playhead) {
                 Some(step) => {
-                    let harmony = analyze(sounding(pattern, &heard, step));
                     let set: PitchSet = sounding(pattern, &heard, step)
                         .map(|note| note.pitch_class())
                         .collect();
+                    // The chord of all the tracks, and this track's own
+                    // when it is another (a piano's C/E over a bass's C).
+                    let all = analyze(project.chord_notes_with_pattern(self.pattern, step));
+                    let track = analyze(sounding(pattern, &[self.channel], step));
+                    let own = match track.label_in(scale) {
+                        Some(label) if track != all => {
+                            let name = project
+                                .channels()
+                                .get(self.channel)
+                                .map_or("This track", |channel| channel.name.as_str());
+                            match track {
+                                Harmony::Chord { chord, bass } => {
+                                    match scale.figured_numeral(chord, bass) {
+                                        Some(numeral) => format!("{name}: {label} ({numeral}). "),
+                                        None => format!("{name}: {label}. "),
+                                    }
+                                }
+                                _ => format!("{name}: {label}. "),
+                            }
+                        }
+                        _ => String::new(),
+                    };
                     (
-                        format!("Step {}: {}", step + 1, harmony.describe(scale)),
+                        format!(
+                            "Step {}: {own}{}{}",
+                            step + 1,
+                            if own.is_empty() { "" } else { "All: " },
+                            all.describe(scale)
+                        ),
                         set,
                     )
                 }
@@ -961,8 +988,8 @@ impl PianoRoll {
         self.chord_lane(
             ui,
             (lane_rect, &lane_response),
+            project,
             pattern,
-            &heard,
             scale,
             lanes,
             playhead,
@@ -1398,14 +1425,62 @@ impl PianoRoll {
     }
 
     /// The strip above the grid that names the chord at every step, in
-    /// `rect`, the place taken for it.
+    /// `rect`, the place taken for it: on top the chord of this track's
+    /// own notes, below it the chord of all the tracks playing together
+    /// (see [`Project::chord_notes_with_pattern`]). Each is named with
+    /// its bass after a slash when it is an inversion: a piano playing
+    /// C/E over a bass playing C is C/E on the track and C for all.
     #[allow(clippy::too_many_arguments)]
     fn chord_lane(
         &mut self,
         ui: &mut Ui,
         (rect, response): (Rect, &Response),
+        project: &Project,
         pattern: &Pattern,
-        heard: &[usize],
+        scale: Scale,
+        lanes: Lanes,
+        playhead: Option<usize>,
+    ) {
+        let length = lanes.length;
+        let track_name = project
+            .channels()
+            .get(self.channel)
+            .map_or("Track", |channel| channel.name.as_str());
+        let channel = [self.channel];
+        let rows: [(&str, Vec<Harmony>); 2] = [
+            (
+                track_name,
+                (0..length)
+                    .map(|step| analyze(sounding(pattern, &channel, step)))
+                    .collect(),
+            ),
+            (
+                "All",
+                (0..length)
+                    .map(|step| analyze(project.chord_notes_with_pattern(self.pattern, step)))
+                    .collect(),
+            ),
+        ];
+        let row_height = rect.height() / rows.len() as f32;
+        for (index, (name, harmonies)) in rows.iter().enumerate() {
+            let top = rect.top() + row_height * index as f32;
+            let row = Rect::from_min_size(pos2(rect.left(), top), vec2(rect.width(), row_height));
+            self.chord_row(ui, row, response, name, harmonies, scale, lanes, playhead);
+        }
+    }
+
+    /// One row of the chord lane: `name` where the keyboard is, and the
+    /// chord at every step, runs of the same harmony joined into one
+    /// block. Two chords without a name both read "?", but stay two
+    /// blocks.
+    #[allow(clippy::too_many_arguments)]
+    fn chord_row(
+        &mut self,
+        ui: &mut Ui,
+        rect: Rect,
+        response: &Response,
+        name: &str,
+        harmonies: &[Harmony],
         scale: Scale,
         lanes: Lanes,
         playhead: Option<usize>,
@@ -1420,37 +1495,29 @@ impl PianoRoll {
         }
 
         let painter = ui.painter_at(rect);
-        painter.text(
+        let name_rect =
+            Rect::from_min_max(rect.min, pos2(rect.left() + KEY_WIDTH - 2.0, rect.bottom()));
+        painter.with_clip_rect(name_rect).text(
             pos2(rect.left() + 4.0, rect.center().y),
             Align2::LEFT_CENTER,
-            "Chords",
+            name,
             FontId::proportional(11.0),
             ui.visuals().weak_text_color(),
         );
         painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
         let painter = painter.with_clip_rect(cells);
 
-        // Work out the harmony and the bass at every step, then join runs
-        // where both stay the same: `chunk_by` splits a slice wherever
-        // two neighbours differ. Two chords without a name both read "?",
-        // but stay two blocks.
-        let harmonies: Vec<_> = (0..length)
-            .map(|step| {
-                let bass = sounding(pattern, heard, step)
-                    .min()
-                    .map(|note| note.pitch_class());
-                (analyze(sounding(pattern, heard, step)), bass)
-            })
-            .collect();
+        // `chunk_by` splits a slice wherever two neighbours differ. A
+        // harmony holds its bass, so C and C/E are two blocks.
         let mut start = 0;
         for run in harmonies.chunk_by(|a, b| a == b) {
             let end = start + run.len();
-            if let Some(label) = run[0].0.label_in(scale) {
+            if let Some(label) = run[0].label_in(scale) {
                 let chord_rect = Rect::from_min_max(
                     pos2(lane.x(start), lane.rect.top()),
                     pos2(lane.x(end), lane.rect.bottom()),
                 )
-                .shrink2(vec2(1.0, 2.0));
+                .shrink2(vec2(1.0, 1.0));
                 painter.rect_filled(chord_rect, 3.0, LANE_CHORD);
                 // A long chord's name stays in view while it scrolls.
                 let shown = chord_rect.intersect(cells);
@@ -1458,7 +1525,7 @@ impl PianoRoll {
                     shown.center(),
                     Align2::CENTER_CENTER,
                     label,
-                    FontId::proportional(12.0),
+                    FontId::proportional(11.0),
                     LANE_TEXT,
                 );
             }
