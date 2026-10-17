@@ -10,6 +10,7 @@
 | 6. Harmony tools | Done | Selecting and moving groups of notes, a Tools menu (transpose, move in key, snap to the key, invert, arpeggiate), stamped inversions, seven more chord types, next-chord suggestions with secondary dominants, ghost notes from the other channels, a velocity lane |
 | 7. MIDI | Done | MIDI keyboards in, external synths out (MIDI Out channels), a typing keyboard, chords named as you play, recording takes, `.mid` export of songs and patterns, file format 2 |
 | 8. Harmony keys and library | Done | The harmony keys (the seven chords of the key, coloured by function, with next-chord suggestions and the chord playing), time signatures, 78 harmony styles and 49 rhythms in 13 genres including tango, 16 public-domain songs, demos, nine new drums, patterns up to sixteen bars, file format 3 |
+| 9. The band | In progress, on the `band-in-a-box` branch | Following Band-in-a-Box: chord names and slash chords (done), then a chord sheet the band plays, a practice bar, song form, swing, SoundFont sounds, a bigger band, a lead sheet; see [step 9](step-9/README.md) |
 
 The four steps planned at the start are done: Ferrous Loom runs on
 Linux, macOS and Windows, using the same code on all three. Step 5 added

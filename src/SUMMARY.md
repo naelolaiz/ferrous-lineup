@@ -75,6 +75,8 @@
   - [A rhythm in another time signature: re-metering the song](step-8/re-metering.md)
   - [A demo keeps its name, and is saved as a copy](step-8/demo-names.md)
   - [Exercises](step-8/exercises.md)
+- [Step 9: The band](step-9/README.md)
+  - [Chord names: reading a lead sheet](step-9/chord-names.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---

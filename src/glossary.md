@@ -31,6 +31,7 @@ where each one first appears in real code.
 | **`checked_add_signed`** | Adds a signed number to an unsigned one, like `usize + isize`, and gives `None` instead of going below zero or overflowing. | [Tools](step-6/tools.md) |
 | **`chunk_by`** | Splits a slice into runs of neighbours that belong together, without copying. | [Piano roll window](step-3/piano-roll-ui.md) |
 | **`chunks` / `chunks_exact`** | Split a slice into pieces of n items; `chunks_exact` leaves out a last piece that is too short. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
+| **`chars` / `Chars::as_str`** | `text.chars()` walks a string one whole character at a time ("♭" is three bytes but one `char`); `as_str()` is the part not walked yet, borrowed from the same text. | [Chord names](step-9/chord-names.md#reading-a-note-and-keeping-the-rest) |
 | **Closure** | An anonymous function, `\|args\| body`, that can capture variables from its surroundings. | [loom-audio](step-1/audio-engine.md) |
 | **Closure captures fields** | Since the 2021 edition, a closure that uses `self.midi_out` borrows only that field, not all of `self`, so other fields can be borrowed at the same time. | [Live keys](step-7/live.md) |
 | **`cmp::Reverse`** | Wraps a value so that it compares the other way round: sorting by `Reverse(count)` puts the largest count first. | [Micromodes](step-8/micromodes.md#counting-groups-of-three) |
@@ -64,6 +65,7 @@ where each one first appears in real code.
 | **`Fn` / `FnMut` / `FnOnce`** | The traits closures implement: only reads, mutates its captures, or can be called once. | [Instruments](step-2/instruments.md) |
 | **`From` / `Into`** | Conversion traits: implementing `From<A> for B` also gives `a.into()`. The `?` operator uses `From` to convert errors. | [Many patterns](step-4/patterns.md) |
 | **`FromIterator`** | The trait behind `collect()`; implement it to collect into your own type. | [Pitch classes and scales](step-3/theory.md) |
+| **`FromStr` / `str::parse`** | The trait for "can be read from text": implement `from_str`, and `"Am7".parse::<ChordSymbol>()` works, as it does for numbers. | [Chord names](step-9/chord-names.md#fromstr-am7parse) |
 | **Generic** | Code written for a placeholder type `T`, filled in at compile time. | [loom-audio](step-1/audio-engine.md) |
 | **Glob import** | `use super::*;` brings in every name the other module can see, including a parent's private items when used from a child. Two glob imports that bring the same name make it ambiguous. | [More demos](step-8/more-demos.md#use-super-and-what-children-can-see) |
 | **`HashMap<K, V>`** | A map from keys to values that finds a key in about the same time however many entries it holds. | [What changed](step-5/diff.md) |
@@ -118,6 +120,7 @@ where each one first appears in real code.
 | **`Result<T, E>`** | `Ok(value)` or `Err(error)`; Rust's way to return errors. | [loom-audio](step-1/audio-engine.md) |
 | **`retain`** | Keeps only the items of a `Vec` for which a closure returns `true`, in one pass. | [Steps to notes](step-3/notes.md) |
 | **RON** | Rust Object Notation, a text format that looks like Rust's own struct syntax; Ferrous Loom's project files use it. | [Saving](step-4/saving.md) |
+| **`rsplit_once` / `split_once`** | Splits a string at the last (or first) place a pattern occurs, into the parts before and after, or `None` if it does not occur. | [Chord names](step-9/chord-names.md#rsplit_once-and-the-six-nine-chord) |
 | **`rposition`** | The index of the last item of a slice that matches, searching from the end; `position` searches from the start. | [Micromodes](step-8/micromodes.md#the-walk-choosing-with-a-tuple) |
 | **`saturating_sub`** | Subtraction that stops at the smallest value (0 for `usize`) instead of overflowing. | [Voices](step-3/voices.md) |
 | **`Send`** | A marker trait: values of this type can be moved to another thread. | [loom-audio](step-1/audio-engine.md) |
