@@ -14,6 +14,7 @@ pub(super) const ODE_TO_JOY: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Offbeat,
     rhythm: "Four on the floor",
+    band: SYNTHS,
     style: "House piano",
     parts: &[Part::new(
         "Theme",
@@ -41,6 +42,7 @@ pub(super) const KOROBEINIKI: Song = Song {
     comping: Comping::Arp16,
     bass: Bass::Octaves16,
     rhythm: "Synthwave",
+    band: SYNTHS,
     style: "Synthwave",
     parts: &[
         Part::new(
@@ -74,6 +76,7 @@ pub(super) const SYMPHONY_40: Song = Song {
     comping: Comping::Held,
     bass: Bass::Sub,
     rhythm: "Drum and bass",
+    band: SYNTHS,
     style: "Drum and bass",
     parts: &[
         Part::new("Pickup", "-:12 Eb5:2 D5", "i"),
@@ -103,6 +106,7 @@ pub(super) const EINE_KLEINE: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Octaves,
     rhythm: "Disco",
+    band: DISCO,
     style: "Disco",
     parts: &[Part::new(
         "Theme",
@@ -132,6 +136,7 @@ pub(super) const TOCCATA: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Offbeat,
     rhythm: "Techno",
+    band: SYNTHS,
     style: "Techno minor",
     parts: &[Part::new(
         "Toccata",
@@ -165,6 +170,7 @@ pub(super) const TURKISH_MARCH: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Octaves,
     rhythm: "Breakbeat",
+    band: SYNTHS,
     style: "Eurodance",
     parts: &[
         Part::new("Pickup", "-:12 B4:1 A4 G#4 A4", "i"),
@@ -388,6 +394,7 @@ pub(super) const KALINKA: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Offbeat,
     rhythm: "Techno",
+    band: SYNTHS,
     style: "Techno minor",
     parts: &[
         Part::new("Intro", "E5:8 E5:8", "i"),
@@ -433,6 +440,7 @@ pub(super) const CELLO_SUITE_PRELUDE: Song = Song {
     comping: Comping::Held,
     bass: Bass::Held,
     rhythm: "Trance",
+    band: SYNTHS,
     style: "Ambient",
     parts: &[
         Part::new(
@@ -479,6 +487,7 @@ pub(super) const BADINERIE: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Offbeat,
     rhythm: "Techno",
+    band: SYNTHS,
     style: "Techno minor",
     parts: &[
         Part::new("Pickup", "-:12 B5:2 D6:1 B5:1", "i"),
@@ -531,6 +540,7 @@ pub(super) const SPRING: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Offbeat,
     rhythm: "Dance pop",
+    band: SYNTHS,
     style: "House piano",
     parts: &[
         Part::new("Pickup", "-:14 E4:2", "I"),
@@ -574,6 +584,7 @@ pub(super) const CAN_CAN: Song = Song {
     comping: Comping::Stabs,
     bass: Bass::Octaves,
     rhythm: "Techno",
+    band: SYNTHS,
     style: "EDM drop",
     parts: &[
         Part::new(

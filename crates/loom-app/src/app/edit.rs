@@ -97,8 +97,8 @@ impl LoomApp {
                     self.piano_roll.channel_inserted(index);
                 }
                 Change::Instrument(channel) => {
-                    let kind = self.project.channels()[channel].kind.clone();
-                    let instrument = self.build_instrument(&kind, sample_rate);
+                    let state = self.project.channels()[channel].clone();
+                    let instrument = self.build_instrument(&state, sample_rate);
                     self.send(Command::SetInstrument {
                         channel,
                         instrument,

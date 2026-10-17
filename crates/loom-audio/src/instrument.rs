@@ -10,11 +10,12 @@
 
 use std::sync::Arc;
 
-use loom_core::{ChannelKind, MidiMessage, Note, STEP_NOTE, SampleSource};
+use loom_core::{Channel, ChannelKind, MidiMessage, Note, STEP_NOTE, SampleSource};
 
 use crate::drums;
 use crate::dsp::LowPass;
 use crate::sample::{SampleCache, SampleData, SampleError};
+use crate::timbre::{Timbre, Wave};
 
 /// How many notes the Loom Osc can play at once.
 pub const SYNTH_VOICES: usize = 16;
@@ -66,21 +67,28 @@ pub enum Instrument {
 impl Instrument {
     /// Builds the instrument for a channel of the project. Drums are
     /// synthesized and files are loaded here, on the calling thread; a
-    /// file that was loaded before comes from `samples`.
+    /// file that was loaded before comes from `samples`. A synth takes the
+    /// sound of the channel's General MIDI program, and a MIDI Out sends
+    /// the program to the external synth.
     pub fn for_channel(
-        kind: &ChannelKind,
+        channel: &Channel,
         sample_rate: u32,
         samples: &mut SampleCache,
     ) -> Result<Self, SampleError> {
-        Ok(match kind {
+        Ok(match &channel.kind {
             ChannelKind::Sampler(SampleSource::Builtin(drum)) => {
                 Instrument::Sampler(Sampler::new(Arc::new(drums::render(*drum, sample_rate))))
             }
             ChannelKind::Sampler(SampleSource::File(path)) => {
                 Instrument::Sampler(Sampler::new(samples.get(path)?))
             }
-            ChannelKind::Synth => Instrument::Synth(Synth::new(sample_rate)),
-            ChannelKind::MidiOut { channel } => Instrument::MidiOut(MidiOut::new(*channel)),
+            ChannelKind::Synth => Instrument::Synth(Synth::with_timbre(
+                sample_rate,
+                Timbre::for_program(channel.program),
+            )),
+            ChannelKind::MidiOut { channel: number } => {
+                Instrument::MidiOut(MidiOut::new(*number).with_program(channel.program))
+            }
         })
     }
 
@@ -88,11 +96,17 @@ impl Instrument {
     /// its notes play on the external synth instead of the speakers.
     /// With a `pitch`, every note goes out as that note: a drum is one
     /// note of a General MIDI drum set, whatever note its steps are on.
-    /// A MIDI Out already sends its notes, so it is given back as it is.
-    pub fn to_midi(self, channel: u8, pitch: Option<Note>) -> Self {
+    /// With a `program`, the synth is told to play that General MIDI
+    /// instrument. A MIDI Out already sends its notes, so it is given back
+    /// as it is.
+    pub fn to_midi(self, channel: u8, pitch: Option<Note>, program: Option<u8>) -> Self {
         match self {
             Instrument::MidiOut(_) => self,
-            _ => Instrument::MidiOut(MidiOut::new(channel).playing_as(pitch)),
+            _ => Instrument::MidiOut(
+                MidiOut::new(channel)
+                    .playing_as(pitch)
+                    .with_program(program),
+            ),
         }
     }
 
@@ -401,30 +415,25 @@ impl Sampler {
     }
 }
 
-/// How long a Loom Osc note takes to reach full volume, in seconds.
-const SYNTH_ATTACK: f32 = 0.004;
-/// How quickly the volume falls from the peak to the sustain level (time constant).
-const SYNTH_DECAY: f32 = 0.3;
-/// The volume a held note settles at, after the decay.
-const SYNTH_SUSTAIN: f32 = 0.45;
-/// How quickly a note fades after it is released (time constant).
-const SYNTH_RELEASE: f32 = 0.08;
 /// Each voice is turned down so that a four-note chord is not too loud.
 const SYNTH_VOICE_GAIN: f32 = 0.35;
 /// Below this volume (about -80 dB) a releasing voice counts as silent.
 const SILENT: f32 = 0.000_1;
 
-/// The Loom Osc: sawtooth oscillators with a soft filter and an
-/// attack-decay-sustain-release envelope, one per voice.
+/// The Loom Osc: oscillators with a soft filter and an
+/// attack-decay-sustain-release envelope, one per voice. Its [`Timbre`]
+/// says which wave, filter and envelope.
 #[derive(Debug, Clone)]
 pub struct Synth {
     sample_rate: f32,
     voices: Box<[SynthVoice; SYNTH_VOICES]>,
-    envelope: EnvelopeRates,
+    /// Boxed, like the voices, so an `Instrument` stays small.
+    envelope: Box<EnvelopeRates>,
     notes_started: u64,
 }
 
-/// The envelope's speeds, worked out once per sample rate.
+/// The envelope's speeds, worked out once per sample rate, and the rest
+/// of the timbre.
 #[derive(Debug, Clone, Copy)]
 struct EnvelopeRates {
     /// How much the volume grows per frame during the attack.
@@ -433,14 +442,22 @@ struct EnvelopeRates {
     decay_factor: f32,
     /// Each frame of the release keeps this fraction of the volume.
     release_factor: f32,
+    /// The volume a held note settles at, after the decay.
+    sustain: f32,
+    wave: Wave,
+    /// How loud this timbre is, compared with the Loom Osc's own sound.
+    gain: f32,
 }
 
 impl EnvelopeRates {
-    fn new(sample_rate: f32) -> Self {
+    fn new(sample_rate: f32, timbre: &Timbre) -> Self {
         EnvelopeRates {
-            attack_step: 1.0 / (SYNTH_ATTACK * sample_rate),
-            decay_factor: (-1.0 / (SYNTH_DECAY * sample_rate)).exp(),
-            release_factor: (-1.0 / (SYNTH_RELEASE * sample_rate)).exp(),
+            attack_step: 1.0 / (timbre.attack * sample_rate),
+            decay_factor: (-1.0 / (timbre.decay * sample_rate)).exp(),
+            release_factor: (-1.0 / (timbre.release * sample_rate)).exp(),
+            sustain: timbre.sustain,
+            wave: timbre.wave,
+            gain: timbre.gain,
         }
     }
 }
@@ -489,12 +506,12 @@ impl Voice for SynthVoice {
 }
 
 impl SynthVoice {
-    fn new(sample_rate: u32) -> Self {
+    fn new(sample_rate: u32, cutoff: f32) -> Self {
         SynthVoice {
             pitch: Note::C4,
             frequency: 0.0,
             phase: 0.0,
-            filter: LowPass::new(2_500.0, sample_rate),
+            filter: LowPass::new(cutoff, sample_rate),
             gain: 0.0,
             gate: 0,
             stage: Stage::Idle,
@@ -520,7 +537,8 @@ impl SynthVoice {
                 }
             }
             Stage::Decay => {
-                self.level = SYNTH_SUSTAIN + (self.level - SYNTH_SUSTAIN) * envelope.decay_factor;
+                let sustain = envelope.sustain;
+                self.level = sustain + (self.level - sustain) * envelope.decay_factor;
             }
             Stage::Release => {
                 self.level *= envelope.release_factor;
@@ -540,20 +558,27 @@ impl SynthVoice {
             }
         }
 
-        // A sawtooth ramps from -1 to 1 once per cycle.
-        let saw = self.phase * 2.0 - 1.0;
+        let value = envelope.wave.at(self.phase);
         self.phase = (self.phase + self.frequency / sample_rate).fract();
-        self.filter.process(saw) * self.level * self.gain
+        self.filter.process(value) * self.level * self.gain
     }
 }
 
 impl Synth {
+    /// A Loom Osc with its own sound.
     pub fn new(sample_rate: u32) -> Self {
+        Synth::with_timbre(sample_rate, Timbre::LOOM_OSC)
+    }
+
+    /// A Loom Osc with the sound `timbre`.
+    pub fn with_timbre(sample_rate: u32, timbre: Timbre) -> Self {
         Synth {
             sample_rate: sample_rate as f32,
             // `from_fn` builds an array by calling the closure once per element.
-            voices: Box::new(std::array::from_fn(|_| SynthVoice::new(sample_rate))),
-            envelope: EnvelopeRates::new(sample_rate as f32),
+            voices: Box::new(std::array::from_fn(|_| {
+                SynthVoice::new(sample_rate, timbre.cutoff)
+            })),
+            envelope: Box::new(EnvelopeRates::new(sample_rate as f32, &timbre)),
             notes_started: 0,
         }
     }
@@ -567,7 +592,7 @@ impl Synth {
         let voice = pick_voice(&mut self.voices[..]);
         voice.pitch = pitch;
         voice.frequency = pitch.frequency();
-        voice.gain = velocity_gain(velocity) * SYNTH_VOICE_GAIN;
+        voice.gain = velocity_gain(velocity) * SYNTH_VOICE_GAIN * self.envelope.gain;
         voice.gate = gate;
         voice.stage = Stage::Attack;
         voice.started = self.notes_started;
@@ -643,6 +668,12 @@ pub struct MidiOut {
     channel: u8,
     /// The note every note goes out as, for a drum.
     pitch: Option<Note>,
+    /// The General MIDI program the synth should play, if any.
+    program: Option<u8>,
+    /// Whether the program change still has to be sent: before the first
+    /// note, and again after every stop, in case the synth's sound was
+    /// changed on the synth itself in between.
+    program_due: bool,
     /// Frames played so far: the clock that says when a note-off is due.
     now: u64,
     /// Boxed so an `Instrument` stays small, as the voices of the others are.
@@ -678,6 +709,8 @@ impl MidiOut {
         MidiOut {
             channel: channel.min(15),
             pitch: None,
+            program: None,
+            program_due: false,
             now: 0,
             state: Box::new(MidiOutState {
                 notes: [Sounding::Off; 128],
@@ -690,6 +723,14 @@ impl MidiOut {
     /// The same MIDI Out, sending every note as `pitch` if there is one.
     pub fn playing_as(mut self, pitch: Option<Note>) -> Self {
         self.pitch = pitch;
+        self
+    }
+
+    /// The same MIDI Out, having the synth play General MIDI program
+    /// `program`, if there is one.
+    pub fn with_program(mut self, program: Option<u8>) -> Self {
+        self.program = program.map(|program| program.min(127));
+        self.program_due = self.program.is_some();
         self
     }
 
@@ -714,6 +755,15 @@ impl MidiOut {
     }
 
     fn start(&mut self, pitch: Note, velocity: u8, gate: u32, origin: Option<Origin>) {
+        if self.program_due
+            && let Some(program) = self.program
+        {
+            self.post(MidiMessage::ProgramChange {
+                channel: self.channel,
+                program,
+            });
+            self.program_due = false;
+        }
         let pitch = self.pitch.unwrap_or(pitch);
         let slot = usize::from(pitch.midi());
         // MIDI has one of each note per channel. If this one is already
@@ -746,6 +796,7 @@ impl MidiOut {
 
     /// Ends every note that is sounding, held or not.
     pub fn release_all(&mut self) {
+        self.program_due = self.program.is_some();
         for index in 0..128 {
             if self.state.notes[index] != Sounding::Off {
                 self.post(self.note_off_message(Note::new(index as u8)));
@@ -825,7 +876,15 @@ mod tests {
     }
 
     fn synth() -> Instrument {
-        Instrument::for_channel(&ChannelKind::Synth, RATE, &mut SampleCache::new()).unwrap()
+        Instrument::for_channel(&Channel::synth(), RATE, &mut SampleCache::new()).unwrap()
+    }
+
+    /// A channel of kind `kind`, with no program.
+    fn channel(kind: ChannelKind) -> Channel {
+        Channel {
+            kind,
+            ..Channel::synth()
+        }
     }
 
     /// Counts how often the signal changes sign: about twice per cycle.
@@ -862,7 +921,7 @@ mod tests {
         let out = render(&mut synth, RATE as usize);
         assert!(out[..gate as usize].iter().any(|&s| s != 0.0));
         // After the release (10 time constants is plenty) it is silent.
-        let quiet_from = gate as usize + (10.0 * SYNTH_RELEASE * RATE as f32) as usize;
+        let quiet_from = gate as usize + (10.0 * Timbre::LOOM_OSC.release * RATE as f32) as usize;
         assert!(out[quiet_from..].iter().all(|&s| s == 0.0));
         assert_eq!(synth.voices_playing(), 0);
     }
@@ -1083,7 +1142,7 @@ mod tests {
     #[test]
     fn missing_file_reports_an_error() {
         let kind = ChannelKind::Sampler(SampleSource::File("/no/such.wav".into()));
-        assert!(Instrument::for_channel(&kind, RATE, &mut SampleCache::new()).is_err());
+        assert!(Instrument::for_channel(&channel(kind), RATE, &mut SampleCache::new()).is_err());
     }
 
     /// Everything an instrument has sent through MIDI so far.
@@ -1095,7 +1154,7 @@ mod tests {
 
     #[test]
     fn a_synth_sent_to_midi_is_silent_and_sends_its_notes() {
-        let mut echoed = synth().to_midi(4, None);
+        let mut echoed = synth().to_midi(4, None, None);
         echoed.note_on(Note::new(64), 90, 100, RATE);
         assert!(render(&mut echoed, 1_000).iter().all(|&s| s == 0.0));
         let on = MidiMessage::NoteOn {
@@ -1113,8 +1172,8 @@ mod tests {
     #[test]
     fn a_drum_sent_to_midi_sends_its_own_note_and_lets_go_of_held_keys() {
         let kind = ChannelKind::Sampler(SampleSource::Builtin(loom_core::Drum::Kick));
-        let kick = Instrument::for_channel(&kind, RATE, &mut SampleCache::new()).unwrap();
-        let mut echoed = kick.to_midi(9, Some(Note::new(36)));
+        let kick = Instrument::for_channel(&channel(kind), RATE, &mut SampleCache::new()).unwrap();
+        let mut echoed = kick.to_midi(9, Some(Note::new(36)), None);
         // A key held on the typing keyboard: the step note, C4.
         echoed.note_on(STEP_NOTE, 100, HELD, RATE);
         echoed.note_off(STEP_NOTE);
@@ -1123,6 +1182,7 @@ mod tests {
             .map(|message| match message {
                 MidiMessage::NoteOn { channel, pitch, .. } => (true, channel, pitch.midi()),
                 MidiMessage::NoteOff { channel, pitch } => (false, channel, pitch.midi()),
+                MidiMessage::ProgramChange { .. } => panic!("a drum has no program"),
             })
             .collect();
         assert_eq!(pitches, [(true, 9, 36), (false, 9, 36)]);
@@ -1131,6 +1191,51 @@ mod tests {
     #[test]
     fn sending_a_midi_out_to_midi_changes_nothing() {
         let midi_out = Instrument::MidiOut(MidiOut::new(2));
-        assert!(matches!(midi_out.to_midi(5, None), Instrument::MidiOut(_)));
+        assert!(matches!(
+            midi_out.to_midi(5, None, None),
+            Instrument::MidiOut(_)
+        ));
+    }
+
+    #[test]
+    fn the_program_goes_out_before_the_first_note_and_after_every_stop() {
+        let violin = Some(loom_core::general_midi::VIOLIN);
+        let mut echoed = synth().to_midi(4, None, violin);
+        let change = MidiMessage::ProgramChange {
+            channel: 4,
+            program: 40,
+        };
+        let starts = |echoed: &mut Instrument| {
+            echoed.note_on(Note::new(64), 90, HELD, RATE);
+            echoed.note_on(Note::new(67), 90, HELD, RATE);
+            let sent = sent_by(echoed);
+            sent.iter().filter(|message| **message == change).count()
+        };
+        assert_eq!(sent_by(&mut echoed), [], "nothing before a note");
+        assert_eq!(starts(&mut echoed), 1);
+        assert_eq!(starts(&mut echoed), 0, "once is enough");
+        echoed.release_all();
+        assert_eq!(starts(&mut echoed), 1, "again after a stop");
+    }
+
+    #[test]
+    fn a_synth_with_a_program_sounds_like_it() {
+        let mut piano = Channel::synth();
+        piano.program = Some(loom_core::general_midi::ACOUSTIC_GRAND_PIANO);
+        let mut piano = Instrument::for_channel(&piano, RATE, &mut SampleCache::new()).unwrap();
+        let mut osc = synth();
+        // A note held for four seconds: the piano dies away, the Loom Osc
+        // keeps sounding.
+        for instrument in [&mut piano, &mut osc] {
+            instrument.note_on(Note::A4, 100, HELD, RATE);
+        }
+        let loudness = |instrument: &mut Instrument| {
+            let late = render(instrument, 4 * RATE as usize);
+            late[late.len() - 4_800..]
+                .iter()
+                .map(|s| s.abs())
+                .fold(0.0, f32::max)
+        };
+        assert!(loudness(&mut piano) < 0.1 * loudness(&mut osc));
     }
 }

@@ -16,6 +16,7 @@ pub(super) const MIDNIGHT_SHUFFLE: Song = Song {
     comping: Comping::Shuffle,
     bass: Bass::Boogie,
     rhythm: "Shuffle",
+    band: BLUES_HARP,
     style: "Twelve-bar blues",
     parts: &[Part::new(
         "Chorus",
@@ -43,6 +44,7 @@ pub(super) const ROLLING_BOOGIE: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Boogie,
     rhythm: "Shuffle",
+    band: PIANO,
     style: "Twelve-bar blues",
     parts: &[Part::new(
         "Chorus",
@@ -72,6 +74,7 @@ pub(super) const MINOR_MOOD: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Jazz ballad",
+    band: BLUES_GUITAR,
     style: "Minor blues",
     parts: &[Part::new(
         "Chorus",
@@ -100,6 +103,7 @@ pub(super) const CARELESS_LOVE: Song = Song {
     comping: Comping::Shuffle,
     bass: Bass::Boogie,
     rhythm: "Shuffle",
+    band: BLUES_HARP,
     style: "Eight-bar blues",
     parts: &[
         Part::new(
@@ -141,6 +145,7 @@ pub(super) const FRANKIE_AND_JOHNNY: Song = Song {
     comping: Comping::Shuffle,
     bass: Bass::Boogie,
     rhythm: "Shuffle",
+    band: BLUES_HARP,
     style: "Twelve-bar blues",
     parts: &[
         Part::new(
@@ -180,6 +185,7 @@ pub(super) const TROUBLE_IN_MIND: Song = Song {
     comping: Comping::Pulse,
     bass: Bass::Quarters,
     rhythm: "Slow blues",
+    band: SLOW_BLUES,
     style: "Slow blues",
     parts: &[
         Part::new("Pickup", "-:18 D4:2 E4 D4", "V7"),
@@ -219,6 +225,7 @@ pub(super) const ST_JAMES_INFIRMARY: Song = Song {
     comping: Comping::Charleston,
     bass: Bass::Walking,
     rhythm: "Jazz ballad",
+    band: BLUES_GUITAR,
     style: "Minor blues",
     parts: &[
         Part::new("Pickup", "-:12 C4:2 Eb4", "i"),
@@ -251,6 +258,7 @@ pub(super) const SEE_SEE_RIDER: Song = Song {
     comping: Comping::Shuffle,
     bass: Bass::Boogie,
     rhythm: "Shuffle",
+    band: BLUES_HARP,
     style: "Twelve-bar blues",
     parts: &[Part::new(
         "Chorus",

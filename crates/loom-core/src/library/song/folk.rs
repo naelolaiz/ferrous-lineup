@@ -18,16 +18,32 @@ pub(super) const FRERE_JACQUES: Song = Song {
     comping: Comping::ArpUpDown,
     bass: Bass::RootFifth,
     rhythm: "Folk",
+    band: SONG_AND_GUITAR,
     style: "Folk",
     parts: &[
         Part::new("Alone", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS),
-        Part::new("Round", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&[0, 2, 4, 6]),
+        Part::new("Round", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&[
+            (1, 0),
+            (2, 2),
+            (3, 4),
+            (4, 6),
+        ]),
         // Voices 2 to 4 carry on from the part before, and start again.
-        Part::new("Round again", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS)
-            .with_voices(&[0, -6, 2, -4, 4, -2, 6]),
+        Part::new("Round again", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&[
+            (1, 0),
+            (2, -6),
+            (2, 2),
+            (3, -4),
+            (3, 4),
+            (4, -2),
+            (4, 6),
+        ]),
         // The first voice has finished; the others sing their last bars.
-        Part::new("Last voices", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS)
-            .with_voices(&[-6, -4, -2]),
+        Part::new("Last voices", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&[
+            (2, -6),
+            (3, -4),
+            (4, -2),
+        ]),
     ],
     form: &["Alone", "Round", "Round again", "Last voices"],
     drums_from: 0,
@@ -47,6 +63,7 @@ pub(super) const GREENSLEEVES: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: FLUTE_AND_GUITAR,
     style: "La folia",
     parts: &[
         Part::new("Intro", "-:12 | -:8 A4:4", "i | V"),
@@ -85,6 +102,7 @@ pub(super) const OH_SUSANNA: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: COUNTRY,
     style: "Country",
     parts: &[
         Part::new("Intro", "-:16 | -:14 C5:1 D5", "I | V7"),
@@ -115,6 +133,7 @@ pub(super) const SCARBOROUGH_FAIR: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Jazz waltz",
+    band: FLUTE_AND_GUITAR,
     style: "Minor jazz waltz",
     parts: &[Part::new(
         "Verse",
@@ -142,6 +161,7 @@ pub(super) const CLEMENTINE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: COUNTRY,
     style: "Country waltz",
     parts: &[
         Part::new("Pickup", "-:8 C5:3 C5:1", "I"),
@@ -171,6 +191,7 @@ pub(super) const CAMPTOWN_RACES: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Country train",
+    band: COUNTRY,
     style: "Country",
     parts: &[Part::new(
         "Song",
@@ -201,12 +222,21 @@ pub(super) const ROW_YOUR_BOAT: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "Six-eight",
+    band: SONG_AND_GUITAR,
     style: "Jig",
     parts: &[
         Part::new("Alone", ROW_TUNE, ROW_CHORDS),
-        Part::new("Round", ROW_TUNE, ROW_CHORDS).with_voices(&[0, 2, 4, 6]),
-        Part::new("Round again", ROW_TUNE, ROW_CHORDS).with_voices(&[0, -6, 2, -4, 4, -2, 6]),
-        Part::new("Last voices", ROW_TUNE, ROW_CHORDS).with_voices(&[-6, -4, -2]),
+        Part::new("Round", ROW_TUNE, ROW_CHORDS).with_voices(&[(1, 0), (2, 2), (3, 4), (4, 6)]),
+        Part::new("Round again", ROW_TUNE, ROW_CHORDS).with_voices(&[
+            (1, 0),
+            (2, -6),
+            (2, 2),
+            (3, -4),
+            (3, 4),
+            (4, -2),
+            (4, 6),
+        ]),
+        Part::new("Last voices", ROW_TUNE, ROW_CHORDS).with_voices(&[(2, -6), (3, -4), (4, -2)]),
     ],
     form: &["Alone", "Round", "Round again", "Last voices"],
     drums_from: 0,
@@ -226,6 +256,7 @@ pub(super) const SILENT_NIGHT: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "Six-eight",
+    band: CAROL,
     style: "Six-eight ballad",
     parts: &[
         Part::new(
@@ -259,6 +290,7 @@ pub(super) const WE_WISH_YOU: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: ACCORDION_BAND,
     style: "Country waltz",
     parts: &[Part::new(
         "Song",
@@ -289,6 +321,7 @@ pub(super) const WILD_ROVER: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: ACCORDION_BAND,
     style: "Country waltz",
     parts: &[
         Part::new("Pickup", "-:8 C5:4", "I"),
@@ -336,6 +369,7 @@ pub(super) const SHENANDOAH: Song = Song {
     comping: Comping::Ballad,
     bass: Bass::Held,
     rhythm: "Folk",
+    band: FLUTE_AND_GUITAR,
     style: "Folk",
     parts: &[
         Part::new("Pickup", "-:12 E4:4", "I"),
@@ -368,6 +402,7 @@ pub(super) const RED_RIVER_VALLEY: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Country train",
+    band: COUNTRY,
     style: "Country",
     parts: &[
         Part::new("Pickup", "-:12 G4:2 C5", "I"),
@@ -401,6 +436,7 @@ pub(super) const HOME_ON_THE_RANGE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: COUNTRY,
     style: "Country waltz",
     parts: &[
         Part::new("Pickup", "-:8 G4:4", "I"),
@@ -440,6 +476,7 @@ pub(super) const DANNY_BOY: Song = Song {
     comping: Comping::Ballad,
     bass: Bass::Held,
     rhythm: "Pop ballad",
+    band: BALLAD,
     style: "Piano ballad",
     parts: &[
         Part::new("Pickup", "-:10 E4:2 F4 G4", "I"),
@@ -479,6 +516,7 @@ pub(super) const LOCH_LOMOND: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Folk",
+    band: FOLK,
     style: "Folk",
     parts: &[
         Part::new("Pickup", "-:12 G4:4", "I"),
@@ -517,6 +555,7 @@ pub(super) const WAYFARING_STRANGER: Song = Song {
     comping: Comping::ArpUpDown,
     bass: Bass::Held,
     rhythm: "Folk",
+    band: FLUTE_AND_GUITAR,
     style: "Celtic",
     parts: &[
         Part::new("Pickup", "-:10 A4:2 A4 E5", "i"),
@@ -555,6 +594,7 @@ pub(super) const COTTON_EYED_JOE: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Bluegrass",
+    band: BLUEGRASS,
     style: "Bluegrass",
     parts: &[
         Part::new("Pickup", "-:14 E4:1 F#4", "I"),
@@ -603,6 +643,7 @@ pub(super) const OLD_JOE_CLARK: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Bluegrass",
+    band: BLUEGRASS,
     style: "Bluegrass",
     parts: &[
         Part::new(
@@ -639,6 +680,7 @@ pub(super) const SOLDIERS_JOY: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Bluegrass",
+    band: BLUEGRASS,
     style: "Bluegrass",
     parts: &[
         Part::new("Pickup", "-:12 F#4:2 G4", "I"),
@@ -684,6 +726,7 @@ pub(super) const TURKEY_IN_THE_STRAW: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Country train",
+    band: COUNTRY,
     style: "Country",
     parts: &[
         Part::new("Pickup", "-:12 E5:2 D5", "I"),
@@ -730,6 +773,7 @@ pub(super) const IRISH_WASHERWOMAN: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Six-eight",
+    band: JIG,
     style: "Jig",
     parts: &[
         Part::new("Pickup", "-:10 D5:1 C5", "I"),
@@ -771,6 +815,7 @@ pub(super) const WALTZING_MATILDA: Song = Song {
     comping: Comping::Strum,
     bass: Bass::RootFifth,
     rhythm: "Folk",
+    band: FOLK,
     style: "Folk",
     parts: &[
         Part::new(
@@ -811,6 +856,7 @@ pub(super) const MOLLY_MALONE: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: ACCORDION_BAND,
     style: "Country waltz",
     parts: &[
         Part::new("Pickup", "-:8 G4:4", "I"),
@@ -853,6 +899,7 @@ pub(super) const HAVA_NAGILA: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: KLEZMER,
     style: "Polka",
     parts: &[
         Part::new(
@@ -903,6 +950,7 @@ pub(super) const SANTA_LUCIA: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: ACCORDION_BAND,
     style: "Country waltz",
     parts: &[
         Part::new(
@@ -949,6 +997,7 @@ pub(super) const TARANTELLA_NAPOLETANA: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Held,
     rhythm: "Tarantella",
+    band: ACCORDION_BAND,
     style: "Tarantella",
     parts: &[
         Part::new("Pickup", "-:6 A5:4 A5:2", "i"),
@@ -1029,6 +1078,7 @@ pub(super) const TORNA_A_SURRIENTO: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Tango vals",
+    band: ACCORDION_BAND,
     style: "Vals in minor",
     parts: &[
         Part::new(
@@ -1082,6 +1132,7 @@ pub(super) const ARIRANG: Song = Song {
     comping: Comping::Arp3,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: ACCORDION_BAND,
     style: "Country waltz",
     parts: &[
         Part::new(
@@ -1119,6 +1170,7 @@ pub(super) const TUMBALALAIKA: Song = Song {
     comping: Comping::Waltz,
     bass: Bass::Waltz,
     rhythm: "Waltz",
+    band: ACCORDION_BAND,
     style: "Vals in minor",
     parts: &[
         Part::new(
@@ -1161,6 +1213,7 @@ pub(super) const MO_LI_HUA: Song = Song {
     comping: Comping::ArpUpDown,
     bass: Bass::Held,
     rhythm: "",
+    band: FLUTE_AND_GUITAR,
     style: "Folk",
     parts: &[
         Part::new(
@@ -1199,6 +1252,7 @@ pub(super) const HUNGARIAN_DANCE: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::RootFifth,
     rhythm: "Two-step",
+    band: POLKA,
     style: "Polka",
     parts: &[
         Part::new(

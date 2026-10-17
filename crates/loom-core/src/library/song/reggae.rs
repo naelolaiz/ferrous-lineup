@@ -14,6 +14,7 @@ pub(super) const MARY_HAD_A_LITTLE_LAMB: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Walking,
     rhythm: "Ska",
+    band: SKA,
     style: "Ska",
     parts: &[Part::new(
         "Tune",
@@ -39,6 +40,7 @@ pub(super) const THIS_OLD_MAN: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Reggae,
     rhythm: "One drop",
+    band: REGGAE,
     style: "Reggae",
     parts: &[Part::new(
         "Song",
@@ -64,6 +66,7 @@ pub(super) const VALLEY_DUB: Song = Song {
     comping: Comping::Offbeat,
     bass: Bass::Reggae,
     rhythm: "Steppers",
+    band: REGGAE,
     style: "Roots minor",
     parts: &[
         Part::new(
