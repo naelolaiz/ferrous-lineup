@@ -518,7 +518,10 @@ mod tests {
             check(&project, style.name);
             assert_eq!(project.playlist().sections().len(), 5, "{}", style.name);
             assert!(!project.scale.kind.is_tonal());
-            assert_eq!(crate::file::format_for(&project), 6);
+            // A row key needs format 6, and a piano on the Keys channel 9.
+            let piano = project.channels().iter().any(|c| c.program.is_some());
+            let format = if piano { 9 } else { 6 };
+            assert_eq!(crate::file::format_for(&project), format);
         }
     }
 
