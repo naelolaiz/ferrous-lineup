@@ -1,0 +1,180 @@
+name: Release
+
+# Builds Ferrous Lineup for Linux, Windows and macOS (Apple Silicon and
+# Intel), packed with the README and the licence, ready to download.
+#
+# - Every push to main, and every manual run (Actions > Release > Run
+#   workflow), keeps the four packages as artifacts of the run.
+# - Pushing a tag that starts with `v` (v0.2.0) also publishes them on a
+#   GitHub Release for that tag.
+# - A pull request that changes this file runs it too, so a broken
+#   release build shows up before it is merged.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths: [.github/workflows/release.yml]
+  workflow_dispatch:
+
+# Only reading the code is allowed by default. The job that publishes the
+# release asks for more below.
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the build that is still running
+# for the older one. Tags are never cancelled.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The oldest Ubuntu GitHub still offers: a program built against
+          # an older C library (glibc) also runs on newer systems, not the
+          # other way round. When GitHub retires 22.04, move to 24.04.
+          - name: Linux x86_64
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            platform: linux-x86_64
+          # `crt-static` puts Microsoft's C runtime inside the .exe, so it
+          # runs on a Windows without the Visual C++ Redistributable.
+          - name: Windows x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: windows-x86_64
+            rustflags: -C target-feature=+crt-static
+          - name: macOS Apple Silicon
+            os: macos-latest
+            target: aarch64-apple-darwin
+            platform: macos-arm64
+          # GitHub's macOS machines are Apple Silicon. Apple's compilers
+          # build Intel programs there too, so only the Rust target differs.
+          - name: macOS Intel
+            os: macos-latest
+            target: x86_64-apple-darwin
+            platform: macos-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libxkbcommon-dev libwayland-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      # `--locked` builds exactly the library versions in Cargo.lock.
+      - name: Build
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      # ferrous-lineup-v0.2.0-linux-x86_64.tar.gz for a tag, or
+      # ferrous-lineup-1a2b3c4-linux-x86_64.tar.gz (the commit) otherwise.
+      # Windows gets a .zip; the others a .tar.gz, which keeps the
+      # program's "executable" permission.
+      - name: Package
+        shell: bash
+        env:
+          # Stops macOS's tar from adding hidden "._" files.
+          COPYFILE_DISABLE: 1
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            label="$GITHUB_REF_NAME"
+          else
+            label="${GITHUB_SHA::7}"
+          fi
+          name="ferrous-lineup-$label-${{ matrix.platform }}"
+          binary=ferrous-lineup
+          if [[ "$RUNNER_OS" == Windows ]]; then binary+=.exe; fi
+
+          mkdir -p "dist/$name"
+          cp "target/${{ matrix.target }}/release/$binary" README.md LICENSE "dist/$name/"
+          cd dist
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            7z a -tzip "$name.zip" "$name"
+            echo "PACKAGE=dist/$name.zip" >> "$GITHUB_ENV"
+          else
+            tar -czf "$name.tar.gz" "$name"
+            echo "PACKAGE=dist/$name.tar.gz" >> "$GITHUB_ENV"
+          fi
+
+      # `archive: false` uploads the package as it is, so the artifact
+      # downloads as the .zip or .tar.gz itself, not wrapped in another zip.
+      - uses: actions/upload-artifact@v7
+        with:
+          path: ${{ env.PACKAGE }}
+          archive: false
+          if-no-files-found: error
+
+  release:
+    name: Publish the release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compare the tag with the version in Cargo.toml
+        run: |
+          version=$(sed -n '/^\[workspace.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
+            echo "::warning::The tag is $GITHUB_REF_NAME, but Cargo.toml says version $version."
+          fi
+
+      # Each artifact lands in a folder of its own name. `skip-decompress`
+      # keeps the Windows .zip as it is instead of unpacking it.
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: ferrous-lineup-*
+          path: downloads
+          skip-decompress: true
+
+      - name: Collect the packages and their checksums
+        run: |
+          mkdir release
+          for folder in downloads/*/; do
+            name=$(basename "$folder")
+            mv "$folder"* "release/$name"
+          done
+          cd release
+          sha256sum ferrous-lineup-* > SHA256SUMS.txt
+          ls -l
+
+      # A tag with a dash (v0.2.0-beta.1) makes a pre-release. Running the
+      # workflow again for a tag replaces the files of its release.
+      - name: Create the release and upload the packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber
+          else
+            flags=()
+            if [[ "$TAG" == *-* ]]; then flags+=(--prerelease); fi
+            gh release create "$TAG" release/* \
+              --title "Ferrous Lineup $TAG" \
+              --generate-notes \
+              --verify-tag \
+              "${flags[@]}"
+          fi
