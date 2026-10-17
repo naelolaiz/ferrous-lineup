@@ -71,6 +71,7 @@
   - [Opening MIDI files](step-8/midi-import.md)
   - [Every voice on its own channel, with a real instrument](step-8/voices-and-instruments.md)
   - [Finding the key from the music (experimental)](step-8/finding-the-key.md)
+  - [Any time signature, and irregular meters](step-8/any-time-signature.md)
   - [Exercises](step-8/exercises.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 

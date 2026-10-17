@@ -175,3 +175,7 @@ track.meta(0, TIME_SIGNATURE, &[signature.beats, unit_power, clocks, 8]);
 the number before reaching 1. `8u8.ilog2()` is 3. It panics on 0, which
 is why the unit goes through `max(1)` first. In 6/8 a click is a dotted
 quarter, six steps, so 36 clocks; a test checks exactly those bytes.
+
+> Later in step 8 a time signature can be any two numbers, and beats can
+> be grouped (2+2+3/8): `steps_per_beat` gave way to `beat_at`. See
+> [Any time signature, and irregular meters](any-time-signature.md).
