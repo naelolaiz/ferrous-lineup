@@ -74,6 +74,7 @@
   - [Any time signature, and irregular meters](step-8/any-time-signature.md)
   - [A rhythm in another time signature: re-metering the song](step-8/re-metering.md)
   - [A demo keeps its name, and is saved as a copy](step-8/demo-names.md)
+  - [One set of zoom keys that follows the pointer](step-8/zoom-follows-the-pointer.md)
   - [Exercises](step-8/exercises.md)
 - [Step 9: The band](step-9/README.md)
   - [Chord names: reading a lead sheet](step-9/chord-names.md)
