@@ -205,8 +205,9 @@ fn channel_events(
             continue;
         };
         let length = pattern.length();
-        for note in pattern
-            .notes(channel)
+        // The notes as they are played, with the song's swing.
+        for note in project
+            .played_notes(play.pattern, channel)
             .iter()
             .filter(|note| note.start < length)
         {

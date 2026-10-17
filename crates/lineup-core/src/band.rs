@@ -163,6 +163,12 @@ pub fn band_styles() -> &'static [BandStyle] {
 }
 
 impl BandStyle {
+    /// How much it swings when it is picked (see [`crate::swing`]): as
+    /// much as its drums do, and not at all without drums.
+    pub fn swing(&self) -> u8 {
+        self.rhythm.map_or(0, |rhythm| rhythm.swing)
+    }
+
     /// The band style called `name`, if there is one.
     pub fn named(name: &str) -> Option<&'static BandStyle> {
         band_styles().iter().find(|style| style.name == name)
@@ -588,7 +594,8 @@ impl Project {
     /// A style in another time signature puts the song in it bar for
     /// bar, as a rhythm from the library does (see
     /// [`remeter`](crate::remeter::remeter)). While the sheet is empty,
-    /// the song also takes the style's tempo.
+    /// the song also takes the style's tempo. The song always takes the
+    /// style's swing, as it is a part of how the style is played.
     pub fn set_band_style(&mut self, style: Option<&'static BandStyle>) {
         let Some(style) = style else {
             self.stop_band();
@@ -625,6 +632,7 @@ impl Project {
         if self.playlist.chord_markers.is_empty() {
             self.tempo = Tempo::new(style.tempo);
         }
+        self.swing = style.swing();
         self.band_channels();
         self.write_band();
     }

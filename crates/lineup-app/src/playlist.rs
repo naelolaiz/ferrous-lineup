@@ -23,13 +23,14 @@ use eframe::egui::{
     Vec2, pos2, vec2,
 };
 use lineup_core::band::VariationMarker;
+use lineup_core::swing::swings_in;
 use lineup_core::{
-    Clip, KeyMap, KeyMarker, LoopRegion, MAX_LOOSE_TIMING, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS,
-    Meter, Pass, Pattern, Project, STEPS_PER_BAR, Section, TempoMarker, TimeMarker,
+    Clip, KeyMap, KeyMarker, LoopRegion, MAX_LOOSE_TIMING, MAX_REPEATS, MAX_SONG_STEPS, MAX_SWING,
+    MAX_TRACKS, Meter, Pass, Pattern, Project, STEPS_PER_BAR, Section, TempoMarker, TimeMarker,
 };
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, Tried};
-use crate::widgets;
+use crate::{theme, widgets};
 use sections::Strips;
 use tempo::TempoStrip;
 
@@ -94,6 +95,8 @@ pub enum PlaylistAction {
     RemoveTempoMarker(usize),
     /// How loose the timing is, in milliseconds.
     SetLooseTiming(u8),
+    /// How much the eighth notes swing, from 0 to [`MAX_SWING`].
+    SetSwing(u8),
     /// Something picked in the Library tab.
     Library(LibraryAction),
 }
@@ -423,6 +426,9 @@ impl PlaylistView {
                 actions.push(PlaylistAction::AddSection(next_section(project)));
             }
             ui.separator();
+            if let Some(swing) = swing_control(ui, project) {
+                actions.push(PlaylistAction::SetSwing(swing));
+            }
             loose_timing(ui, project, &mut actions);
             if let Some(region) = project.playlist().loop_region() {
                 let meter = project.meter();
@@ -832,6 +838,49 @@ impl PlaylistView {
             }
         }
     }
+}
+
+/// How much the song swings, from "straight" to [`MAX_SWING`] percent:
+/// a triplet. Returns the new amount when it is changed. The chord sheet
+/// shows it too.
+pub(crate) fn swing_control(ui: &mut Ui, project: &Project) -> Option<u8> {
+    let meter = project.meter();
+    let swings =
+        swings_in(meter.first()) || meter.markers().iter().any(|marker| swings_in(marker.time));
+    let mut swing = project.swing;
+    let label = ui.label("Swing");
+    let value = ui.add_enabled(
+        swings,
+        egui::DragValue::new(&mut swing)
+            .range(0..=MAX_SWING)
+            .speed(0.5)
+            .custom_formatter(|amount, _| {
+                if amount == 0.0 {
+                    "straight".to_string()
+                } else {
+                    format!("{amount:.0}%")
+                }
+            })
+            .custom_parser(|text| {
+                let text = text.trim().trim_end_matches('%').trim();
+                if text.eq_ignore_ascii_case("straight") {
+                    Some(0.0)
+                } else {
+                    text.parse().ok()
+                }
+            }),
+    );
+    let text = "Swing: the second eighth note of every beat comes late, so pairs of eighths \
+                are played long-short, as in jazz, blues and shuffles. \"straight\" plays them \
+                even, 50% is a light swing and 100% a triplet: two thirds and one third. Each \
+                style remembers what you set. Drag up or down, or double-click to type";
+    theme::hint(label, text);
+    let value = theme::hint(value, text).on_disabled_hover_text(format!(
+        "The song is in {}: its beats are eighth notes, or already split in three, so \
+         there are no pairs of eighths to swing",
+        meter.first()
+    ));
+    value.changed().then_some(swing)
 }
 
 /// How loose the timing is: how far off the grid notes may land as they

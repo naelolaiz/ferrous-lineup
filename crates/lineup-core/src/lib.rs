@@ -4,7 +4,7 @@
 //! harmony, the playlist and its sections, the project as a whole, how to save a
 //! project to a file, what changed between two versions of a project,
 //! undo and redo, the piano roll's tools for changing many notes at once,
-//! MIDI note messages, MIDI files, turning keys played on a keyboard into
+//! MIDI note messages, MIDI files, swing, turning keys played on a keyboard into
 //! notes, twelve-tone rows and serialism, Kröpfl's micromodes, and a
 //! library of styles,
 //! rhythms and songs. It has no audio and no UI code, which keeps it
@@ -33,6 +33,7 @@ pub mod record;
 pub mod remeter;
 pub mod sequencer;
 pub mod serial;
+pub mod swing;
 pub mod tempo;
 pub mod tools;
 
@@ -60,4 +61,5 @@ pub use project::{
     Channel, ChannelKind, Drum, MAX_CHANNELS, MAX_LOOSE_TIMING, MAX_PATTERNS, Project, SampleSource,
 };
 pub use sequencer::{STEPS_PER_BEAT, Sequencer};
+pub use swing::MAX_SWING;
 pub use tempo::{Tempo, TempoMap, TempoMarker};

@@ -227,6 +227,8 @@ impl LineupApp {
         let selected = self.piano_roll.channel();
         let tonic = self.project.scale.root;
         let use_tempo = self.playlist.library_tempo();
+        // The song swings as the rhythm does, or as it was last set to.
+        let swing = rhythm.map(|rhythm| self.swings.of(rhythm.name).unwrap_or(rhythm.swing));
         // A rhythm that was picked, not the style's own, decides how the
         // chords and bass are played.
         let feel = rhythm.filter(|_| rhythm_picked);
@@ -262,6 +264,9 @@ impl LineupApp {
             }
             if let Some(rhythm) = rhythm {
                 apply::write_rhythm(project, index, rhythm);
+            }
+            if let Some(swing) = swing {
+                project.swing = swing;
             }
             if use_tempo {
                 let bpm = style.map_or_else(|| rhythm.map(|r| r.tempo), |s| Some(s.tempo));
@@ -348,6 +353,14 @@ impl LineupApp {
         let song_library = self.song_library;
         let before = self.project.clone();
         let original = self.song_original();
+        // The swing the rhythm was last played with, if it was set.
+        let rhythm = match action {
+            _ if fill_picked(action) => None,
+            LibraryAction::Style(style) => Rhythm::named(style.rhythm),
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => Some(rhythm),
+            LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => None,
+        };
+        let swing = rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
         // A rhythm or a style starts again from the song as it was before
         // the library changed it. A fill or a twelve-tone or micromode
         // style goes on top of what plays now.
@@ -374,6 +387,11 @@ impl LineupApp {
                     apply::use_rhythm(project, rhythm)
                 }
             };
+            if change.drums > 0
+                && let Some(swing) = swing
+            {
+                project.swing = swing;
+            }
             // A song put in another time signature keeps its pace (see
             // `remeter`): the rhythm's own tempo would rush or drag it.
             if use_tempo
@@ -752,7 +770,6 @@ impl LineupApp {
     }
 }
 
-/// Whether `action` puts a fill in the song.
 impl LineupApp {
     /// Has the band play the way a library style or rhythm goes. Returns
     /// `false` for what a band does not play: fills, rows and micromode
@@ -770,9 +787,13 @@ impl LineupApp {
             return false;
         };
         let use_tempo = self.playlist.library_tempo();
+        let swing = self.swings.of(style.name);
         self.edit("change the band", |project| {
             let time = project.meter().first();
             project.set_band_style(Some(style));
+            if let Some(swing) = swing {
+                project.swing = swing;
+            }
             // As with a rhythm: a song put in another time signature
             // keeps its pace, so only a song that stays in its time
             // takes the style's tempo.
@@ -785,6 +806,7 @@ impl LineupApp {
     }
 }
 
+/// Whether `action` puts a fill in the song.
 fn fill_picked(action: LibraryAction) -> bool {
     matches!(
         action,
