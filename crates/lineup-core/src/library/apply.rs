@@ -12,6 +12,7 @@
 //! they are worked out from its notes first (see [`super::listen`]).
 
 use crate::TimeSignature;
+use crate::general_midi;
 use crate::harmony::{Chord, ChordQuality, Scale};
 use crate::pattern::NoteEvent;
 use crate::pitch::PitchClass;
@@ -65,12 +66,20 @@ pub fn synth_named(project: &mut Project, name: &str) -> Option<usize> {
         _ if name.starts_with("Voice ") => LEAD_VOLUME,
         _ => KEYS_VOLUME,
     };
+    // The chords are played on a piano and the bass line on a bass, by
+    // a SoundFont or an external synth (the Lineup Osc takes a sound
+    // close to them). Other voices keep the Lineup Osc's own sound.
+    let program = match name {
+        KEYS => Some(general_midi::ACOUSTIC_GRAND_PIANO),
+        BASS => Some(general_midi::FINGER_BASS),
+        _ => None,
+    };
     project.add_channel(Channel {
         name: name.to_string(),
         kind: ChannelKind::Synth,
         volume,
         muted: false,
-        program: None,
+        program,
     })
 }
 
