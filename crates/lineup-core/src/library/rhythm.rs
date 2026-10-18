@@ -980,7 +980,7 @@ pub static RHYTHMS: &[Rhythm] = &[
         "",
         "3 + 3 + 3 + 3 + 2 + 2 in sixteenths: the restless accents of the new tango of the 1950s.",
     ),
-    // ----- South American folklore -----
+    // ----- Latin American folklore -----
     rhythm(
         "Zamba",
         Folklore,
@@ -1137,6 +1137,39 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Montevideo's candombe: the stick on the drum's wooden shell plays the clave, \
          3 + 3 + 2 twice, under the piano, repique and chico drums.",
     ),
+    rhythm(
+        "Polca",
+        Folklore,
+        120.0,
+        &[(Kick, "X... .... X... ...."), (Rim, ".... x.o. .... x.o.")],
+        "",
+        "The polka of Mexico's corridos and norteño bands: the bass on beat 1, the guitars \
+         strumming beat 2 and its \"and\". The polka is in 2/4; each bar here lasts two.",
+    ),
+    rhythm(
+        "Pasillo",
+        Folklore,
+        190.0,
+        &[(Kick, "X... .... ...."), (Rim, ".... ..x. x...")],
+        "",
+        "The quick waltz of Colombia and Ecuador: the bass on 1, the tiple and guitar on the \
+         \"and\" of 2 and on 3, so the second beat comes late.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
+        "Son jalisciense",
+        Folklore,
+        180.0,
+        &[
+            (Kick, "X.....X..... | X...X...X..."),
+            (Rim, "..x.x...x.x. | ..x...x...x."),
+        ],
+        "",
+        "The mariachi son of Jalisco, which the jarabe strings together: 6/8 and 3/4 in turn, \
+         the guitarrón on the two beats of one bar and the three of the next, the vihuela and \
+         guitar strumming between them.",
+    )
+    .in_time(SIX_EIGHT),
     // ----- Flamenco -----
     rhythm(
         "Rumba flamenca",
@@ -1418,7 +1451,7 @@ mod tests {
             Rhythm::for_time(TimeSignature::COMMON, None).name,
             "Pop beat"
         );
-        // A zamba (6/8) in 3/4 stays South American folklore.
+        // A zamba (6/8) in 3/4 stays Latin American folklore.
         let zamba = named("Zamba");
         assert_eq!(
             Rhythm::for_time(THREE_FOUR, Some(zamba)).genre,
