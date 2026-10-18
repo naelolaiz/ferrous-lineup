@@ -2169,3 +2169,281 @@ pub(super) const LUAR_DO_SERTAO: Song = Song {
             verse walks the same chords in steady eighths, three repeated notes and a step. The \
             refrain, sung twice, opens the song and follows each of its three verses.",
 };
+
+// Source: https://github.com/baobach/abc_search/blob/42cb4abd42a0ea8b0c5c9b8477ab80ec059f48df/database/abc/QmVxmDt9pfR6yVSK4FK38kehyaVvEoHJ5UZHcC636wwaAr.abc
+// (abc_search database: "La Llorona", an anonymous MuseScore piano lead sheet in D minor, 3/4,
+// with chord symbols Dm C Bb A7 Gm; Section A the instrumental theme with Fine at bar 19, B the
+// verse and C the refrain inside one repeat, D.C. at the end), written an octave higher.
+// Second source: https://github.com/hf7y/lilypond (archive/brass-charts/muertos-dio/la_llorona.ly,
+// a brass chart in C minor): its a-melody and b-melody have the verse's and the refrain's pitches
+// and chords (Cm Fm G7 / Cm Bb Ab G7, a tone lower); its rhythms are a little different.
+// PD: traditional (a son of the Isthmus of Tehuantepec, Oaxaca, with no known author)
+pub(super) const LA_LLORONA: Song = Song {
+    name: "La Llorona",
+    origin: "Traditional, Mexico (Isthmus of Tehuantepec)",
+    feel: "Son istmeño",
+    genre: Genre::Folklore,
+    tonic: D,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 100.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Ranchera",
+    band: SONG_AND_GUITAR,
+    style: "Ranchera",
+    parts: &[
+        Part::new(
+            "Intro",
+            "F5:2 E5 D5 E5 F5:4 | _:2 A5 G5 F5 E5 D5 | C5 B4 C5 D5 E5:4 | _:2 G5 F5 E5 D5 C5 | \
+             Bb4 A4 Bb4 C5 D5:4 | _:2 D5 E5 D5 C#5 D5 | E5:4 E5:2 C#5 A4:4 | -:2 A4 B4 C#5 D5 E5 | \
+             F5 E5 D5 E5 F5:4 | _:2 A5 G5 F5 E5 D5 | C5 B4 C5 D5 E5:4 | _:2 G5 F5 E5 D5 C5 | \
+             Bb4 A4 Bb4 C5 D5:4 | _:2 D5 E5 D5 C#5 D5 | E5:4 E5:2 C#5 A4:4 | -:12",
+            "i | i | bVII | bVII | bVI | bVI | V7 | V7 | i | i | bVII | bVII | bVI | bVI | \
+             V7 | V7",
+        ),
+        Part::new("Tag", "A5:4 Bb5 A5 | G5 F5 E5 | D5 -:8", "V7 | V7 | i"),
+        Part::new("Vamp", "-:12 | - | -", "V7 | i | V7"),
+        Part::new(
+            "Verse",
+            "A4:6 A4:2 A4:4 | A4:8 A4:4 | C5 Bb4:6 A4:2 | C5:4 Bb4 - | A4:6 A4:2 A4:4 | \
+             Bb4:8 A4:4 | A4 G4:8 | -:12 | A4:6 A4:2 A4:4 | A4 D5:6 C5:2 | C5:4 Bb4:6 A4:2 | \
+             C5:4 Bb4 - | A4:6 A4:2 A4:4 | Bb4:8 A4:4 | A4 G4:8 | - A4:4",
+            "i | i | iv | iv | i | i | V7 | V7 | i | i | iv | iv | i | i | V7 | V7",
+        ),
+        Part::new(
+            "Refrain",
+            "D5:6 D5:2 D5:4 | F5:8 F5:4 | E5 C5:6 D5:2 | E5:4 C5 - | Bb4:6 Bb4:2 Bb4:4 | \
+             D5:8 D5:4 | C#5 A4:8 | - A4:4 | D5:6 D5:2 D5:4 | F5:8 F5:4 | E5 C5:6 D5:2 | \
+             E5:4 C5 - | Bb4:6 Bb4:2 Bb4:4 | D5:8 D5:4 | C#5 A4:8 | -:12",
+            "i | i | bVII | bVII | bVI | bVI | V7 | V7 | i | i | bVII | bVII | bVI | bVI | \
+             V7 | V7",
+        ),
+    ],
+    form: &[
+        "Intro", "Tag", "Vamp", "Verse", "Refrain", "Verse", "Refrain", "Intro", "Tag",
+    ],
+    drums_from: 0,
+    about: "A slow son from Oaxaca in D minor and in three. The instrumental theme and the \
+            refrain walk down the Andalusian cadence, D minor, C, B flat and A7, two bars to a \
+            chord, while the verse only rocks between D minor, G minor and A7. A7's C sharp \
+            pulls every phrase home to D.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/
+// wikifonia-dataset/original-abc/PacoPerezLunadeXelaju.abc (Wikifonia lead sheet, "Luna de Xelajú, Paco
+// Perez (1917 - 1951)", transcribed by Alberto Betancourt, Vals lento, 1/4 = 120, with words and chords:
+// an intro with first and second endings, two verses in A minor, the intro again, a chorus in A
+// major from a segno, D.S. al Coda). The chords Bm7-5/F, Bm7-5 written as text in the source are
+// iiø7; slash chords are written as the chord itself, except A minor over G sharp, G and F sharp,
+// which are Am(maj7), Am7 and Am6 (imaj7, i7, i6), the same notes. "Fdim", "Cdim", "Ddim" are triads.
+// In bars 102-103 the source has N.C.; the D chord is held. The N.C. pickup bars 9 and 45 get i.
+// The tie from the chorus's last A (bar 116) into the coda (bars 120-121) is kept: the Coda part
+// starts with bar 116 and holds that A on.
+// PD: Paco Pérez, the only author, died in 1951 (https://en.wikipedia.org/wiki/Paco_P%C3%A9rez_(musician))
+pub(super) const LUNA_DE_XELAJU: Song = Song {
+    name: "Luna de Xelajú",
+    origin: "Paco Pérez, 1944",
+    feel: "Vals",
+    genre: Genre::Folklore,
+    tonic: A,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 120.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Waltz",
+    band: Band::new(gm::MARIMBA, gm::MARIMBA, gm::ACOUSTIC_BASS),
+    style: "Waltz",
+    parts: &[
+        Part::new("Pickup", "-:2 B4 C5 D5 C5 B4", "i"),
+        Part::new(
+            "Intro",
+            "D5:2 D5 D5 D5 D5 D5 | D5 C5 B4 C5 D5 B4 | C5 C5 C5 C5 C5 C5 | C5 B4 A4 B4 C5 A4 | \
+             B4 B4 B4 B4 B4 B4 | B4 A4 G#4 A4 B4 C5 | A4 A4 A4 A4 A4 A4",
+            "iv | iv | i | i | V7 | V7 | i",
+        ),
+        Part::new("Intro turn", "A4:2 B4 C5 D5 C5 B4", "i"),
+        Part::new(
+            "Intro end",
+            "A4:6 E4:2 E4:4 | - G4:8 | -:6 E4:2 E4:4 | - G4:8",
+            "i | V7#9 | i | V7#9",
+        ),
+        Part::new(
+            "Verse",
+            "A4:4 G#4 A4 | C5 B4:6 A4:2 | A4:4 G#4:2 - A4:4 | C5 B4:6 A4:2 | A4:4 G#4:2 - A4:4 | \
+             C5 B4 A4 | F4:12 | _:4 -:8 | E4:4 D#4 E4 | G4 F4:6 E4:2 | E4:4 D#4:2 - E4:4 | \
+             G4 F4:6 E4:2 | E4:4 D#4:2 - E4:4 | G4 F4 E4 | E4:12 | -:4 G4:8",
+            "i | imaj7 | i7 | i6 | bVImaj7 | i | iv | iiø7 | V | iiø7 | V | iiø7 | V | \
+             V7 | i | V7#9",
+        ),
+        Part::new(
+            "Verse 2",
+            "A4:4 G#4 A4 | C5 B4:6 A4:2 | A4:4 G#4:2 - A4:4 | C5 B4:6 A4:2 | A4:4 G#4:2 - A4:4 | \
+             C5 B4 A4 | F5:12 | _:4 -:8 | D5:4 D5:6 D5:2 | D5:4 C5 B4 | D5 C5 -:2 C5 | \
+             C5:4 B4 A4 | C5 B4 -:2 B4 | B4:4 A4 G#4 | A4:12",
+            "i | imaj7 | i7 | i6 | bVImaj7 | i | iv | iv | iv | iv | i | i | V7 | V7 | \
+             i",
+        ),
+        Part::new(
+            "Interlude",
+            "-:2 B4 C5 D5 C5 B4 | D5 D5 D5 D5 D5 D5 | D5 C5 B4 C5 D5 B4 | C5 C5 C5 C5 C5 C5 | \
+             C5 B4 A4 B4 C5 A4 | B4 B4 B4 B4 B4 B4 | B4 A4 G#4 A4 B4 C5",
+            "i | iv | iv | i | i | V7 | V7",
+        ),
+        Part::new(
+            "Lead-in",
+            "C#5:12 | _ | _:4 C#5 D5 | E5 D5 C#5",
+            "I | vi7 | ii7 | V7",
+        )
+        .in_key(A, Major)
+        .with_tempo(&[fermata(40, 4)]),
+        Part::new(
+            "Chorus 1",
+            "E5:12 | _ | -:4 A4 B4 | C#5 B4 A4 | C#5:12 | _ | -:4 G#4 A4 | B4 A4 G#4 | \
+             A4 A4:6 A4:2 | A4:4 G#4 F#4 | A4 A4 -:2 A4 | A4:4 G#4 F#4 | D5:12 | _ | -:4 B4 C#5 | \
+             D5 C#5 B4",
+            "I | Imaj7 | I6 | bvi° | I | Imaj7 | I6 | V7 | I | ii7 | I | biii° | ii7 | \
+             ii | V7 | V7",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "Chorus 2",
+            "D5:12 | _ | -:4 G#4 A4 | B4 A4 G#4 | B4:12 | _ | -:4 G#4 A4 | B4 A4 G#4 | \
+             A4 A4:6 A4:2 | A4:4 G#4 F#4 | G#4 G#4 -:2 E4 | E4:4 F#4 G#4 | F#4 -:8 | -:12 | \
+             -:4 C#5 D5 | E5 D5 C#5",
+            "ii | bVII | V7 | V7 | ii | bVII | V7 | V7 | IV6 | ii7 | V7 | V7 | I | V7 | \
+             I | V7",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "Chorus 3",
+            "E5:12 | _ | -:4 A4 B4 | C#5 B4 A4 | C#5:12 | _ | -:4 G#4 A4 | B4 A4 G#4 | \
+             G4 G4:6 G4:2 | G4:4 F#4 E4 | G4 G4 - | G4:2 A4 B4 C#5 E5 C#5 | B4:12 | _ | \
+             -:4 A4 B4 | C5 B4 A4",
+            "I | Imaj7 | I6 | bvi° | I | Imaj7 | vi7 | ii7 | v7 | v7 | I7 | I7 | IV | iv° | \
+             IV | IV",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "Chorus 4",
+            "C5:12 | _ | -:4 A4 B4 | C5 B4 A4 | E5:12 | _ | _:2 - C#5:4 D5 | E5 D5 C#5 | \
+             C#5 B4:6 A#4:2 | B4:4 F#5:6 D5:2 | C#5:4 B4:6 A#4:2 | B4:4 E5:6 C#5:2",
+            "bVI | bVI | bVI | bVI | I | bVII7 | VI7 | VI7 | ii7 | ii7 | V7 | V7",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "Turnaround",
+            "A4:12 | _ | _:2 - C#5:4 D5 | E5 D5 C#5",
+            "I | vi7 | ii7 | V7",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "Coda",
+            "A4:12 | _ | _:4 - E5 | A5 -:8",
+            "I | iv | I I V7 | I",
+        )
+        .in_key(A, Major),
+    ],
+    form: &[
+        "Pickup",
+        "Intro",
+        "Intro turn",
+        "Intro",
+        "Intro end",
+        "Verse",
+        "Verse 2",
+        "Interlude",
+        "Lead-in",
+        "Chorus 1",
+        "Chorus 2",
+        "Chorus 3",
+        "Chorus 4",
+        "Turnaround",
+        "Chorus 1",
+        "Chorus 2",
+        "Chorus 3",
+        "Chorus 4",
+        "Coda",
+    ],
+    drums_from: 1,
+    about: "Guatemala's best-loved waltz, from Quetzaltenango. The verses are in A minor over a \
+            line cliché, one note falling A, G sharp, G, F sharp under the A minor chord, and \
+            the first verse stops on E, rocking between B half-diminished and E; the chorus \
+            turns to A major, the parallel key, and visits chords from outside it: G, F sharp 7, \
+            F major and D minor.",
+};
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201305318.abc
+// (John Chambers' "Los Machetes [G,C]", polka, Mexico, 2/4, in thirds with chord symbols: an intro on
+// D7, a segno, A with a repeat ending at Fine, B with a repeat, a trio in C with a repeat, D.S.).
+// The melody is the upper note of the thirds. Single source (JC's second setting, in A and D, is the
+// same tune a tone higher). The 2/4 bars are paired; the eighth-note pickups that start each
+// repeated strain end the part before. After the D.S. the A strain is played once, to Fine.
+// PD: traditional (JC names no composer; the Hermanos Villarreal recording on Oro 252-B credits only an
+// arrangement, https://frontera.library.ucla.edu/es/node/285999)
+pub(super) const LOS_MACHETES: Song = Song {
+    name: "Los machetes",
+    origin: "Traditional, Mexico",
+    feel: "Polca",
+    genre: Genre::Folklore,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 120.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Polca",
+    band: ACCORDION_BAND,
+    style: "Polca",
+    parts: &[
+        Part::new("Intro", "D5:4 D5 D5 -:2 G5", "V7"),
+        Part::new(
+            "A",
+            "F#5:2 G5 F#5 E5 D5:4 B4:2 D5 | C5 B4 C5 E5 D5:4 B4:2 G5 | F#5 G5 F#5 E5 D5:4 B4:2 D5 | \
+             C5 B4 C5 A4 G4:4 -:2 G5",
+            "V7 I | V7 I | V7 I | V7 I",
+        ),
+        Part::new(
+            "A end",
+            "F#5:2 G5 F#5 E5 D5:4 B4:2 D5 | C5 B4 C5 E5 D5:4 B4:2 G5 | F#5 G5 F#5 E5 D5:4 B4:2 D5 | \
+             C5 B4 C5 A4 G4:4 -",
+            "V7 I | V7 I | V7 I | V7 I",
+        ),
+        Part::new(
+            "B",
+            "B4:2 D5 D5 D5 C5 E5 E5:4 | D5:2 F#5 A5 F#5 G5 B5 B5:4 | B4:2 D5 D5 D5 C5 E5 E5:4 | \
+             D5:2 F#5 A5 F#5 G5 G5 G5 -",
+            "I IV | V7 I | I IV | V7 I",
+        ),
+        Part::new(
+            "Trio",
+            "E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 | D5 E5 F5 G5 A5:4 G5 | \
+             E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 | D5 F5 E5 D5 C5:4 C5:2 -",
+            "I | V7 V7 IV V | I | V7 I",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "Trio to A",
+            "E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 | D5 E5 F5 G5 A5:4 G5 | \
+             E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 E5:1 F5 G5:2 | D5 F5 E5 D5 C5:4 C5:2 G5",
+            "I | V7 V7 IV V | I | V7 I",
+        )
+        .in_key(C, Major),
+    ],
+    form: &[
+        "Intro",
+        "A",
+        "A end",
+        "B",
+        "B",
+        "Trio",
+        "Trio to A",
+        "A end",
+    ],
+    drums_from: 0,
+    about: "A Mexican polka in G major built on only I, IV and V7: the first strain answers D7 \
+            with G in every bar, the second climbs through C. The trio moves to C major, the key \
+            of IV, as polkas and marches do, before the first strain comes back. The polka is in \
+            2/4, two bars to a bar here.",
+};

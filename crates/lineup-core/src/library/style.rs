@@ -1228,6 +1228,19 @@ pub static STYLES: &[Style] = &[
          bar here lasts two bars of 2/4.",
     ),
     style(
+        "Marchinha",
+        Latin,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Offbeat,
+        Bass::RootFifth,
+        116.0,
+        "Marchinha",
+        "Rio's carnival march, sung by the crowds in the street since 1899: a brass band, the \
+         tonic and the dominant, the bass on the beats and the chords between them. Each bar \
+         here lasts two bars of 2/4.",
+    ),
+    style(
         "Ranchera",
         Latin,
         Major,
