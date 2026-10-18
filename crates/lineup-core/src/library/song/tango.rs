@@ -427,3 +427,662 @@ pub(super) const GALLO_CIEGO: Song = Song {
             moved up to D7 and G minor before a scale runs down to D. The second strain, in \
             F major, is all arpeggios, each one leaning on a C sharp.",
 };
+
+/// Six bars of C minor, eight of G7, two of C minor.
+const LAGRIMAS_FIRST_CHORDS: &str =
+    "i | i | i | i | i | i | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | i | i";
+
+/// The answer turns through C7 to F minor and back.
+const LAGRIMAS_SECOND_CHORDS: &str =
+    "i | i | i | i | i | I7 | iv | iv | iv | iv | i | i | V7 | V7 | i | i";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201299835.abc
+// (John Chambers' ABC of 2018, in C minor, with chords; abc_tune_jc_201299836.abc
+// has the same notes laid out differently. Where the score doubles the tune in
+// octaves the lower note is kept, except in bars 21-32, where the upper one
+// joins the line to the thirds of bars 25-28; where it writes thirds or chords
+// the top note is kept. The walking bass under bars 15-16 and 47-48 is written
+// as plain C minor. Bar 56 has an eighth rest where the bar needs a quarter.)
+// PD: Pascual de Gullo died in 1951 (https://viaf.org/viaf/51412200); the tune is
+// dated 1913 in the source and Victor recorded it in 1917 (matrix G-1958,
+// https://adp.library.ucsb.edu/index.php/matrix/refer/600001130).
+pub(super) const LAGRIMAS_Y_SONRISAS: Song = Song {
+    name: "Lágrimas y sonrisas",
+    origin: "Pascual de Gullo, 1913",
+    feel: "Tango vals",
+    genre: Genre::Tango,
+    tonic: C,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 168.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Tango vals",
+    band: TANGO,
+    style: "Vals in minor",
+    parts: &[
+        Part::new(
+            "A1",
+            "G4:4 C5 Eb5 | G5:8 Ab5:4 | G5:12 | _:8 -:4 | G5:4 F5 Eb5 | Eb5 D5 C5 | Eb5:12 | \
+             D5:12 | D5:4 Eb5 F5 | D5 B4 G4 | Ab4:12 | G4:12 | G4:4 B4 C5 | D5 Eb5 B4 | \
+             C5:12 | _:8 -:4",
+            LAGRIMAS_FIRST_CHORDS,
+        ),
+        Part::new(
+            "A2",
+            "G4:4 C5 Eb5 | G5:8 Ab5:4 | G5:12 | _:8 -:4 | G5:4 F#5 G5 | C6:8 C6:4 | C6:12 | \
+             Ab5:12 | Ab5:4 C6 Ab5 | C6 Ab5 C6 | G5 C6 G5 | C6 G5 C6 | G5:12 | B5:12 | C6:12 | \
+             _:4 -:8",
+            LAGRIMAS_SECOND_CHORDS,
+        ),
+        Part::new(
+            "B1",
+            "G5:12 | Eb5:12 | C5:12 | G4:12 | G4:4 C5 D5 | Eb5 D5 C5 | D5:12 | D5:8 -:4 | \
+             Ab5:12 | F5:12 | D5:12 | B4:12 | B4:4 C5 D5 | Eb5:8 D5:4 | C5:12 | _:8 -:4",
+            LAGRIMAS_FIRST_CHORDS,
+        ),
+        Part::new(
+            "B2",
+            "G5:12 | Eb5:12 | C5:12 | G4:12 | G4:4 C5 Eb5 | G4 C5 G4 | Ab4:12 | _:8 -:4 | \
+             Ab5:8 F5:2 D5:2 | Ab4:12 | G5:8 Eb5:2 C5:2 | G4:12 | G4:4 B4 C5 | D5 Eb5 B4 | \
+             C5:12 | _:4 -:8",
+            LAGRIMAS_SECOND_CHORDS,
+        ),
+        Part::new(
+            "C1",
+            "E5:4 G5 E5 | C5 E5 C5 | G4 C5 G4 | E4 G4 E4 | C5 B4 A4 | E5 D5 C5 | \
+             B4:4 -:2 B5:2 B5:4 | B5:4 -:8 | F5:4 A5 F5 | D5 F5 D5 | B4 D5 B4 | G4 B4 G4 | \
+             F4 E4 D4 | A4 G4 F4 | E4:4 -:2 G5:2 G5:4 | C6:4 -:8",
+            "I | I | I | I | I | I | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | I | I",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "C2",
+            "E5:4 G5 E5 | C5 E5 C5 | G4 C5 G4 | E4 G4 E4 | C5 B4 C5 | E5 D5 C5 | \
+             A4:4 -:2 A5:2 A5:4 | A5:4 -:8 | A5:4 G#5 A5 | F5 D5 C5 | G5 F#5 G5 | E5 C5 A4 | \
+             G4:2 A4 B4 C5 D5 E5 | F5:8 B4:4 | C5:12 | _:4 -:8",
+            "I | I | I | I | I | I | IV | IV | IV | ii7 | I | I | V7 | V7 | I | I",
+        )
+        .in_key(C, Major),
+    ],
+    form: &[
+        "A1", "A2", "A1", "A2", "B1", "B2", "B1", "B2", "C1", "C2", "C1", "C2", "A1", "A2", "B1",
+        "B2",
+    ],
+    drums_from: 0,
+    about: "A tango waltz in C minor, felt one beat to the bar. Each minor strain is sixteen \
+            bars of C minor and G7 answered by sixteen that pass through C7 to F minor; the \
+            trio turns to C major, with a D minor seventh before its last cadence. After the \
+            trio both minor strains come back, and the piece ends at the Fine of the second.",
+};
+
+const MEDIA_LUZ_REFRAIN_CHORDS: &str = "I | V7 | V7 | I";
+
+const MEDIA_LUZ_REFRAIN_LAST_CHORDS: &str = "I | V7 | V7 | I V7 I I";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/folktunefinder/abc_tune_folktunefinder_19715.txt
+// (John Chambers' ABC, http://trillian.mit.edu/~jc/music/abc/tango/A_Media_Luz_G.abc,
+// "from an undated edition by O. Di Bella Music Co., New York", in G with chords.
+// Checked against the Wikifonia lead sheet in D:
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/EdgardoDonatoAMediaLuz.abc
+// Where the two differ in the verse, the Di Bella edition is followed.)
+// PD: composed 1925, published 1926 (https://en.wikipedia.org/wiki/A_Media_Luz), before 1930.
+pub(super) const A_MEDIA_LUZ: Song = Song {
+    name: "A media luz",
+    origin: "Edgardo Donato, 1925",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 116.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new("Pickup", "-:6 D5:2 B4:2 G4:2 B4:2 F#5:2", "I"),
+        Part::new(
+            "Refrain",
+            "E5:6 D5:2 B4:2 G4:2 B4:2 E5:2 | D5:6 D5:2 D5:2 E5:2 C5:2 D5:2 | \
+             B4:4 A4:2 C5:2 C5:2 D5:2 B4:2 A4:2 | D5:4 -:2 D5:2 B4:2 G4:2 B4:2 F#5:2",
+            MEDIA_LUZ_REFRAIN_CHORDS,
+        ),
+        Part::new(
+            "Refrain into verse",
+            "E5:6 D5:2 B4:2 G4:2 B4:2 E5:2 | D5:6 D5:2 D5:2 E5:2 C5:2 D5:2 | \
+             B4:4 A4:2 C5:2 C5:2 D5:2 B4:2 A4:2 | G4:2 -:2 D5:2 -:2 G5:2 -:2 D5:4",
+            MEDIA_LUZ_REFRAIN_LAST_CHORDS,
+        ),
+        Part::new(
+            "Verse",
+            "D5:4 Bb4:4 _:4 D5:2 D5:2 | Eb5:4 C5:4 _:4 F#5:4 | F#5:6 D5:2 Eb5:2 D5:4 C#5:2 | \
+             D5:8 -:8 | -:4 Bb4:2 C5:2 D5:2 F5:2 Eb5:2 D5:2 | D5:4 C5:6 -:6 | \
+             -:4 A4:2 Bb4:2 C5:2 Eb5:2 D5:2 C5:2 | Bb4:12 Bb4:4 | C5:2 Bb4:4 C5:2 D5:4 Bb4:4 | \
+             C5:4 A4:12",
+            "i | iv V7 | V7 | i | i | V7 | V7 | i | i | V7",
+        )
+        .in_key(G, HarmonicMinor),
+        Part::new(
+            "Verse end",
+            "C5:4 A4:4 Bb4:2 A4:2 Bb4:2 C5:2 | D5:12 D5:4 | G5:2 G5:4 G5:2 G5:4 F5:4 | \
+             Eb5:4 C5:12 | A5:2 F#5:4 D5:2 Eb5:2 D5:4 C5:2 | D5:4 Bb4:12 | \
+             -:4 Bb4:2 C5:2 D5:2 D5:2 C5:2 Bb4:2 | A4:4 C5:2 C5:2 C5:2 C5:2 Bb4:2 A4:2 | \
+             A4:2 G4:2 Bb4:2 A4:2 C5:2 Bb4:2 A4:2 F#4:2 | G4:4 -:2 D5:2 B4:2 G4:2 B4:2 F#5:2",
+            "V7 | i | I7 | iv | V7 | i | i | V7 | V7 | I",
+        )
+        .in_key(G, HarmonicMinor),
+        Part::new(
+            "Refrain again",
+            "E5:6 D5:2 B4:2 G4:2 B4:2 E5:2 | D5:6 D5:2 D5:2 E5:2 C5:2 D5:2 | \
+             B4:4 A4:2 C5:2 C5:2 D5:2 B4:2 A4:2 | G4:4 -:2 D5:2 B4:2 G4:2 B4:2 F#5:2",
+            MEDIA_LUZ_REFRAIN_CHORDS,
+        ),
+        Part::new(
+            "Refrain end",
+            "E5:6 D5:2 B4:2 G4:2 B4:2 E5:2 | D5:6 D5:2 D5:2 E5:2 C5:2 D5:2 | \
+             B4:4 A4:2 C5:2 C5:2 D5:2 B4:2 A4:2 | G4:2 -:2 D5:2 -:2 G5:2 -:6",
+            MEDIA_LUZ_REFRAIN_LAST_CHORDS,
+        ),
+    ],
+    form: &[
+        "Pickup",
+        "Refrain",
+        "Refrain into verse",
+        "Verse",
+        "Verse end",
+        "Refrain",
+        "Refrain again",
+        "Refrain",
+        "Refrain end",
+    ],
+    drums_from: 1,
+    about: "The refrain is only four bars over G and D7, played twice before the verse and \
+            four times after it. The verse turns to G minor, swinging between G minor and D7, \
+            with a G7 that leads to C minor; its last bar lands on G major for the refrain.",
+};
+
+const ADIOS_A1_CHORDS: &str = "I III7 | IV | V7 | I | I #ii°7 | ii7 | V7 | I";
+
+/// The second half falls through C minor seventh and F7 to B flat minor.
+const ADIOS_A2_CHORDS: &str = "I III7 | IV | V7 | I | v7 I7 | iv | I I II7 V7 | I";
+
+const ADIOS_B_CHORDS: &str = "III7 | vi7 | ii7 V7 | I I7 | IV iv | I #ii°7 | ii7 V7 | I";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/folktunefinder/abc_tune_folktunefinder_619.txt
+// (Michel Bellon's ABC of 2005, in F, no chords; it gives the form: A, B with
+// two endings, D.S. to the Fine at the end of A.)
+// Checked against two Wikifonia lead sheets in C, with chords:
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/JulioSandersRobertLopezPabloTheDreamer.abc
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/JuliusCesarSandersDorcasCochranIGETIDEASWhenIDanceWithYou.abc
+// (Bellon's rhythms are short or long by an eighth in a few bars; the
+// rhythms and the D flat in bar 14 follow the two lead sheets. Chords are
+// from the lead sheets: "Pablo" writes "Eb" (in C) where "I Get Ideas" has
+// "Ebdim", read here as #ii°7; A2's C minor seventh and F7 are from Pablo's
+// second time through, the B flat minor in A2 and B from I Get Ideas.
+// Neither sheet has B's first ending, so its chords (ii7 V7, I) are read
+// from the tune.)
+// PD: composed and published 1927 (https://en.wikipedia.org/wiki/Adi%C3%B3s_muchachos_(song)), before 1930.
+pub(super) const ADIOS_MUCHACHOS: Song = Song {
+    name: "Adiós muchachos",
+    origin: "Julio César Sanders, 1927",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 120.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new("Pickup", "-:10 C5:2 C5:2 C5:2", "I"),
+        Part::new(
+            "A1",
+            "A5:2 F5:2 F5:2 F5:2 G5:2 E5:2 E5:2 E5:2 | F5:4 D5:4 -:2 G5:2 G5:2 F5:2 | \
+             F5:4 E5:4 -:2 F5:2 F5:2 E5:2 | D5:4 C5:4 -:2 C5:2 B4:2 C5:2 | \
+             F5:2 C5:2 B4:2 C5:2 E5:2 C5:2 B4:2 C5:2 | D5:4 Bb4:4 -:2 C5:2 B4:2 C5:2 | \
+             E5:2 C5:2 B4:2 C5:2 D5:2 Bb4:2 A4:2 Bb4:2 | C5:4 A4:4 -:2 C5:2 C5:2 C5:2",
+            ADIOS_A1_CHORDS,
+        ),
+        Part::new(
+            "A2",
+            "A5:2 F5:2 F5:2 F5:2 G5:2 E5:2 E5:2 E5:2 | F5:4 D5:4 -:2 G5:2 G5:2 F5:2 | \
+             F5:4 E5:4 -:2 F5:2 F5:2 E5:2 | D5:4 C5:4 -:2 F5:2 F5:2 C5:2 | \
+             C5:2 Bb4:2 Bb4:2 A4:2 A4:2 G4:2 G4:2 F4:2 | C5:4 Bb4:4 -:2 Db5:2 Bb4:2 G4:2 | \
+             G4:2 F4:2 E4:2 F4:2 A4:4 G4:4 | F4:4 -:2 A4:2 Bb4:2 A4:2 G#4:2 A4:2",
+            ADIOS_A2_CHORDS,
+        ),
+        Part::new(
+            "B",
+            "F5:2 E5:4 A4:2 Bb4:2 A4:2 G#4:2 A4:2 | E5:2 D5:4 C5:2 D5:2 C5:2 B4:2 C5:2 | \
+             F5:2 E5:4 C5:2 D5:2 E5:2 F5:2 G5:2 | A5:4 -:2 F5:2 G5:2 F5:2 E5:2 F5:2 | \
+             A5:2 G5:4 F5:2 Db5:4 Bb4:4 | G5:2 F5:4 C5:2 B4:2 C5:2 E5:2 D5:2 | \
+             D5:2 C5:4 C5:2 B4:2 C5:2 E5:2 D5:2 | C5:4 -:2 A4:2 Bb4:2 A4:2 G#4:2 A4:2",
+            ADIOS_B_CHORDS,
+        ),
+        Part::new(
+            "B end",
+            "F5:2 E5:4 A4:2 Bb4:2 A4:2 G#4:2 A4:2 | E5:2 D5:4 C5:2 D5:2 C5:2 B4:2 C5:2 | \
+             F5:2 E5:4 C5:2 D5:2 E5:2 F5:2 G5:2 | A5:4 -:2 F5:2 G5:2 F5:2 E5:2 F5:2 | \
+             A5:2 G5:4 F5:2 Db5:4 Bb4:4 | G5:2 F5:4 C5:2 B4:2 C5:2 E5:2 D5:2 | \
+             C5:2 Bb4:4 D5:2 A4:4 G4:4 | F4:4 -:6 C5:2 C5:2 C5:2",
+            ADIOS_B_CHORDS,
+        ),
+        Part::new(
+            "A2 fine",
+            "A5:2 F5:2 F5:2 F5:2 G5:2 E5:2 E5:2 E5:2 | F5:4 D5:4 -:2 G5:2 G5:2 F5:2 | \
+             F5:4 E5:4 -:2 F5:2 F5:2 E5:2 | D5:4 C5:4 -:2 F5:2 F5:2 C5:2 | \
+             C5:2 Bb4:2 Bb4:2 A4:2 A4:2 G4:2 G4:2 F4:2 | C5:4 Bb4:4 -:2 Db5:2 Bb4:2 G4:2 | \
+             G4:2 F4:2 E4:2 F4:2 A4:4 G4:4 | F4:4 -:12",
+            ADIOS_A2_CHORDS,
+        ),
+    ],
+    form: &["Pickup", "A1", "A2", "B", "B end", "A1", "A2 fine"],
+    drums_from: 1,
+    about: "Each phrase of the first strain starts with three repeated notes and a fall, over \
+            F and A7, then B flat and C7; the second half sinks through C minor seventh and F7 \
+            to B flat minor, a chord borrowed from F minor. The second strain starts on A7 \
+            and D minor and climbs back to F through G minor and C7.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/JuanDeDiosFilibertoCaminito.abc
+// (Wikifonia lead sheet in E with chords, moved up a fourth to A. In the
+// refrain's second phrase the sheet's chords are one bar out of place and
+// read F for F sharp; they follow the first phrase, which has the same tune.
+// Its F sharp chord (B once moved to A) is a plain triad, so the chart has II.)
+// PD: published in Buenos Aires by Pirovano about 1926 (Universidad Nacional de Quilmes
+// library, https://biblio.unq.edu.ar/qfind/Record/438) and recorded by Carlos Gardel that
+// year (https://en.wikipedia.org/wiki/Caminito_(song)), before 1930.
+pub(super) const CAMINITO: Song = Song {
+    name: "Caminito",
+    origin: "Juan de Dios Filiberto, 1926",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: A,
+    mode: Major,
+    time: COMMON,
+    tempo: 108.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new(
+            "Intro",
+            "E5:2 E5:4 E5:2 A5:4 E5:2 C#5:2 | D5:2 D5:4 F5:2 A5:4 F5:2 D5:2 | \
+             E5:2 E5:4 E5:2 G#5:4 E5:2 D5:2 | A4:4 C#5:2 E5:2 A4:2 C5:2 -:4",
+            "I | iv | V7 | I",
+        ),
+        Part::new(
+            "Verse",
+            "E5:4 E5:2 E5:2 E5:4 E5:2 E5:2 | F5:4 E5:2 E5:2 G5:4 F5:2 E5:2 | \
+             E5:4 D5:2 D5:2 D5:4 D5:2 C#5:2 | D5:8 -:4 D5:2 D5:2 | \
+             D5:4 C5:2 C5:2 C5:4 B4:2 B4:2 | B4:8 -:4 B4:2 B4:2 | \
+             B4:4 A4:2 A4:2 A4:4 B4:2 A4:2 | G#4:8 -:4 A4:2 C5:2 | \
+             E5:4 E5:2 E5:2 E5:4 E5:2 E5:2 | F5:4 E5:2 E5:2 G5:4 F5:2 E5:2 | \
+             E5:4 E5:2 E5:2 E5:4 F5:2 G5:2 | F5:8 -:4 F5:2 F5:2 | \
+             F5:4 F5:2 F5:2 E5:2 D#5:2 -:4 | E5:8 -:4 D5:2 D5:2 | \
+             D5:4 C5:2 C5:2 C5:4 B4:2 B4:2",
+            "i V7 | i | i I7 | iv | iv | ii°7 | iv II7 | V7 | i V7 | i | I7 | iv | iv | i | V7",
+        )
+        .in_key(A, HarmonicMinor),
+        Part::new(
+            "Bridge",
+            "A4:4 -:2 E5:2 F#5:4 E5:2 D#5:2 | E5:4 A5:4 E5:4 D5:4 | \
+             C#5:4 A5:4 E5:4 D5:2 C#5:2 | D5:2 C#5:4 C#5:2 B4:6 B4:2",
+            "I | I V7 | I V7 | V7",
+        ),
+        Part::new(
+            "Refrain",
+            "A4:4 A4:2 C#5:2 E5:6 E5:2 | E5:16 | B4:2 C#5:2 D5:6 D5:2 -:4 | C#5:16 | \
+             -:4 A4:2 A4:2 F#5:6 E5:2 | E5:8 D5:8 | -:4 E4:2 E4:2 C#5:6 B4:2 | A4:8 -:8 | \
+             A4:4 A4:2 C#5:2 E5:6 E5:2 | E5:16 | -:4 B4:2 C#5:2 D5:6 E5:2 | C#5:16 | \
+             -:4 A4:2 C#5:2 F#5:6 E5:2 | E5:8 D5:8 | -:4 E4:2 E4:2 C#5:6 B4:2 | A4:8 -:8",
+            "I | V7 | V7 | I | I II | V7 | V7 | I | I | V7 | V7 | I | I II | V7 | V7 | I",
+        ),
+    ],
+    form: &["Intro", "Verse", "Bridge", "Refrain"],
+    drums_from: 0,
+    about: "A tango-canción in three colours: the introduction in A major, the verse in A \
+            minor, where the harmony leans on D minor with a B diminished seventh and B7 on \
+            the way to E7, and the refrain back in A major on just A, E7 and B major, its \
+            long notes held over whole bars.",
+};
+
+const BOEDO_B_CHORDS: &str = "V7 | I | III | vi | IV | I | V7 | I";
+
+const BOEDO_C_CHORDS: &str = "V7 | I | III7 | vi | IV | I | V7 | I";
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/JulioDeCaroBoedo.abc
+// (Wikifonia lead sheet in D with chords, moved down a step to C. Its bar 41 is
+// a quarter short and follows the same bar of the repeat, bar 49; the half bar
+// that ends the second strain is filled out with a half rest.)
+// PD: premiered on 8 October 1928
+// (https://www.todotango.com/english/history/chronicle/337/Boedo-Story-of-the-tango-Boedo/)
+// and recorded by De Caro's orchestra that year (Victor BAVE-44378, Victor 80999,
+// https://adp.library.ucsb.edu/index.php/matrix/refer/800018508), out before 1930; no
+// dated printed edition was found.
+pub(super) const BOEDO: Song = Song {
+    name: "Boedo",
+    origin: "Julio De Caro, 1928",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 116.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new("Pickup", "-:6 B4:2 C5:2 E5:2 G5:2 C6:2", "I"),
+        Part::new(
+            "Intro",
+            "B4:2 D5:2 G5:2 B5:2 A4:2 C5:2 F5:2 A5:2 | G4:2 C5:2 E5:2 G5:2 F4:2 A4:2 C5:2 F5:2 | \
+             E4:2 G4:2 C5:2 E5:2 D4:2 F4:2 G4:2 B4:2",
+            "V IV | I IV | I V7",
+        ),
+        Part::new(
+            "A1",
+            "C5:4 -:2 C5:2 B4:2 D5:2 C5:4 | -:2 G4:2 F#4:2 A4:2 G4:6 C#4:2 | \
+             E4:2 D4:4 A4:2 G#4:2 B4:2 A4:4 | -:2 F4:2 E4:2 G4:2 F4:6 B3:2 | \
+             D4:2 C4:4 G4:2 F#4:2 A4:2 G4:4 | -:2 E4:2 D#4:2 F4:2 E4:6 C4:2 | \
+             B3:2 C4:2 C#4:2 D4:2 G4:2 G4:2 G5:4 | B4:2 C5:2 C#5:2 D5:2 G5:2 F#5:4 F5:2",
+            "I | I | ii | V7 | I | I | V | V",
+        ),
+        Part::new(
+            "A2",
+            "E5:4 -:2 C5:2 B4:2 D5:2 C5:4 | -:2 G4:2 F#4:2 A4:2 G4:6 C#4:2 | \
+             E4:2 D4:4 A4:2 G#4:2 B4:2 A4:4 | -:2 F4:2 E4:2 G4:2 F4:6 B3:2 | \
+             D4:2 C4:4 G4:2 F#4:2 A4:2 G4:4 | -:2 E5:2 D#5:2 F5:2 E5:4 C5:4 | \
+             D5:2 C5:4 B4:2 A4:4 B4:2 C5:2 | E5:2 D5:4 C5:2 B4:4 A4:2 G4:2 | \
+             C5:8 -:4 G5:2 F#5:2",
+            "I | I | ii | V7 | I | I7 | IV | V7 | I",
+        ),
+        Part::new(
+            "B1",
+            "F#5:2 F5:2 F5:2 E5:2 E5:2 D5:2 B4:2 G4:2 | D5:2 Db5:2 C5:4 -:4 E5:2 D#5:2 | \
+             D#5:2 D5:2 D5:2 C5:2 C5:2 B4:2 G#4:2 E4:2 | B4:2 Bb4:2 A4:4 -:2 C5:2 B4:2 A4:2 | \
+             F4:2 A4:2 D5:2 F5:2 A5:2 C6:2 B5:2 A5:2 | A5:2 G5:2 G5:2 Gb5:2 F5:2 E5:2 D5:2 C5:2 | \
+             B4:2 A4:2 G4:2 F4:2 E4:2 G4:2 F4:2 E4:2 | D4:2 Db4:2 C4:4 -:4 G5:2 F#5:2",
+            BOEDO_B_CHORDS,
+        ),
+        Part::new(
+            "B2",
+            "F#5:2 F5:2 F5:2 E5:2 E5:2 D5:2 B4:2 G4:2 | D5:2 Db5:2 C5:4 -:4 E5:2 D#5:2 | \
+             D#5:2 D5:2 D5:2 C5:2 C5:2 B4:2 G#4:2 E4:2 | B4:2 Bb4:2 A4:4 -:2 C5:2 B4:2 A4:2 | \
+             F4:2 A4:2 D5:2 F5:2 A5:2 C6:2 B5:2 A5:2 | A5:2 G5:2 G5:2 Gb5:2 F5:2 E5:2 D5:2 C5:2 | \
+             B4:2 A4:2 G4:2 F4:2 E4:2 G4:2 F4:2 D4:2 | C4:8 -:8",
+            BOEDO_B_CHORDS,
+        ),
+        Part::new(
+            "C1",
+            "G4:4 G5:4 F5:2 D5:2 A4:2 B4:2 | C5:8 -:4 D#4:4 | E4:4 E5:4 D5:2 B4:2 F#4:2 G#4:2 | \
+             A4:8 -:4 G4:4 | F4:4 A4:4 D5:2 F5:2 E5:2 D5:2 | G5:10 E5:2 D5:2 C5:2 | \
+             G5:10 F5:2 E5:2 D5:2 | G5:6 E5:2 C5:2 B4:2 A4:2 Ab4:2",
+            BOEDO_C_CHORDS,
+        ),
+        Part::new(
+            "C2",
+            "G4:4 G5:4 F5:2 D5:2 A4:2 B4:2 | C5:8 -:4 D#4:4 | E4:4 E5:4 D5:2 B4:2 F#4:2 G#4:2 | \
+             A4:8 -:4 G4:4 | F4:4 A4:4 D5:2 F5:2 E5:2 D5:2 | G5:10 E5:2 D5:2 C5:2 | \
+             G5:8 F5:2 G4:2 G5:2 E5:2 | C5:8 -:8",
+            BOEDO_C_CHORDS,
+        ),
+    ],
+    form: &["Pickup", "Intro", "A1", "A2", "B1", "B2", "C1", "C2"],
+    drums_from: 1,
+    about: "De Caro's tango is full of half steps. The first strain winds down chromatically \
+            over C, D minor and G7; the second runs down whole bars of eighth notes over G7, C, \
+            E and A minor; the third leaps between low and high notes over the same circle, \
+            G7, C, E7, A minor, F, before the cadence.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/AnselmaAietaAlmaenPena.abc
+// (Wikifonia lead sheet with chords, in F sharp minor and A major. Its bars are
+// 2/4 bars of sixteenth notes, written here two to a bar; the bridge has five,
+// so its last bar is filled out with rests. The sheet has no chord on the
+// bridge's first beat, where the verse lands on F sharp; F sharp minor is
+// read there from the tune.)
+// PD: 1928 (https://todotango.com/english/artists/biography/1017/Anselmo-Aieta); Columbia
+// recorded it in New York in 1929 (matrix W97070, Columbia 3506-X,
+// https://frontera.library.ucla.edu/es/node/212618; Columbia's matrices W96970
+// and W97263 date from January and July 1929), so it was out before 1930; no dated
+// printed edition was found.
+pub(super) const ALMA_EN_PENA: Song = Song {
+    name: "Alma en pena",
+    origin: "Anselmo Aieta, 1928",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: FSharp,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 96.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new("Pickup", "-:8 -:2 F#4:1 E#4:1 F#4:1 G#4:1 A4:1 A#4:1", "i"),
+        Part::new(
+            "Verse",
+            "B4:2 -:1 F#5:1 E#5:1 G#5:2 F#5:1 D5:1 B4:2 F#5:1 D5:1 B4:2 F#5:1 | \
+             C#5:1 A4:2 D5:1 C#5:1 A4:2 F#5:1 C#5:1 A4:2 D5:1 C#5:1 A4:2 F#4:1 | \
+             B4:1 G#4:2 C#5:1 B4:1 G#4:2 B4:1 C#5:1 B4:2 C#5:1 B4:1 G#4:2 B4:1 | \
+             A4:2 -:6 -:2 F#4:1 E#4:1 F#4:1 G#4:1 A4:1 A#4:1 | \
+             B4:2 -:1 F#5:1 E#5:1 G#5:2 F#5:1 D5:1 B4:2 F#5:1 D5:1 B4:2 F#5:1 | \
+             C#5:1 A4:2 D5:1 C#5:1 A4:2 F#5:1 C#5:1 A4:2 D5:1 C#5:1 A4:2 F#5:1 | \
+             B4:1 G#4:2 C#5:1 B4:1 G#4:2 B4:1 A4:1 F#4:2 A4:1 G#4:1 E#4:2 G#4:1",
+            "iv | i | V7 | i | iv | i | V7 V7 i V7",
+        ),
+        Part::new(
+            "Bridge",
+            "F#4:2 -:2 A5:1 F#5:1 D5:1 B4:1 G#5:1 E5:1 C#5:1 A4:1 F#5:1 D5:1 B4:1 G#4:1 | \
+             E5:2 -:2 F5:1 C5:1 A4:1 F4:1 E5:1 C#5:1 A4:1 E4:1 C#5:1 B4:1 G#4:1 E4:1 | \
+             A4:2 -:6 -:8",
+            "vi IV iii ii | V bVI I V7 | I",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "Refrain",
+            "C#5:1 E4:2 E4:1 C#5:1 B#4:1 C#5:1 D5:1 C#5:1 E4:2 E4:1 C#5:1 B#4:1 C#5:1 D5:1 | \
+             B4:1 E4:2 E4:1 B#4:1 A#4:1 B#4:1 C#5:1 A4:2 E4:6 | \
+             C#5:1 E4:2 E4:1 C#5:1 B#4:1 C#5:1 D5:1 C#5:1 E4:2 E4:1 C#5:1 B#4:1 C#5:1 D5:1 | \
+             B4:1 E4:2 E4:1 B#4:1 A#4:1 B#4:1 C#5:1 A4:4 -:1 A4:1 B4:1 C#5:1 | \
+             D5:1 D5:2 D5:1 D5:2 C#5:1 B#4:1 D5:1 C#5:2 B#4:1 C#5:2 B4:1 A#4:1 | \
+             C#5:1 B4:2 A#4:1 B4:2 A4:1 G#4:1 B4:2 A4:2 -:1 A4:1 B4:1 C#5:1 | \
+             D5:1 D5:2 D5:1 D5:2 C#5:1 B#4:1 D5:1 C#5:2 B#4:1 C#5:2 B4:1 A#4:1 | \
+             C#5:1 B4:2 A#4:1 B4:2 A4:1 G#4:1 B4:2 A4:2 -:1 A4:1 B4:1 C#5:1 | \
+             D5:1 D5:2 D5:1 D5:2 C#5:1 B#4:1 D5:1 C#5:2 B#4:1 C#5:2 B4:1 A#4:1 | \
+             C#5:1 B4:2 A#4:1 B4:2 A4:1 G#4:1 A4:4 -:4",
+            "I | V7 I | I | V7 I | IV I | V7 I | IV I | V7 I | IV I | V7 I",
+        )
+        .in_key(A, Major),
+    ],
+    form: &["Pickup", "Verse", "Bridge", "Refrain"],
+    drums_from: 1,
+    about: "The verse in F sharp minor is all syncopation, a sixteenth, an eighth and a \
+            sixteenth again and again, over B minor, F sharp minor and C sharp 7. A bridge of \
+            falling arpeggios leads to the refrain in A major, where chromatic neighbour notes \
+            circle each note of the chord over D, A and E7.",
+};
+
+const AMANECER_A_CHORDS: &str = "V7 | i | V7 | i | iv | i | V7 | i";
+
+/// The last bar closes C minor, G7, C minor.
+const AMANECER_A_END_CHORDS: &str = "V7 | i | V7 | i | iv | i | V7 | i V7 i i";
+
+/// The tune: a rest, three rising eighths, a rest, three falling.
+const AMANECER_A_TUNE: &str = "-:2 D5:2 Eb5:2 F5:2 -:2 F5:2 Eb5:2 D5:2 | \
+                               -:2 C5:2 D5:2 Eb5:2 -:2 Eb5:2 D5:2 C5:2 | \
+                               -:2 D5:2 Eb5:2 F5:2 -:2 F5:2 Eb5:2 D5:2 | \
+                               -:2 C5:2 D5:2 Eb5:2 -:2 Eb5:2 D5:2 C5:2 | \
+                               -:2 F5:2 G5:2 Ab5:2 -:2 Ab5:2 G5:2 F5:2 | \
+                               -:2 Eb5:2 F5:2 G5:2 -:2 G5:2 F5:2 Eb5:2 | \
+                               -:2 D5:2 Eb5:2 F5:2 -:2 F5:2 Eb5:2 D5:2 | C5:4 -:12";
+
+const AMANECER_A_END_TUNE: &str = "-:2 D5:2 Eb5:2 F5:2 -:2 F5:2 Eb5:2 D5:2 | \
+                                   -:2 C5:2 D5:2 Eb5:2 -:2 Eb5:2 D5:2 C5:2 | \
+                                   -:2 D5:2 Eb5:2 F5:2 -:2 F5:2 Eb5:2 D5:2 | \
+                                   -:2 C5:2 D5:2 Eb5:2 -:2 Eb5:2 D5:2 C5:2 | \
+                                   -:2 F5:2 G5:2 Ab5:2 -:2 Ab5:2 G5:2 F5:2 | \
+                                   -:2 Eb5:2 F5:2 G5:2 -:2 G5:2 F5:2 Eb5:2 | \
+                                   -:2 D5:2 Eb5:2 F5:2 -:2 F5:2 Eb5:2 D5:2 | C5:4 G5:4 C6:4 -:4";
+
+// Source: https://github.com/baobach/abc_search/blob/master/database/abc/QmQhzsujKd7PVGVaK1fDP9zvd7johEkbHGBns9otY499gW.abc
+// (Javier Tucat Moreno's piano arrangement in C minor, www.tangoalpiano.com; the
+// tune is the top note of the right hand, and the chords are read from his left
+// hand. His eight-bar introduction, the first strain an octave up, "based on
+// Beba Pugliese's arrangement", is left out, and four bars he gives to the left
+// register are written an octave up, where the lead sheet below has them.)
+// Checked against the Wikifonia lead sheet:
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/RobertoFirpoElAmanecer.abc
+// (its three strains match Tucat's; its trio keeps the C minor key signature but
+// its chords, C and G, agree with Tucat's change to C major. After its final bar
+// line it has 22 more bars without chords, an 8-bar slow phrase and 14 bars of
+// arpeggios with two empty bars; no second source has them, so they are left out.)
+// PD: composed 1910; published in Rio de Janeiro by Futuro das Moças in 1917
+// (https://imslp.org/wiki/El_amanecer_(Firpo,_Roberto)), before 1930.
+pub(super) const EL_AMANECER: Song = Song {
+    name: "El amanecer",
+    origin: "Roberto Firpo, 1910",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: C,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 96.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new("A", AMANECER_A_TUNE, AMANECER_A_CHORDS),
+        Part::new(
+            "B",
+            "G5:6 F#5:2 G5:6 F#5:2 | G5:4 -:2 F5:2 F5:2 E5:2 F5:4 | F5:6 E5:2 F5:6 G5:2 | \
+             F5:4 -:2 Eb5:2 Eb5:2 D5:2 Eb5:4 | G4:2 C5:4 D5:2 Eb5:6 F5:2 | \
+             Eb5:4 -:2 D5:2 D5:2 C#5:2 D5:4 | -:4 F5:4 D5:4 G4:4 | Ab4:6 G4:2 G4:2 F#4:2 G4:4 | \
+             -:2 G5:4 F#5:2 G5:6 F#5:2 | G5:4 -:2 F5:2 F5:2 E5:2 F5:4 | -:2 F5:4 E5:2 F5:6 G5:2 | \
+             F5:4 -:2 Eb5:2 Eb5:2 D5:2 Eb5:4 | -:2 D5:4 Eb5:2 F5:2 Eb5:2 D5:2 C5:2 | \
+             B4:4 G4:2 Ab4:2 Bb4:2 Ab4:2 G4:2 F4:2 | -:4 C5:4 -:4 B4:4 | C5:4 -:12",
+            "i | V7 | V7 | i | i | i V7 | V7 | i | i | V7 | V7 | i | iiø7 | V7 | i V7 | i",
+        ),
+        Part::new(
+            "C",
+            "G4:4 C5:4 -:2 G4:2 A4:2 G4:2 | F4:4 B4:4 D5:4 -:4 | F4:4 B4:4 -:2 F4:2 B4:2 F4:2 | \
+             E4:4 G4:4 C5:4 -:4 | G4:4 E5:6 D#5:2 E5:2 F5:2 | E5:6 D5:2 D5:2 C#5:2 D5:4 | \
+             F4:4 D5:6 C#5:2 D5:2 E5:2 | D5:2 C5:4 B4:2 C5:4 -:4 | \
+             G4:4 C5:4 -:2 G4:2 A4:2 G4:2 | F4:4 B4:4 D5:4 -:4 | F4:4 B4:4 -:2 F4:2 B4:2 F4:2 | \
+             E4:4 G4:4 C5:4 -:4 | -:2 Ab4:2 C5:2 Eb5:2 Ab5:4 Ab5:4 | G5:4 -:12 | -:16 | \
+             -:4 Eb4:4 D4:4 C4:4",
+            "I | V7 | V7 | I | I | V7 | V7 | I | I | V7 | V7 | I | bVI | V7 | V7 | i",
+        )
+        .in_key(C, Major),
+        Part::new("A end", AMANECER_A_END_TUNE, AMANECER_A_END_CHORDS),
+    ],
+    form: &["A", "B", "C", "A end"],
+    drums_from: 0,
+    about: "The first strain is one small figure, a rest, three rising eighths, a rest, three \
+            falling, moved over G7, C minor and F minor. The second holds long G's over C minor \
+            and G7, and the third turns to C major; its last phrase goes from an A flat chord \
+            to G7, where the tune rests for a bar, and back to C minor for the first strain.",
+};
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201244558.abc
+// (John Chambers' ABC in A minor, with chords and the form "A1 B A2 C A2"; A2 is
+// his "alternate form of A". One typo, "Z3B" for "z3B", is read as a rest. The
+// low E3 in the first strain and the high D6 in A2 are as he writes them. The
+// second strain's E minor chord is written E7 where the tune has G sharp. His
+// "n.c." (the band stops) after the first beat of bar 15 of A1 and A2 is held as
+// A minor, as a chart cannot stop; the A2 bar he marks "often omitted" is kept.)
+// PD: dated 1919 in the source; Victor recorded it on 25 August 1920 (matrix
+// B-24403, Victor 72805, https://adp.library.ucsb.edu/index.php/matrix/refer/700009617),
+// so it was out well before 1930; no dated printed edition was found.
+pub(super) const A_LA_GRAN_MUNECA: Song = Song {
+    name: "A la gran muñeca",
+    origin: "Jesús Ventura, 1919",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: A,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 116.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new(
+            "A1",
+            "E4:4 E4:2 F#4:2 G#4:4 G#4:2 A4:2 | B4:4 B4:2 C5:2 D5:2 D5:2 C5:2 B4:2 | \
+             A4:4 A4:2 B4:2 C5:4 C5:2 D5:2 | E5:4 F4:2 F4:2 E4:2 E4:2 C4:2 A3:2 | \
+             E3:4 E4:2 F#4:2 G#4:4 G#4:2 A4:2 | B4:4 B4:2 C5:2 D5:2 D5:2 C5:2 B4:2 | \
+             A4:4 A4:2 B4:2 C5:4 A4:2 B4:2 | C5:4 A4:2 B4:2 C5:2 B4:2 A4:2 B4:2 | \
+             A4:4 A4:2 B4:2 C#5:4 C#5:2 D5:2 | E5:4 E5:2 F5:2 G5:2 G5:2 F5:2 E5:2 | \
+             D5:4 D5:2 E5:2 F5:4 F5:2 G5:2 | A5:4 F5:2 E5:2 D5:2 E5:2 F5:2 A5:2 | \
+             A5:2 E5:2 C5:2 D5:2 E5:2 F5:2 E5:2 F5:2 | E5:2 D5:2 B4:2 C5:2 D5:2 E5:2 C5:2 B4:2 | \
+             A4:4 B4:2 C5:2 D5:2 E5:2 C5:2 B4:2 | A4:4 -:8 C5:2 B4:2",
+            "V7 | V7 | i | i | V7 | V7 | i | i | I7 | I7 | iv | iv | i | V7 | i | i V7 i i",
+        ),
+        Part::new(
+            "B",
+            "B4:4 A4:2 A4:2 A4:4 C5:2 B4:2 | B4:4 A4:8 A4:2 B4:2 | C5:4 C5:2 C5:2 C5:4 D5:2 C5:2 | \
+             E5:4 B4:8 B4:2 C5:2 | D5:4 D5:2 C5:2 B4:4 B4:2 A4:2 | A4:4 G#4:8 B4:2 A4:2 | \
+             G#4:4 G#4:2 F4:2 E4:4 E4:2 D4:2 | C4:4 -:8 C5:2 B4:2 | \
+             B4:4 A4:2 A4:2 A4:4 C5:2 B4:2 | B4:4 A4:8 E5:2 D5:2 | \
+             C#5:4 C#5:2 Bb4:2 A4:4 A4:2 G4:2 | F4:4 -:8 D4:2 F4:2 | \
+             Bb4:4 Bb4:2 Bb4:2 Bb4:4 C5:2 Bb4:2 | A4:4 E4:4 -:4 E4:2 F4:2 | \
+             E4:4 G#4:2 A4:2 B4:4 C5:2 B4:2 | A4:4 -:8 E4:4",
+            "i | i | i | v | v | V7 | V7 | i | i | i | I7 | iv | bII | i | V7 | i V7 i i",
+        ),
+        Part::new(
+            "A2",
+            "E4:6 G#4:2 B4:6 C5:2 | D5:6 E5:2 F5:6 E5:2 | A5:4 E5:12 | A5:8 -:8 | \
+             E4:6 G#4:2 B4:6 C5:2 | D5:6 E5:2 F5:6 E5:2 | A5:4 E5:12 | A5:8 -:8 | \
+             E5:6 C#5:1 D5:1 E5:6 F5:2 | G5:6 A5:2 Bb5:6 A5:2 | D6:4 A5:12 | \
+             -:4 F5:2 E5:2 D5:2 E5:2 F5:2 A5:2 | A5:2 E5:2 C5:2 D5:2 E5:2 F5:2 E5:2 F5:2 | \
+             E5:2 D5:2 B4:2 C5:2 D5:2 E5:2 C5:2 B4:2 | A4:4 B4:2 C5:2 D5:2 E5:2 C5:2 B4:2 | \
+             A4:4 -:8 E4:4",
+            "V7 | V7 | i | i | V7 | V7 | i | i | I7 | I7 | iv | iv | i | V7 | i | i V7 i i",
+        ),
+        Part::new(
+            "C",
+            "C#5:6 C#5:2 C#5:4 D5:2 C#5:2 | E5:8 B4:8 | -:4 B4:2 C#5:2 D5:2 C#5:2 D5:2 E5:2 | \
+             D5:8 C#5:8 | -:4 C5:2 B4:2 B4:2 A4:2 G#4:2 A4:2 | C5:8 B4:8 | \
+             -:4 B4:2 C5:2 D5:2 D5:2 C5:2 B4:2 | E5:8 -:8 | C#5:6 C#5:2 C#5:4 D5:2 C#5:2 | \
+             E5:8 B4:8 | -:6 B4:2 C#5:2 C#5:2 D5:2 E5:2 | E5:8 D5:8 | \
+             F4:4 F4:2 F4:2 F4:2 F4:2 G4:2 F4:2 | A4:8 E4:6 F4:2 | E4:4 G#4:2 A4:2 B4:4 C5:2 B4:2 | \
+             A4:4 -:8 E4:4",
+            "I | V7 | V7 | I | i | v | v | i | I | V7 | I7 | IV | iv | i | V7 | i V7 i i",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "A2 fine",
+            "E4:6 G#4:2 B4:6 C5:2 | D5:6 E5:2 F5:6 E5:2 | A5:4 E5:12 | A5:8 -:8 | \
+             E4:6 G#4:2 B4:6 C5:2 | D5:6 E5:2 F5:6 E5:2 | A5:4 E5:12 | A5:8 -:8 | \
+             E5:6 C#5:1 D5:1 E5:6 F5:2 | G5:6 A5:2 Bb5:6 A5:2 | D6:4 A5:12 | \
+             -:4 F5:2 E5:2 D5:2 E5:2 F5:2 A5:2 | A5:2 E5:2 C5:2 D5:2 E5:2 F5:2 E5:2 F5:2 | \
+             E5:2 D5:2 B4:2 C5:2 D5:2 E5:2 C5:2 B4:2 | A4:4 B4:2 C5:2 D5:2 E5:2 C5:2 B4:2 | \
+             A4:4 -:12",
+            "V7 | V7 | i | i | V7 | V7 | i | i | I7 | I7 | iv | iv | i | V7 | i | i V7 i i",
+        ),
+    ],
+    form: &["A1", "B", "A2", "C", "A2 fine"],
+    drums_from: 0,
+    about: "The first strain climbs from E up the A melodic minor scale, with F sharp and G \
+            sharp, over E7 and A minor, falls to a low E and climbs again; its middle goes \
+            through A7 to D minor. The second strain dips to E minor and E7 and to B flat, the \
+            Neapolitan chord of A minor, and the trio turns to A major, slipping back to A \
+            minor in its second phrase.",
+};
