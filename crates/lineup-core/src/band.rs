@@ -1259,6 +1259,34 @@ impl Project {
     /// parts following the sheet: the band's notes moved with everything
     /// else, which is not an edit of yours.
     pub(crate) fn moving_the_band<R>(&mut self, change: impl FnOnce(&mut Project) -> R) -> R {
+        self.keeping_parts(|_, _| true, change)
+    }
+
+    /// Runs `change`, which removes channel `index`, and keeps the band's
+    /// parts that play nothing on it following the sheet: the channels
+    /// after it are numbered one lower, which is not an edit of yours. A
+    /// part that played on it lost those notes, and is frozen.
+    pub(crate) fn removing_channel<R>(
+        &mut self,
+        index: usize,
+        change: impl FnOnce(&mut Project) -> R,
+    ) -> R {
+        let plays_on_it = |project: &Project, player: Player| {
+            project
+                .patterns
+                .iter()
+                .any(|pattern| pattern.player == Some(player) && !pattern.notes(index).is_empty())
+        };
+        self.keeping_parts(|project, player| !plays_on_it(project, player), change)
+    }
+
+    /// Runs `change`, and afterwards takes what the parts that followed
+    /// the sheet before it, and that `keep` picks, are as the band's own.
+    fn keeping_parts<R>(
+        &mut self,
+        keep: impl Fn(&Project, Player) -> bool,
+        change: impl FnOnce(&mut Project) -> R,
+    ) -> R {
         let following: Vec<Player> = Player::ALL
             .into_iter()
             .filter(|&player| {
@@ -1266,6 +1294,7 @@ impl Project {
                     .as_ref()
                     .is_some_and(|band| band.written[player.index()].is_some())
                     && !self.is_frozen(player)
+                    && keep(self, player)
             })
             .collect();
         let result = change(self);
@@ -2166,6 +2195,55 @@ mod tests {
     }
 
     #[test]
+    fn no_chord_silences_every_style() {
+        // Styles that play a chord note by note (arpeggios, Alberti bass,
+        // montunos) once divided by the number of notes of N.C.: none.
+        for style in band_styles() {
+            let mut project = Project::with_band();
+            project.set_band_style(Some(style));
+            write(&mut project, &["C", "N.C.", "G7", "C"]);
+            let bar = project.meter().bar(1);
+            for player in [Player::Piano, Player::Bass, Player::Guitar] {
+                assert!(
+                    part(&project, player)
+                        .iter()
+                        .all(|&(at, ..)| !(bar.start..bar.end()).contains(&at)),
+                    "{} {player:?} plays in a bar of N.C.",
+                    style.name
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_slow_blues_plays_four_beats_of_three() {
+        // 12/8: four dotted-quarter beats a bar, at steps 0, 6, 12 and
+        // 18. The bass is on every beat and nowhere off the eighths, and
+        // the piano plays eighths, three to a beat.
+        let mut project = Project::with_band();
+        project.set_band_style(BandStyle::named("Slow blues"));
+        write(&mut project, &["C7", "F7"]);
+        assert_eq!(project.time_signature, TimeSignature::new(12, 8));
+        let bass: Vec<usize> = part(&project, Player::Bass)
+            .iter()
+            .map(|&(at, ..)| at)
+            .filter(|&at| at < 24)
+            .collect();
+        for beat in [0, 6, 12, 18] {
+            assert!(bass.contains(&beat), "no bass on step {beat}: {bass:?}");
+        }
+        assert!(bass.iter().all(|at| at % 2 == 0), "{bass:?}");
+        let piano: Vec<usize> = part(&project, Player::Piano)
+            .iter()
+            .map(|&(at, ..)| at)
+            .filter(|&at| at < 24)
+            .collect();
+        for eighth in (0..24).step_by(2) {
+            assert!(piano.contains(&eighth), "no chord on step {eighth}");
+        }
+    }
+
+    #[test]
     fn a_style_in_three_puts_the_song_in_three() {
         let mut project = Project::with_band();
         write(&mut project, &["C", "G7", "C", "C"]);
@@ -2203,6 +2281,61 @@ mod tests {
         assert_eq!(project.patterns(), before.patterns());
         assert_eq!(project.playlist().clips(), before.playlist().clips());
         assert_eq!(project.playlist().tracks(), before.playlist().tracks());
+    }
+
+    #[test]
+    fn deleting_a_channel_of_the_song_leaves_the_band_following() {
+        let song = SONGS.iter().find(|song| song.name == "Ode to Joy").unwrap();
+        let mut project = song_demo(song);
+        let before = project.clone();
+        project.set_band_style(BandStyle::named("Bossa nova"));
+        // The song's own keys, before the band's channels: every band
+        // channel moves down one.
+        let keys = project
+            .channels()
+            .iter()
+            .position(|c| c.name == KEYS)
+            .unwrap();
+        let since = project.band().unwrap().since;
+        assert!(keys < since);
+        let piano = project.player_channel(Player::Piano).unwrap();
+        project.remove_channel(keys);
+        assert_eq!(project.player_channel(Player::Piano), Some(piano - 1));
+        assert!(Player::ALL.iter().all(|&player| !project.is_frozen(player)));
+        // The band still plays what is typed.
+        let bar = project.meter().bar(1);
+        let markers = read_bar("Ab", &bar, project.scale).unwrap();
+        project.set_chords(bar.start, bar.end(), &markers);
+        assert!(project.follow_chord_sheet());
+        let in_bar = |player| {
+            let mut classes: Vec<u8> = part(&project, player)
+                .into_iter()
+                .filter(|&(at, ..)| (bar.start..bar.end()).contains(&at))
+                .map(|(_, _, midi)| midi % 12)
+                .collect();
+            classes.sort_unstable();
+            classes.dedup();
+            classes
+        };
+        assert_eq!(in_bar(Player::Piano), [0, 3, 8], "Ab C Eb");
+        assert!(in_bar(Player::Bass).contains(&8));
+        // And takes all its channels with it when it stops.
+        project.stop_band();
+        let mut channels = before.channels().to_vec();
+        channels.remove(keys);
+        assert_eq!(project.channels(), channels);
+    }
+
+    #[test]
+    fn deleting_a_players_channel_freezes_only_that_part() {
+        let mut project = Project::with_band();
+        write(&mut project, &["C", "F", "G", "C"]);
+        let piano = project.player_channel(Player::Piano).unwrap();
+        project.remove_channel(piano);
+        assert!(project.is_frozen(Player::Piano));
+        assert!(!project.is_frozen(Player::Bass));
+        assert!(!project.is_frozen(Player::Drums));
+        assert!(!project.is_frozen(Player::Guitar));
     }
 
     #[test]

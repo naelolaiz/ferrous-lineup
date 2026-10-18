@@ -23,7 +23,7 @@ use lineup_core::ChordQuality;
 use lineup_core::ear_training::{
     CHORD_QUALITIES, ChordPool, ChordQuestion, Cue, Direction, EarSettings, Exercise, Interval,
     IntervalQuestion, KeyChoice, PROGRESSION_LENGTHS, PROGRESSION_TEMPOS, Players,
-    ProgressionQuestion, Score, duration,
+    ProgressionQuestion, Score, duration, next_seed,
 };
 use lineup_core::harmony::keys::ChordKey;
 
@@ -198,7 +198,7 @@ impl EarTraining {
         let settings = &self.settings;
         let mut next = None;
         for _ in 0..8 {
-            self.seed = self.seed.wrapping_add(0x9E37_79B9_7F4A_7C15);
+            self.seed = next_seed(self.seed);
             let seed = self.seed;
             let asked = match settings.exercise {
                 Exercise::Intervals => Asked::Interval {
@@ -431,8 +431,8 @@ impl EarTraining {
                 Exercise::Intervals => "Two notes play. How far apart are they?",
                 Exercise::Chords => "A chord plays. What kind of chord is it?",
                 Exercise::Progressions => {
-                    "The band plays a few chords in a key, starting at home (I). \
-                     What are the others?"
+                    "The band plays a few chords in a key, starting at home (I, or i in \
+                     a minor key). What are the others?"
                 }
             };
             ui.label(RichText::new(text).size(15.0));
@@ -453,9 +453,11 @@ impl EarTraining {
             let prompt = match &self.asked {
                 Some(Asked::Interval { .. }) => "What interval is this?".to_string(),
                 Some(Asked::Chord { .. }) => "What kind of chord is this?".to_string(),
-                Some(Asked::Progression { question, .. }) => {
-                    format!("In {}: what are the chords after I?", question.scale.name())
-                }
+                Some(Asked::Progression { question, .. }) => format!(
+                    "In {}: what are the chords after {}?",
+                    question.scale.name(),
+                    question.keys[0].numeral
+                ),
                 None => String::new(),
             };
             ui.label(RichText::new(prompt).size(16.0).strong());
@@ -477,7 +479,10 @@ impl EarTraining {
                 }
                 Some(Asked::Progression { question, .. }) => {
                     let key = theme::light_button(ui, "Hear the key", false, None);
-                    if theme::hint(key, "I, IV, V and I: where home is").clicked() {
+                    // I, IV, V and I; in a minor key i, iv, V and i.
+                    let [home, four, five] = [0, 3, 4].map(|degree| &question.keys[degree].numeral);
+                    let hint = format!("{home}, {four}, {five} and {home}: where home is");
+                    if theme::hint(key, hint).clicked() {
                         let cues = question.key_cues();
                         self.play(cues, None, actions);
                     }

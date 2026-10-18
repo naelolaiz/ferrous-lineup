@@ -11,7 +11,7 @@
 
 use eframe::egui;
 use lineup_audio::{Command, PlayMode};
-use lineup_core::{LoopRegion, Player, Tempo, TimeSignature};
+use lineup_core::{LoopRegion, Player, STEPS_PER_BEAT, Tempo, TimeSignature};
 use serde::{Deserialize, Serialize};
 
 use super::LineupApp;
@@ -97,10 +97,11 @@ impl Practice {
         }
     }
 
-    /// Notes a tap at `now` seconds. Returns the tempo of the taps so
-    /// far, rounded to a whole BPM, once there are two, and whether it
-    /// carries on from an earlier tap's tempo.
-    fn tap(&mut self, now: f64) -> Option<(Tempo, bool)> {
+    /// Notes a tap at `now` seconds, on beats `quarters` quarter notes
+    /// long. Returns the tempo of the taps so far, in quarter notes a
+    /// minute (the tempo's unit) rounded to a whole BPM, once there are
+    /// two, and whether it carries on from an earlier tap's tempo.
+    fn tap(&mut self, now: f64, quarters: f64) -> Option<(Tempo, bool)> {
         if self.taps.last().is_none_or(|&last| now - last > TAP_GAP) {
             self.taps.clear();
         }
@@ -113,7 +114,7 @@ impl Practice {
         if beats == 0 || last <= first {
             return None;
         }
-        let bpm = (60.0 * beats as f64 / (last - first)).round() as f32;
+        let bpm = (60.0 * quarters * beats as f64 / (last - first)).round() as f32;
         Some((Tempo::new(bpm), self.taps.len() > 2))
     }
 }
@@ -170,7 +171,7 @@ impl LineupApp {
 
     /// Loops `region` of the song, from its start, or plays the whole
     /// song again, carrying on from where the playhead is in it.
-    fn loop_bars(&mut self, region: Option<LoopRegion>) {
+    pub(super) fn loop_bars(&mut self, region: Option<LoopRegion>) {
         let before = self.project.playlist().loop_region();
         let here = self.playhead().unwrap_or(self.cursor);
         self.edit("set loop", |project| project.set_loop_region(region));
@@ -216,7 +217,13 @@ impl LineupApp {
     /// A tap of the Tap button: two or more in a row set the song's
     /// tempo to theirs, as one undo step.
     pub(super) fn tap_tempo(&mut self, now: f64) {
-        let Some((tempo, carries_on)) = self.practice.tap(now) else {
+        // The taps follow the beats the metronome clicks, which are not
+        // always quarter notes: a dotted quarter in 6/8, an eighth in
+        // 7/8 (on average, as its beats are uneven), a half note in 2/2.
+        let time = self.project.time_signature;
+        let beats = time.beat_starts().len().max(1);
+        let quarters = time.steps_per_bar() as f64 / beats as f64 / f64::from(STEPS_PER_BEAT);
+        let Some((tempo, carries_on)) = self.practice.tap(now, quarters) else {
             self.notice = Some("Tap again on every beat to set the tempo".to_string());
             return;
         };
@@ -310,15 +317,19 @@ mod tests {
     #[test]
     fn taps_set_the_tempo_of_their_beats() {
         let mut practice = practice();
-        assert_eq!(practice.tap(10.0), None, "one tap is not a tempo yet");
+        assert_eq!(practice.tap(10.0, 1.0), None, "one tap is not a tempo yet");
         // Half a second apart: 120 BPM.
-        assert_eq!(practice.tap(10.5), Some((Tempo::new(120.0), false)));
+        assert_eq!(practice.tap(10.5, 1.0), Some((Tempo::new(120.0), false)));
         // A little uneven, as hands are: the average is taken.
-        assert_eq!(practice.tap(11.02), Some((Tempo::new(118.0), true)));
-        assert_eq!(practice.tap(11.5), Some((Tempo::new(120.0), true)));
+        assert_eq!(practice.tap(11.02, 1.0), Some((Tempo::new(118.0), true)));
+        assert_eq!(practice.tap(11.5, 1.0), Some((Tempo::new(120.0), true)));
         // After a pause, counting starts again.
-        assert_eq!(practice.tap(20.0), None);
-        assert_eq!(practice.tap(21.0), Some((Tempo::new(60.0), false)));
+        assert_eq!(practice.tap(20.0, 1.0), None);
+        assert_eq!(practice.tap(21.0, 1.0), Some((Tempo::new(60.0), false)));
+        // In 6/8 the beat is a dotted quarter: 80 beats a minute are 120
+        // quarter notes.
+        assert_eq!(practice.tap(30.0, 1.5), None);
+        assert_eq!(practice.tap(30.75, 1.5), Some((Tempo::new(120.0), false)));
     }
 
     #[test]
@@ -326,13 +337,13 @@ mod tests {
         let mut practice = practice();
         let mut now = 0.0;
         for _ in 0..10 {
-            practice.tap(now);
+            practice.tap(now, 1.0);
             now += 1.0;
         }
         // Then faster: the slow taps drop out of the average.
         let mut last = None;
         for _ in 0..TAPS {
-            last = practice.tap(now);
+            last = practice.tap(now, 1.0);
             now += 0.5;
         }
         assert_eq!(last.map(|(tempo, _)| tempo), Some(Tempo::new(120.0)));

@@ -390,6 +390,7 @@ impl LineupApp {
         self.cursor = 0;
         self.marker = 0;
         self.piano_roll = PianoRoll::new(super::first_synth(&self.project));
+        self.chord_sheet.new_song();
         self.harmony_keys.forget_chords();
         self.key_finder.new_project(&self.project, Vec::new());
         self.message = None;
