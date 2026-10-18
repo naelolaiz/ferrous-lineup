@@ -1057,14 +1057,23 @@ pub(super) const MOONLIGHT_SONATA: Song = Song {
 };
 
 // Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BachJS/BWV1068/bach-air/bach-air-lys/bach-air-notes.ly
-// (Mutopia 242, from the Bach-Gesellschaft edition: violin I and continuo)
+// (Mutopia 242, from the Bach-Gesellschaft edition: all four parts)
 const AIR_ENDING: &str = "C#5:2 B4 B4:1 C#5 D5:6 C#5:2 B4 | A4:16";
-const AIR_B_END: &str = "D5:12 F#5:2 E5 | E5:12 G5:2 F#5 | F#5:12 A5:2 G5 | G5:16 | A4:10 C#5:2 E5 G5 | \
-             G5:2 E5 F#5:10 G5:1 A5 | D5:10 F#5:2 A5 C6 | B5:12 D5:4 | C#5:2 E5 G5:8 B4:4 | \
-             A4:4 E5:2 F#5:1 G5:3 F#5:4 E5:2 | D5:1 C#5 B4:4 C#5:2 D5:4 C#5:2 D5 | D5:16";
-const AIR_B_END_LEFT: &str = "F#2:4 F#3 G3 G2 | G#2:4 G#3 A3 A2 | A#2:4 A#3 B3 B2 | E3:4 E4 D4 D3 | \
-             C#3:4 C#4 A3 C#4 | D4:4 D3 C3 C4 | B3:4 B2 A2 A3 | G3:4 G2 F#2 F#3 | \
-             E3:4 E2 D2 D3 | C#3:4 A2 D3 G3 | A3:4 G3 A3 A2 | D2:16";
+const AIR_B_END: &str = "D5:12 F#5:2 E5 | E5:12 G5:2 F#5 | F#5:12 A5:2 G5 | G5:16 | \
+             A4:10 C#5:2 E5 G5 | G5 E5 F#5:10 G5:1 A5 | D5:10 F#5:2 A5 C6 | B5:12 D5:4 | \
+             C#5:2 E5 G5:8 B4:4 | A4 E5:2 F#5:1 G5:3 F#5:4 E5:2 | \
+             D5:1 C#5 B4:4 C#5:2 D5:4 C#5:2 D5 | D5:16";
+const AIR_B_END_LEFT: &str = "A4:4 B4:2 C5 B4 C#5 D5:4 | _ C#5:2 B4 C#5 D#5 E5:4 | \
+             _ D#5:2 C#5 D#5 E5 F#5:4 | _:2 D#5 E5 B4 E4:8 | _:2 C#4 E4 A4 C#5:4 A4 | \
+             _ C#5:2 D5 D4:8 | _:4 E4 F#4:8 | G4:16 | _:4 B4 E5:8 | _:2 D5 C#5 B4 A4:4 B4 | \
+             A4:8 G4:2 F#4 G4:4 | F#4:16 & A3:4 D4:8 B3:4 | _ E4:8 C#4:4 | _ F#4:8 D#4:4 | \
+             B3:10 B4:2 G4 E4 | A4:4 G4 F#4 E4 | D4:8 A4 | _:4 G4 A4:8 | D4:16 | \
+             E4:2 B3 E4 G4 B4 A4 G4 F#4 | E4:4 A4:8 G4:4 | F#4:8 E4:4 A3 | \
+             A3:16 & F#2:4 F#3 G3 G2 | G#2 G#3 A3 A2 | A#2 A#3 B3 B2 | E3 E4 D4 D3 | \
+             C#3 C#4 A3 C#4 | - D3 C3 C4 | B3 B2 A2 A3 | G3 G2 F#2 F#3 | E3 E2 D2 D3 | \
+             C#3 A2 D3 G3 | A3 G3 A3 A2 | D2:16";
+const AIR_B_END_CHORDS: &str = "D/F# G | E7/G# A | F#7/A# B | Em Em/D | A7/C# A7 | D D7/C | \
+             G/B D7/A | G G/F# | Em Em/D | A/C# A/C# D G | D/A A7/G A7sus4 A7 | D";
 
 pub(super) const AIR_ON_THE_G_STRING: Song = Song {
     name: "Air on the G String",
@@ -1076,61 +1085,83 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
     time: COMMON,
     tempo: 72.0,
     comping: Comping::Held,
-    bass: Bass::Held,
+    bass: Bass::None,
     rhythm: "",
-    band: Band::new(gm::VIOLIN, gm::CELLO, gm::CONTRABASS),
+    band: Band::new(gm::VIOLIN, gm::STRING_ENSEMBLE, gm::CONTRABASS),
     style: "Hymn",
     parts: &[
         Part::new(
             "A",
-            "F#5:16 | _:16 | _:4 B5:2 G5 E5 D5 C#5 D5 | C#5:8 A4 | A5:16 | \
+            "F#5:16 | _ | _:4 B5:2 G5 E5 D5 C#5 D5 | C#5:8 A4 | A5:16 | \
              _:2 F#5 C5 B4 E5 D#5 A5 G5 | G5:16 | _:2 E5 B4 A4 D5 C#5 G5 F#5 | \
              F#5:12 G#5:2 A5 | D5:4 D5:1 E5 F#5:4 E5:2 E5 D5",
-            "",
+            "D D/C# | Bm Bm/A | Gmaj7 E7/G# | A A7/G | F#m7b5 Am/E | B7/D# B7 | Em Em/D | \
+             A7/C# A7 | D D D/C# A/C# | Bm7 E/G#",
         )
         .with_left(
-            "D3:4 D4 C#4 C#3 | B2:4 B3 A3 A2 | G2:4 G3 G#3 G#2 | A2:4 A3 G3 G2 | \
-             F#2:4 F#3 E3 E2 | D#2:4 D#3 B2 B3 | E2:4 E3 D3 D2 | C#2:4 C#3 A2 A3 | \
-             D3:4 D4 C#4 C#3 | B2:4 B3 G#3 E3",
+            "D5:16 | _ | _:8 B4 | A4:16 | _:4 C5:2 B4 C5:4 A5:2 C5 | B4:4 -:12 | \
+                    B4:4 E5:2 D5 E5 F#5 G5 E5 | A4:4 -:12 | A4:16 | \
+                    _:4 G#4:2 A4 B4:4 G#4 & A4:16 | B4 | B3:8 E4 | E4:16 | _:4 D#4 D#4 E4 | \
+                    F#4 -:12 | E4:4 B3 B3 E4 | E4 -:12 | D4 E4:4 | \
+                    F#4 D4 B3 E4 & D3:4 D4 C#4 C#3 | B2 B3 A3 A2 | G2 G3 G#3 G#2 | \
+                    A2 A3 G3 G2 | F#2 F#3 E3 E2 | D#2 D#3 B2 B3 | E2 E3 D3 D2 | \
+                    C#2 C#3 A2 A3 | D3 D4 C#4 C#3 | B2 B3 G#3 E3",
         ),
-        // The A part ends in A major, the dominant: G sharp in bar 9, and
-        // a cadence in A.
-        Part::new("First ending", AIR_ENDING, "")
-            .with_left("A3:4 D3 E3 E2 | A2:2 B2 C#3 D3 E3 G3 F#3 E3")
+        // The first half ends in A major, the dominant: G sharp in bar 9,
+        // and a cadence in A.
+        Part::new("First ending", AIR_ENDING, "A D E7sus4 E | A A7/E")
+            .with_left(
+                "A4:4 A4 A4 G#4 | E4:16 & E4:4 F#4 B3 E4 | C#4:16 & A3:4 D3 E3 E2 | \
+                    A2:2 B2 C#3 D3 E3 G3 F#3 E3",
+            )
             .in_key(A, Major),
-        Part::new("Second ending", AIR_ENDING, "")
-            .with_left("A3:4 D3 E3 E2 | A2:16")
+        Part::new("Second ending", AIR_ENDING, "A D E7sus4 E | A")
+            .with_left("A4:4 A4 A4 G#4 | E4:16 & E4:4 F#4 B3 E4 | C#4:16 & A3:4 D3 E3 E2 | A2:16")
             .in_key(A, Major),
-        // B goes through three keys: E minor (C and D sharp), B minor
-        // (A sharp, a cadence in bar 8) and A major (G sharp, a cadence in
-        // bar 12), before "B end" turns back to D.
+        // The second half goes through three keys: E minor (C and D
+        // sharp), B minor (A sharp, a cadence in bar 8) and A major (G
+        // sharp, a cadence in bar 12), before "B end" turns back to D.
         Part::new(
             "B in E minor",
-            "C#5:10 D5:1 C#5 B4 C#5 A4:2 | A5:12 C5:4 | B4:4 B5:6 A5:2 G5 F#5 | \
+            "C#5:10 D5:1 C#5 B4 C#5 A4:2 | A5:12 C5:4 | B4 B5:6 A5:2 G5 F#5 | \
              G5:9 F#5:1 E5 D5 C#5:2 B4",
-            "",
+            "A A7/G | F#m7b5 F#m7b5/E | B/D# B/F# | Em Em/D",
         )
-        .with_left("A2:4 A3 G3 G2 | F#2:4 F#3 E3 E2 | D#2:4 D#3 F#3 B2 | E3:4 E4 D4 D3")
+        .with_left(
+            "E4:16 | _:4 D#4:2 E4 F#4:8 | _:2 G4 A4 F#4 D#4:4 B4 | B4:8 B3 & A4:16 | \
+                    _:2 B4 C5:6 B4:2 A4 G4 | F#4:12 D#5:4 | E5:16 & A2:4 A3 G3 G2 | \
+                    F#2 F#3 E3 E2 | D#2 D#3 F#3 B2 | E3 E4 D4 D3",
+        )
         .in_key(E, HarmonicMinor),
         Part::new(
             "B in B minor",
-            "A#4:2 B4 C#5:6 D5:2 E5:4 | _:2 F#5 G5:8 F#5:4 | \
-             E5:2 D5 C#5 B4 C#5 D5:1 E5 D5:4 | B4:16",
-            "",
+            "A#4:2 B4 C#5:6 D5:2 E5:4 | _:2 F#5 G5:8 F#5:4 | E5:2 D5 C#5 B4 C#5 D5:1 E5 D5:4 | \
+             B4:16",
+            "F#7/C# Em/B | F#7/A# F#/C# | Bm G Em F# | Bm Bm/A",
         )
-        .with_left("C#3:4 C#4 B3 B2 | A#2:4 B2 C#3 A#2 | B2:4 G3 E3 F#3 | B2:4 B3 A3 A2")
+        .with_left(
+            "E5:16 | _:2 D5 C#5 B4 A#4 B4 C#5:4 | B4 B4 B4 A#4 | \
+                    F#4:16 & C#3:4 C#4 B3 B2 | A#2 B2 C#3 A#2 | B2 G3 E3 F#3 | \
+                    B2 B3 A3 A2 & C#4:2 D4 E4 F#4 G4 F#4 G4 E4 | F#4:4 E4:2 D4 C#4:4 F#4 | \
+                    F#4 E4:2 D4 G4:4 F#4:2 E4 | D4:16",
+        )
         .in_key(B, HarmonicMinor),
         Part::new(
             "B in A major",
-            "D5:10 F#5:2 E5 D5 | B5:12 A5:2 G#5 | E5:2 A5 A4:4 B4:6 C#5:1 D5 | C#5:6 B4:2 A4:8",
-            "",
+            "D5:10 F#5:2 E5 D5 | B5:12 A5:2 G#5 | E5 A5 A4:4 B4:6 C#5:1 D5 | C#5:6 B4:2 A4:8",
+            "E7/G# D/F# | E E7/D | A/C# A/C# Bm7/D E | A A7/G",
         )
-        .with_left("G#2:4 G#3 F#3 F#2 | E2:4 E3 D3 D2 | C#2:4 C#3 D3 E3 | A2:4 A3 G3 G2")
+        .with_left(
+            "E4:8 F#4 | B3:4 E4:2 F#4 G#4 A4 B4:4 | _ A4:8 G#4:4 | \
+                    A4:16 & B3:4 B4 A4:2 G#4 A4:4 | G#4:6 -:2 E4:8 | _:4 E4 F#4 E4 | \
+                    E4:6 D4:2 C#4 D4 E4 C#4 & G#2:4 G#3 F#3 F#2 | E2 E3 D3 D2 | \
+                    C#2 C#3 D3 E3 | A2 A3 G3 G2",
+        )
         .in_key(A, Major),
-        Part::new("B end", AIR_B_END, "").with_left(AIR_B_END_LEFT),
-        // The second time round is the end of the piece: the last note
+        Part::new("B end", AIR_B_END, AIR_B_END_CHORDS).with_left(AIR_B_END_LEFT),
+        // The second time round is the end of the piece: the last chord
         // has the Air's only fermata.
-        Part::new("Last end", AIR_B_END, "")
+        Part::new("Last end", AIR_B_END, AIR_B_END_CHORDS)
             .with_left(AIR_B_END_LEFT)
             .with_tempo(&[fermata(176, 16)]),
     ],
@@ -1150,11 +1181,15 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
     ],
     drums_from: 0,
     about: "The first violin's long held notes, each one breaking into quick figures, over \
-            the continuo's bass in steady octave leaps, here on the Keys channel; the inner \
-            parts are left out. The bass walks down the D major scale under the first held \
-            F sharp, as in Pachelbel's Canon. The first half ends in A major; the second \
-            passes through E minor, B minor and A major before it finds D again. Each bar of Bach's is written as two bars \
-            with the note values doubled, so his thirty-second notes fit in sixteenths.",
+            the continuo's bass in steady octave leaps; the second violin and the viola \
+            fill in the harmony between them, here with the continuo on the Keys channel as \
+            a string section. The bass walks down the D major scale under the first held F \
+            sharp, as in Pachelbel's Canon. The first half ends in A major; the second \
+            passes through E minor, B minor and A major before it finds D again, and both \
+            halves are repeated as Bach marks them. Each bar of Bach's is written as two \
+            bars with the note values doubled, so his thirty-second notes fit in \
+            sixteenths. The three grace notes are left out, and a note held from one part \
+            into the next is played again where the next part starts.",
 };
 
 // Source: https://raw.githubusercontent.com/baobach/abc_search/main/database/abc/QmfHw5KYvE3na6LB6W77W5KqiSuhtgqPdkLmr4tuWFUowx.abc
