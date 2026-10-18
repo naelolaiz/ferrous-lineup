@@ -173,7 +173,8 @@ const CHOCLO_B_INTO_C_TUNE: &str = "F5:1 F5:2 F5:1 G5 F5 E5 D#5 F5:1 E5:2 B4:1 D
                                      D5:1 D5:2 D5:1 E5 D5 C5 B4 D5:2 C5 -:1 C5 D5 C5 | \
                                      B4:1 A4 G#4 A4 B4 C5 D5 D#5 E5:2 -:3 E4:1 E5 C#5";
 
-/// The third strain, with its first ending (the pickup back into C).
+/// The third strain, with its first ending: "D.C.", and the E E F pickup
+/// that starts the tango again.
 const CHOCLO_C_TUNE: &str = "A4:1 E4 -:1 C#5:1 A4 E4 A4 C#5 D5:2 B4 -:1 E4 D5 B4 | \
                               G#4:1 E4 -:1 G#4:1 E4 G#4 B4 D5 C#5:2 A4 -:1 E4 C#5 B4 | \
                               A#4:1 F#4 F4 F#4 G#4 A#4 B4 C#5 E5:2 D5 -:1 B4 A#4 B4 | \
@@ -181,7 +182,7 @@ const CHOCLO_C_TUNE: &str = "A4:1 E4 -:1 C#5:1 A4 E4 A4 C#5 D5:2 B4 -:1 E4 D5 B4
                               A4:1 E4 -:1 C#5:1 A4 E4 A4 C#5 D5:2 B4 -:1 E4 D5 B4 | \
                               G#4:1 E4 -:1 G#4:1 E4 G#4 B4 D5 C#5:2 A4 -:1 E4 C#5 B4 | \
                               A#4:1 F#4 F4 F#4 G#4 A#4 B4 C#5 E5:2 D5 -:1 F#4 D5 C#5 | \
-                              C#5:1 B4 A#4 B4 F#4 A4 G#4 B4 A4:2 -:3 E4:1 E5 C#5";
+                              C#5:1 B4 A#4 B4 F#4 A4 G#4 B4 A4:2 -:3 E4:1 E4 F4";
 
 /// The same with its second ending.
 const CHOCLO_C_END_TUNE: &str = "A4:1 E4 -:1 C#5:1 A4 E4 A4 C#5 D5:2 B4 -:1 E4 D5 B4 | \
@@ -196,6 +197,12 @@ const CHOCLO_C_END_TUNE: &str = "A4:1 E4 -:1 C#5:1 A4 E4 A4 C#5 D5:2 B4 -:1 E4 D
 // Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201261939.abc
 // (John Chambers' ABC of 2005, in A minor; checked note for note against
 // Eugen Pîrvu's piano ABC in D minor, https://github.com/baobach/abc_search/blob/master/database/abc/QmdGRGR4MjTJrRJp95QHxCsTao9ZVvDioyd6cVFCUZiuNe.abc)
+// Form, as Chambers writes it: A once, B twice, then C, whose first ending says
+// "D.C."; back at the start the repeats are not taken again, so A, B once and C
+// with its second ending close the piece in A major. Other editions end
+// differently (Wikifonia's lead sheet and Pîrvu go back to A and stop there).
+// PD: Villoldo died in 1919 (the source's header: 1868-1919); IMSLP also holds a
+// 1913 printing, O Malho, Rio de Janeiro (https://imslp.org/wiki/El_Choclo_(Villoldo%2C_%C3%81ngel_Gregorio)).
 pub(super) const EL_CHOCLO: Song = Song {
     name: "El Choclo",
     origin: "Ángel Villoldo, 1903",
@@ -229,27 +236,38 @@ pub(super) const EL_CHOCLO: Song = Song {
         Part::new("C", CHOCLO_C_TUNE, CHOCLO_C_CHORDS).in_key(A, Major),
         Part::new("C end", CHOCLO_C_END_TUNE, CHOCLO_C_CHORDS).in_key(A, Major),
     ],
-    form: &["Pickup", "A", "B", "B into C", "C", "C end"],
+    form: &[
+        "Pickup", "A", "B", "B into C", "C", "A", "B into C", "C end",
+    ],
     drums_from: 1,
     about: "The oldest tango still played everywhere, first heard in Buenos Aires in 1903. \
             The first strain runs up and down A minor and E7 in sixteenth notes, each phrase \
             ending in a rest and a three-note pickup; the second leans on C major, and the \
-            third turns to A major with a circle of fifths, F#7, B minor, B7, E7. Villoldo's \
-            tangos were still half milonga, so the bass plays the 3 + 3 + 2 here.",
+            third turns to A major with a circle of fifths, F#7, B minor, B7, E7, before the \
+            whole tango comes round once more to end in A major. Villoldo's tangos were \
+            still half milonga, so the bass plays the 3 + 3 + 2 here.",
 };
 
 const CUMPARSITA_A_CHORDS: &str = "V7 | i | V7 | i | iv | i | V7 | i";
 
-const CUMPARSITA_B_CHORDS: &str = "i viø7 | i V7 | iiø7 V7 | V7 i | i viø7 | i iv | iv i | V7 i";
+const CUMPARSITA_B_CHORDS: &str = "i | i V7 | V7 | V7 i | i | i iv | iv i | V7 i";
 
-/// Two bars of G minor and D7 twice over, then the minor's own seventh chords.
-const CUMPARSITA_C_CHORDS: &str =
-    "i V7 i I7 | iv7 bVII7 bIII V7 | i V7 i I7 | iv7 bVII7 bIII V7 | i V7 | V7 i | i V7 | V7 i";
+/// G minor answered by C minor, twice; then a sequence that steps down over
+/// D7 and G minor.
+const CUMPARSITA_C_CHORDS: &str = "i | iv i | i | iv i | i V7 | V7 i | i V7 | V7 i";
 
 // Source: https://github.com/cellist/Lilypond-Sheet-Music/blob/master/Vlc,%20Vlc,%20Vlc/Rodr%C3%ADguez,%20Gerardo%20Hernan%20Matos/La%20Cumparsita/v1.ily
 // (a cello trio in G minor, written with German note names, so "b" is B flat;
-// checked against Javier Tucat Moreno's piano ABC, parts A, B and C:
-// https://github.com/baobach/abc_search/blob/master/database/abc/QmXRLueCMcCeFVavmPohAW9vVJe6MXUsamdGb5QLN1KS4x.abc)
+// the chords are read from its two lower cellos. Its form is |: A :| Fine,
+// |: B :|, |: C :|, D.C. al Fine; back at the start the repeat is not taken.
+// Left out: the trio's two-bar lead-in and the G minor chords it strikes in
+// the last bar of A and of C, which the band plays. The trio takes the second
+// half of B an octave below the first; here it is an octave above, as in
+// Eugen Pîrvu's piano ABC, which has A and B:
+// https://github.com/baobach/abc_search/blob/master/database/abc/QmXqK3udSEJjr51sd3k7mHyBkRP2JuM1bK3oNdgNdEjcjn.abc
+// C checked against Pablo Moro's piano ABC, the same tune with small changes of rhythm:
+// https://github.com/baobach/abc_search/blob/master/database/abc/QmVk7Me2CRhrct17L4D8SiMBaHdpL2jYxCVaJJpTQDnVxj.abc)
+// PD: Matos Rodríguez died in 1948 (https://en.wikipedia.org/wiki/Gerardo_Matos_Rodr%C3%ADguez).
 pub(super) const LA_CUMPARSITA: Song = Song {
     name: "La Cumparsita",
     origin: "Gerardo Matos Rodríguez, 1916",
@@ -270,7 +288,7 @@ pub(super) const LA_CUMPARSITA: Song = Song {
             "D4:2 C5 A4 F#4 -:1 D4 Eb4 D4 C#4:2 D4 | D4:2 D5 Bb4 G4 -:1 D4 Eb4 D4 C#4:2 D4 | \
              D4:2 C5 A4 F#4 -:1 D4 Eb4 D4 C#4:2 D4 | D4:2 D5 Bb4 G4 -:1 D4 Eb4 D4 C#4:2 D4 | \
              C4:2 G4 F#4 G4 -:1 F#4 G4 F#4 G4:2 F#4 | Bb3:2 G4 F#4 G4 -:1 F#4 G4 F#4 G4:2 F#4 | \
-             A3:2 D4 C4 D4 -:1 C5 Bb4 A4 G4:2 F#4 | G4:4 -:12",
+             A3:2 D5 C5 D5 -:1 C5 Bb4 A4 G4:2 F#4 | G4:4 -:12",
             CUMPARSITA_A_CHORDS,
         ),
         Part::new(
@@ -291,24 +309,33 @@ pub(super) const LA_CUMPARSITA: Song = Song {
             CUMPARSITA_C_CHORDS,
         ),
     ],
-    form: &["A", "A", "B", "B", "C", "A"],
+    form: &["A", "A", "B", "B", "C", "C", "A"],
     drums_from: 0,
-    about: "Written in Montevideo in 1916 by a student, as a march for a carnival \"comparsa\", \
-            and turned into a tango by Roberto Firpo's orchestra the next year. The first strain \
+    about: "Written in Montevideo by a student, as a march for a carnival \"comparsa\", and \
+            made a tango by Roberto Firpo's orchestra, which first played it. The first strain \
             is one two-bar idea four times, D7 answered by G minor, with the C sharp that leans \
-            into every D; the second is the tune of \"Si supieras\"; the third climbs over the \
-            dominant and falls back home. Piano and bass hit every beat, short and hard.",
+            into every D; the second runs down from G over G minor and D7, then again an octave \
+            higher, touching C minor; the third answers G minor with C minor, then steps down \
+            in sequence over D7 and G minor. Piano and bass hit every beat, short and hard.",
 };
 
 const PALOMA_VERSE_CHORDS: &str = "I | I V7 | V7 | V7 | I";
 
 const PALOMA_CHORUS_CHORDS: &str = "I | V7 | V7 | I";
 
-const PALOMA_CODA_CHORDS: &str = "I V7 | V7 | V7 | V7 I | I V7 | V7 | V7 | V7 I | I";
+/// "Ay, chinita, que sí" twice, then the last "¡Ay!" on G7 and C.
+const PALOMA_CODA_CHORDS: &str = "I | V7 | V7 | I | I | V7 | V7 | I | V7 | I";
 
 // Source: https://github.com/baobach/abc_search/blob/master/database/abc/QmTKDqnk2k82yFfjfFjCYGKjnnXvg3VnLSRaQSNaDyYvYQ.abc
 // (Jean-Paul Finck's choral arrangement in C, with the words; the tenor line is
-// the tune. Checked against Bill Gray's ABC, https://github.com/Bill-Gray/abc/blob/master/lapaloma.abc)
+// the tune, the upper note where the tenors split in thirds (two bars of the
+// coda's second half), and the chords are read from its three voices; a passing
+// diminished chord at "una pa-" in the chorus is left as C, as Bill Gray's chord
+// symbols have it. Checked against Bill Gray's ABC,
+// https://github.com/Bill-Gray/abc/blob/master/lapaloma.abc, which writes the
+// sixteenth-eighth-sixteenth figures as triplets and ends with a vamp of its own.
+// The last bar of the coda is padded with a rest, its 2/4 bar having no partner.)
+// PD: Iradier died in 1865 (https://sin80.com/en/artist/iradier).
 pub(super) const LA_PALOMA: Song = Song {
     name: "La Paloma",
     origin: "Sebastián Iradier, about 1860",
@@ -327,14 +354,14 @@ pub(super) const LA_PALOMA: Song = Song {
         Part::new("Pickup", "-:14 G4:2", "I"),
         Part::new(
             "Verse",
-            "G4:9 E4:2 F4:1 G4:2 A4:2 | B4:1 C5:2 A4:1 B4:2 G4:2 F4:8 | F4:4 -:2 D5:10 | \
-             D5:1 E5:2 C5:1 D5:2 B4:2 C5:1 B4:2 A4:1 G4:2 F4:2 | E4:12 -:2 G4:2",
+            "G4:9 E4:2 F4:1 G4:2 A4:2 | B4:1 C5:2 A4:1 B4:2 G4:2 F4:8 | _:4 -:2 D5:2 D5:8 | \
+             _:1 E5:2 C5:1 D5:2 B4:2 C5:1 B4:2 A4:1 G4:2 F4:2 | E4:12 -:2 G4:2",
             PALOMA_VERSE_CHORDS,
         ),
         Part::new(
             "Verse end",
-            "G4:9 E4:2 F4:1 G4:2 A4:2 | B4:1 C5:2 A4:1 B4:2 G4:2 F4:8 | F4:4 -:2 D5:10 | \
-             D5:1 E5:2 C5:1 D5:2 B4:2 C5:1 B4:2 A4:1 G4:2 F4:2 | E4:12 -:4",
+            "G4:9 E4:2 F4:1 G4:2 A4:2 | B4:1 C5:2 A4:1 B4:2 G4:2 F4:8 | _:4 -:2 D5:2 D5:8 | \
+             _:1 E5:2 C5:1 D5:2 B4:2 C5:1 B4:2 A4:1 G4:2 F4:2 | E4:12 -:4",
             PALOMA_VERSE_CHORDS,
         ),
         Part::new(
@@ -343,19 +370,22 @@ pub(super) const LA_PALOMA: Song = Song {
              B4:1 B4:2 B4:1 B4:2 A4:2 A4:1 G4:2 G4:1 G4:2 A4:2 | G4:1 F4:1 E4:12 -:2",
             PALOMA_CHORUS_CHORDS,
         ),
+        // The second time, the chorus runs straight into the coda's pickup.
         Part::new(
             "Chorus end",
             "C5:1 C5:2 C5:1 C5:2 B4:2 D5:1 D5:2 C5:1 B4:2 A4:2 | A4:1 G4:13 -:2 | \
-             B4:1 B4:2 B4:1 B4:2 A4:2 A4:1 G4:2 G4:1 G4:2 A4:2 | G4:1 F4:1 E4:6 -:8",
+             B4:1 B4:2 B4:1 B4:2 A4:2 A4:1 G4:2 G4:1 G4:2 A4:2 | \
+             G4:1 F4:1 E4:6 -:1 G4:2 G4:1 G4:1 A4:2 F#4:1",
             PALOMA_CHORUS_CHORDS,
         ),
         Part::new(
             "Coda",
-            "-:1 G4:2 G4:1 G4:1 A4:2 F#4:1 G4:8 | -:1 G4:2 G4:1 G4:1 G4:2 A4:1 B4:4 D5:4 | \
-             _:1 E5:2 C5:1 D5:1 B4:2 C5:1 A4:1 B4:2 C5:1 E5:2 D5:2 | -:1 D4:1 E4:1 F4:1 A4:3 G4:1 E4:8 | \
-             -:1 G4:2 G4:1 G4:1 A4:2 F#4:1 G4:8 | -:1 G4:2 G4:1 G4:1 G4:2 A4:1 B4:4 D5:4 | \
-             _:1 F5:2 E5:1 D5:1 E5:2 C5:1 D5:1 B4:2 C5:1 E5:2 D5:2 | D4:1 E4:2 F4:1 A4:2 G4:2 C5:8 | \
-             C5:6 -:10",
+            "G4:8 -:1 G4:2 G4:1 G4:1 G4:2 A4:1 | B4:4 D5:4 _:1 E5:2 C5:1 D5:1 B4:2 C5:1 | \
+             A4:1 B4:2 C5:1 E5:2 D5:2 -:1 D4:1 E4:1 F4:1 A4:3 G4:1 | \
+             E4:8 -:1 G4:2 G4:1 G4:1 A4:2 F#4:1 | \
+             G4:8 -:1 G4:2 G4:1 G4:1 G4:2 A4:1 | B4:4 D5:4 _:1 F5:2 E5:1 D5:1 E5:2 C5:1 | \
+             D5:1 B4:2 C5:1 E5:2 D5:2 D4:1 E4:2 F4:1 A4:2 G4:2 | C5:14 -:2 | \
+             B4:12 -:2 B4:2 | C5:2 -:14",
             PALOMA_CODA_CHORDS,
         ),
     ],
@@ -379,11 +409,20 @@ const GALLO_A_CHORDS: &str = "V7 i | V7 i | I7 iv | I7 iv | V7 i | V7 i";
 
 const GALLO_B_CHORDS: &str = "V7 | I | V7 | I | V7 | I | I7 IV | V7 I";
 
+/// The third strain, in B flat: B flat, C, F7 and back, twice.
+const GALLO_C_CHORDS: &str = "I II | V7 I | I V7 | V7 I | I II | V7 I | I V7 | V7 I";
+
 // Source: https://github.com/baobach/abc_search/blob/master/database/abc/QmQfW3aBzYDVq2oyUDGcr4wbZxsFHpGVfiy11JiY9zjksw.abc
-// (Pablo Moro's piano arrangement; the melody is the top note of the right hand.)
+// (Pablo Moro's piano arrangement; the melody is the top note of the right hand
+// and the chords are read from the left. Its form is A, B, C in B flat with a
+// repeat sign at the end and none at the start, so the whole tango is played
+// twice and ends in B flat. A turn of two 32nd notes is folded into the note
+// before it (D5:3 for D, C sharp, D; C5:3 for C, B, C); the 32nd notes E flat,
+// E before an F are one sixteenth E.)
+// PD: Bardi died in 1941 (https://en.wikipedia.org/wiki/Agust%C3%ADn_Bardi).
 pub(super) const GALLO_CIEGO: Song = Song {
     name: "Gallo ciego",
-    origin: "Agustín Bardi, 1916",
+    origin: "Agustín Bardi",
     feel: "Tango",
     genre: Genre::Tango,
     tonic: D,
@@ -406,6 +445,7 @@ pub(super) const GALLO_CIEGO: Song = Song {
              A4:1 G4:2 F4:1 E4:2 D4:1 C#4:1 D4:2 -:2 D5:2 -:2",
             GALLO_A_CHORDS,
         ),
+        // It ends with the pickup, D and E, into the third strain.
         Part::new(
             "B",
             "E4:1 G4 Bb4 D5 C#5 D5 Bb4:2 -:1 D5:3 Bb4:2 -:2 | \
@@ -415,17 +455,32 @@ pub(super) const GALLO_CIEGO: Song = Song {
              E4:1 G4 Bb4 D5 C#5 D5 Bb4:2 -:1 D5:3 Bb4:2 -:2 | \
              E4:1 F4 A4 D5 C#5 D5 A4:2 -:1 D5:3 A4:2 -:2 | \
              -:1 A4:1 C5 Eb5 G5 F#5 G5:2 -:1 Bb4:1 G5 Gb5 F5:2 -:2 | \
-             E5:1 C5 D5 Bb4 A4 C5 Bb4 G4 F4:2 -:2 F5:1 -:3",
+             E5:1 C5 D5 Bb4 A4 C5 Bb4 G4 F4:2 -:2 F5:1 D4:2 E4:1",
             GALLO_B_CHORDS,
         )
         .in_key(F, Major),
+        Part::new(
+            "C",
+            "F4:5 D5:3 E4:1 E4:2 D#4:1 E4:1 D#4:1 E4:2 | \
+             Eb4:5 C5:3 D4:1 D4:2 C#4:1 D4:1 A4:1 G4:1 A4:1 | \
+             G4:1 F4:2 A4:1 G4:3 A4:1 G4:2 F4:3 A4:1 G4:1 A4:1 | \
+             G4:1 F4:2 A4:1 G4:3 A4:1 G4:2 F4:3 D4:2 E4:1 | \
+             F4:5 D5:3 E4:1 E4:2 D#4:1 E4:1 D#4:1 E4:2 | \
+             Eb4:5 C5:3 D4:1 D4:2 C#4:1 D4:1 A4:1 G4:1 A4:1 | \
+             G4:1 F4:2 A4:1 G4:3 A4:1 G4:2 F4:3 A4:1 G4:1 A4:1 | \
+             G4:1 F4:2 Eb5:1 D5:2 C5:1 Bb4:3 -:2 Bb5:2 -:2",
+            GALLO_C_CHORDS,
+        )
+        .in_key(ASharp, Major),
     ],
-    form: &["A", "A", "B", "A"],
+    form: &["A", "B", "C", "A", "B", "C"],
     drums_from: 0,
     about: "Bardi's tango opens not with a tune but with a rhythm: two notes a semitone apart, \
             A and B flat, hammered in the 3 + 3 + 2 of the síncopa over A7 and D minor, then \
             moved up to D7 and G minor before a scale runs down to D. The second strain, in \
-            F major, is all arpeggios, each one leaning on a C sharp.",
+            F major, is all arpeggios, each one leaning on a C sharp; the third, in B flat, \
+            creeps by semitones, E, D sharp, E, over a C chord before F7 brings it home, and \
+            then the whole tango is played again.",
 };
 
 /// Six bars of C minor, eight of G7, two of C minor.
