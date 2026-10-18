@@ -926,6 +926,19 @@ pub static RHYTHMS: &[Rhythm] = &[
          maxixe is in 2/4; each bar here lasts two.",
     ),
     rhythm(
+        "Marchinha",
+        Latin,
+        116.0,
+        &[
+            (Kick, "x... X... x... X..."),
+            (Snare, "x.xx x.x. x.xx x.x."),
+        ],
+        "Latin fill",
+        "The carnival march of Rio de Janeiro: the surdo (a big bass drum) on both beats, \
+         the second one stronger, under the snare's rattle. The marchinha is in 2/4; each bar \
+         here lasts two.",
+    ),
+    rhythm(
         "Ranchera",
         Latin,
         150.0,
