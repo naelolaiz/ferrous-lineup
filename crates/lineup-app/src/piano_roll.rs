@@ -372,10 +372,8 @@ pub struct PianoRoll {
     /// move to the buttons.
     last_step: Option<usize>,
     /// Whether the arrow keys and Delete go to the piano roll: from a
-    /// click inside the window until a click outside it.
+    /// click on the window until a click anywhere else.
     has_keyboard: bool,
-    /// Where the window was drawn last frame.
-    window_rect: Option<Rect>,
     /// The project's time signature, which says where the bar and beat
     /// lines go. Copied from the project on every frame.
     time: TimeSignature,
@@ -424,7 +422,6 @@ impl PianoRoll {
             hovered_step: None,
             last_step: None,
             has_keyboard: false,
-            window_rect: None,
             time: TimeSignature::COMMON,
             hints: HintLevel::default(),
             snap_to_scale: false,
@@ -546,17 +543,25 @@ impl PianoRoll {
             return actions;
         };
 
-        // A click inside the window gives it the keyboard; a click
-        // anywhere else takes the keyboard away again.
+        // A click on the window gives it the keyboard; a click anywhere
+        // else takes the keyboard away again, even inside its rectangle
+        // when another window (the chord sheet, the rack) is on top
+        // there. A click in a menu or a list leaves the keyboard where
+        // it was.
         let press = ctx.input(|input| crate::widgets::press_pos(input, None));
         if let Some(pos) = press {
-            self.has_keyboard = self.window_rect.is_some_and(|rect| rect.contains(pos));
+            match ctx.layer_id_at(pos) {
+                Some(layer) if layer.order > egui::Order::Middle => {}
+                layer => {
+                    self.has_keyboard = layer.is_some_and(|layer| layer.id == Self::id());
+                }
+            }
         }
 
         // `open` is a copy: the window needs `&mut open` while the closure
         // below needs `&mut self`, and both cannot borrow `self` at once.
         let mut open = self.open;
-        let window = egui::Window::new(format!(
+        egui::Window::new(format!(
             "Piano roll · {} · {}",
             pattern_notes.name, channel.name
         ))
@@ -568,7 +573,6 @@ impl PianoRoll {
         .show(ctx, |ui| {
             self.contents(ui, project, pattern_notes, playhead, held, &mut actions)
         });
-        self.window_rect = window.map(|window| window.response.rect);
         self.open = open;
         self.was_open = open;
         if !open {
