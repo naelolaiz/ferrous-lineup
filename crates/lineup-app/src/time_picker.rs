@@ -7,6 +7,7 @@
 
 use eframe::egui::{self, Id, Ui};
 use lineup_core::TimeSignature;
+use lineup_core::library::apply::StyleParts;
 
 use crate::theme;
 
@@ -58,9 +59,33 @@ impl Draft {
 
 /// The picker: the usual time signatures as buttons, then a row to type
 /// any other. `current` is shown selected. Returns the one chosen, if
-/// one was, and closes the menu it is in.
-pub fn time_picker(ui: &mut Ui, id: Id, current: TimeSignature) -> Option<TimeSignature> {
+/// one was, and closes the menu it is in. Whole-song meter changes get
+/// the shared style options; later time markers keep the current style.
+pub fn time_picker(
+    ui: &mut Ui,
+    id: Id,
+    current: TimeSignature,
+    parts: Option<&mut StyleParts>,
+) -> Option<TimeSignature> {
     let mut chosen = None;
+    if let Some(parts) = parts {
+        ui.checkbox(&mut parts.matching_style, "Use matching style")
+            .on_hover_text(
+                "Turn off to mark the new meter's accents with your current instruments, \
+                 even when the library has a matching style.",
+            );
+        ui.checkbox(&mut parts.rhythm, "Apply rhythm patterns / accents")
+            .on_hover_text(
+                "Turn off to change the meter while keeping the current playing patterns",
+            );
+        ui.add_enabled_ui(parts.matching_style, |ui| {
+            ui.checkbox(&mut parts.instruments, "Use style instruments")
+                .on_hover_text("Turn off to keep the current voices and instruments");
+        });
+        ui.checkbox(&mut parts.swing, "Use rhythm's swing")
+            .on_hover_text("Turn off to keep the current swing amount");
+        ui.separator();
+    }
     ui.horizontal_wrapped(|ui| {
         ui.set_max_width(220.0);
         for time in TimeSignature::ALL {
@@ -181,5 +206,135 @@ pub fn describe_time(time: TimeSignature) -> String {
              2+2+3, to see its beats"
         ),
         _ => format!("{beats} {notes} to the bar"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use eframe::egui::{
+        Event, FullOutput, Modifiers, PointerButton, Pos2, RawInput, Rect, Shape, vec2,
+    };
+    use lineup_core::library::{Rhythm, Style};
+    use lineup_core::{BandStyle, Player, Project};
+
+    fn frame(
+        ctx: &egui::Context,
+        parts: &mut StyleParts,
+        events: Vec<Event>,
+    ) -> (FullOutput, Option<TimeSignature>) {
+        let mut chosen = None;
+        let mut output = ctx.run_pass(
+            RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(480.0, 640.0))),
+                events,
+                time: Some(ctx.cumulative_frame_nr() as f64 * 0.1),
+                ..Default::default()
+            },
+            |ctx| {
+                egui::Window::new("Time signature")
+                    .fixed_pos(Pos2::ZERO)
+                    .default_size(vec2(440.0, 580.0))
+                    .show(ctx, |ui| {
+                        chosen = time_picker(
+                            ui,
+                            Id::unique("test-time-picker"),
+                            TimeSignature::COMMON,
+                            Some(parts),
+                        );
+                    });
+            },
+        );
+        output.textures_delta.clear();
+        (output, chosen)
+    }
+
+    fn label_rect(output: &FullOutput, label: &str) -> Rect {
+        output
+            .shapes
+            .iter()
+            .find_map(|shape| match &shape.shape {
+                Shape::Text(text) if text.galley.text() == label => {
+                    Some(Rect::from_min_size(text.pos, text.galley.size()))
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("{label:?} is missing from the time-signature editor"))
+    }
+
+    fn click(
+        ctx: &egui::Context,
+        parts: &mut StyleParts,
+        output: &FullOutput,
+        label: &str,
+    ) -> (FullOutput, Option<TimeSignature>) {
+        let pos = label_rect(output, label).center();
+        frame(
+            ctx,
+            parts,
+            vec![
+                Event::PointerMoved(pos),
+                Event::PointerButton {
+                    pos,
+                    button: PointerButton::Primary,
+                    pressed: true,
+                    modifiers: Modifiers::NONE,
+                },
+            ],
+        );
+        frame(
+            ctx,
+            parts,
+            vec![Event::PointerButton {
+                pos,
+                button: PointerButton::Primary,
+                pressed: false,
+                modifiers: Modifiers::NONE,
+            }],
+        )
+    }
+
+    #[test]
+    fn the_time_picker_can_choose_an_odd_meter_with_current_instruments() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut parts = StyleParts::default();
+        frame(&ctx, &mut parts, vec![]);
+        let (output, _) = frame(&ctx, &mut parts, vec![]);
+        assert!(label_rect(&output, "Use matching style").top() < label_rect(&output, "7/8").top());
+        let (output, _) = click(&ctx, &mut parts, &output, "Use matching style");
+        assert!(!parts.matching_style);
+        let (_, chosen) = click(&ctx, &mut parts, &output, "7/8");
+        let time = chosen.expect("clicking the meter should apply it");
+        assert_eq!(time, TimeSignature::new(7, 8));
+
+        let mut project = Project::with_band();
+        project.write_progression(Style::named("Four chords").unwrap(), 0);
+        project.follow_chord_sheet();
+        let piano = project.player_channel(Player::Piano).unwrap();
+        project.channel_mut(piano).unwrap().program = Some(80);
+        let instruments = project.band().unwrap().instrument_style;
+        let rhythm = Rhythm::for_time(time, project.band().unwrap().style.rhythm);
+        let parts = StyleParts {
+            time_signature: true,
+            ..parts.for_rhythm()
+        };
+        project.apply_band_parts(BandStyle::named(rhythm.name).unwrap(), None, parts);
+        assert!(project.band().unwrap().accents_only);
+        assert_eq!(project.band().unwrap().instrument_style, instruments);
+        assert_eq!(project.channels()[piano].program, Some(80));
+    }
+
+    #[test]
+    fn the_time_picker_can_keep_instruments_with_a_matching_style() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut parts = StyleParts::default();
+        frame(&ctx, &mut parts, vec![]);
+        let (output, _) = frame(&ctx, &mut parts, vec![]);
+        click(&ctx, &mut parts, &output, "Use style instruments");
+        assert!(parts.matching_style);
+        assert!(!parts.instruments);
+        assert!(parts.rhythm);
     }
 }

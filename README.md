@@ -120,8 +120,10 @@ demonstrate it. Rhythm choices always keep the chords.
 
 Turn off **Use matching style for rhythms** to play simple accents on
 the meter's beat groups with the current instruments, including for odd
-meters that have a matching style. The Library shows the band's rhythm
-style and its instrumentation separately; the chord sheet remains the
+meters that have a matching style. The **Time** picker and bar 1's
+time-signature menu also show the matching style, rhythm/accent,
+instrument and swing checkboxes directly. The Library shows the band's
+rhythm style and its instrumentation separately; the chord sheet remains the
 source of the song's chords. These band choices survive saving and
 undo/redo. A meter change keeps each bar's duration by adjusting tempo.
 

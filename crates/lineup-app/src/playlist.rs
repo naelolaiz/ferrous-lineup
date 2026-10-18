@@ -584,8 +584,15 @@ impl PlaylistView {
             .sections(ui, layout, strip, project, self.snap, pass, actions);
         self.tempo_strip
             .show(ui, layout, tempo, project, self.snap, steps, actions);
-        self.strips
-            .loop_ruler(ui, layout, ruler, project, self.snap, actions);
+        self.strips.loop_ruler(
+            ui,
+            layout,
+            ruler,
+            project,
+            self.snap,
+            &mut self.library.parts,
+            actions,
+        );
     }
 
     /// The column of track names on the left, which stays put when the
