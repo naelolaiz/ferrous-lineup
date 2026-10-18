@@ -117,19 +117,35 @@ impl TimeSignature {
         {
             return None;
         }
+        Some(Self::of_groups(groups, unit))
+    }
+
+    /// The same as [`grouped`](Self::grouped), for tables Rust writes
+    /// down before the program runs, such as the library's songs and
+    /// rhythms: `TimeSignature::of_groups(&[3, 2, 2], 8)` is 3+2+2/8, the
+    /// 7/8 of the Greek kalamatianos. A `const fn` cannot return an
+    /// error to look at, so groupings that `grouped` refuses stop the
+    /// build instead.
+    pub const fn of_groups(groups: &[u8], unit: u8) -> Self {
         let mut mask = 0_u64;
         let mut at = 0;
-        for &group in groups {
+        let mut index = 0;
+        // `for` loops are not allowed in a `const fn` yet: `while` is.
+        while index < groups.len() {
+            assert!(groups[index] > 0, "a group of no notes");
+            assert!(at < Self::MAX_GROUPED_BEATS as usize, "too many notes");
             mask |= 1 << at;
-            at += usize::from(group);
+            at += groups[index] as usize;
+            index += 1;
         }
-        let mut time = TimeSignature::new(total as u8, unit);
+        assert!(at > 0 && at <= Self::MAX_GROUPED_BEATS as usize);
+        let mut time = TimeSignature::new(at as u8, unit);
         // The usual grouping is written the plain way, so 3+3/8 and 6/8
         // are the same time signature.
         if mask != time.usual_mask() {
             time.groups = mask;
         }
-        Some(time)
+        time
     }
 
     /// Whether the beats are grouped in some other way than the usual.
@@ -160,7 +176,7 @@ impl TimeSignature {
     /// eighths (and the same for sixteenths: 6/16, 9/16, 12/16). Every
     /// other time signature counts each note as a beat, including 5/8
     /// and 7/8, until it is given a grouping such as 3+2/8.
-    pub fn usual_groups(self) -> u8 {
+    pub const fn usual_groups(self) -> u8 {
         if self.unit >= 8 && self.beats.is_multiple_of(3) && self.beats > 3 {
             3
         } else {
@@ -168,12 +184,46 @@ impl TimeSignature {
         }
     }
 
+    /// How many `unit` notes each beat has as a player leans on it, which
+    /// may be fewer beats than a metronome clicks: a grouping when there
+    /// is one ([`groups`](Self::groups)), the three-note beats of 6/8,
+    /// 9/8 and 12/8, and otherwise beats of two with a three at the end
+    /// for an odd number: 4/4 is felt in two halves (2+2), 5/4 as 2+3,
+    /// 7/8 as 2+2+3. Bars of three notes or fewer, such as 3/4, are one
+    /// beat. A band's "oom-pa" puts the bass on each of these beats.
+    pub fn felt_groups(self) -> Vec<u8> {
+        let groups = self.groups();
+        if groups.iter().any(|&group| group > 1) {
+            return groups;
+        }
+        let beats = self.beats.max(1);
+        if beats <= 3 {
+            return vec![beats];
+        }
+        let mut felt = vec![2; usize::from(beats / 2)];
+        if beats % 2 == 1
+            && let Some(last) = felt.last_mut()
+        {
+            *last = 3;
+        }
+        felt
+    }
+
     /// The beat starts of the usual grouping, as in `groups`.
-    fn usual_mask(self) -> u64 {
-        let every = usize::from(self.usual_groups());
-        (0..usize::from(self.beats.min(Self::MAX_GROUPED_BEATS)))
-            .step_by(every)
-            .fold(0, |mask, i| mask | 1 << i)
+    const fn usual_mask(self) -> u64 {
+        let every = self.usual_groups() as usize;
+        let beats = if self.beats < Self::MAX_GROUPED_BEATS {
+            self.beats
+        } else {
+            Self::MAX_GROUPED_BEATS
+        } as usize;
+        let mut mask = 0;
+        let mut at = 0;
+        while at < beats {
+            mask |= 1 << at;
+            at += every;
+        }
+        mask
     }
 
     /// The beat starts in use: `groups` if it fits the top number (it
@@ -187,7 +237,7 @@ impl TimeSignature {
 
     /// How many steps one `unit` note lasts: 4 for a quarter, 2 for an
     /// eighth.
-    fn unit_steps(self) -> usize {
+    pub fn unit_steps(self) -> usize {
         (16 / usize::from(self.unit.clamp(1, 16))).max(1)
     }
 

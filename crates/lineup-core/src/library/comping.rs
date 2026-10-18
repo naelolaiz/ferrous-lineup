@@ -6,8 +6,10 @@
 //! Each style here is a short table of *hits*: when a note starts, how
 //! long it lasts, which notes of the chord it plays, and how hard.
 
+use std::borrow::Cow;
+
 use crate::harmony::Chord;
-use crate::meter::Bar;
+use crate::meter::{Bar, TimeSignature};
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
 
@@ -117,10 +119,55 @@ pub enum Comping {
     /// For 12/8: the chord on every eighth, three to a beat, the first of
     /// each three the strongest: the slow blues piano.
     Triplets,
+    /// For odd meters, and any other: the "oom-pa" of a dance band in
+    /// the beats the bar is felt in (see [`TimeSignature::felt_groups`]).
+    /// The bass takes the first note of every beat and the chord the
+    /// notes after it, so the long beats get two chords and the short
+    /// ones one. In the 2+2+3/8 of a Bulgarian rachenitsa: bass-chord,
+    /// bass-chord, bass-chord-chord; in a 3+2+2/8 kalamatianos the long
+    /// beat comes first. Turkish and Balkan musicians call these meters
+    /// *aksak*, "limping". Play it with [`Bass::Aksak`].
+    Aksak,
 }
 
 impl Comping {
-    /// How many steps the pattern lasts before it repeats, and its hits.
+    /// How many steps the pattern lasts before it repeats, and its hits,
+    /// in bars of `time`. Only [`Comping::Aksak`] depends on the time
+    /// signature: its pattern is a bar long.
+    fn hits(self, time: TimeSignature) -> (usize, Cow<'static, [Hit<Voices>]>) {
+        match self {
+            Comping::Aksak => {
+                let unit = time.unit_steps();
+                // A chord a little shorter than its note, so the next
+                // one is heard to start, but never under a step.
+                let length = (unit - unit / 4).max(1);
+                let mut hits = Vec::new();
+                let mut at = 0;
+                for group in time.felt_groups() {
+                    for note in 1..usize::from(group) {
+                        let velocity = if note == 1 { 84 } else { 74 };
+                        hits.push(hit!(at + note * unit, length, Voices::All, velocity));
+                    }
+                    at += usize::from(group) * unit;
+                }
+                (time.steps_per_bar(), Cow::Owned(hits))
+            }
+            _ => {
+                let (period, hits) = self.pattern();
+                (period, Cow::Borrowed(hits))
+            }
+        }
+    }
+
+    /// Whether the pattern counts from the bar line, wherever the chord
+    /// starts: the beats of an odd meter are where the bar puts them.
+    /// The other patterns start again with each chord.
+    fn follows_the_bar(self) -> bool {
+        self == Comping::Aksak
+    }
+
+    /// How many steps the pattern lasts before it repeats, and its hits,
+    /// for the patterns that are the same in every time signature.
     fn pattern(self) -> (usize, &'static [Hit<Voices>]) {
         use Voices::*;
         match self {
@@ -337,12 +384,23 @@ impl Comping {
                     hit!(10, 2, Nth(1), 72),
                 ],
             ),
+            // Worked out from the bar in `hits`.
+            Comping::Aksak => (16, &[]),
         }
     }
 
     /// The notes for a chord voiced as `voicing`, starting at step
-    /// `start` and lasting `span` steps.
-    pub fn play(self, voicing: &[Note], start: usize, span: usize) -> Vec<NoteEvent> {
+    /// `start` and lasting `span` steps, in bars of `time` counted from
+    /// step 0. A pattern that follows the bar ([`Comping::Aksak`]) and
+    /// has no hit inside so short a chord strikes it once where it
+    /// starts, so no chord goes unheard.
+    pub fn play(
+        self,
+        time: TimeSignature,
+        voicing: &[Note],
+        start: usize,
+        span: usize,
+    ) -> Vec<NoteEvent> {
         if voicing.is_empty() || span == 0 {
             return Vec::new();
         }
@@ -355,21 +413,38 @@ impl Comping {
                 })
                 .collect();
         }
-        let (period, hits) = self.pattern();
+        let (period, hits) = self.hits(time);
+        let end = start + span;
+        let origin = if self.follows_the_bar() {
+            start - start % period
+        } else {
+            start
+        };
         let mut notes = Vec::new();
-        for offset in (0..span).step_by(period) {
-            for hit in hits {
+        for offset in (origin..end).step_by(period) {
+            for hit in hits.iter() {
                 let at = offset + hit.at;
-                if at >= span {
+                if at < start || at >= end {
                     continue;
                 }
-                let length = hit.len.min(span - at);
+                let length = hit.len.min(end - at);
                 for pitch in pick(voicing, hit.what) {
                     notes.push(NoteEvent {
                         velocity: hit.velocity,
-                        ..NoteEvent::new(pitch, start + at, length)
+                        ..NoteEvent::new(pitch, at, length)
                     });
                 }
+            }
+        }
+        if notes.is_empty()
+            && self.follows_the_bar()
+            && let Some(first) = hits.first()
+        {
+            for &pitch in voicing {
+                notes.push(NoteEvent {
+                    velocity: first.velocity,
+                    ..NoteEvent::new(pitch, start, first.len.min(span))
+                });
             }
         }
         notes
@@ -458,6 +533,11 @@ pub enum Bass {
     /// For 12/8: the root on every beat, long then short, the short one
     /// on the beat's last eighth leading to the next: the slow blues.
     LongShort,
+    /// For odd meters, and any other: the bass of the "oom-pa" (see
+    /// [`Comping::Aksak`]), on the first note of every beat the bar is
+    /// felt in: the root, then the fifth below and the root by turns.
+    /// In 2+2+3/8: root, fifth, root, the last one on the long beat.
+    Aksak,
 }
 
 impl Bass {
@@ -475,10 +555,39 @@ impl Bass {
             .unwrap_or(0)
     }
 
+    /// How many steps the line lasts before it repeats, and its hits, in
+    /// bars of `time`. Only [`Bass::Aksak`] depends on the time
+    /// signature: its line is a bar long.
+    fn hits(self, time: TimeSignature) -> (usize, Cow<'static, [Hit<Tone>]>) {
+        match self {
+            Bass::Aksak => {
+                let unit = time.unit_steps();
+                let mut hits = Vec::new();
+                let mut at = 0;
+                for (index, group) in time.felt_groups().into_iter().enumerate() {
+                    let (tone, velocity) = match index {
+                        0 => (Tone::Root, 104),
+                        _ if index % 2 == 1 => (Tone::LowFifth, 92),
+                        _ => (Tone::Root, 96),
+                    };
+                    hits.push(hit!(at, unit, tone, velocity));
+                    at += usize::from(group) * unit;
+                }
+                (time.steps_per_bar(), Cow::Owned(hits))
+            }
+            _ => {
+                let (period, hits) = self.pattern();
+                (period, Cow::Borrowed(hits))
+            }
+        }
+    }
+
+    /// How many steps the line lasts before it repeats, and its hits, for
+    /// the lines that are the same in every time signature.
     fn pattern(self) -> (usize, &'static [Hit<Tone>]) {
         use Tone::*;
         match self {
-            Bass::None | Bass::Held | Bass::Walking => (16, &[]),
+            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak => (16, &[]),
             Bass::Pulse => (4, &[hit!(0, 2, Root, 100), hit!(2, 2, Root, 84)]),
             Bass::Quarters => (4, &[hit!(0, 2, Root, 104)]),
             Bass::RootFifth => (16, &[hit!(0, 4, Root, 104), hit!(8, 4, LowFifth, 96)]),
@@ -577,10 +686,18 @@ impl Bass {
         }
     }
 
-    /// The bass notes for `chord`, from step `start` for `span` steps.
-    /// `next` is the chord after it, which some lines lead into.
-    pub fn play(self, chord: Chord, next: Chord, start: usize, span: usize) -> Vec<NoteEvent> {
-        self.play_over(chord, bass_root(chord), next.root, start, span)
+    /// The bass notes for `chord`, from step `start` for `span` steps, in
+    /// bars of `time` counted from step 0. `next` is the chord after it,
+    /// which some lines lead into.
+    pub fn play(
+        self,
+        time: TimeSignature,
+        chord: Chord,
+        next: Chord,
+        start: usize,
+        span: usize,
+    ) -> Vec<NoteEvent> {
+        self.play_over(time, chord, bass_root(chord), next.root, start, span)
     }
 
     /// The bass notes for `chord` with `bass` as its lowest note, as in
@@ -589,8 +706,29 @@ impl Bass {
     /// notes (its third, fifth and seventh) above it, or its fifth just
     /// below. `next` is the bass note of the chord after it, which some
     /// lines lead into.
+    ///
+    /// The bars of `time` are counted from step 0, which only matters to
+    /// a line that follows the bar ([`Bass::Aksak`]).
     pub fn play_over(
         self,
+        time: TimeSignature,
+        chord: Chord,
+        bass: Note,
+        next: PitchClass,
+        start: usize,
+        span: usize,
+    ) -> Vec<NoteEvent> {
+        let bar = time.steps_per_bar();
+        self.play_from(time, start - start % bar, chord, bass, next, start, span)
+    }
+
+    /// [`Bass::play_over`], with a bar of `time` starting on step `bar`,
+    /// at or before `start`.
+    #[allow(clippy::too_many_arguments)]
+    fn play_from(
+        self,
+        time: TimeSignature,
+        bar: usize,
         chord: Chord,
         bass: Note,
         next: PitchClass,
@@ -608,6 +746,34 @@ impl Bass {
                 .into_iter()
                 .map(|(at, tone)| note(tone, at, 4.min(span - at), if at == 0 { 104 } else { 92 }))
                 .collect(),
+            Bass::Aksak => {
+                // The line keeps its place in the bar, wherever the chord
+                // starts; a chord that starts between two of its notes
+                // gets its root at once, as the bass would play it.
+                let (period, hits) = self.hits(time);
+                let mut notes = Vec::new();
+                for offset in (bar..start + span).step_by(period) {
+                    for hit in hits.iter() {
+                        let at = offset + hit.at;
+                        if at < start || at >= start + span {
+                            continue;
+                        }
+                        // The first note of a chord is its root.
+                        let tone = if at == start { Tone::Root } else { hit.what };
+                        notes.push(note(
+                            tone,
+                            at - start,
+                            hit.len.min(start + span - at),
+                            hit.velocity,
+                        ));
+                    }
+                }
+                if notes.first().is_none_or(|first| first.start > start) {
+                    let length = hits.first().map_or(span, |hit| hit.len).min(span);
+                    notes.insert(0, note(Tone::Root, 0, length, 100));
+                }
+                notes
+            }
             _ => {
                 let (period, hits) = self.pattern();
                 let mut notes = Vec::new();
@@ -829,6 +995,7 @@ impl Comping {
         if self == Comping::Held {
             for harmony in harmonies {
                 notes.extend(self.play(
+                    TimeSignature::COMMON,
                     &harmony.voicing,
                     harmony.start,
                     harmony.end - harmony.start,
@@ -836,12 +1003,16 @@ impl Comping {
             }
             return notes;
         }
-        let (period, hits) = self.pattern();
         let mut struck = vec![false; harmonies.len()];
         for bar in bars {
-            let from = period_start(bar, period);
+            let (period, hits) = self.hits(bar.time);
+            let from = if self.follows_the_bar() {
+                bar.start
+            } else {
+                period_start(bar, period)
+            };
             for offset in (0..bar.end() - from).step_by(period) {
-                for hit in hits {
+                for hit in hits.iter() {
                     let at = from + offset + hit.at;
                     if at < bar.start || at >= bar.end() {
                         continue;
@@ -865,7 +1036,8 @@ impl Comping {
                 }
             }
         }
-        if let Some(first) = hits.first() {
+        let time = bars.first().map_or(TimeSignature::COMMON, |bar| bar.time);
+        if let Some(first) = self.hits(time).1.first() {
             for (harmony, _) in harmonies
                 .iter()
                 .zip(&struck)
@@ -895,9 +1067,10 @@ impl Bass {
     pub fn play_in_bars(self, bars: &[Bar], harmonies: &[Played]) -> Vec<NoteEvent> {
         let (period, _) = self.pattern();
         // A held or walking bass has no pattern of its own to keep: it
-        // starts again with every bar, whatever the bar's length.
+        // starts again with every bar, whatever the bar's length. So does
+        // the line of an odd meter, which is a bar long.
         let period = match self {
-            Bass::None | Bass::Held | Bass::Walking => 0,
+            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak => 0,
             _ => period,
         };
         let mut notes = Vec::new();
@@ -917,13 +1090,18 @@ impl Bass {
             for (index, piece) in cuts.windows(2).enumerate() {
                 let (start, span) = (piece[0], piece[1] - piece[0]);
                 let last = index + 2 == cuts.len();
+                // The bar the piece is in, for a line that follows it.
+                let (time, bar) = bars
+                    .iter()
+                    .rfind(|bar| bar.start <= start)
+                    .map_or((TimeSignature::COMMON, start), |bar| (bar.time, bar.start));
                 notes.extend(match harmony.bass {
                     BassPart::Chord { chord, note, next } => {
                         // Only the last piece leads into the next chord.
                         let next = if last { next } else { note.pitch_class() };
-                        self.play_over(chord, note, next, start, span)
+                        self.play_from(time, bar, chord, note, next, start, span)
                     }
-                    BassPart::Pedal(note) => self.pedal(note, start, span),
+                    BassPart::Pedal(note) => self.pedal(time, bar, note, start, span),
                     BassPart::Rest => Vec::new(),
                 });
             }
@@ -945,9 +1123,16 @@ impl Bass {
     /// The line's rhythm on one note: every tone of the line is `note`,
     /// but its octave stays an octave. For a group of notes with no root,
     /// whose third or fifth would not be in it.
-    fn pedal(self, note: Note, start: usize, span: usize) -> Vec<NoteEvent> {
+    fn pedal(
+        self,
+        time: TimeSignature,
+        bar: usize,
+        note: Note,
+        start: usize,
+        span: usize,
+    ) -> Vec<NoteEvent> {
         let chord = Chord::new(note.pitch_class(), crate::harmony::ChordQuality::Major);
-        self.play_over(chord, note, note.pitch_class(), start, span)
+        self.play_from(time, bar, chord, note, note.pitch_class(), start, span)
             .into_iter()
             .map(|played| {
                 let octave = played.pitch.midi() == note.midi() + 12;
@@ -966,6 +1151,8 @@ mod tests {
     use crate::harmony::ChordQuality::*;
     use crate::pitch::PitchClass::*;
 
+    const FOUR: TimeSignature = TimeSignature::COMMON;
+
     fn c_major() -> Vec<Note> {
         vec![Note::new(60), Note::new(64), Note::new(67)]
     }
@@ -978,7 +1165,7 @@ mod tests {
 
     #[test]
     fn held_chords_last_the_whole_span() {
-        let notes = Comping::Held.play(&c_major(), 16, 32);
+        let notes = Comping::Held.play(FOUR, &c_major(), 16, 32);
         assert_eq!(notes.len(), 3);
         assert!(
             notes
@@ -989,7 +1176,7 @@ mod tests {
 
     #[test]
     fn patterns_repeat_and_stop_at_the_end_of_the_chord() {
-        let notes = Comping::Charleston.play(&c_major(), 0, 24);
+        let notes = Comping::Charleston.play(FOUR, &c_major(), 0, 24);
         // Beat 1 and the "and" of 2 in the first bar, then only beat 1
         // and the "and" of 2 of the half bar that is left.
         assert_eq!(starts(&notes), [0, 6, 16, 22]);
@@ -999,7 +1186,7 @@ mod tests {
 
     #[test]
     fn arpeggios_climb_into_the_next_octave() {
-        let notes = Comping::ArpUp.play(&c_major(), 0, 8);
+        let notes = Comping::ArpUp.play(FOUR, &c_major(), 0, 8);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         assert_eq!(pitches, [60, 64, 67, 72]);
     }
@@ -1008,7 +1195,7 @@ mod tests {
     fn a_walking_line_leads_into_the_next_chord() {
         let c = Chord::new(C, Dominant7);
         let f = Chord::new(F, Dominant7);
-        let notes = Bass::Walking.play(c, f, 0, 16);
+        let notes = Bass::Walking.play(FOUR, c, f, 0, 16);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         // C2, E2, G2, then E2 a semitone under F2.
         assert_eq!(pitches, [36, 40, 43, 40]);
@@ -1018,7 +1205,7 @@ mod tests {
     fn the_tumbao_anticipates_only_at_the_end() {
         let c = Chord::new(C, Major);
         let g = Chord::new(G, Major);
-        let notes = Bass::Tumbao.play(c, g, 0, 32);
+        let notes = Bass::Tumbao.play(FOUR, c, g, 0, 32);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         // Fifth, root; fifth, then G (the next root, nearest to C2: G1).
         assert_eq!(pitches, [43, 36, 43, 31]);
@@ -1031,12 +1218,12 @@ mod tests {
     fn the_low_fifth_is_the_chords_own_fifth() {
         // Bm7b5: the fifth under B is F, not F#.
         let b = Chord::new(B, HalfDiminished7);
-        let notes = Bass::RootFifth.play(b, b, 0, 16);
+        let notes = Bass::RootFifth.play(FOUR, b, b, 0, 16);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         assert_eq!(pitches, [47, 41]);
         // C: G under C.
         let c = Chord::new(C, Major);
-        let notes = Bass::RootFifth.play(c, c, 0, 16);
+        let notes = Bass::RootFifth.play(FOUR, c, c, 0, 16);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         assert_eq!(pitches, [36, 31]);
     }
@@ -1059,7 +1246,7 @@ mod tests {
     #[test]
     fn boogie_walks_up_the_chord() {
         let c = Chord::new(C, Dominant7);
-        let notes = Bass::Boogie.play(c, c, 0, 16);
+        let notes = Bass::Boogie.play(FOUR, c, c, 0, 16);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         assert_eq!(pitches, [36, 40, 43, 46, 48, 46, 43, 40]);
     }
@@ -1074,25 +1261,28 @@ mod tests {
         // below it.
         let e2 = Note::new(40);
         assert_eq!(
-            pitches(Bass::RootFifth.play_over(c, e2, F, 0, 16)),
+            pitches(Bass::RootFifth.play_over(FOUR, c, e2, F, 0, 16)),
             [40, 31]
         );
-        assert_eq!(pitches(Bass::Octaves.play_over(c, e2, F, 0, 4)), [40, 52]);
+        assert_eq!(
+            pitches(Bass::Octaves.play_over(FOUR, c, e2, F, 0, 4)),
+            [40, 52]
+        );
         // A walking line over C/E starts on E and leads into the next
         // bass note, D, from a semitone above.
-        let walk = pitches(Bass::Walking.play_over(c, e2, D, 0, 16));
+        let walk = pitches(Bass::Walking.play_over(FOUR, c, e2, D, 0, 16));
         assert_eq!(walk.first(), Some(&40));
         assert_eq!(walk.last(), Some(&39), "Eb2 leads down into D2");
         // In a bar of three: C2, G2, then E2 into F, not C2 E2 E2.
         let c2 = Note::new(36);
-        let walk = pitches(Bass::Walking.play_over(c, c2, F, 0, 12));
+        let walk = pitches(Bass::Walking.play_over(FOUR, c, c2, F, 0, 12));
         assert_eq!(walk, [36, 43, 40]);
         // With the root in the bass, play_over is play.
         let g = Chord::new(G, Dominant7);
         for bass in [Bass::Walking, Bass::Boogie, Bass::Tumbao, Bass::Reggae] {
             assert_eq!(
-                bass.play_over(c, bass_root(c), G, 0, 32),
-                bass.play(c, g, 0, 32),
+                bass.play_over(FOUR, c, bass_root(c), G, 0, 32),
+                bass.play(FOUR, c, g, 0, 32),
                 "{bass:?}"
             );
         }

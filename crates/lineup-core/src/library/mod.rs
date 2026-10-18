@@ -58,6 +58,7 @@ pub enum Genre {
     Tango,
     Folklore,
     Flamenco,
+    Balkan,
     Reggae,
     Folk,
     Classical,
@@ -65,7 +66,7 @@ pub enum Genre {
 
 impl Genre {
     /// All genres, in the order the library lists them.
-    pub const ALL: [Genre; 14] = [
+    pub const ALL: [Genre; 15] = [
         Genre::Pop,
         Genre::Rock,
         Genre::Blues,
@@ -77,6 +78,7 @@ impl Genre {
         Genre::Tango,
         Genre::Folklore,
         Genre::Flamenco,
+        Genre::Balkan,
         Genre::Reggae,
         Genre::Folk,
         Genre::Classical,
@@ -95,6 +97,7 @@ impl Genre {
             Genre::Tango => "Tango",
             Genre::Folklore => "Latin American folklore",
             Genre::Flamenco => "Flamenco",
+            Genre::Balkan => "Balkan and Turkish",
             Genre::Reggae => "Reggae and ska",
             Genre::Folk => "Country and folk",
             Genre::Classical => "Classical and film",
