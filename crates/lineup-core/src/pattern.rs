@@ -215,9 +215,7 @@ pub fn tidy_notes(notes: impl IntoIterator<Item = NoteEvent>) -> Vec<NoteEvent> 
 
 /// Cleans notes on a song timeline without limiting their starts to one
 /// pattern's [`MAX_STEPS`].
-pub(crate) fn tidy_timeline_notes(
-    notes: impl IntoIterator<Item = NoteEvent>,
-) -> Vec<NoteEvent> {
+pub(crate) fn tidy_timeline_notes(notes: impl IntoIterator<Item = NoteEvent>) -> Vec<NoteEvent> {
     let mut tidy = Vec::new();
     let mut places = std::collections::HashSet::new();
     for mut note in notes {
