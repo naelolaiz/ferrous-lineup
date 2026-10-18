@@ -11,6 +11,7 @@ use eframe::egui::{
     self, Align, Align2, Color32, FontId, Key, KeyboardShortcut, Modifiers, Painter, Pos2, Rect,
     Response, Sense, Stroke, StrokeKind, Ui, Vec2, pos2, vec2,
 };
+use lineup_core::band::solo::{NoteRole, Over};
 use lineup_core::harmony::keys::{self, ChordSize};
 use lineup_core::harmony::{Harmony, HintLevel, analyze, next_chords};
 use lineup_core::tools::{self, ArpeggioOrder};
@@ -123,6 +124,10 @@ const ROW_MARK: Color32 = Color32::from_rgb(54, 96, 168);
 const ROOT_MARK: Color32 = Color32::from_rgb(255, 152, 48);
 const NOTE: Color32 = Color32::from_rgb(118, 214, 140);
 const NOTE_OUTSIDE: Color32 = Color32::from_rgb(240, 120, 110);
+/// A soloist's notes, by what they are: chord tones in the usual green,
+/// other notes of the scale blue, chromatic notes orange.
+const SOLO_SCALE: Color32 = Color32::from_rgb(120, 172, 236);
+const SOLO_CHROMATIC: Color32 = Color32::from_rgb(242, 164, 92);
 const NOTE_BORDER: Color32 = Color32::from_rgb(24, 40, 30);
 const NOTE_TEXT: Color32 = Color32::from_rgb(16, 28, 20);
 const SELECTED_BORDER: Color32 = Color32::from_rgb(255, 255, 255);
@@ -204,6 +209,8 @@ struct View<'a> {
     step_width: f32,
     playhead: Option<usize>,
     held: &'a [Note],
+    /// For the soloist's part, what each note is.
+    roles: Option<&'a [Option<(NoteRole, Over)>]>,
 }
 
 /// Where the grid is on screen, and how to turn steps and pitches into
@@ -793,6 +800,11 @@ impl PianoRoll {
         // Selected notes that are no longer there are forgotten.
         let notes = pattern.notes(self.channel);
         self.selection.retain(|note| notes.contains(note));
+        // The soloist's notes are shown with what each one is.
+        let roles = match project.player_channel(lineup_core::Player::Soloist) {
+            Some(channel) if channel == self.channel => project.solo_roles(self.pattern),
+            _ => None,
+        };
 
         // The other channels whose notes are shown faintly behind this
         // one's: those that play melodies or chords. Drum channels, whose
@@ -876,7 +888,27 @@ impl PianoRoll {
             let set: PitchSet = held.iter().map(|note| note.pitch_class()).collect();
             (format!("Keys down: {}", harmony.describe(scale)), set)
         };
-        let info = ui.label(info);
+        // Over a soloist's note, what that note is.
+        let solo_note = roles
+            .as_ref()
+            .zip(self.hovered_step.or(playhead).filter(|_| held.is_empty()))
+            .and_then(|(roles, step)| {
+                let (note, role) = notes
+                    .iter()
+                    .zip(roles)
+                    .find(|(note, _)| (note.start..note.start + note.length).contains(&step))?;
+                let (role, over) = (*role)?;
+                let key = project.key_at(over.start);
+                let name = key.note_name(note.pitch);
+                // Band parts start at the top of the song, so the note's
+                // place is counted as the transport counts it.
+                let place = match project.meter().position(note.start) {
+                    (bar, beat, 1) => format!("Bar {bar}, beat {beat}"),
+                    (bar, beat, step) => format!("Bar {bar}, beat {beat}, step {step}"),
+                };
+                Some(format!("{place} · {}", role.describe(&name, &over, key)))
+            });
+        let info = ui.label(solo_note.unwrap_or(info));
         // Any group of notes, chord or not, has a set class. Shown for
         // three notes or more, and for the selection.
         let selected: PitchSet = self
@@ -885,6 +917,13 @@ impl PianoRoll {
             .map(|note| note.pitch.pitch_class())
             .collect();
         let mut sets = Vec::new();
+        if roles.is_some() {
+            sets.push(
+                "Soloist: chord tones green (R 3 5 7), scale notes blue (p passing, n \
+                 neighbour, s other), chromatic orange (a approach, cp passing)"
+                    .to_string(),
+            );
+        }
         if set.len() >= 3 {
             sets.push(format!("Set: {}", twelve_tone::describe_set(set, scale)));
         }
@@ -958,6 +997,7 @@ impl PianoRoll {
                 step_width,
                 playhead,
                 held,
+                roles: roles.as_deref(),
             };
             self.grid(ui, pattern, ghosts, view, actions)
         });
@@ -1563,6 +1603,7 @@ impl PianoRoll {
             step_width,
             playhead,
             held,
+            roles,
         } = view;
         let length = pattern.length();
         let rows = (HIGHEST - LOWEST + 1) as f32;
@@ -1646,7 +1687,7 @@ impl PianoRoll {
                 );
             }
         }
-        self.paint_notes(&painter, grid, notes, scale);
+        self.paint_notes(&painter, grid, notes, scale, roles);
 
         // Show what a click would place: an outline of the note or chord.
         let ctrl = ui.input(|input| input.modifiers.command);
@@ -2158,18 +2199,31 @@ impl PianoRoll {
         }
     }
 
-    fn paint_notes(&self, painter: &Painter, grid: Grid, notes: &[NoteEvent], scale: Scale) {
+    fn paint_notes(
+        &self,
+        painter: &Painter,
+        grid: Grid,
+        notes: &[NoteEvent],
+        scale: Scale,
+        roles: Option<&[Option<(NoteRole, Over)>]>,
+    ) {
         let visible = notes
             .iter()
             .enumerate()
             .filter(|(_, note)| note.start < grid.length);
         for (index, note) in visible {
             let rect = grid.note_rect(note).shrink2(vec2(0.5, 1.0));
-            // Notes outside the key are drawn red, so they stand out.
-            let mut fill = if scale.contains(note.pitch.pitch_class()) {
-                NOTE
-            } else {
-                NOTE_OUTSIDE
+            let role = roles
+                .and_then(|roles| roles.get(index).copied().flatten())
+                .map(|(role, _)| role);
+            // Notes outside the key are drawn red, so they stand out. A
+            // soloist's notes are coloured by what they are.
+            let mut fill = match role {
+                Some(role) if role.is_chord_tone() => NOTE,
+                Some(role) if role.is_chromatic() => SOLO_CHROMATIC,
+                Some(_) => SOLO_SCALE,
+                None if scale.contains(note.pitch.pitch_class()) => NOTE,
+                None => NOTE_OUTSIDE,
             };
             // Softer notes are a little darker, as in the velocity lane.
             fill = fill.gamma_multiply(0.55 + 0.45 * f32::from(note.velocity) / 127.0);
@@ -2186,11 +2240,18 @@ impl PianoRoll {
             // The name stays in view when the start of the note is
             // scrolled away under the keyboard.
             let shown = rect.intersect(grid.cells());
-            if shown.width() > 26.0 {
+            let name = scale.note_name(note.pitch);
+            let text = match role {
+                Some(role) if shown.width() > 44.0 => Some(format!("{name} {}", role.mark())),
+                Some(role) if shown.width() > 12.0 => Some(role.mark()),
+                None if shown.width() > 26.0 => Some(name),
+                _ => None,
+            };
+            if let Some(text) = text {
                 painter.with_clip_rect(shown).text(
                     shown.left_center() + vec2(3.0, 0.0),
                     Align2::LEFT_CENTER,
-                    scale.note_name(note.pitch),
+                    text,
                     FontId::proportional(grid.text_size()),
                     NOTE_TEXT,
                 );
