@@ -312,7 +312,9 @@ impl LineupApp {
 
     /// Does `action` now if nothing would be lost, or asks first.
     pub(super) fn request(&mut self, ctx: &egui::Context, action: Pending) {
-        if self.has_unsaved_changes() {
+        if self.has_unsaved_changes()
+            || (matches!(&action, Pending::Quit) && self.style_editor.has_unsaved_changes())
+        {
             self.file.pending = Some(action);
         } else {
             self.perform(ctx, action);
@@ -468,7 +470,10 @@ impl LineupApp {
     /// Also stops the window from closing while there are unsaved changes.
     pub(super) fn unsaved_changes_dialog(&mut self, ctx: &egui::Context) {
         let close_requested = ctx.input(|input| input.viewport().close_requested());
-        if close_requested && !self.file.quitting && self.has_unsaved_changes() {
+        if close_requested
+            && !self.file.quitting
+            && (self.has_unsaved_changes() || self.style_editor.has_unsaved_changes())
+        {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.file.pending = Some(Pending::Quit);
         }
@@ -476,6 +481,50 @@ impl LineupApp {
         let Some(pending) = self.file.pending.clone() else {
             return;
         };
+        if matches!(pending, Pending::Quit) && self.style_editor.has_unsaved_changes() {
+            let mut choice = None;
+            let modal =
+                egui::Modal::new(egui::Id::unique("unsaved-style-on-quit")).show(ctx, |ui| {
+                    ui.heading("Save style changes?");
+                    ui.label("The style draft has unsaved edits.");
+                    ui.horizontal(|ui| {
+                        if ui.button("Save style").clicked() {
+                            choice = Some(Choice::Save);
+                        }
+                        if ui.button("Don't save style").clicked() {
+                            choice = Some(Choice::Discard);
+                        }
+                        if ui.button("Cancel").clicked() {
+                            choice = Some(Choice::Cancel);
+                        }
+                    });
+                });
+            if modal.should_close() && choice.is_none() {
+                choice = Some(Choice::Cancel);
+            }
+            match choice {
+                Some(Choice::Save) => {
+                    self.save_user_style(self.style_editor.current_style(), false)
+                }
+                Some(Choice::Discard) => {
+                    self.style_editor.discard_edits();
+                    self.send(lineup_audio::Command::StopPhrase);
+                }
+                Some(Choice::Cancel) => {
+                    self.file.pending = None;
+                    return;
+                }
+                None => return,
+            }
+            if self.style_editor.has_unsaved_changes() {
+                return;
+            }
+        }
+        if matches!(pending, Pending::Quit) && !self.has_unsaved_changes() {
+            self.file.pending = None;
+            self.perform(ctx, pending);
+            return;
+        }
         let name = self.file.display_name();
         let mut choice = None;
         let modal = egui::Modal::new(egui::Id::unique("unsaved-changes")).show(ctx, |ui| {

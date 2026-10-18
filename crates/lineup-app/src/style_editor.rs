@@ -56,6 +56,20 @@ pub enum EditorEvent {
 }
 
 impl StyleEditor {
+    pub fn has_unsaved_changes(&self) -> bool {
+        self.open && self.draft.style != self.saved
+    }
+    pub fn current_style(&self) -> UserStyle {
+        self.draft.style.clone()
+    }
+    pub fn discard_edits(&mut self) {
+        let style = self.saved.clone();
+        let path = self.path.clone();
+        self.open = false;
+        self.start(style, path);
+        self.open = false;
+        self.roll.open = false;
+    }
     pub fn new() -> Self {
         let style = UserStyle::blank();
         let project = style.pattern_project();
