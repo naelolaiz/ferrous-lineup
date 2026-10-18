@@ -52,6 +52,12 @@ pub struct Part {
     /// A time signature of its own, for a part in another time than the
     /// rest of the song. The demo puts a time marker where it starts.
     pub time: Option<TimeSignature>,
+    /// The time signature of each bar, for music whose meter changes
+    /// from bar to bar, as in Mussorgsky's Promenade: 5/4, 6/4, 5/4...
+    /// Empty when every bar is in the part's time. The demo puts a time
+    /// marker wherever the meter changes, and a pattern for each run of
+    /// bars in one time signature, since a pattern has one.
+    pub meters: &'static [TimeSignature],
     /// The key this part is in, when it is not the song's. Its chords
     /// are read in this key, so a piece that modulates has a part for
     /// each key it visits.
@@ -160,6 +166,7 @@ impl Part {
             left: "",
             voices: &[(1, 0)],
             time: None,
+            meters: &[],
             key: None,
             tempo: &[],
             played: None,
@@ -181,6 +188,13 @@ impl Part {
             time: Some(time),
             ..self
         }
+    }
+
+    /// The same part with a time signature for each bar, for music whose
+    /// meter changes from bar to bar.
+    #[allow(dead_code)] // until its songs are in
+    const fn in_meters(self, meters: &'static [TimeSignature]) -> Part {
+        Part { meters, ..self }
     }
 
     /// The same part with the tempo markings of the score.
@@ -286,9 +300,46 @@ impl Song {
         Scale::new(self.tonic, self.mode)
     }
 
-    /// The time signature `part` is in: its own, or else the song's.
+    /// The time signature `part` is in: its own, or else the song's. A
+    /// part whose meter changes from bar to bar is in the time of its
+    /// first bar.
     pub fn part_time(&self, part: &Part) -> TimeSignature {
-        part.time.unwrap_or(self.time)
+        part.meters
+            .first()
+            .copied()
+            .or(part.time)
+            .unwrap_or(self.time)
+    }
+
+    /// `part` cut where its meter changes: one part for each run of bars
+    /// in one time signature, each with its own time and its own share
+    /// of the melody, the chords and the written-out accompaniment. A
+    /// part in one time signature is a single run, itself. The pieces
+    /// keep the part's name, voices and key, and its tempo markings go
+    /// with the first.
+    pub fn part_runs(&self, part: &Part) -> Vec<Part> {
+        if part.meters.is_empty() {
+            return vec![*part];
+        }
+        let mut runs: Vec<(usize, usize, TimeSignature)> = Vec::new();
+        for (bar, &time) in part.meters.iter().enumerate() {
+            match runs.last_mut() {
+                Some((_, bars, last)) if *last == time => *bars += 1,
+                _ => runs.push((bar, 1, time)),
+            }
+        }
+        runs.iter()
+            .enumerate()
+            .map(|(index, &(first, bars, time))| Part {
+                melody: bars_of(part.melody, first, bars),
+                chords: bars_of(part.chords, first, bars),
+                left: bars_of(part.left, first, bars),
+                time: Some(time),
+                meters: &[],
+                tempo: if index == 0 { part.tempo } else { &[] },
+                ..*part
+            })
+            .collect()
     }
 
     /// How `part` is accompanied: its comping, bass line and rhythm, its
@@ -324,6 +375,23 @@ impl Song {
     pub fn named(name: &str) -> Option<&'static Song> {
         SONGS.iter().find(|song| song.name == name)
     }
+}
+
+/// Bars `first` to `first + count` of a melody or a chart: the text
+/// between its bar lines. Text that is a slice of `'static` text lives
+/// as long, so the pieces of a part are parts too.
+fn bars_of(text: &'static str, first: usize, count: usize) -> &'static str {
+    if text.trim().is_empty() {
+        return text;
+    }
+    // Where each bar starts and ends, in bytes.
+    let mut cuts = vec![0];
+    cuts.extend(text.match_indices('|').map(|(at, _)| at));
+    cuts.push(text.len());
+    let start = cuts[first.min(cuts.len() - 1)];
+    let end = cuts[(first + count).min(cuts.len() - 1)];
+    // Leave out the bar line the piece starts with.
+    text[start..end].trim_start_matches('|').trim()
 }
 
 // Every genre file starts with `use super::*;`, which brings in all the
@@ -698,7 +766,15 @@ mod tests {
     #[test]
     fn every_bar_of_every_part_adds_up() {
         for song in SONGS {
-            for part in song.parts {
+            for whole in song.parts {
+                if !whole.meters.is_empty() {
+                    let bars = chart::parse_melody(whole.melody).unwrap().bars.len();
+                    assert_eq!(bars, whole.meters.len(), "{}: a meter per bar", song.name);
+                    assert_eq!(whole.voices, [(1, 0)], "{}: one voice", song.name);
+                }
+            }
+            for part in song.parts.iter().flat_map(|part| song.part_runs(part)) {
+                let part = &part;
                 let bar = song.part_time(part).steps_per_bar();
                 let what = format!("{}, {}", song.name, part.name);
                 for text in [part.melody, part.left] {

@@ -177,7 +177,7 @@ pub fn write_style_played(
         return false;
     }
     let (comping, bass_line) = rhythm.map_or((style.comping, style.bass), feel);
-    let backing = accompany(&style.spans(), tonic, comping, bass_line);
+    let backing = accompany(&style.spans(), tonic, style.time, comping, bass_line);
     let Some(chords) = chords_channel(project, selected) else {
         return false;
     };
@@ -337,12 +337,8 @@ pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bas
     let old_bass = find_synth(project, BASS)
         .map(|channel| target.notes(channel).to_vec())
         .unwrap_or_default();
-    let heard = hear_chords(
-        &old_chords,
-        &old_bass,
-        length,
-        project.pattern_time(pattern),
-    );
+    let time = project.pattern_time(pattern);
+    let heard = hear_chords(&old_chords, &old_bass, length, time);
     let played: Vec<_> = heard
         .iter()
         .filter_map(|stretch| stretch.chord.map(|chord| (chord, stretch)))
@@ -364,8 +360,8 @@ pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bas
     let mut new_bass = Vec::new();
     for (index, (chord, stretch)) in played.iter().enumerate() {
         let next = played[(index + 1) % played.len()].0;
-        new_chords.extend(comping.play(&voicings[index], stretch.start, stretch.length));
-        new_bass.extend(bass.play(*chord, next, stretch.start, stretch.length));
+        new_chords.extend(comping.play(time, &voicings[index], stretch.start, stretch.length));
+        new_bass.extend(bass.play(time, *chord, next, stretch.start, stretch.length));
     }
     // Where no chord is heard, the old notes stay.
     for stretch in heard.iter().filter(|stretch| stretch.chord.is_none()) {
@@ -758,6 +754,7 @@ mod tests {
         let expected = accompany(
             &style.spans(),
             PitchClass::C,
+            style.time,
             Comping::Montuno,
             Bass::Tumbao,
         );
@@ -775,7 +772,13 @@ mod tests {
         let keys = chords_channel(&mut project, None).unwrap();
         let bass = find_synth(&project, BASS).unwrap();
         assert!(recomp(&mut project, 0, Comping::Bossa, Bass::Bossa));
-        let expected = accompany(&style.spans(), PitchClass::D, Comping::Bossa, Bass::Bossa);
+        let expected = accompany(
+            &style.spans(),
+            PitchClass::D,
+            style.time,
+            Comping::Bossa,
+            Bass::Bossa,
+        );
         let mut chords = project.pattern(0).unwrap().notes(keys).to_vec();
         let mut wanted = expected.chords;
         let key = |n: &NoteEvent| (n.start, n.pitch);
