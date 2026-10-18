@@ -20,7 +20,7 @@
 
 use crate::harmony::{Chord, ChordSymbol};
 use crate::meter::{Bar, TimeSignature};
-use crate::pattern::{DEFAULT_VELOCITY, NoteEvent};
+use crate::pattern::{DEFAULT_VELOCITY, NoteEvent, TICKS_PER_STEP};
 use crate::pitch::{Note, PitchClass};
 
 use super::comping::{Bass, BassPart, Comping, Played};
@@ -125,9 +125,14 @@ pub struct Melody {
 ///   before it, from the start, such as a held bass under a moving
 ///   tune: `"E5:4 D5 C5 B4 & C3:16"`. Each voice is read on its own, and
 ///   all must have the same bars.
+/// - `(3` makes the next three notes (or rests, or ties) a triplet:
+///   three in the time of two, as sheet music writes a 3 over them.
+///   `(3 G4:2 G4 G4` is three eighth notes in the time of a quarter.
+///   Their starts fall between the steps of the grid, so they are
+///   placed to the tick (see [`NoteEvent::exact`]).
 ///
-/// Returns `None` if anything cannot be read, or if the voices' bars
-/// differ.
+/// Returns `None` if anything cannot be read, if the voices' bars
+/// differ, or if a bar line falls in the middle of a step.
 pub fn parse_melody(text: &str) -> Option<Melody> {
     let mut voices = text.split('&').map(parse_voice);
     let mut melody = voices.next()??;
@@ -138,23 +143,33 @@ pub fn parse_melody(text: &str) -> Option<Melody> {
         }
         melody.notes.extend(voice.notes);
     }
-    melody.notes.sort_by_key(|note| (note.start, note.pitch));
+    melody
+        .notes
+        .sort_by_key(|note| (note.start_tick(), note.pitch));
     Some(melody)
 }
 
 /// Reads one voice of a melody (see [`parse_melody`]).
 fn parse_voice(text: &str) -> Option<Melody> {
+    const TICKS: usize = TICKS_PER_STEP;
     let mut notes: Vec<NoteEvent> = Vec::new();
     let mut bars = Vec::new();
+    // Counted in ticks, for triplets.
     let mut at = 0;
     let mut bar_start = 0;
     let mut length = 4;
     // The notes the last note or chord struck, which a tie holds on.
     let mut last = 0..0;
+    let mut triplet = 0;
+    let steps = |ticks: usize| ticks.is_multiple_of(TICKS).then_some(ticks / TICKS);
     for token in text.split_whitespace() {
         if token == "|" {
-            bars.push(at - bar_start);
+            bars.push(steps(at - bar_start)?);
             bar_start = at;
+            continue;
+        }
+        if token == "(3" {
+            triplet = 3;
             continue;
         }
         let name = match token.split_once(':') {
@@ -164,34 +179,46 @@ fn parse_voice(text: &str) -> Option<Melody> {
             }
             None => token,
         };
+        let ticks = if triplet > 0 {
+            triplet -= 1;
+            length * TICKS * 2 / 3
+        } else {
+            length * TICKS
+        };
         if name == "_" {
             // A tie: the last note or chord goes on, across a bar line.
             let held = notes
                 .get_mut(last.clone())
                 .filter(|held| !held.is_empty())?;
             for note in held {
-                note.length += length;
+                let start = note.start_tick();
+                *note = melody_note(note.pitch, start, at + ticks - start);
             }
         } else if name != "-" {
             let first = notes.len();
             for name in name.split('+') {
-                notes.push(NoteEvent {
-                    velocity: DEFAULT_VELOCITY,
-                    ..NoteEvent::new(note_named(name)?, at, length)
-                });
+                notes.push(melody_note(note_named(name)?, at, ticks));
             }
             last = first..notes.len();
         }
-        at += length;
+        at += ticks;
     }
     if at > bar_start {
-        bars.push(at - bar_start);
+        bars.push(steps(at - bar_start)?);
     }
     Some(Melody {
         notes,
         bars,
-        length: at,
+        length: steps(at)?,
     })
+}
+
+/// A note of a melody, from tick `start` for `ticks` ticks.
+fn melody_note(pitch: Note, start: usize, ticks: usize) -> NoteEvent {
+    NoteEvent {
+        velocity: DEFAULT_VELOCITY,
+        ..NoteEvent::exact(pitch, start, ticks)
+    }
 }
 
 /// The note with a name such as "C4", "F#5" or "Bb3".
@@ -237,8 +264,16 @@ pub struct Backing {
 /// moves by step where it can (see [`bass_line`]).
 ///
 /// The bass line may lead into the next chord. After the last chord
-/// comes the first one again, because patterns loop.
-pub fn accompany(spans: &[ChordSpan], tonic: PitchClass, comping: Comping, bass: Bass) -> Backing {
+/// comes the first one again, because patterns loop. The chart is in
+/// bars of `time` from its first step, which the ways of playing that
+/// follow the beats of the bar ([`Comping::Aksak`]) need to know.
+pub fn accompany(
+    spans: &[ChordSpan],
+    tonic: PitchClass,
+    time: TimeSignature,
+    comping: Comping,
+    bass: Bass,
+) -> Backing {
     let chords: Vec<Chord> = spans.iter().map(|span| span.chord.in_key(tonic)).collect();
     let basses: Vec<(PitchClass, bool)> = spans
         .iter()
@@ -251,8 +286,9 @@ pub fn accompany(spans: &[ChordSpan], tonic: PitchClass, comping: Comping, bass:
         let (next, _) = basses[(index + 1) % basses.len()];
         backing
             .chords
-            .extend(comping.play(&voicings[index], span.start, span.length));
+            .extend(comping.play(time, &voicings[index], span.start, span.length));
         backing.bass.extend(bass.play_over(
+            time,
             chords[index],
             line[index],
             next,
@@ -289,7 +325,7 @@ pub fn accompany_in_bars(
     bass: Bass,
     time: TimeSignature,
 ) -> Backing {
-    let mut backing = accompany(spans, tonic, comping, bass);
+    let mut backing = accompany(spans, tonic, time, comping, bass);
     let chords: Vec<Chord> = spans.iter().map(|span| span.chord.in_key(tonic)).collect();
     let voicings = voice_progression(&chords);
     let harmonies: Vec<Played> = spans
@@ -463,7 +499,13 @@ mod tests {
         let chart = "C | G/B | Am | Am/G | F | C/E | Dm | G";
         let bass = |tonic: PitchClass| -> Vec<u8> {
             let spans = parse_chart_in(chart, 16, PitchClass::C).unwrap();
-            let backing = accompany(&spans, tonic, Comping::Held, Bass::Held);
+            let backing = accompany(
+                &spans,
+                tonic,
+                TimeSignature::COMMON,
+                Comping::Held,
+                Bass::Held,
+            );
             backing.bass.iter().map(|note| note.pitch.midi()).collect()
         };
         // C2 B1 A1 G1 F1 E1, then D2: D1 is below a bass guitar.
@@ -473,7 +515,13 @@ mod tests {
         // The chords above are G major, not B something: G/B is G with
         // B in the bass.
         let spans = parse_chart_in("G/B", 16, PitchClass::C).unwrap();
-        let backing = accompany(&spans, PitchClass::C, Comping::Held, Bass::Held);
+        let backing = accompany(
+            &spans,
+            PitchClass::C,
+            TimeSignature::COMMON,
+            Comping::Held,
+            Bass::Held,
+        );
         let mut chord: Vec<u8> = backing
             .chords
             .iter()
@@ -486,7 +534,13 @@ mod tests {
     #[test]
     fn a_chart_is_accompanied_in_any_key() {
         let chart = parse_chart("I | V", 16).unwrap();
-        let backing = accompany(&chart, PitchClass::D, Comping::Held, Bass::Held);
+        let backing = accompany(
+            &chart,
+            PitchClass::D,
+            TimeSignature::COMMON,
+            Comping::Held,
+            Bass::Held,
+        );
         let bass: Vec<u8> = backing.bass.iter().map(|note| note.pitch.midi()).collect();
         assert_eq!(bass, [38, 45], "D2 and A2");
         assert_eq!(backing.chords.len(), 6, "two triads");
@@ -528,7 +582,7 @@ mod tests {
         );
         // The per-chord rhythm of `accompany` never reaches beat 2 of a
         // chord a beat long, so it leaves V7 and IV out.
-        let restarted = accompany(&chart, PitchClass::C, Comping::Waltz, Bass::Waltz);
+        let restarted = accompany(&chart, PitchClass::C, three, Comping::Waltz, Bass::Waltz);
         assert!(restarted.chords.iter().all(|note| note.start >= 12));
         // The bass is the same either way: every chord's root.
         assert_eq!(backing.bass, restarted.bass);

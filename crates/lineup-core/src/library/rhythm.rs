@@ -143,14 +143,18 @@ impl Rhythm {
     /// The rhythm a song plays when its time signature is changed to
     /// `time` by hand, while it played `like`: a rhythm of the same kind
     /// in `time` if the library has one (a tango in 3/4 is a tango vals),
-    /// else the usual one in `time` (a waltz for 3/4), else a plain beat
-    /// made for `time` (see [`Rhythm::basic`]).
+    /// else the usual one in `time` (a waltz for 3/4), else one with the
+    /// same notes to the bar grouped its own way (7/8 plays as 2+2+3/8,
+    /// a rachenitsa, or 3+2+2/8 for a song that is already Balkan), else
+    /// a plain beat made for `time` (see [`Rhythm::basic`]).
     pub fn for_time(time: TimeSignature, like: Option<&Rhythm>) -> &'static Rhythm {
         let in_time = |rhythm: &&'static Rhythm| rhythm.time == time;
+        let same_kind =
+            |rhythm: &&'static Rhythm| like.is_some_and(|like| like.genre == rhythm.genre);
         RHYTHMS
             .iter()
             .filter(in_time)
-            .find(|rhythm| like.is_some_and(|like| like.genre == rhythm.genre))
+            .find(same_kind)
             .or_else(|| {
                 USUAL
                     .iter()
@@ -158,7 +162,37 @@ impl Rhythm {
                     .find(in_time)
             })
             .or_else(|| RHYTHMS.iter().find(in_time))
+            .or_else(|| Rhythm::grouped_for(time, same_kind))
             .unwrap_or_else(|| Rhythm::basic(time))
+    }
+
+    /// A rhythm for `time` with its notes grouped: `time` is an odd
+    /// meter written without its grouping, such as 5/4 or 7/8, and the
+    /// rhythm has as many of the same notes to the bar. One of the kind
+    /// `same_kind` picks comes first, then one grouped the way `time` is
+    /// felt (see [`TimeSignature::felt_groups`]), then any.
+    fn grouped_for(
+        time: TimeSignature,
+        same_kind: impl Fn(&&'static Rhythm) -> bool,
+    ) -> Option<&'static Rhythm> {
+        if time.is_grouped() || time.usual_groups() != 1 {
+            return None;
+        }
+        let grouped = |rhythm: &&'static Rhythm| {
+            rhythm.time.beats == time.beats && rhythm.time.unit == time.unit
+        };
+        let felt = time.felt_groups();
+        RHYTHMS
+            .iter()
+            .filter(grouped)
+            .find(&same_kind)
+            .or_else(|| {
+                RHYTHMS
+                    .iter()
+                    .filter(grouped)
+                    .find(|rhythm| rhythm.time.groups() == felt)
+            })
+            .or_else(|| RHYTHMS.iter().find(grouped))
     }
 
     /// A plain beat for `time`, for the time signatures the library has
@@ -421,6 +455,19 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Tom fill",
         "Two bass drums in sixteenths under a heavy backbeat.",
     ),
+    rhythm(
+        "Five-four rock",
+        Rock,
+        120.0,
+        &[
+            (Kick, "X... ..x. .... X... ...."),
+            (Snare, ".... .... X... .... X..."),
+            (HiHat, "x.x. x.x. x.x. x.x. x.x."),
+        ],
+        "Snare roll",
+        "A rock beat in 5/4, counted 3 + 2: kick on 1 and 4, snare on 3 and 5.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Blues -----
     rhythm(
         "Shuffle",
@@ -502,6 +549,21 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Snare roll",
         "New Orleans street parade drumming: a bass drum that answers itself under a busy snare.",
     ),
+    rhythm(
+        "Five-four swing",
+        Jazz,
+        170.0,
+        &[
+            (Ride, "x... x.x. x... x... x.x."),
+            (HiHat, ".... x... .... .... x..."),
+            (Kick, "o... .... .... o... ...."),
+        ],
+        "",
+        "Swing in five, counted 3 + 2: a jazz waltz bar and a bar of two, the ride \
+         marking where each starts.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4))
+    .swung(100),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",
@@ -1211,6 +1273,108 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Latin fill",
         "Hand claps (palmas) and the bass and slap of a cajón.",
     ),
+    // ----- Balkan and Turkish -----
+    // Dances in bars of short and long beats: a long beat is three
+    // eighths, a short one two. The big drum (the tapan, the daouli, the
+    // davul) strikes the long beats and the first of the bar; a thin
+    // stick on the other side plays the rest.
+    rhythm(
+        "Paidushko",
+        Balkan,
+        200.0,
+        &[(Kick, "X... x....."), (Rim, "..o. ..x.o.")],
+        "",
+        "Bulgaria's limping dance in 5/8: a short beat and a long one, 2 + 3, \
+         quick and slow, over and over.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 3], 8)),
+    rhythm(
+        "Kalamatianos",
+        Balkan,
+        180.0,
+        &[
+            (Kick, "X..... .... ...."),
+            (Snare, "...... x... x..."),
+            (Rim, "..o.o. ..o. ..o."),
+        ],
+        "",
+        "Greece's most loved dance, in 7/8: a long beat and two short ones, 3 + 2 + 2, \
+         slow, quick, quick.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    rhythm(
+        "Lesnoto",
+        Balkan,
+        140.0,
+        &[(Kick, "X..... x... ...."), (Rim, "..o.x. ..o. x.o.")],
+        "",
+        "The \"easy\" dance of Macedonia, in 7/8 like the kalamatianos (3 + 2 + 2) but \
+         slower and heavier, the big drum on the first two beats.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    rhythm(
+        "Rachenitsa",
+        Balkan,
+        220.0,
+        &[(Kick, "X... .... x....."), (Rim, "..o. x.o. ..x.o.")],
+        "",
+        "Bulgaria's fast dance in 7/8 the other way round: two short beats and a long \
+         one, 2 + 2 + 3, quick, quick, slow.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 3], 8)),
+    rhythm(
+        "Daichovo",
+        Balkan,
+        220.0,
+        &[
+            (Kick, "X... .... .... x....."),
+            (Rim, "..o. x.o. x.o. ..x.o."),
+        ],
+        "",
+        "A Bulgarian dance in 9/8 that is not three times three: four beats, the last \
+         one long, 2 + 2 + 2 + 3.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    rhythm(
+        "Karşılama",
+        Balkan,
+        150.0,
+        &[
+            (Kick, "X... .... x... ......"),
+            (Conga, "l... h... l... h.h..."),
+            (Shaker, "x.o. x.o. x.o. x.o.o."),
+        ],
+        "",
+        "The Turkish 9/8 of Thrace, 2 + 2 + 2 + 3, on the darbuka: düm, tek, düm, \
+         tek-tek, the low and the high sound of the drum.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    rhythm(
+        "Kopanitsa",
+        Balkan,
+        220.0,
+        &[
+            (Kick, "X... .... x..... .... ...."),
+            (Rim, "..o. x.o. ..o.o. x.o. x.o."),
+        ],
+        "",
+        "Bulgaria's 11/8, 2 + 2 + 3 + 2 + 2: five beats with the long one in the \
+         middle, the dance of Gankino horo.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8)),
+    rhythm(
+        "Bučimiš",
+        Balkan,
+        260.0,
+        &[
+            (Kick, "X... .... .... .... x..... .... ...."),
+            (Rim, "..o. x.o. x.o. x.o. ..o.o. x.o. x.o."),
+        ],
+        "",
+        "Fifteen eighths in seven beats, 2 + 2 + 2 + 2 + 3 + 2 + 2: one of the longest \
+         bars Bulgarian dancers count, with the long beat near the end.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8)),
     // ----- Reggae and ska -----
     rhythm(
         "One drop",
@@ -1488,9 +1652,43 @@ mod tests {
     }
 
     #[test]
+    fn an_odd_meter_gets_a_rhythm_grouped_its_way() {
+        let seven = TimeSignature::new(7, 8);
+        // 7/8 is felt as 2+2+3, a rachenitsa...
+        let pop = named("Pop beat");
+        let rhythm = Rhythm::for_time(seven, Some(pop));
+        assert_eq!(rhythm.name, "Rachenitsa");
+        assert_eq!(rhythm.time.to_string(), "2+2+3/8");
+        // ...unless the song is Balkan already: a kalamatianos stays
+        // with its kind, the first of them in 7/8.
+        let kalamatianos = named("Kalamatianos");
+        assert_eq!(
+            Rhythm::for_time(seven, Some(kalamatianos)).name,
+            "Kalamatianos"
+        );
+        // 5/4 swings in a jazz song, and rocks in any other.
+        let swing = named("Swing");
+        let five = TimeSignature::new(5, 4);
+        assert_eq!(Rhythm::for_time(five, Some(swing)).name, "Five-four swing");
+        assert_eq!(Rhythm::for_time(five, Some(pop)).name, "Five-four rock");
+        assert_eq!(
+            Rhythm::for_time(TimeSignature::new(11, 8), None).name,
+            "Kopanitsa"
+        );
+        // 9/8 is three beats of three, not 2+2+2+3: nothing the library
+        // has, so a basic beat.
+        let nine = TimeSignature::new(9, 8);
+        assert_eq!(Rhythm::for_time(nine, Some(pop)).name, "Basic beat");
+    }
+
+    #[test]
     fn a_time_signature_with_no_rhythm_gets_a_basic_beat() {
+        let thirteen = TimeSignature::new(13, 8);
+        let beat = Rhythm::for_time(thirteen, Some(named("Pop beat")));
+        assert_eq!(beat.name, "Basic beat");
+        assert_eq!(beat.time, thirteen);
         let five_four = TimeSignature::new(5, 4);
-        let beat = Rhythm::for_time(five_four, Some(named("Pop beat")));
+        let beat = Rhythm::basic(five_four);
         assert_eq!(beat.time, five_four);
         let line = |beat: &Rhythm, drum: Drum| {
             beat.lines

@@ -82,7 +82,7 @@ impl Style {
 
     /// The chords and the bass line, played in the key of `tonic`.
     pub fn render(&self, tonic: PitchClass) -> Backing {
-        chart::accompany(&self.spans(), tonic, self.comping, self.bass)
+        chart::accompany(&self.spans(), tonic, self.time, self.comping, self.bass)
     }
 
     /// A key that suits the style, for the demos: A for the minor modes,
@@ -427,6 +427,19 @@ pub static STYLES: &[Style] = &[
         "Rock beat",
         "Major chords borrowed from the minor key, bIII, bVI and bVII: the sound of garage rock and grunge.",
     ),
+    style(
+        "Five-four rock",
+        Rock,
+        NaturalMinor,
+        "i | bVI | bVII | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        120.0,
+        "Five-four rock",
+        "Rock in 5/4, counted 3 + 2: the bass on 1 and 4, the chords on the beats \
+         between, climbing from bVI through bVII back to i.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Blues -----
     style(
         "Twelve-bar blues",
@@ -676,6 +689,19 @@ pub static STYLES: &[Style] = &[
         "The whole circle of fifths in a minor key, one chord a bar, in three.",
     )
     .in_time(THREE_FOUR),
+    style(
+        "Five-four swing",
+        Jazz,
+        NaturalMinor,
+        "i7 | v7 | i7 | v7 | iv7 | v7 | bVImaj7 | V7",
+        Comping::Aksak,
+        Bass::Aksak,
+        170.0,
+        "Five-four swing",
+        "Jazz in 5/4, counted 3 + 2: a minor vamp from i7 to v7, then iv7 and \
+         bVImaj7 lead to a V7 with the leading note, back to i7.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Soul, funk and R&B -----
     style(
         "Neo-soul",
@@ -1608,6 +1634,114 @@ pub static STYLES: &[Style] = &[
         "Rumba flamenca",
         "The harmonic minor's E7 makes A minor sound Spanish: its G sharp and F sit a step and a half apart.",
     ),
+    // ----- Balkan and Turkish -----
+    // One chord to the bar: the bass on each beat, short or long, and
+    // the chord on the eighths between (see `Comping::Aksak`).
+    style(
+        "Paidushko",
+        Balkan,
+        HarmonicMinor,
+        "i | i | V7 | i | iv | i | V7 | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        200.0,
+        "Paidushko",
+        "A limping 5/8, 2 + 3: the bass on the short beat and on the long one, \
+         the accordion's chord after each, in a minor key with its V7.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 3], 8)),
+    style(
+        "Kalamatianos",
+        Balkan,
+        HarmonicMinor,
+        "i | i | iv | iv | V7 | V7 | i | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        180.0,
+        "Kalamatianos",
+        "The Greek 7/8, 3 + 2 + 2, slow, quick, quick: i, iv and V7 of a minor \
+         key, two bars each.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    style(
+        "Lesnoto",
+        Balkan,
+        NaturalMinor,
+        "i | bVII | i | bVII | iv | i | V | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        140.0,
+        "Lesnoto",
+        "Macedonia's 3 + 2 + 2, unhurried: a minor key rocking to the major chord a step \
+         below, bVII, before iv and a major V bring it home.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    style(
+        "Rachenitsa",
+        Balkan,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        220.0,
+        "Rachenitsa",
+        "The Bulgarian 7/8, 2 + 2 + 3, quick, quick, slow: two chords, I and V7, at a \
+         dancing pace.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 3], 8)),
+    style(
+        "Daichovo",
+        Balkan,
+        Major,
+        "I | IV | V7 | I | I | IV | V7 | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        220.0,
+        "Daichovo",
+        "A Bulgarian 9/8 counted 2 + 2 + 2 + 3: three short beats and a long one, \
+         over I, IV and V7.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    style(
+        "Karşılama",
+        Balkan,
+        Phrygian,
+        "I | bII | I | bII | bvii | bII | I | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        150.0,
+        "Karşılama",
+        "The Turkish 9/8, 2 + 2 + 2 + 3, with the sound of makam hicaz: a major chord \
+         on the tonic, the major chord a semitone above it, and the minor one a \
+         tone below.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    style(
+        "Kopanitsa",
+        Balkan,
+        HarmonicMinor,
+        "i | i | iv | iv | V7 | V7 | i | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        220.0,
+        "Kopanitsa",
+        "The 11/8 of Gankino horo, 2 + 2 + 3 + 2 + 2: five beats a bar, the long \
+         one in the middle, over i, iv and V7.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8)),
+    style(
+        "Bučimiš",
+        Balkan,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        260.0,
+        "Bučimiš",
+        "Fifteen eighths to the bar, 2 + 2 + 2 + 2 + 3 + 2 + 2: seven beats, the long \
+         one fifth, over two chords.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8)),
     // ----- Reggae and ska -----
     style(
         "Reggae",
@@ -1940,7 +2074,10 @@ mod tests {
                 style.name,
                 style.rhythm
             );
-            assert!((40.0..=200.0).contains(&style.tempo), "{}", style.name);
+            // Tempos count quarter notes: the fast dances counted in
+            // eighths, such as a rachenitsa, go past 200.
+            let fastest = if style.time.unit >= 8 { 280.0 } else { 200.0 };
+            assert!((40.0..=fastest).contains(&style.tempo), "{}", style.name);
             assert!(!style.about.is_empty());
         }
         assert!(STYLES.len() >= 60, "a large library");
