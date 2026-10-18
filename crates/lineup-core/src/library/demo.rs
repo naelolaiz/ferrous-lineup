@@ -478,11 +478,13 @@ pub fn song_demo(song: &Song) -> Project {
     }
     // The ending is a bar of the last part's time, on the home chord of
     // the last part's key: a song that ends after a modulation ends in
-    // the new key.
+    // the new key. A piece written out in full, its accompaniment too,
+    // ends where its score ends, with nothing added.
     let last_part = song.form.last().and_then(|name| song.part(name));
+    let written_out = last_part.is_some_and(|part| !part.left.is_empty());
     project.time_signature = last_part.map_or(song.time, |part| song.part_time(part));
     project.scale = last_part.map_or(song.scale(), |part| song.part_scale(part));
-    let end = ending(&mut project, rhythm.is_some());
+    let end = (!written_out).then(|| ending(&mut project, rhythm.is_some()));
     project.time_signature = song.time;
     project.scale = song.scale();
     name_tracks(&mut project, "Song", "Drums");
@@ -522,12 +524,28 @@ pub fn song_demo(song: &Song) -> Project {
         }
         at += length;
     }
-    project.add_clip(Clip::new(end, SONG_TRACK, at));
-    if !project.playlist().chord_markers().is_empty() {
-        let (time, key) = last_part.map_or((song.time, song.scale()), |part| {
-            (song.part_time(part), song.part_scale(part))
-        });
-        write_ending(&mut project, at, time.steps_per_bar(), key);
+    if let Some(end) = end {
+        project.add_clip(Clip::new(end, SONG_TRACK, at));
+        if !project.playlist().chord_markers().is_empty() {
+            let (time, key) = last_part.map_or((song.time, song.scale()), |part| {
+                (song.part_time(part), song.part_scale(part))
+            });
+            write_ending(&mut project, at, time.steps_per_bar(), key);
+        }
+    }
+    // A marking that would start after the music, such as the tempo
+    // coming back after a fermata on the very last note, has nothing left
+    // to change.
+    let end = project.song_length();
+    let after: Vec<usize> = project
+        .playlist()
+        .tempo_markers()
+        .iter()
+        .map(|marker| marker.start)
+        .filter(|&start| start >= end)
+        .collect();
+    for start in after {
+        project.remove_tempo_marker(start);
     }
     if let Some(bar) = last_bar(song, at) {
         broaden_the_end(&mut project, song, bar);
@@ -786,6 +804,21 @@ mod tests {
         // Its chords are heard when it is opened instead.
         let project = song_demo(Song::named("Für Elise").unwrap());
         assert!(project.playlist().chord_markers().is_empty());
+    }
+
+    #[test]
+    fn a_piece_written_out_in_full_ends_where_its_score_ends() {
+        // Für Elise stops on its last A, with no chord added after it.
+        let song = Song::named("Für Elise").unwrap();
+        let project = song_demo(song);
+        assert!(project.patterns().iter().all(|p| p.name != "Ending"));
+        let length: usize = song
+            .form
+            .iter()
+            .filter_map(|name| song.part(name))
+            .map(|part| part.length(song.part_time(part).steps_per_bar()))
+            .sum();
+        assert_eq!(project.song_length(), length);
     }
 
     #[test]
