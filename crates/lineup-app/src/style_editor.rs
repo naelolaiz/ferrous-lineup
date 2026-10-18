@@ -7,7 +7,7 @@ use crate::{
     widgets,
 };
 use eframe::egui::{self, Key, Modifiers, Rect};
-use lineup_core::library::{STYLES, StyleLane, UserStyle};
+use lineup_core::library::{StyleLane, UserStyle};
 use lineup_core::{Channel, ChannelKind, History, MAX_STEPS, Note, Player, Project, Tempo};
 use std::path::PathBuf;
 
@@ -207,14 +207,19 @@ impl StyleEditor {
                     let menu = egui::containers::menu::MenuButton::new("Start from…").config(
                         egui::containers::menu::MenuConfig::new().close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside));
                     menu.ui(ui, |ui| {
-                        ui.add(egui::TextEdit::singleline(&mut self.source_filter).hint_text("Search styles"));
+                        ui.add(egui::TextEdit::singleline(&mut self.source_filter).hint_text("Search presets"));
                         egui::ScrollArea::vertical().max_height(260.0).show(ui, |ui| {
                             if ui.button("Empty style").clicked() { events.push(EditorEvent::StartFrom(UserStyle::blank())); ui.close(); }
-                            for style in user_styles.iter().filter(|style| style.name.to_lowercase().contains(&self.source_filter.to_lowercase())) {
-                                if ui.button(&style.name).clicked() { let mut copy = style.clone(); copy.name.push_str(" copy"); events.push(EditorEvent::StartFrom(copy)); ui.close(); }
-                            }
-                            for style in crate::library_browser::catalogue::alphabetical(STYLES.iter().filter(|style| style.name.to_lowercase().contains(&self.source_filter.to_lowercase())), |style| style.name) {
-                                if ui.button(style.name).clicked() { events.push(EditorEvent::StartFrom(UserStyle::from_builtin(style))); ui.close(); }
+                            for preset in crate::library_browser::catalogue::presets(&self.source_filter, user_styles, false) {
+                                if ui.button(preset.name()).clicked() {
+                                    use crate::library_browser::catalogue::Preset;
+                                    let copy = match preset {
+                                        Preset::Style(style) => UserStyle::from_builtin(style),
+                                        Preset::Rhythm(rhythm) => UserStyle::from_rhythm(rhythm),
+                                        Preset::User(_, style) => { let mut copy = style.clone(); copy.name.push_str(" copy"); copy },
+                                    };
+                                    events.push(EditorEvent::StartFrom(copy)); ui.close();
+                                }
                             }
                         });
                     });
@@ -498,6 +503,7 @@ impl StyleEditor {
 mod tests {
     use super::*;
     use egui::{Event, FullOutput, PointerButton, RawInput, Shape};
+    use lineup_core::library::STYLES;
 
     fn frame(
         editor: &mut StyleEditor,

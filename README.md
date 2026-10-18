@@ -98,38 +98,41 @@ of the project, and a big key for each chord of the key (I to vii°),
 coloured by what it does: home, away or tension. Hold one, or press
 **1** to **7**, to play its chord; the chords that often come next
 light up, and while the music plays, the chord you hear lights up too.
-The **Library** tab next to the pattern list holds 145 harmony styles
-and 81 rhythms from pop, rock, blues, jazz, soul, hip hop, electronic,
-Latin, tango, flamenco, reggae, folk and classical music: click one to
-hear it in your key. Pick a rhythm after a style, and the style's chords
-and bass are played the way that rhythm goes; right-click a rhythm and
-**Play the whole song in this rhythm** changes the drums, chords and bass
-of the whole song at once, keeping the melody. **File > Demos** opens
+The **Library** tab next to the pattern list holds one alphabetical
+**Presets** list, combining all 145 harmony presets, 81 rhythm presets
+and your saved styles. They cover pop, rock, blues, jazz, soul, hip hop,
+electronic, Latin, tango, flamenco, reggae, folk and classical music.
+Click one to hear it in your key; right-click and choose **Play the whole
+song with this preset** to apply it throughout the song while stopped.
+The melody stays in place. **File > Demos** opens
 177 songs with their melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
 *Für Elise* and the *Habanera*, and new tunes written to show off the
 blues, tango, flamenco and more. It also plays every style as a short
 song.
 
-The Library and the chord sheet's **Band** menu share **Apply from styles
-and rhythms** checkboxes: **Rhythm patterns**, **Voices / instruments**,
-**Time signature**, **Chord progression**, **Tempo**, and **Swing**.
-Only the checked components change. Chord progression is off initially,
-so a style keeps the current song's chords; check it to take the style's
-progression too. An empty audition pattern uses the style's chords to
-demonstrate it. Rhythm choices always keep the chords.
+The Library and the chord sheet's **Band** menu share **Copy from preset**
+checkboxes: **Rhythm patterns**, **Voices / instruments**, **Time
+signature**, **Chord progression (when included)**, **Tempo**, and **Swing**.
+Only the checked components change. Entries marked **+ chords** include a
+progression; other entries say **keeps chords**. Chord progression is off
+initially; check it to copy a preset's chart as well. An empty audition
+uses example chords to demonstrate the preset. The combined list keeps
+every original playing pattern and instrument choice available.
 
 The chord sheet's **Band** and **Progression** menus use the Library's
-browser too, with the same style names, search and alphabetical ordering
-of genres and entries. Search by name, genre or time signature; the search
+browser too, with the same preset names, search and alphabetical ordering.
+Search by name, genre or time signature; the search
 carries between views, and **×** clears it. **Progression** shows harmony
-styles; **Band** also offers rhythms.
+presets that include a chord progression.
 
-Turn off **Use matching style for rhythms** to play simple accents on
-the meter's beat groups with the current instruments, including for odd
-meters that have a matching style. The **Time** picker and bar 1's
+Enable **Plain accents, keep instruments** to play chord and bass accents
+on the meter's beat groups with the current instruments. This works with
+every preset, including saved styles; its drum patterns are still copied
+when **Rhythm patterns** is checked. The instrument checkbox is disabled
+while plain accents is enabled. The **Time** picker and bar 1's
 time-signature menu also show the matching style, rhythm/accent,
 instrument and swing checkboxes directly. The Library shows the band's
-rhythm style and its instrumentation separately; the chord sheet remains the
+pattern source and its instrumentation separately; the chord sheet remains the
 source of the song's chords. These band choices survive saving and
 undo/redo. A meter change keeps each bar's duration by adjusting tempo.
 
@@ -140,7 +143,8 @@ preview. **Start from…** copies an existing style; right-clicking a style
 or rhythm in the Library also opens an editable copy. Pitched templates
 are written over C major and follow the song’s chords when applied.
 Save them as `.lineup-style` files; **Styles folder…** chooses the folder
-loaded into **User styles** in the shared browser. Applied styles are
+loaded into **Presets** in the shared browser. **Start from…** uses that same
+list, including rhythm presets. Applied styles are
 embedded in project files, so reopening a song keeps its custom patterns.
 
 **Mixer** in the toolbar, **View > Mixer**, or **F9** opens master and

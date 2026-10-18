@@ -197,7 +197,10 @@ impl LineupApp {
             self.use_in_song(action);
             return;
         }
-        if let LibraryAction::RhythmInSong(_) = action {
+        if matches!(
+            action,
+            LibraryAction::RhythmInSong(_) | LibraryAction::StyleInSong(_)
+        ) {
             self.use_in_song(action);
             return;
         }
@@ -223,7 +226,7 @@ impl LineupApp {
         };
         let mut tried = previous;
         let (name, tempo) = match action {
-            LibraryAction::Style(style) => {
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                 if parts.rhythm || parts.progression {
                     tried.style = Some(style);
                     tried.row_style = None;
@@ -237,6 +240,7 @@ impl LineupApp {
             LibraryAction::Rhythm(rhythm) => {
                 if parts.rhythm {
                     tried.rhythm = Some(rhythm);
+                    tried.style = None;
                 }
                 (rhythm.name, rhythm.tempo)
             }
@@ -251,7 +255,7 @@ impl LineupApp {
         let written = self.edit("try from the library", |project| {
             let index = target.or_else(|| project.add_pattern())?;
             match action {
-                LibraryAction::Style(style) => {
+                LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                     apply::write_style_parts(project, index, style, Some(selected), parts)
                 }
                 LibraryAction::Rhythm(rhythm) => {
@@ -318,7 +322,9 @@ impl LineupApp {
         let use_tempo = parts.tempo;
         let (name, tempo, label) = match action {
             LibraryAction::UserStyle(_) => unreachable!("handled above"),
-            LibraryAction::Style(style) => (style.name, Some(style.tempo), "change the style"),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                (style.name, Some(style.tempo), "change the style")
+            }
             LibraryAction::RowStyle(style) => (style.name, Some(style.tempo), "change the style"),
             LibraryAction::MicromodeStyle(style) => {
                 (style.name, Some(style.tempo), "change the style")
@@ -338,7 +344,9 @@ impl LineupApp {
         // The swing the rhythm was last played with, if it was set.
         let rhythm = match action {
             _ if fill_picked(action) => None,
-            LibraryAction::Style(style) => Rhythm::named(style.rhythm),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                Rhythm::named(style.rhythm)
+            }
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => Some(rhythm),
             LibraryAction::UserStyle(_)
             | LibraryAction::RowStyle(_)
@@ -348,7 +356,9 @@ impl LineupApp {
         let change = self.edit(label, |project| {
             let change = match action {
                 LibraryAction::UserStyle(_) => unreachable!("handled above"),
-                LibraryAction::Style(style) => apply::use_style_parts(project, style, parts),
+                LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                    apply::use_style_parts(project, style, parts)
+                }
                 LibraryAction::RowStyle(style) => rows::use_row_style(project, style),
                 LibraryAction::MicromodeStyle(style) => {
                     micromodes::use_micromode_style(project, style)
@@ -408,17 +418,21 @@ impl LineupApp {
         // The song now plays what was picked, so the library shows it.
         if self.project != before || change != apply::RhythmChange::default() {
             self.song_library = match action {
-                LibraryAction::Style(style) if parts.rhythm || parts.progression => Tried {
-                    user_style: None,
-                    style: Some(style),
-                    rhythm: if parts.rhythm {
-                        Rhythm::named(style.rhythm)
-                    } else {
-                        song_library.rhythm
-                    },
-                    row_style: None,
-                    micromode_style: None,
-                },
+                LibraryAction::Style(style) | LibraryAction::StyleInSong(style)
+                    if parts.rhythm || parts.progression =>
+                {
+                    Tried {
+                        user_style: None,
+                        style: Some(style),
+                        rhythm: if parts.rhythm {
+                            Rhythm::named(style.rhythm)
+                        } else {
+                            song_library.rhythm
+                        },
+                        row_style: None,
+                        micromode_style: None,
+                    }
+                }
                 LibraryAction::RowStyle(style) => Tried {
                     rhythm: style.rhythm().or(song_library.rhythm),
                     row_style: Some(style),
@@ -433,6 +447,8 @@ impl LineupApp {
                     if !fill && parts.rhythm =>
                 {
                     Tried {
+                        user_style: None,
+                        style: None,
                         rhythm: Some(rhythm),
                         ..song_library
                     }
@@ -641,7 +657,9 @@ impl LineupApp {
     /// styles.
     fn band_plays(&mut self, action: LibraryAction) -> bool {
         let parts = match action {
-            LibraryAction::Style(_) => self.playlist.library_parts(),
+            LibraryAction::Style(_) | LibraryAction::StyleInSong(_) => {
+                self.playlist.library_parts()
+            }
             _ => self.playlist.library_parts().for_rhythm(),
         };
         self.band_plays_parts(action, parts)
@@ -650,7 +668,9 @@ impl LineupApp {
     fn band_plays_parts(&mut self, action: LibraryAction, parts: apply::StyleParts) -> bool {
         let style = match action {
             _ if fill_picked(action) => return false,
-            LibraryAction::Style(style) => BandStyle::of_style(style),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                BandStyle::of_style(style)
+            }
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
                 BandStyle::named(rhythm.name)
             }
@@ -662,7 +682,7 @@ impl LineupApp {
             return false;
         };
         let harmony = match action {
-            LibraryAction::Style(style) => Some(style),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => Some(style),
             _ => None,
         };
         let swing = self.swings.of(style.name);
