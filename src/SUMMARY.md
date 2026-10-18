@@ -96,6 +96,7 @@
   - [The lead sheet: the tune in notation](step-9/lead-sheet.md)
   - [Release builds: a download for every system](step-9/releases.md)
   - [A second bug hunt: crashes, spelling and the beat](step-9/bug-hunt.md)
+  - [Swing and big band songs, with a horn section](step-9/big-band-songs.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
