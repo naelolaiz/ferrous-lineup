@@ -114,6 +114,9 @@ pub enum Comping {
     Arp3,
     /// Long, short, long, long: the Cuban habanera, grandmother of the tango.
     Habanera,
+    /// For 12/8: the chord on every eighth, three to a beat, the first of
+    /// each three the strongest: the slow blues piano.
+    Triplets,
 }
 
 impl Comping {
@@ -315,6 +318,14 @@ impl Comping {
                     hit!(6, 2, All, 84),
                 ],
             ),
+            Comping::Triplets => (
+                6,
+                &[
+                    hit!(0, 2, All, 92),
+                    hit!(2, 2, Upper, 66),
+                    hit!(4, 2, Upper, 72),
+                ],
+            ),
             Comping::Arp3 => (
                 12,
                 &[
@@ -443,6 +454,9 @@ pub enum Bass {
     Waltz,
     /// The habanera's long, short, long, long.
     Habanera,
+    /// For 12/8: the root on every beat, long then short, the short one
+    /// on the beat's last eighth leading to the next: the slow blues.
+    LongShort,
 }
 
 impl Bass {
@@ -534,6 +548,7 @@ impl Bass {
                 ],
             ),
             Bass::Waltz => (24, &[hit!(0, 4, Root, 100), hit!(12, 4, LowFifth, 90)]),
+            Bass::LongShort => (6, &[hit!(0, 4, Root, 104), hit!(4, 2, Root, 78)]),
             Bass::Habanera => (
                 8,
                 &[

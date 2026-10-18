@@ -2187,6 +2187,34 @@ mod tests {
     }
 
     #[test]
+    fn the_slow_blues_plays_four_beats_of_three() {
+        // 12/8: four dotted-quarter beats a bar, at steps 0, 6, 12 and
+        // 18. The bass is on every beat and nowhere off the eighths, and
+        // the piano plays eighths, three to a beat.
+        let mut project = Project::with_band();
+        project.set_band_style(BandStyle::named("Slow blues"));
+        write(&mut project, &["C7", "F7"]);
+        assert_eq!(project.time_signature, TimeSignature::new(12, 8));
+        let bass: Vec<usize> = part(&project, Player::Bass)
+            .iter()
+            .map(|&(at, ..)| at)
+            .filter(|&at| at < 24)
+            .collect();
+        for beat in [0, 6, 12, 18] {
+            assert!(bass.contains(&beat), "no bass on step {beat}: {bass:?}");
+        }
+        assert!(bass.iter().all(|at| at % 2 == 0), "{bass:?}");
+        let piano: Vec<usize> = part(&project, Player::Piano)
+            .iter()
+            .map(|&(at, ..)| at)
+            .filter(|&at| at < 24)
+            .collect();
+        for eighth in (0..24).step_by(2) {
+            assert!(piano.contains(&eighth), "no chord on step {eighth}");
+        }
+    }
+
+    #[test]
     fn a_style_in_three_puts_the_song_in_three() {
         let mut project = Project::with_band();
         write(&mut project, &["C", "G7", "C", "C"]);
