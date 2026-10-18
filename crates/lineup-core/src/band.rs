@@ -2166,6 +2166,27 @@ mod tests {
     }
 
     #[test]
+    fn no_chord_silences_every_style() {
+        // Styles that play a chord note by note (arpeggios, Alberti bass,
+        // montunos) once divided by the number of notes of N.C.: none.
+        for style in band_styles() {
+            let mut project = Project::with_band();
+            project.set_band_style(Some(style));
+            write(&mut project, &["C", "N.C.", "G7", "C"]);
+            let bar = project.meter().bar(1);
+            for player in [Player::Piano, Player::Bass, Player::Guitar] {
+                assert!(
+                    part(&project, player)
+                        .iter()
+                        .all(|&(at, ..)| !(bar.start..bar.end()).contains(&at)),
+                    "{} {player:?} plays in a bar of N.C.",
+                    style.name
+                );
+            }
+        }
+    }
+
+    #[test]
     fn a_style_in_three_puts_the_song_in_three() {
         let mut project = Project::with_band();
         write(&mut project, &["C", "G7", "C", "C"]);

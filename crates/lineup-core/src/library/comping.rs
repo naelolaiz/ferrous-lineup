@@ -365,11 +365,13 @@ impl Comping {
     }
 }
 
-/// The notes of `voicing` that `voices` asks for.
+/// The notes of `voicing` that `voices` asks for. A voicing with no
+/// notes (N.C., no chord) gives none.
 fn pick(voicing: &[Note], voices: Voices) -> Vec<Note> {
     match voices {
         Voices::All => voicing.to_vec(),
         Voices::Upper => voicing.iter().skip(1).copied().collect(),
+        Voices::Nth(_) if voicing.is_empty() => Vec::new(),
         Voices::Nth(index) => {
             let octave = (index / voicing.len()) as i32;
             voicing[index % voicing.len()]
