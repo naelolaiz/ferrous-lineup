@@ -257,6 +257,11 @@ impl Scale {
         use PitchClass::*;
         match self.root.transpose(self.kind.relative_major() as i32) {
             F | ASharp | DSharp | GSharp | CSharp => Spelling::Flats,
+            // F# major and Gb major are the same keys of the piano, and
+            // the tonic's name decides between them. Their modes are
+            // named with sharps (G# Dorian, B Lydian), except F Locrian,
+            // whose notes are those of Gb major: F Gb Ab Bb Cb Db Eb.
+            FSharp if self.root == F => Spelling::Flats,
             _ => Spelling::Sharps,
         }
     }
@@ -1100,6 +1105,32 @@ mod tests {
     }
 
     #[test]
+    fn every_mode_is_spelled_as_its_key_signature_says() {
+        // The sharps or flats a key's notes are written with are those of
+        // its signature, so a staff needs no accidental for them.
+        let modes = [
+            ScaleKind::Major,
+            ScaleKind::Dorian,
+            ScaleKind::Phrygian,
+            ScaleKind::Lydian,
+            ScaleKind::Mixolydian,
+            ScaleKind::NaturalMinor,
+            ScaleKind::Locrian,
+        ];
+        for kind in modes {
+            for root in PitchClass::ALL {
+                let scale = Scale::new(root, kind);
+                let (signature, _) = scale.key_signature().unwrap();
+                let written: i8 = scale
+                    .pitch_classes()
+                    .map(|note| scale.spell(note).accidental)
+                    .sum();
+                assert_eq!(written, signature, "{}", scale.name());
+            }
+        }
+    }
+
+    #[test]
     fn signatures_of_all_keys() {
         let signatures = |kind| -> Vec<Option<(i8, bool)>> {
             (0..12)
@@ -1128,6 +1159,11 @@ mod tests {
                 "{kind:?}"
             );
         }
+        // F Locrian has the notes, and the six flats, of Gb major.
+        assert_eq!(
+            Scale::new(PitchClass::F, ScaleKind::Locrian).key_signature(),
+            Some((-6, false))
+        );
         // D Dorian uses the white keys, like C major.
         assert_eq!(
             Scale::new(PitchClass::D, ScaleKind::Dorian).key_signature(),
