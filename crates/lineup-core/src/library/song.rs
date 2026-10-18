@@ -405,6 +405,15 @@ const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const NINE_EIGHT: TimeSignature = TimeSignature::new(9, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
+// Odd meters, with the beats they are felt in: 3 + 2 quarters, 2 + 3
+// eighths...
+const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
+const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
+const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
+const TWO_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 2, 3], 8);
+const NINE_EIGHT_AKSAK: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 3], 8);
+const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
+const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
 
 // The bands the songs are dressed in, named after their style. Each is
 // melody, chords, bass. A piece from the concert hall names its own
@@ -427,6 +436,9 @@ const JIG: Band = Band::new(gm::FIDDLE, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 const ACCORDION_BAND: Band = Band::new(gm::ACCORDION, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const BALLAD: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::CELLO);
 const KLEZMER: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
+const BALKAN: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
+const KAVAL: Band = Band::new(gm::FLUTE, gm::ACCORDION, gm::ACOUSTIC_BASS);
+const GREEK: Band = Band::new(gm::VIOLIN, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 const POLKA: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::TUBA);
 const ANDEAN: Band = Band::new(gm::PAN_FLUTE, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const LLANERO: Band = Band::new(gm::HARP, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
@@ -481,6 +493,7 @@ const SON: Band = Band::new(gm::TRUMPET, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 /// Trumpets, the vihuela and guitars, and the guitarrón.
 const MARIACHI: Band = Band::new(gm::TRUMPET, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 
+mod balkan;
 mod blues;
 mod classical;
 mod electronic;
@@ -578,6 +591,7 @@ pub static SONGS: &[Song] = &[
     jazz::GREAT_DAY,
     jazz::IF_I_COULD_BE_WITH_YOU,
     jazz::CAROLINA_IN_THE_MORNING,
+    jazz::TAKE_FIVE,
     soul::AMAZING_GRACE,
     soul::JOY_TO_THE_WORLD,
     soul::DORIAN_STRUT,
@@ -693,6 +707,7 @@ pub static SONGS: &[Song] = &[
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
+    balkan::AJDE_JANO,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
     reggae::VALLEY_DUB,
