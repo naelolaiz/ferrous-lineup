@@ -224,6 +224,7 @@ pub struct ChordSheet {
     followed: Option<usize>,
     /// Whether to scroll to the selected bar, moved there with the keys.
     reveal: bool,
+    reveal_step: Option<usize>,
     front: Front,
 }
 
@@ -240,6 +241,7 @@ impl ChordSheet {
             focused: false,
             followed: None,
             reveal: false,
+            reveal_step: None,
             front: Front::default(),
         }
     }
@@ -248,6 +250,11 @@ impl ChordSheet {
     /// and sets, not harmony keys.
     pub fn has_keyboard(&self) -> bool {
         self.open && self.focused
+    }
+
+    pub fn reveal_step(&mut self, step: usize) {
+        self.reveal_step = Some(step);
+        self.reveal = false;
     }
 
     /// Lets go of a harmony held down with the mouse.
@@ -490,6 +497,10 @@ impl ChordSheet {
         }
 
         let playing_bar = playing.map(|step| meter.bar_at(step).number);
+        let reveal_bar = self
+            .reveal_step
+            .take()
+            .map(|step| meter.bar_at(step).number);
         let marks = Marks::of(project);
         let mut start_typing = None;
         let mut clicked = sheet.clicked() || heading_selection.is_some();
@@ -516,9 +527,11 @@ impl ChordSheet {
                 ui.scroll_to_rect(cell.rect, None);
                 self.reveal = false;
             }
-            if crate::widgets::follow_playback(ui.ctx())
-                && playing_bar == Some(cell.bar.number)
-                && self.followed != playing_bar
+            if reveal_bar == Some(cell.bar.number)
+                || (reveal_bar.is_none()
+                    && crate::widgets::follow_playback(ui.ctx())
+                    && playing_bar == Some(cell.bar.number)
+                    && self.followed != playing_bar)
             {
                 ui.scroll_to_rect(cell.rect, None);
             }
@@ -920,6 +933,7 @@ impl ChordSheet {
         self.clipboard = None;
         self.followed = None;
         self.reveal = false;
+        self.reveal_step = None;
     }
 
     /// Selects `bar`, as a click on it does, so what comes next is

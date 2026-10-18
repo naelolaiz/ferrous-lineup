@@ -12,7 +12,7 @@ use std::f32::consts::TAU;
 
 use eframe::egui::{self, Color32, Pos2, RichText, Sense, Stroke, Ui, Vec2};
 use lineup_core::harmony::{Micromode, MicromodeFamily, SetClass, digits, micromodes_in};
-use lineup_core::{Note, NoteName, PitchClass, PitchSet, Scale};
+use lineup_core::{ChordStamp, Note, NoteName, PitchClass, PitchSet, Scale};
 
 use crate::theme;
 use crate::twelve_tone::{Front, NoteNames};
@@ -24,8 +24,6 @@ pub(crate) fn window_id() -> egui::Id {
 
 /// Something done in the micromode window.
 pub enum MicroAction {
-    /// Click the grid to place this group above the note clicked.
-    Stamp(PitchSet),
     /// Make this group the key.
     UseAsKey(Scale),
     /// Play these notes now.
@@ -115,6 +113,7 @@ impl MicromodeWindow {
         area: egui::Rect,
         names: impl NoteNames,
         selected: PitchSet,
+        drawing: &mut ChordStamp,
     ) -> Vec<MicroAction> {
         let mut actions = Vec::new();
         let mut open = self.open;
@@ -131,7 +130,9 @@ impl MicromodeWindow {
             .constrain_to(area)
             .resizable([false, true])
             .vscroll(true)
-            .show(ctx, |ui| self.contents(ui, names, selected, &mut actions));
+            .show(ctx, |ui| {
+                self.contents(ui, names, selected, drawing, &mut actions)
+            });
         self.open = open;
         actions
     }
@@ -141,6 +142,7 @@ impl MicromodeWindow {
         ui: &mut Ui,
         names: impl NoteNames,
         selected: PitchSet,
+        drawing: &mut ChordStamp,
         actions: &mut Vec<MicroAction>,
     ) {
         ui.weak(
@@ -175,7 +177,7 @@ impl MicromodeWindow {
             });
         }
         ui.separator();
-        self.details(ui, names, actions);
+        self.details(ui, names, drawing, actions);
     }
 
     /// What the selected notes are, or hold.
@@ -239,7 +241,13 @@ impl MicromodeWindow {
         });
     }
 
-    fn details(&mut self, ui: &mut Ui, names: impl NoteNames, actions: &mut Vec<MicroAction>) {
+    fn details(
+        &mut self,
+        ui: &mut Ui,
+        names: impl NoteNames,
+        drawing: &mut ChordStamp,
+        actions: &mut Vec<MicroAction>,
+    ) {
         let micromode = self.micromode;
         let form = self.chosen();
         let notes = form_names(form, names);
@@ -308,17 +316,7 @@ impl MicromodeWindow {
             {
                 actions.push(MicroAction::Hear(voiced(form, &notes)));
             }
-            if ui
-                .button("Draw with it")
-                .on_hover_text(
-                    "A click on the grid places the group, packed as in its normal form, \
-                     starting on the note you click",
-                )
-                .clicked()
-                && let Some(&first) = form.normal_form().first()
-            {
-                actions.push(MicroAction::Stamp(form.relative_to(first)));
-            }
+            crate::twelve_tone::draw_set_control(ui, form, drawing);
             if ui
                 .button("Use as the key")
                 .on_hover_text("The piano roll highlights these three notes and snaps to them")
@@ -384,7 +382,7 @@ fn forms_text(micromode: &Micromode) -> &'static str {
 
 /// The notes of `form` as keys of the piano, from middle C: the first
 /// written note at or above C4, the others stacked above it.
-fn voiced(form: PitchSet, notes: &[NoteName]) -> Vec<Note> {
+pub(crate) fn voiced(form: PitchSet, notes: &[NoteName]) -> Vec<Note> {
     let mut keys: Vec<Note> = Vec::new();
     for name in notes {
         let pitch_class = name.pitch_class();

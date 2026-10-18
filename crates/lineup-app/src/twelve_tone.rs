@@ -17,7 +17,7 @@ use lineup_core::harmony::{
 };
 use lineup_core::serial::{Chain, Register, RowWriting, write_row};
 use lineup_core::{
-    Chord, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
+    Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
 };
 
 /// Where the row and set last used are remembered.
@@ -719,8 +719,8 @@ impl RowWindow {
 
 /// Something done in the set browser.
 pub enum SetAction {
-    /// Click the grid to place this set above the note clicked.
-    Stamp(PitchSet),
+    /// Play the chosen set without writing notes or changing the key.
+    Hear(Vec<Note>),
     /// Make this set the key.
     UseAsKey(Scale),
     /// Show the micromode of these three notes in the micromode window.
@@ -786,6 +786,7 @@ impl SetWindow {
         area: egui::Rect,
         names: impl NoteNames,
         selected: PitchSet,
+        drawing: &mut ChordStamp,
     ) -> Vec<SetAction> {
         let mut actions = Vec::new();
         let mut open = self.open;
@@ -800,7 +801,9 @@ impl SetWindow {
             .default_pos([320.0, 140.0])
             .default_size([560.0, 520.0])
             .constrain_to(area)
-            .show(ctx, |ui| self.contents(ui, names, selected, &mut actions));
+            .show(ctx, |ui| {
+                self.contents(ui, names, selected, drawing, &mut actions)
+            });
         self.open = open;
         actions
     }
@@ -810,6 +813,7 @@ impl SetWindow {
         ui: &mut Ui,
         names: impl NoteNames,
         selected: PitchSet,
+        drawing: &mut ChordStamp,
         actions: &mut Vec<SetAction>,
     ) {
         if selected.len() >= 2 {
@@ -883,10 +887,16 @@ impl SetWindow {
             });
         self.reveal = false;
         ui.separator();
-        self.details(ui, names, actions);
+        self.details(ui, names, drawing, actions);
     }
 
-    fn details(&mut self, ui: &mut Ui, names: impl NoteNames, actions: &mut Vec<SetAction>) {
+    fn details(
+        &mut self,
+        ui: &mut Ui,
+        names: impl NoteNames,
+        drawing: &mut ChordStamp,
+        actions: &mut Vec<SetAction>,
+    ) {
         let class = self.class;
         ui.label(RichText::new(class.describe()).strong());
         let mut facts = Vec::new();
@@ -938,16 +948,18 @@ impl SetWindow {
         ui.horizontal(|ui| {
             let set = self.chosen();
             if ui
-                .button("Draw with it")
-                .on_hover_text(
-                    "A click on the grid places the set, packed as in its normal form, \
-                     starting on the note you click",
-                )
+                .button("▶ Hear it")
+                .on_hover_text("Play this set together on the current instrument")
                 .clicked()
-                && let Some(&first) = set.normal_form().first()
             {
-                actions.push(SetAction::Stamp(set.relative_to(first)));
+                let names: Vec<_> = set
+                    .normal_form()
+                    .into_iter()
+                    .map(|pitch| names.note_name(pitch))
+                    .collect();
+                actions.push(SetAction::Hear(crate::micromodes::voiced(set, &names)));
             }
+            draw_set_control(ui, set, drawing);
             if ui
                 .button("Use as the key")
                 .on_hover_text("The piano roll highlights these notes and snaps to them")
@@ -1004,9 +1016,107 @@ impl SetWindow {
     }
 }
 
+/// Both browsers edit the piano roll's actual drawing mode, so changing the
+/// toolbar or either browser is reflected in all three places.
+pub(crate) fn draw_set_control(ui: &mut Ui, set: PitchSet, drawing: &mut ChordStamp) {
+    ui.selectable_value(drawing, ChordStamp::Single, "Single note")
+        .on_hover_text("Return to drawing one note per click");
+    let Some(&first) = set.normal_form().first() else {
+        return;
+    };
+    let stamp = ChordStamp::Set(set.relative_to(first));
+    let active = *drawing == stamp;
+    if ui
+        .selectable_label(active, "Draw with it")
+        .on_hover_text(
+            "Draw this set above each clicked note. Click again to return to single notes.",
+        )
+        .clicked()
+    {
+        *drawing = if active { ChordStamp::Single } else { stamp };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hear_previews_the_chosen_set_with_its_transposition_and_inversion() {
+        let ctx = egui::Context::default();
+        let mut window = SetWindow::new();
+        window.pick(PitchSet::from_semitones(&[9, 10, 0, 2, 5]));
+        window.inverted = !window.inverted;
+        let expected = window.chosen();
+        let mut drawing = ChordStamp::Single;
+        let actions = {
+            let mut frame = |events| {
+                let mut actions = Vec::new();
+                let mut output = ctx.run_pass(
+                    egui::RawInput {
+                        screen_rect: Some(egui::Rect::from_min_size(
+                            egui::Pos2::ZERO,
+                            egui::vec2(900.0, 700.0),
+                        )),
+                        events,
+                        ..Default::default()
+                    },
+                    |ctx| {
+                        egui::Window::new("PCS preview test").show(ctx, |ui| {
+                            window.details(ui, Spelling::Sharps, &mut drawing, &mut actions);
+                        });
+                    },
+                );
+                output.textures_delta.clear();
+                (output, actions)
+            };
+            frame(vec![]);
+            let (output, _) = frame(vec![]);
+            let pos = output
+                .shapes
+                .iter()
+                .find_map(|shape| match &shape.shape {
+                    egui::Shape::Text(text) if text.galley.text() == "▶ Hear it" => {
+                        Some(text.pos + text.galley.size() * 0.5)
+                    }
+                    _ => None,
+                })
+                .expect("Hear control is visible");
+            frame(vec![
+                egui::Event::PointerMoved(pos),
+                egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers: egui::Modifiers::NONE,
+                },
+                egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: false,
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ])
+            .1
+        };
+        let pitches = actions
+            .into_iter()
+            .find_map(|action| match action {
+                SetAction::Hear(pitches) => Some(pitches),
+                _ => None,
+            })
+            .expect("Clicking Hear produces a preview");
+        assert_eq!(
+            pitches
+                .iter()
+                .map(|note| note.pitch_class())
+                .collect::<PitchSet>(),
+            expected
+        );
+        assert!(pitches.windows(2).all(|notes| notes[0] < notes[1]));
+        assert!(pitches[0] >= Note::C4);
+        assert_eq!(drawing, ChordStamp::Single);
+    }
 
     #[test]
     fn a_row_key_becomes_its_first_group_of_three() {

@@ -60,11 +60,7 @@ pub fn presets<'a>(
         )
         .chain(users.iter().enumerate().filter_map(|(index, style)| {
             let text = format!("{} {} {} user", style.name, style.about, style.time).to_lowercase();
-            query
-                .to_lowercase()
-                .split_whitespace()
-                .all(|word| text.contains(word))
-                .then_some(Preset::User(index, style))
+            matches_text(query, &text).then_some(Preset::User(index, style))
         }))
         .filter(|preset| !progressions_only || preset.has_progression())
         .collect();
@@ -108,17 +104,31 @@ pub fn matches(query: &str, name: &str, genre: Genre, time: TimeSignature, about
         time.unit
     )
     .to_lowercase();
-    query
-        .to_lowercase()
-        .split_whitespace()
-        .all(|word| text.contains(word))
+    matches_text(query, &text)
+}
+
+fn matches_text(query: &str, text: &str) -> bool {
+    query.to_lowercase().split_whitespace().all(|word| {
+        text.contains(word)
+            || match word {
+                "vals" => text.contains("waltz"),
+                "waltz" => text.contains("vals"),
+                _ => false,
+            }
+    })
 }
 
 pub fn harmony_styles(query: &str, genre: Option<Genre>) -> Vec<&'static Style> {
     alphabetical(
         STYLES.iter().filter(|style| {
             genre.is_none_or(|genre| style.genre == genre)
-                && matches(query, style.name, style.genre, style.time, style.about)
+                && matches(
+                    query,
+                    style.name,
+                    style.genre,
+                    style.time,
+                    &format!("{} {}", style.about, style.rhythm),
+                )
         }),
         |style| style.name,
     )
@@ -138,6 +148,33 @@ pub fn rhythms(query: &str, genre: Option<Genre>) -> Vec<&'static Rhythm> {
 mod tests {
     use super::*;
     use lineup_core::BandStyle;
+
+    #[test]
+    fn vals_and_waltz_find_the_plain_rhythm_and_waltzes_across_genres() {
+        let names = |query| {
+            presets(query, &[], false)
+                .into_iter()
+                .map(|preset| preset.name().to_string())
+                .collect::<Vec<_>>()
+        };
+        let vals = names("vals");
+        assert_eq!(vals, names("waltz"));
+        for name in [
+            "Waltz",
+            "Country waltz",
+            "Tango vals",
+            "Vals in minor",
+            "Sevillanas",
+        ] {
+            assert!(vals.iter().any(|found| found == name), "Missing {name}");
+        }
+        let folk = presets("vals 3/4 folk", &[], false);
+        assert!(!folk.is_empty());
+        assert!(folk.iter().all(|preset| matches!(
+            preset.genre(),
+            Some(Genre::Folk | Genre::Folklore)
+        ) && preset.time() == TimeSignature::new(3, 4)));
+    }
 
     #[test]
     fn the_merged_catalogue_keeps_every_source_and_sorts_them_together() {

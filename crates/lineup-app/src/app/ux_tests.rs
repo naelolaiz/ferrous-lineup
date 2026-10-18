@@ -62,38 +62,51 @@ impl Screen {
         let pos = text_rect(&output, label)
             .map(|rect| rect.center())
             .unwrap_or_else(|| panic!("Missing control: {label}"));
+        self.click_at(pos, Modifiers::NONE);
+    }
+
+    fn click_at(&mut self, pos: Pos2, modifiers: Modifiers) {
         self.draw(vec![
+            Event::ModifiersChanged(modifiers),
             Event::PointerMoved(pos),
             Event::PointerButton {
                 pos,
                 button: PointerButton::Primary,
                 pressed: true,
-                modifiers: Modifiers::NONE,
+                modifiers,
             },
         ]);
         self.draw(vec![Event::PointerButton {
             pos,
             button: PointerButton::Primary,
             pressed: false,
-            modifiers: Modifiers::NONE,
+            modifiers,
         }]);
     }
 
     fn key(&mut self, key: Key) {
-        self.draw(vec![Event::Key {
-            key,
-            physical_key: None,
-            pressed: true,
-            repeat: false,
-            modifiers: Modifiers::NONE,
-        }]);
+        self.key_with_modifiers(key, Modifiers::NONE);
+    }
+
+    fn key_with_modifiers(&mut self, key: Key, modifiers: Modifiers) {
+        self.draw(vec![
+            Event::ModifiersChanged(modifiers),
+            Event::Key {
+                key,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers,
+            },
+        ]);
         self.draw(vec![Event::Key {
             key,
             physical_key: None,
             pressed: false,
             repeat: false,
-            modifiers: Modifiers::NONE,
+            modifiers,
         }]);
+        self.draw(vec![Event::ModifiersChanged(Modifiers::NONE)]);
     }
 
     fn scroll_to(&mut self, label: &str) {
@@ -462,6 +475,25 @@ fn preset_workflows_keep_their_apply_buttons_visible_in_small_windows() {
     }
     screen.click("Cancel");
     assert!(!egui::Popup::is_any_open(&screen.ctx));
+}
+
+#[test]
+fn searching_vals_reveals_the_normal_waltz_in_both_browser_layouts() {
+    for grouped in [false, true] {
+        let mut screen = Screen::new();
+        crate::library_browser::set_grouped_presets(&screen.ctx, grouped);
+        screen.app.rack_open = false;
+        screen.app.playlist.browser_open = true;
+        screen.click("📚 Library");
+        screen.click("🔍 Search: bossa, 6/8, tango…");
+        screen.draw(vec![Event::Text("vals".into())]);
+        screen.scroll_to_at("Waltz  (3/4)", egui::pos2(100.0, 650.0));
+        screen.click("Waltz  (3/4)");
+        let output = screen.draw(vec![]);
+        assert!(text_rect(&output, "Waltz").is_some());
+        assert!(!checkbox_checked(&output, "Chord progression"));
+        screen.click("Cancel");
+    }
 }
 
 #[test]
@@ -904,10 +936,233 @@ fn rack_transport_and_space_play_pause_and_stop_the_current_pattern() {
 #[test]
 fn settings_keyboard_input_does_not_start_song_playback() {
     let mut screen = Screen::new();
+    screen.app.cursor = 8;
+    screen.app.marker = 8;
     screen.app.settings_open = true;
     screen.click("Appearance");
     screen.key(Key::Space);
     assert!(!screen.app.playing);
+    screen.key(Key::Home);
+    assert_eq!(screen.app.cursor, 8);
+    screen.app.settings_open = false;
+    screen.draw(vec![]);
+    screen.key(Key::Home);
+    assert_eq!(
+        screen.app.cursor, 0,
+        "Closing Settings releases transport shortcuts"
+    );
+}
+
+#[test]
+fn pattern_home_end_and_page_keys_use_the_pattern_boundaries() {
+    let mut screen = shortcut_screen();
+    screen.app.set_mode(PlayMode::Pattern);
+    let before = screen.app.project.clone();
+    screen.key(Key::End);
+    assert_eq!((screen.app.cursor, screen.app.marker), (63, 63));
+    screen.key(Key::PageDown);
+    assert_eq!(screen.app.cursor, 63);
+    screen.key(Key::PageUp);
+    assert_eq!(screen.app.cursor, 48);
+    screen.key(Key::Home);
+    screen.key(Key::PageUp);
+    assert_eq!((screen.app.cursor, screen.app.marker), (0, 0));
+    assert_eq!(screen.app.project, before);
+}
+
+fn shortcut_screen() -> Screen {
+    let mut screen = Screen::new();
+    let mut project = Project::empty();
+    project.add_channel(lineup_core::Channel::synth());
+    let pattern = project.pattern_mut(0).unwrap();
+    pattern.name = "Shortcut test".into();
+    pattern.set_length(64);
+    pattern.add_note(0, lineup_core::NoteEvent::new(Note::C4, 4, 4));
+    pattern.add_note(0, lineup_core::NoteEvent::new(Note::new(67), 12, 4));
+    project.add_clip(lineup_core::Clip::new(0, 0, 0));
+    project.add_clip(lineup_core::Clip::new(0, 0, 512));
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    screen
+}
+
+#[test]
+fn timeline_shortcuts_reveal_boundaries_with_follow_on_or_off_and_keep_playback_state() {
+    for follow in [false, true] {
+        let mut screen = shortcut_screen();
+        screen
+            .ctx
+            .data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), follow));
+        let before = screen.app.project.clone();
+        let pos = screen.app.playlist.area().center();
+        screen.draw(vec![
+            Event::PointerMoved(pos),
+            Event::MouseWheel {
+                unit: egui::MouseWheelUnit::Point,
+                delta: vec2(-1800.0, 0.0),
+                phase: egui::TouchPhase::Move,
+                source: egui::MouseWheelSource::Wheel,
+                modifiers: Modifiers::NONE,
+            },
+        ]);
+        for _ in 0..20 {
+            screen.draw(vec![]);
+        }
+        let output = screen.draw(vec![]);
+        assert!(
+            text_rect(&output, "1").is_none(),
+            "The timeline was scrolled away"
+        );
+        for modifiers in [Modifiers::NONE, Modifiers::COMMAND] {
+            screen.key_with_modifiers(Key::Home, modifiers);
+            assert_eq!((screen.app.cursor, screen.app.marker), (0, 0));
+            assert!(text_rect(&screen.draw(vec![]), "1").is_some());
+            screen.key_with_modifiers(Key::End, modifiers);
+            let end = screen.app.loop_length() - 1;
+            assert_eq!((screen.app.cursor, screen.app.marker), (end, end));
+            assert!(text_rect(&screen.draw(vec![]), "36").is_some());
+        }
+        screen.key(Key::PageDown);
+        assert_eq!(screen.app.cursor, screen.app.loop_length() - 1);
+        screen.key(Key::PageUp);
+        assert_eq!(screen.app.cursor, 560);
+        screen.app.set_playing(true);
+        screen.key(Key::Home);
+        assert!(screen.app.playing);
+        assert_eq!(screen.app.cursor, 0);
+        assert_eq!(screen.app.project, before);
+    }
+}
+
+#[test]
+fn clicking_notes_and_clips_selects_for_delete_and_undo_restores_the_exact_project() {
+    for note in [false, true] {
+        for key in [Key::Delete, Key::Backspace] {
+            let mut screen = shortcut_screen();
+            let before = screen.app.project.clone();
+            if note {
+                screen.app.piano_roll.open_for(0);
+                screen.draw(vec![]);
+                screen.draw(vec![]);
+                let output = screen.draw(vec![]);
+                let label = screen.app.project.scale.note_name(Note::C4);
+                let pos = output
+                    .shapes
+                    .iter()
+                    .filter_map(|shape| match &shape.shape {
+                        Shape::Text(text) if text.galley.text() == label => {
+                            let rect = Rect::from_min_size(text.pos, text.galley.size());
+                            let visible = shape.clip_rect.intersect(rect);
+                            visible.is_positive().then_some(visible.center())
+                        }
+                        _ => None,
+                    })
+                    .max_by(|left, right| left.x.total_cmp(&right.x))
+                    .expect("The C4 note is visible");
+                screen.click_at(pos, Modifiers::NONE);
+            } else {
+                screen.click("Shortcut test");
+            }
+            assert_eq!(
+                screen.app.project, before,
+                "Selection must not edit the song"
+            );
+            screen.key(key);
+            if note {
+                assert_eq!(
+                    screen.app.project.pattern(0).unwrap().notes(0),
+                    &before.pattern(0).unwrap().notes(0)[1..]
+                );
+                assert_eq!(
+                    screen.app.project.playlist().clips(),
+                    before.playlist().clips()
+                );
+            } else {
+                assert_eq!(
+                    screen.app.project.playlist().clips().len(),
+                    before.playlist().clips().len() - 1
+                );
+                assert_eq!(screen.app.project.patterns(), before.patterns());
+            }
+            let deleted = screen.app.project.clone();
+            screen.key(key);
+            assert_eq!(
+                screen.app.project, deleted,
+                "Delete without a selection does nothing"
+            );
+            screen.key_with_modifiers(Key::Z, Modifiers::COMMAND);
+            assert_eq!(screen.app.project, before);
+            screen.key_with_modifiers(Key::Y, Modifiers::COMMAND);
+            assert_eq!(screen.app.project, deleted);
+        }
+    }
+}
+
+#[test]
+fn rack_delete_removes_only_the_selected_channel_and_is_undoable() {
+    let mut screen = Screen::new();
+    let before = screen.app.project.clone();
+    let channel = before.channels()[0].name.clone();
+    screen.click(&channel);
+    screen.key(Key::Delete);
+    assert_eq!(screen.app.project.channels(), &before.channels()[1..]);
+    assert_eq!(screen.app.piano_roll.selected_channel(), None);
+    let deleted = screen.app.project.clone();
+    screen.key(Key::Delete);
+    assert_eq!(screen.app.project, deleted);
+    screen.key_with_modifiers(Key::Z, Modifiers::COMMAND);
+    assert_eq!(screen.app.project, before);
+}
+
+#[test]
+fn sets_and_micromodes_can_switch_back_to_single_note_drawing() {
+    for browser in ["Sets…", "Micromodes…"] {
+        let mut screen = shortcut_screen();
+        screen.app.piano_roll.open_for(0);
+        screen.click(browser);
+        screen.scroll_to_at("Draw with it", egui::pos2(600.0, 550.0));
+        let before = screen.app.project.clone();
+        screen.click("▶ Hear it");
+        assert!(
+            !screen.app.playing,
+            "Preview does not start the song transport"
+        );
+        screen.click("Draw with it");
+        assert!(button_lit(&screen.draw(vec![]), "Draw with it"));
+        screen.click("Draw with it");
+        assert!(!button_lit(&screen.draw(vec![]), "Draw with it"));
+        assert!(button_lit(&screen.draw(vec![]), "Single note"));
+        screen.click("Draw with it");
+        screen.click("Single note");
+        assert!(button_lit(&screen.draw(vec![]), "Single note"));
+        assert!(!button_lit(&screen.draw(vec![]), "Draw with it"));
+        assert_eq!(
+            screen.app.project, before,
+            "Drawing mode changes no notes or key"
+        );
+    }
+}
+
+#[test]
+fn home_end_and_delete_edit_focused_text_without_moving_or_changing_the_song() {
+    let mut screen = shortcut_screen();
+    screen.app.playlist.browser_open = true;
+    screen.app.cursor = 8;
+    screen.app.marker = 8;
+    screen.click("📚 Library");
+    screen.click("🔍 Search: bossa, 6/8, tango…");
+    screen.draw(vec![Event::Text("abc".into())]);
+    let before = screen.app.project.clone();
+    screen.key(Key::Home);
+    screen.key(Key::Delete);
+    assert!(text_rect(&screen.draw(vec![]), "bc").is_some());
+    screen.key(Key::End);
+    screen.key(Key::Backspace);
+    assert!(text_rect(&screen.draw(vec![]), "b").is_some());
+    assert_eq!((screen.app.cursor, screen.app.marker), (8, 8));
+    assert_eq!(screen.app.project, before);
 }
 
 #[test]
