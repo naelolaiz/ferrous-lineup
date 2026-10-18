@@ -887,16 +887,16 @@ pub static RHYTHMS: &[Rhythm] = &[
     rhythm(
         "Son",
         Latin,
-        100.0,
+        192.0,
         &[
-            (Rim, "..x. x... x..x ..x."),
-            (Conga, "h.o. h.oo h.o. h.oo"),
-            (Shaker, "xoxo xoxo xoxo xoxo"),
+            (Rim, ".... x... x... .... | x... ..x. .... x..."),
+            (Conga, "h.o. o.o. h.o. o.hh | h.o. o.o. h.o. o.hh"),
+            (Shaker, "X.x. x.x. X.x. x.x. | X.x. x.x. X.x. x.x."),
         ],
         "Latin fill",
-        "The Cuban son of the 1920s, salsa's parent: the clave, here 2 + 3 (its bar of two \
-         hits first), the bongo's steady \"hammer\" and maracas, and no drum kit. Each bar here \
-         lasts two bars of son.",
+        "The Cuban son of the 1920s, salsa's parent: the clave across two bars, here 2 + 3 (its \
+         bar of two hits first), the bongo's steady \"hammer\" and maracas in eighths, and no \
+         drum kit.",
     ),
     rhythm(
         "Choro",
