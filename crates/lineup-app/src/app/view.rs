@@ -341,6 +341,19 @@ impl LineupApp {
                 self.lead_sheet.open = !self.lead_sheet.open;
             }
             window(&mut self.rack_open, "Channel rack", RACK, ui);
+            if ui
+                .button("Style editor…")
+                .on_hover_text(
+                    "See and edit repeating parts, or create a style from an existing one",
+                )
+                .clicked()
+            {
+                if self.style_editor.open {
+                    self.bring_to_front = Some(crate::style_editor::window_id());
+                } else {
+                    self.edit_current_style();
+                }
+            }
             window(&mut self.piano_roll.open, "Piano roll", PIANO_ROLL, ui);
             window(&mut self.harmony_keys.open, "Harmony keys", HARMONY, ui);
             let browser = &mut self.playlist.browser_open;

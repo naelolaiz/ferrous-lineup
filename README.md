@@ -133,6 +133,30 @@ rhythm style and its instrumentation separately; the chord sheet remains the
 source of the song's chords. These band choices survive saving and
 undo/redo. A meter change keeps each bar's duration by adjusting tempo.
 
+Use **Edit style…** or **New style…** in the channel rack (also **View >
+Style editor…**) to edit repeating drum, chord and bass parts. The editor
+reuses the rack and piano roll, with its own undo history and a four-repeat
+preview. **Start from…** copies an existing style; right-clicking a style
+or rhythm in the Library also opens an editable copy. Pitched templates
+are written over C major and follow the song’s chords when applied.
+Save them as `.lineup-style` files; **Styles folder…** chooses the folder
+loaded into **User styles** in the shared browser. Applied styles are
+embedded in project files, so reopening a song keeps its custom patterns.
+
+**Mixer** in the toolbar, **View > Mixer**, or **F9** opens master and
+per-instrument volume, mute and solo controls. They work with both
+SoundFont and Lineup Osc sounds, plus samples. The master stereo reverb
+has wet/dry, decay, damping and pre-delay controls. Mixer settings are
+saved with the project, support undo, and are used for WAV export.
+
+**Follow playback** in the toolbar and View menu keeps the playing
+position visible in the playlist, chord sheet and piano roll. Turning it
+off lets you scroll freely; the preference is remembered. Editor shortcuts
+follow the active window: **Ctrl+A** selects its bars, notes or clips.
+The playlist also supports **Ctrl+C/X/V**, **Ctrl+D**, **Delete**, and
+**Ctrl-click** to add or remove a clip from the selection. Ctrl-click empty
+playlist space sets the paste position without placing a clip.
+
 **F5**, or **📝 Chords** in the toolbar, opens the **chord sheet**: the
 song's harmony bar by bar, four bars to a line and each section under
 its name, as a lead sheet writes it. Click a bar and type its harmony:

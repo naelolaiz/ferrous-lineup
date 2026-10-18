@@ -120,6 +120,7 @@ impl LineupApp {
         }
         match self.unchanged_audition() {
             Some(audition) => Tried {
+                user_style: None,
                 style: audition.style,
                 rhythm: audition.rhythm,
                 row_style: audition.row_style,
@@ -165,6 +166,10 @@ impl LineupApp {
     /// While the song plays, it changes the song instead, and the song
     /// carries on.
     pub(super) fn try_from_library(&mut self, action: LibraryAction) {
+        if let LibraryAction::UserStyle(index) = action {
+            self.apply_user_library(index, None);
+            return;
+        }
         let parts = match action {
             LibraryAction::Rhythm(_) | LibraryAction::RhythmInSong(_) => {
                 self.playlist.library_parts().for_rhythm()
@@ -206,6 +211,7 @@ impl LineupApp {
         }
         let reuse = self.unchanged_audition().cloned();
         let previous = reuse.as_ref().map_or(self.song_library, |a| Tried {
+            user_style: None,
             style: a.style,
             rhythm: a.rhythm,
             row_style: a.row_style,
@@ -302,11 +308,16 @@ impl LineupApp {
     }
 
     fn use_in_song_parts(&mut self, action: LibraryAction, parts: apply::StyleParts) {
+        if let LibraryAction::UserStyle(index) = action {
+            self.apply_user_library(index, None);
+            return;
+        }
         if self.project.band().is_some() && self.band_plays_parts(action, parts) {
             return;
         }
         let use_tempo = parts.tempo;
         let (name, tempo, label) = match action {
+            LibraryAction::UserStyle(_) => unreachable!("handled above"),
             LibraryAction::Style(style) => (style.name, Some(style.tempo), "change the style"),
             LibraryAction::RowStyle(style) => (style.name, Some(style.tempo), "change the style"),
             LibraryAction::MicromodeStyle(style) => {
@@ -329,11 +340,14 @@ impl LineupApp {
             _ if fill_picked(action) => None,
             LibraryAction::Style(style) => Rhythm::named(style.rhythm),
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => Some(rhythm),
-            LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => None,
+            LibraryAction::UserStyle(_)
+            | LibraryAction::RowStyle(_)
+            | LibraryAction::MicromodeStyle(_) => None,
         };
         let swing = rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
         let change = self.edit(label, |project| {
             let change = match action {
+                LibraryAction::UserStyle(_) => unreachable!("handled above"),
                 LibraryAction::Style(style) => apply::use_style_parts(project, style, parts),
                 LibraryAction::RowStyle(style) => rows::use_row_style(project, style),
                 LibraryAction::MicromodeStyle(style) => {
@@ -395,6 +409,7 @@ impl LineupApp {
         if self.project != before || change != apply::RhythmChange::default() {
             self.song_library = match action {
                 LibraryAction::Style(style) if parts.rhythm || parts.progression => Tried {
+                    user_style: None,
                     style: Some(style),
                     rhythm: if parts.rhythm {
                         Rhythm::named(style.rhythm)
@@ -639,7 +654,9 @@ impl LineupApp {
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
                 BandStyle::named(rhythm.name)
             }
-            LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => return false,
+            LibraryAction::UserStyle(_)
+            | LibraryAction::RowStyle(_)
+            | LibraryAction::MicromodeStyle(_) => return false,
         };
         let Some(style) = style else {
             return false;

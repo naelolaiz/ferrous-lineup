@@ -11,6 +11,10 @@ use lineup_core::NoteEvent;
 /// Editor shortcuts belong to the last clicked window, including its title
 /// and toolbar. Popup controls and text fields keep their own keyboard input.
 pub fn editor_keyboard(ctx: &egui::Context, layer: egui::LayerId) -> bool {
+    editor_active(ctx, layer) && !ctx.text_edit_focused() && !egui::Popup::is_any_open(ctx)
+}
+
+pub fn editor_active(ctx: &egui::Context, layer: egui::LayerId) -> bool {
     let id = egui::Id::unique("keyboard-editor");
     if let Some(pos) = ctx.input(|input| press_pos(input, None))
         && let Some(clicked) = ctx.layer_id_at(pos)
@@ -20,8 +24,6 @@ pub fn editor_keyboard(ctx: &egui::Context, layer: egui::LayerId) -> bool {
     }
     let active = ctx.data(|data| data.get_temp::<egui::LayerId>(id));
     active.or_else(|| ctx.top_layer_id()) == Some(layer)
-        && !ctx.text_edit_focused()
-        && !egui::Popup::is_any_open(ctx)
 }
 
 pub fn follow_playback(ctx: &egui::Context) -> bool {

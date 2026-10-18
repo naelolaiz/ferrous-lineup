@@ -19,6 +19,7 @@ use catalogue::{alphabetical, matches};
 /// Something picked in the library.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LibraryAction {
+    UserStyle(usize),
     /// Play this style's chords and bass line, in the project's key.
     Style(&'static Style),
     /// Play this rhythm (or fill) on the drums.
@@ -46,6 +47,7 @@ pub enum LibraryPurpose {
 /// show it selected.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Tried {
+    pub user_style: Option<u64>,
     pub style: Option<&'static Style>,
     pub rhythm: Option<&'static Rhythm>,
     pub row_style: Option<&'static RowStyle>,
@@ -56,15 +58,27 @@ impl Tried {
     /// Read the exact rhythm and harmony style from the project, including undo and load.
     pub fn from_band(band: &Band) -> Self {
         Self {
-            style: band.harmony_style,
-            rhythm: band.style.rhythm,
+            user_style: band.custom_rhythm.as_ref().map(|style| style.id()),
+            style: band.harmony_style.filter(|_| band.custom_rhythm.is_none()),
+            rhythm: band.style.rhythm.filter(|_| band.custom_rhythm.is_none()),
             ..Self::default()
         }
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum StyleEditorRequest {
+    New,
+    Builtin(&'static Style),
+    Rhythm(&'static Rhythm),
+    User(usize),
+    Folder,
+}
+
 /// What the library tab remembers between frames.
 pub struct LibraryBrowser {
+    pub user_styles: Vec<lineup_core::library::UserStyle>,
+    pub editor_request: Option<StyleEditorRequest>,
     filter: String,
     /// Which components of a choice replace the current song's settings.
     pub parts: StyleParts,
@@ -84,6 +98,8 @@ pub struct LibraryBrowser {
 impl LibraryBrowser {
     pub fn new() -> Self {
         LibraryBrowser {
+            user_styles: Vec::new(),
+            editor_request: None,
             filter: String::new(),
             parts: StyleParts::default(),
             shown: Tried::default(),
@@ -106,6 +122,14 @@ impl LibraryBrowser {
     ) -> Option<LibraryAction> {
         let mut picked = None;
         ui.horizontal(|ui| {
+            if ui.small_button("New style…").clicked() {
+                self.editor_request = Some(StyleEditorRequest::New);
+            }
+            if ui.small_button("Styles folder…").clicked() {
+                self.editor_request = Some(StyleEditorRequest::Folder);
+            }
+        });
+        ui.horizontal(|ui| {
             let width = (ui.available_width() - 28.0).max(80.0);
             ui.add(
                 egui::TextEdit::singleline(&mut self.filter)
@@ -127,7 +151,7 @@ impl LibraryBrowser {
             && let Some(band) = project.band()
         {
             ui.weak(format!("Rhythm style: {}", band.name()));
-            ui.weak(format!("Instruments: {}", band.instrument_style.name));
+            ui.weak(format!("Instruments: {}", band.instrument_name()));
             ui.weak("Chords: chord sheet");
             if band.accents_only {
                 ui.weak("Plain accents with current instruments");
@@ -174,7 +198,17 @@ impl LibraryBrowser {
         let scroll_row = revealing && self.reveal_row;
         let scroll_style = revealing && !self.reveal_rhythm && !self.reveal_row;
         let scroll_rhythm = revealing && self.reveal_rhythm;
-        if searching && !anything_matches(&filter, purpose) {
+        let user_matches = |style: &&lineup_core::library::UserStyle| {
+            filter.split_whitespace().all(|word| {
+                format!("{} {} {}", style.name, style.about, style.time)
+                    .to_lowercase()
+                    .contains(word)
+            })
+        };
+        if searching
+            && !anything_matches(&filter, purpose)
+            && !self.user_styles.iter().filter(user_matches).any(|_| true)
+        {
             ui.label(format!(
                 "Nothing in the library matches \"{}\".",
                 self.filter.trim()
@@ -188,6 +222,33 @@ impl LibraryBrowser {
         egui::ScrollArea::vertical()
             .max_height(max_height)
             .show(ui, |ui| {
+                let custom: Vec<_> = self
+                    .user_styles
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, style)| user_matches(style))
+                    .collect();
+                if !custom.is_empty() {
+                    section(ui, "User styles", true, |ui| {
+                        for (index, style) in custom {
+                            let response = ui
+                                .selectable_label(
+                                    tried.user_style == Some(style.id()),
+                                    label(&style.name, style.time),
+                                )
+                                .on_hover_text(&style.about);
+                            if response.clicked() {
+                                picked = Some(LibraryAction::UserStyle(index));
+                            }
+                            response.context_menu(|ui| {
+                                if ui.button("Edit in channel rack…").clicked() {
+                                    self.editor_request = Some(StyleEditorRequest::User(index));
+                                    ui.close();
+                                }
+                            });
+                        }
+                    });
+                }
                 let open = searching || new_style;
                 section(ui, "Harmony styles", open, |ui| {
                     for genre in catalogue::genres() {
@@ -207,6 +268,13 @@ impl LibraryBrowser {
                                 if response.clicked() {
                                     picked = Some(LibraryAction::Style(style));
                                 }
+                                response.context_menu(|ui| {
+                                    if ui.button("Edit a copy in channel rack…").clicked() {
+                                        self.editor_request =
+                                            Some(StyleEditorRequest::Builtin(style));
+                                        ui.close();
+                                    }
+                                });
                             }
                         });
                     }
@@ -236,6 +304,7 @@ impl LibraryBrowser {
                                     tried,
                                     scroll_rhythm,
                                     purpose,
+                                    &mut self.editor_request,
                                 ));
                             }
                         });
@@ -269,6 +338,7 @@ impl LibraryBrowser {
                                     tried,
                                     scroll_rhythm,
                                     purpose,
+                                    &mut self.editor_request,
                                 ));
                             }
                         });
@@ -467,6 +537,7 @@ fn rhythm_label(
     tried: Tried,
     scroll: bool,
     purpose: LibraryPurpose,
+    editor: &mut Option<StyleEditorRequest>,
 ) -> Option<LibraryAction> {
     let selected = tried.rhythm == Some(rhythm);
     let is_fill = FILLS.contains(rhythm);
@@ -493,9 +564,14 @@ fn rhythm_label(
         response.scroll_to_me(None);
     }
     let mut picked = response.clicked().then_some(LibraryAction::Rhythm(rhythm));
-    if !is_fill && purpose == LibraryPurpose::Play {
-        response.context_menu(|ui| {
-            if ui
+    response.context_menu(|ui| {
+        if ui.button("Edit a copy in channel rack…").clicked() {
+            *editor = Some(StyleEditorRequest::Rhythm(rhythm));
+            ui.close();
+        }
+        if !is_fill
+            && purpose == LibraryPurpose::Play
+            && ui
                 .button("Play the whole song in this rhythm")
                 .on_hover_text(
                     "Every pattern with drums gets this rhythm, and the chords and bass \
@@ -503,12 +579,11 @@ fn rhythm_label(
                      another time signature puts the song in it, bar for bar.",
                 )
                 .clicked()
-            {
-                picked = Some(LibraryAction::RhythmInSong(rhythm));
-                ui.close();
-            }
-        });
-    }
+        {
+            picked = Some(LibraryAction::RhythmInSong(rhythm));
+            ui.close();
+        }
+    });
     picked
 }
 

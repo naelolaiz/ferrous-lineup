@@ -324,6 +324,7 @@ impl Lanes {
 
 /// The piano roll window and everything it remembers between frames.
 pub struct PianoRoll {
+    pub instance: Option<egui::Id>,
     pub open: bool,
     channel: usize,
     /// The pattern shown last time, to notice when it changes.
@@ -398,6 +399,7 @@ impl PianoRoll {
     /// A closed piano roll for `channel`.
     pub fn new(channel: usize) -> Self {
         PianoRoll {
+            instance: None,
             open: false,
             channel,
             pattern: 0,
@@ -550,7 +552,7 @@ impl PianoRoll {
         // it was.
         self.has_keyboard = crate::widgets::editor_keyboard(
             ctx,
-            egui::LayerId::new(egui::Order::Middle, Self::id()),
+            egui::LayerId::new(egui::Order::Middle, self.instance.unwrap_or_else(Self::id)),
         );
 
         // `open` is a copy: the window needs `&mut open` while the closure
@@ -560,7 +562,7 @@ impl PianoRoll {
             "Piano roll · {} · {}",
             pattern_notes.name, channel.name
         ))
-        .id(Self::id())
+        .id(self.instance.unwrap_or_else(Self::id))
         .open(&mut open)
         .default_pos([150.0, 160.0])
         .default_size([1120.0, 580.0])
