@@ -339,3 +339,325 @@ pub(super) const PAIDUSHKO_HORO: Song = Song {
             slow beat, where the tune leans on a long note. Four strains of eight bars, each \
             played twice.",
 };
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/norbeck/abc_tune_norbeck_2948.abc
+// (Henrik Norbeck's ABC tunes, rachenitsa 4, in 2+2+3/16: written here in eighths, every
+// note twice as long, without the rolls and grace notes. Six strains, each played twice, then
+// da capo to the fine at the end of the second strain, its repeats taken again; the sixth
+// strain is the third with a last bar that leads back to the start. The source has no
+// chords: these are a plain harmonization of the melody. No second source of this tune was
+// found to compare.)
+pub(super) const SVATBARSKA_RACHENITSA: Song = Song {
+    name: "Svatbarska rachenitsa",
+    origin: "Bulgarian wedding dance, traditional",
+    feel: "Rachenitsa",
+    genre: Genre::Balkan,
+    tonic: A,
+    mode: NaturalMinor,
+    time: TWO_TWO_THREE,
+    tempo: 220.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Rachenitsa",
+    band: BALKAN,
+    style: "Rachenitsa",
+    parts: &[
+        Part::new(
+            "A",
+            "C5:4 D5:2 E5 E5:4 D5:2 | D5:2 C5 E5 D5 D5:4 C5:2 | C5:2 D5 D5 C5 C5 B4 G4 | \
+             A4:2 G4 A4 B4 C5:4 G4:2 | C5:4 D5:2 E5 E5:4 D5:2 | D5:2 C5 E5 D5 D5:4 C5:2 | \
+             C5:2 D5 D5 C5 C5 B4 G4 | A4:4 A4:2 E4 A4:6",
+            "i | iv7 | bIII | i | i | iv7 | bIII | i",
+        ),
+        Part::new(
+            "B",
+            "C5:2 D5 D5 A4 C5 D5 D5 | C5:2 B4 A4 B4 C5:4 G4:2 | C5:2 D5 B4:4 G4:2 A4 B4 | \
+             A4:2 G4 A4 B4 C5:4 G4:2 | C5:2 D5 D5 A4 C5 D5 D5 | C5:2 B4 A4 B4 C5:4 G4:2 | \
+             E5:2 D5 D5 C5 C5 B4 G4 | A4:4 C5:2 D5 A4:6",
+            "iv7 | i | bVII | i | iv7 | i | bIII | i",
+        ),
+        Part::new(
+            "C",
+            "A4:2 E5 D5 E5 C#5:4 C#5:2 | A4:2 B4 B4 A4 C#5:4 C#5:2 | E5:2 A4 D5 E5 C#5:4 C#5:2 | \
+             A4:2 B4 B4 A4 A4 E4 A4 | A4:2 E5 D5 E5 C#5:4 C#5:2 | A4:2 B4 B4 A4 C#5:4 C#5:2 | \
+             E5:2 A4 D5 E5 C#5:4 C#5:2 | A4:2 B4 B4 A4 A4:6",
+            "I | I | I | I | I | I | I | I",
+        )
+        .in_key(A, Major),
+        Part::new(
+            "D",
+            "A4:2 B4 B4:4 D5:2 C#5 A4 | C#5:4 C#5:2 A4 B4:6 | B4:4 D5:2 E5 C#5 D5 E5 | \
+             C#5:4 C#5:2 A4 B4:6 | A4:2 B4 B4:4 D5:2 C#5 A4 | C#5:4 C#5:2 A4 B4:6 | \
+             B4:4 D5:2 E5 C#5 D5 E5 | C#5:4 B4:2 A4 A4:6",
+            "I I V V I I I | I I I I V V V | V7 V7 V7 V7 I I I | I I I I V V V | \
+             I I V V I I I | I I I I V V V | V7 V7 V7 V7 I I I | I",
+        )
+        .in_key(A, Major),
+        // The makam hicaz on A: B flat and C sharp, an augmented second apart.
+        Part::new(
+            "E",
+            "F5:2 E5 D5 C#5 Bb4 A4 G4 | A4:2 Bb4 C#5:4 A4:2 C#5 D5 | F5:2 E5 D5 C#5 Bb4 A4 G4 | \
+             A4:4 A4:2 E4 C#5 D5 E5 | F5:2 E5 D5 C#5 Bb4 A4 G4 | A4:2 Bb4 C#5:4 A4:2 C#5 D5 | \
+             F5:2 E5 D5 C#5 Bb4 A4 G4 | A4:4 A4:2 E4 A4:6",
+            "bvii7 | I | bvii7 | I | bvii7 | I | bvii7 | I",
+        )
+        .in_key(A, Phrygian),
+        // The third strain again, its last bar leading back to the first.
+        Part::new(
+            "F",
+            "A4:2 E5 D5 E5 C#5:4 C#5:2 | A4:2 B4 B4 A4 C#5:4 C#5:2 | E5:2 A4 D5 E5 C#5:4 C#5:2 | \
+             A4:2 B4 B4 A4 A4 E4 A4 | A4:2 E5 D5 E5 C#5:4 C#5:2 | A4:2 B4 B4 A4 C#5:4 C#5:2 | \
+             E5:2 A4 D5 E5 C#5:4 C#5:2 | A4:2 B4 B4 A4 A4 E4 A4",
+            "I | I | I | I | I | I | I | I",
+        )
+        .in_key(A, Major),
+    ],
+    form: &[
+        "A", "A", "B", "B", "C", "C", "D", "D", "E", "E", "F", "F", "A", "A", "B", "B",
+    ],
+    drums_from: 0,
+    about: "A wedding rachenitsa: seven eighths to the bar, counted 1 2, 1 2, 1 2 3, quick, \
+            quick, slow. The first two strains are in A minor and never touch F; under them \
+            go A minor, D minor seven (iv7), C (bIII) and G (bVII). The next two turn to A \
+            major: the third stays on the A chord, the fourth leans on B over E, the V. The \
+            fifth runs down from F through C sharp and B flat, an augmented second apart, the \
+            mark of the makam hicaz, over G minor seven and A major. The third strain comes \
+            back, and the tune goes back to the start to end after the second.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/robinson/abc_tune_robinson_2930.abc
+// (Richard Robinson's tunebook, "Diacove (Bulgaria)", from Cathy Goss, in 9/16 counted
+// 2 + 2 + 2 + 3: written here in 9/8, every note twice as long. Six strains, each played
+// twice. John Chambers' copy of Andy Hornby and Cathy Goss's ABC,
+// https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201268487.abc,
+// has the same notes bar for bar. Neither has chords: these are a plain harmonization of the
+// melody.)
+pub(super) const DAICHOVO_HORO: Song = Song {
+    name: "Daichovo horo",
+    origin: "Bulgarian dance tune, traditional",
+    feel: "Daichovo",
+    genre: Genre::Balkan,
+    tonic: A,
+    mode: Dorian,
+    time: NINE_EIGHT_AKSAK,
+    tempo: 220.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Daichovo",
+    band: KAVAL,
+    style: "Daichovo",
+    parts: &[
+        Part::new(
+            "A",
+            "E5:4 D5 E5 C5 B4:2 | C5:2 D5 E5:4 C5:2 A4 B4:4 G4:2 | A4:8 C5:2 D5 E5 -:4 | \
+             E5:4 D5 E5 C5 B4:2 | C5:2 D5 E5:4 C5:2 A4 B4:4 G4:2 | A4:8 A4:4 A4:2 -:4",
+            "i | i i i i i i bVII bVII bVII | i | i | i i i i i i bVII bVII bVII | i",
+        ),
+        Part::new(
+            "B",
+            "C5:2 D5 D5 E5 C5 A4 B4:4 A4:2 | D5:4 D5:2 E5 C5 A4 B4:4 A4:2 | \
+             C5:2 D5 D5 E5 C5 A4 B4:4 A4:2 | A4:8 C5:2 D5 E5 -:4 | \
+             C5:2 D5 D5 E5 C5 A4 B4:4 A4:2 | D5:4 D5:2 E5 C5 A4 B4:4 A4:2 | \
+             C5:2 D5 D5 E5 C5 A4 B4:4 A4:2 | A4:8 A4:4 A4:2 -:4",
+            "i | bVII bVII bVII bVII i i i i i | i | i | i | bVII bVII bVII bVII i i i i i | i | i",
+        ),
+        Part::new(
+            "C",
+            "B4:2 C5 D5 C5 B4 G4 A4:4 B4:2 | C5:4 D5:2 C5 B4 G4 A4:6 | \
+             B4:2 C5 D5 C5 B4 G4 A4:4 B4:2 | C5:4 C5:2 B4 C5 B4 G4 A4:4",
+            "bVII bVII bVII bVII bVII bVII i i i | i i i i bVII bVII i i i | \
+             bVII bVII bVII bVII bVII bVII i i i | i",
+        ),
+        Part::new(
+            "D",
+            "C5:4 D5:2 C5 D5:4 D5 C5:2 | D5:4 D5:2 C5 B4 G4 A4:4 B4:2 | \
+             C5:4 D5:2 C5 D5:4 D5 C5:2 | E5:4 D5:2 C5 B4 G4 A4:6",
+            "i i i i bVII bVII bVII bVII bVII | bVII bVII bVII bVII bVII bVII i i i | \
+             i i i i bVII bVII bVII bVII bVII | i i i i bVII bVII i i i",
+        ),
+        Part::new(
+            "E",
+            "E5:4 D5:2 C5 B4:4 G4:2 A4 B4 | C5:4 D5:2 C5 B4 G4 A4:6 | \
+             E5:4 D5:2 C5 B4:4 A4 B4:2 | C5:4 C5:2 B4 G4:4 A4:6",
+            "i i i i bVII bVII bVII bVII bVII | i i i i bVII bVII i i i | \
+             i i i i bVII bVII i i i | i i i i bVII bVII i i i",
+        ),
+        // F sharp at last, over D major: the dorian IV.
+        Part::new(
+            "F",
+            "F#4:2 G4 A4:4 F#4:2 G4 A4:4 B4:2 | C5:4 B4:2 A4 D5:4 A4:6 | \
+             F#4:2 G4 A4:4 F#4:2 G4 A4:4 B4:2 | C5:4 B4:2 G4 A4:4 A4:6",
+            "IV | i i i i IV IV IV IV IV | IV | i i bVII bVII i i i i i",
+        ),
+    ],
+    form: &["A", "A", "B", "B", "C", "C", "D", "D", "E", "E", "F", "F"],
+    drums_from: 0,
+    about: "Nine eighths to the bar that are not three times three: 2 + 2 + 2 + 3, quick, \
+            quick, quick, slow. Six short strains, each played twice, circle around A and \
+            leave out F until the last, which brings in F sharp over D major (IV): the sound \
+            of the dorian mode. Most phrases fall to A through B and G, over G major (bVII) \
+            and then A minor, the cadence of much Balkan music.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/norbeck/abc_tune_norbeck_2890.abc
+// (Henrik Norbeck's ABC tunes, kopanitsa 3, as Boris Karlov played it, in 2+2+3+2+2/16 with
+// its chords: written here in eighths, every note twice as long. Five strains, each played
+// twice. Compared bar by bar with John Chambers' "Gankino/Kopanica #2" in D minor,
+// https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201297860.abc,
+// the same tune in the same key. Chambers often holds a note where Norbeck repeats it or cuts
+// it short (D for D D, or for D and a rest; E E for E E E D; G sharp for G sharp and a rest),
+// holds E where Norbeck ends the bars of the fourth strain on the low B, starts the second bar
+// of the third and of the fifth strain a fourth lower (B for E, E for A), has E for the high
+// A of the last bar, and goes from E7 to A at the end of the first two strains, where Norbeck
+// has E. His "fine" at the end of the fourth strain asks
+// for a da capo that Norbeck does not have. Norbeck's notes and chords are followed, except
+// in the last bar of the fourth strain: its E chord on the last two beats is missing there,
+// and Chambers has it, as in the strain's other bars.)
+pub(super) const GANKINO_HORO: Song = Song {
+    name: "Gankino horo",
+    origin: "Bulgarian kopanitsa, traditional",
+    feel: "Kopanitsa",
+    genre: Genre::Balkan,
+    tonic: D,
+    mode: Dorian,
+    time: ELEVEN_EIGHT,
+    tempo: 220.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Kopanitsa",
+    band: BALKAN,
+    style: "Kopanitsa",
+    parts: &[
+        Part::new(
+            "A",
+            "D4:4 C#5:2 D5 D5 -:2 D5 D5 C5 B4 A4 | C5:2 B4 A4 G#4 G#4 F4 A4 G#4:4 F4:2 E4 | \
+             D4:4 E4:2 F4 F4 D4 A4 G#4:4 F4:2 A4 | G#4:4 F4:2 E4 E4 D4 F4 E4 E4 E4 D4",
+            "i | i | i | i i i i i i i II II II II",
+        ),
+        Part::new(
+            "B",
+            "D4:4 E4:2 F4 F4 D4 A4 G#4:4 F4:2 E4 | D4:4 D5:2 D5 D5 C5 B4 A4 G#4 F4 E4 | \
+             D4:4 E4:2 F4 F4 D4 A4 G#4:4 F4:2 A4 | G#4:4 F4:2 E4 E4 D4 F4 E4 E4 E4 D4",
+            "i | i | i | i i i i i i i II II II II",
+        ),
+        Part::new(
+            "C",
+            "B4:2 C#5 D5 D5 D5 B4 D5 C#5 C#5 C#5 A4 | E5:2 C#5 D5 D5 D5 B4 D5 C#5 C#5 C#5 A4 | \
+             B4:2 C#5 D5 D5 D5 B4 D5 C#5 C#5 C#5 A4 | B4:2 A4 G#4 A4 B4 B4 E5 B4:4 -:4",
+            "V7 V7 V7 V7 V7 V7 V7 I I I I | V7 V7 V7 V7 V7 V7 V7 I I I I | \
+             V7 V7 V7 V7 V7 V7 V7 I I I I | V",
+        )
+        .in_key(A, Major),
+        // On E, with the notes of the first strains: E, F, G sharp, A, B, C, D.
+        Part::new(
+            "D",
+            "A4:2 B4 G#4:4 F4:2 E4 D4 E4 E4 E4 B3 | A4:2 B4 G#4:4 F4:2 E4 D4 E4 E4 E4 B3 | \
+             A4:2 B4 G#4:4 A4:2 B4 G#4 A4 B4 G#4 -:2 | A4:2 B4 G#4:4 F4:2 E4 D4 E4 E4 E4 B3",
+            "II II II II i i i II II II II | II II II II i i i II II II II | II | \
+             II II II II i i i II II II II",
+        ),
+        Part::new(
+            "E",
+            "E5:2 F#5 G5 G5 G5 E5 G5 F#5 F#5 F#5 D5 | A5:2 F#5 G5 G5 G5 E5 G5 F#5 F#5 F#5 D5 | \
+             E5:2 F#5 G5 G5 G5 E5 G5 F#5 F#5 F#5 D5 | E5:2 D5 C#5 D5 E5 E5 A5 E5 -:6",
+            "V7 V7 V7 V7 V7 V7 V7 I I I I | V7 V7 V7 V7 V7 V7 V7 I I I I | \
+             V7 V7 V7 V7 V7 V7 V7 I I I I | V V V V II7 II7 II7 V V V V",
+        )
+        .in_key(D, Major),
+    ],
+    form: &["A", "A", "B", "B", "C", "C", "D", "D", "E", "E"],
+    drums_from: 0,
+    about: "Eleven eighths to the bar, counted 1 2, 1 2, 1 2 3, 1 2, 1 2: five beats with \
+            the long one in the middle. The first two strains are in D on a minor scale with \
+            B and G sharp: the raised fourth, G sharp, rubs against the D minor chord (i) and \
+            makes the chord on E major (II), where each strain stops. The third goes to A \
+            major, E7 to A; the fourth hovers on E over E major and D minor, the first \
+            strains' notes heard from E, like the makam hicaz; the fifth is in D major, A7 to \
+            D, and stops on A, the V, ready to start again.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201355994.abc
+// (John Chambers' ABC of 1987, in bars of 8 + 7 eighths: here each pair is one bar of 15/8,
+// 2 + 2 + 2 + 2 + 3 + 2 + 2, with his chords, without the rolls. The first two strains are
+// marked "4x" and played four times, the others twice; the second ends at "fine", so after
+// the seventh the tune goes back to the start and ends there, its repeats taken again. The
+// fourth to sixth strains are in thirds: the upper voice. Compared with Henrik Norbeck's
+// "Buchimish", in 2+2+2+2+3+2+2/16,
+// https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/norbeck/abc_tune_norbeck_2848.abc:
+// his first two strains are the same; his third ends its first bar on G for E and has D for
+// the high E in its second; his last two strains are other tunes, where Chambers has four.)
+pub(super) const BUCIMIS: Song = Song {
+    name: "Bučimiš",
+    origin: "Bulgarian dance tune, traditional",
+    feel: "Bučimiš",
+    genre: Genre::Balkan,
+    tonic: A,
+    mode: Dorian,
+    time: FIFTEEN_EIGHT,
+    tempo: 220.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Bučimiš",
+    band: KAVAL,
+    style: "Bučimiš",
+    parts: &[
+        Part::new(
+            "A",
+            "A4:4 D5:2 E5 E5 A4 E5 A4 E5:4 D5:2 D5 C5 D5 E5 | \
+             C5:2 E4 B4 E4 C5 E4 B4 E4 G4 F#4 G4 A4:4 A4:2 E4",
+            "i | i i i i i i i i bVII bVII bVII i i i i",
+        ),
+        Part::new(
+            "B",
+            "C5:2 E4 B4 E4 C5 E4 B4 E4 G4 F#4 G4 A4 B4 C5 D5 | \
+             C5:2 E4 B4 E4 C5 E4 B4 E4 G4 F#4 G4 A4:4 A4:2 E4",
+            "i i i i i i i i bVII bVII bVII i i i i | i i i i i i i i bVII bVII bVII i i i i",
+        ),
+        Part::new(
+            "C",
+            "C5:2 D5 D5 B4 C5 A4 B4 G4 A4:4 B4:2 C5:4 C5:2 E4 | \
+             C5:2 D5 D5 B4 C5 A4 B4 G4 A4:4 E5:2 A4:4 A4",
+            "i | i",
+        ),
+        // The makam hicaz on A, B flat and C sharp, over A major and G minor.
+        Part::new(
+            "D",
+            "G5:2 F5 E5 D5 E5 C#5 D5 Bb4 C#5:2 D5 E5 C#5:4 C#5:2 Bb4 | \
+             A4:2 Bb4 C#5 D5 E5 F5 E5:4 D5:2 C#5 Bb4 C#5:4 C#5:2 A4",
+            "I | I I I I I I I I bvii bvii bvii I I I I",
+        )
+        .in_key(A, Phrygian),
+        Part::new(
+            "E",
+            "C#5:2 D5 E5:4 E5:2 D5 E5:4 D5:2 C#5 Bb4 C#5:4 C#5:2 Bb4 | \
+             A4:2 Bb4 C#5 D5 E5 F5 E5:4 D5:2 C#5 Bb4 C#5:4 C#5:2 A4",
+            "I I I I I I I I bvii bvii bvii I I I I | I I I I I I I I bvii bvii bvii I I I I",
+        )
+        .in_key(A, Phrygian),
+        Part::new(
+            "F",
+            "D5:2 E5 E5 A4 D5 E5 E5 A4 F5 E5 D5 C#5:4 Bb4:2 A4 | \
+             D5:2 E5 E5 A4 D5 E5 E5 A4 F5 E5 D5 E5:4 E5:2 A4",
+            "I I I I I I I I bvii bvii bvii I I I I | I I I I I I I I bvii bvii bvii I I I I",
+        )
+        .in_key(A, Phrygian),
+        Part::new(
+            "G",
+            "D5:2 E4 C#5:4 D5:2 E4 C#5:4 A4:2 G#4 A4 B4 C#5 D5 E5 | \
+             D5:2 E4 C#5:4 D5:2 E4 C#5:4 A4:2 C#5 A4 B4:4 B4",
+            "I I I I I I I I I I I V7 V7 V7 V7 | I I I I I I I I II7 II7 II7 V V V V",
+        )
+        .in_key(A, Major),
+    ],
+    form: &[
+        "A", "A", "A", "A", "B", "B", "B", "B", "C", "C", "D", "D", "E", "E", "F", "F", "G", "G",
+        "A", "A", "A", "A", "B", "B", "B", "B",
+    ],
+    drums_from: 0,
+    about: "Fifteen eighths to the bar in seven beats, 2 + 2 + 2 + 2 + 3 + 2 + 2, the long \
+            one fifth. The first three strains are in A dorian, with F sharp, over A minor, \
+            and G major (bVII) comes on the long beat. The next three move to A with B flat \
+            and C sharp, the makam hicaz, over A major and G minor (bvii). The last turns to \
+            A major and stops on E, the V, through B7 (II7): a half cadence that leads back \
+            to the first strain, and the tune ends after the second.",
+};
