@@ -1320,7 +1320,7 @@ pub static STYLES: &[Style] = &[
         "The tango waltz in a minor key: fast, felt in one, and wistful.",
     )
     .in_time(THREE_FOUR),
-    // ----- South American folklore -----
+    // ----- Latin American folklore -----
     style(
         "Zamba",
         Folklore,
@@ -1487,6 +1487,44 @@ pub static STYLES: &[Style] = &[
         "From Montevideo, across the river from Buenos Aires: the drums that the tango and \
          the milonga grew up with, under three plain chords.",
     ),
+    style(
+        "Polca",
+        Folklore,
+        Major,
+        "I | V7 | V7 | I",
+        Comping::Backbeat,
+        Bass::RootFifth,
+        120.0,
+        "Polca",
+        "The polka of Mexican corridos: two chords, the bass on beat 1 and the guitars on beat \
+         2. Each bar here lasts two bars of 2/4.",
+    ),
+    style(
+        "Pasillo",
+        Folklore,
+        HarmonicMinor,
+        "i | i | iv | iv | V7 | V7 | i | i",
+        Comping::Waltz,
+        Bass::Waltz,
+        190.0,
+        "Pasillo",
+        "The Andean waltz of Colombia and Ecuador, quick and often in minor: the bass on 1, \
+         the strings on the beats after it.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Son jalisciense",
+        Folklore,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Arp3,
+        Bass::Waltz,
+        180.0,
+        "Son jalisciense",
+        "The mariachi son: two chords, I and V7, with violins and trumpets over guitars that \
+         swing between 6/8 and 3/4.",
+    )
+    .in_time(SIX_EIGHT),
     // ----- Flamenco -----
     style(
         "Andalusian cadence",

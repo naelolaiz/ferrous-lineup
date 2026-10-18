@@ -15,7 +15,7 @@ use crate::project::Project;
 use crate::tempo::{Tempo, TempoMarker};
 
 use super::apply::{self, LEAD};
-use super::chart::{ChordSpan, accompany};
+use super::chart::{ChordSpan, accompany, accompany_in_bars};
 use super::comping::Bass;
 use super::interpret::{self, Role};
 use super::micromodes::{self, MicromodeStyle};
@@ -424,7 +424,8 @@ pub fn song_demo(song: &Song) -> Project {
         let melody = melody_notes(song, part, time, length, voices.len());
         let tonic = song.part_scale(part).root;
         let (mut chords, mut bass_line) = if part.left.is_empty() {
-            let backing = accompany(&part.spans(bar, tonic), tonic, song.comping, song.bass);
+            let (comping, bass, _) = song.part_playing(part);
+            let backing = accompany_in_bars(&part.spans(bar, tonic), tonic, comping, bass, time);
             (backing.chords, backing.bass)
         } else {
             (part.left().notes, Vec::new())
@@ -457,7 +458,7 @@ pub fn song_demo(song: &Song) -> Project {
                 pattern.set_notes(horns, horn_notes);
             }
         }
-        patterns.push((part.name, index, length, time));
+        patterns.push((part, index, length, time));
     }
 
     // A drum pattern for each part, with a fill at the end of long ones.
@@ -466,14 +467,20 @@ pub fn song_demo(song: &Song) -> Project {
     let rhythm = Rhythm::named(song.rhythm);
     let mut drums = Vec::new();
     if let Some(rhythm) = rhythm {
-        for &(name, _, length, time) in &patterns {
-            let Some(rhythm) = rhythm_in(rhythm, time) else {
+        for &(part, _, length, time) in &patterns {
+            // A part played its own way has its own rhythm, or none.
+            let rhythm = match part.played {
+                Some((_, _, own)) => Rhythm::named(own),
+                None => rhythm_in(rhythm, time),
+            };
+            let Some(rhythm) = rhythm else {
                 continue;
             };
             project.time_signature = time;
             let long = length >= 4 * time.steps_per_bar();
-            let index = drum_pattern(&mut project, &format!("{name} drums"), length, rhythm, long);
-            drums.push((name, index));
+            let name = format!("{} drums", part.name);
+            let index = drum_pattern(&mut project, &name, length, rhythm, long);
+            drums.push((part.name, index));
         }
     }
     // The ending is a bar of the last part's time, on the home chord of
@@ -492,7 +499,8 @@ pub fn song_demo(song: &Song) -> Project {
     let mut at = 0;
     let mut time_here = song.time;
     for (entry, name) in song.form.iter().enumerate() {
-        let Some(&(_, pattern, length, time)) = patterns.iter().find(|(part, ..)| part == name)
+        let Some(&(_, pattern, length, time)) =
+            patterns.iter().find(|(part, ..)| part.name == *name)
         else {
             continue;
         };
@@ -688,6 +696,7 @@ mod tests {
             time: Some(waltz),
             key: None,
             tempo: &[],
+            played: None,
         };
         let first = song.form[0];
         let parts: &'static [Part] =

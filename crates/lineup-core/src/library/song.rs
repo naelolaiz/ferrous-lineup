@@ -61,6 +61,11 @@ pub struct Part {
     /// part is played. After the part, the song carries on at the tempo
     /// it got to.
     pub tempo: &'static [TempoMark],
+    /// How this part is accompanied, when it is not the way the rest of
+    /// the song is: its comping, its bass line and its rhythm, a name in
+    /// [`super::RHYTHMS`] ("" for no drums). A refrain in 3/4 in a song
+    /// in 2/4 needs a waltz's comping and a rhythm in three.
+    pub played: Option<(Comping, Bass, &'static str)>,
 }
 
 /// The General MIDI instruments a song's channels play (see
@@ -157,6 +162,7 @@ impl Part {
             time: None,
             key: None,
             tempo: &[],
+            played: None,
         }
     }
 
@@ -180,6 +186,14 @@ impl Part {
     /// The same part with the tempo markings of the score.
     const fn with_tempo(self, tempo: &'static [TempoMark]) -> Part {
         Part { tempo, ..self }
+    }
+
+    /// The same part accompanied another way than the rest of the song.
+    const fn played(self, comping: Comping, bass: Bass, rhythm: &'static str) -> Part {
+        Part {
+            played: Some((comping, bass, rhythm)),
+            ..self
+        }
     }
 
     /// The same part in another key: a modulation.
@@ -277,6 +291,13 @@ impl Song {
         part.time.unwrap_or(self.time)
     }
 
+    /// How `part` is accompanied: its comping, bass line and rhythm, its
+    /// own or else the song's.
+    pub fn part_playing(&self, part: &Part) -> (Comping, Bass, &'static str) {
+        part.played
+            .unwrap_or((self.comping, self.bass, self.rhythm))
+    }
+
     /// The key `part` is in: its own, if it modulates, or the song's.
     pub fn part_scale(&self, part: &Part) -> Scale {
         match part.key {
@@ -363,7 +384,6 @@ const BALLAD_BAND: Band = Band::new(gm::TENOR_SAX, gm::ACOUSTIC_GRAND_PIANO, gm:
 const DIXIELAND: Band = Band::new(gm::TRUMPET, gm::ACOUSTIC_GRAND_PIANO, gm::TUBA);
 const JAZZ_WALTZ: Band = Band::new(gm::VIBRAPHONE, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
 const GYPSY_JAZZ: Band = Band::new(gm::VIOLIN, gm::JAZZ_GUITAR, gm::ACOUSTIC_BASS);
-const CUMBIA: Band = Band::new(gm::ACCORDION, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
 const SAMBA: Band = Band::new(gm::FLUTE, gm::NYLON_GUITAR, gm::FINGER_BASS);
 const AFROBEATS: Band = Band::new(gm::MARIMBA, gm::ELECTRIC_PIANO, gm::SYNTH_BASS);
 const POP: Band = Band::new(gm::SQUARE_LEAD, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
@@ -531,12 +551,13 @@ pub static SONGS: &[Song] = &[
     electronic::BADINERIE,
     electronic::SPRING,
     electronic::CAN_CAN,
-    latin::LA_CUCARACHA,
     latin::RIO_AFTERNOON,
     latin::CARNIVAL_MORNING,
     latin::TICO_TICO,
     latin::EL_MANISERO,
     latin::CIELITO_LINDO,
+    latin::QUIEREME_MUCHO,
+    latin::SIBONEY,
     tango::HABANERA,
     tango::TANGO_DEL_TELAR,
     tango::MILONGA_DEL_RIO,
@@ -545,9 +566,34 @@ pub static SONGS: &[Song] = &[
     tango::LA_CUMPARSITA,
     tango::LA_PALOMA,
     tango::GALLO_CIEGO,
+    tango::LAGRIMAS_Y_SONRISAS,
+    tango::A_MEDIA_LUZ,
+    tango::ADIOS_MUCHACHOS,
+    tango::CAMINITO,
+    tango::BOEDO,
+    tango::ALMA_EN_PENA,
+    tango::EL_AMANECER,
+    tango::A_LA_GRAN_MUNECA,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,
+    folklore::PAPEL_DE_PLATA,
+    folklore::LA_QUEBRADA_DE_HUMAHUACA,
+    folklore::HUAYTA_HUAYTUCHA,
+    folklore::KICHARIRILLAWAY,
+    folklore::A_LAS_ORILLAS_DEL_TITICACA,
+    folklore::CHUNGUINADA,
+    folklore::JESUSITA_EN_CHIHUAHUA,
+    folklore::DE_COLORES,
+    folklore::SOBRE_LAS_OLAS,
+    folklore::LA_GOLONDRINA,
+    folklore::ESTRELLITA,
+    folklore::JARABE_TAPATIO,
+    folklore::LA_RASPA,
+    folklore::LA_BAMBA,
+    folklore::LA_CUCARACHA,
+    folklore::DIANA_TRISTE,
+    folklore::LA_GATA_GOLOSA,
     folklore::ZAMBA_DEL_TELAR,
     folklore::CHACARERA_DEL_PATIO,
     folklore::GATO_DEL_ARROYO,
@@ -717,16 +763,30 @@ mod tests {
     #[test]
     fn songs_in_three_play_in_three() {
         for song in SONGS {
-            if song.time.steps_per_bar() == 12 {
-                assert!(
-                    matches!(
-                        song.comping,
-                        Comping::Waltz | Comping::Sway | Comping::Arp3 | Comping::Held
-                    ),
-                    "{} is in three but plays {:?}",
-                    song.name,
-                    song.comping
-                );
+            for part in song.parts {
+                let (comping, _, rhythm) = song.part_playing(part);
+                let time = song.part_time(part);
+                if time.steps_per_bar() == 12 {
+                    assert!(
+                        matches!(
+                            comping,
+                            Comping::Waltz | Comping::Sway | Comping::Arp3 | Comping::Held
+                        ),
+                        "{}, {}: in three but plays {comping:?}",
+                        song.name,
+                        part.name,
+                    );
+                }
+                if part.played.is_some() && !rhythm.is_empty() {
+                    let rhythm = RHYTHMS.iter().find(|r| r.name == rhythm);
+                    assert_eq!(
+                        rhythm.map(|r| r.time),
+                        Some(time),
+                        "{}, {}: its rhythm is in another time",
+                        song.name,
+                        part.name
+                    );
+                }
             }
         }
     }

@@ -19,10 +19,11 @@
 //! whole piano part can be written out.
 
 use crate::harmony::{Chord, ChordSymbol};
+use crate::meter::{Bar, TimeSignature};
 use crate::pattern::{DEFAULT_VELOCITY, NoteEvent};
 use crate::pitch::{Note, PitchClass};
 
-use super::comping::{Bass, Comping};
+use super::comping::{Bass, BassPart, Comping, Played};
 use super::numeral::{self, RomanChord};
 use super::voicing::{bass_line, voice_progression};
 
@@ -275,6 +276,46 @@ pub fn accompany(spans: &[ChordSpan], tonic: PitchClass, comping: Comping, bass:
     backing
 }
 
+/// Plays a chart as [`accompany`] does, but with the chords in step with
+/// bars of `time`, the way a band keeps its groove whatever the chords
+/// do (see [`Comping::play_in_bars`]): a chord that comes on beat 2 is
+/// struck on beat 2, and a chord too short for any hit of the pattern is
+/// still struck where it starts, so every chord of a song is heard. The
+/// bass plays as in [`accompany`], from the root of every chord.
+pub fn accompany_in_bars(
+    spans: &[ChordSpan],
+    tonic: PitchClass,
+    comping: Comping,
+    bass: Bass,
+    time: TimeSignature,
+) -> Backing {
+    let mut backing = accompany(spans, tonic, comping, bass);
+    let chords: Vec<Chord> = spans.iter().map(|span| span.chord.in_key(tonic)).collect();
+    let voicings = voice_progression(&chords);
+    let harmonies: Vec<Played> = spans
+        .iter()
+        .zip(voicings)
+        .map(|(span, voicing)| Played {
+            start: span.start,
+            end: span.start + span.length,
+            voicing,
+            bass: BassPart::Rest,
+        })
+        .collect();
+    let end = spans.last().map_or(0, |span| span.start + span.length);
+    let length = time.steps_per_bar().max(1);
+    let bars: Vec<Bar> = (0..end.div_ceil(length))
+        .map(|number| Bar {
+            number,
+            start: number * length,
+            length: length.min(end - number * length),
+            time,
+        })
+        .collect();
+    backing.chords = comping.play_in_bars(&bars, &harmonies);
+    backing
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -451,5 +492,45 @@ mod tests {
         assert_eq!(backing.chords.len(), 6, "two triads");
         assert!(backing.chords.iter().all(|note| note.length == 16));
         assert_eq!(chart[1].chord.quality, ChordQuality::Major);
+    }
+
+    #[test]
+    fn chords_on_the_beat_are_struck_on_the_beat() {
+        // A waltz bar of three chords, a beat each: the waltz's keys play
+        // on beats 2 and 3, so the second and third chords are struck
+        // there, and the first, where no hit falls, on beat 1.
+        let three = TimeSignature::new(3, 4);
+        let chart = parse_chart("I V7 IV | I", 12).unwrap();
+        let backing = accompany_in_bars(&chart, PitchClass::C, Comping::Waltz, Bass::Waltz, three);
+        let struck: Vec<(usize, Vec<u8>)> = [0, 4, 8, 16, 20]
+            .iter()
+            .map(|&at| {
+                let mut notes: Vec<u8> = backing
+                    .chords
+                    .iter()
+                    .filter(|note| note.start == at)
+                    .map(|note| note.pitch.pitch_class().semitone())
+                    .collect();
+                notes.sort_unstable();
+                notes.dedup();
+                (at, notes)
+            })
+            .collect();
+        assert_eq!(
+            struck,
+            [
+                (0, vec![0, 4, 7]),
+                (4, vec![2, 5, 7, 11]),
+                (8, vec![0, 5, 9]),
+                (16, vec![0, 4, 7]),
+                (20, vec![0, 4, 7]),
+            ]
+        );
+        // The per-chord rhythm of `accompany` never reaches beat 2 of a
+        // chord a beat long, so it leaves V7 and IV out.
+        let restarted = accompany(&chart, PitchClass::C, Comping::Waltz, Bass::Waltz);
+        assert!(restarted.chords.iter().all(|note| note.start >= 12));
+        // The bass is the same either way: every chord's root.
+        assert_eq!(backing.bass, restarted.bass);
     }
 }
