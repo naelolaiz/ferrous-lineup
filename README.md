@@ -51,7 +51,9 @@ cargo run --release
 Press **Space** to play the demo song: two bars of a C, Am, F, G chord
 progression, then a beat comes in, and a drum fill ends it. The play
 button pauses while playing, and Stop goes back to where the playhead was
-put. **Home** goes to the start, **Page Up** and **Page Down** skip a bar
+put. **Home** goes to the start, **End** to the last step, and **Ctrl+Home/End**
+also work (⌘ on Mac). These jumps reveal the destination even with
+**Follow playhead** off. **Page Up** and **Page Down** skip a bar
 back or forward, and clicking the bar numbers moves the playhead. The playlist
 arranges patterns into a song: click to place a clip of the selected
 pattern, drag clips around, right-click to delete, and double-click a
@@ -68,13 +70,16 @@ controls play the selected pattern directly; its pattern picker switches
 what is being edited. After clicking the rack or piano roll, **Space**
 plays or pauses that pattern. Click a channel name to select and hear it;
 click it again, click empty rack space, or press **Escape** to deselect.
+**Delete** or **Backspace** removes the selected rack channel; Undo restores it.
 Double-click its name to open its piano roll. An explicitly selected
 channel stays selected even when it has no notes in the current pattern.
 **F7** shows the piano roll, on the selected pattern: when
 the channel has no notes there, it says so and offers the patterns that
 do. Pick a key to highlight its notes,
 draw notes or whole chords, and watch the chord names above the grid.
-Select notes with Ctrl+click or a Ctrl+drag box, then move them with the
+Click an existing note to select it; **Delete** or **Backspace** removes selected
+notes. Add or remove notes from the selection with Ctrl+click, or select a range
+with a Ctrl+drag box, then move them with the
 arrow keys (Alt+↑ stays in the key), invert or arpeggiate them from the
 Tools menu, and set velocities in the lane under the grid. The chord
 buttons light up with the chords that often come next.
@@ -338,7 +343,10 @@ length and time signature, and keeps the source pattern intact. Both actions
 support Undo. **Sets…** lists all 224
 pitch-class sets by Forte number, with their prime forms and interval
 vectors, to draw with or use as a scale, and selecting notes names their
-set. The Library's **Twelve-tone rows** and **File > Demos > Twelve-tone**
+set. **Hear it** previews the chosen set or micromode on the selected instrument.
+**Draw with it** in Sets and Micromodes lights up while active; click it
+again or choose **Single note** to stop drawing the set. The piano roll's
+**Draw > Single note** does the same. The Library's **Twelve-tone rows** and **File > Demos > Twelve-tone**
 play seven ways of using a row.
 
 **Micromodes…** opens Francisco Kröpfl's twelve micromodes: the twelve

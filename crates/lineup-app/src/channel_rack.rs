@@ -236,7 +236,8 @@ pub fn show(
                         .truncate();
                     let hover = "Click to select and hear this channel; click again to deselect. \
                                  Double-click to open its piano roll. Keyboards play the selected \
-                                 channel. Right-click for options. Drop a WAV file here to load it.";
+                                 channel. Delete removes the selected channel. Right-click for options. \
+                                 Drop a WAV file here to load it.";
                     let name = match channel.program {
                         Some(program) => ui.add(name).on_hover_text(format!(
                             "Plays: {} (General MIDI {})\n\n{hover}",
@@ -378,6 +379,16 @@ pub fn show(
         && !dismissing
     {
         actions.push(RackAction::SelectChannel(None));
+    }
+
+    if widgets::editor_keyboard(ui.ctx(), ui.layer_id())
+        && let Some(channel) = selected
+        && ui.input_mut(|input| {
+            input.consume_key(egui::Modifiers::NONE, egui::Key::Delete)
+                || input.consume_key(egui::Modifiers::NONE, egui::Key::Backspace)
+        })
+    {
+        actions.push(RackAction::Remove(channel));
     }
 
     // Highlight the row a dragged file would land on.

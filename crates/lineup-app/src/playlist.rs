@@ -325,6 +325,8 @@ pub struct PlaylistView {
     view_rect: Option<Rect>,
     /// Where to scroll the grid to the next time it is drawn.
     scroll_to: Option<Vec2>,
+    /// An explicit transport jump is revealed even with playback following off.
+    reveal: Option<usize>,
     /// Where on screen the playlist was drawn last frame, beside the
     /// Patterns and Library panel: where the zoom keys zoom the playlist.
     area: Rect,
@@ -349,6 +351,7 @@ impl PlaylistView {
             scrolled: Vec2::ZERO,
             view_rect: None,
             scroll_to: None,
+            reveal: None,
             area: Rect::NOTHING,
         }
     }
@@ -378,6 +381,10 @@ impl PlaylistView {
     /// and Library panel.
     pub fn area(&self) -> Rect {
         self.area
+    }
+
+    pub fn reveal_step(&mut self, step: usize) {
+        self.reveal = Some(step);
     }
 
     /// Whether trying something from the library also sets its tempo.
@@ -502,6 +509,7 @@ impl PlaylistView {
 
         let area = egui::ScrollArea::both()
             .id_salt("playlist")
+            .animated(false)
             .auto_shrink(false);
         let area = match self.scroll_to.take() {
             Some(offset) => area.scroll_offset(offset),
@@ -627,7 +635,16 @@ impl PlaylistView {
 
         self.handle_input(ui, &response, layout, cells, project, current, actions);
 
-        if let Some(step) = playhead {
+        if let Some(step) = self.reveal.take() {
+            // Include the fixed track headers, so step zero is fully visible.
+            ui.scroll_to_rect(
+                Rect::from_min_max(
+                    pos2(layout.x(step) - HEADER_WIDTH, cells.center().y),
+                    pos2(layout.x(step) + step_width, cells.center().y + 1.0),
+                ),
+                None,
+            );
+        } else if let Some(step) = playhead {
             widgets::follow_x(ui, playhead, layout.x(step), cells);
         }
 

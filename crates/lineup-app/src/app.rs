@@ -444,6 +444,20 @@ impl LineupApp {
         self.marker = step;
         self.cursor = step;
         self.send(Command::Seek(step));
+        match self.mode {
+            PlayMode::Pattern => self.piano_roll.reveal_step(step),
+            PlayMode::Song => {
+                let song = self.project.playback_arrangement();
+                let step = song
+                    .pass_at(step)
+                    .map_or(step, |pass| pass.from + step - pass.start);
+                self.playlist.reveal_step(step);
+                self.chord_sheet.reveal_step(step);
+                if let Some(step) = self.project.pattern_step_in_song(self.pattern, step) {
+                    self.piano_roll.reveal_step(step);
+                }
+            }
+        }
     }
 
     /// Moves the playhead by `bars` bars (back if negative), to the start
@@ -467,7 +481,7 @@ impl LineupApp {
         if target < 0 {
             self.seek(0);
         } else {
-            self.seek(meter.bar(target as usize).start);
+            self.seek(meter.bar(target as usize).start.min(self.loop_length() - 1));
         }
     }
 
@@ -1610,11 +1624,13 @@ impl LineupApp {
         // While a text field has the keyboard (a track or pattern name),
         // Space and L are letters, not shortcuts.
         let controls_active = [
-            egui::Id::unique("application-settings"),
-            egui::Id::unique("mixer"),
+            (self.settings_open, egui::Id::unique("application-settings")),
+            (self.mixer_open, egui::Id::unique("mixer")),
         ]
         .iter()
-        .any(|&id| widgets::editor_active(ctx, egui::LayerId::new(egui::Order::Middle, id)));
+        .any(|&(open, id)| {
+            open && widgets::editor_active(ctx, egui::LayerId::new(egui::Order::Middle, id))
+        });
         let typing = ctx.text_edit_focused() || egui::Popup::is_any_open(ctx);
         // `consume_key` reports whether the key was pressed and removes the
         // press, so a focused button does not also react to Space.
@@ -1639,8 +1655,14 @@ impl LineupApp {
         {
             self.select_channel(None);
         }
-        if !typing && !controls_active && pressed(egui::Key::Home) {
+        let boundary = |key| {
+            ctx.input_mut(|input| input.consume_key(egui::Modifiers::COMMAND, key)) || pressed(key)
+        };
+        if !typing && !controls_active && boundary(egui::Key::Home) {
             self.seek(0);
+        }
+        if !typing && !controls_active && boundary(egui::Key::End) {
+            self.seek(self.loop_length().saturating_sub(1));
         }
         if !typing && !controls_active && pressed(egui::Key::PageUp) {
             self.skip_bars(-1);

@@ -377,6 +377,7 @@ pub struct PianoRoll {
     banner: Option<Rect>,
     /// Where to scroll the grid to the next time it is drawn.
     scroll_to: Option<Vec2>,
+    reveal: Option<usize>,
     /// Whether the window was open last frame, to notice it opening.
     was_open: bool,
     /// How much wider and taller than usual the steps and rows are: the
@@ -438,6 +439,7 @@ impl PianoRoll {
             view_rect: None,
             banner: None,
             scroll_to: None,
+            reveal: None,
             was_open: false,
             zoom: Vec2::splat(1.0),
             hovered_step: None,
@@ -473,6 +475,10 @@ impl PianoRoll {
 
     pub fn selected_channel(&self) -> Option<usize> {
         self.channel_selected.then_some(self.channel)
+    }
+
+    pub fn reveal_step(&mut self, step: usize) {
+        self.reveal = Some(step);
     }
 
     pub fn deselect_channel(&mut self) {
@@ -713,13 +719,17 @@ impl PianoRoll {
         } else {
             held.iter().map(|note| note.pitch_class()).collect()
         };
+        let drawing = self.stamp;
         if self.set_window.open {
-            for action in self.set_window.show(ctx, area, scale, selected) {
+            for action in self
+                .set_window
+                .show(ctx, area, scale, selected, &mut self.stamp)
+            {
                 match action {
-                    SetAction::Stamp(set) => {
-                        self.stamp = ChordStamp::Set(set);
-                        self.inversion = 0;
-                    }
+                    SetAction::Hear(pitches) => actions.push(RollAction::Preview {
+                        channel: self.channel,
+                        pitches,
+                    }),
                     SetAction::UseAsKey(set) => actions.push(RollAction::SetScale(set)),
                     SetAction::ShowMicromode(trio) => {
                         self.micromode_window.pick(trio);
@@ -730,12 +740,11 @@ impl PianoRoll {
             }
         }
         if self.micromode_window.open {
-            for action in self.micromode_window.show(ctx, area, scale, selected) {
+            for action in self
+                .micromode_window
+                .show(ctx, area, scale, selected, &mut self.stamp)
+            {
                 match action {
-                    MicroAction::Stamp(set) => {
-                        self.stamp = ChordStamp::Set(set);
-                        self.inversion = 0;
-                    }
                     MicroAction::UseAsKey(set) => actions.push(RollAction::SetScale(set)),
                     MicroAction::Hear(pitches) => actions.push(RollAction::Preview {
                         channel: self.channel,
@@ -747,6 +756,9 @@ impl PianoRoll {
                     }
                 }
             }
+        }
+        if self.stamp != drawing {
+            self.inversion = 0;
         }
     }
 
@@ -1056,7 +1068,16 @@ impl PianoRoll {
         let view = self.view_rect;
         crate::widgets::no_rubber_band(ui);
         let output = grid_area.show(ui, |ui| {
-            if let (Some(view), Some(step)) = (view, playhead) {
+            if let (Some(view), Some(step)) = (view, self.reveal.take()) {
+                let left = ui.cursor().min.x + step as f32 * step_width;
+                ui.scroll_to_rect(
+                    Rect::from_min_max(
+                        pos2(left, view.center().y),
+                        pos2(left + KEY_WIDTH + step_width, view.center().y + 1.0),
+                    ),
+                    None,
+                );
+            } else if let (Some(view), Some(step)) = (view, playhead) {
                 crate::widgets::follow_x(
                     ui,
                     playhead,
@@ -1931,6 +1952,7 @@ impl PianoRoll {
                             } else {
                                 if !selected {
                                     self.selection.clear();
+                                    self.selection.push(note);
                                 }
                                 self.drag = Some(if near_end {
                                     Drag::Resize { index }
@@ -1953,6 +1975,7 @@ impl PianoRoll {
                                 .iter()
                                 .map(|&p| NoteEvent::new(p, step, self.note_length))
                                 .collect();
+                            self.selection = new_notes.clone();
                             // A single new note can be dragged straight
                             // away. It will be added at the end of the list.
                             if new_notes.len() == 1 {
@@ -2796,6 +2819,27 @@ mod tests {
             "{before} became {}",
             middle(&roll)
         );
+    }
+
+    #[test]
+    fn explicit_navigation_reveals_pattern_ends_without_moving_the_pitch_view() {
+        let project = Project::demo();
+        let mut roll = PianoRoll::new(SYNTH);
+        roll.open = true;
+        let mut screen = Screen::new();
+        screen
+            .ctx
+            .data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), false));
+        screen.run(&mut roll, &project, CHORDS, vec2(2.0, 1.0), 3);
+        let top = roll.scrolled.y;
+        roll.reveal_step(project.pattern(CHORDS).unwrap().length() - 1);
+        screen.run(&mut roll, &project, CHORDS, vec2(2.0, 1.0), 2);
+        assert!(roll.scrolled.x > 0.0);
+        assert!((roll.scrolled.y - top).abs() < 1.0);
+        roll.reveal_step(0);
+        screen.run(&mut roll, &project, CHORDS, vec2(2.0, 1.0), 2);
+        assert_eq!(roll.scrolled.x, 0.0);
+        assert!((roll.scrolled.y - top).abs() < 1.0);
     }
 
     #[test]
