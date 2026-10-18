@@ -14,7 +14,9 @@
 //! share it equally: "IV V" is half a bar each. Charts read with
 //! [`parse_chart_in`] may also name chords as lead sheets do, "C | G/B |
 //! Am", slash chords included. In a melody, each note is
-//! a name with its octave and, after a colon, its length in steps.
+//! a name with its octave and, after a colon, its length in steps;
+//! notes joined by `+` make a chord, and `&` adds another voice, so a
+//! whole piano part can be written out.
 
 use crate::harmony::{Chord, ChordSymbol};
 use crate::pattern::{DEFAULT_VELOCITY, NoteEvent};
@@ -116,14 +118,38 @@ pub struct Melody {
 ///   can be held across a bar line: `D5:12 | _:8`.
 /// - `|` is a bar line. It changes nothing, but the bars it marks are
 ///   kept, so a test can check that each one has the right length.
+/// - `+` joins notes into a chord, struck together and all as long:
+///   `A3+C#4+E4:4`. A tie after a chord holds all its notes.
+/// - `&` starts another voice, which plays at the same time as the ones
+///   before it, from the start, such as a held bass under a moving
+///   tune: `"E5:4 D5 C5 B4 & C3:16"`. Each voice is read on its own, and
+///   all must have the same bars.
 ///
-/// Returns `None` if anything cannot be read.
+/// Returns `None` if anything cannot be read, or if the voices' bars
+/// differ.
 pub fn parse_melody(text: &str) -> Option<Melody> {
+    let mut voices = text.split('&').map(parse_voice);
+    let mut melody = voices.next()??;
+    for voice in voices {
+        let voice = voice?;
+        if voice.bars != melody.bars {
+            return None;
+        }
+        melody.notes.extend(voice.notes);
+    }
+    melody.notes.sort_by_key(|note| (note.start, note.pitch));
+    Some(melody)
+}
+
+/// Reads one voice of a melody (see [`parse_melody`]).
+fn parse_voice(text: &str) -> Option<Melody> {
     let mut notes: Vec<NoteEvent> = Vec::new();
     let mut bars = Vec::new();
     let mut at = 0;
     let mut bar_start = 0;
     let mut length = 4;
+    // The notes the last note or chord struck, which a tie holds on.
+    let mut last = 0..0;
     for token in text.split_whitespace() {
         if token == "|" {
             bars.push(at - bar_start);
@@ -138,13 +164,22 @@ pub fn parse_melody(text: &str) -> Option<Melody> {
             None => token,
         };
         if name == "_" {
-            // A tie: the last note goes on, across a bar line.
-            notes.last_mut()?.length += length;
+            // A tie: the last note or chord goes on, across a bar line.
+            let held = notes
+                .get_mut(last.clone())
+                .filter(|held| !held.is_empty())?;
+            for note in held {
+                note.length += length;
+            }
         } else if name != "-" {
-            notes.push(NoteEvent {
-                velocity: DEFAULT_VELOCITY,
-                ..NoteEvent::new(note_named(name)?, at, length)
-            });
+            let first = notes.len();
+            for name in name.split('+') {
+                notes.push(NoteEvent {
+                    velocity: DEFAULT_VELOCITY,
+                    ..NoteEvent::new(note_named(name)?, at, length)
+                });
+            }
+            last = first..notes.len();
         }
         at += length;
     }
@@ -301,6 +336,49 @@ mod tests {
         assert_eq!(notes, [(0, 20), (20, 4)]);
         assert_eq!(melody.bars, [12, 12]);
         assert_eq!(parse_melody("_:4"), None, "nothing to tie");
+    }
+
+    #[test]
+    fn chords_are_struck_together_and_tied_together() {
+        let melody = parse_melody("A3+C#4+E4:4 _:4 B3:8").unwrap();
+        let notes: Vec<(u8, usize, usize)> = melody
+            .notes
+            .iter()
+            .map(|note| (note.pitch.midi(), note.start, note.length))
+            .collect();
+        assert_eq!(notes, [(57, 0, 8), (61, 0, 8), (64, 0, 8), (59, 8, 8)]);
+        assert_eq!(parse_melody("A3+:4"), None);
+        assert_eq!(parse_melody("A3+H4:4"), None);
+    }
+
+    #[test]
+    fn voices_play_at_the_same_time() {
+        // A tune over a held bass, and an inner voice with rests.
+        let melody =
+            parse_melody("E5:4 D5 C5 B4 | C5:16 & C3:16 | _:16 & -:8 G4:8 | E4:16").unwrap();
+        let notes: Vec<(u8, usize, usize)> = melody
+            .notes
+            .iter()
+            .map(|note| (note.pitch.midi(), note.start, note.length))
+            .collect();
+        assert_eq!(
+            notes,
+            [
+                (48, 0, 32),
+                (76, 0, 4),
+                (74, 4, 4),
+                (67, 8, 8),
+                (72, 8, 4),
+                (71, 12, 4),
+                (64, 16, 16),
+                (72, 16, 16)
+            ]
+        );
+        assert_eq!(melody.bars, [16, 16]);
+        assert_eq!(melody.length, 32);
+        // The voices must have the same bars.
+        assert_eq!(parse_melody("C5:16 & C3:8"), None);
+        assert_eq!(parse_melody("C5:16 | D5:16 & C3:16"), None);
     }
 
     #[test]
