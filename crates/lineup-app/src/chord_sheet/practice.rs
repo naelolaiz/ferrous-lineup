@@ -89,7 +89,7 @@ pub(super) fn row(
             // The style's players, and any other that still has a part:
             // one you edited before changing the style.
             let players = Player::ALL.into_iter().filter(|&player| {
-                band.style.players().contains(&player) || project.player_track(player).is_some()
+                band.players().contains(&player) || project.player_track(player).is_some()
             });
             for player in players {
                 let has_part = project.player_track(player).is_some();
