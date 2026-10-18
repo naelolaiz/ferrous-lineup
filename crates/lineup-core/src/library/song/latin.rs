@@ -1,4 +1,4 @@
-//! Latin: bossa nova, samba, choro, maxixe, son, bolero and the Mexican ranchera.
+//! Latin: bossa nova, samba, choro, maxixe, marchinha, son, bolero and the Mexican ranchera.
 
 use super::*;
 
@@ -967,4 +967,260 @@ pub(super) const SONS_DE_CARRILHOES: Song = Song {
             D minor and G7; the second moves to F, the subdominant, through an augmented F chord \
             and C7, and turns through D7, G minor and D flat before its cadence. Each bar here \
             holds two bars of 2/4; the score is in D, a tone higher.",
+};
+
+// Source: https://github.com/soprodecarnaval/cadern.in (cadernin_2026 flute book, page 15, "Abre
+// alas", marchinha no. 1, in G minor, 2/4, with chords Gm D7 Cm: A with a repeat, B, D.C.),
+// written a fourth higher, in C minor.
+// Second source: https://chiquinhagonzaga.com/acervo/partituras/o-abre-alas_canto-e-piano_cifra.pdf
+// (the Chiquinha Gonzaga archive's voice and piano score, in F minor, read through WebFetch: chords
+// Fm C7 / Fm C7 Fm Bbm Fm C7, first and second endings, the second marked Fine). Only its chords
+// and form could be read, not its notes; the form here ends on the last bar of B, as its Fine does.
+// The 2/4 bars are paired.
+// Date: written in 1899 for the Rio carnival group (cordão) Rosa de Ouro, https://www.cnnbrasil.com.br/
+// pop/carnaval/carnaval-qual-foi-a-primeira-marchinha-da-historia/
+// PD: Chiquinha Gonzaga, the only author, died in 1935
+pub(super) const O_ABRE_ALAS: Song = Song {
+    name: "Ó abre alas",
+    origin: "Chiquinha Gonzaga, 1899",
+    feel: "Marchinha",
+    genre: Genre::Latin,
+    tonic: C,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 116.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Marchinha",
+    band: BRASS_BAND,
+    style: "Marchinha",
+    parts: &[
+        Part::new("Pickup", "-:8 -:2 Eb5 Eb5 D5", "i"),
+        Part::new(
+            "A",
+            "D5:2 C5:4 Eb5 D5:2 C5 B4 | C5:8 -:2 Eb5 Eb5 D5",
+            "i V7 | i",
+        ),
+        Part::new(
+            "A into B",
+            "D5:2 C5:4 Eb5 D5:2 C5 B4 | C5:8 -:2 C5 C5 Bb4",
+            "i V7 | i",
+        ),
+        Part::new(
+            "B",
+            "Bb4:2 Ab4:4 C5 C5:2 Bb4 Ab4 | G4:8 -:2 G4 B4 D5 | G5:4 D5:2 G5:4 F5:2 Eb5 D5",
+            "iv | i | V7",
+        ),
+        Part::new("B back", "C5:8 -:2 Eb5 Eb5 D5", "i"),
+        Part::new("B end", "C5:8 -", "i"),
+    ],
+    form: &[
+        "Pickup", "A", "A into B", "B", "B back", "A", "A into B", "B", "B end",
+    ],
+    drums_from: 1,
+    about: "Counted as the first carnival march, written for the Rio carnival group Rosa de \
+            Ouro: C minor with only three chords, C minor, G7 and F minor. Every phrase starts \
+            after a rest, three quick notes running into the bar line, the shout of a crowd on \
+            the march. The march is in 2/4, two bars to a bar here.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/
+// wikifonia-dataset/original-abc/NiloMendezAdolfoUtreraGreenEyes.abc (Wikifonia lead sheet "Green Eyes",
+// Nilo Mendez, in E flat with chord symbols and first and second endings), written a tone higher, in F.
+// Second source: the same dataset's NiloMenencoAquellosOjosVerdes.abc ("Aquellos Ojos Verdes", in F):
+// the same pitches bar for bar, in plainer rhythm (no anticipations) and with plainer chords
+// (F, C7, Gm, D7, G7, Bb). Slash chords are written as the chord itself; the Bb/C of bar 10 is
+// written ii7 (G minor 7, which the F sheet has there); bar 24's "Fm C7" (Gm D7 here) is ii, as the
+// F sheet has it. The first ending's stacked "Eb Eb6 Edim7" (F F6 F#dim7 here) is spread as
+// I for two beats, I6, #i°7 (the positions are a guess; the source prints all three on beat 1).
+// Published: c1929 (The Morgan Library, https://www.themorgan.org/music-manuscripts-and-printed-music/213977)
+// PD: first published in 1929
+pub(super) const AQUELLOS_OJOS_VERDES: Song = Song {
+    name: "Aquellos ojos verdes",
+    origin: "Nilo Menéndez, 1929",
+    feel: "Bolero",
+    genre: Genre::Latin,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 76.0,
+    comping: Comping::ArpUpDown,
+    bass: Bass::RootFifth,
+    rhythm: "Bolero",
+    band: SONG_AND_GUITAR,
+    style: "Bolero",
+    parts: &[
+        Part::new("Pickup", "-:6 C4:2 F4 G4 A4 C5", "I"),
+        Part::new(
+            "A",
+            "E5:6 F5:10 | _:4 -:2 E5 F5 E5 D5 C5 | D5:6 E5:10 | _:4 -:2 C4 F4 G4 A4 Bb4 | \
+             C5:6 D5:10 | _:4 -:2 C5 D5 C5 Bb4 A4 | C5:16 | _:4 -:2 C4 G4 A4 Bb4 C5",
+            "Imaj7 I | I | I6 Imaj7 | Imaj7 | I I6 | #i°7 | V7 | V7",
+        ),
+        Part::new(
+            "A2",
+            "E5:6 F5:10 | _:4 -:2 E5 F5 E5 D5 C5 | D5:6 E5:10 | _:4 -:2 D5 E5 D5 C5 B4 | \
+             Bb4:6 A4:10 | _:2 G4:4 A4:2 B4:4 C5:2 D5 | E5:16 | _:4 -:2 C4 F4 G4 A4 C5",
+            "V7 ii7 | ii7 | V7 | V7 | VI+ VI7 | II7 | V7 | V7",
+        ),
+        Part::new(
+            "B",
+            "E5:6 F5:10 | _:4 -:2 E5 F5 E5 D5 C5 | D5:6 E5:10 | _:4 -:2 C4 F4 G4 A4 Bb4 | \
+             C5:6 D5:10 | _:4 -:2 C5 D5 C5 Bb4 A4 | D5:16 | _:4 -:2 D4 G4 A4 Bb4 D5",
+            "Imaj7 I | I | I6 Imaj7 | Imaj7 | #i°7 VI7 | VI7 | ii | ii",
+        ),
+        Part::new(
+            "C",
+            "G5:6 A5:10 | _:6 G5:2 A5 G5 F5 D5 | F5:6 C5:10 | -:6 C5:2 D5 C5 Bb4 A4 | D5:6 E5 F5:4 | \
+             G5:8 F5:2 E5 D5 E5",
+            "IV6 IVmaj7 | IVmaj7 IVmaj7 IVmaj7 #iv°7 | I v6 | VI7 | II7 | V7",
+        ),
+        Part::new(
+            "First ending",
+            "F5:16 | -:6 C4:2 F4 G4 A4 C5",
+            "I I I6 #i°7 | V7",
+        ),
+        Part::new("Second ending", "F5:16 | _:12 -:4", "I | I"),
+    ],
+    form: &[
+        "Pickup",
+        "A",
+        "A2",
+        "B",
+        "C",
+        "First ending",
+        "A",
+        "A2",
+        "B",
+        "C",
+        "Second ending",
+    ],
+    drums_from: 1,
+    about: "A Cuban bolero in F major. Most phrases run up from low C to a long note that \
+            arrives half a beat early, the bolero's anticipation. The harmony is rich for 1929: \
+            major sevenths and sixths on F, a diminished chord on F sharp sliding into the \
+            dominant, and secondary dominants, D7 to G minor and G7 to C7, before the last \
+            phrase comes home.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/
+// wikifonia-dataset/original-abc/LorenzoBarcelataS.abc (Wikifonia lead sheet "Maria Elena", Lorenzo
+// Barcelata, in C with chord symbols, one repeat with first and second endings), written a fourth
+// higher, in F. Single source. "Ebdim" and "Cdim" are written as triads, biii° and i°; bar 24's
+// "Am7 Ab7" on one whole note is split half and half; bar 32's "C Cdim" likewise.
+// PD: Lorenzo Barcelata, the only author, died in 1943 (https://en.wikipedia.org/wiki/Lorenzo_Barcelata)
+pub(super) const MARIA_ELENA: Song = Song {
+    name: "María Elena",
+    origin: "Lorenzo Barcelata, Mexico",
+    feel: "Bolero",
+    genre: Genre::Latin,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 80.0,
+    comping: Comping::ArpUpDown,
+    bass: Bass::RootFifth,
+    rhythm: "Bolero",
+    band: SONG_AND_GUITAR,
+    style: "Bolero",
+    parts: &[
+        Part::new("Pickup", "-:6 F5:2 E5 F5 E5 D5", "I"),
+        Part::new(
+            "A",
+            "F5:12 A4:4 | C5:10 E5:2 E5 Eb5 | D5:16 | _:6 G5:2 F#5 G5 F#5 F5 | E5:12 G4:4 | \
+             C5:10 E5:2 C5 E5 | A4:16 | _:12 C5:4 | A5:10 F5:2 G5 E5 | F5:10 F4:2 A4 C5 | \
+             E5:12 D5:4 | Bb4:12 C5:4 | G5:10 E5:2 F5 D5 | E5:10 G4:2 A4 Bb4 | E5:12 D5:4 | \
+             A4:6 F5:2 E5 F5 E5 D5",
+            "I | iii7 | ii | ii | V7 | V7 | I | I | I | I | biii° | ii7 | ii7 | V7 | I | \
+             I",
+        ),
+        Part::new(
+            "A2",
+            "F5:12 A4:4 | C5:10 E5:2 E5 Eb5 | D5:16 | _:6 G5:2 F#5 G5 F#5 F5 | E5:12 A4:4 | \
+             C#5:8 A4 | F5:16 | _:12 F5:4 | G5:10 F5:2 G5 F5 | G5:10 F5:2 G5 G#5 | A5:16 | \
+             _:10 A4:2 C5 E5 | D5:10 B4:2 D5 G5 | E5:10 C5:2 E5 A5",
+            "I | iii7 | ii | ii | viiø7 | III7 | vi7 bVI7 | v7 v7 v7 I7 | IVmaj7 | iv6 | \
+             iii7 | vi7 | II9 | V13",
+        ),
+        Part::new("First ending", "F5:16 | _:6 F5:2 E5 F5 E5 D5", "I i° | V7"),
+        Part::new("Second ending", "F5:16", "I"),
+    ],
+    form: &[
+        "Pickup",
+        "A",
+        "A2",
+        "First ending",
+        "A",
+        "A2",
+        "Second ending",
+    ],
+    drums_from: 1,
+    about: "A Mexican bolero in F major. The first half stays close to home, I, iii7, ii and V7, \
+            with a passing diminished chord; the second half travels: E half-diminished and A7 \
+            lead to D minor, then B flat major turns to B flat minor (iv6, borrowed from F \
+            minor) and G9 and C13 walk back round the circle of fifths.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/
+// wikifonia-dataset/original-abc/MariaGreverMagicIsTheMoonlight.abc (Wikifonia lead sheet "Magic Is The
+// Moonlight", the English version of "Te quiero dijiste", María Grever, in F, 2/2, with chord symbols and
+// first and second endings), written a fourth higher, in B flat. Single source. Chords written at the same spot are read in order
+// (bar 24: C7, Gm, Gm7 is written ii7; bar 32: F, Bdim, split half and half; bar 34: F, Eb9);
+// bar 19's C+ on the last eighth is put on
+// beat 4.
+// Published: Southern Music, New York, 1930 (https://imslp.org/wiki/Te_Quiero_Dijiste_(Grever,_Mar%C3%ADa))
+// PD: first published in 1930; also, María Grever, the only author, died in 1951
+pub(super) const TE_QUIERO_DIJISTE: Song = Song {
+    name: "Te quiero dijiste",
+    origin: "María Grever, 1930",
+    feel: "Bolero",
+    genre: Genre::Latin,
+    tonic: ASharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 84.0,
+    comping: Comping::ArpUpDown,
+    bass: Bass::RootFifth,
+    rhythm: "Bolero",
+    band: SONG_AND_GUITAR,
+    style: "Bolero",
+    parts: &[
+        Part::new("Pickup", "-:8 F4:2 G4 Bb4 C5", "I"),
+        Part::new(
+            "A",
+            "D5:8 D5 | _ F5:2 D5 C5 Bb4 | D5:8 D5 | _ F5:2 D5 C5 Bb4 | C5:8 C5 | _ C5:2 Bb4 A4 C5 | \
+             Bb4:16 | _:8 F4:2 G4 Bb4 C5 | D5:8 D5 | _ F5:2 D5 C5 Bb4 | D5:16 | _:8 F5:2 D5 C5 Bb4 | \
+             C5:8 C5 | _ C5:2 Bb4 A4 C5 | Bb4:16 | _:8 Bb4:2 C5 Eb5 F5",
+            "I I6 | I I6 | I I6 | I I6 | V7 V9 | V7 V9 | I | I I6 | I I6 | I I6 | I | I I6 | \
+             V7 V9 | V7 V9 | I | I9",
+        ),
+        Part::new(
+            "B",
+            "G5:8 G5 | _ A5:2 G5 Bb5 A5 | A5:8 F5 | _ G5:2 F5 A5 G5 | G5:8 Eb5 | _ D5:2 C5 Bb4 D5 | \
+             C5:16 | _:8 F4:2 G4 Bb4 C5 | D5:8 D5 | _ F5:2 D5 C5 Bb4 | D5:8 D5 | _ F5:2 D5 C5 Bb4 | \
+             C5:8 C5 | _ C5:2 Bb4 A4 C5",
+            "IV | IV IV ii V+ | Imaj7 I | I I I #iv° | V9 V7 | V7 II7 | ii7 | V7 | I I6 | \
+             I I6 | I I6 | I I6 | V7 V9 | V7",
+        ),
+        Part::new(
+            "First ending",
+            "Bb4:16 | _:4 - F4:2 G4 Bb4 C5",
+            "I #iv° | V9",
+        ),
+        Part::new("Second ending", "Bb4:16 | _:12 -:4", "I bVII9 | I"),
+    ],
+    form: &[
+        "Pickup",
+        "A",
+        "B",
+        "First ending",
+        "A",
+        "B",
+        "Second ending",
+    ],
+    drums_from: 1,
+    about: "\"Muñequita linda\": a Mexican song in B flat major whose first half rocks between B \
+            flat and F7, the sixth and ninth of each chord adding the colour. The second half \
+            goes up to E flat, the IV chord, with B flat 9 as its dominant, and back through a \
+            diminished chord, C7 and F7.",
 };
