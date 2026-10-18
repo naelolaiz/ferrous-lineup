@@ -92,6 +92,19 @@ impl Cue {
 }
 
 /// How long a list of cues lasts, in seconds: until its last note stops.
+/// The seed of the question after the one asked with `seed`.
+///
+/// Every question draws its notes from a small random number generator
+/// started at its seed. Stepping the seed the way that generator steps
+/// itself would start each question one draw further along the last
+/// one's numbers, so its first draw (the chord's kind) would be the last
+/// question's second (its root): after C, E or Ab the next chord was
+/// always major. A seed taken from the generator's output starts fresh
+/// numbers.
+pub fn next_seed(seed: u64) -> u64 {
+    Random(seed).next()
+}
+
 pub fn duration(cues: &[Cue]) -> f64 {
     cues.iter().map(Cue::end).fold(0.0, f64::max)
 }
@@ -1129,6 +1142,26 @@ mod tests {
     /// Every question of a kind made from the first `n` seeds.
     fn seeds(n: u64) -> impl Iterator<Item = u64> {
         (0..n).map(|seed| seed.wrapping_mul(0x9E37_79B9))
+    }
+
+    #[test]
+    fn one_question_does_not_give_the_next_away() {
+        // Asked one after another as the window asks them, the chord
+        // after a C can be of any kind: the next question's numbers are
+        // not the last one's, shifted.
+        let settings = ChordSettings::default();
+        let mut seed = 1;
+        let mut after_c = std::collections::BTreeSet::new();
+        let mut last = ChordQuestion::new(&settings, seed);
+        for _ in 0..2_000 {
+            seed = next_seed(seed);
+            let question = ChordQuestion::new(&settings, seed);
+            if last.chord.root == PitchClass::C {
+                after_c.insert(question.chord.quality.name());
+            }
+            last = question;
+        }
+        assert_eq!(after_c.len(), 4, "{after_c:?}");
     }
 
     #[test]
