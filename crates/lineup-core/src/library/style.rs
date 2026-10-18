@@ -1717,6 +1717,19 @@ pub static STYLES: &[Style] = &[
     )
     .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
     style(
+        "Raks aksağı",
+        Balkan,
+        Phrygian,
+        "iv | I | iv | I | bII | I | bvii | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        200.0,
+        "Raks aksağı",
+        "A Turkish 9/8 counted 2 + 3 + 2 + 2, in makam hicaz: A, B flat, C sharp, D, E, \
+         F, G, a major chord on the tonic with D minor, B flat and G minor around it.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 3, 2, 2], 8)),
+    style(
         "Kopanitsa",
         Balkan,
         HarmonicMinor,

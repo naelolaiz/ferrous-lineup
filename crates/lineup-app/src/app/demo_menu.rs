@@ -580,7 +580,7 @@ mod tests {
     fn genres_are_in_alphabetical_order() {
         let names: Vec<&str> = DEMOS.genres.iter().map(|genre| genre.name()).collect();
         assert_eq!(names.len(), Genre::ALL.len());
-        assert_eq!(names.first(), Some(&"Blues"));
+        assert_eq!(names.first(), Some(&"Balkan and Turkish"));
         assert_eq!(names.last(), Some(&"Tango"));
         for pair in names.windows(2) {
             assert!(
