@@ -28,7 +28,7 @@ use eframe::egui::{
     vec2,
 };
 use lineup_core::band::{Ending, Variation};
-use lineup_core::chord_sheet::{read_bar, text, write_bar};
+use lineup_core::chord_sheet::{Push, Stop, read_bar, text, write_bar};
 use lineup_core::library::{Genre, STYLES, Style};
 use lineup_core::{
     BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass, Player,
@@ -320,7 +320,8 @@ impl ChordSheet {
              sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C.",
         );
         ui.weak(
-            "Each / holds the harmony before it one more beat, as in C / / G7. Ctrl+C and \
+            "Each / holds the harmony before it one more beat, as in C / / G7. The band stops \
+             with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and \
              Ctrl+V copy and paste bars as text.",
         );
         for player in Player::ALL {
@@ -659,7 +660,7 @@ impl ChordSheet {
             };
             names.push(Name {
                 place: slot(inner_left, right),
-                harmony: marker.harmony,
+                marker: ChordMarker::new(marker.start, marker.harmony),
                 color,
                 caption: None,
                 going_on: true,
@@ -679,17 +680,15 @@ impl ChordSheet {
             };
             names.push(Name {
                 place: slot(x_of(marker.start), right),
-                harmony: marker.harmony,
+                marker: *marker,
                 color,
-                caption: marker.harmony.caption(key),
+                caption: caption(marker, key),
                 going_on: false,
             });
         }
         draw_names(painter, &names);
-        let slots: Vec<(Rect, HarmonyName)> = names
-            .iter()
-            .map(|name| (name.place, name.harmony))
-            .collect();
+        let slots: Vec<(Rect, ChordMarker)> =
+            names.iter().map(|name| (name.place, name.marker)).collect();
 
         // A selection of several bars is shaded, and the bars that loop
         // have the loop's colour along their top.
@@ -730,13 +729,13 @@ impl ChordSheet {
             slots
                 .iter()
                 .find(|(place, _)| place.x_range().contains(pos.x))
-                .map(|(_, harmony)| *harmony)
+                .map(|(_, marker)| *marker)
         };
         let primary = ui.input(|input| input.pointer.primary_down());
         if response.is_pointer_button_down_on() && primary && self.sounding.is_empty() {
             let pointer = response.interact_pointer_pos();
-            if let Some(harmony) = under(pointer) {
-                self.sounding = voicing(harmony);
+            if let Some(marker) = under(pointer) {
+                self.sounding = voicing(marker.harmony);
                 if !self.sounding.is_empty() {
                     actions.push(SheetAction::NoteOn(self.sounding.clone()));
                 }
@@ -766,7 +765,7 @@ impl ChordSheet {
                  once and held. Type a chord here, and the chorus takes this bar in",
                 bar.number + 1
             ),
-            (Some(harmony), None) => harmony.describe(key),
+            (Some(marker), None) => describe(&marker, key),
             (None, None) => format!(
                 "Bar {}: click it and type its harmony, or double-click to change it. \
                  Right-click for more",
@@ -794,6 +793,14 @@ impl ChordSheet {
             if project.band().is_some() {
                 ui.separator();
                 variation_menu(ui, project, meter, bar.number, selection, actions);
+                for marker in here
+                    .iter()
+                    .filter(|marker| marker.harmony != HarmonyName::NoChord)
+                {
+                    ui.menu_button(format!("Band on {}", marker.harmony), |ui| {
+                        breaks_menu(ui, &bar, &here, *marker, actions);
+                    });
+                }
             }
             if project.band().is_some() && ending.is_none() {
                 let end = ui.button("End the song here");
@@ -1447,7 +1454,7 @@ fn is_group(harmony: HarmonyName) -> bool {
 /// A harmony to draw in a bar: where, in which colour, and its caption.
 struct Name {
     place: Rect,
-    harmony: HarmonyName,
+    marker: ChordMarker,
     color: Color32,
     caption: Option<String>,
     /// It goes on from an earlier bar: drawn faintly, in what room is
@@ -1461,7 +1468,7 @@ struct Name {
 /// on from before only shrinks itself.
 fn draw_names(painter: &egui::Painter, names: &[Name]) {
     let fits = |name: &Name| {
-        let text = name.harmony.to_string();
+        let text = name.marker.text();
         let font = FontId::proportional(NAME_SIZE);
         let width = painter.layout_no_wrap(text, font, name.color).size().x;
         NAME_SIZE * (name.place.width().max(1.0) / width).min(1.0)
@@ -1481,7 +1488,7 @@ fn draw_names(painter: &egui::Painter, names: &[Name]) {
         clipped.text(
             name.place.left_top(),
             Align2::LEFT_TOP,
-            name.harmony.to_string(),
+            name.marker.text(),
             FontId::proportional(size),
             name.color,
         );
@@ -1495,6 +1502,97 @@ fn draw_names(painter: &egui::Painter, names: &[Name]) {
             );
         }
     }
+}
+
+/// The words under a harmony on the sheet: its numeral or its notes (see
+/// [`HarmonyName::caption`]), and what the band does there if it leaves
+/// its style: "V · push · shot".
+fn caption(marker: &ChordMarker, key: lineup_core::Scale) -> Option<String> {
+    let words: Vec<String> = marker
+        .harmony
+        .caption(key)
+        .into_iter()
+        .chain(marker.push.map(|_| "push".to_string()))
+        .chain(marker.stop.map(|stop| stop.name().to_string()))
+        .collect();
+    (!words.is_empty()).then(|| words.join(" · "))
+}
+
+/// A sentence about a harmony and what the band does there, for its
+/// hint.
+fn describe(marker: &ChordMarker, key: lineup_core::Scale) -> String {
+    let mut text = marker.harmony.describe(key);
+    if let Some(push) = marker.push {
+        text.push_str(&format!(" Push: {}.", push.describe()));
+    }
+    if let Some(stop) = marker.stop {
+        text.push_str(&format!(
+            " {}: {}.",
+            capitalized(stop.name()),
+            stop.describe()
+        ));
+    }
+    text
+}
+
+/// The menu that marks a harmony of `bar` (one of its markers, `here`)
+/// as a shot, a hold, a rest or a push, as typing the marks would.
+fn breaks_menu(
+    ui: &mut Ui,
+    bar: &Bar,
+    here: &[ChordMarker],
+    marker: ChordMarker,
+    actions: &mut Vec<SheetAction>,
+) {
+    let mut chosen = None;
+    let style = ui.radio(marker.stop.is_none(), "As the style goes");
+    if theme::hint(style, "The band plays its style through this harmony").clicked() {
+        chosen = Some(marker.stopped(None));
+    }
+    for stop in Stop::ALL {
+        let label = format!("{} ({})", capitalized(stop.name()), stop.marks());
+        let item = ui.radio(marker.stop == Some(stop), label);
+        if theme::hint(item, format!("{}: {}", marker.harmony, stop.describe())).clicked() {
+            chosen = Some(marker.stopped(Some(stop)));
+        }
+    }
+    ui.separator();
+    let on_time = ui.radio(marker.push.is_none(), "On the beat");
+    if theme::hint(on_time, "The band plays it on the beat it is written on").clicked() {
+        chosen = Some(marker.pushed(None));
+    }
+    for (push, label) in [
+        (Push::Eighth, "Push (^)"),
+        (Push::Sixteenth, "Push a sixteenth (^^)"),
+    ] {
+        let item = ui.radio(marker.push == Some(push), label);
+        if theme::hint(item, format!("{}: {}", marker.harmony, push.describe())).clicked() {
+            chosen = Some(marker.pushed(Some(push)));
+        }
+    }
+    if let Some(changed) = chosen {
+        let markers = here
+            .iter()
+            .map(|other| match other.start == marker.start {
+                true => changed,
+                false => *other,
+            })
+            .collect();
+        actions.push(SheetAction::SetChords {
+            start: bar.start,
+            end: bar.end(),
+            markers,
+        });
+        ui.close();
+    }
+}
+
+/// `word` with a capital first letter.
+fn capitalized(word: &str) -> String {
+    let mut letters = word.chars();
+    letters.next().map_or_else(String::new, |first| {
+        first.to_uppercase().chain(letters).collect()
+    })
 }
 
 /// The notes to hear for a harmony: a chord with its bass under it from
