@@ -93,7 +93,7 @@ impl Genre {
             Genre::Electronic => "Electronic",
             Genre::Latin => "Latin",
             Genre::Tango => "Tango",
-            Genre::Folklore => "South American folklore",
+            Genre::Folklore => "Latin American folklore",
             Genre::Flamenco => "Flamenco",
             Genre::Reggae => "Reggae and ska",
             Genre::Folk => "Country and folk",

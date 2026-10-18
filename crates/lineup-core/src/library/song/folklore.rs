@@ -1,4 +1,4 @@
-//! Folklore: the dances and songs of South America.
+//! Folklore: the dances and songs of Latin America, from Mexico to Argentina.
 
 use super::*;
 
@@ -594,4 +594,1258 @@ pub(super) const CANDOMBE_DEL_BARRIO: Song = Song {
     about: "Montevideo's candombe, across the river from Buenos Aires. The tune moves in \
             3 + 3 + 2, two dotted eighths and an eighth, the same clave the stick plays on \
             the drum's wooden shell, over three plain chords in C major.",
+};
+
+/// The verse: E minor, then D7 into G, the relative major, and A minor and
+/// B7 back home.
+const PAPEL_A_CHORDS: &str = "i i bVII7 bIII | iv iv V7 i | i i bVII7 bIII | iv iv V7 i";
+
+/// The refrain, "Ay, palomita", in 3/4.
+const PAPEL_B_CHORDS: &str = "i bVII7 bIII | bIII bVII7 bIII | bIII iv bIII | V7 i i";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/norbeck/abc_tune_norbeck_2990.abc
+// (Henrik Norbeck's wayñu collection, hnwaynu0.abc from norbeck.nu/abc, tune 26,
+// "Papel de plata", D: Inti-Illimani, in E minor; the verse in 2/4, the refrain in 3/4)
+// Chords: https://acordes.lacuerda.net/intiillimani/papel_de_plata.shtml (Inti-Illimani's
+// version, in E minor: Em D7 G / Am Am/G B7 Em for the verse, Em D7 G / D7 G / Am G /
+// B7 Em for the refrain), placed on the syllables the chord sheet puts them on; Am/G is
+// written Am.
+// PD: traditional (credited "Traditional" on Inti-Illimani's "Canto de pueblos andinos";
+// Norbeck names no composer)
+pub(super) const PAPEL_DE_PLATA: Song = Song {
+    name: "Papel de plata",
+    origin: "Traditional huayno, Andes",
+    feel: "Huayno",
+    genre: Genre::Folklore,
+    tonic: E,
+    mode: NaturalMinor,
+    time: COMMON,
+    tempo: 90.0,
+    comping: Comping::Strum,
+    bass: Bass::RootFifth,
+    rhythm: "Huayno",
+    band: ANDEAN,
+    style: "Huayno",
+    parts: &[
+        Part::new(
+            "Verse",
+            "E4:1 B4:2 B4 B4 A4:1 B4:2 B4 D5:4 | F#4:1 A4:2 A4 G4 E4:1 D4:2 D4 E4:4 | \
+             E4:1 B4:2 B4 B4 A4:1 B4:2 B4 D5:4 | A4:1 A4:2 A4 G4 E4:1 G4:2 G4 E4:4",
+            PAPEL_A_CHORDS,
+        ),
+        Part::new(
+            "Refrain",
+            "B4:3 A4:2 G4 E4:1 D4:4 | G4:2 A4:1 B4:2 B4 A4:1 B4:4 | \
+             A4:2 A4:1 A4:2 G4 E4:1 D4:4 | G4:2 A4 G4 G4 E4:4",
+            PAPEL_B_CHORDS,
+        )
+        .in_time(THREE_FOUR)
+        .played(Comping::Waltz, Bass::Waltz, "Vidala"),
+    ],
+    form: &["Verse", "Verse", "Refrain", "Refrain"],
+    drums_from: 0,
+    about: "A huayno in E minor, \"Papel de plata quisiera\": E minor, then D7 resolving to G, \
+            the relative major, and A minor and B7 to come home. The tune keeps its D natural \
+            even over B7, the two-sided tonality of Andean song. The verse is in 2/4, two bars \
+            to a bar here; the refrain, \"Ay, palomita\", turns to 3/4.",
+};
+
+const QUEBRADA_A_CHORDS: &str = "i | bIII i";
+const QUEBRADA_B_CHORDS: &str = "bVII i | bIII i";
+
+/// The second strain, the second time: its last bar turns back up, and the
+/// last phrase is played twice more.
+const QUEBRADA_B_END_CHORDS: &str = "bVII i | bIII i | bIII i | bIII i";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/norbeck/abc_tune_norbeck_2979.abc
+// (Henrik Norbeck's wayñu collection, tune 15, "La Quebrada de Humahuaca", O: Argentina,
+// in E minor, 2/4, both strains repeated, the second with first and second endings)
+// Chords: the source has none; these are the plain chords of the style (i, bIII, bVII),
+// chosen to fit the melody.
+// PD: traditional (Inti-Illimani's "Canto de pueblos andinos" credits "Quebrada de
+// Humahuaca" as traditional; Norbeck names no composer)
+pub(super) const LA_QUEBRADA_DE_HUMAHUACA: Song = Song {
+    name: "La Quebrada de Humahuaca",
+    origin: "Traditional huayno, northern Argentina",
+    feel: "Huayno",
+    genre: Genre::Folklore,
+    tonic: E,
+    mode: NaturalMinor,
+    time: COMMON,
+    tempo: 90.0,
+    comping: Comping::Strum,
+    bass: Bass::RootFifth,
+    rhythm: "Huayno",
+    band: ANDEAN,
+    style: "Huayno",
+    parts: &[
+        Part::new(
+            "A",
+            "E5:1 E5:2 E5:1 E5 F#5:2 G5:1 G5:1 F#5:2 E5:1 E5:2 D5 | \
+             B4:1 B4:2 B4:1 A4:2 G4 E4:3 E4 E4:2",
+            QUEBRADA_A_CHORDS,
+        ),
+        Part::new(
+            "B",
+            "D5:1 D5:2 D5:1 E5 B4:2 A4:1 G4:1 E4:2 D5:1 D5:2 E5 | \
+             B4:1 B4:2 B4:1 A4:2 G4 E4:3 E4 E4:2",
+            QUEBRADA_B_CHORDS,
+        ),
+        Part::new(
+            "B end",
+            "D5:1 D5:2 D5:1 E5 B4:2 A4:1 G4:1 E4:2 D5:1 D5:2 E5 | \
+             B4:1 B4:2 B4:1 A4:2 G4 E4:3 D5:1 D5:2 E5 | \
+             B4:1 B4:2 B4:1 A4:2 G4 E4:3 D5:1 D5:2 E5 | \
+             B4:1 B4:2 B4:1 A4:2 G4 E4:3 E4 E4:2",
+            QUEBRADA_B_END_CHORDS,
+        ),
+    ],
+    form: &["A", "A", "B", "B end"],
+    drums_from: 0,
+    about: "A huayno named after the valley of Jujuy, in E minor and 2/4, two bars to a bar \
+            here. Every phrase falls to the same cadence, B, A, G and three Es in the long, \
+            long, short of the huayno, and the second strain starts a step lower, on D, the \
+            flat seventh, with no D sharp anywhere.",
+};
+
+const HUAYTA_A_CHORDS: &str = "I | V7 I";
+const HUAYTA_B_CHORDS: &str = "I | vi I";
+const HUAYTA_C_CHORDS: &str = "V7 I | V7 I";
+
+/// The third strain again, then the fourth twice, each bar swinging from D
+/// to A7 on a tied A.
+const HUAYTA_C_INTO_D_CHORDS: &str = "V7 I | V7 I | I V7 I V7 | V7 I | I V7 I V7 | V7 I";
+
+/// The fifth strain ends on F#7 and B minor, the relative minor.
+const HUAYTA_E_CHORDS: &str = "I | ii7 V7 | I | III7 vi";
+const HUAYTA_F_CHORDS: &str = "I | I | I | I vi";
+
+const HUAYTA_C_TUNE: &str = "E4:1 E4:2 F#4:1 G4 F#4:2 E4:1 D4:2 F#4 A4:4 | \
+                             E4:1 E4:2 F#4:1 G4 F#4:2 E4:1 D4:2 D4 D4:4";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/norbeck/abc_tune_norbeck_2992.abc
+// (Henrik Norbeck's wayñu collection, tune 28, "Huayta Huaytucha", D: Los Incas, in D,
+// 2/4, six strains with their repeats, endings and pickups)
+// Chords: the source has none; these are the plain chords of the style, chosen to fit
+// the melody (the F#7 of the fifth strain is spelled out by its tune, C#, A#, F#, E).
+// PD: traditional (Norbeck names no composer)
+pub(super) const HUAYTA_HUAYTUCHA: Song = Song {
+    name: "Huayta huaytucha",
+    origin: "Traditional huayno, Andes",
+    feel: "Huayno",
+    genre: Genre::Folklore,
+    tonic: D,
+    mode: Major,
+    time: COMMON,
+    tempo: 90.0,
+    comping: Comping::Strum,
+    bass: Bass::RootFifth,
+    rhythm: "Huayno",
+    band: ANDEAN,
+    style: "Huayno",
+    parts: &[
+        Part::new(
+            "A",
+            "D4:1 F#4:2 D4:1 F#4 D4:2 F#4:1 A4:2 A4 A4:4 | \
+             E4:1 E4:2 F#4:1 G4 F#4:2 E4:1 D4:2 D4 D4:4",
+            HUAYTA_A_CHORDS,
+        ),
+        Part::new(
+            "B",
+            "A4:1 A4:2 F#4:1 A4:2 B4:1 C#5 D5:1 D5:2 B4:1 D5:4 | \
+             B4:1 B4:2 C#5:1 D5 C#5:2 B4:1 A4:1 A4:2 F#4:1 A4:4",
+            HUAYTA_B_CHORDS,
+        ),
+        Part::new("C", HUAYTA_C_TUNE, HUAYTA_C_CHORDS),
+        // The second ending leads into the fourth strain on an A tied over the
+        // bar line, and so does every bar of it.
+        Part::new(
+            "C into D",
+            "E4:1 E4:2 F#4:1 G4 F#4:2 E4:1 D4:2 F#4 A4:4 | \
+             E4:1 E4:2 F#4:1 G4 F#4:2 E4:1 D4:2 D4 D4:3 A4:1 | \
+             _:1 F#4:2 D4:1 E4:3 A4:1 _:1 F#4:2 D4:1 E4:4 | \
+             E4:1 E4:2 F#4:1 G4 F#4:2 E4:1 D4:2 D4 D4:3 A4:1 | \
+             _:1 F#4:2 D4:1 E4:3 A4:1 _:1 F#4:2 D4:1 E4:4 | \
+             E4:1 E4:2 F#4:1 G4 F#4:2 E4:1 D5:2 D5 D5 D5:1 D5",
+            HUAYTA_C_INTO_D_CHORDS,
+        ),
+        Part::new(
+            "E",
+            "D5:4 B4:2 D5:1 D5 D5:4 B4:2 C#5:1 D5 | E5:3 D5:2 B4:1 D5:2 A4:4 A4:2 A4 | \
+             A4:4 F#4:2 A4:1 A4 A4:4 F#4:2 B4:1 B4 | C#5:2 A#4:1 F#4:2 F#4:1 E4:2 D4:4 D5:2 D5",
+            HUAYTA_E_CHORDS,
+        ),
+        Part::new(
+            "E end",
+            "D5:4 B4:2 D5:1 D5 D5:4 B4:2 C#5:1 D5 | E5:3 D5:2 B4:1 D5:2 A4:4 A4:2 A4 | \
+             A4:4 F#4:2 A4:1 A4 A4:4 F#4:2 B4:1 B4 | C#5:2 A#4:1 F#4:2 F#4:1 E4:2 D4:8",
+            HUAYTA_E_CHORDS,
+        ),
+        Part::new(
+            "F",
+            "F#5:3 E5:1 D5 A4 D5 E5 F#5:3 E5:1 D5 A4 D5 E5 | \
+             F#5:2 A5:1 F#5:2 A5:1 F#5 E5 F#5:8 | \
+             F#5:3 E5:1 D5 A4 D5 E5 F#5:3 E5:1 D5 A4 D5 E5 | \
+             F#5:2 A5:1 F#5:2 E5:1 D5:2 B4:8",
+            HUAYTA_F_CHORDS,
+        ),
+    ],
+    form: &["A", "A", "B", "B", "C", "C into D", "E", "E end", "F", "F"],
+    drums_from: 0,
+    about: "A huayno in D major in six short strains, 2/4 written two bars to a bar. The first \
+            ones swing between D and A7; the fourth ties an A over the bar line into its \
+            downbeat, a syncopation the huayno loves; the fifth bends to F sharp 7 and \
+            lands on B minor, the relative minor, and the last strain, high on F sharp \
+            and A, ends there too.",
+};
+
+const KICHARI_A_CHORDS: &str = "i | bIII";
+const KICHARI_B_CHORDS: &str = "bIII i | bIII";
+
+/// The third strain twice: five bars of 2/4 each time, so the second time
+/// starts in the middle of a bar here.
+const KICHARI_C_CHORDS: &str = "i | i bVII | bIII i | i | bVII bIII";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/norbeck/abc_tune_norbeck_2994.abc
+// (Henrik Norbeck's wayñu collection, tune 30, "Kicharirillaway" / "Ábreme la puerta
+// vidita", O: Bolivia, D: Los Pachecos, Sumaq Raymi, Los Incas; D minor, 2/4, three
+// strains, each repeated)
+// Chords: the source has none; these are the plain chords of the style (i, bIII, bVII),
+// chosen to fit the melody.
+// PD: traditional (Norbeck names no composer)
+pub(super) const KICHARIRILLAWAY: Song = Song {
+    name: "Kicharirillaway",
+    origin: "Traditional huayno, Bolivia",
+    feel: "Huayno",
+    genre: Genre::Folklore,
+    tonic: D,
+    mode: NaturalMinor,
+    time: COMMON,
+    tempo: 90.0,
+    comping: Comping::Strum,
+    bass: Bass::RootFifth,
+    rhythm: "Huayno",
+    band: ANDEAN,
+    style: "Huayno",
+    parts: &[
+        Part::new(
+            "A",
+            "D4:1 E4 F4 G4 A4 G4:2 A4:1 D5:6 C5:2 | A4:2 A4:1 A4:2 F4:1 G4:2 F4:8",
+            KICHARI_A_CHORDS,
+        ),
+        Part::new(
+            "B",
+            "F5:6 E5:2 D5:2 C5:1 D5:3 C5:2 | A4:2 A4:1 A4:2 F4:1 G4:2 F4:8",
+            KICHARI_B_CHORDS,
+        ),
+        // The second ending ends with the pickup, C and D, into the third strain.
+        Part::new(
+            "B into C",
+            "F5:6 E5:2 D5:2 C5:1 D5:3 C5:2 | A4:2 A4:1 A4:2 F4:1 G4:2 F4:4 C5:2 D5",
+            KICHARI_B_CHORDS,
+        ),
+        Part::new(
+            "C",
+            "A4:3 C5:2 C5:1 D5:2 A4:4 D4:1 E4 F4 G4 | A4:3 C5:2 C5:1 D5:2 A4:3 A4:1 G4:2 G4 | \
+             F4:4 C5:2 D5 A4:3 C5:2 C5:1 D5:2 | A4:4 D4:1 E4 F4 G4 A4:3 C5:2 C5:1 D5:2 | \
+             A4:3 A4:1 G4:2 G4 F4:8",
+            KICHARI_C_CHORDS,
+        ),
+    ],
+    form: &["A", "A", "B", "B into C", "C"],
+    drums_from: 0,
+    about: "\"Open the door, dear, I am no thief\": a Bolivian huayno in D minor whose tune \
+            has no C sharp, so no dominant chord. Every strain comes to rest on F, the relative \
+            major, the way Andean tunes hover between a minor key and its major; the third \
+            strain is five bars of 2/4 long, so the second time round it starts halfway \
+            through a bar here.",
+};
+
+const TITICACA_CHORDS: &str = "i | i bVII i | i | i bVII i | bIII bIII i | i | bIII bIII i | i";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/norbeck/abc_tune_norbeck_2983.abc
+// (Henrik Norbeck's wayñu collection, tune 19, "A las orillas del Titicaca", O: Peru/Bolivia,
+// D: Los Incas, in E minor and 3/4; eight bars, each line of the words sung twice, and
+// four verses)
+// Chords: the source has none; these are the plain chords of the style (i, bIII, bVII),
+// chosen to fit the melody.
+// PD: traditional (Norbeck names no composer)
+pub(super) const A_LAS_ORILLAS_DEL_TITICACA: Song = Song {
+    name: "A las orillas del Titicaca",
+    origin: "Traditional huayno, Peru and Bolivia",
+    feel: "Huayno",
+    genre: Genre::Folklore,
+    tonic: E,
+    mode: NaturalMinor,
+    time: THREE_FOUR,
+    tempo: 90.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Vidala",
+    band: ANDEAN,
+    style: "Vidala",
+    parts: &[Part::new(
+        "Verse",
+        "B4:1 B4:2 B4:1 E5:4 G5 | E5:1 D5:2 B4:1 D5:4 E5 | G4:1 G4:2 G4:1 E5:4 G5 | \
+         E5:1 D5:2 B4:1 D5:4 E5 | G4:1 A4:2 B4:1 D5:4 E5 | B4:1 A4:2 G4:1 E4:4 G4 | \
+         G4:1 A4:2 B4:1 D5:4 E5 | B4:1 A4:2 G4:1 E4:4 E4",
+        TITICACA_CHORDS,
+    )],
+    form: &["Verse", "Verse", "Verse", "Verse"],
+    drums_from: 0,
+    about: "\"On the shores of Lake Titicaca I wrote your name in the sand\": each line of \
+            the words is sung twice, the first one from B and then from G. The tune leans on \
+            E, G, B and D, the notes E minor and G major share, and its D is never sharpened, \
+            so there is no dominant: D and G turn around E minor instead.",
+};
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/norbeck/abc_tune_norbeck_2986.abc
+// (Henrik Norbeck's wayñu collection, tune 22, "Chunguinada", O: Peru, in E minor, 2/4:
+// a half-bar pickup, a first strain repeated with first and second endings, and a
+// second strain that ends on the half bar the pickup took)
+// Chords: the source has none; these are the plain chords of the style (i, bIII, bVII),
+// chosen to fit the melody.
+// PD: traditional (Norbeck names no composer)
+pub(super) const CHUNGUINADA: Song = Song {
+    name: "Chunguinada",
+    origin: "Traditional, Peru",
+    feel: "Huayno",
+    genre: Genre::Folklore,
+    tonic: E,
+    mode: NaturalMinor,
+    time: COMMON,
+    tempo: 90.0,
+    comping: Comping::Strum,
+    bass: Bass::RootFifth,
+    rhythm: "Huayno",
+    band: ANDEAN,
+    style: "Huayno",
+    parts: &[
+        Part::new("Pickup", "-:12 E4:1 G4:2 B4:1", "i"),
+        // The first strain's repeat comes back in the middle of a bar here (its first
+        // ending is a bar and a half, the pickup completing it), and the last bar is
+        // padded with a rest after the final half bar.
+        Part::new(
+            "Tune",
+            "E5:6 G5:2 E5:2 D5 D5 B4 | D5:1 E5:2 G5:1 E5:2 D5 B4:8 | \
+             _:4 E4:1 G4:2 B4:1 E5:6 G5:2 | E5:2 D5 D5 B4 D5:1 E5:2 G5:1 E5:2 D5 | \
+             B4:8 E5:2 E5 E5 G5 | E5:2 D5 D5 B4 D5:1 E5:2 G5:1 E5:2 D5 | \
+             B4:5 A4:1 B4 G4 D4:6 A4:1 B4 | G4:4 E4:8 -:4",
+            "i | bIII i | i | i bIII | i | i bIII | bIII bVII | i",
+        ),
+    ],
+    form: &["Pickup", "Tune"],
+    drums_from: 1,
+    about: "A Peruvian huayno in E minor and 2/4, two bars to a bar here, that starts on a \
+            half-bar pickup. Its phrases climb from E to G and fall back to B, the fifth, and \
+            only the very last one comes down through G and D to the tonic.",
+};
+
+/// The first strain: G and D7, every phrase leaning on a chromatic neighbour.
+const JESUSITA_A_TUNE: &str = "B4:4 C5:2 E5 D5:4 C#5:2 D5 | G5:3 D5:1 C#5:2 D5 F#5 E5 D#5 E5 | \
+                               A5:4 G5:2 E5 G5:4 F#5:2 C5 | F#5:3 C5:1 B4:2 C5 E5 D5 Db5 C5 | \
+                               B4:4 C5:2 E5 D5 C#5:1 D5 E5 F#5 G5 A5 | B5:2 G5 F#5 G5 A5 E5 D#5 E5 | \
+                               A5 G5 F#5 E5 G5 D5 C#5 D5 | E5 G5 F#5 A5 G5:4 G5";
+
+const JESUSITA_A_CHORDS: &str = "I | I V7 | V7 | V7 | I | I IV | IV I | II V7 I I";
+
+/// The second strain, in D, the dominant.
+const JESUSITA_B_CHORDS: &str = "V7 I | V7 I | V7 I | V7 I";
+
+/// Its second ending slides down D, D flat, C to the B that starts the first strain.
+const JESUSITA_B_END_CHORDS: &str = "V7 I | V7 I | V7 I | V7 V7 I I7";
+
+/// The trio, in C, the subdominant, in long notes (thirds in the source, their top note here).
+const JESUSITA_C_CHORDS: &str = "I | IV | V7 | I";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201292801.abc
+// (John Chambers' ABC of 1999 in G, "Jesucita en Chihuahua", Quirino Mendoza y Cortés 1916;
+// the same notes as his A major version, abc_tune_jc_201292798.abc, and as his "Mexican
+// Mixer", abc_tune_jc_201292794.abc, which plays the trio four times; the thirds of the trio
+// are given as their top note. In the second ending of the second strain the ABC writes
+// D, D flat, C under the key of D, which makes the last note C sharp, the same pitch as the
+// D flat; it is C natural here, as in the same descent at the end of the first strain's
+// first half, under the D7 the ABC writes there.)
+// PD: premiered on Christmas Day 1916 (Wikipedia, "Jesusita en Chihuahua") and recorded
+// for Columbia by Trío Nava in July 1921 (Columbia matrix 87642, Discography
+// of American Historical Recordings), out before 1930; no dated printed edition was found.
+pub(super) const JESUSITA_EN_CHIHUAHUA: Song = Song {
+    name: "Jesusita en Chihuahua",
+    origin: "Quirino Mendoza y Cortés, 1916",
+    feel: "Polka",
+    genre: Genre::Folklore,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 120.0,
+    comping: Comping::Backbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Polca",
+    band: ACCORDION_BAND,
+    style: "Polca",
+    parts: &[
+        Part::new("A", JESUSITA_A_TUNE, JESUSITA_A_CHORDS),
+        Part::new(
+            "B",
+            "A5:4 G5 F#5:2 E5:1 F#5 G5:2 F#5 | E5 D5:1 E5 F#5:2 E5 E5:1 D5 C#5 B4 A4:4 | \
+             A5 G5 F#5:2 E5:1 F#5 G5:2 F#5 | E5 D5:1 E5 F#5:2 E5 D5 F#5 D5:4",
+            JESUSITA_B_CHORDS,
+        )
+        .in_key(D, Major),
+        Part::new(
+            "B end",
+            "A5:4 G5 F#5:2 E5:1 F#5 G5:2 F#5 | E5 D5:1 E5 F#5:2 E5 E5:1 D5 C#5 B4 A4:4 | \
+             A5 G5 F#5:2 E5:1 F#5 G5:2 F#5 | E5 D5:1 E5 F#5:2 E5 D5 D5 Db5 C5",
+            JESUSITA_B_END_CHORDS,
+        )
+        .in_key(D, Major),
+        Part::new(
+            "C",
+            "G5:8 G5:2 E5 F5 G5 | A5:8 A5:2 F5 G5 A5 | B5:8 A5:4 B5 | A5 G5 G5:2 E5 F5 F#5",
+            JESUSITA_C_CHORDS,
+        )
+        .in_key(C, Major),
+        Part::new(
+            "C end",
+            "G5:8 G5:2 E5 F5 G5 | A5:8 A5:2 F5 G5 A5 | B5:8 A5:4 B5 | C6:8 C6:2 -:6",
+            JESUSITA_C_CHORDS,
+        )
+        .in_key(C, Major),
+        Part::new(
+            "D",
+            "D4:1 E4 F#4 G4 A4 B4 C5 D5 E5 D5 B4 G4 D4:2 G5 | \
+             F#5:1 E5 C5 A4 F#4:2 F#5 E5:1 D5 B4 G4 D4:4",
+            "V7 I | V7 I",
+        ),
+        Part::new(
+            "D end",
+            "D4:1 E4 F#4 G4 A4 B4 C5 D5 E5 D5 B4 G4 D4:2 G5 | \
+             F#5:1 E5 D5 C5 B4 D5 C5 A4 G4:4 G4",
+            "V7 I | V7 I",
+        ),
+    ],
+    form: &[
+        "A", "A", "B", "B end", "A", "C", "C end", "D", "D end", "D", "D end", "C", "C end", "A",
+    ],
+    drums_from: 0,
+    about: "A Mexican polka from the years of the Revolution, in 2/4 with two of its bars \
+            to each bar here, over the norteño oom-pah. The first strain answers G with D7, \
+            every phrase leaning on a chromatic neighbour (C sharp to D, D sharp to E); the \
+            second moves to D, the dominant, the trio to C, the subdominant, and the last \
+            strain runs up the D7 scale before each return.",
+};
+
+/// The chorus, "Y por eso los grandes amores", with the pickup back into it.
+const DE_COLORES_CHORUS_TUNE: &str = "D5:2 D5 D5 D5 E5:3 D5:1 | D5:2 C5:3 C5:1 C5:2 D5 C5 | \
+                                      C5 Bb4 C5 D5 C5 Bb4 | A4:6 -:2 Bb4 C5";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201267508.abc
+// (John Chambers' ABC of 2005, "De Colores [C]", Mexico, in 6/8 with a second voice in
+// thirds below the tune; here up a fourth, in F. Checked against "De colores", Música
+// Tradicional Asturiana (Tello & Tito, 2001) in Jack Campin's ABC,
+// https://github.com/syntithenai/abc2book/blob/master/abcresources/misc/abc_tune_misc_0.abc,
+// a habanera in 2/4 with the same notes except: the first two bars of the second line,
+// which it sings a third higher, A G G F where Chambers has F E E D; the fourth bar of the
+// third line, G B flat B flat B flat where Chambers has G A B flat (C E flat E flat E flat
+// and C D E flat here); and the chorus's first ending, which it takes down to G through
+// F sharp (a half cadence) where Chambers ends on E.)
+// The ABC writes the verse once and repeats only the chorus, with endings "1-N" and "last";
+// here the whole song is played twice, as for a second stanza, each time with both endings.
+// PD: traditional.
+pub(super) const DE_COLORES: Song = Song {
+    name: "De colores",
+    origin: "Traditional, Mexico",
+    feel: "Canción",
+    genre: Genre::Folklore,
+    tonic: F,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 96.0,
+    comping: Comping::Arp3,
+    bass: Bass::Waltz,
+    rhythm: "Six-eight",
+    band: SONG_AND_GUITAR,
+    style: "Six-eight ballad",
+    parts: &[
+        Part::new(
+            "Verse",
+            "C5:6 _:4 Bb4:2 | Bb4 A4:4 -:2 A4 Bb4 | C5 C5:3 C5:1 C5:2 Bb4 A4 | \
+             C5 C5:3 C5:1 C5:2 Bb4 A4 | C5 Bb4:4 _ -:2 | Bb4:6 _:4 A4:2 | A4 G4:4 -:2 Bb4 C5 | \
+             D5 D5:3 D5:1 D5:2 C5 Bb4 | D5 D5:3 D5:1 D5:2 C5 Bb4 | D5 C5:4 _ -:2 | \
+             C5:6 _:4 Bb4:2 | Bb4 A4:4 -:2 A4 Bb4 | C5 C5 C5 C5 Bb4 A4 | \
+             C5 C5:3 C5:1 C5:2 D5 Eb5 | D5:6 -:2 Bb4 C5",
+            "I V7 | I | I | I | V7 | V7 | V7 | V7 | V7 | I | I V7 | I | I | I | IV",
+        ),
+        Part::new("Chorus", DE_COLORES_CHORUS_TUNE, "IV V7 | I vi | ii V7 | I"),
+        Part::new(
+            "Chorus end",
+            "D5:2 D5 D5 D5 E5:3 D5:1 | D5:2 C5:3 C5:1 C5:2 D5 C5 | C5 Bb4 C5 D5 C5 E5 | F5:8 -:4",
+            "IV V7 | I vi | ii V7 | I",
+        ),
+    ],
+    form: &[
+        "Verse",
+        "Chorus",
+        "Chorus end",
+        "Verse",
+        "Chorus",
+        "Chorus end",
+    ],
+    drums_from: 0,
+    about: "\"De colores, de colores se visten los campos en la primavera\": each line of \
+            the verse is one figure sung again a step higher or lower, over F and C7 only, \
+            until an E flat, the flat seventh, leads to B flat. The chorus, \
+            \"Y por eso los grandes amores\", walks B flat, C7, F, D minor, G minor, C7 \
+            home, in a gentle 6/8.",
+};
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/folktunefinder/abc_tune_folktunefinder_6213.txt
+// (John Chambers' ABC of 2006, "Over the Waves / Sobre las olas", the copy of his
+// trillian.mit.edu/~jc/music/abc/Mexico/waltz/OverTheWaves_G.abc: four waltzes, in G, G, D
+// and F, played AABBACCDDA. He writes the waltz in 6/8 at half value; here each 6/8 bar is
+// two bars of 3/4, and the whole is up a minor third, in B flat, B flat, F and A flat, to
+// lift the low first waltz; the notes named below are in his keys. Grace notes left out.
+// The first two waltzes checked against the 3/4 "Over the Waves" (X:28, no transcriber
+// named) of the "Waltz Jam (Fiddle Hell Online) 2020" tunebook among his files,
+// https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201350397.abc,
+// which holds the long notes where the 2006 ABC rests, plays the dotted figures even, ends
+// the second waltz like the first (A C E | D) where the 2006 ABC goes down E D# E | C B A | G
+// (the 2006 ending is used), and in the second waltz's tenth bar has E D C where the 2006
+// ABC has E D C#: C natural here, under the D7.
+// The third and fourth waltzes have only this one source.)
+// PD: Juventino Rosas died in 1894; published 1888.
+pub(super) const SOBRE_LAS_OLAS: Song = Song {
+    name: "Sobre las olas",
+    origin: "Juventino Rosas, 1888",
+    feel: "Waltz",
+    genre: Genre::Folklore,
+    tonic: ASharp,
+    mode: Major,
+    time: THREE_FOUR,
+    tempo: 176.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Waltz",
+    band: SALON,
+    style: "Waltz",
+    parts: &[
+        Part::new(
+            "A1",
+            "D4:12 | C#4:4 D4 F4 | Bb4:12 | _:4 A4 Bb4 | C5 Bb4 A4 | Bb4 D4 F4 | A4:12 | - | \
+             Eb4 | D4:4 Eb4 F4 | A4:12 | _:4 Ab4 A4 | Bb4 A4 Ab4 | A4 Eb4 A4 | D4:12 | -",
+            "I | I | I | I | I | I | V7 | V7 | ii | ii | V7 | V7 | V7 | V7 | I | I",
+        ),
+        Part::new(
+            "A2",
+            "D4:12 | C#4:4 D4 F4 | Bb4:12 | _:4 A4 Bb4 | C5 Bb4 A4 | Bb4 D4 F4 | G4:12 | - | \
+             G4 | C5:4 Eb5 G5 | F5:12 | _:4 Eb5 D5 | C5 Bb4 A4 | G4 A4 C5 | Bb4:12",
+            "I | I | I | I | I | I | IV | IV | ii | ii | I | I | V7 | V7 | I",
+        ),
+        // The last beat of the waltz, and the silent upbeat of the next.
+        Part::new("A rest", "-:12", "I"),
+        Part::new("Into B", "-:8 D5:4", "I"),
+        Part::new(
+            "B1",
+            "D5:4 C#5 D5 | Bb5 A5:6 G5:2 | Bb5:12 | _:4 A5 G5 | D5 C#5 D5 | G5 F5:6 Eb5:2 | \
+             A4:12 | - | A4:4 Ab4 A4 | G5 F5:6 Eb5:2 | G5:12 | _:4 F5 Eb5 | A4 Ab4 A4 | \
+             Eb5 D5 C5 | Bb4:12 | -",
+            "I | I | I | I | I | I | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | I | I",
+        ),
+        Part::new(
+            "B2",
+            "D5:4 C#5 D5 | Bb5 A5:6 G5:2 | Bb5:12 | _:4 A5 G5 | D5:4 C#5 D5 | G5 F5:6 Eb5:2 | \
+             G4:12 | - | G4:4 F#4 G4 | Eb5 D5 C5 | Bb4:12 | _:4 A4 Ab4 | A4 C5 Eb5 | G5:8 F5:4 | \
+             Bb4:12",
+            "I | I | I | I | VI7 | VI7 | ii | ii | ii | ii | I | I | V7 | V7 | I",
+        ),
+        // "D.C.": a fermata on the last rest, then the first waltz again.
+        Part::new("B rest", "-:12", "I").with_tempo(&[fermata(0, 4)]),
+        Part::new(
+            "C1",
+            "A4:8 C5:4 | _ D5:8 | E5 F5:4 | _ D5:8 | E5 F5:4 | _ D5:8 | E5:12 | - | \
+             E5:8 F5:4 | _ F#5:8 | A5 G5:4 | _ F5:8 | E5:4 D5 D5 | _ E5:8 | C5:12 | -",
+            "I | I | I | I | I | I | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | I | I",
+        )
+        .in_key(F, Major),
+        Part::new(
+            "C2",
+            "A4:8 C5:4 | _ D5:8 | E5 F5:4 | _ D5:8 | E5 F5:4 | _ D5:8 | E5:12 | - | \
+             E5:8 G5:4 | _ C6:8 | C6 G5:4 | _ E5:8 | E5 D5:4 | _ G4:8 | C5:12",
+            "I | I | I | I | I | I | V | V | V | V | V | V | II7 | II7 | V",
+        )
+        .in_key(F, Major),
+        Part::new("C rest", "-:12", "V").in_key(F, Major),
+        Part::new("Into D", "-:4 B4 C5", "V").in_key(F, Major),
+        Part::new(
+            "D1",
+            "Ab5:12 | _:4 G5 Ab5 | Ab5:12 | _:4 B4 C5 | Ab5:12 | _:4 G5 Ab5 | Db5:12 | _:4 C5 Db5 | \
+             G5:12 | _:4 F#5 G5 | G5:12 | _:4 C5 Db5 | G5:12 | _:4 F#5 G5 | C5:12 | _:4 B4 C5",
+            "I | I | I | I | I | I | ii | ii | V7 | V7 | V7 | V7 | V7 | V7 | I | I",
+        )
+        .in_key(GSharp, Major),
+        Part::new(
+            "D2",
+            "Ab5:12 | _:4 G5 Ab5 | Ab5:12 | _:4 B4 C5 | F5:12 | _:4 E5 F5 | F4:12 | _:4 E4 F4 | \
+             F5:12 | _:4 Eb5 Db5 | C5:12 | _:4 Bb4 Ab4 | G4:12 | _:4 F4 G4 | Ab4:12",
+            "I | I | I | I | VI7 | VI7 | ii | ii | ii | ii | I | I | V7 | V7 | I",
+        )
+        .in_key(GSharp, Major),
+        Part::new("D again", "-:4 B4 C5", "I").in_key(GSharp, Major),
+        Part::new("D rest", "-:12", "I").in_key(GSharp, Major),
+    ],
+    form: &[
+        "A1", "A2", "A rest", "A1", "A2", "Into B", "B1", "B2", "Into B", "B1", "B2", "B rest",
+        "A1", "A2", "A rest", "C1", "C2", "C rest", "C1", "C2", "Into D", "D1", "D2",
+        "D again", "D1", "D2", "D rest", "A1", "A2",
+    ],
+    drums_from: 0,
+    about: "Known in English as Over the Waves. The first waltz starts low, on the third \
+            of B flat, and climbs out of a leading note (C sharp to D); the second \
+            leaps to the high B flat and turns through G7 to C minor. The third, in F, is all \
+            hemiola, three half notes across two bars, and ends on C, its dominant; the \
+            fourth, in A flat, holds long notes, each turning on the semitone below it \
+            (A flat G A flat, G F sharp G). \
+            Then the first waltz once more.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/TraditionalLaGolondrina.abc
+// (the Wikifonia lead sheet in C, with its chords; here up a fifth, in G. Its triplets are
+// written 2 + 1 + 1 steps.) Checked against Joel Jacklich's cello quartet in C, 2/4,
+// https://github.com/cellist/Lilypond-Sheet-Music/tree/master/Vlc,%20Vlc,%20Vlc,%20Vlc/Sevilla,%20Narciso%20Serradel/La%20Golondrina
+// (the tune in the first cello, and in the third for the first half of the second part):
+// the same notes, with some of the dotted rhythms even and a few passing notes more; in
+// the first bar of the second part it has D C B A, D E F# G A where the lead sheet has
+// D C A F#, D E F# G A. The lead sheet writes G (D here) for the eighth bar, where the
+// first verse ends on a long G; the quartet, in C, holds C E G C there (the home chord),
+// and the lead sheet itself writes the home chord at the end of the second verse, so I is
+// used.
+// PD: Narciso Serradell died in 1910; composed 1862.
+pub(super) const LA_GOLONDRINA: Song = Song {
+    name: "La golondrina",
+    origin: "Narciso Serradell, 1862",
+    feel: "Canción",
+    genre: Genre::Folklore,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 66.0,
+    comping: Comping::Habanera,
+    bass: Bass::Habanera,
+    rhythm: "Habanera",
+    band: SONG_AND_GUITAR,
+    style: "Habanera",
+    parts: &[
+        Part::new("Pickup", "-:11 D4:1 G4:3 A4:1", "I"),
+        // "A dónde irá veloz y fatigada la golondrina que de aquí se va".
+        Part::new(
+            "Verse",
+            "B4:6 A4:2 B4:3 C5:1 D5:3 E5:1 | E5:4 _:1 D5 C5 B4 A4:3 D4:1 G4:3 A4:1 | \
+             B4:6 D5:2 C#5 D5 E5 D5 | A4:6 C5:1 B4 A4:3 D4:1 G4:3 A4:1 | \
+             B4:6 A4:2 G4 G5 G5 F#5 | G5:8 E5:2 E5 C5 A4 | B4:6 D5:2 C#5 D5 C5:3 A4:1 | \
+             G4:8 _:3 D4:1 G4:3 A4:1",
+            "I | V7 | I | V7 | I I I I+ | IV | I I I V7 | I",
+        ),
+        // The verse again, ending on G, with the pickup into the second part.
+        Part::new(
+            "Verse 2",
+            "B4:6 A4:2 B4:3 C5:1 D5:3 E5:1 | E5:4 _:1 D5 C5 B4 A4:3 D4:1 G4:3 A4:1 | \
+             B4:6 D5:2 C#5 D5 E5 D5 | A4:6 C5:1 B4 A4:3 D4:1 G4:3 A4:1 | \
+             B4:6 A4:2 G4 G5 G5 F#5 | G5:8 E5:2 E5 C5 A4 | B4:6 D5:2 C#5 D5 C5:3 A4:1 | \
+             G4:8 _:2 -:1 D5 E5:3 D5:1",
+            "I | V7 | I | V7 | I I I I+ | IV | I I I V7 | I",
+        ),
+        Part::new(
+            "Refrain",
+            "D5:4 _:2 C5:1 A4 F#4:2 D5:1 E5 F#5:2 G5:1 A5 | B5:8 G5:3 B5:1 A5:3 G5:1 | \
+             G5:4 F#5 _:2 E5:1 F#5 G5:2 F#5:1 E5 | D5:8 B4:2 -:1 D5 D5:3 C#5:1 | \
+             D5:8 B4:2 B4:1 C5 D5:2 E5:1 F#5 | G5:8 E5:3 E5:1 C5:3 A4:1 | \
+             B4:6 D5:2 C#5:3 D5:1 C5:3 A4:1 | G4:8 -",
+            "V7 | I | V7 | I | I | IV | I I I V7 | I",
+        ),
+    ],
+    form: &["Pickup", "Verse", "Verse 2", "Refrain"],
+    drums_from: 1,
+    about: "Mexico's song of farewell. The verse sways between G and D7, turning around D \
+            with a chromatic neighbour, C sharp; an augmented G chord pushes it on to C. The \
+            second part falls down a D7 chord and runs up the scale to the high B, then \
+            comes home by the verse's last line.",
+};
+
+const ESTRELLITA_A_TUNE: &str = "E4:4 F4:2 A4:1 C5:1 G5:6 F5:2 | F5:3 G4:1 G4:4 -:6 D5:2 | \
+     D5:3 F#4:1 G4:3 A4:1 Bb4:2 -:4 D5:2 | D5:3 E5:1 C5:4 C5:2 C4:1 A4:2 -:2 A4:1 | \
+     E4:4 F4:2 A4:1 C5:1 A5:4 -:2 E5:2 | G5:3 F5:1 G4:4 -:2 E5:1 G5:1 F5:1 E5:1 F5:1 D5:1 | \
+     D5:3 C5:1 F5:3 A4:1 A4:2 Bb4:2 D5:3 E4:1 | F4:8 -:7 C4:1";
+const ESTRELLITA_A_AGAIN_TUNE: &str = "E4:4 F4:2 A4:1 C5:1 G5:6 F5:2 | F5:3 G4:1 G4:4 -:6 D5:2 | \
+     D5:3 F#4:1 G4:3 A4:1 Bb4:2 -:4 D5:2 | D5:3 E5:1 C5:4 C5:2 C4:1 A4:2 -:2 A4:1 | \
+     E4:4 F4:2 A4:1 C5:1 A5:4 -:2 E5:2 | G5:3 F5:1 G4:4 -:2 E5:1 G5:1 F5:1 E5:1 F5:1 D5:1 | \
+     D5:3 C5:1 F5:3 A4:1 A4:2 Bb4:2 D5:3 E4:1 | F4:8 -:4 Bb4:4";
+// Cbdim in the source is B diminished (#iv°); Gbaug is D augmented (VI+).
+const ESTRELLITA_A_CHORDS: &str =
+    "Imaj7 iii | IVmaj7 ii | V7 ii | #iv° iii vi vi | vi I I III | IVmaj7 ii | I V7 | I";
+const ESTRELLITA_A_AGAIN_CHORDS: &str =
+    "Imaj7 iii | IVmaj7 ii | V7 ii | #iv° iii vi vi | vi I I III | IVmaj7 ii | I V7 | I IV";
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/ManuelMariaPonceCuellarEstrellitaLittleStar.abc
+// (the Wikifonia lead sheet in F, 2/4, with its chords; two of its bars make one bar here,
+// and its triplets are written 2 + 1 + 1 steps.) Checked against the flute part of
+// "Estrellita, Mexican love song, for flute and piano, Manuel Ponce arr. Jascha Heifetz",
+// https://github.com/baobach/abc_search/blob/master/database/abc/Qma1SS6MKNcx9UjWGpZbX1JLMpidpoZegYkny5jV1zLiR1.abc
+// (its first 24 bars, before the variation): the same notes, but it holds the long notes
+// where the lead sheet has rests, plays some of the lead sheet's dotted and sixteenth
+// figures as triplets, and in the fourth bar of each verse sings C once (C, low C, A) where
+// the lead sheet repeats it (C, C, low C, A). Where the lead sheet has a two-note chord, C
+// and B flat, as the upbeat of bar 2, the flute has D, as in bar 3, and that is followed
+// here. The flute leads into the tune with C D where the lead sheet has a single C, and
+// into bar 5 with C D where the lead sheet has A. In the sixth bar of the middle part
+// (lead sheet bar 44, flute bar 23) the flute has A for the lead sheet's low G.
+// The lead sheet's chord on the opening upbeat is unreadable ("CbminMaj7"); I is used.
+// PD: every author died before 1956 (Manuel M. Ponce, 1882-1948).
+pub(super) const ESTRELLITA: Song = Song {
+    name: "Estrellita",
+    origin: "Manuel M. Ponce, Mexico",
+    feel: "Canción",
+    genre: Genre::Folklore,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 52.0,
+    comping: Comping::ArpUpDown,
+    bass: Bass::RootFifth,
+    rhythm: "Bolero",
+    band: SONG_AND_GUITAR,
+    style: "Bolero",
+    parts: &[
+        Part::new("Pickup", "-:15 C4:1", "I"),
+        Part::new("A", ESTRELLITA_A_TUNE, ESTRELLITA_A_CHORDS),
+        Part::new(
+            "A again",
+            ESTRELLITA_A_AGAIN_TUNE,
+            ESTRELLITA_A_AGAIN_CHORDS,
+        ),
+        Part::new(
+            "B",
+            "A4:2 F#4:1 G4:1 D5:8 C5:2 A4:2 | G4:2 A4:1 F4:1 C4:4 -:4 Bb4:4 | \
+             A4:2 F#4:1 G4:1 Bb4:4 A4:6 G4:2 | Bb4:3 A4:1 F4:8 -:2 C4:2 | \
+             E4:4 F4:2 A4:1 C5:1 A5:4 -:2 E5:2 | G5:3 F5:1 G4:4 -:2 E5:1 G5:1 F5:1 E5:1 F5:1 D5:1 | \
+             D5:3 C5:1 F5:3 A4:1 A4:2 Bb4:2 D5:3 E4:1 | F4:16",
+            "VI7 ii V7 V7 | V7 I I IV | VI+ VI+ iii V7 | I V | I iii | vii° vi V V | I V7 | I",
+        ),
+    ],
+    form: &["Pickup", "A", "A again", "B"],
+    drums_from: 1,
+    about: "A slow song by Manuel M. Ponce. Each line starts low, on E, climbs an F major chord \
+            and leaps up to the high G or A. The middle part turns to G minor through D7, \
+            with F sharp as a leading note, before the last line of the tune comes back.",
+};
+
+const JARABE_A_TUNE: &str = "G5:2 E5 D#5 E5 C5 B4 | C5:2 G4 -:4 E4:2 F4 | G4:2 A4 B4 C5 D5 E5 | \
+     F5:2 D5 -:4 F5:2 E5 | F5:2 D5 C#5 D5 B4 A#4 | B4:2 G4 -:4 G5:2 G5 | \
+     G5:2 A5 G5 F5 E5 D5 | E5:6 _:2 G5:2 F#5";
+const JARABE_A2_TUNE: &str = "G5:2 E5 D#5 E5 C5 B4 | C5:2 G4 -:4 E4:2 F4 | G4:2 A4 B4 C5 D5 E5 | \
+     F5:2 D5 -:4 F5:2 E5 | F5:2 D5 C#5 D5 B4 A#4 | B4:2 G4 -:4 G5:2 G5 | \
+     G5:2 A5 G5 F5 E5 D5 | C5:6 _:2 D5:2 D5";
+const JARABE_A_END_TUNE: &str = "G5:2 E5 D#5 E5 C5 B4 | C5:2 G4 -:4 E4:2 F4 | G4:2 A4 B4 C5 D5 E5 | \
+     F5:2 D5 -:4 F5:2 E5 | F5:2 D5 C#5 D5 B4 A#4 | B4:2 G4 -:4 G5:2 G5 | \
+     G5:2 A5 G5 F5 E5 D5 | C5:8 -:4";
+const JARABE_A_CHORDS: &str = "I | I | I | V7 | V7 | V7 | V7 | I";
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/UnknownMEXICANHATDANCE.abc
+// ("Mexican hat dance", arr. H. Laukens, a lead sheet in F, 6/8, with its chords; here down
+// a fourth, in C). Only the two traditional strains are taken: the lead sheet's own
+// introduction (a chromatic run down from F) and its coda are left out, and the tune ends
+// on the first strain's own last bar. The lead sheet plays the first eight bars of the
+// first strain partly an octave lower; here they are at the octave of the second eight,
+// as in the quartet below, and the pickup out of the second strain is moved up an octave
+// to match. Checked against two cellist quartets,
+// https://github.com/cellist/Lilypond-Sheet-Music/tree/master/Vl,%20Vl,%20Vla,%20Vlc/Traditional/Mexican%20Hat%20Dance
+// (Kenneth W. Abeling's arrangement in C, first violin) and
+// https://github.com/cellist/Lilypond-Sheet-Music/tree/master/Vlc,%20Vlc,%20Vlc,%20Vlc/Traditional/El%20Jarabe%20Tapatio
+// (Tim Curd's arrangement in G, first cello): both have the first strain with the same
+// notes, holding the long notes where the lead sheet has rests (the gaps for the dancers'
+// stamps are kept here). Abeling's has the second strain with the lead sheet's notes;
+// in Curd's each of its lines starts 5 2 2 2 3 4 (D A A A B C here) instead of 5 2 2 2 4 4.
+// The lead sheet's D.S. al Coda plays the first strain again up to its fourteenth bar and
+// then its own coda; here the strain is played to its last bar instead (C held for a
+// dotted quarter and an eighth, as in the strain's second ending).
+// PD: traditional.
+pub(super) const JARABE_TAPATIO: Song = Song {
+    name: "Jarabe tapatío",
+    origin: "Traditional, Mexico",
+    feel: "Jarabe",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 180.0,
+    comping: Comping::Arp3,
+    bass: Bass::Waltz,
+    rhythm: "Son jalisciense",
+    band: MARIACHI,
+    style: "Son jalisciense",
+    parts: &[
+        Part::new("Pickup", "-:8 G5:2 F#5", "I"),
+        Part::new("A", JARABE_A_TUNE, JARABE_A_CHORDS),
+        Part::new("A2", JARABE_A2_TUNE, JARABE_A_CHORDS),
+        Part::new(
+            "B",
+            "D5:2 A4 A4 A4 C5 C5 | C5:2 B4:4 _:2 D5:2 D5 | D5:2 A4 A4 A4 C5 C5 | \
+             B4:6 _:2 D5:2 D5 | D5:2 A4 A4 A4 C5 C5 | C5:2 B4:4 _:2 D5:2 D5 | \
+             D5:2 E5 D5 C5 B4 A4 | G4:6 _:2 G5:2 F#5",
+            "V7 | I | V7 | I | V7 | I | V7 | I",
+        )
+        .in_key(G, Major),
+        Part::new("A end", JARABE_A_END_TUNE, JARABE_A_CHORDS),
+    ],
+    form: &["Pickup", "A", "A2", "B", "A", "A end"],
+    drums_from: 1,
+    about: "The hat dance. The tune falls a third, circles back up through a chromatic \
+            neighbour (D sharp to E), and stops short: the gaps are for the dancers' stamps. \
+            The second strain moves to G, the dominant, and bounces between D7 and G before \
+            the first strain comes back.",
+};
+
+const LA_RASPA_A_TUNE: &str = "D5:4 A4:2 D5:4 A4:2 | D5:2 -:8 A4:2 | D5:2 E5 D5 C#5:4 D5:2 | \
+     E5:2 -:8 A4:2 | C#5:4 A4:2 C#5:4 A4:2 | C#5:2 -:8 A4:2 | C#5:2 D5 C#5 B4:4 C#5:2 | \
+     D5:2 -:8 A4:2";
+const LA_RASPA_A_TO_B_TUNE: &str = "D5:4 A4:2 D5:4 A4:2 | D5:2 -:8 A4:2 | D5:2 E5 D5 C#5:4 D5:2 | \
+     E5:2 -:8 A4:2 | C#5:4 A4:2 C#5:4 A4:2 | C#5:2 -:8 A4:2 | C#5:2 D5 C#5 B4:4 C#5:2 | \
+     D5:2 -:4 F#5:4 A5:2";
+const LA_RASPA_A_TO_C_TUNE: &str = "D5:4 A4:2 D5:4 A4:2 | D5:2 -:8 A4:2 | D5:2 E5 D5 C#5:4 D5:2 | \
+     E5:2 -:8 A4:2 | C#5:4 A4:2 C#5:4 A4:2 | C#5:2 -:8 A4:2 | C#5:2 D5 C#5 B4:4 C#5:2 | \
+     D5:2 -:6 A5:2 G#5";
+const LA_RASPA_A_CHORDS: &str = "I | I | I | V7 | V7 | V7 | V7 | I";
+const LA_RASPA_B_TUNE: &str = "D5:2 D5 D5 D5 C#5 D5 | E5:2 -:4 E5:4 G5:2 | C#5:2 C#5 C#5 C#5 B4 C#5 | \
+     D5:2 -:4 F#5:4 A5:2 | D5:2 D5 D5 D5 C#5 D5 | E5:2 -:4 E5:4 G5:2 | \
+     C#5:2 C#5 C#5 C#5 B4 C#5 | D5:2 -:4 F#5:4 A5:2";
+const LA_RASPA_B_TO_A_TUNE: &str = "D5:2 D5 D5 D5 C#5 D5 | E5:2 -:4 E5:4 G5:2 | C#5:2 C#5 C#5 C#5 B4 C#5 | \
+     D5:2 -:4 F#5:4 A5:2 | D5:2 D5 D5 D5 C#5 D5 | E5:2 -:4 E5:4 G5:2 | \
+     C#5:2 C#5 C#5 C#5 B4 C#5 | D5:2 -:8 A4:2";
+const LA_RASPA_B_CHORDS: &str = "I | V7 | V7 | I | I | V7 | V7 | I";
+const LA_RASPA_C_TUNE: &str = "A5:2 F#5 F5 F#5 D5 C#5 | D5:4 A4:2 _:2 F#4:2 G4 | A4:2 B4 C#5 D5 E5 F#5 | \
+     G5:4 E5:2 _:2 G5:2 F#5 | G5:2 E5 D#5 E5 C#5 C5 | C#5:4 A4:2 _:2 A5:2 G#5 | \
+     A5:2 B5 A5 G5 F#5 E5 | D5:2 -:6 A5:2 G#5";
+const LA_RASPA_C_END_TUNE: &str = "A5:2 F#5 F5 F#5 D5 C#5 | D5:4 A4:2 _:2 F#4:2 G4 | A4:2 B4 C#5 D5 E5 F#5 | \
+     G5:4 E5:2 _:2 G5:2 F#5 | G5:2 E5 D#5 E5 C#5 C5 | C#5:4 A4:2 _:2 A5:2 G#5 | \
+     A5:2 B5 A5 G5 F#5 E5 | D5:2 -:10";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/folktunefinder/abc_tune_folktunefinder_5780.txt
+// (John Chambers' "La Raspa" in D, 6/8, with its chords; from
+// http://trillian.mit.edu/~jc/music/abc/Mexico/Raspa.abc). The copy in
+// abc_tune_folktunefinder_7571.txt (from .../Mexico/LaRaspa.abc) is the same transcription;
+// no independent second source was found. The source's form is A A B B A A C C, as here.
+// The pickup into part C is two eighths where the bar before it leaves room for three, so
+// an eighth rest is added before it. The source puts a fermata on the last note of the
+// first A, which is not played here, since the form goes on. E sharp and B sharp in part
+// C are written F and C.
+// PD: traditional.
+pub(super) const LA_RASPA: Song = Song {
+    name: "La raspa",
+    origin: "Traditional, Mexico",
+    feel: "Raspa",
+    genre: Genre::Folklore,
+    tonic: D,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 168.0,
+    comping: Comping::Arp3,
+    bass: Bass::Waltz,
+    rhythm: "Son jalisciense",
+    band: MARIACHI,
+    style: "Son jalisciense",
+    parts: &[
+        Part::new("Pickup", "-:10 A4:2", "I"),
+        Part::new("A", LA_RASPA_A_TUNE, LA_RASPA_A_CHORDS),
+        Part::new("A to B", LA_RASPA_A_TO_B_TUNE, LA_RASPA_A_CHORDS),
+        Part::new("B", LA_RASPA_B_TUNE, LA_RASPA_B_CHORDS),
+        Part::new("B to A", LA_RASPA_B_TO_A_TUNE, LA_RASPA_B_CHORDS),
+        Part::new("A to C", LA_RASPA_A_TO_C_TUNE, LA_RASPA_A_CHORDS),
+        Part::new("C", LA_RASPA_C_TUNE, LA_RASPA_A_CHORDS),
+        Part::new("C end", LA_RASPA_C_END_TUNE, LA_RASPA_A_CHORDS),
+    ],
+    form: &[
+        "Pickup", "A", "A to B", "B", "B to A", "A", "A to C", "C", "C end",
+    ],
+    drums_from: 1,
+    about: "Only two chords, D and A7. The first strain answers each short call with a \
+            silence, the second hammers repeated notes, and the third runs up the scale, \
+            leaning on chromatic neighbours a semitone below (D sharp to E, G sharp to A) before \
+            it comes home.",
+};
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/misc/abc_tune_misc_0.abc, byte 108772
+// (Jack Campin's Nine-Note Tunebook, "La Bamba", "folksong from Veracruz, Mexico", in G,
+// 4/4, a quarter = 150, no chords; here up a fourth, in C). Checked against the Wikifonia
+// lead sheet of Ritchie Valens' version in C,
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/RitchieValensLaBamba.abc
+// whose bars line up with Campin's one for one: the same tune, with straighter rhythms
+// (Campin ties many notes over from the half bar before), but in bars 11-14 and 17-20
+// ("y arriba y arriba", "soy capitán") Valens sings other notes; Campin's are followed.
+// The chords are Valens' sheet's: one loop, V7 | I IV, all through (V in the first bar).
+// The last four bars of Campin's "bamba, bamba" vary the lead sheet's two-bar repeat.
+// PD: traditional.
+pub(super) const LA_BAMBA: Song = Song {
+    name: "La bamba",
+    origin: "Traditional, Veracruz, Mexico",
+    feel: "Son jarocho",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 150.0,
+    comping: Comping::Strum,
+    bass: Bass::RootFifth,
+    rhythm: "Folk",
+    band: LLANERO,
+    style: "Folk",
+    parts: &[
+        // "Para bailar la bamba, se necesita una poca de gracia".
+        Part::new(
+            "Verse",
+            "-:2 F5:2 F5 F5 F5:4 F5:2 E5 | _:2 C5:2 _:4 -:8 | -:4 F5:2 F5 F5 F5 F5 F5 | \
+             E5:2 C5:4 C5:2 C5:4 C5:2 D5 | _:4 B4:2 D5 F5 E5 D5 E5 | _:2 C5 -:4 -:8 | \
+             -:4 F5:2 F5 F5 F5 F5 F5 | E5:2 C5 C5 C5 C5:4 A4:2 D5 | \
+             D5:4 B4:2 D5 F5 E5 D5 E5 | _:2 C5 -:4 -:8",
+            "V | I IV | V7 | I IV | V7 | I IV | V7 | I IV | V7 | I IV",
+        ),
+        // "Y arriba y arriba ... yo no soy marinero, soy capitán".
+        Part::new(
+            "Verse 2",
+            "-:4 D5:2 E5 F5 E5 D5 E5 | _:2 C5 -:2 C5:2 C5:4 A4:2 D5 | \
+             _:4 B4:2 D5 F5 E5 D5 C5 | _:4 C5:4 A4:4 A4:2 G4 | -:2 F5 F5 F5 F5:4 F5:2 E5 | \
+             _:2 C5 -:4 -:8 | -:2 F5 F5 F5 F5:4 F5:2 E5 | _:2 C5:4 A4:2 _:2 C5:4 A4:2 | \
+             D5:4 -:2 B4 D5:4 F5:2 E5 | _:4 -:2 C5 C5:4 A4:2 G4 | _:4 -:4 -:8",
+            "V7 | I IV | V7 | I IV | V7 | I IV | V7 | I IV | V7 | I IV | V7",
+        ),
+        // "Bamba, bamba".
+        Part::new(
+            "Chorus",
+            "C5:8 A4:6 B4:2 | _:2 G4:2 -:4 -:8 | E5:8 C5:6 D5:2 | _:2 D5:2 -:4 -:8 | \
+             E5:8 C5:6 D5:2 | _:2 D5:2 -:4 -:8 | C5:8 A4:6 B4:2 | _:2 G4:2 -:4 -:8",
+            "I IV | V7 | I IV | V7 | I IV | V7 | I IV | V7",
+        ),
+    ],
+    form: &["Verse", "Verse 2", "Chorus"],
+    drums_from: 0,
+    about: "Three chords, C, F and G7, going round without stopping, as a son jarocho does. \
+            The singer starts most lines on F, the seventh of G7, and pushes many notes in \
+            early, tied over from the half bar before.",
+};
+
+const LA_CUCARACHA_CHORDS: &str = "I | I | I | V7 | V7 | V7 | V7 | I";
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/TraditionalMexicanLacucaracha.abc
+// (the Wikifonia lead sheet, "Traditional Mexican", in G, with its chords and two Spanish
+// verses; here up a fourth, in C). Checked against two shorter versions that have only the
+// first half of the verse and the refrain once, repeated:
+// https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201358365.abc ("La cucaracha",
+// anon., in D, from http://abc.musicaviva.com/tunes/anon/la-cucaracha/la-cucaracha-1.abc)
+// and https://github.com/syntithenai/abc2book/blob/master/abcresources/misc/abc_tune_misc_0.abc, byte 104270 (Jack
+// Campin's Nine-Note Tunebook, "Mexican satirical song, late 19th century", in F). Both
+// agree with the lead sheet's notes except: in bar 3 they have G A G F E G where the lead
+// sheet has E G F E D E (the lead sheet is followed); they end the first line of the verse
+// and of the refrain on C alone where it has E C; and several upbeats start an eighth
+// earlier. The second half of the verse ("Cuando oigo la cucaracha", bars 9-16) is only
+// in the lead sheet.
+// PD: traditional.
+pub(super) const LA_CUCARACHA: Song = Song {
+    name: "La cucaracha",
+    origin: "Traditional, Mexico",
+    feel: "Corrido",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 144.0,
+    comping: Comping::Backbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Polca",
+    band: MARIACHI,
+    style: "Polca",
+    parts: &[
+        // "Ya llegó la cucaracha ... Cuando oigo la cucaracha".
+        Part::new(
+            "Verse",
+            "-:4 G4:2 G4 C5 C5 E5 E5 | G5:6 E5:2 _:4 -:4 | -:2 E5:4 G5:2 F5 E5 D5 E5 | \
+             F5:6 D5:2 _:4 -:4 | -:4 G4:2 G4 B4 B4 D5 D5 | F5:6 D5:2 _:4 -:4 | \
+             -:2 G5:4 A5:2 G5 F5 E5 D5 | E5:6 C5:2 _:4 -:4 | -:4 G4:2 G4 C5 C5 E5 E5 | \
+             G5:16 | _:2 G5:4 G5:2 G5 F5 E5 G5 | F5:6 D5:2 _:4 -:4 | \
+             G4:2 A4:4 B4:2 D5:4 E5:4 | F5:4 G5:12 | _:2 G5:4 A5:2 G5 F5 E5 D5 | \
+             C5:8 -:2 G4 G4 G4",
+            "I | I | I | V7 | V7 | V7 | V7 | I | I | I | I | V7 | V7 | V7 | V7 | I",
+        ),
+        // "La cucaracha, la cucaracha, ya no quiere caminar".
+        Part::new(
+            "Chorus",
+            "C5:6 E5:2 _:2 G4 G4 G4 | C5:6 E5:2 _:4 -:4 | -:4 C5:2 C5 B4 B4 A4 A4 | \
+             G4:8 -:2 G4 G4 G4 | B4:6 D5:2 _:2 G4 G4 G4 | B4:6 D5:2 _:4 -:4 | \
+             -:4 G5:2 A5 G5 F5 E5 D5 | E5:6 C5:2 _:2 G4 G4 G4",
+            LA_CUCARACHA_CHORDS,
+        ),
+        Part::new(
+            "Chorus again",
+            "C5:6 E5:2 _:2 G4 G4 G4 | C5:6 E5:2 _:4 -:4 | -:4 C5:2 C5 B4 B4 A4 A4 | \
+             G4:8 _:2 G4 G4 G4 | B4:6 D5:2 _:2 G4 G4 G4 | B4:6 D5:2 _:4 -:4 | \
+             -:4 G5:2 A5 G5 F5 E5 D5 | C5:12 -:4",
+            LA_CUCARACHA_CHORDS,
+        ),
+        Part::new(
+            "Chorus end",
+            "C5:6 E5:2 _:2 G4 G4 G4 | C5:6 E5:2 _:4 -:4 | -:4 C5:2 C5 B4 B4 A4 A4 | \
+             G4:8 _:2 G4 G4 G4 | B4:6 D5:2 _:2 G4 G4 G4 | B4:6 D5:2 _:4 -:4 | \
+             -:4 G5:2 A5 G5 F5 E5 D5 | C5:16 | _:4 -:12",
+            "I | I | I | V7 | V7 | V7 | V7 | I | I",
+        ),
+    ],
+    form: &[
+        "Verse",
+        "Chorus",
+        "Chorus again",
+        "Verse",
+        "Chorus",
+        "Chorus end",
+    ],
+    drums_from: 0,
+    about: "Two chords, C and G7, and a tune that starts almost every line after the beat. \
+            The refrain hammers three quick upbeats into each long note: la cu-ca-RA-cha.",
+};
+
+// Source: https://github.com/baobach/abc_search/blob/master/database/abc/QmYRNNHEUn3KC8ecx2Wz1v88QYmjLjMHntZVTPMSNEh2rB.abc
+// (abc_search database: "Diana triste, vals para piano", Luis Antonio Calvo, transcribed by Juan Carlos Moreno 2014-2015;
+// in B minor, Lento in B major). Melody = the right hand's main voice (voice 1 of the ABC, its
+// top notes), chords read from the whole piano texture; everything transposed down a fourth to
+// F# minor for range. In the first bar of the second ending another right-hand voice strikes
+// the chord again an octave higher under a fermata; that is left to the accompaniment.
+// PD: Luis Antonio Calvo died in 1945, before 1956.
+const DIANA_INTRO_TUNE: &str = "-:2 C#4:2 D4 C#4 B#3 C#4 | C#5:2 C#4 B#3 A4 G#4:4 | _:2 C#4 D4 C#4 B#3 C#4 | G#4:2 C#4 B3 G#4 F#4:4 | \
+    _:2 A4 B4 A4 G#4 A4 | D5:2 E4 F#4 G#4 A4 E4 | D#4:2 C#5 A4 F#5 B4 B5 | A5:1 G#5 A5 G#5 F#5:2 E5 D#5 D5 | \
+    C#5:1 B4 C#5 B4 A4:2 F#4 E4 D4 | -:2 C#4 D4 C#4 B#3 C#4 | C#5:2 C#4 B#3 A4 G#4:4 | _:2 C#4 D4 C#4 B#3 C#4 | \
+    G#4:2 C#4 B3 G#4 F#4:4 | -:2 F#4 G#4 F#4 E#4 F#4 | A4:2 E#4 F#4 A4 C#5 F#5 | A5:2 F#5 A5:4 G#5 | \
+    F#5:4 -:6 C#4:2";
+const DIANA_INTRO_CHORDS: &str = "i | II7 | V7 | i V7 i | bVI bVI vii°7 | bIII bIII #iv°7 | IV9 | bVII7 | bIII | i | II7 | V7 | i V7 i | bVI bVI vii°7 | V+ i i | bVI7 bVI7 V7 | i";
+const DIANA_A_TUNE: &str = "B4:2 A#4 B4 C#5 -:2 G#4 | B4:2 A4 G#4 F#4 -:2 C#4 | D4:2 C#4 D4 F#4 -:2 D4 | C#4:8 -:2 C#4 | \
+    D4:2 C#4 D4 E4 -:2 F#4 | G#4:2 A4 B4 C#5 -:2 C#5 | D5:2 C#5 D5 F#5:4 D5:2 | C#5:8 -:2 C#5 | \
+    D5:2 C#5 B#4 C#5 F#5 F#4 | C#5:2 B4 A#4 B4:4 B4:2 | C#5:2 B4 A#4 B4 E5 E4 | B4:2 A4 G#4 A4:4 A4:2 | \
+    A4:2 G#4 G4 G#4 C#5 C#4 | B4:2 A4 G#4 A4 C#5 C#4";
+const DIANA_A_CHORDS: &str = "V7 | i | iv6 | V7 | bVII7 | bIII bIII iii°7 | iv6 | V | I7 I7 IV7 | bVII | bVII7 bVII7 bIII7 | bVI | V7 | i";
+const DIANA_A2_TUNE: &str = "C#5:2 B4 A#4 B4 C#5 D5 | C#5:2 F#5 F#4 C#5 F#5 F#4 | C#5:2 F#5 F#4 C#5 F#5 F#4 | D5:2 F#5 F#4 B4 F#5 F#4 | \
+    A4:2 A5 A4 D5 A5 F#5 | C#6:8 -:2 C#5 | B5:2 A#5 B5 C#6:4 G#5:2 | B5:2 A5 G#5 F#5:4 C#5:2 | \
+    E5:2 D5 E5 F#5:4 D5:2 | C#5:4 C#5 -:2 F#4 | E5:2 D#5 E5 F#5:4 C#5:2 | E5:2 D5 C#5 B4:4 F#4:2 | \
+    A4:2 G#4 F#4 A4:4 G#4:2 | F#4:8 -:2 C#4";
+const DIANA_A2_CHORDS: &str =
+    "iiø7 | i | I7 | iv | bVI7 | V | V7 | i | iv iv iv6 | V I7 I7 | I7 | iv | V #iv°7 V7 | i";
+const DIANA_B_TUNE: &str = "A#4:4 A#4 B4 | C#5:4 C#5 D#5 | E#5:2 D#5 C#5 B4 A#4 B4 | G#4:10 C#4:2 | \
+    F#4:4 F#4 G#4 | A#4:4 A#4 A4 | G#4:4 D#4:2 E#4 F#4 G#4 | F#4:2 E#4 D#4 E#4 C#4 C#4 | \
+    A#4:4 A#4 B4 | C#5:4 C#5 D#5 | E5:4 D#5:2 C#5 B4 A#4 | C#5:4 B4:2 A#4 G#4 D#4 | \
+    F#4:4 F#4 G#4 | A#4:4 B4 C#5";
+const DIANA_B_CHORDS: &str = "I I IV | I I IV7 | V7 | V7 | I I iii7 | I vi viø7 | II7 | V7 | I I IV | I I IV7 | bVII I7 I7 | IV | IV iv iv6 | I IV I";
+
+pub(super) const DIANA_TRISTE: Song = Song {
+    name: "Diana triste",
+    origin: "Luis Antonio Calvo",
+    feel: "Vals",
+    genre: Genre::Folklore,
+    tonic: FSharp,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 90.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Waltz",
+    band: PIANO,
+    style: "Vals in minor",
+    parts: &[
+        // "Ad libitum"; "Ligero" in bar 8, "a tempo" in bar 10. Bars 8 and 9 open with an
+        // eighth and a sixteenth-note triplet (a turn), 4 notes in 4 steps: with no
+        // triplets, they are written as four sixteenths, the first on the beat.
+        Part::new("Intro", DIANA_INTRO_TUNE, DIANA_INTRO_CHORDS)
+            .with_tempo(&[tempo(86, 100), tempo(110, 90)]),
+        // "Gracioso", with a fermata in bar 7.
+        Part::new("A", DIANA_A_TUNE, DIANA_A_CHORDS).with_tempo(&[tempo(0, 80), fermata(78, 4)]),
+        // "Accelerando" over the rising bass: the score's metronome marks go 90, 100, 110,
+        // 120, 130 and 140, one a bar, then "a tempo" (90) before the last eighth of bar 6.
+        Part::new("A2", DIANA_A2_TUNE, DIANA_A2_CHORDS).with_tempo(&[
+            tempo(0, 90),
+            tempo(12, 100),
+            tempo(24, 110),
+            tempo(36, 120),
+            tempo(48, 130),
+            tempo(60, 140),
+            tempo(70, 90),
+        ]),
+        Part::new("B", DIANA_B_TUNE, DIANA_B_CHORDS)
+            .in_key(FSharp, Major)
+            .with_tempo(&[tempo(0, 70)]),
+        // Fermata, then "molto rallentando" 60, 50, 40. The augmented chord of bar 4 is
+        // held, its raised fifth tied, through bar 5.
+        Part::new(
+            "B ending 1",
+            "D#5:12 | D#4:4 E#4 F#4 | G#4:4 C#5:8 | C#6:4 C#6:8 | _:8 -:2 C#4",
+            "ii7 | IV V IV | V7 | V+ | V+",
+        )
+        .in_key(FSharp, Major)
+        .with_tempo(&[fermata(0, 12), tempo(12, 60), tempo(16, 50), tempo(20, 40)]),
+        // A fermata on beats 2-3 of bar 1, "molto rallentando" in bar 2 (to 56, so the
+        // fermatas after it, held twice as long, stay above a third of the tempo; it starts a
+        // step after the fermata ends, as two marks cannot share a step), fermatas on bar 3
+        // and on the last chord. The closing arpeggio stops on
+        // F#5, held to the end: the score goes on to C#6 and a chord topped by F#6, marked
+        // 8va, far above the melody's range.
+        Part::new(
+            "B ending 2",
+            "D#5:12 | D#4:4 E#4 F#4 | C#5:8 A#4:3 A#4:1 | F#4:3 C#5:1 F#5:8 | _:12",
+            "ii7 | IV V IV | V7 | I | I",
+        )
+        .in_key(FSharp, Major)
+        .with_tempo(&[
+            fermata(4, 8),
+            glide(13, 56, 11),
+            fermata(24, 8),
+            fermata(48, 12),
+        ]),
+    ],
+    form: &[
+        "Intro",
+        "A",
+        "A2",
+        "A",
+        "A2",
+        "B",
+        "B ending 1",
+        "B",
+        "B ending 2",
+    ],
+    drums_from: 1,
+    about: "A piano waltz, here in F# minor: the free introduction turns round the circle of \
+            fifths, B9, E7, A, and the waltz theme starts on the dominant, C#7. Its second half \
+            chains secondary dominants, F#7-B7-E and E7-A7-D, then speeds up over a bass rising by \
+            semitones to a German sixth, D7 over B#, and the dominant. The Lento turns to F# major, \
+            the parallel major, with a molto rallentando in each ending.",
+};
+
+// Source: https://github.com/profedecuerdas/partituras-2019/blob/master/lagatagolosa.ly
+// (LilyPond lead sheet "La Gata Golosa, pasillo", Fulgencio García, "versión abril 23 2020",
+// melody with chord names).
+// Chords cross-checked with the iReal Pro charts "La Gata Golosa 1 de 2" (in G) and "2 de 2"
+// (in Eb) in https://github.com/smashub/choco/blob/main/partitions/ireal-pro/raw/forum/brazilian-latin/columbian%20songs%20-%20m%C3%BAsica%20colombiana.csv,
+// and for the trio with the analysis of
+// the piece (in G, trio in E flat) in a thesis of the Universidad Pedagógica Nacional,
+// https://repositorio.upn.edu.co/bitstreams/2cb61f3c-5ee5-457b-9be2-389de30cf9e8/download
+// (read through a summarizer). Bar numbers are the lead sheet's. Where the sources differ:
+// bars 21 and 37 take the iReal's C diminished (Bbo in its G), biii°, as the lead sheet's
+// F#7 clashes with the tune's A natural; bars 6-7 take the iReal's E9 for the lead sheet's E7,
+// its ninth being the F# the tune leans on; bar 63 takes the iReal's D minor, vi of F and iv
+// of A, which the tune outlines (D-E-F) and which the thesis names as the link back to the
+// home key. The lead sheet's chord is kept in bar 53 (A, held under the pickup into F, where
+// the iReal has no chord) and bar 61 (F, where the iReal's C does not fit the tune's A).
+// The opening pickup has no chord in either source; it gets I, as the same run has in bars
+// 17, 51 and 70.
+// Navigation as in the lead sheet: D.C. al Signo after the second strain (the segno at the
+// end of the first strain jumps to the trio), D.C. al Coda after the trio; the run that ends
+// the second strain and the trio stands for the opening pickup bar when the music goes back.
+// PD: Fulgencio García died in 1945, before 1956.
+const GATA_B_CHORDS: &str =
+    "I | I | biii° | ii | ii | V7 | V7 | I | I7 | IV | iv | I | VI7 | ii | V7 | I";
+
+pub(super) const LA_GATA_GOLOSA: Song = Song {
+    name: "La gata golosa",
+    origin: "Fulgencio García",
+    feel: "Pasillo",
+    genre: Genre::Folklore,
+    tonic: A,
+    mode: Major,
+    time: THREE_FOUR,
+    tempo: 190.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Pasillo",
+    band: GUITARS,
+    style: "Pasillo",
+    parts: &[
+        Part::new("Pickup", "-:2 E4:2 F#4 G#4 A4 B4", "I"),
+        Part::new(
+            "A first",
+            "C#5:2 E4 E4 C#5 C#5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 F#4 F#4 D5 D5:4 | -:2 F#4 G#4 A4 B4 C#5 | \
+             D5:2 F#4 F#4 D5 D5:4 | -:2 F#4 F#4 D5 D5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 E4:2 F#4 G#4 A4 B4 | \
+             C#5:2 E4 E4 C#5 C#5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 F#4 F#4 B4 B4:4 | -:2 F4 F4 B4 B4:4 | \
+             -:2 E4 E4 A4 A4:4 | -:2 E4:2 F#4 E4 G#4 E4 | A4:4 -:2 A4:2 A4:4 | -:2 E4:2 F#4 G#4 A4 B4",
+            "I | VI7 | ii | ii | V9 | V9 | I | I | I | I7 | IV | iv | I | V7 | I | I",
+        ),
+        // The second ending; after the D.C. al Signo, the bar at the segno is the same.
+        Part::new(
+            "A second",
+            "C#5:2 E4 E4 C#5 C#5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 F#4 F#4 D5 D5:4 | -:2 F#4 G#4 A4 B4 C#5 | \
+             D5:2 F#4 F#4 D5 D5:4 | -:2 F#4 F#4 D5 D5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 E4:2 F#4 G#4 A4 B4 | \
+             C#5:2 E4 E4 C#5 C#5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 F#4 F#4 B4 B4:4 | -:2 F4 F4 B4 B4:4 | \
+             -:2 E4 E4 A4 A4:4 | -:2 E4:2 F#4 E4 G#4 E4 | A4:4 -:2 A4:2 A4:4",
+            "I | VI7 | ii | ii | V9 | V9 | I | I | I | I7 | IV | iv | I | V7 | I",
+        ),
+        Part::new(
+            "B",
+            "-:4 C#5:4 E5 | A5:6 B5 | -:4 A5:2 B5 A5 F#5 | -:4 G#5:6 A5:2 | \
+             -:4 G#5:2 A5 G#5 E5 | -:4 F#5:6 G#5:2 | -:4 F#5:2 G#5 F#5 D5 | -:4 E5:6 F#5:2 | \
+             -:4 E5:2 F#5 E5 C#5 | -:4 D5:6 E5:2 | -:4 D5:2 E5 D5 B4 | -:4 C#5:6 D5:2 | \
+             -:4 C#5:2 D5 C#5 A4 | -:4 B4:6 C#5:2 | -:4 B4:2 C#5 B4 E4 | A4:2 E4 F#4 G#4 A4 B4",
+            GATA_B_CHORDS,
+        ),
+        // The same chords under running eighths, and the run back to the start (D.C. al Signo).
+        Part::new(
+            "B variation",
+            "C#5:2 D5 E5 F#5 G#5 G#5 | A5:2 A5 A5 A5 B5 B5 | B5:2 B5 A5 B5 A5 F#5 | G#5:2 G#5 G#5 G#5 A5 A5 | \
+             A5:2 A5 G#5 A5 G#5 E5 | F#5:2 F#5 F#5 F#5 G#5 G#5 | G#5:2 G#5 F#5 G#5 F#5 D5 | E5:2 E5 E5 E5 F#5 F#5 | \
+             F#5:2 F#5 E5 F#5 E5 C#5 | D5:2 D5 D5 D5 E5 E5 | E5:2 E5 D5 E5 D5 B4 | C#5:2 C#5 C#5 C#5 D5 D5 | \
+             D5:2 D5 C#5 D5 C#5 A4 | B4:2 B4 B4 B4 C#5 C#5 | C#5:2 C#5 B4 C#5 B4 E4 | A4:4 -:2 A4:2 A4:4 | \
+             -:2 E4:2 F#4 G#4 A4 B4",
+            "I | I | biii° | ii | ii | V7 | V7 | I | I7 | IV | iv | I | VI7 | ii | V7 | I | I",
+        ),
+        // The key signature turns to F at the trio's first bar, a pickup bar over the A
+        // major chord (III of F) that F follows; D minor in the last bar leads back to A.
+        Part::new(
+            "Trio",
+            "-:4 A4:4 Bb4:2 C5 | F4:12 | -:4 D5:4 E5:2 F5 | Bb4:12 | \
+             -:4 G5:4 A5:2 Bb5 | E5:4 F5:2 G5 D5:4 | E5:2 F5 C5:4 D5:2 E5 | D5:4 C5:2 Bb4 A4:4 | \
+             -:4 A4:4 Bb4:2 C5 | F4:12 | -:4 D5:4 E5:2 F5",
+            "III | I | I | ii | ii | V7 | V7 | I | I | I | vi",
+        )
+        .in_key(F, Major),
+        Part::new(
+            "Trio end",
+            "E5:12 | -:4 E5:4 F#5:2 A5 | G#5:4 D5:2 F#5 E5:4 | B4:2 D5 C#5:4 G#4:2 B4 | \
+             A4:4 -:2 A4:2 A4:4",
+            "I | I | V7 | V7 | I",
+        ),
+        // The second ending and the run back to the start (D.C. al Coda).
+        Part::new(
+            "Trio end 2",
+            "E5:12 | -:4 E5:4 F#5:2 A5 | G#5:4 D5:2 F#5 E5:4 | B4:2 D5 C#5:4 G#4:2 B4 | \
+             A4:4 -:2 A4:2 A4:4 | -:2 E4:2 F#4 G#4 A4 B4",
+            "I | I | V7 | V7 | I | I",
+        ),
+        Part::new(
+            "A coda",
+            "C#5:2 E4 E4 C#5 C#5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 F#4 F#4 D5 D5:4 | -:2 F#4 G#4 A4 B4 C#5 | \
+             D5:2 F#4 F#4 D5 D5:4 | -:2 F#4 F#4 D5 D5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 E4:2 F#4 G#4 A4 B4 | \
+             C#5:2 E4 E4 C#5 C#5:4 | -:2 E4 E4 C#5 C#5:4 | -:2 F#4 F#4 B4 B4:4 | -:2 F4 F4 B4 B4:4 | \
+             -:2 E4 E4 A4 A4:4 | -:2 E4:2 F#4 E4 G#4 E4 | A4:4 -:2 A4:2 A4:4 | _:12",
+            "I | VI7 | ii | ii | V9 | V9 | I | I | I | I7 | IV | iv | I | V7 | I | I",
+        ),
+    ],
+    form: &[
+        "Pickup",
+        "A first",
+        "A second",
+        "B",
+        "B variation",
+        "A second",
+        "Trio",
+        "Trio end",
+        "Trio",
+        "Trio end 2",
+        "A coda",
+    ],
+    drums_from: 1,
+    about: "A quick Colombian pasillo in A major. The first strain \
+            goes I-VI7-ii-V and turns to D and D minor, IV and iv, before the cadence; the second \
+            strain opens A, C diminished, B minor, climbs down by sequence, and comes back as \
+            a variation in running eighths. The trio moves to F major for a ii-V7-I; \
+            then D minor, vi in F and iv in A, leads back to A major for an E7-A cadence.",
 };
