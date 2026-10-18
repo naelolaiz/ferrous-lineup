@@ -1,4 +1,4 @@
-//! Latin: bossa nova, samba, choro, son, bolero and the Mexican ranchera.
+//! Latin: bossa nova, samba, choro, maxixe, son, bolero and the Mexican ranchera.
 
 use super::*;
 
@@ -469,4 +469,502 @@ pub(super) const SIBONEY: Song = Song {
             before coming to rest on a bright F major chord. The refrain stays in the major \
             until its last line borrows D flat and A flat from the minor again, leading back \
             to the start.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/ErnestoNazarethCavaquinho.abc
+// (the Wikifonia lead sheet, H. Laukens's arrangement in G, written in 2/2 at twice the
+// note values; checked note for note against the banjo lead sheet in
+// https://github.com/music4classicalguitar/music4classicalguitar.github.io/blob/master/docs/scores/Irish%20banjo/Tablature/Folk/Ernesto%20Nazareth/Ernesto%20Nazareth%20-%20Apanhei%20te%2C%20cavaquinho.mscz
+// and the chords against the iReal Pro chart in https://github.com/smashub/choco,
+// partitions/ireal-pro/choco/forum/jams-converted/ireal-pro-forum_4160.jams)
+// Where the two sheets differ, the tune follows the banjo sheet, whose notes fit the iReal
+// chords: in the second strain the first sixteenth of Wikifonia bars 25 and 33 is G, not F
+// sharp, over B7 (iReal B9(b13)), and that of bar 30 is C, not D sharp (iReal B7b9). The chart
+// follows the iReal chart where the Wikifonia sheet differs: C, not A minor, in bars 10 and 18;
+// D7 for C diminished in the trio's bars 42 and 50; F sharp half-diminished, not F sharp 7, in
+// bar 37; B7 for B in bar 30.
+// PD: Ernesto Nazareth died in 1934; published in 1914.
+pub(super) const APANHEI_TE_CAVAQUINHO: Song = Song {
+    name: "Apanhei-te, cavaquinho",
+    origin: "Ernesto Nazareth, 1914",
+    feel: "Choro",
+    genre: Genre::Latin,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 104.0,
+    comping: Comping::Habanera,
+    bass: Bass::Quarters,
+    rhythm: "Choro",
+    band: FLUTE_AND_GUITAR,
+    style: "Choro",
+    parts: &[
+        Part::new("Pickup", "-:13 G5:1 F#5 E5", "V7"),
+        Part::new(
+            "Intro",
+            "E5:1 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 G4 F#4 E4 Eb4 D4:2 -:3 G5:1 F#5 E5",
+            "V7 I | V7",
+        ),
+        Part::new(
+            "A",
+            "E5:1 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 F#5 E5 D5 C5 A#4 B4 E5 D5 - G5 F#5 E5 | \
+             E5 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 D#5 E5 F5 F#5 G5:4 -:1 G5 F#5 E5",
+            "V7 I | III7 vi | IV #iv°7 I I | V7 I | V7 I | III7 vi | IV #iv°7 I I | V7 I",
+        ),
+        Part::new(
+            "A into B",
+            "E5:1 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 F#5 E5 D5 C5 A#4 B4 E5 D5 - G5 F#5 E5 | \
+             E5 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 D#5 E5 F5 F#5 G5:4 -:1 B4 C5 B4",
+            "V7 I | III7 vi | IV #iv°7 I I | V7 I | V7 I | III7 vi | IV #iv°7 I I | V7 I",
+        ),
+        Part::new(
+            "B",
+            "A#4:1 B4 E5 F#5 G5 B4 G5 B4 G5 A#4 C#5 F#5:2 A#4:1 F#5 A#4 | \
+             G5 A4 B4 F#5:2 A4:1 F#5 A4 F#5 G4 B4 E5 - B4 C5 B4 | \
+             A#4 B4 E5 F#5 G5 B4 G5 B4 G5 B4 F#5 B4 E5 B4 D5 B4 | \
+             D5 E4 F#4 C#5:2 E4:1 C#5 E4 C5 D#4 F#4 B4 - B4 C5 B4 | \
+             A#4 B4 E5 F#5 G5 B4 G5 B4 G5 A#4 C#5 F#5:2 A#4:1 F#5 A#4 | \
+             G5 A4 B4 F#5:2 A4:1 F#5 A4 F5 G#4 B4 E5 - E5 D#5 E5 | \
+             F5 A4 E5 A4 D5 A4 C5 A4 C5 E4 G4 B4 - B4 A#4 B4 | \
+             C5 B4 A#4 B4 E5 D#5 G5 F#5 E5:4 -:1 B4 C5 B4",
+            "i II7 | V7 i | i v | II7 V7 | i II7 | V7 I7 | iv i | iiø7 V7 i i",
+        )
+        .in_key(E, HarmonicMinor),
+        Part::new(
+            "B into A",
+            "A#4:1 B4 E5 F#5 G5 B4 G5 B4 G5 A#4 C#5 F#5:2 A#4:1 F#5 A#4 | \
+             G5 A4 B4 F#5:2 A4:1 F#5 A4 F#5 G4 B4 E5 - B4 C5 B4 | \
+             A#4 B4 E5 F#5 G5 B4 G5 B4 G5 B4 F#5 B4 E5 B4 D5 B4 | \
+             D5 E4 F#4 C#5:2 E4:1 C#5 E4 C5 D#4 F#4 B4 - B4 C5 B4 | \
+             A#4 B4 E5 F#5 G5 B4 G5 B4 G5 A#4 C#5 F#5:2 A#4:1 F#5 A#4 | \
+             G5 A4 B4 F#5:2 A4:1 F#5 A4 F5 G#4 B4 E5 - E5 D#5 E5 | \
+             F5 A4 E5 A4 D5 A4 C5 A4 C5 E4 G4 B4 - B4 A#4 B4 | \
+             C5 B4 A#4 B4 E5 D#5 G5 F#5 E5:4 -:1 G5 F#5 E5",
+            "i II7 | V7 i | i v | II7 V7 | i II7 | V7 I7 | iv i | iiø7 V7 i i",
+        )
+        .in_key(E, HarmonicMinor),
+        Part::new(
+            "A into C",
+            "E5:1 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 F#5 E5 D5 C5 A#4 B4 E5 D5 - G5 F#5 E5 | \
+             E5 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 D#5 E5 F5 F#5 G5:4 -:1 G5 F#5 G5",
+            "V7 I | III7 vi | IV #iv°7 I I | V7 I | V7 I | III7 vi | IV #iv°7 I I | V7 I",
+        ),
+        Part::new(
+            "C",
+            "A5:1 G5 E5 C5 A4 G4 E4 C4 A4:2 -:1 A4 -:2 A4 | \
+             -:1 G4:2 A4:1 B4 C5:2 D5:1 E5:2 -:1 E5 -:2 E5 | \
+             -:1 E5 D#5 E5 F5 E5 D#5 E5 C5 E5 B4 E5 A4 E5 G4 E5 | \
+             - D5 C#5 D5 E5 D5 C#5 D5 E5 D5 B4 G5 - G5 F#5 G5 | \
+             A5 G5 E5 C5 A4 G4 E4 C4 A4:2 -:1 A4 -:2 A4 | \
+             -:1 G4:2 A4:1 B4 C5:2 D5:1 E5:2 -:1 E5 -:2 E5 | \
+             -:1 D#5:2 E5:1 F5 E5 D#5 E5 A5:2 -:1 A5 -:2 A5 | \
+             -:1 G5 F5 D5 B4 G4 F4 D4 C4:2 -:3 G5:1 F#5 G5",
+            "I II7 | V7 I | III7 vi | II7 V7 | I II7 | V7 III7 | VI7 II7 | V7 I",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "C into A",
+            "A5:1 G5 E5 C5 A4 G4 E4 C4 A4:2 -:1 A4 -:2 A4 | \
+             -:1 G4:2 A4:1 B4 C5:2 D5:1 E5:2 -:1 E5 -:2 E5 | \
+             -:1 E5 D#5 E5 F5 E5 D#5 E5 C5 E5 B4 E5 A4 E5 G4 E5 | \
+             - D5 C#5 D5 E5 D5 C#5 D5 E5 D5 B4 G5 - G5 F#5 G5 | \
+             A5 G5 E5 C5 A4 G4 E4 C4 A4:2 -:1 A4 -:2 A4 | \
+             -:1 G4:2 A4:1 B4 C5:2 D5:1 E5:2 -:1 E5 -:2 E5 | \
+             -:1 D#5:2 E5:1 F5 E5 D#5 E5 A5:2 -:1 A5 -:2 A5 | \
+             -:1 G5 F5 D5 B4 G4 F4 D4 C4:2 -:3 G5:1 F#5 E5",
+            "I II7 | V7 I | III7 vi | II7 V7 | I II7 | V7 III7 | VI7 II7 | V7 I",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "A end",
+            "E5:1 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 F#5 E5 D5 C5 A#4 B4 E5 D5 - G5 F#5 E5 | \
+             E5 D5 C#5 D5 F#5 E5 D5 C5 C5 B4 A#4 B4 E5 D5 C5 B4 | \
+             B4 A4 G#4 A4 D5 C5 B4 A4 A4 G4 F#4 G4 C5 B4 A4 G4 | \
+             F#4 E4 D#4 E4 A4 G4 F#4 E4 E4 D4 C#4 D4 E4 F#4 G4 A4 | \
+             B4 C5 C#5 D5 D#5 E5 F5 F#5 G5:2 - G5 -",
+            "V7 I | III7 vi | IV #iv°7 I I | V7 I | V7 I | III7 vi | IV #iv°7 I I | V7 I",
+        ),
+    ],
+    form: &[
+        "Pickup", "Intro", "A", "A into B", "B", "B into A", "A into C", "C", "C into A", "A end",
+    ],
+    drums_from: 1,
+    about: "Nazareth's polka of 1914: the first strain runs down G major in sixteenths, each \
+            beat leaning on the semitone below it, over D7, G, B7 and E minor; the second turns \
+            to E minor and climbs F#7 and B7 arpeggios; the trio, in C major, answers its runs \
+            with short chords in a 3 + 3 + 2 rhythm. Each strain is two bars of 2/4 to a bar \
+            here, in the rondo A A B B A C C A.",
+};
+
+// Source: https://raw.githubusercontent.com/baobach/abc_search/42cb4abd42a0ea8b0c5c9b8477ab80ec059f48df/database/abc/QmaZw5S1V4ZLCS2FPLuw3GP7L9dEP3Bp1oZzcje6bBFaeT.abc
+// (the piano score of the Acervo Digital Chiquinha Gonzaga, 2011, edited by Douglas
+// Passoni with chord symbols by Alexandre Dias, in F; the tune is the top of the right
+// hand, and the trio's offbeat chords under it are left to the comping). Here in G, a tone
+// higher and an octave lower than the score, so that the tune, which spans nearly three
+// octaves, lies between E3 and D6.
+// PD: Chiquinha Gonzaga died in 1935; published in 1877.
+pub(super) const ATRAENTE: Song = Song {
+    name: "Atraente",
+    origin: "Chiquinha Gonzaga, 1877",
+    feel: "Polca",
+    genre: Genre::Latin,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 96.0,
+    comping: Comping::Habanera,
+    bass: Bass::Quarters,
+    rhythm: "Polca",
+    band: FLUTE_AND_GUITAR,
+    style: "Polca",
+    parts: &[
+        // The repeated octaves over F7, then the run up to the first strain under a fermata.
+        // The introduction has five bars of 2/4: a bar of rest comes first.
+        Part::new(
+            "Intro",
+            "-:8 D5:2 D4 D4 D5 | D5 D4 D4 D5 D5 D5 D5 D5 | D5 D5 D5 D5 D5:1 C4 D4 F#4 B4 A4 F#4 D4",
+            "V7 | V7 | V7",
+        )
+        .with_tempo(&[fermata(44, 1)]),
+        Part::new(
+            "A",
+            "C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | B3:3 A4:1 G4:4 -:1 A#3 B3 D4 A4 G4 D4 Bb3 | \
+             A3:2 D4:1 F#4 A4 D5 F#5 A5 B5 A5 A5 G#5 G#5 G5 G5 F#5 | \
+             F#5 D5 D5 C5 C5 A4 A4 F#4 F#4 C4 D4 F#4 B4 A4 F#4 D4 | \
+             C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | \
+             B3:3 A4:1 G4:4 -:1 D#4 E4 A4 D5 C5 Eb4 C5 | \
+             C5 B4 B4 D4 D4:4 -:1 C#4 C#4 B4 B4 A4 A4 F#4 | \
+             G4 B3 G4 D4 B4 G4 D5 B4 G5 C4 D4 F#4 B4 A4 F#4 D4",
+            "V7 | I I I I I I I i | V II7 | V7 | V7 | I I I I ii ii ii iv°7 | I I II7 V7 | I",
+        )
+        .with_tempo(&[fermata(60, 1), fermata(124, 1)]),
+        Part::new(
+            "A into B",
+            "C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | B3:3 A4:1 G4:4 -:1 A#3 B3 D4 A4 G4 D4 Bb3 | \
+             A3:2 D4:1 F#4 A4 D5 F#5 A5 B5 A5 A5 G#5 G#5 G5 G5 F#5 | \
+             F#5 D5 D5 C5 C5 A4 A4 F#4 F#4 C4 D4 F#4 B4 A4 F#4 D4 | \
+             C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | \
+             B3:3 A4:1 G4:4 -:1 D#4 E4 A4 D5 C5 Eb4 C5 | \
+             C5 B4 B4 D4 D4:4 -:1 C#4 C#4 B4 B4 A4 A4 F#4 | G4 B3 G4 D4 B4 G4 D5 B4 G5:2 B4 A#4 B4",
+            "V7 | I I I I I I I i | V II7 | V7 | V7 | I I I I ii ii ii iv°7 | I I II7 V7 | I",
+        )
+        .with_tempo(&[fermata(60, 1)]),
+        // The second strain ends with the introduction again, its five bars of 2/4
+        // padded with a bar of rest before the run, under its fermata.
+        Part::new(
+            "B",
+            "C5:1 D#4 F#4 C5 C5 D#4 F#4 C5 C5 D#4 F#4 C5 C5 D#4 F#4 C5 | \
+             C5 E4 G4 B4 B4 E4 G4 B4 B4 E4 G4 B4 B4 Bb4 Bb4 A4 | \
+             A4 D5 D5 F#5 F#5 A5 A5 B5 B5 A5 A5 G5 G5 E5 E5 C#5 | \
+             E5 D5 D5 A4 A4 F#4 F#4 D4 D4:2 B4 A#4 B4 | C5 C6 C5 C6 C5 C5 B4 F#4 | \
+             B4 B4 B4 B4 B4 B4 Bb4 Bb4 | A4 A4 D5 F#5 B5 A5 G5 C#5 | D5 D4 D4 D5 D5 D4 D4 D5 | \
+             D5 D6 D5 D6 D5 D6 D5 D6 | -:8 D5:1 C4 D4 F#4 B4 A4 F#4 D4",
+            "III7 | vi vi vi vi vi vi vi biii°7 | V II7 | V | III7 | vi vi vi biii°7 | V II7 | V7 | \
+             V7 | V7",
+        )
+        .with_tempo(&[fermata(156, 1)]),
+        Part::new(
+            "A into trio",
+            "C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | B3:3 A4:1 G4:4 -:1 A#3 B3 D4 A4 G4 D4 Bb3 | \
+             A3:2 D4:1 F#4 A4 D5 F#5 A5 B5 A5 A5 G#5 G#5 G5 G5 F#5 | \
+             F#5 D5 D5 C5 C5 A4 A4 F#4 F#4 C4 D4 F#4 B4 A4 F#4 D4 | \
+             C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | \
+             B3:3 A4:1 G4:4 -:1 D#4 E4 A4 D5 C5 Eb4 C5 | \
+             C5 B4 B4 D4 D4:4 -:1 C#4 C#4 B4 B4 A4 A4 F#4 | G4 B3 G4 D4 B4 G4 D5 B4 G5:2 G4 F#4 F4",
+            "V7 | I I I I I I I i | V II7 | V7 | V7 | I I I I ii ii ii iv°7 | I I II7 V7 | I",
+        )
+        .with_tempo(&[fermata(60, 1)]),
+        Part::new(
+            "Trio",
+            "E4:2 - G4 - A4:1 A3 D4 F4 A4 A3 Ab4 Ab3 | G4:2 - F4 - E4:1 E3 G3 C4 E4 G4 C5 E5 | \
+             G5:2 - A5 - B5:1 B4 D5 G5 B5 D5 B5 D5 | \
+             D6 C6 A5 F#5 D5 C5 A4 F#4 G4 G5 F5 D5 B4 G4 F4 D4 | \
+             E4:2 - G4 - A4:1 A3 D4 F4 A4 A3 Ab4 Ab3 | G4:2 - F4 - E4:1 E3 G3 C4 E4 G4 C5 E5 | \
+             G5:2 - A5 C#5:1 G5 G5 F5 F5 A4 E5:2 D5 | D5:1 C5 C5 E4 A4 G4 G4 B3 C4:4 C5",
+            "I IV | V7 I | I i V V | II7 II7 V V7 | I ii | V7 I | I bvii°7 ii iv°7 | I V7 I I",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "A end",
+            "C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | B3:3 A4:1 G4:4 -:1 A#3 B3 D4 A4 G4 D4 Bb3 | \
+             A3:2 D4:1 F#4 A4 D5 F#5 A5 B5 A5 A5 G#5 G#5 G5 G5 F#5 | \
+             F#5 D5 D5 C5 C5 A4 A4 F#4 F#4 C4 D4 F#4 B4 A4 F#4 D4 | \
+             C4:3 B4:1 A4:4 -:1 C4 D4 F#4 B4 A4 F#4 C4 | \
+             B3:3 A4:1 G4:4 -:1 D#4 E4 A4 D5 C5 Eb4 C5 | \
+             C5 B4 B4 D4 D4:4 -:1 C#4 C#4 B4 B4 A4 A4 F#4 | G4 B3 G4 D4 B4 G4 D5 B4 G5:2 -:6",
+            "V7 | I I I I I I I i | V II7 | V7 | V7 | I I I I ii ii ii iv°7 | I I II7 V7 | I",
+        )
+        .with_tempo(&[fermata(60, 1)]),
+    ],
+    form: &["Intro", "A", "A into B", "B", "A into trio", "Trio", "Trio", "Intro", "A end"],
+    drums_from: 1,
+    about: "A polka by Chiquinha Gonzaga, published in 1877. The first strain waits two bars on \
+            D7 before G arrives, climbs an arpeggio to the high B and slides down in semitones \
+            over A7 and D7; the second leans on E minor through its own dominant, B7; the trio \
+            moves to C, the subdominant, in leaping octaves. Each bar here holds two bars of \
+            2/4; the score is in F, a tone lower and an octave higher.",
+};
+
+// Source: https://raw.githubusercontent.com/baobach/abc_search/42cb4abd42a0ea8b0c5c9b8477ab80ec059f48df/database/abc/QmYH1DJQdxPZabqsHWojoQRXzqj3NEvm4XWa5YiNfgtMHW.abc
+// (abc_search: a piano score in G sharp minor, 2/4, "Con dolcezza", quarter = 70; the tune is the
+// top of the right hand, the chords are read from the left hand)
+// Form, dedication and date checked against the Musica Brasilis edition,
+// https://musicabrasilis.com/media/en_carioca.pdf, and IMSLP, https://imslp.org/wiki/Carioca_(Nazareth,_Ernesto)
+// (first edition Sampaio, Araújo & Cia., Rio de Janeiro, 1913).
+// Here in E minor, a major third lower, with the tune on the violin of a salon trio. The
+// score's runs climb to B6 and E7; to keep the tune between G3 and C6 it is taken an octave
+// lower in places (bar numbers count the pickup as bar 1): in the second strain from the leap
+// in bar 23 to the first note of bar 26, and from bar 39 to bar 42 the same; in the trio from
+// the pickup at the end of bar 57 to the second note of bar 61, and from the pickup at the end
+// of bar 65 to the first note of each ending (bars 69 and 70; the last eighth of the second
+// ending stays up, as written).
+// Bar 34 is a bar of rest for the tune, whose run goes on in the left hand, and the F sharp at
+// the end of bar 49 (here D), written across the staves, is left to the bass.
+// PD: published in 1913; Ernesto Nazareth died in 1934.
+pub(super) const CARIOCA: Song = Song {
+    name: "Carioca",
+    origin: "Ernesto Nazareth, 1913",
+    feel: "Tango brasileiro",
+    genre: Genre::Latin,
+    tonic: E,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 70.0,
+    comping: Comping::Habanera,
+    bass: Bass::Habanera,
+    rhythm: "Maxixe",
+    band: SALON,
+    style: "Maxixe",
+    parts: &[
+        Part::new("Pickup", "-:14 B3:2", ""),
+        // "A" also follows the bridge: back to the tempo after its rit.
+        Part::new(
+            "A",
+            "E4:1 F#4:2 G4 A4 B4:1 C5:3 B4:1 -:2 B4 | \
+             E5:1 F#5:2 G5:1 G5 F#5:2 E5:1 C6:3 B5:1 -:2 B3 | \
+             E4:1 F#4:2 G#4 A4 B4:1 D5:3 C5:1 - C5:2 B4:1 | \
+             Bb4:2 G5 F#5 E5 D#5:1 C6 B5 A5 F#5 D#5 B4 B3 | E4 F#4:2 G4 A4 B4:1 C5:3 B4:1 -:2 B4 | \
+             E5:1 F#5:2 G5:1 G5 F#5:2 E5:1 C6:3 B5:1 - B4:2 A4:1 | \
+             G#4 F5:2 E5:1 D5 C5:2 B4:1 E5 A4:2 G4:1 C5 F4:2 E4:1 | \
+             G4 F4:2 E4:1 D#4 B4:2 D#4:1 E4:4 -:2 B3",
+            "i V7 | i V7 | I7 iv | bVI7 V7 | i V7 | i V7 | I7 I7 iv bVI7 | bII V7 i V",
+        )
+        .with_tempo(&[tempo(0, 70)]),
+        // The second ending, which is also the Fine.
+        Part::new(
+            "A into B",
+            "E4:1 F#4:2 G4 A4 B4:1 C5:3 B4:1 -:2 B4 | \
+             E5:1 F#5:2 G5:1 G5 F#5:2 E5:1 C6:3 B5:1 -:2 B3 | \
+             E4:1 F#4:2 G#4 A4 B4:1 D5:3 C5:1 - C5:2 B4:1 | \
+             Bb4:2 G5 F#5 E5 D#5:1 C6 B5 A5 F#5 D#5 B4 B3 | E4 F#4:2 G4 A4 B4:1 C5:3 B4:1 -:2 B4 | \
+             E5:1 F#5:2 G5:1 G5 F#5:2 E5:1 C6:3 B5:1 - B4:2 A4:1 | \
+             G#4 F5:2 E5:1 D5 C5:2 B4:1 E5 A4:2 G4:1 C5 F4:2 E4:1 | \
+             G4 F4:2 E4:1 D#4 B4:2 D#4:1 E4:2 - E5 -",
+            "i V7 | i V7 | I7 iv | bVI7 V7 | i V7 | i V7 | I7 I7 iv bVI7 | bII V7 i i",
+        ),
+        Part::new(
+            "B",
+            "E5:2 - D5:4 -:1 Eb5:2 C5:1 A4 F#4 E4 C4 | \
+             B3 C4:2 C#4:1 D4 E4:2 F#4:1 G4 A4:2 A#4:1 B4 E5:2 D5:1 | \
+             C#5 D5:2 D#5:1 E5 B4:2 A4:1 F#4 G4:2 G#4:1 A4 G5:2 E5:1 | \
+             C#5 E5 D5 A#4 C5 B4 F#4 A4 G4 C#5 E5 D5 B4 G4 E4 D4 | \
+             E4:2 - D4:4 -:1 B4:2 A4:1 F#4 D#4 C4 A3 | \
+             G3 A3:2 A#3:1 B3 C#4:2 D#4:1 E4 F#4:2 G4:1 A4 B4:2 C#5:1 | \
+             D5 E5:2 E#5:1 F#5 B5:2 A5:1 G5 B4:2 D5:1 C#5 F#5:2 E5:1 | \
+             D5 F#5 D5 F#4 D4 F#4 D4 -:9 | E5:2 - D5:4 -:1 Eb5:2 C5:1 A4 F#4 E4 C4 | \
+             B3 C4:2 C#4:1 D4 E4:2 F#4:1 G4 A4:2 A#4:1 B4 E5:2 D5:1 | \
+             C#5 D5:2 D#5:1 E5 B4:2 A4:1 F#4 G4:2 G#4:1 A4 G5:2 E5:1 | \
+             C#5 E5 D5 A#4 C5 B4 F#4 A4 G4 C#5 E5 D5 B4 C5 D5 E5 | \
+             F5:2 - E5:4 -:1 D5:2 B4:1 G#4 F4 D4 B3 | \
+             A3 B3:2 C4:1 E4 A4:2 B4:1 C5 E5:2 A5:1 G5 F#5:2 E5:1 | \
+             G5 F#5:2 E5:1 D5 C5:2 B4:1 E5 D5:2 C5:1 B4 A4:2 D4:1 | \
+             G4 B3:2 B3:1 B3 A3:2 -:5 G4:4",
+            "V7 V7b9 | I I | II7 V7 | I I | V7 V7b9 | vi vi | V V vi II7 | V V | V7 V7b9 | I I | \
+             II7 V7 | I I | VI7 VI7b9 | ii ii ii #iv°7 | I vi7 ii V7 | I V7b9 I I",
+        )
+        .in_key(G, Major),
+        // Second ending, then D.S. to the first strain, which goes to the coda.
+        Part::new(
+            "B into A",
+            "E5:2 - D5:4 -:1 Eb5:2 C5:1 A4 F#4 E4 C4 | \
+             B3 C4:2 C#4:1 D4 E4:2 F#4:1 G4 A4:2 A#4:1 B4 E5:2 D5:1 | \
+             C#5 D5:2 D#5:1 E5 B4:2 A4:1 F#4 G4:2 G#4:1 A4 G5:2 E5:1 | \
+             C#5 E5 D5 A#4 C5 B4 F#4 A4 G4 C#5 E5 D5 B4 G4 E4 D4 | \
+             E4:2 - D4:4 -:1 B4:2 A4:1 F#4 D#4 C4 A3 | \
+             G3 A3:2 A#3:1 B3 C#4:2 D#4:1 E4 F#4:2 G4:1 A4 B4:2 C#5:1 | \
+             D5 E5:2 E#5:1 F#5 B5:2 A5:1 G5 B4:2 D5:1 C#5 F#5:2 E5:1 | \
+             D5 F#5 D5 F#4 D4 F#4 D4 -:9 | E5:2 - D5:4 -:1 Eb5:2 C5:1 A4 F#4 E4 C4 | \
+             B3 C4:2 C#4:1 D4 E4:2 F#4:1 G4 A4:2 A#4:1 B4 E5:2 D5:1 | \
+             C#5 D5:2 D#5:1 E5 B4:2 A4:1 F#4 G4:2 G#4:1 A4 G5:2 E5:1 | \
+             C#5 E5 D5 A#4 C5 B4 F#4 A4 G4 C#5 E5 D5 B4 C5 D5 E5 | \
+             F5:2 - E5:4 -:1 D5:2 B4:1 G#4 F4 D4 B3 | \
+             A3 B3:2 C4:1 E4 A4:2 B4:1 C5 E5:2 A5:1 G5 F#5:2 E5:1 | \
+             G5 F#5:2 E5:1 D5 C5:2 B4:1 E5 D5:2 C5:1 B4 A4:2 D4:1 | \
+             G4 B3:2 B3:1 B3 A3:2 -:5 B4:2 B3",
+            "V7 V7b9 | I I | II7 V7 | I I | V7 V7b9 | vi vi | V V vi II7 | V V | V7 V7b9 | I I | \
+             II7 V7 | I I | VI7 VI7b9 | ii ii ii #iv°7 | I vi7 ii V7 | I V7b9 I III7",
+        )
+        .in_key(G, Major),
+        // The coda bar, with the pickup into the trio.
+        Part::new(
+            "A into trio",
+            "E4:1 F#4:2 G4 A4 B4:1 C5:3 B4:1 -:2 B4 | \
+             E5:1 F#5:2 G5:1 G5 F#5:2 E5:1 C6:3 B5:1 -:2 B3 | \
+             E4:1 F#4:2 G#4 A4 B4:1 D5:3 C5:1 - C5:2 B4:1 | \
+             Bb4:2 G5 F#5 E5 D#5:1 C6 B5 A5 F#5 D#5 B4 B3 | E4 F#4:2 G4 A4 B4:1 C5:3 B4:1 -:2 B4 | \
+             E5:1 F#5:2 G5:1 G5 F#5:2 E5:1 C6:3 B5:1 - B4:2 A4:1 | \
+             G#4 F5:2 E5:1 D5 C5:2 B4:1 E5 A4:2 G4:1 C5 F4:2 E4:1 | \
+             G4 F4:2 E4:1 D#4 B4:2 D#4:1 E4:4 E5:1 D4:2 E4:1",
+            "i V7 | i V7 | I7 iv | bVI7 V7 | i V7 | i V7 | I7 I7 iv bVI7 | bII V7 i i",
+        ),
+        Part::new(
+            "Trio",
+            "F4:1 G4 A4 B4 C5 D5 E5 F5 F#5 A5 G5 E5 C5 A4 G4 E4 | \
+             D4 F#4 B4 A4 G4 B4 E5 D5 C5 E5 A5 G5 - D4:2 E4:1 | \
+             F4 G4 A4 B4 C5 D5 E5 F5 E5 D5 C5 B4 A4 G4 F#4 E4 | \
+             D4 D#4 F#4 E4 B3 D4 C4 A3 G3:2 G4 -:1 D4:2 E4:1 | \
+             F4 G4 A4 B4 C5 D5 E5 F5 F#5 A5 G5 E5 C5 A4 G4 E4 | \
+             D4 F#4 B4 A4 G4 B4 E5 D5 C5 E5 A5 G5 - C4:2 D4:1 | \
+             E4 F4 G4 A4 Bb4 C5 D5 E5 F5 G5 A5 B5 C6 B5 C6 A5 | \
+             G5 A5 G5 E5 D5 E5 D5 G4 C5:4 -:1 D4:2 E4:1",
+            "V7 I | II7 V7 I I | V7 V7 #v°7 #v°7 vi vi vi #i°7 | V II7 V V | V7 I | II7 V7 I I | \
+             I I7 IV #iv°7 | I V7 I I",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "Trio end",
+            "F4:1 G4 A4 B4 C5 D5 E5 F5 F#5 A5 G5 E5 C5 A4 G4 E4 | \
+             D4 F#4 B4 A4 G4 B4 E5 D5 C5 E5 A5 G5 - D4:2 E4:1 | \
+             F4 G4 A4 B4 C5 D5 E5 F5 E5 D5 C5 B4 A4 G4 F#4 E4 | \
+             D4 D#4 F#4 E4 B3 D4 C4 A3 G3:2 G4 -:1 D4:2 E4:1 | \
+             F4 G4 A4 B4 C5 D5 E5 F5 F#5 A5 G5 E5 C5 A4 G4 E4 | \
+             D4 F#4 B4 A4 G4 B4 E5 D5 C5 E5 A5 G5 - C4:2 D4:1 | \
+             E4 F4 G4 A4 Bb4 C5 D5 E5 F5 G5 A5 B5 C6 B5 C6 A5 | \
+             G5 A5 G5 E5 D5 E5 D5 G4 C5:4 -:2 C6",
+            "V7 I | II7 V7 I I | V7 V7 #v°7 #v°7 vi vi vi #i°7 | V II7 V V | V7 I | II7 V7 I I | \
+             I I7 IV #iv°7 | I V7 I I",
+        )
+        .in_key(C, Major),
+        // Over chromatic runs in the bass; rit. in its last two bars, then D.S. al Fine.
+        Part::new(
+            "Bridge",
+            "B5:3 B5:1 -:2 A5 G5:3 G5:1 -:2 G5 | F#5:3 F#5:1 E5:2 E5 D#5:3 D#5:1 -:2 C5 | \
+             B4:3 B4:1 -:2 D#5 E5:3 E5:1 -:2 E5 | G5:3 G5:1 E5:2 E5 D#5:1 B3 B4 B4 B5:2 B3",
+            "V V7 i i | II7 V | V V7 i #iv°7 | i i bVI iv6 V V V V",
+        )
+        .with_tempo(&[glide(48, 56, 16)]),
+    ],
+    form: &[
+        "Pickup",
+        "A",
+        "A into B",
+        "B",
+        "B into A",
+        "A into trio",
+        "Trio",
+        "Trio end",
+        "Bridge",
+        "A",
+        "A into B",
+    ],
+    drums_from: 1,
+    about: "Nazareth's tango brasileiro of 1913, here in E minor (the score is in G sharp \
+            minor). The first strain answers E minor with B7 and cadences through the Neapolitan \
+            F major chord; the second, marked enérgico, moves to G major over the habanera bass \
+            and climbs in chromatic steps; the trio, brilhante, goes to C major in running \
+            sixteenths, and a bridge over chromatic bass runs leads back to the first strain. \
+            Each bar here holds two bars of 2/4.",
+};
+
+// Source: https://raw.githubusercontent.com/rodrigoborgesdeoliveira/sheet-music-and-chords/8980988549406f50fd736a0510ddf439082d3a3d/joao-pernambuco/sons-de-carrilhoes/sons-de-carrilhoes.abc
+// (a guitar solo score in D, 2/4, quarter = 70; the tune is the top voice, written an
+// octave above the guitar's sound as guitar music is, and the chords are read from the bass).
+// Here a tone lower, in C, at the written pitch: at the guitar's sounding pitch the tune would
+// lie between A2 and E5, too low for the lead, and in D at the written pitch it climbs to E6;
+// in C it lies between G3 and D6.
+// PD: João Pernambuco died in 1947.
+pub(super) const SONS_DE_CARRILHOES: Song = Song {
+    name: "Sons de carrilhões",
+    origin: "João Pernambuco",
+    feel: "Choro",
+    genre: Genre::Latin,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 70.0,
+    comping: Comping::Habanera,
+    bass: Bass::Quarters,
+    rhythm: "Choro",
+    band: GUITARS,
+    style: "Choro",
+    parts: &[
+        Part::new("Pickup", "-:13 C6:1 C5 E5", "I"),
+        Part::new(
+            "A",
+            "B5:5 A5:1 G5 F5 A4:5 A4:1 B4 C5 | E5:5 D5:1 G5 D5 A4:5 G5:1 E5 C5 | \
+             A4 G4 E4 C4 E4:2 Eb4 D4:1 A4:2 A4 A4:1 B4 C5 | E5:5 D5:1 G5 E5 A4:5 C6:1 C5 E5 | \
+             B5:5 A5:1 G5 F5 A4:5 A4:1 B4 C5 | E5:5 D5:1 G5 E5 A4:5 G4:1 E4 C4 | \
+             C#4 E4 G4 Bb4 C#5 E5 G5 A5 G5 F5 D5 A4 F4 D4 A3 Ab3 | \
+             G3 G4 E4 C4 A4:2 B4 C5:4 -:1 C6 C5 E5",
+            "Imaj7 ii | V7 I6 | I ii | V7 I6 | Imaj7 ii7 | V7 I6 | VI7b9 ii | I I ii V7 I I I I",
+        ),
+        // The second ending, which is also the Fine.
+        Part::new(
+            "A end",
+            "B5:5 A5:1 G5 F5 A4:5 A4:1 B4 C5 | E5:5 D5:1 G5 D5 A4:5 G5:1 E5 C5 | \
+             A4 G4 E4 C4 E4:2 Eb4 D4:1 A4:2 A4 A4:1 B4 C5 | E5:5 D5:1 G5 E5 A4:5 C6:1 C5 E5 | \
+             B5:5 A5:1 G5 F5 A4:5 A4:1 B4 C5 | E5:5 D5:1 G5 E5 A4:5 G4:1 E4 C4 | \
+             C#4 E4 G4 Bb4 C#5 E5 G5 A5 G5 F5 D5 A4 F4 D4 A3 Ab3 | G3 G4 E4 C4 A4:2 B4 C5:4 C6",
+            "Imaj7 ii | V7 I6 | I ii | V7 I6 | Imaj7 ii7 | V7 I6 | VI7b9 ii | I I ii V7 I I I I",
+        ),
+        Part::new(
+            "B",
+            "C5:1 C5:2 C5:1 C#5:2 C#5 E5:5 Bb5:1 E5 Bb5 | Bb5 Bb5:2 Bb5:1 Bb5:2 Bb5 C6:5 A5:1 D6 C6 | \
+             A5 F5 C5 A4 F4 A4 C5 C6 Bb5 A5 G5 F#5 F5 E5 D5 C5 | E5:5 D5:1 G5 E5 D5:4 C5 | \
+             C5:1 C5:2 C5:1 C#5:2 C#5 E5:5 Bb5:1 E5 Bb5 | Bb5:2 Bb5:1 Bb5 Bb5:2 Bb5 C6:5 A5:1 D6 C6 | \
+             A5 F#5 D5 C5 A4 F#4 D4 C4 Bb3 D4 G4 Bb4 Db4 F4 Ab4 Db5 | C4 F4 A4 C5 D5:2 C5 F5:4 -",
+            "I I+ V7 V7 | V7 I | I I | ii7 V7 | I I+ V7 V7 | V7 I | VI7 VI7 ii bVI | I V7 I I",
+        )
+        .in_key(F, Major),
+        // Second ending, then D.S. to the first strain, which ends at the Fine.
+        Part::new(
+            "B into A",
+            "C5:1 C5:2 C5:1 C#5:2 C#5 E5:5 Bb5:1 E5 Bb5 | Bb5 Bb5:2 Bb5:1 Bb5:2 Bb5 C6:5 A5:1 D6 C6 | \
+             A5 F5 C5 A4 F4 A4 C5 C6 Bb5 A5 G5 F#5 F5 E5 D5 C5 | E5:5 D5:1 G5 E5 D5:4 C5 | \
+             C5:1 C5:2 C5:1 C#5:2 C#5 E5:5 Bb5:1 E5 Bb5 | Bb5:2 Bb5:1 Bb5 Bb5:2 Bb5 C6:5 A5:1 D6 C6 | \
+             A5 F#5 D5 C5 A4 F#4 D4 C4 Bb3 D4 G4 Bb4 Db4 F4 Ab4 Db5 | \
+             C4 F4 A4 C5 D5:2 C5 F5:4 -:1 C6 C5 E5",
+            "I I+ V7 V7 | V7 I | I I | ii7 V7 | I I+ V7 V7 | V7 I | VI7 VI7 ii bVI | I V7 I I",
+        )
+        .in_key(F, Major),
+    ],
+    form: &["Pickup", "A", "A end", "B", "B into A", "A end"],
+    drums_from: 1,
+    about: "A choro for the guitar by João Pernambuco; its title means sounds of bells. The \
+            first strain, in C, rings out in octave leaps from the high C over C major seventh, \
+            D minor and G7; the second moves to F, the subdominant, through an augmented F chord \
+            and C7, and turns through D7, G minor and D flat before its cadence. Each bar here \
+            holds two bars of 2/4; the score is in D, a tone higher.",
 };
