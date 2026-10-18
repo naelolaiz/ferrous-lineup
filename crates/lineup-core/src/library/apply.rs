@@ -43,8 +43,8 @@ pub struct StyleParts {
     pub progression: bool,
     pub tempo: bool,
     pub swing: bool,
-    /// Borrow a rhythm's matching style. Off uses plain accents and the
-    /// current instruments instead of changing the band to that style.
+    /// Copy accompaniment patterns from the preset (or a rhythm's matching
+    /// style). Off uses plain accents and keeps the current instruments.
     pub matching_style: bool,
 }
 
@@ -63,11 +63,16 @@ impl Default for StyleParts {
 }
 
 impl StyleParts {
+    /// Plain accents always keep the current sounds, for every preset source.
+    pub fn for_preset(mut self) -> Self {
+        self.instruments &= self.matching_style;
+        self
+    }
+
     /// Rhythm-only choices never supply a chord progression.
     pub fn for_rhythm(mut self) -> Self {
         self.progression = false;
-        self.instruments &= self.matching_style;
-        self
+        self.for_preset()
     }
 }
 
@@ -513,12 +518,18 @@ pub fn use_style(project: &mut Project, style: &Style) -> RhythmChange {
 }
 
 pub fn use_style_parts(project: &mut Project, style: &Style, parts: StyleParts) -> RhythmChange {
+    let parts = parts.for_preset();
+    let (comping, bass) = if parts.matching_style {
+        (style.comping, style.bass)
+    } else {
+        (Comping::Accents, Bass::Accents)
+    };
     let mut change = play_song(
         project,
         Rhythm::named(style.rhythm),
         style.time,
-        style.comping,
-        style.bass,
+        comping,
+        bass,
         parts,
     );
     if parts.progression {
