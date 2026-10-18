@@ -31,12 +31,20 @@ impl StyleFiles {
     }
 }
 
-fn read_styles(folder: &Path) -> Result<(Vec<UserStyle>, Vec<PathBuf>), String> {
+#[derive(Default)]
+struct LoadedStyles {
+    styles: Vec<UserStyle>,
+    paths: Vec<PathBuf>,
+    errors: Vec<String>,
+}
+
+fn read_styles(folder: &Path) -> Result<LoadedStyles, String> {
     if !folder.exists() {
-        return Ok((Vec::new(), Vec::new()));
+        return Ok(LoadedStyles::default());
     }
     let entries = std::fs::read_dir(folder).map_err(|error| error.to_string())?;
     let mut styles = Vec::new();
+    let mut errors = Vec::new();
     for entry in entries {
         let path = entry.map_err(|error| error.to_string())?.path();
         if path
@@ -45,24 +53,41 @@ fn read_styles(folder: &Path) -> Result<(Vec<UserStyle>, Vec<PathBuf>), String> 
         {
             continue;
         }
-        let text = std::fs::read_to_string(&path)
-            .map_err(|error| format!("{}: {error}", path.display()))?;
-        let style =
-            UserStyle::from_text(&text).map_err(|error| format!("{}: {error}", path.display()))?;
-        styles.push((style, path));
+        match std::fs::read_to_string(&path)
+            .map_err(|error| error.to_string())
+            .and_then(|text| UserStyle::from_text(&text))
+        {
+            Ok(style) => styles.push((style, path)),
+            Err(error) => errors.push(format!("{}: {error}", path.display())),
+        }
     }
     styles.sort_by_cached_key(|(style, _)| style.name.to_lowercase());
-    Ok(styles.into_iter().unzip())
+    let (styles, paths) = styles.into_iter().unzip();
+    Ok(LoadedStyles {
+        styles,
+        paths,
+        errors,
+    })
 }
 
 impl LineupApp {
     pub(super) fn reload_user_styles(&mut self) {
         match read_styles(&self.style_files.folder) {
-            Ok((styles, paths)) => {
-                self.playlist.library_browser_mut().user_styles = styles;
-                self.style_files.paths = paths;
+            Ok(loaded) => {
+                self.playlist.library_browser_mut().user_styles = loaded.styles;
+                self.style_files.paths = loaded.paths;
+                if !loaded.errors.is_empty() {
+                    self.message = Some(format!(
+                        "Some styles could not be loaded: {}",
+                        loaded.errors.join("; ")
+                    ));
+                }
             }
-            Err(error) => self.message = Some(format!("Could not load styles: {error}")),
+            Err(error) => {
+                self.playlist.library_browser_mut().user_styles.clear();
+                self.style_files.paths.clear();
+                self.message = Some(format!("Could not load styles: {error}"));
+            }
         }
     }
     pub(super) fn start_style_editor(&mut self, style: UserStyle, path: Option<PathBuf>) {
@@ -168,7 +193,7 @@ impl LineupApp {
             )
         });
     }
-    fn save_user_style(&mut self, style: UserStyle, save_as: bool) {
+    pub(super) fn save_user_style(&mut self, style: UserStyle, save_as: bool) {
         let text = match style.to_text() {
             Ok(text) => text,
             Err(error) => {
@@ -327,9 +352,11 @@ mod tests {
             alpha.to_text().unwrap(),
         )
         .unwrap();
-        let (styles, paths) = read_styles(&directory).unwrap();
-        assert_eq!(styles, vec![alpha, zeta]);
-        assert_eq!(paths.len(), 2);
+        std::fs::write(directory.join(format!("broken.{EXTENSION}")), "invalid").unwrap();
+        let loaded = read_styles(&directory).unwrap();
+        assert_eq!(loaded.styles, vec![alpha, zeta]);
+        assert_eq!(loaded.paths.len(), 2);
+        assert_eq!(loaded.errors.len(), 1);
         std::fs::remove_dir_all(directory).unwrap();
     }
 }
