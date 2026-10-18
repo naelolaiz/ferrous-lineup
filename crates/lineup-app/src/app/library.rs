@@ -23,17 +23,14 @@
 //! it, and every rhythm or style picked after that starts again from that
 //! original: 4/4 to 3/4 to 6/8 and back to 4/4 gives back the 4/4 song.
 
-use eframe::egui;
 use lineup_audio::PlayMode;
 use lineup_core::library::demo::{micromode_demo, row_demo, song_demo, style_demo};
 use lineup_core::library::{
-    FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, SONGS, STYLES,
-    Song, Style, apply, micromodes, rows,
+    FILLS, MicromodeStyle, Rhythm, RowStyle, Song, Style, apply, micromodes, rows,
 };
 use lineup_core::{BandStyle, Pattern, Project, Tempo, TimeSignature};
 
 use super::LineupApp;
-use super::files::Pending;
 use crate::library_browser::{LibraryAction, Tried};
 
 /// How many of the patterns the library wrote are remembered.
@@ -687,98 +684,6 @@ impl LineupApp {
         }
     }
 
-    /// The Demos submenu of the File menu.
-    pub(super) fn demos_menu(&mut self, ui: &mut egui::Ui) {
-        let ctx = ui.ctx().clone();
-        let mut picked = None;
-        ui.menu_button("Demos", |ui| {
-            if ui
-                .button("The starting song")
-                .on_hover_text("The beat and chords Ferrous Lineup opens with")
-                .clicked()
-            {
-                picked = Some(Demo::Start);
-            }
-            ui.separator();
-            ui.menu_button("Songs", |ui| {
-                ui.weak("Tunes with their melodies, free for everyone to use");
-                // A genre with no songs gets no empty submenu.
-                for genre in Genre::ALL
-                    .into_iter()
-                    .filter(|&genre| SONGS.iter().any(|song| song.genre == genre))
-                {
-                    ui.menu_button(genre.name(), |ui| {
-                        for song in SONGS.iter().filter(|song| song.genre == genre) {
-                            let hover = format!("{}\n\n{}", song.origin, song.about);
-                            if ui
-                                .button(format!("{} · {}", song.name, song.feel))
-                                .on_hover_text(hover)
-                                .clicked()
-                            {
-                                picked = Some(Demo::Song(song));
-                            }
-                        }
-                    });
-                }
-            });
-            ui.menu_button("Styles", |ui| {
-                ui.weak("Each harmony style as a short song");
-                for genre in Genre::ALL
-                    .into_iter()
-                    .filter(|&genre| STYLES.iter().any(|style| style.genre == genre))
-                {
-                    ui.menu_button(genre.name(), |ui| {
-                        for style in STYLES.iter().filter(|style| style.genre == genre) {
-                            if ui.button(style.name).on_hover_text(style.about).clicked() {
-                                picked = Some(Demo::Style(style));
-                            }
-                        }
-                    });
-                }
-            });
-            ui.menu_button("Twelve-tone", |ui| {
-                ui.weak("Each row style as a short piece: the row, backwards, upside down, both");
-                for style in &ROW_STYLES {
-                    if ui.button(style.name).on_hover_text(style.about).clicked() {
-                        picked = Some(Demo::Row(style));
-                    }
-                }
-            });
-            ui.menu_button("Micromodes", |ui| {
-                ui.weak(
-                    "Each micromode style as a short piece: from the micromode, upside down, \
-                     a tritone away, upside down there, and back",
-                );
-                for style in &MICROMODE_STYLES {
-                    let micromode = style.micromode();
-                    let hover =
-                        format!("{}\n\n{}: {}", style.about, micromode.name, micromode.about);
-                    if ui
-                        .button(format!("{} · {}", style.name, micromode.name))
-                        .on_hover_text(hover)
-                        .clicked()
-                    {
-                        picked = Some(Demo::Micromode(style));
-                    }
-                }
-                ui.separator();
-                ui.weak("A famous row made of one micromode");
-                if let Some(style) = RowStyle::named("Webern's trichords")
-                    && ui
-                        .button(format!("{} · Menor 3", style.name))
-                        .on_hover_text(style.about)
-                        .clicked()
-                {
-                    picked = Some(Demo::Row(style));
-                }
-            });
-        });
-        if let Some(demo) = picked {
-            ui.close();
-            self.request(&ctx, Pending::Demo(demo));
-        }
-    }
-
     /// Opens a demo in place of the project, and plays it, with its
     /// style and rhythm selected in the library.
     pub(super) fn open_demo(&mut self, demo: Demo) {
@@ -837,6 +742,7 @@ fn fill_picked(action: LibraryAction) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lineup_core::library::SONGS;
 
     #[test]
     fn demo_songs_select_their_style_and_rhythm() {
