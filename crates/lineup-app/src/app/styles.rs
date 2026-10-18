@@ -306,13 +306,19 @@ impl LineupApp {
         }
         let before = self.project.clone();
         let previous = self.tried();
-        let result = self.edit("apply user style", |project| {
-            if let Some(from) = progression_from {
-                project.write_user_progression(&style, from).map(|_| ())
-            } else {
-                project.apply_user_style(&style, parts)
-            }
-        });
+        let result = self.edit_song(
+            "apply user style",
+            progression_from.is_none().then_some(style.time),
+            parts,
+            true,
+            |project, parts| {
+                if let Some(from) = progression_from {
+                    project.write_user_progression(&style, from).map(|_| ())
+                } else {
+                    project.apply_user_style(&style, parts)
+                }
+            },
+        );
         if let Err(error) = result {
             self.message = Some(error);
             return;
