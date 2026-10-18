@@ -242,6 +242,9 @@ impl LibraryBrowser {
                 .collect();
             if !custom.is_empty() {
                 section(ui, "User styles", true, |ui| {
+                    if purpose == LibraryPurpose::Play {
+                        ui.weak("Apply the checked components to the song’s band.");
+                    }
                     for (index, style) in custom {
                         let response = ui
                             .selectable_label(
