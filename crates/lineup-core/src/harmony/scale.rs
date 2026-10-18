@@ -515,11 +515,38 @@ impl Scale {
     /// its #iv°. A chord from outside the key is numbered the same way:
     /// Bb major in C major is bVII.
     pub fn roman_numeral(self, chord: Chord) -> Option<String> {
+        self.numeral_on(self.letters_above_tonic(chord.root), chord)
+    }
+
+    /// The Roman numeral of `chord` written with the root `root`. The
+    /// letter says which degree the chord stands on, so in C major
+    /// C#°7, a raised tonic, is "#i°7", and Db7 is "bII7"; from the sound
+    /// alone ([`Scale::roman_numeral`]) both would be on the second
+    /// degree.
+    pub fn spelled_numeral(self, root: NoteName, chord: Chord) -> Option<String> {
+        self.numeral_on(self.tonic_name().letter.steps_up_to(root.letter), chord)
+    }
+
+    /// [`Scale::spelled_numeral`] with the figures of an inversion, as
+    /// [`Scale::figured_numeral`] gives them.
+    pub fn spelled_figured_numeral(
+        self,
+        root: NoteName,
+        chord: Chord,
+        bass: PitchClass,
+    ) -> Option<String> {
+        let numeral = self.spelled_numeral(root, chord)?;
+        Some(with_figures(&numeral, chord.inversion_figures(bass)))
+    }
+
+    /// The Roman numeral of `chord` on the degree `letters` letters above
+    /// the tonic.
+    fn numeral_on(self, letters: u8, chord: Chord) -> Option<String> {
         const NUMERALS: [&str; 7] = ["I", "II", "III", "IV", "V", "VI", "VII"];
         if !self.is_heptatonic() {
             return None;
         }
-        let letters = usize::from(self.letters_above_tonic(chord.root));
+        let letters = usize::from(letters);
         let in_major = ScaleKind::Major.tonal_intervals()[letters] as i8;
         let semitones = self.root.semitones_up_to(chord.root) as i8;
         // How far the root is from the major scale's note, from -6 to 5.
@@ -1058,6 +1085,29 @@ mod tests {
             set.chord_name(Chord::new(CSharp, ChordQuality::Major)),
             "Db"
         );
+    }
+
+    #[test]
+    fn written_chords_are_numbered_by_their_letter() {
+        let numeral = |key: Scale, text: &str| {
+            let symbol: super::super::ChordSymbol = text.parse().unwrap();
+            key.spelled_numeral(symbol.root, symbol.chord()).unwrap()
+        };
+        let c_major = Scale::new(C, ScaleKind::Major);
+        // The same keys of the piano, two degrees: a raised tonic leading
+        // to ii, and a Neapolitan-like flat second.
+        assert_eq!(numeral(c_major, "C#dim7"), "#i°7");
+        assert_eq!(numeral(c_major, "Db7"), "bII7");
+        assert_eq!(numeral(c_major, "D#dim7"), "#ii°7");
+        assert_eq!(numeral(c_major, "Ebmaj7"), "bIIImaj7");
+        assert_eq!(numeral(c_major, "G#dim"), "#v°");
+        assert_eq!(numeral(c_major, "Gb7"), "bV7");
+        assert_eq!(numeral(c_major, "F#m7b5"), "#ivø7");
+        // The key's own chords, double sharps included.
+        assert_eq!(numeral(c_major, "G7"), "V7");
+        let g_sharp_minor = Scale::new(GSharp, ScaleKind::HarmonicMinor);
+        assert_eq!(numeral(g_sharp_minor, "F##dim7"), "vii°7");
+        assert_eq!(numeral(g_sharp_minor, "D#7"), "V7");
     }
 
     #[test]

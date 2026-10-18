@@ -265,56 +265,17 @@ impl Harmony {
                 };
                 format!("{low} up to {high}: {} {name}{tritone}.", article(&name))
             }
-            Harmony::Chord { chord, bass } => {
-                let root = scale.spell_root(chord);
-                let mut text = format!(
-                    "{}: {root} {}",
-                    self.label_in(scale).unwrap_or_default(),
-                    chord.quality.name()
-                );
-                if bass != chord.root
-                    && let Some(bass) = chord.spell_note(root, bass)
-                {
-                    text += &format!(" with {bass} in the bass");
-                }
-                // The numeral carries the inversion's figures: C/E is I⁶.
-                let figures = chord.inversion_figures(bass);
-                text += &match scale.figured_numeral(chord, bass) {
-                    Some(numeral) if scale.is_diatonic(chord) => {
-                        format!(", chord {numeral} of {key}.")
-                    }
-                    Some(numeral) if scale.uses_raised_seventh(chord) => {
-                        let leading = scale.spell(scale.root.transpose(11));
-                        format!(
-                            ", chord {numeral} of {key}, with the raised seventh ({leading}) of harmonic minor."
-                        )
-                    }
-                    Some(numeral) => match (
-                        scale.borrowed_from(chord),
-                        scale.secondary_dominant_target(chord),
-                    ) {
-                        (Some(parallel), _) => {
-                            format!(", {numeral} borrowed from {}.", parallel.name())
-                        }
-                        (None, Some(target)) => format!(
-                            ", {} in {key}: a secondary dominant, the dominant of {}.",
-                            with_figures(
-                                &format!(
-                                    "V{}/{}",
-                                    chord.quality.numeral_suffix(),
-                                    scale.roman_numeral(target).unwrap_or_default()
-                                ),
-                                figures
-                            ),
-                            scale.chord_name(target)
-                        ),
-                        (None, None) => format!(", {numeral}, from outside {key}."),
-                    },
-                    None if scale.is_diatonic(chord) => format!(", in {key}."),
-                    None => format!(", outside {key}."),
-                };
-                text
-            }
+            Harmony::Chord { chord, bass } => format!(
+                "{}: {}",
+                self.label_in(scale).unwrap_or_default(),
+                describe_chord(
+                    scale,
+                    chord,
+                    bass,
+                    scale.spell_root(chord),
+                    scale.figured_numeral(chord, bass)
+                )
+            ),
             Harmony::Unknown(pitch_set) => {
                 let names: Vec<String> = pitch_set
                     .iter()
@@ -324,6 +285,62 @@ impl Harmony {
             }
         }
     }
+}
+
+/// What `chord` is in `scale`, with `bass` lowest, written with the root
+/// `root` and numbered `numeral`: "A dominant seventh, V7/ii in C
+/// major." The harmony keys spell and number a chord from its sound; the
+/// chord sheet passes the root and numeral as they were written.
+pub fn describe_chord(
+    scale: Scale,
+    chord: Chord,
+    bass: PitchClass,
+    root: NoteName,
+    numeral: Option<String>,
+) -> String {
+    let key = scale.name();
+    let mut text = format!("{root} {}", chord.quality.name());
+    if bass != chord.root
+        && let Some(bass) = chord.spell_note(root, bass)
+    {
+        text += &format!(" with {bass} in the bass");
+    }
+    let figures = chord.inversion_figures(bass);
+    text += &match numeral {
+        Some(numeral) if scale.is_diatonic(chord) => {
+            format!(", chord {numeral} of {key}.")
+        }
+        Some(numeral) if scale.uses_raised_seventh(chord) => {
+            let leading = scale.spell(scale.root.transpose(11));
+            format!(
+                ", chord {numeral} of {key}, with the raised seventh ({leading}) of harmonic minor."
+            )
+        }
+        Some(numeral) => match (
+            scale.borrowed_from(chord),
+            scale.secondary_dominant_target(chord),
+        ) {
+            (Some(parallel), _) => {
+                format!(", {numeral} borrowed from {}.", parallel.name())
+            }
+            (None, Some(target)) => format!(
+                ", {} in {key}: a secondary dominant, the dominant of {}.",
+                with_figures(
+                    &format!(
+                        "V{}/{}",
+                        chord.quality.numeral_suffix(),
+                        scale.roman_numeral(target).unwrap_or_default()
+                    ),
+                    figures
+                ),
+                scale.chord_name(target)
+            ),
+            (None, None) => format!(", {numeral}, from outside {key}."),
+        },
+        None if scale.is_diatonic(chord) => format!(", in {key}."),
+        None => format!(", outside {key}."),
+    };
+    text
 }
 
 #[cfg(test)]

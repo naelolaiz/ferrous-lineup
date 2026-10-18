@@ -31,7 +31,7 @@ mod scale;
 mod set_class;
 mod symbol;
 
-pub use analysis::{Harmony, analyze, interval_name, spelled_interval_name};
+pub use analysis::{Harmony, analyze, describe_chord, interval_name, spelled_interval_name};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
 pub use chord_scale::{chord_scale, chord_scale_name};
 pub use hints::HintLevel;

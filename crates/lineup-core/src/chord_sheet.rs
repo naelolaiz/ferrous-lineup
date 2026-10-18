@@ -34,8 +34,8 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 use crate::harmony::{
-    Chord, ChordQuality, ChordSymbol, Harmony, Micromode, PitchSet, RowLabel, Scale, ScaleKind,
-    SetClass, pc_digit,
+    Chord, ChordQuality, ChordSymbol, Micromode, PitchSet, RowLabel, Scale, ScaleKind, SetClass,
+    describe_chord, pc_digit,
 };
 use crate::library::numeral;
 use crate::meter::{Bar, TimeSignature};
@@ -470,21 +470,20 @@ impl HarmonyName {
         match self {
             HarmonyName::Chord(symbol) => {
                 let notes: Vec<String> = symbol.notes().iter().map(NoteName::to_string).collect();
-                let harmony = Harmony::Chord {
-                    chord: symbol.chord(),
-                    bass: symbol.bass_pitch_class(),
-                };
                 let notes = notes.join(" ");
                 if !key.is_heptatonic() {
                     return format!("{symbol}: {notes}.");
                 }
-                // The harmony keys' description starts with the chord's
-                // name as they spell it ("A7: A dominant seventh, V7/ii
-                // in C major…"); the name here is the one written.
-                let about = harmony.describe(key);
-                let about = about
-                    .split_once(": ")
-                    .map_or(about.as_str(), |(_, rest)| rest);
+                // Said as the harmony keys say it ("A dominant seventh,
+                // V7/ii in C major"), but with the root and the numeral
+                // as written: Gb7 is a Gb chord, not an F# one.
+                let about = describe_chord(
+                    key,
+                    symbol.chord(),
+                    symbol.bass_pitch_class(),
+                    symbol.root,
+                    numeral_with_figures(symbol, key),
+                );
                 format!("{symbol}: {about} Its notes: {notes}.")
             }
             HarmonyName::NoChord => "No chord: nothing plays the harmony here.".to_string(),
@@ -572,7 +571,7 @@ fn spell_set(set: PitchSet, key: Scale) -> String {
 /// bass for an inversion ("V⁶₅", see [`Scale::figured_numeral`]). `None`
 /// in a key without seven notes.
 fn numeral_with_figures(symbol: ChordSymbol, key: Scale) -> Option<String> {
-    key.figured_numeral(symbol.chord(), symbol.bass_pitch_class())
+    key.spelled_figured_numeral(symbol.root, symbol.chord(), symbol.bass_pitch_class())
 }
 
 impl fmt::Display for HarmonyName {
@@ -994,7 +993,15 @@ mod tests {
         assert!(a7.ends_with("Its notes: A C# E G."), "{a7}");
         // Written with flats, it stays written with flats.
         let gb = name("Gb7").describe(C_MAJOR);
-        assert!(gb.starts_with("Gb7: "), "{gb}");
+        assert!(
+            gb.starts_with("Gb7: Gb dominant seventh, bV7, from outside C major."),
+            "{gb}"
+        );
+        assert!(gb.ends_with("Its notes: Gb Bb Db Fb."), "{gb}");
+        // The letter says which degree: C#°7 is a raised tonic, #i°7.
+        let raised = name("C#dim7").describe(C_MAJOR);
+        assert!(raised.contains("#i°7"), "{raised}");
+        assert_eq!(name("C#dim7").caption(C_MAJOR).as_deref(), Some("#i°7"));
         let set = name("3-11 T2").describe(C_MAJOR);
         assert!(set.starts_with("3-11 T2: D F A. Set class 3-11"), "{set}");
     }
