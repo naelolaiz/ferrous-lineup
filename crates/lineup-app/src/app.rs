@@ -12,6 +12,7 @@
 //! records it for undo and tells the audio thread what changed.
 
 mod chord_text;
+mod demo_menu;
 mod ear;
 mod edit;
 mod export;
