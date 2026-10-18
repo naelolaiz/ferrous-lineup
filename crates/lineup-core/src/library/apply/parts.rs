@@ -148,6 +148,12 @@ pub fn write_style_parts(
     selected: Option<usize>,
     parts: StyleParts,
 ) {
+    let parts = parts.for_preset();
+    let (comping, bass) = if parts.matching_style {
+        (style.comping, style.bass)
+    } else {
+        (Comping::Accents, Bass::Accents)
+    };
     let empty = project
         .pattern(index)
         .is_some_and(|pattern| pattern.is_empty());
@@ -157,6 +163,8 @@ pub fn write_style_parts(
         let old_time = project.time_signature;
         let own_time = project.pattern_time(index);
         let seed = Style {
+            comping,
+            bass,
             time: if parts.time_signature {
                 style.time
             } else {
@@ -174,7 +182,7 @@ pub fn write_style_parts(
             meter(project, index, style.time);
         }
         if parts.rhythm {
-            recomp(project, index, style.comping, style.bass);
+            recomp(project, index, comping, bass);
         }
         if parts.progression {
             progression(project, index, style);
@@ -302,6 +310,43 @@ mod tests {
             .map(|n| n.start)
             .collect();
         assert_eq!(starts, [0, 8].into_iter().collect());
+    }
+
+    #[test]
+    fn a_style_preset_can_use_plain_accents_and_keep_its_current_sounds() {
+        for empty in [false, true] {
+            let mut project = audition();
+            let keys = find_synth(&project, KEYS).unwrap();
+            project.channel_mut(keys).unwrap().program = Some(80);
+            if empty {
+                let pattern = project.pattern_mut(0).unwrap();
+                for channel in 0..pattern.rows() {
+                    pattern.set_notes(channel, []);
+                }
+            }
+            write_style_parts(
+                &mut project,
+                0,
+                Style::named("Emotional pop").unwrap(),
+                None,
+                StyleParts {
+                    rhythm: true,
+                    instruments: true,
+                    matching_style: false,
+                    ..no_parts()
+                },
+            );
+            assert_eq!(project.channels()[keys].program, Some(80));
+            let starts: std::collections::BTreeSet<_> = project
+                .pattern(0)
+                .unwrap()
+                .notes(keys)
+                .iter()
+                .filter(|note| note.start < 16)
+                .map(|note| note.start)
+                .collect();
+            assert_eq!(starts, [0, 8].into_iter().collect());
+        }
     }
 
     #[test]

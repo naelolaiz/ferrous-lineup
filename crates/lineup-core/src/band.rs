@@ -367,6 +367,9 @@ impl Band {
                 .as_ref()
                 .map_or_else(|| self.instrument_style.players(), |style| style.players());
             for player in style.players() {
+                if self.accents_only && player != Player::Drums {
+                    continue;
+                }
                 if !players.contains(&player) {
                     players.push(player);
                 }
@@ -982,12 +985,13 @@ impl Project {
         harmony: Option<&'static Style>,
         parts: apply::StyleParts,
     ) {
+        let parts = parts.for_preset();
         let Some(band) = &mut self.band else { return };
         if parts.rhythm {
             band.custom_rhythm = None;
             band.style = style;
             band.harmony_style = harmony;
-            band.accents_only = harmony.is_none() && !parts.matching_style;
+            band.accents_only = !parts.matching_style;
         }
         if parts.instruments {
             band.custom_instruments = None;
@@ -1019,6 +1023,7 @@ impl Project {
         parts: apply::StyleParts,
     ) -> Result<(), String> {
         style.validate()?;
+        let parts = parts.for_preset();
         if self.band.is_none() {
             let base = BandStyle::named("Pop beat").unwrap();
             let mut band = Band::new(base);
@@ -1077,7 +1082,7 @@ impl Project {
         if let Some(band) = &mut self.band {
             if parts.rhythm {
                 band.custom_rhythm = Some(Box::new(style.clone()));
-                band.accents_only = false;
+                band.accents_only = !parts.matching_style;
                 band.harmony_style = None;
             }
             if parts.instruments {
@@ -1431,6 +1436,9 @@ impl Project {
         ] {
             if let Some(style) = style {
                 for lane in &style.lanes {
+                    if band.accents_only && !sounds && lane.player != Player::Drums {
+                        continue;
+                    }
                     self.user_style_channel(lane, sounds);
                 }
             }
@@ -1847,7 +1855,9 @@ impl Project {
                     None => Vec::new(),
                 },
             };
-            let notes = if let Some(style) = &band.custom_rhythm {
+            let notes = if let Some(style) = &band.custom_rhythm
+                && (!band.accents_only || player == Player::Drums)
+            {
                 let mut notes = Vec::new();
                 for lane in style.lanes.iter().filter(|lane| lane.player == player) {
                     if let Some(channel) = self.user_style_channel(lane, false) {
@@ -3136,6 +3146,54 @@ mod tests {
         );
         project.follow_chord_sheet();
         assert_eq!(project.channels()[keys].program, Some(80));
+    }
+
+    #[test]
+    fn plain_accents_work_for_both_builtin_and_saved_style_presets() {
+        let style = Style::named("Four chords").unwrap();
+        for custom in [false, true] {
+            let mut project = band("Rock ride", &["C", "Am", "F", "G"]);
+            let keys = project.player_channel(Player::Piano).unwrap();
+            project.channel_mut(keys).unwrap().program = Some(80);
+            let chords = project.playlist.chord_markers.clone();
+            let sounds = project.channels().to_vec();
+            let parts = apply::StyleParts {
+                rhythm: true,
+                instruments: true,
+                matching_style: false,
+                ..no_parts()
+            };
+            if custom {
+                let mut saved = crate::library::UserStyle::from_builtin(style);
+                // Make the custom performance easy to distinguish from beat-group accents.
+                for lane in saved
+                    .lanes
+                    .iter_mut()
+                    .filter(|lane| lane.player != Player::Drums)
+                {
+                    lane.notes.truncate(1);
+                    for note in &mut lane.notes {
+                        note.start = 3;
+                        note.length = 1;
+                    }
+                }
+                project.apply_user_style(&saved, parts).unwrap();
+            } else {
+                project.apply_band_parts(BandStyle::of_style(style).unwrap(), Some(style), parts);
+            }
+            assert!(project.band().unwrap().accents_only);
+            assert_eq!(project.band().unwrap().instrument_style.name, "Rock ride");
+            assert_eq!(project.channels(), sounds);
+            assert_eq!(project.playlist.chord_markers, chords);
+            let piano = part(&project, Player::Piano);
+            assert!(piano.iter().any(|note| note.0 == 8));
+            assert!(piano.iter().all(|note| note.0 % 8 == 0));
+            let text = crate::file::to_text(&project).unwrap();
+            let mut reopened = crate::file::from_text(&text).unwrap();
+            assert_eq!(reopened, project);
+            reopened.follow_chord_sheet();
+            assert_eq!(part(&reopened, Player::Piano), piano);
+        }
     }
 
     #[test]
