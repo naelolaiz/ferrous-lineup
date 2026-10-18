@@ -350,7 +350,15 @@ impl PlaylistView {
 
     /// Whether trying something from the library also sets its tempo.
     pub fn library_tempo(&self) -> bool {
-        self.library.use_tempo
+        self.library.parts.tempo
+    }
+
+    pub fn library_parts(&self) -> lineup_core::library::apply::StyleParts {
+        self.library.parts
+    }
+
+    pub fn library_parts_mut(&mut self) -> &mut lineup_core::library::apply::StyleParts {
+        &mut self.library.parts
     }
 
     /// Draws the pattern picker and the playlist. `current` is the

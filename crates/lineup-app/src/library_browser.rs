@@ -6,11 +6,12 @@
 //! into a pattern (see `app/library.rs`).
 
 use eframe::egui::{self, RichText, Ui};
+use lineup_core::library::apply::StyleParts;
 use lineup_core::library::{
     FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, RHYTHMS, ROW_STYLES, Rhythm, RowStyle, STYLES,
     Style,
 };
-use lineup_core::{Project, TimeSignature};
+use lineup_core::{Band, Project, TimeSignature};
 
 /// Something picked in the library.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -41,15 +42,12 @@ pub struct Tried {
 }
 
 impl Tried {
-    /// The band is the source of truth when it plays the chord sheet.
-    /// Keep an explicitly picked harmony style only while its band matches.
-    pub fn for_band(self, band: &'static lineup_core::BandStyle) -> Self {
-        Tried {
-            style: self
-                .style
-                .filter(|style| lineup_core::BandStyle::of_style(style) == Some(band)),
-            rhythm: band.rhythm,
-            ..Tried::default()
+    /// Read the exact rhythm and harmony style from the project, including undo and load.
+    pub fn from_band(band: &Band) -> Self {
+        Self {
+            style: band.harmony_style,
+            rhythm: band.style.rhythm,
+            ..Self::default()
         }
     }
 }
@@ -57,8 +55,8 @@ impl Tried {
 /// What the library tab remembers between frames.
 pub struct LibraryBrowser {
     filter: String,
-    /// Whether trying a style or a rhythm also sets its usual tempo.
-    pub use_tempo: bool,
+    /// Which components of a choice replace the current song's settings.
+    pub parts: StyleParts,
     /// The selection last drawn. When it changes (a demo was opened, or
     /// something was tried), the genre holding what changed opens and it
     /// scrolls into view.
@@ -76,7 +74,7 @@ impl LibraryBrowser {
     pub fn new() -> Self {
         LibraryBrowser {
             filter: String::new(),
-            use_tempo: true,
+            parts: StyleParts::default(),
             shown: Tried::default(),
             reveal_until: 0.0,
             reveal_rhythm: false,
@@ -91,10 +89,15 @@ impl LibraryBrowser {
                 .hint_text("🔍 Search: bossa, 6/8, tango…")
                 .desired_width(f32::INFINITY),
         );
-        ui.checkbox(&mut self.use_tempo, "Use their tempo")
-            .on_hover_text(
-                "Trying a style or a rhythm also sets the tempo it is usually played at",
-            );
+        style_parts_ui(ui, &mut self.parts);
+        if let Some(band) = project.band() {
+            ui.weak(format!("Rhythm style: {}", band.name()));
+            ui.weak(format!("Instruments: {}", band.instrument_style.name));
+            ui.weak("Chords: chord sheet");
+            if band.accents_only {
+                ui.weak("Plain accents with current instruments");
+            }
+        }
         ui.weak(
             "Click to play it in a pattern. Click another to swap. While the song plays, a \
              click plays the whole song that way instead, and the song carries on. Right-click \
@@ -209,6 +212,40 @@ impl LibraryBrowser {
         });
         picked
     }
+}
+
+/// Shared by the Library and the chord sheet's band menu.
+pub fn style_parts_ui(ui: &mut Ui, parts: &mut StyleParts) {
+    ui.checkbox(&mut parts.matching_style, "Use matching style for rhythms")
+        .on_hover_text(
+            "Turn off to mark a rhythm's accents with the current instruments, even when a \
+             matching style exists. Applies to rhythm choices and time-signature changes.",
+        );
+    egui::CollapsingHeader::new("Apply from styles and rhythms").show(ui, |ui| {
+        ui.checkbox(&mut parts.rhythm, "Rhythm patterns").on_hover_text(
+            "Replace drum, chord and bass playing patterns, keeping the harmony unless \
+             Chord progression is checked.",
+        );
+        ui.checkbox(&mut parts.instruments, "Voices / instruments")
+            .on_hover_text(
+                "Use the style's sounds and band players. Rhythm choices keep current sounds \
+                 when Use matching style for rhythms is off.",
+            );
+        ui.checkbox(&mut parts.time_signature, "Time signature")
+            .on_hover_text(
+                "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
+            );
+        ui.checkbox(&mut parts.progression, "Chord progression")
+            .on_hover_text(
+                "Replace existing chords with the style's progression. An empty audition \
+                 pattern uses its chords to demonstrate the style. Rhythm choices keep the chords.",
+            );
+        ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
+            "Use the usual tempo when the meter stays the same. Changing meter keeps each bar's duration.",
+        );
+        ui.checkbox(&mut parts.swing, "Swing")
+            .on_hover_text("Use the style or rhythm's swing amount.");
+    });
 }
 
 /// The twelve-tone styles, under the harmony styles, opened when `open`
@@ -501,29 +538,42 @@ mod tests {
 
     #[test]
     fn the_library_follows_repeated_band_changes() {
-        let mut tried = Tried::default();
+        let mut project = Project::with_band();
         for name in ["Pop beat", "Waltz", "Bossa nova", "Pop beat", "Waltz"] {
             let band = BandStyle::named(name).unwrap();
-            tried = tried.for_band(band);
+            project.set_band_style(Some(band));
+            let tried = Tried::from_band(project.band().unwrap());
             assert_eq!(tried.rhythm, band.rhythm);
             assert!(tried.style.is_none());
         }
     }
 
     #[test]
-    fn an_explicit_harmony_style_stays_selected_only_for_its_band() {
-        let style = Style::named("Four chords").unwrap();
-        let tried = Tried {
-            style: Some(style),
-            ..Tried::default()
-        };
-        let band = BandStyle::of_style(style).unwrap();
-        assert_eq!(tried.for_band(band).style, Some(style));
-        assert!(
-            tried
-                .for_band(BandStyle::named("Waltz").unwrap())
-                .style
-                .is_none()
+    fn the_exact_style_stays_selected_across_repeated_changes_and_loading() {
+        let mut project = Project::with_band();
+        for style in STYLES.iter().cycle().take(150) {
+            let Some(band) = BandStyle::of_style(style) else {
+                continue;
+            };
+            project.apply_band_parts(
+                band,
+                Some(style),
+                StyleParts {
+                    time_signature: false,
+                    tempo: false,
+                    ..StyleParts::default()
+                },
+            );
+            let tried = Tried::from_band(project.band().unwrap());
+            assert_eq!(tried.style, Some(style));
+            assert_eq!(tried.rhythm, band.rhythm);
+            assert_eq!(project.band().unwrap().name(), style.name);
+        }
+        let text = lineup_core::file::to_text(&project).unwrap();
+        let loaded = lineup_core::file::from_text(&text).unwrap();
+        assert_eq!(
+            Tried::from_band(loaded.band().unwrap()),
+            Tried::from_band(project.band().unwrap())
         );
     }
 }
