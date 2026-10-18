@@ -716,6 +716,13 @@ impl AudioThread {
                 self.update_loop_length();
                 self.start = 0;
                 self.sequencer.reset();
+                // As after a seek: the notes of the old loop would hang
+                // on over the new one until ends they will never reach.
+                if self.playing {
+                    for channel in &mut self.channels {
+                        channel.instrument.release_all();
+                    }
+                }
                 if self.counting.is_some() {
                     self.begin_play();
                 }
@@ -1602,6 +1609,19 @@ mod tests {
         send(&mut h, Command::Play);
         render(&mut h, 1_000);
         h.commands.push(Command::Stop).unwrap();
+        render(&mut h, 48_000);
+        assert_eq!(h.audio.channels[0].instrument.voices_playing(), 0);
+    }
+
+    #[test]
+    fn switching_between_pattern_and_song_releases_held_notes() {
+        let mut h = harness();
+        add_synth(&mut h, &[NoteEvent::new(Note::A4, 0, 16)]);
+        send(&mut h, Command::Play);
+        render(&mut h, 1_000);
+        assert!(h.audio.channels[0].instrument.voices_playing() > 0);
+        // The song is empty: nothing plays in it.
+        h.commands.push(Command::SetMode(PlayMode::Song)).unwrap();
         render(&mut h, 48_000);
         assert_eq!(h.audio.channels[0].instrument.voices_playing(), 0);
     }
