@@ -912,6 +912,20 @@ pub static RHYTHMS: &[Rhythm] = &[
          low thump stronger on the second beat. Choro is in 2/4; each bar here lasts two.",
     ),
     rhythm(
+        "Maxixe",
+        Latin,
+        90.0,
+        &[
+            (Kick, "X... x... X... x..."),
+            (Shaker, "xoxx xoxo xoxx xoxo"),
+            (Rim, ".x.x ..x. .x.x ..x."),
+        ],
+        "Latin fill",
+        "Rio de Janeiro's maxixe, the \"Brazilian tango\" of the 1900s: the rim plays its \
+         syncopation, short, long, short, then two even notes, over a steady bass drum. The \
+         maxixe is in 2/4; each bar here lasts two.",
+    ),
+    rhythm(
         "Ranchera",
         Latin,
         150.0,
@@ -1143,8 +1157,9 @@ pub static RHYTHMS: &[Rhythm] = &[
         120.0,
         &[(Kick, "X... .... X... ...."), (Rim, ".... x.o. .... x.o.")],
         "",
-        "The polka of Mexico's corridos and norteño bands: the bass on beat 1, the guitars \
-         strumming beat 2 and its \"and\". The polka is in 2/4; each bar here lasts two.",
+        "The polka of Mexico's corridos and norteño bands, and of Rio's polcas: the bass on \
+         beat 1, the guitars strumming beat 2 and its \"and\". The polka is in 2/4; each bar \
+         here lasts two.",
     ),
     rhythm(
         "Pasillo",
