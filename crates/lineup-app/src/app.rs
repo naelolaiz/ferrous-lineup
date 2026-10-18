@@ -892,6 +892,9 @@ impl LineupApp {
             PlaylistAction::UnrollSection(index) => {
                 self.edit("write out repeats", |project| project.unroll_section(index));
             }
+            // Back to the whole song from the same place in it, as the
+            // practice bar's loop does.
+            PlaylistAction::SetLoop(None) => self.loop_bars(None),
             PlaylistAction::SetLoop(region) => {
                 self.edit("set loop", |project| project.set_loop_region(region));
             }
