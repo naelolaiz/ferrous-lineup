@@ -27,6 +27,7 @@ mod live;
 mod mixer;
 mod practice;
 mod sounds;
+mod styles;
 mod swing;
 mod view;
 
@@ -101,6 +102,8 @@ pub struct LineupApp {
     /// Where Stop goes back to: the last place the playhead was moved to.
     marker: usize,
     mixer_open: bool,
+    style_editor: crate::style_editor::StyleEditor,
+    style_files: styles::StyleFiles,
     rack_open: bool,
     /// The size the rack's rows needed last frame. When it changes (more
     /// steps, another channel, another pattern), the window is fitted to
@@ -199,6 +202,8 @@ impl LineupApp {
             cursor: 0,
             marker: 0,
             mixer_open: false,
+            style_editor: crate::style_editor::StyleEditor::new(),
+            style_files: styles::StyleFiles::new(&cc.egui_ctx),
             rack_open: true,
             rack_natural: egui::Vec2::ZERO,
             piano_roll,
@@ -226,6 +231,7 @@ impl LineupApp {
             zoom_target: view::Target::Interface,
         };
         app.send_whole_project();
+        app.reload_user_styles();
         if let Some(path) = path {
             app.open_path(&cc.egui_ctx, path);
         }
@@ -702,6 +708,10 @@ impl LineupApp {
     /// Applies one action from the chord sheet.
     fn apply_sheet(&mut self, action: SheetAction) {
         match action {
+            SheetAction::UserStyle {
+                index,
+                progression_from,
+            } => self.apply_user_library(index, progression_from),
             SheetAction::SetChords {
                 start,
                 end,
@@ -1457,6 +1467,7 @@ impl LineupApp {
     }
 
     fn keyboard_shortcuts(&mut self, ctx: &egui::Context) {
+        self.style_editor.shortcuts(ctx);
         // While a text field has the keyboard (a track or pattern name),
         // Space and L are letters, not shortcuts.
         let typing = ctx.text_edit_focused();
@@ -1636,6 +1647,18 @@ impl eframe::App for LineupApp {
             .show(&ctx, |ui| {
                 widgets::zoom_contents(ui, rack_scale);
                 let selected = self.piano_roll.channel();
+                ui.horizontal(|ui| {
+                    if ui
+                        .button("Edit style…")
+                        .on_hover_text("Edit a copy of the current style’s repeating parts")
+                        .clicked()
+                    {
+                        self.edit_current_style();
+                    }
+                    if ui.button("New style…").clicked() {
+                        self.start_style_editor(lineup_core::library::UserStyle::blank(), None);
+                    }
+                });
                 channel_rack::show(ui, &self.project, self.pattern, selected, playhead)
             })
             .and_then(|window| window.inner)
@@ -1682,6 +1705,7 @@ impl eframe::App for LineupApp {
         self.lead_sheet_window(&ctx, area);
         self.sound_font_window(&ctx);
         self.mixer_window(&ctx, area);
+        self.style_editor_window(&ctx, area);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
         self.end_frame_for_undo(&ctx);

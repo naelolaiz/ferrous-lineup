@@ -283,6 +283,8 @@ pub struct Muted {
 /// about the parts it wrote.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Band {
+    pub custom_rhythm: Option<Box<crate::library::UserStyle>>,
+    pub custom_instruments: Option<Box<crate::library::UserStyle>>,
     pub style: &'static BandStyle,
     /// The instrumentation can come from a different style than the rhythm.
     pub instrument_style: &'static BandStyle,
@@ -319,6 +321,8 @@ pub struct Band {
 impl Band {
     fn new(style: &'static BandStyle) -> Self {
         Band {
+            custom_rhythm: None,
+            custom_instruments: None,
             style,
             instrument_style: style,
             harmony_style: None,
@@ -357,6 +361,21 @@ impl Band {
 
     /// Who plays: the style's players, and the soloist when there is one.
     pub fn players(&self) -> Vec<Player> {
+        if let Some(style) = &self.custom_rhythm {
+            let mut players = self
+                .custom_instruments
+                .as_ref()
+                .map_or_else(|| self.instrument_style.players(), |style| style.players());
+            for player in style.players() {
+                if !players.contains(&player) {
+                    players.push(player);
+                }
+            }
+            if self.has_soloist() && !players.contains(&Player::Soloist) {
+                players.push(Player::Soloist);
+            }
+            return players;
+        }
         let mut players = self.instrument_style.players();
         players.retain(|player| *player != Player::Drums);
         if self.style.rhythm.is_some() {
@@ -368,9 +387,18 @@ impl Band {
         players
     }
 
-    pub fn name(&self) -> &'static str {
+    pub fn name(&self) -> &str {
+        if let Some(style) = &self.custom_rhythm {
+            return &style.name;
+        }
         self.harmony_style
             .map_or(self.style.name, |style| style.name)
+    }
+
+    pub fn instrument_name(&self) -> &str {
+        self.custom_instruments
+            .as_ref()
+            .map_or(self.instrument_style.name, |style| &style.name)
     }
 
     fn extras(&self) -> Extras {
@@ -435,6 +463,10 @@ impl Band {
 pub(crate) struct BandFile {
     pub style: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_rhythm: Option<Box<crate::library::UserStyle>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_instruments: Option<Box<crate::library::UserStyle>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instrument_style: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub harmony_style: Option<String>,
@@ -486,6 +518,8 @@ impl From<&Band> for BandFile {
         let [piano, bass, drums, guitar, strings, organ, soloist] = band.written;
         BandFile {
             style: band.style.name.to_string(),
+            custom_rhythm: band.custom_rhythm.clone(),
+            custom_instruments: band.custom_instruments.clone(),
             instrument_style: (band.instrument_style != band.style)
                 .then(|| band.instrument_style.name.to_string()),
             harmony_style: band.harmony_style.map(|style| style.name.to_string()),
@@ -539,7 +573,15 @@ impl BandFile {
         };
         let [piano, bass, drums] = self.written;
         let [guitar, strings, organ] = self.written_too;
+        for style in [&self.custom_rhythm, &self.custom_instruments]
+            .into_iter()
+            .flatten()
+        {
+            style.validate()?;
+        }
         Ok(Band {
+            custom_rhythm: self.custom_rhythm,
+            custom_instruments: self.custom_instruments,
             style,
             instrument_style,
             harmony_style,
@@ -889,6 +931,8 @@ impl Project {
                 && band.instrument_style == style
                 && band.harmony_style.is_none()
                 && !band.accents_only
+                && band.custom_rhythm.is_none()
+                && band.custom_instruments.is_none()
         }) {
             return;
         }
@@ -906,6 +950,8 @@ impl Project {
             }
             self.band = Some(band);
         } else if let Some(band) = &mut self.band {
+            band.custom_rhythm = None;
+            band.custom_instruments = None;
             band.style = style;
             band.instrument_style = style;
             band.harmony_style = None;
@@ -938,11 +984,13 @@ impl Project {
     ) {
         let Some(band) = &mut self.band else { return };
         if parts.rhythm {
+            band.custom_rhythm = None;
             band.style = style;
             band.harmony_style = harmony;
             band.accents_only = harmony.is_none() && !parts.matching_style;
         }
         if parts.instruments {
+            band.custom_instruments = None;
             band.instrument_style = style;
         }
         let time = self.meter();
@@ -962,6 +1010,141 @@ impl Project {
         }
         self.band_channels(parts.instruments);
         self.write_band();
+    }
+
+    /// Apply a portable style while keeping unchecked components intact.
+    pub fn apply_user_style(
+        &mut self,
+        style: &crate::library::UserStyle,
+        parts: apply::StyleParts,
+    ) -> Result<(), String> {
+        style.validate()?;
+        if self.band.is_none() {
+            let base = BandStyle::named("Pop beat").unwrap();
+            let mut band = Band::new(base);
+            band.end = self.song_length();
+            band.since = self.channels.len();
+            if self.playlist.chord_markers.is_empty() && band.end > 0 {
+                self.write_heard_chords();
+            }
+            if !self.playlist.chord_markers.is_empty() {
+                band.muted = self.mute_the_songs_own();
+            }
+            self.band = Some(band);
+        }
+        if parts.time_signature {
+            crate::remeter::remeter(self, style.time);
+        }
+        if parts.tempo {
+            self.scale_tempo(style.tempo);
+        }
+        if parts.swing {
+            self.swing = style.swing;
+        }
+        if parts.progression {
+            let meter = self.meter();
+            let end = self
+                .band
+                .as_ref()
+                .map_or(self.song_length(), |band| band.end)
+                .max(
+                    self.playlist
+                        .chord_markers
+                        .last()
+                        .map_or(0, |marker| meter.bar_at(marker.start).end()),
+                );
+            let from = self
+                .band
+                .as_ref()
+                .map_or(0, |band| meter.bar_at(band.form.intro).number);
+            let chart: Vec<_> = style.chart.split('|').collect();
+            let count = if end == 0 {
+                from + chart.len()
+            } else {
+                meter.bar_at(end - 1).number + 1
+            };
+            let keys = self.key_map();
+            for index in from..count {
+                let bar = meter.bar(index);
+                let markers = read_bar(
+                    chart[(index - from) % chart.len()].trim(),
+                    &bar,
+                    keys.key_at(bar.start),
+                )?;
+                self.set_chords(bar.start, bar.end(), &markers);
+            }
+        }
+        if let Some(band) = &mut self.band {
+            if parts.rhythm {
+                band.custom_rhythm = Some(Box::new(style.clone()));
+                band.accents_only = false;
+                band.harmony_style = None;
+            }
+            if parts.instruments {
+                band.custom_instruments = Some(Box::new(style.clone()));
+            }
+        }
+        self.band_channels(parts.instruments);
+        self.write_band();
+        Ok(())
+    }
+
+    pub fn write_user_progression(
+        &mut self,
+        style: &crate::library::UserStyle,
+        from: usize,
+    ) -> Result<usize, String> {
+        style.validate()?;
+        if self.playlist.chord_markers.is_empty() && self.song_length() == 0 {
+            self.scale.kind = style.mode;
+        }
+        let meter = self.meter();
+        let keys = self.key_map();
+        let mut count = 0;
+        for (index, text) in style.chart.split('|').enumerate() {
+            let bar = meter.bar(from + index);
+            if bar.end() > MAX_SONG_STEPS {
+                break;
+            }
+            let markers = read_bar(text.trim(), &bar, keys.key_at(bar.start))?;
+            self.set_chords(bar.start, bar.end(), &markers);
+            count += 1;
+        }
+        Ok(count)
+    }
+
+    fn user_style_channel(
+        &mut self,
+        lane: &crate::library::StyleLane,
+        sounds: bool,
+    ) -> Option<usize> {
+        if lane.player == Player::Drums {
+            return self
+                .channels
+                .iter()
+                .position(|channel| channel.kind == lane.channel.kind)
+                .or_else(|| self.add_channel(lane.channel.clone()));
+        }
+        let had = self
+            .band
+            .as_ref()?
+            .channel(lane.player)
+            .filter(|index| *index < self.channels.len());
+        let index = had.or_else(|| {
+            let mut channel = if sounds {
+                lane.channel.clone()
+            } else {
+                Channel::synth()
+            };
+            channel.name = lane.player.name().to_string();
+            self.add_channel(channel)
+        })?;
+        if sounds {
+            self.channels[index].kind = lane.channel.kind.clone();
+            self.channels[index].program = lane.channel.program;
+        }
+        self.band.as_mut()?.channels[lane.player.index()] = Some(index);
+        Some(index)
     }
 
     /// Repeats a style's chart over the existing song, or writes it once on
@@ -1242,6 +1425,16 @@ impl Project {
         if let Some(band) = &mut self.band {
             band.channels = channels;
         }
+        for (style, sounds) in [
+            (band.custom_instruments.as_deref(), use_instruments),
+            (band.custom_rhythm.as_deref(), false),
+        ] {
+            if let Some(style) = style {
+                for lane in &style.lanes {
+                    self.user_style_channel(lane, sounds);
+                }
+            }
+        }
     }
 
     /// Removes the channels and tracks of the players the band's style
@@ -1297,12 +1490,7 @@ impl Project {
         program: u8,
         use_instruments: bool,
     ) -> Option<usize> {
-        let plays_notes = |channel: &Channel| {
-            matches!(
-                channel.kind,
-                ChannelKind::Synth | ChannelKind::MidiOut { .. }
-            )
-        };
+        let plays_notes = |channel: &Channel| channel.is_pitched();
         let index = match had.filter(|&index| self.channels.get(index).is_some_and(plays_notes)) {
             Some(index) => index,
             None => {
@@ -1380,6 +1568,7 @@ impl Project {
     fn band_inputs(&self) -> u64 {
         let mut print = Fingerprint::new();
         if let Some(band) = &self.band {
+            print.bytes(format!("{:?}", band.custom_rhythm).as_bytes());
             print.bytes(band.style.name.as_bytes());
             print.bytes(
                 format!(
@@ -1658,19 +1847,53 @@ impl Project {
                     None => Vec::new(),
                 },
             };
-            let notes = match (player, band.channel(player)) {
-                (Player::Drums, _) => self.drum_part(style, &bars, &chunks, end, held, &breaks),
-                (_, Some(channel)) => {
-                    let mut notes = notes;
-                    let role = match player {
-                        Player::Soloist => Role::Melody,
-                        _ => Role::Accompaniment,
-                    };
-                    interpret::perform(&mut notes, time, role, seed(player));
-                    louder_in_b(&mut notes, &variations);
-                    notes.into_iter().map(|note| (channel, note)).collect()
+            let notes = if let Some(style) = &band.custom_rhythm {
+                let mut notes = Vec::new();
+                for lane in style.lanes.iter().filter(|lane| lane.player == player) {
+                    if let Some(channel) = self.user_style_channel(lane, false) {
+                        let mut part = style.play_lane(lane, &bars, &harmonies);
+                        if player != Player::Drums {
+                            part = breaks.apply(part, &harmonies, |played| {
+                                if player == Player::Bass {
+                                    bass_struck(played)
+                                } else {
+                                    Comping::Held.play_in_bars(&bars, std::slice::from_ref(played))
+                                }
+                            });
+                            louder_in_b(&mut part, &variations);
+                        }
+                        notes.extend(part.into_iter().map(|note| (channel, note)));
+                    }
                 }
-                (_, None) => Vec::new(),
+                if player == Player::Drums {
+                    let drum_channel = |drum| {
+                        self.channels.iter().position(|channel| {
+                            channel.kind == ChannelKind::Sampler(SampleSource::Builtin(drum))
+                        })
+                    };
+                    breaks.apply_to_drums(
+                        notes,
+                        drum_channel(Drum::Kick),
+                        drum_channel(Drum::Crash),
+                    )
+                } else {
+                    notes
+                }
+            } else {
+                match (player, band.channel(player)) {
+                    (Player::Drums, _) => self.drum_part(style, &bars, &chunks, end, held, &breaks),
+                    (_, Some(channel)) => {
+                        let mut notes = notes;
+                        let role = match player {
+                            Player::Soloist => Role::Melody,
+                            _ => Role::Accompaniment,
+                        };
+                        interpret::perform(&mut notes, time, role, seed(player));
+                        louder_in_b(&mut notes, &variations);
+                        notes.into_iter().map(|note| (channel, note)).collect()
+                    }
+                    (_, None) => Vec::new(),
+                }
             };
             self.write_part(player, &chunks, notes);
             rewritten.push(player);

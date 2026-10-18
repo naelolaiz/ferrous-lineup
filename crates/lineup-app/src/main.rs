@@ -23,6 +23,7 @@ mod micromodes;
 mod midi;
 mod piano_roll;
 mod playlist;
+mod style_editor;
 mod theme;
 mod time_picker;
 mod twelve_tone;

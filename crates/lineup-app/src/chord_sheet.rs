@@ -81,6 +81,10 @@ const ENDING: Color32 = Color32::from_rgb(150, 162, 170);
 
 /// Something done on the chord sheet.
 pub enum SheetAction {
+    UserStyle {
+        index: usize,
+        progression_from: Option<usize>,
+    },
     /// Write the harmonies of the steps from `start` to `end`: one bar.
     SetChords {
         start: usize,
@@ -1350,6 +1354,14 @@ fn band_menu(
         let tried = project.band().map_or_else(Tried::default, Tried::from_band);
         if let Some(picked) = library.show_for(ui, project, tried, LibraryPurpose::Band) {
             let (style, harmony) = match picked {
+                LibraryAction::UserStyle(index) => {
+                    actions.push(SheetAction::UserStyle {
+                        index,
+                        progression_from: None,
+                    });
+                    ui.close();
+                    return;
+                }
                 LibraryAction::Style(style) => (BandStyle::of_style(style), Some(style)),
                 LibraryAction::Rhythm(rhythm) => (BandStyle::named(rhythm.name), None),
                 _ => return,
@@ -1419,11 +1431,19 @@ fn progression_menu(
         let (response, _) = menu.ui(ui, |ui| {
             ui.set_width(300.0);
             let tried = project.band().map_or_else(Tried::default, Tried::from_band);
-            if let Some(LibraryAction::Style(style)) =
-                library.show_for(ui, project, tried, LibraryPurpose::Progression)
-            {
-                actions.push(SheetAction::WriteProgression { style, from });
-                ui.close();
+            match library.show_for(ui, project, tried, LibraryPurpose::Progression) {
+                Some(LibraryAction::Style(style)) => {
+                    actions.push(SheetAction::WriteProgression { style, from });
+                    ui.close();
+                }
+                Some(LibraryAction::UserStyle(index)) => {
+                    actions.push(SheetAction::UserStyle {
+                        index,
+                        progression_from: Some(from),
+                    });
+                    ui.close();
+                }
+                _ => {}
             }
         });
         theme::hint(

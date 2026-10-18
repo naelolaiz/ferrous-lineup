@@ -149,7 +149,8 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 20 separates a band's rhythm from its instruments and remembers
 /// the exact harmony style and the option to play plain accents.
 /// Format 21 adds the saved master mixer, solo and stereo reverb.
-pub const FORMAT_VERSION: u32 = 21;
+/// Format 22 embeds user style patterns and instruments with the band.
+pub const FORMAT_VERSION: u32 = 22;
 
 /// The oldest format that can hold `project`.
 ///
@@ -225,7 +226,12 @@ pub fn format_for(project: &Project) -> u32 {
     let has_style_parts = project.band().is_some_and(|band| {
         band.instrument_style != band.style || band.harmony_style.is_some() || band.accents_only
     });
-    if !project.mixer.is_default() {
+    if project
+        .band()
+        .is_some_and(|band| band.custom_rhythm.is_some() || band.custom_instruments.is_some())
+    {
+        22
+    } else if !project.mixer.is_default() {
         21
     } else if has_style_parts {
         20
@@ -762,10 +768,14 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 21 might have fields we have never heard of. Only the
+        // A future format might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 21, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(21)), "{error}");
+        let error =
+            from_text(&format!("(format: {}, sparkles: true)", FORMAT_VERSION + 1)).unwrap_err();
+        assert!(
+            matches!(error, FileError::NewerFormat(version) if version == FORMAT_VERSION+1),
+            "{error}"
+        );
     }
 
     #[test]
