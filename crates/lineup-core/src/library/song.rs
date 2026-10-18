@@ -410,14 +410,10 @@ const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
 const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
 const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
-#[allow(dead_code)] // until its songs are in
 const TWO_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 2, 3], 8);
-#[allow(dead_code)] // until its songs are in
 const NINE_EIGHT_AKSAK: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 3], 8);
 const RAKS_AKSAGI: TimeSignature = TimeSignature::of_groups(&[2, 3, 2, 2], 8);
-#[allow(dead_code)] // until its songs are in
 const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
-#[allow(dead_code)] // until its songs are in
 const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
 
 // The bands the songs are dressed in, named after their style. Each is
@@ -718,6 +714,10 @@ pub static SONGS: &[Song] = &[
     balkan::JOVANO_JOVANKE,
     balkan::SAMIOTISSA,
     balkan::PAIDUSHKO_HORO,
+    balkan::SVATBARSKA_RACHENITSA,
+    balkan::DAICHOVO_HORO,
+    balkan::GANKINO_HORO,
+    balkan::BUCIMIS,
     balkan::ENTARISI,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
