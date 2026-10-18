@@ -434,23 +434,30 @@ impl Project {
     }
 
     /// Removes a channel and its notes in every pattern. Returns the removed channel.
+    /// The band's parts that play nothing on it go on following the chord sheet.
     pub fn remove_channel(&mut self, index: usize) -> Option<Channel> {
         if index >= self.channels.len() {
             return None;
         }
-        for pattern in &mut self.patterns {
-            pattern.remove_row(index);
-        }
-        if let Some(band) = &mut self.band {
-            for channel in &mut band.channels {
-                *channel = match *channel {
-                    Some(own) if own == index => None,
-                    Some(own) if own > index => Some(own - 1),
-                    own => own,
-                };
+        let removed = self.removing_channel(index, |project| {
+            for pattern in &mut project.patterns {
+                pattern.remove_row(index);
             }
-        }
-        Some(self.channels.remove(index))
+            if let Some(band) = &mut project.band {
+                for channel in &mut band.channels {
+                    *channel = match *channel {
+                        Some(own) if own == index => None,
+                        Some(own) if own > index => Some(own - 1),
+                        own => own,
+                    };
+                }
+                if index < band.since {
+                    band.since -= 1;
+                }
+            }
+            project.channels.remove(index)
+        });
+        Some(removed)
     }
 
     // ----- Patterns -----
