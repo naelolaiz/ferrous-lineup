@@ -128,6 +128,8 @@ pub struct LineupApp {
     /// The song's style and rhythm in versions of the project the library
     /// changed, so undo and redo show the right ones selected.
     song_versions: Vec<(Project, Tried)>,
+    /// Sources before meter changes, including the latest independent preset options.
+    song_sources: Vec<(Project, library::SongSource)>,
     file: files::FileState,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
@@ -224,6 +226,7 @@ impl LineupApp {
             auditions: Vec::new(),
             song_library: Tried::default(),
             song_versions: Vec::new(),
+            song_sources: Vec::new(),
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
@@ -861,25 +864,33 @@ impl LineupApp {
                 } else {
                     self.playlist.library_parts().for_rhythm()
                 };
-                self.edit("change the band", |project| {
-                    match style {
-                        Some(style) if project.band().is_some() => {
-                            project.apply_band_parts(style, harmony, parts)
-                        }
-                        _ => {
-                            project.set_band_style(style);
-                            if let (Some(style), Some(harmony)) = (style, harmony) {
-                                project.apply_band_parts(style, Some(harmony), parts);
+                self.edit_song(
+                    "change the band",
+                    style
+                        .filter(|_| had)
+                        .map(|style| harmony.map_or(style.time, |harmony| harmony.time)),
+                    parts,
+                    false,
+                    |project, parts| {
+                        match style {
+                            Some(style) if project.band().is_some() => {
+                                project.apply_band_parts(style, harmony, parts)
+                            }
+                            _ => {
+                                project.set_band_style(style);
+                                if let (Some(style), Some(harmony)) = (style, harmony) {
+                                    project.apply_band_parts(style, Some(harmony), parts);
+                                }
                             }
                         }
-                    }
-                    // The swing this style was last played with.
-                    if parts.swing
-                        && let Some(swing) = swing
-                    {
-                        project.swing = swing;
-                    }
-                });
+                        // The swing this style was last played with.
+                        if parts.swing
+                            && let Some(swing) = swing
+                        {
+                            project.swing = swing;
+                        }
+                    },
+                );
                 self.song_library = self
                     .project
                     .band()

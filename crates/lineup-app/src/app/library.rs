@@ -17,7 +17,10 @@
 //! rhythm instead of stopping for a pattern of its own.
 //!
 //! Library choices apply their checked components to the current song.
-//! Meter changes keep each bar's duration (see [`lineup_core::remeter`]).
+//! Meter changes keep each bar's duration (see [`lineup_core::remeter`])
+//! and start from a source in the original meter, so rounding and chord
+//! snapping do not accumulate. Preset components selected along with a
+//! meter change also update that source; standalone edits start a new reference.
 
 use lineup_audio::PlayMode;
 use lineup_core::library::demo::{micromode_demo, row_demo, song_demo, style_demo};
@@ -31,6 +34,14 @@ use crate::library_browser::{LibraryAction, Tried};
 
 /// How many of the patterns the library wrote are remembered.
 const REMEMBERED: usize = 64;
+
+#[derive(Clone)]
+pub(super) struct SongSource {
+    original: Project,
+    library: Tried,
+    /// Latest preset components, applied without changing the source meter.
+    reference: Project,
+}
 
 /// A pattern the library wrote, and what it wrote there.
 #[derive(Debug, Clone, PartialEq)]
@@ -107,6 +118,89 @@ impl Demo {
 }
 
 impl LineupApp {
+    fn song_source(&self) -> SongSource {
+        self.song_sources
+            .iter()
+            .rev()
+            .find(|(version, _)| *version == self.project)
+            .map(|(_, source)| source.clone())
+            .unwrap_or_else(|| SongSource {
+                original: self.project.clone(),
+                library: self
+                    .project
+                    .band()
+                    .map_or(self.song_library, Tried::from_band),
+                reference: self.project.clone(),
+            })
+    }
+
+    /// Apply meter changes directly to the source, and keep unchecked
+    /// components from earlier preset choices in that same source meter.
+    /// Version matching lets undo reuse its reference and makes edits
+    /// establish a new one instead of losing the user's work.
+    pub(super) fn edit_song<R>(
+        &mut self,
+        label: &'static str,
+        time: Option<TimeSignature>,
+        parts: apply::StyleParts,
+        tempo_on_meter_change: bool,
+        change: impl Fn(&mut Project, apply::StyleParts) -> R,
+    ) -> R {
+        let Some(time) = time else {
+            return self.edit(label, |project| change(project, parts));
+        };
+        // A standalone component edit is an explicit project change. Its
+        // result will not match a cached conversion, establishing a new source.
+        if !parts.time_signature {
+            return self.edit(label, |project| change(project, parts));
+        }
+        let before = self.project.clone();
+        let mut source = self.song_source();
+        let changes_meter = !lineup_core::remeter::is_in(&before, time);
+        let effective = apply::StyleParts {
+            // Built-in meter changes preserve bar duration; saved styles
+            // can explicitly supply their tempo along with their meter.
+            tempo: parts.tempo && (!changes_meter || tempo_on_meter_change),
+            ..parts
+        };
+        let result = self.edit(label, |project| {
+            *project = source.reference.clone();
+            lineup_core::remeter::remeter(project, time);
+            change(
+                project,
+                apply::StyleParts {
+                    time_signature: false,
+                    ..effective
+                },
+            )
+        });
+        if self.project != before {
+            change(
+                &mut source.reference,
+                apply::StyleParts {
+                    time_signature: false,
+                    tempo: false,
+                    ..parts
+                },
+            );
+            if effective.tempo {
+                let ratio = source.reference.time_signature.steps_per_bar() as f32
+                    / self.project.time_signature.steps_per_bar() as f32;
+                source
+                    .reference
+                    .scale_tempo(Tempo::new(self.project.tempo.bpm() * ratio));
+            }
+            source.reference.follow_chord_sheet();
+            self.song_sources
+                .retain(|(version, _)| *version != self.project);
+            if self.song_sources.len() == REMEMBERED {
+                self.song_sources.remove(0);
+            }
+            self.song_sources.push((self.project.clone(), source));
+        }
+        result
+    }
+
     /// What the library shows selected: what it put in the selected
     /// pattern, if that is unchanged, or else the style and rhythm the
     /// whole song plays, so a demo opens with its own selected, as in FL
@@ -320,7 +414,6 @@ impl LineupApp {
         if self.band_plays_parts(action, parts) {
             return;
         }
-        let use_tempo = parts.tempo;
         let (name, tempo, label) = match action {
             LibraryAction::UserStyle(_) => unreachable!("handled above"),
             LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
@@ -354,7 +447,16 @@ impl LineupApp {
             | LibraryAction::MicromodeStyle(_) => None,
         };
         let swing = rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
-        let change = self.edit(label, |project| {
+        let time = match action {
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => Some(style.time),
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
+                if !fill_picked(action) =>
+            {
+                Some(rhythm.time)
+            }
+            _ => None,
+        };
+        let change = self.edit_song(label, time, parts, false, |project, parts| {
             let change = match action {
                 LibraryAction::UserStyle(_) => unreachable!("handled above"),
                 LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
@@ -384,7 +486,7 @@ impl LineupApp {
             }
             // A song put in another time signature keeps its pace (see
             // `remeter`): the rhythm's own tempo would rush or drag it.
-            if use_tempo
+            if parts.tempo
                 && change.time.is_none()
                 && let Some(bpm) = tempo
             {
@@ -493,8 +595,9 @@ impl LineupApp {
     /// sound like 3/4 is the drums and the way the chords are played, so
     /// the song plays a rhythm in `time`, as if it were picked in the
     /// library: one of the kind the song plays if there is one (see
-    /// [`Rhythm::for_time`]). Back in the time signature the song was
-    /// in, the band plays it there again. An empty song just gets the new bars.
+    /// [`Rhythm::for_time`]). With matching style off, a plain beat and
+    /// accents use the requested meter and current instruments. Returning
+    /// to the source meter restores the original performance exactly.
     pub(super) fn set_song_time(&mut self, time: TimeSignature) {
         if self.project.patterns().iter().all(Pattern::is_empty) {
             self.edit("change time signature", |project| {
@@ -502,15 +605,36 @@ impl LineupApp {
             });
             return;
         }
-        let playing = self.song_library.rhythm.or_else(|| {
-            self.song_library
+        let source = self.song_source();
+        if lineup_core::remeter::is_in(&source.original, time) {
+            let before = self.project.clone();
+            let previous = self.tried();
+            self.edit("change time signature", |project| {
+                *project = source.original.clone()
+            });
+            self.song_library = source.library;
+            self.keep_place_in_song(&before);
+            self.remember_song_version(before, previous);
+            self.remember_song_version(self.project.clone(), self.song_library);
+            self.notice = Some(format!(
+                "The song is back in {time}, as it was. Ctrl+Z takes it back."
+            ));
+            return;
+        }
+        let playing = source.library.rhythm.or_else(|| {
+            source
+                .library
                 .style
                 .and_then(|style| Rhythm::named(style.rhythm))
         });
-        let rhythm = Rhythm::for_time(time, playing);
         let parts = apply::StyleParts {
             time_signature: true,
             ..self.playlist.library_parts().for_rhythm()
+        };
+        let rhythm = if parts.matching_style {
+            Rhythm::for_time(time, playing)
+        } else {
+            Rhythm::basic(time)
         };
         self.use_in_song_parts(LibraryAction::RhythmInSong(rhythm), parts);
     }
@@ -690,6 +814,37 @@ impl LineupApp {
             | LibraryAction::MicromodeStyle(_) => return false,
         };
         let Some(style) = style else {
+            // Generated beats have no named BandStyle. Embed their patterns
+            // just like a saved style, so the live band plays and saves them.
+            if let LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) = action {
+                let mut style = lineup_core::library::UserStyle::from_rhythm(rhythm);
+                style.name = rhythm.name.into();
+                style.chart.clear();
+                let parts = apply::StyleParts {
+                    matching_style: false,
+                    ..parts
+                }
+                .for_preset();
+                let before = self.project.clone();
+                let previous = self.tried();
+                self.edit_song(
+                    "change the band",
+                    Some(rhythm.time),
+                    parts,
+                    false,
+                    |project, parts| {
+                        project
+                            .apply_user_style(&style, parts)
+                            .expect("generated rhythm is valid");
+                    },
+                );
+                self.song_library = Tried::from_band(self.project.band().unwrap());
+                self.keep_place_in_song(&before);
+                self.remember_song_version(before, previous);
+                self.remember_song_version(self.project.clone(), self.song_library);
+                self.notice = Some(format!("Applied selected parts of {}", rhythm.name));
+                return true;
+            }
             return false;
         };
         let harmony = match action {
@@ -699,14 +854,20 @@ impl LineupApp {
         let swing = self.swings.of(style.name);
         let before = self.project.clone();
         let previous = self.tried();
-        self.edit("change the band", |project| {
-            project.apply_band_parts(style, harmony, parts);
-            if parts.swing
-                && let Some(swing) = swing
-            {
-                project.swing = swing;
-            }
-        });
+        self.edit_song(
+            "change the band",
+            Some(harmony.map_or(style.time, |style| style.time)),
+            parts,
+            false,
+            |project, parts| {
+                project.apply_band_parts(style, harmony, parts);
+                if parts.swing
+                    && let Some(swing) = swing
+                {
+                    project.swing = swing;
+                }
+            },
+        );
         self.song_library = Tried::from_band(self.project.band().unwrap());
         self.keep_place_in_song(&before);
         self.remember_song_version(before, previous);

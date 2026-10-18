@@ -645,6 +645,306 @@ fn band_notes(
         .collect()
 }
 
+fn meter_test_screen(live_band: bool, rhythm: bool) -> Screen {
+    use lineup_core::{Channel, Note, NoteEvent, library::apply::StyleParts};
+    let mut screen = Screen::new();
+    let mut project = if live_band {
+        let mut project = Project::with_band();
+        project.write_progression(
+            lineup_core::library::Style::named("Four chords").unwrap(),
+            0,
+        );
+        project.follow_chord_sheet();
+        project
+    } else {
+        Project::demo()
+    };
+    let lead = project
+        .add_channel(Channel {
+            name: "Lead".into(),
+            ..Channel::synth()
+        })
+        .unwrap();
+    project
+        .pattern_mut(0)
+        .unwrap()
+        .set_notes(lead, [NoteEvent::exact(Note::new(60), 2, 100)]);
+    let markers =
+        lineup_core::chord_sheet::read_bar("C G", &project.meter().bar(0), project.scale).unwrap();
+    project.set_chords(0, 16, &markers);
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    *screen.app.playlist.library_parts_mut() = StyleParts {
+        rhythm,
+        instruments: false,
+        time_signature: true,
+        progression: false,
+        tempo: false,
+        swing: false,
+        matching_style: false,
+    };
+    screen
+}
+
+fn melody(project: &Project) -> Vec<lineup_core::NoteEvent> {
+    let lead = project
+        .channels()
+        .iter()
+        .position(|channel| channel.name == "Lead")
+        .unwrap();
+    project
+        .patterns()
+        .iter()
+        .flat_map(|pattern| pattern.notes(lead).iter().copied())
+        .collect()
+}
+
+#[test]
+fn meter_changes_without_matching_style_use_plain_drums_and_keep_the_requested_meter() {
+    use lineup_core::{
+        Player, TimeSignature,
+        library::{Rhythm, UserStyle, apply},
+    };
+    for live_band in [false, true] {
+        for time in [
+            TimeSignature::new(3, 4),
+            TimeSignature::new(7, 8),
+            "2+3+2/8".parse().unwrap(),
+            TimeSignature::new(13, 16),
+        ] {
+            let mut screen = meter_test_screen(live_band, true);
+            let before = screen.app.project.clone();
+            screen.app.set_song_time(time);
+            assert_eq!(screen.app.project.time_signature, time);
+            for channel in before.channels() {
+                assert!(
+                    screen.app.project.channels().contains(channel),
+                    "Keep the original instruments"
+                );
+            }
+            let rhythm = Rhythm::basic(time);
+            if live_band {
+                let band = screen.app.project.band().unwrap();
+                assert!(band.accents_only);
+                assert_eq!(
+                    band.instrument_style,
+                    before.band().unwrap().instrument_style
+                );
+                assert_eq!(band.custom_rhythm.as_ref().unwrap().name, "Basic beat");
+                let mut expected = before.clone();
+                lineup_core::remeter::remeter(&mut expected, time);
+                expected
+                    .apply_user_style(
+                        &UserStyle::from_rhythm(rhythm),
+                        screen.app.playlist.library_parts(),
+                    )
+                    .unwrap();
+                expected.follow_chord_sheet();
+                assert_eq!(
+                    band_notes(&screen.app.project, Player::Drums),
+                    band_notes(&expected, Player::Drums)
+                );
+            } else {
+                assert_eq!(screen.app.song_library.rhythm, Some(rhythm));
+                let mut expected = before.clone();
+                apply::use_rhythm_parts(&mut expected, rhythm, screen.app.playlist.library_parts());
+                assert_eq!(screen.app.project, expected);
+            }
+            let text = lineup_core::file::to_text(&screen.app.project).unwrap();
+            assert_eq!(
+                lineup_core::file::from_text(&text).unwrap(),
+                screen.app.project
+            );
+        }
+    }
+}
+
+#[test]
+fn meter_changes_start_from_the_original_timing_and_restore_the_original_song() {
+    use lineup_core::TimeSignature;
+    for live_band in [false, true] {
+        for (rhythm, matching_style) in [(false, false), (true, false), (false, true), (true, true)]
+        {
+            let mut screen = meter_test_screen(live_band, rhythm);
+            screen.app.playlist.library_parts_mut().matching_style = matching_style;
+            let original = screen.app.project.clone();
+            let final_time = TimeSignature::new(5, 4);
+            let mut direct = meter_test_screen(live_band, rhythm);
+            direct.app.playlist.library_parts_mut().matching_style = matching_style;
+            direct.app.set_song_time(final_time);
+            for time in [
+                TimeSignature::new(3, 4),
+                TimeSignature::new(7, 8),
+                final_time,
+            ] {
+                screen.app.set_song_time(time);
+                screen.app.history.close();
+            }
+            assert_eq!(melody(&screen.app.project), melody(&direct.app.project));
+            assert_eq!(
+                screen.app.project.playlist().chord_markers(),
+                direct.app.project.playlist().chord_markers()
+            );
+            assert_eq!(screen.app.project.tempo, direct.app.project.tempo);
+            let changed = screen.app.project.clone();
+            screen.app.set_song_time(TimeSignature::COMMON);
+            screen.app.history.close();
+            assert_eq!(
+                screen.app.project, original,
+                "Round trip, band={live_band}, rhythm={rhythm}"
+            );
+            screen.app.undo();
+            assert_eq!(screen.app.project, changed);
+            screen.app.redo();
+            assert_eq!(screen.app.project, original);
+            screen.app.undo();
+            screen.app.set_song_time(final_time);
+            assert_eq!(melody(&screen.app.project), melody(&direct.app.project));
+            assert_eq!(
+                screen.app.project.playlist().chord_markers(),
+                direct.app.project.playlist().chord_markers()
+            );
+        }
+    }
+}
+
+#[test]
+fn the_time_picker_routes_unchecked_matching_style_to_plain_accents() {
+    let mut screen = meter_test_screen(true, true);
+    screen.app.rack_open = false;
+    screen.app.harmony_keys.open = true;
+    screen.app.playlist.library_parts_mut().matching_style = true;
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let time_label = text_rect(&output, "Time").unwrap().center();
+    let time_button = output
+        .shapes
+        .iter()
+        .filter_map(|shape| match &shape.shape {
+            Shape::Text(text) if text.galley.text() == "4/4" => {
+                Some(Rect::from_min_size(text.pos, text.galley.size()).center())
+            }
+            _ => None,
+        })
+        .min_by(|a, b| {
+            a.distance_sq(time_label)
+                .total_cmp(&b.distance_sq(time_label))
+        })
+        .unwrap();
+    screen.click_at(time_button, Modifiers::NONE);
+    screen.click("Use matching style");
+    screen.click("7/8");
+    assert!(!screen.app.playlist.library_parts().matching_style);
+    assert_eq!(
+        screen.app.project.time_signature,
+        lineup_core::TimeSignature::new(7, 8)
+    );
+    let band = screen.app.project.band().unwrap();
+    assert!(band.accents_only);
+    assert_eq!(band.custom_rhythm.as_ref().unwrap().name, "Basic beat");
+}
+
+#[test]
+fn editing_a_remetered_song_establishes_a_new_reference() {
+    use lineup_core::{Note, NoteEvent, TimeSignature};
+    let mut screen = meter_test_screen(false, false);
+    screen.app.set_song_time(TimeSignature::new(3, 4));
+    let lead = screen
+        .app
+        .project
+        .channels()
+        .iter()
+        .position(|channel| channel.name == "Lead")
+        .unwrap();
+    screen.app.edit("edit melody", |project| {
+        project
+            .pattern_mut(0)
+            .unwrap()
+            .set_notes(lead, [NoteEvent::exact(Note::new(67), 5, 80)]);
+    });
+    let edited = screen.app.project.clone();
+    screen.app.set_song_time(TimeSignature::new(5, 4));
+    screen.app.set_song_time(TimeSignature::new(3, 4));
+    assert_eq!(screen.app.project, edited);
+    screen.app.replace_project(Project::demo(), None);
+    assert!(screen.app.song_sources.is_empty());
+}
+
+#[test]
+fn later_meter_changes_keep_unchecked_voices_and_generated_beats_play_the_whole_band() {
+    use lineup_core::{Player, TimeSignature};
+    let mut screen = meter_test_screen(true, true);
+    screen.app.playlist.library_parts_mut().matching_style = true;
+    screen.app.playlist.library_parts_mut().instruments = true;
+    screen.app.set_song_time(TimeSignature::new(7, 8));
+    let instrument_style = screen.app.project.band().unwrap().instrument_style;
+    assert_eq!(instrument_style.name, "Rachenitsa");
+    screen.app.playlist.library_parts_mut().matching_style = false;
+    screen.app.set_song_time(TimeSignature::new(5, 4));
+    assert_eq!(
+        screen.app.project.band().unwrap().instrument_style,
+        instrument_style
+    );
+    let piano = screen.app.project.player_channel(Player::Piano).unwrap();
+    assert_eq!(screen.app.project.channels()[piano].program, Some(21));
+    screen.app.playlist.library_parts_mut().matching_style = true;
+    screen.app.set_song_time(TimeSignature::new(13, 16));
+    assert_eq!(
+        screen.app.project.time_signature,
+        TimeSignature::new(13, 16)
+    );
+    for player in [Player::Piano, Player::Bass, Player::Drums] {
+        assert!(
+            !band_notes(&screen.app.project, player).is_empty(),
+            "Generated beat left {player:?} silent"
+        );
+    }
+}
+
+#[test]
+fn library_meter_changes_preserve_the_source_timing_and_independent_voice_choices() {
+    use lineup_core::{
+        Player, TimeSignature,
+        library::{Rhythm, UserStyle},
+    };
+    for live_band in [false, true] {
+        for saved in [false, true] {
+            let mut screen = meter_test_screen(live_band, true);
+            screen.app.playlist.library_parts_mut().matching_style = true;
+            screen.app.playlist.library_parts_mut().tempo = saved;
+            let original = screen.app.project.clone();
+            for name in ["Waltz", "Rachenitsa", "Five-four rock"] {
+                let rhythm = Rhythm::named(name).unwrap();
+                if saved {
+                    screen.app.playlist.library_browser_mut().user_styles =
+                        vec![UserStyle::from_rhythm(rhythm)];
+                    screen.app.apply_user_library(0, None);
+                } else {
+                    screen.app.try_from_library(
+                        crate::library_browser::LibraryAction::RhythmInSong(rhythm),
+                    );
+                }
+            }
+            let mut direct = original.clone();
+            lineup_core::remeter::remeter(&mut direct, TimeSignature::new(5, 4));
+            assert_eq!(melody(&screen.app.project), melody(&direct));
+            if saved {
+                assert_eq!(
+                    screen.app.project.tempo.bpm(),
+                    Rhythm::named("Five-four rock").unwrap().tempo
+                );
+            }
+            assert_eq!(
+                screen.app.project.playlist().chord_markers(),
+                direct.playlist().chord_markers()
+            );
+            if let Some(piano) = screen.app.project.player_channel(Player::Piano) {
+                assert_eq!(screen.app.project.channels()[piano].program, Some(0));
+            }
+        }
+    }
+}
+
 #[test]
 fn band_lineup_changes_keep_the_current_performance_and_support_undo_and_save() {
     use lineup_core::Player;
