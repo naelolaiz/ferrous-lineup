@@ -19,6 +19,7 @@
 
 mod analysis;
 mod chord;
+mod chord_scale;
 mod hints;
 pub mod key_finding;
 pub mod keys;
@@ -32,6 +33,7 @@ mod symbol;
 
 pub use analysis::{Harmony, analyze, interval_name, spelled_interval_name};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
+pub use chord_scale::{chord_scale, chord_scale_name};
 pub use hints::HintLevel;
 pub use key_finding::key_fits;
 pub use micromode::{Micromode, MicromodeFamily, micromode_content, micromodes_in, trichords};

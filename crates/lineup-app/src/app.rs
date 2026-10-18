@@ -771,6 +771,22 @@ impl LineupApp {
             SheetAction::PlayAgain(player) => {
                 self.edit("play the part again", |project| project.play_again(player));
             }
+            SheetAction::SetSoloist(on) => {
+                let what = if on {
+                    "add the soloist"
+                } else {
+                    "take the soloist out"
+                };
+                self.edit(what, |project| project.set_soloist(on));
+                self.notice = Some(match on {
+                    true => "The soloist improvises over the chorus".to_string(),
+                    false => "No soloist".to_string(),
+                });
+            }
+            SheetAction::AnotherSolo => {
+                self.edit("play another solo", Project::another_solo);
+                self.notice = Some("The soloist plays another solo".to_string());
+            }
             SheetAction::WriteProgression { style, from } => {
                 let bars = self.edit("write a progression", |project| {
                     project.write_progression(style, from)

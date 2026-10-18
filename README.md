@@ -196,6 +196,18 @@ band plays it an eighth note early and holds it over the beat, and
 kick and a crash with each shot, hold and push. Right-click a bar and
 pick **Band on C** to set the same marks from a menu.
 
+**Soloist (experimental)**, at the bottom of the band menu, adds a
+soloist who improvises over the chorus: a tenor sax in jazz, a harmonica
+in blues, a fiddle in folk and so on. The line puts chord tones on
+the beats and fills the space between with notes of the chord's scale
+(chosen from the key, so in C major G7 plays G Mixolydian and E7, which
+leads to Am, plays the A harmonic minor scale from E: E Phrygian
+dominant) or with chromatic notes a half step away. It breathes
+between phrases, and **Another solo** plays a new one. Open its part in
+the piano roll to see what each note is: chord tones green with their
+degree (R 3 5 7), scale notes blue (passing, neighbour), chromatic notes
+orange; point at a note to have it explained.
+
 **File > Import chord sheet…** reads a chord chart typed as text, the way
 charts are passed around in emails and forums (a `.txt` file, or drop it
 on the window): bar lines between the bars, a section's name in
