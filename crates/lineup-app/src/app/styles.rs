@@ -322,6 +322,9 @@ impl LineupApp {
         self.keep_place_in_song(&before);
         self.remember_song_version(before, previous);
         self.remember_song_version(self.project.clone(), self.song_library);
+        if progression_from.is_none() {
+            self.set_mode(lineup_audio::PlayMode::Song);
+        }
         if self.project.playlist().chord_markers().is_empty() {
             self.notice = Some("Style applied. Write chords on the sheet or enable Chord progression when applying it.".into());
         } else {
