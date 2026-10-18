@@ -823,6 +823,18 @@ impl ChordSheet {
         clicks
     }
 
+    /// Forgets the bars of the song it showed, for another song: what
+    /// was being typed in a bar is not written into the new one.
+    pub fn new_song(&mut self) {
+        self.selected = None;
+        self.anchor = None;
+        self.editing = None;
+        self.error = None;
+        self.clipboard = None;
+        self.followed = None;
+        self.reveal = false;
+    }
+
     /// Selects `bar`, as a click on it does, so what comes next is
     /// written there.
     pub fn select(&mut self, bar: usize) {
