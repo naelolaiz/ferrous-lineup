@@ -40,6 +40,20 @@ pub struct Tried {
     pub micromode_style: Option<&'static MicromodeStyle>,
 }
 
+impl Tried {
+    /// The band is the source of truth when it plays the chord sheet.
+    /// Keep an explicitly picked harmony style only while its band matches.
+    pub fn for_band(self, band: &'static lineup_core::BandStyle) -> Self {
+        Tried {
+            style: self
+                .style
+                .filter(|style| lineup_core::BandStyle::of_style(style) == Some(band)),
+            rhythm: band.rhythm,
+            ..Tried::default()
+        }
+    }
+}
+
 /// What the library tab remembers between frames.
 pub struct LibraryBrowser {
     filter: String,
@@ -478,4 +492,38 @@ fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
         style.tempo,
         style.bars(),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lineup_core::BandStyle;
+
+    #[test]
+    fn the_library_follows_repeated_band_changes() {
+        let mut tried = Tried::default();
+        for name in ["Pop beat", "Waltz", "Bossa nova", "Pop beat", "Waltz"] {
+            let band = BandStyle::named(name).unwrap();
+            tried = tried.for_band(band);
+            assert_eq!(tried.rhythm, band.rhythm);
+            assert!(tried.style.is_none());
+        }
+    }
+
+    #[test]
+    fn an_explicit_harmony_style_stays_selected_only_for_its_band() {
+        let style = Style::named("Four chords").unwrap();
+        let tried = Tried {
+            style: Some(style),
+            ..Tried::default()
+        };
+        let band = BandStyle::of_style(style).unwrap();
+        assert_eq!(tried.for_band(band).style, Some(style));
+        assert!(
+            tried
+                .for_band(BandStyle::named("Waltz").unwrap())
+                .style
+                .is_none()
+        );
+    }
 }

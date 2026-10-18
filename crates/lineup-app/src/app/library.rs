@@ -119,6 +119,12 @@ impl LineupApp {
     /// whole song plays, so a demo opens with its own selected, as in FL
     /// Studio.
     pub(super) fn tried(&self) -> Tried {
+        if let Some(band) = self.project.band() {
+            return self.song_library.for_band(band.style);
+        }
+        if self.mode == PlayMode::Song {
+            return self.song_library;
+        }
         match self.unchanged_audition() {
             Some(audition) => Tried {
                 style: audition.style,
@@ -132,7 +138,7 @@ impl LineupApp {
 
     /// Remembers the style and rhythm the song plays in this version of
     /// the project, for undo and redo.
-    fn remember_song_version(&mut self, project: Project, tried: Tried) {
+    pub(super) fn remember_song_version(&mut self, project: Project, tried: Tried) {
         self.song_versions
             .retain(|(version, _)| *version != project);
         if self.song_versions.len() == REMEMBERED {
@@ -144,14 +150,12 @@ impl LineupApp {
     /// After undo or redo, shows the style and rhythm this version of the
     /// project plays, if the library changed it.
     pub(super) fn restore_song_library(&mut self) {
-        if let Some((_, tried)) = self
+        self.song_library = self
             .song_versions
             .iter()
             .rev()
             .find(|(version, _)| *version == self.project)
-        {
-            self.song_library = *tried;
-        }
+            .map_or_else(Tried::default, |(_, tried)| *tried);
     }
 
     /// What the library wrote in the selected pattern, if it is still
@@ -433,6 +437,7 @@ impl LineupApp {
             self.song_library = match action {
                 LibraryAction::Style(style) => Tried {
                     style: Some(style),
+                    rhythm: Rhythm::named(style.rhythm),
                     row_style: None,
                     micromode_style: None,
                     ..song_library
@@ -713,6 +718,8 @@ impl LineupApp {
         };
         let use_tempo = self.playlist.library_tempo();
         let swing = self.swings.of(style.name);
+        let before = self.project.clone();
+        let previous = self.tried();
         self.edit("change the band", |project| {
             let time = project.meter().first();
             project.set_band_style(Some(style));
@@ -726,6 +733,16 @@ impl LineupApp {
                 project.scale_tempo(Tempo::new(style.tempo));
             }
         });
+        self.song_library = match action {
+            LibraryAction::Style(picked) => Tried {
+                style: Some(picked),
+                rhythm: style.rhythm,
+                ..Tried::default()
+            },
+            _ => Tried::default().for_band(style),
+        };
+        self.remember_song_version(before, previous);
+        self.remember_song_version(self.project.clone(), self.song_library);
         self.notice = Some(format!("The band plays {}", style.name));
         true
     }

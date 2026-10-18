@@ -735,6 +735,8 @@ impl LineupApp {
             SheetAction::SetSwing(swing) => self.set_swing(swing),
             SheetAction::SetBand(style) => {
                 let had = self.project.band().is_some();
+                let before = self.project.clone();
+                let previous = self.tried();
                 let swing = style.and_then(|style| self.swings.of(style.name));
                 self.edit("change the band", |project| {
                     project.set_band_style(style);
@@ -743,6 +745,10 @@ impl LineupApp {
                         project.swing = swing;
                     }
                 });
+                self.song_library =
+                    style.map_or_else(Tried::default, |style| Tried::default().for_band(style));
+                self.remember_song_version(before, previous);
+                self.remember_song_version(self.project.clone(), self.song_library);
                 self.notice = match (style, self.project.band()) {
                     (Some(style), Some(band)) if !had && band.muted() != &Default::default() => {
                         // The channels muted, then the drum tracks.
