@@ -1330,6 +1330,7 @@ fn band_menu(
         egui::containers::menu::MenuConfig::new()
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
     );
+    let parts_before = library.parts;
     let (response, _) = menu.ui(ui, |ui| {
         ui.set_width(300.0);
         if ui
@@ -1363,6 +1364,14 @@ fn band_menu(
             soloist_items(ui, band, actions);
         }
     });
+    // A preference edit is not a menu selection. Retain the popup after
+    // its container has processed the click, including when it resizes.
+    if library.parts != parts_before && !ui.input(|input| input.key_pressed(Key::Escape)) {
+        let popup_id = egui::Popup::default_response_id(&response);
+        if !egui::Popup::is_id_open(ui.ctx(), popup_id) {
+            egui::Popup::open_id(ui.ctx(), popup_id);
+        }
+    }
     theme::hint(
         response,
         "Choose the band's playing from the Library's styles and rhythms. Search by name, genre or meter.",
@@ -1706,6 +1715,7 @@ mod tests {
         project: Project,
         library: LibraryBrowser,
         sidebar: bool,
+        screen_size: egui::Vec2,
     }
 
     impl MenuScreen {
@@ -1717,6 +1727,7 @@ mod tests {
                 project: Project::with_band(),
                 library: LibraryBrowser::new(),
                 sidebar: false,
+                screen_size: vec2(1280.0, 1200.0),
             }
         }
 
@@ -1724,7 +1735,7 @@ mod tests {
             let mut actions = Vec::new();
             let mut output = self.ctx.run_pass(
                 RawInput {
-                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 1200.0))),
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.screen_size)),
                     time: Some(self.ctx.cumulative_frame_nr() as f64 * 0.1),
                     events,
                     ..Default::default()
@@ -1785,6 +1796,102 @@ mod tests {
                 pressed: false,
                 modifiers: Modifiers::NONE,
             }])
+        }
+    }
+
+    #[test]
+    fn band_copy_options_can_be_changed_without_reopening_the_menu() {
+        for height in [1200.0, 720.0, 480.0] {
+            let mut screen = MenuScreen::new();
+            screen.screen_size.y = height;
+            screen.frame(vec![]);
+            let (output, _) = screen.frame(vec![]);
+            screen.click(&output, "🎷 Band: Pop beat");
+            let (output, _) = screen.frame(vec![]);
+            screen.click(&output, "Apply from styles and rhythms");
+            let (mut output, _) = screen.frame(vec![]);
+            for label in [
+                "Rhythm patterns",
+                "Voices / instruments",
+                "Time signature",
+                "Chord progression",
+                "Tempo",
+                "Swing",
+                "Use matching style for rhythms",
+            ] {
+                let pos = output
+                    .shapes
+                    .iter()
+                    .find_map(|shape| match &shape.shape {
+                        Shape::Text(shape) if shape.galley.text() == label => {
+                            Some(shape.pos + shape.galley.size() * 0.5)
+                        }
+                        _ => None,
+                    })
+                    .unwrap();
+                screen.frame(vec![Event::PointerMoved(pos)]);
+                for _ in 0..10 {
+                    screen.frame(vec![]);
+                }
+                (output, _) = screen.frame(vec![]);
+                let (_, actions) = screen.click(&output, label);
+                assert!(
+                    actions.is_empty(),
+                    "changing {label} should only update copy preferences"
+                );
+                (output, _) = screen.frame(vec![]);
+                assert!(
+                    output.shapes.iter().any(|shape| matches!(&shape.shape,
+                        Shape::Text(text) if text.galley.text() == "Apply from styles and rhythms"
+                    )),
+                    "the style menu closed after changing {label}"
+                );
+            }
+            let parts = screen.library.parts;
+            assert!(!parts.rhythm && !parts.instruments && !parts.time_signature);
+            assert!(parts.progression);
+            assert!(!parts.tempo && !parts.swing);
+            assert!(!parts.matching_style);
+
+            // Picking a style still closes the menu after several edits.
+            screen.click(&output, "Apply from styles and rhythms");
+            let (output, _) = screen.frame(vec![]);
+            screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
+            let (output, _) = screen.frame(vec![Event::Text("royal road".to_string())]);
+            let (_, actions) = screen.click(&output, "Royal road");
+            assert!(
+                actions
+                    .iter()
+                    .any(|action| matches!(action, SheetAction::SetBand { .. }))
+            );
+            let (output, _) = screen.frame(vec![]);
+            assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape,
+                Shape::Text(text) if text.galley.text() == "Apply from styles and rhythms"
+            )));
+
+            // An ordinary outside click still dismisses it.
+            screen.click(&output, "🎷 Band: Pop beat");
+            screen.frame(vec![]);
+            let pos = egui::pos2(screen.screen_size.x - 5.0, height - 5.0);
+            screen.frame(vec![
+                Event::PointerMoved(pos),
+                Event::PointerButton {
+                    pos,
+                    button: PointerButton::Primary,
+                    pressed: true,
+                    modifiers: Modifiers::NONE,
+                },
+            ]);
+            screen.frame(vec![Event::PointerButton {
+                pos,
+                button: PointerButton::Primary,
+                pressed: false,
+                modifiers: Modifiers::NONE,
+            }]);
+            let (output, _) = screen.frame(vec![]);
+            assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape,
+                Shape::Text(text) if text.galley.text() == "Apply from styles and rhythms"
+            )));
         }
     }
 
