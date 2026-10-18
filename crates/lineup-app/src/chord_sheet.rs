@@ -1399,7 +1399,7 @@ fn band_menu(
     }
     theme::hint(
         response,
-        "Choose the band's playing from the Library's styles and rhythms. Search by name, genre or meter.",
+        "Choose the band’s preset from the Library. Search by name, genre or meter.",
     );
 }
 
@@ -1891,16 +1891,16 @@ mod tests {
             let (output, _) = screen.frame(vec![]);
             screen.click(&output, "🎷 Band: Pop beat");
             let (output, _) = screen.frame(vec![]);
-            screen.click(&output, "Apply from styles and rhythms");
+            screen.click(&output, "Copy from preset");
             let (mut output, _) = screen.frame(vec![]);
             for label in [
                 "Rhythm patterns",
                 "Voices / instruments",
                 "Time signature",
-                "Chord progression",
+                "Chord progression (when included)",
                 "Tempo",
                 "Swing",
-                "Use matching style for rhythms",
+                "Plain accents, keep instruments",
             ] {
                 let pos = output
                     .shapes
@@ -1925,7 +1925,7 @@ mod tests {
                 (output, _) = screen.frame(vec![]);
                 assert!(
                     output.shapes.iter().any(|shape| matches!(&shape.shape,
-                        Shape::Text(text) if text.galley.text() == "Apply from styles and rhythms"
+                        Shape::Text(text) if text.galley.text() == "Copy from preset"
                     )),
                     "the style menu closed after changing {label}"
                 );
@@ -1937,7 +1937,7 @@ mod tests {
             assert!(!parts.matching_style);
 
             // Picking a style still closes the menu after several edits.
-            screen.click(&output, "Apply from styles and rhythms");
+            screen.click(&output, "Copy from preset");
             let (output, _) = screen.frame(vec![]);
             screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
             let (output, _) = screen.frame(vec![Event::Text("royal road".to_string())]);
@@ -1949,7 +1949,7 @@ mod tests {
             );
             let (output, _) = screen.frame(vec![]);
             assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape,
-                Shape::Text(text) if text.galley.text() == "Apply from styles and rhythms"
+                Shape::Text(text) if text.galley.text() == "Copy from preset"
             )));
 
             // An ordinary outside click still dismisses it.
@@ -1973,8 +1973,43 @@ mod tests {
             }]);
             let (output, _) = screen.frame(vec![]);
             assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape,
-                Shape::Text(text) if text.galley.text() == "Apply from styles and rhythms"
+                Shape::Text(text) if text.galley.text() == "Copy from preset"
             )));
+        }
+    }
+
+    #[test]
+    fn the_band_and_sidebar_show_one_list_of_presets_with_optional_chords() {
+        for sidebar in [false, true] {
+            let mut screen = MenuScreen::new();
+            screen.sidebar = sidebar;
+            screen.frame(vec![]);
+            let (mut output, _) = screen.frame(vec![]);
+            if !sidebar {
+                screen.click(&output, "🎷 Band: Pop beat");
+                (output, _) = screen.frame(vec![]);
+            }
+            screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
+            screen.frame(vec![Event::Text("pop".into())]);
+            let (output, _) = screen.frame(vec![]);
+            let has = |label: &str| {
+                output.shapes.iter().any(|shape| {
+                    matches!(&shape.shape,
+                        Shape::Text(text) if text.galley.text() == label
+                    )
+                })
+            };
+            assert!(
+                has("Four chords"),
+                "the progression preset must remain available"
+            );
+            assert!(
+                has("Pop beat"),
+                "the pattern preset must be in the same list"
+            );
+            assert!(has("+ chords") && has("keeps chords"));
+            assert!(has("Copy from preset") && has("Plain accents, keep instruments"));
+            assert!(!has("Harmony styles") && !has("Rhythms"));
         }
     }
 

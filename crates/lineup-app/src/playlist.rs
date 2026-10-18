@@ -376,7 +376,7 @@ impl PlaylistView {
     }
 
     pub fn library_parts(&self) -> lineup_core::library::apply::StyleParts {
-        self.library.parts
+        self.library.parts.for_preset()
     }
 
     pub fn library_parts_mut(&mut self) -> &mut lineup_core::library::apply::StyleParts {
@@ -417,7 +417,7 @@ impl PlaylistView {
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut self.tab, Tab::Patterns, "Patterns");
                     ui.selectable_value(&mut self.tab, Tab::Library, "📚 Library")
-                        .on_hover_text("Harmony styles and rhythms by genre");
+                        .on_hover_text("Search all presets by name, genre or meter");
                 });
                 ui.separator();
                 match self.tab {

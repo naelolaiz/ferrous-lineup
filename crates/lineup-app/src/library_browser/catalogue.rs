@@ -1,7 +1,64 @@
 //! Shared names, searches and ordering for the Library and chord sheet menus.
 
 use lineup_core::TimeSignature;
-use lineup_core::library::{Genre, RHYTHMS, Rhythm, STYLES, Style};
+use lineup_core::library::{Genre, RHYTHMS, Rhythm, STYLES, Style, UserStyle};
+
+/// One catalogue, regardless of whether a preset supplies a chord chart.
+#[derive(Clone, Copy)]
+pub enum Preset<'a> {
+    Style(&'static Style),
+    Rhythm(&'static Rhythm),
+    User(usize, &'a UserStyle),
+}
+
+impl<'a> Preset<'a> {
+    pub fn name(self) -> &'a str {
+        match self {
+            Self::Style(style) => style.name,
+            Self::Rhythm(rhythm) => rhythm.name,
+            Self::User(_, style) => &style.name,
+        }
+    }
+
+    pub fn time(self) -> TimeSignature {
+        match self {
+            Self::Style(style) => style.time,
+            Self::Rhythm(rhythm) => rhythm.time,
+            Self::User(_, style) => style.time,
+        }
+    }
+
+    pub fn has_progression(self) -> bool {
+        match self {
+            Self::Style(style) => !style.chart.trim().is_empty(),
+            Self::Rhythm(_) => false,
+            Self::User(_, style) => !style.chart.trim().is_empty(),
+        }
+    }
+}
+
+pub fn presets<'a>(
+    query: &str,
+    users: &'a [UserStyle],
+    progressions_only: bool,
+) -> Vec<Preset<'a>> {
+    let mut presets: Vec<_> = harmony_styles(query, None)
+        .into_iter()
+        .map(Preset::Style)
+        .chain(rhythms(query, None).into_iter().map(Preset::Rhythm))
+        .chain(users.iter().enumerate().filter_map(|(index, style)| {
+            let text = format!("{} {} {} user", style.name, style.about, style.time).to_lowercase();
+            query
+                .to_lowercase()
+                .split_whitespace()
+                .all(|word| text.contains(word))
+                .then_some(Preset::User(index, style))
+        }))
+        .filter(|preset| !progressions_only || preset.has_progression())
+        .collect();
+    presets.sort_by_cached_key(|preset| (preset.name().to_lowercase(), preset.name().to_string()));
+    presets
+}
 
 pub fn alphabetical<T>(
     entries: impl IntoIterator<Item = T>,
@@ -10,10 +67,6 @@ pub fn alphabetical<T>(
     let mut entries: Vec<_> = entries.into_iter().collect();
     entries.sort_by_cached_key(|entry| (name(entry).to_lowercase(), name(entry)));
     entries
-}
-
-pub fn genres() -> Vec<Genre> {
-    alphabetical(Genre::ALL, |genre| genre.name())
 }
 
 pub fn matches(query: &str, name: &str, genre: Genre, time: TimeSignature, about: &str) -> bool {
@@ -56,6 +109,59 @@ mod tests {
     use lineup_core::BandStyle;
 
     #[test]
+    fn the_merged_catalogue_keeps_every_source_and_sorts_them_together() {
+        let mut user = UserStyle::blank();
+        user.name = "A custom groove".into();
+        let users = [user];
+        let all = presets("", &users, false);
+        assert_eq!(all.len(), STYLES.len() + RHYTHMS.len() + 1);
+        assert_eq!(
+            all.iter().filter(|p| matches!(p, Preset::Style(_))).count(),
+            STYLES.len()
+        );
+        assert_eq!(
+            all.iter()
+                .filter(|p| matches!(p, Preset::Rhythm(_)))
+                .count(),
+            RHYTHMS.len()
+        );
+        assert!(all.iter().any(|p| matches!(p, Preset::User(0, _))));
+        assert!(
+            all.windows(2)
+                .all(|pair| pair[0].name().to_lowercase() <= pair[1].name().to_lowercase())
+        );
+        assert!(
+            presets("balkan 7/8", &users, false)
+                .iter()
+                .any(|p| matches!(p, Preset::Style(_)))
+        );
+        assert!(
+            presets("balkan 7/8", &users, false)
+                .iter()
+                .any(|p| matches!(p, Preset::Rhythm(_)))
+        );
+        assert!(matches!(
+            presets("custom groove", &users, false)[0],
+            Preset::User(0, _)
+        ));
+    }
+
+    #[test]
+    fn progression_choices_include_only_presets_that_supply_chords() {
+        let users = [UserStyle::blank()];
+        let choices = presets("", &users, true);
+        assert_eq!(choices.len(), STYLES.len() + users.len());
+        assert!(choices.iter().all(|preset| preset.has_progression()));
+        let beat = presets("pop beat", &[], false);
+        assert!(beat.iter().any(|preset| !preset.has_progression()));
+        assert!(
+            presets("pop beat", &[], true)
+                .iter()
+                .all(|preset| preset.has_progression())
+        );
+    }
+
+    #[test]
     fn searches_find_sidebar_styles_by_name_genre_and_meter() {
         let found = harmony_styles("  FOUR chords ", None);
         assert!(found.iter().any(|style| style.name == "Four chords"));
@@ -70,10 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn genre_and_style_lists_are_alphabetical() {
-        let genres = genres();
-        assert_eq!(genres.first(), Some(&Genre::Balkan));
-        assert_eq!(genres.last(), Some(&Genre::Tango));
+    fn style_lists_are_alphabetical() {
         let styles = harmony_styles("", Some(Genre::Pop));
         let place = |name| styles.iter().position(|style| style.name == name).unwrap();
         for pair in [
