@@ -171,7 +171,7 @@ impl LineupApp {
 
     /// Loops `region` of the song, from its start, or plays the whole
     /// song again, carrying on from where the playhead is in it.
-    fn loop_bars(&mut self, region: Option<LoopRegion>) {
+    pub(super) fn loop_bars(&mut self, region: Option<LoopRegion>) {
         let before = self.project.playlist().loop_region();
         let here = self.playhead().unwrap_or(self.cursor);
         self.edit("set loop", |project| project.set_loop_region(region));
