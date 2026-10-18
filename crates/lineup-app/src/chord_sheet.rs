@@ -27,12 +27,14 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Key, Modifiers, Pos2, Rect, Sense, Stroke, StrokeKind, Ui, pos2,
     vec2,
 };
+use lineup_core::band::solo::Soloist;
 use lineup_core::band::{Ending, Variation};
 use lineup_core::chord_sheet::{Push, Stop, read_bar, text, write_bar};
+use lineup_core::general_midi;
 use lineup_core::library::{Genre, STYLES, Style};
 use lineup_core::{
-    BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass, Player,
-    Project, band_styles,
+    Band, BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass,
+    Player, Project, band_styles,
 };
 
 use crate::theme;
@@ -92,6 +94,10 @@ pub enum SheetAction {
     SetSwing(u8),
     /// Have the band play this part again, where it was edited.
     PlayAgain(Player),
+    /// Have a soloist improvise with the band, or not.
+    SetSoloist(bool),
+    /// Have the soloist play another solo.
+    AnotherSolo,
     /// Write a progression's chords from this bar on.
     WriteProgression {
         style: &'static Style,
@@ -1330,12 +1336,37 @@ fn band_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction>) {
                 }
             });
         }
+        if let Some(band) = project.band() {
+            ui.separator();
+            soloist_items(ui, band, actions);
+        }
     });
     theme::hint(
         menu.response,
         "The band plays the sheet: piano, bass and drums, and in many styles a guitar, \
          strings or an organ, in the style you pick. It plays again whenever the sheet changes",
     );
+}
+
+/// The experimental soloist: on or off, and another solo.
+fn soloist_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
+    let soloist = Soloist::of(band.style.genre);
+    let instrument = general_midi::NAMES[usize::from(soloist.program)].to_lowercase();
+    let mut on = band.has_soloist();
+    let check = ui.checkbox(&mut on, "Soloist (experimental)");
+    let hint = format!(
+        "A {instrument} improvises over the chorus: chord tones on the beats, scale and \
+         chromatic notes between them. The piano roll says what each of its notes is"
+    );
+    if theme::hint(check, hint).clicked() {
+        actions.push(SheetAction::SetSoloist(on));
+        ui.close();
+    }
+    let again = ui.add_enabled(band.has_soloist(), egui::Button::new("Another solo"));
+    if theme::hint(again, "Have the soloist improvise again, a different solo").clicked() {
+        actions.push(SheetAction::AnotherSolo);
+        ui.close();
+    }
 }
 
 /// The library's progressions, to write on the sheet from bar `from`.

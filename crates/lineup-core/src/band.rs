@@ -38,12 +38,14 @@ use crate::tempo::Tempo;
 mod extras;
 mod form;
 mod guitar;
+pub mod solo;
 mod stops;
 mod variation;
 
 pub use extras::{Extra, Extras, PadPart};
 pub use form::{ENDING_BARS, Ending, Form, INTRO_BARS};
 pub use guitar::GuitarPart;
+use solo::{NoteRole, Over, Soloist};
 pub use variation::{Variation, VariationMarker};
 pub(crate) use variation::{tidy as tidy_variations, variation_in};
 
@@ -56,11 +58,14 @@ pub enum Player {
     Guitar,
     Strings,
     Organ,
+    /// The soloist: experimental, and only when it is switched on (see
+    /// [`Project::set_soloist`]).
+    Soloist,
 }
 
 impl Player {
     /// How many there are.
-    pub const COUNT: usize = 6;
+    pub const COUNT: usize = 7;
 
     pub const ALL: [Player; Player::COUNT] = [
         Player::Piano,
@@ -69,6 +74,7 @@ impl Player {
         Player::Guitar,
         Player::Strings,
         Player::Organ,
+        Player::Soloist,
     ];
 
     /// Its name, which its playlist track and patterns are called by.
@@ -80,6 +86,7 @@ impl Player {
             Player::Guitar => "Guitar",
             Player::Strings => "Strings",
             Player::Organ => "Organ",
+            Player::Soloist => "Soloist",
         }
     }
 
@@ -203,6 +210,7 @@ impl BandStyle {
                 Player::Guitar => extras.guitar.is_some(),
                 Player::Strings => extras.strings.is_some(),
                 Player::Organ => extras.organ.is_some(),
+                Player::Soloist => false,
             })
             .collect()
     }
@@ -296,6 +304,8 @@ pub struct Band {
     /// Where the band changes between the style's two variations, in
     /// order. Before the first, it plays variation a.
     pub(crate) variations: Vec<VariationMarker>,
+    /// The seed of the soloist's solo, while there is a soloist.
+    pub(crate) solo: Option<u64>,
 }
 
 impl Band {
@@ -310,6 +320,7 @@ impl Band {
             since: 0,
             form: Form::default(),
             variations: Vec::new(),
+            solo: None,
         }
     }
 
@@ -326,6 +337,20 @@ impl Band {
     /// The song's own channels and tracks the band muted.
     pub fn muted(&self) -> &Muted {
         &self.muted
+    }
+
+    /// Whether a soloist plays with the band.
+    pub fn has_soloist(&self) -> bool {
+        self.solo.is_some()
+    }
+
+    /// Who plays: the style's players, and the soloist when there is one.
+    pub fn players(&self) -> Vec<Player> {
+        let mut players = self.style.players();
+        if self.has_soloist() {
+            players.push(Player::Soloist);
+        }
+        players
     }
 }
 
@@ -344,12 +369,20 @@ pub(crate) struct BandFile {
     pub strings: Option<usize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub organ: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub soloist: Option<usize>,
+    /// The seed of the solo, while there is a soloist.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub solo: Option<u64>,
     /// The fingerprints of the piano, the bass and the drums.
     pub written: [Option<u64>; 3],
     /// The fingerprints of the guitar, the strings and the organ, left
     /// out when there are none, so a band of three reads as before.
     #[serde(default, skip_serializing_if = "none_written")]
     pub written_too: [Option<u64>; 3],
+    /// The fingerprint of the soloist's part.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub written_solo: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heard: Option<u64>,
     #[serde(default)]
@@ -368,7 +401,7 @@ fn none_written(written: &[Option<u64>; 3]) -> bool {
 
 impl From<&Band> for BandFile {
     fn from(band: &Band) -> Self {
-        let [piano, bass, drums, guitar, strings, organ] = band.written;
+        let [piano, bass, drums, guitar, strings, organ, soloist] = band.written;
         BandFile {
             style: band.style.name.to_string(),
             end: band.end,
@@ -377,8 +410,11 @@ impl From<&Band> for BandFile {
             guitar: band.channel(Player::Guitar),
             strings: band.channel(Player::Strings),
             organ: band.channel(Player::Organ),
+            soloist: band.channel(Player::Soloist),
+            solo: band.solo,
             written: [piano, bass, drums],
             written_too: [guitar, strings, organ],
+            written_solo: soloist,
             heard: band.heard,
             muted: band.muted.clone(),
             since: band.since,
@@ -419,8 +455,17 @@ impl BandFile {
                 channel(self.guitar)?,
                 channel(self.strings)?,
                 channel(self.organ)?,
+                channel(self.soloist)?,
             ],
-            written: [piano, bass, drums, guitar, strings, organ],
+            written: [
+                piano,
+                bass,
+                drums,
+                guitar,
+                strings,
+                organ,
+                self.written_solo,
+            ],
             heard: self.heard,
             muted: self.muted,
             since: self.since.min(channels),
@@ -435,6 +480,7 @@ impl BandFile {
                 variation::tidy(&mut markers);
                 markers
             },
+            solo: self.solo,
         })
     }
 }
@@ -468,6 +514,7 @@ const PIANO_VOLUME: f32 = 0.45;
 const BASS_VOLUME: f32 = 0.7;
 const GUITAR_VOLUME: f32 = 0.4;
 const PAD_VOLUME: f32 = 0.3;
+const SOLO_VOLUME: f32 = 0.6;
 
 /// How far above the piano's voicing the strings play: an octave.
 const STRINGS_OCTAVE: i32 = 12;
@@ -666,6 +713,54 @@ impl Project {
         self.band.as_ref()?.channel(player)
     }
 
+    /// What each note of the soloist's part in `pattern` is (see
+    /// [`solo::note_roles`]), with the harmony it is over, in the order
+    /// of the pattern's notes on the soloist's channel; `None` for a note
+    /// where no harmony sounds. `None` if `pattern` is not the soloist's.
+    pub fn solo_roles(&self, pattern: usize) -> Option<Vec<Option<(NoteRole, Over)>>> {
+        let band = self.band.as_ref()?;
+        let channel = band.channel(Player::Soloist)?;
+        let solo = self
+            .patterns
+            .get(pattern)
+            .filter(|solo| solo.player == Some(Player::Soloist))?;
+        let at = self
+            .playlist
+            .clips
+            .iter()
+            .find(|clip| clip.pattern == pattern)?
+            .start;
+        let markers: Vec<ChordMarker> = self
+            .playlist
+            .chord_markers
+            .iter()
+            .filter(|marker| marker.start < band.end)
+            .copied()
+            .collect();
+        let keys = self.key_map();
+        let overs: Vec<Over> = self
+            .played_harmonies(&markers, band.end)
+            .iter()
+            .filter_map(|played| Over::of(played, keys.key_at(played.start)))
+            .collect();
+        let notes: Vec<NoteEvent> = solo
+            .notes(channel)
+            .iter()
+            .map(|note| NoteEvent {
+                start: at + note.start,
+                ..*note
+            })
+            .collect();
+        let roles = solo::note_roles(&notes, &overs);
+        let with_harmony = roles.into_iter().zip(&notes).map(|(role, note)| {
+            let over = overs
+                .iter()
+                .find(|over| (over.start..over.end).contains(&note.start))?;
+            Some((role?, *over))
+        });
+        Some(with_harmony.collect())
+    }
+
     /// File > New: an empty chord sheet, and a band ready to play it in
     /// the [`DEFAULT_STYLE`].
     pub fn with_band() -> Self {
@@ -802,6 +897,38 @@ impl Project {
         true
     }
 
+    /// Has a soloist improvise over the chorus, or stops it. The soloist
+    /// is experimental. Returns `false` if there is no band.
+    pub fn set_soloist(&mut self, on: bool) -> bool {
+        let Some(band) = &mut self.band else {
+            return false;
+        };
+        if band.has_soloist() == on {
+            return true;
+        }
+        band.solo = on.then_some(1);
+        band.written[Player::Soloist.index()] = None;
+        self.band_channels();
+        self.write_band();
+        true
+    }
+
+    /// Has the soloist play another solo, in place of the one it plays
+    /// (or one you edited). Returns `false` if there is no soloist.
+    pub fn another_solo(&mut self) -> bool {
+        let Some(band) = &mut self.band else {
+            return false;
+        };
+        let Some(solo) = band.solo else {
+            return false;
+        };
+        band.solo = Some(solo.wrapping_add(1));
+        band.written[Player::Soloist.index()] = None;
+        self.band_channels();
+        self.write_band();
+        true
+    }
+
     /// Writes the band's parts again if what they are played from (the
     /// chord sheet, the keys, the bars or the style) changed since they
     /// were written. The app calls this after every change, so the band
@@ -910,6 +1037,10 @@ impl Project {
                 Player::Organ => extras
                     .organ
                     .map(|organ| (player.name(), PAD_VOLUME, organ.program)),
+                Player::Soloist => band.solo.map(|_| {
+                    let soloist = Soloist::of(style.genre);
+                    (player.name(), SOLO_VOLUME, soloist.program)
+                }),
             };
             if let Some((other, volume, program)) = sound {
                 channels[player.index()] =
@@ -934,7 +1065,7 @@ impl Project {
         let Some(band) = self.band.clone() else {
             return;
         };
-        let players = band.style.players();
+        let players = band.players();
         let gone: Vec<Player> = rewritten
             .iter()
             .copied()
@@ -1064,7 +1195,14 @@ impl Project {
             print.bytes(band.style.name.as_bytes());
             print.number(band.end);
             print.bytes(
-                format!("{:?}{:?}{:?}", band.form, self.ending(), band.variations).as_bytes(),
+                format!(
+                    "{:?}{:?}{:?}{:?}",
+                    band.form,
+                    self.ending(),
+                    band.variations,
+                    band.solo
+                )
+                .as_bytes(),
             );
         }
         // What the band plays from only has to be compared within one
@@ -1271,12 +1409,32 @@ impl Project {
                         }
                     })
                 }
+                // The soloist plays over the chorus, not the intro or the
+                // ending, and goes on through shots and rests: the gaps
+                // are where a soloist is heard.
+                Player::Soloist => match band.solo {
+                    Some(solo) => {
+                        let keys = self.key_map();
+                        let overs: Vec<Over> = harmonies
+                            .iter()
+                            .filter_map(|played| Over::of(played, keys.key_at(played.start)))
+                            .collect();
+                        let (from, to) = self.chorus().unwrap_or((0, end));
+                        let soloist = Soloist::of(style.genre);
+                        solo::improvise(&bars, &overs, from, to, soloist, solo)
+                    }
+                    None => Vec::new(),
+                },
             };
             let notes = match (player, band.channel(player)) {
                 (Player::Drums, _) => self.drum_part(style, &bars, &chunks, end, held, &breaks),
                 (_, Some(channel)) => {
                     let mut notes = notes;
-                    interpret::perform(&mut notes, time, Role::Accompaniment, seed(player));
+                    let role = match player {
+                        Player::Soloist => Role::Melody,
+                        _ => Role::Accompaniment,
+                    };
+                    interpret::perform(&mut notes, time, role, seed(player));
                     louder_in_b(&mut notes, &variations);
                     notes.into_iter().map(|note| (channel, note)).collect()
                 }
@@ -1287,8 +1445,8 @@ impl Project {
         }
         self.drop_unused_players(&rewritten);
         // Fingerprints last: dropping a channel renumbers the ones after it.
-        // A player the style does not have has no part to keep.
-        let players = style.players();
+        // A player the band does not have has no part to keep.
+        let players = band.players();
         let mut written = band.written;
         for player in rewritten {
             written[player.index()] = players.contains(&player).then(|| self.part_print(player));
@@ -2244,6 +2402,118 @@ mod tests {
         project.set_band_style(BandStyle::named("Boom bap"));
         assert!(!part(&project, Player::Guitar).is_empty());
         assert!(channel_names(&project).contains(&"Guitar"));
+    }
+
+    #[test]
+    fn a_soloist_improvises_when_asked() {
+        let mut project = band("Swing", &["Dm7", "G7", "Cmaj7", "A7"]);
+        assert!(part(&project, Player::Soloist).is_empty());
+        assert!(!channel_names(&project).contains(&"Soloist"));
+        assert!(project.set_soloist(true));
+        let solo = part(&project, Player::Soloist);
+        assert!(solo.len() > 8, "{solo:?}");
+        let channel = project.player_channel(Player::Soloist).unwrap();
+        assert_eq!(
+            project.channels()[channel].program,
+            Some(crate::general_midi::TENOR_SAX)
+        );
+        assert!(project.player_track(Player::Soloist).is_some());
+        // On every beat, a note of the chord of its bar.
+        let chords = ["Dm7", "G7", "Cmaj7", "A7"].map(|name| {
+            crate::harmony::ChordSymbol::parse(name)
+                .unwrap()
+                .chord()
+                .pitch_set()
+        });
+        for &(at, _, midi) in &solo {
+            if at % 4 == 0 {
+                let pitch_class = PitchClass::from_semitone(midi % 12);
+                assert!(chords[at / 16].contains(pitch_class), "{midi} at {at}");
+            }
+        }
+        // Another solo, also after an edit.
+        let pattern = project
+            .patterns()
+            .iter()
+            .position(|pattern| pattern.player == Some(Player::Soloist))
+            .unwrap();
+        project
+            .pattern_mut(pattern)
+            .unwrap()
+            .remove_note(channel, 0);
+        assert!(project.is_frozen(Player::Soloist));
+        assert!(project.another_solo());
+        assert!(!project.is_frozen(Player::Soloist));
+        assert_ne!(part(&project, Player::Soloist), solo);
+        // And it goes, with its channel and track.
+        assert!(project.set_soloist(false));
+        assert!(part(&project, Player::Soloist).is_empty());
+        assert!(!channel_names(&project).contains(&"Soloist"));
+        assert!(project.player_track(Player::Soloist).is_none());
+    }
+
+    #[test]
+    fn the_soloist_plays_the_chorus_only() {
+        let mut project = band("Swing", &["C6", "A7", "Dm7", "G7"]);
+        assert!(project.set_intro(2));
+        assert!(project.set_ending(true));
+        assert!(project.set_soloist(true));
+        let (start, end) = project.chorus().unwrap();
+        let solo = part(&project, Player::Soloist);
+        assert!(!solo.is_empty());
+        assert!(
+            solo.iter().all(|&(at, ..)| (start..end).contains(&at)),
+            "{solo:?}"
+        );
+    }
+
+    #[test]
+    fn over_a_set_the_soloist_plays_its_notes_on_the_beats() {
+        let mut project = Project::with_band();
+        write(&mut project, &["3-11 T2", "Menor 3", "N.C.", "3-11 T2"]);
+        assert!(project.set_soloist(true));
+        let solo = part(&project, Player::Soloist);
+        assert!(!solo.is_empty());
+        let sets = [vec![2, 5, 9], vec![0, 1, 4]];
+        for &(at, _, midi) in &solo {
+            assert!(!(32..48).contains(&at), "no solo without a chord: {at}");
+            if at % 4 == 0 && at < 32 {
+                assert!(sets[at / 16].contains(&(midi % 12)), "{midi} at {at}");
+            }
+        }
+        // There is no scale to name over a set, but its notes are
+        // still the solo's chord tones.
+        let pattern = project
+            .patterns()
+            .iter()
+            .position(|pattern| pattern.player == Some(Player::Soloist))
+            .unwrap();
+        let channel = project.player_channel(Player::Soloist).unwrap();
+        let notes = project.pattern(pattern).unwrap().notes(channel);
+        let roles = project.solo_roles(pattern).unwrap();
+        assert_eq!(roles.len(), notes.len());
+        for (note, role) in notes.iter().zip(&roles) {
+            let (role, over) = role.expect("every note is over a set");
+            assert!(over.chord.is_none());
+            if note.start % 4 == 0 {
+                assert_eq!(role, NoteRole::ChordTone(None), "at {}", note.start);
+            }
+        }
+    }
+
+    #[test]
+    fn a_soloist_is_saved_in_format_nineteen() {
+        let mut project = band("Pop beat", &["C", "Am", "F", "G"]);
+        let without = crate::file::format_for(&project);
+        assert!(project.set_soloist(true));
+        assert_eq!(crate::file::format_for(&project), 19);
+        let text = crate::file::to_text(&project).unwrap();
+        let loaded = crate::file::from_text(&text).unwrap();
+        assert_eq!(loaded, project);
+        assert!(loaded.band().unwrap().has_soloist());
+        assert!(!loaded.is_frozen(Player::Soloist));
+        assert!(project.set_soloist(false));
+        assert_eq!(crate::file::format_for(&project), without);
     }
 
     #[test]

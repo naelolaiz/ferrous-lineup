@@ -32,7 +32,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::band::{BandFile, Player};
+use crate::band::{Band, BandFile, Player};
 use crate::chord_sheet::ChordMarker;
 use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
@@ -142,7 +142,11 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 18 added shots, holds, rests and pushes to the chord sheet's
 /// harmonies. Older versions would drop them and play the style straight
 /// through, so a song with any needs format 18.
-pub const FORMAT_VERSION: u32 = 18;
+///
+/// Format 19 added the band's soloist. Older versions know no such
+/// player, so a song whose band has one, or has a soloist's part, needs
+/// format 19.
+pub const FORMAT_VERSION: u32 = 19;
 
 /// The oldest format that can hold `project`.
 ///
@@ -210,7 +214,14 @@ pub fn format_for(project: &Project) -> u32 {
         .chord_markers()
         .iter()
         .any(|marker| marker.push.is_some() || marker.stop.is_some());
-    if has_breaks {
+    let has_soloist = project.band().is_some_and(Band::has_soloist)
+        || project
+            .patterns()
+            .iter()
+            .any(|pattern| pattern.player == Some(Player::Soloist));
+    if has_soloist {
+        19
+    } else if has_breaks {
         18
     } else if has_bigger_band {
         17
@@ -707,10 +718,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 19 might have fields we have never heard of. Only the
+        // Format 20 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 19, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(19)), "{error}");
+        let error = from_text("(format: 20, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(20)), "{error}");
     }
 
     #[test]
