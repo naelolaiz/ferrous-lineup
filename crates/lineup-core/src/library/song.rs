@@ -32,7 +32,10 @@ pub struct Part {
     pub name: &'static str,
     /// The tune, played by the Lead channel.
     pub melody: &'static str,
-    /// The chords, accompanied in the song's comping and bass style.
+    /// The chords, accompanied in the song's comping and bass style, and
+    /// written on the chord sheet. A chart may name them as numerals,
+    /// "i | V7", or by name as a lead sheet does, "C#m | G#7/B#", read in
+    /// the part's key (see [`chart::parse_chart_in`]).
     pub chords: &'static str,
     /// Notes for the Keys channel written out in full, for pieces whose
     /// accompaniment is part of the music. When there are any, the
@@ -167,7 +170,6 @@ impl Part {
 
     /// The same part in another time signature than the song's, such as
     /// a verse in 3/4 in a song in 4/4.
-    #[allow(dead_code)] // until a song changes time signature
     const fn in_time(self, time: TimeSignature) -> Part {
         Part {
             time: Some(time),
@@ -204,8 +206,10 @@ impl Part {
         })
     }
 
-    pub fn spans(&self, bar: usize) -> Vec<ChordSpan> {
-        chart::parse_chart(self.chords, bar).unwrap_or_default()
+    /// The chords of the chart, `bar` steps to the bar, in the key whose
+    /// tonic is `tonic`.
+    pub fn spans(&self, bar: usize, tonic: PitchClass) -> Vec<ChordSpan> {
+        chart::parse_chart_in(self.chords, bar, tonic).unwrap_or_default()
     }
 
     /// How many steps the part lasts: the longest of its melody, its
@@ -309,8 +313,8 @@ use ScaleKind::*;
 
 const COMMON: TimeSignature = TimeSignature::COMMON;
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
-const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
+const NINE_EIGHT: TimeSignature = TimeSignature::new(9, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 
 // The bands the songs are dressed in, named after their style. Each is
@@ -644,8 +648,9 @@ mod tests {
                         assert_eq!(*length, bar, "{what}: bar {} has {length} steps", index + 1);
                     }
                 }
+                let tonic = song.part_scale(part).root;
                 assert!(
-                    chart::parse_chart(part.chords, bar).is_some(),
+                    chart::parse_chart_in(part.chords, bar, tonic).is_some(),
                     "{what}: cannot read the chords"
                 );
                 let length = part.length(bar);
