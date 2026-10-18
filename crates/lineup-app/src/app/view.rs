@@ -345,6 +345,12 @@ impl LineupApp {
             window(&mut self.harmony_keys.open, "Harmony keys", HARMONY, ui);
             let browser = &mut self.playlist.browser_open;
             window(browser, "Patterns and library", BROWSER, ui);
+            if ui
+                .add(egui::Button::selectable(self.mixer_open, "Mixer").shortcut_text("F9"))
+                .clicked()
+            {
+                self.mixer_open = !self.mixer_open;
+            }
             crate::widgets::follow_control(ui);
             ui.separator();
             let ear = egui::Button::selectable(self.ear_training.open, "Ear training")
@@ -448,6 +454,9 @@ impl LineupApp {
         }
         if pressed(PIANO_ROLL) {
             self.piano_roll.open = !self.piano_roll.open;
+        }
+        if ctx.input_mut(|input| input.consume_key(Modifiers::NONE, egui::Key::F9)) {
+            self.mixer_open = !self.mixer_open;
         }
     }
 }

@@ -126,7 +126,7 @@ impl LineupApp {
                     self.send(Command::SetVolume { channel, volume });
                 }
                 Change::Muted(channel) => {
-                    let muted = self.project.channels()[channel].muted;
+                    let muted = self.project.channel_muted(channel);
                     self.send(Command::SetMuted { channel, muted });
                 }
                 Change::PatternLength(pattern) => {
@@ -148,6 +148,10 @@ impl LineupApp {
                 }
                 Change::LooseTiming => {
                     self.send(Command::SetLooseTiming(self.project.loose_timing));
+                }
+                Change::Mixer => {
+                    self.send(Command::SetMasterVolume(self.project.mixer.master));
+                    self.send(Command::SetReverb(self.project.mixer.reverb));
                 }
                 Change::Song => {
                     for command in self.song_commands() {

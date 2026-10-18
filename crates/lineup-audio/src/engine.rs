@@ -174,6 +174,7 @@ pub enum Command {
     /// starts up to this much late. 0 plays every note on its step.
     SetLooseTiming(u8),
     SetMasterVolume(f32),
+    SetReverb(lineup_core::ReverbSettings),
     /// Add an empty pattern at position `index`; the patterns from there
     /// on move up one place. An index past the end adds it at the end.
     InsertPattern {
@@ -572,6 +573,7 @@ pub(crate) struct AudioThread {
     /// Where `Play` starts, set by `Seek`.
     start: usize,
     master_volume: Smoothed,
+    reverb: crate::reverb::Reverb,
     commands: rtrb::Consumer<Command>,
     trash: rtrb::Producer<Garbage>,
     playhead: Arc<AtomicUsize>,
@@ -643,6 +645,7 @@ impl AudioThread {
             playing: false,
             start: 0,
             master_volume: Smoothed::new(0.8, VOLUME_SMOOTHING, sample_rate),
+            reverb: crate::reverb::Reverb::new(sample_rate),
             commands,
             trash,
             playhead,
@@ -746,6 +749,7 @@ impl AudioThread {
                 self.loose_frames = f64::from(ms) / 1000.0 * f64::from(self.sample_rate);
             }
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
+            Command::SetReverb(settings) => self.reverb.configure(settings),
             Command::InsertPattern { index, length } => {
                 if self.pattern_lengths.len() < MAX_PATTERNS {
                     let index = index.min(self.pattern_lengths.len());
@@ -871,6 +875,7 @@ impl AudioThread {
             Command::SetCountIn(on) => self.count_in = on,
             Command::Clear => {
                 self.stop();
+                self.reverb.clear();
                 self.start = 0;
                 // `pop` takes the last channel out of the list; `while let`
                 // keeps going until there are none left.
@@ -908,6 +913,7 @@ impl AudioThread {
     /// make the first moment too loud or too quiet.
     pub(crate) fn settle_volumes(&mut self) {
         self.master_volume.settle();
+        self.reverb.settle();
         for channel in &mut self.channels {
             channel.volume.settle();
         }
@@ -1196,8 +1202,16 @@ impl AudioThread {
                 mix += phrase.next_sample();
             }
             // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
-            let sample = (mix * self.master_volume.next_value()).tanh();
-            frame.fill(T::from_sample(sample));
+            let stereo = self.reverb.next(mix);
+            let volume = self.master_volume.next_value();
+            let stereo = stereo.map(|sample| (sample * volume).tanh());
+            if frame.len() == 1 {
+                frame[0] = T::from_sample((stereo[0] + stereo[1]) * 0.5);
+            } else {
+                for (index, sample) in frame.iter_mut().enumerate() {
+                    *sample = T::from_sample(stereo[index % 2]);
+                }
+            }
         }
 
         if self.phrase.as_ref().is_some_and(|phrase| phrase.is_over())
