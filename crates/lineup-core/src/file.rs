@@ -918,6 +918,24 @@ mod tests {
     }
 
     #[test]
+    fn chords_with_two_sharps_open_again() {
+        // In G# harmonic minor the leading-tone chord is F##dim7, written
+        // by the sheet itself from "vii°7".
+        let mut project = plain_demo();
+        project.scale = crate::Scale::new(
+            crate::PitchClass::GSharp,
+            crate::harmony::ScaleKind::HarmonicMinor,
+        );
+        let bar = project.meter().bar(0);
+        let chords = crate::chord_sheet::read_bar("vii°7 D#/F##", &bar, project.scale).unwrap();
+        assert!(project.set_chords(0, 16, &chords));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("harmony: \"F##dim7\""), "{text}");
+        assert!(text.contains("harmony: \"D#/F##\""), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
     fn shots_holds_rests_and_pushes_need_format_eighteen() {
         use crate::chord_sheet::{Push, Stop};
         let mut project = plain_demo();

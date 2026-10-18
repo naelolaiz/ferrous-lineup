@@ -119,10 +119,23 @@ pub(crate) fn intro_harmonies(first: HarmonyName, bars: usize) -> Vec<Option<Har
         ChordFamily::Diminished => return vamp(),
     };
     let key = Scale::new(symbol.root.pitch_class(), kind);
+    // The key takes the usual name of its tonic (D# minor), but the
+    // turnaround is written from the chord's own letter: into Ebm it is
+    // Cbmaj7 Fm7b5 Bb7, not Bmaj7 E#m7b5 A#7.
+    let tonic = key.spell(key.root);
+    let written = |chord: ChordSymbol| {
+        if tonic == symbol.root {
+            chord
+        } else {
+            chord.transposed(tonic, symbol.root)
+        }
+    };
     let chords: Vec<HarmonyName> = numerals
         .iter()
         .map(|text| match numeral::parse(text) {
-            Some(numeral) if !text.is_empty() => HarmonyName::Chord(numeral.symbol_in(key)),
+            Some(numeral) if !text.is_empty() => {
+                HarmonyName::Chord(written(numeral.symbol_in(key)))
+            }
             _ => first,
         })
         .collect();
@@ -549,6 +562,17 @@ mod tests {
         );
         // Flat keys are spelled with flats.
         assert_eq!(names(&intro_harmonies(chord("Eb"), 2)), ["Fm7", "Bb7"]);
+        // And from the letter the chord is written with, where a key has
+        // two names: Ebm, not D#m; Gb, not F#.
+        assert_eq!(
+            names(&intro_harmonies(chord("Ebm"), 4)),
+            ["Ebm", "Cbmaj7", "Fm7b5", "Bb7"]
+        );
+        assert_eq!(
+            names(&intro_harmonies(chord("Gb"), 4)),
+            ["Gb", "Ebm7", "Abm7", "Db7"]
+        );
+        assert_eq!(names(&intro_harmonies(chord("D#m"), 2)), ["E#m7b5", "A#7"]);
         // A blues starts on a seventh chord, a major one.
         assert_eq!(
             names(&intro_harmonies(chord("C7"), 4)),

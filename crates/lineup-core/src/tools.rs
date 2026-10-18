@@ -9,7 +9,7 @@
 //! `Option`, and `None` means "this would not work, so do nothing": a
 //! chord is never transposed with one of its notes missing.
 
-use crate::{Note, NoteEvent, Scale};
+use crate::{Note, NoteEvent, Scale, ScaleKind};
 
 /// The notes grouped by the step they start on, each group lowest
 /// first, the groups in time order. A group of two or more notes is a
@@ -158,6 +158,13 @@ pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
     let Some(moved) = note.transpose(shift) else {
         return note;
     };
+    // The chromatic scale holds every note, so it has no degrees to
+    // match with a key's: into it or out of it, notes only take the new
+    // root. (Out of it, every note would otherwise be "of the old scale"
+    // and be pulled into the new key, losing every sharp and flat.)
+    if from.kind == ScaleKind::Chromatic || to.kind == ScaleKind::Chromatic {
+        return moved;
+    }
     // The old scale moved to the new root, so `moved` can be compared
     // with it degree by degree.
     let old = Scale::new(to.root, from.kind);
@@ -318,7 +325,7 @@ pub fn arpeggiate(notes: &[NoteEvent], order: ArpeggioOrder, rate: usize) -> Vec
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{PitchClass, PitchSet, ScaleKind};
+    use crate::{PitchClass, PitchSet};
 
     #[test]
     fn quantizing_moves_notes_to_the_nearest_steps() {
@@ -418,6 +425,14 @@ mod tests {
         assert_eq!(moved(71, C_MAJOR, pentatonic), 72);
         // A note that would leave the MIDI range stays put.
         assert_eq!(moved(127, C_MAJOR, key(D, ScaleKind::Major)), 127);
+        // To the chromatic scale and back, a D7 (D F# A C) stays a D7:
+        // it has no degrees, so nothing is pulled into the key.
+        let chromatic = key(C, ScaleKind::Chromatic);
+        for midi in [62, 66, 69, 72] {
+            let there = moved(midi, C_MAJOR, chromatic);
+            assert_eq!(moved(there, chromatic, C_MAJOR), midi);
+        }
+        assert_eq!(moved(66, chromatic, key(D, ScaleKind::Major)), 68);
     }
 
     #[test]

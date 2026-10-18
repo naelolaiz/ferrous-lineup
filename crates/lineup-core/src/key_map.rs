@@ -107,9 +107,13 @@ impl KeyMap {
 /// mode takes its new one as well (a C major song going to G major, in
 /// C minor, goes to G minor); a key in another mode keeps it (the A
 /// major march of a song in A minor stays major when the song goes to
-/// A Dorian).
+/// A Dorian). Where the song's notes stay put, as from a key to a
+/// twelve-tone row or a set, its key changes stay put too.
 pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     let from = crate::tools::from_key(from, to);
+    if !from.kind.notes_follow(to.kind) {
+        return key;
+    }
     let up = from.root.semitones_up_to(to.root);
     let root = key.root.transpose(up as i32);
     let kind = if key.kind == from.kind && from.kind.is_tonal() && to.kind.is_tonal() {
@@ -184,5 +188,11 @@ mod tests {
             moved_key(key(PitchClass::G, ScaleKind::Major), c_major, c_dorian),
             key(PitchClass::G, ScaleKind::Dorian)
         );
+        // A row as the key moves no notes, so the G major section of a C
+        // major song stays in G major (it used to go up to B with the
+        // row's first note, E).
+        let row = Scale::row(crate::harmony::ToneRow::CHROMATIC.starting_on(PitchClass::E));
+        let g_major = key(PitchClass::G, ScaleKind::Major);
+        assert_eq!(moved_key(g_major, c_major, row), g_major);
     }
 }

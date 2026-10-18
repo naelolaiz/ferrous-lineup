@@ -188,6 +188,18 @@ fn rest_fits(time: TimeSignature, bar: usize, from: usize, to: usize) -> bool {
             && inside < start
             && (is_simple(time) || to == bar || strength(time, to) >= 2);
     }
+    // In a dotted beat (each beat of 6/8, 9/8 and 12/8), a quarter rest
+    // may only cover its first two eighths. From the second eighth on,
+    // the rest is written in eighths, "♪ 𝄾 𝄾", not "♪ 𝄽", so that the
+    // beat's last third can be seen.
+    let beat = time.beat_at(from);
+    if beat.length > 3
+        && beat.length.is_multiple_of(3)
+        && from > beat.start
+        && to - from > beat.length / 3
+    {
+        return false;
+    }
     !value.dotted || start >= 2
 }
 
@@ -356,6 +368,12 @@ mod tests {
         assert_eq!(rests(FOUR_FOUR, 0, 3), [3]);
         assert_eq!(rests(SIX_EIGHT, 0, 6), [6]);
         assert_eq!(rests(SIX_EIGHT, 6, 12), [6]);
+        // A quarter rest covers the first two eighths of a dotted beat,
+        // never the last two.
+        assert_eq!(rests(SIX_EIGHT, 0, 4), [4]);
+        assert_eq!(rests(SIX_EIGHT, 2, 6), [2, 2]);
+        assert_eq!(rests(SIX_EIGHT, 8, 12), [2, 2]);
+        assert_eq!(rests(TimeSignature::new(12, 8), 14, 18), [2, 2]);
     }
 
     #[test]
