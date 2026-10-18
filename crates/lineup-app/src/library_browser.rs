@@ -120,7 +120,6 @@ impl LibraryBrowser {
         tried: Tried,
         purpose: LibraryPurpose,
     ) -> Option<LibraryAction> {
-        let mut picked = None;
         ui.horizontal(|ui| {
             if ui.small_button("New style…").clicked() {
                 self.editor_request = Some(StyleEditorRequest::New);
@@ -144,6 +143,25 @@ impl LibraryBrowser {
                 self.filter.clear();
             }
         });
+        let height = ui
+            .available_height()
+            .min(ui.ctx().content_rect().bottom() - ui.next_widget_position().y - 16.0)
+            .max(48.0);
+        egui::ScrollArea::vertical()
+            .id_salt("library-content")
+            .max_height(height)
+            .show(ui, |ui| self.results(ui, project, tried, purpose))
+            .inner
+    }
+
+    fn results(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        tried: Tried,
+        purpose: LibraryPurpose,
+    ) -> Option<LibraryAction> {
+        let mut picked = None;
         if purpose != LibraryPurpose::Progression {
             style_parts_ui(ui, &mut self.parts);
         }
@@ -215,136 +233,128 @@ impl LibraryBrowser {
             ));
             ui.weak("Songs with melodies are in File ▸ Demos ▸ Songs.");
         }
-        let max_height = ui
-            .available_height()
-            .min(ui.ctx().content_rect().bottom() - ui.next_widget_position().y - 16.0)
-            .max(48.0);
-        egui::ScrollArea::vertical()
-            .max_height(max_height)
-            .show(ui, |ui| {
-                let custom: Vec<_> = self
-                    .user_styles
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, style)| user_matches(style))
-                    .collect();
-                if !custom.is_empty() {
-                    section(ui, "User styles", true, |ui| {
-                        for (index, style) in custom {
+        ui.scope(|ui| {
+            let custom: Vec<_> = self
+                .user_styles
+                .iter()
+                .enumerate()
+                .filter(|(_, style)| user_matches(style))
+                .collect();
+            if !custom.is_empty() {
+                section(ui, "User styles", true, |ui| {
+                    for (index, style) in custom {
+                        let response = ui
+                            .selectable_label(
+                                tried.user_style == Some(style.id()),
+                                label(&style.name, style.time),
+                            )
+                            .on_hover_text(&style.about);
+                        if response.clicked() {
+                            picked = Some(LibraryAction::UserStyle(index));
+                        }
+                        response.context_menu(|ui| {
+                            if ui.button("Edit in channel rack…").clicked() {
+                                self.editor_request = Some(StyleEditorRequest::User(index));
+                                ui.close();
+                            }
+                        });
+                    }
+                });
+            }
+            let open = searching || new_style;
+            section(ui, "Harmony styles", open, |ui| {
+                for genre in catalogue::genres() {
+                    let styles = catalogue::harmony_styles(&filter, Some(genre));
+                    let open = searching
+                        || ((new_style || !tracking)
+                            && tried.style.is_some_and(|s| s.genre == genre));
+                    group(ui, "styles", genre, styles.len(), open, |ui| {
+                        for style in styles {
+                            let selected = tried.style == Some(style);
                             let response = ui
-                                .selectable_label(
-                                    tried.user_style == Some(style.id()),
-                                    label(&style.name, style.time),
-                                )
-                                .on_hover_text(&style.about);
+                                .selectable_label(selected, label(style.name, style.time))
+                                .on_hover_text(describe_style(style, tonic));
+                            if selected && scroll_style {
+                                response.scroll_to_me(None);
+                            }
                             if response.clicked() {
-                                picked = Some(LibraryAction::UserStyle(index));
+                                picked = Some(LibraryAction::Style(style));
                             }
                             response.context_menu(|ui| {
-                                if ui.button("Edit in channel rack…").clicked() {
-                                    self.editor_request = Some(StyleEditorRequest::User(index));
+                                if ui.button("Edit a copy in channel rack…").clicked() {
+                                    self.editor_request = Some(StyleEditorRequest::Builtin(style));
                                     ui.close();
                                 }
                             });
                         }
                     });
                 }
-                let open = searching || new_style;
-                section(ui, "Harmony styles", open, |ui| {
-                    for genre in catalogue::genres() {
-                        let styles = catalogue::harmony_styles(&filter, Some(genre));
-                        let open = searching
-                            || ((new_style || !tracking)
-                                && tried.style.is_some_and(|s| s.genre == genre));
-                        group(ui, "styles", genre, styles.len(), open, |ui| {
-                            for style in styles {
-                                let selected = tried.style == Some(style);
-                                let response = ui
-                                    .selectable_label(selected, label(style.name, style.time))
-                                    .on_hover_text(describe_style(style, tonic));
-                                if selected && scroll_style {
-                                    response.scroll_to_me(None);
-                                }
-                                if response.clicked() {
-                                    picked = Some(LibraryAction::Style(style));
-                                }
-                                response.context_menu(|ui| {
-                                    if ui.button("Edit a copy in channel rack…").clicked() {
-                                        self.editor_request =
-                                            Some(StyleEditorRequest::Builtin(style));
-                                        ui.close();
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-                if purpose == LibraryPurpose::Play {
-                    let open = searching || new_row;
-                    picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
-                    picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
+            });
+            if purpose == LibraryPurpose::Play {
+                let open = searching || new_row;
+                picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
+                picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
+            }
+            if purpose == LibraryPurpose::Progression {
+                return;
+            }
+            let open = searching || new_rhythm;
+            section(ui, "Rhythms", open, |ui| {
+                for genre in catalogue::genres() {
+                    let rhythms = catalogue::rhythms(&filter, Some(genre));
+                    let open = searching
+                        || ((new_rhythm || !tracking)
+                            && tried
+                                .rhythm
+                                .is_some_and(|r| r.genre == genre && !FILLS.contains(r)));
+                    group(ui, "rhythms", genre, rhythms.len(), open, |ui| {
+                        for rhythm in rhythms {
+                            picked = picked.or(rhythm_label(
+                                ui,
+                                rhythm,
+                                tried,
+                                scroll_rhythm,
+                                purpose,
+                                &mut self.editor_request,
+                            ));
+                        }
+                    });
                 }
-                if purpose == LibraryPurpose::Progression {
+                if purpose != LibraryPurpose::Play {
                     return;
                 }
-                let open = searching || new_rhythm;
-                section(ui, "Rhythms", open, |ui| {
-                    for genre in catalogue::genres() {
-                        let rhythms = catalogue::rhythms(&filter, Some(genre));
-                        let open = searching
-                            || ((new_rhythm || !tracking)
-                                && tried
-                                    .rhythm
-                                    .is_some_and(|r| r.genre == genre && !FILLS.contains(r)));
-                        group(ui, "rhythms", genre, rhythms.len(), open, |ui| {
-                            for rhythm in rhythms {
-                                picked = picked.or(rhythm_label(
-                                    ui,
-                                    rhythm,
-                                    tried,
-                                    scroll_rhythm,
-                                    purpose,
-                                    &mut self.editor_request,
-                                ));
-                            }
-                        });
-                    }
-                    if purpose != LibraryPurpose::Play {
-                        return;
-                    }
-                    let fills = alphabetical(
-                        FILLS.iter().filter(|r| {
-                            matches(&filter, r.name, r.genre, r.time, r.about)
-                                || names_a_word(&filter, "fill fills")
-                        }),
-                        |rhythm| rhythm.name,
-                    );
-                    if !fills.is_empty() {
-                        let header =
-                            egui::CollapsingHeader::new(format!("Fills ({})", fills.len()))
-                                .id_salt("rhythms-fills");
-                        let open = searching
-                            || (new_rhythm && tried.rhythm.is_some_and(|r| FILLS.contains(r)));
-                        let header = if open {
-                            header.open(Some(true))
-                        } else {
-                            header
-                        };
-                        header.show(ui, |ui| {
-                            for fill in fills {
-                                picked = picked.or(rhythm_label(
-                                    ui,
-                                    fill,
-                                    tried,
-                                    scroll_rhythm,
-                                    purpose,
-                                    &mut self.editor_request,
-                                ));
-                            }
-                        });
-                    }
-                });
+                let fills = alphabetical(
+                    FILLS.iter().filter(|r| {
+                        matches(&filter, r.name, r.genre, r.time, r.about)
+                            || names_a_word(&filter, "fill fills")
+                    }),
+                    |rhythm| rhythm.name,
+                );
+                if !fills.is_empty() {
+                    let header = egui::CollapsingHeader::new(format!("Fills ({})", fills.len()))
+                        .id_salt("rhythms-fills");
+                    let open = searching
+                        || (new_rhythm && tried.rhythm.is_some_and(|r| FILLS.contains(r)));
+                    let header = if open {
+                        header.open(Some(true))
+                    } else {
+                        header
+                    };
+                    header.show(ui, |ui| {
+                        for fill in fills {
+                            picked = picked.or(rhythm_label(
+                                ui,
+                                fill,
+                                tried,
+                                scroll_rhythm,
+                                purpose,
+                                &mut self.editor_request,
+                            ));
+                        }
+                    });
+                }
             });
+        });
         picked
     }
 }

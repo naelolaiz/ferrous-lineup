@@ -440,13 +440,15 @@ impl RowWindow {
                 self.set_row(ToneRow::random_all_interval(self.seed));
             }
             ui.menu_button("Famous and example rows", |ui| {
-                for preset in ROW_PRESETS {
-                    let hover = format!("{}\n\n{}", preset.source, preset.about);
-                    if ui.button(preset.name).on_hover_text(hover).clicked() {
-                        self.set_row(preset.row);
-                        ui.close();
+                crate::widgets::scroll_menu(ui, |ui| {
+                    for preset in ROW_PRESETS {
+                        let hover = format!("{}\n\n{}", preset.source, preset.about);
+                        if ui.button(preset.name).on_hover_text(hover).clicked() {
+                            self.set_row(preset.row);
+                            ui.close();
+                        }
                     }
-                }
+                });
             });
             ui.checkbox(&mut self.numbers, "Numbers")
                 .on_hover_text("Show pitch classes as numbers: C is 0, C# is 1… T is 10, E is 11");

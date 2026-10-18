@@ -73,41 +73,43 @@ fn instrument_menu(
         None => "Instrument".to_string(),
     };
     ui.menu_button(label, |ui| {
-        let none = ui
-            .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
-            .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
-        if none.clicked() {
-            actions.push(RackAction::SetProgram {
-                channel,
-                program: None,
-            });
-            ui.close();
-        }
-        ui.separator();
-        for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
-            let here = current.is_some_and(|program| general_midi::family(program) == family);
-            let family_label = if here {
-                format!("● {family_name}")
-            } else {
-                family_name.to_string()
-            };
-            ui.menu_button(family_label, |ui| {
-                for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
-                    let text =
-                        format!("{} {}", u16::from(program) + 1, general_midi::name(program));
-                    if ui
-                        .selectable_label(current == Some(program), text)
-                        .clicked()
-                    {
-                        actions.push(RackAction::SetProgram {
-                            channel,
-                            program: Some(program),
-                        });
-                        ui.close();
+        widgets::scroll_menu(ui, |ui| {
+            let none = ui
+                .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
+                .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
+            if none.clicked() {
+                actions.push(RackAction::SetProgram {
+                    channel,
+                    program: None,
+                });
+                ui.close();
+            }
+            ui.separator();
+            for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
+                let here = current.is_some_and(|program| general_midi::family(program) == family);
+                let family_label = if here {
+                    format!("● {family_name}")
+                } else {
+                    family_name.to_string()
+                };
+                ui.menu_button(family_label, |ui| {
+                    for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
+                        let text =
+                            format!("{} {}", u16::from(program) + 1, general_midi::name(program));
+                        if ui
+                            .selectable_label(current == Some(program), text)
+                            .clicked()
+                        {
+                            actions.push(RackAction::SetProgram {
+                                channel,
+                                program: Some(program),
+                            });
+                            ui.close();
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
+        });
     })
     .response
     .on_hover_text(
@@ -261,28 +263,30 @@ pub fn show(
             let rack_full = project.channels().len() >= MAX_CHANNELS;
             ui.add_enabled_ui(!rack_full, |ui| {
                 ui.menu_button("➕ Add channel", |ui| {
-                    for drum in Drum::ALL {
-                        if ui.button(drum.name()).clicked() {
-                            actions.push(RackAction::AddDrum(drum));
+                    widgets::scroll_menu(ui, |ui| {
+                        for drum in Drum::ALL {
+                            if ui.button(drum.name()).clicked() {
+                                actions.push(RackAction::AddDrum(drum));
+                                ui.close();
+                            }
+                        }
+                        ui.separator();
+                        if ui.button("Lineup Osc (synth)").clicked() {
+                            actions.push(RackAction::AddSynth);
                             ui.close();
                         }
-                    }
-                    ui.separator();
-                    if ui.button("Lineup Osc (synth)").clicked() {
-                        actions.push(RackAction::AddSynth);
-                        ui.close();
-                    }
-                    if ui
-                        .button("MIDI Out (external synth)")
-                        .on_hover_text(
-                            "Plays its notes on a synth outside Ferrous Lineup: pick where in \
+                        if ui
+                            .button("MIDI Out (external synth)")
+                            .on_hover_text(
+                                "Plays its notes on a synth outside Ferrous Lineup: pick where in \
                              MIDI > Output.",
-                        )
-                        .clicked()
-                    {
-                        actions.push(RackAction::AddMidiOut);
-                        ui.close();
-                    }
+                            )
+                            .clicked()
+                        {
+                            actions.push(RackAction::AddMidiOut);
+                            ui.close();
+                        }
+                    });
                 });
             });
         });
