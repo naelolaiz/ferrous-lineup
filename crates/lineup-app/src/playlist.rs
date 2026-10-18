@@ -361,6 +361,10 @@ impl PlaylistView {
         &mut self.library.parts
     }
 
+    pub fn library_browser_mut(&mut self) -> &mut LibraryBrowser {
+        &mut self.library
+    }
+
     /// Draws the pattern picker and the playlist. `current` is the
     /// selected pattern; `playhead` is the step of the playlist being
     /// played, and which time round, if the song is playing; `tried` is

@@ -727,18 +727,27 @@ impl LineupApp {
                 }
             }
             SheetAction::SetSwing(swing) => self.set_swing(swing),
-            SheetAction::SetBand(style) => {
+            SheetAction::SetBand { style, harmony } => {
                 let had = self.project.band().is_some();
                 let before = self.project.clone();
                 let previous = self.tried();
                 let swing = style.and_then(|style| self.swings.of(style.name));
-                let parts = self.playlist.library_parts().for_rhythm();
+                let parts = if harmony.is_some() {
+                    self.playlist.library_parts()
+                } else {
+                    self.playlist.library_parts().for_rhythm()
+                };
                 self.edit("change the band", |project| {
                     match style {
                         Some(style) if project.band().is_some() => {
-                            project.apply_band_parts(style, None, parts)
+                            project.apply_band_parts(style, harmony, parts)
                         }
-                        _ => project.set_band_style(style),
+                        _ => {
+                            project.set_band_style(style);
+                            if let (Some(style), Some(harmony)) = (style, harmony) {
+                                project.apply_band_parts(style, Some(harmony), parts);
+                            }
+                        }
                     }
                     // The swing this style was last played with.
                     if parts.swing
@@ -769,11 +778,14 @@ impl LineupApp {
                         };
                         Some(format!(
                             "The band plays {}; the song's own {names} {} muted",
-                            style.name,
+                            harmony.map_or(style.name, |style| style.name),
                             if muted.len() == 1 { "is" } else { "are" }
                         ))
                     }
-                    (Some(style), _) => Some(format!("The band plays {}", style.name)),
+                    (Some(style), _) => Some(format!(
+                        "Applied selected parts of {}",
+                        harmony.map_or(style.name, |style| style.name)
+                    )),
                     (None, _) => Some("No band".to_string()),
                 };
                 if style.is_some() {
@@ -1636,7 +1648,7 @@ impl eframe::App for LineupApp {
             &self.project,
             playing,
             self.live.typing(),
-            (self.practice.view(), self.playlist.library_parts_mut()),
+            (self.practice.view(), self.playlist.library_browser_mut()),
         );
         for action in sheet_actions {
             self.apply_sheet(action);

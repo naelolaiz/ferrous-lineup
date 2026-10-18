@@ -118,6 +118,12 @@ so a style keeps the current song's chords; check it to take the style's
 progression too. An empty audition pattern uses the style's chords to
 demonstrate it. Rhythm choices always keep the chords.
 
+The chord sheet's **Band** and **Progression** menus use the Library's
+browser too, with the same style names, search and alphabetical ordering
+of genres and entries. Search by name, genre or time signature; the search
+carries between views, and **×** clears it. **Progression** shows harmony
+styles; **Band** also offers rhythms.
+
 Turn off **Use matching style for rhythms** to play simple accents on
 the meter's beat groups with the current instruments, including for odd
 meters that have a matching style. The **Time** picker and bar 1's

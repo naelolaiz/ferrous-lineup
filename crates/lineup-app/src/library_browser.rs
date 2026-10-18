@@ -13,6 +13,9 @@ use lineup_core::library::{
 };
 use lineup_core::{Band, Project, TimeSignature};
 
+pub(crate) mod catalogue;
+use catalogue::{alphabetical, matches};
+
 /// Something picked in the library.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LibraryAction {
@@ -29,6 +32,14 @@ pub enum LibraryAction {
     /// Play this micromode style. The key becomes its micromode, on the
     /// project's key note.
     MicromodeStyle(&'static MicromodeStyle),
+}
+
+/// The same browser serves auditions, the band's playing and written progressions.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum LibraryPurpose {
+    Play,
+    Band,
+    Progression,
 }
 
 /// What the selected pattern was made from, if the library made it, to
@@ -83,14 +94,38 @@ impl LibraryBrowser {
     }
 
     pub fn show(&mut self, ui: &mut Ui, project: &Project, tried: Tried) -> Option<LibraryAction> {
+        self.show_for(ui, project, tried, LibraryPurpose::Play)
+    }
+
+    pub fn show_for(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        tried: Tried,
+        purpose: LibraryPurpose,
+    ) -> Option<LibraryAction> {
         let mut picked = None;
-        ui.add(
-            egui::TextEdit::singleline(&mut self.filter)
-                .hint_text("🔍 Search: bossa, 6/8, tango…")
-                .desired_width(f32::INFINITY),
-        );
-        style_parts_ui(ui, &mut self.parts);
-        if let Some(band) = project.band() {
+        ui.horizontal(|ui| {
+            let width = (ui.available_width() - 28.0).max(80.0);
+            ui.add(
+                egui::TextEdit::singleline(&mut self.filter)
+                    .hint_text("🔍 Search: bossa, 6/8, tango…")
+                    .desired_width(width),
+            );
+            if ui
+                .add_enabled(!self.filter.is_empty(), egui::Button::new("×"))
+                .on_hover_text("Clear search")
+                .clicked()
+            {
+                self.filter.clear();
+            }
+        });
+        if purpose != LibraryPurpose::Progression {
+            style_parts_ui(ui, &mut self.parts);
+        }
+        if purpose != LibraryPurpose::Progression
+            && let Some(band) = project.band()
+        {
             ui.weak(format!("Rhythm style: {}", band.name()));
             ui.weak(format!("Instruments: {}", band.instrument_style.name));
             ui.weak("Chords: chord sheet");
@@ -98,118 +133,149 @@ impl LibraryBrowser {
                 ui.weak("Plain accents with current instruments");
             }
         }
-        ui.weak(
-            "Click to play it in a pattern. Click another to swap. While the song plays, a \
+        ui.weak(match purpose {
+            LibraryPurpose::Play => {
+                "Click to play it in a pattern. Click another to swap. While the song plays, a \
              click plays the whole song that way instead, and the song carries on. Right-click \
-             a rhythm to do that while stopped. Ctrl+Z takes it back.",
-        );
+             a rhythm to do that while stopped. Ctrl+Z takes it back."
+            }
+            LibraryPurpose::Band => {
+                "Choose a style or rhythm to apply the checked components to the band."
+            }
+            LibraryPurpose::Progression => {
+                "Choose a harmony style to write its progression from the selected bar."
+            }
+        });
         ui.add_space(2.0);
 
         let filter = self.filter.trim().to_lowercase();
         let searching = !filter.is_empty();
         let tonic = project.scale.root;
         let now = ui.input(|i| i.time);
-        let new_style = tried.style.is_some() && tried.style != self.shown.style;
-        let new_rhythm = tried.rhythm.is_some() && tried.rhythm != self.shown.rhythm;
-        let new_row = (tried.row_style.is_some() && tried.row_style != self.shown.row_style)
-            || (tried.micromode_style.is_some()
-                && tried.micromode_style != self.shown.micromode_style);
-        self.shown = tried;
+        let tracking = purpose == LibraryPurpose::Play;
+        let new_style = tracking && tried.style.is_some() && tried.style != self.shown.style;
+        let new_rhythm = tracking && tried.rhythm.is_some() && tried.rhythm != self.shown.rhythm;
+        let new_row = tracking
+            && ((tried.row_style.is_some() && tried.row_style != self.shown.row_style)
+                || (tried.micromode_style.is_some()
+                    && tried.micromode_style != self.shown.micromode_style));
+        if tracking {
+            self.shown = tried;
+        }
         if new_style || new_rhythm || new_row {
             self.reveal_until = now + 0.5;
             self.reveal_rhythm = !new_style && !new_row;
             self.reveal_row = new_row;
         }
-        let revealing = now < self.reveal_until;
+        let revealing = tracking && now < self.reveal_until;
         if revealing {
             ui.ctx().request_repaint();
         }
         let scroll_row = revealing && self.reveal_row;
         let scroll_style = revealing && !self.reveal_rhythm && !self.reveal_row;
         let scroll_rhythm = revealing && self.reveal_rhythm;
-        if searching && !anything_matches(&filter) {
+        if searching && !anything_matches(&filter, purpose) {
             ui.label(format!(
                 "Nothing in the library matches \"{}\".",
                 self.filter.trim()
             ));
             ui.weak("Songs with melodies are in File ▸ Demos ▸ Songs.");
         }
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            let open = searching || new_style;
-            section(ui, "Harmony styles", open, |ui| {
-                for genre in Genre::ALL {
-                    let styles: Vec<&'static Style> = STYLES
-                        .iter()
-                        .filter(|style| style.genre == genre)
-                        .filter(|style| {
-                            matches(&filter, style.name, genre, style.time, style.about)
-                        })
-                        .collect();
-                    let open =
-                        searching || (new_style && tried.style.is_some_and(|s| s.genre == genre));
-                    group(ui, "styles", genre, styles.len(), open, |ui| {
-                        for style in styles {
-                            let selected = tried.style == Some(style);
-                            let response = ui
-                                .selectable_label(selected, label(style.name, style.time))
-                                .on_hover_text(describe_style(style, tonic));
-                            if selected && scroll_style {
-                                response.scroll_to_me(None);
+        let max_height = if tracking {
+            f32::INFINITY
+        } else {
+            ui.ctx().content_rect().height() * 0.5
+        };
+        egui::ScrollArea::vertical()
+            .max_height(max_height)
+            .show(ui, |ui| {
+                let open = searching || new_style;
+                section(ui, "Harmony styles", open, |ui| {
+                    for genre in catalogue::genres() {
+                        let styles = catalogue::harmony_styles(&filter, Some(genre));
+                        let open = searching
+                            || ((new_style || !tracking)
+                                && tried.style.is_some_and(|s| s.genre == genre));
+                        group(ui, "styles", genre, styles.len(), open, |ui| {
+                            for style in styles {
+                                let selected = tried.style == Some(style);
+                                let response = ui
+                                    .selectable_label(selected, label(style.name, style.time))
+                                    .on_hover_text(describe_style(style, tonic));
+                                if selected && scroll_style {
+                                    response.scroll_to_me(None);
+                                }
+                                if response.clicked() {
+                                    picked = Some(LibraryAction::Style(style));
+                                }
                             }
-                            if response.clicked() {
-                                picked = Some(LibraryAction::Style(style));
+                        });
+                    }
+                });
+                if purpose == LibraryPurpose::Play {
+                    let open = searching || new_row;
+                    picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
+                    picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
+                }
+                if purpose == LibraryPurpose::Progression {
+                    return;
+                }
+                let open = searching || new_rhythm;
+                section(ui, "Rhythms", open, |ui| {
+                    for genre in catalogue::genres() {
+                        let rhythms = catalogue::rhythms(&filter, Some(genre));
+                        let open = searching
+                            || ((new_rhythm || !tracking)
+                                && tried
+                                    .rhythm
+                                    .is_some_and(|r| r.genre == genre && !FILLS.contains(r)));
+                        group(ui, "rhythms", genre, rhythms.len(), open, |ui| {
+                            for rhythm in rhythms {
+                                picked = picked.or(rhythm_label(
+                                    ui,
+                                    rhythm,
+                                    tried,
+                                    scroll_rhythm,
+                                    purpose,
+                                ));
                             }
-                        }
-                    });
-                }
+                        });
+                    }
+                    if purpose != LibraryPurpose::Play {
+                        return;
+                    }
+                    let fills = alphabetical(
+                        FILLS.iter().filter(|r| {
+                            matches(&filter, r.name, r.genre, r.time, r.about)
+                                || names_a_word(&filter, "fill fills")
+                        }),
+                        |rhythm| rhythm.name,
+                    );
+                    if !fills.is_empty() {
+                        let header =
+                            egui::CollapsingHeader::new(format!("Fills ({})", fills.len()))
+                                .id_salt("rhythms-fills");
+                        let open = searching
+                            || (new_rhythm && tried.rhythm.is_some_and(|r| FILLS.contains(r)));
+                        let header = if open {
+                            header.open(Some(true))
+                        } else {
+                            header
+                        };
+                        header.show(ui, |ui| {
+                            for fill in fills {
+                                picked = picked.or(rhythm_label(
+                                    ui,
+                                    fill,
+                                    tried,
+                                    scroll_rhythm,
+                                    purpose,
+                                ));
+                            }
+                        });
+                    }
+                });
             });
-            let open = searching || new_row;
-            picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
-            picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
-            let open = searching || new_rhythm;
-            section(ui, "Rhythms", open, |ui| {
-                for genre in Genre::ALL {
-                    let rhythms: Vec<&'static Rhythm> = RHYTHMS
-                        .iter()
-                        .filter(|rhythm| rhythm.genre == genre)
-                        .filter(|r| matches(&filter, r.name, genre, r.time, r.about))
-                        .collect();
-                    let open = searching
-                        || (new_rhythm
-                            && tried
-                                .rhythm
-                                .is_some_and(|r| r.genre == genre && !FILLS.contains(r)));
-                    group(ui, "rhythms", genre, rhythms.len(), open, |ui| {
-                        for rhythm in rhythms {
-                            picked = picked.or(rhythm_label(ui, rhythm, tried, scroll_rhythm));
-                        }
-                    });
-                }
-                let fills: Vec<&'static Rhythm> = FILLS
-                    .iter()
-                    .filter(|r| {
-                        matches(&filter, r.name, r.genre, r.time, r.about)
-                            || names_a_word(&filter, "fill fills")
-                    })
-                    .collect();
-                if !fills.is_empty() {
-                    let header = egui::CollapsingHeader::new(format!("Fills ({})", fills.len()))
-                        .id_salt("rhythms-fills");
-                    let open = searching
-                        || (new_rhythm && tried.rhythm.is_some_and(|r| FILLS.contains(r)));
-                    let header = if open {
-                        header.open(Some(true))
-                    } else {
-                        header
-                    };
-                    header.show(ui, |ui| {
-                        for fill in fills {
-                            picked = picked.or(rhythm_label(ui, fill, tried, scroll_rhythm));
-                        }
-                    });
-                }
-            });
-        });
         picked
     }
 }
@@ -257,10 +323,12 @@ fn row_styles(
     tried: Tried,
     scroll: bool,
 ) -> Option<LibraryAction> {
-    let styles: Vec<&'static RowStyle> = ROW_STYLES
-        .iter()
-        .filter(|style| row_style_matches(filter, style))
-        .collect();
+    let styles = alphabetical(
+        ROW_STYLES
+            .iter()
+            .filter(|style| row_style_matches(filter, style)),
+        |style| style.name,
+    );
     if styles.is_empty() {
         return None;
     }
@@ -306,10 +374,12 @@ fn micromode_styles(
     tried: Tried,
     scroll: bool,
 ) -> Option<LibraryAction> {
-    let styles: Vec<&'static MicromodeStyle> = MICROMODE_STYLES
-        .iter()
-        .filter(|style| micromode_style_matches(filter, style))
-        .collect();
+    let styles = alphabetical(
+        MICROMODE_STYLES
+            .iter()
+            .filter(|style| micromode_style_matches(filter, style)),
+        |style| style.name,
+    );
     if styles.is_empty() {
         return None;
     }
@@ -397,6 +467,7 @@ fn rhythm_label(
     rhythm: &'static Rhythm,
     tried: Tried,
     scroll: bool,
+    purpose: LibraryPurpose,
 ) -> Option<LibraryAction> {
     let selected = tried.rhythm == Some(rhythm);
     let is_fill = FILLS.contains(rhythm);
@@ -407,7 +478,9 @@ fn rhythm_label(
         rhythm.tempo,
         rhythm.bars(),
         if rhythm.bars() == 1 { "" } else { "s" },
-        if is_fill {
+        if purpose == LibraryPurpose::Band {
+            "\n\nApply the checked rhythm components to the band."
+        } else if is_fill {
             "\n\nWhile the song plays, a click puts this fill in the last bar of its drums."
         } else {
             "\n\nRight-click to play the whole song in this rhythm. While the song plays, \
@@ -421,7 +494,7 @@ fn rhythm_label(
         response.scroll_to_me(None);
     }
     let mut picked = response.clicked().then_some(LibraryAction::Rhythm(rhythm));
-    if !is_fill {
+    if !is_fill && purpose == LibraryPurpose::Play {
         response.context_menu(|ui| {
             if ui
                 .button("Play the whole song in this rhythm")
@@ -441,7 +514,7 @@ fn rhythm_label(
 }
 
 /// The name, with the time signature after it unless it is 4/4.
-fn label(name: &str, time: TimeSignature) -> String {
+pub(crate) fn label(name: &str, time: TimeSignature) -> String {
     if time.is_common() {
         name.to_string()
     } else {
@@ -473,21 +546,24 @@ fn micromode_style_matches(filter: &str, style: &MicromodeStyle) -> bool {
 }
 
 /// Whether anything at all in the library matches the search.
-fn anything_matches(filter: &str) -> bool {
+fn anything_matches(filter: &str, purpose: LibraryPurpose) -> bool {
     STYLES
         .iter()
         .any(|s| matches(filter, s.name, s.genre, s.time, s.about))
-        || RHYTHMS
-            .iter()
-            .chain(FILLS.iter())
-            .any(|r| matches(filter, r.name, r.genre, r.time, r.about))
-        || names_a_word(filter, "fill fills")
-        || ROW_STYLES
-            .iter()
-            .any(|style| row_style_matches(filter, style))
-        || MICROMODE_STYLES
-            .iter()
-            .any(|style| micromode_style_matches(filter, style))
+        || (purpose != LibraryPurpose::Progression
+            && RHYTHMS
+                .iter()
+                .chain(FILLS.iter())
+                .filter(|r| purpose == LibraryPurpose::Play || !FILLS.contains(r))
+                .any(|r| matches(filter, r.name, r.genre, r.time, r.about)))
+        || (purpose == LibraryPurpose::Play
+            && (names_a_word(filter, "fill fills")
+                || ROW_STYLES
+                    .iter()
+                    .any(|style| row_style_matches(filter, style))
+                || MICROMODE_STYLES
+                    .iter()
+                    .any(|style| micromode_style_matches(filter, style))))
 }
 
 /// Whether `filter` is the start of one of `words` (at least three
@@ -497,16 +573,6 @@ fn names_a_word(filter: &str, words: &str) -> bool {
         && words
             .split_whitespace()
             .any(|word| word.starts_with(filter))
-}
-
-/// Whether an entry matches the search: its name, genre, time signature
-/// or description contains the text.
-fn matches(filter: &str, name: &str, genre: Genre, time: TimeSignature, about: &str) -> bool {
-    filter.is_empty()
-        || name.to_lowercase().contains(filter)
-        || genre.name().to_lowercase().contains(filter)
-        || time.to_string() == filter
-        || about.to_lowercase().contains(filter)
 }
 
 /// The tooltip of a style: its chords in the project's key, and more.
@@ -519,8 +585,7 @@ fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
         format!(" · drums: {}", style.rhythm)
     };
     format!(
-        "{}\n\nIn {}: {}\n{}\n\n{} · {} BPM · {} bars{rhythm}\n\nWhile the song plays, a \
-         click plays the whole song this way, keeping its chords.",
+        "{}\n\nIn {}: {}\n{}\n\n{} · {} BPM · {} bars{rhythm}",
         style.about,
         scale.name(),
         style.chord_names(tonic),
