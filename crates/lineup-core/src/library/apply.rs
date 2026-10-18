@@ -26,10 +26,50 @@ use super::rhythm::Rhythm;
 use super::style::{STYLES, Style};
 use super::voicing::{bass_root, voice, voice_progression};
 
+mod parts;
+pub use parts::{style_instruments, write_rhythm_parts, write_style_parts};
+
 /// The names of the channels the library writes to.
 pub const KEYS: &str = "Keys";
 pub const BASS: &str = "Bass";
 pub const LEAD: &str = "Lead";
+
+/// Which parts of a library choice replace the song's current settings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StyleParts {
+    pub rhythm: bool,
+    pub instruments: bool,
+    pub time_signature: bool,
+    pub progression: bool,
+    pub tempo: bool,
+    pub swing: bool,
+    /// Borrow a rhythm's matching style. Off uses plain accents and the
+    /// current instruments instead of changing the band to that style.
+    pub matching_style: bool,
+}
+
+impl Default for StyleParts {
+    fn default() -> Self {
+        Self {
+            rhythm: true,
+            instruments: true,
+            time_signature: true,
+            progression: false,
+            tempo: true,
+            swing: true,
+            matching_style: true,
+        }
+    }
+}
+
+impl StyleParts {
+    /// Rhythm-only choices never supply a chord progression.
+    pub fn for_rhythm(mut self) -> Self {
+        self.progression = false;
+        self.instruments &= self.matching_style;
+        self
+    }
+}
 
 /// How loud new channels start, so the melody stands out and the chords
 /// stay behind it.
@@ -444,8 +484,23 @@ pub(super) fn drums_in(
 /// "one" every bar, so a 4/4 song played as a waltz becomes a song in
 /// 3/4, each bar's notes keeping their place in the bar.
 pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
-    let (comping, bass) = feel(rhythm);
-    play_song(project, Some(rhythm), rhythm.time, comping, bass)
+    use_rhythm_parts(project, rhythm, StyleParts::default())
+}
+
+pub fn use_rhythm_parts(project: &mut Project, rhythm: &Rhythm, parts: StyleParts) -> RhythmChange {
+    let (comping, bass) = if parts.matching_style {
+        feel(rhythm)
+    } else {
+        (Comping::Accents, Bass::Accents)
+    };
+    let change = play_song(project, Some(rhythm), rhythm.time, comping, bass, parts);
+    if parts.instruments
+        && parts.matching_style
+        && let Some(style) = STYLES.iter().find(|style| style.rhythm == rhythm.name)
+    {
+        style_instruments(project, style, None);
+    }
+    change
 }
 
 /// Plays the whole song the way `style` goes: its rhythm on the drums,
@@ -454,13 +509,30 @@ pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
 /// time signature the same way. A style without a rhythm leaves the drums
 /// as they are.
 pub fn use_style(project: &mut Project, style: &Style) -> RhythmChange {
-    play_song(
+    use_style_parts(project, style, StyleParts::default())
+}
+
+pub fn use_style_parts(project: &mut Project, style: &Style, parts: StyleParts) -> RhythmChange {
+    let mut change = play_song(
         project,
         Rhythm::named(style.rhythm),
         style.time,
         style.comping,
         style.bass,
-    )
+        parts,
+    );
+    if parts.progression {
+        for index in 0..project.patterns().len() {
+            if !is_the_bands(project, index) && parts::progression(project, index, style) {
+                change.harmony += 1;
+            }
+        }
+        project.write_heard_chords();
+    }
+    if parts.instruments {
+        style_instruments(project, style, None);
+    }
+    change
 }
 
 /// Puts `fill` in the last bar of every pattern with drums that is at
@@ -527,9 +599,10 @@ fn play_song(
     time: TimeSignature,
     comping: Comping,
     bass: Bass,
+    parts: StyleParts,
 ) -> RhythmChange {
     let mut change = RhythmChange::default();
-    if remeter(project, time) {
+    if parts.time_signature && remeter(project, time) {
         change.time = Some(time);
     }
     let has_drums = |project: &Project, pattern: usize| {
@@ -555,12 +628,14 @@ fn play_song(
                 .step_by(bar)
                 .all(|start| drums_in(project, pattern, start, bar) != last)
         };
-        if recomp(project, pattern, comping, bass) {
+        let has_chords = heard_chords_channel(project, pattern).is_some();
+        if parts.rhythm && recomp(project, pattern, comping, bass) {
             change.harmony += 1;
-        } else if !drums {
+        } else if !drums && !has_chords {
             continue;
         }
         if let Some(rhythm) = rhythm
+            && parts.rhythm
             && (drums || !any_drums)
         {
             write_rhythm(project, pattern, rhythm);
@@ -572,7 +647,7 @@ fn play_song(
     }
     // The song now swings as much as the rhythm it plays.
     if let Some(rhythm) = rhythm
-        && change.drums > 0
+        && parts.swing
     {
         project.swing = rhythm.swing;
     }

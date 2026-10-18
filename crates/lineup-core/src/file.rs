@@ -146,7 +146,9 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 19 added the band's soloist. Older versions know no such
 /// player, so a song whose band has one, or has a soloist's part, needs
 /// format 19.
-pub const FORMAT_VERSION: u32 = 19;
+/// Format 20 separates a band's rhythm from its instruments and remembers
+/// the exact harmony style and the option to play plain accents.
+pub const FORMAT_VERSION: u32 = 20;
 
 /// The oldest format that can hold `project`.
 ///
@@ -219,7 +221,12 @@ pub fn format_for(project: &Project) -> u32 {
             .patterns()
             .iter()
             .any(|pattern| pattern.player == Some(Player::Soloist));
-    if has_soloist {
+    let has_style_parts = project.band().is_some_and(|band| {
+        band.instrument_style != band.style || band.harmony_style.is_some() || band.accents_only
+    });
+    if has_style_parts {
+        20
+    } else if has_soloist {
         19
     } else if has_breaks {
         18
@@ -718,10 +725,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 20 might have fields we have never heard of. Only the
+        // Format 21 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 20, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(20)), "{error}");
+        let error = from_text("(format: 21, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(21)), "{error}");
     }
 
     #[test]

@@ -20,6 +20,8 @@ use super::variation::Variation;
 pub enum PadPart {
     /// Each chord held for as long as it lasts: a pad under the band.
     Held,
+    /// Plain accents in the bar's beat grouping, on the existing sound.
+    Accents,
     /// The reggae organ's "bubble": short chords between all the beats
     /// low down, and on beats 2 and 4 an octave higher, with the guitar.
     Bubble,
@@ -354,8 +356,13 @@ impl PadPart {
                 .collect()
         };
         match self {
-            PadPart::Held => {
-                let mut notes = Comping::Held.play_in_bars(bars, &raised(octave));
+            PadPart::Held | PadPart::Accents => {
+                let comping = if self == PadPart::Accents {
+                    Comping::Accents
+                } else {
+                    Comping::Held
+                };
+                let mut notes = comping.play_in_bars(bars, &raised(octave));
                 for note in &mut notes {
                     note.velocity = PAD_VELOCITY;
                 }
@@ -373,8 +380,8 @@ impl PadPart {
     /// A short description, for the chord sheet's style menu.
     pub fn describe(self, organ: bool) -> &'static str {
         match (self, organ) {
-            (PadPart::Held, false) => "strings",
-            (PadPart::Held, true) => "an organ",
+            (PadPart::Held | PadPart::Accents, false) => "strings",
+            (PadPart::Held | PadPart::Accents, true) => "an organ",
             (PadPart::Bubble, _) => "an organ bubbling",
         }
     }
