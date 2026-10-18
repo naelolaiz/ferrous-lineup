@@ -1,12 +1,14 @@
-//! Well-known songs in the public domain, with their melodies.
+//! Well-known songs, with their melodies.
 //!
-//! Every song here is old enough to belong to everyone: folk songs
-//! nobody owns, and pieces by composers who died long ago. The melodies
-//! are written in the notation of [`chart::parse_melody`] and the chords
-//! as chord charts, one bar at a time, exactly like a lead sheet. Each
-//! song is dressed in a style (a house track, a swing band, lo-fi...)
-//! by its comping, bass and rhythm, the same building blocks the
-//! harmony styles use.
+//! Almost every song here is old enough to belong to everyone: folk
+//! songs nobody owns, and pieces by composers who died long ago. A few
+//! newer ones are still under copyright in some countries or in all of
+//! them, such as Hit the Road Jack (1960); a comment above each says
+//! so. The melodies are written in the notation of
+//! [`chart::parse_melody`] and the chords as chord charts, one bar at a
+//! time, exactly like a lead sheet. Each song is dressed in a style (a
+//! house track, a swing band, lo-fi...) by its comping, bass and rhythm,
+//! the same building blocks the harmony styles use.
 //!
 //! The songs live in one file per genre, in the `song/` folder next to
 //! this one, and [`SONGS`] lists them all. Songs marked "Written for
@@ -61,24 +63,49 @@ pub struct Part {
 /// The General MIDI instruments a song's channels play (see
 /// [`crate::general_midi`]): the melody (the Lead channel, and every other
 /// voice of a round or a canon), the chords or written-out accompaniment
-/// (Keys) and the bass. A piece from the concert hall gets the
-/// instruments it was written for, and a song dressed in a style gets
-/// that style's band.
+/// (Keys) and the bass, and a big band's horn section. A piece from the
+/// concert hall gets the instruments it was written for, and a song
+/// dressed in a style gets that style's band.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Band {
     pub lead: u8,
     pub keys: u8,
     pub bass: u8,
+    pub horns: Option<Horns>,
+}
+
+/// A horn section behind the melody, on a channel of its own ("Horns"):
+/// it plays the song's chords, voiced as the Keys channel voices them,
+/// in a comping of its own. A big band's saxophones hold the chords
+/// under the trumpet's tune ([`Comping::Held`]), and its brass punch
+/// them on the beat and just before beat 3 ([`Comping::Charleston`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Horns {
+    pub program: u8,
+    pub comping: Comping,
 }
 
 impl Band {
     const fn new(lead: u8, keys: u8, bass: u8) -> Band {
-        Band { lead, keys, bass }
+        Band {
+            lead,
+            keys,
+            bass,
+            horns: None,
+        }
     }
 
     /// One instrument playing everything, such as a piano piece.
     const fn solo(instrument: u8) -> Band {
         Band::new(instrument, instrument, instrument)
+    }
+
+    /// The same band with a horn section playing `program` in `comping`.
+    const fn with_horns(self, program: u8, comping: Comping) -> Band {
+        Band {
+            horns: Some(Horns { program, comping }),
+            ..self
+        }
     }
 }
 
@@ -320,6 +347,15 @@ const BOOM_BAP: Band = Band::new(
 );
 const TRAP: Band = Band::new(gm::CHOIR_AAHS, gm::STRING_ENSEMBLE, gm::SYNTH_BASS);
 const SWING: Band = Band::new(gm::ALTO_SAX, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
+// A big band: a trumpet with the tune over the saxophones holding the
+// chords; the saxophones' tune with the brass punching the chords; and a
+// tenor saxophone's ballad over the trombones.
+const BIG_BAND: Band = Band::new(gm::TRUMPET, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS)
+    .with_horns(gm::TENOR_SAX, Comping::Held);
+const SAX_SECTION: Band = Band::new(gm::ALTO_SAX, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS)
+    .with_horns(gm::BRASS_SECTION, Comping::Charleston);
+const BALLAD_BAND: Band = Band::new(gm::TENOR_SAX, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS)
+    .with_horns(gm::TROMBONE, Comping::Held);
 const DIXIELAND: Band = Band::new(gm::TRUMPET, gm::ACOUSTIC_GRAND_PIANO, gm::TUBA);
 const JAZZ_WALTZ: Band = Band::new(gm::VIBRAPHONE, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
 const GYPSY_JAZZ: Band = Band::new(gm::VIOLIN, gm::JAZZ_GUITAR, gm::ACOUSTIC_BASS);
@@ -400,6 +436,8 @@ pub static SONGS: &[Song] = &[
     blues::TROUBLE_IN_MIND,
     blues::ST_JAMES_INFIRMARY,
     blues::SEE_SEE_RIDER,
+    blues::HIT_THE_ROAD_JACK,
+    blues::ST_LOUIS_BLUES,
     jazz::JINGLE_BELLS,
     jazz::SAINTS,
     jazz::ENTERTAINER,
@@ -417,6 +455,37 @@ pub static SONGS: &[Song] = &[
     jazz::DILL_PICKLES,
     jazz::PINE_APPLE_RAG,
     jazz::ELITE_SYNCOPATIONS,
+    jazz::TEA_FOR_TWO,
+    jazz::LADY_BE_GOOD,
+    jazz::HONEYSUCKLE_ROSE,
+    jazz::SOMETIMES_IM_HAPPY,
+    jazz::MY_BLUE_HEAVEN,
+    jazz::LIMEHOUSE_BLUES,
+    jazz::JAPANESE_SANDMAN,
+    jazz::LIZA,
+    jazz::STRIKE_UP_THE_BAND,
+    jazz::S_WONDERFUL,
+    jazz::IN_THE_MOOD,
+    jazz::SING_SING_SING,
+    jazz::TAKE_THE_A_TRAIN,
+    jazz::FASCINATING_RHYTHM,
+    jazz::LOVE_ME_OR_LEAVE_ME,
+    jazz::MAKIN_WHOOPEE,
+    jazz::WITHOUT_A_SONG,
+    jazz::EMBRACEABLE_YOU,
+    jazz::BUT_NOT_FOR_ME,
+    jazz::SWEET_GEORGIA_BROWN,
+    jazz::AINT_MISBEHAVIN,
+    jazz::IT_HAD_TO_BE_YOU,
+    jazz::TIGER_RAG,
+    jazz::AFTER_YOUVE_GONE,
+    jazz::KING_PORTER_STOMP,
+    jazz::INDIANA,
+    jazz::ROSE_ROOM,
+    jazz::CHARLESTON,
+    jazz::GREAT_DAY,
+    jazz::IF_I_COULD_BE_WITH_YOU,
+    jazz::CAROLINA_IN_THE_MORNING,
     soul::AMAZING_GRACE,
     soul::JOY_TO_THE_WORLD,
     soul::DORIAN_STRUT,
