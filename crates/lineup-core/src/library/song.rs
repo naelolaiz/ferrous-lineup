@@ -408,7 +408,6 @@ const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 // Odd meters, with the beats they are felt in: 3 + 2 quarters, 2 + 3
 // eighths...
 const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
-#[allow(dead_code)] // until its songs are in
 const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
 const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
 #[allow(dead_code)] // until its songs are in
@@ -443,9 +442,7 @@ const ACCORDION_BAND: Band = Band::new(gm::ACCORDION, gm::NYLON_GUITAR, gm::ACOU
 const BALLAD: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::CELLO);
 const KLEZMER: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
 const BALKAN: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
-#[allow(dead_code)] // until its songs are in
 const KAVAL: Band = Band::new(gm::FLUTE, gm::ACCORDION, gm::ACOUSTIC_BASS);
-#[allow(dead_code)] // until its songs are in
 const GREEK: Band = Band::new(gm::VIOLIN, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 // The kanun, the Turkish zither, is played by a koto, the nearest General MIDI sound.
 const TURKISH: Band = Band::new(gm::CLARINET, gm::KOTO, gm::ACOUSTIC_BASS);
@@ -718,6 +715,9 @@ pub static SONGS: &[Song] = &[
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
     balkan::AJDE_JANO,
+    balkan::JOVANO_JOVANKE,
+    balkan::SAMIOTISSA,
+    balkan::PAIDUSHKO_HORO,
     balkan::ENTARISI,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
