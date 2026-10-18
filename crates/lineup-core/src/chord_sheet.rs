@@ -194,11 +194,8 @@ impl Push {
 
 /// Splits the marks off a harmony as typed: the carets of a push before
 /// it and the dots of a stop after it. "N.C." keeps its dots, which are
-/// part of its name.
+/// part of its name, pushed or not.
 fn read_marks(text: &str) -> Result<(Option<Push>, &str, Option<Stop>), String> {
-    if is_no_chord(text) {
-        return Ok((None, text, None));
-    }
     let name = text.trim_start_matches('^');
     let push = match text.len() - name.len() {
         0 => None,
@@ -206,6 +203,9 @@ fn read_marks(text: &str) -> Result<(Option<Push>, &str, Option<Stop>), String> 
         2 => Some(Push::Sixteenth),
         _ => return Err("a push is written ^ (an eighth early) or ^^ (a sixteenth).".to_string()),
     };
+    if is_no_chord(name) {
+        return Ok((push, name, None));
+    }
     let bare = name.trim_end_matches('.');
     let stop = match name.len() - bare.len() {
         0 => None,
@@ -861,6 +861,8 @@ mod tests {
         // N.C. keeps its dots, and a lone "." is still a beat.
         assert_eq!(read("N.C.")[0].harmony, HarmonyName::NoChord);
         assert_eq!(marks(read("N.C.")), [(0, None, None)]);
+        assert_eq!(marks(read("^N.C.")), [(0, Some(Push::Eighth), None)]);
+        assert_eq!(marks(read("^^NC")), [(0, Some(Push::Sixteenth), None)]);
         assert_eq!(marks(read("C . G .")), [(0, None, None), (8, None, None)]);
         // Too many marks, or marks on nothing, are mistakes.
         assert!(read_bar("C....", &bar, C_MAJOR).is_err());
@@ -871,7 +873,13 @@ mod tests {
     #[test]
     fn marks_are_written_back_as_typed() {
         let bar = Meter::steady(TimeSignature::COMMON).bar(0);
-        for text in ["^C.", "C.. G7", "Dm7 / / ^^G7...", "^Menor 3 T2.."] {
+        for text in [
+            "^C.",
+            "C.. G7",
+            "Dm7 / / ^^G7...",
+            "^Menor 3 T2..",
+            "C ^N.C.",
+        ] {
             let markers = read_bar(text, &bar, C_MAJOR).unwrap();
             assert_eq!(write_bar(&markers, &bar), text);
         }
