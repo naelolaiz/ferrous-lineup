@@ -1528,3 +1528,119 @@ pub(super) const RADETZKY_MARCH: Song = Song {
             with the E sharp just below it. The second theme ends on F sharp major chords, \
             and the tune comes back over them before D major returns. The trio is left out.",
 };
+
+/// The Promenade's 5/4 as Mussorgsky writes it: five quarter notes, each
+/// a beat of its own, not the 3 + 2 of `FIVE_FOUR`.
+const FIVE_STEPS: TimeSignature = TimeSignature::new(5, 4);
+
+/// The walking tune, a bar of 5/4 and one of 6/4, as the right hand plays
+/// it alone and then on top of the first chords.
+const PROMENADE_THEME: &str = "G4:4 F4 Bb4 C5:2 F5 D5:4 | C5:2 F5 D5:4 Bb4 C5 G4 F4";
+
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/2144afd6f52d56c5b6995b8b589ef1268b3139f0/ftp/MussorgskyM/pictures-at-an-exhibition/pictures-at-an-exhibition-lys/promenade-1.ly
+// (Pavel Lamm's edition of the piano original, the only source here: the first Promenade,
+// all 24 bars, once, each bar in the meter it is written in. The melody is the top note of
+// the right hand. The chart is read from both hands, one chord to each quarter-note beat;
+// where a beat has two, one on each eighth, it keeps the beat's own chord and leaves out the
+// one passing by: the six-four chords over the stepping bass in bars 10 and 13, the E flat
+// chord leaning on G minor and the F chord passing up to B flat in bars 17 and 19, and the
+// inner voice's E flat, rising to E, in the C major chords of bar 16. Bare octaves get the
+// chord they imply: F (V), A flat (bVII), G minor (vi). The E flat held over G flat in bars
+// 9 and 11, and the G over B flat in bar 12, make sixth chords (bVI6, I6); vi6 in bar 14 is
+// the score's E, B flat, D over G. The band's bass plays each chord's root, so the score's
+// inversions, such as F/A and C/E, and the bass's neighbour notes in bars 9, 11 and 12, are
+// not heard. Bars 6 and 8 begin with two beats of the right hand alone, which a chart cannot
+// leave silent: their left hand is written out instead, its octaves as single notes, and
+// their chords are only shown on the chord sheet. The tempo, 88 to the quarter, is the
+// edition's own MIDI tempo: a walking pace, an allegro held back.)
+pub(super) const PROMENADE: Song = Song {
+    name: "Promenade",
+    origin: "Modest Mussorgsky, Pictures at an Exhibition, 1874",
+    feel: "Piano",
+    genre: Genre::Classical,
+    tonic: ASharp,
+    mode: Major,
+    time: FIVE_STEPS,
+    tempo: 88.0,
+    comping: Comping::Held,
+    bass: Bass::Held,
+    rhythm: "",
+    band: PIANO,
+    style: "",
+    parts: &[
+        Part::new("Call", PROMENADE_THEME, "").in_meters(&[FIVE_STEPS, SIX_FOUR]),
+        Part::new("Answer", PROMENADE_THEME, "vi V vi V iii | V I vi II II V")
+            .in_meters(&[FIVE_STEPS, SIX_FOUR]),
+        Part::new("Second call", "F4:4 G4 D4 F4:2 G4 C4:4", "").in_meters(&[FIVE_STEPS]),
+        Part::new(
+            "Second answer",
+            "G4:2 A4 F4:4 F5 D5 C5:2 Bb4 F4:4",
+            "V V V I vi7 V",
+        )
+        .with_left("-:8 F2:4 Bb2 G2 F2")
+        .in_meters(&[SIX_FOUR]),
+        Part::new("Third call", "F4:4 G4 D4 F4:2 G4 Eb4:4", "").in_meters(&[FIVE_STEPS]),
+        Part::new(
+            "Third answer",
+            "Bb4:2 C5 Ab4:4 Ab5 F5 Eb5:2 Db5 Ab4:4",
+            "bVII bVII bVII bIII i7 bVII",
+        )
+        .with_left("-:8 Ab2:4 Db3 Bb2 Ab2")
+        .in_meters(&[SIX_FOUR]),
+        // The tune in octaves over a held E flat, then the chords in D
+        // flat major, and the first bar again, cut short.
+        Part::new(
+            "In D flat",
+            "Ab4:4 Bb4 Ab4 Bb4:2 C5 Eb5 Bb4 Ab4:4 | \
+             Db5:2 Eb5 F5 Ab5 Gb5 F5 Eb5 Gb5 F5 Db5 Eb5:4 | \
+             Ab4:4 Bb4 Ab4 Bb4:2 C5 Eb5 Bb4",
+            "bVI6 | bIII bIII iv bVII i bVII | bVI6",
+        )
+        .in_meters(&[SIX_FOUR, SIX_FOUR, FIVE_STEPS]),
+        // The same a major third higher, over a held G, in F.
+        Part::new(
+            "In F",
+            "C5:4 D5 C5 D5:2 F5 G5 D5 C5:4 | F5:2 G5 A5 C6 Bb5 A5 G5 Bb5 A5 F5 G5:4 | \
+             A5:2 E5 F5:4 A5 D5 A5 D5 | F5:2 C5 D5:4 F5 D5 F5:2 C5 D5:4 | \
+             C5:4 A4 Bb4 C5 A4 Bb4:2 D5",
+            "I6 | V V vi II iii II | vii I V vi6 V vi6 | iii vi7 iii vi7 iii vi7 | \
+             II V vi7 II V vi7",
+        )
+        .in_meters(&[SIX_FOUR; 5]),
+        Part::new(
+            "Home",
+            "C5:4 A4 C5 F5 Eb5:2 D5 C5 Bb4 | C5:4 D5 F5 G5:2 Bb5 F5:4 G5 | \
+             F5:4 Eb5:2 D5 C5 Bb4 C5:4 D5 F5 | G5:2 Bb5 F5:4 G5 F5 G4 F4 | \
+             G5:2 Bb5 F5:4 G5 F5 G4 F4 | Bb4:4 C5:2 F5 D5:4 C5:2 F5 D5:4 Bb4 | \
+             C5:4 G4 F4 G4 F4 Bb4 | C5:2 F5 D5:4 Bb4 Eb5 C5 Bb4",
+            "II V6 II V vi I | V I V IV V vi | V vi I V I V | IV V vi V vi V | \
+             II7 V vi V IV V | I V I V vi7 vi7 | ii II V vi V vi | V I vi ii V I",
+        )
+        .in_meters(&[SIX_FOUR; 8]),
+    ],
+    form: &[
+        "Call",
+        "Answer",
+        "Second call",
+        "Second answer",
+        "Third call",
+        "Third answer",
+        "In D flat",
+        "In F",
+        "Home",
+    ],
+    drums_from: 0,
+    about: "The composer himself, walking from one picture to the next. The meter changes \
+            from bar to bar, five quarter notes, then six, as a sentence or a Russian folk \
+            song takes the breath it needs instead of keeping a dance beat. Count every \
+            quarter, 1 2 3 4 5, 1 2 3 4 5 6, each step as heavy as the last: the marking asks \
+            for a strict allegro \"in the Russian manner, without gaiety, but a little held \
+            back\", and nearly every note of the lone tune is marked tenuto, leaned on. The \
+            right hand sings the phrase alone and the whole piano answers in chords of B flat \
+            major, a new one on almost every beat: G minor, F, G minor, F, D minor (vi V vi V \
+            iii), then F, B flat, G minor, C major (II, the V of V) and F. Twice more the tune \
+            sets off alone; the answers turn to F, then to D flat major (bIII), where the tune \
+            circles over a held E flat. The same passage comes back a major third higher, in \
+            F, and the last bars bring it home to B flat in chords and bare octaves, ending \
+            ii V I.",
+};

@@ -241,10 +241,12 @@ impl BandStyle {
     }
 
     /// The General MIDI instrument of the piano: an electric piano in
-    /// the electronic, hip hop and soul styles, a grand piano elsewhere.
+    /// the electronic, hip hop and soul styles, an accordion in the
+    /// Balkan ones, a grand piano elsewhere.
     fn piano_program(&self) -> u8 {
         match self.genre {
             Genre::Electronic | Genre::HipHop | Genre::Soul => 4,
+            Genre::Balkan => 21,
             _ => 0,
         }
     }
@@ -258,6 +260,7 @@ impl BandStyle {
             | Genre::Tango
             | Genre::Folklore
             | Genre::Flamenco
+            | Genre::Balkan
             | Genre::Folk
             | Genre::Classical => 32,
             Genre::Electronic | Genre::HipHop => 38,

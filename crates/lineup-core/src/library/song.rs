@@ -52,6 +52,12 @@ pub struct Part {
     /// A time signature of its own, for a part in another time than the
     /// rest of the song. The demo puts a time marker where it starts.
     pub time: Option<TimeSignature>,
+    /// The time signature of each bar, for music whose meter changes
+    /// from bar to bar, as in Mussorgsky's Promenade: 5/4, 6/4, 5/4...
+    /// Empty when every bar is in the part's time. The demo puts a time
+    /// marker wherever the meter changes, and a pattern for each run of
+    /// bars in one time signature, since a pattern has one.
+    pub meters: &'static [TimeSignature],
     /// The key this part is in, when it is not the song's. Its chords
     /// are read in this key, so a piece that modulates has a part for
     /// each key it visits.
@@ -160,6 +166,7 @@ impl Part {
             left: "",
             voices: &[(1, 0)],
             time: None,
+            meters: &[],
             key: None,
             tempo: &[],
             played: None,
@@ -181,6 +188,12 @@ impl Part {
             time: Some(time),
             ..self
         }
+    }
+
+    /// The same part with a time signature for each bar, for music whose
+    /// meter changes from bar to bar.
+    const fn in_meters(self, meters: &'static [TimeSignature]) -> Part {
+        Part { meters, ..self }
     }
 
     /// The same part with the tempo markings of the score.
@@ -286,9 +299,46 @@ impl Song {
         Scale::new(self.tonic, self.mode)
     }
 
-    /// The time signature `part` is in: its own, or else the song's.
+    /// The time signature `part` is in: its own, or else the song's. A
+    /// part whose meter changes from bar to bar is in the time of its
+    /// first bar.
     pub fn part_time(&self, part: &Part) -> TimeSignature {
-        part.time.unwrap_or(self.time)
+        part.meters
+            .first()
+            .copied()
+            .or(part.time)
+            .unwrap_or(self.time)
+    }
+
+    /// `part` cut where its meter changes: one part for each run of bars
+    /// in one time signature, each with its own time and its own share
+    /// of the melody, the chords and the written-out accompaniment. A
+    /// part in one time signature is a single run, itself. The pieces
+    /// keep the part's name, voices and key, and its tempo markings go
+    /// with the first.
+    pub fn part_runs(&self, part: &Part) -> Vec<Part> {
+        if part.meters.is_empty() {
+            return vec![*part];
+        }
+        let mut runs: Vec<(usize, usize, TimeSignature)> = Vec::new();
+        for (bar, &time) in part.meters.iter().enumerate() {
+            match runs.last_mut() {
+                Some((_, bars, last)) if *last == time => *bars += 1,
+                _ => runs.push((bar, 1, time)),
+            }
+        }
+        runs.iter()
+            .enumerate()
+            .map(|(index, &(first, bars, time))| Part {
+                melody: bars_of(part.melody, first, bars),
+                chords: bars_of(part.chords, first, bars),
+                left: bars_of(part.left, first, bars),
+                time: Some(time),
+                meters: &[],
+                tempo: if index == 0 { part.tempo } else { &[] },
+                ..*part
+            })
+            .collect()
     }
 
     /// How `part` is accompanied: its comping, bass line and rhythm, its
@@ -326,6 +376,23 @@ impl Song {
     }
 }
 
+/// Bars `first` to `first + count` of a melody or a chart: the text
+/// between its bar lines. Text that is a slice of `'static` text lives
+/// as long, so the pieces of a part are parts too.
+fn bars_of(text: &'static str, first: usize, count: usize) -> &'static str {
+    if text.trim().is_empty() {
+        return text;
+    }
+    // Where each bar starts and ends, in bytes.
+    let mut cuts = vec![0];
+    cuts.extend(text.match_indices('|').map(|(at, _)| at));
+    cuts.push(text.len());
+    let start = cuts[first.min(cuts.len() - 1)];
+    let end = cuts[(first + count).min(cuts.len() - 1)];
+    // Leave out the bar line the piece starts with.
+    text[start..end].trim_start_matches('|').trim()
+}
+
 // Every genre file starts with `use super::*;`, which brings in all the
 // names below: `Song`, `Part`, the time signatures, and the notes and
 // scales without their type in front, so a song can say `tonic: A`.
@@ -337,6 +404,18 @@ const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const NINE_EIGHT: TimeSignature = TimeSignature::new(9, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
+// Six quarter notes, each a beat, as in Mussorgsky's Promenade.
+const SIX_FOUR: TimeSignature = TimeSignature::new(6, 4);
+// Odd meters, with the beats they are felt in: 3 + 2 quarters, 2 + 3
+// eighths...
+const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
+const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
+const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
+const TWO_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 2, 3], 8);
+const NINE_EIGHT_AKSAK: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 3], 8);
+const RAKS_AKSAGI: TimeSignature = TimeSignature::of_groups(&[2, 3, 2, 2], 8);
+const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
+const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
 
 // The bands the songs are dressed in, named after their style. Each is
 // melody, chords, bass. A piece from the concert hall names its own
@@ -359,6 +438,11 @@ const JIG: Band = Band::new(gm::FIDDLE, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 const ACCORDION_BAND: Band = Band::new(gm::ACCORDION, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const BALLAD: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::CELLO);
 const KLEZMER: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
+const BALKAN: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
+const KAVAL: Band = Band::new(gm::FLUTE, gm::ACCORDION, gm::ACOUSTIC_BASS);
+const GREEK: Band = Band::new(gm::VIOLIN, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
+// The kanun, the Turkish zither, is played by a koto, the nearest General MIDI sound.
+const TURKISH: Band = Band::new(gm::CLARINET, gm::KOTO, gm::ACOUSTIC_BASS);
 const POLKA: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::TUBA);
 const ANDEAN: Band = Band::new(gm::PAN_FLUTE, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const LLANERO: Band = Band::new(gm::HARP, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
@@ -413,6 +497,7 @@ const SON: Band = Band::new(gm::TRUMPET, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 /// Trumpets, the vihuela and guitars, and the guitarrón.
 const MARIACHI: Band = Band::new(gm::TRUMPET, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 
+mod balkan;
 mod blues;
 mod classical;
 mod electronic;
@@ -510,6 +595,7 @@ pub static SONGS: &[Song] = &[
     jazz::GREAT_DAY,
     jazz::IF_I_COULD_BE_WITH_YOU,
     jazz::CAROLINA_IN_THE_MORNING,
+    jazz::TAKE_FIVE,
     soul::AMAZING_GRACE,
     soul::JOY_TO_THE_WORLD,
     soul::DORIAN_STRUT,
@@ -625,6 +711,15 @@ pub static SONGS: &[Song] = &[
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
+    balkan::AJDE_JANO,
+    balkan::JOVANO_JOVANKE,
+    balkan::SAMIOTISSA,
+    balkan::PAIDUSHKO_HORO,
+    balkan::SVATBARSKA_RACHENITSA,
+    balkan::DAICHOVO_HORO,
+    balkan::GANKINO_HORO,
+    balkan::BUCIMIS,
+    balkan::ENTARISI,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
     reggae::VALLEY_DUB,
@@ -686,6 +781,7 @@ pub static SONGS: &[Song] = &[
     classical::TRAUMEREI,
     classical::SYMPHONY_7_ALLEGRETTO,
     classical::RADETZKY_MARCH,
+    classical::PROMENADE,
 ];
 
 #[cfg(test)]
@@ -698,7 +794,15 @@ mod tests {
     #[test]
     fn every_bar_of_every_part_adds_up() {
         for song in SONGS {
-            for part in song.parts {
+            for whole in song.parts {
+                if !whole.meters.is_empty() {
+                    let bars = chart::parse_melody(whole.melody).unwrap().bars.len();
+                    assert_eq!(bars, whole.meters.len(), "{}: a meter per bar", song.name);
+                    assert_eq!(whole.voices, [(1, 0)], "{}: one voice", song.name);
+                }
+            }
+            for part in song.parts.iter().flat_map(|part| song.part_runs(part)) {
+                let part = &part;
                 let bar = song.part_time(part).steps_per_bar();
                 let what = format!("{}, {}", song.name, part.name);
                 for text in [part.melody, part.left] {
@@ -824,15 +928,20 @@ mod tests {
     fn melodies_are_mostly_in_their_key() {
         // A few notes from outside the key are normal (passing notes,
         // borrowed leading notes), but a song with many is more likely
-        // a typo, such as F written for F#.
+        // a typo, such as F written for F#. The Phrygian of flamenco and
+        // of the Turkish makam hicaz raises its third (E F G# A B C D):
+        // that G# counts as in the key.
         for song in SONGS {
             let mut total = 0;
             let mut inside = 0;
             for part in song.parts {
                 let scale = song.part_scale(part);
+                let raised_third =
+                    (scale.kind == ScaleKind::Phrygian).then(|| scale.root.transpose(4));
                 for note in part.melody().notes {
                     total += 1;
-                    if scale.contains(note.pitch.pitch_class()) {
+                    let pitch = note.pitch.pitch_class();
+                    if scale.contains(pitch) || Some(pitch) == raised_third {
                         inside += 1;
                     }
                 }

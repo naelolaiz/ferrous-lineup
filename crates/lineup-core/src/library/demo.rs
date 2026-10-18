@@ -212,7 +212,7 @@ fn last_bar(song: &Song, end: usize) -> Option<usize> {
     if !part.tempo.is_empty() {
         return None;
     }
-    end.checked_sub(song.part_time(part).steps_per_bar())
+    end.checked_sub(last_time(song, part).steps_per_bar())
 }
 
 /// A *poco rit.*, a little slowing down, over the last bar of the music,
@@ -405,82 +405,105 @@ pub fn song_demo(song: &Song) -> Project {
         }
     }
 
-    // One pattern per part. `Project::empty` starts with one pattern,
-    // which the first part uses.
-    let mut patterns = Vec::new();
-    for (number, part) in song.parts.iter().enumerate() {
-        let time = song.part_time(part);
-        let bar = time.steps_per_bar();
-        let length = part.length(bar);
-        let index = if number == 0 {
-            if let Some(pattern) = project.pattern_mut(0) {
-                pattern.name = part.name.to_string();
-                pattern.set_length(length);
-            }
-            0
-        } else {
-            new_pattern(&mut project, part.name, length)
-        };
-        let melody = melody_notes(song, part, time, length, voices.len());
-        let tonic = song.part_scale(part).root;
-        let (mut chords, mut bass_line) = if part.left.is_empty() {
-            let (comping, bass, _) = song.part_playing(part);
-            let backing = accompany_in_bars(&part.spans(bar, tonic), tonic, comping, bass, time);
-            (backing.chords, backing.bass)
-        } else {
-            (part.left().notes, Vec::new())
-        };
-        // The horns play the chart in their own comping, so a part with
-        // its accompaniment written out has none for them.
-        let mut horn_notes = match horns {
-            Some((_, horns)) if part.left.is_empty() => {
-                accompany(&part.spans(bar, tonic), tonic, horns.comping, Bass::None).chords
-            }
-            _ => Vec::new(),
-        };
-        let seed = |channel| interpret::seed(song.name, part.name, channel);
-        interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
-        interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
-        interpret::perform(&mut horn_notes, time, Role::Accompaniment, seed(HORNS));
-        if let Some(pattern) = project.pattern_mut(index) {
-            for (&channel, notes) in voices.iter().zip(melody) {
-                if let Some(channel) = channel {
-                    pattern.set_notes(channel, notes);
+    // One pattern per part, or per run of bars in one time signature of
+    // a part whose meter changes bar by bar (see `Song::part_runs`).
+    // `Project::empty` starts with one pattern, which the first part uses.
+    let mut patterns: Vec<Piece> = Vec::new();
+    for part in song.parts {
+        let mut bar_number = 0;
+        for (run, piece) in song.part_runs(part).iter().enumerate() {
+            let time = song.part_time(piece);
+            let bar = time.steps_per_bar();
+            let length = piece.length(bar);
+            let name = if run == 0 {
+                part.name.to_string()
+            } else {
+                format!("{}, bar {}", part.name, bar_number + 1)
+            };
+            bar_number += length / bar;
+            let index = if patterns.is_empty() {
+                if let Some(pattern) = project.pattern_mut(0) {
+                    pattern.name = name.clone();
+                    pattern.set_length(length);
+                }
+                0
+            } else {
+                new_pattern(&mut project, &name, length)
+            };
+            let melody = melody_notes(song, piece, time, length, voices.len());
+            let tonic = song.part_scale(piece).root;
+            let spans = piece.spans(bar, tonic);
+            let (mut chords, mut bass_line) = if piece.left.is_empty() {
+                let (comping, bass, _) = song.part_playing(piece);
+                let backing = accompany_in_bars(&spans, tonic, comping, bass, time);
+                (backing.chords, backing.bass)
+            } else {
+                (piece.left().notes, Vec::new())
+            };
+            // The horns play the chart in their own comping, so a part with
+            // its accompaniment written out has none for them.
+            let mut horn_notes = match horns {
+                Some((_, horns)) if piece.left.is_empty() => {
+                    accompany(&spans, tonic, time, horns.comping, Bass::None).chords
+                }
+                _ => Vec::new(),
+            };
+            let seed = |channel| interpret::seed(song.name, &name, channel);
+            interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
+            interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
+            interpret::perform(&mut horn_notes, time, Role::Accompaniment, seed(HORNS));
+            if let Some(pattern) = project.pattern_mut(index) {
+                for (&channel, notes) in voices.iter().zip(melody) {
+                    if let Some(channel) = channel {
+                        pattern.set_notes(channel, notes);
+                    }
+                }
+                if let Some(keys) = keys {
+                    pattern.set_notes(keys, chords);
+                }
+                if let Some(bass) = bass {
+                    pattern.set_notes(bass, bass_line);
+                }
+                if let Some((horns, _)) = horns {
+                    pattern.set_notes(horns, horn_notes);
                 }
             }
-            if let Some(keys) = keys {
-                pattern.set_notes(keys, chords);
-            }
-            if let Some(bass) = bass {
-                pattern.set_notes(bass, bass_line);
-            }
-            if let Some((horns, _)) = horns {
-                pattern.set_notes(horns, horn_notes);
-            }
+            patterns.push(Piece {
+                part: part.name,
+                name,
+                pattern: index,
+                length,
+                time,
+                spans,
+                drums: None,
+            });
         }
-        patterns.push((part, index, length, time));
     }
 
-    // A drum pattern for each part, with a fill at the end of long ones.
+    // A drum pattern for each piece, with a fill at the end of long ones.
     // Patterns without clips are counted in the project's time signature,
-    // so it is the part's own while its drums are written.
+    // so it is the piece's own while its drums are written.
     let rhythm = Rhythm::named(song.rhythm);
-    let mut drums = Vec::new();
     if let Some(rhythm) = rhythm {
-        for &(part, _, length, time) in &patterns {
+        for piece in &mut patterns {
             // A part played its own way has its own rhythm, or none.
-            let rhythm = match part.played {
+            let rhythm = match song.part(piece.part).and_then(|part| part.played) {
                 Some((_, _, own)) => Rhythm::named(own),
-                None => rhythm_in(rhythm, time),
+                None => rhythm_in(rhythm, piece.time),
             };
             let Some(rhythm) = rhythm else {
                 continue;
             };
-            project.time_signature = time;
-            let long = length >= 4 * time.steps_per_bar();
-            let name = format!("{} drums", part.name);
-            let index = drum_pattern(&mut project, &name, length, rhythm, long);
-            drums.push((part.name, index));
+            project.time_signature = piece.time;
+            let long = piece.length >= 4 * piece.time.steps_per_bar();
+            let name = format!("{} drums", piece.name);
+            piece.drums = Some(drum_pattern(
+                &mut project,
+                &name,
+                piece.length,
+                rhythm,
+                long,
+            ));
         }
     }
     // The ending is a bar of the last part's time, on the home chord of
@@ -489,7 +512,8 @@ pub fn song_demo(song: &Song) -> Project {
     // ends where its score ends, with nothing added.
     let last_part = song.form.last().and_then(|name| song.part(name));
     let written_out = last_part.is_some_and(|part| !part.left.is_empty());
-    project.time_signature = last_part.map_or(song.time, |part| song.part_time(part));
+    let last_time = last_part.map_or(song.time, |part| last_time(song, part));
+    project.time_signature = last_time;
     project.scale = last_part.map_or(song.scale(), |part| song.part_scale(part));
     let end = (!written_out).then(|| ending(&mut project, rhythm.is_some()));
     project.time_signature = song.time;
@@ -499,46 +523,41 @@ pub fn song_demo(song: &Song) -> Project {
     let mut at = 0;
     let mut time_here = song.time;
     for (entry, name) in song.form.iter().enumerate() {
-        let Some(&(_, pattern, length, time)) =
-            patterns.iter().find(|(part, ..)| part.name == *name)
-        else {
+        let Some(part) = song.part(name) else {
             continue;
         };
-        if time != time_here {
-            project.set_time_marker(TimeMarker::new(at, time));
-            time_here = time;
+        // A part in a key of its own is a modulation: the key changes
+        // where it starts, and changes back after it.
+        let key = song.part_scale(part);
+        if key != project.key_at(at) {
+            project.set_key_marker(KeyMarker::new(at, key));
         }
-        if let Some(part) = song.part(name) {
-            // A part in a key of its own is a modulation: the key changes
-            // where it starts, and changes back after it.
-            let key = song.part_scale(part);
-            if key != project.key_at(at) {
-                project.set_key_marker(KeyMarker::new(at, key));
-            }
-            for &mark in part.tempo {
-                mark_tempo(&mut project, at, mark);
+        for &mark in part.tempo {
+            mark_tempo(&mut project, at, mark);
+        }
+        for piece in patterns.iter().filter(|piece| piece.part == *name) {
+            if piece.time != time_here {
+                project.set_time_marker(TimeMarker::new(at, piece.time));
+                time_here = piece.time;
             }
             // A part with its accompaniment written out may still have a
             // chart, which names what it plays; without one, its chords
             // are only heard (see `Project::heard_chords`).
-            let spans = part.spans(time.steps_per_bar(), key.root);
-            write_chart(&mut project, at, &spans, key);
+            write_chart(&mut project, at, &piece.spans, key);
+            project.add_clip(Clip::new(piece.pattern, SONG_TRACK, at));
+            if entry >= song.drums_from
+                && let Some(drums) = piece.drums
+            {
+                project.add_clip(Clip::new(drums, DRUM_TRACK, at));
+            }
+            at += piece.length;
         }
-        project.add_clip(Clip::new(pattern, SONG_TRACK, at));
-        if entry >= song.drums_from
-            && let Some(&(_, drum)) = drums.iter().find(|(part, _)| part == name)
-        {
-            project.add_clip(Clip::new(drum, DRUM_TRACK, at));
-        }
-        at += length;
     }
     if let Some(end) = end {
         project.add_clip(Clip::new(end, SONG_TRACK, at));
         if !project.playlist().chord_markers().is_empty() {
-            let (time, key) = last_part.map_or((song.time, song.scale()), |part| {
-                (song.part_time(part), song.part_scale(part))
-            });
-            write_ending(&mut project, at, time.steps_per_bar(), key);
+            let key = last_part.map_or(song.scale(), |part| song.part_scale(part));
+            write_ending(&mut project, at, last_time.steps_per_bar(), key);
         }
     }
     // A marking that would start after the music, such as the tempo
@@ -561,6 +580,31 @@ pub fn song_demo(song: &Song) -> Project {
     project.swing = song.swing();
     project.remove_unused_tracks();
     project
+}
+
+/// One pattern of a song demo: a part, or a run of its bars in one time
+/// signature (see [`Song::part_runs`]).
+struct Piece {
+    /// The part it belongs to.
+    part: &'static str,
+    /// The name of its pattern: the part's, and for the later runs of a
+    /// part, the bar it starts on too ("Promenade, bar 2").
+    name: String,
+    pattern: usize,
+    length: usize,
+    time: TimeSignature,
+    /// Its chords, from its first step.
+    spans: Vec<ChordSpan>,
+    /// Its drum pattern, if the song has drums.
+    drums: Option<usize>,
+}
+
+/// The time signature the last bar of `part` is in.
+fn last_time(song: &Song, part: &Part) -> TimeSignature {
+    part.meters
+        .last()
+        .copied()
+        .unwrap_or_else(|| song.part_time(part))
 }
 
 /// The rhythm to play in a part in `time`: the song's own if it is in
@@ -694,6 +738,7 @@ mod tests {
             left: "",
             voices: &[(1, 0)],
             time: Some(waltz),
+            meters: &[],
             key: None,
             tempo: &[],
             played: None,

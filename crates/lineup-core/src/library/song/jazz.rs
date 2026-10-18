@@ -3445,3 +3445,84 @@ pub(super) const CAROLINA_IN_THE_MORNING: Song = Song {
             D minor (ii). The middle eight starts on F (IV) and climbs by half steps, F sharp, \
             G, G sharp, A, over D7, the V of V, to land on G.",
 };
+
+// Still under copyright: written in 1959 (Paul Desmond died in 1977).
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/PaulDesmondTakeFive.abc
+// (Desmond's alto saxophone part of the Time Out recording, written for the E flat alto, a
+// major sixth above the sound; here at concert pitch, in E flat minor. The intro is the
+// eleven bars the piano and drums play before he comes in, shortened to four. The four
+// sixteenths of "dedc" are written as eighths there, which overfills the bar; they are
+// sixteenths in the lead sheet below, as here. Checked note by note against the Wikifonia
+// lead sheet of Carmen McRae's sung version,
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/PaulDesmondCarmenMcRaeTakeFive.abc,
+// which gives the chords: E flat minor for three beats and B flat minor seven for two, and
+// the bridge's. Desmond's bridge is the same; his A plays a little chromatic run, B, C, D
+// flat, where the singer holds G flat, B flat, D flat.)
+pub(super) const TAKE_FIVE: Song = Song {
+    name: "Take Five",
+    origin: "Paul Desmond, for the Dave Brubeck Quartet's Time Out, 1959",
+    feel: "Five-four swing",
+    genre: Genre::Jazz,
+    tonic: DSharp,
+    mode: NaturalMinor,
+    time: FIVE_FOUR,
+    tempo: 172.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Five-four swing",
+    band: SWING,
+    style: "Five-four swing",
+    parts: &[
+        Part::new(
+            "Intro",
+            "-:20 | -:20 | -:20 | -:12 Bb3:2 Eb4 Gb4 Ab4",
+            "i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | i i i v7 v7",
+        ),
+        Part::new(
+            "A",
+            "A4:2 Bb4 A4 Ab4 Gb4 -:2 Bb3:2 B3:1 C4 Db4:2 -:2 | Eb4:12 F4:1 Gb4 F4 Eb4 Db4:4 | \
+             Eb4:12 Db4:1 Eb4 Db4 Bb3 Ab3:4 | Bb3:12 Bb3:2 Eb4 Gb4 Ab4 | \
+             A4:2 Bb4 A4 Ab4 Gb4 -:2 Bb3:2 B3:1 C4 Db4:2 -:2 | Eb4:12 Db4:1 Eb4 Db4 Bb3 Ab3:4 | \
+             Bb3:12 F4:1 Gb4 F4 Eb4 Db4:4 | Eb4:16 -:4",
+            "i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | \
+             i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | i i i v7 v7",
+        ),
+        Part::new(
+            "Bridge",
+            "Eb5:2 Gb5:4 Eb5:2 B4:4 Ab4:2 Bb4 B4 C5 | Db5:2 F5:4 Db5:2 Bb4:4 Gb4:2 Ab4 A4 Bb4 | \
+             B4:2 Eb5:4 B4:2 Ab4:4 F4:2 Gb4 Ab4 A4 | Bb4:2 A4 Bb4 B4 Db5:4 Db5:2 C5 Db5 D5 | \
+             Eb5:2 Gb5:4 Eb5:2 B4:4 Ab4:2 Bb4 B4 C5 | Db5:2 F5:4 Db5:2 Bb4:4 Gb4:2 Ab4 A4 Bb4 | \
+             B4:2 Eb5:4 B4:2 Ab4:4 F4:2 Ab4 Db5 B4 | Bb4:12 Bb3:2 Eb4 Gb4 Ab4",
+            "bVImaj7 bVImaj7 bVImaj7 iv6 iv6 | v7 v7 v7 i7 i7 | iv7 iv7 iv7 bVII7 bVII7 | \
+             bIIImaj7 | bVImaj7 bVImaj7 bVImaj7 iv6 iv6 | v7 v7 v7 i7 i7 | \
+             iv7 iv7 iv7 bVII7 bVII7 | ii7 ii7 ii7 V7 V7",
+        ),
+        Part::new(
+            "Vamp",
+            "-:20 | -:20 | -:20 | -:20 | -:20 | -:20 | -:20 | -:12 Bb3:2 Eb4 Gb4 Ab4",
+            "i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | \
+             i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | i i i v7 v7",
+        ),
+        Part::new(
+            "Last A",
+            "A4:2 Bb4 A4 Ab4 Gb4 -:2 Bb3:2 B3:1 C4 Db4:2 -:2 | Eb4:12 F4:1 Gb4 F4 Eb4 Db4:4 | \
+             Eb4:12 Db4:1 Eb4 Db4 Bb3 Ab3:4 | Bb3:12 Bb3:2 Eb4 Gb4 Ab4 | \
+             A4:2 Bb4 A4 Ab4 Gb4 -:2 Bb3:2 B3:1 C4 Db4:2 -:2 | Eb4:12 Db4:1 Eb4 Db4 Bb3 Ab3:4 | \
+             Bb3:12 F4:1 Gb4 F4 Eb4 Db4:4 | Eb4:16 -:4",
+            "i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | \
+             i i i v7 v7 | i i i v7 v7 | i i i v7 v7 | i",
+        ),
+    ],
+    form: &["Intro", "A", "Bridge", "A", "Vamp", "A", "Bridge", "Last A"],
+    drums_from: 0,
+    about: "Five beats to the bar, counted 1 2 3, 1 2: the piano's vamp holds E flat minor \
+            for three beats and B flat minor seven for two, and the bass and the drums lean \
+            on 1 and 4. Over it the alto saxophone's A section climbs through A natural, the \
+            sharp fourth of the key, the bluesy note of the whole tune. The bridge leaves the \
+            vamp for C flat major seven (bVI), then walks round the circle of fifths, B flat \
+            minor, E flat minor, A flat minor, D flat seven, to G flat major, the relative \
+            major; the second time round it ends on F minor seven and B flat seven, the V7 \
+            that leads home to the vamp. The head, A B A, is played \
+            twice around eight bars of vamp, where the solos go. The app names the key D sharp \
+            minor, the same six-accidental key spelled with sharps.",
+};

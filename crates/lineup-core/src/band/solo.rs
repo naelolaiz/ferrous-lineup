@@ -321,6 +321,7 @@ impl Soloist {
             Genre::Tango => (gm::TANGO_ACCORDION, 55, 84),
             Genre::Folklore => (gm::PAN_FLUTE, 64, 88),
             Genre::Flamenco => (gm::NYLON_GUITAR, 52, 81),
+            Genre::Balkan => (gm::CLARINET, 50, 82),
             Genre::Folk => (gm::FIDDLE, 55, 88),
             Genre::Classical => (gm::FLUTE, 65, 89),
             Genre::HipHop => (gm::VIBRAPHONE, 60, 84),
