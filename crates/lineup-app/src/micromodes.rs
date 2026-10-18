@@ -308,7 +308,7 @@ impl MicromodeWindow {
                 RichText::new(format!("{label}: {} ({})", names.join(" "), digits(form))).strong(),
             );
         });
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui
                 .button("▶ Hear it")
                 .on_hover_text("Play the three notes together, from middle C")
