@@ -119,11 +119,6 @@ pub struct LineupApp {
     /// The song's style and rhythm in versions of the project the library
     /// changed, so undo and redo show the right ones selected.
     song_versions: Vec<(Project, Tried)>,
-    /// Versions of the song the library made, each with the song it
-    /// started from. A rhythm or a style picked for the whole song starts
-    /// again from that original, so flicking through rhythms in other
-    /// time signatures never squeezes an already squeezed song.
-    song_originals: Vec<(Project, Project)>,
     file: files::FileState,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
@@ -212,7 +207,6 @@ impl LineupApp {
             auditions: Vec::new(),
             song_library: Tried::default(),
             song_versions: Vec::new(),
-            song_originals: Vec::new(),
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
@@ -738,15 +732,26 @@ impl LineupApp {
                 let before = self.project.clone();
                 let previous = self.tried();
                 let swing = style.and_then(|style| self.swings.of(style.name));
+                let parts = self.playlist.library_parts().for_rhythm();
                 self.edit("change the band", |project| {
-                    project.set_band_style(style);
+                    match style {
+                        Some(style) if project.band().is_some() => {
+                            project.apply_band_parts(style, None, parts)
+                        }
+                        _ => project.set_band_style(style),
+                    }
                     // The swing this style was last played with.
-                    if let Some(swing) = swing {
+                    if parts.swing
+                        && let Some(swing) = swing
+                    {
                         project.swing = swing;
                     }
                 });
-                self.song_library =
-                    style.map_or_else(Tried::default, |style| Tried::default().for_band(style));
+                self.song_library = self
+                    .project
+                    .band()
+                    .map_or_else(Tried::default, Tried::from_band);
+                self.keep_place_in_song(&before);
                 self.remember_song_version(before, previous);
                 self.remember_song_version(self.project.clone(), self.song_library);
                 self.notice = match (style, self.project.band()) {
@@ -1630,7 +1635,7 @@ impl eframe::App for LineupApp {
             &self.project,
             playing,
             self.live.typing(),
-            self.practice.view(),
+            (self.practice.view(), self.playlist.library_parts_mut()),
         );
         for action in sheet_actions {
             self.apply_sheet(action);

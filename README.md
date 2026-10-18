@@ -110,6 +110,21 @@ of the whole song at once, keeping the melody. **File > Demos** opens
 blues, tango, flamenco and more. It also plays every style as a short
 song.
 
+The Library and the chord sheet's **Band** menu share **Apply from styles
+and rhythms** checkboxes: **Rhythm patterns**, **Voices / instruments**,
+**Time signature**, **Chord progression**, **Tempo**, and **Swing**.
+Only the checked components change. Chord progression is off initially,
+so a style keeps the current song's chords; check it to take the style's
+progression too. An empty audition pattern uses the style's chords to
+demonstrate it. Rhythm choices always keep the chords.
+
+Turn off **Use matching style for rhythms** to play simple accents on
+the meter's beat groups with the current instruments, including for odd
+meters that have a matching style. The Library shows the band's rhythm
+style and its instrumentation separately; the chord sheet remains the
+source of the song's chords. These band choices survive saving and
+undo/redo. A meter change keeps each bar's duration by adjusting tempo.
+
 **F5**, or **📝 Chords** in the toolbar, opens the **chord sheet**: the
 song's harmony bar by bar, four bars to a line and each section under
 its name, as a lead sheet writes it. Click a bar and type its harmony:

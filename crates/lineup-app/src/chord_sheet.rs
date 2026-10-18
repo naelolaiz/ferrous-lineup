@@ -250,8 +250,9 @@ impl ChordSheet {
         project: &Project,
         playing: Option<(usize, Pass)>,
         typing_keys: bool,
-        practice: PracticeView,
+        controls: (PracticeView, &mut lineup_core::library::apply::StyleParts),
     ) -> Vec<SheetAction> {
+        let (practice, parts) = controls;
         let mut actions = Vec::new();
         if !self.open {
             self.release(&mut actions);
@@ -270,7 +271,14 @@ impl ChordSheet {
             .constrain_to(area)
             .resizable(true)
             .show(ctx, |ui| {
-                self.contents(ui, project, playing, typing_keys, practice, &mut actions);
+                self.contents(
+                    ui,
+                    project,
+                    playing,
+                    typing_keys,
+                    (practice, parts),
+                    &mut actions,
+                );
             });
         self.open = open;
         if !self.open {
@@ -287,12 +295,13 @@ impl ChordSheet {
         project: &Project,
         playing: Option<(usize, Pass)>,
         typing_keys: bool,
-        practice: PracticeView,
+        controls: (PracticeView, &mut lineup_core::library::apply::StyleParts),
         actions: &mut Vec<SheetAction>,
     ) {
+        let (practice, parts) = controls;
         let markers = project.playlist().chord_markers();
         ui.horizontal_wrapped(|ui| {
-            band_menu(ui, project, actions);
+            band_menu(ui, project, parts, actions);
             progression_menu(ui, project, self.next_bar(project), actions);
             ui.label(egui::RichText::new(format!("Key: {}", project.scale.name())).strong());
             ui.weak(format!("· {}", project.time_signature));
@@ -1303,13 +1312,26 @@ const KEEP_KEYS: egui::EventFilter = egui::EventFilter {
 };
 
 /// The band's style, to pick from by genre, or no band.
-fn band_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction>) {
+fn band_menu(
+    ui: &mut Ui,
+    project: &Project,
+    parts: &mut lineup_core::library::apply::StyleParts,
+    actions: &mut Vec<SheetAction>,
+) {
     let current = project.band().map(|band| band.style);
     let title = match current {
-        Some(style) => format!("🎷 Band: {}", style.name),
+        Some(_) => format!("🎷 Band: {}", project.band().unwrap().name()),
         None => "🎷 Band: none".to_string(),
     };
     let menu = ui.menu_button(title, |ui| {
+        crate::library_browser::style_parts_ui(ui, parts);
+        if let Some(band) = project.band() {
+            ui.weak(format!("Instruments: {}", band.instrument_style.name));
+            if band.accents_only {
+                ui.weak("Plain accents with current instruments");
+            }
+        }
+        ui.separator();
         if ui.selectable_label(current.is_none(), "No band").clicked() {
             actions.push(SheetAction::SetBand(None));
             ui.close();
