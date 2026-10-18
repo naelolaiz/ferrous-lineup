@@ -201,6 +201,7 @@ pub const MAX_LOOSE_TIMING: u8 = 40;
 /// - sections are sorted and never overlap, and repeats stay in range.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Project {
+    pub mixer: crate::Mixer,
     pub tempo: Tempo,
     /// The key the piano roll highlights and names chords in.
     pub scale: Scale,
@@ -228,6 +229,7 @@ impl Project {
     /// An empty project: no channels, one empty pattern, an empty playlist.
     pub fn empty() -> Self {
         Project {
+            mixer: crate::Mixer::default(),
             tempo: Tempo::default(),
             scale: Scale::default(),
             time_signature: TimeSignature::COMMON,
@@ -416,6 +418,11 @@ impl Project {
         &self.channels
     }
 
+    pub fn channel_muted(&self, channel: usize) -> bool {
+        self.channels.get(channel).is_none_or(|state| state.muted)
+            || self.mixer.solo.is_some_and(|solo| solo != channel)
+    }
+
     pub fn channel_mut(&mut self, index: usize) -> Option<&mut Channel> {
         self.channels.get_mut(index)
     }
@@ -439,6 +446,11 @@ impl Project {
         if index >= self.channels.len() {
             return None;
         }
+        self.mixer.solo = match self.mixer.solo {
+            Some(solo) if solo == index => None,
+            Some(solo) if solo > index => Some(solo - 1),
+            solo => solo,
+        };
         let removed = self.removing_channel(index, |project| {
             for pattern in &mut project.patterns {
                 pattern.remove_row(index);

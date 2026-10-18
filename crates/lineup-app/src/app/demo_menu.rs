@@ -421,71 +421,83 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
     }
     ui.separator();
     ui.menu_button("Songs", |ui| {
-        ui.weak("Tunes with their melodies, free for everyone to use");
-        for &genre in &demos.genres {
-            let songs: Vec<&Entry> = demos
-                .entries
-                .iter()
-                .filter(|e| matches!(e.demo, Demo::Song(song) if song.genre == genre))
-                .collect();
-            // A genre with no songs gets no empty submenu.
-            if songs.is_empty() {
-                continue;
-            }
-            ui.menu_button(genre.name(), |ui| {
-                for entry in songs {
-                    button(ui, entry, &entry.label);
+        crate::widgets::scroll_menu(ui, |ui| {
+            ui.weak("Tunes with their melodies, free for everyone to use");
+            for &genre in &demos.genres {
+                let songs: Vec<&Entry> = demos
+                    .entries
+                    .iter()
+                    .filter(|e| matches!(e.demo, Demo::Song(song) if song.genre == genre))
+                    .collect();
+                // A genre with no songs gets no empty submenu.
+                if songs.is_empty() {
+                    continue;
                 }
-            });
-        }
+                ui.menu_button(genre.name(), |ui| {
+                    crate::widgets::scroll_menu(ui, |ui| {
+                        for entry in songs {
+                            button(ui, entry, &entry.label);
+                        }
+                    });
+                });
+            }
+        });
     });
     ui.menu_button("Styles", |ui| {
-        ui.weak("Each harmony style as a short song");
-        for &genre in &demos.genres {
-            let styles: Vec<&Entry> = demos
-                .entries
-                .iter()
-                .filter(|e| matches!(e.demo, Demo::Style(style) if style.genre == genre))
-                .collect();
-            if styles.is_empty() {
-                continue;
-            }
-            ui.menu_button(genre.name(), |ui| {
-                for entry in styles {
-                    button(ui, entry, &entry.label);
+        crate::widgets::scroll_menu(ui, |ui| {
+            ui.weak("Each harmony style as a short song");
+            for &genre in &demos.genres {
+                let styles: Vec<&Entry> = demos
+                    .entries
+                    .iter()
+                    .filter(|e| matches!(e.demo, Demo::Style(style) if style.genre == genre))
+                    .collect();
+                if styles.is_empty() {
+                    continue;
                 }
-            });
-        }
+                ui.menu_button(genre.name(), |ui| {
+                    crate::widgets::scroll_menu(ui, |ui| {
+                        for entry in styles {
+                            button(ui, entry, &entry.label);
+                        }
+                    });
+                });
+            }
+        });
     });
     ui.menu_button("Twelve-tone", |ui| {
-        ui.weak("Each row style as a short piece: the row, backwards, upside down, both");
-        for entry in demos
-            .entries
-            .iter()
-            .filter(|e| matches!(e.demo, Demo::Row(_)))
-        {
-            button(ui, entry, &entry.label);
-        }
+        crate::widgets::scroll_menu(ui, |ui| {
+            ui.weak("Each row style as a short piece: the row, backwards, upside down, both");
+            for entry in demos
+                .entries
+                .iter()
+                .filter(|e| matches!(e.demo, Demo::Row(_)))
+            {
+                button(ui, entry, &entry.label);
+            }
+        });
     });
     ui.menu_button("Micromodes", |ui| {
-        ui.weak(
-            "Each micromode style as a short piece: from the micromode, upside down, \
+        crate::widgets::scroll_menu(ui, |ui| {
+            ui.weak(
+                "Each micromode style as a short piece: from the micromode, upside down, \
              a tritone away, upside down there, and back",
-        );
-        for entry in demos
-            .entries
-            .iter()
-            .filter(|e| matches!(e.demo, Demo::Micromode(_)))
-        {
-            button(ui, entry, &entry.label);
-        }
-        ui.separator();
-        ui.weak("A famous row made of one micromode");
-        if let Some(style) = RowStyle::named("Webern's trichords")
-            && let Some(entry) = demos.entries.iter().find(|e| e.demo == Demo::Row(style))
-        {
-            button(ui, entry, &format!("{} · Menor 3", style.name));
-        }
+            );
+            for entry in demos
+                .entries
+                .iter()
+                .filter(|e| matches!(e.demo, Demo::Micromode(_)))
+            {
+                button(ui, entry, &entry.label);
+            }
+            ui.separator();
+            ui.weak("A famous row made of one micromode");
+            if let Some(style) = RowStyle::named("Webern's trichords")
+                && let Some(entry) = demos.entries.iter().find(|e| e.demo == Demo::Row(style))
+            {
+                button(ui, entry, &format!("{} · Menor 3", style.name));
+            }
+        });
     });
     picked
 }

@@ -35,7 +35,9 @@ pub mod rhythm;
 pub mod rows;
 pub mod song;
 pub mod style;
+pub mod user_style;
 pub mod voicing;
+pub use user_style::{StyleLane, UserStyle};
 
 pub use comping::{Bass, Comping};
 pub use micromodes::{MICROMODE_STYLES, MicromodeStyle};

@@ -215,6 +215,7 @@ impl HarmonyKeys {
         heard: &[Note],
         digits: bool,
         key_heard: Option<&KeyHeard>,
+        parts: &mut lineup_core::library::apply::StyleParts,
     ) -> Vec<HarmonyAction> {
         let scale = here;
         let size = self.size_for(scale);
@@ -228,6 +229,7 @@ impl HarmonyKeys {
                 held,
                 heard,
                 digits,
+                parts,
             );
         }
         let mut actions = Vec::new();
@@ -260,7 +262,7 @@ impl HarmonyKeys {
         // Wrapped, so on a narrow window the little piano moves to a row
         // of its own instead of running off the edge.
         ui.horizontal_wrapped(|ui| {
-            ui.vertical(|ui| self.settings(ui, project, here, &mut actions));
+            ui.vertical(|ui| self.settings(ui, project, here, parts, &mut actions));
             ui.separator();
             for (index, key) in chord_keys.iter().enumerate() {
                 let rank = suggestion_rank(&suggestions, &chord_keys, index);
@@ -339,6 +341,7 @@ impl HarmonyKeys {
         held: &[Note],
         heard: &[Note],
         digits: bool,
+        parts: &mut lineup_core::library::apply::StyleParts,
     ) -> Vec<HarmonyAction> {
         let mut actions = Vec::new();
         let scale = here;
@@ -346,7 +349,7 @@ impl HarmonyKeys {
         let mut pressed = None;
         ui.add_space(4.0);
         ui.horizontal_wrapped(|ui| {
-            ui.vertical(|ui| self.settings(ui, project, here, &mut actions));
+            ui.vertical(|ui| self.settings(ui, project, here, parts, &mut actions));
             ui.separator();
             for (index, group) in groups.iter().enumerate() {
                 let lit = self.down.as_ref().is_some_and(|d| d.key == index)
@@ -497,6 +500,7 @@ impl HarmonyKeys {
         ui: &mut Ui,
         project: &Project,
         here: Scale,
+        parts: &mut lineup_core::library::apply::StyleParts,
         actions: &mut Vec<HarmonyAction>,
     ) {
         let scale = project.scale;
@@ -538,7 +542,12 @@ impl HarmonyKeys {
                 .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
                 .selected_text(egui::RichText::new(time.to_string()).strong())
                 .show_ui(ui, |ui| {
-                    chosen = time_picker(ui, egui::Id::unique("harmony-time-picker"), time);
+                    chosen = time_picker(
+                        ui,
+                        egui::Id::unique("harmony-time-picker"),
+                        time,
+                        Some(parts),
+                    );
                 })
                 .response
                 .on_hover_text(describe_time(time));

@@ -1,8 +1,8 @@
-//! The Sounds menu: real instrument sounds from a SoundFont.
+//! Audio preferences: real instrument sounds from a SoundFont.
 //!
 //! The Lineup Osc makes every instrument out of a few simple waves. A
 //! SoundFont holds recordings of real ones (see
-//! [`lineup_audio::soundfont`]). With Sounds > SoundFont instruments on,
+//! [`lineup_audio::soundfont`]). With Settings > Audio > SoundFont instruments on,
 //! every channel that has a General MIDI instrument (chosen in the
 //! channel rack, or given by a demo or the Library) plays it from the
 //! SoundFont, and with SoundFont drums on, the built-in drums play the
@@ -17,7 +17,7 @@
 //! the window keeps drawing meanwhile. When the SoundFont is ready, every
 //! channel is given its instrument again.
 //!
-//! What the menu was set to is remembered between runs, like the size of
+//! The sound preferences are remembered between runs, like the size of
 //! the window and the zoom.
 
 use std::fs::{self, File};
@@ -54,7 +54,7 @@ const MAX_DOWNLOAD: u64 = 1 << 30;
 /// report.
 const CANCELLED: &str = "cancelled";
 
-/// What the Sounds menu was set to, kept between runs.
+/// Sound preferences, kept between runs.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 struct Settings {
@@ -106,7 +106,7 @@ fn file_name(path: &Path) -> String {
     )
 }
 
-/// The SoundFont, the Sounds menu's settings, and any download or
+/// The SoundFont, its settings, and any download or
 /// reading going on.
 pub(super) struct Sounds {
     settings: Settings,
@@ -242,7 +242,7 @@ impl Sounds {
         });
     }
 
-    /// What the menu and the status bar say is going on, if anything.
+    /// What Settings and the status bar say is going on, if anything.
     fn activity(&self) -> Option<String> {
         let job = self.job.as_ref()?;
         Some(if job.download {
@@ -314,47 +314,61 @@ fn download_part(url: &str, part: &Path, progress: &Progress) -> Result<(), Stri
 }
 
 impl LineupApp {
-    /// The Sounds menu, between View and MIDI.
-    pub(super) fn sounds_menu(&mut self, ui: &mut egui::Ui) {
-        ui.menu_button("Sounds", |ui| {
-            let mut on = self.sounds.settings.on;
-            let instruments = ui.checkbox(&mut on, "SoundFont instruments").on_hover_text(
-                "Channels with a General MIDI instrument (chosen in the channel rack, or \
-                 given by a demo or the Library) play real recorded sounds from a \
-                 SoundFont instead of the Lineup Osc. Channels on the Lineup Osc's own \
-                 sound keep it.",
-            );
-            if instruments.changed() {
+    /// Instrument playback and the selected SoundFont in Settings > Audio.
+    pub(super) fn sound_settings_ui(&mut self, ui: &mut egui::Ui) {
+        super::settings::card(
+            ui,
+            "Instrument playback",
+            "Use recorded instruments from a SoundFont, or the built-in Lineup Osc.",
+            |ui| {
+                let mut on = self.sounds.settings.on;
+                if ui.checkbox(&mut on, "SoundFont instruments").on_hover_text(
+                "General MIDI channels use the SoundFont. Channels using a Lineup Osc sound keep it.",
+            ).changed() {
                 self.set_sound_font(on);
             }
-            let mut drums = self.sounds.settings.drums;
-            let drums_box = ui
-                .add_enabled(on, egui::Checkbox::new(&mut drums, "SoundFont drums"))
-                .on_hover_text("The built-in drums play the SoundFont's drum kit too.");
-            if drums_box.changed() {
-                self.sounds.settings.drums = drums;
-                self.sounds.changed = true;
-                self.live.instruments_changed();
-            }
-            ui.separator();
-            let state = self
-                .sounds
-                .activity()
-                .unwrap_or_else(|| format!("SoundFont: {}", self.sounds.name()));
-            ui.weak(state);
-            if ui.button("Choose SoundFont…").clicked() {
-                ui.close();
-                self.choose_sound_font();
-            }
-            if self.sounds.settings.file.is_some()
-                && ui.button(format!("Use {GENERAL_USER}")).clicked()
-            {
-                ui.close();
-                self.sounds.settings.file = None;
-                self.sounds.changed = true;
-                self.set_sound_font(true);
-            }
-        });
+                let mut drums = self.sounds.settings.drums;
+                if ui
+                    .add_enabled(on, egui::Checkbox::new(&mut drums, "SoundFont drums"))
+                    .on_hover_text("The built-in drums play the SoundFont’s drum kit too.")
+                    .changed()
+                {
+                    self.sounds.settings.drums = drums;
+                    self.sounds.changed = true;
+                    self.live.instruments_changed();
+                }
+            },
+        );
+        super::settings::card(
+            ui,
+            "SoundFont library",
+            "A General MIDI .sf2 file supplies the instrument recordings.",
+            |ui| {
+                ui.strong(self.sounds.name());
+                if let Some(path) = self.sounds.wanted_path() {
+                    ui.label(
+                        egui::RichText::new(shown(&path))
+                            .small()
+                            .color(crate::theme::TEXT_DIM),
+                    );
+                }
+                if let Some(state) = self.sounds.activity() {
+                    ui.label(state);
+                }
+                ui.horizontal_wrapped(|ui| {
+                    if ui.button("Choose SoundFont…").clicked() {
+                        self.choose_sound_font();
+                    }
+                    if self.sounds.settings.file.is_some()
+                        && ui.button(format!("Use {GENERAL_USER}")).clicked()
+                    {
+                        self.sounds.settings.file = None;
+                        self.sounds.changed = true;
+                        self.set_sound_font(true);
+                    }
+                });
+            },
+        );
     }
 
     /// Turns the SoundFont on or off. Turned on, it is read if it is not

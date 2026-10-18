@@ -128,6 +128,8 @@ pub enum Comping {
     /// beat comes first. Turkish and Balkan musicians call these meters
     /// *aksak*, "limping". Play it with [`Bass::Aksak`].
     Aksak,
+    /// One chord on each felt beat, with the first accent strongest.
+    Accents,
 }
 
 impl Comping {
@@ -136,6 +138,21 @@ impl Comping {
     /// signature: its pattern is a bar long.
     fn hits(self, time: TimeSignature) -> (usize, Cow<'static, [Hit<Voices>]>) {
         match self {
+            Comping::Accents => {
+                let unit = time.unit_steps();
+                let mut at = 0;
+                let hits = time
+                    .felt_groups()
+                    .into_iter()
+                    .enumerate()
+                    .map(|(index, group)| {
+                        let hit = hit!(at, unit, Voices::All, if index == 0 { 104 } else { 88 });
+                        at += usize::from(group) * unit;
+                        hit
+                    })
+                    .collect();
+                (time.steps_per_bar(), Cow::Owned(hits))
+            }
             Comping::Aksak => {
                 let unit = time.unit_steps();
                 // A chord a little shorter than its note, so the next
@@ -163,7 +180,7 @@ impl Comping {
     /// starts: the beats of an odd meter are where the bar puts them.
     /// The other patterns start again with each chord.
     fn follows_the_bar(self) -> bool {
-        self == Comping::Aksak
+        matches!(self, Comping::Aksak | Comping::Accents)
     }
 
     /// How many steps the pattern lasts before it repeats, and its hits,
@@ -385,7 +402,7 @@ impl Comping {
                 ],
             ),
             // Worked out from the bar in `hits`.
-            Comping::Aksak => (16, &[]),
+            Comping::Aksak | Comping::Accents => (16, &[]),
         }
     }
 
@@ -538,6 +555,8 @@ pub enum Bass {
     /// felt in: the root, then the fifth below and the root by turns.
     /// In 2+2+3/8: root, fifth, root, the last one on the long beat.
     Aksak,
+    /// The root on each felt beat, without borrowing a style's bass line.
+    Accents,
 }
 
 impl Bass {
@@ -560,13 +579,14 @@ impl Bass {
     /// signature: its line is a bar long.
     fn hits(self, time: TimeSignature) -> (usize, Cow<'static, [Hit<Tone>]>) {
         match self {
-            Bass::Aksak => {
+            Bass::Aksak | Bass::Accents => {
                 let unit = time.unit_steps();
                 let mut hits = Vec::new();
                 let mut at = 0;
                 for (index, group) in time.felt_groups().into_iter().enumerate() {
                     let (tone, velocity) = match index {
                         0 => (Tone::Root, 104),
+                        _ if self == Bass::Accents => (Tone::Root, 92),
                         _ if index % 2 == 1 => (Tone::LowFifth, 92),
                         _ => (Tone::Root, 96),
                     };
@@ -587,7 +607,7 @@ impl Bass {
     fn pattern(self) -> (usize, &'static [Hit<Tone>]) {
         use Tone::*;
         match self {
-            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak => (16, &[]),
+            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak | Bass::Accents => (16, &[]),
             Bass::Pulse => (4, &[hit!(0, 2, Root, 100), hit!(2, 2, Root, 84)]),
             Bass::Quarters => (4, &[hit!(0, 2, Root, 104)]),
             Bass::RootFifth => (16, &[hit!(0, 4, Root, 104), hit!(8, 4, LowFifth, 96)]),
@@ -746,7 +766,7 @@ impl Bass {
                 .into_iter()
                 .map(|(at, tone)| note(tone, at, 4.min(span - at), if at == 0 { 104 } else { 92 }))
                 .collect(),
-            Bass::Aksak => {
+            Bass::Aksak | Bass::Accents => {
                 // The line keeps its place in the bar, wherever the chord
                 // starts; a chord that starts between two of its notes
                 // gets its root at once, as the bass would play it.
@@ -1070,7 +1090,7 @@ impl Bass {
         // starts again with every bar, whatever the bar's length. So does
         // the line of an odd meter, which is a bar long.
         let period = match self {
-            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak => 0,
+            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak | Bass::Accents => 0,
             _ => period,
         };
         let mut notes = Vec::new();
@@ -1161,6 +1181,18 @@ mod tests {
         let mut starts: Vec<usize> = notes.iter().map(|note| note.start).collect();
         starts.dedup();
         starts
+    }
+
+    #[test]
+    fn plain_accents_follow_the_grouping_without_a_styled_bass_line() {
+        let time = TimeSignature::of_groups(&[2, 2, 3], 8);
+        let notes = Comping::Accents.play(time, &c_major(), 0, 28);
+        assert_eq!(starts(&notes), [0, 4, 8, 14, 18, 22]);
+        let chord = Chord::new(C, Major);
+        let bass = Bass::Accents.play(time, chord, chord, 0, 28);
+        assert_eq!(starts(&bass), [0, 4, 8, 14, 18, 22]);
+        assert!(bass.iter().all(|note| note.pitch.pitch_class() == C));
+        assert!(notes[0].velocity > notes[3].velocity);
     }
 
     #[test]

@@ -174,6 +174,7 @@ pub enum Command {
     /// starts up to this much late. 0 plays every note on its step.
     SetLooseTiming(u8),
     SetMasterVolume(f32),
+    SetReverb(lineup_core::ReverbSettings),
     /// Add an empty pattern at position `index`; the patterns from there
     /// on move up one place. An index past the end adds it at the end.
     InsertPattern {
@@ -238,8 +239,9 @@ pub enum Command {
     /// A key went down or up on the typing keyboard. Keys from a MIDI
     /// keyboard take the faster way, through [`LiveInput`].
     Live(MidiMessage),
-    /// Choose the channel that keys play: the one selected in the UI.
-    SetLiveChannel(usize),
+    /// Choose the channel that keys play. `None` releases live keys and
+    /// ignores new key presses until another channel is selected.
+    SetLiveChannel(Option<usize>),
     /// What the metronome plays on each step of the song, in song steps
     /// (see [`lineup_core::Project::played_clicks`]). Sent with
     /// [`Command::SetSong`].
@@ -572,6 +574,7 @@ pub(crate) struct AudioThread {
     /// Where `Play` starts, set by `Seek`.
     start: usize,
     master_volume: Smoothed,
+    reverb: crate::reverb::Reverb,
     commands: rtrb::Consumer<Command>,
     trash: rtrb::Producer<Garbage>,
     playhead: Arc<AtomicUsize>,
@@ -583,7 +586,7 @@ pub(crate) struct AudioThread {
     /// Where MIDI Out channels send their messages, if anywhere.
     midi_out: Option<rtrb::Producer<MidiMessage>>,
     /// The channel that keys play.
-    live_channel: usize,
+    live_channel: Option<usize>,
     /// For each of the 128 notes whose key is down, the channel it went
     /// down on. The key must come up on the same channel, even if
     /// another one has been selected in between, or the note would never end.
@@ -643,13 +646,14 @@ impl AudioThread {
             playing: false,
             start: 0,
             master_volume: Smoothed::new(0.8, VOLUME_SMOOTHING, sample_rate),
+            reverb: crate::reverb::Reverb::new(sample_rate),
             commands,
             trash,
             playhead,
             position,
             live_input: None,
             midi_out: None,
-            live_channel: 0,
+            live_channel: Some(0),
             live_keys: [None; 128],
             song_clicks: Vec::new(),
             pattern_clicks: Vec::new(),
@@ -746,6 +750,7 @@ impl AudioThread {
                 self.loose_frames = f64::from(ms) / 1000.0 * f64::from(self.sample_rate);
             }
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
+            Command::SetReverb(settings) => self.reverb.configure(settings),
             Command::InsertPattern { index, length } => {
                 if self.pattern_lengths.len() < MAX_PATTERNS {
                     let index = index.min(self.pattern_lengths.len());
@@ -858,7 +863,12 @@ impl AudioThread {
             Command::Preview(channel) => self.preview(channel, STEP_NOTE),
             Command::PreviewNote { channel, pitch } => self.preview(channel, pitch),
             Command::Live(message) => self.play_live(message),
-            Command::SetLiveChannel(channel) => self.live_channel = channel,
+            Command::SetLiveChannel(channel) => {
+                if channel.is_none() {
+                    self.release_live_keys();
+                }
+                self.live_channel = channel;
+            }
             Command::SetSongClicks(clicks) => {
                 let old = std::mem::replace(&mut self.song_clicks, clicks);
                 self.throw_away(Garbage::Clicks(old));
@@ -871,6 +881,7 @@ impl AudioThread {
             Command::SetCountIn(on) => self.count_in = on,
             Command::Clear => {
                 self.stop();
+                self.reverb.clear();
                 self.start = 0;
                 // `pop` takes the last channel out of the list; `while let`
                 // keeps going until there are none left.
@@ -908,6 +919,7 @@ impl AudioThread {
     /// make the first moment too loud or too quiet.
     pub(crate) fn settle_volumes(&mut self) {
         self.master_volume.settle();
+        self.reverb.settle();
         for channel in &mut self.channels {
             channel.volume.settle();
         }
@@ -1040,8 +1052,9 @@ impl AudioThread {
                 // A key that is already down (on both keyboards at once,
                 // say) comes up first.
                 self.release_live(pitch);
-                let channel = self.live_channel;
-                if let Some(state) = self.channels.get_mut(channel) {
+                if let Some(channel) = self.live_channel
+                    && let Some(state) = self.channels.get_mut(channel)
+                {
                     state
                         .instrument
                         .note_on(pitch, velocity, HELD, self.sample_rate);
@@ -1196,8 +1209,16 @@ impl AudioThread {
                 mix += phrase.next_sample();
             }
             // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
-            let sample = (mix * self.master_volume.next_value()).tanh();
-            frame.fill(T::from_sample(sample));
+            let stereo = self.reverb.next(mix);
+            let volume = self.master_volume.next_value();
+            let stereo = stereo.map(|sample| (sample * volume).tanh());
+            if frame.len() == 1 {
+                frame[0] = T::from_sample((stereo[0] + stereo[1]) * 0.5);
+            } else {
+                for (index, sample) in frame.iter_mut().enumerate() {
+                    *sample = T::from_sample(stereo[index % 2]);
+                }
+            }
         }
 
         if self.phrase.as_ref().is_some_and(|phrase| phrase.is_over())
@@ -2018,7 +2039,7 @@ mod tests {
         let mut h = harness();
         add_synth(&mut h, &[]);
         add_synth(&mut h, &[]);
-        send(&mut h, Command::SetLiveChannel(1));
+        send(&mut h, Command::SetLiveChannel(Some(1)));
         send(&mut h, Command::Live(key_down(Note::A4)));
         // Held far longer than a preview (one beat, 24 000 frames).
         render(&mut h, 48_000);
@@ -2029,12 +2050,29 @@ mod tests {
     }
 
     #[test]
+    fn deselecting_a_channel_releases_keys_and_disables_live_input() {
+        let mut h = harness();
+        add_synth(&mut h, &[]);
+        send(&mut h, Command::Live(key_down(Note::C4)));
+        render(&mut h, 100);
+        assert_eq!(voices(&h, 0), 1);
+        send(&mut h, Command::SetLiveChannel(None));
+        send(&mut h, Command::Live(key_down(Note::A4)));
+        render(&mut h, 48_000);
+        assert_eq!(voices(&h, 0), 0);
+        send(&mut h, Command::SetLiveChannel(Some(0)));
+        send(&mut h, Command::Live(key_down(Note::A4)));
+        render(&mut h, 100);
+        assert_eq!(voices(&h, 0), 1);
+    }
+
+    #[test]
     fn a_key_comes_up_on_the_channel_it_went_down_on() {
         let mut h = harness();
         add_synth(&mut h, &[]);
         add_synth(&mut h, &[]);
         send(&mut h, Command::Live(key_down(Note::C4)));
-        send(&mut h, Command::SetLiveChannel(1));
+        send(&mut h, Command::SetLiveChannel(Some(1)));
         send(&mut h, Command::Live(key_up(Note::C4)));
         render(&mut h, 48_000);
         assert_eq!(voices(&h, 0), 0, "the note on channel 0 has ended");
@@ -2070,7 +2108,7 @@ mod tests {
         let mut h = harness();
         add_synth(&mut h, &[]);
         add_synth(&mut h, &[]);
-        send(&mut h, Command::SetLiveChannel(1));
+        send(&mut h, Command::SetLiveChannel(Some(1)));
         send(&mut h, Command::Live(key_down(Note::C4)));
         // Channel 1 is now channel 0. Its key must not stay down.
         send(&mut h, Command::RemoveChannel(0));

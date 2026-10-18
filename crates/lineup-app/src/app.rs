@@ -24,9 +24,14 @@ mod key_finder;
 mod lead;
 mod library;
 mod live;
+mod mixer;
 mod practice;
+mod settings;
 mod sounds;
+mod styles;
 mod swing;
+#[cfg(test)]
+mod ux_tests;
 mod view;
 
 use std::path::PathBuf;
@@ -99,7 +104,11 @@ pub struct LineupApp {
     cursor: usize,
     /// Where Stop goes back to: the last place the playhead was moved to.
     marker: usize,
-    master_volume: f32,
+    mixer_open: bool,
+    settings_open: bool,
+    settings: settings::SettingsView,
+    style_editor: crate::style_editor::StyleEditor,
+    style_files: styles::StyleFiles,
     rack_open: bool,
     /// The size the rack's rows needed last frame. When it changes (more
     /// steps, another channel, another pattern), the window is fitted to
@@ -119,11 +128,6 @@ pub struct LineupApp {
     /// The song's style and rhythm in versions of the project the library
     /// changed, so undo and redo show the right ones selected.
     song_versions: Vec<(Project, Tried)>,
-    /// Versions of the song the library made, each with the song it
-    /// started from. A rhythm or a style picked for the whole song starts
-    /// again from that original, so flicking through rhythms in other
-    /// time signatures never squeezes an already squeezed song.
-    song_originals: Vec<(Project, Project)>,
     file: files::FileState,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
@@ -179,16 +183,20 @@ impl LineupApp {
             options.input_options.zoom_modifier = egui::Modifiers::COMMAND | egui::Modifiers::ALT;
         });
 
-        let mut audio = match AudioEngine::start() {
+        let audio = match AudioEngine::start() {
             Ok(engine) => Audio::Running(Box::new(engine)),
             Err(err) => Audio::Unavailable(err.to_string()),
         };
+        Self::with_audio(&cc.egui_ctx, path, audio)
+    }
+
+    fn with_audio(ctx: &egui::Context, path: Option<PathBuf>, mut audio: Audio) -> Self {
         // The engine's ways in and out for MIDI go to the MIDI threads.
         let (live_input, midi_output) = match &mut audio {
             Audio::Running(engine) => (engine.take_live_input(), engine.take_midi_output()),
             Audio::Unavailable(_) => (None, None),
         };
-        let midi = Midi::new(&cc.egui_ctx, live_input, midi_output);
+        let midi = Midi::new(ctx, live_input, midi_output);
 
         let mut project = Project::demo();
         files::fill_chord_sheet(&mut project);
@@ -202,7 +210,11 @@ impl LineupApp {
             playing: false,
             cursor: 0,
             marker: 0,
-            master_volume: 0.8,
+            mixer_open: false,
+            settings_open: false,
+            settings: settings::SettingsView::default(),
+            style_editor: crate::style_editor::StyleEditor::new(),
+            style_files: styles::StyleFiles::new(ctx),
             rack_open: true,
             rack_natural: egui::Vec2::ZERO,
             piano_roll,
@@ -212,27 +224,28 @@ impl LineupApp {
             auditions: Vec::new(),
             song_library: Tried::default(),
             song_versions: Vec::new(),
-            song_originals: Vec::new(),
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
             import: None,
             key_finder: key_finder::KeyFinder::default(),
             live: live::Live::new(midi),
-            sounds: sounds::Sounds::new(&cc.egui_ctx),
-            practice: practice::Practice::new(&cc.egui_ctx),
-            swings: swing::SwingMemory::new(&cc.egui_ctx),
-            ear_training: EarTraining::new(&cc.egui_ctx),
-            lead_sheet: LeadSheetWindow::new(&cc.egui_ctx),
+            sounds: sounds::Sounds::new(ctx),
+            practice: practice::Practice::new(ctx),
+            swings: swing::SwingMemory::new(ctx),
+            ear_training: EarTraining::new(ctx),
+            lead_sheet: LeadSheetWindow::new(ctx),
             message: None,
             notice: None,
             hint_bar: HintBar::default(),
             bring_to_front: None,
             zoom_target: view::Target::Interface,
         };
+        app.playlist.library_browser_mut().restore_preferences(ctx);
         app.send_whole_project();
+        app.reload_user_styles();
         if let Some(path) = path {
-            app.open_path(&cc.egui_ctx, path);
+            app.open_path(ctx, path);
         }
         app
     }
@@ -281,6 +294,8 @@ impl LineupApp {
         let mut commands = vec![
             Command::SetTempo(practice::at_speed(self.project.tempo, speed)),
             Command::SetLooseTiming(self.project.loose_timing),
+            Command::SetMasterVolume(self.project.mixer.master),
+            Command::SetReverb(self.project.mixer.reverb),
         ];
         for (index, pattern) in self.project.patterns().iter().enumerate() {
             commands.push(Command::InsertPattern {
@@ -299,7 +314,6 @@ impl LineupApp {
     /// after opening a file.
     fn send_whole_project(&mut self) {
         self.send(Command::Clear);
-        self.send(Command::SetMasterVolume(self.master_volume));
         let speed = self.practice.speed();
         for command in self.project_commands(self.sample_rate(), speed) {
             self.send(command);
@@ -326,7 +340,7 @@ impl LineupApp {
             instrument: self.build_instrument(&channel, sample_rate),
             notes,
             volume: channel.volume,
-            muted: channel.muted,
+            muted: self.project.channel_muted(index),
         }
     }
 
@@ -430,6 +444,20 @@ impl LineupApp {
         self.marker = step;
         self.cursor = step;
         self.send(Command::Seek(step));
+        match self.mode {
+            PlayMode::Pattern => self.piano_roll.reveal_step(step),
+            PlayMode::Song => {
+                let song = self.project.playback_arrangement();
+                let step = song
+                    .pass_at(step)
+                    .map_or(step, |pass| pass.from + step - pass.start);
+                self.playlist.reveal_step(step);
+                self.chord_sheet.reveal_step(step);
+                if let Some(step) = self.project.pattern_step_in_song(self.pattern, step) {
+                    self.piano_roll.reveal_step(step);
+                }
+            }
+        }
     }
 
     /// Moves the playhead by `bars` bars (back if negative), to the start
@@ -453,7 +481,7 @@ impl LineupApp {
         if target < 0 {
             self.seek(0);
         } else {
-            self.seek(meter.bar(target as usize).start);
+            self.seek(meter.bar(target as usize).start.min(self.loop_length() - 1));
         }
     }
 
@@ -556,6 +584,21 @@ impl LineupApp {
     /// Applies one action from the channel rack.
     fn apply(&mut self, action: RackAction) {
         match action {
+            RackAction::PlayPattern => {
+                self.set_mode(PlayMode::Pattern);
+                self.set_playing(true);
+            }
+            RackAction::PausePattern => {
+                if self.mode == PlayMode::Pattern {
+                    self.pause();
+                }
+            }
+            RackAction::StopPattern => {
+                if self.mode == PlayMode::Pattern {
+                    self.set_playing(false);
+                }
+            }
+            RackAction::SelectChannel(channel) => self.select_channel(channel),
             RackAction::ToggleStep { channel, step } => {
                 self.edit_pattern("change steps", |pattern| {
                     pattern.toggle(channel, step);
@@ -567,9 +610,6 @@ impl LineupApp {
                 });
             }
             RackAction::Preview(channel) => {
-                // Clicking a channel also selects it, for the piano roll
-                // and the keyboards.
-                self.piano_roll.select(channel);
                 self.send(Command::Preview(channel));
             }
             RackAction::SetVolume { channel, volume } => {
@@ -587,9 +627,15 @@ impl LineupApp {
                 });
             }
             RackAction::Remove(channel) => {
+                self.finish_recording();
+                self.release_all_keys();
                 self.edit("delete channel", |project| project.remove_channel(channel));
             }
-            RackAction::OpenPianoRoll(channel) => self.piano_roll.open_for(channel),
+            RackAction::OpenPianoRoll(channel) => {
+                self.select_channel(Some(channel));
+                self.piano_roll.open_for(channel);
+                self.bring_to_front = Some(PianoRoll::id());
+            }
             RackAction::SelectPattern(pattern) => self.select_pattern(pattern),
             RackAction::AddDrum(drum) => self.add_channel(Channel::drum(drum)),
             RackAction::AddSynth => self.add_channel(Channel::synth()),
@@ -623,9 +669,26 @@ impl LineupApp {
         }
     }
 
+    fn select_channel(&mut self, channel: Option<usize>) {
+        let channel = channel.filter(|&index| index < self.project.channels().len());
+        if channel != self.piano_roll.selected_channel() {
+            self.finish_recording();
+            self.release_all_keys();
+            match channel {
+                Some(channel) => self.piano_roll.select(channel),
+                None => self.piano_roll.deselect_channel(),
+            }
+            self.send(Command::SetLiveChannel(channel));
+            self.live.resend_channel();
+        }
+    }
+
     /// Applies one action from the piano roll.
     fn apply_roll(&mut self, action: RollAction) {
         match action {
+            RollAction::SetLength(length) => {
+                self.edit_pattern("extend pattern", |pattern| pattern.set_length(length))
+            }
             RollAction::AddNotes { channel, notes } => {
                 self.edit_pattern("add notes", |pattern| {
                     for note in notes {
@@ -666,6 +729,32 @@ impl LineupApp {
                 self.edit("change key", |project| project.change_key(scale))
             }
             RollAction::SelectPattern(pattern) => self.select_pattern(pattern),
+            RollAction::NewPattern {
+                channel,
+                name,
+                length,
+                notes,
+            } => {
+                if self.project.patterns().len() >= lineup_core::MAX_PATTERNS {
+                    self.message = Some("There is no room for another pattern.".into());
+                    return;
+                }
+                let time = self.project.pattern_time(self.pattern);
+                let added = self.edit("save row to new pattern", |project| {
+                    let index = project.add_pattern()?;
+                    let pattern = project.pattern_mut(index)?;
+                    pattern.name = name;
+                    pattern.time = Some(time);
+                    pattern.set_length(length);
+                    pattern.set_notes(channel, notes);
+                    Some(index)
+                });
+                if let Some(pattern) = added {
+                    self.select_pattern(pattern);
+                } else {
+                    self.message = Some("There is no room for another pattern.".into());
+                }
+            }
             RollAction::OpenRack => self.show_rack(),
         }
     }
@@ -706,6 +795,10 @@ impl LineupApp {
     /// Applies one action from the chord sheet.
     fn apply_sheet(&mut self, action: SheetAction) {
         match action {
+            SheetAction::UserStyle {
+                index,
+                progression_from,
+            } => self.apply_user_library(index, progression_from),
             SheetAction::SetChords {
                 start,
                 end,
@@ -733,16 +826,67 @@ impl LineupApp {
                 }
             }
             SheetAction::SetSwing(swing) => self.set_swing(swing),
-            SheetAction::SetBand(style) => {
+            SheetAction::BandVoices(style) => {
+                self.edit("change band voices", |project| {
+                    project.apply_band_parts(
+                        style,
+                        None,
+                        lineup_core::library::apply::StyleParts {
+                            rhythm: false,
+                            instruments: true,
+                            time_signature: false,
+                            progression: false,
+                            tempo: false,
+                            swing: false,
+                            matching_style: true,
+                        },
+                    );
+                });
+            }
+            SheetAction::BandPlayer { player, on } => {
+                self.edit("change band players", |project| {
+                    project.set_you_play(player, !on)
+                });
+            }
+            SheetAction::BandProgram { channel, program } => {
+                self.apply(RackAction::SetProgram { channel, program });
+            }
+            SheetAction::SetBand { style, harmony } => {
                 let had = self.project.band().is_some();
+                let before = self.project.clone();
+                let previous = self.tried();
                 let swing = style.and_then(|style| self.swings.of(style.name));
+                let parts = if harmony.is_some() {
+                    self.playlist.library_parts()
+                } else {
+                    self.playlist.library_parts().for_rhythm()
+                };
                 self.edit("change the band", |project| {
-                    project.set_band_style(style);
+                    match style {
+                        Some(style) if project.band().is_some() => {
+                            project.apply_band_parts(style, harmony, parts)
+                        }
+                        _ => {
+                            project.set_band_style(style);
+                            if let (Some(style), Some(harmony)) = (style, harmony) {
+                                project.apply_band_parts(style, Some(harmony), parts);
+                            }
+                        }
+                    }
                     // The swing this style was last played with.
-                    if let Some(swing) = swing {
+                    if parts.swing
+                        && let Some(swing) = swing
+                    {
                         project.swing = swing;
                     }
                 });
+                self.song_library = self
+                    .project
+                    .band()
+                    .map_or_else(Tried::default, Tried::from_band);
+                self.keep_place_in_song(&before);
+                self.remember_song_version(before, previous);
+                self.remember_song_version(self.project.clone(), self.song_library);
                 self.notice = match (style, self.project.band()) {
                     (Some(style), Some(band)) if !had && band.muted() != &Default::default() => {
                         // The channels muted, then the drum tracks.
@@ -758,11 +902,14 @@ impl LineupApp {
                         };
                         Some(format!(
                             "The band plays {}; the song's own {names} {} muted",
-                            style.name,
+                            harmony.map_or(style.name, |style| style.name),
                             if muted.len() == 1 { "is" } else { "are" }
                         ))
                     }
-                    (Some(style), _) => Some(format!("The band plays {}", style.name)),
+                    (Some(style), _) => Some(format!(
+                        "Applied selected parts of {}",
+                        harmony.map_or(style.name, |style| style.name)
+                    )),
                     (None, _) => Some("No band".to_string()),
                 };
                 if style.is_some() {
@@ -815,6 +962,31 @@ impl LineupApp {
     fn apply_playlist(&mut self, action: PlaylistAction) {
         match action {
             PlaylistAction::SelectPattern(pattern) => self.select_pattern(pattern),
+            PlaylistAction::SelectSection(region) => {
+                self.playlist.select_section(&self.project, region)
+            }
+            PlaylistAction::MoveClips {
+                indices,
+                tracks,
+                steps,
+            } => {
+                self.edit("move selected clips", |project| {
+                    let targets: Vec<_> = indices
+                        .iter()
+                        .filter_map(|&index| {
+                            let clip = project.playlist().clips().get(index)?;
+                            Some((
+                                index,
+                                clip.track.saturating_add_signed(tracks),
+                                clip.start.saturating_add_signed(steps),
+                            ))
+                        })
+                        .collect();
+                    for (index, track, start) in targets {
+                        project.move_clip(index, track, start);
+                    }
+                });
+            }
             PlaylistAction::AddClip(clip) => {
                 self.edit("add clip", |project| project.add_clip(clip));
             }
@@ -831,6 +1003,20 @@ impl LineupApp {
             PlaylistAction::RemoveClip(index) => {
                 self.edit("delete clips", |project| project.remove_clip(index));
             }
+            PlaylistAction::RemoveClips(indices) => {
+                self.edit("delete selected clips", |project| {
+                    for index in indices.into_iter().rev() {
+                        project.remove_clip(index);
+                    }
+                });
+            }
+            PlaylistAction::PasteClips(clips) => {
+                self.edit("paste clips", |project| {
+                    for clip in clips {
+                        project.add_clip(clip);
+                    }
+                });
+            }
             PlaylistAction::ToggleTrackMute(track) => {
                 self.edit("mute track", |project| {
                     if let Some(track) = project.track_mut(track) {
@@ -842,6 +1028,14 @@ impl LineupApp {
                 self.edit("rename track", |project| {
                     if let Some(track) = project.track_mut(track) {
                         track.name = name;
+                    }
+                });
+            }
+            PlaylistAction::ResizeTrack { track, height } => {
+                self.edit("resize track", |project| {
+                    if let Some(track) = project.track_mut(track) {
+                        let height = height.clamp(24, 240);
+                        track.height = (height != 36).then_some(height);
                     }
                 });
             }
@@ -941,7 +1135,9 @@ impl LineupApp {
     }
 
     fn add_channel(&mut self, channel: Channel) {
-        self.edit("add channel", |project| project.add_channel(channel));
+        if let Some(channel) = self.edit("add channel", |project| project.add_channel(channel)) {
+            self.select_channel(Some(channel));
+        }
     }
 
     /// Loads a sample file into channel `channel`, or into a new channel.
@@ -960,23 +1156,26 @@ impl LineupApp {
             .map(|stem| stem.to_string_lossy().into_owned())
             .unwrap_or_else(|| "Sample".to_string());
 
-        self.edit("load sample", |project| {
-            match channel.and_then(|index| project.channel_mut(index)) {
-                Some(existing) => {
+        let loaded = self.edit("load sample", |project| {
+            match channel.filter(|&index| index < project.channels().len()) {
+                Some(index) => {
+                    let existing = project.channel_mut(index).unwrap();
                     existing.name = name;
                     existing.kind = kind;
+                    Some(index)
                 }
-                None => {
-                    project.add_channel(Channel {
-                        name,
-                        kind,
-                        volume: 0.8,
-                        muted: false,
-                        program: None,
-                    });
-                }
+                None => project.add_channel(Channel {
+                    name,
+                    kind,
+                    volume: 0.8,
+                    muted: false,
+                    program: None,
+                }),
             }
         });
+        if let Some(channel) = loaded {
+            self.select_channel(Some(channel));
+        }
         self.message = None;
     }
 
@@ -986,8 +1185,6 @@ impl LineupApp {
             self.file_menu(ui);
             self.edit_menu(ui);
             self.view_menu(ui);
-            self.sounds_menu(ui);
-            self.practice_menu(ui);
             self.midi_menu(ui);
             ui.separator();
             self.hint_bar.show(ui);
@@ -1053,6 +1250,8 @@ impl LineupApp {
                 self.record_button(ui);
             });
 
+            theme::group(ui, |ui| self.playback_controls(ui));
+
             // While a song whose tempo changes plays, the box follows the
             // tempo at the playhead, as FL Studio's does; stopped, it is
             // the tempo the song starts at, to change.
@@ -1072,7 +1271,7 @@ impl LineupApp {
                 (
                     format!(" {speed}%"),
                     80.0,
-                    format!(". You practise at {speed}% of it (Practice menu)"),
+                    format!(". You practise at {speed}% of it (Settings > Playback)"),
                 )
             };
             if let Some(now) = now {
@@ -1144,6 +1343,12 @@ impl LineupApp {
                 {
                     self.piano_roll.open = !self.piano_roll.open;
                 }
+                if theme::light_button(ui, "Mixer", self.mixer_open, None)
+                    .on_hover_text("Master and instrument levels, solo, mute and reverb (F9)")
+                    .clicked()
+                {
+                    self.mixer_open = !self.mixer_open;
+                }
                 let harmony = theme::light_button(ui, "🎼 Harmony", self.harmony_keys.open, None);
                 if theme::hint(
                     harmony,
@@ -1163,12 +1368,12 @@ impl LineupApp {
                 // Shorter than egui's usual slider, so the toolbar fits
                 // on one row in a window 1280 points wide.
                 ui.spacing_mut().slider_width = 64.0;
-                let volume_slider =
-                    egui::Slider::new(&mut self.master_volume, 0.0..=1.0).show_value(false);
+                let mut master = self.project.mixer.master;
+                let volume_slider = egui::Slider::new(&mut master, 0.0..=1.0).show_value(false);
                 let volume = ui.add_sized([64.0, 22.0], volume_slider);
-                let text = format!("Master volume: {:.0}%", self.master_volume * 100.0);
+                let text = format!("Master volume: {:.0}%", master * 100.0);
                 if theme::hint(volume, text).changed() {
-                    self.send(Command::SetMasterVolume(self.master_volume));
+                    self.edit("master volume", |project| project.mixer.master = master);
                 }
             });
         });
@@ -1305,9 +1510,8 @@ impl LineupApp {
         });
     }
 
-    /// Which sound card is in use, the chord held, an export running, and
-    /// the last piece of news or problem.
-    fn status_messages(&self, ui: &mut egui::Ui) {
+    /// The audio output and format, shared by Settings and the status bar.
+    fn audio_status(&self, ui: &mut egui::Ui) {
         match &self.audio {
             Audio::Running(engine) => {
                 let info = engine.info();
@@ -1323,6 +1527,12 @@ impl LineupApp {
                 );
             }
         }
+    }
+
+    /// Which sound card is in use, the chord held, an export running, and
+    /// the last piece of news or problem.
+    fn status_messages(&self, ui: &mut egui::Ui) {
+        self.audio_status(ui);
         if let Some(chord) = self.held_chord() {
             ui.separator();
             ui.label(chord);
@@ -1410,25 +1620,60 @@ impl LineupApp {
     }
 
     fn keyboard_shortcuts(&mut self, ctx: &egui::Context) {
+        if widgets::modal_open(ctx) {
+            return;
+        }
+        self.style_editor.shortcuts(ctx);
         // While a text field has the keyboard (a track or pattern name),
         // Space and L are letters, not shortcuts.
-        let typing = ctx.text_edit_focused();
+        let controls_active = [
+            (self.settings_open, egui::Id::unique("application-settings")),
+            (self.mixer_open, egui::Id::unique("mixer")),
+        ]
+        .iter()
+        .any(|&(open, id)| {
+            open && widgets::editor_active(ctx, egui::LayerId::new(egui::Order::Middle, id))
+        });
+        let typing = ctx.text_edit_focused() || egui::Popup::is_any_open(ctx);
         // `consume_key` reports whether the key was pressed and removes the
         // press, so a focused button does not also react to Space.
         let pressed = |key| ctx.input_mut(|input| input.consume_key(egui::Modifiers::NONE, key));
-        if !typing && pressed(egui::Key::Space) {
-            self.set_playing(!self.playing);
+        if !typing && !controls_active && pressed(egui::Key::Space) {
+            let pattern_editor = widgets::clicked_editor(ctx).is_some_and(|layer| {
+                layer.order == egui::Order::Middle
+                    && [rack_id(), PianoRoll::id()].contains(&layer.id)
+            });
+            if pattern_editor {
+                if self.mode == PlayMode::Pattern && self.playing {
+                    self.pause();
+                } else {
+                    self.apply(RackAction::PlayPattern);
+                }
+            } else {
+                self.set_playing(!self.playing);
+            }
         }
-        if !typing && pressed(egui::Key::Home) {
+        if widgets::editor_keyboard(ctx, egui::LayerId::new(egui::Order::Middle, rack_id()))
+            && pressed(egui::Key::Escape)
+        {
+            self.select_channel(None);
+        }
+        let boundary = |key| {
+            ctx.input_mut(|input| input.consume_key(egui::Modifiers::COMMAND, key)) || pressed(key)
+        };
+        if !typing && !controls_active && boundary(egui::Key::Home) {
             self.seek(0);
         }
-        if !typing && pressed(egui::Key::PageUp) {
+        if !typing && !controls_active && boundary(egui::Key::End) {
+            self.seek(self.loop_length().saturating_sub(1));
+        }
+        if !typing && !controls_active && pressed(egui::Key::PageUp) {
             self.skip_bars(-1);
         }
-        if !typing && pressed(egui::Key::PageDown) {
+        if !typing && !controls_active && pressed(egui::Key::PageDown) {
             self.skip_bars(1);
         }
-        if !typing && pressed(egui::Key::L) {
+        if !typing && !controls_active && pressed(egui::Key::L) {
             self.set_mode(match self.mode {
                 PlayMode::Pattern => PlayMode::Song,
                 PlayMode::Song => PlayMode::Pattern,
@@ -1491,17 +1736,19 @@ impl eframe::App for LineupApp {
             self.find_key_live(seconds);
             let key_heard = self.key_heard();
             let held = self.live.held_pitches();
-            let channel = self.piano_roll.channel();
+            let channel = self.piano_roll.selected_channel();
             let channel_name = self
                 .project
                 .channels()
-                .get(channel)
+                .get(channel.unwrap_or(usize::MAX))
                 .map_or("", |channel| channel.name.as_str());
             let heard = self.chord_playing();
             // While the chord sheet has the keyboard, digits are sets
             // and figures typed in a bar.
-            let digits =
-                !self.live.typing() && !ctx.text_edit_focused() && !self.chord_sheet.has_keyboard();
+            let digits = !self.live.typing()
+                && !ctx.text_edit_focused()
+                && !self.chord_sheet.has_keyboard()
+                && !widgets::modal_open(&ctx);
             let here = self.key_here();
             egui::Panel::bottom("harmony-keys")
                 .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))
@@ -1515,6 +1762,7 @@ impl eframe::App for LineupApp {
                         &heard,
                         digits,
                         key_heard.as_ref(),
+                        self.playlist.library_parts_mut(),
                     )
                 })
                 .inner
@@ -1561,9 +1809,13 @@ impl eframe::App for LineupApp {
         // When the rows grow or shrink (a longer pattern, a new channel),
         // it is fitted to them again, so no step hides past its edge.
         let rack_scale = Self::rack_scale(&ctx);
-        let natural =
-            channel_rack::natural_size(&ctx.global_style(), &self.project, self.pattern, 1.0)
-                * rack_scale;
+        let style = ctx.global_style();
+        let natural = (channel_rack::natural_size(&style, &self.project, self.pattern, 1.0)
+            + egui::vec2(
+                0.0,
+                style.spacing.interact_size.y + style.spacing.item_spacing.y,
+            ))
+            * rack_scale;
         // A window's default size is its outside: the contents, the frame
         // around them and the title bar.
         let style = ctx.global_style();
@@ -1587,8 +1839,31 @@ impl eframe::App for LineupApp {
         let rack_actions = rack
             .show(&ctx, |ui| {
                 widgets::zoom_contents(ui, rack_scale);
-                let selected = self.piano_roll.channel();
-                channel_rack::show(ui, &self.project, self.pattern, selected, playhead)
+                let selected = self.piano_roll.selected_channel();
+                ui.horizontal(|ui| {
+                    if ui
+                        .button("Edit style…")
+                        .on_hover_text("Edit a copy of the current style’s repeating parts")
+                        .clicked()
+                    {
+                        self.edit_current_style();
+                    }
+                    if ui.button("New style…").clicked() {
+                        self.start_style_editor(lineup_core::library::UserStyle::blank(), None);
+                    }
+                });
+                channel_rack::show(
+                    ui,
+                    &self.project,
+                    self.pattern,
+                    selected,
+                    playhead,
+                    Some(channel_rack::RackPlayback {
+                        playing: self.playing && self.mode == PlayMode::Pattern,
+                        can_stop: self.mode == PlayMode::Pattern
+                            && (self.playing || self.cursor != self.marker),
+                    }),
+                )
             })
             .and_then(|window| window.inner)
             .unwrap_or_default();
@@ -1624,7 +1899,7 @@ impl eframe::App for LineupApp {
             &self.project,
             playing,
             self.live.typing(),
-            self.practice.view(),
+            (self.practice.view(), self.playlist.library_browser_mut()),
         );
         for action in sheet_actions {
             self.apply_sheet(action);
@@ -1633,6 +1908,10 @@ impl eframe::App for LineupApp {
         self.ear_training_window(&ctx, area);
         self.lead_sheet_window(&ctx, area);
         self.sound_font_window(&ctx);
+        self.mixer_window(&ctx, area);
+        self.style_editor_window(&ctx, area);
+        self.settings_window(&ctx);
+        self.playlist.library_browser_mut().store_preferences(&ctx);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
         self.end_frame_for_undo(&ctx);

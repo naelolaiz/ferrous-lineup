@@ -20,10 +20,6 @@ use crate::chord_sheet::{PracticeAction, PracticeView, SPEEDS};
 /// The practice speed that plays the song at its own tempo, in percent.
 pub(super) const FULL_SPEED: u16 = 100;
 
-/// The speeds the Practice menu offers; any other can be typed on the
-/// chord sheet.
-const MENU_SPEEDS: [u16; 10] = [50, 60, 70, 75, 80, 90, 100, 110, 125, 150];
-
 /// A tap that comes longer than this after the last one, in seconds,
 /// starts counting again: slower than 30 BPM is not a tempo anyone taps.
 const TAP_GAP: f64 = 2.0;
@@ -195,6 +191,20 @@ impl LineupApp {
         self.practice.settings.metronome = on;
     }
 
+    /// Frequently used playback controls stay beside the main transport.
+    pub(super) fn playback_controls(&mut self, ui: &mut egui::Ui) {
+        crate::widgets::follow_button(ui);
+        let practice = self.practice.view();
+        let count_in = crate::theme::light_button(ui, "Count-in", practice.count_in, None);
+        if crate::theme::hint(count_in, "One bar of clicks before playback starts").clicked() {
+            self.set_count_in(!practice.count_in);
+        }
+        let metronome = crate::theme::light_button(ui, "Metronome", practice.metronome, None);
+        if crate::theme::hint(metronome, "A click on every beat during playback").clicked() {
+            self.set_metronome(!practice.metronome);
+        }
+    }
+
     /// Plays at `speed` percent of the song's tempo, from the next step.
     pub(super) fn set_speed(&mut self, speed: u16) {
         let speed = speed.clamp(*SPEEDS.start(), *SPEEDS.end());
@@ -261,42 +271,6 @@ impl LineupApp {
             }
             None => self.notice = Some(format!("You play the {name}: the band leaves it out")),
         }
-    }
-
-    /// The Practice menu, after the Sounds menu.
-    pub(super) fn practice_menu(&mut self, ui: &mut egui::Ui) {
-        ui.menu_button("Practice", |ui| {
-            let mut count_in = self.practice.settings.count_in;
-            if ui
-                .checkbox(&mut count_in, "Count-in")
-                .on_hover_text("A bar of clicks before the music starts, so you come in on time")
-                .changed()
-            {
-                self.set_count_in(count_in);
-            }
-            let mut metronome = self.practice.settings.metronome;
-            if ui
-                .checkbox(&mut metronome, "Metronome")
-                .on_hover_text("A click on every beat while the music plays")
-                .changed()
-            {
-                self.set_metronome(metronome);
-            }
-            ui.menu_button(format!("Speed ({}%)", self.practice.speed), |ui| {
-                ui.weak("How fast to play, as a percentage of the song's tempo.");
-                for speed in MENU_SPEEDS {
-                    let chosen = self.practice.speed == speed;
-                    if ui.selectable_label(chosen, format!("{speed}%")).clicked() {
-                        self.set_speed(speed);
-                    }
-                }
-            });
-            ui.separator();
-            ui.weak(
-                "Tap tempo, playing a part yourself and looping\n\
-                 bars are on the chord sheet (F5).",
-            );
-        });
     }
 }
 

@@ -1,22 +1,28 @@
-//! The Library tab, next to the list of patterns: harmony styles and
-//! rhythms, sorted by genre, to try with one click.
+//! The Library tab: searchable accompaniment presets, shown alphabetically
+//! or grouped by family, with optional chord progressions and copy controls.
 //!
 //! Like the other views, it only draws and reads the mouse. A click
 //! returns a [`LibraryAction`], and the app writes the style or rhythm
 //! into a pattern (see `app/library.rs`).
 
 use eframe::egui::{self, RichText, Ui};
+use lineup_core::library::apply::StyleParts;
 use lineup_core::library::{
-    FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, RHYTHMS, ROW_STYLES, Rhythm, RowStyle, STYLES,
-    Style,
+    FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, Style,
 };
-use lineup_core::{Project, TimeSignature};
+use lineup_core::{Band, Project, TimeSignature};
+
+pub(crate) mod catalogue;
+use catalogue::{Preset, alphabetical, matches};
 
 /// Something picked in the library.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LibraryAction {
+    UserStyle(usize),
     /// Play this style's chords and bass line, in the project's key.
     Style(&'static Style),
+    /// Apply this preset to the whole song even while stopped.
+    StyleInSong(&'static Style),
     /// Play this rhythm (or fill) on the drums.
     Rhythm(&'static Rhythm),
     /// Play the whole song in this rhythm: its drums, and its chords and
@@ -30,27 +36,55 @@ pub enum LibraryAction {
     MicromodeStyle(&'static MicromodeStyle),
 }
 
+/// The same browser serves accompaniment presets and written progressions.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum LibraryPurpose {
+    Play,
+    Progression,
+}
+
 /// What the selected pattern was made from, if the library made it, to
 /// show it selected.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Tried {
+    pub user_style: Option<u64>,
     pub style: Option<&'static Style>,
     pub rhythm: Option<&'static Rhythm>,
     pub row_style: Option<&'static RowStyle>,
     pub micromode_style: Option<&'static MicromodeStyle>,
 }
 
+impl Tried {
+    /// Read the exact rhythm and harmony style from the project, including undo and load.
+    pub fn from_band(band: &Band) -> Self {
+        Self {
+            user_style: band.custom_rhythm.as_ref().map(|style| style.id()),
+            style: band.harmony_style.filter(|_| band.custom_rhythm.is_none()),
+            rhythm: band.style.rhythm.filter(|_| band.custom_rhythm.is_none()),
+            ..Self::default()
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum StyleEditorRequest {
+    New,
+    Builtin(&'static Style),
+    Rhythm(&'static Rhythm),
+    User(usize),
+    Folder,
+}
+
 /// What the library tab remembers between frames.
 pub struct LibraryBrowser {
+    pub user_styles: Vec<lineup_core::library::UserStyle>,
+    pub editor_request: Option<StyleEditorRequest>,
     filter: String,
-    /// Whether trying a style or a rhythm also sets its usual tempo.
-    pub use_tempo: bool,
-    /// The selection last drawn. When it changes (a demo was opened, or
-    /// something was tried), the genre holding what changed opens and it
-    /// scrolls into view.
+    /// Which components of a choice replace the current song's settings.
+    pub parts: StyleParts,
+    /// The selection last drawn, to reveal it after applying, loading or undoing.
     shown: Tried,
-    /// Until when (in `ui` time) to keep scrolling the selection into
-    /// view, while its genre opens.
+    /// Until when (in `ui` time) to keep revealing a changed selection.
     reveal_until: f64,
     /// Whether that is the rhythm (only the rhythm changed) or the style.
     reveal_rhythm: bool,
@@ -61,8 +95,10 @@ pub struct LibraryBrowser {
 impl LibraryBrowser {
     pub fn new() -> Self {
         LibraryBrowser {
+            user_styles: Vec::new(),
+            editor_request: None,
             filter: String::new(),
-            use_tempo: true,
+            parts: StyleParts::default(),
             shown: Tried::default(),
             reveal_until: 0.0,
             reveal_rhythm: false,
@@ -70,111 +106,178 @@ impl LibraryBrowser {
         }
     }
 
+    pub fn restore_preferences(&mut self, ctx: &egui::Context) {
+        self.parts = ctx
+            .data_mut(|data| data.get_persisted(egui::Id::unique("preset-copy-options")))
+            .unwrap_or_default();
+    }
+
+    pub fn store_preferences(&self, ctx: &egui::Context) {
+        ctx.data_mut(|data| {
+            data.insert_persisted(egui::Id::unique("preset-copy-options"), self.parts);
+        });
+    }
+
     pub fn show(&mut self, ui: &mut Ui, project: &Project, tried: Tried) -> Option<LibraryAction> {
-        let mut picked = None;
-        ui.add(
-            egui::TextEdit::singleline(&mut self.filter)
-                .hint_text("🔍 Search: bossa, 6/8, tango…")
-                .desired_width(f32::INFINITY),
-        );
-        ui.checkbox(&mut self.use_tempo, "Use their tempo")
-            .on_hover_text(
-                "Trying a style or a rhythm also sets the tempo it is usually played at",
+        self.show_for(ui, project, tried, LibraryPurpose::Play)
+    }
+
+    pub fn show_for(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        tried: Tried,
+        purpose: LibraryPurpose,
+    ) -> Option<LibraryAction> {
+        if ui.small_button("New style…").clicked() {
+            self.editor_request = Some(StyleEditorRequest::New);
+        }
+        ui.horizontal(|ui| {
+            let width = (ui.available_width() - 28.0).max(80.0);
+            ui.add(
+                egui::TextEdit::singleline(&mut self.filter)
+                    .hint_text("🔍 Search: bossa, 6/8, tango…")
+                    .desired_width(width),
             );
-        ui.weak(
-            "Click to play it in a pattern. Click another to swap. While the song plays, a \
-             click plays the whole song that way instead, and the song carries on. Right-click \
-             a rhythm to do that while stopped. Ctrl+Z takes it back.",
-        );
+            if ui
+                .add_enabled(!self.filter.is_empty(), egui::Button::new("×"))
+                .on_hover_text("Clear search")
+                .clicked()
+            {
+                self.filter.clear();
+            }
+        });
+        let height = ui
+            .available_height()
+            .min(ui.ctx().content_rect().bottom() - ui.next_widget_position().y - 16.0)
+            .max(48.0);
+        egui::ScrollArea::vertical()
+            .id_salt("library-content")
+            .max_height(height)
+            .show(ui, |ui| self.results(ui, project, tried, purpose))
+            .inner
+    }
+
+    fn results(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        tried: Tried,
+        purpose: LibraryPurpose,
+    ) -> Option<LibraryAction> {
+        let mut picked = None;
+        if purpose != LibraryPurpose::Progression
+            && let Some(band) = project.band()
+        {
+            ui.weak(format!("Patterns: {}", band.name()));
+            ui.weak(format!("Instruments: {}", band.instrument_name()));
+            ui.weak("Chords: chord sheet");
+            if band.accents_only {
+                ui.weak("Plain accents with current instruments");
+            }
+        }
+        ui.weak(match purpose {
+            LibraryPurpose::Play => {
+                "Click a preset to choose what to copy, then Apply. Ctrl-click applies the \
+                 previous options immediately. While the song plays, it carries on with the \
+                 new preset. Right-click to apply to the whole song while stopped. Ctrl+Z undoes it."
+            }
+            LibraryPurpose::Progression => {
+                "Choose a preset’s chord progression to write from the selected bar."
+            }
+        });
         ui.add_space(2.0);
 
         let filter = self.filter.trim().to_lowercase();
         let searching = !filter.is_empty();
         let tonic = project.scale.root;
         let now = ui.input(|i| i.time);
-        let new_style = tried.style.is_some() && tried.style != self.shown.style;
-        let new_rhythm = tried.rhythm.is_some() && tried.rhythm != self.shown.rhythm;
-        let new_row = (tried.row_style.is_some() && tried.row_style != self.shown.row_style)
-            || (tried.micromode_style.is_some()
-                && tried.micromode_style != self.shown.micromode_style);
-        self.shown = tried;
+        let tracking = purpose == LibraryPurpose::Play;
+        let new_style = tracking
+            && ((tried.style.is_some() && tried.style != self.shown.style)
+                || (tried.user_style.is_some() && tried.user_style != self.shown.user_style));
+        let new_rhythm = tracking && tried.rhythm.is_some() && tried.rhythm != self.shown.rhythm;
+        let new_row = tracking
+            && ((tried.row_style.is_some() && tried.row_style != self.shown.row_style)
+                || (tried.micromode_style.is_some()
+                    && tried.micromode_style != self.shown.micromode_style));
+        if tracking {
+            self.shown = tried;
+        }
         if new_style || new_rhythm || new_row {
             self.reveal_until = now + 0.5;
             self.reveal_rhythm = !new_style && !new_row;
             self.reveal_row = new_row;
         }
-        let revealing = now < self.reveal_until;
+        let revealing = tracking && now < self.reveal_until;
         if revealing {
             ui.ctx().request_repaint();
         }
         let scroll_row = revealing && self.reveal_row;
-        let scroll_style = revealing && !self.reveal_rhythm && !self.reveal_row;
         let scroll_rhythm = revealing && self.reveal_rhythm;
-        if searching && !anything_matches(&filter) {
+        let presets = catalogue::presets(
+            &filter,
+            &self.user_styles,
+            purpose == LibraryPurpose::Progression,
+        );
+        if searching && presets.is_empty() && !anything_else_matches(&filter, purpose) {
             ui.label(format!(
                 "Nothing in the library matches \"{}\".",
                 self.filter.trim()
             ));
             ui.weak("Songs with melodies are in File ▸ Demos ▸ Songs.");
         }
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            let open = searching || new_style;
-            section(ui, "Harmony styles", open, |ui| {
-                for genre in Genre::ALL {
-                    let styles: Vec<&'static Style> = STYLES
-                        .iter()
-                        .filter(|style| style.genre == genre)
-                        .filter(|style| {
-                            matches(&filter, style.name, genre, style.time, style.about)
-                        })
-                        .collect();
-                    let open =
-                        searching || (new_style && tried.style.is_some_and(|s| s.genre == genre));
-                    group(ui, "styles", genre, styles.len(), open, |ui| {
-                        for style in styles {
-                            let selected = tried.style == Some(style);
-                            let response = ui
-                                .selectable_label(selected, label(style.name, style.time))
-                                .on_hover_text(describe_style(style, tonic));
-                            if selected && scroll_style {
-                                response.scroll_to_me(None);
-                            }
-                            if response.clicked() {
-                                picked = Some(LibraryAction::Style(style));
-                            }
-                        }
-                    });
+        ui.scope(|ui| {
+            ui.label(format!("Presets ({})", presets.len()));
+            if purpose != LibraryPurpose::Progression {
+                ui.weak("+ chords: includes a progression. Other presets keep your chords.");
+            }
+            let mut draw = |ui: &mut Ui, preset| {
+                if let Some(action) = preset_label(
+                    ui,
+                    preset,
+                    PresetView {
+                        tried,
+                        tonic,
+                        reveal: revealing && !self.reveal_row,
+                        purpose,
+                    },
+                    &mut self.parts,
+                    &mut self.editor_request,
+                ) {
+                    picked = Some(action);
                 }
-            });
-            let open = searching || new_row;
-            picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
-            picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
-            let open = searching || new_rhythm;
-            section(ui, "Rhythms", open, |ui| {
-                for genre in Genre::ALL {
-                    let rhythms: Vec<&'static Rhythm> = RHYTHMS
-                        .iter()
-                        .filter(|rhythm| rhythm.genre == genre)
-                        .filter(|r| matches(&filter, r.name, genre, r.time, r.about))
-                        .collect();
-                    let open = searching
-                        || (new_rhythm
-                            && tried
-                                .rhythm
-                                .is_some_and(|r| r.genre == genre && !FILLS.contains(r)));
-                    group(ui, "rhythms", genre, rhythms.len(), open, |ui| {
-                        for rhythm in rhythms {
-                            picked = picked.or(rhythm_label(ui, rhythm, tried, scroll_rhythm));
-                        }
-                    });
+            };
+            if grouped_presets(ui.ctx()) {
+                grouped_results(
+                    ui,
+                    &presets,
+                    tried,
+                    searching,
+                    revealing || !tracking,
+                    &mut draw,
+                );
+            } else {
+                for preset in presets {
+                    draw(ui, preset);
                 }
-                let fills: Vec<&'static Rhythm> = FILLS
-                    .iter()
-                    .filter(|r| {
+            }
+            if purpose == LibraryPurpose::Play {
+                let open = searching || new_row;
+                picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
+                picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
+            }
+            if purpose == LibraryPurpose::Progression {
+                return;
+            }
+            if purpose == LibraryPurpose::Play {
+                let fills = alphabetical(
+                    FILLS.iter().filter(|r| {
                         matches(&filter, r.name, r.genre, r.time, r.about)
                             || names_a_word(&filter, "fill fills")
-                    })
-                    .collect();
+                    }),
+                    |rhythm| rhythm.name,
+                );
                 if !fills.is_empty() {
                     let header = egui::CollapsingHeader::new(format!("Fills ({})", fills.len()))
                         .id_salt("rhythms-fills");
@@ -187,13 +290,342 @@ impl LibraryBrowser {
                     };
                     header.show(ui, |ui| {
                         for fill in fills {
-                            picked = picked.or(rhythm_label(ui, fill, tried, scroll_rhythm));
+                            picked = picked.or(rhythm_label(
+                                ui,
+                                fill,
+                                tried,
+                                scroll_rhythm,
+                                purpose,
+                                &mut self.editor_request,
+                            ));
                         }
                     });
                 }
-            });
+            }
         });
         picked
+    }
+}
+
+/// The presentation preference is shared by every preset browser.
+pub fn grouped_presets(ctx: &egui::Context) -> bool {
+    ctx.data_mut(|data| {
+        data.get_persisted(egui::Id::unique("group-presets"))
+            .unwrap_or(false)
+    })
+}
+
+pub fn set_grouped_presets(ctx: &egui::Context, grouped: bool) {
+    ctx.data_mut(|data| data.insert_persisted(egui::Id::unique("group-presets"), grouped));
+}
+
+fn preset_selected(preset: Preset<'_>, tried: Tried) -> bool {
+    match preset {
+        Preset::Style(style) => {
+            tried.style == Some(style)
+                || (tried.style.is_none()
+                    && tried.user_style.is_none()
+                    && tried.row_style.is_none()
+                    && tried.micromode_style.is_none()
+                    && tried.rhythm.and_then(catalogue::equivalent_style) == Some(style))
+        }
+        Preset::Rhythm(rhythm) => {
+            tried.user_style.is_none()
+                && tried.style.is_none()
+                && tried.row_style.is_none()
+                && tried.micromode_style.is_none()
+                && tried.rhythm == Some(rhythm)
+        }
+        Preset::User(_, style) => tried.user_style == Some(style.id()),
+    }
+}
+
+fn grouped_results<'a>(
+    ui: &mut Ui,
+    presets: &[Preset<'a>],
+    tried: Tried,
+    searching: bool,
+    reveal: bool,
+    draw: &mut impl FnMut(&mut Ui, Preset<'a>),
+) {
+    let users: Vec<_> = presets
+        .iter()
+        .copied()
+        .filter(|preset| preset.genre().is_none())
+        .collect();
+    if !users.is_empty() {
+        let open =
+            searching || (reveal && users.iter().any(|&preset| preset_selected(preset, tried)));
+        let header = egui::CollapsingHeader::new(format!("User styles ({})", users.len()))
+            .id_salt("preset-users");
+        let header = if open {
+            header.open(Some(true))
+        } else {
+            header
+        };
+        header.show(ui, |ui| {
+            for preset in users {
+                draw(ui, preset);
+            }
+        });
+    }
+    let mut genres = Genre::ALL;
+    genres.sort_by_key(|genre| genre.name());
+    for genre in genres {
+        let group: Vec<_> = presets
+            .iter()
+            .copied()
+            .filter(|preset| preset.genre() == Some(genre))
+            .collect();
+        if group.is_empty() {
+            continue;
+        }
+        let open =
+            searching || (reveal && group.iter().any(|&preset| preset_selected(preset, tried)));
+        let header = egui::CollapsingHeader::new(format!("{} ({})", genre.name(), group.len()))
+            .id_salt(("preset-genre", genre));
+        let header = if open {
+            header.open(Some(true))
+        } else {
+            header
+        };
+        header.show(ui, |ui| {
+            for preset in group {
+                draw(ui, preset);
+            }
+        });
+    }
+}
+
+#[derive(Clone, Copy)]
+struct PresetView {
+    tried: Tried,
+    tonic: lineup_core::PitchClass,
+    reveal: bool,
+    purpose: LibraryPurpose,
+}
+
+fn preset_label(
+    ui: &mut Ui,
+    preset: Preset<'_>,
+    view: PresetView,
+    parts: &mut StyleParts,
+    editor: &mut Option<StyleEditorRequest>,
+) -> Option<LibraryAction> {
+    let selected = preset_selected(preset, view.tried);
+    let hover = match preset {
+        Preset::Style(style) => describe_style(style, view.tonic),
+        Preset::Rhythm(rhythm) => format!(
+            "{}\n\n{} · {} BPM · {} bars\nNo chord progression; keeps your chords.",
+            rhythm.about,
+            rhythm.time,
+            rhythm.tempo,
+            rhythm.bars(),
+        ),
+        Preset::User(_, style) => format!(
+            "{}\n\n{} · {} BPM · {} bars\n{}",
+            style.about,
+            style.time,
+            style.tempo.bpm(),
+            style.bars,
+            style.chart,
+        ),
+    };
+    // Harmony and rhythm presets can share both a name and a genre.
+    let identity = (
+        "preset",
+        std::mem::discriminant(&preset),
+        preset.name(),
+        preset.genre(),
+        match preset {
+            Preset::User(_, style) => Some(style.id()),
+            _ => None,
+        },
+    );
+    ui.push_id(identity, |ui| {
+        let response = ui
+            .horizontal_wrapped(|ui| {
+                let response = ui.selectable_label(selected, label(preset.name(), preset.time()));
+                if view.purpose != LibraryPurpose::Progression {
+                    ui.weak(if preset.has_progression() {
+                        "+ chords"
+                    } else {
+                        "keeps chords"
+                    });
+                }
+                response
+            })
+            .inner
+            .on_hover_text(hover);
+        if selected && view.reveal {
+            response.scroll_to_me(None);
+        }
+        let action = match preset {
+            Preset::Style(style) => LibraryAction::Style(style),
+            Preset::Rhythm(rhythm) => LibraryAction::Rhythm(rhythm),
+            Preset::User(index, _) => LibraryAction::UserStyle(index),
+        };
+        // This uses a different ID from the right-click editor menu.
+        let popup_id = response.id.with("copy-options");
+        let mut picked = None;
+        let clicked = response.clicked();
+        let immediate = ui.input(|input| input.modifiers.ctrl || input.modifiers.command)
+            || view.purpose == LibraryPurpose::Progression;
+        if clicked && immediate {
+            egui::Popup::close_id(ui.ctx(), popup_id);
+            picked = Some(action);
+        }
+        let opening = clicked && !immediate;
+        let mut draft = ui.ctx().data_mut(|data| {
+            if opening {
+                data.insert_temp(popup_id, *parts);
+            }
+            data.get_temp::<StyleParts>(popup_id).unwrap_or(*parts)
+        });
+        let popup = egui::Popup::from_response(&response)
+            .id(popup_id)
+            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
+            .width(300.0);
+        let popup = popup.open_memory(opening.then_some(egui::SetOpenCommand::Bool(true)));
+        popup.show(|ui| {
+            ui.strong(preset.name());
+            let height = (ui.ctx().content_rect().height() - 110.0).max(80.0);
+            egui::ScrollArea::vertical()
+                .max_height(height)
+                .show(ui, |ui| {
+                    style_parts_editor(ui, &mut draft, preset.has_progression());
+                });
+            ui.separator();
+            ui.horizontal(|ui| {
+                let effective = draft.for_preset();
+                let can_apply = effective.rhythm
+                    || effective.instruments
+                    || effective.time_signature
+                    || effective.tempo
+                    || effective.swing
+                    || (effective.progression && preset.has_progression());
+                if ui
+                    .add_enabled(can_apply, egui::Button::new("Apply"))
+                    .clicked()
+                {
+                    *parts = draft;
+                    picked = Some(action);
+                    ui.close();
+                }
+                if ui.button("Cancel").clicked() {
+                    ui.close();
+                }
+            });
+        });
+        ui.ctx().data_mut(|data| data.insert_temp(popup_id, draft));
+        response.context_menu(|ui| {
+            let edit_label = if matches!(preset, Preset::User(_, _)) {
+                "Edit in channel rack…"
+            } else {
+                "Edit a copy in channel rack…"
+            };
+            if ui.button(edit_label).clicked() {
+                *editor = Some(match preset {
+                    Preset::Style(style) => StyleEditorRequest::Builtin(style),
+                    Preset::Rhythm(rhythm) => StyleEditorRequest::Rhythm(rhythm),
+                    Preset::User(index, _) => StyleEditorRequest::User(index),
+                });
+                ui.close();
+            }
+            if view.purpose == LibraryPurpose::Play
+                && ui.button("Play the whole song with this preset").clicked()
+            {
+                picked = Some(match preset {
+                    Preset::Style(style) => LibraryAction::StyleInSong(style),
+                    Preset::Rhythm(rhythm) => LibraryAction::RhythmInSong(rhythm),
+                    Preset::User(index, _) => LibraryAction::UserStyle(index),
+                });
+                ui.close();
+            }
+        });
+        picked
+    })
+    .inner
+}
+
+/// Shared option editor for applying a preset and editing the saved defaults.
+pub fn style_parts_checkboxes(ui: &mut Ui, parts: &mut StyleParts) {
+    style_parts_editor(ui, parts, true);
+}
+
+fn style_parts_editor(ui: &mut Ui, parts: &mut StyleParts, has_progression: bool) {
+    ui.spacing_mut().item_spacing.y = 8.0;
+    ui.add_space(4.0);
+    ui.weak("Playing style");
+    style_mode_ui(ui, parts);
+    ui.separator();
+    ui.strong("Accompaniment");
+    copy_parts_ui(ui, parts, has_progression);
+}
+
+pub(crate) fn style_mode_ui(ui: &mut Ui, parts: &mut StyleParts) {
+    ui.horizontal_wrapped(|ui| {
+        ui.selectable_value(&mut parts.matching_style, true, "Preset patterns");
+        ui.selectable_value(&mut parts.matching_style, false, "Plain accents");
+    });
+    ui.weak(if parts.matching_style {
+        "Use the preset’s playing patterns and choose whether to copy its instruments."
+    } else {
+        "Simple chord and bass accents on the meter’s beat groups. Drum patterns still come from the preset. Your current instruments are kept."
+    });
+}
+
+fn copy_parts_ui(ui: &mut Ui, parts: &mut StyleParts, has_progression: bool) {
+    let (label, hint) = if parts.matching_style {
+        (
+            "Playing patterns",
+            "Copy the preset’s drum, chord, bass and other accompaniment patterns. Existing chords are kept unless Chord progression is checked.",
+        )
+    } else {
+        (
+            "Drums and plain accents",
+            "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups. Keep current instruments and chords unless Chord progression is checked.",
+        )
+    };
+    ui.checkbox(&mut parts.rhythm, label).on_hover_text(hint);
+    instrument_option(ui, parts, "Voices / instruments");
+    ui.add_space(2.0);
+    ui.strong("Harmony");
+    let mut progression = has_progression && parts.progression;
+    if ui
+        .add_enabled(
+            has_progression,
+            egui::Checkbox::new(&mut progression, "Chord progression"),
+        )
+        .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments.")
+        .on_disabled_hover_text(
+            "This preset has no chord progression. Your current chords are kept.",
+        )
+        .changed()
+    {
+        parts.progression = progression;
+    }
+    if has_progression && parts.progression {
+        ui.weak("Replaces existing chords. The melody is kept.");
+    }
+    ui.add_space(2.0);
+    ui.strong("Timing");
+    ui.checkbox(&mut parts.time_signature, "Time signature")
+        .on_hover_text(
+            "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
+        );
+    ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
+        "Use the usual tempo when the meter stays the same. Changing meter keeps each bar's duration.",
+    );
+    ui.checkbox(&mut parts.swing, "Swing")
+        .on_hover_text("Use the preset’s swing amount.");
+}
+
+/// Display the effective option while preserving the preference for preset patterns.
+pub(crate) fn instrument_option(ui: &mut Ui, parts: &mut StyleParts, label: &str) {
+    if parts.matching_style {
+        ui.checkbox(&mut parts.instruments, label)
+            .on_hover_text("Copy the preset’s sounds and band players.");
     }
 }
 
@@ -206,10 +638,12 @@ fn row_styles(
     tried: Tried,
     scroll: bool,
 ) -> Option<LibraryAction> {
-    let styles: Vec<&'static RowStyle> = ROW_STYLES
-        .iter()
-        .filter(|style| row_style_matches(filter, style))
-        .collect();
+    let styles = alphabetical(
+        ROW_STYLES
+            .iter()
+            .filter(|style| row_style_matches(filter, style)),
+        |style| style.name,
+    );
     if styles.is_empty() {
         return None;
     }
@@ -255,10 +689,12 @@ fn micromode_styles(
     tried: Tried,
     scroll: bool,
 ) -> Option<LibraryAction> {
-    let styles: Vec<&'static MicromodeStyle> = MICROMODE_STYLES
-        .iter()
-        .filter(|style| micromode_style_matches(filter, style))
-        .collect();
+    let styles = alphabetical(
+        MICROMODE_STYLES
+            .iter()
+            .filter(|style| micromode_style_matches(filter, style)),
+        |style| style.name,
+    );
     if styles.is_empty() {
         return None;
     }
@@ -302,42 +738,6 @@ fn micromode_styles(
     picked
 }
 
-/// A top-level part of the library, open at the start, and opened when
-/// `open` is true (while searching, or to show the selection).
-fn section(ui: &mut Ui, title: &str, open: bool, add: impl FnOnce(&mut Ui)) {
-    let header = egui::CollapsingHeader::new(RichText::new(title).strong()).default_open(true);
-    let header = if open {
-        header.open(Some(true))
-    } else {
-        header
-    };
-    header.show(ui, add);
-}
-
-/// The entries of one genre, under its name. Closed at the start, opened
-/// when `open` is true (while searching, or when it holds the selection),
-/// and left out if nothing in it matches.
-fn group(
-    ui: &mut Ui,
-    kind: &str,
-    genre: Genre,
-    count: usize,
-    open: bool,
-    add: impl FnOnce(&mut Ui),
-) {
-    if count == 0 {
-        return;
-    }
-    let header = egui::CollapsingHeader::new(format!("{} ({count})", genre.name()))
-        .id_salt(format!("{kind}-{genre:?}"));
-    let header = if open {
-        header.open(Some(true))
-    } else {
-        header
-    };
-    header.show(ui, add);
-}
-
 /// One rhythm in the list. Returns it if it was clicked, or picked for
 /// the whole song from its menu. Fills have no menu: they are one bar.
 /// With `scroll`, a selected rhythm scrolls into view.
@@ -346,6 +746,8 @@ fn rhythm_label(
     rhythm: &'static Rhythm,
     tried: Tried,
     scroll: bool,
+    purpose: LibraryPurpose,
+    editor: &mut Option<StyleEditorRequest>,
 ) -> Option<LibraryAction> {
     let selected = tried.rhythm == Some(rhythm);
     let is_fill = FILLS.contains(rhythm);
@@ -370,9 +772,14 @@ fn rhythm_label(
         response.scroll_to_me(None);
     }
     let mut picked = response.clicked().then_some(LibraryAction::Rhythm(rhythm));
-    if !is_fill {
-        response.context_menu(|ui| {
-            if ui
+    response.context_menu(|ui| {
+        if ui.button("Edit a copy in channel rack…").clicked() {
+            *editor = Some(StyleEditorRequest::Rhythm(rhythm));
+            ui.close();
+        }
+        if !is_fill
+            && purpose == LibraryPurpose::Play
+            && ui
                 .button("Play the whole song in this rhythm")
                 .on_hover_text(
                     "Every pattern with drums gets this rhythm, and the chords and bass \
@@ -380,17 +787,16 @@ fn rhythm_label(
                      another time signature puts the song in it, bar for bar.",
                 )
                 .clicked()
-            {
-                picked = Some(LibraryAction::RhythmInSong(rhythm));
-                ui.close();
-            }
-        });
-    }
+        {
+            picked = Some(LibraryAction::RhythmInSong(rhythm));
+            ui.close();
+        }
+    });
     picked
 }
 
 /// The name, with the time signature after it unless it is 4/4.
-fn label(name: &str, time: TimeSignature) -> String {
+pub(crate) fn label(name: &str, time: TimeSignature) -> String {
     if time.is_common() {
         name.to_string()
     } else {
@@ -422,21 +828,18 @@ fn micromode_style_matches(filter: &str, style: &MicromodeStyle) -> bool {
 }
 
 /// Whether anything at all in the library matches the search.
-fn anything_matches(filter: &str) -> bool {
-    STYLES
-        .iter()
-        .any(|s| matches(filter, s.name, s.genre, s.time, s.about))
-        || RHYTHMS
-            .iter()
-            .chain(FILLS.iter())
-            .any(|r| matches(filter, r.name, r.genre, r.time, r.about))
-        || names_a_word(filter, "fill fills")
-        || ROW_STYLES
-            .iter()
-            .any(|style| row_style_matches(filter, style))
-        || MICROMODE_STYLES
-            .iter()
-            .any(|style| micromode_style_matches(filter, style))
+fn anything_else_matches(filter: &str, purpose: LibraryPurpose) -> bool {
+    purpose == LibraryPurpose::Play
+        && (names_a_word(filter, "fill fills")
+            || FILLS
+                .iter()
+                .any(|r| matches(filter, r.name, r.genre, r.time, r.about))
+            || ROW_STYLES
+                .iter()
+                .any(|style| row_style_matches(filter, style))
+            || MICROMODE_STYLES
+                .iter()
+                .any(|style| micromode_style_matches(filter, style)))
 }
 
 /// Whether `filter` is the start of one of `words` (at least three
@@ -446,16 +849,6 @@ fn names_a_word(filter: &str, words: &str) -> bool {
         && words
             .split_whitespace()
             .any(|word| word.starts_with(filter))
-}
-
-/// Whether an entry matches the search: its name, genre, time signature
-/// or description contains the text.
-fn matches(filter: &str, name: &str, genre: Genre, time: TimeSignature, about: &str) -> bool {
-    filter.is_empty()
-        || name.to_lowercase().contains(filter)
-        || genre.name().to_lowercase().contains(filter)
-        || time.to_string() == filter
-        || about.to_lowercase().contains(filter)
 }
 
 /// The tooltip of a style: its chords in the project's key, and more.
@@ -468,8 +861,7 @@ fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
         format!(" · drums: {}", style.rhythm)
     };
     format!(
-        "{}\n\nIn {}: {}\n{}\n\n{} · {} BPM · {} bars{rhythm}\n\nWhile the song plays, a \
-         click plays the whole song this way, keeping its chords.",
+        "{}\n\nIn {}: {}\n{}\n\n{} · {} BPM · {} bars{rhythm}",
         style.about,
         scale.name(),
         style.chord_names(tonic),
@@ -478,4 +870,73 @@ fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
         style.tempo,
         style.bars(),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lineup_core::BandStyle;
+    use lineup_core::library::STYLES;
+
+    #[test]
+    fn browser_preferences_survive_recreation_and_serialization() {
+        let ctx = egui::Context::default();
+        let mut browser = LibraryBrowser::new();
+        browser.parts.tempo = false;
+        browser.parts.progression = true;
+        browser.parts.matching_style = false;
+        browser.store_preferences(&ctx);
+        set_grouped_presets(&ctx, true);
+
+        // eframe writes the context's persisted data to disk between runs.
+        let data = ctx.data(|data| ron::to_string(data).unwrap());
+        let restored = egui::Context::default();
+        restored.data_mut(|memory| *memory = ron::from_str(&data).unwrap());
+        let mut next = LibraryBrowser::new();
+        next.restore_preferences(&restored);
+        assert_eq!(next.parts, browser.parts);
+        assert!(grouped_presets(&restored));
+        assert!(!grouped_presets(&egui::Context::default()));
+    }
+
+    #[test]
+    fn the_library_follows_repeated_band_changes() {
+        let mut project = Project::with_band();
+        for name in ["Pop beat", "Waltz", "Bossa nova", "Pop beat", "Waltz"] {
+            let band = BandStyle::named(name).unwrap();
+            project.set_band_style(Some(band));
+            let tried = Tried::from_band(project.band().unwrap());
+            assert_eq!(tried.rhythm, band.rhythm);
+            assert!(tried.style.is_none());
+        }
+    }
+
+    #[test]
+    fn the_exact_style_stays_selected_across_repeated_changes_and_loading() {
+        let mut project = Project::with_band();
+        for style in STYLES.iter().cycle().take(150) {
+            let Some(band) = BandStyle::of_style(style) else {
+                continue;
+            };
+            project.apply_band_parts(
+                band,
+                Some(style),
+                StyleParts {
+                    time_signature: false,
+                    tempo: false,
+                    ..StyleParts::default()
+                },
+            );
+            let tried = Tried::from_band(project.band().unwrap());
+            assert_eq!(tried.style, Some(style));
+            assert_eq!(tried.rhythm, band.rhythm);
+            assert_eq!(project.band().unwrap().name(), style.name);
+        }
+        let text = lineup_core::file::to_text(&project).unwrap();
+        let loaded = lineup_core::file::from_text(&text).unwrap();
+        assert_eq!(
+            Tried::from_band(loaded.band().unwrap()),
+            Tried::from_band(project.band().unwrap())
+        );
+    }
 }

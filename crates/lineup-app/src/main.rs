@@ -15,6 +15,7 @@
 mod app;
 mod channel_rack;
 mod chord_sheet;
+mod clipboard;
 mod ear_training;
 mod harmony_keys;
 mod lead_sheet;
@@ -23,6 +24,7 @@ mod micromodes;
 mod midi;
 mod piano_roll;
 mod playlist;
+mod style_editor;
 mod theme;
 mod time_picker;
 mod twelve_tone;

@@ -26,6 +26,7 @@ pub mod meter;
 pub mod micromodal;
 pub mod midi;
 pub mod midi_file;
+pub mod mixer;
 pub mod pattern;
 pub mod pitch;
 pub mod playlist;
@@ -50,6 +51,7 @@ pub use key_map::{KeyMap, KeyMarker};
 pub use meter::{Bar, Click, Meter, TimeMarker, TimeSignature};
 pub use midi::{DRUM_CHANNEL, MidiMessage};
 pub use midi_file::{general_midi_drum, midi_channels, pattern_to_midi, song_to_midi};
+pub use mixer::{Mixer, ReverbSettings};
 pub use pattern::{
     DEFAULT_VELOCITY, MAX_STEPS, NoteEvent, Pattern, STEP_NOTE, TICKS_PER_STEP, tidy_notes,
 };

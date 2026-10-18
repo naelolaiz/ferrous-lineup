@@ -2038,6 +2038,7 @@ dependencies = [
  "midir",
  "pdf-writer",
  "rfd",
+ "ron",
  "serde",
  "ttf-parser",
  "ureq",

@@ -89,12 +89,16 @@ enum Drag {
 /// What the strips remember between frames.
 #[derive(Debug, Default)]
 pub(super) struct Strips {
+    pub selected: Option<LoopRegion>,
     drag: Option<Drag>,
     /// The bar whose time signature menu is open, by its first step.
     time_menu: usize,
 }
 
 impl Strips {
+    pub(super) fn cancel_drag(&mut self) {
+        self.drag = None;
+    }
     /// The section strip: draws the sections and reads the mouse over it.
     /// `pass` is what the song is playing now, to show "2 of 3" on a
     /// section that repeats.
@@ -113,6 +117,14 @@ impl Strips {
         painter.rect_filled(strip, 0.0, STRIP);
         let sections = project.playlist().sections();
         let meter = project.meter();
+        let dismissing = crate::widgets::dismissing(ui.ctx());
+        if self.selected.is_some_and(|region| {
+            !sections
+                .iter()
+                .any(|section| section.start == region.start && section.end() == region.end)
+        }) {
+            self.selected = None;
+        }
 
         // The empty strip, under the sections: dragging on it marks a new one.
         let background = ui.interact(strip, ui.scope_id().with("section-strip"), Sense::drag());
@@ -127,6 +139,7 @@ impl Strips {
             );
         }
         if background.drag_started()
+            && !dismissing
             && let Some(pos) = press_origin(ui)
         {
             let from = snap.floor(layout.step_at(pos.x), &meter);
@@ -152,6 +165,7 @@ impl Strips {
                 ui.ctx().set_cursor_icon(CursorIcon::ResizeHorizontal);
             }
             if response.drag_started()
+                && !dismissing
                 && let Some(pos) = press_origin(ui)
             {
                 self.drag = Some(if near_edge(pos.x) {
@@ -164,12 +178,25 @@ impl Strips {
 
             let playing = pass.filter(|pass| pass.section == Some(index));
             paint_section(&painter, rect, section, playing);
+            let region = LoopRegion::new(section.start, section.end());
+            if self.selected == Some(region) {
+                painter.rect_stroke(rect, 3.0, Stroke::new(2.0, GHOST), StrokeKind::Inside);
+            }
+            let select =
+                response.clicked() && ui.input(|input| input.modifiers.command) && !dismissing;
+            if select {
+                actions.push(PlaylistAction::SelectSection(
+                    (self.selected != Some(region)).then_some(region),
+                ));
+            }
             let response = response.on_hover_text(format!(
-                "{}: click to rename, repeat, loop or copy it. \
+                "{}: click to rename, repeat, loop or copy it. Ctrl-click selects its clips; Ctrl-click again deselects. \
                  Drag to move it, drag its right edge to resize it.",
                 section.name
             ));
-            section_menu(&response, index, section, project, actions);
+            if !select {
+                section_menu(&response, index, section, project, actions);
+            }
         }
 
         // While dragging, an outline shows where the section will land,
@@ -235,6 +262,7 @@ impl Strips {
 
     /// The bar ruler: click to move the playhead there, drag to set the
     /// loop region. `ruler` is the strip with the bar numbers.
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn loop_ruler(
         &mut self,
         ui: &mut Ui,
@@ -242,6 +270,7 @@ impl Strips {
         ruler: Rect,
         project: &Project,
         snap: Snap,
+        parts: &mut lineup_core::library::apply::StyleParts,
         actions: &mut Vec<PlaylistAction>,
     ) {
         let meter = project.meter();
@@ -266,11 +295,12 @@ impl Strips {
         // stay open while typing: only a click outside closes it.
         egui::Popup::context_menu(&response)
             .close_behavior(PopupCloseBehavior::CloseOnClickOutside)
-            .show(|ui| time_menu(ui, project, at, actions));
+            .show(|ui| time_menu(ui, project, at, parts, actions));
         let region = project.playlist().loop_region();
         let painter = ui.painter_at(ruler);
 
         if response.clicked()
+            && !crate::widgets::dismissing(ui.ctx())
             && let Some(pos) = response.interact_pointer_pos()
         {
             actions.push(PlaylistAction::Seek(
@@ -279,6 +309,7 @@ impl Strips {
         }
 
         if response.drag_started()
+            && !crate::widgets::dismissing(ui.ctx())
             && let Some(pos) = press_origin(ui)
         {
             self.drag = Some(Drag::Loop {
@@ -309,7 +340,13 @@ impl Strips {
 
 /// The menu on the bar numbers: the time signature from the bar that
 /// starts on step `at` on.
-fn time_menu(ui: &mut Ui, project: &Project, at: usize, actions: &mut Vec<PlaylistAction>) {
+fn time_menu(
+    ui: &mut Ui,
+    project: &Project,
+    at: usize,
+    parts: &mut lineup_core::library::apply::StyleParts,
+    actions: &mut Vec<PlaylistAction>,
+) {
     let meter = project.meter();
     let bar = meter.bar_at(at);
     let marker = project
@@ -318,11 +355,18 @@ fn time_menu(ui: &mut Ui, project: &Project, at: usize, actions: &mut Vec<Playli
         .iter()
         .find(|marker| marker.start == at);
     ui.label(format!("Time signature from bar {}", bar.number + 1));
-    if let Some(time) = time_picker(ui, egui::Id::unique(("time-from", at)), bar.time) {
+    if let Some(time) = time_picker(
+        ui,
+        egui::Id::unique(("time-from", at)),
+        bar.time,
+        (at == 0).then_some(parts),
+    ) {
         actions.push(PlaylistAction::SetTimeMarker(TimeMarker::new(at, time)));
     }
     if at == 0 {
         ui.weak("Bar 1 sets the time signature the song starts in.");
+    } else {
+        ui.weak("Changes the meter here; keeps the current style and instruments.");
     }
     if marker.is_some() {
         ui.separator();
@@ -525,7 +569,9 @@ fn section_menu(
     project: &Project,
     actions: &mut Vec<PlaylistAction>,
 ) {
-    let toggle = response.clicked() || response.secondary_clicked();
+    let toggle = (response.clicked() || response.secondary_clicked())
+        && !response.ctx.input(|input| input.modifiers.command)
+        && !crate::widgets::dismissing(&response.ctx);
     let set = |section: Section| PlaylistAction::SetSection { index, section };
     // The menu holds a text field, so it must stay open while typing:
     // only a click outside closes it.
@@ -534,6 +580,13 @@ fn section_menu(
         .close_behavior(PopupCloseBehavior::CloseOnClickOutside)
         .show(|ui| {
             ui.set_min_width(220.0);
+            if ui.button("Select clips in this section").clicked() {
+                actions.push(PlaylistAction::SelectSection(Some(LoopRegion::new(
+                    section.start,
+                    section.end(),
+                ))));
+                ui.close();
+            }
             let mut name = section.name.clone();
             ui.horizontal(|ui| {
                 ui.label("Name");

@@ -17,6 +17,10 @@ use crate::widgets;
 /// Something the user asked the rack to do.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RackAction {
+    PlayPattern,
+    PausePattern,
+    StopPattern,
+    SelectChannel(Option<usize>),
     ToggleStep {
         channel: usize,
         step: usize,
@@ -60,6 +64,12 @@ pub enum RackAction {
 const NAME_WIDTH: f32 = 110.0;
 const DROP_HIGHLIGHT: Color32 = Color32::from_rgba_premultiplied(255, 152, 48, 40);
 
+#[derive(Clone, Copy, Default)]
+pub struct RackPlayback {
+    pub playing: bool,
+    pub can_stop: bool,
+}
+
 /// The "Instrument" submenu: the 128 General MIDI programs in their
 /// sixteen families, and "None" for the Lineup Osc's own sound.
 fn instrument_menu(
@@ -73,41 +83,43 @@ fn instrument_menu(
         None => "Instrument".to_string(),
     };
     ui.menu_button(label, |ui| {
-        let none = ui
-            .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
-            .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
-        if none.clicked() {
-            actions.push(RackAction::SetProgram {
-                channel,
-                program: None,
-            });
-            ui.close();
-        }
-        ui.separator();
-        for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
-            let here = current.is_some_and(|program| general_midi::family(program) == family);
-            let family_label = if here {
-                format!("● {family_name}")
-            } else {
-                family_name.to_string()
-            };
-            ui.menu_button(family_label, |ui| {
-                for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
-                    let text =
-                        format!("{} {}", u16::from(program) + 1, general_midi::name(program));
-                    if ui
-                        .selectable_label(current == Some(program), text)
-                        .clicked()
-                    {
-                        actions.push(RackAction::SetProgram {
-                            channel,
-                            program: Some(program),
-                        });
-                        ui.close();
+        widgets::scroll_menu(ui, |ui| {
+            let none = ui
+                .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
+                .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
+            if none.clicked() {
+                actions.push(RackAction::SetProgram {
+                    channel,
+                    program: None,
+                });
+                ui.close();
+            }
+            ui.separator();
+            for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
+                let here = current.is_some_and(|program| general_midi::family(program) == family);
+                let family_label = if here {
+                    format!("● {family_name}")
+                } else {
+                    family_name.to_string()
+                };
+                ui.menu_button(family_label, |ui| {
+                    for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
+                        let text =
+                            format!("{} {}", u16::from(program) + 1, general_midi::name(program));
+                        if ui
+                            .selectable_label(current == Some(program), text)
+                            .clicked()
+                        {
+                            actions.push(RackAction::SetProgram {
+                                channel,
+                                program: Some(program),
+                            });
+                            ui.close();
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
+        });
     })
     .response
     .on_hover_text(
@@ -124,8 +136,9 @@ pub fn show(
     ui: &mut Ui,
     project: &Project,
     pattern: usize,
-    selected: usize,
+    selected: Option<usize>,
     playhead: Option<usize>,
+    playback: Option<RackPlayback>,
 ) -> Vec<RackAction> {
     let mut actions = Vec::new();
     let pattern_index = pattern;
@@ -138,23 +151,71 @@ pub fn show(
     let length = pattern.length();
     let files_hovering = ui.ctx().input(|input| !input.raw.hovered_files.is_empty());
     let pointer = ui.ctx().input(|input| input.pointer.hover_pos());
+    let dismissing = widgets::dismissing(ui.ctx());
+
+    if let Some(playback) = playback {
+        ui.horizontal_wrapped(|ui| {
+            let play = if playback.playing {
+                "⏸ Pause pattern"
+            } else {
+                "▶ Play pattern"
+            };
+            if ui
+                .button(play)
+                .on_hover_text("Play every channel in this pattern with its current instruments")
+                .clicked()
+                && !dismissing
+            {
+                actions.push(if playback.playing {
+                    RackAction::PausePattern
+                } else {
+                    RackAction::PlayPattern
+                });
+            }
+            if ui
+                .add_enabled(playback.can_stop, egui::Button::new("■ Stop pattern"))
+                .clicked()
+                && !dismissing
+            {
+                actions.push(RackAction::StopPattern);
+            }
+            egui::ComboBox::from_id_salt("rack-pattern")
+                .selected_text(&pattern.name)
+                .show_ui(ui, |ui| {
+                    for (index, choice) in project.patterns().iter().enumerate() {
+                        if ui
+                            .selectable_label(index == pattern_index, &choice.name)
+                            .clicked()
+                        {
+                            actions.push(RackAction::SelectPattern(index));
+                        }
+                    }
+                });
+        });
+    }
+    ui.weak("Click a channel to select and hear it; click it again or empty space to deselect. Double-click for the piano roll.");
 
     drums_elsewhere(ui, project, pattern, &mut actions);
 
     // The rack scrolls when the window is smaller than its rows. When all
     // the rows fit, the mouse wheel scrolls the steps sideways, without
     // having to hold Shift.
-    let size = natural_size(ui.style(), project, pattern_index, widgets::zoom(ui));
     ui.style_mut().always_scroll_the_only_direction = true;
-    let vertical = size.y > ui.available_height();
-    egui::ScrollArea::new([true, vertical])
+    let rows_height = project.channels().len() as f32
+        * (widgets::step_size(ui).y + ui.spacing().item_spacing.y)
+        + 4.0
+        + ui.spacing().interact_size.y
+        + ui.spacing().item_spacing.y;
+    let vertical = rows_height > ui.available_height();
+    let mut content_bottom = ui.cursor().top();
+    let scroll = egui::ScrollArea::new([true, vertical])
         .auto_shrink(false)
         .show(ui, |ui| {
             for (index, channel) in project.channels().iter().enumerate() {
                 let row = ui.horizontal(|ui| {
                     if widgets::mute_light(ui, !channel.muted)
                         .on_hover_text("Click to mute or unmute")
-                        .clicked()
+                        .clicked() && !dismissing
                     {
                         actions.push(RackAction::ToggleMute(index));
                     }
@@ -162,7 +223,7 @@ pub fn show(
                     let mut volume = channel.volume;
                     let knob = widgets::knob(ui, &mut volume, 0.8)
                         .on_hover_text(format!("Volume {:.0}%", volume * 100.0));
-                    if knob.changed() {
+                    if knob.changed() && !dismissing {
                         actions.push(RackAction::SetVolume {
                             channel: index,
                             volume,
@@ -171,11 +232,12 @@ pub fn show(
 
                     let name = egui::Button::new(&channel.name)
                         .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y) * widgets::zoom(ui))
-                        .selected(index == selected)
+                        .selected(selected == Some(index))
                         .truncate();
-                    let hover = "Click to hear it and select it: the piano roll shows the \
-                                 selected channel, and keyboards play it. Right-click for \
-                                 options. Drop a WAV file here to load it.";
+                    let hover = "Click to select and hear this channel; click again to deselect. \
+                                 Double-click to open its piano roll. Keyboards play the selected \
+                                 channel. Delete removes the selected channel. Right-click for options. \
+                                 Drop a WAV file here to load it.";
                     let name = match channel.program {
                         Some(program) => ui.add(name).on_hover_text(format!(
                             "Plays: {} (General MIDI {})\n\n{hover}",
@@ -184,8 +246,17 @@ pub fn show(
                         )),
                         None => ui.add(name).on_hover_text(hover),
                     };
-                    if name.clicked() {
-                        actions.push(RackAction::Preview(index));
+                    if !dismissing {
+                        if name.double_clicked() {
+                            actions.push(RackAction::OpenPianoRoll(index));
+                        } else if name.clicked() {
+                            if selected == Some(index) {
+                                actions.push(RackAction::SelectChannel(None));
+                            } else {
+                                actions.push(RackAction::SelectChannel(Some(index)));
+                                actions.push(RackAction::Preview(index));
+                            }
+                        }
                     }
                     name.context_menu(|ui| {
                         if ui.button("Piano roll").clicked() {
@@ -238,7 +309,7 @@ pub fn show(
                                     channel: index,
                                     step,
                                 });
-                            } else if response.secondary_clicked() {
+                            } else if response.secondary_clicked() && !dismissing {
                                 actions.push(RackAction::ClearStep {
                                     channel: index,
                                     step,
@@ -249,7 +320,7 @@ pub fn show(
                         let preview =
                             widgets::mini_roll(ui, pattern.notes(index), length, playhead)
                                 .on_hover_text("Click to open the piano roll");
-                        if preview.clicked() {
+                        if preview.clicked() && !dismissing {
                             actions.push(RackAction::OpenPianoRoll(index));
                         }
                     }
@@ -261,31 +332,64 @@ pub fn show(
             let rack_full = project.channels().len() >= MAX_CHANNELS;
             ui.add_enabled_ui(!rack_full, |ui| {
                 ui.menu_button("➕ Add channel", |ui| {
-                    for drum in Drum::ALL {
-                        if ui.button(drum.name()).clicked() {
-                            actions.push(RackAction::AddDrum(drum));
+                    widgets::scroll_menu(ui, |ui| {
+                        for drum in Drum::ALL {
+                            if ui.button(drum.name()).clicked() {
+                                actions.push(RackAction::AddDrum(drum));
+                                ui.close();
+                            }
+                        }
+                        ui.separator();
+                        if ui.button("Lineup Osc (synth)").clicked() {
+                            actions.push(RackAction::AddSynth);
                             ui.close();
                         }
-                    }
-                    ui.separator();
-                    if ui.button("Lineup Osc (synth)").clicked() {
-                        actions.push(RackAction::AddSynth);
-                        ui.close();
-                    }
-                    if ui
-                        .button("MIDI Out (external synth)")
-                        .on_hover_text(
-                            "Plays its notes on a synth outside Ferrous Lineup: pick where in \
+                        if ui
+                            .button("MIDI Out (external synth)")
+                            .on_hover_text(
+                                "Plays its notes on a synth outside Ferrous Lineup: pick where in \
                              MIDI > Output.",
-                        )
-                        .clicked()
-                    {
-                        actions.push(RackAction::AddMidiOut);
-                        ui.close();
-                    }
+                            )
+                            .clicked()
+                        {
+                            actions.push(RackAction::AddMidiOut);
+                            ui.close();
+                        }
+                    });
                 });
             });
+            content_bottom = ui.cursor().top();
         });
+
+    let empty = Rect::from_min_max(
+        egui::pos2(
+            scroll.inner_rect.left(),
+            content_bottom.max(scroll.inner_rect.top()),
+        ),
+        scroll.inner_rect.max,
+    );
+    if empty.is_positive()
+        && ui
+            .interact(
+                empty,
+                ui.scope_id().with("empty-rack"),
+                egui::Sense::click(),
+            )
+            .clicked()
+        && !dismissing
+    {
+        actions.push(RackAction::SelectChannel(None));
+    }
+
+    if widgets::editor_keyboard(ui.ctx(), ui.layer_id())
+        && let Some(channel) = selected
+        && ui.input_mut(|input| {
+            input.consume_key(egui::Modifiers::NONE, egui::Key::Delete)
+                || input.consume_key(egui::Modifiers::NONE, egui::Key::Backspace)
+        })
+    {
+        actions.push(RackAction::Remove(channel));
+    }
 
     // Highlight the row a dragged file would land on.
     let target_row = pointer.and_then(|p| row_rects.iter().position(|rect| rect.contains(p)));
@@ -391,7 +495,7 @@ pub fn natural_size(
     };
     // Room for a scroll bar, so one never covers the last row or step.
     let bar = style.spacing.scroll.bar_width + style.spacing.scroll.bar_outer_margin;
-    egui::vec2(width + bar, hint + rows + add_channel + bar)
+    egui::vec2(width + bar, 2.0 * line + hint + rows + add_channel + bar)
 }
 
 /// Whether a path opens as a project: a `.lineup` or `.loom` file, or a

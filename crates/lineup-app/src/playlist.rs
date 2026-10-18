@@ -45,7 +45,15 @@ pub enum PlaylistAction {
         track: usize,
         start: usize,
     },
+    MoveClips {
+        indices: Vec<usize>,
+        tracks: isize,
+        steps: isize,
+    },
+    SelectSection(Option<LoopRegion>),
     RemoveClip(usize),
+    RemoveClips(Vec<usize>),
+    PasteClips(Vec<Clip>),
     /// Play the clip's pattern this many times in a row.
     SetClipRepeats {
         index: usize,
@@ -57,6 +65,10 @@ pub enum PlaylistAction {
     RenameTrack {
         track: usize,
         name: String,
+    },
+    ResizeTrack {
+        track: usize,
+        height: u16,
     },
     AddTrack,
     /// Insert a new, empty track at this row.
@@ -227,19 +239,19 @@ struct ClipDrag {
 
 /// Where the grid of tracks and steps is on screen.
 #[derive(Debug, Clone, Copy)]
-struct Layout {
+struct Layout<'a> {
     /// The top-left corner of step 0 of track 0.
     origin: Pos2,
     /// How wide a step is and how tall a track is: the zoom.
     step_width: f32,
-    track_height: f32,
+    track_tops: &'a [f32],
     tracks: usize,
     /// Whether there is an empty row below the last track, where a clip
     /// starts a new track. There is unless the playlist is full.
     spare: bool,
 }
 
-impl Layout {
+impl Layout<'_> {
     fn x(self, step: usize) -> f32 {
         self.origin.x + step as f32 * self.step_width
     }
@@ -252,14 +264,23 @@ impl Layout {
     }
 
     fn track_top(self, track: usize) -> f32 {
-        self.origin.y + track as f32 * self.track_height
+        self.origin.y
+            + self
+                .track_tops
+                .get(track)
+                .copied()
+                .unwrap_or_else(|| *self.track_tops.last().unwrap_or(&0.0))
+    }
+
+    fn track_height(self, track: usize) -> f32 {
+        self.track_top(track + 1) - self.track_top(track)
     }
 
     fn clip_rect(self, clip: &Clip, length: usize) -> Rect {
         let top = self.track_top(clip.track);
         Rect::from_min_max(
             pos2(self.x(clip.start), top),
-            pos2(self.x(clip.start + length), top + self.track_height),
+            pos2(self.x(clip.start + length), self.track_top(clip.track + 1)),
         )
     }
 
@@ -271,16 +292,22 @@ impl Layout {
     /// The track and step under a point, clamped to the grid. Below the
     /// last track that is the spare row, the track a clip there makes.
     fn cell_at(self, pos: Pos2) -> (usize, usize) {
-        let last_track = self.rows().saturating_sub(1) as f32;
-        let track = ((pos.y - self.origin.y) / self.track_height)
-            .floor()
-            .clamp(0.0, last_track) as usize;
+        let track = self
+            .track_tops
+            .partition_point(|top| *top <= pos.y - self.origin.y)
+            .saturating_sub(1)
+            .min(self.rows().saturating_sub(1));
         (track, self.step_at(pos.x))
     }
 }
 
 /// What the playlist remembers between frames.
 pub struct PlaylistView {
+    selected: std::collections::BTreeSet<usize>,
+    shown_clips: Vec<Clip>,
+    selection_box: Option<Pos2>,
+    clipboard: Vec<Clip>,
+    paste_at: usize,
     snap: Snap,
     drag: Option<ClipDrag>,
     strips: Strips,
@@ -298,6 +325,8 @@ pub struct PlaylistView {
     view_rect: Option<Rect>,
     /// Where to scroll the grid to the next time it is drawn.
     scroll_to: Option<Vec2>,
+    /// An explicit transport jump is revealed even with playback following off.
+    reveal: Option<usize>,
     /// Where on screen the playlist was drawn last frame, beside the
     /// Patterns and Library panel: where the zoom keys zoom the playlist.
     area: Rect,
@@ -306,6 +335,11 @@ pub struct PlaylistView {
 impl PlaylistView {
     pub fn new() -> Self {
         PlaylistView {
+            selected: Default::default(),
+            shown_clips: Vec::new(),
+            selection_box: None,
+            clipboard: Vec::new(),
+            paste_at: 0,
             snap: Snap::Bar,
             drag: None,
             strips: Strips::default(),
@@ -317,6 +351,7 @@ impl PlaylistView {
             scrolled: Vec2::ZERO,
             view_rect: None,
             scroll_to: None,
+            reveal: None,
             area: Rect::NOTHING,
         }
     }
@@ -348,9 +383,25 @@ impl PlaylistView {
         self.area
     }
 
+    pub fn reveal_step(&mut self, step: usize) {
+        self.reveal = Some(step);
+    }
+
     /// Whether trying something from the library also sets its tempo.
     pub fn library_tempo(&self) -> bool {
-        self.library.use_tempo
+        self.library.parts.tempo
+    }
+
+    pub fn library_parts(&self) -> lineup_core::library::apply::StyleParts {
+        self.library.parts.for_preset()
+    }
+
+    pub fn library_parts_mut(&mut self) -> &mut lineup_core::library::apply::StyleParts {
+        &mut self.library.parts
+    }
+
+    pub fn library_browser_mut(&mut self) -> &mut LibraryBrowser {
+        &mut self.library
     }
 
     /// Draws the pattern picker and the playlist. `current` is the
@@ -369,6 +420,7 @@ impl PlaylistView {
         zoom: Vec2,
     ) -> Vec<PlaylistAction> {
         let mut actions = Vec::new();
+        self.reconcile_selection(project.playlist().clips());
         if zoom != self.zoom {
             self.zoom_to(ui.ctx(), zoom);
         }
@@ -383,7 +435,7 @@ impl PlaylistView {
                 ui.horizontal(|ui| {
                     ui.selectable_value(&mut self.tab, Tab::Patterns, "Patterns");
                     ui.selectable_value(&mut self.tab, Tab::Library, "📚 Library")
-                        .on_hover_text("Harmony styles and rhythms by genre");
+                        .on_hover_text("Search all presets by name, genre or meter");
                 });
                 ui.separator();
                 match self.tab {
@@ -457,6 +509,7 @@ impl PlaylistView {
 
         let area = egui::ScrollArea::both()
             .id_salt("playlist")
+            .animated(false)
             .auto_shrink(false);
         let area = match self.scroll_to.take() {
             Some(offset) => area.scroll_offset(offset),
@@ -468,7 +521,60 @@ impl PlaylistView {
         });
         self.scrolled = output.state.clamped_offset();
         self.view_rect = Some(output.inner_rect);
+        self.selected
+            .retain(|index| *index < project.playlist().clips().len());
+        if widgets::editor_keyboard(ui.ctx(), ui.layer_id()) {
+            self.keys(ui.ctx(), project, &mut actions);
+        }
         actions
+    }
+
+    /// Preserve clip identities when deleting an earlier clip shifts its index.
+    fn reconcile_selection(&mut self, clips: &[Clip]) {
+        if self.shown_clips.len() != clips.len() {
+            if clips.starts_with(&self.shown_clips) {
+                self.shown_clips = clips.to_vec();
+                self.selected.retain(|&index| index < clips.len());
+                return;
+            }
+            let mut selected = std::collections::BTreeSet::new();
+            for &index in &self.selected {
+                if let Some(old) = self.shown_clips.get(index) {
+                    if let Some((index, _)) = clips
+                        .iter()
+                        .enumerate()
+                        .find(|(index, clip)| !selected.contains(index) && *clip == old)
+                    {
+                        selected.insert(index);
+                    }
+                } else if index < clips.len() {
+                    // A clip just added or pasted is selected before its first draw.
+                    selected.insert(index);
+                }
+            }
+            self.selected = selected;
+            self.drag = None;
+        }
+        self.shown_clips = clips.to_vec();
+    }
+
+    pub fn select_section(&mut self, project: &Project, region: Option<LoopRegion>) {
+        self.strips.selected = region;
+        self.selected = project
+            .playlist()
+            .clips()
+            .iter()
+            .enumerate()
+            .filter(|(_, clip)| {
+                region.is_some_and(|region| {
+                    clip.start < region.end && clip.start + project.clip_length(clip) > region.start
+                })
+            })
+            .map(|(index, _)| index)
+            .collect();
+        self.shown_clips = project.playlist().clips().to_vec();
+        self.drag = None;
+        self.selection_box = None;
     }
 
     /// The tracks, the bar ruler and the clips.
@@ -493,14 +599,19 @@ impl PlaylistView {
             .bar(meter.bar_at(song_length).number + EXTRA_BARS)
             .start;
         let step_width = STEP_WIDTH * self.zoom.x;
-        let track_height = TRACK_HEIGHT * self.zoom.y;
+        let mut track_tops = Vec::with_capacity(rows + 1);
+        track_tops.push(0.0);
+        for row in 0..rows {
+            let height = tracks.get(row).map_or(TRACK_HEIGHT, |track| track.height()) * self.zoom.y;
+            track_tops.push(track_tops.last().copied().unwrap_or(0.0) + height);
+        }
         // The grid always reaches the right edge of the view: zoomed out,
         // and after a zoom in that keeps a step far to the right in place.
         let fill = ((viewport.right() - HEADER_WIDTH) / step_width).ceil() as usize;
         let steps = meter.round_up_to_bar(extra.max(MIN_BARS * STEPS_PER_BAR).max(fill));
         let size = vec2(
             HEADER_WIDTH + steps as f32 * step_width,
-            TOP + rows as f32 * track_height,
+            TOP + track_tops.last().copied().unwrap_or(0.0),
         );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
 
@@ -511,7 +622,7 @@ impl PlaylistView {
         let layout = Layout {
             origin: pos2(rect.left() + HEADER_WIDTH, rect.top() + TOP),
             step_width,
-            track_height,
+            track_tops: &track_tops,
             tracks: tracks.len(),
             spare,
         };
@@ -524,6 +635,19 @@ impl PlaylistView {
 
         self.handle_input(ui, &response, layout, cells, project, current, actions);
 
+        if let Some(step) = self.reveal.take() {
+            // Include the fixed track headers, so step zero is fully visible.
+            ui.scroll_to_rect(
+                Rect::from_min_max(
+                    pos2(layout.x(step) - HEADER_WIDTH, cells.center().y),
+                    pos2(layout.x(step) + step_width, cells.center().y + 1.0),
+                ),
+                None,
+            );
+        } else if let Some(step) = playhead {
+            widgets::follow_x(ui, playhead, layout.x(step), cells);
+        }
+
         let painter = ui.painter_at(visible);
         paint_tracks(&painter, layout, steps, &meter);
         if let Some(region) = project.playlist().loop_region() {
@@ -535,6 +659,28 @@ impl PlaylistView {
             painter.rect_filled(shade, 0.0, sections::LOOP.gamma_multiply(0.06));
         }
         paint_clips(&painter, layout, cells, project, current);
+        for &index in &self.selected {
+            if let Some(clip) = project.playlist().clips().get(index) {
+                painter.rect_stroke(
+                    layout
+                        .clip_rect(clip, project.clip_length(clip))
+                        .shrink(1.5),
+                    2.0,
+                    Stroke::new(2.0, theme::ACCENT),
+                    StrokeKind::Inside,
+                );
+            }
+        }
+        if let (Some(start), Some(pos)) = (self.selection_box, ui.ctx().pointer_interact_pos()) {
+            let selection = Rect::from_two_pos(start, pos).intersect(cells);
+            painter.rect_filled(selection, 0.0, theme::ACCENT.gamma_multiply(0.15));
+            painter.rect_stroke(
+                selection,
+                0.0,
+                Stroke::new(1.0, theme::ACCENT),
+                StrokeKind::Inside,
+            );
+        }
         // Lines from the ruler down to the last track.
         let lines = cells.top()..=layout.track_top(rows).min(cells.bottom());
         if let Some(step) = playhead {
@@ -576,8 +722,15 @@ impl PlaylistView {
             .sections(ui, layout, strip, project, self.snap, pass, actions);
         self.tempo_strip
             .show(ui, layout, tempo, project, self.snap, steps, actions);
-        self.strips
-            .loop_ruler(ui, layout, ruler, project, self.snap, actions);
+        self.strips.loop_ruler(
+            ui,
+            layout,
+            ruler,
+            project,
+            self.snap,
+            &mut self.library.parts,
+            actions,
+        );
     }
 
     /// The column of track names on the left, which stays put when the
@@ -603,7 +756,7 @@ impl PlaylistView {
             let top = layout.track_top(index);
             let row = Rect::from_min_size(
                 pos2(column.left(), top),
-                vec2(HEADER_WIDTH, layout.track_height),
+                vec2(HEADER_WIDTH, layout.track_height(index)),
             );
             // Only rows fully below the ruler get their buttons, so a row
             // half-hidden under the ruler cannot be clicked through it.
@@ -644,6 +797,30 @@ impl PlaylistView {
             }
             let tracks = project.playlist().tracks().len();
             name_response.context_menu(|ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Track height");
+                    let mut height = track.height() as u16;
+                    if ui
+                        .add(
+                            egui::DragValue::new(&mut height)
+                                .range(24..=240)
+                                .suffix(" px"),
+                        )
+                        .changed()
+                    {
+                        actions.push(PlaylistAction::ResizeTrack {
+                            track: index,
+                            height,
+                        });
+                    }
+                });
+                if ui.button("Reset track height").clicked() {
+                    actions.push(PlaylistAction::ResizeTrack {
+                        track: index,
+                        height: 36,
+                    });
+                }
+                ui.separator();
                 if ui.button("Insert track above").clicked() {
                     actions.push(PlaylistAction::InsertTrack(index));
                 }
@@ -672,6 +849,37 @@ impl PlaylistView {
                     actions.push(PlaylistAction::RemoveTrack(index));
                 }
             });
+            let edge =
+                Rect::from_x_y_ranges(row.x_range(), row.bottom() - 4.0..=row.bottom() + 4.0);
+            let id = ui.scope_id().with(("track-height", index));
+            let resize = ui
+                .interact(edge, id, Sense::click_and_drag())
+                .on_hover_cursor(egui::CursorIcon::ResizeVertical)
+                .on_hover_text("Drag to resize this track; double-click to reset its height");
+            if resize.drag_started() {
+                ui.ctx()
+                    .data_mut(|data| data.insert_temp(id, track.height()));
+            }
+            if let Some(delta) = resize.total_drag_delta() {
+                let base = ui
+                    .ctx()
+                    .data(|data| data.get_temp::<f32>(id))
+                    .unwrap_or(track.height());
+                let height = (base + delta.y / self.zoom.y).round().clamp(24.0, 240.0) as u16;
+                actions.push(PlaylistAction::ResizeTrack {
+                    track: index,
+                    height,
+                });
+            }
+            if resize.double_clicked() {
+                actions.push(PlaylistAction::ResizeTrack {
+                    track: index,
+                    height: 36,
+                });
+            }
+            if resize.hovered() || resize.dragged() {
+                painter.hline(row.x_range(), row.bottom(), Stroke::new(2.0, theme::ACCENT));
+            }
         }
 
         // The spare row's header: a button that adds the track, for those
@@ -680,7 +888,7 @@ impl PlaylistView {
             let top = layout.track_top(layout.tracks);
             let row = Rect::from_min_size(
                 pos2(column.left(), top),
-                vec2(HEADER_WIDTH, layout.track_height),
+                vec2(HEADER_WIDTH, layout.track_height(layout.tracks)),
             );
             if row.top() >= cells.top() && row.top() <= visible.bottom() {
                 let button = egui::Button::new(
@@ -716,6 +924,14 @@ impl PlaylistView {
         current: usize,
         actions: &mut Vec<PlaylistAction>,
     ) {
+        if widgets::editor_keyboard(ui.ctx(), ui.layer_id())
+            && ui.input(|input| input.key_pressed(egui::Key::Escape))
+        {
+            self.drag = None;
+            self.selection_box = None;
+            self.strips.cancel_drag();
+            return;
+        }
         let clips = project.playlist().clips();
         let (primary_pressed, primary_down, secondary, pointer, press_origin) = ui.input(|input| {
             let pointer = &input.pointer;
@@ -741,6 +957,19 @@ impl PlaylistView {
             let meter = project.meter();
             match clip_at(project, layout, pos) {
                 Some(index) => {
+                    self.strips.selected = None;
+                    let add = ui.input(|input| input.modifiers.command || input.modifiers.shift);
+                    if add {
+                        if !self.selected.insert(index) {
+                            self.selected.remove(&index);
+                        }
+                        self.drag = None;
+                        return;
+                    }
+                    if !self.selected.contains(&index) {
+                        self.selected.clear();
+                        self.selected.insert(index);
+                    }
                     let clip = clips[index];
                     let rect = layout.clip_rect(&clip, project.clip_length(&clip));
                     self.drag = Some(ClipDrag {
@@ -753,7 +982,16 @@ impl PlaylistView {
                     }
                 }
                 None => {
+                    self.strips.selected = None;
                     let start = self.snap.floor(step, &meter);
+                    self.paste_at = start;
+                    self.selected.clear();
+                    // Ctrl-click empty space moves the paste point without placing a clip.
+                    if ui.input(|input| input.modifiers.command || input.modifiers.shift) {
+                        self.selection_box = Some(pos);
+                        return;
+                    }
+                    self.selected.insert(clips.len());
                     actions.push(PlaylistAction::AddClip(Clip::new(current, track, start)));
                     // The new clip goes at the end of the list.
                     self.drag = Some(ClipDrag {
@@ -772,6 +1010,7 @@ impl PlaylistView {
                 .button_double_clicked(egui::PointerButton::Primary)
         });
         if double_clicked
+            && !dismissing
             && response.hovered()
             && let Some(pos) = pointer.filter(|pos| cells.contains(*pos))
             && let Some(index) = clip_at(project, layout, pos)
@@ -800,8 +1039,22 @@ impl PlaylistView {
             ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
         }
 
+        if let (Some(start), Some(pos)) = (self.selection_box, pointer) {
+            let selection = Rect::from_two_pos(start, pos).intersect(cells);
+            if start.distance(pos) > 3.0 {
+                self.selected = clips
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, clip)| {
+                        selection.intersects(layout.clip_rect(clip, project.clip_length(clip)))
+                    })
+                    .map(|(index, _)| index)
+                    .collect();
+            }
+        }
         if !primary_down {
             self.drag = None;
+            self.selection_box = None;
         }
         if let Some(drag) = self.drag
             && drag.stretch
@@ -830,12 +1083,126 @@ impl PlaylistView {
                 .snap
                 .floor(step.saturating_sub(drag.grab), &project.meter());
             if (track, start) != (clip.track, clip.start) {
-                actions.push(PlaylistAction::MoveClip {
-                    index: drag.index,
-                    track,
-                    start,
-                });
+                if self.selected.len() > 1 {
+                    let selected: Vec<_> = self
+                        .selected
+                        .iter()
+                        .filter_map(|&index| clips.get(index))
+                        .collect();
+                    let min_track = selected.iter().map(|clip| clip.track).min().unwrap_or(0);
+                    let max_track = selected.iter().map(|clip| clip.track).max().unwrap_or(0);
+                    let min_start = selected.iter().map(|clip| clip.start).min().unwrap_or(0);
+                    let max_start = selected.iter().map(|clip| clip.start).max().unwrap_or(0);
+                    let tracks = (track as isize - clip.track as isize)
+                        .clamp(-(min_track as isize), (MAX_TRACKS - 1 - max_track) as isize);
+                    let steps = (start as isize - clip.start as isize).clamp(
+                        -(min_start as isize),
+                        (MAX_SONG_STEPS - 1 - max_start) as isize,
+                    );
+                    actions.push(PlaylistAction::MoveClips {
+                        indices: self.selected.iter().copied().collect(),
+                        tracks,
+                        steps,
+                    });
+                } else {
+                    actions.push(PlaylistAction::MoveClip {
+                        index: drag.index,
+                        track,
+                        start,
+                    });
+                }
             }
+        }
+    }
+
+    fn keys(&mut self, ctx: &egui::Context, project: &Project, actions: &mut Vec<PlaylistAction>) {
+        use egui::{Key, KeyboardShortcut, Modifiers};
+        let pressed = |key| {
+            ctx.input_mut(|input| {
+                input.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, key))
+            })
+        };
+        let clips = project.playlist().clips();
+        if pressed(Key::A) {
+            self.selected = (0..clips.len()).collect();
+            self.strips.selected = None;
+        }
+        let copy = pressed(Key::C) || ctx.input(|input| input.events.contains(&egui::Event::Copy));
+        let cut = pressed(Key::X) || ctx.input(|input| input.events.contains(&egui::Event::Cut));
+        let duplicate = pressed(Key::D);
+        if copy || cut || duplicate {
+            self.clipboard = self
+                .selected
+                .iter()
+                .filter_map(|&index| clips.get(index).copied())
+                .collect();
+        }
+        if copy || cut {
+            crate::clipboard::copy(ctx, "clips", &self.clipboard);
+        }
+        if cut
+            || ctx.input_mut(|input| {
+                input.consume_key(Modifiers::NONE, Key::Delete)
+                    || input.consume_key(Modifiers::NONE, Key::Backspace)
+            })
+        {
+            actions.push(PlaylistAction::RemoveClips(
+                self.selected.iter().copied().collect(),
+            ));
+            self.selected.clear();
+        }
+        let system_paste = crate::clipboard::paste::<Vec<Clip>>(ctx, "clips");
+        let paste = pressed(Key::V) && !crate::clipboard::has_paste(ctx);
+        let pasted = system_paste.is_some();
+        if let Some(clips) = system_paste {
+            self.clipboard = clips
+                .into_iter()
+                .filter(|clip| clip.pattern < project.patterns().len())
+                .map(|mut clip| {
+                    clip.repeats = clip.repeats.clamp(1, MAX_REPEATS);
+                    clip.start = clip.start.min(MAX_SONG_STEPS - 1);
+                    clip.track = clip
+                        .track
+                        .min(project.playlist().tracks().len().saturating_sub(1));
+                    clip
+                })
+                .collect();
+        }
+        if (paste || pasted || duplicate) && !self.clipboard.is_empty() {
+            let first = self
+                .clipboard
+                .iter()
+                .map(|clip| clip.start)
+                .min()
+                .unwrap_or(0);
+            let at = if duplicate {
+                self.clipboard
+                    .iter()
+                    .map(|clip| clip.start + project.clip_length(clip))
+                    .max()
+                    .unwrap_or(first)
+            } else {
+                self.paste_at
+            };
+            let pasted: Vec<_> = self
+                .clipboard
+                .iter()
+                .copied()
+                .map(|mut clip| {
+                    clip.start = at
+                        .saturating_add(clip.start - first)
+                        .min(MAX_SONG_STEPS - 1);
+                    clip
+                })
+                .collect();
+            self.selected = (clips.len()..clips.len() + pasted.len()).collect();
+            actions.push(PlaylistAction::PasteClips(pasted));
+        }
+        if ctx.input_mut(|input| input.consume_key(Modifiers::NONE, Key::Escape)) {
+            self.selected.clear();
+            self.selection_box = None;
+            self.strips.selected = None;
+            self.drag = None;
         }
     }
 }
@@ -974,7 +1341,7 @@ fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) 
         let top = layout.track_top(track);
         let row = Rect::from_min_max(
             pos2(layout.origin.x, top),
-            pos2(right, top + layout.track_height),
+            pos2(right, layout.track_top(track + 1)),
         );
         let color = ROW[track % 2];
         // The spare row is fainter: it is not a track yet.
@@ -1259,4 +1626,245 @@ fn paint_ruler(
         FontId::proportional(11.0),
         RULER_TEXT,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use egui::{Event, PointerButton, RawInput};
+
+    fn selection_project() -> Project {
+        let mut project = Project::empty();
+        project.pattern_mut(0).unwrap().set_length(16);
+        project.add_clip(Clip::new(0, 0, 0));
+        project.add_clip(Clip::new(0, 1, 16));
+        project.add_clip(Clip::new(0, 0, 64));
+        project.add_section(Section::new("Verse", 0, 32));
+        project
+    }
+
+    fn pointer(pos: Pos2, pressed: bool, modifiers: egui::Modifiers) -> Vec<Event> {
+        vec![
+            Event::ModifiersChanged(modifiers),
+            Event::PointerMoved(pos),
+            Event::PointerButton {
+                pos,
+                button: PointerButton::Primary,
+                pressed,
+                modifiers,
+            },
+        ]
+    }
+
+    #[test]
+    fn section_selection_toggles_and_tracks_the_clips_after_deletion() {
+        let ctx = egui::Context::default();
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        let mut project = selection_project();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        let visible = view.view_rect.unwrap();
+        let section = pos2(
+            visible.left() + HEADER_WIDTH + 8.0 * STEP_WIDTH,
+            visible.top() + SECTION_HEIGHT / 2.0,
+        );
+        for expected in [Some(LoopRegion::new(0, 32)), None] {
+            frame(
+                &ctx,
+                &mut view,
+                &project,
+                pointer(section, true, egui::Modifiers::COMMAND),
+            );
+            let actions = frame(
+                &ctx,
+                &mut view,
+                &project,
+                pointer(section, false, egui::Modifiers::COMMAND),
+            );
+            assert!(
+                actions.contains(&PlaylistAction::SelectSection(expected)),
+                "{actions:?}"
+            );
+            view.select_section(&project, expected);
+            assert_eq!(
+                view.selected.iter().copied().collect::<Vec<_>>(),
+                if expected.is_some() {
+                    vec![0, 1]
+                } else {
+                    vec![]
+                }
+            );
+        }
+        view.selected.insert(2);
+        project.remove_clip(0);
+        frame(
+            &ctx,
+            &mut view,
+            &project,
+            vec![Event::ModifiersChanged(egui::Modifiers::NONE)],
+        );
+        assert_eq!(view.selected.iter().copied().collect::<Vec<_>>(), vec![1]);
+        assert_eq!(project.playlist().clips()[1].start, 64);
+    }
+
+    #[test]
+    fn ctrl_drag_selects_a_clip_range_and_dragging_moves_it_together() {
+        let ctx = egui::Context::default();
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        let project = selection_project();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        let origin = view.view_rect.unwrap().min + vec2(HEADER_WIDTH, TOP);
+        let from = origin + vec2(33.0 * STEP_WIDTH, 2.0 * TRACK_HEIGHT + 5.0);
+        let to = origin + vec2(1.0, 1.0);
+        let actions = frame(
+            &ctx,
+            &mut view,
+            &project,
+            pointer(from, true, egui::Modifiers::COMMAND),
+        );
+        assert!(actions.is_empty());
+        frame(&ctx, &mut view, &project, vec![Event::PointerMoved(to)]);
+        frame(
+            &ctx,
+            &mut view,
+            &project,
+            pointer(to, false, egui::Modifiers::COMMAND),
+        );
+        assert_eq!(
+            view.selected.iter().copied().collect::<Vec<_>>(),
+            vec![0, 1]
+        );
+        let from = origin + vec2(4.0 * STEP_WIDTH, TRACK_HEIGHT * 0.5);
+        let to = from + vec2(16.0 * STEP_WIDTH, TRACK_HEIGHT);
+        frame(
+            &ctx,
+            &mut view,
+            &project,
+            pointer(from, true, egui::Modifiers::NONE),
+        );
+        let actions = frame(&ctx, &mut view, &project, vec![Event::PointerMoved(to)]);
+        assert!(
+            actions.contains(&PlaylistAction::MoveClips {
+                indices: vec![0, 1],
+                tracks: 1,
+                steps: 16
+            }),
+            "{actions:?}"
+        );
+    }
+
+    #[test]
+    fn select_all_and_native_paste_work_in_the_playlist_window() {
+        let ctx = egui::Context::default();
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        let project = Project::demo();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(
+            &ctx,
+            &mut view,
+            &project,
+            vec![Event::Key {
+                key: egui::Key::A,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: egui::Modifiers::COMMAND,
+            }],
+        );
+        assert_eq!(view.selected.len(), project.playlist().clips().len());
+        let copied = vec![project.playlist().clips()[0]];
+        view.paste_at = 64;
+        let actions = frame(
+            &ctx,
+            &mut view,
+            &project,
+            vec![Event::Paste(format!(
+                "Ferrous Lineup clips\n{}",
+                ron::to_string(&copied).unwrap()
+            ))],
+        );
+        assert!(actions.iter().any(|action| matches!(action,PlaylistAction::PasteClips(clips) if clips.len() == 1 && clips[0].start == 64)));
+    }
+
+    fn frame(
+        ctx: &egui::Context,
+        view: &mut PlaylistView,
+        project: &Project,
+        events: Vec<Event>,
+    ) -> Vec<PlaylistAction> {
+        let mut actions = Vec::new();
+        let mut output = ctx.run_pass(
+            RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1200.0, 800.0))),
+                time: Some(ctx.cumulative_frame_nr() as f64 * 0.1),
+                events,
+                ..Default::default()
+            },
+            |ctx| {
+                egui::Window::new("Playlist test")
+                    .fixed_pos(Pos2::ZERO)
+                    .default_size([1000.0, 600.0])
+                    .show(ctx, |ui| {
+                        actions =
+                            view.show(ui, project, 0, None, Tried::default(), Vec2::splat(1.0));
+                    });
+            },
+        );
+        output.textures_delta.clear();
+        actions
+    }
+    #[test]
+    fn dragging_a_track_edge_resizes_only_that_track_and_preserves_clip_hit_testing() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        let mut project = Project::demo();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        let rect = view.view_rect.unwrap();
+        let edge = pos2(rect.left() + HEADER_WIDTH * 0.5, rect.top() + TOP + 36.0);
+        frame(
+            &ctx,
+            &mut view,
+            &project,
+            vec![
+                Event::PointerMoved(edge),
+                Event::PointerButton {
+                    pos: edge,
+                    button: PointerButton::Primary,
+                    pressed: true,
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ],
+        );
+        let target = edge + vec2(0.0, 48.0);
+        let actions = frame(&ctx, &mut view, &project, vec![Event::PointerMoved(target)]);
+        assert!(
+            actions.contains(&PlaylistAction::ResizeTrack {
+                track: 0,
+                height: 84
+            }),
+            "{actions:?}"
+        );
+        project.track_mut(0).unwrap().height = Some(84);
+        let text = lineup_core::file::to_text(&project).unwrap();
+        assert_eq!(lineup_core::file::from_text(&text).unwrap(), project);
+        let tops = [0.0, 84.0, 120.0, 156.0];
+        let layout = Layout {
+            origin: Pos2::ZERO,
+            track_tops: &tops,
+            step_width: 4.5,
+            tracks: 2,
+            spare: true,
+        };
+        assert_eq!(layout.cell_at(pos2(4.5, 83.0)), (0, 1));
+        assert_eq!(layout.cell_at(pos2(4.5, 85.0)), (1, 1));
+        assert_eq!(layout.clip_rect(&Clip::new(0, 1, 0), 16).height(), 36.0);
+    }
 }
