@@ -138,7 +138,11 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 17 added the band's guitar, strings and organ. Older versions
 /// know only a piano, a bass and drums, and could not read their parts,
 /// so a song whose band has any of them needs format 17.
-pub const FORMAT_VERSION: u32 = 17;
+///
+/// Format 18 added shots, holds, rests and pushes to the chord sheet's
+/// harmonies. Older versions would drop them and play the style straight
+/// through, so a song with any needs format 18.
+pub const FORMAT_VERSION: u32 = 18;
 
 /// The oldest format that can hold `project`.
 ///
@@ -202,7 +206,13 @@ pub fn format_for(project: &Project) -> u32 {
             .into_iter()
             .any(|player| band.channel(player).is_some())
     });
-    if has_bigger_band {
+    let has_breaks = playlist
+        .chord_markers()
+        .iter()
+        .any(|marker| marker.push.is_some() || marker.stop.is_some());
+    if has_breaks {
+        18
+    } else if has_bigger_band {
         17
     } else if project.swing > 0 {
         16
@@ -697,10 +707,10 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 18 might have fields we have never heard of. Only the
+        // Format 19 might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 18, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(18)), "{error}");
+        let error = from_text("(format: 19, sparkles: true)").unwrap_err();
+        assert!(matches!(error, FileError::NewerFormat(19)), "{error}");
     }
 
     #[test]
@@ -894,6 +904,28 @@ mod tests {
 
         let bad = text.replace("G7/B", "H7");
         assert!(from_text(&bad).is_err());
+    }
+
+    #[test]
+    fn shots_holds_rests_and_pushes_need_format_eighteen() {
+        use crate::chord_sheet::{Push, Stop};
+        let mut project = plain_demo();
+        let name = |text| crate::HarmonyName::parse(text).unwrap();
+        let chords = [
+            ChordMarker::new(0, name("C")).stopped(Some(Stop::Shot)),
+            ChordMarker::new(16, name("F")).pushed(Some(Push::Eighth)),
+            ChordMarker::new(32, name("G7")),
+        ];
+        assert!(project.set_chords(0, 48, &chords));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 18,"), "{text}");
+        assert!(text.contains("stop: Some(Shot)"), "{text}");
+        assert!(text.contains("push: Some(Eighth)"), "{text}");
+        // A harmony without marks is written as before.
+        assert_eq!(text.matches("stop:").count(), 1, "{text}");
+        assert_eq!(text.matches("push:").count(), 1, "{text}");
+        let loaded = from_text(&text).unwrap();
+        assert_eq!(loaded.playlist().chord_markers(), chords);
     }
 
     #[test]

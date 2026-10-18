@@ -22,6 +22,11 @@
 //! and `TnI` turns it upside down first, as in the Sets and Micromodes
 //! windows. In a key of seven notes, Roman numerals can be typed too:
 //! "ii7 V7 I" in C major is written down as Dm7, G7 and C.
+//!
+//! Marks around a harmony tell the band to leave its style there, the
+//! way arrangers mark a chart: dots after it make a [`Stop`] (`C.` a
+//! shot, `C..` a hold, `C...` a rest), and a caret before it a
+//! [`Push`] (`^C` an eighth early, `^^C` a sixteenth).
 
 use std::fmt;
 use std::str::FromStr;
@@ -63,12 +68,157 @@ pub struct ChordMarker {
     /// The step it starts on, counted from the start of the song.
     pub start: usize,
     pub harmony: HarmonyName,
+    /// Whether the band plays it early.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub push: Option<Push>,
+    /// Whether the band stops playing its style here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stop: Option<Stop>,
 }
 
 impl ChordMarker {
     pub fn new(start: usize, harmony: HarmonyName) -> Self {
-        ChordMarker { start, harmony }
+        ChordMarker {
+            start,
+            harmony,
+            push: None,
+            stop: None,
+        }
     }
+
+    /// The same marker, played early.
+    pub fn pushed(self, push: Option<Push>) -> Self {
+        ChordMarker { push, ..self }
+    }
+
+    /// The same marker, where the band stops as `stop` says.
+    pub fn stopped(self, stop: Option<Stop>) -> Self {
+        ChordMarker { stop, ..self }
+    }
+
+    /// The step the band plays it from: its own, or a little earlier
+    /// when it is pushed.
+    pub fn played_start(&self) -> usize {
+        self.start.saturating_sub(self.push.map_or(0, Push::steps))
+    }
+
+    /// The harmony with its marks, as it is typed: "^C..".
+    pub fn text(&self) -> String {
+        let carets = self.push.map_or("", Push::marks);
+        let dots = self.stop.map_or("", Stop::marks);
+        format!("{carets}{}{dots}", self.harmony)
+    }
+}
+
+/// How the band stops playing its style at a harmony, until the next
+/// one. Written with dots after the harmony.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Stop {
+    /// "C.": the whole band strikes the chord once, short, with a kick
+    /// and a crash cymbal, and then is silent.
+    Shot,
+    /// "C..": the band strikes the chord and holds it.
+    Hold,
+    /// "C...": the band is silent. The harmony goes on, for whoever
+    /// plays over it.
+    Rest,
+}
+
+impl Stop {
+    pub const ALL: [Stop; 3] = [Stop::Shot, Stop::Hold, Stop::Rest];
+
+    /// The dots that write it.
+    pub fn marks(self) -> &'static str {
+        match self {
+            Stop::Shot => ".",
+            Stop::Hold => "..",
+            Stop::Rest => "...",
+        }
+    }
+
+    /// One word for it.
+    pub fn name(self) -> &'static str {
+        match self {
+            Stop::Shot => "shot",
+            Stop::Hold => "hold",
+            Stop::Rest => "rest",
+        }
+    }
+
+    /// What the band does, for hints.
+    pub fn describe(self) -> &'static str {
+        match self {
+            Stop::Shot => "the band strikes it once, short, and stops until the next harmony",
+            Stop::Hold => "the band strikes it and holds it until the next harmony",
+            Stop::Rest => "the band stops until the next harmony",
+        }
+    }
+}
+
+/// How early the band plays a harmony: a "push", or anticipation. The
+/// chord comes in just before the beat it is written on, and is held
+/// over into it. Written with a caret before the harmony.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Push {
+    /// "^C": an eighth note early.
+    Eighth,
+    /// "^^C": a sixteenth note early.
+    Sixteenth,
+}
+
+impl Push {
+    /// How many steps early.
+    pub fn steps(self) -> usize {
+        match self {
+            Push::Eighth => 2,
+            Push::Sixteenth => 1,
+        }
+    }
+
+    /// The carets that write it.
+    pub fn marks(self) -> &'static str {
+        match self {
+            Push::Eighth => "^",
+            Push::Sixteenth => "^^",
+        }
+    }
+
+    /// What the band does, for hints.
+    pub fn describe(self) -> &'static str {
+        match self {
+            Push::Eighth => "the band plays it an eighth note early, held over the beat",
+            Push::Sixteenth => "the band plays it a sixteenth note early, held over the beat",
+        }
+    }
+}
+
+/// Splits the marks off a harmony as typed: the carets of a push before
+/// it and the dots of a stop after it. "N.C." keeps its dots, which are
+/// part of its name.
+fn read_marks(text: &str) -> Result<(Option<Push>, &str, Option<Stop>), String> {
+    if is_no_chord(text) {
+        return Ok((None, text, None));
+    }
+    let name = text.trim_start_matches('^');
+    let push = match text.len() - name.len() {
+        0 => None,
+        1 => Some(Push::Eighth),
+        2 => Some(Push::Sixteenth),
+        _ => return Err("a push is written ^ (an eighth early) or ^^ (a sixteenth).".to_string()),
+    };
+    let bare = name.trim_end_matches('.');
+    let stop = match name.len() - bare.len() {
+        0 => None,
+        1 => Some(Stop::Shot),
+        2 => Some(Stop::Hold),
+        3 => Some(Stop::Rest),
+        _ => {
+            return Err(
+                "after a harmony, . is a shot, .. a hold and ... a rest: no more dots.".to_string(),
+            );
+        }
+    };
+    Ok((push, bare, stop))
 }
 
 /// "N.C.", "NC" or "n.c.": no chord.
@@ -472,11 +622,24 @@ impl TryFrom<String> for HarmonyName {
     }
 }
 
-/// One thing typed in a bar: a harmony, or a beat that goes on with the
-/// one before ("/").
+/// One thing typed in a bar: a harmony with its marks, or a beat that
+/// goes on with the one before ("/").
 enum Item {
-    Harmony(HarmonyName),
+    Harmony(HarmonyName, Option<Push>, Option<Stop>),
     Hold,
+}
+
+/// Reads a harmony with its marks (see [`read_marks`]).
+fn read_marked(
+    text: &str,
+    key: Scale,
+) -> Result<(HarmonyName, Option<Push>, Option<Stop>), String> {
+    let (push, name, stop) = read_marks(text)?;
+    if name.is_empty() {
+        return Err(format!("\"{text}\" has marks but no harmony."));
+    }
+    let harmony = HarmonyName::parse_in(name, key)?;
+    Ok((harmony, push, stop))
 }
 
 /// The most words one harmony takes: "Acorde menor-mayor T11I" is three.
@@ -490,7 +653,8 @@ const MOST_WORDS: usize = 4;
 /// one, and two in a bar of three take two and one. A "/" (or ".") is
 /// one beat of the harmony before it, to place them yourself: "C / / G7"
 /// puts G7 on the fourth beat. "%", or nothing at all, leaves the bar
-/// going on with the harmony before it.
+/// going on with the harmony before it. A harmony can carry the marks of
+/// a [`Push`] and a [`Stop`]: "^C.".
 ///
 /// Returns the markers, each on the step its beat starts on, or why the
 /// text could not be read.
@@ -517,22 +681,22 @@ pub fn read_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, S
         let longest = (at + 1..=holds_at.min(at + MOST_WORDS))
             .rev()
             .find_map(|end| {
-                HarmonyName::parse_in(&words[at..end].join(" "), key)
+                read_marked(&words[at..end].join(" "), key)
                     .ok()
-                    .map(|harmony| (harmony, end))
+                    .map(|marked| (marked, end))
             });
         match longest {
-            Some((harmony, end)) => {
-                items.push(Item::Harmony(harmony));
+            Some(((harmony, push, stop), end)) => {
+                items.push(Item::Harmony(harmony, push, stop));
                 at = end;
             }
-            None => return Err(HarmonyName::parse_in(words[at], key).unwrap_err()),
+            None => return Err(read_marked(words[at], key).unwrap_err()),
         }
     }
     let beats: Vec<usize> = bar.beat_starts().collect();
     let harmonies = items
         .iter()
-        .filter(|item| matches!(item, Item::Harmony(_)))
+        .filter(|item| matches!(item, Item::Harmony(..)))
         .count();
     let holds = items.len() > harmonies;
     let written = if holds { items.len() } else { harmonies };
@@ -546,13 +710,17 @@ pub fn read_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, S
     let mut markers = Vec::new();
     let mut harmony_count = 0;
     for (place, item) in items.into_iter().enumerate() {
-        if let Item::Harmony(harmony) = item {
+        if let Item::Harmony(harmony, push, stop) = item {
             let beat = if holds {
                 place
             } else {
                 (harmony_count * beats.len()).div_ceil(harmonies)
             };
-            markers.push(ChordMarker::new(beats[beat], harmony));
+            markers.push(
+                ChordMarker::new(beats[beat], harmony)
+                    .pushed(push)
+                    .stopped(stop),
+            );
             harmony_count += 1;
         }
     }
@@ -571,10 +739,7 @@ pub fn write_bar(markers: &[ChordMarker], bar: &Bar) -> String {
             .map(|k| (k * beats.len()).div_ceil(count))
             .collect()
     };
-    let names: Vec<String> = markers
-        .iter()
-        .map(|marker| marker.harmony.to_string())
-        .collect();
+    let names: Vec<String> = markers.iter().map(ChordMarker::text).collect();
     if places == spread(markers.len()) {
         return names.join(" ");
     }
@@ -668,6 +833,50 @@ mod tests {
         root: PitchClass::C,
         kind: ScaleKind::Major,
     };
+
+    #[test]
+    fn marks_tell_the_band_where_to_stop_and_push() {
+        let bar = Meter::steady(TimeSignature::COMMON).bar(0);
+        let read = |text| read_bar(text, &bar, C_MAJOR).unwrap();
+        let marks = |markers: Vec<ChordMarker>| -> Vec<(usize, Option<Push>, Option<Stop>)> {
+            markers
+                .iter()
+                .map(|marker| (marker.start, marker.push, marker.stop))
+                .collect()
+        };
+        assert_eq!(marks(read("C.")), [(0, None, Some(Stop::Shot))]);
+        assert_eq!(marks(read("C..")), [(0, None, Some(Stop::Hold))]);
+        assert_eq!(marks(read("C...")), [(0, None, Some(Stop::Rest))]);
+        assert_eq!(marks(read("^C")), [(0, Some(Push::Eighth), None)]);
+        assert_eq!(
+            marks(read("^^Am7/G.")),
+            [(0, Some(Push::Sixteenth), Some(Stop::Shot))]
+        );
+        // Marks on any kind of harmony, and with beats placed by hand.
+        assert_eq!(
+            marks(read("Dm7 / ^G7.. /")),
+            [(0, None, None), (8, Some(Push::Eighth), Some(Stop::Hold))]
+        );
+        assert_eq!(marks(read("Menor 3 T2.")), [(0, None, Some(Stop::Shot))]);
+        assert_eq!(marks(read("^V7")), [(0, Some(Push::Eighth), None)]);
+        // N.C. keeps its dots, and a lone "." is still a beat.
+        assert_eq!(read("N.C.")[0].harmony, HarmonyName::NoChord);
+        assert_eq!(marks(read("N.C.")), [(0, None, None)]);
+        assert_eq!(marks(read("C . G .")), [(0, None, None), (8, None, None)]);
+        // Too many marks, or marks on nothing, are mistakes.
+        assert!(read_bar("C....", &bar, C_MAJOR).is_err());
+        assert!(read_bar("^^^C", &bar, C_MAJOR).is_err());
+        assert!(read_bar("^", &bar, C_MAJOR).is_err());
+    }
+
+    #[test]
+    fn marks_are_written_back_as_typed() {
+        let bar = Meter::steady(TimeSignature::COMMON).bar(0);
+        for text in ["^C.", "C.. G7", "Dm7 / / ^^G7...", "^Menor 3 T2.."] {
+            let markers = read_bar(text, &bar, C_MAJOR).unwrap();
+            assert_eq!(write_bar(&markers, &bar), text);
+        }
+    }
 
     #[test]
     fn every_way_of_naming_harmony_is_read() {

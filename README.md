@@ -187,6 +187,15 @@ and disco, and an **organ** bubbles in reggae or fills out a rock
 chorus; some join in only in variation b. Each has its own General MIDI
 instrument and track, and the style menu says who plays.
 
+The band also stops where the music does. A dot after a harmony is a
+**shot** (`C.`: the band strikes it once, short, and stops until the
+next harmony), two dots a **hold** (`C..`: struck and held) and three a
+**rest** (`C...`: silence). A caret before it is a **push** (`^C`): the
+band plays it an eighth note early and holds it over the beat, and
+`^^C` comes a sixteenth early. The drums stop with the band and hit a
+kick and a crash with each shot, hold and push. Right-click a bar and
+pick **Band on C** to set the same marks from a menu.
+
 **File > Import chord sheet…** reads a chord chart typed as text, the way
 charts are passed around in emails and forums (a `.txt` file, or drop it
 on the window): bar lines between the bars, a section's name in
