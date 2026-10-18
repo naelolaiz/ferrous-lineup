@@ -1849,3 +1849,178 @@ pub(super) const LA_GATA_GOLOSA: Song = Song {
             a variation in running eighths. The trio moves to F major for a ii-V7-I; \
             then D minor, vi in F and iv in A, leads back to A major for an E7-A cadence.",
 };
+
+// Source: https://raw.githubusercontent.com/flvani/diatonic-map/4f0966a394a536852809e5f4c215d44243854d98/songs/minuano/pezinho.abcx
+// (Flávio Vanni's map for the diatonic accordion, in G, 2/4, with the words and chords G and D)
+// Second source: John Chambers' tune finder, abc2book collection, abcresources/jc/abc_tune_jc_201323534.abc
+// ("Pezinho [G]", J. R. Meletti, 4/4, chords G and D7). The notes agree; where Meletti holds
+// a note through the next beat the accordion map rests, and the map's words (two pickup notes,
+// "e de-", into the second half) are followed here.
+// PD: traditional (Rio Grande do Sul).
+pub(super) const PEZINHO: Song = Song {
+    name: "Pezinho",
+    origin: "Traditional, Brazil (Rio Grande do Sul)",
+    feel: "Pezinho",
+    genre: Genre::Folklore,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 90.0,
+    comping: Comping::Backbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Two-step",
+    band: ACCORDION_BAND,
+    style: "Polka",
+    parts: &[
+        Part::new("Pickup", "-:10 D5:2 D5 D5", "V7"),
+        Part::new(
+            "A",
+            "B4:2 D5 D5 D5 E5 D5 C5 B4 | D5:4 A4 -:2 A4 A4 B4 | C5 B4 A4 B4 C5 B4 C5 D5 | \
+             B4:8 -:2 D5 D5 D5",
+            "I | V7 | V7 | I",
+        ),
+        Part::new(
+            "A into B",
+            "B4:2 D5 D5 D5 E5 D5 C5 B4 | D5:4 A4 -:2 A4 A4 B4 | C5 B4 A4 B4 C5 B4 C5 D5 | \
+             B4:8 -:4 D5:2 D5",
+            "I | V7 | V7 | I",
+        ),
+        Part::new(
+            "B",
+            "G5:8 -:2 F#5 E5 D5 | F#5:4 C5 - D5:2 D5 | F#5:8 -:2 E5 D5 C5 | E5:4 B4 - D5:2 D5",
+            "I | V7 | V7 | I",
+        ),
+        Part::new(
+            "B end",
+            "G5:8 -:2 F#5 E5 D5 | F#5:4 C5 - D5:2 D5 | F#5:8 -:2 E5 D5 C5 | B4:12 -:4",
+            "I | V7 | V7 | I",
+        ),
+    ],
+    form: &["Pickup", "A", "A into B", "B", "B end"],
+    drums_from: 1,
+    about: "A traditional dance-song of Rio Grande do Sul, in which the singer asks the partner \
+            to put the little foot here, then there, close to mine. Both halves of the tune \
+            stand on the same four chords, G, D7, D7, G, over the accordion's oom-pah. Each bar \
+            here holds two bars of 2/4.",
+};
+
+// Source: https://raw.githubusercontent.com/flvani/diatonic-map/4f0966a394a536852809e5f4c215d44243854d98/songs/minuano/balaio.abcx
+// (Flávio Vanni's map for the diatonic accordion, in G, 2/4: Parte I, Parte II, D.S. and a
+// final Parte I; the tune is the top line, the chords G and D from the accordion's bass)
+// Second source for the second part: https://github.com/tcanabrava/harmonicon-songs,
+// Traditional/Balaio/song/chart.harpchart (from the UFSCar folklore vocal score, in C): the same
+// notes, C C D E F D B G, with small differences of rhythm.
+// PD: traditional (Rio Grande do Sul).
+pub(super) const BALAIO: Song = Song {
+    name: "Balaio",
+    origin: "Traditional, Brazil (Rio Grande do Sul)",
+    feel: "Balaio",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 80.0,
+    comping: Comping::Habanera,
+    bass: Bass::Habanera,
+    rhythm: "Habanera",
+    band: ACCORDION_BAND,
+    style: "Habanera",
+    parts: &[
+        Part::new("Pickup", "-:14 G5:2", "V7"),
+        Part::new(
+            "Part I",
+            "G5:1 E5:2 C5:1 A4:2 G4 F5:1 D5:2 B4:1 A4:2 G4 | A4:1 A4:2 A4:1 F4:2 F4 G4:3 - G5:2 | \
+             G5:1 E5:2 C5:1 A4:2 G4 F5:1 D5:2 B4:1 A4:2 G4:1 G4 | A4:2 A4 B4 B4 C5:3 - G4:1 G4",
+            "I V7 | V7 I | I V7 | V7 I",
+        ),
+        Part::new(
+            "Part II",
+            "C5:2 C5 D5 E5 F5:3 D5:1 B4:2 G4:1 G4 | A4:2 A4 F4 F4 G4:3 - G4:1 G4 | \
+             C5:2 C5 D5 E5 F5:3 D5:1 B4:2 G4:1 G4 | A4:2 A4 B4 B4 C5:3 - G5:2",
+            "I V7 | V7 I | I V7 | V7 I",
+        ),
+        // The last bar of the score is a half bar, under a fermata: padded with a rest.
+        Part::new(
+            "Final",
+            "G5:1 E5:2 C5:1 A4:2 G4 F5:1 D5:2 B4:1 A4:2 G4 | A4:1 A4:2 A4:1 F4:2 F4 G4:3 - G5:2 | \
+             G5:1 E5:2 C5:1 A4:2 G4 F5:1 D5:2 B4:1 A4:2 G4:1 G4 | A4:2 A4 B4 B4 C5:4 -",
+            "I V7 | V7 I | I V7 | V7 I",
+        )
+        .with_tempo(&[fermata(56, 4)]),
+    ],
+    form: &["Pickup", "Part I", "Part II", "Final"],
+    drums_from: 1,
+    about: "A traditional song and dance of Rio Grande do Sul. Both parts go C, G7, G7, C, over \
+            the accordion's bass in the habanera rhythm, long, short, long, long. Each bar here \
+            holds two bars of 2/4; the source is in G, a fourth lower.",
+};
+
+// Source: https://raw.githubusercontent.com/flvani/diatonic-map/4f0966a394a536852809e5f4c215d44243854d98/songs/minuano/luar.do.sertao.abcx
+// (Flávio Vanni's map for the diatonic accordion, in C, 4/4, with chord symbols), checked
+// against the same arranger's version in F with the words,
+// https://raw.githubusercontent.com/flvani/diatonic-map/4f0966a394a536852809e5f4c215d44243854d98/songs/club-br/luar.do.sertao.club.abcx
+// The song is strophic: three verses (four in Luiz Gonzaga's recording) to the same tune, each
+// followed by the refrain, as Wikipedia's article on the song and the chord sheets of Gonzaga's
+// and Milton Nascimento's recordings give it. The map writes the refrain twice, one verse and
+// the refrain twice; the form here plays the verse and its two refrains three times.
+// PD: Catulo da Paixão Cearense died in 1946 and João Pernambuco in 1947.
+pub(super) const LUAR_DO_SERTAO: Song = Song {
+    name: "Luar do sertão",
+    origin: "Catulo da Paixão Cearense and João Pernambuco",
+    feel: "Toada",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 90.0,
+    comping: Comping::Backbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Folk",
+    band: SONG_AND_GUITAR,
+    style: "Folk",
+    parts: &[
+        Part::new("Pickup", "-:14 G4:2", "V7"),
+        Part::new(
+            "Refrain",
+            "C5:6 D5:2 E5:6 D5:2 | F5:6 E5:2 D5:6 C5:2 | B4:6 A4:2 G4:4 F4 | E4:14 G4:2",
+            "I vi | ii IV | V7 | I I I V7",
+        ),
+        Part::new(
+            "Refrain into verse",
+            "C5:6 D5:2 E5:6 D5:2 | F5:6 E5:2 D5:6 C5:2 | B4:6 A4:2 G4:4 D5",
+            "I vi | ii IV | V7",
+        ),
+        // Then D.S. al Fine: the refrain again, ending on C.
+        Part::new(
+            "Verse",
+            "C5:10 G4:2 A4 B4 | C5 C5 C5 D5 E5 E5 E5 D5 | F5 F5 F5 E5 D5 D5 D5 C5 | \
+             D5 C5 B4 A4 B4 A4 G4 F4 | E4:10 G4:2 A4 B4 | C5 C5 C5 D5 E5 E5 E5 D5 | \
+             F5 F5 F5 E5 D5 D5 D5 C5 | D5 C5 B4 A4 B4 A4 G4 D5 | C5:14 G4:2",
+            "I V7 | I vi | ii IV | V7 | I V7 | I vi | ii IV | V7 | I I I V7",
+        ),
+        Part::new(
+            "Refrain end",
+            "C5:6 D5:2 E5:6 D5:2 | F5:6 E5:2 D5:6 C5:2 | B4:6 A4:2 G4:4 D5 | C5:16",
+            "I vi | ii IV | V7 | I",
+        ),
+    ],
+    form: &[
+        "Pickup",
+        "Refrain",
+        "Refrain into verse",
+        "Verse",
+        "Refrain",
+        "Refrain into verse",
+        "Verse",
+        "Refrain",
+        "Refrain into verse",
+        "Verse",
+        "Refrain",
+        "Refrain end",
+    ],
+    drums_from: 1,
+    about: "A toada in praise of the moonlight of the sertão, Brazil's backlands. The refrain \
+            climbs from C over C and A minor and falls back through D minor and F to G7; the \
+            verse walks the same chords in steady eighths, three repeated notes and a step. The \
+            refrain, sung twice, opens the song and follows each of its three verses.",
+};
