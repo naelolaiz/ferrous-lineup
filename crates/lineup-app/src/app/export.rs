@@ -110,7 +110,7 @@ impl LineupApp {
         let step_frames = frames_per_step(end_tempo, EXPORT_SAMPLE_RATE);
         let reverb = self.project.mixer.reverb;
         let tail_seconds = if reverb.enabled {
-            TAIL_SECONDS.max(f64::from(reverb.decay + reverb.pre_delay_ms / 1000.0))
+            TAIL_SECONDS + f64::from(reverb.decay + reverb.pre_delay_ms / 1000.0)
         } else {
             TAIL_SECONDS
         };
