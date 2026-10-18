@@ -8,6 +8,14 @@
 use eframe::egui::{self, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use lineup_core::NoteEvent;
 
+pub fn scroll_menu<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
+    let height = (ui.ctx().content_rect().height() * 0.6).max(80.0);
+    egui::ScrollArea::vertical()
+        .max_height(height)
+        .show(ui, add)
+        .inner
+}
+
 /// Editor shortcuts belong to the last clicked window, including its title
 /// and toolbar. Popup controls and text fields keep their own keyboard input.
 pub fn editor_keyboard(ctx: &egui::Context, layer: egui::LayerId) -> bool {
@@ -337,4 +345,55 @@ pub fn press_pos(
         } if only.is_none_or(|only| only == button) => Some(pos),
         _ => None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn playback_follow_scrolls_to_the_cursor_and_can_be_disabled() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut offset = 0.0;
+        for (frame, follow) in [false, false, false, true, true, true]
+            .into_iter()
+            .enumerate()
+        {
+            ctx.data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), follow));
+            let mut output = ctx.run_pass(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(800.0, 600.0))),
+                    time: Some(frame as f64 * 0.1),
+                    ..Default::default()
+                },
+                |ctx| {
+                    egui::Window::new("Follow test")
+                        .default_size([400.0, 250.0])
+                        .show(ctx, |ui| {
+                            let result =
+                                egui::ScrollArea::horizontal()
+                                    .animated(false)
+                                    .show(ui, |ui| {
+                                        let view = ui.clip_rect();
+                                        let (rect, _) = ui.allocate_exact_size(
+                                            vec2(2000.0, 40.0),
+                                            Sense::hover(),
+                                        );
+                                        follow_x(ui, Some(100), rect.left() + 1500.0, view);
+                                    });
+                            offset = result.state.clamped_offset().x;
+                        });
+                },
+            );
+            output.textures_delta.clear();
+            if !follow {
+                assert_eq!(offset, 0.0);
+            }
+        }
+        assert!(
+            offset > 1000.0,
+            "the playing cursor should be revealed: {offset}"
+        );
+    }
 }

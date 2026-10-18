@@ -158,6 +158,9 @@ with the project, and support Undo.
 position visible in the playlist, chord sheet and piano roll. Turning it
 off lets you scroll freely; the preference is remembered. Editor shortcuts
 follow the active window: **Ctrl+A** selects its bars, notes or clips.
+The piano roll supports **Ctrl+C/X/V** and **Ctrl+D** for notes, including
+pasting between the song and the style editor; its Tools menu lists these
+actions. Pasting or duplicating notes extends the pattern when needed.
 The playlist also supports **Ctrl+C/X/V**, **Ctrl+D**, **Delete**, and
 **Ctrl-click** to add or remove a clip from the selection. Ctrl-click empty
 playlist space sets the paste position without placing a clip.
