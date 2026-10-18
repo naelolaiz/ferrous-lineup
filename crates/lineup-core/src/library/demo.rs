@@ -424,7 +424,7 @@ pub fn song_demo(song: &Song) -> Project {
         let melody = melody_notes(song, part, time, length, voices.len());
         let tonic = song.part_scale(part).root;
         let (mut chords, mut bass_line) = if part.left.is_empty() {
-            let backing = accompany(&part.spans(bar), tonic, song.comping, song.bass);
+            let backing = accompany(&part.spans(bar, tonic), tonic, song.comping, song.bass);
             (backing.chords, backing.bass)
         } else {
             (part.left().notes, Vec::new())
@@ -433,7 +433,7 @@ pub fn song_demo(song: &Song) -> Project {
         // its accompaniment written out has none for them.
         let mut horn_notes = match horns {
             Some((_, horns)) if part.left.is_empty() => {
-                accompany(&part.spans(bar), tonic, horns.comping, Bass::None).chords
+                accompany(&part.spans(bar, tonic), tonic, horns.comping, Bass::None).chords
             }
             _ => Vec::new(),
         };
@@ -478,11 +478,13 @@ pub fn song_demo(song: &Song) -> Project {
     }
     // The ending is a bar of the last part's time, on the home chord of
     // the last part's key: a song that ends after a modulation ends in
-    // the new key.
+    // the new key. A piece written out in full, its accompaniment too,
+    // ends where its score ends, with nothing added.
     let last_part = song.form.last().and_then(|name| song.part(name));
+    let written_out = last_part.is_some_and(|part| !part.left.is_empty());
     project.time_signature = last_part.map_or(song.time, |part| song.part_time(part));
     project.scale = last_part.map_or(song.scale(), |part| song.part_scale(part));
-    let end = ending(&mut project, rhythm.is_some());
+    let end = (!written_out).then(|| ending(&mut project, rhythm.is_some()));
     project.time_signature = song.time;
     project.scale = song.scale();
     name_tracks(&mut project, "Song", "Drums");
@@ -508,9 +510,11 @@ pub fn song_demo(song: &Song) -> Project {
             for &mark in part.tempo {
                 mark_tempo(&mut project, at, mark);
             }
-            // A part with its accompaniment written out has no chart:
-            // its chords are only heard (see `Project::heard_chords`).
-            write_chart(&mut project, at, &part.spans(time.steps_per_bar()), key);
+            // A part with its accompaniment written out may still have a
+            // chart, which names what it plays; without one, its chords
+            // are only heard (see `Project::heard_chords`).
+            let spans = part.spans(time.steps_per_bar(), key.root);
+            write_chart(&mut project, at, &spans, key);
         }
         project.add_clip(Clip::new(pattern, SONG_TRACK, at));
         if entry >= song.drums_from
@@ -520,12 +524,28 @@ pub fn song_demo(song: &Song) -> Project {
         }
         at += length;
     }
-    project.add_clip(Clip::new(end, SONG_TRACK, at));
-    if !project.playlist().chord_markers().is_empty() {
-        let (time, key) = last_part.map_or((song.time, song.scale()), |part| {
-            (song.part_time(part), song.part_scale(part))
-        });
-        write_ending(&mut project, at, time.steps_per_bar(), key);
+    if let Some(end) = end {
+        project.add_clip(Clip::new(end, SONG_TRACK, at));
+        if !project.playlist().chord_markers().is_empty() {
+            let (time, key) = last_part.map_or((song.time, song.scale()), |part| {
+                (song.part_time(part), song.part_scale(part))
+            });
+            write_ending(&mut project, at, time.steps_per_bar(), key);
+        }
+    }
+    // A marking that would start after the music, such as the tempo
+    // coming back after a fermata on the very last note, has nothing left
+    // to change.
+    let end = project.song_length();
+    let after: Vec<usize> = project
+        .playlist()
+        .tempo_markers()
+        .iter()
+        .map(|marker| marker.start)
+        .filter(|&start| start >= end)
+        .collect();
+    for start in after {
+        project.remove_tempo_marker(start);
     }
     if let Some(bar) = last_bar(song, at) {
         broaden_the_end(&mut project, song, bar);
@@ -780,10 +800,64 @@ mod tests {
     }
 
     #[test]
-    fn a_piece_with_its_accompaniment_written_out_has_no_chart_to_write() {
-        // Its chords are heard when it is opened instead.
-        let project = song_demo(Song::named("Für Elise").unwrap());
-        assert!(project.playlist().chord_markers().is_empty());
+    fn a_piece_written_out_plays_its_score_under_its_chart() {
+        let song = Song::named("Für Elise").unwrap();
+        let project = song_demo(song);
+        // Where each entry of the form starts.
+        let start = |entry: usize| -> usize {
+            song.form[..entry]
+                .iter()
+                .filter_map(|name| song.part(name))
+                .map(|part| part.length(song.part_time(part).steps_per_bar()))
+                .sum()
+        };
+        let chord = |step| project.chord_at(step).unwrap().harmony.to_string();
+        // The pickup, then the theme: E, then A minor in its second bar.
+        assert_eq!(chord(start(1)), "E");
+        assert_eq!(chord(start(1) + 12), "Am");
+        // The bar before the first episode: C7 over B flat, F over A, C7
+        // over G, a sixteenth note each, then F major.
+        let into = song
+            .form
+            .iter()
+            .position(|&n| n == "Into the episode")
+            .unwrap();
+        assert_eq!(chord(start(into) + 6), "C7/Bb");
+        assert_eq!(chord(start(into) + 8), "F/A");
+        assert_eq!(chord(start(into) + 10), "C7/G");
+        assert_eq!(chord(start(into + 1)), "F");
+        // The Keys channel plays the left hand as written, not the chart:
+        // nothing in the theme's first bar, then A, E, A.
+        let keys = project
+            .channels()
+            .iter()
+            .position(|c| c.name == apply::KEYS)
+            .unwrap();
+        let theme = project
+            .patterns()
+            .iter()
+            .find(|p| p.name == "Theme")
+            .unwrap();
+        let left: Vec<(usize, u8)> = theme.notes(keys)[..3]
+            .iter()
+            .map(|note| (note.start, note.pitch.midi()))
+            .collect();
+        assert_eq!(left, [(12, 45), (14, 52), (16, 57)]);
+    }
+
+    #[test]
+    fn a_piece_written_out_in_full_ends_where_its_score_ends() {
+        // Für Elise stops on its last A, with no chord added after it.
+        let song = Song::named("Für Elise").unwrap();
+        let project = song_demo(song);
+        assert!(project.patterns().iter().all(|p| p.name != "Ending"));
+        let length: usize = song
+            .form
+            .iter()
+            .filter_map(|name| song.part(name))
+            .map(|part| part.length(song.part_time(part).steps_per_bar()))
+            .sum();
+        assert_eq!(project.song_length(), length);
     }
 
     #[test]
