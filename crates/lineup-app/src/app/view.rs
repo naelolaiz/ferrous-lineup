@@ -20,7 +20,7 @@
 //!   directions, so Ctrl and Alt do the same there.
 //! - With the pointer outside the window, the keys zoom what was clicked
 //!   last.
-//! - The View menu has all of these.
+//! - Settings > Appearance has all of these.
 //! - The status bar has buttons for the playlist's two zooms.
 //!
 //! The channel rack draws its contents bigger by scaling their text and
@@ -60,7 +60,7 @@ const STEPS: [f32; 19] = [
     8.0,
 ];
 
-/// The interface sizes offered in the View menu.
+/// The interface sizes offered in Settings.
 const INTERFACE_SIZES: [f32; 11] = [0.5, 0.6, 0.67, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 2.0, 2.5];
 
 /// A part of the screen with its own zoom.
@@ -116,6 +116,26 @@ impl Target {
             Target::Interface => {
                 ctx.set_zoom_factor(interface_step(ctx.zoom_factor(), bigger));
             }
+        }
+    }
+
+    /// Keyboard zoom shares its stored values with Settings.
+    fn keyboard(self, ctx: &egui::Context) {
+        let pressed = |shortcut| ctx.input_mut(|input| input.consume_shortcut(&shortcut));
+        if pressed(WIDER) || pressed(WIDER_2) {
+            self.step(ctx, Axis::Horizontal, true);
+        }
+        if pressed(NARROWER) {
+            self.step(ctx, Axis::Horizontal, false);
+        }
+        if pressed(TALLER) || pressed(TALLER_2) {
+            self.step(ctx, Axis::Vertical, true);
+        }
+        if pressed(SHORTER) {
+            self.step(ctx, Axis::Vertical, false);
+        }
+        if pressed(RESET) {
+            self.reset(ctx);
         }
     }
 
@@ -193,7 +213,7 @@ impl Area {
     }
 
     /// One step bigger or smaller. Every way of zooming in steps goes
-    /// through here (the keys, the wheel, the View menu and the status
+    /// through here (the keys, the wheel, Settings and the status
     /// bar's buttons), so they all stop at the same sizes.
     fn step_zoom(self, ctx: &egui::Context, axis: Axis, bigger: bool) {
         self.set_zoom(ctx, axis, zoom_step(self.zoom(ctx, axis), bigger));
@@ -299,35 +319,9 @@ impl WheelZoom {
 }
 
 impl LineupApp {
-    /// The View menu: zoom, and which windows and panels are shown.
+    /// The View menu: which windows and panels are shown.
     pub(super) fn view_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button("View", |ui| {
-            let ctx = ui.ctx().clone();
-            let shortcut = |shortcut| ctx.format_shortcut(&shortcut);
-            for area in Area::ALL {
-                ui.menu_button(zoom_title(&ctx, area), |ui| {
-                    zoom_items(ui, area, &shortcut);
-                });
-            }
-            ui.menu_button(
-                format!("Interface size ({})", percent(ctx.zoom_factor())),
-                |ui| {
-                    ui.weak("How big the text, buttons and menus are everywhere.");
-                    for size in INTERFACE_SIZES {
-                        let chosen = (ctx.zoom_factor() - size).abs() < 0.01;
-                        if ui.selectable_label(chosen, percent(size)).clicked() {
-                            ctx.set_zoom_factor(size);
-                        }
-                    }
-                },
-            );
-            ui.weak(
-                "Ctrl and + or − (or the wheel) zooms what the pointer is over:\n\
-                 the playlist, piano roll or channel rack, or the whole\n\
-                 interface over the toolbars and panels. Alt zooms tracks\n\
-                 and keys taller. Ctrl+0 goes back to 100%.",
-            );
-            ui.separator();
             let window = |open: &mut bool, text: &str, shortcut, ui: &mut egui::Ui| {
                 let shortcut = ui.ctx().format_shortcut(&shortcut);
                 let button = egui::Button::selectable(*open, text).shortcut_text(shortcut);
@@ -341,10 +335,29 @@ impl LineupApp {
                 self.lead_sheet.open = !self.lead_sheet.open;
             }
             window(&mut self.rack_open, "Channel rack", RACK, ui);
+            if ui
+                .button("Style editor…")
+                .on_hover_text(
+                    "See and edit repeating parts, or create a style from an existing one",
+                )
+                .clicked()
+            {
+                if self.style_editor.open {
+                    self.bring_to_front = Some(crate::style_editor::window_id());
+                } else {
+                    self.edit_current_style();
+                }
+            }
             window(&mut self.piano_roll.open, "Piano roll", PIANO_ROLL, ui);
             window(&mut self.harmony_keys.open, "Harmony keys", HARMONY, ui);
             let browser = &mut self.playlist.browser_open;
             window(browser, "Patterns and library", BROWSER, ui);
+            if ui
+                .add(egui::Button::selectable(self.mixer_open, "Mixer").shortcut_text("F9"))
+                .clicked()
+            {
+                self.mixer_open = !self.mixer_open;
+            }
             ui.separator();
             let ear = egui::Button::selectable(self.ear_training.open, "Ear training")
                 .shortcut_text("experimental");
@@ -407,22 +420,7 @@ impl LineupApp {
             }
         }
 
-        let pressed = |shortcut| ctx.input_mut(|input| input.consume_shortcut(&shortcut));
-        if pressed(WIDER) || pressed(WIDER_2) {
-            target.step(ctx, Axis::Horizontal, true);
-        }
-        if pressed(NARROWER) {
-            target.step(ctx, Axis::Horizontal, false);
-        }
-        if pressed(TALLER) || pressed(TALLER_2) {
-            target.step(ctx, Axis::Vertical, true);
-        }
-        if pressed(SHORTER) {
-            target.step(ctx, Axis::Vertical, false);
-        }
-        if pressed(RESET) {
-            target.reset(ctx);
-        }
+        target.keyboard(ctx);
     }
 
     /// The scale the channel rack's contents are drawn at: its own zoom.
@@ -448,74 +446,119 @@ impl LineupApp {
         if pressed(PIANO_ROLL) {
             self.piano_roll.open = !self.piano_roll.open;
         }
-    }
-}
-
-/// "Piano roll zoom: ↔ 150% ↕ 100%", for the View menu.
-fn zoom_title(ctx: &egui::Context, area: Area) -> String {
-    let wide = area.zoom(ctx, Axis::Horizontal);
-    if area.two_way() {
-        let tall = area.zoom(ctx, Axis::Vertical);
-        format!(
-            "{} zoom: ↔ {}  ↕ {}",
-            area.name(),
-            percent(wide),
-            percent(tall)
-        )
-    } else {
-        format!("{} zoom: {}", area.name(), percent(wide))
-    }
-}
-
-/// The items of an area's zoom submenu in the View menu.
-fn zoom_items(ui: &mut egui::Ui, area: Area, shortcut: &dyn Fn(KeyboardShortcut) -> String) {
-    let ctx = ui.ctx().clone();
-    let item = |ui: &mut egui::Ui, text: &str, keys, axis, bigger| {
-        let button = egui::Button::new(text).shortcut_text(shortcut(keys));
-        if ui
-            .add_enabled(area.can_step(&ctx, axis, bigger), button)
-            .clicked()
-        {
-            area.step_zoom(&ctx, axis, bigger);
+        if ctx.input_mut(|input| input.consume_key(Modifiers::NONE, egui::Key::F9)) {
+            self.mixer_open = !self.mixer_open;
         }
-    };
-    if area.two_way() {
-        item(
-            ui,
-            "Wider (zoom in horizontally)",
-            WIDER,
-            Axis::Horizontal,
-            true,
-        );
-        item(
-            ui,
-            "Narrower (zoom out horizontally)",
-            NARROWER,
-            Axis::Horizontal,
-            false,
-        );
-        item(
-            ui,
-            "Taller (zoom in vertically)",
-            TALLER,
-            Axis::Vertical,
-            true,
-        );
-        item(
-            ui,
-            "Shorter (zoom out vertically)",
-            SHORTER,
-            Axis::Vertical,
-            false,
-        );
-    } else {
-        item(ui, "Zoom in", WIDER, Axis::Horizontal, true);
-        item(ui, "Zoom out", NARROWER, Axis::Horizontal, false);
     }
-    let button = egui::Button::new("Reset to 100%").shortcut_text(shortcut(RESET));
-    if ui.add_enabled(!area.is_reset(&ctx), button).clicked() {
-        area.reset(&ctx);
-    }
+}
+
+/// The settings dialog edits the same persisted values as the shortcuts
+/// and status bar, so changes through any of them stay in sync.
+pub(super) fn zoom_settings_ui(ui: &mut egui::Ui) {
+    let ctx = ui.ctx().clone();
+    super::settings::card(
+        ui,
+        "Interface size",
+        "Scale text, buttons and menus throughout the app.",
+        |ui| {
+            egui::ComboBox::from_id_salt("settings-interface-size")
+                .width(110.0)
+                .selected_text(percent(ctx.zoom_factor()))
+                .show_ui(ui, |ui| {
+                    for size in INTERFACE_SIZES {
+                        if ui
+                            .selectable_label(
+                                (ctx.zoom_factor() - size).abs() < 0.01,
+                                percent(size),
+                            )
+                            .clicked()
+                        {
+                            ctx.set_zoom_factor(size);
+                        }
+                    }
+                });
+        },
+    );
+    super::settings::card(
+        ui,
+        "Editor zoom",
+        "Adjust time detail and row height independently.",
+        |ui| {
+            egui::Grid::new("settings-zoom")
+                .spacing(egui::vec2(14.0, 12.0))
+                .show(ui, |ui| {
+                    ui.weak("Editor");
+                    ui.weak("Horizontal");
+                    ui.weak("Vertical");
+                    ui.end_row();
+                    for area in Area::ALL {
+                        ui.label(area.name());
+                        for axis in [Axis::Horizontal, Axis::Vertical] {
+                            if axis == Axis::Vertical && !area.two_way() {
+                                ui.weak("Linked").on_hover_text(
+                                    "The channel rack uses one scale for both directions.",
+                                );
+                                continue;
+                            }
+                            let current = area.zoom(&ctx, axis);
+                            egui::ComboBox::from_id_salt(("settings-zoom", area, axis))
+                                .width(86.0)
+                                .selected_text(percent(current))
+                                .show_ui(ui, |ui| {
+                                    let (low, high) = area.range(axis);
+                                    for step in
+                                        STEPS.into_iter().filter(|step| (low..=high).contains(step))
+                                    {
+                                        if ui
+                                            .selectable_label(
+                                                (current - step).abs() < 0.01,
+                                                percent(step),
+                                            )
+                                            .clicked()
+                                        {
+                                            area.set_zoom(&ctx, axis, step);
+                                        }
+                                    }
+                                });
+                        }
+                        ui.end_row();
+                    }
+                });
+            ui.add_space(6.0);
+            let changed =
+                ctx.zoom_factor() != 1.0 || Area::ALL.into_iter().any(|area| !area.is_reset(&ctx));
+            if ui
+                .add_enabled(changed, egui::Button::new("Reset all zoom levels to 100%"))
+                .clicked()
+            {
+                for area in Area::ALL {
+                    area.reset(&ctx);
+                }
+                ctx.set_zoom_factor(1.0);
+            }
+        },
+    );
+    super::settings::card(
+        ui,
+        "Zoom shortcuts",
+        "Shortcuts act on the view under the pointer.",
+        |ui| {
+            egui::Grid::new("settings-zoom-shortcuts")
+                .spacing(egui::vec2(20.0, 8.0))
+                .show(ui, |ui| {
+                    for (keys, action) in [
+                        ("Ctrl +/− · Ctrl+wheel", "Horizontal zoom"),
+                        ("Alt +/− · Alt+wheel", "Vertical zoom"),
+                        ("Ctrl+0", "Reset the current view"),
+                    ] {
+                        ui.label(keys);
+                        ui.weak(action);
+                        ui.end_row();
+                    }
+                });
+            ui.weak("Over toolbars and panels, zoom changes the interface size. Use ⌘ in place of Ctrl on Mac.");
+        },
+    );
 }
 
 /// The playlist's zoom at the right end of the status bar: − and +
@@ -614,6 +657,60 @@ mod tests {
         assert_eq!(Area::Rack.zoom(&ctx, Axis::Horizontal), 1.1);
         Area::Main.reset(&ctx);
         assert!(Area::Main.is_reset(&ctx));
+    }
+
+    #[test]
+    fn settings_and_keyboard_shortcuts_share_the_same_zoom_levels() {
+        let ctx = egui::Context::default();
+        ctx.options_mut(|options| options.zoom_with_keyboard = false);
+        let frame = |shortcut: KeyboardShortcut, target: Target| {
+            let mut output = ctx.run_pass(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(900.0, 700.0),
+                    )),
+                    events: vec![egui::Event::Key {
+                        key: shortcut.logical_key,
+                        physical_key: None,
+                        pressed: true,
+                        repeat: false,
+                        modifiers: shortcut.modifiers,
+                    }],
+                    ..Default::default()
+                },
+                |ctx| {
+                    target.keyboard(ctx);
+                    egui::Window::new("Zoom settings").show(ctx, zoom_settings_ui);
+                },
+            );
+            output.textures_delta.clear();
+            output
+        };
+        for area in Area::ALL {
+            area.set_zoom(&ctx, Axis::Horizontal, 1.25);
+            area.set_zoom(&ctx, Axis::Vertical, 1.25);
+            frame(WIDER_2, Target::Area(area));
+            assert_eq!(area.zoom(&ctx, Axis::Horizontal), 1.5);
+            if area.two_way() {
+                assert_eq!(area.zoom(&ctx, Axis::Vertical), 1.25);
+            }
+            let output = frame(TALLER, Target::Area(area));
+            let expected = if area.two_way() { 1.5 } else { 1.75 };
+            assert!(output.shapes.iter().any(|shape| matches!(&shape.shape,
+                egui::Shape::Text(text) if text.galley.text() == percent(expected)
+            )));
+            assert_eq!(area.zoom(&ctx, Axis::Vertical), expected);
+            frame(RESET, Target::Area(area));
+            assert!(area.is_reset(&ctx));
+        }
+        frame(WIDER, Target::Interface);
+        // egui applies interface zoom on the following pass.
+        frame(NARROWER, Target::Area(Area::Main));
+        assert_eq!(ctx.zoom_factor(), 1.1);
+        frame(RESET, Target::Interface);
+        frame(NARROWER, Target::Area(Area::Main));
+        assert_eq!(ctx.zoom_factor(), 1.0);
     }
 
     #[test]

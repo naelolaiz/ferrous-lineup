@@ -126,7 +126,7 @@ impl LineupApp {
                     self.send(Command::SetVolume { channel, volume });
                 }
                 Change::Muted(channel) => {
-                    let muted = self.project.channels()[channel].muted;
+                    let muted = self.project.channel_muted(channel);
                     self.send(Command::SetMuted { channel, muted });
                 }
                 Change::PatternLength(pattern) => {
@@ -148,6 +148,10 @@ impl LineupApp {
                 }
                 Change::LooseTiming => {
                     self.send(Command::SetLooseTiming(self.project.loose_timing));
+                }
+                Change::Mixer => {
+                    self.send(Command::SetMasterVolume(self.project.mixer.master));
+                    self.send(Command::SetReverb(self.project.mixer.reverb));
                 }
                 Change::Song => {
                     for command in self.song_commands() {
@@ -204,6 +208,12 @@ impl LineupApp {
             let button = egui::Button::new(text).shortcut_text(ctx.format_shortcut(&REDO));
             if ui.add_enabled(redo.is_some(), button).clicked() {
                 self.redo();
+                ui.close();
+            }
+            ui.separator();
+            if ui.button("Settings…").clicked() {
+                self.settings_open = true;
+                self.bring_to_front = Some(egui::Id::unique("application-settings"));
                 ui.close();
             }
         });

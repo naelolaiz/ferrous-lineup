@@ -87,7 +87,7 @@ pub(super) struct Live {
     /// Whether keys are recorded while the pattern plays.
     recording: bool,
     /// The live channel last sent to the audio thread.
-    channel_sent: Option<usize>,
+    channel_sent: Option<Option<usize>>,
     /// Whether the MIDI menu was open last frame, to look for new ports
     /// when it opens.
     menu_was_open: bool,
@@ -162,7 +162,10 @@ impl LineupApp {
     /// Reads both keyboards, once per frame.
     pub(super) fn live_input(&mut self, ctx: &egui::Context) {
         // Keys play the channel the piano roll shows.
-        let channel = self.piano_roll.channel();
+        let channel = self
+            .piano_roll
+            .selected_channel()
+            .filter(|&channel| channel < self.project.channels().len());
         if self.live.channel_sent != Some(channel) {
             self.send(Command::SetLiveChannel(channel));
             self.live.channel_sent = Some(channel);
@@ -193,7 +196,10 @@ impl LineupApp {
 
     /// Whether keys played now are recorded.
     pub(super) fn is_recording(&self) -> bool {
-        self.live.recording && self.playing && self.mode == PlayMode::Pattern
+        self.live.recording
+            && self.playing
+            && self.mode == PlayMode::Pattern
+            && self.piano_roll.selected_channel().is_some()
     }
 
     /// Reads the letter keys while the typing keyboard is on.
@@ -203,7 +209,13 @@ impl LineupApp {
         // "up" here. So all keys are let go as soon as that happens, or
         // their notes would play for ever.
         let focused = ctx.input(|input| input.focused);
-        if !self.live.typing || !focused || ctx.text_edit_focused() {
+        if !self.live.typing
+            || !focused
+            || ctx.text_edit_focused()
+            || egui::Popup::is_any_open(ctx)
+            || crate::widgets::modal_open(ctx)
+            || self.piano_roll.selected_channel().is_none()
+        {
             self.release_typing_keys();
             return;
         }
@@ -276,7 +288,7 @@ impl LineupApp {
     }
 
     /// Lets go of every key, as when the MIDI keyboard is disconnected.
-    fn release_all_keys(&mut self) {
+    pub(super) fn release_all_keys(&mut self) {
         self.live.typing_down.clear();
         for held in std::mem::take(&mut self.live.held) {
             self.send(Command::Live(MidiMessage::NoteOff {
@@ -292,13 +304,16 @@ impl LineupApp {
             MidiMessage::NoteOn {
                 pitch, velocity, ..
             } => {
+                let Some(channel) = self.piano_roll.selected_channel() else {
+                    return;
+                };
                 self.live.held.retain(|held| held.pitch != pitch);
                 self.live.follow.key_down();
                 let recorded_from = played.position.filter(|_| self.is_recording());
                 self.live.held.push(Held {
                     pitch,
                     velocity,
-                    channel: self.piano_roll.channel(),
+                    channel,
                     recorded_from,
                 });
             }

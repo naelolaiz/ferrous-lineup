@@ -146,7 +146,11 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 19 added the band's soloist. Older versions know no such
 /// player, so a song whose band has one, or has a soloist's part, needs
 /// format 19.
-pub const FORMAT_VERSION: u32 = 19;
+/// Format 20 separates a band's rhythm from its instruments and remembers
+/// the exact harmony style and the option to play plain accents.
+/// Format 21 adds the saved master mixer, solo and stereo reverb.
+/// Format 22 embeds user style patterns and instruments with the band.
+pub const FORMAT_VERSION: u32 = 22;
 
 /// The oldest format that can hold `project`.
 ///
@@ -219,7 +223,19 @@ pub fn format_for(project: &Project) -> u32 {
             .patterns()
             .iter()
             .any(|pattern| pattern.player == Some(Player::Soloist));
-    if has_soloist {
+    let has_style_parts = project.band().is_some_and(|band| {
+        band.instrument_style != band.style || band.harmony_style.is_some() || band.accents_only
+    });
+    if project
+        .band()
+        .is_some_and(|band| band.custom_rhythm.is_some() || band.custom_instruments.is_some())
+    {
+        22
+    } else if !project.mixer.is_default() {
+        21
+    } else if has_style_parts {
+        20
+    } else if has_soloist {
         19
     } else if has_breaks {
         18
@@ -264,6 +280,8 @@ pub fn format_for(project: &Project) -> u32 {
 #[derive(Debug, Serialize, Deserialize)]
 struct ProjectFile {
     format: u32,
+    #[serde(default, skip_serializing_if = "crate::Mixer::is_default")]
+    mixer: crate::Mixer,
     tempo: Tempo,
     scale: Scale,
     /// Left out for 4/4, so those files read exactly as before. A file
@@ -406,6 +424,7 @@ impl From<&Project> for ProjectFile {
         let channels = project.channels().len();
         ProjectFile {
             format: format_for(project),
+            mixer: project.mixer,
             tempo: project.tempo,
             scale: project.scale,
             time_signature: project.time_signature,
@@ -447,6 +466,10 @@ impl TryFrom<ProjectFile> for Project {
         let invalid = |reason: String| Err(FileError::Invalid(reason));
 
         let mut project = Project::empty();
+        if !file.mixer.valid() {
+            return invalid("its mixer settings are outside their ranges".to_string());
+        }
+        project.mixer = file.mixer;
         project.tempo = file.tempo;
         project.scale = file.scale;
         if file.time_signature.steps_per_bar() > MAX_STEPS {
@@ -457,6 +480,13 @@ impl TryFrom<ProjectFile> for Project {
         }
         project.time_signature = file.time_signature;
 
+        if file
+            .mixer
+            .solo
+            .is_some_and(|solo| solo >= file.channels.len())
+        {
+            return invalid("its solo channel does not exist".to_string());
+        }
         if file.channels.len() > MAX_CHANNELS {
             return invalid(format!("it has more than {MAX_CHANNELS} channels"));
         }
@@ -640,6 +670,26 @@ mod tests {
     use crate::Note;
     use crate::project::Drum;
 
+    #[test]
+    fn mixer_round_trip_and_legacy_defaults() {
+        let mut project = Project::demo();
+        let legacy = to_text(&project).unwrap();
+        assert!(!legacy.contains("mixer:"));
+        assert_eq!(from_text(&legacy).unwrap().mixer, crate::Mixer::default());
+        project.mixer.master = 0.42;
+        project.mixer.solo = Some(2);
+        project.mixer.reverb.enabled = true;
+        project.mixer.reverb.decay = 3.2;
+        assert_eq!(format_for(&project), 21);
+        let text = to_text(&project).unwrap();
+        assert_eq!(from_text(&text).unwrap(), project);
+        assert!(from_text(&text.replace("master: 0.42", "master: NaN")).is_err());
+        project.remove_channel(0);
+        assert_eq!(project.mixer.solo, Some(1));
+        project.remove_channel(1);
+        assert_eq!(project.mixer.solo, None);
+    }
+
     /// The demo song with nothing that needs a newer format than 1: its
     /// chords on the Lineup Osc's own sound instead of a piano.
     fn plain_demo() -> Project {
@@ -718,10 +768,14 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // Format 20 might have fields we have never heard of. Only the
+        // A future format might have fields we have never heard of. Only the
         // header is read, so the rest does not matter.
-        let error = from_text("(format: 20, sparkles: true)").unwrap_err();
-        assert!(matches!(error, FileError::NewerFormat(20)), "{error}");
+        let error =
+            from_text(&format!("(format: {}, sparkles: true)", FORMAT_VERSION + 1)).unwrap_err();
+        assert!(
+            matches!(error, FileError::NewerFormat(version) if version == FORMAT_VERSION+1),
+            "{error}"
+        );
     }
 
     #[test]

@@ -51,7 +51,9 @@ cargo run --release
 Press **Space** to play the demo song: two bars of a C, Am, F, G chord
 progression, then a beat comes in, and a drum fill ends it. The play
 button pauses while playing, and Stop goes back to where the playhead was
-put. **Home** goes to the start, **Page Up** and **Page Down** skip a bar
+put. **Home** goes to the start, **End** to the last step, and **Ctrl+Home/End**
+also work (⌘ on Mac). These jumps reveal the destination even with
+**Follow playhead** off. **Page Up** and **Page Down** skip a bar
 back or forward, and clicking the bar numbers moves the playhead. The playlist
 arranges patterns into a song: click to place a clip of the selected
 pattern, drag clips around, right-click to delete, and double-click a
@@ -63,11 +65,21 @@ row, loop it or copy it. Drag along the bar numbers to loop part of the
 song. Right-click a track's name to insert a track above or below it,
 move it up or down, or delete it. **F6** shows or hides
 the channel rack, where you click steps and drop WAV files to use your
-own sounds. **F7** shows the piano roll, on the selected pattern: when
+own sounds. Its **Play pattern**, **Pause pattern** and **Stop pattern**
+controls play the selected pattern directly; its pattern picker switches
+what is being edited. After clicking the rack or piano roll, **Space**
+plays or pauses that pattern. Click a channel name to select and hear it;
+click it again, click empty rack space, or press **Escape** to deselect.
+**Delete** or **Backspace** removes the selected rack channel; Undo restores it.
+Double-click its name to open its piano roll. An explicitly selected
+channel stays selected even when it has no notes in the current pattern.
+**F7** shows the piano roll, on the selected pattern: when
 the channel has no notes there, it says so and offers the patterns that
 do. Pick a key to highlight its notes,
 draw notes or whole chords, and watch the chord names above the grid.
-Select notes with Ctrl+click or a Ctrl+drag box, then move them with the
+Click an existing note to select it; **Delete** or **Backspace** removes selected
+notes. Add or remove notes from the selection with Ctrl+click, or select a range
+with a Ctrl+drag box, then move them with the
 arrow keys (Alt+↑ stays in the key), invert or arpeggiate them from the
 Tools menu, and set velocities in the lane under the grid. The chord
 buttons light up with the chords that often come next.
@@ -98,17 +110,101 @@ of the project, and a big key for each chord of the key (I to vii°),
 coloured by what it does: home, away or tension. Hold one, or press
 **1** to **7**, to play its chord; the chords that often come next
 light up, and while the music plays, the chord you hear lights up too.
-The **Library** tab next to the pattern list holds 145 harmony styles
-and 81 rhythms from pop, rock, blues, jazz, soul, hip hop, electronic,
-Latin, tango, flamenco, reggae, folk and classical music: click one to
-hear it in your key. Pick a rhythm after a style, and the style's chords
-and bass are played the way that rhythm goes; right-click a rhythm and
-**Play the whole song in this rhythm** changes the drums, chords and bass
-of the whole song at once, keeping the melody. **File > Demos** opens
+The **Library** tab next to the pattern list holds an alphabetical
+**Presets** list, combining all 145 harmony presets, 81 rhythm presets
+and your saved styles. **Edit > Settings… > Library > Style list** can instead group
+them by genre, with a separate **User styles** group. Equivalent
+style/rhythm entries are combined; distinct playing patterns remain available. They cover pop, rock, blues, jazz, soul, hip hop,
+electronic, Latin, tango, flamenco, reggae, folk and classical music.
+Click one to review its copy options, then **Apply** to hear it in your key.
+**Ctrl-click** (also ⌘-click on a Mac) applies the previous options immediately.
+Right-click and choose **Play the whole
+song with this preset** to apply it throughout the song while stopped.
+The melody stays in place. **File > Demos** opens
 177 songs with their melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
 *Für Elise* and the *Habanera*, and new tunes written to show off the
 blues, tango, flamenco and more. It also plays every style as a short
 song.
+
+The Library groups its application options into accompaniment, harmony and timing: **Playing patterns**, **Voices / instruments**, **Time
+signature**, **Chord progression**, **Tempo**, and **Swing**.
+These appear in the popup when you click a preset, preselected with the
+last confirmed options. **Apply** remembers them between runs; **Cancel**
+discards popup edits. **Edit > Settings… > Library** shows the defaults as a
+compact set of clickable toggles; **Edit defaults…** opens their full editor. Saving defaults
+changes the next style application and leaves the current song as it is.
+Only the checked components change. Entries marked **+ chords** include a
+progression; other entries say **keeps chords** and show the progression
+checkbox unchecked and disabled. Applying a preset without chords preserves
+the remembered progression choice for the next preset with chords. Chord
+progression is off initially; check it to copy a preset's chart as well. An empty audition
+uses example chords to demonstrate the preset. The combined list keeps
+every original playing pattern and instrument choice available.
+
+In song mode, copying **Playing patterns** and **Voices / instruments** brings in
+the preset's full band, including its extra guitar, strings or organ, even when
+the demo has no live band yet. Leave **Chord progression** off to keep the song's
+exact chords and change only its accompaniment. Enabling it replaces the harmony
+with the preset's chart while retaining the melody.
+
+The chord sheet's **Progression** menu uses the Library's browser too, with the same preset names, search and grouping preference.
+Search by name, genre or time signature; the search
+carries between views, and **×** clears it. **Progression** shows harmony
+presets that include a chord progression.
+
+Select **Plain accents** to play chord and bass accents
+on the meter's beat groups with the current instruments. This works with
+every preset, including saved styles. **Drums and plain accents** applies
+the preset’s drums with simple chord and bass accents. The instrument option
+is hidden while preserving its remembered value; **Preset patterns** restores
+normal style copying. The **Time** picker and bar 1's
+time-signature menu also show the matching style, rhythm/accent,
+instrument and swing checkboxes directly. The Library shows the band's
+pattern source and its instrumentation separately; the chord sheet remains the
+source of the song's chords. These band choices survive saving and
+undo/redo. A meter change keeps each bar's duration by adjusting tempo.
+
+Use **Edit style…** or **New style…** in the channel rack (also **View >
+Style editor…**) to edit repeating drum, chord and bass parts. The editor
+reuses the rack and piano roll, with its own undo history and a four-repeat
+preview. **Start from…** copies an existing style; right-clicking a style
+or rhythm in the Library also opens an editable copy. Pitched templates
+are written over C major and follow the song’s chords when applied.
+Save them as `.lineup-style` files; **Settings > Library > Styles folder…** chooses the folder
+loaded into **Presets** in the shared browser. **Start from…** uses that same
+list, including rhythm presets. Applied styles are
+embedded in project files, so reopening a song keeps its custom patterns.
+
+**Mixer** in the toolbar, **View > Mixer**, or **F9** opens master and
+per-instrument volume, mute and solo controls. They work with both
+SoundFont and Lineup Osc sounds, plus samples. The master stereo reverb
+has wet/dry, decay, damping and pre-delay controls. Mixer settings are
+saved with the project, support undo, and are used for WAV export.
+
+Resize an individual playlist track by dragging the lower edge of its
+name header. Double-click that edge to reset it, or use **Track height**
+in the header’s right-click menu. Heights follow track moves, are saved
+with the project, and support Undo.
+
+**Follow playhead** in the toolbar and **Settings > Playback** keeps the playing
+position visible in the playlist, chord sheet and piano roll. Turning it
+off lets you scroll freely; the preference is remembered. Editor shortcuts
+follow the active window: **Ctrl+A** selects its bars, notes or clips.
+The piano roll supports **Ctrl+C/X/V** and **Ctrl+D** for notes, including
+pasting between the song and the style editor; its Tools menu lists these
+actions. Pasting or duplicating notes extends the pattern when needed.
+The playlist also supports **Ctrl+C/X/V**, **Ctrl+D**, **Delete**, and
+**Ctrl-click** to add or remove a clip from the selection. Ctrl-click empty
+playlist space sets the paste position without placing a clip.
+**Ctrl-drag** empty playlist space to select a box of clips; dragging a
+selected clip moves the selected clips together. **Ctrl-click** a section
+marker (Intro, Verse, Chorus…) to select its overlapping clips, or select
+**Select clips in this section** from its menu. Ctrl-click it again or
+press **Escape** to clear the selection. On the chord sheet, clicking a
+section heading selects all of that section's bars; clicking it again
+clears them. **Shift-click** or **Shift+arrows** selects a range of bars,
+and **Escape** clears it. Selection stays with clips when earlier clips
+are deleted. Open popups and configuration controls keep their own keys.
 
 **F5**, or **📝 Chords** in the toolbar, opens the **chord sheet**: the
 song's harmony bar by bar, four bars to a line and each section under
@@ -128,10 +224,11 @@ window: the playlist stays as it is.
 
 **File > New** opens an empty chord sheet with a **band**: type chords
 and a piano, a bass and drums play them, written as patterns on their
-own tracks in the playlist. **🎷 Band** picks how they play, from the
-81 rhythms of the Library (a waltz puts the song in 3/4) and a few
-styles without drums (chorale, Alberti bass, arpeggios, sarabande), or
-**No band**. **Progression** writes a well-known progression from the
+own tracks in the playlist. **🎷 Band** chooses the instrument lineup,
+each player’s voice, and which players are heard. These controls keep the
+current playing patterns, chords, meter, tempo and swing. **No band**
+removes the accompaniment. Choose rhythms and playing patterns in the
+**Library**; a waltz can put the song in 3/4 when copying its time signature. **Progression** writes a well-known progression from the
 selected bar, in the song's key, and **End the song here** (right-click
 a bar) says where the band stops. The band plays again whenever the
 sheet, the key or the bars change; a part you edit in the piano roll
@@ -140,8 +237,7 @@ demo, the band plays the demo's chords and mutes its own accompaniment
 until you pick **No band**. **File > New beat** is the old empty
 pattern with a drum kit.
 
-To practise with the band, the chord sheet's second row (and the
-**Practice** menu) has a **Count-in** (a bar of clicks before the music
+To practise with the band, the chord sheet's second row has a **Count-in** (a bar of clicks before the music
 starts), a **Metronome**, the **Speed** to play at (25% to 200% of the
 song's tempo, which the song itself keeps) and **Tap**, which sets the
 tempo from a few clicks on the beat. **You play** leaves a player (the
@@ -149,7 +245,9 @@ piano, the bass, the drums, or a guitar, strings or organ) out of the
 band so you can play the part yourself; your keyboard then plays that
 part's sound. Shift+click a second bar to select several, and **Loop
 bars** plays them over and over. The clicks never reach a saved song or
-a WAV export.
+a WAV export. **Follow playhead**, **Count-in** and **Metronome** are also
+illuminated toggle buttons beside the main transport. Practice settings
+are available in **Edit > Settings… > Playback** too.
 
 The **Form** row above it shapes the whole performance. **Intro** puts
 2, 4 or 8 bars in front of the song, a turnaround that leads into its
@@ -238,10 +336,17 @@ Concerto Op. 24, all public domain now, or a few written for Ferrous
 Lineup), see its matrix
 with all 48 forms (P, I, R and RI on every note), and write any of them
 into the pattern as a melody or as chords, with the durations, dynamics
-and octaves following the row too if you like. **Sets…** lists all 224
+and octaves following the row too if you like. **Write … into current pattern**
+replaces the selected instrument’s notes in that pattern. **Save to new pattern**
+creates and selects a separate pattern, using the same row-writing options,
+length and time signature, and keeps the source pattern intact. Both actions
+support Undo. **Sets…** lists all 224
 pitch-class sets by Forte number, with their prime forms and interval
 vectors, to draw with or use as a scale, and selecting notes names their
-set. The Library's **Twelve-tone rows** and **File > Demos > Twelve-tone**
+set. **Hear it** previews the chosen set or micromode on the selected instrument.
+**Draw with it** in Sets and Micromodes lights up while active; click it
+again or choose **Single note** to stop drawing the set. The piano roll's
+**Draw > Single note** does the same. The Library's **Twelve-tone rows** and **File > Demos > Twelve-tone**
 play seven ways of using a row.
 
 **Micromodes…** opens Francisco Kröpfl's twelve micromodes: the twelve
@@ -269,14 +374,15 @@ exact time, even between two steps, and the tempo changes, time
 signatures and key come with it. The piano roll's Chords lane and the
 harmony keys then name the chords as it plays.
 
-**Sounds > SoundFont instruments** plays recordings of real instruments
+**Edit > Settings… > Audio > SoundFont instruments** plays recordings of real instruments
 instead of the Lineup Osc: every channel with a General MIDI instrument
 (the demos' voices, the Library's piano and bass, the demo song's
 chords) and, with **SoundFont drums**, the drum kit. The first time, it
 offers to download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS),
 a free General MIDI SoundFont by S. Christian Collins (about 30 MB, kept
 for next time). **Choose SoundFont…** plays any other `.sf2` file
-instead. WAV export uses it too.
+instead. WAV export uses it too. The Audio category also shows the active
+output device, sample rate and channel count.
 
 **View > Ear training** (experimental) asks questions to answer by ear:
 which interval two notes make, which kind of chord plays (with
@@ -304,10 +410,18 @@ narrower, and **Alt** with the same keys or the wheel makes tracks and
 keys taller or shorter, around what is under the pointer. Over the
 channel rack they zoom its one size. Anywhere else (the toolbars, the
 harmony keys, the status bar, the Patterns and Library panel) they make
-the text, buttons and menus bigger or smaller everywhere, as **View >
+the text, buttons and menus bigger or smaller everywhere, as **Settings > Appearance >
 Interface size** does. **Ctrl+0** takes what is under the pointer back
 to 100%. The playlist's two zooms are also at the right end of the
 status bar.
+**Edit > Settings…** separates preferences into **Appearance**, **Library**,
+**Audio** and **Playback** categories. Appearance holds interface size and
+all editor zoom levels; Library holds style grouping, saved style defaults
+and the styles folder; Audio holds output information and SoundFont settings;
+Playback holds follow playback and practice controls. The former zoom,
+Sounds and Practice menus are replaced by these categories. Zoom controls
+share the current values with the keyboard and wheel shortcuts, which
+continue to work as before.
 The View menu also shows or hides each window and panel, and **Alt+F8**
 hides the Patterns and Library panel to give the playlist more room. The
 zoom, the window size and where you left the windows are remembered for

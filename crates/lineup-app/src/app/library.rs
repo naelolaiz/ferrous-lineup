@@ -16,12 +16,8 @@
 //! rhythm does while the song plays, so the song carries on in the new
 //! rhythm instead of stopping for a pattern of its own.
 //!
-//! A rhythm or style in another time signature puts the whole song in
-//! it, bar for bar (see [`lineup_core::remeter`]). Each squeeze or stretch
-//! loses a little (notes that met on one tick may part on the next), so
-//! the app remembers the song as it was before the library first changed
-//! it, and every rhythm or style picked after that starts again from that
-//! original: 4/4 to 3/4 to 6/8 and back to 4/4 gives back the 4/4 song.
+//! Library choices apply their checked components to the current song.
+//! Meter changes keep each bar's duration (see [`lineup_core::remeter`]).
 
 use lineup_audio::PlayMode;
 use lineup_core::library::demo::{micromode_demo, row_demo, song_demo, style_demo};
@@ -45,9 +41,6 @@ pub(super) struct Audition {
     written: Pattern,
     style: Option<&'static Style>,
     rhythm: Option<&'static Rhythm>,
-    /// Whether the rhythm was picked, or came with the style. A rhythm
-    /// that came with a style changes with the next style.
-    rhythm_picked: bool,
     row_style: Option<&'static RowStyle>,
     micromode_style: Option<&'static MicromodeStyle>,
 }
@@ -119,8 +112,15 @@ impl LineupApp {
     /// whole song plays, so a demo opens with its own selected, as in FL
     /// Studio.
     pub(super) fn tried(&self) -> Tried {
+        if let Some(band) = self.project.band() {
+            return Tried::from_band(band);
+        }
+        if self.mode == PlayMode::Song {
+            return self.song_library;
+        }
         match self.unchanged_audition() {
             Some(audition) => Tried {
+                user_style: None,
                 style: audition.style,
                 rhythm: audition.rhythm,
                 row_style: audition.row_style,
@@ -132,7 +132,7 @@ impl LineupApp {
 
     /// Remembers the style and rhythm the song plays in this version of
     /// the project, for undo and redo.
-    fn remember_song_version(&mut self, project: Project, tried: Tried) {
+    pub(super) fn remember_song_version(&mut self, project: Project, tried: Tried) {
         self.song_versions
             .retain(|(version, _)| *version != project);
         if self.song_versions.len() == REMEMBERED {
@@ -144,14 +144,12 @@ impl LineupApp {
     /// After undo or redo, shows the style and rhythm this version of the
     /// project plays, if the library changed it.
     pub(super) fn restore_song_library(&mut self) {
-        if let Some((_, tried)) = self
+        self.song_library = self
             .song_versions
             .iter()
             .rev()
             .find(|(version, _)| *version == self.project)
-        {
-            self.song_library = *tried;
-        }
+            .map_or_else(Tried::default, |(_, tried)| *tried);
     }
 
     /// What the library wrote in the selected pattern, if it is still
@@ -168,9 +166,30 @@ impl LineupApp {
     /// While the song plays, it changes the song instead, and the song
     /// carries on.
     pub(super) fn try_from_library(&mut self, action: LibraryAction) {
+        if let LibraryAction::UserStyle(index) = action {
+            self.apply_user_library(index, None);
+            return;
+        }
+        let parts = match action {
+            LibraryAction::Rhythm(_) | LibraryAction::RhythmInSong(_) => {
+                self.playlist.library_parts().for_rhythm()
+            }
+            _ => self.playlist.library_parts(),
+        };
+        if !(parts.rhythm
+            || parts.instruments
+            || parts.time_signature
+            || parts.progression
+            || parts.tempo
+            || parts.swing)
+        {
+            self.notice = Some("Choose a component to apply in the Library options.".to_string());
+            return;
+        }
         // With a band, a style or a rhythm is the band's new way of
         // playing the chord sheet.
-        if self.project.band().is_some() && self.band_plays(action) {
+        if (self.project.band().is_some() || self.mode == PlayMode::Song) && self.band_plays(action)
+        {
             return;
         }
         // Taking over with a pattern of its own would stop the song, so
@@ -179,7 +198,10 @@ impl LineupApp {
             self.use_in_song(action);
             return;
         }
-        if let LibraryAction::RhythmInSong(_) = action {
+        if matches!(
+            action,
+            LibraryAction::RhythmInSong(_) | LibraryAction::StyleInSong(_)
+        ) {
             self.use_in_song(action);
             return;
         }
@@ -192,84 +214,65 @@ impl LineupApp {
             return;
         }
         let reuse = self.unchanged_audition().cloned();
-        let mut style = reuse.as_ref().and_then(|a| a.style);
-        let mut rhythm = reuse.as_ref().and_then(|a| a.rhythm);
-        let mut rhythm_picked = reuse.as_ref().is_some_and(|a| a.rhythm_picked);
-        match action {
-            LibraryAction::Style(picked) => {
-                style = Some(picked);
-                if !rhythm_picked {
-                    rhythm = Rhythm::named(picked.rhythm);
-                }
-            }
-            LibraryAction::Rhythm(picked) => {
-                rhythm = Some(picked);
-                rhythm_picked = true;
-            }
-            LibraryAction::RhythmInSong(_)
-            | LibraryAction::RowStyle(_)
-            | LibraryAction::MicromodeStyle(_) => return,
-        }
-
-        let name = match (style, rhythm) {
-            (Some(style), Some(rhythm)) if style.name != rhythm.name => {
-                format!("{} · {}", style.name, rhythm.name)
-            }
-            (Some(style), _) => style.name.to_string(),
-            (None, Some(rhythm)) => rhythm.name.to_string(),
-            (None, None) => return,
+        let previous = reuse.as_ref().map_or(self.song_library, |a| Tried {
+            user_style: None,
+            style: a.style,
+            rhythm: a.rhythm,
+            row_style: a.row_style,
+            micromode_style: a.micromode_style,
+        });
+        let parts = match action {
+            LibraryAction::Rhythm(_) => self.playlist.library_parts().for_rhythm(),
+            _ => self.playlist.library_parts(),
         };
-        let target = reuse.as_ref().map(|a| a.pattern);
-        let selected = self.piano_roll.channel();
-        let tonic = self.project.scale.root;
-        let use_tempo = self.playlist.library_tempo();
-        // The song swings as the rhythm does, or as it was last set to.
-        let swing = rhythm.map(|rhythm| self.swings.of(rhythm.name).unwrap_or(rhythm.swing));
-        // A rhythm that was picked, not the style's own, decides how the
-        // chords and bass are played.
-        let feel = rhythm.filter(|_| rhythm_picked);
+        let mut tried = previous;
+        let (name, tempo) = match action {
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                if parts.rhythm || parts.progression {
+                    tried.style = Some(style);
+                    tried.row_style = None;
+                    tried.micromode_style = None;
+                }
+                if parts.rhythm {
+                    tried.rhythm = Rhythm::named(style.rhythm);
+                }
+                (style.name, style.tempo)
+            }
+            LibraryAction::Rhythm(rhythm) => {
+                if parts.rhythm {
+                    tried.rhythm = Some(rhythm);
+                    tried.style = None;
+                }
+                (rhythm.name, rhythm.tempo)
+            }
+            _ => return,
+        };
+        let target = reuse
+            .as_ref()
+            .map(|a| a.pattern)
+            .or_else(|| (!parts.rhythm && !parts.progression).then_some(self.pattern));
+        let selected = self.piano_roll.selected_channel();
+        let swing = tried.rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
         let written = self.edit("try from the library", |project| {
-            let index = match target {
-                Some(index) => index,
-                None => project.add_pattern()?,
-            };
-            let pattern = project.pattern_mut(index)?;
-            pattern.name = name;
-            for channel in 0..pattern.rows() {
-                pattern.set_notes(channel, []);
-            }
-            match style {
-                // The style decides the bars: its time signature and length.
-                Some(style) => {
-                    apply::write_style_played(project, index, style, tonic, Some(selected), feel);
+            let index = target.or_else(|| project.add_pattern())?;
+            match action {
+                LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                    apply::write_style_parts(project, index, style, selected, parts)
                 }
-                // A rhythm alone brings its own, to the song too if the
-                // song has nothing else in it.
-                None => {
-                    if let Some(rhythm) = rhythm {
-                        let own = apply::song_has_music(project, index);
-                        if !own {
-                            project.time_signature = rhythm.time;
-                        }
-                        let length = rhythm.bars() * rhythm.time.steps_per_bar();
-                        let pattern = project.pattern_mut(index)?;
-                        pattern.time = own.then_some(rhythm.time);
-                        pattern.set_length(length);
-                    }
+                LibraryAction::Rhythm(rhythm) => {
+                    apply::write_rhythm_parts(project, index, rhythm, parts)
                 }
+                _ => return None,
             }
-            if let Some(rhythm) = rhythm {
-                apply::write_rhythm(project, index, rhythm);
-            }
-            if let Some(swing) = swing {
+            if parts.swing
+                && let Some(swing) = swing
+            {
                 project.swing = swing;
             }
-            if use_tempo {
-                let bpm = style.map_or_else(|| rhythm.map(|r| r.tempo), |s| Some(s.tempo));
-                if let Some(bpm) = bpm {
-                    project.scale_tempo(Tempo::new(bpm));
-                }
+            if parts.tempo {
+                project.scale_tempo(Tempo::new(tempo));
             }
+            project.pattern_mut(index)?.name = name.to_string();
             Some((index, project.pattern(index)?.clone()))
         });
         let Some((pattern, written)) = written else {
@@ -277,48 +280,19 @@ impl LineupApp {
             return;
         };
         self.select_pattern(pattern);
-        // A song with music of its own kept its key and time signature,
-        // which may not be the style's: say so.
-        if apply::song_has_music(&self.project, pattern) {
-            let (key, time) = match (style, rhythm) {
-                (Some(style), _) => (Some(style.scale(tonic)), style.time),
-                (None, Some(rhythm)) => (None, rhythm.time),
-                (None, None) => (None, self.project.time_signature),
-            };
-            let song = self.project.scale;
-            let mut differ = Vec::new();
-            if let Some(key) = key.filter(|key| *key != song) {
-                differ.push((key.name(), song.name()));
-            }
-            if time != self.project.time_signature {
-                differ.push((time.to_string(), self.project.time_signature.to_string()));
-            }
-            if !differ.is_empty() {
-                let (theirs, ours): (Vec<String>, Vec<String>) = differ.into_iter().unzip();
-                let name = &self.project.patterns()[pattern].name;
-                self.message = Some(format!(
-                    "\"{name}\" is in {}; the song stays in {}.",
-                    theirs.join(", "),
-                    ours.join(", ")
-                ));
-            }
-        }
         if self.auditions.len() == REMEMBERED {
             self.auditions.remove(0);
         }
         self.auditions.push(Audition {
             pattern,
             written,
-            style,
-            rhythm,
-            rhythm_picked,
-            row_style: None,
-            micromode_style: None,
+            style: tried.style,
+            rhythm: tried.rhythm,
+            row_style: tried.row_style,
+            micromode_style: tried.micromode_style,
         });
         self.set_mode(PlayMode::Pattern);
         if !self.playing {
-            // What the library wrote plays from its start, not from where
-            // the last pattern was paused.
             self.rewind_for_new_pattern();
             self.set_playing(true);
         }
@@ -329,9 +303,29 @@ impl LineupApp {
     /// chords, its melody and its place: see [`apply::use_style`],
     /// [`apply::use_rhythm`] and [`apply::use_fill`].
     fn use_in_song(&mut self, action: LibraryAction) {
-        let use_tempo = self.playlist.library_tempo();
+        let parts = match action {
+            LibraryAction::Rhythm(_) | LibraryAction::RhythmInSong(_) => {
+                self.playlist.library_parts().for_rhythm()
+            }
+            _ => self.playlist.library_parts(),
+        };
+        self.use_in_song_parts(action, parts);
+    }
+
+    fn use_in_song_parts(&mut self, action: LibraryAction, parts: apply::StyleParts) {
+        if let LibraryAction::UserStyle(index) = action {
+            self.apply_user_library(index, None);
+            return;
+        }
+        if self.band_plays_parts(action, parts) {
+            return;
+        }
+        let use_tempo = parts.tempo;
         let (name, tempo, label) = match action {
-            LibraryAction::Style(style) => (style.name, Some(style.tempo), "change the style"),
+            LibraryAction::UserStyle(_) => unreachable!("handled above"),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                (style.name, Some(style.tempo), "change the style")
+            }
             LibraryAction::RowStyle(style) => (style.name, Some(style.tempo), "change the style"),
             LibraryAction::MicromodeStyle(style) => {
                 (style.name, Some(style.tempo), "change the style")
@@ -348,28 +342,24 @@ impl LineupApp {
         };
         let song_library = self.song_library;
         let before = self.project.clone();
-        let original = self.song_original();
         // The swing the rhythm was last played with, if it was set.
         let rhythm = match action {
             _ if fill_picked(action) => None,
-            LibraryAction::Style(style) => Rhythm::named(style.rhythm),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                Rhythm::named(style.rhythm)
+            }
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => Some(rhythm),
-            LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => None,
+            LibraryAction::UserStyle(_)
+            | LibraryAction::RowStyle(_)
+            | LibraryAction::MicromodeStyle(_) => None,
         };
         let swing = rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
-        // A rhythm or a style starts again from the song as it was before
-        // the library changed it. A fill or a twelve-tone or micromode
-        // style goes on top of what plays now.
-        let from_original = matches!(
-            action,
-            LibraryAction::Style(_) | LibraryAction::Rhythm(_) | LibraryAction::RhythmInSong(_)
-        ) && !fill_picked(action);
         let change = self.edit(label, |project| {
-            if from_original {
-                *project = original.clone();
-            }
             let change = match action {
-                LibraryAction::Style(style) => apply::use_style(project, style),
+                LibraryAction::UserStyle(_) => unreachable!("handled above"),
+                LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                    apply::use_style_parts(project, style, parts)
+                }
                 LibraryAction::RowStyle(style) => rows::use_row_style(project, style),
                 LibraryAction::MicromodeStyle(style) => {
                     micromodes::use_micromode_style(project, style)
@@ -377,13 +367,17 @@ impl LineupApp {
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
                     if FILLS.contains(rhythm) =>
                 {
-                    apply::use_fill(project, rhythm)
+                    if parts.rhythm {
+                        apply::use_fill(project, rhythm)
+                    } else {
+                        apply::RhythmChange::default()
+                    }
                 }
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
-                    apply::use_rhythm(project, rhythm)
+                    apply::use_rhythm_parts(project, rhythm, parts)
                 }
             };
-            if change.drums > 0
+            if parts.swing
                 && let Some(swing) = swing
             {
                 project.swing = swing;
@@ -391,20 +385,14 @@ impl LineupApp {
             // A song put in another time signature keeps its pace (see
             // `remeter`): the rhythm's own tempo would rush or drag it.
             if use_tempo
-                && change != apply::RhythmChange::default()
                 && change.time.is_none()
                 && let Some(bpm) = tempo
             {
                 project.scale_tempo(Tempo::new(bpm));
             }
-            if change == apply::RhythmChange::default() {
-                // Nothing to play differently: the song stays as it is.
-                *project = before.clone();
-            }
             change
         });
         if self.project != before {
-            self.remember_original(original);
             self.keep_place_in_song(&before);
         }
         // The time signature the song changed to, back to its own
@@ -415,9 +403,9 @@ impl LineupApp {
             1 => "1 pattern".to_string(),
             count => format!("{count} patterns"),
         };
-        let mut parts = Vec::new();
+        let mut descriptions = Vec::new();
         if change.drums > 0 {
-            parts.push(format!("new drums in {}", patterns(change.drums)));
+            descriptions.push(format!("new drums in {}", patterns(change.drums)));
         }
         if change.harmony > 0 {
             let what = match action {
@@ -425,18 +413,27 @@ impl LineupApp {
                 LibraryAction::MicromodeStyle(_) => "the micromode instead of the chords",
                 _ => "chords and bass played again",
             };
-            parts.push(format!("{what} in {}", patterns(change.harmony)));
+            descriptions.push(format!("{what} in {}", patterns(change.harmony)));
         }
         let fill = fill_picked(action);
         // The song now plays what was picked, so the library shows it.
-        if change != apply::RhythmChange::default() {
+        if self.project != before || change != apply::RhythmChange::default() {
             self.song_library = match action {
-                LibraryAction::Style(style) => Tried {
-                    style: Some(style),
-                    row_style: None,
-                    micromode_style: None,
-                    ..song_library
-                },
+                LibraryAction::Style(style) | LibraryAction::StyleInSong(style)
+                    if parts.rhythm || parts.progression =>
+                {
+                    Tried {
+                        user_style: None,
+                        style: Some(style),
+                        rhythm: if parts.rhythm {
+                            Rhythm::named(style.rhythm)
+                        } else {
+                            song_library.rhythm
+                        },
+                        row_style: None,
+                        micromode_style: None,
+                    }
+                }
                 LibraryAction::RowStyle(style) => Tried {
                     rhythm: style.rhythm().or(song_library.rhythm),
                     row_style: Some(style),
@@ -447,8 +444,12 @@ impl LineupApp {
                     micromode_style: Some(style),
                     ..Tried::default()
                 },
-                LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) if !fill => {
+                LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
+                    if !fill && parts.rhythm =>
+                {
                     Tried {
+                        user_style: None,
+                        style: None,
                         rhythm: Some(rhythm),
                         ..song_library
                     }
@@ -464,23 +465,21 @@ impl LineupApp {
                 patterns(change.drums)
             )
         } else if let Some(time) = new_time {
-            let what = if parts.is_empty() {
+            let what = if descriptions.is_empty() {
                 String::new()
             } else {
-                format!(": {}", parts.join(", "))
+                format!(": {}", descriptions.join(", "))
             };
             format!(
                 "The song now plays {name} in {time}, every bar squeezed or stretched into a \
                  {time} bar{what}. Ctrl+Z takes it back."
             )
-        } else if parts.is_empty() {
-            format!(
-                "{name} finds nothing to change in this song: it has no drums or chords for it."
-            )
+        } else if descriptions.is_empty() {
+            format!("Applied selected parts of {name}.")
         } else {
             format!(
                 "The song now plays {name}: {}. Ctrl+Z takes it back.",
-                parts.join(", ")
+                descriptions.join(", ")
             )
         });
     }
@@ -495,17 +494,12 @@ impl LineupApp {
     /// the song plays a rhythm in `time`, as if it were picked in the
     /// library: one of the kind the song plays if there is one (see
     /// [`Rhythm::for_time`]). Back in the time signature the song was
-    /// in, it is the song as it was. An empty song just gets the new bars.
+    /// in, the band plays it there again. An empty song just gets the new bars.
     pub(super) fn set_song_time(&mut self, time: TimeSignature) {
         if self.project.patterns().iter().all(Pattern::is_empty) {
             self.edit("change time signature", |project| {
                 project.time_signature = time;
             });
-            return;
-        }
-        let original = self.song_original();
-        if lineup_core::remeter::is_in(&original, time) {
-            self.back_to_original(original);
             return;
         }
         let playing = self.song_library.rhythm.or_else(|| {
@@ -514,46 +508,11 @@ impl LineupApp {
                 .and_then(|style| Rhythm::named(style.rhythm))
         });
         let rhythm = Rhythm::for_time(time, playing);
-        self.use_in_song(LibraryAction::RhythmInSong(rhythm));
-    }
-
-    /// Puts back the song as it was before the library changed it, with
-    /// the style and rhythm it played then.
-    fn back_to_original(&mut self, original: Project) {
-        let before = self.project.clone();
-        let song_library = self.song_library;
-        self.edit("change time signature", |project| *project = original);
-        if self.project == before {
-            return;
-        }
-        self.keep_place_in_song(&before);
-        self.remember_song_version(before, song_library);
-        self.restore_song_library();
-        self.notice = Some(format!(
-            "The song is back in {}, as it was. Ctrl+Z takes it back.",
-            self.project.time_signature
-        ));
-    }
-
-    /// The song as it was before the library changed it, if the library
-    /// made the project as it is now, or else the project itself.
-    fn song_original(&self) -> Project {
-        self.song_originals
-            .iter()
-            .rev()
-            .find(|(version, _)| *version == self.project)
-            .map_or_else(|| self.project.clone(), |(_, original)| original.clone())
-    }
-
-    /// Remembers that the project as it is now was made from `original`.
-    fn remember_original(&mut self, original: Project) {
-        let project = &self.project;
-        self.song_originals
-            .retain(|(version, _)| version != project);
-        if self.song_originals.len() == REMEMBERED {
-            self.song_originals.remove(0);
-        }
-        self.song_originals.push((self.project.clone(), original));
+        let parts = apply::StyleParts {
+            time_signature: true,
+            ..self.playlist.library_parts().for_rhythm()
+        };
+        self.use_in_song_parts(LibraryAction::RhythmInSong(rhythm), parts);
     }
 
     /// After the song changed time signature, keeps playing (or ready to
@@ -586,7 +545,7 @@ impl LineupApp {
     /// project's key note.
     fn try_row_style(&mut self, style: &'static RowStyle) {
         let target = self.unchanged_audition().map(|audition| audition.pattern);
-        let selected = self.piano_roll.channel();
+        let selected = self.piano_roll.selected_channel();
         let start = self.project.scale.root;
         let use_tempo = self.playlist.library_tempo();
         let written = self.edit("try from the library", |project| {
@@ -599,7 +558,7 @@ impl LineupApp {
             for channel in 0..pattern.rows() {
                 pattern.set_notes(channel, []);
             }
-            rows::write_row_style(project, index, style, start, Some(selected));
+            rows::write_row_style(project, index, style, start, selected);
             if let Some(rhythm) = style.rhythm() {
                 apply::write_rhythm(project, index, rhythm);
             }
@@ -621,7 +580,6 @@ impl LineupApp {
             written,
             style: None,
             rhythm: style.rhythm(),
-            rhythm_picked: false,
             row_style: Some(style),
             micromode_style: None,
         });
@@ -637,7 +595,7 @@ impl LineupApp {
     /// on the project's key note.
     fn try_micromode_style(&mut self, style: &'static MicromodeStyle) {
         let target = self.unchanged_audition().map(|audition| audition.pattern);
-        let selected = self.piano_roll.channel();
+        let selected = self.piano_roll.selected_channel();
         let key = self.project.scale.root;
         let use_tempo = self.playlist.library_tempo();
         let written = self.edit("try from the library", |project| {
@@ -651,7 +609,7 @@ impl LineupApp {
                 pattern.set_notes(channel, []);
             }
             let start = micromodes::DEMO_SECTIONS[0].0;
-            micromodes::write_micromode_style(project, index, style, key, start, Some(selected));
+            micromodes::write_micromode_style(project, index, style, key, start, selected);
             if let Some(rhythm) = style.rhythm() {
                 apply::write_rhythm(project, index, rhythm);
             }
@@ -673,7 +631,6 @@ impl LineupApp {
             written,
             style: None,
             rhythm: style.rhythm(),
-            rhythm_picked: false,
             row_style: None,
             micromode_style: Some(style),
         });
@@ -700,33 +657,64 @@ impl LineupApp {
     /// `false` for what a band does not play: fills, rows and micromode
     /// styles.
     fn band_plays(&mut self, action: LibraryAction) -> bool {
+        let parts = match action {
+            LibraryAction::Style(_) | LibraryAction::StyleInSong(_) => {
+                self.playlist.library_parts()
+            }
+            _ => self.playlist.library_parts().for_rhythm(),
+        };
+        self.band_plays_parts(action, parts)
+    }
+
+    fn band_plays_parts(&mut self, action: LibraryAction, parts: apply::StyleParts) -> bool {
+        // A demo has a written accompaniment but no live band yet. Copying
+        // both patterns and voices must bring in the full preset lineup,
+        // just as changing an existing band does. Copying a chart is optional.
+        if self.project.band().is_none()
+            && !(parts.rhythm
+                && parts.for_preset().instruments
+                && !self.project.playlist().chord_markers().is_empty())
+        {
+            return false;
+        }
         let style = match action {
             _ if fill_picked(action) => return false,
-            LibraryAction::Style(style) => BandStyle::of_style(style),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                BandStyle::of_style(style)
+            }
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
                 BandStyle::named(rhythm.name)
             }
-            LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => return false,
+            LibraryAction::UserStyle(_)
+            | LibraryAction::RowStyle(_)
+            | LibraryAction::MicromodeStyle(_) => return false,
         };
         let Some(style) = style else {
             return false;
         };
-        let use_tempo = self.playlist.library_tempo();
+        let harmony = match action {
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => Some(style),
+            _ => None,
+        };
         let swing = self.swings.of(style.name);
+        let before = self.project.clone();
+        let previous = self.tried();
         self.edit("change the band", |project| {
-            let time = project.meter().first();
-            project.set_band_style(Some(style));
-            if let Some(swing) = swing {
+            project.apply_band_parts(style, harmony, parts);
+            if parts.swing
+                && let Some(swing) = swing
+            {
                 project.swing = swing;
             }
-            // As with a rhythm: a song put in another time signature
-            // keeps its pace, so only a song that stays in its time
-            // takes the style's tempo.
-            if use_tempo && project.meter().first() == time {
-                project.scale_tempo(Tempo::new(style.tempo));
-            }
         });
-        self.notice = Some(format!("The band plays {}", style.name));
+        self.song_library = Tried::from_band(self.project.band().unwrap());
+        self.keep_place_in_song(&before);
+        self.remember_song_version(before, previous);
+        self.remember_song_version(self.project.clone(), self.song_library);
+        self.notice = Some(format!(
+            "Applied selected parts of {}",
+            harmony.map_or(style.name, |s| s.name)
+        ));
         true
     }
 }

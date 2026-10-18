@@ -42,6 +42,7 @@ pub enum Change {
     Tempo,
     /// How loose the timing is.
     LooseTiming,
+    Mixer,
     /// The clips that can be heard, the song's length, or the tempo of
     /// its steps.
     Song,
@@ -142,7 +143,7 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
         if old.volume != channel.volume {
             changes.push(Change::Volume(index));
         }
-        if old.muted != channel.muted {
+        if before.channel_muted(channels.old_index(index).unwrap()) != after.channel_muted(index) {
             changes.push(Change::Muted(index));
         }
     }
@@ -183,6 +184,9 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
     if before.loose_timing != after.loose_timing {
         changes.push(Change::LooseTiming);
     }
+    if before.mixer != after.mixer {
+        changes.push(Change::Mixer);
+    }
     // What song mode plays: the clips, with their repeats and the
     // sections' repeats unrolled, cut to the loop region if there is one.
     // Only what the audio thread is sent counts, so renaming a section
@@ -200,6 +204,21 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn solo_changes_the_other_channels_without_losing_their_mutes() {
+        let before = Project::demo();
+        let mut after = before.clone();
+        after.mixer.solo = Some(1);
+        let changes = diff(&before, &after);
+        assert!(changes.contains(&Change::Mixer));
+        assert!(!changes.contains(&Change::Muted(1)));
+        for index in [0, 2, 3, 4] {
+            assert!(changes.contains(&Change::Muted(index)));
+        }
+        after.mixer.solo = None;
+        assert_eq!(diff(&before, &after), Vec::new());
+    }
     use crate::{
         Channel, ChannelKind, Drum, LoopRegion, Note, NoteEvent, Play, SampleSource, Section, Tempo,
     };
@@ -235,7 +254,7 @@ mod tests {
                 kind: channel.kind.clone(),
                 program: channel.program,
                 volume: channel.volume,
-                muted: channel.muted,
+                muted: project.channel_muted(index),
                 notes: (0..project.patterns().len())
                     .map(|pattern| project.played_notes(pattern, index).into_owned())
                     .collect(),
@@ -284,7 +303,7 @@ mod tests {
                 Change::Volume(index) => {
                     self.channels[index].volume = after.channels()[index].volume
                 }
-                Change::Muted(index) => self.channels[index].muted = after.channels()[index].muted,
+                Change::Muted(index) => self.channels[index].muted = after.channel_muted(index),
                 Change::PatternLength(index) => {
                     self.lengths[index] = after.patterns()[index].length();
                 }
@@ -294,6 +313,7 @@ mod tests {
                 }
                 Change::Tempo => self.tempo = after.tempo,
                 Change::LooseTiming => self.loose_timing = after.loose_timing,
+                Change::Mixer => {}
                 Change::Song => {
                     let song = after.playback_arrangement();
                     self.tempos = after.played_tempos(&song);

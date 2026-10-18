@@ -8,6 +8,101 @@
 use eframe::egui::{self, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use lineup_core::NoteEvent;
 
+pub fn scroll_menu<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
+    let height = (ui.ctx().content_rect().height() * 0.6).max(80.0);
+    egui::ScrollArea::vertical()
+        .max_height(height)
+        .show(ui, add)
+        .inner
+}
+
+/// Editor shortcuts belong to the last clicked window, including its title
+/// and toolbar. Popup controls and text fields keep their own keyboard input.
+pub fn editor_keyboard(ctx: &egui::Context, layer: egui::LayerId) -> bool {
+    editor_active(ctx, layer)
+        && !ctx.text_edit_focused()
+        && !egui::Popup::is_any_open(ctx)
+        && ctx.memory(|memory| memory.is_above_modal_layer(layer))
+}
+
+pub fn modal_open(ctx: &egui::Context) -> bool {
+    ctx.memory(|memory| memory.top_modal_layer().is_some())
+}
+
+pub fn editor_active(ctx: &egui::Context, layer: egui::LayerId) -> bool {
+    let id = egui::Id::unique("keyboard-editor");
+    if let Some(pos) = ctx.input(|input| press_pos(input, None))
+        && let Some(clicked) = ctx.layer_id_at(pos)
+        && clicked.order <= egui::Order::Middle
+    {
+        ctx.data_mut(|data| data.insert_temp(id, clicked));
+    }
+    let active = ctx.data(|data| data.get_temp::<egui::LayerId>(id));
+    active.or_else(|| ctx.top_layer_id()) == Some(layer)
+}
+
+/// The window explicitly clicked, without assigning a floating window
+/// keyboard control merely because it opened over the song at startup.
+pub fn clicked_editor(ctx: &egui::Context) -> Option<egui::LayerId> {
+    ctx.data(|data| data.get_temp(egui::Id::unique("keyboard-editor")))
+}
+
+pub fn follow_playback(ctx: &egui::Context) -> bool {
+    ctx.data_mut(|data| {
+        data.get_persisted::<bool>(egui::Id::unique("follow-playback"))
+            .unwrap_or(true)
+    })
+}
+
+pub fn follow_control(ui: &mut Ui) {
+    let mut follow = follow_playback(ui.ctx());
+    if ui
+        .checkbox(&mut follow, "Follow playhead")
+        .on_hover_text(
+            "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
+        )
+        .changed()
+    {
+        ui.ctx()
+            .data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), follow));
+    }
+}
+
+/// A persistent transport toggle, sharing its value with the preferences.
+pub fn follow_button(ui: &mut Ui) {
+    let follow = follow_playback(ui.ctx());
+    let button = crate::theme::light_button(ui, "Follow playhead", follow, None);
+    if crate::theme::hint(
+        button,
+        "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
+    )
+    .clicked()
+    {
+        ui.ctx().data_mut(|data| {
+            data.insert_persisted(egui::Id::unique("follow-playback"), !follow);
+        });
+    }
+}
+
+/// Reveal the playhead horizontally, leaving the user's vertical position
+/// intact. Only a new step can scroll, so manual scrolling still works.
+pub fn follow_x(ui: &Ui, step: Option<usize>, x: f32, view: Rect) {
+    let id = ui.scope_id().with("followed-step");
+    let step = step.filter(|_| follow_playback(ui.ctx()));
+    let previous = ui.ctx().data_mut(|data| {
+        let previous = data.get_temp::<Option<usize>>(id).flatten();
+        data.insert_temp(id, step);
+        previous
+    });
+    if step.is_some() && step != previous {
+        let margin = (view.width() * 0.1).min(60.0);
+        ui.scroll_to_rect(
+            Rect::from_center_size(pos2(x, view.center().y), vec2(margin * 2.0, 1.0)),
+            None,
+        );
+    }
+}
+
 /// Step colors. Steps are grouped by beats (four steps in 4/4, six in
 /// 6/8), and the groups alternate colors so you can count beats at a
 /// glance.
@@ -279,4 +374,55 @@ pub fn press_pos(
         } if only.is_none_or(|only| only == button) => Some(pos),
         _ => None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn playback_follow_scrolls_to_the_cursor_and_can_be_disabled() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut offset = 0.0;
+        for (frame, follow) in [false, false, false, true, true, true]
+            .into_iter()
+            .enumerate()
+        {
+            ctx.data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), follow));
+            let mut output = ctx.run_pass(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(800.0, 600.0))),
+                    time: Some(frame as f64 * 0.1),
+                    ..Default::default()
+                },
+                |ctx| {
+                    egui::Window::new("Follow test")
+                        .default_size([400.0, 250.0])
+                        .show(ctx, |ui| {
+                            let result =
+                                egui::ScrollArea::horizontal()
+                                    .animated(false)
+                                    .show(ui, |ui| {
+                                        let view = ui.clip_rect();
+                                        let (rect, _) = ui.allocate_exact_size(
+                                            vec2(2000.0, 40.0),
+                                            Sense::hover(),
+                                        );
+                                        follow_x(ui, Some(100), rect.left() + 1500.0, view);
+                                    });
+                            offset = result.state.clamped_offset().x;
+                        });
+                },
+            );
+            output.textures_delta.clear();
+            if !follow {
+                assert_eq!(offset, 0.0);
+            }
+        }
+        assert!(
+            offset > 1000.0,
+            "the playing cursor should be revealed: {offset}"
+        );
+    }
 }
