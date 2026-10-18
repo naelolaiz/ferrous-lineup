@@ -278,8 +278,8 @@ const MAJOR: &[Slot] = &[
             ),
             go(
                 5,
-                "root falls a fifth",
-                "bVII to IV: the root falls a fifth, as in I, bVII, IV, I.",
+                "root rises a fifth (plagal)",
+                "bVII to IV: the root rises a fifth, a plagal move like IV to I. I, bVII, IV, I is the \"double plagal\" cadence.",
             ),
         ],
     ),
@@ -517,6 +517,23 @@ mod tests {
 
     fn major(root: PitchClass, quality: ChordQuality) -> Chord {
         Chord::new(root, quality)
+    }
+
+    #[test]
+    fn a_fifth_down_or_up_is_what_it_says() {
+        // Every move whose reason says the root falls (or rises) a fifth
+        // goes from a root to the one seven semitones below (or above).
+        for slot in MAJOR.iter().chain(MINOR) {
+            for go in slot.moves {
+                let down = (slot.root + 12 - go.to) % 12;
+                if go.reason.contains("falls a fifth") {
+                    assert_eq!(down, 7, "{}", go.reason);
+                }
+                if go.reason.contains("rises a fifth") {
+                    assert_eq!(down, 5, "{}", go.reason);
+                }
+            }
+        }
     }
 
     #[test]
