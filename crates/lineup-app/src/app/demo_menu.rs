@@ -12,15 +12,17 @@
 //! that match: songs, styles, twelve-tone and micromode pieces alike. A
 //! search looks through each demo's title, who wrote it and when, its
 //! feel and genre, its key and time signature, and last of all the notes
-//! about it. Every word typed has to be found. Demos whose title starts
-//! with what was typed come first; demos found only in their notes come
-//! last, and fainter.
+//! about it. Every word typed has to be found, at the start of a word:
+//! "bach" finds Bach, not Offenbach. Demos whose title starts with what
+//! was typed come first. Weaker matches come last, and fainter: the
+//! words typed found apart ("d minor" in Hungarian Dance No. 5, which
+//! is in G minor), or only in the notes.
 
 use std::cmp::Ordering;
 use std::sync::LazyLock;
 
 use eframe::egui;
-use lineup_core::harmony::Scale;
+use lineup_core::harmony::{Scale, ScaleKind};
 use lineup_core::library::{Genre, MICROMODE_STYLES, ROW_STYLES, RowStyle, SONGS, STYLES};
 
 use super::LineupApp;
@@ -73,22 +75,22 @@ impl Entry {
     }
 
     /// How well the entry matches a search for `words`, best first, or
-    /// `None` if one of the words is nowhere to be found.
+    /// `None` if one of the words starts no word of the entry.
     fn rank(&self, words: &[String]) -> Option<Rank> {
         let phrase = words.join(" ");
-        let in_title = |word: &String| self.title.contains(word.as_str());
-        let in_details = |word: &String| in_title(word) || self.details.contains(word.as_str());
-        let anywhere = |word: &String| in_details(word) || self.about.contains(word.as_str());
+        let in_title = |word: &String| starts_a_word(&self.title, word);
+        let in_details = |word: &String| in_title(word) || starts_a_word(&self.details, word);
+        let anywhere = |word: &String| in_details(word) || starts_a_word(&self.about, word);
         if words.is_empty() || !words.iter().all(anywhere) {
             None
         } else if self.title.starts_with(&phrase) {
             Some(Rank::TitleStart)
-        } else if words.iter().all(|word| starts_a_word(&self.title, word)) {
-            Some(Rank::TitleWords)
         } else if words.iter().all(in_title) {
-            Some(Rank::Title)
-        } else if words.iter().all(in_details) {
+            Some(Rank::TitleWords)
+        } else if starts_a_word(&self.details, &phrase) {
             Some(Rank::Details)
+        } else if words.iter().all(in_details) {
+            Some(Rank::Words)
         } else {
             Some(Rank::About)
         }
@@ -103,11 +105,13 @@ enum Rank {
     TitleStart,
     /// Every word typed starts a word of the title: "choc" in "El Choclo".
     TitleWords,
-    /// Every word typed is somewhere in the title.
-    Title,
-    /// In the title, or in who wrote it, the feel, genre, key or time.
+    /// What was typed is in who wrote it, the feel, genre, key or time,
+    /// as typed: "d minor" in a song in D minor.
     Details,
-    /// Only in the notes about it.
+    /// Each word typed is in the title or those, but apart: "d minor"
+    /// in Hungarian Dance No. 5, in G minor. Shown fainter, as is `About`.
+    Words,
+    /// Some word typed is only in the notes about it.
     About,
 }
 
@@ -139,7 +143,15 @@ fn all_entries() -> Vec<Entry> {
     )];
     for song in SONGS {
         let scale = Scale::new(song.tonic, song.mode);
-        let key = format!("{} {}", scale.spell(song.tonic), song.mode.name());
+        let tonic = scale.spell(song.tonic);
+        let mut key = format!("{tonic} {}", song.mode.name());
+        // A song in D harmonic minor is in D minor too.
+        if matches!(
+            song.mode,
+            ScaleKind::HarmonicMinor | ScaleKind::MelodicMinor
+        ) {
+            key.push_str(&format!(" {tonic} minor"));
+        }
         let time = song.time.to_string();
         let entry = Entry::new(
             Demo::Song(song),
@@ -201,7 +213,8 @@ fn all_entries() -> Vec<Entry> {
 
 /// Writes `text` the way the menu sorts and searches it: in small
 /// letters, without accents, and without punctuation, so that "Für" is
-/// found by typing "fur", and "St. James" by "st james". Sharps ("F#"),
+/// found by typing "fur", and "St. James" by "st james". A hyphen is a
+/// space, so "Tico-Tico" is found by "tico". Sharps ("F#"),
 /// time signatures ("3/4") and grouped beats ("2+2+3/8") keep their marks.
 fn fold(text: &str) -> String {
     let mut folded = String::with_capacity(text.len());
@@ -233,15 +246,17 @@ fn fold(text: &str) -> String {
             '♭' => folded.push('b'),
             c if c.is_alphanumeric() || matches!(c, '#' | '/' | '+') => folded.push(c),
             // A space, or a mark that stands between words, as in "Für
-            // Elise · Piano": one space between words, however many.
-            c if (c.is_whitespace() || matches!(c, '(' | ')' | '·' | '▸' | ':' | ';'))
+            // Elise · Piano" or "Tico-Tico": one space between words,
+            // however many.
+            c if (c.is_whitespace()
+                || matches!(c, '-' | '–' | '—' | '(' | ')' | '·' | '▸' | ':' | ';'))
                 && !folded.is_empty()
                 && !folded.ends_with(' ') =>
             {
                 folded.push(' ');
             }
-            // Any other mark is dropped: "Won't", "C-sharp", "St. James",
-            // "Oh! Susanna", "Row, Row, Row Your Boat".
+            // Any other mark is dropped: "Won't", "St. James", "Oh!
+            // Susanna", "Row, Row, Row Your Boat".
             _ => {}
         }
     }
@@ -255,9 +270,11 @@ fn by_title(a: &str, b: &str) -> Ordering {
     fold(a).cmp(&fold(b)).then_with(|| a.cmp(b))
 }
 
-/// Whether one of the words of `text` starts with `word`.
-fn starts_a_word(text: &str, word: &str) -> bool {
-    text.split(' ').any(|each| each.starts_with(word))
+/// Whether `words` is in `text` where a word starts: "bach" is in
+/// "johann sebastian bach", but not in "jacques offenbach".
+fn starts_a_word(text: &str, words: &str) -> bool {
+    text.match_indices(words)
+        .any(|(at, _)| at == 0 || text[..at].ends_with(' '))
 }
 
 /// The demos a search for `query` finds, best match first, with how well
@@ -369,8 +386,9 @@ fn demos(ui: &mut egui::Ui) -> Option<Demo> {
             // One line each: the menu widens instead.
             ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
             for (index, (entry, rank)) in found.iter().copied().enumerate() {
-                // Demos found only in their notes are shown fainter.
-                let label = if rank == Rank::About {
+                // Weaker matches are shown fainter: the words typed were
+                // found apart, or only in the notes.
+                let label = if rank >= Rank::Words {
                     egui::RichText::new(&entry.label).weak()
                 } else {
                     egui::RichText::new(&entry.label)
@@ -475,7 +493,6 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lineup_core::harmony::ScaleKind;
     use lineup_core::library::Song;
     use lineup_core::pitch::PitchClass;
 
@@ -494,8 +511,8 @@ mod tests {
             fold("Shchedryk (Carol of the Bells)"),
             "shchedryk carol of the bells"
         );
-        assert_eq!(fold("Prelude in C-sharp minor"), "prelude in csharp minor");
-        assert_eq!(fold("Tico-Tico no Fubá"), "ticotico no fuba");
+        assert_eq!(fold("Prelude in C-sharp minor"), "prelude in c sharp minor");
+        assert_eq!(fold("Tico-Tico no Fubá"), "tico tico no fuba");
         assert_eq!(fold("F# minor, 2+2+3/8"), "f# minor 2+2+3/8");
         assert_eq!(
             fold("Mo Li Hua (Jasmine Flower)"),
@@ -615,13 +632,14 @@ mod tests {
 
     #[test]
     fn a_search_finds_composers_genres_keys_and_time_signatures() {
-        // Who wrote it.
+        // Who wrote it, as a word: Bach, but not Offenbach.
         let bach = search("bach");
         assert!(
             names(&bach).contains(&"Air on the G String"),
             "{:?}",
             names(&bach)
         );
+        assert!(!names(&bach).contains(&"Can-can"), "{:?}", names(&bach));
         // A genre brings its songs and its styles.
         let tango = search("tango");
         assert!(tango.iter().any(|(e, _)| matches!(e.demo, Demo::Song(_))));
@@ -639,22 +657,56 @@ mod tests {
                 .iter()
                 .any(|(e, _)| matches!(e.demo, Demo::Song(s) if s.name == "The Blue Danube"))
         );
-        // A key: every song that starts in D minor, whatever its title.
+        // A key: every song that starts in D minor, whatever its title,
+        // and whichever minor scale it is written in.
         let d_minor = search("d minor");
         let in_d_minor: Vec<&Song> = SONGS
             .iter()
-            .filter(|song| song.tonic == PitchClass::D && song.mode == ScaleKind::NaturalMinor)
+            .filter(|song| {
+                song.tonic == PitchClass::D
+                    && matches!(
+                        song.mode,
+                        ScaleKind::NaturalMinor
+                            | ScaleKind::HarmonicMinor
+                            | ScaleKind::MelodicMinor
+                    )
+            })
             .collect();
         assert!(!in_d_minor.is_empty());
         for song in in_d_minor {
+            let rank = d_minor.iter().find_map(|&(e, rank)| match e.demo {
+                Demo::Song(s) if s.name == song.name => Some(rank),
+                _ => None,
+            });
+            // Found as a key, ahead of songs that only have a "d" word
+            // and a "minor" somewhere.
             assert!(
-                d_minor
-                    .iter()
-                    .any(|(e, _)| matches!(e.demo, Demo::Song(s) if s.name == song.name)),
+                rank.is_some_and(|rank| rank <= Rank::Details),
                 "{}",
                 song.name
             );
         }
+        for &(entry, rank) in &d_minor {
+            if let Demo::Song(song) = entry.demo
+                && rank == Rank::Details
+            {
+                assert_eq!(song.tonic, PitchClass::D, "{}", song.name);
+            }
+        }
+        // A "d" word and a "minor" apart are a weaker match.
+        let dance = d_minor
+            .iter()
+            .find(|(e, _)| e.demo.name() == "Hungarian Dance No. 5");
+        assert_eq!(dance.map(|&(_, rank)| rank), Some(Rank::Words));
+        // The "d" of "prelude" is not the start of a word.
+        let e_minor = d_minor
+            .iter()
+            .find(|(e, _)| e.demo.name() == "Prelude in E minor");
+        assert!(
+            e_minor.is_none_or(|&(_, rank)| rank == Rank::About),
+            "{:?}",
+            e_minor.map(|(_, rank)| rank)
+        );
         // A micromode by its name.
         assert!(
             search("menor 3")
