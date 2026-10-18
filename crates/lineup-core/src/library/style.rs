@@ -1215,6 +1215,19 @@ pub static STYLES: &[Style] = &[
          the bass in the habanera's long, short, long, long. Each bar here lasts two bars of 2/4.",
     ),
     style(
+        "Maxixe",
+        Latin,
+        HarmonicMinor,
+        "i | i | V7 | V7 | iv | i | V7 | i",
+        Comping::Habanera,
+        Bass::Habanera,
+        90.0,
+        "Maxixe",
+        "Rio de Janeiro's dance of the 1900s, which piano composers called \"Brazilian tango\": \
+         the habanera's long, short, long, long in the left hand under a syncopated tune. Each \
+         bar here lasts two bars of 2/4.",
+    ),
+    style(
         "Ranchera",
         Latin,
         Major,
@@ -1496,8 +1509,8 @@ pub static STYLES: &[Style] = &[
         Bass::RootFifth,
         120.0,
         "Polca",
-        "The polka of Mexican corridos: two chords, the bass on beat 1 and the guitars on beat \
-         2. Each bar here lasts two bars of 2/4.",
+        "The polka of Mexican corridos and of Rio's choro players: two chords, the bass on \
+         beat 1 and the guitars on beat 2. Each bar here lasts two bars of 2/4.",
     ),
     style(
         "Pasillo",
