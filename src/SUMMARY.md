@@ -95,6 +95,7 @@
   - [Chord sheets as text: to paste and share](step-9/text-chord-sheets.md)
   - [The lead sheet: the tune in notation](step-9/lead-sheet.md)
   - [Release builds: a download for every system](step-9/releases.md)
+  - [A second bug hunt: crashes, spelling and the beat](step-9/bug-hunt.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
