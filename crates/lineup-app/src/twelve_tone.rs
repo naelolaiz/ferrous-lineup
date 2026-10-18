@@ -801,6 +801,7 @@ impl SetWindow {
             .default_pos([320.0, 140.0])
             .default_size([560.0, 520.0])
             .constrain_to(area)
+            .vscroll(true)
             .show(ctx, |ui| {
                 self.contents(ui, names, selected, drawing, &mut actions)
             });
@@ -945,7 +946,7 @@ impl SetWindow {
             };
             ui.label(RichText::new(format!("{label}: {notes} ({})", digits(set))).strong());
         });
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             let set = self.chosen();
             if ui
                 .button("▶ Hear it")

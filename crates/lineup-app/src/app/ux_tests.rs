@@ -1166,6 +1166,40 @@ fn home_end_and_delete_edit_focused_text_without_moving_or_changing_the_song() {
 }
 
 #[test]
+fn theory_browser_actions_stay_reachable_in_short_zoomed_windows() {
+    for browser in ["Sets…", "Micromodes…"] {
+        let mut screen = shortcut_screen();
+        screen.app.piano_roll.open_for(0);
+        screen.click(browser);
+        let before = screen.app.project.clone();
+        screen.size = vec2(640.0, 480.0);
+        screen.ctx.set_zoom_factor(1.25);
+        screen.draw(vec![]);
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        let title = text_rect(
+            &output,
+            if browser == "Sets…" {
+                "Pitch-class sets"
+            } else {
+                "Micromodes"
+            },
+        )
+        .expect("Browser title remains visible");
+        let scroll = title.center() + vec2(80.0, 80.0);
+        for label in ["▶ Hear it", "Draw with it", "Single note", "Use as the key"] {
+            screen.scroll_to_at(label, scroll);
+            let output = screen.draw(vec![]);
+            let rect = text_rect(&output, label).expect("Browser action is fully visible");
+            assert!(screen.ctx.content_rect().contains_rect(rect));
+        }
+        screen.click("Draw with it");
+        screen.click("Single note");
+        assert_eq!(screen.app.project, before);
+    }
+}
+
+#[test]
 fn initial_space_plays_the_song_until_an_editor_is_clicked() {
     let mut screen = Screen::new();
     screen.draw(vec![]);
