@@ -41,6 +41,7 @@ use crate::library_browser::{LibraryAction, LibraryBrowser, LibraryPurpose, Trie
 use crate::theme;
 use crate::twelve_tone::Front;
 
+mod band;
 mod form;
 mod practice;
 
@@ -97,6 +98,16 @@ pub enum SheetAction {
     SetBand {
         style: Option<&'static BandStyle>,
         harmony: Option<&'static Style>,
+    },
+    /// Choose only the instrument lineup, keeping the playing style.
+    BandVoices(&'static BandStyle),
+    BandPlayer {
+        player: Player,
+        on: bool,
+    },
+    BandProgram {
+        channel: usize,
+        program: Option<u8>,
     },
     /// Swing the eighth notes this much, from 0 to `MAX_SWING`.
     SetSwing(u8),
@@ -309,7 +320,7 @@ impl ChordSheet {
         let (practice, library) = controls;
         let markers = project.playlist().chord_markers();
         ui.horizontal_wrapped(|ui| {
-            band_menu(ui, project, library, actions);
+            band::menu(ui, project, actions);
             progression_menu(ui, project, self.next_bar(project), library, actions);
             ui.label(egui::RichText::new(format!("Key: {}", project.scale.name())).strong());
             ui.weak(format!("· {}", project.time_signature));
@@ -422,9 +433,41 @@ impl ChordSheet {
 
         // Where every bar is drawn.
         let mut cells: Vec<Cell> = Vec::new();
+        let mut heading_selection = None;
         let mut y = canvas.top();
         for (index, line) in lines.iter().enumerate() {
             if let Some(heading) = &line.heading {
+                let response = ui.interact(
+                    Rect::from_min_size(pos2(canvas.left(), y), vec2(width, HEADING_HEIGHT)),
+                    ui.scope_id().with(("section-heading", index)), Sense::click(),
+                ).on_hover_text("Click to select this section’s bars; click again or press Escape to clear the selection");
+                if response.clicked() && !crate::widgets::dismissing(ui.ctx()) {
+                    let first = line.bars[0].number;
+                    let next = lines
+                        .iter()
+                        .skip(index + 1)
+                        .find(|line| line.heading.is_some())
+                        .and_then(|line| line.bars.first())
+                        .map(|bar| bar.number);
+                    let explicit_end = project
+                        .playlist()
+                        .sections()
+                        .iter()
+                        .find(|section| meter.bar_at(section.start).number == first)
+                        .map(|section| meter.bar_at(section.end().saturating_sub(1)).number);
+                    let reach = project.song_length().max(
+                        project
+                            .playlist()
+                            .chord_markers()
+                            .last()
+                            .map_or(0, |marker| marker.start + 1),
+                    );
+                    let last = explicit_end
+                        .unwrap_or_else(|| meter.bar_at(reach.saturating_sub(1)).number)
+                        .min(next.map_or(usize::MAX, |next| next.saturating_sub(1)))
+                        .max(first);
+                    heading_selection = Some((first, last));
+                }
                 painter.text(
                     pos2(canvas.left() + 2.0, y + 2.0),
                     Align2::LEFT_TOP,
@@ -449,7 +492,7 @@ impl ChordSheet {
         let playing_bar = playing.map(|step| meter.bar_at(step).number);
         let marks = Marks::of(project);
         let mut start_typing = None;
-        let mut clicked = sheet.clicked();
+        let mut clicked = sheet.clicked() || heading_selection.is_some();
         for cell in &cells {
             let starts_section = cell.column == 0 && lines[cell.line].heading.is_some();
             let ends_line = cell.column + 1 == lines[cell.line].bars.len();
@@ -492,6 +535,25 @@ impl ChordSheet {
         // a click on another bar never loses it.
         let was_editing = self.editing.is_some();
         self.edit_field(ui, project, &cells, &keys, sheet.id, actions);
+        if let Some((first, last)) = heading_selection {
+            self.take_in(project, &cells, &keys, actions);
+            if self.selected_bars() == Some((first, last)) {
+                self.selected = None;
+                self.anchor = None;
+            } else {
+                self.select_to(first, false);
+                self.select_to(last, true);
+            }
+        } else if sheet.clicked()
+            && !crate::widgets::dismissing(ui.ctx())
+            && sheet
+                .interact_pointer_pos()
+                .is_some_and(|pos| !cells.iter().any(|cell| cell.rect.contains(pos)))
+        {
+            self.take_in(project, &cells, &keys, actions);
+            self.selected = None;
+            self.anchor = None;
+        }
         if let Some((bar, text)) = start_typing {
             self.take_in(project, &cells, &keys, actions);
             self.start_editing(bar, text, Fresh::SelectAll);
@@ -758,7 +820,12 @@ impl ChordSheet {
                 .map(|(_, marker)| *marker)
         };
         let primary = ui.input(|input| input.pointer.primary_down());
-        if response.is_pointer_button_down_on() && primary && self.sounding.is_empty() {
+        let dismissing = crate::widgets::dismissing(ui.ctx());
+        if response.is_pointer_button_down_on()
+            && primary
+            && self.sounding.is_empty()
+            && !dismissing
+        {
             let pointer = response.interact_pointer_pos();
             if let Some(marker) = under(pointer) {
                 self.sounding = voicing(marker.harmony);
@@ -768,7 +835,7 @@ impl ChordSheet {
             }
         }
         let mut clicks = BarClicks {
-            clicked: response.clicked() || response.secondary_clicked(),
+            clicked: (response.clicked() || response.secondary_clicked()) && !dismissing,
             start_typing: None,
         };
         // A right-click inside the bars selected keeps them selected, for
@@ -777,12 +844,12 @@ impl ChordSheet {
             .selected_bars()
             .is_some_and(|(first, last)| first < last && (first..=last).contains(&bar.number));
         let keeps_selection = response.secondary_clicked() && in_selection;
-        if (clicks.clicked || response.drag_started()) && !keeps_selection {
+        if (clicks.clicked || response.drag_started()) && !keeps_selection && !dismissing {
             let shift = ui.input(|input| input.modifiers.shift);
             self.select_to(bar.number, shift);
             self.error = None;
         }
-        if response.double_clicked() {
+        if response.double_clicked() && !dismissing {
             clicks.start_typing = Some((bar.number, write_bar(&here, &bar)));
         }
         let hint = match (under(response.hover_pos()), ending) {
@@ -1332,77 +1399,6 @@ const KEEP_KEYS: egui::EventFilter = egui::EventFilter {
     escape: false,
 };
 
-/// Pick from the same styles and rhythms as the Library sidebar.
-fn band_menu(
-    ui: &mut Ui,
-    project: &Project,
-    library: &mut LibraryBrowser,
-    actions: &mut Vec<SheetAction>,
-) {
-    let title = project.band().map_or_else(
-        || "🎷 Band: none".to_string(),
-        |band| format!("🎷 Band: {}", band.name()),
-    );
-    let menu = egui::containers::menu::MenuButton::new(title).config(
-        egui::containers::menu::MenuConfig::new()
-            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
-    );
-    let parts_before = library.parts;
-    let (response, _) = menu.ui(ui, |ui| {
-        ui.set_width(300.0);
-        if ui
-            .selectable_label(project.band().is_none(), "No band")
-            .clicked()
-        {
-            actions.push(SheetAction::SetBand {
-                style: None,
-                harmony: None,
-            });
-            ui.close();
-        }
-        ui.separator();
-        let tried = project.band().map_or_else(Tried::default, Tried::from_band);
-        if let Some(picked) = library.show_for(ui, project, tried, LibraryPurpose::Band) {
-            let (style, harmony) = match picked {
-                LibraryAction::UserStyle(index) => {
-                    actions.push(SheetAction::UserStyle {
-                        index,
-                        progression_from: None,
-                    });
-                    ui.close();
-                    return;
-                }
-                LibraryAction::Style(style) => (BandStyle::of_style(style), Some(style)),
-                LibraryAction::Rhythm(rhythm) => (BandStyle::named(rhythm.name), None),
-                _ => return,
-            };
-            if let Some(style) = style {
-                actions.push(SheetAction::SetBand {
-                    style: Some(style),
-                    harmony,
-                });
-                ui.close();
-            }
-        }
-        if let Some(band) = project.band() {
-            ui.separator();
-            soloist_items(ui, band, actions);
-        }
-    });
-    // A preference edit is not a menu selection. Retain the popup after
-    // its container has processed the click, including when it resizes.
-    if library.parts != parts_before && !ui.input(|input| input.key_pressed(Key::Escape)) {
-        let popup_id = egui::Popup::default_response_id(&response);
-        if !egui::Popup::is_id_open(ui.ctx(), popup_id) {
-            egui::Popup::open_id(ui.ctx(), popup_id);
-        }
-    }
-    theme::hint(
-        response,
-        "Choose the band’s preset from the Library. Search by name, genre or meter.",
-    );
-}
-
 /// The experimental soloist: on or off, and another solo.
 fn soloist_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
     let soloist = Soloist::of(band.style.genre);
@@ -1727,6 +1723,122 @@ mod tests {
     use eframe::egui::{Event, FullOutput, PointerButton, RawInput, Shape};
 
     #[test]
+    fn section_headings_toggle_all_their_bars_and_shift_ranges_clear_with_escape() {
+        fn draw(
+            ctx: &egui::Context,
+            sheet: &mut ChordSheet,
+            library: &mut LibraryBrowser,
+            project: &Project,
+            events: Vec<Event>,
+        ) -> FullOutput {
+            let mut output = ctx.run_pass(
+                RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 1000.0))),
+                    time: Some(ctx.cumulative_frame_nr() as f64 * 0.2),
+                    events,
+                    ..Default::default()
+                },
+                |ctx| {
+                    sheet.show(
+                        ctx,
+                        ctx.content_rect(),
+                        project,
+                        None,
+                        false,
+                        (
+                            PracticeView {
+                                count_in: false,
+                                metronome: false,
+                                speed: 100,
+                            },
+                            library,
+                        ),
+                    );
+                },
+            );
+            output.textures_delta.clear();
+            output
+        }
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut project = Project::empty();
+        project.pattern_mut(0).unwrap().set_length(128);
+        project.add_clip(lineup_core::Clip::new(0, 0, 0));
+        project.add_section(lineup_core::Section::new("Verse", 0, 96));
+        project.add_section(lineup_core::Section::new("Chorus", 96, 32));
+        let mut sheet = ChordSheet::new();
+        sheet.open = true;
+        let mut library = LibraryBrowser::new();
+        draw(&ctx, &mut sheet, &mut library, &project, vec![]);
+        for expected in [Some((0, 5)), None] {
+            let output = draw(&ctx, &mut sheet, &mut library, &project, vec![]);
+            let pos = output
+                .shapes
+                .iter()
+                .find_map(|shape| match &shape.shape {
+                    Shape::Text(text) if text.galley.text() == "Verse" => {
+                        Some(text.pos + text.galley.size() * 0.5)
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            for pressed in [true, false] {
+                draw(
+                    &ctx,
+                    &mut sheet,
+                    &mut library,
+                    &project,
+                    vec![
+                        Event::PointerMoved(pos),
+                        Event::PointerButton {
+                            pos,
+                            button: PointerButton::Primary,
+                            pressed,
+                            modifiers: Modifiers::NONE,
+                        },
+                    ],
+                );
+            }
+            assert_eq!(sheet.selected_bars(), expected);
+        }
+        sheet.select(1);
+        draw(
+            &ctx,
+            &mut sheet,
+            &mut library,
+            &project,
+            vec![
+                Event::ModifiersChanged(Modifiers::SHIFT),
+                Event::Key {
+                    key: Key::ArrowRight,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: Modifiers::SHIFT,
+                },
+            ],
+        );
+        assert_eq!(sheet.selected_bars(), Some((1, 2)));
+        draw(
+            &ctx,
+            &mut sheet,
+            &mut library,
+            &project,
+            vec![
+                Event::ModifiersChanged(Modifiers::NONE),
+                Event::Key {
+                    key: Key::Escape,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: Modifiers::NONE,
+                },
+            ],
+        );
+        assert_eq!(sheet.selected_bars(), None);
+    }
+
+    #[test]
     fn select_all_works_when_the_chord_window_owns_the_keyboard() {
         let ctx = egui::Context::default();
         let project = Project::demo();
@@ -1798,6 +1910,7 @@ mod tests {
         project: Project,
         library: LibraryBrowser,
         sidebar: bool,
+        picked: Option<LibraryAction>,
         screen_size: egui::Vec2,
     }
 
@@ -1810,6 +1923,7 @@ mod tests {
                 project: Project::with_band(),
                 library: LibraryBrowser::new(),
                 sidebar: false,
+                picked: None,
                 screen_size: vec2(1280.0, 1200.0),
             }
         }
@@ -1829,14 +1943,14 @@ mod tests {
                         .default_size(vec2(900.0, 850.0))
                         .show(ctx, |ui| {
                             if self.sidebar {
-                                self.library.show(
+                                self.picked = self.library.show(
                                     ui,
                                     &self.project,
                                     Tried::from_band(self.project.band().unwrap()),
                                 );
                             } else {
                                 ui.horizontal(|ui| {
-                                    band_menu(ui, &self.project, &mut self.library, &mut actions);
+                                    band::menu(ui, &self.project, &mut actions);
                                     progression_menu(
                                         ui,
                                         &self.project,
@@ -1854,6 +1968,15 @@ mod tests {
         }
 
         fn click(&mut self, output: &FullOutput, text: &str) -> (FullOutput, Vec<SheetAction>) {
+            self.click_with_modifiers(output, text, Modifiers::NONE)
+        }
+
+        fn click_with_modifiers(
+            &mut self,
+            output: &FullOutput,
+            text: &str,
+            modifiers: Modifiers,
+        ) -> (FullOutput, Vec<SheetAction>) {
             let pos = output
                 .shapes
                 .iter()
@@ -1865,132 +1988,161 @@ mod tests {
                 })
                 .unwrap_or_else(|| panic!("Missing menu item: {text}"));
             self.frame(vec![
+                Event::ModifiersChanged(modifiers),
                 Event::PointerMoved(pos),
                 Event::PointerButton {
                     pos,
                     button: PointerButton::Primary,
                     pressed: true,
-                    modifiers: Modifiers::NONE,
+                    modifiers,
                 },
             ]);
             self.frame(vec![Event::PointerButton {
                 pos,
                 button: PointerButton::Primary,
                 pressed: false,
-                modifiers: Modifiers::NONE,
+                modifiers,
             }])
         }
     }
 
     #[test]
-    fn band_copy_options_can_be_changed_without_reopening_the_menu() {
+    fn preset_popup_edits_are_applied_together_and_remembered() {
         for height in [1200.0, 720.0, 480.0] {
             let mut screen = MenuScreen::new();
             screen.screen_size.y = height;
+            screen.sidebar = true;
             screen.frame(vec![]);
             let (output, _) = screen.frame(vec![]);
-            screen.click(&output, "🎷 Band: Pop beat");
+            screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
+            screen.frame(vec![Event::Text("royal road".into())]);
             let (output, _) = screen.frame(vec![]);
-            screen.click(&output, "Copy from preset");
+            let (_, actions) = screen.click(&output, "Royal road");
+            assert!(actions.is_empty(), "a normal click must only open options");
             let (mut output, _) = screen.frame(vec![]);
+            let before = screen.library.parts;
             for label in [
-                "Rhythm patterns",
+                "Playing patterns",
                 "Voices / instruments",
                 "Time signature",
-                "Chord progression (when included)",
+                "Chord progression",
                 "Tempo",
                 "Swing",
-                "Plain accents, keep instruments",
+                "Plain accents",
             ] {
-                let pos = output
-                    .shapes
-                    .iter()
-                    .find_map(|shape| match &shape.shape {
-                        Shape::Text(shape) if shape.galley.text() == label => {
-                            Some(shape.pos + shape.galley.size() * 0.5)
-                        }
-                        _ => None,
-                    })
-                    .unwrap();
-                screen.frame(vec![Event::PointerMoved(pos)]);
-                for _ in 0..10 {
-                    screen.frame(vec![]);
-                }
-                (output, _) = screen.frame(vec![]);
                 let (_, actions) = screen.click(&output, label);
-                assert!(
-                    actions.is_empty(),
-                    "changing {label} should only update copy preferences"
+                assert!(actions.is_empty());
+                assert_eq!(
+                    screen.library.parts, before,
+                    "options are drafts until Apply"
                 );
                 (output, _) = screen.frame(vec![]);
                 assert!(
-                    output.shapes.iter().any(|shape| matches!(&shape.shape,
-                        Shape::Text(text) if text.galley.text() == "Copy from preset"
-                    )),
-                    "the style menu closed after changing {label}"
+                    has_text(&output, "Apply"),
+                    "the popup closed after changing {label}"
                 );
             }
+            let (_, actions) = screen.click(&output, "Apply");
+            assert!(actions.is_empty());
+            assert!(
+                matches!(screen.picked, Some(LibraryAction::Style(style)) if style.name == "Royal road")
+            );
             let parts = screen.library.parts;
             assert!(!parts.rhythm && !parts.instruments && !parts.time_signature);
             assert!(parts.progression);
-            assert!(!parts.tempo && !parts.swing);
-            assert!(!parts.matching_style);
-
-            // Picking a style still closes the menu after several edits.
-            screen.click(&output, "Copy from preset");
+            assert!(!parts.tempo && !parts.swing && !parts.matching_style);
             let (output, _) = screen.frame(vec![]);
-            screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
-            let (output, _) = screen.frame(vec![Event::Text("royal road".to_string())]);
-            let (_, actions) = screen.click(&output, "Royal road");
+            assert!(!has_text(&output, "Apply"));
+
+            // Reopening starts with the confirmed options. Cancel discards changes.
+            screen.click(&output, "Royal road");
+            let (output, _) = screen.frame(vec![]);
+            screen.click(&output, "Tempo");
+            let (output, _) = screen.frame(vec![]);
+            screen.click(&output, "Cancel");
+            assert_eq!(screen.library.parts, parts);
+            let (output, _) = screen.frame(vec![]);
+            // A second click applies immediately, with no dialog.
+            let (_, actions) = screen.click_with_modifiers(&output, "Royal road", Modifiers::CTRL);
+            assert!(actions.is_empty());
             assert!(
-                actions
-                    .iter()
-                    .any(|action| matches!(action, SheetAction::SetBand { .. }))
+                matches!(screen.picked, Some(LibraryAction::Style(style)) if style.name == "Royal road")
             );
+            assert_eq!(screen.library.parts, parts);
             let (output, _) = screen.frame(vec![]);
-            assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape,
-                Shape::Text(text) if text.galley.text() == "Copy from preset"
-            )));
+            assert!(!has_text(&output, "Apply"));
+        }
+    }
 
-            // An ordinary outside click still dismisses it.
-            screen.click(&output, "🎷 Band: Pop beat");
-            screen.frame(vec![]);
-            let pos = egui::pos2(screen.screen_size.x - 5.0, height - 5.0);
-            screen.frame(vec![
-                Event::PointerMoved(pos),
-                Event::PointerButton {
-                    pos,
-                    button: PointerButton::Primary,
-                    pressed: true,
-                    modifiers: Modifiers::NONE,
-                },
-            ]);
-            screen.frame(vec![Event::PointerButton {
-                pos,
-                button: PointerButton::Primary,
-                pressed: false,
-                modifiers: Modifiers::NONE,
-            }]);
-            let (output, _) = screen.frame(vec![]);
-            assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape,
-                Shape::Text(text) if text.galley.text() == "Copy from preset"
-            )));
+    fn has_text(output: &FullOutput, text: &str) -> bool {
+        output.shapes.iter().any(|shape| {
+            matches!(&shape.shape,
+                Shape::Text(shape) if shape.galley.text() == text
+            )
+        })
+    }
+
+    #[test]
+    fn sidebar_click_confirms_options_and_ctrl_click_uses_the_last_selection() {
+        use lineup_core::library::{Rhythm, Style, UserStyle};
+        let choices = [
+            (
+                "Royal road",
+                LibraryAction::Style(Style::named("Royal road").unwrap()),
+            ),
+            (
+                "Pop beat",
+                LibraryAction::Rhythm(Rhythm::named("Pop beat").unwrap()),
+            ),
+            ("User groove", LibraryAction::UserStyle(0)),
+        ];
+        for grouped in [false, true] {
+            for (name, expected) in choices {
+                let mut screen = MenuScreen::new();
+                screen.sidebar = true;
+                let mut user = UserStyle::blank();
+                user.name = "User groove".into();
+                screen.library.user_styles.push(user);
+                crate::library_browser::set_grouped_presets(&screen.ctx, grouped);
+                screen.frame(vec![]);
+                let (output, _) = screen.frame(vec![]);
+                screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
+                screen.frame(vec![Event::Text(name.to_lowercase())]);
+                let (output, _) = screen.frame(vec![]);
+                screen.click(&output, name);
+                assert_eq!(screen.picked, None);
+                let (output, _) = screen.frame(vec![]);
+                assert!(
+                    has_text(&output, "Playing patterns"),
+                    "missing copy popup for {name}, grouped={grouped}"
+                );
+                screen.click(&output, "Tempo");
+                let (output, _) = screen.frame(vec![]);
+                screen.click(&output, "Apply");
+                assert_eq!(screen.picked, Some(expected));
+                assert!(!screen.library.parts.tempo);
+                let (output, _) = screen.frame(vec![]);
+                screen.click_with_modifiers(&output, name, Modifiers::CTRL);
+                assert_eq!(screen.picked, Some(expected));
+                assert!(!screen.library.parts.tempo);
+                let (output, _) = screen.frame(vec![]);
+                assert!(!has_text(&output, "Apply"));
+            }
         }
     }
 
     #[test]
-    fn the_band_and_sidebar_show_one_list_of_presets_with_optional_chords() {
-        for sidebar in [false, true] {
+    fn the_sidebar_groups_all_presets_by_genre_with_optional_chords() {
+        for grouped in [false, true] {
             let mut screen = MenuScreen::new();
-            screen.sidebar = sidebar;
+            screen.sidebar = true;
+            crate::library_browser::set_grouped_presets(&screen.ctx, grouped);
             screen.frame(vec![]);
-            let (mut output, _) = screen.frame(vec![]);
-            if !sidebar {
-                screen.click(&output, "🎷 Band: Pop beat");
-                (output, _) = screen.frame(vec![]);
-            }
+            let (output, _) = screen.frame(vec![]);
             screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
-            screen.frame(vec![Event::Text("pop".into())]);
+            screen.frame(vec![Event::Text(
+                if grouped { "bossa" } else { "pop" }.into(),
+            )]);
             let (output, _) = screen.frame(vec![]);
             let has = |label: &str| {
                 output.shapes.iter().any(|shape| {
@@ -2000,49 +2152,64 @@ mod tests {
                 })
             };
             assert!(
-                has("Four chords"),
+                has(if grouped { "Bossa nova" } else { "Four chords" }),
                 "the progression preset must remain available"
             );
             assert!(
-                has("Pop beat"),
+                has(if grouped { "Bossa nova" } else { "Pop beat" }),
                 "the pattern preset must be in the same list"
             );
-            assert!(has("+ chords") && has("keeps chords"));
-            assert!(has("Copy from preset") && has("Plain accents, keep instruments"));
-            assert!(!has("Harmony styles") && !has("Rhythms"));
+            assert!(has("+ chords"));
+            if !grouped {
+                assert!(has("keeps chords"));
+            }
+            assert!(
+                !has("Copy from preset"),
+                "copy options belong to the preset popup"
+            );
+            for prefix in ["Harmony styles (", "Rhythms ("] {
+                let has_group = output.shapes.iter().any(|shape| {
+                    matches!(&shape.shape,
+                        Shape::Text(text) if text.galley.text().starts_with(prefix)
+                    )
+                });
+                assert!(!has_group, "presets share one set of genre groups");
+            }
         }
     }
 
     #[test]
-    fn chord_menus_share_the_sidebar_search_and_style_choices() {
+    fn band_voices_are_separate_from_progression_and_library_choices() {
         let mut screen = MenuScreen::new();
         screen.frame(vec![]);
         let (output, _) = screen.frame(vec![]);
-        screen.click(&output, "🎷 Band: Pop beat");
+        screen.click(&output, "🎷 Band");
         let (output, _) = screen.frame(vec![]);
-        screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
-        let (output, _) = screen.frame(vec![Event::Text("royal road".to_string())]);
-        let (_, actions) = screen.click(&output, "Royal road");
+        assert!(has_text(&output, "Voices and players"));
+        assert!(!has_text(&output, "Copy from preset"));
+        assert!(!has_text(&output, "Playing patterns"));
+        screen.click(&output, "Instrument lineup");
+        let (output, _) = screen.frame(vec![]);
+        let (_, actions) = screen.click(&output, "Electric piano + synth bass");
         assert!(actions.iter().any(|action| matches!(action,
-            SheetAction::SetBand { style: Some(_), harmony: Some(style) } if style.name == "Royal road"
+            SheetAction::BandVoices(style) if style.name == "Boom bap"
         )));
-
+        screen.frame(vec![Event::Key {
+            key: Key::Escape,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }]);
         let (output, _) = screen.frame(vec![]);
         screen.click(&output, "Progression");
+        let (output, _) = screen.frame(vec![]);
+        screen.click(&output, "🔍 Search: bossa, 6/8, tango…");
+        screen.frame(vec![Event::Text("royal road".to_string())]);
         let (output, _) = screen.frame(vec![]);
         let (_, actions) = screen.click(&output, "Royal road");
         assert!(actions.iter().any(|action| matches!(action,
             SheetAction::WriteProgression { style, from: 2 } if style.name == "Royal road"
-        )));
-
-        screen.sidebar = true;
-        screen.frame(vec![]);
-        let (output, _) = screen.frame(vec![]);
-        assert!(output.shapes.iter().any(|shape| matches!(&shape.shape,
-            Shape::Text(text) if text.galley.text() == "Royal road"
-        )));
-        assert!(!output.shapes.iter().any(|shape| matches!(&shape.shape,
-            Shape::Text(text) if text.galley.text() == "Four chords"
         )));
     }
 }

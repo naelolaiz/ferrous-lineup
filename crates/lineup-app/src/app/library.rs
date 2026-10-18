@@ -188,7 +188,8 @@ impl LineupApp {
         }
         // With a band, a style or a rhythm is the band's new way of
         // playing the chord sheet.
-        if self.project.band().is_some() && self.band_plays(action) {
+        if (self.project.band().is_some() || self.mode == PlayMode::Song) && self.band_plays(action)
+        {
             return;
         }
         // Taking over with a pattern of its own would stop the song, so
@@ -250,13 +251,13 @@ impl LineupApp {
             .as_ref()
             .map(|a| a.pattern)
             .or_else(|| (!parts.rhythm && !parts.progression).then_some(self.pattern));
-        let selected = self.piano_roll.channel();
+        let selected = self.piano_roll.selected_channel();
         let swing = tried.rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
         let written = self.edit("try from the library", |project| {
             let index = target.or_else(|| project.add_pattern())?;
             match action {
                 LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
-                    apply::write_style_parts(project, index, style, Some(selected), parts)
+                    apply::write_style_parts(project, index, style, selected, parts)
                 }
                 LibraryAction::Rhythm(rhythm) => {
                     apply::write_rhythm_parts(project, index, rhythm, parts)
@@ -316,7 +317,7 @@ impl LineupApp {
             self.apply_user_library(index, None);
             return;
         }
-        if self.project.band().is_some() && self.band_plays_parts(action, parts) {
+        if self.band_plays_parts(action, parts) {
             return;
         }
         let use_tempo = parts.tempo;
@@ -544,7 +545,7 @@ impl LineupApp {
     /// project's key note.
     fn try_row_style(&mut self, style: &'static RowStyle) {
         let target = self.unchanged_audition().map(|audition| audition.pattern);
-        let selected = self.piano_roll.channel();
+        let selected = self.piano_roll.selected_channel();
         let start = self.project.scale.root;
         let use_tempo = self.playlist.library_tempo();
         let written = self.edit("try from the library", |project| {
@@ -557,7 +558,7 @@ impl LineupApp {
             for channel in 0..pattern.rows() {
                 pattern.set_notes(channel, []);
             }
-            rows::write_row_style(project, index, style, start, Some(selected));
+            rows::write_row_style(project, index, style, start, selected);
             if let Some(rhythm) = style.rhythm() {
                 apply::write_rhythm(project, index, rhythm);
             }
@@ -594,7 +595,7 @@ impl LineupApp {
     /// on the project's key note.
     fn try_micromode_style(&mut self, style: &'static MicromodeStyle) {
         let target = self.unchanged_audition().map(|audition| audition.pattern);
-        let selected = self.piano_roll.channel();
+        let selected = self.piano_roll.selected_channel();
         let key = self.project.scale.root;
         let use_tempo = self.playlist.library_tempo();
         let written = self.edit("try from the library", |project| {
@@ -608,7 +609,7 @@ impl LineupApp {
                 pattern.set_notes(channel, []);
             }
             let start = micromodes::DEMO_SECTIONS[0].0;
-            micromodes::write_micromode_style(project, index, style, key, start, Some(selected));
+            micromodes::write_micromode_style(project, index, style, key, start, selected);
             if let Some(rhythm) = style.rhythm() {
                 apply::write_rhythm(project, index, rhythm);
             }
@@ -666,6 +667,16 @@ impl LineupApp {
     }
 
     fn band_plays_parts(&mut self, action: LibraryAction, parts: apply::StyleParts) -> bool {
+        // A demo has a written accompaniment but no live band yet. Copying
+        // both patterns and voices must bring in the full preset lineup,
+        // just as changing an existing band does. Copying a chart is optional.
+        if self.project.band().is_none()
+            && !(parts.rhythm
+                && parts.for_preset().instruments
+                && !self.project.playlist().chord_markers().is_empty())
+        {
+            return false;
+        }
         let style = match action {
             _ if fill_picked(action) => return false,
             LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {

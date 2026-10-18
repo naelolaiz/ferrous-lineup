@@ -290,7 +290,9 @@ impl LineupApp {
         else {
             return;
         };
-        let parts = self.playlist.library_parts();
+        let mut parts = self.playlist.library_parts();
+        // A saved default is a preference, not a chart supplied by this preset.
+        parts.progression &= !style.chart.trim().is_empty();
         if progression_from.is_none()
             && !(parts.rhythm
                 || parts.instruments

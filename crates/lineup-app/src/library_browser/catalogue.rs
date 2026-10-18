@@ -28,6 +28,14 @@ impl<'a> Preset<'a> {
         }
     }
 
+    pub fn genre(self) -> Option<Genre> {
+        match self {
+            Self::Style(style) => Some(style.genre),
+            Self::Rhythm(rhythm) => Some(rhythm.genre),
+            Self::User(_, _) => None,
+        }
+    }
+
     pub fn has_progression(self) -> bool {
         match self {
             Self::Style(style) => !style.chart.trim().is_empty(),
@@ -45,7 +53,11 @@ pub fn presets<'a>(
     let mut presets: Vec<_> = harmony_styles(query, None)
         .into_iter()
         .map(Preset::Style)
-        .chain(rhythms(query, None).into_iter().map(Preset::Rhythm))
+        .chain(
+            rhythms(query, None).into_iter().map(|rhythm| {
+                equivalent_style(rhythm).map_or(Preset::Rhythm(rhythm), Preset::Style)
+            }),
+        )
         .chain(users.iter().enumerate().filter_map(|(index, style)| {
             let text = format!("{} {} {} user", style.name, style.about, style.time).to_lowercase();
             query
@@ -57,7 +69,26 @@ pub fn presets<'a>(
         .filter(|preset| !progressions_only || preset.has_progression())
         .collect();
     presets.sort_by_cached_key(|preset| (preset.name().to_lowercase(), preset.name().to_string()));
+    presets.dedup_by(|a, b| {
+        matches!((*a, *b),
+            (Preset::Style(a), Preset::Style(b)) if std::ptr::eq(a, b)
+        )
+    });
     presets
+}
+
+/// Prefer the entry with optional chords when both sources play the same groove.
+/// Different meters, tempos or accompaniment patterns remain separate choices.
+pub fn equivalent_style(rhythm: &Rhythm) -> Option<&'static Style> {
+    let feel = lineup_core::library::apply::feel(rhythm);
+    STYLES.iter().find(|style| {
+        style.name == rhythm.name
+            && style.rhythm == rhythm.name
+            && style.genre == rhythm.genre
+            && style.time == rhythm.time
+            && style.tempo == rhythm.tempo
+            && (style.comping, style.bass) == feel
+    })
 }
 
 pub fn alphabetical<T>(
@@ -114,7 +145,11 @@ mod tests {
         user.name = "A custom groove".into();
         let users = [user];
         let all = presets("", &users, false);
-        assert_eq!(all.len(), STYLES.len() + RHYTHMS.len() + 1);
+        let distinct_rhythms = RHYTHMS
+            .iter()
+            .filter(|rhythm| equivalent_style(rhythm).is_none())
+            .count();
+        assert_eq!(all.len(), STYLES.len() + distinct_rhythms + 1);
         assert_eq!(
             all.iter().filter(|p| matches!(p, Preset::Style(_))).count(),
             STYLES.len()
@@ -123,8 +158,20 @@ mod tests {
             all.iter()
                 .filter(|p| matches!(p, Preset::Rhythm(_)))
                 .count(),
-            RHYTHMS.len()
+            distinct_rhythms
         );
+        for rhythm in RHYTHMS {
+            assert!(
+                all.iter().any(|preset| match preset {
+                    Preset::Rhythm(found) => std::ptr::eq(*found, rhythm),
+                    Preset::Style(style) => equivalent_style(rhythm)
+                        .is_some_and(|equivalent| std::ptr::eq(*style, equivalent)),
+                    _ => false,
+                }),
+                "Missing groove {}",
+                rhythm.name
+            );
+        }
         assert!(all.iter().any(|p| matches!(p, Preset::User(0, _))));
         assert!(
             all.windows(2)
@@ -136,9 +183,9 @@ mod tests {
                 .any(|p| matches!(p, Preset::Style(_)))
         );
         assert!(
-            presets("balkan 7/8", &users, false)
-                .iter()
-                .any(|p| matches!(p, Preset::Rhythm(_)))
+            presets("balkan 7/8", &users, false).iter().all(|preset| {
+                preset.genre() == Some(Genre::Balkan) && preset.time().beats == 7
+            })
         );
         assert!(matches!(
             presets("custom groove", &users, false)[0],
@@ -158,6 +205,22 @@ mod tests {
             presets("pop beat", &[], true)
                 .iter()
                 .all(|preset| preset.has_progression())
+        );
+    }
+
+    #[test]
+    fn equivalent_bossa_entries_are_combined_and_distinct_patterns_remain() {
+        let all = presets("", &[], false);
+        let bossa: Vec<_> = all
+            .iter()
+            .filter(|preset| preset.name() == "Bossa nova")
+            .collect();
+        assert_eq!(bossa.len(), 1);
+        assert!(bossa[0].has_progression());
+        assert!(all.iter().any(|preset| preset.name() == "Bossa minor"));
+        assert!(
+            all.iter()
+                .any(|preset| preset.name() == "Pop beat" && !preset.has_progression())
         );
     }
 

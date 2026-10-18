@@ -35,7 +35,8 @@ pub const BASS: &str = "Bass";
 pub const LEAD: &str = "Lead";
 
 /// Which parts of a library choice replace the song's current settings.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct StyleParts {
     pub rhythm: bool,
     pub instruments: bool,

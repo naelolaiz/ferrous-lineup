@@ -34,6 +34,12 @@ pub fn editor_active(ctx: &egui::Context, layer: egui::LayerId) -> bool {
     active.or_else(|| ctx.top_layer_id()) == Some(layer)
 }
 
+/// The window explicitly clicked, without assigning a floating window
+/// keyboard control merely because it opened over the song at startup.
+pub fn clicked_editor(ctx: &egui::Context) -> Option<egui::LayerId> {
+    ctx.data(|data| data.get_temp(egui::Id::unique("keyboard-editor")))
+}
+
 pub fn follow_playback(ctx: &egui::Context) -> bool {
     ctx.data_mut(|data| {
         data.get_persisted::<bool>(egui::Id::unique("follow-playback"))
@@ -44,7 +50,7 @@ pub fn follow_playback(ctx: &egui::Context) -> bool {
 pub fn follow_control(ui: &mut Ui) {
     let mut follow = follow_playback(ui.ctx());
     if ui
-        .checkbox(&mut follow, "Follow playback")
+        .checkbox(&mut follow, "Follow playhead")
         .on_hover_text(
             "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
         )
@@ -52,6 +58,22 @@ pub fn follow_control(ui: &mut Ui) {
     {
         ui.ctx()
             .data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), follow));
+    }
+}
+
+/// A persistent transport toggle, sharing its value with the preferences.
+pub fn follow_button(ui: &mut Ui) {
+    let follow = follow_playback(ui.ctx());
+    let button = crate::theme::light_button(ui, "Follow playhead", follow, None);
+    if crate::theme::hint(
+        button,
+        "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
+    )
+    .clicked()
+    {
+        ui.ctx().data_mut(|data| {
+            data.insert_persisted(egui::Id::unique("follow-playback"), !follow);
+        });
     }
 }
 
