@@ -424,7 +424,7 @@ pub fn song_demo(song: &Song) -> Project {
         let melody = melody_notes(song, part, time, length, voices.len());
         let tonic = song.part_scale(part).root;
         let (mut chords, mut bass_line) = if part.left.is_empty() {
-            let backing = accompany(&part.spans(bar), tonic, song.comping, song.bass);
+            let backing = accompany(&part.spans(bar, tonic), tonic, song.comping, song.bass);
             (backing.chords, backing.bass)
         } else {
             (part.left().notes, Vec::new())
@@ -433,7 +433,7 @@ pub fn song_demo(song: &Song) -> Project {
         // its accompaniment written out has none for them.
         let mut horn_notes = match horns {
             Some((_, horns)) if part.left.is_empty() => {
-                accompany(&part.spans(bar), tonic, horns.comping, Bass::None).chords
+                accompany(&part.spans(bar, tonic), tonic, horns.comping, Bass::None).chords
             }
             _ => Vec::new(),
         };
@@ -508,9 +508,11 @@ pub fn song_demo(song: &Song) -> Project {
             for &mark in part.tempo {
                 mark_tempo(&mut project, at, mark);
             }
-            // A part with its accompaniment written out has no chart:
-            // its chords are only heard (see `Project::heard_chords`).
-            write_chart(&mut project, at, &part.spans(time.steps_per_bar()), key);
+            // A part with its accompaniment written out may still have a
+            // chart, which names what it plays; without one, its chords
+            // are only heard (see `Project::heard_chords`).
+            let spans = part.spans(time.steps_per_bar(), key.root);
+            write_chart(&mut project, at, &spans, key);
         }
         project.add_clip(Clip::new(pattern, SONG_TRACK, at));
         if entry >= song.drums_from
