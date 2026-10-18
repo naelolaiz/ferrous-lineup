@@ -243,7 +243,7 @@ impl BandStyle {
     /// The General MIDI instrument of the piano: an electric piano in
     /// the electronic, hip hop and soul styles, an accordion in the
     /// Balkan ones, a grand piano elsewhere.
-    fn piano_program(&self) -> u8 {
+    pub(crate) fn piano_program(&self) -> u8 {
         match self.genre {
             Genre::Electronic | Genre::HipHop | Genre::Soul => 4,
             Genre::Balkan => 21,
@@ -254,7 +254,7 @@ impl BandStyle {
     /// The General MIDI instrument of the bass: a double bass in jazz,
     /// tango, folklore and the acoustic styles, a synth bass in
     /// electronic music and hip hop, and a bass guitar elsewhere.
-    fn bass_program(&self) -> u8 {
+    pub(crate) fn bass_program(&self) -> u8 {
         match self.genre {
             Genre::Jazz
             | Genre::Tango
@@ -284,6 +284,11 @@ pub struct Muted {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Band {
     pub style: &'static BandStyle,
+    /// The instrumentation can come from a different style than the rhythm.
+    pub instrument_style: &'static BandStyle,
+    /// The exact library style supplying the comping, when one was picked.
+    pub harmony_style: Option<&'static Style>,
+    pub accents_only: bool,
     /// The step the band plays up to: the end of the last bar written
     /// on the chord sheet, or of a bar typed after it.
     pub(crate) end: usize,
@@ -315,6 +320,9 @@ impl Band {
     fn new(style: &'static BandStyle) -> Self {
         Band {
             style,
+            instrument_style: style,
+            harmony_style: None,
+            accents_only: false,
             end: 0,
             channels: [None; Player::COUNT],
             written: [None; Player::COUNT],
@@ -349,11 +357,76 @@ impl Band {
 
     /// Who plays: the style's players, and the soloist when there is one.
     pub fn players(&self) -> Vec<Player> {
-        let mut players = self.style.players();
+        let mut players = self.instrument_style.players();
+        players.retain(|player| *player != Player::Drums);
+        if self.style.rhythm.is_some() {
+            players.push(Player::Drums);
+        }
         if self.has_soloist() {
             players.push(Player::Soloist);
         }
         players
+    }
+
+    pub fn name(&self) -> &'static str {
+        self.harmony_style
+            .map_or(self.style.name, |style| style.name)
+    }
+
+    fn extras(&self) -> Extras {
+        let mut extras = self.instrument_style.extras();
+        let patterns = self.style.extras();
+        if let Some(guitar) = &mut extras.guitar {
+            guitar.part = if self.accents_only {
+                GuitarPart::Strum(Comping::Accents)
+            } else {
+                patterns
+                    .guitar
+                    .map_or(GuitarPart::StylesRhythm, |part| part.part)
+            };
+        }
+        for (player, pattern) in [
+            (&mut extras.strings, patterns.strings),
+            (&mut extras.organ, patterns.organ),
+        ] {
+            if let Some(player) = player {
+                player.part = if self.accents_only {
+                    PadPart::Accents
+                } else {
+                    pattern.map_or(PadPart::Held, |part| part.part)
+                };
+            }
+        }
+        extras
+    }
+
+    fn comping_in(&self, variation: Variation) -> Comping {
+        if self.accents_only {
+            Comping::Accents
+        } else {
+            self.playing_style().comping_in(variation)
+        }
+    }
+
+    fn bass_in(&self, variation: Variation) -> Bass {
+        if self.accents_only {
+            Bass::Accents
+        } else {
+            self.playing_style().bass_in(variation)
+        }
+    }
+
+    fn playing_style(&self) -> BandStyle {
+        self.harmony_style.map_or(*self.style, |style| BandStyle {
+            name: style.name,
+            genre: style.genre,
+            time: style.time,
+            tempo: style.tempo,
+            comping: style.comping,
+            bass: style.bass,
+            rhythm: Rhythm::named(style.rhythm),
+            about: style.about,
+        })
     }
 }
 
@@ -361,6 +434,12 @@ impl Band {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct BandFile {
     pub style: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instrument_style: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub harmony_style: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub accents_only: bool,
     pub end: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub piano: Option<usize>,
@@ -407,6 +486,10 @@ impl From<&Band> for BandFile {
         let [piano, bass, drums, guitar, strings, organ, soloist] = band.written;
         BandFile {
             style: band.style.name.to_string(),
+            instrument_style: (band.instrument_style != band.style)
+                .then(|| band.instrument_style.name.to_string()),
+            harmony_style: band.harmony_style.map(|style| style.name.to_string()),
+            accents_only: band.accents_only,
             end: band.end,
             piano: band.channel(Player::Piano),
             bass: band.channel(Player::Bass),
@@ -436,6 +519,14 @@ impl BandFile {
                 self.style
             )
         })?;
+        let instrument_style = self.instrument_style.as_deref().map_or(Ok(style), |name| {
+            BandStyle::named(name).ok_or_else(|| format!("unknown instrument style: {name}"))
+        })?;
+        let harmony_style = self
+            .harmony_style
+            .as_deref()
+            .map(|name| Style::named(name).ok_or_else(|| format!("unknown harmony style: {name}")))
+            .transpose()?;
         if self.end > MAX_SONG_STEPS {
             return Err("its band plays past the end of the song".to_string());
         }
@@ -450,6 +541,9 @@ impl BandFile {
         let [guitar, strings, organ] = self.written_too;
         Ok(Band {
             style,
+            instrument_style,
+            harmony_style,
+            accents_only: self.accents_only,
             end: self.end,
             channels: [
                 channel(self.piano)?,
@@ -790,7 +884,12 @@ impl Project {
             self.stop_band();
             return;
         };
-        if self.band.as_ref().is_some_and(|band| band.style == style) {
+        if self.band.as_ref().is_some_and(|band| {
+            band.style == style
+                && band.instrument_style == style
+                && band.harmony_style.is_none()
+                && !band.accents_only
+        }) {
             return;
         }
         let arriving = self.band.is_none();
@@ -808,6 +907,9 @@ impl Project {
             self.band = Some(band);
         } else if let Some(band) = &mut self.band {
             band.style = style;
+            band.instrument_style = style;
+            band.harmony_style = None;
+            band.accents_only = false;
         }
         let empty = self.playlist.chord_markers.is_empty() && self.song_length() == 0;
         if self.meter().first() != style.time || !self.playlist.time_markers.is_empty() {
@@ -822,8 +924,84 @@ impl Project {
             self.tempo = Tempo::new(style.tempo);
         }
         self.swing = style.swing();
-        self.band_channels();
+        self.band_channels(true);
         self.write_band();
+    }
+
+    /// Applies the selected components without coupling the rhythm, sounds,
+    /// meter or progression. The library only calls this for an existing band.
+    pub fn apply_band_parts(
+        &mut self,
+        style: &'static BandStyle,
+        harmony: Option<&'static Style>,
+        parts: apply::StyleParts,
+    ) {
+        let Some(band) = &mut self.band else { return };
+        if parts.rhythm {
+            band.style = style;
+            band.harmony_style = harmony;
+            band.accents_only = harmony.is_none() && !parts.matching_style;
+        }
+        if parts.instruments {
+            band.instrument_style = style;
+        }
+        let time = self.meter();
+        if parts.time_signature {
+            crate::remeter::remeter(self, harmony.map_or(style.time, |style| style.time));
+        }
+        if parts.tempo && time == self.meter() {
+            self.scale_tempo(Tempo::new(harmony.map_or(style.tempo, |style| style.tempo)));
+        }
+        if parts.swing {
+            self.swing = style.swing();
+        }
+        if parts.progression
+            && let Some(harmony) = harmony
+        {
+            self.replace_progression(harmony);
+        }
+        self.band_channels(parts.instruments);
+        self.write_band();
+    }
+
+    /// Repeats a style's chart over the existing song, or writes it once on
+    /// an empty sheet. Keep the key and stop at the song's current last bar.
+    pub fn replace_progression(&mut self, style: &Style) {
+        let meter = self.meter();
+        let end = self
+            .band
+            .as_ref()
+            .map_or(self.song_length(), |band| band.end)
+            .max(
+                self.playlist
+                    .chord_markers
+                    .last()
+                    .map_or(0, |marker| meter.bar_at(marker.start).end()),
+            );
+        let from = self
+            .band
+            .as_ref()
+            .map_or(0, |band| meter.bar_at(band.form.intro).number);
+        let bars = if end == 0 {
+            from + style.bars()
+        } else {
+            meter.bar_at(end - 1).number + 1
+        };
+        let chart: Vec<_> = style.chart.split('|').collect();
+        if chart.is_empty() {
+            return;
+        }
+        let keys = self.key_map();
+        for index in from..bars {
+            let bar = meter.bar(index);
+            if let Ok(markers) = read_bar(
+                chart[(index - from) % chart.len()].trim(),
+                &bar,
+                keys.key_at(bar.start),
+            ) {
+                self.set_chords(bar.start, bar.end(), &markers);
+            }
+        }
     }
 
     /// Stops the band: its patterns go, with their clips and the tracks
@@ -895,7 +1073,7 @@ impl Project {
             return false;
         };
         band.written[player.index()] = None;
-        self.band_channels();
+        self.band_channels(false);
         self.write_band();
         true
     }
@@ -911,7 +1089,7 @@ impl Project {
         }
         band.solo = on.then_some(1);
         band.written[Player::Soloist.index()] = None;
-        self.band_channels();
+        self.band_channels(false);
         self.write_band();
         true
     }
@@ -927,7 +1105,7 @@ impl Project {
         };
         band.solo = Some(solo.wrapping_add(1));
         band.written[Player::Soloist.index()] = None;
-        self.band_channels();
+        self.band_channels(false);
         self.write_band();
         true
     }
@@ -944,7 +1122,7 @@ impl Project {
         if band.heard == Some(self.band_inputs()) {
             return false;
         }
-        self.band_channels();
+        self.band_channels(false);
         self.write_band();
         true
     }
@@ -1019,11 +1197,11 @@ impl Project {
     /// Makes sure the band has its channels: the piano and the bass, the
     /// guitar, strings and organ its style adds (each in the instrument
     /// of its style), and the drums its rhythm plays.
-    fn band_channels(&mut self) {
+    fn band_channels(&mut self, use_instruments: bool) {
         let Some(band) = self.band.clone() else {
             return;
         };
-        let style = band.style;
+        let style = band.instrument_style;
         let extras = style.extras();
         let mut channels = band.channels;
         for player in Player::ALL {
@@ -1046,11 +1224,17 @@ impl Project {
                 }),
             };
             if let Some((other, volume, program)) = sound {
-                channels[player.index()] =
-                    self.band_channel(band.channel(player), player.name(), other, volume, program);
+                channels[player.index()] = self.band_channel(
+                    band.channel(player),
+                    player.name(),
+                    other,
+                    volume,
+                    program,
+                    use_instruments,
+                );
             }
         }
-        if let Some(rhythm) = style.rhythm {
+        if let Some(rhythm) = band.style.rhythm {
             for drum in rhythm.drums() {
                 apply::drum_channel(self, drum);
             }
@@ -1111,6 +1295,7 @@ impl Project {
         other: &str,
         volume: f32,
         program: u8,
+        use_instruments: bool,
     ) -> Option<usize> {
         let plays_notes = |channel: &Channel| {
             matches!(
@@ -1135,11 +1320,11 @@ impl Project {
                     kind: ChannelKind::Synth,
                     volume,
                     muted: false,
-                    program: None,
+                    program: Some(program),
                 })?
             }
         };
-        if let Some(channel) = self.channels.get_mut(index) {
+        if use_instruments && let Some(channel) = self.channels.get_mut(index) {
             channel.program = Some(program);
         }
         Some(index)
@@ -1196,6 +1381,15 @@ impl Project {
         let mut print = Fingerprint::new();
         if let Some(band) = &self.band {
             print.bytes(band.style.name.as_bytes());
+            print.bytes(
+                format!(
+                    "{:?}{:?}{}",
+                    band.instrument_style.name,
+                    band.harmony_style.map(|style| style.name),
+                    band.accents_only
+                )
+                .as_bytes(),
+            );
             print.number(band.end);
             print.bytes(
                 format!(
@@ -1354,7 +1548,7 @@ impl Project {
         let variations = band.variations.clone();
         let runs = runs(&bars, held, &variations);
         let style = band.style;
-        let extras = style.extras();
+        let extras = band.extras();
         let seed = |player: Player| interpret::seed("band", style.name, player.name());
         let time = meter.first();
         // The variation the last bar of an ending is played in.
@@ -1368,7 +1562,7 @@ impl Project {
             let notes: Vec<NoteEvent> = match player {
                 Player::Piano => {
                     let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
-                        style.comping_in(variation).play_in_bars(bars, played)
+                        band.comping_in(variation).play_in_bars(bars, played)
                     });
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Comping::Held.play_in_bars(bars, played)
@@ -1379,7 +1573,7 @@ impl Project {
                 }
                 Player::Bass => {
                     let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
-                        style.bass_in(variation).play_in_bars(bars, played)
+                        band.bass_in(variation).play_in_bars(bars, played)
                     });
                     notes.extend(held_bar(held, &harmonies, |bars, played| {
                         Bass::Held.play_in_bars(bars, played)
@@ -1390,7 +1584,13 @@ impl Project {
                 Player::Guitar => {
                     let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
                         extras.guitar_in(variation).map_or_else(Vec::new, |guitar| {
-                            guitar::play(guitar.part, style.comping_in(variation), bars, played)
+                            let comping = band.comping_in(variation);
+                            let part = if band.accents_only {
+                                GuitarPart::Strum(comping)
+                            } else {
+                                guitar.part
+                            };
+                            guitar::play(part, comping, bars, played)
                         })
                     });
                     if held_in
@@ -1452,7 +1652,7 @@ impl Project {
                             .filter_map(|played| Over::of(played, keys.key_at(played.start)))
                             .collect();
                         let (from, to) = self.chorus().unwrap_or((0, end));
-                        let soloist = Soloist::of(style.genre);
+                        let soloist = Soloist::of(band.instrument_style.genre);
                         solo::improvise(&bars, &overs, from, to, soloist, solo)
                     }
                     None => Vec::new(),
@@ -2665,5 +2865,129 @@ mod tests {
         let text = crate::file::to_text(&project).unwrap();
         assert!(!text.contains("written_too"), "{text}");
         assert_eq!(crate::file::format_for(&project), 13);
+    }
+
+    fn no_parts() -> apply::StyleParts {
+        apply::StyleParts {
+            rhythm: false,
+            instruments: false,
+            time_signature: false,
+            progression: false,
+            tempo: false,
+            swing: false,
+            matching_style: true,
+        }
+    }
+
+    #[test]
+    fn a_rhythm_can_keep_the_instruments_and_chords() {
+        let mut project = band("Rock ride", &["C", "Am", "F", "G"]);
+        let keys = project.player_channel(Player::Piano).unwrap();
+        project.channel_mut(keys).unwrap().program = Some(80);
+        let sounds = project.channels().to_vec();
+        let chords = project.playlist().chord_markers().to_vec();
+        project.apply_band_parts(
+            BandStyle::named("Rachenitsa").unwrap(),
+            None,
+            apply::StyleParts {
+                rhythm: true,
+                time_signature: true,
+                matching_style: false,
+                ..no_parts()
+            },
+        );
+        assert_eq!(project.band().unwrap().style.name, "Rachenitsa");
+        assert_eq!(project.band().unwrap().instrument_style.name, "Rock ride");
+        assert!(project.band().unwrap().accents_only);
+        for (index, channel) in sounds.iter().enumerate() {
+            assert_eq!(&project.channels()[index], channel);
+        }
+        assert_eq!(
+            project
+                .playlist()
+                .chord_markers()
+                .iter()
+                .map(|m| m.harmony)
+                .collect::<Vec<_>>(),
+            chords.iter().map(|m| m.harmony).collect::<Vec<_>>()
+        );
+        project.follow_chord_sheet();
+        assert_eq!(project.channels()[keys].program, Some(80));
+    }
+
+    #[test]
+    fn instruments_can_change_without_changing_the_performance() {
+        let mut project = band("Boom bap", &["C", "Am", "F", "G"]);
+        let piano = part(&project, Player::Piano);
+        let bass = part(&project, Player::Bass);
+        let drums = part(&project, Player::Drums);
+        let time = project.meter();
+        let tempo = project.tempo;
+        project.apply_band_parts(
+            BandStyle::named("Pop beat").unwrap(),
+            None,
+            apply::StyleParts {
+                instruments: true,
+                ..no_parts()
+            },
+        );
+        assert_eq!(project.band().unwrap().style.name, "Boom bap");
+        assert_eq!(project.band().unwrap().instrument_style.name, "Pop beat");
+        assert_eq!(part(&project, Player::Piano), piano);
+        assert_eq!(part(&project, Player::Bass), bass);
+        assert_eq!(part(&project, Player::Drums), drums);
+        assert_eq!(project.meter(), time);
+        assert_eq!(project.tempo, tempo);
+    }
+
+    #[test]
+    fn the_progression_is_independent_of_the_rhythm_and_sounds() {
+        let mut project = band("Boom bap", &["C", "C", "C", "C"]);
+        let rhythm = project.band().unwrap().style;
+        let channels = project.channels().to_vec();
+        let drums = part(&project, Player::Drums);
+        project.apply_band_parts(
+            BandStyle::named("Pop beat").unwrap(),
+            Style::named("Four chords"),
+            apply::StyleParts {
+                progression: true,
+                ..no_parts()
+            },
+        );
+        assert_eq!(project.band().unwrap().style, rhythm);
+        assert_eq!(project.channels(), channels);
+        assert_eq!(part(&project, Player::Drums), drums);
+        assert_eq!(project.playlist().chord_markers().len(), 4);
+        assert_eq!(
+            project.chord_at(16).unwrap().harmony.caption(project.scale),
+            Some("V".to_string())
+        );
+    }
+
+    #[test]
+    fn separate_style_components_survive_saving_and_undo() {
+        let mut project = band("Rock ride", &["C", "Am", "F", "G"]);
+        let before = project.clone();
+        let mut history = crate::History::default();
+        project.apply_band_parts(
+            BandStyle::named("Rachenitsa").unwrap(),
+            None,
+            apply::StyleParts {
+                rhythm: true,
+                matching_style: false,
+                ..no_parts()
+            },
+        );
+        history.record("change rhythm", before.clone());
+        let changed = project.clone();
+        let text = crate::file::to_text(&project).unwrap();
+        assert_eq!(crate::file::format_for(&project), 20);
+        let mut loaded = crate::file::from_text(&text).unwrap();
+        assert_eq!(loaded, changed);
+        assert!(!loaded.follow_chord_sheet());
+        history.undo(&mut project).unwrap();
+        assert_eq!(project, before);
+        history.redo(&mut project).unwrap();
+        assert_eq!(project, changed);
     }
 }
