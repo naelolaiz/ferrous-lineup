@@ -1350,6 +1350,20 @@ pub static RHYTHMS: &[Rhythm] = &[
     )
     .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
     rhythm(
+        "Raks aksağı",
+        Balkan,
+        200.0,
+        &[
+            (Kick, "X... ...... X... ...."),
+            (Conga, "l... h...h. l... h.h."),
+            (Shaker, "x.o. x.o.o. x.o. x.o."),
+        ],
+        "",
+        "The Turkish \"dancing aksak\", 9/8 the other way round: a five and a four, \
+         2 + 3 + 2 + 2, the darbuka's low düm on the first and third beats.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 3, 2, 2], 8)),
+    rhythm(
         "Kopanitsa",
         Balkan,
         220.0,

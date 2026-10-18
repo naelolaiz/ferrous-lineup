@@ -408,11 +408,17 @@ const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 // Odd meters, with the beats they are felt in: 3 + 2 quarters, 2 + 3
 // eighths...
 const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
+#[allow(dead_code)] // until its songs are in
 const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
 const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
+#[allow(dead_code)] // until its songs are in
 const TWO_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 2, 3], 8);
+#[allow(dead_code)] // until its songs are in
 const NINE_EIGHT_AKSAK: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 3], 8);
+const RAKS_AKSAGI: TimeSignature = TimeSignature::of_groups(&[2, 3, 2, 2], 8);
+#[allow(dead_code)] // until its songs are in
 const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
+#[allow(dead_code)] // until its songs are in
 const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
 
 // The bands the songs are dressed in, named after their style. Each is
@@ -437,8 +443,12 @@ const ACCORDION_BAND: Band = Band::new(gm::ACCORDION, gm::NYLON_GUITAR, gm::ACOU
 const BALLAD: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::CELLO);
 const KLEZMER: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
 const BALKAN: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::ACOUSTIC_BASS);
+#[allow(dead_code)] // until its songs are in
 const KAVAL: Band = Band::new(gm::FLUTE, gm::ACCORDION, gm::ACOUSTIC_BASS);
+#[allow(dead_code)] // until its songs are in
 const GREEK: Band = Band::new(gm::VIOLIN, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
+// The kanun, the Turkish zither, is played by a koto, the nearest General MIDI sound.
+const TURKISH: Band = Band::new(gm::CLARINET, gm::KOTO, gm::ACOUSTIC_BASS);
 const POLKA: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::TUBA);
 const ANDEAN: Band = Band::new(gm::PAN_FLUTE, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const LLANERO: Band = Band::new(gm::HARP, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
@@ -708,6 +718,7 @@ pub static SONGS: &[Song] = &[
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
     balkan::AJDE_JANO,
+    balkan::ENTARISI,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
     reggae::VALLEY_DUB,
@@ -915,15 +926,20 @@ mod tests {
     fn melodies_are_mostly_in_their_key() {
         // A few notes from outside the key are normal (passing notes,
         // borrowed leading notes), but a song with many is more likely
-        // a typo, such as F written for F#.
+        // a typo, such as F written for F#. The Phrygian of flamenco and
+        // of the Turkish makam hicaz raises its third (E F G# A B C D):
+        // that G# counts as in the key.
         for song in SONGS {
             let mut total = 0;
             let mut inside = 0;
             for part in song.parts {
                 let scale = song.part_scale(part);
+                let raised_third =
+                    (scale.kind == ScaleKind::Phrygian).then(|| scale.root.transpose(4));
                 for note in part.melody().notes {
                     total += 1;
-                    if scale.contains(note.pitch.pitch_class()) {
+                    let pitch = note.pitch.pitch_class();
+                    if scale.contains(pitch) || Some(pitch) == raised_third {
                         inside += 1;
                     }
                 }
