@@ -800,10 +800,49 @@ mod tests {
     }
 
     #[test]
-    fn a_piece_with_its_accompaniment_written_out_has_no_chart_to_write() {
-        // Its chords are heard when it is opened instead.
-        let project = song_demo(Song::named("Für Elise").unwrap());
-        assert!(project.playlist().chord_markers().is_empty());
+    fn a_piece_written_out_plays_its_score_under_its_chart() {
+        let song = Song::named("Für Elise").unwrap();
+        let project = song_demo(song);
+        // Where each entry of the form starts.
+        let start = |entry: usize| -> usize {
+            song.form[..entry]
+                .iter()
+                .filter_map(|name| song.part(name))
+                .map(|part| part.length(song.part_time(part).steps_per_bar()))
+                .sum()
+        };
+        let chord = |step| project.chord_at(step).unwrap().harmony.to_string();
+        // The pickup, then the theme: E, then A minor in its second bar.
+        assert_eq!(chord(start(1)), "E");
+        assert_eq!(chord(start(1) + 12), "Am");
+        // The bar before the first episode: C7 over B flat, F over A, C7
+        // over G, a sixteenth note each, then F major.
+        let into = song
+            .form
+            .iter()
+            .position(|&n| n == "Into the episode")
+            .unwrap();
+        assert_eq!(chord(start(into) + 6), "C7/Bb");
+        assert_eq!(chord(start(into) + 8), "F/A");
+        assert_eq!(chord(start(into) + 10), "C7/G");
+        assert_eq!(chord(start(into + 1)), "F");
+        // The Keys channel plays the left hand as written, not the chart:
+        // nothing in the theme's first bar, then A, E, A.
+        let keys = project
+            .channels()
+            .iter()
+            .position(|c| c.name == apply::KEYS)
+            .unwrap();
+        let theme = project
+            .patterns()
+            .iter()
+            .find(|p| p.name == "Theme")
+            .unwrap();
+        let left: Vec<(usize, u8)> = theme.notes(keys)[..3]
+            .iter()
+            .map(|note| (note.start, note.pitch.midi()))
+            .collect();
+        assert_eq!(left, [(12, 45), (14, 52), (16, 57)]);
     }
 
     #[test]
