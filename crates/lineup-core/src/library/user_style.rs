@@ -311,7 +311,7 @@ impl UserStyle {
                 }
             }
         }
-        crate::tidy_notes(notes)
+        crate::pattern::tidy_timeline_notes(notes)
     }
 }
 

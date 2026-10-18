@@ -159,7 +159,12 @@ the preset’s drums with simple chord and bass accents. The instrument option
 is hidden while preserving its remembered value; **Preset patterns** restores
 normal style copying. The **Time** picker and bar 1's
 time-signature menu also show the matching style, rhythm/accent,
-instrument and swing checkboxes directly. The Library shows the band's
+instrument and swing checkboxes directly. Turning off **Use matching style**
+there uses a plain drum beat and pitched accents in the requested meter.
+Repeated meter changes use the original song as their reference until you
+explicitly edit the project; returning to its original meter restores its
+exact performance. Undo and redo retain the corresponding reference.
+The Library shows the band's
 pattern source and its instrumentation separately; the chord sheet remains the
 source of the song's chords. These band choices survive saving and
 undo/redo. A meter change keeps each bar's duration by adjusting tempo.
