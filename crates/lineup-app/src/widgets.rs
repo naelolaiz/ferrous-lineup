@@ -19,7 +19,14 @@ pub fn scroll_menu<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
 /// Editor shortcuts belong to the last clicked window, including its title
 /// and toolbar. Popup controls and text fields keep their own keyboard input.
 pub fn editor_keyboard(ctx: &egui::Context, layer: egui::LayerId) -> bool {
-    editor_active(ctx, layer) && !ctx.text_edit_focused() && !egui::Popup::is_any_open(ctx)
+    editor_active(ctx, layer)
+        && !ctx.text_edit_focused()
+        && !egui::Popup::is_any_open(ctx)
+        && ctx.memory(|memory| memory.is_above_modal_layer(layer))
+}
+
+pub fn modal_open(ctx: &egui::Context) -> bool {
+    ctx.memory(|memory| memory.top_modal_layer().is_some())
 }
 
 pub fn editor_active(ctx: &egui::Context, layer: egui::LayerId) -> bool {

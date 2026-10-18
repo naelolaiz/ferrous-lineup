@@ -213,6 +213,7 @@ impl LineupApp {
             || !focused
             || ctx.text_edit_focused()
             || egui::Popup::is_any_open(ctx)
+            || crate::widgets::modal_open(ctx)
             || self.piano_roll.selected_channel().is_none()
         {
             self.release_typing_keys();
