@@ -1620,6 +1620,9 @@ impl LineupApp {
     }
 
     fn keyboard_shortcuts(&mut self, ctx: &egui::Context) {
+        if widgets::modal_open(ctx) {
+            return;
+        }
         self.style_editor.shortcuts(ctx);
         // While a text field has the keyboard (a track or pattern name),
         // Space and L are letters, not shortcuts.
@@ -1742,8 +1745,10 @@ impl eframe::App for LineupApp {
             let heard = self.chord_playing();
             // While the chord sheet has the keyboard, digits are sets
             // and figures typed in a bar.
-            let digits =
-                !self.live.typing() && !ctx.text_edit_focused() && !self.chord_sheet.has_keyboard();
+            let digits = !self.live.typing()
+                && !ctx.text_edit_focused()
+                && !self.chord_sheet.has_keyboard()
+                && !widgets::modal_open(&ctx);
             let here = self.key_here();
             egui::Panel::bottom("harmony-keys")
                 .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))

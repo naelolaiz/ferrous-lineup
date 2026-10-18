@@ -1176,6 +1176,49 @@ fn initial_space_plays_the_song_until_an_editor_is_clicked() {
 }
 
 #[test]
+fn save_confirmation_blocks_background_shortcuts_and_escape_keeps_the_project() {
+    let mut screen = Screen::new();
+    screen
+        .app
+        .edit("change swing", |project| project.swing = 20);
+    let channel = screen.app.project.channels()[0].name.clone();
+    screen.click(&channel);
+    screen.app.cursor = 8;
+    screen.app.marker = 8;
+    let before = screen.app.project.clone();
+    screen.key_with_modifiers(Key::N, Modifiers::COMMAND);
+    assert!(text_rect(&screen.draw(vec![]), "Save changes?").is_some());
+    for key in [
+        Key::Space,
+        Key::Delete,
+        Key::Home,
+        Key::End,
+        Key::L,
+        Key::F7,
+    ] {
+        screen.key(key);
+        assert_eq!(
+            screen.app.project, before,
+            "{key:?} edits behind a confirmation"
+        );
+        assert_eq!((screen.app.cursor, screen.app.marker), (8, 8));
+        assert!(!screen.app.playing && !screen.app.piano_roll.open);
+    }
+    screen.key_with_modifiers(Key::Z, Modifiers::COMMAND);
+    assert_eq!(screen.app.project, before);
+    assert_eq!((screen.app.cursor, screen.app.marker), (8, 8));
+    assert!(!screen.app.playing && !screen.app.piano_roll.open);
+    screen.key(Key::Escape);
+    assert!(text_rect(&screen.draw(vec![]), "Save changes?").is_none());
+    assert_eq!(screen.app.project, before);
+    screen.key(Key::Delete);
+    assert_eq!(
+        screen.app.project.channels().len(),
+        before.channels().len() - 1
+    );
+}
+
+#[test]
 fn moving_selected_clips_is_one_undoable_edit() {
     let mut screen = Screen::new();
     let before = screen.app.project.clone();

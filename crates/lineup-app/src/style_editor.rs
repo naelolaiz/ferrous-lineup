@@ -130,7 +130,7 @@ impl StyleEditor {
     }
     /// Read before the song's global file/edit shortcuts.
     pub fn shortcuts(&mut self, ctx: &egui::Context) {
-        if !self.active(ctx) || egui::Popup::is_any_open(ctx) {
+        if !self.active(ctx) || egui::Popup::is_any_open(ctx) || widgets::modal_open(ctx) {
             return;
         }
         let pressed = |key, modifiers| ctx.input_mut(|input| input.consume_key(modifiers, key));
@@ -190,10 +190,9 @@ impl StyleEditor {
         }
         if self.pending_start.is_some() {
             let mut discard = false;
-            egui::Window::new("Replace unsaved style?")
-                .collapsible(false)
-                .resizable(false)
-                .show(ctx, |ui| {
+            let modal =
+                egui::Modal::new(egui::Id::unique("replace-unsaved-style")).show(ctx, |ui| {
+                    ui.heading("Replace unsaved style?");
                     ui.label("The current style has unsaved edits.");
                     ui.horizontal(|ui| {
                         if ui.button("Keep editing").clicked() {
@@ -204,6 +203,9 @@ impl StyleEditor {
                         }
                     });
                 });
+            if modal.should_close() {
+                self.pending_start = None;
+            }
             if discard && let Some((style, path)) = self.pending_start.take() {
                 self.open = false;
                 self.start(style, path);
@@ -336,27 +338,28 @@ impl StyleEditor {
             .as_deref()
             .is_some_and(|error| error.starts_with("Unsaved edits"))
         {
-            egui::Window::new("Unsaved style")
-                .collapsible(false)
-                .resizable(false)
-                .show(ctx, |ui| {
-                    ui.label("Save your style before closing?");
-                    ui.horizontal(|ui| {
-                        if ui.button("Save").clicked() {
-                            self.save_requested = true;
-                            self.error = None;
-                        }
-                        if ui.button("Keep editing").clicked() {
-                            self.error = None;
-                        }
-                        if ui.button("Discard edits").clicked() {
-                            self.open = false;
-                            self.roll.open = false;
-                            self.error = None;
-                            events.push(EditorEvent::Stop);
-                        }
-                    });
+            let modal = egui::Modal::new(egui::Id::unique("close-unsaved-style")).show(ctx, |ui| {
+                ui.heading("Unsaved style");
+                ui.label("Save your style before closing?");
+                ui.horizontal(|ui| {
+                    if ui.button("Save").clicked() {
+                        self.save_requested = true;
+                        self.error = None;
+                    }
+                    if ui.button("Keep editing").clicked() {
+                        self.error = None;
+                    }
+                    if ui.button("Discard edits").clicked() {
+                        self.open = false;
+                        self.roll.open = false;
+                        self.error = None;
+                        events.push(EditorEvent::Stop);
+                    }
                 });
+            });
+            if modal.should_close() {
+                self.error = None;
+            }
         }
         events
     }
@@ -667,5 +670,59 @@ mod tests {
             }],
         );
         assert!(events.iter().any(|event| matches!(event,EditorEvent::Save {style,..} if style.name == "Edited style" && style.validate().is_ok())));
+    }
+
+    #[test]
+    fn style_confirmations_block_draft_shortcuts_and_escape_keeps_edits() {
+        for replace in [false, true] {
+            let ctx = egui::Context::default();
+            let mut editor = StyleEditor::new();
+            editor.start(UserStyle::blank(), None);
+            editor.roll.deselect_channel();
+            frame(&mut editor, &ctx, vec![]);
+            let (output, _) = frame(&mut editor, &ctx, vec![]);
+            let channel = editor.draft.project.channels()[0].name.clone();
+            click(&mut editor, &ctx, &output, &channel);
+            editor.draft.style.about = "Unsaved description".into();
+            if replace {
+                editor.start(UserStyle::blank(), None);
+            } else {
+                editor.error = Some("Unsaved edits. Save the style before closing.".into());
+            }
+            frame(&mut editor, &ctx, vec![]);
+            let before = editor.draft.clone();
+            for key in [Key::Space, Key::Delete] {
+                let (_, events) = frame(
+                    &mut editor,
+                    &ctx,
+                    vec![Event::Key {
+                        key,
+                        physical_key: None,
+                        pressed: true,
+                        repeat: false,
+                        modifiers: Modifiers::NONE,
+                    }],
+                );
+                assert!(
+                    !events
+                        .iter()
+                        .any(|event| matches!(event, EditorEvent::Preview(_)))
+                );
+                assert!(editor.draft == before);
+            }
+            frame(
+                &mut editor,
+                &ctx,
+                vec![Event::Key {
+                    key: Key::Escape,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: Modifiers::NONE,
+                }],
+            );
+            assert!(editor.pending_start.is_none() && editor.error.is_none());
+            assert!(editor.open && editor.draft == before);
+        }
     }
 }
