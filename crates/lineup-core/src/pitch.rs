@@ -340,22 +340,31 @@ impl NoteName {
         NoteName::with_letter(pitch_class, self.letter.up(i32::from(letters)))
     }
 
-    /// Reads a note name at the start of `text`: a capital letter and at
-    /// most one sharp (`#` or `♯`) or flat (`b` or `♭`). Returns the name
-    /// and the rest of the text, so "F#m7" gives F# and "m7". Two sharps
-    /// or flats are not read, since chord symbols never use them: "Bbb"
-    /// is Bb and a "b" left over.
+    /// Reads a note name at the start of `text`: a capital letter and up
+    /// to two sharps (`#` or `♯`) or two flats (`b` or `♭`). Returns the
+    /// name and the rest of the text, so "F#m7" gives F# and "m7". The
+    /// app writes two when a key needs them: vii°7 in G# harmonic minor
+    /// is F##dim7, and it must read back as it was written.
     pub fn read(text: &str) -> Option<(NoteName, &str)> {
         let mut chars = text.chars();
         let letter = Letter::from_char(chars.next()?)?;
-        let rest = chars.as_str();
-        let mut chars = rest.chars();
-        let accidental = match chars.next() {
-            Some('#' | '♯') => 1,
-            Some('b' | '♭') => -1,
-            _ => return Some((NoteName::new(letter, 0), rest)),
+        let mut rest = chars.as_str();
+        let sign = |c| match c {
+            '#' | '♯' => 1,
+            'b' | '♭' => -1,
+            _ => 0,
         };
-        Some((NoteName::new(letter, accidental), chars.as_str()))
+        let mut accidental = 0;
+        for _ in 0..2 {
+            let mut chars = rest.chars();
+            let step = chars.next().map_or(0, sign);
+            if step == 0 || (accidental != 0 && step != accidental) {
+                break;
+            }
+            accidental += step;
+            rest = chars.as_str();
+        }
+        Some((NoteName::new(letter, accidental), rest))
     }
 
     /// Reads a whole note name, such as "C", "F#" or "Bb". Returns `None`
@@ -515,7 +524,11 @@ mod tests {
         assert_eq!(read("Bb13"), Some(("Bb".to_string(), "13")));
         assert_eq!(read("E♭maj7"), Some(("Eb".to_string(), "maj7")));
         assert_eq!(read("Cm"), Some(("C".to_string(), "m")));
-        assert_eq!(read("Bbb"), Some(("Bb".to_string(), "b")));
+        assert_eq!(read("Bbb"), Some(("Bbb".to_string(), "")));
+        assert_eq!(read("F##dim7"), Some(("F##".to_string(), "dim7")));
+        assert_eq!(read("C♯♯"), Some(("C##".to_string(), "")));
+        assert_eq!(read("Ebbb"), Some(("Ebb".to_string(), "b")), "two at most");
+        assert_eq!(read("F#b"), Some(("F#".to_string(), "b")), "not mixed");
         assert_eq!(read("c"), None, "lower case is a flat, not a note");
         assert_eq!(read("H"), None);
         assert_eq!(read(""), None);

@@ -314,7 +314,7 @@ mod tests {
     #[test]
     fn nonsense_is_refused() {
         for text in [
-            "", "H7", "c", "am7", "Cxyz", "C/H", "C#5", "C/", "/E", "Bbb7", "Cmaj8", "C7/9",
+            "", "H7", "c", "am7", "Cxyz", "C/H", "C#5", "C/", "/E", "Bbbb7", "Cmaj8", "C7/9",
         ] {
             assert!(ChordSymbol::parse(text).is_err(), "{text:?} was read");
         }
@@ -323,14 +323,18 @@ mod tests {
     #[test]
     fn every_quality_is_written_and_read_back() {
         for quality in ChordQuality::ALL {
-            for root in PitchClass::ALL {
-                for spelling in [Spelling::Sharps, Spelling::Flats] {
-                    let chord = ChordSymbol::new(NoteName::plain(root, spelling), quality);
+            // Every letter with up to two sharps or flats: keys such as
+            // G# harmonic minor write F##dim7.
+            for letter in Letter::ALL {
+                for accidental in -2..=2 {
+                    let chord = ChordSymbol::new(NoteName::new(letter, accidental), quality);
                     let text = chord.to_string();
                     assert_eq!(read(&text), chord, "{text}");
-                    let slash = chord.over(NoteName::new(Letter::E, -1));
-                    if slash.bass.is_some() {
-                        assert_eq!(read(&slash.to_string()), slash, "{slash}");
+                    for bass in [NoteName::new(Letter::E, -1), NoteName::new(Letter::F, 2)] {
+                        let slash = chord.over(bass);
+                        if slash.bass.is_some() {
+                            assert_eq!(read(&slash.to_string()), slash, "{slash}");
+                        }
                     }
                 }
             }
