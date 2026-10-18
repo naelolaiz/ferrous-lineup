@@ -224,6 +224,19 @@ pub fn accompany(spans: &[ChordSpan], tonic: PitchClass, comping: Comping, bass:
             span.length,
         ));
     }
+    // Nothing is held over into the first chord: it starts on its root
+    // (see `Bass::held_over`).
+    let held = bass.held_over();
+    if let Some(first) = spans.first()
+        && held > 0
+    {
+        let length = held.min(first.length);
+        backing
+            .bass
+            .push(NoteEvent::new(line[0], first.start, length));
+    }
+    let end = spans.last().map_or(0, |span| span.start + span.length);
+    super::comping::one_at_a_time(&mut backing.bass, end);
     backing
 }
 

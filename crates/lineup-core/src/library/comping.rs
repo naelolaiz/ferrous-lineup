@@ -434,7 +434,8 @@ pub enum Bass {
     Boogie,
     /// Root and fifth with the bossa nova's pickups.
     Bossa,
-    /// The salsa tumbao, which plays the next chord's root before it arrives.
+    /// The tumbao of son and salsa: nothing on beat 1, the fifth on the
+    /// "and" of 2, and on 4 the next chord's root, held over the bar line.
     Tumbao,
     /// A reggae one-drop line.
     Reggae,
@@ -460,6 +461,20 @@ pub enum Bass {
 }
 
 impl Bass {
+    /// How long the line's anticipation of the next chord rings on into
+    /// it, in steps: the tumbao's root on 4 is held to the next "and" of
+    /// 2. A line that starts on its own, at the start of a song or a
+    /// part, has nothing held over, so it plays that much of its first
+    /// chord on the root.
+    pub fn held_over(self) -> usize {
+        let (period, hits) = self.pattern();
+        hits.iter()
+            .filter(|hit| hit.what == Tone::Next)
+            .map(|hit| (hit.at + hit.len).saturating_sub(period))
+            .max()
+            .unwrap_or(0)
+    }
+
     fn pattern(self) -> (usize, &'static [Hit<Tone>]) {
         use Tone::*;
         match self {
@@ -491,7 +506,8 @@ impl Bass {
                     hit!(14, 2, Root, 86),
                 ],
             ),
-            Bass::Tumbao => (16, &[hit!(6, 6, Fifth, 96), hit!(12, 4, Next, 104)]),
+            // The root on 4 rings on to the next bar's fifth.
+            Bass::Tumbao => (16, &[hit!(6, 6, Fifth, 96), hit!(12, 10, Next, 104)]),
             Bass::Reggae => (
                 16,
                 &[
@@ -599,21 +615,55 @@ impl Bass {
                     // The next chord is only anticipated in the last period
                     // of this one; before that, it is this chord's root.
                     let last = offset + period >= span;
+                    // The anticipation comes as long before the next chord
+                    // as the pattern has it before the end of its period,
+                    // even under a chord shorter than the period, and the
+                    // line holds it from there.
+                    let early = hits
+                        .iter()
+                        .find(|hit| hit.what == Tone::Next)
+                        .and_then(|hit| span.checked_sub(period - hit.at))
+                        .filter(|_| last);
                     for hit in hits {
-                        let at = offset + hit.at;
-                        if at >= span {
+                        let at = match (hit.what, early) {
+                            (Tone::Next, Some(early)) => early,
+                            _ => offset + hit.at,
+                        };
+                        if at >= span || early.is_some_and(|early| at > early) {
                             continue;
                         }
                         let tone = match hit.what {
                             Tone::Next | Tone::Approach if !last => Tone::Root,
                             tone => tone,
                         };
-                        notes.push(note(tone, at, hit.len.min(span - at), hit.velocity));
+                        // The next chord's root, played early, belongs to
+                        // that chord: it may ring on into it.
+                        let length = match tone {
+                            Tone::Next => hit.len,
+                            _ => hit.len.min(span - at),
+                        };
+                        notes.push(note(tone, at, length, hit.velocity));
                     }
                 }
+                notes.sort_by_key(|note| note.start);
                 notes
             }
         }
+    }
+}
+
+/// Makes a bass line play one note at a time: a note held over into
+/// the next chord stops where the next note starts, or at `end`, where
+/// the chords end.
+pub(crate) fn one_at_a_time(notes: &mut [NoteEvent], end: usize) {
+    notes.sort_by_key(|note| note.start);
+    let starts: Vec<usize> = notes.iter().map(|note| note.start).collect();
+    for (index, note) in notes.iter_mut().enumerate() {
+        let until = starts[index + 1..]
+            .iter()
+            .find(|&&start| start > note.start)
+            .map_or(end, |&start| start.min(end));
+        note.length = note.length.min(until.saturating_sub(note.start));
     }
 }
 
@@ -878,6 +928,17 @@ impl Bass {
                 });
             }
         }
+        // Nothing is held over into the first harmony: it starts on its
+        // root (see `held_over`).
+        if let Some(first) = harmonies.first()
+            && let BassPart::Chord { note, .. } = first.bass
+            && self.held_over() > 0
+        {
+            let length = self.held_over().min(first.end - first.start);
+            notes.push(NoteEvent::new(note, first.start, length));
+        }
+        let end = harmonies.last().map_or(0, |harmony| harmony.end);
+        one_at_a_time(&mut notes, end);
         notes
     }
 
@@ -961,6 +1022,9 @@ mod tests {
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
         // Fifth, root; fifth, then G (the next root, nearest to C2: G1).
         assert_eq!(pitches, [43, 36, 43, 31]);
+        // The anticipated G rings over the bar line, up to the next fifth.
+        let last = notes.last().unwrap();
+        assert_eq!((last.start, last.length), (28, 10));
     }
 
     #[test]
