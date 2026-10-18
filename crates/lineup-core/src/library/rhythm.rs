@@ -884,6 +884,43 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Named after its sound: the two quick notes and one long, \"cha-cha-chá\", on beat 4 and \
          the next beat 1.",
     ),
+    rhythm(
+        "Son",
+        Latin,
+        100.0,
+        &[
+            (Rim, "..x. x... x..x ..x."),
+            (Conga, "h.o. h.oo h.o. h.oo"),
+            (Shaker, "xoxo xoxo xoxo xoxo"),
+        ],
+        "Latin fill",
+        "The Cuban son of the 1920s, salsa's parent: the clave, here 2 + 3 (its bar of two \
+         hits first), the bongo's steady \"hammer\" and maracas, and no drum kit. Each bar here \
+         lasts two bars of son.",
+    ),
+    rhythm(
+        "Choro",
+        Latin,
+        100.0,
+        &[
+            (Kick, "o... x... o... x..."),
+            (Shaker, "Xoox Xoox Xoox Xoox"),
+            (Rim, ".... ..x. .... ..x."),
+        ],
+        "Latin fill",
+        "Rio de Janeiro's choro, played by a pandeiro (a tambourine): jingles in sixteenths, the \
+         low thump stronger on the second beat. Choro is in 2/4; each bar here lasts two.",
+    ),
+    rhythm(
+        "Ranchera",
+        Latin,
+        150.0,
+        &[(Kick, "X... .... ...."), (Rim, ".... x.o. x.o.")],
+        "",
+        "The Mexican mariachi waltz has no drums: the guitarrón (a big bass guitar) plays beat 1, \
+         the vihuela strums beats 2 and 3. A soft kick and rim stand in for them.",
+    )
+    .in_time(THREE_FOUR),
     // ----- Tango -----
     rhythm(
         "Tango marcato",

@@ -348,6 +348,10 @@ const TANGO: Band = Band::new(
     gm::ACOUSTIC_BASS,
 );
 const SALON: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
+/// Trumpet, the steel strings of the Cuban tres, and the bass.
+const SON: Band = Band::new(gm::TRUMPET, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
+/// Trumpets, the vihuela and guitars, and the guitarrón.
+const MARIACHI: Band = Band::new(gm::TRUMPET, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 
 mod blues;
 mod classical;
@@ -457,6 +461,9 @@ pub static SONGS: &[Song] = &[
     latin::LA_CUCARACHA,
     latin::RIO_AFTERNOON,
     latin::CARNIVAL_MORNING,
+    latin::TICO_TICO,
+    latin::EL_MANISERO,
+    latin::CIELITO_LINDO,
     tango::HABANERA,
     tango::TANGO_DEL_TELAR,
     tango::MILONGA_DEL_RIO,
