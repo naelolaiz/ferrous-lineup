@@ -60,6 +60,10 @@ pub enum PlaylistAction {
         track: usize,
         name: String,
     },
+    ResizeTrack {
+        track: usize,
+        height: u16,
+    },
     AddTrack,
     /// Insert a new, empty track at this row.
     InsertTrack(usize),
@@ -229,19 +233,19 @@ struct ClipDrag {
 
 /// Where the grid of tracks and steps is on screen.
 #[derive(Debug, Clone, Copy)]
-struct Layout {
+struct Layout<'a> {
     /// The top-left corner of step 0 of track 0.
     origin: Pos2,
     /// How wide a step is and how tall a track is: the zoom.
     step_width: f32,
-    track_height: f32,
+    track_tops: &'a [f32],
     tracks: usize,
     /// Whether there is an empty row below the last track, where a clip
     /// starts a new track. There is unless the playlist is full.
     spare: bool,
 }
 
-impl Layout {
+impl Layout<'_> {
     fn x(self, step: usize) -> f32 {
         self.origin.x + step as f32 * self.step_width
     }
@@ -254,14 +258,23 @@ impl Layout {
     }
 
     fn track_top(self, track: usize) -> f32 {
-        self.origin.y + track as f32 * self.track_height
+        self.origin.y
+            + self
+                .track_tops
+                .get(track)
+                .copied()
+                .unwrap_or_else(|| *self.track_tops.last().unwrap_or(&0.0))
+    }
+
+    fn track_height(self, track: usize) -> f32 {
+        self.track_top(track + 1) - self.track_top(track)
     }
 
     fn clip_rect(self, clip: &Clip, length: usize) -> Rect {
         let top = self.track_top(clip.track);
         Rect::from_min_max(
             pos2(self.x(clip.start), top),
-            pos2(self.x(clip.start + length), top + self.track_height),
+            pos2(self.x(clip.start + length), self.track_top(clip.track + 1)),
         )
     }
 
@@ -273,10 +286,11 @@ impl Layout {
     /// The track and step under a point, clamped to the grid. Below the
     /// last track that is the spare row, the track a clip there makes.
     fn cell_at(self, pos: Pos2) -> (usize, usize) {
-        let last_track = self.rows().saturating_sub(1) as f32;
-        let track = ((pos.y - self.origin.y) / self.track_height)
-            .floor()
-            .clamp(0.0, last_track) as usize;
+        let track = self
+            .track_tops
+            .partition_point(|top| *top <= pos.y - self.origin.y)
+            .saturating_sub(1)
+            .min(self.rows().saturating_sub(1));
         (track, self.step_at(pos.x))
     }
 }
@@ -518,14 +532,19 @@ impl PlaylistView {
             .bar(meter.bar_at(song_length).number + EXTRA_BARS)
             .start;
         let step_width = STEP_WIDTH * self.zoom.x;
-        let track_height = TRACK_HEIGHT * self.zoom.y;
+        let mut track_tops = Vec::with_capacity(rows + 1);
+        track_tops.push(0.0);
+        for row in 0..rows {
+            let height = tracks.get(row).map_or(TRACK_HEIGHT, |track| track.height()) * self.zoom.y;
+            track_tops.push(track_tops.last().copied().unwrap_or(0.0) + height);
+        }
         // The grid always reaches the right edge of the view: zoomed out,
         // and after a zoom in that keeps a step far to the right in place.
         let fill = ((viewport.right() - HEADER_WIDTH) / step_width).ceil() as usize;
         let steps = meter.round_up_to_bar(extra.max(MIN_BARS * STEPS_PER_BAR).max(fill));
         let size = vec2(
             HEADER_WIDTH + steps as f32 * step_width,
-            TOP + rows as f32 * track_height,
+            TOP + track_tops.last().copied().unwrap_or(0.0),
         );
         let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
 
@@ -536,7 +555,7 @@ impl PlaylistView {
         let layout = Layout {
             origin: pos2(rect.left() + HEADER_WIDTH, rect.top() + TOP),
             step_width,
-            track_height,
+            track_tops: &track_tops,
             tracks: tracks.len(),
             spare,
         };
@@ -651,7 +670,7 @@ impl PlaylistView {
             let top = layout.track_top(index);
             let row = Rect::from_min_size(
                 pos2(column.left(), top),
-                vec2(HEADER_WIDTH, layout.track_height),
+                vec2(HEADER_WIDTH, layout.track_height(index)),
             );
             // Only rows fully below the ruler get their buttons, so a row
             // half-hidden under the ruler cannot be clicked through it.
@@ -692,6 +711,30 @@ impl PlaylistView {
             }
             let tracks = project.playlist().tracks().len();
             name_response.context_menu(|ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Track height");
+                    let mut height = track.height() as u16;
+                    if ui
+                        .add(
+                            egui::DragValue::new(&mut height)
+                                .range(24..=240)
+                                .suffix(" px"),
+                        )
+                        .changed()
+                    {
+                        actions.push(PlaylistAction::ResizeTrack {
+                            track: index,
+                            height,
+                        });
+                    }
+                });
+                if ui.button("Reset track height").clicked() {
+                    actions.push(PlaylistAction::ResizeTrack {
+                        track: index,
+                        height: 36,
+                    });
+                }
+                ui.separator();
                 if ui.button("Insert track above").clicked() {
                     actions.push(PlaylistAction::InsertTrack(index));
                 }
@@ -720,6 +763,37 @@ impl PlaylistView {
                     actions.push(PlaylistAction::RemoveTrack(index));
                 }
             });
+            let edge =
+                Rect::from_x_y_ranges(row.x_range(), row.bottom() - 4.0..=row.bottom() + 4.0);
+            let id = ui.scope_id().with(("track-height", index));
+            let resize = ui
+                .interact(edge, id, Sense::click_and_drag())
+                .on_hover_cursor(egui::CursorIcon::ResizeVertical)
+                .on_hover_text("Drag to resize this track; double-click to reset its height");
+            if resize.drag_started() {
+                ui.ctx()
+                    .data_mut(|data| data.insert_temp(id, track.height()));
+            }
+            if let Some(delta) = resize.total_drag_delta() {
+                let base = ui
+                    .ctx()
+                    .data(|data| data.get_temp::<f32>(id))
+                    .unwrap_or(track.height());
+                let height = (base + delta.y / self.zoom.y).round().clamp(24.0, 240.0) as u16;
+                actions.push(PlaylistAction::ResizeTrack {
+                    track: index,
+                    height,
+                });
+            }
+            if resize.double_clicked() {
+                actions.push(PlaylistAction::ResizeTrack {
+                    track: index,
+                    height: 36,
+                });
+            }
+            if resize.hovered() || resize.dragged() {
+                painter.hline(row.x_range(), row.bottom(), Stroke::new(2.0, theme::ACCENT));
+            }
         }
 
         // The spare row's header: a button that adds the track, for those
@@ -728,7 +802,7 @@ impl PlaylistView {
             let top = layout.track_top(layout.tracks);
             let row = Rect::from_min_size(
                 pos2(column.left(), top),
-                vec2(HEADER_WIDTH, layout.track_height),
+                vec2(HEADER_WIDTH, layout.track_height(layout.tracks)),
             );
             if row.top() >= cells.top() && row.top() <= visible.bottom() {
                 let button = egui::Button::new(
@@ -1108,7 +1182,7 @@ fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) 
         let top = layout.track_top(track);
         let row = Rect::from_min_max(
             pos2(layout.origin.x, top),
-            pos2(right, top + layout.track_height),
+            pos2(right, layout.track_top(track + 1)),
         );
         let color = ROW[track % 2];
         // The spare row is fainter: it is not a track yet.
@@ -1393,4 +1467,87 @@ fn paint_ruler(
         FontId::proportional(11.0),
         RULER_TEXT,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use egui::{Event, PointerButton, RawInput};
+
+    fn frame(
+        ctx: &egui::Context,
+        view: &mut PlaylistView,
+        project: &Project,
+        events: Vec<Event>,
+    ) -> Vec<PlaylistAction> {
+        let mut actions = Vec::new();
+        let mut output = ctx.run_pass(
+            RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1200.0, 800.0))),
+                time: Some(ctx.cumulative_frame_nr() as f64 * 0.1),
+                events,
+                ..Default::default()
+            },
+            |ctx| {
+                egui::Window::new("Playlist test")
+                    .fixed_pos(Pos2::ZERO)
+                    .default_size([1000.0, 600.0])
+                    .show(ctx, |ui| {
+                        actions =
+                            view.show(ui, project, 0, None, Tried::default(), Vec2::splat(1.0));
+                    });
+            },
+        );
+        output.textures_delta.clear();
+        actions
+    }
+    #[test]
+    fn dragging_a_track_edge_resizes_only_that_track_and_preserves_clip_hit_testing() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        let mut project = Project::demo();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        let rect = view.view_rect.unwrap();
+        let edge = pos2(rect.left() + HEADER_WIDTH * 0.5, rect.top() + TOP + 36.0);
+        frame(
+            &ctx,
+            &mut view,
+            &project,
+            vec![
+                Event::PointerMoved(edge),
+                Event::PointerButton {
+                    pos: edge,
+                    button: PointerButton::Primary,
+                    pressed: true,
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ],
+        );
+        let target = edge + vec2(0.0, 48.0);
+        let actions = frame(&ctx, &mut view, &project, vec![Event::PointerMoved(target)]);
+        assert!(
+            actions.contains(&PlaylistAction::ResizeTrack {
+                track: 0,
+                height: 84
+            }),
+            "{actions:?}"
+        );
+        project.track_mut(0).unwrap().height = Some(84);
+        let text = lineup_core::file::to_text(&project).unwrap();
+        assert_eq!(lineup_core::file::from_text(&text).unwrap(), project);
+        let tops = [0.0, 84.0, 120.0, 156.0];
+        let layout = Layout {
+            origin: Pos2::ZERO,
+            track_tops: &tops,
+            step_width: 4.5,
+            tracks: 2,
+            spare: true,
+        };
+        assert_eq!(layout.cell_at(pos2(4.5, 83.0)), (0, 1));
+        assert_eq!(layout.cell_at(pos2(4.5, 85.0)), (1, 1));
+        assert_eq!(layout.clip_rect(&Clip::new(0, 1, 0), 16).height(), 36.0);
+    }
 }

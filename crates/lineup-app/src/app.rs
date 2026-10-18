@@ -894,6 +894,14 @@ impl LineupApp {
                     }
                 });
             }
+            PlaylistAction::ResizeTrack { track, height } => {
+                self.edit("resize track", |project| {
+                    if let Some(track) = project.track_mut(track) {
+                        let height = height.clamp(24, 240);
+                        track.height = (height != 36).then_some(height);
+                    }
+                });
+            }
             PlaylistAction::AddTrack => {
                 self.edit("add track", |project| project.add_track());
             }
