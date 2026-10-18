@@ -1193,14 +1193,14 @@ pub static STYLES: &[Style] = &[
         "Son",
         Latin,
         Major,
-        "I V7 | I V7 | I V7 | I V7",
+        "I | IV | V7 | IV",
         Comping::Montuno,
         Bass::Tumbao,
-        100.0,
+        192.0,
         "Son",
-        "Cuba in the 1920s: two chords, a bar of son each, a tres guitar playing a repeating \
-         figure, and a bass that plays each chord before it arrives, over the clave. Each bar here \
-         lasts two bars of son.",
+        "Cuba in the 1920s: a tres guitar plays a repeating figure over the clave, and the bass \
+         plays no note on beat 1, only on the \"and\" of 2 and on 4, where it already plays the \
+         next chord's root.",
     ),
     style(
         "Choro",
