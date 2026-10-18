@@ -1189,6 +1189,44 @@ pub static STYLES: &[Style] = &[
         "Salsa",
         "The salsa montuno in a minor key, over the son clave.",
     ),
+    style(
+        "Son",
+        Latin,
+        Major,
+        "I V7 | I V7 | I V7 | I V7",
+        Comping::Montuno,
+        Bass::Tumbao,
+        100.0,
+        "Son",
+        "Cuba in the 1920s: two chords, a bar of son each, a tres guitar playing a repeating \
+         figure, and a bass that plays each chord before it arrives, over the clave. Each bar here \
+         lasts two bars of son.",
+    ),
+    style(
+        "Choro",
+        Latin,
+        HarmonicMinor,
+        "i | V7 | V7 | i | iv | i | II7 V7 | i",
+        Comping::Habanera,
+        Bass::Habanera,
+        100.0,
+        "Choro",
+        "Rio de Janeiro around 1900: flute, guitars and pandeiro, a tune running in sixteenths, and \
+         the bass in the habanera's long, short, long, long. Each bar here lasts two bars of 2/4.",
+    ),
+    style(
+        "Ranchera",
+        Latin,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Waltz,
+        Bass::Waltz,
+        150.0,
+        "Ranchera",
+        "The Mexican mariachi waltz: the bass on beat 1, the guitars on 2 and 3, and the trumpets \
+         and violins singing over them.",
+    )
+    .in_time(THREE_FOUR),
     // ----- Tango -----
     style(
         "Tango",
