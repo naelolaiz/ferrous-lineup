@@ -89,6 +89,7 @@
   - [Swing: eighth notes played long-short](step-9/swing.md)
   - [A bigger band: guitar, strings and organ](step-9/bigger-band.md)
   - [Shots, holds, rests and pushes: the band breaks the groove](step-9/stops.md)
+  - [The soloist: an improvised line over the chords](step-9/soloist.md)
   - [Inversions: which note is in the bass](step-9/inversions.md)
   - [Ear training](step-9/ear-training.md)
   - [Chord sheets as text: to paste and share](step-9/text-chord-sheets.md)
