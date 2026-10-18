@@ -1526,6 +1526,7 @@ impl eframe::App for LineupApp {
                         &heard,
                         digits,
                         key_heard.as_ref(),
+                        self.playlist.library_parts_mut(),
                     )
                 })
                 .inner

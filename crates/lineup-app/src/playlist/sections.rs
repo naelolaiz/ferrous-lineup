@@ -235,6 +235,7 @@ impl Strips {
 
     /// The bar ruler: click to move the playhead there, drag to set the
     /// loop region. `ruler` is the strip with the bar numbers.
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn loop_ruler(
         &mut self,
         ui: &mut Ui,
@@ -242,6 +243,7 @@ impl Strips {
         ruler: Rect,
         project: &Project,
         snap: Snap,
+        parts: &mut lineup_core::library::apply::StyleParts,
         actions: &mut Vec<PlaylistAction>,
     ) {
         let meter = project.meter();
@@ -266,7 +268,7 @@ impl Strips {
         // stay open while typing: only a click outside closes it.
         egui::Popup::context_menu(&response)
             .close_behavior(PopupCloseBehavior::CloseOnClickOutside)
-            .show(|ui| time_menu(ui, project, at, actions));
+            .show(|ui| time_menu(ui, project, at, parts, actions));
         let region = project.playlist().loop_region();
         let painter = ui.painter_at(ruler);
 
@@ -309,7 +311,13 @@ impl Strips {
 
 /// The menu on the bar numbers: the time signature from the bar that
 /// starts on step `at` on.
-fn time_menu(ui: &mut Ui, project: &Project, at: usize, actions: &mut Vec<PlaylistAction>) {
+fn time_menu(
+    ui: &mut Ui,
+    project: &Project,
+    at: usize,
+    parts: &mut lineup_core::library::apply::StyleParts,
+    actions: &mut Vec<PlaylistAction>,
+) {
     let meter = project.meter();
     let bar = meter.bar_at(at);
     let marker = project
@@ -318,11 +326,18 @@ fn time_menu(ui: &mut Ui, project: &Project, at: usize, actions: &mut Vec<Playli
         .iter()
         .find(|marker| marker.start == at);
     ui.label(format!("Time signature from bar {}", bar.number + 1));
-    if let Some(time) = time_picker(ui, egui::Id::unique(("time-from", at)), bar.time) {
+    if let Some(time) = time_picker(
+        ui,
+        egui::Id::unique(("time-from", at)),
+        bar.time,
+        (at == 0).then_some(parts),
+    ) {
         actions.push(PlaylistAction::SetTimeMarker(TimeMarker::new(at, time)));
     }
     if at == 0 {
         ui.weak("Bar 1 sets the time signature the song starts in.");
+    } else {
+        ui.weak("Changes the meter here; keeps the current style and instruments.");
     }
     if marker.is_some() {
         ui.separator();
