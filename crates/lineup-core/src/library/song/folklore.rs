@@ -8,7 +8,11 @@ const CONDOR_THEME_CHORDS: &str = "i | bIII | bIII | bIII | i | i";
 // Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/DanielA.abc
 // (the Wikifonia lead sheet of the 1933 E. B. Marks piano edition, in D minor,
 // with Robles's Andante, D.C. al Coda, and the Allegro fuga; cross-checked
-// against John Chambers's ABC, https://trillian.mit.edu/~jc/music/abc/song/El_Condor_Pasa-Am-34-0.abc)
+// against John Chambers's ABC, https://trillian.mit.edu/~jc/music/abc/song/El_Condor_Pasa-Am-34-0.abc,
+// which has the Andante only. The lead sheet has no chords; the charts follow
+// the tune. Where it slurs two notes of the same pitch, they are one note here,
+// as in Chambers's ABC. After the D.C. the Andante's repeat is not taken again.)
+// PD: Robles died in 1942 (https://en.wikipedia.org/wiki/El_C%C3%B3ndor_Pasa_(song)).
 pub(super) const EL_CONDOR_PASA: Song = Song {
     name: "El cóndor pasa",
     origin: "Daniel Alomía Robles, 1913",
@@ -38,23 +42,32 @@ pub(super) const EL_CONDOR_PASA: Song = Song {
              A4:12 C5:4 | A4:12 -:2 E5:2",
             CONDOR_THEME_CHORDS,
         ),
+        // Its last bar is where "To Coda" stands.
         Part::new(
             "B",
             "A5:6 G#5:2 A5:3 G#5:1 A5:3 G#5:1 | A5:12 C6:2 A5 | G5:12 A5:2 G5 | E5:12 -:2 E5 | \
              A5:6 G#5:2 A5:3 G#5:1 A5:3 G#5:1 | A5:12 C6:2 A5 | G5:12 A5:2 G5 | E5:12 D5:2 C5 | \
-             A4:12 C5:4 | A4:12 E5:2 D5:1 C5 | A4:12 -:4",
-            "bVI | bVI | bIII | bIII | bVI | bVI | bIII | bIII | i | i | i",
+             A4:12 C5:4 | A4:12 E5:2 D5:1 C5",
+            "bVI | bVI | bIII | bIII | bVI | bVI | bIII | bIII | i | i",
+        ),
+        // The bar marked "D.C.", with the pickup back to the theme.
+        Part::new("D.C.", "A4:12 -:2 E4:2", "i"),
+        Part::new(
+            "Coda",
+            "A4:12 C5:4 | A4:12 E5:2 D5:1 C5 | A4:12 C5:4 | A4:12 -:4",
+            "i | i | i | i",
         )
         // The Andante ends under a fermata.
-        .with_tempo(&[fermata(160, 12)]),
+        .with_tempo(&[fermata(48, 12)]),
+        // "Allegro": two bars that the lead sheet leaves to the accompaniment,
+        // half as fast again as the Andante.
+        Part::new("Fuga intro", "-:16 | -:16", "i | i").with_tempo(&[tempo(0, 120)]),
         Part::new(
             "Fuga A",
             "E5:1 A5 E5 A5 E5:2 D5 C5:1 A4:2 A4:5 | A4:1 B4 C5 D5 E5:2 G5 E5:8 | \
              E5:1 A5 E5 A5 E5:2 D5 C5:1 A4:2 G4:1 A4:4 | A4:1 B4 C5 D5 E5 D5 C5 B4 A4:8",
             "i | bIII | i | i",
-        )
-        // "Allegro": the fuga is half as fast again as the Andante.
-        .with_tempo(&[tempo(0, 120)]),
+        ),
         Part::new(
             "Fuga B",
             "E5:1 G5 E5 G5 D5:2 D5:1 G5 E5:8 | E5:1 G5 E5 G5 D5:1 G5:3 E5:4 E5 | \
@@ -78,30 +91,44 @@ pub(super) const EL_CONDOR_PASA: Song = Song {
         // The fermata on the flourish's first note.
         .with_tempo(&[fermata(0, 4)]),
     ],
+    // The fuga plays A twice, then B and C twice over.
     form: &[
         "Pickup",
         "Theme",
         "Theme into B",
         "B",
+        "D.C.",
+        "Theme into B",
+        "B",
+        "Coda",
+        "Fuga intro",
         "Fuga A",
         "Fuga A",
-        "Fuga B",
         "Fuga B",
         "Fuga C",
+        "Fuga B",
         "Fuga C",
         "Fuga end",
     ],
-    drums_from: 4,
+    drums_from: 8,
     about: "From Robles's zarzuela of the same name, Lima, 1913. The slow theme rests on A \
             minor and its relative major, C; the second strain rises to F and climbs to the \
-            high C before it comes home. Then the fuga, the fast dance that ends the piece, \
-            runs up and down the same scale in sixteenths, and the drums come in with it. \
-            The 1933 piano edition is in D minor; it sits in A minor here.",
+            high C before it comes home, the whole Andante is played again, and a short coda \
+            ends it under a fermata. Then the fuga, the fast dance that ends the piece, runs \
+            up and down the same scale in sixteenths, and the drums come in with it. The 1933 \
+            piano edition is in D minor; it sits in A minor here.",
 };
 
 // Source: https://raw.githubusercontent.com/baobach/abc_search/42cb4abd42a0ea8b0c5c9b8477ab80ec059f48df/database/abc/QmbQQ3V7BEHLkjDvy16ozcfijwzH9FFppgH3LJcv6aThg4.abc
 // (a piano arrangement in ABC, "Tiempo de Joropo", one flat with C sharps written in,
-// turning to D major for the chorus; the tune is the piano's top voice)
+// turning to D major for the chorus; the tune is the piano's top voice and the
+// chords are read from the left hand. The low run of the introduction is an
+// octave up here, for the range. Where the right hand only accompanies, in the
+// interludes and before the chorus, the melody rests and the band plays the
+// chords. The very last note, D6, is the score's.)
+// PD: Gutiérrez died in 1954 (https://en.wikipedia.org/wiki/Pedro_El%C3%ADas_Guti%C3%A9rrez)
+// and the lyricist, Rafael Bolívar Coronado, in 1924
+// (https://onlinebooks.library.upenn.edu/webbin/who/Bol%26iacute%3bvar%20Coronado%2c%20Rafael%2c%201884%2d1924).
 pub(super) const ALMA_LLANERA: Song = Song {
     name: "Alma llanera",
     origin: "Pedro Elías Gutiérrez, 1914",
@@ -117,39 +144,153 @@ pub(super) const ALMA_LLANERA: Song = Song {
     band: LLANERO,
     style: "Joropo",
     parts: &[
+        // The left hand alone: D minor and A7.
+        Part::new("Vamp", "-:12 | -:12", "i | V7"),
+        Part::new(
+            "Intro low",
+            "D4:2 E4 F4 G4 A4 Bb4 | A4:4 C#5:4 A4:2 C#5:2 | \
+             D4:2 E4 F4 G4 A4 Bb4 | A4:4 C#5:4 A4:2 C#5:2",
+            "i | V7 | i | V7",
+        ),
         Part::new(
             "Intro",
             "D4:2 E4 F4 G4 A4 Bb4 | A4:4 A5:8 | D4:2 E4 F4 G4 A4 Bb4 | A4:4 A5:8",
             "i | V7 | i | V7",
         ),
+        // With the first ending, which goes back to the vamp.
         Part::new(
             "Verse",
             "D5:2 F5:4 E5:4 D5:2 | C#5:2 E5:4 D5:4 C#5:2 | D5:4 A4:8 | _:12 | \
              D5:2 F5:4 E5:4 D5:2 | C#5:2 E5:4 D5:4 C#5:2 | D5:4 A4:8 | _:12 | \
              D5:2 F5:4 E5:4 D5:2 | C5:2 D5:4 C5:4 Bb4:2 | A4:12 | G4:2 G4:4 A4:4 Bb4:2 | \
-             A4:4 D5:4 A4:4 | A4:2 G4:2 E4:4 F4:4 | D4:12 | -:12",
-            "i | V7 | i | V7 | i | V7 | i | V7 | i | bVII | bIII | iiø7 | i | V7 | i | V7",
+             A4:4 D5:4 A4:4 | A4:2 G4:2 E4:4 F4:4 | D4:12 | A3:8 -:4",
+            "i | V7 | i | V7 | i | V7 | i | V7 | i | bVII | bIII | ii° | i | V7 | i | V7",
         ),
+        // With the second ending, where the interlude starts.
+        Part::new(
+            "Verse end",
+            "D5:2 F5:4 E5:4 D5:2 | C#5:2 E5:4 D5:4 C#5:2 | D5:4 A4:8 | _:12 | \
+             D5:2 F5:4 E5:4 D5:2 | C#5:2 E5:4 D5:4 C#5:2 | D5:4 A4:8 | _:12 | \
+             D5:2 F5:4 E5:4 D5:2 | C5:2 D5:4 C5:4 Bb4:2 | A4:12 | G4:2 G4:4 A4:4 Bb4:2 | \
+             A4:4 D5:4 A4:4 | A4:2 G4:2 E4:4 F4:4 | -:12",
+            "i | V7 | i | V7 | i | V7 | i | V7 | i | bVII | bIII | ii° | i | V7 | i",
+        ),
+        Part::new(
+            "Interlude",
+            "-:12 | -:12 | -:12 | -:12 | -:12 | -:12 | -:12",
+            "ii° | V7 | V7 | i | ii° | V7 | V7",
+        ),
+        // Played twice; the E flat chord is the Neapolitan, bII.
+        Part::new(
+            "Interlude 2",
+            "-:4 A5:4 A4:2 A5:2 | -:4 A5:4 A4:2 A5:2 | -:4 A5:4 A4:2 A5:2 | \
+             -:4 Bb5:4 Bb4:2 Bb5:2 | -:4 A5:4 A4:2 A5:2 | -:2 C#5:2 E5:2 G5:2 F5:2 E5:2",
+            "i | V7 | i | bII | V7 | V7",
+        ),
+        Part::new(
+            "Interlude 3",
+            "-:4 A4:4 F4:2 A4:2 | -:4 Bb4:4 E4:2 Bb4:2 | -:4 A4:4 E4:2 A4:2 | \
+             -:2 C#4:2 D4:2 G4:2 F4:2 E4:2 | D4:4 A4:4 F4:2 A4:2 | -:4 A4:4 F4:2 A4:2",
+            "i | iv6 | V7 | V7 | i | i",
+        ),
+        // The second minor strain, played twice.
+        Part::new(
+            "Verse 2",
+            "F5:2 F5 -:2 F5 E5 D5 | E5:4 E5:6 -:2 | E5:2 E5 -:2 E5 D5 C#5 | D5:4 A4:6 -:2 | \
+             A4:2 A4 -:2 A4 C5:3 C5:1 | Bb4:4 E4:8 | G4:2 G4 -:2 G4 A4:3 A4:1 | F4:4 D4:8",
+            "i | V7 | V7 | i | I7 | iv6 | V7 | i",
+        ),
+        Part::new(
+            "Verse 2 end",
+            "A4:2 A4 -:2 A4 G4 F4 | A4:4 E4:8 | G4:2 G4 -:2 G4 F4 E4 | D4:12 | \
+             A4:2 A4 -:2 A4 G4 F4 | A4:4 E4:8 | G4:2 G4 -:2 G4 F4 E4",
+            "i | V7 | V7 | i | i | V7 | V7",
+        ),
+        Part::new(
+            "Chorus intro",
+            "-:12 | -:12 | -:12 | -:12 | -:12 | -:12 | -:12 | -:12",
+            "I | IV6 | V7 | V7 | I | IV6 | V7 | V7",
+        )
+        .in_key(D, Major),
         Part::new(
             "Chorus",
             "A4:12 | _:12 | _:8 A4:4 | D5:6 C#5:2 E5 D5 | F#5:6 E5:2 D5 C#5 | E5:6 D5:2 C#5 B4 | C#5:12 | _:12 | -:4 B4:4 B4 | D5:6 D5:2 D5 D5 | C#5:4 A4:8 | _:12 | -:4 B4:4 B4 | D5:6 D5:2 D5 D5",
             "I | V7 | I | ii7 | I | IV | V7 | V7 | IV | IV | V7 | V7 | IV | IV",
         )
         .in_key(D, Major),
+        // With the first ending, which goes back to the chords before the chorus.
         Part::new(
             "Chorus end",
-            "C#5:4 A4:8 | _:12 | -:4 B4:4 B4 | D5:6 D5:2 D5 D5 | A4:4 A4 A4:2 A4 | B4:4 G4 G4:2 G4 | A4:4 F#4 -:4 | -:4 G4:4 E4 | A4:12 | _:12 | _:12 | A4:4 G4 E4 | D4:4 -:8",
+            "C#5:4 A4:8 | _:12 | -:4 B4:4 B4 | D5:6 D5:2 D5 D5 | A4:4 A4 A4:2 A4 | B4:4 G4 G4:2 G4 | A4:4 F#4 -:4 | -:4 G4:4 E4 | A4:12 | _:12 | _:12 | _:4 G4 E4 | D4:4 -:8",
             "V7 | V7 | IV | IV | V7 | IV | I | ii7 | I | I | V7 | V7 | I",
         )
         .in_key(D, Major),
+        Part::new(
+            "Chorus vamp",
+            "-:12 | -:12 | -:12 | -:12 | -:12 | -:12 | -:12",
+            "IV6 | V7 | V7 | I | IV6 | V7 | V7",
+        )
+        .in_key(D, Major),
+        // With the second ending and the pickup into the coda.
+        Part::new(
+            "Chorus last",
+            "C#5:4 A4:8 | _:12 | -:4 B4:4 B4 | D5:6 D5:2 D5 D5 | A4:4 A4 A4:2 A4 | B4:4 G4 G4:2 G4 | A4:4 F#4 -:4 | -:4 G4:4 E4 | A4:12 | _:12 | _:12 | _:4 G4 E4 | D4:4 -:8 | A4:4 A4 -:4",
+            "V7 | V7 | IV | IV | V7 | IV | I | ii7 | I | I | V7 | V7 | I | I",
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Coda",
+            "B4:4 B4 -:4 | C#5:4 C#5 -:4 | A4:4 A4 -:4 | F#5:2 D5 E5 C#5 D5 B4 | G4:12 | \
+             E5:2 C#5 D5 B4 C#5 A4 | F#4:12 | -:4 A4:4 F#4:2 A4:2 | -:4 B4:4 G4:2 B4:2 | \
+             -:4 C#5:4 A4:2 C#5:2 | -:4 A4:4 F#4:2 A4:2 | F#5:2 D5 E5 C#5 D5 B4 | C#5:4 A4 A4 | \
+             B4:4 A4:2 G4 F#4 E4 | D4:4 -:8",
+            "IV | V7 | I | I | V7 | V7 | I | I | IV6 | V7 | I | I | V7 | V7 | I",
+        )
+        .in_key(D, Major),
+        // The second strain's last phrase again, now in D major, and the final chords.
+        Part::new(
+            "Coda end",
+            "A4:2 A4 A4 A4 G4 F#4 | A4:4 E4:8 | G4:2 G4 G4 G4 F#4 E4 | D4:4 A5:4 A4:2 A5:2 | \
+             A4:2 A4 A4 A4 G4 F#4 | A4:4 E4:8 | G4:2 A4 B4 C#5 D5 E5 | F#5:4 F#5:2 F#5:2 F#5:4 | \
+             F#5:4 F#5 F#5 | F#5:4 -:8 | E5:4 D5 A4 | -:4 D5:2 D5:2 D5:4 | D5:4 D5 D5 | \
+             D5:4 -:8 | A5:4 -:8 | D6:4 -:8",
+            "I | V7 | V7 | I | I | V7 | V7 | I | I | I | V7 | I | I | I | V | I",
+        )
+        .in_key(D, Major),
     ],
-    form: &["Intro", "Verse", "Verse", "Chorus", "Chorus end", "Verse"],
-    drums_from: 1,
+    form: &[
+        "Vamp",
+        "Vamp",
+        "Intro low",
+        "Intro",
+        "Verse",
+        "Vamp",
+        "Intro low",
+        "Intro",
+        "Verse end",
+        "Interlude",
+        "Interlude 2",
+        "Interlude 2",
+        "Interlude 3",
+        "Verse 2",
+        "Verse 2",
+        "Verse 2 end",
+        "Chorus intro",
+        "Chorus",
+        "Chorus end",
+        "Chorus vamp",
+        "Chorus",
+        "Chorus last",
+        "Coda",
+        "Coda end",
+    ],
+    drums_from: 4,
     about: "A joropo from a zarzuela staged in Caracas in 1914, sung in Venezuela as a second \
-            anthem. The verse, \"Yo nací en esta ribera\", swings between D minor and A7 and \
-            passes through C and F, the relative major, on its way down; the chorus, \"Amo, \
-            lloro, canto, sueño\", turns to D major on three chords. The 3/4 arpeggio stands \
-            in for the harp and the cuatro.",
+            anthem. The first strain swings between D minor and A7 and passes through C and F, \
+            the relative major, on its way down; after the interludes a second minor \
+            strain turns through D7 to G minor, and the chorus, \"Amo, lloro, canto, sueño\", \
+            turns to D major, where the coda brings back the second strain's last phrase. The \
+            3/4 arpeggio stands in for the harp and the cuatro.",
 };
 
 const PALOMITAS_A_CHORDS: &str = "I | vi | vi I | V I";
@@ -157,7 +298,11 @@ const PALOMITAS_B_CHORDS: &str = "vi | vi | vi I | V I";
 
 // Source: https://raw.githubusercontent.com/NischalRana29/DCP_Assignment_C24392253/92b3d6334af726832dd44495e54494fa79c2a69e/abc_books/1/hnwaynu0.abc
 // (Henrik Norbeck's wayñu collection, hnwaynu0.abc from norbeck.nu/abc, tune 20,
-// "Dos Palomitas", no composer, with its instrumental variations)
+// "Dos Palomitas", no composer, with its instrumental variations; A and B checked
+// against Jack Campin's ABC in F, the same notes a tone lower:
+// https://github.com/syntithenai/abc2book/blob/master/abcresources/misc/abc_tune_misc_0.abc, X:262.
+// Neither has chords; the charts follow the tune.)
+// PD: traditional (neither Norbeck nor Campin names a composer).
 pub(super) const DOS_PALOMITAS: Song = Song {
     name: "Dos palomitas",
     origin: "Traditional huayno, Andes",
@@ -210,7 +355,7 @@ pub(super) const DOS_PALOMITAS: Song = Song {
     ],
     drums_from: 0,
     about: "A huayno, the dance of the Andes, in 2/4: two of its bars to each bar here. The \
-            tune uses only G, A, B, D, E and F sharp, leans on E minor and ends every phrase \
+            tune uses only G, A, B, D, E and F sharp, leans on E minor and ends each strain \
             on G, the two-sided tonality of Andean song. The second half is the instrumental \
             variation that answers the sung verse.",
 };
