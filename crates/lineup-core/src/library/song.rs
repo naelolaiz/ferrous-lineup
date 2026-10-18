@@ -170,7 +170,6 @@ impl Part {
 
     /// The same part in another time signature than the song's, such as
     /// a verse in 3/4 in a song in 4/4.
-    #[allow(dead_code)] // until a song changes time signature
     const fn in_time(self, time: TimeSignature) -> Part {
         Part {
             time: Some(time),
@@ -314,8 +313,8 @@ use ScaleKind::*;
 
 const COMMON: TimeSignature = TimeSignature::COMMON;
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
-const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
+const NINE_EIGHT: TimeSignature = TimeSignature::new(9, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 
 // The bands the songs are dressed in, named after their style. Each is

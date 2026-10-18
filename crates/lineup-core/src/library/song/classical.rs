@@ -41,6 +41,8 @@ pub(super) const CANON: Song = Song {
             eight notes that repeats from start to end: a ground bass.",
 };
 
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/BeethovenLv/WoO59/fur_Elise_WoO59/fur_Elise_WoO59.ly
+// (Mutopia 931, from the Breitkopf & Härtel edition of 1888)
 pub(super) const FUR_ELISE: Song = Song {
     name: "Für Elise",
     origin: "Ludwig van Beethoven, 1810",
@@ -48,60 +50,161 @@ pub(super) const FUR_ELISE: Song = Song {
     genre: Genre::Classical,
     tonic: A,
     mode: HarmonicMinor,
-    time: THREE_EIGHT,
-    tempo: 66.0,
+    // Each bar of 3/8 is a bar of 3/4 here, every note twice as long, so
+    // the thirty-second notes fit: "Poco moto" at 72 quarter notes a
+    // minute is 144 in the doubled values.
+    time: THREE_FOUR,
+    tempo: 144.0,
     comping: Comping::Held,
     bass: Bass::None,
     rhythm: "",
     band: PIANO,
     style: "",
     parts: &[
-        Part::new("Pickup", "-:4 E5:1 D#5", "").with_left("-:6"),
+        Part::new("Pickup", "-:8 E5:2 D#5", "E").with_left("-:12"),
         Part::new(
-            "A",
-            "E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 G#4 B4 | C5:2 -:1 E4 E5 D#5 | \
-             E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 C5 B4 | A4:4 E5:1 D#5",
-            "",
+            "Theme",
+            "E5:2 D#5 E5 B4 D5 C5 | A4:4 -:2 C4 E4 A4 | B4:4 -:2 E4 G#4 B4 | \
+             C5:4 -:2 E4 E5 D#5 | E5 D#5 E5 B4 D5 C5 | A4:4 -:2 C4 E4 A4 | B4:4 -:2 E4 C5 B4",
+            "E | Am | E | Am | E | Am | E",
         )
         .with_left(
-            "-:6 | A2:1 E3 A3 -:3 | E2:1 E3 G#3 -:3 | A2:1 E3 A3 -:3 | \
-             -:6 | A2:1 E3 A3 -:3 | E2:1 E3 G#3 -:3 | A2:1 E3 A3 -:3",
+            "-:12 | A2:2 E3 A3 -:6 | E2:2 E3 G#3 -:6 | A2:2 E3 A3 -:6 | -:12 | \
+                    A2:2 E3 A3 -:6 | E2:2 E3 G#3 -:6",
         ),
+        Part::new("First ending", "A4:8 E5:2 D#5", "Am").with_left("A2:2 E3 A3 -:6"),
+        Part::new("Second ending", "A4:4 -:2 B4 C5 D5", "Am").with_left("A2:2 E3 A3 -:6"),
         Part::new(
-            "A into B",
-            "E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 G#4 B4 | C5:2 -:1 E4 E5 D#5 | \
-             E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 C5 B4 | A4:2 -:1 B4:1 C5 D5",
-            "",
+            "Middle",
+            "E5:6 G4:2 F5 E5 | D5:6 F4:2 E5 D5 | C5:6 E4:2 D5 C5 | B4:4 -:2 E4 E5 - | \
+             - E5 E6 -:4 D#5:2 | E5:4 -:2 D#5 E5 D#5",
+            "C | G7 | Am | E | E | E",
         )
         .with_left(
-            "-:6 | A2:1 E3 A3 -:3 | E2:1 E3 G#3 -:3 | A2:1 E3 A3 -:3 | \
-             -:6 | A2:1 E3 A3 -:3 | E2:1 E3 G#3 -:3 | A2:1 E3 A3 -:3",
+            "C3:2 G3 C4 -:6 | G2:2 G3 B3 -:6 | A2:2 E3 A3 -:6 | E2:2 E3 E4 -:4 E4:2 | \
+                    E5 -:4 D#5:2 E5 - | - D#5 E5 -:6",
         ),
         Part::new(
-            "B",
-            "E5:3 G4:1 F5 E5 | D5:3 F4:1 E5 D5 | C5:3 E4:1 D5 C5 | B4:2 -:1 E4:1 E5 -:1 | \
-             -:1 E5 E6 -:2 D#5:1 | E5:2 -:1 D#5:1 E5 D#5",
-            "",
+            "Into the episode",
+            "A4:4 -:2 E4+C5 F4+C5 E4+G4+C5",
+            "Am Am Am C7/Bb F/A C7/G",
+        )
+        .with_left("A2:2 E3 A3 Bb3+C4 A3+C4 G3+Bb3+C4"),
+        Part::new(
+            "Episode in F",
+            "C5:8 F5:3 E5:1 | E5:4 D5 Bb5:3 A5:1 | A5:2 G5 F5 E5 D5 C5 | \
+             Bb4:4 A4 A4:1 G4 A4 Bb4 | C5:8 D5:2 D#5 | E5:6 E5:2 F5 A4 | C5:8 D5:3 B4:1",
+            "F | Bb/F | C7/F | F | F | Am/E Am/E Dm | C/G C/G G7",
         )
         .with_left(
-            "C3:1 G3 C4 -:3 | G2:1 G3 B3 -:3 | A2:1 E3 A3 -:3 | E2:1 E3 E4 -:2 E4:1 | \
-             E5:1 -:2 D#5:1 E5 -:1 | -:1 D#5:1 E5 -:3",
+            "F3:2 A3 C4 A3 C4 A3 | F3 Bb3 D4 Bb3 D4 Bb3 | \
+                    F3 E4 F3+G3+Bb3 E4 F3+G3+Bb3 E4 | F3 A3 C4 A3 C4 A3 | F3 A3 C4 A3 C4 A3 | \
+                    E3 A3 C4 A3 D3+D4 F3 | G3 E4 G3 E4 G3 F4",
+        )
+        .in_key(F, Major),
+        Part::new(
+            "Episode in C",
+            "C5:1 G5 G4 G5 A4 G5 B4 G5 C5 G5 D5 G5 | E5 G5 C6 B5 A5 G5 F5 E5 D5 G5 F5 D5 | \
+             C5 G5 G4 G5 A4 G5 B4 G5 C5 G5 D5 G5 | E5 G5 C6 B5 A5 G5 F5 E5 D5 G5 F5 D5",
+            "C C C G7/F C/E G7/D | C F G7 | C C C G7/F C/E G7/D | C F G7",
+        )
+        .with_left(
+            "C4+E4:4 -:2 F4+G4 E4+G4 D4+F4+G4 | C4+E4+G4:4 F3+A3 G3+B3 | \
+                    C4 -:2 F4+G4 E4+G4 D4+F4+G4 | C4+E4+G4:4 F3+A3 G3+B3",
+        )
+        .in_key(C, Major),
+        Part::new(
+            "Back to A minor",
+            "E5:1 F5 E5 D#5 E5 B4 E5 D#5 E5 B4 E5 D#5 | E5:6 B4:2 E5 D#5 | E5:6 B4:2 E5 D#5 | \
+             E5 D#5 E5 D#5 E5 D#5",
+            "E/G# | E | E | E",
+        )
+        .with_left("G#3+B3:4 -:8 | -:12 | - | -"),
+        Part::new(
+            "Middle again",
+            "E5:6 G4:2 F5 E5 | D5:6 F4:2 E5 D5 | C5:6 E4:2 D5 C5 | B4:4 -:2 E4 E5 - | \
+             - E5 E6 -:4 D#5:2 | E5 -:4 D#5:2 E5 D#5",
+            "C | G7 | Am | E | E | E",
+        )
+        .with_left(
+            "C3:2 G3 C4 -:6 | G2:2 G3 B3 -:6 | A2:2 E3 A3 -:6 | E2:2 E3 E4 -:4 E4:2 | \
+                    E5 -:4 D#5:2 E5 - | - D#5 E5 -:6",
         ),
         Part::new(
-            "A to the end",
-            "E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 G#4 B4 | C5:2 -:1 E4 E5 D#5 | \
-             E5:1 D#5 E5 B4 D5 C5 | A4:2 -:1 C4 E4 A4 | B4:2 -:1 E4 C5 B4 | A4:6",
-            "",
+            "Pedal",
+            "A4:4 -:8 | E4+G4+Bb4+C#5:12 | F4+A4+D5:8 C#5+E5:2 D5+F5 | \
+             G#4+D5+F5:8 G#4+D5+F5:4 | A4+C5+E5:12 | F4+D5:8 E4+C5:2 D4+B4 | \
+             C4+F#4+A4:8 C4+A4:4 | C4+A4 E4+C5 D4+B4 | C4+A4:12 | E4+G4+Bb4+C#5 | \
+             F4+A4+D5:8 C#5+E5:2 D5+F5 | D5+F5:8 D5+F5:4 | D5+F5:12 | \
+             G4+Eb5:8 F4+D5:2 Eb4+C5 | D4+F4+Bb4:8 D4+F4+A4:4 | D4+F4+G#4:8 D4+F4+G#4:4 | \
+             C4+E4+A4:8 -:4 | E4+B4 -:8",
+            "Am | A7b9 | Dm/A | G#dim7/A | Am | Dm | D#dim7 | Am/E Am/E E7 | Am | A7b9 | Dm/A | \
+             Dm/A | Bb | Eb/Bb Eb/Bb Bb | Bb Bb Bbmaj7 | G#dim7/B | Am/C | E",
         )
         .with_left(
-            "-:6 | A2:1 E3 A3 -:3 | E2:1 E3 G#3 -:3 | A2:1 E3 A3 -:3 | \
-             -:6 | A2:1 E3 A3 -:3 | E2:1 E3 G#3 -:3 | A2:1 E3 A3:4",
+            "A2:2 A2 A2 A2 A2 A2 | A2 A2 A2 A2 A2 A2 | A2 A2 A2 A2 A2 A2 | \
+                    A2 A2 A2 A2 A2 A2 | A2 A2 A2 A2 A2 A2 | \
+                    D2+A2 D2+A2 D2+A2 D2+A2 D2+A2 D2+A2 | \
+                    D#2+A2 D#2+A2 D#2+A2 D#2+A2 D#2+A2 D#2+A2 | \
+                    E2+A2 E2+A2 E2+A2 E2+A2 E2+G#2 E2+G#2 | A1+A2 A2 A2 A2 A2 A2 | \
+                    A2 A2 A2 A2 A2 A2 | A2 A2 A2 A2 A2 A2 | A2 A2 A2 A2 A2 A2 | \
+                    Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 | Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 | \
+                    Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 | B2 B2 B2 B2 B2 B2 | C3:8 -:4 | E3+G#3 -:8",
         ),
+        Part::new(
+            "Run",
+            "A3:2 C4 E4 A4 C5 E5 D5 C5 B4 | A4 C5 E5 A5 C6 E6 D6 C6 B5 | \
+             A5 C6 E6 A6 C7 E7 D7 C7 B6 | Bb6 A6 G#6 G6 F#6 F6 E6 D#6 D6 | \
+             C#6 C6 B5 Bb5 A5 G#5 G5 F#5 F5",
+            "Am | Am | Am | Am | Am",
+        )
+        .with_left(
+            "A1:6 - A3+C4+E4 | A3+C4+E4 - A3+C4+E4 | A3+C4+E4 - A3+C4+E4 | \
+                    A3+C4+E4 -:12 | -:18",
+        )
+        .in_time(NINE_EIGHT)
+        .with_tempo(&[tempo(0, 216), tempo(90, 144)]),
+        Part::new("Last bar", "A4:4 -:8", "Am").with_left("A1+A2:4 -:8"),
     ],
-    form: &["Pickup", "A", "A into B", "B", "A", "A to the end"],
+    form: &[
+        "Pickup",
+        "Theme",
+        "First ending",
+        "Theme",
+        "Second ending",
+        "Middle",
+        "Theme",
+        "Second ending",
+        "Middle",
+        "Theme",
+        "Into the episode",
+        "Episode in F",
+        "Episode in C",
+        "Back to A minor",
+        "Theme",
+        "Second ending",
+        "Middle again",
+        "Theme",
+        "Pedal",
+        "Run",
+        "Theme",
+        "Second ending",
+        "Middle again",
+        "Theme",
+        "Last bar",
+    ],
     drums_from: 0,
-    about: "The right hand rocks between E and D sharp, the leading note of A minor, while \
-            the left hand answers with broken chords. In 3/8: three eighth notes to the bar.",
+    about: "The whole rondo, with its repeats as Beethoven wrote them. The theme rocks \
+            between E and D sharp, the leading note of A minor, over broken chords in the \
+            left hand; its middle phrase passes through C major and G7. The first episode \
+            is in F major and turns to C major in runs of thirty-second notes, then E and \
+            D sharp lead back to the theme. The second episode is stormy, over an A drummed \
+            in the bass: A7 with a flat ninth, D minor, a diminished seventh, then B flat \
+            major, the Neapolitan chord of A minor, before an arpeggio climbs three octaves \
+            and falls back down the chromatic scale to the theme. Each bar of Beethoven's \
+            3/8 is written as a bar of 3/4 with the note values doubled; the five bars of \
+            triplet sixteenths are bars of 9/8 that last as long. The three grace notes are \
+            left out.",
 };
 
 /// Grieg keeps the bass on the key note while the theme climbs; only the
