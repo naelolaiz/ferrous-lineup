@@ -78,6 +78,10 @@ pub struct Track {
     pub name: String,
     /// A muted track's clips are not played.
     pub muted: bool,
+    /// Preferred row height at 100% zoom. Older versions may ignore this
+    /// display preference without changing the music.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<u16>,
 }
 
 impl Track {
@@ -86,7 +90,12 @@ impl Track {
         Track {
             name: format!("Track {number}"),
             muted: false,
+            height: None,
         }
+    }
+
+    pub fn height(&self) -> f32 {
+        f32::from(self.height.unwrap_or(36).clamp(24, 240))
     }
 }
 

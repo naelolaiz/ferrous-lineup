@@ -149,6 +149,11 @@ SoundFont and Lineup Osc sounds, plus samples. The master stereo reverb
 has wet/dry, decay, damping and pre-delay controls. Mixer settings are
 saved with the project, support undo, and are used for WAV export.
 
+Resize an individual playlist track by dragging the lower edge of its
+name header. Double-click that edge to reset it, or use **Track height**
+in the header’s right-click menu. Heights follow track moves, are saved
+with the project, and support Undo.
+
 **Follow playback** in the toolbar and View menu keeps the playing
 position visible in the playlist, chord sheet and piano roll. Turning it
 off lets you scroll freely; the preference is remembered. Editor shortcuts
