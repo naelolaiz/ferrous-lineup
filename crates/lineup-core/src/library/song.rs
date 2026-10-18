@@ -192,7 +192,6 @@ impl Part {
 
     /// The same part with a time signature for each bar, for music whose
     /// meter changes from bar to bar.
-    #[allow(dead_code)] // until its songs are in
     const fn in_meters(self, meters: &'static [TimeSignature]) -> Part {
         Part { meters, ..self }
     }
@@ -405,6 +404,8 @@ const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const NINE_EIGHT: TimeSignature = TimeSignature::new(9, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
+// Six quarter notes, each a beat, as in Mussorgsky's Promenade.
+const SIX_FOUR: TimeSignature = TimeSignature::new(6, 4);
 // Odd meters, with the beats they are felt in: 3 + 2 quarters, 2 + 3
 // eighths...
 const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
@@ -780,6 +781,7 @@ pub static SONGS: &[Song] = &[
     classical::TRAUMEREI,
     classical::SYMPHONY_7_ALLEGRETTO,
     classical::RADETZKY_MARCH,
+    classical::PROMENADE,
 ];
 
 #[cfg(test)]
