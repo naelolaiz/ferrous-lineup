@@ -140,9 +140,33 @@ impl UserStyle {
     }
 
     pub fn id(&self) -> u64 {
-        self.name.bytes().fold(0xcbf29ce484222325, |hash, byte| {
-            (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3)
-        })
+        use std::hash::{Hash, Hasher};
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        self.name.hash(&mut hash);
+        self.time.hash(&mut hash);
+        self.tempo.bpm().to_bits().hash(&mut hash);
+        self.swing.hash(&mut hash);
+        self.mode.hash(&mut hash);
+        self.chart.hash(&mut hash);
+        self.bars.hash(&mut hash);
+        for lane in &self.lanes {
+            lane.player.hash(&mut hash);
+            lane.channel.name.hash(&mut hash);
+            lane.channel.program.hash(&mut hash);
+            lane.channel.volume.to_bits().hash(&mut hash);
+            lane.channel.muted.hash(&mut hash);
+            std::mem::discriminant(&lane.channel.kind).hash(&mut hash);
+            match &lane.channel.kind {
+                crate::ChannelKind::Synth => {}
+                crate::ChannelKind::MidiOut { channel } => channel.hash(&mut hash),
+                crate::ChannelKind::Sampler(source) => match source {
+                    crate::SampleSource::Builtin(drum) => drum.hash(&mut hash),
+                    crate::SampleSource::File(path) => path.hash(&mut hash),
+                },
+            }
+            lane.notes.hash(&mut hash);
+        }
+        hash.finish()
     }
 
     pub fn validate(&self) -> Result<(), String> {
@@ -326,6 +350,15 @@ fn adapt_pitch(source: Note, player: Player, harmony: &Played) -> Option<Note> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn styles_with_the_same_name_keep_distinct_patterns_selected() {
+        let style = UserStyle::from_builtin(&super::super::STYLES[0]);
+        let mut edited = style.clone();
+        edited.lanes[0].notes[0].velocity = edited.lanes[0].notes[0].velocity.saturating_sub(1);
+        assert_ne!(style.id(), edited.id());
+        let reopened = UserStyle::from_text(&edited.to_text().unwrap()).unwrap();
+        assert_eq!(edited.id(), reopened.id());
+    }
     #[test]
     fn every_builtin_can_be_copied_edited_and_saved() {
         for style in super::super::STYLES {
