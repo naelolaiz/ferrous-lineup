@@ -1141,3 +1141,273 @@ pub(super) const A_LA_GRAN_MUNECA: Song = Song {
             Neapolitan chord of A minor, and the trio turns to A major, slipping back to A \
             minor in its second phrase.",
 };
+
+const POR_UNA_CABEZA_A_CHORDS: &str = "I | I ii | ii V7 | V7 I | I | I7 IV | iv I | II7 V7 I I";
+const POR_UNA_CABEZA_B_CHORDS: &str = "i v | bVI bIII | iv i";
+const POR_UNA_CABEZA_B_TUNE: &str = "-:2 F5:2 F5:2 G5:1 A5:1 A5:4 E5:4 | -:2 D5:2 D5:2 E5:1 F5:1 F5:4 C5:4 | \
+     -:2 Bb4:2 Bb4:2 C5:1 D5:1 D5:2 A4:2 D5:1 E5:1 F5:1 D5:1";
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/CarlosGardelAlfredoLeperaPorUnaCabeza.abc
+// (Wikifonia lead sheet in A major / A minor with chords, moved up a fourth to D. Its
+// ending brackets are misplaced: read as one 16-bar B strain whose first ending goes
+// back to the start with the pickup and whose second ending closes the piece.)
+// Checked against three arrangements, and where the four differ the reading most of
+// them share is used, the lead sheet's otherwise:
+// https://github.com/bebox/scifidelity_orchestra/blob/master/source/por_una_cabeza.ly (lead sheet in G),
+// https://github.com/cellist/Lilypond-Sheet-Music/blob/master/Vlc,%20Vlc/Gardel,%20Carlos/Por%20Una%20Cabeza/v1.ily (cello duo in G),
+// https://github.com/Rilay9/PianoProject/blob/main/docs/review/pdmx-quarry-2026-10-05/xml/E-latin/por-una-cabeza-carlos-gardel-QmNswaWYXpxK1XegKbJVDULwZMjKN6cETGTVfXQKYsYrzs.musicxml (piano, PDMX, in A).
+// The pickup is four sixteenths and the first beats of the A strain are two sixteenths
+// and a rest (the arrangements). Source bar 8 is F# E C# A A# C# B G, as in the G lead
+// sheet and two further PDMX piano scores (QmTBJZ..., QmQSWZ... in the same folder).
+// The B strain's rising figures are eighth-note triplets in the arrangements; they are
+// written as an eighth and two sixteenths, the rhythm the Wikifonia sheet gives them.
+// PD: Carlos Gardel (d. 1935) and Alfredo Le Pera (d. 1935): every author died before 1956.
+pub(super) const POR_UNA_CABEZA: Song = Song {
+    name: "Por una cabeza",
+    origin: "Carlos Gardel, 1935",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: D,
+    mode: Major,
+    time: COMMON,
+    tempo: 112.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new("Pickup", "-:12 F#4:1 G4:1 G#4:1 A4:1", "I"),
+        Part::new(
+            "A",
+            "B4:1 A4:1 -:2 G#4:1 A4:1 B4:1 C#5:1 E5:1 D5:1 -:2 F#5:1 G5:1 E5:1 F#5:1 | \
+             D5:1 E5:1 C#5:1 D5:1 C#5:3 A4:1 G4:4 G5:1 F#5:1 A5:1 G5:1 | \
+             E5:4 E5:1 D#5:1 F#5:1 E5:1 C#5:4 C#5:1 D5:1 D#5:1 E5:1 | \
+             F#5:1 E5:1 C#5:1 A4:1 A#4:1 C#5:1 B4:1 G4:1 F#4:4 F#4:1 G4:1 G#4:1 A4:1 | \
+             B4:1 A4:1 -:2 G#4:1 A4:1 B4:1 C#5:1 E5:1 D5:1 -:2 D5:1 E5:1 F#5:1 D5:1 | \
+             E5:1 D5:1 E5:1 F#5:1 E5:3 D5:1 B4:4 E5:1 D5:1 B4:1 G4:1 | \
+             F#4:1 E4:1 F#4:1 G4:1 Bb4:1 D5:1 C5:1 Bb4:1 D5:2 A4:2 D5:1 E5:1 F#5:1 D5:1 | \
+             E5:2 E5:2 C#5:1 D5:1 E5:1 C#5:1 D5:4 -:4",
+            POR_UNA_CABEZA_A_CHORDS,
+        ),
+        Part::new("B", POR_UNA_CABEZA_B_TUNE, POR_UNA_CABEZA_B_CHORDS).in_key(D, HarmonicMinor),
+        Part::new(
+            "B ending 1",
+            "E5:4 D5:1 E5:1 F5:1 D5:1 F5:4 E5:4",
+            "II7 II7 vi°7 V7",
+        )
+        .in_key(D, HarmonicMinor),
+        // The second ending lands on D major and plays the pickup back into A.
+        Part::new(
+            "B ending 2",
+            "E5:4 C#5:1 D5:1 E5:1 C#5:1 D5:4 F#4:1 G4:1 G#4:1 A4:1",
+            "II7 V7 I I",
+        )
+        .in_key(D, HarmonicMinor),
+        Part::new(
+            "B final",
+            "E5:4 C#5:1 D5:1 E5:1 C#5:1 D5:6 -:2",
+            "II7 V7 i i",
+        )
+        .in_key(D, HarmonicMinor),
+    ],
+    form: &[
+        "Pickup",
+        "A",
+        "B",
+        "B ending 1",
+        "B",
+        "B ending 2",
+        "A",
+        "B",
+        "B ending 1",
+        "B",
+        "B final",
+    ],
+    drums_from: 1,
+    about: "The A strain in D major is all quick chromatic turns over D, E minor and A7, \
+            with a D7 that leads to G and a G minor that darkens it. The B strain turns to \
+            D minor: one rising figure three times, each a third lower, over D minor and A \
+            minor, B flat and F, G minor and D minor; E7 and A7 lead home, and the second \
+            ending lands on D major for the A strain again.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/CarlosGardelEldiaquemequieras.abc
+// (Wikifonia lead sheet in E flat with chords, voice 1; moved up a fourth to A flat.)
+// Checked against https://github.com/maximoskp/chameleon/blob/master/training_data/Tango/El_Dia_Que_Me_Quieras.xml
+// (melody and one chord per bar, in D) and the string quartet arranged by Ignacio
+// Massun, https://github.com/cellist/Lilypond-Sheet-Music/tree/master/Vl,%20Vl,%20Vlc,%20Vlc/Gardel,%20Carlos/El%20dia%20que%20me%20quieras
+// (first violin for the tune, the other three for the chords). Where the three differ
+// the reading two of them share is used. The quartet's tempo (4 = 60), fermatas, rall.
+// and a tempo marks are kept.
+// The verse opens with the A flat that ends the introduction's tune (the quartet's
+// second violin and chameleon); source bar 10 is dotted (Wikifonia's c2>B2 and the
+// quartet). Source bar 15 is B flat 7 sus 4 then B flat 7 (the quartet; Wikifonia's
+// C7/F, F7 in its key): chameleon's F minor there is not used.
+// Form: introduction, verse, refrain twice (first and second endings). The refrain's
+// lead-in bar makes the 2/4 bars odd in number, so the second time through the refrain
+// is paired the other way, and the last written bar is padded with a rest.
+// PD: Carlos Gardel (d. 1935) and Alfredo Le Pera (d. 1935): every author died before 1956.
+pub(super) const EL_DIA_QUE_ME_QUIERAS: Song = Song {
+    name: "El día que me quieras",
+    origin: "Carlos Gardel, 1935",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: GSharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 60.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new(
+            "Intro",
+            "-:2 F5:2 F5:1 E5:1 G5:1 F5:1 F5:4 E5:4 | -:2 Eb5:2 Eb5:1 D5:1 F5:1 Eb5:1 Eb5:4 Db5:4 | \
+             -:2 Db5:2 Eb5:1 Db5:1 Ab4:1 Bb4:1 C5:2 Eb5:2 G5:2 F5:2 | \
+             Eb5:2 C5:1 Ab4:1 F4:2 Db5:2 Bb4:6 Ab4:2",
+            "IV III7 | VI7 ii | IV IV I #iv°7 | I I V7sus4 V7",
+        )
+        .with_tempo(&[glide(56, 50, 8)]),
+        Part::new(
+            "Verse",
+            "Ab4:2 Eb4:2 Ab4:1 C5:1 Eb5:1 G5:1 F5:3 Eb5:1 Eb5:2 C5:1 Bb4:1 | \
+             Bb4:2 Ab4:1 Ab4:1 Ab4:2 F4:1 Ab4:1 Eb5:8 | \
+             -:2 Db5:1 Db5:1 Db5:2 C5:1 Db5:1 C5:2 C5:1 Bb4:1 Bb4:2 Ab4:1 F4:1 | \
+             C5:2 C5:1 Bb4:1 Ab4:2 E4:1 F4:1 Bb4:8 | \
+             -:2 Eb4:2 Ab4:1 C5:1 Eb5:1 G5:1 F5:2 Eb5:1 Eb5:1 Eb5:2 D5:1 C5:1 | \
+             Eb5:2 Eb5:1 Eb5:1 Eb5:2 D5:1 C5:1 G5:8 | \
+             -:2 G5:1 Ab5:1 G5:2 B4:1 C5:1 G5:4 F5:4 | -:2 F5:1 G5:1 F5:2 A4:1 Bb4:1 F5:4 E5:4",
+            "I I I iii | vi V | V #v°7 vi vi | II7sus4 II7 V7 V7 | V I | VI7 #i°7 V V | III7 VI7 | \
+             II7 II7 V7 bVII7",
+        )
+        .with_tempo(&[tempo(0, 60)]),
+        Part::new(
+            "Refrain",
+            "Eb5:2 Eb4:2 C5:1 C5:1 C5:1 Bb4:1 Db5:2 C5:6 | _:2 C5:2 C5:1 Bb4:1 Bb4:1 C5:1 Bb4:2 Ab4:6 | \
+             _:2 Ab4:2 Ab4:1 Ab4:1 Ab4:1 Ab4:1 F5:4 F5:4 | _:2 F5:2 F5:1 Eb5:1 Gb5:1 F5:1 F5:8 | \
+             -:2 F5:2 F5:1 Eb5:1 A4:1 Bb4:1 F5:4 Eb5:4 | -:2 Db5:2 Db5:1 C5:1 F#4:1 G4:1 Bb4:4 Ab4:4 | \
+             _:2 Ab4:2 Bb4:1 Ab4:1 G4:1 Ab4:1 C5:4 C5:4 | _:2 Ab4:2 Bb4:1 Ab4:1 G4:1 Ab4:1 Eb5:8",
+            "V7 I | III7 vi | I7 IV | VI7 ii | ii V7 | #v°7 vi | vi iii | vi II7 V7 V7",
+        )
+        .with_tempo(&[fermata(0, 2), glide(120, 50, 8)]),
+        Part::new(
+            "Refrain 2",
+            "Eb5:2 Eb4:2 C5:1 C5:1 C5:1 Bb4:1 Db5:2 C5:6 | _:2 C5:2 C5:1 Bb4:1 Bb4:1 C5:1 Bb4:2 Ab4:6 | \
+             -:2 Ab4:2 Ab4:1 Ab4:1 Ab4:1 Ab4:1 F5:4 F5:4 | _:2 F5:2 F5:1 Eb5:1 Gb5:1 F5:1 F5:8 | \
+             _:2 F5:2 F5:1 E5:1 G5:1 F5:1 F5:4 E5:4 | -:2 Eb5:2 Eb5:1 D5:1 F5:1 Eb5:1 Eb5:4 Db5:4 | \
+             -:2 Db5:2 Eb5:1 Db5:1 Ab4:1 Bb4:1 C5:2 Eb5:2 G5:2 F5:2 | \
+             Eb5:2 C5:1 Ab4:1 F4:2 Db5:2 Bb4:6 Ab4:2",
+            "V7 I | III7 vi | I7 IV | VI7 ii | ii IV III7 III7 | VI7 ii | iv iv I #iv°7 | I V7",
+        )
+        .with_tempo(&[tempo(4, 60), glide(104, 50, 12), tempo(116, 60)]),
+        Part::new("Ending 1", "Ab4:4 -:4 -:2 Eb4:2 C5:1 C5:1 C5:1 Bb4:1", "I #iv°7 V7 V7"),
+        Part::new(
+            "Refrain again",
+            "Db5:2 C5:6 _:2 C5:2 C5:1 Bb4:1 Bb4:1 C5:1 | Bb4:2 Ab4:6 _:2 Ab4:2 Ab4:1 Ab4:1 Ab4:1 Ab4:1 | \
+             F5:4 F5:4 _:2 F5:2 F5:1 Eb5:1 Gb5:1 F5:1 | F5:8 -:2 F5:2 F5:1 Eb5:1 A4:1 Bb4:1 | \
+             F5:4 Eb5:4 -:2 Db5:2 Db5:1 C5:1 F#4:1 G4:1 | Bb4:4 Ab4:4 _:2 Ab4:2 Bb4:1 Ab4:1 G4:1 Ab4:1 | \
+             C5:4 C5:4 _:2 Ab4:2 Bb4:1 Ab4:1 G4:1 Ab4:1 | Eb5:8 _:2 Eb4:2 C5:1 C5:1 C5:1 Bb4:1",
+            "I III7 | vi I7 | IV VI7 | ii | V7 #v°7 | vi | iii iii vi II7 | V7",
+        )
+        .with_tempo(&[glide(112, 50, 8), tempo(124, 60)]),
+        Part::new(
+            "Refrain again 2",
+            "Db5:2 C5:6 _:2 C5:2 C5:1 Bb4:1 Bb4:1 C5:1 | Bb4:2 Ab4:6 -:2 Ab4:2 Ab4:1 Ab4:1 Ab4:1 Ab4:1 | \
+             F5:4 F5:4 _:2 F5:2 F5:1 Eb5:1 Gb5:1 F5:1 | F5:8 _:2 F5:2 F5:1 E5:1 G5:1 F5:1 | \
+             F5:4 E5:4 -:2 Eb5:2 Eb5:1 D5:1 F5:1 Eb5:1 | Eb5:4 Db5:4 -:2 Db5:2 Eb5:1 Db5:1 Ab4:1 Bb4:1 | \
+             C5:2 Eb5:2 G5:2 F5:2 Eb5:2 C5:1 Ab4:1 F4:2 Db5:2 | Bb4:6 Ab4:2 Ab4:8 | _:8 -:8",
+            "I III7 | vi I7 | IV VI7 | ii ii ii IV | III7 VI7 | ii iv | I #iv°7 I I | V7 V7 I iv | I",
+        )
+        .with_tempo(&[glide(96, 50, 12), tempo(108, 60), fermata(128, 8)]),
+    ],
+    form: &[
+        "Intro",
+        "Verse",
+        "Refrain",
+        "Refrain 2",
+        "Ending 1",
+        "Refrain again",
+        "Refrain again 2",
+    ],
+    drums_from: 0,
+    about: "A slow tango-canción in A flat. The refrain walks through secondary dominants, \
+            C7 to F minor, A flat 7 to D flat, F7 to B flat minor, with diminished sevenths \
+            on D and E along the way; at its close the D flat chord turns minor before the \
+            last cadence, and the introduction is that closing phrase.",
+};
+
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/CarlosGardelVolverTango.abc
+// (Wikifonia lead sheet transcribed by Alberto Betancourt: verse in D minor, refrain in
+// D major, with chords; moved up a fourth to G. The same sheet as MusicXML,
+// https://raw.githubusercontent.com/ptigas/markovjam/master/dataset/4782.xml, gives the same
+// notes.) No second transcription was found. Its form: verse, refrain, D.C. al Coda, the
+// second refrain leaving its last bar for the coda.
+// In refrain bar 3-4 the sheet's chords (D minor over F, D minor over A) contradict its
+// own F sharps; the chords of the same tune in bars 16-17 (D over F sharp, D over A) are
+// used. A C7 on the last eighth of verse bar 4 and the B flat 7 / A7 of verse bar 19 are
+// kept eighth by eighth.
+// PD: Carlos Gardel (d. 1935) and Alfredo Le Pera (d. 1935): every author died before 1956.
+pub(super) const VOLVER: Song = Song {
+    name: "Volver",
+    origin: "Carlos Gardel, 1934",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: G,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 62.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        Part::new(
+            "Verse",
+            "-:2 D5:1 D5:1 D5:1 C5:1 Bb4:1 C5:1 D5:1 D5:1 D5:1 D5:1 D5:1 C5:1 Bb4:1 D5:1 | \
+             C5:1 C5:1 C5:1 C5:1 C5:1 Bb4:1 A4:1 C5:1 Bb4:4 G4:2 -:2 | \
+             -:2 F5:1 F5:1 F5:1 Eb5:1 D5:1 Eb5:1 F5:1 F5:1 F5:1 F5:1 F5:1 Eb5:1 D5:1 F5:1 | \
+             Eb5:1 Eb5:1 Eb5:1 Eb5:1 Eb5:1 D5:1 C5:1 Eb5:1 D5:6 -:2 | \
+             -:1 D5:1 D5:1 D5:1 F#5:1 D5:2 C5:1 C5:2 Bb4:2 -:1 Bb4:1 C5:1 C#5:1 | \
+             D5:2 C5:1 Bb4:1 A4:2 G4:1 Bb4:1 D5:4 -:1 D5:1 D5:1 D5:1 | \
+             Eb5:3 D5:1 C5:1 A5:1 G5:1 F#5:1 G5:2 D5:2 -:1 D5:1 Eb5:1 D5:1 | \
+             C#5:1 E5:2 G5:1 Bb5:2 A5:1 G5:1 A5:4 -:1 A5:1 A5:1 A5:1 | \
+             Bb5:3 F5:1 Eb5:1 F5:1 G5:1 Eb5:1 G5:1 D5:2 Bb4:1 C5:1 D5:1 Eb5:1 F5:1 | \
+             D5:1 Bb4:1 G4:1 D4:1 Bb4:2 A4:2 G4:6 B4:2",
+            "i | iv6 iv6 V7 V7 i i i bVII7 | bIII | bVI6 bVII7 bIII bIII | V7 i | bIII bVI7 V V | \
+             iv i | II7 V | i iiø7 i iv | i i bVI7 V7 i i i i",
+        ),
+        Part::new(
+            "Refrain",
+            "D5:4 _:4 -:2 C5:1 D5:1 E5:2 D5:1 C5:1 | D5:1 B4:2 B4:1 C5:2 B4:1 A4:1 B4:1 G4:2 G4:1 A4:2 G4:1 F#4:1 | \
+             G4:6 -:1 E5:1 G5:8 | _:2 F#5:1 G5:1 A5:2 G5:1 F#5:1 G5:4 D5:4 | \
+             -:2 D5:1 E5:1 F5:2 E5:1 D5:1 F5:1 E5:1 E5:1 F#5:1 G5:2 F#5:1 E5:1 | \
+             G5:1 F#5:2 F#5:1 G5:2 E5:1 E5:1 F#5:2 D5:1 D5:1 E5:2 C5:1 C5:1 | \
+             D5:4 B4:2 -:1 B4:1 D5:8 | _:2 C5:1 D5:1 E5:2 D5:1 C5:1 D5:1 B4:2 B4:1 C5:2 B4:1 A4:1",
+            "I #i°7 V7 V7 | I I bVI6 bVI6 I I II7 V7 | I7 IV | iv° I | #i°7 #i°7 ii biii°7 | \
+             iii iii vi ii V I IV V7 | I #i°7 V7 V7 | V7 V7 I bVI6",
+        )
+        .in_key(G, Major),
+        Part::new(
+            "Refrain end",
+            "B4:1 G4:2 G4:1 A4:2 G4:1 F#4:1 G4:6 -:2",
+            "I I II7 V7 I I I I",
+        )
+        .in_key(G, Major),
+        Part::new(
+            "Coda",
+            "B4:1 G4:2 G4:1 A4:2 G4:1 F#4:1 G4:4 G5:2 -:2",
+            "I I II7 V7 I I I I",
+        )
+        .in_key(G, Major),
+    ],
+    form: &["Verse", "Refrain", "Refrain end", "Verse", "Refrain", "Coda"],
+    drums_from: 0,
+    about: "The verse in G minor repeats one note in quick even notes, then the note a step \
+            below: D over G minor, C over C minor, then F over B flat and E flat over E flat; \
+            D7 and A7 lift it to a high cadence on D. The refrain turns to G major and borrows \
+            from G minor: an E flat sixth chord, and a C diminished chord after C major.",
+};
