@@ -218,7 +218,9 @@ pub(super) const TICO_TICO: Song = Song {
 
 // Source: https://github.com/oriolcolomefont/The-Sound-of-AI-workshop/blob/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/MoisesSimonsL.abc
 // (a Wikifonia lead sheet with chords of the 1930 American edition, "The
-// Peanut Vendor", in 2/2; the tune is the Cuban one).
+// Peanut Vendor", in 2/2; the tune is the Cuban one). A bar of 2/2 is a bar
+// of 4/4 here. The score's G on the last beat of a D7 bar is the bass's
+// anticipation of the next bar, which the son's bass plays anyway.
 pub(super) const EL_MANISERO: Song = Song {
     name: "El manisero",
     origin: "Moisés Simons, 1928",
@@ -227,7 +229,7 @@ pub(super) const EL_MANISERO: Song = Song {
     tonic: G,
     mode: Major,
     time: COMMON,
-    tempo: 96.0,
+    tempo: 192.0,
     comping: Comping::Montuno,
     bass: Bass::Tumbao,
     rhythm: "Son",
@@ -236,44 +238,41 @@ pub(super) const EL_MANISERO: Song = Song {
     parts: &[
         Part::new(
             "Intro",
-            "-:2 G4:2 D4:2 E4:2 -:2 F#4:1 E4:2 E4:1 D4:2 | \
-             -:2 G4:2 D4:2 E4:2 -:2 F#4:1 E4:2 E4:1 D4:2",
-            "I V7 | I V7",
+            "-:4 G4 D4 E4 | -:4 F#4:2 E4:4 E4:2 D4:4 | -:4 G4 D4 E4 | -:4 F#4:2 E4:4 E4:2 D4:4",
+            "I | V7 | I | V7",
         ),
         Part::new(
             "A",
-            "-:2 B4:2 D5:4 -:2 F#4:1 E4:2 E4:1 D4:2 | -:2 B4:2 D5:4 -:2 F#4:1 E4:2 E4:1 D4:2 | \
-             -:2 B4:1 C5 D5 E5 D5 C#5 D5:2 D5:1 C5:2 C5:1 B4:2 | \
-             -:2 G4:1 A4 B4 C5 D5 B4 D5:2 A4:1 C5:2 B4:1 G4:2 | \
-             -:2 G4:2 D4:2 E4:2 -:2 F#4:1 E4:2 E4:1 D4:2 | \
-             -:2 G4:2 D4:2 E4:2 -:2 F#4:1 E4:2 E4:1 D4:2 | \
-             -:2 D4:2 E4:2 G4:1 A4:2 A4:2 C5:2 B4:1 G4:2 | \
-             -:2 D4:2 E4:2 G4:1 A4:2 A4:2 C5:2 B4:1 D5:2 | \
-             _:2 G4:2 D4:2 E4:2 -:2 F#4:1 E4:2 E4:1 D4:2",
-            "I V7 | I V7 | I I I I V7 V7 V7 I | I I I I V7 V7 V7 I | I V7 | I V7 | \
-             I I I I ii7 ii7 V7 I | I I I I ii7 ii7 V7 I | I V7",
+            "-:4 B4 D5:8 | -:4 F#4:2 E4:4 E4:2 D4:4 | -:4 B4 D5:8 | -:4 F#4:2 E4:4 E4:2 D4:4 | \
+             -:4 B4:2 C5 D5 E5 D5 C#5 | D5:4 D5:2 C5:4 C5:2 B4:4 | -:4 G4:2 A4 B4 C5 D5 B4 | \
+             D5:4 A4:2 C5:4 B4:2 G4:4",
+            "I | V7 | I | V7 | I | V7 | I | V7",
         ),
         Part::new(
             "B",
-            "-:1 D5:1 E5 F#5 G5:2 E5:1 F#5:3 D5:1 E5:2 C5:1 D5:2 | \
-             -:1 B4:1 C5 D5 E5:2 C5:1 D5:3 B4:1 C5:2 A4:1 B4:2 | \
-             -:1 G4:2 A4:1 B4:2 G4:1 A4:3 F#4:1 E4:2 E4:1 D4:2 | \
-             _:2 G4:2 D4:2 E4:2 -:2 F#4:1 E4:2 E4:1 D4:2 | \
-             -:2 G4:2 D4:2 E4:2 -:1 C5:2 D5:1 E5 D5 C5 D5 | \
-             _:2 G4:2 D4:2 E4:2 -:1 C5:2 D5:1 E5 F#5 E5 D5 | \
-             _:1 B4:2 C5:1 D5 E5 D5 C#5 D5:2 D5:1 C5:2 C5:1 B4:2 | \
-             -:1 G4:2 A4:1 B4 C5 D5 B4 D5:1 A4:2 C5:2 B4:1 G4:2",
-            "I V7 | I V7 | I V7 | I V7 | I V7 | I V7 | I I I I V7 V7 V7 I | \
-             I I I I I I #i°7 #i°7 ii7 ii7 ii7 V7 V7 V7 I I",
+            "-:4 G4 D4 E4 | -:4 F#4:2 E4:4 E4:2 D4:4 | -:4 G4 D4 E4 | -:4 F#4:2 E4:4 E4:2 D4:4 | \
+             -:4 D4 E4 G4:2 A4 | _:2 A4:4 C5 B4:2 G4:4 | -:4 D4 E4 G4:2 A4 | \
+             _:2 A4:4 C5 B4:2 D5:4 | _:4 G4 D4 E4 | -:4 F#4:2 E4:4 E4:2 D4:4",
+            "I | V7 | I | V7 | I | ii7 V7 | I | ii7 V7 | I | V7",
+        ),
+        Part::new(
+            "C",
+            "-:2 D5 E5 F#5 G5:4 E5:2 F#5 | _:4 D5:2 E5:4 C5:2 D5:4 | -:2 B4 C5 D5 E5:4 C5:2 D5 | \
+             _:4 B4:2 C5:4 A4:2 B4:4 | -:2 G4:4 A4:2 B4:4 G4:2 A4 | _:4 F#4:2 E4:4 E4:2 D4:4 | \
+             _:4 G4 D4 E4 | -:4 F#4:2 E4:4 E4:2 D4:4 | -:4 G4 D4 E4 | -:2 C5:4 D5:2 E5 D5 C5 D5 | \
+             _:4 G4 D4 E4 | -:2 C5:4 D5:2 E5 F#5 E5 D5 | _:2 B4:4 C5:2 D5 E5 D5 C#5 | \
+             D5:4 D5:2 C5:4 C5:2 B4:4 | -:2 G4:4 A4:2 B4 C5 D5 B4 | D5:2 A4:4 C5 B4:2 G4:4",
+            "I | V7 | I | V7 | I | V7 | I | V7 | I | V7 | I | V7 | I | V7 | I I I #i°7 | ii7 V7",
         ),
     ],
-    form: &["Intro", "A", "B", "Intro", "A", "B"],
+    form: &["Intro", "A", "B", "C", "Intro", "A", "B", "C"],
     drums_from: 0,
     about: "The peanut seller's street cry (a pregón) made into a Cuban son: \"Maní!\" \
-            (peanuts) over G and D7, again and again. Don Azpiazu's Havana Casino Orchestra \
-            recorded it in New York in 1930, and it was the first Cuban hit around the world. \
-            Each bar here holds two bars of the son, as the clave takes two bars to go round. \
-            The bass plays each chord just before it arrives.",
+            (peanuts) over G and D7, a bar each, again and again. Don Azpiazu's Havana Casino \
+            Orchestra recorded it in New York in 1930, and it was the first Cuban hit around \
+            the world. The clave takes two bars, the bar of two hits first, as the tune does. \
+            The bass plays no note on the first beat: it plays on the \"and\" of 2 and on 4, \
+            where it already plays the root of the next chord.",
 };
 
 const CIELITO_REFRAIN: &str = "E5:12 | D5:8 C5:4 | A4:12 | _:12 | D5:12 | D5:8 C5:2 C5:2 | \
