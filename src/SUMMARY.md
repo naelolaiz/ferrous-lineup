@@ -98,6 +98,7 @@
   - [A second bug hunt: crashes, spelling and the beat](step-9/bug-hunt.md)
   - [Swing and big band songs, with a horn section](step-9/big-band-songs.md)
   - [Finding a demo: alphabetical order and search](step-9/demo-search.md)
+  - [Latin American songs, from Mexico to the Río de la Plata](step-9/latin-american-songs.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
