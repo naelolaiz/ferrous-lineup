@@ -27,6 +27,7 @@ use crate::twelve_tone::{self, RowAction, RowWindow, SetAction, SetWindow};
 /// Something the user asked the piano roll to do.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RollAction {
+    SetLength(usize),
     /// Add one note, or the notes of a chord.
     AddNotes {
         channel: usize,
@@ -189,6 +190,10 @@ struct GroupDrag {
 /// is selected), from the Tools menu or a key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Tool {
+    Copy,
+    Cut,
+    Paste,
+    Duplicate,
     Transpose(i32),
     InKey(i32),
     Shift(isize),
@@ -324,6 +329,7 @@ impl Lanes {
 
 /// The piano roll window and everything it remembers between frames.
 pub struct PianoRoll {
+    clipboard: Vec<NoteEvent>,
     pub instance: Option<egui::Id>,
     pub open: bool,
     channel: usize,
@@ -399,6 +405,7 @@ impl PianoRoll {
     /// A closed piano roll for `channel`.
     pub fn new(channel: usize) -> Self {
         PianoRoll {
+            clipboard: Vec::new(),
             instance: None,
             open: false,
             channel,
@@ -1056,7 +1063,7 @@ impl PianoRoll {
             None
         };
         if let Some(tool) = tool.or(key_tool) {
-            self.use_tool(tool, pattern, scale, actions);
+            self.use_tool(ui.ctx(), tool, pattern, scale, actions);
         }
     }
 
@@ -1229,61 +1236,76 @@ impl PianoRoll {
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
         let menu = egui::containers::menu::MenuButton::new("Tools").config(stay_open);
         menu.ui(ui, |ui| {
-            ui.weak("Changes the selected notes, or every note if none is selected.");
-            let mut item =
-                |ui: &mut Ui, text: &str, tool: Tool, shortcut: Option<KeyboardShortcut>| {
-                    let mut button = egui::Button::new(text);
-                    if let Some(shortcut) = shortcut {
-                        button = button.shortcut_text(ctx.format_shortcut(&shortcut));
+            crate::widgets::scroll_menu(ui, |ui| {
+                ui.weak("Changes the selected notes, or every note if none is selected.");
+                let mut item =
+                    |ui: &mut Ui, text: &str, tool: Tool, shortcut: Option<KeyboardShortcut>| {
+                        let mut button = egui::Button::new(text);
+                        if let Some(shortcut) = shortcut {
+                            button = button.shortcut_text(ctx.format_shortcut(&shortcut));
+                        }
+                        if ui.add(button).clicked() {
+                            picked = Some(tool);
+                            ui.close();
+                        }
+                    };
+                item(ui, "Up a semitone", Tool::Transpose(1), Some(KEY_UP));
+                item(ui, "Down a semitone", Tool::Transpose(-1), Some(KEY_DOWN));
+                item(ui, "Up an octave", Tool::Transpose(12), Some(OCTAVE_UP));
+                item(
+                    ui,
+                    "Down an octave",
+                    Tool::Transpose(-12),
+                    Some(OCTAVE_DOWN),
+                );
+                item(ui, "Up a note in the key", Tool::InKey(1), Some(IN_KEY_UP));
+                item(
+                    ui,
+                    "Down a note in the key",
+                    Tool::InKey(-1),
+                    Some(IN_KEY_DOWN),
+                );
+                ui.separator();
+                item(ui, "A step earlier", Tool::Shift(-1), Some(KEY_LEFT));
+                item(ui, "A step later", Tool::Shift(1), Some(KEY_RIGHT));
+                item(ui, "A beat earlier", Tool::Shift(-4), Some(BEAT_LEFT));
+                item(ui, "A beat later", Tool::Shift(4), Some(BEAT_RIGHT));
+                item(ui, "Quantize to the steps", Tool::Quantize, None);
+                ui.separator();
+                item(ui, "Snap to the key", Tool::SnapToKey, None);
+                item(ui, "Invert chords up", Tool::Invert { up: true }, None);
+                item(ui, "Invert chords down", Tool::Invert { up: false }, None);
+                ui.separator();
+                ui.horizontal(|ui| {
+                    ui.label("Arpeggio");
+                    for order in ArpeggioOrder::ALL {
+                        ui.selectable_value(&mut self.arpeggio, order, order.name());
                     }
-                    if ui.add(button).clicked() {
-                        picked = Some(tool);
-                        ui.close();
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Each note");
+                    for (steps, name) in ARPEGGIO_RATES {
+                        ui.selectable_value(&mut self.arpeggio_rate, steps, name);
                     }
-                };
-            item(ui, "Up a semitone", Tool::Transpose(1), Some(KEY_UP));
-            item(ui, "Down a semitone", Tool::Transpose(-1), Some(KEY_DOWN));
-            item(ui, "Up an octave", Tool::Transpose(12), Some(OCTAVE_UP));
-            item(
-                ui,
-                "Down an octave",
-                Tool::Transpose(-12),
-                Some(OCTAVE_DOWN),
-            );
-            item(ui, "Up a note in the key", Tool::InKey(1), Some(IN_KEY_UP));
-            item(
-                ui,
-                "Down a note in the key",
-                Tool::InKey(-1),
-                Some(IN_KEY_DOWN),
-            );
-            ui.separator();
-            item(ui, "A step earlier", Tool::Shift(-1), Some(KEY_LEFT));
-            item(ui, "A step later", Tool::Shift(1), Some(KEY_RIGHT));
-            item(ui, "A beat earlier", Tool::Shift(-4), Some(BEAT_LEFT));
-            item(ui, "A beat later", Tool::Shift(4), Some(BEAT_RIGHT));
-            item(ui, "Quantize to the steps", Tool::Quantize, None);
-            ui.separator();
-            item(ui, "Snap to the key", Tool::SnapToKey, None);
-            item(ui, "Invert chords up", Tool::Invert { up: true }, None);
-            item(ui, "Invert chords down", Tool::Invert { up: false }, None);
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label("Arpeggio");
-                for order in ArpeggioOrder::ALL {
-                    ui.selectable_value(&mut self.arpeggio, order, order.name());
+                });
+                item(ui, "Arpeggiate chords", Tool::Arpeggiate, None);
+                ui.separator();
+                item(ui, "Select all", Tool::SelectAll, Some(SELECT_ALL));
+                for (label, key, tool) in [
+                    ("Copy", Key::C, Tool::Copy),
+                    ("Cut", Key::X, Tool::Cut),
+                    ("Paste", Key::V, Tool::Paste),
+                    ("Duplicate", Key::D, Tool::Duplicate),
+                ] {
+                    item(
+                        ui,
+                        label,
+                        tool,
+                        Some(KeyboardShortcut::new(Modifiers::COMMAND, key)),
+                    );
                 }
+                item(ui, "Delete selected notes", Tool::Delete, Some(DELETE));
             });
-            ui.horizontal(|ui| {
-                ui.label("Each note");
-                for (steps, name) in ARPEGGIO_RATES {
-                    ui.selectable_value(&mut self.arpeggio_rate, steps, name);
-                }
-            });
-            item(ui, "Arpeggiate chords", Tool::Arpeggiate, None);
-            ui.separator();
-            item(ui, "Select all", Tool::SelectAll, Some(SELECT_ALL));
-            item(ui, "Delete selected notes", Tool::Delete, Some(DELETE));
         });
         picked
     }
@@ -2110,6 +2132,15 @@ impl PianoRoll {
 
     /// The tool asked for with a key, if any.
     fn tool_from_keys(&self, ctx: &egui::Context) -> Option<Tool> {
+        if ctx.input(|input| input.events.contains(&egui::Event::Copy)) {
+            return Some(Tool::Copy);
+        }
+        if ctx.input(|input| input.events.contains(&egui::Event::Cut)) {
+            return Some(Tool::Cut);
+        }
+        if crate::clipboard::paste::<Vec<NoteEvent>>(ctx, "notes").is_some() {
+            return Some(Tool::Paste);
+        }
         let pressed = |shortcut| ctx.input_mut(|input| input.consume_shortcut(&shortcut));
         // egui counts Shift+↑ and Alt+↑ as ↑ too, so the longer shortcuts
         // are checked first.
@@ -2125,6 +2156,19 @@ impl PianoRoll {
             (KEY_LEFT, Tool::Shift(-1)),
             (KEY_RIGHT, Tool::Shift(1)),
             (SELECT_ALL, Tool::SelectAll),
+            (
+                KeyboardShortcut::new(Modifiers::COMMAND, Key::C),
+                Tool::Copy,
+            ),
+            (KeyboardShortcut::new(Modifiers::COMMAND, Key::X), Tool::Cut),
+            (
+                KeyboardShortcut::new(Modifiers::COMMAND, Key::V),
+                Tool::Paste,
+            ),
+            (
+                KeyboardShortcut::new(Modifiers::COMMAND, Key::D),
+                Tool::Duplicate,
+            ),
             (DELETE, Tool::Delete),
             (BACKSPACE, Tool::Delete),
             (ESCAPE, Tool::SelectNone),
@@ -2138,6 +2182,7 @@ impl PianoRoll {
     /// when none is selected.
     fn use_tool(
         &mut self,
+        ctx: &egui::Context,
         tool: Tool,
         pattern: &Pattern,
         scale: Scale,
@@ -2156,6 +2201,10 @@ impl PianoRoll {
             self.selection.clone()
         };
         let (label, new) = match tool {
+            Tool::Copy | Tool::Cut | Tool::Paste | Tool::Duplicate => {
+                self.clipboard_tool(ctx, tool, pattern, actions);
+                return;
+            }
             Tool::SelectAll => {
                 self.selection = visible;
                 return;
@@ -2207,6 +2256,93 @@ impl PianoRoll {
                 pitches: first.iter().map(|note| note.pitch).collect(),
             });
         }
+    }
+
+    fn clipboard_tool(
+        &mut self,
+        ctx: &egui::Context,
+        tool: Tool,
+        pattern: &Pattern,
+        actions: &mut Vec<RollAction>,
+    ) {
+        if matches!(tool, Tool::Copy | Tool::Cut | Tool::Duplicate) {
+            if self.selection.is_empty() {
+                return;
+            }
+            self.clipboard = self.selection.clone();
+            if tool != Tool::Duplicate {
+                crate::clipboard::copy(ctx, "notes", &self.clipboard);
+            }
+            if tool == Tool::Cut {
+                actions.push(RollAction::ReplaceNotes {
+                    channel: self.channel,
+                    old: self.selection.clone(),
+                    new: Vec::new(),
+                    label: "cut notes",
+                });
+                self.selection.clear();
+                return;
+            }
+            if tool == Tool::Copy {
+                return;
+            }
+        }
+        if let Some(notes) = crate::clipboard::paste::<Vec<NoteEvent>>(ctx, "notes") {
+            self.clipboard = lineup_core::tidy_notes(notes);
+        } else if tool == Tool::Paste && crate::clipboard::has_paste(ctx) {
+            return;
+        }
+        let Some(first) = self.clipboard.iter().map(|note| note.start).min() else {
+            return;
+        };
+        let at = if tool == Tool::Duplicate {
+            self.clipboard
+                .iter()
+                .map(|note| note.end())
+                .max()
+                .unwrap_or(first)
+        } else {
+            self.hovered_step.or(self.last_step).unwrap_or(0)
+        };
+        let notes: Vec<_> = self
+            .clipboard
+            .iter()
+            .copied()
+            .filter_map(|mut note| {
+                note.start = at.saturating_add(note.start - first);
+                if note.start >= lineup_core::MAX_STEPS {
+                    return None;
+                }
+                if note.end() > lineup_core::MAX_STEPS {
+                    note.length = lineup_core::MAX_STEPS - note.start;
+                    note.trim = 0;
+                }
+                if pattern
+                    .notes(self.channel)
+                    .iter()
+                    .any(|old| old.same_place(&note))
+                {
+                    return None;
+                }
+                Some(note)
+            })
+            .collect();
+        let Some(end) = notes.iter().map(|note| note.end()).max() else {
+            return;
+        };
+        if end > pattern.length() {
+            let bar = self.time.steps_per_bar();
+            actions.push(RollAction::SetLength(
+                end.div_ceil(bar)
+                    .saturating_mul(bar)
+                    .min(lineup_core::MAX_STEPS),
+            ));
+        }
+        self.selection = notes.clone();
+        actions.push(RollAction::AddNotes {
+            channel: self.channel,
+            notes,
+        });
     }
 
     fn paint_notes(
@@ -2439,6 +2575,98 @@ pub fn busiest_channel(pattern: &Pattern) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn native_clipboard_events_copy_paste_and_cut_notes_between_rolls() {
+        fn frame(
+            ctx: &egui::Context,
+            roll: &mut PianoRoll,
+            project: &Project,
+            events: Vec<egui::Event>,
+        ) -> (egui::FullOutput, Vec<RollAction>) {
+            let mut actions = Vec::new();
+            let screen = Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 800.0));
+            let mut output = ctx.run_pass(
+                egui::RawInput {
+                    screen_rect: Some(screen),
+                    events,
+                    time: Some(ctx.cumulative_frame_nr() as f64 * 0.1),
+                    ..Default::default()
+                },
+                |ctx| {
+                    actions = roll.show(ctx, project, 0, None, &[], screen, Vec2::splat(1.0));
+                },
+            );
+            output.textures_delta.clear();
+            (output, actions)
+        }
+        let mut project = Project::empty();
+        project.add_channel(lineup_core::Channel::synth());
+        let mut quiet = NoteEvent::new(Note::C4, 0, 4);
+        quiet.velocity = 43;
+        project.pattern_mut(0).unwrap().add_note(0, quiet);
+        project
+            .pattern_mut(0)
+            .unwrap()
+            .add_note(0, NoteEvent::new(Note::new(67), 8, 2));
+        let ctx = egui::Context::default();
+        let mut roll = PianoRoll::new(0);
+        roll.open = true;
+        frame(&ctx, &mut roll, &project, vec![]);
+        frame(&ctx, &mut roll, &project, vec![]);
+        frame(
+            &ctx,
+            &mut roll,
+            &project,
+            vec![egui::Event::Key {
+                key: Key::A,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: Modifiers::COMMAND,
+            }],
+        );
+        assert_eq!(roll.selection.len(), 2);
+        let (output, _) = frame(&ctx, &mut roll, &project, vec![egui::Event::Copy]);
+        let copied = output
+            .platform_output
+            .commands
+            .iter()
+            .find_map(|command| match command {
+                egui::OutputCommand::CopyText(text) => Some(text.clone()),
+                _ => None,
+            })
+            .expect("copy writes to the system clipboard");
+        let other_ctx = egui::Context::default();
+        let mut other = PianoRoll::new(0);
+        other.open = true;
+        frame(&other_ctx, &mut other, &project, vec![]);
+        frame(&other_ctx, &mut other, &project, vec![]);
+        other.last_step = Some(4);
+        let (_, actions) = frame(
+            &other_ctx,
+            &mut other,
+            &project,
+            vec![egui::Event::Paste(copied)],
+        );
+        let pasted = actions
+            .iter()
+            .find_map(|action| match action {
+                RollAction::AddNotes { notes, .. } => Some(notes.clone()),
+                _ => None,
+            })
+            .unwrap();
+        assert_eq!(
+            pasted.iter().map(|note| note.start).collect::<Vec<_>>(),
+            vec![4, 12]
+        );
+        assert_eq!(pasted[0].velocity, 43);
+        for note in &pasted {
+            project.pattern_mut(0).unwrap().add_note(0, *note);
+        }
+        let (_, actions) = frame(&other_ctx, &mut other, &project, vec![egui::Event::Cut]);
+        assert!(actions.iter().any(|action| matches!(action,RollAction::ReplaceNotes {old,new,..} if *old == pasted && new.is_empty())));
+    }
 
     const CHORDS: usize = 1;
     const SYNTH: usize = 4;

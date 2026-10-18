@@ -480,7 +480,7 @@ impl ChordSheet {
                 ui.scroll_to_rect(cell.rect, None);
             }
         }
-        self.followed = playing_bar;
+        self.followed = playing_bar.filter(|_| crate::widgets::follow_playback(ui.ctx()));
         if !ui.input(|input| input.pointer.primary_down()) {
             self.release(actions);
         }
@@ -1138,10 +1138,10 @@ impl ChordSheet {
                 .map(|cell| cell.bar.number)
         };
         let mut moved_to = None;
-        if pressed(Key::ArrowRight) || pressed(Key::Tab) {
+        if pressed(Key::ArrowRight) || (pressed(Key::Tab) && !ui.input(|i| i.modifiers.shift)) {
             moved_to = Some((selected + 1).min(last));
         }
-        if pressed(Key::ArrowLeft) {
+        if pressed(Key::ArrowLeft) || (pressed(Key::Tab) && ui.input(|i| i.modifiers.shift)) {
             moved_to = Some(selected.saturating_sub(1));
         }
         if let Some(cell) = cell_of(selected) {
@@ -1213,17 +1213,19 @@ impl ChordSheet {
         project: &Project,
         actions: &mut Vec<SheetAction>,
     ) -> bool {
-        let (copy, paste) = ui.input(|input| {
+        let (copy, cut, paste) = ui.input(|input| {
             let mut copy = false;
+            let mut cut = false;
             let mut paste = None;
             for event in &input.events {
                 match event {
                     egui::Event::Copy => copy = true,
+                    egui::Event::Cut => cut = true,
                     egui::Event::Paste(text) => paste = Some(text.clone()),
                     _ => {}
                 }
             }
-            (copy, paste)
+            (copy, cut, paste)
         });
         let all = ui.input_mut(|input| {
             input.consume_shortcut(&egui::KeyboardShortcut::new(Modifiers::COMMAND, Key::A))
@@ -1237,8 +1239,16 @@ impl ChordSheet {
             }
             return true;
         }
-        if copy {
+        if copy || cut {
             self.copy(ui.ctx(), project, bars);
+            if cut && let Some((first, last)) = self.selected_bars() {
+                let meter = project.meter();
+                actions.push(SheetAction::SetChords {
+                    start: meter.bar(first).start,
+                    end: meter.bar(last).end(),
+                    markers: Vec::new(),
+                });
+            }
             return true;
         }
         if let Some(pasted) = paste {

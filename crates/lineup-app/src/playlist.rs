@@ -1001,6 +1001,9 @@ impl PlaylistView {
                 .filter_map(|&index| clips.get(index).copied())
                 .collect();
         }
+        if copy || cut {
+            crate::clipboard::copy(ctx, "clips", &self.clipboard);
+        }
         if cut
             || ctx.input_mut(|input| {
                 input.consume_key(Modifiers::NONE, Key::Delete)
@@ -1012,7 +1015,24 @@ impl PlaylistView {
             ));
             self.selected.clear();
         }
-        if (pressed(Key::V) || duplicate) && !self.clipboard.is_empty() {
+        let system_paste = crate::clipboard::paste::<Vec<Clip>>(ctx, "clips");
+        let paste = pressed(Key::V) && !crate::clipboard::has_paste(ctx);
+        let pasted = system_paste.is_some();
+        if let Some(clips) = system_paste {
+            self.clipboard = clips
+                .into_iter()
+                .filter(|clip| clip.pattern < project.patterns().len())
+                .map(|mut clip| {
+                    clip.repeats = clip.repeats.clamp(1, MAX_REPEATS);
+                    clip.start = clip.start.min(MAX_SONG_STEPS - 1);
+                    clip.track = clip
+                        .track
+                        .min(project.playlist().tracks().len().saturating_sub(1));
+                    clip
+                })
+                .collect();
+        }
+        if (paste || pasted || duplicate) && !self.clipboard.is_empty() {
             let first = self
                 .clipboard
                 .iter()
@@ -1473,6 +1493,41 @@ fn paint_ruler(
 mod tests {
     use super::*;
     use egui::{Event, PointerButton, RawInput};
+
+    #[test]
+    fn select_all_and_native_paste_work_in_the_playlist_window() {
+        let ctx = egui::Context::default();
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        let project = Project::demo();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(
+            &ctx,
+            &mut view,
+            &project,
+            vec![Event::Key {
+                key: egui::Key::A,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: egui::Modifiers::COMMAND,
+            }],
+        );
+        assert_eq!(view.selected.len(), project.playlist().clips().len());
+        let copied = vec![project.playlist().clips()[0]];
+        view.paste_at = 64;
+        let actions = frame(
+            &ctx,
+            &mut view,
+            &project,
+            vec![Event::Paste(format!(
+                "Ferrous Lineup clips\n{}",
+                ron::to_string(&copied).unwrap()
+            ))],
+        );
+        assert!(actions.iter().any(|action| matches!(action,PlaylistAction::PasteClips(clips) if clips.len() == 1 && clips[0].start == 64)));
+    }
 
     fn frame(
         ctx: &egui::Context,

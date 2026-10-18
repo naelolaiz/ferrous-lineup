@@ -628,6 +628,9 @@ impl LineupApp {
     /// Applies one action from the piano roll.
     fn apply_roll(&mut self, action: RollAction) {
         match action {
+            RollAction::SetLength(length) => {
+                self.edit_pattern("extend pattern", |pattern| pattern.set_length(length))
+            }
             RollAction::AddNotes { channel, notes } => {
                 self.edit_pattern("add notes", |pattern| {
                     for note in notes {

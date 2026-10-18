@@ -432,6 +432,14 @@ impl StyleEditor {
     fn roll_action(&mut self, action: RollAction, events: &mut Vec<EditorEvent>) {
         let project = &mut self.draft.project;
         match action {
+            RollAction::SetLength(length) => {
+                let bar = project.time_signature.steps_per_bar();
+                self.draft.style.bars = length.div_ceil(bar).min(16);
+                project
+                    .pattern_mut(0)
+                    .unwrap()
+                    .set_length(self.draft.style.bars * bar);
+            }
             RollAction::AddNotes { channel, notes } => {
                 for note in notes {
                     project.pattern_mut(0).unwrap().add_note(channel, note);
