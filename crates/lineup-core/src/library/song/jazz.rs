@@ -68,6 +68,10 @@ pub(super) const SAINTS: Song = Song {
             G, and the tuba plays two beats to the bar.",
 };
 
+// Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/JoplinS/entertainer/entertainer.ly
+// (Mutopia, from the original edition of 1902; the top line of the right hand, in C
+// as written, two bars of its 2/4 to a bar. The repeat of the second strain, which
+// Joplin marks an octave higher, is played as written, and so is the run into it.)
 pub(super) const ENTERTAINER: Song = Song {
     name: "The Entertainer",
     origin: "Scott Joplin, 1902",
@@ -83,23 +87,119 @@ pub(super) const ENTERTAINER: Song = Song {
     band: PIANO,
     style: "New Orleans",
     parts: &[
-        Part::new("Pickup", "-:12 D5:2 D#5", "V"),
+        // The introduction is in octaves, without chords: the line alone.
+        Part::new(
+            "Intro",
+            "D6:1 E6 C6 A5:2 B5:1 G5:2 D5:1 E5 C5 A4:2 B4:1 G4:2 | \
+             D4:1 E4 C4 A3:2 B3:1 A3 Ab3 G3:2 - G5 D4:1 D#4",
+            "",
+        ),
         Part::new(
             "A",
-            "E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:10 C6:2 D6 D#6 | E6:2 C6 D6 E6:4 B5:2 D6:4 | \
-             C6:12 D5:2 D#5 | E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:12 A5:2 G5 | \
-             F#5:2 A5 C6 E6:4 D6:2 C6 A5 | D6:12 D5:2 D#5 | \
-             E5:2 C6:4 E5:2 C6:4 E5:2 C6:2 | _:10 C6:2 D6 D#6 | E6:2 C6 D6 E6:4 B5:2 D6:4 | \
-             C6:12 C6:2 D6 | E6:2 C6 D6 E6:4 C6:2 D6 C6 | E6:2 C6 D6 E6:4 C6:2 D6 C6 | \
-             E6:2 C6 D6 E6:4 B5:2 D6:4 | C6:12 D5:2 D#5",
-            "I | IV I | I V7 | I | I | IV | II7 | V7 | I | IV I | I V7 | I | I7 | IV iv | I V7 | I",
+            "E4:1 C5:2 E4:1 C5:2 E4:1 C5:6 C6:1 D6 D#6 | \
+             E6 C6 D6 E6:2 B5:1 D6:2 C6:6 D4:1 D#4 | \
+             E4 C5:2 E4:1 C5:2 E4:1 C5:7 A5:1 G5 | \
+             F#5 A5 C6 E6:2 D6:1 C6 A5 D6:6 D4:1 D#4 | \
+             E4 C5:2 E4:1 C5:2 E4:1 C5:6 C6:1 D6 D#6 | \
+             E6 C6 D6 E6:2 B5:1 D6:2 C6:6 C6:1 D6 | \
+             E6 C6 D6 E6:2 C6:1 D6 C6 E6 C6 D6 E6:2 C6:1 D6 C6",
+            "I I IV I | I V7 I I | I IV | II7 V7 | I I IV I | I V7 I I | I7 I7 IV iv",
         ),
+        // The endings of the first strain: back to its start, or on to B.
+        Part::new("A1", "E6:1 C6 D6 E6:2 B5:1 D6:2 C6:6 D4:1 D#4", "I V7 I I"),
+        Part::new(
+            "A2",
+            "E6:1 C6 D6 E6:2 B5:1 D6:2 C6:5 E5:1 F5 F#5",
+            "I V7 I I",
+        ),
+        Part::new(
+            "B",
+            "G5:2 A5:1 G5:2 E5:1 F5 F#5 G5:2 A5:1 G5:2 E5:1 C5 G4 | \
+             A4 B4 C5 D5 E5 D5 C5 D5 G4 E5 F5 G5 A5 G5 E5 F5 | \
+             G5:2 A5:1 G5:2 E5:1 F5 F#5 G5:2 A5:1 G5:2 G5:1 A5 A#5 | \
+             B5 B5:2 B5 A5:1 F#5 D5 G5:5 E5:1 F5 F#5 | \
+             G5:2 A5:1 G5:2 E5:1 F5 F#5 G5:2 A5:1 G5:2 E5:1 C5 G4 | \
+             A4 B4 C5 D5 E5 D5 C5 D5 C5:5 G4:1 F#4 G4 | \
+             C5:2 A4:1 C5:2 A4:1 C5 A4 G4 C5 E5 G5:2 E5:1 C5 G4",
+            "I | IV iv I I | I | V II7 V7 V7 | I | IV iv I I7 | IV #iv°7 I I",
+        ),
+        // Joplin has the repeat of B played an octave higher ("Repeat 8va"), with this run
+        // written an octave up to lead into it; both are played as written here.
+        Part::new("B1", "A4:2 C5 E5:1 D5:2 C5:6 E5:1 F5 F#5", "II7 V7 I I"),
+        Part::new("B2", "A4:2 C5 E5:1 D5:2 C5:7 D4:1 D#4", "II7 V7 I I"),
+        // The first strain again, ending on the tonic before the trio.
+        Part::new("A3", "E6:1 C6 D6 E6:2 B5:1 D6:2 C6:4 C6:2 -", "I V7 I I"),
+        // The trio, in F major.
+        Part::new(
+            "C",
+            "A5:1 G#5 A5:4 C6:2 D6:8 | \
+             F5:1 E5 F5:4 A5:2 Bb5:7 G5:1 | \
+             D5:2 G5:1 D5:2 G5:1 D5:2 C5:4 F5 | \
+             E5:1 G#5 B5 E6:2 D6:1 B5 C6 A5:4 Bb5 | \
+             A5:1 G#5 A5:4 C6:2 D6:8 | \
+             F5:1 E5 F5:4 A5:2 Bb5:7 G5:1 | \
+             D5:2 G5:1 D5:2 G5:1 D5:2 C5:4 F5:3 F5:1",
+            "I IV | vi ii | ii ii I vi | III7 III7 vi V7 | I IV | vi ii | ii ii I bVI7",
+        )
+        .in_key(F, Major),
+        Part::new(
+            "C1",
+            "A5:1 C6:2 G5 C5:1 D5 E5 F5:2 B4:1 C5 D5 E5 F5 G5",
+            "I V7 I I",
+        )
+        .in_key(F, Major),
+        Part::new("C2", "A5:1 C6:2 G5 C5:1 D5 E5 F5:2 - F6 -", "I V7 I I").in_key(F, Major),
+        // Four bars back to C major, the end of the second strain again.
+        Part::new(
+            "Interlude",
+            "C5:2 A4:1 C5:2 A4:1 C5 A4 G4 C5 E5 G5:2 E5:1 C5 G4 | \
+             A4:2 C5 E5:1 D5:2 C5:5 C6:2 -",
+            "IV #iv°7 I I | II7 V7 I I",
+        ),
+        Part::new(
+            "D",
+            "F4:2 E4:1 F4:2 E4:1 F4:2 -:1 A4 D5 A4 C5 D5 C5 A4 | \
+             G4:2 F#4:1 G4:2 F#4:1 G4:2 -:1 C5 E5 C5 D5 E5 D5 C5 | \
+             D5:2 C#5:1 D5:2 C#5:1 D5:2 -:1 F5 A5 F5 G5 A5 G5 F5 | \
+             C6 C6 C6:4 A5:2 G5 G4:1 G4 G4:2 G4 | \
+             F4 E4:1 F4:2 E4:1 F4:2 -:1 A4 D5 A4 C5 D5 C5 A4 | \
+             G4:2 F#4:1 G4:2 F#4:1 G4:2 -:1 C5 E5 C5 D5 E5 D5 C5 | \
+             A4 G#4 A4 G5:2 F5 C5:1 E5 D#5 E5 A5:2 C6:1 G5 E5",
+            "ii | I | V7 | #ii°7 I | ii | I | IV I",
+        ),
+        Part::new("D1", "C5:2 C5 E5:1 D5:2 C5:3 G4:1 G4 G4:2 G4", "II7 V7 I I"),
+        Part::new("D2", "C5:2 C5 E5:1 D5:2 C5:5 C6:2 -", "II7 V7 I I"),
     ],
-    form: &["Pickup", "A", "A"],
+    form: &[
+        "Intro",
+        "A",
+        "A1",
+        "A",
+        "A2",
+        "B",
+        "B1",
+        "B",
+        "B2",
+        "A",
+        "A3",
+        "C",
+        "C1",
+        "C",
+        "C2",
+        "Interlude",
+        "D",
+        "D1",
+        "D",
+        "D2",
+    ],
     drums_from: 1,
-    about: "Ragtime, the piano music jazz grew out of: the left hand keeps a steady \
-            oom-pah, bass then chord, while the right hand pushes against it, landing \
-            between the beats and holding on across them.",
+    about: "Ragtime, the piano music jazz grew out of: the left hand keeps a steady oom-pah, \
+            bass then chord, while the right hand pushes against it, landing between the beats \
+            and holding on across them. After four bars in octaves, Joplin's strains come A A B \
+            B A C C D D: the trio (C) moves to F major, the IV, with a D flat 7 (bVI7) before \
+            its cadence, and four bars from the end of the second strain lead back to C major \
+            for the last. The piece is in 2/4, two of its bars to a bar here; Joplin marks the \
+            repeat of the second strain an octave higher, played here as written.",
 };
 
 pub(super) const HAPPY_BIRTHDAY: Song = Song {
@@ -159,7 +259,10 @@ pub(super) const TWO_FIVE_WALK: Song = Song {
 };
 
 // Source: https://raw.githubusercontent.com/DCMLab/debussy_childrens_corner/main/notes/l113-06_childrens_golliwoggs.tsv
-// (the note table of the DCML corpus score)
+// (the note table of the DCML corpus score, all 128 bars: the top line of the
+// right hand, two 2/4 bars to a bar, with half a bar's rest before the first
+// and after the last; the tempo words from the same corpus's score,
+// https://raw.githubusercontent.com/DCMLab/debussy_childrens_corner/main/MS3/l113-06_childrens_golliwoggs.mscx)
 pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
     name: "Golliwogg's Cakewalk",
     origin: "Claude Debussy, Children's Corner, 1908",
@@ -183,6 +286,7 @@ pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
              -:2 Bb3:1 Bb3:1 -:2 Bb3:2 -:2 Bb3:2 -:2 Bb3:2",
             "I | I | I | I | I",
         ),
+        // Bars 10-25; again in bars 90-105.
         Part::new(
             "Theme",
             "Bb4:1 Ab4:2 Bb4:1 F4:2 Bb4:2 Ab4:1 F4:2 Eb4:1 Cb4:2 Eb4:2 | Bb3:1 Bb3:2 C4:1 Bb3:2 Bb4:2 Bb3:8 | \
@@ -193,15 +297,119 @@ pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
              F4:1 F4:2 G4:1 F4:2 D5:2 Bb4:4 Bb5:2 -:2",
             "I | I | I | I I vi V7 | I | I | bIII | II7 V",
         ),
+        // Bars 26-37: the same rhythm in thirds over B flat 7, then the
+        // right hand holds a chord while the left plays the tune; the low
+        // unison run is written an octave up.
+        Part::new(
+            "Second theme",
+            "Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:4 Bb5:2 -:2 | \
+             Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:2 Eb4:2 F4:2 C5:2 | Eb4:16 | \
+             Eb4:8 -:1 Bb3:1 C4:1 D4:1 C4:2 Bb3:2 | \
+             Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:4 Bb5:2 -:2 | \
+             Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:2 Eb4:2 F4:2 C5:2",
+            "V7 | iii7 | V11 | vi7 V | V7 | iii7",
+        ),
+        // Bars 38-45, and again 118-125: the opening run over a held C flat
+        // and E flat, then the vamp, thinning out.
+        Part::new(
+            "Vamp",
+            "Bb5:1 Ab5:2 Bb5:1 F5:2 Bb5:2 Ab5:1 F5:2 Eb5:1 Cb5:4 | \
+             -:1 Ab4:1 F4:1 Eb4:1 Cb4:2 G3:2 -:2 Bb3:2 -:2 Bb3:2 | \
+             -:10 Bb3:2 -:2 Bb3:2 | -:10 Bb3:2 -:2 Bb3:2",
+            "iv6 | iv6 V I I | I | I",
+        ),
+        // Bars 46-61: the bass walks up E flat, F to G flat, "Un peu moins
+        // vite" (a little slower), the chords off the beat over a G flat
+        // pedal; "Cédez" (give way) at the A that starts the quotation.
+        Part::new(
+            "G flat",
+            "-:10 Db4:2 -:2 Db4:2 | -:2 Cb4:2 -:2 F4:2 -:2 Db4:2 -:2 Db4:2 | \
+             -:2 Cb4:2 -:2 F4:2 -:2 Db4:2 -:4 | -:4 Db4:2 -:10 | \
+             -:4 Db3:2 -:4 Db4:2 -:2 Db4:2 | -:2 Cb4:2 -:2 F4:2 -:2 Db4:2 -:2 Db4:2 | \
+             -:2 Cb4:2 -:2 F4:2 -:2 Db4:2 -:4 | -:12 A3:4",
+            "VI I | I | I | I | V7 I | I | I | V",
+        )
+        .in_key(FSharp, Major)
+        .with_tempo(&[tempo(8, 96), glide(120, 72, 8)]),
+        // Bars 62-89: Tristan's A, F, E, "avec une grande émotion", four
+        // times, each answered "a Tempo" by the cakewalk's chords; then a
+        // held chord over D flat with the theme's first notes, "Retenu"
+        // (held back). The score gives words, not numbers.
+        Part::new(
+            "Tristan",
+            "F4:6 E4:2 Eb4:2 Eb5:2 Db5:2 Eb5:2 | -:2 Eb5:2 Db5:2 Eb5:2 -:4 A3:4 | \
+             F4:6 E4:2 Eb4:2 Eb5:2 Db5:2 Eb5:2 | -:2 Eb5:2 Db5:2 Eb5:2 -:4 A4:4 | \
+             F5:2 Ab5:4 Gb5:2 Eb5:1 Gb5:2 F5:1 Db5:4 | Ab4:1 Cb5:2 Bb4:1 Db4:4 Db4:4 A3:4 | \
+             F4:6 E4:2 Eb4:2 Eb5:2 Db5:2 Eb5:2 | -:4 A3:4 F4:6 E4:2 | \
+             Eb4:2 Eb5:2 Db5:2 Eb5:2 -:4 Db5:4 | A5:2 Cb6:4 Bb5:2 F5:1 Ab5:2 Gb5:1 Eb5:4 | \
+             Bb4:1 Db5:2 Cb5:1 F4:3 Gb4:1 Eb4:8 | _:11 Bb4:1 Ab4:2 Bb4:2 | \
+             -:3 Bb4:1 Ab4:2 Bb4:2 Db4:8 | _:3 Bb4:1 Ab4:2 Bb4:2 Db4:3 Bb4:1 Ab4:2 Bb4:2",
+            "VII #IV7 V9 V9 | V9 | V+ I6 | I6 | V7 | ii7 V7 I I | #iø7 V9 | I I VII7 VIImaj7 | \
+             I6 | I6 IV6 | IV V7 V11 V11 | V11 | V11 V7sus4 | V7",
+        )
+        .in_key(FSharp, Major)
+        .with_tempo(&[
+            tempo(8, 96),
+            glide(28, 72, 4),
+            tempo(40, 96),
+            glide(60, 72, 4),
+            tempo(72, 96),
+            glide(88, 72, 8),
+            tempo(104, 96),
+            glide(112, 72, 8),
+            tempo(128, 96),
+            glide(200, 84, 24),
+        ]),
+        // Bars 90-105: the theme as in bars 10-25, "Toujours retenu" (still
+        // held back) for two bars, then "1o Tempo".
+        Part::new(
+            "Theme again",
+            "Bb4:1 Ab4:2 Bb4:1 F4:2 Bb4:2 Ab4:1 F4:2 Eb4:1 Cb4:2 Eb4:2 | Bb3:1 Bb3:2 C4:1 Bb3:2 Bb4:2 Bb3:8 | \
+             Bb3:1 Ab3:2 Bb3:1 C4:2 Ab3:2 Bb3:1 Ab3:2 Bb3:1 Cb4:2 Ab3:2 | \
+             Bb4:1 G4:2 F4:1 Eb4:2 D4:2 C4:2 G3:2 C4:2 D4:2 | \
+             Bb4:1 Ab4:2 Bb4:1 F4:2 Bb4:2 Ab4:1 F4:2 Eb4:1 Cb4:2 Eb4:2 | Bb3:1 Bb3:2 C4:1 Bb3:2 Bb4:2 Bb3:8 | \
+             Bb3:1 Bb3:2 C4:1 Bb3:2 Db4:2 Eb4:2 F4:2 Eb4:2 Gb4:2 | \
+             F4:1 F4:2 G4:1 F4:2 D5:2 Bb4:4 Bb5:2 -:2",
+            "I | I | I | I I vi V7 | I | I | bIII | II7 V",
+        )
+        .with_tempo(&[glide(0, 72, 16), tempo(16, 108)]),
+        // Bars 106-117: the second theme again, with an A major chord over B
+        // sliding down onto B flat 9 in its middle.
+        Part::new(
+            "Second theme 2",
+            "Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:4 Bb5:2 -:2 | \
+             Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:2 Eb4:2 F4:2 C5:2 | E4:8 F4:8 | Bb3:16 | \
+             Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:4 Bb5:2 -:2 | \
+             Eb4:1 F4:2 G4:1 F4:2 Eb4:2 F4:2 Eb4:2 F4:2 C5:2",
+            "V7 | iii7 | #V11 V9 | V6 I | V7 | iii7",
+        ),
+        // Bars 126-128: the last run, C flat and then B flat, A flat, G, F
+        // in thirty-seconds (here B flat and G, on their own beats), and two
+        // E flats, all an octave up.
+        Part::new("Coda", "-:4 Cb4:2 Bb3:1 G3:1 Eb4:2 -:6 | Eb4:2 -:14", "I | I"),
     ],
-    form: &["Intro", "Theme", "Theme"],
+    form: &[
+        "Intro",
+        "Theme",
+        "Second theme",
+        "Vamp",
+        "G flat",
+        "Tristan",
+        "Theme again",
+        "Second theme 2",
+        "Vamp",
+        "Coda",
+    ],
     drums_from: 1,
     about: "A cakewalk, the strutting dance of ragtime, with Debussy's blue note: the C flat \
-            that keeps falling onto B flat on the off-beat. The second time round the tune \
-            slides into G flat major, the flat-three chord, and comes back through F7 and \
-            B flat. The piece is in 2/4, two of its bars to a bar here; the opening run falls \
-            through three octaves, and the low unison run in the fourth bar of the theme is \
-            written an octave up.",
+            that keeps falling onto B flat on the off-beat. The theme's second phrase slides \
+            into G flat major, the flat-three chord, and comes back through F7 and B flat; the \
+            middle section, a little slower, settles in G flat and quotes the opening of \
+            Wagner's Tristan und Isolde, A rising to F and sinking to E, \"with great \
+            emotion\", each time answered by the cakewalk's chords. It ends on D flat 7, the \
+            V7 of G flat, and the theme drops straight back into E flat. The piece is in 2/4, \
+            two of its bars to a bar here; the opening run falls through three octaves, and \
+            the low unison runs and the last notes are written an octave up.",
 };
 
 // Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/RussianFolkSongDarkEyes.abc
@@ -301,19 +509,92 @@ pub(super) const MAPLE_LEAF_RAG: Song = Song {
             "C5:2 -:1 C5 - Bb4:2 Eb4:1 - Ab4 C5 Eb5 Ab5:2 -",
             "II7 V7 I I",
         ),
+        // The first strain again, its last eighth an A flat leading into the trio.
+        Part::new(
+            "A3",
+            "-:1 Ab4 Eb5 Ab4 C5 Eb5:2 G4:1 Eb5 G4 Bb4 Eb5:5 | \
+             -:1 Ab4 Eb5 Ab4 C5 Eb5:2 G4:1 Eb5 G4 Bb4 Eb5:3 -:1 Eb5 | \
+             - Ab4 Cb5 Fb5 - Eb5 - Eb5 - Ab4 Cb5 Fb5 - Eb5 -:2 | \
+             -:1 Ab3 Cb4 Ab4 - Ab3 Cb4 Ab4 - Ab4 Cb5 Ab5 - Ab4 Cb5 Ab5 | \
+             Ab5:2 Ab5 Ab5 Ab5:1 Ab5 _ Eb5 F5 C5 Eb5 F5:2 Ab4:1 | \
+             _ Bb4 Cb5 Ab4 Bb4 C5:2 Ab4:1 C5 Ab4 Bb4:2 Ab4 -:1 Ab5 | \
+             _:2 Ab5 Ab5 Ab5:1 Ab5 _ Eb5 F5 C5 Eb5 F5:2 Ab4:1 | \
+             _ Bb4 Cb5 Ab4 Bb4 C5:2 Ab4:1 C5 Ab4 Bb4:2 Ab4 Ab5",
+            "I V7 | I V7 | bVI V bVI V | i | #ii°7 I | bVI I V7 I | #ii°7 I | bVI I V7 I",
+        ),
+        // The trio, in D flat major.
+        Part::new(
+            "C",
+            "Ab5:3 Ab5:2 Eb5:1 Bb4:2 Ab5:3 Ab5:2 Eb5:1 Bb4 Eb5 | \
+             Ab4 Db5 Bb4 Db5 F5 Ab4 Db5 F5 Bb4 Db5 F5 Ab4:2 F5:1 Bb4 F5 | \
+             Ab5:3 Ab5:2 Eb5:1 Bb4:2 Ab5:3 Ab5:2 Eb5:1 Bb4 Eb5 | \
+             Ab4 Db5 Bb4 Db5 F5 Ab4 Db5 F5 Bb4 Db5 F5 Ab4:2 F5:1 A4 F5 | \
+             Bb5:3 Bb5:2 F5:1 C5:2 Bb5:3 Bb5:2 F5:1 C5 F5 | \
+             - Eb5 Bb5 Eb5 Gb5 C6:2 Eb5:1 Bb5 Eb5 Gb5 C6:2 Eb5:1 Bb5:2 | \
+             Db6 Db6 C6 Bb5 F5:1 Db5 Eb5 Gb5:2 Bb4:1 F5:2",
+            "V7 | I | V7 | I | VI7 | ii | #iv°7 #iv°7 I VI7",
+        )
+        .in_key(CSharp, Major),
+        Part::new(
+            "C1",
+            "F5:1 Db5 Eb5 F5:2 C5:1 Eb5 Db5:2 Ab5 F5:1 Ab5 F5 Ab5 F5",
+            "II7 V7 I I",
+        )
+        .in_key(CSharp, Major),
+        Part::new(
+            "C2",
+            "F5:1 Db5 Eb5 F5:2 C5:1 Eb5 Db5:2 Db5:1 F5 Ab5 Db6:2 -",
+            "II7 V7 I I",
+        )
+        .in_key(CSharp, Major),
+        // The last strain, back in A flat. From its eleventh bar to the ending the tune is
+        // tied across every bar line, so each ending carries the five bars before it.
+        Part::new(
+            "D",
+            "Ab5:2 F5 Ab5 F5 Ab5 Bb5:1 C6:2 Bb5:1 Ab5 F5 | \
+             Eb5 F5:2 C5:5 -:1 Eb5 F5 C5 Eb5 F5:2 C5:1 | \
+             Eb5:2 F5:1 Bb4:5 -:1 Db5 F5 Bb4 Db5 F5:2 C5:1 | \
+             _ Eb5 F5 C5 Eb5 F5:2 C5 Eb5:1 F5 C5 Eb5 F5:2 Eb5:1 | \
+             Ab5:2 F5 Ab5 F5 Ab5 Bb5:1 C6:2 Bb5:1 Ab5 F5",
+            "IV | I | V7 | I | IV",
+        ),
+        Part::new(
+            "D1",
+            "Ab5:2 F5 Eb5:1 Ab5:2 C5 Eb5:1 F5 C5 Eb5 F5:2 Ab4:1 | \
+             _ Bb4 Ab4:2 Ab4 Bb4:1 Ab4:2 Bb4:1 C5 Ab4 Bb4 C5:2 Ab4:1 | \
+             _ Bb4 C5 Ab4 - Bb4:2 Eb4:1 Ab4:2 Eb5 Eb5 Eb5",
+            "I | IV iv I I | vi6 V7 I I",
+        ),
+        Part::new(
+            "D2",
+            "Ab5:2 F5 Eb5:1 Ab5:2 C5 Eb5:1 F5 C5 Eb5 F5:2 Ab4:1 | \
+             _ Bb4 Ab4:2 Ab4 Bb4:1 Ab4:2 Bb4:1 C5 Ab4 Bb4 C5:2 Ab4:1 | \
+             _ Bb4 C5 Ab4 - Bb4:2 Eb4:1 Ab4:2 Eb5 Ab5 -",
+            "I | IV iv I I | vi6 V7 I I",
+        ),
     ],
-    form: &["A", "A", "B", "B1", "B", "B2", "A"],
+    form: &[
+        "A", "A", "B", "B1", "B", "B2", "A3", "C", "C1", "C", "C2", "D", "D1", "D", "D2",
+    ],
     drums_from: 0,
     about: "The rag that made ragtime famous. The tune is a broken chord in sixteenths that \
-            keeps landing just after the beat, over a left hand that never stops its \
-            oom-pah. Listen for the F flat chord (bVI) that darkens the third bar, and the \
-            diminished seventh under the repeated A flats that resolves back to the tonic. The \
-            piece is in 2/4, two of its bars to a bar here; the climb through four octaves \
-            is folded into two, and one high phrase is played an octave down.",
+            keeps landing just after the beat, over a left hand that never stops its oom-pah. \
+            Listen for the F flat chord (bVI) that darkens the third bar, and the diminished \
+            seventh under the repeated A flats that resolves back to the tonic. The strains come \
+            A A B B A C C D D: the trio (C) moves to D flat major, the IV, opening on its own \
+            dominant, A flat 7, and passing through B flat 7 to E flat minor, and the last \
+            strain comes home to A flat. The piece is in 2/4, two of its bars to a bar here; the \
+            climb through four octaves is folded into two, and one high phrase is played an \
+            octave down.",
 };
 
 // Source: https://raw.githubusercontent.com/00sapo/OpenEWLD/master/dataset/George_Gershwin-Ira_Gershwin/I_Got_Rhythm/I_Got_Rhythm.mxl
-// (OpenEWLD, the public-domain part of the Wikifonia lead sheets: the refrain)
+// (OpenEWLD, the public-domain part of the Wikifonia lead sheets: the two-bar
+// introduction, the verse and the refrain with its two endings; the same lead sheet as
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/HEAD/wikifonia-dataset/original-abc/GeorgeGershwinIraGershwinIGotRhythm.abc.
+// The refrain's chords checked against the iReal chart of the standard; the sheet's "Em6"
+// over the melody's B flat, in bar 8 of the verse, is read as E flat minor 6, as the same
+// spot of the refrain is written E flat minor further on.)
 pub(super) const I_GOT_RHYTHM: Song = Song {
     name: "I Got Rhythm",
     origin: "George Gershwin, Girl Crazy, 1930",
@@ -329,10 +610,36 @@ pub(super) const I_GOT_RHYTHM: Song = Song {
     band: SWING,
     style: "Rhythm changes",
     parts: &[
+        Part::new("Intro", "D5:2 D5:4 D5:2 F5:4 Eb5 | D5:4 D4:12", "vi | III7"),
+        // "Days can be sunny, with never a sigh..."
+        Part::new(
+            "Verse",
+            "Bb4:4 G4 Bb4:8 | C5:4 C5:8 G4:4 | Bb4 G4 Bb4:8 | Db5:16 | \
+             Bb4:4 G4 Bb4:8 | D5:4 D5:8 Bb4:4 | G4:16 | _:12 -:4 | \
+             Bb4:4 G4 Bb4:8 | C5:4 C5:8 G4:4 | Bb4 G4 Bb4:8 | Db5:16 | \
+             Bb4:4 G4 Bb4:8 | D5:4 D5:8 D5:4 | Bb4:16 | _:12 -:4",
+            "vi | ii | vi6 | IV7 | vi IV | vi6 vi6 vi6 iv6 | vi iii7 vi vi | iii7 iii7 iii7 vi | \
+             vi | ii | vi6 | IV7 | vi vi7 | ii7 ii7 ii7 V7 | I v7 | v7 I",
+        ),
+        // "I'm chipper all the day...", and the lead-in to the refrain.
+        Part::new(
+            "Verse 2",
+            "D5:4 - D4 D4 | F4 F4 D4:8 | Eb4:4 F4 G4 Bb4 | Db5:16 | \
+             D5:4 - D4 D4 | F4 F4 D4:8 | Eb4:4 F4 G4 Bb4 | C5:16 | \
+             F5:2 F5:4 F5:2 Ab5:4 Gb5 | F5:16",
+            "III III7 | V+ III7 | ii7 | IV7 | III III7 | V+ III7 | ii7 | V7 | #iv° bVI7 | \
+             V7 i6 iii° V7",
+        ),
         Part::new(
             "A",
             "-:4 F4:6 G4 | Bb4 C5:10 | -:4 C5:6 Bb4 | G4 F4:10 | \
              -:4 F4:6 G4 | Bb4 C5:2 - Eb5 - C5 | D5:4 D5 C5:2 D5 C5 Bb4 | _:16",
+            "I vi7 | ii7 V7 | I vi7 | ii7 V7 | I I7 | IV iv | I V7 | I #ii° V7 V7",
+        ),
+        Part::new(
+            "A2",
+            "-:4 F4:6 G4 | Bb4 C5:10 | -:4 C5:6 Bb4 | G4 F4:10 | \
+             -:4 F4:6 G4 | Bb4 C5:2 - Eb5 - C5 | D5:4 D5 C5:2 D5 C5:4 | Bb4:16",
             "I vi7 | ii7 V7 | I vi7 | ii7 V7 | I I7 | IV iv | I V7 | I",
         ),
         Part::new(
@@ -341,7 +648,16 @@ pub(super) const I_GOT_RHYTHM: Song = Song {
              -:4 C5:6 C5 | C5 D5:10 | -:4 C5:6 C5 | C5:16",
             "III7 | III7 | VI7 | VI7 | II7 | II7 | V7 | V7",
         ),
-        // The last A, with the two-bar tag: "who could ask for anything more?"
+        // The last A with the two-bar tag, "who could ask for anything more?", and the
+        // first ending, back to the top of the refrain.
+        Part::new(
+            "A3",
+            "-:4 F4:6 G4 | Bb4 C5:10 | -:4 C5:6 Bb4 | G4 F4:10 | \
+             -:4 F4:6 G4 | Bb4 C5:4 Eb5 C5:2 | D5:4 D5 C5:2 D5 C5:4 | F5:12 Eb5:2 Bb4 | \
+             D5:4 D5 C5:2 D5 C5:4 | Bb4:16",
+            "I vi7 | ii7 V7 | I vi7 | ii7 V7 | I I7 | IV iv | I v | VI7 | II7 V7 | I V7",
+        ),
+        // The same with the second ending.
         Part::new(
             "A end",
             "-:4 F4:6 G4 | Bb4 C5:10 | -:4 C5:6 Bb4 | G4 F4:10 | \
@@ -350,17 +666,23 @@ pub(super) const I_GOT_RHYTHM: Song = Song {
             "I vi7 | ii7 V7 | I vi7 | ii7 V7 | I I7 | IV iv | I v | VI7 | II7 V7 | I",
         ),
     ],
-    form: &["A", "A", "B", "A end"],
+    form: &[
+        "Intro", "Verse", "Verse 2", "A", "A2", "B", "A3", "A", "A2", "B", "A end",
+    ],
     drums_from: 0,
-    about: "The chords of this chorus became \"rhythm changes\", the progression jazz \
-            musicians have written most new tunes on after the blues. The A section turns \
-            I-vi-ii-V twice, then I-I7-IV-iv; the bridge is a chain of dominants, two bars \
-            each, falling by fifths from D7 back to F7. The tune opens on four notes, F G \
-            B flat C, pushed off the beat.",
+    about: "The verse leans on G minor, the relative minor, with a blue D flat over E flat 7, \
+            before the refrain sets off in B flat. The chords of the refrain became \"rhythm \
+            changes\", the progression jazz musicians have written most new tunes on after \
+            the blues. The A section turns I-vi-ii-V twice, then I-I7-IV-iv; the bridge is a \
+            chain of dominants, two bars each, falling by fifths from D7 back to F7. The tune \
+            opens on four notes, F G B flat C, pushed off the beat.",
 };
 
 // Source: https://raw.githubusercontent.com/00sapo/OpenEWLD/master/dataset/Hughie_Cannon/Bill_Bailey%2C_Won%27t_You_Please_Come_Home%3F/Bill_Bailey%2C_Won%27t_You_Please_Come_Home%3F.mxl
-// (OpenEWLD lead sheet: the chorus)
+// (OpenEWLD lead sheet: the chorus with its two endings; the verse is not in it. Chords
+// checked against the iReal charts of the standard and of the Dixieland book,
+// https://raw.githubusercontent.com/Dazzid/chromaflow/HEAD/data/iRealXML/Bill%20Bailey%20(Dixieland%20Tunes).xml:
+// "fine tooth comb" is on C, the IV, reached through G7, where the lead sheet has A minor.)
 pub(super) const BILL_BAILEY: Song = Song {
     name: "Bill Bailey, Won't You Please Come Home",
     origin: "Hughie Cannon, 1902",
@@ -384,25 +706,36 @@ pub(super) const BILL_BAILEY: Song = Song {
              -:4 D4 F#4 A4 | D5:8 E5 | E5:4 B4:12 | _:16",
             "I | I | I | I | I | I #i°7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 | V7 V+ | I | I",
         ),
+        // The second half with the first ending, back to the start.
+        Part::new(
+            "Chorus 2",
+            "-:4 D4 E4:2 E4 G4:4 | B4 A#4 B4 D5 | - D4 E4 G4 | B4:12 D4:4 | \
+             D4 D4 G4 B4 | D5:8 F5 | E5:16 | E5:12 G4:4 | \
+             G4 G4:8 G4:4 | A4:8 G4 | D5:4 D5:8 E5:4 | B4:12 B4:4 | \
+             B4 A4 G#4 A4 | D5:8 B4 | G4:16 | _:4 -:12",
+            "I | I | I | I | I | I I7 | IV | IV | IV | #iv°7 | I | VI7 | II7 | V7 | I | II7 V7",
+        ),
+        // The second half with the second ending.
         Part::new(
             "Chorus end",
             "-:4 D4 E4:2 E4 G4:4 | B4 A#4 B4 D5 | - D4 E4 G4 | B4:12 D4:4 | \
              D4 D4 G4 B4 | D5:8 F5 | E5:16 | E5:12 G4:4 | \
              G4 G4:8 G4:4 | A4:8 G4 | D5:4 D5:8 E5:4 | B4:12 B4:4 | \
              B4 A4 G#4 A4 | D5:8 B4 | G4:16 | _:4 -:12",
-            "I | I | I | I | I | I iii° | ii VI7 | ii | IV | #iv°7 | I | VI7 | II7 | V7 | I | II7 V7",
+            "I | I | I | I | I | I I7 | IV | IV | IV | #iv°7 | I | VI7 | II7 | V7 | I | I",
         ),
     ],
-    form: &["Chorus", "Chorus end", "Chorus", "Chorus end"],
+    form: &["Chorus", "Chorus 2", "Chorus", "Chorus end"],
     drums_from: 0,
     about: "A ragtime song from 1902 that Dixieland bands still play. The first half takes \
-            its time: six bars of G, then eight of D7, the V7. The second half changes chord \
-            almost every bar, through C and C sharp diminished, then a chain of dominants, E7, A7, \
-            D7, each a fifth above the next, that walks back home to G.",
+            its time: six bars of G, then eight of D7, the V7. The second half turns to C \
+            through G7, climbs through C sharp diminished, then takes a chain of dominants, \
+            E7, A7, D7, each a fifth above the next, that walks back home to G.",
 };
 
 // Source: https://raw.githubusercontent.com/00sapo/OpenEWLD/master/dataset/George_Gershwin-Irving_Caesar/Swanee/Swanee.mxl
-// (OpenEWLD lead sheet: the chorus)
+// (OpenEWLD lead sheet: the chorus; the verse is not in it. Checked against the same
+// lead sheet as ABC, https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/HEAD/wikifonia-dataset/original-abc/GeorgeGershwinIrvingCaesarSwanee.abc)
 pub(super) const SWANEE: Song = Song {
     name: "Swanee",
     origin: "George Gershwin, 1919",
@@ -435,7 +768,7 @@ pub(super) const SWANEE: Song = Song {
             "I | I | I | I | IV | ii7 V7 | I | I | I | III | IV | ii | V | V V V I | I | I",
         ),
     ],
-    form: &["Chorus", "Chorus end"],
+    form: &["Chorus", "Chorus end", "Chorus", "Chorus end"],
     drums_from: 0,
     about: "Gershwin's first big hit. The tune sits on A, the third of F, for two whole \
             bars, then climbs by half steps, C, C sharp, D, while the chords go from F \
@@ -444,7 +777,10 @@ pub(super) const SWANEE: Song = Song {
 };
 
 // Source: https://raw.githubusercontent.com/00sapo/OpenEWLD/master/dataset/Al_Jolson-B.G._DeSylva-Vincent_Rose/Avalon/Avalon.mxl
-// (OpenEWLD lead sheet: the chorus)
+// (OpenEWLD lead sheet: the chorus; the verse is not in it. Chords checked against the
+// iReal chart of the standard: the lead sheet leaves out the G minor of bar 21 under the
+// held G, though it names D7 again in the middle of the next bar, as it names C7 again
+// at the same spot of the first half; G minor there is the standard's chord too.)
 pub(super) const AVALON: Song = Song {
     name: "Avalon",
     origin: "Vincent Rose, Al Jolson and Buddy DeSylva, 1920",
@@ -469,24 +805,34 @@ pub(super) const AVALON: Song = Song {
              A4:16 | _:8 D4 | A4:16 | _:8 D4",
             "V7 | V7 | V7 | V7 | I | I V7 | I | I | V7 ii7 | V7 ii7 | V7 | V7 | I | I V7 | I | I",
         ),
+        // The second half, the first time: the pickup into the chorus again.
+        Part::new(
+            "Chorus 2",
+            "A4:8 Bb4 | C5 D5 | C5:4 Bb4 A4:8 | _ D4 | \
+             G4:16 | _:8 A4 | Bb4:16 | _:4 - D4:8 | \
+             C4 F4 | A4 C5 | E5:4 D5 E5:8 | _:4 - D5:8 | \
+             Bb4:16 | A4 | F4 | _:12 C4:4",
+            "VI7 | VI7 | VI7 | VI7 | ii | ii VI7 | ii | ii | I | I | VI7 | VI7 | ii | V7 | I | I",
+        ),
         Part::new(
             "Chorus end",
             "A4:8 Bb4 | C5 D5 | C5:4 Bb4 A4:8 | _ D4 | \
              G4:16 | _:8 A4 | Bb4:16 | _:4 - D4:8 | \
              C4 F4 | A4 C5 | E5:4 D5 E5:8 | _:4 - D5:8 | \
              Bb4:16 | A4 | F4 | _:12 -:4",
-            "VI7 | VI7 | VI7 | VI7 | VI7 | VI7 | ii | ii | I | I | VI7 | VI7 | ii | V7 | I | I",
+            "VI7 | VI7 | VI7 | VI7 | ii | ii VI7 | ii | ii | I | I | VI7 | VI7 | ii | V7 | I | I",
         ),
     ],
-    form: &["Pickup", "Chorus", "Chorus end"],
+    form: &["Pickup", "Chorus", "Chorus 2", "Chorus", "Chorus end"],
     drums_from: 1,
     about: "The song starts away from home: four bars of C7, the V7, before the first F \
-            chord arrives. The second half does the same trick a step higher, six bars of \
+            chord arrives. The second half does the same trick a step higher, four bars of \
             D7 that lead to G minor, the ii, and the end is a plain ii-V-I.",
 };
 
 // Source: https://raw.githubusercontent.com/00sapo/OpenEWLD/master/dataset/Chris_Smith_%5B1%5D-Jim_Burris/Ballin%27_the_Jack/Ballin%27_the_Jack.mxl
-// (OpenEWLD lead sheet: the chorus)
+// (OpenEWLD lead sheet: the chorus; the verse is not in it. Chords checked against the
+// iReal chart, https://raw.githubusercontent.com/Dazzid/chromaflow/HEAD/data/iRealXML/Ballin'%20The%20Jack.xml)
 pub(super) const BALLIN_THE_JACK: Song = Song {
     name: "Ballin' the Jack",
     origin: "Chris Smith and Jim Burris, 1913",
@@ -509,7 +855,7 @@ pub(super) const BALLIN_THE_JACK: Song = Song {
          D5:2 B4:4 G4:6 A4:2 Ab4 | G4 G4 A4 A4 Bb4:4 A4:2 G4 | Bb4 A4:4 G4:6 Bb4:2 C5 | \
          Db5:4 Bb4 Db5 Bb4 | D5:2 C5:4 Bb4:6 G4:4 | C5 D5 Eb5 C5 | D5:2 C#5 D5 Bb4:6 -:4",
         "VI7 | VI7 | II7 | II7 | V7 | V7 | I III7 | IV7 III7 | VI7 | VI7 | II7 | II7 | bVI7 | \
-         I I vi VI7 | ii VI7 ii iiø7 | V7 I",
+         I #v°7 vi VI7 | ii VI ii iiø7 | V7 I",
     )],
     form: &["Chorus", "Chorus", "Chorus"],
     drums_from: 0,
@@ -521,6 +867,15 @@ pub(super) const BALLIN_THE_JACK: Song = Song {
 // Source: https://tunearch.org/wiki/Annotation:Twelfth_Street_Rag
 // (the ABC there, a fiddle version after Phillips, Traditional American Fiddle
 // Tunes vol. 2: the introduction and the famous first strain, in cut time)
+// and https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/EudayL.abc
+// (the Wikifonia lead sheet of the published rag, in E flat: the two
+// variations of the strain and the second introduction, here down a minor
+// third, in C. Checked against Colin MacDonald's sequence of the printed score,
+// https://raw.githubusercontent.com/HeavenlyBerserker/Midireader/HEAD/midiReader/input/InputV1/notefiles/RAG/RAG/MathewCollection/MacDonald/12th%20Street%20Rag%20-%20MacDonald.notelist,
+// which has the same notes but for two, where the sequence and the lead
+// sheet's own first strain agree and are followed: the rhythm of the last bar
+// of B1 and the last note of the eleventh bar of C2. The 1914 edition's long
+// first introduction is in no written source and is left out.)
 pub(super) const TWELFTH_STREET_RAG: Song = Song {
     name: "Twelfth Street Rag",
     origin: "Euday L. Bowman, 1914",
@@ -562,18 +917,75 @@ pub(super) const TWELFTH_STREET_RAG: Song = Song {
              C4 C4:2 D4 E4 G4 A4 G4 | C5 G4 A4 C5:6 -:4",
             "I | I7 | IV | iv | I | II7 V7 | I | I",
         ),
+        // The first variation: the three notes C, B, A with an E struck
+        // between them.
+        Part::new(
+            "B1",
+            "C5:4 E5:2 B4:4 E5:2 A4:2 E5:2 | G4:2 E5:2 C5:2 E5:2 B4:2 E5:2 A4:2 E5:2 | \
+             B4:4 F5:2 A4:4 F5:2 G#4:4 | G4:16 | B4:4 F5:2 A4:4 F5:2 G4:2 F5:2 | \
+             B4:4 F5:2 A4:4 F5:2 G4:2 F5:2 | C5:4 E5:2 B4:4 E5:2 A4:2 E5:2 | G4:16 | \
+             C5:4 E5:2 B4:4 E5:2 A4:2 E5:2 | G4:2 E5:2 C5:2 E5:2 B4:2 E5:2 A4:2 E5:2 | \
+             B4:4 F5:2 A4:4 F5:2 G#4:4 | G4:16 | E4:8 D4:8 | B4:8 A4:8 | \
+             G4:4 A4:4 B4:6 C5:2 | D5:2 B4:4 A4:4 G4:6",
+            "I | I | V7 | V7 | V7 | V7 | I | I | I | I | V7 | V7 | II7 | II7 | V7 | V7",
+        ),
+        Part::new(
+            "B2",
+            "C5:4 E5:2 B4:4 E5:2 A4:2 E5:2 | G4:2 E5:2 C5:2 E5:2 B4:2 E5:2 A4:2 E5:2 | \
+             B4:4 F5:2 A4:4 F5:2 G#4:4 | G4:16 | B4:4 F5:2 A4:4 F5:2 G4:2 F5:2 | \
+             B4:4 F5:2 A4:4 F5:2 G4:2 F5:2 | C5:4 E5:2 B4:4 E5:2 A4:2 E5:2 | G4:16 | \
+             E5:12 E5:4 | E5:12 E5:4 | -:2 C5:2 D5:2 Eb5:5 D5:1 C5:4 | E5:16 | \
+             E5:4 D5:4 C5:2 A4:6 | E5:8 D5:8 | C5:16 | _:4 -:4 C5:4 -:4",
+            "I | I | V7 | V7 | V7 | V7 | I | I | I | III7 | IV iv7 | I | II7 | V7 | I | I",
+        ),
+        // The second introduction, the opening lick as the printed score
+        // has it.
+        Part::new(
+            "Intro 2",
+            "G5:2 F#5:2 G5:2 A5:2 G5:4 -:4 | G4:2 F#4:2 G4:2 A4:2 G4:4 -:4 | \
+             G4:3 G4:1 G#4:3 G#4:1 A4:3 A4:1 A#4:3 A#4:1 | B4:4 -:4 G5:4 -:4",
+            "V7 | V7 | V7 | V7",
+        ),
+        // The second variation: G sharp, A and a high G, in dotted rhythm.
+        Part::new(
+            "C1",
+            "G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 G5:4 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | A5:16 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 G5:4 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | A5:16 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 G5:4 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | A5:16 | E5:8 D5:8 | F#5:8 E5:8 | \
+             G5:2 G4:4 F4:2 F4:3 F5:1 D4:3 D5:1 | G4:3 G5:1 G#4:3 G#5:1 A4:3 A5:1 B4:3 B5:1",
+            "I | I | V7 | V7 | V7 | V7 | I | I | I | I | V7 | V7 | II7 | II7 | V7 | V7",
+        ),
+        Part::new(
+            "C2",
+            "G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 G5:4 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | A5:16 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 G5:4 | \
+             G#4:3 A4:1 G5:3 G#4:1 A4:3 G5:1 G#4:3 A4:1 | A5:16 | \
+             C5:4 G4:2 C5:4 G4:2 C5:4 | C5:4 G4:2 C5:4 G4:2 C5:4 | C5:4 A4:2 C5:4 A4:2 C5:4 | \
+             C5:12 -:4 | G5:8 A5:3 G5:1 E5:3 C5:1 | E5:8 D5:8 | C5:4 A4:2 G4:4 E4:2 D4:4 | \
+             C4:4 -:4 C5:2 -:6",
+            "I | I | V7 | V7 | V7 | V7 | I | I | I | I7 | IV | bVI7 | I vi7 | II7 V7 | I | I",
+        ),
     ],
-    form: &["Intro", "A1", "A2", "A1", "Tag"],
+    form: &[
+        "Intro", "A1", "A2", "A1", "Tag", "B1", "B2", "Intro 2", "C1", "C2",
+    ],
     drums_from: 0,
     about: "The main strain is three notes, C B A, played in bars of eight eighths, so the \
             group of three starts on a different beat each time round: the three-against-four \
-            of ragtime. The chords hardly move, C and G7, and the last strain slides down \
-            by half steps, C, B flat, A, A flat, over C, C7, F and F minor.",
+            of ragtime. The chords hardly move, C and G7, and the strain's end slides down by \
+            half steps, C, B flat, A, A flat, over C, C7, F and F minor. Two variations \
+            follow, the second after the introduction comes back: first the three notes with \
+            an E struck between them, then G sharp, A and a high G in dotted rhythm, which \
+            ends over C, C7, F and A flat 7, the flat-six chord.",
 };
 
 // Source: https://tunearch.org/wiki/Annotation:Dill_Pickle_Rag
-// (the ABC there, a fiddle version after Phillips, "via PR": the first and
-// second strains, in 4/4 as written there)
+// (the ABC there, a fiddle version after Phillips, "via PR": the three
+// strains, the trio in C, in 4/4 as written there)
 pub(super) const DILL_PICKLES: Song = Song {
     name: "Dill Pickles Rag",
     origin: "Charles L. Johnson, 1906",
@@ -621,19 +1033,41 @@ pub(super) const DILL_PICKLES: Song = Song {
             "II | V",
         ),
         Part::new("B2", "D5:2 E5 F#5 D5 E5 F#5:6 | G5:16", "V | I"),
+        // The trio, in C major, the IV of G.
+        Part::new(
+            "Trio",
+            "C5:2 A4 G4 C5 A4 G4 E4 F4 | G4 E4 G4 A4:4 G4:2 E4:4 | \
+             D4:2 C#4 D4 G4:4 E4:2 D4:4 | C4:8 A4:4 B4 | \
+             C5:2 A4 G4 C5 A4 G4 E4 F4 | G4 E4 G4 A4:4 G4:2 E4:4 | \
+             A4:2 G#4 A4 D5:4 B4:2 A4:4 | G4:8 A4:4 B4 | \
+             C5:2 A4 G4 C5 A4 G4 E4 F4 | G4 E4 G4 A4:4 G4:2 E4:4 | \
+             D4:2 C#4 D4 G4:4 E4:2 D4:4 | C4:8 C5:4 B4 | \
+             A4 A4:2 B4 C5 B4 C5 D5 | E5 D#5 E5 A5:4 G5:2 E5:4 | \
+             D5:2 C#5 D5 G5:4 E5:2 D5:4",
+            "I | I | V | I | I | I | II | V | I | I | V | I | vi | vi | II V",
+        )
+        .in_key(C, Major),
+        // The two endings of the trio.
+        Part::new("Trio 1", "C5:12 A4:2 B4", "I").in_key(C, Major),
+        Part::new("Trio 2", "C5:12 -:4", "I").in_key(C, Major),
     ],
-    form: &["Pickup", "A", "A1", "A", "A2", "B", "B1", "B", "B2"],
+    form: &[
+        "Pickup", "A", "A1", "A", "A2", "B", "B1", "B", "B2", "Trio", "Trio 1", "Trio", "Trio 2",
+    ],
     drums_from: 1,
     about: "The first strain is a three-note cell, D E G, run through bars of eight \
             eighths, so it lands on a new beat each time: ragtime's three-against-four. The \
             same cell then steps down, onto E minor (vi) and D (V), and the endings turn \
-            through E and A major, a chain of dominants that leads back through D to G.",
+            through E and A major, a chain of dominants that leads back through D to G. The \
+            trio moves to C major, the IV of G, as rag trios do, and its last phrase passes \
+            through A minor and D major on the way home.",
 };
 
 // Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/JoplinS/PineappleRag/PineappleRag.ly
 // (Mutopia, from the Seminary Music edition of 1908; the top line of the right
-// hand, down a fourth from B flat. In the second strain the broken octaves,
-// a low note and then the chord, are written as repeated notes at the top.)
+// hand, down a fourth from B flat, so the trio is in B flat instead of E flat. In the
+// second strain the broken octaves, a low note and then the chord, are written as
+// repeated notes at the top.)
 pub(super) const PINE_APPLE_RAG: Song = Song {
     name: "Pine Apple Rag",
     origin: "Scott Joplin, 1908",
@@ -649,6 +1083,13 @@ pub(super) const PINE_APPLE_RAG: Song = Song {
     band: PIANO,
     style: "New Orleans",
     parts: &[
+        // The introduction is in octaves, without chords: the line alone.
+        Part::new(
+            "Intro",
+            "D4:1 C4:2 Bb3:1 A3 G#3 A3 G3 F3 G3 A3 C4:5 | \
+             D4:1 D4:2 C#4:1 D4 E4 F4:2 G4 C4:4 C4:2",
+            "",
+        ),
         Part::new(
             "A",
             "D5:1 C5:2 Bb4:1 A4 G#4 A4 G4 F4 G4 A4 C5:2 F5:1 A5:2 | \
@@ -684,17 +1125,67 @@ pub(super) const PINE_APPLE_RAG: Song = Song {
         ),
         Part::new("B1", "-:1 G5:3 A5:2 G5 F5 C5:1 B4 C5 C#5 D5 D#5", "V7 I"),
         Part::new("B2", "-:1 G5:3 A5:2 G5 F5 F4:1 G4 A4 Bb4 C5:2", "V7 I"),
-        // The first ending again, without the run back to the start.
-        Part::new("End", "F4:4 G4:1 A4:2 F4:9", "II7 V7 I I"),
+        // The first strain again, ending on F7 to lead into the trio.
+        Part::new("A3", "F4:4 G4:1 A4:2 F4:6 G4:1 F4 Eb4", "II7 V7 I I7"),
+        // The trio, in B flat major (E flat in the score), where the piece ends. It lies
+        // low, as in the score.
+        Part::new(
+            "C",
+            "D4:1 C#4:2 D4:5 D4:1 C#4:2 D4:5 | \
+             Bb3:1 C4:2 Db4 C4:1 Bb3:2 D4:4 Eb4:1 G4 F4 Eb4 | \
+             D4 C#4:2 D4:3 Bb4:2 Bb4:1 A4:2 A4:3 F5:2 | \
+             F5:1 E5:2 E5 F5:1 E5:2 D5:4 F4:1 G4 F4 Eb4 | \
+             D4 C#4:2 D4:5 D4:1 C#4:2 D4:5 | \
+             Bb3:1 C4:2 Db4 C4:1 Bb3:2 D4:6 F4:2 | \
+             F4:1 Eb4:2 G4 F#4:1 G4:2 G4:1 F4:2 D5 Bb4:1 D4:2",
+            "I | IV IV I V7 | I iii | VII7 VII7 iii V7 | I | IV IV I I7 | IV I",
+        )
+        .in_key(ASharp, Major),
+        Part::new(
+            "C1",
+            "D4:1 C4:2 G4 F4:1 D4:2 Bb3 F3:1 G3 A3 Bb3 C4 C#4",
+            "V7 V7 I V7",
+        )
+        .in_key(ASharp, Major),
+        Part::new(
+            "C2",
+            "D4:1 C4:2 G4 F4:1 D4:2 Bb3:5 A4:1 Bb4 C5",
+            "V7 V7 I I",
+        )
+        .in_key(ASharp, Major),
+        Part::new(
+            "D",
+            "Db5:1 Db5:2 Db5:6 Bb4:1 Db5 Gb4 Bb4 Db5:2 Bb4:1 | \
+             D5 D5:2 D5:6 D5:1 F5 Bb4 C5 D5:3 | \
+             G5:1 F5:2 Eb5 D5:1 C5:2 B4:1 C5:2 C5 D5:1 Eb5:2 | \
+             G5:1 F5:2 D5 C5:1 Bb4:2 C#5:1 D5:2 D5 A4:1 Bb4 C5 | \
+             Db5 Db5:2 Db5:6 Bb4:1 Db5 Gb4 Bb4 Db5:2 Bb4:1 | \
+             D5 D5:2 D5:6 D5:1 F5 Bb4 C5 D5:3 | \
+             D5:1 D5:2 C5:1 C5 Bb4 C5:2 D5:1 D5:2 F5:1 F5 Bb4 D5:2",
+            "bVI | I | V7 | I | bVI | I | IV I",
+        )
+        .in_key(ASharp, Major),
+        Part::new(
+            "D1",
+            "F5:1 Eb5:2 D5 C5:1 D5:2 Bb4:5 A4:1 Bb4 C5",
+            "V7 V7 I I",
+        )
+        .in_key(ASharp, Major),
+        Part::new("D2", "F5:1 Eb5:2 D5 C5:1 D5:2 Bb4:4 Bb5:2 -", "V7 V7 I I").in_key(ASharp, Major),
     ],
-    form: &["A", "A1", "A", "A2", "B", "B1", "B", "B2", "A", "End"],
-    drums_from: 0,
-    about: "A slow-march rag. The first strain steps down with a chromatic turn around A, \
-            then climbs a broken chord to the top; halfway through it turns B flat major into B flat minor \
-            (IV, then iv) for a moment of shade. The second strain opens on the dominant, \
-            C7, and hammers each note twice, short then long: that is the ragtime \
-            syncopation in its plainest form. The piece is in 2/4, two of its bars to a bar \
-            here, a fourth below the original key.",
+    form: &[
+        "Intro", "A", "A1", "A", "A2", "B", "B1", "B", "B2", "A", "A3", "C", "C1", "C", "C2", "D",
+        "D1", "D", "D2",
+    ],
+    drums_from: 1,
+    about: "A slow-march rag. The first strain steps down with a chromatic turn around A, then \
+            climbs a broken chord to the top; halfway through it turns B flat major into B flat \
+            minor (IV, then iv) for a moment of shade. The second strain opens on the dominant, \
+            C7, and hammers each note twice, short then long: that is the ragtime syncopation in \
+            its plainest form. After four bars in octaves, the strains come A A B B A C C D D: \
+            the trio (C) moves to B flat major, the IV, low and quiet, and the last strain opens \
+            on G flat major, the flat six (bVI), before the piece ends in B flat. The piece is \
+            in 2/4, two of its bars to a bar here, a fourth below the original key.",
 };
 
 // Source: https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/ftp/JoplinS/EliteSyncopations/EliteSyncopations.ly
@@ -715,6 +1206,13 @@ pub(super) const ELITE_SYNCOPATIONS: Song = Song {
     band: PIANO,
     style: "New Orleans",
     parts: &[
+        // The introduction is in octaves, without chords: the line alone.
+        Part::new(
+            "Intro",
+            "C6:1 A5 G5 F5:2 A5:1 G5 F5 G5 F5 D5 C5:2 F4:1 G4 A4 | \
+             C4 G4:2 F4:1 E4:2 G4 C5 -:1 C4 - D4 - E4",
+            "",
+        ),
         Part::new(
             "A",
             "-:1 F4 D5 C5:2 D5:1 C5:2 -:1 E4 D5 C5:2 D5:1 C5:2 | \
@@ -758,16 +1256,99 @@ pub(super) const ELITE_SYNCOPATIONS: Song = Song {
             "Bb4:1 G4 D5 C5:2 Bb4:1 E4:2 F4 -:1 C4 - D4 - E4",
             "V7 I",
         ),
-        // The first ending again, without the run back to the start.
-        Part::new("End", "F4:1 G4 A4:2 G4:1 G4:2 C4:1 F4:2 -:6", "ii6 V7 I I"),
+        // The first strain again, ending on F7 to lead into the trio.
+        Part::new(
+            "A3",
+            "F4:1 G4 A4:2 G4:1 G4:2 C4:1 F4:2 - F5:4",
+            "ii6 V7 I I7",
+        ),
+        // The trio, in B flat major, where the piece ends.
+        Part::new(
+            "C",
+            "D5:1 G5 F5 Eb5 D5 C5 Bb4 D5 C5 Bb4 G4 F4:2 Bb5 G5:1 | \
+             F5 G5 F5 D5 Bb4 C5 D5 C5:7 F4:2 | \
+             D5:1 G5 F5 Eb5 D5 Eb5 D5 C5 Bb4 A4 G4 Bb4:2 D5:1 C5 Bb4 | \
+             A4 D5 F5 A5 G5 F5:2 E5:1 D5:2 - F5:4 | \
+             D5:1 G5 F5 Eb5 D5 C5 Bb4 D5 C5 Bb4 G4 F4:2 Bb5 G5:1 | \
+             F5 G5 F5 D5 Bb4 C5 D5 C5:7 F4:2 | \
+             D5:1 C#5 D5 Eb5 F5 E5 F5 F#5 G5 F#5 G5 Bb5:2 Bb5:1 A5 G5",
+            "I I IV I | I II7 V7 V7 | I III7 vi vi | iii VII7 iii V7 | I I IV I | I II7 V7 V7 | \
+             I I IV #iv°7",
+        )
+        .in_key(ASharp, Major),
+        Part::new(
+            "C1",
+            "F5:1 D6 Bb5 F5 G5 Eb5 C5 A4 Bb4:2 E4:1 F4 G4 A4 Bb4 C5",
+            "I V7 I I",
+        )
+        .in_key(ASharp, Major),
+        // The trio's second ending runs into the last strain: its last B flat is tied over the
+        // bar line, so the first two bars of D come with it.
+        Part::new(
+            "C2 into D",
+            "F5:1 D6 Bb5 F5 G5 Eb5 C5 A4 Bb4:6 -:1 Bb5 | \
+             _ Eb5 C6 Eb5 G5 Bb5:2 Eb5:1 C6 Eb5 G5 Bb5:2 C6 Bb5:1",
+            "I V7 I I | IV",
+        )
+        .in_key(ASharp, Major),
+        Part::new(
+            "D",
+            "F5:1 Bb4 G5 Bb4 D5 F5:2 Bb4:1 G5 Bb4 D5 F5:2 G5 Bb4:1 | \
+             F5 A4 G5 A4 C5 F5:2 A4:1 G5 A4 C5 F5:2 G5 A4:1 | \
+             F5 Bb4 G5 Bb4 D5 F5:2 Bb4:1 G5 Bb4 D5 F5:2 F5 Bb5:1 | \
+             _ Eb5 C6 Eb5 G5 Bb5:2 Eb5:1 C6 Eb5 G5 Bb5:2 C6 Bb5:1",
+            "I | V7 | I | IV",
+        )
+        .in_key(ASharp, Major),
+        // The end of D, its first ending, and the tied B flat into the first two bars again.
+        Part::new(
+            "D1 into D",
+            "F5:1 Bb4 G5 Bb4 D5 F5:2 Bb4:1 G5 Bb4 D5 F5:2 F5 Db5:1 | \
+             _ Bb4 Db5 Bb4 C5 Db5:2 Bb4:1 D5 Bb4 C5 D5:2 D5 F5:1 | \
+             _ C5 G5 C5 Eb5 A5:2 Bb5:5 -:3 Bb5:1 | \
+             _ Eb5 C6 Eb5 G5 Bb5:2 Eb5:1 C6 Eb5 G5 Bb5:2 C6 Bb5:1",
+            "I | bVI7 I | V7 V7 I I | IV",
+        )
+        .in_key(ASharp, Major),
+        Part::new(
+            "D2",
+            "F5:1 Bb4 G5 Bb4 D5 F5:2 Bb4:1 G5 Bb4 D5 F5:2 F5 Db5:1 | \
+             _ Bb4 Db5 Bb4 C5 Db5:2 Bb4:1 D5 Bb4 C5 D5:2 D5 F5:1 | \
+             _ C5 G5 C5 Eb5 A5:2 Bb5:5 Bb5:2 -",
+            "I | bVI7 I | V7 V7 I I",
+        )
+        .in_key(ASharp, Major),
     ],
-    form: &["A", "A1", "A", "A2", "B", "B1", "B", "B2", "A", "End"],
-    drums_from: 0,
-    about: "The first strain is a two-note figure, D and C, where the C comes a sixteenth \
-            early and is held across the beat, while the bass creeps up by half steps from F \
-            to A and then slides back down under a diminished chord. The second strain is a \
-            single line running down the scale, and in its middle it leans toward D minor \
-            and A minor through A7 and E7. The piece is in 2/4, two of its bars to a bar here.",
+    form: &[
+        "Intro",
+        "A",
+        "A1",
+        "A",
+        "A2",
+        "B",
+        "B1",
+        "B",
+        "B2",
+        "A",
+        "A3",
+        "C",
+        "C1",
+        "C",
+        "C2 into D",
+        "D",
+        "D1 into D",
+        "D",
+        "D2",
+    ],
+    drums_from: 1,
+    about: "The first strain is a two-note figure, D and C, where the C comes a sixteenth early \
+            and is held across the beat, while the bass creeps up by half steps from F to A and \
+            then slides back down under a diminished chord. The second strain is a single line \
+            running down the scale, and in its middle it leans toward D minor and A minor \
+            through A7 and E7. After four bars in octaves, the strains come A A B B A C C D D: \
+            the trio (C) moves to B flat major, the IV, and the piece ends there, the last \
+            strain reaching its cadence through G flat 7 (bVI7). The piece is in 2/4, two of its \
+            bars to a bar here.",
 };
 
 // Source: https://raw.githubusercontent.com/00sapo/OpenEWLD/master/dataset/Irving_Caesar-Vincent_Youmans/Tea_for_Two/Tea_for_Two.mxl
