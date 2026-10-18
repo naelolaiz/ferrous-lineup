@@ -279,6 +279,8 @@ pub enum RowAction {
     UseAsKey(Scale),
     /// Put these notes in place of the channel's notes in the pattern.
     Write(Vec<NoteEvent>),
+    /// Put these notes in a new pattern, keeping the current pattern intact.
+    NewPattern { name: String, notes: Vec<NoteEvent> },
 }
 
 /// How long each note lasts, for the menu.
@@ -363,6 +365,7 @@ impl RowWindow {
         scale: Scale,
         drawn: &[Note],
         length: usize,
+        can_create_pattern: bool,
     ) -> Vec<RowAction> {
         self.follow(scale);
         let mut actions = Vec::new();
@@ -379,7 +382,7 @@ impl RowWindow {
             .resizable([false, true])
             .vscroll(true)
             .show(ctx, |ui| {
-                self.contents(ui, drawn, length, &mut actions);
+                self.contents(ui, drawn, length, can_create_pattern, &mut actions);
             });
         self.open = open;
         if let Some(RowAction::UseAsKey(scale)) = actions.first() {
@@ -393,6 +396,7 @@ impl RowWindow {
         ui: &mut Ui,
         drawn: &[Note],
         length: usize,
+        can_create_pattern: bool,
         actions: &mut Vec<RowAction>,
     ) {
         ui.weak(
@@ -461,7 +465,7 @@ impl RowWindow {
         ui.add_space(4.0);
         self.properties(ui);
         ui.separator();
-        self.write_options(ui, length, actions);
+        self.write_options(ui, length, can_create_pattern, actions);
     }
 
     /// The 12×12 matrix with its labels: P on the left, R on the right,
@@ -581,7 +585,13 @@ impl RowWindow {
         }
     }
 
-    fn write_options(&mut self, ui: &mut Ui, length: usize, actions: &mut Vec<RowAction>) {
+    fn write_options(
+        &mut self,
+        ui: &mut Ui,
+        length: usize,
+        can_create_pattern: bool,
+        actions: &mut Vec<RowAction>,
+    ) {
         let writing = &mut self.writing;
         ui.horizontal_wrapped(|ui| {
             ui.label("Then");
@@ -667,15 +677,29 @@ impl RowWindow {
                 heard.len()
             ));
         }
-        ui.horizontal(|ui| {
+        ui.weak(format!(
+            "Selected instrument · pattern length: {length} steps"
+        ));
+        ui.horizontal_wrapped(|ui| {
             if ui
-                .button(format!("Write {} into the pattern", writing.label))
+                .button(format!("Write {} into current pattern", writing.label))
                 .on_hover_text(
                     "Replaces this channel's notes in the pattern. Ctrl+Z puts them back.",
                 )
                 .clicked()
             {
-                actions.push(RowAction::Write(notes));
+                actions.push(RowAction::Write(notes.clone()));
+            }
+            if ui
+                .add_enabled(can_create_pattern, egui::Button::new("Save to new pattern"))
+                .on_hover_text("Create and select a new pattern with these notes, the selected instrument, and the current pattern’s length and time signature. Ctrl+Z undoes it.")
+                .on_disabled_hover_text("New patterns are available in the song piano roll, up to 99 patterns per project.")
+                .clicked()
+            {
+                actions.push(RowAction::NewPattern {
+                    name: format!("Row {}", writing.label),
+                    notes,
+                });
             }
             if ui
                 .button("Use as the key")

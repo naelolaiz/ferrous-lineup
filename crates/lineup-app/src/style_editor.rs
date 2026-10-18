@@ -68,7 +68,8 @@ impl StyleEditor {
         self.open = false;
         self.start(style, path);
         self.open = false;
-        self.roll.open = false;
+        self.roll = PianoRoll::new(0);
+        self.roll.instance = Some(roll_id());
     }
     pub fn new() -> Self {
         let style = UserStyle::blank();
@@ -109,7 +110,8 @@ impl StyleEditor {
         self.saved = style;
         self.path = path;
         self.history = History::default();
-        self.roll.open = false;
+        self.roll = PianoRoll::new(0);
+        self.roll.instance = Some(roll_id());
         self.preview_started = None;
         self.error = None;
         self.open = true;
@@ -128,7 +130,7 @@ impl StyleEditor {
     }
     /// Read before the song's global file/edit shortcuts.
     pub fn shortcuts(&mut self, ctx: &egui::Context) {
-        if !self.active(ctx) {
+        if !self.active(ctx) || egui::Popup::is_any_open(ctx) {
             return;
         }
         let pressed = |key, modifiers| ctx.input_mut(|input| input.consume_key(modifiers, key));
@@ -143,6 +145,11 @@ impl StyleEditor {
         }
         if pressed(Key::Space, Modifiers::NONE) {
             self.preview_requested = true;
+        }
+        if widgets::editor_keyboard(ctx, egui::LayerId::new(egui::Order::Middle, window_id()))
+            && pressed(Key::Escape, Modifiers::NONE)
+        {
+            self.roll.deselect_channel();
         }
         if pressed(Key::Z, Modifiers::COMMAND | Modifiers::SHIFT)
             || pressed(Key::Y, Modifiers::COMMAND)
@@ -163,13 +170,23 @@ impl StyleEditor {
         }
         let before = self.draft.clone();
         let mut events = Vec::new();
+        if self
+            .preview_started
+            .is_some_and(|(start, period)| ctx.input(|input| input.time) >= start + period * 4.0)
+        {
+            self.preview_started = None;
+        }
         if self.preview_requested {
             self.preview_requested = false;
-            let period = self.draft.project.pattern(0).unwrap().length() as f64 * 60.0
-                / f64::from(self.draft.project.tempo.bpm())
-                / 4.0;
-            self.preview_started = Some((ctx.input(|input| input.time), period));
-            events.push(EditorEvent::Preview(Box::new(self.draft.project.clone())));
+            if self.preview_started.take().is_some() {
+                events.push(EditorEvent::Stop);
+            } else {
+                let period = self.draft.project.pattern(0).unwrap().length() as f64 * 60.0
+                    / f64::from(self.draft.project.tempo.bpm())
+                    / 4.0;
+                self.preview_started = Some((ctx.input(|input| input.time), period));
+                events.push(EditorEvent::Preview(Box::new(self.draft.project.clone())));
+            }
         }
         if self.pending_start.is_some() {
             let mut discard = false;
@@ -232,7 +249,7 @@ impl StyleEditor {
                         self.preview_started = Some((ctx.input(|input| input.time), seconds));
                         events.push(EditorEvent::Preview(Box::new(self.draft.project.clone())));
                     }
-                    if ui.button("Stop preview").clicked() { events.push(EditorEvent::Stop); self.preview_started = None; }
+                    if ui.add_enabled(self.preview_started.is_some(), egui::Button::new("Stop preview")).clicked() { events.push(EditorEvent::Stop); self.preview_started = None; }
                 });
                 ui.horizontal_wrapped(|ui| {
                     ui.label("Name"); ui.text_edit_singleline(&mut self.draft.style.name);
@@ -269,7 +286,7 @@ impl StyleEditor {
                     let elapsed = ctx.input(|input| input.time)-start;
                     if elapsed < period * 4.0 { ctx.request_repaint(); Some(((elapsed%period)/period * length as f64) as usize) } else { None }
                 });
-                for action in channel_rack::show(ui, &self.draft.project, 0, self.roll.channel(), playhead) { self.rack_action(action, &mut events); }
+                for action in channel_rack::show(ui, &self.draft.project, 0, self.roll.selected_channel(), playhead, None) { self.rack_action(action, &mut events); }
             });
         for action in self.roll.show(
             ctx,
@@ -378,6 +395,15 @@ impl StyleEditor {
     fn rack_action(&mut self, action: RackAction, events: &mut Vec<EditorEvent>) {
         let project = &mut self.draft.project;
         match action {
+            RackAction::SelectChannel(channel) => match channel {
+                Some(channel) => self.roll.select(channel),
+                None => self.roll.deselect_channel(),
+            },
+            RackAction::PlayPattern => self.preview_requested = true,
+            RackAction::PausePattern | RackAction::StopPattern => {
+                self.preview_started = None;
+                events.push(EditorEvent::Stop);
+            }
             RackAction::ToggleStep { channel, step } => {
                 project.pattern_mut(0).unwrap().toggle(channel, step);
             }
@@ -385,7 +411,6 @@ impl StyleEditor {
                 project.pattern_mut(0).unwrap().set(channel, step, false);
             }
             RackAction::Preview(index) => {
-                self.roll.select(index);
                 events.push(EditorEvent::Hear {
                     channel: project.channels()[index].clone(),
                     pitches: vec![lineup_core::STEP_NOTE],
@@ -404,11 +429,13 @@ impl StyleEditor {
             RackAction::Remove(channel) => {
                 project.remove_channel(channel);
                 self.draft.roles.remove(channel);
+                self.roll.channel_removed(channel, project.channels().len());
             }
             RackAction::OpenPianoRoll(channel) => self.roll.open_for(channel),
             RackAction::AddDrum(drum) => {
-                if project.add_channel(Channel::drum(drum)).is_some() {
+                if let Some(channel) = project.add_channel(Channel::drum(drum)) {
                     self.draft.roles.push(Player::Drums);
+                    self.roll.select(channel);
                 }
             }
             RackAction::AddSynth | RackAction::AddMidiOut => {
@@ -416,8 +443,14 @@ impl StyleEditor {
                     .into_iter()
                     .find(|player| *player != Player::Drums && !self.draft.roles.contains(player))
                     .unwrap_or(Player::Piano);
-                if project.add_channel(Channel::synth()).is_some() {
+                let instrument = if matches!(action, RackAction::AddMidiOut) {
+                    Channel::midi_out(0)
+                } else {
+                    Channel::synth()
+                };
+                if let Some(channel) = project.add_channel(instrument) {
                     self.draft.roles.push(role);
+                    self.roll.select(channel);
                 }
             }
             RackAction::SetProgram { channel, program } => {
@@ -443,6 +476,9 @@ impl StyleEditor {
                 });
                 if let Some(state) = index.and_then(|index| project.channel_mut(index)) {
                     state.kind = ChannelKind::Sampler(lineup_core::SampleSource::File(path));
+                }
+                if let Some(index) = index {
+                    self.roll.select(index);
                 }
             }
             RackAction::SelectPattern(_) => {}
@@ -494,6 +530,12 @@ impl StyleEditor {
             RollAction::SetScale(scale) => {
                 project.scale = scale;
             }
+            RollAction::NewPattern { .. } => {
+                self.error = Some(
+                    "Styles contain a single pattern. Save new patterns from the song piano roll."
+                        .into(),
+                );
+            }
             RollAction::OpenRack | RollAction::SelectPattern(_) => {}
         }
     }
@@ -502,6 +544,24 @@ impl StyleEditor {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn channel_selection_survives_removal_and_new_styles_reset_it() {
+        let mut editor = StyleEditor::new();
+        editor.start(UserStyle::blank(), None);
+        let mut events = Vec::new();
+        editor.rack_action(RackAction::SelectChannel(Some(3)), &mut events);
+        editor.rack_action(RackAction::Remove(0), &mut events);
+        assert_eq!(editor.roll.selected_channel(), Some(2));
+        editor.rack_action(RackAction::Remove(2), &mut events);
+        assert_eq!(editor.roll.selected_channel(), None);
+        editor.rack_action(RackAction::AddSynth, &mut events);
+        assert_eq!(editor.roll.selected_channel(), Some(2));
+        editor.open = false;
+        editor.start(UserStyle::blank(), None);
+        assert_eq!(editor.roll.selected_channel(), Some(0));
+        assert!(!editor.roll.open);
+    }
     use egui::{Event, FullOutput, PointerButton, RawInput, Shape};
     use lineup_core::library::STYLES;
 

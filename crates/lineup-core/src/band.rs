@@ -978,7 +978,8 @@ impl Project {
     }
 
     /// Applies the selected components without coupling the rhythm, sounds,
-    /// meter or progression. The library only calls this for an existing band.
+    /// meter or progression. Starts a band when both its playing patterns and
+    /// instruments are requested; timing is still controlled by its own options.
     pub fn apply_band_parts(
         &mut self,
         style: &'static BandStyle,
@@ -986,6 +987,18 @@ impl Project {
         parts: apply::StyleParts,
     ) {
         let parts = parts.for_preset();
+        if self.band.is_none() && parts.rhythm && parts.instruments {
+            let mut band = Band::new(style);
+            band.end = self.song_length();
+            band.since = self.channels.len();
+            if self.playlist.chord_markers.is_empty() && band.end > 0 {
+                self.write_heard_chords();
+            }
+            if !self.playlist.chord_markers.is_empty() {
+                band.muted = self.mute_the_songs_own();
+            }
+            self.band = Some(band);
+        }
         let Some(band) = &mut self.band else { return };
         if parts.rhythm {
             band.custom_rhythm = None;
@@ -3270,5 +3283,91 @@ mod tests {
         assert_eq!(project, before);
         history.redo(&mut project).unwrap();
         assert_eq!(project, changed);
+    }
+
+    #[test]
+    fn starting_a_band_from_a_preset_respects_unchecked_timing_and_progression() {
+        let mut project = Project::empty();
+        project.time_signature = TimeSignature::new(3, 4);
+        project.tempo = Tempo::new(73.0);
+        project.swing = 17;
+        let lead = apply::synth_named(&mut project, apply::LEAD).unwrap();
+        let melody = vec![NoteEvent::new(Note::new(63), 0, 12)];
+        project.pattern_mut(0).unwrap().set_length(48);
+        project
+            .pattern_mut(0)
+            .unwrap()
+            .set_notes(lead, melody.clone());
+        project.add_clip(Clip::new(0, 0, 0));
+        project.set_chords(
+            0,
+            48,
+            &[
+                ChordMarker::new(0, HarmonyName::parse("Cm").unwrap()),
+                ChordMarker::new(24, HarmonyName::parse("G7").unwrap()),
+            ],
+        );
+        let before = project.clone();
+        let style = BandStyle::named("Rock ride").unwrap();
+        project.apply_band_parts(
+            style,
+            None,
+            apply::StyleParts {
+                rhythm: true,
+                instruments: true,
+                ..no_parts()
+            },
+        );
+        assert_eq!(project.meter(), before.meter());
+        assert_eq!(project.tempo, before.tempo);
+        assert_eq!(project.swing, before.swing);
+        assert_eq!(
+            project.playlist.chord_markers,
+            before.playlist.chord_markers
+        );
+        assert_eq!(project.pattern(0).unwrap().notes(lead), melody);
+        for player in style
+            .players()
+            .into_iter()
+            .filter(|player| *player != Player::Drums)
+        {
+            assert!(project.player_channel(player).is_some(), "{player:?}");
+            assert!(!part(&project, player).is_empty(), "{player:?}");
+        }
+    }
+
+    #[test]
+    fn every_builtin_preset_can_bring_in_its_full_instrument_lineup() {
+        for harmony in crate::library::STYLES {
+            let mut project = Project::empty();
+            project.set_chords(
+                0,
+                16,
+                &[ChordMarker::new(0, HarmonyName::parse("Cm").unwrap())],
+            );
+            let style = BandStyle::of_style(harmony).unwrap();
+            project.apply_band_parts(
+                style,
+                Some(harmony),
+                apply::StyleParts {
+                    rhythm: true,
+                    instruments: true,
+                    ..no_parts()
+                },
+            );
+            let band = project.band().unwrap();
+            assert_eq!(band.instrument_style, style, "{}", harmony.name);
+            for player in style
+                .players()
+                .into_iter()
+                .filter(|player| *player != Player::Drums)
+            {
+                assert!(
+                    project.player_channel(player).is_some(),
+                    "{}: {player:?}",
+                    harmony.name
+                );
+            }
+        }
     }
 }

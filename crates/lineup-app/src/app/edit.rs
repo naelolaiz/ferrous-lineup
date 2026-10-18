@@ -210,6 +210,12 @@ impl LineupApp {
                 self.redo();
                 ui.close();
             }
+            ui.separator();
+            if ui.button("Settings…").clicked() {
+                self.settings_open = true;
+                self.bring_to_front = Some(egui::Id::unique("application-settings"));
+                ui.close();
+            }
         });
     }
 

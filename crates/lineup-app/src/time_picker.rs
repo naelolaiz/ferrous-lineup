@@ -78,10 +78,7 @@ pub fn time_picker(
             .on_hover_text(
                 "Turn off to change the meter while keeping the current playing patterns",
             );
-        ui.add_enabled_ui(parts.matching_style, |ui| {
-            ui.checkbox(&mut parts.instruments, "Use style instruments")
-                .on_hover_text("Turn off to keep the current voices and instruments");
-        });
+        crate::library_browser::instrument_option(ui, parts, "Use style instruments");
         ui.checkbox(&mut parts.swing, "Use rhythm's swing")
             .on_hover_text("Turn off to keep the current swing amount");
         ui.separator();

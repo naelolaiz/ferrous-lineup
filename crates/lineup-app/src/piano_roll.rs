@@ -59,6 +59,13 @@ pub enum RollAction {
     SetScale(Scale),
     /// Show another pattern: one where the channel has notes.
     SelectPattern(usize),
+    /// Create and select a separate pattern for generated notes.
+    NewPattern {
+        channel: usize,
+        name: String,
+        length: usize,
+        notes: Vec<NoteEvent>,
+    },
     /// Open the channel rack, where drum steps are edited.
     OpenRack,
 }
@@ -333,6 +340,9 @@ pub struct PianoRoll {
     pub instance: Option<egui::Id>,
     pub open: bool,
     channel: usize,
+    channel_selected: bool,
+    /// An explicit rack or editor choice must survive empty patterns and reopening.
+    explicit_channel: bool,
     /// The pattern shown last time, to notice when it changes.
     pattern: usize,
     stamp: ChordStamp,
@@ -409,6 +419,8 @@ impl PianoRoll {
             instance: None,
             open: false,
             channel,
+            channel_selected: true,
+            explicit_channel: false,
             pattern: 0,
             stamp: ChordStamp::Single,
             inversion: 0,
@@ -459,6 +471,20 @@ impl PianoRoll {
         self.channel
     }
 
+    pub fn selected_channel(&self) -> Option<usize> {
+        self.channel_selected.then_some(self.channel)
+    }
+
+    pub fn deselect_channel(&mut self) {
+        self.channel_selected = false;
+        self.explicit_channel = true;
+        self.open = false;
+        self.was_open = false;
+        self.has_keyboard = false;
+        self.selection.clear();
+        self.stop_dragging();
+    }
+
     /// Shows another channel, without opening the window.
     pub fn select(&mut self, channel: usize) {
         let open = self.open;
@@ -474,6 +500,8 @@ impl PianoRoll {
         }
         self.open = true;
         self.channel = channel;
+        self.channel_selected = true;
+        self.explicit_channel = true;
         self.stop_dragging();
     }
 
@@ -484,8 +512,7 @@ impl PianoRoll {
     /// again on a channel that is there.
     pub fn channel_removed(&mut self, removed: usize, left: usize) {
         if removed == self.channel {
-            self.open = false;
-            self.selection.clear();
+            self.deselect_channel();
             self.channel = self.channel.min(left.saturating_sub(1));
         } else if removed < self.channel {
             self.channel -= 1;
@@ -526,6 +553,19 @@ impl PianoRoll {
         zoom: Vec2,
     ) -> Vec<RollAction> {
         let mut actions = Vec::new();
+        if self.channel >= project.channels().len() && self.channel_selected {
+            self.deselect_channel();
+            self.channel = project.channels().len().saturating_sub(1);
+        }
+        if !self.channel_selected {
+            if !self.open || project.channels().is_empty() {
+                self.has_keyboard = false;
+                return actions;
+            }
+            // Opening the piano roll explicitly restores its last valid channel.
+            self.channel_selected = true;
+            self.channel = self.channel.min(project.channels().len() - 1);
+        }
         if zoom != self.zoom {
             self.zoom_to(ctx, zoom);
         }
@@ -541,7 +581,7 @@ impl PianoRoll {
             self.selection.clear();
             self.stop_dragging();
         }
-        if opened || new_pattern {
+        if (opened || new_pattern) && !self.explicit_channel && self.open {
             self.follow_notes(pattern_notes);
         }
         if opened {
@@ -637,7 +677,12 @@ impl PianoRoll {
             };
             drawn.sort_by_key(|note| (note.start, note.pitch));
             let drawn: Vec<Note> = drawn.iter().map(|note| note.pitch).collect();
-            for action in self.row_window.show(ctx, area, scale, &drawn, length) {
+            let can_create_pattern = self.instance.is_none()
+                && project.patterns().len() < lineup_core::project::MAX_PATTERNS;
+            for action in self
+                .row_window
+                .show(ctx, area, scale, &drawn, length, can_create_pattern)
+            {
                 match action {
                     RowAction::UseAsKey(row) => actions.push(RollAction::SetScale(row)),
                     RowAction::Write(notes) => {
@@ -645,6 +690,17 @@ impl PianoRoll {
                             notes.into_iter().filter(|n| fits_view(&[*n])).collect();
                         self.selection.clear();
                         self.replace(pattern, actions, "write a row", visible.clone(), notes);
+                    }
+                    RowAction::NewPattern { name, notes } => {
+                        actions.push(RollAction::NewPattern {
+                            channel: self.channel,
+                            name,
+                            length,
+                            notes: notes
+                                .into_iter()
+                                .filter(|note| fits_view(&[*note]))
+                                .collect(),
+                        });
                     }
                 }
             }
@@ -2750,6 +2806,28 @@ mod tests {
         roll.open = true;
         run(&mut roll, &project, CHORDS, 2);
         assert_eq!(roll.channel(), SYNTH);
+    }
+
+    #[test]
+    fn explicit_channel_choices_survive_reopening_and_pattern_changes() {
+        let project = Project::demo();
+        let mut roll = PianoRoll::new(SYNTH);
+        roll.select(0); // Kick has no notes in the Chords pattern.
+        run(&mut roll, &project, CHORDS, 2);
+        assert_eq!(roll.selected_channel(), Some(0));
+        roll.open_for(0);
+        run(&mut roll, &project, CHORDS, 2);
+        assert_eq!(roll.selected_channel(), Some(0));
+        run(&mut roll, &project, 0, 2);
+        run(&mut roll, &project, CHORDS, 2);
+        assert_eq!(roll.selected_channel(), Some(0));
+        roll.deselect_channel();
+        run(&mut roll, &project, CHORDS, 2);
+        assert_eq!(roll.selected_channel(), None);
+        assert!(!roll.open);
+        roll.select(SYNTH);
+        run(&mut roll, &project, CHORDS, 2);
+        assert_eq!(roll.selected_channel(), Some(SYNTH));
     }
 
     #[test]
