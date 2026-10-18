@@ -345,6 +345,7 @@ impl LineupApp {
             window(&mut self.harmony_keys.open, "Harmony keys", HARMONY, ui);
             let browser = &mut self.playlist.browser_open;
             window(browser, "Patterns and library", BROWSER, ui);
+            crate::widgets::follow_control(ui);
             ui.separator();
             let ear = egui::Button::selectable(self.ear_training.open, "Ear training")
                 .shortcut_text("experimental");

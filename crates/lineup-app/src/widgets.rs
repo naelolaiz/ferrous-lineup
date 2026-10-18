@@ -8,6 +8,62 @@
 use eframe::egui::{self, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use lineup_core::NoteEvent;
 
+/// Editor shortcuts belong to the last clicked window, including its title
+/// and toolbar. Popup controls and text fields keep their own keyboard input.
+pub fn editor_keyboard(ctx: &egui::Context, layer: egui::LayerId) -> bool {
+    let id = egui::Id::unique("keyboard-editor");
+    if let Some(pos) = ctx.input(|input| press_pos(input, None))
+        && let Some(clicked) = ctx.layer_id_at(pos)
+        && clicked.order <= egui::Order::Middle
+    {
+        ctx.data_mut(|data| data.insert_temp(id, clicked));
+    }
+    let active = ctx.data(|data| data.get_temp::<egui::LayerId>(id));
+    active.or_else(|| ctx.top_layer_id()) == Some(layer)
+        && !ctx.text_edit_focused()
+        && !egui::Popup::is_any_open(ctx)
+}
+
+pub fn follow_playback(ctx: &egui::Context) -> bool {
+    ctx.data_mut(|data| {
+        data.get_persisted::<bool>(egui::Id::unique("follow-playback"))
+            .unwrap_or(true)
+    })
+}
+
+pub fn follow_control(ui: &mut Ui) {
+    let mut follow = follow_playback(ui.ctx());
+    if ui
+        .checkbox(&mut follow, "Follow playback")
+        .on_hover_text(
+            "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
+        )
+        .changed()
+    {
+        ui.ctx()
+            .data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), follow));
+    }
+}
+
+/// Reveal the playhead horizontally, leaving the user's vertical position
+/// intact. Only a new step can scroll, so manual scrolling still works.
+pub fn follow_x(ui: &Ui, step: Option<usize>, x: f32, view: Rect) {
+    let id = ui.scope_id().with("followed-step");
+    let step = step.filter(|_| follow_playback(ui.ctx()));
+    let previous = ui.ctx().data_mut(|data| {
+        let previous = data.get_temp::<Option<usize>>(id).flatten();
+        data.insert_temp(id, step);
+        previous
+    });
+    if step.is_some() && step != previous {
+        let margin = (view.width() * 0.1).min(60.0);
+        ui.scroll_to_rect(
+            Rect::from_center_size(pos2(x, view.center().y), vec2(margin * 2.0, 1.0)),
+            None,
+        );
+    }
+}
+
 /// Step colors. Steps are grouped by beats (four steps in 4/4, six in
 /// 6/8), and the groups alternate colors so you can count beats at a
 /// glance.

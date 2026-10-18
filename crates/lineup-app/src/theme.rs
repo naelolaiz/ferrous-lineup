@@ -112,6 +112,11 @@ pub fn apply(ctx: &egui::Context) {
         spacing.window_margin = Margin::same(6);
         spacing.menu_margin = Margin::same(5);
         spacing.interact_size.y = 22.0;
+        spacing.scroll = egui::style::ScrollStyle::solid();
+        spacing.scroll.bar_width = 10.0;
+        spacing.scroll.dormant_handle_opacity = 0.8;
+        spacing.scroll.active_handle_opacity = 1.0;
+        spacing.scroll.dormant_background_opacity = 0.3;
 
         style.interaction.tooltip_delay = 0.6;
         style.text_styles.insert(

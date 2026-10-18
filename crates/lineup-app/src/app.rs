@@ -854,6 +854,20 @@ impl LineupApp {
             PlaylistAction::RemoveClip(index) => {
                 self.edit("delete clips", |project| project.remove_clip(index));
             }
+            PlaylistAction::RemoveClips(indices) => {
+                self.edit("delete selected clips", |project| {
+                    for index in indices.into_iter().rev() {
+                        project.remove_clip(index);
+                    }
+                });
+            }
+            PlaylistAction::PasteClips(clips) => {
+                self.edit("paste clips", |project| {
+                    for clip in clips {
+                        project.add_clip(clip);
+                    }
+                });
+            }
             PlaylistAction::ToggleTrackMute(track) => {
                 self.edit("mute track", |project| {
                     if let Some(track) = project.track_mut(track) {
@@ -1075,6 +1089,8 @@ impl LineupApp {
                 }
                 self.record_button(ui);
             });
+
+            widgets::follow_control(ui);
 
             // While a song whose tempo changes plays, the box follows the
             // tempo at the playhead, as FL Studio's does; stopped, it is

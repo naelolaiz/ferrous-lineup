@@ -548,15 +548,10 @@ impl PianoRoll {
         // when another window (the chord sheet, the rack) is on top
         // there. A click in a menu or a list leaves the keyboard where
         // it was.
-        let press = ctx.input(|input| crate::widgets::press_pos(input, None));
-        if let Some(pos) = press {
-            match ctx.layer_id_at(pos) {
-                Some(layer) if layer.order > egui::Order::Middle => {}
-                layer => {
-                    self.has_keyboard = layer.is_some_and(|layer| layer.id == Self::id());
-                }
-            }
-        }
+        self.has_keyboard = crate::widgets::editor_keyboard(
+            ctx,
+            egui::LayerId::new(egui::Order::Middle, Self::id()),
+        );
 
         // `open` is a copy: the window needs `&mut open` while the closure
         // below needs `&mut self`, and both cannot borrow `self` at once.
@@ -993,8 +988,17 @@ impl PianoRoll {
             Some(offset) => grid_area.scroll_offset(offset),
             None => grid_area,
         };
+        let view = self.view_rect;
         crate::widgets::no_rubber_band(ui);
         let output = grid_area.show(ui, |ui| {
+            if let (Some(view), Some(step)) = (view, playhead) {
+                crate::widgets::follow_x(
+                    ui,
+                    playhead,
+                    ui.cursor().min.x + KEY_WIDTH + step as f32 * step_width,
+                    view,
+                );
+            }
             let ghosts = if self.ghosts { &others[..] } else { &[] };
             let view = View {
                 scale,

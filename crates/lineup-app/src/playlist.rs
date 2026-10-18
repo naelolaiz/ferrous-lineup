@@ -46,6 +46,8 @@ pub enum PlaylistAction {
         start: usize,
     },
     RemoveClip(usize),
+    RemoveClips(Vec<usize>),
+    PasteClips(Vec<Clip>),
     /// Play the clip's pattern this many times in a row.
     SetClipRepeats {
         index: usize,
@@ -281,6 +283,9 @@ impl Layout {
 
 /// What the playlist remembers between frames.
 pub struct PlaylistView {
+    selected: std::collections::BTreeSet<usize>,
+    clipboard: Vec<Clip>,
+    paste_at: usize,
     snap: Snap,
     drag: Option<ClipDrag>,
     strips: Strips,
@@ -306,6 +311,9 @@ pub struct PlaylistView {
 impl PlaylistView {
     pub fn new() -> Self {
         PlaylistView {
+            selected: Default::default(),
+            clipboard: Vec::new(),
+            paste_at: 0,
             snap: Snap::Bar,
             drag: None,
             strips: Strips::default(),
@@ -480,6 +488,11 @@ impl PlaylistView {
         });
         self.scrolled = output.state.clamped_offset();
         self.view_rect = Some(output.inner_rect);
+        self.selected
+            .retain(|index| *index < project.playlist().clips().len());
+        if widgets::editor_keyboard(ui.ctx(), ui.layer_id()) {
+            self.keys(ui.ctx(), project, &mut actions);
+        }
         actions
     }
 
@@ -536,6 +549,10 @@ impl PlaylistView {
 
         self.handle_input(ui, &response, layout, cells, project, current, actions);
 
+        if let Some(step) = playhead {
+            widgets::follow_x(ui, playhead, layout.x(step), cells);
+        }
+
         let painter = ui.painter_at(visible);
         paint_tracks(&painter, layout, steps, &meter);
         if let Some(region) = project.playlist().loop_region() {
@@ -547,6 +564,18 @@ impl PlaylistView {
             painter.rect_filled(shade, 0.0, sections::LOOP.gamma_multiply(0.06));
         }
         paint_clips(&painter, layout, cells, project, current);
+        for &index in &self.selected {
+            if let Some(clip) = project.playlist().clips().get(index) {
+                painter.rect_stroke(
+                    layout
+                        .clip_rect(clip, project.clip_length(clip))
+                        .shrink(1.5),
+                    2.0,
+                    Stroke::new(2.0, theme::ACCENT),
+                    StrokeKind::Inside,
+                );
+            }
+        }
         // Lines from the ruler down to the last track.
         let lines = cells.top()..=layout.track_top(rows).min(cells.bottom());
         if let Some(step) = playhead {
@@ -760,6 +789,18 @@ impl PlaylistView {
             let meter = project.meter();
             match clip_at(project, layout, pos) {
                 Some(index) => {
+                    let add = ui.input(|input| input.modifiers.command || input.modifiers.shift);
+                    if add {
+                        if !self.selected.insert(index) {
+                            self.selected.remove(&index);
+                        }
+                        self.drag = None;
+                        return;
+                    }
+                    if !self.selected.contains(&index) {
+                        self.selected.clear();
+                        self.selected.insert(index);
+                    }
                     let clip = clips[index];
                     let rect = layout.clip_rect(&clip, project.clip_length(&clip));
                     self.drag = Some(ClipDrag {
@@ -773,6 +814,13 @@ impl PlaylistView {
                 }
                 None => {
                     let start = self.snap.floor(step, &meter);
+                    self.paste_at = start;
+                    self.selected.clear();
+                    // Ctrl-click empty space moves the paste point without placing a clip.
+                    if ui.input(|input| input.modifiers.command || input.modifiers.shift) {
+                        return;
+                    }
+                    self.selected.insert(clips.len());
                     actions.push(PlaylistAction::AddClip(Clip::new(current, track, start)));
                     // The new clip goes at the end of the list.
                     self.drag = Some(ClipDrag {
@@ -855,6 +903,73 @@ impl PlaylistView {
                     start,
                 });
             }
+        }
+    }
+
+    fn keys(&mut self, ctx: &egui::Context, project: &Project, actions: &mut Vec<PlaylistAction>) {
+        use egui::{Key, KeyboardShortcut, Modifiers};
+        let pressed = |key| {
+            ctx.input_mut(|input| {
+                input.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, key))
+            })
+        };
+        let clips = project.playlist().clips();
+        if pressed(Key::A) {
+            self.selected = (0..clips.len()).collect();
+        }
+        let copy = pressed(Key::C) || ctx.input(|input| input.events.contains(&egui::Event::Copy));
+        let cut = pressed(Key::X) || ctx.input(|input| input.events.contains(&egui::Event::Cut));
+        let duplicate = pressed(Key::D);
+        if copy || cut || duplicate {
+            self.clipboard = self
+                .selected
+                .iter()
+                .filter_map(|&index| clips.get(index).copied())
+                .collect();
+        }
+        if cut
+            || ctx.input_mut(|input| {
+                input.consume_key(Modifiers::NONE, Key::Delete)
+                    || input.consume_key(Modifiers::NONE, Key::Backspace)
+            })
+        {
+            actions.push(PlaylistAction::RemoveClips(
+                self.selected.iter().copied().collect(),
+            ));
+            self.selected.clear();
+        }
+        if (pressed(Key::V) || duplicate) && !self.clipboard.is_empty() {
+            let first = self
+                .clipboard
+                .iter()
+                .map(|clip| clip.start)
+                .min()
+                .unwrap_or(0);
+            let at = if duplicate {
+                self.clipboard
+                    .iter()
+                    .map(|clip| clip.start + project.clip_length(clip))
+                    .max()
+                    .unwrap_or(first)
+            } else {
+                self.paste_at
+            };
+            let pasted: Vec<_> = self
+                .clipboard
+                .iter()
+                .copied()
+                .map(|mut clip| {
+                    clip.start = at
+                        .saturating_add(clip.start - first)
+                        .min(MAX_SONG_STEPS - 1);
+                    clip
+                })
+                .collect();
+            self.selected = (clips.len()..clips.len() + pasted.len()).collect();
+            actions.push(PlaylistAction::PasteClips(pasted));
+        }
+        if ctx.input_mut(|input| input.consume_key(Modifiers::NONE, Key::Escape)) {
+            self.selected.clear();
         }
     }
 }
