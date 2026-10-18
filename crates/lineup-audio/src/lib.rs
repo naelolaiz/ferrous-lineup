@@ -23,6 +23,7 @@ pub mod instrument;
 mod metronome;
 pub mod phrase;
 pub mod render;
+mod reverb;
 pub mod sample;
 pub mod soundfont;
 pub mod timbre;

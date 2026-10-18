@@ -91,7 +91,6 @@ impl LineupApp {
         }
 
         let mut renderer = Renderer::new(EXPORT_SAMPLE_RATE, EXPORT_CHANNELS);
-        renderer.send(Command::SetMasterVolume(self.master_volume));
         for command in self.project_commands(EXPORT_SAMPLE_RATE, 1.0) {
             renderer.send(command);
         }
@@ -109,7 +108,13 @@ impl LineupApp {
         let tempos = self.project.played_tempos(&song);
         let end_tempo = tempos.last().copied().unwrap_or(self.project.tempo);
         let step_frames = frames_per_step(end_tempo, EXPORT_SAMPLE_RATE);
-        let tail_frames = TAIL_SECONDS * f64::from(EXPORT_SAMPLE_RATE);
+        let reverb = self.project.mixer.reverb;
+        let tail_seconds = if reverb.enabled {
+            TAIL_SECONDS.max(f64::from(reverb.decay + reverb.pre_delay_ms / 1000.0))
+        } else {
+            TAIL_SECONDS
+        };
+        let tail_frames = tail_seconds * f64::from(EXPORT_SAMPLE_RATE);
         let silent_steps = (tail_frames / step_frames).ceil() as usize + 1;
         let song_frames = self.project.played_seconds(&song) * f64::from(EXPORT_SAMPLE_RATE);
         renderer.send(Command::SetSong {

@@ -24,6 +24,7 @@ mod key_finder;
 mod lead;
 mod library;
 mod live;
+mod mixer;
 mod practice;
 mod sounds;
 mod swing;
@@ -99,7 +100,7 @@ pub struct LineupApp {
     cursor: usize,
     /// Where Stop goes back to: the last place the playhead was moved to.
     marker: usize,
-    master_volume: f32,
+    mixer_open: bool,
     rack_open: bool,
     /// The size the rack's rows needed last frame. When it changes (more
     /// steps, another channel, another pattern), the window is fitted to
@@ -197,7 +198,7 @@ impl LineupApp {
             playing: false,
             cursor: 0,
             marker: 0,
-            master_volume: 0.8,
+            mixer_open: false,
             rack_open: true,
             rack_natural: egui::Vec2::ZERO,
             piano_roll,
@@ -275,6 +276,8 @@ impl LineupApp {
         let mut commands = vec![
             Command::SetTempo(practice::at_speed(self.project.tempo, speed)),
             Command::SetLooseTiming(self.project.loose_timing),
+            Command::SetMasterVolume(self.project.mixer.master),
+            Command::SetReverb(self.project.mixer.reverb),
         ];
         for (index, pattern) in self.project.patterns().iter().enumerate() {
             commands.push(Command::InsertPattern {
@@ -293,7 +296,6 @@ impl LineupApp {
     /// after opening a file.
     fn send_whole_project(&mut self) {
         self.send(Command::Clear);
-        self.send(Command::SetMasterVolume(self.master_volume));
         let speed = self.practice.speed();
         for command in self.project_commands(self.sample_rate(), speed) {
             self.send(command);
@@ -320,7 +322,7 @@ impl LineupApp {
             instrument: self.build_instrument(&channel, sample_rate),
             notes,
             volume: channel.volume,
-            muted: channel.muted,
+            muted: self.project.channel_muted(index),
         }
     }
 
@@ -1183,6 +1185,12 @@ impl LineupApp {
                 {
                     self.piano_roll.open = !self.piano_roll.open;
                 }
+                if theme::light_button(ui, "Mixer", self.mixer_open, None)
+                    .on_hover_text("Master and instrument levels, solo, mute and reverb (F9)")
+                    .clicked()
+                {
+                    self.mixer_open = !self.mixer_open;
+                }
                 let harmony = theme::light_button(ui, "🎼 Harmony", self.harmony_keys.open, None);
                 if theme::hint(
                     harmony,
@@ -1202,12 +1210,12 @@ impl LineupApp {
                 // Shorter than egui's usual slider, so the toolbar fits
                 // on one row in a window 1280 points wide.
                 ui.spacing_mut().slider_width = 64.0;
-                let volume_slider =
-                    egui::Slider::new(&mut self.master_volume, 0.0..=1.0).show_value(false);
+                let mut master = self.project.mixer.master;
+                let volume_slider = egui::Slider::new(&mut master, 0.0..=1.0).show_value(false);
                 let volume = ui.add_sized([64.0, 22.0], volume_slider);
-                let text = format!("Master volume: {:.0}%", self.master_volume * 100.0);
+                let text = format!("Master volume: {:.0}%", master * 100.0);
                 if theme::hint(volume, text).changed() {
-                    self.send(Command::SetMasterVolume(self.master_volume));
+                    self.edit("master volume", |project| project.mixer.master = master);
                 }
             });
         });
@@ -1673,6 +1681,7 @@ impl eframe::App for LineupApp {
         self.ear_training_window(&ctx, area);
         self.lead_sheet_window(&ctx, area);
         self.sound_font_window(&ctx);
+        self.mixer_window(&ctx, area);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
         self.end_frame_for_undo(&ctx);

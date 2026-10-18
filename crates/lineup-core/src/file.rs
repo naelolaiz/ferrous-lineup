@@ -148,7 +148,8 @@ pub fn is_project(path: &Path) -> bool {
 /// format 19.
 /// Format 20 separates a band's rhythm from its instruments and remembers
 /// the exact harmony style and the option to play plain accents.
-pub const FORMAT_VERSION: u32 = 20;
+/// Format 21 adds the saved master mixer, solo and stereo reverb.
+pub const FORMAT_VERSION: u32 = 21;
 
 /// The oldest format that can hold `project`.
 ///
@@ -224,7 +225,9 @@ pub fn format_for(project: &Project) -> u32 {
     let has_style_parts = project.band().is_some_and(|band| {
         band.instrument_style != band.style || band.harmony_style.is_some() || band.accents_only
     });
-    if has_style_parts {
+    if !project.mixer.is_default() {
+        21
+    } else if has_style_parts {
         20
     } else if has_soloist {
         19
@@ -271,6 +274,8 @@ pub fn format_for(project: &Project) -> u32 {
 #[derive(Debug, Serialize, Deserialize)]
 struct ProjectFile {
     format: u32,
+    #[serde(default, skip_serializing_if = "crate::Mixer::is_default")]
+    mixer: crate::Mixer,
     tempo: Tempo,
     scale: Scale,
     /// Left out for 4/4, so those files read exactly as before. A file
@@ -413,6 +418,7 @@ impl From<&Project> for ProjectFile {
         let channels = project.channels().len();
         ProjectFile {
             format: format_for(project),
+            mixer: project.mixer,
             tempo: project.tempo,
             scale: project.scale,
             time_signature: project.time_signature,
@@ -454,6 +460,10 @@ impl TryFrom<ProjectFile> for Project {
         let invalid = |reason: String| Err(FileError::Invalid(reason));
 
         let mut project = Project::empty();
+        if !file.mixer.valid() {
+            return invalid("its mixer settings are outside their ranges".to_string());
+        }
+        project.mixer = file.mixer;
         project.tempo = file.tempo;
         project.scale = file.scale;
         if file.time_signature.steps_per_bar() > MAX_STEPS {
@@ -464,6 +474,13 @@ impl TryFrom<ProjectFile> for Project {
         }
         project.time_signature = file.time_signature;
 
+        if file
+            .mixer
+            .solo
+            .is_some_and(|solo| solo >= file.channels.len())
+        {
+            return invalid("its solo channel does not exist".to_string());
+        }
         if file.channels.len() > MAX_CHANNELS {
             return invalid(format!("it has more than {MAX_CHANNELS} channels"));
         }
@@ -646,6 +663,26 @@ mod tests {
     use super::*;
     use crate::Note;
     use crate::project::Drum;
+
+    #[test]
+    fn mixer_round_trip_and_legacy_defaults() {
+        let mut project = Project::demo();
+        let legacy = to_text(&project).unwrap();
+        assert!(!legacy.contains("mixer:"));
+        assert_eq!(from_text(&legacy).unwrap().mixer, crate::Mixer::default());
+        project.mixer.master = 0.42;
+        project.mixer.solo = Some(2);
+        project.mixer.reverb.enabled = true;
+        project.mixer.reverb.decay = 3.2;
+        assert_eq!(format_for(&project), 21);
+        let text = to_text(&project).unwrap();
+        assert_eq!(from_text(&text).unwrap(), project);
+        assert!(from_text(&text.replace("master: 0.42", "master: NaN")).is_err());
+        project.remove_channel(0);
+        assert_eq!(project.mixer.solo, Some(1));
+        project.remove_channel(1);
+        assert_eq!(project.mixer.solo, None);
+    }
 
     /// The demo song with nothing that needs a newer format than 1: its
     /// chords on the Lineup Osc's own sound instead of a piano.
