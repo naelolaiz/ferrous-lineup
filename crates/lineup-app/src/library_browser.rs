@@ -181,11 +181,10 @@ impl LibraryBrowser {
             ));
             ui.weak("Songs with melodies are in File ▸ Demos ▸ Songs.");
         }
-        let max_height = if tracking {
-            f32::INFINITY
-        } else {
-            ui.ctx().content_rect().height() * 0.5
-        };
+        let max_height = ui
+            .available_height()
+            .min(ui.ctx().content_rect().bottom() - ui.next_widget_position().y - 16.0)
+            .max(48.0);
         egui::ScrollArea::vertical()
             .max_height(max_height)
             .show(ui, |ui| {

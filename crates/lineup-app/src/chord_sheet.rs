@@ -469,7 +469,10 @@ impl ChordSheet {
                 ui.scroll_to_rect(cell.rect, None);
                 self.reveal = false;
             }
-            if playing_bar == Some(cell.bar.number) && self.followed != playing_bar {
+            if crate::widgets::follow_playback(ui.ctx())
+                && playing_bar == Some(cell.bar.number)
+                && self.followed != playing_bar
+            {
                 ui.scroll_to_rect(cell.rect, None);
             }
         }
@@ -491,7 +494,7 @@ impl ChordSheet {
         }
         // The key that ended the typing (Enter, Escape) is not read
         // again as a key for the sheet.
-        let has_keyboard = sheet.has_focus();
+        let has_keyboard = crate::widgets::editor_keyboard(ui.ctx(), ui.layer_id());
         if has_keyboard && self.editing.is_none() && !was_editing {
             ui.memory_mut(|memory| memory.set_focus_lock_filter(sheet.id, KEEP_KEYS));
             self.keys(ui, project, &cells, typing_keys, actions);
@@ -1692,6 +1695,56 @@ fn voicing(harmony: HarmonyName) -> Vec<Note> {
 mod tests {
     use super::*;
     use eframe::egui::{Event, FullOutput, PointerButton, RawInput, Shape};
+
+    #[test]
+    fn select_all_works_when_the_chord_window_owns_the_keyboard() {
+        let ctx = egui::Context::default();
+        let project = Project::demo();
+        let mut sheet = ChordSheet::new();
+        sheet.open = true;
+        let mut library = LibraryBrowser::new();
+        let mut frame = |events: Vec<Event>| {
+            let mut output = ctx.run_pass(
+                RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 800.0))),
+                    events,
+                    ..Default::default()
+                },
+                |ctx| {
+                    sheet.show(
+                        ctx,
+                        ctx.content_rect(),
+                        &project,
+                        None,
+                        false,
+                        (
+                            PracticeView {
+                                count_in: false,
+                                metronome: false,
+                                speed: 100,
+                            },
+                            &mut library,
+                        ),
+                    );
+                },
+            );
+            output.textures_delta.clear();
+        };
+        frame(vec![]);
+        frame(vec![]);
+        // No bar-canvas click is required: the active window receives it.
+        frame(vec![Event::Key {
+            key: Key::A,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::COMMAND,
+        }]);
+        assert_eq!(
+            sheet.selected_bars(),
+            Some((0, text::sheet_bars(&project) - 1))
+        );
+    }
 
     fn heard(text: &str) -> Vec<u8> {
         voicing(HarmonyName::parse(text).unwrap())
