@@ -29,6 +29,10 @@ use crate::pitch::PitchClass;
 /// About how many bars a style demo plays with the drums.
 const DEMO_BARS: usize = 32;
 
+/// The channel a song's horn section plays on (see
+/// [`super::song::Horns`]).
+const HORNS: &str = "Horns";
+
 /// The playlist tracks the demos use.
 const SONG_TRACK: usize = 0;
 const DRUM_TRACK: usize = 1;
@@ -387,10 +391,14 @@ pub fn song_demo(song: &Song) -> Project {
         _ => apply::synth_named(&mut project, apply::BASS),
     };
     let band = song.band;
+    let horns = band
+        .horns
+        .and_then(|horns| Some((apply::synth_named(&mut project, HORNS)?, horns)));
     for (channel, program) in voices
         .iter()
         .map(|&voice| (voice, band.lead))
         .chain([(keys, band.keys), (bass, band.bass)])
+        .chain(horns.map(|(channel, horns)| (Some(channel), horns.program)))
     {
         if let Some(state) = channel.and_then(|channel| project.channel_mut(channel)) {
             state.program = Some(program);
@@ -414,16 +422,25 @@ pub fn song_demo(song: &Song) -> Project {
             new_pattern(&mut project, part.name, length)
         };
         let melody = melody_notes(song, part, time, length, voices.len());
+        let tonic = song.part_scale(part).root;
         let (mut chords, mut bass_line) = if part.left.is_empty() {
-            let tonic = song.part_scale(part).root;
             let backing = accompany(&part.spans(bar), tonic, song.comping, song.bass);
             (backing.chords, backing.bass)
         } else {
             (part.left().notes, Vec::new())
         };
+        // The horns play the chart in their own comping, so a part with
+        // its accompaniment written out has none for them.
+        let mut horn_notes = match horns {
+            Some((_, horns)) if part.left.is_empty() => {
+                accompany(&part.spans(bar), tonic, horns.comping, Bass::None).chords
+            }
+            _ => Vec::new(),
+        };
         let seed = |channel| interpret::seed(song.name, part.name, channel);
         interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
         interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
+        interpret::perform(&mut horn_notes, time, Role::Accompaniment, seed(HORNS));
         if let Some(pattern) = project.pattern_mut(index) {
             for (&channel, notes) in voices.iter().zip(melody) {
                 if let Some(channel) = channel {
@@ -435,6 +452,9 @@ pub fn song_demo(song: &Song) -> Project {
             }
             if let Some(bass) = bass {
                 pattern.set_notes(bass, bass_line);
+            }
+            if let Some((horns, _)) = horns {
+                pattern.set_notes(horns, horn_notes);
             }
         }
         patterns.push((part.name, index, length, time));
@@ -600,6 +620,35 @@ mod tests {
             let notes: usize = project.patterns().iter().map(|p| p.notes(lead).len()).sum();
             assert!(notes >= 8, "{}: the melody is there", song.name);
         }
+    }
+
+    #[test]
+    fn a_big_band_has_its_horns() {
+        let big_bands: Vec<_> = SONGS.iter().filter(|s| s.band.horns.is_some()).collect();
+        assert!(!big_bands.is_empty());
+        for song in big_bands {
+            let horns = song.band.horns.unwrap();
+            let project = song_demo(song);
+            let channel = project.channels().iter().position(|c| c.name == HORNS);
+            let channel = channel.unwrap_or_else(|| panic!("{}: no horns", song.name));
+            assert_eq!(project.channels()[channel].program, Some(horns.program));
+            // Every part with a chart has its chords on the horns.
+            let charted = |part: &&Part| part.left.is_empty() && !part.chords.trim().is_empty();
+            for part in song.parts.iter().filter(charted) {
+                let pattern = project.patterns().iter().find(|p| p.name == part.name);
+                let pattern = pattern.unwrap();
+                assert!(
+                    !pattern.notes(channel).is_empty(),
+                    "{}: {}",
+                    song.name,
+                    part.name
+                );
+            }
+        }
+        // The other songs have no horn section.
+        let plain = SONGS.iter().find(|s| s.band.horns.is_none()).unwrap();
+        let project = song_demo(plain);
+        assert!(project.channels().iter().all(|c| c.name != HORNS));
     }
 
     #[test]
