@@ -37,6 +37,7 @@ pub const OVERDRIVEN_GUITAR: u8 = 29;
 pub const DISTORTION_GUITAR: u8 = 30;
 pub const ACOUSTIC_BASS: u8 = 32;
 pub const FINGER_BASS: u8 = 33;
+pub const FRETLESS_BASS: u8 = 35;
 pub const SLAP_BASS: u8 = 36;
 pub const SYNTH_BASS: u8 = 38;
 pub const VIOLIN: u8 = 40;
