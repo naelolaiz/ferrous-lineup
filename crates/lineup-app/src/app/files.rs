@@ -251,6 +251,14 @@ impl LineupApp {
                 self.export_song();
                 ui.close();
             }
+            let video = ui
+                .add_enabled(self.can_export(), egui::Button::new("Export video…"))
+                .on_hover_text("Save the song with the chord sheet or other views playing along")
+                .on_disabled_hover_text("Put some clips in the playlist first");
+            if video.clicked() {
+                self.ask_for_video();
+                ui.close();
+            }
             let has_song = self.project.song_length() > 0;
             let song_midi = ui
                 .add_enabled(has_song, egui::Button::new("Export song as MIDI…"))

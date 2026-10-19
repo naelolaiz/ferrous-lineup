@@ -1,0 +1,13 @@
+[package]
+name = "lineup-video"
+description = "Video files for Ferrous Lineup: egui pictures painted in memory, encoded as H.264 and MP3 in an MP4 file"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+epaint.workspace = true
+openh264.workspace = true
+mp3lame-encoder.workspace = true

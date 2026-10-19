@@ -32,6 +32,7 @@ mod styles;
 mod swing;
 #[cfg(test)]
 mod ux_tests;
+mod video;
 mod view;
 
 use std::path::PathBuf;
@@ -139,8 +140,10 @@ pub struct LineupApp {
     history: History<Project>,
     /// Sample files already read, so undo and export do not read them again.
     samples: SampleCache,
-    /// The WAV export running in the background, if any.
+    /// The WAV or video export running in the background, if any.
     export: Option<export::Export>,
+    /// The dialog that asks what a video shows.
+    video_dialog: video::VideoDialog,
     /// A recording being listened to in the background, if any.
     import: Option<import::Import>,
     /// Find the key: the key worked out from the music.
@@ -234,6 +237,7 @@ impl LineupApp {
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
+            video_dialog: video::VideoDialog::default(),
             import: None,
             key_finder: key_finder::KeyFinder::default(),
             live: live::Live::new(midi),
@@ -1591,6 +1595,9 @@ impl LineupApp {
                     .desired_width(160.0)
                     .text(format!("Exporting {}", export.file_name())),
             );
+            if export.can_cancel() && ui.small_button("Stop").clicked() {
+                export.cancel();
+            }
         }
         self.sounds_status(ui);
         if let Some(notice) = &self.notice {
@@ -1977,6 +1984,7 @@ impl eframe::App for LineupApp {
         self.mixer_window(&ctx, area);
         self.style_editor_window(&ctx, area);
         self.settings_window(&ctx);
+        self.video_dialog(&ctx);
         self.playlist.library_browser_mut().store_preferences(&ctx);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
