@@ -85,11 +85,13 @@ pub fn swung(notes: &[NoteEvent], swing: u8, hits: bool) -> Vec<NoteEvent> {
 
 impl Project {
     /// How much pattern `pattern` swings: the song's [`swing`](Self::swing),
-    /// or 0 if it is in a time signature whose eighths do not swing (see
-    /// [`swings_in`]).
+    /// or for a band's pattern in a section played in another style, that
+    /// style's (see [`crate::band::sections`]); 0 if it is in a time
+    /// signature whose eighths do not swing (see [`swings_in`]).
     pub fn pattern_swing(&self, pattern: usize) -> u8 {
-        if self.swing > 0 && swings_in(self.pattern_time(pattern)) {
-            self.swing
+        let swing = self.section_swing(pattern).unwrap_or(self.swing);
+        if swing > 0 && swings_in(self.pattern_time(pattern)) {
+            swing
         } else {
             0
         }

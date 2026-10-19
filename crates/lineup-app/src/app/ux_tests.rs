@@ -2754,3 +2754,104 @@ mod locks {
         assert!(notice.starts_with("Keys unlocked"), "{notice}");
     }
 }
+
+mod section_styles {
+    use super::*;
+    use lineup_core::BandStyle;
+
+    /// A song with a band, four bars of a verse and four of a chorus,
+    /// with the chord sheet open.
+    fn song() -> Screen {
+        let mut screen = Screen::new();
+        let mut project = Project::with_band();
+        project.write_progression(
+            lineup_core::library::Style::named("Four chords").unwrap(),
+            0,
+        );
+        project.write_progression(
+            lineup_core::library::Style::named("Four chords").unwrap(),
+            64,
+        );
+        project.add_section(lineup_core::Section::new("Verse", 0, 64));
+        project.add_section(lineup_core::Section::new("Chorus", 64, 64));
+        project.follow_chord_sheet();
+        screen.app.replace_project(project, None);
+        screen.app.rack_open = false;
+        screen.app.chord_sheet.open = true;
+        screen
+    }
+
+    fn right_click(screen: &mut Screen, label: &str) {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        let at = text_rect(&output, label)
+            .unwrap_or_else(|| panic!("Missing: {label}"))
+            .center();
+        screen.draw(vec![Event::PointerMoved(at)]);
+        for pressed in [true, false] {
+            screen.draw(vec![Event::PointerButton {
+                pos: at,
+                button: PointerButton::Secondary,
+                pressed,
+                modifiers: Modifiers::NONE,
+            }]);
+        }
+    }
+
+    /// Clicks `label` in a menu that may move as it opens: the pointer
+    /// goes to it, and then clicks where it is drawn next.
+    fn follow(screen: &mut Screen, label: &str) {
+        let output = screen.draw(Vec::new());
+        let at = text_rect(&output, label)
+            .unwrap_or_else(|| panic!("Missing: {label}"))
+            .center();
+        let output = screen.draw(vec![Event::PointerMoved(at)]);
+        let at = text_rect(&output, label)
+            .unwrap_or_else(|| panic!("Missing: {label}"))
+            .center();
+        screen.draw(vec![Event::PointerMoved(at)]);
+        for pressed in [true, false] {
+            screen.draw(vec![Event::PointerButton {
+                pos: at,
+                button: PointerButton::Primary,
+                pressed,
+                modifiers: Modifiers::NONE,
+            }]);
+        }
+    }
+
+    #[test]
+    fn a_sections_menu_plays_it_in_another_style() {
+        let mut screen = song();
+        let own = screen.app.project.band().unwrap().name().to_string();
+        right_click(&mut screen, "Chorus");
+        screen.click(&format!("Style: {own}"));
+        follow(&mut screen, "Latin");
+        follow(&mut screen, "Bossa nova");
+        let bossa = BandStyle::named("Bossa nova");
+        assert_eq!(screen.app.project.section_style_at(64), bossa);
+        assert_eq!(screen.app.project.section_style_at(63), None);
+        assert_eq!(screen.app.history.undo_label(), Some("section style"));
+        assert!(
+            screen
+                .app
+                .notice
+                .as_deref()
+                .is_some_and(|notice| notice.contains("Bars 5–8: the band plays Bossa nova")),
+            "{:?}",
+            screen.app.notice
+        );
+        // The sheet names the style where it starts.
+        screen.app.chord_sheet.new_song();
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "Bossa nova").is_some());
+        // A bar's menu goes back to the song's style from there on.
+        right_click(&mut screen, "Bossa nova");
+        screen.click("Style: Bossa nova");
+        follow(&mut screen, &format!("The song's style: {own}"));
+        assert!(screen.app.project.section_styles().is_empty());
+        screen.app.undo();
+        assert_eq!(screen.app.project.section_style_at(64), bossa);
+    }
+}

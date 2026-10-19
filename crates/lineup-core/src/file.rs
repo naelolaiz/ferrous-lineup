@@ -156,10 +156,15 @@ pub fn is_project(path: &Path) -> bool {
 /// would let styles and the band write over them, so a song with a
 /// locked channel needs format 23.
 ///
+/// Format 24 added a style for part of a song (see
+/// [`crate::band::sections`]). Older versions would play the whole song
+/// in the band's own style, so a song with a section style needs format
+/// 24.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play.
-pub const FORMAT_VERSION: u32 = 23;
+pub const FORMAT_VERSION: u32 = 24;
 
 /// The oldest format that can hold `project`.
 ///
@@ -235,7 +240,9 @@ pub fn format_for(project: &Project) -> u32 {
     let has_style_parts = project.band().is_some_and(|band| {
         band.instrument_style != band.style || band.harmony_style.is_some() || band.accents_only
     });
-    if !project.locked().is_empty() {
+    if !project.section_styles().is_empty() {
+        24
+    } else if !project.locked().is_empty() {
         23
     } else if project
         .band()
