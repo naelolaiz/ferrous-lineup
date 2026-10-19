@@ -1992,13 +1992,15 @@ impl PianoRoll {
                             });
                         }
                         None => {
+                            // A drawn note is not selected, so the tools and
+                            // the arrow keys still change every note until
+                            // you click one.
                             self.selection.clear();
                             let pitches = self.stamp_notes(self.snapped(pitch, scale), scale);
                             let new_notes: Vec<NoteEvent> = pitches
                                 .iter()
                                 .map(|&p| NoteEvent::new(p, step, self.note_length))
                                 .collect();
-                            self.selection = new_notes.clone();
                             // A single new note can be dragged straight
                             // away. It will be added at the end of the list.
                             if new_notes.len() == 1 {
