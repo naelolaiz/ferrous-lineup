@@ -269,6 +269,52 @@ pub fn mute_light(ui: &mut Ui, enabled: bool) -> Response {
     response
 }
 
+/// A small padlock: closed and lit while the channel is locked (see
+/// [`lineup_core::lock`]), open and faint while it is not.
+pub fn lock_light(ui: &mut Ui, locked: bool) -> Response {
+    let zoom = zoom(ui);
+    let (rect, response) = ui.allocate_exact_size(vec2(14.0, 24.0) * zoom, Sense::click());
+    if ui.is_rect_visible(rect) {
+        let color = match (locked, response.hovered()) {
+            (true, _) => ui.visuals().warn_fg_color,
+            (false, true) => ui.visuals().weak_text_color(),
+            (false, false) => LED_OFF,
+        };
+        let body =
+            Rect::from_center_size(rect.center() + vec2(0.0, 3.0) * zoom, vec2(9.0, 7.0) * zoom);
+        // The shackle is an arch over the body, lifted out of it on one
+        // side when the lock is open.
+        let radius = 3.0 * zoom;
+        let top = body.top() - if locked { 2.0 } else { 4.0 } * zoom;
+        let arch = (0..=12).map(|step| {
+            let angle = std::f32::consts::PI * step as f32 / 12.0;
+            pos2(
+                body.center().x - radius * angle.cos(),
+                top - radius * angle.sin(),
+            )
+        });
+        let left = pos2(
+            body.center().x - radius,
+            if locked { body.top() } else { top },
+        );
+        let right = pos2(body.center().x + radius, body.top());
+        let shackle: Vec<_> = std::iter::once(left).chain(arch).chain([right]).collect();
+        let painter = ui.painter();
+        painter.add(egui::Shape::line(shackle, Stroke::new(1.5 * zoom, color)));
+        if locked {
+            painter.rect_filled(body, 1.5 * zoom, color);
+        } else {
+            painter.rect_stroke(
+                body,
+                1.5 * zoom,
+                Stroke::new(1.2 * zoom, color),
+                StrokeKind::Inside,
+            );
+        }
+    }
+    response
+}
+
 /// A small picture of a channel's notes, drawn in place of its steps when
 /// the channel plays melodies or chords. Clicking it opens the piano roll.
 pub fn mini_roll(

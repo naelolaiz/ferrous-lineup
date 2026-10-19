@@ -673,6 +673,7 @@ impl LineupApp {
                     }
                 });
             }
+            RackAction::SetLocked { channel, locked } => self.set_locked(channel, locked),
             RackAction::RemoveChosen => {
                 if let Some(channel) = self.piano_roll.chosen_channel() {
                     self.apply(RackAction::Remove(channel));
@@ -967,16 +968,18 @@ impl LineupApp {
                             None => String::new(),
                         };
                         Some(format!(
-                            "The band plays {}; the song's own {names} {} muted",
+                            "The band plays {}; the song's own {names} {} muted.{}",
                             harmony.map_or(style.name, |style| style.name),
-                            if muted.len() == 1 { "is" } else { "are" }
+                            if muted.len() == 1 { "is" } else { "are" },
+                            library::kept(&self.project)
                         ))
                     }
                     (Some(style), _) => Some(format!(
-                        "Applied selected parts of {}",
-                        harmony.map_or(style.name, |style| style.name)
+                        "Applied selected parts of {}.{}",
+                        harmony.map_or(style.name, |style| style.name),
+                        library::kept(&self.project)
                     )),
-                    (None, _) => Some("No band".to_string()),
+                    (None, _) => Some(format!("No band.{}", library::kept(&self.project))),
                 };
                 if style.is_some() {
                     self.set_mode(PlayMode::Song);
@@ -984,6 +987,14 @@ impl LineupApp {
             }
             SheetAction::PlayAgain(player) => {
                 self.edit("play the part again", |project| project.play_again(player));
+            }
+            _ if matches!(
+                action,
+                SheetAction::SetSoloist(_) | SheetAction::AnotherSolo
+            ) && self.project.plays_locked(lineup_core::Player::Soloist) =>
+            {
+                self.notice =
+                    Some("The soloist is locked: unlock it in the rack first.".to_string());
             }
             SheetAction::SetSoloist(on) => {
                 let what = if on {
@@ -1943,6 +1954,7 @@ impl eframe::App for LineupApp {
                         song_playing: self.playing && self.mode == PlayMode::Song,
                         over_song: self.over_song.is_some(),
                     }),
+                    true,
                 )
             })
             .and_then(|window| window.inner)

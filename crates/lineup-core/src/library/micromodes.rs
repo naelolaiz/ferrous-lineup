@@ -326,7 +326,7 @@ fn write_voices(
             write_forms(&forms, style.steps, &voice.writing(), length),
         ));
     }
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
     for (channel, notes) in writes {
@@ -348,7 +348,7 @@ pub fn write_micromode_style(
     start: Start,
     selected: Option<usize>,
 ) -> bool {
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
     target.set_length(style.length());
@@ -359,7 +359,7 @@ pub fn write_micromode_style(
         .filter(|name| !style.voices.iter().any(|voice| voice.channel == *name))
         .filter_map(|name| find_synth(project, name))
         .collect();
-    if let Some(target) = project.pattern_mut(pattern) {
+    if let Some(mut target) = project.style_pattern(pattern) {
         for channel in unused {
             target.set_notes(channel, []);
         }

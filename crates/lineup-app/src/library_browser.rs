@@ -167,8 +167,9 @@ impl LibraryBrowser {
     ) -> Option<LibraryAction> {
         let mut picked = None;
         let sources = SongPart::ALL.map(|part| part_source_text(project, part));
+        let locked = project.locked_names().join(", ");
         if purpose != LibraryPurpose::Progression {
-            part_sources(ui, project, &sources);
+            part_sources(ui, project, &sources, &locked);
             if project.band().is_some_and(|band| band.accents_only) {
                 ui.weak("Plain accents with current instruments");
             }
@@ -239,6 +240,7 @@ impl LibraryBrowser {
                         reveal: revealing && !self.reveal_row,
                         purpose,
                         now: &sources,
+                        locked: &locked,
                     },
                     &mut self.parts,
                     &mut self.editor_request,
@@ -404,6 +406,8 @@ struct PresetView<'a> {
     /// Where each part of the song comes from now, in [`SongPart::ALL`]'s
     /// order (see [`part_source_text`]).
     now: &'a [String; 6],
+    /// The names of the locked channels, "Bass, Keys", or nothing.
+    locked: &'a str,
 }
 
 /// Where a part of the song comes from, in words: "Tango marcato
@@ -447,7 +451,8 @@ fn part_value(project: &Project, part: SongPart) -> Option<String> {
 }
 
 /// Where each part of the song comes from: a demo, a style, your edits.
-fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6]) {
+/// And the channels styles leave alone, if any are `locked`.
+fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6], locked: &str) {
     egui::Grid::new("part-sources")
         .num_columns(2)
         .spacing([10.0, 2.0])
@@ -466,6 +471,14 @@ fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6]) {
                     None => "Your own: it did not come from a demo or a style.".to_string(),
                 };
                 ui.label(text).on_hover_text(hover);
+                ui.end_row();
+            }
+            if !locked.is_empty() {
+                ui.weak("Locked");
+                ui.label(format!("🔒 {locked}")).on_hover_text(
+                    "Styles and the band keep their notes and sound. Unlock them in the \
+                     channel rack.",
+                );
                 ui.end_row();
             }
         });
@@ -559,7 +572,13 @@ fn preset_label(
             egui::ScrollArea::vertical()
                 .max_height(height)
                 .show(ui, |ui| {
-                    style_parts_editor(ui, &mut draft, preset.has_progression(), Some(view.now));
+                    style_parts_editor(
+                        ui,
+                        &mut draft,
+                        preset.has_progression(),
+                        Some(view.now),
+                        view.locked,
+                    );
                 });
             ui.separator();
             ui.horizontal(|ui| {
@@ -616,16 +635,18 @@ fn preset_label(
 
 /// Shared option editor for applying a preset and editing the saved defaults.
 pub fn style_parts_checkboxes(ui: &mut Ui, parts: &mut StyleParts) {
-    style_parts_editor(ui, parts, true, None);
+    style_parts_editor(ui, parts, true, None, "");
 }
 
 /// The options for applying a preset. With `now`, each says where that
-/// part of the song comes from now, which it would replace.
+/// part of the song comes from now, which it would replace. The
+/// `locked` channels, if any, are named as kept.
 fn style_parts_editor(
     ui: &mut Ui,
     parts: &mut StyleParts,
     has_progression: bool,
     now: Option<&[String; 6]>,
+    locked: &str,
 ) {
     ui.spacing_mut().item_spacing.y = 8.0;
     ui.add_space(4.0);
@@ -633,6 +654,9 @@ fn style_parts_editor(
     style_mode_ui(ui, parts);
     ui.separator();
     ui.strong("Accompaniment");
+    if !locked.is_empty() {
+        ui.weak(format!("🔒 Kept: {locked}"));
+    }
     copy_parts_ui(ui, parts, has_progression, now);
 }
 
