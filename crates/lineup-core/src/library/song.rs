@@ -908,6 +908,7 @@ pub static SONGS: &[Song] = &[
     folklore::PUNTO_OCUENO,
     folklore::BOI_BARROSO,
     folklore::CANDOMBE_PARA_GARDEL,
+    folklore::LA_MARCHA_PERONISTA,
     folklore::ZAMBA_DEL_TELAR,
     folklore::CHACARERA_DEL_PATIO,
     folklore::GATO_DEL_ARROYO,
