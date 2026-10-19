@@ -1414,13 +1414,18 @@ pub(super) const VOLVER: Song = Song {
 
 /// Eight bars of D minor over a bass walking down D, C, B, B flat, A, then the
 /// answer through D7, G minor and C7 to F major and back on A7.
-const ROMANCE_A1_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | i | I7 | I7 | iv | \
-                                 iv iv vii°7 | bVII7 | bVII7 | bIII | V7";
+/// The piano stops on the third beat where the voice breathes ("a-bril.", "bal-cón."): the
+/// bass and one chord, then a rest (`...`), as the score has it in bars 3-6, 13, 15 and 16.
+const ROMANCE_A1_CHORDS: &str = "i | i7 | II7 II7 II7... | II7 II7 II7... | bVI7 bVI7 bVI7... | \
+                                 V7 V7 V7... | i i II7 | i | I7 | I7 | iv | iv iv vii°7 | \
+                                 bVII7 bVII7 bVII7... | bVII7 | bIII bIII bIII... | V7 V7 V7...";
 
 /// The same opening, then F7 over E flat sliding onto D7, G minor, C7 and F to A7 and a
 /// cadence in D minor.
-const ROMANCE_A2_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | bIII7 I7 I7 | iv | bVII7 | \
-                                 bIII | V7 | i | V7 | i | i";
+/// Rests on the third beat as the score has them (bars 19-22, 24 and 28).
+const ROMANCE_A2_CHORDS: &str = "i | i7 | II7 II7 II7... | II7 II7 II7... | bVI7 bVI7 bVI7... | \
+                                 V7 V7 V7... | i i II7 | bIII7 I7 I7... | iv | bVII7 | bIII | \
+                                 V7 V7 V7... | i | V7 | i | i";
 
 /// A sequence climbing a step every two bars: G minor, A7, D minor (with A half-diminished
 /// over C leading on), G minor, C7, F.
@@ -1429,7 +1434,7 @@ const ROMANCE_B1_CHORDS: &str =
 
 /// The sequence again, falling back to D minor over E7 and A7.
 const ROMANCE_B2_CHORDS: &str =
-    "iv6 | V7 | i | i7 | II7 | V7 | i | I7 | iv | V7 | i | i7 | II7 | V7";
+    "iv6 | V7 | i | i7 | II7 | V7 | i i i... | I7 | iv | V7 | i | i7 | II7 | V7";
 
 // Source: score attached by the owner (two page images of a voice and piano
 // edition, "Romance de barrio, vals", words by Homero Manzi, music by Aníbal
@@ -1472,7 +1477,7 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
             "A2",
             "A4:4 Ab4 G4 | F4:4 E4:6 D4:2 | F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | \
              F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4 -:2 G#4:2 | A4:8 -:2 G4:2 | \
-             G4:4 A4 Bb4 | C5:4 D5 -:2 E5:2 | F5:8 C5:4 | -:2 C#5:2 D5 C#5 B4 C#5 | \
+             G4:4 A4 Bb4 | C5:4 >D5 -:2 >E5:2 | F5:8 C5:4 | -:2 C#5:2 D5 C#5 B4 C#5 | \
              D5:8 A4:4 | -:2 Bb4:2 G4:4 -:2 E4:2 | D4:12 | _:4 -:8",
             ROMANCE_A2_CHORDS,
         ),
@@ -1494,7 +1499,9 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
             ROMANCE_B2_CHORDS,
         ),
         Part::new("First ending", "D4:12 | _:4 -:6 A4:2", "i | i"),
-        Part::new("Second ending", "D4:4 -:8 | -:12", "i i V7 | i"),
+        // The final "chan-chan": D minor, a beat of rest, A7 marcato on the third beat and
+        // D minor marcato, then silence (FIN).
+        Part::new("Second ending", "D4:4 -:8 | -:12", "i. i... V7. | i."),
     ],
     form: &[
         "Pickup",
@@ -1534,17 +1541,26 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
 // Copyright: Rosita Melo died in 1981 and the score's words are Manzi's (1948): not public domain; added at the owner's request.
 
 /// The first strain: F#7 for two bars, then B minor; E minor in its third phrase.
-const DESDE_A_CHORDS: &str =
-    "V7 | V7 | i | i | V7 | V7 | i | i i I7 | iv | iv | i | i | V7 | V7 | i | V7";
-const DESDE_A2_CHORDS: &str =
-    "V7 | V7 | i | i | V7 | V7 | i | i i I7 | iv | iv | i | i | V7 | V7 | i | i";
+/// Where the voice runs in eighths ("si tan-to te han he-") the piano strikes the bass on the
+/// first beat and rests (`...`) for the other two, as the score has it; bar 7 rests on beat 3.
+const DESDE_A_CHORDS: &str = "V7 | V7 V7... V7... | i | i | V7 | V7 V7... V7... | i i i... | i i I7 | \
+                              iv | iv iv... iv... | i | i i... i... | V7 | V7 V7... V7... | i | V7";
+/// The same, ending on B minor with a quarter and two beats of rest before the double bar.
+const DESDE_A2_CHORDS: &str = "V7 | V7 V7... V7... | i | i | V7 | V7 V7... V7... | i i i... | \
+                               i i I7 | iv | iv iv... iv... | i | i i... i... | V7 | V7 | i | \
+                               i i... i...";
 /// The second strain, in D major: A7 (over A, then over C sharp) to D, B7 over D sharp, A7 over
 /// E and A, and D.
-const DESDE_B_CHORDS: &str = "V7 | V7 | I | I I VI7 | V7 | V7 | I | I | \
-                              V7 | V7 | I | I I VI7 | V7 | V7 | I | I";
+/// The bass's half notes leave the third beat silent under the tune's eighths (bars 34, 38, 42),
+/// and bars 40 and 48 have the bass alone on the first beat.
+const DESDE_B_CHORDS: &str = "V7 | V7 V7 V7... | I | I I VI7 | V7 | V7 V7 V7... | I | I I... I... | \
+                              V7 | V7 V7 V7... | I | I I VI7 | V7 | V7 | I | I I... I...";
 const DESDE_TRIO_CHORDS: &str =
-    "I | I | V | V7 | I | I | V7 | V7 | I | I7 | IV | IV | VI | VI7 | V | V7";
-const DESDE_TRIO_END_CHORDS: &str = "III7 | III7 | VIsus4 | vi | VII7 | VII7 | iii | iii";
+    "I | I I... I... | V | V7 | I | I | V7 | V7 | I | I7 | IV | IV | VI | VI7 | V | V7";
+/// It closes with the vals's "chan-chan": B minor struck on the first beat, again on the
+/// half beat before the third (a push), and on the next downbeat, with rests between.
+const DESDE_TRIO_END_CHORDS: &str =
+    "III7 | III7 | VIsus4 | vi | VII7 | VII7 | iii. iii... ^iii. | iii.";
 
 pub(super) const DESDE_EL_ALMA: Song = Song {
     name: "Desde el alma",
@@ -1615,12 +1631,15 @@ pub(super) const DESDE_EL_ALMA: Song = Song {
 
 /// A7, then A7 with its flat ninth, D minor with a ninth on top; D minor and A7,
 /// A7 and D minor, D minor and G minor, and A7 home to D minor.
-const MUCHACHO_INTRO_CHORDS: &str = "V7 V7b9 i9 i9 | i V7 | V7 i | i iv | V7 i";
+/// The intro ends on the "chan": D minor on the beat, then the high stab (`i.`) and silence
+/// under the singer's pickup.
+const MUCHACHO_INTRO_CHORDS: &str = "V7 V7b9 i9 i9 | i V7 | V7 i | i iv | V7 V7 i i.";
 
 /// Two bars of A7 under "Muchacho", then D minor and A7, D minor (over a moving
 /// bass) and G minor, and the same again; the middle visits F major (F, C7, C7, F)
 /// before A7 brings it back to D minor.
-const MUCHACHO_CANTO_CHORDS: &str = "V7 | i V7 | i iv | i V7 | i V7 | V7 i | V7 i | iv i | V7 i | \
+/// Bar 28 ends on the sfz stab (`i.`) with rests after it.
+const MUCHACHO_CANTO_CHORDS: &str = "V7 | i V7 | i iv | i V7 | i V7 | V7 i | V7 i | iv i | V7 V7 i i. | \
                                      bIII bVII7 | bVII7 bIII | V7 V7 V7b9 V7 | V7 i | V7 | V7 i";
 
 // Source: score attached by the owner (three page images of a typeset edition for
@@ -1662,42 +1681,42 @@ pub(super) const MUCHACHO: Song = Song {
         // It ends with the pickup "Mu-" into the canto.
         Part::new(
             "Intro",
-            "-:1 C#5:2 E5:1 G5:1 Bb5:2 C#6:1 F6:2 C6:2 _:4 | \
+            "-:1 C#5:2 !< E5:1 G5:1 Bb5:2 C#6:1 != F6:2 C6:2 !> _:4 != | \
              -:1 F6:1 F6 E6 E6 D6 D6 E6 D6:2 C#6:2 _:4 | \
-             -:1 G6:1 G6 F6 F6 E6 E6 F6 E6:2 D6:2 _:4 | \
-             -:1 A5:1 A5 A5 A5 A5 A5 A5 A5:2 G5:4 -:2 | \
-             A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 D6:2 -:1 A4:1",
+             !f -:1 G6:1 G6 F6 F6 E6 E6 F6 E6:2 D6:2 _:4 | \
+             !p -:1 A5:1 A5 A5 A5 A5 A5 A5 A5:2 G5:4 -:2 | \
+             A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 >D6:2 -:1 A4:1",
             MUCHACHO_INTRO_CHORDS,
         ),
         Part::new(
             "Canto",
-            "A4:2 G4:2 _:4 -:1 G4:1 Bb4 G4 Bb4 A4:2 G4:1 | \
-             Bb4:2 A4:1 A4 C5 F4 F4 F4 G4 G4 Bb4 A4 C5 Bb4 A4 G#4 | \
-             A4:6 -:2 -:1 G4:1 G4 G4 Bb4 A4 Bb4 A4 | \
-             G4:1 F4 F4 F4 A4 G#4 A4 F4 G4 E4 E4 F4 G4 Bb4 A4 G4 | \
+            "!p A4:2 G4:2 _:4 -:1 !< G4:1 Bb4 G4 != Bb4 A4:2 G4:1 | \
+             Bb4:2 A4:1 A4 !> C5 F4 F4 F4 G4 G4 Bb4 A4 != C5 Bb4 A4 G#4 | \
+             !> A4:6 -:2 !p -:1 !< G4:1 G4 G4 != Bb4 A4 Bb4 A4 | \
+             G4:1 F4 F4 F4 A4 G#4 A4 F4 !p G4 E4 E4 F4 G4 Bb4 A4 G4 | \
              A4:6 -:1 A4:1 A4:2 G4:2 _:4 | \
              -:1 G4:1 Bb4 G4 Bb4 A4:2 G4:1 Bb4:2 A4:1 A4 C5 F4 F4 F4 | \
-             G4:1 G4 Bb4 A4 C5 Bb4 A4 G#4 A4:6 -:2 | \
-             -:1 G4:1 G4 G4 G4:1 G4:2 G4:1 G4:1 F4 F4 F4 A4:1 F4:2 F4:1 | \
-             G4:1 E4 E4 E4 D4 C#4 D4 E4 D4:4 D6:2 -:2 | \
-             -:1 C5:2 C5:1 C5 C5 C5 C5 D5:4 C5:4 | \
-             -:1 C5:1 E5 C5 C5:3 Bb4:1 Bb4:4 A4:4 | \
-             -:1 A4:1 A4 A4 Bb4:3 A4:1 C#5:4 A4:4 | \
-             -:1 G4:2 G4:1 G4:1 E4 F4 G4 A4:6 -:2 | \
-             -:1 E4:1 F4 F#4 G4:1 A4:2 G#4:1 A4:4 G4:4 | \
-             -:2 G4:1 G4 Bb4 A4 A4 G4 G4 F4 D4 E4 F4 G4 A4 Bb4",
+             G4:1 G4 Bb4 A4 C5 Bb4 A4 G#4 !> A4:6 -:2 | \
+             !p -:1 G4:1 G4 G4 G4:1 G4:2 G4:1 !< G4:1 F4 F4 F4 != A4:1 F4:2 F4:1 | \
+             G4:1 E4 E4 E4 D4 C#4 D4 E4 !> D4:4 != !sfz D6:2 -:2 | \
+             !f -:1 C5:2 C5:1 C5 C5 C5 C5 !> D5:4 C5:4 | \
+             !p -:1 C5:1 E5 C5 C5:3 Bb4:1 Bb4:4 A4:4 | \
+             !f -:1 A4:1 A4 A4 Bb4:3 A4:1 C#5:4 A4:4 | \
+             -:1 !< G4:2 G4:1 != G4:1 E4 F4 G4 !> A4:6 -:2 | \
+             !p -:1 E4:1 F4 F#4 G4:1 A4:2 G#4:1 A4:4 G4:4 | \
+             -:2 !< G4:1 G4 != Bb4 A4 A4 G4 !> G4 F4 D4 E4 F4 G4 A4 Bb4",
             MUCHACHO_CANTO_CHORDS,
         ),
         // It ends with the pickup "De-" into the second verse.
         Part::new(
             "First ending",
-            "A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 D6:2 -:1 A4:1",
-            "V7 i",
+            "!pp A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 >D6:2 -:1 A4:1",
+            "V7 V7 i i.",
         ),
         Part::new(
             "Second ending",
-            "A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 D6:2 -:2",
-            "V7 i",
+            "!pp A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 >D6:2 -:2",
+            "V7 V7 i i.",
         ),
     ],
     form: &["Intro", "Canto", "First ending", "Canto", "Second ending"],
@@ -1710,34 +1729,36 @@ pub(super) const MUCHACHO: Song = Song {
 };
 
 /// Verse: two-bar phrases, A7 to D minor, then C7 to F, then E7 and A7.
-const GARUA_VERSE_CHORDS: &str = "V7 i | V7 i | bVII7 bIII | bVII7 bIII | II7 V7 | \
-                                  i i bVI V7 V7 V7 V7 V7 | V7 i | V7 i | II7 V7 | \
+/// In bars 10 and 18 the left hand strikes once and rests under the tune's run (`II7.`).
+const GARUA_VERSE_CHORDS: &str = "V7 i | V7 i | bVII7 bIII | bVII7 bIII | II7. V7 | \
+                                  i i bVI V7 V7 V7 V7 V7 | V7 i | V7 i | II7. V7 | \
                                   i i bVI V7 i i i i | i";
 
-const GARUA_VERSE_TUNE: &str = "-:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
-     -:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
-     -:1 G4:1 G4:1 G4:1 Bb4:2 E4:1 E4:1 G4:2 F4:1 A4:1 G4:2 F4:2 | \
-     -:1 G4:1 G4:1 G4:1 Bb4:2 E4:1 E4:1 G4:2 F4:1 A4:1 G4:2 F4:2 | \
-     -:1 G#4:2 A4:1 B4:1 C#5:1 D5:1 E5:1 C#5:1 A4:1 Bb4:1 G4:1 A4:1 F4:1 G4:1 E4:1 | \
+const GARUA_VERSE_TUNE: &str = "-:1 E4:1. E4:1. E4:1. G4:2. C#4:1. C#4:1. >E4:2 D4:1. F4:1. >E4:2 D4:2 | \
+     -:1 E4:1. E4:1. E4:1. G4:2. C#4:1. C#4:1. >E4:2 D4:1. F4:1. >E4:2 D4:2 | \
+     -:1 G4:1. G4:1. G4:1. Bb4:2. E4:1. E4:1. >G4:2 F4:1. A4:1. >G4:2 F4:2 | \
+     -:1 G4:1. G4:1. G4:1. Bb4:2. E4:1. E4:1. >G4:2 F4:1. A4:1. >G4:2 F4:2 | \
+     -:1 G#4:2 A4:1 B4:1 C#5:1 D5:1 E5:1 >C#5:1 A4:1 >Bb4:1 G4:1 >A4:1 F4:1 >G4:1 E4:1 | \
      F4:1 D4:1 E4:1 C#4:1 D4:3 G4:1 A3:4 -:4 | \
-     -:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
-     -:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
-     -:1 G#4:2 A4:1 B4:1 C#5:1 D5:1 E5:1 C#5:1 A4:1 Bb4:1 G4:1 A4:1 F4:1 G4:1 E4:1 | \
-     F4:1 D4:1 D4:1 E4:1 F4:2 E4:2 D4:1 D5:2 E5:1 D5:2 -:2 | \
-     -:8 -:1 D5:2 E5:1 D5:2 -:1 A4:1";
+     -:1 E4:1. E4:1. E4:1. G4:2. C#4:1. C#4:1. >E4:2 D4:1. F4:1. >E4:2 D4:2 | \
+     -:1 E4:1. E4:1. E4:1. G4:2. C#4:1. C#4:1. >E4:2 D4:1. F4:1. >E4:2 D4:2 | \
+     -:1 G#4:2 A4:1 B4:1 C#5:1 D5:1 E5:1 >C#5:1 A4:1 >Bb4:1 G4:1 >A4:1 F4:1 >G4:1 E4:1 | \
+     >F4:1 D4:1 D4:1 E4:1 F4:2 E4:2 D4:1. >D5:2 >E5:1 >D5:2 -:2 | \
+     -:8 -:1 >D5:2 >E5:1 >D5:2 -:1 A4:1";
 
 /// Refrain: D minor over a bass falling D, C, B, B flat; B flat 7 and A7; D7 to G minor.
+/// Bars 30 and 34 are shots: the left hand strikes once, then rests under a run.
 const GARUA_REFRAIN_CHORDS: &str =
-    "i | i i7 IV7 iv | bVI7 V7 V7 V7 | V7 | V7 i | i I7 | I7 iv | V7 i";
+    "i | i i7 IV7 iv | bVI7 V7 V7 V7 | V7 V7. | V7 i | i I7. | I7 iv | V7 i";
 
 const GARUA_REFRAIN_TUNE: &str = "A4:4 D4:4 -:2 A4:1 D5:1 D5:1 C#5:1 C5:1 B4:1 | \
-     Bb4:1 A4:1 F4:1 A4:1 A4:1 G#4:1 G4:1 F#4:1 F4:1 E4:1 E4:1 D4:1 D4:1 D4:1 C#4:1 D4:1 | \
+     Bb4:1 A4:1 F4:1 A4:1 A4:1 G#4:1 G4:1 F#4:1 F4:1 E4:1 E4:1 D4:1 >D4:1 >D4:1 >C#4:1 >D4:1 | \
      F4:4 E4:3 Bb4:1 _:4 E4:3 G4:1 | \
-     G4:4 C#4:4 -:2 Bb3:1 F4:1 D4:1 C#4:1 F4:1 E4:1 | \
-     Bb4:1 A4:1 A4:1 Ab4:1 G4:1 Gb4:1 F4:1 A4:1 E4:4 D4:2 -:1 D5:1 | \
+     G4:4 C#4:4 -:2 Bb3:1 F4:1 >D4:1 C#4:1 >F4:1 E4:1 | \
+     >Bb4:1 A4:1 A4:1 Ab4:1 >G4:1 Gb4:1 F4:1 A4:1 E4:4 D4:2 -:1 D5:1 | \
      _:4 A4:2 -:2 -:2 D4:1 E4:1 F#4:1 G4:1 A4:1 Bb4:1 | \
      C5:1 B4:1 Bb4:1 A4:1 Eb5:1 D5:1 D5:1 C5:1 C5:4 Bb4:2 -:1 Bb4:1 | \
-     _:4 E4:3 A4:1 A4:4 D4:2 D4:1 E4:1";
+     _:4 E4:3 A4:1 A4:4 D4:2 >D4:1 E4:1";
 
 // Source: score attached by the owner (page images), "Garúa... Tango", letra de Enrique
 // Cadícamo, música de Aníbal Troilo (Pichuco), Editorial Julio Korn, Buenos Aires,
@@ -1775,7 +1796,13 @@ pub(super) const GARUA: Song = Song {
     parts: &[
         // The piano's introduction: D minor 7 (F, C, A over D), A minor over its C, then
         // B flat, a bass falling D, C, B flat to the A of the verse's first bar.
-        Part::new("Pickup", "-:8 -:2 F4:2 E4:2 D4:2", "i i i i i i v bVI"),
+        // Nothing sounds before the introduction's first eighth rest is over (the first half
+        // of the bar is the padding before the 2/4 bar).
+        Part::new(
+            "Pickup",
+            "-:8 -:2 F4:2 E4:2 D4:2",
+            "i... i... i... i... i... i v bVI",
+        ),
         Part::new("Verse", GARUA_VERSE_TUNE, GARUA_VERSE_CHORDS),
         Part::new("Refrain", GARUA_REFRAIN_TUNE, GARUA_REFRAIN_CHORDS),
         // The refrain's last bar: G sharp diminished 7 (G sharp in the bass under D and
@@ -1789,7 +1816,7 @@ pub(super) const GARUA: Song = Song {
         Part::new(
             "Refrain ending 2",
             "F4:2 E4:1 D4:1 E4:2 D4:1 C#4:1 D4:2 A4:2 D5:2 -:2",
-            "#iv°7 #iv°7 V7 V7 i V7 i i",
+            "#iv°7 #iv°7 V7 V7 i V7 i. i...",
         ),
     ],
     form: &[
@@ -1824,10 +1851,12 @@ const ESTA_NOCHE_DE_LUNA_A_TUNE: &str = "F4:2 F4:1 G4:1 A4:1 Bb4:1 C5:1 C#5:1 D5
      F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
      F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 -:6";
 
+// "So-lo quie-ro vi-vir de ro-di-llas": the left hand strikes once a bar and rests, so those
+// three bars are shots.
 // The refrain, also in B flat major: 28 bars of 2/4. Its last bar lands on B flat and
 // plays the pickup back into the verse.
 const ESTA_NOCHE_DE_LUNA_B_CHORDS: &str = "I ii | I V7 | ii6 vi | III7 | III7 III7 vi iv6 | I II7 | \
-     V7 #ii°7 I I | ii I | V7 ii6 | vi III7 | III7 | ii iv6 I I | I ii | V7 V7 I #ii°7";
+     V7 #ii°7 I I | ii I | V7 ii6 | vi III7 | III7 | ii iv6 I I | I. ii. | V7. V7... I #ii°7";
 const ESTA_NOCHE_DE_LUNA_B_TUNE: &str = "D5:8 _:2 Bb4:1 C5:1 D5:2 C5:1 Bb4:1 | F5:8 _:2 C5:1 D5:1 Eb5:2 D5:1 C5:1 | \
      G4:8 G4:2 G4:1 A4:1 Bb4:2 C5:1 C#5:1 | D5:4 A4:4 _:2 A4:2 Bb4:2 A4:2 | \
      C5:4 A4:4 _:2 Eb4:1 F4:1 Ab4:2 C5:1 Bb4:1 | \
@@ -1868,12 +1897,18 @@ pub(super) const ESTA_NOCHE_DE_LUNA: Song = Song {
     style: "Tango",
     parts: &[
         // Half a bar of silence, then the first run of the piano's intro.
-        Part::new("Pickup", "-:8 -:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1", "I"),
+        Part::new(
+            "Pickup",
+            "-:8 -:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1",
+            "I... I",
+        ),
         Part::new(
             "Intro",
             "F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
              F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 -:1 F4:1 G4:2 F4:1 E4:1",
-            "V7 I | V7 V7 I #ii°7",
+            // The left hand strikes B flat and rests; the right hand's C sharp diminished
+            // chord under "A-cer-ca-te" is one stroke.
+            "V7 I | V7 V7 I. #ii°7.",
         ),
         Part::new("A", ESTA_NOCHE_DE_LUNA_A_TUNE, ESTA_NOCHE_DE_LUNA_A_CHORDS),
         Part::new("B", ESTA_NOCHE_DE_LUNA_B_TUNE, ESTA_NOCHE_DE_LUNA_B_CHORDS),
