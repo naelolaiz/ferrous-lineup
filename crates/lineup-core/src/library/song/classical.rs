@@ -1644,3 +1644,246 @@ pub(super) const PROMENADE: Song = Song {
             F, and the last bars bring it home to B flat in chords and bare octaves, ending \
             ii V I.",
 };
+
+const GRAZIA_CELLOS: &str = "F#3:4 G3:4 (3 A3:2 G3 A3 B3:4 C#4:4 | D4:4 B3:4 C#4:12 | \
+     A3:4 B3:4 (3 C#4:2 B3 C#4 D4:4 E4:4 | F#4:4 D4:4 E4:12 | \
+     G4:4 F#4:4 (3 E4:2 F#4 E4 D4:4 C#4:4 | F#4:2 -:1 G4:1 F#4:2 -:1 E#4:1 F#4:12 | \
+     F#4:4 E4:4 (3 D4:2 E4 D4 C#4:4 B3:4 | B4:2 A4 G4 F#4 E4 Eb4 D4 C#4 B3 Bb3";
+const GRAZIA_CELLOS_CHORDS: &str = "I | D/F# D/F# V V V | D/F# | I I V V V | \
+     ii ii III7 III7 III7 | vi | vi vi II7 II7 II7 | V7";
+const GRAZIA_WOODWINDS: &str = "F#5:4 G5:4 (3 A5:2 G5 A5 B5:4 C#6:4 | D6:4 B5:4 C#6:12 | \
+     A5:4 B5:4 (3 C#6:2 B5 C#6 D6:4 E6:4 | F#6:4 D6:4 E6:12 | \
+     E6:4 F#6:4 (3 E6:2 F#6 E6 D6:4 C#6:4 | B5:2 -:1 C#6:1 B5:2 -:1 A#5:1 B5:12 | \
+     D6:4 E6:4 (3 D6:2 E6 D6 C#6:4 B5:4";
+const GRAZIA_WOODWINDS_CHORDS: &str = "I | I I V7 V7 V7 | I I V V V | I I V7 V7 V7 | \
+     Em/G Em/G III7 III7 III7 | Bm/D | Bm7/F# Bm7/F# II7 II7 II7";
+const GRAZIA_OVER_A: &str = "B5:4 E5:4 (3 E5:2 D5 E5 F#5:4 G5:4 | \
+     A5:2 -:1 B5:1 A5:2 -:1 G5:1 A5:12 | A5:4 D6:4 (3 A5:2 B5 A5 G5:4 F#5:4 | \
+     F#5:2 -:1 A5:1 G5:2 -:1 D5:1 E5:12 | B5:4 E5:4 (3 E5:2 D5 E5 F#5:4 G5:4 | \
+     A5:2 -:1 B5:1 A5:2 -:1 G5:1 A5:12 | A5:4 B5:4 (3 A5:2 G#5 A5 C#6:4 B5:4 | \
+     A5:2 -:1 B5:1 A5:2 -:1 G#5:1 F#5:2 D5 E#5 F#5 G#5 A5";
+const GRAZIA_OVER_A_CHORDS: &str =
+    "V9 | D/A | D/A | D/A D/A V7 V7 V7 | V9 | D/A | VII7 | VII7 VII7 iii iii iii";
+const GRAZIA_OBOE: &str = "B5:4 G5:4 (3 E5:2 D5 E5 F#5:4 G5:4 | \
+     A5:2 -:1 B5:1 A5:2 -:1 G5:1 A5:12 | A5:4 D6 A5 G5 F#5 | \
+     F#5:2 -:1 A5:1 G5:2 -:1 D5:1 E5:12 | B5:4 E5 E5 F#5 G5 | \
+     A5:2 -:1 B5:1 A5:2 -:1 G5:1 A5:12 | A5:4 B5 C#6 E6 D6 | \
+     C#6:2 -:1 A5:1 B5:2 -:1 G#5:1 A5:6 -:6";
+const GRAZIA_OBOE_CHORDS: &str = "V9 | D/A | D/A | D/A D/A V7 V7 V7 | V9 | D/A | \
+     F#m/C# F#m/C# iii iii iii | II7 II7 V V V";
+const GRAZIA_UNDER_SCALES: &str = "F#4:4 G4:4 (3 A4:2 G#4 A4 B4:4 C#5:4 | D5:4 B4:4 C#5:12 | \
+     A4:4 B4:4 (3 C#5:2 B4 C#5 D5:4 E5:4 | F#5:4 D5:4 E5:12 | \
+     G5:4 F#5:4 (3 E5:2 F#5 E5 D5:4 C#5:4 | F#5:2 -:1 G5:1 F#5:2 -:1 E#5:1 F#5:12 | \
+     F#5:4 E5:4 (3 D5:2 E5 D5 C#5:4 B4:4 | B5:2 A5 G5 F#5 E5 Eb5 D5 C#5 B4 Bb4";
+const GRAZIA_UNDER_SCALES_CHORDS: &str = "I | I I V V V | I | I I V7 V7 V7 | ii | vi | vi | V7";
+const GRAZIA_VIOLINS: &str = "F#5:4 G5:4 (3 A5:2 G5 A5 B5:4 C#6:4 | D6:4 B5:4 C#6:12 | \
+     A5:4 B5:4 (3 C#6:2 B5 C#6 D6:4 E6:4 | F#6:4 D6:4 E6:8 F6:4 | \
+     C5:4 A4:4 (3 B4:2 A4 B4 C5:4 D5:4 | E5:4 C5:4 D5:12 | \
+     C5:4 D5:4 (3 E5:2 D5 E5 F5:4 F#5:4 | G5:4 E5:4 D5:12";
+const GRAZIA_VIOLINS_CHORDS: &str = "I | D/F# D/F# V V V | D/F# | I I V V V | \
+     C/G C/G IV IV IV | C/G C/G IV IV IV | C/G | C/G C/G IV IV IV";
+const GRAZIA_CLIMAX: &str = "Bb6:8 A6:8 G6:4 | F6:4 G6:4 A6:12 | A6:8 G#6:8 F#6:4 | \
+     E6:4 F#6:4 G#6:12 | G6:4 A6:4 (3 G6:2 A6 G6 F#6:2 -:2 E#6:4 | \
+     F#6:2 -:2 D6:4 E6:2 D6 C#6 B5 A5 G5 | D4:4 E4:4 (3 F#4:2 E4 F#4 G4:4 A4:4 | \
+     B4:4 C#5:4 D5:2 -:10";
+const GRAZIA_CLIMAX_CHORDS: &str = "Bb/F Bb/F bIII7 bIII7 bIII7 | \
+     Bb/F Bb/F bIII7 bIII7 bIII7 | A/E A/E II7 II7 II7 | A/E A/E II7 II7 II7 | \
+     A7b5/Eb | I I A7/G A7/G A7/G | D/A | V7 V7 I I I";
+// The trio, in B minor over a held D: its chords are named as on a lead
+// sheet, with the D after the slash.
+const GRAZIA_TRIO: &str = "F#5:6 F#5:2 F#5:8 E5:4 | D5:6 D5:2 D5:8 C#5:4 | \
+     B4:6 B4:2 D5:8 C#5:4 | B4:6 B4:2 G4:8 F#4:4 | F#5:6 F#5:2 F#5:8 E5:4 | \
+     D5:6 D5:2 D5:8 C#5:4 | B4:6 B4:2 D5:8 C#5:4 | B4:6 B4:2 G5:8 F#5:4";
+const GRAZIA_TRIO_CHORDS: &str = "Bm/D Bm/D A#°7/D A#°7/D A#°7/D | \
+     Bm/D Bm/D A#°7/D A#°7/D A#°7/D | Bm/D Bm/D A#°7/D A#°7/D A#°7/D | \
+     Bm/D Bm/D A#°7/D A#°7/D A#°7/D | Bm/D Bm/D A#°7/D A#°7/D A#°7/D | \
+     Bm/D Bm/D A#°7/D A#°7/D A#°7/D | Bm/D Bm/D A#°7/D A#°7/D A#°7/D | \
+     Bm/D Bm/D A#°7/D A#°7/D A#°7/D";
+const GRAZIA_STRAIN: &str = "F#5:6 G5:2 A5:8 B5:4 | A5:6 G5:2 F#5:8 E5:4 | \
+     E5:6 F#5:2 G5:8 A5:4 | G5:6 F#5:2 E5:8 D5:4 | D5:6 E5:2 F5:8 D5:4 | \
+     G5:6 A5:2 Bb5:8 G5:4 | B5:6 C#6:2 D6:8 B5:4 | D6:6 E6:2 F#6:8 D6:4";
+const GRAZIA_STRAIN_CHORDS: &str = "Bm/D Bm/D D#°7/D D#°7/D D#°7/D | Em/D | \
+     Em/D Em/D C#°7/D C#°7/D C#°7/D | D | Bb/D | Eb/D | G#°7/D | Bm/D";
+const GRAZIA_SIGHS: &str = "B5:6 B5:2 C#5:8 B4:4 | G#4:4 A#4:4 (3 B4:2 A#4 B4 C#5:4 D5:4 | \
+     G5:6 G5:2 B4:8 A#4:4 | B5:4 C#6:4 (3 D6:2 C#6 D6 E6:4 F#6:4";
+const GRAZIA_SIGHS_CHORDS: &str =
+    "Em/D Em/D C#7b5/D C#7b5/D C#7b5/D | Bm/D | Em/D Em/D A#°7/D A#°7/D A#°7/D | Bm/D";
+const GRAZIA_BACK: &str = "C5:4 D5:4 (3 E5:2 D5 E5 F#5:4 G5:4 | \
+     B4:4 C#5:4 (3 D5:2 C#5 D5 E5:4 E#5:4 | G#4:4 A#4:4 (3 B4:2 A#4 B4 C#5:4 D5:4 | \
+     B4:4 C#5:4 (3 D5:2 C#5 D5 E5:4 F#5:4 | C4:4 D4:4 (3 E4:2 D4 E4 F#4:4 G4:4 | \
+     B3:4 C#4:4 (3 D4:2 C#4 D4 E4:4 E#4:4 | A3:4 B3:4 (3 C#4:2 B3 C#4 D4:4 E4:4";
+const GRAZIA_BACK_CHORDS: &str = "C/D | G#°7/D | Bm/D | Bm/D | C/D | G#°7/D | I";
+const GRAZIA_RETURN: &str = "F#4:4 G4:4 (3 A4:2 G4 A4 B4:4 C#5:4 | D5:4 B4:4 C#5:12 | \
+     A4:4 B4:4 (3 C#5:2 B4 C#5 D5:4 E5:4 | F#5:4 D5:4 E5:12 | \
+     G5:4 F#5:4 (3 E5:2 F#5 E5 D5:4 C#5:4 | F#5:2 -:1 G5:1 F#5:2 -:1 E#5:1 F#5:12 | \
+     F#5:4 E5:4 (3 D5:2 E5 D5 C#5:4 B4:4 | B5:2 A5 G5 F#5 E5 Eb5 D5 C#5 B4 Bb4";
+const GRAZIA_CODA: &str = "D6:8 C#6:12 | B5:8 A5:12 | G5:8 F#5:12 | E5:8 D5:12 | \
+     D5:8 C#5:12 | B4:8 A4:12 | G4:8 F#4:12 | E4:8 D4:12";
+const GRAZIA_CODA_CHORDS: &str = "I I C#°/D C#°/D C#°/D | Bm/D Bm/D F#m/D F#m/D F#m/D | \
+     G/D G/D I I I | A/D A/D I I I | I I C#°/D C#°/D C#°/D | Bm/D Bm/D I I I | \
+     G/D G/D I I I | A/D A/D Bm/D Bm/D Bm/D";
+const GRAZIA_FAREWELL: &str = "F4:6 F4:2 E4:8 D4:4 | A5:20 | F4:6 F4:2 E4:8 D4:4 | A5:20 | \
+     F4:6 F4:2 E4:8 D4:4 | Bb4:6 Bb4:2 A4:8 G4:4 | D5:6 D5:2 C#5:8 B4:4 | \
+     F#5:6 F#5:2 E5:8 D5:4 | A5:6 A5:2 G5:8 F#5:4 | B4:6 B4:2 A4:8 G4:4 | \
+     D4:6 D4:2 C#4:8 B3:4 | F#3:6 F#3:2 E3:8 D3:4";
+const GRAZIA_FAREWELL_CHORDS: &str =
+    "Bb/D | I | Bb/D | I | Bb/D | Eb/D | G#°7/D | I | I7 | Em/D | G#°7/D | I";
+
+// Source: https://raw.githubusercontent.com/kyuchia/mctl-symphony-dataset/8353dc785159a1da6e86aa06965c46abaeca227a/mctl_symphony_dataset/tc2/sheet.xml
+// and its harmony analysis,
+// https://raw.githubusercontent.com/kyuchia/mctl-symphony-dataset/8353dc785159a1da6e86aa06965c46abaeca227a/mctl_symphony_dataset/tc2/annotations/form/harmony.csv
+// (The full score of the MCTL symphony dataset, the only score here: all 178 bars, with the
+// repeats it writes, 210 bars as heard. Bars 1 to 16 twice, with their first and second
+// endings, then 17 to 56; the trio, 57 to 64 twice, 65 to 72 twice, then 73 to 95 (73 to 80
+// are 57 to 64 again, and 85 to 88 are 81 to 84); the return, 96 to 151, written out: the
+// first eight bars with the tune in the first violins, an octave above the cellos, then
+// bars 9 to 15, the second ending and 17 to 56 note for note; the coda, 152 to 178. The
+// melody is the tune as heard, wherever it is: the cellos in bars 1 to 8, the flutes in 9
+// to 16, the first violins in 17 to 24, the first oboe in 25 to 32 (the dataset has the
+// flutes an octave below the oboes there), the flutes and oboes in 33 to 40 under the
+// violins' falling chromatic scales, the first violins in 41 to 44 and 49 to 54, the
+// woodwinds in 45 to 48 under the violins' held G, and the flutes in 55 and 56. Each ending
+// leads on with the line of the instrument that takes the tune next: the cellos' back to
+// bar 1, the violins' scale into bar 17, the oboes' into bar 25; at the end of bar 32 the
+// oboes hold their A and the violins' scale down to the next section is left out. In the
+// trio the first violins have the tune, doubled by the flutes and the cellos, the woodwinds
+// take bars 70 and 72, and from bar 81 strings and woodwinds answer each other, bar by bar.
+// In the coda the oboes, then the trumpets, walk down the scale while the cellos and the
+// strings climb it; then the cellos and the first oboe take turns, then the flute, oboe,
+// clarinet, flutes, oboe, bassoon, horn and clarinet, a bar each, and at last the first
+// violins alone, answered by the clarinet. The chart follows the analysis, one chord to
+// each felt beat, the short one (quarters 1 and 2) and the long one (3 to 5), except where
+// the notes say otherwise: F#7 (III7) on the long beat of bar 5, from the winds' A sharp,
+// where the analysis keeps E minor; E7 (II7) for its E minor on the long beat of bar 7,
+// with the G sharp in the score; V7 in bar 8 (the winds' G); A on the long beat of bar 11;
+// B minor seventh over F# (Bm7/F#), then E7, in bar 15, where the analysis repeats bar 13's
+// E minor over G and the score has no G; A9 (V9) in bars 17, 21, 25 and 29, the E, G and B
+// over C# and A; D/A in bars 18 and 22 and on the short beat of 20 and 28, all over the
+// basses' held A; C#7 then F# minor in bar 24; E7 then A in bar 32, where the analysis
+// gives the first quarter to D#ø7; C/G then G over the basses' held G in bars 45 to 48,
+// where its labels are a fourth off; B flat over F, then F7, in bars 49 and 50, and A over
+// E, then E7, in 51 and 52; the French sixth A, C#, E flat, G over E flat in bar 53
+// (A7b5/Eb) for its V43. In the trio, over the basses' D, bars 61, 73 and 77 have the
+// chords of bar 57, which they repeat note for note; bars 81 and 85 E minor, then the
+// French sixth G, B, C#, E# (C#7b5/D), where the analysis keeps B minor; 82 and 86 B minor
+// for its F# minor; 87 the chords of 83. In the coda, D for the analysis' F# minor on the
+// long beat of bar 157 (there is no C#); B flat over D in bars 160, 162 and 164 (B flat, D,
+// F), where it has D minor; E flat over D for its augmented chord in 165; a diminished
+// seventh, G#, B, D, F, in 166 for its half-diminished one; and D7 for its D major in 168,
+// with the C in the score. Slash chords show the bass where the score's bass and the
+// analysis agree, and over every held bass note, so that the band's bass plays the score's.
+// Bars 172 and 174, the first violins alone, show their chord, A, on the chord sheet but
+// have no accompaniment; the last two bars, a chord plucked on the third beat and a chord
+// held by the winds over the strings' last pluck, are written out. The dataset marks the
+// movement "Allegretto con grazia" (printed scores say Allegro con grazia) and plays it at
+// 144 quarter notes a minute, the tempo here: it has no other tempo marks, only fermatas
+// over the final rest, kept. In bars 56 and 151 the dataset has the flutes' scale, D E F#
+// G A B, go on to C#4 and D4, a seventh below the B, which looks like an octave slip: here
+// the scale goes on up to C#5 and D5, the tonic the trio's first F# sits above.)
+pub(super) const PATHETIQUE_WALTZ: Song = Song {
+    name: "Pathétique Symphony, Allegro con grazia",
+    origin: "Pyotr Ilyich Tchaikovsky, Symphony No. 6 \"Pathétique\", second movement, 1893",
+    feel: "Waltz in five",
+    genre: Genre::Classical,
+    tonic: D,
+    mode: Major,
+    time: FIVE_FOUR_TWO_THREE,
+    tempo: 144.0,
+    comping: Comping::Accents,
+    bass: Bass::Accents,
+    rhythm: "",
+    band: Band::new(gm::STRING_ENSEMBLE, gm::PIZZICATO_STRINGS, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        Part::new("Cellos", GRAZIA_CELLOS, GRAZIA_CELLOS_CHORDS),
+        Part::new("Woodwinds", GRAZIA_WOODWINDS, GRAZIA_WOODWINDS_CHORDS),
+        // The flutes' last bar, and the cellos lead back to the start.
+        Part::new(
+            "First ending",
+            "A5:2 -:1 B5:1 A5:2 -:1 G#5:1 A5:2 A3 B3 A3 G#3 G3",
+            "V",
+        ),
+        // The same, and the violins run up to the next section.
+        Part::new(
+            "Second ending",
+            "A5:2 -:1 B5:1 A5:2 -:1 G#5:1 A5:2 D5 E5 F#5 G5 A5",
+            "V",
+        ),
+        Part::new("Over A", GRAZIA_OVER_A, GRAZIA_OVER_A_CHORDS),
+        Part::new("Oboe over A", GRAZIA_OBOE, GRAZIA_OBOE_CHORDS),
+        Part::new(
+            "Under scales",
+            GRAZIA_UNDER_SCALES,
+            GRAZIA_UNDER_SCALES_CHORDS,
+        ),
+        Part::new("Violins", GRAZIA_VIOLINS, GRAZIA_VIOLINS_CHORDS),
+        Part::new("Climax", GRAZIA_CLIMAX, GRAZIA_CLIMAX_CHORDS),
+        Part::new("Trio", GRAZIA_TRIO, GRAZIA_TRIO_CHORDS).in_key(B, HarmonicMinor),
+        Part::new("Second strain", GRAZIA_STRAIN, GRAZIA_STRAIN_CHORDS).in_key(B, HarmonicMinor),
+        Part::new("Sighs", GRAZIA_SIGHS, GRAZIA_SIGHS_CHORDS).in_key(B, HarmonicMinor),
+        Part::new("Back to D", GRAZIA_BACK, GRAZIA_BACK_CHORDS),
+        Part::new("Return", GRAZIA_RETURN, GRAZIA_CELLOS_CHORDS),
+        Part::new("Coda", GRAZIA_CODA, GRAZIA_CODA_CHORDS),
+        Part::new("Farewell", GRAZIA_FAREWELL, GRAZIA_FAREWELL_CHORDS),
+        // The violins alone: the chord is only on the chord sheet.
+        Part::new("Violins alone", "A3:4 B3:4 (3 C#4:2 B3 C#4 D4:4 E4:4", "V").with_left("-:20"),
+        Part::new("Clarinet", "F#3:6 F#3:2 E3:8 D3:4", "I"),
+        Part::new("Last chords", "-:8 F#5:2 -:10 | A3:18 -:2", "I | I")
+            .with_left("-:8 D3+A3+D4+F#4+A4:2 -:10 | D2+A2+D3+F#3:18 -:2")
+            .with_tempo(&[fermata(38, 2)]),
+    ],
+    form: &[
+        "Cellos",
+        "Woodwinds",
+        "First ending",
+        "Cellos",
+        "Woodwinds",
+        "Second ending",
+        "Over A",
+        "Oboe over A",
+        "Under scales",
+        "Violins",
+        "Climax",
+        "Trio",
+        "Trio",
+        "Second strain",
+        "Second strain",
+        "Trio",
+        "Sighs",
+        "Sighs",
+        "Back to D",
+        "Return",
+        "Woodwinds",
+        "Second ending",
+        "Over A",
+        "Oboe over A",
+        "Under scales",
+        "Violins",
+        "Climax",
+        "Coda",
+        "Farewell",
+        "Violins alone",
+        "Clarinet",
+        "Violins alone",
+        "Clarinet",
+        "Clarinet",
+        "Last chords",
+    ],
+    drums_from: 0,
+    about: "The \"waltz in five\": five quarter notes to the bar, felt as two beats, a short \
+            one and a long one, counted 1 2, 1 2 3. A waltz counts 1 2 3 in every bar; here \
+            two quarters cut in before every three, so the dance limps, gracefully, always \
+            leaning into the long beat, and the accompaniment marks the two beats, on 1 and on \
+            3. The cellos sing the tune in D major, up the scale F# G A B C# to D with a \
+            little triplet turn on the third quarter, each phrase coming to rest on the long \
+            beat. The middle section, the trio, marked \"con dolcezza e flebile\", sweetly and \
+            plaintively, turns to B minor, and under it the double basses play nothing but D \
+            from its first bar to its last, a pedal point that never moves while the chords \
+            change above it: B minor over D, then the diminished seventh A# C# E G over D. Its \
+            tune hardly moves either, one note repeated and falling a step, F# F# F# E, D D D \
+            C#: a sigh. The waltz comes back, then the coda remembers both: the winds walk \
+            down the scale of D major, two octaves, while the strings climb it, and the trio's \
+            sighing rhythm comes back, F F E D, over the same held D, darkened by B flat and E \
+            flat major chords, before the music breaks off into fragments, the violins alone, \
+            a clarinet, and two last chords of D major.",
+};
