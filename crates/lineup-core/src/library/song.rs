@@ -482,6 +482,8 @@ const BALLAD_BAND: Band = Band::new(gm::TENOR_SAX, gm::ACOUSTIC_GRAND_PIANO, gm:
 const DIXIELAND: Band = Band::new(gm::TRUMPET, gm::ACOUSTIC_GRAND_PIANO, gm::TUBA);
 const JAZZ_WALTZ: Band = Band::new(gm::VIBRAPHONE, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
 const GYPSY_JAZZ: Band = Band::new(gm::VIOLIN, gm::JAZZ_GUITAR, gm::ACOUSTIC_BASS);
+/// Getz's tenor saxophone over Gilberto's guitar.
+const BOSSA: Band = Band::new(gm::TENOR_SAX, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const SAMBA: Band = Band::new(gm::FLUTE, gm::NYLON_GUITAR, gm::FINGER_BASS);
 const AFROBEATS: Band = Band::new(gm::MARIMBA, gm::ELECTRIC_PIANO, gm::SYNTH_BASS);
 const POP: Band = Band::new(gm::SQUARE_LEAD, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
@@ -675,6 +677,7 @@ pub static SONGS: &[Song] = &[
     latin::A_MULATINHA,
     latin::RODA_YOYO,
     latin::DONA_ADELAIDE,
+    latin::GAROTA_DE_IPANEMA,
     tango::HABANERA,
     tango::TANGO_DEL_TELAR,
     tango::MILONGA_DEL_RIO,
@@ -696,6 +699,8 @@ pub static SONGS: &[Song] = &[
     tango::VOLVER,
     tango::ROMANCE_DE_BARRIO,
     tango::DESDE_EL_ALMA,
+    tango::MUCHACHO,
+    tango::GARUA,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,
