@@ -2156,3 +2156,32 @@ mod mix {
         assert_eq!(project.channels()[kick].volume, 0.8);
     }
 }
+
+#[test]
+fn a_drawn_note_is_not_selected_so_tools_still_change_every_note() {
+    let mut screen = shortcut_screen();
+    screen.app.piano_roll.open_for(0);
+    screen.draw(vec![]);
+    let key = text_rect(&screen.draw(vec![]), "C4").expect("the C4 key is in view");
+    // On the C4 row, well right of the C4 note at steps 4 to 7.
+    screen.click_at(
+        egui::pos2(key.right() + 400.0, key.center().y),
+        Modifiers::NONE,
+    );
+    let pitches = |screen: &Screen| -> Vec<u8> {
+        let mut pitches: Vec<u8> = screen
+            .app
+            .project
+            .pattern(0)
+            .unwrap()
+            .notes(0)
+            .iter()
+            .map(|note| note.pitch.midi())
+            .collect();
+        pitches.sort_unstable();
+        pitches
+    };
+    assert_eq!(pitches(&screen), [60, 60, 67], "a C4 was drawn");
+    screen.key(Key::ArrowUp);
+    assert_eq!(pitches(&screen), [61, 61, 68]);
+}
