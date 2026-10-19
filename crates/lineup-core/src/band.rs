@@ -1770,6 +1770,7 @@ impl Project {
             markers.push(ChordMarker::new(ending.start, ending.harmony));
         }
         let harmonies = self.played_harmonies(&markers, parts_end);
+        let keys = self.key_map();
         let breaks = stops::Breaks::of(&markers, parts_end);
         // The last bar of an ending is one chord, struck and held.
         let held = ending.and_then(|_| bars.last().copied());
@@ -1874,7 +1875,6 @@ impl Project {
                 // are where a soloist is heard.
                 Player::Soloist => match band.solo {
                     Some(solo) => {
-                        let keys = self.key_map();
                         let overs: Vec<Over> = harmonies
                             .iter()
                             .filter_map(|played| Over::of(played, keys.key_at(played.start)))
@@ -1902,7 +1902,7 @@ impl Project {
                 let mut notes = Vec::new();
                 for lane in style.lanes.iter().filter(|lane| lane.player == player) {
                     if let Some(channel) = self.user_style_channel(lane, false) {
-                        let mut part = style.play_lane(lane, &bars, &harmonies);
+                        let mut part = style.play_lane(lane, &bars, &harmonies, &keys);
                         if player != Player::Drums {
                             part = breaks.apply(part, &harmonies, |played| {
                                 if player == Player::Bass {
