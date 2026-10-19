@@ -1819,3 +1819,156 @@ fn the_tools_menu_pastes_what_another_roll_copied() {
         .collect();
     assert_eq!(pitches, [72]);
 }
+
+mod library_parts {
+    use super::*;
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::{Rhythm, Song, Style, UserStyle, apply::StyleParts};
+
+    const NOTHING: StyleParts = StyleParts {
+        rhythm: false,
+        instruments: false,
+        time_signature: false,
+        progression: false,
+        tempo: false,
+        swing: false,
+        matching_style: true,
+    };
+
+    fn el_choclo() -> Screen {
+        let mut screen = Screen::new();
+        screen
+            .app
+            .open_demo(library::Demo::Song(Song::named("El Choclo").unwrap()));
+        screen
+    }
+
+    fn muted(project: &Project) -> Vec<&str> {
+        project
+            .channels()
+            .iter()
+            .filter(|channel| channel.muted)
+            .map(|channel| channel.name.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn a_saved_styles_tempo_alone_does_not_bring_in_a_band() {
+        let mut screen = el_choclo();
+        let mut style = UserStyle::from_rhythm(Rhythm::named("Waltz").unwrap());
+        style.tempo = Tempo::new(150.0);
+        screen.app.playlist.library_browser_mut().user_styles = vec![style];
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            tempo: true,
+            ..NOTHING
+        };
+        screen.app.apply_user_library(0, None);
+        assert!(screen.app.project.band().is_none());
+        assert!(muted(&screen.app.project).is_empty());
+        assert_eq!(screen.app.project.tempo.bpm(), 150.0);
+
+        // Its instruments alone have no band to play in, and say so.
+        let before = screen.app.project.clone();
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            instruments: true,
+            ..NOTHING
+        };
+        screen.app.apply_user_library(0, None);
+        assert!(screen.app.project.band().is_none());
+        assert_eq!(screen.app.project, before);
+        assert!(
+            screen
+                .app
+                .notice
+                .as_deref()
+                .is_some_and(|notice| notice.contains("Playing patterns")),
+            "{:?}",
+            screen.app.notice
+        );
+    }
+
+    #[test]
+    fn a_saved_chart_that_does_not_fit_the_bars_changes_nothing() {
+        let mut screen = Screen::new();
+        screen.app.replace_project(Project::with_band(), None);
+        screen.app.edit("remeter", |project| {
+            lineup_core::remeter::remeter(project, lineup_core::TimeSignature::new(3, 4));
+        });
+        let mut style = UserStyle::from_builtin(&lineup_core::library::STYLES[0]);
+        style.time = lineup_core::TimeSignature::COMMON;
+        style.chart = "C D E F".into();
+        style.tempo = Tempo::new(150.0);
+        style.validate().unwrap();
+        screen.app.playlist.library_browser_mut().user_styles = vec![style];
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            progression: true,
+            tempo: true,
+            rhythm: true,
+            ..NOTHING
+        };
+        let before = screen.app.project.clone();
+        screen.app.apply_user_library(0, None);
+        assert!(screen.app.message.is_some(), "the error is shown");
+        assert_eq!(screen.app.project, before);
+    }
+
+    #[test]
+    fn instruments_or_tempo_alone_leave_your_pattern_yours() {
+        let mut screen = Screen::new();
+        screen.app.set_mode(PlayMode::Pattern);
+        let pattern = screen.app.pattern;
+        let name = screen.app.project.patterns()[pattern].name.clone();
+        let count = screen.app.project.patterns().len();
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            instruments: true,
+            tempo: true,
+            ..NOTHING
+        };
+        let royal_road = Style::named("Royal road").unwrap();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(royal_road));
+        assert_eq!(screen.app.project.patterns()[pattern].name, name);
+        assert_eq!(screen.app.project.tempo.bpm(), royal_road.tempo);
+        // The next style tried gets a pattern of its own.
+        let yours = screen.app.project.patterns()[pattern].clone();
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Four chords").unwrap()));
+        assert_eq!(screen.app.project.patterns().len(), count + 1);
+        let now = &screen.app.project.patterns()[pattern];
+        assert_eq!(now.name, yours.name);
+        for channel in 0..yours.rows() {
+            assert_eq!(now.notes(channel), yours.notes(channel));
+        }
+    }
+
+    #[test]
+    fn instruments_alone_with_no_channel_to_take_them_say_so() {
+        let mut screen = Screen::new();
+        let mut project = Project::empty();
+        project.add_channel(lineup_core::Channel::drum(lineup_core::Drum::Kick));
+        project.pattern_mut(0).unwrap().set(0, 0, true);
+        screen.app.replace_project(project, None);
+        screen.app.set_mode(PlayMode::Pattern);
+        let before = screen.app.project.clone();
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            instruments: true,
+            ..NOTHING
+        };
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Royal road").unwrap()));
+        assert_eq!(screen.app.project, before);
+        assert!(
+            screen
+                .app
+                .notice
+                .as_deref()
+                .is_some_and(|notice| notice.contains("Keys")),
+            "{:?}",
+            screen.app.notice
+        );
+    }
+}

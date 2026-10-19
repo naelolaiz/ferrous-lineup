@@ -1036,8 +1036,23 @@ impl Project {
         parts: apply::StyleParts,
     ) -> Result<(), String> {
         style.validate()?;
-        let parts = parts.for_preset();
-        if self.band.is_none() {
+        // The chart is read into the song's bars, which can fail halfway
+        // in another meter, after the band and the tempo changed: so it
+        // is applied to a copy, and an error changes nothing.
+        let mut project = self.clone();
+        project.apply_valid_user_style(style, parts.for_preset())?;
+        *self = project;
+        Ok(())
+    }
+
+    fn apply_valid_user_style(
+        &mut self,
+        style: &crate::library::UserStyle,
+        parts: apply::StyleParts,
+    ) -> Result<(), String> {
+        // Only the style's playing patterns need a band to play them: its
+        // tempo, meter, swing or chords alone change the song as it is.
+        if self.band.is_none() && parts.rhythm {
             let base = BandStyle::named("Pop beat").unwrap();
             let mut band = Band::new(base);
             band.end = self.song_length();
