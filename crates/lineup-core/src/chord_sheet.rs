@@ -195,7 +195,7 @@ impl Push {
 /// Splits the marks off a harmony as typed: the carets of a push before
 /// it and the dots of a stop after it. "N.C." keeps its dots, which are
 /// part of its name, pushed or not.
-fn read_marks(text: &str) -> Result<(Option<Push>, &str, Option<Stop>), String> {
+pub(crate) fn read_marks(text: &str) -> Result<(Option<Push>, &str, Option<Stop>), String> {
     let name = text.trim_start_matches('^');
     let push = match text.len() - name.len() {
         0 => None,

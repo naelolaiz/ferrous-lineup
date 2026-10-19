@@ -11,11 +11,11 @@ use crate::harmony::{ChordSymbol, Scale};
 use crate::key_map::KeyMarker;
 use crate::meter::{TimeMarker, TimeSignature};
 use crate::playlist::{Clip, Section};
-use crate::project::Project;
+use crate::project::{Drum, Project};
 use crate::tempo::{Tempo, TempoMarker};
 
 use super::apply::{self, LEAD};
-use super::chart::{ChordSpan, accompany, accompany_in_bars};
+use super::chart::{self, ChordSpan, Melody, accompany, accompany_in_bars};
 use super::comping::Bass;
 use super::interpret::{self, Role};
 use super::micromodes::{self, MicromodeStyle};
@@ -107,7 +107,8 @@ fn ending(project: &mut Project, with_drums: bool) -> usize {
 }
 
 /// Writes a chart's chords on the chord sheet, from step `at` on, named
-/// in `key`, so a demo opens with the chords it plays written there.
+/// in `key`, so a demo opens with the chords it plays written there,
+/// with the breaks it plays marked on them.
 fn write_chart(project: &mut Project, at: usize, spans: &[ChordSpan], key: Scale) {
     let Some(end) = spans.last().map(|span| at + span.start + span.length) else {
         return;
@@ -119,6 +120,8 @@ fn write_chart(project: &mut Project, at: usize, spans: &[ChordSpan], key: Scale
                 at + span.start,
                 HarmonyName::Chord(span.chord.symbol_in(key)),
             )
+            .pushed(span.push)
+            .stopped(span.stop)
         })
         .collect();
     project.set_chords(at, end, &markers);
@@ -484,6 +487,14 @@ pub fn song_demo(song: &Song) -> Project {
             interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
             interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
             interpret::perform(&mut horn_notes, time, Role::Accompaniment, seed(HORNS));
+            // The band plays as loud as the tune is marked to be; a left
+            // hand written out with marks of its own plays those.
+            let tune = piece.melody();
+            if !piece.left().is_marked() {
+                interpret::follow(&mut chords, &tune);
+            }
+            interpret::follow(&mut bass_line, &tune);
+            interpret::follow(&mut horn_notes, &tune);
             // The tune, on the channel of each instrument that plays it,
             // and the drums written out in the score.
             let mut lines: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
@@ -571,6 +582,7 @@ pub fn song_demo(song: &Song) -> Project {
                 length,
                 time,
                 spans,
+                tune,
                 drums: None,
                 from_meters: !part.meters.is_empty(),
                 notes: lines,
@@ -603,13 +615,9 @@ pub fn song_demo(song: &Song) -> Project {
             project.time_signature = piece.time;
             let long = piece.length >= 4 * piece.time.steps_per_bar();
             let name = format!("{} drums", piece.name);
-            piece.drums = Some(drum_pattern(
-                &mut project,
-                &name,
-                piece.length,
-                rhythm,
-                long,
-            ));
+            let drums = drum_pattern(&mut project, &name, piece.length, rhythm, long);
+            mark_drums(&mut project, drums, &piece.spans, &piece.tune);
+            piece.drums = Some(drums);
         }
     }
     // The ending is a bar of the last part's time, on the home chord of
@@ -701,6 +709,8 @@ struct Piece {
     time: TimeSignature,
     /// Its chords, from its first step.
     spans: Vec<ChordSpan>,
+    /// Its tune as written, whose marks the band follows.
+    tune: Melody,
     /// Its drum pattern, if the song has drums.
     drums: Option<usize>,
     /// Whether it is a run of a part whose meter changes bar by bar.
@@ -717,6 +727,51 @@ fn same_notes(a: &[(usize, Vec<NoteEvent>)], b: &[(usize, Vec<NoteEvent>)]) -> b
         && a.iter().zip(b).all(|((x, xs), (y, ys))| {
             x == y && xs.len() == ys.len() && xs.iter().map(key).eq(ys.iter().map(key))
         })
+}
+
+/// Plays the marks of a piece on its drum pattern `index`, as the band
+/// plays them: the drums stop where the chart marks a shot, a hold or a
+/// rest, until the next chord, and hit the shots, holds and pushes with
+/// the kick and the crash cymbal (see [`chart::parse_chart`]); and they
+/// play as loud as the piece's `tune` is marked to be (see
+/// [`interpret::follow`]). Drums written out in a score play their own
+/// marks instead.
+fn mark_drums(project: &mut Project, index: usize, spans: &[ChordSpan], tune: &Melody) {
+    let breaks = chart::breaks(spans);
+    if breaks.is_empty() && !tune.is_marked() {
+        return;
+    }
+    let (kick, crash) = if breaks.is_empty() {
+        (None, None)
+    } else {
+        (
+            apply::drum_channel(project, Drum::Kick),
+            apply::drum_channel(project, Drum::Crash),
+        )
+    };
+    let channels = project.channels().len();
+    let Some(pattern) = project.pattern_mut(index) else {
+        return;
+    };
+    let notes: Vec<(usize, NoteEvent)> = (0..channels)
+        .flat_map(|channel| {
+            pattern
+                .notes(channel)
+                .iter()
+                .map(move |&note| (channel, note))
+        })
+        .collect();
+    let notes = breaks.apply_to_drums(notes, kick, crash);
+    for channel in 0..channels {
+        let mut line: Vec<NoteEvent> = notes
+            .iter()
+            .filter(|(other, _)| *other == channel)
+            .map(|&(_, note)| note)
+            .collect();
+        line.sort_by_key(|note| (note.start, note.pitch));
+        interpret::follow(&mut line, tune);
+        pattern.set_notes(channel, line);
+    }
 }
 
 /// The time signature the last bar of `part` is in.
@@ -983,6 +1038,92 @@ mod tests {
                 .iter()
                 .all(|c| c.name != HORNS && c.name != STRINGS)
         );
+    }
+
+    #[test]
+    fn the_band_follows_the_dynamics_of_the_tune_and_the_breaks_of_the_chart() {
+        // A song with drums, its tune played as three bars: piano, then
+        // forte; the second chord a shot, "chan", and the band silent
+        // until the third.
+        let song = SONGS
+            .iter()
+            .find(|song| {
+                song.time == TimeSignature::COMMON
+                    && !song.rhythm.is_empty()
+                    && song.bass != Bass::None
+            })
+            .unwrap();
+        let demo = |melody: &'static str, chords: &'static str| {
+            let part = Part {
+                name: "Marked",
+                melody,
+                chords,
+                ..*song.part(song.form[0]).unwrap()
+            };
+            let parts: &'static [Part] = Box::leak(vec![part].into_boxed_slice());
+            let form: &'static [&'static str] = Box::leak(vec!["Marked"].into_boxed_slice());
+            song_demo(&Song {
+                parts,
+                form,
+                drums_from: 0,
+                ..*song
+            })
+        };
+        let marked = demo("!p C5:16 | E5:16 | !f C5:16", "I | V. | I");
+        let plain = demo("C5:16 | E5:16 | C5:16", "I | V | I");
+        let notes = |project: &Project, pattern: &str, channel: &str| -> Vec<NoteEvent> {
+            let pattern = project
+                .patterns()
+                .iter()
+                .find(|p| p.name == pattern)
+                .unwrap();
+            let channel = project.channels().iter().position(|c| c.name == channel);
+            channel.map_or_else(Vec::new, |channel| pattern.notes(channel).to_vec())
+        };
+        let loudest = |notes: &[NoteEvent], bar: usize| {
+            notes
+                .iter()
+                .filter(|note| note.start / 16 == bar)
+                .map(|note| note.velocity)
+                .max()
+                .unwrap_or(0)
+        };
+        for channel in [apply::KEYS, apply::BASS] {
+            let (soft, loud) = (
+                notes(&marked, "Marked", channel),
+                notes(&plain, "Marked", channel),
+            );
+            // Piano under the piano, forte under the forte.
+            let (soft_start, loud_start) = (loudest(&soft, 0), loudest(&loud, 0));
+            assert!(
+                u32::from(soft_start) * 10 <= u32::from(loud_start) * 6,
+                "{channel}: {soft_start} {loud_start}"
+            );
+            assert!(loudest(&soft, 2) > loudest(&loud, 2), "{channel}");
+            // The shot: struck on the bar, an eighth note, then silence.
+            let shot: Vec<&NoteEvent> = soft.iter().filter(|n| n.start / 16 == 1).collect();
+            assert!(!shot.is_empty(), "{channel}");
+            assert!(
+                shot.iter().all(|n| n.start == 16 && n.end() <= 18),
+                "{channel}"
+            );
+        }
+        // The drums hit the shot and stop until the next chord.
+        let drums: Vec<NoteEvent> = (0..marked.channels().len())
+            .flat_map(|channel| {
+                let pattern = marked.patterns().iter().find(|p| p.name == "Marked drums");
+                pattern.unwrap().notes(channel).to_vec()
+            })
+            .collect();
+        assert!(drums.iter().any(|note| note.start == 16));
+        assert!(drums.iter().all(|note| !(17..32).contains(&note.start)));
+        assert!(drums.iter().any(|note| note.start >= 32));
+        let crash = notes(&marked, "Marked drums", Drum::Crash.name());
+        assert!(crash.iter().any(|note| note.start == 16));
+        // The chord sheet shows the shot.
+        let marker = marked.chord_at(16).unwrap();
+        assert_eq!(marker.stop, Some(crate::chord_sheet::Stop::Shot));
+        assert_eq!(plain.chord_at(16).unwrap().stop, None);
     }
 
     #[test]

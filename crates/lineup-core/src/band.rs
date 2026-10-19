@@ -39,7 +39,7 @@ mod extras;
 mod form;
 mod guitar;
 pub mod solo;
-mod stops;
+pub(crate) mod stops;
 mod variation;
 
 pub use extras::{Extra, Extras, PadPart};
@@ -807,7 +807,7 @@ fn held_bar(
 
 /// The bass's note under `played`, struck once and held to its end: the
 /// bass's part in a shot, a hold or a push.
-fn bass_struck(played: &Played) -> Vec<NoteEvent> {
+pub(crate) fn bass_struck(played: &Played) -> Vec<NoteEvent> {
     match played.bass {
         BassPart::Chord { note, .. } | BassPart::Pedal(note) => {
             vec![NoteEvent::new(

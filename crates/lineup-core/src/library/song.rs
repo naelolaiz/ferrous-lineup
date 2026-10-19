@@ -18,7 +18,7 @@
 use crate::general_midi as gm;
 use crate::harmony::{Scale, ScaleKind};
 use crate::meter::TimeSignature;
-use crate::pattern::{NoteEvent, STEP_NOTE};
+use crate::pattern::{DEFAULT_VELOCITY, NoteEvent, STEP_NOTE};
 use crate::pitch::PitchClass;
 use crate::project::Drum;
 
@@ -84,14 +84,17 @@ pub struct Part {
     /// playing the tune as written. In a round, only the first voice
     /// moves.
     pub instruments: &'static [(u8, i8)],
-    /// How loud the part is played (see [`Dynamic`]).
+    /// How loud the part is played (see [`Dynamic`]). The marks in the
+    /// melody, such as `!p` or `!<` (see [`chart::parse_melody`]), change
+    /// the loudness note by note from there, and the band follows them.
     pub dynamic: Dynamic,
     /// A drum part written out in full, for music whose drumming is part
     /// of the score, such as the snare drum of Ravel's Boléro: a line for
     /// each drum, in the notation of melodies (see
     /// [`chart::parse_melody`]), with `x` for a stroke and `X` for an
     /// accented one: `"x:2 (3 x:1 x x"` is an eighth note and a triplet
-    /// of sixteenths. When there is one, the song's rhythm is not played
+    /// of sixteenths. A melody's dynamic marks, such as `!p` or `!<`,
+    /// work here too. When there is one, the song's rhythm is not played
     /// in this part. A part whose meter changes bar by bar has none.
     pub drums: &'static [(Drum, &'static str)],
 }
@@ -116,6 +119,39 @@ pub enum Dynamic {
 }
 
 impl Dynamic {
+    /// From the softest to the loudest.
+    pub const ALL: [Dynamic; 6] = [
+        Dynamic::Pianissimo,
+        Dynamic::Piano,
+        Dynamic::MezzoPiano,
+        Dynamic::MezzoForte,
+        Dynamic::Forte,
+        Dynamic::Fortissimo,
+    ];
+
+    /// The dynamic a score writes as `mark`: "pp", "p", "mp", "mf", "f"
+    /// or "ff". The rarer "ppp" and "fff" are read as pp and ff, the
+    /// softest and the loudest there are here.
+    pub fn named(mark: &str) -> Option<Dynamic> {
+        match mark {
+            "ppp" | "pp" => Some(Dynamic::Pianissimo),
+            "p" => Some(Dynamic::Piano),
+            "mp" => Some(Dynamic::MezzoPiano),
+            "mf" => Some(Dynamic::MezzoForte),
+            "f" => Some(Dynamic::Forte),
+            "fff" | "ff" => Some(Dynamic::Fortissimo),
+            _ => None,
+        }
+    }
+
+    /// The dynamic `levels` marks louder, or softer if `levels` is
+    /// negative, going no further than pp and ff: two louder than mp is f.
+    pub fn louder(self, levels: isize) -> Dynamic {
+        let here = Dynamic::ALL.iter().position(|&dynamic| dynamic == self);
+        let there = here.unwrap_or(0).saturating_add_signed(levels);
+        Dynamic::ALL[there.min(Dynamic::ALL.len() - 1)]
+    }
+
     /// How much harder than at mezzo-forte the notes are struck: what
     /// their velocities are multiplied by.
     pub fn scale(self) -> f32 {
@@ -309,19 +345,11 @@ impl Part {
     }
 
     pub fn melody(&self) -> Melody {
-        chart::parse_melody(self.melody).unwrap_or(Melody {
-            notes: Vec::new(),
-            bars: Vec::new(),
-            length: 0,
-        })
+        chart::parse_melody(self.melody).unwrap_or_default()
     }
 
     pub fn left(&self) -> Melody {
-        chart::parse_melody(self.left).unwrap_or(Melody {
-            notes: Vec::new(),
-            bars: Vec::new(),
-            length: 0,
-        })
+        chart::parse_melody(self.left).unwrap_or_default()
     }
 
     /// The strokes of one written-out drum line (see [`Part::drums`]),
@@ -382,11 +410,15 @@ fn drum_line(line: &str) -> Option<Melody> {
     let mut melody = chart::parse_melody(&text.join(" "))?;
     for note in &mut melody.notes {
         let accented = note.pitch != STEP_NOTE;
+        let written = if accented { ACCENT } else { STROKE };
+        // As loud as the line's dynamic marks say, too (see
+        // `chart::parse_melody`): at mezzo-forte, as written.
+        let loudness = f32::from(note.velocity) / f32::from(DEFAULT_VELOCITY);
         *note = NoteEvent {
             pitch: STEP_NOTE,
             length: 1,
             trim: 0,
-            velocity: if accented { ACCENT } else { STROKE },
+            velocity: (f32::from(written) * loudness).round().clamp(1.0, 127.0) as u8,
             ..*note
         };
     }
@@ -1033,6 +1065,16 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn dynamics_are_read_as_scores_write_them() {
+        assert_eq!(Dynamic::named("mp"), Some(Dynamic::MezzoPiano));
+        assert_eq!(Dynamic::named("fff"), Some(Dynamic::Fortissimo));
+        assert_eq!(Dynamic::named("sfz"), None);
+        assert_eq!(Dynamic::MezzoPiano.louder(2), Dynamic::Forte);
+        assert_eq!(Dynamic::Piano.louder(-2), Dynamic::Pianissimo);
+        assert_eq!(Dynamic::Forte.louder(2), Dynamic::Fortissimo);
     }
 
     #[test]
