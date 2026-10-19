@@ -2119,6 +2119,7 @@ mod mix {
     use super::*;
     use crate::library_browser::LibraryAction;
     use lineup_core::library::{Song, Style, apply::StyleParts};
+    use lineup_core::{Channel, Drum};
 
     #[test]
     fn the_rack_lights_go_out_for_channels_a_solo_silences() {
@@ -2189,6 +2190,64 @@ mod mix {
             .position(|channel| channel.name == "Kick")
             .unwrap();
         assert_eq!(project.channels()[kick].volume, 0.8);
+    }
+
+    #[test]
+    fn the_mixer_keeps_the_drums_together_and_each_one_still_solos_alone() {
+        let mut screen = Screen::new();
+        screen.app.edit("add a band", |project| {
+            project.add_channel(Channel {
+                name: "Keys".into(),
+                program: Some(lineup_core::general_midi::ACOUSTIC_GRAND_PIANO),
+                ..Channel::synth()
+            });
+            project.add_channel(Channel {
+                name: "Bass".into(),
+                program: Some(lineup_core::general_midi::FINGER_BASS),
+                ..Channel::synth()
+            });
+            project.add_channel(Channel::drum(Drum::Ride));
+        });
+        let ride = screen.app.project.channels().len() - 1;
+        screen.app.mixer_open = true;
+        screen.app.rack_open = false;
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        let y = |label: &str| {
+            text_rect(&output, label)
+                .unwrap_or_else(|| panic!("{label} is in the mixer"))
+                .center()
+                .y
+        };
+        let mut drums = ["Kick", "Snare", "Ride", "Hat", "Clap", "Drums"];
+        drums.sort_by(|a, b| y(a).total_cmp(&y(b)));
+        assert_eq!(drums, ["Drums", "Clap", "Hat", "Ride", "Snare", "Kick"]);
+        // The band comes after the drums, if it is in view at all.
+        for later in [
+            "Harp and guitars",
+            "Bass",
+            "Keyboards",
+            "Keys",
+            "Lineup Osc",
+        ] {
+            assert!(text_rect(&output, later).is_none_or(|rect| rect.top() > y("Kick")));
+        }
+        let solo = output
+            .shapes
+            .iter()
+            .find_map(|shape| match &shape.shape {
+                Shape::Text(text)
+                    if text.galley.text() == "S"
+                        && (text.pos.y + text.galley.size().y / 2.0 - y("Ride")).abs() < 4.0 =>
+                {
+                    Some(Rect::from_min_size(text.pos, text.galley.size()).center())
+                }
+                _ => None,
+            })
+            .expect("the Ride row has a solo button");
+        screen.click_at(solo, Modifiers::NONE);
+        assert_eq!(screen.app.project.mixer.solo, Some(ride));
+        assert_eq!(screen.app.project.channels()[ride].name, "Ride");
     }
 }
 

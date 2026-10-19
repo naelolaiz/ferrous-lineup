@@ -1,9 +1,14 @@
 //! One mixer for every internal instrument and the master reverb.
 
 use eframe::egui::{self, Rect};
-use lineup_core::{ChannelKind, Mixer, general_midi};
+use lineup_core::score_order::score_order;
+use lineup_core::{Channel, ChannelKind, Mixer, SampleSource, general_midi};
 
 use super::LineupApp;
+use crate::theme;
+
+/// How far channel names sit in from their section's heading.
+const INDENT: f32 = 10.0;
 
 impl LineupApp {
     pub(super) fn mixer_window(&mut self, ctx: &egui::Context, area: Rect) {
@@ -16,7 +21,7 @@ impl LineupApp {
         egui::Window::new("Mixer")
             .id(egui::Id::unique("mixer"))
             .open(&mut open)
-            .default_size([650.0, 440.0])
+            .default_size([650.0, 560.0])
             .constrain_to(area)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -74,36 +79,34 @@ impl LineupApp {
                             ui.strong("Mute");
                             ui.strong("Solo");
                             ui.end_row();
-                            for (index, channel) in levels.iter_mut().enumerate() {
-                                ui.label(&channel.name);
-                                let instrument = match channel.kind {
-                                    ChannelKind::Synth => channel
-                                        .program
-                                        .map_or("Lineup Osc", general_midi::name)
-                                        .to_string(),
-                                    ChannelKind::MidiOut { channel } => {
-                                        format!("MIDI Out {}", channel + 1)
-                                    }
-                                    _ => "Sample / drum".to_string(),
-                                };
-                                ui.label(instrument);
-                                percent_slider(ui, &mut channel.volume);
-                                ui.checkbox(&mut channel.muted, "")
-                                    .on_hover_text("Mute this channel");
-                                if ui
-                                    .selectable_label(mix.solo == Some(index), "S")
-                                    .on_hover_text(
-                                        "Hear only this channel; click again to clear solo",
-                                    )
-                                    .clicked()
-                                {
-                                    mix.solo = if mix.solo == Some(index) {
-                                        None
-                                    } else {
-                                        Some(index)
-                                    };
-                                }
+                            for (section, indices) in score_order(&levels) {
+                                ui.label(egui::RichText::new(section.name()).color(theme::ACCENT));
                                 ui.end_row();
+                                for index in indices {
+                                    let channel = &mut levels[index];
+                                    ui.horizontal(|ui| {
+                                        ui.add_space(INDENT);
+                                        ui.label(&channel.name);
+                                    });
+                                    ui.label(instrument(channel));
+                                    percent_slider(ui, &mut channel.volume);
+                                    ui.checkbox(&mut channel.muted, "")
+                                        .on_hover_text("Mute this channel");
+                                    if ui
+                                        .selectable_label(mix.solo == Some(index), "S")
+                                        .on_hover_text(
+                                            "Hear only this channel; click again to clear solo",
+                                        )
+                                        .clicked()
+                                    {
+                                        mix.solo = if mix.solo == Some(index) {
+                                            None
+                                        } else {
+                                            Some(index)
+                                        };
+                                    }
+                                    ui.end_row();
+                                }
                             }
                         });
                     if levels.is_empty() {
@@ -141,6 +144,19 @@ impl LineupApp {
         const STEP: &str = "master volume";
         self.history.reopen(STEP);
         self.edit(STEP, |project| project.mixer.master = master);
+    }
+}
+
+/// What a channel plays, for the Instrument column.
+fn instrument(channel: &Channel) -> String {
+    match channel.kind {
+        ChannelKind::Synth => channel
+            .program
+            .map_or("Lineup Osc", general_midi::name)
+            .to_string(),
+        ChannelKind::MidiOut { channel } => format!("MIDI Out {}", channel + 1),
+        ChannelKind::Sampler(SampleSource::Builtin(_)) => "Built-in drum".to_string(),
+        ChannelKind::Sampler(SampleSource::File(_)) => "Sample".to_string(),
     }
 }
 
