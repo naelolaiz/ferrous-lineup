@@ -4,6 +4,13 @@
 use crate::dsp::Smoothed;
 use lineup_core::ReverbSettings;
 
+/// `value`, or 0 if it is too small to hear: a decaying tail would
+/// otherwise end in numbers so small (denormals) that many processors
+/// handle them very slowly.
+fn flushed(value: f32) -> f32 {
+    if value.abs() < 1e-20 { 0.0 } else { value }
+}
+
 struct Delay {
     samples: Vec<f32>,
     cursor: usize,
@@ -19,7 +26,7 @@ impl Delay {
         self.samples[self.cursor]
     }
     fn write(&mut self, value: f32) {
-        self.samples[self.cursor] = if value.abs() < 1e-20 { 0.0 } else { value };
+        self.samples[self.cursor] = flushed(value);
         self.cursor = (self.cursor + 1) % self.samples.len();
     }
     fn clear(&mut self) {
@@ -36,7 +43,7 @@ struct Comb {
 impl Comb {
     fn next(&mut self, input: f32, damping: f32) -> f32 {
         let out = self.delay.read();
-        self.filtered = out * (1.0 - damping) + self.filtered * damping;
+        self.filtered = flushed(out * (1.0 - damping) + self.filtered * damping);
         self.delay.write(input + self.filtered * self.feedback);
         out
     }
@@ -116,6 +123,11 @@ impl Reverb {
         if !settings.valid() {
             return;
         }
+        // Turned back on, it starts from silence, not from the tail it
+        // had when it was turned off (see `next`).
+        if settings.enabled && !self.settings.enabled {
+            self.clear();
+        }
         self.settings = settings;
         self.wet
             .set(if settings.enabled { settings.mix } else { 0.0 });
@@ -135,6 +147,10 @@ impl Reverb {
     }
     pub fn next(&mut self, dry: f32) -> [f32; 2] {
         let wet = self.wet.next_value();
+        // Off, once faded out, it adds nothing, so it does no work.
+        if !self.settings.enabled && wet == 0.0 {
+            return [dry; 2];
+        }
         let size = self.pre_delay.samples.len();
         let delayed = if self.pre_frames == 0 {
             dry
@@ -160,6 +176,43 @@ mod tests {
             assert_eq!(reverb.next(dry), [dry; 2]);
         }
     }
+    #[test]
+    fn a_tail_ends_in_zeros_not_denormals() {
+        let mut reverb = Reverb::new(48_000);
+        let on = ReverbSettings {
+            enabled: true,
+            mix: 0.5,
+            decay: 0.3,
+            damping: 1.0,
+            pre_delay_ms: 0.0,
+        };
+        reverb.configure(on);
+        reverb.settle();
+        reverb.next(1.0);
+        for _ in 0..48_000 * 4 {
+            reverb.next(0.0);
+        }
+        let subnormal = |x: f32| x != 0.0 && !x.is_normal();
+        for side in &reverb.sides {
+            assert!(side.combs.iter().all(|comb| !subnormal(comb.filtered)));
+        }
+        // Turned off, it fades out to exactly dry, and back on starts
+        // from silence.
+        reverb.next(1.0);
+        reverb.configure(ReverbSettings {
+            enabled: false,
+            ..on
+        });
+        for _ in 0..48_000 {
+            reverb.next(0.0);
+        }
+        assert_eq!(reverb.wet.next_value(), 0.0);
+        assert_eq!(reverb.next(0.3), [0.3; 2]);
+        reverb.configure(on);
+        reverb.settle();
+        assert_eq!(reverb.next(0.0), [0.0; 2]);
+    }
+
     #[test]
     fn impulse_has_a_stereo_tail_that_decays_and_can_be_cleared() {
         for rate in [22_050, 48_000, 96_000] {
