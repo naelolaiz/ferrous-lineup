@@ -665,7 +665,7 @@ pub(crate) fn style_mode_ui(ui: &mut Ui, parts: &mut StyleParts) {
     ui.weak(if parts.matching_style {
         "Use the preset’s playing patterns and choose whether to copy its instruments."
     } else {
-        "Simple chord and bass accents on the meter’s beat groups. Drum patterns still come from the preset. Your current instruments are kept."
+        "Simple chord and bass accents on the meter’s beat groups. Drum patterns still come from the preset. Your current instruments and chords are kept."
     });
 }
 
@@ -683,7 +683,7 @@ fn copy_parts_ui(
     } else {
         (
             "Drums and plain accents",
-            "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups. Keep current instruments and chords unless Chord progression is checked.",
+            "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups, over the song’s own chords and instruments.",
         )
     };
     with_source(ui, now, SongPart::Patterns, |ui| {
@@ -696,24 +696,32 @@ fn copy_parts_ui(
     }
     ui.add_space(2.0);
     ui.strong("Harmony");
-    let mut progression = has_progression && parts.progression;
-    with_source(ui, now, SongPart::Chords, |ui| {
-        if ui
-            .add_enabled(
-                has_progression,
-                egui::Checkbox::new(&mut progression, "Chord progression"),
-            )
-            .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried.")
-            .on_disabled_hover_text(
-                "This preset has no chord progression. Your current chords are kept.",
-            )
-            .changed()
-        {
-            parts.progression = progression;
+    if parts.matching_style {
+        let mut progression = has_progression && parts.progression;
+        with_source(ui, now, SongPart::Chords, |ui| {
+            if ui
+                .add_enabled(
+                    has_progression,
+                    egui::Checkbox::new(&mut progression, "Chord progression"),
+                )
+                .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried.")
+                .on_disabled_hover_text(
+                    "This preset has no chord progression. Your current chords are kept.",
+                )
+                .changed()
+            {
+                parts.progression = progression;
+            }
+        });
+        if has_progression && parts.progression {
+            ui.weak("Replaces existing chords. The melody is kept.");
         }
-    });
-    if has_progression && parts.progression {
-        ui.weak("Replaces existing chords. The melody is kept.");
+    } else {
+        // Plain accents play the song's own chords. Whether to copy a
+        // progression is kept for when preset patterns are picked again.
+        with_source(ui, now, SongPart::Chords, |ui| {
+            ui.weak("Keeps the song’s chords");
+        });
     }
     ui.add_space(2.0);
     ui.strong("Timing");
