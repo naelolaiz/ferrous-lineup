@@ -291,7 +291,7 @@ impl Part {
 
     /// The same part with its tune played by other instruments than the
     /// band's lead (see [`Part::instruments`]).
-    const fn played_by(self, instruments: &'static [(u8, i8)]) -> Part {
+    pub const fn played_by(self, instruments: &'static [(u8, i8)]) -> Part {
         Part {
             instruments,
             ..self
@@ -299,12 +299,12 @@ impl Part {
     }
 
     /// The same part played this loud.
-    const fn marked(self, dynamic: Dynamic) -> Part {
+    pub const fn marked(self, dynamic: Dynamic) -> Part {
         Part { dynamic, ..self }
     }
 
     /// The same part with its drums written out (see [`Part::drums`]).
-    const fn with_drums(self, drums: &'static [(Drum, &'static str)]) -> Part {
+    pub const fn with_drums(self, drums: &'static [(Drum, &'static str)]) -> Part {
         Part { drums, ..self }
     }
 
