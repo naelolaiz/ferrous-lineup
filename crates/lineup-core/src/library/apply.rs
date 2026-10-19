@@ -45,7 +45,8 @@ pub struct StyleParts {
     pub tempo: bool,
     pub swing: bool,
     /// Copy accompaniment patterns from the preset (or a rhythm's matching
-    /// style). Off uses plain accents and keeps the current instruments.
+    /// style). Off uses plain accents and keeps the current instruments
+    /// and chords.
     pub matching_style: bool,
 }
 
@@ -64,9 +65,11 @@ impl Default for StyleParts {
 }
 
 impl StyleParts {
-    /// Plain accents always keep the current sounds, for every preset source.
+    /// Plain accents always keep the current sounds and chords, for every
+    /// preset source: they bring no chord progression.
     pub fn for_preset(mut self) -> Self {
         self.instruments &= self.matching_style;
+        self.progression &= self.matching_style;
         self
     }
 
