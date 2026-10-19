@@ -38,6 +38,12 @@ impl Smoothed {
     /// Moves one sample toward the target and returns the new value.
     pub fn next_value(&mut self) -> f32 {
         self.current += (self.target - self.current) * self.coefficient;
+        // Close enough to hear no difference (-120 dB): there it stops,
+        // instead of creeping on through numbers so small (denormals)
+        // that many processors handle them very slowly.
+        if (self.target - self.current).abs() < 1e-6 {
+            self.current = self.target;
+        }
         self.current
     }
 }

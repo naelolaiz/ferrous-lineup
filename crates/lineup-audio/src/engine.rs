@@ -1204,13 +1204,15 @@ impl AudioThread {
                 let volume = channel.volume.next_value();
                 mix += channel.instrument.next_sample() * volume;
             }
-            mix += self.click.next_sample();
             if let Some(phrase) = &mut self.phrase {
                 mix += phrase.next_sample();
             }
-            // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
-            let stereo = self.reverb.next(mix);
+            // The metronome's clicks are added after the reverb: the room
+            // is the music's, and a click with a tail is harder to follow.
+            let click = self.click.next_sample();
+            let stereo = self.reverb.next(mix).map(|sample| sample + click);
             let volume = self.master_volume.next_value();
+            // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
             let stereo = stereo.map(|sample| (sample * volume).tanh());
             if frame.len() == 1 {
                 frame[0] = T::from_sample((stereo[0] + stereo[1]) * 0.5);
@@ -2415,6 +2417,30 @@ mod tests {
         // Off again: nothing more.
         send(&mut h, Command::SetMetronome(false));
         assert!(render(&mut h, 16 * STEP).iter().all(|&s| s == 0.0));
+    }
+
+    #[test]
+    fn the_metronome_is_heard_dry_through_a_full_reverb() {
+        let clicks = |reverb: bool| {
+            let mut h = harness();
+            send(
+                &mut h,
+                Command::SetReverb(lineup_core::ReverbSettings {
+                    enabled: reverb,
+                    mix: 1.0,
+                    decay: 2.0,
+                    damping: 0.0,
+                    pre_delay_ms: 50.0,
+                }),
+            );
+            send(&mut h, Command::SetPatternClicks(four_four()));
+            send(&mut h, Command::SetMetronome(true));
+            send(&mut h, Command::Play);
+            render(&mut h, 8 * STEP)
+        };
+        // All wet, the reverb would delay the click and give it a tail.
+        assert_eq!(clicks(true), clicks(false));
+        assert!(clicks(true).iter().any(|&s| s != 0.0));
     }
 
     #[test]
