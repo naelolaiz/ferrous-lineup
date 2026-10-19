@@ -23,6 +23,7 @@ use super::rhythm::{FILLS, RHYTHMS, Rhythm};
 use super::rows::{self, DEMO_SECTIONS, RowStyle};
 use super::song::{Part, Song, TempoMark};
 use super::style::Style;
+use crate::general_midi as gm;
 use crate::pattern::NoteEvent;
 use crate::pitch::PitchClass;
 
@@ -395,15 +396,24 @@ pub fn song_demo(song: &Song) -> Project {
     project.time_signature = song.time;
     project.scale = song.scale();
 
+    // The Lead channel plays the tune of every part that does not hand
+    // it to other instruments (see `Part::instruments`).
+    let band = song.band;
+    let lead_plays = song.parts.iter().any(|part| {
+        part.instruments.is_empty() || part.instruments.iter().any(|&(p, _)| p == band.lead)
+    });
     let voices: Vec<Option<usize>> = (1..=song.voices())
-        .map(|voice| apply::synth_named(&mut project, &voice_channel(voice)))
+        .map(|voice| {
+            (voice > 1 || lead_plays)
+                .then(|| apply::synth_named(&mut project, &voice_channel(voice)))
+                .flatten()
+        })
         .collect();
     let keys = apply::synth_named(&mut project, apply::KEYS);
     let bass = match song.bass {
         Bass::None => None,
         _ => apply::synth_named(&mut project, apply::BASS),
     };
-    let band = song.band;
     let horns = band.horns.and_then(|horns| {
         let name = section_name(horns.program);
         Some((apply::synth_named(&mut project, name)?, horns))
@@ -416,6 +426,21 @@ pub fn song_demo(song: &Song) -> Project {
     {
         if let Some(state) = channel.and_then(|channel| project.channel_mut(channel)) {
             state.program = Some(program);
+        }
+    }
+    // The other instruments the tune is handed to, each on a channel
+    // named after it, as loud as the Lead channel.
+    let mut instruments: Vec<(u8, usize)> = Vec::new();
+    for &(program, _) in song.parts.iter().flat_map(|part| part.instruments) {
+        if program == band.lead || instruments.iter().any(|&(p, _)| p == program) {
+            continue;
+        }
+        if let Some(channel) = apply::synth_named(&mut project, gm::name(program)) {
+            if let Some(state) = project.channel_mut(channel) {
+                state.program = Some(program);
+                state.volume = apply::LEAD_VOLUME;
+            }
+            instruments.push((program, channel));
         }
     }
 
@@ -466,11 +491,54 @@ pub fn song_demo(song: &Song) -> Project {
             interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
             interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
             interpret::perform(&mut horn_notes, time, Role::Accompaniment, seed(HORNS));
-            if let Some(pattern) = project.pattern_mut(index) {
-                for (&channel, notes) in voices.iter().zip(melody) {
-                    if let Some(channel) = channel {
-                        pattern.set_notes(channel, notes);
+            // The tune, on the channel of each instrument that plays it,
+            // and the drums written out in the score.
+            let mut lines: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
+            for (voice, (&channel, notes)) in voices.iter().zip(melody).enumerate() {
+                if voice > 0 || piece.instruments.is_empty() {
+                    lines.extend(channel.map(|channel| (channel, notes)));
+                    continue;
+                }
+                for &(program, shift) in piece.instruments {
+                    let channel = if program == band.lead {
+                        channel
+                    } else {
+                        instruments
+                            .iter()
+                            .find(|&&(p, _)| p == program)
+                            .map(|&(_, channel)| channel)
+                    };
+                    let Some(channel) = channel else {
+                        continue;
+                    };
+                    let moved = notes.iter().filter_map(|note| {
+                        let pitch = note.pitch.transpose(i32::from(shift))?;
+                        Some(NoteEvent { pitch, ..*note })
+                    });
+                    match lines.iter_mut().find(|(c, _)| *c == channel) {
+                        Some((_, line)) => line.extend(moved),
+                        None => lines.push((channel, moved.collect())),
                     }
+                }
+            }
+            for &(drum, line) in piece.drums {
+                let Some(channel) = apply::drum_channel(&mut project, drum) else {
+                    continue;
+                };
+                let mut hits = Part::drum_hits(line);
+                interpret::perform(&mut hits, time, Role::Accompaniment, seed(drum.name()));
+                lines.push((channel, hits));
+            }
+            for notes in lines
+                .iter_mut()
+                .map(|(_, notes)| notes)
+                .chain([&mut chords, &mut bass_line, &mut horn_notes])
+            {
+                piece.dynamic.mark(notes);
+            }
+            if let Some(pattern) = project.pattern_mut(index) {
+                for (channel, notes) in lines {
+                    pattern.set_notes(channel, notes);
                 }
                 if let Some(keys) = keys {
                     pattern.set_notes(keys, chords);
@@ -500,6 +568,14 @@ pub fn song_demo(song: &Song) -> Project {
     let rhythm = Rhythm::named(song.rhythm);
     if let Some(rhythm) = rhythm {
         for piece in &mut patterns {
+            // A part with its drums written out plays them, not the
+            // rhythm's.
+            if song
+                .part(piece.part)
+                .is_some_and(|part| !part.drums.is_empty())
+            {
+                continue;
+            }
             // A part played its own way has its own rhythm, or none.
             let rhythm = match song.part(piece.part).and_then(|part| part.played) {
                 Some((_, _, own)) => Rhythm::named(own),
