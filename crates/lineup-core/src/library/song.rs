@@ -400,6 +400,7 @@ use PitchClass::*;
 use ScaleKind::*;
 
 const COMMON: TimeSignature = TimeSignature::COMMON;
+const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const NINE_EIGHT: TimeSignature = TimeSignature::new(9, 8);
@@ -410,10 +411,13 @@ const SIX_FOUR: TimeSignature = TimeSignature::new(6, 4);
 // eighths...
 const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
 const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
+// 5/8 the other way round, a long beat and then a short one, 3 + 2.
+const FIVE_EIGHT_THREE_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2], 8);
 const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
 const TWO_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 2, 3], 8);
 const NINE_EIGHT_AKSAK: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 3], 8);
 const RAKS_AKSAGI: TimeSignature = TimeSignature::of_groups(&[2, 3, 2, 2], 8);
+const CURCUNA: TimeSignature = TimeSignature::of_groups(&[3, 2, 2, 3], 8);
 const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
 const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
 
@@ -443,7 +447,13 @@ const KAVAL: Band = Band::new(gm::FLUTE, gm::ACCORDION, gm::ACOUSTIC_BASS);
 const GREEK: Band = Band::new(gm::VIOLIN, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 // The kanun, the Turkish zither, is played by a koto, the nearest General MIDI sound.
 const TURKISH: Band = Band::new(gm::CLARINET, gm::KOTO, gm::ACOUSTIC_BASS);
+// The kemençe of the Black Sea coast, a small fiddle played upright, by a fiddle.
+const KEMENCE: Band = Band::new(gm::FIDDLE, gm::KOTO, gm::ACOUSTIC_BASS);
 const POLKA: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::TUBA);
+// A Bavarian dance band: clarinet, the button accordion and the tuba.
+const BAVARIAN: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::TUBA);
+// A Romanian band of lăutari: the violin leads, over accordion and double bass.
+const TARAF: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::ACOUSTIC_BASS);
 const ANDEAN: Band = Band::new(gm::PAN_FLUTE, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const LLANERO: Band = Band::new(gm::HARP, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const FIDDLE_AND_GUITAR: Band = Band::new(gm::VIOLIN, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
@@ -596,6 +606,7 @@ pub static SONGS: &[Song] = &[
     jazz::IF_I_COULD_BE_WITH_YOU,
     jazz::CAROLINA_IN_THE_MORNING,
     jazz::TAKE_FIVE,
+    jazz::MISSION_IMPOSSIBLE,
     soul::AMAZING_GRACE,
     soul::JOY_TO_THE_WORLD,
     soul::DORIAN_STRUT,
@@ -714,12 +725,20 @@ pub static SONGS: &[Song] = &[
     balkan::AJDE_JANO,
     balkan::JOVANO_JOVANKE,
     balkan::SAMIOTISSA,
+    balkan::YERAKINA,
+    balkan::MILO_MOU_KOKKINO,
+    balkan::TSAKONIKOS,
     balkan::PAIDUSHKO_HORO,
     balkan::SVATBARSKA_RACHENITSA,
     balkan::DAICHOVO_HORO,
     balkan::GANKINO_HORO,
     balkan::BUCIMIS,
+    balkan::GEAMPARAUA_DE_LA_MURFATLAR,
+    balkan::MANDRELE,
     balkan::ENTARISI,
+    balkan::SARI_GELIN,
+    balkan::IZMIRIN_KAVAKLARI,
+    balkan::CAYELINDEN_OTEYE,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
     reggae::VALLEY_DUB,
@@ -754,6 +773,7 @@ pub static SONGS: &[Song] = &[
     folk::TUMBALALAIKA,
     folk::MO_LI_HUA,
     folk::HUNGARIAN_DANCE,
+    folk::SUSSERL,
     classical::CANON,
     classical::FUR_ELISE,
     classical::MOUNTAIN_KING,
