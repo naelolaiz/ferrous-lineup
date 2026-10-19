@@ -317,10 +317,12 @@ impl LineupApp {
         let before = self.project.clone();
         let previous = self.tried();
         let source = Source::new(SourceKind::SavedStyle, &style.name);
-        // Writing its progression from a bar brings in its chords alone.
+        // Writing its progression from a bar brings in its chords alone,
+        // whichever playing style the Library options have.
         let taken = match progression_from {
             Some(_) => apply::StyleParts {
                 progression: true,
+                matching_style: true,
                 ..parts
             },
             None => parts,
@@ -359,7 +361,11 @@ impl LineupApp {
                 style.name
             ));
         } else if self.project.playlist().chord_markers().is_empty() {
-            self.notice = Some("Style applied. Write chords on the sheet or enable Chord progression when applying it.".into());
+            self.notice = Some(if parts.matching_style {
+                "Style applied. Write chords on the sheet or enable Chord progression when applying it."
+            } else {
+                "Style applied. Plain accents play the chords on the sheet: write some there."
+            }.into());
         } else {
             self.notice = Some(format!("Applied {}", style.name));
         }

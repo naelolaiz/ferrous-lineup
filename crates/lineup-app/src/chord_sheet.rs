@@ -2102,12 +2102,13 @@ mod tests {
             assert!(actions.is_empty(), "a normal click must only open options");
             let (mut output, _) = screen.frame(vec![]);
             let before = screen.library.parts;
+            // Tempo stays ticked: plain accents bring no chord progression,
+            // so without it there would be nothing to apply.
             for label in [
                 "Playing patterns",
                 "Voices / instruments",
                 "Time signature",
                 "Chord progression",
-                "Tempo",
                 "Swing",
                 "Plain accents",
             ] {
@@ -2130,8 +2131,8 @@ mod tests {
             );
             let parts = screen.library.parts;
             assert!(!parts.rhythm && !parts.instruments && !parts.time_signature);
-            assert!(parts.progression);
-            assert!(!parts.tempo && !parts.swing && !parts.matching_style);
+            assert!(parts.progression && parts.tempo);
+            assert!(!parts.swing && !parts.matching_style);
             let (output, _) = screen.frame(vec![]);
             assert!(!has_text(&output, "Apply"));
 

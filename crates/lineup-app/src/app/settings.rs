@@ -201,7 +201,7 @@ impl LineupApp {
                             true,
                         ),
                         ("Instruments", &mut parts.instruments, parts.matching_style),
-                        ("Chords", &mut parts.progression, true),
+                        ("Chords", &mut parts.progression, parts.matching_style),
                         ("Meter", &mut parts.time_signature, true),
                         ("Tempo", &mut parts.tempo, true),
                         ("Swing", &mut parts.swing, true),
