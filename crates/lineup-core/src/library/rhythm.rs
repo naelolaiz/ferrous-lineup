@@ -1403,6 +1403,16 @@ pub static RHYTHMS: &[Rhythm] = &[
          bars Bulgarian dancers count, with the long beat near the end.",
     )
     .in_time(TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8)),
+    rhythm(
+        "Tsakonikos",
+        Balkan,
+        140.0,
+        &[(Kick, "X..... x..."), (Rim, "..o.o. ..o.")],
+        "",
+        "The dance of Tsakonia, in the Peloponnese, in 5/8 the other way round from the \
+         paidushko: a long beat and a short one, 3 + 2, slow, quick, the big drum on both.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 8)),
     // ----- Reggae and ska -----
     rhythm(
         "One drop",

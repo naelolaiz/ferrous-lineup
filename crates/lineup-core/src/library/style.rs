@@ -1768,6 +1768,19 @@ pub static STYLES: &[Style] = &[
          one fifth, over two chords.",
     )
     .in_time(TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8)),
+    style(
+        "Tsakonikos",
+        Balkan,
+        NaturalMinor,
+        "i | i | i | iv | iv | i | iv | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        140.0,
+        "Tsakonikos",
+        "The 5/8 of Tsakonia, 3 + 2, slow, quick, the paidushko's beats the other way \
+         round: the bass on the long beat and on the short one, over a minor key's i and iv.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 8)),
     // ----- Reggae and ska -----
     style(
         "Reggae",
