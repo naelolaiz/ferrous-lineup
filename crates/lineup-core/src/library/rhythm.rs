@@ -306,6 +306,7 @@ impl Rhythm {
     }
 }
 
+const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
@@ -1413,6 +1414,19 @@ pub static RHYTHMS: &[Rhythm] = &[
          paidushko: a long beat and a short one, 3 + 2, slow, quick, the big drum on both.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 8)),
+    rhythm(
+        "Five-four",
+        Balkan,
+        192.0,
+        &[
+            (Kick, "X... .... .... x... ...."),
+            (Rim, "..o. x.o. x.o. ..o. x.o."),
+        ],
+        "",
+        "A folk dance in five quarter notes, counted 3 + 2: the big drum on 1 and 4, \
+         where each group starts, the stick on the other beats and lightly between them.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Reggae and ska -----
     rhythm(
         "One drop",
@@ -1519,6 +1533,16 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Oom-pah-pah: one strong beat and two light ones.",
     )
     .in_time(THREE_FOUR),
+    rhythm(
+        "Two-four polka",
+        Folk,
+        120.0,
+        &[(Kick, "X... ...."), (Snare, ".... o...")],
+        "",
+        "The polka in 2/4, as it is written: oom-pa, one strong beat and one light one. \
+         Taking turns with the waltz, it makes the bars of a zwiefacher.",
+    )
+    .in_time(TWO_FOUR),
     rhythm(
         "Six-eight",
         Folk,
