@@ -271,6 +271,204 @@ pub(super) const SAMIOTISSA: Song = Song {
             swinging between D7 and G.",
 };
 
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201354585.abc
+// (John Chambers' transcription in C, which names Theodore Alevizos' record "Songs of Greece"
+// and an Alshire record of Greek folk songs, with his chords and the words of four verses. He
+// writes two voices in thirds, the upper note first in every chord and with the note lengths:
+// the upper line is the tune, and the one his chords fit, G on the long beats over G7 where
+// the lower line holds E, which is not in the chord. The lower line is left out. Each verse
+// is sung to the whole tune, the refrain twice with its two endings. The second ending holds
+// E for two bars here and in abc_tune_jc_201354582.abc, for one bar in
+// abc_tune_jc_201354586.abc, abc_tune_jc_201361006.abc and abc_tune_jc_201358690.abc: one bar
+// is played between verses, so that each verse lasts sixteen bars, and two at the very end.
+// The notes are otherwise the same in all five. Copies a tone higher in D, the one in
+// abc_tune_jc_201354589.abc and the parts "for B flat instruments" after the C version in the
+// last three, hold the first note of the fifth bar for three eighths where the sung version
+// repeats it, a quarter and an eighth: the sung version is followed. The copy in D in
+// abc_tune_jc_201354582.abc has the sung rhythm.)
+pub(super) const YERAKINA: Song = Song {
+    name: "Yerakina",
+    origin: "Greek folk song from Macedonia",
+    feel: "Kalamatianos",
+    genre: Genre::Balkan,
+    tonic: C,
+    mode: Major,
+    time: THREE_TWO_TWO,
+    tempo: 168.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Kalamatianos",
+    band: GREEK,
+    style: "Kalamatianos",
+    parts: &[
+        Part::new("Intro", "-:14 | -:14", "I | I"),
+        Part::new(
+            "Verse",
+            "G4:4 A4:2 B4 C5 B4 A4 | G4:14 | G4:4 A4:2 B4 C5 B4 A4 | G4:4 F4:2 G4 F4 E4:4 | \
+             E4:4 E4:2 F4 G4 F4 E4 | F4:14 | G4:4 F4:2 F4 G4 F4 E4 | E4:4 F4:2 G4 A4 B4 A4",
+            "I | I | I | I | vi | ii | V7 | I",
+        ),
+        Part::new(
+            "Refrain",
+            "G4:6 F4:4 F4:2 E4 | G4:6 G4:2 A4 B4 A4 | G4:2 G4:4 F4:2 G4 F4 E4 | \
+             E4:4 F4:2 G4 A4 B4 A4 | G4:6 F4:4 F4:2 E4 | G4:6 G4:2 A4 B4 A4 | \
+             G4:2 G4:4 F4:2 G4 F4 E4 | E4:14",
+            "V7 | I | V7 | I | V7 | I | V7 | I",
+        ),
+        Part::new(
+            "Last refrain",
+            "G4:6 F4:4 F4:2 E4 | G4:6 G4:2 A4 B4 A4 | G4:2 G4:4 F4:2 G4 F4 E4 | \
+             E4:4 F4:2 G4 A4 B4 A4 | G4:6 F4:4 F4:2 E4 | G4:6 G4:2 A4 B4 A4 | \
+             G4:2 G4:4 F4:2 G4 F4 E4 | E4:14 | _:14",
+            "V7 | I | V7 | I | V7 | I | V7 | I | I",
+        ),
+    ],
+    form: &[
+        "Intro",
+        "Verse",
+        "Refrain",
+        "Verse",
+        "Refrain",
+        "Verse",
+        "Refrain",
+        "Verse",
+        "Last refrain",
+    ],
+    drums_from: 0,
+    about: "Yerakina goes to the well for cold water and falls in; everyone runs, and the \
+            singer promises to pull her out and make her his wife, while her bracelets jingle, \
+            \"droum, droum\". A kalamatianos, the Greek circle dance in seven eighths, counted \
+            1 2 3, 1 2, 1 2, slow, quick, quick. The tune is in C major: it climbs from G to C \
+            and back and holds G for a whole bar, then sinks to E over A minor (vi) and to F \
+            over D minor (ii) before G7 (V7) brings it home. The refrain swings between G7 and \
+            C, a bar each, and is sung twice. The singers go in thirds; the tune is the upper \
+            voice.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201309933.abc
+// (John Chambers' ABC of 2017, from tousauxbalkans.net, in C with its chords and the Greek
+// words. Three strains, each played twice with two endings: an instrumental one written in
+// two voices a third apart all through, of which the violin plays the upper, then the two
+// halves of the sung tune, in one voice. The words come in three stanzas, some lines written
+// between slashes: as the strains go, those are sung twice, and the others one to each time
+// through the second half. So the first half takes one line twice and the second half the
+// next line twice, or, in the second and third stanzas, two lines. The whole tune is played
+// for each stanza, the instrumental strain first. abc_tune_jc_201309932.abc is the same
+// without the words, and abc_tune_jc_201309934.abc the same a tone higher in D, except for
+// one chord: in the third bar of the first sung half, under A A A, the copies in C have an
+// empty chord symbol where the copy in D has G, its IV. F, the IV in C, is played here.)
+pub(super) const MILO_MOU_KOKKINO: Song = Song {
+    name: "Milo mou kokkino",
+    origin: "Greek folk song",
+    feel: "Kalamatianos",
+    genre: Genre::Balkan,
+    tonic: C,
+    mode: Major,
+    time: THREE_TWO_TWO,
+    tempo: 168.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Kalamatianos",
+    band: GREEK,
+    style: "Kalamatianos",
+    parts: &[
+        Part::new(
+            "Interlude",
+            "E4:1 F4 G4:2 G4 G4 F4 F4 E4 | F4:1 G4 A4:2 A4 A4 G4 G4 F4 | \
+             E4:1 F4 G4:2 G4 G4 F4 F4 E4 | E4:2 D4 C4 B3:8 | \
+             E4:1 F4 G4:2 G4 G4 F4 F4 E4 | F4:1 G4 A4:2 A4 A4 G4 G4 F4 | \
+             E4:1 F4 G4:2 G4 G4 F4 F4 E4 | E4:4 F4:2 G4:1 F4 E4 F4 E4:4",
+            "I | IV | I | I I I V7 V7 V7 V7 | I | IV | I | I I I V7 V7 I I",
+        ),
+        Part::new(
+            "First half",
+            "C4:6 C4:4 C4 | E4:4 F4:2 G4:8 | A4:6 A4:4 A4 | G4:4 F4:2 E4:3 F4:1 E4:2 D4 | \
+             C4:6 C4:4 C4 | E4:4 F4:2 G4:8 | A4:6 A4:4 A4 | G4:4 F4:2 E4:8",
+            "I | I | IV | I | I | I | IV | I",
+        ),
+        Part::new(
+            "Second half",
+            "G4:6 A4:2 G4 F4 E4 | F4:4 E4:2 D4:4 C4:2 D4 | E4:6 F4:2 E4 D4 C4 | \
+             E4:4 D4:2 C4 D4 E4 F4 | G4:6 A4:2 G4 F4 E4 | F4:4 E4:2 D4:4 C4:2 D4 | \
+             E4:6 F4:2 E4 D4 C4 | E4:4 D4:2 C4:8",
+            "I | ii | V7 | I | I | ii | V7 | I",
+        ),
+    ],
+    form: &[
+        "Interlude",
+        "First half",
+        "Second half",
+        "Interlude",
+        "First half",
+        "Second half",
+        "Interlude",
+        "First half",
+        "Second half",
+    ],
+    drums_from: 0,
+    about: "\"My red apple, dyed pomegranate, why have you made me wither?\" The singer comes \
+            and goes and finds her door bolted; her quilt tells him she has gone to the spring \
+            for water. A kalamatianos, seven eighths to the bar counted 1 2 3, 1 2, 1 2, slow, \
+            quick, quick: the sung tune starts by spelling the count out, three Cs, one on each \
+            beat. It is in C major, on C, F (IV), D minor (ii) and G7 (V7), and each half is \
+            sung twice. Before each stanza the violin plays a strain the source writes in \
+            thirds; the first time through it stops on B over G7, a half cadence, the second \
+            time on E over C.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/robinson/abc_tune_robinson_2752.abc
+// (Richard Robinson's tunebook, from Cecil Sharp House via Ian McArdle, in 5/8 with chords:
+// two strains of four bars, each played twice. Every bar is three eighths and then two: the
+// tune moves on the first three and holds a note on the last two, where the chords change, so
+// 3 + 2. Twice the tune turns quickly around a note before a dotted eighth, E F E and D E D,
+// three thirty-second notes in a triplet, a sixteenth in all: a sixteenth is the shortest
+// note written here, so each turn is played as its first note, held for that sixteenth. The
+// chords are his: D minor goes on under the first beat of the fourth and eighth bars until A
+// minor comes with the A. The copies in John Chambers' collection have the same notes:
+// abc_tune_jc_201360585.abc, a copy of this one, writes the two chord changes of the second
+// strain on the second note of the turn, as Robinson does; abc_tune_jc_201360324.abc and
+// abc_tune_jc_201358690.abc write them on its first, on the beat, where they are played
+// here.)
+pub(super) const TSAKONIKOS: Song = Song {
+    name: "Tsakonikos",
+    origin: "Greek folk dance from Tsakonia",
+    feel: "Tsakonikos",
+    genre: Genre::Balkan,
+    tonic: A,
+    mode: NaturalMinor,
+    time: FIVE_EIGHT_THREE_TWO,
+    tempo: 140.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Tsakonikos",
+    band: GREEK,
+    style: "Tsakonikos",
+    parts: &[
+        Part::new("Intro", "-:10 | -:10", "i | i"),
+        Part::new(
+            "A",
+            "G4:2 C5 B4:1 G4 A4:4 | G4:2 C5 B4:1 G4 A4:4 | G4:2 C5 B4:1 G4 D5:4 | \
+             G4:2 C5 B4:1 G4 A4:4",
+            "i | i | i i i iv iv | iv iv iv i i",
+        ),
+        Part::new(
+            "B",
+            "E5:2 E5 E5 E5:1 D5:3 | D5:2 D5 D5 D5:1 C5:3 | G4:2 C5 B4:1 C5 D5:4 | \
+             G4:2 C5 B4:1 G4 A4:4",
+            "i i i iv iv | iv iv iv i i | i i i iv iv | iv iv iv i i",
+        ),
+    ],
+    form: &["Intro", "A", "A", "B", "B"],
+    drums_from: 0,
+    about: "The dance of Tsakonia, in the Peloponnese, danced in a long winding line. Five \
+            eighths to the bar, counted 1 2 3, 1 2: a long beat and a short one, slow, quick, \
+            the paidushko's limp the other way round. The tune is in A minor; most bars turn \
+            G C B G on the long beat and come to rest on the short one, on A or on D. The \
+            chords change there too, A minor and D minor (iv) each lasting from one short beat \
+            to the next, so every bar starts over the chord the bar before ended on. Two \
+            strains of four bars, the second higher, each played twice.",
+};
+
 // Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/norbeck/abc_tune_norbeck_2942.abc
 // (Henrik Norbeck's transcription in G of the paidushko Lúnasa recorded on The Kinnitty
 // Sessions, at his tempo: four strains, each played twice, A and B with first and second

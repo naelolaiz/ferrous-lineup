@@ -410,6 +410,8 @@ const SIX_FOUR: TimeSignature = TimeSignature::new(6, 4);
 // eighths...
 const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
 const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
+// 5/8 the other way round, a long beat and then a short one, 3 + 2.
+const FIVE_EIGHT_THREE_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2], 8);
 const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
 const TWO_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 2, 3], 8);
 const NINE_EIGHT_AKSAK: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 3], 8);
@@ -715,6 +717,9 @@ pub static SONGS: &[Song] = &[
     balkan::AJDE_JANO,
     balkan::JOVANO_JOVANKE,
     balkan::SAMIOTISSA,
+    balkan::YERAKINA,
+    balkan::MILO_MOU_KOKKINO,
+    balkan::TSAKONIKOS,
     balkan::PAIDUSHKO_HORO,
     balkan::SVATBARSKA_RACHENITSA,
     balkan::DAICHOVO_HORO,
