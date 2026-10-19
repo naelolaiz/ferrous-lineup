@@ -2711,10 +2711,13 @@ const CANDOMBE_PARA_GARDEL_INTRO_TUNE: &str = "-:4 -:1 A4:1 A4:1 A4:1 D5:1 D5:2 
      B5:3 A5:1 G5:1 F#5:1 E5:2 -:2 D5:1 D5:1 C#5:3 E5:1";
 const CANDOMBE_PARA_GARDEL_INTRO_CHORDS: &str = "V... | V... | I... | V7... | V | V | I | V7 | I bVII bVII bVII | IV iv iv iv | bVII V7 V7 V7 | V7";
 
-/// The verse, bars 13-26: twice through D minor, the same three-plus-one
+/// The verse, bars 13-26: twice through D minor (stanzas 1-2, then stanza 3), the same three-plus-one
 /// syncopation (sixteenth, eighth, sixteenth) on every beat. In bar 13 the
 /// guitar and the piano strike D minor once and every part, the drums too,
-/// rests under the voice's first line: a shot.
+/// rests under the voice's first line: a shot. Each pass runs D minor,
+/// G minor 7 turning to C7, A7, then D minor over C and B half-diminished,
+/// and B flat, A7 back to D minor, as both chord sheets have it (bar 14
+/// is D minor, and bars 16 and 24 are C7).
 const CANDOMBE_PARA_GARDEL_VERSE_TUNE: &str = "-:4 F4:1 F4:2 F4:1 F4:1 F4:2 F4:1 F4:1 D4:2 D4:1 | _:8 -:8 | \
      -:4 Bb4:1 Bb4:2 Bb4:1 Bb4:1 Bb4:2 Bb4:1 Bb4:1 G4:2 G4:1 | _:8 -:8 | \
      -:4 A4:1 A4:2 A4:1 A4:1 A4:2 C#5:1 A4:1 G4:2 F4:1 | \
@@ -2724,14 +2727,35 @@ const CANDOMBE_PARA_GARDEL_VERSE_TUNE: &str = "-:4 F4:1 F4:2 F4:1 F4:1 F4:2 F4:1
      -:4 Bb4:1 Bb4:2 Bb4:1 Bb4:1 Bb4:2 Bb4:1 Bb4:1 G4:2 G4:1 | _:8 -:8 | \
      -:4 A4:1 A4:2 A4:1 A4:1 A4:2 C#5:1 A4:1 G4:2 F4:1 | \
      F4:3 F4:2 F4:2 F4:1 F4:1 F4:2 A4:1 F4:1 E4:2 D4:1";
-const CANDOMBE_PARA_GARDEL_VERSE_CHORDS: &str = "i. | I | iv7 | iv7 | V7 | i viø7 viø7 viø7 | \
-     bVI V7 i i | i | i | i | iv | iv | V7 | i viø7 viø7 viø7";
+const CANDOMBE_PARA_GARDEL_VERSE_CHORDS: &str = "i. | i | iv7 | bVII7 | V7 | i viø7 viø7 viø7 | \
+     bVI V7 i i | i | i | i | iv | bVII7 | V7 | i viø7 viø7 viø7";
 
 /// The refrain, bars 27-32, in D major.
 const CANDOMBE_PARA_GARDEL_CHORUS_TUNE: &str = "D4:4 -:1 F#4:1 F#4:1 F#4:1 E4:2 E4:1 E4:1 E4:2 E4:1 F#4:1 | _:8 -:4 A4:2 F#4:2 | \
      G4:3 F#4:2 G4:2 F#4:1 G4:2 F#4:2 G4:2 F#4:1 A4:1 | F#4:8 A4:4 F#4:2 G4:2 | \
      F#4:3 G4:2 F#4:2 G4:1 F#4:3 G4:1 F#4:3 A4:1 | _:8 -:4 C5:2 A4:2";
 const CANDOMBE_PARA_GARDEL_CHORUS_CHORDS: &str = "bVI V I I | V7 | V | I V7 V7 V7 | V | I I7 I7 I7";
+
+/// The riff again as the instrumental between the two refrains: bars 5-12 of
+/// the introduction, with the whole band (it does not wait four bars this time).
+const CANDOMBE_PARA_GARDEL_RIFF_TUNE: &str = "A4:4 -:1 A4:1 A4:1 A4:1 D5:1 D5:2 A4:1 D5:2 A4:1 E5:1 | \
+     _:3 A4:1 -:1 A4:1 A4:1 A4:1 E5:1 E5:2 A4:1 E5:2 A4:1 F#5:1 | \
+     -:4 -:1 A4:1 B4:1 C#5:1 D5:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 E4:1 D4:1 | \
+     A4:3 G4:1 -:1 G4:1 A4:1 B4:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 E4:1 D4:1 B4:1 | \
+     A4:4 -:1 C5:1 C5:1 C5:1 C5:1 C5:1 C5:1 C5:1 C5:1 E5:1 D5:1 C5:1 | \
+     D5:3 B4:1 -:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 D5:1 C5:1 Bb4:1 | \
+     C5:4 -:1 A4:1 B4:1 C#5:1 D5:1 A4:1 B4:1 C#5:1 D5:1 E5:1 F#5:1 G5:1 | \
+     B5:3 A5:1 G5:1 F#5:1 E5:2 -:2 D5:1 D5:1 C#5:3 E5:1";
+const CANDOMBE_PARA_GARDEL_RIFF_CHORDS: &str =
+    "V | V | I | V7 | I bVII bVII bVII | IV iv iv iv | bVII V7 V7 V7 | V7";
+
+/// The refrain sung again after the instrumental, bars 28-32: it starts on
+/// the pickup "los mu-" of bar 28, the bar 27 line ("pero la cosa no pudo
+/// ser") belonging to the verse.
+const CANDOMBE_PARA_GARDEL_CHORUS_AGAIN_TUNE: &str = "-:12 A4:2 F#4:2 | \
+     G4:3 F#4:2 G4:2 F#4:1 G4:2 F#4:2 G4:2 F#4:1 A4:1 | F#4:8 A4:4 F#4:2 G4:2 | \
+     F#4:3 G4:2 F#4:2 G4:1 F#4:3 G4:1 F#4:3 A4:1 | _:8 -:4 C5:2 A4:2";
+const CANDOMBE_PARA_GARDEL_CHORUS_AGAIN_CHORDS: &str = "V7 | V | I V7 V7 V7 | V | I I7 I7 I7";
 
 /// Bars 33-35: G minor, C7, F, the relative major; the tune rocks between
 /// B flat (written A sharp in the score) and A.
@@ -2754,14 +2778,34 @@ const CANDOMBE_PARA_GARDEL_CODA_TUNE: &str = "A4:1 F4:2 F4:3 F4:2 F4:2 F4:2 E4:2
      F4:1 F4:2 F4:3 F4:2 F4:2 F4:2 F4:2 F4:1 F4:1 | _:8 -:8";
 const CANDOMBE_PARA_GARDEL_CODA_CHORDS: &str = "bIII V7 i i | i i iv7 iv7 | bIII V7 i i | i";
 
+/// The first time through, the refrain stops after bar 39 ("suavemente me
+/// decía"): its last D is held and the guitar's riff comes back
+/// as the instrumental break. The "¡ah, qué calor hace en abril!" tags of
+/// bars 40-42 are sung only at the end.
+const CANDOMBE_PARA_GARDEL_REFRAIN_END_TUNE: &str =
+    "A4:1 F4:2 F4:3 F4:2 F4:2 F4:2 E4:2 E4:1 D4:1 | _:4 -:12";
+const CANDOMBE_PARA_GARDEL_REFRAIN_END_CHORDS: &str = "bIII V7 i i | i";
+
 // Source: score attached by the owner (page images), "Candombe para Gardel", a typeset
 // band arrangement (Voz, Guitarra clásica, Bajo eléctrico, Piano, Cajón, Chico) in 4/4 at
-// quarter = 80, 42 bars, key signature of two sharps, no composer or edition printed.
+// quarter = 80, 42 bars, key signature of two sharps, no composer or edition printed; it
+// seems to be the arrangement at https://musescore.com/user/32398025/scores/5949190.
+// Chords and form checked against two chord sheets,
+// https://acordes.lacuerda.net/ruben_rada/candombe_para_gardel (its tab is the intro riff)
+// and https://letras-acordes-partituras.blogspot.com/2015/10/candombe-para-gardel-ruben-radaacordes.html
+// (verse Dm | Gm7 C7 | A7 Dm | Dm/C Bø | Bb A7 Dm; refrain; "música"; refrain again; tags),
+// and the recording's chord analysis at
+// https://chordify.net/chords/ruben-rada-candombe-para-gardel-musica-uruguaya-mpu (D minor
+// verse of 7 bars at about 125 beats a minute, the riff between the two refrains; also
+// https://chordu.com/chords-tabs-ruben-rada-candombe-para-gardel-id__g29SyYizHg, 124).
+// The score's tempo of 80 is too slow for the recording, so the tempo follows the recording.
+// The score goes through the refrain once; the instrumental and the second refrain follow
+// the chord sheets' order.
 // Melody: the Voz staff from bar 13; bars 1-12 are the classical guitar's introduction,
 // at its written pitch (it sounds an octave lower). Chords: the chord symbols, on the beat
 // the score prints them; bars 1-12, which have none, from the bass and the guitar's tune;
-// where two symbols are stacked (bar 14 "D" over "Gm7", bar 40 "Dm" over "Gm7 A7 D"),
-// the one the guitar, piano and bass play. The score prints no dynamics, hairpins,
+// where two symbols are stacked (bar 40 "Dm" over "Gm7 A7 D"), the one the guitar, piano
+// and bass play; bar 14 ("D" over "Gm7") and bars 16 and 24 follow the chord sheets. The score prints no dynamics, hairpins,
 // articulations, fermatas or tempo changes; its breaks (the solo guitar of bars 1-4, the
 // shot of bar 13) are marked on the charts.
 // Composer: Rubén Rada, "Tengo un candombe para Gardel", on his 1985 album "La yapla mata"
@@ -2776,7 +2820,7 @@ pub(super) const CANDOMBE_PARA_GARDEL: Song = Song {
     tonic: D,
     mode: HarmonicMinor,
     time: COMMON,
-    tempo: 80.0,
+    tempo: 124.0,
     comping: Comping::Offbeat,
     bass: Bass::Tresillo,
     rhythm: "Candombe",
@@ -2817,18 +2861,50 @@ pub(super) const CANDOMBE_PARA_GARDEL: Song = Song {
         )
         .in_key(D, Major),
         Part::new(
+            "Refrain end",
+            CANDOMBE_PARA_GARDEL_REFRAIN_END_TUNE,
+            CANDOMBE_PARA_GARDEL_REFRAIN_END_CHORDS,
+        ),
+        Part::new(
+            "Riff",
+            CANDOMBE_PARA_GARDEL_RIFF_TUNE,
+            CANDOMBE_PARA_GARDEL_RIFF_CHORDS,
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Chorus again",
+            CANDOMBE_PARA_GARDEL_CHORUS_AGAIN_TUNE,
+            CANDOMBE_PARA_GARDEL_CHORUS_AGAIN_CHORDS,
+        )
+        .in_key(D, Major),
+        Part::new(
             "Coda",
             CANDOMBE_PARA_GARDEL_CODA_TUNE,
             CANDOMBE_PARA_GARDEL_CODA_CHORDS,
         ),
     ],
-    form: &["Intro", "Verse", "Chorus", "Bridge", "Chorus 2", "Coda"],
+    // The refrain once, the riff as the instrumental break, the refrain again
+    // and the tags, as the chord sheets lay the song out.
+    form: &[
+        "Intro",
+        "Verse",
+        "Chorus",
+        "Bridge",
+        "Chorus 2",
+        "Refrain end",
+        "Riff",
+        "Chorus again",
+        "Bridge",
+        "Chorus 2",
+        "Coda",
+    ],
     drums_from: 0,
     about: "A candombe in D minor that keeps changing mode: the verse sits on D minor, \
-            G minor and A7, with a half-diminished B and then B flat before A7; the \
-            refrain turns to D major, and D7 leads through G minor and C7 to F, the \
-            relative major. The refrain's D major returns, and the ending's F, A7 and \
-            D minor bring back the minor key. Listen for the sixteenth-eighth-sixteenth \
+            G minor 7 turning to C7, and A7, with a half-diminished B and then B flat \
+            before A7; the refrain turns to D major, and D7 leads through G minor and \
+            C7 to F, the relative major. The refrain's D major returns, and F, A7 and \
+            D minor bring back the minor key before the guitar's riff and the refrain \
+            again. Listen for the sixteenth-eighth-sixteenth \
             syncopation on nearly every beat of the tune, the candombe drums' off-beat lilt.",
 };
 
