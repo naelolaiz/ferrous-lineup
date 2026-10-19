@@ -645,16 +645,24 @@ impl LineupApp {
             ));
             return;
         }
-        let playing = source.library.rhythm.or_else(|| {
-            source
-                .library
-                .style
-                .and_then(|style| Rhythm::named(style.rhythm))
-        });
-        let parts = apply::StyleParts {
+        // What the song plays now: `source` remembers what it played
+        // before the last meter change, not a style picked since.
+        let now = self
+            .project
+            .band()
+            .map_or(self.song_library, Tried::from_band);
+        let playing = now
+            .rhythm
+            .or_else(|| now.style.and_then(|style| Rhythm::named(style.rhythm)));
+        let mut parts = apply::StyleParts {
             time_signature: true,
             ..self.playlist.library_parts().for_rhythm()
         };
+        // In pattern mode, a song without a band keeps its own parts, played
+        // again in the new time; the band comes in from song mode.
+        if self.mode == PlayMode::Pattern && self.project.band().is_none() {
+            parts.instruments = false;
+        }
         let rhythm = if parts.matching_style {
             Rhythm::for_time(time, playing)
         } else {

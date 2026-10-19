@@ -1881,6 +1881,64 @@ mod library_parts {
     }
 
     #[test]
+    fn the_time_box_plays_the_rhythm_picked_last() {
+        let mut screen = meter_test_screen(true, true);
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen.app.set_mode(PlayMode::Song);
+        screen.app.try_from_library(LibraryAction::RhythmInSong(
+            Rhythm::named("Tango marcato").unwrap(),
+        ));
+        assert_eq!(
+            screen.app.project.band().map(|band| band.style.name),
+            Some("Tango marcato")
+        );
+        screen
+            .app
+            .set_song_time(lineup_core::TimeSignature::new(3, 4));
+        assert_eq!(
+            screen.app.project.band().map(|band| band.style.name),
+            Some("Tango vals")
+        );
+    }
+
+    #[test]
+    fn the_time_box_brings_in_the_band_only_in_song_mode() {
+        let three_four = lineup_core::TimeSignature::new(3, 4);
+        // Pattern mode: the demo's own Keys and Bass, in 3/4.
+        let mut screen = el_choclo();
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen.app.set_mode(PlayMode::Pattern);
+        let keys = |project: &Project| {
+            let keys = project
+                .channels()
+                .iter()
+                .position(|channel| channel.name == "Keys")
+                .unwrap();
+            project
+                .patterns()
+                .iter()
+                .map(|pattern| pattern.notes(keys).len())
+                .sum::<usize>()
+        };
+        assert!(keys(&screen.app.project) > 0);
+        screen.app.set_song_time(three_four);
+        assert_eq!(screen.app.project.time_signature, three_four);
+        assert!(screen.app.project.band().is_none());
+        assert!(muted(&screen.app.project).is_empty());
+        assert!(keys(&screen.app.project) > 0);
+        // Song mode: the band, in the demo's style, instead of them.
+        let mut screen = el_choclo();
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen.app.set_song_time(three_four);
+        assert_eq!(screen.app.project.time_signature, three_four);
+        assert_eq!(
+            screen.app.project.band().map(|band| band.style.name),
+            Some("Tango vals")
+        );
+        assert_eq!(muted(&screen.app.project), ["Keys", "Bass"]);
+    }
+
+    #[test]
     fn a_saved_styles_tempo_alone_does_not_bring_in_a_band() {
         let mut screen = el_choclo();
         let mut style = UserStyle::from_rhythm(Rhythm::named("Waltz").unwrap());
