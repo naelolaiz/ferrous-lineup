@@ -99,6 +99,7 @@
   - [Swing and big band songs, with a horn section](step-9/big-band-songs.md)
   - [Finding a demo: alphabetical order and search](step-9/demo-search.md)
   - [Latin American songs, from Mexico to the Río de la Plata](step-9/latin-american-songs.md)
+  - [Odd meters: 5/4, 7/8 and the dances of the Balkans](step-9/odd-meters.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
