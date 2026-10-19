@@ -29,22 +29,81 @@ pub fn modal_open(ctx: &egui::Context) -> bool {
     ctx.memory(|memory| memory.top_modal_layer().is_some())
 }
 
-pub fn editor_active(ctx: &egui::Context, layer: egui::LayerId) -> bool {
+/// Who has the editor keyboard: the layer last pressed, and where it was
+/// pressed. The playlist shares the background layer with the toolbars and
+/// the side panel, so for it the place matters too.
+#[derive(Clone, Copy)]
+struct KeyboardOwner {
+    layer: egui::LayerId,
+    /// `None` when the app gave the keyboard to a window it opened.
+    pos: Option<egui::Pos2>,
+}
+
+/// The layer last clicked, or given the keyboard by the app, while it is
+/// still shown: a window that was closed or hidden gives its keys up.
+fn clicked_owner(ctx: &egui::Context) -> Option<KeyboardOwner> {
     let id = egui::Id::unique("keyboard-editor");
     if let Some(pos) = ctx.input(|input| press_pos(input, None))
         && let Some(clicked) = ctx.layer_id_at(pos)
         && clicked.order <= egui::Order::Middle
     {
-        ctx.data_mut(|data| data.insert_temp(id, clicked));
+        let owner = KeyboardOwner {
+            layer: clicked,
+            pos: Some(pos),
+        };
+        ctx.data_mut(|data| data.insert_temp(id, owner));
     }
-    let active = ctx.data(|data| data.get_temp::<egui::LayerId>(id));
-    active.or_else(|| ctx.top_layer_id()) == Some(layer)
+    let owner = ctx.data(|data| data.get_temp::<KeyboardOwner>(id))?;
+    shown(ctx, owner.layer).then_some(owner)
+}
+
+fn shown(ctx: &egui::Context, layer: egui::LayerId) -> bool {
+    layer.order != egui::Order::Middle || ctx.memory(|memory| memory.areas().is_visible(&layer))
+}
+
+/// The clicked layer, or else the frontmost window on screen.
+fn keyboard_owner(ctx: &egui::Context) -> Option<KeyboardOwner> {
+    clicked_owner(ctx).or_else(|| {
+        let front = ctx.memory(|memory| {
+            memory
+                .layer_ids()
+                .filter(|layer| layer.order == egui::Order::Middle)
+                .filter(|layer| memory.areas().parent_layer(*layer).is_none())
+                .filter(|layer| memory.areas().is_visible(layer))
+                .last()
+        })?;
+        Some(KeyboardOwner {
+            layer: front,
+            pos: None,
+        })
+    })
+}
+
+pub fn editor_active(ctx: &egui::Context, layer: egui::LayerId) -> bool {
+    keyboard_owner(ctx).is_some_and(|owner| owner.layer == layer)
+}
+
+/// [`editor_keyboard`] for a view drawn on the background layer, such as
+/// the playlist: a click on a toolbar or a panel beside it lands on the
+/// same layer, so only a click inside `area` gives it the keyboard.
+pub fn editor_keyboard_in(ctx: &egui::Context, layer: egui::LayerId, area: Rect) -> bool {
+    editor_keyboard(ctx, layer)
+        && keyboard_owner(ctx)
+            .and_then(|owner| owner.pos)
+            .is_none_or(|pos| area.contains(pos))
+}
+
+/// Gives the keyboard to a window the app opened or brought to the front,
+/// as a click on it would.
+pub fn give_keyboard(ctx: &egui::Context, layer: egui::LayerId) {
+    let owner = KeyboardOwner { layer, pos: None };
+    ctx.data_mut(|data| data.insert_temp(egui::Id::unique("keyboard-editor"), owner));
 }
 
 /// The window explicitly clicked, without assigning a floating window
 /// keyboard control merely because it opened over the song at startup.
 pub fn clicked_editor(ctx: &egui::Context) -> Option<egui::LayerId> {
-    ctx.data(|data| data.get_temp(egui::Id::unique("keyboard-editor")))
+    clicked_owner(ctx).map(|owner| owner.layer)
 }
 
 pub fn follow_playback(ctx: &egui::Context) -> bool {

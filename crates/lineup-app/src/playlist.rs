@@ -523,7 +523,7 @@ impl PlaylistView {
         self.view_rect = Some(output.inner_rect);
         self.selected
             .retain(|index| *index < project.playlist().clips().len());
-        if widgets::editor_keyboard(ui.ctx(), ui.layer_id()) {
+        if widgets::editor_keyboard_in(ui.ctx(), ui.layer_id(), self.area) {
             self.keys(ui.ctx(), project, &mut actions);
         }
         actions
@@ -924,7 +924,7 @@ impl PlaylistView {
         current: usize,
         actions: &mut Vec<PlaylistAction>,
     ) {
-        if widgets::editor_keyboard(ui.ctx(), ui.layer_id())
+        if widgets::editor_keyboard_in(ui.ctx(), ui.layer_id(), self.area)
             && ui.input(|input| input.key_pressed(egui::Key::Escape))
         {
             self.drag = None;

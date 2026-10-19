@@ -1668,3 +1668,79 @@ fn row_window_cannot_create_a_pattern_after_the_project_limit() {
         lineup_core::MAX_PATTERNS
     );
 }
+
+#[test]
+fn delete_at_startup_keeps_the_channel_the_piano_roll_picked_by_itself() {
+    for key in [Key::Delete, Key::Backspace] {
+        let mut screen = Screen::new();
+        screen.draw(vec![]);
+        screen.draw(vec![]);
+        let before = screen.app.project.clone();
+        screen.key(key);
+        assert_eq!(screen.app.project, before, "{key:?} deleted a channel");
+        // Choosing a channel and then deselecting it leaves none to delete.
+        let step = screen.app.project.channels()[0].name.clone();
+        screen.click(&step);
+        screen.click(&step);
+        screen.key(key);
+        assert_eq!(screen.app.project, before, "{key:?} after deselecting");
+    }
+}
+
+#[test]
+fn a_window_opened_by_double_clicking_a_clip_takes_the_keyboard() {
+    let mut screen = shortcut_screen();
+    screen.click("Shortcut test");
+    let before = screen.app.project.clone();
+    screen
+        .app
+        .apply_playlist(crate::playlist::PlaylistAction::EditClip(0));
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    screen.key(Key::Delete);
+    assert_eq!(
+        screen.app.project.playlist().clips(),
+        before.playlist().clips(),
+        "Ctrl+A and Delete in the piano roll deleted clips"
+    );
+    assert!(screen.app.project.pattern(0).unwrap().notes(0).is_empty());
+}
+
+#[test]
+fn toolbar_clicks_do_not_give_the_playlist_the_keyboard() {
+    let mut screen = shortcut_screen();
+    screen.click("Shortcut test");
+    let before = screen.app.project.clone();
+    screen.click("Follow playhead");
+    screen.click("Follow playhead");
+    screen.key(Key::Delete);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    screen.key(Key::Delete);
+    assert_eq!(screen.app.project, before);
+    // A click in the playlist itself still does.
+    screen.click("Shortcut test");
+    screen.key(Key::Delete);
+    assert_eq!(
+        screen.app.project.playlist().clips().len(),
+        before.playlist().clips().len() - 1
+    );
+}
+
+#[test]
+fn a_hidden_rack_gives_up_space_and_escape() {
+    let mut screen = Screen::new();
+    screen.draw(vec![]);
+    let name = screen.app.project.channels()[0].name.clone();
+    screen.click(&name);
+    let chosen = screen.app.piano_roll.selected_channel();
+    screen.key(Key::F6);
+    screen.draw(vec![]);
+    assert!(!screen.app.rack_open);
+    screen.app.set_mode(PlayMode::Song);
+    screen.key(Key::Space);
+    assert_eq!(screen.app.mode, PlayMode::Song);
+    assert!(screen.app.playing);
+    screen.key(Key::Escape);
+    assert_eq!(screen.app.piano_roll.selected_channel(), chosen);
+}
