@@ -482,6 +482,8 @@ const BALLAD_BAND: Band = Band::new(gm::TENOR_SAX, gm::ACOUSTIC_GRAND_PIANO, gm:
 const DIXIELAND: Band = Band::new(gm::TRUMPET, gm::ACOUSTIC_GRAND_PIANO, gm::TUBA);
 const JAZZ_WALTZ: Band = Band::new(gm::VIBRAPHONE, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
 const GYPSY_JAZZ: Band = Band::new(gm::VIOLIN, gm::JAZZ_GUITAR, gm::ACOUSTIC_BASS);
+/// Getz's tenor saxophone over Gilberto's guitar.
+const BOSSA: Band = Band::new(gm::TENOR_SAX, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const SAMBA: Band = Band::new(gm::FLUTE, gm::NYLON_GUITAR, gm::FINGER_BASS);
 const AFROBEATS: Band = Band::new(gm::MARIMBA, gm::ELECTRIC_PIANO, gm::SYNTH_BASS);
 const POP: Band = Band::new(gm::SQUARE_LEAD, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
@@ -493,6 +495,8 @@ const ROCK: Band = Band::new(
     gm::FINGER_BASS,
 );
 const ROCK_AND_ROLL: Band = Band::new(gm::TENOR_SAX, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+// Serú Girán: Charly García singing at the piano, Pedro Aznar on fretless bass.
+const SERU: Band = Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::FRETLESS_BASS);
 const BRASS_BAND: Band = Band::new(gm::TRUMPET, gm::BRASS_SECTION, gm::TUBA);
 const GOSPEL: Band = Band::new(gm::CHOIR_AAHS, gm::DRAWBAR_ORGAN, gm::FINGER_BASS);
 const SOUL: Band = Band::new(gm::VOICE_OOHS, gm::DRAWBAR_ORGAN, gm::FINGER_BASS);
@@ -554,6 +558,7 @@ pub static SONGS: &[Song] = &[
     rock::TOREADOR_SONG,
     rock::HOUSE_OF_THE_RISING_SUN,
     rock::WILLIAM_TELL,
+    rock::DESARMA_Y_SANGRA,
     blues::MIDNIGHT_SHUFFLE,
     blues::ROLLING_BOOGIE,
     blues::MINOR_MOOD,
@@ -670,6 +675,12 @@ pub static SONGS: &[Song] = &[
     latin::AQUELLOS_OJOS_VERDES,
     latin::MARIA_ELENA,
     latin::TE_QUIERO_DIJISTE,
+    latin::ZE_PEREIRA,
+    latin::FEIJOADA_DO_BRASIL,
+    latin::A_MULATINHA,
+    latin::RODA_YOYO,
+    latin::DONA_ADELAIDE,
+    latin::GAROTA_DE_IPANEMA,
     tango::HABANERA,
     tango::TANGO_DEL_TELAR,
     tango::MILONGA_DEL_RIO,
@@ -690,6 +701,10 @@ pub static SONGS: &[Song] = &[
     tango::EL_DIA_QUE_ME_QUIERAS,
     tango::VOLVER,
     tango::ROMANCE_DE_BARRIO,
+    tango::DESDE_EL_ALMA,
+    tango::MUCHACHO,
+    tango::GARUA,
+    tango::ESTA_NOCHE_DE_LUNA,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,
@@ -718,6 +733,8 @@ pub static SONGS: &[Song] = &[
     folklore::LOS_MACHETES,
     folklore::BRISAS_MESANAS,
     folklore::PUNTO_OCUENO,
+    folklore::BOI_BARROSO,
+    folklore::CANDOMBE_PARA_GARDEL,
     folklore::ZAMBA_DEL_TELAR,
     folklore::CHACARERA_DEL_PATIO,
     folklore::GATO_DEL_ARROYO,

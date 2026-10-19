@@ -364,3 +364,218 @@ pub(super) const WILLIAM_TELL: Song = Song {
             climbs F, G, A. Only I and V under it. In 2/4, two bars to a bar \
             here, and played a second time an octave higher, as the piano fragment asks.",
 };
+
+/// The intro: B flat, A flat and G over a bass climbing G, B, C, then home to E flat.
+const DESARMA_INTRO_CHORDS: &str = "V IV | III | IV | I | V | I";
+/// The verse: E flat, D flat (bVII, borrowed from E flat minor) and A flat, C minor, B flat;
+/// then E flat over D flat (I7, the V7 of IV) into A flat.
+const DESARMA_VERSE_CHORDS: &str = "I | bVII IV IV | vi | V | I | bVII IV IV | vi | V | I7 | IV";
+/// The bar of 3/4 in the middle of the verse: B flat, A flat, E flat over B flat.
+const DESARMA_TURN_CHORDS: &str = "V IV I";
+/// F7 over A (II7, the V7 of V: the bar spells A, C, E flat, F) into B flat; the verse's
+/// last line; C minor and F lead back to the intro.
+const DESARMA_VERSE_END_CHORDS: &str = "II7 | V | I | bVII IV IV | vi vi V | I | vi | II";
+/// E flat minor: i and V; then the figure moves onto D flat minor (bvii) for two bars.
+const DESARMA_EB_MINOR_CHORDS: &str = "i | i | V | V | i | i | bvii | bvii";
+/// G minor: i, v, the bass falling B flat, A, G to the suspended dominant.
+const DESARMA_GM_A_CHORDS: &str = "i | i | v | v | i | i | bVI | bVI | V7sus4 | V7 | i | i";
+const DESARMA_GM_B_CHORDS: &str = "bVII | bVII | bVI | bVI | bIII | bIII | bVI | bVI | V7sus4 | V7";
+/// G major: the tune steps down over G, A minor 7, G major 7, then E flat (bVI).
+const DESARMA_G_CHORDS: &str = "I | I | ii7 | ii7 | Imaj7 | Imaj7 | bVI | bVI | bVI | bVI";
+const DESARMA_VERSE3_CHORDS: &str = "I | I | bVI | bVI | I | I | bVI | bVI";
+/// In 3/4: A suspended resolving to A (II, the V of V), E minor 7, A minor 9, D13.
+const DESARMA_VERSE3_END_CHORDS: &str = "IIsus4 II II | II | vi7 | vi7 | ii9 | ii9 | V13 | V13";
+const DESARMA_CODA_CHORDS: &str = "I | bVII bVII IV";
+/// In 3/4: G over F, C over E, the bass walking down to A and D; then C minor 7 and F,
+/// borrowed from G minor, turn toward E flat.
+const DESARMA_OUTRO_CHORDS: &str =
+    "I7 | IV | I ii I | II7 | V | I | bVII IV IV | vi7 V | iv7 | bVII";
+const DESARMA_FINAL_CHORDS: &str = "V IV | III | IV | I | V | I | IV | I | I";
+
+// Source: score attached by the owner (page images), "DESARMA Y SANGRA", Charly García:
+// piano arrangement with chord symbols, "Introducción", 6/8 with bars of 3/4, dotted quarter
+// = 80 (= 68 at bar 128, = 62 at bar 132), 136 bars, first and second endings at bars
+// 116-117. Melody = the top line of the right hand; chords = the printed symbols, checked
+// against the piano's bass and right-hand chords bar by bar.
+// Second source: score attached by the owner (page images), "Desarma y Sangra", Charly
+// García: piano, 3/4, quarter = 115, 112 bars with a repeat of bars 7-31 (the same music,
+// arranged differently); used to cross-check the notes and for bars 17-18 (bass D, C, B flat,
+// A: F over A, as the chord sheet acordesweb.com/cancion/seru-giran/desarma-y-sangra has it).
+// Under copyright (Charly García); added at the owner's request.
+pub(super) const DESARMA_Y_SANGRA: Song = Song {
+    name: "Desarma y sangra",
+    origin: "Charly García, Serú Girán, 1979",
+    feel: "Rock ballad",
+    genre: Genre::Rock,
+    tonic: DSharp,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 120.0,
+    comping: Comping::Arp3,
+    bass: Bass::Held,
+    rhythm: "Six-eight",
+    band: SERU,
+    style: "Six-eight ballad",
+    parts: &[
+        // Bars 1-6 (and 26-31, 51-56); bars 2-6 are marked 8va.
+        Part::new(
+            "Intro",
+            "D5:2 Eb5 D5 C5 D5 C5 | B4 G4 B4 D5 G5 F5 | Eb5 Ab4 C5 Ab5 Eb5 Ab4 | \
+             Eb5 G4 Bb4 G4 Eb5 Bb4 | F5:4 Eb5 D5 | Eb5:12",
+            DESARMA_INTRO_CHORDS,
+        ),
+        // Bars 7-16 (and 32-41).
+        Part::new(
+            "Verse",
+            "G4:2 Bb3 Eb4 F4 G4 Bb3 | F4 Ab3 Eb4 Ab3 C4 Ab3 | Eb4 G3 C4 Eb4 G4 Eb4 | \
+             -:2 F3:2 Bb3 D4 F4 Bb3 | G4 Bb3 Eb4 F4 G4 Bb3 | F4 Ab3 Eb4 Ab3 C4 Ab3 | \
+             Eb4 G3 C4 Eb4 G4 Eb4 | -:2 F3:2 Bb3 D4 F4 Bb3 | Bb4 G4 Db4 Bb4 G4 Db4 | \
+             Ab4 Eb4 C4 Ab4 Eb4 C4",
+            DESARMA_VERSE_CHORDS,
+        ),
+        // Bar 17 (and 42), in 3/4. The 6/8 score prints Bb, Ab/C, G/Bb over a bass Bb, Ab, Bb;
+        // the 3/4 score has the bass D, C, B flat, and the chord sheet Bb/D Ab/C Eb/Bb: beat 3
+        // is written I (E flat over B flat; the tune's G and D fit it as a passing chord).
+        Part::new("Verse turn", "D4:2 Bb4 C4 Ab4 D4 G4", DESARMA_TURN_CHORDS)
+            .in_time(THREE_FOUR)
+            .played(Comping::Arp3, Bass::Held, "Waltz"),
+        // Bars 18-25 (and 43-50). Bar 18 follows the 3/4 score (A natural, F over A, as the
+        // chord sheet's F/A; with the E flat of the figure it is F7); the 6/8 score prints Ab
+        // with A flats.
+        Part::new(
+            "Verse end",
+            "-:2 A3:2 C4 A3 F4 Eb4 | D4 Bb3 D4 F4 Bb4:4 | G4:2 Bb3 Eb4 F4 G4 Bb3 | \
+             F4 Ab3 Eb4 Ab3 C4 Ab3 | Eb4 G3 C4 Eb4 F4:4 | Eb4:12 | Eb4:4 F4 G4 | A4 Bb4 C5",
+            DESARMA_VERSE_END_CHORDS,
+        ),
+        // Bars 57-64: the key signature stays three flats, but the music is in E flat minor.
+        // Bars 63-64 are printed with five flats: two bars of D flat minor (E is its F flat),
+        // one chord with no cadence of its own, so they are read as bvii of E flat minor
+        // rather than as a key.
+        Part::new(
+            "E flat minor",
+            "Gb4:8 F4:4 | Eb4:4 F4 Gb4 | F4:2 Bb3 Bb3 Bb3 Bb3 Bb3 | F4 Bb3 Bb3 Bb3 Bb3 Bb3 | \
+             Gb4:8 F4:4 | Eb4:4 F4 Gb4 | Ab4:8 Gb4:4 | E4:4 Gb4 Ab4",
+            DESARMA_EB_MINOR_CHORDS,
+        )
+        .in_key(DSharp, NaturalMinor),
+        // Bars 65-76, two flats. The D chords carry C in the right hand ("Dsus", "D"):
+        // V7sus4 and V7.
+        Part::new(
+            "G minor",
+            "Bb4:8 A4:4 | G4:4 A4 Bb4 | A4:2 D4 D4 D4 D4 D4 | A4 D4 D4 D4 D4 D4 | \
+             Bb4:8 A4:4 | G4:4 A4 Bb4 | Bb4:12 | Bb4:8 C5:2 D4 | C5:12 | D5:8 C5:4 | \
+             D5:8 G4:2 D4 | D5:4 C5 Bb4",
+            DESARMA_GM_A_CHORDS,
+        )
+        .in_key(G, HarmonicMinor),
+        // Bars 77-86. Bar 82 is printed Gm/Bb, but its notes are bar 81's B flat chord over F.
+        Part::new(
+            "G minor 2",
+            "C5:8 G4:2 C4 | C5:4 Bb4 A4 | Bb4:12 | Bb4:4 A4 G4 | F4:12 | F4:12 | Bb4:12 | \
+             Bb4:8 C5:2 D4 | C5:12 | D5:8 C5:4",
+            DESARMA_GM_B_CHORDS,
+        )
+        .in_key(G, HarmonicMinor),
+        // Bars 87-96, one sharp.
+        Part::new(
+            "G major",
+            "D5:8 G4:2 D4 | D5:4 C5 B4 | C5:8 G4:2 C4 | C5:4 B4 A4 | B4:12 | B4:4 A4 G4 | \
+             G4:8 Eb4:2 Bb3 | Bb4 Bb3 Eb4 G4 Eb4 Bb3 | Bb4 Bb3 Eb4 G4 Eb4 Bb3 | Bb4:12",
+            DESARMA_G_CHORDS,
+        )
+        .in_key(G, Major),
+        // Bars 97-104.
+        Part::new(
+            "Verse 3",
+            "G5:2 D5 G4 D5 A4 B4 | G5 D5 A4 B4 D5:4 | G5:2 Eb5 G4 Bb4 Eb5 Bb4 | \
+             G5 G4 Bb4 Eb5 G4 Bb4 | G5 D5 G4 D5 A4 B4 | G5 D5 A4 B4 D5:4 | \
+             G5:2 Eb5 G4 Bb4 Eb5 Bb4 | G5 G4 Bb4 Eb5 G4 Bb4",
+            DESARMA_VERSE3_CHORDS,
+        )
+        .in_key(G, Major),
+        // Bars 105-112, in 3/4.
+        Part::new(
+            "Verse 3 end",
+            "B4:6 A4:4 E4:2 | _:6 C#4:2 E4:4 | B4:6 D4:2 G4 D4 | B4:2 D4 G4 B4 D4:4 | \
+             D5:6 C5:4 E4:2 | _:6 C4:2 E4:4 | B4:12 | F#5:4 G5 A5",
+            DESARMA_VERSE3_END_CHORDS,
+        )
+        .in_key(G, Major)
+        .in_time(THREE_FOUR)
+        .played(Comping::Arp3, Bass::Held, "Waltz"),
+        // Bars 113-114, in 3/4: the start of the repeat.
+        Part::new(
+            "Coda",
+            "B5:6 C6:2 B5:2 C6:1 B5:1 | A5:6 B5:1 A5:1 G5:4",
+            DESARMA_CODA_CHORDS,
+        )
+        .in_key(G, Major)
+        .in_time(THREE_FOUR)
+        .played(Comping::Arp3, Bass::Held, "Waltz"),
+        // Bar 115, back in 6/8.
+        Part::new("Coda 6/8", "B5:6 C6:2 D6:4", "vi").in_key(G, Major),
+        // Bar 116, the first ending (D over F sharp).
+        Part::new("First ending", "D6:6 A4:2 F#4 D5", "V").in_key(G, Major),
+        // Bar 117, the second ending.
+        Part::new("Second ending", "F#4:2 A4 D5 D5 D5 D5", "V").in_key(G, Major),
+        // Bars 118-127, in 3/4.
+        Part::new(
+            "Outro",
+            "D5:2 G5:8 G5:2 | G5:6 C5:4 C5:2 | D5:1 G4 B4 D5 C5 E4 G4 C5 B4 D4 G4 B4 | \
+             A4:2 D4 C#4 A3 A4 G4 | F#4 D4 F#4 A4 D5 D5 | B4:6 C5:2 B4:2 C5:1 B4:1 | \
+             A4:2 B4:1 A4:1 G4:6 G4:2 | G4:6 A4:2 F#4:4 | G4:4 F4 G4 | A4 Bb4 C5",
+            DESARMA_OUTRO_CHORDS,
+        )
+        .in_key(G, Major)
+        .in_time(THREE_FOUR)
+        .played(Comping::Arp3, Bass::Held, "Waltz"),
+        // Bars 128-136: three flats again, the intro an octave lower, slower, and still in
+        // 3/4 (no new time signature after bar 118; the right hand is beamed in pairs, the
+        // bass moves in half + quarter). The dashed "8" line at bars 132-135 hangs under the
+        // right-hand staff with its end hook pointing up: an 8va bassa for the right hand
+        // (the 3/4 score has the same F3 E flat 3 D3 and an E flat chord topped by E flat 4).
+        // The last chord is tied over two bars; the fermata on it is the 3/4 score's.
+        Part::new(
+            "Final",
+            "D4:2 Eb4 D4 C4 D4 C4 | B3 G3 B3 D4 G4 F4 | Eb4 Ab3 C4 Ab4 Eb4 Ab3 | \
+             Eb4 G3 Bb3 Eb4 Bb3 G3 | F3:4 Eb3 D3 | Eb4:12 | Eb4:12 | Eb4:12 | _:12",
+            DESARMA_FINAL_CHORDS,
+        )
+        .in_key(DSharp, Major)
+        .in_time(THREE_FOUR)
+        .played(Comping::Arp3, Bass::Held, "Waltz")
+        .with_tempo(&[tempo(0, 102), tempo(48, 93), fermata(96, 12)]),
+    ],
+    form: &[
+        "Intro",
+        "Verse",
+        "Verse turn",
+        "Verse end",
+        "Intro",
+        "Verse",
+        "Verse turn",
+        "Verse end",
+        "Intro",
+        "E flat minor",
+        "G minor",
+        "G minor 2",
+        "G major",
+        "Verse 3",
+        "Verse 3 end",
+        "Coda",
+        "Coda 6/8",
+        "First ending",
+        "Coda",
+        "Coda 6/8",
+        "Second ending",
+        "Outro",
+        "Final",
+    ],
+    drums_from: 0,
+    about: "A ballad in E flat that borrows D flat (bVII) from E flat minor; its third line \
+            goes through E flat 7 (I7, the V7 of IV) to A flat and through F7 (II7, the V7 of \
+            V) to B flat. The middle turns to E flat minor, touches D flat minor, settles \
+            in G minor and reaches G major through D7, where E flat comes back as bVI; C minor \
+            7 and F lead home to E flat. It sways in 6/8, with whole passages in 3/4.",
+};
