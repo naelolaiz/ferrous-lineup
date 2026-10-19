@@ -235,6 +235,8 @@ pub fn show(
     ui.style_mut().always_scroll_the_only_direction = true;
     let rows_height = project.channels().len() as f32
         * (widgets::step_size(ui).y + ui.spacing().item_spacing.y)
+        + widgets::step_lights_height(ui)
+        + ui.spacing().item_spacing.y
         + 4.0
         + ui.spacing().interact_size.y
         + ui.spacing().item_spacing.y;
@@ -243,6 +245,14 @@ pub fn show(
     let scroll = egui::ScrollArea::new([true, vertical])
         .auto_shrink(false)
         .show(ui, |ui| {
+            // A row of lights over the steps, lit over the one sounding.
+            // Its lights are drawn once the rows below have shown where
+            // the steps start.
+            let (lights, _) = ui.allocate_exact_size(
+                egui::vec2(1.0, widgets::step_lights_height(ui)),
+                egui::Sense::hover(),
+            );
+            let mut steps_left = None;
             for (index, channel) in project.channels().iter().enumerate() {
                 let row = ui.horizontal(|ui| {
                     // Lit while the channel is heard: not muted, and not
@@ -362,6 +372,7 @@ pub fn show(
                     });
 
                     ui.add_space(6.0 * widgets::zoom(ui));
+                    steps_left.get_or_insert(ui.cursor().left());
                     // Plain steps are shown as buttons; melodies and chords as
                     // a small preview of the piano roll.
                     if pattern.is_step_row(index) {
@@ -395,6 +406,21 @@ pub fn show(
                     }
                 });
                 row_rects.push(row.response.rect);
+            }
+            if let Some(left) = steps_left {
+                let steps_per_bar = time.steps_per_bar();
+                let marks: Vec<_> = (0..length)
+                    .map(|step| {
+                        if step % steps_per_bar == 0 {
+                            widgets::StepMark::Bar
+                        } else if time.beat_at(step).start == step % steps_per_bar {
+                            widgets::StepMark::Beat
+                        } else {
+                            widgets::StepMark::Plain
+                        }
+                    })
+                    .collect();
+                widgets::step_lights(ui, lights, left, &marks, playhead);
             }
 
             ui.add_space(4.0);
@@ -554,7 +580,10 @@ pub fn natural_size(
     let step = widgets::STEP_SIZE * zoom;
     let controls = (14.0 + 24.0 + 14.0 + NAME_WIDTH + 6.0) * zoom + 5.0 * gap.x;
     let width = controls + steps as f32 * (step.x + gap.x);
-    let rows = project.channels().len() as f32 * (step.y + gap.y);
+    // The steps, and the row of lights over them.
+    let rows = project.channels().len() as f32 * (step.y + gap.y)
+        + widgets::STEP_LIGHTS_HEIGHT * zoom
+        + gap.y;
     let line = style.spacing.interact_size.y + gap.y;
     let add_channel = 4.0 + line;
     let hint = if patterns_with_drums(project, pattern).is_empty() {

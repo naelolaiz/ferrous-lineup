@@ -197,6 +197,10 @@ pub fn step_button(ui: &mut Ui, on: bool, beat_group: usize, is_playhead: bool) 
         if response.hovered() {
             fill = fill.gamma_multiply(1.25);
         }
+        if is_playhead {
+            // The whole column that is sounding lights up, down every row.
+            fill = fill.lerp_to_gamma(PLAYHEAD, if on { 0.25 } else { 0.35 });
+        }
         let painter = ui.painter();
         let pad = rect.shrink(1.0);
         painter.rect_filled(pad, 2.0, STEP_EDGE);
@@ -220,6 +224,57 @@ pub fn step_button(ui: &mut Ui, on: bool, beat_group: usize, is_playhead: bool) 
         }
     }
     response
+}
+
+/// How a step's light in [`step_lights`] looks when it is not playing:
+/// the first step of a bar and of a beat are a little brighter, so the
+/// row can be counted like the steps under it.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum StepMark {
+    Bar,
+    Beat,
+    Plain,
+}
+
+/// The height of the row of lights above the rack's steps, unzoomed.
+pub const STEP_LIGHTS_HEIGHT: f32 = 10.0;
+
+/// The height of the row of lights above the rack's steps in `ui`.
+pub fn step_lights_height(ui: &Ui) -> f32 {
+    STEP_LIGHTS_HEIGHT * zoom(ui)
+}
+
+/// A row of lights over a pattern's steps, like those of a drum machine:
+/// the one over the step that is sounding is lit, the others are dim.
+/// `left` is where the first step starts, and `marks` says which steps
+/// begin a bar or a beat.
+pub fn step_lights(ui: &Ui, row: Rect, left: f32, marks: &[StepMark], playhead: Option<usize>) {
+    let gap = ui.spacing().item_spacing.x;
+    let step_width = step_size(ui).x + gap;
+    let zoom = zoom(ui);
+    let painter = ui.painter();
+    for (step, &mark) in marks.iter().enumerate() {
+        let x = left + step as f32 * step_width;
+        let light = Rect::from_min_size(
+            pos2(x + 3.0 * zoom, row.center().y - 2.5 * zoom),
+            vec2(step_size(ui).x - 6.0 * zoom, 5.0 * zoom),
+        );
+        if !ui.is_rect_visible(light) {
+            continue;
+        }
+        if playhead == Some(step) {
+            // A soft glow around the lit one, so it catches the eye.
+            painter.rect_filled(light.expand(2.0 * zoom), 3.0, PLAYHEAD.gamma_multiply(0.35));
+            painter.rect_filled(light, 2.0, PLAYHEAD);
+        } else {
+            let color = match mark {
+                StepMark::Bar => Color32::from_rgb(112, 116, 124),
+                StepMark::Beat => Color32::from_rgb(88, 92, 100),
+                StepMark::Plain => LED_OFF,
+            };
+            painter.rect_filled(light, 2.0, color);
+        }
+    }
 }
 
 /// A round knob for a value from 0.0 to 1.0. Drag up or down to turn it;
@@ -368,6 +423,7 @@ pub fn mini_roll(
         let x = rect.left() + step as f32 * step_width;
         let column =
             Rect::from_min_max(pos2(x, inner.top()), pos2(x + step_size.x, inner.bottom()));
+        painter.rect_filled(column, 2.0, PLAYHEAD.gamma_multiply(0.25));
         painter.rect_stroke(column, 2.0, Stroke::new(2.0, PLAYHEAD), StrokeKind::Inside);
     }
     response
