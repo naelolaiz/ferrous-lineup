@@ -83,6 +83,17 @@ const KEYS_VOLUME: f32 = 0.4;
 const BASS_VOLUME: f32 = 0.7;
 const LEAD_VOLUME: f32 = 0.55;
 
+/// How loud a new synth channel called `name` starts. The other voices
+/// of a round sing as loud as the first.
+pub(crate) fn synth_volume(name: &str) -> f32 {
+    match name {
+        BASS => BASS_VOLUME,
+        LEAD => LEAD_VOLUME,
+        _ if name.starts_with("Voice ") => LEAD_VOLUME,
+        _ => KEYS_VOLUME,
+    }
+}
+
 /// Whether a channel can play chords and melodies.
 fn plays_notes(channel: &Channel) -> bool {
     matches!(
@@ -105,13 +116,7 @@ pub fn synth_named(project: &mut Project, name: &str) -> Option<usize> {
     if let Some(index) = find_synth(project, name) {
         return Some(index);
     }
-    // The other voices of a round sing as loud as the first.
-    let volume = match name {
-        BASS => BASS_VOLUME,
-        LEAD => LEAD_VOLUME,
-        _ if name.starts_with("Voice ") => LEAD_VOLUME,
-        _ => KEYS_VOLUME,
-    };
+    let volume = synth_volume(name);
     // The chords are played on a piano and the bass line on a bass, by
     // a SoundFont or an external synth (the Lineup Osc takes a sound
     // close to them). Other voices keep the Lineup Osc's own sound.

@@ -216,8 +216,16 @@ pub fn show(
         .show(ui, |ui| {
             for (index, channel) in project.channels().iter().enumerate() {
                 let row = ui.horizontal(|ui| {
-                    if widgets::mute_light(ui, !channel.muted)
-                        .on_hover_text("Click to mute or unmute")
+                    // Lit while the channel is heard: not muted, and not
+                    // silenced by another channel's solo in the mixer.
+                    let hint = if !channel.muted && project.channel_muted(index) {
+                        "Silent while another channel plays solo (see the Mixer). \
+                         Click to mute or unmute"
+                    } else {
+                        "Click to mute or unmute"
+                    };
+                    if widgets::mute_light(ui, !project.channel_muted(index))
+                        .on_hover_text(hint)
                         .clicked() && !dismissing
                     {
                         actions.push(RackAction::ToggleMute(index));

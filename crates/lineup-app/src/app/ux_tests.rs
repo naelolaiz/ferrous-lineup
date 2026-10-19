@@ -2079,3 +2079,80 @@ mod library_parts {
         );
     }
 }
+
+mod mix {
+    use super::*;
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::{Song, Style, apply::StyleParts};
+
+    #[test]
+    fn the_rack_lights_go_out_for_channels_a_solo_silences() {
+        let mut screen = Screen::new();
+        screen.app.rack_open = true;
+        let lit = |output: &FullOutput| {
+            output
+                .shapes
+                .iter()
+                .filter(|shape| {
+                    matches!(&shape.shape, Shape::Circle(circle) if circle.fill == crate::widgets::LED_ON)
+                })
+                .count()
+        };
+        screen.draw(vec![]);
+        let all = lit(&screen.draw(vec![]));
+        screen
+            .app
+            .edit("solo", |project| project.mixer.solo = Some(0));
+        screen.draw(vec![]);
+        let solo = lit(&screen.draw(vec![]));
+        assert_eq!(all - solo, screen.app.project.channels().len() - 1);
+    }
+
+    #[test]
+    fn reset_mix_keeps_the_band_playing_instead_of_the_songs_own_parts() {
+        let mut screen = Screen::new();
+        screen
+            .app
+            .open_demo(library::Demo::Song(Song::named("El Choclo").unwrap()));
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
+        let muted = |project: &Project| -> Vec<String> {
+            project
+                .channels()
+                .iter()
+                .filter(|channel| channel.muted)
+                .map(|channel| channel.name.clone())
+                .collect()
+        };
+        assert_eq!(muted(&screen.app.project), ["Keys", "Bass"]);
+        let band_piano = screen
+            .app
+            .project
+            .player_channel(lineup_core::Player::Piano)
+            .unwrap();
+        screen.app.edit("mix", |project| {
+            project.mixer.solo = Some(0);
+            for channel in 0..project.channels().len() {
+                let state = project.channel_mut(channel).unwrap();
+                state.volume = 1.0;
+                state.muted = channel == band_piano;
+            }
+        });
+        screen.app.mixer_open = true;
+        screen.app.rack_open = false;
+        screen.draw(vec![]);
+        screen.click("Reset mix");
+        let project = &screen.app.project;
+        assert_eq!(muted(project), ["Keys", "Bass"]);
+        assert_eq!(project.mixer.solo, None);
+        assert_eq!(project.channels()[band_piano].volume, 0.45);
+        let kick = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == "Kick")
+            .unwrap();
+        assert_eq!(project.channels()[kick].volume, 0.8);
+    }
+}
