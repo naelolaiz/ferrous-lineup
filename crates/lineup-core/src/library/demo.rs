@@ -33,6 +33,19 @@ const DEMO_BARS: usize = 32;
 /// [`super::song::Horns`]).
 const HORNS: &str = "Horns";
 
+/// The channel a song's string section plays on, in place of [`HORNS`].
+const STRINGS: &str = "Strings";
+
+/// The name of the channel a section playing General MIDI `program`
+/// gets: the strings (programs 40 to 51, violin to synth strings) are
+/// "Strings", anything else "Horns".
+fn section_name(program: u8) -> &'static str {
+    match program {
+        40..=51 => STRINGS,
+        _ => HORNS,
+    }
+}
+
 /// The playlist tracks the demos use.
 const SONG_TRACK: usize = 0;
 const DRUM_TRACK: usize = 1;
@@ -391,9 +404,10 @@ pub fn song_demo(song: &Song) -> Project {
         _ => apply::synth_named(&mut project, apply::BASS),
     };
     let band = song.band;
-    let horns = band
-        .horns
-        .and_then(|horns| Some((apply::synth_named(&mut project, HORNS)?, horns)));
+    let horns = band.horns.and_then(|horns| {
+        let name = section_name(horns.program);
+        Some((apply::synth_named(&mut project, name)?, horns))
+    });
     for (channel, program) in voices
         .iter()
         .map(|&voice| (voice, band.lead))
@@ -701,7 +715,8 @@ mod tests {
         for song in big_bands {
             let horns = song.band.horns.unwrap();
             let project = song_demo(song);
-            let channel = project.channels().iter().position(|c| c.name == HORNS);
+            let name = section_name(horns.program);
+            let channel = project.channels().iter().position(|c| c.name == name);
             let channel = channel.unwrap_or_else(|| panic!("{}: no horns", song.name));
             assert_eq!(project.channels()[channel].program, Some(horns.program));
             // Every part with a chart has its chords on the horns.
@@ -720,7 +735,12 @@ mod tests {
         // The other songs have no horn section.
         let plain = SONGS.iter().find(|s| s.band.horns.is_none()).unwrap();
         let project = song_demo(plain);
-        assert!(project.channels().iter().all(|c| c.name != HORNS));
+        assert!(
+            project
+                .channels()
+                .iter()
+                .all(|c| c.name != HORNS && c.name != STRINGS)
+        );
     }
 
     #[test]
