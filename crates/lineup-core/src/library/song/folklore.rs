@@ -2447,3 +2447,179 @@ pub(super) const LOS_MACHETES: Song = Song {
             of IV, as polkas and marches do, before the first strain comes back. The polka is in \
             2/4, two bars to a bar here.",
 };
+
+// Source: https://github.com/linkmoises/musica-folklorica (commit d39b73ae9780b0a365337dfcd508d75da25fdd2a),
+// "V02 - Pasillo - Alcedo, César - Brisas Mesanas.ly": "Isabel (Brisas Mesanas)", pasillo, a
+// LilyPond lead sheet (melody and chord names) in A minor with a trio in A major, 3/4, "Andante
+// moderato", MIDI tempo 4 = 105. Single source. Bars with no chord name in the score ("s2.")
+// keep the chord before them; the first pickup, which has none, is given i. The second A
+// ties its first two notes with a slur where the first A has a tie; it is played as a tie
+// (the same part). The trio's bar 6 (G#4, D4, E4, G#4: an E7 arpeggio, the bar-2 figure
+// a step lower) has an A chord in the score, which clashes with the G# on the downbeat; it is
+// played as E (V), the chord the score gives the next bar. The trio's first bar has no chord
+// name; it keeps the E before it, also on the repeat.
+// PD: César Alcedo Alvarado (1890-1931): the score's header, and La Estrella de Panamá,
+// "Un rescate cultural hacia el legado de los pasillos panameños" (Astrid Chang, 5 Dec 2020),
+// which gives the same dates and says the pasillo's real title is "Isabelita".
+pub(super) const BRISAS_MESANAS: Song = Song {
+    name: "Isabel (Brisas mesanas)",
+    origin: "César Alcedo, Panama",
+    feel: "Pasillo",
+    genre: Genre::Folklore,
+    tonic: A,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 105.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Pasillo",
+    band: GUITARS,
+    style: "Pasillo",
+    parts: &[
+        Part::new("Pickup", "-:2 E4 D#4 E4 A4 C5", "i"),
+        Part::new(
+            "A",
+            "E5:12 | _:4 B4:6 D5:2 | C5:12 | -:2 G4 F#4 G4 C5 E5 | G5:6 F#5:2 G5 F#5 | \
+             G5:4 D5 D#5 | E5:12 | _:4 B4 D5 | C5:4 C5:2 D5 E5:4 | -:4 B4 D5 | C5:4 C5:2 D5 E5:4 | \
+             _:4 E5 A5 | G#5:2 B5:4 G#5:2 B5:4 | F#5:2 B5:4 F#5:2 B5:4 | E5:6 E5:2 E5:4",
+            "i | V | i | i | bIII | bVII | bIII | V | i | V | i | i | II7 | II7 | V",
+        ),
+        Part::new("A turn", "-:2 E4 D#4 E4 A4 C5", "V"),
+        Part::new("A end", "-:2 E5 F5:6 E5:2", "V"),
+        Part::new(
+            "B",
+            "E5:2 D5 D5 C5 B4:4 | -:2 D5 E5:6 D5:2 | D5:2 C5 C5 B4 A4:4 | -:2 A4 C5:4 A4 | \
+             F4:2 A4 C5 F4 A4 C5",
+            "V | V | i | i | bVI",
+        ),
+        Part::new(
+            "B turn",
+            "E4:2 G#4 B4 E4 G#4 B4 | A4:2 G#4 A4 B4 C5 D5",
+            "V | i",
+        ),
+        Part::new(
+            "B end",
+            "E4:2 G#4 B4 E5 B4 C5 | A4:12 | -:2 E4 D#4 E4 A4 D5",
+            "V | i | i",
+        ),
+        Part::new(
+            "Trio",
+            "-:2 F#5 E5:4 D5 | C#5:4 E4:2 A4 C#5:4 | _:2 B4 A4:4 G#4 | F#4:4 F#4:2 B4 D5:4 | \
+             -:2 C#5 B4:4 A4 | G#4:4 D4:2 E4 G#4:4 | _:2 F#4 E4:4 D4 | C#4:2 C#4:4 F#4:2 E4:4 | \
+             -:2 F#5 E5:4 D5 | C#5:4 E4:2 A4 C#5:4 | _:2 B4 A4:4 G#4 | F#4:4 F#4:2 B4 D5:4 | \
+             -:2 D5 E5:6 F#5:2 | E5:4 F#5:6 E5:2 | D5:4 C#5:6 B4:2",
+            "V | I | I | ii | ii | V | V | I | V | I | I | ii | IV | I | V",
+        )
+        .in_key(A, Major),
+        Part::new("Trio turn", "A4:12", "I").in_key(A, Major),
+        Part::new("Trio end", "A4:4 C#5 E5 | A5:2 -:10", "I I V | I").in_key(A, Major),
+    ],
+    form: &[
+        "Pickup",
+        "A",
+        "A turn",
+        "A",
+        "A end",
+        "B",
+        "B turn",
+        "B",
+        "B end",
+        "A",
+        "Trio",
+        "Trio turn",
+        "Trio",
+        "Trio end",
+    ],
+    drums_from: 1,
+    about: "A Panamanian pasillo in A minor that visits C major (C, G, C) and comes back to A \
+            minor through E; each half of the strain closes on E, the second time after B7, \
+            the dominant of the dominant. The middle strain leans on F before E, and the trio \
+            turns to the parallel major, A, where B minor (ii) and D (IV) lead to E and home.",
+};
+
+// Source: https://github.com/linkmoises/musica-folklorica (commit d39b73ae9780b0a365337dfcd508d75da25fdd2a),
+// "V01 - Punto - Desconocido - Punto ocueño.ly": "Punto Ocueño", punto, "Autor Desconocido",
+// transcribed by Luis Pedro Quintero C.; a LilyPond lead sheet (melody and chord names) in
+// A minor, 6/8: an ad-libitum introduction, then from the segno "Allegretto" a repeated strain
+// with two endings, a long middle strain, a repeated closing strain whose second ending says
+// "D.S. al Fine", and five more bars after a double bar, the last marked "Fine". Single source.
+// The D.S. pass is played without the repeats, as is usual. Its closing strain does not take
+// the 2nd ending (that bar's E-F pickup leads back to the segno): the five bars after the
+// double bar take its place. Their first bar is the closing strain's 1st-ending bar again
+// (C held, then A-C leading on), followed by a last four-bar phrase F | E7 | E7 | A minor,
+// as the coda does in this collection's other scores ("D.S. al coda").
+// PD: traditional (the score names the author as unknown)
+// Wants rhythm: Punto (6/8): the Panamanian punto, a 6/8 couple dance played by violin, guitar
+// and drums; its pattern needs a recorded reference.
+pub(super) const PUNTO_OCUENO: Song = Song {
+    name: "Punto ocueño",
+    origin: "Traditional, Panama (Ocú)",
+    feel: "Punto",
+    genre: Genre::Folklore,
+    tonic: A,
+    mode: HarmonicMinor,
+    time: SIX_EIGHT,
+    tempo: 150.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Six-eight",
+    band: FIDDLE_AND_GUITAR,
+    style: "",
+    parts: &[
+        Part::new(
+            "Intro",
+            "E5:6 F5 | G5:6 F5 | E5:6 D5 | C5:6 B4 | A4:6 G#4 | A4:6 C5 | E5:6 C5 | A5:6 E5 | \
+             E5:6 E5 | A5:6 E5 | C5:6 B4 | A4:6 -:2 E5 F5",
+            "i | i | i | i | i | i | i | i | i | i | i | i",
+        )
+        // "Ad libitum", with fermatas on the first notes of bars 1 and 9.
+        .with_tempo(&[tempo(0, 100), fermata(0, 6), fermata(96, 6)]),
+        Part::new(
+            "A",
+            "G5:2 G5 F#5 G5 E5:4 | F5:2 F5:4 -:2 D5 E5 | F5:2 A5:4 G#5:2 A5:4 | E5:6 -:2 E4 E4 | \
+             E4:2 A4 C5 F5 E5:4 | D5:2 C5 B4 _ E4 E4 | E4:2 G#4 B4 E5 D5:4",
+            "I7 | iv | bVII7 | bIII | bVI | V7 | V7",
+        )
+        // "Allegretto" from the segno.
+        .with_tempo(&[tempo(0, 150)]),
+        Part::new("A turn", "C5:2 B4 A4 - E5 F5", "i"),
+        Part::new("A end", "E5:4 A5:2 _ B5:4", "i"),
+        Part::new(
+            "B1",
+            "A5:2 G5:4 F5:2 E5:4 | D5:4 B5:2 _ A5:4 | G5:2 F5:4 E5:2 D5:4 | C5:2 A4 B4 C5 A4 B4 | \
+             C5:2 A4 B4 C5 D5 E5 | B5:2 G#5 E5 G#5 E5:4 | B5:2 G#5 E5 G#5 E5:4 | \
+             C5:2 A5 E5 A5 E5:4 | C5:2 A5 E5 A5 E5:4 | B5:2 G#5 E5 G#5 E5 G#5 | \
+             B5:2 G#5 E5 D5 B4:4 | C5:6 _:2 A4 C5 | F5:6 E5 | B4:2 C5 D5 _ E4 B4",
+            "bVI | V7 | V7 | i | bVI | V7 | V7 | i | bVI | V7 | V7 | i | bVI | V7",
+        ),
+        Part::new(
+            "B2",
+            "E5:2 E5:4 D5:2 D5:4 | C5:6 _:2 A4 C5 | F5:6 E5 | B4:2 C5 D5 _ E4 B4 | \
+             E5:2 E5:4 D5:2 D5:4 | C5:2 A5 A5 A5 A5 A5 | C5:2 A5 A5 A5 A5 A5 | \
+             B4:2 G#5 G#5 G#5 G#5 G#5 | B5:2 G#5 G#5 G#5 G#5 G#5 | C5:2 A5 A5 A5 A5 A5 | \
+             C5:2 A5 A5 A5 A5 A5 | B4:2 G#5 G#5 G#5 E5 G#5 | B5:2 G#5 E5 D5 B4:4 | C5:6 _:2 A4 C5",
+            "V7 | i | bVI | V7 | V7 | i | bVI | V7 | V7 | i | bVI | V7 | V7 | i",
+        ),
+        Part::new(
+            "C",
+            "F5:6 E5 | B4:2 C5 D5 _ E4 B4 | E5:2 E5:4 D5:2 D5:4",
+            "bVI | V7 | V7",
+        ),
+        Part::new("C turn", "C5:6 _:2 A4 C5", "i"),
+        Part::new("C end", "C5:6 _:2 E5 F5", "i"),
+        Part::new(
+            "Fine",
+            "C5:6 _:2 A4 C5 | F5:6 E5 | B4:12 | E5:2 E5:4 F5:2 G#5:4 | A5:12",
+            "i | bVI | V7 | V7 | i",
+        ),
+    ],
+    form: &[
+        "Intro", "A", "A turn", "A", "A end", "B1", "B2", "C", "C turn", "C", "C end", "A",
+        "A end", "B1", "B2", "C", "Fine",
+    ],
+    drums_from: 1,
+    about: "A punto from Panama in A minor. After a free introduction over A minor, the dance \
+            opens on A7, the dominant of D minor, and goes round the circle of fifths, D \
+            minor, G7, C, F, to E7; the rest of the tune turns again and again on F, E7 \
+            and A minor.",
+};
