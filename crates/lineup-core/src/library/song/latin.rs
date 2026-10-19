@@ -1605,3 +1605,146 @@ pub(super) const DONA_ADELAIDE: Song = Song {
             E7 and A, with an F natural slipping down to E in the tune. Both stanzas are sung, \
             each from D major to A major. Each bar here holds two bars of 2/4.",
 };
+
+// Under copyright (Jobim d. 1994, de Moraes d. 1980); added at the owner's request.
+// Source: two lead sheets in F, transposed up a minor sixth to D flat, the key of the
+// Getz/Gilberto recording (recorded 1963, released 1964). First chorus, with the rhythm of the Portuguese words:
+// Ulf Bro's ABC lead sheet, "The Girl From Ipanema (Garota De Ipanema)", 2002, from John
+// Chambers' tune finder, in the abc2book collection:
+// https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201280611.abc
+// (the same sheet is X:78 in abcresources/jc/abc_tune_jc_201254999.abc there). Second chorus,
+// with the rhythm of the English words and the record's ending tag: the Wikifonia lead sheet,
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/AntonioCarlosJobimViniciusdeMoraesTheGirlFromIpanema.abc
+// The two sheets give the same pitches and the same chord roots bar for bar. The second bar
+// of the bridge is F G flat F in both Wikifonia and the tune's own sequence; Ulf's ABC writes
+// F flat there, which is a slip. Key and tempo of the recording: jazzguitar.be ("The Girl
+// From Ipanema – Original Guitar Chords") and Hooktheory give D flat; the tempo, 128, is
+// Hooktheory's figure, an estimate (karaoke-version.com says about 130).
+pub(super) const GAROTA_DE_IPANEMA: Song = Song {
+    name: "Garota de Ipanema",
+    origin: "Antônio Carlos Jobim and Vinícius de Moraes, 1962",
+    feel: "Bossa nova",
+    genre: Genre::Latin,
+    tonic: CSharp,
+    mode: Major,
+    time: COMMON,
+    // An estimate of the Getz/Gilberto recording's tempo.
+    tempo: 128.0,
+    comping: Comping::Bossa,
+    bass: Bass::Bossa,
+    rhythm: "Bossa nova",
+    band: BOSSA,
+    style: "Bossa nova",
+    parts: &[
+        // First chorus: the rhythm of the Portuguese words, "Olha que coisa mais linda",
+        // as João Gilberto sings them on the record.
+        Part::new(
+            "A1",
+            "Eb5:4 Eb5:2 C5:2 C5:4 C5:2 Bb4:2 | Eb5:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Db5:2 | \
+             _:4 Db5:2 Bb4:2 Bb4:2 Bb4:2 Ab4:2 C5:2 | _:4 C5:2 Ab4:2 Ab4:2 Ab4:2 Gb4:2 Ab4:2 | \
+             _:16 | -:16",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | bII7",
+        ),
+        Part::new(
+            "A2",
+            "Eb5:4 Eb5:2 C5:2 C5:4 C5:2 Bb4:2 | Eb5:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Db5:2 | \
+             _:4 Db5:2 Bb4:2 Bb4:2 Bb4:2 Ab4:2 C5:2 | _:4 C5:2 Ab4:2 Ab4:2 Ab4:2 Gb4:2 Ab4:2 | \
+             _:16 | -:16",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7",
+        ),
+        // The bridge goes up a half step, to D major, for eight bars. The quarter-note
+        // triplets are written 3 + 3 + 2 steps. The F at the end is the anticipation of the
+        // next bar, which the score ties over; it is struck again on the bar line, where
+        // the key goes back to D flat.
+        Part::new(
+            "Bridge 1",
+            "C#5:16 | _:3 D5:3 C#5:2 B4:3 C#5:3 B4:2 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
+             _:16 | _:3 F5:3 E5:2 D5:3 E5:3 D5:2 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
+            "Imaj7 | Imaj7 | IV7 | IV7 | i7 | i7 | bVI7 | bVI7",
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Bridge 2",
+            "F5:16 | _:3 Gb5:3 F5:2 Eb5:3 F5:3 Eb5:2 | Db5:6 Eb5:2 _:8 | _:8 -:3 F5:3 Gb5:2 | \
+             Ab5:3 Ab4:3 Bb4:2 C5:3 Db5:3 Eb5:2 | E5:6 F5:6 -:4 | \
+             Gb5:3 Gb4:3 Ab4:2 Bb4:3 C5:3 Db5:2 | D5:6 Eb5:6 -:4",
+            "ii7 | ii7 | bVII7 | bVII7 | iii7 | VI7 | ii7 | V7",
+        ),
+        // The last A of the first chorus. Ulf's sheet ends on its seventh bar; the D7 of the
+        // eighth, leading into the second chorus, is the first ending of the Wikifonia sheet.
+        Part::new(
+            "A3",
+            "Eb5:6 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 F5:2 | \
+             _:4 F5:2 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | _:4 Ab5:2 C5:2 C5:3 C5:3 Bb4:2 | \
+             C5:16 | _:4 -:12",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | bII7",
+        ),
+        // Second chorus: the rhythm of the English words, "Tall and tan and young and
+        // lovely", as Astrud Gilberto sings them on the record.
+        Part::new(
+            "A1 English",
+            "Eb5:6 C5:2 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 C5:4 C5:4 Bb4:2 Eb5:2 | _:2 Eb5:2 C5:2 C5:2 _:2 C5:2 Bb4:2 Db5:2 | \
+             _:2 Bb4:4 Bb4:2 _:2 Bb4:2 Ab4:2 C5:2 | _:2 Ab4:4 Ab4:2 _:2 Ab4:2 Gb4:4 | \
+             -:4 Ab4:12 | _:8 -:8",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | bII9",
+        ),
+        Part::new(
+            "A2 English",
+            "Eb5:6 C5:2 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:4 | \
+             Eb5:4 C5:4 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:2 Db5:2 | \
+             _:2 Bb4:4 Bb4:2 Bb4:2 Bb4:2 Ab4:2 C5:2 | _:2 Ab4:4 Ab4:2 _:2 Ab4:2 Gb4:4 | \
+             -:4 Ab4:12 | _:8 -:8",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7",
+        ),
+        Part::new(
+            "Bridge 1 English",
+            "C#5:16 | _:3 D5:3 C#5:2 B4:3 C#5:3 B4:2 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
+             _:16 | _:3 F5:3 E5:2 D5:3 E5:3 D5:2 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
+            "Imaj7 | Imaj7 | IV9 | IV9 | i7 | i7 | bVI9 | bVI9",
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Bridge 2 English",
+            "F5:16 | _:3 Gb5:3 F5:2 Eb5:3 F5:3 Eb5:2 | Db5:6 Eb5:2 _:8 | _:8 -:3 F5:3 Gb5:2 | \
+             Ab5:3 Ab4:3 Bb4:2 C5:3 Db5:3 Eb5:2 | E5:12 F5:4 | \
+             Gb5:3 Gb4:3 Ab4:2 Bb4:3 C5:3 Db5:2 | D5:12 -:4",
+            "ii7 | ii7 | bVII9 | bVII9 | iii7 | VI7b9 | ii7 | V7b9",
+        ),
+        // The last A, and the record's ending: "but she doesn't see", then twice more,
+        // "she just doesn't see", "no, she doesn't see", rocking between D flat major 7
+        // and D7, and a held last note.
+        Part::new(
+            "A3 end",
+            "Eb5:6 C5:2 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 C5:4 C5:4 Bb4:2 Eb5:2 | _:2 Eb5:2 C5:2 C5:2 _:2 C5:2 Bb4:2 F5:2 | \
+             _:6 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | Ab5:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | \
+             -:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | -:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | _:16",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7 bII7 bII7 bII7 | Imaj7 | \
+             bII7 | Imaj7 bII7 | Imaj7",
+        )
+        .with_tempo(&[fermata(176, 16)]),
+    ],
+    form: &[
+        "A1",
+        "A2",
+        "Bridge 1",
+        "Bridge 2",
+        "A3",
+        "A1 English",
+        "A2 English",
+        "Bridge 1 English",
+        "Bridge 2 English",
+        "A3 end",
+    ],
+    drums_from: 0,
+    about: "The second chord is the surprise: E flat 7 (II7, the dominant of the dominant) where \
+            E flat minor 7 (ii7) would be expected, and the ii7 that follows goes home through \
+            D7 (bII7), standing in for A flat 7. The bridge jumps up a half step to D major (I, \
+            then G7 as IV7), turns D minor (i7), and B flat 7, D major's bVI7 but D flat's VI7, \
+            leads to E flat minor and a chain of chords home: B7 (bVII7), F minor 7 (iii7), \
+            B flat 7 (VI7), E flat minor 7 (ii7), A flat 7 (V7).",
+};
