@@ -2202,3 +2202,26 @@ fn space_in_the_rack_stops_the_song_then_plays_the_pattern() {
     assert_eq!(screen.app.mode, PlayMode::Pattern);
     assert!(screen.app.playing, "the pattern plays");
 }
+
+#[test]
+fn nudges_of_the_master_volume_are_one_step_to_undo() {
+    let mut screen = Screen::new();
+    let before = screen.app.project.mixer.master;
+    for master in [0.5, 0.6, 0.7] {
+        screen.app.set_master_volume(master);
+        screen.app.history.close();
+    }
+    assert_eq!(screen.app.project.mixer.master, 0.7);
+    screen.app.undo();
+    assert_eq!(screen.app.project.mixer.master, before);
+    // Any other change in between starts a new step.
+    screen.app.set_master_volume(0.5);
+    screen.app.history.close();
+    screen.app.edit("change the tempo", |project| {
+        project.tempo = Tempo::new(100.0);
+    });
+    screen.app.history.close();
+    screen.app.set_master_volume(0.6);
+    screen.app.undo();
+    assert_eq!(screen.app.project.mixer.master, 0.5);
+}

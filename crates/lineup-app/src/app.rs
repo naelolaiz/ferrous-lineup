@@ -1376,7 +1376,7 @@ impl LineupApp {
                 let volume = ui.add_sized([64.0, 22.0], volume_slider);
                 let text = format!("Master volume: {:.0}%", master * 100.0);
                 if theme::hint(volume, text).changed() {
-                    self.edit("master volume", |project| project.mixer.master = master);
+                    self.set_master_volume(master);
                 }
             });
         });
