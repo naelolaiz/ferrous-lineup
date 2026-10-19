@@ -746,7 +746,7 @@ mod tests {
     use crate::library::song::{Dynamic, Part};
     use crate::library::{SONGS, STYLES};
     use crate::pattern::MAX_STEPS;
-    use crate::project::Drum;
+    use crate::project::{ChannelKind, Drum};
 
     fn check(project: &Project, name: &str) {
         assert!(project.song_length() > 0, "{name}");
@@ -812,6 +812,18 @@ mod tests {
                 .unwrap();
             let notes: usize = project.patterns().iter().map(|p| p.notes(lead).len()).sum();
             assert!(notes >= 8, "{}: the melody is there", song.name);
+            // A MIDI file has fifteen channels besides the drums', so
+            // every instrument keeps a channel of its own when exported.
+            let instruments = project
+                .channels()
+                .iter()
+                .filter(|channel| channel.kind == ChannelKind::Synth)
+                .count();
+            assert!(
+                instruments <= 15,
+                "{}: {instruments} instruments",
+                song.name
+            );
         }
     }
 
