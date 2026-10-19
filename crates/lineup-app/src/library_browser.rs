@@ -10,7 +10,7 @@ use lineup_core::library::apply::StyleParts;
 use lineup_core::library::{
     FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, Style,
 };
-use lineup_core::{Band, Project, TimeSignature};
+use lineup_core::{Band, Project, SongPart, SourceKind, TimeSignature};
 
 pub(crate) mod catalogue;
 use catalogue::{Preset, alphabetical, matches};
@@ -166,13 +166,10 @@ impl LibraryBrowser {
         purpose: LibraryPurpose,
     ) -> Option<LibraryAction> {
         let mut picked = None;
-        if purpose != LibraryPurpose::Progression
-            && let Some(band) = project.band()
-        {
-            ui.weak(format!("Patterns: {}", band.name()));
-            ui.weak(format!("Instruments: {}", band.instrument_name()));
-            ui.weak("Chords: chord sheet");
-            if band.accents_only {
+        let sources = SongPart::ALL.map(|part| part_source_text(project, part));
+        if purpose != LibraryPurpose::Progression {
+            part_sources(ui, project, &sources);
+            if project.band().is_some_and(|band| band.accents_only) {
                 ui.weak("Plain accents with current instruments");
             }
         }
@@ -241,6 +238,7 @@ impl LibraryBrowser {
                         tonic,
                         reveal: revealing && !self.reveal_row,
                         purpose,
+                        now: &sources,
                     },
                     &mut self.parts,
                     &mut self.editor_request,
@@ -398,17 +396,85 @@ fn grouped_results<'a>(
 }
 
 #[derive(Clone, Copy)]
-struct PresetView {
+struct PresetView<'a> {
     tried: Tried,
     tonic: lineup_core::PitchClass,
     reveal: bool,
     purpose: LibraryPurpose,
+    /// Where each part of the song comes from now, in [`SongPart::ALL`]'s
+    /// order (see [`part_source_text`]).
+    now: &'a [String; 6],
+}
+
+/// Where a part of the song comes from, in words: "Tango marcato
+/// (style)", "edited, was El Choclo", or "yours" for a part that never
+/// came from a demo or a style.
+pub(crate) fn part_source_text(project: &Project, part: SongPart) -> String {
+    match project.part_source(part) {
+        Some(origin) if origin.edited => format!("edited, was {}", origin.source.name),
+        Some(origin) => {
+            let kind = match origin.source.kind {
+                SourceKind::Demo => "demo",
+                SourceKind::Style => "style",
+                SourceKind::Rhythm => "rhythm",
+                SourceKind::SavedStyle => "saved style",
+            };
+            format!("{} ({kind})", origin.source.name)
+        }
+        None => "yours".to_string(),
+    }
+}
+
+/// What a part of the song is now, where a few words say it: "3/4",
+/// "120 BPM", "even".
+fn part_value(project: &Project, part: SongPart) -> Option<String> {
+    match part {
+        SongPart::TimeSignature => {
+            let changes = !project.playlist().time_markers().is_empty();
+            Some(format!(
+                "{}{}",
+                project.time_signature,
+                if changes { " and others" } else { "" }
+            ))
+        }
+        SongPart::Tempo => Some(format!("{:.0} BPM", project.tempo.bpm())),
+        SongPart::Swing => Some(match project.swing {
+            0 => "even".to_string(),
+            swing => format!("{swing}%"),
+        }),
+        SongPart::Patterns | SongPart::Instruments | SongPart::Chords => None,
+    }
+}
+
+/// Where each part of the song comes from: a demo, a style, your edits.
+fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6]) {
+    egui::Grid::new("part-sources")
+        .num_columns(2)
+        .spacing([10.0, 2.0])
+        .show(ui, |ui| {
+            for (part, source) in SongPart::ALL.into_iter().zip(now) {
+                ui.weak(part.name());
+                let text = match part_value(project, part) {
+                    Some(value) => format!("{value} · {source}"),
+                    None => source.clone(),
+                };
+                let hover = match project.part_source(part) {
+                    Some(origin) if origin.edited => {
+                        format!("You changed it since it came from {}.", origin.source.name)
+                    }
+                    Some(origin) => format!("As it came from {}.", origin.source.name),
+                    None => "Your own: it did not come from a demo or a style.".to_string(),
+                };
+                ui.label(text).on_hover_text(hover);
+                ui.end_row();
+            }
+        });
 }
 
 fn preset_label(
     ui: &mut Ui,
     preset: Preset<'_>,
-    view: PresetView,
+    view: PresetView<'_>,
     parts: &mut StyleParts,
     editor: &mut Option<StyleEditorRequest>,
 ) -> Option<LibraryAction> {
@@ -493,7 +559,7 @@ fn preset_label(
             egui::ScrollArea::vertical()
                 .max_height(height)
                 .show(ui, |ui| {
-                    style_parts_editor(ui, &mut draft, preset.has_progression());
+                    style_parts_editor(ui, &mut draft, preset.has_progression(), Some(view.now));
                 });
             ui.separator();
             ui.horizontal(|ui| {
@@ -550,17 +616,45 @@ fn preset_label(
 
 /// Shared option editor for applying a preset and editing the saved defaults.
 pub fn style_parts_checkboxes(ui: &mut Ui, parts: &mut StyleParts) {
-    style_parts_editor(ui, parts, true);
+    style_parts_editor(ui, parts, true, None);
 }
 
-fn style_parts_editor(ui: &mut Ui, parts: &mut StyleParts, has_progression: bool) {
+/// The options for applying a preset. With `now`, each says where that
+/// part of the song comes from now, which it would replace.
+fn style_parts_editor(
+    ui: &mut Ui,
+    parts: &mut StyleParts,
+    has_progression: bool,
+    now: Option<&[String; 6]>,
+) {
     ui.spacing_mut().item_spacing.y = 8.0;
     ui.add_space(4.0);
     ui.weak("Playing style");
     style_mode_ui(ui, parts);
     ui.separator();
     ui.strong("Accompaniment");
-    copy_parts_ui(ui, parts, has_progression);
+    copy_parts_ui(ui, parts, has_progression, now);
+}
+
+/// A part's option, and beside it where that part comes from now, if
+/// known.
+fn with_source(
+    ui: &mut Ui,
+    now: Option<&[String; 6]>,
+    part: SongPart,
+    option: impl FnOnce(&mut Ui),
+) {
+    let Some(now) = now else {
+        option(ui);
+        return;
+    };
+    ui.horizontal(|ui| {
+        option(ui);
+        let text = RichText::new(format!("now: {}", now[part as usize]))
+            .small()
+            .weak();
+        ui.add(egui::Label::new(text).truncate());
+    });
 }
 
 pub(crate) fn style_mode_ui(ui: &mut Ui, parts: &mut StyleParts) {
@@ -575,7 +669,12 @@ pub(crate) fn style_mode_ui(ui: &mut Ui, parts: &mut StyleParts) {
     });
 }
 
-fn copy_parts_ui(ui: &mut Ui, parts: &mut StyleParts, has_progression: bool) {
+fn copy_parts_ui(
+    ui: &mut Ui,
+    parts: &mut StyleParts,
+    has_progression: bool,
+    now: Option<&[String; 6]>,
+) {
     let (label, hint) = if parts.matching_style {
         (
             "Playing patterns",
@@ -587,38 +686,52 @@ fn copy_parts_ui(ui: &mut Ui, parts: &mut StyleParts, has_progression: bool) {
             "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups. Keep current instruments and chords unless Chord progression is checked.",
         )
     };
-    ui.checkbox(&mut parts.rhythm, label).on_hover_text(hint);
-    instrument_option(ui, parts, "Voices / instruments");
+    with_source(ui, now, SongPart::Patterns, |ui| {
+        ui.checkbox(&mut parts.rhythm, label).on_hover_text(hint);
+    });
+    if parts.matching_style {
+        with_source(ui, now, SongPart::Instruments, |ui| {
+            instrument_option(ui, parts, "Voices / instruments");
+        });
+    }
     ui.add_space(2.0);
     ui.strong("Harmony");
     let mut progression = has_progression && parts.progression;
-    if ui
-        .add_enabled(
-            has_progression,
-            egui::Checkbox::new(&mut progression, "Chord progression"),
-        )
-        .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried.")
-        .on_disabled_hover_text(
-            "This preset has no chord progression. Your current chords are kept.",
-        )
-        .changed()
-    {
-        parts.progression = progression;
-    }
+    with_source(ui, now, SongPart::Chords, |ui| {
+        if ui
+            .add_enabled(
+                has_progression,
+                egui::Checkbox::new(&mut progression, "Chord progression"),
+            )
+            .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried.")
+            .on_disabled_hover_text(
+                "This preset has no chord progression. Your current chords are kept.",
+            )
+            .changed()
+        {
+            parts.progression = progression;
+        }
+    });
     if has_progression && parts.progression {
         ui.weak("Replaces existing chords. The melody is kept.");
     }
     ui.add_space(2.0);
     ui.strong("Timing");
-    ui.checkbox(&mut parts.time_signature, "Time signature")
-        .on_hover_text(
-            "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
+    with_source(ui, now, SongPart::TimeSignature, |ui| {
+        ui.checkbox(&mut parts.time_signature, "Time signature")
+            .on_hover_text(
+                "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
+            );
+    });
+    with_source(ui, now, SongPart::Tempo, |ui| {
+        ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
+            "Use the usual tempo when the meter stays the same. Changing meter keeps each bar's duration.",
         );
-    ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
-        "Use the usual tempo when the meter stays the same. Changing meter keeps each bar's duration.",
-    );
-    ui.checkbox(&mut parts.swing, "Swing")
-        .on_hover_text("Use the preset’s swing amount.");
+    });
+    with_source(ui, now, SongPart::Swing, |ui| {
+        ui.checkbox(&mut parts.swing, "Swing")
+            .on_hover_text("Use the preset’s swing amount.");
+    });
 }
 
 /// Display the effective option while preserving the preference for preset patterns.

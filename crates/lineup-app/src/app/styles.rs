@@ -6,8 +6,9 @@ use crate::style_editor::EditorEvent;
 use eframe::egui;
 use lineup_audio::phrase::PhraseNote;
 use lineup_audio::{Command, Phrase};
-use lineup_core::Project;
+use lineup_core::library::apply;
 use lineup_core::library::{UserStyle, user_style::EXTENSION};
+use lineup_core::{Project, Source, SourceKind};
 use std::path::{Path, PathBuf};
 
 pub(super) struct StyleFiles {
@@ -315,11 +316,21 @@ impl LineupApp {
         }
         let before = self.project.clone();
         let previous = self.tried();
+        let source = Source::new(SourceKind::SavedStyle, &style.name);
+        // Writing its progression from a bar brings in its chords alone.
+        let taken = match progression_from {
+            Some(_) => apply::StyleParts {
+                progression: true,
+                ..parts
+            },
+            None => parts,
+        };
         let result = self.edit_song(
             "apply user style",
             progression_from.is_none().then_some(style.time),
-            parts,
+            taken,
             true,
+            Some(super::library::Bringing::from(&source)),
             |project, parts| {
                 if let Some(from) = progression_from {
                     project.write_user_progression(&style, from).map(|_| ())
