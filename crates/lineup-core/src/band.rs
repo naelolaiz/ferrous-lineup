@@ -1293,8 +1293,17 @@ impl Project {
     /// Stops the band: its patterns go, with their clips and the tracks
     /// they leave empty, and the song's own channels and tracks it muted
     /// play again. The chord sheet stays, and so do the parts on locked
-    /// channels, as the song's own.
+    /// channels, as the song's own; a song's Keys or Bass that a kept
+    /// piano or bass replaces stays muted.
     pub fn stop_band(&mut self) {
+        // A locked piano or bass of the band stays as the song's own, so
+        // the song's first Keys or Bass, which it played over, stays
+        // quiet: the two would double.
+        let replaced: Vec<&str> = [(Player::Piano, KEYS), (Player::Bass, BASS)]
+            .into_iter()
+            .filter(|&(player, _)| self.plays_locked(player))
+            .map(|(_, name)| name)
+            .collect();
         self.keep_locked_parts();
         let Some(band) = self.band.take() else {
             return;
@@ -1336,6 +1345,9 @@ impl Project {
             }
         }
         for name in &band.muted.channels {
+            if replaced.contains(&name.as_str()) {
+                continue;
+            }
             if let Some(channel) = self.channels.iter_mut().find(|c| c.name == *name) {
                 channel.muted = false;
             }
@@ -1927,6 +1939,17 @@ impl Project {
             self.write_part(player, &score.chunks, notes);
             rewritten.push(player);
         }
+        // A part the band left as it is (a locked one) and that is as the
+        // band wrote it stays so: dropping a channel renumbers its notes,
+        // which is not an edit.
+        let left: Vec<Player> = Player::ALL
+            .into_iter()
+            .filter(|player| {
+                !rewritten.contains(player)
+                    && band.written[player.index()].is_some()
+                    && !self.is_frozen(*player)
+            })
+            .collect();
         self.drop_unused_players(&rewritten);
         // Fingerprints last: dropping a channel renumbers the ones after it.
         // A player the band does not have has no part to keep.
@@ -1934,6 +1957,9 @@ impl Project {
         let mut written = band.written;
         for player in rewritten {
             written[player.index()] = players.contains(&player).then(|| self.part_print(player));
+        }
+        for player in left {
+            written[player.index()] = Some(self.part_print(player));
         }
         let heard = self.band_inputs();
         if let Some(band) = &mut self.band {
