@@ -1762,3 +1762,60 @@ fn opening_a_song_forgets_the_clips_selected_in_the_last_one() {
     screen.key(Key::Delete);
     assert_eq!(screen.app.project.playlist().clips().len(), 2);
 }
+
+#[test]
+fn the_tools_menu_pastes_what_another_roll_copied() {
+    use lineup_core::NoteEvent;
+    let mut screen = shortcut_screen();
+    screen.app.piano_roll.open_for(0);
+    screen.draw(vec![]);
+    // This roll's own copy, of the notes it then deletes.
+    screen.click("Tools");
+    screen.key(Key::Escape);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    screen.key_with_modifiers(Key::C, Modifiers::COMMAND);
+    screen.key(Key::Delete);
+    assert!(screen.app.project.pattern(0).unwrap().notes(0).is_empty());
+    // Another roll copied a high C since.
+    let copied = NoteEvent::new(Note::new(72), 0, 2);
+    let text = format!(
+        "Ferrous Lineup notes\n{}",
+        ron::to_string(&vec![copied]).unwrap()
+    );
+    screen.click("Tools");
+    let menu = text_rect(&screen.draw(vec![]), "Up a semitone").unwrap();
+    screen.scroll_to_at("Paste", menu.center());
+    let pos = text_rect(&screen.draw(vec![]), "Paste").unwrap().center();
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    let output = screen.draw(vec![Event::PointerButton {
+        pos,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+    let asked = output.viewport_output.values().any(|viewport| {
+        viewport
+            .commands
+            .contains(&egui::ViewportCommand::RequestPaste)
+    });
+    assert!(asked, "the menu asks for the system clipboard");
+    screen.draw(vec![Event::Paste(text)]);
+    let pitches: Vec<u8> = screen
+        .app
+        .project
+        .pattern(0)
+        .unwrap()
+        .notes(0)
+        .iter()
+        .map(|note| note.pitch.midi())
+        .collect();
+    assert_eq!(pitches, [72]);
+}
