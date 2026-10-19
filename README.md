@@ -451,6 +451,29 @@ Ready-built programs for all three systems are attached to every CI run
 as `ferrous-lineup-linux`, `ferrous-lineup-macos` and `ferrous-lineup-windows`.
 They are not signed yet, so macOS and Windows warn before the first start.
 
+### Checking playback with a trace
+
+A trace lists every note the player plays, one line each: when it starts
+and how long it lasts in seconds and in steps, its bar and beat, the
+tempo and time signature in force, the channel, its General MIDI program,
+the pitch and the velocity, and how late it came after its step (nudge,
+swing and loose timing). It is written where the notes start, on the
+audio thread, so it shows what you hear rather than what the screen says.
+
+```sh
+ferrous-lineup --trace song.lineup --out song.tsv   # a project file
+ferrous-lineup --trace "Für Elise"                  # a demo, to the terminal
+ferrous-lineup --demos                              # the demos' names
+```
+
+`--trace` plays the song as File > Export WAV does, without a window or a
+sound card. To trace what you play in the app instead, tick **Write a
+trace while playing** in Settings > Playback: each playback, from Play to
+Stop, adds a table to the file shown there. Lines starting with `#` say
+what the table holds and list the tempo and time signature changes; the
+rest is tab-separated, for a spreadsheet, `awk` or `grep`. On Windows,
+use `--out`: the ready-built program has no terminal to print to.
+
 ## Screenshots
 
 | | |
@@ -473,7 +496,7 @@ They are not signed yet, so macOS and Windows warn before the first start.
 | Path | Contents |
 |------|----------|
 | `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, lead sheets laid out on pages, and the library of styles, rhythms and songs. No audio, no UI. |
-| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, and offline rendering to WAV files. |
+| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, offline rendering to WAV files, and traces of every note played. |
 | `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
 | `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
 

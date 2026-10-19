@@ -27,6 +27,10 @@
 //! - MIDI Out channels make MIDI messages instead of sound. They leave
 //!   through a fourth ring buffer, [`MidiOutput`], for a thread that
 //!   sends them to the MIDI port, because sending can wait.
+//!
+//! And a fifth, while a trace is on: a [`Tracer`] writes down every note
+//! the thread starts and ends, for another thread to read (see
+//! [`crate::trace`]).
 
 use std::fmt;
 use std::sync::Arc;
@@ -43,6 +47,7 @@ use crate::dsp::Smoothed;
 use crate::instrument::{HELD, Instrument, Origin};
 use crate::metronome::{ClickVoice, click_at, count_in_bar};
 use crate::phrase::Phrase;
+use crate::trace::Tracer;
 
 /// How many commands can wait in the queue before `send` starts failing.
 /// The audio thread empties the queue every few milliseconds, so this is
@@ -261,6 +266,9 @@ pub enum Command {
     PlayPhrase(Box<Phrase>),
     /// Let go of the phrase playing, and let it ring out.
     StopPhrase,
+    /// Start writing a trace of what is played with this tracer, in
+    /// place of the one writing before, if any; or stop (`None`).
+    SetTrace(Option<Box<Tracer>>),
     /// Play a pattern over the song as it plays, or stop it (`None`): to
     /// try a pattern out with the song. It starts on the song's next bar
     /// line and loops in time with it. Another pattern takes over on the
@@ -281,6 +289,7 @@ pub(crate) enum Garbage {
     Tempos(Vec<Tempo>),
     Clicks(Vec<Click>),
     Phrase(Box<Phrase>),
+    Trace(Box<Tracer>),
 }
 
 /// What the engine found when it opened the sound card.
@@ -526,6 +535,7 @@ impl AudioEngine {
                 Garbage::Tempos(tempos) => drop(tempos),
                 Garbage::Clicks(clicks) => drop(clicks),
                 Garbage::Phrase(phrase) => drop(phrase),
+                Garbage::Trace(trace) => drop(trace),
             }
         }
     }
@@ -644,6 +654,8 @@ pub(crate) struct AudioThread {
     overlay: Option<Overlay>,
     /// What it is playing, for the UI (see [`store_overlay`]).
     overlay_playhead: Arc<AtomicU64>,
+    /// Where every note played is written down, while a trace is on.
+    trace: Option<Box<Tracer>>,
 }
 
 /// A pattern played over the song (see [`Command::SetOverlay`]).
@@ -716,6 +728,7 @@ impl AudioThread {
             phrase: None,
             overlay: None,
             overlay_playhead: Arc::new(AtomicU64::new(NO_POSITION)),
+            trace: None,
         }
     }
 
@@ -763,6 +776,9 @@ impl AudioThread {
                     for channel in &mut self.channels {
                         channel.instrument.release_all();
                     }
+                    if let Some(trace) = &mut self.trace {
+                        trace.jumped(self.now, step);
+                    }
                     self.sequencer.start_at(step);
                 }
             }
@@ -783,6 +799,11 @@ impl AudioThread {
                     for channel in &mut self.channels {
                         channel.instrument.release_all();
                     }
+                    // The steps from now on are another loop's.
+                    if let Some(trace) = &mut self.trace {
+                        trace.cut(self.now, None, |_| false);
+                    }
+                    self.trace_play(0);
                 }
                 if self.counting.is_some() {
                     self.begin_play();
@@ -871,8 +892,11 @@ impl AudioThread {
                     self.pending.clear();
                     // `insert` moves the channels after `index` along by
                     // one, inside the room reserved up front.
-                    self.channels
-                        .insert(index.min(self.channels.len()), channel);
+                    let index = index.min(self.channels.len());
+                    self.channels.insert(index, channel);
+                    if let Some(trace) = &mut self.trace {
+                        trace.channel_inserted(index);
+                    }
                 } else {
                     self.throw_away(Garbage::Channel(channel));
                 }
@@ -883,6 +907,9 @@ impl AudioThread {
                     self.pending.clear();
                     let mut removed = self.channels.remove(index);
                     silence(&mut removed.instrument, &mut self.midi_out);
+                    if let Some(trace) = &mut self.trace {
+                        trace.channel_removed(self.now, index);
+                    }
                     self.throw_away(Garbage::Channel(removed));
                 }
             }
@@ -893,6 +920,9 @@ impl AudioThread {
                 Some(state) => {
                     let mut old = std::mem::replace(&mut state.instrument, instrument);
                     silence(&mut old, &mut self.midi_out);
+                    if let Some(trace) = &mut self.trace {
+                        trace.cut(self.now, Some(channel), |_| false);
+                    }
                     self.throw_away(Garbage::Instrument(old));
                 }
                 None => self.throw_away(Garbage::Instrument(instrument)),
@@ -921,6 +951,9 @@ impl AudioThread {
                         // and those about to start never do.
                         state.instrument.release_unless(|_| false);
                         self.pending.retain(|note| note.channel != channel);
+                        if let Some(trace) = &mut self.trace {
+                            trace.cut(self.now, Some(channel), |_| false);
+                        }
                     }
                 }
             }
@@ -984,6 +1017,24 @@ impl AudioThread {
                 }
             }
             Command::SetOverlay(None) => self.end_overlay(),
+            Command::SetTrace(trace) => {
+                if let Some(old) = std::mem::replace(&mut self.trace, trace) {
+                    self.throw_away(Garbage::Trace(old));
+                }
+                // A trace started while playing starts where playback is.
+                if self.playing {
+                    self.trace_play(self.sequencer.position() as usize);
+                }
+            }
+        }
+    }
+
+    /// Writes down that playback starts on `step` of the loop, if a
+    /// trace is on.
+    fn trace_play(&mut self, step: usize) {
+        if let Some(trace) = &mut self.trace {
+            let song = self.mode == PlayMode::Song;
+            trace.played(self.now, step, song, self.pattern);
         }
     }
 
@@ -998,6 +1049,9 @@ impl AudioThread {
             channel
                 .instrument
                 .release_unless(|origin| !origin.over_song);
+        }
+        if let Some(trace) = &mut self.trace {
+            trace.cut(self.now, None, |origin| !origin.over_song);
         }
     }
 
@@ -1065,6 +1119,9 @@ impl AudioThread {
         for channel in &mut self.channels {
             channel.instrument.tempo_changed(next_step, stretch);
         }
+        if let Some(trace) = &mut self.trace {
+            trace.tempo_changed(self.now, next_step, stretch);
+        }
     }
 
     /// Stops the notes that the new song, just received, no longer plays.
@@ -1090,6 +1147,9 @@ impl AudioThread {
         for channel in &mut self.channels {
             channel.instrument.release_unless(still_played);
         }
+        if let Some(trace) = &mut self.trace {
+            trace.cut(self.now, None, still_played);
+        }
     }
 
     /// The tempo step `step` of the loop plays at: the song's own for
@@ -1114,6 +1174,7 @@ impl AudioThread {
         if !self.count_in {
             self.sequencer.start_at(self.start);
             self.playing = true;
+            self.trace_play(self.start);
             return;
         }
         if self.playing {
@@ -1151,6 +1212,7 @@ impl AudioThread {
             self.counting = None;
             self.sequencer.start_at(self.start);
             self.playing = true;
+            self.trace_play(self.start);
             return;
         }
         let step = count.bar + count.counted % count.length;
@@ -1160,6 +1222,11 @@ impl AudioThread {
     }
 
     fn stop(&mut self) {
+        if self.playing
+            && let Some(trace) = &mut self.trace
+        {
+            trace.stopped(self.now);
+        }
         self.playing = false;
         self.counting = None;
         self.pending.clear();
@@ -1265,6 +1332,7 @@ impl AudioThread {
                     length - step.min(length),
                     timing,
                     &mut self.pending,
+                    self.trace.as_deref_mut(),
                 );
             }
             PlayMode::Song => {
@@ -1287,6 +1355,7 @@ impl AudioThread {
                             room,
                             timing,
                             &mut self.pending,
+                            self.trace.as_deref_mut(),
                         );
                     }
                 }
@@ -1305,6 +1374,7 @@ impl AudioThread {
                         length - at,
                         timing,
                         &mut self.pending,
+                        self.trace.as_deref_mut(),
                     );
                 }
             }
@@ -1326,6 +1396,9 @@ impl AudioThread {
         }
 
         for frame in output.chunks_mut(self.output_channels) {
+            if let Some(trace) = &mut self.trace {
+                trace.frame(self.now);
+            }
             if let Some(count) = self.counting {
                 self.count_in_frame(count);
             }
@@ -1340,6 +1413,9 @@ impl AudioThread {
                 }
                 if let Some(step) = self.sequencer.tick() {
                     self.playhead.store(step, Ordering::Relaxed);
+                    if let Some(trace) = &mut self.trace {
+                        trace.step(self.now, step, self.tempo_now);
+                    }
                     self.start_notes(step);
                     if self.metronome {
                         self.click.strike(click_at(self.loop_clicks(), step));
@@ -1407,6 +1483,18 @@ impl AudioThread {
                         note.gate,
                         self.sample_rate,
                     );
+                    if let Some(trace) = &mut self.trace {
+                        trace.note_on(
+                            self.now,
+                            note.channel,
+                            note.origin,
+                            note.pitch,
+                            note.velocity,
+                            note.gate,
+                            note.late,
+                            one_per_pitch(&channel.instrument),
+                        );
+                    }
                 }
             } else {
                 index += 1;
@@ -1425,6 +1513,8 @@ pub(crate) struct Pending {
     gate: u32,
     /// The frame it starts on, counted on [`AudioThread::now`]'s clock.
     at: u64,
+    /// How many frames after its step that is, for a trace.
+    late: u32,
 }
 
 /// A number from 0 to 1 that looks random but is always the same for
@@ -1452,6 +1542,16 @@ fn delay(loose_frames: f64, channel: usize, song_step: usize, pitch: Note) -> f6
     let together = scatter(onset);
     let apart = scatter(onset ^ (u64::from(pitch.midi()) << 40));
     loose_frames * (0.8 * together + 0.2 * apart)
+}
+
+/// Whether an instrument plays one of each note at a time, so that a note
+/// starting again ends the one sounding: a MIDI Out, and a SoundFont,
+/// which plays its notes the same way.
+fn one_per_pitch(instrument: &Instrument) -> bool {
+    matches!(
+        instrument,
+        Instrument::MidiOut(_) | Instrument::SoundFont(_)
+    )
 }
 
 /// Ends the notes an instrument has playing on an external synth, before
@@ -1487,6 +1587,8 @@ struct Timing {
 /// With loose timing, a note that should start a little late goes to
 /// `pending` instead, to start when its time comes.
 ///
+/// Each note that starts is written down in `trace`, if a trace is on.
+///
 /// This is a plain function, not a method, so that it borrows only the
 /// channels. Its caller can keep reading other fields of the audio thread
 /// (such as the clips) while the channels are being changed.
@@ -1496,6 +1598,7 @@ fn start_pattern_notes(
     room: usize,
     timing: Timing,
     pending: &mut Vec<Pending>,
+    mut trace: Option<&mut Tracer>,
 ) {
     for (index, channel) in channels.iter_mut().enumerate() {
         if channel.muted {
@@ -1534,6 +1637,7 @@ fn start_pattern_notes(
                     velocity: note.velocity,
                     gate,
                     at: timing.now + late,
+                    late: late.min(u64::from(u32::MAX)) as u32,
                 });
                 continue;
             }
@@ -1544,6 +1648,18 @@ fn start_pattern_notes(
                 gate,
                 timing.sample_rate,
             );
+            if let Some(trace) = trace.as_deref_mut() {
+                trace.note_on(
+                    timing.now,
+                    index,
+                    origin,
+                    note.pitch,
+                    note.velocity,
+                    gate,
+                    0,
+                    one_per_pitch(&channel.instrument),
+                );
+            }
         }
     }
 }
@@ -1742,8 +1858,11 @@ mod tests {
                 Garbage::Instrument(_) => instruments += 1,
                 Garbage::Notes(_) => note_lists += 1,
                 Garbage::Channel(_) => channels += 1,
-                Garbage::Song(_) | Garbage::Tempos(_) | Garbage::Clicks(_) | Garbage::Phrase(_) => {
-                }
+                Garbage::Song(_)
+                | Garbage::Tempos(_)
+                | Garbage::Clicks(_)
+                | Garbage::Phrase(_)
+                | Garbage::Trace(_) => {}
             }
         }
         assert_eq!(instruments, 1, "the replaced instrument");
@@ -2346,7 +2465,10 @@ mod tests {
                 Garbage::Channel(_) => "channel",
                 Garbage::Song(_) => "song",
                 Garbage::Tempos(_) | Garbage::Clicks(_) => continue,
-                Garbage::Instrument(_) | Garbage::Notes(_) | Garbage::Phrase(_) => "other",
+                Garbage::Instrument(_)
+                | Garbage::Notes(_)
+                | Garbage::Phrase(_)
+                | Garbage::Trace(_) => "other",
             });
         }
         // The empty song from the start, the real one, then the channel and the song.

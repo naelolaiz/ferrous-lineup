@@ -15,6 +15,8 @@
 //!   the UI thread and keys from a MIDI keyboard.
 //! - [`render`] runs the same audio thread without a sound card, to save
 //!   a song as a WAV file.
+//! - [`trace`] writes down every note the audio thread plays, to check
+//!   playback by reading instead of listening.
 
 pub mod drums;
 pub mod dsp;
@@ -27,6 +29,7 @@ mod reverb;
 pub mod sample;
 pub mod soundfont;
 pub mod timbre;
+pub mod trace;
 
 pub use engine::{
     AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, LiveInput, MidiOutput, PlayMode,
@@ -37,3 +40,4 @@ pub use render::{Renderer, export_wav};
 pub use sample::{SampleCache, SampleData, SampleError};
 pub use soundfont::{SoundFont, SoundFontError};
 pub use timbre::{Timbre, Wave};
+pub use trace::{Trace, TraceReader, TracedNote, Tracer, trace_queue};

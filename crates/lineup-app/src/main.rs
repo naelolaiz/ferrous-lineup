@@ -3,7 +3,9 @@
 //! `main` only sets up the window. Everything you see is drawn by
 //! [`app::LineupApp`].
 //!
-//! Run `ferrous-lineup song.lineup` to open a project file straight away.
+//! Run `ferrous-lineup song.lineup` to open a project file straight away,
+//! or `ferrous-lineup --trace song.lineup` to write down every note the
+//! song plays without opening a window (see `app/trace.rs`).
 
 // On Windows, a program is either a "console" program, which opens a
 // terminal window, or a "windows" program, which does not. Release builds
@@ -31,13 +33,43 @@ mod twelve_tone;
 mod video;
 mod widgets;
 
+use std::ffi::OsString;
+use std::io::Write;
 use std::path::PathBuf;
 
+const USAGE: &str = "\
+Usage:
+  ferrous-lineup [FILE]
+      Opens FILE, or the starting song.
+  ferrous-lineup --trace FILE|DEMO [--out TRACE] [--rate HZ]
+      Writes a trace of every note the song plays, as File > Export WAV
+      plays it, without opening a window: a table with a line for each
+      note, to TRACE or else to the terminal.
+  ferrous-lineup --demos
+      Lists the names of the demos.";
+
 fn main() -> eframe::Result {
-    // The first command-line argument, if there is one, is a file to open.
-    // `args_os` keeps file names exactly as the system gave them, even if
-    // they are not valid UTF-8.
-    let path = std::env::args_os().nth(1).map(PathBuf::from);
+    // The first command-line argument, if there is one, is a file to open,
+    // or what to do instead of opening the window. `args_os` keeps file
+    // names exactly as the system gave them, even if they are not valid
+    // UTF-8.
+    let mut args = std::env::args_os().skip(1);
+    let first = args.next();
+    match first.as_ref().and_then(|arg| arg.to_str()) {
+        Some("--trace") => std::process::exit(trace(args)),
+        Some("--demos") => {
+            for name in app::demo_names() {
+                println!("{name}");
+            }
+            return Ok(());
+        }
+        Some("--help" | "-h") => {
+            println!("{USAGE}");
+            return Ok(());
+        }
+        _ => {}
+    }
+    let path = first.map(PathBuf::from);
 
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
@@ -52,4 +84,52 @@ fn main() -> eframe::Result {
         options,
         Box::new(|cc| Ok(Box::new(app::LineupApp::new(cc, path)))),
     )
+}
+
+/// `--trace`, with the arguments after it. Returns the exit code: 0 when
+/// the trace was written, 1 when it could not be, 2 for a mistake in the
+/// arguments.
+fn trace(mut args: impl Iterator<Item = OsString>) -> i32 {
+    let mut source = None;
+    let mut out = None;
+    let mut rate = app::TRACE_SAMPLE_RATE;
+    while let Some(arg) = args.next() {
+        match arg.to_str() {
+            Some("--out" | "-o") => out = args.next().map(PathBuf::from),
+            Some("--rate") => match args.next().and_then(|hz| hz.to_str()?.parse().ok()) {
+                Some(hz) if (8_000..=192_000).contains(&hz) => rate = hz,
+                _ => {
+                    eprintln!("--rate takes a sample rate in Hz, such as 44100");
+                    return 2;
+                }
+            },
+            _ if source.is_none() => source = Some(arg),
+            _ => {
+                eprintln!("{USAGE}");
+                return 2;
+            }
+        }
+    }
+    let Some(source) = source else {
+        eprintln!("{USAGE}");
+        return 2;
+    };
+    let table = match app::trace_table(&source, rate) {
+        Ok(table) => table,
+        Err(err) => {
+            eprintln!("{err}");
+            return 1;
+        }
+    };
+    let written = match &out {
+        Some(path) => std::fs::write(path, &table),
+        None => std::io::stdout().write_all(&table),
+    };
+    match written {
+        Ok(()) => 0,
+        Err(err) => {
+            eprintln!("Could not write the trace: {err}");
+            1
+        }
+    }
 }

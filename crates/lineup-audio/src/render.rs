@@ -5,6 +5,9 @@
 //! Here a loop asks for them as fast as the computer can make them, and
 //! writes them to a file instead. It is the same code making the same
 //! sound, so an export sounds exactly like playback.
+//!
+//! A renderer can write a trace of what it plays, too ([`Renderer::trace`]):
+//! the notes of an export, to read instead of listening to them.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -14,6 +17,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize};
 use crate::engine::{
     AudioThread, Command, Garbage, NO_POSITION, NO_STEP, TRASH_QUEUE_SIZE, load_position,
 };
+use crate::trace::{Trace, TraceReader, trace_queue};
 
 /// How many frames are made and written at a time.
 const BLOCK_FRAMES: usize = 4_096;
@@ -30,6 +34,9 @@ pub struct Renderer {
     trash: rtrb::Consumer<Garbage>,
     /// Where playback is, which the audio thread stores after every block.
     position: Arc<AtomicU64>,
+    /// The trace being written, and its reader, once [`Renderer::trace`]
+    /// has started one.
+    trace: Option<(TraceReader, Trace)>,
 }
 
 impl Renderer {
@@ -55,6 +62,34 @@ impl Renderer {
             _commands: commands,
             trash,
             position,
+            trace: None,
+        }
+    }
+
+    /// Starts writing down every note played from now on (see
+    /// [`crate::trace`]). Send it before [`Command::Play`], so the trace
+    /// starts with the playback.
+    pub fn trace(&mut self) {
+        let (tracer, reader) = trace_queue();
+        self.audio.apply(Command::SetTrace(Some(Box::new(tracer))));
+        self.empty_trash();
+        self.trace = Some((reader, Trace::new(self.sample_rate)));
+    }
+
+    /// What the trace has written so far, which it then starts again
+    /// from empty; or `None` if no trace was started.
+    pub fn take_trace(&mut self) -> Option<Trace> {
+        self.read_trace();
+        let (_, trace) = self.trace.as_mut()?;
+        let sample_rate = trace.sample_rate;
+        Some(std::mem::replace(trace, Trace::new(sample_rate)))
+    }
+
+    /// Moves what the audio thread traced into the trace. The queue has
+    /// room for far more than a block makes, so it is read after each.
+    fn read_trace(&mut self) {
+        if let Some((reader, trace)) = &mut self.trace {
+            reader.read_into(trace);
         }
     }
 
@@ -81,12 +116,26 @@ impl Renderer {
         self.audio.apply(command);
         self.audio.settle_volumes();
         self.empty_trash();
+        self.read_trace();
     }
 
     /// Fills `output` with the next frames, one sample per channel each.
     pub fn render(&mut self, output: &mut [f32]) {
         self.audio.process(output);
         self.empty_trash();
+        self.read_trace();
+    }
+
+    /// Plays `frames` frames and throws the sound away: for a trace,
+    /// which only needs what was played.
+    pub fn skip(&mut self, frames: usize) {
+        let mut block = vec![0.0_f32; BLOCK_FRAMES * self.channels];
+        let mut done = 0;
+        while done < frames {
+            let count = (frames - done).min(BLOCK_FRAMES);
+            self.render(&mut block[..count * self.channels]);
+            done += count;
+        }
     }
 
     /// Frees what the audio thread threw away. There is no real-time
