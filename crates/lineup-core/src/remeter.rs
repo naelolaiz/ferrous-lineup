@@ -262,6 +262,10 @@ fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
             marker.start = song.step(marker.start);
         }
         crate::band::tidy_variations(&mut band.variations);
+        for marker in &mut band.styles {
+            marker.start = song.step(marker.start);
+        }
+        crate::band::sections::tidy(&mut band.styles);
     }
     // A chord changes on a beat, so it goes to the nearest one.
     for marker in &mut playlist_mut.chord_markers {

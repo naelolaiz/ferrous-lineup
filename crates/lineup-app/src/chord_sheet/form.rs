@@ -4,13 +4,13 @@
 
 use eframe::egui::{self, Ui};
 use lineup_core::band::{INTRO_BARS, Variation};
-use lineup_core::{MAX_REPEATS, Project};
+use lineup_core::{BandStyle, MAX_REPEATS, Project};
 
 use super::SheetAction;
 use crate::theme;
 
 /// What the form row asks for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FormAction {
     /// An intro this many bars long, or none with 0.
     Intro(usize),
@@ -24,6 +24,13 @@ pub enum FormAction {
         start: usize,
         end: Option<usize>,
         variation: Variation,
+    },
+    /// Play `style` (or, with `None`, the band's own) from step `start`
+    /// up to `end`, or to the next change without one.
+    SectionStyle {
+        start: usize,
+        end: Option<usize>,
+        style: Option<&'static BandStyle>,
     },
 }
 
