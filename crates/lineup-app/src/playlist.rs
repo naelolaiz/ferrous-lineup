@@ -356,6 +356,17 @@ impl PlaylistView {
         }
     }
 
+    /// Forgets the clips selected, being dragged or copied: they were
+    /// another song's.
+    pub fn new_song(&mut self) {
+        self.selected.clear();
+        self.shown_clips.clear();
+        self.selection_box = None;
+        self.clipboard.clear();
+        self.paste_at = 0;
+        self.drag = None;
+    }
+
     /// Changes the zoom, keeping the step and the track under the pointer
     /// where they are, or those in the middle of the view if the pointer
     /// is elsewhere.

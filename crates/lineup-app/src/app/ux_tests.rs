@@ -1744,3 +1744,21 @@ fn a_hidden_rack_gives_up_space_and_escape() {
     screen.key(Key::Escape);
     assert_eq!(screen.app.piano_roll.selected_channel(), chosen);
 }
+
+#[test]
+fn opening_a_song_forgets_the_clips_selected_in_the_last_one() {
+    use lineup_core::{Channel, Clip};
+    let mut screen = shortcut_screen();
+    screen.click("Shortcut test");
+    let middle = screen.app.playlist.area().center();
+    screen.click_at(middle, Modifiers::NONE);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    let mut other = Project::empty();
+    other.add_channel(Channel::synth());
+    other.add_clip(Clip::new(0, 0, 0)).unwrap();
+    other.add_clip(Clip::new(0, 1, 64)).unwrap();
+    screen.app.replace_project(other, None);
+    // The playlist still has the keyboard, but nothing selected.
+    screen.key(Key::Delete);
+    assert_eq!(screen.app.project.playlist().clips().len(), 2);
+}

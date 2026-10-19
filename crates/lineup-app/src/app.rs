@@ -987,20 +987,7 @@ impl LineupApp {
                 steps,
             } => {
                 self.edit("move selected clips", |project| {
-                    let targets: Vec<_> = indices
-                        .iter()
-                        .filter_map(|&index| {
-                            let clip = project.playlist().clips().get(index)?;
-                            Some((
-                                index,
-                                clip.track.saturating_add_signed(tracks),
-                                clip.start.saturating_add_signed(steps),
-                            ))
-                        })
-                        .collect();
-                    for (index, track, start) in targets {
-                        project.move_clip(index, track, start);
-                    }
+                    project.move_clips(&indices, tracks, steps);
                 });
             }
             PlaylistAction::AddClip(clip) => {
