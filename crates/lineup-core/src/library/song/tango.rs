@@ -1411,3 +1411,105 @@ pub(super) const VOLVER: Song = Song {
             D7 and A7 lift it to a high cadence on D. The refrain turns to G major and borrows \
             from G minor: an E flat sixth chord, and a C diminished chord after C major.",
 };
+
+/// Eight bars of D minor over a bass walking down D, C, B, B flat, A, then the
+/// answer through D7, G minor and C7 to F major and back on A7.
+const ROMANCE_A1_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | i | I7 | I7 | iv | \
+                                 iv iv vii°7 | bVII7 | bVII7 | bIII | V7";
+
+/// The same opening, then G minor, C7 and F to A7 and a cadence in D minor.
+const ROMANCE_A2_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | i i I7 | iv | bVII7 | \
+                                 bIII | V7 | i | V7 | i | i";
+
+/// A sequence climbing a step at a time: G minor, A7, D minor, G minor, C7, F.
+const ROMANCE_B1_CHORDS: &str =
+    "iv6 | V7 | i | i7 | iv | bVII7 | bIII | bIII | V7 | V7 | i | i | bVI | iv | V7 | V7";
+
+/// The sequence again, falling back to D minor over A7.
+const ROMANCE_B2_CHORDS: &str = "iv | V7 | i | i7 | V7 | V7 | i | I7 | iv | V7 | i | i7 | V7 | V7";
+
+// Source: score attached by the owner (two page images of a voice and piano
+// edition, "Romance de barrio, vals", words by Homero Manzi, music by Aníbal
+// Troilo, in D minor). The tune is the voice part; the chords were read from the
+// piano part and checked against the guitar chart at
+// https://acordes.lacuerda.net/anibal_troilo/romance_de_barrio (in A minor).
+// The edition plays the verse and the second part, then goes back to the segno
+// for the verse's second words ("Ceniza del tiempo...") and the second part
+// again, ending at the second ending (FIN).
+// Best-known recording: Troilo's orchestra with Floreal Ruiz, 1947
+// (https://en.wikipedia.org/wiki/Floreal_Ruiz); the tempo is an estimate of a
+// Troilo vals.
+// Copyright: Troilo died in 1975 and Manzi in 1951; the vals is from 1947 and not
+// public domain. Added at the owner's request.
+pub(super) const ROMANCE_DE_BARRIO: Song = Song {
+    name: "Romance de barrio",
+    origin: "Aníbal Troilo, 1947",
+    feel: "Vals criollo",
+    genre: Genre::Tango,
+    tonic: D,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 180.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Tango vals",
+    band: TANGO,
+    style: "Vals in minor",
+    parts: &[
+        Part::new("Pickup", "-:10 A4:2", "i"),
+        Part::new(
+            "A1",
+            "A4:4 Ab4 G4 | F4:4 E4:6 D4:2 | F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | \
+             F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4:6 G#4:2 | A4:8 -:2 D5:2 | \
+             D5:4 A4 Bb4 | C5:4 Bb4 F#4 | A4:4 G4:6 A4:2 | Bb4:8 -:2 A4:2 | \
+             A4:4 G4:6 A4:2 | A4:8 -:2 A4:2 | G4:4 F4:6 G4:2 | G4:8 -:2 A4:2",
+            ROMANCE_A1_CHORDS,
+        ),
+        Part::new(
+            "A2",
+            "A4:4 Ab4 G4 | F4:4 E4:6 D4:2 | F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | \
+             F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4:6 G#4:2 | A4:8 -:2 G4:2 | \
+             G4:4 A4 Bb4 | C5:4 D5 -:2 E5:2 | F5:8 C5:4 | -:2 C#5:2 D5 C#5 B4 C#5 | \
+             D5:8 A4:4 | -:2 Bb4:2 G4:4 -:2 E4:2 | D4:12 | _:4 -:8",
+            ROMANCE_A2_CHORDS,
+        ),
+        Part::new(
+            "B1",
+            "G4:4 E4:2 F4 G4:4 | E4:2 F4 G4 E4 F4 G4 | A4:4 F4:2 G4 A4:4 | \
+             F4:2 G4 A4 F4 G4 A4 | Bb4:4 G4:2 A4 Bb4:4 | G4:2 A4 Bb4 G4 A4 Bb4 | \
+             C5:4 A4:2 Bb4 C5:4 | _:4 -:8 | C#5:4 A4:2 B4 C#5:4 | A4:2 B4 C#5 A4 B4 C#5 | \
+             D5:12 | A4:12 | Bb4:4 C5 Bb4 | F4:4 G4 Bb4 | A4:12 | _:8 -:4",
+            ROMANCE_B1_CHORDS,
+        ),
+        Part::new(
+            "B2",
+            "G4:4 E4:2 F4 G4:4 | E4:2 F4 G4 E4 F4 G4 | F4:4 D4:2 E4 F4:4 | \
+             D4:2 E4 F4 D4 E4 F4 | E4:4 C#4:2 D4 E4:4 | C#4:2 D4 E4 C#4 D4 E4 | \
+             D4:6 C#4:2 D4 F4 | A4:12 | G4:4 E4:2 F4 G4:4 | E4:2 F4 G4 E4 F4 G4 | \
+             F4:4 D4:2 E4 F4:4 | D4:2 E4 F4 D4 E4 F4 | E4:4 C#4:2 D4 E4:4 | \
+             C#4:2 D4 E4 C#4 F4 E4",
+            ROMANCE_B2_CHORDS,
+        ),
+        Part::new("First ending", "D4:12 | _:4 -:6 A4:2", "i | i"),
+        Part::new("Second ending", "D4:4 -:8 | -:12", "i | i"),
+    ],
+    form: &[
+        "Pickup",
+        "A1",
+        "A2",
+        "B1",
+        "B2",
+        "First ending",
+        "A1",
+        "A2",
+        "B1",
+        "B2",
+        "Second ending",
+    ],
+    drums_from: 1,
+    about: "Troilo's vals opens on a chromatic sigh, A, A flat, G, over D minor, while the \
+            bass walks down D, C, B, B flat to A: the same notes then lean on E7 and B flat 7 \
+            before A7 brings the cadence. The second part climbs in a sequence, each bar a \
+            step higher over its own chord: G minor, A7, D minor, then C7 to F major, the \
+            relative major, until C sharp turns it back to D minor.",
+};
