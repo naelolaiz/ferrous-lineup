@@ -101,6 +101,7 @@
   - [Latin American songs, from Mexico to the Río de la Plata](step-9/latin-american-songs.md)
   - [Odd meters: 5/4, 7/8 and the dances of the Balkans](step-9/odd-meters.md)
   - [The mixer in score order: the drums together](step-9/mixer-score-order.md)
+  - [Export video: the song with the views playing along](step-9/video-export.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
