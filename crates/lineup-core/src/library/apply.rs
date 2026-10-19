@@ -81,7 +81,7 @@ impl StyleParts {
 /// stay behind it.
 const KEYS_VOLUME: f32 = 0.4;
 const BASS_VOLUME: f32 = 0.7;
-const LEAD_VOLUME: f32 = 0.55;
+pub(super) const LEAD_VOLUME: f32 = 0.55;
 
 /// How loud a new synth channel called `name` starts. The other voices
 /// of a round sing as loud as the first.
