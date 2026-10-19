@@ -108,6 +108,22 @@ impl Canvas {
         Color32::from_rgba_premultiplied(r, g, b, a)
     }
 
+    /// Fills the whole picture with `color`.
+    pub fn fill(&mut self, color: Color32) {
+        self.pixels.fill(color.to_array());
+    }
+
+    /// Copies `other` onto this picture, its top left corner at `(x, y)`.
+    /// What falls outside is left out.
+    pub fn copy_from(&mut self, other: &Canvas, x: usize, y: usize) {
+        let width = other.width.min(self.width.saturating_sub(x));
+        for row in 0..other.height.min(self.height.saturating_sub(y)) {
+            let to = (y + row) * self.width + x;
+            let from = row * other.width;
+            self.pixels[to..to + width].copy_from_slice(&other.pixels[from..from + width]);
+        }
+    }
+
     /// Takes in the new and changed textures egui made this frame: the
     /// font picture grows as new letters and sizes are needed.
     fn set_textures(&mut self, delta: &mut TexturesDelta) {
@@ -445,6 +461,20 @@ mod tests {
     use super::*;
     use epaint::textures::TextureOptions;
     use epaint::{ColorImage, ImageDelta, Pos2, Vec2, pos2};
+
+    #[test]
+    fn copies_a_picture_onto_another() {
+        let mut big = Canvas::new(4, 3);
+        big.fill(Color32::BLUE);
+        let mut small = Canvas::new(2, 2);
+        small.fill(Color32::RED);
+        // Half of it falls off the right edge.
+        big.copy_from(&small, 3, 1);
+        assert_eq!(big.pixel(3, 1), Color32::RED);
+        assert_eq!(big.pixel(3, 2), Color32::RED);
+        assert_eq!(big.pixel(2, 1), Color32::BLUE);
+        assert_eq!(big.pixel(3, 0), Color32::BLUE);
+    }
 
     /// A canvas with egui's usual white texture for plain shapes.
     fn canvas(width: usize, height: usize) -> Canvas {
