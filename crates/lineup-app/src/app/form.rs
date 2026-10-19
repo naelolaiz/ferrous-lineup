@@ -1,8 +1,9 @@
 //! The band's song form, from the chord sheet's form row: the intro,
 //! how many times the chorus plays, and the ending; and from a bar's
-//! menu, which variation of the style the band plays there. The work is
-//! done by `lineup_core::band::Form` and the project's `set_intro`,
-//! `set_choruses`, `set_ending` and `set_variation`.
+//! menu, which variation of the style the band plays there, and in which
+//! style. The work is done by `lineup_core::band::Form` and the project's
+//! `set_intro`, `set_choruses`, `set_ending`, `set_variation` and
+//! `set_section_style`.
 
 use lineup_core::band::Variation;
 
@@ -41,20 +42,28 @@ impl LineupApp {
                 self.edit("variation", |project| {
                     project.set_variation(start, end, variation)
                 });
-                let meter = self.project.meter();
-                let first = meter.bar_at(start).number + 1;
-                let bars = match end {
-                    Some(end) => format!(
-                        "Bars {first}–{}: the band",
-                        meter.bar_at(end - 1).number + 1
-                    ),
-                    None => format!("From bar {first} on, the band"),
-                };
+                let bars = bars_from(&self.project, start, end);
                 self.notice = Some(match variation {
                     Variation::A => format!("{bars} plays the style as it is"),
                     Variation::B => {
                         format!("{bars} plays the style fuller, with a fill before it")
                     }
+                });
+            }
+            FormAction::SectionStyle { start, end, style } => {
+                self.edit("section style", |project| {
+                    project.set_section_style(start, end, style)
+                });
+                let bars = bars_from(&self.project, start, end);
+                self.notice = Some(match style {
+                    Some(style) => format!(
+                        "{bars} plays {}, with a fill before it; the instruments stay",
+                        style.name
+                    ),
+                    None => format!(
+                        "{bars} plays its own style, {}",
+                        self.project.style_name_at(start)
+                    ),
                 });
             }
         }
@@ -84,5 +93,18 @@ impl LineupApp {
             }
             (bars, None) => format!("A {bars}-bar intro"),
         });
+    }
+}
+
+/// "Bars 5–8: the band", or "From bar 5 on, the band", for a notice.
+fn bars_from(project: &lineup_core::Project, start: usize, end: Option<usize>) -> String {
+    let meter = project.meter();
+    let first = meter.bar_at(start).number + 1;
+    match end {
+        Some(end) => format!(
+            "Bars {first}–{}: the band",
+            meter.bar_at(end - 1).number + 1
+        ),
+        None => format!("From bar {first} on, the band"),
     }
 }

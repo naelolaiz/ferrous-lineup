@@ -31,10 +31,10 @@ use lineup_core::band::solo::Soloist;
 use lineup_core::band::{Ending, Variation};
 use lineup_core::chord_sheet::{Push, Stop, read_bar, text, write_bar};
 use lineup_core::general_midi;
-use lineup_core::library::Style;
+use lineup_core::library::{Genre, Style};
 use lineup_core::{
     Band, BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass,
-    Player, Project,
+    Player, Project, band_styles,
 };
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, LibraryPurpose, Tried};
@@ -467,11 +467,23 @@ impl ChordSheet {
         let mut y = canvas.top();
         for (index, line) in lines.iter().enumerate() {
             if let Some(heading) = &line.heading {
-                let response = ui.interact(
-                    Rect::from_min_size(pos2(canvas.left(), y), vec2(width, HEADING_HEIGHT)),
-                    ui.scope_id().with(("section-heading", index)), Sense::click(),
-                ).on_hover_text("Click to select this section’s bars; click again or press Escape to clear the selection");
-                if response.clicked() && !crate::widgets::dismissing(ui.ctx()) {
+                let hint = match project.band() {
+                    Some(_) => {
+                        "Click to select this section’s bars; click again or press Escape to clear the selection. Right-click to have the band play it another way"
+                    }
+                    None => {
+                        "Click to select this section’s bars; click again or press Escape to clear the selection"
+                    }
+                };
+                let response = ui
+                    .interact(
+                        Rect::from_min_size(pos2(canvas.left(), y), vec2(width, HEADING_HEIGHT)),
+                        ui.scope_id().with(("section-heading", index)),
+                        Sense::click(),
+                    )
+                    .on_hover_text(hint);
+                let opens = response.secondary_clicked() && project.band().is_some();
+                if (response.clicked() || opens) && !crate::widgets::dismissing(ui.ctx()) {
                     let first = line.bars[0].number;
                     let next = lines
                         .iter()
@@ -496,7 +508,21 @@ impl ChordSheet {
                         .unwrap_or_else(|| meter.bar_at(reach.saturating_sub(1)).number)
                         .min(next.map_or(usize::MAX, |next| next.saturating_sub(1)))
                         .max(first);
-                    heading_selection = Some((first, last));
+                    // A right-click selects the section too, so the menu's
+                    // choices apply to the bars that show selected.
+                    heading_selection = Some((first, last, opens));
+                }
+                if project.band().is_some() {
+                    response.context_menu(|ui| {
+                        ui.set_min_width(220.0);
+                        if let Some(bars) = self.selected_bars() {
+                            ui.label(heading);
+                            ui.separator();
+                            variation_menu(ui, project, &meter, bars.0, Some(bars), actions);
+                            ui.separator();
+                            style_menu(ui, project, &meter, bars.0, Some(bars), actions);
+                        }
+                    });
                 }
                 painter.text(
                     pos2(canvas.left() + 2.0, y + 2.0),
@@ -571,9 +597,9 @@ impl ChordSheet {
         // a click on another bar never loses it.
         let was_editing = self.editing.is_some();
         self.edit_field(ui, project, &cells, &keys, sheet.id, actions);
-        if let Some((first, last)) = heading_selection {
+        if let Some((first, last, opens)) = heading_selection {
             self.take_in(project, &cells, &keys, actions);
-            if self.selected_bars() == Some((first, last)) {
+            if self.selected_bars() == Some((first, last)) && !opens {
                 self.selected = None;
                 self.anchor = None;
             } else {
@@ -718,6 +744,21 @@ impl ChordSheet {
                 2.0,
                 Stroke::new(1.0, theme::ACCENT),
                 StrokeKind::Middle,
+            );
+            marks_right = letter.right() + 3.0;
+        }
+        // Where the band changes style: the style's name.
+        if project
+            .section_styles()
+            .iter()
+            .any(|marker| marker.start == bar.start)
+        {
+            painter.text(
+                pos2(marks_right + 9.0, number_rect.top()),
+                Align2::LEFT_TOP,
+                project.style_name_at(bar.start),
+                FontId::proportional(SMALL_SIZE),
+                theme::ACCENT,
             );
         }
         if bar.number > 0 && keys.key_at(bar.start - 1) != key {
@@ -922,6 +963,7 @@ impl ChordSheet {
             if project.band().is_some() {
                 ui.separator();
                 variation_menu(ui, project, meter, bar.number, selection, actions);
+                style_menu(ui, project, meter, bar.number, selection, actions);
                 for marker in here
                     .iter()
                     .filter(|marker| marker.harmony != HarmonyName::NoChord)
@@ -1545,6 +1587,87 @@ fn variation_menu(
             ui.close();
         }
     }
+}
+
+/// The styles the band can play part of the song in, in a bar's menu.
+/// They apply to the bars `selection` holds, when the bar right-clicked
+/// is one of them, or else from bar `number` on. Only the styles in that
+/// bar's time signature are offered: another would change the bars.
+fn style_menu(
+    ui: &mut Ui,
+    project: &Project,
+    meter: &Meter,
+    number: usize,
+    selection: Option<(usize, usize)>,
+    actions: &mut Vec<SheetAction>,
+) {
+    let Some(band) = project.band() else {
+        return;
+    };
+    let (start, end) = match selection {
+        Some((first, last)) => (meter.bar(first).start, Some(meter.bar(last).end())),
+        None => (meter.bar(number).start, None),
+    };
+    let bars = match selection {
+        Some((first, last)) => format!("Bars {}–{}: the band", first + 1, last + 1),
+        None => format!("From bar {} on, the band", number + 1),
+    };
+    let time = meter.bar_at(start).time;
+    let playing = project.section_style_at(start);
+    let mut choose = |ui: &mut Ui, style: Option<&'static BandStyle>| {
+        actions.push(SheetAction::Form(FormAction::SectionStyle {
+            start,
+            end,
+            style,
+        }));
+        ui.close();
+    };
+    let menu = ui.menu_button(format!("Style: {}", project.style_name_at(start)), |ui| {
+        ui.set_min_width(220.0);
+        crate::widgets::scroll_menu(ui, |ui| {
+            let own = ui.radio(
+                playing.is_none(),
+                format!("The song's style: {}", band.name()),
+            );
+            if theme::hint(own, format!("{bars} plays the band's own style")).clicked() {
+                choose(ui, None);
+            }
+            ui.separator();
+            for genre in Genre::ALL {
+                let styles: Vec<&'static BandStyle> = band_styles()
+                    .iter()
+                    .filter(|style| style.genre == genre && style.time == time)
+                    .collect();
+                if styles.is_empty() {
+                    continue;
+                }
+                let here = playing.is_some_and(|playing| styles.contains(&playing));
+                let name = match here {
+                    true => format!("{} •", genre.name()),
+                    false => genre.name().to_string(),
+                };
+                ui.menu_button(name, |ui| {
+                    for style in styles {
+                        let item = ui.radio(playing == Some(style), style.name);
+                        let about = format!(
+                            "{bars} plays {}: {} The drums fill into it",
+                            style.name, style.about
+                        );
+                        if theme::hint(item, about).clicked() {
+                            choose(ui, Some(style));
+                        }
+                    }
+                });
+            }
+        });
+    });
+    theme::hint(
+        menu.response,
+        format!(
+            "Have the band play these bars in another style, in {time}: its piano, bass, \
+             drums and swing, on the band's instruments"
+        ),
+    );
 }
 
 /// The two dots of a repeat sign, around the middle of a bar line.

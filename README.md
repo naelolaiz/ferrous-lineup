@@ -295,6 +295,14 @@ ballad's piano plays eighth notes), a little louder. The drums play a
 fill into each change and crash on its first beat, and a boxed letter
 marks it on the sheet and the playlist.
 
+The same menu's **Style** plays the bars in another style: a verse as
+a bossa nova and the bridge as a swing. Right-click a section's name on
+the sheet to choose for the whole section. The band keeps its
+instruments and plays the new style's comping, bass line, drums and
+swing, with a fill into the change. The style's name marks where it
+starts, and **The song's style** goes back. Only styles in the bars'
+time signature are offered.
+
 **Swing**, next to the tempo on the sheet (and on the playlist), plays
 pairs of eighth notes long-short, as jazz, blues and shuffle players
 do: from *straight* (even) to 100%, the first two thirds and the last
