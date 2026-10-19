@@ -564,6 +564,20 @@ pub static RHYTHMS: &[Rhythm] = &[
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4))
     .swung(100),
+    rhythm(
+        "Five-four spy",
+        Jazz,
+        160.0,
+        &[
+            (Kick, "X... ..x. .... X... x..."),
+            (Conga, "h.x. x.h. x.x. h.x. h.x."),
+            (Shaker, "o.o. o.o. o.o. o.o. o.o."),
+        ],
+        "",
+        "The long, long, short, short of a 1960s spy theme in 5/4: the bar's ten \
+         eighths go 3 + 3 + 2 + 2, the bass drum and the high conga on each start.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",

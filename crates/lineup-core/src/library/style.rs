@@ -702,6 +702,19 @@ pub static STYLES: &[Style] = &[
          bVImaj7 lead to a V7 with the leading note, back to i7.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    style(
+        "Five-four spy",
+        Jazz,
+        NaturalMinor,
+        "i | i | iv | i | i | i | bVI | V",
+        Comping::Aksak,
+        Bass::Aksak,
+        160.0,
+        "Five-four spy",
+        "A 1960s spy theme in 5/4: a minor chord held over the beat, moving to iv as \
+         a blues does, then bVI and the V with the leading note bring it home.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Soul, funk and R&B -----
     style(
         "Neo-soul",

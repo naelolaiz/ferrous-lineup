@@ -596,6 +596,7 @@ pub static SONGS: &[Song] = &[
     jazz::IF_I_COULD_BE_WITH_YOU,
     jazz::CAROLINA_IN_THE_MORNING,
     jazz::TAKE_FIVE,
+    jazz::MISSION_IMPOSSIBLE,
     soul::AMAZING_GRACE,
     soul::JOY_TO_THE_WORLD,
     soul::DORIAN_STRUT,
