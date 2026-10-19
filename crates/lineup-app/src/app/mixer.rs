@@ -1,7 +1,7 @@
 //! One mixer for every internal instrument and the master reverb.
 
 use eframe::egui::{self, Rect};
-use lineup_core::{ChannelKind, general_midi};
+use lineup_core::{ChannelKind, Mixer, general_midi};
 
 use super::LineupApp;
 
@@ -112,7 +112,15 @@ impl LineupApp {
                 });
             });
         self.mixer_open = open;
-        if mix != self.project.mixer || levels != self.project.channels() {
+        let master_only = levels == self.project.channels()
+            && mix
+                == Mixer {
+                    master: self.project.mixer.master,
+                    ..mix
+                };
+        if mix.master != self.project.mixer.master && master_only {
+            self.set_master_volume(mix.master);
+        } else if mix != self.project.mixer || levels != self.project.channels() {
             self.edit("mixer", |project| {
                 project.mixer = mix;
                 for (index, channel) in levels.into_iter().enumerate() {
@@ -123,6 +131,16 @@ impl LineupApp {
                 }
             });
         }
+    }
+}
+
+impl LineupApp {
+    /// Sets the master volume. It is saved with the song, so exports sound
+    /// the same, but one nudge after another is one step to undo.
+    pub(super) fn set_master_volume(&mut self, master: f32) {
+        const STEP: &str = "master volume";
+        self.history.reopen(STEP);
+        self.edit(STEP, |project| project.mixer.master = master);
     }
 }
 
