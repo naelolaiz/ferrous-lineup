@@ -1427,6 +1427,64 @@ pub static RHYTHMS: &[Rhythm] = &[
          where each group starts, the stick on the other beats and lightly between them.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    // The Turkish usuls, on the darbuka: `l` is its low sound, düm, `h`
+    // its high one, tek (or te, ke), and the big drum doubles the düms.
+    //
+    // Aksak: nine beats and six strokes, ending 2 + 1 (Cinuçen
+    // Tanrıkorur, "Aksak", TDV İslâm Ansiklopedisi 2, 1989), a sofyan and a
+    // türk aksağı, 4 + 5 (İsmail Hakkı Özkan, "Raks aksağı", TDV İslâm
+    // Ansiklopedisi 34, 2007): düm . te ke | düm . tek . tek.
+    rhythm(
+        "Aksak",
+        Balkan,
+        90.0,
+        &[
+            (Kick, "X... .... X... ......"),
+            (Conga, "l... h.h. l... h...h."),
+            (Shaker, "x.o. x.o. x.o. x.o.o."),
+        ],
+        "",
+        "The Turkish aksak, 9/8 counted 2 + 2 + 2 + 3, on the darbuka: düm, te-ke, \
+         düm, tek-tek, the low düm on the first and third beats, the long last beat \
+         split two and one.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    // Devr-i hindî: seven beats and five strokes, a semai and a sofyan
+    // (İsmail Hakkı Özkan, "Devr-i hindî", TDV İslâm Ansiklopedisi 9,
+    // 1994): düm tek tek | düm . | tek . (the semai's three strokes, then
+    // the sofyan's düm and tek).
+    rhythm(
+        "Devr-i hindi",
+        Balkan,
+        120.0,
+        &[
+            (Kick, "X..... X... ...."),
+            (Conga, "l.h.h. l... h..."),
+            (Shaker, "x.o.o. x.o. x.o."),
+        ],
+        "",
+        "The Turkish devr-i hindî, 7/8 counted 3 + 2 + 2: düm, tek, tek on the three \
+         eighths of the long beat, then düm and tek on the two short ones.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    // Curcuna as Turkish folk musicians count it, "Dü-ü-üm Te-ek Dü-üm
+    // Te-e-ek", 3 + 2 + 2 + 3 (E. Düzenli and İ. Doğan, "Sözlü Türk Halk
+    // Müziği Eserlerinde Ölçü Tespitine Yönelik Bir Analiz Modeli",
+    // Eurasian Journal of Music and Dance 17, 2020).
+    rhythm(
+        "Curcuna",
+        Balkan,
+        96.0,
+        &[
+            (Kick, "X..... .... X... ......"),
+            (Conga, "l..... h... l... h....."),
+            (Shaker, "x.o.o. x.o. x.o. x.o.o."),
+        ],
+        "",
+        "The Turkish curcuna, ten eighths counted 3 + 2 + 2 + 3: düm on the long first \
+         beat, tek on the second, düm on the third and tek on the long last one.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2, 3], 8)),
     // ----- Reggae and ska -----
     rhythm(
         "One drop",
