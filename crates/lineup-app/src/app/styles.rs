@@ -11,7 +11,7 @@ use lineup_core::library::{UserStyle, user_style::EXTENSION};
 use std::path::{Path, PathBuf};
 
 pub(super) struct StyleFiles {
-    folder: PathBuf,
+    pub(super) folder: PathBuf,
     paths: Vec<PathBuf>,
 }
 
@@ -232,12 +232,21 @@ impl LineupApp {
             return;
         }
         self.style_editor.saved(path.clone());
-        // A chosen Save As folder becomes the library's styles folder too.
-        if let Some(folder) = path.parent() {
-            self.style_files.folder = folder.to_owned();
-        }
+        // Saving one style elsewhere leaves the styles folder as it is,
+        // with every other style in it; Settings changes the folder.
         self.reload_user_styles();
-        self.notice = Some(format!("Saved style: {}", path.display()));
+        self.notice = Some(
+            if path.parent() == Some(self.style_files.folder.as_path()) {
+                format!("Saved style: {}", path.display())
+            } else {
+                format!(
+                    "Saved style: {}. The Library lists the styles in {}; Settings > Styles \
+                 folder changes it.",
+                    path.display(),
+                    self.style_files.folder.display()
+                )
+            },
+        );
     }
     fn preview_style(&mut self, project: &Project) {
         if self.playing {

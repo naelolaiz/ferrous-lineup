@@ -2225,3 +2225,31 @@ fn nudges_of_the_master_volume_are_one_step_to_undo() {
     screen.app.undo();
     assert_eq!(screen.app.project.mixer.master, 0.5);
 }
+
+#[test]
+fn saving_a_style_elsewhere_keeps_the_styles_folder() {
+    use lineup_core::library::UserStyle;
+    let root = std::env::temp_dir().join(format!("lineup-save-as-{}", std::process::id()));
+    let (folder, elsewhere) = (root.join("styles"), root.join("desktop"));
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::create_dir_all(&elsewhere).unwrap();
+    let mut screen = Screen::new();
+    screen.app.style_files.folder = folder.clone();
+    let mut style = UserStyle::blank();
+    style.name = "Elsewhere".into();
+    screen.app.style_editor.start(style.clone(), None);
+    screen.app.style_editor.path = Some(elsewhere.join("Elsewhere.lineup-style"));
+    screen.app.save_user_style(style, false);
+    assert!(elsewhere.join("Elsewhere.lineup-style").exists());
+    assert_eq!(screen.app.style_files.folder, folder);
+    assert!(
+        screen
+            .app
+            .notice
+            .as_deref()
+            .is_some_and(|notice| notice.contains("Styles folder")),
+        "{:?}",
+        screen.app.notice
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+}
