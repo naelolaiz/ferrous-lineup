@@ -404,15 +404,15 @@ fn lagrimas_demo_keeps_its_written_chord_qualities_on_open_and_style_change() {
 }
 
 #[test]
-fn plain_accents_popup_hides_instruments_and_restores_their_saved_choice() {
+fn plain_accents_popup_hides_instruments_and_chords_and_restores_their_saved_choices() {
     use lineup_core::library::apply::StyleParts;
-    for instruments in [false, true] {
+    for saved in [false, true] {
         let mut screen = Screen::new();
         screen.app.rack_open = false;
         screen.app.playlist.browser_open = true;
         *screen.app.playlist.library_parts_mut() = StyleParts {
-            instruments,
-            progression: false,
+            instruments: saved,
+            progression: saved,
             time_signature: false,
             tempo: false,
             swing: false,
@@ -420,21 +420,19 @@ fn plain_accents_popup_hides_instruments_and_restores_their_saved_choice() {
         };
         screen.click("📚 Library");
         screen.click("🔍 Search: bossa, 6/8, tango…");
-        screen.draw(vec![Event::Text("Tango".into())]);
-        screen.click("Tango");
+        screen.draw(vec![Event::Text("Royal road".into())]);
+        screen.click("Royal road");
         screen.click("Plain accents");
         let output = screen.draw(vec![]);
         assert!(text_rect(&output, "Drums and plain accents").is_some());
         assert!(text_rect(&output, "Playing patterns").is_none());
         assert!(text_rect(&output, "Voices / instruments").is_none());
-        assert!(text_rect(&output, "Chord progression").is_some());
-        assert!(text_rect(&output, "Chord progression (when included)").is_none());
+        assert!(text_rect(&output, "Chord progression").is_none());
+        assert!(text_rect(&output, "Keeps the song’s chords").is_some());
         screen.click("Preset patterns");
         let output = screen.draw(vec![]);
-        assert_eq!(
-            checkbox_checked(&output, "Voices / instruments"),
-            instruments
-        );
+        assert_eq!(checkbox_checked(&output, "Voices / instruments"), saved);
+        assert_eq!(checkbox_checked(&output, "Chord progression"), saved);
         screen.click("Plain accents");
         let before = screen.app.project.clone();
         screen.click("Apply");
@@ -445,12 +443,63 @@ fn plain_accents_popup_hides_instruments_and_restores_their_saved_choice() {
         for (index, original) in before.channels().iter().enumerate() {
             assert_eq!(screen.app.project.channels()[index], *original);
         }
+        let remembered = *screen.app.playlist.library_parts_mut();
         assert_eq!(
-            screen.app.playlist.library_parts_mut().instruments,
-            instruments
+            (remembered.instruments, remembered.progression),
+            (saved, saved)
         );
-        assert!(!screen.app.playlist.library_parts().instruments);
-        assert!(!screen.app.playlist.library_parts().matching_style);
+        let parts = screen.app.playlist.library_parts();
+        assert!(!parts.instruments && !parts.progression && !parts.matching_style);
+    }
+}
+
+/// The chords a trial pattern plays, as heard from its notes.
+fn heard_chords(project: &Project, pattern: usize) -> Vec<String> {
+    let target = project.pattern(pattern).unwrap();
+    let channel = (0..project.channels().len())
+        .find(|&channel| {
+            let it = &project.channels()[channel];
+            it.kind == lineup_core::ChannelKind::Synth
+                && it.name != lineup_core::library::apply::BASS
+                && !target.notes(channel).is_empty()
+        })
+        .expect("a channel plays the chords");
+    lineup_core::library::listen::hear_chords(
+        target.notes(channel),
+        &[],
+        target.length(),
+        project.pattern_time(pattern),
+    )
+    .iter()
+    .filter_map(|stretch| stretch.chord)
+    .map(|chord| chord.name(lineup_core::Spelling::Flats))
+    .collect()
+}
+
+#[test]
+fn a_style_tried_with_plain_accents_plays_the_songs_chords_not_its_own() {
+    for progression in [false, true] {
+        let mut screen = Screen::new();
+        screen.app.rack_open = false;
+        screen.app.playlist.browser_open = true;
+        screen.app.playlist.library_parts_mut().progression = progression;
+        let chords = screen.app.project.playlist().chord_markers().to_vec();
+        screen.click("📚 Library");
+        screen.click("🔍 Search: bossa, 6/8, tango…");
+        // Its chart is bVI | bVII | i | i: in C, Ab Bb Cm.
+        screen.draw(vec![Event::Text("Aeolian climb".into())]);
+        screen.click("Aeolian climb");
+        screen.click("Plain accents");
+        screen.click("Apply");
+        let project = &screen.app.project;
+        assert_eq!(project.playlist().chord_markers(), chords);
+        let trial = screen.app.pattern;
+        assert_eq!(project.pattern(trial).unwrap().name, "Aeolian climb");
+        // The starting song plays C Am F G, two chords a bar.
+        assert_eq!(
+            heard_chords(project, trial),
+            ["C", "Am", "F", "G"].repeat(2)
+        );
     }
 }
 
