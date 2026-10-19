@@ -156,6 +156,15 @@ the tempo kept with a new time signature, keeps its source. The popup shows
 the same next to each checkbox (**now: …**), so you can see what it would
 replace. Undo, redo and saving keep the sources.
 
+The padlock next to each channel's volume knob in the channel rack locks
+that channel: presets, the **Time** picker and the band keep its notes and its
+instrument, and change the rest of the song. A locked Keys keeps the song's
+chords, and the bass follows them; a locked drum keeps its notes while the
+other drums take the new rhythm. When the band comes into a song whose own
+Keys or Bass is locked, it leaves that part to it. A new time signature still
+fits a locked channel's notes into the new bars, and you can still edit it by
+hand. The Library and the popup list what is locked (**🔒 Kept: …**).
+
 In song mode, copying **Playing patterns** and **Voices / instruments** brings in
 the preset's full band, including its extra guitar, strings or organ, even when
 the demo has no live band yet. Leave **Chord progression** off to keep the song's

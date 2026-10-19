@@ -201,9 +201,11 @@ pub struct Followed {
 
 impl Accompaniment {
     /// Hears the chords of every pattern of `project` that has an
-    /// accompaniment: a chord channel, a "Bass" synth, or both.
+    /// accompaniment: a chord channel, a "Bass" synth, or both. A locked
+    /// channel keeps its notes, so it is heard but does not follow.
     pub fn hear(project: &Project) -> Self {
         let bass_channel = find_synth(project, BASS);
+        let free = |channel: Option<usize>| channel.filter(|&c| !project.is_locked(c));
         let patterns = project
             .patterns()
             .iter()
@@ -211,7 +213,7 @@ impl Accompaniment {
             .filter_map(|(index, pattern)| {
                 let chords = heard_chords_channel(project, index);
                 let bass = bass_channel.filter(|&b| !pattern.notes(b).is_empty());
-                if chords.is_none() && bass.is_none() {
+                if free(chords).is_none() && free(bass).is_none() {
                     return None;
                 }
                 let notes = |channel: Option<usize>| {
@@ -225,8 +227,8 @@ impl Accompaniment {
                 );
                 Some(Heard {
                     pattern: index,
-                    chords,
-                    bass,
+                    chords: free(chords),
+                    bass: free(bass),
                     stretches,
                 })
             })
@@ -352,6 +354,21 @@ mod tests {
             old.sort_by_key(|n| n.start);
             assert_eq!(starts(&old), starts(&channel.notes));
         }
+    }
+
+    #[test]
+    fn a_locked_channel_does_not_follow() {
+        let mut project = Project::empty();
+        assert!(write_style(&mut project, 0, &STYLES[0], C, None));
+        let bass = find_synth(&project, BASS).unwrap();
+        let free = Accompaniment::hear(&project).follow(&project, Chord::new(D, Minor));
+        project.set_locked(bass, true);
+        let accompaniment = Accompaniment::hear(&project);
+        assert!(accompaniment.channels().all(|(_, channel)| channel != bass));
+        let followed = accompaniment.follow(&project, Chord::new(D, Minor));
+        let others: Vec<_> = free.into_iter().filter(|f| f.channel != bass).collect();
+        assert!(!others.is_empty());
+        assert_eq!(followed, others);
     }
 
     #[test]
