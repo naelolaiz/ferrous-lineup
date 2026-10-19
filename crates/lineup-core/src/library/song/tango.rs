@@ -1417,16 +1417,19 @@ pub(super) const VOLVER: Song = Song {
 const ROMANCE_A1_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | i | I7 | I7 | iv | \
                                  iv iv vii°7 | bVII7 | bVII7 | bIII | V7";
 
-/// The same opening, then G minor, C7 and F to A7 and a cadence in D minor.
-const ROMANCE_A2_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | i i I7 | iv | bVII7 | \
+/// The same opening, then F7 over E flat sliding onto D7, G minor, C7 and F to A7 and a
+/// cadence in D minor.
+const ROMANCE_A2_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | bIII7 I7 I7 | iv | bVII7 | \
                                  bIII | V7 | i | V7 | i | i";
 
-/// A sequence climbing a step at a time: G minor, A7, D minor, G minor, C7, F.
+/// A sequence climbing a step every two bars: G minor, A7, D minor (with A half-diminished
+/// over C leading on), G minor, C7, F.
 const ROMANCE_B1_CHORDS: &str =
-    "iv6 | V7 | i | i7 | iv | bVII7 | bIII | bIII | V7 | V7 | i | i | bVI | iv | V7 | V7";
+    "iv6 | V7 | i | i i vø7 | iv | bVII7 | bIII | bIII | V7 | V7 | i | i | bVI | iv | V7 | V7";
 
-/// The sequence again, falling back to D minor over A7.
-const ROMANCE_B2_CHORDS: &str = "iv | V7 | i | i7 | V7 | V7 | i | I7 | iv | V7 | i | i7 | V7 | V7";
+/// The sequence again, falling back to D minor over E7 and A7.
+const ROMANCE_B2_CHORDS: &str =
+    "iv6 | V7 | i | i7 | II7 | V7 | i | I7 | iv | V7 | i | i7 | II7 | V7";
 
 // Source: score attached by the owner (two page images of a voice and piano
 // edition, "Romance de barrio, vals", words by Homero Manzi, music by Aníbal
@@ -1462,13 +1465,13 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
             "A4:4 Ab4 G4 | F4:4 E4:6 D4:2 | F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | \
              F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4:6 G#4:2 | A4:8 -:2 D5:2 | \
              D5:4 A4 Bb4 | C5:4 Bb4 F#4 | A4:4 G4:6 A4:2 | Bb4:8 -:2 A4:2 | \
-             A4:4 G4:6 A4:2 | A4:8 -:2 A4:2 | G4:4 F4:6 G4:2 | G4:8 -:2 A4:2",
+             A4:4 G4:6 A4:2 | Bb4:8 -:2 A4:2 | G4:4 F4:6 G4:2 | A4:8 -:2 A4:2",
             ROMANCE_A1_CHORDS,
         ),
         Part::new(
             "A2",
             "A4:4 Ab4 G4 | F4:4 E4:6 D4:2 | F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | \
-             F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4:6 G#4:2 | A4:8 -:2 G4:2 | \
+             F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4 -:2 G#4:2 | A4:8 -:2 G4:2 | \
              G4:4 A4 Bb4 | C5:4 D5 -:2 E5:2 | F5:8 C5:4 | -:2 C#5:2 D5 C#5 B4 C#5 | \
              D5:8 A4:4 | -:2 Bb4:2 G4:4 -:2 E4:2 | D4:12 | _:4 -:8",
             ROMANCE_A2_CHORDS,
@@ -1491,7 +1494,7 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
             ROMANCE_B2_CHORDS,
         ),
         Part::new("First ending", "D4:12 | _:4 -:6 A4:2", "i | i"),
-        Part::new("Second ending", "D4:4 -:8 | -:12", "i | i"),
+        Part::new("Second ending", "D4:4 -:8 | -:12", "i i V7 | i"),
     ],
     form: &[
         "Pickup",
@@ -1509,7 +1512,379 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
     drums_from: 1,
     about: "Troilo's vals opens on a chromatic sigh, A, A flat, G, over D minor, while the \
             bass walks down D, C, B, B flat to A: the same notes then lean on E7 and B flat 7 \
-            before A7 brings the cadence. The second part climbs in a sequence, each bar a \
-            step higher over its own chord: G minor, A7, D minor, then C7 to F major, the \
-            relative major, until C sharp turns it back to D minor.",
+            before A7 brings the cadence. The second part climbs in a sequence, a step higher \
+            every two bars: G minor, A7, D minor, G minor, then C7 to F major, the relative \
+            major, until C sharp turns it back to D minor.",
+};
+
+// Source: score attached by the owner (two page images): "Desde el
+// alma", Vals, Letra: Homero Manzi y Víctor Velez, Música: Rosita Melo; voice and piano, 72 bars,
+// key signature of two sharps, TRIO in one sharp, "D.C." at the end with no Fine and no segno.
+// Melody = the vocal line; chords read from the piano's bass and right-hand chords bar by bar.
+// The first strain (bars 1-32) is in B minor, the second (33-48) in D major, the trio (49-72) in
+// G major ending on B minor. The score prints "D.C." at bar 72 with no Fine and no segno, so
+// where the da capo stops is not written. The form goes back to the start and stops at bar 32,
+// the double bar where the first strain closes on B minor, the tonic (the integrator's choice;
+// the other double bar, bar 48 before "TRIO", would end in D major).
+// Recording: the best-known vocal version is Nelly Omar's (Odeon, 22 October 1947, named one of
+// her "remarkable hits" in https://www.todotango.com/english/artists/biography/291/Nelly-Omar/;
+// that page does not name the accompaniment). Roberto Firpo's orchestra recorded the waltz first
+// (https://todotango.com/english/history/chronicle/183/Desde-el-alma-Desde-el-alma-a-romantic-criollo-waltz).
+// The tempo is an estimate for a sung vals criollo, not measured from a recording.
+// Copyright: Rosita Melo died in 1981 and the score's words are Manzi's (1948): not public domain; added at the owner's request.
+
+/// The first strain: F#7 for two bars, then B minor; E minor in its third phrase.
+const DESDE_A_CHORDS: &str =
+    "V7 | V7 | i | i | V7 | V7 | i | i i I7 | iv | iv | i | i | V7 | V7 | i | V7";
+const DESDE_A2_CHORDS: &str =
+    "V7 | V7 | i | i | V7 | V7 | i | i i I7 | iv | iv | i | i | V7 | V7 | i | i";
+/// The second strain, in D major: A7 (over A, then over C sharp) to D, B7 over D sharp, A7 over
+/// E and A, and D.
+const DESDE_B_CHORDS: &str = "V7 | V7 | I | I I VI7 | V7 | V7 | I | I | \
+                              V7 | V7 | I | I I VI7 | V7 | V7 | I | I";
+const DESDE_TRIO_CHORDS: &str =
+    "I | I | V | V7 | I | I | V7 | V7 | I | I7 | IV | IV | VI | VI7 | V | V7";
+const DESDE_TRIO_END_CHORDS: &str = "III7 | III7 | VIsus4 | vi | VII7 | VII7 | iii | iii";
+
+pub(super) const DESDE_EL_ALMA: Song = Song {
+    name: "Desde el alma",
+    origin: "Rosita Melo, 1911",
+    feel: "Vals criollo",
+    genre: Genre::Tango,
+    tonic: B,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 156.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Tango vals",
+    band: TANGO,
+    style: "Tango vals",
+    parts: &[
+        // Bars 1-16 ("Alma, si tanto te han herido...").
+        Part::new(
+            "A",
+            "F#4:8 F#4:4 | -:2 F#4:2 G#4 A#4 G#4 F#4 | B4:12 | B4:8 B4:4 | C#5:12 | \
+             -:2 C#5:2 D5 E5 D5 C#5 | D5:8 D5:4 | D5:4 C#5:6 B4:2 | B4:8 B4:4 | \
+             -:2 B4:2 C#5 D5 C#5 B4 | B4:8 B4:4 | -:2 F#4:2 G4 A4 G4 F#4 | F#4:8 F#4:4 | \
+             -:2 F#4:2 G4 A4 G4 F#4 | F#4:12 | _:8 -:4",
+            DESDE_A_CHORDS,
+        ),
+        // Bars 17-32 ("Vives inútilmente triste..."), ending on B minor before a double bar.
+        Part::new(
+            "A2",
+            "F#4:8 F#4:4 | -:2 F#4:2 G#4 A#4 G#4 F#4 | B4:12 | B4:8 B4:4 | C#5:12 | \
+             -:2 C#5:2 D5 E5 D5 C#5 | D5:8 D5:4 | D5:4 C#5:6 B4:2 | B4:8 B4:4 | \
+             -:2 B4:2 C#5 D5 C#5 B4 | B4:8 B4:4 | -:2 F#4:2 G4 A4 G4 F#4 | F#4:8 F#4:4 | \
+             A#4:8 A#4:4 | B4:12 | _:4 -:8",
+            DESDE_A2_CHORDS,
+        ),
+        // Bars 33-48 ("Fue lo que empezó una vez..."), in the relative major.
+        Part::new(
+            "B",
+            "G4:12 | -:2 F#4:2 E4 D#4 E4 E#4 | F#4:12 | -:2 B4:2 D5:6 B4:2 | C#5:12 | \
+             -:2 A4:2 C#5:6 A4:2 | B4:12 | -:2 E4:2 G4:6 E4:2 | G4:12 | \
+             -:2 F#4:2 E4 D#4 E4 E#4 | F#4:12 | -:2 B4:2 D5:6 B4:2 | C#5:8 A4:4 | \
+             A4:4 G4 C#4 | D4:12 | _:4 -:8",
+            DESDE_B_CHORDS,
+        )
+        .in_key(D, Major),
+        // Bars 49-64 ("¡Deja esas cartas!...").
+        Part::new(
+            "Trio",
+            "D5:12 | _:4 E5 F#5 | D5:12 | C5:12 | B4:4 D5 G5 | A5:4 G5:6 E5:2 | F#5:12 | _:12 | \
+             G5:12 | F5:8 G5:4 | E5:12 | _:12 | E5:12 | D5:8 E5:4 | D5:12 | C5:12",
+            DESDE_TRIO_CHORDS,
+        )
+        .in_key(G, Major),
+        // Bars 65-72 ("...llega la vida trayendo otro amor"), closing on B minor before the D.C.
+        Part::new(
+            "Trio end",
+            "B4:12 | A4:8 B4:4 | A4:12 | G4:12 | F#4:12 | G4:4 F#4 C#5 | B4:12 | _:8 -:4",
+            DESDE_TRIO_END_CHORDS,
+        )
+        .in_key(G, Major),
+    ],
+    form: &["A", "A2", "B", "Trio", "Trio end", "A", "A2"],
+    drums_from: 0,
+    about: "A vals that starts on the dominant, F#7, and only lands on B minor in its third bar. \
+            The second strain turns to the relative major, D, through A7, with C# in the bass under a \
+            chromatic E, D#, E, E# in the tune. The trio moves to G major, touches C through G7, \
+            and closes on B minor through F#7 over A#; the da capo then ends the vals on B minor.",
+};
+
+/// A7, then A7 with its flat ninth, D minor with a ninth on top; D minor and A7,
+/// A7 and D minor, D minor and G minor, and A7 home to D minor.
+const MUCHACHO_INTRO_CHORDS: &str = "V7 V7b9 i9 i9 | i V7 | V7 i | i iv | V7 i";
+
+/// Two bars of A7 under "Muchacho", then D minor and A7, D minor (over a moving
+/// bass) and G minor, and the same again; the middle visits F major (F, C7, C7, F)
+/// before A7 brings it back to D minor.
+const MUCHACHO_CANTO_CHORDS: &str = "V7 | i V7 | i iv | i V7 | i V7 | V7 i | V7 i | iv i | V7 i | \
+                                     bIII bVII7 | bVII7 bIII | V7 V7 V7b9 V7 | V7 i | V7 | V7 i";
+
+// Source: score attached by the owner (three page images of a typeset edition for
+// voice and piano, "Muchacho, tango", "Celedonio Flores" / "Edgardo Donato", in D
+// minor and 2/4: "INTROD." of ten bars, then "CANTO" with a repeat, first and
+// second endings and two verses of words; no publisher or date printed). The tune
+// is the vocal line, which the piano's right hand plays; in the intro it is the top
+// of the right hand, written at its sounding pitch where the score has 8va (bars
+// 3-6 and the chord on the second beat of bars 10, 28, 42 and 43). Where the
+// canto's right hand plays the tune in octaves filled out with chords (bars 29-30
+// and 33-34) the tune is written in the singer's octave, the lower one. The chords
+// were read from the piano's left hand and inner voices. Bar 1's two 32nd notes
+// C sharp, D are one sixteenth C sharp. In bar 9 the score prints a sharp before the
+// first F and no natural later in the bar; the other Fs are written F natural, as
+// in the same figure in bar 41, where the score does print the natural. In bar 7
+// the top voice is A repeated over an inner voice F F F E D D E; the top is kept.
+// Bar 15 (and 24) is charted D minor throughout: the left hand only runs a bass
+// line D C sharp D B flat | C A B flat under the held A. The four bars of F major
+// (29-32) are a tonicization of the relative major, not a new key: no `.in_key`.
+// A well-known recording: Ángel D'Agostino's orchestra with Ángel Vargas, 1940
+// (Victor 39136, https://adp.library.ucsb.edu/index.php/matrix/refer/200038642);
+// the tempo is an estimate of a D'Agostino tango.
+// Public domain in Argentina is not claimed; published by 1925 (recorded by Rosita Quiroga, Victor, 1925); added at the owner's request with the score they attached.
+pub(super) const MUCHACHO: Song = Song {
+    name: "Muchacho",
+    origin: "Edgardo Donato, 1923",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: D,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 124.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        // It ends with the pickup "Mu-" into the canto.
+        Part::new(
+            "Intro",
+            "-:1 C#5:2 E5:1 G5:1 Bb5:2 C#6:1 F6:2 C6:2 _:4 | \
+             -:1 F6:1 F6 E6 E6 D6 D6 E6 D6:2 C#6:2 _:4 | \
+             -:1 G6:1 G6 F6 F6 E6 E6 F6 E6:2 D6:2 _:4 | \
+             -:1 A5:1 A5 A5 A5 A5 A5 A5 A5:2 G5:4 -:2 | \
+             A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 D6:2 -:1 A4:1",
+            MUCHACHO_INTRO_CHORDS,
+        ),
+        Part::new(
+            "Canto",
+            "A4:2 G4:2 _:4 -:1 G4:1 Bb4 G4 Bb4 A4:2 G4:1 | \
+             Bb4:2 A4:1 A4 C5 F4 F4 F4 G4 G4 Bb4 A4 C5 Bb4 A4 G#4 | \
+             A4:6 -:2 -:1 G4:1 G4 G4 Bb4 A4 Bb4 A4 | \
+             G4:1 F4 F4 F4 A4 G#4 A4 F4 G4 E4 E4 F4 G4 Bb4 A4 G4 | \
+             A4:6 -:1 A4:1 A4:2 G4:2 _:4 | \
+             -:1 G4:1 Bb4 G4 Bb4 A4:2 G4:1 Bb4:2 A4:1 A4 C5 F4 F4 F4 | \
+             G4:1 G4 Bb4 A4 C5 Bb4 A4 G#4 A4:6 -:2 | \
+             -:1 G4:1 G4 G4 G4:1 G4:2 G4:1 G4:1 F4 F4 F4 A4:1 F4:2 F4:1 | \
+             G4:1 E4 E4 E4 D4 C#4 D4 E4 D4:4 D6:2 -:2 | \
+             -:1 C5:2 C5:1 C5 C5 C5 C5 D5:4 C5:4 | \
+             -:1 C5:1 E5 C5 C5:3 Bb4:1 Bb4:4 A4:4 | \
+             -:1 A4:1 A4 A4 Bb4:3 A4:1 C#5:4 A4:4 | \
+             -:1 G4:2 G4:1 G4:1 E4 F4 G4 A4:6 -:2 | \
+             -:1 E4:1 F4 F#4 G4:1 A4:2 G#4:1 A4:4 G4:4 | \
+             -:2 G4:1 G4 Bb4 A4 A4 G4 G4 F4 D4 E4 F4 G4 A4 Bb4",
+            MUCHACHO_CANTO_CHORDS,
+        ),
+        // It ends with the pickup "De-" into the second verse.
+        Part::new(
+            "First ending",
+            "A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 D6:2 -:1 A4:1",
+            "V7 i",
+        ),
+        Part::new(
+            "Second ending",
+            "A4:1 G4 G4 F#4 G4 F4 E4 F4 D4:4 D6:2 -:2",
+            "V7 i",
+        ),
+    ],
+    form: &["Intro", "Canto", "First ending", "Canto", "Second ending"],
+    drums_from: 0,
+    about: "Donato's tango lives on A7 and D minor: \"Muchacho\" is sung on A and G over A7, \
+            and the next line leans on B flat, the flat ninth of A7, and on G sharp before \
+            each return to A. In the middle the tune visits F major, the relative \
+            major (F, C7, C7, F), then A7 with its B flat brings it back to D minor; the intro and each \
+            half of the canto end on D with the tango's short, high chord.",
+};
+
+/// Verse: two-bar phrases, A7 to D minor, then C7 to F, then E7 and A7.
+const GARUA_VERSE_CHORDS: &str = "V7 i | V7 i | bVII7 bIII | bVII7 bIII | II7 V7 | \
+                                  i i bVI V7 V7 V7 V7 V7 | V7 i | V7 i | II7 V7 | \
+                                  i i bVI V7 i i i i | i";
+
+const GARUA_VERSE_TUNE: &str = "-:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
+     -:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
+     -:1 G4:1 G4:1 G4:1 Bb4:2 E4:1 E4:1 G4:2 F4:1 A4:1 G4:2 F4:2 | \
+     -:1 G4:1 G4:1 G4:1 Bb4:2 E4:1 E4:1 G4:2 F4:1 A4:1 G4:2 F4:2 | \
+     -:1 G#4:2 A4:1 B4:1 C#5:1 D5:1 E5:1 C#5:1 A4:1 Bb4:1 G4:1 A4:1 F4:1 G4:1 E4:1 | \
+     F4:1 D4:1 E4:1 C#4:1 D4:3 G4:1 A3:4 -:4 | \
+     -:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
+     -:1 E4:1 E4:1 E4:1 G4:2 C#4:1 C#4:1 E4:2 D4:1 F4:1 E4:2 D4:2 | \
+     -:1 G#4:2 A4:1 B4:1 C#5:1 D5:1 E5:1 C#5:1 A4:1 Bb4:1 G4:1 A4:1 F4:1 G4:1 E4:1 | \
+     F4:1 D4:1 D4:1 E4:1 F4:2 E4:2 D4:1 D5:2 E5:1 D5:2 -:2 | \
+     -:8 -:1 D5:2 E5:1 D5:2 -:1 A4:1";
+
+/// Refrain: D minor over a bass falling D, C, B, B flat; B flat 7 and A7; D7 to G minor.
+const GARUA_REFRAIN_CHORDS: &str =
+    "i | i i7 IV7 iv | bVI7 V7 V7 V7 | V7 | V7 i | i I7 | I7 iv | V7 i";
+
+const GARUA_REFRAIN_TUNE: &str = "A4:4 D4:4 -:2 A4:1 D5:1 D5:1 C#5:1 C5:1 B4:1 | \
+     Bb4:1 A4:1 F4:1 A4:1 A4:1 G#4:1 G4:1 F#4:1 F4:1 E4:1 E4:1 D4:1 D4:1 D4:1 C#4:1 D4:1 | \
+     F4:4 E4:3 Bb4:1 _:4 E4:3 G4:1 | \
+     G4:4 C#4:4 -:2 Bb3:1 F4:1 D4:1 C#4:1 F4:1 E4:1 | \
+     Bb4:1 A4:1 A4:1 Ab4:1 G4:1 Gb4:1 F4:1 A4:1 E4:4 D4:2 -:1 D5:1 | \
+     _:4 A4:2 -:2 -:2 D4:1 E4:1 F#4:1 G4:1 A4:1 Bb4:1 | \
+     C5:1 B4:1 Bb4:1 A4:1 Eb5:1 D5:1 D5:1 C5:1 C5:4 Bb4:2 -:1 Bb4:1 | \
+     _:4 E4:3 A4:1 A4:4 D4:2 D4:1 E4:1";
+
+// Source: score attached by the owner (page images), "Garúa... Tango", letra de Enrique
+// Cadícamo, música de Aníbal Troilo (Pichuco), Editorial Julio Korn, Buenos Aires,
+// copyright MCMXLIII (1943); piano solo with the sung tune in the right hand and, for
+// seven bars of the refrain, a "Canto" staff above the piano.
+// The tune is the "Canto" staff where there is one (refrain bars 1-7), else the top
+// note of the right hand, the "Orquesta" bars included. The chords are read from the
+// left hand and the inner voices. The 2/4 bars are written two to a bar.
+// Form as printed: a one-bar introduction, segno, verse (21 bars), refrain (17 bars),
+// first ending "para seguir... al segno", verse again, refrain, second ending "para FIN".
+// The verse has an odd number of 2/4 bars: its last one, the orchestra's second bar
+// with the "Ga-" of the refrain, is written alone, with two beats of rest added before it.
+// Grace notes are left out. Refrain bar 39 is shared by both endings; the first ending
+// (bar 40) is the introduction's figure with the tune's D on its first beat, and the
+// second (bar 41) ends D, A over A7, D over D minor. In verse bar 12 the turn E, C sharp (two 32nd notes) after
+// a D eighth is written as four sixteenths, F D E C sharp.
+// The best-known recording is Aníbal Troilo y su Orquesta Típica with Francisco
+// Fiorentino, Victor, 1943; the tempo is an estimate of a 1940s Troilo dance tempo, not
+// measured from the record.
+// Copyright: Troilo died in 1975; not public domain; added at the owner's request.
+pub(super) const GARUA: Song = Song {
+    name: "Garúa",
+    origin: "Aníbal Troilo, 1943",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: D,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 112.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        // The piano's introduction: D minor 7 (F, C, A over D), A minor over its C, then
+        // B flat, a bass falling D, C, B flat to the A of the verse's first bar.
+        Part::new("Pickup", "-:8 -:2 F4:2 E4:2 D4:2", "i i i i i i v bVI"),
+        Part::new("Verse", GARUA_VERSE_TUNE, GARUA_VERSE_CHORDS),
+        Part::new("Refrain", GARUA_REFRAIN_TUNE, GARUA_REFRAIN_CHORDS),
+        // The refrain's last bar: G sharp diminished 7 (G sharp in the bass under D and
+        // F, E7 without its root) to A7. The first ending then plays the introduction's
+        // chords again, D minor 7, A minor, B flat, back to the segno for the second verse.
+        Part::new(
+            "Refrain ending 1",
+            "F4:2 E4:1 D4:1 E4:2 D4:1 C#4:1 D4:2 F4:2 E4:2 D4:2",
+            "#iv°7 #iv°7 V7 V7 i i v bVI",
+        ),
+        Part::new(
+            "Refrain ending 2",
+            "F4:2 E4:1 D4:1 E4:2 D4:1 C#4:1 D4:2 A4:2 D5:2 -:2",
+            "#iv°7 #iv°7 V7 V7 i V7 i i",
+        ),
+    ],
+    form: &[
+        "Pickup",
+        "Verse",
+        "Refrain",
+        "Refrain ending 1",
+        "Verse",
+        "Refrain",
+        "Refrain ending 2",
+    ],
+    drums_from: 1,
+    about: "The verse in D minor answers A7 with D minor, then C7 with F, and climbs over \
+            E7 to A7, whose bass walks down A, G, F, E, D, C, B flat. The refrain sings a \
+            chromatic line over D minor while the bass falls D, C, B, B flat under G7 and \
+            G minor, and B flat 7 slides down a half step to A7; later D7 leads to G minor, \
+            and G sharp diminished 7 and A7 close in D minor.",
+};
+
+// The verse, in B flat major (it opens on F7 and every phrase closes on B flat; G minor
+// is only touched as vi): 20 bars of 2/4, two to a chart bar.
+const ESTA_NOCHE_DE_LUNA_A_CHORDS: &str = "V7 I | III7 vi | ii #ii°7 I #i°7 | V7 V7 I #ii°7 | \
+     V7 I | III7 vi | ii #ii°7 I #i°7 | V7 I | V7 I | V7 I";
+const ESTA_NOCHE_DE_LUNA_A_TUNE: &str = "F4:2 F4:1 G4:1 A4:1 Bb4:1 C5:1 C#5:1 D5:3 Bb4:1 D5:2 C5:1 Bb4:1 | \
+     D5:1 A4:2 Bb4:1 C5:2 Bb4:1 A4:1 D5:3 G4:1 Bb4:2 A4:1 G4:1 | \
+     Bb4:3 G4:1 Bb4:2 A4:1 G4:1 F4:3 F4:1 G4:2 F4:1 E4:1 | \
+     F4:2 Eb4:1 D4:1 Eb4:2 D4:1 C4:1 F4:2 -:1 F4:1 G4:2 F4:1 E4:1 | \
+     F4:2 F4:1 G4:1 A4:1 Bb4:1 C5:1 C#5:1 D5:3 Bb4:1 D5:2 C5:1 Bb4:1 | \
+     D5:1 A4:2 Bb4:1 C5:2 Bb4:1 A4:1 D5:3 G4:1 Bb4:2 A4:1 G4:1 | \
+     Bb4:3 G4:1 Bb4:2 A4:1 G4:1 F4:3 F4:1 G4:2 F4:1 E4:1 | \
+     F4:2 Eb4:1 D4:1 Eb4:2 D4:1 C4:1 Bb3:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
+     F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
+     F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 -:6";
+
+// The refrain, also in B flat major: 28 bars of 2/4. Its last bar lands on B flat and
+// plays the pickup back into the verse.
+const ESTA_NOCHE_DE_LUNA_B_CHORDS: &str = "I ii | I V7 | ii6 vi | III7 | III7 III7 vi iv6 | I II7 | \
+     V7 #ii°7 I I | ii I | V7 ii6 | vi III7 | III7 | ii iv6 I I | I ii | V7 V7 I #ii°7";
+const ESTA_NOCHE_DE_LUNA_B_TUNE: &str = "D5:8 _:2 Bb4:1 C5:1 D5:2 C5:1 Bb4:1 | F5:8 _:2 C5:1 D5:1 Eb5:2 D5:1 C5:1 | \
+     G4:8 G4:2 G4:1 A4:1 Bb4:2 C5:1 C#5:1 | D5:4 A4:4 _:2 A4:2 Bb4:2 A4:2 | \
+     C5:4 A4:4 _:2 Eb4:1 F4:1 Ab4:2 C5:1 Bb4:1 | \
+     Bb4:1 F4:1 Bb4:1 C5:1 D5:2 C5:1 Bb4:1 D5:1 C5:1 C5:1 D5:1 C5:2 Bb4:1 G4:1 | \
+     C5:4 C#5:4 D5:8 | _:2 Bb4:1 C5:1 D5:2 C5:1 Bb4:1 F5:8 | \
+     _:2 C5:1 D5:1 Eb5:2 D5:1 C5:1 G4:8 | G4:2 G4:1 A4:1 Bb4:2 C5:1 C#5:1 D5:4 A4:4 | \
+     _:2 A4:2 Bb4:2 A4:2 C5:4 A4:4 | G4:2 Eb4:1 F4:1 Gb4:2 Bb4:1 A4:1 Bb4:2 -:2 F4:4 | \
+     _:2 D4:1 Eb4:1 F4:2 Eb4:1 D4:1 G4:2 Eb4:1 F4:1 G4:2 F4:1 Eb4:1 | \
+     A4:2 A4:1 Bb4:1 C5:2 Bb4:1 A4:1 Bb4:2 -:1 F4:1 G4:2 F4:1 E4:1";
+
+// Source: score attached by the owner (page images), piano with the lyric between the
+// staves, "Letra de Héctor Marcó, Música de Graciano Gómez y José García", stamped
+// "Texto aprobado por Radiocomunicaciones"; no publisher or plate number shows on the
+// two pages. Two flats, read in B flat major as printed (no transposition).
+// The runs of sixteenths under the "8a" lines (intro and "Corre, corre barcarola") are
+// written at their printed pitch, an octave below where the piano plays them, so the
+// whole tune stays between B flat 3 and C6.
+// The ⊕ signs only mark where the violin obbligato at the foot of page 2 plays ("violín
+// para Canto de ⊕ a ⊕"); it is left out. The sung order is the lyric blocks I, II, I bis:
+// intro, verse, refrain, verse again, ending on the verse's last B flat.
+// Recordings (Todotango): José García y sus Zorros Grises with Alfredo Rojas (August
+// 1943) and Carlos Di Sarli with Roberto Rufino (December 1943), taken as the best known (a judgement, no source ranks them).
+// The tempo is an estimate for the Di Sarli recording, not a measured figure.
+// Copyright: not public domain; added at the owner's request.
+pub(super) const ESTA_NOCHE_DE_LUNA: Song = Song {
+    name: "Esta noche de luna",
+    origin: "Graciano Gómez and José García, 1943",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: ASharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 120.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        // Half a bar of silence, then the first run of the piano's intro.
+        Part::new("Pickup", "-:8 -:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1", "I"),
+        Part::new(
+            "Intro",
+            "F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
+             F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 -:1 F4:1 G4:2 F4:1 E4:1",
+            "V7 I | V7 V7 I #ii°7",
+        ),
+        Part::new("A", ESTA_NOCHE_DE_LUNA_A_TUNE, ESTA_NOCHE_DE_LUNA_A_CHORDS),
+        Part::new("B", ESTA_NOCHE_DE_LUNA_B_TUNE, ESTA_NOCHE_DE_LUNA_B_CHORDS),
+    ],
+    form: &["Pickup", "Intro", "A", "B", "A"],
+    drums_from: 1,
+    about: "The whole song is in B flat major. The verse starts on the dominant, F7 to \
+            B flat, then D7 turns to G minor; a C minor chord climbs through a C sharp \
+            diminished chord to B flat over F, a B diminished chord leads to F7 and home \
+            to B flat, and the intro's falling runs of sixteenths close it. The refrain \
+            holds long notes on \"Soy\" and \"mar\" over B flat, a D7 turns towards \
+            G minor, and twice an E flat minor sixth over G flat, the minor plagal colour \
+            of the tango, leads back to B flat. Then the verse comes back to end the song.",
 };

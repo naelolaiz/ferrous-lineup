@@ -1224,3 +1224,527 @@ pub(super) const TE_QUIERO_DIJISTE: Song = Song {
             goes up to E flat, the IV chord, with B flat 9 as its dominant, and back through a \
             diminished chord, C7 and F7.",
 };
+
+// Source: https://github.com/soprodecarnaval/cadern.in (cadernin_2026 flute book, page 51 of the
+// PDF, "Zé Pereira", marchinha no. 19, "Domínio público", in B flat, 2/4, with chords B flat and
+// F7: A with a segno and first and second endings, B, C with first and second endings, D.S.),
+// read from the page rendered as an image at 400 dpi. No second
+// written source was found. The eighth-note triplets of bars 4 and 8 (the book counts the
+// pickup as bar 1) are written as an eighth and two sixteenths. The 2/4 bars are paired.
+// The score's D.S. has no Fine and no coda (the book loops it, as the street band does): the
+// form plays the whole song twice, repeats included, and stops on C's first ending, the held
+// B flat, rather than on the second ending's upbeat F.
+// PD: traditional. The tune is the French song "Les pompiers de Nanterre" (Antonin Louis,
+// 1868; he died in 1915, data.bnf.fr), sung in Rio's carnival as Zé Pereira since the actor
+// Francisco Correia Vasques's show "Zé Pereira carnavalesco" (1869).
+pub(super) const ZE_PEREIRA: Song = Song {
+    name: "Zé Pereira",
+    origin: "Traditional, Brazil (Rio de Janeiro carnival)",
+    feel: "Marchinha",
+    genre: Genre::Latin,
+    tonic: ASharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 112.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Marchinha",
+    band: BRASS_BAND,
+    style: "Marchinha",
+    parts: &[
+        Part::new("Pickup", "-:15 F4:1", "I"),
+        Part::new(
+            "A",
+            "Bb4:3 F4:1 Bb4:3 F4:1 Bb4:3 F4:1 D4:4 | F4:2 F4:1 F4 Eb4:2 F4:1 Eb4 D4:4 -:3 F4:1 | \
+             Bb4:3 F4:1 Bb4:3 F4:1 Bb4:3 F4:1 D4:4",
+            "I | V7 I | I",
+        ),
+        Part::new(
+            "A end 1",
+            "D5:2 D5:1 D5 C5:2 D5:1 C5 Bb4:4 -:3 F4:1",
+            "V7 I",
+        ),
+        Part::new("A end 2", "D5:2 D5:1 D5 C5:2 D5:1 C5 Bb4:4 -:4", "V7 I"),
+        Part::new(
+            "B",
+            "F4:2 Bb4 Bb4 Bb4 Bb4:4 F4 | F4:2 D5 D5 D5 D5:4 Bb4 | Bb4:2 F5 F5 F5 F5 D5 Bb4 D5 | \
+             Eb5:4 D5 C5:8 | F4:2 Bb4 Bb4 Bb4 Bb4:4 F4 | F4:2 D5 D5 D5 D5:4 - | \
+             Bb4:2 F5 F5 F5 F5 D5 Bb4 D5 | Eb5:2 C5 A4 F4 Bb4:8",
+            "I | I | I | I V7 | I | I | I | V7 I",
+        ),
+        Part::new(
+            "C",
+            "D5:2 Bb4:1 D5 F5:4 D5:2 Bb4:1 D5 F5:4 | C5:2 F5 C5 F5 D5:3 C5:1 Bb4:4 | \
+             D5:2 Bb4:1 D5 F5:4 D5:2 Bb4:1 D5 F5:4",
+            "I | V7 I | I",
+        ),
+        Part::new("C end 1", "F4:2 F4 G4 A4 Bb4:8", "V7 I"),
+        Part::new("C end 2", "F4:2 F4 G4 A4 Bb4:6 -:1 F4:1", "V7 I"),
+    ],
+    form: &[
+        "Pickup", "A", "A end 1", "A", "A end 2", "B", "C", "C end 1", "C", "C end 2", "A",
+        "A end 1", "A", "A end 2", "B", "C", "C end 1",
+    ],
+    drums_from: 1,
+    about: "The song of Zé Pereira, the bass drummer who leads Rio's street carnival, sung to the \
+            tune of a French music-hall song of 1868. Two chords carry it all, B flat and F7: \
+            the first strain marches in dotted rhythms, the second climbs the B flat chord, \
+            F, B flat, D, F, and the third bounces between D and F before F7 brings it home. \
+            The march is in 2/4, two bars to a bar here.",
+};
+
+// Source: https://github.com/OpenScore/Lieder, scores/Gonzaga,_Chiquinha/_/Feijoada_do_Brasil/
+// lc6611543.mxl (OpenScore Lieder's transcription of the first edition, Vieira Machado & Cia.,
+// Rio de Janeiro, 1909, IMSLP: voice and piano, in C, 2/4, "Moderato", D.C. at the end).
+// The tune is the voice; in the ten bars of the piano's introduction, where the voice rests, it
+// is the top of the right hand (in bars 9 and 10 the repeated G of its chords). The chords are
+// read from the piano. The voice's first bar, a run up from E with the piano silent, is given
+// G, the chord the introduction ends on. The 2/4 bars are paired. The fermata over the
+// introduction's last rest (bar 10) is kept.
+// The D.C. has no Fine: the form plays the song twice and ends on the last bar.
+// PD: published in 1909; Chiquinha Gonzaga died in 1935.
+pub(super) const FEIJOADA_DO_BRASIL: Song = Song {
+    name: "Feijoada do Brasil",
+    origin: "Chiquinha Gonzaga, 1909",
+    feel: "Canção",
+    genre: Genre::Latin,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 84.0,
+    comping: Comping::Habanera,
+    bass: Bass::Habanera,
+    rhythm: "Maxixe",
+    band: Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS),
+    style: "Maxixe",
+    parts: &[
+        Part::new(
+            "Intro",
+            "G5:2 E5 G5 E5 G5:1 F5:2 D5:1 B4 G4:2 F4:1 | E4:2 G4 C5 A4 D5:6 -:2 | \
+             G5 E5 G5 E5 G5:1 F5:2 D5:1 B4 G4:2 F4:1 | E4:2 G4 C5 A4 D5:6 -:2 | \
+             G4:1 G4:2 G4:1 G4 G4:2 G4:1 G4 G4:2 G4:1 G4:2 -",
+            "I V7 | I V7 | I V7 | I V7 | V7 I i V",
+        )
+        .with_tempo(&[fermata(78, 2)]),
+        Part::new(
+            "Verse",
+            "-:2 E4:1 F4 G4 A4 B4 C5 D5:4 D5 | -:1 A4:2 B4:1 D5 C5 A4 B4 G4:8 | \
+             -:1 G4:2 G4:1 C5:2 A4:1 A4 F4:8 | -:1 D4:2 D4:1 B4:2 G4 E4:8 | \
+             -:2 E4:1 F4 G4 A4 B4 C5 D5:4 D5 | -:1 A4:2 B4:1 D5 C5 A4 B4 G4:8 | \
+             -:1 G4:2 G4:1 C5:2 C5:1 C5 B4:8 | -:1 D4:2 D4:1 A4:2 B4 G4:8 | \
+             _:2 G4 F5 C#5 E5:4 D5 | -:2 G4 E5 B4 D5:4 C5 | \
+             -:2 G4 C5 A4 B4:1 B4:2 F4:1 G4:2 A4 | B4 -:1 D4 F4:2 B4 G4:8",
+            "V II7 | V7 I | I V7 | V7 I | I II7 | V7 I | I V | II7 V | V V7 | V7 I | I V7 | V7 I",
+        ),
+        Part::new(
+            "Refrain",
+            "-:2 A4:1 A4 A4:2 A4:1 A4 D5:8 | -:1 G4:2 G4:1 G4:2 G4 C5:8 | \
+             _:2 -:1 A4 E5:2 D5 G4:1 G4:2 G4:1 D5:2 C5 | F4:1 - F4 F4 B4:2 B4 G4:8 | \
+             _:6 -:4 A4:1 A4 A4:2 A4:1 A4 | D5:8 -:1 G4:2 G4:1 G4:2 G4 | \
+             C5:8 _:2 -:1 A4 E5:2 D5 | G4:1 G4:2 G4:1 D5:2 C5 F4:1 - G4 G4 B4:2 E5 | C5:8 -",
+            "VI7 II7 | V7 I | ii ii° I I | V7 I | I VI7 | II7 V7 | I I ii ii° | I V7 | I",
+        ),
+    ],
+    form: &["Intro", "Verse", "Refrain", "Intro", "Verse", "Refrain"],
+    drums_from: 1,
+    about: "A song by Chiquinha Gonzaga, published in 1909, in C major over the habanera rhythm \
+            of the piano's left hand. The verse moves between C and G7 and twice puts D7 over a \
+            C in the bass on its way to G; the refrain opens on A7 and D7, a chain of secondary \
+            dominants, and turns D minor into D diminished, ii to ii°, before the cadence. Each \
+            bar here holds two bars of 2/4.",
+};
+
+// Source: https://github.com/OpenScore/Lieder, scores/Gonzaga,_Chiquinha/_/A_mulatinha/
+// lc6608395.mxl (OpenScore Lieder's transcription of the first edition, "Canção brasileira",
+// Manoel Antonio Gomes Guimarães, Rio de Janeiro, ca. 1901, IMSLP: voice and piano, in C, 2/4,
+// with three stanzas, the second and third printed as text, "Mulatinha, etc.").
+// The tune is the voice; in the eight bars of the piano's introduction, and in bars 38 and 39
+// where the voice rests, it is the top of the right hand. In bar 9 the piano's high C is kept
+// and its two chords above C6 are left to the band, before the voice's first note. The chords
+// are read from the piano. The refrain's last bar (41) is G7 for its first beat and C for its
+// second. The fermatas of bars 17, 26 and 34 are kept.
+// The introduction has nine bars of 2/4: a bar of rest comes first, so that the voice's entry
+// falls on a bar line. The 2/4 bars are paired.
+// PD: published about 1901; Chiquinha Gonzaga died in 1935 and the poet, José do Patrocínio
+// Filho, in 1929.
+pub(super) const A_MULATINHA: Song = Song {
+    name: "A mulatinha",
+    origin: "Chiquinha Gonzaga, 1901",
+    feel: "Canção brasileira",
+    genre: Genre::Latin,
+    tonic: C,
+    mode: Major,
+    time: COMMON,
+    tempo: 76.0,
+    comping: Comping::Habanera,
+    bass: Bass::Habanera,
+    rhythm: "Maxixe",
+    band: Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS),
+    style: "Maxixe",
+    parts: &[
+        Part::new(
+            "Intro",
+            "-:9 C5:2 B4:1 D5 C5 A4 C5 | G4:2 G4 B4 B4 G5 G5 B5 B5 | E4 E4 A4 A4 E5 E5 A5 A5 | \
+             G5:1 F5:2 A4:1 E5:2 D5 D5:1 C5:2 G4:1 D5:2 C5 | \
+             B4:1 C5 D5 E5 F5 G5 A5 B5 C6:2 -:4 E4:2",
+            "I | V7 | I | ii II7 I I | V7 V7 V7 V7 I V I I",
+        ),
+        Part::new(
+            "Verse",
+            "F4:1 F4:2 D4:1 E4:2 F4 G4 G4 - G4 | A4:1 A4:2 E5:1 D5:2 B4 A4 G4 - E4 | \
+             F4:1 F4:2 D4:1 E4:2 F4 G4 G4 - G4:1 G4 | B4:2 B4:1 - A4:2 A4 D5:4 _:2 -:1 E4 | \
+             F4 F4:2 D4:1 E4:2 F4 G4 G4 - G4 | A4:1 A4:2 E5:1 D5:2 B4 A4 G4 - G4 | \
+             C5:1 C5:2 G4:1 A4:2 Bb4 C5:4 -:1 B4:2 A4:1 | G4:2 G4 G4 G4 D5:6 -:2",
+            "V7 I | II7 V7 I I | V7 I | V II7 V7 V7 | V7 I | II7 V7 I I | I7 IV | V7",
+        )
+        .with_tempo(&[fermata(62, 1)]),
+        Part::new(
+            "Refrain",
+            "C5:3 B4:1 D5 C5 A4 C5 G4:2 G4 -:4 | -:1 B4:2 A4:1 C5 B4 A#4 B4 E4:2 E4 -:4 | \
+             -:1 A4:3 -:2 A4 B3:4 G4 | -:1 G4:2 G4:1 E5:2 D5 C5:4 G4:2 - | \
+             C5:3 B4:1 D5 C5 A4 C5 G4:2 G4 -:4 | -:3 B4:1 C5 C5:2 B4:1 E4:4 G4 | \
+             -:1 C4 D4 E4 F4 G4 A4 B4 B4:2 A4 D5:4",
+            "I V7 | V7 I | I V7 | V7 I | I V7 | V7 I | I ii",
+        )
+        .with_tempo(&[fermata(0, 3), fermata(5, 1), fermata(64, 3), fermata(68, 1)]),
+        Part::new(
+            "Refrain end",
+            "-:1 B4 B4 B4 B4 G4:2 E5:1 D5:4 C5:2 -",
+            "V7 V7 V7 I",
+        ),
+        Part::new(
+            "Refrain to verse",
+            "-:1 B4 B4 B4 B4 G4:2 E5:1 D5:4 C5:2 E4",
+            "V7 V7 V7 I",
+        ),
+    ],
+    form: &[
+        "Intro",
+        "Verse",
+        "Refrain",
+        "Refrain to verse",
+        "Verse",
+        "Refrain",
+        "Refrain to verse",
+        "Verse",
+        "Refrain",
+        "Refrain end",
+    ],
+    drums_from: 1,
+    about: "A Brazilian song of 1901 by Chiquinha Gonzaga, sung three times through. It is in C \
+            major: the verse rocks between G7 and C, reaches G through its own dominant, D7, \
+            and near its end turns C into C7 to land on F, I7 to IV; the refrain, \"Mulatinha \
+            sem tardança\", keeps to C and G7, touching D minor before its last G7 to C. Each \
+            bar here holds two bars of 2/4.",
+};
+
+// Source: https://github.com/OpenScore/Lieder, scores/Gonzaga,_Chiquinha/_/Roda_Yôyô/
+// lc6611820.mxl (OpenScore Lieder's transcription of the first edition, "Canção Brazileira",
+// Manoel Antonio Gomes Guimarães, Rio de Janeiro, plate 4575, ca. 1900,
+// words by Ernesto de Souza, dedicated to Sophia Camps; IMSLP: voice and piano, in F, 2/4,
+// one stanza). The tune is the voice, as written (the piano's right hand doubles it an octave
+// higher). In the fourteen bars of the piano's introduction it is the top of the right hand;
+// in bars 39 (second beat) to 43 (first beat), where the voice rests, it is the right hand's
+// top line an octave lower, in the voice's octave. The chords are read from the piano. In
+// bar 37 the C major chord has F in the bass for its first sixteenth; it is written V. The
+// fermatas of bars 23, 31, 39 and 47 are kept.
+// The 2/4 bars are paired; the voice's entry (bar 15) begins a paired bar, and a bar of rest
+// completes the last one.
+// PD: published about 1900; Chiquinha Gonzaga died in 1935 and the poet, Ernesto de Souza, in
+// 1928.
+pub(super) const RODA_YOYO: Song = Song {
+    name: "Roda Yôyô",
+    origin: "Chiquinha Gonzaga, c. 1900",
+    feel: "Canção brasileira",
+    genre: Genre::Latin,
+    tonic: F,
+    mode: Major,
+    time: COMMON,
+    tempo: 72.0,
+    comping: Comping::Habanera,
+    bass: Bass::Habanera,
+    rhythm: "Maxixe",
+    band: Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS),
+    style: "Maxixe",
+    parts: &[
+        Part::new(
+            "Intro",
+            "-:2 C4:2 C4:2 C4:1 -:1 -:1 A4:2 G4:1 F4:1 E4:2 D4:1 | \
+             C4:2 C4:2 C4:2 C4:2 -:1 E4:2 D4:1 C4:1 Bb3:2 E3:1 | \
+             F3:2 C4:2 C4:2 C4:1 -:1 -:1 A4:2 G4:1 F4:1 E4:2 D4:1 | \
+             C4:2 C4:2 C4:2 C4:2 -:1 E4:2 D4:1 C4:1 Bb3:2 E3:1 | \
+             F3:2 C4:2 D4:2 D4:1 -:1 C4:1 C4:2 C4:1 C4:2 C4:1 -:1 | \
+             F4:2 C4:2 D4:2 D4:1 -:1 C4:1 C4:2 C4:1 C4:2 Bb3:1 -:1 | \
+             F4:1 F4:2 F4:1 F4:2 C4:2 F4:1 F4:2 F4:1 F4:2 C4:2",
+            "I | V7 | I | V7 | I I6 V7 V7 | I I6 V7 V7 | I I I V7 I I I V7",
+        ),
+        Part::new(
+            "Verse",
+            "-:3 C4:1 D4:2 -:1 C4:1 F4:2 -:3 F4:1 E4:2 | \
+             D4:1 D4:2 -:3 D5:2 C5:1 Bb4:1 G4:1 E4:1 D4:2 Db4:2 | \
+             C4:2 C4:2 -:2 A3:2 C4:1 C4:2 C4:1 C4:1 Bb3:2 A3:1 | \
+             C4:2 C4:1 -:6 C4:2 D4:1 E4:1 F4:1 G4:1 A4:1 | \
+             Bb4:2 A4:1 -:2 C4:1 D4:1 C4:1 F4:2 -:3 F4:2 E4:1 | \
+             D4:2 D4:1 -:2 D5:2 D5:1 C5:1 Bb4:1 G4:1 E4:1 D4:2 Db4:2 | \
+             C4:2 C4:2 -:1 F4:2 F4:1 C5:4 -:1 C5:1 C5:1 C5:1 | \
+             B4:2 B4:2 -:5 F4:2 G4:1 A4:1 C5:1 A4:1 F4:1",
+            "I I I V7 I I I I | ii V7 | I | V7 | iv I I V7 I I I I | IV V7 | I I7 | #iv° iv I I",
+        )
+        .with_tempo(&[fermata(64, 2)]),
+        Part::new(
+            "Refrain",
+            "G4:1 F4:1 -:1 C4:1 C4:1 D4:2 C4:1 A4:1 A4:1 -:1 C4:1 C4:1 D4:2 C4:1 | \
+             Bb4:1 Bb4:1 -:2 Bb4:1 A4:2 G4:1 D5:2 -:1 C5:1 Bb4:2 E4:2 | \
+             D4:1 C4:1 -:1 C4:1 C4:1 D4:2 C4:1 A4:1 A4:1 -:1 C4:1 C4:1 D4:2 C4:1 | \
+             G4:1 G4:2 -:1 G4:1 G4:2 G4:1 G4:2 G4:2 G4:2 G4:2 | \
+             G4:2 G4:1 -:1 C4:1 D4:2 C4:1 A4:1 A4:2 C4:1 C4:1 D4:2 C4:1 | \
+             Bb4:1 Bb4:2 -:1 Bb4:1 A4:2 G4:1 D5:3 C5:1 Bb4:2 E4:2 | \
+             D4:1 C4:1 -:2 F4:1 F4:2 F4:1 F4:2 -:2 F4:1 F4:2 F4:1 | \
+             F4:2 -:2 C5:1 A4:2 F4:1 D4:1 -:1 E4:1 F4:1 G4:2 A4:2 | \
+             G4:4 F4:2 -:2 -:8",
+            "V7 I I I I I I I | V7 | I | V II7 | V7 I I I | V7 | I I7 IV iv | I I IV V7 | V7 I I I",
+        )
+        .with_tempo(&[fermata(0, 1), fermata(64, 2), fermata(128, 4)]),
+    ],
+    form: &["Intro", "Verse", "Refrain"],
+    drums_from: 1,
+    about: "A Brazilian song by Chiquinha Gonzaga, published about 1900, in F major over the \
+            habanera rhythm of the piano's left hand. The verse colours F with B flat minor, iv, \
+            a passing D flat in the tune, F7 over E flat and a B diminished chord before its \
+            cadence; the refrain, \"Que eu sou de fogo, que eu sou de brasa\", goes between F \
+            and C7, reaches C through G7, and ends with B flat and B flat minor before the last \
+            cadence. Each bar here holds two bars of 2/4.",
+};
+
+// Source: https://github.com/OpenScore/Lieder, scores/Gonzaga,_Chiquinha/_/Dona_Adelaide/
+// lc6610193.mxl (OpenScore Lieder's transcription of the first edition, "Cançoneta", Manoel
+// Antônio Guimarães, Rio de Janeiro, plate 4651, 1900 per IMSLP; words by
+// José do Patrocínio Filho; IMSLP: voice and piano, 2/4, the verse in D major and the refrain
+// in A major). The tune is the voice, as written; in the two bars of introduction it is the top
+// of the piano's right hand until the voice enters. The chords are read from the piano: the
+// verse's bass falls by semitones from B to F sharp, under E minor, A sharp diminished, D,
+// E7 and A7, and bar 7 is G sharp diminished.
+// The score writes out both stanzas: bars 1 to 18, then bars 19 to 36, the same introduction
+// and harmony with small changes of rhythm for the second stanza's words ("Intro 2",
+// "Verse 2", "Refrain 2"). In bar 35 the voice has three sixteenth-note triplets in the last
+// eighth (G sharp, F sharp, E, after a rest under a fermata); they are written as two
+// sixteenths, G sharp and E, leaving out the passing F sharp. Bar 35's E sharp is written F.
+// The fermatas of bars 2, 10, 18, 20, 28, 35 and 36 are kept.
+// PD: published 1900; Chiquinha Gonzaga died in 1935 and the poet, José do Patrocínio Filho,
+// in 1929.
+pub(super) const DONA_ADELAIDE: Song = Song {
+    name: "Dona Adelaide",
+    origin: "Chiquinha Gonzaga, 1900",
+    feel: "Cançoneta",
+    genre: Genre::Latin,
+    tonic: D,
+    mode: Major,
+    time: COMMON,
+    tempo: 76.0,
+    comping: Comping::Habanera,
+    bass: Bass::Habanera,
+    rhythm: "Maxixe",
+    band: Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS),
+    style: "Maxixe",
+    parts: &[
+        Part::new("Intro", "A4:3 A5:1 A5:2 -:2 A4:2 -:1 D4:1 D4:2 C#4:2", "V7")
+            .with_tempo(&[fermata(8, 2)]),
+        Part::new(
+            "Verse",
+            "B3:1 B3:1 A#3:1 B3:1 B4:2 A#4:2 A4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
+             F#4:1 E4:1 D#4:1 E4:1 F#4:2 E4:2 A3:2 A3:2 -:1 D4:1 C#4:1 D4:1 | \
+             F4:2 F4:1 D4:1 D4:1 D4:1 C#4:1 D4:1 B4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
+             A4:1 G4:1 G4:1 B3:1 B3:2 F#4:2 E4:4 D4:2 -:2",
+            "ii #v°7 I I | II7 V7 I I | #iv°7 I | ii V V7 I",
+        )
+        .with_tempo(&[fermata(56, 4)]),
+        Part::new(
+            "Refrain",
+            "F#4:2 B3:1 C#4:1 D4:1 C#4:1 D4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
+             E4:1 -:1 E4:1 F#4:1 G#4:1 A4:1 B4:1 B4:1 B4:2 A4:2 E4:1 E4:1 -:1 E4:1 | \
+             F#4:1 E4:1 E4:1 B3:1 C#4:1 D4:1 E4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
+             F#4:1 F#4:1 E4:1 F#4:1 G#4:1 G#4:1 F#4:1 E4:1 B4:4 A4:2 -:2",
+            "V7 I | V7 I | V7 I | IV V V7 I",
+        )
+        .in_key(A, Major)
+        .with_tempo(&[fermata(56, 4)]),
+        Part::new("Intro 2", "A4:3 A5:1 A5:2 -:2 A4:2 -:2 D4:2 C#4:2", "V7")
+            .with_tempo(&[fermata(8, 2)]),
+        Part::new(
+            "Verse 2",
+            "B3:2 A#3:1 B3:1 B4:1 B4:1 B4:1 A#4:1 A4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
+             F#4:1 E4:1 -:1 E4:1 F#4:1 F#4:1 E4:1 E4:1 A3:2 A3:2 -:1 D4:1 C#4:1 D4:1 | \
+             F4:2 F4:1 D4:1 D4:1 D4:1 C#4:1 D4:1 B4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
+             A4:1 G4:1 G4:1 B3:1 B3:3 F#4:1 E4:4 D4:2 -:2",
+            "ii #v°7 I I | II7 V7 I I | #iv°7 I | ii V V7 I",
+        )
+        .with_tempo(&[fermata(56, 4)]),
+        Part::new(
+            "Refrain 2",
+            "D4:1 -:1 B3:1 C#4:1 D4:1 C#4:1 D4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
+             E4:1 -:1 E4:1 F#4:1 G#4:1 A4:1 B4:1 B4:1 B4:2 A4:2 E4:2 -:1 E4:1 | \
+             F#4:1 E4:1 E4:1 B3:1 C#4:1 D4:1 E4:1 B3:1 F#4:2 F4:2 E4:1 -:2 E4:1 | \
+             F#4:1 F#4:1 F4:1 F#4:1 G#4:1 -:1 G#4:1 E4:1 B4:4 A4:2 -:2",
+            "V7 I | V7 I | V7 I | IV V V7 I",
+        )
+        .in_key(A, Major)
+        .with_tempo(&[fermata(53, 1), fermata(56, 4)]),
+    ],
+    form: &[
+        "Intro",
+        "Verse",
+        "Refrain",
+        "Intro 2",
+        "Verse 2",
+        "Refrain 2",
+    ],
+    drums_from: 1,
+    about: "A cançoneta of 1900 by Chiquinha Gonzaga. The verse, in D major, walks its bass down \
+            by semitones from B to F sharp under E minor, A sharp diminished, D, E7 and A7, then \
+            G sharp diminished, before a ii-V-I; the refrain moves to A major and rocks between \
+            E7 and A, with an F natural slipping down to E in the tune. Both stanzas are sung, \
+            each from D major to A major. Each bar here holds two bars of 2/4.",
+};
+
+// Under copyright (Jobim d. 1994, de Moraes d. 1980); added at the owner's request.
+// Source: two lead sheets in F, transposed up a minor sixth to D flat, the key of the
+// Getz/Gilberto recording (recorded 1963, released 1964). First chorus, with the rhythm of the Portuguese words:
+// Ulf Bro's ABC lead sheet, "The Girl From Ipanema (Garota De Ipanema)", 2002, from John
+// Chambers' tune finder, in the abc2book collection:
+// https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201280611.abc
+// (the same sheet is X:78 in abcresources/jc/abc_tune_jc_201254999.abc there). Second chorus,
+// with the rhythm of the English words and the record's ending tag: the Wikifonia lead sheet,
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/AntonioCarlosJobimViniciusdeMoraesTheGirlFromIpanema.abc
+// The two sheets give the same pitches and the same chord roots bar for bar. The second bar
+// of the bridge is F G flat F in both Wikifonia and the tune's own sequence; Ulf's ABC writes
+// F flat there, which is a slip. Key and tempo of the recording: jazzguitar.be ("The Girl
+// From Ipanema – Original Guitar Chords") and Hooktheory give D flat; the tempo, 128, is
+// Hooktheory's figure, an estimate (karaoke-version.com says about 130).
+pub(super) const GAROTA_DE_IPANEMA: Song = Song {
+    name: "Garota de Ipanema",
+    origin: "Antônio Carlos Jobim and Vinícius de Moraes, 1962",
+    feel: "Bossa nova",
+    genre: Genre::Latin,
+    tonic: CSharp,
+    mode: Major,
+    time: COMMON,
+    // An estimate of the Getz/Gilberto recording's tempo.
+    tempo: 128.0,
+    comping: Comping::Bossa,
+    bass: Bass::Bossa,
+    rhythm: "Bossa nova",
+    band: BOSSA,
+    style: "Bossa nova",
+    parts: &[
+        // First chorus: the rhythm of the Portuguese words, "Olha que coisa mais linda",
+        // as João Gilberto sings them on the record.
+        Part::new(
+            "A1",
+            "Eb5:4 Eb5:2 C5:2 C5:4 C5:2 Bb4:2 | Eb5:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Db5:2 | \
+             _:4 Db5:2 Bb4:2 Bb4:2 Bb4:2 Ab4:2 C5:2 | _:4 C5:2 Ab4:2 Ab4:2 Ab4:2 Gb4:2 Ab4:2 | \
+             _:16 | -:16",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | bII7",
+        ),
+        Part::new(
+            "A2",
+            "Eb5:4 Eb5:2 C5:2 C5:4 C5:2 Bb4:2 | Eb5:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Db5:2 | \
+             _:4 Db5:2 Bb4:2 Bb4:2 Bb4:2 Ab4:2 C5:2 | _:4 C5:2 Ab4:2 Ab4:2 Ab4:2 Gb4:2 Ab4:2 | \
+             _:16 | -:16",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7",
+        ),
+        // The bridge goes up a half step, to D major, for eight bars. The quarter-note
+        // triplets are written 3 + 3 + 2 steps. The F at the end is the anticipation of the
+        // next bar, which the score ties over; it is struck again on the bar line, where
+        // the key goes back to D flat.
+        Part::new(
+            "Bridge 1",
+            "C#5:16 | _:3 D5:3 C#5:2 B4:3 C#5:3 B4:2 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
+             _:16 | _:3 F5:3 E5:2 D5:3 E5:3 D5:2 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
+            "Imaj7 | Imaj7 | IV7 | IV7 | i7 | i7 | bVI7 | bVI7",
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Bridge 2",
+            "F5:16 | _:3 Gb5:3 F5:2 Eb5:3 F5:3 Eb5:2 | Db5:6 Eb5:2 _:8 | _:8 -:3 F5:3 Gb5:2 | \
+             Ab5:3 Ab4:3 Bb4:2 C5:3 Db5:3 Eb5:2 | E5:6 F5:6 -:4 | \
+             Gb5:3 Gb4:3 Ab4:2 Bb4:3 C5:3 Db5:2 | D5:6 Eb5:6 -:4",
+            "ii7 | ii7 | bVII7 | bVII7 | iii7 | VI7 | ii7 | V7",
+        ),
+        // The last A of the first chorus. Ulf's sheet ends on its seventh bar; the D7 of the
+        // eighth, leading into the second chorus, is the first ending of the Wikifonia sheet.
+        Part::new(
+            "A3",
+            "Eb5:6 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 F5:2 | \
+             _:4 F5:2 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | _:4 Ab5:2 C5:2 C5:3 C5:3 Bb4:2 | \
+             C5:16 | _:4 -:12",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | bII7",
+        ),
+        // Second chorus: the rhythm of the English words, "Tall and tan and young and
+        // lovely", as Astrud Gilberto sings them on the record.
+        Part::new(
+            "A1 English",
+            "Eb5:6 C5:2 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 C5:4 C5:4 Bb4:2 Eb5:2 | _:2 Eb5:2 C5:2 C5:2 _:2 C5:2 Bb4:2 Db5:2 | \
+             _:2 Bb4:4 Bb4:2 _:2 Bb4:2 Ab4:2 C5:2 | _:2 Ab4:4 Ab4:2 _:2 Ab4:2 Gb4:4 | \
+             -:4 Ab4:12 | _:8 -:8",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | bII9",
+        ),
+        Part::new(
+            "A2 English",
+            "Eb5:6 C5:2 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:4 | \
+             Eb5:4 C5:4 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:2 Db5:2 | \
+             _:2 Bb4:4 Bb4:2 Bb4:2 Bb4:2 Ab4:2 C5:2 | _:2 Ab4:4 Ab4:2 _:2 Ab4:2 Gb4:4 | \
+             -:4 Ab4:12 | _:8 -:8",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7",
+        ),
+        Part::new(
+            "Bridge 1 English",
+            "C#5:16 | _:3 D5:3 C#5:2 B4:3 C#5:3 B4:2 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
+             _:16 | _:3 F5:3 E5:2 D5:3 E5:3 D5:2 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
+            "Imaj7 | Imaj7 | IV9 | IV9 | i7 | i7 | bVI9 | bVI9",
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Bridge 2 English",
+            "F5:16 | _:3 Gb5:3 F5:2 Eb5:3 F5:3 Eb5:2 | Db5:6 Eb5:2 _:8 | _:8 -:3 F5:3 Gb5:2 | \
+             Ab5:3 Ab4:3 Bb4:2 C5:3 Db5:3 Eb5:2 | E5:12 F5:4 | \
+             Gb5:3 Gb4:3 Ab4:2 Bb4:3 C5:3 Db5:2 | D5:12 -:4",
+            "ii7 | ii7 | bVII9 | bVII9 | iii7 | VI7b9 | ii7 | V7b9",
+        ),
+        // The last A, and the record's ending: "but she doesn't see", then twice more,
+        // "she just doesn't see", "no, she doesn't see", rocking between D flat major 7
+        // and D7, and a held last note.
+        Part::new(
+            "A3 end",
+            "Eb5:6 C5:2 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
+             _:4 C5:4 C5:4 Bb4:2 Eb5:2 | _:2 Eb5:2 C5:2 C5:2 _:2 C5:2 Bb4:2 F5:2 | \
+             _:6 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | Ab5:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | \
+             -:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | -:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | _:16",
+            "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7 bII7 bII7 bII7 | Imaj7 | \
+             bII7 | Imaj7 bII7 | Imaj7",
+        )
+        .with_tempo(&[fermata(176, 16)]),
+    ],
+    form: &[
+        "A1",
+        "A2",
+        "Bridge 1",
+        "Bridge 2",
+        "A3",
+        "A1 English",
+        "A2 English",
+        "Bridge 1 English",
+        "Bridge 2 English",
+        "A3 end",
+    ],
+    drums_from: 0,
+    about: "The second chord is the surprise: E flat 7 (II7, the dominant of the dominant) where \
+            E flat minor 7 (ii7) would be expected, and the ii7 that follows goes home through \
+            D7 (bII7), standing in for A flat 7. The bridge jumps up a half step to D major (I, \
+            then G7 as IV7), turns D minor (i7), and B flat 7, D major's bVI7 but D flat's VI7, \
+            leads to E flat minor and a chain of chords home: B7 (bVII7), F minor 7 (iii7), \
+            B flat 7 (VI7), E flat minor 7 (ii7), A flat 7 (V7).",
+};
