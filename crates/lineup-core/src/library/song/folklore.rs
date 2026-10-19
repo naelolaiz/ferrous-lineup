@@ -2623,3 +2623,71 @@ pub(super) const PUNTO_OCUENO: Song = Song {
             minor, G7, C, F, to E7; the rest of the tune turns again and again on F, E7 \
             and A minor.",
 };
+
+// Source: https://raw.githubusercontent.com/flvani/diatonic-map/4f0966a394a536852809e5f4c215d44243854d98/songs/minuano/boi.barroso.abcx
+// (Flávio Vanni's map for the diatonic accordion, "Folclore regional", arranged by Cezar
+// Ferreira, in G, 2/4: Parte I with two endings, Parte II repeated, D.S. al coda; the tune is
+// the top line, the chords from the accordion's bass: G, D, C with an A minor triad, A minor).
+// The same map in C for the Hohner Club (songs/club-br/boi.barroso.club.abcx) has the same
+// notes and chords a fourth higher. No independent second transcription was found.
+// Repeats: the map marks ":|:" after Parte I's first ending, so Parte II is repeated from the
+// second-ending bar, its second time ending "B2 dc" into the D.S.; after the D.S. Parte I is
+// played once (to its second ending) and Parte II once, to the coda, which is the same bar as
+// the second ending. The D bars are written V7: the tune puts C over them.
+// PD: traditional (Rio Grande do Sul).
+pub(super) const BOI_BARROSO: Song = Song {
+    name: "Boi barroso",
+    origin: "Traditional, Brazil (Rio Grande do Sul)",
+    feel: "Canção gaúcha",
+    genre: Genre::Folklore,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 100.0,
+    comping: Comping::Backbeat,
+    bass: Bass::RootFifth,
+    rhythm: "Two-step",
+    band: ACCORDION_BAND,
+    style: "Polka",
+    parts: &[
+        Part::new("Pickup", "-:12 D5:2 C5:2", "V7"),
+        Part::new(
+            "Part I",
+            "B4:2 B4 B4 C5 D5 D5 D5 C5 | B4 E5 E5 D5 C5:4 C5:2 B4:2 | \
+             A4 A4 A4 B4 C5 C5 C5 B4 | A4 D5 D5 C5 B4:4 D5:2 C5:2",
+            "I | I V7 | V7 | V7 I",
+        ),
+        Part::new(
+            "Part I end",
+            "B4:2 B4 B4 C5 D5 D5 D5 C5 | B4 E5 E5 D5 C5:4 C5:2 B4:2 | \
+             A4 A4 A4 B4 C5 C5 C5 B4 | A4 D5 D5 C5 B4:4 -:4",
+            "I | I V7 | V7 | V7 I",
+        ),
+        Part::new(
+            "Part II",
+            "-:2 B4 C5 D5 E5:4 F#5:4 | -:2 E5 D5 C5 B4:4 D5:4 | \
+             -:2 D5 C5 B4 A4:4 C5:4 | -:2 D5 D5 C5 B4:4 -:4",
+            "I IV6 | ii I | I V7 | V7 I",
+        ),
+        Part::new(
+            "Part II into D.S.",
+            "-:2 B4 C5 D5 E5:4 F#5:4 | -:2 E5 D5 C5 B4:4 D5:4 | \
+             -:2 D5 C5 B4 A4:4 C5:4 | -:2 D5 D5 C5 B4:4 D5:2 C5:2",
+            "I IV6 | ii I | I V7 | V7 I",
+        ),
+    ],
+    form: &[
+        "Pickup",
+        "Part I",
+        "Part I end",
+        "Part II",
+        "Part II into D.S.",
+        "Part I end",
+        "Part II",
+    ],
+    drums_from: 1,
+    about: "A gaúcho folk song from Rio Grande do Sul about the ox called Barroso, in G major. The \
+            first part answers three 2/4 bars of G with four of D7; the second part climbs to F sharp \
+            over C with an A minor triad in the accordion's bass, C6, goes on to A minor and \
+            settles back through D7 to G. Each bar here holds two bars of 2/4.",
+};
