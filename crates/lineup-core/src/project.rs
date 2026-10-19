@@ -223,6 +223,8 @@ pub struct Project {
     pub(crate) playlist: Playlist,
     /// The band that plays the chord sheet, if the song has one.
     pub(crate) band: Option<Band>,
+    /// Where each part of the song came from (see [`crate::sources`]).
+    pub(crate) sources: crate::sources::Sources,
 }
 
 impl Project {
@@ -239,6 +241,7 @@ impl Project {
             patterns: vec![Pattern::new("Pattern 1", 0, NEW_PATTERN_LENGTH)],
             playlist: Playlist::new(),
             band: None,
+            sources: crate::sources::Sources::default(),
         }
     }
 

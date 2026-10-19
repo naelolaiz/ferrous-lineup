@@ -377,7 +377,8 @@ impl LineupApp {
 
     /// Swaps in another project and tells the audio thread about it.
     pub(super) fn replace_project(&mut self, mut project: Project, path: Option<PathBuf>) {
-        fill_chord_sheet(&mut project);
+        // The chords heard in the song are still the song's.
+        project.follow_along(fill_chord_sheet);
         self.project = project;
         self.auditions.clear();
         self.song_library = Tried::default();
