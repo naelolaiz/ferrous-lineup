@@ -19,6 +19,8 @@
 //!
 //! A part on a locked channel stays as it is too, and the band keeps the
 //! song's own locked parts (see [`locks`]).
+//!
+//! A part of the song can be played in another style (see [`sections`]).
 
 use std::sync::OnceLock;
 
@@ -42,6 +44,7 @@ mod extras;
 mod form;
 mod guitar;
 pub mod locks;
+pub mod sections;
 pub mod solo;
 pub(crate) mod stops;
 mod variation;
@@ -49,6 +52,8 @@ mod variation;
 pub use extras::{Extra, Extras, PadPart};
 pub use form::{ENDING_BARS, Ending, Form, INTRO_BARS};
 pub use guitar::GuitarPart;
+pub use sections::StyleMarker;
+use sections::StyleMarkerFile;
 use solo::{NoteRole, Over, Soloist};
 pub use variation::{Variation, VariationMarker};
 pub(crate) use variation::{tidy as tidy_variations, variation_in};
@@ -318,6 +323,9 @@ pub struct Band {
     /// Where the band changes between the style's two variations, in
     /// order. Before the first, it plays variation a.
     pub(crate) variations: Vec<VariationMarker>,
+    /// Where the band plays another style than its own, in order (see
+    /// [`sections`]).
+    pub(crate) styles: Vec<StyleMarker>,
     /// The seed of the soloist's solo, while there is a soloist.
     pub(crate) solo: Option<u64>,
 }
@@ -339,6 +347,7 @@ impl Band {
             since: 0,
             form: Form::default(),
             variations: Vec::new(),
+            styles: Vec::new(),
             solo: None,
         }
     }
@@ -378,6 +387,9 @@ impl Band {
                     players.push(player);
                 }
             }
+            if self.sections_drum() && !players.contains(&Player::Drums) {
+                players.push(Player::Drums);
+            }
             if self.has_soloist() && !players.contains(&Player::Soloist) {
                 players.push(Player::Soloist);
             }
@@ -385,13 +397,20 @@ impl Band {
         }
         let mut players = self.instrument_style.players();
         players.retain(|player| *player != Player::Drums);
-        if self.style.rhythm.is_some() {
+        if self.style.rhythm.is_some() || self.sections_drum() {
             players.push(Player::Drums);
         }
         if self.has_soloist() {
             players.push(Player::Soloist);
         }
         players
+    }
+
+    /// Whether a section's style has drums.
+    fn sections_drum(&self) -> bool {
+        self.styles
+            .iter()
+            .any(|marker| marker.style.is_some_and(|style| style.rhythm.is_some()))
     }
 
     pub fn name(&self) -> &str {
@@ -514,6 +533,8 @@ pub(crate) struct BandFile {
     pub form: Form,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub variations: Vec<VariationMarker>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub styles: Vec<StyleMarkerFile>,
 }
 
 fn none_written(written: &[Option<u64>; 3]) -> bool {
@@ -547,6 +568,7 @@ impl From<&Band> for BandFile {
             since: band.since,
             form: band.form,
             variations: band.variations.clone(),
+            styles: band.styles.iter().map(StyleMarkerFile::from).collect(),
         }
     }
 }
@@ -626,6 +648,16 @@ impl BandFile {
                 variation::tidy(&mut markers);
                 markers
             },
+            styles: {
+                let mut markers = self
+                    .styles
+                    .iter()
+                    .map(StyleMarkerFile::marker)
+                    .collect::<Result<Vec<_>, _>>()?;
+                markers.retain(|marker| marker.start < MAX_SONG_STEPS);
+                sections::tidy(&mut markers);
+                markers
+            },
             solo: self.solo,
         })
     }
@@ -695,11 +727,14 @@ impl Chunk {
 }
 
 /// One pattern's worth of a part: how long, in which time signature,
-/// and its notes by channel.
+/// how it swings, and its notes by channel.
 #[derive(Debug, Clone, PartialEq)]
 struct Content {
     length: usize,
     time: TimeSignature,
+    /// The swing of a section's style, if one plays there: the same notes
+    /// swung otherwise are another pattern.
+    swing: Option<u8>,
     rows: Vec<(usize, Vec<NoteEvent>)>,
 }
 
@@ -744,24 +779,30 @@ fn cut(played: &[Played], start: usize, end: usize) -> Vec<Played> {
         .collect()
 }
 
-/// A stretch of bars the band plays in one variation.
+/// A stretch of bars the band plays in one variation of one style.
 struct Run {
     bars: Vec<Bar>,
     variation: Variation,
 }
 
-/// `bars` in runs of one variation each, as `markers` say, all but the
-/// `held` bar, if there is one: the last bar of an ending, played
-/// otherwise.
-fn runs(bars: &[Bar], held: Option<Bar>, markers: &[VariationMarker]) -> Vec<Run> {
+/// `bars` in runs of one variation each, as `markers` say, starting
+/// again where a section's style starts (`styles`), all but the `held`
+/// bar, if there is one: the last bar of an ending, played otherwise.
+fn runs(
+    bars: &[Bar],
+    held: Option<Bar>,
+    markers: &[VariationMarker],
+    styles: &[StyleMarker],
+) -> Vec<Run> {
     let mut runs: Vec<Run> = Vec::new();
     let played = bars
         .iter()
         .filter(|bar| held.is_none_or(|held| bar.start < held.start));
     for &bar in played {
         let variation = variation::variation_in(markers, bar.start);
+        let restyled = styles.iter().any(|marker| marker.start == bar.start);
         match runs.last_mut() {
-            Some(run) if run.variation == variation => run.bars.push(bar),
+            Some(run) if run.variation == variation && !restyled => run.bars.push(bar),
             _ => runs.push(Run {
                 bars: vec![bar],
                 variation,
@@ -769,6 +810,24 @@ fn runs(bars: &[Bar], held: Option<Bar>, markers: &[VariationMarker]) -> Vec<Run
         }
     }
     runs
+}
+
+/// What the band plays from: the bars, cut into chunks, and the chord
+/// sheet's harmonies, breaks and keys.
+struct Score {
+    bars: Vec<Bar>,
+    chunks: Vec<Chunk>,
+    /// The end of the chorus.
+    end: usize,
+    /// The last bar of an ending, struck and held.
+    held: Option<Bar>,
+    breaks: stops::Breaks,
+    harmonies: Vec<Played>,
+    keys: crate::key_map::KeyMap,
+    runs: Vec<Run>,
+    variations: Vec<VariationMarker>,
+    /// The time signature of the first bar.
+    time: TimeSignature,
 }
 
 /// A player's notes, run by run: each run played with `play` in its
@@ -1383,6 +1442,7 @@ impl Project {
         if let Some(band) = &mut self.band {
             band.end = end;
             band.variations.retain(|marker| marker.start < end);
+            band.styles.retain(|marker| marker.start < end);
         }
         self.write_band();
         true
@@ -1666,6 +1726,12 @@ impl Project {
                 )
                 .as_bytes(),
             );
+            // Only songs with section styles count them, so a song saved
+            // before there were any plays as it was written.
+            for marker in &band.styles {
+                print.number(marker.start);
+                print.bytes(marker.style.map_or("", |style| style.name).as_bytes());
+            }
         }
         // What the band plays from only has to be compared within one
         // run of the app (a change means "write again"), so the debug
@@ -1820,175 +1886,37 @@ impl Project {
         // The last bar of an ending is one chord, struck and held.
         let held = ending.and_then(|_| bars.last().copied());
         let variations = band.variations.clone();
-        let runs = runs(&bars, held, &variations);
-        let style = band.style;
-        let extras = band.extras();
-        let seed = |player: Player| interpret::seed("band", style.name, player.name());
-        let time = meter.first();
-        // The variation the last bar of an ending is played in.
-        let held_in = held.map(|bar| variation::variation_in(&variations, bar.start));
-        let variation_at = |step: usize| variation::variation_in(&variations, step);
+        let runs = runs(&bars, held, &variations, &band.styles);
+        let score = Score {
+            bars,
+            chunks,
+            end,
+            held,
+            breaks,
+            harmonies,
+            keys,
+            runs,
+            variations,
+            time: meter.first(),
+        };
         let mut rewritten = Vec::new();
         for player in Player::ALL {
             if self.is_frozen(player) || self.plays_locked(player) {
                 continue;
             }
-            let notes: Vec<NoteEvent> = match player {
-                Player::Piano => {
-                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
-                        band.comping_in(variation).play_in_bars(bars, played)
-                    });
-                    notes.extend(held_bar(held, &harmonies, |bars, played| {
-                        Comping::Held.play_in_bars(bars, played)
-                    }));
-                    breaks.apply(notes, &harmonies, |played| {
-                        Comping::Held.play_in_bars(&bars, std::slice::from_ref(played))
-                    })
-                }
-                Player::Bass => {
-                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
-                        band.bass_in(variation).play_in_bars(bars, played)
-                    });
-                    notes.extend(held_bar(held, &harmonies, |bars, played| {
-                        Bass::Held.play_in_bars(bars, played)
-                    }));
-                    breaks.apply(notes, &harmonies, bass_struck)
-                }
-                Player::Drums => Vec::new(),
-                Player::Guitar => {
-                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
-                        extras.guitar_in(variation).map_or_else(Vec::new, |guitar| {
-                            let comping = band.comping_in(variation);
-                            let part = if band.accents_only {
-                                GuitarPart::Strum(comping)
-                            } else {
-                                guitar.part
-                            };
-                            guitar::play(part, comping, bars, played)
-                        })
-                    });
-                    if held_in
-                        .and_then(|variation| extras.guitar_in(variation))
-                        .is_some()
-                    {
-                        notes.extend(held_bar(held, &harmonies, |bars, played| {
-                            let ring = GuitarPart::Strum(Comping::Held);
-                            guitar::play(ring, Comping::Held, bars, played)
-                        }));
+            // Each style that plays somewhere plays the whole song, and
+            // each of its notes is kept where that style plays. The
+            // soloist improvises over the chorus whatever the style.
+            let notes = match player {
+                Player::Soloist => self.band_notes(&band, player, &score),
+                _ => {
+                    let mut notes = Vec::new();
+                    for style in sections::styles_played(&band.styles) {
+                        let playing = band.playing(style);
+                        let part = self.band_notes(&playing, player, &score);
+                        notes.extend(sections::where_it_plays(part, &band.styles, style));
                     }
-                    breaks.apply(notes, &harmonies, |played| {
-                        match extras.guitar_in(variation_at(played.start)) {
-                            Some(_) => guitar::play(
-                                GuitarPart::Strum(Comping::Held),
-                                Comping::Held,
-                                &bars,
-                                std::slice::from_ref(played),
-                            ),
-                            None => Vec::new(),
-                        }
-                    })
-                }
-                Player::Strings | Player::Organ => {
-                    let octave = match player {
-                        Player::Strings => STRINGS_OCTAVE,
-                        _ => 0,
-                    };
-                    let pad_in = |variation| match player {
-                        Player::Strings => extras.strings_in(variation),
-                        _ => extras.organ_in(variation),
-                    };
-                    let mut notes = played_in_runs(&runs, &harmonies, |variation, bars, played| {
-                        pad_in(variation)
-                            .map_or_else(Vec::new, |pad| pad.part.play(octave, bars, played))
-                    });
-                    if held_in.and_then(pad_in).is_some() {
-                        notes.extend(held_bar(held, &harmonies, |bars, played| {
-                            PadPart::Held.play(octave, bars, played)
-                        }));
-                    }
-                    breaks.apply(notes, &harmonies, |played| {
-                        match pad_in(variation_at(played.start)) {
-                            Some(_) => {
-                                PadPart::Held.play(octave, &bars, std::slice::from_ref(played))
-                            }
-                            None => Vec::new(),
-                        }
-                    })
-                }
-                // The soloist plays over the chorus, not the intro or the
-                // ending, and goes on through shots and rests: the gaps
-                // are where a soloist is heard.
-                Player::Soloist => match band.solo {
-                    Some(solo) => {
-                        let overs: Vec<Over> = harmonies
-                            .iter()
-                            .filter_map(|played| Over::of(played, keys.key_at(played.start)))
-                            .collect();
-                        let (from, to) = self.chorus().unwrap_or((0, end));
-                        let soloist = Soloist::of(band.instrument_style.genre);
-                        solo::improvise(&bars, &overs, from, to, soloist, solo)
-                    }
-                    None => Vec::new(),
-                },
-            };
-            // A saved style with only drums (a rhythm's copy) leaves the
-            // harmony to the band, as a built-in rhythm does, and the
-            // soloist improvises unless the style has a lane for one.
-            let in_style = |style: &crate::library::UserStyle| {
-                player == Player::Drums
-                    || style.lanes.iter().any(|lane| lane.player == player)
-                    || (player != Player::Soloist
-                        && style.lanes.iter().any(|lane| lane.player != Player::Drums))
-            };
-            let notes = if let Some(style) = &band.custom_rhythm
-                && (!band.accents_only || player == Player::Drums)
-                && in_style(style)
-            {
-                let mut notes = Vec::new();
-                for lane in style.lanes.iter().filter(|lane| lane.player == player) {
-                    if let Some(channel) = self.user_style_channel(lane, false) {
-                        let mut part = style.play_lane(lane, &bars, &harmonies, &keys);
-                        if player != Player::Drums {
-                            part = breaks.apply(part, &harmonies, |played| {
-                                if player == Player::Bass {
-                                    bass_struck(played)
-                                } else {
-                                    Comping::Held.play_in_bars(&bars, std::slice::from_ref(played))
-                                }
-                            });
-                            louder_in_b(&mut part, &variations);
-                        }
-                        notes.extend(part.into_iter().map(|note| (channel, note)));
-                    }
-                }
-                if player == Player::Drums {
-                    let drum_channel = |drum| {
-                        self.channels.iter().position(|channel| {
-                            channel.kind == ChannelKind::Sampler(SampleSource::Builtin(drum))
-                        })
-                    };
-                    breaks.apply_to_drums(
-                        notes,
-                        drum_channel(Drum::Kick),
-                        drum_channel(Drum::Crash),
-                    )
-                } else {
                     notes
-                }
-            } else {
-                match (player, band.channel(player)) {
-                    (Player::Drums, _) => self.drum_part(style, &bars, &chunks, end, held, &breaks),
-                    (_, Some(channel)) => {
-                        let mut notes = notes;
-                        let role = match player {
-                            Player::Soloist => Role::Melody,
-                            _ => Role::Accompaniment,
-                        };
-                        interpret::perform(&mut notes, time, role, seed(player));
-                        louder_in_b(&mut notes, &variations);
-                        notes.into_iter().map(|note| (channel, note)).collect()
-                    }
-                    (_, None) => Vec::new(),
                 }
             };
             let notes = match player {
@@ -1996,7 +1924,7 @@ impl Project {
                 _ if self.song_keeps(player) => Vec::new(),
                 _ => notes,
             };
-            self.write_part(player, &chunks, notes);
+            self.write_part(player, &score.chunks, notes);
             rewritten.push(player);
         }
         self.drop_unused_players(&rewritten);
@@ -2011,6 +1939,195 @@ impl Project {
         if let Some(band) = &mut self.band {
             band.written = written;
             band.heard = Some(heard);
+        }
+    }
+
+    /// What `player` plays in `band`'s style all through `score`, on the
+    /// song's timeline, by channel.
+    fn band_notes(
+        &mut self,
+        band: &Band,
+        player: Player,
+        score: &Score,
+    ) -> Vec<(usize, NoteEvent)> {
+        let extras = band.extras();
+        let seed = |player: Player| interpret::seed("band", band.style.name, player.name());
+        // The variation the last bar of an ending is played in.
+        let held_in = score
+            .held
+            .map(|bar| variation::variation_in(&score.variations, bar.start));
+        let variation_at = |step: usize| variation::variation_in(&score.variations, step);
+        let notes: Vec<NoteEvent> = match player {
+            Player::Piano => {
+                let mut notes =
+                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
+                        band.comping_in(variation).play_in_bars(bars, played)
+                    });
+                notes.extend(held_bar(score.held, &score.harmonies, |bars, played| {
+                    Comping::Held.play_in_bars(bars, played)
+                }));
+                score.breaks.apply(notes, &score.harmonies, |played| {
+                    Comping::Held.play_in_bars(&score.bars, std::slice::from_ref(played))
+                })
+            }
+            Player::Bass => {
+                let mut notes =
+                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
+                        band.bass_in(variation).play_in_bars(bars, played)
+                    });
+                notes.extend(held_bar(score.held, &score.harmonies, |bars, played| {
+                    Bass::Held.play_in_bars(bars, played)
+                }));
+                score.breaks.apply(notes, &score.harmonies, bass_struck)
+            }
+            Player::Drums => Vec::new(),
+            Player::Guitar => {
+                let mut notes =
+                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
+                        extras.guitar_in(variation).map_or_else(Vec::new, |guitar| {
+                            let comping = band.comping_in(variation);
+                            let part = if band.accents_only {
+                                GuitarPart::Strum(comping)
+                            } else {
+                                guitar.part
+                            };
+                            guitar::play(part, comping, bars, played)
+                        })
+                    });
+                if held_in
+                    .and_then(|variation| extras.guitar_in(variation))
+                    .is_some()
+                {
+                    notes.extend(held_bar(score.held, &score.harmonies, |bars, played| {
+                        let ring = GuitarPart::Strum(Comping::Held);
+                        guitar::play(ring, Comping::Held, bars, played)
+                    }));
+                }
+                score.breaks.apply(notes, &score.harmonies, |played| {
+                    match extras.guitar_in(variation_at(played.start)) {
+                        Some(_) => guitar::play(
+                            GuitarPart::Strum(Comping::Held),
+                            Comping::Held,
+                            &score.bars,
+                            std::slice::from_ref(played),
+                        ),
+                        None => Vec::new(),
+                    }
+                })
+            }
+            Player::Strings | Player::Organ => {
+                let octave = match player {
+                    Player::Strings => STRINGS_OCTAVE,
+                    _ => 0,
+                };
+                let pad_in = |variation| match player {
+                    Player::Strings => extras.strings_in(variation),
+                    _ => extras.organ_in(variation),
+                };
+                let mut notes =
+                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
+                        pad_in(variation)
+                            .map_or_else(Vec::new, |pad| pad.part.play(octave, bars, played))
+                    });
+                if held_in.and_then(pad_in).is_some() {
+                    notes.extend(held_bar(score.held, &score.harmonies, |bars, played| {
+                        PadPart::Held.play(octave, bars, played)
+                    }));
+                }
+                score.breaks.apply(notes, &score.harmonies, |played| {
+                    match pad_in(variation_at(played.start)) {
+                        Some(_) => {
+                            PadPart::Held.play(octave, &score.bars, std::slice::from_ref(played))
+                        }
+                        None => Vec::new(),
+                    }
+                })
+            }
+            // The soloist plays over the chorus, not the intro or the
+            // ending, and goes on through shots and rests: the gaps
+            // are where a soloist is heard.
+            Player::Soloist => match band.solo {
+                Some(solo) => {
+                    let overs: Vec<Over> = score
+                        .harmonies
+                        .iter()
+                        .filter_map(|played| Over::of(played, score.keys.key_at(played.start)))
+                        .collect();
+                    let (from, to) = self.chorus().unwrap_or((0, score.end));
+                    let soloist = Soloist::of(band.instrument_style.genre);
+                    solo::improvise(&score.bars, &overs, from, to, soloist, solo)
+                }
+                None => Vec::new(),
+            },
+        };
+        // A saved style with only drums (a rhythm's copy) leaves the
+        // harmony to the band, as a built-in rhythm does, and the
+        // soloist improvises unless the style has a lane for one.
+        let in_style = |style: &crate::library::UserStyle| {
+            player == Player::Drums
+                || style.lanes.iter().any(|lane| lane.player == player)
+                || (player != Player::Soloist
+                    && style.lanes.iter().any(|lane| lane.player != Player::Drums))
+        };
+        if let Some(style) = &band.custom_rhythm
+            && (!band.accents_only || player == Player::Drums)
+            && in_style(style)
+        {
+            let mut notes = Vec::new();
+            for lane in style.lanes.iter().filter(|lane| lane.player == player) {
+                if let Some(channel) = self.user_style_channel(lane, false) {
+                    let mut part =
+                        style.play_lane(lane, &score.bars, &score.harmonies, &score.keys);
+                    if player != Player::Drums {
+                        part = score.breaks.apply(part, &score.harmonies, |played| {
+                            if player == Player::Bass {
+                                bass_struck(played)
+                            } else {
+                                Comping::Held
+                                    .play_in_bars(&score.bars, std::slice::from_ref(played))
+                            }
+                        });
+                        louder_in_b(&mut part, &score.variations);
+                    }
+                    notes.extend(part.into_iter().map(|note| (channel, note)));
+                }
+            }
+            if player == Player::Drums {
+                let drum_channel = |drum| {
+                    self.channels.iter().position(|channel| {
+                        channel.kind == ChannelKind::Sampler(SampleSource::Builtin(drum))
+                    })
+                };
+                score.breaks.apply_to_drums(
+                    notes,
+                    drum_channel(Drum::Kick),
+                    drum_channel(Drum::Crash),
+                )
+            } else {
+                notes
+            }
+        } else {
+            match (player, band.channel(player)) {
+                (Player::Drums, _) => self.drum_part(
+                    band.style,
+                    &score.bars,
+                    &score.chunks,
+                    score.end,
+                    score.held,
+                    &score.breaks,
+                ),
+                (_, Some(channel)) => {
+                    let mut notes = notes;
+                    let role = match player {
+                        Player::Soloist => Role::Melody,
+                        _ => Role::Accompaniment,
+                    };
+                    interpret::perform(&mut notes, score.time, role, seed(player));
+                    louder_in_b(&mut notes, &score.variations);
+                    notes.into_iter().map(|note| (channel, note)).collect()
+                }
+                (_, None) => Vec::new(),
+            }
         }
     }
 
@@ -2029,6 +2146,7 @@ impl Project {
             edges.extend([start, end]);
         }
         edges.extend(self.variations().iter().map(|marker| marker.start));
+        edges.extend(self.section_styles().iter().map(|marker| marker.start));
         let mut chunks: Vec<Chunk> = Vec::new();
         for bar in bars {
             let joins = chunks.last().is_some_and(|chunk| {
@@ -2158,9 +2276,9 @@ impl Project {
 
     /// The drums: the style's rhythm in every bar, started again at each
     /// stretch, with its fill in the last bar of every eight, the last
-    /// bar before a section or a change of variation, and the last bar of
-    /// the intro and of the chorus, which ends at `end`. A change of
-    /// variation starts with a crash, and variation b plays some drums on
+    /// bar before a section or a change of variation or style, and the
+    /// last bar of the intro and of the chorus, which ends at `end`. A
+    /// change of variation or style starts with a crash, and variation b plays some drums on
     /// others, louder. With an ending, its `held` bar is one last hit of
     /// the kick and the crash cymbal, as are the shots, holds and pushes
     /// of the chord sheet, its `breaks`.
@@ -2182,11 +2300,14 @@ impl Project {
         // plays some of the rhythm's drums on others (see
         // `BandStyle::drum_in`).
         let markers = self.variations().to_vec();
-        let changes: Vec<usize> = markers
+        let mut changes: Vec<usize> = markers
             .iter()
             .map(|marker| marker.start)
+            .chain(self.section_styles().iter().map(|marker| marker.start))
             .filter(|&start| start > 0 && start < end)
             .collect();
+        changes.sort_unstable();
+        changes.dedup();
         let crash = (!changes.is_empty())
             .then(|| Rhythm::named(LAST_HIT))
             .flatten();
@@ -2366,6 +2487,7 @@ impl Project {
             let content = Content {
                 length: chunk.length,
                 time: chunk.time,
+                swing: self.section_style_at(chunk.start).map(BandStyle::swing),
                 rows,
             };
             let index = match contents.iter().position(|known| *known == content) {

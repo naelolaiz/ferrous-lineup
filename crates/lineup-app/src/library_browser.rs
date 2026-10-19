@@ -473,6 +473,26 @@ fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6], locked: &str)
                 ui.label(text).on_hover_text(hover);
                 ui.end_row();
             }
+            let meter = project.meter();
+            let sections: Vec<String> = project
+                .section_styles()
+                .iter()
+                .map(|marker| {
+                    format!(
+                        "bar {}: {}",
+                        meter.bar_at(marker.start).number + 1,
+                        project.style_name_at(marker.start)
+                    )
+                })
+                .collect();
+            if !sections.is_empty() {
+                ui.weak("Sections");
+                ui.label(sections.join(", ")).on_hover_text(
+                    "Where the band plays another style. Right-click a bar or a section on \
+                     the chord sheet to change it.",
+                );
+                ui.end_row();
+            }
             if !locked.is_empty() {
                 ui.weak("Locked");
                 ui.label(format!("🔒 {locked}")).on_hover_text(

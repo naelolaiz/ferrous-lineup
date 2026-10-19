@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::arrangement::{Arrangement, arrange};
-use crate::band::{Band, VariationMarker};
+use crate::band::{Band, StyleMarker, VariationMarker};
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::harmony::{ChordSymbol, Harmony, Scale, analyze};
@@ -1293,6 +1293,13 @@ impl Project {
             .filter(|marker| marker.start > section.start && marker.start < section.end())
             .copied()
             .collect();
+        let opening_style = self.section_style_at(section.start);
+        let inside_styles: Vec<StyleMarker> = self
+            .section_styles()
+            .iter()
+            .filter(|marker| marker.start > section.start && marker.start < section.end())
+            .copied()
+            .collect();
         let opening_chord = self.chord_at(section.start);
         let inside_chords: Vec<ChordMarker> = self
             .playlist
@@ -1373,10 +1380,19 @@ impl Project {
                         start: marker.start + shift,
                         ..*marker
                     }));
+                // And the same styles.
+                band.styles
+                    .push(StyleMarker::new(copy_start, opening_style));
+                band.styles
+                    .extend(inside_styles.iter().map(|marker| StyleMarker {
+                        start: marker.start + shift,
+                        ..*marker
+                    }));
             }
         }
         if let Some(band) = &mut self.band {
             crate::band::tidy_variations(&mut band.variations);
+            crate::band::sections::tidy(&mut band.styles);
         }
         self.playlist.time_markers = self.meter().tidy().markers().to_vec();
         self.playlist.tempo_markers = self.tempo_map().tidy().markers().to_vec();
@@ -1458,6 +1474,10 @@ impl Project {
             || self
                 .variations()
                 .iter()
+                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+            || self
+                .section_styles()
+                .iter()
                 .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS);
         if too_late {
             return false;
@@ -1495,6 +1515,9 @@ impl Project {
                 band.form.intro += steps;
             }
             for marker in &mut band.variations {
+                shift(&mut marker.start);
+            }
+            for marker in &mut band.styles {
                 shift(&mut marker.start);
             }
         }
@@ -1576,6 +1599,14 @@ impl Project {
             }
             band.variations.insert(0, VariationMarker::new(0, opening));
             crate::band::tidy_variations(&mut band.variations);
+            // And so does the style.
+            let opening = crate::band::sections::style_in(&band.styles, steps);
+            band.styles.retain(|marker| marker.start > steps);
+            for marker in &mut band.styles {
+                marker.start -= steps;
+            }
+            band.styles.insert(0, StyleMarker::new(0, opening));
+            crate::band::sections::tidy(&mut band.styles);
         }
     }
 
