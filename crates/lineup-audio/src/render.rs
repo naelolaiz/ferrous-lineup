@@ -11,7 +11,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, AtomicUsize};
 
-use crate::engine::{AudioThread, Command, Garbage, NO_POSITION, NO_STEP, TRASH_QUEUE_SIZE};
+use crate::engine::{
+    AudioThread, Command, Garbage, NO_POSITION, NO_STEP, TRASH_QUEUE_SIZE, load_position,
+};
 
 /// How many frames are made and written at a time.
 const BLOCK_FRAMES: usize = 4_096;
@@ -26,6 +28,8 @@ pub struct Renderer {
     /// keeps the queue valid.
     _commands: rtrb::Producer<Command>,
     trash: rtrb::Consumer<Garbage>,
+    /// Where playback is, which the audio thread stores after every block.
+    position: Arc<AtomicU64>,
 }
 
 impl Renderer {
@@ -44,12 +48,13 @@ impl Renderer {
                 command_consumer,
                 trash_producer,
                 playhead,
-                position,
+                Arc::clone(&position),
             ),
             sample_rate,
             channels,
             _commands: commands,
             trash,
+            position,
         }
     }
 
@@ -59,6 +64,14 @@ impl Renderer {
 
     pub fn channels(&self) -> usize {
         self.channels
+    }
+
+    /// Where playback is after the frames made so far, in steps (4.5 is
+    /// halfway through step 4), or `None` before the first frame and
+    /// while stopped. A video asks after each picture's sound, so the
+    /// next picture shows where the music is.
+    pub fn position(&self) -> Option<f64> {
+        load_position(&self.position)
     }
 
     /// Applies a command at once: there is no other thread to hand it to.
@@ -173,6 +186,18 @@ mod tests {
         assert!((out[0] - 0.5_f32.tanh()).abs() < 1e-6);
         assert_eq!(out[0], out[1]);
         assert_eq!(out[2 * 20], 0.0, "the click is 10 frames long");
+    }
+
+    #[test]
+    fn knows_where_playback_is() {
+        let mut renderer = clicking();
+        assert_eq!(renderer.position(), None, "nothing played yet");
+        // At 120 BPM a step (a sixteenth note) lasts an eighth of a
+        // second: 6000 frames.
+        let mut out = vec![0.0; 2 * 9000];
+        renderer.render(&mut out);
+        let position = renderer.position().unwrap();
+        assert!((position - 1.5).abs() < 1e-6, "{position}");
     }
 
     #[test]

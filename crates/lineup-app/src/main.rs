@@ -28,6 +28,7 @@ mod style_editor;
 mod theme;
 mod time_picker;
 mod twelve_tone;
+mod video;
 mod widgets;
 
 use std::path::PathBuf;
