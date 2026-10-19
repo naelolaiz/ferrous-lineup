@@ -53,6 +53,10 @@ pub struct Origin {
     pub pattern_step: usize,
     /// The step of the song (of the pattern, in pattern mode) it started on.
     pub song_step: usize,
+    /// Whether it comes from the pattern played over the song (see
+    /// [`Command::SetOverlay`](crate::Command::SetOverlay)), not from a
+    /// clip of the song.
+    pub over_song: bool,
 }
 
 /// The sound-making part of a channel.
@@ -1050,6 +1054,7 @@ mod tests {
             pattern,
             pattern_step: 0,
             song_step: 0,
+            over_song: false,
         };
         let mut midi_out = Instrument::MidiOut(MidiOut::new(0));
         midi_out.note_on_from(origin(0), Note::C4, 100, 1_000, RATE);

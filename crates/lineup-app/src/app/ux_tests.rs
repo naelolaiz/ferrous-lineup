@@ -1234,6 +1234,41 @@ fn rack_transport_and_space_play_pause_and_stop_the_current_pattern() {
 }
 
 #[test]
+fn the_rack_plays_its_pattern_over_the_playing_song_until_clicked_again() {
+    let mut screen = Screen::new();
+    assert!(screen.app.project.patterns().len() > 1);
+    screen.app.set_mode(PlayMode::Song);
+    screen.app.set_playing(true);
+    // The rack's first frame only measures it.
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    assert!(text_rect(&output, "▶ Play pattern").is_none());
+    assert!(!button_lit(&output, "▶ Play over the song"));
+    screen.click("▶ Play over the song");
+    assert_eq!(screen.app.over_song, Some(screen.app.pattern));
+    assert_eq!(screen.app.mode, PlayMode::Song, "the song plays on");
+    assert!(screen.app.playing);
+    let output = screen.draw(Vec::new());
+    assert!(button_lit(&output, "▶ Play over the song"));
+    // It plays the pattern the rack shows.
+    screen.app.select_pattern(1);
+    assert_eq!(screen.app.over_song, Some(1));
+    screen.click("▶ Play over the song");
+    assert_eq!(screen.app.over_song, None, "clicked again, it stops");
+    assert!(screen.app.playing, "the song plays on");
+    screen.click("▶ Play over the song");
+    screen.click("■ Stop pattern");
+    assert_eq!(screen.app.over_song, None, "Stop pattern stops it too");
+    assert!(screen.app.playing);
+    // Stopping the song ends it, and the rack plays the pattern again.
+    screen.click("▶ Play over the song");
+    screen.app.set_playing(false);
+    let output = screen.draw(Vec::new());
+    assert_eq!(screen.app.over_song, None);
+    assert!(text_rect(&output, "▶ Play pattern").is_some());
+}
+
+#[test]
 fn settings_keyboard_input_does_not_start_song_playback() {
     let mut screen = Screen::new();
     screen.app.cursor = 8;

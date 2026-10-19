@@ -20,6 +20,8 @@ pub enum RackAction {
     PlayPattern,
     PausePattern,
     StopPattern,
+    /// Play the pattern over the song while it plays, or stop doing so.
+    PlayOverSong(bool),
     SelectChannel(Option<usize>),
     ToggleStep {
         channel: usize,
@@ -71,6 +73,10 @@ const DROP_HIGHLIGHT: Color32 = Color32::from_rgba_premultiplied(255, 152, 48, 4
 pub struct RackPlayback {
     pub playing: bool,
     pub can_stop: bool,
+    /// The song is playing, so the pattern can be played over it.
+    pub song_playing: bool,
+    /// The pattern is playing over the song.
+    pub over_song: bool,
 }
 
 /// The "Instrument" submenu: the 128 General MIDI programs in their
@@ -158,22 +164,38 @@ pub fn show(
 
     if let Some(playback) = playback {
         ui.horizontal_wrapped(|ui| {
-            let play = if playback.playing {
-                "⏸ Pause pattern"
+            if playback.song_playing {
+                if ui
+                    .add(egui::Button::new("▶ Play over the song").selected(playback.over_song))
+                    .on_hover_text(
+                        "Play this pattern on top of the song from its next bar, in time with \
+                         it, to try it out with the rest. Click again to stop it.",
+                    )
+                    .clicked()
+                    && !dismissing
+                {
+                    actions.push(RackAction::PlayOverSong(!playback.over_song));
+                }
             } else {
-                "▶ Play pattern"
-            };
-            if ui
-                .button(play)
-                .on_hover_text("Play every channel in this pattern with its current instruments")
-                .clicked()
-                && !dismissing
-            {
-                actions.push(if playback.playing {
-                    RackAction::PausePattern
+                let play = if playback.playing {
+                    "⏸ Pause pattern"
                 } else {
-                    RackAction::PlayPattern
-                });
+                    "▶ Play pattern"
+                };
+                if ui
+                    .button(play)
+                    .on_hover_text(
+                        "Play every channel in this pattern with its current instruments",
+                    )
+                    .clicked()
+                    && !dismissing
+                {
+                    actions.push(if playback.playing {
+                        RackAction::PausePattern
+                    } else {
+                        RackAction::PlayPattern
+                    });
+                }
             }
             if ui
                 .add_enabled(playback.can_stop, egui::Button::new("■ Stop pattern"))
