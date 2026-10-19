@@ -996,7 +996,9 @@ fn period_start(bar: &Bar, period: usize) -> usize {
         return bar.start;
     }
     let bars = period.div_ceil(bar.length.max(1));
-    bar.start - (bar.number % bars) * bar.length
+    // Where the meter changes from bar to bar, the bars before this one
+    // can be shorter than it: the pattern never starts before the song.
+    bar.start.saturating_sub((bar.number % bars) * bar.length)
 }
 
 impl Comping {
