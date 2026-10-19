@@ -33,6 +33,7 @@ pub mod playlist;
 pub mod project;
 pub mod record;
 pub mod remeter;
+pub mod score_order;
 pub mod sequencer;
 pub mod serial;
 pub mod sources;
