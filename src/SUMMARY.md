@@ -103,6 +103,7 @@
   - [The mixer in score order: the drums together](step-9/mixer-score-order.md)
   - [Export video: the song with the views playing along](step-9/video-export.md)
   - [A playback trace: every note the player plays, to read](step-9/playback-trace.md)
+  - [Step lights in the channel rack](step-9/rack-lights.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
