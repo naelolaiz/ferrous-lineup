@@ -1053,7 +1053,10 @@ impl Project {
         // Only the style's playing patterns need a band to play them: its
         // tempo, meter, swing or chords alone change the song as it is.
         if self.band.is_none() && parts.rhythm {
-            let base = BandStyle::named("Pop beat").unwrap();
+            // The players the style has no lanes for play as the band
+            // usually does in its time signature (a waltz for 3/4).
+            let base = BandStyle::named(crate::library::Rhythm::for_time(style.time, None).name)
+                .unwrap_or_else(|| BandStyle::named("Pop beat").unwrap());
             let mut band = Band::new(base);
             band.end = self.song_length();
             band.since = self.channels.len();
@@ -1883,8 +1886,18 @@ impl Project {
                     None => Vec::new(),
                 },
             };
+            // A saved style with only drums (a rhythm's copy) leaves the
+            // harmony to the band, as a built-in rhythm does, and the
+            // soloist improvises unless the style has a lane for one.
+            let in_style = |style: &crate::library::UserStyle| {
+                player == Player::Drums
+                    || style.lanes.iter().any(|lane| lane.player == player)
+                    || (player != Player::Soloist
+                        && style.lanes.iter().any(|lane| lane.player != Player::Drums))
+            };
             let notes = if let Some(style) = &band.custom_rhythm
                 && (!band.accents_only || player == Player::Drums)
+                && in_style(style)
             {
                 let mut notes = Vec::new();
                 for lane in style.lanes.iter().filter(|lane| lane.player == player) {
@@ -3174,6 +3187,37 @@ mod tests {
         );
         project.follow_chord_sheet();
         assert_eq!(project.channels()[keys].program, Some(80));
+    }
+
+    #[test]
+    fn a_saved_rhythm_copy_leaves_the_harmony_to_the_band() {
+        let copy = crate::library::UserStyle::from_rhythm(
+            crate::library::Rhythm::named("Bossa nova").unwrap(),
+        );
+        assert!(copy.chart.is_empty(), "a rhythm brings no chords");
+        let mut project = band("Pop beat", &["C", "Am", "F", "G"]);
+        assert!(project.set_soloist(true));
+        project
+            .apply_user_style(&copy, apply::StyleParts::default())
+            .unwrap();
+        for player in [Player::Drums, Player::Piano, Player::Bass, Player::Soloist] {
+            assert!(!part(&project, player).is_empty(), "{player:?} plays");
+        }
+        // A song with no band yet gets one that plays as usual in the
+        // copy's time.
+        let waltz =
+            crate::library::UserStyle::from_rhythm(crate::library::Rhythm::named("Waltz").unwrap());
+        let mut project = Project::with_band();
+        project.band = None;
+        crate::remeter::remeter(&mut project, waltz.time);
+        write(&mut project, &["C", "F", "G", "C"]);
+        project
+            .apply_user_style(&waltz, apply::StyleParts::default())
+            .unwrap();
+        assert_eq!(project.band().unwrap().style.time, waltz.time);
+        for player in [Player::Piano, Player::Bass] {
+            assert!(!part(&project, player).is_empty(), "{player:?} plays");
+        }
     }
 
     #[test]
