@@ -495,6 +495,8 @@ const ROCK: Band = Band::new(
     gm::FINGER_BASS,
 );
 const ROCK_AND_ROLL: Band = Band::new(gm::TENOR_SAX, gm::ACOUSTIC_GRAND_PIANO, gm::FINGER_BASS);
+// Serú Girán: Charly García singing at the piano, Pedro Aznar on fretless bass.
+const SERU: Band = Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::FRETLESS_BASS);
 const BRASS_BAND: Band = Band::new(gm::TRUMPET, gm::BRASS_SECTION, gm::TUBA);
 const GOSPEL: Band = Band::new(gm::CHOIR_AAHS, gm::DRAWBAR_ORGAN, gm::FINGER_BASS);
 const SOUL: Band = Band::new(gm::VOICE_OOHS, gm::DRAWBAR_ORGAN, gm::FINGER_BASS);
@@ -556,6 +558,7 @@ pub static SONGS: &[Song] = &[
     rock::TOREADOR_SONG,
     rock::HOUSE_OF_THE_RISING_SUN,
     rock::WILLIAM_TELL,
+    rock::DESARMA_Y_SANGRA,
     blues::MIDNIGHT_SHUFFLE,
     blues::ROLLING_BOOGIE,
     blues::MINOR_MOOD,
