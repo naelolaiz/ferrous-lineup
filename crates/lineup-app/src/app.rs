@@ -1646,7 +1646,11 @@ impl LineupApp {
                 layer.order == egui::Order::Middle
                     && [rack_id(), PianoRoll::id()].contains(&layer.id)
             });
-            if pattern_editor {
+            // While the song plays, Space stops it, wherever you clicked;
+            // once it has stopped, Space in the rack or the piano roll
+            // plays the pattern.
+            let song_playing = self.mode == PlayMode::Song && self.playing;
+            if pattern_editor && !song_playing {
                 if self.mode == PlayMode::Pattern && self.playing {
                     self.pause();
                 } else {

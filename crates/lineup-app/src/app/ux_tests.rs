@@ -2185,3 +2185,20 @@ fn a_drawn_note_is_not_selected_so_tools_still_change_every_note() {
     screen.key(Key::ArrowUp);
     assert_eq!(pitches(&screen), [61, 61, 68]);
 }
+
+#[test]
+fn space_in_the_rack_stops_the_song_then_plays_the_pattern() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = true;
+    screen.draw(vec![]);
+    let name = screen.app.project.channels()[0].name.clone();
+    screen.app.set_mode(PlayMode::Song);
+    screen.app.set_playing(true);
+    screen.click(&name);
+    screen.key(Key::Space);
+    assert_eq!(screen.app.mode, PlayMode::Song);
+    assert!(!screen.app.playing, "the song stopped");
+    screen.key(Key::Space);
+    assert_eq!(screen.app.mode, PlayMode::Pattern);
+    assert!(screen.app.playing, "the pattern plays");
+}
