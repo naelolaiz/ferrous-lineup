@@ -11,9 +11,16 @@
 //!
 //! The changes look random but are not: they come from the notes
 //! themselves, so a demo sounds the same every time it is opened.
+//!
+//! What the score says comes first: the shaping is small next to the
+//! difference between a piano and a forte, which it never evens out
+//! (see [`perform`]), and the band plays as loud as the tune is marked
+//! (see [`follow`]).
 
 use crate::meter::TimeSignature;
 use crate::pattern::NoteEvent;
+
+use super::chart::Melody;
 
 /// What a line of notes does in the music, which decides how it is
 /// shaped.
@@ -26,9 +33,14 @@ pub enum Role {
     Accompaniment,
 }
 
-/// The quietest and loudest the shaping ever makes a note.
+/// The quietest and loudest the shaping ever makes a note, unless it
+/// was written softer or louder still: a note marked pianissimo or
+/// fortissimo keeps its place at the edge.
 const SOFTEST: i32 = 24;
 const LOUDEST: i32 = 124;
+
+/// How much of an accent of the tune the band plays with it: half.
+const BAND_ACCENT: f32 = 0.5;
 
 /// A rest at least this many steps long ends a phrase: an eighth note,
 /// the shortest breath a singer takes.
@@ -40,6 +52,11 @@ const LONGEST_PHRASE: usize = 4;
 /// Gives `notes` (one channel's notes in a part, in `time`) the small
 /// differences in loudness of a real performance. `seed` makes each
 /// channel and part come out differently.
+///
+/// The changes are a few steps either way, from where each note is
+/// written: a tune marked piano stays soft and one marked forte loud. A
+/// note written softer than [`SOFTEST`] or louder than [`LOUDEST`], such
+/// as a fortissimo, may stay there.
 pub fn perform(notes: &mut [NoteEvent], time: TimeSignature, role: Role, seed: u64) {
     notes.sort_by_key(|note| (note.start, note.pitch));
     match role {
@@ -54,7 +71,7 @@ pub fn perform(notes: &mut [NoteEvent], time: TimeSignature, role: Role, seed: u
                     (note.start as u64) << 8 | u64::from(note.pitch.midi()),
                 );
                 let change = (2.5 * together + 1.0 * apart).round() as i32;
-                note.velocity = clamp(i32::from(note.velocity) + change);
+                note.velocity = clamp(note.velocity, change);
             }
         }
     }
@@ -102,7 +119,7 @@ fn shape_melody(notes: &mut [NoteEvent], time: TimeSignature, seed: u64) {
                     seed,
                     (note.start as u64) << 8 | u64::from(note.pitch.midi()),
                 );
-            note.velocity = clamp(i32::from(note.velocity) + change.round() as i32);
+            note.velocity = clamp(note.velocity, change.round() as i32);
         }
     }
 }
@@ -131,8 +148,39 @@ fn phrases(notes: &[NoteEvent], bar: usize) -> Vec<std::ops::Range<usize>> {
     phrases
 }
 
-fn clamp(velocity: i32) -> u8 {
-    velocity.clamp(SOFTEST, LOUDEST) as u8
+/// A note written at `velocity`, changed by `change`, between
+/// [`SOFTEST`] and [`LOUDEST`] or as far as it was written beyond them.
+fn clamp(velocity: u8, change: i32) -> u8 {
+    let written = i32::from(velocity);
+    (written + change).clamp(SOFTEST.min(written), LOUDEST.max(written)) as u8
+}
+
+/// Plays a band's `notes` (one channel's notes in a part) as loud as the
+/// part's `tune` is marked to be where each starts (see
+/// [`Melody::loudness`]): softer under a piano, louder under a forte,
+/// growing with a crescendo, as an orchestra follows the singer. A note
+/// struck with an accent or a sforzando of the tune is accented too, half
+/// as much: the band leans on it with the tune. A tune with no marks
+/// leaves the notes as they are.
+pub fn follow(notes: &mut [NoteEvent], tune: &Melody) {
+    if !tune.is_marked() {
+        return;
+    }
+    for note in notes {
+        let loudness = tune
+            .loudness
+            .get(note.start)
+            .or(tune.loudness.last())
+            .copied()
+            .unwrap_or(1.0);
+        let accent = tune
+            .accents
+            .iter()
+            .find(|&&(step, _)| step == note.start)
+            .map_or(1.0, |&(_, accent)| 1.0 + (accent - 1.0) * BAND_ACCENT);
+        let velocity = f32::from(note.velocity) * loudness * accent;
+        note.velocity = velocity.round().clamp(1.0, 127.0) as u8;
+    }
 }
 
 /// A number from -1 to 1 that looks random but is always the same for
@@ -240,5 +288,50 @@ mod tests {
         for note in &chord {
             assert!((84..=92).contains(&note.velocity), "{chord:?}");
         }
+    }
+
+    #[test]
+    fn piano_stays_soft_and_fortissimo_loud() {
+        let tune = |marks: &str| -> Vec<u8> {
+            let text = format!("{marks} C5:4 D5 E5 F5 | G5:8 E5 | D5:4 C5 B4 D5 | C5:16");
+            let mut notes = crate::library::chart::parse_melody(&text).unwrap().notes;
+            perform(&mut notes, TimeSignature::COMMON, Role::Melody, 7);
+            notes.iter().map(|note| note.velocity).collect()
+        };
+        let (piano, forte, fortissimo) = (tune("!p"), tune("!f"), tune("!ff"));
+        // Every note of the piano softer than every note of the forte.
+        assert!(
+            piano.iter().max() < forte.iter().min(),
+            "{piano:?} {forte:?}"
+        );
+        // Fortissimo may go past the usual loudest, as it is written.
+        assert!(
+            fortissimo.iter().any(|&v| i32::from(v) > LOUDEST),
+            "{fortissimo:?}"
+        );
+        let mean = |v: &[u8]| v.iter().map(|&v| f32::from(v)).sum::<f32>() / v.len() as f32;
+        assert!(mean(&fortissimo) > mean(&forte) + 5.0);
+    }
+
+    #[test]
+    fn the_band_follows_the_marks_of_the_tune() {
+        let tune = crate::library::chart::parse_melody("!p C5:8 !< D5:8 | !f >E5:16").unwrap();
+        let mut chords: Vec<NoteEvent> = [0, 8, 12, 16, 20]
+            .iter()
+            .map(|&at| NoteEvent {
+                velocity: 80,
+                ..note(60, at, 4)
+            })
+            .collect();
+        follow(&mut chords, &tune);
+        let velocities: Vec<u8> = chords.iter().map(|note| note.velocity).collect();
+        // Piano, growing to forte, the accent leaned on half as hard as the
+        // tune does, then forte.
+        assert_eq!(velocities, [44, 44, 68, 104, 92]);
+        // A tune without marks leaves the band alone.
+        let plain = crate::library::chart::parse_melody("C5:16").unwrap();
+        let mut again = vec![note(60, 0, 4)];
+        follow(&mut again, &plain);
+        assert_eq!(again[0].velocity, DEFAULT_VELOCITY);
     }
 }
