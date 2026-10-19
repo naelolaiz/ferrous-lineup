@@ -493,7 +493,7 @@ impl StyleEditor {
                     self.roll.select(index);
                 }
             }
-            RackAction::SelectPattern(_) => {}
+            RackAction::SelectPattern(_) | RackAction::PlayOverSong(_) => {}
         }
     }
     fn roll_action(&mut self, action: RollAction, events: &mut Vec<EditorEvent>) {

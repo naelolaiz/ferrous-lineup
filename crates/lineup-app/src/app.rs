@@ -104,6 +104,10 @@ pub struct LineupApp {
     cursor: usize,
     /// Where Stop goes back to: the last place the playhead was moved to.
     marker: usize,
+    /// The pattern the audio thread plays over the song, if any (the
+    /// rack's "Play over the song"): the selected one, sent again whenever
+    /// that changes.
+    over_song: Option<usize>,
     mixer_open: bool,
     settings_open: bool,
     settings: settings::SettingsView,
@@ -210,6 +214,7 @@ impl LineupApp {
             pattern: 0,
             mode: PlayMode::Song,
             playing: false,
+            over_song: None,
             cursor: 0,
             marker: 0,
             mixer_open: false,
@@ -407,6 +412,28 @@ impl LineupApp {
         }
     }
 
+    /// Plays the selected pattern over the playing song, from its next
+    /// bar, or stops playing it.
+    fn play_over_song(&mut self, on: bool) {
+        if on && self.playing && self.mode == PlayMode::Song {
+            self.over_song = Some(self.pattern);
+            self.send(Command::SetOverlay(Some(self.pattern)));
+        } else if !on && self.over_song.take().is_some() {
+            self.send(Command::SetOverlay(None));
+        }
+    }
+
+    /// Once a frame: the pattern played over the song follows the selected
+    /// one, and ends with the song, as it does in the audio thread when
+    /// playback stops or the mode changes.
+    fn keep_over_song(&mut self) {
+        match self.over_song {
+            Some(_) if !self.playing || self.mode != PlayMode::Song => self.over_song = None,
+            Some(pattern) if pattern != self.pattern => self.play_over_song(true),
+            _ => {}
+        }
+    }
+
     /// Stops where the playhead is, so Play carries on from there.
     fn pause(&mut self) {
         let here = self.playhead().unwrap_or(self.cursor);
@@ -547,6 +574,11 @@ impl LineupApp {
             }
             self.pattern = pattern;
             self.send(Command::SelectPattern(pattern));
+            // Sent even for the same number: after patterns moved, it
+            // may be another pattern now.
+            if self.over_song.is_some() {
+                self.play_over_song(true);
+            }
         }
     }
 
@@ -599,8 +631,11 @@ impl LineupApp {
             RackAction::StopPattern => {
                 if self.mode == PlayMode::Pattern {
                     self.set_playing(false);
+                } else {
+                    self.play_over_song(false);
                 }
             }
+            RackAction::PlayOverSong(on) => self.play_over_song(on),
             RackAction::SelectChannel(channel) => self.select_channel(channel),
             RackAction::ToggleStep { channel, step } => {
                 self.edit_pattern("change steps", |pattern| {
@@ -1575,6 +1610,13 @@ impl LineupApp {
         match self.mode {
             PlayMode::Pattern => Some(step),
             PlayMode::Song => {
+                if let Audio::Running(engine) = &self.audio
+                    && self.over_song.is_some()
+                    && let Some((pattern, step)) = engine.overlay()
+                    && pattern == self.pattern
+                {
+                    return Some(step);
+                }
                 let (step, _) = self.song_position()?;
                 self.project.pattern_step_in_song(self.pattern, step)
             }
@@ -1709,6 +1751,7 @@ impl eframe::App for LineupApp {
         widgets::track_dismissing(&ctx);
         self.start_frame_for_undo(&ctx);
         self.keyboard_shortcuts(&ctx);
+        self.keep_over_song();
         self.live_input(&ctx);
         self.practice_frame(&ctx);
         self.handle_dropped_files(&ctx);
@@ -1871,8 +1914,11 @@ impl eframe::App for LineupApp {
                     playhead,
                     Some(channel_rack::RackPlayback {
                         playing: self.playing && self.mode == PlayMode::Pattern,
-                        can_stop: self.mode == PlayMode::Pattern
-                            && (self.playing || self.cursor != self.marker),
+                        can_stop: self.over_song.is_some()
+                            || self.mode == PlayMode::Pattern
+                                && (self.playing || self.cursor != self.marker),
+                        song_playing: self.playing && self.mode == PlayMode::Song,
+                        over_song: self.over_song.is_some(),
                     }),
                 )
             })
