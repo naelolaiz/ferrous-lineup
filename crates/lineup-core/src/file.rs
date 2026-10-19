@@ -41,6 +41,7 @@ use crate::playlist::{Clip, LoopRegion, MAX_TRACKS, Section, Track};
 use crate::project::{
     Channel, ChannelKind, MAX_CHANNELS, MAX_LOOSE_TIMING, MAX_PATTERNS, Project, SampleSource,
 };
+use crate::sources::{PartSource, SongPart, Source};
 use crate::swing::MAX_SWING;
 use crate::tempo::TempoMarker;
 use crate::{Scale, Tempo, TimeSignature};
@@ -150,6 +151,10 @@ pub fn is_project(path: &Path) -> bool {
 /// the exact harmony style and the option to play plain accents.
 /// Format 21 adds the saved master mixer, solo and stereo reverb.
 /// Format 22 embeds user style patterns and instruments with the band.
+///
+/// A file can also say where the parts of the song came from (see
+/// [`crate::sources`]), in any format: older versions skip it, and lose
+/// nothing they could play.
 pub const FORMAT_VERSION: u32 = 22;
 
 /// The oldest format that can hold `project`.
@@ -318,10 +323,29 @@ struct ProjectFile {
     /// The band that plays the sheet. Left out when there is none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     band: Option<BandFile>,
+    /// Where the parts of the song came from. Left out when they are
+    /// all yours.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    sources: Vec<SourceFile>,
 }
 
 fn is_zero(value: &u8) -> bool {
     *value == 0
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
+/// Where a part of the song came from, as it is written in a file: and
+/// whether it was edited since, because the number that tells
+/// ([`Project::part_fingerprint`]) is only good within one run of the app.
+#[derive(Debug, Serialize, Deserialize)]
+struct SourceFile {
+    part: SongPart,
+    from: Source,
+    #[serde(default, skip_serializing_if = "is_false")]
+    edited: bool,
 }
 
 /// A pattern as it is written in a file.
@@ -455,6 +479,17 @@ impl From<&Project> for ProjectFile {
             swing: project.swing,
             chord_markers: project.playlist().chord_markers().to_vec(),
             band: project.band().map(BandFile::from),
+            sources: SongPart::ALL
+                .into_iter()
+                .filter_map(|part| {
+                    let origin = project.part_source(part)?;
+                    Some(SourceFile {
+                        part,
+                        from: origin.source.clone(),
+                        edited: origin.edited,
+                    })
+                })
+                .collect(),
         }
     }
 }
@@ -618,6 +653,14 @@ impl TryFrom<ProjectFile> for Project {
         project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
         project.swing = file.swing.min(MAX_SWING);
         project.remove_blank_tracks();
+        for came in file.sources {
+            let print = (!came.edited).then(|| project.part_fingerprint(came.part));
+            let source = PartSource {
+                source: came.from,
+                print,
+            };
+            project.sources.set(came.part, Some(source));
+        }
         Ok(project)
     }
 }
@@ -918,6 +961,28 @@ mod tests {
         let text = to_text(&loose).unwrap();
         assert!(text.contains("format: 7,"), "{text}");
         assert_eq!(from_text(&text).unwrap(), loose);
+    }
+
+    #[test]
+    fn songs_keep_where_their_parts_came_from() {
+        use crate::{SongPart, Source, SourceKind};
+        let mut project = Project::demo();
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("sources"), "{text}");
+        let format = format_for(&project);
+        project.bring_in_all(&Source::new(SourceKind::Demo, "El Choclo"));
+        assert_eq!(format_for(&project), format, "older versions skip it");
+        project.swing = 30;
+        let read = from_text(&to_text(&project).unwrap()).unwrap();
+        for part in SongPart::ALL {
+            let origin = read.part_source(part).unwrap();
+            assert_eq!(origin.source.name, "El Choclo");
+            assert_eq!(origin.edited, part == SongPart::Swing, "{part:?}");
+        }
+        // Still edited after it is set back: the file only knew it changed.
+        let mut read = read;
+        read.swing = 0;
+        assert!(read.part_source(SongPart::Swing).unwrap().edited);
     }
 
     #[test]

@@ -145,6 +145,17 @@ progression is off initially; check it to copy a preset's chart as well. An empt
 uses example chords to demonstrate the preset. The combined list keeps
 every original playing pattern and instrument choice available.
 
+The top of the Library says where each part of the song comes from:
+patterns, instruments, time signature, chords, tempo and swing. Opening a
+demo brings in every part from it; applying a preset brings in the parts
+checked, even one that was already the same. Each line names the demo,
+style, rhythm or saved style, says **edited, was …** once you change that
+part yourself, or **yours** when nothing brought it in. A time chosen with the
+**Time** picker is your edit; a part that only moves along with another, such as
+the tempo kept with a new time signature, keeps its source. The popup shows
+the same next to each checkbox (**now: …**), so you can see what it would
+replace. Undo, redo and saving keep the sources.
+
 In song mode, copying **Playing patterns** and **Voices / instruments** brings in
 the preset's full band, including its extra guitar, strings or organ, even when
 the demo has no live band yet. Leave **Chord progression** off to keep the song's
@@ -169,7 +180,7 @@ Repeated meter changes use the original song as their reference until you
 explicitly edit the project; returning to its original meter restores its
 exact performance. Undo and redo retain the corresponding reference.
 The Library shows the band's
-pattern source and its instrumentation separately; the chord sheet remains the
+patterns and its instruments as separate parts; the chord sheet remains the
 source of the song's chords. These band choices survive saving and
 undo/redo. A meter change keeps each bar's duration by adjusting tempo.
 

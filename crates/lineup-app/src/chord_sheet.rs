@@ -2043,9 +2043,12 @@ mod tests {
             text: &str,
             modifiers: Modifiers,
         ) -> (FullOutput, Vec<SheetAction>) {
+            // The last drawn is on top: the popup's option, not the
+            // Library's line about the same part.
             let pos = output
                 .shapes
                 .iter()
+                .rev()
                 .find_map(|shape| match &shape.shape {
                     Shape::Text(shape) if shape.galley.text() == text => {
                         Some(shape.pos + shape.galley.size() * 0.5)
