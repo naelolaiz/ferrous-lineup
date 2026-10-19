@@ -2826,3 +2826,107 @@ pub(super) const CANDOMBE_PARA_GARDEL: Song = Song {
             D minor bring back the minor key. Listen for the sixteenth-eighth-sixteenth \
             syncopation on nearly every beat of the tune, the candombe drums' off-beat lilt.",
 };
+
+/// A minor for three bars, E7 for three, then D minor for "un grito de
+/// cora-" and E7 from "-zón" through "¡Viva Perón! ¡Viva Perón!".
+const LA_MARCHA_PERONISTA_VERSE_A_CHORDS: &str = "i | i | i | V7 | V7 | V7 | iv | V7 | V7";
+
+/// A minor again, then A7 (the dominant of D minor) leads to D minor, and
+/// E7 brings it home to A minor.
+const LA_MARCHA_PERONISTA_VERSE_B_CHORDS: &str = "i | i | I7 | iv | iv | i | V7 | i";
+
+/// E7 and A minor bar by bar, D minor for "gran conductor", and E7 to close.
+const LA_MARCHA_PERONISTA_REFRAIN_CHORDS: &str = "V7 | i | V7 | i | iv | i | V7";
+
+// Source: score attached by the owner (page images), arranged by Fede Bär,
+// "Los Muchachos Peronistas", piano with the words under the right hand, in
+// A minor, 4/4, quarter = 80, 26 bars: bars 1-24 between repeat signs, first
+// ending bar 25, second ending bar 26, chord symbols Am E7 Dm A7 printed above
+// the staff. The tune is the right hand's line with the words. The chords
+// are the printed symbols, checked against the left hand's broken chords (A
+// E C E, E B G# B, D A F A, and A E C# E in bar 12).
+// Cross-checks: the chord sheet at https://acordes.lacuerda.net/hugo_del_carril/marcha_peronista
+// (in F minor) has the same chords as the score, except that in the line
+// "y como siempre daremos un grito de corazón" it puts B flat minor and D flat
+// (iv and bVI) where the score has E7, E7, D minor. The solfège notes at
+// https://www.notasparamelodica.com/como-tocar-marcha-peronista-los-post (no
+// rhythm) give the same tune, except "la" where the score has G sharp in bar 5
+// and "fa mi re" where the score has D, D, D on "gran con-duc-" (bar 22).
+// The endings' upper voice (a rest, then three short A5s with no words, a
+// band's figure over the sung A4) is left out: the tune is the sung line.
+// Authorship: SADAIC lists it as anonymous. Todotango (Néstor Pinsón and
+// Ricardo García Blaya) traces the verse's music to Juan Raimundo Streiff's
+// march for the Barracas Juniors club (late 1920s, words by "el Turco"
+// Mufarri) and the refrain to an anonymous carnival murga tune; the words as
+// sung were reworked in 1948 by Rafael Lauría and Oscar Ivanissevich.
+// https://www.todotango.com/english/history/chronicle/178/The-origin-of-the-Peronist-march-rooted-in-sports-and-carnival-chants/
+// Best-known recording: Hugo del Carril, 1949 (Todotango; English and Spanish
+// Wikipedia). It was not heard for this demo: the key, the tempo and the form
+// are those of the score.
+// Copyright: unclear (SADAIC registers it as anonymous; no death date was found
+// for Juan Raimundo Streiff, and the words, which this demo does not use, are
+// credited to Rafael Lauría and Oscar Ivanissevich, who died in 1976); added at
+// the owner's request.
+pub(super) const LA_MARCHA_PERONISTA: Song = Song {
+    name: "La marcha peronista",
+    origin: "Anonymous (music traced to Juan Raimundo Streiff), Argentina, 1948",
+    feel: "Marcha",
+    genre: Genre::Folklore,
+    tonic: A,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 80.0,
+    comping: Comping::Offbeat,
+    bass: Bass::RootFifth,
+    rhythm: "March",
+    band: BRASS_BAND,
+    style: "Marchinha",
+    parts: &[
+        // "Los muchachos peronistas ... un grito de corazón: ¡Viva Perón!
+        // ¡Viva Perón!" (bars 1-9).
+        Part::new(
+            "Verse A",
+            "E5:4 C5:2 A4 E5:4 C5:2 A4 | E5:8 C5 | E5:4 C5:2 A4 E5 E5 D5 C5 | D5:8 B4 | \
+             D5:4 B4:2 G#4 D5:4 B4:2 G#4 | D5:8 B4 | F5:4 F5:2 F5 F5:4 E5:2 D5 | \
+             E5:2 F5 E5 D5 E5 F5 E5 D5 | E5:16",
+            LA_MARCHA_PERONISTA_VERSE_A_CHORDS,
+        ),
+        // "Por ese gran argentino ... combatiendo al capital" (bars 10-17).
+        // It ends with the refrain's pickup "¡Pe-rón, Pe-".
+        Part::new(
+            "Verse B",
+            "E5:4 C5:2 A4 E5:4 C5:2 A4 | E5:8 C5 | E5:4 E5:2 E5 G5:4 F5:2 E5 | \
+             F5:12 D5:2 E5 | F5:4 F5 E5 D5 | E5:4 E5:8 C5:2 D5 | E5:4 D5 C5 B4 | \
+             A4:8 _:2 E5 E5 E5",
+            LA_MARCHA_PERONISTA_VERSE_B_CHORDS,
+        ),
+        // "rón, qué grande sos! ¡Mi general, cuánto valés! ¡Perón, Perón,
+        // gran conductor, sos el primer trabaja-" (bars 18-24).
+        Part::new(
+            "Refrain",
+            "E5:8 _:2 D5 C5 B4 | C5:8 _:2 E5 E5 E5 | E5:8 _:2 D5 C5 B4 | \
+             C5:8 _:2 A4 A4 A4 | F5:8 _:2 D5 D5 D5 | E5:8 _:2 C5 C5 D5 | E5:4 D5 C5 B4",
+            LA_MARCHA_PERONISTA_REFRAIN_CHORDS,
+        ),
+        // "-dor!", then back to the start for the second verse (bar 25).
+        Part::new("First ending", "A4:8 -:8", "i"),
+        // "-dor!" for the last time (bar 26).
+        Part::new("Second ending", "A4:8 -:8", "i"),
+    ],
+    form: &[
+        "Verse A",
+        "Verse B",
+        "Refrain",
+        "First ending",
+        "Verse A",
+        "Verse B",
+        "Refrain",
+        "Second ending",
+    ],
+    drums_from: 0,
+    about: "A street march in A minor, sung in Argentina since 1948. The verse rocks between \
+            A minor and E7, the dominant, with D minor (iv) just before \"¡Viva Perón!\"; in its \
+            second half A7, the dominant of D minor, leads to D minor. The refrain \"¡Perón, \
+            Perón!\" changes chord every bar, E7 to A minor and, under \"gran conductor\", D \
+            minor to A minor, each line starting on the last three eighths of the bar before.",
+};

@@ -6,9 +6,11 @@
 //! **rest**), or comes in with the next chord a little before the beat
 //! (a **push**). The chord sheet marks them on a harmony (see
 //! [`Stop`] and [`Push`]); this module rewrites each player's part
-//! around them, after the style has written it.
+//! around them, after the style has written it. The demo songs' chord
+//! charts mark them the same way (see
+//! [`crate::library::chart::parse_chart`]), and their bands play them so.
 
-use crate::chord_sheet::{ChordMarker, Stop};
+use crate::chord_sheet::{ChordMarker, Push, Stop};
 use crate::library::comping::Played;
 use crate::pattern::{NoteEvent, STEP_NOTE, TICKS_PER_STEP};
 
@@ -44,7 +46,7 @@ struct PushSpan {
 
 /// The shots, holds, rests and pushes of a song.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(super) struct Breaks {
+pub(crate) struct Breaks {
     stops: Vec<StopSpan>,
     pushes: Vec<PushSpan>,
 }
@@ -53,31 +55,43 @@ impl Breaks {
     /// The breaks marked on `markers`, in order, the last harmony lasting
     /// up to step `end`. A push never reaches back to the harmony before
     /// it: it starts at least one step after it.
-    pub(super) fn of(markers: &[ChordMarker], end: usize) -> Breaks {
-        let starts: Vec<usize> = markers
+    pub(crate) fn of(markers: &[ChordMarker], end: usize) -> Breaks {
+        let marks: Vec<(usize, Option<Push>, Option<Stop>)> = markers
+            .iter()
+            .map(|marker| (marker.start, marker.push, marker.stop))
+            .collect();
+        Breaks::marked(&marks, end)
+    }
+
+    /// The breaks of harmonies written on the steps of `marks`, in order,
+    /// each with its push and its stop, as [`Breaks::of`] reads them from
+    /// the chord sheet's markers.
+    pub(crate) fn marked(marks: &[(usize, Option<Push>, Option<Stop>)], end: usize) -> Breaks {
+        let starts: Vec<usize> = marks
             .iter()
             .enumerate()
-            .map(|(index, marker)| {
+            .map(|(index, &(written, push, _))| {
                 let earliest = match index {
                     0 => 0,
-                    _ => markers[index - 1].start + 1,
+                    _ => marks[index - 1].0 + 1,
                 };
-                marker.played_start().max(earliest).min(marker.start)
+                let early = written.saturating_sub(push.map_or(0, Push::steps));
+                early.max(earliest).min(written)
             })
             .collect();
         let mut breaks = Breaks::default();
-        for (index, marker) in markers.iter().enumerate() {
+        for (index, &(written, _, stop)) in marks.iter().enumerate() {
             let start = starts[index];
             let next = starts.get(index + 1).copied().unwrap_or(end).max(start);
-            match marker.stop {
+            match stop {
                 Some(stop) => breaks.stops.push(StopSpan {
-                    written: marker.start,
+                    written,
                     start,
                     end: next,
                     stop,
                 }),
-                None if start < marker.start => breaks.pushes.push(PushSpan {
-                    written: marker.start,
+                None if start < written => breaks.pushes.push(PushSpan {
+                    written,
                     start,
                     end: next,
                 }),
@@ -88,7 +102,7 @@ impl Breaks {
     }
 
     /// Whether the song has none.
-    pub(super) fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.stops.is_empty() && self.pushes.is_empty()
     }
 
@@ -100,7 +114,7 @@ impl Breaks {
     /// written on, up to the player's next note. A shot strikes it for
     /// an eighth note, a hold until the next harmony, and a rest leaves
     /// the player silent.
-    pub(super) fn apply(
+    pub(crate) fn apply(
         &self,
         mut notes: Vec<NoteEvent>,
         harmonies: &[Played],
@@ -172,7 +186,7 @@ impl Breaks {
     /// the groove makes way, and a shot, a hold or a push gets one hit of
     /// the kick and the crash cymbal, on the channels `kick` and `crash`.
     /// A rest is silent.
-    pub(super) fn apply_to_drums(
+    pub(crate) fn apply_to_drums(
         &self,
         mut notes: Vec<(usize, NoteEvent)>,
         kick: Option<usize>,
@@ -234,7 +248,6 @@ fn accented(mut notes: Vec<NoteEvent>) -> Vec<NoteEvent> {
 mod tests {
     use super::*;
     use crate::HarmonyName;
-    use crate::chord_sheet::Push;
     use crate::harmony::{Chord, ChordQuality};
     use crate::library::comping::BassPart;
     use crate::pitch::{Note, PitchClass};
