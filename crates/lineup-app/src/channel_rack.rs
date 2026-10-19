@@ -36,6 +36,9 @@ pub enum RackAction {
     },
     ToggleMute(usize),
     Remove(usize),
+    /// Delete or Backspace in the rack: removes the channel the user chose,
+    /// if they chose one (not the one the piano roll picked by itself).
+    RemoveChosen,
     OpenPianoRoll(usize),
     /// Show another pattern in the rack.
     SelectPattern(usize),
@@ -213,8 +216,16 @@ pub fn show(
         .show(ui, |ui| {
             for (index, channel) in project.channels().iter().enumerate() {
                 let row = ui.horizontal(|ui| {
-                    if widgets::mute_light(ui, !channel.muted)
-                        .on_hover_text("Click to mute or unmute")
+                    // Lit while the channel is heard: not muted, and not
+                    // silenced by another channel's solo in the mixer.
+                    let hint = if !channel.muted && project.channel_muted(index) {
+                        "Silent while another channel plays solo (see the Mixer). \
+                         Click to mute or unmute"
+                    } else {
+                        "Click to mute or unmute"
+                    };
+                    if widgets::mute_light(ui, !project.channel_muted(index))
+                        .on_hover_text(hint)
                         .clicked() && !dismissing
                     {
                         actions.push(RackAction::ToggleMute(index));
@@ -382,13 +393,13 @@ pub fn show(
     }
 
     if widgets::editor_keyboard(ui.ctx(), ui.layer_id())
-        && let Some(channel) = selected
+        && selected.is_some()
         && ui.input_mut(|input| {
             input.consume_key(egui::Modifiers::NONE, egui::Key::Delete)
                 || input.consume_key(egui::Modifiers::NONE, egui::Key::Backspace)
         })
     {
-        actions.push(RackAction::Remove(channel));
+        actions.push(RackAction::RemoveChosen);
     }
 
     // Highlight the row a dragged file would land on.

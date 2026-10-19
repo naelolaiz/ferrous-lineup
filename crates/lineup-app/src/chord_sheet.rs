@@ -1320,6 +1320,11 @@ impl ChordSheet {
             }
             return true;
         }
+        // Cut with no bar selected would copy the whole sheet and clear
+        // nothing, so it leaves the clipboard alone.
+        if cut && self.selected_bars().is_none() {
+            return true;
+        }
         if copy || cut {
             self.copy(ui.ctx(), project, bars);
             if cut && let Some((first, last)) = self.selected_bars() {
@@ -1450,8 +1455,9 @@ fn progression_menu(
         );
         let (response, _) = menu.ui(ui, |ui| {
             ui.set_width(300.0);
-            let tried = project.band().map_or_else(Tried::default, Tried::from_band);
-            match library.show_for(ui, project, tried, LibraryPurpose::Progression) {
+            // Nothing shows as chosen: the band's style says how it plays,
+            // not where the chords on the sheet came from.
+            match library.show_for(ui, project, Tried::default(), LibraryPurpose::Progression) {
                 Some(LibraryAction::Style(style)) => {
                     actions.push(SheetAction::WriteProgression { style, from });
                     ui.close();
@@ -1900,6 +1906,52 @@ mod tests {
             sheet.selected_bars(),
             Some((0, text::sheet_bars(&project) - 1))
         );
+    }
+
+    #[test]
+    fn cut_with_no_bar_selected_leaves_the_clipboard_alone() {
+        let ctx = egui::Context::default();
+        let project = Project::demo();
+        let mut sheet = ChordSheet::new();
+        sheet.open = true;
+        let mut library = LibraryBrowser::new();
+        let mut copied = |events: Vec<Event>| {
+            let mut output = ctx.run_pass(
+                RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 800.0))),
+                    events,
+                    ..Default::default()
+                },
+                |ctx| {
+                    sheet.show(
+                        ctx,
+                        ctx.content_rect(),
+                        &project,
+                        None,
+                        false,
+                        (
+                            PracticeView {
+                                count_in: false,
+                                metronome: false,
+                                speed: 100,
+                            },
+                            &mut library,
+                        ),
+                    );
+                },
+            );
+            output.textures_delta.clear();
+            output
+                .platform_output
+                .commands
+                .iter()
+                .any(|command| matches!(command, egui::OutputCommand::CopyText(_)))
+        };
+        copied(vec![]);
+        copied(vec![]);
+        assert!(!copied(vec![Event::Cut]));
+        // Copy still copies the whole sheet.
+        assert!(copied(vec![Event::Copy]));
     }
 
     fn heard(text: &str) -> Vec<u8> {

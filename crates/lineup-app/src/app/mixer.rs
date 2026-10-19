@@ -25,15 +25,15 @@ impl LineupApp {
                     if ui
                         .button("Reset mix")
                         .on_hover_text(
-                            "Reset master, reverb, channel levels and mutes; Undo restores them",
+                            "Reset master, reverb, solo, levels and mutes (the band's mutes stay); \
+                             Undo restores them",
                         )
                         .clicked()
                     {
-                        mix = Mixer::default();
-                        for channel in &mut levels {
-                            channel.volume = 0.8;
-                            channel.muted = false;
-                        }
+                        let mut reset = self.project.clone();
+                        reset.reset_mix();
+                        mix = reset.mixer;
+                        levels = reset.channels().to_vec();
                     }
                 });
                 ui.separator();
@@ -112,7 +112,15 @@ impl LineupApp {
                 });
             });
         self.mixer_open = open;
-        if mix != self.project.mixer || levels != self.project.channels() {
+        let master_only = levels == self.project.channels()
+            && mix
+                == Mixer {
+                    master: self.project.mixer.master,
+                    ..mix
+                };
+        if mix.master != self.project.mixer.master && master_only {
+            self.set_master_volume(mix.master);
+        } else if mix != self.project.mixer || levels != self.project.channels() {
             self.edit("mixer", |project| {
                 project.mixer = mix;
                 for (index, channel) in levels.into_iter().enumerate() {
@@ -123,6 +131,16 @@ impl LineupApp {
                 }
             });
         }
+    }
+}
+
+impl LineupApp {
+    /// Sets the master volume. It is saved with the song, so exports sound
+    /// the same, but one nudge after another is one step to undo.
+    pub(super) fn set_master_volume(&mut self, master: f32) {
+        const STEP: &str = "master volume";
+        self.history.reopen(STEP);
+        self.edit(STEP, |project| project.mixer.master = master);
     }
 }
 

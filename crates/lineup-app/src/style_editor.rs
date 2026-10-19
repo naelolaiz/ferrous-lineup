@@ -168,7 +168,7 @@ impl StyleEditor {
         if !self.open {
             return Vec::new();
         }
-        let before = self.draft.clone();
+        let mut before = self.draft.clone();
         let mut events = Vec::new();
         if self
             .preview_started
@@ -209,6 +209,8 @@ impl StyleEditor {
             if discard && let Some((style, path)) = self.pending_start.take() {
                 self.open = false;
                 self.start(style, path);
+                // The discarded draft is not an edit of the new style.
+                before = self.draft.clone();
                 events.push(EditorEvent::Stop);
             }
         }
@@ -396,8 +398,15 @@ impl StyleEditor {
             .collect();
     }
     fn rack_action(&mut self, action: RackAction, events: &mut Vec<EditorEvent>) {
+        if action == RackAction::RemoveChosen {
+            if let Some(channel) = self.roll.chosen_channel() {
+                self.rack_action(RackAction::Remove(channel), events);
+            }
+            return;
+        }
         let project = &mut self.draft.project;
         match action {
+            RackAction::RemoveChosen => {}
             RackAction::SelectChannel(channel) => match channel {
                 Some(channel) => self.roll.select(channel),
                 None => self.roll.deselect_channel(),
@@ -670,6 +679,24 @@ mod tests {
             }],
         );
         assert!(events.iter().any(|event| matches!(event,EditorEvent::Save {style,..} if style.name == "Edited style" && style.validate().is_ok())));
+    }
+
+    #[test]
+    fn discarding_a_draft_leaves_nothing_of_it_to_undo() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut editor = StyleEditor::new();
+        editor.start(UserStyle::blank(), None);
+        frame(&mut editor, &ctx, vec![]);
+        editor.draft.style.about = "Unsaved description".into();
+        frame(&mut editor, &ctx, vec![]);
+        let opened = UserStyle::from_builtin(&STYLES[0]);
+        editor.start(opened.clone(), None);
+        frame(&mut editor, &ctx, vec![]);
+        let (output, _) = frame(&mut editor, &ctx, vec![]);
+        click(&mut editor, &ctx, &output, "Discard and start");
+        assert_eq!(editor.draft.style, opened);
+        assert!(editor.history.undo_label().is_none(), "nothing to undo");
     }
 
     #[test]

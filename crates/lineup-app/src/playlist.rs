@@ -356,6 +356,17 @@ impl PlaylistView {
         }
     }
 
+    /// Forgets the clips selected, being dragged or copied: they were
+    /// another song's.
+    pub fn new_song(&mut self) {
+        self.selected.clear();
+        self.shown_clips.clear();
+        self.selection_box = None;
+        self.clipboard.clear();
+        self.paste_at = 0;
+        self.drag = None;
+    }
+
     /// Changes the zoom, keeping the step and the track under the pointer
     /// where they are, or those in the middle of the view if the pointer
     /// is elsewhere.
@@ -523,7 +534,7 @@ impl PlaylistView {
         self.view_rect = Some(output.inner_rect);
         self.selected
             .retain(|index| *index < project.playlist().clips().len());
-        if widgets::editor_keyboard(ui.ctx(), ui.layer_id()) {
+        if widgets::editor_keyboard_in(ui.ctx(), ui.layer_id(), self.area) {
             self.keys(ui.ctx(), project, &mut actions);
         }
         actions
@@ -924,7 +935,7 @@ impl PlaylistView {
         current: usize,
         actions: &mut Vec<PlaylistAction>,
     ) {
-        if widgets::editor_keyboard(ui.ctx(), ui.layer_id())
+        if widgets::editor_keyboard_in(ui.ctx(), ui.layer_id(), self.area)
             && ui.input(|input| input.key_pressed(egui::Key::Escape))
         {
             self.drag = None;
@@ -1129,16 +1140,17 @@ impl PlaylistView {
         }
         let copy = pressed(Key::C) || ctx.input(|input| input.events.contains(&egui::Event::Copy));
         let cut = pressed(Key::X) || ctx.input(|input| input.events.contains(&egui::Event::Cut));
-        let duplicate = pressed(Key::D);
-        if copy || cut || duplicate {
+        // With nothing selected, these leave the clipboard as it was.
+        let duplicate = pressed(Key::D) && !self.selected.is_empty();
+        if (copy || cut || duplicate) && !self.selected.is_empty() {
             self.clipboard = self
                 .selected
                 .iter()
                 .filter_map(|&index| clips.get(index).copied())
                 .collect();
-        }
-        if copy || cut {
-            crate::clipboard::copy(ctx, "clips", &self.clipboard);
+            if copy || cut {
+                crate::clipboard::copy(ctx, "clips", &self.clipboard);
+            }
         }
         if cut
             || ctx.input_mut(|input| {
@@ -1789,6 +1801,34 @@ mod tests {
             ))],
         );
         assert!(actions.iter().any(|action| matches!(action,PlaylistAction::PasteClips(clips) if clips.len() == 1 && clips[0].start == 64)));
+    }
+
+    #[test]
+    fn copying_with_nothing_selected_keeps_the_clipboard() {
+        let ctx = egui::Context::default();
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        let project = Project::demo();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        let copied = vec![project.playlist().clips()[0]];
+        view.clipboard = copied.clone();
+        frame(&ctx, &mut view, &project, vec![Event::Copy]);
+        assert_eq!(view.clipboard, copied);
+        let duplicate = Event::Key {
+            key: egui::Key::D,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: egui::Modifiers::COMMAND,
+        };
+        let actions = frame(&ctx, &mut view, &project, vec![duplicate]);
+        assert!(
+            !actions
+                .iter()
+                .any(|action| matches!(action, PlaylistAction::PasteClips(_))),
+            "nothing selected, nothing duplicated"
+        );
     }
 
     fn frame(

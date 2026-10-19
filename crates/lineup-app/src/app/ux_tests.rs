@@ -1668,3 +1668,588 @@ fn row_window_cannot_create_a_pattern_after_the_project_limit() {
         lineup_core::MAX_PATTERNS
     );
 }
+
+#[test]
+fn delete_at_startup_keeps_the_channel_the_piano_roll_picked_by_itself() {
+    for key in [Key::Delete, Key::Backspace] {
+        let mut screen = Screen::new();
+        screen.draw(vec![]);
+        screen.draw(vec![]);
+        let before = screen.app.project.clone();
+        screen.key(key);
+        assert_eq!(screen.app.project, before, "{key:?} deleted a channel");
+        // Choosing a channel and then deselecting it leaves none to delete.
+        let step = screen.app.project.channels()[0].name.clone();
+        screen.click(&step);
+        screen.click(&step);
+        screen.key(key);
+        assert_eq!(screen.app.project, before, "{key:?} after deselecting");
+    }
+}
+
+#[test]
+fn a_window_opened_by_double_clicking_a_clip_takes_the_keyboard() {
+    let mut screen = shortcut_screen();
+    screen.click("Shortcut test");
+    let before = screen.app.project.clone();
+    screen
+        .app
+        .apply_playlist(crate::playlist::PlaylistAction::EditClip(0));
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    screen.key(Key::Delete);
+    assert_eq!(
+        screen.app.project.playlist().clips(),
+        before.playlist().clips(),
+        "Ctrl+A and Delete in the piano roll deleted clips"
+    );
+    assert!(screen.app.project.pattern(0).unwrap().notes(0).is_empty());
+}
+
+#[test]
+fn toolbar_clicks_do_not_give_the_playlist_the_keyboard() {
+    let mut screen = shortcut_screen();
+    screen.click("Shortcut test");
+    let before = screen.app.project.clone();
+    screen.click("Follow playhead");
+    screen.click("Follow playhead");
+    screen.key(Key::Delete);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    screen.key(Key::Delete);
+    assert_eq!(screen.app.project, before);
+    // A click in the playlist itself still does.
+    screen.click("Shortcut test");
+    screen.key(Key::Delete);
+    assert_eq!(
+        screen.app.project.playlist().clips().len(),
+        before.playlist().clips().len() - 1
+    );
+}
+
+#[test]
+fn a_hidden_rack_gives_up_space_and_escape() {
+    let mut screen = Screen::new();
+    screen.draw(vec![]);
+    let name = screen.app.project.channels()[0].name.clone();
+    screen.click(&name);
+    let chosen = screen.app.piano_roll.selected_channel();
+    screen.key(Key::F6);
+    screen.draw(vec![]);
+    assert!(!screen.app.rack_open);
+    screen.app.set_mode(PlayMode::Song);
+    screen.key(Key::Space);
+    assert_eq!(screen.app.mode, PlayMode::Song);
+    assert!(screen.app.playing);
+    screen.key(Key::Escape);
+    assert_eq!(screen.app.piano_roll.selected_channel(), chosen);
+}
+
+#[test]
+fn opening_a_song_forgets_the_clips_selected_in_the_last_one() {
+    use lineup_core::{Channel, Clip};
+    let mut screen = shortcut_screen();
+    screen.click("Shortcut test");
+    let middle = screen.app.playlist.area().center();
+    screen.click_at(middle, Modifiers::NONE);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    let mut other = Project::empty();
+    other.add_channel(Channel::synth());
+    other.add_clip(Clip::new(0, 0, 0)).unwrap();
+    other.add_clip(Clip::new(0, 1, 64)).unwrap();
+    screen.app.replace_project(other, None);
+    // The playlist still has the keyboard, but nothing selected.
+    screen.key(Key::Delete);
+    assert_eq!(screen.app.project.playlist().clips().len(), 2);
+}
+
+#[test]
+fn the_tools_menu_pastes_what_another_roll_copied() {
+    use lineup_core::NoteEvent;
+    let mut screen = shortcut_screen();
+    screen.app.piano_roll.open_for(0);
+    screen.draw(vec![]);
+    // This roll's own copy, of the notes it then deletes.
+    screen.click("Tools");
+    screen.key(Key::Escape);
+    screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+    screen.key_with_modifiers(Key::C, Modifiers::COMMAND);
+    screen.key(Key::Delete);
+    assert!(screen.app.project.pattern(0).unwrap().notes(0).is_empty());
+    // Another roll copied a high C since.
+    let copied = NoteEvent::new(Note::new(72), 0, 2);
+    let text = format!(
+        "Ferrous Lineup notes\n{}",
+        ron::to_string(&vec![copied]).unwrap()
+    );
+    screen.click("Tools");
+    let menu = text_rect(&screen.draw(vec![]), "Up a semitone").unwrap();
+    screen.scroll_to_at("Paste", menu.center());
+    let pos = text_rect(&screen.draw(vec![]), "Paste").unwrap().center();
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    let output = screen.draw(vec![Event::PointerButton {
+        pos,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+    let asked = output.viewport_output.values().any(|viewport| {
+        viewport
+            .commands
+            .contains(&egui::ViewportCommand::RequestPaste)
+    });
+    assert!(asked, "the menu asks for the system clipboard");
+    screen.draw(vec![Event::Paste(text)]);
+    let pitches: Vec<u8> = screen
+        .app
+        .project
+        .pattern(0)
+        .unwrap()
+        .notes(0)
+        .iter()
+        .map(|note| note.pitch.midi())
+        .collect();
+    assert_eq!(pitches, [72]);
+}
+
+mod library_parts {
+    use super::*;
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::{Rhythm, Song, Style, UserStyle, apply::StyleParts};
+
+    const NOTHING: StyleParts = StyleParts {
+        rhythm: false,
+        instruments: false,
+        time_signature: false,
+        progression: false,
+        tempo: false,
+        swing: false,
+        matching_style: true,
+    };
+
+    fn el_choclo() -> Screen {
+        let mut screen = Screen::new();
+        screen
+            .app
+            .open_demo(library::Demo::Song(Song::named("El Choclo").unwrap()));
+        screen
+    }
+
+    fn muted(project: &Project) -> Vec<&str> {
+        project
+            .channels()
+            .iter()
+            .filter(|channel| channel.muted)
+            .map(|channel| channel.name.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn undo_and_redo_keep_a_demos_style_selected() {
+        let mut screen = el_choclo();
+        let tried = |screen: &Screen| {
+            let tried = screen.app.tried();
+            (
+                tried.style.map(|style| style.name),
+                tried.rhythm.map(|rhythm| rhythm.name),
+            )
+        };
+        let opened = tried(&screen);
+        assert_eq!(opened, (Some("Tango"), Some("Milonga")));
+        screen.app.edit("change the tempo", |project| {
+            project.tempo = Tempo::new(100.0);
+        });
+        screen.app.undo();
+        assert_eq!(tried(&screen), opened);
+        screen.app.redo();
+        assert_eq!(tried(&screen), opened);
+        // A style the Library put in still goes away with its undo.
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
+        assert_eq!(tried(&screen).0, Some("Doo-wop"));
+        screen.app.undo();
+        assert_eq!(tried(&screen), opened);
+    }
+
+    #[test]
+    fn the_time_box_plays_the_rhythm_picked_last() {
+        let mut screen = meter_test_screen(true, true);
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen.app.set_mode(PlayMode::Song);
+        screen.app.try_from_library(LibraryAction::RhythmInSong(
+            Rhythm::named("Tango marcato").unwrap(),
+        ));
+        assert_eq!(
+            screen.app.project.band().map(|band| band.style.name),
+            Some("Tango marcato")
+        );
+        screen
+            .app
+            .set_song_time(lineup_core::TimeSignature::new(3, 4));
+        assert_eq!(
+            screen.app.project.band().map(|band| band.style.name),
+            Some("Tango vals")
+        );
+    }
+
+    #[test]
+    fn the_time_box_brings_in_the_band_only_in_song_mode() {
+        let three_four = lineup_core::TimeSignature::new(3, 4);
+        // Pattern mode: the demo's own Keys and Bass, in 3/4.
+        let mut screen = el_choclo();
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen.app.set_mode(PlayMode::Pattern);
+        let keys = |project: &Project| {
+            let keys = project
+                .channels()
+                .iter()
+                .position(|channel| channel.name == "Keys")
+                .unwrap();
+            project
+                .patterns()
+                .iter()
+                .map(|pattern| pattern.notes(keys).len())
+                .sum::<usize>()
+        };
+        assert!(keys(&screen.app.project) > 0);
+        screen.app.set_song_time(three_four);
+        assert_eq!(screen.app.project.time_signature, three_four);
+        assert!(screen.app.project.band().is_none());
+        assert!(muted(&screen.app.project).is_empty());
+        assert!(keys(&screen.app.project) > 0);
+        // Song mode: the band, in the demo's style, instead of them.
+        let mut screen = el_choclo();
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen.app.set_song_time(three_four);
+        assert_eq!(screen.app.project.time_signature, three_four);
+        assert_eq!(
+            screen.app.project.band().map(|band| band.style.name),
+            Some("Tango vals")
+        );
+        assert_eq!(muted(&screen.app.project), ["Keys", "Bass"]);
+    }
+
+    #[test]
+    fn the_progression_menu_does_not_show_the_bands_style_as_the_sheets_chords() {
+        let mut screen = Screen::new();
+        screen.app.replace_project(Project::with_band(), None);
+        screen.app.set_mode(PlayMode::Song);
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        let doo_wop = Style::named("Doo-wop").unwrap();
+        screen.app.try_from_library(LibraryAction::Style(doo_wop));
+        assert_eq!(
+            screen.app.tried().style.map(|style| style.name),
+            Some("Doo-wop")
+        );
+        screen.app.chord_sheet.open = true;
+        screen.app.rack_open = false;
+        screen.click("Progression");
+        let menu = text_rect(&screen.draw(vec![]), "Progression").unwrap();
+        screen.scroll_to_at("Doo-wop", menu.center() + vec2(0.0, 120.0));
+        let output = screen.draw(vec![]);
+        assert!(!button_lit(&output, "Doo-wop"));
+    }
+
+    #[test]
+    fn a_saved_styles_tempo_alone_does_not_bring_in_a_band() {
+        let mut screen = el_choclo();
+        let mut style = UserStyle::from_rhythm(Rhythm::named("Waltz").unwrap());
+        style.tempo = Tempo::new(150.0);
+        screen.app.playlist.library_browser_mut().user_styles = vec![style];
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            tempo: true,
+            ..NOTHING
+        };
+        screen.app.apply_user_library(0, None);
+        assert!(screen.app.project.band().is_none());
+        assert!(muted(&screen.app.project).is_empty());
+        assert_eq!(screen.app.project.tempo.bpm(), 150.0);
+
+        // Its instruments alone have no band to play in, and say so.
+        let before = screen.app.project.clone();
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            instruments: true,
+            ..NOTHING
+        };
+        screen.app.apply_user_library(0, None);
+        assert!(screen.app.project.band().is_none());
+        assert_eq!(screen.app.project, before);
+        assert!(
+            screen
+                .app
+                .notice
+                .as_deref()
+                .is_some_and(|notice| notice.contains("Playing patterns")),
+            "{:?}",
+            screen.app.notice
+        );
+    }
+
+    #[test]
+    fn a_saved_chart_that_does_not_fit_the_bars_changes_nothing() {
+        let mut screen = Screen::new();
+        screen.app.replace_project(Project::with_band(), None);
+        screen.app.edit("remeter", |project| {
+            lineup_core::remeter::remeter(project, lineup_core::TimeSignature::new(3, 4));
+        });
+        let mut style = UserStyle::from_builtin(&lineup_core::library::STYLES[0]);
+        style.time = lineup_core::TimeSignature::COMMON;
+        style.chart = "C D E F".into();
+        style.tempo = Tempo::new(150.0);
+        style.validate().unwrap();
+        screen.app.playlist.library_browser_mut().user_styles = vec![style];
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            progression: true,
+            tempo: true,
+            rhythm: true,
+            ..NOTHING
+        };
+        let before = screen.app.project.clone();
+        screen.app.apply_user_library(0, None);
+        assert!(screen.app.message.is_some(), "the error is shown");
+        assert_eq!(screen.app.project, before);
+    }
+
+    #[test]
+    fn instruments_or_tempo_alone_leave_your_pattern_yours() {
+        let mut screen = Screen::new();
+        screen.app.set_mode(PlayMode::Pattern);
+        let pattern = screen.app.pattern;
+        let name = screen.app.project.patterns()[pattern].name.clone();
+        let count = screen.app.project.patterns().len();
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            instruments: true,
+            tempo: true,
+            ..NOTHING
+        };
+        let royal_road = Style::named("Royal road").unwrap();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(royal_road));
+        assert_eq!(screen.app.project.patterns()[pattern].name, name);
+        assert_eq!(screen.app.project.tempo.bpm(), royal_road.tempo);
+        // The next style tried gets a pattern of its own.
+        let yours = screen.app.project.patterns()[pattern].clone();
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Four chords").unwrap()));
+        assert_eq!(screen.app.project.patterns().len(), count + 1);
+        let now = &screen.app.project.patterns()[pattern];
+        assert_eq!(now.name, yours.name);
+        for channel in 0..yours.rows() {
+            assert_eq!(now.notes(channel), yours.notes(channel));
+        }
+    }
+
+    #[test]
+    fn instruments_alone_with_no_channel_to_take_them_say_so() {
+        let mut screen = Screen::new();
+        let mut project = Project::empty();
+        project.add_channel(lineup_core::Channel::drum(lineup_core::Drum::Kick));
+        project.pattern_mut(0).unwrap().set(0, 0, true);
+        screen.app.replace_project(project, None);
+        screen.app.set_mode(PlayMode::Pattern);
+        let before = screen.app.project.clone();
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            instruments: true,
+            ..NOTHING
+        };
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Royal road").unwrap()));
+        assert_eq!(screen.app.project, before);
+        assert!(
+            screen
+                .app
+                .notice
+                .as_deref()
+                .is_some_and(|notice| notice.contains("Keys")),
+            "{:?}",
+            screen.app.notice
+        );
+    }
+}
+
+mod mix {
+    use super::*;
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::{Song, Style, apply::StyleParts};
+
+    #[test]
+    fn the_rack_lights_go_out_for_channels_a_solo_silences() {
+        let mut screen = Screen::new();
+        screen.app.rack_open = true;
+        let lit = |output: &FullOutput| {
+            output
+                .shapes
+                .iter()
+                .filter(|shape| {
+                    matches!(&shape.shape, Shape::Circle(circle) if circle.fill == crate::widgets::LED_ON)
+                })
+                .count()
+        };
+        screen.draw(vec![]);
+        let all = lit(&screen.draw(vec![]));
+        screen
+            .app
+            .edit("solo", |project| project.mixer.solo = Some(0));
+        screen.draw(vec![]);
+        let solo = lit(&screen.draw(vec![]));
+        assert_eq!(all - solo, screen.app.project.channels().len() - 1);
+    }
+
+    #[test]
+    fn reset_mix_keeps_the_band_playing_instead_of_the_songs_own_parts() {
+        let mut screen = Screen::new();
+        screen
+            .app
+            .open_demo(library::Demo::Song(Song::named("El Choclo").unwrap()));
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
+        let muted = |project: &Project| -> Vec<String> {
+            project
+                .channels()
+                .iter()
+                .filter(|channel| channel.muted)
+                .map(|channel| channel.name.clone())
+                .collect()
+        };
+        assert_eq!(muted(&screen.app.project), ["Keys", "Bass"]);
+        let band_piano = screen
+            .app
+            .project
+            .player_channel(lineup_core::Player::Piano)
+            .unwrap();
+        screen.app.edit("mix", |project| {
+            project.mixer.solo = Some(0);
+            for channel in 0..project.channels().len() {
+                let state = project.channel_mut(channel).unwrap();
+                state.volume = 1.0;
+                state.muted = channel == band_piano;
+            }
+        });
+        screen.app.mixer_open = true;
+        screen.app.rack_open = false;
+        screen.draw(vec![]);
+        screen.click("Reset mix");
+        let project = &screen.app.project;
+        assert_eq!(muted(project), ["Keys", "Bass"]);
+        assert_eq!(project.mixer.solo, None);
+        assert_eq!(project.channels()[band_piano].volume, 0.45);
+        let kick = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == "Kick")
+            .unwrap();
+        assert_eq!(project.channels()[kick].volume, 0.8);
+    }
+}
+
+#[test]
+fn a_drawn_note_is_not_selected_so_tools_still_change_every_note() {
+    let mut screen = shortcut_screen();
+    screen.app.piano_roll.open_for(0);
+    screen.draw(vec![]);
+    let key = text_rect(&screen.draw(vec![]), "C4").expect("the C4 key is in view");
+    // On the C4 row, well right of the C4 note at steps 4 to 7.
+    screen.click_at(
+        egui::pos2(key.right() + 400.0, key.center().y),
+        Modifiers::NONE,
+    );
+    let pitches = |screen: &Screen| -> Vec<u8> {
+        let mut pitches: Vec<u8> = screen
+            .app
+            .project
+            .pattern(0)
+            .unwrap()
+            .notes(0)
+            .iter()
+            .map(|note| note.pitch.midi())
+            .collect();
+        pitches.sort_unstable();
+        pitches
+    };
+    assert_eq!(pitches(&screen), [60, 60, 67], "a C4 was drawn");
+    screen.key(Key::ArrowUp);
+    assert_eq!(pitches(&screen), [61, 61, 68]);
+}
+
+#[test]
+fn space_in_the_rack_stops_the_song_then_plays_the_pattern() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = true;
+    screen.draw(vec![]);
+    let name = screen.app.project.channels()[0].name.clone();
+    screen.app.set_mode(PlayMode::Song);
+    screen.app.set_playing(true);
+    screen.click(&name);
+    screen.key(Key::Space);
+    assert_eq!(screen.app.mode, PlayMode::Song);
+    assert!(!screen.app.playing, "the song stopped");
+    screen.key(Key::Space);
+    assert_eq!(screen.app.mode, PlayMode::Pattern);
+    assert!(screen.app.playing, "the pattern plays");
+}
+
+#[test]
+fn nudges_of_the_master_volume_are_one_step_to_undo() {
+    let mut screen = Screen::new();
+    let before = screen.app.project.mixer.master;
+    for master in [0.5, 0.6, 0.7] {
+        screen.app.set_master_volume(master);
+        screen.app.history.close();
+    }
+    assert_eq!(screen.app.project.mixer.master, 0.7);
+    screen.app.undo();
+    assert_eq!(screen.app.project.mixer.master, before);
+    // Any other change in between starts a new step.
+    screen.app.set_master_volume(0.5);
+    screen.app.history.close();
+    screen.app.edit("change the tempo", |project| {
+        project.tempo = Tempo::new(100.0);
+    });
+    screen.app.history.close();
+    screen.app.set_master_volume(0.6);
+    screen.app.undo();
+    assert_eq!(screen.app.project.mixer.master, 0.5);
+}
+
+#[test]
+fn saving_a_style_elsewhere_keeps_the_styles_folder() {
+    use lineup_core::library::UserStyle;
+    let root = std::env::temp_dir().join(format!("lineup-save-as-{}", std::process::id()));
+    let (folder, elsewhere) = (root.join("styles"), root.join("desktop"));
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::create_dir_all(&elsewhere).unwrap();
+    let mut screen = Screen::new();
+    screen.app.style_files.folder = folder.clone();
+    let mut style = UserStyle::blank();
+    style.name = "Elsewhere".into();
+    screen.app.style_editor.start(style.clone(), None);
+    screen.app.style_editor.path = Some(elsewhere.join("Elsewhere.lineup-style"));
+    screen.app.save_user_style(style, false);
+    assert!(elsewhere.join("Elsewhere.lineup-style").exists());
+    assert_eq!(screen.app.style_files.folder, folder);
+    assert!(
+        screen
+            .app
+            .notice
+            .as_deref()
+            .is_some_and(|notice| notice.contains("Styles folder")),
+        "{:?}",
+        screen.app.notice
+    );
+    std::fs::remove_dir_all(&root).unwrap();
+}

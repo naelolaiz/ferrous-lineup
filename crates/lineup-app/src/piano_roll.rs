@@ -337,6 +337,9 @@ impl Lanes {
 /// The piano roll window and everything it remembers between frames.
 pub struct PianoRoll {
     clipboard: Vec<NoteEvent>,
+    /// The Tools menu's Paste asked for the system clipboard, which comes
+    /// next frame as a paste event, as with Ctrl+V.
+    paste_requested: bool,
     pub instance: Option<egui::Id>,
     pub open: bool,
     channel: usize,
@@ -417,6 +420,7 @@ impl PianoRoll {
     pub fn new(channel: usize) -> Self {
         PianoRoll {
             clipboard: Vec::new(),
+            paste_requested: false,
             instance: None,
             open: false,
             channel,
@@ -475,6 +479,12 @@ impl PianoRoll {
 
     pub fn selected_channel(&self) -> Option<usize> {
         self.channel_selected.then_some(self.channel)
+    }
+
+    /// The selected channel, if the user chose it rather than the piano
+    /// roll picking the first one there was.
+    pub fn chosen_channel(&self) -> Option<usize> {
+        self.selected_channel().filter(|_| self.explicit_channel)
     }
 
     pub fn reveal_step(&mut self, step: usize) {
@@ -1138,6 +1148,19 @@ impl PianoRoll {
             self.tool_from_keys(ui.ctx())
         } else {
             None
+        };
+        // Notes copied in another roll are on the system clipboard, so
+        // the menu's Paste reads it too, the frame after asking.
+        let tool = match tool {
+            Some(Tool::Paste) => {
+                ui.ctx()
+                    .send_viewport_cmd(egui::ViewportCommand::RequestPaste);
+                self.paste_requested = true;
+                None
+            }
+            tool => {
+                tool.or_else(|| std::mem::take(&mut self.paste_requested).then_some(Tool::Paste))
+            }
         };
         if let Some(tool) = tool.or(key_tool) {
             self.use_tool(ui.ctx(), tool, pattern, scale, actions);
@@ -1969,13 +1992,15 @@ impl PianoRoll {
                             });
                         }
                         None => {
+                            // A drawn note is not selected, so the tools and
+                            // the arrow keys still change every note until
+                            // you click one.
                             self.selection.clear();
                             let pitches = self.stamp_notes(self.snapped(pitch, scale), scale);
                             let new_notes: Vec<NoteEvent> = pitches
                                 .iter()
                                 .map(|&p| NoteEvent::new(p, step, self.note_length))
                                 .collect();
-                            self.selection = new_notes.clone();
                             // A single new note can be dragged straight
                             // away. It will be added at the end of the list.
                             if new_notes.len() == 1 {
