@@ -104,6 +104,8 @@
   - [Export video: the song with the views playing along](step-9/video-export.md)
   - [A playback trace: every note the player plays, to read](step-9/playback-trace.md)
   - [Step lights in the channel rack](step-9/rack-lights.md)
+  - [Locking a track: styles play around it](step-9/locks.md)
+  - [A style for each section](step-9/section-styles.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
