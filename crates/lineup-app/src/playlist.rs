@@ -540,6 +540,20 @@ impl PlaylistView {
         actions
     }
 
+    /// Draws only the tracks in `ui`, for a video: no pattern picker and
+    /// no toolbar. `playhead` is the step of the playlist that plays, and
+    /// which time round; the tracks scroll along with it.
+    pub fn video(&mut self, ui: &mut Ui, project: &Project, playhead: Option<(usize, Pass)>) {
+        let mut actions = Vec::new();
+        egui::ScrollArea::both()
+            .id_salt("playlist")
+            .animated(false)
+            .auto_shrink(false)
+            .show_viewport(ui, |ui, viewport| {
+                self.grid(ui, viewport, project, usize::MAX, playhead, &mut actions)
+            });
+    }
+
     /// Preserve clip identities when deleting an earlier clip shifts its index.
     fn reconcile_selection(&mut self, clips: &[Clip]) {
         if self.shown_clips.len() != clips.len() {

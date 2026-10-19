@@ -323,7 +323,7 @@ impl fmt::Display for EngineError {
 impl std::error::Error for EngineError {}
 
 /// Reads a playback position stored as the bits of an `f64`.
-fn load_position(position: &AtomicU64) -> Option<f64> {
+pub(crate) fn load_position(position: &AtomicU64) -> Option<f64> {
     match position.load(Ordering::Relaxed) {
         NO_POSITION => None,
         bits => Some(f64::from_bits(bits)),

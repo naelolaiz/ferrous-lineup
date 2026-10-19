@@ -214,6 +214,26 @@ impl LeadSheetWindow {
         }
         ui.separator();
 
+        self.pages(ui, project, title, playing);
+    }
+
+    /// Draws only the pages in `ui`, for a video, scrolled to the bar
+    /// that plays: `playing` is the step of the playlist's timeline.
+    pub fn video(&mut self, ui: &mut Ui, project: &Project, title: &str, playing: Option<usize>) {
+        // The pages as wide as the picture allows.
+        let width = self
+            .sheet(project, title)
+            .pages
+            .first()
+            .map(|page| page.width);
+        if let Some(width) = width {
+            self.settings.zoom = ((ui.available_width() - 24.0) / width).clamp(0.5, 2.0);
+        }
+        self.pages(ui, project, title, playing);
+    }
+
+    /// The pages, with the bar that plays lit up and scrolled to.
+    fn pages(&mut self, ui: &mut Ui, project: &Project, title: &str, playing: Option<usize>) {
         let zoom = self.settings.zoom;
         self.sheet(project, title);
         let Some(laid) = self.laid.take() else {

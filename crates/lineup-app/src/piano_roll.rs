@@ -413,6 +413,9 @@ pub struct PianoRoll {
     set_window: SetWindow,
     /// Kröpfl's micromodes, linked to the set browser.
     micromode_window: MicromodeWindow,
+    /// Drawn for a video: the notes, without the menus and the
+    /// velocities, which nobody can use there.
+    for_video: bool,
 }
 
 impl PianoRoll {
@@ -456,6 +459,7 @@ impl PianoRoll {
             row_window: RowWindow::new(),
             set_window: SetWindow::new(),
             micromode_window: MicromodeWindow::new(),
+            for_video: false,
         }
     }
 
@@ -642,6 +646,28 @@ impl PianoRoll {
             self.post_tonal_windows(ctx, project, pattern_notes, held, area, &mut actions);
         }
         actions
+    }
+
+    /// Draws the piano roll's contents in `ui`, for a video: this
+    /// channel's notes in `pattern`, with the step `playhead` playing.
+    /// When the pattern changes, it scrolls to its notes.
+    pub fn video(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        pattern: usize,
+        playhead: Option<usize>,
+    ) {
+        let Some(notes) = project.pattern(pattern) else {
+            return;
+        };
+        if pattern != self.pattern {
+            self.pattern = pattern;
+            self.scroll_to_notes = true;
+        }
+        self.for_video = true;
+        let mut actions = Vec::new();
+        self.contents(ui, project, notes, playhead, &[], &mut actions);
     }
 
     /// Changes the zoom, keeping the step and the pitch under the pointer
@@ -904,7 +930,11 @@ impl PianoRoll {
             heard.extend(&others);
         }
 
-        let tool = self.toolbar(ui, project.scale, scale, others.is_empty(), actions);
+        let tool = if self.for_video {
+            None
+        } else {
+            self.toolbar(ui, project.scale, scale, others.is_empty(), actions)
+        };
         // In a short window the grid comes first: the hint and set lines
         // move into the tooltip of the line naming the chord, so a small
         // screen still shows a dozen rows of notes.
@@ -1062,7 +1092,11 @@ impl PianoRoll {
         // for it: the lane, the gap, and egui's spacing between widgets.
         // Taking even a pixel too much would make the window grow a
         // little on every frame.
-        let below = VELOCITY_HEIGHT + 4.0 + 2.0 * ui.spacing().item_spacing.y;
+        let below = if self.for_video {
+            ui.spacing().item_spacing.y
+        } else {
+            VELOCITY_HEIGHT + 4.0 + 2.0 * ui.spacing().item_spacing.y
+        };
         let grid_height = (ui.available_height() - below).max(96.0);
         // Not animated: after a zoom, the notes that were under the
         // pointer must be there again on the very next frame.
@@ -1138,8 +1172,10 @@ impl PianoRoll {
             lanes,
             playhead,
         );
-        ui.add_space(4.0);
-        self.velocity_lane(ui, pattern, lanes, actions);
+        if !self.for_video {
+            ui.add_space(4.0);
+            self.velocity_lane(ui, pattern, lanes, actions);
+        }
 
         if let Some(step) = self.hovered_step {
             self.last_step = Some(step);
