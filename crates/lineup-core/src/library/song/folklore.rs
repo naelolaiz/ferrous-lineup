@@ -2694,7 +2694,9 @@ pub(super) const BOI_BARROSO: Song = Song {
 
 /// The guitar's introduction, bars 1-12 of the score, in D major: a riff
 /// over A, a run down the D major scale, then D turning to C, G turning to
-/// G minor, and C turning to A7, which leads into the verse.
+/// G minor, and C turning to A7, which leads into the verse. The guitar plays
+/// bars 1-4 alone (the piano comes in at bar 5, the bass and the drums at
+/// bar 6), so the band rests there.
 const CANDOMBE_PARA_GARDEL_INTRO_TUNE: &str = "-:4 -:1 A4:1 A4:1 A4:1 D5:1 D5:2 A4:1 D5:2 A4:1 E5:1 | \
      _:3 A4:1 -:1 A4:1 A4:1 A4:1 E5:1 E5:2 A4:1 E5:2 A4:1 F#5:1 | \
      -:4 -:1 A4:1 B4:1 C#5:1 D5:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 E4:1 D4:1 | \
@@ -2707,11 +2709,12 @@ const CANDOMBE_PARA_GARDEL_INTRO_TUNE: &str = "-:4 -:1 A4:1 A4:1 A4:1 D5:1 D5:2 
      D5:3 B4:1 -:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 D5:1 C5:1 Bb4:1 | \
      C5:4 -:1 A4:1 B4:1 C#5:1 D5:1 A4:1 B4:1 C#5:1 D5:1 E5:1 F#5:1 G5:1 | \
      B5:3 A5:1 G5:1 F#5:1 E5:2 -:2 D5:1 D5:1 C#5:3 E5:1";
-const CANDOMBE_PARA_GARDEL_INTRO_CHORDS: &str =
-    "V | V | I | V7 | V | V | I | V7 | I bVII bVII bVII | IV iv iv iv | bVII V7 V7 V7 | V7";
+const CANDOMBE_PARA_GARDEL_INTRO_CHORDS: &str = "V... | V... | I... | V7... | V | V | I | V7 | I bVII bVII bVII | IV iv iv iv | bVII V7 V7 V7 | V7";
 
 /// The verse, bars 13-26: twice through D minor, the same three-plus-one
-/// syncopation (sixteenth, eighth, sixteenth) on every beat.
+/// syncopation (sixteenth, eighth, sixteenth) on every beat. In bar 13 the
+/// guitar and the piano strike D minor once and every part, the drums too,
+/// rests under the voice's first line: a shot.
 const CANDOMBE_PARA_GARDEL_VERSE_TUNE: &str = "-:4 F4:1 F4:2 F4:1 F4:1 F4:2 F4:1 F4:1 D4:2 D4:1 | _:8 -:8 | \
      -:4 Bb4:1 Bb4:2 Bb4:1 Bb4:1 Bb4:2 Bb4:1 Bb4:1 G4:2 G4:1 | _:8 -:8 | \
      -:4 A4:1 A4:2 A4:1 A4:1 A4:2 C#5:1 A4:1 G4:2 F4:1 | \
@@ -2721,7 +2724,7 @@ const CANDOMBE_PARA_GARDEL_VERSE_TUNE: &str = "-:4 F4:1 F4:2 F4:1 F4:1 F4:2 F4:1
      -:4 Bb4:1 Bb4:2 Bb4:1 Bb4:1 Bb4:2 Bb4:1 Bb4:1 G4:2 G4:1 | _:8 -:8 | \
      -:4 A4:1 A4:2 A4:1 A4:1 A4:2 C#5:1 A4:1 G4:2 F4:1 | \
      F4:3 F4:2 F4:2 F4:1 F4:1 F4:2 A4:1 F4:1 E4:2 D4:1";
-const CANDOMBE_PARA_GARDEL_VERSE_CHORDS: &str = "i | I | iv7 | iv7 | V7 | i viø7 viø7 viø7 | \
+const CANDOMBE_PARA_GARDEL_VERSE_CHORDS: &str = "i. | I | iv7 | iv7 | V7 | i viø7 viø7 viø7 | \
      bVI V7 i i | i | i | i | iv | iv | V7 | i viø7 viø7 viø7";
 
 /// The refrain, bars 27-32, in D major.
@@ -2758,7 +2761,9 @@ const CANDOMBE_PARA_GARDEL_CODA_CHORDS: &str = "bIII V7 i i | i i iv7 iv7 | bIII
 // at its written pitch (it sounds an octave lower). Chords: the chord symbols, on the beat
 // the score prints them; bars 1-12, which have none, from the bass and the guitar's tune;
 // where two symbols are stacked (bar 14 "D" over "Gm7", bar 40 "Dm" over "Gm7 A7 D"),
-// the one the guitar, piano and bass play.
+// the one the guitar, piano and bass play. The score prints no dynamics, hairpins,
+// articulations, fermatas or tempo changes; its breaks (the solo guitar of bars 1-4, the
+// shot of bar 13) are marked on the charts.
 // Composer: Rubén Rada, "Tengo un candombe para Gardel", on his 1985 album "La yapla mata"
 // (https://es.wikipedia.org/wiki/La_yapla_mata credits the song to Rada alone;
 // https://www.discogs.com/release/11999031-Ruben-Rada-La-Yapla-Mata credits Rada as composer).
@@ -2854,6 +2859,8 @@ const LA_MARCHA_PERONISTA_REFRAIN_CHORDS: &str = "V7 | i | V7 | i | iv | i | V7"
 // and "fa mi re" where the score has D, D, D on "gran con-duc-" (bar 22).
 // The endings' upper voice (a rest, then three short A5s with no words, a
 // band's figure over the sung A4) is left out: the tune is the sung line.
+// The score prints no dynamics, articulations or tempo changes; the second
+// ending's held left hand is marked as a hold on its chord.
 // Authorship: SADAIC lists it as anonymous. Todotango (Néstor Pinsón and
 // Ricardo García Blaya) traces the verse's music to Juan Raimundo Streiff's
 // march for the Barracas Juniors club (late 1920s, words by "el Turco"
@@ -2910,8 +2917,9 @@ pub(super) const LA_MARCHA_PERONISTA: Song = Song {
         ),
         // "-dor!", then back to the start for the second verse (bar 25).
         Part::new("First ending", "A4:8 -:8", "i"),
-        // "-dor!" for the last time (bar 26).
-        Part::new("Second ending", "A4:8 -:8", "i"),
+        // "-dor!" for the last time (bar 26): the left hand stops its broken
+        // chords and holds a whole-note A, so the band holds the last chord.
+        Part::new("Second ending", "A4:8 -:8", "i.."),
     ],
     form: &[
         "Verse A",
