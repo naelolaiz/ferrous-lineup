@@ -1853,6 +1853,34 @@ mod library_parts {
     }
 
     #[test]
+    fn undo_and_redo_keep_a_demos_style_selected() {
+        let mut screen = el_choclo();
+        let tried = |screen: &Screen| {
+            let tried = screen.app.tried();
+            (
+                tried.style.map(|style| style.name),
+                tried.rhythm.map(|rhythm| rhythm.name),
+            )
+        };
+        let opened = tried(&screen);
+        assert_eq!(opened, (Some("Tango"), Some("Milonga")));
+        screen.app.edit("change the tempo", |project| {
+            project.tempo = Tempo::new(100.0);
+        });
+        screen.app.undo();
+        assert_eq!(tried(&screen), opened);
+        screen.app.redo();
+        assert_eq!(tried(&screen), opened);
+        // A style the Library put in still goes away with its undo.
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
+        assert_eq!(tried(&screen).0, Some("Doo-wop"));
+        screen.app.undo();
+        assert_eq!(tried(&screen), opened);
+    }
+
+    #[test]
     fn a_saved_styles_tempo_alone_does_not_bring_in_a_band() {
         let mut screen = el_choclo();
         let mut style = UserStyle::from_rhythm(Rhythm::named("Waltz").unwrap());
