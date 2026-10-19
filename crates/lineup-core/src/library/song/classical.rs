@@ -2039,3 +2039,189 @@ pub(super) const HIMNO_NACIONAL_ARGENTINO: Song = Song {
             \"Coronados de gloria vivamos\", and ends with \"O juremos con gloria morir\" \
             three times, the last two going from IV to V.",
 };
+
+// Boléro is built of a few bars repeated many times, so its pieces are
+// macros rather than consts: `concat!` joins only literals, and each of
+// these expands to one, so every statement's accompaniment and drums are
+// put together from the same bars instead of being written out again.
+
+/// Two bars of the snare drum's ostinato, the rhythm under the whole
+/// piece: an eighth, a triplet of sixteenths, an eighth, a triplet, then
+/// two eighths; the second bar ends with two more triplets instead.
+macro_rules! bolero_snare {
+    () => {
+        "x:2 (3 x:1 x x x:2 (3 x:1 x x x:2 x:2 | \
+         x:2 (3 x:1 x x x:2 (3 x:1 x x (3 x:1 x x (3 x:1 x x"
+    };
+}
+
+/// Two bars of the violas' and cellos' pizzicato, together: C and G with
+/// G and its octave above, then the cellos' low G and its octave, as two
+/// eighths in the second bar.
+macro_rules! bolero_pizzicato {
+    () => {
+        "C3+G3:4 G3+G4:4 G2+G3:4 | C3+G3:4 G3+G4:4 G2+G3:2 G2+G3:2"
+    };
+}
+
+/// From rehearsal 1 on, the violas add a C on every third beat.
+macro_rules! bolero_violas_c {
+    () => {
+        "-:8 C3:4 | -:8 C3:4"
+    };
+}
+
+/// The second flute doubling the snare drum's two bars on G, from the
+/// flute's last note (an eighth rest instead of the first stroke).
+macro_rules! bolero_flute_rhythm_in {
+    () => {
+        "-:2 (3 G4:1 G4 G4 G4:2 (3 G4:1 G4 G4 G4:2 G4:2 | \
+         G4:2 (3 G4:1 G4 G4 G4:2 (3 G4:1 G4 G4 (3 G4:1 G4 G4 (3 G4:1 G4 G4"
+    };
+}
+
+/// The same two bars of the second flute, complete.
+macro_rules! bolero_flute_rhythm {
+    () => {
+        "G4:2 (3 G4:1 G4 G4 G4:2 (3 G4:1 G4 G4 G4:2 G4:2 | \
+         G4:2 (3 G4:1 G4 G4 G4:2 (3 G4:1 G4 G4 (3 G4:1 G4 G4 (3 G4:1 G4 G4"
+    };
+}
+
+/// Two bars of silence.
+macro_rules! bolero_rest {
+    () => {
+        "-:12 | -:12"
+    };
+}
+
+/// Eight times the two bars `$bars` names.
+macro_rules! bolero_eight {
+    ($bars:ident) => {
+        concat!(
+            $bars!(),
+            " | ",
+            $bars!(),
+            " | ",
+            $bars!(),
+            " | ",
+            $bars!(),
+            " | ",
+            $bars!(),
+            " | ",
+            $bars!(),
+            " | ",
+            $bars!(),
+            " | ",
+            $bars!()
+        )
+    };
+}
+
+/// A whole statement of the tune: eighteen bars, nine times two.
+macro_rules! bolero_nine {
+    ($bars:ident) => {
+        concat!(bolero_eight!($bars), " | ", $bars!())
+    };
+}
+
+/// The first tune, A, in C major, at the flute's pitch: sixteen bars, its
+/// last note C held into the seventeenth, and a bar of the accompaniment
+/// alone before the next instrument takes it.
+const BOLERO_A: &str = "C5:4 _:2 B4:1 C5 D5 C5 B4 A4 | C5:2 C5:1 A4 C5:4 _:2 B4:1 C5 | \
+     A4:1 G4 E4 F4 G4:8 | _:1 F4:1 E4 D4 E4 F4 G4 A4 G4:4 | \
+     _:4 _:1 A4:1 B4 A4 G4 F4 E4 D4 | E4:1 D4 C4:2 _:2 C4:1 D4 E4:2 F4:2 | D4:4 G4:8 | \
+     _:8 _:2 -:2 | D5:4 _:3 C5:1 B4 A4 B4 C5 | D5:1 C5 B4:2 _:1 C5:1 B4 A4 C5 B4 A4 F4 | \
+     _:2 F4:1 F4 F4:2 A4:2 C5:1 A4 B4 G4 | F4:2 F4:1 F4 F4:2 A4:2 B4:1 G4 A4 F4 | \
+     D4:2 D4:1 C4 D4:4 _:2 D4:1 D4 | D4:2 F4:2 A4:1 F4 G4 E4 D4:2 D4:1 C4 | \
+     D4:4 _:2 D4:1 C4 D4:2 E4:1 F4 | G4:8 _:1 F4:1 E4 D4 | C4:6 -:2 -:4 | -:12";
+
+/// C major under every bar of a statement.
+const BOLERO_C: &str = "C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C";
+
+// Source: Ravel's autograph full score (pencil, 1928: 43 scanned pages, the music on pages 7
+// to 37), the authority here for the bars, instruments, octaves, dynamics and
+// accompaniment, and for the tune's notes the Wikifonia lead sheet
+// https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/RavelBolero.abc
+// checked bar by bar against the manuscript. A FIRST VERSION: bars 1 to 38 of the 340 the
+// manuscript writes (the introduction, the flute's statement and the clarinet's); the rest
+// follows. Bars 1 and 2 are marked "bis" in the manuscript, played twice: the introduction
+// is four bars, as in the printed score, where the flute comes in at bar 5 (bar 3 of the
+// manuscript). The tune agrees with the lead sheet in every bar but its last note, which
+// the manuscript holds for a quarter tied to an eighth (the lead sheet has an eighth). The
+// clarinet in B flat is written a tone higher and plays the tune at the flute's pitch.
+// Under it the violas and cellos pluck their figure, written here as one line (the cellos'
+// C on the first beat is the violas' lower note), with the violas' C on the third beat,
+// added from rehearsal 1 (bar 19), as a second voice; the second flute doubles the snare
+// drum's rhythm on G in bars 19 to 22, written with the strings on the Keys channel. Left
+// out: the harp, which comes in at rehearsal 2 (bar 37) with chords in harmonics on the
+// second and third beats, not yet read with certainty. The manuscript marks the violas and
+// cellos p in bar 1, and the snare drum p (or pp: the mark is faint); the flute and the
+// clarinet come in with no mark of their own, so all three parts are marked p (the printed
+// score has pp). The tempo, ♩ = 72, "Tempo di Bolero, moderato assai", is the printed
+// score's: no tempo mark could be read on the manuscript's first page of music.
+pub(super) const BOLERO: Song = Song {
+    name: "Boléro",
+    origin: "Maurice Ravel, 1928",
+    feel: "Orchestra",
+    genre: Genre::Classical,
+    tonic: C,
+    mode: Major,
+    time: THREE_FOUR,
+    tempo: 72.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::FLUTE, gm::PIZZICATO_STRINGS, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        // Two bars, played twice ("bis"): the snare drum and the pizzicato alone.
+        Part::new("Introduction", "-:12 | -:12", "C | C")
+            .with_left(bolero_pizzicato!())
+            .with_drums(&[(Drum::Snare, bolero_snare!())])
+            .marked(Dynamic::Piano),
+        Part::new("Flute", BOLERO_A, BOLERO_C)
+            .with_left(concat!(
+                bolero_nine!(bolero_pizzicato),
+                " & ",
+                bolero_eight!(bolero_rest),
+                " | ",
+                bolero_violas_c!(),
+                " & ",
+                bolero_eight!(bolero_rest),
+                " | ",
+                bolero_flute_rhythm_in!()
+            ))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::FLUTE, 0)])
+            .marked(Dynamic::Piano),
+        Part::new("Clarinet", BOLERO_A, BOLERO_C)
+            .with_left(concat!(
+                bolero_nine!(bolero_pizzicato),
+                " & ",
+                bolero_nine!(bolero_violas_c),
+                " & ",
+                bolero_flute_rhythm!(),
+                " | ",
+                bolero_eight!(bolero_rest)
+            ))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::CLARINET, 0)])
+            .marked(Dynamic::Piano),
+    ],
+    form: &["Introduction", "Introduction", "Flute", "Clarinet"],
+    drums_from: 0,
+    about: "A first version: bars 1 to 38 of 340; the rest follows. A Spanish dance, the \
+            bolero, slowed down and turned into one long crescendo. The snare drum plays the \
+            same two bars from the first bar to the last, an eighth note and a quick triplet \
+            of sixteenths, over and over, while the violas and cellos pluck C and G, the \
+            tonic and the dominant of C major. Count it in three: the triplets fill the \
+            second half of beats 1 and 2, and beat 3 is two plain eighths. \
+            Over it a single tune, in two halves, passes from one instrument to the next, \
+            each time a little louder and fuller: here the flute plays it first, softly, low \
+            in its range, then the clarinet. The first half stays in C major, rising from C \
+            and falling back by step; it holds its long notes across the bar lines and lands \
+            late, after the beat, with little rushing runs of sixteenths, so the tune seems \
+            to sway over the strict drum. It ends on the low C, and a bar of the drum alone \
+            hands it on.",
+};
