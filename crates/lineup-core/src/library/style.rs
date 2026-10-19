@@ -138,6 +138,7 @@ const fn style(
     }
 }
 
+const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
@@ -1781,6 +1782,19 @@ pub static STYLES: &[Style] = &[
          round: the bass on the long beat and on the short one, over a minor key's i and iv.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 8)),
+    style(
+        "Five-four",
+        Balkan,
+        Major,
+        "I | I | V7 | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        192.0,
+        "Five-four",
+        "A folk dance in 5/4, counted 3 + 2: the bass on 1 and 4, the accordion's chord \
+         on the beats after each, over I and V7.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Reggae and ska -----
     style(
         "Reggae",
@@ -1906,6 +1920,19 @@ pub static STYLES: &[Style] = &[
         "Oom-pah-pah: three beats to the bar, the bass on one and the chords on two and three.",
     )
     .in_time(THREE_FOUR),
+    style(
+        "Two-four polka",
+        Folk,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Backbeat,
+        Bass::RootFifth,
+        120.0,
+        "Two-four polka",
+        "The polka in 2/4, two beats to the bar: the bass on 1, the root and the fifth \
+         below it by turns from bar to bar, and the chord on 2.",
+    )
+    .in_time(TWO_FOUR),
     style(
         "Jig",
         Folk,

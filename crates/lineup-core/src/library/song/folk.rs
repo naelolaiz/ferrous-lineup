@@ -1280,3 +1280,65 @@ pub(super) const HUNGARIAN_DANCE: Song = Song {
             harmonic minor. The second strain is a chain of dominant sevenths: G7 to C \
             minor, F7 to B flat, D7 to E flat (a deceptive turn), then D7 home to G minor.",
 };
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201341631.abc
+// (John Chambers' "Süsserl" in B flat, a zwiefacher in two voices: the upper one, without its
+// two turns (~), with his chords. His title spells the dance, (P2WP2WP2W2)2((P2WP2)2P2WP2WP2W2)2,
+// a P for each bar of two (2/4) and a W for each bar of three (3/4), and he asks for the strains
+// in the order AABBABBA, which the form follows; each bar here has the meter the title gives it.
+// Compared bar by bar with his "Suserl (Bb)",
+// https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201341908.abc,
+// an octave lower: the same tune and chords, its lower voice a third below where the Süsserl
+// has a sixth in the ninth bar. The eighth bar of the first strain rests a quarter there and
+// an eighth here, which leaves that bar of two an eighth short: the Suserl's quarter rest is
+// followed. The Suserl opens with a five-bar intro (the first strain's last five bars, the last
+// two rising to B flat instead of falling to D) and marks the first strain "fine" and the
+// second "D.C.", for A A B B A; neither is used here. The copies in C, F and G, and the
+// Suserl's in C, E flat and F, in abc_tune_jc_201355386.abc, have the same notes. No tempo is given: 168 to the quarter lies
+// between the 144 and the 200 of two other zwiefacher in Chambers' collection, Der Schlesische
+// and the Sommermichl.)
+pub(super) const SUSSERL: Song = Song {
+    name: "Süsserl",
+    origin: "Bavarian zwiefacher, traditional",
+    feel: "Zwiefacher",
+    genre: Genre::Folk,
+    tonic: ASharp,
+    mode: Major,
+    time: TWO_FOUR,
+    tempo: 168.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Two-four polka",
+    band: BAVARIAN,
+    style: "Two-four polka",
+    parts: &[
+        // Two, two, three; two, two, three; two, two, three, three.
+        Part::new(
+            "A",
+            "D5:2 F5 F5 Eb5 | D5:4 -:4 | D5:2 F5 F5 D5 G5 F5 | F5:4 Eb5:2 D5 | C5:4 -:4 | \
+             G5:2 G5 G5 Bb5 A5 G5 | G5:4 F5:2 Eb5 | D5:4 -:4 | F5:2 F5 F5:4 Eb5 | D5:4 -:8",
+            "I | I | I | V7 | V7 | IV | I | I | V7 | I",
+        )
+        .in_meters(&[
+            TWO_FOUR, TWO_FOUR, THREE_FOUR, TWO_FOUR, TWO_FOUR, THREE_FOUR, TWO_FOUR, TWO_FOUR,
+            THREE_FOUR, THREE_FOUR,
+        ]),
+        // Two, two, three, two, two.
+        Part::new(
+            "B",
+            "C5:2 Eb5 Eb5 D5 | C5:4 -:4 | C5:2 Eb5 Eb5 C5 F5 Eb5 | D5:2 F5 F5 Eb5 | D5:4 -:4",
+            "V7 | V7 | V7 | I | I",
+        )
+        .in_meters(&[TWO_FOUR, TWO_FOUR, THREE_FOUR, TWO_FOUR, TWO_FOUR]),
+    ],
+    form: &["A", "A", "B", "B", "A", "B", "B", "A"],
+    drums_from: 0,
+    about: "A zwiefacher, the Bavarian couple dance whose meter changes as it goes: bars of \
+            three (3/4), danced with a waltz step, and bars of two (2/4), with a pivot, the \
+            couple turning on two steps instead of three. The tune fixes the order, and the \
+            dancers learn it by heart: in the first strain two bars of two and one of three, \
+            three times, then one more of three (2 2 3, 2 2 3, 2 2 3 3); in the second, \
+            2 2 3 2 2. The beat stays the same, only the bars change, so the band plays oom-pa \
+            in the bars of two and oom-pa-pa in the bars of three. The tune is in B flat major, \
+            on its three chords: B flat (I), F7 (V7) and E flat (IV).",
+};

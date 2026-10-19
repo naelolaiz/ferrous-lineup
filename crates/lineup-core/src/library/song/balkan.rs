@@ -859,3 +859,137 @@ pub(super) const BUCIMIS: Song = Song {
             A major and stops on E, the V, through B7 (II7): a half cadence that leads back \
             to the first strain, and the tune ends after the second.",
 };
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/robinson/abc_tune_robinson_7697.abc
+// (Richard Robinson's tunebook, with its chords: three strains, each played twice with a first
+// and a second ending, written out here in full. His notes place it, on a correspondent's word,
+// in Dobrogea, and say that it came to him from Alistair Cochrane, who had it from an LP of the
+// Swedish folk band Vargavinter, and that the name may not be right; no composer is named. The copies in John
+// Chambers' collection (abc_tune_jc_201360585.abc) and on FolkTuneFinder are the same ABC, note
+// for note. The first ending of the second strain is marked "A2": its notes have C sharp, so it
+// is played as A. No tempo is given: 220 to the quarter is Henrik Norbeck's for his two
+// geamparale, written in 7/16 at 220 eighths.)
+pub(super) const GEAMPARAUA_DE_LA_MURFATLAR: Song = Song {
+    name: "Geamparaua de la Murfatlar",
+    origin: "Romanian geampara, Dobrogea",
+    feel: "Rachenitsa",
+    genre: Genre::Balkan,
+    tonic: A,
+    mode: Phrygian,
+    time: TWO_TWO_THREE,
+    tempo: 220.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Rachenitsa",
+    band: BALKAN,
+    style: "Rachenitsa",
+    parts: &[
+        Part::new(
+            "A",
+            "C#5:2 A4 C#5 A4 C#5 D5 E5 | D5:4 D5:2 C#5 Bb4 A4 G4 | C#5:2 A4 C#5 A4 C#5 D5 E5 | \
+             D5:4 D5:2 C#5 Bb4 A4 G4 | C#5:2 A4 C#5 A4 C#5 D5 E5 | D5:4 D5:2 C#5 D5 E5 F5 | \
+             G5:2 F5 F5 E5 D5 C#5 D5 | E5:4 E5:2 A4 E5 A4 A4 | \
+             C#5:2 A4 C#5 A4 C#5 D5 E5 | D5:4 D5:2 C#5 Bb4 A4 G4 | C#5:2 A4 C#5 A4 C#5 D5 E5 | \
+             D5:4 D5:2 C#5 Bb4 A4 G4 | G5:2 F5 F5 E5 D5 E5 D5 | C#5:4 C#5:2 A4 Bb4 A4 G4 | \
+             A4:2 Bb4 Bb4 A4 G4 F4 G4 | A4:4 A4 A4:2 C#5 E5",
+            "I | iv | I | iv | I | iv | bII | I | I | iv | I | iv | bvii | I | bII | I",
+        ),
+        Part::new(
+            "B",
+            "A5:4 A5 A4:2 C#5 A5 | G5:4 G5 A4:2 C#5 G5 | F5:4 F5:2 E5 D5 E5 D5 | \
+             C#5:4 C#5:2 A4 Bb4 A4 G4 | F5:4 F5:2 E5 D5 E5 D5 | C#5:4 C#5:2 A4 Bb4 A4 G4 | \
+             F5:4 F5:2 E5 D5 C#5 D5 | E5:4 E5 A4:2 C#5 E5 | \
+             A5:4 A5 A4:2 C#5 A5 | G5:4 G5 A4:2 C#5 G5 | F5:4 F5:2 E5 D5 E5 D5 | \
+             C#5:4 C#5:2 A4 Bb4 A4 G4 | F5:4 F5:2 E5 D5 E5 D5 | C#5:4 C#5:2 A4 Bb4 A4 G4 | \
+             A4:2 Bb4 Bb4 A4 G4 F4 G4 | A4:4 A4:2 E4 A4 E4 E4",
+            "I | I7 | iv | I | iv | I | bII | I | I | I7 | iv | I | iv | I | bII | I",
+        ),
+        Part::new(
+            "C",
+            "E5:4 D5:2 C#5 D5 E5 F5 | G5:2 F5 G5 A5 G5 F5 E5 | G5:2 F5 F5 E5 D5 E5 D5 | \
+             C#5:4 C#5:2 A4 Bb4 A4 G4 | E5:2 F5 F5 E5 D5 E5 D5 | C#5:4 C#5:2 A4 Bb4 A4 G4 | \
+             E5:2 F5 F5 E5 D5 C#5 D5 | E5:4 E5:2 A4 E5 A4 A4 | \
+             E5:4 D5:2 C#5 D5 E5 F5 | G5:2 F5 G5 A5 G5 F5 E5 | G5:2 F5 F5 E5 D5 E5 D5 | \
+             C#5:4 C#5:2 A4 Bb4 A4 G4 | E5:2 F5 F5 E5 D5 E5 D5 | C#5:4 C#5:2 A4 Bb4 A4 G4 | \
+             A4:2 Bb4 Bb4 A4 G4 F4 G4 | A4:4 A4:2 E4 A4 E4 E4",
+            "I | bvii | iv | I | iv | I | bII | I | I | bvii | iv | I | iv | I | bII | I",
+        ),
+    ],
+    form: &["A", "B", "C"],
+    drums_from: 0,
+    about: "A geampara, a dance of Dobrogea, between the Danube and the Black Sea: seven \
+            eighths to the bar, counted 1 2, 1 2, 1 2 3, quick, quick, slow, the same \
+            2 + 2 + 3 as the Bulgarian rachenitsa. The tune is on A with B flat and C sharp, \
+            an augmented second apart, the scale of the makam hicaz. A major (I) and D minor \
+            (iv) take turns, G minor (bvii) comes in now and then, and every strain ends on B \
+            flat (bII), a semitone above A, falling to A. Three strains, each played twice, \
+            the second time with another ending.",
+};
+
+// Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201356092.abc
+// (the ABC in John Chambers' collection, as Mihai and Alexandru David presented the dance at
+// Gypsy Camp II, at its tempo. Every bar is six eighths and a half note, or three quarters and
+// a half note, and the MIDI accents it asks for fall on the first eighth and, less strongly,
+// on the seventh: 3 + 2. Five strains of four bars, the first four played twice, then the
+// first once more; the first is in two voices a third apart, an octave below the others: the
+// upper one. All the
+// other copies the index lists, in the balk2 and jc_regional folders, abc_tune_jc_201358690.abc,
+// abc_tune_jc_201359703.abc and abc_tune_misc_20.abc, are the same ABC; "Mindrele 2", in 6/8, is
+// another tune. Its key signature is E minor's, but every strain ends on C: the tune is in C
+// with F sharp, the Lydian mode. It has no chords: these are a plain harmonization, C, with D
+// major (II) under the first strain's held F sharp, where the lower voice has D, G (V) under
+// the second strain's G, A, B, and C7 (I7) where B flat comes in.)
+pub(super) const MANDRELE: Song = Song {
+    name: "Mândrele",
+    origin: "Romanian folk dance",
+    feel: "Five-four",
+    genre: Genre::Balkan,
+    tonic: C,
+    mode: Lydian,
+    time: FIVE_FOUR,
+    tempo: 192.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Five-four",
+    band: TARAF,
+    style: "Five-four",
+    parts: &[
+        Part::new(
+            "A",
+            "E4:2 F#4 G4 A4 G4 E4 F#4:8 | G4:4 E4 C4 E4:8 | E4:2 F#4 G4 A4 G4 E4 F#4:8 | \
+             G4:4 E4 C4 C4:8",
+            "I I I II II | I | I I I II II | I",
+        ),
+        Part::new(
+            "B",
+            "G5:2 A5 B5 G5 A5 F#5 G5:8 | G5:4 E5 C5 E5:8 | G5:2 A5 B5 G5 A5 F#5 G5:8 | \
+             G5:4 E5 C5 C5:8",
+            "V | I | V | I",
+        ),
+        Part::new(
+            "C",
+            "G5:4 E5 C5 E5:8 | G5:4 E5 C5 Bb5:8 | G5:4 E5 C5 E5:8 | G5:4 E5 C5 C5:8",
+            "I | I7 | I | I",
+        ),
+        Part::new(
+            "D",
+            "Bb5:4 A5 G5 Bb5:8 | G5:4 E5 C5 E5:8 | Bb5:4 A5 G5 Bb5:8 | G5:4 E5 C5 C5:8",
+            "I7 | I | I7 | I",
+        ),
+        Part::new(
+            "E",
+            "E5:2 F#5 G5 A5 G5 F#5 G5:8 | G5:4 E5 C5 E5:8 | E5:2 F#5 G5 A5 G5 F#5 G5:8 | \
+             G5:4 E5 C5 C5:8",
+            "I | I | I | I",
+        ),
+    ],
+    form: &["A", "A", "B", "B", "C", "C", "D", "D", "E", "A"],
+    drums_from: 0,
+    about: "A Romanian dance in five: five quarter notes to the bar, counted 1 2 3, 1 2, a \
+            bar of three and a bar of two in one. Every bar moves over the three and holds a \
+            half note over the two. The tune is in C, but with F sharp: the Lydian mode, whose \
+            raised fourth sits on D major (II) in the first strain and falls back to C. The \
+            second strain goes from G (V) to C; the third and fourth bring in B flat, which \
+            turns C into C7 (I7); the last goes back to the plain C, and the first strain \
+            closes the dance.",
+};

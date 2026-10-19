@@ -400,6 +400,7 @@ use PitchClass::*;
 use ScaleKind::*;
 
 const COMMON: TimeSignature = TimeSignature::COMMON;
+const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const NINE_EIGHT: TimeSignature = TimeSignature::new(9, 8);
@@ -446,6 +447,10 @@ const GREEK: Band = Band::new(gm::VIOLIN, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 // The kanun, the Turkish zither, is played by a koto, the nearest General MIDI sound.
 const TURKISH: Band = Band::new(gm::CLARINET, gm::KOTO, gm::ACOUSTIC_BASS);
 const POLKA: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::TUBA);
+// A Bavarian dance band: clarinet, the button accordion and the tuba.
+const BAVARIAN: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::TUBA);
+// A Romanian band of lăutari: the violin leads, over accordion and double bass.
+const TARAF: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::ACOUSTIC_BASS);
 const ANDEAN: Band = Band::new(gm::PAN_FLUTE, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const LLANERO: Band = Band::new(gm::HARP, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
 const FIDDLE_AND_GUITAR: Band = Band::new(gm::VIOLIN, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS);
@@ -725,6 +730,8 @@ pub static SONGS: &[Song] = &[
     balkan::DAICHOVO_HORO,
     balkan::GANKINO_HORO,
     balkan::BUCIMIS,
+    balkan::GEAMPARAUA_DE_LA_MURFATLAR,
+    balkan::MANDRELE,
     balkan::ENTARISI,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
@@ -760,6 +767,7 @@ pub static SONGS: &[Song] = &[
     folk::TUMBALALAIKA,
     folk::MO_LI_HUA,
     folk::HUNGARIAN_DANCE,
+    folk::SUSSERL,
     classical::CANON,
     classical::FUR_ELISE,
     classical::MOUNTAIN_KING,
