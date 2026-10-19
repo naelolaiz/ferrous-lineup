@@ -460,15 +460,6 @@ pub fn song_demo(song: &Song) -> Project {
                 format!("{}, bar {}", part.name, bar_number + 1)
             };
             bar_number += length / bar;
-            let index = if patterns.is_empty() {
-                if let Some(pattern) = project.pattern_mut(0) {
-                    pattern.name = name.clone();
-                    pattern.set_length(length);
-                }
-                0
-            } else {
-                new_pattern(&mut project, &name, length)
-            };
             let melody = melody_notes(song, piece, time, length, voices.len());
             let tonic = song.part_scale(piece).root;
             let spans = piece.spans(bar, tonic);
@@ -529,27 +520,48 @@ pub fn song_demo(song: &Song) -> Project {
                 interpret::perform(&mut hits, time, Role::Accompaniment, seed(drum.name()));
                 lines.push((channel, hits));
             }
-            for notes in lines
-                .iter_mut()
-                .map(|(_, notes)| notes)
-                .chain([&mut chords, &mut bass_line, &mut horn_notes])
-            {
+            lines.extend(keys.map(|keys| (keys, chords)));
+            lines.extend(bass.map(|bass| (bass, bass_line)));
+            lines.extend(horns.map(|(horns, _)| (horns, horn_notes)));
+            for (_, notes) in &mut lines {
                 piece.dynamic.mark(notes);
             }
-            if let Some(pattern) = project.pattern_mut(index) {
-                for (channel, notes) in lines {
-                    pattern.set_notes(channel, notes);
+            // A run of bars of a part whose meter changes bar by bar
+            // plays the pattern of an earlier run with the same notes,
+            // as a producer reuses a loop: the Rite of Spring changes its
+            // meter nearly every bar, and would need more patterns than
+            // a project has room for.
+            let shared = (!part.meters.is_empty())
+                .then(|| {
+                    patterns.iter().find(|earlier| {
+                        earlier.from_meters
+                            && earlier.time == time
+                            && earlier.length == length
+                            && same_notes(&earlier.notes, &lines)
+                    })
+                })
+                .flatten()
+                .map(|earlier| earlier.pattern);
+            let index = match shared {
+                Some(index) => index,
+                None => {
+                    let index = if patterns.is_empty() {
+                        if let Some(pattern) = project.pattern_mut(0) {
+                            pattern.name = name.clone();
+                            pattern.set_length(length);
+                        }
+                        0
+                    } else {
+                        new_pattern(&mut project, &name, length)
+                    };
+                    if let Some(pattern) = project.pattern_mut(index) {
+                        for (channel, notes) in &lines {
+                            pattern.set_notes(*channel, notes.clone());
+                        }
+                    }
+                    index
                 }
-                if let Some(keys) = keys {
-                    pattern.set_notes(keys, chords);
-                }
-                if let Some(bass) = bass {
-                    pattern.set_notes(bass, bass_line);
-                }
-                if let Some((horns, _)) = horns {
-                    pattern.set_notes(horns, horn_notes);
-                }
-            }
+            };
             patterns.push(Piece {
                 part: part.name,
                 name,
@@ -558,6 +570,8 @@ pub fn song_demo(song: &Song) -> Project {
                 time,
                 spans,
                 drums: None,
+                from_meters: !part.meters.is_empty(),
+                notes: lines,
             });
         }
     }
@@ -687,6 +701,20 @@ struct Piece {
     spans: Vec<ChordSpan>,
     /// Its drum pattern, if the song has drums.
     drums: Option<usize>,
+    /// Whether it is a run of a part whose meter changes bar by bar.
+    from_meters: bool,
+    /// The notes of its pattern, channel by channel.
+    notes: Vec<(usize, Vec<NoteEvent>)>,
+}
+
+/// Whether two patterns' notes are the same, channel by channel, however
+/// hard each is played.
+fn same_notes(a: &[(usize, Vec<NoteEvent>)], b: &[(usize, Vec<NoteEvent>)]) -> bool {
+    let key = |note: &NoteEvent| (note.pitch, note.start, note.length, note.nudge, note.trim);
+    a.len() == b.len()
+        && a.iter().zip(b).all(|((x, xs), (y, ys))| {
+            x == y && xs.len() == ys.len() && xs.iter().map(key).eq(ys.iter().map(key))
+        })
 }
 
 /// The time signature the last bar of `part` is in.
@@ -713,7 +741,7 @@ fn rhythm_in(rhythm: &'static Rhythm, time: TimeSignature) -> Option<&'static Rh
 mod tests {
     use super::*;
     use crate::file::{from_text, to_text};
-    use crate::library::song::Part;
+    use crate::library::song::{Dynamic, Part};
     use crate::library::{SONGS, STYLES};
     use crate::pattern::MAX_STEPS;
 
@@ -838,6 +866,9 @@ mod tests {
             key: None,
             tempo: &[],
             played: None,
+            instruments: &[],
+            dynamic: Dynamic::MezzoForte,
+            drums: &[],
         };
         let first = song.form[0];
         let parts: &'static [Part] =
