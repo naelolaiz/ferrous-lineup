@@ -381,10 +381,13 @@ const DESARMA_EB_MINOR_CHORDS: &str = "i | i | V | V | i | i | bvii | bvii";
 const DESARMA_GM_A_CHORDS: &str = "i | i | v | v | i | i | bVI | bVI | V7sus4 | V7 | i | i";
 const DESARMA_GM_B_CHORDS: &str = "bVII | bVII | bVI | bVI | bIII | bIII | bVI | bVI | V7sus4 | V7";
 /// G major: the tune steps down over G, A minor 7, G major 7, then E flat (bVI).
-const DESARMA_G_CHORDS: &str = "I | I | ii7 | ii7 | Imaj7 | Imaj7 | bVI | bVI | bVI | bVI";
+/// Bar 96 is a shot: both piano scores strike E flat once and stop (the 3/4 score's bar 71 has a
+/// sixteenth chord and rests), and the choir rests but for the tenors' pickup.
+const DESARMA_G_CHORDS: &str = "I | I | ii7 | ii7 | Imaj7 | Imaj7 | bVI | bVI | bVI | bVI.";
 const DESARMA_VERSE3_CHORDS: &str = "I | I | bVI | bVI | I | I | bVI | bVI";
-/// In 3/4: A suspended resolving to A (II, the V of V), E minor 7, A minor 9, D13.
-const DESARMA_VERSE3_END_CHORDS: &str = "IIsus4 II II | II | vi7 | vi7 | ii9 | ii9 | V13 | V13";
+/// In 3/4: A suspended resolving to A (II, the V of V), E minor 7, A minor 9, D13. In bar 112 the
+/// left hand rests and the right hand climbs F sharp, G, A alone (both piano scores): the band rests.
+const DESARMA_VERSE3_END_CHORDS: &str = "IIsus4 II II | II | vi7 | vi7 | ii9 | ii9 | V13 | V13...";
 const DESARMA_CODA_CHORDS: &str = "I | bVII bVII IV";
 /// In 3/4: G over F, C over E, the bass walking down to A and D; then C minor 7 and F,
 /// borrowed from G minor, turn toward E flat.
@@ -416,6 +419,12 @@ const DESARMA_FINAL_CHORDS: &str = "V IV | III | IV | I | V | I | IV | I | I";
 // octave up, where the sopranos sing the same tune in the second verse.
 // The choir's "na ra ra" and "ah" sections (the intro, middle and coda) are not sung words:
 // there the piano's tune stays.
+// Marks: the piano scores print no dynamics; the dynamics and hairpins are the choral score's,
+// those of the voice that has the tune, or of the whole choir where they agree (its bars one
+// later than the demo's: choral bar n is the demo's bar n - 1 from the verse on). The tempo
+// marks are the 6/8 score's (dotted quarter = 80, 68, 62) and the 3/4 score's final fermata;
+// the choral arranger's own rit. (bars 55-56 and 110-113), fermata and caesura (bar 57), "Più
+// mosso" (58) and "Tempo primo" (114) are left out, as they are not in the band's scores.
 // Under copyright (Charly García); added at the owner's request.
 pub(super) const DESARMA_Y_SANGRA: Song = Song {
     name: "Desarma y sangra",
@@ -432,13 +441,22 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
     band: SERU,
     style: "Six-eight ballad",
     parts: &[
-        // Bars 1-6 and 26-31 of the 6/8 score; choral bars 1-7 and 27-32 (the choir's first
+        // Bars 1-6 (and, as "Intro 2", 26-31) of the 6/8 score; choral bars 1-7 and 27-32 (the choir's first
         // intro holds the last E flat one bar longer); bars 2-6 are marked 8va. The last
         // eighth is the sung pickup into the verse ("Tu", "el"), from the choral score.
+        // The choir sings it mp, fading (a diminuendo) over bar 5; the basses' "Tu" is mp.
         Part::new(
             "Intro",
-            "D5:2 Eb5 D5 C5 D5 C5 | B4 G4 B4 D5 G5 F5 | Eb5 Ab4 C5 Ab5 Eb5 Ab4 | \
-             Eb5 G4 Bb4 G4 Eb5 Bb4 | F5:4 Eb5 D5 | Eb5:8 -:2 Bb3:2",
+            "!mp D5:2 Eb5 D5 C5 D5 C5 | B4 G4 B4 D5 G5 F5 | Eb5 Ab4 C5 Ab5 Eb5 Ab4 | \
+             Eb5 G4 Bb4 G4 Eb5 Bb4 | !> F5:4 Eb5 D5 | != Eb5:8 -:2 !mp Bb3:2",
+            DESARMA_INTRO_CHORDS,
+        ),
+        // The same intro after the first verse (bars 26-31; choral bars 27-32), mf, with the
+        // diminuendo over bar 30 and the sopranos' "el" mf.
+        Part::new(
+            "Intro 2",
+            "!mf D5:2 Eb5 D5 C5 D5 C5 | B4 G4 B4 D5 G5 F5 | Eb5 Ab4 C5 Ab5 Eb5 Ab4 | \
+             Eb5 G4 Bb4 G4 Eb5 Bb4 | !> F5:4 Eb5 D5 | != Eb5:8 -:2 !mf Bb3:2",
             DESARMA_INTRO_CHORDS,
         ),
         // Bars 7-16; choral bars 8-17: "Tu tiempo es un vidrio, tu amor un faquir, mi cuerpo
@@ -447,16 +465,16 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // tenors alone "si las sanguijuelas"; all an octave up here.
         Part::new(
             "Verse",
-            "G4:6 Ab4:4 G4:2 | F4:4 Eb4 -:2 Ab4 | G4:6 Ab4:4 Bb4:2 | Bb4:8 -:2 Bb3 | \
+            "!mp G4:6 Ab4:4 G4:2 | F4:4 Eb4 -:2 Ab4 | G4:6 Ab4:4 Bb4:2 | Bb4:8 -:2 Bb3 | \
              G4:6 Ab4:4 G4:2 | F4:4 Eb4 -:2 Ab4 | G4:6 Ab4:4 Bb4:2 | Bb4:8 -:2 Bb4 | \
-             Bb4:6 Eb5:4 Eb5:2 | Eb5:4 Ab4 -:2 Ab4",
+             !mf Bb4:6 Eb5:4 Eb5:2 | Eb5:4 Ab4 -:2 Ab4",
             DESARMA_VERSE_CHORDS,
         ),
         // Bar 17 (and 42), in 3/4; choral bars 18 and 43 ("no pueden he-", "o apenas e-"; in the
         // first verse the choir's basses sing D, C, B flat under it). The 6/8 score prints Bb,
         // Ab/C, G/Bb over a bass Bb, Ab, Bb; the 3/4 score has the bass D, C, B flat, and the chord
         // sheet Bb/D Ab/C Eb/Bb: beat 3 is written I (E flat over B flat).
-        Part::new("Verse turn", "Bb4:4 Ab4 G4", DESARMA_TURN_CHORDS)
+        Part::new("Verse turn", "!mf Bb4:4 Ab4 G4", DESARMA_TURN_CHORDS)
             .in_time(THREE_FOUR)
             .played(Comping::Arp3, Bass::Held, "Waltz"),
         // Bars 18-25; choral bars 19-26: "-rir-te, no existe una escuela que enseñe a vivir",
@@ -466,8 +484,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // E flat of the piano's figure it is F7); the 6/8 score prints Ab with A flats.
         Part::new(
             "Verse end",
-            "F4:12 | F4:8 -:2 Bb3:2 | G4:6 Ab4:2 G4:4 | F4 Eb4 -:2 C4 | Eb4:6 F4:2 D4:4 | \
-             Eb4:12 | Eb4:4 F4 G4 | A4 Bb4 C5",
+            "!mf F4:12 | F4:8 -:2 !p Bb3:2 | G4:6 Ab4:2 G4:4 | F4 Eb4 -:2 C4 | Eb4:6 F4:2 D4:4 | \
+             Eb4:12 | !< Eb4:4 F4 G4 | A4 Bb4 C5 !mf",
             DESARMA_VERSE_END_CHORDS,
         ),
         // Bars 32-41; choral bars 33-42, the sopranos: "El ángel vigía descubre al ladrón, le
@@ -475,8 +493,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // verse's, with the pickups and one rhythm changed by the words.
         Part::new(
             "Verse 2",
-            "G4:6 Ab4:4 G4:2 | F4:4 Eb4 -:2 Bb3 | G4:6 Ab4:4 Bb4:2 | Bb4:8 -:2 Bb3 | \
-             G4:6 Ab4:2 G4:4 | F4 Eb4 -:2 Bb3 | G4:6 Ab4:4 Bb4:2 | Bb4:8 -:2 Bb4 | \
+            "!mf G4:6 Ab4:4 G4:2 | F4:4 Eb4 -:2 Bb3 | G4:6 Ab4:4 Bb4:2 | Bb4:8 -:2 Bb3 | \
+             G4:6 Ab4:2 G4:4 | F4 Eb4 -:2 Bb3 | G4:6 Ab4:4 Bb4:2 | Bb4:8 -:2 !mf Bb4 | \
              Bb4:6 Eb5:4 Eb5:2 | Eb5:4 Ab4 -:2 Ab4",
             DESARMA_VERSE_CHORDS,
         ),
@@ -485,16 +503,16 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // "ah" above), the sopranos again "se olvida de Dios", then their rising "ah".
         Part::new(
             "Verse 2 end",
-            "F4:12 | F4:8 -:2 Bb3:2 | G4:6 Ab4:4 G4:2 | F4:4 Eb4 -:2 C4 | Eb4:6 F4:2 D4:4 | \
-             Eb4:12 | Eb4:4 F4 G4 | A4 Bb4 C5",
+            "!mf F4:12 | F4:8 -:2 Bb3:2 | !> G4:6 Ab4:4 G4:2 | F4:4 Eb4 -:2 !p C4 | Eb4:6 F4:2 D4:4 | \
+             Eb4:12 | !< Eb4:4 F4 G4 | A4 Bb4 C5 !mf",
             DESARMA_VERSE_END_CHORDS,
         ),
         // Bars 51-56; choral bars 52-57, "na ra ra": the intro again, leading to the middle
         // section.
         Part::new(
             "Interlude",
-            "D5:2 Eb5 D5 C5 D5 C5 | B4 G4 B4 D5 G5 F5 | Eb5 Ab4 C5 Ab5 Eb5 Ab4 | \
-             Eb5 G4 Bb4 G4 Eb5 Bb4 | F5:4 Eb5 D5 | Eb5:12",
+            "!mf D5:2 Eb5 D5 C5 D5 C5 | B4 G4 B4 D5 G5 F5 | Eb5 Ab4 C5 Ab5 Eb5 Ab4 | \
+             Eb5 G4 Bb4 G4 Eb5 Bb4 | !> F5:4 Eb5 D5 | != Eb5:12",
             DESARMA_INTRO_CHORDS,
         ),
         // Bars 57-64 (choral bars 58-65, "na ra ra" and "ah"): the key signature stays three flats,
@@ -503,8 +521,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // bvii of E flat minor rather than as a key.
         Part::new(
             "E flat minor",
-            "Gb4:8 F4:4 | Eb4:4 F4 Gb4 | F4:2 Bb3 Bb3 Bb3 Bb3 Bb3 | F4 Bb3 Bb3 Bb3 Bb3 Bb3 | \
-             Gb4:8 F4:4 | Eb4:4 F4 Gb4 | Ab4:8 Gb4:4 | E4:4 Gb4 Ab4",
+            "!mp Gb4:8 F4:4 | Eb4:4 F4 Gb4 | F4:2 Bb3 Bb3 Bb3 Bb3 Bb3 | F4 Bb3 Bb3 Bb3 Bb3 Bb3 | \
+             Gb4:8 F4:4 | !< Eb4:4 F4 Gb4 | Ab4:8 Gb4:4 | E4:4 Gb4 Ab4 !mf",
             DESARMA_EB_MINOR_CHORDS,
         )
         .in_key(DSharp, NaturalMinor),
@@ -512,8 +530,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // hand ("Dsus", "D"): V7sus4 and V7.
         Part::new(
             "G minor",
-            "Bb4:8 A4:4 | G4:4 A4 Bb4 | A4:2 D4 D4 D4 D4 D4 | A4 D4 D4 D4 D4 D4 | \
-             Bb4:8 A4:4 | G4:4 A4 Bb4 | Bb4:12 | Bb4:8 C5:2 D4 | C5:12 | D5:8 C5:4 | \
+            "!mf Bb4:8 A4:4 | G4:4 A4 Bb4 | A4:2 D4 D4 D4 D4 D4 | A4 D4 D4 D4 D4 D4 | \
+             !> Bb4:8 A4:4 | G4:4 A4 Bb4 | !p Bb4:12 | Bb4:8 C5:2 D4 | C5:12 | D5:8 C5:4 | \
              D5:8 G4:2 D4 | D5:4 C5 Bb4",
             DESARMA_GM_A_CHORDS,
         )
@@ -522,8 +540,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // B flat chord over F.
         Part::new(
             "G minor 2",
-            "C5:8 G4:2 C4 | C5:4 Bb4 A4 | Bb4:12 | Bb4:4 A4 G4 | F4:12 | F4:12 | Bb4:12 | \
-             Bb4:8 C5:2 D4 | C5:12 | D5:8 C5:4",
+            "!p C5:8 G4:2 C4 | C5:4 Bb4 A4 | Bb4:12 | Bb4:4 A4 G4 | F4:12 | F4:12 | !< Bb4:12 | \
+             Bb4:8 C5:2 D4 | C5:12 | D5:8 C5:4 !f",
             DESARMA_GM_B_CHORDS,
         )
         .in_key(G, HarmonicMinor),
@@ -531,9 +549,9 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // pickup "Mi-ro al re-de-" (an octave up), from the choral score.
         Part::new(
             "G major",
-            "D5:8 G4:2 D4 | D5:4 C5 B4 | C5:8 G4:2 C4 | C5:4 B4 A4 | B4:12 | B4:4 A4 G4 | \
-             G4:8 Eb4:2 Bb3 | Bb4 Bb3 Eb4 G4 Eb4 Bb3 | Bb4 Bb3 Eb4 G4 Eb4 Bb3 | \
-             Bb4:4 G4:2 G4 A4 G4",
+            "!f D5:8 G4:2 D4 | D5:4 C5 B4 | C5:8 G4:2 C4 | C5:4 B4 A4 | B4:12 | B4:4 A4 G4 | \
+             !< G4:8 Eb4:2 Bb3 | Bb4 Bb3 Eb4 G4 Eb4 Bb3 | !ff Bb4 Bb3 Eb4 G4 Eb4 Bb3 | \
+             Bb4:4 !p G4:2 G4 A4 G4",
             DESARMA_G_CHORDS,
         )
         .in_key(G, Major),
@@ -543,8 +561,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // que van y aquí estoy".
         Part::new(
             "Verse 3",
-            "B4:12 | B4:8 -:2 B4:2 | Bb4 G4 G4 G4 G4 G4 | G4 G4 G4 G4 A4 G4 | B4:12 | \
-             B4:8 -:2 B4:2 | Bb4 G4 G4 G4 G4 G4 | G4 G4 G4 G4 A4 G4",
+            "!p B4:12 | B4:8 -:2 B4:2 | Bb4 G4 G4 G4 G4 G4 | G4 G4 G4 G4 A4 G4 | B4:12 | \
+             B4:8 -:2 B4:2 | !< Bb4 G4 G4 G4 G4 G4 | G4 G4 G4 G4 A4 G4 !f",
             DESARMA_VERSE3_CHORDS,
         )
         .in_key(G, Major),
@@ -553,8 +571,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // is the choir's "na ra" into the coda: the piano's rising F sharp, G, A stays.
         Part::new(
             "Verse 3 end",
-            "B4:8 A4:4 | _:8 G4:4 | B4:8 A4:4 | _:8 G4:4 | B4:12 | A4:8 G4:4 | F#4:12 | \
-             F#5:4 G5 A5",
+            "!f B4:8 A4:4 | _:8 G4:4 | B4:8 A4:4 | _:8 G4:4 | B4:12 | !> A4:8 G4:4 | F#4:12 | \
+             F#5:4 G5 A5 !pp",
             DESARMA_VERSE3_END_CHORDS,
         )
         .in_key(G, Major)
@@ -564,24 +582,24 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // "na ra ra rai").
         Part::new(
             "Coda",
-            "B5:6 C6:2 B5:2 C6:1 B5:1 | A5:6 B5:1 A5:1 G5:4",
+            "!pp B5:6 C6:2 B5:2 C6:1 B5:1 | A5:6 B5:1 A5:1 G5:4",
             DESARMA_CODA_CHORDS,
         )
         .in_key(G, Major)
         .in_time(THREE_FOUR)
         .played(Comping::Arp3, Bass::Held, "Waltz"),
         // Bar 115, back in 6/8 (choral bars 116 and 120).
-        Part::new("Coda 6/8", "B5:6 C6:2 D6:4", "vi").in_key(G, Major),
+        Part::new("Coda 6/8", "!pp B5:6 C6:2 D6:4", "vi").in_key(G, Major),
         // Bar 116, the first ending (D over F sharp; choral bar 117).
-        Part::new("First ending", "D6:6 A4:2 F#4 D5", "V").in_key(G, Major),
+        Part::new("First ending", "!pp D6:6 A4:2 F#4 D5", "V").in_key(G, Major),
         // Bar 117, the second ending (choral bar 121).
-        Part::new("Second ending", "F#4:2 A4 D5 D5 D5 D5", "V").in_key(G, Major),
+        Part::new("Second ending", "!pp F#4:2 A4 D5 D5 D5 D5", "V").in_key(G, Major),
         // Bars 118-127, in 3/4 (choral bars 122-131, "na ra ra rai" and "ah").
         Part::new(
             "Outro",
-            "D5:2 G5:8 G5:2 | G5:6 C5:4 C5:2 | D5:1 G4 B4 D5 C5 E4 G4 C5 B4 D4 G4 B4 | \
+            "!pp !< D5:2 G5:8 G5:2 | G5:6 C5:4 C5:2 | !mf D5:1 G4 B4 D5 C5 E4 G4 C5 B4 D4 G4 B4 | \
              A4:2 D4 C#4 A3 A4 G4 | F#4 D4 F#4 A4 D5 D5 | B4:6 C5:2 B4:2 C5:1 B4:1 | \
-             A4:2 B4:1 A4:1 G4:6 G4:2 | G4:6 A4:2 F#4:4 | G4:4 F4 G4 | A4 Bb4 C5",
+             A4:2 B4:1 A4:1 G4:6 G4:2 | G4:6 A4:2 F#4:4 | !< G4:4 F4 G4 | A4 Bb4 C5 !f",
             DESARMA_OUTRO_CHORDS,
         )
         .in_key(G, Major)
@@ -595,8 +613,8 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         // flat 4). The last chord is tied over two bars; the fermata on it is the 3/4 score's.
         Part::new(
             "Final",
-            "D4:2 Eb4 D4 C4 D4 C4 | B3 G3 B3 D4 G4 F4 | Eb4 Ab3 C4 Ab4 Eb4 Ab3 | \
-             Eb4 G3 Bb3 Eb4 Bb3 G3 | F3:4 Eb3 D3 | Eb4:12 | Eb4:12 | Eb4:12 | _:12",
+            "!f D4:2 Eb4 D4 C4 D4 C4 | B3 G3 B3 D4 G4 F4 | Eb4 Ab3 C4 Ab4 Eb4 Ab3 | \
+             Eb4 G3 Bb3 Eb4 Bb3 G3 | !> F3:4 Eb3 D3 | !mp Eb4:12 | Eb4:12 | !> Eb4:12 | != _:12",
             DESARMA_FINAL_CHORDS,
         )
         .in_key(DSharp, Major)
@@ -609,7 +627,7 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
         "Verse",
         "Verse turn",
         "Verse end",
-        "Intro",
+        "Intro 2",
         "Verse 2",
         "Verse turn",
         "Verse 2 end",

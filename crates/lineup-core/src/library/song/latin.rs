@@ -1230,7 +1230,8 @@ pub(super) const TE_QUIERO_DIJISTE: Song = Song {
 // F7: A with a segno and first and second endings, B, C with first and second endings, D.S.),
 // read from the page rendered as an image at 400 dpi. No second
 // written source was found. The eighth-note triplets of bars 4 and 8 (the book counts the
-// pickup as bar 1) are written as an eighth and two sixteenths. The 2/4 bars are paired.
+// pickup as bar 1) are written as triplets, and the staccato dots of the third strain (bars
+// 27-32) are kept. The book prints no dynamics. The 2/4 bars are paired.
 // The score's D.S. has no Fine and no coda (the book loops it, as the street band does): the
 // form plays the whole song twice, repeats included, and stops on C's first ending, the held
 // B flat, rather than on the second ending's upbeat F.
@@ -1255,16 +1256,16 @@ pub(super) const ZE_PEREIRA: Song = Song {
         Part::new("Pickup", "-:15 F4:1", "I"),
         Part::new(
             "A",
-            "Bb4:3 F4:1 Bb4:3 F4:1 Bb4:3 F4:1 D4:4 | F4:2 F4:1 F4 Eb4:2 F4:1 Eb4 D4:4 -:3 F4:1 | \
+            "Bb4:3 F4:1 Bb4:3 F4:1 Bb4:3 F4:1 D4:4 | (3 F4:2 F4 F4 (3 Eb4:2 F4 Eb4 D4:4 -:3 F4:1 | \
              Bb4:3 F4:1 Bb4:3 F4:1 Bb4:3 F4:1 D4:4",
             "I | V7 I | I",
         ),
         Part::new(
             "A end 1",
-            "D5:2 D5:1 D5 C5:2 D5:1 C5 Bb4:4 -:3 F4:1",
+            "(3 D5:2 D5 D5 (3 C5:2 D5 C5 Bb4:4 -:3 F4:1",
             "V7 I",
         ),
-        Part::new("A end 2", "D5:2 D5:1 D5 C5:2 D5:1 C5 Bb4:4 -:4", "V7 I"),
+        Part::new("A end 2", "(3 D5:2 D5 D5 (3 C5:2 D5 C5 Bb4:4 -:4", "V7 I"),
         Part::new(
             "B",
             "F4:2 Bb4 Bb4 Bb4 Bb4:4 F4 | F4:2 D5 D5 D5 D5:4 Bb4 | Bb4:2 F5 F5 F5 F5 D5 Bb4 D5 | \
@@ -1274,8 +1275,8 @@ pub(super) const ZE_PEREIRA: Song = Song {
         ),
         Part::new(
             "C",
-            "D5:2 Bb4:1 D5 F5:4 D5:2 Bb4:1 D5 F5:4 | C5:2 F5 C5 F5 D5:3 C5:1 Bb4:4 | \
-             D5:2 Bb4:1 D5 F5:4 D5:2 Bb4:1 D5 F5:4",
+            "D5:2. Bb4:1 D5 F5:4. D5:2. Bb4:1 D5 F5:4. | C5:2 F5 C5 F5 D5:3. C5:1 Bb4:4. | \
+             D5:2. Bb4:1 D5 F5:4. D5:2. Bb4:1 D5 F5:4.",
             "I | V7 I | I",
         ),
         Part::new("C end 1", "F4:2 F4 G4 A4 Bb4:8", "V7 I"),
@@ -1300,7 +1301,10 @@ pub(super) const ZE_PEREIRA: Song = Song {
 // is the top of the right hand (in bars 9 and 10 the repeated G of its chords). The chords are
 // read from the piano. The voice's first bar, a run up from E with the piano silent, is given
 // G, the chord the introduction ends on. The 2/4 bars are paired. The fermata over the
-// introduction's last rest (bar 10) is kept.
+// introduction's last rest (bar 10) is kept. The only dynamic is the piano's f at bar 1, in
+// force to the end. Bar 10's G is a shot (an eighth, then the rest under the fermata), the
+// piano is silent in bar 11, and the last bar (52) is a chord held for three eighths: a shot,
+// a rest and a hold on the chart.
 // The D.C. has no Fine: the form plays the song twice and ends on the last bar.
 // PD: published in 1909; Chiquinha Gonzaga died in 1935.
 pub(super) const FEIJOADA_DO_BRASIL: Song = Song {
@@ -1320,29 +1324,29 @@ pub(super) const FEIJOADA_DO_BRASIL: Song = Song {
     parts: &[
         Part::new(
             "Intro",
-            "G5:2 E5 G5 E5 G5:1 F5:2 D5:1 B4 G4:2 F4:1 | E4:2 G4 C5 A4 D5:6 -:2 | \
+            "!f G5:2 E5 G5 E5 G5:1 F5:2 D5:1 B4 G4:2 F4:1 | E4:2 G4 C5 A4 D5:6 -:2 | \
              G5 E5 G5 E5 G5:1 F5:2 D5:1 B4 G4:2 F4:1 | E4:2 G4 C5 A4 D5:6 -:2 | \
              G4:1 G4:2 G4:1 G4 G4:2 G4:1 G4 G4:2 G4:1 G4:2 -",
-            "I V7 | I V7 | I V7 | I V7 | V7 I i V",
+            "I V7 | I V7 | I V7 | I V7 | V7 I i V.",
         )
         .with_tempo(&[fermata(78, 2)]),
         Part::new(
             "Verse",
-            "-:2 E4:1 F4 G4 A4 B4 C5 D5:4 D5 | -:1 A4:2 B4:1 D5 C5 A4 B4 G4:8 | \
+            "!f -:2 E4:1 F4 G4 A4 B4 C5 D5:4 D5 | -:1 A4:2 B4:1 D5 C5 A4 B4 G4:8 | \
              -:1 G4:2 G4:1 C5:2 A4:1 A4 F4:8 | -:1 D4:2 D4:1 B4:2 G4 E4:8 | \
              -:2 E4:1 F4 G4 A4 B4 C5 D5:4 D5 | -:1 A4:2 B4:1 D5 C5 A4 B4 G4:8 | \
              -:1 G4:2 G4:1 C5:2 C5:1 C5 B4:8 | -:1 D4:2 D4:1 A4:2 B4 G4:8 | \
              _:2 G4 F5 C#5 E5:4 D5 | -:2 G4 E5 B4 D5:4 C5 | \
              -:2 G4 C5 A4 B4:1 B4:2 F4:1 G4:2 A4 | B4 -:1 D4 F4:2 B4 G4:8",
-            "V II7 | V7 I | I V7 | V7 I | I II7 | V7 I | I V | II7 V | V V7 | V7 I | I V7 | V7 I",
+            "V... II7 | V7 I | I V7 | V7 I | I II7 | V7 I | I V | II7 V | V V7 | V7 I | I V7 | V7 I",
         ),
         Part::new(
             "Refrain",
-            "-:2 A4:1 A4 A4:2 A4:1 A4 D5:8 | -:1 G4:2 G4:1 G4:2 G4 C5:8 | \
+            "!f -:2 A4:1 A4 A4:2 A4:1 A4 D5:8 | -:1 G4:2 G4:1 G4:2 G4 C5:8 | \
              _:2 -:1 A4 E5:2 D5 G4:1 G4:2 G4:1 D5:2 C5 | F4:1 - F4 F4 B4:2 B4 G4:8 | \
              _:6 -:4 A4:1 A4 A4:2 A4:1 A4 | D5:8 -:1 G4:2 G4:1 G4:2 G4 | \
              C5:8 _:2 -:1 A4 E5:2 D5 | G4:1 G4:2 G4:1 D5:2 C5 F4:1 - G4 G4 B4:2 E5 | C5:8 -",
-            "VI7 II7 | V7 I | ii ii° I I | V7 I | I VI7 | II7 V7 | I I ii ii° | I V7 | I",
+            "VI7 II7 | V7 I | ii ii° I I | V7 I | I VI7 | II7 V7 | I I ii ii° | I V7 | I I..",
         ),
     ],
     form: &["Intro", "Verse", "Refrain", "Intro", "Verse", "Refrain"],
@@ -1362,7 +1366,11 @@ pub(super) const FEIJOADA_DO_BRASIL: Song = Song {
 // where the voice rests, it is the top of the right hand. In bar 9 the piano's high C is kept
 // and its two chords above C6 are left to the band, before the voice's first note. The chords
 // are read from the piano. The refrain's last bar (41) is G7 for its first beat and C for its
-// second. The fermatas of bars 17, 26 and 34 are kept.
+// second. The fermatas of bars 17, 26 and 34 are kept. The score prints no dynamics. The
+// piano's stops are on the chart: bar 9 ends the introduction with three struck chords and a
+// rest (a shot), bar 17's left hand rests under the fermata (a hold), bars 26 and 34 have the
+// left hand silent and the right hand doubling the voice (a rest), and bar 41 ends on a C
+// struck for an eighth (a shot).
 // The introduction has nine bars of 2/4: a bar of rest comes first, so that the voice's entry
 // falls on a bar line. The 2/4 bars are paired.
 // PD: published about 1901; Chiquinha Gonzaga died in 1935 and the poet, José do Patrocínio
@@ -1387,7 +1395,7 @@ pub(super) const A_MULATINHA: Song = Song {
             "-:9 C5:2 B4:1 D5 C5 A4 C5 | G4:2 G4 B4 B4 G5 G5 B5 B5 | E4 E4 A4 A4 E5 E5 A5 A5 | \
              G5:1 F5:2 A4:1 E5:2 D5 D5:1 C5:2 G4:1 D5:2 C5 | \
              B4:1 C5 D5 E5 F5 G5 A5 B5 C6:2 -:4 E4:2",
-            "I | V7 | I | ii II7 I I | V7 V7 V7 V7 I V I I",
+            "I | V7 | I | ii II7 I I | V7 V7 V7 V7 I V I. I...",
         ),
         Part::new(
             "Verse",
@@ -1395,7 +1403,7 @@ pub(super) const A_MULATINHA: Song = Song {
              F4:1 F4:2 D4:1 E4:2 F4 G4 G4 - G4:1 G4 | B4:2 B4:1 - A4:2 A4 D5:4 _:2 -:1 E4 | \
              F4 F4:2 D4:1 E4:2 F4 G4 G4 - G4 | A4:1 A4:2 E5:1 D5:2 B4 A4 G4 - G4 | \
              C5:1 C5:2 G4:1 A4:2 Bb4 C5:4 -:1 B4:2 A4:1 | G4:2 G4 G4 G4 D5:6 -:2",
-            "V7 I | II7 V7 I I | V7 I | V II7 V7 V7 | V7 I | II7 V7 I I | I7 IV | V7",
+            "V7 I | II7 V7 I I | V7 I | V II7 V7 V7.. | V7 I | II7 V7 I I | I7 IV | V7",
         )
         .with_tempo(&[fermata(62, 1)]),
         Part::new(
@@ -1404,18 +1412,18 @@ pub(super) const A_MULATINHA: Song = Song {
              -:1 A4:3 -:2 A4 B3:4 G4 | -:1 G4:2 G4:1 E5:2 D5 C5:4 G4:2 - | \
              C5:3 B4:1 D5 C5 A4 C5 G4:2 G4 -:4 | -:3 B4:1 C5 C5:2 B4:1 E4:4 G4 | \
              -:1 C4 D4 E4 F4 G4 A4 B4 B4:2 A4 D5:4",
-            "I V7 | V7 I | I V7 | V7 I | I V7 | V7 I | I ii",
+            "I... V7 | V7 I | I V7 | V7 I | I... V7 | V7 I | I ii",
         )
         .with_tempo(&[fermata(0, 3), fermata(5, 1), fermata(64, 3), fermata(68, 1)]),
         Part::new(
             "Refrain end",
             "-:1 B4 B4 B4 B4 G4:2 E5:1 D5:4 C5:2 -",
-            "V7 V7 V7 I",
+            "V7 V7 V7 I.",
         ),
         Part::new(
             "Refrain to verse",
             "-:1 B4 B4 B4 B4 G4:2 E5:1 D5:4 C5:2 E4",
-            "V7 V7 V7 I",
+            "V7 V7 V7 I.",
         ),
     ],
     form: &[
@@ -1447,7 +1455,10 @@ pub(super) const A_MULATINHA: Song = Song {
 // in bars 39 (second beat) to 43 (first beat), where the voice rests, it is the right hand's
 // top line an octave lower, in the voice's octave. The chords are read from the piano. In
 // bar 37 the C major chord has F in the bass for its first sixteenth; it is written V. The
-// fermatas of bars 23, 31, 39 and 47 are kept.
+// fermatas of bars 23, 31, 39 and 47 are kept. The score prints no dynamics ("Tranquillo",
+// "con graça"). Under each fermata the piano holds its chord with the left hand silent after
+// it: holds on the chart; in bar 23 it then strikes F once and rests for an eighth, and bar 47
+// ends on an F struck for an eighth (shots).
 // The 2/4 bars are paired; the voice's entry (bar 15) begins a paired bar, and a bar of rest
 // completes the last one.
 // PD: published about 1900; Chiquinha Gonzaga died in 1935 and the poet, Ernesto de Souza, in
@@ -1488,7 +1499,7 @@ pub(super) const RODA_YOYO: Song = Song {
              D4:2 D4:1 -:2 D5:2 D5:1 C5:1 Bb4:1 G4:1 E4:1 D4:2 Db4:2 | \
              C4:2 C4:2 -:1 F4:2 F4:1 C5:4 -:1 C5:1 C5:1 C5:1 | \
              B4:2 B4:2 -:5 F4:2 G4:1 A4:1 C5:1 A4:1 F4:1",
-            "I I I V7 I I I I | ii V7 | I | V7 | iv I I V7 I I I I | IV V7 | I I7 | #iv° iv I I",
+            "I I I V7 I I I I | ii V7 | I | V7 | iv.. I. I... V7 I I I I | IV V7 | I I7 | #iv° iv I I",
         )
         .with_tempo(&[fermata(64, 2)]),
         Part::new(
@@ -1502,7 +1513,8 @@ pub(super) const RODA_YOYO: Song = Song {
              D4:1 C4:1 -:2 F4:1 F4:2 F4:1 F4:2 -:2 F4:1 F4:2 F4:1 | \
              F4:2 -:2 C5:1 A4:2 F4:1 D4:1 -:1 E4:1 F4:1 G4:2 A4:2 | \
              G4:4 F4:2 -:2 -:8",
-            "V7 I I I I I I I | V7 | I | V II7 | V7 I I I | V7 | I I7 IV iv | I I IV V7 | V7 I I I",
+            "V7.. I I I I I I I | V7 | I | V II7 | V7.. I I I | V7 | I I7 IV iv | I I IV V7 | \
+             V7.. I. I... I...",
         )
         .with_tempo(&[fermata(0, 1), fermata(64, 2), fermata(128, 4)]),
     ],
@@ -1526,10 +1538,12 @@ pub(super) const RODA_YOYO: Song = Song {
 // E7 and A7, and bar 7 is G sharp diminished.
 // The score writes out both stanzas: bars 1 to 18, then bars 19 to 36, the same introduction
 // and harmony with small changes of rhythm for the second stanza's words ("Intro 2",
-// "Verse 2", "Refrain 2"). In bar 35 the voice has three sixteenth-note triplets in the last
-// eighth (G sharp, F sharp, E, after a rest under a fermata); they are written as two
-// sixteenths, G sharp and E, leaving out the passing F sharp. Bar 35's E sharp is written F.
-// The fermatas of bars 2, 10, 18, 20, 28, 35 and 36 are kept.
+// "Verse 2", "Refrain 2"). In bar 35 the voice has a sixteenth-note triplet in the last eighth
+// (G sharp, F sharp, E, after a rest under a fermata). Bar 35's E sharp is written F.
+// The fermatas of bars 2, 10, 18, 20, 28, 35 and 36 are kept. The only dynamic is the piano's
+// f on the fermata chord of bar 10, in force to the end. The piano strikes the introduction's
+// last chord (bars 2 and 20) once, short, under its fermata, and holds the A7 and E7 under the
+// fermatas of bars 10, 18, 28 and 36: shots and holds on the chart.
 // PD: published 1900; Chiquinha Gonzaga died in 1935 and the poet, José do Patrocínio Filho,
 // in 1929.
 pub(super) const DONA_ADELAIDE: Song = Song {
@@ -1547,45 +1561,53 @@ pub(super) const DONA_ADELAIDE: Song = Song {
     band: Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS),
     style: "Maxixe",
     parts: &[
-        Part::new("Intro", "A4:3 A5:1 A5:2 -:2 A4:2 -:1 D4:1 D4:2 C#4:2", "V7")
-            .with_tempo(&[fermata(8, 2)]),
+        Part::new(
+            "Intro",
+            "A4:3 A5:1 A5:2 -:2 A4:2 -:1 D4:1 D4:2 C#4:2",
+            "V7 V7.",
+        )
+        .with_tempo(&[fermata(8, 2)]),
         Part::new(
             "Verse",
             "B3:1 B3:1 A#3:1 B3:1 B4:2 A#4:2 A4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
              F#4:1 E4:1 D#4:1 E4:1 F#4:2 E4:2 A3:2 A3:2 -:1 D4:1 C#4:1 D4:1 | \
              F4:2 F4:1 D4:1 D4:1 D4:1 C#4:1 D4:1 B4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
-             A4:1 G4:1 G4:1 B3:1 B3:2 F#4:2 E4:4 D4:2 -:2",
-            "ii #v°7 I I | II7 V7 I I | #iv°7 I | ii V V7 I",
+             A4:1 G4:1 G4:1 B3:1 B3:2 F#4:2 !f E4:4 D4:2 -:2",
+            "ii #v°7 I I | II7 V7 I I | #iv°7 I | ii V V7.. I",
         )
         .with_tempo(&[fermata(56, 4)]),
         Part::new(
             "Refrain",
-            "F#4:2 B3:1 C#4:1 D4:1 C#4:1 D4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
+            "!f F#4:2 B3:1 C#4:1 D4:1 C#4:1 D4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
              E4:1 -:1 E4:1 F#4:1 G#4:1 A4:1 B4:1 B4:1 B4:2 A4:2 E4:1 E4:1 -:1 E4:1 | \
              F#4:1 E4:1 E4:1 B3:1 C#4:1 D4:1 E4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
              F#4:1 F#4:1 E4:1 F#4:1 G#4:1 G#4:1 F#4:1 E4:1 B4:4 A4:2 -:2",
-            "V7 I | V7 I | V7 I | IV V V7 I",
+            "V7 I | V7 I | V7 I | IV V V7.. I",
         )
         .in_key(A, Major)
         .with_tempo(&[fermata(56, 4)]),
-        Part::new("Intro 2", "A4:3 A5:1 A5:2 -:2 A4:2 -:2 D4:2 C#4:2", "V7")
-            .with_tempo(&[fermata(8, 2)]),
+        Part::new(
+            "Intro 2",
+            "!f A4:3 A5:1 A5:2 -:2 A4:2 -:2 D4:2 C#4:2",
+            "V7 V7.",
+        )
+        .with_tempo(&[fermata(8, 2)]),
         Part::new(
             "Verse 2",
-            "B3:2 A#3:1 B3:1 B4:1 B4:1 B4:1 A#4:1 A4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
+            "!f B3:2 A#3:1 B3:1 B4:1 B4:1 B4:1 A#4:1 A4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
              F#4:1 E4:1 -:1 E4:1 F#4:1 F#4:1 E4:1 E4:1 A3:2 A3:2 -:1 D4:1 C#4:1 D4:1 | \
              F4:2 F4:1 D4:1 D4:1 D4:1 C#4:1 D4:1 B4:2 A4:2 -:1 D4:1 E4:1 F#4:1 | \
              A4:1 G4:1 G4:1 B3:1 B3:3 F#4:1 E4:4 D4:2 -:2",
-            "ii #v°7 I I | II7 V7 I I | #iv°7 I | ii V V7 I",
+            "ii #v°7 I I | II7 V7 I I | #iv°7 I | ii V V7.. I",
         )
         .with_tempo(&[fermata(56, 4)]),
         Part::new(
             "Refrain 2",
-            "D4:1 -:1 B3:1 C#4:1 D4:1 C#4:1 D4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
+            "!f D4:1 -:1 B3:1 C#4:1 D4:1 C#4:1 D4:1 B3:1 F#4:2 F4:2 E4:1 E4:1 -:1 E4:1 | \
              E4:1 -:1 E4:1 F#4:1 G#4:1 A4:1 B4:1 B4:1 B4:2 A4:2 E4:2 -:1 E4:1 | \
              F#4:1 E4:1 E4:1 B3:1 C#4:1 D4:1 E4:1 B3:1 F#4:2 F4:2 E4:1 -:2 E4:1 | \
-             F#4:1 F#4:1 F4:1 F#4:1 G#4:1 -:1 G#4:1 E4:1 B4:4 A4:2 -:2",
-            "V7 I | V7 I | V7 I | IV V V7 I",
+             F#4:1 F#4:1 F4:1 F#4:1 G#4:1 -:1 (3 G#4:1 F#4 E4 B4:4 A4:2 -:2",
+            "V7 I | V7 I | V7 I | IV V V7.. I",
         )
         .in_key(A, Major)
         .with_tempo(&[fermata(53, 1), fermata(56, 4)]),
@@ -1654,22 +1676,22 @@ pub(super) const GAROTA_DE_IPANEMA: Song = Song {
              _:16 | -:16",
             "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7",
         ),
-        // The bridge goes up a half step, to D major, for eight bars. The quarter-note
-        // triplets are written 3 + 3 + 2 steps. The F at the end is the anticipation of the
+        // The bridge goes up a half step, to D major, for eight bars, with the lead sheets'
+        // quarter-note triplets. The F at the end is the anticipation of the
         // next bar, which the score ties over; it is struck again on the bar line, where
         // the key goes back to D flat.
         Part::new(
             "Bridge 1",
-            "C#5:16 | _:3 D5:3 C#5:2 B4:3 C#5:3 B4:2 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
-             _:16 | _:3 F5:3 E5:2 D5:3 E5:3 D5:2 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
+            "C#5:16 | (3 _:4 D5 C#5 (3 B4:4 C#5 B4 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
+             _:16 | (3 _:4 F5 E5 (3 D5:4 E5 D5 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
             "Imaj7 | Imaj7 | IV7 | IV7 | i7 | i7 | bVI7 | bVI7",
         )
         .in_key(D, Major),
         Part::new(
             "Bridge 2",
-            "F5:16 | _:3 Gb5:3 F5:2 Eb5:3 F5:3 Eb5:2 | Db5:6 Eb5:2 _:8 | _:8 -:3 F5:3 Gb5:2 | \
-             Ab5:3 Ab4:3 Bb4:2 C5:3 Db5:3 Eb5:2 | E5:6 F5:6 -:4 | \
-             Gb5:3 Gb4:3 Ab4:2 Bb4:3 C5:3 Db5:2 | D5:6 Eb5:6 -:4",
+            "F5:16 | (3 _:4 Gb5 F5 (3 Eb5:4 F5 Eb5 | Db5:6 Eb5:2 _:8 | _:8 (3 -:4 F5 Gb5 | \
+             (3 Ab5:4 Ab4 Bb4 (3 C5:4 Db5 Eb5 | E5:6 F5:6 -:4 | \
+             (3 Gb5:4 Gb4 Ab4 (3 Bb4:4 C5 Db5 | D5:6 Eb5:6 -:4",
             "ii7 | ii7 | bVII7 | bVII7 | iii7 | VI7 | ii7 | V7",
         ),
         // The last A of the first chorus. Ulf's sheet ends on its seventh bar; the D7 of the
@@ -1678,7 +1700,7 @@ pub(super) const GAROTA_DE_IPANEMA: Song = Song {
             "A3",
             "Eb5:6 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
              _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 Eb5:2 | _:4 Eb5:2 C5:2 C5:2 C5:2 Bb4:2 F5:2 | \
-             _:4 F5:2 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | _:4 Ab5:2 C5:2 C5:3 C5:3 Bb4:2 | \
+             _:4 F5:2 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | _:4 Ab5:2 C5:2 (3 C5:4 C5 Bb4 | \
              C5:16 | _:4 -:12",
             "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | bII7",
         ),
@@ -1702,16 +1724,16 @@ pub(super) const GAROTA_DE_IPANEMA: Song = Song {
         ),
         Part::new(
             "Bridge 1 English",
-            "C#5:16 | _:3 D5:3 C#5:2 B4:3 C#5:3 B4:2 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
-             _:16 | _:3 F5:3 E5:2 D5:3 E5:3 D5:2 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
+            "C#5:16 | (3 _:4 D5 C#5 (3 B4:4 C#5 B4 | A4:6 B4:2 _:8 | _:12 -:2 E5:2 | \
+             _:16 | (3 _:4 F5 E5 (3 D5:4 E5 D5 | C5:6 D5:2 _:8 | _:12 -:2 F5:2",
             "Imaj7 | Imaj7 | IV9 | IV9 | i7 | i7 | bVI9 | bVI9",
         )
         .in_key(D, Major),
         Part::new(
             "Bridge 2 English",
-            "F5:16 | _:3 Gb5:3 F5:2 Eb5:3 F5:3 Eb5:2 | Db5:6 Eb5:2 _:8 | _:8 -:3 F5:3 Gb5:2 | \
-             Ab5:3 Ab4:3 Bb4:2 C5:3 Db5:3 Eb5:2 | E5:12 F5:4 | \
-             Gb5:3 Gb4:3 Ab4:2 Bb4:3 C5:3 Db5:2 | D5:12 -:4",
+            "F5:16 | (3 _:4 Gb5 F5 (3 Eb5:4 F5 Eb5 | Db5:6 Eb5:2 _:8 | _:8 (3 -:4 F5 Gb5 | \
+             (3 Ab5:4 Ab4 Bb4 (3 C5:4 Db5 Eb5 | E5:12 F5:4 | \
+             (3 Gb5:4 Gb4 Ab4 (3 Bb4:4 C5 Db5 | D5:12 -:4",
             "ii7 | ii7 | bVII9 | bVII9 | iii7 | VI7b9 | ii7 | V7b9",
         ),
         // The last A, and the record's ending: "but she doesn't see", then twice more,
@@ -1721,8 +1743,8 @@ pub(super) const GAROTA_DE_IPANEMA: Song = Song {
             "A3 end",
             "Eb5:6 C5:2 C5:4 Bb4:2 Eb5:2 | _:4 C5:2 C5:2 _:2 C5:2 Bb4:2 Eb5:2 | \
              _:4 C5:4 C5:4 Bb4:2 Eb5:2 | _:2 Eb5:2 C5:2 C5:2 _:2 C5:2 Bb4:2 F5:2 | \
-             _:6 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | Ab5:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | \
-             -:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | -:6 C5:2 C5:3 C5:3 Bb4:2 | C5:16 | _:16",
+             _:6 Db5:2 Db5:2 Db5:2 Bb4:2 Ab5:2 | Ab5:6 C5:2 (3 C5:4 C5 Bb4 | C5:16 | \
+             -:6 C5:2 (3 C5:4 C5 Bb4 | C5:16 | -:6 C5:2 (3 C5:4 C5 Bb4 | C5:16 | _:16",
             "Imaj7 | Imaj7 | II7 | II7 | ii7 | bII7 | Imaj7 | Imaj7 bII7 bII7 bII7 | Imaj7 | \
              bII7 | Imaj7 bII7 | Imaj7",
         )
