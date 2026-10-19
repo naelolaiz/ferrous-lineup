@@ -16,6 +16,9 @@
 //! the edit by keeping a fingerprint of what it last wrote for each
 //! player and comparing it with what is there now, so it does not matter
 //! which tool made the change.
+//!
+//! A part on a locked channel stays as it is too, and the band keeps the
+//! song's own locked parts (see [`locks`]).
 
 use std::sync::OnceLock;
 
@@ -38,6 +41,7 @@ use crate::tempo::Tempo;
 mod extras;
 mod form;
 mod guitar;
+pub mod locks;
 pub mod solo;
 pub(crate) mod stops;
 mod variation;
@@ -1181,8 +1185,7 @@ impl Project {
             self.add_channel(channel)
         })?;
         if sounds {
-            self.channels[index].kind = lane.channel.kind.clone();
-            self.channels[index].program = lane.channel.program;
+            self.set_sound(index, Some(lane.channel.kind.clone()), lane.channel.program);
         }
         self.band.as_mut()?.channels[lane.player.index()] = Some(index);
         Some(index)
@@ -1230,8 +1233,10 @@ impl Project {
 
     /// Stops the band: its patterns go, with their clips and the tracks
     /// they leave empty, and the song's own channels and tracks it muted
-    /// play again. The chord sheet stays.
+    /// play again. The chord sheet stays, and so do the parts on locked
+    /// channels, as the song's own.
     pub fn stop_band(&mut self) {
+        self.keep_locked_parts();
         let Some(band) = self.band.take() else {
             return;
         };
@@ -1262,10 +1267,11 @@ impl Project {
             self.remove_track(track);
         }
         for channel in (band.since..self.channels.len()).rev() {
-            if self
-                .patterns
-                .iter()
-                .all(|pattern| pattern.notes(channel).is_empty())
+            if !self.is_locked(channel)
+                && self
+                    .patterns
+                    .iter()
+                    .all(|pattern| pattern.notes(channel).is_empty())
             {
                 self.remove_channel(channel);
             }
@@ -1291,8 +1297,12 @@ impl Project {
     }
 
     /// Has the band play `player`'s part again, from the chord sheet,
-    /// in place of what was edited. Returns `false` if there is no band.
+    /// in place of what was edited. Returns `false` if there is no band,
+    /// or the part is locked.
     pub fn play_again(&mut self, player: Player) -> bool {
+        if self.plays_locked(player) {
+            return false;
+        }
         let Some(band) = &mut self.band else {
             return false;
         };
@@ -1303,8 +1313,12 @@ impl Project {
     }
 
     /// Has a soloist improvise over the chorus, or stops it. The soloist
-    /// is experimental. Returns `false` if there is no band.
+    /// is experimental. Returns `false` if there is no band, or the
+    /// soloist's channel is locked.
     pub fn set_soloist(&mut self, on: bool) -> bool {
+        if self.plays_locked(Player::Soloist) {
+            return false;
+        }
         let Some(band) = &mut self.band else {
             return false;
         };
@@ -1319,8 +1333,12 @@ impl Project {
     }
 
     /// Has the soloist play another solo, in place of the one it plays
-    /// (or one you edited). Returns `false` if there is no soloist.
+    /// (or one you edited). Returns `false` if there is no soloist, or
+    /// its channel is locked.
     pub fn another_solo(&mut self) -> bool {
+        if self.plays_locked(Player::Soloist) {
+            return false;
+        }
         let Some(band) = &mut self.band else {
             return false;
         };
@@ -1521,6 +1539,7 @@ impl Project {
             .filter_map(|&player| band.channel(player))
             .filter(|&channel| {
                 channel >= band.since
+                    && !self.is_locked(channel)
                     && self
                         .patterns
                         .iter()
@@ -1577,29 +1596,21 @@ impl Project {
                 })?
             }
         };
-        if use_instruments && let Some(channel) = self.channels.get_mut(index) {
-            channel.program = Some(program);
+        if use_instruments {
+            self.set_sound(index, None, Some(program));
         }
         Some(index)
     }
 
     /// Mutes the chords, bass and drums the song plays without the band:
-    /// the channels the library writes chords and the bass on, and the
-    /// tracks that hold only drums. Returns what it muted.
+    /// the channels the library writes chords and the bass on, unless
+    /// they are locked, and the tracks that hold only drums. Returns what
+    /// it muted.
     fn mute_the_songs_own(&mut self) -> Muted {
         let mut muted = Muted::default();
-        let plays = |project: &Project, channel: usize| {
-            project
-                .patterns
-                .iter()
-                .any(|pattern| pattern.player.is_none() && !pattern.notes(channel).is_empty())
-        };
         for index in 0..self.channels.len() {
-            let channel = &self.channels[index];
-            let accompanies = channel.kind == ChannelKind::Synth
-                && (channel.name == KEYS || channel.name == BASS);
-            if accompanies && !channel.muted && plays(self, index) {
-                muted.channels.push(channel.name.clone());
+            if self.accompanies(index) && !self.channels[index].muted && !self.is_locked(index) {
+                muted.channels.push(self.channels[index].name.clone());
                 self.channels[index].muted = true;
             }
         }
@@ -1671,6 +1682,14 @@ impl Project {
                 .collect::<Vec<_>>()
         );
         print.bytes(text.as_bytes());
+        // Only songs with locks count them, so a song saved before there
+        // were locks plays as it was written.
+        if !self.locked().is_empty() {
+            print.bytes(format!("{:?}", self.locked()).as_bytes());
+            for player in Player::ALL {
+                print.number(usize::from(self.song_keeps(player)));
+            }
+        }
         print.0
     }
 
@@ -1811,7 +1830,7 @@ impl Project {
         let variation_at = |step: usize| variation::variation_in(&variations, step);
         let mut rewritten = Vec::new();
         for player in Player::ALL {
-            if self.is_frozen(player) {
+            if self.is_frozen(player) || self.plays_locked(player) {
                 continue;
             }
             let notes: Vec<NoteEvent> = match player {
@@ -1971,6 +1990,11 @@ impl Project {
                     }
                     (_, None) => Vec::new(),
                 }
+            };
+            let notes = match player {
+                Player::Drums => self.keeping_locked_drums(notes, &band.muted),
+                _ if self.song_keeps(player) => Vec::new(),
+                _ => notes,
             };
             self.write_part(player, &chunks, notes);
             rewritten.push(player);
@@ -2440,7 +2464,7 @@ mod tests {
     use crate::library::demo::song_demo;
 
     /// Writes `bars`, one text per bar, on the sheet from bar 1.
-    fn write(project: &mut Project, bars: &[&str]) {
+    pub(super) fn write(project: &mut Project, bars: &[&str]) {
         let meter = project.meter();
         for (number, text) in bars.iter().enumerate() {
             let bar = meter.bar(number);
@@ -2451,7 +2475,7 @@ mod tests {
     }
 
     /// The notes `player` plays over the whole song, on the timeline.
-    fn part(project: &Project, player: Player) -> Vec<(usize, usize, u8)> {
+    pub(super) fn part(project: &Project, player: Player) -> Vec<(usize, usize, u8)> {
         let mut notes = Vec::new();
         for clip in project.playlist().clips() {
             let pattern = project.pattern(clip.pattern).unwrap();
@@ -2909,7 +2933,7 @@ mod tests {
     }
 
     /// A band in `style` playing `bars`.
-    fn band(style: &str, bars: &[&str]) -> Project {
+    pub(super) fn band(style: &str, bars: &[&str]) -> Project {
         let mut project = Project::with_band();
         project.set_band_style(BandStyle::named(style));
         write(&mut project, bars);

@@ -2580,3 +2580,177 @@ mod part_sources {
         assert_eq!(source(&screen, SongPart::Chords), "El Choclo (demo)");
     }
 }
+
+mod locks {
+    use super::*;
+    use crate::channel_rack::RackAction;
+    use crate::library_browser::LibraryAction;
+    use lineup_core::TimeSignature;
+    use lineup_core::library::{Song, Style, apply::StyleParts};
+
+    fn ode_to_joy() -> Screen {
+        let mut screen = Screen::new();
+        screen
+            .app
+            .open_demo(library::Demo::Song(Song::named("Ode to Joy").unwrap()));
+        screen.app.set_playing(false);
+        screen
+    }
+
+    fn channel(screen: &Screen, name: &str) -> usize {
+        screen
+            .app
+            .project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == name)
+            .unwrap()
+    }
+
+    #[test]
+    fn the_rack_locks_a_channel_and_undo_unlocks_it() {
+        let mut screen = ode_to_joy();
+        let keys = channel(&screen, "Keys");
+        screen.draw(Vec::new());
+        screen.draw(Vec::new());
+        // The name's menu has the lock too.
+        let output = screen.draw(Vec::new());
+        let name = text_rect(&output, "Keys")
+            .expect("Keys is in the rack")
+            .center();
+        screen.draw(vec![Event::PointerMoved(name)]);
+        for pressed in [true, false] {
+            screen.draw(vec![Event::PointerButton {
+                pos: name,
+                button: PointerButton::Secondary,
+                pressed,
+                modifiers: Modifiers::NONE,
+            }]);
+        }
+        screen.click("Lock");
+        assert!(screen.app.project.is_locked(keys));
+        assert_eq!(screen.app.history.undo_label(), Some("lock a channel"));
+        screen.app.undo();
+        assert!(!screen.app.project.is_locked(keys));
+        screen.app.apply(RackAction::SetLocked {
+            channel: keys,
+            locked: true,
+        });
+        assert!(screen.app.project.is_locked(keys));
+        // A locked channel draws, in the rack and in the mixer.
+        screen.app.mixer_open = true;
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "🔒").is_some());
+    }
+
+    #[test]
+    fn a_style_tried_in_a_pattern_plays_around_a_locked_keys() {
+        let mut screen = ode_to_joy();
+        screen.app.set_mode(PlayMode::Pattern);
+        let keys = channel(&screen, "Keys");
+        let song = screen
+            .app
+            .project
+            .patterns()
+            .iter()
+            .position(|pattern| !pattern.notes(keys).is_empty())
+            .unwrap();
+        screen.app.select_pattern(song);
+        screen.app.set_locked(keys, true);
+        let chords = screen
+            .app
+            .project
+            .pattern(song)
+            .unwrap()
+            .notes(keys)
+            .to_vec();
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            time_signature: false,
+            ..StyleParts::default()
+        };
+        let patterns = screen.app.project.patterns().len();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
+        let trial = screen.app.pattern;
+        assert_ne!(trial, song);
+        let tried = screen.app.project.pattern(trial).unwrap();
+        assert_eq!(tried.notes(keys), chords);
+        let bass = channel(&screen, "Bass");
+        assert!(
+            !tried.notes(bass).is_empty(),
+            "the bass follows the locked Keys"
+        );
+        // The next style rewrites the same pattern, around the same Keys.
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Bossa nova").unwrap()));
+        assert_eq!(screen.app.pattern, trial);
+        assert_eq!(screen.app.project.patterns().len(), patterns + 1);
+        assert_eq!(
+            screen.app.project.pattern(trial).unwrap().notes(keys),
+            chords
+        );
+    }
+
+    #[test]
+    fn the_time_box_goes_back_exactly_with_a_channel_locked_since() {
+        let mut screen = ode_to_joy();
+        screen.app.set_mode(PlayMode::Pattern);
+        let original = screen.app.project.clone();
+        screen.app.set_song_time(TimeSignature::new(3, 4));
+        let keys = channel(&screen, "Keys");
+        screen.app.set_locked(keys, true);
+        screen.app.set_song_time(TimeSignature::COMMON);
+        assert!(screen.app.project.is_locked(keys));
+        assert_eq!(screen.app.project.patterns(), original.patterns());
+        assert!(
+            screen
+                .app
+                .notice
+                .as_deref()
+                .is_some_and(|notice| notice.contains("as it was")),
+            "{:?}",
+            screen.app.notice
+        );
+    }
+
+    #[test]
+    fn the_library_and_the_band_say_what_is_kept() {
+        let mut screen = ode_to_joy();
+        let keys = channel(&screen, "Keys");
+        screen.app.set_locked(keys, true);
+        screen.app.mode = PlayMode::Song;
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Bossa nova").unwrap()));
+        let band = screen.app.project.band().expect("the band came in");
+        assert!(!band.muted().channels.contains(&"Keys".to_string()));
+        assert!(!screen.app.project.channels()[keys].muted);
+        let notice = screen.app.notice.clone().unwrap_or_default();
+        assert!(notice.ends_with("🔒 Kept: Keys."), "{notice}");
+        screen.app.rack_open = false;
+        screen.app.playlist.browser_open = true;
+        screen.click("📚 Library");
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "🔒 Keys").is_some());
+        screen.app.playlist.browser_open = false;
+        screen.app.chord_sheet.open = true;
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        assert!(
+            text_rect(
+                &output,
+                "🔒 Keys is locked: the band leaves the piano to it."
+            )
+            .is_some()
+        );
+        // Unlocked, the band plays the piano, and says so.
+        screen.app.set_locked(keys, false);
+        assert!(screen.app.project.channels()[keys].muted);
+        let notice = screen.app.notice.clone().unwrap_or_default();
+        assert!(notice.starts_with("Keys unlocked"), "{notice}");
+    }
+}

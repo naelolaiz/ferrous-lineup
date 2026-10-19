@@ -10,6 +10,10 @@
 //! again (re-"comped") in the way that goes with it, keeping the same
 //! chords. That needs the chords, which a pattern does not store, so
 //! they are worked out from its notes first (see [`super::listen`]).
+//!
+//! Nothing here writes on a locked channel (see [`crate::lock`]): its
+//! notes and its sound stay as they are, and the rest of the style is
+//! written around it.
 
 use crate::TimeSignature;
 use crate::general_midi;
@@ -140,21 +144,32 @@ pub fn synth_named(project: &mut Project, name: &str) -> Option<usize> {
 /// The channel chords go to: the `selected` channel if it plays notes
 /// and is not the bass or the lead; otherwise the synth called "Keys";
 /// otherwise the first other synth; otherwise a new "Keys" synth.
+///
+/// A locked channel is not picked, as the chords would be left out, but
+/// the Keys synth is: a locked Keys keeps the song's chords, so a style
+/// does not add its own on another channel.
 pub fn chords_channel(project: &mut Project, selected: Option<usize>) -> Option<usize> {
-    let free =
-        |channel: &Channel| plays_notes(channel) && channel.name != BASS && channel.name != LEAD;
+    let free = |(index, channel): (usize, &Channel)| {
+        plays_notes(channel)
+            && channel.name != BASS
+            && channel.name != LEAD
+            && !project.is_locked(index)
+    };
     if let Some(index) = selected
-        && project.channels().get(index).is_some_and(free)
+        && project
+            .channels()
+            .get(index)
+            .is_some_and(|channel| free((index, channel)))
     {
         return Some(index);
     }
+    let other = project
+        .channels()
+        .iter()
+        .enumerate()
+        .position(|(index, channel)| channel.kind == ChannelKind::Synth && free((index, channel)));
     find_synth(project, KEYS)
-        .or_else(|| {
-            project
-                .channels()
-                .iter()
-                .position(|channel| channel.kind == ChannelKind::Synth && free(channel))
-        })
+        .or(other)
         .or_else(|| synth_named(project, KEYS))
 }
 
@@ -247,10 +262,10 @@ pub fn write_style_played(
         project.scale = style.scale(tonic);
         project.time_signature = style.time;
     }
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
-    target.time = song_has_music.then_some(style.time);
+    target.set_time(song_has_music.then_some(style.time));
     target.set_length(style.length());
     target.set_notes(chords, backing.chords);
     if let Some(bass) = bass {
@@ -272,7 +287,8 @@ pub fn song_has_music(project: &Project, pattern: usize) -> bool {
 /// Writes a rhythm into pattern `pattern`, repeated to the pattern's
 /// length, in bars of the project's time signature. It replaces whatever
 /// the built-in drums played there; drums the rhythm needs are added.
-/// Returns `false` if the pattern does not exist or the rack is full.
+/// Returns `false` if the pattern does not exist, the rack is full or
+/// every drum is locked.
 pub fn write_rhythm(project: &mut Project, pattern: usize, rhythm: &Rhythm) -> bool {
     let Some(length) = project.pattern(pattern).map(|p| p.length()) else {
         return false;
@@ -286,16 +302,17 @@ pub fn write_rhythm(project: &mut Project, pattern: usize, rhythm: &Rhythm) -> b
     }
     let bar = project.pattern_time(pattern).steps_per_bar();
     let old = drum_channels(project);
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
+    let mut wrote = false;
     for channel in old {
-        target.set_notes(channel, []);
+        wrote |= target.set_notes(channel, []);
     }
     for (drum, channel) in rows {
-        target.set_notes(channel, rhythm.notes(drum, bar, length));
+        wrote |= target.set_notes(channel, rhythm.notes(drum, bar, length));
     }
-    true
+    wrote
 }
 
 /// Replaces the drums of pattern `pattern` from step `at` on with
@@ -310,7 +327,7 @@ pub fn write_fill(project: &mut Project, pattern: usize, fill: &Rhythm, at: usiz
     }
     let bar = project.pattern_time(pattern).steps_per_bar();
     let old = drum_channels(project);
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
     let length = target.length();
@@ -378,7 +395,8 @@ fn plays_chords(notes: &[NoteEvent]) -> bool {
 /// pattern had a bass line, the bass holds the roots instead of going
 /// quiet; if it had none, a "Bass" synth is added for it.
 ///
-/// Returns `false`, changing nothing, if the pattern has no chords.
+/// Returns `false`, changing nothing, if the pattern has no chords or
+/// both its chords and its bass are locked.
 pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bass) -> bool {
     let Some(chords_channel) = heard_chords_channel(project, pattern) else {
         return false;
@@ -426,14 +444,12 @@ pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bas
         new_bass.extend(old_bass.iter().filter(inside));
     }
 
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
-    target.set_notes(chords_channel, new_chords);
-    if let Some(channel) = bass_channel {
-        target.set_notes(channel, new_bass);
-    }
-    true
+    let chords = target.set_notes(chords_channel, new_chords);
+    let bass = bass_channel.is_some_and(|channel| target.set_notes(channel, new_bass));
+    chords || bass
 }
 
 /// What [`use_rhythm`], [`use_style`] or [`use_fill`] changed.
@@ -657,8 +673,8 @@ fn play_song(
         if let Some(rhythm) = rhythm
             && parts.rhythm
             && (drums || !any_drums)
+            && write_rhythm(project, pattern, rhythm)
         {
-            write_rhythm(project, pattern, rhythm);
             if fill && let Some(fill) = rhythm.fill() {
                 write_fill(project, pattern, fill, length - bar);
             }
@@ -689,7 +705,7 @@ pub fn write_final_chord(project: &mut Project, pattern: usize, chord: Chord) ->
         return false;
     };
     let bass = find_synth(project, BASS);
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
     let length = target.length();
@@ -758,6 +774,41 @@ mod tests {
             6,
             "the bass is not used for chords"
         );
+    }
+
+    #[test]
+    fn chords_go_around_a_locked_channel() {
+        // The demo's only synth plays its chords. Locked and selected, it
+        // keeps them, and a style tried in a new pattern plays its chords
+        // on a new Keys.
+        let mut project = Project::demo();
+        let synth = 4;
+        let style = &STYLES[0];
+        project.set_locked(synth, true);
+        let tried = project.add_pattern().unwrap();
+        assert!(write_style(
+            &mut project,
+            tried,
+            style,
+            PitchClass::C,
+            Some(synth)
+        ));
+        let keys = find_synth(&project, KEYS).unwrap();
+        assert_ne!(keys, synth);
+        assert!(!project.pattern(tried).unwrap().notes(keys).is_empty());
+        assert!(project.pattern(tried).unwrap().notes(synth).is_empty());
+        // A locked Keys is where the chords go, and keeps the song's.
+        project.set_locked(keys, true);
+        let before = project.pattern(tried).unwrap().notes(keys).to_vec();
+        assert!(write_style(
+            &mut project,
+            tried,
+            &STYLES[1],
+            PitchClass::C,
+            None
+        ));
+        assert_eq!(chords_channel(&mut project, None), Some(keys));
+        assert_eq!(project.pattern(tried).unwrap().notes(keys), before);
     }
 
     #[test]
