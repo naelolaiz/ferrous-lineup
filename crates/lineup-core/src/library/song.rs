@@ -695,6 +695,7 @@ pub static SONGS: &[Song] = &[
     tango::EL_DIA_QUE_ME_QUIERAS,
     tango::VOLVER,
     tango::ROMANCE_DE_BARRIO,
+    tango::DESDE_EL_ALMA,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,

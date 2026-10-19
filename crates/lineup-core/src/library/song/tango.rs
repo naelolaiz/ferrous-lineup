@@ -1417,16 +1417,19 @@ pub(super) const VOLVER: Song = Song {
 const ROMANCE_A1_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | i | I7 | I7 | iv | \
                                  iv iv vii°7 | bVII7 | bVII7 | bIII | V7";
 
-/// The same opening, then G minor, C7 and F to A7 and a cadence in D minor.
-const ROMANCE_A2_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | i i I7 | iv | bVII7 | \
+/// The same opening, then F7 over E flat sliding onto D7, G minor, C7 and F to A7 and a
+/// cadence in D minor.
+const ROMANCE_A2_CHORDS: &str = "i | i7 | II7 | II7 | bVI7 | V7 | i i II7 | bIII7 I7 I7 | iv | bVII7 | \
                                  bIII | V7 | i | V7 | i | i";
 
-/// A sequence climbing a step at a time: G minor, A7, D minor, G minor, C7, F.
+/// A sequence climbing a step every two bars: G minor, A7, D minor (with A half-diminished
+/// over C leading on), G minor, C7, F.
 const ROMANCE_B1_CHORDS: &str =
-    "iv6 | V7 | i | i7 | iv | bVII7 | bIII | bIII | V7 | V7 | i | i | bVI | iv | V7 | V7";
+    "iv6 | V7 | i | i i vø7 | iv | bVII7 | bIII | bIII | V7 | V7 | i | i | bVI | iv | V7 | V7";
 
-/// The sequence again, falling back to D minor over A7.
-const ROMANCE_B2_CHORDS: &str = "iv | V7 | i | i7 | V7 | V7 | i | I7 | iv | V7 | i | i7 | V7 | V7";
+/// The sequence again, falling back to D minor over E7 and A7.
+const ROMANCE_B2_CHORDS: &str =
+    "iv6 | V7 | i | i7 | II7 | V7 | i | I7 | iv | V7 | i | i7 | II7 | V7";
 
 // Source: score attached by the owner (two page images of a voice and piano
 // edition, "Romance de barrio, vals", words by Homero Manzi, music by Aníbal
@@ -1462,13 +1465,13 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
             "A4:4 Ab4 G4 | F4:4 E4:6 D4:2 | F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | \
              F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4:6 G#4:2 | A4:8 -:2 D5:2 | \
              D5:4 A4 Bb4 | C5:4 Bb4 F#4 | A4:4 G4:6 A4:2 | Bb4:8 -:2 A4:2 | \
-             A4:4 G4:6 A4:2 | A4:8 -:2 A4:2 | G4:4 F4:6 G4:2 | G4:8 -:2 A4:2",
+             A4:4 G4:6 A4:2 | Bb4:8 -:2 A4:2 | G4:4 F4:6 G4:2 | A4:8 -:2 A4:2",
             ROMANCE_A1_CHORDS,
         ),
         Part::new(
             "A2",
             "A4:4 Ab4 G4 | F4:4 E4:6 D4:2 | F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | \
-             F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4:6 G#4:2 | A4:8 -:2 G4:2 | \
+             F4:4 E4 -:2 D4:2 | E4:8 -:2 E4:2 | Bb4:4 A4 -:2 G#4:2 | A4:8 -:2 G4:2 | \
              G4:4 A4 Bb4 | C5:4 D5 -:2 E5:2 | F5:8 C5:4 | -:2 C#5:2 D5 C#5 B4 C#5 | \
              D5:8 A4:4 | -:2 Bb4:2 G4:4 -:2 E4:2 | D4:12 | _:4 -:8",
             ROMANCE_A2_CHORDS,
@@ -1491,7 +1494,7 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
             ROMANCE_B2_CHORDS,
         ),
         Part::new("First ending", "D4:12 | _:4 -:6 A4:2", "i | i"),
-        Part::new("Second ending", "D4:4 -:8 | -:12", "i | i"),
+        Part::new("Second ending", "D4:4 -:8 | -:12", "i i V7 | i"),
     ],
     form: &[
         "Pickup",
@@ -1509,7 +1512,103 @@ pub(super) const ROMANCE_DE_BARRIO: Song = Song {
     drums_from: 1,
     about: "Troilo's vals opens on a chromatic sigh, A, A flat, G, over D minor, while the \
             bass walks down D, C, B, B flat to A: the same notes then lean on E7 and B flat 7 \
-            before A7 brings the cadence. The second part climbs in a sequence, each bar a \
-            step higher over its own chord: G minor, A7, D minor, then C7 to F major, the \
-            relative major, until C sharp turns it back to D minor.",
+            before A7 brings the cadence. The second part climbs in a sequence, a step higher \
+            every two bars: G minor, A7, D minor, G minor, then C7 to F major, the relative \
+            major, until C sharp turns it back to D minor.",
+};
+
+// Source: score attached by the owner (two page images): "Desde el
+// alma", Vals, Letra: Homero Manzi y Víctor Velez, Música: Rosita Melo; voice and piano, 72 bars,
+// key signature of two sharps, TRIO in one sharp, "D.C." at the end with no Fine and no segno.
+// Melody = the vocal line; chords read from the piano's bass and right-hand chords bar by bar.
+// The first strain (bars 1-32) is in B minor, the second (33-48) in D major, the trio (49-72) in
+// G major ending on B minor. The score prints "D.C." at bar 72 with no Fine and no segno, so
+// where the da capo stops is not written. The form goes back to the start and stops at bar 32,
+// the double bar where the first strain closes on B minor, the tonic (the integrator's choice;
+// the other double bar, bar 48 before "TRIO", would end in D major).
+// Recording: the best-known vocal version is Nelly Omar's (Odeon, 22 October 1947, named one of
+// her "remarkable hits" in https://www.todotango.com/english/artists/biography/291/Nelly-Omar/;
+// that page does not name the accompaniment). Roberto Firpo's orchestra recorded the waltz first
+// (https://todotango.com/english/history/chronicle/183/Desde-el-alma-Desde-el-alma-a-romantic-criollo-waltz).
+// The tempo is an estimate for a sung vals criollo, not measured from a recording.
+// Copyright: Rosita Melo died in 1981 and the score's words are Manzi's (1948): not public domain; added at the owner's request.
+
+/// The first strain: F#7 for two bars, then B minor; E minor in its third phrase.
+const DESDE_A_CHORDS: &str =
+    "V7 | V7 | i | i | V7 | V7 | i | i i I7 | iv | iv | i | i | V7 | V7 | i | V7";
+const DESDE_A2_CHORDS: &str =
+    "V7 | V7 | i | i | V7 | V7 | i | i i I7 | iv | iv | i | i | V7 | V7 | i | i";
+/// The second strain, in D major: A7 (over A, then over C sharp) to D, B7 over D sharp, A7 over
+/// E and A, and D.
+const DESDE_B_CHORDS: &str = "V7 | V7 | I | I I VI7 | V7 | V7 | I | I | \
+                              V7 | V7 | I | I I VI7 | V7 | V7 | I | I";
+const DESDE_TRIO_CHORDS: &str =
+    "I | I | V | V7 | I | I | V7 | V7 | I | I7 | IV | IV | VI | VI7 | V | V7";
+const DESDE_TRIO_END_CHORDS: &str = "III7 | III7 | VIsus4 | vi | VII7 | VII7 | iii | iii";
+
+pub(super) const DESDE_EL_ALMA: Song = Song {
+    name: "Desde el alma",
+    origin: "Rosita Melo, 1911",
+    feel: "Vals criollo",
+    genre: Genre::Tango,
+    tonic: B,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 156.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Tango vals",
+    band: TANGO,
+    style: "Tango vals",
+    parts: &[
+        // Bars 1-16 ("Alma, si tanto te han herido...").
+        Part::new(
+            "A",
+            "F#4:8 F#4:4 | -:2 F#4:2 G#4 A#4 G#4 F#4 | B4:12 | B4:8 B4:4 | C#5:12 | \
+             -:2 C#5:2 D5 E5 D5 C#5 | D5:8 D5:4 | D5:4 C#5:6 B4:2 | B4:8 B4:4 | \
+             -:2 B4:2 C#5 D5 C#5 B4 | B4:8 B4:4 | -:2 F#4:2 G4 A4 G4 F#4 | F#4:8 F#4:4 | \
+             -:2 F#4:2 G4 A4 G4 F#4 | F#4:12 | _:8 -:4",
+            DESDE_A_CHORDS,
+        ),
+        // Bars 17-32 ("Vives inútilmente triste..."), ending on B minor before a double bar.
+        Part::new(
+            "A2",
+            "F#4:8 F#4:4 | -:2 F#4:2 G#4 A#4 G#4 F#4 | B4:12 | B4:8 B4:4 | C#5:12 | \
+             -:2 C#5:2 D5 E5 D5 C#5 | D5:8 D5:4 | D5:4 C#5:6 B4:2 | B4:8 B4:4 | \
+             -:2 B4:2 C#5 D5 C#5 B4 | B4:8 B4:4 | -:2 F#4:2 G4 A4 G4 F#4 | F#4:8 F#4:4 | \
+             A#4:8 A#4:4 | B4:12 | _:4 -:8",
+            DESDE_A2_CHORDS,
+        ),
+        // Bars 33-48 ("Fue lo que empezó una vez..."), in the relative major.
+        Part::new(
+            "B",
+            "G4:12 | -:2 F#4:2 E4 D#4 E4 E#4 | F#4:12 | -:2 B4:2 D5:6 B4:2 | C#5:12 | \
+             -:2 A4:2 C#5:6 A4:2 | B4:12 | -:2 E4:2 G4:6 E4:2 | G4:12 | \
+             -:2 F#4:2 E4 D#4 E4 E#4 | F#4:12 | -:2 B4:2 D5:6 B4:2 | C#5:8 A4:4 | \
+             A4:4 G4 C#4 | D4:12 | _:4 -:8",
+            DESDE_B_CHORDS,
+        )
+        .in_key(D, Major),
+        // Bars 49-64 ("¡Deja esas cartas!...").
+        Part::new(
+            "Trio",
+            "D5:12 | _:4 E5 F#5 | D5:12 | C5:12 | B4:4 D5 G5 | A5:4 G5:6 E5:2 | F#5:12 | _:12 | \
+             G5:12 | F5:8 G5:4 | E5:12 | _:12 | E5:12 | D5:8 E5:4 | D5:12 | C5:12",
+            DESDE_TRIO_CHORDS,
+        )
+        .in_key(G, Major),
+        // Bars 65-72 ("...llega la vida trayendo otro amor"), closing on B minor before the D.C.
+        Part::new(
+            "Trio end",
+            "B4:12 | A4:8 B4:4 | A4:12 | G4:12 | F#4:12 | G4:4 F#4 C#5 | B4:12 | _:8 -:4",
+            DESDE_TRIO_END_CHORDS,
+        )
+        .in_key(G, Major),
+    ],
+    form: &["A", "A2", "B", "Trio", "Trio end", "A", "A2"],
+    drums_from: 0,
+    about: "A vals that starts on the dominant, F#7, and only lands on B minor in its third bar. \
+            The second strain turns to the relative major, D, through A7, with C# in the bass under a \
+            chromatic E, D#, E, E# in the tune. The trio moves to G major, touches C through G7, \
+            and closes on B minor through F#7 over A#; the da capo then ends the vals on B minor.",
 };
