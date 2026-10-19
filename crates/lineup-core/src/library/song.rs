@@ -410,6 +410,8 @@ const SIX_FOUR: TimeSignature = TimeSignature::new(6, 4);
 // Odd meters, with the beats they are felt in: 3 + 2 quarters, 2 + 3
 // eighths...
 const FIVE_FOUR: TimeSignature = TimeSignature::of_groups(&[3, 2], 4);
+// Five quarter notes felt the other way round, 2 + 3: Tchaikovsky's waltz in five.
+const FIVE_FOUR_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 3], 4);
 const FIVE_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 3], 8);
 // 5/8 the other way round, a long beat and then a short one, 3 + 2.
 const FIVE_EIGHT_THREE_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2], 8);
@@ -802,6 +804,7 @@ pub static SONGS: &[Song] = &[
     classical::SYMPHONY_7_ALLEGRETTO,
     classical::RADETZKY_MARCH,
     classical::PROMENADE,
+    classical::PATHETIQUE_WALTZ,
 ];
 
 #[cfg(test)]
