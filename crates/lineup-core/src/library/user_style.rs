@@ -122,6 +122,8 @@ impl UserStyle {
 
     pub fn from_rhythm(rhythm: &'static super::Rhythm) -> Self {
         let mut style = Self::blank();
+        // A rhythm has no chords of its own to bring.
+        style.chart.clear();
         style.name = format!("{} copy", rhythm.name);
         style.about = rhythm.about.into();
         style.time = rhythm.time;
