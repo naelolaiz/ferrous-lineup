@@ -88,11 +88,13 @@ pub struct Band {
     pub horns: Option<Horns>,
 }
 
-/// A horn section behind the melody, on a channel of its own ("Horns"):
-/// it plays the song's chords, voiced as the Keys channel voices them,
-/// in a comping of its own. A big band's saxophones hold the chords
-/// under the trumpet's tune ([`Comping::Held`]), and its brass punch
-/// them on the beat and just before beat 3 ([`Comping::Charleston`]).
+/// A horn section behind the melody, on a channel of its own ("Horns",
+/// or "Strings" for a string section): it plays the song's chords, voiced
+/// as the Keys channel voices them, in a comping of its own. A big band's
+/// saxophones hold the chords under the trumpet's tune
+/// ([`Comping::Held`]), and its brass punch them on the beat and just
+/// before beat 3 ([`Comping::Charleston`]). A tango orchestra's violins
+/// hold them under the bandoneones.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Horns {
     pub program: u8,
@@ -498,11 +500,14 @@ const MOTOWN: Band = Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::FIN
 const FUNK: Band = Band::new(gm::BRASS_SECTION, gm::CLAVINET, gm::SLAP_BASS);
 const NEO_SOUL: Band = Band::new(gm::VOICE_OOHS, gm::ELECTRIC_PIANO, gm::FINGER_BASS);
 const SPIRITUAL: Band = Band::new(gm::VOICE_OOHS, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
+/// The orquesta típica of the 1940s: bandoneones on the tune, the violins
+/// holding the chords under it, the piano and the double bass.
 const TANGO: Band = Band::new(
     gm::TANGO_ACCORDION,
     gm::ACOUSTIC_GRAND_PIANO,
     gm::ACOUSTIC_BASS,
-);
+)
+.with_horns(gm::STRING_ENSEMBLE, Comping::Held);
 const SALON: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
 /// Trumpet, the steel strings of the Cuban tres, and the bass.
 const SON: Band = Band::new(gm::TRUMPET, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
@@ -684,6 +689,7 @@ pub static SONGS: &[Song] = &[
     tango::POR_UNA_CABEZA,
     tango::EL_DIA_QUE_ME_QUIERAS,
     tango::VOLVER,
+    tango::ROMANCE_DE_BARRIO,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,
@@ -710,6 +716,8 @@ pub static SONGS: &[Song] = &[
     folklore::LA_LLORONA,
     folklore::LUNA_DE_XELAJU,
     folklore::LOS_MACHETES,
+    folklore::BRISAS_MESANAS,
+    folklore::PUNTO_OCUENO,
     folklore::ZAMBA_DEL_TELAR,
     folklore::CHACARERA_DEL_PATIO,
     folklore::GATO_DEL_ARROYO,
