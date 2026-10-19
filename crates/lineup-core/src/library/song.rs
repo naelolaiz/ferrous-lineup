@@ -685,6 +685,9 @@ const TANGO: Band = Band::new(
     gm::ACOUSTIC_BASS,
 )
 .with_horns(gm::STRING_ENSEMBLE, Comping::Held);
+/// The string orchestra of the anthem: violins on the tune, the section holding
+/// the chords, cellos on the bass.
+const STRING_ORCHESTRA: Band = Band::new(gm::VIOLIN, gm::STRING_ENSEMBLE, gm::CELLO);
 const SALON: Band = Band::new(gm::VIOLIN, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS);
 /// Trumpet, the steel strings of the Cuban tres, and the bass.
 const SON: Band = Band::new(gm::TRUMPET, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
@@ -1004,6 +1007,7 @@ pub static SONGS: &[Song] = &[
     classical::RADETZKY_MARCH,
     classical::PROMENADE,
     classical::PATHETIQUE_WALTZ,
+    classical::HIMNO_NACIONAL_ARGENTINO,
 ];
 
 #[cfg(test)]
