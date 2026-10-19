@@ -724,6 +724,7 @@ pub static SONGS: &[Song] = &[
     folklore::BRISAS_MESANAS,
     folklore::PUNTO_OCUENO,
     folklore::BOI_BARROSO,
+    folklore::CANDOMBE_PARA_GARDEL,
     folklore::ZAMBA_DEL_TELAR,
     folklore::CHACARERA_DEL_PATIO,
     folklore::GATO_DEL_ARROYO,

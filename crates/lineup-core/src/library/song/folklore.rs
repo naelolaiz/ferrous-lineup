@@ -2691,3 +2691,138 @@ pub(super) const BOI_BARROSO: Song = Song {
             over C with an A minor triad in the accordion's bass, C6, goes on to A minor and \
             settles back through D7 to G. Each bar here holds two bars of 2/4.",
 };
+
+/// The guitar's introduction, bars 1-12 of the score, in D major: a riff
+/// over A, a run down the D major scale, then D turning to C, G turning to
+/// G minor, and C turning to A7, which leads into the verse.
+const CANDOMBE_PARA_GARDEL_INTRO_TUNE: &str = "-:4 -:1 A4:1 A4:1 A4:1 D5:1 D5:2 A4:1 D5:2 A4:1 E5:1 | \
+     _:3 A4:1 -:1 A4:1 A4:1 A4:1 E5:1 E5:2 A4:1 E5:2 A4:1 F#5:1 | \
+     -:4 -:1 A4:1 B4:1 C#5:1 D5:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 E4:1 D4:1 | \
+     A4:3 G4:1 -:1 G4:1 A4:1 B4:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 E4:1 D4:1 B4:1 | \
+     A4:4 -:1 A4:1 A4:1 A4:1 D5:1 D5:2 A4:1 D5:2 A4:1 E5:1 | \
+     _:3 A4:1 -:1 A4:1 A4:1 A4:1 E5:1 E5:2 A4:1 E5:2 A4:1 F#5:1 | \
+     -:4 -:1 A4:1 B4:1 C#5:1 D5:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 E4:1 D4:1 | \
+     A4:3 G4:1 -:1 G4:1 A4:1 B4:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 E4:1 D4:1 B4:1 | \
+     A4:4 -:1 C5:1 C5:1 C5:1 C5:1 C5:1 C5:1 C5:1 C5:1 E5:1 D5:1 C5:1 | \
+     D5:3 B4:1 -:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 Bb4:1 D5:1 C5:1 Bb4:1 | \
+     C5:4 -:1 A4:1 B4:1 C#5:1 D5:1 A4:1 B4:1 C#5:1 D5:1 E5:1 F#5:1 G5:1 | \
+     B5:3 A5:1 G5:1 F#5:1 E5:2 -:2 D5:1 D5:1 C#5:3 E5:1";
+const CANDOMBE_PARA_GARDEL_INTRO_CHORDS: &str =
+    "V | V | I | V7 | V | V | I | V7 | I bVII bVII bVII | IV iv iv iv | bVII V7 V7 V7 | V7";
+
+/// The verse, bars 13-26: twice through D minor, the same three-plus-one
+/// syncopation (sixteenth, eighth, sixteenth) on every beat.
+const CANDOMBE_PARA_GARDEL_VERSE_TUNE: &str = "-:4 F4:1 F4:2 F4:1 F4:1 F4:2 F4:1 F4:1 D4:2 D4:1 | _:8 -:8 | \
+     -:4 Bb4:1 Bb4:2 Bb4:1 Bb4:1 Bb4:2 Bb4:1 Bb4:1 G4:2 G4:1 | _:8 -:8 | \
+     -:4 A4:1 A4:2 A4:1 A4:1 A4:2 C#5:1 A4:1 G4:2 F4:1 | \
+     _:3 F4:2 F4:2 F4:1 F4:1 F4:2 A4:1 F4:1 E4:2 D4:1 | \
+     _:4 -:1 F4:1 F4:1 F4:1 F4:2 F4:1 F4:1 F4:2 D4:1 D4:1 | _:8 -:8 | \
+     -:4 F4:1 F4:2 F4:1 F4:1 F4:2 F4:1 F4:1 D4:2 D4:1 | _:8 -:8 | \
+     -:4 Bb4:1 Bb4:2 Bb4:1 Bb4:1 Bb4:2 Bb4:1 Bb4:1 G4:2 G4:1 | _:8 -:8 | \
+     -:4 A4:1 A4:2 A4:1 A4:1 A4:2 C#5:1 A4:1 G4:2 F4:1 | \
+     F4:3 F4:2 F4:2 F4:1 F4:1 F4:2 A4:1 F4:1 E4:2 D4:1";
+const CANDOMBE_PARA_GARDEL_VERSE_CHORDS: &str = "i | I | iv7 | iv7 | V7 | i viø7 viø7 viø7 | \
+     bVI V7 i i | i | i | i | iv | iv | V7 | i viø7 viø7 viø7";
+
+/// The refrain, bars 27-32, in D major.
+const CANDOMBE_PARA_GARDEL_CHORUS_TUNE: &str = "D4:4 -:1 F#4:1 F#4:1 F#4:1 E4:2 E4:1 E4:1 E4:2 E4:1 F#4:1 | _:8 -:4 A4:2 F#4:2 | \
+     G4:3 F#4:2 G4:2 F#4:1 G4:2 F#4:2 G4:2 F#4:1 A4:1 | F#4:8 A4:4 F#4:2 G4:2 | \
+     F#4:3 G4:2 F#4:2 G4:1 F#4:3 G4:1 F#4:3 A4:1 | _:8 -:4 C5:2 A4:2";
+const CANDOMBE_PARA_GARDEL_CHORUS_CHORDS: &str = "bVI V I I | V7 | V | I V7 V7 V7 | V | I I7 I7 I7";
+
+/// Bars 33-35: G minor, C7, F, the relative major; the tune rocks between
+/// B flat (written A sharp in the score) and A.
+const CANDOMBE_PARA_GARDEL_BRIDGE_TUNE: &str = "Bb4:3 A4:2 Bb4:2 A4:1 Bb4:2 A4:2 Bb4:2 A4:1 C5:1 | A4:4 -:4 C5:4 A4:2 Bb4:2 | \
+     A4:4 Bb4:1 A4:2 Bb4:1 A4:3 Bb4:1 G4:3 A4:1";
+const CANDOMBE_PARA_GARDEL_BRIDGE_CHORDS: &str = "ii V7 | I ii | ii ii V7 I";
+
+/// Bars 36-38, back in D major.
+const CANDOMBE_PARA_GARDEL_CHORUS2_TUNE: &str = "-:3 G4:1 -:1 G4:2 G4:3 G4:2 G4:2 F#4:1 A4:1 | \
+     _:3 F#4:1 -:1 G4:2 F#4:1 G4:2 F#4:2 G4:2 F#4:1 A4:1 | \
+     A4:4 A4:4 Bb4:3 G4:1 G4:1 G4:2 A4:1";
+const CANDOMBE_PARA_GARDEL_CHORUS2_CHORDS: &str = "I V7 V V | I I V V | I I iv7 iv7";
+
+/// Bars 39-42, the ending in D minor. Bar 40 prints two sets of symbols: "Gm7 A7 D"
+/// and, stacked above them on the piano staff, "Dm". The guitar, piano and bass play
+/// D minor, then G minor from beat 3 (bass D A B-flat D, as in bar 38), which fits the
+/// tune's B flat and G there, so the chart follows the band.
+const CANDOMBE_PARA_GARDEL_CODA_TUNE: &str = "A4:1 F4:2 F4:3 F4:2 F4:2 F4:2 E4:2 E4:1 D4:1 | \
+     _:4 A4:2 A4:2 Bb4:3 G4:1 G4:1 G4:2 A4:1 | \
+     F4:1 F4:2 F4:3 F4:2 F4:2 F4:2 F4:2 F4:1 F4:1 | _:8 -:8";
+const CANDOMBE_PARA_GARDEL_CODA_CHORDS: &str = "bIII V7 i i | i i iv7 iv7 | bIII V7 i i | i";
+
+// Source: score attached by the owner (page images), "Candombe para Gardel", a typeset
+// band arrangement (Voz, Guitarra clásica, Bajo eléctrico, Piano, Cajón, Chico) in 4/4 at
+// quarter = 80, 42 bars, key signature of two sharps, no composer or edition printed.
+// Melody: the Voz staff from bar 13; bars 1-12 are the classical guitar's introduction,
+// at its written pitch (it sounds an octave lower). Chords: the chord symbols, on the beat
+// the score prints them; bars 1-12, which have none, from the bass and the guitar's tune;
+// where two symbols are stacked (bar 14 "D" over "Gm7", bar 40 "Dm" over "Gm7 A7 D"),
+// the one the guitar, piano and bass play.
+// Composer: Rubén Rada, "Tengo un candombe para Gardel", on his 1985 album "La yapla mata"
+// (https://es.wikipedia.org/wiki/La_yapla_mata credits the song to Rada alone;
+// https://www.discogs.com/release/11999031-Ruben-Rada-La-Yapla-Mata credits Rada as composer).
+// Copyright: a modern song by Rubén Rada (1985), not public domain; added at the owner's request.
+pub(super) const CANDOMBE_PARA_GARDEL: Song = Song {
+    name: "Candombe para Gardel",
+    origin: "Rubén Rada, 1985",
+    feel: "Candombe",
+    genre: Genre::Folklore,
+    tonic: D,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 80.0,
+    comping: Comping::Offbeat,
+    bass: Bass::Tresillo,
+    rhythm: "Candombe",
+    band: CANDOMBE,
+    style: "Candombe",
+    parts: &[
+        Part::new(
+            "Intro",
+            CANDOMBE_PARA_GARDEL_INTRO_TUNE,
+            CANDOMBE_PARA_GARDEL_INTRO_CHORDS,
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Verse",
+            CANDOMBE_PARA_GARDEL_VERSE_TUNE,
+            CANDOMBE_PARA_GARDEL_VERSE_CHORDS,
+        ),
+        // The score ties the verse's last D into this bar; it is struck again here so
+        // that the key change falls on the bar line.
+        Part::new(
+            "Chorus",
+            CANDOMBE_PARA_GARDEL_CHORUS_TUNE,
+            CANDOMBE_PARA_GARDEL_CHORUS_CHORDS,
+        )
+        .in_key(D, Major),
+        // In F major: it cadences twice on F (Gm C7 F), and its C natural is outside
+        // D harmonic minor.
+        Part::new(
+            "Bridge",
+            CANDOMBE_PARA_GARDEL_BRIDGE_TUNE,
+            CANDOMBE_PARA_GARDEL_BRIDGE_CHORDS,
+        )
+        .in_key(F, Major),
+        Part::new(
+            "Chorus 2",
+            CANDOMBE_PARA_GARDEL_CHORUS2_TUNE,
+            CANDOMBE_PARA_GARDEL_CHORUS2_CHORDS,
+        )
+        .in_key(D, Major),
+        Part::new(
+            "Coda",
+            CANDOMBE_PARA_GARDEL_CODA_TUNE,
+            CANDOMBE_PARA_GARDEL_CODA_CHORDS,
+        ),
+    ],
+    form: &["Intro", "Verse", "Chorus", "Bridge", "Chorus 2", "Coda"],
+    drums_from: 0,
+    about: "A candombe in D minor that keeps changing mode: the verse sits on D minor, \
+            G minor and A7, with a half-diminished B and then B flat before A7; the \
+            refrain turns to D major, and D7 leads through G minor and C7 to F, the \
+            relative major. The refrain's D major returns, and the ending's F, A7 and \
+            D minor bring back the minor key. Listen for the sixteenth-eighth-sixteenth \
+            syncopation on nearly every beat of the tune, the candombe drums' off-beat lilt.",
+};
