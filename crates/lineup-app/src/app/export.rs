@@ -24,7 +24,7 @@ use lineup_core::{pattern_to_midi, song_to_midi};
 use super::LineupApp;
 
 /// CD quality: 44 100 frames per second, in stereo.
-const EXPORT_SAMPLE_RATE: u32 = 44_100;
+pub(super) const EXPORT_SAMPLE_RATE: u32 = 44_100;
 const EXPORT_CHANNELS: usize = 2;
 
 /// How long the last notes are given to ring out after the song ends.
@@ -167,7 +167,19 @@ impl LineupApp {
 
     /// The whole song, ready to play into a file at `sample_rate`.
     pub(super) fn song_render(&mut self, sample_rate: u32) -> SongRender {
+        self.song_render_with(Renderer::new(sample_rate, EXPORT_CHANNELS))
+    }
+
+    /// The same, with a trace of every note it plays (see [`super::trace`]).
+    pub(super) fn song_render_traced(&mut self, sample_rate: u32) -> SongRender {
         let mut renderer = Renderer::new(sample_rate, EXPORT_CHANNELS);
+        renderer.trace();
+        self.song_render_with(renderer)
+    }
+
+    /// The whole song, ready for `renderer` to play from the start.
+    fn song_render_with(&mut self, mut renderer: Renderer) -> SongRender {
+        let sample_rate = renderer.sample_rate();
         for command in self.project_commands(sample_rate, 1.0) {
             renderer.send(command);
         }

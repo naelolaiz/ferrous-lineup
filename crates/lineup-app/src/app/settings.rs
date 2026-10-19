@@ -316,5 +316,28 @@ impl LineupApp {
                 );
             },
         );
+        card(
+            ui,
+            "Trace",
+            "Writes every note played to a text file, to check playback by reading it.",
+            |ui| {
+                let mut on = self.trace.is_some();
+                let can = matches!(self.audio, super::Audio::Running(_));
+                if ui
+                    .add_enabled(
+                        can,
+                        egui::Checkbox::new(&mut on, "Write a trace while playing"),
+                    )
+                    .changed()
+                {
+                    self.set_tracing(on);
+                }
+                let note = match &self.trace {
+                    Some(trace) => format!("Writing to {}", trace.path().display()),
+                    None => "Off each time the app starts.".to_string(),
+                };
+                ui.label(RichText::new(note).small().color(theme::TEXT_DIM));
+            },
+        );
     }
 }
