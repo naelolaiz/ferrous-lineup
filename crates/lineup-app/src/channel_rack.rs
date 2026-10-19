@@ -36,6 +36,9 @@ pub enum RackAction {
     },
     ToggleMute(usize),
     Remove(usize),
+    /// Delete or Backspace in the rack: removes the channel the user chose,
+    /// if they chose one (not the one the piano roll picked by itself).
+    RemoveChosen,
     OpenPianoRoll(usize),
     /// Show another pattern in the rack.
     SelectPattern(usize),
@@ -382,13 +385,13 @@ pub fn show(
     }
 
     if widgets::editor_keyboard(ui.ctx(), ui.layer_id())
-        && let Some(channel) = selected
+        && selected.is_some()
         && ui.input_mut(|input| {
             input.consume_key(egui::Modifiers::NONE, egui::Key::Delete)
                 || input.consume_key(egui::Modifiers::NONE, egui::Key::Backspace)
         })
     {
-        actions.push(RackAction::Remove(channel));
+        actions.push(RackAction::RemoveChosen);
     }
 
     // Highlight the row a dragged file would land on.

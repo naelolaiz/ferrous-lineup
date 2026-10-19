@@ -629,6 +629,11 @@ impl LineupApp {
                     }
                 });
             }
+            RackAction::RemoveChosen => {
+                if let Some(channel) = self.piano_roll.chosen_channel() {
+                    self.apply(RackAction::Remove(channel));
+                }
+            }
             RackAction::Remove(channel) => {
                 self.finish_recording();
                 self.release_all_keys();
@@ -1813,7 +1818,11 @@ impl eframe::App for LineupApp {
         let mut rack_open = self.rack_open;
         let pattern_name = &self.project.patterns()[self.pattern].name;
         if let Some(id) = self.bring_to_front.take() {
-            ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, id));
+            let layer = egui::LayerId::new(egui::Order::Middle, id);
+            ctx.move_to_top(layer);
+            // Its keys go with it: Delete after double-clicking a clip
+            // deletes notes in the piano roll, not clips in the playlist.
+            widgets::give_keyboard(&ctx, layer);
         }
         // The rack opens as big as its rows, up to the size of the
         // playlist; it can be resized, and scrolls when made smaller.

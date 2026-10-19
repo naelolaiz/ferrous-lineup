@@ -396,8 +396,15 @@ impl StyleEditor {
             .collect();
     }
     fn rack_action(&mut self, action: RackAction, events: &mut Vec<EditorEvent>) {
+        if action == RackAction::RemoveChosen {
+            if let Some(channel) = self.roll.chosen_channel() {
+                self.rack_action(RackAction::Remove(channel), events);
+            }
+            return;
+        }
         let project = &mut self.draft.project;
         match action {
+            RackAction::RemoveChosen => {}
             RackAction::SelectChannel(channel) => match channel {
                 Some(channel) => self.roll.select(channel),
                 None => self.roll.deselect_channel(),

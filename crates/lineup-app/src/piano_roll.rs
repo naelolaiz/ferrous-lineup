@@ -477,6 +477,12 @@ impl PianoRoll {
         self.channel_selected.then_some(self.channel)
     }
 
+    /// The selected channel, if the user chose it rather than the piano
+    /// roll picking the first one there was.
+    pub fn chosen_channel(&self) -> Option<usize> {
+        self.selected_channel().filter(|_| self.explicit_channel)
+    }
+
     pub fn reveal_step(&mut self, step: usize) {
         self.reveal = Some(step);
     }
