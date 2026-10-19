@@ -7,6 +7,8 @@ Files: [`crates/lineup-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-
 [`crates/lineup-core/src/library/chart.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/chart.rs),
 [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs),
 [`crates/lineup-core/src/library/song/balkan.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song/balkan.rs),
+[`crates/lineup-core/src/library/song/jazz.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song/jazz.rs),
+[`crates/lineup-core/src/library/song/folk.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song/folk.rs),
 [`crates/lineup-core/src/library/song/classical.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song/classical.rs)
 and [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs)
 
@@ -20,6 +22,16 @@ for the band to **play** them, and songs to hear them in:
 **Svatbarska rachenitsa** in 7/8; **Paidushko horo** in 5/8; **Daichovo horo** and
 **Entarisi ala benziyor** in 9/8; **Gankino horo** in 11/8; **Bučimiš** in 15/8; and
 Mussorgsky's **Promenade**, whose meter changes from bar to bar.
+
+A second round added more, with seven more rhythms and styles:
+the **Mission: Impossible theme** in 5/4; **Yerakina** and **Milo mou
+kokkino**, two Greek kalamatianos songs in 7/8; **Tsakonikos** in 5/8;
+two Romanian dances, **Geamparaua de la Murfatlar** in 7/8 and
+**Mândrele** in 5/4; three Turkish folk songs, **Sarı gelin** in 10/8,
+**İzmir'in kavakları** in 9/8 and **Çayeli'nden öteye** in 7/8;
+**Süsserl**, a Bavarian dance whose bars go from two beats to three and
+back; and Tchaikovsky's **waltz in five**, the second movement of his
+*Pathétique* Symphony.
 
 ## Trying it
 
@@ -50,10 +62,12 @@ and Turkey count their eighths in beats of **two and three mixed**:
 | Meter | Counted | Dance |
 |---|---|---|
 | 5/8 | 2 + 3, quick, slow | Bulgarian paidushko |
-| 7/8 | 3 + 2 + 2, slow, quick, quick | Greek kalamatianos, Macedonian lesnoto |
-| 7/8 | 2 + 2 + 3, quick, quick, slow | Bulgarian rachenitsa |
-| 9/8 | 2 + 2 + 2 + 3 | Bulgarian daichovo, Thracian karşılama |
+| 5/8 | 3 + 2, slow, quick | Greek tsakonikos |
+| 7/8 | 3 + 2 + 2, slow, quick, quick | Greek kalamatianos, Macedonian lesnoto, Turkish devr-i hindî |
+| 7/8 | 2 + 2 + 3, quick, quick, slow | Bulgarian rachenitsa, Romanian geampara |
+| 9/8 | 2 + 2 + 2 + 3 | Bulgarian daichovo, Thracian karşılama, Turkish aksak (the zeybek) |
 | 9/8 | 2 + 3 + 2 + 2 | Turkish raks aksağı |
+| 10/8 | 3 + 2 + 2 + 3 | Turkish curcuna |
 | 11/8 | 2 + 2 + 3 + 2 + 2 | Bulgarian kopanitsa (Gankino horo) |
 | 15/8 | 2 + 2 + 2 + 2 + 3 + 2 + 2 | Bulgarian bučimiš |
 
@@ -69,7 +83,32 @@ all follow the grouping.
 Jazz took the idea further in 1959, on the Dave Brubeck Quartet's
 album *Time Out*: **Take Five** is in 5/4, counted 3 + 2, and Brubeck
 wrote **Blue Rondo à la Turk** in a 9/8 he heard Turkish street
-musicians play.
+musicians play. Lalo Schifrin's **Mission: Impossible theme** (1966)
+is in 5/4 too, but it splits the bar's ten eighths **3 + 3 + 2 + 2**:
+long, long, short, short. The piano's ostinato says it, G, G, then B
+flat and C, and the new **Five-four spy** rhythm puts the bass drum
+and a high conga on each of those four starts.
+
+5/4 is not always 3 + 2. **Mândrele**, a Romanian dance, moves on the
+first three quarters of each bar and holds a half note on the last
+two, 3 + 2 like Take Five; **Tchaikovsky's waltz in five** goes the
+other way, **2 + 3**: a short beat cuts in before every waltz-like
+three, so the dance limps gracefully, always leaning into the long
+beat.
+
+### A waltz in five
+
+Tchaikovsky's Sixth Symphony (1893) has, for its second movement, a
+waltz with a beat missing, or rather one too many: five quarter notes
+to the bar, counted 1 2, 1 2 3. The demo plays the whole movement, with
+the tune passed from the cellos to the woodwinds, the violins and the
+oboe. The accompaniment marks only the two felt beats, 1 and 3. In
+the middle section, the trio, the
+key turns to B minor, but the double basses hold **D** from its first
+bar to its last: a **pedal point**, a bass note that does not move
+while the chords above it change, B minor over D, then the diminished
+seventh A sharp, C sharp, E, G over D. On a lead sheet that is written
+`Bm/D` and `A#°7/D`, and the chord sheet shows it that way.
 
 ### Meters that change from bar to bar
 
@@ -82,6 +121,17 @@ short beat here, only bars of different lengths. In the app each bar of such a
 part has its own time signature, the demo puts a **time marker**
 wherever it changes (look at the ruler), and the drums and the band
 follow every one.
+
+### Bars of two and bars of three
+
+A **zwiefacher** (from Bavaria and Austria) mixes bars of 2/4 and 3/4
+in an order the tune fixes. In a bar of three the couple dance a waltz
+step; in a bar of two they pivot, turning on two steps instead of three.
+**Süsserl** goes 2 2 3, 2 2 3, 2 2 3 3 in its first strain and 2 2 3 2 2 in
+its second, and the dancers know it by heart. The beat stays the same,
+only the bars change, so the band plays "oom-pa" in a bar of two and
+"oom-pa-pa" in a bar of three, and the ruler shows a time marker at every
+change, as in the Promenade.
 
 ### The modes of the Balkans and Turkey
 
@@ -101,7 +151,27 @@ piano's semitone.
 Turkish folk songs are sung and played in unison, over a drum. The
 chords of this demo are **added**: D minor where the tune runs between
 D and F, A major where it rests on C sharp and A, B flat major under
-its long B flats.
+its long B flats. **Çayeli'nden öteye**, from the Black Sea coast, and
+the Romanian **Geamparaua de la Murfatlar** use the same hicaz scale on A.
+
+Two more makams came with the Turkish songs. **Hüseyni**, in **Sarı
+gelin**, is A, B, C, D, E, F sharp, G: close to the **Dorian** mode, a
+minor scale with a major sixth, so its IV chord, D7, is major.
+**Segâh**, in **İzmir'in kavakları**, rests on B: B, C, D, E, F sharp,
+G, A, the **Phrygian** mode, with its flat second, C, right above the
+note it rests on. Its B and E are really a **comma** lower than a
+piano's, and the app plays the nearest keys.
+
+Notice something about those scales: B Phrygian has the same notes as
+**G major**, and hicaz on A the same notes as **D harmonic minor** (D,
+E, F, G, A, B flat, C sharp). A mode is a scale heard from another
+note. When the app's key finder listens to these songs it hears G
+major and D minor, because it knows major and minor keys, not makams:
+it finds the notes right and the note they rest on wrong.
+
+**Mândrele** is in C with F sharp, the **Lydian** mode, a major scale
+with its fourth raised; its F sharp rests on a D major chord (II), and
+later strains bring in a B flat, which turns C into C7.
 
 **Gankino horo** has another colour: D, E, F, G sharp, A, B, C, a minor
 scale with its fourth raised and a B natural, the Dorian mode with a
@@ -225,13 +295,70 @@ grouped the way the meter is felt (7/8: 2+2+3, a rachenitsa), then any.
 9/8 is not odd in this sense: written plainly it means three beats of
 three, so it does not get a daichovo.
 
+### Turkish usuls on the darbuka
+
+A Turkish rhythmic cycle, an **usul**, is spoken as low and high drum
+strokes: **düm** in the middle of the drum, **tek** at its rim. The
+new rhythms write them on the conga line, `l` for düm and `h` for
+tek, with the big drum doubling the düms:
+
+```rust
+rhythm(
+    "Devr-i hindi",
+    Balkan,
+    120.0,
+    &[
+        (Kick, "X..... X... ...."),
+        (Conga, "l.h.h. l... h..."),
+        (Shaker, "x.o.o. x.o. x.o."),
+    ],
+    "",
+    "The Turkish devr-i hindî, 7/8 counted 3 + 2 + 2: ...",
+)
+.in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+```
+
+Each character is a sixteenth-note step, so an eighth is two: düm,
+tek, tek on the three eighths of the long beat, then düm and tek on
+the two short ones.
+
+### Accents only
+
+`Comping::Accents` and `Bass::Accents` play one chord and one root on
+each felt beat, the first one loudest, and nothing in between. That is
+how the Tchaikovsky waltz is accompanied, in its 2 + 3:
+
+```rust
+Comping::Accents => {
+    let unit = time.unit_steps();
+    let mut at = 0;
+    let hits = time
+        .felt_groups()
+        .into_iter()
+        .enumerate()
+        .map(|(index, group)| {
+            let hit = hit!(at, unit, Voices::All, if index == 0 { 104 } else { 88 });
+            at += usize::from(group) * unit;
+            hit
+        })
+        .collect();
+    (time.steps_per_bar(), Cow::Owned(hits))
+}
+```
+
+`felt_groups()` gives `[2, 3]` for this 5/4, so the hits fall on the
+first quarter and the third.
+
 ### How the songs were written down
 
 Each song has a `// Source:` comment with the transcription its notes
 come from: ABC files of the folk-dance collections of John Chambers and
 Henrik Norbeck, Paul Desmond's alto saxophone part for Take Five, the
 Mutopia Project's LilyPond engraving of Pictures at an Exhibition, and
-the SymbTr corpus of Turkish makam music. Where a source has no chords,
+the SymbTr corpus of Turkish makam music, a Wikifonia lead sheet for
+the Mission: Impossible theme and the MCTL dataset's full score and
+harmony analysis of Tchaikovsky's symphony, where the notes win
+wherever the analysis disagrees with them. Where a source has no chords,
 the comment says the chords are a plain harmonization. Many Balkan dances are
 written in sixteenths (7/16, 11/16); here they are written in eighths,
 every note twice as long, which sounds the same at the tempo given.
@@ -239,9 +366,10 @@ every note twice as long, which sounds the same at the tempo given.
 ### Copyright
 
 The folk songs and dances are traditional, and Mussorgsky's music is long in the public domain. **Take Five** (Paul
-Desmond, 1959) is still under copyright everywhere; it is included at
-the owner's request, and a comment above it says so. Blue Rondo à la
-Turk was asked for too, but no written score of it could be reached.
+Desmond, 1959) and the **Mission: Impossible theme** (Lalo Schifrin,
+1966) are still under copyright; they are included at the owner's
+request, and a comment above each says so. Blue Rondo à la Turk was
+asked for too, but no written score of it could be reached.
 
 ## Exercises
 
@@ -255,7 +383,13 @@ Turk was asked for too, but no written score of it could be reached.
 3. Pick `5/8` in the Time list of a song in 4/4, with **Use matching
    style** ticked. Which rhythm does it get, and how does the Time list
    write the meter?
-4. Write a style of your own in `style.rs`: `Comping::Aksak` and
+4. Open the **Mission: Impossible theme** and clap the piano's
+   ostinato: long, long, short, short. Then open **Take Five**. Both
+   are in 5/4: where do their long beats fall?
+5. Open **Süsserl** and watch the ruler while it plays. Count the bars
+   of two and the bars of three in the first strain; do they match
+   2 2 3, 2 2 3, 2 2 3 3?
+6. Write a style of your own in `style.rs`: `Comping::Aksak` and
    `Bass::Aksak` in `TimeSignature::of_groups(&[3, 3, 2], 8)`, 8/8
    counted like a tresillo. Does `every_style_is_heard_as_its_chart`
    still pass?
