@@ -1,6 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["crates/lineup-core", "crates/lineup-audio", "crates/lineup-listen", "crates/lineup-app"]
+members = [
+    "crates/lineup-core",
+    "crates/lineup-audio",
+    "crates/lineup-listen",
+    "crates/lineup-video",
+    "crates/lineup-app",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -13,10 +19,14 @@ rust-version = "1.88"
 lineup-core = { path = "crates/lineup-core" }
 lineup-audio = { path = "crates/lineup-audio" }
 lineup-listen = { path = "crates/lineup-listen" }
+lineup-video = { path = "crates/lineup-video" }
 cpal = "0.18"
 rtrb = "0.4"
 hound = "3.5"
 eframe = { version = "0.37", features = ["persistence"] }
+# The fonts of the system, for letters egui's own fonts lack, as eframe
+# finds them for the window: a video's pictures need them too.
+egui_system_font_provider = "0.37"
 serde = { version = "1", features = ["derive"] }
 ron = "0.12"
 rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
@@ -30,8 +40,23 @@ pdf-writer = "0.15"
 ttf-parser = "0.25"
 # Only to download a SoundFont: HTTPS with the system's certificates.
 ureq = { version = "3.4", default-features = false, features = ["rustls", "platform-verifier"] }
+# Video export. egui's shapes, painted in memory: the same version eframe uses.
+epaint = { version = "0.37", default-features = false }
+# H.264 pictures and MP3 sound, both built from their C sources, so no
+# library has to be installed on any system.
+openh264 = "0.9"
+mp3lame-encoder = "0.2"
 
 # The SoundFont synthesizer works out every sample of every note. Built
 # without optimizations, it is too slow to play a band in a debug build.
 [profile.dev.package.rustysynth]
+opt-level = 3
+
+# The same for a video: every picture is painted pixel by pixel, then
+# compressed, thousands of times.
+[profile.dev.package.lineup-video]
+opt-level = 3
+[profile.dev.package.openh264-sys2]
+opt-level = 3
+[profile.dev.package.mp3lame-sys]
 opt-level = 3

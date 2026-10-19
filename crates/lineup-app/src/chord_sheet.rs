@@ -315,6 +315,18 @@ impl ChordSheet {
         actions
     }
 
+    /// Draws only the bars in `ui`, for a video: no window, no buttons.
+    /// `playing` is the step of the playlist's timeline that plays; the
+    /// sheet scrolls along with it.
+    pub fn video(&mut self, ui: &mut Ui, project: &Project, playing: Option<usize>) {
+        let mut actions = Vec::new();
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .show(ui, |ui| {
+                self.sheet(ui, project, playing, false, &mut actions)
+            });
+    }
+
     fn contents(
         &mut self,
         ui: &mut Ui,

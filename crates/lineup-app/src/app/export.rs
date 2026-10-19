@@ -4,14 +4,15 @@
 //! [`Renderer`], with its own copy of every instrument and note, so it
 //! cannot disturb what you hear. It runs on a thread of its own: a long
 //! song takes a few seconds to render, and the window keeps drawing (and
-//! the music keeps playing) meanwhile.
+//! the music keeps playing) meanwhile. A video ([`super::video`]) is made
+//! the same way, with pictures.
 //!
 //! A MIDI file holds only the notes, a few bytes each, so it is written
 //! at once.
 
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
@@ -29,19 +30,43 @@ const EXPORT_CHANNELS: usize = 2;
 /// How long the last notes are given to ring out after the song ends.
 const TAIL_SECONDS: f64 = 2.0;
 
+/// What an export thread says when it was asked to stop.
+pub(super) const CANCELLED: &str = "cancelled";
+
 /// An export that is running.
 pub(super) struct Export {
     path: PathBuf,
+    /// How much there is to do: frames of sound, or pictures.
     frames: usize,
-    /// How many frames are done. The export thread writes it and the UI
+    /// How many are done. The export thread writes it and the UI
     /// thread reads it; an atomic needs no lock for that.
     done: Arc<AtomicUsize>,
+    /// Set to ask the thread to stop, for exports that can be cancelled.
+    cancel: Option<Arc<AtomicBool>>,
     /// The thread doing the work. Joining it gives back what its closure
     /// returned: here, whether the file was written.
     worker: JoinHandle<Result<(), String>>,
 }
 
 impl Export {
+    /// An export of `frames` frames (or pictures) to `path`, which
+    /// `worker` is making, counting them in `done`.
+    pub(super) fn new(
+        path: PathBuf,
+        frames: usize,
+        done: Arc<AtomicUsize>,
+        cancel: Option<Arc<AtomicBool>>,
+        worker: JoinHandle<Result<(), String>>,
+    ) -> Self {
+        Export {
+            path,
+            frames,
+            done,
+            cancel,
+            worker,
+        }
+    }
+
     /// How far along the export is, from 0.0 to 1.0.
     pub(super) fn progress(&self) -> f32 {
         self.done.load(Ordering::Relaxed) as f32 / self.frames.max(1) as f32
@@ -51,6 +76,32 @@ impl Export {
     pub(super) fn file_name(&self) -> String {
         file_name(&self.path)
     }
+
+    /// Whether the export can be stopped halfway.
+    pub(super) fn can_cancel(&self) -> bool {
+        self.cancel.is_some()
+    }
+
+    /// Waits for the export to end, for tests.
+    #[cfg(test)]
+    pub(super) fn wait(self) -> Result<(), String> {
+        self.worker.join().expect("the export thread panicked")
+    }
+
+    /// Asks the export to stop. It removes what it wrote so far.
+    pub(super) fn cancel(&self) {
+        if let Some(cancel) = &self.cancel {
+            cancel.store(true, Ordering::Relaxed);
+        }
+    }
+}
+
+/// The song ready to play from the start, every repeat included, on an
+/// audio thread of its own; and how many frames to make: the song, then
+/// time for its last notes to ring out.
+pub(super) struct SongRender {
+    pub renderer: Renderer,
+    pub frames: usize,
 }
 
 /// What a MIDI export holds.
@@ -90,41 +141,10 @@ impl LineupApp {
             path.set_extension("wav");
         }
 
-        let mut renderer = Renderer::new(EXPORT_SAMPLE_RATE, EXPORT_CHANNELS);
-        for command in self.project_commands(EXPORT_SAMPLE_RATE, 1.0) {
-            renderer.send(command);
-        }
-
-        // The song loops when it reaches its end, so silent steps are
-        // added after it: enough for the tail, and one more, so the
-        // export ends before the song would start again.
-        // The whole song, every repeat included, even when song mode only
-        // loops part of it.
-        let song = self.project.arrangement();
-        let song_length = song.length;
-        // The silent steps play at the tempo the song ends at: the
-        // audio thread plays steps past the end of the tempo list at
-        // its last tempo.
-        let tempos = self.project.played_tempos(&song);
-        let end_tempo = tempos.last().copied().unwrap_or(self.project.tempo);
-        let step_frames = frames_per_step(end_tempo, EXPORT_SAMPLE_RATE);
-        let reverb = self.project.mixer.reverb;
-        let tail_seconds = if reverb.enabled {
-            TAIL_SECONDS + f64::from(reverb.decay + reverb.pre_delay_ms / 1000.0)
-        } else {
-            TAIL_SECONDS
-        };
-        let tail_frames = tail_seconds * f64::from(EXPORT_SAMPLE_RATE);
-        let silent_steps = (tail_frames / step_frames).ceil() as usize + 1;
-        let song_frames = self.project.played_seconds(&song) * f64::from(EXPORT_SAMPLE_RATE);
-        renderer.send(Command::SetSong {
-            plays: song.plays,
-            length: song_length + silent_steps,
-        });
-        renderer.send(Command::SetSongTempos(tempos));
-        renderer.send(Command::SetMode(PlayMode::Song));
-        renderer.send(Command::Play);
-        let frames = (song_frames + tail_frames) as usize;
+        let SongRender {
+            mut renderer,
+            frames,
+        } = self.song_render(EXPORT_SAMPLE_RATE);
 
         let done = Arc::new(AtomicUsize::new(0));
         // The thread gets its own `Arc` pointing to the same counter, and
@@ -140,14 +160,51 @@ impl LineupApp {
                 .map_err(|err| err.to_string())
             })
         };
-        self.export = Some(Export {
-            path,
-            frames,
-            done,
-            worker,
-        });
+        self.export = Some(Export::new(path, frames, done, None, worker));
         self.message = None;
         self.notice = None;
+    }
+
+    /// The whole song, ready to play into a file at `sample_rate`.
+    pub(super) fn song_render(&mut self, sample_rate: u32) -> SongRender {
+        let mut renderer = Renderer::new(sample_rate, EXPORT_CHANNELS);
+        for command in self.project_commands(sample_rate, 1.0) {
+            renderer.send(command);
+        }
+
+        // The song loops when it reaches its end, so silent steps are
+        // added after it: enough for the tail, and one more, so the
+        // export ends before the song would start again.
+        // The whole song, every repeat included, even when song mode only
+        // loops part of it.
+        let song = self.project.arrangement();
+        let song_length = song.length;
+        // The silent steps play at the tempo the song ends at: the
+        // audio thread plays steps past the end of the tempo list at
+        // its last tempo.
+        let tempos = self.project.played_tempos(&song);
+        let end_tempo = tempos.last().copied().unwrap_or(self.project.tempo);
+        let step_frames = frames_per_step(end_tempo, sample_rate);
+        let reverb = self.project.mixer.reverb;
+        let tail_seconds = if reverb.enabled {
+            TAIL_SECONDS + f64::from(reverb.decay + reverb.pre_delay_ms / 1000.0)
+        } else {
+            TAIL_SECONDS
+        };
+        let tail_frames = tail_seconds * f64::from(sample_rate);
+        let silent_steps = (tail_frames / step_frames).ceil() as usize + 1;
+        let song_frames = self.project.played_seconds(&song) * f64::from(sample_rate);
+        renderer.send(Command::SetSong {
+            plays: song.plays,
+            length: song_length + silent_steps,
+        });
+        renderer.send(Command::SetSongTempos(tempos));
+        renderer.send(Command::SetMode(PlayMode::Song));
+        renderer.send(Command::Play);
+        SongRender {
+            renderer,
+            frames: (song_frames + tail_frames) as usize,
+        }
     }
 
     /// Asks where to save, then writes the song or the selected pattern
@@ -198,6 +255,9 @@ impl LineupApp {
             let name = export.file_name();
             match export.worker.join() {
                 Ok(Ok(())) => self.notice = Some(format!("Exported {name}")),
+                Ok(Err(err)) if err == CANCELLED => {
+                    self.notice = Some(format!("Stopped exporting {name}"));
+                }
                 Ok(Err(err)) => self.message = Some(format!("Could not export {name}: {err}")),
                 // `join` fails only if the thread panicked.
                 Err(_) => self.message = Some(format!("Exporting {name} failed")),
