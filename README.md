@@ -66,9 +66,13 @@ song. Right-click a track's name to insert a track above or below it,
 move it up or down, or delete it. **F6** shows or hides
 the channel rack, where you click steps and drop WAV files to use your
 own sounds. Its **Play pattern**, **Pause pattern** and **Stop pattern**
-controls play the selected pattern directly; its pattern picker switches
-what is being edited. After clicking the rack or piano roll, **Space**
-plays or pauses that pattern. Click a channel name to select and hear it;
+controls play the selected pattern directly. While the song plays,
+**Play over the song** plays the pattern on top of it instead, from the
+next bar and in time with it, until you click it again: a way to try a
+pattern out with the rest of the song. The pattern picker switches what
+is being edited (and what plays over the song). After clicking the rack
+or piano roll, **Space** plays or pauses that pattern; while the song
+plays, it stops the song first. Click a channel name to select and hear it;
 click it again, click empty rack space, or press **Escape** to deselect.
 **Delete** or **Backspace** removes the selected rack channel; Undo restores it.
 Double-click its name to open its piano roll. An explicitly selected

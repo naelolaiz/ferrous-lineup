@@ -261,6 +261,14 @@ pub enum Command {
     PlayPhrase(Box<Phrase>),
     /// Let go of the phrase playing, and let it ring out.
     StopPhrase,
+    /// Play a pattern over the song as it plays, or stop it (`None`): to
+    /// try a pattern out with the song. It starts on the song's next bar
+    /// line and loops in time with it. Another pattern takes over on the
+    /// next bar line too, and after a jump (a seek, or the song going back
+    /// round to its start) it starts again from its top on the next one.
+    /// Only song mode plays it; [`Command::Stop`] and
+    /// [`Command::SetMode`] end it.
+    SetOverlay(Option<usize>),
 }
 
 /// Something the audio thread has finished with. It is sent back to the
@@ -322,6 +330,24 @@ fn load_position(position: &AtomicU64) -> Option<f64> {
     }
 }
 
+/// The pattern played over the song and the step of it, kept in one
+/// `AtomicU64` so they are always read together: the pattern in the high
+/// 32 bits, the step in the low ones, or [`NO_POSITION`] for none.
+fn store_overlay(overlay: &AtomicU64, playing: Option<(usize, usize)>) {
+    let bits = playing.map_or(NO_POSITION, |(pattern, step)| {
+        ((pattern as u64) << 32) | step as u64
+    });
+    overlay.store(bits, Ordering::Relaxed);
+}
+
+/// Reads what [`store_overlay`] stored.
+fn load_overlay(overlay: &AtomicU64) -> Option<(usize, usize)> {
+    match overlay.load(Ordering::Relaxed) {
+        NO_POSITION => None,
+        bits => Some(((bits >> 32) as usize, (bits & u64::from(u32::MAX)) as usize)),
+    }
+}
+
 /// The way in for keys played on a MIDI keyboard.
 ///
 /// It is the producer end of a ring buffer whose consumer is the audio
@@ -375,6 +401,7 @@ pub struct AudioEngine {
     trash: rtrb::Consumer<Garbage>,
     playhead: Arc<AtomicUsize>,
     position: Arc<AtomicU64>,
+    overlay: Arc<AtomicU64>,
     live_input: Option<LiveInput>,
     midi_output: Option<MidiOutput>,
     info: EngineInfo,
@@ -416,6 +443,7 @@ impl AudioEngine {
         );
         audio_thread.live_input = Some(live_consumer);
         audio_thread.midi_out = Some(midi_producer);
+        let overlay = Arc::clone(&audio_thread.overlay_playhead);
         let live_input = LiveInput {
             notes: live_producer,
             position: Arc::clone(&position),
@@ -440,6 +468,7 @@ impl AudioEngine {
             trash: trash_consumer,
             playhead,
             position,
+            overlay,
             live_input: Some(live_input),
             midi_output: Some(MidiOutput(midi_consumer)),
             info,
@@ -464,6 +493,12 @@ impl AudioEngine {
     /// Where playback is, in steps with a fraction, or `None` when stopped.
     pub fn position(&self) -> Option<f64> {
         load_position(&self.position)
+    }
+
+    /// The pattern playing over the song (see [`Command::SetOverlay`]) and
+    /// the step of it being played, or `None` while none is.
+    pub fn overlay(&self) -> Option<(usize, usize)> {
+        load_overlay(&self.overlay)
     }
 
     /// The way in for a MIDI keyboard. It can be taken once; after that
@@ -605,6 +640,22 @@ pub(crate) struct AudioThread {
     click: ClickVoice,
     /// A phrase playing apart from the song, if any.
     phrase: Option<Box<Phrase>>,
+    /// The pattern played over the song, if any.
+    overlay: Option<Overlay>,
+    /// What it is playing, for the UI (see [`store_overlay`]).
+    overlay_playhead: Arc<AtomicU64>,
+}
+
+/// A pattern played over the song (see [`Command::SetOverlay`]).
+#[derive(Debug, Clone, Copy, Default)]
+struct Overlay {
+    /// The pattern playing, and the step of it the next song step plays.
+    /// `None` until the bar line it starts on.
+    playing: Option<(usize, usize)>,
+    /// The pattern to play from the next bar line on, if it changes.
+    coming: Option<usize>,
+    /// The song step played last, to notice a jump.
+    last: Option<usize>,
 }
 
 /// A count-in under way: the bar it counts (where it starts in the
@@ -663,6 +714,8 @@ impl AudioThread {
             counter: Sequencer::new(Tempo::default(), sample_rate, STEPS_PER_BAR),
             click: ClickVoice::new(sample_rate),
             phrase: None,
+            overlay: None,
+            overlay_playhead: Arc::new(AtomicU64::new(NO_POSITION)),
         }
     }
 
@@ -713,8 +766,12 @@ impl AudioThread {
                     self.sequencer.start_at(step);
                 }
             }
-            Command::Stop => self.stop(),
+            Command::Stop => {
+                self.end_overlay();
+                self.stop();
+            }
             Command::SetMode(mode) => {
+                self.end_overlay();
                 self.mode = mode;
                 self.pending.clear();
                 self.update_loop_length();
@@ -759,6 +816,7 @@ impl AudioThread {
                         channel.notes.insert_empty(index);
                     }
                     self.update_loop_length();
+                    self.overlay_moved(|pattern| Some(pattern + usize::from(pattern >= index)));
                 }
             }
             Command::RemovePattern(pattern) => {
@@ -770,6 +828,12 @@ impl AudioThread {
                         }
                     }
                     self.update_loop_length();
+                    let removed = pattern;
+                    self.overlay_moved(|pattern| match pattern.cmp(&removed) {
+                        std::cmp::Ordering::Less => Some(pattern),
+                        std::cmp::Ordering::Equal => None,
+                        std::cmp::Ordering::Greater => Some(pattern - 1),
+                    });
                 }
             }
             Command::SetPatternLength { pattern, length } => {
@@ -880,6 +944,7 @@ impl AudioThread {
             Command::SetMetronome(on) => self.metronome = on,
             Command::SetCountIn(on) => self.count_in = on,
             Command::Clear => {
+                self.end_overlay();
                 self.stop();
                 self.reverb.clear();
                 self.start = 0;
@@ -911,7 +976,71 @@ impl AudioThread {
                     phrase.stop();
                 }
             }
+            Command::SetOverlay(Some(pattern)) => {
+                if self.mode == PlayMode::Song {
+                    let overlay = self.overlay.get_or_insert_default();
+                    let playing = overlay.playing.map(|(playing, _)| playing);
+                    overlay.coming = (playing != Some(pattern)).then_some(pattern);
+                }
+            }
+            Command::SetOverlay(None) => self.end_overlay(),
         }
+    }
+
+    /// Stops the pattern played over the song, and the notes it started.
+    fn end_overlay(&mut self) {
+        if self.overlay.take().is_none() {
+            return;
+        }
+        store_overlay(&self.overlay_playhead, None);
+        self.pending.retain(|note| !note.origin.over_song);
+        for channel in &mut self.channels {
+            channel
+                .instrument
+                .release_unless(|origin| !origin.over_song);
+        }
+    }
+
+    /// Keeps the pattern played over the song on the same pattern when
+    /// patterns are added or removed before it: `moved` gives a pattern's
+    /// new number, or `None` for the one removed, which stops it.
+    fn overlay_moved(&mut self, moved: impl Fn(usize) -> Option<usize>) {
+        let Some(overlay) = &mut self.overlay else {
+            return;
+        };
+        overlay.playing = overlay
+            .playing
+            .and_then(|(pattern, step)| Some((moved(pattern)?, step)));
+        overlay.coming = overlay.coming.and_then(&moved);
+        if overlay.playing.is_none() && overlay.coming.is_none() {
+            self.end_overlay();
+        }
+    }
+
+    /// Moves the pattern played over the song on to song step `step`, and
+    /// gives the pattern and the step of it to play there, if any.
+    fn overlay_step(&mut self, step: usize) -> Option<(usize, usize)> {
+        let bar_line = click_at(&self.song_clicks, step) == Click::Bar;
+        let overlay = self.overlay.as_mut()?;
+        // After a jump it waits for a bar line, to start again from its
+        // top in time with the bars.
+        if overlay.last.is_some_and(|last| step != last + 1)
+            && let Some((pattern, _)) = overlay.playing.take()
+        {
+            overlay.coming.get_or_insert(pattern);
+        }
+        overlay.last = Some(step);
+        if bar_line && let Some(pattern) = overlay.coming.take() {
+            overlay.playing = Some((pattern, 0));
+        }
+        let (pattern, at) = overlay.playing?;
+        let length = self.pattern_lengths.get(pattern).copied().unwrap_or(0);
+        if length == 0 {
+            return None;
+        }
+        let at = at % length;
+        overlay.playing = Some((pattern, at + 1));
+        Some((pattern, at))
     }
 
     /// Puts every volume at its target at once. Smoothing avoids clicks
@@ -949,6 +1078,9 @@ impl AudioThread {
         let plays = &self.plays;
         let lengths = &self.pattern_lengths;
         let still_played = |origin: Origin| {
+            if origin.over_song {
+                return true;
+            }
             let length = lengths.get(origin.pattern).copied().unwrap_or(0);
             plays.iter().any(|play| {
                 play.pattern == origin.pattern
@@ -1110,7 +1242,8 @@ impl AudioThread {
     /// mode, it is a step of the song, and each piece playing then is asked
     /// for the notes at its own step: a piece that started on song step 32
     /// plays its pattern's step 2 on song step 34, and step 2 again on
-    /// song step 50 if it repeats a 16-step pattern.
+    /// song step 50 if it repeats a 16-step pattern. The pattern played
+    /// over the song, if any, plays its own next step too.
     fn start_notes(&mut self, step: usize) {
         let timing = Timing {
             step_frames: self.sequencer.step_frames(),
@@ -1127,6 +1260,7 @@ impl AudioThread {
                         pattern: self.pattern,
                         pattern_step: step,
                         song_step: step,
+                        over_song: false,
                     },
                     length - step.min(length),
                     timing,
@@ -1148,12 +1282,30 @@ impl AudioThread {
                                 pattern: play.pattern,
                                 pattern_step: local_step,
                                 song_step: step,
+                                over_song: false,
                             },
                             room,
                             timing,
                             &mut self.pending,
                         );
                     }
+                }
+                let overlay = self.overlay_step(step);
+                store_overlay(&self.overlay_playhead, overlay);
+                if let Some((pattern, at)) = overlay {
+                    let length = self.pattern_length(pattern);
+                    start_pattern_notes(
+                        &mut self.channels,
+                        Origin {
+                            pattern,
+                            pattern_step: at,
+                            song_step: step,
+                            over_song: true,
+                        },
+                        length - at,
+                        timing,
+                        &mut self.pending,
+                    );
                 }
             }
         }
@@ -1749,6 +1901,197 @@ mod tests {
             h.playhead.load(Ordering::Relaxed),
             7,
             "step 39 is step 7 of the second time round"
+        );
+    }
+
+    /// Two patterns (see [`two_patterns`]) and a song of three silent
+    /// bars, playing: what plays is the pattern played over it.
+    fn silent_song() -> Harness {
+        let mut h = two_patterns();
+        send(
+            &mut h,
+            Command::SetSong {
+                plays: Vec::new(),
+                length: 48,
+            },
+        );
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        send(&mut h, Command::Play);
+        h
+    }
+
+    /// The onsets of `frames` more frames, counted from the song's start
+    /// when `before` frames have played already.
+    fn onsets_from(h: &mut Harness, before: usize, frames: usize) -> Vec<usize> {
+        onsets(&render(h, frames))
+            .into_iter()
+            .map(|frame| before + frame)
+            .collect()
+    }
+
+    #[test]
+    fn a_pattern_over_the_song_starts_on_the_next_bar_and_loops() {
+        let mut h = silent_song();
+        assert!(onsets(&render(&mut h, 3 * STEP)).is_empty());
+        send(&mut h, Command::SetOverlay(Some(1)));
+        // Pattern 1 plays its step 2 from bar 2 on: song steps 18 and 34.
+        assert_eq!(
+            onsets_from(&mut h, 3 * STEP, 17 * STEP),
+            vec![18 * STEP],
+            "nothing before the bar line"
+        );
+        assert_eq!(load_overlay(&h.audio.overlay_playhead), Some((1, 3)));
+        assert_eq!(onsets_from(&mut h, 20 * STEP, 16 * STEP), vec![34 * STEP]);
+        send(&mut h, Command::SetOverlay(None));
+        assert!(onsets(&render(&mut h, 16 * STEP)).is_empty());
+        assert_eq!(load_overlay(&h.audio.overlay_playhead), None);
+    }
+
+    /// The metronome's clicks for `steps` steps of 3/4: bars of 12 steps.
+    fn three_four(steps: usize) -> Vec<Click> {
+        (0..steps)
+            .map(|step| match step % 12 {
+                0 => Click::Bar,
+                beat if beat % 4 == 0 => Click::Beat,
+                _ => Click::None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_pattern_over_the_song_follows_its_bars() {
+        let mut h = silent_song();
+        send(&mut h, Command::SetSongClicks(three_four(48)));
+        render(&mut h, STEP);
+        send(&mut h, Command::SetOverlay(Some(1)));
+        assert_eq!(onsets_from(&mut h, STEP, 20 * STEP), vec![14 * STEP]);
+    }
+
+    #[test]
+    fn another_pattern_over_the_song_waits_for_the_bar_line() {
+        let mut h = silent_song();
+        send(&mut h, Command::SetOverlay(Some(1)));
+        render(&mut h, 20 * STEP);
+        send(&mut h, Command::SetOverlay(Some(0)));
+        // Pattern 1 goes on to the end of bar 2 (its step 2 is already
+        // past), then pattern 0 plays its step 0 on bar 3.
+        assert_eq!(onsets_from(&mut h, 20 * STEP, 20 * STEP), vec![32 * STEP]);
+        // Asking for the pattern already playing changes nothing.
+        send(&mut h, Command::SetOverlay(Some(0)));
+        assert!(onsets(&render(&mut h, 8 * STEP)).is_empty());
+        assert_eq!(onsets_from(&mut h, 48 * STEP, STEP), vec![48 * STEP]);
+    }
+
+    #[test]
+    fn a_pattern_over_the_song_starts_again_after_a_jump() {
+        let mut h = silent_song();
+        send(&mut h, Command::SetOverlay(Some(1)));
+        render(&mut h, 20 * STEP);
+        // Back to step 5: it waits for bar 2 to start from its top.
+        send(&mut h, Command::Seek(5));
+        assert_eq!(onsets_from(&mut h, 5 * STEP, 16 * STEP), vec![18 * STEP]);
+    }
+
+    #[test]
+    fn a_pattern_over_the_song_starts_again_when_the_song_does() {
+        let mut h = silent_song();
+        send(&mut h, Command::SetSongClicks(three_four(48)));
+        render(&mut h, STEP);
+        send(&mut h, Command::SetOverlay(Some(1)));
+        // From bar 2 (step 12) its step 2 plays on steps 14, 30 and 46.
+        // Then the song goes back round from step 47 to step 0, where it
+        // starts again from its top instead of going on from its step 4.
+        assert_eq!(
+            onsets_from(&mut h, STEP, 51 * STEP),
+            vec![14 * STEP, 30 * STEP, 46 * STEP, 50 * STEP]
+        );
+    }
+
+    #[test]
+    fn a_pattern_over_the_song_keeps_to_its_pattern_as_patterns_move() {
+        let mut h = silent_song();
+        send(&mut h, Command::SetOverlay(Some(1)));
+        render(&mut h, 17 * STEP);
+        // A pattern added before it: pattern 1 becomes pattern 2.
+        send(
+            &mut h,
+            Command::InsertPattern {
+                index: 0,
+                length: 16,
+            },
+        );
+        assert_eq!(onsets_from(&mut h, 17 * STEP, 2 * STEP), vec![18 * STEP]);
+        assert_eq!(load_overlay(&h.audio.overlay_playhead), Some((2, 2)));
+        // Removing it ends it.
+        send(&mut h, Command::RemovePattern(2));
+        assert!(onsets(&render(&mut h, 20 * STEP)).is_empty());
+        assert_eq!(load_overlay(&h.audio.overlay_playhead), None);
+    }
+
+    #[test]
+    fn a_pattern_over_the_song_sounds_as_its_clips_there_would() {
+        // A bass note in each bar of the song, and a melody in pattern 1,
+        // with loose timing on and a last note cut at the pattern's end.
+        let song = |over_song: bool| {
+            let mut h = harness();
+            send(
+                &mut h,
+                Command::InsertPattern {
+                    index: 1,
+                    length: 16,
+                },
+            );
+            send(&mut h, Command::SetLooseTiming(20));
+            let melody = [(60, 2, 3), (64, 6, 2), (67, 12, 6)]
+                .map(|(midi, start, length)| NoteEvent::new(Note::new(midi), start, length));
+            send(
+                &mut h,
+                Command::InsertChannel {
+                    index: AT_END,
+                    instrument: Instrument::Synth(Synth::new(RATE)),
+                    notes: ChannelNotes::new([
+                        vec![NoteEvent::new(Note::new(40), 0, 8)],
+                        melody.to_vec(),
+                    ]),
+                    volume: 1.0,
+                    muted: false,
+                },
+            );
+            let mut plays = vec![whole(0, 0), whole(0, 16), whole(0, 32)];
+            if !over_song {
+                plays.extend([whole(1, 16), whole(1, 32)]);
+            }
+            send(&mut h, Command::SetSong { plays, length: 48 });
+            send(&mut h, Command::SetMode(PlayMode::Song));
+            send(&mut h, Command::Play);
+            let mut out = render(&mut h, 3 * STEP);
+            if over_song {
+                send(&mut h, Command::SetOverlay(Some(1)));
+            }
+            out.extend(render(&mut h, 45 * STEP));
+            out
+        };
+        let clips = song(false);
+        assert!(clips[16 * STEP..].iter().any(|&sample| sample != 0.0));
+        assert!(song(true) == clips, "the same samples, from bar 2 on");
+    }
+
+    #[test]
+    fn only_a_playing_song_plays_a_pattern_over_it() {
+        let mut h = two_patterns();
+        send(&mut h, Command::SetOverlay(Some(1)));
+        send(&mut h, Command::Play);
+        // Pattern mode loops pattern 0 alone.
+        assert_eq!(onsets(&render(&mut h, 20 * STEP)), vec![0, 16 * STEP]);
+
+        let mut h = silent_song();
+        send(&mut h, Command::SetOverlay(Some(1)));
+        render(&mut h, 20 * STEP);
+        send(&mut h, Command::Stop);
+        send(&mut h, Command::Play);
+        assert!(
+            onsets(&render(&mut h, 40 * STEP)).is_empty(),
+            "Stop ends it"
         );
     }
 
