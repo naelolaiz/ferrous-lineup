@@ -236,14 +236,18 @@ impl LineupApp {
     }
 
     /// After undo or redo, shows the style and rhythm this version of the
-    /// project plays, if the library changed it.
+    /// project plays, if the library changed it. A version made by any
+    /// other edit plays what the version it was made from played, which
+    /// is what the library shows already.
     pub(super) fn restore_song_library(&mut self) {
-        self.song_library = self
+        if let Some((_, tried)) = self
             .song_versions
             .iter()
             .rev()
             .find(|(version, _)| *version == self.project)
-            .map_or_else(Tried::default, |(_, tried)| *tried);
+        {
+            self.song_library = *tried;
+        }
     }
 
     /// What the library wrote in the selected pattern, if it is still
@@ -791,6 +795,7 @@ impl LineupApp {
         self.replace_project(demo.project(), None);
         self.file.open_demo(demo);
         self.song_library = demo.library();
+        self.remember_song_version(self.project.clone(), self.song_library);
         self.set_mode(PlayMode::Song);
         self.set_playing(true);
     }
