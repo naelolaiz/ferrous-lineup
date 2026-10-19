@@ -1,7 +1,7 @@
 //! One mixer for every internal instrument and the master reverb.
 
 use eframe::egui::{self, Rect};
-use lineup_core::{ChannelKind, Mixer, general_midi};
+use lineup_core::{ChannelKind, general_midi};
 
 use super::LineupApp;
 
@@ -25,15 +25,15 @@ impl LineupApp {
                     if ui
                         .button("Reset mix")
                         .on_hover_text(
-                            "Reset master, reverb, channel levels and mutes; Undo restores them",
+                            "Reset master, reverb, solo, levels and mutes (the band's mutes stay); \
+                             Undo restores them",
                         )
                         .clicked()
                     {
-                        mix = Mixer::default();
-                        for channel in &mut levels {
-                            channel.volume = 0.8;
-                            channel.muted = false;
-                        }
+                        let mut reset = self.project.clone();
+                        reset.reset_mix();
+                        mix = reset.mixer;
+                        levels = reset.channels().to_vec();
                     }
                 });
                 ui.separator();

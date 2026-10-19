@@ -170,7 +170,7 @@ const STEP_ON: Color32 = Color32::from_rgb(222, 228, 232);
 /// The dark edge along the bottom of a step, so it looks like a raised pad.
 const STEP_EDGE: Color32 = Color32::from_rgb(26, 30, 33);
 const PLAYHEAD: Color32 = Color32::from_rgb(246, 150, 58);
-const LED_ON: Color32 = Color32::from_rgb(96, 220, 120);
+pub const LED_ON: Color32 = Color32::from_rgb(96, 220, 120);
 const LED_OFF: Color32 = Color32::from_rgb(70, 74, 80);
 const MINI_ROLL_BACKGROUND: Color32 = Color32::from_rgb(40, 54, 48);
 const MINI_ROLL_LINE: Color32 = Color32::from_rgb(64, 74, 68);

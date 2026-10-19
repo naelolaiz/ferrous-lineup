@@ -54,8 +54,9 @@ pub fn is_midi_file(path: &std::path::Path) -> bool {
 }
 
 /// The whole song, as the playlist plays it: every clip on a track that
-/// is not muted, every channel that is not muted, with every repeat of
-/// clips and sections written out.
+/// is not muted, every channel that is heard (not muted, and not silenced
+/// by another's solo), with every repeat of clips and sections written
+/// out.
 pub fn song_to_midi(project: &Project) -> Vec<u8> {
     let song = project.arrangement();
     let meter = project.played_meter(&song);
@@ -116,7 +117,8 @@ fn write_file(
 
     let mut tracks = vec![tempo_track(project, meter, keys, tempos, end)];
     for (index, channel) in project.channels().iter().enumerate() {
-        if channel.muted {
+        // As playback: a muted channel, or every other while one is solo.
+        if project.channel_muted(index) {
             continue;
         }
         let events = channel_events(project, index, midi_channels[index], placed);
@@ -711,7 +713,13 @@ mod tests {
             .collect();
         assert_eq!(starts, [0, 32 * 24]);
 
-        // A muted channel is left out, as it is when the song plays.
+        // A muted channel is left out, as it is when the song plays, and
+        // so is every other while one plays solo.
+        let tracks = read(&song_to_midi(&project)).len();
+        project.mixer.solo = Some(0);
+        assert_eq!(read(&song_to_midi(&project)).len(), 2);
+        project.mixer.solo = None;
+        assert_eq!(read(&song_to_midi(&project)).len(), tracks);
         project.channel_mut(1).unwrap().muted = true;
         assert_eq!(read(&song_to_midi(&project)).len(), 2);
     }

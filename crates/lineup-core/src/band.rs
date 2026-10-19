@@ -650,13 +650,18 @@ impl Fingerprint {
     }
 }
 
-/// The volumes of the band's channels: the bass under the melody, the
-/// piano and the guitar further back, and pads behind them all.
-const PIANO_VOLUME: f32 = 0.45;
-const BASS_VOLUME: f32 = 0.7;
-const GUITAR_VOLUME: f32 = 0.4;
-const PAD_VOLUME: f32 = 0.3;
-const SOLO_VOLUME: f32 = 0.6;
+/// How loud a band player's channel starts: the bass under the melody,
+/// the piano and the guitar further back, and pads behind them all.
+fn player_volume(player: Player) -> f32 {
+    match player {
+        Player::Piano => 0.45,
+        Player::Bass => 0.7,
+        Player::Guitar => 0.4,
+        Player::Strings | Player::Organ => 0.3,
+        Player::Soloist => 0.6,
+        Player::Drums => Channel::drum(Drum::Kick).volume,
+    }
+}
 
 /// How far above the piano's voicing the strings play: an octave.
 const STRINGS_OCTAVE: i32 = 12;
@@ -1413,6 +1418,31 @@ impl Project {
 
     // ----- Writing the parts -----
 
+    /// Puts the mix back as it starts: the master level, the reverb and no
+    /// solo, each channel as loud as a new one of its kind (a band
+    /// player's as the band sets it), and nothing muted but the song's own
+    /// parts the band plays instead.
+    pub fn reset_mix(&mut self) {
+        self.mixer = crate::Mixer::default();
+        let band = self.band.as_ref();
+        for (index, channel) in self.channels.iter_mut().enumerate() {
+            let player = band.and_then(|band| {
+                Player::ALL
+                    .into_iter()
+                    .find(|&player| band.channel(player) == Some(index))
+            });
+            let named = [KEYS, BASS, apply::LEAD].contains(&channel.name.as_str())
+                || channel.name.starts_with("Voice ");
+            channel.volume = match (player, &channel.kind) {
+                (Some(player), _) => player_volume(player),
+                (None, ChannelKind::Synth) if named => apply::synth_volume(&channel.name),
+                (None, ChannelKind::Synth) => Channel::synth().volume,
+                (None, _) => Channel::drum(Drum::Kick).volume,
+            };
+            channel.muted = band.is_some_and(|band| band.muted().channels.contains(&channel.name));
+        }
+    }
+
     /// Makes sure the band has its channels: the piano and the bass, the
     /// guitar, strings and organ its style adds (each in the instrument
     /// of its style), and the drums its rhythm plays.
@@ -1425,24 +1455,20 @@ impl Project {
         let mut channels = band.channels;
         for player in Player::ALL {
             let sound = match player {
-                Player::Piano => Some((KEYS, PIANO_VOLUME, style.piano_program())),
-                Player::Bass => Some((BASS, BASS_VOLUME, style.bass_program())),
+                Player::Piano => Some((KEYS, style.piano_program())),
+                Player::Bass => Some((BASS, style.bass_program())),
                 Player::Drums => None,
-                Player::Guitar => extras
-                    .guitar
-                    .map(|guitar| (player.name(), GUITAR_VOLUME, guitar.program)),
+                Player::Guitar => extras.guitar.map(|guitar| (player.name(), guitar.program)),
                 Player::Strings => extras
                     .strings
-                    .map(|strings| (player.name(), PAD_VOLUME, strings.program)),
-                Player::Organ => extras
-                    .organ
-                    .map(|organ| (player.name(), PAD_VOLUME, organ.program)),
-                Player::Soloist => band.solo.map(|_| {
-                    let soloist = Soloist::of(style.genre);
-                    (player.name(), SOLO_VOLUME, soloist.program)
-                }),
+                    .map(|strings| (player.name(), strings.program)),
+                Player::Organ => extras.organ.map(|organ| (player.name(), organ.program)),
+                Player::Soloist => band
+                    .solo
+                    .map(|_| (player.name(), Soloist::of(style.genre).program)),
             };
-            if let Some((other, volume, program)) = sound {
+            if let Some((other, program)) = sound {
+                let volume = player_volume(player);
                 channels[player.index()] = self.band_channel(
                     band.channel(player),
                     player.name(),
