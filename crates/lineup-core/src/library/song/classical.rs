@@ -1887,3 +1887,155 @@ pub(super) const PATHETIQUE_WALTZ: Song = Song {
             flat major chords, before the music breaks off into fragments, the violins alone, \
             a clarinet, and two last chords of D major.",
 };
+
+// Source: IMSLP 422976 (Parera, arranged for strings by Jeff Manookian, Windsor Editions, 2016); only the tune and its harmony are taken.
+// The tune is the line the voice sings, in the singer's octave: the first violins, an octave
+// lower where they double it above. In the instrumental bars it is the first violins' top
+// line (an octave lower in bars 53-60, where it would pass C6), except bar 54, where it is
+// the second violins' run (the top line of Esnaola's piano part) while the firsts hold D.
+// The harmony is read from the four lower string parts. All 77 bars, in the score's order,
+// with its metronome marks and fermatas; its triplets (bars 9-10 and 12-19) are exact.
+// Cross-checked with a voice-and-piano edition engraved by Héctor M. Monacci (2001).
+// PD: music by Blas Parera (d. 1840), words by Vicente López y Planes (d. 1856), arrangement Esnaola (d. 1878).
+pub(super) const HIMNO_NACIONAL_ARGENTINO: Song = Song {
+    name: "Himno Nacional Argentino",
+    origin: "Blas Parera, 1813; arranged by Juan Pedro Esnaola, 1860",
+    feel: "Anthem",
+    genre: Genre::Classical,
+    tonic: ASharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 76.0,
+    comping: Comping::Held,
+    bass: Bass::Held,
+    rhythm: "",
+    band: STRING_ORCHESTRA,
+    style: "Classical cadence",
+    parts: &[
+        // Bars 1-11, ♩ = 76; a fermata on the rest that ends bar 11.
+        Part::new(
+            "Intro",
+            "!f Bb4:8 D5:7 Bb4:1 | F5:10 -:2 Eb5:3 C5:1 | A4:4 A4 A4 A4 | A4:6 Bb4:1 C5:1 Bb4:4 -:4 | \
+             -:4 !p D5:4 G5:4 F5:4 | E5:4 Eb5:4 C5:4 F5:4 | D5:4 Bb4 Eb5 D5 | C5:4 -:4 !mf Eb5:4 D5:4 | \
+             C5:4 !p (3 -:2 F4:2 G4:2 (3 A4:2 Bb4:2 C5:2 (3 D5:2 Eb5:2 F5:2 | \
+             F5:3 Eb5:1 (3 C5:2 C5:2 D5:2 F5:3 Eb5:1 !mf (3 C5:2 C5:2 D5:2 | F5:6 E5:2 Eb5:4 -:4",
+            "I | V7 | V7 | V7 V7 I I... | I I vi VI7 | II V7 V V | I I V7 I | V V... V7 I | V V V7 I | V7 | \
+             I I V7 V7...",
+        )
+        .with_tempo(&[fermata(172, 4)]),
+        // Bars 12-24, ♩ = 116: the march, in triplet eighths, from bar 16 over a tonic
+        // pedal; a fermata on the half note that starts bar 24, then "Oíd" comes in.
+        Part::new(
+            "March",
+            "!p (3 D4:2 C4:2 Bb3:2 (3 Bb3:2 Bb3:2 Bb3:2 (3 Bb3:2 Bb3:2 Bb3:2 (3 Bb3:2 Bb3:2 Bb3:2 | \
+             Bb3:4 !f D5:3 D5:1 F5:3 F5:1 D5:3 D5:1 | \
+             !p (3 Eb4:2 D4:2 C4:2 (3 C4:2 C4:2 C4:2 (3 C4:2 C4:2 C4:2 (3 C4:2 C4:2 C4:2 | \
+             C4:4 !f C5:3 C5:1 Eb5:3 Eb5:1 C5:3 C5:1 | \
+             !p (3 D4:2 C4:2 Bb3:2 (3 Bb3:2 Bb3:2 Bb3:2 (3 D4:2 C4:2 Bb3:2 (3 Bb3:2 Bb3:2 Bb3:2 | \
+             (3 Eb4:2 D4:2 C4:2 (3 C4:2 C4:2 C4:2 !< (3 Eb4:2 D4:2 C4:2 (3 C4:2 C4:2 C4:2 | \
+             (3 F4:2 Eb4:2 D4:2 (3 D4:2 D4:2 D4:2 (3 F4:2 Eb4:2 D4:2 (3 D4:2 D4:2 D4:2 | \
+             (3 G4:2 F4:2 Eb4:2 (3 Eb4:2 Eb4:2 Eb4:2 (3 A4:2 G4:2 F4:2 (3 F4:2 F4:2 F4:2 | \
+             !f Bb4:4 -:6 F5:2. F5:1 Eb5:1 C5:1 A4:1 | Bb4:4 -:6 F5:2. F5:1 Eb5:1 C5:1 A4:1 | \
+             Bb4:4 -:2 >D5:2 >Bb4:2 >D5:2 >Bb4:2 >D5:2 | >Bb4:8 >Bb3:6 >Bb3:2 | >Bb3:8 -:2 !mf F4:2 G4:2 A4:2",
+            "I | I | V7 | V7 | I | V7 | I7 | IV V7 | I V7 | I V7 | I | I | I I I... V7",
+        )
+        .with_tempo(&[tempo(0, 116), fermata(192, 8)]),
+        // Bars 25-32, ♩ = 76: "Oíd, mortales" ... "ved en trono a la noble igualdad",
+        // then the strings' fanfare climbs into the minor.
+        Part::new(
+            "Verse",
+            "!mf Bb4:4 Bb4:3 D5:1 C5:2 Bb4:2 A4:3 G4:1 | F4:6 D4:2 Bb3:2 -:2 D4:3 F4:1 | \
+             Eb4:4 Eb4:3 G4:1 F4:4 G4:3 A4:1 | Bb4:10 -:2 Bb3:3 C4:1 | \
+             D4:4 D4:3 Bb3:1 D4:2 F4:2 E4:3 G4:1 | G4:4 F4:4 -:4 F4:3 A4:1 | \
+             G4:4 G4:3 Bb4:1 E4:4 E4:3 G4:1 | F4:4 F4:4 !ff F4:2 F5:2 G5:2 A5:2",
+            "I | I | ii ii V7 ii | I | I I I II7 | V | vi II | V",
+        )
+        .with_tempo(&[tempo(0, 76)]),
+        // Bars 33-44, in B flat minor: the strings' fanfare (bar 33), "Ya su trono
+        // dignísimo abrieron las Provincias Unidas del Sud", a half cadence through a
+        // German sixth (bar 37) to F, then "Y los libres del mundo responden" over an F
+        // pedal, back to F for the major.
+        Part::new(
+            "Verse minor",
+            "!ff Bb5:4 F5:3 F5:1 Gb5:2 F5:2 Eb5:2 Db5:2 | Db5:8 C5:2 !p F4:2 G4:2 A4:2 | \
+             Bb4:4 F4:3 F4:1 Gb4:2 F4:2 Eb4:3 Db4:1 | Db4:8 C4:2 -:2 !f F4:3 F4:1 | \
+             !< Bb4:4 C5:3 C5:1 Db5:4 E5:3 E5:1 | !ff F5:10 -:2 !p F4:3 F4:1 | \
+             Bb4:4 Bb4:3 Bb4:1 C5:4 C5:3 C5:1 | Db5:4 Bb4:4 -:4 F4:3 F4:1 | \
+             Bb4:4 Bb4:3 Bb4:1 C5:4 C5:3 C5:1 | Db5:4 Bb4:4 -:4 Bb4:3 Db5:1 | \
+             Db5:2 C5:2 C5:2 Bb4:2 C5:2 Bb4:2 A4:2 Bb4:2 | F4:10 !p F4:2 G4:2 A4:2",
+            "i i i iv | #iv°7 #iv°7 V V7 | i i i iv | #iv°7 #iv°7 V V | i V i bVI7 | V V V V... | \
+             i V7 | i V7 | i V7 | i | i i i #iv°7 | V V V V7",
+        )
+        .in_key(ASharp, HarmonicMinor),
+        // Bars 45-52: "Y los libres del mundo responden: ¡Al gran pueblo argentino,
+        // salud!" twice, back in B flat major, each ending on a cadential six-four.
+        Part::new(
+            "Verse end",
+            "!p Bb4:4 Bb4:3 A4:1 G4:2 F4:2 Eb4:2 D4:2 | F4:4 Eb4:2 -:2 !f -:4 !p Eb4:3 G4:1 | \
+             F4:2 Bb4:2 D4:2 F4:2 F4:3 Eb4:1 D4:2 C4:2 | D4:10 F4:2 G4:2 A4:2 | \
+             Bb4:4 Bb4:3 A4:1 G4:2 F4:2 Eb4:2 D4:2 | F4:4 Eb4:2 -:2 !f -:4 Eb4:3 G4:1 | \
+             F4:2 Bb4:2 D5:2 F5:2 F5:3 Eb5:1 D5:2 C5:2 | Bb4:10 -:2 !ff F5:3 D5:1",
+            "I I I V7 | VI7 ii ii. ii... | I I I V | I I I V7 | I I I V7 | VI7 ii ii. ii... | I I I V7 | I",
+        ),
+        // Bars 53-57, ♩ = 92: the strings alone, to a held B flat.
+        Part::new(
+            "Interlude",
+            "!ff C5:6 D5:2 Eb5:2 D5:2 Eb5:2 C5:2 | \
+             D5:1 Bb4:1 C5:1 D5:1 Eb5:1 F5:1 G5:1 A5:1 Bb5:1 A5:1 G5:1 F5:1 F5:3 D5:1 | \
+             C5:6 D5:2 Eb5:2 D5:2 Eb5:2 C5:2 | Bb4:4 -:4 Bb3:4 -:4 | Bb3:16",
+            "V V V7 V7 | I | V V V7 V7 | I I... I I... | I..",
+        )
+        .with_tempo(&[tempo(0, 92), fermata(64, 16)]),
+        // Bars 58-65, ♩ = 132: three bars of the strings alone, then the chorus, "Sean
+        // eternos los laureles que supimos conseguir".
+        Part::new(
+            "Chorus",
+            "!f Bb3:4 Bb3:1 A3:1 Bb3:1 A3:1 Bb3:1 A3:1 Bb3:1 A3:1 Bb3:1 C4:1 D4:1 Eb4:1 | \
+             >F4:4 F4:1 E4:1 F4:1 E4:1 F4:1 E4:1 F4:1 E4:1 F4:1 G4:1 A4:1 F4:1 | \
+             >Bb4:4 Bb4:1 A4:1 Bb4:1 C5:1 D5:2 D5:1 Eb5:1 C5:2 C5:1 D5:1 | \
+             Bb4:2 -:2 >Bb3:2 -:2 >Bb3:2 -:2 !ff F4:3 F4:1 | Bb4:4 F4:4 D4:4 F4:4 | \
+             Bb4:10 -:2 F4:3 F4:1 | Bb4:4 F4:4 D4:4 F4:4 | Bb4:10 -:2 !f Bb4:3 D5:1",
+            "I | V | I I I V7 | I. I. I. V | I | I | I | I",
+        )
+        .with_tempo(&[tempo(0, 132)]),
+        // Bars 66-77: "que supimos conseguir" again broadens (♩ = 76, a fermata), then
+        // "Coronados de gloria vivamos" (♩ = 60, a fermata on the C of bar 69), then
+        // ♩ = 132 for "O juremos con gloria morir" three times, to the held last chord.
+        Part::new(
+            "Chorus end",
+            "!f C5:4 Bb4:4 A4:4 G4:4 | F4:12 !p Bb4:3 A4:1 | A4:4 G4:3 F4:1 F4:2 Eb4:2 Eb4:3 D4:1 | \
+             D4:3 F4:1 E4:1 F4:1 G4:1 F4:1 C4:2 !f F4:2 G4:2 A4:2 | \
+             Bb4:4 Bb4:2 Bb4:2 A4:4 A4:2 A4:2 | Bb4:4 -:4 Eb5:6 Eb5:2 | \
+             Eb5:2 D5:2 C5:2 Bb4:2 F4:4 A4:2 A4:2 | Bb4:4 -:4 Eb5:6 Eb5:2 | \
+             Eb5:2 D5:2 C5:2 Bb4:2 F4:4 A4:2 A4:2 | Bb4:4 -:2 >D5:2 >Bb4:2 >D5:2 >Bb4:2 >D5:2 | \
+             >Bb4:8 >Bb4:6 >Bb4:2 | >Bb4:16",
+            "V I V II | V | Imaj7 IV I V7 | I I V V | I V7 | I I... IV IV | IV I V V7 | I I... IV IV | \
+             IV I V V7 | I | I | I..",
+        )
+        .with_tempo(&[
+            tempo(0, 76),
+            fermata(16, 12),
+            tempo(32, 60),
+            fermata(56, 2),
+            tempo(64, 132),
+            fermata(176, 16),
+        ]),
+    ],
+    form: &[
+        "Intro",
+        "March",
+        "Verse",
+        "Verse minor",
+        "Verse end",
+        "Interlude",
+        "Chorus",
+        "Chorus end",
+    ],
+    drums_from: 0,
+    about: "The anthem as the strings play it, in B flat major: a slow introduction, then \
+            a march in triplets that settles over a held B flat, and the verse, which turns \
+            to B flat minor and reaches F through diminished sevenths and a German sixth \
+            before coming back to the major. The chorus is much faster, broadens for \
+            \"Coronados de gloria vivamos\", and ends with \"O juremos con gloria morir\" \
+            three times, the last two going from IV to V.",
+};
