@@ -275,6 +275,53 @@ mod tests {
     }
 
     #[test]
+    fn a_locked_player_still_follows_once_a_channel_before_it_goes() {
+        // A band whose guitar plays on a channel before another player's,
+        // and a style without the guitar but with that player: changing
+        // to it takes the guitar's channel away.
+        let common = crate::TimeSignature::COMMON;
+        let styles = crate::band_styles();
+        let (from, to, player) = styles
+            .iter()
+            .filter(|style| style.time == common && style.players().contains(&Player::Guitar))
+            .find_map(|from| {
+                let later = [Player::Strings, Player::Organ]
+                    .into_iter()
+                    .filter(|player| from.players().contains(player));
+                later.into_iter().find_map(|player| {
+                    styles
+                        .iter()
+                        .find(|to| {
+                            to.time == common
+                                && !to.players().contains(&Player::Guitar)
+                                && to.players().contains(&player)
+                        })
+                        .map(|to| (from, to, player))
+                })
+            })
+            .expect("styles with a guitar and strings or an organ, and without the guitar");
+        let mut project = band(from.name, &BARS);
+        // Fuller, so a player that joins only in variation b plays too.
+        project.set_variation(0, None, crate::band::Variation::B);
+        let guitar = project.player_channel(Player::Guitar).unwrap();
+        let locked = project.player_channel(player).unwrap();
+        assert!(guitar < locked, "{} plays after the guitar", player.name());
+        assert!(!part(&project, player).is_empty());
+        assert!(project.set_locked(locked, true));
+        project.set_band_style(Some(to));
+        assert!(
+            project.player_channel(Player::Guitar).is_none(),
+            "{}",
+            to.name
+        );
+        assert!(!project.is_frozen(player), "{} to {}", from.name, to.name);
+        // Unlocked, the band plays it from the sheet again.
+        let locked = project.player_channel(player).unwrap();
+        assert!(project.set_locked(locked, false));
+        assert!(!project.is_frozen(player));
+    }
+
+    #[test]
     fn a_locked_drum_keeps_its_notes_and_the_others_change() {
         let mut project = band("Pop beat", &BARS);
         let kick = drum_channel(&project, Drum::Kick);
@@ -376,6 +423,53 @@ mod tests {
         project.stop_band();
         assert_eq!(starts(&project, kick, |_, _| true), songs_own);
         assert!(project.playlist().tracks().iter().all(|track| !track.muted));
+    }
+
+    #[test]
+    fn a_locked_band_bass_kept_without_the_band_does_not_double_the_songs() {
+        let song = SONGS.iter().find(|song| song.name == "Ode to Joy").unwrap();
+        let mut project = song_demo(song);
+        project.set_band_style(BandStyle::named("Bossa nova"));
+        let own = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == "Bass")
+            .unwrap();
+        assert!(
+            project.channels()[own].muted,
+            "the band mutes the song's bass"
+        );
+        let band_bass = project.player_channel(Player::Bass).unwrap();
+        assert_ne!(band_bass, own);
+        let kept = project.channels()[band_bass].name.clone();
+        project.set_locked(band_bass, true);
+        project.stop_band();
+        // The band's bass stays as the song's own, so the song's first
+        // bass stays quiet: one bass line, not two.
+        let own = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == "Bass")
+            .unwrap();
+        assert!(project.channels()[own].muted);
+        let kept = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == kept)
+            .unwrap();
+        assert!(
+            project
+                .patterns()
+                .iter()
+                .any(|pattern| !pattern.notes(kept).is_empty())
+        );
+        // The song's own Keys, which no locked part replaces, plays again.
+        let keys = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == "Keys")
+            .unwrap();
+        assert!(!project.channels()[keys].muted);
     }
 
     #[test]
