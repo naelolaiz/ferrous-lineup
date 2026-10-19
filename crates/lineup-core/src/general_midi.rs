@@ -55,6 +55,7 @@ pub const TUBA: u8 = 58;
 pub const MUTED_TRUMPET: u8 = 59;
 pub const FRENCH_HORN: u8 = 60;
 pub const BRASS_SECTION: u8 = 61;
+pub const SOPRANO_SAX: u8 = 64;
 pub const ALTO_SAX: u8 = 65;
 pub const TENOR_SAX: u8 = 66;
 pub const OBOE: u8 = 68;
