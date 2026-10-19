@@ -26,16 +26,41 @@ it comes.
    The ticked views share the picture, one above the other. A title bar
    on top names the song, the bar and beat, the key, the time and the
    tempo.
-3. Pick a size: **1280×720** (HD) or **1920×1080** (Full HD). Full HD
+3. Arrange them on the preview, if you like (see below).
+4. Pick a size: **1280×720** (HD) or **1920×1080** (Full HD). Full HD
    draws the same layout one and a half times bigger, so the text is
    sharper but nothing more fits.
-4. Click **Export…** and choose where to save the `.mp4` file.
+5. Click **Export…** and choose where to save the `.mp4` file.
 
 The export runs in the background, with its progress in the status bar
 and a **Stop** button beside it. A stopped export leaves no file
 behind. The dialog remembers your choices for next time.
 
 ![Lead sheet, playlist and piano roll together](../images/step-9-video-three-views.png)
+
+## Arranging the views
+
+The dialog shows a preview: the picture the video will have at the bar
+you pick with **Preview at**. Each view on it has a frame with its name
+and zoom:
+
+- **Drag a view** to move its box.
+- **Drag its corner** (the small square) to resize the box.
+- **Scroll over it** to zoom in or out, from 50% to 250%. The slider
+  next to each view's tick does the same.
+- **Stack** puts the views back one above the other, sharing the
+  picture. Ticking a view on or off stacks them too.
+
+Boxes may overlap: the view lower in the list is drawn on top. The lead
+sheet has no zoom: it always fills the width of its box, so a wider box
+draws it bigger. The dialog remembers the layout for the next video.
+
+![The Export video dialog: the chord sheet moved to the right and zoomed to 250%](../images/step-9-video-layout.png)
+
+Here the chord sheet, zoomed to 140%, sits beside the lead sheet, with
+the harmony keys at 120% below:
+
+![El Choclo at 1920×1080: chord sheet and lead sheet side by side](../images/step-9-video-side-by-side.png)
 
 ## Nothing to install
 
@@ -197,6 +222,42 @@ letters get their shapes. A few details make it match the screen:
   painted on its own core with `std::thread::scope`, which lets the
   threads borrow the picture because they all finish before it
   returns.
+
+### A box for each view
+
+Each view has a **pane**: an `egui::Context` of its own and a `Canvas`
+the size of its box. Zoom works the way egui's own zoom does: the pane
+tells its context there are more pixels to a point (1.4 times as many
+at 140%), so egui lays the view out in fewer points and draws every
+letter at the bigger size. If the view were drawn small and the picture
+stretched instead, the letters would come out blurred.
+
+```rust
+let ppp = self.pixels_per_point;            // the picture's, times the zoom
+let size = vec2(width as f32, height as f32) / ppp;
+let mut input = egui::RawInput {
+    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
+    ..
+};
+input.viewports.entry(egui::ViewportId::ROOT).or_default()
+    .native_pixels_per_point = Some(ppp);
+```
+
+Each pane paints its own canvas. `Canvas::copy_from` then copies the
+panes into the picture, in their boxes, under the title line. Moving a
+box only copies again. A box whose size or zoom changed gets a new
+canvas and is drawn twice, because egui measures some things on its
+first frame.
+
+Two details keep the views on the beat:
+
+- **No gliding.** In the window, a view scrolls smoothly to the bar
+  playing, taking about half a second. In a video that's half a second
+  late, so the panes turn egui's scroll animation off and jump there.
+- **No frame late.** A view that scrolls only moves on the next frame,
+  and egui asks for one at once (a repaint delay of zero). The pane
+  draws again within the same picture, so the bar shows on its first
+  beat.
 
 ### Pictures that did not change
 
