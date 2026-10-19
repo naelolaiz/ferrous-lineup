@@ -23,6 +23,7 @@ use super::rhythm::{FILLS, RHYTHMS, Rhythm};
 use super::rows::{self, DEMO_SECTIONS, RowStyle};
 use super::song::{Part, Song, TempoMark};
 use super::style::Style;
+use crate::general_midi as gm;
 use crate::pattern::NoteEvent;
 use crate::pitch::PitchClass;
 
@@ -386,24 +387,35 @@ fn voice_channel(voice: usize) -> String {
 /// A demo project of a song: one pattern per part with the melody, the
 /// chords and the bass, drum patterns, and the parts arranged in order.
 /// Each voice of a round or a canon sings on a channel of its own, and
-/// every channel plays the General MIDI instrument of the song's band.
-/// A part in a time signature of its own gets a time marker where it
-/// starts, and one back where the song's time comes again.
+/// every channel plays the General MIDI instrument of the song's band;
+/// a part that hands its tune to other instruments plays it on a channel
+/// for each, at the part's dynamic, over its drums if they are written
+/// out. A part in a time signature of its own gets a time marker where
+/// it starts, and one back where the song's time comes again.
 pub fn song_demo(song: &Song) -> Project {
     let mut project = Project::empty();
     project.tempo = Tempo::new(song.tempo);
     project.time_signature = song.time;
     project.scale = song.scale();
 
+    // The Lead channel plays the tune of every part that does not hand
+    // it to other instruments (see `Part::instruments`).
+    let band = song.band;
+    let lead_plays = song.parts.iter().any(|part| {
+        part.instruments.is_empty() || part.instruments.iter().any(|&(p, _)| p == band.lead)
+    });
     let voices: Vec<Option<usize>> = (1..=song.voices())
-        .map(|voice| apply::synth_named(&mut project, &voice_channel(voice)))
+        .map(|voice| {
+            (voice > 1 || lead_plays)
+                .then(|| apply::synth_named(&mut project, &voice_channel(voice)))
+                .flatten()
+        })
         .collect();
     let keys = apply::synth_named(&mut project, apply::KEYS);
     let bass = match song.bass {
         Bass::None => None,
         _ => apply::synth_named(&mut project, apply::BASS),
     };
-    let band = song.band;
     let horns = band.horns.and_then(|horns| {
         let name = section_name(horns.program);
         Some((apply::synth_named(&mut project, name)?, horns))
@@ -416,6 +428,21 @@ pub fn song_demo(song: &Song) -> Project {
     {
         if let Some(state) = channel.and_then(|channel| project.channel_mut(channel)) {
             state.program = Some(program);
+        }
+    }
+    // The other instruments the tune is handed to, each on a channel
+    // named after it, as loud as the Lead channel.
+    let mut instruments: Vec<(u8, usize)> = Vec::new();
+    for &(program, _) in song.parts.iter().flat_map(|part| part.instruments) {
+        if program == band.lead || instruments.iter().any(|&(p, _)| p == program) {
+            continue;
+        }
+        if let Some(channel) = apply::synth_named(&mut project, gm::name(program)) {
+            if let Some(state) = project.channel_mut(channel) {
+                state.program = Some(program);
+                state.volume = apply::LEAD_VOLUME;
+            }
+            instruments.push((program, channel));
         }
     }
 
@@ -435,15 +462,6 @@ pub fn song_demo(song: &Song) -> Project {
                 format!("{}, bar {}", part.name, bar_number + 1)
             };
             bar_number += length / bar;
-            let index = if patterns.is_empty() {
-                if let Some(pattern) = project.pattern_mut(0) {
-                    pattern.name = name.clone();
-                    pattern.set_length(length);
-                }
-                0
-            } else {
-                new_pattern(&mut project, &name, length)
-            };
             let melody = melody_notes(song, piece, time, length, voices.len());
             let tonic = song.part_scale(piece).root;
             let spans = piece.spans(bar, tonic);
@@ -466,22 +484,86 @@ pub fn song_demo(song: &Song) -> Project {
             interpret::perform(&mut chords, time, Role::Accompaniment, seed(apply::KEYS));
             interpret::perform(&mut bass_line, time, Role::Accompaniment, seed(apply::BASS));
             interpret::perform(&mut horn_notes, time, Role::Accompaniment, seed(HORNS));
-            if let Some(pattern) = project.pattern_mut(index) {
-                for (&channel, notes) in voices.iter().zip(melody) {
-                    if let Some(channel) = channel {
-                        pattern.set_notes(channel, notes);
+            // The tune, on the channel of each instrument that plays it,
+            // and the drums written out in the score.
+            let mut lines: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
+            for (voice, (&channel, notes)) in voices.iter().zip(melody).enumerate() {
+                if voice > 0 || piece.instruments.is_empty() {
+                    lines.extend(channel.map(|channel| (channel, notes)));
+                    continue;
+                }
+                for &(program, shift) in piece.instruments {
+                    let channel = if program == band.lead {
+                        channel
+                    } else {
+                        instruments
+                            .iter()
+                            .find(|&&(p, _)| p == program)
+                            .map(|&(_, channel)| channel)
+                    };
+                    let Some(channel) = channel else {
+                        continue;
+                    };
+                    let moved = notes.iter().filter_map(|note| {
+                        let pitch = note.pitch.transpose(i32::from(shift))?;
+                        Some(NoteEvent { pitch, ..*note })
+                    });
+                    match lines.iter_mut().find(|(c, _)| *c == channel) {
+                        Some((_, line)) => line.extend(moved),
+                        None => lines.push((channel, moved.collect())),
                     }
                 }
-                if let Some(keys) = keys {
-                    pattern.set_notes(keys, chords);
-                }
-                if let Some(bass) = bass {
-                    pattern.set_notes(bass, bass_line);
-                }
-                if let Some((horns, _)) = horns {
-                    pattern.set_notes(horns, horn_notes);
-                }
             }
+            for &(drum, line) in piece.drums {
+                let Some(channel) = apply::drum_channel(&mut project, drum) else {
+                    continue;
+                };
+                let mut hits = Part::drum_hits(line);
+                interpret::perform(&mut hits, time, Role::Accompaniment, seed(drum.name()));
+                lines.push((channel, hits));
+            }
+            lines.extend(keys.map(|keys| (keys, chords)));
+            lines.extend(bass.map(|bass| (bass, bass_line)));
+            lines.extend(horns.map(|(horns, _)| (horns, horn_notes)));
+            for (_, notes) in &mut lines {
+                piece.dynamic.mark(notes);
+            }
+            // A run of bars of a part whose meter changes bar by bar
+            // plays the pattern of an earlier run with the same notes,
+            // as a producer reuses a loop: the Rite of Spring changes its
+            // meter nearly every bar, and would need more patterns than
+            // a project has room for.
+            let shared = (!part.meters.is_empty())
+                .then(|| {
+                    patterns.iter().find(|earlier| {
+                        earlier.from_meters
+                            && earlier.time == time
+                            && earlier.length == length
+                            && same_notes(&earlier.notes, &lines)
+                    })
+                })
+                .flatten()
+                .map(|earlier| earlier.pattern);
+            let index = match shared {
+                Some(index) => index,
+                None => {
+                    let index = if patterns.is_empty() {
+                        if let Some(pattern) = project.pattern_mut(0) {
+                            pattern.name = name.clone();
+                            pattern.set_length(length);
+                        }
+                        0
+                    } else {
+                        new_pattern(&mut project, &name, length)
+                    };
+                    if let Some(pattern) = project.pattern_mut(index) {
+                        for (channel, notes) in &lines {
+                            pattern.set_notes(*channel, notes.clone());
+                        }
+                    }
+                    index
+                }
+            };
             patterns.push(Piece {
                 part: part.name,
                 name,
@@ -490,6 +572,8 @@ pub fn song_demo(song: &Song) -> Project {
                 time,
                 spans,
                 drums: None,
+                from_meters: !part.meters.is_empty(),
+                notes: lines,
             });
         }
     }
@@ -500,6 +584,14 @@ pub fn song_demo(song: &Song) -> Project {
     let rhythm = Rhythm::named(song.rhythm);
     if let Some(rhythm) = rhythm {
         for piece in &mut patterns {
+            // A part with its drums written out plays them, not the
+            // rhythm's.
+            if song
+                .part(piece.part)
+                .is_some_and(|part| !part.drums.is_empty())
+            {
+                continue;
+            }
             // A part played its own way has its own rhythm, or none.
             let rhythm = match song.part(piece.part).and_then(|part| part.played) {
                 Some((_, _, own)) => Rhythm::named(own),
@@ -611,6 +703,20 @@ struct Piece {
     spans: Vec<ChordSpan>,
     /// Its drum pattern, if the song has drums.
     drums: Option<usize>,
+    /// Whether it is a run of a part whose meter changes bar by bar.
+    from_meters: bool,
+    /// The notes of its pattern, channel by channel.
+    notes: Vec<(usize, Vec<NoteEvent>)>,
+}
+
+/// Whether two patterns' notes are the same, channel by channel, however
+/// hard each is played.
+fn same_notes(a: &[(usize, Vec<NoteEvent>)], b: &[(usize, Vec<NoteEvent>)]) -> bool {
+    let key = |note: &NoteEvent| (note.pitch, note.start, note.length, note.nudge, note.trim);
+    a.len() == b.len()
+        && a.iter().zip(b).all(|((x, xs), (y, ys))| {
+            x == y && xs.len() == ys.len() && xs.iter().map(key).eq(ys.iter().map(key))
+        })
 }
 
 /// The time signature the last bar of `part` is in.
@@ -637,9 +743,10 @@ fn rhythm_in(rhythm: &'static Rhythm, time: TimeSignature) -> Option<&'static Rh
 mod tests {
     use super::*;
     use crate::file::{from_text, to_text};
-    use crate::library::song::Part;
+    use crate::library::song::{Dynamic, Part};
     use crate::library::{SONGS, STYLES};
     use crate::pattern::MAX_STEPS;
+    use crate::project::{ChannelKind, Drum};
 
     fn check(project: &Project, name: &str) {
         assert!(project.song_length() > 0, "{name}");
@@ -705,7 +812,142 @@ mod tests {
                 .unwrap();
             let notes: usize = project.patterns().iter().map(|p| p.notes(lead).len()).sum();
             assert!(notes >= 8, "{}: the melody is there", song.name);
+            // A MIDI file has fifteen channels besides the drums', so
+            // every instrument keeps a channel of its own when exported.
+            let instruments = project
+                .channels()
+                .iter()
+                .filter(|channel| channel.kind == ChannelKind::Synth)
+                .count();
+            assert!(
+                instruments <= 15,
+                "{}: {instruments} instruments",
+                song.name
+            );
         }
+    }
+
+    #[test]
+    fn a_part_can_hand_its_tune_to_other_instruments_softly_over_its_own_drums() {
+        // A song in 4/4 with drums, whose first part comes back played
+        // pianissimo by a clarinet doubled an octave up by a flute, over
+        // a snare drum written out with a triplet in every bar.
+        let song = SONGS
+            .iter()
+            .find(|song| song.time == TimeSignature::COMMON && !song.rhythm.is_empty())
+            .unwrap();
+        let first = *song.part(song.form[0]).unwrap();
+        let length = first.length(16);
+        let bar = "x:4 (3 x:2 x x x:4 x:4";
+        let snare: &'static str = Box::leak(vec![bar; length / 16].join(" | ").into_boxed_str());
+        let drums: &'static [(Drum, &'static str)] =
+            Box::leak(vec![(Drum::Snare, snare)].into_boxed_slice());
+        let moved = Part {
+            name: "Moved",
+            ..first
+        }
+        .played_by(&[(gm::CLARINET, 0), (gm::FLUTE, 12)])
+        .marked(Dynamic::Pianissimo)
+        .with_drums(drums);
+        let parts: &'static [Part] = Box::leak(vec![first, moved].into_boxed_slice());
+        let form: &'static [&'static str] = Box::leak(vec![first.name, "Moved"].into_boxed_slice());
+        let song = Song {
+            parts,
+            form,
+            drums_from: 0,
+            ..*song
+        };
+        let project = song_demo(&song);
+        let channel = |name: &str| {
+            project
+                .channels()
+                .iter()
+                .position(|channel| channel.name == name)
+                .unwrap_or_else(|| panic!("no {name} channel"))
+        };
+        let (lead, clarinet, flute) = (channel(LEAD), channel("Clarinet"), channel("Flute"));
+        assert_eq!(project.channels()[clarinet].program, Some(gm::CLARINET));
+        assert_eq!(project.channels()[flute].program, Some(gm::FLUTE));
+        let pattern = |name: &str| {
+            project
+                .patterns()
+                .iter()
+                .find(|pattern| pattern.name == name)
+                .unwrap_or_else(|| panic!("no {name} pattern"))
+        };
+        let (plain, moved) = (pattern(first.name), pattern("Moved"));
+        let pitches = |notes: &[NoteEvent], shift: i32| -> Vec<u8> {
+            notes
+                .iter()
+                .map(|note| (i32::from(note.pitch.midi()) + shift) as u8)
+                .collect()
+        };
+        assert!(moved.notes(lead).is_empty());
+        assert_eq!(
+            pitches(moved.notes(clarinet), 0),
+            pitches(plain.notes(lead), 0)
+        );
+        assert_eq!(
+            pitches(moved.notes(flute), 0),
+            pitches(plain.notes(lead), 12)
+        );
+        // Pianissimo: struck at four tenths of the strength, or less.
+        let loudest = |notes: &[NoteEvent]| notes.iter().map(|note| note.velocity).max();
+        assert!(loudest(moved.notes(clarinet)) <= Some(51));
+        assert!(loudest(plain.notes(lead)) > Some(80));
+        // The written snare plays its triplets between the steps, and the
+        // part has no drum pattern of its own.
+        let snare = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == Drum::Snare.name())
+            .expect("a snare channel");
+        let hits = moved.notes(snare);
+        assert_eq!(hits.len(), 6 * length / 16);
+        assert!(hits.iter().any(|hit| hit.nudge > 0));
+        assert!(project.patterns().iter().all(|p| p.name != "Moved drums"));
+    }
+
+    #[test]
+    fn runs_of_the_same_bars_share_a_pattern() {
+        // Two bars of 3/4 and two of 4/4, alternating, the second pair
+        // the same as the first: two patterns, each played twice.
+        let song = SONGS
+            .iter()
+            .find(|song| song.time == TimeSignature::COMMON)
+            .unwrap();
+        let three = TimeSignature::new(3, 4);
+        let meters: &'static [TimeSignature] = Box::leak(
+            vec![three, TimeSignature::COMMON, three, TimeSignature::COMMON].into_boxed_slice(),
+        );
+        let part = Part {
+            name: "Changing",
+            melody: "C5:12 | E5:16 | C5:12 | E5:16",
+            chords: "I | V | I | V",
+            left: "",
+            meters,
+            ..*song.part(song.form[0]).unwrap()
+        };
+        let parts: &'static [Part] = Box::leak(vec![part].into_boxed_slice());
+        let form: &'static [&'static str] = Box::leak(vec!["Changing"].into_boxed_slice());
+        let song = Song {
+            parts,
+            form,
+            rhythm: "",
+            ..*song
+        };
+        let project = song_demo(&song);
+        let clips: Vec<usize> = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| clip.track == SONG_TRACK)
+            .map(|clip| clip.pattern)
+            .collect();
+        assert_eq!(clips.len(), 5, "four runs and the ending");
+        assert_eq!(clips[0], clips[2]);
+        assert_eq!(clips[1], clips[3]);
+        assert_ne!(clips[0], clips[1]);
     }
 
     #[test]
@@ -762,6 +1004,9 @@ mod tests {
             key: None,
             tempo: &[],
             played: None,
+            instruments: &[],
+            dynamic: Dynamic::MezzoForte,
+            drums: &[],
         };
         let first = song.form[0];
         let parts: &'static [Part] =

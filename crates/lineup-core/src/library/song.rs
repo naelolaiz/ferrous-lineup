@@ -18,7 +18,9 @@
 use crate::general_midi as gm;
 use crate::harmony::{Scale, ScaleKind};
 use crate::meter::TimeSignature;
+use crate::pattern::{NoteEvent, STEP_NOTE};
 use crate::pitch::PitchClass;
+use crate::project::Drum;
 
 use super::Genre;
 use super::chart::{self, ChordSpan, Melody};
@@ -72,6 +74,71 @@ pub struct Part {
     /// [`super::RHYTHMS`] ("" for no drums). A refrain in 3/4 in a song
     /// in 2/4 needs a waltz's comping and a rhythm in three.
     pub played: Option<(Comping, Bass, &'static str)>,
+    /// The instruments that play the melody in this part, when it is not
+    /// the band's lead: each a General MIDI program and how many
+    /// semitones higher it plays the tune (12 is an octave up, 19 a
+    /// twelfth). An orchestra hands its tune from one instrument to
+    /// another, as Ravel's Boléro does from the flute to the clarinet,
+    /// and doubles it an octave or two higher. Each instrument gets a
+    /// channel of its own, named after it. Empty is the Lead channel,
+    /// playing the tune as written. In a round, only the first voice
+    /// moves.
+    pub instruments: &'static [(u8, i8)],
+    /// How loud the part is played (see [`Dynamic`]).
+    pub dynamic: Dynamic,
+    /// A drum part written out in full, for music whose drumming is part
+    /// of the score, such as the snare drum of Ravel's Boléro: a line for
+    /// each drum, in the notation of melodies (see
+    /// [`chart::parse_melody`]), with `x` for a stroke and `X` for an
+    /// accented one: `"x:2 (3 x:1 x x"` is an eighth note and a triplet
+    /// of sixteenths. When there is one, the song's rhythm is not played
+    /// in this part. A part whose meter changes bar by bar has none.
+    pub drums: &'static [(Drum, &'static str)],
+}
+
+/// How loud a part is played, as a score marks it, from pianissimo (pp,
+/// very soft) to fortissimo (ff, very loud). Mezzo-forte (mf, moderately
+/// loud) is how a part is played when nothing says otherwise.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Dynamic {
+    /// pp, very soft.
+    Pianissimo,
+    /// p, soft.
+    Piano,
+    /// mp, moderately soft.
+    MezzoPiano,
+    /// mf, moderately loud.
+    MezzoForte,
+    /// f, loud.
+    Forte,
+    /// ff, very loud.
+    Fortissimo,
+}
+
+impl Dynamic {
+    /// How much harder than at mezzo-forte the notes are struck: what
+    /// their velocities are multiplied by.
+    pub fn scale(self) -> f32 {
+        match self {
+            Dynamic::Pianissimo => 0.4,
+            Dynamic::Piano => 0.55,
+            Dynamic::MezzoPiano => 0.75,
+            Dynamic::MezzoForte => 1.0,
+            Dynamic::Forte => 1.15,
+            Dynamic::Fortissimo => 1.3,
+        }
+    }
+
+    /// Plays `notes` this loud: their velocities scaled, from 1 to 127.
+    pub fn mark(self, notes: &mut [NoteEvent]) {
+        if self == Dynamic::MezzoForte {
+            return;
+        }
+        for note in notes {
+            let velocity = (f32::from(note.velocity) * self.scale()).round();
+            note.velocity = velocity.clamp(1.0, 127.0) as u8;
+        }
+    }
 }
 
 /// The General MIDI instruments a song's channels play (see
@@ -172,6 +239,9 @@ impl Part {
             key: None,
             tempo: &[],
             played: None,
+            instruments: &[],
+            dynamic: Dynamic::MezzoForte,
+            drums: &[],
         }
     }
 
@@ -219,6 +289,25 @@ impl Part {
         }
     }
 
+    /// The same part with its tune played by other instruments than the
+    /// band's lead (see [`Part::instruments`]).
+    pub const fn played_by(self, instruments: &'static [(u8, i8)]) -> Part {
+        Part {
+            instruments,
+            ..self
+        }
+    }
+
+    /// The same part played this loud.
+    pub const fn marked(self, dynamic: Dynamic) -> Part {
+        Part { dynamic, ..self }
+    }
+
+    /// The same part with its drums written out (see [`Part::drums`]).
+    pub const fn with_drums(self, drums: &'static [(Drum, &'static str)]) -> Part {
+        Part { drums, ..self }
+    }
+
     pub fn melody(&self) -> Melody {
         chart::parse_melody(self.melody).unwrap_or(Melody {
             notes: Vec::new(),
@@ -235,6 +324,14 @@ impl Part {
         })
     }
 
+    /// The strokes of one written-out drum line (see [`Part::drums`]),
+    /// on the step sequencer's note, a triplet's nudged to its tick.
+    pub fn drum_hits(line: &str) -> Vec<NoteEvent> {
+        drum_line(line)
+            .map(|melody| melody.notes)
+            .unwrap_or_default()
+    }
+
     /// The chords of the chart, `bar` steps to the bar, in the key whose
     /// tonic is `tonic`.
     pub fn spans(&self, bar: usize, tonic: PitchClass) -> Vec<ChordSpan> {
@@ -242,15 +339,58 @@ impl Part {
     }
 
     /// How many steps the part lasts: the longest of its melody, its
-    /// chords and its written-out accompaniment.
+    /// chords, its written-out accompaniment and its drums.
     pub fn length(&self, bar: usize) -> usize {
         let chords = if self.chords.trim().is_empty() {
             0
         } else {
             self.chords.split('|').count() * bar
         };
-        self.melody().length.max(self.left().length).max(chords)
+        let drums = self
+            .drums
+            .iter()
+            .filter_map(|(_, line)| drum_line(line))
+            .map(|melody| melody.length)
+            .max()
+            .unwrap_or(0);
+        self.melody()
+            .length
+            .max(self.left().length)
+            .max(chords)
+            .max(drums)
     }
+}
+
+/// How hard a drum line's stroke (`x`) and accented stroke (`X`) are
+/// played, as in the rhythms' own lines.
+const STROKE: u8 = 96;
+const ACCENT: u8 = 120;
+
+/// Reads a written-out drum line (see [`Part::drums`]): each stroke is
+/// read as a note, C4 (the step sequencer's) or D4 if accented, so its
+/// rhythm is read exactly as a melody's, then put on the step
+/// sequencer's note, one step long.
+fn drum_line(line: &str) -> Option<Melody> {
+    let text: Vec<String> = line
+        .split_whitespace()
+        .map(|token| match token.split_at_checked(1) {
+            Some(("x", rest)) => format!("C4{rest}"),
+            Some(("X", rest)) => format!("D4{rest}"),
+            _ => token.to_string(),
+        })
+        .collect();
+    let mut melody = chart::parse_melody(&text.join(" "))?;
+    for note in &mut melody.notes {
+        let accented = note.pitch != STEP_NOTE;
+        *note = NoteEvent {
+            pitch: STEP_NOTE,
+            length: 1,
+            trim: 0,
+            velocity: if accented { ACCENT } else { STROKE },
+            ..*note
+        };
+    }
+    Some(melody)
 }
 
 /// A song, its parts, and how they are put together.
@@ -338,6 +478,7 @@ impl Song {
                 time: Some(time),
                 meters: &[],
                 tempo: if index == 0 { part.tempo } else { &[] },
+                drums: &[],
                 ..*part
             })
             .collect()
@@ -847,6 +988,7 @@ mod tests {
                     let bars = chart::parse_melody(whole.melody).unwrap().bars.len();
                     assert_eq!(bars, whole.meters.len(), "{}: a meter per bar", song.name);
                     assert_eq!(whole.voices, [(1, 0)], "{}: one voice", song.name);
+                    assert!(whole.drums.is_empty(), "{}: drums written out", song.name);
                 }
             }
             for part in song.parts.iter().flat_map(|part| song.part_runs(part)) {
@@ -880,6 +1022,14 @@ mod tests {
                 }
                 if !part.left.is_empty() {
                     assert_eq!(part.left().length, length, "{what}: left hand");
+                }
+                for (drum, line) in part.drums {
+                    let drums = drum_line(line)
+                        .unwrap_or_else(|| panic!("{what}: cannot read the {drum:?} line"));
+                    for (index, length) in drums.bars.iter().enumerate() {
+                        assert_eq!(*length, bar, "{what}: {drum:?} bar {}", index + 1);
+                    }
+                    assert_eq!(drums.length, length, "{what}: {drum:?}");
                 }
             }
         }
