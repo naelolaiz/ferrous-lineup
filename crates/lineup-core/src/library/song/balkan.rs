@@ -68,7 +68,8 @@ const ENTARI_LINE: &str = "A4:4 D5 C#5:2 D5:4 -:4 | C#5:2 D5 E5:4 F5:2 E5 D5 C#5
 // Ansiklopedisi, "Raks aksağı"): 2 + 3 + 2 + 2, as the tune's long notes show. The song is
 // sung without chords; the chords here are added, from the notes the tune leans on: D
 // minor under its runs from D to F, A major under its C sharps and A's, B flat major under
-// the long B flats.)
+// the long B flats. The tempo, 114 to the quarter, is the metronome mark of SymbTr's
+// MusicXML version.)
 pub(super) const ENTARISI: Song = Song {
     name: "Entarisi ala benziyor",
     origin: "Turkish folk song (türkü) from Istanbul",
@@ -77,7 +78,7 @@ pub(super) const ENTARISI: Song = Song {
     tonic: A,
     mode: Phrygian,
     time: RAKS_AKSAGI,
-    tempo: 200.0,
+    tempo: 114.0,
     comping: Comping::Aksak,
     bass: Bass::Aksak,
     rhythm: "Raks aksağı",
