@@ -1939,6 +1939,27 @@ mod library_parts {
     }
 
     #[test]
+    fn the_progression_menu_does_not_show_the_bands_style_as_the_sheets_chords() {
+        let mut screen = Screen::new();
+        screen.app.replace_project(Project::with_band(), None);
+        screen.app.set_mode(PlayMode::Song);
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        let doo_wop = Style::named("Doo-wop").unwrap();
+        screen.app.try_from_library(LibraryAction::Style(doo_wop));
+        assert_eq!(
+            screen.app.tried().style.map(|style| style.name),
+            Some("Doo-wop")
+        );
+        screen.app.chord_sheet.open = true;
+        screen.app.rack_open = false;
+        screen.click("Progression");
+        let menu = text_rect(&screen.draw(vec![]), "Progression").unwrap();
+        screen.scroll_to_at("Doo-wop", menu.center() + vec2(0.0, 120.0));
+        let output = screen.draw(vec![]);
+        assert!(!button_lit(&output, "Doo-wop"));
+    }
+
+    #[test]
     fn a_saved_styles_tempo_alone_does_not_bring_in_a_band() {
         let mut screen = el_choclo();
         let mut style = UserStyle::from_rhythm(Rhythm::named("Waltz").unwrap());

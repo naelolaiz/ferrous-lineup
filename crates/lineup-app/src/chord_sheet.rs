@@ -1455,8 +1455,9 @@ fn progression_menu(
         );
         let (response, _) = menu.ui(ui, |ui| {
             ui.set_width(300.0);
-            let tried = project.band().map_or_else(Tried::default, Tried::from_band);
-            match library.show_for(ui, project, tried, LibraryPurpose::Progression) {
+            // Nothing shows as chosen: the band's style says how it plays,
+            // not where the chords on the sheet came from.
+            match library.show_for(ui, project, Tried::default(), LibraryPurpose::Progression) {
                 Some(LibraryAction::Style(style)) => {
                     actions.push(SheetAction::WriteProgression { style, from });
                     ui.close();
