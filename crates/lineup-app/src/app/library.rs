@@ -341,12 +341,17 @@ impl LineupApp {
             }
             _ => return,
         };
+        // Without patterns or chords to write, only the sounds, the tempo
+        // or the swing of your own pattern change: it stays yours, keeps
+        // its name, and the next click does not write over it.
+        let own_pattern = reuse.is_none() && !parts.rhythm && !parts.progression;
         let target = reuse
             .as_ref()
             .map(|a| a.pattern)
-            .or_else(|| (!parts.rhythm && !parts.progression).then_some(self.pattern));
+            .or_else(|| own_pattern.then_some(self.pattern));
         let selected = self.piano_roll.selected_channel();
         let swing = tried.rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
+        let before = self.project.clone();
         let written = self.edit("try from the library", |project| {
             let index = target.or_else(|| project.add_pattern())?;
             match action {
@@ -366,25 +371,40 @@ impl LineupApp {
             if parts.tempo {
                 project.scale_tempo(Tempo::new(tempo));
             }
-            project.pattern_mut(index)?.name = name.to_string();
+            if !own_pattern {
+                project.pattern_mut(index)?.name = name.to_string();
+            }
             Some((index, project.pattern(index)?.clone()))
         });
         let Some((pattern, written)) = written else {
             self.message = Some("There is no room for another pattern.".to_string());
             return;
         };
-        self.select_pattern(pattern);
-        if self.auditions.len() == REMEMBERED {
-            self.auditions.remove(0);
+        if own_pattern && self.project == before {
+            self.notice = Some(if parts.instruments {
+                format!(
+                    "{name} changed nothing: its instruments go to the channels named \
+                     Keys and Bass, or to the channel chosen in the rack."
+                )
+            } else {
+                format!("{name} changed nothing: the song already goes that way.")
+            });
+            return;
         }
-        self.auditions.push(Audition {
-            pattern,
-            written,
-            style: tried.style,
-            rhythm: tried.rhythm,
-            row_style: tried.row_style,
-            micromode_style: tried.micromode_style,
-        });
+        self.select_pattern(pattern);
+        if !own_pattern {
+            if self.auditions.len() == REMEMBERED {
+                self.auditions.remove(0);
+            }
+            self.auditions.push(Audition {
+                pattern,
+                written,
+                style: tried.style,
+                rhythm: tried.rhythm,
+                row_style: tried.row_style,
+                micromode_style: tried.micromode_style,
+            });
+        }
         self.set_mode(PlayMode::Pattern);
         if !self.playing {
             self.rewind_for_new_pattern();

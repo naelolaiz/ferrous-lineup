@@ -333,7 +333,12 @@ impl LineupApp {
         if progression_from.is_none() {
             self.set_mode(lineup_audio::PlayMode::Song);
         }
-        if self.project.playlist().chord_markers().is_empty() {
+        if self.project.band().is_none() && parts.instruments && !parts.rhythm {
+            self.notice = Some(format!(
+                "{}'s instruments play in a band: tick Playing patterns too.",
+                style.name
+            ));
+        } else if self.project.playlist().chord_markers().is_empty() {
             self.notice = Some("Style applied. Write chords on the sheet or enable Chord progression when applying it.".into());
         } else {
             self.notice = Some(format!("Applied {}", style.name));
