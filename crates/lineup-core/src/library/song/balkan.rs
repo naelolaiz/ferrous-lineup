@@ -131,6 +131,229 @@ pub(super) const ENTARISI: Song = Song {
             are added from the notes the tune leans on.",
 };
 
+// Source: https://raw.githubusercontent.com/MTG/SymbTr/246bbe362ef17cf9d200b5296e06473f29768be3/txt/huseyni--turku--curcuna--sari_gelin--erzurum.txt
+// (SymbTr's "Erzurum çarşı pazar", makam hüseyni, usul curcuna, 10/8, from Erzurum: no. 615
+// of the TRT folk song repertoire, collected by Muzaffer Sarısözen from the singer Faruk
+// Kaleli, whom SymbTr's MusicXML names as its composer; the words are anonymous. All its 20
+// bars, in order: the verse once and its refrain twice, as SymbTr writes them. Folk musicians
+// count the curcuna 3 + 2 + 2 + 3 (see the "Curcuna" rhythm). Hüseyni is A, B, C, D, E, F
+// sharp, G: its B (segâh) is a comma or two below the piano's B, one in SymbTr's AEU column,
+// two in its 53-comma one, and its F sharp (eviç) a comma or two below the piano's F sharp;
+// both are written as the nearest key, B and F sharp, which gives the Dorian mode. The grace
+// notes are left out: an F after the E of "neynim" and "sarı", and a D, C or E struck before
+// a note of the same pitch. The MusicXML version has the same notes, its B a quarter tone
+// flat. The song is sung without chords; the chords here are added from the notes the tune
+// leans on: A minor under its A's and C's, E minor 7 under its E's and D's, D7 under its D's
+// and C's and the F sharp, E minor under a B on the beat.)
+pub(super) const SARI_GELIN: Song = Song {
+    name: "Sarı gelin",
+    origin: "Turkish folk song (türkü) from Erzurum",
+    feel: "Curcuna",
+    genre: Genre::Balkan,
+    tonic: A,
+    mode: Dorian,
+    time: CURCUNA,
+    tempo: 80.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Curcuna",
+    band: TURKISH,
+    style: "Curcuna",
+    parts: &[
+        Part::new(
+            "Erzurum",
+            "-:4 A4:2 A4:4 A4 E5:6 | E5:4 D5:6 E5:2 D5 E5:6 | \
+             E5:4 E5:2 E5:3 D5:1 D5:3 C5:1 D5:2 E5 -:2 | E5:4 F#5:2 D5:4 C5:3 B4:1 C5:2 D5 -:2 | \
+             C5:4 D5:2 B4:4 A4 A4:2 C5 -:2 | B4:4 C5:2 A4:4 A4:10",
+            "i | v7 | v7 | v7 v7 IV7 IV7 IV7 IV7 IV7 IV7 IV7 IV7 | i i i v v i i i i i | \
+             v v v i i i i i i i",
+        ),
+        Part::new(
+            "İçinde bir kız",
+            "-:4 C5:2 C5:4 D5 D5:6 | D5:4 C5:6 D5:2 C5 D5 E5:4 | E5:2 -:2 C5:2 D5:4 E5 E5:6 | \
+             E5:4 E5:2 D5:4 D5:3 C5:1 D5:2 E5 -:2 | E5:4 F#5:2 D5:4 C5:3 B4:1 C5:2 D5 -:2 | \
+             C5:4 D5:2 B4:4 A4 A4:2 C5 -:2 | B4:4 C5:2 A4:4 A4:10",
+            "IV7 | IV7 | i i i v7 v7 v7 v7 v7 v7 v7 | v7 | \
+             v7 v7 IV7 IV7 IV7 IV7 IV7 IV7 IV7 IV7 | i i i v v i i i i i | v v v i i i i i i i",
+        ),
+    ],
+    form: &["Erzurum", "İçinde bir kız", "İçinde bir kız"],
+    drums_from: 0,
+    about: "\"In the market of Erzurum a girl walks about\": the song of the fair-haired bride \
+            (sarı gelin), sung slowly, like a lament, its lines answered by \"neynim aman \
+            aman\" and \"suna yârim\", my graceful love. Ten eighths to the bar in the Turkish \
+            curcuna, counted 1 2 3, 1 2, 1 2, 1 2 3: a long beat, two short ones and a long \
+            one. The tune is in makam hüseyni on A: A, B, C, D, E, F sharp, G, close to the \
+            Dorian mode. It climbs to E, the note hüseyni dwells on above A, touches the F \
+            sharp and comes down to A. Turkish singers and players go in unison over a drum; \
+            the chords here, A minor, E minor (7) and D7, the Dorian mode's major IV, are \
+            added from the notes the tune leans on.",
+};
+
+// "İzmir'in kavakları" and "Servim senden uzun yok" share a tune.
+const KAVAK_LINE: &str = "G4:2 B4:1 B4 B4:2 D5 C5 B4:1 A4 G4:6 | \
+                          -:2 G5:1 G5 G5:2 G5:1 F#5 F#5:2 E5:1 D5 E5:2 F#5 E5:1 D5 | \
+                          D5:4 D5:1 G5 F5 E5 D5 C5 B4 A#4 B4:3 C5:1 B4 A#4 | \
+                          G4:2 B4:1 B4 B4:2 D5 C5 B4:1 A4 G4:6 | \
+                          -:2 G5:1 G5 G5:2 G5:1 F#5 F#5:2 E5:1 D5 E5:2 F#5 E5:1 D5 | \
+                          D5:4 D5:1 G5 F5 E5 D5 C5 B4 A#4 B4 C5 D5 E5 F#5 G5";
+const KAVAK_LINE_CHORDS: &str = "bVI | bVI bVI bVI bVI bIII bIII bIII bIII bIII | \
+                                 bIII bIII bVI bVI i i i i i | bVI | \
+                                 bVI bVI bVI bVI bIII bIII bIII bIII bIII | \
+                                 bIII bIII bVI bVI i i i i i";
+// "Bize de derler Çakıcı" and "Kamalı zeybek vurulmuş" share a tune too, the one the
+// instrumental turn plays.
+const KAVAK_REFRAIN: &str = "G5:1 G5 G5 G5 G5:2 D5 E5 F#5 G5 F5 E5 | \
+                             D5:3 E5:1 F5 E5:2 D5:1 D5 C5 C5 B4 E5:6 | \
+                             -:2 D5:1 E5 F5:2 E5:1 D5 D5:2 C5:1 B4 B4 C5 D5:2 C5:1 B4 | \
+                             B4:4 B4:1 G5 F5 E5 D5 C5 B4 A#4 B4 C5 D5 E5 F#5 G5 | \
+                             G5:1 G5 G5 G5 G5:2 D5 E5 F#5 G5 F5 E5 | \
+                             D5:3 E5:1 F5 E5:2 D5:1 D5 C5 C5 B4 E5:6 | \
+                             -:2 D5:1 E5 F5:2 E5:1 D5 D5:2 C5:1 B4 B4 C5 D5:2 C5:1 B4 | \
+                             B4:4 A#4 G4:2 A#4 B4:4 -:2";
+const KAVAK_REFRAIN_CHORDS: &str = "bVI bVI bVI bVI iv iv iv iv iv | \
+                                    bVI bVI bVI bVI bVI bVI iv iv iv | \
+                                    bVI bVI bVI bVI i i i i i | i i bVI bVI i i i i i | \
+                                    bVI bVI bVI bVI iv iv iv iv iv | \
+                                    bVI bVI bVI bVI bVI bVI iv iv iv | \
+                                    bVI bVI bVI bVI i i i i i | \
+                                    i i vii°7 vii°7 vii°7 vii°7 i i i";
+
+// Source: https://raw.githubusercontent.com/MTG/SymbTr/246bbe362ef17cf9d200b5296e06473f29768be3/txt/segah--turku--aksak--izmirin_kavaklari--.txt
+// (SymbTr: makam segâh, usul aksak, 9/8 counted 2 + 2 + 2 + 3, as its long notes show; no.
+// 337 of the TRT folk song repertoire, from İzmir, collected by Muzaffer Sarısözen from Ekrem
+// Güyer, whom SymbTr's MusicXML names as its composer; the words are anonymous. All its 44
+// bars, in order: the instrumental turn (aranağme), played twice, the verse's two lines, sung
+// twice, and the refrain, sung twice; then all of it again with the second verse. Segâh rests
+// on B a comma flat, under a comma below the piano's B; its E is a comma flat too, its F
+// sharp (eviç) under a comma below the piano's and its A sharp within a comma of the piano's.
+// Each is written as the nearest key: B, C, D, E, F sharp, G, A, the Phrygian mode on B, with
+// F natural (acem) on the way down and the A sharp leading back to B from below. Four
+// ornaments (a G touching the A above) are left out. The MusicXML version has the same notes,
+// its B's and E's a quarter tone flat. The song is sung without chords; the chords here are
+// added from the notes the tune leans on: G major under its G's, B's and D's, E minor under
+// its E's, D major under F sharp and D, B minor under the B's it comes down to, and the
+// diminished seventh on A sharp (A sharp, C sharp, E, G) under the A sharp and G of the last
+// bar.)
+pub(super) const IZMIRIN_KAVAKLARI: Song = Song {
+    name: "İzmir'in kavakları",
+    origin: "Turkish folk song (türkü) from İzmir",
+    feel: "Aksak",
+    genre: Genre::Balkan,
+    tonic: B,
+    mode: Phrygian,
+    time: NINE_EIGHT_AKSAK,
+    tempo: 60.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Aksak",
+    band: TURKISH,
+    style: "Aksak",
+    parts: &[
+        Part::new(
+            "Aranağme",
+            "F#5:1 G5:2 G5:1 G5:2 D5 E5 F#5 G5 F5 E5 | D5:3 E5:1 F5 E5:2 D5:1 D5 C5 C5 B4 E5:6 | \
+             -:2 D5:1 E5 F5:2 E5:1 D5 D5:2 C5:1 B4 B4 C5 D5:2 C5:1 B4 | \
+             B4:4 B4:1 G5 F5 E5 D5 C5 B4 A#4 B4 C5 D5 E5 F#5 G5 | \
+             F#5:1 G5:2 G5:1 G5:2 D5 E5 F#5 G5 F5 E5 | D5:3 E5:1 F5 E5:2 D5:1 D5 C5 C5 B4 E5:6 | \
+             -:2 D5:1 E5 F5:2 E5:1 D5 D5:2 C5:1 B4 B4 C5 D5:2 C5:1 B4 | \
+             B4:4 B4:1 G5 F5 E5 D5 C5 B4 A#4 B4:3 C5:1 B4 A#4",
+            "bVI bVI bVI bVI iv iv iv iv iv | bVI bVI bVI bVI bVI bVI iv iv iv | \
+             bVI bVI bVI bVI i i i i i | i i bVI bVI i i i i i | \
+             bVI bVI bVI bVI iv iv iv iv iv | bVI bVI bVI bVI bVI bVI iv iv iv | \
+             bVI bVI bVI bVI i i i i i | i i bVI bVI i i i i i",
+        ),
+        Part::new("İzmir'in kavakları", KAVAK_LINE, KAVAK_LINE_CHORDS),
+        Part::new("Bize de derler", KAVAK_REFRAIN, KAVAK_REFRAIN_CHORDS),
+        Part::new("Servim senden", KAVAK_LINE, KAVAK_LINE_CHORDS),
+        Part::new("Kamalı zeybek", KAVAK_REFRAIN, KAVAK_REFRAIN_CHORDS),
+    ],
+    form: &[
+        "Aranağme",
+        "İzmir'in kavakları",
+        "Bize de derler",
+        "Aranağme",
+        "Servim senden",
+        "Kamalı zeybek",
+    ],
+    drums_from: 0,
+    about: "\"The poplars of İzmir shed their leaves; they call us Çakıcı, we burn down the \
+            mansions\": the song of Çakıcı, the outlaw hero (efe) of the hills around İzmir. \
+            Nine eighths to the bar in the Turkish aksak, counted 1 2, 1 2, 1 2, 1 2 3: three \
+            short beats and a long one, slowly. The tune is in makam segâh, which rests on B: \
+            B, C, D, E, F sharp, G, A, the Phrygian mode, with F natural on the way down and \
+            an A sharp leading back up to B. The verse circles G, below and above; the refrain \
+            falls from the high G, step by step, to B. Turkish singers and players go in \
+            unison over a drum; the chords here are added from the notes the tune leans on: G \
+            major (bVI), E minor (iv), D major (bIII) and B minor (i), and the diminished \
+            seventh chord on A sharp (vii°7) under the last bar's A sharp and G.",
+};
+
+// Source: https://raw.githubusercontent.com/MTG/SymbTr/246bbe362ef17cf9d200b5296e06473f29768be3/txt/hicaz--turku--devrihindi--cayelinden_oteye--rize.txt
+// (SymbTr: makam hicaz, usul devr-i hindî, 7/8 counted 3 + 2 + 2; no. 1765 of the TRT folk
+// song repertoire, from Çayeli in Rize, collected by Yücel Paşmakçı from Dursun Tanyaş, whom
+// SymbTr's MusicXML names as its composer; the words are anonymous. All its 48 bars, in
+// order: "Çayeli'nden öteye" once, "Sırtındaki sepetun" twice, and all of it again. Hicaz as
+// in Entarisi ala benziyor: its B flat, C sharp and the F sharp below G are four commas from
+// B, C and F, which a twelve-tone semitone matches closely. Its mordents, trills and grace
+// notes are left out. The MusicXML version has the same notes, but its key signature has the
+// F sharp of hicaz's upper notes and its F's carry no natural; the txt gives them as F
+// natural, 340 commas, the F of Entarisi, and so does this. The song is sung without chords;
+// the chords here are added from the notes the tune leans on, often one to a beat: D minor
+// under its F's and D's, A major under its E's, C sharps and A's, B flat under its B flats
+// and the D's before them, and A7 under the G.)
+pub(super) const CAYELINDEN_OTEYE: Song = Song {
+    name: "Çayeli'nden öteye",
+    origin: "Turkish folk song (türkü) from Rize, on the Black Sea",
+    feel: "Devr-i hindi",
+    genre: Genre::Balkan,
+    tonic: A,
+    mode: Phrygian,
+    time: THREE_TWO_TWO,
+    tempo: 120.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Devr-i hindi",
+    band: KEMENCE,
+    style: "Devr-i hindi",
+    parts: &[
+        Part::new(
+            "Çayeli'nden öteye",
+            "F5:2 E5 F5 E5:4 D5 | E5:4 F5:2 F5 E5 D5 E5 | C#5:1 D5:3 D5:2 C#5:4 Bb4 | \
+             D5:4 D5:2 D5 C#5 Bb4 C#5 | Bb4:4 Bb4:2 A4:4 G4:1 F#4 G4:2 | Bb4:4 Bb4:2 A4:4 A4 | \
+             A4:4 A4:2 A4:4 A4 | A4:4 -:2 A4:4 A4",
+            "iv iv iv I I iv iv | I I I iv iv iv iv | iv iv iv I I bII bII | bII | \
+             bII bII bII I I I7 I7 | bII bII bII I I I I | I | I",
+        ),
+        Part::new(
+            "Sırtındaki sepetun",
+            "F5:2 E5 F5 E5:1 F5 E5:2 D5:4 | E5:1 F5 E5:2 F5 F5 E5 D5 E5 | D5:4 D5:2 C#5:4 Bb4 | \
+             D5:4 D5:2 D5 C#5 Bb4 C#5 | Bb4:4 Bb4:2 A4:4 G4:1 F#4 G4:2 | Bb4:4 Bb4:2 A4:4 A4 | \
+             A4:4 A4:2 A4:4 A4 | A4:4 -:2 A4:4 A4",
+            "iv iv iv I I iv iv | I I I iv iv iv iv | iv iv iv I I bII bII | bII | \
+             bII bII bII I I I7 I7 | bII bII bII I I I I | I | I",
+        ),
+    ],
+    form: &[
+        "Çayeli'nden öteye",
+        "Sırtındaki sepetun",
+        "Sırtındaki sepetun",
+        "Çayeli'nden öteye",
+        "Sırtındaki sepetun",
+        "Sırtındaki sepetun",
+    ],
+    drums_from: 0,
+    about: "\"Let us go on past Çayeli, yâli yâli\", and \"let me be the porter of the basket \
+            on your back\": a song of Rize, on the Black Sea, in its own dialect. Seven \
+            eighths to the bar in the Turkish devr-i hindî, counted 1 2 3, 1 2, 1 2: a long \
+            beat and two short ones. The tune is in makam hicaz on A: A, B flat, C sharp, D, \
+            E, F, G, the Phrygian mode with a raised third, as in Entarisi ala benziyor. It \
+            starts high, around E and F, and walks down through C sharp and B flat to A, with \
+            the step and a half from B flat to C sharp. Turkish singers and players go in \
+            unison over a drum; the chords here, D minor, A major and B flat, often one to a \
+            beat, are added from the notes the tune leans on.",
+};
+
 // Source: https://raw.githubusercontent.com/syntithenai/abc2book/db1681da9417cea25072527b9e75fbe7f28186a5/abcresources/jc/abc_tune_jc_201294633.abc
 // (John Chambers' transcription in 7/16, in E with G sharp; written here in eighths, each
 // note twice as long. Only his sung part, "Vocal": its first phrase is sung alone, then two

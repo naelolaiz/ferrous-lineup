@@ -1795,6 +1795,45 @@ pub static STYLES: &[Style] = &[
          on the beats after each, over I and V7.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    style(
+        "Aksak",
+        Balkan,
+        Phrygian,
+        "bVI | iv | bVI | i | bVI | bIII | bVI | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        90.0,
+        "Aksak",
+        "The Turkish 9/8, 2 + 2 + 2 + 3, in makam segâh: B, C, D, E, F sharp, G, A, \
+         the Phrygian mode, over G major, E minor and D major, coming back to B minor.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    style(
+        "Devr-i hindi",
+        Balkan,
+        Phrygian,
+        "iv | I | iv | bII | bII | I | iv | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        120.0,
+        "Devr-i hindi",
+        "A Turkish 7/8 counted 3 + 2 + 2, in makam hicaz: A, B flat, C sharp, D, E, F, \
+         G, over D minor, B flat and A major.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    style(
+        "Curcuna",
+        Balkan,
+        Dorian,
+        "i | v7 | v7 | IV7 | i | IV7 | v7 | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        96.0,
+        "Curcuna",
+        "A slow Turkish 10/8 counted 3 + 2 + 2 + 3, in makam hüseyni: A, B, C, D, E, \
+         F sharp, G, the Dorian mode, over A minor, E minor 7 and D7.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2, 3], 8)),
     // ----- Reggae and ska -----
     style(
         "Reggae",

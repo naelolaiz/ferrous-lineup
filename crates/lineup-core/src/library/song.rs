@@ -417,6 +417,7 @@ const THREE_TWO_TWO: TimeSignature = TimeSignature::of_groups(&[3, 2, 2], 8);
 const TWO_TWO_THREE: TimeSignature = TimeSignature::of_groups(&[2, 2, 3], 8);
 const NINE_EIGHT_AKSAK: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 3], 8);
 const RAKS_AKSAGI: TimeSignature = TimeSignature::of_groups(&[2, 3, 2, 2], 8);
+const CURCUNA: TimeSignature = TimeSignature::of_groups(&[3, 2, 2, 3], 8);
 const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
 const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
 
@@ -446,6 +447,8 @@ const KAVAL: Band = Band::new(gm::FLUTE, gm::ACCORDION, gm::ACOUSTIC_BASS);
 const GREEK: Band = Band::new(gm::VIOLIN, gm::STEEL_GUITAR, gm::ACOUSTIC_BASS);
 // The kanun, the Turkish zither, is played by a koto, the nearest General MIDI sound.
 const TURKISH: Band = Band::new(gm::CLARINET, gm::KOTO, gm::ACOUSTIC_BASS);
+// The kemençe of the Black Sea coast, a small fiddle played upright, by a fiddle.
+const KEMENCE: Band = Band::new(gm::FIDDLE, gm::KOTO, gm::ACOUSTIC_BASS);
 const POLKA: Band = Band::new(gm::VIOLIN, gm::ACCORDION, gm::TUBA);
 // A Bavarian dance band: clarinet, the button accordion and the tuba.
 const BAVARIAN: Band = Band::new(gm::CLARINET, gm::ACCORDION, gm::TUBA);
@@ -733,6 +736,9 @@ pub static SONGS: &[Song] = &[
     balkan::GEAMPARAUA_DE_LA_MURFATLAR,
     balkan::MANDRELE,
     balkan::ENTARISI,
+    balkan::SARI_GELIN,
+    balkan::IZMIRIN_KAVAKLARI,
+    balkan::CAYELINDEN_OTEYE,
     reggae::MARY_HAD_A_LITTLE_LAMB,
     reggae::THIS_OLD_MAN,
     reggae::VALLEY_DUB,
