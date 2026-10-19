@@ -701,6 +701,7 @@ pub static SONGS: &[Song] = &[
     tango::DESDE_EL_ALMA,
     tango::MUCHACHO,
     tango::GARUA,
+    tango::ESTA_NOCHE_DE_LUNA,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,

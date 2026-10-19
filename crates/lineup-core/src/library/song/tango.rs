@@ -1808,3 +1808,83 @@ pub(super) const GARUA: Song = Song {
             G minor, and B flat 7 slides down a half step to A7; later D7 leads to G minor, \
             and G sharp diminished 7 and A7 close in D minor.",
 };
+
+// The verse, in B flat major (it opens on F7 and every phrase closes on B flat; G minor
+// is only touched as vi): 20 bars of 2/4, two to a chart bar.
+const ESTA_NOCHE_DE_LUNA_A_CHORDS: &str = "V7 I | III7 vi | ii #ii°7 I #i°7 | V7 V7 I #ii°7 | \
+     V7 I | III7 vi | ii #ii°7 I #i°7 | V7 I | V7 I | V7 I";
+const ESTA_NOCHE_DE_LUNA_A_TUNE: &str = "F4:2 F4:1 G4:1 A4:1 Bb4:1 C5:1 C#5:1 D5:3 Bb4:1 D5:2 C5:1 Bb4:1 | \
+     D5:1 A4:2 Bb4:1 C5:2 Bb4:1 A4:1 D5:3 G4:1 Bb4:2 A4:1 G4:1 | \
+     Bb4:3 G4:1 Bb4:2 A4:1 G4:1 F4:3 F4:1 G4:2 F4:1 E4:1 | \
+     F4:2 Eb4:1 D4:1 Eb4:2 D4:1 C4:1 F4:2 -:1 F4:1 G4:2 F4:1 E4:1 | \
+     F4:2 F4:1 G4:1 A4:1 Bb4:1 C5:1 C#5:1 D5:3 Bb4:1 D5:2 C5:1 Bb4:1 | \
+     D5:1 A4:2 Bb4:1 C5:2 Bb4:1 A4:1 D5:3 G4:1 Bb4:2 A4:1 G4:1 | \
+     Bb4:3 G4:1 Bb4:2 A4:1 G4:1 F4:3 F4:1 G4:2 F4:1 E4:1 | \
+     F4:2 Eb4:1 D4:1 Eb4:2 D4:1 C4:1 Bb3:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
+     F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
+     F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 -:6";
+
+// The refrain, also in B flat major: 28 bars of 2/4. Its last bar lands on B flat and
+// plays the pickup back into the verse.
+const ESTA_NOCHE_DE_LUNA_B_CHORDS: &str = "I ii | I V7 | ii6 vi | III7 | III7 III7 vi iv6 | I II7 | \
+     V7 #ii°7 I I | ii I | V7 ii6 | vi III7 | III7 | ii iv6 I I | I ii | V7 V7 I #ii°7";
+const ESTA_NOCHE_DE_LUNA_B_TUNE: &str = "D5:8 _:2 Bb4:1 C5:1 D5:2 C5:1 Bb4:1 | F5:8 _:2 C5:1 D5:1 Eb5:2 D5:1 C5:1 | \
+     G4:8 G4:2 G4:1 A4:1 Bb4:2 C5:1 C#5:1 | D5:4 A4:4 _:2 A4:2 Bb4:2 A4:2 | \
+     C5:4 A4:4 _:2 Eb4:1 F4:1 Ab4:2 C5:1 Bb4:1 | \
+     Bb4:1 F4:1 Bb4:1 C5:1 D5:2 C5:1 Bb4:1 D5:1 C5:1 C5:1 D5:1 C5:2 Bb4:1 G4:1 | \
+     C5:4 C#5:4 D5:8 | _:2 Bb4:1 C5:1 D5:2 C5:1 Bb4:1 F5:8 | \
+     _:2 C5:1 D5:1 Eb5:2 D5:1 C5:1 G4:8 | G4:2 G4:1 A4:1 Bb4:2 C5:1 C#5:1 D5:4 A4:4 | \
+     _:2 A4:2 Bb4:2 A4:2 C5:4 A4:4 | G4:2 Eb4:1 F4:1 Gb4:2 Bb4:1 A4:1 Bb4:2 -:2 F4:4 | \
+     _:2 D4:1 Eb4:1 F4:2 Eb4:1 D4:1 G4:2 Eb4:1 F4:1 G4:2 F4:1 Eb4:1 | \
+     A4:2 A4:1 Bb4:1 C5:2 Bb4:1 A4:1 Bb4:2 -:1 F4:1 G4:2 F4:1 E4:1";
+
+// Source: score attached by the owner (page images), piano with the lyric between the
+// staves, "Letra de Héctor Marcó, Música de Graciano Gómez y José García", stamped
+// "Texto aprobado por Radiocomunicaciones"; no publisher or plate number shows on the
+// two pages. Two flats, read in B flat major as printed (no transposition).
+// The runs of sixteenths under the "8a" lines (intro and "Corre, corre barcarola") are
+// written at their printed pitch, an octave below where the piano plays them, so the
+// whole tune stays between B flat 3 and C6.
+// The ⊕ signs only mark where the violin obbligato at the foot of page 2 plays ("violín
+// para Canto de ⊕ a ⊕"); it is left out. The sung order is the lyric blocks I, II, I bis:
+// intro, verse, refrain, verse again, ending on the verse's last B flat.
+// Recordings (Todotango): José García y sus Zorros Grises with Alfredo Rojas (August
+// 1943) and Carlos Di Sarli with Roberto Rufino (December 1943), taken as the best known (a judgement, no source ranks them).
+// The tempo is an estimate for the Di Sarli recording, not a measured figure.
+// Copyright: not public domain; added at the owner's request.
+pub(super) const ESTA_NOCHE_DE_LUNA: Song = Song {
+    name: "Esta noche de luna",
+    origin: "Graciano Gómez and José García, 1943",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: ASharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 120.0,
+    comping: Comping::Quarters,
+    bass: Bass::Quarters,
+    rhythm: "Tango marcato",
+    band: TANGO,
+    style: "Tango",
+    parts: &[
+        // Half a bar of silence, then the first run of the piano's intro.
+        Part::new("Pickup", "-:8 -:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1", "I"),
+        Part::new(
+            "Intro",
+            "F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 Bb5:1 Bb5:1 A5:1 A5:1 G5:1 G5:1 | \
+             F5:1 F5:1 Eb5:1 Eb5:1 D5:1 D5:1 C5:1 C5:1 Bb4:2 -:1 F4:1 G4:2 F4:1 E4:1",
+            "V7 I | V7 V7 I #ii°7",
+        ),
+        Part::new("A", ESTA_NOCHE_DE_LUNA_A_TUNE, ESTA_NOCHE_DE_LUNA_A_CHORDS),
+        Part::new("B", ESTA_NOCHE_DE_LUNA_B_TUNE, ESTA_NOCHE_DE_LUNA_B_CHORDS),
+    ],
+    form: &["Pickup", "Intro", "A", "B", "A"],
+    drums_from: 1,
+    about: "The whole song is in B flat major. The verse starts on the dominant, F7 to \
+            B flat, then D7 turns to G minor; a C minor chord climbs through a C sharp \
+            diminished chord to B flat over F, a B diminished chord leads to F7 and home \
+            to B flat, and the intro's falling runs of sixteenths close it. The refrain \
+            holds long notes on \"Soy\" and \"mar\" over B flat, a D7 turns towards \
+            G minor, and twice an E flat minor sixth over G flat, the minor plagal colour \
+            of the tango, leads back to B flat. Then the verse comes back to end the song.",
+};
