@@ -273,13 +273,8 @@ impl Band<'_> {
                 color: vertex.color.to_array().map(f32::from),
             }
         };
-        for triangle in mesh.indices.chunks_exact(3) {
-            let corners = [
-                corner(triangle[0]),
-                corner(triangle[1]),
-                corner(triangle[2]),
-            ];
-            self.paint_triangle(corners, area, texture);
+        for &triangle in mesh.indices.as_chunks::<3>().0 {
+            self.paint_triangle(triangle.map(corner), area, texture);
         }
     }
 
