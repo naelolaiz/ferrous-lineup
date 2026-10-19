@@ -629,6 +629,11 @@ impl LineupApp {
                     }
                 });
             }
+            RackAction::RemoveChosen => {
+                if let Some(channel) = self.piano_roll.chosen_channel() {
+                    self.apply(RackAction::Remove(channel));
+                }
+            }
             RackAction::Remove(channel) => {
                 self.finish_recording();
                 self.release_all_keys();
@@ -982,20 +987,7 @@ impl LineupApp {
                 steps,
             } => {
                 self.edit("move selected clips", |project| {
-                    let targets: Vec<_> = indices
-                        .iter()
-                        .filter_map(|&index| {
-                            let clip = project.playlist().clips().get(index)?;
-                            Some((
-                                index,
-                                clip.track.saturating_add_signed(tracks),
-                                clip.start.saturating_add_signed(steps),
-                            ))
-                        })
-                        .collect();
-                    for (index, track, start) in targets {
-                        project.move_clip(index, track, start);
-                    }
+                    project.move_clips(&indices, tracks, steps);
                 });
             }
             PlaylistAction::AddClip(clip) => {
@@ -1384,7 +1376,7 @@ impl LineupApp {
                 let volume = ui.add_sized([64.0, 22.0], volume_slider);
                 let text = format!("Master volume: {:.0}%", master * 100.0);
                 if theme::hint(volume, text).changed() {
-                    self.edit("master volume", |project| project.mixer.master = master);
+                    self.set_master_volume(master);
                 }
             });
         });
@@ -1654,7 +1646,11 @@ impl LineupApp {
                 layer.order == egui::Order::Middle
                     && [rack_id(), PianoRoll::id()].contains(&layer.id)
             });
-            if pattern_editor {
+            // While the song plays, Space stops it, wherever you clicked;
+            // once it has stopped, Space in the rack or the piano roll
+            // plays the pattern.
+            let song_playing = self.mode == PlayMode::Song && self.playing;
+            if pattern_editor && !song_playing {
                 if self.mode == PlayMode::Pattern && self.playing {
                     self.pause();
                 } else {
@@ -1813,7 +1809,11 @@ impl eframe::App for LineupApp {
         let mut rack_open = self.rack_open;
         let pattern_name = &self.project.patterns()[self.pattern].name;
         if let Some(id) = self.bring_to_front.take() {
-            ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, id));
+            let layer = egui::LayerId::new(egui::Order::Middle, id);
+            ctx.move_to_top(layer);
+            // Its keys go with it: Delete after double-clicking a clip
+            // deletes notes in the piano roll, not clips in the playlist.
+            widgets::give_keyboard(&ctx, layer);
         }
         // The rack opens as big as its rows, up to the size of the
         // playlist; it can be resized, and scrolls when made smaller.

@@ -7,8 +7,8 @@ use super::{
     comping::{BassPart, Played},
 };
 use crate::{
-    Bar, Channel, ChordMarker, HarmonyName, MAX_CHANNELS, MAX_STEPS, Note, NoteEvent, Player,
-    Project, Scale, ScaleKind, Tempo, TimeSignature,
+    Bar, Channel, ChordMarker, HarmonyName, KeyMap, MAX_CHANNELS, MAX_STEPS, Note, NoteEvent,
+    Player, Project, Scale, ScaleKind, Tempo, TimeSignature,
 };
 use serde::{Deserialize, Serialize};
 
@@ -122,6 +122,8 @@ impl UserStyle {
 
     pub fn from_rhythm(rhythm: &'static super::Rhythm) -> Self {
         let mut style = Self::blank();
+        // A rhythm has no chords of its own to bring.
+        style.chart.clear();
         style.name = format!("{} copy", rhythm.name);
         style.about = rhythm.about.into();
         style.time = rhythm.time;
@@ -267,6 +269,7 @@ impl UserStyle {
         lane: &StyleLane,
         bars: &[Bar],
         harmonies: &[Played],
+        keys: &KeyMap,
     ) -> Vec<NoteEvent> {
         let source_bar = self.time.steps_per_bar();
         let mut notes = Vec::new();
@@ -295,7 +298,9 @@ impl UserStyle {
                     });
                 } else {
                     for harmony in harmonies.iter().filter(|h| h.start < end && h.end > start) {
-                        let Some(pitch) = adapt_pitch(original.pitch, lane.player, harmony) else {
+                        let key = keys.key_at(harmony.start);
+                        let Some(pitch) = adapt_pitch(original.pitch, lane.player, harmony, key)
+                        else {
                             continue;
                         };
                         let at = start.max(harmony.start);
@@ -315,7 +320,15 @@ impl UserStyle {
     }
 }
 
-fn adapt_pitch(source: Note, player: Player, harmony: &Played) -> Option<Note> {
+/// The note a template note written over C major plays over `harmony`,
+/// in `key`. C, E and G are the chord's root, third and fifth, and B is
+/// its seventh, or sixth, if it has one. Over a chord of the key, B, D, F
+/// and A take the note of the key as many steps above the root: an A over
+/// Em in C major is C, not C#, and a B over G is F. Over a chord from
+/// outside the key they keep their distance from the root, as in its own
+/// major, but a minor chord takes the flat seventh. The other notes are
+/// chromatic colours and keep their distance from the root.
+fn adapt_pitch(source: Note, player: Player, harmony: &Played, key: Scale) -> Option<Note> {
     let (root, intervals) = match harmony.bass {
         BassPart::Chord { chord, note, .. } => {
             let root = if player == Player::Bass && source.midi().is_multiple_of(12) {
@@ -334,22 +347,95 @@ fn adapt_pitch(source: Note, player: Player, harmony: &Played) -> Option<Note> {
     } else {
         semitone
     };
+    let has = |interval: u8| intervals.contains(&interval);
+    let own_seventh = [10, 11, 9].into_iter().find(|&seventh| has(seventh));
     let pc = source.midi() % 12;
-    let target = match pc {
-        0 => 0,
-        4 => intervals.get(1).copied().unwrap_or(4),
-        7 => intervals.get(2).copied().unwrap_or(7),
-        11 => intervals.get(3).copied().unwrap_or(11),
+    let target = match (pc, own_seventh) {
+        (0, _) => 0,
+        (4, _) => intervals.get(1).copied().unwrap_or(4),
+        (7, _) => intervals.get(2).copied().unwrap_or(7),
+        (11, Some(seventh)) => seventh,
+        (11, None) if has(3) => 10,
         _ => pc,
     };
-    Some(Note::new(
+    let note = Note::new(
         (i32::from(source.midi()) + shift + i32::from(target) - i32::from(pc)).clamp(0, 127) as u8,
-    ))
+    );
+    let steps = match (pc, own_seventh) {
+        (2, _) => 1,
+        (5, _) => 3,
+        (9, _) => 5,
+        (11, None) => 6,
+        _ => return Some(note),
+    };
+    let in_key = key.is_heptatonic()
+        && intervals
+            .iter()
+            .all(|&interval| key.contains(root.transpose(i32::from(interval))));
+    let Some(degree) = key.degree_of(root).filter(|_| in_key) else {
+        return Some(note);
+    };
+    let wanted = key.pitch_classes().nth((degree + steps) % 7)?;
+    let up = note.pitch_class().semitones_up_to(wanted);
+    Some(Note::new(if up <= 6 {
+        (note.midi() + up).min(127)
+    } else {
+        note.midi().saturating_sub(12 - up)
+    }))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn template_notes_stay_in_the_key() {
+        use crate::{Chord, ChordQuality::*, PitchClass::*};
+        let c_major = Scale::new(C, ScaleKind::Major);
+        // The note `template` (written over C) plays over `chord`, as a
+        // pitch class.
+        let over = |template: crate::PitchClass, chord: Chord| {
+            let harmony = Played {
+                start: 0,
+                end: 16,
+                voicing: Vec::new(),
+                bass: BassPart::Chord {
+                    chord,
+                    note: Note::new(48 + chord.root.semitone()),
+                    next: chord.root,
+                },
+            };
+            let source = Note::new(60 + template.semitone());
+            adapt_pitch(source, Player::Piano, &harmony, c_major)
+                .unwrap()
+                .pitch_class()
+        };
+        let chord = Chord::new;
+        // The seventh: the chord's own, else the key's.
+        assert_eq!(over(B, chord(C, Major)), B);
+        assert_eq!(over(B, chord(A, Minor)), G);
+        assert_eq!(over(B, chord(G, Major)), F);
+        assert_eq!(over(B, chord(F, Major)), E);
+        assert_eq!(over(B, chord(A, Minor6)), FSharp);
+        assert_eq!(over(B, chord(D, Dominant7)), C);
+        // The sixth, ninth and fourth of the key over its chords.
+        assert_eq!(over(A, chord(E, Minor)), C);
+        assert_eq!(over(A, chord(A, Minor)), F);
+        assert_eq!(over(A, chord(D, Minor)), B);
+        assert_eq!(over(D, chord(E, Minor)), F);
+        assert_eq!(over(D, chord(A, Minor)), B);
+        assert_eq!(over(F, chord(F, Major)), B);
+        assert_eq!(over(F, chord(G, Major)), C);
+        // A chord from outside the key keeps its own notes: Fm's flat
+        // seventh and Bb's major seventh, not B and B.
+        assert_eq!(over(B, chord(F, Minor)), DSharp);
+        assert_eq!(over(F, chord(F, Minor)), ASharp);
+        assert_eq!(over(B, chord(ASharp, Major)), A);
+        // Chord tones and chromatic colours as before.
+        assert_eq!(over(E, chord(A, Minor)), C);
+        assert_eq!(over(G, chord(B, Diminished)), F);
+        assert_eq!(over(DSharp, chord(A, Minor)), C);
+    }
     #[test]
     fn styles_with_the_same_name_keep_distinct_patterns_selected() {
         let style = UserStyle::from_builtin(&super::super::STYLES[0]);

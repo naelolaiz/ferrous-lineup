@@ -716,6 +716,52 @@ impl Project {
         true
     }
 
+    /// Moves clips `indices` together, `tracks` tracks down and `steps`
+    /// steps later (or up and earlier, when negative). Either they all
+    /// move or none does: the group keeps its shape. Returns whether they
+    /// moved.
+    pub fn move_clips(&mut self, indices: &[usize], tracks: isize, steps: isize) -> bool {
+        let mut moved = Vec::with_capacity(indices.len());
+        for &index in indices {
+            let Some(&clip) = self.playlist.clips.get(index) else {
+                return false;
+            };
+            let (Some(track), Some(start)) = (
+                clip.track.checked_add_signed(tracks),
+                clip.start.checked_add_signed(steps),
+            ) else {
+                return false;
+            };
+            let clip = Clip {
+                track,
+                start,
+                ..clip
+            };
+            // At most one new track, just below the last one.
+            if !self.clip_fits(clip) {
+                return false;
+            }
+            moved.push((index, clip));
+        }
+        // Two clips of the group never land on each other, as they keep
+        // their distance; so only a clip left behind can be in the way.
+        let blocked = moved.iter().any(|(_, clip)| {
+            self.playlist
+                .clips
+                .iter()
+                .enumerate()
+                .any(|(index, other)| !indices.contains(&index) && other.same_place(clip))
+        });
+        if blocked {
+            return false;
+        }
+        for (index, clip) in moved {
+            self.open_track(clip.track);
+            self.playlist.clips[index] = clip;
+        }
+        true
+    }
+
     /// Makes a clip play its pattern `repeats` times in a row. Returns
     /// `false` if there is no such clip or `repeats` is not 1 to
     /// [`MAX_REPEATS`].
@@ -2042,6 +2088,42 @@ mod tests {
             project.add_clip(Clip::new(0, 4, 0)).is_none(),
             "one row at a time"
         );
+    }
+
+    #[test]
+    fn clips_moved_together_keep_their_shape() {
+        let mut project = Project::template();
+        let length = project.patterns()[0].length();
+        for start in [0, length, 3 * length] {
+            project.add_clip(Clip::new(0, 0, start)).unwrap();
+        }
+        let starts = |project: &Project| -> Vec<(usize, usize)> {
+            project
+                .playlist()
+                .clips()
+                .iter()
+                .map(|clip| (clip.track, clip.start))
+                .collect()
+        };
+        // Two clips side by side, one pattern later: the first lands where
+        // the second was, and both move.
+        assert!(project.move_clips(&[0, 1], 0, length as isize));
+        assert_eq!(
+            starts(&project),
+            [(0, length), (0, 2 * length), (0, 3 * length)]
+        );
+        // Once more and the second would sit on the third clip, and two
+        // patterns back the first would start before the song: none moves.
+        assert!(!project.move_clips(&[0, 1], 0, length as isize));
+        assert!(!project.move_clips(&[0, 1], 0, -(2 * length as isize)));
+        assert_eq!(
+            starts(&project),
+            [(0, length), (0, 2 * length), (0, 3 * length)]
+        );
+        // Down to a new track, all three together.
+        assert!(project.move_clips(&[0, 1, 2], 1, -(length as isize)));
+        assert_eq!(starts(&project), [(1, 0), (1, length), (1, 2 * length)]);
+        assert_eq!(project.playlist().tracks().len(), 2);
     }
 
     #[test]
