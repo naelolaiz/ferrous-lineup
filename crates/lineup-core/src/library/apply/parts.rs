@@ -45,31 +45,45 @@ fn meter(project: &mut Project, index: usize, time: TimeSignature) {
     }
 }
 
-/// Change the sounds of the existing chord and bass voices.
+/// Change the sounds of the existing chord and bass voices. Locked
+/// channels keep theirs, and a locked `selected` channel counts as none.
 pub fn style_instruments(project: &mut Project, style: &Style, selected: Option<usize>) {
     let Some(band) = BandStyle::of_style(style) else {
         return;
     };
-    let chords = selected.or_else(|| find_synth(project, KEYS));
-    if let Some(channel) = chords.and_then(|index| project.channel_mut(index))
-        && plays_notes(channel)
+    let chords = selected
+        .filter(|&index| !project.is_locked(index))
+        .or_else(|| find_synth(project, KEYS));
+    if let Some(index) = chords
+        && project.channels().get(index).is_some_and(plays_notes)
     {
-        channel.program = Some(band.piano_program());
+        project.set_sound(index, None, Some(band.piano_program()));
     }
-    if let Some(index) = find_synth(project, BASS)
-        && let Some(channel) = project.channel_mut(index)
-    {
-        channel.program = Some(band.bass_program());
+    if let Some(index) = find_synth(project, BASS) {
+        project.set_sound(index, None, Some(band.bass_program()));
     }
 }
 
 /// Put new chords under an existing performance, keeping its attacks,
 /// velocities and channels. Held notes split where the new harmony changes.
 /// Each pattern repeats the chart.
+///
+/// A pattern whose chords or bass line are locked keeps its chords: the
+/// other part could not take new ones without clashing with it.
 pub(super) fn progression(project: &mut Project, index: usize, style: &Style) -> bool {
     let Some(chords) = heard_chords_channel(project, index) else {
         return false;
     };
+    let bass = find_synth(project, BASS);
+    let plays_locked = |channel: usize| {
+        project.is_locked(channel)
+            && project
+                .pattern(index)
+                .is_some_and(|pattern| !pattern.notes(channel).is_empty())
+    };
+    if plays_locked(chords) || bass.is_some_and(plays_locked) {
+        return false;
+    }
     let time = project.pattern_time(index);
     let Some(spans) = parse_chart(style.chart, time.steps_per_bar()) else {
         return false;
@@ -79,8 +93,7 @@ pub(super) fn progression(project: &mut Project, index: usize, style: &Style) ->
         return false;
     }
     let tonic = project.scale.root;
-    let bass = find_synth(project, BASS);
-    let Some(pattern) = project.pattern_mut(index) else {
+    let Some(mut pattern) = project.style_pattern(index) else {
         return false;
     };
     for channel in std::iter::once(chords).chain(bass) {

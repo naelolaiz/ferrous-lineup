@@ -37,6 +37,11 @@ pub enum RackAction {
         volume: f32,
     },
     ToggleMute(usize),
+    /// Lock a channel, so styles leave it alone, or unlock it.
+    SetLocked {
+        channel: usize,
+        locked: bool,
+    },
     Remove(usize),
     /// Delete or Backspace in the rack: removes the channel the user chose,
     /// if they chose one (not the one the piano roll picked by itself).
@@ -140,7 +145,8 @@ fn instrument_menu(
 /// Draws the rack for pattern `pattern` and returns what the user did
 /// this frame. `selected` is the selected channel, which the piano roll
 /// shows and the keyboards play; `playhead` is the step of the pattern
-/// being played, if any.
+/// being played, if any. `locks` shows a lock on every row, which only
+/// the song's rack has: a style has no styles to keep a channel from.
 pub fn show(
     ui: &mut Ui,
     project: &Project,
@@ -148,6 +154,7 @@ pub fn show(
     selected: Option<usize>,
     playhead: Option<usize>,
     playback: Option<RackPlayback>,
+    locks: bool,
 ) -> Vec<RackAction> {
     let mut actions = Vec::new();
     let pattern_index = pattern;
@@ -263,6 +270,23 @@ pub fn show(
                         });
                     }
 
+                    let locked = project.is_locked(index);
+                    if locks
+                        && widgets::lock_light(ui, locked)
+                            .on_hover_text(if locked {
+                                "Locked: styles keep its notes and sound. Click to unlock"
+                            } else {
+                                "Lock: styles keep its notes and sound"
+                            })
+                            .clicked()
+                        && !dismissing
+                    {
+                        actions.push(RackAction::SetLocked {
+                            channel: index,
+                            locked: !locked,
+                        });
+                    }
+
                     let name = egui::Button::new(&channel.name)
                         .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y) * widgets::zoom(ui))
                         .selected(selected == Some(index))
@@ -271,6 +295,11 @@ pub fn show(
                                  Double-click to open its piano roll. Keyboards play the selected \
                                  channel. Delete removes the selected channel. Right-click for options. \
                                  Drop a WAV file here to load it.";
+                    let hover = if locks && locked {
+                        format!("🔒 Locked\n\n{hover}")
+                    } else {
+                        hover.to_string()
+                    };
                     let name = match channel.program {
                         Some(program) => ui.add(name).on_hover_text(format!(
                             "Plays: {} (General MIDI {})\n\n{hover}",
@@ -318,6 +347,13 @@ pub fn show(
                                     }
                                 }
                             });
+                        }
+                        if locks && ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
+                            actions.push(RackAction::SetLocked {
+                                channel: index,
+                                locked: !locked,
+                            });
+                            ui.close();
                         }
                         if ui.button("Remove channel").clicked() {
                             actions.push(RackAction::Remove(index));
@@ -500,8 +536,8 @@ fn patterns_with_drums<'a>(
 }
 
 /// How big the rack is with nothing hidden: as wide as a row (the light,
-/// the knob, the name, a small gap and the steps, with spacing between
-/// them all) and as tall as all the rows, the "Add channel" button and
+/// the knob, the lock, the name, a small gap and the steps, with spacing
+/// between them all) and as tall as all the rows, the "Add channel" button and
 /// the line that says where the drums are, if it is shown. `zoom` is the
 /// rack's zoom; `style` must already be scaled by it.
 pub fn natural_size(
@@ -516,7 +552,7 @@ pub fn natural_size(
     let steps = pattern.length();
     let gap = style.spacing.item_spacing;
     let step = widgets::STEP_SIZE * zoom;
-    let controls = (14.0 + 24.0 + NAME_WIDTH + 6.0) * zoom + 4.0 * gap.x;
+    let controls = (14.0 + 24.0 + 14.0 + NAME_WIDTH + 6.0) * zoom + 5.0 * gap.x;
     let width = controls + steps as f32 * (step.x + gap.x);
     let rows = project.channels().len() as f32 * (step.y + gap.y);
     let line = style.spacing.interact_size.y + gap.y;

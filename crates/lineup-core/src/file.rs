@@ -152,10 +152,14 @@ pub fn is_project(path: &Path) -> bool {
 /// Format 21 adds the saved master mixer, solo and stereo reverb.
 /// Format 22 embeds user style patterns and instruments with the band.
 ///
+/// Format 23 added locked channels (see [`crate::lock`]). Older versions
+/// would let styles and the band write over them, so a song with a
+/// locked channel needs format 23.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play.
-pub const FORMAT_VERSION: u32 = 22;
+pub const FORMAT_VERSION: u32 = 23;
 
 /// The oldest format that can hold `project`.
 ///
@@ -231,7 +235,9 @@ pub fn format_for(project: &Project) -> u32 {
     let has_style_parts = project.band().is_some_and(|band| {
         band.instrument_style != band.style || band.harmony_style.is_some() || band.accents_only
     });
-    if project
+    if !project.locked().is_empty() {
+        23
+    } else if project
         .band()
         .is_some_and(|band| band.custom_rhythm.is_some() || band.custom_instruments.is_some())
     {
@@ -327,6 +333,9 @@ struct ProjectFile {
     /// all yours.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     sources: Vec<SourceFile>,
+    /// The locked channels, by number. Left out when there are none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    locked: Vec<usize>,
 }
 
 fn is_zero(value: &u8) -> bool {
@@ -490,6 +499,7 @@ impl From<&Project> for ProjectFile {
                     })
                 })
                 .collect(),
+            locked: project.locked().to_vec(),
         }
     }
 }
@@ -650,6 +660,7 @@ impl TryFrom<ProjectFile> for Project {
                 Err(reason) => return invalid(reason),
             }
         }
+        project.lock_saved(file.locked);
         project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
         project.swing = file.swing.min(MAX_SWING);
         project.remove_blank_tracks();

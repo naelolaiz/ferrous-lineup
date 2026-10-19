@@ -290,7 +290,7 @@ impl StyleEditor {
                     let elapsed = ctx.input(|input| input.time)-start;
                     if elapsed < period * 4.0 { ctx.request_repaint(); Some(((elapsed%period)/period * length as f64) as usize) } else { None }
                 });
-                for action in channel_rack::show(ui, &self.draft.project, 0, self.roll.selected_channel(), playhead, None) { self.rack_action(action, &mut events); }
+                for action in channel_rack::show(ui, &self.draft.project, 0, self.roll.selected_channel(), playhead, None, false) { self.rack_action(action, &mut events); }
             });
         for action in self.roll.show(
             ctx,
@@ -406,7 +406,8 @@ impl StyleEditor {
         }
         let project = &mut self.draft.project;
         match action {
-            RackAction::RemoveChosen => {}
+            // A style's rack has no locks.
+            RackAction::RemoveChosen | RackAction::SetLocked { .. } => {}
             RackAction::SelectChannel(channel) => match channel {
                 Some(channel) => self.roll.select(channel),
                 None => self.roll.deselect_channel(),

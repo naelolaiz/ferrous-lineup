@@ -225,6 +225,8 @@ pub struct Project {
     pub(crate) band: Option<Band>,
     /// Where each part of the song came from (see [`crate::sources`]).
     pub(crate) sources: crate::sources::Sources,
+    /// The channels styles leave alone (see [`crate::lock`]).
+    pub(crate) locked: crate::lock::Locked,
 }
 
 impl Project {
@@ -242,6 +244,7 @@ impl Project {
             playlist: Playlist::new(),
             band: None,
             sources: crate::sources::Sources::default(),
+            locked: crate::lock::Locked::NONE,
         }
     }
 
@@ -454,6 +457,7 @@ impl Project {
             Some(solo) if solo > index => Some(solo - 1),
             solo => solo,
         };
+        self.unlock_removed(index);
         let removed = self.removing_channel(index, |project| {
             for pattern in &mut project.patterns {
                 pattern.remove_row(index);

@@ -18,6 +18,7 @@ impl LineupApp {
         let mut open = self.mixer_open;
         let mut mix = self.project.mixer;
         let mut levels = self.project.channels().to_vec();
+        let locked = self.project.locked();
         egui::Window::new("Mixer")
             .id(egui::Id::unique("mixer"))
             .open(&mut open)
@@ -87,6 +88,11 @@ impl LineupApp {
                                     ui.horizontal(|ui| {
                                         ui.add_space(INDENT);
                                         ui.label(&channel.name);
+                                        if locked.contains(index) {
+                                            ui.label("🔒").on_hover_text(
+                                                "Locked: styles keep its notes and sound",
+                                            );
+                                        }
                                     });
                                     ui.label(instrument(channel));
                                     percent_slider(ui, &mut channel.volume);

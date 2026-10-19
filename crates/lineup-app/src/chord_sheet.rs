@@ -378,14 +378,25 @@ impl ChordSheet {
              Ctrl+V copy and paste bars as text.",
         );
         for player in Player::ALL {
-            if project.is_frozen(player) {
+            let name = player.name().to_lowercase();
+            if project.plays_locked(player) {
+                ui.colored_label(
+                    ui.visuals().warn_fg_color,
+                    format!("🔒 The {name} is locked: it keeps its notes, not new chords."),
+                );
+            } else if project.song_keeps(player) {
+                let channel = match player {
+                    Player::Piano => lineup_core::library::apply::KEYS,
+                    _ => lineup_core::library::apply::BASS,
+                };
+                ui.weak(format!(
+                    "🔒 {channel} is locked: the band leaves the {name} to it."
+                ));
+            } else if project.is_frozen(player) {
                 ui.horizontal_wrapped(|ui| {
                     ui.colored_label(
                         ui.visuals().warn_fg_color,
-                        format!(
-                            "✎ You edited the {}: the band keeps it as you left it.",
-                            player.name().to_lowercase()
-                        ),
+                        format!("✎ You edited the {name}: the band keeps it as you left it."),
                     );
                     let again = ui.small_button("Play it again");
                     if theme::hint(again, "Have the band play this part from the sheet again")

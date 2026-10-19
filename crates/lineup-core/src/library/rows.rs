@@ -336,7 +336,7 @@ fn write_voices(
         let notes = write_row(row, &voice.writing(start, section), length);
         writes.push((channel, notes));
     }
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
     for (channel, notes) in writes {
@@ -370,7 +370,7 @@ fn write_row_style_as(
     selected: Option<usize>,
     section: RowForm,
 ) -> bool {
-    let Some(target) = project.pattern_mut(pattern) else {
+    let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
     target.set_length(style.length());
@@ -381,7 +381,7 @@ fn write_row_style_as(
         .filter(|name| !style.voices.iter().any(|voice| voice.channel == *name))
         .filter_map(|name| find_synth(project, name))
         .collect();
-    if let Some(target) = project.pattern_mut(pattern) {
+    if let Some(mut target) = project.style_pattern(pattern) {
         for channel in unused {
             target.set_notes(channel, []);
         }
@@ -461,7 +461,7 @@ pub(super) fn take_over_harmony(
                 .filter(|(name, _)| !uses(name))
                 .filter_map(|(_, channel)| channel)
                 .collect();
-            if let Some(target) = project.pattern_mut(pattern) {
+            if let Some(mut target) = project.style_pattern(pattern) {
                 for channel in quiet {
                     target.set_notes(channel, []);
                 }
