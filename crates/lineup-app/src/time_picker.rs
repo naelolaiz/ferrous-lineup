@@ -69,6 +69,7 @@ pub fn time_picker(
 ) -> Option<TimeSignature> {
     let mut chosen = None;
     if let Some(parts) = parts {
+        ui.weak("Shared with the Library options");
         ui.checkbox(&mut parts.matching_style, "Use matching style")
             .on_hover_text(
                 "Turn off to mark the new meter's accents with your current instruments, \
