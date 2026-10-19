@@ -597,7 +597,7 @@ fn copy_parts_ui(ui: &mut Ui, parts: &mut StyleParts, has_progression: bool) {
             has_progression,
             egui::Checkbox::new(&mut progression, "Chord progression"),
         )
-        .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments.")
+        .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried.")
         .on_disabled_hover_text(
             "This preset has no chord progression. Your current chords are kept.",
         )
