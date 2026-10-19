@@ -2225,3 +2225,115 @@ pub(super) const BOLERO: Song = Song {
             to sway over the strict drum. It ends on the low C, and a bar of the drum alone \
             hands it on.",
 };
+
+// Source: Debussy's autograph manuscript full score of La Mer (1905), ink, PDF pages 9 and 11
+// (the person's own copy). Bars 1 to 11 of the first movement, "De l'aube à midi sur la
+// mer": the Très lent introduction up to rehearsal number 1; the rest of the movement
+// follows. Sounding pitches throughout: the clarinets in A sound a minor third lower than
+// written, the cor anglais in F a fifth lower, the trumpet in F a fourth higher. The tempo
+// is the manuscript's own, "Très lent (116 = ♩)", a quarter note, and "(♩ = ♩)" where 4/4
+// begins in bar 6. The melody is the line in front: the divided cellos' upper octave in
+// bars 3 to 5, the first oboe in bars 6 to 8, the cor anglais in bars 9 to 11 with the muted
+// first trumpet an octave above it. Everything else is on the Keys channel: the timpani's B
+// roll and the double basses' low B, the two harps (their alternating strokes, harp 2 on
+// beats 1 and 4 and harp 1 on beats 2 and 5, merged into one line), the cellos' lower octave,
+// the divided violas' octaves, the bassoons' B and E sharp, the first clarinet's echo of
+// the oboe, and the tremolo strings' falling B, A, G sharp, F sharp, handed down from the
+// violins to the violas and cellos (the tremolos are written as held notes). Left out: the
+// double basses' pizzicato B on beats 1 and 4 of bars 2 to 5, which doubles their held B;
+// the cellos' first B in bar 11, which is the timpani's B on the same channel; and what
+// could not be read for sure: the violas' bar 5 after its first half note (a B over C sharp
+// and a chord on beat 6), the end of the cellos' bar 5, and the lower bassoon's figure in
+// bars 8 and 9 (only the upper C natural is kept). No chord symbol is honest here: B is
+// held in the bass while pentatonic dyads move above it, so the charts are empty.
+pub(super) const LA_MER_DAWN: Song = Song {
+    name: "La Mer, From Dawn to Noon on the Sea",
+    origin: "Claude Debussy, La Mer, 1905",
+    feel: "Orchestra",
+    genre: Genre::Classical,
+    tonic: B,
+    mode: Dorian,
+    time: SIX_FOUR,
+    tempo: 116.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::CELLO, gm::STRING_ENSEMBLE, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        // Bars 1 to 5: the pedal B, the harps' F sharp and G sharp, and the cellos' rocking
+        // octaves.
+        Part::new(
+            "Dawn",
+            "-:24 | -:24 | F#3:1 G#3:3 _:4 G#3:4 G#3:4 G#3:8 | \
+             F#3:1 G#3:3 _:8 G#3:8 G#3:4 | F#3:1 G#3:3 _:8 G#3:4 -:8",
+            "",
+        )
+        .with_left(
+            "B2:24 | B2:24 | B2:24 | B2:24 | B2:24 \
+             & B1:24 | _:24 | _:24 | _:24 | _:24 \
+             & -:24 | F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 | \
+             F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 | \
+             F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 | \
+             F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 \
+             & -:24 | -:24 | F#2:1 G#2:3 _:4 G#2:4 G#2:4 G#2:8 | \
+             F#2:1 G#2:3 _:8 G#2:8 G#2:4 | F#2:1 G#2:3 _:8 G#2:4 -:8 \
+             & -:24 | -:24 | -:20 C#3+C#4:4 | _:8 F#3+F#4:4 _:4 G#3+G#4:8 | B3+B4:8 -:16",
+        )
+        .marked(Dynamic::Pianissimo),
+        // Bars 6 to 8, in 4/4: the oboe's sigh, G sharp to A, answered by the clarinet,
+        // over the bassoons' B and E sharp and the violins' tremolo.
+        Part::new(
+            "Oboe",
+            "-:8 G#4:1 A4:3 _:4 | _:8 G#4:8 | G#4:1 F#4:3 _:12",
+            "",
+        )
+        .with_left(
+            "B2:16 | B2:16 | B2:16 \
+             & B1:8 -:8 | B1:8 -:8 | B1:8 -:8 \
+             & -:8 E#3+B3:8 | _:8 -:8 | C4:16 \
+             & -:16 | D4:1 D#4:3 _:12 | D#4:1 E4:3 _:12 \
+             & B5+B6:16 | B5+B6:16 | B5+B6:4 A5+A6:4 G#5+G#6:4 F#5+F#6:4",
+        )
+        .in_time(COMMON)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Piano),
+        // Bars 9 to 11: the call of the cor anglais and the muted trumpet, on C, while
+        // the falling tremolo line goes down through the strings.
+        Part::new("Call", "-:8 C4:8 | (3 _:4 C4 C4 C4:8 | C4:4 -:12", "")
+            .with_left(
+                "F#4:4 -:12 | -:16 | -:16 \
+                 & E4:4 -:12 | -:16 | -:16 \
+                 & C4:4 -:12 | -:16 | -:16 \
+                 & B2:16 | B2:16 | B2:16 \
+                 & B1:8 -:8 | -:16 | -:16 \
+                 & B5:4 A5:4 G#5:4 F#5:4 | -:16 | -:16 \
+                 & B4:4 A4:4 G#4:4 F#4:4 | B4:4 A4:4 G#4:4 F#4:4 | -:16 \
+                 & -:16 | B3:4 A3:4 G#3:4 F#3:4 | B3:4 A3:4 G#3:4 F#3:4 \
+                 & -:16 | -:16 | -:4 A2:4 G#2:4 F#2:4",
+            )
+            .in_time(COMMON)
+            .in_key(C, MinorPentatonic)
+            .played_by(&[(gm::ENGLISH_HORN, 0), (gm::MUTED_TRUMPET, 12)])
+            .marked(Dynamic::Pianissimo),
+    ],
+    form: &["Dawn", "Oboe", "Call"],
+    drums_from: 0,
+    about: "The first bars of La Mer, bars 1 to 11, the slow introduction up to rehearsal \
+            number 1; the rest of the movement follows. Dawn on the sea: the timpani roll a \
+            B and the double basses hold the B below it for five bars of 6/4, \"très lent\", \
+            while the two harps strike F sharp and G sharp, an octave apart, one beat after \
+            the other, and the cellos, divided in octaves, rock between F sharp and G sharp. \
+            Nothing here is a chord in the usual sense: a held bass and, above it, notes of a \
+            pentatonic scale (B, C sharp, F sharp, G sharp), so the chord sheet stays empty. \
+            In bar 6 the meter turns to 4/4 at the same beat and the oboe sighs G sharp to A \
+            and back, the clarinet echoes it a step lower, and the bassoons hold B with E \
+            sharp, a tritone, the interval of the whole-tone scale. The key signature is B \
+            minor's, but the G sharp makes it B Dorian. Then the cor anglais and the first \
+            trumpet, muted, an octave apart, call on a single C, a semitone above the pedal \
+            B: the first notes of the movement's motto, which goes on in a pentatonic scale \
+            on C (C, E flat, F, G, B flat), so this part is in C minor pentatonic over the B. \
+            Under the call, a falling line, B, A, G sharp, F sharp, trembles down through the \
+            strings, from the violins to the violas and the cellos, an octave lower each \
+            time.",
+};
