@@ -30,10 +30,13 @@ mod settings;
 mod sounds;
 mod styles;
 mod swing;
+mod trace;
 #[cfg(test)]
 mod ux_tests;
 mod video;
 mod view;
+
+pub use trace::{TRACE_SAMPLE_RATE, demo_names, trace_table};
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -144,6 +147,8 @@ pub struct LineupApp {
     export: Option<export::Export>,
     /// The dialog that asks what a video shows.
     video_dialog: video::VideoDialog,
+    /// The trace of what is played, while Settings > Playback > Trace is on.
+    trace: Option<trace::LiveTrace>,
     /// A recording being listened to in the background, if any.
     import: Option<import::Import>,
     /// Find the key: the key worked out from the music.
@@ -238,6 +243,7 @@ impl LineupApp {
             samples: SampleCache::new(),
             export: None,
             video_dialog: video::VideoDialog::default(),
+            trace: None,
             import: None,
             key_finder: key_finder::KeyFinder::default(),
             live: live::Live::new(midi),
@@ -1761,6 +1767,7 @@ impl eframe::App for LineupApp {
         if let Audio::Running(engine) = &mut self.audio {
             engine.collect_garbage();
         }
+        self.check_trace();
         let ctx = ui.ctx().clone();
         // Before anything is drawn: whether a menu is open as the mouse
         // button goes down.

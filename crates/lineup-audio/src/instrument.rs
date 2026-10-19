@@ -277,7 +277,7 @@ fn velocity_gain(velocity: u8) -> f32 {
 /// `left` at the old tempo: the frames up to the next step (`next_step`)
 /// stay as they are, and the rest are multiplied by `stretch`. Rounded to
 /// the nearest frame.
-fn stretched(left: f64, next_step: f64, stretch: f64) -> f64 {
+pub(crate) fn stretched(left: f64, next_step: f64, stretch: f64) -> f64 {
     if left <= next_step {
         left
     } else {
