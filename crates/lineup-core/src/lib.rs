@@ -35,6 +35,7 @@ pub mod record;
 pub mod remeter;
 pub mod sequencer;
 pub mod serial;
+pub mod sources;
 pub mod swing;
 pub mod tempo;
 pub mod tools;
@@ -64,5 +65,6 @@ pub use project::{
     Channel, ChannelKind, Drum, MAX_CHANNELS, MAX_LOOSE_TIMING, MAX_PATTERNS, Project, SampleSource,
 };
 pub use sequencer::{STEPS_PER_BEAT, Sequencer};
+pub use sources::{PartOrigin, PartSet, SongPart, Source, SourceKind};
 pub use swing::MAX_SWING;
 pub use tempo::{Tempo, TempoMap, TempoMarker};

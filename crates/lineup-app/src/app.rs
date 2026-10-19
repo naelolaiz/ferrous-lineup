@@ -43,8 +43,8 @@ use lineup_audio::{
     AudioEngine, ChannelNotes, Command, Instrument, PlayMode, SampleCache, SampleData,
 };
 use lineup_core::{
-    Channel, ChannelKind, DEFAULT_VELOCITY, History, Meter, MidiMessage, Note, Pass, Pattern,
-    Project, SampleSource, Scale, Tempo,
+    Channel, ChannelKind, DEFAULT_VELOCITY, History, Meter, MidiMessage, Note, PartSet, Pass,
+    Pattern, Project, SampleSource, Scale, SongPart, Source, SourceKind, Tempo,
 };
 
 use crate::channel_rack::{self, RackAction};
@@ -204,8 +204,7 @@ impl LineupApp {
         };
         let midi = Midi::new(ctx, live_input, midi_output);
 
-        let mut project = Project::demo();
-        files::fill_chord_sheet(&mut project);
+        let project = library::Demo::Start.project();
         let piano_roll = PianoRoll::new(first_synth(&project));
         let mut app = LineupApp {
             audio,
@@ -904,6 +903,11 @@ impl LineupApp {
                 } else {
                     self.playlist.library_parts().for_rhythm()
                 };
+                // Taking the band away is your edit; a style brings it in.
+                let source = style.map(|style| match harmony {
+                    Some(harmony) => Source::new(SourceKind::Style, harmony.name),
+                    None => Source::new(SourceKind::Rhythm, style.name),
+                });
                 self.edit_song(
                     "change the band",
                     style
@@ -911,6 +915,7 @@ impl LineupApp {
                         .map(|style| harmony.map_or(style.time, |harmony| harmony.time)),
                     parts,
                     false,
+                    source.as_ref().map(library::Bringing::from),
                     |project, parts| {
                         match style {
                             Some(style) if project.band().is_some() => {
@@ -987,8 +992,12 @@ impl LineupApp {
                 self.notice = Some("The soloist plays another solo".to_string());
             }
             SheetAction::WriteProgression { style, from } => {
+                let source = Source::new(SourceKind::Style, style.name);
+                let chords = PartSet::of(&[SongPart::Chords]);
                 let bars = self.edit("write a progression", |project| {
-                    project.write_progression(style, from)
+                    project.bring_in(&source, chords, PartSet::NONE, |project| {
+                        project.write_progression(style, from)
+                    })
                 });
                 self.notice = Some(format!("Wrote {} from bar {}", style.name, from + 1));
                 if bars == 0 {

@@ -2288,3 +2288,187 @@ fn saving_a_style_elsewhere_keeps_the_styles_folder() {
     );
     std::fs::remove_dir_all(&root).unwrap();
 }
+
+mod part_sources {
+    use super::*;
+    use crate::library_browser::{LibraryAction, part_source_text};
+    use lineup_core::SongPart;
+    use lineup_core::library::{Rhythm, Song, Style, apply::StyleParts};
+
+    const ONLY_TEMPO: StyleParts = StyleParts {
+        rhythm: false,
+        instruments: false,
+        time_signature: false,
+        progression: false,
+        tempo: true,
+        swing: false,
+        matching_style: true,
+    };
+
+    fn source(screen: &Screen, part: SongPart) -> String {
+        part_source_text(&screen.app.project, part)
+    }
+
+    /// Every part but `part` comes from `from`.
+    fn others_from(screen: &Screen, part: SongPart, from: &str) {
+        for other in SongPart::ALL.into_iter().filter(|&other| other != part) {
+            assert_eq!(source(screen, other), from, "{other:?}");
+        }
+    }
+
+    fn el_choclo() -> Screen {
+        let mut screen = Screen::new();
+        screen
+            .app
+            .open_demo(library::Demo::Song(Song::named("El Choclo").unwrap()));
+        screen
+    }
+
+    #[test]
+    fn a_demo_brings_in_every_part_and_a_style_only_those_ticked() {
+        let screen = Screen::new();
+        others_from(&screen, SongPart::Tempo, "The starting song (demo)");
+        assert_eq!(source(&screen, SongPart::Tempo), "The starting song (demo)");
+
+        let mut screen = el_choclo();
+        assert!(screen.app.playing && screen.app.mode == PlayMode::Song);
+        others_from(&screen, SongPart::Tempo, "El Choclo (demo)");
+        let tempo = screen.app.project.tempo;
+        *screen.app.playlist.library_parts_mut() = ONLY_TEMPO;
+        let doo_wop = Style::named("Doo-wop").unwrap();
+        screen.app.try_from_library(LibraryAction::Style(doo_wop));
+        assert_ne!(screen.app.project.tempo, tempo);
+        assert_eq!(source(&screen, SongPart::Tempo), "Doo-wop (style)");
+        others_from(&screen, SongPart::Tempo, "El Choclo (demo)");
+
+        // Your own change, and its undo. (A click starts each step.)
+        screen.app.history.close();
+        screen.app.edit("change the tempo", |project| {
+            project.tempo = Tempo::new(97.0);
+        });
+        assert_eq!(source(&screen, SongPart::Tempo), "edited, was Doo-wop");
+        others_from(&screen, SongPart::Tempo, "El Choclo (demo)");
+        screen.app.undo();
+        assert_eq!(source(&screen, SongPart::Tempo), "Doo-wop (style)");
+        screen.app.undo();
+        assert_eq!(source(&screen, SongPart::Tempo), "El Choclo (demo)");
+    }
+
+    #[test]
+    fn a_part_ticked_comes_from_the_rhythm_even_if_the_song_had_it_already() {
+        let mut screen = Screen::new();
+        assert_eq!(screen.app.mode, PlayMode::Song);
+        let afrobeats = Rhythm::named("Afrobeats").unwrap();
+        assert_eq!(afrobeats.time, screen.app.project.time_signature);
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            tempo: false,
+            ..StyleParts::default()
+        };
+        screen
+            .app
+            .try_from_library(LibraryAction::Rhythm(afrobeats));
+        for part in [
+            SongPart::Patterns,
+            SongPart::Instruments,
+            SongPart::TimeSignature,
+            SongPart::Swing,
+        ] {
+            assert_eq!(source(&screen, part), "Afrobeats (rhythm)", "{part:?}");
+        }
+        for part in [SongPart::Chords, SongPart::Tempo] {
+            assert_eq!(
+                source(&screen, part),
+                "The starting song (demo)",
+                "{part:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_time_box_time_is_yours_and_the_band_comes_from_its_rhythm() {
+        let mut screen = el_choclo();
+        let time = screen.app.project.time_signature;
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen
+            .app
+            .set_song_time(lineup_core::TimeSignature::new(3, 4));
+        assert_eq!(
+            source(&screen, SongPart::TimeSignature),
+            "edited, was El Choclo"
+        );
+        let band = screen.app.project.band().unwrap().style.name;
+        let rhythm = format!("{band} (rhythm)");
+        assert_eq!(source(&screen, SongPart::Patterns), rhythm);
+        assert_eq!(source(&screen, SongPart::Instruments), rhythm);
+        // "Use rhythm's swing" is ticked: the rhythm's, even if the same.
+        assert_eq!(source(&screen, SongPart::Swing), rhythm);
+        // Moved into the new bars, and kept at their pace: still the demo's.
+        for part in [SongPart::Chords, SongPart::Tempo] {
+            assert_eq!(source(&screen, part), "El Choclo (demo)", "{part:?}");
+        }
+        // Back in its own time, the song is the demo's again.
+        screen.app.set_song_time(time);
+        others_from(&screen, SongPart::Tempo, "El Choclo (demo)");
+        assert_eq!(source(&screen, SongPart::Tempo), "El Choclo (demo)");
+    }
+
+    #[test]
+    fn a_trial_pattern_does_not_change_where_the_songs_patterns_come_from() {
+        let mut screen = el_choclo();
+        screen.app.set_playing(false);
+        screen.app.set_mode(PlayMode::Pattern);
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        let doo_wop = Style::named("Doo-wop").unwrap();
+        screen.app.try_from_library(LibraryAction::Style(doo_wop));
+        assert_eq!(
+            screen.app.project.pattern(screen.app.pattern).unwrap().name,
+            "Doo-wop"
+        );
+        assert_eq!(source(&screen, SongPart::Patterns), "El Choclo (demo)");
+        assert_eq!(source(&screen, SongPart::Chords), "El Choclo (demo)");
+        assert_eq!(source(&screen, SongPart::Tempo), "Doo-wop (style)");
+    }
+
+    #[test]
+    fn the_library_and_its_apply_options_say_where_each_part_comes_from() {
+        let mut screen = el_choclo();
+        screen.app.rack_open = false;
+        screen.app.playlist.browser_open = true;
+        *screen.app.playlist.library_parts_mut() = ONLY_TEMPO;
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
+        screen.click("📚 Library");
+        let output = screen.draw(Vec::new());
+        let tempo = format!(
+            "{:.0} BPM · Doo-wop (style)",
+            screen.app.project.tempo.bpm()
+        );
+        assert!(text_rect(&output, &tempo).is_some(), "{tempo}");
+        assert!(text_rect(&output, "El Choclo (demo)").is_some());
+        screen.click("🔍 Search: bossa, 6/8, tango…");
+        screen.draw(vec![Event::Text("Emotional pop".into())]);
+        screen.click("Emotional pop");
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "now: Doo-wop (style)").is_some());
+        assert!(text_rect(&output, "now: El Choclo (demo)").is_some());
+    }
+
+    #[test]
+    fn a_saved_song_keeps_where_its_parts_came_from() {
+        let mut screen = el_choclo();
+        *screen.app.playlist.library_parts_mut() = ONLY_TEMPO;
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
+        screen
+            .app
+            .edit("change the swing", |project| project.swing = 20);
+        let text = lineup_core::file::to_text(&screen.app.project).unwrap();
+        let opened = lineup_core::file::from_text(&text).unwrap();
+        screen.app.replace_project(opened, None);
+        assert_eq!(source(&screen, SongPart::Tempo), "Doo-wop (style)");
+        assert_eq!(source(&screen, SongPart::Swing), "edited, was El Choclo");
+        assert_eq!(source(&screen, SongPart::Chords), "El Choclo (demo)");
+    }
+}
