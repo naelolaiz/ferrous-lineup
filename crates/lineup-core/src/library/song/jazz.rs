@@ -3526,3 +3526,90 @@ pub(super) const TAKE_FIVE: Song = Song {
             twice around eight bars of vamp, where the solos go. The app names the key D sharp \
             minor, the same six-accidental key spelled with sharps.",
 };
+
+// Still under copyright: written in 1966 for the television series.
+// Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/LaloSchifrinMISSIONIMPOSSIBLETHEME.abc
+// (A 24-bar piano lead sheet in G minor, L:1/8 in 5/4, with the chords. Its first four
+// bars are the ostinato alone, written as the tune; here the piano's left hand plays them,
+// in octaves, and keeps playing the ostinato under the tune, on C under the C minor
+// section, as the chords imply. The last three bars play the chords the lead sheet gives,
+// in the ostinato's rhythm, which the tune's notes follow. Its Bb/Ab and Eb/Db are
+// written here as Bb7/Ab and Eb7/Db, the same four notes, so the bass is spelled as the
+// chord's seventh.)
+pub(super) const MISSION_IMPOSSIBLE: Song = Song {
+    name: "Mission: Impossible theme",
+    origin: "Lalo Schifrin, for the television series Mission: Impossible, 1966",
+    feel: "Five-four spy",
+    genre: Genre::Jazz,
+    tonic: G,
+    mode: NaturalMinor,
+    time: FIVE_FOUR,
+    tempo: 160.0,
+    comping: Comping::Aksak,
+    bass: Bass::Aksak,
+    rhythm: "Five-four spy",
+    band: Band::new(
+        gm::BRASS_SECTION,
+        gm::ACOUSTIC_GRAND_PIANO,
+        gm::ACOUSTIC_BASS,
+    ),
+    style: "Five-four spy",
+    parts: &[
+        Part::new("Intro", "-:20 | -:20 | -:20 | -:20", "Gm | Gm | Gm | Gm").with_left(
+            "G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3 | \
+             G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3",
+        ),
+        Part::new(
+            "A",
+            "(3 Bb5:2 G5 D5 _:12 -:4 | (3 Bb5:2 G5 Db5 _:12 -:4 | (3 Bb5:2 G5 C5 _:12 -:4 | \
+             Bb4:2 C5 -:16 | G5:4 -:2 G5:4 -:2 Bb5:4 C6 | G5:4 -:2 G5:4 -:2 F5:4 F#5 | \
+             G5:4 (3 Bb5:2 G5 F#6 _:8 -:4 | -:4 (3 Bb5:2 G5 F6 _:8 -:4 | \
+             -:4 (3 Bb5:2 G5 E6 _:8 -:4 | Eb6:2 D6 -:16",
+            "Gm | Gm | Gm | Gm | Gm Gm Gm Bbm Cm | Gm Gm Gm Fm F#m | Gm | Gm | Gm | Gm",
+        )
+        .with_left(
+            "G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3 | \
+             G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3 | \
+             G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3 | \
+             G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3 | \
+             G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3",
+        ),
+        Part::new(
+            "B",
+            "Eb4:2 C4 G3:12 -:4 | Eb4:2 C4 Gb3:12 -:4 | Eb4:2 C4 F3:12 -:4 | Eb3:2 F3 -:16",
+            "Cm | Cm | Cm | Cm",
+        )
+        .with_left(
+            "C2+C3:4 -:2 C2+C3:4 -:2 Eb2+Eb3:4 F2+F3 | C2+C3:4 -:2 C2+C3:4 -:2 Bb1+Bb2:4 B1+B2 | \
+             C2+C3:4 -:2 C2+C3:4 -:2 Eb2+Eb3:4 F2+F3 | C2+C3:4 -:2 C2+C3:4 -:2 Bb1+Bb2:4 B1+B2",
+        ),
+        Part::new(
+            "Ending",
+            "Bb4:2 G4 F#5:12 -:4 | Bb4:2 G4 F5:12 -:4 | Bb4:2 G4 E5:12 -:4 | \
+             Eb5:2 D5 -:2 A4:4 -:2 Bb4:4 C5 | A4:4 -:8 F5:2 G5:6 | _:16 -:4",
+            "Gm | Gm | Gm | Dsus4 Dsus4 Dsus4 Ebsus4 Fsus4 | \
+             Dsus4 Dsus4 Dsus4 Dsus4 Dsus4 Dsus4 Bb7/Ab Eb7/Db Eb7/Db Eb7/Db | Eb7/Db",
+        )
+        .with_left(
+            "G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | G2+G3:4 -:2 G2+G3:4 -:2 F2+F3:4 F#2+F#3 | \
+             G2+G3:4 -:2 G2+G3:4 -:2 Bb2+Bb3:4 C3+C4 | \
+             D2+D3+G3+A3:4 -:2 D2+D3+G3+A3:4 -:2 Eb2+Eb3+Ab3+Bb3:4 F2+F3+Bb3+C4 | \
+             D2+D3+G3+A3:4 -:8 Ab2+Bb3+D4+F4:2 Db2+Eb3+G3+Bb3:6 | _:16 -:4",
+        )
+        .with_tempo(&[fermata(108, 8)]),
+    ],
+    form: &["Intro", "A", "B", "Ending"],
+    drums_from: 0,
+    about: "The theme of a television series about secret agents, in 5/4. The piano's \
+            ostinato splits the bar's ten eighths 3 + 3 + 2 + 2, long, long, short, short: \
+            G, G, then B flat and C; G, G, then F and F sharp, the leading note, creeping \
+            back to G. Over it the brass fall in a triplet from B flat and G to D, the fifth \
+            of G minor, then to D flat and C, sinking a half step at a time. The tune proper \
+            is the ostinato's own notes two octaves up, harmonized with parallel minor \
+            chords, B flat minor and C minor, F minor and F sharp minor; then the triplet \
+            leaps up a major seventh to F sharp, F and E, and falls to E flat and D. The \
+            call comes back on C minor, the iv, as a blues moves to its IV, then on G minor \
+            again. The ending climbs in parallel sus4 chords, D, E flat, F, and stops \
+            without resolving: B flat seven, then E flat seven, each with its seventh in \
+            the bass, A flat and D flat, under a long G.",
+};

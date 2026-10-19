@@ -138,6 +138,7 @@ const fn style(
     }
 }
 
+const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
@@ -700,6 +701,19 @@ pub static STYLES: &[Style] = &[
         "Five-four swing",
         "Jazz in 5/4, counted 3 + 2: a minor vamp from i7 to v7, then iv7 and \
          bVImaj7 lead to a V7 with the leading note, back to i7.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    style(
+        "Five-four spy",
+        Jazz,
+        NaturalMinor,
+        "i | i | iv | i | i | i | bVI | V",
+        Comping::Aksak,
+        Bass::Aksak,
+        160.0,
+        "Five-four spy",
+        "A 1960s spy theme in 5/4: a minor chord held over the beat, moving to iv as \
+         a blues does, then bVI and the V with the leading note bring it home.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Soul, funk and R&B -----
@@ -1755,6 +1769,71 @@ pub static STYLES: &[Style] = &[
          one fifth, over two chords.",
     )
     .in_time(TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8)),
+    style(
+        "Tsakonikos",
+        Balkan,
+        NaturalMinor,
+        "i | i | i | iv | iv | i | iv | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        140.0,
+        "Tsakonikos",
+        "The 5/8 of Tsakonia, 3 + 2, slow, quick, the paidushko's beats the other way \
+         round: the bass on the long beat and on the short one, over a minor key's i and iv.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 8)),
+    style(
+        "Five-four",
+        Balkan,
+        Major,
+        "I | I | V7 | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        192.0,
+        "Five-four",
+        "A folk dance in 5/4, counted 3 + 2: the bass on 1 and 4, the accordion's chord \
+         on the beats after each, over I and V7.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    style(
+        "Aksak",
+        Balkan,
+        Phrygian,
+        "bVI | iv | bVI | i | bVI | bIII | bVI | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        90.0,
+        "Aksak",
+        "The Turkish 9/8, 2 + 2 + 2 + 3, in makam segâh: B, C, D, E, F sharp, G, A, \
+         the Phrygian mode, over G major, E minor and D major, coming back to B minor.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    style(
+        "Devr-i hindi",
+        Balkan,
+        Phrygian,
+        "iv | I | iv | bII | bII | I | iv | I",
+        Comping::Aksak,
+        Bass::Aksak,
+        120.0,
+        "Devr-i hindi",
+        "A Turkish 7/8 counted 3 + 2 + 2, in makam hicaz: A, B flat, C sharp, D, E, F, \
+         G, over D minor, B flat and A major.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    style(
+        "Curcuna",
+        Balkan,
+        Dorian,
+        "i | v7 | v7 | IV7 | i | IV7 | v7 | i",
+        Comping::Aksak,
+        Bass::Aksak,
+        96.0,
+        "Curcuna",
+        "A slow Turkish 10/8 counted 3 + 2 + 2 + 3, in makam hüseyni: A, B, C, D, E, \
+         F sharp, G, the Dorian mode, over A minor, E minor 7 and D7.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2, 3], 8)),
     // ----- Reggae and ska -----
     style(
         "Reggae",
@@ -1880,6 +1959,19 @@ pub static STYLES: &[Style] = &[
         "Oom-pah-pah: three beats to the bar, the bass on one and the chords on two and three.",
     )
     .in_time(THREE_FOUR),
+    style(
+        "Two-four polka",
+        Folk,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Backbeat,
+        Bass::RootFifth,
+        120.0,
+        "Two-four polka",
+        "The polka in 2/4, two beats to the bar: the bass on 1, the root and the fifth \
+         below it by turns from bar to bar, and the chord on 2.",
+    )
+    .in_time(TWO_FOUR),
     style(
         "Jig",
         Folk,

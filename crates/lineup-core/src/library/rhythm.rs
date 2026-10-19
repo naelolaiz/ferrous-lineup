@@ -306,6 +306,7 @@ impl Rhythm {
     }
 }
 
+const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
@@ -564,6 +565,20 @@ pub static RHYTHMS: &[Rhythm] = &[
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4))
     .swung(100),
+    rhythm(
+        "Five-four spy",
+        Jazz,
+        160.0,
+        &[
+            (Kick, "X... ..x. .... X... x..."),
+            (Conga, "h.x. x.h. x.x. h.x. h.x."),
+            (Shaker, "o.o. o.o. o.o. o.o. o.o."),
+        ],
+        "",
+        "The long, long, short, short of a 1960s spy theme in 5/4: the bar's ten \
+         eighths go 3 + 3 + 2 + 2, the bass drum and the high conga on each start.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",
@@ -1389,6 +1404,87 @@ pub static RHYTHMS: &[Rhythm] = &[
          bars Bulgarian dancers count, with the long beat near the end.",
     )
     .in_time(TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8)),
+    rhythm(
+        "Tsakonikos",
+        Balkan,
+        140.0,
+        &[(Kick, "X..... x..."), (Rim, "..o.o. ..o.")],
+        "",
+        "The dance of Tsakonia, in the Peloponnese, in 5/8 the other way round from the \
+         paidushko: a long beat and a short one, 3 + 2, slow, quick, the big drum on both.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 8)),
+    rhythm(
+        "Five-four",
+        Balkan,
+        192.0,
+        &[
+            (Kick, "X... .... .... x... ...."),
+            (Rim, "..o. x.o. x.o. ..o. x.o."),
+        ],
+        "",
+        "A folk dance in five quarter notes, counted 3 + 2: the big drum on 1 and 4, \
+         where each group starts, the stick on the other beats and lightly between them.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    // The Turkish usuls, on the darbuka: `l` is its low sound, düm, `h`
+    // its high one, tek (or te, ke), and the big drum doubles the düms.
+    //
+    // Aksak: nine beats and six strokes, ending 2 + 1 (Cinuçen
+    // Tanrıkorur, "Aksak", TDV İslâm Ansiklopedisi 2, 1989), a sofyan and a
+    // türk aksağı, 4 + 5 (İsmail Hakkı Özkan, "Raks aksağı", TDV İslâm
+    // Ansiklopedisi 34, 2007): düm . te ke | düm . tek . tek.
+    rhythm(
+        "Aksak",
+        Balkan,
+        90.0,
+        &[
+            (Kick, "X... .... X... ......"),
+            (Conga, "l... h.h. l... h...h."),
+            (Shaker, "x.o. x.o. x.o. x.o.o."),
+        ],
+        "",
+        "The Turkish aksak, 9/8 counted 2 + 2 + 2 + 3, on the darbuka: düm, te-ke, \
+         düm, tek-tek, the low düm on the first and third beats, the long last beat \
+         split two and one.",
+    )
+    .in_time(TimeSignature::of_groups(&[2, 2, 2, 3], 8)),
+    // Devr-i hindî: seven beats and five strokes, a semai and a sofyan
+    // (İsmail Hakkı Özkan, "Devr-i hindî", TDV İslâm Ansiklopedisi 9,
+    // 1994): düm tek tek | düm . | tek . (the semai's three strokes, then
+    // the sofyan's düm and tek).
+    rhythm(
+        "Devr-i hindi",
+        Balkan,
+        120.0,
+        &[
+            (Kick, "X..... X... ...."),
+            (Conga, "l.h.h. l... h..."),
+            (Shaker, "x.o.o. x.o. x.o."),
+        ],
+        "",
+        "The Turkish devr-i hindî, 7/8 counted 3 + 2 + 2: düm, tek, tek on the three \
+         eighths of the long beat, then düm and tek on the two short ones.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2], 8)),
+    // Curcuna as Turkish folk musicians count it, "Dü-ü-üm Te-ek Dü-üm
+    // Te-e-ek", 3 + 2 + 2 + 3 (E. Düzenli and İ. Doğan, "Sözlü Türk Halk
+    // Müziği Eserlerinde Ölçü Tespitine Yönelik Bir Analiz Modeli",
+    // Eurasian Journal of Music and Dance 17, 2020).
+    rhythm(
+        "Curcuna",
+        Balkan,
+        96.0,
+        &[
+            (Kick, "X..... .... X... ......"),
+            (Conga, "l..... h... l... h....."),
+            (Shaker, "x.o.o. x.o. x.o. x.o.o."),
+        ],
+        "",
+        "The Turkish curcuna, ten eighths counted 3 + 2 + 2 + 3: düm on the long first \
+         beat, tek on the second, düm on the third and tek on the long last one.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 2, 2, 3], 8)),
     // ----- Reggae and ska -----
     rhythm(
         "One drop",
@@ -1495,6 +1591,16 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Oom-pah-pah: one strong beat and two light ones.",
     )
     .in_time(THREE_FOUR),
+    rhythm(
+        "Two-four polka",
+        Folk,
+        120.0,
+        &[(Kick, "X... ...."), (Snare, ".... o...")],
+        "",
+        "The polka in 2/4, as it is written: oom-pa, one strong beat and one light one. \
+         Taking turns with the waltz, it makes the bars of a zwiefacher.",
+    )
+    .in_time(TWO_FOUR),
     rhythm(
         "Six-eight",
         Folk,
