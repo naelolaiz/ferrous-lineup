@@ -10,8 +10,11 @@
 use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Rect, Ui};
-use lineup_core::{ChannelKind, Drum, MAX_CHANNELS, Project, file, general_midi};
+use lineup_core::{
+    Channel, ChannelKind, DRUM_CHANNEL, Drum, MAX_CHANNELS, Project, file, general_midi,
+};
 
+use crate::midi::Port;
 use crate::widgets;
 
 /// Something the user asked the rack to do.
@@ -53,11 +56,17 @@ pub enum RackAction {
     AddSynth,
     /// Add a channel that plays an external synth.
     AddMidiOut,
-    /// Change the MIDI channel (0 to 15) of a MIDI Out channel.
+    /// Send a channel over MIDI on MIDI channel `midi_channel` (0 to
+    /// 15): a synth becomes a MIDI Out channel, and a MIDI Out channel
+    /// changes its channel.
     SetMidiChannel {
         channel: usize,
         midi_channel: u8,
     },
+    /// Play a MIDI Out channel on the built-in sound again.
+    PlayHere(usize),
+    /// Send every MIDI Out channel to this output port, or to none.
+    ConnectMidiOutput(Option<Port>),
     /// Change the General MIDI instrument of a synth or MIDI Out channel,
     /// or take it away (`None`).
     SetProgram {
@@ -84,39 +93,74 @@ pub struct RackPlayback {
     pub over_song: bool,
 }
 
+/// The MIDI outputs the instrument menus offer. The app keeps them up
+/// to date (see [`set_midi_outputs`]), as the rack and the mixer cannot
+/// reach the MIDI connection themselves.
+#[derive(Clone, Default)]
+pub struct MidiOutputs {
+    pub ports: Vec<Port>,
+    pub connected: Option<Port>,
+}
+
+fn midi_outputs_id() -> egui::Id {
+    egui::Id::unique("midi-outputs")
+}
+
+/// Tells the instrument menus which MIDI outputs there are.
+pub fn set_midi_outputs(ctx: &egui::Context, outputs: MidiOutputs) {
+    ctx.data_mut(|data| data.insert_temp(midi_outputs_id(), outputs));
+}
+
 /// The "Instrument" submenu (see [`instrument_choices`]).
-fn instrument_menu(
-    ui: &mut Ui,
-    channel: usize,
-    current: Option<u8>,
-    actions: &mut Vec<RackAction>,
-) {
-    let label = match current {
+fn instrument_menu(ui: &mut Ui, channel: usize, state: &Channel, actions: &mut Vec<RackAction>) {
+    let label = match state.program {
         Some(program) => format!("Instrument: {}", general_midi::name(program)),
         None => "Instrument".to_string(),
     };
-    ui.menu_button(label, |ui| {
-        instrument_choices(ui, channel, current, actions)
-    })
-    .response
-    .on_hover_text(
-        "The General MIDI instrument this channel plays: sent to a MIDI synth as a \
+    ui.menu_button(label, |ui| instrument_choices(ui, channel, state, actions))
+        .response
+        .on_hover_text(
+            "The General MIDI instrument this channel plays: sent to a MIDI synth as a \
              program change, written in exported MIDI files, and imitated by the Lineup Osc",
-    );
+        );
 }
 
-/// The instruments a synth or MIDI Out channel can play, inside a menu:
-/// "None" for the Lineup Osc's own sound, then the 128 General MIDI
-/// programs in their sixteen families. The mixer shows them too.
+/// The instruments a synth or MIDI Out channel (`state`, number
+/// `channel`) can play, inside a menu: sending it over MIDI, "None" for
+/// the Lineup Osc's own sound, and the 128 General MIDI programs in their
+/// sixteen families. The mixer shows them too.
 pub fn instrument_choices(
     ui: &mut Ui,
     channel: usize,
-    current: Option<u8>,
+    state: &Channel,
     actions: &mut Vec<RackAction>,
 ) {
+    let current = state.program;
+    let sent_on = match state.kind {
+        ChannelKind::MidiOut { channel } => Some(channel),
+        _ => None,
+    };
+    // Sending it over MIDI comes first, where the long list of
+    // instruments below can't scroll it out of sight.
+    midi_choices(ui, channel, sent_on, actions);
+    if sent_on.is_some()
+        && ui
+            .button("Play it here instead")
+            .on_hover_text("Stop sending it over MIDI, and play it with the built-in sound")
+            .clicked()
+    {
+        actions.push(RackAction::PlayHere(channel));
+        ui.close();
+    }
+    ui.separator();
     widgets::scroll_menu(ui, |ui| {
+        let none = if sent_on.is_some() {
+            "None (no program change)"
+        } else {
+            "None (the Lineup Osc's own sound)"
+        };
         let none = ui
-            .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
+            .selectable_label(current.is_none(), none)
             .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
         if none.clicked() {
             actions.push(RackAction::SetProgram {
@@ -149,6 +193,66 @@ pub fn instrument_choices(
                     }
                 }
             });
+        }
+    });
+}
+
+/// "Send over MIDI": the MIDI channel to send channel `channel` on (it is
+/// sent on `sent_on` already, if any), and the output that every MIDI
+/// Out channel goes to.
+fn midi_choices(ui: &mut Ui, channel: usize, sent_on: Option<u8>, actions: &mut Vec<RackAction>) {
+    let label = match sent_on {
+        Some(midi_channel) => format!("● Sent over MIDI, channel {}", midi_channel + 1),
+        None => "Send over MIDI".to_string(),
+    };
+    ui.menu_button(label, |ui| {
+        ui.label("MIDI channel");
+        egui::Grid::new("midi-channels").show(ui, |ui| {
+            for midi_channel in 0..16 {
+                let mut response = ui.selectable_label(
+                    sent_on == Some(midi_channel),
+                    (midi_channel + 1).to_string(),
+                );
+                if midi_channel == DRUM_CHANNEL {
+                    response =
+                        response.on_hover_text("General MIDI synths play drums on channel 10");
+                }
+                if response.clicked() {
+                    actions.push(RackAction::SetMidiChannel {
+                        channel,
+                        midi_channel,
+                    });
+                    ui.close();
+                }
+                if midi_channel % 4 == 3 {
+                    ui.end_row();
+                }
+            }
+        });
+        ui.separator();
+        ui.label("Output, for every MIDI Out channel");
+        let outputs: MidiOutputs = ui
+            .ctx()
+            .data(|data| data.get_temp(midi_outputs_id()))
+            .unwrap_or_default();
+        if ui
+            .selectable_label(outputs.connected.is_none(), "None")
+            .clicked()
+        {
+            actions.push(RackAction::ConnectMidiOutput(None));
+            ui.close();
+        }
+        if outputs.ports.is_empty() {
+            ui.weak("No outputs found (the MIDI menu looks again)");
+        }
+        for port in &outputs.ports {
+            if ui
+                .selectable_label(outputs.connected.as_ref() == Some(port), &port.name)
+                .clicked()
+            {
+                actions.push(RackAction::ConnectMidiOutput(Some(port.clone())));
+                ui.close();
+            }
         }
     });
 }
@@ -350,24 +454,7 @@ pub fn show(
                             channel.kind,
                             ChannelKind::Synth | ChannelKind::MidiOut { .. }
                         ) {
-                            instrument_menu(ui, index, channel.program, &mut actions);
-                        }
-                        if let ChannelKind::MidiOut { channel: current } = channel.kind {
-                            ui.menu_button("MIDI channel", |ui| {
-                                for midi_channel in 0..16 {
-                                    let label = format!("{}", midi_channel + 1);
-                                    if ui
-                                        .selectable_label(current == midi_channel, label)
-                                        .clicked()
-                                    {
-                                        actions.push(RackAction::SetMidiChannel {
-                                            channel: index,
-                                            midi_channel,
-                                        });
-                                        ui.close();
-                                    }
-                                }
-                            });
+                            instrument_menu(ui, index, channel, &mut actions);
                         }
                         if locks && ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
                             actions.push(RackAction::SetLocked {

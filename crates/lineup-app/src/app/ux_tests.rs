@@ -480,6 +480,47 @@ fn an_exported_song_keeps_each_channel_where_the_mixer_put_it() {
 }
 
 #[test]
+fn the_mixer_sends_a_channel_over_midi_and_back() {
+    use lineup_core::general_midi::ACOUSTIC_GRAND_PIANO;
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    let osc = screen
+        .app
+        .project
+        .channels()
+        .iter()
+        .position(|channel| channel.name == "Lineup Osc")
+        .unwrap();
+    let channel = |screen: &Screen| screen.app.project.channels()[osc].clone();
+    screen.click("Acoustic Grand Piano");
+    screen.click("Send over MIDI");
+    let output = screen.draw(vec![]);
+    // No MIDI here, so no outputs; "None" is the one chosen.
+    assert!(text_rect(&output, "Output, for every MIDI Out channel").is_some());
+    assert!(text_rect(&output, "No outputs found (the MIDI menu looks again)").is_some());
+    screen.click("3");
+    assert_eq!(channel(&screen).kind, ChannelKind::MidiOut { channel: 2 });
+    assert_eq!(channel(&screen).program, Some(ACOUSTIC_GRAND_PIANO));
+    assert_eq!(channel(&screen).name, "MIDI Out 3");
+    assert_eq!(screen.app.history.undo_label(), Some("send over MIDI"));
+    // The mixer says where it goes; the menu, which channel.
+    screen.click("Acoustic Grand Piano · MIDI 3");
+    screen.click("● Sent over MIDI, channel 3");
+    screen.click("10");
+    assert_eq!(channel(&screen).kind, ChannelKind::MidiOut { channel: 9 });
+    assert_eq!(channel(&screen).name, "MIDI Out 10");
+    assert_eq!(screen.app.history.undo_label(), Some("change MIDI channel"));
+    screen.click("Acoustic Grand Piano · MIDI 10");
+    screen.click("Play it here instead");
+    assert_eq!(channel(&screen).kind, ChannelKind::Synth);
+    assert_eq!(channel(&screen).name, "Lineup Osc");
+    assert_eq!(channel(&screen).program, Some(ACOUSTIC_GRAND_PIANO));
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Acoustic Grand Piano").is_some());
+}
+
+#[test]
 fn windows_open_at_their_own_size_not_one_remembered_from_before() {
     type Open = fn(&mut LineupApp, bool);
     let windows: [(&str, egui::Id, Open); 7] = [
