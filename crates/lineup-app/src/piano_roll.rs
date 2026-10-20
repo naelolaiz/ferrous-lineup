@@ -2555,20 +2555,20 @@ const fn shortcut(modifiers: Modifiers, key: Key) -> KeyboardShortcut {
     KeyboardShortcut::new(modifiers, key)
 }
 
-const KEY_UP: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowUp);
-const KEY_DOWN: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowDown);
-const OCTAVE_UP: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowUp);
-const OCTAVE_DOWN: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowDown);
-const IN_KEY_UP: KeyboardShortcut = shortcut(Modifiers::ALT, Key::ArrowUp);
-const IN_KEY_DOWN: KeyboardShortcut = shortcut(Modifiers::ALT, Key::ArrowDown);
-const KEY_LEFT: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowLeft);
-const KEY_RIGHT: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowRight);
-const BEAT_LEFT: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowLeft);
-const BEAT_RIGHT: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowRight);
-const SELECT_ALL: KeyboardShortcut = shortcut(Modifiers::COMMAND, Key::A);
-const DELETE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Delete);
-const BACKSPACE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Backspace);
-const ESCAPE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Escape);
+pub(crate) const KEY_UP: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowUp);
+pub(crate) const KEY_DOWN: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowDown);
+pub(crate) const OCTAVE_UP: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowUp);
+pub(crate) const OCTAVE_DOWN: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowDown);
+pub(crate) const IN_KEY_UP: KeyboardShortcut = shortcut(Modifiers::ALT, Key::ArrowUp);
+pub(crate) const IN_KEY_DOWN: KeyboardShortcut = shortcut(Modifiers::ALT, Key::ArrowDown);
+pub(crate) const KEY_LEFT: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowLeft);
+pub(crate) const KEY_RIGHT: KeyboardShortcut = shortcut(Modifiers::NONE, Key::ArrowRight);
+pub(crate) const BEAT_LEFT: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowLeft);
+pub(crate) const BEAT_RIGHT: KeyboardShortcut = shortcut(Modifiers::SHIFT, Key::ArrowRight);
+pub(crate) const SELECT_ALL: KeyboardShortcut = shortcut(Modifiers::COMMAND, Key::A);
+pub(crate) const DELETE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Delete);
+pub(crate) const BACKSPACE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Backspace);
+pub(crate) const ESCAPE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Escape);
 
 /// The pitches held during `step` on any of `channels`.
 fn sounding<'a>(
