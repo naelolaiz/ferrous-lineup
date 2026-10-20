@@ -67,7 +67,7 @@ and a library to go with them:
 - **patterns up to sixteen bars long**, so a whole twelve-bar blues fits
   in one pattern.
 - **a bug hunt**: the playlist and the piano roll zoom horizontally and
-  vertically on their own, as in FL Studio; notes, scales and chords are
+  vertically on their own; notes, scales and chords are
   spelled with the right letters (E# in F# major, E#dim); hints and
   harmony keys get their theory right in minor keys, modes and sets;
   held notes survive section edges, muting and tempo changes; and many

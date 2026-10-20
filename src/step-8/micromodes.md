@@ -39,10 +39,10 @@ What Ferrous Lineup gains:
 
 ![The Sets window on 7-35, the diatonic scale, opened from the Micromodes window. Under the details, "Micromodes inside, in its 35 groups of three", each one a button back to the Micromodes window.](../images/step-8-micromodes-in-sets.png)
 
-## What FL Studio does, and what we do
+## What other music programs do, and what we do
 
-FL Studio has nothing like this; like the last chapter, this one is
-not a copy of anything. It is the tool a student of Kröpfl's method
+Music programs have nothing like this; like the last chapter, this one
+is not a copy of anything. It is the tool a student of Kröpfl's method
 would want beside a piano roll: something that names the groups of
 three in what you play, and plays them back to you, so that your ear
 learns their colours.

@@ -1,13 +1,24 @@
 # Introduction
 
-**Ferrous Lineup** is an open source music studio, written in Rust, that
-plays songs with a backing band. It began as a pattern studio in the
-spirit of FL Studio, where you build short patterns in a step sequencer
-or a piano roll and arrange them into songs, and from step 9 on it grows
-toward a backing band: type the chords of a song, pick a style, and
-the band plays it. It also has a second goal: helping you
-**learn harmony** while you play, by showing you scales, chords and their
-names as you write.
+**Ferrous Lineup** is an open source program, written in Rust, for
+playing songs with a **backing band**. Type the chords of a song bar by
+bar, pick a style, and a band (bass, drums and piano, with a guitar,
+strings or an organ when the style has them) plays it in any key and
+tempo. Change the style, the key or the tempo, and the band plays the
+song again the new way. Every part the band plays lands on a track of
+its own, where you can open it in the piano roll, change it by hand, or
+leave it out and play it yourself.
+
+It also has a second goal: helping you **learn harmony** while you play.
+It names every chord you hear, with its numeral in the key and what it
+does there (home, away or tension), and it knows the other ways music
+names harmony too: pitch-class sets, twelve-tone rows and Kröpfl's
+micromodes.
+
+Steps 1 to 8 build what the band stands on: the sound, patterns and
+tracks, a piano roll with harmony help, MIDI, and a library of styles,
+rhythms and songs. Step 9 puts the band in front: a chord sheet to type
+the song into, and a band that plays it.
 
 Until step 9 the app was called **Ferrous Loom** ([A new name](step-9/new-name.md)
 tells how it was renamed).
@@ -56,10 +67,9 @@ The [Roadmap](roadmap.md) chapter keeps this table up to date.
 ## Name and license
 
 "Ferrous" means "made of iron", and rust is iron oxide; a lineup is the
-players of a band. The first name, Ferrous Loom, kept the "F L" initials
-of FL Studio, and a loom weaves threads together the way the playlist
-weaves patterns into a song. Ferrous Lineup is an independent project
-with no connection to Image-Line or FL Studio.
+players of a band, the band that plays your songs. The first name,
+Ferrous Loom, came from the playlist: a loom weaves threads together the
+way the playlist weaves patterns into a song.
 
 Ferrous Lineup is free software, released under the GNU General Public
 License, version 3 or later.

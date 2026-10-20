@@ -82,7 +82,7 @@ development you can drop it to build faster.
 
 You should see this window:
 
-![Ferrous Lineup with the playlist and the channel rack](images/step-4-playlist.png)
+![Ferrous Lineup as it opens: the demo song on the playlist, the channel rack over it with Kick, Clap, Hat, Snare and the Lineup Osc, and the harmony keys of C major along the bottom.](images/getting-started-window.png)
 
 Press **Space** or click **▶ Play** to hear the demo song: two bars of
 chords, then a beat comes in, and a drum fill ends it before it loops.
@@ -98,11 +98,19 @@ turns the letter keys into a piano; **● Rec** records what you play. The
 status bar at the bottom shows which sound card is in use, or why audio
 could not start, and names the chord you hold down.
 
+To play a song of your own with the band, pick **File > New**. It opens
+an empty **chord sheet**: click a bar and type its chords (`C`, `Am7`,
+`G7/B`), and a piano, a bass and drums play them, each on a track of its
+own. **🎷 Band** chooses the players, and the **Library** the style they
+play in. **F5**, or **📝 Chords** in the toolbar, opens the chord sheet of
+any song, the demos too. [Step 9](step-9/README.md) tells how the band
+works.
+
 Above the status bar are the **harmony keys**: the key and the time
 signature, and a big key for each chord of the key. Hold one down, or
 press **1** to **7**, to play its chord. The **Library** tab next to the
-pattern list has harmony styles and rhythms by genre to try with one
-click, and **File > Demos** opens whole songs: try *Für Elise* or
+pattern list holds the styles and rhythms: click one, then **Apply**, to
+hear the song played that way. **File > Demos** opens whole songs: try *Für Elise* or
 *Frère Jacques*, press nothing, and watch the harmony keys follow the
 chords.
 
@@ -124,6 +132,13 @@ programs are not signed, so macOS and Windows will warn you before the
 first start; [Linux, macOS and Windows](step-4/platforms.md#what-is-not-there-yet)
 explains how to get past the warning.
 
+The **Release** workflow packs the same programs ready to use, each
+with the README and the licence: a `.tar.gz` and an AppImage for Linux,
+a `.zip` for Windows, and builds for Macs with Apple Silicon and with
+Intel. They are under **Artifacts** of every Release run, and on the
+repository's **Releases** page for each version
+([Release builds: a download for every system](step-9/releases.md)).
+
 ## 4. Run the tests
 
 ```sh
@@ -137,16 +152,21 @@ are written.
 ## 5. Build this book
 
 The book is written with [mdBook](https://rust-lang.github.io/mdBook/), a
-Rust tool. Install it once, then build:
+Rust tool. It lives on a branch of its own, `book`, which shares no
+history with the app's code. Open that branch in a folder next to the
+app, install mdBook once, then build:
 
 ```sh
-cargo install mdbook
-mdbook build docs
+git worktree add ../ferrous-lineup-book book
+cd ../ferrous-lineup-book
+cargo install mdbook --locked
+mdbook build
 ```
 
-Open `docs/book/index.html` in your browser. It works without internet.
-While writing, `mdbook serve docs --open` rebuilds the pages every time you
-save a file.
+Open `book/index.html` in your browser. It works without internet.
+While writing, `mdbook serve --open` rebuilds the pages every time you
+save a file. The same book is online, and as one PDF
+([The book online and as a PDF](step-9/book-online.md)).
 
 ## Useful commands
 

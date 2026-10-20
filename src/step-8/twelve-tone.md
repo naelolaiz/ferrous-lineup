@@ -32,12 +32,12 @@ Demos > Twelve-tone** plays each of them as a short piece.
 
 ![The Sets window, searching for "octatonic": set 8-28, its prime form, its interval vector, and what its complement is. Below the piano roll's toolbar, the notes at the step under the pointer are named as set 3-11.](../images/step-8-pitch-class-sets.png)
 
-## What FL Studio does, and what we do
+## What other music programs do, and what we do
 
-FL Studio's piano roll knows scales and chords, but not rows or sets.
-Its **Flip** tool turns a selection upside down or back to front, which
-is an inversion or a retrograde done by hand, and that is as close as
-it gets. So this chapter is not a copy of anything: it is the kind of
+The piano roll of a typical music program knows scales and chords, but
+not rows or sets. Some can flip a selection upside down or back to
+front, which is an inversion or a retrograde done by hand, and that is
+as close as they get. So this chapter is not a copy of anything: it is the kind of
 help a student of twelve-tone music would want next to a piano roll,
 built on the same pieces as the rest of the app (scales, the harmony
 keys, chord stamps, the library).

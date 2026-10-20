@@ -1,8 +1,8 @@
 # Step 9: The band
 
-Ferrous Loom began as a pattern studio in the style of FL Studio: build
-loops in a step sequencer and a piano roll, then arrange them in a
-playlist. What the project really set out to be is something else: a
+Steps 1 to 8 built the parts: loops in a step sequencer and a piano
+roll, arranged on the tracks of a playlist, with a library of styles
+behind them. What the project was meant to be from the start is a
 **backing band**. You type the chords of a song bar by bar, choose a
 style, press Play, and a band (bass, drums, piano, guitar, strings)
 plays the song in that style. Change the
@@ -55,6 +55,26 @@ Nothing goes away. The playlist with its tracks, the channel rack, the
 piano roll, the harmony keys, the twelve-tone rows, the pitch-class sets
 and the micromodes all stay as they are; the chord sheet is one more
 window beside them.
+
+## After the plan
+
+With those thirteen in place, playing songs with the band showed what
+else was needed:
+
+- downloads for every system ([Release builds](releases.md)), and a
+  second round of fixes ([A second bug hunt](bug-hunt.md));
+- many more songs: [swing and big band](big-band-songs.md),
+  [Latin American](latin-american-songs.md), [odd meters](odd-meters.md),
+  [a TV theme](big-bang-theory-theme.md), and
+  [the concert hall](concert-hall.md), with a
+  [search](demo-search.md) to find them;
+- the band's sound and what it plays, to see and check:
+  [the mixer in score order](mixer-score-order.md),
+  [export video](video-export.md), [a playback trace](playback-trace.md)
+  and [step lights in the channel rack](rack-lights.md);
+- more say over the band: [locking a track](locks.md) and
+  [a style for each section](section-styles.md);
+- and this book, [online and as a PDF](book-online.md).
 
 ## Trying it
 

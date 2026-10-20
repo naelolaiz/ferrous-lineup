@@ -229,8 +229,8 @@ which chord is borrowed, where the hemiola falls.
 
 ## A demo opens with its style and rhythm selected
 
-In FL Studio, whatever you load is highlighted in the browser, so you
-can see where it came from and try the one next to it. Here, opening a
+In a good browser, whatever you load stays highlighted, so you can see
+where it came from and try the one next to it. Here, opening a
 demo used to leave the Library tab with nothing selected. The library
 only highlighted what it had itself written into the selected pattern,
 and a demo is built by `song_demo`, not by a click in the library.

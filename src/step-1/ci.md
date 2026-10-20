@@ -56,7 +56,8 @@ Every push and pull request runs two jobs on GitHub's Linux machines:
    `ferrous-lineup-linux` download.
 2. **book**: builds this book with mdBook and attaches it as a
    download, which you can unzip and read offline. (The book later moved
-   out of the app's repository, and this job went with it.)
+   out of the app's code to a branch of its own, `book`, and this job
+   with it: [The book online and as a PDF](../step-9/book-online.md).)
 
 A pull request shows a green check when both jobs pass. In step 4, the
 same workflow will add macOS and Windows machines.

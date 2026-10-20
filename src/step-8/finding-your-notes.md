@@ -95,8 +95,8 @@ self.was_open = open;
 
 ## Double-click a clip to edit it
 
-In FL Studio you double-click a clip in the playlist to edit it. The
-playlist now does the same. egui counts the clicks for us:
+In most music programs you double-click a clip in the playlist to edit
+it. The playlist now does the same. egui counts the clicks for us:
 
 ```rust
 let double_clicked = ui.input(|input| {

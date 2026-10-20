@@ -18,7 +18,7 @@ app **shows or plays that is wrong**, because Ferrous Lineup is meant for
 learning music. Two examples came with it: the piano roll "went crazy"
 with a pitch-class set as the key and the zoom, and the main window's
 zoom made *everything* bigger, instead of zooming the playlist
-horizontally or vertically as in FL Studio.
+horizontally or vertically, as music programs usually do.
 
 This chapter is a tour of what was found and how each thing was fixed.
 Most fixes are small; what is worth learning is *why* each bug was
@@ -44,8 +44,8 @@ branch.
 
 ## Zoom in two directions
 
-In FL Studio the playlist and the piano roll zoom each direction on its
-own: **Ctrl and the wheel** makes bars and steps wider (less time on
+In most music programs the playlist and the piano roll zoom each
+direction on its own: **Ctrl and the wheel** makes bars and steps wider (less time on
 screen, in more detail), **Alt and the wheel** makes tracks and keys
 taller. Text and menus keep their size. Ferrous Lineup now does the same:
 
@@ -241,8 +241,8 @@ grid uses the press position for a press.
 
 Open a drop-down list, then click on the grid to close it: egui closes
 the menu, but the click also reaches the grid, which draws a note (or
-places a clip, or turns on a step). In FL Studio, as in most programs,
-that click only closes the menu. So at the start of each frame the app
+places a clip, or turns on a step). In most programs that click only
+closes the menu. So at the start of each frame the app
 remembers whether the button now down went down while a menu was open:
 
 ```rust

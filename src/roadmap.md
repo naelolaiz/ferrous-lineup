@@ -10,42 +10,48 @@
 | 6. Harmony tools | Done | Selecting and moving groups of notes, a Tools menu (transpose, move in key, snap to the key, invert, arpeggiate), stamped inversions, seven more chord types, next-chord suggestions with secondary dominants, ghost notes from the other channels, a velocity lane |
 | 7. MIDI | Done | MIDI keyboards in, external synths out (MIDI Out channels), a typing keyboard, chords named as you play, recording takes, `.mid` export of songs and patterns, file format 2 |
 | 8. Harmony keys and library | Done | The harmony keys (the seven chords of the key, coloured by function, with next-chord suggestions and the chord playing), time signatures, 78 harmony styles and 49 rhythms in 13 genres including tango, 16 public-domain songs, demos, nine new drums, patterns up to sixteen bars, file format 3 |
-| 9. The band | Done | Chord names and slash chords, a chord sheet the band plays, a practice bar, SoundFont sounds, chord inversions, ear training, song form, variations, swing, chord sheets as text, a lead sheet, a bigger band, shots, holds, rests and pushes, and an experimental soloist; see [step 9](step-9/README.md) |
+| 9. The band | Done | Chord names and slash chords, a chord sheet the band plays, a practice bar, SoundFont sounds, chord inversions, ear training, song form, variations, swing, chord sheets as text, a lead sheet, a bigger band, shots, holds, rests and pushes, and an experimental soloist; then release builds, odd meters, a mixer in score order, video export, a playback trace, locked tracks, a style for each section, many more songs, and this book online and as a PDF; see [step 9](step-9/README.md) |
 
-The four steps planned at the start are done: Ferrous Lineup runs on
-Linux, macOS and Windows, using the same code on all three. Step 5 added
-two features every studio needs, undo and WAV export. Step 6 brought the
-piano roll's harmony help closer to what a full studio offers. One
-planned tool, strumming, was left out, because it needs notes that start
-between steps; [step 6](step-6/README.md#what-is-not-here-strumming)
-explains why. Step 7 came from a question, "does it have MIDI, in and
-out?" Now it does, both ways, and it names the chord you hold down. It
-was built on a computer with no MIDI system, so real MIDI
-hardware has not been tried yet; [step 7](step-7/README.md#how-it-was-tested)
-says what was tested. Step 8 added what a pattern-based studio is
-known for when you learn harmony: a row of chord keys, one for each
-chord of the key. A library of styles, rhythms and songs came with it,
-to hear how each genre uses those chords.
+Ferrous Lineup is a backing band you can learn harmony with: type the
+chords of a song, pick a style, and the band plays it, while the app
+names every chord you hear. It runs on Linux, macOS and Windows, using
+the same code on all three.
+
+Steps 1 to 8 built what the band stands on. Steps 1 to 4 made the
+sound, the patterns and the tracks of a song, and step 5 added undo and
+WAV export. Step 6 gave the piano roll its harmony help. Step 7 came
+from a question, "does it have MIDI, in and out?" Now it does, both
+ways, and it names the chord you hold down. It was built on a computer
+with no MIDI system, so real MIDI hardware has not been tried yet;
+[step 7](step-7/README.md#how-it-was-tested) says what was tested. Step
+8 added the harmony keys, one for each chord of the key, and a library
+of styles, rhythms and songs: the knowledge the band plays from. In
+step 8 the accompaniment could already follow the chords you play,
+the way an arranger keyboard does. Step 9 put the band in front, with a
+chord sheet to type the song into.
+
+Some ideas of the early roadmap are done along the way: a mixer, MIDI
+file import, notes that start between steps (swing, pushes, strummed
+guitars, imported MIDI), time signature changes partway through a song,
+and ready-built downloads for every system, with an AppImage for Linux.
 
 ## Ideas for what comes next
 
-None of these are planned yet. They are the features a
-pattern-based studio usually has that Ferrous Lineup does not, roughly from
-smaller to bigger:
+None of these are planned yet. They are ideas, roughly from smaller to
+bigger:
 
-- **A mixer.** Each channel routed to a mixer track with its own volume,
-  pan and effects (a reverb and a delay to start with).
-- **Automation**: knob movements recorded or drawn over time, in the
-  playlist.
-- **Audio clips** in the playlist, next to pattern clips.
-- **MIDI file import**, and recording in song mode (exercises 5 and 6 of
-  step 7).
-- **Finer timing**: notes that start between steps, for strumming,
-  swing and notes played slightly early or late.
+- **More of the band**: more styles, and a horn section the band can
+  bring to any style, not only to the big band songs.
+- **A soloist that is no longer an experiment.**
 - **Even more harmony help**: borrowed chords and modulations
-  explained (exercise 4 of step 8 starts it), a "voice leading" view,
-  chords named over a whole beat.
-- **Time signature changes** in the middle of a song (exercise 6 of
-  step 8).
-- **Packaging**: icons, a macOS `.app` bundle, a Windows installer, and
+  explained (exercise 4 of step 8 starts it), and a view of how each
+  voice moves from chord to chord.
+- **Effects for each instrument** in the mixer, next to the reverb they
+  share now, and panning.
+- **Automation**: knob movements recorded or drawn over time, on the
+  tracks.
+- **Audio clips** on the tracks, next to the patterns, to play along
+  with a recording.
+- **Recording in song mode** (exercise 5 of step 7).
+- **Packaging**: a macOS `.app` bundle, a Windows installer, and
   double-clicking `.lineup` files to open them.

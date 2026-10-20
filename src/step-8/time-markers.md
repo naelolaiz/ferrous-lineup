@@ -8,8 +8,9 @@ and [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/
 [Time signatures](time-signatures.md) gave a project one time signature.
 Real music does not always keep one: a hymn's last line can stretch into
 3/4, a folk dance can switch between 6/8 and 3/4, a prog song changes
-every few bars. FL Studio handles this with *time markers* on the
-playlist, and now Ferrous Lineup does too.
+every few bars. A chord chart writes the new time signature where it
+changes, and music programs mark it on the timeline; now Ferrous Lineup
+does too.
 
 Right-click the bar numbers and pick a time signature. From that bar on,
 bars are counted in it. The ruler writes the time signature at bar 1 and

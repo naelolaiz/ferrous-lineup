@@ -21,14 +21,15 @@ everything back in one go.
 
 ![The same pattern after picking D, then minor. The melody now starts D, E, F, D, the harmony keys go from Dm to C, and the drums (the grey ghost notes) did not move.](../images/step-8-key-after.png)
 
-## What FL Studio does, and what we do
+## What other music programs do, and what we do
 
-In FL Studio the piano roll's key and scale menu never moves a note: it
-only highlights the scale and makes notes you draw or drag *snap* to it
-("for safety", as its manual puts it). To move a whole song you transpose
-its patterns from the playlist. Ferrous Lineup's key menu is the key of the
-whole song, the one the harmony keys and hints use, so it moves the song
-as well; and the piano roll gets FL Studio's snapping on top (below).
+In many music programs the piano roll's key and scale menu never moves a
+note: it only highlights the scale and makes notes you draw or drag
+*snap* to it. To move a whole song you transpose its patterns yourself.
+Ferrous Lineup's key menu is the key of the whole song, the one the
+harmony keys, the hints and the band use, so it moves the song as well,
+the way a band plays the same song in another key when you ask it to;
+and the piano roll gets snapping on top (below).
 
 ## One note at a time
 
@@ -151,12 +152,12 @@ the new key.
 ## Snap to scale
 
 Next to the key's notes the piano roll now has a **Snap to scale**
-button, like FL Studio's. While it is on:
+button. While it is on:
 
 - a note you draw lands on the nearest note of the key (the outline that
   follows the pointer shows where it will go);
 - a note you drag moves only along the key's rows;
-- a selection you drag snaps once it has moved. As in FL Studio, notes
+- a selection you drag snaps once it has moved. Notes
   already there are left alone until you touch them: select them and drag
   them up a semitone and back to snap them all.
 

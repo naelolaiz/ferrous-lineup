@@ -11,10 +11,11 @@ and the same groove carries on in A minor. It is a fast way to learn
 harmony: you choose the chords, and you hear at once what each one does
 to the song.
 
-FL Studio has no such mode built in. Its forum has people asking for
-one, and the nearest thing it has is the arpeggiator of a channel, which
-turns one held chord into an arpeggio. Ferrous Lineup goes further, and
-does what the arranger keyboard does with any song.
+This is the backing band Ferrous Lineup is meant to be, in its first
+form: you give the chords, it plays the rest. A pattern-based studio
+rarely has such a mode; the nearest thing is usually an arpeggiator,
+which turns one held chord into an arpeggio. Ferrous Lineup does what
+the arranger keyboard does, with any song.
 
 ## How to use it
 

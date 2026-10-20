@@ -15,7 +15,8 @@ screen said "this is the chorus". This page adds three things:
   strip above the bar numbers. A section can be played several times in a
   row: it is drawn once and marked "×2".
 - **Clip repeats**: drag a clip's right edge and it plays its pattern again
-  and again, like stretching a pattern clip in FL Studio.
+  and again, like stretching a pattern clip in other pattern-based
+  studios.
 - **A loop region**: drag along the bar numbers, and song mode loops just
   that part while you work on it.
 
@@ -293,6 +294,6 @@ below.
 3. Give `Clip` an `offset` (how many steps into its pattern it starts) so
    a clip can be cut in two. `Play::skip` already plays a clip from the
    middle; the work is in the playlist and in `duplicate_section`.
-4. FL Studio can also *mark* a point in time without a range, for example
-   to jump to it. Add markers to the strip, and a key that moves the
+4. Many music programs can also *mark* a point in time without a range,
+   for example to jump to it. Add markers to the strip, and a key that moves the
    playhead to the next one.

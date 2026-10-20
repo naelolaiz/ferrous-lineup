@@ -7,9 +7,9 @@ and [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrou
 
 Until now, picking a rhythm in the Library only changed the drums. Put a
 reggae beat under a bossa nova and the piano went on playing bossa nova
-over it. FL Studio does better: change the rhythm and the chords and
-the bass follow it. A band does the same when someone says "let's do
-this one as a reggae": same chords, new way of playing them.
+over it. A band does better when someone says "let's do this one as a
+reggae": same chords, a new way of playing all of them, the piano and
+the bass too.
 
 Now Ferrous Lineup does it too, in two places:
 

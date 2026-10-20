@@ -4,8 +4,8 @@ Files: [`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/fe
 [`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/midi.rs)
 and [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/live.rs)
 
-[Step 7](../step-7/live.md) built MIDI Out the way FL Studio does it: a
-channel of a special kind, *MIDI Out*, plays no sound and sends its notes
+[Step 7](../step-7/live.md) built MIDI Out the way pattern-based studios
+often do it: a channel of a special kind, *MIDI Out*, plays no sound and sends its notes
 to the port chosen in the MIDI menu. Every other channel stays inside
 Ferrous Lineup.
 
@@ -41,8 +41,8 @@ own note instead of the one in the pattern.
 
 Keys you play go out too: a MIDI keyboard, the typing keyboard, the
 harmony keys, and clicking a channel's name to hear it. Untick **Send
-every channel** to get FL Studio's behaviour back, where only MIDI Out
-channels reach the port.
+every channel** to get the behaviour of step 7 back, where only MIDI
+Out channels reach the port.
 
 Two smaller things changed in the menu:
 

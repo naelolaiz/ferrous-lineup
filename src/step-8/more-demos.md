@@ -298,6 +298,6 @@ Some(Choice::Cancel) => {
 
 `{name}` inside `format!` reads a variable of that name from the
 surrounding scope, so there is no need to pass it as an argument. The
-load itself was already as thorough as FL Studio's: `replace_project`
+load itself was already thorough: `replace_project`
 clears the engine and sends it every pattern, clip and rhythm of the new
 project, so nothing of the previous one survives a load.

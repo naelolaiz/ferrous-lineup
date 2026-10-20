@@ -69,7 +69,7 @@ change.
 ![The tempo menu opened at bar 57: ♩ = 165.0 BPM, the ways to get there (at once, or over a beat, half a bar, one, two, four or eight bars, with "over 8 bars" chosen), "From 154 to 165 BPM. Speeding up bit by bit is an accelerando (accel.)", and a button to remove the change.](../images/step-8-tempo-menu.png)
 
 While a song with tempo changes plays, the **TEMPO** box in the toolbar
-follows the tempo at the playhead, as in FL Studio; stopped, it is the
+follows the tempo at the playhead; stopped, it is the
 tempo the song starts at, and changing it moves every change with it,
 by the same proportion. To practise a piece more slowly, lower the
 tempo box: the ritardando at the end is still there, only slower too.
