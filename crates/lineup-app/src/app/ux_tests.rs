@@ -209,6 +209,48 @@ fn songs_open_on_the_chord_sheet_and_beats_on_the_rack() {
 }
 
 #[test]
+fn the_rack_fits_its_rows_again_when_the_app_starts() {
+    let mut screen = Screen::new();
+    assert!(screen.app.rack_open);
+    let rack = |screen: &mut Screen| {
+        screen.draw(vec![]);
+        screen.draw(vec![]);
+        screen
+            .ctx
+            .memory(|memory| memory.area_rect(rack_id()))
+            .unwrap()
+    };
+    let fitted = rack(&mut screen);
+    // A longer pattern widens the rack, and egui remembers that size
+    // for the next time the app starts.
+    screen
+        .app
+        .edit_pattern("longer", |pattern| pattern.set_length(64));
+    let wide = rack(&mut screen);
+    assert!(wide.width() > fitted.width() + 100.0);
+    // Started again on the short pattern, it fits its rows, not the
+    // size remembered.
+    screen.app = LineupApp::with_audio(&screen.ctx, None, Audio::Unavailable("test".into()));
+    screen.app.harmony_keys.open = false;
+    screen.app.playlist.browser_open = false;
+    let restarted = rack(&mut screen);
+    assert!(
+        (restarted.width() - fitted.width()).abs() < 2.0,
+        "{restarted:?} after starting again, {fitted:?} the first time"
+    );
+    // The same when the rows change while the rack is closed.
+    screen.app.rack_open = false;
+    screen.draw(vec![]);
+    screen
+        .app
+        .edit_pattern("longer", |pattern| pattern.set_length(64));
+    screen.draw(vec![]);
+    screen.app.rack_open = true;
+    let reopened = rack(&mut screen);
+    assert!((reopened.width() - wide.width()).abs() < 2.0);
+}
+
+#[test]
 fn applying_a_library_preset_to_a_demo_creates_all_its_players() {
     use lineup_core::{Player, library::apply::StyleParts};
     for (copy_progression, playing) in [(false, false), (false, true), (true, true)] {
