@@ -340,10 +340,13 @@ impl LineupApp {
                     project.swing = swing;
                 }
                 self.replace_project(project, None);
-                self.chord_sheet.open = true;
+                self.show_chord_sheet();
                 self.set_mode(PlayMode::Song);
             }
-            Pending::NewBeat => self.replace_project(Project::template(), None),
+            Pending::NewBeat => {
+                self.replace_project(Project::template(), None);
+                self.show_beat();
+            }
             Pending::Open => {
                 // This waits until the user picks a file or cancels. The
                 // window does not redraw meanwhile, but the music goes on:
