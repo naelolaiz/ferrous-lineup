@@ -53,7 +53,7 @@ use lineup_core::{
 };
 
 use crate::channel_rack::{self, RackAction};
-use crate::chord_sheet::{ChordSheet, SheetAction};
+use crate::chord_sheet::{self, ChordSheet, SheetAction};
 use crate::ear_training::EarTraining;
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
 use crate::lead_sheet::LeadSheetWindow;
@@ -578,6 +578,21 @@ impl LineupApp {
     fn show_rack(&mut self) {
         self.rack_open = true;
         self.bring_to_front = Some(rack_id());
+    }
+
+    /// What a song opens on: the chord sheet in front, since its bars and
+    /// chords are what you study and write in a song, and the rack out of
+    /// the way (F6 brings it back).
+    fn show_chord_sheet(&mut self) {
+        self.chord_sheet.open = true;
+        self.rack_open = false;
+        self.bring_to_front = Some(chord_sheet::window_id());
+    }
+
+    /// What a beat opens on: the rack in front, and no chord sheet.
+    fn show_beat(&mut self) {
+        self.chord_sheet.open = false;
+        self.show_rack();
     }
 
     fn select_pattern(&mut self, pattern: usize) {

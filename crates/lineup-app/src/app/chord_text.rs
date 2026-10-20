@@ -42,7 +42,7 @@ impl LineupApp {
                 if let Some(name) = title.as_deref().or(stem.as_deref()) {
                     self.file.name_imported(name);
                 }
-                self.chord_sheet.open = true;
+                self.show_chord_sheet();
                 self.set_mode(PlayMode::Song);
                 let mut notice = format!(
                     "Imported {name}: {bars} bar{}",

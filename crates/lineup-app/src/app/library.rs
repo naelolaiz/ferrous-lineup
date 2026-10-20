@@ -1001,6 +1001,9 @@ impl LineupApp {
     /// style and rhythm selected in the library.
     pub(super) fn open_demo(&mut self, demo: Demo) {
         self.replace_project(demo.project(), None);
+        if let Demo::Song(_) = demo {
+            self.show_chord_sheet();
+        }
         self.file.open_demo(demo);
         self.song_library = demo.library();
         self.remember_song_version(self.project.clone(), self.song_library);
