@@ -190,9 +190,11 @@ mod tests {
             metronome,
         ];
         for picture in pictures {
-            let output = ctx.run_ui(Default::default(), |ui| {
+            let mut output = ctx.run_ui(Default::default(), |ui| {
                 picture(ui.painter(), square, Color32::WHITE);
             });
+            // The font texture is not drawn anywhere here.
+            output.textures_delta.clear();
             let mut shapes = 0;
             for shape in output.shapes {
                 let bounds = shape.shape.visual_bounding_rect();
