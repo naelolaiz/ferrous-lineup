@@ -1538,6 +1538,33 @@ pub static STYLES: &[Style] = &[
          loop, with quena, charango and bombo.",
     ),
     style(
+        "Carnavalito (2/4)",
+        Folklore,
+        HarmonicMinor,
+        "i V | i V | i V | i V | bVI bVII | bIII bVI | bVI bVII | bIII",
+        Comping::Strum,
+        Bass::RootFifth,
+        88.0,
+        "Carnavalito (2/4)",
+        "The carnavalito as the Gloria of the Misa Criolla plays it, a bar of 2/4 for each \
+         two beats: the minor chord and its dominant, a beat each, then the relative major's \
+         IV, V and I (bVI, bVII and bIII of the minor key).",
+    )
+    .in_time(TWO_FOUR),
+    style(
+        "Yaraví",
+        Folklore,
+        NaturalMinor,
+        "i | i | bIII | bIII | iv | iv | i | i",
+        Comping::Arp3,
+        Bass::Held,
+        44.0,
+        "Yaraví",
+        "The yaraví, the slow, sad song of the Andes, in 3/4: a minor pentatonic tune over \
+         long chords, the bass held, the guitar picking the chord's notes.",
+    )
+    .in_time(THREE_FOUR),
+    style(
         "Huayno",
         Folklore,
         NaturalMinor,
