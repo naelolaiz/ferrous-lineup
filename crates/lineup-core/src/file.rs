@@ -384,16 +384,6 @@ struct PatternFile {
     notes: Vec<Vec<NoteEvent>>,
 }
 
-/// Just the first field of a file, read before anything else.
-///
-/// Fields that a struct does not list are skipped while reading, so this
-/// reads the version of any project file, even one from a future version
-/// whose other fields this code would not understand.
-#[derive(Deserialize)]
-struct Header {
-    format: u32,
-}
-
 /// Everything that can go wrong while saving or loading.
 #[derive(Debug)]
 pub enum FileError {
@@ -697,13 +687,42 @@ pub fn to_text(project: &Project) -> Result<String, FileError> {
 }
 
 /// Reads a project from the text of a project file.
+///
+/// The whole file is read first, and its format number checked after. A
+/// file from a newer version may not read at all, because of fields or
+/// names this version does not know: then the format number alone says
+/// why.
 pub fn from_text(text: &str) -> Result<Project, FileError> {
-    let header: Header = ron::from_str(text)?;
-    if header.format > FORMAT_VERSION {
-        return Err(FileError::NewerFormat(header.format));
+    let file: ProjectFile = match ron::from_str(text) {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(match format_number(text) {
+                Some(format) if format > FORMAT_VERSION => FileError::NewerFormat(format),
+                _ => err.into(),
+            });
+        }
+    };
+    if file.format > FORMAT_VERSION {
+        return Err(FileError::NewerFormat(file.format));
     }
-    let file: ProjectFile = ron::from_str(text)?;
     Project::try_from(file)
+}
+
+/// The format number at the start of a project file, `(format: 25, ...`,
+/// read without the RON reader.
+///
+/// RON could read it as a struct with just that field, skipping the
+/// others, but to skip a number it looks ahead through all the text
+/// after it. Doing that for every number of a long song took over a
+/// minute.
+fn format_number(text: &str) -> Option<u32> {
+    let rest = text.trim_start().strip_prefix('(')?.trim_start();
+    let rest = rest.strip_prefix("format")?.trim_start();
+    let rest = rest.strip_prefix(':')?.trim_start();
+    let digits = rest
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(rest.len());
+    rest[..digits].parse().ok()
 }
 
 /// Saves a project to a file, replacing the file if it exists.
@@ -829,14 +848,50 @@ mod tests {
 
     #[test]
     fn files_from_the_future_are_refused() {
-        // A future format might have fields we have never heard of. Only the
-        // header is read, so the rest does not matter.
+        // A future format might have fields we have never heard of: the
+        // format number alone says why the file does not read.
         let error =
             from_text(&format!("(format: {}, sparkles: true)", FORMAT_VERSION + 1)).unwrap_err();
         assert!(
             matches!(error, FileError::NewerFormat(version) if version == FORMAT_VERSION+1),
             "{error}"
         );
+        // Or it might read, and still mean something else.
+        let text = to_text(&Project::template()).unwrap();
+        let newer = text.replacen(
+            &format!("format: {}", format_for(&Project::template())),
+            &format!("format: {}", FORMAT_VERSION + 1),
+            1,
+        );
+        assert!(matches!(
+            from_text(&newer),
+            Err(FileError::NewerFormat(version)) if version == FORMAT_VERSION + 1
+        ));
+    }
+
+    #[test]
+    fn the_format_number_is_read_from_the_start_of_the_file() {
+        assert_eq!(format_number("(format: 25, tempo: 120.0)"), Some(25));
+        assert_eq!(format_number("  (\n    format:3,\n"), Some(3));
+        assert_eq!(format_number("(tempo: 120.0, format: 25)"), None);
+        assert_eq!(format_number("this is not a project"), None);
+    }
+
+    #[test]
+    fn a_long_song_opens_quickly() {
+        // Boléro is the longest demo: over two megabytes of text. Reading
+        // its format number with RON alone took 85 seconds, even
+        // optimized; the whole file now reads in a fraction of one.
+        let bolero = crate::library::SONGS
+            .iter()
+            .find(|song| song.name == "Boléro")
+            .unwrap();
+        let project = crate::library::demo::song_demo(bolero);
+        let text = to_text(&project).unwrap();
+        let start = std::time::Instant::now();
+        assert_eq!(from_text(&text).unwrap(), project);
+        let seconds = start.elapsed().as_secs_f64();
+        assert!(seconds < 10.0, "Boléro took {seconds:.1} s to read");
     }
 
     #[test]
