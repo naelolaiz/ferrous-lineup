@@ -84,8 +84,7 @@ pub struct RackPlayback {
     pub over_song: bool,
 }
 
-/// The "Instrument" submenu: the 128 General MIDI programs in their
-/// sixteen families, and "None" for the Lineup Osc's own sound.
+/// The "Instrument" submenu (see [`instrument_choices`]).
 fn instrument_menu(
     ui: &mut Ui,
     channel: usize,
@@ -97,49 +96,61 @@ fn instrument_menu(
         None => "Instrument".to_string(),
     };
     ui.menu_button(label, |ui| {
-        widgets::scroll_menu(ui, |ui| {
-            let none = ui
-                .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
-                .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
-            if none.clicked() {
-                actions.push(RackAction::SetProgram {
-                    channel,
-                    program: None,
-                });
-                ui.close();
-            }
-            ui.separator();
-            for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
-                let here = current.is_some_and(|program| general_midi::family(program) == family);
-                let family_label = if here {
-                    format!("● {family_name}")
-                } else {
-                    family_name.to_string()
-                };
-                ui.menu_button(family_label, |ui| {
-                    for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
-                        let text =
-                            format!("{} {}", u16::from(program) + 1, general_midi::name(program));
-                        if ui
-                            .selectable_label(current == Some(program), text)
-                            .clicked()
-                        {
-                            actions.push(RackAction::SetProgram {
-                                channel,
-                                program: Some(program),
-                            });
-                            ui.close();
-                        }
-                    }
-                });
-            }
-        });
+        instrument_choices(ui, channel, current, actions)
     })
     .response
     .on_hover_text(
         "The General MIDI instrument this channel plays: sent to a MIDI synth as a \
-         program change, written in exported MIDI files, and imitated by the Lineup Osc",
+             program change, written in exported MIDI files, and imitated by the Lineup Osc",
     );
+}
+
+/// The instruments a synth or MIDI Out channel can play, inside a menu:
+/// "None" for the Lineup Osc's own sound, then the 128 General MIDI
+/// programs in their sixteen families. The mixer shows them too.
+pub fn instrument_choices(
+    ui: &mut Ui,
+    channel: usize,
+    current: Option<u8>,
+    actions: &mut Vec<RackAction>,
+) {
+    widgets::scroll_menu(ui, |ui| {
+        let none = ui
+            .selectable_label(current.is_none(), "None (the Lineup Osc's own sound)")
+            .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
+        if none.clicked() {
+            actions.push(RackAction::SetProgram {
+                channel,
+                program: None,
+            });
+            ui.close();
+        }
+        ui.separator();
+        for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
+            let here = current.is_some_and(|program| general_midi::family(program) == family);
+            let family_label = if here {
+                format!("● {family_name}")
+            } else {
+                family_name.to_string()
+            };
+            ui.menu_button(family_label, |ui| {
+                for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
+                    let text =
+                        format!("{} {}", u16::from(program) + 1, general_midi::name(program));
+                    if ui
+                        .selectable_label(current == Some(program), text)
+                        .clicked()
+                    {
+                        actions.push(RackAction::SetProgram {
+                            channel,
+                            program: Some(program),
+                        });
+                        ui.close();
+                    }
+                }
+            });
+        }
+    });
 }
 
 /// Draws the rack for pattern `pattern` and returns what the user did

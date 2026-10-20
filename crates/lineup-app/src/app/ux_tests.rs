@@ -350,6 +350,42 @@ fn the_mixer_is_as_big_as_its_channels() {
 }
 
 #[test]
+fn a_click_on_an_instrument_in_the_mixer_changes_it() {
+    use lineup_core::general_midi::{ACOUSTIC_GRAND_PIANO, VIOLIN};
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    let channels = |screen: &Screen| screen.app.project.channels().to_vec();
+    let osc = channels(&screen)
+        .iter()
+        .position(|channel| channel.name == "Lineup Osc")
+        .unwrap();
+    assert_eq!(channels(&screen)[osc].program, Some(ACOUSTIC_GRAND_PIANO));
+    let id = egui::Id::unique("mixer");
+    let piano = window_rect(&mut screen, id);
+    screen.click("Acoustic Grand Piano");
+    screen.click("Strings");
+    screen.click("41 Violin");
+    assert_eq!(channels(&screen)[osc].program, Some(VIOLIN));
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Violin").is_some());
+    // A shorter name: the mixer is fitted to its narrower column.
+    let violin = window_rect(&mut screen, id);
+    assert!(
+        violin.width() < piano.width() - 40.0,
+        "{violin:?}, {piano:?} with the piano"
+    );
+    // One step to undo, as in the rack.
+    assert_eq!(screen.app.history.undo_label(), Some("change instrument"));
+    screen.app.undo();
+    assert_eq!(channels(&screen)[osc].program, Some(ACOUSTIC_GRAND_PIANO));
+    // A drum plays its own sound, so it has no menu.
+    screen.click("Built-in drum");
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Guitar").is_none());
+}
+
+#[test]
 fn windows_open_at_their_own_size_not_one_remembered_from_before() {
     type Open = fn(&mut LineupApp, bool);
     let windows: [(&str, egui::Id, Open); 7] = [
