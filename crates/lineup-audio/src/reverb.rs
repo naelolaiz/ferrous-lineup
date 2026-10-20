@@ -145,35 +145,53 @@ impl Reverb {
             side.clear();
         }
     }
-    pub fn next(&mut self, dry: f32) -> [f32; 2] {
-        let wet = self.wet.next_value();
+    /// How much of the sound is the room's for this frame, from 0 to 1.
+    /// Called once a frame, before [`Reverb::next`]: it moves on as the
+    /// mix slides to a new setting.
+    pub fn wet(&mut self) -> f32 {
+        self.wet.next_value()
+    }
+
+    /// The `dry` sound, left and right, with the room of `send` added at
+    /// `wet` (from [`Reverb::wet`]). The caller has already taken out of
+    /// `dry` what it put into `send`.
+    pub fn next(&mut self, dry: [f32; 2], send: f32, wet: f32) -> [f32; 2] {
         // Off, once faded out, it adds nothing, so it does no work.
         if !self.settings.enabled && wet == 0.0 {
-            return [dry; 2];
+            return dry;
         }
         let size = self.pre_delay.samples.len();
         let delayed = if self.pre_frames == 0 {
-            dry
+            send
         } else {
             self.pre_delay.samples
                 [(self.pre_delay.cursor + size - self.pre_frames.min(size - 1)) % size]
         };
         self.pre_delay
-            .write(if self.settings.enabled { dry } else { 0.0 });
-        self.sides
-            .each_mut()
-            .map(|side| dry * (1.0 - wet) + side.next(delayed, self.settings.damping * 0.9) * wet)
+            .write(if self.settings.enabled { send } else { 0.0 });
+        let damping = self.settings.damping * 0.9;
+        let [left, right] = &mut self.sides;
+        [
+            dry[0] + left.next(delayed, damping) * wet,
+            dry[1] + right.next(delayed, damping) * wet,
+        ]
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// One sound all sent to the reverb, as a whole song used to be.
+    fn mono(reverb: &mut Reverb, dry: f32) -> [f32; 2] {
+        let wet = reverb.wet();
+        reverb.next([dry * (1.0 - wet); 2], dry, wet)
+    }
     #[test]
     fn bypass_preserves_samples_exactly() {
         let mut reverb = Reverb::new(48_000);
         for dry in [0.0, 0.2, -0.3, 1.0] {
-            assert_eq!(reverb.next(dry), [dry; 2]);
+            assert_eq!(mono(&mut reverb, dry), [dry; 2]);
         }
     }
     #[test]
@@ -188,9 +206,9 @@ mod tests {
         };
         reverb.configure(on);
         reverb.settle();
-        reverb.next(1.0);
+        mono(&mut reverb, 1.0);
         for _ in 0..48_000 * 4 {
-            reverb.next(0.0);
+            mono(&mut reverb, 0.0);
         }
         let subnormal = |x: f32| x != 0.0 && !x.is_normal();
         for side in &reverb.sides {
@@ -198,19 +216,19 @@ mod tests {
         }
         // Turned off, it fades out to exactly dry, and back on starts
         // from silence.
-        reverb.next(1.0);
+        mono(&mut reverb, 1.0);
         reverb.configure(ReverbSettings {
             enabled: false,
             ..on
         });
         for _ in 0..48_000 {
-            reverb.next(0.0);
+            mono(&mut reverb, 0.0);
         }
         assert_eq!(reverb.wet.next_value(), 0.0);
-        assert_eq!(reverb.next(0.3), [0.3; 2]);
+        assert_eq!(mono(&mut reverb, 0.3), [0.3; 2]);
         reverb.configure(on);
         reverb.settle();
-        assert_eq!(reverb.next(0.0), [0.0; 2]);
+        assert_eq!(mono(&mut reverb, 0.0), [0.0; 2]);
     }
 
     #[test]
@@ -225,12 +243,12 @@ mod tests {
                 pre_delay_ms: 20.0,
             });
             reverb.settle();
-            assert_eq!(reverb.next(1.0), [0.0; 2]);
+            assert_eq!(mono(&mut reverb, 1.0), [0.0; 2]);
             let mut early = 0.0;
             let mut late = 0.0;
             let mut stereo = false;
             for frame in 1..rate * 2 {
-                let out = reverb.next(0.0);
+                let out = mono(&mut reverb, 0.0);
                 assert!(out.iter().all(|x| x.is_finite() && x.abs() < 1.0));
                 if frame < rate / 100 {
                     assert_eq!(out, [0.0; 2]);
@@ -246,7 +264,7 @@ mod tests {
             assert!(stereo && early > 0.01 && late < early * 0.001);
             reverb.clear();
             for _ in 0..rate {
-                assert_eq!(reverb.next(0.0), [0.0; 2]);
+                assert_eq!(mono(&mut reverb, 0.0), [0.0; 2]);
             }
         }
     }

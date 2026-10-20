@@ -34,6 +34,10 @@ pub enum Change {
     Instrument(usize),
     Volume(usize),
     Muted(usize),
+    /// Channel `n` sits elsewhere between the speakers.
+    Pan(usize),
+    /// Channel `n` sends more or less of itself to the reverb.
+    ReverbSend(usize),
     PatternLength(usize),
     Notes {
         pattern: usize,
@@ -158,6 +162,12 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
         if old.volume != channel.volume {
             changes.push(Change::Volume(index));
         }
+        if old.pan != channel.pan {
+            changes.push(Change::Pan(index));
+        }
+        if old.reverb_send != channel.reverb_send {
+            changes.push(Change::ReverbSend(index));
+        }
         if before.channel_muted(channels.old_index(index).unwrap()) != after.channel_muted(index) {
             changes.push(Change::Muted(index));
         }
@@ -245,6 +255,8 @@ mod tests {
         program: Option<u8>,
         volume: f32,
         muted: bool,
+        pan: f32,
+        reverb_send: f32,
         /// One list per pattern.
         notes: Vec<Vec<NoteEvent>>,
     }
@@ -270,6 +282,8 @@ mod tests {
                 program: channel.program,
                 volume: channel.volume,
                 muted: project.channel_muted(index),
+                pan: channel.pan,
+                reverb_send: channel.reverb_send,
                 notes: (0..project.patterns().len())
                     .map(|pattern| project.played_notes(pattern, index).into_owned())
                     .collect(),
@@ -319,6 +333,10 @@ mod tests {
                     self.channels[index].volume = after.channels()[index].volume
                 }
                 Change::Muted(index) => self.channels[index].muted = after.channel_muted(index),
+                Change::Pan(index) => self.channels[index].pan = after.channels()[index].pan,
+                Change::ReverbSend(index) => {
+                    self.channels[index].reverb_send = after.channels()[index].reverb_send;
+                }
                 Change::PatternLength(index) => {
                     self.lengths[index] = after.patterns()[index].length();
                 }
@@ -471,13 +489,17 @@ mod tests {
         after.channel_mut(2).unwrap().kind =
             ChannelKind::Sampler(SampleSource::Builtin(Drum::Snare));
         after.channel_mut(3).unwrap().program = Some(crate::general_midi::VIOLIN);
+        after.channel_mut(4).unwrap().pan = -0.5;
+        after.channel_mut(0).unwrap().reverb_send = 0.25;
         assert_eq!(
             check_both_ways(&before, &after),
             vec![
                 Change::Volume(0),
+                Change::ReverbSend(0),
                 Change::Muted(1),
                 Change::Instrument(2),
-                Change::Instrument(3)
+                Change::Instrument(3),
+                Change::Pan(4),
             ]
         );
     }

@@ -137,9 +137,50 @@ pub struct Channel {
     /// a program change; the Lineup Osc picks a sound close to it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub program: Option<u8>,
+    /// Where the channel sits between the speakers, from -1.0 (all left)
+    /// through 0.0 (the middle, as a new channel) to 1.0 (all right).
+    /// Moving it one way turns the other speaker down; the middle plays
+    /// both at full volume.
+    #[serde(default, skip_serializing_if = "is_centred")]
+    pub pan: f32,
+    /// How much of the channel goes into the mixer's reverb, from 0.0
+    /// (none: it plays dry, as with the reverb off) to 1.0 (all of it, as
+    /// a new channel). The reverb's own wet / dry mix sets how loud the
+    /// room is (see [`crate::mixer::ReverbSettings`]).
+    #[serde(default = "full_send", skip_serializing_if = "is_full_send")]
+    pub reverb_send: f32,
+}
+
+fn is_centred(pan: &f32) -> bool {
+    *pan == 0.0
+}
+
+fn full_send() -> f32 {
+    1.0
+}
+
+fn is_full_send(send: &f32) -> bool {
+    *send == 1.0
 }
 
 impl Channel {
+    /// Whether its pan and reverb send are within their ranges.
+    pub fn mix_is_valid(&self) -> bool {
+        (-1.0..=1.0).contains(&self.pan) && (0.0..=1.0).contains(&self.reverb_send)
+    }
+
+    /// Whether it sits in the middle with all of it in the reverb, as a
+    /// new channel does. Files older than format 26 can only say that.
+    pub fn has_plain_mix(&self) -> bool {
+        self.pan == 0.0 && self.reverb_send == 1.0
+    }
+
+    /// How loud it is in the left and the right speaker for its pan: both
+    /// full in the middle, and the far side fading out as it moves away.
+    pub fn pan_gains(pan: f32) -> [f32; 2] {
+        [(1.0 - pan).min(1.0), (1.0 + pan).min(1.0)]
+    }
+
     /// A sampler channel playing a built-in drum, named after it.
     pub fn drum(drum: Drum) -> Self {
         Channel {
@@ -148,6 +189,8 @@ impl Channel {
             volume: 0.8,
             muted: false,
             program: None,
+            pan: 0.0,
+            reverb_send: 1.0,
         }
     }
 
@@ -159,6 +202,8 @@ impl Channel {
             volume: 0.6,
             muted: false,
             program: None,
+            pan: 0.0,
+            reverb_send: 1.0,
         }
     }
 
@@ -172,6 +217,8 @@ impl Channel {
             volume: 0.8,
             muted: false,
             program: None,
+            pan: 0.0,
+            reverb_send: 1.0,
         }
     }
 

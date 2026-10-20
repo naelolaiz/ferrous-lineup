@@ -385,6 +385,100 @@ fn a_click_on_an_instrument_in_the_mixer_changes_it() {
     assert!(text_rect(&output, "Guitar").is_none());
 }
 
+/// Where `label` was drawn on the row at height `y`.
+fn text_rect_in_row(output: &FullOutput, label: &str, y: f32) -> Option<Rect> {
+    output.shapes.iter().find_map(|shape| match &shape.shape {
+        Shape::Text(text) if text.galley.text() == label => {
+            let rect = Rect::from_min_size(text.pos, text.galley.size());
+            (rect.top() - 4.0..=rect.bottom() + 4.0)
+                .contains(&y)
+                .then_some(rect)
+        }
+        _ => None,
+    })
+}
+
+#[test]
+fn the_mixer_pans_a_channel_and_sets_its_reverb_send() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    let osc = screen
+        .app
+        .project
+        .channels()
+        .iter()
+        .position(|channel| channel.name == "Lineup Osc")
+        .unwrap();
+    let channel = |screen: &Screen| screen.app.project.channels()[osc].clone();
+    assert_eq!(
+        (channel(&screen).pan, channel(&screen).reverb_send),
+        (0.0, 1.0)
+    );
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let row = text_rect(&output, "Acoustic Grand Piano")
+        .unwrap()
+        .center()
+        .y;
+    // The left end of each slider, under the start of its heading: all
+    // the way left, and nothing sent.
+    // "L100" is wider than "C", so the columns are found again after each.
+    for heading in ["Pan", "Reverb"] {
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        let left = text_rect(&output, heading).expect(heading).left();
+        screen.click_at(egui::pos2(left + 1.0, row), Modifiers::NONE);
+    }
+    assert_eq!(
+        (channel(&screen).pan, channel(&screen).reverb_send),
+        (-1.0, 0.0)
+    );
+    let output = screen.draw(vec![]);
+    assert!(text_rect_in_row(&output, "L100", row).is_some());
+    assert!(text_rect_in_row(&output, "0%", row).is_some());
+    assert_eq!(screen.app.history.undo_label(), Some("mixer"));
+    // Reset mix puts it back in the middle, all of it in the reverb.
+    screen.click("Reset mix");
+    assert_eq!(
+        (channel(&screen).pan, channel(&screen).reverb_send),
+        (0.0, 1.0)
+    );
+    screen.app.undo();
+    assert_eq!(
+        (channel(&screen).pan, channel(&screen).reverb_send),
+        (-1.0, 0.0)
+    );
+}
+
+#[test]
+fn an_exported_song_keeps_each_channel_where_the_mixer_put_it() {
+    const RATE: u32 = 8000;
+    let mut screen = Screen::new();
+    // How much sound the first two seconds of the export have, left and right.
+    let sides = |app: &mut LineupApp| {
+        let mut render = app.song_render(RATE);
+        let mut out = vec![0.0; 2 * 2 * RATE as usize];
+        render.renderer.render(&mut out);
+        out.chunks(2).fold([0.0_f32; 2], |sum, frame| {
+            [sum[0] + frame[0].abs(), sum[1] + frame[1].abs()]
+        })
+    };
+    let [left, right] = sides(&mut screen.app);
+    assert!(
+        left > 1.0 && (left - right).abs() < 1e-3 * left,
+        "{left} {right}"
+    );
+    screen.app.edit("mixer", |project| {
+        project.mixer.reverb.enabled = false;
+        for index in 0..project.channels().len() {
+            project.channel_mut(index).unwrap().pan = -1.0;
+        }
+    });
+    let [left, right] = sides(&mut screen.app);
+    assert!(left > 1.0 && right == 0.0, "{left} {right}");
+}
+
 #[test]
 fn windows_open_at_their_own_size_not_one_remembered_from_before() {
     type Open = fn(&mut LineupApp, bool);

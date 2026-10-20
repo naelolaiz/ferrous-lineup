@@ -549,6 +549,8 @@ mod tests {
             volume: 1.0,
             muted: false,
             program,
+            pan: 0.0,
+            reverb_send: 1.0,
         }
     }
 
