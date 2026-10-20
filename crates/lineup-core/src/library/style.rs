@@ -1565,6 +1565,46 @@ pub static STYLES: &[Style] = &[
     )
     .in_time(THREE_FOUR),
     style(
+        "Chacarera trunca",
+        Folklore,
+        HarmonicMinor,
+        "i | V7 | i | V7 | iv | i | V7 | i",
+        Comping::Sway,
+        Bass::RootFifth,
+        152.0,
+        "Chacarera trunca",
+        "The chacarera trunca, its phrases cut short before the end of their second bar, in \
+         a quick 3/4: the minor tonic and its dominant seventh, with one iv.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Carnaval cochabambino",
+        Folklore,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I",
+        Comping::Waltz,
+        Bass::RootFifth,
+        152.0,
+        "Carnaval cochabambino",
+        "The carnival of Cochabamba, in a quick 3/4, in a major key: the tonic and its \
+         dominant seventh, two bars at a time, under drums, a wood block and a snare.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Estilo",
+        Folklore,
+        HarmonicMinor,
+        "i | iv | i | V7 | i | iv | V7 | i",
+        Comping::Sway,
+        Bass::Held,
+        44.0,
+        "",
+        "The estilo of the Pampas, the gaucho's slow song to the guitar, in 3/4, with no \
+         drums: the guitar's chords, the minor tonic, its iv and its V7, under a voice that \
+         takes its time.",
+    )
+    .in_time(THREE_FOUR),
+    style(
         "Huayno",
         Folklore,
         NaturalMinor,
