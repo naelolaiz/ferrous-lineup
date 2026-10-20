@@ -1322,6 +1322,38 @@ pub static RHYTHMS: &[Rhythm] = &[
     )
     .in_time(THREE_FOUR),
     rhythm(
+        "Chacarera trunca",
+        Folklore,
+        152.0,
+        &[
+            (LowTom, "X...x....... | ........X..."),
+            (Rim, "........xxxx | x.........x."),
+            (HighTom, "..x.x...x... | ..x.x...x..."),
+        ],
+        "",
+        "The chacarera trunca in a quick 3/4, as in the Credo of the Misa Criolla: two bars \
+         of the bombo, its head on the first two beats and then on the third, its rim \
+         answering with four sixteenths, while the sung phrases stop short before the \
+         third beat of their second bar.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
+        "Carnaval cochabambino",
+        Folklore,
+        152.0,
+        &[
+            (HighTom, "x.....x....."),
+            (LowTom, "....x...x..."),
+            (Rim, "x.....x...x."),
+            (Snare, "....XXXXx..."),
+        ],
+        "",
+        "The carnival of Cochabamba, in Bolivia, in a quick 3/4, as in the Sanctus of the \
+         Misa Criolla: two drums answering each other, a wood block, and a snare's burst of \
+         four loud sixteenths on the second beat.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
         "Huayno",
         Folklore,
         100.0,
