@@ -1165,7 +1165,8 @@ mod tests {
     /// of three, so a song in 3/4 or 6/8 plays one written for three, as
     /// the styles do.
     /// The style a song names is in the library and in the song's time
-    /// signature, so selecting it never changes the bars.
+    /// signature, or follows the song's meter, so selecting it never
+    /// changes the bars.
     #[test]
     fn every_song_names_a_real_style() {
         for song in SONGS {
@@ -1174,10 +1175,33 @@ mod tests {
             }
             let style = crate::library::Style::named(song.style)
                 .unwrap_or_else(|| panic!("{}: no style called {}", song.name, song.style));
-            assert_eq!(
-                style.time, song.time,
+            assert!(
+                style.time == song.time || style.follows_the_song(),
                 "{}: {} is in another time",
-                song.name, song.style
+                song.name,
+                song.style
+            );
+        }
+    }
+
+    /// A song whose meter changes from bar to bar has a style to play
+    /// it with: the library's matching style follows the meter.
+    #[test]
+    fn songs_that_change_meter_have_a_style_that_follows_it() {
+        for song in SONGS {
+            let meters: std::collections::HashSet<_> = song
+                .parts
+                .iter()
+                .flat_map(|part| part.meters.iter().copied().chain([song.part_time(part)]))
+                .collect();
+            if meters.len() < 3 || song.genre != Genre::Classical {
+                continue;
+            }
+            let style = crate::library::Style::named(song.style);
+            assert!(
+                style.is_some_and(|style| style.follows_the_song()),
+                "{} changes meter but has no style that follows it",
+                song.name
             );
         }
     }

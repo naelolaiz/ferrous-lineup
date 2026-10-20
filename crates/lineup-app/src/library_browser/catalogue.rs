@@ -36,6 +36,16 @@ impl<'a> Preset<'a> {
         }
     }
 
+    /// Whether it plays every bar in that bar's meter, keeping the song's
+    /// time signatures and tempo (see [`Style::follows_the_song`]).
+    pub fn follows_the_song(self) -> bool {
+        match self {
+            Self::Style(style) => style.follows_the_song(),
+            Self::Rhythm(rhythm) => rhythm.follows_the_meter,
+            Self::User(_, _) => false,
+        }
+    }
+
     pub fn has_progression(self) -> bool {
         match self {
             Self::Style(style) => !style.chart.trim().is_empty(),

@@ -46,6 +46,7 @@ pub const CELLO: u8 = 42;
 pub const CONTRABASS: u8 = 43;
 pub const PIZZICATO_STRINGS: u8 = 45;
 pub const HARP: u8 = 46;
+pub const TIMPANI: u8 = 47;
 pub const STRING_ENSEMBLE: u8 = 48;
 pub const CHOIR_AAHS: u8 = 52;
 pub const VOICE_OOHS: u8 = 53;

@@ -256,7 +256,7 @@ pub fn write_style_parts(
     selected: Option<usize>,
     parts: StyleParts,
 ) {
-    let parts = parts.for_preset();
+    let parts = parts.for_preset().following(style.follows_the_song());
     let (comping, bass) = if parts.matching_style {
         (style.comping, style.bass)
     } else {
@@ -317,6 +317,7 @@ pub fn write_style_parts(
 }
 
 pub fn write_rhythm_parts(project: &mut Project, index: usize, rhythm: &Rhythm, parts: StyleParts) {
+    let parts = parts.following(rhythm.follows_the_meter);
     if project
         .pattern(index)
         .is_some_and(|pattern| pattern.is_empty())

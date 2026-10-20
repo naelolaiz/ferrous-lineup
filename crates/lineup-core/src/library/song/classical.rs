@@ -1566,7 +1566,7 @@ pub(super) const PROMENADE: Song = Song {
     bass: Bass::Held,
     rhythm: "",
     band: PIANO,
-    style: "",
+    style: "Orchestra",
     parts: &[
         Part::new("Call", PROMENADE_THEME, "").in_meters(&[FIVE_STEPS, SIX_FOUR]),
         Part::new("Answer", PROMENADE_THEME, "vi V vi V iii | V I vi II II V")
@@ -1793,7 +1793,7 @@ pub(super) const PATHETIQUE_WALTZ: Song = Song {
     bass: Bass::Accents,
     rhythm: "",
     band: Band::new(gm::STRING_ENSEMBLE, gm::PIZZICATO_STRINGS, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         Part::new("Cellos", GRAZIA_CELLOS, GRAZIA_CELLOS_CHORDS),
         Part::new("Woodwinds", GRAZIA_WOODWINDS, GRAZIA_WOODWINDS_CHORDS),
@@ -3159,7 +3159,7 @@ pub(super) const BOLERO: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FLUTE, gm::PIZZICATO_STRINGS, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         Part::new("Introduction", "-:12 | -:12", "C | C")
             .with_left(concat!(bolero_beats_1!(), " & ", bolero_rest!()))
@@ -3370,7 +3370,7 @@ pub(super) const LA_MER_DAWN: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::CELLO, gm::STRING_ENSEMBLE, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         // Bars 1 to 5: the pedal B, the harps' F sharp and G sharp, and the cellos' rocking
         // octaves.
@@ -3493,7 +3493,7 @@ pub(super) const AUGURS_OF_SPRING: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FRENCH_HORN, gm::STRING_ENSEMBLE, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         Part::new(
             "13",
@@ -4373,7 +4373,7 @@ pub(super) const RITUAL_OF_ABDUCTION: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FLUTE, gm::STRING_ENSEMBLE, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         Part::new(
             "37",
@@ -4890,7 +4890,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         // MIDI bars 2 to 17.
         Part::new(
@@ -6523,7 +6523,7 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         // MIDI bars 299 to 306.
         Part::new(
@@ -7216,7 +7216,7 @@ pub(super) const PETRUSHKA_ROOM: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         // MIDI bars 434 to 438.
         Part::new(
@@ -8109,7 +8109,7 @@ pub(super) const PETRUSHKA_MOOR: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         // MIDI bars 562 to 565.
         Part::new(
@@ -9336,7 +9336,7 @@ pub(super) const PETRUSHKA_FAIR_EVENING: Song = Song {
     bass: Bass::None,
     rhythm: "",
     band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::CONTRABASS),
-    style: "",
+    style: "Orchestra",
     parts: &[
         // MIDI bars 794 to 796.
         Part::new(

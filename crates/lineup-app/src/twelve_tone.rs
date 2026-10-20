@@ -693,7 +693,10 @@ impl RowWindow {
             if ui
                 .add_enabled(can_create_pattern, egui::Button::new("Save to new pattern"))
                 .on_hover_text("Create and select a new pattern with these notes, the selected instrument, and the current pattern’s length and time signature. Ctrl+Z undoes it.")
-                .on_disabled_hover_text("New patterns are available in the song piano roll, up to 99 patterns per project.")
+                .on_disabled_hover_text(format!(
+                    "New patterns are available in the song piano roll, up to {} patterns per project.",
+                    lineup_core::MAX_PATTERNS
+                ))
                 .clicked()
             {
                 actions.push(RowAction::NewPattern {

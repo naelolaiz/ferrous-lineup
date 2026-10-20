@@ -328,6 +328,14 @@ const BY_STYLE: &[(&str, Extras)] = &[
             ..NONE
         },
     ),
+    // The orchestra's strings hold the chords its horns strike.
+    (
+        "Orchestra",
+        Extras {
+            strings: pad(STRINGS),
+            ..NONE
+        },
+    ),
 ];
 
 /// The players the band style called `name` adds.
