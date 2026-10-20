@@ -27,6 +27,7 @@ use std::sync::OnceLock;
 use serde::{Deserialize, Serialize};
 
 use crate::chord_sheet::{ChordMarker, HarmonyName, read_bar};
+use crate::general_midi;
 use crate::harmony::{Chord, PitchSet, Scale, ScaleKind};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
@@ -123,6 +124,10 @@ pub struct BandStyle {
 
 /// The band style File > New starts with.
 pub const DEFAULT_STYLE: &str = "Pop beat";
+
+/// The band style of an orchestra, which follows the song's meter (see
+/// [`BandStyle::follows_the_song`]).
+const ORCHESTRA: &str = "Orchestra";
 
 /// The styles with no drums: the ways of playing of the library's
 /// classical and ambient styles, which have no rhythm of their own.
@@ -230,6 +235,14 @@ impl BandStyle {
         self.rhythm.map_or(0, |rhythm| rhythm.swing)
     }
 
+    /// Whether it follows the song, as [`Style::follows_the_song`] says:
+    /// its drums follow the meter, so it plays every bar in that bar's
+    /// meter, leaves the song's time signatures and tempo as they are,
+    /// and comes in alongside the song's own parts instead of muting them.
+    pub fn follows_the_song(&self) -> bool {
+        self.rhythm.is_some_and(|rhythm| rhythm.follows_the_meter)
+    }
+
     /// The band style called `name`, if there is one.
     pub fn named(name: &str) -> Option<&'static BandStyle> {
         band_styles().iter().find(|style| style.name == name)
@@ -249,22 +262,25 @@ impl BandStyle {
         })
     }
 
-    /// The General MIDI instrument of the piano: an electric piano in
-    /// the electronic, hip hop and soul styles, an accordion in the
-    /// Balkan ones, a grand piano elsewhere.
+    /// The General MIDI instrument of the piano: the horns of the
+    /// orchestra, an electric piano in the electronic, hip hop and soul
+    /// styles, an accordion in the Balkan ones, a grand piano elsewhere.
     pub(crate) fn piano_program(&self) -> u8 {
         match self.genre {
+            _ if self.name == ORCHESTRA => general_midi::FRENCH_HORN,
             Genre::Electronic | Genre::HipHop | Genre::Soul => 4,
             Genre::Balkan => 21,
             _ => 0,
         }
     }
 
-    /// The General MIDI instrument of the bass: a double bass in jazz,
-    /// tango, folklore and the acoustic styles, a synth bass in
-    /// electronic music and hip hop, and a bass guitar elsewhere.
+    /// The General MIDI instrument of the bass: the orchestra's timpani,
+    /// a double bass in jazz, tango, folklore and the acoustic styles, a
+    /// synth bass in electronic music and hip hop, and a bass guitar
+    /// elsewhere.
     pub(crate) fn bass_program(&self) -> u8 {
         match self.genre {
+            _ if self.name == ORCHESTRA => general_midi::TIMPANI,
             Genre::Jazz
             | Genre::Tango
             | Genre::Folklore
@@ -1016,7 +1032,7 @@ impl Project {
             let mut band = Band::new(style);
             band.end = song_end;
             band.since = self.channels.len();
-            if !self.playlist.chord_markers.is_empty() {
+            if !self.playlist.chord_markers.is_empty() && !style.follows_the_song() {
                 band.muted = self.mute_the_songs_own();
             }
             self.band = Some(band);
@@ -1029,7 +1045,9 @@ impl Project {
             band.accents_only = false;
         }
         let empty = self.playlist.chord_markers.is_empty() && self.song_length() == 0;
-        if self.meter().first() != style.time || !self.playlist.time_markers.is_empty() {
+        let other_meter =
+            self.meter().first() != style.time || !self.playlist.time_markers.is_empty();
+        if other_meter && !style.follows_the_song() {
             if empty {
                 self.time_signature = style.time;
                 self.playlist.time_markers.clear();
@@ -1054,7 +1072,7 @@ impl Project {
         harmony: Option<&'static Style>,
         parts: apply::StyleParts,
     ) {
-        let parts = parts.for_preset();
+        let parts = parts.for_preset().following(style.follows_the_song());
         if self.band.is_none() && parts.rhythm && parts.instruments {
             let mut band = Band::new(style);
             band.end = self.song_length();
@@ -1062,7 +1080,7 @@ impl Project {
             if self.playlist.chord_markers.is_empty() && band.end > 0 {
                 self.write_heard_chords();
             }
-            if !self.playlist.chord_markers.is_empty() {
+            if !self.playlist.chord_markers.is_empty() && !style.follows_the_song() {
                 band.muted = self.mute_the_songs_own();
             }
             self.band = Some(band);
@@ -2410,13 +2428,12 @@ impl Project {
         };
         let mut notes = Vec::new();
         for chunk in chunks {
-            let bar = chunk.time.steps_per_bar();
             let variation = variation::variation_in(&markers, chunk.start);
             for &(drum, _) in &drums {
                 let Some(channel) = channel_of(style.drum_in(drum, variation)) else {
                     continue;
                 };
-                for note in rhythm.notes(drum, bar, chunk.length) {
+                for note in rhythm.notes_in(drum, chunk.time, chunk.length) {
                     let at = chunk.start + note.start;
                     if !in_a_fill(at) {
                         let velocity = match variation {
@@ -3626,5 +3643,114 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// Where each beat a bar is felt in starts, bar by bar up to `end`,
+    /// and whether it is the bar's first.
+    fn felt_beats(project: &Project, end: usize) -> Vec<(usize, bool)> {
+        let mut beats = Vec::new();
+        for bar in project.meter().bars().take_while(|bar| bar.start < end) {
+            let mut at = bar.start;
+            for (index, group) in bar.time.felt_groups().into_iter().enumerate() {
+                beats.push((at, index == 0));
+                at += usize::from(group) * bar.time.unit_steps();
+            }
+        }
+        beats
+    }
+
+    #[test]
+    fn an_orchestra_plays_every_bar_of_the_rite_of_spring_in_its_own_meter() {
+        let name = "The Rite of Spring, Ritual of Abduction";
+        let song = SONGS.iter().find(|song| song.name == name).unwrap();
+        let mut project = song_demo(song);
+        project.write_heard_chords();
+        assert!(
+            project.playlist().time_markers().len() > 20,
+            "a new meter every bar or two"
+        );
+        let before = project.clone();
+        let harmony = Style::named(song.style).unwrap();
+        let style = BandStyle::of_style(harmony).unwrap();
+        assert!(style.follows_the_song());
+        project.apply_band_parts(style, Some(harmony), apply::StyleParts::default());
+        // The song keeps its meters, its tempo and its own parts, which
+        // the orchestra plays along with.
+        assert_eq!(project.meter(), before.meter());
+        assert_eq!(project.tempo, before.tempo);
+        assert_eq!(
+            project.playlist().tempo_markers(),
+            before.playlist().tempo_markers()
+        );
+        for (channel, was) in before.channels().iter().enumerate() {
+            assert_eq!(project.channels()[channel].muted, was.muted, "{}", was.name);
+        }
+        assert!(project.band().unwrap().muted.channels.is_empty());
+        // The horns strike the chords, the timpani play their roots and
+        // the strings hold them.
+        let program = |player| project.channels()[project.player_channel(player).unwrap()].program;
+        assert_eq!(program(Player::Piano), Some(general_midi::FRENCH_HORN));
+        assert_eq!(program(Player::Bass), Some(general_midi::TIMPANI));
+        assert_eq!(
+            program(Player::Strings),
+            Some(general_midi::STRING_ENSEMBLE)
+        );
+        // The bass drum strikes every bar's first beat, and softly each
+        // other beat the bar is felt in, and nothing else.
+        let end = project.band().unwrap().end();
+        let beats = felt_beats(&project, end);
+        let mut drums = Vec::new();
+        for clip in project.playlist().clips() {
+            let pattern = project.pattern(clip.pattern).unwrap();
+            if pattern.player == Some(Player::Drums) {
+                drums.extend(
+                    pattern
+                        .all_notes()
+                        .map(|(_, note)| (clip.start + note.start, note.velocity)),
+                );
+            }
+        }
+        drums.sort_unstable();
+        let expected: Vec<(usize, u8)> = beats
+            .iter()
+            .map(|&(at, first)| (at, if first { 120 } else { 56 }))
+            .collect();
+        assert_eq!(drums, expected);
+        // The horns and the timpani play on those beats, or where a chord
+        // changes between two of them.
+        let changes: Vec<usize> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| marker.start)
+            .collect();
+        for player in [Player::Piano, Player::Bass] {
+            let notes = part(&project, player);
+            assert!(!notes.is_empty(), "{player:?}");
+            for (at, ..) in notes {
+                assert!(
+                    beats.iter().any(|&(beat, _)| beat == at) || changes.contains(&at),
+                    "{player:?} at step {at}, bar {}",
+                    project.meter().bar_at(at).number + 1
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn picking_the_orchestra_keeps_the_meters_of_the_song() {
+        let name = "The Rite of Spring, The Augurs of Spring";
+        let song = SONGS.iter().find(|song| song.name == name).unwrap();
+        let mut project = song_demo(song);
+        project.write_heard_chords();
+        let before = project.clone();
+        project.set_band_style(BandStyle::named(ORCHESTRA));
+        assert_eq!(project.meter(), before.meter());
+        assert_eq!(project.time_signature, TimeSignature::new(2, 4));
+        assert!(project.band().unwrap().muted.channels.is_empty());
+        // Another style puts the song in its own time, as before.
+        project.set_band_style(BandStyle::named("Pop beat"));
+        assert!(project.playlist().time_markers().is_empty());
+        assert_eq!(project.time_signature, TimeSignature::COMMON);
     }
 }

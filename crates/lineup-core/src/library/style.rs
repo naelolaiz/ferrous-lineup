@@ -105,6 +105,14 @@ impl Style {
         STYLES.iter().find(|style| style.name == name)
     }
 
+    /// Whether it follows the song (its drums follow the meter, see
+    /// [`super::Rhythm::follows_the_meter`]): it plays in whatever meter
+    /// each bar is in, so the song keeps its time signatures and tempo,
+    /// and a band in it plays along with the song's own parts.
+    pub fn follows_the_song(&self) -> bool {
+        super::Rhythm::named(self.rhythm).is_some_and(|rhythm| rhythm.follows_the_meter)
+    }
+
     /// The same style in another time signature.
     const fn in_time(self, time: TimeSignature) -> Style {
         Style { time, ..self }
@@ -2141,6 +2149,17 @@ pub static STYLES: &[Style] = &[
         70.0,
         "",
         "The minor iv borrowed from the minor key, like a sigh: film music's favourite way to say \"long ago\".",
+    ),
+    style(
+        "Orchestra",
+        Classical,
+        Mixolydian,
+        "I | bVII | I | bVII | IV | I | bVII | I",
+        Comping::Accents,
+        Bass::Accents,
+        100.0,
+        "Orchestra",
+        "An orchestra that plays along with the song in whatever meter each bar is in, for music whose meter changes from bar to bar, as in The Rite of Spring: on each beat the bar is felt in, the horns strike the chord and the timpani its root, the strings hold it, and the bass drum marks every bar. The song keeps its meters, its tempo and its own parts. Its chords swing between I and the flat VII of the Mixolydian mode.",
     ),
 ];
 

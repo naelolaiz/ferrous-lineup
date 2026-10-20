@@ -475,7 +475,15 @@ impl LineupApp {
             micromode_style: a.micromode_style,
         });
         let parts = match action {
-            LibraryAction::Rhythm(_) => self.playlist.library_parts().for_rhythm(),
+            LibraryAction::Rhythm(rhythm) => self
+                .playlist
+                .library_parts()
+                .for_rhythm()
+                .following(rhythm.follows_the_meter),
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => self
+                .playlist
+                .library_parts()
+                .following(style.follows_the_song()),
             _ => self.playlist.library_parts(),
         };
         let mut tried = previous;
@@ -648,7 +656,10 @@ impl LineupApp {
             | LibraryAction::MicromodeStyle(_) => None,
         };
         let swing = rhythm.and_then(|rhythm| self.swings.of(rhythm.name));
+        // A style that follows the song keeps its meters and tempo.
+        let parts = parts.following(rhythm.is_some_and(|rhythm| rhythm.follows_the_meter));
         let time = match action {
+            _ if !parts.time_signature => None,
             LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => Some(style.time),
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
                 if !fill_picked(action) =>
@@ -1089,13 +1100,18 @@ impl LineupApp {
             LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => Some(style),
             _ => None,
         };
+        // A style that follows the song plays it in its own meters and
+        // tempo: the song is not put in the style's time.
+        let follows = style.follows_the_song();
+        let parts = parts.following(follows);
+        let time = (!follows).then(|| harmony.map_or(style.time, |style| style.time));
         let swing = self.swings.of(style.name);
         let before = self.project.clone();
         let previous = self.tried();
         let source = source_of(action).expect("a style or a rhythm");
         self.edit_song(
             "change the band",
-            Some(harmony.map_or(style.time, |style| style.time)),
+            time,
             parts,
             false,
             Some(Bringing {
