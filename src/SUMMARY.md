@@ -96,6 +96,7 @@
   - [The lead sheet: the tune in notation](step-9/lead-sheet.md)
   - [Release builds: a download for every system](step-9/releases.md)
   - [A second bug hunt: crashes, spelling and the beat](step-9/bug-hunt.md)
+  - [A third bug hunt: a slow file, a jumping pattern and names cut short](step-9/bug-hunt-3.md)
   - [Swing and big band songs, with a horn section](step-9/big-band-songs.md)
   - [Finding a demo: alphabetical order and search](step-9/demo-search.md)
   - [Latin American songs, from Mexico to the Río de la Plata](step-9/latin-american-songs.md)

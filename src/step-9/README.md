@@ -62,7 +62,8 @@ With those thirteen in place, playing songs with the band showed what
 else was needed:
 
 - downloads for every system ([Release builds](releases.md)), and a
-  second round of fixes ([A second bug hunt](bug-hunt.md));
+  second and a third round of fixes ([A second bug hunt](bug-hunt.md),
+  [a third](bug-hunt-3.md));
 - many more songs: [swing and big band](big-band-songs.md),
   [Latin American](latin-american-songs.md), [odd meters](odd-meters.md),
   [a TV theme](big-bang-theory-theme.md), and
