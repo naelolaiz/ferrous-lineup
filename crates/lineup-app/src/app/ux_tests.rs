@@ -442,6 +442,52 @@ fn lagrimas_demo_keeps_its_written_chord_qualities_on_open_and_style_change() {
 }
 
 #[test]
+fn trying_row_and_micromode_styles_rewrites_one_pattern_while_it_is_unchanged() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::micromodes::MICROMODE_STYLES;
+    use lineup_core::library::rows::ROW_STYLES;
+    let mut screen = Screen::new();
+    screen
+        .app
+        .replace_project(lineup_core::Project::empty(), None);
+    let before = screen.app.project.clone();
+    let patterns = before.patterns().len();
+    screen
+        .app
+        .try_from_library(LibraryAction::RowStyle(&ROW_STYLES[0]));
+    let first = screen.app.pattern;
+    let name = |screen: &Screen| screen.app.project.pattern(first).unwrap().name.clone();
+    assert_eq!(screen.app.project.patterns().len(), patterns + 1);
+    assert_eq!(name(&screen), ROW_STYLES[0].name);
+    assert_eq!(screen.app.mode, PlayMode::Pattern);
+    assert!(screen.app.playing);
+    // While the pattern is as the library wrote it, the next style
+    // writes over it, whichever kind it is.
+    screen
+        .app
+        .try_from_library(LibraryAction::RowStyle(&ROW_STYLES[1]));
+    assert_eq!(name(&screen), ROW_STYLES[1].name);
+    screen
+        .app
+        .try_from_library(LibraryAction::MicromodeStyle(&MICROMODE_STYLES[0]));
+    assert_eq!(screen.app.pattern, first);
+    assert_eq!(screen.app.project.patterns().len(), patterns + 1);
+    assert_eq!(name(&screen), MICROMODE_STYLES[0].name);
+    let tried = screen.app.tried();
+    assert!(tried.row_style.is_none());
+    assert!(
+        tried
+            .micromode_style
+            .is_some_and(|style| std::ptr::eq(style, &MICROMODE_STYLES[0]))
+    );
+    // Each try is one step to undo.
+    for _ in 0..3 {
+        screen.app.undo();
+    }
+    assert_eq!(screen.app.project, before);
+}
+
+#[test]
 fn plain_accents_popup_hides_instruments_and_chords_and_restores_their_saved_choices() {
     use lineup_core::library::apply::StyleParts;
     for saved in [false, true] {
