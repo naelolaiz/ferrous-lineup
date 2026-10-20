@@ -24,7 +24,9 @@ use eframe::egui::{
 };
 use lineup_core::harmony::key_finding::{KeyGuess, read_chord};
 use lineup_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
-use lineup_core::harmony::{Harmony, HintLevel, Suggestion, analyze, next_chords, with_figures};
+use lineup_core::harmony::{
+    Harmony, HintLevel, Suggestion, analyze, next_chords_over, with_figures,
+};
 use lineup_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
 
 use crate::piano_roll::{KEY_HELP, both_names};
@@ -250,11 +252,10 @@ impl HarmonyKeys {
             self.last_bass = Some(bass);
         }
         let playing = played.and_then(|(chord, _)| keys::key_for(&chord_keys, chord));
-        // The key that plays shows the chord heard, inversion and all:
-        // I⁶ and C/E, or V⁴₂ and G7/F on the key of V.
+        // What follows depends on the inversion too: C/G, I⁶₄, goes to V.
         let suggestions = self
             .last_chord
-            .map(|chord| next_chords(tonal, chord))
+            .map(|chord| next_chords_over(tonal, chord, self.last_bass.unwrap_or(chord.root)))
             .unwrap_or_default();
 
         ui.add_space(4.0);
@@ -1150,6 +1151,17 @@ fn scale_dot(painter: &Painter, scale: Scale, pitch_class: PitchClass, key: Rect
 mod tests {
     use super::*;
     use lineup_core::ChordQuality;
+    use lineup_core::harmony::next_chords;
+
+    #[test]
+    fn after_the_tonic_six_four_the_hint_goes_on_to_v() {
+        let c = Scale::new(PitchClass::C, ScaleKind::Major);
+        let c_major = Chord::new(PitchClass::C, ChordQuality::Major);
+        let next = next_chords_over(c, c_major, PitchClass::G);
+        let last = Some((c_major, PitchClass::G));
+        let line = hint_line(HintLevel::Short, c, last, &next, true, false, "Piano");
+        assert_eq!(line, "C/G → G: cadential six-four, on to V");
+    }
 
     #[test]
     fn the_hint_line_gets_shorter_by_level() {

@@ -16,6 +16,7 @@
 //! bIII, bVI and bVII.
 
 use super::{Chord, ChordFamily, ChordQuality, HintLevel, Scale, ScaleKind};
+use crate::PitchClass;
 
 /// A chord that often follows another one, and why.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -502,11 +503,67 @@ pub fn next_chords(scale: Scale, current: Chord) -> Vec<Suggestion> {
         .unwrap_or_default()
 }
 
+const CADENTIAL_SIX_FOUR_SHORT: &str = "cadential six-four, on to V";
+const CADENTIAL_SIX_FOUR: &str = "I⁶₄ to V: with its fifth in the bass, the tonic chord leans on \
+    the dominant. It is heard as V whose sixth and fourth wait a beat to fall to the fifth and the \
+    third, so it goes on to V (often V7), and then home.";
+
+/// The chords that often follow `current` with `bass` lowest: as
+/// [`next_chords`], except for the tonic chord in its second inversion
+/// (I⁶₄, C/G in C major), which in a cadence goes on to V. A six-four
+/// chord sounds unsettled, because the fourth above its bass wants to
+/// fall a step to the third: over G, the C of C/G falls to B, and the E
+/// to D, and C/G becomes G.
+pub fn next_chords_over(scale: Scale, current: Chord, bass: PitchClass) -> Vec<Suggestion> {
+    let tonic = match scale.kind {
+        ScaleKind::Major => ChordQuality::Major,
+        ScaleKind::NaturalMinor | ScaleKind::HarmonicMinor | ScaleKind::MelodicMinor => {
+            ChordQuality::Minor
+        }
+        _ => return Vec::new(),
+    };
+    let six_four = current == Chord::new(scale.root, tonic) && current.tone_of(bass) == Some(5);
+    if !six_four {
+        return next_chords(scale, current);
+    }
+    let dominant = scale.root.transpose(7);
+    match scale.degree_of(dominant) {
+        Some(degree) => vec![Suggestion {
+            degree,
+            chord: Chord::new(dominant, ChordQuality::Major),
+            reason: CADENTIAL_SIX_FOUR,
+            short: CADENTIAL_SIX_FOUR_SHORT,
+        }],
+        None => next_chords(scale, current),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{PitchClass, Spelling};
     use PitchClass::*;
+
+    #[test]
+    fn the_tonic_six_four_goes_on_to_the_dominant() {
+        let c = Scale::new(C, ScaleKind::Major);
+        let c_major = Chord::new(C, ChordQuality::Major);
+        // C/G: on to G.
+        let after = next_chords_over(c, c_major, G);
+        assert_eq!(names(&after), ["G"]);
+        assert_eq!(after[0].short, "cadential six-four, on to V");
+        // C and C/E keep the usual suggestions.
+        assert_eq!(next_chords_over(c, c_major, C), next_chords(c, c_major));
+        assert_eq!(next_chords_over(c, c_major, E), next_chords(c, c_major));
+        // In A minor, Am/E goes on to E major, the V with the leading tone.
+        let a = Scale::new(A, ScaleKind::NaturalMinor);
+        let a_minor = Chord::new(A, ChordQuality::Minor);
+        assert_eq!(names(&next_chords_over(a, a_minor, E)), ["E"]);
+        // Another chord with its fifth in the bass is not a cadential
+        // six-four: F/C keeps F's suggestions.
+        let f = Chord::new(F, ChordQuality::Major);
+        assert_eq!(next_chords_over(c, f, C), next_chords(c, f));
+    }
 
     fn names(suggestions: &[Suggestion]) -> Vec<String> {
         suggestions
