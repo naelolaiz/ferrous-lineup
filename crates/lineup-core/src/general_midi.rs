@@ -251,9 +251,85 @@ pub fn family(program: u8) -> usize {
     usize::from(program.min(LAST)) / 8
 }
 
+/// The first note of the General MIDI drum set.
+const FIRST_DRUM: u8 = 35;
+
+/// The General MIDI drum set: what each note from 35 to 81 plays on
+/// channel 10, whatever program is chosen there.
+const DRUMS: [&str; 47] = [
+    "Acoustic Bass Drum",
+    "Bass Drum 1",
+    "Side Stick",
+    "Acoustic Snare",
+    "Hand Clap",
+    "Electric Snare",
+    "Low Floor Tom",
+    "Closed Hi-Hat",
+    "High Floor Tom",
+    "Pedal Hi-Hat",
+    "Low Tom",
+    "Open Hi-Hat",
+    "Low-Mid Tom",
+    "Hi-Mid Tom",
+    "Crash Cymbal 1",
+    "High Tom",
+    "Ride Cymbal 1",
+    "Chinese Cymbal",
+    "Ride Bell",
+    "Tambourine",
+    "Splash Cymbal",
+    "Cowbell",
+    "Crash Cymbal 2",
+    "Vibraslap",
+    "Ride Cymbal 2",
+    "Hi Bongo",
+    "Low Bongo",
+    "Mute Hi Conga",
+    "Open Hi Conga",
+    "Low Conga",
+    "High Timbale",
+    "Low Timbale",
+    "High Agogo",
+    "Low Agogo",
+    "Cabasa",
+    "Maracas",
+    "Short Whistle",
+    "Long Whistle",
+    "Short Guiro",
+    "Long Guiro",
+    "Claves",
+    "Hi Wood Block",
+    "Low Wood Block",
+    "Mute Cuica",
+    "Open Cuica",
+    "Mute Triangle",
+    "Open Triangle",
+];
+
+/// The drum General MIDI plays for `note` on channel 10, such as "Bass
+/// Drum 1" for 36, if the drum set has one there.
+pub fn drum_name(note: u8) -> Option<&'static str> {
+    DRUMS
+        .get(usize::from(note.checked_sub(FIRST_DRUM)?))
+        .copied()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_drum_set_is_the_general_midi_one() {
+        assert_eq!(drum_name(34), None);
+        assert_eq!(drum_name(35), Some("Acoustic Bass Drum"));
+        assert_eq!(drum_name(38), Some("Acoustic Snare"));
+        assert_eq!(drum_name(42), Some("Closed Hi-Hat"));
+        assert_eq!(drum_name(56), Some("Cowbell"));
+        assert_eq!(drum_name(63), Some("Open Hi Conga"));
+        assert_eq!(drum_name(70), Some("Maracas"));
+        assert_eq!(drum_name(81), Some("Open Triangle"));
+        assert_eq!(drum_name(82), None);
+    }
 
     #[test]
     fn the_named_programs_are_the_general_midi_ones() {

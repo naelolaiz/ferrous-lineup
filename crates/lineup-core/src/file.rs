@@ -169,10 +169,14 @@ pub fn is_project(path: &Path) -> bool {
 /// versions would play every channel in the middle with all of it in
 /// the reverb, so a song with any other mix needs format 26.
 ///
+/// Format 27 added sending a built-in drum over MIDI (see
+/// [`Channel::sent_on`]). Older versions would play it here, so a song
+/// with a drum sent over MIDI needs format 27.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play.
-pub const FORMAT_VERSION: u32 = 26;
+pub const FORMAT_VERSION: u32 = 27;
 
 /// The oldest format that can hold `project`.
 ///
@@ -256,7 +260,13 @@ pub fn format_for(project: &Project) -> u32 {
         .channels()
         .iter()
         .any(|channel| !channel.has_plain_mix());
-    if has_channel_mix {
+    let sends_drums = project
+        .channels()
+        .iter()
+        .any(|channel| channel.sent_on.is_some());
+    if sends_drums {
+        27
+    } else if has_channel_mix {
         26
     } else if has_polychords {
         25
@@ -556,6 +566,16 @@ impl TryFrom<ProjectFile> for Project {
         if let Some(channel) = file.channels.iter().find(|channel| !channel.mix_is_valid()) {
             return invalid(format!(
                 "channel \"{}\" has its pan or reverb send outside its range",
+                channel.name
+            ));
+        }
+        if let Some(channel) = file.channels.iter().find(|channel| {
+            channel
+                .sent_on
+                .is_some_and(|midi_channel| midi_channel > 15)
+        }) {
+            return invalid(format!(
+                "channel \"{}\" is sent over a MIDI channel other than 1 to 16",
                 channel.name
             ));
         }
@@ -1224,6 +1244,26 @@ mod tests {
         assert_eq!(from_text(&text).unwrap(), project);
         // A file edited by hand cannot pan past the speakers.
         let text = text.replace("pan: -0.5", "pan: -3.0");
+        assert!(matches!(from_text(&text), Err(FileError::Invalid(_))));
+    }
+
+    #[test]
+    fn drums_sent_over_midi_need_format_twenty_seven() {
+        let mut project = plain_demo();
+        let kick = project
+            .channels()
+            .iter()
+            .position(|channel| {
+                channel.kind == ChannelKind::Sampler(SampleSource::Builtin(Drum::Kick))
+            })
+            .unwrap();
+        project.channel_mut(kick).unwrap().send_over_midi(9);
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 27,"), "{text}");
+        assert!(text.contains("sent_on: Some(9)"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+        // A file edited by hand cannot send it past MIDI channel 16.
+        let text = text.replace("sent_on: Some(9)", "sent_on: Some(16)");
         assert!(matches!(from_text(&text), Err(FileError::Invalid(_))));
     }
 
