@@ -5,8 +5,8 @@ use lineup_core::score_order::score_order;
 use lineup_core::{Channel, ChannelKind, Mixer, SampleSource, general_midi};
 
 use super::LineupApp;
-use crate::theme;
 use crate::widgets::{self, Opening};
+use crate::{channel_rack, theme};
 
 /// How far channel names sit in from their section's heading.
 const INDENT: f32 = 10.0;
@@ -20,6 +20,7 @@ impl LineupApp {
         let mut mix = self.project.mixer;
         let mut levels = self.project.channels().to_vec();
         let locked = self.project.locked();
+        let mut picked = Vec::new();
         let id = egui::Id::unique("mixer");
         let window = egui::Window::new("Mixer")
             .id(id)
@@ -27,8 +28,17 @@ impl LineupApp {
             .constrain_to(area);
         // As wide as its columns and as tall as its channels, up to the
         // height of the playlist; the channels scroll past that.
+        // So it is fitted again when they change: another channel or
+        // instrument can make a column narrower. The channels' grid is
+        // then a new one, which measures its columns afresh.
         let size = egui::vec2(320.0, area.height());
-        widgets::open_at(ctx, window, id, size, Opening::EveryTime).show(ctx, |ui| {
+        let rows: Vec<(&str, String)> = levels
+            .iter()
+            .map(|channel| (channel.name.as_str(), instrument(channel)))
+            .collect();
+        let grid = egui::Id::unique(("mixer-channels", &rows));
+        let window = widgets::open_at(ctx, window, id, size, Opening::EveryTime);
+        widgets::fit_when_changed(ctx, window, id, size, &rows).show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.strong("Master");
                 percent_slider(ui, &mut mix.master);
@@ -72,7 +82,7 @@ impl LineupApp {
             });
             ui.separator();
             egui::ScrollArea::vertical().show(ui, |ui| {
-                egui::Grid::new("mixer-channels")
+                egui::Grid::new(grid)
                     .striped(true)
                     .min_col_width(45.0)
                     .show(ui, |ui| {
@@ -96,7 +106,25 @@ impl LineupApp {
                                         );
                                     }
                                 });
-                                ui.label(instrument(channel));
+                                // A synth's instrument is picked here as in
+                                // the rack; a drum or a sample has none.
+                                if matches!(
+                                    channel.kind,
+                                    ChannelKind::Synth | ChannelKind::MidiOut { .. }
+                                ) {
+                                    ui.menu_button(instrument(channel), |ui| {
+                                        channel_rack::instrument_choices(
+                                            ui,
+                                            index,
+                                            channel.program,
+                                            &mut picked,
+                                        );
+                                    })
+                                    .response
+                                    .on_hover_text("Choose the instrument it plays");
+                                } else {
+                                    ui.label(instrument(channel));
+                                }
                                 percent_slider(ui, &mut channel.volume);
                                 ui.checkbox(&mut channel.muted, "")
                                     .on_hover_text("Mute this channel");
@@ -141,6 +169,9 @@ impl LineupApp {
                     }
                 }
             });
+        }
+        for action in picked {
+            self.apply(action);
         }
     }
 }
