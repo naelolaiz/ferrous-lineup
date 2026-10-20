@@ -414,7 +414,16 @@ pub fn song_demo(song: &Song) -> Project {
                 .flatten()
         })
         .collect();
-    let keys = apply::synth_named(&mut project, apply::KEYS);
+    // The Keys channel plays the chords, or a part's left hand: a song
+    // whose every part writes out its other instruments' lines, with no
+    // left hand, has none.
+    let keys_play = song
+        .parts
+        .iter()
+        .any(|part| part.lines.is_empty() || !part.left.is_empty());
+    let keys = keys_play
+        .then(|| apply::synth_named(&mut project, apply::KEYS))
+        .flatten();
     let bass = match song.bass {
         Bass::None => None,
         _ => apply::synth_named(&mut project, apply::BASS),
