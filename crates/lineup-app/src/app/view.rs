@@ -1,7 +1,7 @@
 //! The View menu and the zoom controls: how big things are drawn, and
 //! which windows are open.
 //!
-//! As in FL Studio, the playlist and the piano roll zoom their two
+//! As in most music programs, the playlist and the piano roll zoom their two
 //! directions separately: horizontal zoom makes bars and steps wider, so
 //! you see less time in more detail, and vertical zoom makes tracks and
 //! piano keys taller. Neither changes the size of the text or the menus.

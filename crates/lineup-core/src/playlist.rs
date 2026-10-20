@@ -12,7 +12,7 @@
 //! On top of the clips, the playlist holds the song's structure:
 //!
 //! - a clip can repeat its pattern several times in a row ([`Clip::repeats`]),
-//!   like stretching a pattern clip in FL Studio;
+//!   like stretching a pattern clip in a pattern-based studio;
 //! - [`Section`]s name stretches of the song (Intro, Verse, Chorus...) and
 //!   can be played more than once, so a chorus written once is heard twice;
 //! - a [`LoopRegion`] makes song mode loop one part of the song while you

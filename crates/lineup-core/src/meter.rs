@@ -14,7 +14,7 @@
 //!
 //! A song can change time signature partway through, like a hymn that
 //! goes from 4/4 to 3/4 for its last line. Each change is a
-//! [`TimeMarker`] on the playlist, as in FL Studio, and a [`Meter`]
+//! [`TimeMarker`] on the playlist, and a [`Meter`]
 //! works out where every bar of such a song starts.
 
 use std::fmt;

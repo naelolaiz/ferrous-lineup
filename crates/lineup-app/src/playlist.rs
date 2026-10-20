@@ -12,8 +12,8 @@
 //!
 //! Above the bar numbers is the section strip, where the song's structure
 //! is marked; [`sections`] draws it and the loop region. A right-click on
-//! the bar numbers changes the time signature from that bar on, like a
-//! time marker in FL Studio.
+//! the bar numbers changes the time signature from that bar on, the way a
+//! chart writes a new time signature where it changes.
 
 mod sections;
 mod tempo;
@@ -1536,7 +1536,7 @@ fn paint_ruler(
     // changes, after the bar number.
     let changes: Vec<usize> = meter.markers().iter().map(|marker| marker.start).collect();
     // Zoomed out, the bars get too narrow for their numbers: then every
-    // second, fourth, ... bar is numbered, as in FL Studio.
+    // second, fourth, ... bar is numbered.
     let bar_width = layout.step_width * STEPS_PER_BAR as f32;
     let every = [1, 2, 4, 8, 16, 32]
         .into_iter()

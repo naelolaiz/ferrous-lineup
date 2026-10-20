@@ -473,7 +473,7 @@ impl LineupApp {
             .on_hover_text(
                 "On: every channel plays on the output instead of the speakers, on the MIDI channels File > \
                  Export MIDI uses: drums on channel 10 as a General MIDI drum set, the others \
-                 on 1, 2, 3 and so on. Off: only MIDI Out channels play there, as in FL Studio.",
+                 on 1, 2, 3 and so on. Off: only MIDI Out channels play there.",
             );
         if !self.live.midi.can_send() {
             ui.colored_label(
