@@ -56,6 +56,7 @@ use crate::channel_rack::{self, RackAction};
 use crate::chord_sheet::{self, ChordSheet, SheetAction};
 use crate::ear_training::EarTraining;
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
+use crate::icons;
 use crate::lead_sheet::LeadSheetWindow;
 use crate::library_browser::Tried;
 use crate::midi::Midi;
@@ -1281,9 +1282,10 @@ impl LineupApp {
 
     /// The toolbar under the menus: the transport, the tempo and song
     /// position displays, the pattern selector, buttons for the windows
-    /// and the master volume, each in its own group. When the window is
-    /// too narrow for all of it (or zoomed in), the groups wrap onto a
-    /// second row instead of running off the edge.
+    /// and the master volume, each in its own group. It fits on one row
+    /// in a window 1280 points wide; when the window is narrower (or
+    /// zoomed in), the groups wrap onto a second row instead of running
+    /// off the edge.
     fn transport_bar(&mut self, ui: &mut egui::Ui) {
         ui.horizontal_wrapped(|ui| {
             theme::group(ui, |ui| {
@@ -1407,45 +1409,46 @@ impl LineupApp {
 
             theme::group(ui, |ui| self.pattern_selector(ui));
 
+            // The windows, as pictures: each says its name and its key
+            // when the mouse is over it.
             theme::group(ui, |ui| {
-                let sheet = theme::light_button(ui, "📝 Chords", self.chord_sheet.open, None);
-                if theme::hint(
-                    sheet,
-                    "Show or hide the chord sheet: the song's harmony bar by bar, to read and \
-                     write (F5)",
-                )
-                .clicked()
-                {
-                    self.chord_sheet.open = !self.chord_sheet.open;
-                }
-                let rack = theme::light_button(ui, "▦ Rack", self.rack_open, None);
-                if theme::hint(rack, "Show or hide the channel rack: the steps (F6)").clicked() {
-                    self.rack_open = !self.rack_open;
-                }
-                let roll = theme::light_button(ui, "🎹 Piano roll", self.piano_roll.open, None);
-                if theme::hint(
-                    roll,
-                    "Show or hide the piano roll: melodies and chords (F7)",
-                )
-                .clicked()
-                {
-                    self.piano_roll.open = !self.piano_roll.open;
-                }
-                if theme::light_button(ui, "Mixer", self.mixer_open, None)
-                    .on_hover_text("Master and instrument levels, solo, mute and reverb (F9)")
-                    .clicked()
-                {
-                    self.mixer_open = !self.mixer_open;
-                }
-                let harmony = theme::light_button(ui, "🎼 Harmony", self.harmony_keys.open, None);
-                if theme::hint(
-                    harmony,
-                    "Show or hide the harmony keys: the key, the time signature and a key \
-                     for each chord (F8)",
-                )
-                .clicked()
-                {
-                    self.harmony_keys.open = !self.harmony_keys.open;
+                let windows: [(&str, &mut bool, icons::Picture, &str); 5] = [
+                    (
+                        "Chord sheet",
+                        &mut self.chord_sheet.open,
+                        icons::chord_sheet,
+                        "the song's harmony bar by bar, to read and write (F5)",
+                    ),
+                    (
+                        "Channel rack",
+                        &mut self.rack_open,
+                        icons::rack,
+                        "the steps of the selected pattern (F6)",
+                    ),
+                    (
+                        "Piano roll",
+                        &mut self.piano_roll.open,
+                        icons::piano_roll,
+                        "melodies and chords, note by note (F7)",
+                    ),
+                    (
+                        "Harmony keys",
+                        &mut self.harmony_keys.open,
+                        icons::harmony_keys,
+                        "the key, the time signature and a key for each chord (F8)",
+                    ),
+                    (
+                        "Mixer",
+                        &mut self.mixer_open,
+                        icons::mixer,
+                        "master and instrument levels, solo, mute and reverb (F9)",
+                    ),
+                ];
+                for (name, open, picture, about) in windows {
+                    let button = icons::toggle(ui, name, *open, picture);
+                    if theme::hint(button, format!("{name}: {about}")).clicked() {
+                        *open = !*open;
+                    }
                 }
             });
 
@@ -1454,7 +1457,8 @@ impl LineupApp {
                 // and its name wrap to the next row together.
                 ui.label(egui::RichText::new("VOL").small().color(theme::TEXT_DIM));
                 // Shorter than egui's usual slider, so the toolbar fits
-                // on one row in a window 1280 points wide.
+                // on one row in a window 1280 points wide (see
+                // `the_toolbar_fits_on_one_row_at_1280_points`).
                 ui.spacing_mut().slider_width = 64.0;
                 let mut master = self.project.mixer.master;
                 let volume_slider = egui::Slider::new(&mut master, 0.0..=1.0).show_value(false);
