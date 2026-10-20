@@ -496,9 +496,16 @@ fn the_mixer_sends_a_channel_over_midi_and_back() {
     screen.click("Acoustic Grand Piano");
     screen.click("Send over MIDI");
     let output = screen.draw(vec![]);
-    // No MIDI here, so no outputs; "None" is the one chosen.
+    // The outputs this machine has, if any (Windows always has one).
     assert!(text_rect(&output, "Output, for every MIDI Out channel").is_some());
-    assert!(text_rect(&output, "No outputs found (the MIDI menu looks again)").is_some());
+    let ports = screen.app.live.midi.outputs();
+    assert_eq!(
+        text_rect(&output, "No outputs found (the MIDI menu looks again)").is_some(),
+        ports.is_empty()
+    );
+    for port in ports {
+        assert!(text_rect(&output, &port.name).is_some(), "{}", port.name);
+    }
     screen.click("3");
     assert_eq!(channel(&screen).kind, ChannelKind::MidiOut { channel: 2 });
     assert_eq!(channel(&screen).program, Some(ACOUSTIC_GRAND_PIANO));
