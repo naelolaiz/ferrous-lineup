@@ -65,6 +65,14 @@ impl Screen {
         self.click_at(pos, Modifiers::NONE);
     }
 
+    /// Clicks the picture button named `name` (see [`crate::icons`]).
+    fn click_icon(&mut self, name: &str) {
+        self.draw(vec![]);
+        self.draw(vec![]);
+        let pos = icon_rect(self, name).center();
+        self.click_at(pos, Modifiers::NONE);
+    }
+
     fn click_at(&mut self, pos: Pos2, modifiers: Modifiers) {
         self.draw(vec![
             Event::ModifiersChanged(modifiers),
@@ -147,6 +155,24 @@ fn text_rect(output: &FullOutput, label: &str) -> Option<Rect> {
             }
             _ => None,
         })
+}
+
+/// Where the picture button named `name` was in the last frame drawn.
+fn icon_rect(screen: &Screen, name: &str) -> Rect {
+    screen
+        .ctx
+        .read_response(crate::icons::id(name))
+        .unwrap_or_else(|| panic!("Missing picture button: {name}"))
+        .rect
+}
+
+fn icon_lit(output: &FullOutput, screen: &Screen, name: &str) -> bool {
+    let center = icon_rect(screen, name).center();
+    output.shapes.iter().any(|shape| {
+        matches!(&shape.shape,
+            Shape::Rect(rect) if rect.fill == theme::ACCENT && rect.rect.contains(center)
+        )
+    })
 }
 
 fn button_lit(output: &FullOutput, label: &str) -> bool {
@@ -654,6 +680,7 @@ fn f1_and_the_help_menu_show_the_keyboard_shortcuts() {
 
 #[test]
 fn main_transport_toggles_are_visible_reversible_and_saved() {
+    const TOGGLES: [&str; 3] = ["Follow playhead", "Count-in", "Metronome"];
     for size in [vec2(1400.0, 1000.0), vec2(800.0, 600.0)] {
         let mut screen = Screen::new();
         screen.size = size;
@@ -662,31 +689,102 @@ fn main_transport_toggles_are_visible_reversible_and_saved() {
         screen.draw(vec![]);
         screen.draw(vec![]);
         let output = screen.draw(vec![]);
-        for label in ["Follow playhead", "Count-in", "Metronome"] {
-            let rect = text_rect(&output, label).unwrap();
+        for name in TOGGLES {
+            let rect = icon_rect(&screen, name);
             assert!(screen.ctx.content_rect().contains_rect(rect));
         }
-        assert!(button_lit(&output, "Follow playhead"));
-        assert!(!button_lit(&output, "Count-in"));
-        assert!(!button_lit(&output, "Metronome"));
-        for label in ["Follow playhead", "Count-in", "Metronome"] {
-            screen.click(label);
+        assert!(icon_lit(&output, &screen, "Follow playhead"));
+        assert!(!icon_lit(&output, &screen, "Count-in"));
+        assert!(!icon_lit(&output, &screen, "Metronome"));
+        for name in TOGGLES {
+            screen.click_icon(name);
         }
         let output = screen.draw(vec![]);
-        assert!(!button_lit(&output, "Follow playhead"));
-        assert!(button_lit(&output, "Count-in"));
-        assert!(button_lit(&output, "Metronome"));
+        assert!(!icon_lit(&output, &screen, "Follow playhead"));
+        assert!(icon_lit(&output, &screen, "Count-in"));
+        assert!(icon_lit(&output, &screen, "Metronome"));
         assert!(!widgets::follow_playback(&screen.ctx));
         let restored = practice::Practice::new(&screen.ctx).view();
         assert!(restored.count_in && restored.metronome);
-        for label in ["Follow playhead", "Count-in", "Metronome"] {
-            screen.click(label);
+        for name in TOGGLES {
+            screen.click_icon(name);
         }
         assert!(widgets::follow_playback(&screen.ctx));
         assert!(!screen.app.practice.view().count_in && !screen.app.practice.view().metronome);
         assert_eq!(screen.app.project, project);
         assert!(!screen.app.playing);
     }
+}
+
+#[test]
+fn the_toolbar_fits_on_one_row_at_1280_points() {
+    let mut screen = Screen::new();
+    screen.size = vec2(1280.0, 800.0);
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let row = text_rect(&output, "PAT").unwrap().center().y;
+    let mut right: f32 = 0.0;
+    for label in ["SONG", "TEMPO", "BAR : BEAT : STEP", "PATTERN", "VOL"] {
+        let rect = text_rect(&output, label).unwrap_or_else(|| panic!("{label} missing"));
+        assert!(
+            (rect.center().y - row).abs() < 16.0,
+            "{label} is on another row"
+        );
+        right = right.max(rect.right());
+    }
+    for name in [
+        "Follow playhead",
+        "Count-in",
+        "Metronome",
+        "Chord sheet",
+        "Channel rack",
+        "Piano roll",
+        "Harmony keys",
+        "Mixer",
+    ] {
+        let rect = icon_rect(&screen, name);
+        assert!(
+            (rect.center().y - row).abs() < 16.0,
+            "{name} is on another row"
+        );
+        right = right.max(rect.right());
+    }
+    assert!(right < 1280.0);
+}
+
+#[test]
+fn the_window_buttons_open_and_close_their_windows() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    let windows = |app: &LineupApp| {
+        [
+            app.chord_sheet.open,
+            app.rack_open,
+            app.piano_roll.open,
+            app.harmony_keys.open,
+            app.mixer_open,
+        ]
+    };
+    assert_eq!(windows(&screen.app), [false; 5]);
+    let names = [
+        "Chord sheet",
+        "Channel rack",
+        "Piano roll",
+        "Harmony keys",
+        "Mixer",
+    ];
+    for (index, name) in names.into_iter().enumerate() {
+        screen.click_icon(name);
+        let mut open = [false; 5];
+        open[..=index].fill(true);
+        assert_eq!(windows(&screen.app), open, "after {name}");
+        let output = screen.draw(vec![]);
+        assert!(icon_lit(&output, &screen, name));
+    }
+    for name in names {
+        screen.click_icon(name);
+    }
+    assert_eq!(windows(&screen.app), [false; 5]);
 }
 
 #[test]
@@ -1939,8 +2037,8 @@ fn toolbar_clicks_do_not_give_the_playlist_the_keyboard() {
     let mut screen = shortcut_screen();
     screen.click("Shortcut test");
     let before = screen.app.project.clone();
-    screen.click("Follow playhead");
-    screen.click("Follow playhead");
+    screen.click_icon("Follow playhead");
+    screen.click_icon("Follow playhead");
     screen.key(Key::Delete);
     screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
     screen.key(Key::Delete);
