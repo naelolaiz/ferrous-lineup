@@ -631,6 +631,8 @@ const SEVEN_EIGHT: TimeSignature = TimeSignature::new(7, 8);
 const ONE_FOUR: TimeSignature = TimeSignature::new(1, 4);
 // Three half notes to the bar (Petrushka).
 const THREE_TWO: TimeSignature = TimeSignature::new(3, 2);
+// Thirteen sixteenth notes, a single odd bar of Petrushka's third tableau.
+const THIRTEEN_SIXTEEN: TimeSignature = TimeSignature::new(13, 16);
 
 // The bands the songs are dressed in, named after their style. Each is
 // melody, chords, bass. A piece from the concert hall names its own
@@ -1049,6 +1051,7 @@ pub static SONGS: &[Song] = &[
     classical::PETRUSHKA_FAIR,
     classical::PETRUSHKA_RUSSIAN_DANCE,
     classical::PETRUSHKA_ROOM,
+    classical::PETRUSHKA_MOOR,
 ];
 
 #[cfg(test)]
