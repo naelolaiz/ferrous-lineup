@@ -1927,7 +1927,9 @@ impl eframe::App for LineupApp {
         // The rack opens as big as its rows, up to the size of the
         // playlist; it can be resized, and scrolls when made smaller.
         // When the rows grow or shrink (a longer pattern, a new channel),
-        // it is fitted to them again, so no step hides past its edge.
+        // it is fitted to them again, so no step hides past its edge. So
+        // it is the first time it shows after the app starts: the size
+        // egui remembers from last time was fitted to other rows.
         let rack_scale = Self::rack_scale(&ctx);
         let style = ctx.global_style();
         let natural = (channel_rack::natural_size(&style, &self.project, self.pattern, 1.0)
@@ -1950,10 +1952,10 @@ impl eframe::App for LineupApp {
             .default_size(rack_size)
             .constrain_to(area)
             .resizable(true);
-        if natural != self.rack_natural {
-            if self.rack_natural != egui::Vec2::ZERO {
-                rack = rack.fixed_size(rack_size);
-            }
+        // Rows that change while the rack is closed are fitted when it
+        // opens again.
+        if self.rack_open && natural != self.rack_natural {
+            rack = rack.fixed_size(rack_size);
             self.rack_natural = natural;
         }
         let rack_actions = rack
