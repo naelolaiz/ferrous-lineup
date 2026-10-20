@@ -287,9 +287,9 @@ impl LineupApp {
                     },
                 );
                 if effective.tempo {
-                    let ratio =
-                        reference.time_signature.steps_per_bar() as f32 / steps_per_bar as f32;
-                    reference.scale_tempo(Tempo::new(bpm * ratio));
+                    let steps = reference.time_signature.steps_per_bar() as f64;
+                    let bpm = f64::from(bpm) * steps / steps_per_bar as f64;
+                    reference.scale_tempo(Tempo::new(bpm as f32));
                 }
                 reference.follow_chord_sheet();
             });
@@ -533,6 +533,7 @@ impl LineupApp {
             let source = source.as_ref()?;
             project.bring_in(source, taken, PartSet::NONE, |project| {
                 let index = target.or_else(|| project.add_pattern_around_locked(from))?;
+                let time = project.pattern_time(index);
                 match action {
                     LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                         apply::write_style_parts(project, index, style, selected, parts)
@@ -547,7 +548,9 @@ impl LineupApp {
                 {
                     project.swing = swing;
                 }
-                if parts.tempo {
+                // As in the song: a pattern put in another meter keeps
+                // the song's tempo.
+                if parts.tempo && project.pattern_time(index) == time {
                     project.scale_tempo(Tempo::new(tempo));
                 }
                 if !own_pattern {
@@ -952,9 +955,9 @@ impl LineupApp {
     /// the pattern the library wrote last if it is unchanged, or else a
     /// new one next to the current pattern. `write` writes its notes in
     /// the cleared pattern, then its `rhythm` plays the drums and, if the
-    /// library takes tempos, `tempo` becomes the song's. Returns the
-    /// pattern and what was written there, or `None`, saying why, when
-    /// there is no room for another pattern.
+    /// library takes tempos and the pattern keeps its meter, `tempo`
+    /// becomes the song's. Returns the pattern and what was written there,
+    /// or `None`, saying why, when there is no room for another pattern.
     fn write_pattern_style(
         &mut self,
         name: &'static str,
@@ -973,13 +976,14 @@ impl LineupApp {
                     Some(index) => index,
                     None => project.add_pattern_around_locked(from)?,
                 };
+                let time = project.pattern_time(index);
                 project.pattern_mut(index)?.name = name.to_string();
                 project.clear_unlocked(index);
                 write(project, index);
                 if let Some(rhythm) = rhythm {
                     apply::write_rhythm(project, index, rhythm);
                 }
-                if use_tempo {
+                if use_tempo && project.pattern_time(index) == time {
                     project.scale_tempo(Tempo::new(tempo));
                 }
                 Some((index, project.pattern(index)?.clone()))

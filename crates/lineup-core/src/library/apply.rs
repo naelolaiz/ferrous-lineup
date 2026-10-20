@@ -46,6 +46,9 @@ pub struct StyleParts {
     pub instruments: bool,
     pub time_signature: bool,
     pub progression: bool,
+    /// Take the preset's usual tempo where the meter stays the same. Off
+    /// by default: the song keeps its tempo, so its own notes last as
+    /// long as before.
     pub tempo: bool,
     pub swing: bool,
     /// Copy accompaniment patterns from the preset (or a rhythm's matching
@@ -61,7 +64,7 @@ impl Default for StyleParts {
             instruments: true,
             time_signature: true,
             progression: false,
-            tempo: true,
+            tempo: false,
             swing: true,
             matching_style: true,
         }
