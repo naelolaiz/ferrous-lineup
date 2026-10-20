@@ -3099,16 +3099,14 @@ const BOLERO_ENDING: &str = "E3+G3+C4+C5:4 (3 F#3+Bb3+D4+F#4+F#5:1 G3+B3+Eb4+G4+
      G3+C4+E4+G4+C5+E5+G5+C6:2 -:10 & -:12 | G3+C4+E4:4 -:8 | G3+C4+E4:4 -:8 | \
      G3+C4+E4:4 -:8 | F3+Ab3:2 -:10 | -:12";
 
-/// C major under every bar of a statement: under the flute's and the
-/// clarinet's, the violas and cellos play nothing but C and G.
-const BOLERO_C: &str = "C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C";
-
-/// The first tune's harmony once the strings play chords under it, from
-/// bar 77: C major, the strings' G, B and D on each third beat a passing
-/// touch of the dominant over the held C. Where the tune comes to rest
-/// on G, in its seventh bar, the strings move to G, C, D and F and then
-/// G, B and D: the dominant seventh over the held C, to the tune's
-/// sixteenth bar, where C major comes back.
+/// The first tune's harmony: C major, then, where the tune comes to rest
+/// on G in its seventh bar, the dominant seventh over the held C, to the
+/// tune's sixteenth bar, where C major comes back. Under the flute and
+/// the clarinet (bars 5 to 40) the violas and cellos play only C and G,
+/// and the tune alone sings the dominant's D, F and B; from bar 77 the
+/// strings play it too, G, C, D and F and then G, B and D over the held
+/// C, and the strings' G, B and D on each third beat of the C major bars
+/// are a passing touch of the dominant.
 const BOLERO_A_CHORDS: &str = "C | C | C | C | C | C | G7/C | G7/C | G7/C | G7/C | G7/C | G7/C | \
      G7/C | G7/C | G7/C | C | C | C";
 
@@ -3194,12 +3192,12 @@ pub(super) const BOLERO: Song = Song {
             .with_left(concat!(bolero_beats_1!(), " & ", bolero_rest!()))
             .with_drums(&[(Drum::Snare, bolero_snare!())])
             .marked(Dynamic::Pianissimo),
-        Part::new("Flute", BOLERO_A, BOLERO_C)
+        Part::new("Flute", BOLERO_A, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_eight!(bolero_beats_1), " | ", bolero_beats_2!(), " & ", bolero_eight!(bolero_rest), " | ", bolero_rhythm_1!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::FLUTE, 0)])
             .marked(Dynamic::Pianissimo),
-        Part::new("Clarinet", BOLERO_A, BOLERO_C)
+        Part::new("Clarinet", BOLERO_A, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_eight!(bolero_beats_2), " | ", bolero_beats_3!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_2!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::CLARINET, 0)])
