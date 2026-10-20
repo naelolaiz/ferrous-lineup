@@ -6476,7 +6476,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
 // Copyright: this is Stravinsky's 1947 revision of Petrushka, which is still under
 // copyright (Boosey & Hawkes); it is added here at the request of the project's owner.
 // Source: Stravinsky's Petrushka, 1947 revision, the Russian Dance that ends the first tableau,
-// MIDI bars 299 to 431, a song of its own because the whole tableau needs more than 99 patterns
+// MIDI bars 299 to 432, a song of its own because the whole tableau needs more than 99 patterns
 // (the fair before it is "Petrushka, The Shrovetide Fair"). The notes are converted by script
 // from a MIDI file of the 1947 version (the person's own copy, at sounding pitch) and checked
 // bar by bar against that file, not against a printed score; MIDI bar numbers are given below
@@ -7054,53 +7054,59 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
              G3+B4+C6:2 -:4 | -:2 E4 - E4 | G4:1 - G3+E4+C6:2 G4:1 - G3+B4+F5+C6:2 & -:6 \
              G2+E5+G5+A5:2. | - G2+E5+G5+A5. - A5. | -:1 G5 A5 C7 -:4",
         )
-        .in_key(G, Mixolydian)
+        .in_key(C, Major)
         .played_by(&[(gm::FLUTE, 0)])
         .marked(Dynamic::Fortissimo),
         // MIDI bar 420.
         Part::new("Reprise, 1/4", "-:2 C6:1 -", "")
             .with_left("-:2 F3+B3+A4+C5:1 - & -:2 G2+D3+D5+F5+A5:1 - & -:2 G3+D4+B4+C6")
             .in_time(ONE_FOUR)
-            .in_key(G, Mixolydian)
+            .in_key(C, Major)
             .played_by(&[(gm::FLUTE, 0)])
             .marked(Dynamic::Fortissimo),
-        // MIDI bars 421 to 431.
+        // MIDI bars 421 to 432.
         Part::new(
             "Coda",
             "C6:1 D6 C6 G6 D6 E6 C6 C7. | _ - C6:2. - C6 | D6:1 E6 C6 C7 D6 E6 C6 C7 | D6:2 C7 \
              D6 C6:1 C7. | _ - C6:2. - C6 | D6 C7 D6:1 E6 C6:2 | D6 C7 D6:1 E6 C6:2 | D6 C7 D6:1 \
-             E6 C6:2 | D6:1 E6 C6:2 D6:1 E6 C6:2 | D6:1 E6 C6:2 D6:1 E6 C6 - | -:2 C6:4 C6:1 -",
+             E6 C6:2 | D6:1 E6 C6:2 D6:1 E6 C6:2 | D6:1 E6 C6:2 D6:1 E6 C6 - | -:2 C6:4 C6:2 | \
+             C6:1 -:7",
             "",
         )
         .with_left(
             "-:8 | -:2 F3+B3+A4+C5. - F3+B3+A4+C5. | -:8 | - | -:2 G3+C4+E4+A4+C5. - B3+A4+C5:1 \
              - | -:6 (3 -:1 G3 A3 | (3 G3+G4 - G3+G4 C5:2 (3 G3+G4+B5:1 A3+F4+Bb5 - (3 G3+A5 A3 \
              G3 | (3 G3+A4 - G3+B4 (3 A3+A5 G3+Bb5+G6 A3 -:2 (3 -:1 G5. _ | (3 _ - - F5:2 G4:4 | \
-             _:8 | -:2 C4+E4+G4+A4:4 G3+C4+F4+A4:1 - & -:8 | - | - | - | - | - | - | - | - | (3 \
-             G3+D4+C6:1 A3+E4+G5 G3+D4+C5+D5 (3 A3+E4+G5+A5 - A3+E4+G5 (3 G3+D4+C5+D5+B5 \
-             A3+E4+E5+G5+Bb5 G3+D4+D5+C6 (3 - - A3+E5 | G3+D5:2 -:6 & -:8 | - | -:2 G3+B4+F5 \
+             _:8 | -:2 C4+E4+G4+A4:4 G3+C4+F4+A4:1 - | G3+C4+E4+A4 -:7 & -:8 | - | -:2 G3+B4+F5 \
              G4:1 - G3+E4:2 | G4:1 - G3+E4+C6:2 G4:1 - G3+B4+F5:2 | -:6 G3+D4+B4+G5:2 | - \
              E4+C5+G5+C6 G4:1 - D4+F5:2 | - E4+G5+C6 - D4+B4+F5 | - E4+C6 - D4+B4 | - D4+B4 - \
-             D4+B4+F5 | - B4+F5 - B4+F5 | -:6 F3:1 - & G4:1 - G3+E4+C6:2 G4:1 - G3+B4+F5+C6:2 | \
-             - G3+D4+B4+G5 - G3+D4+B4+G5 | G4:1 - C6 -:3 C6:1 - | -:6 C6:1 - | -:6 F3+C4:2. | \
-             -:8 | - | - | - | -:6 C6:1 - | -:8 & G3:1 G4+D7 A4+C7 G4 G3 G4 A4 G4 | -:2 C3+A3 - \
-             C3+A3 | G3+D6:1 G4 A4 G4+C6 G3+D6 G4 A4 G4+C6 | G3 G4 A4+A6 G4+E6 G3 G4 A4 G4+C6 | \
-             -:2 C3+A3 - C3+A3 | -:1 G4 A6 G4+E6 - G4 A4 G4+C6 | -:2 A4+A6:1 G4+E6 - G4 A4 G4+C6 \
-             | -:2 A4+A6:1 G4+E6 -:2 A4:1 G4+C6 | -:2 A4:1 G4+C6 -:2 A4:1 C6 | -:2 A4:1 -:3 A4:1 \
-             C6 | -:4 C6:1 - C5 - & -:1 G5 A5 Bb5 - Bb5 A5 G5. | _ - G2+D3+D5+F5+A5:2. - \
-             G2+D3+D5+F5+A5. | -:8 | - | -:2 G2+E5+A5. - G2+D5+F5+A5. | (3 -:1 A3+C4+G5+D7 - (3 \
-             A3+A5 G3+Bb5+G6 A3 (3 G3+A4+B5 A3+D4+Bb5 G3+F4 (3 A3+A5 G5+C7. _ | (3 _ - - -:2 D6 \
-             (3 -:1 G5+C7. _ | (3 _ - - -:2 D6 F5+B5 | D6 - C6+D6 (3 -:1 G5. _ | (3 _ - - (3 - \
-             G3+D4+Bb5+C6+C7 - -:2 (3 A3+E5+G5+A5:1 G3+D4+C5+D5+C7 E4. | _:2 D2+D3+C5+G5+A5:4 \
-             G1+G2+B4+G5+A5:1 - & C6:2 - B5+D6:1 -:3 | -:8 | -:1 G5 A5 Bb5+C7:2 G5:1 A5 Bb5+C7 | \
-             _ G5+D7 A5 Bb5+G6 B5 Bb5 A5 G5. | _ -:5 D3+F4:1 - | (3 G3+G4 - G3+E4 A4:2 D6 B4 | \
-             (3 -:1 A3+E4+G5+D7 - (3 A3+A5 G3+Bb5+G6 A3 (3 - - G3+A4 D5:2 | (3 -:1 A3+G4+G5+D7 - \
-             E5:2 (3 G3+C5+F5+B5:1 A3+G4+C5+Bb5 G3+C5+F5 (3 A3+A5 G3+C7 A3 | (3 A3+C5 G3+G4+G5 \
-             A3+C5 (3 G3+G5+A5 A3+D5+Bb5+C7 G3+G5 (3 A3+C5+B5 G3+Bb5 A3+D4 (3 G3+G5+A5 A3+D5+C7 \
-             G3 | D6:2 - D6 (3 -:1 G5. _ | _ -:7",
+             D4+B4+F5 | - B4+F5 - B4+F5 | -:6 F3:2 | G2+C3:1 -:7 & -:8 | - | - | - | - | - | - | \
+             - | - | (3 G3+D4+C6:1 A3+E4+G5 G3+D4+C5+D5 (3 A3+E4+G5+A5 - A3+E4+G5 (3 \
+             G3+D4+C5+D5+B5 A3+E4+E5+G5+Bb5 G3+D4+D5+C6 (3 - - A3+E5 | G3+D5:2 -:6 | -:8 & G3:1 \
+             G4+D7 A4+C7 G4 G3 G4 A4 G4 | -:2 C3+A3 - C3+A3 | G3+D6:1 G4 A4 G4+C6 G3+D6 G4 A4 \
+             G4+C6 | G3 G4 A4+A6 G4+E6 G3 G4 A4 G4+C6 | -:2 C3+A3 - C3+A3 | -:1 G4 A6 G4+E6 - G4 \
+             A4 G4+C6 | -:2 A4+A6:1 G4+E6 - G4 A4 G4+C6 | -:2 A4+A6:1 G4+E6 -:2 A4:1 G4+C6 | -:2 \
+             A4:1 G4+C6 -:2 A4:1 C6 | -:2 A4:1 -:3 A4:1 C6 | -:4 C6:1 - C5:2 | C2+C5+E5:1 -:7 & \
+             G4:1 - G3+E4+C6:2 G4:1 - G3+B4+F5+C6:2 | - G3+D4+B4+G5 - G3+D4+B4+G5 | G4:1 - C6 \
+             -:3 C6:1 - | -:6 C6:1 - | -:6 F3+C4:2. | -:8 | - | - | - | -:6 C6:1 - | -:8 | C6:2 \
+             -:6 & -:1 G5 A5 Bb5 - Bb5 A5 G5. | _ - G2+D3+D5+F5+A5:2. - G2+D3+D5+F5+A5. | -:8 | \
+             - | -:2 G2+E5+A5. - G2+D5+F5+A5. | (3 -:1 A3+C4+G5+D7 - (3 A3+A5 G3+Bb5+G6 A3 (3 \
+             G3+A4+B5 A3+D4+Bb5 G3+F4 (3 A3+A5 G5+C7. _ | (3 _ - - -:2 D6 (3 -:1 G5+C7. _ | (3 _ \
+             - - -:2 D6 F5+B5 | D6 - C6+D6 (3 -:1 G5. _ | (3 _ - - (3 - G3+D4+Bb5+C6+C7 - -:2 (3 \
+             A3+E5+G5+A5:1 G3+D4+C5+D5+C7 E4. | _:2 D2+D3+C5+G5+A5:4 G1+G2+B4+G5+A5:1 - | -:8 & \
+             C6:2 - B5+D6:1 -:3 | -:8 | -:1 G5 A5 Bb5+C7:2 G5:1 A5 Bb5+C7 | _ G5+D7 A5 Bb5+G6 B5 \
+             Bb5 A5 G5. | _ -:5 D3+F4:1 - | (3 G3+G4 - G3+E4 A4:2 D6 B4 | (3 -:1 A3+E4+G5+D7 - \
+             (3 A3+A5 G3+Bb5+G6 A3 (3 - - G3+A4 D5:2 | (3 -:1 A3+G4+G5+D7 - E5:2 (3 \
+             G3+C5+F5+B5:1 A3+G4+C5+Bb5 G3+C5+F5 (3 A3+A5 G3+C7 A3 | (3 A3+C5 G3+G4+G5 A3+C5 (3 \
+             G3+G5+A5 A3+D5+Bb5+C7 G3+G5 (3 A3+C5+B5 G3+Bb5 A3+D4 (3 G3+G5+A5 A3+D5+C7 G3 | D6:2 \
+             - D6 (3 -:1 G5. _ | _ -:7 | G5+A5:1 -:7",
         )
-        .in_key(G, Mixolydian)
+        .in_key(C, Major)
         .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[(
+            Drum::Kick,
+            "-:8 | - | - | - | - | - | - | - | - | - | - | X",
+        )])
         .marked(Dynamic::Forte),
     ],
     form: &[
@@ -7146,6 +7152,8 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
             over a drone on E (E Mixolydian); the violins' oscillating triplets ring A major; a \
             softer tune in D Dorian follows, and a slow, almost stopped phrase in A minor, with \
             bars of 5/8, before the piano brings the dance back with the tune in parallel chords \
-            and a glittering figure of its own over a G pedal. The dance stops on two loud \
-            chords, the first over D, the second over G.",
+            and a glittering figure of its own over a G pedal. At the end the same pedal on G \
+            turns out to be the dominant of C: the tune is cut off by loud chords over D and \
+            over G, and the dance lands, fff, on C major with an added sixth (C, E, G, A), so \
+            the last parts are in C major.",
 };
