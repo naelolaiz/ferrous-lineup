@@ -17,3 +17,7 @@ use-default-preprocessors = false
 [output.html]
 default-theme = "navy"
 preferred-dark-theme = "navy"
+additional-css = ["print.css"]
+# Where GitHub Pages serves the book, so the "page not found" page can
+# find its styles from any address.
+site-url = "/ferrous-lineup/"

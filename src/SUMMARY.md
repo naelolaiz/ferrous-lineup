@@ -108,6 +108,7 @@
   - [A style for each section](step-9/section-styles.md)
   - [The Big Bang Theory theme: a TV theme from a transcription](step-9/big-bang-theory-theme.md)
   - [The concert hall: Boléro, La Mer, The Rite of Spring and Petrushka](step-9/concert-hall.md)
+  - [The book online and as a PDF](step-9/book-online.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---

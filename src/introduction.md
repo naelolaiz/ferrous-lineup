@@ -24,12 +24,18 @@ a few exercises you can try on your own copy of the code.
 
 ## How to read this book
 
-You can read it three ways, all of them offline:
+You can read it in five ways:
 
 1. As plain Markdown files, in the book's `src` folder.
 2. As a website on your computer: run `mdbook build` in the book's
    folder and open `book/index.html` in a browser.
 3. As that website in a zip file, ready to unzip and open.
+4. Online, at <https://naelolaiz.github.io/ferrous-lineup/>.
+5. As one PDF with every chapter in order, to read offline or print:
+   [ferrous-lineup-book.pdf](https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf).
+
+[The book online and as a PDF](step-9/book-online.md) tells how the last
+two are made.
 
 ## The plan
 
