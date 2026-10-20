@@ -3202,3 +3202,49 @@ mod section_styles {
         assert_eq!(screen.app.project.section_style_at(64), bossa);
     }
 }
+
+#[test]
+fn the_chord_sheet_shows_its_chords_as_sets_and_micromodes_and_reads_the_notes() {
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    project.write_progression(
+        lineup_core::library::Style::named("Four chords").unwrap(),
+        0,
+    );
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = true;
+    let before = screen.app.project.clone();
+    let shows = |screen: &mut Screen, text: &str| {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        text_rect(&output, text).is_some()
+    };
+    assert!(shows(&mut screen, "C") && shows(&mut screen, "Am"));
+    // C G Am F in C major: the same notes as sets...
+    screen.click("As written");
+    screen.click("Pitch-class sets");
+    for set in ["3-11 T7I", "3-11 T2I", "3-11 T9", "3-11 T0I"] {
+        assert!(shows(&mut screen, set), "{set}");
+    }
+    assert!(shows(&mut screen, "C E G"));
+    // ...and as micromodes, all four the major-and-minor triad.
+    screen.click("Pitch-class sets");
+    screen.click("Micromodes");
+    assert!(shows(&mut screen, "Acorde menor-mayor T7I"));
+    assert!(shows(&mut screen, "Acorde menor-mayor T9"));
+    // The notes the band plays, read in threes from the lowest up.
+    screen.click("The sheet's harmonies");
+    screen.click("Notes together (vertical)");
+    assert!(shows(&mut screen, "3 notes"));
+    assert!(shows(&mut screen, "All tracks"));
+    screen.click("Notes together (vertical)");
+    screen.click("Notes in a line (serial)");
+    assert!(shows(&mut screen, "of"));
+    // And back to chords: nothing in the song has changed.
+    screen.click("Micromodes");
+    screen.click("Chords");
+    assert!(shows(&mut screen, "Am") && !shows(&mut screen, "Notes in a line (serial)"));
+    assert_eq!(screen.app.project, before);
+}

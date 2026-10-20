@@ -8,7 +8,10 @@
 //! plays it more than once, and the ending. A bar shows its harmonies where
 //! their beats fall, each with a caption: the Roman numeral of a chord
 //! in the key, or the notes of a set or a micromode. A bar with nothing
-//! written goes on with the harmony before it, shown faintly. While the
+//! written goes on with the harmony before it, shown faintly. The row
+//! above the bars ([`notation`]) shows the harmony in another notation
+//! (as chords, pitch-class sets or micromodes, on the same notes), or the
+//! song's own notes grouped into sets, vertically or in a line. While the
 //! song plays, the bar playing is framed in white and its harmony is the
 //! brightest thing on the sheet.
 //!
@@ -43,9 +46,11 @@ use crate::twelve_tone::Front;
 
 mod band;
 mod form;
+mod notation;
 mod practice;
 
 pub use form::FormAction;
+use notation::{NotationView, Shown};
 pub use practice::{PracticeAction, PracticeView, SPEEDS};
 
 /// The id of the window.
@@ -61,6 +66,9 @@ const HEADING_HEIGHT: f32 = 18.0;
 const LINE_GAP: f32 = 6.0;
 const NAME_SIZE: f32 = 20.0;
 const SMALLEST_NAME: f32 = 11.0;
+/// The smallest size for the class of a set or a micromode, written
+/// where its whole name does not fit.
+const SMALLEST_CLASS: f32 = 9.0;
 const CAPTION_SIZE: f32 = 13.0;
 const SMALL_SIZE: f32 = 10.0;
 /// Inside a bar: room for the bar number above the harmonies.
@@ -225,6 +233,8 @@ pub struct ChordSheet {
     /// Whether to scroll to the selected bar, moved there with the keys.
     reveal: bool,
     reveal_step: Option<usize>,
+    /// How the harmony is named, and which notes are grouped.
+    notation: NotationView,
     front: Front,
 }
 
@@ -242,6 +252,7 @@ impl ChordSheet {
             followed: None,
             reveal: false,
             reveal_step: None,
+            notation: NotationView::new(),
             front: Front::default(),
         }
     }
@@ -280,6 +291,7 @@ impl ChordSheet {
     ) -> Vec<SheetAction> {
         let (practice, library) = controls;
         let mut actions = Vec::new();
+        self.notation.remember(ctx);
         if !self.open {
             self.release(&mut actions);
             self.editing = None;
@@ -366,6 +378,7 @@ impl ChordSheet {
                 }
             }
         });
+        self.notation.row(ui, project);
         let round = playing.and_then(|(_, pass)| pass.chorus);
         form::row(ui, project, round, actions);
         practice::row(ui, project, practice, self.selected_bars(), actions);
@@ -445,6 +458,7 @@ impl ChordSheet {
     ) {
         let meter = project.meter();
         let keys = project.key_map();
+        let heard = self.notation.heard(project, &keys);
         let lines = self.lines(project, &meter);
         let width = ui.available_width().max(BARS_PER_LINE as f32 * 80.0);
         let cell_width = (width - 2.0) / BARS_PER_LINE as f32;
@@ -566,7 +580,7 @@ impl ChordSheet {
                 *cell,
                 (starts_section, ends_line),
                 marks,
-                playing,
+                (playing, &heard[..]),
                 actions,
             );
             clicked |= clicks.clicked;
@@ -643,7 +657,7 @@ impl ChordSheet {
         cell: Cell,
         (starts_section, ends_line): (bool, bool),
         marks: Marks,
-        playing: Option<usize>,
+        (playing, heard): (Option<usize>, &[Shown]),
         actions: &mut Vec<SheetAction>,
     ) -> BarClicks {
         let Cell { bar, rect, .. } = cell;
@@ -780,13 +794,20 @@ impl ChordSheet {
             );
         }
 
-        // The harmonies, each where its beat falls. While the song
-        // plays, the one sounding is the brightest thing on the sheet.
-        let sounding = playing.and_then(|step| match marks.ending {
-            Some(ending) if (ending.start..ending.end).contains(&step) => {
-                Some(ChordMarker::new(ending.start, ending.harmony))
+        // The harmonies, each where its beat falls, in the notation
+        // chosen: what is written, or the groups of notes the song plays.
+        // While the song plays, the one sounding is the brightest thing
+        // on the sheet.
+        let reads_notes = self.notation.reads_notes();
+        let sounding = playing.and_then(|step| {
+            if reads_notes {
+                let after = heard.partition_point(|shown| shown.start <= step);
+                return after.checked_sub(1).map(|index| heard[index].start);
             }
-            _ => project.chord_at(step),
+            match marks.ending {
+                Some(ending) if (ending.start..ending.end).contains(&step) => Some(ending.start),
+                _ => project.chord_at(step).map(|marker| marker.start),
+            }
         });
         let playing_here = playing.is_some_and(|step| (bar.start..bar.end()).contains(&step));
         let inner_left = rect.left() + PADDING + if repeat_from { 8.0 } else { 0.0 };
@@ -806,55 +827,82 @@ impl ChordSheet {
             .editing
             .as_ref()
             .is_some_and(|editing| editing.bar == bar.number);
-        // The ending's harmony is the band's, not written on the sheet.
-        let ending_marker = ending.map(|ending| ChordMarker::new(ending.start, ending.harmony));
-        let (going_on, shown) = match (typed_in, ending_marker) {
-            (true, _) => (None, Vec::new()),
-            (false, Some(marker)) if marker.start == bar.start => (None, vec![marker]),
-            (false, Some(marker)) => (Some(marker), Vec::new()),
-            (false, None) => (going_on, here.clone()),
+        let written = |marker: &ChordMarker| {
+            self.notation.written(
+                marker,
+                key,
+                |shown| caption(shown, key),
+                |shown| describe(shown, key),
+                voicing,
+            )
+        };
+        let (going_on, shown): (Option<Shown>, Vec<Shown>) = if typed_in {
+            (None, Vec::new())
+        } else if reads_notes {
+            let first = heard.partition_point(|shown| shown.start < bar.start);
+            let end = heard.partition_point(|shown| shown.start < bar.end());
+            let shown = heard[first..end].to_vec();
+            let going_on = (first > 0
+                && bar.start < project.song_length()
+                && shown.first().is_none_or(|first| first.start > bar.start))
+            .then(|| heard[first - 1].clone());
+            (going_on, shown)
+        } else {
+            // The ending's harmony is the band's, not written on the
+            // sheet.
+            let ending_marker = ending.map(|ending| ChordMarker::new(ending.start, ending.harmony));
+            let (going_on, markers) = match ending_marker {
+                Some(marker) if marker.start == bar.start => (None, vec![marker]),
+                Some(marker) => (Some(marker), Vec::new()),
+                None => (going_on, here.clone()),
+            };
+            // A harmony going on from before is not struck again: its
+            // marks are left out.
+            (
+                going_on.map(|marker| written(&ChordMarker::new(marker.start, marker.harmony))),
+                markers.iter().map(written).collect(),
+            )
         };
         let mut names: Vec<Name> = Vec::new();
-        if let Some(marker) = going_on {
+        if let Some(item) = going_on {
             let right = shown
                 .first()
                 .map_or(inner_right, |next| x_of(next.start) - 4.0);
-            let color = if playing_here && sounding == Some(marker) {
+            let color = if playing_here && sounding == Some(item.start) {
                 PLAYING
             } else {
                 GOING_ON
             };
             names.push(Name {
                 place: slot(inner_left, right),
-                marker: ChordMarker::new(marker.start, marker.harmony),
+                shown: Shown {
+                    caption: None,
+                    ..item
+                },
                 color,
-                caption: None,
                 going_on: true,
             });
         }
-        for (index, marker) in shown.iter().enumerate() {
+        for (index, item) in shown.iter().enumerate() {
             let right = shown
                 .get(index + 1)
                 .map_or(inner_right, |next| x_of(next.start) - 4.0);
-            let color = match (playing.is_some(), sounding == Some(*marker)) {
+            let color = match (playing.is_some(), sounding == Some(item.start)) {
                 (true, true) => PLAYING,
                 (true, false) => theme::TEXT_DIM,
-                _ if ending.is_some() => ENDING,
-                _ if is_group(marker.harmony) => GROUP_TEXT,
-                _ if marker.harmony == HarmonyName::NoChord => theme::TEXT_DIM,
+                _ if ending.is_some() && !reads_notes => ENDING,
+                _ if item.group => GROUP_TEXT,
+                _ if item.no_chord => theme::TEXT_DIM,
                 _ => theme::TEXT,
             };
             names.push(Name {
-                place: slot(x_of(marker.start), right),
-                marker: *marker,
+                place: slot(x_of(item.start), right),
+                shown: item.clone(),
                 color,
-                caption: caption(marker, key),
                 going_on: false,
             });
         }
         draw_names(painter, &names);
-        let slots: Vec<(Rect, ChordMarker)> =
-            names.iter().map(|name| (name.place, name.marker)).collect();
 
         // A selection of several bars is shaded, and the bars that loop
         // have the loop's colour along their top.
@@ -892,10 +940,9 @@ impl ChordSheet {
         // bar, double-click to type in it, right-click for more.
         let under = |pos: Option<Pos2>| {
             let pos = pos?;
-            slots
+            names
                 .iter()
-                .find(|(place, _)| place.x_range().contains(pos.x))
-                .map(|(_, marker)| *marker)
+                .find(|name| name.place.x_range().contains(pos.x))
         };
         let primary = ui.input(|input| input.pointer.primary_down());
         let dismissing = crate::widgets::dismissing(ui.ctx());
@@ -905,8 +952,8 @@ impl ChordSheet {
             && !dismissing
         {
             let pointer = response.interact_pointer_pos();
-            if let Some(marker) = under(pointer) {
-                self.sounding = voicing(marker.harmony);
+            if let Some(name) = under(pointer) {
+                self.sounding = name.shown.notes.clone();
                 if !self.sounding.is_empty() {
                     actions.push(SheetAction::NoteOn(self.sounding.clone()));
                 }
@@ -936,7 +983,7 @@ impl ChordSheet {
                  once and held. Type a chord here, and the chorus takes this bar in",
                 bar.number + 1
             ),
-            (Some(marker), None) => describe(&marker, key),
+            (Some(name), None) => name.shown.about.clone(),
             (None, None) => format!(
                 "Bar {}: click it and type its harmony, or double-click to change it. \
                  Right-click for more",
@@ -1000,6 +1047,7 @@ impl ChordSheet {
         self.followed = None;
         self.reveal = false;
         self.reveal_step = None;
+        self.notation.new_song();
     }
 
     /// Selects `bar`, as a click on it does, so what comes next is
@@ -1710,12 +1758,11 @@ fn is_group(harmony: HarmonyName) -> bool {
     )
 }
 
-/// A harmony to draw in a bar: where, in which colour, and its caption.
+/// A harmony to draw in a bar: where, what, and in which colour.
 struct Name {
     place: Rect,
-    marker: ChordMarker,
+    shown: Shown,
     color: Color32,
-    caption: Option<String>,
     /// It goes on from an earlier bar: drawn faintly, in what room is
     /// left before the bar's own first harmony.
     going_on: bool,
@@ -1725,33 +1772,54 @@ struct Name {
 /// bar's own names are all drawn at one size, as big as the most crowded
 /// one allows, so a bar does not mix big and small names; a name going
 /// on from before only shrinks itself.
+///
+/// A set or a micromode whose name does not fit even at the smallest
+/// size is written by its class alone, a little smaller still: "Menor 3"
+/// for "Menor 3 T8I", and the notes under it say which one it is. Where
+/// not even that fits, it is "…", since a name cut short would read as
+/// another one.
 fn draw_names(painter: &egui::Painter, names: &[Name]) {
-    let fits = |name: &Name| {
-        let text = name.marker.text();
+    let fit = |name: &Name, text: &str| {
         let font = FontId::proportional(NAME_SIZE);
-        let width = painter.layout_no_wrap(text, font, name.color).size().x;
-        NAME_SIZE * (name.place.width().max(1.0) / width).min(1.0)
+        let width = painter
+            .layout_no_wrap(text.to_string(), font, name.color)
+            .size()
+            .x;
+        NAME_SIZE * (name.place.width().max(1.0) / width.max(1.0)).min(1.0)
     };
-    let size = names
-        .iter()
-        .filter(|name| !name.going_on)
-        .map(fits)
+    // Each name's text, and the smallest size it may take.
+    let text = |name: &Name| match &name.shown.short {
+        Some(short) if fit(name, &name.shown.text) < SMALLEST_NAME => {
+            match fit(name, short) < SMALLEST_CLASS {
+                true => ("…".to_string(), SMALLEST_CLASS),
+                false => (short.clone(), SMALLEST_CLASS),
+            }
+        }
+        _ => (name.shown.text.clone(), SMALLEST_NAME),
+    };
+    let texts: Vec<(String, f32)> = names.iter().map(text).collect();
+    let own = || names.iter().zip(&texts).filter(|(name, _)| !name.going_on);
+    let smallest = own()
+        .map(|(_, (_, smallest))| *smallest)
+        .fold(SMALLEST_NAME, f32::min);
+    let size = own()
+        .map(|(name, (text, _))| fit(name, text))
         .fold(NAME_SIZE, f32::min)
-        .max(SMALLEST_NAME);
-    for name in names {
+        .max(smallest);
+    for (name, (text, smallest)) in names.iter().zip(texts) {
         let size = match name.going_on {
-            true => fits(name).max(SMALLEST_NAME),
+            true => fit(name, &text).max(smallest),
             false => size,
         };
         let clipped = painter.with_clip_rect(name.place.intersect(painter.clip_rect()));
         clipped.text(
             name.place.left_top(),
             Align2::LEFT_TOP,
-            name.marker.text(),
+            text,
             FontId::proportional(size),
             name.color,
         );
-        if let Some(caption) = &name.caption {
+        if let Some(caption) = &name.shown.caption {
             clipped.text(
                 pos2(name.place.left(), name.place.top() + NAME_SIZE + 4.0),
                 Align2::LEFT_TOP,
