@@ -1656,6 +1656,14 @@ impl LineupApp {
         }
     }
 
+    /// How the song's beat at the playhead is heard, for the harmony
+    /// keys: `None` in pattern mode or while stopped.
+    fn hearing_playing(&self) -> Option<lineup_core::harmony::Hearing> {
+        self.playhead()?;
+        let (step, _) = self.song_position()?;
+        Some(self.project.hearing_at(step))
+    }
+
     /// The chord notes playing at the playhead, for the harmony keys.
     fn chord_playing(&self) -> Vec<Note> {
         match (self.playhead(), self.mode) {
@@ -1827,6 +1835,7 @@ impl eframe::App for LineupApp {
                 .get(channel.unwrap_or(usize::MAX))
                 .map_or("", |channel| channel.name.as_str());
             let heard = self.chord_playing();
+            let hearing = self.hearing_playing();
             // While the chord sheet has the keyboard, digits are sets
             // and figures typed in a bar.
             let digits = !self.live.typing()
@@ -1844,6 +1853,7 @@ impl eframe::App for LineupApp {
                         channel_name,
                         &held,
                         &heard,
+                        hearing.as_ref(),
                         digits,
                         key_heard.as_ref(),
                         self.playlist.library_parts_mut(),
