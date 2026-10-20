@@ -75,6 +75,12 @@ pub enum StyleEditorRequest {
     Folder,
 }
 
+/// Where the Library options are saved between runs.
+const OPTIONS: &str = "library-options";
+
+/// Where they were saved while the Tempo option started ticked.
+const OPTIONS_TEMPO_ON: &str = "preset-copy-options";
+
 /// What the library tab remembers between frames.
 pub struct LibraryBrowser {
     pub user_styles: Vec<lineup_core::library::UserStyle>,
@@ -108,13 +114,24 @@ impl LibraryBrowser {
 
     pub fn restore_preferences(&mut self, ctx: &egui::Context) {
         self.parts = ctx
-            .data_mut(|data| data.get_persisted(egui::Id::unique("preset-copy-options")))
+            .data_mut(|data| {
+                data.get_persisted(egui::Id::unique(OPTIONS)).or_else(|| {
+                    // Options saved while Tempo started ticked: it was
+                    // ticked for everyone, so it starts off now like a new
+                    // one, and the other choices stay.
+                    data.get_persisted(egui::Id::unique(OPTIONS_TEMPO_ON))
+                        .map(|parts| StyleParts {
+                            tempo: false,
+                            ..parts
+                        })
+                })
+            })
             .unwrap_or_default();
     }
 
     pub fn store_preferences(&self, ctx: &egui::Context) {
         ctx.data_mut(|data| {
-            data.insert_persisted(egui::Id::unique("preset-copy-options"), self.parts);
+            data.insert_persisted(egui::Id::unique(OPTIONS), self.parts);
         });
     }
 
@@ -793,7 +810,7 @@ fn copy_parts_ui(
         });
         with_source(ui, now, SongPart::Tempo, |ui| {
             ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
-                "Use the usual tempo when the meter stays the same. Changing meter keeps each bar's duration.",
+                "Use the preset’s usual tempo when the meter stays the same. Off, the song keeps its tempo. Changing meter keeps each bar's duration.",
             );
         });
     }
@@ -1086,6 +1103,34 @@ mod tests {
         assert_eq!(next.parts, browser.parts);
         assert!(grouped_presets(&restored));
         assert!(!grouped_presets(&egui::Context::default()));
+    }
+
+    #[test]
+    fn options_saved_while_tempo_started_ticked_come_back_with_tempo_off() {
+        let ctx = egui::Context::default();
+        let saved = StyleParts {
+            tempo: true,
+            progression: true,
+            matching_style: false,
+            ..StyleParts::default()
+        };
+        ctx.data_mut(|data| data.insert_persisted(egui::Id::unique(OPTIONS_TEMPO_ON), saved));
+        let mut browser = LibraryBrowser::new();
+        browser.restore_preferences(&ctx);
+        assert_eq!(
+            browser.parts,
+            StyleParts {
+                tempo: false,
+                ..saved
+            }
+        );
+        // Ticked again since, it stays ticked.
+        browser.parts.tempo = true;
+        browser.store_preferences(&ctx);
+        let mut next = LibraryBrowser::new();
+        next.restore_preferences(&ctx);
+        assert!(next.parts.tempo);
+        assert!(!LibraryBrowser::new().parts.tempo);
     }
 
     #[test]

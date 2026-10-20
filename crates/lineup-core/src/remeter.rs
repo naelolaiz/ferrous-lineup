@@ -194,25 +194,31 @@ fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
     // changes too.
     let meter = project.meter();
     let tempos = project.tempo_map();
-    let ratio = |step: usize| bar as f32 / meter.time_at(step).steps_per_bar() as f32;
+    let old_bar = |step: usize| meter.time_at(step).steps_per_bar();
+    // Multiplied before it is divided, so that a tempo put in another
+    // meter and back is the tempo it was: 112 is 98 in 7/8, and 112
+    // again in 4/4.
+    let scaled = |tempo: Tempo, step: usize| {
+        Tempo::new((f64::from(tempo.bpm()) * bar as f64 / old_bar(step) as f64) as f32)
+    };
     let mut markers: Vec<TempoMarker> = playlist
         .tempo_markers()
         .iter()
         .map(|marker| TempoMarker {
-            tempo: Tempo::new(marker.tempo.bpm() * ratio(marker.start)),
+            tempo: scaled(marker.tempo, marker.start),
             ..*marker
         })
         .collect();
     for change in meter.markers() {
         let step = change.start;
         let already = markers.iter().any(|marker| marker.start == step);
-        if !already && ratio(step) != ratio(step - 1) {
-            let bpm = tempos.tempo_at(step).bpm() * ratio(step);
-            markers.push(TempoMarker::new(step, bpm));
+        if !already && old_bar(step) != old_bar(step - 1) {
+            let tempo = scaled(tempos.tempo_at(step), step);
+            markers.push(TempoMarker::new(step, tempo.bpm()));
         }
     }
     markers.sort_by_key(|marker| marker.start);
-    project.tempo = Tempo::new(project.tempo.bpm() * ratio(0));
+    project.tempo = scaled(project.tempo, 0);
     project.playlist.tempo_markers = markers;
 
     // Everything on the playlist moves with its bar.
@@ -445,6 +451,27 @@ mod tests {
             "{} vs {before}",
             seconds(&project)
         );
+    }
+
+    #[test]
+    fn a_tempo_put_in_another_meter_and_back_is_the_same_tempo() {
+        let seven = TimeSignature::new(7, 8);
+        let thirteen = TimeSignature::new(13, 16);
+        for bpm in [97.5, 100.0, 110.0, 112.0, 124.0, 133.3] {
+            for times in [
+                [seven, TimeSignature::COMMON],
+                [THREE_FOUR, seven],
+                [thirteen, THREE_FOUR],
+                [SIX_EIGHT, TWELVE_EIGHT],
+            ] {
+                let mut project = quarter_notes(4);
+                project.tempo = Tempo::new(bpm);
+                for time in times.into_iter().chain([TimeSignature::COMMON]) {
+                    remeter(&mut project, time);
+                }
+                assert_eq!(project.tempo.bpm(), bpm, "{times:?}");
+            }
+        }
     }
 
     #[test]
