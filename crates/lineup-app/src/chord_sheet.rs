@@ -1776,8 +1776,8 @@ struct Name {
 /// A set or a micromode whose name does not fit even at the smallest
 /// size is written by its class alone, a little smaller still: "Menor 3"
 /// for "Menor 3 T8I", and the notes under it say which one it is. Where
-/// not even that fits, it is "…", since a name cut short would read as
-/// another one.
+/// not even that fits, it is "…" with no notes under it, since a name or
+/// notes cut short would read as others.
 fn draw_names(painter: &egui::Painter, names: &[Name]) {
     let fit = |name: &Name, text: &str| {
         let font = FontId::proportional(NAME_SIZE);
@@ -1812,6 +1812,7 @@ fn draw_names(painter: &egui::Painter, names: &[Name]) {
             false => size,
         };
         let clipped = painter.with_clip_rect(name.place.intersect(painter.clip_rect()));
+        let cut = text == "…";
         clipped.text(
             name.place.left_top(),
             Align2::LEFT_TOP,
@@ -1819,7 +1820,7 @@ fn draw_names(painter: &egui::Painter, names: &[Name]) {
             FontId::proportional(size),
             name.color,
         );
-        if let Some(caption) = &name.shown.caption {
+        if !cut && let Some(caption) = &name.shown.caption {
             clipped.text(
                 pos2(name.place.left(), name.place.top() + NAME_SIZE + 4.0),
                 Align2::LEFT_TOP,
