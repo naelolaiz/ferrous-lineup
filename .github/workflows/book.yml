@@ -1,0 +1,95 @@
+name: Book
+
+# Builds the book with mdBook, prints it to one PDF, and publishes both on
+# GitHub Pages. Pull requests into the book build it too, so a change can
+# be checked before it is merged; only a push to `book` publishes.
+on:
+  push:
+    branches: [book]
+  pull_request:
+    branches: [book]
+
+permissions:
+  contents: read
+
+# One deployment at a time. A newer push waits for the one that is
+# publishing instead of cancelling it halfway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build the website and the PDF
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # A released mdBook, pinned so every run builds the same book. The
+      # action downloads the ready-built program and checks its checksum.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook@0.5.4
+
+      - name: Build the website
+        run: mdbook build
+
+      # The book uses music symbols (𝄾, ♩) and a few emoji. FreeSerif has
+      # the symbols and Noto Color Emoji the emoji, so the PDF shows them
+      # instead of empty boxes.
+      - name: Install fonts for the PDF
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-freefont-ttf fonts-noto-color-emoji
+
+      # mdBook also writes print.html, every chapter on one page. A second
+      # build in the light theme (the website stays dark) gives black text
+      # on white paper; the MDBOOK_ variables override book.toml for this
+      # build only. Chrome, which the runner already has, then prints that
+      # page the way a browser's Print button does, without the date and
+      # address at the top and bottom of each page. print.css sets the
+      # paper size.
+      - name: Print the PDF
+        env:
+          MDBOOK_OUTPUT__HTML__DEFAULT_THEME: light
+          MDBOOK_OUTPUT__HTML__PREFERRED_DARK_THEME: light
+        run: |
+          mdbook build --dest-dir pdf
+          google-chrome --headless --no-sandbox --disable-gpu \
+            --no-pdf-header-footer --virtual-time-budget=30000 \
+            --print-to-pdf="$PWD/book/ferrous-lineup-book.pdf" \
+            "file://$PWD/pdf/print.html"
+          test -s book/ferrous-lineup-book.pdf
+
+      # The PDF is a download on every run, pull requests included. It is
+      # also part of the website, next to its pages.
+      - uses: actions/upload-artifact@v7
+        with:
+          path: book/ferrous-lineup-book.pdf
+          archive: false
+          if-no-files-found: error
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: book
+
+  # Before the first run: Settings > Pages > Source: "GitHub Actions". The
+  # `github-pages` environment that creates only lets the default branch
+  # deploy, so add `book` under Settings > Environments > github-pages >
+  # Deployment branches and tags.
+  deploy:
+    name: Publish on GitHub Pages
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v6
+
+      - id: deployment
+        uses: actions/deploy-pages@v5

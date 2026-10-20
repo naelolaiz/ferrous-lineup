@@ -1,7 +1,7 @@
-# loom-app: the window
+# lineup-app: the window
 
-Files: [`crates/loom-app/src/main.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/main.rs)
-and [`crates/loom-app/src/app.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-app/src/app.rs)
+Files: [`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/main.rs)
+and [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs)
 
 The window is drawn with [egui](https://github.com/emilk/egui), a GUI
 library written in Rust, and [eframe](https://docs.rs/eframe), egui's
@@ -36,16 +36,16 @@ mod app;
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
-            .with_title("Ferrous Loom")
+            .with_title("Ferrous Lineup")
             .with_inner_size([960.0, 600.0])
             .with_min_inner_size([640.0, 400.0]),
         ..Default::default()
     };
 
     eframe::run_native(
-        "Ferrous Loom",
+        "Ferrous Lineup",
         options,
-        Box::new(|cc| Ok(Box::new(app::LoomApp::new(cc)))),
+        Box::new(|cc| Ok(Box::new(app::LineupApp::new(cc)))),
     )
 }
 ```
@@ -63,7 +63,7 @@ fn main() -> eframe::Result {
   `Box<dyn App>`. The `dyn` keyword means "some type implementing this
   trait, decided at run time" (a **trait object**).
 
-## `LoomApp`: the state
+## `LineupApp`: the state
 
 ```rust
 enum Audio {
@@ -71,7 +71,7 @@ enum Audio {
     Unavailable(String),
 }
 
-pub struct LoomApp {
+pub struct LineupApp {
     audio: Audio,
     playing: bool,
     tempo: Tempo,
@@ -104,7 +104,7 @@ borrows the engine mutably instead of moving it out of the struct.
 ## Implementing `eframe::App`
 
 ```rust
-impl eframe::App for LoomApp {
+impl eframe::App for LineupApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let typing = ui.ctx().memory(|memory| memory.focused().is_some());
         if !typing && ui.ctx().input(|input| input.key_pressed(egui::Key::Space)) {
@@ -165,7 +165,7 @@ let note_slider = egui::Slider::new(&mut midi, TONE_RANGE)
 ```
 
 The formatter is a closure that turns the slider's number into text using
-the `Display` implementation from `loom-core`. The `_` ignores the second
+the `Display` implementation from `lineup-core`. The `_` ignores the second
 argument, which we do not need.
 
 When a value changes, the app sends a `Command` to the audio thread, for

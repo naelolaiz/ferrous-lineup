@@ -1,0 +1,6 @@
+/* Printed pages, from the browser's Print button and for the PDF the
+   book's workflow makes: A4 paper with room around the text. */
+@page {
+    size: A4;
+    margin: 18mm 16mm;
+}
