@@ -6,6 +6,8 @@
 //! - [`ChordSymbol`] is a chord as a lead sheet writes it, read from
 //!   text: "F#m7b5", "Bb13", "G/B".
 //! - [`analyze`] names a group of notes: a single note, an interval or a chord.
+//! - [`hearing`] names the harmony of a stretch of music, with its
+//!   arpeggios, passing notes and chords played over other chords.
 //! - [`ChordStamp`] says what the piano roll places with one click.
 //! - [`next_chords`] suggests chords that often come next in a key.
 //! - [`HintLevel`] says how much the hints explain.
@@ -20,6 +22,7 @@
 mod analysis;
 mod chord;
 mod chord_scale;
+pub mod hearing;
 mod hints;
 pub mod key_finding;
 pub mod keys;
@@ -34,6 +37,7 @@ mod symbol;
 pub use analysis::{Harmony, analyze, describe_chord, interval_name, spelled_interval_name};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
 pub use chord_scale::{chord_scale, chord_scale_name};
+pub use hearing::{HeardNote, Hearing, Listening, Reading, hear};
 pub use hints::HintLevel;
 pub use key_finding::key_fits;
 pub use micromode::{Micromode, MicromodeFamily, micromode_content, micromodes_in, trichords};

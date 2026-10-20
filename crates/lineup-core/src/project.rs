@@ -1,6 +1,7 @@
 //! The project: channels, patterns, the playlist, the tempo and the key,
 //! kept in sync.
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
@@ -9,15 +10,15 @@ use crate::arrangement::{Arrangement, arrange};
 use crate::band::{Band, StyleMarker, VariationMarker};
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
-use crate::harmony::{ChordSymbol, Harmony, Scale, analyze};
+use crate::harmony::{Chord, ChordSymbol, Harmony, HeardNote, Hearing, Listening, Scale, hear};
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
-use crate::meter::{Click, Meter, TimeMarker, TimeSignature};
+use crate::meter::{Bar, Click, Meter, TimeMarker, TimeSignature};
 use crate::pattern::{NoteEvent, Pattern};
 use crate::playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, Section, Track,
 };
 use crate::tempo::{TempoMap, TempoMarker};
-use crate::{DRUM_CHANNEL, Note, Tempo, tools};
+use crate::{DRUM_CHANNEL, Note, PitchClass, Tempo, tools};
 
 /// The most channels a project can have. The audio thread reserves room
 /// for this many up front so that adding a channel never allocates.
@@ -172,6 +173,18 @@ impl Channel {
             muted: false,
             program: None,
         }
+    }
+
+    /// Whether the channel's notes count in the harmony heard: a synth
+    /// or a MIDI Out channel that is not muted, other than the MIDI drum
+    /// channel (10). Samplers, such as an imported recording, do not.
+    pub fn plays_notes(&self) -> bool {
+        let melodic = match self.kind {
+            ChannelKind::Synth => true,
+            ChannelKind::MidiOut { channel } => channel != DRUM_CHANNEL,
+            ChannelKind::Sampler(_) => false,
+        };
+        melodic && !self.muted
     }
 
     /// Whether the channel plays tunes, so its notes follow a change of
@@ -1040,62 +1053,178 @@ impl Project {
         true
     }
 
-    /// Writes the chords the song plays onto the chord sheet, beat by
-    /// beat, as the harmony keys hear them (see
-    /// [`Project::chord_notes_in_song`]): a marker wherever the chord
-    /// changes, and where a section starts, as a chart writes the chord
-    /// again at the top of each part. A beat with no chord, or with notes
-    /// that make no chord the app knows, goes on with the chord before.
-    /// Chords are spelled in the key of the song where they play.
-    /// Returns how many were written; the sheet is replaced only if
-    /// there is at least one.
+    /// Writes the chords the song plays onto the chord sheet, as the
+    /// music is heard (see [`crate::harmony::hearing`]): each bar is cut
+    /// into stretches at beat lines, wherever the harmony changes, and
+    /// each stretch is named as a whole, so an arpeggio counts as its
+    /// chord and a tune's passing notes do not hide it. A marker goes
+    /// wherever the harmony changes, and where a section starts, as a
+    /// chart writes the chord again at the top of each part. Two chords
+    /// played at once are written as a polychord ("Eb7|Fb"), and notes
+    /// that make no chord as their set ("4-23 T2"). A stretch of a single
+    /// line, or of silence, goes on with the harmony before it. Chords
+    /// are spelled in the key of the song where they play. Returns how
+    /// many were written; the sheet is replaced only if there is at
+    /// least one.
     ///
     /// In a key that is a set or a twelve-tone row, where chords have no
-    /// function, the notes heard together are written as a set, or as a
-    /// micromode when the key is one of Kröpfl's trichords (see
-    /// [`chord_sheet::heard_group`]).
+    /// function, the notes heard together on each beat are written as a
+    /// set, or as a micromode when the key is one of Kröpfl's trichords
+    /// (see [`chord_sheet::heard_group`]).
     ///
     /// The note after the slash is the lowest note of the whole band,
     /// the bass line included, as a lead sheet writes it: piano chords
-    /// voiced C E A over a bass playing A are Am, not Am/C. A lowest
-    /// note outside the chord, such as a passing note of the bass, is
-    /// left out, and the chord is written with its root.
+    /// voiced C E A over a bass playing A are Am, not Am/C. A passing
+    /// note in the bass is left out.
     pub fn write_heard_chords(&mut self) -> usize {
         let meter = self.meter();
         let keys = self.key_map();
         let end = self.song_length();
         let mut markers: Vec<ChordMarker> = Vec::new();
-        let beats = meter
-            .bars()
-            .take_while(|bar| bar.start < end)
-            .flat_map(|bar| bar.beat_starts().collect::<Vec<_>>());
-        for step in beats {
-            let key = keys.key_at(step);
-            let parts = self.parts_in_song(step);
-            let harmony = if chord_sheet::names_groups(key) {
-                let heard = chord_notes(parts)
-                    .iter()
-                    .map(|note| note.pitch_class())
-                    .collect();
-                match chord_sheet::heard_group(heard, key) {
-                    Some(group) => group,
-                    None => continue,
+        let mut last: Option<Harmony> = None;
+        let mut heard_bars = HeardBars::new();
+        for bar in meter.bars().take_while(|bar| bar.start < end) {
+            let named: Vec<(usize, Option<HarmonyName>)> =
+                if chord_sheet::names_groups(keys.key_at(bar.start)) {
+                    bar.beat_starts()
+                        .filter(|&beat| beat < end)
+                        .map(|beat| {
+                            let heard = chord_notes(self.parts_in_song(beat))
+                                .iter()
+                                .map(|note| note.pitch_class())
+                                .collect();
+                            (beat, chord_sheet::heard_group(heard, keys.key_at(beat)))
+                        })
+                        .collect()
+                } else {
+                    self.heard_stretches(&bar, end, &mut heard_bars)
+                        .into_iter()
+                        .map(|(start, hearing)| {
+                            // Two chords at once go on while their notes
+                            // do, though one of them rests, where nothing
+                            // else fits well.
+                            let harmony = match last {
+                                Some(last @ Harmony::Polychord { .. })
+                                    if hearing.goes_on(last) && hearing.fit() < WEAK =>
+                                {
+                                    last
+                                }
+                                _ => hearing.best(),
+                            };
+                            if !matches!(
+                                harmony,
+                                Harmony::Silence | Harmony::Single(_) | Harmony::Interval { .. }
+                            ) {
+                                last = Some(harmony);
+                            }
+                            (start, heard_name(harmony, keys.key_at(start)))
+                        })
+                        .collect()
+                };
+            for (start, harmony) in named {
+                let Some(harmony) = harmony else {
+                    continue;
+                };
+                let section_starts = self.playlist.sections.iter().any(|s| s.start == start);
+                if section_starts || markers.last().is_none_or(|last| last.harmony != harmony) {
+                    markers.push(ChordMarker::new(start, harmony));
                 }
-            } else {
-                match heard_chord(parts, key) {
-                    Some(symbol) => HarmonyName::Chord(symbol),
-                    None => continue,
-                }
-            };
-            let section_starts = self.playlist.sections.iter().any(|s| s.start == step);
-            if section_starts || markers.last().is_none_or(|last| last.harmony != harmony) {
-                markers.push(ChordMarker::new(step, harmony));
             }
         }
         if !markers.is_empty() {
             self.playlist.chord_markers = markers.clone();
         }
         markers.len()
+    }
+
+    /// `bar` cut into the stretches it plays, each from a beat line to a
+    /// later one, with how each is heard: the cuts that fit the notes
+    /// best, as a short piece of dynamic programming (the best way to
+    /// cut the first `i` beats is the best way to cut the first `j`, plus
+    /// one stretch from `j` to `i`, for the best `j`). Each cut costs a
+    /// little, more off the middle of the bar, so a harmony is only split
+    /// where that really fits the notes better. `end` is where the song
+    /// ends.
+    ///
+    /// A bar played again just as before, between the same bars, is
+    /// heard as before: `heard_bars` keeps how each bar was cut.
+    fn heard_stretches(
+        &self,
+        bar: &Bar,
+        end: usize,
+        heard_bars: &mut HeardBars,
+    ) -> Vec<(usize, Hearing)> {
+        let bar_end = bar.end().min(end);
+        let mut lines: Vec<usize> = bar.beat_starts().filter(|&beat| beat < bar_end).collect();
+        lines.push(bar_end);
+        let half = bar.start + bar.length / 2;
+        // The bars around it too, to tell what each part does (see
+        // `Project::hear`).
+        let meter = self.meter();
+        let before = meter.floor_to_bar(bar.start.saturating_sub(1));
+        let notes = self.heard_notes(before, meter.bar_at(bar_end).end());
+        let from_bar = |step: f32| step - (bar.start - before) as f32;
+        let mut played: Vec<(i64, i64, u8, usize)> = notes
+            .iter()
+            .map(|note| {
+                let at = |step: f32| from_bar(step) as i64;
+                (at(note.start), at(note.end), note.pitch.midi(), note.part)
+            })
+            .collect();
+        played.sort_unstable();
+        let key = (
+            lines
+                .iter()
+                .map(|&line| line - bar.start)
+                .collect::<Vec<usize>>(),
+            played,
+        );
+        if let Some(stretches) = heard_bars.get(&key) {
+            return stretches
+                .iter()
+                .map(|(start, hearing)| (bar.start + start, hearing.clone()))
+                .collect();
+        }
+        let listening = Listening::new(&notes);
+        let heard =
+            |from: usize, to: usize| listening.hear((from - before) as f32, (to - before) as f32);
+        // best[i]: the best score for the beats before line i, where its
+        // last stretch starts, and how that stretch is heard.
+        let mut best: Vec<(f32, usize, Option<Hearing>)> = vec![(0.0, 0, None)];
+        for i in 1..lines.len() {
+            let mut here = (f32::NEG_INFINITY, 0, None);
+            for j in 0..i {
+                let hearing = heard(lines[j], lines[i]);
+                let cut = match lines[j] {
+                    line if line == bar.start => 0.0,
+                    line if line == half => CUT_HALF_BAR,
+                    _ => CUT_BEAT,
+                };
+                let total = best[j].0 + worth(&hearing) * (i - j) as f32 - cut;
+                if total > here.0 {
+                    here = (total, j, Some(hearing));
+                }
+            }
+            best.push(here);
+        }
+        let mut stretches = Vec::new();
+        let mut i = lines.len() - 1;
+        while i > 0 {
+            let (_, j, hearing) = best[i].clone();
+            if let Some(hearing) = hearing {
+                stretches.push((lines[j], hearing));
+            }
+            i = j;
+        }
+        stretches.reverse();
+        heard_bars.insert(
+            key,
+            stretches
+                .iter()
+                .map(|(start, hearing)| (start - bar.start, hearing.clone()))
+                .collect(),
+        );
+        stretches
     }
 
     // ----- Tempo changes -----
@@ -1641,6 +1770,180 @@ impl Project {
         chord_notes(self.parts_in_song(song_step))
     }
 
+    /// The notes heard from timeline step `start` to `end` of the song,
+    /// on the channels that play notes (as for
+    /// [`Project::chord_notes_in_song`], but every channel, a tune's
+    /// too), each timed from `start`.
+    pub fn heard_notes(&self, start: usize, end: usize) -> Vec<HeardNote> {
+        let mut heard = Vec::new();
+        for clip in self.playlist.audible_clips() {
+            let Some(pattern) = self.patterns.get(clip.pattern) else {
+                continue;
+            };
+            let length = pattern.length();
+            let clip_end = clip.start + length * clip.repeats;
+            if length == 0 || clip_end <= start || clip.start >= end {
+                continue;
+            }
+            for (index, channel) in self.channels.iter().enumerate() {
+                if !channel.plays_notes() {
+                    continue;
+                }
+                for time in 0..clip.repeats {
+                    let from = clip.start + time * length;
+                    if from >= end || from + length <= start {
+                        continue;
+                    }
+                    for note in pattern.notes(index) {
+                        let note_start = from + note.start;
+                        let note_end = (note_start + note.length).min(from + length);
+                        if note_end <= start || note_start >= end {
+                            continue;
+                        }
+                        heard.push(HeardNote {
+                            pitch: note.pitch,
+                            start: note_start as f32 - start as f32,
+                            end: note_end as f32 - start as f32,
+                            part: index,
+                        });
+                    }
+                }
+            }
+        }
+        heard
+    }
+
+    /// How the music from timeline step `start` to `end` is heard: its
+    /// chord, two chords at once, or a set of notes, weighing every
+    /// note by how long it sounds (see [`crate::harmony::hearing`]).
+    ///
+    /// The bar before and the bar after are listened to as well, to tell
+    /// what each part does there, such as a tune moving in chords.
+    pub fn hear(&self, start: usize, end: usize) -> Hearing {
+        let meter = self.meter();
+        let before = meter.floor_to_bar(meter.floor_to_bar(start).saturating_sub(1));
+        let after = meter.bar_at(end).end();
+        let notes = self.heard_notes(before, after);
+        Listening::new(&notes).hear(
+            (start - before) as f32,
+            end.max(start) as f32 - before as f32,
+        )
+    }
+
+    /// How the beat that holds timeline step `step` is heard: the
+    /// harmony keys and the piano roll name the chord playing with it.
+    pub fn hearing_at(&self, step: usize) -> Hearing {
+        let meter = self.meter();
+        let start = meter.floor_to_beat(step);
+        self.hear(start, meter.beat_end(step))
+    }
+
+    /// How the beat that holds step `step` of pattern `pattern` is heard
+    /// with the whole band: where the pattern is first heard in the
+    /// song, everything playing then (see [`Project::hearing_at`]); for
+    /// a pattern not in the song, its own channels', in its own time
+    /// signature. The piano roll names the chord of all the tracks with
+    /// it.
+    pub fn hearing_with_pattern(&self, pattern: usize, step: usize) -> Hearing {
+        let first = self
+            .playlist
+            .audible_clips()
+            .filter(|clip| clip.pattern == pattern)
+            .min_by_key(|clip| clip.start);
+        if let Some(clip) = first {
+            return self.hearing_at(clip.start + step);
+        }
+        let Some(notes) = self.patterns.get(pattern) else {
+            return hear(&[], 0.0);
+        };
+        let time = self.pattern_time(pattern);
+        let bar = time.steps_per_bar().max(1);
+        let beat = time.beat_at(step);
+        let start = step - step % bar + beat.start;
+        let heard: Vec<HeardNote> = self
+            .channels
+            .iter()
+            .enumerate()
+            .filter(|(_, channel)| channel.plays_notes())
+            .flat_map(|(index, _)| {
+                notes.notes(index).iter().map(move |note| HeardNote {
+                    pitch: note.pitch,
+                    start: note.start as f32 - start as f32,
+                    end: (note.start + note.length) as f32 - start as f32,
+                    part: index,
+                })
+            })
+            .collect();
+        hear(&heard, beat.length as f32)
+    }
+
+    /// How every beat of pattern `pattern` is heard with the whole band,
+    /// as [`Project::hearing_with_pattern`] hears one: the step of the
+    /// pattern each beat starts on, from the first, with its hearing.
+    /// The notes of each bar and the bars around it are gathered once,
+    /// for the piano roll to name the harmony of a whole pattern.
+    pub fn hearings_with_pattern(&self, pattern: usize) -> Vec<(usize, Hearing)> {
+        let Some(own) = self.patterns.get(pattern) else {
+            return Vec::new();
+        };
+        let length = own.length();
+        let first = self
+            .playlist
+            .audible_clips()
+            .filter(|clip| clip.pattern == pattern)
+            .min_by_key(|clip| clip.start);
+        let mut heard = Vec::new();
+        if let Some(clip) = first {
+            let meter = self.meter();
+            let (start, end) = (clip.start, clip.start + length);
+            for bar in meter
+                .bars()
+                .skip_while(|bar| bar.end() <= start)
+                .take_while(|bar| bar.start < end)
+            {
+                let before = meter.floor_to_bar(bar.start.saturating_sub(1));
+                let notes = self.heard_notes(before, meter.bar_at(bar.end()).end());
+                let listening = Listening::new(&notes);
+                for beat in bar.beat_starts() {
+                    let beat_end = meter.beat_end(beat);
+                    if beat_end <= start || beat >= end {
+                        continue;
+                    }
+                    let hearing =
+                        listening.hear((beat - before) as f32, (beat_end - before) as f32);
+                    heard.push((beat.saturating_sub(start), hearing));
+                }
+            }
+            return heard;
+        }
+        let time = self.pattern_time(pattern);
+        let notes: Vec<HeardNote> = self
+            .channels
+            .iter()
+            .enumerate()
+            .filter(|(_, channel)| channel.plays_notes())
+            .flat_map(|(index, _)| {
+                own.notes(index).iter().map(move |note| HeardNote {
+                    pitch: note.pitch,
+                    start: note.start as f32,
+                    end: (note.start + note.length) as f32,
+                    part: index,
+                })
+            })
+            .collect();
+        let listening = Listening::new(&notes);
+        let bar = time.steps_per_bar().max(1);
+        let mut step = 0;
+        while step < length {
+            let beat = time.beat_at(step);
+            let start = step - step % bar + beat.start;
+            let end = start + beat.length;
+            heard.push((start, listening.hear(start as f32, end as f32)));
+            step = end;
+        }
+        heard
+    }
+
     /// The notes the whole band holds while step `step` of pattern
     /// `pattern` plays: where the pattern is first heard in the song, the
     /// notes of every track then (see [`Project::chord_notes_in_song`]);
@@ -1731,13 +2034,7 @@ impl Project {
             return;
         };
         for (index, channel) in self.channels.iter().enumerate() {
-            // MIDI channel 10 plays drums, not notes.
-            let melodic = match channel.kind {
-                ChannelKind::Synth => true,
-                ChannelKind::MidiOut { channel } => channel != DRUM_CHANNEL,
-                ChannelKind::Sampler(_) => false,
-            };
-            if melodic && !channel.muted {
+            if channel.plays_notes() {
                 parts.push(pattern.sounding_at(index, step).collect());
             }
         }
@@ -1765,22 +2062,58 @@ impl Project {
     }
 }
 
-/// The chord heard in `parts`, the notes each channel holds at one
-/// moment, spelled in `key`, with the band's lowest note after the slash
-/// when it is one of the chord's (see [`Project::write_heard_chords`]).
-fn heard_chord(parts: Vec<Vec<Note>>, key: Scale) -> Option<ChordSymbol> {
-    let Harmony::Chord { chord, bass } = analyze(chord_notes(parts)) else {
-        return None;
-    };
+/// How each bar was heard, by its beat lines and the notes in it and
+/// in the bars around it (each start, end, pitch and part, in steps from
+/// the bar's start): see [`Project::heard_stretches`].
+type HeardBars = HashMap<(Vec<usize>, Vec<(i64, i64, u8, usize)>), Vec<(usize, Hearing)>>;
+
+/// What a cut of a beat costs in [`Project::write_heard_chords`], in
+/// the units of [`Reading::fit`](crate::harmony::Reading) per beat:
+/// halfway through the bar, and on any other beat.
+const CUT_HALF_BAR: f32 = 0.15;
+const CUT_BEAT: f32 = 0.25;
+/// Where the best reading fits less well than this, two chords at once
+/// heard just before can go on.
+const WEAK: f32 = 0.7;
+
+/// How well a stretch is heard, per beat, for cutting a bar into
+/// stretches: the best reading's fit, or a little less for a single
+/// line, which names no harmony; silence takes the harmony around it.
+fn worth(hearing: &Hearing) -> f32 {
+    match hearing.best() {
+        Harmony::Silence => 1.0,
+        Harmony::Single(_) | Harmony::Interval { .. } => 0.8,
+        _ => hearing.fit(),
+    }
+}
+
+/// The chord sheet's name for `harmony` heard where the song is in
+/// `key`, spelled in it: a chord with the band's lowest note after the
+/// slash, two chords at once, or a set. `None` for a single note, an
+/// interval or silence, which name no harmony.
+fn heard_name(harmony: Harmony, key: Scale) -> Option<HarmonyName> {
+    match harmony {
+        Harmony::Chord { chord, bass } => Some(HarmonyName::Chord(spelled(chord, bass, key))),
+        Harmony::Polychord { upper, lower, bass } => Some(HarmonyName::Polychord(
+            spelled(upper, upper.root, key),
+            spelled(lower, bass, key),
+        )),
+        Harmony::Unknown(set) => Some(HarmonyName::Set(set)),
+        Harmony::Silence | Harmony::Single(_) | Harmony::Interval { .. } => None,
+    }
+}
+
+/// `chord` over `bass` as a chord symbol spelled in `key`.
+fn spelled(chord: Chord, bass: PitchClass, key: Scale) -> ChordSymbol {
     let root = key.spell_root(chord);
     let symbol = ChordSymbol::new(root, chord.quality);
     if bass == chord.root {
-        return Some(symbol);
+        return symbol;
     }
     let name = chord
         .spell_note(root, bass)
         .unwrap_or_else(|| key.spell(bass));
-    Some(symbol.over(name))
+    symbol.over(name)
 }
 
 /// The notes of the parts that hold two notes or more, or of all the

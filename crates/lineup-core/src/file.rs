@@ -33,7 +33,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use crate::band::{Band, BandFile, Player};
-use crate::chord_sheet::ChordMarker;
+use crate::chord_sheet::{ChordMarker, HarmonyName};
 use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
 use crate::pattern::{MAX_STEPS, MAX_STEPS_BEFORE_FORMAT_3, NoteEvent};
@@ -161,10 +161,14 @@ pub fn is_project(path: &Path) -> bool {
 /// in the band's own style, so a song with a section style needs format
 /// 24.
 ///
+/// Format 25 added two chords at once to the chord sheet, written
+/// "Eb7|Fb" (see [`HarmonyName::Polychord`]). Older versions cannot read
+/// them, so a song with any needs format 25.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play.
-pub const FORMAT_VERSION: u32 = 24;
+pub const FORMAT_VERSION: u32 = 25;
 
 /// The oldest format that can hold `project`.
 ///
@@ -240,7 +244,13 @@ pub fn format_for(project: &Project) -> u32 {
     let has_style_parts = project.band().is_some_and(|band| {
         band.instrument_style != band.style || band.harmony_style.is_some() || band.accents_only
     });
-    if !project.section_styles().is_empty() {
+    let has_polychords = playlist
+        .chord_markers()
+        .iter()
+        .any(|marker| matches!(marker.harmony, HarmonyName::Polychord(..)));
+    if has_polychords {
+        25
+    } else if !project.section_styles().is_empty() {
         24
     } else if !project.locked().is_empty() {
         23
@@ -1107,6 +1117,22 @@ mod tests {
 
         let bad = text.replace("G7/B", "H7");
         assert!(from_text(&bad).is_err());
+    }
+
+    #[test]
+    fn two_chords_at_once_need_format_twenty_five() {
+        let mut project = plain_demo();
+        let name = |text| crate::HarmonyName::parse(text).unwrap();
+        let chords = [
+            ChordMarker::new(0, name("Eb7|Fb")),
+            ChordMarker::new(16, name("C|F#/C#")),
+        ];
+        assert!(project.set_chords(0, 32, &chords));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 25,"), "{text}");
+        assert!(text.contains("harmony: \"Eb7|Fb\""), "{text}");
+        let loaded = from_text(&text).unwrap();
+        assert_eq!(loaded.playlist().chord_markers(), chords);
     }
 
     #[test]

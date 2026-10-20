@@ -775,6 +775,26 @@ fn group_voicing(pitch_classes: impl IntoIterator<Item = PitchClass>) -> Vec<Not
     notes
 }
 
+/// Two chords at once, each in a layer of its own: the lower chord from
+/// the G below middle C up, and the upper chord stacked right above it,
+/// so the two never cross, as an orchestra keeps them apart.
+fn polychord_voicing(upper: Chord, lower: Chord) -> Vec<Note> {
+    let stacked = |chord: Chord, floor: u8| -> Vec<Note> {
+        let root = floor + floor_gap(floor, chord.root);
+        chord.notes_from(Note::new(root))
+    };
+    let low = stacked(lower, 55);
+    let top = low.last().map_or(60, |note| note.midi() + 1);
+    let mut notes = low;
+    notes.extend(stacked(upper, top));
+    notes
+}
+
+/// How many semitones up from `floor` the first `pitch_class` is.
+fn floor_gap(floor: u8, pitch_class: PitchClass) -> u8 {
+    Note::new(floor).pitch_class().semitones_up_to(pitch_class)
+}
+
 /// `played` cut to the steps from `start` to `end`. A harmony cut short
 /// at `end` goes on after it, so its bass does not lead anywhere yet.
 fn cut(played: &[Played], start: usize, end: usize) -> Vec<Played> {
@@ -2254,6 +2274,7 @@ impl Project {
         let bass_of = |harmony: HarmonyName, start: usize| -> Option<PitchClass> {
             match harmony {
                 HarmonyName::Chord(symbol) => Some(symbol.bass_pitch_class()),
+                HarmonyName::Polychord(_, lower) => Some(lower.bass_pitch_class()),
                 HarmonyName::Set(set) | HarmonyName::Micromode(set) => {
                     Some(group_bass(set).pitch_class())
                 }
@@ -2284,6 +2305,12 @@ impl Project {
                     });
                     chord_index += 1;
                 }
+                HarmonyName::Polychord(upper, lower) => played.push(Played {
+                    start,
+                    end: stop,
+                    voicing: polychord_voicing(upper.chord(), lower.chord()),
+                    bass: BassPart::Pedal(Note::new(36 + lower.bass_pitch_class().semitone())),
+                }),
                 HarmonyName::Set(set) | HarmonyName::Micromode(set) => played.push(Played {
                     start,
                     end: stop,

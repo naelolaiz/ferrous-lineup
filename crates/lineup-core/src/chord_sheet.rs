@@ -8,11 +8,12 @@
 //! tempo and key markers, so they move with the song when a section is
 //! copied or the song is put into another time signature.
 //!
-//! A bar can name its harmony in five ways ([`HarmonyName`]):
+//! A bar can name its harmony in six ways ([`HarmonyName`]):
 //!
 //! | Written | What it is |
 //! |---------|------------|
 //! | `Am7`, `G/B`, `F#m7b5` | a chord symbol ([`ChordSymbol`]) |
+//! | `Eb7\|Fb`, `C\|F#` | two chords at once, the upper one first: a polychord |
 //! | `3-11 T2`, `4-Z15`, `{0,1,4}` | a pitch-class set, by Forte name or by its notes |
 //! | `Menor 3 T2I`, `Major 1` | one of Kröpfl's micromodes |
 //! | `P0`, `I5`, `R3`, `RI7` | a form of the twelve-tone row of the key |
@@ -51,6 +52,11 @@ pub mod text;
 pub enum HarmonyName {
     /// A chord symbol: "Am7", "G/B".
     Chord(ChordSymbol),
+    /// Two chords at once, one over the other, the upper one first:
+    /// "Eb7|Fb" is E♭7 over F♭ major, the chord that opens the Augurs of
+    /// Spring. Lead sheets draw the two chords as a fraction, with a
+    /// line between them; a slash would mean a bass note.
+    Polychord(ChordSymbol, ChordSymbol),
     /// No chord, written "N.C.": nothing plays the harmony here.
     NoChord,
     /// A pitch-class set on these very notes, named by its Forte number
@@ -371,12 +377,17 @@ impl HarmonyName {
         if let Some(micromode) = Micromode::named(name) {
             return Ok(HarmonyName::Micromode(moved(micromode.prime, step)));
         }
+        if let Some((upper, lower)) = text.split_once('|') {
+            let upper = ChordSymbol::parse(upper)?;
+            let lower = ChordSymbol::parse(lower)?;
+            return Ok(HarmonyName::Polychord(upper, lower));
+        }
         if text.starts_with(|c: char| ('A'..='G').contains(&c)) {
             return ChordSymbol::parse(text).map(HarmonyName::Chord);
         }
         Err(format!(
-            "\"{text}\" is not a chord (Am7, G/B), a set (3-11 T2, {{0,4,7}}), a micromode \
-             (Menor 3), a row form (P0, RI7) or N.C."
+            "\"{text}\" is not a chord (Am7, G/B), two chords at once (Eb7|Fb), a set (3-11 T2, \
+             {{0,4,7}}), a micromode (Menor 3), a row form (P0, RI7) or N.C."
         ))
     }
 
@@ -406,6 +417,13 @@ impl HarmonyName {
                 set.insert(symbol.bass_pitch_class());
                 Some(set)
             }
+            HarmonyName::Polychord(upper, lower) => {
+                let mut set = HarmonyName::Chord(lower).pitch_set()?;
+                for pitch_class in upper.chord().pitch_set().iter() {
+                    set.insert(pitch_class);
+                }
+                Some(set)
+            }
             HarmonyName::Set(set) | HarmonyName::Micromode(set) => Some(set),
             HarmonyName::NoChord | HarmonyName::Row(_) => None,
         }
@@ -431,6 +449,13 @@ impl HarmonyName {
                 HarmonyName::Chord(symbol.transposed(from.spell(from.root), to.spell(to.root)))
             }
             HarmonyName::Chord(symbol) => HarmonyName::Chord(chord_moved(symbol, from, to)),
+            HarmonyName::Polychord(upper, lower) if from.kind == to.kind => {
+                let (from, to) = (from.spell(from.root), to.spell(to.root));
+                HarmonyName::Polychord(upper.transposed(from, to), lower.transposed(from, to))
+            }
+            HarmonyName::Polychord(upper, lower) => {
+                HarmonyName::Polychord(chord_moved(upper, from, to), chord_moved(lower, from, to))
+            }
             HarmonyName::NoChord => HarmonyName::NoChord,
             HarmonyName::Set(set) => HarmonyName::Set(set.transpose(up)),
             HarmonyName::Micromode(set) => HarmonyName::Micromode(set.transpose(up)),
@@ -447,6 +472,11 @@ impl HarmonyName {
     pub fn caption(self, key: Scale) -> Option<String> {
         match self {
             HarmonyName::Chord(symbol) => numeral_with_figures(symbol, key),
+            HarmonyName::Polychord(upper, lower) => {
+                let upper = numeral_with_figures(upper, key)?;
+                let lower = numeral_with_figures(lower, key)?;
+                Some(format!("{upper} over {lower}"))
+            }
             HarmonyName::Set(set) | HarmonyName::Micromode(set) => Some(spell_set(set, key)),
             HarmonyName::Row(label) => match key.kind {
                 ScaleKind::Row(row) => {
@@ -485,6 +515,29 @@ impl HarmonyName {
                     numeral_with_figures(symbol, key),
                 );
                 format!("{symbol}: {about} Its notes: {notes}.")
+            }
+            HarmonyName::Polychord(upper, lower) => {
+                let notes = |symbol: ChordSymbol| {
+                    let notes: Vec<String> =
+                        symbol.notes().iter().map(NoteName::to_string).collect();
+                    notes.join(" ")
+                };
+                let mut lower_name = format!("{} {}", lower.root, lower.quality.name());
+                if let Some(bass) = lower.bass {
+                    lower_name += &format!(" with {bass} in the bass");
+                }
+                let numerals = match self.caption(key) {
+                    Some(numerals) => format!(" In {}: {numerals}.", key.name()),
+                    None => String::new(),
+                };
+                format!(
+                    "{self}: {} {} over {lower_name}, two chords at once: a polychord. Upper: {}. \
+                     Lower: {}.{numerals}",
+                    upper.root,
+                    upper.quality.name(),
+                    notes(upper),
+                    notes(lower),
+                )
             }
             HarmonyName::NoChord => "No chord: nothing plays the harmony here.".to_string(),
             HarmonyName::Set(set) => {
@@ -578,6 +631,7 @@ impl fmt::Display for HarmonyName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             HarmonyName::Chord(symbol) => write!(f, "{symbol}"),
+            HarmonyName::Polychord(upper, lower) => write!(f, "{upper}|{lower}"),
             HarmonyName::NoChord => write!(f, "N.C."),
             HarmonyName::Set(set) => {
                 let class = set.set_class();
