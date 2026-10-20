@@ -39,6 +39,10 @@ pub struct StyleEditor {
     save_as_requested: bool,
     preview_requested: bool,
     pending_start: Option<(UserStyle, Option<PathBuf>)>,
+    /// How tall the fields over the rows were last drawn.
+    header: f32,
+    /// The size of the contents the window was last fitted to.
+    fitted: egui::Vec2,
 }
 
 pub enum EditorEvent {
@@ -95,6 +99,8 @@ impl StyleEditor {
             save_as_requested: false,
             preview_requested: false,
             pending_start: None,
+            header: 0.0,
+            fitted: egui::Vec2::ZERO,
         }
     }
     pub fn start(&mut self, style: UserStyle, path: Option<PathBuf>) {
@@ -222,8 +228,25 @@ impl StyleEditor {
         } else {
             "Style editor · channel rack"
         };
-        egui::Window::new(title).id(window_id()).open(&mut open)
-            .default_size([950.0, 530.0]).constrain_to(area).show(ctx, |ui| {
+        // The editor opens as big as its rows and the fields over them, up
+        // to the size of the playlist, and is fitted to them again when
+        // they change (a longer pattern, a new channel), as the channel
+        // rack is. The rack draws no play buttons here: one line less.
+        let style = ctx.global_style();
+        let line = style.spacing.interact_size.y + style.spacing.item_spacing.y;
+        let natural = channel_rack::natural_size(&style, &self.draft.project, 0, 1.0)
+            + egui::vec2(0.0, self.header - line);
+        let mut window = egui::Window::new(title)
+            .id(window_id())
+            .open(&mut open)
+            .constrain_to(area);
+        if natural != self.fitted || widgets::opens(ctx, window_id()) {
+            ctx.request_discard("the style editor is fitted to its rows");
+            window = window.fixed_size(widgets::window_size(ctx, natural, area));
+            self.fitted = natural;
+        }
+        window.show(ctx, |ui| {
+                let top = ui.cursor().top();
                 ui.horizontal_wrapped(|ui| {
                     let menu = egui::containers::menu::MenuButton::new("Start from…").config(
                         egui::containers::menu::MenuConfig::new().close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside));
@@ -255,7 +278,8 @@ impl StyleEditor {
                     }
                     if ui.add_enabled(self.preview_started.is_some(), egui::Button::new("Stop preview")).clicked() { events.push(EditorEvent::Stop); self.preview_started = None; }
                 });
-                ui.horizontal_wrapped(|ui| {
+                // On one line, so the window is fitted to be as wide.
+                ui.horizontal(|ui| {
                     ui.label("Name"); ui.text_edit_singleline(&mut self.draft.style.name);
                     let mut tempo = self.draft.project.tempo.bpm();
                     ui.label("BPM"); if ui.add(egui::DragValue::new(&mut tempo).range(Tempo::MIN..=Tempo::MAX)).changed() { self.draft.project.tempo = Tempo::new(tempo); }
@@ -290,6 +314,7 @@ impl StyleEditor {
                     let elapsed = ctx.input(|input| input.time)-start;
                     if elapsed < period * 4.0 { ctx.request_repaint(); Some(((elapsed%period)/period * length as f64) as usize) } else { None }
                 });
+                self.header = ui.cursor().top() - top;
                 for action in channel_rack::show(ui, &self.draft.project, 0, self.roll.selected_channel(), playhead, None, false) { self.rack_action(action, &mut events); }
             });
         for action in self.roll.show(

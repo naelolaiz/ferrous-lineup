@@ -1942,13 +1942,7 @@ impl eframe::App for LineupApp {
                 style.spacing.interact_size.y + style.spacing.item_spacing.y,
             ))
             * rack_scale;
-        // A window's default size is its outside: the contents, the frame
-        // around them and the title bar.
-        let style = ctx.global_style();
-        let frame = style.spacing.window_margin.sum();
-        let title = style.text_styles[&egui::TextStyle::Heading].size + 2.0 * frame.y;
-        let rack_size =
-            (natural + frame + egui::vec2(0.0, title)).min(area.size() - egui::vec2(40.0, 80.0));
+        let rack_size = widgets::window_size(&ctx, natural, area);
         let mut rack = egui::Window::new(format!("Channel rack · {pattern_name}"))
             .id(rack_id())
             .open(&mut rack_open)

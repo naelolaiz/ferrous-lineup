@@ -9,6 +9,7 @@ use crate::library_browser::{
     StyleEditorRequest, grouped_presets, set_grouped_presets, style_mode_ui, style_parts_checkboxes,
 };
 use crate::theme;
+use crate::widgets::{self, Opening};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 enum Page {
@@ -128,96 +129,97 @@ impl LineupApp {
         }
         let mut open = true;
         let available = (ctx.content_rect().size() - vec2(32.0, 64.0)).max(vec2(280.0, 180.0));
-        egui::Window::new("Settings")
-            .id(egui::Id::unique("application-settings"))
+        let id = egui::Id::unique("application-settings");
+        let window = egui::Window::new("Settings")
+            .id(id)
             .open(&mut open)
             .collapsible(false)
-            .default_size(vec2(800.0, 540.0).min(available))
             .min_size(vec2(500.0, 350.0).min(available))
-            .max_size(available)
-            .show(ctx, |ui| {
-                ui.spacing_mut().item_spacing = vec2(12.0, 12.0);
-                egui::Panel::bottom("settings-footer")
-                    .exact_size(48.0)
-                    .resizable(false)
-                    .frame(egui::Frame::NONE)
-                    .show(ui, |ui| {
-                        ui.separator();
-                        ui.horizontal(|ui| {
-                            ui.label(
-                                RichText::new("Preferences are saved automatically.")
-                                    .small()
-                                    .color(theme::TEXT_DIM),
-                            );
-                            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                if ui
-                                    .add_sized(vec2(80.0, 28.0), egui::Button::new("Done"))
-                                    .clicked()
-                                {
-                                    self.settings_open = false;
-                                }
-                            });
+            .max_size(available);
+        let size = vec2(800.0, 540.0).min(available);
+        widgets::open_at(ctx, window, id, size, Opening::FirstTime).show(ctx, |ui| {
+            ui.spacing_mut().item_spacing = vec2(12.0, 12.0);
+            egui::Panel::bottom("settings-footer")
+                .exact_size(48.0)
+                .resizable(false)
+                .frame(egui::Frame::NONE)
+                .show(ui, |ui| {
+                    ui.separator();
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new("Preferences are saved automatically.")
+                                .small()
+                                .color(theme::TEXT_DIM),
+                        );
+                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                            if ui
+                                .add_sized(vec2(80.0, 28.0), egui::Button::new("Done"))
+                                .clicked()
+                            {
+                                self.settings_open = false;
+                            }
                         });
                     });
-                let narrow = ui.available_width() < 620.0;
-                if narrow {
-                    ui.horizontal_wrapped(|ui| self.settings_navigation(ui, false));
-                    ui.separator();
-                }
-                let height = ui.available_height().max(80.0);
-                ui.allocate_ui_with_layout(
-                    vec2(ui.available_width(), height),
-                    Layout::left_to_right(Align::Min),
-                    |ui| {
-                        if !narrow {
-                            egui::Frame::new()
-                                .fill(theme::GROUP)
-                                .corner_radius(6)
-                                .inner_margin(8)
-                                .show(ui, |ui| {
-                                    ui.set_width(136.0);
-                                    ui.set_min_height((height - 16.0).max(0.0));
-                                    ui.with_layout(Layout::top_down(Align::Min), |ui| {
-                                        self.settings_navigation(ui, true);
-                                    });
+                });
+            let narrow = ui.available_width() < 620.0;
+            if narrow {
+                ui.horizontal_wrapped(|ui| self.settings_navigation(ui, false));
+                ui.separator();
+            }
+            let height = ui.available_height().max(80.0);
+            ui.allocate_ui_with_layout(
+                vec2(ui.available_width(), height),
+                Layout::left_to_right(Align::Min),
+                |ui| {
+                    if !narrow {
+                        egui::Frame::new()
+                            .fill(theme::GROUP)
+                            .corner_radius(6)
+                            .inner_margin(8)
+                            .show(ui, |ui| {
+                                ui.set_width(136.0);
+                                ui.set_min_height((height - 16.0).max(0.0));
+                                ui.with_layout(Layout::top_down(Align::Min), |ui| {
+                                    self.settings_navigation(ui, true);
                                 });
-                        }
-                        ui.vertical(|ui| {
-                            egui::ScrollArea::vertical()
-                                .id_salt(("settings-page", self.settings.page))
-                                .auto_shrink([false, false])
-                                .max_height(height)
-                                .show(ui, |ui| {
-                                    ui.spacing_mut().item_spacing.y = 12.0;
-                                    match self.settings.page {
-                                        Page::Appearance => {
-                                            ui.heading("Appearance");
-                                            view::zoom_settings_ui(ui);
-                                        }
-                                        Page::Harmony => {
-                                            ui.heading("Harmony");
-                                            minor_numerals_ui(ui);
-                                        }
-                                        Page::Library => self.library_settings_ui(ui),
-                                        Page::Audio => {
-                                            ui.heading("Audio");
-                                            card(
-                                                ui,
-                                                "Output",
-                                                "Uses your system’s default audio device.",
-                                                |ui| {
-                                                    self.audio_status(ui);
-                                                },
-                                            );
-                                            self.sound_settings_ui(ui);
-                                        }
-                                        Page::Playback => self.playback_settings_ui(ui),
+                            });
+                    }
+                    ui.vertical(|ui| {
+                        egui::ScrollArea::vertical()
+                            .id_salt(("settings-page", self.settings.page))
+                            .auto_shrink([false, false])
+                            .max_height(height)
+                            .show(ui, |ui| {
+                                ui.spacing_mut().item_spacing.y = 12.0;
+                                match self.settings.page {
+                                    Page::Appearance => {
+                                        ui.heading("Appearance");
+                                        view::zoom_settings_ui(ui);
                                     }
-                                })
-                        });
-                    },
-                );
-            });
+                                    Page::Harmony => {
+                                        ui.heading("Harmony");
+                                        minor_numerals_ui(ui);
+                                    }
+                                    Page::Library => self.library_settings_ui(ui),
+                                    Page::Audio => {
+                                        ui.heading("Audio");
+                                        card(
+                                            ui,
+                                            "Output",
+                                            "Uses your system’s default audio device.",
+                                            |ui| {
+                                                self.audio_status(ui);
+                                            },
+                                        );
+                                        self.sound_settings_ui(ui);
+                                    }
+                                    Page::Playback => self.playback_settings_ui(ui),
+                                }
+                            })
+                    });
+                },
+            );
+        });
         self.settings_open &= open;
     }
 

@@ -625,16 +625,23 @@ impl PianoRoll {
         // `open` is a copy: the window needs `&mut open` while the closure
         // below needs `&mut self`, and both cannot borrow `self` at once.
         let mut open = self.open;
-        egui::Window::new(format!(
+        let id = self.instance.unwrap_or_else(Self::id);
+        let window = egui::Window::new(format!(
             "Piano roll · {} · {}",
             pattern_notes.name, channel.name
         ))
-        .id(self.instance.unwrap_or_else(Self::id))
+        .id(id)
         .open(&mut open)
         .default_pos([150.0, 160.0])
-        .default_size([1120.0, 580.0])
-        .constrain_to(area)
-        .show(ctx, |ui| {
+        .constrain_to(area);
+        // The window is built while closed too, and egui then hides it.
+        let window = if self.open {
+            let size = egui::vec2(1120.0, 580.0);
+            crate::widgets::open_at(ctx, window, id, size, crate::widgets::Opening::FirstTime)
+        } else {
+            window
+        };
+        window.show(ctx, |ui| {
             self.contents(ui, project, pattern_notes, playhead, held, &mut actions)
         });
         self.open = open;

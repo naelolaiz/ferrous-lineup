@@ -30,6 +30,7 @@ use lineup_core::harmony::keys::ChordKey;
 use crate::harmony_keys::{KEY_TEXT, KEY_TEXT_DIM, function_color, paint_playing};
 use crate::theme;
 use crate::twelve_tone::Front;
+use crate::widgets::{self, Opening};
 
 /// The id of the window, to keep it in front.
 pub(crate) fn window_id() -> egui::Id {
@@ -149,15 +150,17 @@ impl EarTraining {
         if self.open {
             self.front.keep(ctx, window_id());
             let mut open = true;
-            egui::Window::new("Ear training")
+            let window = egui::Window::new("Ear training")
                 .id(window_id())
                 .open(&mut open)
                 .default_pos([300.0, 110.0])
-                .default_size([640.0, 600.0])
-                .constrain_to(area)
-                .resizable([true, true])
-                .vscroll(true)
-                .show(ctx, |ui| self.contents(ui, &mut actions));
+                .constrain_to(area);
+            // As tall as the exercise, up to the height of the playlist;
+            // it scrolls past that.
+            let size = vec2(640.0, area.height());
+            widgets::open_at(ctx, window, window_id(), size, Opening::EveryTime).show(ctx, |ui| {
+                egui::ScrollArea::vertical().show(ui, |ui| self.contents(ui, &mut actions))
+            });
             self.open = open;
         }
         if self.was_open && !self.open {
