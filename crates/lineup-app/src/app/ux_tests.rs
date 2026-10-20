@@ -171,6 +171,44 @@ fn checkbox_checked(output: &FullOutput, label: &str) -> bool {
 }
 
 #[test]
+fn songs_open_on_the_chord_sheet_and_beats_on_the_rack() {
+    let top = |screen: &Screen| {
+        screen
+            .ctx
+            .memory(|memory| memory.areas().top_layer_id(egui::Order::Middle))
+            .map(|layer| layer.id)
+    };
+    let mut screen = Screen::new();
+    assert!(screen.app.rack_open);
+    screen.app.open_demo(library::Demo::Song(
+        lineup_core::library::Song::named("El Choclo").unwrap(),
+    ));
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(screen.app.chord_sheet.open);
+    assert!(!screen.app.rack_open);
+    assert_eq!(top(&screen), Some(crate::chord_sheet::window_id()));
+    assert!(text_rect(&output, "Chord sheet").is_some());
+
+    screen.app.set_playing(false);
+    screen
+        .app
+        .request(&screen.ctx.clone(), files::Pending::NewBeat);
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    assert!(screen.app.rack_open);
+    assert!(!screen.app.chord_sheet.open);
+    assert_eq!(top(&screen), Some(rack_id()));
+
+    screen.app.request(&screen.ctx.clone(), files::Pending::New);
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    assert!(screen.app.chord_sheet.open);
+    assert!(!screen.app.rack_open);
+    assert_eq!(top(&screen), Some(crate::chord_sheet::window_id()));
+}
+
+#[test]
 fn applying_a_library_preset_to_a_demo_creates_all_its_players() {
     use lineup_core::{Player, library::apply::StyleParts};
     for (copy_progression, playing) in [(false, false), (false, true), (true, true)] {
@@ -2287,6 +2325,7 @@ mod mix {
         });
         screen.app.mixer_open = true;
         screen.app.rack_open = false;
+        screen.app.chord_sheet.open = false;
         screen.draw(vec![]);
         screen.click("Reset mix");
         let project = &screen.app.project;
@@ -2654,6 +2693,9 @@ mod locks {
             .app
             .open_demo(library::Demo::Song(Song::named("Ode to Joy").unwrap()));
         screen.app.set_playing(false);
+        // A song opens on the chord sheet; the locks are in the rack.
+        screen.app.chord_sheet.open = false;
+        screen.app.rack_open = true;
         screen
     }
 
