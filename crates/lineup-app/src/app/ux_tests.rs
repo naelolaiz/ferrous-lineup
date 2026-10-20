@@ -1965,6 +1965,45 @@ mod library_parts {
     }
 
     #[test]
+    fn the_piano_roll_names_only_the_chords_whose_names_fit() {
+        // El Choclo's "A" has chords and notes too short for their names
+        // at the usual zoom. Each name drawn fits its block, instead of
+        // being cut to a piece such as "7/".
+        let mut screen = el_choclo();
+        screen.app.set_playing(false);
+        let a = screen
+            .app
+            .project
+            .patterns()
+            .iter()
+            .position(|pattern| pattern.name == "A")
+            .unwrap();
+        screen.app.edit_clip(a);
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        let names: Vec<_> = output
+            .shapes
+            .iter()
+            .filter_map(|shape| match &shape.shape {
+                Shape::Text(text) if text.fallback_color == crate::piano_roll::LANE_TEXT => Some((
+                    text.galley.text().to_string(),
+                    text.galley.size().x,
+                    shape.clip_rect,
+                )),
+                _ => None,
+            })
+            .collect();
+        assert!(!names.is_empty(), "the chord lane names some chords");
+        for (name, width, clip) in names {
+            assert!(
+                width <= clip.width(),
+                "{name} is {width} wide in a block {} wide",
+                clip.width()
+            );
+        }
+    }
+
+    #[test]
     fn applying_a_style_to_the_song_keeps_the_selected_pattern() {
         // The band brings channels, which give every pattern new rows:
         // the patterns are still the song's own, so "Pickup" stays
