@@ -330,6 +330,9 @@ mod tests {
     #[test]
     fn keys_are_written_as_the_menus_write_them() {
         let ctx = egui::Context::default();
+        // As on Linux and Windows. On a Mac, egui writes ⇧⌘Z, if the
+        // font it has by then can show those symbols.
+        ctx.set_os(egui::os::OperatingSystem::Nix);
         assert_eq!(
             Keys::Any(vec![edit::REDO, edit::REDO_Y]).text(&ctx),
             "Ctrl+Shift+Z or Ctrl+Y"
