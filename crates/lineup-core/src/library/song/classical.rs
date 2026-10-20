@@ -3449,6 +3449,9 @@ pub(super) const LA_MER_DAWN: Song = Song {
             time.",
 };
 
+// Copyright: The Rite of Spring (1913, printed 1921) is still under copyright where
+// copyright lasts 70 years after the composer's death (Stravinsky died in 1971); it is
+// added here at the request of the project's owner.
 // Source: Jun Nishio's sequence of Part I of The Rite of Spring for the Roland SC-88,
 // converted by script, checked against the full orchestral score (Russischer Musikverlag,
 // 1921, pages 11 to 27): rehearsal 13 to 37, 172 bars. Each rehearsal number is a part,
@@ -4330,6 +4333,9 @@ pub(super) const AUGURS_OF_SPRING: Song = Song {
             time, until the dance breaks off into the next one, the Ritual of Abduction.",
 };
 
+// Copyright: The Rite of Spring (1913, printed 1921) is still under copyright where
+// copyright lasts 70 years after the composer's death (Stravinsky died in 1971); it is
+// added here at the request of the project's owner.
 // Source: Jun Nishio's sequence of Part I of The Rite of Spring for the Roland SC-88,
 // converted by script, checked against the full orchestral score (Russischer Musikverlag,
 // 1921, pages 28 to 37): rehearsal 37 to 48, 67 bars. Each rehearsal number is a part,
