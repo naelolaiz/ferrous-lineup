@@ -358,8 +358,7 @@ impl LineupApp {
 
     /// What the library shows selected: what it put in the selected
     /// pattern, if that is unchanged, or else the style and rhythm the
-    /// whole song plays, so a demo opens with its own selected, as in FL
-    /// Studio.
+    /// whole song plays, so a demo opens with its own selected.
     pub(super) fn tried(&self) -> Tried {
         if let Some(band) = self.project.band() {
             return Tried::from_band(band);
