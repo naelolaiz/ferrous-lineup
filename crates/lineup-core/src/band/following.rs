@@ -25,6 +25,7 @@
 //! [`BandStyle::follows_the_song`]: super::BandStyle::follows_the_song
 
 use std::collections::{BTreeMap, HashMap};
+use std::ops::Range;
 
 use super::Player;
 use crate::meter::Bar;
@@ -72,6 +73,11 @@ pub(super) struct Following {
     /// loudest note struck at each step of it. `None` where the score
     /// strikes nothing.
     loudness: Vec<Option<f32>>,
+    /// The bars from the first the score strikes in to the last, by
+    /// index. Outside them the song has no score to follow (chords on
+    /// the chord sheet before or after the tune), and the band plays as
+    /// its style wrote.
+    heard: Range<usize>,
     accents: Vec<Accent>,
     /// For each bar, whether it is in a passage of accents.
     accented: Vec<bool>,
@@ -89,8 +95,9 @@ fn middle(mut values: Vec<u32>) -> u32 {
 
 impl Following {
     /// Listens to the notes `project` plays in `bars`: the song's own, on
-    /// the tracks and channels that are heard, not the band's.
-    pub(super) fn hear(project: &Project, bars: &[Bar]) -> Following {
+    /// the tracks and channels that are heard, not the band's. `None` if
+    /// the song plays none: there is nothing to follow.
+    pub(super) fn hear(project: &Project, bars: &[Bar]) -> Option<Following> {
         let end = bars.last().map_or(0, Bar::end);
         // What starts at each step: the channel, how hard, and how long.
         let mut struck: BTreeMap<usize, Vec<(usize, u8, usize)>> = BTreeMap::new();
@@ -122,7 +129,15 @@ impl Following {
                 }
             }
         }
+        // From the first note the score strikes to the end of the last
+        // one that sounds.
+        let first = *struck.keys().next()?;
+        let last = struck
+            .iter()
+            .flat_map(|(&at, notes)| notes.iter().map(move |&(_, _, length)| at + length.max(1)))
+            .max()?;
         let bar_of = |step: usize| bars.partition_point(|bar| bar.end() <= step);
+        let heard = bar_of(first)..bar_of(last - 1) + 1;
         // Where each channel strikes, in order, and how hard in each bar.
         let mut strikes: HashMap<usize, Vec<usize>> = HashMap::new();
         let mut velocities: HashMap<(usize, usize), Vec<u32>> = HashMap::new();
@@ -243,12 +258,13 @@ impl Following {
                 around.filter(|&bar| with_accents[bar]).count() >= PASSAGE_BARS
             })
             .collect();
-        Following {
+        Some(Following {
             bars: bars.to_vec(),
             loudness,
+            heard,
             accents,
             accented,
-        }
+        })
     }
 
     /// The accents the score has.
@@ -261,11 +277,6 @@ impl Following {
     fn bar_index(&self, step: usize) -> Option<usize> {
         let index = self.bars.partition_point(|bar| bar.end() <= step);
         (index < self.bars.len()).then_some(index)
-    }
-
-    /// How loud the score is where `step` is, if it plays there.
-    fn loudness_at(&self, step: usize) -> Option<f32> {
-        self.bar_index(step).and_then(|index| self.loudness[index])
     }
 
     /// Whether `step` is in a passage of accents.
@@ -290,15 +301,19 @@ impl Following {
         let mut played: Vec<(usize, NoteEvent)> = notes
             .into_iter()
             .filter_map(|(channel, mut note)| {
-                let loudness = self.loudness_at(note.start)?;
+                let Some(index) = self
+                    .bar_index(note.start)
+                    .filter(|index| self.heard.contains(index))
+                else {
+                    return Some((channel, note));
+                };
+                let loudness = self.loudness[index]?;
                 let strikes = matches!(player, Player::Piano | Player::Bass | Player::Drums);
                 if strikes && self.in_accents(note.start) {
                     return None;
                 }
                 if player == Player::Drums {
-                    let first = self
-                        .bar_index(note.start)
-                        .is_some_and(|index| self.bars[index].start == note.start);
+                    let first = self.bars[index].start == note.start;
                     if !first || loudness < LOUD {
                         return None;
                     }

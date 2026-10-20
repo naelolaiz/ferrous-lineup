@@ -1967,7 +1967,9 @@ impl Project {
         let follows = sections::styles_played(&band.styles)
             .into_iter()
             .any(|style| band.playing(style).style.follows_the_song());
-        let following = follows.then(|| following::Following::hear(self, &score.bars));
+        let following = follows
+            .then(|| following::Following::hear(self, &score.bars))
+            .flatten();
         let mut rewritten = Vec::new();
         for player in Player::ALL {
             if self.is_frozen(player) || self.plays_locked(player) {
@@ -3778,7 +3780,7 @@ mod tests {
             .bars()
             .take_while(|bar| bar.start < end)
             .collect();
-        let heard = following::Following::hear(&before, &bars);
+        let heard = following::Following::hear(&before, &bars).unwrap();
         let accents: Vec<usize> = heard.accents().iter().map(|accent| accent.at).collect();
         assert!(!accents.is_empty());
         let mut drums = Vec::new();
@@ -3919,7 +3921,7 @@ mod tests {
             .bars()
             .take_while(|bar| bar.start < project.song_length())
             .collect();
-        let heard = following::Following::hear(&project, &bars);
+        let heard = following::Following::hear(&project, &bars).unwrap();
         assert_eq!(heard.accents(), []);
         // So the orchestra plays every bar on its beat, from the start.
         let harmony = Style::named(ORCHESTRA).unwrap();
@@ -3936,6 +3938,23 @@ mod tests {
             .into_iter()
             .collect();
         assert_eq!(horns, (0..8).map(|bar| bars[bar].start).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn with_no_score_to_follow_the_orchestra_plays_as_written() {
+        // Chords on the chord sheet and no notes: nothing to listen to.
+        let mut project = Project::with_band();
+        project.set_chords(
+            0,
+            32,
+            &[ChordMarker::new(0, HarmonyName::parse("C").unwrap())],
+        );
+        let harmony = Style::named(ORCHESTRA).unwrap();
+        let style = BandStyle::of_style(harmony).unwrap();
+        project.apply_band_parts(style, Some(harmony), apply::StyleParts::default());
+        for player in [Player::Piano, Player::Bass, Player::Drums, Player::Strings] {
+            assert!(!part(&project, player).is_empty(), "{player:?}");
+        }
     }
 
     #[test]
