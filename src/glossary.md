@@ -108,11 +108,13 @@ where each one first appears in real code.
 | **Or-pattern** | `A \| B` in a pattern matches either `A` or `B`. | [Pitch classes and scales](step-3/theory.md) |
 | **Ownership** | Every value has exactly one owner, and is dropped when the owner goes away. | [lineup-audio](step-1/audio-engine.md) |
 | **`partition`** | Splits an iterator in two by a closure, in one pass: the items it says yes to and the rest, each collected into its own collection. | [Micromodes](step-8/micromodes.md#textures) |
+| **`partition_point`** | On a slice sorted so that a test is `true` for a first part and `false` for the rest, the index where the `false` part begins, found by binary search. | [One harmony, four names](step-9/harmony-notations.md#finding-a-bars-groups-with-partition_point) |
 | **Panic** | An unrecoverable error that stops the current thread (`panic!`, failed `assert!`). | [lineup-core](step-1/lineup-core.md) |
 | **Property-based test** | A test that checks a rule which must hold for any input ("following the changes gives the new project"), rather than one answer for one input. | [What changed](step-5/diff.md) |
 | **`pub(crate)`** | Visible everywhere inside the current crate, but not to other crates. | [Patterns](step-2/project.md) |
 | **`pub(super)`** | Visible to the parent module and everything inside it. | [Saving](step-4/saving.md) |
 | **Pure function** | A function whose result depends only on its arguments and that changes nothing else; the easiest kind of code to test. | [Tools](step-6/tools.md) |
+| **`Rc<T>`** | A reference-counted pointer for one thread: cloning it adds to a count instead of copying the value, which is freed when the last `Rc` goes. `Rc<[T]>` shares a slice. | [One harmony, four names](step-9/harmony-notations.md#reading-the-notes-only-when-they-change) |
 | **RAII / `Drop`** | Owning a value means owning its resource; dropping it releases the resource. | [lineup-audio](step-1/audio-engine.md) |
 | **Range** | `a..b`, the numbers from `a` up to but not including `b`; a value with methods like `contains`. | [Steps to notes](step-3/notes.md) |
 | **Recursion** | A function that calls itself on a smaller piece of the problem, until a piece is small enough to answer directly. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |

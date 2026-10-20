@@ -228,7 +228,12 @@ under each set its notes; hold the mouse down on a harmony to hear it.
 **Write the chords the song plays** fills an empty sheet from what the
 song plays, with the bass player's note after the slash, and in a set or
 a row with the sets or micromodes heard. While the song plays, the bar
-playing is framed in white. The sheet is saved with the project and
+playing is framed in white. **Show**, at the top of the sheet, names
+the same harmony **As written**, as **Chords**, as **Pitch-class sets**
+(C major is 3-11 T7I) or as **Micromodes** (Acorde menor-mayor T7I),
+without changing a note. For sets and micromodes it can also read the
+song's notes, **together** (vertically) or **in a line** (serially), in
+groups of 2 to 12 notes, from every track or one. The sheet is saved with the project and
 follows key changes, re-metering and copied sections. It is an extra
 window: the playlist stays as it is.
 

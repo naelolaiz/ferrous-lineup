@@ -112,6 +112,7 @@
   - [The concert hall: Boléro, La Mer, The Rite of Spring and Petrushka](step-9/concert-hall.md)
   - [An orchestra for music that changes meter](step-9/orchestra.md)
   - [Hearing chords: over time, two at once, and as sets](step-9/chord-hearing.md)
+  - [One harmony, four names: chords, sets and micromodes on the chord sheet](step-9/harmony-notations.md)
   - [The book online and as a PDF](step-9/book-online.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
