@@ -629,6 +629,8 @@ const FIVE_EIGHT_UNGROUPED: TimeSignature = TimeSignature::new(5, 8);
 const SEVEN_EIGHT: TimeSignature = TimeSignature::new(7, 8);
 // A single beat, a bar of one quarter note (Petrushka).
 const ONE_FOUR: TimeSignature = TimeSignature::new(1, 4);
+// Three half notes to the bar (Petrushka).
+const THREE_TWO: TimeSignature = TimeSignature::new(3, 2);
 
 // The bands the songs are dressed in, named after their style. Each is
 // melody, chords, bass. A piece from the concert hall names its own
@@ -1046,6 +1048,7 @@ pub static SONGS: &[Song] = &[
     classical::RITUAL_OF_ABDUCTION,
     classical::PETRUSHKA_FAIR,
     classical::PETRUSHKA_RUSSIAN_DANCE,
+    classical::PETRUSHKA_ROOM,
 ];
 
 #[cfg(test)]
