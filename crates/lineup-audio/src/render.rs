@@ -238,6 +238,82 @@ mod tests {
     }
 
     #[test]
+    fn a_panned_channel_plays_more_on_its_side() {
+        // In the middle both speakers play it in full; moving it one way
+        // turns the other speaker down.
+        for (pan, gains) in [
+            (-1.0, [1.0, 0.0]),
+            (-0.5, [1.0, 0.5]),
+            (0.0, [1.0, 1.0]),
+            (0.5, [0.5, 1.0]),
+            (1.0, [0.0, 1.0]),
+        ] {
+            let mut renderer = clicking();
+            renderer.send(Command::SetPan { channel: 0, pan });
+            let mut out = [0.0; 2];
+            renderer.render(&mut out);
+            assert_eq!(out, gains.map(|gain: f32| (0.5 * gain).tanh()), "{pan}");
+        }
+    }
+
+    #[test]
+    fn a_channel_sent_nowhere_plays_dry_in_a_room() {
+        let room = lineup_core::ReverbSettings {
+            enabled: true,
+            mix: 0.5,
+            ..Default::default()
+        };
+        // The first frame, before the room answers, and how much sound
+        // there is after the click.
+        let play = |send: f32| {
+            let mut renderer = clicking();
+            renderer.send(Command::SetReverb(room));
+            renderer.send(Command::SetReverbSend { channel: 0, send });
+            let mut out = vec![0.0; RATE as usize];
+            renderer.render(&mut out);
+            let after: f32 = out[2 * 20..].iter().map(|sample| sample.abs()).sum();
+            (out[0], after)
+        };
+        let (first, after) = play(0.0);
+        assert_eq!(first, 0.5_f32.tanh(), "as loud as with the reverb off");
+        assert_eq!(after, 0.0, "and no room after the click");
+        let (first, all) = play(1.0);
+        assert!(
+            (first - 0.25_f32.tanh()).abs() < 1e-6,
+            "half went into the room"
+        );
+        assert!(all > 0.01);
+        let (first, half) = play(0.5);
+        assert!((first - 0.375_f32.tanh()).abs() < 1e-6);
+        assert!((half / all - 0.5).abs() < 0.01, "{half} {all}");
+    }
+
+    #[test]
+    fn the_meters_see_each_channel_and_the_master() {
+        let mut renderer = clicking();
+        renderer.send(Command::SetVolume {
+            channel: 0,
+            volume: 0.5,
+        });
+        renderer.send(Command::SetPan {
+            channel: 0,
+            pan: -1.0,
+        });
+        renderer.send(Command::SetMasterVolume(0.8));
+        let levels = Arc::clone(renderer.audio.levels());
+        assert_eq!(levels.take_channel(0), 0.0, "nothing played yet");
+        let mut out = vec![0.0; 2 * 100];
+        renderer.render(&mut out);
+        // After the channel's volume, before its pan.
+        assert_eq!(levels.take_channel(0), 0.25);
+        // After the master volume, all on the left.
+        let [left, right] = levels.take_master();
+        assert!((left - 0.2).abs() < 1e-6 && right == 0.0, "{left} {right}");
+        renderer.render(&mut out);
+        assert_eq!(levels.take_channel(0), 0.0, "the click is over");
+    }
+
+    #[test]
     fn knows_where_playback_is() {
         let mut renderer = clicking();
         assert_eq!(renderer.position(), None, "nothing played yet");

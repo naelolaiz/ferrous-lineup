@@ -1561,8 +1561,9 @@ impl Project {
 
     /// Puts the mix back as it starts: the master level, the reverb and no
     /// solo, each channel as loud as a new one of its kind (a band
-    /// player's as the band sets it), and nothing muted but the song's own
-    /// parts the band plays instead.
+    /// player's as the band sets it), in the middle with all of it in the
+    /// reverb, and nothing muted but the song's own parts the band plays
+    /// instead.
     pub fn reset_mix(&mut self) {
         self.mixer = crate::Mixer::default();
         let band = self.band.as_ref();
@@ -1581,6 +1582,8 @@ impl Project {
                 (None, _) => Channel::drum(Drum::Kick).volume,
             };
             channel.muted = band.is_some_and(|band| band.muted().channels.contains(&channel.name));
+            channel.pan = 0.0;
+            channel.reverb_send = 1.0;
         }
     }
 
@@ -1716,6 +1719,8 @@ impl Project {
                     volume,
                     muted: false,
                     program: Some(program),
+                    pan: 0.0,
+                    reverb_send: 1.0,
                 })?
             }
         };

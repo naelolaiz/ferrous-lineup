@@ -22,6 +22,7 @@ pub mod drums;
 pub mod dsp;
 pub mod engine;
 pub mod instrument;
+pub mod levels;
 mod metronome;
 pub mod phrase;
 pub mod render;
@@ -35,6 +36,7 @@ pub use engine::{
     AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, LiveInput, MidiOutput, PlayMode,
 };
 pub use instrument::Instrument;
+pub use levels::Levels;
 pub use phrase::{Phrase, PhraseNote};
 pub use render::{Renderer, export_wav};
 pub use sample::{SampleCache, SampleData, SampleError};
