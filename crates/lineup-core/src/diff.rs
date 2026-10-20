@@ -12,7 +12,7 @@
 
 use std::borrow::Cow;
 
-use crate::Project;
+use crate::{Pattern, Project};
 
 /// One difference between two versions of a project.
 ///
@@ -62,7 +62,9 @@ struct Alignment {
 }
 
 impl Alignment {
-    fn new<T: PartialEq>(before: &[T], after: &[T]) -> Self {
+    /// Lines up two lists, taking two items for the same one when `same`
+    /// says so.
+    fn new<T>(before: &[T], after: &[T], same: impl Fn(&T, &T) -> bool) -> Self {
         if before.len() == after.len() {
             return Alignment {
                 start: 0,
@@ -74,7 +76,7 @@ impl Alignment {
         let start = before
             .iter()
             .zip(after)
-            .take_while(|(old, new)| old == new)
+            .take_while(|(old, new)| same(old, new))
             .count();
         // ...and the same at the end, without counting an item twice.
         let room = before.len().min(after.len()) - start;
@@ -82,7 +84,7 @@ impl Alignment {
             .iter()
             .rev()
             .zip(after[start..].iter().rev())
-            .take_while(|(old, new)| old == new)
+            .take_while(|(old, new)| same(old, new))
             .count()
             .min(room);
         Alignment {
@@ -118,14 +120,27 @@ impl Alignment {
     }
 }
 
+/// Whether two patterns are the same pattern, perhaps with other notes.
+///
+/// A pattern's notes change when channels come or go: when the band joins,
+/// every pattern gets a row for each of its channels. Lined up by their
+/// notes, the patterns would all look new; by name, colour and player,
+/// only the band's own are. Telling them apart wrongly would still play
+/// right (the notes that differ are sent anyway), but the app selects a
+/// pattern that is new, and the audio thread would get every pattern
+/// again.
+fn same_pattern(old: &Pattern, new: &Pattern) -> bool {
+    old.name == new.name && old.color == new.color && old.player == new.player
+}
+
 /// Lists what the audio thread must change to go from `before` to `after`.
 ///
 /// The order matters: patterns are added and removed first, so that a
 /// channel added afterwards comes with notes for the right patterns; then
 /// channels; then everything that changed inside them.
 pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
-    let patterns = Alignment::new(before.patterns(), after.patterns());
-    let channels = Alignment::new(before.channels(), after.channels());
+    let patterns = Alignment::new(before.patterns(), after.patterns(), same_pattern);
+    let channels = Alignment::new(before.channels(), after.channels(), |old, new| old == new);
 
     let mut changes: Vec<Change> = patterns
         .changes(Change::RemovePattern, Change::InsertPattern)
@@ -564,6 +579,30 @@ mod tests {
         assert_eq!(
             check_both_ways(&before, &after),
             vec![Change::PatternLength(2), Change::Song]
+        );
+    }
+
+    #[test]
+    fn a_new_channel_and_its_pattern_leave_the_other_patterns_in_place() {
+        // As when the band joins: its channels give every pattern a new
+        // row, and its parts come in new patterns at the end.
+        let before = Project::demo();
+        let mut after = before.clone();
+        let channel = after.add_channel(Channel::synth()).unwrap();
+        let pattern = after.add_pattern().unwrap();
+        after
+            .pattern_mut(pattern)
+            .unwrap()
+            .add_note(channel, NoteEvent::new(Note::new(60), 0, 4));
+        let changes = check_both_ways(&before, &after);
+        let patterns: Vec<_> = changes
+            .iter()
+            .filter(|change| matches!(change, Change::InsertPattern(_) | Change::RemovePattern(_)))
+            .collect();
+        assert_eq!(
+            patterns,
+            vec![&Change::InsertPattern(pattern)],
+            "{changes:?}"
         );
     }
 
