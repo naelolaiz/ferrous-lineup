@@ -79,6 +79,9 @@ else was needed:
 - harmony heard the way an ear hears it, an arpeggio as its chord and
   two chords at once as a polychord:
   [hearing chords](chord-hearing.md);
+- the same harmony named four ways on the chord sheet, as chords, sets
+  or micromodes, and the song's own notes cut into sets, vertically or
+  in a line: [one harmony, four names](harmony-notations.md);
 - and this book, [online and as a PDF](book-online.md).
 
 ## Trying it
