@@ -28,6 +28,15 @@ impl<'a> Preset<'a> {
         }
     }
 
+    /// The speed it was made for, in beats a minute.
+    pub fn tempo(self) -> f32 {
+        match self {
+            Self::Style(style) => style.tempo,
+            Self::Rhythm(rhythm) => rhythm.tempo,
+            Self::User(_, style) => style.tempo.bpm(),
+        }
+    }
+
     pub fn genre(self) -> Option<Genre> {
         match self {
             Self::Style(style) => Some(style.genre),

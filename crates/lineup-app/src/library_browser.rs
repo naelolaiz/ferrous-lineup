@@ -81,6 +81,62 @@ const OPTIONS: &str = "library-options";
 /// Where they were saved while the Tempo option started ticked.
 const OPTIONS_TEMPO_ON: &str = "preset-copy-options";
 
+/// The tick boxes under the search, which keep only the presets like
+/// the song. Saved with the app's state.
+#[derive(Clone, Copy, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+struct Filters {
+    /// In the song's time signature.
+    time: bool,
+    /// Made for about the song's speed.
+    speed: bool,
+    /// Bringing a chord progression.
+    chords: bool,
+}
+
+/// How far a preset's own speed may be from the song's for "Near the
+/// song's speed": 15% either way, so 110 to 150 BPM for a song at 130.
+const NEAR_SPEED: f32 = 1.15;
+
+/// The [`Filters`] ticked, with what they compare against.
+#[derive(Clone, Copy)]
+struct Narrowing {
+    filters: Filters,
+    /// The song's first time signature.
+    time: TimeSignature,
+    /// The song's speed, in beats a minute.
+    tempo: f32,
+}
+
+impl Narrowing {
+    fn of(filters: Filters, project: &Project) -> Self {
+        Narrowing {
+            filters,
+            time: project.time_signature,
+            tempo: project.tempo.bpm(),
+        }
+    }
+
+    /// Whether a preset in `time`, made for `tempo`, is kept. One that
+    /// plays every bar in its own meter (`any_meter`) fits any time
+    /// signature; `chords` says whether it brings a progression.
+    fn keeps(self, time: TimeSignature, tempo: f32, any_meter: bool, chords: bool) -> bool {
+        let filters = self.filters;
+        // 7/8 as 2+2+3 is still 7/8.
+        let same_time = any_meter || time.ungrouped() == self.time.ungrouped();
+        let ratio = tempo / self.tempo;
+        let near = ratio.max(1.0 / ratio) <= NEAR_SPEED;
+        (!filters.time || same_time) && (!filters.speed || near) && (!filters.chords || chords)
+    }
+
+    fn any(self) -> bool {
+        self.filters != Filters::default()
+    }
+}
+
+fn filters_id() -> egui::Id {
+    egui::Id::unique("library-filters")
+}
+
 /// What the library tab remembers between frames.
 pub struct LibraryBrowser {
     pub user_styles: Vec<lineup_core::library::UserStyle>,
@@ -164,6 +220,33 @@ impl LibraryBrowser {
                 self.filter.clear();
             }
         });
+        let saved: Filters = ui
+            .ctx()
+            .data_mut(|data| data.get_persisted(filters_id()))
+            .unwrap_or_default();
+        let mut filters = saved;
+        ui.horizontal_wrapped(|ui| {
+            ui.checkbox(&mut filters.time, format!("In {}", project.time_signature))
+                .on_hover_text(
+                    "Only presets in the song's time signature, and those that play every bar \
+                     in its own meter",
+                );
+            ui.checkbox(
+                &mut filters.speed,
+                format!("Near {:.0} BPM", project.tempo.bpm()),
+            )
+            .on_hover_text(
+                "Only presets made for about the song's speed: 15% faster or slower at most",
+            );
+            if purpose != LibraryPurpose::Progression {
+                ui.checkbox(&mut filters.chords, "With chords")
+                    .on_hover_text("Only presets that bring a chord progression");
+            }
+        });
+        if filters != saved {
+            ui.ctx()
+                .data_mut(|data| data.insert_persisted(filters_id(), filters));
+        }
         let height = ui
             .available_height()
             .min(ui.ctx().content_rect().bottom() - ui.next_widget_position().y - 16.0)
@@ -230,16 +313,40 @@ impl LibraryBrowser {
         }
         let scroll_row = revealing && self.reveal_row;
         let scroll_rhythm = revealing && self.reveal_rhythm;
-        let presets = catalogue::presets(
+        let narrowing = Narrowing::of(
+            ui.ctx()
+                .data_mut(|data| data.get_persisted(filters_id()))
+                .unwrap_or_default(),
+            project,
+        );
+        let mut presets = catalogue::presets(
             &filter,
             &self.user_styles,
             purpose == LibraryPurpose::Progression,
         );
-        if searching && presets.is_empty() && !anything_else_matches(&filter, purpose) {
-            ui.label(format!(
-                "Nothing in the library matches \"{}\".",
-                self.filter.trim()
-            ));
+        presets.retain(|preset| {
+            narrowing.keeps(
+                preset.time(),
+                preset.tempo(),
+                preset.follows_the_song(),
+                preset.has_progression(),
+            )
+        });
+        if (searching || narrowing.any())
+            && presets.is_empty()
+            && !anything_else_matches(&filter, narrowing, purpose)
+        {
+            if searching {
+                ui.label(format!(
+                    "Nothing in the library matches \"{}\".",
+                    self.filter.trim()
+                ));
+            } else {
+                ui.label("Nothing in the library matches the ticked boxes.");
+            }
+            if narrowing.any() {
+                ui.weak("Untick a box to see more.");
+            }
             ui.weak("Songs with melodies are in File ▸ Demos ▸ Songs.");
         }
         ui.scope(|ui| {
@@ -281,8 +388,10 @@ impl LibraryBrowser {
             }
             if purpose == LibraryPurpose::Play {
                 let open = searching || new_row;
-                picked = picked.or(row_styles(ui, &filter, open, tried, scroll_row));
-                picked = picked.or(micromode_styles(ui, &filter, open, tried, scroll_row));
+                picked = picked.or(row_styles(ui, &filter, narrowing, open, tried, scroll_row));
+                picked = picked.or(micromode_styles(
+                    ui, &filter, narrowing, open, tried, scroll_row,
+                ));
             }
             if purpose == LibraryPurpose::Progression {
                 return;
@@ -290,8 +399,9 @@ impl LibraryBrowser {
             if purpose == LibraryPurpose::Play {
                 let fills = alphabetical(
                     FILLS.iter().filter(|r| {
-                        matches(&filter, r.name, r.genre, r.time, r.about)
-                            || names_a_word(&filter, "fill fills")
+                        (matches(&filter, r.name, r.genre, r.time, r.about)
+                            || names_a_word(&filter, "fill fills"))
+                            && narrowing.keeps(r.time, r.tempo, r.follows_the_meter, false)
                     }),
                     |rhythm| rhythm.name,
                 );
@@ -833,6 +943,7 @@ pub(crate) fn instrument_option(ui: &mut Ui, parts: &mut StyleParts, label: &str
 fn row_styles(
     ui: &mut Ui,
     filter: &str,
+    narrowing: Narrowing,
     open: bool,
     tried: Tried,
     scroll: bool,
@@ -840,7 +951,8 @@ fn row_styles(
     let styles = alphabetical(
         ROW_STYLES
             .iter()
-            .filter(|style| row_style_matches(filter, style)),
+            .filter(|style| row_style_matches(filter, style))
+            .filter(|style| narrowing.keeps(style.time, style.tempo, false, false)),
         |style| style.name,
     );
     if styles.is_empty() {
@@ -884,6 +996,7 @@ fn row_styles(
 fn micromode_styles(
     ui: &mut Ui,
     filter: &str,
+    narrowing: Narrowing,
     open: bool,
     tried: Tried,
     scroll: bool,
@@ -891,7 +1004,8 @@ fn micromode_styles(
     let styles = alphabetical(
         MICROMODE_STYLES
             .iter()
-            .filter(|style| micromode_style_matches(filter, style)),
+            .filter(|style| micromode_style_matches(filter, style))
+            .filter(|style| narrowing.keeps(style.time, style.tempo, false, false)),
         |style| style.name,
     );
     if styles.is_empty() {
@@ -1027,18 +1141,19 @@ fn micromode_style_matches(filter: &str, style: &MicromodeStyle) -> bool {
 }
 
 /// Whether anything at all in the library matches the search.
-fn anything_else_matches(filter: &str, purpose: LibraryPurpose) -> bool {
+fn anything_else_matches(filter: &str, narrowing: Narrowing, purpose: LibraryPurpose) -> bool {
     purpose == LibraryPurpose::Play
-        && (names_a_word(filter, "fill fills")
-            || FILLS
-                .iter()
-                .any(|r| matches(filter, r.name, r.genre, r.time, r.about))
-            || ROW_STYLES
-                .iter()
-                .any(|style| row_style_matches(filter, style))
-            || MICROMODE_STYLES
-                .iter()
-                .any(|style| micromode_style_matches(filter, style)))
+        && (FILLS.iter().any(|r| {
+            (names_a_word(filter, "fill fills")
+                || matches(filter, r.name, r.genre, r.time, r.about))
+                && narrowing.keeps(r.time, r.tempo, r.follows_the_meter, false)
+        }) || ROW_STYLES.iter().any(|style| {
+            row_style_matches(filter, style)
+                && narrowing.keeps(style.time, style.tempo, false, false)
+        }) || MICROMODE_STYLES.iter().any(|style| {
+            micromode_style_matches(filter, style)
+                && narrowing.keeps(style.time, style.tempo, false, false)
+        }))
 }
 
 /// Whether `filter` is the start of one of `words` (at least three
