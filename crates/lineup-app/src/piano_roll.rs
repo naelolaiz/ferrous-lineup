@@ -1127,6 +1127,7 @@ impl PianoRoll {
                     playhead,
                     ui.cursor().min.x + KEY_WIDTH + step as f32 * step_width,
                     view,
+                    KEY_WIDTH,
                 );
             }
             let ghosts = if self.ghosts { &others[..] } else { &[] };
