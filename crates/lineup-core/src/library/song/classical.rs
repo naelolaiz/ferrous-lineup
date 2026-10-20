@@ -8042,3 +8042,1202 @@ pub(super) const PETRUSHKA_ROOM: Song = Song {
             play his chord once more, pianissimo, and the tableau ends on his cry: a trumpet on \
             G sharp and a chord of F sharp major, fortissimo.",
 };
+
+// Copyright: this is Stravinsky's 1947 revision of Petrushka, which is still under
+// copyright (Boosey & Hawkes); it is added here at the request of the project's owner.
+// Source: Stravinsky's Petrushka, 1947 revision, third tableau, "The Moor's Room", MIDI bars
+// 562 to 793: from the drum roll that links it to the second tableau up to the Moor chasing
+// Petrushka out. The whole tableau fits in 99 patterns, so the Dance of the Ballerina and the
+// Waltz stay in it. The notes are converted by script from a MIDI file of the 1947 version (the
+// person's own copy, at sounding pitch) and checked bar by bar against that file, not against a
+// printed score; MIDI bar numbers are given below (MIDI bar 1 is a silent lead-in). The melody
+// is the line in front, in the octave of the instrument that has it, and played_by follows it
+// from instrument to instrument. Everything else that matters is written out on the Keys
+// channel: the harmony, the bass, the ostinati and the timpani; lines doubled in unison or
+// octaves are written once. Rhythms are quantised to sixteenths and eighth-note triplets;
+// tremolos and rolls are written as held notes, grace notes are left out. The dynamic of each
+// part is read from the MIDI's velocities. The percussion is written out (triangle as Ride,
+// tambourine as Shaker, bass drum as Kick, side drum as Snare, cymbals as Crash). Where the
+// meter changes, every run of bars in one meter is a part of its own, named "..., bar N" after
+// the bar it starts on, with in_time: in_meters cannot cut a written-out left hand of several
+// voices into its runs, nor carry drums. No chord symbol is honest for this music, which moves
+// in drones, ostinati and parallel chords, so the charts are empty. Unlike the first tableau, a
+// tremolo between two chords (32nd notes taking turns) is written as the two chords taking
+// turns in sixteenths, and a run of 32nd notes keeps every other note. Where a part starts on a
+// chord held over from the bar before, the chord is struck again.
+//
+// Left out: MIDI bar 606, a silent bar of 2/8, written instead as a pause on the last sixteenth
+// of bar 605; a roll on the lowest A of the keyboard (A0) on the MIDI's celesta track in bars
+// 580 to 585, which is most likely a drum roll put on the wrong track; the piano, which doubles
+// the orchestra, where too many lines play at once (bars 773 to 778, 787, 792 and 793); in bars
+// 779 to 783 the Keys channel keeps the second flute, the first clarinet, the first bassoon,
+// the trumpets, the first violins and the double basses, and leaves out the third flute, the
+// oboes, the cor anglais, the second clarinet, the horns, the piano, the inner strings and the
+// pizzicato violins. Grace notes are left out throughout.
+//
+// Not certain: the meters are the MIDI's: 2/8 in bars 604 and 609, 3/8 in bars 605, 610, 612,
+// 785 to 789 and 791, 4/8 in bars 611, 790, 792 and 793, 9/8 in bar 617, 5/8 in bar 667
+// (counted 2 + 3, which the MIDI cannot tell), 13/16 in bar 730 and 6/8 in bars 764 to 783,
+// between bars of 2/4, 3/4 and 4/4. The MIDI's ritardandos (bars 667 and 668, 735) are written
+// as glides. The keys: the bars that keep to no scale are marked chromatic (see the song's
+// description): the flourish of bar 570, the trombones' and strings' chromatic descents, the
+// whole-tone chords of the Lento (bars 580 to 585), the Moor's frantic bars 600 to 621, and
+// Petrushka's entrance, the fight and the chase (bars 751 to 793), where two keys sound at
+// once. The opening (bars 566 to 568) is marked G sharp Phrygian, though bar 568's chord of E
+// has a D natural, its seventh, which is outside it. The Moor's tune is marked B flat Lydian,
+// the mode of its notes over the pedal on B flat, though in bars 595 to 598 the pizzicato
+// strings add A flat (written G sharp) under it; the oboes' parallel chords in bars 622 and 623
+// move by half steps (C sharp, E flat) around D minor, marked D minor; the clarinets' chords in
+// bars 665 and 666, before the Waltz, borrow C flat (written B) from E flat minor, marked E
+// flat major like the Waltz; bar 633, the trumpet's upbeat to the Dance of the Ballerina over
+// the Moor's pedal on B flat, is marked F major like the Dance.
+pub(super) const PETRUSHKA_MOOR: Song = Song {
+    name: "Petrushka, The Moor's Room",
+    origin: "Igor Stravinsky, Petrushka, 1911, revised 1947",
+    feel: "Orchestra",
+    genre: Genre::Classical,
+    tonic: C,
+    mode: Chromatic,
+    time: THREE_FOUR,
+    tempo: 126.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        // MIDI bars 562 to 565.
+        Part::new(
+            "Drum roll",
+            "-:16 | - | - | -:15 A5:1",
+            "",
+        )
+        .with_left(
+            "F#2:1 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 | F#2 F#2 F#2 F#2 \
+             F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 | F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 \
+             F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 | F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 F#2 \
+             F#2 F#2 F#2 F#2 & -:16 | - | - | -:15 Eb4+E4+A4+E5:1",
+        )
+        .in_time(COMMON)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "x:1 x x x x x x x x x x x x x x x | x x x x x x x x x x x x x x x x | \
+                           x x x x x x x x x x x x x x x x | x x x x x x x x x x x x x x x x"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bar 566.
+        Part::new(
+            "The Moor",
+            "G#5:3 A5:1 G#5:3 A5:1",
+            "",
+        )
+        .with_left(
+            "-:2 (3 -:1 - D#4 _:3 -:1 & -:4 E4+A4:2. - & D#4+G#4+D#5+G#5:2 (3 _:1 _ E4+A4+E5+A5 \
+             G#4+D#5:3 D#4+E4+A4+E5:1 & -:4 G#5",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(GSharp, Phrygian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 567 to 568.
+        Part::new(
+            "The Moor, bar 2",
+            "G#5:3 A5:1 G#5:3 A5:1 G#5:4 | (3 B5:1 G#5 A5 (3 _ G#5 A5 G#5 -:7",
+            "",
+        )
+        .with_left(
+            "-:4 E4:2. - E4. - | D#4+F4+B4:1 -:4 E4+A4:1 -:6 & -:4 D#4:3 E4:1 D#4:4 | (3 \
+             D4+G#4:1 G#4+A4 D4+G#4+B4 (3 E4+A4 D4+G#4+B4+D5 E4+A4+D5+E5 D#4+G#4+G#5:4 \
+             D#4+G#4+G#5 & D#4+G#4+D#5:3 E4:1 A4+E5:2. - A4+E5. - | E4+E5+D6. - D4+D#5:1 -:7 & \
+             -:3 A4+E5:1 G#4+D#5:3 A4+E5:1 G#4+D#5:4 | (3 -:1 D#5 A4 (3 - D#5 - -:8 & G#5:4 G#5 \
+             - | B5 -:8 & -:12 | D5:2 -:10",
+        )
+        .in_key(GSharp, Phrygian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 569 to 571.
+        Part::new(
+            "Flourish",
+            "-:12 | (3 D4:1 Eb4 E4 F#4:2 -:8 | -:12",
+            "",
+        )
+        .with_left(
+            "-:12 | (3 B3+B4:1 A3+G#4 G#3+A4 F#3+C4+F#4:10 | _:12 & -:12 | D4+E4:2. -:10 | -:12",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)]),
+        // MIDI bar 572.
+        Part::new(
+            "Piano and violins",
+            "-:2 (3 G3:1 D4 G4 F#4 -:7",
+            "",
+        )
+        .with_left(
+            "(3 -:1 C#2 F#2 (3 G2 - - -:8 & (3 F#1+F#2:1 C#3 F#3 -:10 & -:4 F#4:8",
+        )
+        .in_key(FSharp, Phrygian)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 573 to 575.
+        Part::new(
+            "Piano and violins, bar 2",
+            "-:2 (3 G3:1 D4 G4 F#4 -:3 | -:2 (3 G3:1 D4 G4 F#4 -:3 | -:2 (3 G3:1 D4 G4 F#4 -:3",
+            "",
+        )
+        .with_left(
+            "(3 -:1 C#2 F#2 (3 G2 - - -:4 | (3 -:1 C#2 F#2 (3 G2 - - -:4 | (3 -:1 C#2 F#2 (3 G2 \
+             - - -:4 & (3 F#1+F#2:1 C#3 F#3 -:6 | (3 F#1+F#2:1 C#3 F#3 -:6 | (3 F#1+F#2:1 C#3 \
+             F#3 -:6 & -:4 F#4:2 - | -:4 F#4:2 - | -:4 F#4:2 -",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(FSharp, Phrygian)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 576 to 577.
+        Part::new(
+            "Trombones",
+            "(3 D4:2 C4 B3 B3:4 | _:8",
+            "",
+        )
+        .with_left(
+            "(3 D3:2 C3 B2 B2:4 | _:8 & -:2 (3 -:1 - C#3+G#3+C#4 Bb2 -:3 | -:8 & (3 A3:1 \
+             C#3+G#3+C#4 G3 (3 C#3+G#3+C#4 F#3 _ F3:2. - | -:7 G#2+Eb3+C4:1",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TROMBONE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 578 to 579.
+        Part::new(
+            "Trombones, bar 3",
+            "A3:2 G3 F#3:1 -:7 | -:12",
+            "",
+        )
+        .with_left(
+            "A2:2 G2 -:8 | -:12 & -:4 F#2+C3+F#3:8 | _:12 & E3:1 G#2+Eb3+G#3 D3 G#2+Eb3+G#3 -:8 \
+             | -:12",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TROMBONE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 580.
+        Part::new(
+            "Timpani and strings",
+            "-:8",
+            "",
+        )
+        .with_left(
+            "G#1:8 & -:2 G#2 - G#2:1 -",
+        )
+        .in_time(TWO_FOUR)
+        .with_tempo(&[tempo(0, 48)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bar 581.
+        Part::new(
+            "Timpani and strings, bar 2",
+            "-:12",
+            "",
+        )
+        .with_left(
+            "G#2:2 G#2 - G#2 - G#2:1 -",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 582 to 585.
+        Part::new(
+            "Timpani and strings, bar 3",
+            "D3:4 E3 | F#3 G#3 | Bb3:2 C4 D4 E4 | (3 F#4 G#4 Bb4 (3 C5 D5 -",
+            "",
+        )
+        .with_left(
+            "G#2:2 G#2 - G#2:1 - | -:2 G#2 G#2 G#2:1 - | -:2 G#2 - G#2:1 - | -:8 & -:8 | - | -:2 \
+             C3 D3+F3+Bb3 - | (3 C2+F#3+A3+D4 C#2+E3 _ -:4 & Bb2:4 A2+C3 | C3+D3 C#3+E3 | \
+             C#3+E3+F#3:2 E3+G#3:4 C3+E3+A3+C4:2 | (3 - Eb3+G#3+C#4+E4 F3+Bb3+C#4+E4+F#4 (3 \
+             C2+F#3+F4+G#4 F2+D4+G#4+Bb4 -",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bar 586.
+        Part::new(
+            "Piccolo",
+            "-:4 G6:1 G7 Eb7 -:5",
+            "",
+        )
+        .with_left(
+            "-:6 A3+A4:1 -:3 A3+A4:1 - & -:4 G5:1 F#6 -:6",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::PICCOLO, 0)])
+        .with_drums(&[
+            (Drum::Crash, "x:12"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bar 587.
+        Part::new(
+            "Bassoon",
+            "-:8",
+            "",
+        )
+        .with_left(
+            "Bb1+Bb2:4 Bb1+Bb2 & -:1 Bb3:4 Bb3:3 & -:2 A3+A4:4 A3+A4:2 & -:2 Bb4:3 -:1 Bb4:2",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(ASharp, Lydian)
+        .played_by(&[(gm::BASSOON, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:2 x:6"),
+            (Drum::Crash, "-:1 x:4 x:2 x:1"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bar 588.
+        Part::new(
+            "Bassoon, bar 2",
+            "-:2 A4:4 G4:1 F4 G4:2 F4",
+            "",
+        )
+        .with_left(
+            "Bb1+Bb2:4 Bb1+Bb2 Bb1+Bb2 & -:2 A3:4 -:6 & -:1 Bb3:4 Bb3 Bb3:3 & -:2 Bb4:3 -:1 \
+             Bb4:3 -:1 Bb4:2",
+        )
+        .in_key(ASharp, Lydian)
+        .played_by(&[(gm::BASSOON, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:2 x:8 x:2"),
+            (Drum::Crash, "-:1 x:4 x:2 x x:3"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bars 590 to 599.
+        Part::new(
+            "The Moor's tune",
+            "-:2 A4:4 G4:1 F4 G4:2 F4 | E4 D4 E4 F4 G4 F4 | E4 D4 E4 F4 G4 F4 | E4:1 D4 C4:2 \
+             D4:4 - | -:2 A4:4 G4:1 F4 G4:2 F4 | E4 D4 E4 F4 G4 F4 | E4 D4 E4 F4 G4 F4 | E4:1 D4 \
+             C4:2 D4:6 F4:2 | E4:1 D4 C4:2 D4:8 | -:12",
+            "",
+        )
+        .with_left(
+            "Bb1+Bb2:4 Bb1+Bb2 Bb1+Bb2 | Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | \
+             Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | \
+             Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | Bb1+Bb2 Bb1+Bb2 Bb1+Bb2 | -:12 \
+             & -:12 | - | - | E2:1 D2 E2:2 D2:4 - | -:12 | - | - | E2:1 D2 E2:2 D2:6 F2:2 | E2:1 \
+             D2 E2:2 D2:8 | -:12 & -:1 Bb3:4 Bb3 Bb3:3 | _:1 Bb3:4 Bb3 Bb3:3 | _:1 Bb3:4 Bb3 \
+             Bb3:3 | _:1 Bb3:4 Bb3 Bb3:3 | _:1 Bb3:4 Bb3 Bb3:3 | _:1 G#3:4 Bb3 G#3:3 | _:1 Bb3:4 \
+             G#3 Bb3:3 | _:1 G#3:4 Bb3 G#3:3 | _:1 Bb3:4 G#3 Bb3:3 | -:12 & -:12 | - | - | -:6 \
+             D4:3 E2+E4:1 F2+F4 G2+G4. | _ - A2 -:9 | -:12 | - | - | - | - & -:2 Bb4:3 -:1 Bb4:3 \
+             -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 \
+             - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - G#4:3 -:1 \
+             Bb4:3 -:1 G#4:2 | _:1 - Bb4:3 -:1 G#4:3 -:1 Bb4:2 | _:1 - G#4:3 -:1 Bb4:3 -:1 G#4:2 \
+             | _:1 - Bb4:3 -:1 G#4:3 -:1 Bb4:2 | -:12",
+        )
+        .in_key(ASharp, Lydian)
+        .played_by(&[(gm::CLARINET, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:2 x:6 x:4 | -:2 x:6 x:4 | -:2 x:6 x:4 | -:2 x:6 x:4 | -:2 x:6 x:4 | \
+                          -:2 x:6 x:4 | -:2 x:6 x:4 | -:2 x:6 x:4 | -:2 x:6 x:4 | -:2 x:10"),
+            (Drum::Crash, "-:1 x:4 x:2 x:3 x:2 | -:1 x:4 x:2 x:3 x:2 | -:1 x:4 x:2 x:3 x:2 | -:1 \
+                           x:4 x:2 x:3 x:2 | -:1 x:4 x:2 x:3 x:2 | -:1 x:4 x:2 x:3 x:2 | -:1 x:4 \
+                           x:2 x:3 x:2 | -:1 x:4 x:2 x:3 x:2 | -:1 x:4 x:2 x:3 x:2 | -:1 x:4 x:2 \
+                           x:5"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bars 600 to 603.
+        Part::new(
+            "Cor anglais",
+            "-:16 | -:2 A3:1 A3 G#3 G#3:11 | (3 A3:2 _ C4 (3 _ G#3 _ Bb3:8 | -:2 A3:1 A3 G#3 \
+             G#3:11",
+            "",
+        )
+        .with_left(
+            "E1:2 C2+E2 E1 C2+E2 E1 C2+E2 E1 C2+E2 | E1 C2+E2 E1 C2+E2 E1 C2+E2 E1 C2+E2 | E1 \
+             C2+E2 E1 C2+E2 E1 C2+E2 E1 C2+E2 | E1 C2+E2 E1 C2+E2 E1 C2+E2 E1 C2+E2:1 -",
+        )
+        .in_time(COMMON)
+        .with_tempo(&[tempo(0, 96)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::ENGLISH_HORN, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bar 604.
+        Part::new(
+            "Bassoons",
+            "(3 C#2:1 Bb2 Bb3 (3 F#3 - -",
+            "",
+        )
+        .with_left(
+            "Bb1:1 -:3 & (3 Bb2:1 Bb2+Bb3 _ -:2 & -:2 F#2+C3+F#3:1 -",
+        )
+        .in_time(TWO_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::BASSOON, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 605.
+        Part::new(
+            "Bassoons held",
+            "F#3:4 F#3:1 -",
+            "",
+        )
+        .with_left(
+            "C3:4 C3:1 -",
+        )
+        .in_time(THREE_EIGHT)
+        .with_tempo(&[fermata(5, 1)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::BASSOON, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 607 to 608.
+        Part::new(
+            "Cor anglais again",
+            "-:2 A3:1 A3 G#3 G#3:11 | (3 A3:2 _ C4 (3 _ G#3 _ Bb3:8",
+            "",
+        )
+        .with_left(
+            "E1:2 C2+E2 E1 C2+E2 E1 C2+E2 E1 C2+E2 | E1 C2+E2 E1 C2+E2 E1 C2+E2 E1 C2+E2:1 -",
+        )
+        .in_time(COMMON)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::ENGLISH_HORN, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bar 609.
+        Part::new(
+            "Bassoons again",
+            "(3 C#2:1 Bb2 Bb3 (3 F#3 - -",
+            "",
+        )
+        .with_left(
+            "Bb1:1 -:3 & (3 -:1 A2 - -:2 & (3 Bb2:1 Bb2+Bb3 _ -:2 & -:2 F#2+C3+F#3:1 -",
+        )
+        .in_time(TWO_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::BASSOON, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 610.
+        Part::new(
+            "Horn",
+            "-:2 (3 C#4:1 _ E4 (3 _ C4 _",
+            "",
+        )
+        .with_left(
+            "C3+F#3:4 C3+F#3:1 -",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FRENCH_HORN, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 611.
+        Part::new(
+            "Piccolo flourish",
+            "-:6 (3 D6:1 C#6 G#6",
+            "",
+        )
+        .with_left(
+            "D3+D4:2 -:6 & -:6 (3 E5:1 - - & -:6 D5:1 G#5",
+        )
+        .in_time(FOUR_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::PICCOLO, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 612.
+        Part::new(
+            "Piccolo flourish, bar 2",
+            "D7:1 -:5",
+            "",
+        )
+        .with_left(
+            "(3 Bb1+Bb2:1 Bb2+Bb3 _ -:4 & (3 C2:1 - - (3 F#2+C3+C#3+F#3+C#4 _ E3+E4 (3 _ C3+C4 _",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::PICCOLO, 0)])
+        .with_drums(&[
+            (Drum::Snare, "-:4 (3 -:1 x x"),
+        ])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 613 to 615.
+        Part::new(
+            "Trumpets",
+            "(3 F#5:2 G#5 E5 F#5:4 (3 _:2 E5 F#5 | (3 D5 E5 C5 D5:8 | _:12",
+            "",
+        )
+        .with_left(
+            "(3 D3+C4+C5:2 C#4+C#5 A3+A4 C4+G#4+C5:4 (3 _:2 A3+A4 C4+C5 | (3 G#3+G#4 A3+A4 F3+F4 \
+             G#3+E4+G#4:8 | _:12 & (3 B4:2 Bb4 - -:4 (3 -:2 - G#4 | (3 G4 F#4 - -:8 | -:12",
+        )
+        .with_tempo(&[tempo(0, 138)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .with_drums(&[
+            (Drum::Snare, "x:12 | - | -"),
+        ])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 616.
+        Part::new(
+            "Rush",
+            "(3 Eb2:1 Bb2 D4 B4:2. Eb5 -:6",
+            "",
+        )
+        .with_left(
+            "(3 Eb1:2 Bb2+B2 Eb3+E3 Eb3+Bb3:1 -:7 & -:2 (3 Eb2+Bb3:1 - - -:8 & Eb3:2 -:10 & (3 \
+             -:1 E2+F2 G#2 (3 A2 B2 C3 E4+A4+B4+C5+D5 -:7 & (3 E1:1 Bb1+G#3+E4 B3+G#4 (3 _ \
+             Bb2+Eb4+E4+B4 G#4+A4+E5 -:7 E4+A4+B4+E5:1 & -:4 Eb4+Bb4:1 -:7",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::ACOUSTIC_GRAND_PIANO, 0)])
+        .with_drums(&[
+            (Drum::Kick, "x:12"),
+        ])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 617.
+        Part::new(
+            "Oboe",
+            "Eb5:4 -:2 Eb5:4 -:2 Eb5:4 -:2",
+            "",
+        )
+        .with_left(
+            "Bb4:4 -:2 Bb4:4 -:2 Bb4:4 -:2 & -:4 (3 -:1 - A4 Eb4:4 -:2 Eb4:4 -:2 & Eb4:4 (3 -:1 \
+             - E4+B4+E5. (3 _ _ - -:2 (3 -:1 - E4+A4+B4+E5 -:6",
+        )
+        .in_time(NINE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 618.
+        Part::new(
+            "Oboe, bar 2",
+            "-:4 Eb5 -",
+            "",
+        )
+        .with_left(
+            "-:4 Bb4 - & -:3 E4+A4+B4+E5:1 Eb4:4 -:2 (3 -:1 C#4 D4",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 619 to 621.
+        Part::new(
+            "Trumpets again",
+            "F5:1 -:3 E5:1 -:3 (3 Eb5:2 D5 C5 | C5:1 -:7 (3 Bb4:2 A4 A4 | -:12",
+            "",
+        )
+        .with_left(
+            "-:12 | C4:1 -:7 (3 Bb3:2 A3 A3 | _:12 & F4:1 -:3 E4:1 -:3 (3 Eb4:2 D4 C4 | \
+             A3+G4+C5:8 (3 -:2 - Eb4 | Eb4+A4:12 & C5+F5:4 B4+E5 (3 Bb4:1 E4+B4+E5 A4 (3 \
+             E4+B4+E5 G4 E4+B4+E5 | -:8 (3 E4:1 B3+F4+B4 Eb4 (3 B3+F4+B4 - - | -:12 & -:2 (3 -:1 \
+             Eb4 G#4 Eb5:2. -:6 | E5:1 -:11 | -:12",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 622 to 623.
+        Part::new(
+            "Oboes",
+            "-:2 A5:4 G5:1 F5 G5:2 A5:1 - | -:12",
+            "",
+        )
+        .with_left(
+            "D2+A2:12 | -:2 C#4+Eb4+G4:1 Bb3+C#4+F4 C#4+Eb4+G4:2 Bb3+C#4+F4 C2+G2 C3+G3 & -:2 \
+             D5+F5:4 C#5+Eb5:1 Bb4+C#5 C#5+Eb5:2 D5+F5:1 - | -:12",
+        )
+        .with_tempo(&[tempo(0, 48)])
+        .in_key(D, NaturalMinor)
+        .played_by(&[(gm::OBOE, 0)])
+        .with_drums(&[
+            (Drum::Crash, "-:12 | -:9 x:2 x:1"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bar 624.
+        Part::new(
+            "Trumpet",
+            "-:4 A4 A4:2 A4",
+            "",
+        )
+        .with_left(
+            "D2+A2:4 C2+G2 E2+A2 & -:2 D3+A3 - D3+A3 - D3+A3 & -:4 D4 D4:2 D4",
+        )
+        .in_key(D, NaturalMinor)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:1 x:11"),
+            (Drum::Crash, "-:2 x:3 x:2 x:3 x:2"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bars 625 to 632.
+        Part::new(
+            "The Moor's tune, bassoon",
+            "-:2 A4:4 G4:1 F4 G4:2 F4 | E4 D4 E4 F4 G4 F4 | E4 D4 E4 F4 G4 F4 | E4:1 D4 C4:2 \
+             D4:6 -:2 | - A4:4 G4:1 F4 G4:2 F4 | E4 D4 E4 F4 G4 F4 | E4 D4 E4 F4 G4 F4 | E4:1 D4 \
+             C4:2 D4:8",
+            "",
+        )
+        .with_left(
+            "C2+G2:4 D2+A2 C2+G2 | C2+G2 C2+G2 C2+G2 | C2+G2 C2+G2 C2+G2 | C2+G2 D2+A2 C2+G2:2 - \
+             | F2 Bb2+F3 Bb1:4 Eb2:2 Bb2+F3 | Bb1:4 F2:2 Bb2+Eb3 Bb1:4 | F2:2 Bb2+F3 Bb1:4 Eb2:2 \
+             Bb2+F3 | Bb1:4 Bb1 Bb1 & -:6 Eb3:2 -:4 | -:2 D3+A3 - Eb3 -:4 | -:2 D3+A3 - Eb3 -:4 \
+             | -:12 | Bb1:4 F2:2 Bb2+Eb3 Bb1:4 | F2:2 Bb2+F3 Bb1:4 Eb2:2 Bb2+F3 | Bb1:4 F2:2 \
+             Bb2+Eb3 Bb1:4 | F2:2 G#2+Eb3 F2 G2+D3 F2 G2+D3 & -:2 D4:4 C#4:1 Bb3 C#4:2 Bb3 | Bb3 \
+             G3 Bb3 Bb3 C#4 Bb3 | Bb3 G3 Bb3 Bb3 C#4 Bb3 | Bb3:1 G3 F#3:2 G3:6 -:2 | - D4:4 \
+             C#4:1 Bb3 C#4:2 Bb3 | Bb3 G3 Bb3 Bb3 C#4 Bb3 | Bb3 G3 Bb3 Bb3 C#4 Bb3 | Bb3:1 G3 \
+             F#3:2 G3:8 & -:2 D3+A3 - Bb3:1 -:3 F3+C4:2 | -:10 F3+C4:2 | -:10 F3+C4:2 | - \
+             Eb3+Bb3 - D3+A3 -:1 C4+E4 C3+G3+Bb3+C#4+F4 C#4+Eb4+G4 | -:12 | - | - | - & -:2 F4:4 \
+             Eb4:1 C#4 Eb4:2 C#4 | C4 Bb3 C4 C#4 Eb4 C#4 | C4 Bb3 C4 C#4 Eb4 C#4 | C4:1 Bb3 \
+             G#3:2 Bb3:6 -:2 | -:7 C#4:1 -:2 C#4 | C4 Bb3 C4 C#4 - C#4 | C4 Bb3 C4 C#4 - C#4 | \
+             C4:1 Bb3 G#3:2 Bb3:8 & -:12 | - | - | -:7 D4:2 -:3 | -:2 F4:4 E4:1 - E4:2 - | -:8 \
+             Eb4:2 - | -:8 Eb4:2 - | -:12",
+        )
+        .in_key(ASharp, Lydian)
+        .played_by(&[(gm::BASSOON, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:5 x:7 | -:1 x:11 | -:5 x:7 | -:1 x:11 | -:5 x:7 | -:1 x:11 | -:5 x:7 \
+                          | -:1 x:11"),
+            (Drum::Crash, "-:1 x:2 x:3 x x:2 x:1 | -:2 x:3 x:2 x:3 x:2 | -:1 x:2 x:3 x x:2 x:1 | \
+                           -:2 x:3 x:2 x:3 x:2 | -:1 x:2 x:3 x x:2 x:1 | -:2 x:3 x:2 x:3 x:2 | \
+                           -:1 x:2 x:3 x x:2 x:1 | -:2 x:3 x:2 x:3 x:2"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bar 633.
+        Part::new(
+            "Side drum",
+            "(3 -:1 - G4 C5 C4:4 -:5",
+            "",
+        )
+        .with_left(
+            "Bb1:4 -:8 & F2:2 G2+D3 -:8",
+        )
+        .in_key(F, Major)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .with_drums(&[
+            (Drum::Snare, "-:5 x:1 (3 x x x (3 x x x (3 x x x"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bars 634 to 662.
+        Part::new(
+            "Dance of the Ballerina",
+            "-:8 | - | - | -:6 A4:1 C5 | F5:2 C5:1 A4 F4:2 A4:1 C5 | E5:2 C5:1 A4 F4:2 G4:1 A4 | \
+             Bb4 C5 D5 E5 D5 C5 Bb4 C5 | D5 E5 D5 C5 F4:2 A4:1 C5 | F5:2 C5:1 A4 F4:2 A4:1 C5 | \
+             E5:2 C5:1 A4 F4:2 A4:1 Bb4 | C5 D5 E5 C5 G4 A4 Bb4 C5 | D5 E5 C5 G4 F4:2 G4:1 G4 | \
+             G4 Bb4 Bb4 D5 D5 F5 F5 A5 | A5:3 F5:1 A5 F5 F5 D5 | D5 Bb4 Bb4 G4 G4:2 G5:1 D5 | \
+             Bb4:2 G5:1 E5 C5:2 G5:1 D5 | D5 C5 E5 D5 Bb4:2 C5:1 D5 | E5:2 D5:1 C5 Bb4:2 C5:1 D5 \
+             | E5:2 D5:1 C5 F4:2 A4:1 C5 | F5:2 C5:1 A4 F4:2 A4:1 C5 | E5:2 C5:1 A4 F4:2 G4:1 A4 \
+             | Bb4 C5 D5 E5 D5 C5 Bb4 C5 | D5 E5 D5 C5 F4:2 A4:1 C5 | F5:2 C5:1 A4 F4:2 A4:1 C5 \
+             | E5:2 C5:1 A4 F4:2 A4:1 Bb4 | C5 D5 E5 C5 G4 A4 Bb4 C5 | D5 E5 D5 G4 F4 -:3 | F5:1 \
+             F5 F5 F5 F5 F5 F5 F5 | F5 -:7",
+            "",
+        )
+        .with_left(
+            "-:8 | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - | - \
+             | - | - | - | - | - | - | - | -:7 F4+C5+F5:1",
+        )
+        .in_time(TWO_FOUR)
+        .with_tempo(&[tempo(0, 116)])
+        .in_key(F, Major)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .with_drums(&[
+            (Drum::Snare, "x:3 x:1 x x x x | x:2 (3 x:1 x x x:2 (3 x:1 x x | x:2 (3 x:1 x x x:2 \
+                           (3 x:1 x x | x:2 (3 x:1 x x x x x x | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 \
+                           x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 \
+                           x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 \
+                           x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | \
+                           x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 \
+                           | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 \
+                           x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:3 x:1 x:3 x:1 | x:8"),
+        ]),
+        // MIDI bars 663 to 664.
+        Part::new(
+            "Strings",
+            "E5:1 -:2 Eb5:1 D5 -:2 C#5:1 | C5:3 B4:1 Bb4 -:3",
+            "",
+        )
+        .with_left(
+            "Eb4:2. - Eb4. - | E4. - E4:1 -:3 & B4:1 -:2 Bb4:1 -:3 G#4:1 | -:3 F#4:1 -:4 & \
+             E4+A4+E5:2. - D4+G4+D5. - | C4+F4. - Bb3+Eb4:1 -:3",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::VIOLIN, 0)]),
+        // MIDI bars 665 to 666.
+        Part::new(
+            "Clarinets",
+            "-:7 Bb4:1 | F4:3 Bb4:1 F4:2 -",
+            "",
+        )
+        .with_left(
+            "-:7 Eb4:1 | Eb3+B3:3 Bb3+Eb4:1 F3+B3:2 -:1 Ab5",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(DSharp, Major)
+        .played_by(&[(gm::CLARINET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bar 667.
+        Part::new(
+            "Flute",
+            "Ab6:7 F6:1 D6 Bb5",
+            "",
+        )
+        .in_time(FIVE_EIGHT)
+        .in_key(DSharp, Major)
+        .played_by(&[(gm::FLUTE, 0)]),
+        // MIDI bar 668.
+        Part::new(
+            "Flute, bar 2",
+            "Ab5:1 F5 D5 Bb4 Ab4 F4 D4 Bb4 -:4",
+            "",
+        )
+        .with_tempo(&[tempo(0, 108), glide(0, 50, 7), tempo(8, 80)])
+        .in_key(DSharp, Major)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 669 to 688.
+        Part::new(
+            "Waltz",
+            "-:12 | - | - | - | Eb4:2 G4 C5:6 G4:2 | G4 Bb4 Ab4:1 -:3 Ab4:1 -:3 | Ab5:2 D6 Ab6:6 \
+             D6:2 | D6 F6 Eb5:1 -:3 Eb5:1 -:3 | Eb5:2 G5 C6:6 G5:2 | G5 Bb5 Ab4:1 -:3 Ab4:1 -:3 \
+             | Ab4:2 D5 Ab5 F5 D5 Ab4 | G4 Bb4 G4:4 Eb4:2 F4 | Eb4:1 Eb5 G4 G5 C5 C6 C6 C6 C6 C6 \
+             G4 G5 | G4 G5 Bb4 Bb5 Ab4 Ab5 Ab5 Ab5 Ab4 Ab5 Ab5 Ab5 | Ab4:2 D5 Ab5:1 Ab6 Ab6 Ab6 \
+             Ab6 Ab6 D5 D6 | D5 D6 F5 F6 Eb5 Eb6 Eb6 Eb6 Eb5 Eb6 Eb6 Eb6 | Eb4 Eb5 G4 G5 C5 C6 \
+             C6 C6 C6 C6 G4 G5 | G4 G5 Bb4 Bb5 Ab4 Ab5 Ab5 Ab5 Ab4 Ab5 Ab5 Ab5 | Ab4 Ab5 D5 D6 \
+             Ab5 Ab6 F5 F6 C5 C6 D5 D6 | -:12",
+            "",
+        )
+        .with_left(
+            "Eb3:2 G3 Bb3 Eb4 Bb3 G3 | D3 F3 Ab3 D4 Ab3 F3 | D3 F3 Ab3 D4 Ab3 F3 | Eb3 G3 Bb3 \
+             Eb4 Bb3 G3 | Eb3 G3 Bb3 Eb4 Bb3 G3 | D3 F3 Ab3 D4 Ab3 F3 | D3 F3 Ab3 D4 Ab3 F3 | \
+             Eb3 G3 Bb3 Eb4 Bb3 G3 | Eb3 G3 Bb3 Eb4 Bb3 G3 | D3 F3 Ab3 D4 Ab3 F3 | D3 F3 Ab3 D4 \
+             Ab3 F3 | Eb3 G3 Bb3 Eb4 Bb3 G3 | Eb3 G3 Bb3 Eb4 Bb3 G3 | D3 F3 Ab3 D4 Ab3 F3 | D3 \
+             F3 Ab3 D4 Ab3 F3 | Eb3 G3 Bb3 Eb4 Bb3 G3 | Eb3 G3 Bb3 Eb4 Bb3 G3 | D3 F3 Ab3 D4 Ab3 \
+             F3 | D3 F3 Ab3 D4 Ab3 F3 | -:12",
+        )
+        .with_tempo(&[tempo(235, 195)])
+        .in_key(DSharp, Major)
+        .played_by(&[(gm::TRUMPET, 0)]),
+        // MIDI bars 689 to 696.
+        Part::new(
+            "The Moor's waltz",
+            "-:3 D6:1 D#6:3 D6:1 D#6:3 D6:1 | D#6:2 -:6 F#5:2 - | -:3 D6:1 D#6:3 D6:1 D#6:3 D6:1 \
+             | D#6:2 -:6 F#5:2 - | -:3 C6:1 C#6:3 D6:1 D#6:3 D#6:1 | E6:2 -:6 G#5:2 - | -:3 G5:1 \
+             G#5:2 - A#5:3 A#5:1 | B5:2 -:6 F#5:2 -",
+            "",
+        )
+        .with_left(
+            "-:12 | - | - | - | - | - | - | -:4 D#4 D#4:2 - & B3:4 D#4+B4+D#6 D#4+B4+D#6 | \
+             B3+D#6 D#4+B4 D#4+B4+F#5 | B3 D#4+B4+D#6 D#4+B4+D#6 | B3+D#6 D#4+B4 D#4+B4+F#5 | B3 \
+             D#4+B4+C#6 D#4+B4+D#6 | A#3+E6 C#4+A#4 C#4+A#4+G#5 | A#3 C#4+G#4+A#4+F5 C#4+A#4 | \
+             B3+F#4 B4:2 - B4+F#5:4 & -:12 | - | - | - | - | - | - | -:2 F#5 D#5 B4 F#4 D#4:1 - \
+             & -:4 F#5:2 - F#5 - | F#5 -:6 D#5:2 - | -:4 F#5:2 - F#5 - | F#5 -:6 D#5:2 - | -:4 \
+             E5:2 - F#5 - | G#5 -:6 E5:2 - | -:4 E5:2 - F#5 - | D#5 -:6 D#5:2 -",
+        )
+        .in_key(B, Major)
+        .played_by(&[(gm::FLUTE, 0)]),
+        // MIDI bars 697 to 712.
+        Part::new(
+            "The Moor's tune, cor anglais",
+            "-:6 D#4 | _ C#4:3 B3 | C#4:6 B3 | - C#4:3 B3 | C#4:6 B3 | A#3 G#3 | A#3 B3 | C#4 B3 \
+             | A#3:3 G#3 F#3:6 | G#3:12 | D#4:6 C#4:3 B3 | C#4:6 B3 | A#3 G#3 | A#3 B3 | C#4 B3 \
+             | A#3:3 G#3 F#3:6",
+            "",
+        )
+        .with_left(
+            "-:9 D#2+D#3:3 | -:12 | -:9 B1:3 | -:12 | -:9 B1:3 | -:9 D#3:3 | A#1:6 B2 | C#2 B2 | \
+             -:3 G#1 -:6 | -:12 | D#2+D#3:6 - | - B1 | - G#2 | A#1 B2 | C#2 B2 | G#1:3 -:9 & \
+             -:12 | - | - | - | - | -:8 D#4+B4:4 | C#4:2 - F4+C#5 - F4+C#5+F#5 - | B3 F#4+A#4 \
+             F#4 F#4+A#4 F#4 F#4+A#4 | F#4:4 -:8 | B3:4 D#4+B4 D#4+B4 | B3 D#4+B4 D#4+B4 | B3 \
+             D#4+B4 D#4+B4 | B3 D#4+B4 D#4+B4 | B3 D#4+B4 D#4+B4 | A#3 C#4+A#4 C#4+A#4 | A#3 -:8 \
+             & B3:4 D#4+B4 D#4+B4 | B3 D#4+B4 D#4+B4 | B3 D#4+B4 D#4+B4 | B3 D#4+B4 D#4+B4 | B3 \
+             D#4+B4 D#4+B4 | B3 D#4+B4 C#6:2 - | -:10 G#5:2 | -:12 | -:2 F#5 D#5 B4 F#4 D#4:1 - \
+             | -:12 | - | - | - | - | - | -:4 C#4+G#4+A#4+F5 C#4+A#4 & -:3 D6:1 F#5+D#6:2 -:1 D6 \
+             F#5+D#6:2 -:1 D6 | F#5+D#6:2 -:6 D#5+F#5:2 - | -:3 D6:1 F#5+D#6:2 -:1 D6 F#5+D#6:2 \
+             -:1 D6 | F#5+D#6:2 -:6 D#5+F#5:2 - | -:3 D6:1 F#5+D#6:2 -:1 D6 F#5+D#6:2 -:1 D6 | \
+             F#5+D#6:2 -:6 F5+D6:2 - | - F5+C#6 F#5+D#6 F5+C#6 C#6+D#6+A#6 B5+F6+G#6 | \
+             F#5+A#5+F#6 F#5+A#5+F#6 F#5+A#5+F#6 F#5+A#5+F#6 F#5+A#5+F#6 F#5+A#5+F#6 | \
+             F#5+A#5+F#6:1 -:11 | -:3 D6:1 F#5+D#6:2 -:1 D6 F#5+D#6:2 -:1 D6 | F#5+D#6:2 -:6 \
+             D#5+F#5:2 - | -:3 D6:1 F#5+D#6:2 -:1 D6 F#5+D#6:2 -:1 D6 | F#5+D#6:2 -:6 D#5+F#5:2 \
+             - | -:3 C6:1 E5+C#6:2 -:1 D6 F#5+D#6:2 -:1 D#6 | G#5+E6:2 -:6 E5+G#5:2 - | -:3 G5:1 \
+             E5+G#5:2 - F#5+A#5 -:1 A#5",
+        )
+        .in_key(B, Major)
+        .played_by(&[(gm::ENGLISH_HORN, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:12 | -:6 x | -:12 | -:6 x | -:12 | - | - | - | - | - | -:6 x | -:12 \
+                          | - | - | - | -"),
+            (Drum::Crash, "-:12 | -:9 x:3 | -:6 x | -:9 x:3 | -:6 x | -:12 | -:6 x | - x | -:3 \
+                           x:9 | x:12 | -:9 x:3 | -:6 x | - x | - x | - x | -:3 x:9"),
+        ]),
+        // MIDI bars 713 to 728.
+        Part::new(
+            "The Moor's tune, cor anglais 2",
+            "G#3:11 -:1 | -:6 D#4 | D#4 C#4:3 B3 | C#4:6 B3 | A#3 G#3 | A#3 B3 | C#4 B3 | A#3:3 \
+             G#3 F#3:6 | G#3:12 | _:3 - B3:6 | A#3:3 G#3 F#3:6 | G#3:12 | _:6 D#4 | C#4 B3:3 A#3 \
+             | G#3 A#3 G#3 F#3 | -:12",
+            "",
+        )
+        .with_left(
+            "-:2 F#5 D#5 B4 F#4 D#4:1 - | -:12 | - | -:6 B1 | - G#2 | G#1 B2 | C#2 B2 | -:3 G#1 \
+             -:6 | -:12 | -:2 F#5 D#5 B4 F#4 D#4:1 - | -:3 G#1 -:6 | - G#2 | G#1 - | C#2 B2 | \
+             G#1 G#3 | -:12 & -:4 D#4 D#4:2 - | B3:4 -:8 | B3:4 -:8 | B3:4 -:8 | B3:4 -:8 | B3:4 \
+             -:8 | A#3:4 -:8 | -:12 | - | - | - | - | - | - | - | - & B3+F#4:4 B4:2 - B4:4 | - \
+             D#4+B4 D#4+B4 | - D#4+B4 D#4+B4 | - D#4+B4 D#4+B4 | - D#4+B4 D#4+B4 | - D#4+B4 \
+             D#4+B4 | - C#4+A#4 C#4+G#4+A#4+E5 | A#3+A#4+F#5 C#4+A#4+B4+G#5 C#4+A#4+C#5 | \
+             B3+D#5:2 D#4+B4+D#5 B3+D#5 D#4+B4+D#5 B3+D#5 D#4+B4+D#5 | B3+D#5:4 -:8 | -:12 | - | \
+             - | - | - | - & D#5+B5:2 -:6 D#5+F#5:2 - | -:3 D6:1 F#5+D#6:2 -:1 D6 F#5+D#6:2 -:1 \
+             D6 | F#5+D#6:2 -:6 D#5+F#5:2 - | -:3 D6:1 F#5+D#6:2 -:1 D6 F#5+D#6:2 -:1 D6 | \
+             F#5+D#6:2 -:6 D#5+F#5:2 - | -:3 C6:1 E5+C#6:2 -:1 D6 F#5+D#6:2 -:1 D#6 | G#5+E6:4 - \
+             G#5+F6 | A#5+F#6 B5+G#6 A#5+C#6+A#6 | B5+D#6+B6:2 B5+D#6+B6 B5+D#6+B6 B5+D#6+B6 \
+             B5+D#6+B6 B5+D#6+B6 | B5+D#6+B6:1 -:11 | -:12 | - | - | - | - | -",
+        )
+        .in_key(GSharp, NaturalMinor)
+        .played_by(&[(gm::ENGLISH_HORN, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:12 | - | -:6 x | -:12 | - | - | - | - | x | - | - | x | - | - | - | \
+                          -"),
+            (Drum::Crash, "x:12 | - | -:9 x:3 | -:6 x | - x | - x | - x | -:3 x:9 | x:12 | -:6 x \
+                           | -:3 x:9 | x:12 | - | - | -:9 x:3 | -:6 x"),
+        ]),
+        // MIDI bar 729.
+        Part::new(
+            "Horns",
+            "-:3 A4:1 C#5:8",
+            "",
+        )
+        .with_left(
+            "-:3 D4+D5:1 C#4+G#4:2 -:6 & -:4 F5 -",
+        )
+        .with_tempo(&[tempo(0, 138)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FRENCH_HORN, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bar 730.
+        Part::new(
+            "Horns, bar 2",
+            "-:3 A4:1 C#5:3 A4:1 C#5:3 -:2",
+            "",
+        )
+        .with_left(
+            "-:3 D4:1 C#4:3 D4:1 C#4:3 -:2 & -:3 D5:1 G#4:3 D5:1 G#4:3 -:2 & -:4 C#5+F5 F5:3 -:1 \
+             D4+A4+D5",
+        )
+        .in_time(THIRTEEN_SIXTEEN)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FRENCH_HORN, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 731 to 732.
+        Part::new(
+            "Horns, bar 3",
+            "(3 C#5:2 C5 B4 B4 -:6 | (3 A4:2 G4 F#4 F#4 -:6",
+            "",
+        )
+        .with_left(
+            "(3 C#4:2 C4 B3 B3+B4:8 | (3 A3:2 G3 F#3 F#3+F#4:8 & (3 G#4:1 D4+A4+D5 F4 (3 \
+             C#4+F#4+C#5 F4 C#4+F#4+C#5 F4:2. -:6 | (3 E4:1 G#3+Eb4+G#4 C4 (3 G#3+Eb4+G#4 C4 \
+             G#3+A3+C#4+G#4 C4 -:7",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FRENCH_HORN, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 733 to 734.
+        Part::new(
+            "Pizzicato cellos",
+            "G#2:2 G#3 G#2 G#3 -:4 | - A3:2 A2 -:4",
+            "",
+        )
+        .with_tempo(&[tempo(0, 80)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::PIZZICATO_STRINGS, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bar 735.
+        Part::new(
+            "Pizzicato cellos, bar 3",
+            "Bb2:2 Bb3 Bb3 Bb2 Bb2 Bb3 -:4",
+            "",
+        )
+        .in_time(COMMON)
+        .with_tempo(&[glide(2, 61, 9), tempo(12, 80)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::PIZZICATO_STRINGS, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 736 to 750.
+        Part::new(
+            "Waltz again",
+            "Eb4:2 G4 C5:6 G4:2 | G4 Bb4 Ab4:1 -:3 Ab4:1 -:3 | Ab5:2 D6 Ab6:6 D6:2 | D6 F6 Eb5:1 \
+             -:3 Eb5:1 -:3 | Eb5:2 G5 C6:6 G5:2 | G5 Bb5 Ab4:1 -:3 Ab4:1 -:3 | Ab4:2 D5 Ab5 F5 \
+             D5 Ab4 | G4 Bb4 G4:4 Eb4:1 Eb4 F4 F4 | Eb4 Eb4 G4 G4 C5 C5 C5 C5 C5 C5 G4 G4 | G4 \
+             G4 Bb4 Bb4 Ab4 Ab4 Ab4 Ab4 Ab4 Ab4 Ab4 Ab4 | Ab4:2 D5 Ab5:6 D5:2 | D5 F5 Eb5 Bb4 G4 \
+             Bb4 | (3 Eb4:1 Eb4 Eb4 (3 G4 G4 G4 (3 C5 C5 C5 (3 C5 C5 C5 (3 C5 C5 C5 (3 G4 G4 G4 \
+             | (3 G4 G4 G4 (3 Bb4 Bb4 Bb4 (3 Ab4 Ab4 Ab4 (3 Ab4 Ab4 Ab4 (3 Ab4 Ab4 Ab4 (3 Ab4 \
+             Ab4 Ab4 | (3 Ab4 Ab5 Ab5 (3 D5 D6 D6 (3 Ab5 Ab6 Ab6 (3 F5 F6 F6 (3 C5 Eb6 Eb6 (3 D5 \
+             _ -",
+            "",
+        )
+        .with_left(
+            "Eb2:4 -:6 Bb2:2 | Bb2 Bb3 -:6 Bb3:2 | Bb3:1 - Bb2:2 Bb2 Bb3 -:4 | Eb2 -:2 Bb2 Bb2 - \
+             | Eb2:4 -:6 Bb2:2 | Bb2 Bb3 -:6 Bb3:2 | Bb3 Bb2 Bb2 Bb3 -:4 | Eb2 -:2 Bb2 Bb2 - | \
+             Eb2:4 - Eb2 | - Eb2 - | Eb2 - Eb2 | - Eb2 - | Eb2 - Eb2 | - Eb2 - | Eb2 - Eb2 & \
+             Bb3:2 Bb2 Bb2 Bb3 -:4 | Eb2 -:2 Bb2 Bb2 - | Eb2:4 -:6 Bb2:2 | Bb2 Bb3 -:6 Bb3:2 | \
+             Bb3 Bb2 Bb2 Bb3 -:4 | Eb2 -:2 Bb2 Bb2 - | Eb2:4 -:6 Bb2:2 | Bb2 Bb3 -:6 Bb3:2 | Bb3 \
+             Bb2+Bb3 Bb2 Bb3 - Bb2+Bb3 | Bb2 Bb3 - Bb2+Bb3 Bb2 Bb3 | Bb3 Bb2+Bb3 Bb2 Bb3 - \
+             Bb2+Bb3 | Bb2 Bb3 - Bb2+Bb3 Bb2 Bb3 | Bb3 Bb2+Bb3 Bb2 Bb3 - Bb2+Bb3 | Bb2 Bb3 - \
+             Bb2+Bb3 Bb2 Bb3 | Bb3:1 - Bb2:2 Bb2+D4:1 - Bb3:2 D4:1 - Bb2+Bb3:2 & -:12 | - | - | \
+             - | - | - | - | - | -:4 C#4:1 C#4:7 | -:2 G3:1 G3 F#3 F#3:7 | (3 G3:1 _ C4 (3 _ F#3 \
+             _ Ab3:8 | -:2 D4:1 D4 C#4 C#4:7 | -:4 C#4:1 C#4:7 | -:2 G3+Bb4:1 G3 F#3 F#3:7 | (3 \
+             G3:1 _ Bb3 (3 _ F#3 _ Ab3:6 -:2 & -:12 | - | - | - | - | - | - | - | (3 -:1 Eb4 Eb4 \
+             -:2 Bb3+Eb4 - C4+G4:4 | _ C4+G4 - | G4 Bb3+D4:2 - C4+G4:4 | _ C4+G4 - | C4+G4 - \
+             C4+G4 | _ C4+G4 - | C4+G4 - Bb3+C4+Eb4+G4:2 - & -:12 | -:2 G3:1 G3 F#3 F#3:5 -:2 | \
+             (3 G3 Bb3 F#3 Ab3:8 | -:12 | - | -:2 G3:1 G3 F#3 F#3:7 | (3 G3:2 C4 F#3 Ab3:8 | \
+             -:12 | -:2 Bb4:4 Bb4 Bb4:2 | _ Bb4:4 Bb4 Bb4:2 | _ Bb4:4 Bb4 Bb4:2 | - Bb4 (3 -:1 \
+             Eb5 Eb5 (3 Eb5 Eb5 Eb5 (3 Eb5 Eb5 Eb5 (3 Eb5 Eb5 Eb5 | -:2 Bb4 - Bb4 - Bb4 | -:6 \
+             Bb4:2 - Bb4 | - Bb4 - Bb4 - Ab3+Bb4:1 - & C4:4 Bb3+Eb4:2. - Bb3+Eb4. - | C4:4 \
+             Bb3+D4:2. - Bb3+D4. - | C4:4 Bb3+D4:2. - Bb3+D4. - | C4:4 Bb3+Eb4:2. - Bb3+Eb4. - | \
+             C4:4 Bb3+Eb4:2. - Bb3+Eb4. - | C4:4 Bb3+D4:2. - Bb3+D4. - | C4:1 -:3 Bb3+D4:2. - \
+             Bb3+D4. - | C4:4 Bb3+Eb4:2. - Bb3+Eb4. - | C4+G4:4 (3 -:1 C5 C5 (3 - C5 C5 \
+             Bb3+Eb4:2 - | -:4 Bb3+D4:2 - Bb3+D4 - | (3 C4:1 _ Ab4 (3 - - D5 (3 - - Ab5 (3 _ - \
+             Ab5 (3 _ Ab6 Ab5 (3 - D6 D5 | (3 _ D6 D5 (3 - F6 F5 -:8 | -:12 | - | - & -:12 | - | \
+             - | - | - | - | - | - | -:8 (3 -:1 C5 C5 -:2 | -:4 Ab4:8 | (3 _:1 Ab5 - (3 - D6 - \
+             (3 - Ab6 - (3 - Ab6 - Bb3+D4:2 - | -:4 Bb3+Eb4:2 - Bb3+Eb4 - | -:4 Bb3+Eb4:2 - \
+             Bb3+Eb4 - | -:4 Bb3+D4:2 - Bb3+D4 - | -:4 Bb3+Eb4:2 -:6",
+        )
+        .in_key(DSharp, Major)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 751 to 758.
+        Part::new(
+            "Petrushka comes",
+            "-:16 | -:12 (3 F#3:2 B3 D4 | F#4:10 -:6 | -:4 (3 F#3:2 B3 D4 F#4:8 | _:2 - (3 F#3 \
+             B3 D4 F#4:4 (3 F#4:2 B4 D5 | F#5:8 (3 E5:2 C#5 A4 E4:4 | _:8 -:4 (3 C#5:2 A4 E4 | \
+             A4:1 -:3 (3 C#5:2 A4 E4 A4:1 -:3 (3 C#5:2 A4 E4",
+            "",
+        )
+        .with_left(
+            "-:1 B3+D4+F#4 - B3+D4+F#4 - B3+D4+F#4 - B3+D4+F#4 - B3+D4+F#4 - B3+D4+F#4 - \
+             B3+D4+F#4 - B3+D4+F#4 | Eb4 B3+D4+F#4 Eb4 B3+D4+F#4 Eb4 B3+D4+F#4 Eb4 B3+D4+F#4 Bb3 \
+             B3+D4+F#4 Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 | Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 \
+             Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 G4 B3+D4+F#4 G4 B3+D4+F#4 G4 B3+D4+F#4 G4 B3+D4+F#4 | \
+             Bb3+G4 B3+D4+F#4 Bb3+G4 B3+D4+F#4 Bb3+G4 B3+D4+F#4 Bb3+G4 B3+D4+F#4 Bb3 B3+D4+F#4 \
+             Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 | Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 Bb3 \
+             B3+D4+F#4 Bb3 B3+D4+F#4 Bb3+Eb4 B3+D4+F#4 Bb3+Eb4 B3+D4+F#4 Bb3+Eb4 B3+D4+F#4 \
+             Bb3+Eb4 B3+D4+F#4 | Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 Bb3 B3+D4+F#4 G4 \
+             A3+C#4+E4 G4 A3+C#4+E4 G4 A3+C#4+E4 G4 A3+C#4+E4 | Bb3+G4 A3+C#4+E4 Bb3+G4 \
+             A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 \
+             Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 | Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+G4 \
+             A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+G4 A3+C#4+E4 \
+             Bb3+G4 A3+C#4+E4 & Bb3:16 | _:8 Eb4 | _:16 | _:4 Eb4:12 | _:8 - | Eb4:16 | _ | _ & \
+             Eb4+G4:16 | G4 | _:8 Bb3 | - G4 | _ G4 | _ Bb3 | - (3 A4:2 Bb4 Eb5 -:4 | (3 A4:2 \
+             Bb4 Eb5 -:4 (3 A4:2 Bb4 Eb5 -:4",
+        )
+        .in_time(COMMON)
+        .with_tempo(&[tempo(0, 160)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 759 to 760.
+        Part::new(
+            "Petrushka comes, bar 9",
+            "G4:1 -:11 | -:2 A3:1 Bb3 Bb3 Eb4 C#4 - (3 C#4:2 A3 E3",
+            "",
+        )
+        .with_left(
+            "-:12 | C#4:1 -:3 Bb3:8 & Bb3+Eb4:1 A3+C#4+E4 Bb3+G4 A3+C#4+E4 Bb3+Eb4+G4 A3+C#4 \
+             Bb3+Eb4+G4 A3+C#4+E4 Bb3+Eb4 A3+C#4+E4 G4 A3+C#4+E4 | Bb3 A3+C#4+E4 Bb3 A3+C#4+E4 \
+             Eb4 A3+C#4+E4 Eb4 A3+C#4+E4 Eb4 A3+C#4+E4 Eb4 A3+C#4+E4 & -:2 Eb4 E4 A4 (3 G4 Eb4 \
+             Bb3 | Eb4:4 -:8 & F4:12 | G4",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bar 761.
+        Part::new(
+            "Petrushka comes, bar 11",
+            "(3 G3:2. _ A3 (3 G3. _ Bb2",
+            "",
+        )
+        .with_left(
+            "(3 Eb3:2 E3. _ (3 - Eb3 - & Bb3+Eb4+G4:1 A3+C#4+E4 Bb3+Eb4+G4 A3+C#4+E4 Bb3+Eb4+G4 \
+             A3+C#4+E4 Bb3+Eb4+G4 A3+C#4+E4",
+        )
+        .in_time(TWO_FOUR)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 762 to 763.
+        Part::new(
+            "Flutes and clarinets",
+            "-:3 Eb6:1 G5 -:2 Eb6:1 G5 -:6 Eb6:1 | (3 G5 - - (3 B5 D6 B5 G5 -:6 Eb6:1 G5 -:2 \
+             Eb6:1",
+            "",
+        )
+        .with_left(
+            "-:12 (3 A3:2 Bb3 - | (3 - A3 - -:4 Bb3:8 & Bb3+Eb4+G4:1 A3+C#4+E4 Bb3+Eb4+G4 \
+             A3+C#4+E4 Bb3+Eb4 A3+C#4+E4 Bb3+Eb4+G4 A3+C#4+E4 Bb3 A3+C#4+E4 Bb3+G4 A3+C#4+E4 \
+             Bb3+G4 C#4+E4 G4 A3+C#4+E4 | Bb3+Eb4 E4 Bb3+Eb4+G4 A3+C#4+E4 Bb3+Eb4 A3+C#4+E4 \
+             Bb3+Eb4+G4 A3+C#4+E4 Eb4+G4 A3+C#4+E4 Eb4+G4 A3+C#4 Eb4 A3+C#4+E4 Eb4+G4 A3+C#4+E4 \
+             & C#3:1 -:7 Eb4:8 | (3 C#4:2 - - (3 A4 Bb4 Eb5 (3 C#5 A4 E4 -:4 & -:2 (3 -:1 - \
+             B4+F5 G4+C#5 -:2 B4+F5:1 G4+C#5 -:5 (3 -:1 - B4+F5 | (3 G4+C#5 - - (3 - G5. _ _ -:5 \
+             (3 -:1 - B5. (3 _ _ - -:2 & -:2 (3 -:1 - B5. _:2 -:1 B5:2. -:5 (3 -:1 - B5. | (3 _ \
+             _ - (3 G5+D6 E5+B5 C5 G4+C#5 -:5 (3 -:1 - B4+F5 (3 G4+C#5 - - (3 - - B4+Eb5+B5 & \
+             -:3 E5+B6:1 (3 G5 _ - (3 - - E5+Eb6+B6 -:7 E5+B6:1 | (3 G5 _ - (3 - - E5+Eb6+B6 -:6 \
+             (3 -:1 - E5+Eb6+B6 -:3 E5+B6:1",
+        )
+        .in_time(COMMON)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 764 to 768.
+        Part::new(
+            "The fight",
+            "G3:2 B3 D4 G4 E4 C4 | G3 B3 D4 G4 E4 C4 | G3 B3 D4 G4 E4 C4 | G4 E4 C4 E4 C4 G3 | \
+             G3 B3 D4 G4 G3 B3:1 -",
+            "",
+        )
+        .with_left(
+            "F#2+E4:1 -:11 | -:12 | - | - | - & -:3 B3:1 Bb3:2 Eb4 Bb3+D4 F#3 | -:1 G3 -:10 | \
+             -:1 G3 -:10 | -:11 G3:1. | _ G3 -:5 G4:1 - G3 A3:2 & F#3+C#5+G5:1 - Bb3:2 C#4 F#4 \
+             C#4 Bb3 | F#3 Bb3 C#4 F#4 C#4 Bb3 | F#3 Bb3 C#4 F#4 C#4 Bb3 | F#4 C#4 Bb3 F#4 C#4 \
+             Bb3 | F#3 Bb3 C#4 F#4 F#3 Bb3:1 - & -:1 G3 F#3:2 -:1 D4:2. G4:1 - E4 - C4. | _ -:2 \
+             B3:1 - D4:2. G4:1 - E4 - C4. | _ -:2 B3:1 - D4:2. G4:1 - E4 - C4. | _ G4 - E4 - \
+             C4:2. E4:1 - C4 -:2 | -:3 B3:2. D4:1 F4:2 F3 -:1 B3 & G4:1 -:11 | -:12 | - | - | -",
+        )
+        .in_time(SIX_EIGHT)
+        .with_tempo(&[tempo(0, 150)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::BASSOON, 0)])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 769 to 772.
+        Part::new(
+            "Clarinet",
+            "D4:2 G4 B4 C5 G4 E4:1 - | -:6 C5:2 G4 E4:1 - | -:6 C5:2 G4 E4 | E5 C5 G4 C5 G4 E4:1 \
+             -",
+            "",
+        )
+        .with_left(
+            "C#4:2 F#4 Bb4 C#5 Bb4 F#4:1 - | Bb4+C5:2 F#4+G4 C#4+E4:1 - C#5:2 Bb4 F#4:1 - | \
+             Bb4+C5:2 F#4+G4 C#4+E4:1 - C#5:2 Bb4 F#4 | C#5 Bb4 F#4 C#5 Bb4 F#4:1 - & -:1 D4 - \
+             G4 - B4 - C5 - G4 E4:2 | -:5 E4:1 - C5 - G4 E4:2 | -:5 E4:1 - C5 - G4 - E4 | - E5 - \
+             C#5 - E4 - C5 - G4 E4:2",
+        )
+        .in_time(SIX_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::CLARINET, 0)]),
+        // MIDI bars 773 to 778.
+        Part::new(
+            "Petrushka's call",
+            "-:2 F#4:1 B4:2 D5:1 F#5 -:5 | F#4:1 B4 D5 F#5:2 -:7 | C5:2 C#5:1 F#5:2 E5:1 C5 -:5 \
+             | E5:1 C#5 G4 Bb4:2 -:7 | -:12 | -:6 C5:1 C#5 F#5 E5:2 -:1",
+            "",
+        )
+        .with_left(
+            "-:12 | - | - | -:3 G2 G2:6 | -:12 | - & -:12 | - | - | -:3 G3 -:6 | G3:1 - C4 C#4 - \
+             Bb3 -:6 | -:12 & -:12 | - | -:7 G4:2 Bb4:1 -:2 | -:3 C#4:2 C4+G4:1 G3+C#4+F#4+F#5 \
+             -:5 | -:1 F#4 -:2 E4:1 - G4 -:4 Bb4:1 | - F#4+D5 -:9 Bb4+B4:1 & G4:1 F#4 G4+B4 \
+             F#4+G4 F#4+G4+D5 F#4+G4 F#4+G4+F#5+G5 F#4+G4 F#4+G4+E5 F#4+G4 F#4+G4+C5 F#4+G4 | \
+             F#4+G4 F#4 F#4+G4+B4 F#4+G4 F#4+G4+D5 F#4+G4 F#4+G4+G5 F#4+G4 F#4+G4+E5 F#4+G4 \
+             F#4+G4+C5 F#4+G4 | G4 F#4 F#4+G4+B4 F#4+G4 F#4+G4+D5 F#4+G4 F#4+G4+G5 F#4 F#4+E5 \
+             F#4+G4 F#4+G4+C5 F#4+G4 | F#4+G4+E5 F#4+G4 F#4+C5 G4 G4 F#4 G4+G5 F#4+G4 F#4+G4+E5 \
+             F#4+G4 F#4+G4+C5 G4 | G4 G4 F#4+G4+Bb4+C5 F#4+G4+Bb4+C5 F#3+G4+Bb4+C5+C#5+E5 \
+             F#3+Bb4+C5+C#5+E5 Bb3+C5+C#5+E5+F#5+G5 Bb3+C#5+E5+G5 F#3+F#4+G4 F#4+G4 \
+             F#4+G4+Bb4+B4 F#4+G4+B4 | F#3+Bb4+B4+D5 F#3+Bb4+B4+C#5 F#3+F#4+G5 F#4+G4 - \
+             F#4+G4+Bb4+B4 - F#3+E4+G4+Bb4+C5 - E4+F#4+G4+Bb4 - E4+F#4 & -:12 | - | - | -:11 \
+             F#4:1. | _ -:6 C5:2. -:3 | -:1 G4:2. -:1 F#4+G4+Bb4+B5 - F#3+E4+Bb4+C#5+C6+C#6 - \
+             F#3+E4+F#4+G4+Bb4+G5+Bb5 - E4+F#4+F#5 - & F#4:1 G4 Bb4 - C#5 -:2 G5:1 C#5 E5 Bb4 C5 \
+             | - G4 Bb4 B4 C#5 D5 F#5 G5 C#5 E5 Bb4 C5 | F#4 G4 Bb4 B4 C#5 D5 F#5 G5 C#5 E5 Bb4 \
+             C5 | F#5 E5 C4+C#5 F#4+C5:2. -:1 C4+C5:2. - Bb4:1 C5 | -:8 B4:1 C#5 D5 - | \
+             G4+C#5+G5 -:5 G4+F#5:1 - B4+C5 C#5 C#5+E5 - & -:12 | - | - | -:4 Bb4:1 -:2 G5:1 C#5 \
+             E5 -:2 | -:7 F#5:1 -:4 | -:2 D5+F#5:1 Bb4+A5 B4+Bb5 C#5+G5 - F#5+G5 -:4",
+        )
+        .in_time(SIX_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 779 to 783.
+        Part::new(
+            "Flutes",
+            "-:6 G5:1 F#6 C6 C#6 E6 Bb5 | G6 C#6 E6 F#6 C6 Bb6 -:6 | G6:1 C#6 E6 F#6 C6 Bb6 -:6 \
+             | Bb5:1 E5 C#6 G5 F#6 C6 Bb5:2. -:4 | Bb5:1 C6 C#6 E6 F#6 G6 C#6 C6 F#6 E6 Bb6 G6",
+            "",
+        )
+        .with_left(
+            "-:4 C5:1 - Bb4 -:3 (3 -:1 C5 _ | C#5 -:3 G4:1 Bb4 C5 -:3 C5:1 G4 | Bb4 - C5 Bb4 F#4 \
+             C#4 E4 -:5 | -:8 G4:1 -:3 | G4:2 - F#4:1 C#4 E4 -:5 & C#3:1 C#3+C5 C#3 G4 E4 E4 \
+             F#3+C5 F#3+C5 F#3+G4 G4 E4 E4 | C5 C5 C5 - C5 C5 -:2 C5:1 C5 - C5 | C5 C5 -:2 C5:1 \
+             C5 C5 C5 C5 C5 C5 C5 | C5 -:3 C5:1 C5 C5 - C5 C5 C5 C5 | C5 C5 - C5 C5 C5 C5 - C5 \
+             C5 C5 C5 & -:6 F#4:1 G4 C5 Bb4 F#4 C#4 | F#4 G4 Bb4 C5 C#5 F#4+E5 G4+F#5+G5 C5+F#6 \
+             Bb4+C6 F#4+C#6 C#4+E6 E4+Bb5 | -:3 C5:1 C#5 E5 F#5+E6 Bb5 C6 C#6 G5 F#6 | -:3 Bb3:1 \
+             (3 _ _ C4 A3+C#5 -:5 | C#5:1 - C4+E5+F#5 Bb3+F#5+G5 - C#5+E5 C#5+E5 -:4 F#5+G5:1 & \
+             (3 C5:1 - G4 - E5:2 -:7 | -:1 F#5 E5 -:6 E5:1 -:2 | -:12 | -:2 C5:1 C#5 - F#5 E5 C5 \
+             - Bb4:2 -:1 | -:2 C5:1 Bb4 -:8 & F#4+C#5+G5:1 D5+C#6 G4+F#5+C6 C5+A5+Bb5 Bb5+E6 \
+             Bb4+F#5+G5 F#5:2. -:4 | E4:3 -:9 | F#4:1 G4 Bb4 -:9 | C#5:1 C5 C#4+Bb4 C5 (3 C#5 E5 \
+             _ - G5 C#6 C6 F#6 E6 | _ E5+C#6 -:2 F#5+G5:1 -:2 C5+C#6:1 F#5+G5 E5+Bb5 Bb5+C6 -",
+        )
+        .in_time(SIX_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bar 784.
+        Part::new(
+            "The chase",
+            "-:2 Bb6 Bb6 Bb6. - Bb6:1 -",
+            "",
+        )
+        .with_left(
+            "B1:2 -:10 & B2:2 -:10 & F2:2 -:10 & -:2 B3 B3 B3 - B3 & -:2 (3 F#4:1 F4 _ -:8 & -:2 \
+             B4. (3 F#4+Bb4:1 F4+B4 _ (3 F#4+Bb4 F4+B4. _ (3 _ - - (3 F#4+Bb4 F4+B4 - & (3 -:1 - \
+             F#4+Bb4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ \
+             F#4+F#5+Bb5+Bb6 G5+F6:2. (3 -:1 - F#4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ \
+             F#4+Bb4+F#5+Bb5+Bb6",
+        )
+        .with_tempo(&[tempo(0, 100)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Kick, "x:12"),
+        ])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 785.
+        Part::new(
+            "The chase, bar 2",
+            "B6:2 Bb6 Bb6:1 -",
+            "",
+        )
+        .with_left(
+            "B3:2 B3 - & (3 F#4:1 F4 _ (3 F#4 F4 _ -:2 & B4:2 B4 F4+G4+B4+F5 & (3 \
+             G4+F5+G5+B5+F6:1 _ F#4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 \
+             B3+F#4+G5+B5+F6 -",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 786.
+        Part::new(
+            "Trumpet call",
+            "-:2 A4 A4:1 -",
+            "",
+        )
+        .with_left(
+            "-:2 D3 D3 & (3 -:1 - B3+B4 (3 A3 _ G4 A3+Eb4+A4:2 & -:1 G4 B3+Eb4+B4:2 B3+F#4+B4:1 \
+             -",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 787.
+        Part::new(
+            "The chase 2",
+            "-:2 Bb6 Bb6:1 -",
+            "",
+        )
+        .with_left(
+            "-:2 B3 - & -:2 (3 F#4:1 F4 _ -:2 & -:5 F#4:1 & -:2 B4. B3+G4+Bb4+B5+F6:1 - & -:4 \
+             F4+B4+F5:2 & (3 -:1 - F#4+Bb4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 -:2",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 788.
+        Part::new(
+            "Trumpet call 2",
+            "A4:2 A4 A4:1 -",
+            "",
+        )
+        .with_left(
+            "D3:2 D3+A3+Eb4 D3 & A3:2 - (3 G4:1 A3+Eb4+A4 B3+G4+B4 & B3+Eb4+B4:2 B3+G4+B4 \
+             B3+F#4+B4:1 F4",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 789.
+        Part::new(
+            "The chase 3",
+            "-:6",
+            "",
+        )
+        .with_left(
+            "D3:2 -:4 & A3+B3+Eb4+A4+B4:1 -:5 & -:4 (3 -:1 - F#4+Bb4+F#5+Bb5",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 790.
+        Part::new(
+            "The chase 3, bar 2",
+            "B6:2 Bb6 Bb6 Bb6:1 -",
+            "",
+        )
+        .with_left(
+            "B3:2 B3 B3 B3 & (3 F#4:1 F4 _ (3 F#4 F4 _ (3 F#4 F4 _ (3 - F4 - & B4:2 B4 B4 \
+             G4+B4+F5 & (3 G4+F5+G5+B5+F6:1 _ F#4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ \
+             F#4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 (3 F#4+G5+B5+F6 - -",
+        )
+        .in_time(FOUR_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 791.
+        Part::new(
+            "The chase 3, bar 3",
+            "(3 -:1 - Bb6 (3 B6 - - -:2",
+            "",
+        )
+        .with_left(
+            "-:2 B3 - & -:2 G4+B4+F5 - & (3 -:1 - F#4+Bb4+F#5+Bb5 (3 F#4+G5+B5+F6 F4 - -:2",
+        )
+        .in_time(THREE_EIGHT)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 792 to 793.
+        Part::new(
+            "The chase 3, bar 4",
+            "-:2 Bb6 Bb6 Bb6 | Bb6 Bb6 Bb6:1 -:3",
+            "",
+        )
+        .with_left(
+            "B2:2 -:6 | -:8 & -:2 B3 B3 B3 | B3 B3 -:4 & (3 B1:1 - - -:2 (3 F4+B4:1 - - -:2 | B4 \
+             Bb4+B4 F4+Bb4+B4:1 -:3 & F2:2 -:6 | -:4 G4+F5:2 - & -:2 (3 F#4:1 F4 _ -:4 | (3 \
+             F#4:1 F4 _ (3 F#4 F4 _ -:4 & -:2 B4. (3 F#4+Bb4:1 F4+B4 _ (3 F#4+Bb4 F4+B4 - | -:8 \
+             & (3 -:1 - F#4+Bb4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 (3 \
+             G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ F#4+Bb4+F#5+Bb5+Bb6 | (3 \
+             G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 (3 G4+F5+G5+B5+F6 _ F#4+F#5+Bb5+Bb6 \
+             B3+F#4+G5+B5+F6 -:3",
+        )
+        .in_time(FOUR_EIGHT)
+        .with_tempo(&[tempo(14, 126)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Kick, "x:8 | -"),
+        ])
+        .marked(Dynamic::Fortissimo),
+    ],
+    form: &["Drum roll", "The Moor", "The Moor, bar 2", "Flourish", "Piano and violins", "Piano and violins, bar 2", "Trombones", "Trombones, bar 3", "Timpani and strings", "Timpani and strings, bar 2", "Timpani and strings, bar 3", "Piccolo", "Bassoon", "Bassoon, bar 2", "Bassoon", "The Moor's tune", "Cor anglais", "Bassoons", "Bassoons held", "Cor anglais again", "Bassoons again", "Horn", "Piccolo flourish", "Piccolo flourish, bar 2", "Trumpets", "Rush", "Oboe", "Oboe, bar 2", "Trumpets again", "Oboes", "Trumpet", "The Moor's tune, bassoon", "Side drum", "Dance of the Ballerina", "Strings", "Clarinets", "Flute", "Flute, bar 2", "Waltz", "The Moor's waltz", "The Moor's tune, cor anglais", "The Moor's tune, cor anglais 2", "Horns", "Horns, bar 2", "Horns, bar 3", "Pizzicato cellos", "Pizzicato cellos, bar 3", "Waltz again", "Petrushka comes", "Petrushka comes, bar 9", "Petrushka comes, bar 11", "Flutes and clarinets", "The fight", "Clarinet", "Petrushka's call", "Flutes", "The chase", "The chase, bar 2", "Trumpet call", "The chase 2", "Trumpet call 2", "The chase 3", "The chase 3, bar 2", "The chase 3, bar 3", "The chase 3, bar 4"],
+    drums_from: 0,
+    about: "The third tableau of Petrushka (1911, revised 1947): the Moor's room, a gaudy \
+            chamber in the Charlatan's booth. A side drum roll links it to the second tableau. \
+            The opening is hurled out fortissimo: the whole orchestra hammers the fifth G sharp \
+            and D sharp, each beat ending on A and E, half a step above, in G sharp Phrygian \
+            (the minor mode whose second step is a half step above the tonic); after a quick \
+            flourish come an ostinato of F sharp minor and G major (F sharp Phrygian) on the \
+            piano and strings and the trombones' chromatic descent. In a slow, whole-tone haze \
+            over the timpani the Moor lies on his couch playing with a coconut. His tune, on the \
+            clarinet and bass clarinet two octaves apart, is in B flat Lydian (the major scale \
+            with a raised fourth, E natural) over a pizzicato pedal on B flat, with cymbal and \
+            bass drum. The cor anglais laments over a bass of E, C and D; he cannot split the \
+            coconut, and the music grows frantic in bars of 2/8, 3/8 and 4/8, keeping to no key; \
+            he takes it for a god and bows to it, and the bassoons take up his tune again. A \
+            drum roll: the Ballerina enters. Her dance is a trumpet tune in F major (a cornet in \
+            1911) over the side drum alone. Then she and the Moor waltz to two waltzes by Joseph \
+            Lanner, in E flat major, the trumpet and the flute over a bassoon's oom-pah; the \
+            Moor joins in, faster, in B major, the flutes trilling over the harp while the cor \
+            anglais and contrabassoon plod through his tune, in B major and then G sharp minor; \
+            the waltz comes back in E flat. Petrushka bursts in: his trumpet call in B minor \
+            sounds against chords of E flat major, and in the fight the Moor's C major and G \
+            major stand against F sharp in the bass, the tritone of Petrushka's chord again. \
+            These bars, like the Moor's frantic ones, are in two keys at once or in none, and \
+            are marked chromatic. The tableau ends on the chase, a shrill trill of B flat and B \
+            over the tritone B and F, cut by the trumpet's A over E flat, as the Moor throws \
+            Petrushka out.",
+};
