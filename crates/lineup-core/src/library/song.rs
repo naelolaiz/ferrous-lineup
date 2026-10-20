@@ -754,6 +754,7 @@ pub static SONGS: &[Song] = &[
     pop::ALOUETTE,
     pop::VOGELFAENGER,
     pop::SURPRISE_SYMPHONY,
+    pop::BIG_BANG_THEORY,
     rock::DRUNKEN_SAILOR,
     rock::BELLA_CIAO,
     rock::BEETHOVENS_FIFTH,
