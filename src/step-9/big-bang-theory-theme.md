@@ -20,8 +20,8 @@ Open **File > Demos > Songs > Pop > The Big Bang Theory theme** (or type
 - The **chord sheet** shows four chords going round, two beats each:
   Cadd9, D, G, Em7.
 - In the **last bar** the band stops dead on beat 1, strikes G once on
-  beat 2, short, with a crash cymbal, and is silent again. After it
-  comes the bar every demo ends with, the home chord held.
+  beat 2, short, with a crash cymbal, and is silent again. The song
+  ends there: no bar of the home chord held comes after it.
 
 To read the tempos instead of listening for them, trace the demo:
 
@@ -104,6 +104,40 @@ a crash (see [Shots, holds, rests and pushes](stops.md)). So: silence on
 beat 1, G struck on beat 2, silence to the end. The first beat is written
 `I...` and not `V...` because the tune sings G there: the harmony is
 already home, even with nobody playing it.
+
+### Ending on the stop
+
+Most song demos end with one bar the score does not have: the home
+chord held, with a crash, so a chart that just runs out still sounds
+finished. The genres that end slowly (tangos, folk songs, soul,
+classical pieces) also broaden their last bar, a small ritardando. A song whose
+chart already ends on a break (a shot, a hold or a rest) gets neither:
+the score says how the band stops, and that stop is in time. A tango's
+last "chan-chan" is the same case as this shot.
+
+`song_demo`, in
+[`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs),
+looks at the last chord of the last part's chart and skips the extra
+bar when that chord has a stop:
+
+```rust
+let stopped = song.form.last().is_some_and(|name| {
+    patterns
+        .iter()
+        .rev()
+        .find(|piece| piece.part == *name)
+        .and_then(|piece| piece.spans.last())
+        .is_some_and(|span| span.stop.is_some())
+});
+```
+
+`is_some_and` asks two things at once: is there a value, and does it
+pass the test? `song.form.last()` is `None` for a song with no form, and
+then the answer is simply `false`. The chain inside reads from the end
+of the list of patterns (`.rev()`), takes the last one made from that
+part, its last chord span, and checks whether the span carries a stop.
+Eleven demos end this way; the trace of each shows the last note where
+the score has it.
 
 ## Where the notes come from
 
