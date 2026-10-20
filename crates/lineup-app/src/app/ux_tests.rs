@@ -1965,6 +1965,27 @@ mod library_parts {
     }
 
     #[test]
+    fn applying_a_style_to_the_song_keeps_the_selected_pattern() {
+        // The band brings channels, which give every pattern new rows:
+        // the patterns are still the song's own, so "Pickup" stays
+        // selected instead of the song's last pattern.
+        let mut screen = el_choclo();
+        screen.app.set_playing(false);
+        screen.app.select_pattern(0);
+        let selected = screen.app.project.patterns()[0].name.clone();
+        *screen.app.playlist.library_parts_mut() = StyleParts::default();
+        screen.app.set_mode(PlayMode::Song);
+        screen
+            .app
+            .try_from_library(LibraryAction::Style(Style::named("Tango nuevo").unwrap()));
+        assert!(screen.app.project.band().is_some());
+        assert_eq!(
+            screen.app.project.patterns()[screen.app.pattern].name,
+            selected
+        );
+    }
+
+    #[test]
     fn the_time_box_plays_the_rhythm_picked_last() {
         let mut screen = meter_test_screen(true, true);
         *screen.app.playlist.library_parts_mut() = StyleParts::default();
