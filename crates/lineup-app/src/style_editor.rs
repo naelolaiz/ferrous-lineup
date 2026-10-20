@@ -57,6 +57,8 @@ pub enum EditorEvent {
     },
     Stop,
     StartFrom(UserStyle),
+    /// Send every MIDI Out channel to this output port, or to none.
+    ConnectMidiOutput(Option<crate::midi::Port>),
 }
 
 impl StyleEditor {
@@ -501,10 +503,16 @@ impl StyleEditor {
                 midi_channel,
             } => {
                 if let Some(state) = project.channel_mut(channel) {
-                    state.kind = ChannelKind::MidiOut {
-                        channel: midi_channel,
-                    };
+                    state.send_over_midi(midi_channel);
                 }
+            }
+            RackAction::PlayHere(channel) => {
+                if let Some(state) = project.channel_mut(channel) {
+                    state.play_here();
+                }
+            }
+            RackAction::ConnectMidiOutput(port) => {
+                events.push(EditorEvent::ConnectMidiOutput(port))
             }
             RackAction::LoadSample { channel, path } => {
                 let index = channel.or_else(|| {
