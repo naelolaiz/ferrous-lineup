@@ -8,7 +8,7 @@
 
 use std::borrow::Cow;
 
-use crate::harmony::Chord;
+use crate::harmony::{Chord, Harmony, analyze};
 use crate::meter::{Bar, TimeSignature};
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
@@ -406,6 +406,17 @@ impl Comping {
         }
     }
 
+    /// The notes of `voicing` this way of playing uses: the Alberti bass
+    /// breaks three of them (see [`three_voices`]), every other way the
+    /// whole voicing.
+    fn voiced(self, voicing: &[Note]) -> Cow<'_, [Note]> {
+        if self == Comping::Alberti {
+            Cow::Owned(three_voices(voicing))
+        } else {
+            Cow::Borrowed(voicing)
+        }
+    }
+
     /// The notes for a chord voiced as `voicing`, starting at step
     /// `start` and lasting `span` steps, in bars of `time` counted from
     /// step 0. A pattern that follows the bar ([`Comping::Aksak`]) and
@@ -430,6 +441,8 @@ impl Comping {
                 })
                 .collect();
         }
+        let voicing = self.voiced(voicing);
+        let voicing = voicing.as_ref();
         let (period, hits) = self.hits(time);
         let end = start + span;
         let origin = if self.follows_the_bar() {
@@ -466,6 +479,32 @@ impl Comping {
         }
         notes
     }
+}
+
+/// The three notes of `voicing` that a pattern breaking three voices
+/// plays, as four-part harmony leaves notes out of a bigger chord: the
+/// fifth first, then the notes above the seventh, the highest first,
+/// then the root, which the bass plays. E flat seventh voiced B flat, D
+/// flat, E flat, G is broken as D flat, E flat, G, never as B flat, D
+/// flat, E flat, which has no third. A voicing that is no chord keeps
+/// its three lowest notes.
+fn three_voices(voicing: &[Note]) -> Vec<Note> {
+    let mut kept = voicing.to_vec();
+    let Harmony::Chord { chord, .. } = analyze(voicing.iter().copied()) else {
+        kept.truncate(3);
+        return kept;
+    };
+    let tone = |note: &Note| chord.tone_of(note.pitch_class()).unwrap_or(0);
+    for drop in [5, 13, 11, 9, 1] {
+        while kept.len() > 3 {
+            let Some(at) = kept.iter().rposition(|note| tone(note) == drop) else {
+                break;
+            };
+            kept.remove(at);
+        }
+    }
+    kept.truncate(3);
+    kept
 }
 
 /// The notes of `voicing` that `voices` asks for. A voicing with no
@@ -1026,6 +1065,10 @@ impl Comping {
             return notes;
         }
         let mut struck = vec![false; harmonies.len()];
+        let voicings: Vec<Cow<[Note]>> = harmonies
+            .iter()
+            .map(|harmony| self.voiced(&harmony.voicing))
+            .collect();
         for bar in bars {
             let (period, hits) = self.hits(bar.time);
             let from = if self.follows_the_bar() {
@@ -1049,7 +1092,7 @@ impl Comping {
                     }
                     struck[index] = true;
                     let length = hit.len.min(harmony.end - at).min(bar.end() - at);
-                    for pitch in pick(&harmony.voicing, hit.what) {
+                    for pitch in pick(&voicings[index], hit.what) {
                         notes.push(NoteEvent {
                             velocity: hit.velocity,
                             ..NoteEvent::new(pitch, at, length)
