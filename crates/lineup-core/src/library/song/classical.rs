@@ -4329,3 +4329,510 @@ pub(super) const AUGURS_OF_SPRING: Song = Song {
             and horns rocking between two chords, every instrument joining it, louder each \
             time, until the dance breaks off into the next one, the Ritual of Abduction.",
 };
+
+// Source: Jun Nishio's sequence of Part I of The Rite of Spring for the Roland SC-88,
+// converted by script, checked against the full orchestral score (Russischer Musikverlag,
+// 1921, pages 28 to 37): rehearsal 37 to 48, 67 bars. Each rehearsal number is a part,
+// split where its tune passes to another instrument. The tune of each passage is the
+// melody, played by the instrument that has it: the violins' chord, the D clarinet's
+// fanfare, the bassoons' arpeggio, the trombones', the pizzicato basses', the horns' call,
+// the oboes', the piccolos', the flutes', the trumpets' chords. Everything else is the
+// accompaniment, on the strings, the timpani at their pitches. Quantised to sixteenths.
+// The dynamics come from the sequence's velocities, as in the Augurs of Spring. Where the
+// sequence differs from the score, the score is followed:
+// - the bars and meters are the score's: the sequence writes the bar of 4/8 and the bar
+//   of 5/8 at 39 as one bar of 9/8;
+// - the tempo is the score's, "Presto", a dotted quarter 132 a minute (a quarter 198),
+//   steady throughout, not the sequence's (a quarter 170, slowing down to 130 at the end
+//   of 44, then 160); the last two bars get the score's fermatas;
+// - the strings' eighth notes, which the sequence plays as pairs of sixteenths at 37, 38,
+//   40, 41 and 47, are eighth notes, and the chords of 45, which it strikes in eighth
+//   notes, are held for a dotted quarter;
+// - the D clarinet's tune at 37 is ff, the bassoons' at 38 and before 41 f, and the
+//   chords of 45 ff (fff in the score), where the sequence plays them softer.
+// Left out: the trills, which are held on their lower notes (the clarinets' and the
+// violins' at 39, the flutes' at the end), and the tremolos, held as chords of their
+// notes, as are the clarinets' sweeps at 42; the flutter-tongue of the oboes at 39, the
+// glissandos, and the bass drum.
+pub(super) const RITUAL_OF_ABDUCTION: Song = Song {
+    name: "The Rite of Spring, Ritual of Abduction",
+    origin: "Igor Stravinsky, The Rite of Spring, 1913",
+    feel: "Orchestra",
+    genre: Genre::Classical,
+    tonic: C,
+    mode: Chromatic,
+    time: NINE_EIGHT,
+    tempo: 198.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::FLUTE, gm::STRING_ENSEMBLE, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        Part::new(
+            "37",
+            "Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 | !f Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2 Eb5:2",
+            "",
+        )
+        .with_left(
+            "G4+Bb4+Db5+Eb5:18 | _:18 & \
+             !f C4+E4+G4:18 | _:18 & \
+             !f C2+C3+G3:1 -:17 | -:18 & \
+             !f C3:3 -:15 | -:3 Gb2:3 -:9 Gb2:3",
+        )
+        .in_meters(&[NINE_EIGHT, NINE_EIGHT])
+        .played_by(&[(gm::VIOLIN, 0)]),
+        Part::new(
+            "37, bar 3",
+            "-:8 A5:1 -:1 D6:1 -:1 A5:1 -:1 D6:1 -:1 E6:1 -:1 | G6:1 -:1 Gb6:1 -:1 E6:1 -:1 D6:1 -:1 A5:1 -:1 B5:1 -:1 D6:1 -:1 G6:1 -:1 Gb6:1 -:1 | E6:1 -:1 D6:1 -:1 A5:1 -:3 B5:1 -:1 D6:1 -:1 C6:1 -:1 A5:1 -:1 A5:1 -:1",
+            "",
+        )
+        .with_left(
+            "C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 | C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 | \
+             C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 C4+E4+G4+Bb4+Db5+Eb5:2 & \
+             -:8 A4:1 A4:1 D5:1 D5:1 A4:1 A4:1 D5:1 D5:1 E5:1 E5:1 | G5:1 G5:1 Gb5:1 Gb5:1 E5:1 E5:1 D5:1 D5:1 A4:1 A4:1 B4:1 B4:1 D5:1 D5:1 G5:1 G5:1 Gb5:1 Gb5:1 | \
+             E5:1 E5:1 D5:1 D5:1 A4:1 A4:1 -:2 B4:1 B4:1 D5:1 D5:1 C5:1 C5:1 A4:1 A4:1 A4:1 A4:1 & \
+             -:8 !f A5:1 -:1 D6:1 -:1 A5:1 -:1 D6:1 -:1 E6:1 -:1 | G6:1 -:1 Gb6:1 -:1 E6:1 -:1 D6:1 -:1 A5+A6:1 -:1 B5+B6:1 -:1 D6+D7:1 -:1 G6+G7:1 -:1 Gb6+Gb7:1 -:1 | \
+             E6+E7:1 -:1 D6+D7:1 -:1 A5+A6:1 -:3 B5+B6:1 -:1 D6+D7:1 -:1 C6+C7:1 -:1 A5+A6:1 -:1 A5+A6:1 -:1 & \
+             -:8 A5:1 -:1 D6:1 -:1 A5:1 -:1 D6:1 -:1 E6:1 -:1 | G6:1 -:1 Gb6:1 -:1 E6:1 -:1 D6:1 -:1 A5:1 -:9 | \
+             -:18 & \
+             -:3 Gb2:3 -:12 | -:18 | \
+             -:18",
+        )
+        .in_meters(&[NINE_EIGHT, NINE_EIGHT, NINE_EIGHT])
+        .played_by(&[(gm::CLARINET, 0)])
+        .marked(Dynamic::Fortissimo),
+        Part::new(
+            "38",
+            "Ab3:1 -:1 C4:1 -:1 Eb4:1 -:1 Gb4:1 -:1 A4:1 -:1 B4:1 -:1 Ab3:1 -:1 C4:1 -:1 Eb4:1 -:1 | Gb4:1 -:1 A4:1 -:1 B4:1 -:1 Ab3:1 -:1 C4:1 -:1 Eb4:1 -:1 Gb4:1 -:1 A4:1 -:1 B4:1 -:1 | Ab3:1 -:1 C4:1 -:1 Eb4:1 -:1 Gb4:1 -:1 A4:1 -:1 B4:1 -:7",
+            "",
+        )
+        .with_left(
+            "!ff Eb4+Gb4+A4+B4+Eb5:2 A4:2 Gb4:2 Eb4:2 C4:2 Ab3:2 B4:2 A4:2 Gb4:2 | Eb4:2 C4:2 Ab3:2 B4:2 A4:2 Gb4:2 Eb4:2 C4:2 Ab3:2 | \
+             B4:2 A4:2 Gb4:2 Eb4:2 C4:2 Ab3:2 Bb4+C5:2 F4+Ab4+B4+Db5:2 B3+Eb4+Gb4+A4+C5+D5:2 & \
+             Ab3+Eb4+A4:18 | _:18 | \
+             _:18 & \
+             C4+Gb4+B4:18 | _:18 | \
+             _:12 !ff A3+G4+C5:6 & \
+             C4+Gb4+B4:18 | _:18 | \
+             _:18 & \
+             !ff Ab3+Eb4+A4:18 | _:18 | \
+             _:12 Db4+E4+Bb4:6 & \
+             -:4 (3 -:1 -:1 B3+C4+Db4+Eb4+E4+Gb4+G4:1 >Ab3+A3+D4+Eb4+F4+Gb4+Ab4+A4+B4:1 -:9 (3 -:1 -:1 B3+C4+Db4+Eb4+E4+Gb4+G4:1 | !ff Ab3+A3+D4+Eb4+F4+Gb4+Ab4+A4+B4:1 -:9 (3 -:1 -:1 B3+C4+Db4+Eb4+E4+Gb4+G4:1 Ab3+A3+D4+Eb4+F4+Gb4+Ab4+A4+B4:1 -:5 | \
+             -:4 !mf (3 -:1 -:1 B3+C4+Db4+Eb4+E4+Gb4+G4:1 >Ab3+A3+D4+Eb4+F4+Gb4+Ab4+A4+B4:1 -:11 & \
+             !ff Ab3+C4+Eb4+Gb4:2 -:16 | -:3 B3:1 -:11 B3:2 -:1 | \
+             -:9 B3:1 -:2 A3+Db4+E4+G4+Bb4+C5:2 Bb3+D4+F4+Ab4+B4+Db5:2 B3+Eb4+Gb4+A4+C5+D5:2 & \
+             !ff Ab2+Eb3+C4:2 -:13 C3:3 | -:3 B3:3 C3:3 -:6 B3:3 | \
+             -:3 C3:3 -:3 B3:3 C3:3 -:3 & \
+             -:15 !ff C3:3 | -:3 B3:3 C3:3 -:6 B3:3 | \
+             -:3 C3:3 -:3 B3:3 C3:3 -:3 & \
+             -:15 !ff C2:3 | -:3 B2:3 C2:3 -:6 B2:3 | \
+             -:3 C2:3 -:3 B2:3 C2:3 -:3 & \
+             -:18 | -:18 | \
+             !ff Eb4:12 -:6 & \
+             -:18 | -:18 | \
+             !ff Ab3+Bb3+C4+Db4+E4:6 F4+Gb4+Ab4+Bb4+B4:6 -:6",
+        )
+        .in_meters(&[NINE_EIGHT, NINE_EIGHT, NINE_EIGHT])
+        .played_by(&[(gm::BASSOON, 0)])
+        .marked(Dynamic::Forte),
+        Part::new(
+            "39",
+            "-:2 Db3:1 -:1 E3:1 -:1 C3:1 -:1 | E3:1 -:1 G3:1 -:1 A3:1 -:1 Db4:1 -:1 E4:1 -:1",
+            "",
+        )
+        .with_left(
+            "-:8 | !p G5+Bb5+Db6+Eb6:1 Gb5+A5+C6+D6:1 (3 F5+Ab5+B5+Db6:1 _:1 E5+G5+Bb5+C6:1 Eb5+Gb5+A5+B5:1 -:1 (3 D5+F5+Ab5+Bb5:1 Db5+E5+G5+A5:1 -:1 C5+Eb5+Gb5+Ab5:1 B4+D5+F5+G5:1 & \
+             -:8 | !mp G5+Bb5+Db6+Eb6:1 Gb5+A5+C6+D6:1 (3 F5+Ab5+B5+Db6:1 -:1 E5+G5+Bb5+C6:1 Eb5+Gb5+A5+B5:1 -:1 (3 D5+F5+Ab5+Bb5:1 Db5+E5+G5+A5:1 -:1 C5+Eb5+Gb5+Ab5:1 B4+D5+F5+G5:1 & \
+             -:2 !p G5+Bb5+Db6+Eb6:1 Gb5+A5+C6+D6:1 F5+Ab5+B5+Db6:1 E5+G5+Bb5+C6:1 Eb5+Gb5+A5+B5:1 D5+F5+Ab5+Bb5:1 | Db5+E5+G5+A5:1 -:9 & \
+             C4+E4+G4+Bb4+Db5+Eb5:2 -:6 | -:10 & \
+             C4+E4+G4+Bb4+Db5+Eb5:2 -:6 | -:10 & \
+             !mp G4+Bb4+Db5+Eb5:8 | G4+Bb4+Db5+Eb5:10",
+        )
+        .in_meters(&[FOUR_EIGHT, FIVE_EIGHT_UNGROUPED])
+        .played_by(&[(gm::TROMBONE, 0)])
+        .marked(Dynamic::Fortissimo),
+        Part::new(
+            "39, bar 3",
+            "C2:2 E2:2 G2:2 A2:2 Db3:2 E3:2 G3:2 C4:2 E4:2",
+            "",
+        )
+        .with_left(
+            "!f Bb4+Db5+E5+Gb5:18 & \
+             Bb4+Db5+E5+Gb5:1 -:17",
+        )
+        .in_meters(&[NINE_EIGHT])
+        .played_by(&[(gm::PIZZICATO_STRINGS, 0)]),
+        Part::new(
+            "40",
+            ">A4:3 -:1 D4:1 -:1 >A4:3 -:1 D4:1 -:1 >A4:3 -:1 D4:2 | _:1 -:1 A4:1 -:1 D4:1 -:1 A4:1 -:11 | -:12 A4:3 -:1 D4:2 | _:1 -:1 A4:1 -:1 D4:1 -:1 A4:1 -:11 | \
+             -:6 >A4:3 -:1 D4:1 -:1 >A4:3 -:1 D4:2 | _:1 -:1 A4:1 -:1 D4:1 -:1 A4:7 -:1 D4:1 -:1 A4:1 -:1",
+            "",
+        )
+        .with_left(
+            "-:18 | -:8 Bb5+Bb6:1 -:1 Eb6+Eb7:1 -:1 Bb5+Bb6:1 -:1 Eb6+Eb7:1 -:1 F6+F7:1 -:1 | \
+             Ab6+Ab7:1 -:1 G6+G7:1 -:1 F6+F7:1 -:1 Eb6+Eb7:1 -:1 Bb5+Bb6:1 -:9 | -:6 Eb6+Eb7:1 -:1 Ab6+Ab7:1 -:1 G6+G7:1 -:1 F6+F7:1 -:1 Eb6+Eb7:1 -:1 Bb5+Bb6:1 -:1 | \
+             C6+C7:1 -:1 Eb6+Eb7:1 -:1 Db6+Db7:1 -:1 Bb5+Bb6:1 -:1 Bb5+Bb6:1 -:1 Bb5+Bb6:1 -:7 | -:18 & \
+             !p >A4+Eb5:2 Db5:2 Bb4:2 G4:2 Eb5:2 Db5:2 Bb4:2 G4:2 Eb5:2 | Db5:2 Bb4:2 G4:2 Eb5:2 Db5:2 Bb4:2 G4:2 Eb5:2 Db5:2 | \
+             Bb4:2 G4:2 Eb5:2 Db5:2 Bb4:2 G4:2 Eb5:2 Db5:2 Bb4:2 | G4:2 Eb5:2 Db5:2 Bb4:2 G4:2 Eb5:2 Db5:2 Bb4:2 G4:2 | \
+             Eb5:2 Db5:2 Bb4:2 G4:2 Eb5:2 Db5:2 Bb4:2 G4:2 Eb5:2 | Db5:2 Bb4:2 G4:2 Eb5:2 Db5:2 Bb4:2 A4:2 Db5:2 E5:2 & \
+             !p >G4+Bb4+Db5+Eb5:2 Bb4:2 G4:2 Bb4:2 G4:2 Bb4:2 G4:2 >Bb4:2 >G4:2 | !f Bb4:2 G4:2 Bb4:2 G4:2 Bb4+Bb5:2 Eb6:2 Bb5:2 Eb6:2 F6:2 | \
+             Ab6:2 G6:2 F6:2 Eb6:2 Bb5:2 -:8 | -:6 Eb6:2 Ab6:2 G6:2 F6:2 Eb6:2 Bb5:2 | \
+             C6:2 Eb6:2 Db6:2 Bb5:2 Bb5:2 Bb5:2 -:6 | G4:2 G4:2 G4+Bb4:2 G4+Bb4:2 G4+Bb4+Db5:2 G4+Bb4+Db5:2 Gb4+A4+C5+D5:2 F4+Ab4+B4+Db5:2 E4+G4+Bb4+C5:2 & \
+             G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 | G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 | \
+             G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 | G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 | \
+             G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 | G4+Bb4+Db5+Eb5:6 G4+Bb4+Db5+Eb5:6 -:6",
+        )
+        .in_meters(&[NINE_EIGHT, NINE_EIGHT, NINE_EIGHT, NINE_EIGHT, NINE_EIGHT, NINE_EIGHT])
+        .played_by(&[(gm::FRENCH_HORN, 0)])
+        .marked(Dynamic::Forte),
+        Part::new(
+            "40, bar 7",
+            "Ab3:1 -:1 C4:1 -:1 Eb4:1 -:1 Gb4:1 -:1 A4:1 -:1 B4:1 -:1 Ab3:1 -:1 C4:1 -:1 Eb4:1 -:1 | Gb4:1 -:1 A4:1 -:1 B4:1 -:1 Ab3:1 -:1 C4:1 -:1 Eb4:1 -:1 Gb4:1 -:1 A4:1 -:1 B4:1 -:7",
+            "",
+        )
+        .with_left(
+            "!ff Eb4+Gb4+A4+B4:2 A4:2 Gb4:2 Eb4:2 C4:2 Ab3:2 B4:2 A4:2 Gb4:2 | Eb4:2 C4:2 Ab3:2 B4:2 A4:2 Gb4:2 Eb4:2 C4:2 Ab3:2 Gb3+A3+Db4+E4+G4+Bb4+C5:2 Bb3+D4+F4+Ab4+B4+Db5:2 Ab3+B3+Eb4+Gb4+A4+C5+D5:2 & \
+             Ab3+C4+Eb4+Gb4+A4+B4:18 | Ab3+Eb4+A4:24 & \
+             -:18 | C4+Gb4+B4:18 A3+G4+C5:6 & \
+             !ff Ab3+C4+Eb4+Gb4+A4+B4:18 | !mf C4+Gb4+B4:24 & \
+             -:18 | !ff Ab3+Eb4+A4:18 Db4+E4+Bb4:6 & \
+             -:4 (3 -:1 -:1 B3+C4+Db4+Eb4+E4+Gb4+G4:1 >Ab3+A3+D4+Eb4+F4+Gb4+Ab4+A4+B4:1 -:9 (3 -:1 -:1 B3+C4+Db4+Eb4+E4+Gb4+G4:1 | !ff Ab3+A3+D4+Eb4+F4+Gb4+Ab4+A4+B4:1 -:9 (3 -:1 -:1 B3+C4+Db4+Eb4+E4+Gb4+G4:1 Ab3+A3+D4+Eb4+F4+Gb4+Ab4+A4+B4:1 -:11 & \
+             -:9 !ff B3:1 -:8 | -:3 B3:2 -:10 B3:1 -:8 & \
+             !ff A5:2 -:1 C3:3 -:3 B3:3 C3:3 -:3 | -:3 B3:3 -:3 C3:3 -:3 B3:3 C3:3 -:3 & \
+             -:3 !ff C3:3 -:3 B3:3 C3:3 -:3 | -:3 B3:3 -:3 C3:3 -:3 B3:3 C3:3 -:3 & \
+             -:3 !ff C2:3 -:3 B2:3 C2:3 -:3 | -:3 B2:3 -:3 C2:3 -:3 B2:3 C2:3 -:3 & \
+             -:3 !ff C2:6 -:3 C2:6 | C2:3 -:6 C2:6 -:3 C2:6 & \
+             -:12 !ff Ab3+Bb3+C4+Db4+Eb4+E4:6 | Eb4:18 -:6 & \
+             -:18 | !ff F4+Gb4+Ab4+A4+Bb4:6 Ab3+Bb3+C4+Db4+E4:6 F4+Gb4+Ab4+Bb4+B4:6 -:6",
+        )
+        .in_meters(&[NINE_EIGHT, TWELVE_EIGHT])
+        .played_by(&[(gm::BASSOON, 0)])
+        .marked(Dynamic::Forte),
+        Part::new(
+            "41",
+            "Eb5:2 E5:2 F5:2 Gb5:2 Gb5:2 Gb5:2 Eb5:2 Eb5:2 Eb5:2 | Eb5:2 E5:2 F5:2 Gb5:2 F5:2 E5:2 Eb5:2 Eb5:2 Eb5:2",
+            "",
+        )
+        .with_left(
+            "!f A2:1 -:1 Db3:1 -:1 E3:1 -:1 C3:1 -:1 E3:1 -:9 | C3+E3+G3:1 -:1 E3+Ab3+B3:1 -:1 G3+B3+D4:1 -:1 Eb3+G3+Bb3:1 -:1 G3+B3+D4:1 -:1 Bb3+D4+F4:1 -:1 C4+E4+G4:1 -:1 E4+Ab4+B4:1 -:1 G4+B4+D5:1 -:1 & \
+             !f A1:1 -:1 Db2:1 -:1 E2:1 -:1 C2:1 -:1 E2:1 -:1 G2:1 -:1 A2:1 -:1 Db3:1 -:1 E3:1 -:1 | C3:1 -:17 & \
+             -:7 !f E3:2 G3:2 A3:2 Db4:2 E4:2 C4:1 | _:1 -:17",
+        )
+        .in_meters(&[NINE_EIGHT, NINE_EIGHT])
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Forte),
+        Part::new(
+            "42",
+            "!mp Bb4:1 -:1 Db5:1 -:1 Bb4:1 -:1 G4:1 -:1 E4:1 -:1 Db4:1 -:1 | !mf Db5:1 -:1 E5:1 -:1 Db5:1 -:1 Bb4:1 -:1 G4:1 -:1 E4:1 -:1 | E5:1 -:1 G5:1 -:1 E5:1 -:1 Db5:1 -:1 Bb4:1 -:1 G4:1 -:1 | G5:1 -:1 Bb5:1 -:1 G5:1 -:1 E5:1 -:1 Db5:1 -:1 Bb4:1 -:1 | \
+             Bb5:1 -:1 Db6:1 -:1 Bb5:1 -:1 G5:1 -:1 E5:1 -:1 Db5:1 -:1 | Db6:1 -:1 E6:1 -:1 Db6:1 -:1 Bb5:1 -:1 G5:1 -:1 E5:1 -:1",
+            "",
+        )
+        .with_left(
+            "!ff Eb4+G4+Bb4:1 -:11 | !mf Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 -:6 | \
+             -:12 | !ff Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 -:6 | \
+             -:12 | Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 Db5+E5+G5+A5:1 -:6 & \
+             -:12 | -:12 | \
+             -:12 | -:12 | \
+             -:12 | -:10 !ff (3 -:1 -:1 E6+Gb6+G6:1 & \
+             -:6 !ff Bb5+Db6+E6+Gb6:6 | Bb5+Db6+E6+Gb6:6 -:6 | \
+             -:6 Bb5+Db6+E6+Gb6:6 | Bb5+Db6+E6+Gb6:6 -:6 | \
+             -:6 Bb5+Db6+E6+Gb6:6 | Bb5+Db6+E6+Gb6:6 -:6 & \
+             G4:12 | G4:12 | \
+             _:12 | !ff G4+Bb4:12 | \
+             _:12 | _:12 & \
+             -:12 | Bb4:12 | \
+             !ff Bb4:12 | Db5:12 | \
+             Db5:12 | Eb5:12 & \
+             Bb4:12 | _:12 | \
+             _:12 | -:12 | \
+             -:12 | -:12 & \
+             Db5:12 | _:12 | \
+             -:12 | -:12 | \
+             -:12 | -:12 & \
+             Eb5:12 | -:12 | \
+             -:12 | -:12 | \
+             -:12 | -:12 & \
+             E1:2 A1:2 Db2:2 Eb2:2 G2:2 Bb2:2 | Bb1+Eb3:2 Db2+G3:2 Gb2+Bb3:2 Bb2+C4:2 Db3+E4:2 Gb3+G4:2 | \
+             !ff G2+A3+C5:2 Bb2+Db4+E5:2 Eb3+E4+G5:2 E3+A4+Bb5:2 G3+Db5+Db6:2 C4+E5+Gb6:2 | E2+E4+G5:2 A2+G4+Bb5:2 Db3+C5+Eb6:2 E4+E5:2 G4+A5:2 C5+Db6:2 | \
+             Db4+E5:2 Gb4+G5:2 Bb4+C6:2 Db5:2 Gb5:2 Bb5:2 | Bb4:2 Eb5:2 G5:2 -:6 & \
+             !ff >C4+E4+G4+Bb4+Db5+Eb5:1 G4:1 Db5:1 Bb4:1 Bb4:1 G4:1 G4:1 E4:1 E4:1 Db4:1 Db4:1 Bb3:1 | Db5:1 Bb4:1 E5:1 Db5:1 Db5:1 Bb4:1 Bb4:1 G4:1 G4:1 E4:1 E4:1 Db4:1 | \
+             E5:1 Db5:1 G5:1 E5:1 E5:1 Db5:1 Db5:1 Bb4:1 Bb4:1 G4:1 G4:1 E4:1 | G5:1 E5:1 Bb5:1 G5:1 G5:1 E5:1 E5:1 Db5:1 Db5:1 Bb4:1 Bb4:1 G4:1 | \
+             Bb5:1 G5:1 Db6:1 Bb5:1 Bb5:1 G5:1 G5:1 E5:1 E5:1 Db5:1 Db5:1 Bb4:1 | Db6:1 Bb5:1 E6:1 Db6:1 Db6:1 Bb5:1 Bb5:1 G5:1 G5:1 E5:1 E5:1 Db5:1 & \
+             Bb4+Db5+Eb5+G5+Bb5+Db6:12 | _:12 | \
+             _:12 | _:12 | \
+             _:12 | _:12 & \
+             G4:6 Eb6:6 | G4:6 Eb6:6 | \
+             G4:6 Eb6:6 | G4:6 Eb6:6 | \
+             G4:6 Eb6:6 | G4:6 Eb6:6 & \
+             -:12 | -:12 | \
+             -:12 | E5+G5:6 G4+Bb4+Db5:6 | \
+             !ff Eb5+Gb5+G5+Bb5:6 Gb4+A4+Bb4+C5+Db5+E5:6 | Gb5+A5+Bb5+Db6:6 A4+C5+Db5+Eb5+E5+G5:6",
+        )
+        .in_meters(&[SIX_EIGHT, SIX_EIGHT, SIX_EIGHT, SIX_EIGHT, SIX_EIGHT, SIX_EIGHT])
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Piano),
+        Part::new(
+            "43",
+            "!sfz Bb6:1 -:1 Ab6:1 -:1 Bb6:1 -:1 Ab6:1 -:1 Gb6:1 -:1 F6:1 -:1 | Bb6:1 -:1 Ab6:1 -:1 Bb6:1 -:1 Ab6:1 -:1 Gb6:1 -:1 F6:1 -:1 | Bb6:1 -:1 Ab6:1 -:1 Bb6:1 -:1 Ab6:1 -:1 Gb6:1 -:1 F6:1 -:1 Gb6:1 -:1 | Eb6:1 -:1 Eb6:1 -:1 Eb6:1 -:1 F6:1 -:1 Gb6:1 -:1 Ab6:1 -:1 | \
+             Bb6:1 -:1 Ab6:1 -:1 Bb6:1 -:1 Ab6:1 -:1 Gb6:1 -:1 F6:1 -:1 | Eb6:1 -:1 F6:1 -:1 Gb6:1 -:1 Ab6:1 -:1 | A6:1 -:1 G6:1 -:1 A6:1 -:1 G6:1 -:1 F6:1 -:1 E6:1 -:1 | D6:1 -:1 D6:1 -:1 D6:1 -:1 E6:1 -:1 F6:1 -:1 G6:1 -:1",
+            "",
+        )
+        .with_left(
+            "-:12 | -:12 | \
+             G3+Db4+G4+Gb5+Bb5:1 -:1 G3+Db4+G4+F5+Ab5:1 -:1 G3+Db4+G4+Gb5+Bb5:1 -:1 G3+Db4+G4+F5+Ab5:1 -:1 G3+Db4+G4+Eb5+Gb5:1 -:1 G3+Db4+G4+Db5+F5:1 -:1 G3+Db4+G4+Eb5+Gb5:1 -:1 | G3+Db4+G4+C5+Eb5:1 -:1 G3+Db4+G4+C5+Eb5:1 -:1 G3+Db4+G4+C5+Eb5:1 -:1 G3+Db4+G4+Db5+F5:1 -:1 G3+Db4+G4+Eb5+Gb5:1 -:1 G3+Db4+G4+F5+Ab5:1 -:1 | \
+             G3+Db4+G4+Gb5+Bb5:1 -:11 | -:8 | \
+             C3+Gb3+C4+F5+A5:1 -:1 C3+Gb3+C4+E5+G5:1 -:1 C3+Gb3+C4+F5+A5:1 -:1 C3+Gb3+C4+E5+G5:1 -:1 C3+Gb3+C4+D5+F5:1 -:1 C3+Gb3+C4+C5+E5:1 -:1 | C3+Gb3+C4+B4+D5:1 -:1 C3+Gb3+C4+B4+D5:1 -:1 C3+Gb3+C4+B4+D5:1 -:1 C3+Gb3+C4+C5+E5:1 -:1 C3+Gb3+C4+D5+F5:1 -:1 C3+Gb3+C4+E5+G5:1 -:1 & \
+             -:12 | G4+Bb4+Gb5+Bb5:1 -:3 G4+Bb4+Gb5+Bb5:1 -:7 | \
+             G4+Bb4+Gb5+Bb5:1 -:1 F4+A4+F5+Ab5:1 -:1 G4+Bb4+Gb5+Bb5:1 -:1 F4+A4+F5+Ab5:1 -:1 Eb4+G4+Eb5+Gb5:1 -:1 D4+F4+Db5+F5:1 -:1 Eb4+G4+Eb5+Gb5:1 -:1 | C4+E4+C5+Eb5:1 -:1 C4+E4+C5+Eb5:1 -:1 C4+E4+C5+Eb5:1 -:1 D4+F4+Db5+F5:1 -:1 Eb4+G4+Eb5+Gb5:1 -:1 F4+A4+F5+Ab5:1 -:1 | \
+             !f G4+Bb4+Gb5+Bb5:1 -:11 | -:8 | \
+             !mf Gb4+A4+F5+A5:1 -:1 E4+Ab4+E5+G5:1 -:1 Gb4+A4+F5+A5:1 -:1 E4+Ab4+E5+G5:1 -:1 D4+Gb4+D5+F5:1 -:1 Db4+E4+C5+E5:1 -:1 | B3+Eb4+B4+D5:1 -:1 B3+Eb4+B4+D5:1 -:1 B3+Eb4+B4+D5:1 -:1 Db4+E4+C5+E5:1 -:1 D4+Gb4+D5+F5:1 -:1 E4+Ab4+E5+G5:1 -:1 & \
+             G3+Db4+G4+Bb4:1 -:1 G3+Db4+F4+G4+A4:1 -:1 G3+Db4+G4+Bb4:1 -:1 G3+Db4+F4+G4+A4:1 -:1 G3+Db4+Eb4+G4:1 -:1 G3+Db4+D4+F4+G4:1 -:1 | G3+Db4+G4+Bb4:1 -:1 G3+Db4+F4+G4+A4:1 -:1 G3+Db4+G4+Bb4:1 -:1 G3+Db4+F4+G4+A4:1 -:1 G3+Db4+Eb4+G4:1 -:1 G3+Db4+D4+F4+G4:1 -:1 | \
+             G3+Db4+G4+Bb4:1 -:1 F4+A4:1 -:1 G4+Bb4:1 -:1 F4+A4:1 -:1 Eb4+G4:1 -:1 D4+F4:1 -:1 Eb4+G4:1 -:1 | C4+E4:1 -:1 C4+E4:1 -:1 C4+E4:1 -:1 D4+F4:1 -:1 Eb4+G4:1 -:1 F4+A4:1 -:1 | \
+             G3+Db4+G4+Bb4:1 -:1 G3+Db4+F4+G4+A4:1 -:1 G3+Db4+G4+Bb4:1 -:1 G3+Db4+F4+G4+A4:1 -:1 G3+Db4+Eb4+G4:1 -:1 G3+Db4+D4+F4+G4:1 -:1 | G3+C4+Db4+E4+G4:1 -:1 G3+Db4+D4+F4+G4:1 -:1 G3+Db4+Eb4+G4:1 -:1 G3+Db4+F4+G4+A4:1 -:1 | \
+             Gb3+C4+Gb4+A4:1 -:1 E4+Ab4:1 -:1 Gb4+A4:1 -:1 E4+Ab4:1 -:1 D4+Gb4:1 -:1 Db4+E4:1 -:1 | B3+Eb4:1 -:1 B3+Eb4:1 -:1 B3+Eb4:1 -:1 Db4+E4:1 -:1 D4+Gb4:1 -:1 E4+Ab4:1 -:1 & \
+             !mp G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 | G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 | \
+             G3+Db4+G4:1 -:13 | -:12 | \
+             G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 | G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 G3+Db4+G4:1 -:1 | \
+             G3+Db4+G4:1 -:11 | -:12 & \
+             !mp Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Eb5+Gb5:1 -:1 Db5+F5:1 -:1 | Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Eb5+Gb5:1 -:1 Db5+F5:1 -:1 | \
+             Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Eb5+Gb5:1 -:1 Db5+F5:1 -:1 Db5+Eb5+Gb5:1 -:1 | C5+Db5+Eb5:1 -:1 C5+Db5+Eb5:1 -:1 C5+Db5+Eb5:1 -:1 Db5+F5:1 -:1 Db5+Eb5+Gb5:1 -:1 Db5+F5+Ab5:1 -:1 | \
+             Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Gb5+Bb5:1 -:1 Db5+F5+Ab5:1 -:1 Db5+Eb5+Gb5:1 -:1 Db5+F5:1 -:1 | C5+Db5+Eb5:1 -:1 Db5+F5:1 -:1 Db5+Eb5+Gb5:1 -:1 Db5+F5+Ab5:1 -:1 | \
+             Gb4+F5+A5:1 -:1 Gb4+E5+G5:1 -:1 Gb4+F5+A5:1 -:1 Gb4+E5+G5:1 -:1 Gb4+D5+F5:1 -:1 Gb4+C5+E5:1 -:1 | Gb4+B4+D5:1 -:1 Gb4+B4+D5:1 -:1 Gb4+B4+D5:1 -:1 Gb4+C5+E5:1 -:1 Gb4+D5+F5:1 -:1 Gb4+E5+G5:1 -:1 & \
+             !mp G5+Bb5:1 -:1 F5+A5:1 -:1 G5+Bb5:1 -:1 F5+A5:1 -:1 Eb5+G5:1 -:1 D5+F5:1 -:1 | G5+Bb5:1 -:1 F5+A5:1 -:1 G5+Bb5:1 -:1 F5+A5:1 -:1 Eb5+G5:1 -:1 D5+F5:1 -:1 | \
+             G5+Bb5:1 -:1 F5+A5:1 -:1 G5+Bb5:1 -:1 F5+A5:1 -:1 Eb5+G5:1 -:1 D5+F5:1 -:1 Eb5+G5:1 -:1 | C5+E5:1 -:1 C5+E5:1 -:1 C5+E5:1 -:1 D5+F5:1 -:1 Eb5+G5:1 -:1 F5+A5:1 -:1 | \
+             G5+Bb5:1 -:1 F5+A5:1 -:1 G5+Bb5:1 -:1 F5+A5:1 -:1 Eb5+G5:1 -:1 D5+F5:1 -:1 | C5+E5:1 -:1 D5+F5:1 -:1 Eb5+G5:1 -:1 F5+A5:1 -:1 | \
+             Gb5+A5:1 -:1 E5+G5+Ab5:1 -:1 Gb5+A5:1 -:1 E5+G5+Ab5:1 -:1 D5+Gb5:1 -:1 Db5+E5:1 -:1 | B4+Eb5:1 -:1 B4+Eb5:1 -:1 B4+Eb5:1 -:1 Db5+E5:1 -:1 D5+Gb5:1 -:1 E5+Ab5:1 -:1 & \
+             Db5:2 -:10 | -:12 | \
+             -:14 | -:12 | \
+             -:12 | -:8 | \
+             -:12 | -:12 & \
+             !mp Gb4+Bb4:2 -:10 | -:12 | \
+             -:14 | -:12 | \
+             -:12 | -:8 | \
+             -:12 | -:12 & \
+             -:12 | -:12 | \
+             -:14 | -:12 | \
+             -:12 | -:8 | \
+             C3:1 -:1 C3:1 -:1 C3:1 -:1 C3:1 -:1 C3:1 -:1 C3:1 -:1 | C3:1 -:1 C3:1 -:1 C3:1 -:1 C3:1 -:1 C3:1 -:1 C3:1 -:1",
+        )
+        .in_meters(&[
+            SIX_EIGHT,
+            SIX_EIGHT,
+            SEVEN_EIGHT,
+            THREE_FOUR,
+            SIX_EIGHT,
+            TWO_FOUR,
+            SIX_EIGHT,
+            THREE_FOUR,
+        ])
+        .played_by(&[(gm::PICCOLO, 0)])
+        .marked(Dynamic::Forte),
+        Part::new(
+            "44",
+            "D5:3 -:1 A4:1 -:1 D5:3 -:1 A4:1 -:1 D5:3 -:1 A4:1 -:1 | D5:1 -:1 A4:1 -:1 D5:1 -:1 A4:6 -:2 D5:1 -:1 A4:1 -:1 | D5:1 -:1 A4:1 -:1 D5:1 -:1 A4:6 -:6 | -:18 | \
+             -:18",
+            "",
+        )
+        .with_left(
+            "!p A4+C5+Eb5+F5:6 A4+C5+Eb5+F5:6 A4+C5+Eb5+F5:6 | A4+C5+Eb5+F5:6 A4+C5+Eb5+F5:6 A4+C5+Eb5+F5:6 | \
+             A4+C5+Eb5+F5:6 A4+C5+Eb5+F5:6 A4+C5+Eb5+F5:6 | A4+C5+Eb5+F5:6 -:12 | \
+             -:18 & \
+             -:18 | -:18 | \
+             -:18 | !mp Eb4+Gb4+A4+C5+Eb5:18 | \
+             _:18 & \
+             A4+C5+Eb5:6 A4+C5+Eb5+F5:6 A4+C5+Eb5:6 | A4+C5+Eb5+F5:6 A4+C5+Eb5:6 A4+C5+Eb5+F5:6 | \
+             A4+C5+Eb5:6 A4+C5+Eb5+F5:6 A4+C5+Eb5:6 | Eb4+Gb4+A4+B4+C5+Eb5+F5:6 C4+Eb4+F4+A4+C5+D5+Gb5:6 C4+Eb4+Gb4+Ab4+A4+C5+Eb5+F5:6 | \
+             A3+C4+Eb4+F4+C5+Eb5+Gb5+Ab5:6 A3+C4+D4+Gb4+A4+C5+Eb5+F5:6 F3+A3+C4+Eb4+Eb5+Gb5+Ab5+Bb5+C6+Db6+D6+Eb6+E6+F6+Gb6+G6+Ab6+A6+Bb6+B6:6 & \
+             -:18 | -:18 | \
+             -:18 | -:18 | \
+             -:15 F1:1 G1:1 Ab1:1",
+        )
+        .in_meters(&[NINE_EIGHT, NINE_EIGHT, NINE_EIGHT, NINE_EIGHT, NINE_EIGHT])
+        .played_by(&[(gm::FRENCH_HORN, 0)])
+        .marked(Dynamic::Forte),
+        Part::new(
+            "45",
+            "C7:6 A6:6 Gb6:6 | Eb6:6 A6:6 Gb6:6 | Eb6:6 C6:6 A5:6",
+            "",
+        )
+        .with_left(
+            "!mp C5:1 -:1 C5:1 -:1 C5:1 -:1 A4:1 -:1 A4:1 -:1 A4:1 -:1 Gb4+D5:1 -:1 D5:1 -:1 !sfz Gb3+Gb4+D5:1 -:1 | !sfz Db3+Db4:12 D4+Gb4+G4+D5+Gb5:1 -:1 D4+Gb4+G4+D5+Gb5:1 -:1 D4+Gb4+G4+D5+Gb5:1 -:1 | \
+             Eb4+E4+B4+Eb5:1 -:1 Eb4+E4+B4+Eb5:1 -:1 Eb4+E4+B4+Eb5:1 -:1 Eb4+Ab4+C5:1 -:1 Eb4+Ab4+C5:1 -:1 Eb4+Ab4+C5:1 -:1 Bb3+F4+A4:1 -:1 Bb3+F4+A4:1 -:1 Bb3+F4+A4:1 -:1 & \
+             -:18 | !mp B4+Eb5:1 -:1 B4+Eb5:1 -:1 B4+Eb5:1 -:1 F4+A4+Bb4+F5+A5:1 -:1 F4+A4+Bb4+F5+A5:1 -:1 F4+A4+Bb4+F5+A5:1 -:7 | \
+             -:18 & \
+             !f Db6+Ab7+C8:6 Bb5+F7+A7:6 G5+D7+Gb7:6 | !mf E5+B5+Eb6+B6+Eb7:6 Bb5+F6+A6:6 G5+D6+Gb6:6 | \
+             E5+B5+Eb6:6 Db5+Ab5+C6:6 Bb4+F5+A5:6 & \
+             A1+A2+A3:6 E2+E3+E4:6 B1+B2+B3:4 -:2 | -:10 (3 E1:1 F1:1 _:1 Ab1+Ab2+Ab3:1 -:5 | \
+             -:18 & \
+             -:18 | -:10 (3 -:1 -:1 G1:1 -:6 | \
+             -:18 & \
+             A1+A2+A3:6 E2+E3+E4:6 B1+B2+B3:4 -:2 | -:12 Ab1+Ab2+Ab3:1 -:5 | \
+             -:18 & \
+             Db4+Ab4:1 -:1 Db4+Ab4:1 -:1 Db4+Ab4:1 -:1 Bb3+F4:1 -:1 Bb3+F4:1 -:1 Bb3+F4:1 -:1 G3+Gb4+G4:1 -:1 Gb4+G4:1 -:1 Gb4+G4:1 -:1 | Eb4+E4:1 -:1 Eb4+E4:1 -:1 Eb4+E4:1 -:1 Bb3+F4:1 -:9 !sfz Eb3+Eb4:1 -:1 | \
+             !f Bb3+Bb4:17 -:1 & \
+             !mp Ab5+C6+Db6:6 F5+A5+Bb5:6 D5+Gb5+G5:6 | B4+Eb5+E5:6 F5+A5+Bb5:6 D5+Gb5+G5:6 | \
+             B4+Eb5+E5:6 Ab4+C5+Db5:6 F4+A4+Bb4:6 & \
+             !mp Ab5+Db6+Ab6:6 F5+Bb5+F6:6 D5+Gb5+G5+D6:6 | B4+E5+B5:6 A5+Bb5+F6+A6:6 Gb5+G5+D6+Gb6:6 | \
+             Eb5+E5+B5+Eb6:6 C5+Db5+Ab5+C6:6 A4+Bb4+F5+A5:6 & \
+             -:18 | -:12 !f Ab2:2 -:4 | \
+             -:18",
+        )
+        .in_meters(&[NINE_EIGHT, NINE_EIGHT, NINE_EIGHT])
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Fortissimo),
+        Part::new(
+            "46",
+            "-:6 | F6:1 -:1 Bb6:1 -:1 F6:1 -:1 Bb6:1 -:1 C7:1 -:1 | Eb7:1 -:1 D7:1 -:1 C7:1 -:1 Bb6:1 -:1 F6:1 -:1 | -:6 | \
+             Bb6:1 -:1 F6:1 -:1 Bb6:1 -:1 C7:1 -:1 | Eb7:1 -:1 D7:1 -:1 C7:1 -:1 Bb6:1 -:1 F6:1 -:1 | Bb6:1 -:1 Eb7:1 -:1 D7:1 -:1 C7:1 -:1 Bb6:1 -:1 F6:1 -:1 | G6:1 -:1 Bb6:1 -:1 Ab6:1 -:1 F6:1 -:1 F6:1 -:1",
+            "",
+        )
+        .with_left(
+            "-:6 | !mp F4:1 -:1 Bb4:1 -:1 F4:1 -:1 Bb4:1 -:1 C5:1 -:1 | \
+             Eb5:1 -:1 D5:1 -:1 C5:1 -:1 Bb4:1 -:1 F4:1 -:1 | -:6 | \
+             Bb4:1 -:1 F4:1 -:1 Bb4:1 -:1 C5:1 -:1 | Eb5:1 -:1 D5:1 -:1 C5:1 -:1 Bb4:1 -:1 F4:1 -:1 | \
+             >Bb4:1 -:1 Eb5:1 -:1 D5:1 -:1 C5:1 -:1 Bb4:1 -:1 F4:1 -:1 | >G4:1 -:1 Bb4:1 -:1 Ab4:1 -:1 F4:1 -:1 F4:1 -:1 & \
+             !ff F1+F2:2 -:4 | -:10 | \
+             -:10 | F1+F2:2 -:4 | \
+             -:8 | -:10 | \
+             -:12 | -:10 & \
+             -:6 | !mp C5+F5+F6:1 -:1 Eb5+F5+Eb6:1 -:1 D5+Bb5+D6:1 -:1 C5+C6+Eb6:1 -:1 D5+Bb5+D6:1 -:1 | \
+             Eb5+F5+Eb6:1 -:1 C5+F5+F6:1 -:1 Eb5+F5+Eb6:1 -:1 D5+Bb5+D6:1 -:1 C5+C6+Eb6:1 -:1 | -:6 | \
+             Eb5+F5+Eb6:1 -:1 D5+Bb5+D6:1 -:1 C5+C6+Eb6:1 -:1 D5+Bb5+D6:1 -:1 | Eb5+F5+Eb6:1 -:1 C5+F5+F6:1 -:1 Eb5+F5+Eb6:1 -:1 D5+Bb5+D6:1 -:1 C5+C6+Eb6:1 -:1 | \
+             D5+Bb5+D6:1 -:1 Eb5+F5+Eb6:1 -:1 C5+F5+F6:1 -:1 Eb5+F5+Eb6:1 -:1 D5+Bb5+D6:1 -:1 C5+C6+Eb6:1 -:1 | D5+Bb5+D6:1 -:1 Eb5+F5+Eb6:1 -:1 C5+F5+F6:1 -:1 Eb5+F5+Eb6:1 -:1 D5+Bb5+D6:1 -:1 & \
+             !ff F2:2 -:4 | -:10 | \
+             -:10 | !f F2:2 -:4 | \
+             -:8 | -:10 | \
+             -:12 | -:10",
+        )
+        .in_meters(&[
+            THREE_EIGHT,
+            FIVE_EIGHT_UNGROUPED,
+            FIVE_EIGHT_UNGROUPED,
+            THREE_EIGHT,
+            FOUR_EIGHT,
+            FIVE_EIGHT_UNGROUPED,
+            SIX_EIGHT,
+            FIVE_EIGHT_UNGROUPED,
+        ])
+        .played_by(&[(gm::FLUTE, 0)]),
+        Part::new(
+            "47",
+            "!f C6:2 -:2 | !mp C4:2 F4:2 G4:2 >C5:2 Bb4:2 G4:2 | C4:2 >F4:2 >G4:2 C5:2 Bb4:2 G4:2 | C4:2 >F4:2 >G4:2 C5:2 Bb4:2 G4:2 | \
+             C4:2 F4:2 G4:2 >C5:2 Bb4:2 G4:2 | !f C6:2 -:2 | !mp C4:2 F4:2 G4:2 >C5:2 Bb4:2 G4:2 | !f E6:2 -:2 C6:2 -:2 | \
+             !mp C5:2 F5:2 G5:2 >C6:2 Bb5:2 G5:2 | C5:2 >F5:2 >G5:2 C6:2 Bb5:2 G5:2 | -:4 !f C6:2 -:2 | !mp C5:2 >F5:2 >G5:2 C6:2 Bb5:2 G5:2",
+            "",
+        )
+        .with_left(
+            "!ff C2+C3+A3+Gb4+Ab4+F5+C6:2 -:2 | -:12 | \
+             -:12 | -:12 | \
+             -:12 | C2+C3+A3+Gb4+Ab4+F5+C6:2 -:2 | \
+             -:12 | C2+C3+A3+Gb4+Ab4+F5+E6:2 -:2 C2+C3+A3+Gb4+Ab4+F5+C6:2 -:2 | \
+             -:12 | -:12 | \
+             -:4 C2+C3+A3+Gb4+Ab4+F5+C6:2 -:2 | -:12 & \
+             !f Ab4+C5+F5+Ab5+C6:2 -:2 | -:12 | \
+             -:12 | -:12 | \
+             -:12 | Ab4+C5+F5+Ab5+C6:2 -:2 | \
+             -:12 | Ab4+E5+F5+Ab5+E6:2 -:2 Ab4+C5+F5+Ab5+C6:2 -:2 | \
+             -:12 | -:12 | \
+             -:4 Ab4+C5+F5+Ab5+C6:2 -:2 | -:12 & \
+             Gb3+A3+C4:2 -:2 | -:12 | \
+             -:12 | -:12 | \
+             -:12 | Gb3+A3+C4:2 -:2 | \
+             -:12 | Gb3+A3+C4:2 -:2 Gb3+A3+C4:2 -:2 | \
+             -:12 | -:12 | \
+             -:4 Gb3+A3+C4:2 -:2 | -:12 & \
+             !f C2+C3:2 -:2 | -:12 | \
+             -:12 | -:12 | \
+             -:12 | C2+C3:2 -:2 | \
+             -:12 | C2+C3:2 -:2 C2+C3:2 -:2 | \
+             -:12 | -:12 | \
+             -:4 C2+C3:2 -:2 | -:12 & \
+             !f C3:2 -:2 | -:12 | \
+             -:12 | -:12 | \
+             -:12 | C3:2 -:2 | \
+             -:12 | C3:2 -:2 C3:2 -:2 | \
+             -:12 | -:12 | \
+             -:4 C3:2 -:2 | -:12",
+        )
+        .in_meters(&[
+            TWO_EIGHT,
+            SIX_EIGHT,
+            THREE_FOUR,
+            THREE_FOUR,
+            SIX_EIGHT,
+            TWO_EIGHT,
+            SIX_EIGHT,
+            FOUR_EIGHT,
+            SIX_EIGHT,
+            THREE_FOUR,
+            FOUR_EIGHT,
+            THREE_FOUR,
+        ])
+        .played_by(&[(gm::VIOLIN, 0)]),
+        Part::new(
+            "47, bar 13",
+            "C4+Ab4+C5+F5+Ab5:2 -:10 C4+Ab4+C5+F5+Ab5:2 -:2 | -:8 C4+Ab4+C5+F5+Ab5:2 -:6 | C4+Ab4+C5+F5+Ab5:2 -:14 | -:16",
+            "",
+        )
+        .with_left(
+            "C2+C3+Gb3:2 -:10 C2+C3+Gb3:2 -:2 | -:8 C2+C3+Gb3:2 -:6 | \
+             C2+C3+Gb3:2 -:14 | -:16 & \
+             !f E7:2 -:10 E7:2 -:2 | -:8 E7:2 -:6 | \
+             E7:2 -:14 | -:16 & \
+             Ab4+E5+F5+Ab5+E6:2 -:10 Ab4+E5+F5+Ab5+E6:2 -:2 | -:8 Ab4+E5+F5+Ab5+E6:2 -:6 | \
+             Ab4+E5+F5+Ab5+E6:2 -:14 | -:16 & \
+             A3+Gb4+A4:2 -:10 A3+Gb4+A4:2 -:2 | -:8 A3+Gb4+A4:2 -:6 | \
+             A3+Gb4+A4:2 -:14 | -:16 & \
+             C2+C3:2 -:10 C2+C3:2 -:2 | -:8 C2+C3:2 -:6 | \
+             C2+C3:2 -:14 | -:16 & \
+             F5+Ab5+E6:2 -:10 F5+Ab5+E6:2 -:2 | -:8 F5+Ab5+E6:2 -:6 | \
+             F5+Ab5+E6:2 -:14 | -:16 & \
+             E4+E5+E6:16 | _:16 | \
+             _:4 -:12 | -:16 & \
+             Eb4+Eb5+Eb6:16 | _:16 | \
+             -:16 | -:16 & \
+             -:16 | -:16 | \
+             !pp Eb4+Eb5+Eb6:16 | _:16 & \
+             C3:2 -:10 C3:2 -:2 | -:8 C3:2 -:6 | \
+             C3:2 -:14 | -:16",
+        )
+        .in_meters(&[COMMON, COMMON, COMMON, COMMON])
+        .with_tempo(&[fermata(40, 8), fermata(48, 16)])
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Forte),
+    ],
+    form: &[
+        "37",
+        "37, bar 3",
+        "38",
+        "39",
+        "39, bar 3",
+        "40",
+        "40, bar 7",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "47, bar 13",
+    ],
+    drums_from: 0,
+    about: "The second dance of the ballet, \"Presto\", a dotted quarter 132 a minute: the young \
+            men chase the girls in a game of abduction. Its meter changes all the time: 9/8, then \
+            6/8, 7/8, 3/4 and 2/4, and towards the end bars of 5/8, 3/8 and 2/8, the shortest a \
+            single stroke. It is in no key, and the score has no key signature: most of its notes \
+            come from one octatonic scale, half step and whole step in turn, C, D flat, E flat, E, \
+            F sharp, G, A, B flat. The violins start it on a chord of that scale; the high D \
+            clarinet, ff marcatissimo, the flutes, the oboes and the piccolo trumpet shriek a \
+            fanfare over it. The bassoons run up an arpeggio, a trombone answers, the horns call, \
+            A, D, A, with the piccolo and the flute replying. The oboes' tune climbs over the \
+            clarinets' sweeps, crescendo poco a poco, until the whole wind band takes over; a horn \
+            calls again, and at 45 the whole orchestra plays chords, fff, the horns with their \
+            bells raised. From 46 the flutes' runs alternate with strokes of the timpani and the \
+            basses, and from 47 the strings' figure with strokes of the whole orchestra; four bars \
+            of chords end it, and a trill in the flutes, under a fermata, leads into the Spring \
+            Rounds.",
+};
