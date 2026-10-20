@@ -23,6 +23,7 @@ mod harmony_keys;
 mod icons;
 mod lead_sheet;
 mod library_browser;
+mod meters;
 mod micromodes;
 mod midi;
 mod piano_roll;

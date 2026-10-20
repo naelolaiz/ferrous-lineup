@@ -45,6 +45,7 @@ use lineup_core::{
 
 use crate::dsp::Smoothed;
 use crate::instrument::{HELD, Instrument, Origin};
+use crate::levels::Levels;
 use crate::metronome::{ClickVoice, click_at, count_in_bar};
 use crate::phrase::Phrase;
 use crate::trace::Tracer;
@@ -226,6 +227,17 @@ pub enum Command {
     SetVolume {
         channel: usize,
         volume: f32,
+    },
+    /// Move a channel between the speakers (see [`lineup_core::Channel::pan`]).
+    SetPan {
+        channel: usize,
+        pan: f32,
+    },
+    /// Send more or less of a channel to the reverb (see
+    /// [`lineup_core::Channel::reverb_send`]).
+    SetReverbSend {
+        channel: usize,
+        send: f32,
     },
     /// Mute or unmute a channel. Muting it also stops the notes it is
     /// playing, but not keys held on a keyboard: those play on a muted
@@ -411,6 +423,7 @@ pub struct AudioEngine {
     playhead: Arc<AtomicUsize>,
     position: Arc<AtomicU64>,
     overlay: Arc<AtomicU64>,
+    levels: Arc<Levels>,
     live_input: Option<LiveInput>,
     midi_output: Option<MidiOutput>,
     info: EngineInfo,
@@ -453,6 +466,7 @@ impl AudioEngine {
         audio_thread.live_input = Some(live_consumer);
         audio_thread.midi_out = Some(midi_producer);
         let overlay = Arc::clone(&audio_thread.overlay_playhead);
+        let levels = Arc::clone(audio_thread.levels());
         let live_input = LiveInput {
             notes: live_producer,
             position: Arc::clone(&position),
@@ -478,6 +492,7 @@ impl AudioEngine {
             playhead,
             position,
             overlay,
+            levels,
             live_input: Some(live_input),
             midi_output: Some(MidiOutput(midi_consumer)),
             info,
@@ -489,6 +504,12 @@ impl AudioEngine {
     /// Returns `false` if the queue was full and the command was dropped.
     pub fn send(&mut self, command: Command) -> bool {
         self.commands.push(command).is_ok()
+    }
+
+    /// How loud each channel and the master have been since the last
+    /// look, for the mixer's meters.
+    pub fn levels(&self) -> &Levels {
+        &self.levels
     }
 
     /// The step being played right now, or `None` when stopped.
@@ -579,6 +600,10 @@ pub(crate) struct ChannelState {
     notes: ChannelNotes,
     volume: Smoothed,
     muted: bool,
+    pan: Smoothed,
+    reverb_send: Smoothed,
+    /// The loudest sample since the end of the last block, for the meters.
+    peak: f32,
 }
 
 /// Everything the audio callback owns.
@@ -656,6 +681,8 @@ pub(crate) struct AudioThread {
     overlay_playhead: Arc<AtomicU64>,
     /// Where every note played is written down, while a trace is on.
     trace: Option<Box<Tracer>>,
+    /// How loud each channel and the master were, for the mixer's meters.
+    levels: Arc<Levels>,
 }
 
 /// A pattern played over the song (see [`Command::SetOverlay`]).
@@ -729,7 +756,13 @@ impl AudioThread {
             overlay: None,
             overlay_playhead: Arc::new(AtomicU64::new(NO_POSITION)),
             trace: None,
+            levels: Arc::default(),
         }
+    }
+
+    /// Where it keeps how loud each channel and the master have been.
+    pub(crate) fn levels(&self) -> &Arc<Levels> {
+        &self.levels
     }
 
     /// Hands something to the UI thread to be freed there.
@@ -884,6 +917,11 @@ impl AudioThread {
                     notes,
                     volume: Smoothed::new(volume, VOLUME_SMOOTHING, self.sample_rate),
                     muted,
+                    // In the middle, all of it in the reverb, until a
+                    // `SetPan` or `SetReverbSend` says otherwise.
+                    pan: Smoothed::new(0.0, VOLUME_SMOOTHING, self.sample_rate),
+                    reverb_send: Smoothed::new(1.0, VOLUME_SMOOTHING, self.sample_rate),
+                    peak: 0.0,
                 };
                 if self.channels.len() < MAX_CHANNELS {
                     // The channels are about to move, and `live_keys`
@@ -941,6 +979,16 @@ impl AudioThread {
             Command::SetVolume { channel, volume } => {
                 if let Some(state) = self.channels.get_mut(channel) {
                     state.volume.set(volume);
+                }
+            }
+            Command::SetPan { channel, pan } => {
+                if let Some(state) = self.channels.get_mut(channel) {
+                    state.pan.set(pan);
+                }
+            }
+            Command::SetReverbSend { channel, send } => {
+                if let Some(state) = self.channels.get_mut(channel) {
+                    state.reverb_send.set(send);
                 }
             }
             Command::SetMuted { channel, muted } => {
@@ -1105,6 +1153,8 @@ impl AudioThread {
         self.reverb.settle();
         for channel in &mut self.channels {
             channel.volume.settle();
+            channel.pan.settle();
+            channel.reverb_send.settle();
         }
     }
 
@@ -1395,6 +1445,7 @@ impl AudioThread {
             self.play_live(message);
         }
 
+        let mut master_peak = [0.0f32; 2];
         for frame in output.chunks_mut(self.output_channels) {
             if let Some(trace) = &mut self.trace {
                 trace.frame(self.now);
@@ -1427,21 +1478,43 @@ impl AudioThread {
             }
             self.now += 1;
 
-            let mut mix = 0.0;
+            // Each channel goes to the speakers as its pan says, and as
+            // much of it as its send says to the reverb, which plays only
+            // the room: what goes in is taken out of the dry sound in
+            // the reverb's wet / dry mix, so a channel with all of it in
+            // sounds as the whole song did before channels had sends,
+            // and one with none plays dry, as with the reverb off.
+            let wet = self.reverb.wet();
+            let mut dry = [0.0; 2];
+            let mut send = 0.0;
             for channel in &mut self.channels {
                 let volume = channel.volume.next_value();
-                mix += channel.instrument.next_sample() * volume;
+                let sample = channel.instrument.next_sample() * volume;
+                channel.peak = channel.peak.max(sample.abs());
+                let amount = channel.reverb_send.next_value();
+                let gains = lineup_core::Channel::pan_gains(channel.pan.next_value());
+                let kept = sample * (1.0 - wet * amount);
+                dry[0] += kept * gains[0];
+                dry[1] += kept * gains[1];
+                send += sample * amount;
             }
             if let Some(phrase) = &mut self.phrase {
-                mix += phrase.next_sample();
+                let sample = phrase.next_sample();
+                dry = dry.map(|side| side + sample * (1.0 - wet));
+                send += sample;
             }
             // The metronome's clicks are added after the reverb: the room
             // is the music's, and a click with a tail is harder to follow.
             let click = self.click.next_sample();
-            let stereo = self.reverb.next(mix).map(|sample| sample + click);
+            let stereo = self
+                .reverb
+                .next(dry, send, wet)
+                .map(|sample| sample + click);
             let volume = self.master_volume.next_value();
+            let stereo = stereo.map(|sample| sample * volume);
+            master_peak = [0, 1].map(|side| master_peak[side].max(stereo[side].abs()));
             // `tanh` gently rounds off peaks above 1.0 instead of clipping them hard.
-            let stereo = stereo.map(|sample| (sample * volume).tanh());
+            let stereo = stereo.map(f32::tanh);
             if frame.len() == 1 {
                 frame[0] = T::from_sample((stereo[0] + stereo[1]) * 0.5);
             } else {
@@ -1450,6 +1523,12 @@ impl AudioThread {
                 }
             }
         }
+
+        for (index, channel) in self.channels.iter_mut().enumerate() {
+            self.levels
+                .raise_channel(index, std::mem::take(&mut channel.peak));
+        }
+        self.levels.raise_master(master_peak);
 
         if self.phrase.as_ref().is_some_and(|phrase| phrase.is_over())
             && let Some(over) = self.phrase.take()

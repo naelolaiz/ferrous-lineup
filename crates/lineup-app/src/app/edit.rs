@@ -107,8 +107,9 @@ impl LineupApp {
                         .channel_removed(index, self.project.channels().len());
                 }
                 Change::InsertChannel(index) => {
-                    let command = self.channel_command(index, sample_rate);
-                    self.send(command);
+                    for command in self.channel_commands(index, sample_rate) {
+                        self.send(command);
+                    }
                     channels_changed = true;
                     self.piano_roll.channel_inserted(index);
                 }
@@ -124,6 +125,14 @@ impl LineupApp {
                 Change::Volume(channel) => {
                     let volume = self.project.channels()[channel].volume;
                     self.send(Command::SetVolume { channel, volume });
+                }
+                Change::Pan(channel) => {
+                    let pan = self.project.channels()[channel].pan;
+                    self.send(Command::SetPan { channel, pan });
+                }
+                Change::ReverbSend(channel) => {
+                    let send = self.project.channels()[channel].reverb_send;
+                    self.send(Command::SetReverbSend { channel, send });
                 }
                 Change::Muted(channel) => {
                     let muted = self.project.channel_muted(channel);

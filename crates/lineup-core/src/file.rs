@@ -165,10 +165,14 @@ pub fn is_project(path: &Path) -> bool {
 /// "Eb7|Fb" (see [`HarmonyName::Polychord`]). Older versions cannot read
 /// them, so a song with any needs format 25.
 ///
+/// Format 26 added a pan and a reverb send to each channel. Older
+/// versions would play every channel in the middle with all of it in
+/// the reverb, so a song with any other mix needs format 26.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play.
-pub const FORMAT_VERSION: u32 = 25;
+pub const FORMAT_VERSION: u32 = 26;
 
 /// The oldest format that can hold `project`.
 ///
@@ -248,7 +252,13 @@ pub fn format_for(project: &Project) -> u32 {
         .chord_markers()
         .iter()
         .any(|marker| matches!(marker.harmony, HarmonyName::Polychord(..)));
-    if has_polychords {
+    let has_channel_mix = project
+        .channels()
+        .iter()
+        .any(|channel| !channel.has_plain_mix());
+    if has_channel_mix {
+        26
+    } else if has_polychords {
         25
     } else if !project.section_styles().is_empty() {
         24
@@ -543,6 +553,12 @@ impl TryFrom<ProjectFile> for Project {
             return invalid(format!("it has more than {MAX_CHANNELS} channels"));
         }
         let channels = file.channels.len();
+        if let Some(channel) = file.channels.iter().find(|channel| !channel.mix_is_valid()) {
+            return invalid(format!(
+                "channel \"{}\" has its pan or reverb send outside its range",
+                channel.name
+            ));
+        }
         for mut channel in file.channels {
             // The synth was called the Loom Osc while the app was called
             // Ferrous Loom; a channel still named after it takes the new
@@ -1189,6 +1205,26 @@ mod tests {
         assert!(text.contains("nudge: 8"), "{text}");
         assert!(text.contains("trim: 8"), "{text}");
         assert_eq!(from_text(&text).unwrap(), project);
+    }
+
+    #[test]
+    fn pan_and_reverb_sends_need_format_twenty_six() {
+        let mut project = plain_demo();
+        let text = to_text(&project).unwrap();
+        assert!(
+            !text.contains("pan") && !text.contains("reverb_send"),
+            "{text}"
+        );
+        project.channel_mut(0).unwrap().pan = -0.5;
+        project.channel_mut(1).unwrap().reverb_send = 0.25;
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 26,"), "{text}");
+        assert!(text.contains("pan: -0.5"), "{text}");
+        assert!(text.contains("reverb_send: 0.25"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+        // A file edited by hand cannot pan past the speakers.
+        let text = text.replace("pan: -0.5", "pan: -3.0");
+        assert!(matches!(from_text(&text), Err(FileError::Invalid(_))));
     }
 
     #[test]
