@@ -1,13 +1,13 @@
-# loom-core: notes and tempo
+# lineup-core: notes and tempo
 
-`loom-core` is the music brain of the project. In step 1 it holds two
+`lineup-core` is the music brain of the project. In step 1 it holds two
 small types, `Note` and `Tempo`. They are simple, which makes them a good
 place to meet Rust's basic building blocks: structs, `impl` blocks,
 associated constants, traits and tests.
 
 ## `Note`: a newtype around a number
 
-File: [`crates/loom-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/pitch.rs)
+File: [`crates/lineup-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/pitch.rs)
 
 ### The music
 
@@ -103,7 +103,7 @@ type Rust uses for sizes and positions in memory.
 
 ## `Tempo`: keeping a value valid
 
-File: [`crates/loom-core/src/tempo.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/tempo.rs)
+File: [`crates/lineup-core/src/tempo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/tempo.rs)
 
 ```rust
 pub struct Tempo { bpm: f32 }

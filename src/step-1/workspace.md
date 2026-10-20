@@ -10,28 +10,28 @@ almost never call the compiler `rustc` directly.
 ## Crates
 
 A **crate** is Rust's unit of compilation: one library or one program.
-Ferrous Loom is split into three crates:
+Ferrous Lineup is split into three crates:
 
 | Crate | Kind | Job |
 |-------|------|-----|
-| `loom-core` | library | Music concepts: notes, tempo, later patterns and chords. No audio, no UI. |
-| `loom-audio` | library | Talks to the sound card and generates sound. |
-| `loom-app` | binary (program) | The window. Produces the `ferrous-loom` executable. |
+| `lineup-core` | library | Music concepts: notes, tempo, later patterns and chords. No audio, no UI. |
+| `lineup-audio` | library | Talks to the sound card and generates sound. |
+| `lineup-app` | binary (program) | The window. Produces the `ferrous-lineup` executable. |
 
 Why three crates instead of one?
 
-- **Clear boundaries.** `loom-core` *cannot* accidentally depend on the UI,
+- **Clear boundaries.** `lineup-core` *cannot* accidentally depend on the UI,
   because it does not list `eframe` as a dependency. The compiler enforces
   the architecture for us.
-- **Faster tests.** `cargo test -p loom-core` compiles only a tiny crate, not
+- **Faster tests.** `cargo test -p lineup-core` compiles only a tiny crate, not
   the whole GUI toolkit.
 - **Reuse.** Later we could build a command-line renderer or a plugin on top
-  of `loom-core` and `loom-audio` without touching the window code.
+  of `lineup-core` and `lineup-audio` without touching the window code.
 
 The dependencies only point one way:
 
 ```text
-loom-app ──▶ loom-audio ──▶ loom-core
+lineup-app ──▶ lineup-audio ──▶ lineup-core
     └─────────────────────────▲
 ```
 
@@ -39,12 +39,12 @@ loom-app ──▶ loom-audio ──▶ loom-core
 
 A **workspace** is a group of crates that are built together and share one
 `Cargo.lock` file and one `target/` output folder. Look at the top-level
-[`Cargo.toml`](https://github.com/naelolaiz/ferrous-loom/blob/main/Cargo.toml):
+[`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml):
 
 ```toml
 [workspace]
 resolver = "3"
-members = ["crates/loom-core", "crates/loom-audio", "crates/loom-app"]
+members = ["crates/lineup-core", "crates/lineup-audio", "crates/lineup-app"]
 
 [workspace.package]
 version = "0.1.0"
@@ -53,7 +53,7 @@ license = "GPL-3.0-or-later"
 ...
 
 [workspace.dependencies]
-loom-core = { path = "crates/loom-core" }
+lineup-core = { path = "crates/lineup-core" }
 cpal = "0.18"
 ...
 ```
@@ -80,13 +80,13 @@ different editions work together fine.
 ## Modules
 
 Inside a crate, code is organized in **modules**. A module is usually one
-file. In [`crates/loom-core/src/lib.rs`](https://github.com/naelolaiz/ferrous-loom/blob/main/crates/loom-core/src/lib.rs):
+file. In [`crates/lineup-core/src/lib.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/lib.rs):
 
 ```rust
 pub mod pitch;   // loads src/pitch.rs as the module `pitch`
 pub mod tempo;   // loads src/tempo.rs as the module `tempo`
 
-pub use pitch::Note;   // re-export: users can write loom_core::Note
+pub use pitch::Note;   // re-export: users can write lineup_core::Note
 pub use tempo::Tempo;
 ```
 
@@ -97,8 +97,8 @@ pub use tempo::Tempo;
   `pub use` also re-exports it.
 
 `lib.rs` is the **crate root** of a library; `main.rs` is the crate root of
-a program. Note that the crate is called `loom-core` in `Cargo.toml` but
-`loom_core` in code: Rust code cannot contain `-` in names, so Cargo
+a program. Note that the crate is called `lineup-core` in `Cargo.toml` but
+`lineup_core` in code: Rust code cannot contain `-` in names, so Cargo
 replaces it with `_`.
 
 ## Doc comments
@@ -106,4 +106,4 @@ replaces it with `_`.
 Comments starting with `///` document the item below them, and `//!`
 documents the enclosing module or crate. They are written in Markdown.
 Run `cargo doc --open` to see them rendered as a browsable website: every
-type and function in Ferrous Loom shows up with its explanation.
+type and function in Ferrous Lineup shows up with its explanation.

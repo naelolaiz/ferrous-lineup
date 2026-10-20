@@ -1,5 +1,10 @@
 # Step 1: The foundation
 
+> The code shown in step 1's chapters is the code as it was at the end of
+> step 1. Later steps changed some of it (the test tone, for example, was
+> replaced in step 2). To read the step 1 version of the code, run
+> `git checkout step-1-foundation`, or browse that branch on GitHub.
+
 Step 1 builds the skeleton that every later feature hangs on:
 
 - a **window** with a transport bar (play button, tempo, test tone controls)
@@ -18,14 +23,14 @@ talk to each other, is made here, and everything else builds on it.
 ## The big picture
 
 ```text
-  UI thread (loom-app)                    Audio thread (loom-audio)
+  UI thread (lineup-app)                    Audio thread (lineup-audio)
   draws the window ~60 times a second     asked for samples every few ms
   reacts to clicks and keys               must never wait or allocate
 
-  LoomApp ──Command──▶ ring buffer (rtrb) ──▶ AudioThread ──▶ sound card
+  LineupApp ──Command──▶ ring buffer (rtrb) ──▶ AudioThread ──▶ sound card
                                                  └── TestTone
 
-  Both sides use loom-core (Note, Tempo): pure music logic, no I/O.
+  Both sides use lineup-core (Note, Tempo): pure music logic, no I/O.
 ```
 
 ## Files added in this step
@@ -33,15 +38,15 @@ talk to each other, is made here, and everything else builds on it.
 ```text
 Cargo.toml                    the workspace: lists the three crates
 crates/
-  loom-core/src/lib.rs        crate root, re-exports Note and Tempo
-  loom-core/src/pitch.rs      Note: MIDI numbers, names, frequencies
-  loom-core/src/tempo.rs      Tempo: beats per minute, beat lengths
-  loom-audio/src/lib.rs       crate root
-  loom-audio/src/synth.rs     TestTone: a click-free sine generator
-  loom-audio/src/engine.rs    AudioEngine: sound card, audio thread, commands
-  loom-app/src/main.rs        program entry point, opens the window
-  loom-app/src/app.rs         LoomApp: everything drawn in the window
-docs/                         this book
+  lineup-core/src/lib.rs        crate root, re-exports Note and Tempo
+  lineup-core/src/pitch.rs      Note: MIDI numbers, names, frequencies
+  lineup-core/src/tempo.rs      Tempo: beats per minute, beat lengths
+  lineup-audio/src/lib.rs       crate root
+  lineup-audio/src/synth.rs     TestTone: a click-free sine generator
+  lineup-audio/src/engine.rs    AudioEngine: sound card, audio thread, commands
+  lineup-app/src/main.rs        program entry point, opens the window
+  lineup-app/src/app.rs         LineupApp: everything drawn in the window
+docs/                         this book (now on the book branch)
 .github/workflows/ci.yml      automatic build and test on GitHub
 ```
 
