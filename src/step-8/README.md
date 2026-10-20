@@ -38,8 +38,8 @@ and a library to go with them:
   song,
 - **a new rhythm for a song**: pick a rhythm after a style, or
   right-click a rhythm and play the whole song in it, and the chords
-  and bass follow the new rhythm, keeping the same chords, as in FL
-  Studio. Ferrous Lineup works the chords out from the notes first
+  and bass follow the new rhythm, keeping the same chords, as a band
+  would. Ferrous Lineup works the chords out from the notes first
   ([A new rhythm for a song](new-rhythm.md)),
 - **the accompaniment follows your chords**: turn it on in the MIDI
   menu, and while the music plays, the chord you hold on a MIDI or
