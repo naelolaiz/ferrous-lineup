@@ -663,39 +663,74 @@ pub(super) const PRELUDE_IN_C_SHARP_MINOR: Song = Song {
     band: PIANO,
     style: "Epic minor",
     parts: &[
-        Part::new("Pickup", "-:8 A4:4 G#4:4", "").with_left("-:8 A2:4 G#2:4"),
-        // The right hand: its chords on the off-beat eighths, with the
-        // motto A, G sharp, C sharp between them. The left hand has the
-        // motto in octaves; its lower chord notes are left out.
+        Part::new("Pickup", "!ff -:8 A4:4 G#4:4", "").with_left("!ff -:8 A2:4 G#2:4"),
+        // The Lead: the motto A, G sharp, C sharp and, between its notes,
+        // the top of each chord, struck on the off-beat eighths. The Keys
+        // channel: the left hand's motto, one octave of it, and the rest
+        // of each chord, both hands' notes together. A double sharp is
+        // written as the note it sounds: F double sharp is G.
         Part::new(
             "Lento",
-            "C#4:16 | C#4:2 C#5:2 E5:2 D#5:2 A4:2 D5:2 G#4:2 B#4:2 | \
+            "!ff C#4:16 | !pp C#4:2 C#5:2 E5:2 D#5:2 A4:2 D5:2 G#4:2 B#4:2 | \
              C#4:2 C#5:2 E5:2 D#5:2 A4:2 D5:2 G#4:2 B#4:2 | \
              C#4:2 C#5:2 G#5:2 F#5:2 C5:2 E5:2 B4:2 D#5:2 | \
              E4:2 E5:2 B5:2 A5:2 E5:2 G#5:2 D#5:2 G5:2 | \
-             G#4:2 G#5:2 A5:2 F#5:2 G#5:2 E5:2 F#5:2 D#5:2 | \
+             !mf G#4:2 G#5:2 A5:2 F#5:2 G#5:2 E5:2 F#5:2 D#5:2 | \
              E5:2 E5:2 F#5:2 D#5:2 E5:2 C#5:2 D#5:2 B#4:2 | \
-             C#5:2 C#5:2 E5:2 D#5:2 A4:2 D5:2 G#4:2 B#4:2 | \
+             !pp C#5:2 C#5:2 E5:2 D#5:2 A4:2 D5:2 G#4:2 B#4:2 | \
              C#4:2 C#5:2 G#5:2 F#5:2 A4:2 E5:2 G#4:2 B#4:2 | \
              C#4:2 C#5:2 D5:2 B4:2 C#5:2 A4:2 B4:2 G#4:2 | \
-             A5:2 A5:2 C#6:2 B5:2 G4:2 A5:2 G#4:2 G#5:2 | \
-             C#4:2 C#5:2 E5:2 D#5:2 A4:2 D5:2 G#4:2 B#4:2 | \
-             C#4:2 C#5:2 E5:2 D#5:2 A4:2 D5:2 G#4:2 B#4:2",
-            "",
+             A4:2 A4:2 C#5:2 B4:2 G4:2 A4:2 G#4:2 G#4:2 | \
+             C#4:2 C#4:2 E4:2 D#4:2 A4:2 D4:2 G#4:2 B#3:2 | \
+             C#4:2 C#4:2 E4:2 D#4:2 A4:2 D4:2 G#4:2 B#3:2",
+            "C#m | C#m C#m D7/A G#7 | C#m C#m D7/A G#7 | C#m C#m F#m7b5/C B7 | \
+             E E A#m7b5/E D#7 | G#m A/G# G#m F#m/G# | E/G# F#m/G# E/G# G#7 | \
+             C#m C#m D7/A G#7 | C#m C#m F#m7b5/A G#7 | C#m D/C# C#m Bm/C# | \
+             F#m/C# F#m/C# A7/G G#7 | C#m C#m D7/A G#7 | C#m C#m D7/A G#7",
         )
         .with_left(
-            "C#2:16 | _:8 A2:4 G#2:4 | C#2:8 A2:4 G#2:4 | C#2:8 C3:4 B2:4 | E2:8 E3:4 D#3:4 | \
-             G#2:16 | _:2 -:14 | -:8 A2:4 G#2:4 | C#2:8 A2:4 G#2:4 | C#2:16 | \
-             _:2 -:6 G2:4 G#2:4 | C#2:8 A2:4 G#2:4 | C#2:8 A2:4 G#2:4",
+            "!ff C#2:16 | _:8 !pp A2:4 G#2:4 | C#2:8 A2:4 G#2:4 | C#2:8 C3:4 B2:4 | \
+             E2:8 E3:4 D#3:4 | !mf G#2:16 | _:2 -:14 | -:8 !pp A2:4 G#2:4 | C#2:8 A2:4 G#2:4 | \
+             C#2:16 | _:2 -:6 G2:4 G#2:4 | C#2:8 A2:4 G#2:4 | C#2:8 A2:4 G#2:4 \
+             & -:16 | \
+             !pp -:2 E3+G#3+C#4+E4+G#4:2 G#3+B3+E4+G#4+B4:2 G3+A#3+D#4+G4+A#4:2 \
+             -:2 F#3+B#3+D4+F#4+A4:2 -:2 D#3+F#3+B#3+D#4+F#4:2 | \
+             -:2 E3+G#3+C#4+E4+G#4:2 G#3+B3+E4+G#4+B4:2 G3+A#3+D#4+G4+A#4:2 \
+             -:2 F#3+B#3+D4+F#4+A4:2 -:2 D#3+F#3+B#3+D#4+F#4:2 | \
+             -:2 E3+G#3+C#4+E4+G#4:2 B3+C#4+G#4+B4+C#5:2 A3+C#4+F#4+A4+C#5:2 \
+             -:2 F#3+A3+E4+F#4+A4:2 -:2 F#3+A3+D#4+F#4+A4:2 | \
+             -:2 G#3+B3+E4+G#4+B4:2 D#4+E4+B4+D#5+E5:2 C#4+E4+A4+C#5+E5:2 \
+             -:2 A#3+C#4+G#4+A#4+C#5:2 -:2 A#3+C#4+G4+A#4+C#5:2 | \
+             !mf -:2 B3+D#4+G#4+B4+D#5:2 C#4+E4+A4+C#5+E5:2 A3+C#4+F#4+A4+C#5:2 \
+             B3+D#4+G#4+B4+D#5:2 G#3+B3+E4+G#4+B4:2 A3+C#4+F#4+A4+C#5:2 F#3+A3+D#4+F#4+A4:2 | \
+             G#3+B3+E4+G#4+B4:2 G#3+B3+E4+G#4+B4:2 A3+C#4+F#4+A4+C#5:2 F#3+A3+D#4+F#4+A4:2 \
+             G#3+B3+E4+G#4+B4:2 E3+G#3+C#4+E4+G#4:2 F#3+A3+D#4+F#4+A4:2 D#3+F#3+B#3+D#4+F#4:2 | \
+             !pp E3+G#3+C#4+E4+G#4:2 E3+G#3+C#4+E4+G#4:2 G#3+B3+E4+G#4+B4:2 G3+A#3+D#4+G4+A#4:2 \
+             -:2 F#3+B#3+D4+F#4+A4:2 -:2 D#3+F#3+B#3+D#4+F#4:2 | \
+             -:2 E3+G#3+C#4+E4+G#4:2 B3+C#4+G#4+B4+C#5:2 A3+C#4+F#4+A4+C#5:2 \
+             -:2 F#3+B#3+E4+F#4+A4:2 -:2 D#3+F#3+B#3+D#4+F#4:2 | \
+             -:2 E3+G#3+C#4+E4+G#4:2 F#3+A3+D4+F#4+A4:2 D3+F#3+B3+D4+F#4:2 \
+             E3+G#3+C#4+E4+G#4:2 C#3+E3+A3+C#4+E4:2 D3+F#3+B3+D4+F#4:2 B2+F#3+G#3+B3+D4:2 | \
+             C#3+F#3+A3+C#4+F#4:2 C#3+F#3+A3+C#4+F#4:2 E3+F#3+C#4+E4+F#4:2 D3+F#3+B3+D4+F#4:2 \
+             -:2 E3+A3+C#4+E4:2 -:2 D#3+F#3+G#3+B#3+D#4:2 | \
+             -:2 G#2+E3:2 B2+G#3:2 A#2+G3:2 -:2 F#3+B#3:2 -:2 D#3+F#3:2 | \
+             -:2 G#2+E3:2 B2+G#3:2 A#2+G3:2 -:2 F#3+B#3:2 -:2 D#3+F#3:2",
         ),
     ],
     form: &["Pickup", "Lento"],
     drums_from: 1,
-    about: "Three notes, A, G sharp, C sharp, tolling in octaves in the left hand (the Keys \
-            channel) under heavy chords: the first fourteen bars, marked Lento. The chords \
-            slide by semitones over a C sharp that never moves, so there is no chart; the \
-            piano part is written out, with the left hand's octaves reduced to one note. \
-            The famous Agitato comes after this.",
+    about: "Three notes, A, G sharp, C sharp, tolling fff in octaves: the first fourteen \
+            bars, marked Lento. Then, ppp, both hands strike soft chords between the bells, \
+            on the off-beats: C sharp minor over the low C sharp, D seventh over the A (its \
+            C written as B sharp: an augmented sixth, pulling to C sharp) and G sharp \
+            seventh, the dominant, over the G sharp. Bar 5 turns towards E major through F \
+            sharp half-diminished and B seventh, bar 6 towards G sharp through A sharp \
+            half-diminished and D sharp seventh, and over the G sharp held through bars 7 \
+            and 8 the chords step down in parallel. The chart names the chord on each beat \
+            and leaves out the passing chords between. The piano part is written out: the \
+            motto and the top of each chord on the Lead, the left hand's motto (one octave \
+            of it) and the rest of each chord on the Keys channel. The famous Agitato comes \
+            after this.",
 };
 
 // Source: https://www.mutopiaproject.org/ftp/Mendelssohn-BartholdyF/O61/Sommernachtstraum-wedding-march/Sommernachtstraum-wedding-march.ly
@@ -3463,7 +3498,10 @@ pub(super) const LA_MER_DAWN: Song = Song {
             while the two harps strike F sharp and G sharp, an octave apart, one beat after \
             the other, and the cellos, divided in octaves, rock between F sharp and G sharp. \
             Nothing here is a chord in the usual sense: a held bass and, above it, notes of a \
-            pentatonic scale (B, C sharp, F sharp, G sharp), so the chord sheet stays empty. \
+            pentatonic scale (B, C sharp, F sharp, G sharp), so there is no chart. The \
+            chord sheet names the chords it hears in these notes, such as G sharp minor \
+            seventh over B for B, F sharp and G sharp, which its Pitch-class sets view \
+            calls 3-7. \
             In bar 6 the meter turns to 4/4 at the same beat and the oboe sighs G sharp to A \
             and back, the clarinet echoes it a step lower, and the bassoons hold B with E \
             sharp, a tritone, the interval of the whole-tone scale. The key signature is B \
