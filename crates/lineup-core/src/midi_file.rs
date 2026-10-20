@@ -158,17 +158,18 @@ fn write_file(
 /// The MIDI channel (0 to 15) each channel of the project goes out on.
 ///
 /// Built-in drums share channel 10, where General MIDI expects drums.
-/// MIDI Out channels keep the channel they were given. Every other
-/// channel gets the next free one: not 10, and not one a MIDI Out channel
-/// already plays on, or the two would share one sound on the synth and
-/// cut each other's notes short. When there are more channels than free
-/// ones, the free ones are used again from the start (or, if MIDI Out
-/// channels take all of them, every channel but 10 is).
+/// Channels sent over MIDI (MIDI Out channels, and drums sent elsewhere)
+/// keep the channel they were given. Every other channel gets the next
+/// free one: not 10, and not one a channel sent over MIDI already plays
+/// on, or the two would share one sound on the synth and cut each
+/// other's notes short. When there are more channels than free ones, the
+/// free ones are used again from the start (or, if channels sent over
+/// MIDI take all of them, every channel but 10 is).
 pub fn midi_channels(channels: &[Channel]) -> Vec<u8> {
     let taken = |number: u8| {
         channels
             .iter()
-            .any(|channel| channel.kind == ChannelKind::MidiOut { channel: number })
+            .any(|channel| channel.sent_over_midi() == Some(number))
     };
     let free: Vec<u8> = (0..16u8)
         .filter(|&number| number != DRUM_CHANNEL && !taken(number))
@@ -183,7 +184,9 @@ pub fn midi_channels(channels: &[Channel]) -> Vec<u8> {
     channels
         .iter()
         .map(|channel| match channel.kind {
-            ChannelKind::Sampler(SampleSource::Builtin(_)) => DRUM_CHANNEL,
+            ChannelKind::Sampler(SampleSource::Builtin(_)) => {
+                channel.sent_on.unwrap_or(DRUM_CHANNEL)
+            }
             ChannelKind::MidiOut { channel } => channel,
             _ => melodic.next().unwrap_or(0),
         })
@@ -804,5 +807,36 @@ mod tests {
             Channel::synth(),
         ];
         assert_eq!(midi_channels(&channels), [0, DRUM_CHANNEL, 4, 1]);
+    }
+
+    #[test]
+    fn a_drum_sent_over_midi_keeps_its_channel_and_its_note() {
+        let mut clap = Channel::drum(Drum::Clap);
+        clap.send_over_midi(2);
+        let channels = [
+            Channel::synth(),
+            Channel::drum(Drum::Snare),
+            clap,
+            Channel::synth(),
+            Channel::synth(),
+        ];
+        // The synths leave channel 3 to the clap.
+        assert_eq!(midi_channels(&channels), [0, DRUM_CHANNEL, 2, 1, 3]);
+        let mut project = Project::empty();
+        while !project.channels().is_empty() {
+            project.remove_channel(0);
+        }
+        let clap = project.add_channel(channels[2].clone()).unwrap();
+        project.pattern_mut(0).unwrap().toggle(clap, 0);
+        let file = pattern_to_midi(&project, 0);
+        let on = MidiMessage::NoteOn {
+            channel: 2,
+            pitch: general_midi_drum(Drum::Clap),
+            velocity: crate::DEFAULT_VELOCITY,
+        };
+        assert!(
+            file.windows(3).any(|bytes| *bytes == *on.bytes()),
+            "no clap on channel 3"
+        );
     }
 }

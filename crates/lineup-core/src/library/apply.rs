@@ -123,12 +123,13 @@ fn plays_notes(channel: &Channel) -> bool {
     )
 }
 
-/// The first synth channel called `name`.
+/// The first synth channel called `name`, or the first sent over MIDI:
+/// a "Bass" sent to an external synth is still the bass.
 pub(super) fn find_synth(project: &Project, name: &str) -> Option<usize> {
     project
         .channels()
         .iter()
-        .position(|channel| channel.kind == ChannelKind::Synth && channel.name == name)
+        .position(|channel| plays_notes(channel) && channel.name == name)
 }
 
 /// A synth channel called `name`: the first one there is, or a new one.
@@ -154,6 +155,7 @@ pub fn synth_named(project: &mut Project, name: &str) -> Option<usize> {
         program,
         pan: 0.0,
         reverb_send: 1.0,
+        sent_on: None,
     })
 }
 
@@ -791,6 +793,23 @@ mod tests {
             6,
             "the bass is not used for chords"
         );
+
+        // A bass and a kick sent over MIDI are still the bass and the
+        // kick: the style plays on them, not on new channels.
+        project.channel_mut(5).unwrap().send_over_midi(1);
+        project.channel_mut(0).unwrap().send_over_midi(9);
+        assert!(write_style(&mut project, 0, style, PitchClass::C, Some(4)));
+        assert_eq!(project.channels().len(), 6);
+        assert_eq!(
+            project.channels()[5].kind,
+            ChannelKind::MidiOut { channel: 1 }
+        );
+        assert_eq!(project.channels()[0].sent_over_midi(), Some(9));
+        assert!(!project.pattern(0).unwrap().notes(5).is_empty());
+        let beat = Rhythm::named("Pop beat").unwrap();
+        assert!(write_rhythm(&mut project, 0, beat));
+        assert_eq!(project.channels().len(), 6);
+        assert!(!project.pattern(0).unwrap().notes(0).is_empty());
     }
 
     #[test]

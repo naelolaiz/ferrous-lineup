@@ -136,22 +136,10 @@ pub fn instrument_choices(
     actions: &mut Vec<RackAction>,
 ) {
     let current = state.program;
-    let sent_on = match state.kind {
-        ChannelKind::MidiOut { channel } => Some(channel),
-        _ => None,
-    };
+    let sent_on = state.sent_over_midi();
     // Sending it over MIDI comes first, where the long list of
     // instruments below can't scroll it out of sight.
-    midi_choices(ui, channel, sent_on, actions);
-    if sent_on.is_some()
-        && ui
-            .button("Play it here instead")
-            .on_hover_text("Stop sending it over MIDI, and play it with the built-in sound")
-            .clicked()
-    {
-        actions.push(RackAction::PlayHere(channel));
-        ui.close();
-    }
+    midi_part(ui, channel, state, actions);
     ui.separator();
     widgets::scroll_menu(ui, |ui| {
         let none = if sent_on.is_some() {
@@ -197,9 +185,27 @@ pub fn instrument_choices(
     });
 }
 
+/// Sending channel `channel` (`state`) over MIDI, inside a menu: the
+/// MIDI channel and the output, and "Play it here instead" once it is
+/// sent. The instrument menus start with it; a built-in drum, which has
+/// no instrument to choose, has only this.
+pub fn midi_part(ui: &mut Ui, channel: usize, state: &Channel, actions: &mut Vec<RackAction>) {
+    let sent_on = state.sent_over_midi();
+    midi_choices(ui, channel, sent_on, actions);
+    if sent_on.is_some()
+        && ui
+            .button("Play it here instead")
+            .on_hover_text("Stop sending it over MIDI, and play it with the built-in sound")
+            .clicked()
+    {
+        actions.push(RackAction::PlayHere(channel));
+        ui.close();
+    }
+}
+
 /// "Send over MIDI": the MIDI channel to send channel `channel` on (it is
-/// sent on `sent_on` already, if any), and the output that every MIDI
-/// Out channel goes to.
+/// sent on `sent_on` already, if any), and the output that every channel
+/// sent over MIDI goes to.
 fn midi_choices(ui: &mut Ui, channel: usize, sent_on: Option<u8>, actions: &mut Vec<RackAction>) {
     let label = match sent_on {
         Some(midi_channel) => format!("● Sent over MIDI, channel {}", midi_channel + 1),
@@ -230,7 +236,7 @@ fn midi_choices(ui: &mut Ui, channel: usize, sent_on: Option<u8>, actions: &mut 
             }
         });
         ui.separator();
-        ui.label("Output, for every MIDI Out channel");
+        ui.label("Output, for every channel sent over MIDI");
         let outputs: MidiOutputs = ui
             .ctx()
             .data(|data| data.get_temp(midi_outputs_id()))
@@ -455,6 +461,8 @@ pub fn show(
                             ChannelKind::Synth | ChannelKind::MidiOut { .. }
                         ) {
                             instrument_menu(ui, index, channel, &mut actions);
+                        } else if channel.can_go_over_midi() {
+                            midi_part(ui, index, channel, &mut actions);
                         }
                         if locks && ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
                             actions.push(RackAction::SetLocked {

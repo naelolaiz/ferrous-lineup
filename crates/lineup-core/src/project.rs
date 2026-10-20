@@ -149,6 +149,15 @@ pub struct Channel {
     /// room is (see [`crate::mixer::ReverbSettings`]).
     #[serde(default = "full_send", skip_serializing_if = "is_full_send")]
     pub reverb_send: f32,
+    /// For a built-in drum: the MIDI channel (0 to 15, shown as 1 to 16)
+    /// it is sent over instead of playing here, as its note of a General
+    /// MIDI drum set (see
+    /// [`general_midi_drum`](crate::midi_file::general_midi_drum)). Other
+    /// channels go over MIDI by being a [`ChannelKind::MidiOut`], which
+    /// keeps the notes they play; a drum keeps being the drum it is, for
+    /// the band and the styles.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sent_on: Option<u8>,
 }
 
 fn is_centred(pan: &f32) -> bool {
@@ -191,6 +200,7 @@ impl Channel {
             program: None,
             pan: 0.0,
             reverb_send: 1.0,
+            sent_on: None,
         }
     }
 
@@ -204,6 +214,7 @@ impl Channel {
             program: None,
             pan: 0.0,
             reverb_send: 1.0,
+            sent_on: None,
         }
     }
 
@@ -219,13 +230,42 @@ impl Channel {
             program: None,
             pan: 0.0,
             reverb_send: 1.0,
+            sent_on: None,
         }
+    }
+
+    /// The MIDI channel (0 to 15) it is sent over, if it is: a MIDI Out
+    /// channel's, or a built-in drum's sent over MIDI.
+    pub fn sent_over_midi(&self) -> Option<u8> {
+        match self.kind {
+            ChannelKind::MidiOut { channel } => Some(channel),
+            ChannelKind::Sampler(SampleSource::Builtin(_)) => self.sent_on,
+            _ => None,
+        }
+    }
+
+    /// Whether it can be sent over MIDI: a synth, a built-in drum, or a
+    /// MIDI Out channel already. A sample file has no note a synth could
+    /// play in its place.
+    pub fn can_go_over_midi(&self) -> bool {
+        !matches!(self.kind, ChannelKind::Sampler(SampleSource::File(_)))
     }
 
     /// Sends its notes over MIDI, on MIDI channel `midi_channel` (0–15),
     /// keeping its instrument. A name that only said what played it
-    /// ("Lineup Osc", "MIDI Out 2") follows to the new MIDI channel.
+    /// ("Lineup Osc", "MIDI Out 2") follows to the new MIDI channel. A
+    /// built-in drum stays the drum it is, and goes out as its note of a
+    /// General MIDI drum set. A sample file stays as it is.
     pub fn send_over_midi(&mut self, midi_channel: u8) {
+        let midi_channel = midi_channel.min(15);
+        match self.kind {
+            ChannelKind::Sampler(SampleSource::Builtin(_)) => {
+                self.sent_on = Some(midi_channel);
+                return;
+            }
+            ChannelKind::Sampler(SampleSource::File(_)) => return,
+            _ => {}
+        }
         let plain = match self.kind {
             ChannelKind::Synth => self.name == Channel::synth().name,
             ChannelKind::MidiOut { channel } => self.name == Channel::midi_out(channel).name,
@@ -241,8 +281,10 @@ impl Channel {
 
     /// Plays it with the built-in sound again, if it was sent over MIDI,
     /// keeping its instrument. A name that only said which MIDI channel
-    /// it was sent on becomes the Lineup Osc's.
+    /// it was sent on becomes the Lineup Osc's. A drum plays its own
+    /// built-in sound again.
     pub fn play_here(&mut self) {
+        self.sent_on = None;
         if let ChannelKind::MidiOut { channel } = self.kind {
             if self.name == Channel::midi_out(channel).name {
                 self.name = Channel::synth().name;
@@ -2262,6 +2304,32 @@ mod tests {
             (lead.name.as_str(), lead.kind),
             ("Lead", ChannelKind::MidiOut { channel: 0 })
         );
+    }
+
+    #[test]
+    fn a_drum_goes_over_midi_as_the_drum_it_is() {
+        let mut kick = Channel::drum(Drum::Kick);
+        assert!(kick.can_go_over_midi());
+        assert_eq!(kick.sent_over_midi(), None);
+        kick.send_over_midi(9);
+        assert_eq!(
+            kick.kind,
+            ChannelKind::Sampler(SampleSource::Builtin(Drum::Kick))
+        );
+        assert_eq!(
+            (kick.name.as_str(), kick.sent_over_midi()),
+            ("Kick", Some(9))
+        );
+        kick.play_here();
+        assert_eq!(kick, Channel::drum(Drum::Kick));
+        // A sample file has no note to send.
+        let mut sample = Channel {
+            kind: ChannelKind::Sampler(SampleSource::File("loop.wav".into())),
+            ..Channel::drum(Drum::Kick)
+        };
+        assert!(!sample.can_go_over_midi());
+        sample.send_over_midi(2);
+        assert_eq!(sample.sent_over_midi(), None);
     }
 
     #[test]
