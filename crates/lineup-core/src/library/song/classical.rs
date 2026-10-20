@@ -3099,8 +3099,37 @@ const BOLERO_ENDING: &str = "E3+G3+C4+C5:4 (3 F#3+Bb3+D4+F#4+F#5:1 G3+B3+Eb4+G4+
      G3+C4+E4+G4+C5+E5+G5+C6:2 -:10 & -:12 | G3+C4+E4:4 -:8 | G3+C4+E4:4 -:8 | \
      G3+C4+E4:4 -:8 | F3+Ab3:2 -:10 | -:12";
 
-/// C major under every bar of a statement.
+/// C major under every bar of a statement: under the flute's and the
+/// clarinet's, the violas and cellos play nothing but C and G.
 const BOLERO_C: &str = "C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C";
+
+/// The first tune's harmony once the strings play chords under it, from
+/// bar 77: C major, the strings' G, B and D on each third beat a passing
+/// touch of the dominant over the held C. Where the tune comes to rest
+/// on G, in its seventh bar, the strings move to G, C, D and F and then
+/// G, B and D: the dominant seventh over the held C, to the tune's
+/// sixteenth bar, where C major comes back.
+const BOLERO_A_CHORDS: &str = "C | C | C | C | C | C | G7/C | G7/C | G7/C | G7/C | G7/C | G7/C | \
+     G7/C | G7/C | G7/C | C | C | C";
+
+/// The second tune's harmony, all over the held C: C seventh, the B flat
+/// the tune starts on; C seventh with a flat ninth, the tune's D flat
+/// over the strings' E and B flat (C, D flat, E, F, G, A flat, B flat,
+/// the Phrygian dominant scale, as Spanish as the tune); the dominant
+/// seventh over C where the tune climbs to A flat; and, where it falls
+/// F, E flat, D flat, C, the chords the woodwinds play it in from bar
+/// 203: F minor, E flat major and D flat major over C, each held into
+/// the next bar's first beat, as the harp's B flat, A flat, G falls
+/// under them (bars 55 and 56), down to C.
+const BOLERO_B_CHORDS: &str = "C7 | C7 | C7 | C7 | C7b9 | C7b9 | C7b9 C7b9 C7 | C7 | G7/C | G7/C | \
+     C7 | C7 | C Fm/C Fm/C | Fm/C Eb/C Eb/C | Eb/C Db/C Db/C | Db/C Db/C C | C | C";
+
+/// The last statement's harmony: the second tune's, until its last four
+/// bars, which climb instead of falling: C, then D minor seventh and F
+/// over the held C with G on each third beat, the G that turns to E
+/// major.
+const BOLERO_LAST_CHORDS: &str = "C7 | C7 | C7 | C7 | C7b9 | C7b9 | C7b9 C7b9 C7 | C7 | G7/C | G7/C | \
+     C7 | C7 | C | C | Dm7/C Dm7/C G | Dm7/C F/C G";
 
 // Source: the printed full score (Durand, 1929) as engraved in LilyPond by Nicolas Sceaux
 // (CC0), https://github.com/nsceaux/Ravel_Bolero at commit
@@ -3175,96 +3204,96 @@ pub(super) const BOLERO: Song = Song {
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::CLARINET, 0)])
             .marked(Dynamic::Piano),
-        Part::new("Bassoon", BOLERO_B, BOLERO_C)
+        Part::new("Bassoon", BOLERO_B, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_four!(bolero_beats_3), " | ", bolero_beats_4!(), " | ", bolero_beats_3!(), " | ", bolero_beats_5!(), " | ", bolero_beats_6!(), " | ", bolero_beats_7!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_2!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::BASSOON, 0)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::MezzoPiano),
-        Part::new("E-flat clarinet", BOLERO_B, BOLERO_C)
+        Part::new("E-flat clarinet", BOLERO_B, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_four!(bolero_beats_7), " | ", bolero_beats_8!(), " | ", bolero_beats_7!(), " | ", bolero_beats_9!(), " | ", bolero_beats_10!(), " | ", bolero_beats_11!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_1!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::CLARINET, 12)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::Piano),
-        Part::new("Oboe d'amore", BOLERO_A, BOLERO_C)
+        Part::new("Oboe d'amore", BOLERO_A, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_two!(bolero_beats_12), " | ", bolero_beats_13!(), " | ", bolero_four!(bolero_beats_14), " | ", bolero_beats_15!(), " | ", bolero_beats_16!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_1!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::OBOE, 0)])
             .marked(Dynamic::MezzoPiano),
-        Part::new("Trumpet and flute", BOLERO_A, BOLERO_C)
+        Part::new("Trumpet and flute", BOLERO_A, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_two!(bolero_beats_17), " | ", bolero_beats_18!(), " | ", bolero_four!(bolero_beats_19), " | ", bolero_beats_20!(), " | ", bolero_beats_21!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_1!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::MUTED_TRUMPET, 0), (gm::FLUTE, 12)])
             .marked(Dynamic::MezzoPiano),
-        Part::new("Tenor saxophone", BOLERO_B, BOLERO_C)
+        Part::new("Tenor saxophone", BOLERO_B, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_four!(bolero_beats_22), " | ", bolero_beats_23!(), " | ", bolero_beats_22!(), " | ", bolero_beats_24!(), " | ", bolero_beats_25!(), " | ", bolero_beats_26!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_2!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::TENOR_SAX, 0)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::MezzoPiano),
-        Part::new("Sopranino saxophone", BOLERO_B, BOLERO_C)
+        Part::new("Sopranino saxophone", BOLERO_B, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_four!(bolero_beats_26), " | ", bolero_beats_27!(), " | ", bolero_beats_26!(), " | ", bolero_beats_28!(), " | ", bolero_beats_29!(), " | ", bolero_beats_30!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_3!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::SOPRANO_SAX, 12)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::MezzoPiano),
-        Part::new("Horn, celesta and piccolos", BOLERO_A, BOLERO_C)
+        Part::new("Horn, celesta and piccolos", BOLERO_A, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_two!(bolero_beats_31), " | ", bolero_beats_32!(), " | ", bolero_four!(bolero_beats_33), " | ", bolero_beats_34!(), " | ", bolero_beats_35!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_5!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::FRENCH_HORN, 0), (gm::CELESTA, 12), (gm::CELESTA, 24), (gm::PICCOLO, 19), (gm::PICCOLO, 28)])
             .marked(Dynamic::MezzoForte),
-        Part::new("Oboes and clarinets", BOLERO_A, BOLERO_C)
+        Part::new("Oboes and clarinets", BOLERO_A, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_two!(bolero_beats_35), " | ", bolero_beats_36!(), " | ", bolero_four!(bolero_beats_37), " | ", bolero_beats_38!(), " | ", bolero_beats_39!(), " & ", bolero_eight!(bolero_rhythm_6), " | ", bolero_rhythm_7!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::OBOE, 7), (gm::OBOE, 12), (gm::ENGLISH_HORN, 0), (gm::CLARINET, 0), (gm::CLARINET, 12)])
             .marked(Dynamic::MezzoForte),
-        Part::new("Trombone", BOLERO_B, BOLERO_C)
+        Part::new("Trombone", BOLERO_B, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_four!(bolero_beats_40), " | ", bolero_beats_41!(), " | ", bolero_beats_42!(), " | ", bolero_beats_43!(), " | ", bolero_beats_44!(), " | ", bolero_beats_45!(), " & ", bolero_eight!(bolero_rhythm_8), " | ", bolero_rhythm_3!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::TROMBONE, 0)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::MezzoForte),
-        Part::new("Woodwinds", BOLERO_WOODWINDS, BOLERO_C)
+        Part::new("Woodwinds", BOLERO_WOODWINDS, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_two!(bolero_beats_45), " | ", bolero_beats_46!(), " | ", bolero_beats_45!(), " | ", bolero_beats_47!(), " | ", bolero_beats_45!(), " | ", bolero_beats_48!(), " | ", bolero_beats_49!(), " | ", bolero_beats_50!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_3!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::OBOE, 0), (gm::CLARINET, 0)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::Forte),
-        Part::new("Violins", BOLERO_A, BOLERO_C)
+        Part::new("Violins", BOLERO_A, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_two!(bolero_beats_51), " | ", bolero_beats_52!(), " | ", bolero_four!(bolero_beats_53), " | ", bolero_beats_54!(), " | ", bolero_beats_55!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_3!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::STRING_ENSEMBLE, 0), (gm::STRING_ENSEMBLE, 12), (gm::FLUTE, 0), (gm::FLUTE, 12), (gm::OBOE, 0), (gm::OBOE, 12), (gm::CLARINET, 0), (gm::CLARINET, 12), (gm::PICCOLO, 24)])
             .marked(Dynamic::Forte),
-        Part::new("Violins in harmony", BOLERO_VIOLINS_IN_HARMONY, BOLERO_C)
+        Part::new("Violins in harmony", BOLERO_VIOLINS_IN_HARMONY, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_beats_55!(), " | ", bolero_beats_56!(), " | ", bolero_beats_57!(), " | ", bolero_four!(bolero_beats_53), " | ", bolero_beats_58!(), " | ", bolero_beats_59!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_9!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::STRING_ENSEMBLE, 0), (gm::STRING_ENSEMBLE, 12), (gm::TENOR_SAX, 0), (gm::ENGLISH_HORN, 0), (gm::CLARINET, 0), (gm::OBOE, 12), (gm::FLUTE, 12)])
             .marked(Dynamic::Forte),
-        Part::new("Violins and trumpet", BOLERO_B, BOLERO_C)
+        Part::new("Violins and trumpet", BOLERO_B, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_four!(bolero_beats_60), " | ", bolero_beats_61!(), " | ", bolero_beats_60!(), " | ", bolero_beats_62!(), " | ", bolero_beats_63!(), " | ", bolero_beats_64!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_4!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::STRING_ENSEMBLE, 0), (gm::STRING_ENSEMBLE, 12), (gm::TRUMPET, 0), (gm::ENGLISH_HORN, 0), (gm::OBOE, 12), (gm::FLUTE, 12), (gm::PICCOLO, 24)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::Forte),
-        Part::new("Trombone and strings", BOLERO_TROMBONE_AND_STRINGS, BOLERO_C)
+        Part::new("Trombone and strings", BOLERO_TROMBONE_AND_STRINGS, BOLERO_B_CHORDS)
             .with_left(concat!(bolero_beats_65!(), " | ", bolero_beats_66!(), " | ", bolero_beats_67!(), " | ", bolero_beats_68!(), " | ", bolero_beats_69!(), " | ", bolero_beats_70!(), " | ", bolero_beats_71!(), " | ", bolero_beats_72!(), " | ", bolero_beats_73!(), " & ", bolero_four!(bolero_rhythm_4), " | ", bolero_rhythm_10!(), " | ", bolero_two!(bolero_rhythm_4), " | ", bolero_rhythm_4!(), " | ", bolero_rhythm_11!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::TROMBONE, 0), (gm::STRING_ENSEMBLE, 0), (gm::ENGLISH_HORN, 0), (gm::CLARINET, 0), (gm::STRING_ENSEMBLE, 12), (gm::OBOE, 12), (gm::FLUTE, 12), (gm::SOPRANO_SAX, 12)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::Forte),
-        Part::new("Trumpets", BOLERO_TRUMPETS, BOLERO_C)
+        Part::new("Trumpets", BOLERO_TRUMPETS, BOLERO_A_CHORDS)
             .with_left(concat!(bolero_two!(bolero_beats_74), " | ", bolero_beats_75!(), " | ", bolero_four!(bolero_beats_76), " | ", bolero_beats_77!(), " | ", bolero_beats_78!(), " & ", bolero_two!(bolero_rhythm_12), " | ", bolero_rhythm_13!(), " | ", bolero_two!(bolero_rhythm_14), " | ", bolero_two!(bolero_rhythm_15), " | ", bolero_rhythm_16!(), " | ", bolero_rhythm_17!()))
             .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
             .played_by(&[(gm::TRUMPET, 0), (gm::TENOR_SAX, 0), (gm::STRING_ENSEMBLE, 0), (gm::TRUMPET, 12), (gm::SOPRANO_SAX, 12), (gm::STRING_ENSEMBLE, 12), (gm::FLUTE, 12)])
             .marked(Dynamic::Fortissimo),
-        Part::new("Last statement", BOLERO_LAST_STATEMENT, "C | C | C | C | C | C | C | C | C | C | C | C | C | C | Dm7 Dm7 G | Dm7 Dm7 G")
+        Part::new("Last statement", BOLERO_LAST_STATEMENT, BOLERO_LAST_CHORDS)
             .with_left(concat!(bolero_four!(bolero_beats_79), " | ", bolero_beats_80!(), " | ", bolero_beats_81!(), " | ", bolero_beats_82!(), " | ", bolero_beats_83!(), " & ", bolero_four!(bolero_rhythm_18), " | ", bolero_rhythm_14!(), " | ", bolero_rhythm_18!(), " | ", bolero_rhythm_19!(), " | ", bolero_rhythm_14!()))
             .with_drums(&[(Drum::Snare, bolero_eight!(bolero_snare))])
             .played_by(&[(gm::TRUMPET, 0), (gm::STRING_ENSEMBLE, 0), (gm::TENOR_SAX, 0)])
             .in_key(C, Mixolydian)
             .marked(Dynamic::Fortissimo),
-        Part::new("E major", BOLERO_E_MAJOR, "E | E | E | E | E | E | E | E E G")
+        Part::new("E major", BOLERO_E_MAJOR, "E | E | E | E | E | E | E | E E G7")
             .with_left(concat!(bolero_two!(bolero_beats_84), " | ", bolero_beats_84!(), " | ", bolero_beats_85!(), " & ", bolero_two!(bolero_rhythm_20), " | ", bolero_rhythm_20!(), " | ", bolero_rhythm_21!()))
             .with_drums(&[(Drum::Snare, bolero_four!(bolero_snare))])
             .played_by(&[(gm::TRUMPET, 0), (gm::STRING_ENSEMBLE, 0), (gm::TENOR_SAX, 0)])
