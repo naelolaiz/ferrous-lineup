@@ -4,18 +4,40 @@ use eframe::egui::{self, Rect};
 use lineup_core::score_order::score_order;
 use lineup_core::{Channel, ChannelKind, Mixer, SampleSource, general_midi};
 
-use super::LineupApp;
+use super::{Audio, LineupApp};
+use crate::meters::{self, Meters};
 use crate::widgets::{self, Opening};
 use crate::{channel_rack, theme};
 
 /// How far channel names sit in from their section's heading.
 const INDENT: f32 = 10.0;
 
+/// The size of a channel's level meter.
+const METER: egui::Vec2 = egui::vec2(64.0, 8.0);
+
+/// How often the mixer looks at the meters while nothing else redraws
+/// the window: for notes played on a MIDI keyboard while stopped.
+const METER_REFRESH: std::time::Duration = std::time::Duration::from_millis(100);
+
+const METER_HELP: &str = "How loud it plays: full scale at the right end. Amber is close to \
+                          full; red is over it, where the sound is rounded off.";
+
 impl LineupApp {
     pub(super) fn mixer_window(&mut self, ctx: &egui::Context, area: Rect) {
         if !self.mixer_open {
             return;
         }
+        if let Audio::Running(engine) = &self.audio {
+            let seconds = ctx.input(|input| input.stable_dt).min(0.25);
+            self.meters
+                .update(engine.levels(), self.project.channels().len(), seconds);
+            if self.meters.moving() {
+                ctx.request_repaint();
+            } else {
+                ctx.request_repaint_after(METER_REFRESH);
+            }
+        }
+        let meters = &self.meters;
         let mut open = self.mixer_open;
         let mut mix = self.project.mixer;
         let mut levels = self.project.channels().to_vec();
@@ -41,12 +63,13 @@ impl LineupApp {
         widgets::fit_when_changed(ctx, window, id, size, &rows).show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.strong("Master");
+                master_meter(ui, meters);
                 percent_slider(ui, &mut mix.master);
                 if ui
                     .button("Reset mix")
                     .on_hover_text(
-                        "Reset master, reverb, solo, levels and mutes (the band's mutes stay); \
-                             Undo restores them",
+                        "Reset master, reverb, solo, levels, pans, reverb sends and mutes (the \
+                         band's mutes stay); Undo restores them",
                     )
                     .clicked()
                 {
@@ -88,7 +111,10 @@ impl LineupApp {
                     .show(ui, |ui| {
                         ui.strong("Channel");
                         ui.strong("Instrument");
+                        ui.strong("Level");
                         ui.strong("Volume");
+                        ui.strong("Pan");
+                        ui.strong("Reverb");
                         ui.strong("Mute");
                         ui.strong("Solo");
                         ui.end_row();
@@ -125,7 +151,23 @@ impl LineupApp {
                                 } else {
                                     ui.label(instrument(channel));
                                 }
+                                meters::meter(ui, meters.channel(index), METER)
+                                    .on_hover_text(METER_HELP);
                                 percent_slider(ui, &mut channel.volume);
+                                pan_slider(ui, &mut channel.pan);
+                                ui.scope(|ui| {
+                                    ui.spacing_mut().slider_width = 60.0;
+                                    percent_slider(ui, &mut channel.reverb_send);
+                                })
+                                .response
+                                .on_hover_text(
+                                    if mix.reverb.enabled {
+                                        "How much of it goes into the reverb: none plays it dry"
+                                    } else {
+                                        "How much of it goes into the reverb, once the Reverb \
+                                     above is on"
+                                    },
+                                );
                                 ui.checkbox(&mut channel.muted, "")
                                     .on_hover_text("Mute this channel");
                                 if ui
@@ -166,6 +208,8 @@ impl LineupApp {
                     if let Some(state) = project.channel_mut(index) {
                         state.volume = channel.volume;
                         state.muted = channel.muted;
+                        state.pan = channel.pan;
+                        state.reverb_send = channel.reverb_send;
                     }
                 }
             });
@@ -199,6 +243,74 @@ fn instrument(channel: &Channel) -> String {
     }
 }
 
+/// The master's meters, left above right.
+fn master_meter(ui: &mut egui::Ui, meters: &Meters) {
+    let [left, right] = meters.master();
+    ui.vertical(|ui| {
+        ui.spacing_mut().item_spacing.y = 2.0;
+        let size = egui::vec2(METER.x, 4.0);
+        meters::meter(ui, left, size).on_hover_text(METER_HELP);
+        meters::meter(ui, right, size).on_hover_text(METER_HELP);
+    });
+}
+
+/// Where a channel sits between the speakers: "L50" is halfway to the
+/// left, "C" the middle. A double-click puts it back in the middle.
+fn pan_slider(ui: &mut egui::Ui, pan: &mut f32) {
+    let response = ui
+        .scope(|ui| {
+            ui.spacing_mut().slider_width = 60.0;
+            // Room for "L100", so the columns after it stay put.
+            ui.spacing_mut().interact_size.x = 48.0;
+            ui.add(
+                egui::Slider::new(pan, -1.0..=1.0)
+                    // Not lit from the left: the middle is where it starts.
+                    .trailing_fill(false)
+                    .custom_formatter(|value, _| pan_text(value as f32))
+                    .custom_parser(pan_value),
+            )
+        })
+        .inner
+        .on_hover_text("Where it sits between the speakers. Double-click for the middle.");
+    // A slider senses drags, not clicks, so the double-click is read from
+    // the pointer.
+    let double_click = ui.input(|input| {
+        input
+            .pointer
+            .button_double_clicked(egui::PointerButton::Primary)
+    });
+    if double_click && response.contains_pointer() {
+        *pan = 0.0;
+    }
+}
+
+fn pan_text(pan: f32) -> String {
+    let percent = (pan * 100.0).round();
+    if percent < 0.0 {
+        format!("L{:.0}", -percent)
+    } else if percent > 0.0 {
+        format!("R{percent:.0}")
+    } else {
+        "C".to_string()
+    }
+}
+
+/// What a typed pan means: "L30", "R100", "C", or a number from -100
+/// (left) to 100 (right).
+fn pan_value(text: &str) -> Option<f64> {
+    let text = text.trim().to_uppercase();
+    let percent = if text == "C" {
+        0.0
+    } else if let Some(left) = text.strip_prefix('L') {
+        -left.trim().parse::<f64>().ok()?
+    } else if let Some(right) = text.strip_prefix('R') {
+        right.trim().parse::<f64>().ok()?
+    } else {
+        text.parse::<f64>().ok()?
+    };
+    Some(percent / 100.0)
+}
+
 fn percent_slider(ui: &mut egui::Ui, value: &mut f32) {
     ui.add(
         egui::Slider::new(value, 0.0..=1.0)
@@ -212,4 +324,21 @@ fn percent_slider(ui: &mut egui::Ui, value: &mut f32) {
                     .map(|value| value / 100.0)
             }),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pans_read_as_they_are_written() {
+        for (pan, text) in [(-1.0, "L100"), (-0.25, "L25"), (0.0, "C"), (0.5, "R50")] {
+            assert_eq!(pan_text(pan), text);
+            assert_eq!(pan_value(text), Some(f64::from(pan)));
+        }
+        assert_eq!(pan_text(-0.001), "C");
+        assert_eq!(pan_value("r 30"), Some(0.3));
+        assert_eq!(pan_value("-40"), Some(-0.4));
+        assert_eq!(pan_value("left"), None);
+    }
 }

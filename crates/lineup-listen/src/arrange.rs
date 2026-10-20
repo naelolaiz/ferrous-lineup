@@ -150,6 +150,8 @@ pub fn follow(analysis: &Analysis, lead_in: LeadIn, wav: PathBuf, title: &str) -
             volume: 0.8,
             muted: false,
             program: None,
+            pan: 0.0,
+            reverb_send: 1.0,
         })
         .unwrap_or(0);
     let harmony = project

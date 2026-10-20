@@ -115,6 +115,8 @@ pub struct LineupApp {
     /// that changes.
     over_song: Option<usize>,
     mixer_open: bool,
+    /// What the mixer's level meters show.
+    meters: crate::meters::Meters,
     /// Help > Keyboard shortcuts.
     shortcuts_open: bool,
     settings_open: bool,
@@ -229,6 +231,7 @@ impl LineupApp {
             cursor: 0,
             marker: 0,
             mixer_open: false,
+            meters: Default::default(),
             shortcuts_open: false,
             settings_open: false,
             settings: settings::SettingsView::default(),
@@ -326,7 +329,7 @@ impl LineupApp {
             });
         }
         for index in 0..self.project.channels().len() {
-            commands.push(self.channel_command(index, sample_rate));
+            commands.extend(self.channel_commands(index, sample_rate));
         }
         commands.extend(self.song_commands_at(speed));
         commands
@@ -348,22 +351,34 @@ impl LineupApp {
         self.live.channels_changed(self.project.channels().len());
     }
 
-    /// The command that inserts channel `index` of the project, with its
-    /// instrument and its notes in every pattern.
-    fn channel_command(&mut self, index: usize, sample_rate: u32) -> Command {
+    /// The commands that insert channel `index` of the project, with its
+    /// instrument and its notes in every pattern, and set its pan and
+    /// reverb send unless it has the plain mix a new channel starts with.
+    fn channel_commands(&mut self, index: usize, sample_rate: u32) -> Vec<Command> {
         let channel = self.project.channels()[index].clone();
         // The notes as they are played, with the song's swing.
         let notes = ChannelNotes::new(
             (0..self.project.patterns().len())
                 .map(|pattern| self.project.played_notes(pattern, index).into_owned()),
         );
-        Command::InsertChannel {
+        let mut commands = vec![Command::InsertChannel {
             index,
             instrument: self.build_instrument(&channel, sample_rate),
             notes,
             volume: channel.volume,
             muted: self.project.channel_muted(index),
+        }];
+        if !channel.has_plain_mix() {
+            commands.push(Command::SetPan {
+                channel: index,
+                pan: channel.pan,
+            });
+            commands.push(Command::SetReverbSend {
+                channel: index,
+                send: channel.reverb_send,
+            });
         }
+        commands
     }
 
     /// The song as song mode plays it: the clips on tracks that are not
@@ -1258,6 +1273,8 @@ impl LineupApp {
                     volume: 0.8,
                     muted: false,
                     program: None,
+                    pan: 0.0,
+                    reverb_send: 1.0,
                 }),
             }
         });
@@ -1441,7 +1458,7 @@ impl LineupApp {
                         "Mixer",
                         &mut self.mixer_open,
                         icons::mixer,
-                        "master and instrument levels, solo, mute and reverb (F9)",
+                        "levels, meters, pan, solo, mute and reverb (F9)",
                     ),
                 ];
                 for (name, open, picture, about) in windows {
