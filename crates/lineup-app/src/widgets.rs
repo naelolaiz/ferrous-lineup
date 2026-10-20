@@ -145,7 +145,12 @@ pub fn follow_button(ui: &mut Ui) {
 
 /// Reveal the playhead horizontally, leaving the user's vertical position
 /// intact. Only a new step can scroll, so manual scrolling still works.
-pub fn follow_x(ui: &Ui, step: Option<usize>, x: f32, view: Rect) {
+///
+/// `covered` is how wide the names or keys are that stay fixed at the
+/// left edge of the view, over what scrolls: when the playhead goes back
+/// (a song or a loop starting again), it stops right of them, not under
+/// them.
+pub fn follow_x(ui: &Ui, step: Option<usize>, x: f32, view: Rect, covered: f32) {
     let id = ui.scope_id().with("followed-step");
     let step = step.filter(|_| follow_playback(ui.ctx()));
     let previous = ui.ctx().data_mut(|data| {
@@ -155,8 +160,12 @@ pub fn follow_x(ui: &Ui, step: Option<usize>, x: f32, view: Rect) {
     });
     if step.is_some() && step != previous {
         let margin = (view.width() * 0.1).min(60.0);
+        let y = view.center().y;
         ui.scroll_to_rect(
-            Rect::from_center_size(pos2(x, view.center().y), vec2(margin * 2.0, 1.0)),
+            Rect::from_min_max(
+                pos2(x - margin - covered, y - 0.5),
+                pos2(x + margin, y + 0.5),
+            ),
             None,
         );
     }
@@ -570,7 +579,7 @@ mod tests {
                                             vec2(2000.0, 40.0),
                                             Sense::hover(),
                                         );
-                                        follow_x(ui, Some(100), rect.left() + 1500.0, view);
+                                        follow_x(ui, Some(100), rect.left() + 1500.0, view, 0.0);
                                     });
                             offset = result.state.clamped_offset().x;
                         });
@@ -584,6 +593,55 @@ mod tests {
         assert!(
             offset > 1000.0,
             "the playing cursor should be revealed: {offset}"
+        );
+    }
+
+    #[test]
+    fn a_playhead_going_back_stops_right_of_the_fixed_names() {
+        // Names 116 points wide stay at the left of the view, over the
+        // bars, as the playlist's track names do. The playhead plays far
+        // to the right, then a loop takes it back to 600 points from the
+        // start: it must come to rest right of the names.
+        const NAMES: f32 = 116.0;
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        ctx.data_mut(|data| data.insert_persisted(egui::Id::unique("follow-playback"), true));
+        let mut offset = 0.0;
+        for (frame, (step, x)) in [(100, 1500.0), (100, 1500.0), (24, 600.0), (24, 600.0)]
+            .into_iter()
+            .enumerate()
+        {
+            let mut output = ctx.run_pass(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(800.0, 600.0))),
+                    time: Some(frame as f64 * 0.1),
+                    ..Default::default()
+                },
+                |ctx| {
+                    egui::Window::new("Follow back test")
+                        .default_size([400.0, 250.0])
+                        .show(ctx, |ui| {
+                            let result =
+                                egui::ScrollArea::horizontal()
+                                    .animated(false)
+                                    .show(ui, |ui| {
+                                        let view = ui.clip_rect();
+                                        let (rect, _) = ui.allocate_exact_size(
+                                            vec2(2000.0, 40.0),
+                                            Sense::hover(),
+                                        );
+                                        follow_x(ui, Some(step), rect.left() + x, view, NAMES);
+                                    });
+                            offset = result.state.clamped_offset().x;
+                        });
+                },
+            );
+            output.textures_delta.clear();
+        }
+        let shown_at = 600.0 - offset;
+        assert!(
+            shown_at >= NAMES,
+            "the playhead is {shown_at} points from the left, under the names"
         );
     }
 }

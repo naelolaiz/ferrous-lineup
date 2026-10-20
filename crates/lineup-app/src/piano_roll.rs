@@ -146,7 +146,7 @@ const SELECTION_BOX: Color32 = Color32::from_rgba_premultiplied(40, 60, 90, 60);
 const PLAYHEAD: Color32 = Color32::from_rgba_premultiplied(64, 38, 12, 60);
 const LANE_BACKGROUND: Color32 = Color32::from_rgb(36, 42, 46);
 const LANE_CHORD: Color32 = Color32::from_rgb(72, 88, 120);
-const LANE_TEXT: Color32 = Color32::from_rgb(235, 238, 245);
+pub(crate) const LANE_TEXT: Color32 = Color32::from_rgb(235, 238, 245);
 const NO_NOTES_BACKGROUND: Color32 = Color32::from_rgb(70, 52, 30);
 const NO_NOTES_TEXT: Color32 = Color32::from_rgb(150, 156, 170);
 
@@ -1127,6 +1127,7 @@ impl PianoRoll {
                     playhead,
                     ui.cursor().min.x + KEY_WIDTH + step as f32 * step_width,
                     view,
+                    KEY_WIDTH,
                 );
             }
             let ghosts = if self.ghosts { &others[..] } else { &[] };
@@ -1730,15 +1731,19 @@ impl PianoRoll {
                 )
                 .shrink2(vec2(1.0, 1.0));
                 painter.rect_filled(chord_rect, 3.0, LANE_CHORD);
-                // A long chord's name stays in view while it scrolls.
-                let shown = chord_rect.intersect(cells);
-                painter.with_clip_rect(chord_rect).text(
-                    shown.center(),
-                    Align2::CENTER_CENTER,
-                    label,
-                    FontId::proportional(11.0),
-                    LANE_TEXT,
-                );
+                // A name too long for its block is left out: cut short,
+                // "E7/B" would read "7/", another chord. Pointing at the
+                // block names it in full, under the toolbar.
+                let name = painter.layout_no_wrap(label, FontId::proportional(11.0), LANE_TEXT);
+                if name.size().x <= chord_rect.width() - 2.0 {
+                    // A long chord's name stays in view while it scrolls.
+                    let shown = chord_rect.intersect(cells);
+                    painter.with_clip_rect(chord_rect).galley(
+                        shown.center() - name.size() / 2.0,
+                        name,
+                        LANE_TEXT,
+                    );
+                }
             }
             start = end;
         }
