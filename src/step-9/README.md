@@ -73,8 +73,9 @@ else was needed:
   [the mixer in score order](mixer-score-order.md),
   [export video](video-export.md), [a playback trace](playback-trace.md)
   and [step lights in the channel rack](rack-lights.md);
-- more say over the band: [locking a track](locks.md) and
-  [a style for each section](section-styles.md);
+- more say over the band: [locking a track](locks.md),
+  [a style for each section](section-styles.md) and
+  [an orchestra for music that changes meter](orchestra.md);
 - and this book, [online and as a PDF](book-online.md).
 
 ## Trying it

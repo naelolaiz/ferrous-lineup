@@ -39,6 +39,9 @@ clarinets after the drum roll and the kick into the room. One plays
 an arpeggio of C major and the other one of F sharp major, at the same
 time.
 
+To add an orchestra that plays along with any of these pieces in every
+meter, see [An orchestra for music that changes meter](orchestra.md).
+
 ## The music
 
 ### Boléro: one tune, louder and louder
