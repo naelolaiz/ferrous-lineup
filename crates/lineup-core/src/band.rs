@@ -42,6 +42,7 @@ use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 use crate::tempo::Tempo;
 
 mod extras;
+mod following;
 mod form;
 mod guitar;
 pub mod locks;
@@ -1093,8 +1094,20 @@ impl Project {
         parts: apply::StyleParts,
     ) {
         let parts = parts.for_preset().following(style.follows_the_song());
-        if self.band.is_none() && parts.rhythm && parts.instruments {
+        // The band comes in with its instruments, on tracks of its own,
+        // playing plain accents if its patterns were not picked. A style
+        // that follows the song comes in alongside it with its patterns
+        // or its instruments, either, and plays as it does: it never
+        // plays the song's own parts.
+        let follows = style.follows_the_song();
+        let joins = if follows {
+            parts.rhythm || parts.instruments
+        } else {
+            parts.instruments
+        };
+        if self.band.is_none() && joins {
             let mut band = Band::new(style);
+            band.accents_only = !parts.rhythm && !follows;
             band.end = self.song_length();
             band.since = self.channels.len();
             if self.playlist.chord_markers.is_empty() && band.end > 0 {
@@ -1949,6 +1962,12 @@ impl Project {
             variations,
             time: meter.first(),
         };
+        // A style that follows the song plays along with it: it listens
+        // to the song first.
+        let follows = sections::styles_played(&band.styles)
+            .into_iter()
+            .any(|style| band.playing(style).style.follows_the_song());
+        let following = follows.then(|| following::Following::hear(self, &score.bars));
         let mut rewritten = Vec::new();
         for player in Player::ALL {
             if self.is_frozen(player) || self.plays_locked(player) {
@@ -1963,7 +1982,12 @@ impl Project {
                     let mut notes = Vec::new();
                     for style in sections::styles_played(&band.styles) {
                         let playing = band.playing(style);
-                        let part = self.band_notes(&playing, player, &score);
+                        let mut part = self.band_notes(&playing, player, &score);
+                        if let Some(following) = &following
+                            && playing.style.follows_the_song()
+                        {
+                            part = self.played_along(following, &playing, player, part, &score);
+                        }
                         notes.extend(sections::where_it_plays(part, &band.styles, style));
                     }
                     notes
@@ -2004,6 +2028,29 @@ impl Project {
             band.written = written;
             band.heard = Some(heard);
         }
+    }
+
+    /// What `player` of `band` plays along with the song, from `part`, the
+    /// notes its style wrote (see [`following::Following::play_along`]).
+    /// The horns and the timpani strike the chords and the bass notes
+    /// held through each harmony.
+    fn played_along(
+        &self,
+        following: &following::Following,
+        band: &Band,
+        player: Player,
+        part: Vec<(usize, NoteEvent)>,
+        score: &Score,
+    ) -> Vec<(usize, NoteEvent)> {
+        let held = match player {
+            Player::Piano => Comping::Held.play_in_bars(&score.bars, &score.harmonies),
+            Player::Bass => Bass::Held.play_in_bars(&score.bars, &score.harmonies),
+            _ => Vec::new(),
+        };
+        let kick = self.channels.iter().position(|channel| {
+            channel.kind == ChannelKind::Sampler(SampleSource::Builtin(Drum::Kick))
+        });
+        following.play_along(player, part, &held, band.channel(player), kick)
     }
 
     /// What `player` plays in `band`'s style all through `score`, on the
@@ -3722,29 +3769,37 @@ mod tests {
             program(Player::Strings),
             Some(general_midi::STRING_ENSEMBLE)
         );
-        // The bass drum strikes every bar's first beat, and softly each
-        // other beat the bar is felt in, and nothing else.
+        // The bass drum strikes with the score's accents, and on the first
+        // beat of loud bars, and nothing else: not every bar.
         let end = project.band().unwrap().end();
         let beats = felt_beats(&project, end);
+        let bars: Vec<Bar> = project
+            .meter()
+            .bars()
+            .take_while(|bar| bar.start < end)
+            .collect();
+        let heard = following::Following::hear(&before, &bars);
+        let accents: Vec<usize> = heard.accents().iter().map(|accent| accent.at).collect();
+        assert!(!accents.is_empty());
         let mut drums = Vec::new();
         for clip in project.playlist().clips() {
             let pattern = project.pattern(clip.pattern).unwrap();
             if pattern.player == Some(Player::Drums) {
-                drums.extend(
-                    pattern
-                        .all_notes()
-                        .map(|(_, note)| (clip.start + note.start, note.velocity)),
-                );
+                drums.extend(pattern.all_notes().map(|(_, note)| clip.start + note.start));
             }
         }
         drums.sort_unstable();
-        let expected: Vec<(usize, u8)> = beats
-            .iter()
-            .map(|&(at, first)| (at, if first { 120 } else { 56 }))
-            .collect();
-        assert_eq!(drums, expected);
-        // The horns and the timpani play on those beats, or where a chord
-        // changes between two of them.
+        drums.dedup();
+        assert!(!drums.is_empty());
+        assert!(drums.len() < bars.len(), "a bass drum on every bar");
+        for at in &drums {
+            assert!(
+                accents.contains(at) || beats.contains(&(*at, true)),
+                "bass drum at step {at}"
+            );
+        }
+        // The horns and the timpani play on the felt beats, where a chord
+        // changes between two of them, or with the score's accents.
         let changes: Vec<usize> = project
             .playlist()
             .chord_markers()
@@ -3756,12 +3811,156 @@ mod tests {
             assert!(!notes.is_empty(), "{player:?}");
             for (at, ..) in notes {
                 assert!(
-                    beats.iter().any(|&(beat, _)| beat == at) || changes.contains(&at),
+                    beats.iter().any(|&(beat, _)| beat == at)
+                        || changes.contains(&at)
+                        || accents.contains(&at),
                     "{player:?} at step {at}, bar {}",
                     project.meter().bar_at(at).number + 1
                 );
             }
         }
+    }
+
+    /// The notes of the song's own patterns, the first `count`, by
+    /// channel.
+    fn own_notes(project: &Project, count: usize) -> Vec<Vec<(usize, NoteEvent)>> {
+        project.patterns()[..count]
+            .iter()
+            .map(|pattern| {
+                pattern
+                    .all_notes()
+                    .map(|(channel, note)| (channel, *note))
+                    .collect()
+            })
+            .collect()
+    }
+
+    /// Where `player` starts notes, and how hard, from step `from` to `to`.
+    fn struck(project: &Project, player: Player, from: usize, to: usize) -> Vec<(usize, u8)> {
+        let mut notes = Vec::new();
+        for clip in project.playlist().clips() {
+            let pattern = project.pattern(clip.pattern).unwrap();
+            if pattern.player != Some(player) {
+                continue;
+            }
+            for (_, note) in pattern.all_notes() {
+                let at = clip.start + note.start;
+                if (from..to).contains(&at) {
+                    notes.push((at, note.velocity));
+                }
+            }
+        }
+        notes.sort_unstable();
+        notes
+    }
+
+    #[test]
+    fn the_orchestra_strikes_with_the_accents_of_the_augurs_of_spring() {
+        let name = "The Rite of Spring, The Augurs of Spring";
+        let song = SONGS.iter().find(|song| song.name == name).unwrap();
+        let mut project = song_demo(song);
+        project.write_heard_chords();
+        let before = project.clone();
+        let harmony = Style::named(ORCHESTRA).unwrap();
+        let style = BandStyle::of_style(harmony).unwrap();
+        // Only the voices: an orchestra comes in with its patterns anyway.
+        let parts = apply::StyleParts {
+            rhythm: false,
+            ..apply::StyleParts::default()
+        };
+        project.apply_band_parts(style, Some(harmony), parts.following(true).for_preset());
+        assert!(!project.band().unwrap().accents_only);
+        assert_eq!(
+            project.channels()[..before.channels().len()],
+            *before.channels()
+        );
+        let count = before.patterns().len();
+        assert_eq!(own_notes(&project, count), own_notes(&before, count));
+        // Bars 1 to 8 of the demo, in 2/4: the strings stamp the same
+        // chord on every eighth, and the horns accent it off the beat.
+        let bar = |number: usize| project.meter().bars().nth(number - 1).unwrap();
+        let eight = bar(8).end();
+        let accents = [18, 22, 34, 40, 48, 58];
+        let steps = |player| -> Vec<usize> {
+            let mut steps: Vec<usize> = struck(&project, player, 0, eight)
+                .into_iter()
+                .map(|(at, _)| at)
+                .collect();
+            steps.dedup();
+            steps
+        };
+        for player in [Player::Piano, Player::Bass, Player::Drums] {
+            assert_eq!(steps(player), accents, "{player:?}");
+        }
+        // Bars 9 to 12 are soft: the horns and the bass drum rest, and the
+        // strings play quietly.
+        let (from, to) = (bar(9).start, bar(12).end());
+        for player in [Player::Piano, Player::Drums] {
+            assert_eq!(struck(&project, player, from, to), [], "{player:?}");
+        }
+        let strings = struck(&project, Player::Strings, from, to);
+        assert!(!strings.is_empty());
+        assert!(
+            strings.iter().all(|&(_, velocity)| velocity < 60),
+            "{strings:?}"
+        );
+    }
+
+    #[test]
+    fn a_tune_or_a_held_chord_is_not_an_accent() {
+        // Carol of the Bells: four quarter and eighth notes over a chord
+        // held for four bars, all at the same strength.
+        let name = "Shchedryk (Carol of the Bells)";
+        let song = SONGS.iter().find(|song| song.name == name).unwrap();
+        let mut project = song_demo(song);
+        project.write_heard_chords();
+        let bars: Vec<Bar> = project
+            .meter()
+            .bars()
+            .take_while(|bar| bar.start < project.song_length())
+            .collect();
+        let heard = following::Following::hear(&project, &bars);
+        assert_eq!(heard.accents(), []);
+        // So the orchestra plays every bar on its beat, from the start.
+        let harmony = Style::named(ORCHESTRA).unwrap();
+        let style = BandStyle::of_style(harmony).unwrap();
+        project.apply_band_parts(
+            style,
+            Some(harmony),
+            apply::StyleParts::default().following(true),
+        );
+        let horns: Vec<usize> = struck(&project, Player::Piano, 0, bars[8].start)
+            .into_iter()
+            .map(|(at, _)| at)
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        assert_eq!(horns, (0..8).map(|bar| bars[bar].start).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn copying_only_the_voices_brings_a_band_that_plays_plain_accents() {
+        let song = SONGS.iter().find(|song| song.name == "El Choclo").unwrap();
+        let mut project = song_demo(song);
+        let before = project.clone();
+        let harmony = Style::named("Emotional pop").unwrap();
+        let style = BandStyle::of_style(harmony).unwrap();
+        let parts = apply::StyleParts {
+            rhythm: false,
+            time_signature: false,
+            tempo: false,
+            ..apply::StyleParts::default()
+        };
+        project.apply_band_parts(style, Some(harmony), parts.for_preset());
+        let band = project.band().expect("the band comes in");
+        assert!(band.accents_only);
+        assert!(!part(&project, Player::Piano).is_empty());
+        for (channel, was) in before.channels().iter().enumerate() {
+            let now = &project.channels()[channel];
+            assert_eq!((&now.name, now.program), (&was.name, was.program));
+        }
+        let count = before.patterns().len();
+        assert_eq!(own_notes(&project, count), own_notes(&before, count));
     }
 
     #[test]
