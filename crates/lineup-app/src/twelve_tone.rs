@@ -20,6 +20,8 @@ use lineup_core::{
     Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
 };
 
+use crate::widgets::{self, Opening};
+
 /// Where the row and set last used are remembered.
 fn row_id() -> egui::Id {
     egui::Id::unique("lineup-last-row")
@@ -371,19 +373,21 @@ impl RowWindow {
         let mut actions = Vec::new();
         let mut open = self.open;
         self.front.keep(ctx, row_window_id());
-        egui::Window::new("Twelve-tone row")
+        let window = egui::Window::new("Twelve-tone row")
             .id(row_window_id())
             .open(&mut open)
             .default_pos([260.0, 120.0])
-            .default_height(720.0)
             .constrain_to(area)
-            // On a small screen the window scrolls, so its buttons at the
-            // bottom stay in reach, and it can be made taller.
-            .resizable([false, true])
-            .vscroll(true)
-            .show(ctx, |ui| {
+            .resizable([false, true]);
+        // As wide as the matrix and as tall as its contents, up to the
+        // height of the playlist. On a small screen it scrolls, so its
+        // buttons at the bottom stay in reach.
+        let size = egui::vec2(340.0, area.height());
+        widgets::open_at(ctx, window, row_window_id(), size, Opening::EveryTime).show(ctx, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
                 self.contents(ui, drawn, length, can_create_pattern, &mut actions);
             });
+        });
         self.open = open;
         if let Some(RowAction::UseAsKey(scale)) = actions.first() {
             self.seen = Some(*scale);
@@ -798,16 +802,19 @@ impl SetWindow {
         if self.reveal {
             ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, set_window_id()));
         }
-        egui::Window::new("Pitch-class sets")
+        let window = egui::Window::new("Pitch-class sets")
             .id(set_window_id())
             .open(&mut open)
             .default_pos([320.0, 140.0])
-            .default_size([560.0, 520.0])
-            .constrain_to(area)
-            .vscroll(true)
-            .show(ctx, |ui| {
+            .constrain_to(area);
+        // As tall as its contents, up to the height of the playlist; they
+        // scroll past that.
+        let size = egui::vec2(560.0, area.height());
+        widgets::open_at(ctx, window, set_window_id(), size, Opening::EveryTime).show(ctx, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
                 self.contents(ui, names, selected, drawing, &mut actions)
-            });
+            })
+        });
         self.open = open;
         actions
     }

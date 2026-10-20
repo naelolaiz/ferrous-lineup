@@ -16,6 +16,7 @@ use lineup_core::{ChordStamp, Note, NoteName, PitchClass, PitchSet, Scale};
 
 use crate::theme;
 use crate::twelve_tone::{Front, NoteNames};
+use crate::widgets::{self, Opening};
 
 /// The id of the window, to keep it in front.
 pub(crate) fn window_id() -> egui::Id {
@@ -121,18 +122,20 @@ impl MicromodeWindow {
         if std::mem::take(&mut self.raise) {
             ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, window_id()));
         }
-        egui::Window::new("Micromodes")
+        let window = egui::Window::new("Micromodes")
             .id(window_id())
             .open(&mut open)
             .default_pos([360.0, 120.0])
-            .default_width(580.0)
-            .default_height(640.0)
             .constrain_to(area)
-            .resizable([false, true])
-            .vscroll(true)
-            .show(ctx, |ui| {
+            .resizable([false, true]);
+        // As tall as its contents, up to the height of the playlist; they
+        // scroll past that.
+        let size = Vec2::new(580.0, area.height());
+        widgets::open_at(ctx, window, window_id(), size, Opening::EveryTime).show(ctx, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
                 self.contents(ui, names, selected, drawing, &mut actions)
-            });
+            })
+        });
         self.open = open;
         actions
     }
