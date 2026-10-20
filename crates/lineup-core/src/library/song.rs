@@ -802,6 +802,7 @@ mod folklore;
 mod hiphop;
 mod jazz;
 mod latin;
+mod misa_criolla;
 mod pop;
 mod reggae;
 mod rock;
@@ -1011,6 +1012,8 @@ pub static SONGS: &[Song] = &[
     folklore::BOI_BARROSO,
     folklore::CANDOMBE_PARA_GARDEL,
     folklore::LA_MARCHA_PERONISTA,
+    misa_criolla::MISA_CRIOLLA_KYRIE,
+    misa_criolla::MISA_CRIOLLA_GLORIA,
     folklore::ZAMBA_DEL_TELAR,
     folklore::CHACARERA_DEL_PATIO,
     folklore::GATO_DEL_ARROYO,
