@@ -300,24 +300,31 @@ impl ChordSheet {
         }
         let mut open = self.open;
         self.front.keep(ctx, window_id());
-        egui::Window::new("Chord sheet")
+        let window = egui::Window::new("Chord sheet")
             .id(window_id())
             .open(&mut open)
             .default_pos([260.0, 110.0])
-            .default_size([760.0, 420.0])
             .min_width(360.0)
             .constrain_to(area)
-            .resizable(true)
-            .show(ctx, |ui| {
-                self.contents(
-                    ui,
-                    project,
-                    playing,
-                    typing_keys,
-                    (practice, library),
-                    &mut actions,
-                );
-            });
+            .resizable(true);
+        let size = vec2(760.0, 420.0);
+        crate::widgets::open_at(
+            ctx,
+            window,
+            window_id(),
+            size,
+            crate::widgets::Opening::FirstTime,
+        )
+        .show(ctx, |ui| {
+            self.contents(
+                ui,
+                project,
+                playing,
+                typing_keys,
+                (practice, library),
+                &mut actions,
+            );
+        });
         self.open = open;
         if !self.open {
             self.release(&mut actions);
