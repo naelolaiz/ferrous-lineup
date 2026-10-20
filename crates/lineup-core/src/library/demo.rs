@@ -623,13 +623,23 @@ pub fn song_demo(song: &Song) -> Project {
     // The ending is a bar of the last part's time, on the home chord of
     // the last part's key: a song that ends after a modulation ends in
     // the new key. A piece written out in full, its accompaniment too,
-    // ends where its score ends, with nothing added.
+    // ends where its score ends, with nothing added, and so does a song
+    // whose chart ends on a break, such as a tango's last "chan-chan":
+    // the score already says how the band stops.
     let last_part = song.form.last().and_then(|name| song.part(name));
     let written_out = last_part.is_some_and(|part| !part.left.is_empty());
+    let stopped = song.form.last().is_some_and(|name| {
+        patterns
+            .iter()
+            .rev()
+            .find(|piece| piece.part == *name)
+            .and_then(|piece| piece.spans.last())
+            .is_some_and(|span| span.stop.is_some())
+    });
     let last_time = last_part.map_or(song.time, |part| last_time(song, part));
     project.time_signature = last_time;
     project.scale = last_part.map_or(song.scale(), |part| song.part_scale(part));
-    let end = (!written_out).then(|| ending(&mut project, rhythm.is_some()));
+    let end = (!written_out && !stopped).then(|| ending(&mut project, rhythm.is_some()));
     project.time_signature = song.time;
     project.scale = song.scale();
     name_tracks(&mut project, "Song", "Drums");
@@ -688,7 +698,9 @@ pub fn song_demo(song: &Song) -> Project {
     for start in after {
         project.remove_tempo_marker(start);
     }
-    if let Some(bar) = last_bar(song, at) {
+    // A song that ends on a written break keeps its tempo to the end: the
+    // score says how it stops, and a tango's "chan-chan" is in time.
+    if !stopped && let Some(bar) = last_bar(song, at) {
         broaden_the_end(&mut project, song, bar);
     }
     project.swing = song.swing();
@@ -1309,6 +1321,22 @@ mod tests {
     fn a_piece_written_out_in_full_ends_where_its_score_ends() {
         // Für Elise stops on its last A, with no chord added after it.
         let song = Song::named("Für Elise").unwrap();
+        let project = song_demo(song);
+        assert!(project.patterns().iter().all(|p| p.name != "Ending"));
+        let length: usize = song
+            .form
+            .iter()
+            .filter_map(|name| song.part(name))
+            .map(|part| part.length(song.part_time(part).steps_per_bar()))
+            .sum();
+        assert_eq!(project.song_length(), length);
+    }
+
+    #[test]
+    fn a_song_whose_chart_ends_on_a_break_ends_there() {
+        // The Big Bang Theory theme stops for a beat and strikes G once,
+        // a shot: no held chord and no second crash after it.
+        let song = Song::named("The Big Bang Theory theme").unwrap();
         let project = song_demo(song);
         assert!(project.patterns().iter().all(|p| p.name != "Ending"));
         let length: usize = song
