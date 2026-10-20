@@ -592,6 +592,7 @@ impl Views {
         if view == View::HarmonyKeys {
             let here = step.map_or(self.project.scale, |step| self.project.key_at(step));
             let heard = step.map_or_else(Vec::new, |step| self.project.chord_notes_in_song(step));
+            let hearing = step.map(|step| self.project.hearing_at(step));
             let frame = egui::Frame::new()
                 .fill(theme::PANEL)
                 .inner_margin(egui::Margin::symmetric(8, 4))
@@ -604,6 +605,7 @@ impl Views {
                     "",
                     &[],
                     &heard,
+                    hearing.as_ref(),
                     false,
                     None,
                     &mut self.parts,

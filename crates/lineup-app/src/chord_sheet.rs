@@ -355,9 +355,10 @@ impl ChordSheet {
                 let button = ui.button("Write the chords the song plays");
                 if theme::hint(
                     button,
-                    "Fill the sheet with the chords heard in the song, beat by beat, as the \
-                     harmony keys hear them, in place of what it says now; in a set or a \
-                     row, with the sets or micromodes heard. Undo brings the sheet back",
+                    "Fill the sheet with the chords heard in the song, in place of what it \
+                     says now: an arpeggio counts as its chord, two chords at once are \
+                     written Eb7|Fb, notes that make no chord as their set; in a set or a \
+                     row, the sets or micromodes heard. Undo brings the sheet back",
                 )
                 .clicked()
                 {
@@ -1854,10 +1855,25 @@ fn capitalized(word: &str) -> String {
 }
 
 /// The notes to hear for a harmony: a chord with its bass under it from
-/// C3 and its notes from the root, from C4 up; a set or a micromode in
+/// C3 and its notes from the root, from C4 up; two chords at once, the
+/// lower so, the upper stacked right above it; a set or a micromode in
 /// normal form, from C4 up. A row form and no chord have none.
 fn voicing(harmony: HarmonyName) -> Vec<Note> {
     match harmony {
+        HarmonyName::Polychord(upper, lower) => {
+            let mut notes = voicing(HarmonyName::Chord(lower));
+            let top = notes.last().map_or(72, |note| note.midi() + 1);
+            let upper = upper.chord();
+            let root = top + Note::new(top).pitch_class().semitones_up_to(upper.root);
+            notes.extend(
+                upper
+                    .quality
+                    .intervals()
+                    .iter()
+                    .map(|&interval| Note::new(root + interval)),
+            );
+            notes
+        }
         HarmonyName::Chord(symbol) => {
             let chord = symbol.chord();
             let root = 60 + chord.root.semitone();
