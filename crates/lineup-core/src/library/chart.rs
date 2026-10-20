@@ -188,7 +188,10 @@ const HAIRPIN: isize = 2;
 ///   octave: `C4` is middle C, `F#5` the F sharp an octave and a half
 ///   above it.
 /// - `:4` gives its length in steps (4 is a quarter note). Without it, a
-///   note is as long as the one before.
+///   note is as long as the one before. A note shorter than a step, as
+///   the quick runs and grace notes of an ornament are, takes a fraction:
+///   `:1/2` is a thirty-second note, `:1/4` a sixty-fourth. It must come
+///   out a whole number of ticks ([`TICKS_PER_STEP`] to the step).
 /// - `-` is a rest: `-:8` is half a bar of silence in 4/4.
 /// - `_` is a tie: the note before it goes on for that long, so a note
 ///   can be held across a bar line: `D5:12 | _:8`.
@@ -284,7 +287,8 @@ fn parse_voice(text: &str) -> Option<Melody> {
     // Counted in ticks, for triplets.
     let mut at = 0;
     let mut bar_start = 0;
-    let mut length = 4;
+    // The length of a note, in ticks.
+    let mut length = 4 * TICKS;
     // The notes the last note or chord struck, which a tie holds on.
     let mut last = 0..0;
     let mut triplet = 0;
@@ -319,16 +323,16 @@ fn parse_voice(text: &str) -> Option<Melody> {
         };
         let name = match token.split_once(':') {
             Some((name, steps)) => {
-                length = steps.parse().ok().filter(|&steps: &usize| steps > 0)?;
+                length = length_in_ticks(steps)?;
                 name
             }
             None => token,
         };
         let ticks = if triplet > 0 {
             triplet -= 1;
-            length * TICKS * 2 / 3
+            (length * 2).is_multiple_of(3).then_some(length * 2 / 3)?
         } else {
-            length * TICKS
+            length
         };
         // A staccato note takes its whole length in the bar, but sounds
         // for half of it.
@@ -393,6 +397,16 @@ fn parse_voice(text: &str) -> Option<Melody> {
         loudness,
         accents,
     })
+}
+
+/// A note's length written in steps, `4`, or in a fraction of them,
+/// `1/2`, in ticks: `None` if it is not a whole number of ticks, or none.
+fn length_in_ticks(steps: &str) -> Option<usize> {
+    let (top, bottom) = steps.split_once('/').unwrap_or((steps, "1"));
+    let top: usize = top.parse().ok()?;
+    let bottom: usize = bottom.parse().ok().filter(|&bottom| bottom > 0)?;
+    let ticks = top * TICKS_PER_STEP;
+    (ticks > 0 && ticks.is_multiple_of(bottom)).then_some(ticks / bottom)
 }
 
 /// A note of a melody, from tick `start` for `ticks` ticks.
@@ -736,6 +750,40 @@ mod tests {
         assert_eq!(notes, [(0, 20), (20, 4)]);
         assert_eq!(melody.bars, [12, 12]);
         assert_eq!(parse_melody("_:4"), None, "nothing to tie");
+    }
+
+    #[test]
+    fn notes_shorter_than_a_step_are_fractions_of_one() {
+        // A turn: a thirty-second note's run of two, then the note it
+        // ends on, and a triplet of thirty-seconds in the time of a step.
+        let melody = parse_melody("F5:1/2 G5 F5:1 -:2 (3 A4:1/2 B4 C#5 D5:3 | -:8").unwrap();
+        let ticks: Vec<(u8, usize, usize)> = melody
+            .notes
+            .iter()
+            .map(|note| {
+                (
+                    note.pitch.midi(),
+                    note.start_tick(),
+                    note.end_tick() - note.start_tick(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            ticks,
+            [
+                (77, 0, 12),
+                (79, 12, 12),
+                (77, 24, 24),
+                (69, 96, 8),
+                (71, 104, 8),
+                (73, 112, 8),
+                (74, 120, 72)
+            ]
+        );
+        assert_eq!(melody.bars, [8, 8]);
+        assert_eq!(parse_melody("C4:1/5"), None, "not a whole number of ticks");
+        assert_eq!(parse_melody("C4:1/0"), None);
+        assert_eq!(parse_melody("C4:0/2"), None);
     }
 
     #[test]

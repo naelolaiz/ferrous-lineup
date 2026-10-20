@@ -799,6 +799,7 @@ mod electronic;
 mod flamenco;
 mod folk;
 mod folklore;
+mod folklore_arranged;
 mod hiphop;
 mod jazz;
 mod latin;
@@ -808,6 +809,7 @@ mod reggae;
 mod rock;
 mod soul;
 mod tango;
+mod tango_arranged;
 
 /// All the songs, sorted by genre in the order of [`Genre::ALL`].
 pub static SONGS: &[Song] = &[
@@ -981,6 +983,9 @@ pub static SONGS: &[Song] = &[
     tango::MUCHACHO,
     tango::GARUA,
     tango::ESTA_NOCHE_DE_LUNA,
+    tango_arranged::MI_NOCHE_TRISTE,
+    tango_arranged::SENTIMIENTO_GAUCHO,
+    tango_arranged::ZORRO_GRIS,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,
@@ -1025,6 +1030,8 @@ pub static SONGS: &[Song] = &[
     folklore::VIDALA_DE_LA_QUEBRADA,
     folklore::CARNAVALITO_DE_LA_QUEBRADA,
     folklore::CANDOMBE_DEL_BARRIO,
+    folklore_arranged::CINCO_SIGLOS_IGUAL,
+    folklore_arranged::LA_CULTURA_ES_LA_SONRISA,
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
@@ -1080,6 +1087,7 @@ pub static SONGS: &[Song] = &[
     folk::MO_LI_HUA,
     folk::HUNGARIAN_DANCE,
     folk::SUSSERL,
+    folklore_arranged::EL_NOI_DE_LA_MARE,
     classical::CANON,
     classical::FUR_ELISE,
     classical::MOUNTAIN_KING,
