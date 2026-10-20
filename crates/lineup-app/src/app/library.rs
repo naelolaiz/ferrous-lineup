@@ -11,7 +11,7 @@
 //! rewrites it.
 //!
 //! A rhythm picked after a style changes how the style's chords and bass
-//! are played, too, as in FL Studio. And a rhythm can be used for the
+//! are played, too, as a band would. And a rhythm can be used for the
 //! whole song: see [`apply::use_rhythm`]. That is what a click on a
 //! rhythm does while the song plays, so the song carries on in the new
 //! rhythm instead of stopping for a pattern of its own.

@@ -52,7 +52,7 @@ pub fn shift(notes: &[NoteEvent], steps: isize, pattern_length: usize) -> Option
 }
 
 /// Moves every note onto the grid: its start and its end to the nearest
-/// step, as FL Studio's quantize does. A note that would then start at
+/// step, as a quantize does. A note that would then start at
 /// the end of the pattern starts on its last step instead.
 ///
 /// Notes recorded by hand or imported from a MIDI file are often a
