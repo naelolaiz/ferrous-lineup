@@ -174,9 +174,21 @@ fn report() {
     );
 }
 
+/// Songs whose harmony is two keys at once, so that no single key the
+/// finder could name is right: the Augurs of Spring stamps F flat major
+/// over E flat seventh, and the tunes over it are each in a mode of their
+/// own, so the finder hears E major, F major, B flat minor and G minor where
+/// the score keeps its key signature of E flat. They are left out of the
+/// figure below and checked on their own.
+const POLYTONAL: &[&str] = &["The Rite of Spring, The Augurs of Spring"];
+
 #[test]
 fn most_bars_of_the_demos_are_heard_in_their_key() {
-    let results: Vec<SongResult> = SONGS.iter().map(measure).collect();
+    let results: Vec<SongResult> = SONGS
+        .iter()
+        .filter(|song| !POLYTONAL.contains(&song.name))
+        .map(measure)
+        .collect();
     let bars: usize = results.iter().map(|r| r.bars).sum();
     let right: usize = results.iter().map(|r| r.right_bars).sum();
     // 95.2% when this was written, 91.6% once the swing standards came in:
@@ -189,12 +201,28 @@ fn most_bars_of_the_demos_are_heard_in_their_key() {
     // C sharp, D, E, F, G) is D harmonic minor's, and the segâh of İzmir'in
     // kavakları, written as B Phrygian, G major's, which is what the finder
     // hears; and the Mission: Impossible theme, in G minor, is heard in C
-    // minor, its iv. 88.6% once the Augurs of Spring came in, which is in no
-    // key the finder can name: its chord is two at once, F flat major under
-    // E flat seventh, and the tunes over it are each in a mode of their own,
-    // so the finder hears E major, F major, B flat minor and G minor where
-    // the score keeps its key signature of E flat.
-    assert!(right * 100 >= bars * 88, "{right}/{bars}");
+    // minor, its iv.
+    assert!(right * 100 >= bars * 89, "{right}/{bars}");
+}
+
+/// A polytonal song is heard in many keys, but its key signature's key is
+/// still among them, since one of its two layers is in it.
+#[test]
+fn the_keys_of_polytonal_songs_include_their_written_key() {
+    for name in POLYTONAL {
+        let song = SONGS.iter().find(|song| song.name == *name).unwrap();
+        let result = measure(song);
+        assert!(
+            result.right_bars > 0,
+            "{name}: {}/{}",
+            result.right_bars,
+            result.bars
+        );
+        assert!(
+            result.right_bars < result.bars,
+            "{name} is heard in one key: drop it from POLYTONAL"
+        );
+    }
 }
 
 #[test]
