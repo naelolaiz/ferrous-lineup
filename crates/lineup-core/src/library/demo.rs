@@ -414,13 +414,12 @@ pub fn song_demo(song: &Song) -> Project {
                 .flatten()
         })
         .collect();
-    // The Keys channel plays the chords, or a part's left hand: a song
-    // whose every part writes out its other instruments' lines, with no
-    // left hand, has none.
-    let keys_play = song
-        .parts
-        .iter()
-        .any(|part| part.lines.is_empty() || !part.left.is_empty());
+    // The Keys channel plays a part's left hand, or the chords of a part
+    // that is not written out: a song whose parts write out their other
+    // instruments' lines, with no left hand, has none.
+    let keys_play = song.parts.iter().any(|part| {
+        !part.left.is_empty() || (part.lines.is_empty() && !part.chords.trim().is_empty())
+    });
     let keys = keys_play
         .then(|| apply::synth_named(&mut project, apply::KEYS))
         .flatten();
