@@ -1008,6 +1008,8 @@ pub static SONGS: &[Song] = &[
     classical::PROMENADE,
     classical::PATHETIQUE_WALTZ,
     classical::HIMNO_NACIONAL_ARGENTINO,
+    classical::BOLERO,
+    classical::LA_MER_DAWN,
 ];
 
 #[cfg(test)]

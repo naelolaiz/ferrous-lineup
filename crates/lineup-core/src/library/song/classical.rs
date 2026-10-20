@@ -2039,3 +2039,1412 @@ pub(super) const HIMNO_NACIONAL_ARGENTINO: Song = Song {
             \"Coronados de gloria vivamos\", and ends with \"O juremos con gloria morir\" \
             three times, the last two going from IV to V.",
 };
+
+// Boléro is built of a few bars repeated many times, so its pieces are
+// macros rather than consts: `concat!` joins only literals, and each of
+// these expands to one, so every statement's accompaniment and drums are
+// put together from the same two bars instead of being written out again.
+
+/// The two bars `$bars` names, twice.
+macro_rules! bolero_two {
+    ($bars:ident) => {
+        concat!($bars!(), " | ", $bars!())
+    };
+}
+
+/// The two bars `$bars` names, four times.
+macro_rules! bolero_four {
+    ($bars:ident) => {
+        concat!(bolero_two!($bars), " | ", bolero_two!($bars))
+    };
+}
+
+/// The two bars `$bars` names, eight times.
+macro_rules! bolero_eight {
+    ($bars:ident) => {
+        concat!(bolero_four!($bars), " | ", bolero_four!($bars))
+    };
+}
+
+/// A whole statement of the tune: eighteen bars, nine times two.
+macro_rules! bolero_nine {
+    ($bars:ident) => {
+        concat!(bolero_eight!($bars), " | ", $bars!())
+    };
+}
+
+/// Two bars of the snare drum's ostinato, the rhythm under the whole
+/// piece: an eighth, a triplet of sixteenths, an eighth, a triplet, then
+/// two eighths; the second bar ends with two more triplets instead.
+macro_rules! bolero_snare {
+    () => {
+        "x:2 (3 x:1 x x x:2 (3 x:1 x x x:2 x:2 | \
+         x:2 (3 x:1 x x x:2 (3 x:1 x x (3 x:1 x x (3 x:1 x x"
+    };
+}
+
+/// Two bars of silence.
+macro_rules! bolero_rest {
+    () => {
+        "-:12 | -:12"
+    };
+}
+
+/// The snare drum's two bars as the orchestra doubles them, one chord on
+/// each of the six beats.
+macro_rules! bolero_ostinato {
+    ($a:literal, $b:literal, $c:literal, $d:literal, $e:literal, $f:literal) => {
+        concat!(
+            $a, ":2 (3 ", $a, ":1 ", $a, " ", $a, " ", $b, ":2 (3 ", $b, ":1 ", $b, " ", $b, " ",
+            $c, ":2 ", $c, " | ", $d, ":2 (3 ", $d, ":1 ", $d, " ", $d, " ", $e, ":2 (3 ", $e,
+            ":1 ", $e, " ", $e, " (3 ", $f, ":1 ", $f, " ", $f, " (3 ", $f, " ", $f, " ", $f
+        )
+    };
+}
+
+// The accompaniment, two bars at a time, each named after the bar where
+// it is first heard: `bolero_beats_*` is everything but the snare drum's
+// rhythm (the pizzicato, the harps, the held chords, the bass and the
+// timpani), `bolero_rhythm_*` the instruments that double that rhythm.
+// A chord keeps its lowest and highest notes and every other pitch once,
+// at the highest of its octaves.
+
+/// Two bars from bar 5: violas and cellos.
+macro_rules! bolero_beats_1 {
+    () => {
+        "C3+G3:4 G3+G4 G2+G3 | C3+G3 G3+G4 G2+G3:2 G3"
+    };
+}
+
+/// Two bars from bar 21: violas and cellos.
+macro_rules! bolero_beats_2 {
+    () => {
+        "C3+G3:4 G3+G4 G2+C3+G3 | C3+G3 G3+G4 G2+C3+G3:2 G3"
+    };
+}
+
+/// The ostinato from bar 21: flutes.
+macro_rules! bolero_rhythm_1 {
+    () => {
+        "-:2 (3 G4:1 G4 G4 G4:2 (3 G4:1 G4 G4 G4:2 G4 | \
+         G4 (3 G4:1 G4 G4 G4:2 (3 G4:1 G4 G4 (3 G4 G4 G4 (3 G4 G4 G4"
+    };
+}
+
+/// The ostinato from bar 23: flutes.
+macro_rules! bolero_rhythm_2 {
+    () => {
+        bolero_ostinato!("G4", "G4", "G4", "G4", "G4", "G4")
+    };
+}
+
+/// Two bars from bar 39: harp, violas and cellos.
+macro_rules! bolero_beats_3 {
+    () => {
+        "C3+G3:4 D3+E3+G4 G2+C3+D3+G3 | C3+G3 D3+E3+G4 G2+C3+D3+G3:2 G3"
+    };
+}
+
+/// Two bars from bar 49: harp, violas and cellos.
+macro_rules! bolero_beats_4 {
+    () => {
+        "C3+G3:4 C3+D3+G4 G2+B2+C3+G3 | C3+G3 C3+D3+G4 G2+B2+C3+G3:2 G3"
+    };
+}
+
+/// Two bars from bar 53: harp, violas and cellos.
+macro_rules! bolero_beats_5 {
+    () => {
+        "C3+G3:4 D3+E3+G4 G2+C3+D3+G3 | C3+G3 C3+D3+G4 G2+Bb2+C3+G3:2 G3"
+    };
+}
+
+/// Two bars from bar 55: harp, violas and cellos.
+macro_rules! bolero_beats_6 {
+    () => {
+        "C3+G3:4 Bb2+C3+G4 G2+Ab2+C3+G3 | C3+G3 Ab2+C3+G4 G2+C3+G3:2 G3"
+    };
+}
+
+/// Two bars from bar 57: harp, violas and cellos.
+macro_rules! bolero_beats_7 {
+    () => {
+        "C2+G3:4 G3+C4+D4+E4+G4 G2+Bb3+C4+D4 | C2+G3 G3+C4+D4+E4+G4 G2+Bb3+C4+D4:2 G3"
+    };
+}
+
+/// Two bars from bar 67: harp, violas and cellos.
+macro_rules! bolero_beats_8 {
+    () => {
+        "C2+G3:4 G3+C4+D4+F4+G4 G2+B3+C4+D4 | C2+G3 G3+C4+D4+F4+G4 G2+B3+C4+D4:2 G3"
+    };
+}
+
+/// Two bars from bar 71: harp, violas and cellos.
+macro_rules! bolero_beats_9 {
+    () => {
+        "C2+G3:4 G3+C4+D4+E4+G4 G2+Ab3+C4+D4 | C2+G3 G3+Ab3+C4+D4+G4 G2+Bb3+C4:2 G3"
+    };
+}
+
+/// Two bars from bar 73: harp, violas and cellos.
+macro_rules! bolero_beats_10 {
+    () => {
+        "C2+G3:4 G3+Bb3+C4+G4 G2+Ab3+C4 | C2+G3 G3+Ab3+C4+G4 G2+C4:2 G3"
+    };
+}
+
+/// Two bars from bar 75: flutes, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_11 {
+    () => {
+        "C2+E3+G4:4 G3+C4+D4+E4+G4 G2+B3+C4+D4+G4 | \
+         C2+E3+G3 G3+C4+D4+E4+G4 G2+B3+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 77: second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_12 {
+    () => {
+        "C2+E3+G3:4 G3+C4+D4+E4+G4 G2+B3+C4+D4+G4 | \
+         C2+E3+G3 G3+C4+D4+E4+G4 G2+B3+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 81: second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_13 {
+    () => {
+        "C2+E3+G3:4 G3+C4+D4+E4+G4 G2+B3+C4+D4+G4 | \
+         C2+E3+G3 G3+C4+D4+E4+G4 G2+B3+C4+E4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 83: second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_14 {
+    () => {
+        "C2+D3+G3:4 G3+C4+D4+F4+G4 G2+B3+C4+D4+G4 | \
+         C2+D3+G3 G3+C4+D4+F4+G4 G2+B3+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 91: second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_15 {
+    () => {
+        "C2+D3+G3:4 G3+C4+D4+F4+G4 G2+B3+C4+D4+G4 | C2+E3+G3 G3+C4+E4+G4 G2+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 93: bassoons, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_16 {
+    () => {
+        "C2+E3+G4:4 G3+C5+D5+E5 G2+B4+C5+D5 | C2+E3+G3 G3+C5+D5+E5 G2+B4+C5+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 95: first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_17 {
+    () => {
+        "C2+E3+G3:4 G3+C5+D5+E5 G2+B4+C5+D5 | C2+E3+G3 G3+C5+D5+E5 G2+B4+C5+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 99: first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_18 {
+    () => {
+        "C2+E3+G3:4 G3+C5+D5+E5 G2+B4+C5+D5 | C2+E3+G3 G3+C5+D5+E5 G2+B4+C5+E5:2 G3"
+    };
+}
+
+/// Two bars from bar 101: first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_19 {
+    () => {
+        "C2+D3+G3:4 G3+C5+D5+F5 G2+B4+C5+D5 | C2+D3+G3 G3+C5+D5+F5 G2+B4+C5+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 109: first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_20 {
+    () => {
+        "C2+D3+G3:4 G3+C5+D5+F5 G2+B4+C5+D5 | C2+E3+G3 G3+C5+D5+E5 G2+C5+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 111: flutes, horns, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_21 {
+    () => {
+        "C2+E3+G4:4 G3+C4+D4+E4 G1+B3+C4+D4 | C2+E3+G3 G3+C4+D4+E4 G1+B3+C4+D4:2 G3"
+    };
+}
+
+/// Two bars from bar 113: flutes, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_22 {
+    () => {
+        "C2+E3+G3:4 G3+C4+D4+E4 G1+Bb3+C4+D4 | C2+E3+G3 G3+C4+D4+E4 G1+Bb3+C4+D4:2 G3"
+    };
+}
+
+/// Two bars from bar 121: flutes, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_23 {
+    () => {
+        "C2+D3+G3:4 G3+C4+D4+F4 G1+B3+C4+D4 | C2+D3+G3 G3+C4+D4+F4 G1+B3+C4+D4:2 G3"
+    };
+}
+
+/// Two bars from bar 125: flutes, clarinets, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_24 {
+    () => {
+        "C2+E3+G3:4 G3+C4+D4+E4 G1+Ab3+C4+D4 | C2+D3+G3 G3+Ab3+C4+D4 G1+Bb3+C4:2 G3"
+    };
+}
+
+/// Two bars from bar 127: flutes, clarinets, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_25 {
+    () => {
+        "C2+G3:4 G3+Bb3+C4 G1+Ab3+C4 | C2+G3 G3+Ab3+C4 G1+C4:2 G3"
+    };
+}
+
+/// Two bars from bar 129: oboes, English horn, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_26 {
+    () => {
+        "C2+E3+G3:4 G3+C5+D5+E5 G1+Bb4+C5+D5 | C2+E3+G3 G3+C5+D5+E5 G1+Bb4+C5+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 139: oboes, English horn, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_27 {
+    () => {
+        "C2+E3+G3:4 G3+C5+D5+F5 G1+B4+C5+D5 | C2+E3+G3 G3+C5+D5+F5 G1+B4+C5+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 143: oboes, English horn, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_28 {
+    () => {
+        "C2+E3+G3:4 G3+C5+D5+E5 G1+Ab4+C5+D5 | C2+D3+G3 G3+Ab4+C5+D5 G1+Bb4+C5:2 G3"
+    };
+}
+
+/// Two bars from bar 145: oboes, English horn, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_29 {
+    () => {
+        "C2+G3:4 G3+Bb4+C5 G1+Ab4+C5 | C2+G3 G3+Ab4+C5 G1+C5:2 G3"
+    };
+}
+
+/// Two bars from bar 147: bass clarinet, bassoons, trumpets, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_30 {
+    () => {
+        "C2+E3+G4:4 G3+C4+D4+E4+G4 G1+B3+C4+D4+G4 | \
+         C2+E3+G3 G3+C4+D4+E4+G4 G1+B3+C4+D4+G4:2 G3"
+    };
+}
+
+/// The ostinato from bar 147: flutes and horns.
+macro_rules! bolero_rhythm_3 {
+    () => {
+        "-:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 G3+G4 | \
+         G3+G4 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4"
+    };
+}
+
+/// Two bars from bar 149: bass clarinet, bassoons, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_31 {
+    () => {
+        "C2+E3+G3:4 G3+C4+D4+E4+G4 G1+B3+C4+D4+G4 | \
+         C2+E3+G3 G3+C4+D4+E4+G4 G1+B3+C4+D4+G4:2 G3"
+    };
+}
+
+/// The ostinato from bar 149: flutes and horns.
+macro_rules! bolero_rhythm_4 {
+    () => {
+        bolero_ostinato!("G3+G4", "G3+G4", "G3+G4", "G3+G4", "G3+G4", "G3+G4")
+    };
+}
+
+/// Two bars from bar 153: bass clarinet, bassoons, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_32 {
+    () => {
+        "C2+E3+G3:4 G3+C4+D4+E4+G4 G1+B3+C4+D4+G4 | \
+         C2+E3+G3 G3+C4+D4+E4+G4 G1+B3+C4+E4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 155: bass clarinet, bassoons, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_33 {
+    () => {
+        "C2+D3+G3:4 G3+C4+D4+F4+G4 G1+B3+C4+D4+G4 | \
+         C2+D3+G3 G3+C4+D4+F4+G4 G1+B3+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 163: bass clarinet, bassoons, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_34 {
+    () => {
+        "C2+D3+G3:4 G3+C4+D4+F4+G4 G1+B3+C4+D4+G4 | C2+E3+G3 G3+C4+E4+G4 G1+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 165: flutes, bass clarinet, bassoons, horns, trumpets, harp, first violins, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_35 {
+    () => {
+        "C2+E3+G4:4 G3+C5+E5+G5 G1+B4+C5+D5:2 G3+C4+G4 | \
+         C2+G2+E3:4 G3+C5+E5+G5 G1+B4+C5+D5:2 G3"
+    };
+}
+
+/// The ostinato from bar 165: horns, trumpets, second violins and violas.
+macro_rules! bolero_rhythm_5 {
+    () => {
+        "-:2 (3 C3+G4:1 G3+G4 G3+C5 G3+C5+G5:2 (3 C3+G4:1 G3+G4 G3+C5 G3+C5+G5:2 G3+C5+G5 | \
+         C3+G5 (3 C3+G4:1 G3+G4 G3+C5 G3+C5+G5:2 (3 C3+G4:1 G3+G4 G3+C5 (3 C3+G5 G3+G4 G3+C5 (3 C3+G5 G3+G4 G3+C5"
+    };
+}
+
+/// The ostinato from bar 167: horns, trumpets, second violins and violas.
+macro_rules! bolero_rhythm_6 {
+    () => {
+        "G3+C5+G5:2 (3 C3+G4:1 G3+G4 G3+C5 G3+C5+G5:2 (3 C3+G4:1 G3+G4 G3+C5 G3+C5+G5:2 G3+C5+G5 | \
+         C3+G5 (3 C3+G4:1 G3+G4 G3+C5 G3+C5+G5:2 (3 C3+G4:1 G3+G4 G3+C5 (3 C3+G5 G3+G4 G3+C5 (3 C3+G5 G3+G4 G3+C5"
+    };
+}
+
+/// Two bars from bar 171: bass clarinet, bassoons, trumpets, harp, first violins, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_36 {
+    () => {
+        "C2+E3+G4:4 G3+C5+E5+G5 G1+B4+C5+D5:2 G3+C4+G4 | \
+         C2+G2+E3:4 G3+C5+E5+G5 G1+B4+C5+E5:2 G3"
+    };
+}
+
+/// Two bars from bar 173: bass clarinet, bassoons, trumpets, harp, first violins, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_37 {
+    () => {
+        "C2+D3+G4:4 G3+C5+D5+F5+G5 G1+C4+B4+D5:2 G3+C4+G4 | \
+         C2+G2+D3:4 C4+D5+F5+G5 G1+C4+B4+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 181: bass clarinet, bassoons, trumpets, harp, first violins, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_38 {
+    () => {
+        "C2+D3+G4:4 G3+C5+D5+F5+G5 G1+C4+B4+D5:2 G3+C4+G4 | \
+         C2+G2+E3:4 G3+C5+D5+E5+G5 G1+C5+D5:2 G3"
+    };
+}
+
+/// Two bars from bar 183: clarinets, bass clarinet, contrabassoon, horns, trumpets, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_39 {
+    () => {
+        "C2+E3+G5:4 G3+C4+D4+E4+G4 G1+B3+C4+D4+G4 | \
+         C2+G2+E3 G3+C4+D4+E4+G4 G1+B3+C4+D4+G4:2 G2"
+    };
+}
+
+/// The ostinato from bar 183: flutes, horns and violas.
+macro_rules! bolero_rhythm_7 {
+    () => {
+        "C3+C5:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 G3+G4 | \
+         C3+G4 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4"
+    };
+}
+
+/// Two bars from bar 185: clarinets, bass clarinet, contrabassoon, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_40 {
+    () => {
+        "C2+G2+E3:4 G3+C4+D4+E4+G4 G1+Bb3+C4+D4+G4 | \
+         C2+G2+E3 G3+C4+D4+E4+G4 G1+Bb3+C4+D4+G4:2 G2"
+    };
+}
+
+/// The ostinato from bar 185: flutes, horns and violas.
+macro_rules! bolero_rhythm_8 {
+    () => {
+        "C3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 G3+G4 | \
+         C3+G4 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4"
+    };
+}
+
+/// Two bars from bar 193: clarinets, bass clarinet, contrabassoon, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_41 {
+    () => {
+        "C2+G2+D3:4 G3+C4+D4+E4+F4+G4 G1+B3+C4+D4+G4 | \
+         C2+G2+D3 G3+C4+D4+E4+F4+G4 G1+B3+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 195: clarinets, bass clarinet, contrabassoon, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_42 {
+    () => {
+        "C2+G2+E3:4 G3+C4+D4+E4+G4 G1+Bb3+C4+D4+G4 | \
+         C2+G2+E3 G3+C4+D4+E4+G4 G1+Bb3+C4+D4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 197: clarinets, bass clarinet, contrabassoon, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_43 {
+    () => {
+        "C2+G2+E3:4 G3+C4+D4+E4+G4 G1+Ab3+C4+D4+G4 | \
+         C2+G2+D3 G3+Ab3+C4+D4+G4 G1+Bb3+C4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 199: clarinets, bass clarinet, contrabassoon, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_44 {
+    () => {
+        "C2+G3:4 G3+Bb3+C4+G4 G1+Ab3+C4+G4 | C2+G3 G3+Ab3+C4+G4 G1+C4+G4:2 G3"
+    };
+}
+
+/// Two bars from bar 201: flutes, bass clarinet, bassoons, contrabassoon, horns, harp, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_45 {
+    () => {
+        "C2+E3+G4:4 C3+G4+D5+E5 G1+Bb4+C5+D5 | C2+E3+G4 C3+G4+D5+E5 G1+Bb4+C5+D5:2 G2"
+    };
+}
+
+/// Two bars from bar 207: flutes, bass clarinet, bassoons, contrabassoon, harp, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_46 {
+    () => {
+        "C2+G4+E6+Bb6:2 E6+Bb6 C3+G4+D5+E5 E6+Bb6 G1+C5+D5+E6+Bb6 E6+Bb6 | \
+         C2+E3+G4:4 C3+G4+D5+E5 G1+Bb4+C5+D5:2 G2"
+    };
+}
+
+/// Two bars from bar 211: bass clarinet, bassoons, contrabassoon, harp, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_47 {
+    () => {
+        "C2+D3+G4:4 C3+G4+D5+F5 G1+B4+C5+D5 | C2+D3+G4 C3+G4+D5+F5 G1+B4+C5+D5:2 G2"
+    };
+}
+
+/// Two bars from bar 215: bass clarinet, bassoons, contrabassoon, harp, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_48 {
+    () => {
+        "C2+E3+G4:4 C3+G4+D5+E5 G1+Ab4+C5+D5:2 G2 | C2+D3+G4:4 C3+G4+Ab4+D5 G1+Bb4+C5:2 G2"
+    };
+}
+
+/// Two bars from bar 217: bass clarinet, bassoons, contrabassoon, harp, first violins, violas, cellos and double basses.
+macro_rules! bolero_beats_49 {
+    () => {
+        "C2+G4:4 C3+G4+Bb4+C5 G1+Ab4+C5 | C2+G4 C3+G4+Ab4+C5 G1+C5:2 G2"
+    };
+}
+
+/// Two bars from bar 219: oboes, clarinets, bassoons, contrabassoon, horns, trumpets, timpani, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_50 {
+    () => {
+        "C2+E3+G4:4 C3+D5+E5+G5 G1+B4+C5+D5+G5 | C2+E3+G3 C3+D5+E5+G5 G1+B4+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 221: bassoons, contrabassoon, horns, timpani, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_51 {
+    () => {
+        "C2+E3+G3:4 C3+D5+E5+G5 G1+B4+C5+D5+G5 | C2+E3+G3 C3+D5+E5+G5 G1+B4+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 225: bassoons, contrabassoon, horns, timpani, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_52 {
+    () => {
+        "C2+E3+G3:4 C3+D5+E5+G5 G1+B4+C5+D5+G5 | \
+         C2+E3+G4 C3+D5+E5+G5 G1+D4+B4+C5+E5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 227: bassoons, contrabassoon, horns, timpani, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_53 {
+    () => {
+        "C2+D3+G4:4 C3+D5+F5+G5 G1+B4+C5+D5+G5 | C2+D3+G4 C3+D5+F5+G5 G1+B4+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 235: bassoons, contrabassoon, horns, timpani, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_54 {
+    () => {
+        "C2+D3+G4:4 C3+D5+F5+G5 G1+B4+C5+D5+G5 | C2+E3+G4 C3+D4+E5+G5 G1+B3+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 237: clarinets, bass clarinet, bassoons, contrabassoon, soprano saxophone, horns, timpani, harp, violas, cellos and double basses.
+macro_rules! bolero_beats_55 {
+    () => {
+        "C2+E3+G4:4 C3+D5+E5+G5 G1+B4+C5+D5+G5 | C2+E3+G4 C3+D5+E5+G5 G1+B4+C5+D5+G5:2 G2"
+    };
+}
+
+/// Two bars from bar 241: bass clarinet, bassoons, contrabassoon, soprano saxophone, horns, timpani, harp, violas, cellos and double basses.
+macro_rules! bolero_beats_56 {
+    () => {
+        "C2+E3+G4:4 C3+D5+E5+G5 G1+B4+C5+D5+G5 | C2+E3+G4 C3+D5+E5+G5 G1+B4+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 243: bass clarinet, bassoons, contrabassoon, soprano saxophone, horns, timpani, harp, violas, cellos and double basses.
+macro_rules! bolero_beats_57 {
+    () => {
+        "C2+E3+G4:4 C3+D5+E5+G5 G1+B4+C5+D5+G5 | \
+         C2+E3+G4 C3+D5+E5+G5 G1+D4+B4+C5+E5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 253: bass clarinet, bassoons, contrabassoon, soprano saxophone, horns, timpani, harp, violas, cellos and double basses.
+macro_rules! bolero_beats_58 {
+    () => {
+        "C2+D3+G4:4 C3+D5+F5+G5 G1+B4+C5+D5+G5 | C2+E3+G4 C3+D5+E5+G5 G1+B4+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 255: flutes, oboes, clarinets, bassoons, contrabassoon, soprano saxophone, tenor saxophone, horns, trombones, tuba, timpani, harp, violas, cellos and double basses.
+macro_rules! bolero_beats_59 {
+    () => {
+        "C2+E5+G5:4 C3+D5+E5+G5 G1+B4+C5+D5+G5 | C2+E4+G4 C3+D5+E5+G5 G1+B4+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// The ostinato from bar 255: horns.
+macro_rules! bolero_rhythm_9 {
+    () => {
+        "C4+E4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 G3+G4 | \
+         G3+G4 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4 (3 G3+G4 G3+G4 G3+G4"
+    };
+}
+
+/// Two bars from bar 257: clarinets, bassoons, contrabassoon, soprano saxophone, tenor saxophone, horns, trombones, tuba, timpani, harp, violas, cellos and double basses.
+macro_rules! bolero_beats_60 {
+    () => {
+        "C2+E4+G4:4 C3+D5+E5+G5 G1+Bb4+C5+D5+G5 | \
+         C2+E4+G4 C3+D5+E5+G5 G1+Bb4+C5+D5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 265: clarinets, bassoons, contrabassoon, soprano saxophone, tenor saxophone, horns, trombones, tuba, timpani, harp, violas, cellos and double basses.
+macro_rules! bolero_beats_61 {
+    () => {
+        "C2+D3+F4+G4:4 C3+D5+F5+G5 G1+B4+C5+D5+G5 | \
+         C2+D4+F4+G4 C3+D5+F5+G5 G1+B4+C5+D5+G5:2 G2+A2+G3"
+    };
+}
+
+/// Two bars from bar 269: clarinets, bassoons, contrabassoon, soprano saxophone, tenor saxophone, horns, trombones, tuba, timpani, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_62 {
+    () => {
+        "C2+E4+G4:4 C3+D5+E5+G5 G1+Ab4+C5+D5+G5 | \
+         C2+G2+D3+C4 C3+Ab4+D5+G5 G1+Bb4+C5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 271: clarinets, bassoons, contrabassoon, soprano saxophone, tenor saxophone, horns, trombones, tuba, timpani, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_63 {
+    () => {
+        "C2+G3+C4:4 C3+Bb4+G5 G1+Ab4+C5+G5 | C2+G3+C4 C3+Ab4+G5 G1+C5+G5:2 G2+G3"
+    };
+}
+
+/// Two bars from bar 273: bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, second violins, cellos and double basses.
+macro_rules! bolero_beats_64 {
+    () => {
+        "C2+G3+E4:4 C3+D5+E5+G5 G1+B3+Bb4+C5+D5+G5 | \
+         C2+G3+E4 C3+D5+E5+G5 G1+B3+Bb4+C5+D5+G5:2 C3"
+    };
+}
+
+/// Two bars from bar 275: bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_65 {
+    () => {
+        "C2+G3+E5:4 C3+D4+E5+G5:1 D5 C5 Bb4 G1+C4+Bb4+D5+E5+G5 F5 D5 C5 | \
+         C2+G3+E5:2 D5:1 C5 C3+D4+E5+G5:4 G1+C4+Bb4+D5+G5:1 E5 G2+C3+D5 C5"
+    };
+}
+
+/// Two bars from bar 277: bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_66 {
+    () => {
+        "C2+G3+E4:4 C3+D4+E5+G5:1 Bb4 G4 F4 G1+C4+Bb4+D5+G5:4 | \
+         C2+E4+G4 C3+D4+E5+G5:2 D5 G1+C4+Bb4+D5+E5+G5 G2+C3+E5"
+    };
+}
+
+/// Two bars from bar 279: flutes, bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_67 {
+    () => {
+        "C2+G4+E6+Bb6:2 E5+Bb6 C3+D4+E5+G5 E5+Bb6 G1+C4+D5+E6+Bb6 E5+Bb6 | \
+         (3 C2+G4+E5 E5 E5 C3+D4+E5+G5 Eb5:1 Db5 G1+C4+Bb4+D5+E5+G5:2 G2+C3+Eb5:1 Db5"
+    };
+}
+
+/// Two bars from bar 281: bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_68 {
+    () => {
+        "C2+G4+E5:1 Eb5 Db5 C5 C3+Bb4+D5+E5+G5 Ab4 G4:2 G1+Bb4+C5+D5+G5:4 | \
+         C2+E4+G4 C3+D5+E5+G5 G1+Bb4+C5+D5+G5:2 G2+C3"
+    };
+}
+
+/// Two bars from bar 283: bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_69 {
+    () => {
+        "C2+G3+F4:4 C3+D5+F5+G5:2 G4 G1+F4+B4+C5+D5+G5:1 G4 A4:2 | \
+         C2+G3+D4+F4:4 C3+D5+F5+G5 G1+B4+C5+D5+G5:2 G2+C3"
+    };
+}
+
+/// The ostinato from bar 283: horns and violas.
+macro_rules! bolero_rhythm_10 {
+    () => {
+        "G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 (3 G3+G4:1 G3+G4 G3+G4 G3+G4:2 G3+G4 | \
+         G3+G4 (3 G3+G4:1 G3+G4 G3+G4 G3+B4:2 (3 G3+D5:1 G3+G4 G3+G4 (3 G3+Ab4 G3+G4 G3+B4 (3 G3+G4 G3+G4 G3+G4"
+    };
+}
+
+/// Two bars from bar 285: bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_70 {
+    () => {
+        "C2+E4+G4:1 A4 G4 E4 C3+D5+E5+G5:2 D4 G1+Bb4+C5+D5+G5:4 | \
+         C2+G3+E4:1 E4 D4 E4 C3+D5+E5+G5 A4 G4 E4 G1+Bb4+C5+D5+G5 E4 G2+C3+D4 C4"
+    };
+}
+
+/// Two bars from bar 287: bass clarinet, bassoons, contrabassoon, tenor saxophone, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_71 {
+    () => {
+        "C2+G3+E4:2 C4 C3+D5+E5+G5 F3+Ab3 G1+Ab4+C5+D5+G5:4 | \
+         C2+G3+D4 C3+Ab4+D5+G5:1 G3+Bb3 F3+Ab3 Eb3+G3 G1+Bb4+C5+G5:2 G2+C3"
+    };
+}
+
+/// Two bars from bar 289: bass clarinet, bassoons, contrabassoon, tenor saxophone, trumpets, trombones, tuba, timpani, harp, violas and double basses.
+macro_rules! bolero_beats_72 {
+    () => {
+        "C2+G3+Bb3+C4:4 C3+F3+Ab3+Bb4+G5:1 Eb3+G3 F3+Ab3 Db3+F3 G1+Ab4+C5+G5:4 | \
+         C2+G3+Ab3+C4 C3+Ab4+G5:1 Db3+F3 Eb3+G3 Db3+F3 G1+F3+Ab3+B3+C5+G5 Eb3+G3 G2+C3+Db3+F3 C3+E3"
+    };
+}
+
+/// Two bars from bar 291: bass clarinet, bassoons, contrabassoon, trumpets, trombones, tuba, timpani, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_73 {
+    () => {
+        "C2+G3+C4:4 C2+D5+E5+G5 G1+B4+C5+D5+G5:2 C2+B4+D5+G5 | \
+         C2+D4+E4+G5:4 C2+D5+E5+G5 G1+B4+C5+D5+G5:2 G1+C4+D4+B4+G5"
+    };
+}
+
+/// The ostinato from bar 291: piccolo, flutes, oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_11 {
+    () => {
+        "G3+A3+C4+G4:2 (3 C2+D5+E6+G6:1 C2+E6+G6 C2+D5+E6+G6 C2+D5+E6+G6:2 (3 C2+D5+E6+G6:1 C2+E6+G6 C2+D5+E6+G6 C2+B5+D6+G6:2 C2+B5+D6+G6 | \
+         C2+D5+E6+G6 (3 C2+D5+E6+G6:1 C2+E6+G6 C2+D5+E6+G6 C2+D5+E6+G6:2 (3 C2+D5+E6+G6:1 C2+E6+G6 C2+D5+E6+G6 (3 C2+B5+D6+G6 C2+E5+B5+D6+G6 C2+B5+D6+G6 (3 C2+B5+D6+G6 C2+E5+B5+D6+G6 C2+B5+D6+G6"
+    };
+}
+
+/// Two bars from bar 293: bass clarinet, bassoons, contrabassoon, trombones, tuba, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_74 {
+    () => {
+        "C2+D4+E5+G5:4 C2+D4+E5+G5 G1+C4+B4+D5+G5:2 C2+B4+D5+G5 | \
+         C2+D4+E4+G5:4 C2+D4+E4+G5 G1+C4+D4+B4+G5:2 G1+C4+D4+B4+G5"
+    };
+}
+
+/// The ostinato from bar 293: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_12 {
+    () => {
+        "C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 C2+B4+D5+G5:2 C2+B4+D5+G5 | \
+         C2+D5+E5+G5 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 (3 C2+B4+D5+G5 C2+B4+D5+E5+G5 C2+B4+D5+G5 (3 C2+B4+D5+G5 C2+B4+D5+E5+G5 C2+B4+D5+G5"
+    };
+}
+
+/// Two bars from bar 297: bass clarinet, bassoons, contrabassoon, trombones, tuba, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_75 {
+    () => {
+        "C2+D4+E5+G5:4 C2+D4+E5+G5 G1+C4+B4+D5+G5:2 C2+B4+D5+G5 | \
+         C2+D4+E4+G5:4 C2+D4+E4+G5 G1+C4+E4+B4+G5:2 G1+C4+E4+B4+G5"
+    };
+}
+
+/// The ostinato from bar 297: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_13 {
+    () => {
+        "C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 C2+B4+D5+G5:2 C2+B4+D5+G5 | \
+         C2+D5+E5+G5 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 (3 C2+B4+Db5+E5+G5 C2+B4+D5+E5+G5 C2+B4+Db5+E5+G5 (3 C2+B4+Db5+E5+G5 C2+B4+D5+E5+G5 C2+B4+Db5+E5+G5"
+    };
+}
+
+/// Two bars from bar 299: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_76 {
+    () => {
+        "C2+D5+F5+G5:4 C2+D5+F5+G5 G1+C4+B4+D5+G5:2 C2+B4+D5+G5 | \
+         C2+F4+D5+G5:4 C2+F4+D5+G5 G1+C4+D4+B4+G5:2 G1+C4+D4+B4+G5"
+    };
+}
+
+/// The ostinato from bar 299: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_14 {
+    () => {
+        "C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+B4+Db5+D5+G5:2 C2+B4+Db5+D5+G5 | \
+         C2+D5+F5+G5 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 (3 C2+B4+Db5+D5+G5 C2+B4+D5+G5 C2+B4+Db5+D5+G5 (3 C2+B4+Db5+D5+G5 C2+B4+D5+G5 C2+B4+Db5+D5+G5"
+    };
+}
+
+/// The ostinato from bar 303: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_15 {
+    () => {
+        "C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+B4+Db5+D5+G5:2 C2+B4+Db5+D5+G5 | \
+         C2+D5+F5+G5 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 (3 C2+B4+Db5+D5+F5+G5 C2+B4+D5+F5+G5 C2+B4+Db5+D5+F5+G5 (3 C2+B4+Db5+D5+F5+G5 C2+B4+D5+G5 C2+B4+Db5+D5+G5"
+    };
+}
+
+/// Two bars from bar 307: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_77 {
+    () => {
+        "C2+D5+F5+G5:4 C2+D5+F5+G5 G1+C4+B4+D5+G5:2 C2+B4+D5+G5 | \
+         C2+D4+E4+G5:4 C2+D4+E4+G5 G1+D4+F4+C5+G5:2 G1+D4+F4+C5+G5"
+    };
+}
+
+/// The ostinato from bar 307: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_16 {
+    () => {
+        "C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+D5+F5+G5:2 (3 C2+D5+F5+G5:1 C2+D5+E5+F5+G5 C2+D5+F5+G5 C2+B4+Db5+D5+G5:2 C2+B4+Db5+D5+G5 | \
+         C2+D5+E5+G5 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+E5+G5 C2+D5+E5+G5 (3 C2+D5+G5 C2+D5+E5+G5 C2+D5+G5 (3 C2+D5+G5 C2+D5+E5+G5 C2+D5+G5"
+    };
+}
+
+/// Two bars from bar 309: bass clarinet, bassoons, contrabassoon, sopranino saxophone, tenor saxophone, trumpets, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_78 {
+    () => {
+        "C2+D4+E4+G5:4 C2+D5+E5+G5 G1+B4+C5+D5+G5:2 G2+C4+D4+B4+G5 | \
+         C2+D4+E4+G5:4 C2+D5+E5+G5 G1+B4+C5+D5+G5:2 G1+C4+D4+B4+G5"
+    };
+}
+
+/// The ostinato from bar 309: piccolo, flutes, oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_17 {
+    () => {
+        "C2+D5+E5+G5+C6:2 (3 C2+D5+E6+G6:1 C2+D5+E6+G6 C2+D5+E6+G6 C2+D5+E6+G6:2 (3 C2+D5+E6+G6:1 C2+D5+E6+G6 C2+D5+E6+G6 C2+B4+Db5+D6+G6:2 C2+B4+Db5+D6+G6 | \
+         C2+D5+E6+G6 (3 C2+D5+E6+G6:1 C2+D5+E6+G6 C2+D5+E6+G6 C2+D5+E6+G6:2 (3 C2+E5+D6+G6:1 C2+E5+D6+G6 C2+E5+D6+G6 (3 C2+B4+Db5+D6+G6 C2+B4+E5+D6+G6 C2+B4+Db5+D6+G6 (3 C2+B4+Db5+D6+G6 C2+B4+E5+D6+G6 C2+B4+Db5+D6+G6"
+    };
+}
+
+/// Two bars from bar 311: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_79 {
+    () => {
+        "C2+E4+G5:4 C2+D4+E4+G5 G1+C4+D4+Bb4+G5:2 G2+C4+D4+Bb4+G5 | \
+         C2+E4+G5:4 C2+D4+E4+G5 G1+C4+D4+Bb4+G5:2 G1+C4+D4+Bb4+G5"
+    };
+}
+
+/// The ostinato from bar 311: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_18 {
+    () => {
+        bolero_ostinato!(
+            "C2+D5+E5+G5",
+            "C2+D5+E5+G5",
+            "C2+Bb4+D5+G5",
+            "C2+D5+E5+G5",
+            "C2+D5+E5+G5",
+            "C2+Bb4+D5+G5"
+        )
+    };
+}
+
+/// Two bars from bar 319: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_80 {
+    () => {
+        "C2+F4+D5+G5:4 C2+F4+D5+G5 G1+C4+D4+B4+G5:2 G2+C4+D4+B4+G5 | \
+         C2+F4+D5+G5:4 C2+F4+D5+G5 G1+C4+D4+B4+G5:2 G1+C4+D4+B4+G5"
+    };
+}
+
+/// Two bars from bar 321: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_81 {
+    () => {
+        "C2+E4+G5:4 C2+D4+E4+G5 G1+C4+D4+Bb4+G5:2 G2+C4+D4+Bb4+G5 | \
+         C2+E4+G5:4 C2+E4+G5 G1+C4+D4+Bb4+G5:2 G1+C4+D4+Bb4+G5"
+    };
+}
+
+/// Two bars from bar 323: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_82 {
+    () => {
+        "C2+E4+G5:4 C2+D4+E4+G5 G1+C4+D5+G5:2 G2+C4+D5+G5 | \
+         C2+E4+G5:4 C2+D4+E4+G5 G1+C4+D5+G5:2 G1+C4+D5+G5"
+    };
+}
+
+/// The ostinato from bar 323: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_19 {
+    () => {
+        "C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+D5+E5+G5 C2+D5+E5+G5 C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+D5+E5+G5 C2+D5+E5+G5 C2+D5+G5:2 C2+D5+G5 | \
+         C2+D5+E5+G5 (3 C2+D5+E5+G5:1 C2+D5+E5+G5 C2+D5+E5+G5 C2+D5+E5+G5:2 (3 C2+D5+E5+G5:1 C2+D5+E5+G5 C2+D5+E5+G5 (3 C2+D5+G5 C2+D5+E5+G5 C2+D5+G5 (3 C2+D5+G5 C2+D5+E5+G5 C2+D5+G5"
+    };
+}
+
+/// Two bars from bar 325: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_83 {
+    () => {
+        "C2+F4+D5+G5:4 C2+F4+D5+G5 G1+C4+D4+B4+G5:2 G2+C4+D4+B4+G5 | \
+         C2+F4+D5+G5:4 C2+F4+D5+G5 G1+C4+D4+B4+G5:2 G1+B3+C4+D4"
+    };
+}
+
+/// Two bars from bar 327: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_84 {
+    () => {
+        "E1+B4+G#5:4 E2+B4+G#5 B1+E3+D5+F#5:2 B2+D5+F#5 | \
+         E1+B4+G#5:4 E2+B4+G#5 B1+E3+D5+F#5:2 B1+D5+F#5"
+    };
+}
+
+/// The ostinato from bar 327: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_20 {
+    () => {
+        "E2+A#4+B4+G#5:2 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 E2+A#4+B4+G#5:2 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 B2+G#4+D5+E5+F#5:2 B2+G#4+D5+E5+F#5 | \
+         E2+A#4+B4+G#5 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 E2+A#4+B4+G#5:2 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 (3 B2+G#4+D5+E5+F#5 B2+C#5+D5+E5+F#5 B2+G#4+D5+E5+F#5 (3 B2+G#4+D5+E5+F#5 B2+C#5+D5+E5+F#5 B2+G#4+D5+E5+F#5"
+    };
+}
+
+/// Two bars from bar 333: bass clarinet, bassoons, contrabassoon, trombones, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_85 {
+    () => {
+        "E1+B4+G#5:4 E2+B4+G#5 B1+E3+A3+C#4+D5+F#5:2 B2+D5+F#5 | \
+         E1+B4+G#5:4 E2+B4+G#5 G1+F3+A3+D4+B4+G5:1 G3+B3 G1+F3+A3+D4+B4+G5 E3+G3"
+    };
+}
+
+/// The ostinato from bar 333: oboes, clarinets, horns, second violins, violas and cellos.
+macro_rules! bolero_rhythm_21 {
+    () => {
+        "E2+A#4+B4+G#5:2 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 E2+A#4+B4+G#5:2 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 B2+G#4+D5+E5+F#5:2 B2+G#4+D5+E5+F#5 | \
+         E2+A#4+B4+G#5 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 E2+A#4+B4+G#5:2 (3 E2+A#4+B4+G#5:1 E2+B4+C#5+G#5 E2+A#4+B4+G#5 (3 G2+A4+B4+D5+G5 G2+B4+C#5+D5+G5 G2+A4+B4+D5+G5 (3 G2+A4+B4+D5+G5 G2+B4+C#5+D5+G5 G2+A4+B4+D5+G5"
+    };
+}
+
+/// Two bars from bar 335: oboes, English horn, clarinets, bass clarinet, bassoons, contrabassoon, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_86 {
+    () => {
+        "C2+A4+E5+G5:4 C2+D5+E5+G5+C6 G1+B4+Db5+D5+C6:2 G1+B4+Db5+D5+C6 | \
+         C2+D5+E5+G5+C6:4 C2+D5+E5+G5+C6 G1+B4+Db5+D5+C6:2 G1+B4+Db5+D5+C6"
+    };
+}
+
+/// The ostinato from bar 335: piccolo, flutes, horns, D trumpet, trumpets, first violins, second violins, violas and cellos.
+macro_rules! bolero_rhythm_22 {
+    () => {
+        "C2+D5+E5+G5+C6:2 (3 C2+D5+E6+G6:1 C2+D5+E6+G6 C2+D5+E6+G6 C2+D5+E6+G6:2 (3 C2+D5+E6+G6:1 C2+D5+E6+G6 C2+D5+E6+G6 C2+B5+D6+G6:2 C2+B5+D6+G6 | \
+         C2+D5+E6+G6 (3 C2+D5+E6+G6:1 C2+D5+E6+G6 C2+D5+E6+G6 C2+D5+E6+G6:2 (3 C2+D5+E6+G6:1 C2+D5+E6+G6 C2+D5+E6+G6 (3 C2+B5+D6+G6 C2+B5+D6+G6 C2+B5+D6+G6 (3 C2+B5+D6+G6 C2+B5+D6+G6 C2+B5+D6+G6"
+    };
+}
+
+/// Two bars from bar 337: oboes, English horn, clarinets, bass clarinet, bassoons, contrabassoon, tuba, timpani, harp and double basses.
+macro_rules! bolero_beats_87 {
+    () => {
+        "C2+D5+E5+G5+C6:4 C2+D5+E5+G5+C6 G1+B4+Db5+D5+C6:2 G1+B4+Db5+D5+C6 | \
+         C2+D5+E5+G5+C6:4 C2+D5+E5+G5+C6 G1+B4+Db5+D5+C6:2 G1+B4+Db5+D5+C6"
+    };
+}
+
+/// The ostinato from bar 337: piccolo, flutes, horns, D trumpet, trumpets, first violins, second violins, violas and cellos.
+macro_rules! bolero_rhythm_23 {
+    () => {
+        bolero_ostinato!(
+            "C2+D5+E6+G6",
+            "C2+D5+E6+G6",
+            "C2+B5+D6+G6",
+            "C2+D5+E6+G6",
+            "C2+D5+E6+G6",
+            "C2+B5+D6+G6"
+        )
+    };
+}
+
+/// Two bars from bar 339: oboes, English horn, clarinets, bass clarinet, bassoons, contrabassoon, horns, trombones, tuba, timpani, harp, second violins, violas, cellos and double basses.
+macro_rules! bolero_beats_88 {
+    () => {
+        "F1+Ab3+C4:2 (3 F1+Ab5+B5+C6+Db6:1 E5+G5 Db5+F5 _:4 (3 _:1 F1+Ab3+D4+Eb5+B5+C6+Db6 F1+Ab3+Eb4+Bb4+B5+C6+Db6 (3 F1+A3+E4+Ab4+B5+C6+Db6 F1+Ab3+G4+Bb4+B5+C6+Db6 F1+F#4+Ab4+B5+C6+Db6 | \
+         C1+E5+F#5+G5+C6:2 -:10"
+    };
+}
+
+/// The first tune, A, in C major, as the flute plays it: sixteen bars, its
+/// last note C on the first beat of the seventeenth, and a bar of the
+/// accompaniment alone before the next instrument takes it.
+const BOLERO_A: &str = "C5:6 B4:1 C5 D5 C5 B4 A4 | C5:2 C5:1 A4 C5:6 B4:1 C5 | A4 G4 E4 F4 G4:8 | \
+     _:1 F4 E4 D4 E4 F4 G4 A4 G4:4 | _:5 A4:1 B4 A4 G4 F4 E4 D4 | \
+     E4 D4 C4:4 C4:1 D4 E4:2 F4 | D4:4 G4:8 | _:10 -:2 | D5:7 C5:1 B4 A4 B4 C5 | \
+     D5 C5 B4:3 C5:1 B4 A4 C5 B4 A4 F4 | _:2 F4:1. F4. F4:2. A4. C5:1 A4 B4 G4 | \
+     F4:2 F4:1. F4. F4:2. A4. B4:1 G4 A4 F4 | D4:2 D4:1 C4 D4:6 D4:1. D4. | \
+     D4:2. F4. A4:1 F4 G4 E4 D4:2 D4:1 C4 | D4:6 D4:1 C4 D4:2 E4:1 F4 | G4:9 F4:1 E4 D4 | \
+     C4:2 -:10 | -:12";
+
+/// The second tune, B, as the bassoon plays it, from B flat high in its
+/// range: C major darkened by B flat, D flat, A flat and E flat, falling
+/// to the low C.
+const BOLERO_B: &str = "Bb4:5 A4:1 G4 F4 Bb4 C5 A4 G4 | Bb4:2 A4:1 G4 Bb4:4 A4:1 Bb4 A4 G4 | \
+     _:5 F4:1 E4 D4 E4:4 | _ -:2 Bb4 C5 Db5 | _ Db5:4 Db5:2 Db5 Db5 | \
+     (3 Db5 Db5 Db5 Db5 C5:1 Bb4 Db5:2 C5:1 Bb4 | Db5 C5 Bb4 Ab4 G4 F4 E4:6 | _:10 -:2 | \
+     D4:6 E4:2 D4:1 E4 F4:2 | _:4 G4:2 Ab4 (3 F4 G4 E4 | D4:1 E4 D4 C4:3 Bb3:6 | \
+     _:1 C4 Bb3 C4 D4 E4 D4 C4 D4 C4 Bb3 Ab3 | Bb3 Ab3 G3:4 F3:6 | _:5 G3:1 F3 Eb3:5 | \
+     _:4 F3:1 Eb3 F3 Db3:5 | _ Db3:1 Eb3 Db3 F3 Eb3 Db3 C3 | _:4 -:8 | -:12";
+
+/// Woodwinds
+const BOLERO_WOODWINDS: &str = "Bb4+E5+G5+Bb5+E6+G6+Bb6:5 A4+D5+F5+A5+D6+F6+A6:1 G4+C5+E5+G5+C6+E6+G6 F4+Bb4+D5+F5+Bb5+D6+F6 Bb4+E5+G5+Bb5+E6+G6+Bb6 C5+F5+A5+C6+F6+A6+C7 A4+D5+F5+A5+D6+F6+A6 G4+C5+E5+G5+C6+E6+G6 | \
+     Bb4+E5+G5+Bb5+E6+G6+Bb6:2 A4+D5+F5+A5+D6+F6+A6:1 G4+C5+E5+G5+C6+E6+G6 Bb4+E5+G5+Bb5+E6+G6+Bb6:4 A4+D5+F5+A5+D6+F6+A6:1 Bb4+E5+G5+Bb5+E6+G6+Bb6 A4+D5+F5+A5+D6+F6+A6 G4+C5+E5+G5+C6+E6+G6 | \
+     _:5 F4+Bb4+D5+F5+Bb5+D6+F6:1 E4+G4+C5+E5+G5+C6+E6 D4+F4+Bb4+D5+F5+Bb5+D6 E4+G4+C5+E5+G5+C6+E6:4 | \
+     _ -:2 Bb4+D5+G5+Bb5+D6+G6+Bb6 C5+E5+A5+C6+E6+A6+C7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 | \
+     _ Db5+E5+Bb5+Db6+Db7:4 Db5+E5+Bb5+Db6+Db7:2 Db5+E5+Bb5+Db6+Db7 Db5+E5+Bb5+Db6+Db7 | \
+     (3 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 C5+Eb5+A5+C6+Eb6+A6+C7:1 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 Db5+E5+Bb5+Db6+E6+Bb6+Db7:2 C5+Eb5+A5+C6+Eb6+A6+C7:1 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 | \
+     Db5+E5+Bb5+Db6+E6+Bb6+Db7 C5+Eb5+A5+C6+Eb6+A6+C7 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 Ab4+C5+F5+Ab5+C6+F6+Ab6 G4+Bb4+E5+G5+Bb5+E6+G6 F4+Ab4+D5+F5+Ab5+D6+F6 E4+G4+C5+E5+G5+C6+E6:6 | \
+     _:10 -:2 | \
+     D4+A4+D5+F5+A5+D6:6 E4+B4+E5+G5+B5+E6:2 D4+A4+D5+F5+A5+D6:1 E4+B4+E5+G5+B5+E6 F4+C5+F5+A5+C6+F6:2 | \
+     _:4 G4+D5+G5+B5+D6+G6:2 Ab4+F5+Ab5+D6+F6+Ab6 (3 F4+B4+F5+Ab5+B5+F6 G4+D5+G5+B5+D6+G6 E4+B4+E5+G5+B5+E6 | \
+     D4+G4+A4+D5+G5+A5+D6:1 E4+A4+C5+E5+A5+C6+E6 D4+G4+A4+D5+G5+A5+D6 C4+E4+G4+C5+E5+G5+C6:3 Bb3+D4+G4+Bb4+D5+G5+Bb5:6 | \
+     _:1 C4+E4+A4+C5+E5+A5+C6 Bb3+D4+G4+Bb4+D5+G5+Bb5 C4+E4+A4+C5+E5+A5+C6 D4+G4+Bb4+D5+G5+Bb5+D6 E4+A4+C5+E5+A5+C6+E6 D4+G4+Bb4+D5+G5+Bb5+D6 C4+E4+A4+C5+E5+A5+C6 D4+G4+Bb4+D5+G5+Bb5+D6 C4+E4+A4+C5+E5+A5+C6 Bb3+D4+G4+Bb4+D5+G5+Bb5 Ab3+C4+E4+Ab4+C5+E5+Ab5 | \
+     Bb3+E4+G4+Bb4+E5+G5+Bb5 Ab3+Ab4+Ab5 G3+C4+E4+G4+C5+E5+G5:4 F3+Ab3+C4+F4+C5+F5:6 | \
+     _:5 G3+Bb3+D4+G4+D5+G5:1 F3+Ab3+C4+F4+C5+F5 Eb3+G3+Bb3+Eb4+Bb4+Eb5:5 | \
+     _:4 F3+Ab3+C4+F4+C5+F5:1 Eb3+G3+Bb3+Eb4+Bb4+Eb5 F3+Ab3+C4+F4+C5+F5 Db3+F3+Ab3+Db4+Ab4+Db5:5 | \
+     _ Db3+F3+Ab3+Db4+Ab4+Db5:1 Eb3+G3+Bb3+Eb4+Bb4+Eb5 Db3+F3+Ab3+Db4+Ab4+Db5 F3+Ab3+C4+F4+C5+F5 Eb3+G3+Bb3+Eb4+Bb4+Eb5 Db3+F3+Ab3+Db4+Ab4+Db5 C3+E3+G3+C4+G4+C5 | \
+     _:4 -:8 | -:12";
+
+/// Violins in harmony
+const BOLERO_VIOLINS_IN_HARMONY: &str = "C5+E5+G5:6 B4+D5+F#5:1 C5+E5+G5 D5+F#5+A5 C5+E5+G5 B4+D5+F#5 A4+C5+E5 | \
+     C5+E5+G5:2 C5+E5+G5:1 A4+C5+E5 C5+E5+G5:6 B4+D5+F#5:1 C5+E5+G5 | \
+     A4+C5+E5 G4+B4+D5 E4+G4+B4 F4+A4+C5 G4+C5+E5:8 | \
+     _:1 F4+A4+C5 E4+G4+B4 D4+F4+A4 E4+G4+B4 F4+A4+C5 G4+B4+D5 A4+C5+E5 G4+B4+D5:4 | \
+     _:5 A4+C5+E5:1 B4+D5+F#5 A4+C5+E5 G4+B4+D5 F4+A4+C5 E4+G4+B4 D4+F4+A4 | \
+     E4+G4+B4 D4+F4+A4 C4+E4+G4:4 C4+E4+G4:1 D4+F4+A4 E4+G4+B4:2 F4+A4+C5 | \
+     D4+F4+A4:4 G4+B4+D5:8 | _:10 -:2 | \
+     D5+F5+A5:7 C5+E5+G5:1 B4+D5+F5 A4+C5+E5 B4+D5+F5 C5+E5+G5 | \
+     D5+F5+A5 C5+E5+G5 B4+D5+F5:3 C5+E5+G5:1 B4+D5+F5 A4+C5+E5 C5+E5+G5 B4+D5+F5 A4+C5+E5 F4+A4+C5 | \
+     _:2 F4+A4+C5:1. F4+A4+C5. F4+A4+C5:2. A4+C5+E5. C5+E5+G5:1 A4+C5+E5 B4+D5+F5 G4+B4+D5 | \
+     F4+A4+C5:2 F4+A4+C5:1. F4+A4+C5. F4+A4+C5:2. A4+C5+E5. B4+D5+F5:1 G4+B4+D5 A4+C5+E5 F4+A4+C5 | \
+     D4+F4+A4:2 D4+F4+A4:1 C4+E4+G4 D4+F4+A4:6 D4+F4+A4:1. D4+F4+A4. | \
+     D4+F4+A4:2. F4+A4+C5. A4+C5+E5:1 F4+A4+C5 G4+B4+D5 E4+G4+B4 D4+F4+A4:2 D4+F4+A4:1 C4+E4+G4 | \
+     D4+F4+A4:6 D4+F4+A4:1 C4+E4+G4 D4+F4+A4:2 E4+G4+B4:1 F4+A4+C5 | \
+     G4+C5+E5:9 F4+A4+C5:1 E4+G4+B4 D4+F4+A4 | C4+E4+G4:2 -:10 | -:12 & -:12 | - | \
+     -:8 D5:4 | E5:1 -:11 | -:12 | - | - | - | - | - | - | - | - | - | - | - | - | -";
+
+/// Trombone and strings
+const BOLERO_TROMBONE_AND_STRINGS: &str = "Bb4+E5+G5+Bb5+E6+G6+Bb6:5 A4+D5+F5+A5+D6+F6+A6:1 G4+C5+E5+G5+C6+E6+G6 F4+Bb4+D5+F5+Bb5+D6+F6 Bb4+E5+G5+Bb5+E6+G6+Bb6 C5+F5+A5+C6+F6+A6+C7 A4+D5+F5+A5+D6+F6+A6 G4+C5+E5+G5+C6+E6+G6 | \
+     Bb4+E5+G5+Bb5+E6+G6+Bb6:2 A4+D5+F5+A5+D6+F6+A6:1 G4+C5+E5+G5+C6+E6+G6 Bb4+E5+G5+Bb5+E6+G6+Bb6:4 A4+D5+F5+A5+D6+F6+A6:1 Bb4+E5+G5+Bb5+E6+G6+Bb6 A4+D5+F5+A5+D6+F6+A6 G4+C5+E5+G5+C6+E6+G6 | \
+     _:5 F4+Bb4+D5+F5+Bb5+D6+F6:1 E4+G4+C5+E5+G5+C6+E6 D4+F4+Bb4+D5+F5+Bb5+D6 E4+G4+C5+E5+G5+C6+E6:4 | \
+     _ -:2 Bb4+D5+G5+Bb5+D6+G6+Bb6 C5+E5+A5+C6+E6+A6+C7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 | \
+     _ Db5+E5+Bb5+Db6+Db7:4 Db5+E5+Bb5+Db6+Db7:2 Db5+E5+Bb5+Db6+Db7 Db5+E5+Bb5+Db6+Db7 | \
+     (3 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 C5+Eb5+A5+C6+Eb6+A6+C7:1 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 Db5+E5+Bb5+Db6+E6+Bb6+Db7:2 C5+Eb5+A5+C6+Eb6+A6+C7:1 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 | \
+     Db5+E5+Bb5+Db6+E6+Bb6+Db7 C5+Eb5+A5+C6+Eb6+A6+C7 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 Ab4+C5+F5+Ab5+C6+F6+Ab6 G4+Bb4+E5+G5+Bb5+E6+G6 F4+Ab4+D5+F5+Ab5+D6+F6 E4+G4+C5+E5+G5+C6+E6:6 | \
+     _:10 -:2 | \
+     D4+F4+A4+D5+F5+A5+D6:6 E4+G4+B4+E5+G5+B5+E6:2 D4+F4+A4+D5+F5+A5+D6:1 E4+G4+B4+E5+G5+B5+E6 F4+A4+C5+F5+A5+C6+F6:2 | \
+     _:4 G4+B4+D5+G5+B5+D6+G6:2 Ab4+D5+F5+Ab5+D6+F6+Ab6 (3 F4+Ab4+B4+F5+Ab5+B5+F6 G4+B4+D5+G5+B5+D6+G6 E4+G4+B4+E5+G5+B5+E6 | \
+     D4+G4+A4+D5+G5+A5+D6:1 E4+A4+C5+E5+A5+C6+E6 D4+G4+A4+D5+G5+A5+D6 C4+E4+G4+C5+E5+G5+C6:3 Bb3+D4+G4+Bb4+D5+G5+Bb5:6 | \
+     _:1 C4+E4+A4+C5+E5+A5+C6 Bb3+D4+G4+Bb4+D5+G5+Bb5 C4+E4+A4+C5+E5+A5+C6 D4+G4+Bb4+D5+G5+Bb5+D6 E4+A4+C5+E5+A5+C6+E6 D4+G4+Bb4+D5+G5+Bb5+D6 C4+E4+A4+C5+E5+A5+C6 D4+G4+Bb4+D5+G5+Bb5+D6 C4+E4+A4+C5+E5+A5+C6 Bb3+D4+G4+Bb4+D5+G5+Bb5 Ab3+C4+E4+Ab4+C5+E5+Ab5 | \
+     Bb3+E4+G4+Bb4+E5+G5+Bb5 Ab3+Ab4+Ab5 G3+C4+E4+G4+C5+E5+G5:4 F3+Ab3+C4+F4+C5+F5:6 | \
+     _:5 G3+Bb3+D4+G4+D5+G5:1 F3+Ab3+C4+F4+C5+F5 Eb3+G3+Bb3+Eb4+Bb4+Eb5:5 | \
+     _:4 F3+Ab3+C4+F4+C5+F5:1 Eb3+G3+Bb3+Eb4+Bb4+Eb5 F3+Ab3+C4+F4+C5+F5 Db3+F3+Ab3+Db4+Ab4+Db5:5 | \
+     _ Db3+F3+Ab3+Db4+Ab4+Db5:1 Eb3+G3+Bb3+Eb4+Bb4+Eb5 Db3+F3+Ab3+Db4+Ab4+Db5 F3+Ab3+C4+F4+C5+F5 Eb3+G3+Bb3+Eb4+Bb4+Eb5 Db3+F3+Ab3+Db4+Ab4+Db5 C3+E3+G3+C4+G4+C5 | \
+     _:4 -:8 | -:12";
+
+/// Trumpets
+const BOLERO_TRUMPETS: &str = "C5+E5+G5:6 B4+D5+F#5:1 C5+E5+G5 D5+F#5+A5 C5+E5+G5 B4+D5+F#5 A4+C5+E5 | \
+     C5+E5+G5:2 C5+E5+G5:1 A4+C5+E5 C5+E5+G5:6 B4+D5+F#5:1 C5+E5+G5 | \
+     A4+C5+E5 G4+B4+D5 E4+G4+B4 F4+A4+C5 G4+C5+E5:8 | \
+     _:1 F4+A4+C5 E4+G4+B4 D4+F4+A4 E4+G4+B4 F4+A4+C5 G4+B4+D5 A4+C5+E5 G4+B4+D5:4 | \
+     _:5 A4+C5+E5:1 B4+D5+F#5 A4+C5+E5 G4+B4+D5 F4+A4+C5 E4+G4+B4 D4+F4+A4 | \
+     E4+G4+B4 D4+F4+A4 C4+E4+G4:4 C4+E4+G4:1 D4+F4+A4 E4+G4+B4:2 F4+A4+C5 | \
+     D4+F4+A4:4 G4+B4+D5:8 | _:10 -:2 | \
+     D5+F5+A5:7 C5+E5+G5:1 B4+D5+F5 A4+C5+E5 B4+D5+F5 C5+E5+G5 | \
+     D5+F5+A5 C5+E5+G5 B4+D5+F5:3 C5+F5+A5:1 B4+E5+G5 A4+D5+F5 C5+F5+A5 B4+E5+G5 A4+D5+F5 F4+A4+D5 | \
+     _:2 F4+A4+D5:1. F4+A4+D5. F4+A4+D5:2. A4+D5+F5. C5+F5+A5:1 A4+D5+F5 B4+E5+G5 G4+B4+E5 | \
+     F4+A4+D5:2 F4+A4+D5:1. F4+A4+D5. F4+A4+D5:2. A4+D5+F5. B4+E5+G5:1 G4+B4+E5 A4+D5+F5 F4+A4+D5 | \
+     D4+F4+A4:2 D4+F4+A4:1 C4+E4+G4 D4+F4+A4:6 D4+F4+A4:1. D4+F4+A4. | \
+     D4+F4+A4:2. F4+A4+C5. A4+C5+E5:1 F4+A4+C5 G4+B4+D5 E4+G4+B4 D4+F4+A4:2 D4+F4+A4:1 C4+E4+G4 | \
+     D4+F4+A4:6 D4+F4+A4:1 C4+E4+G4 D4+F4+A4:2 E4+G4+B4:1 F4+A4+C5 | \
+     G4+C5+E5:9 F4+A4+C5:1 E4+G4+B4 D4+F4+A4 | C4+E4+G4:2 -:10 | -:12 & -:12 | - | \
+     -:8 D5:4 | E5:1 -:11 | C5+E5:5 -:7 | -:12 | - | - | - | - | - | - | - | - | - | - | \
+     - | -";
+
+/// Last statement
+const BOLERO_LAST_STATEMENT: &str = "Bb4+E5+G5+Bb5+E6+G6+Bb6:5 A4+D5+F5+A5+D6+F6+A6:1. G4+C5+E5+G5+C6+E6+G6. F4+Bb4+D5+F5+Bb5+D6+F6. Bb4+E5+G5+Bb5+E6+G6+Bb6 C5+F5+A5+C6+F6+A6+C7 A4+D5+F5+A5+D6+F6+A6 G4+C5+E5+G5+C6+E6+G6 | \
+     Bb4+E5+G5+Bb5+E6+G6+Bb6:2 A4+D5+F5+A5+D6+F6+A6:1. G4+C5+E5+G5+C6+E6+G6. Bb4+E5+G5+Bb5+E6+G6+Bb6:4 A4+D5+F5+A5+D6+F6+A6:1 Bb4+E5+G5+Bb5+E6+G6+Bb6 A4+D5+F5+A5+D6+F6+A6 G4+C5+E5+G5+C6+E6+G6 | \
+     _:5 F4+Bb4+D5+F5+Bb5+D6+F6:1 E4+G4+C5+E5+G5+C6+E6 D4+F4+Bb4+D5+F5+Bb5+D6 E4+G4+C5+E5+G5+C6+E6:4 | \
+     _ -:2 Bb4+D5+G5+Bb5+D6+G6+Bb6 C5+E5+A5+C6+E6+A6+C7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 | \
+     _ Db5+E5+Bb5+Db6+E6+Bb6+Db7:4 Db5+E5+Bb5+Db6+E6+Bb6+Db7:2 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 | \
+     (3 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 Db5+E5+Bb5+Db6+E6+Bb6+Db7 C5+Eb5+A5+C6+Eb6+A6+C7:1 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 Db5+E5+Bb5+Db6+E6+Bb6+Db7:2 C5+Eb5+A5+C6+Eb6+A6+C7:1 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 | \
+     Db5+E5+Bb5+Db6+E6+Bb6+Db7 C5+Eb5+A5+C6+Eb6+A6+C7 Bb4+Db5+G5+Bb5+Db6+G6+Bb6 Ab4+C5+F5+Ab5+C6+F6+Ab6 G4+Bb4+E5+G5+Bb5+E6+G6 F4+Ab4+D5+F5+Ab5+D6+F6 E4+G4+C5+E5+G5+C6+E6:6 | \
+     _:10 -:2 | \
+     D4+F4+A4+D5+F5+A5+D6:6 E4+G4+B4+E5+G5+B5+E6:2 D4+F4+A4+D5+F5+A5+D6:1 E4+G4+B4+E5+G5+B5+E6 F4+A4+C5+F5+A5+C6+F6:2 | \
+     _:4 G4+B4+D5+G5+B5+D6+G6:2 Ab4+D5+F5+Ab5+D6+F6+Ab6 (3 F4+Ab4+B4+F5+Ab5+B5+F6 G4+B4+D5+G5+B5+D6+G6 E4+G4+B4+E5+G5+B5+E6 | \
+     D4+G4+A4+D5+G5+A5+D6:1 E4+A4+C5+E5+A5+C6+E6 D4+G4+A4+D5+G5+A5+D6 C4+E4+G4+C5+E5+G5+C6:3 Bb3+D4+G4+Bb4+D5+G5+Bb5:6 | \
+     _:1 C4+E4+A4+C5+E5+A5+C6 Bb3+D4+G4+Bb4+D5+G5+Bb5 C4+E4+A4+C5+E5+A5+C6 D4+G4+Bb4+D5+G5+Bb5+D6 E4+A4+C5+E5+A5+C6+E6 D4+G4+Bb4+D5+G5+Bb5+D6 C4+E4+A4+C5+E5+A5+C6 D4+G4+Bb4+D5+G5+Bb5+D6 C4+E4+A4+C5+E5+A5+C6 Bb3+D4+G4+Bb4+D5+G5+Bb5 Ab3+C4+F4+Ab4+C5+F5+Ab5 | \
+     Bb3+E4+G4+Bb4+E5+G5+Bb5 Ab3+Ab4+Ab5 G3+C4+E4+G4+C5+E5+G5:10 | \
+     _:8 -:2 D4+F4+A4+D5+F5+A5+D6 | _:6 E4+G4+B4+E5+G5+B5+E6 | \
+     D4+F4+A4+D5+F5+A5+D6:1 E4+G4+B4+E5+G5+B5+E6 F4+A4+C5+F5+A5+C6+F6:6 G4+B4+D5+G5+B5+D6+G6:2 B4+E5+Ab5+B5+E6+Ab6+B6";
+
+/// E major
+const BOLERO_E_MAJOR: &str = "B4+E5+G#5+B5+E6+G#6+B6:5 A4+D5+F#5+A5+D6+F#6+A6:1 G#4+B4+E5+G#5+B5+E6+G#6 F#4+A4+D5+F#5+A5+D6+F#6 G#4+B4+E5+G#5+B5+E6+G#6 A4+D5+F#5+A5+D6+F#6+A6 B4+E5+G#5+B5+E6+G#6+B6 C5+F5+A5+C6+F6+A6+C7 | \
+     B4+E5+G#5+B5+E6+G#6+B6:5 C5+F5+A5+C6+F6+A6+C7:1 D5+G5+B5+D6+G6+B6+D7 C5+F5+A5+C6+F6+A6+C7 B4+E5+G#5+B5+E6+G#6+B6 A4+D5+F#5+A5+D6+F#6+A6 G#4+B4+E5+G#5+B5+E6+G#6 F#4+A4+D5+F#5+A5+D6+F#6 | \
+     G#4+B4+E5+G#5+B5+E6+G#6 A4+D5+F#5+A5+D6+F#6+A6 B4+E5+G#5+B5+E6+G#6+B6:3 C5+F5+A5+C6+F6+A6+C7:1 D5+G5+B5+D6+G6+B6+D7 C5+F5+A5+C6+F6+A6+C7 B4+E5+G#5+B5+E6+G#6+B6 A4+C5+F5+A5+C6+F6+A6 G#4+B4+E5+G#5+B5+E6+G#6 F#4+A4+D5+F#5+A5+D6+F#6 | \
+     G#4+B4+E5+G#5+B5+E6+G#6 F#4+A4+D5+F#5+A5+D6+F#6 E4+G#4+B4+E5+G#5+B5+E6:6 D4+F#4+A4+D5+F#5+A5+D6:1 C4+E4+G4+C5+E5+G5+C6 D4+F#4+A4+D5+F#5+A5+D6 E4+G#4+B4+E5+G#5+B5+E6 | \
+     _:8 F4+A4+C5+F5+A5+C6+F6:1 G4+B4+D5+G5+B5+D6+G6 F4+A4+C5+F5+A5+C6+F6 E4+G#4+B4+E5+G#5+B5+E6 | \
+     _:8 D4+F#4+A4+D5+F#5+A5+D6:1 C4+E4+G#4+C5+E5+G#5+C6 D4+F#4+A4+D5+F#5+A5+D6 E4+G#4+B4+E5+G#5+B5+E6 | \
+     _:8 F#4+A4+C#5+F#5+A5+C#6+F#6:1 G#4+B4+D#5+G#5+B5+D#6+G#6 F#4+A4+C#5+F#5+A5+C#6+F#6 E4+G#4+B4+E5+G#5+B5+E6 | \
+     _:8 D4+F4+A4+D5+F5+A5+D6:1 E4+G4+B4+E5+G5+B5+E6 D4+F4+A4+D5+F5+A5+D6 C4+E4+G4+C5+E5+G5+C6";
+
+/// Ending
+const BOLERO_ENDING: &str = "E3+G3+C4+C5:4 (3 F#3+Bb3+D4+F#4+F#5:1 G3+B3+Eb4+G4+G5 Ab3+C4+E4+Ab4+Ab5 _:2 (3 E3+A3+C4+E4+E5:1 F3+Bb3+Db4+F4+F5 F#3+B3+D4+F#4+F#5 _:2 | \
+     -:4 (3 F#3+Bb3+D4+F#4+F#5:1 G3+B3+Eb4+G4+G5 Ab3+C4+E4+Ab4+Ab5 _:2 (3 E3+A3+C4+E4+E5:1 F3+Bb3+Db4+F4+F5 F#3+B3+D4+F#4+F#5 _:2 | \
+     -:4 (3 F#3+Bb3+D4+F#4+F#5:1 G3+B3+Eb4+G4+G5 Ab3+C4+E4+Ab4+Ab5 _:2 (3 E3+A3+C4+E4+E5:1 F3+Bb3+Db4+F4+F5 F#3+B3+D4+F#4+F#5 _:2 | \
+     -:4 (3 F#3+Bb3+D4+F#4+F#5:1 G3+B3+Eb4+G4+G5 Ab3+C4+E4+Ab4+Ab5 _:2 (3 E3+A3+C4+E4+E5:1 F3+Bb3+Db4+F4+F5 F#3+B3+D4+F#4+F#5 _:2 | \
+     - (3 B3+Db4+C5+F5+Ab5+C6+F6+Ab6+C7:1 B4+E5+G5+B5+E6+G6+B6 Bb4+Db5+F5+Bb5+Db6+F6+Bb6 _:4 (3 _:1 B3+D4+Ab4+C5+Eb5+Ab5+C6+Eb6+Ab6 C4+Eb4+G4+Bb4+Db5+G5+Bb5+Db6+G6 (3 Db4+E4+F4+Ab4+C5+F5+Ab5+C6+F6 D4+Eb4+F4+G4+Bb4+Eb5+G5+Bb5+Eb6 Db4+Eb4+F4+F#4+Ab4+Db5+F5+Ab5+Db6 | \
+     G3+C4+E4+G4+C5+E5+G5+C6:2 -:10 & -:12 | G3+C4+E4:4 -:8 | G3+C4+E4:4 -:8 | \
+     G3+C4+E4:4 -:8 | F3+Ab3:2 -:10 | -:12";
+
+/// C major under every bar of a statement.
+const BOLERO_C: &str = "C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C";
+
+// Source: the printed full score (Durand, 1929) as engraved in LilyPond by Nicolas Sceaux
+// (CC0), https://github.com/nsceaux/Ravel_Bolero at commit
+// e46e0da5b2518ac9c2521308351ce02c30a4b0da, its notes and dynamics read staff by staff at
+// sounding pitch, cross-checked with Ravel's autograph full score (pencil, 1928). The
+// edition's MIDI is not at sounding pitch everywhere, so these are put right here, as the
+// score prints them: the two piccolos of rehearsal 8 play the tune in E and in G, two
+// octaves and a third and an octave and a fifth above the horn (the fifth and third
+// harmonics of its C, with the celesta's two octaves), the third piccolo and the celesta
+// sound an octave above their written notes, the D trumpet a tone above, and the double
+// basses and the contrabassoon an octave below.
+//
+// 340 bars of 3/4, as printed: four bars of the snare drum and the pizzicato, then eighteen
+// statements of the tunes, each eighteen bars (sixteen of tune, its last note, and a bar of
+// the accompaniment alone), the last one cut short by the turn to E major (bars 327 to 334)
+// and the ending (335 to 340). Each statement is a part with the instruments that play its
+// tune (`played_by`), at the dynamic the score marks for them. Where they double it at
+// fixed intervals (octaves; the horn's harmonics; the oboe d'amore a fifth up, in G, in
+// statement 10), the tune is written
+// once and played by each at its interval. Where it is harmonised in chords that move
+// along the scale (statements 12, 14, 16 and 17, and the last), the melody is in chords:
+// in 14 and 17, the tune and its harmony (thirds and fifths) in the octave above it, which the
+// flutes, oboes, clarinets, violins and trumpets double an octave higher; in 12, 16 and
+// the last, whose harmony is spread over three octaves and leaves the tune's low notes,
+// every note the winds and violins play. The accompaniment is in two lines, the
+// instruments that double the snare drum's rhythm, and all the rest (see the macros).
+//
+// Left out: the grace notes and glissandi (the trombone's and the saxophones'); the octave
+// doublings in the accompaniment; in statements 14 and 17 the third piccolo's tune two
+// octaves up (it would double the chords too), and the octave doubling then adds an
+// octave the score has not on a few notes (bars 249 to 251, and the last note of each); in
+// statement 15 the instruments that take the end of the tune (bass clarinet, violas,
+// horns) are not told apart from those that start it; the clarinets' and flutes' few
+// repeated sixteenths that the score writes as eighths (bars 177 to 179, 231 to 233). The
+// second and third tune parts end and start on a note tied across the bar line between
+// them (bars 326 to 327 and 334 to 335), struck again in the new part. The cymbals and the
+// tam-tam both play on the Crash channel.
+//
+// Where the manuscript differs from the print, the print is followed: the manuscript ends
+// the first tune on a quarter tied to an eighth (print: an eighth); it marks bars 1 and 2
+// "bis" where the print writes four bars, and bars 337 and 338 of its own count, and writes
+// two bars more in the coda, so it lasts four bars longer than the print's 340 (not read
+// in detail); the second flute doubles the snare drum only in bars 21 to 24 there (print:
+// through the clarinet's statement); the strings and the snare drum start p (print: pp).
+// The tempo, ♩ = 72, "Tempo di Bolero, moderato assai", is the print's.
+pub(super) const BOLERO: Song = Song {
+    name: "Boléro",
+    origin: "Maurice Ravel, 1928",
+    feel: "Orchestra",
+    genre: Genre::Classical,
+    tonic: C,
+    mode: Major,
+    time: THREE_FOUR,
+    tempo: 72.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::FLUTE, gm::PIZZICATO_STRINGS, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        Part::new("Introduction", "-:12 | -:12", "C | C")
+            .with_left(concat!(bolero_beats_1!(), " & ", bolero_rest!()))
+            .with_drums(&[(Drum::Snare, bolero_snare!())])
+            .marked(Dynamic::Pianissimo),
+        Part::new("Flute", BOLERO_A, BOLERO_C)
+            .with_left(concat!(bolero_eight!(bolero_beats_1), " | ", bolero_beats_2!(), " & ", bolero_eight!(bolero_rest), " | ", bolero_rhythm_1!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::FLUTE, 0)])
+            .marked(Dynamic::Pianissimo),
+        Part::new("Clarinet", BOLERO_A, BOLERO_C)
+            .with_left(concat!(bolero_eight!(bolero_beats_2), " | ", bolero_beats_3!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_2!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::CLARINET, 0)])
+            .marked(Dynamic::Piano),
+        Part::new("Bassoon", BOLERO_B, BOLERO_C)
+            .with_left(concat!(bolero_four!(bolero_beats_3), " | ", bolero_beats_4!(), " | ", bolero_beats_3!(), " | ", bolero_beats_5!(), " | ", bolero_beats_6!(), " | ", bolero_beats_7!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_2!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::BASSOON, 0)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::MezzoPiano),
+        Part::new("E-flat clarinet", BOLERO_B, BOLERO_C)
+            .with_left(concat!(bolero_four!(bolero_beats_7), " | ", bolero_beats_8!(), " | ", bolero_beats_7!(), " | ", bolero_beats_9!(), " | ", bolero_beats_10!(), " | ", bolero_beats_11!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_1!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::CLARINET, 12)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::Piano),
+        Part::new("Oboe d'amore", BOLERO_A, BOLERO_C)
+            .with_left(concat!(bolero_two!(bolero_beats_12), " | ", bolero_beats_13!(), " | ", bolero_four!(bolero_beats_14), " | ", bolero_beats_15!(), " | ", bolero_beats_16!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_1!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::OBOE, 0)])
+            .marked(Dynamic::MezzoPiano),
+        Part::new("Trumpet and flute", BOLERO_A, BOLERO_C)
+            .with_left(concat!(bolero_two!(bolero_beats_17), " | ", bolero_beats_18!(), " | ", bolero_four!(bolero_beats_19), " | ", bolero_beats_20!(), " | ", bolero_beats_21!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_1!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::MUTED_TRUMPET, 0), (gm::FLUTE, 12)])
+            .marked(Dynamic::MezzoPiano),
+        Part::new("Tenor saxophone", BOLERO_B, BOLERO_C)
+            .with_left(concat!(bolero_four!(bolero_beats_22), " | ", bolero_beats_23!(), " | ", bolero_beats_22!(), " | ", bolero_beats_24!(), " | ", bolero_beats_25!(), " | ", bolero_beats_26!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_2!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::TENOR_SAX, 0)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::MezzoPiano),
+        Part::new("Sopranino saxophone", BOLERO_B, BOLERO_C)
+            .with_left(concat!(bolero_four!(bolero_beats_26), " | ", bolero_beats_27!(), " | ", bolero_beats_26!(), " | ", bolero_beats_28!(), " | ", bolero_beats_29!(), " | ", bolero_beats_30!(), " & ", bolero_eight!(bolero_rhythm_2), " | ", bolero_rhythm_3!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::SOPRANO_SAX, 12)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::MezzoPiano),
+        Part::new("Horn, celesta and piccolos", BOLERO_A, BOLERO_C)
+            .with_left(concat!(bolero_two!(bolero_beats_31), " | ", bolero_beats_32!(), " | ", bolero_four!(bolero_beats_33), " | ", bolero_beats_34!(), " | ", bolero_beats_35!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_5!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::FRENCH_HORN, 0), (gm::CELESTA, 12), (gm::CELESTA, 24), (gm::PICCOLO, 19), (gm::PICCOLO, 28)])
+            .marked(Dynamic::MezzoForte),
+        Part::new("Oboes and clarinets", BOLERO_A, BOLERO_C)
+            .with_left(concat!(bolero_two!(bolero_beats_35), " | ", bolero_beats_36!(), " | ", bolero_four!(bolero_beats_37), " | ", bolero_beats_38!(), " | ", bolero_beats_39!(), " & ", bolero_eight!(bolero_rhythm_6), " | ", bolero_rhythm_7!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::OBOE, 7), (gm::OBOE, 12), (gm::ENGLISH_HORN, 0), (gm::CLARINET, 0), (gm::CLARINET, 12)])
+            .marked(Dynamic::MezzoForte),
+        Part::new("Trombone", BOLERO_B, BOLERO_C)
+            .with_left(concat!(bolero_four!(bolero_beats_40), " | ", bolero_beats_41!(), " | ", bolero_beats_42!(), " | ", bolero_beats_43!(), " | ", bolero_beats_44!(), " | ", bolero_beats_45!(), " & ", bolero_eight!(bolero_rhythm_8), " | ", bolero_rhythm_3!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::TROMBONE, 0)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::MezzoForte),
+        Part::new("Woodwinds", BOLERO_WOODWINDS, BOLERO_C)
+            .with_left(concat!(bolero_two!(bolero_beats_45), " | ", bolero_beats_46!(), " | ", bolero_beats_45!(), " | ", bolero_beats_47!(), " | ", bolero_beats_45!(), " | ", bolero_beats_48!(), " | ", bolero_beats_49!(), " | ", bolero_beats_50!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_3!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::OBOE, 0), (gm::CLARINET, 0)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::Forte),
+        Part::new("Violins", BOLERO_A, BOLERO_C)
+            .with_left(concat!(bolero_two!(bolero_beats_51), " | ", bolero_beats_52!(), " | ", bolero_four!(bolero_beats_53), " | ", bolero_beats_54!(), " | ", bolero_beats_55!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_3!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::STRING_ENSEMBLE, 0), (gm::STRING_ENSEMBLE, 12), (gm::FLUTE, 0), (gm::FLUTE, 12), (gm::OBOE, 0), (gm::OBOE, 12), (gm::CLARINET, 0), (gm::CLARINET, 12), (gm::PICCOLO, 24)])
+            .marked(Dynamic::Forte),
+        Part::new("Violins in harmony", BOLERO_VIOLINS_IN_HARMONY, BOLERO_C)
+            .with_left(concat!(bolero_beats_55!(), " | ", bolero_beats_56!(), " | ", bolero_beats_57!(), " | ", bolero_four!(bolero_beats_53), " | ", bolero_beats_58!(), " | ", bolero_beats_59!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_9!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::STRING_ENSEMBLE, 0), (gm::STRING_ENSEMBLE, 12), (gm::TENOR_SAX, 0), (gm::ENGLISH_HORN, 0), (gm::CLARINET, 0), (gm::OBOE, 12), (gm::FLUTE, 12)])
+            .marked(Dynamic::Forte),
+        Part::new("Violins and trumpet", BOLERO_B, BOLERO_C)
+            .with_left(concat!(bolero_four!(bolero_beats_60), " | ", bolero_beats_61!(), " | ", bolero_beats_60!(), " | ", bolero_beats_62!(), " | ", bolero_beats_63!(), " | ", bolero_beats_64!(), " & ", bolero_eight!(bolero_rhythm_4), " | ", bolero_rhythm_4!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::STRING_ENSEMBLE, 0), (gm::STRING_ENSEMBLE, 12), (gm::TRUMPET, 0), (gm::ENGLISH_HORN, 0), (gm::OBOE, 12), (gm::FLUTE, 12), (gm::PICCOLO, 24)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::Forte),
+        Part::new("Trombone and strings", BOLERO_TROMBONE_AND_STRINGS, BOLERO_C)
+            .with_left(concat!(bolero_beats_65!(), " | ", bolero_beats_66!(), " | ", bolero_beats_67!(), " | ", bolero_beats_68!(), " | ", bolero_beats_69!(), " | ", bolero_beats_70!(), " | ", bolero_beats_71!(), " | ", bolero_beats_72!(), " | ", bolero_beats_73!(), " & ", bolero_four!(bolero_rhythm_4), " | ", bolero_rhythm_10!(), " | ", bolero_two!(bolero_rhythm_4), " | ", bolero_rhythm_4!(), " | ", bolero_rhythm_11!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::TROMBONE, 0), (gm::STRING_ENSEMBLE, 0), (gm::ENGLISH_HORN, 0), (gm::CLARINET, 0), (gm::STRING_ENSEMBLE, 12), (gm::OBOE, 12), (gm::FLUTE, 12), (gm::SOPRANO_SAX, 12)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::Forte),
+        Part::new("Trumpets", BOLERO_TRUMPETS, BOLERO_C)
+            .with_left(concat!(bolero_two!(bolero_beats_74), " | ", bolero_beats_75!(), " | ", bolero_four!(bolero_beats_76), " | ", bolero_beats_77!(), " | ", bolero_beats_78!(), " & ", bolero_two!(bolero_rhythm_12), " | ", bolero_rhythm_13!(), " | ", bolero_two!(bolero_rhythm_14), " | ", bolero_two!(bolero_rhythm_15), " | ", bolero_rhythm_16!(), " | ", bolero_rhythm_17!()))
+            .with_drums(&[(Drum::Snare, bolero_nine!(bolero_snare))])
+            .played_by(&[(gm::TRUMPET, 0), (gm::TENOR_SAX, 0), (gm::STRING_ENSEMBLE, 0), (gm::TRUMPET, 12), (gm::SOPRANO_SAX, 12), (gm::STRING_ENSEMBLE, 12), (gm::FLUTE, 12)])
+            .marked(Dynamic::Fortissimo),
+        Part::new("Last statement", BOLERO_LAST_STATEMENT, "C | C | C | C | C | C | C | C | C | C | C | C | C | C | Dm7 Dm7 G | Dm7 Dm7 G")
+            .with_left(concat!(bolero_four!(bolero_beats_79), " | ", bolero_beats_80!(), " | ", bolero_beats_81!(), " | ", bolero_beats_82!(), " | ", bolero_beats_83!(), " & ", bolero_four!(bolero_rhythm_18), " | ", bolero_rhythm_14!(), " | ", bolero_rhythm_18!(), " | ", bolero_rhythm_19!(), " | ", bolero_rhythm_14!()))
+            .with_drums(&[(Drum::Snare, bolero_eight!(bolero_snare))])
+            .played_by(&[(gm::TRUMPET, 0), (gm::STRING_ENSEMBLE, 0), (gm::TENOR_SAX, 0)])
+            .in_key(C, Mixolydian)
+            .marked(Dynamic::Fortissimo),
+        Part::new("E major", BOLERO_E_MAJOR, "E | E | E | E | E | E | E | E E G")
+            .with_left(concat!(bolero_two!(bolero_beats_84), " | ", bolero_beats_84!(), " | ", bolero_beats_85!(), " & ", bolero_two!(bolero_rhythm_20), " | ", bolero_rhythm_20!(), " | ", bolero_rhythm_21!()))
+            .with_drums(&[(Drum::Snare, bolero_four!(bolero_snare))])
+            .played_by(&[(gm::TRUMPET, 0), (gm::STRING_ENSEMBLE, 0), (gm::TENOR_SAX, 0)])
+            .in_key(E, Major)
+            .marked(Dynamic::Fortissimo),
+        Part::new("Ending", BOLERO_ENDING, "C | C | C | C | Fm | C")
+            .with_left(concat!(bolero_beats_86!(), " | ", bolero_beats_87!(), " | ", bolero_beats_88!(), " & ", bolero_rhythm_22!(), " | ", bolero_rhythm_23!(), " | ", bolero_rest!()))
+            .with_drums(&[
+                (Drum::Snare, concat!(bolero_two!(bolero_snare), " | ", "x:2 x:2 -:4 (3 -:1 x x (3 x x x | x:2 -:10")),
+                (Drum::Kick, "x:4 -:8 | x:4 -:8 | x:4 -:8 | x:4 -:8 | x:4 -:8 | x:2 -:10"),
+                // The cymbals on the second beat, the tam-tam on the third.
+                (Drum::Crash, "-:4 x:4 x:4 | -:4 x:4 x:4 | -:4 x:4 x:4 | -:4 x:4 x:4 | -:2 x:6 -:4 | x:2 -:10"),
+            ])
+            .played_by(&[(gm::TRUMPET, 0), (gm::STRING_ENSEMBLE, 0), (gm::TROMBONE, 0)])
+            .marked(Dynamic::Fortissimo),
+    ],
+    form: &[
+        "Introduction",
+        "Introduction",
+        "Flute",
+        "Clarinet",
+        "Bassoon",
+        "E-flat clarinet",
+        "Oboe d'amore",
+        "Trumpet and flute",
+        "Tenor saxophone",
+        "Sopranino saxophone",
+        "Horn, celesta and piccolos",
+        "Oboes and clarinets",
+        "Trombone",
+        "Woodwinds",
+        "Violins",
+        "Violins in harmony",
+        "Violins and trumpet",
+        "Trombone and strings",
+        "Trumpets",
+        "Last statement",
+        "E major",
+        "Ending",
+    ],
+    drums_from: 0,
+    about: "A Spanish dance, the bolero, slowed down and turned into one long crescendo, \
+            a quarter of an hour of it. The snare drum plays the same two bars from the \
+            first bar to the last, an eighth note and a quick triplet of sixteenths, over \
+            and over, while the violas and cellos pluck C and G, the tonic and the \
+            dominant of C major. Count it in three: the triplets fill the second half of \
+            beats 1 and 2, and beat 3 is two plain eighths. Over it two tunes of sixteen \
+            bars pass from instrument to instrument, each time a little louder and \
+            fuller. The first stays in C major, rising from C and falling back by step; \
+            the second is in C Mixolydian, C major with its seventh flattened to B \
+            flat, on which it starts, and it borrows three more flat notes from the \
+            Phrygian mode on C, D flat, A flat and E flat (its flattened second, sixth \
+            and third), climbing high and sinking to the low C. Both hold their long notes across the \
+            bar lines and land late, after the beat, so the tunes seem to sway over the \
+            strict drum. Each is played twice: the flute and the clarinet play the first, \
+            the bassoon, high in its range, and the little E-flat clarinet the second, \
+            then the oboe d'amore and a muted trumpet with a flute, the tenor and the \
+            sopranino saxophones. Then Ravel mixes colours into new ones: a horn plays \
+            the tune with the celesta one and two octaves above it and two piccolos in G \
+            and in E, the overtones of the horn's C, so that they blend like the stops of \
+            an organ; the oboes, the oboe d'amore (in G again), the English horn and the \
+            clarinets play it together; the trombone plays the second. Then the tunes are \
+            harmonised in chords that move along the scale with them, the woodwinds, the \
+            violins, the trombone with the strings, the trumpets, while under them more \
+            and more of the orchestra joins the snare drum's rhythm, the harps and the \
+            strings' chords grow, and the timpani come in. In the last statement the \
+            whole orchestra plays the second tune and, for the first time, the music \
+            leaves C: eight bars in E major, a jolt, then back to C, the trombones \
+            sliding up, the bass drum, the cymbals and the tam-tam crashing in every bar, \
+            a dissonant chord on F, and the final crash on C.",
+};
+
+// Source: Debussy's autograph manuscript full score of La Mer (1905), ink, PDF pages 9 and 11
+// (the person's own copy). Bars 1 to 11 of the first movement, "De l'aube à midi sur la
+// mer": the Très lent introduction up to rehearsal number 1; the rest of the movement
+// follows. Sounding pitches throughout: the clarinets in A sound a minor third lower than
+// written, the cor anglais in F a fifth lower, the trumpet in F a fourth higher. The tempo
+// is the manuscript's own, "Très lent (116 = ♩)", a quarter note, and "(♩ = ♩)" where 4/4
+// begins in bar 6. The melody is the line in front: the divided cellos' upper octave in
+// bars 3 to 5, the first oboe in bars 6 to 8, the cor anglais in bars 9 to 11 with the muted
+// first trumpet an octave above it. Everything else is on the Keys channel: the timpani's B
+// roll and the double basses' low B, the two harps (their alternating strokes, harp 2 on
+// beats 1 and 4 and harp 1 on beats 2 and 5, merged into one line), the cellos' lower octave,
+// the divided violas' octaves, the bassoons' B and E sharp, the first clarinet's echo of
+// the oboe, and the tremolo strings' falling B, A, G sharp, F sharp, handed down from the
+// violins to the violas and cellos (the tremolos are written as held notes). Left out: the
+// double basses' pizzicato B on beats 1 and 4 of bars 2 to 5, which doubles their held B;
+// the cellos' first B in bar 11, which is the timpani's B on the same channel; and what
+// could not be read for sure: the violas' bar 5 after its first half note (a B over C sharp
+// and a chord on beat 6), the end of the cellos' bar 5, and the lower bassoon's figure in
+// bars 8 and 9 (only the upper C natural is kept). No chord symbol is honest here: B is
+// held in the bass while pentatonic dyads move above it, so the charts are empty.
+pub(super) const LA_MER_DAWN: Song = Song {
+    name: "La Mer, From Dawn to Noon on the Sea",
+    origin: "Claude Debussy, La Mer, 1905",
+    feel: "Orchestra",
+    genre: Genre::Classical,
+    tonic: B,
+    mode: Dorian,
+    time: SIX_FOUR,
+    tempo: 116.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::CELLO, gm::STRING_ENSEMBLE, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        // Bars 1 to 5: the pedal B, the harps' F sharp and G sharp, and the cellos' rocking
+        // octaves.
+        Part::new(
+            "Dawn",
+            "-:24 | -:24 | F#3:1 G#3:3 _:4 G#3:4 G#3:4 G#3:8 | \
+             F#3:1 G#3:3 _:8 G#3:8 G#3:4 | F#3:1 G#3:3 _:8 G#3:4 -:8",
+            "",
+        )
+        .with_left(
+            "B2:24 | B2:24 | B2:24 | B2:24 | B2:24 \
+             & B1:24 | _:24 | _:24 | _:24 | _:24 \
+             & -:24 | F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 | \
+             F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 | \
+             F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 | \
+             F#2+F#3:4 F#2+F#3:8 G#2+G#3:4 G#2+G#3:8 \
+             & -:24 | -:24 | F#2:1 G#2:3 _:4 G#2:4 G#2:4 G#2:8 | \
+             F#2:1 G#2:3 _:8 G#2:8 G#2:4 | F#2:1 G#2:3 _:8 G#2:4 -:8 \
+             & -:24 | -:24 | -:20 C#3+C#4:4 | _:8 F#3+F#4:4 _:4 G#3+G#4:8 | B3+B4:8 -:16",
+        )
+        .marked(Dynamic::Pianissimo),
+        // Bars 6 to 8, in 4/4: the oboe's sigh, G sharp to A, answered by the clarinet,
+        // over the bassoons' B and E sharp and the violins' tremolo.
+        Part::new(
+            "Oboe",
+            "-:8 G#4:1 A4:3 _:4 | _:8 G#4:8 | G#4:1 F#4:3 _:12",
+            "",
+        )
+        .with_left(
+            "B2:16 | B2:16 | B2:16 \
+             & B1:8 -:8 | B1:8 -:8 | B1:8 -:8 \
+             & -:8 E#3+B3:8 | _:8 -:8 | C4:16 \
+             & -:16 | D4:1 D#4:3 _:12 | D#4:1 E4:3 _:12 \
+             & B5+B6:16 | B5+B6:16 | B5+B6:4 A5+A6:4 G#5+G#6:4 F#5+F#6:4",
+        )
+        .in_time(COMMON)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Piano),
+        // Bars 9 to 11: the call of the cor anglais and the muted trumpet, on C, while
+        // the falling tremolo line goes down through the strings.
+        Part::new("Call", "-:8 C4:8 | (3 _:4 C4 C4 C4:8 | C4:4 -:12", "")
+            .with_left(
+                "F#4:4 -:12 | -:16 | -:16 \
+                 & E4:4 -:12 | -:16 | -:16 \
+                 & C4:4 -:12 | -:16 | -:16 \
+                 & B2:16 | B2:16 | B2:16 \
+                 & B1:8 -:8 | -:16 | -:16 \
+                 & B5:4 A5:4 G#5:4 F#5:4 | -:16 | -:16 \
+                 & B4:4 A4:4 G#4:4 F#4:4 | B4:4 A4:4 G#4:4 F#4:4 | -:16 \
+                 & -:16 | B3:4 A3:4 G#3:4 F#3:4 | B3:4 A3:4 G#3:4 F#3:4 \
+                 & -:16 | -:16 | -:4 A2:4 G#2:4 F#2:4",
+            )
+            .in_time(COMMON)
+            .in_key(C, MinorPentatonic)
+            .played_by(&[(gm::ENGLISH_HORN, 0), (gm::MUTED_TRUMPET, 12)])
+            .marked(Dynamic::Pianissimo),
+    ],
+    form: &["Dawn", "Oboe", "Call"],
+    drums_from: 0,
+    about: "The first bars of La Mer, bars 1 to 11, the slow introduction up to rehearsal \
+            number 1; the rest of the movement follows. Dawn on the sea: the timpani roll a \
+            B and the double basses hold the B below it for five bars of 6/4, \"très lent\", \
+            while the two harps strike F sharp and G sharp, an octave apart, one beat after \
+            the other, and the cellos, divided in octaves, rock between F sharp and G sharp. \
+            Nothing here is a chord in the usual sense: a held bass and, above it, notes of a \
+            pentatonic scale (B, C sharp, F sharp, G sharp), so the chord sheet stays empty. \
+            In bar 6 the meter turns to 4/4 at the same beat and the oboe sighs G sharp to A \
+            and back, the clarinet echoes it a step lower, and the bassoons hold B with E \
+            sharp, a tritone, the interval of the whole-tone scale. The key signature is B \
+            minor's, but the G sharp makes it B Dorian. Then the cor anglais and the first \
+            trumpet, muted, an octave apart, call on a single C, a semitone above the pedal \
+            B: the first notes of the movement's motto, which goes on in a pentatonic scale \
+            on C (C, E flat, F, G, B flat), so this part is in C minor pentatonic over the B. \
+            Under the call, a falling line, B, A, G sharp, F sharp, trembles down through the \
+            strings, from the violins to the violas and the cellos, an octave lower each \
+            time.",
+};
