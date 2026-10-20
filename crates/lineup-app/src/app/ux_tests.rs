@@ -953,6 +953,88 @@ fn searching_vals_reveals_the_normal_waltz_in_both_browser_layouts() {
     }
 }
 
+/// The number in the Library's "Presets (N)" heading.
+fn presets_listed(output: &FullOutput) -> usize {
+    output
+        .shapes
+        .iter()
+        .find_map(|shape| match &shape.shape {
+            Shape::Text(text) => text
+                .galley
+                .text()
+                .strip_prefix("Presets (")?
+                .strip_suffix(')')?
+                .parse()
+                .ok(),
+            _ => None,
+        })
+        .expect("The presets heading is visible")
+}
+
+#[test]
+fn the_library_tick_boxes_keep_only_presets_like_the_song() {
+    use lineup_core::{Tempo, TimeSignature};
+    let mut screen = Screen::new();
+    screen.app.project.time_signature = TimeSignature::new(4, 4);
+    screen.app.project.tempo = Tempo::new(120.0);
+    screen.app.rack_open = false;
+    screen.app.playlist.browser_open = true;
+    screen.click("📚 Library");
+    let users = screen
+        .app
+        .playlist
+        .library_browser_mut()
+        .user_styles
+        .clone();
+    let all = crate::library_browser::catalogue::presets("", &users, false);
+    let output = screen.draw(vec![]);
+    assert_eq!(presets_listed(&output), all.len());
+    assert!(!checkbox_checked(&output, "In 4/4"));
+
+    // A 3/4 waltz goes; a style that plays each bar in its own meter stays.
+    let in_four = |preset: &crate::library_browser::catalogue::Preset| {
+        preset.follows_the_song() || preset.time().ungrouped() == TimeSignature::new(4, 4)
+    };
+    screen.click("In 4/4");
+    let output = screen.draw(vec![]);
+    assert!(checkbox_checked(&output, "In 4/4"));
+    let kept = all.iter().filter(|preset| in_four(preset)).count();
+    assert!(kept < all.len() && kept > 0);
+    assert_eq!(presets_listed(&output), kept);
+
+    // 120 BPM keeps what was made for 104 to 138, 15% either way.
+    let near = |preset: &crate::library_browser::catalogue::Preset| {
+        (120.0 / 1.15..=120.0 * 1.15).contains(&preset.tempo())
+    };
+    screen.click("Near 120 BPM");
+    let output = screen.draw(vec![]);
+    let kept_now = all
+        .iter()
+        .filter(|preset| in_four(preset) && near(preset))
+        .count();
+    assert!(kept_now < kept && kept_now > 0);
+    assert_eq!(presets_listed(&output), kept_now);
+
+    // The boxes stay ticked when the app starts again.
+    screen.restart();
+    screen.app.project.time_signature = TimeSignature::new(4, 4);
+    screen.app.project.tempo = Tempo::new(10.0);
+    screen.app.rack_open = false;
+    screen.app.playlist.browser_open = true;
+    screen.click("📚 Library");
+    let output = screen.draw(vec![]);
+    assert!(checkbox_checked(&output, "In 4/4"));
+    assert!(checkbox_checked(&output, "Near 10 BPM"));
+    // Nothing is made for 10 BPM: the Library says how to see more.
+    assert_eq!(presets_listed(&output), 0);
+    assert!(text_rect(&output, "Nothing in the library matches the ticked boxes.").is_some());
+    assert!(text_rect(&output, "Untick a box to see more.").is_some());
+
+    screen.click("Near 10 BPM");
+    let output = screen.draw(vec![]);
+    assert_eq!(presets_listed(&output), kept);
+}
+
 #[test]
 fn f1_and_the_help_menu_show_the_keyboard_shortcuts() {
     let mut screen = Screen::new();
