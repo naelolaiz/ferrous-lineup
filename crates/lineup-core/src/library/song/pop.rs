@@ -488,3 +488,63 @@ pub(super) const SURPRISE_SYMPHONY: Song = Song {
             theme is where, when the theme is repeated, the whole orchestra suddenly crashes in, \
             very loud: that is the surprise.",
 };
+
+// Still under copyright: written in 2007 (Ed Robertson); added at the owner's request.
+// Source: the Hooktheory TheoryTab of the television version,
+// https://www.hooktheory.com/theorytab/view/bare-naked-ladies/big-bang-theory-theme-song,
+// read from the Sheet Sage dataset of TheoryTabs,
+// https://raw.githubusercontent.com/chrisdonahue/sheetsage-data/refs/heads/main/hooktheory/Hooktheory.json.gz
+// (sections "Intro", AQodnZYBgDl, and "Verse", d_gwyqeboGV), and from Hooktheory's own
+// API for the same two sections. The notes are written there as scale degrees in G; the
+// tonic is G4 here, the written range of a lead sheet (the voice sounds an octave lower).
+// The verse is aligned to the recording, its 32 beats from 7.6 s to 19.66 s: 159 beats a
+// minute. The intro's revision of 2020 gives 124 and its chords as IV | I | IV | I; the
+// TheoryTab page now gives it 130 and the verse's progression, IV(add9) V I vi7, which
+// is used here, two beats each as in the verse. The page also adds an eleventh to the
+// verse's V, which no numeral here writes: it stays V. The verse's last bar is the
+// transcription's: no chord on beat 1, then I for a beat and a half, played as a shot.
+pub(super) const BIG_BANG_THEORY: Song = Song {
+    name: "The Big Bang Theory theme",
+    origin: "Ed Robertson, Barenaked Ladies, for the television series The Big Bang \
+             Theory, 2007",
+    feel: "Pop rock",
+    genre: Genre::Pop,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 130.0,
+    comping: Comping::Strum,
+    bass: Bass::Pulse,
+    rhythm: "Rock beat",
+    band: Band::new(gm::VOICE_OOHS, gm::STEEL_GUITAR, gm::FINGER_BASS),
+    style: "Pop punk",
+    parts: &[
+        Part::new(
+            "Intro",
+            "E5:4 E5:2 D5 D5 B4 B4 A4 | B4:4 D5 G4:2 G4 G4 D4 | E4:2 G4 G4 A4 B4 A4 G4 A4 | \
+             B4:2 B4 D5 G4 G4:4 -:4",
+            "IVadd9 V | I vi7 | IVadd9 V | I vi7",
+        ),
+        Part::new(
+            "Verse",
+            "E4:2 G4 G4 A4 B4 A4 G4:1 A4:3 | B4:2 B4 A4 A4 G4 G4 G4 D4 | \
+             E4:2 G4 G4 A4 B4 A4 G4 A4 | B4:2 B4 B4 D5 E5 D5:1 B4:3 -:2 | \
+             E5:4 E5:2 E5 D5 D5 D5 D5 | G5:2 G5 F#5 F#5 G5 G5 G5 F#5 | \
+             E5:4 E5:2 E5 D5 D5 D5:4 | G4:4 G5:6 -:6",
+            "IVadd9 V | I vi7 | IVadd9 V | I vi7 | IVadd9 V | I vi7 | IVadd9 V | \
+             I... I. I... I...",
+        )
+        .with_tempo(&[tempo(0, 159)]),
+    ],
+    form: &["Intro", "Verse"],
+    drums_from: 0,
+    about: "The theme of a television comedy about scientists: the history of the universe \
+            in twenty seconds. Four chords go round, two beats each: C with an added D \
+            (IVadd9), D (V), G (I) and E minor seven (vi7). The subdominant and the \
+            dominant climb to the tonic, and the relative minor leads back to the start. \
+            Over them the tune is patter, a syllable on nearly every eighth note, mostly \
+            G, A and B. The first four bars go at 130 beats a minute; then the band jumps \
+            to 159. The last lines climb to the G an octave up, with F sharp, the leading \
+            note, under it. In the last bar the band stops for one beat, then strikes G \
+            once, short, with the shouted last word.",
+};
