@@ -518,6 +518,33 @@ pub fn open_at<'a>(
     }
 }
 
+/// Fits `window`, whose Id is `id`, at `size` again when `contents`, a
+/// summary of what it shows, changed since the last pass, as it is fitted
+/// when it opens (see [`open_at`]). egui lets a window grow for wider
+/// contents but never shrink for narrower ones.
+///
+/// A grid lays out its columns at the widths it measured the frame
+/// before, so a grid in the window is best given a new Id with its new
+/// contents: it then measures them afresh.
+pub fn fit_when_changed<'a>(
+    ctx: &egui::Context,
+    window: egui::Window<'a>,
+    id: egui::Id,
+    size: egui::Vec2,
+    contents: impl std::hash::Hash,
+) -> egui::Window<'a> {
+    use std::hash::{BuildHasher, BuildHasherDefault, DefaultHasher};
+    let now = BuildHasherDefault::<DefaultHasher>::default().hash_one(contents);
+    let before =
+        ctx.data_mut(|data| std::mem::replace(data.get_temp_mut_or(id.with("contents"), now), now));
+    if before != now {
+        ctx.request_discard("a window's contents changed");
+        window.fixed_size(size)
+    } else {
+        window
+    }
+}
+
 /// Whether the window whose Id is `id` opens now: it was not shown in
 /// the last pass.
 pub fn opens(ctx: &egui::Context, id: egui::Id) -> bool {
