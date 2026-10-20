@@ -369,6 +369,94 @@ fn applying_a_library_preset_to_a_demo_creates_all_its_players() {
 }
 
 #[test]
+fn copying_only_the_voices_or_the_patterns_brings_the_band_and_leaves_the_song_alone() {
+    use lineup_core::{Player, library::apply::StyleParts};
+    let cases = [
+        (
+            "The Rite of Spring, The Augurs of Spring",
+            "Orchestra  (any meter)",
+            "Voices / instruments",
+        ),
+        (
+            "The Rite of Spring, Ritual of Abduction",
+            "Orchestra  (any meter)",
+            "Playing patterns",
+        ),
+        (
+            "Petrushka, Petrushka's Room",
+            "Orchestra  (any meter)",
+            "Voices / instruments",
+        ),
+        (
+            "Shchedryk (Carol of the Bells)",
+            "Orchestra  (any meter)",
+            "Voices / instruments",
+        ),
+        ("El Choclo", "Emotional pop", "Voices / instruments"),
+    ];
+    for (song, preset, part) in cases {
+        let mut screen = Screen::new();
+        screen.app.open_demo(library::Demo::Song(
+            lineup_core::library::Song::named(song).unwrap(),
+        ));
+        screen.app.rack_open = false;
+        screen.app.playlist.browser_open = true;
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            rhythm: false,
+            instruments: false,
+            progression: false,
+            time_signature: false,
+            tempo: false,
+            swing: false,
+            matching_style: true,
+        };
+        screen.click("📚 Library");
+        screen.click("🔍 Search: bossa, 6/8, tango…");
+        screen.draw(vec![Event::Text(preset.split("  ").next().unwrap().into())]);
+        let before = screen.app.project.clone();
+        screen.click(preset);
+        screen.click(part);
+        screen.click("Apply");
+        let changed = &screen.app.project;
+        let band = changed.band().expect("the band comes in");
+        assert_eq!(
+            band.accents_only,
+            !preset.contains("any meter") && part != "Playing patterns",
+            "{song}"
+        );
+        // The band plays on tracks of its own ...
+        for player in [Player::Piano, Player::Bass] {
+            assert!(
+                !band_notes(changed, player).is_empty(),
+                "{song}: silent {player:?}"
+            );
+        }
+        // ... and the song keeps its instruments and its notes.
+        for (channel, original) in before.channels().iter().enumerate() {
+            let now = &changed.channels()[channel];
+            assert_eq!(
+                (&now.name, now.program, &now.kind),
+                (&original.name, original.program, &original.kind),
+                "{song}"
+            );
+        }
+        for (index, original) in before.patterns().iter().enumerate() {
+            let notes = |pattern: &lineup_core::Pattern| -> Vec<_> {
+                pattern
+                    .all_notes()
+                    .map(|(channel, note)| (channel, *note))
+                    .collect()
+            };
+            assert_eq!(
+                notes(changed.pattern(index).unwrap()),
+                notes(original),
+                "{song}"
+            );
+        }
+    }
+}
+
+#[test]
 fn lagrimas_demo_keeps_its_written_chord_qualities_on_open_and_style_change() {
     use ChordQuality::{Dominant7, Major, Minor, Minor7};
     use PitchClass::{C, D, F, G};
