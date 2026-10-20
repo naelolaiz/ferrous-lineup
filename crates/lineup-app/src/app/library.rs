@@ -1027,13 +1027,36 @@ impl LineupApp {
         edited: PartSet,
     ) -> bool {
         // A demo has a written accompaniment but no live band yet. Copying
-        // both patterns and voices must bring in the full preset lineup,
-        // just as changing an existing band does. Copying a chart is optional.
-        if self.project.band().is_none()
-            && !(parts.rhythm
-                && parts.for_preset().instruments
-                && !self.project.playlist().chord_markers().is_empty())
-        {
+        // its voices must bring in the preset lineup on tracks of their own,
+        // just as changing an existing band does, not give the song's own
+        // parts other instruments; without the patterns, the band plays
+        // plain accents. Copying a chart is optional.
+        // A style that follows the song (an orchestra) comes in alongside
+        // the song with its patterns or its instruments, either: copying
+        // them into the song's own parts would rewrite the score.
+        let follows = match action {
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
+                style.follows_the_song()
+            }
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
+                rhythm.follows_the_meter
+            }
+            _ => false,
+        };
+        // The band needs chords to play: the song's own, or those it hears
+        // in the song's notes, which it writes down when it comes in.
+        let has_music = !self.project.playlist().chord_markers().is_empty()
+            || self.project.playlist().clips().iter().any(|clip| {
+                self.project
+                    .pattern(clip.pattern)
+                    .is_some_and(|pattern| !pattern.is_empty())
+            });
+        let joins = if follows {
+            parts.rhythm || parts.for_preset().instruments
+        } else {
+            parts.for_preset().instruments && has_music
+        };
+        if self.project.band().is_none() && !joins {
             return false;
         }
         let style = match action {
