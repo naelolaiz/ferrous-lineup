@@ -449,6 +449,21 @@ pub fn song_demo(song: &Song) -> Project {
         }
     }
 
+    // The other instruments' written-out lines, each on a channel of its
+    // own, played by the program of its first line.
+    let mut line_channels: Vec<(&str, usize)> = Vec::new();
+    for line in song.parts.iter().flat_map(|part| part.lines) {
+        if line_channels.iter().any(|&(name, _)| name == line.name) {
+            continue;
+        }
+        if let Some(channel) = apply::synth_named(&mut project, line.name) {
+            if let Some(state) = project.channel_mut(channel) {
+                state.program = Some(line.program);
+            }
+            line_channels.push((line.name, channel));
+        }
+    }
+
     // One pattern per part, or per run of bars in one time signature of
     // a part whose meter changes bar by bar (see `Song::part_runs`).
     // `Project::empty` starts with one pattern, which the first part uses.
@@ -468,7 +483,7 @@ pub fn song_demo(song: &Song) -> Project {
             let melody = melody_notes(song, piece, time, length, voices.len());
             let tonic = song.part_scale(piece).root;
             let spans = piece.spans(bar, tonic);
-            let (mut chords, mut bass_line) = if piece.left.is_empty() {
+            let (mut chords, mut bass_line) = if !piece.written_out() {
                 let (comping, bass, _) = song.part_playing(piece);
                 let backing = accompany_in_bars(&spans, tonic, comping, bass, time);
                 (backing.chords, backing.bass)
@@ -478,7 +493,7 @@ pub fn song_demo(song: &Song) -> Project {
             // The horns play the chart in their own comping, so a part with
             // its accompaniment written out has none for them.
             let mut horn_notes = match horns {
-                Some((_, horns)) if piece.left.is_empty() => {
+                Some((_, horns)) if !piece.written_out() => {
                     accompany(&spans, tonic, time, horns.comping, Bass::None).chords
                 }
                 _ => Vec::new(),
@@ -523,6 +538,23 @@ pub fn song_demo(song: &Song) -> Project {
                         Some((_, line)) => line.extend(moved),
                         None => lines.push((channel, moved.collect())),
                     }
+                }
+            }
+            // The other instruments' lines, played as a left hand is.
+            for line in piece.lines {
+                let Some(&(_, channel)) = line_channels.iter().find(|&&(n, _)| n == line.name)
+                else {
+                    continue;
+                };
+                let written = line.melody();
+                let mut notes = written.notes.clone();
+                interpret::perform(&mut notes, time, Role::Accompaniment, seed(line.name));
+                if !written.is_marked() {
+                    interpret::follow(&mut notes, &tune);
+                }
+                match lines.iter_mut().find(|(c, _)| *c == channel) {
+                    Some((_, here)) => here.extend(notes),
+                    None => lines.push((channel, notes)),
                 }
             }
             for &(drum, line) in piece.drums {
@@ -627,7 +659,7 @@ pub fn song_demo(song: &Song) -> Project {
     // whose chart ends on a break, such as a tango's last "chan-chan":
     // the score already says how the band stops.
     let last_part = song.form.last().and_then(|name| song.part(name));
-    let written_out = last_part.is_some_and(|part| !part.left.is_empty());
+    let written_out = last_part.is_some_and(Part::written_out);
     let stopped = song.form.last().is_some_and(|name| {
         patterns
             .iter()
@@ -1160,6 +1192,7 @@ mod tests {
             instruments: &[],
             dynamic: Dynamic::MezzoForte,
             drums: &[],
+            lines: &[],
         };
         let first = song.form[0];
         let parts: &'static [Part] =
