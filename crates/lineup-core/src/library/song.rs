@@ -115,7 +115,9 @@ pub struct Part {
 /// [`chart::parse_melody`]), where `&` starts another voice on the same
 /// channel, as the four voices of a choir. Lines with the same name, in
 /// any part of the song, play on the same channel, with the program of
-/// the first.
+/// the first. "Voice 2", "Voice 3" and so on are the channels of a
+/// round's voices (see [`Part::voices`]), so a second soloist is called
+/// something else, such as "Soloist 2".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Line {
     pub name: &'static str,
@@ -800,6 +802,7 @@ mod folklore;
 mod hiphop;
 mod jazz;
 mod latin;
+mod misa_criolla;
 mod pop;
 mod reggae;
 mod rock;
@@ -1009,6 +1012,8 @@ pub static SONGS: &[Song] = &[
     folklore::BOI_BARROSO,
     folklore::CANDOMBE_PARA_GARDEL,
     folklore::LA_MARCHA_PERONISTA,
+    misa_criolla::MISA_CRIOLLA_KYRIE,
+    misa_criolla::MISA_CRIOLLA_GLORIA,
     folklore::ZAMBA_DEL_TELAR,
     folklore::CHACARERA_DEL_PATIO,
     folklore::GATO_DEL_ARROYO,
@@ -1127,7 +1132,7 @@ mod tests {
     fn written_out_lines_play_on_channels_of_their_own() {
         const PARTS: &[Part] = &[
             Part::new("Verse", "A4:12 | E4:12", "i | V").with_lines(&[
-                line("Voice 2", gm::VOICE_OOHS, "C4:12 | G#3:12"),
+                line("Soloist 2", gm::VOICE_OOHS, "C4:12 | G#3:12"),
                 line("Choir", gm::CHOIR_AAHS, "E4:12 | B3:12 & A2:12 | E2:12"),
             ]),
             Part::new("Coda", "A4:12", "i").with_lines(&[line(
@@ -1160,7 +1165,7 @@ mod tests {
             let index = project.channels().iter().position(|c| c.name == name);
             index.unwrap_or_else(|| panic!("no {name} channel"))
         };
-        let (voice, choir, keys) = (channel("Voice 2"), channel("Choir"), channel("Keys"));
+        let (voice, choir) = (channel("Soloist 2"), channel("Choir"));
         // A line's channel plays the program of its first line.
         assert_eq!(project.channels()[voice].program, Some(gm::VOICE_OOHS));
         assert_eq!(project.channels()[choir].program, Some(gm::CHOIR_AAHS));
@@ -1170,8 +1175,9 @@ mod tests {
         let mut pitches: Vec<_> = verse.notes(choir).iter().map(|n| n.pitch).collect();
         pitches.sort();
         assert_eq!(pitches.len(), 4);
-        // Written out: the chart is not accompanied on the Keys.
-        assert!(verse.notes(keys).is_empty());
+        // Written out, with no left hand: the chart is not accompanied,
+        // and there is no Keys channel.
+        assert!(project.channels().iter().all(|c| c.name != "Keys"));
         let coda = pattern("Coda");
         assert_eq!(coda.notes(choir).len(), 2);
         assert!(coda.notes(voice).is_empty());

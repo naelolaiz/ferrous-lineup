@@ -1301,6 +1301,27 @@ pub static RHYTHMS: &[Rhythm] = &[
          long-short-short, in a quick 2/4 written here as pairs of bars.",
     ),
     rhythm(
+        "Carnavalito (2/4)",
+        Folklore,
+        88.0,
+        &[(LowTom, "X... X..."), (HighTom, "..xx ..xx")],
+        "",
+        "The carnavalito with a bar of 2/4 for each two beats, as Ariel Ramírez writes it \
+         in the Gloria of the Misa Criolla: the bombo strikes each beat and answers it with \
+         two quick sixteenths.",
+    )
+    .in_time(TWO_FOUR),
+    rhythm(
+        "Yaraví",
+        Folklore,
+        44.0,
+        &[(LowTom, "X.x.x.x.x.x.")],
+        "",
+        "The yaraví, the slow lament of the Andes: the bombo, softly, on every eighth note \
+         of a 3/4 bar, as under the middle of the Gloria of the Misa Criolla.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
         "Huayno",
         Folklore,
         100.0,
