@@ -130,10 +130,11 @@ pub fn follow_control(ui: &mut Ui) {
 /// A persistent transport toggle, sharing its value with the preferences.
 pub fn follow_button(ui: &mut Ui) {
     let follow = follow_playback(ui.ctx());
-    let button = crate::theme::light_button(ui, "Follow playhead", follow, None);
+    let button = crate::icons::toggle(ui, "Follow playhead", follow, crate::icons::follow);
     if crate::theme::hint(
         button,
-        "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
+        "Follow playhead: keep the playing bar or step visible in the playlist, chord sheet \
+         and piano roll",
     )
     .clicked()
     {

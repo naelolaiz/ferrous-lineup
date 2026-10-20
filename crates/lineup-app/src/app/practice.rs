@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 
 use super::LineupApp;
 use crate::chord_sheet::{PracticeAction, PracticeView, SPEEDS};
+use crate::icons;
 
 /// The practice speed that plays the song at its own tempo, in percent.
 pub(super) const FULL_SPEED: u16 = 100;
@@ -195,12 +196,22 @@ impl LineupApp {
     pub(super) fn playback_controls(&mut self, ui: &mut egui::Ui) {
         crate::widgets::follow_button(ui);
         let practice = self.practice.view();
-        let count_in = crate::theme::light_button(ui, "Count-in", practice.count_in, None);
-        if crate::theme::hint(count_in, "One bar of clicks before playback starts").clicked() {
+        let count_in = icons::toggle(ui, "Count-in", practice.count_in, icons::count_in);
+        if crate::theme::hint(
+            count_in,
+            "Count-in: one bar of clicks before playback starts",
+        )
+        .clicked()
+        {
             self.set_count_in(!practice.count_in);
         }
-        let metronome = crate::theme::light_button(ui, "Metronome", practice.metronome, None);
-        if crate::theme::hint(metronome, "A click on every beat during playback").clicked() {
+        let metronome = icons::toggle(ui, "Metronome", practice.metronome, icons::metronome);
+        if crate::theme::hint(
+            metronome,
+            "Metronome: a click on every beat during playback",
+        )
+        .clicked()
+        {
             self.set_metronome(!practice.metronome);
         }
     }
