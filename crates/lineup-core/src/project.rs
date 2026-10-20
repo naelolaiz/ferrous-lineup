@@ -2117,8 +2117,8 @@ type HeardBars = HashMap<(Vec<usize>, Vec<(i64, i64, u8, usize)>), Vec<(usize, H
 /// What a cut of a beat costs in [`Project::write_heard_chords`], in
 /// the units of [`Reading::fit`](crate::harmony::Reading) per beat:
 /// halfway through the bar, and on any other beat.
-const CUT_HALF_BAR: f32 = 0.15;
-const CUT_BEAT: f32 = 0.25;
+const CUT_HALF_BAR: f32 = 0.08;
+const CUT_BEAT: f32 = 0.12;
 /// Where the best reading fits less well than this, two chords at once
 /// heard just before can go on.
 const WEAK: f32 = 0.7;
