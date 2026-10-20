@@ -11,6 +11,13 @@
 //! all (see [`HintLevel`]). On the right, a keyboard showing the notes of
 //! the scale and the notes playing.
 //!
+//! In a song, the chord playing is the one heard over the whole beat (see
+//! [`lineup_core::harmony::hearing`]), so an arpeggio lights its chord.
+//! Two chords at once light both their keys; other readings that fit
+//! nearly as well light theirs faintly, and the line under the keys names
+//! what is heard when it is not one chord: two chords at once, such as
+//! the Rite of Spring's Eb7|Fb, or a set of notes, such as 4-23.
+//!
 //! Under it, the experimental Find the key option shows the key the
 //! music sounds like it is in, and the next best keys, fainter, when it
 //! is not clear, each with what the chord playing is in it.
@@ -25,7 +32,7 @@ use eframe::egui::{
 use lineup_core::harmony::key_finding::{KeyGuess, read_chord};
 use lineup_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
 use lineup_core::harmony::{
-    Harmony, HintLevel, Suggestion, analyze, next_chords_over, with_figures,
+    Harmony, Hearing, HintLevel, Suggestion, analyze, next_chords_over, with_figures,
 };
 use lineup_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
 
@@ -203,9 +210,10 @@ impl HarmonyKeys {
     /// the one a key change in the playlist moved to. `held` are the
     /// notes held down on any keyboard,
     /// harmony keys included, and `heard` the chord notes playing in the
-    /// pattern or the song; `digits` says whether the number keys may
-    /// play the harmony keys (not while they play notes on the typing
-    /// keyboard, or a text field has the keyboard).
+    /// pattern or the song, with `hearing`, how the song's beat at the
+    /// playhead is heard, if there is one; `digits` says whether the
+    /// number keys may play the harmony keys (not while they play notes
+    /// on the typing keyboard, or a text field has the keyboard).
     #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
@@ -215,6 +223,7 @@ impl HarmonyKeys {
         channel_name: &str,
         held: &[Note],
         heard: &[Note],
+        hearing: Option<&Hearing>,
         digits: bool,
         key_heard: Option<&KeyHeard>,
         parts: &mut lineup_core::library::apply::StyleParts,
@@ -241,17 +250,46 @@ impl HarmonyKeys {
         let tonal = keys::chord_scale(scale);
 
         // A chord played on any keyboard, or else playing in the music,
-        // lights its key, and is what the suggestions follow.
+        // lights its key, and is what the suggestions follow. In a song,
+        // the music's chord is the one heard over the beat.
         let chord_of = |notes: &[Note]| match analyze(notes.iter().copied()) {
             Harmony::Chord { chord, bass } => Some((chord, bass)),
             _ => None,
         };
-        let played = chord_of(held).or_else(|| chord_of(heard));
+        let music = hearing.filter(|_| held.is_empty());
+        let played = chord_of(held).or_else(|| match music.map(Hearing::best) {
+            Some(Harmony::Chord { chord, bass }) => Some((chord, bass)),
+            Some(_) => None,
+            None => chord_of(heard),
+        });
         if let Some((chord, bass)) = played {
             self.last_chord = Some(chord);
             self.last_bass = Some(bass);
         }
         let playing = played.and_then(|(chord, _)| keys::key_for(&chord_keys, chord));
+        // Both chords of two at once light up; a reading that fits nearly
+        // as well lights its key faintly.
+        let key_of = |chord: Chord| keys::key_for(&chord_keys, chord);
+        let layers: Vec<usize> = match music.map(Hearing::best) {
+            Some(Harmony::Polychord { upper, lower, .. }) => {
+                [upper, lower].into_iter().filter_map(key_of).collect()
+            }
+            _ => Vec::new(),
+        };
+        let faint: Vec<usize> = music
+            .map(|hearing| {
+                hearing
+                    .alternatives()
+                    .iter()
+                    .flat_map(|reading| match reading.harmony {
+                        Harmony::Chord { chord, .. } => vec![chord],
+                        Harmony::Polychord { upper, lower, .. } => vec![upper, lower],
+                        _ => Vec::new(),
+                    })
+                    .filter_map(key_of)
+                    .collect()
+            })
+            .unwrap_or_default();
         // What follows depends on the inversion too: C/G, I⁶₄, goes to V.
         let suggestions = self
             .last_chord
@@ -267,10 +305,12 @@ impl HarmonyKeys {
             ui.separator();
             for (index, key) in chord_keys.iter().enumerate() {
                 let rank = suggestion_rank(&suggestions, &chord_keys, index);
-                let lit =
-                    playing == Some(index) || self.down.as_ref().is_some_and(|d| d.key == index);
+                let lit = playing == Some(index)
+                    || layers.contains(&index)
+                    || self.down.as_ref().is_some_and(|d| d.key == index);
                 let sounding = played.filter(|_| playing == Some(index));
-                let response = chord_key(ui, key, tonal, lit, sounding, rank);
+                let faintly = !lit && faint.contains(&index);
+                let response = chord_key(ui, key, tonal, lit, faintly, sounding, rank);
                 let mut hover = describe_key(key, tonal, self.hints);
                 if let Some(rank) = rank {
                     let often = if rank == 0 { "Most often" } else { "Often" };
@@ -298,6 +338,12 @@ impl HarmonyKeys {
                 .is_some_and(|chord| keys::key_for(&chord_keys, chord).is_none());
         ui.horizontal_wrapped(|ui| {
             self.hints_menu(ui);
+            if let Some((best, others)) = music.and_then(|hearing| heard_line(hearing, tonal)) {
+                ui.label(best);
+                if !others.is_empty() {
+                    ui.weak(others);
+                }
+            }
             let hint = hint_line(
                 self.hints,
                 tonal,
@@ -789,17 +835,47 @@ fn hint_line(
     }
 }
 
+/// What the music is heard as, when it is not simply one chord: two
+/// chords at once or a set of notes, or a chord that could be heard
+/// another way too. The best reading, then the others, fainter.
+fn heard_line(hearing: &Hearing, scale: Scale) -> Option<(String, String)> {
+    let label = |harmony: Harmony| harmony.label_in(scale);
+    let best = match hearing.best() {
+        harmony @ Harmony::Polychord { .. } => {
+            format!("Heard: {}, two chords at once", label(harmony)?)
+        }
+        harmony @ Harmony::Unknown(_) => format!("Heard: the notes {}", label(harmony)?),
+        harmony @ Harmony::Chord { .. } if !hearing.is_clear() => {
+            format!("Heard: {}", label(harmony)?)
+        }
+        _ => return None,
+    };
+    let others: Vec<String> = hearing
+        .alternatives()
+        .iter()
+        .filter_map(|reading| label(reading.harmony))
+        .collect();
+    let others = if others.is_empty() {
+        String::new()
+    } else {
+        format!("or {}", others.join(", "))
+    };
+    Some((best, others))
+}
+
 /// One harmony key: the numeral, the chord's name (spelled in `scale`)
 /// and its function, on the function's colour. While it plays it is
-/// bright and framed in white, the strongest mark on the bar. When it is
-/// a chord that often comes next it gets a thin yellow outline instead,
-/// brighter for the most usual one (`rank` 0): a hint of what may come,
-/// never louder than what is sounding.
+/// bright and framed in white, the strongest mark on the bar; `faintly`
+/// lights it less, with a thin frame, for a chord the music could be
+/// heard as too. When it is a chord that often comes next it gets a thin
+/// yellow outline instead, brighter for the most usual one (`rank` 0): a
+/// hint of what may come, never louder than what is sounding.
 fn chord_key(
     ui: &mut Ui,
     key: &ChordKey,
     scale: Scale,
     lit: bool,
+    faintly: bool,
     sounding: Option<(Chord, PitchClass)>,
     rank: Option<usize>,
 ) -> Response {
@@ -811,7 +887,7 @@ fn chord_key(
     let color = function_color(key.function);
     let fill = if lit {
         color
-    } else if response.hovered() {
+    } else if response.hovered() || faintly {
         color.gamma_multiply(0.7)
     } else {
         color.gamma_multiply(0.45)
@@ -835,6 +911,9 @@ fn chord_key(
     );
     if lit {
         paint_playing(painter, rect);
+    } else if faintly {
+        let stroke = Stroke::new(1.5, PLAYING.gamma_multiply(0.45));
+        painter.rect_stroke(rect, 6.0, stroke, StrokeKind::Inside);
     } else {
         match rank {
             Some(0) => {

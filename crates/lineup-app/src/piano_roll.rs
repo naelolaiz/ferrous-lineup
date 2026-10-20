@@ -962,9 +962,17 @@ impl PianoRoll {
                     let set: PitchSet = sounding(pattern, &heard, step)
                         .map(|note| note.pitch_class())
                         .collect();
-                    // The chord of all the tracks, and this track's own
-                    // when it is another (a piano's C/E over a bass's C).
-                    let all = analyze(project.chord_notes_with_pattern(self.pattern, step));
+                    // The chord of all the tracks, heard over the beat,
+                    // and this track's own when it is another (a piano's
+                    // C/E over a bass's C).
+                    let hearing = project.hearing_with_pattern(self.pattern, step);
+                    let all = hearing.best();
+                    let or = hearing
+                        .alternatives()
+                        .iter()
+                        .filter_map(|reading| reading.harmony.label_in(scale))
+                        .collect::<Vec<_>>()
+                        .join(", ");
                     let track = analyze(sounding(pattern, &[self.channel], step));
                     let own = match track.label_in(scale) {
                         Some(label) if track != all => {
@@ -986,10 +994,15 @@ impl PianoRoll {
                     };
                     (
                         format!(
-                            "Step {}: {own}{}{}",
+                            "Step {}: {own}{}{}{}",
                             step + 1,
                             if own.is_empty() { "" } else { "All: " },
-                            all.describe(scale)
+                            all.describe(scale),
+                            if or.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" (or {or})")
+                            }
                         ),
                         set,
                     )
@@ -1638,10 +1651,13 @@ impl PianoRoll {
 
     /// The strip above the grid that names the chord at every step, in
     /// `rect`, the place taken for it: on top the chord of this track's
-    /// own notes, below it the chord of all the tracks playing together
-    /// (see [`Project::chord_notes_with_pattern`]). Each is named with
-    /// its bass after a slash when it is an inversion: a piano playing
-    /// C/E over a bass playing C is C/E on the track and C for all.
+    /// own notes, below it the harmony of all the tracks playing
+    /// together, heard beat by beat (see
+    /// [`Project::hearing_with_pattern`]): an arpeggio is its chord, and
+    /// two chords at once or a set of notes are named so. Each is named
+    /// with its bass after a slash when it is an inversion: a piano
+    /// playing C/E over a bass playing C is C/E on the track and C for
+    /// all.
     #[allow(clippy::too_many_arguments)]
     fn chord_lane(
         &mut self,
@@ -1666,12 +1682,7 @@ impl PianoRoll {
                     .map(|step| analyze(sounding(pattern, &channel, step)))
                     .collect(),
             ),
-            (
-                "All",
-                (0..length)
-                    .map(|step| analyze(project.chord_notes_with_pattern(self.pattern, step)))
-                    .collect(),
-            ),
+            ("All", heard_by_beat(project, self.pattern, length)),
         ];
         let row_height = rect.height() / rows.len() as f32;
         for (index, (name, harmonies)) in rows.iter().enumerate() {
@@ -2569,6 +2580,25 @@ const SELECT_ALL: KeyboardShortcut = shortcut(Modifiers::COMMAND, Key::A);
 const DELETE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Delete);
 const BACKSPACE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Backspace);
 const ESCAPE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Escape);
+
+/// The harmony of all the tracks at every step of pattern `pattern`,
+/// `length` steps long, heard beat by beat with the whole band (see
+/// [`Project::hearing_with_pattern`]).
+fn heard_by_beat(project: &Project, pattern: usize, length: usize) -> Vec<Harmony> {
+    let mut beats = project
+        .hearings_with_pattern(pattern)
+        .into_iter()
+        .peekable();
+    let mut heard = Vec::with_capacity(length);
+    let mut harmony = Harmony::Silence;
+    for step in 0..length {
+        while let Some((_, hearing)) = beats.next_if(|(start, _)| *start <= step) {
+            harmony = hearing.best();
+        }
+        heard.push(harmony);
+    }
+    heard
+}
 
 /// The pitches held during `step` on any of `channels`.
 fn sounding<'a>(

@@ -114,7 +114,19 @@ pub enum Harmony {
     /// A chord we know. When `bass` is not the chord's root, the chord is
     /// an inversion, written with a slash: C/E is C major with E in the bass.
     Chord { chord: Chord, bass: PitchClass },
-    /// Three or more pitch classes that are not a chord we know.
+    /// Two chords at once, one over the other: a **polychord**, such as
+    /// the E♭7 over F♭ major that opens the Augurs of Spring in The Rite
+    /// of Spring. Written with a bar between them, the upper chord first:
+    /// "E♭7|F♭". `bass` is the lowest note, usually the lower chord's
+    /// root. Only [`hear`](super::hear) finds these: the notes alone
+    /// cannot say which belong to which chord.
+    Polychord {
+        upper: Chord,
+        lower: Chord,
+        bass: PitchClass,
+    },
+    /// Three or more pitch classes that are not a chord we know, named
+    /// by their set class, such as "4-23" for a stack of fourths.
     Unknown(PitchSet),
 }
 
@@ -186,6 +198,27 @@ fn find_chord(pitch_set: PitchSet, bass: PitchClass) -> Option<Chord> {
 }
 
 impl Harmony {
+    /// Every pitch class of the harmony, the bass's too: both chords of a
+    /// polychord.
+    pub fn pitch_set(&self) -> PitchSet {
+        let mut set = match *self {
+            Harmony::Silence => PitchSet::EMPTY,
+            Harmony::Single(pitch_class) => [pitch_class].into_iter().collect(),
+            Harmony::Interval { low, high, .. } => [low, high].into_iter().collect(),
+            Harmony::Chord { chord, .. } => chord.pitch_set(),
+            Harmony::Polychord { upper, lower, .. } => upper
+                .pitch_set()
+                .iter()
+                .chain(lower.pitch_set().iter())
+                .collect(),
+            Harmony::Unknown(set) => set,
+        };
+        if let Harmony::Chord { bass, .. } | Harmony::Polychord { bass, .. } = *self {
+            set.insert(bass);
+        }
+        set
+    }
+
     /// A short label for the chord lane above the piano roll, such as
     /// "Am", "C/E" or "C5", with the black keys named by `spelling`.
     /// `None` for silence. [`Harmony::label_in`] spells it in a key.
@@ -205,7 +238,13 @@ impl Harmony {
                 Some(format!("{}/{}", chord.name(spelling), bass.name(spelling)))
             }
             Harmony::Chord { chord, .. } => Some(chord.name(spelling)),
-            Harmony::Unknown(_) => Some("?".to_string()),
+            Harmony::Polychord {
+                upper, lower, bass, ..
+            } => {
+                let lower = Harmony::Chord { chord: lower, bass }.label(spelling)?;
+                Some(format!("{}|{lower}", upper.name(spelling)))
+            }
+            Harmony::Unknown(set) => Some(set.set_class().name()),
         }
     }
 
@@ -233,7 +272,11 @@ impl Harmony {
                     _ => Some(name),
                 }
             }
-            Harmony::Unknown(_) => Some("?".to_string()),
+            Harmony::Polychord { upper, lower, bass } => {
+                let lower = Harmony::Chord { chord: lower, bass }.label_in(scale)?;
+                Some(format!("{}|{lower}", scale.chord_name(upper)))
+            }
+            Harmony::Unknown(set) => Some(set.set_class().name()),
         }
     }
 
@@ -276,12 +319,38 @@ impl Harmony {
                     scale.figured_numeral(chord, bass)
                 )
             ),
+            Harmony::Polychord { upper, lower, bass } => {
+                let numerals = scale
+                    .figured_numeral(upper, upper.root)
+                    .zip(scale.figured_numeral(lower, bass))
+                    .map(|(upper, lower)| format!(" ({upper} over {lower} in {key})"))
+                    .unwrap_or_default();
+                format!(
+                    "{}: {} {} over {} {}, two chords at once: a polychord{numerals}.",
+                    self.label_in(scale).unwrap_or_default(),
+                    scale.spell_root(upper),
+                    upper.quality.name(),
+                    scale.spell_root(lower),
+                    lower.quality.name(),
+                )
+            }
             Harmony::Unknown(pitch_set) => {
                 let names: Vec<String> = pitch_set
-                    .iter()
+                    .normal_form()
+                    .into_iter()
                     .map(|p| scale.spell(p).to_string())
                     .collect();
-                format!("{}: no chord name for these notes.", names.join(" "))
+                let class = pitch_set.set_class();
+                let nickname = class
+                    .nickname()
+                    .map(|name| format!(", {name}"))
+                    .unwrap_or_default();
+                format!(
+                    "{}: no chord name for these notes; set class {} {}{nickname}.",
+                    names.join(" "),
+                    class.name(),
+                    class.prime_text()
+                )
             }
         }
     }
@@ -438,7 +507,7 @@ mod tests {
 
     #[test]
     fn unknown_clusters() {
-        assert_eq!(label(&[60, 61, 62]).unwrap(), "?");
+        assert_eq!(label(&[60, 61, 62]).unwrap(), "3-1");
     }
 
     #[test]

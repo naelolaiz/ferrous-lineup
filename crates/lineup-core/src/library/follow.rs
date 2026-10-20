@@ -53,7 +53,8 @@ pub fn chord_held(held: &[Note]) -> Option<Chord> {
             };
             Some(Chord::new(low, quality))
         }
-        Harmony::Silence | Harmony::Unknown(_) => None,
+        // `analyze` never hears two chords at once.
+        Harmony::Silence | Harmony::Polychord { .. } | Harmony::Unknown(_) => None,
     }
 }
 
