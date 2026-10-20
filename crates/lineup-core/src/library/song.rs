@@ -15,6 +15,9 @@
 //! Ferrous Lineup" are new tunes, written to show off a genre that has
 //! few well-known tunes old enough to be free.
 
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
+
 use crate::general_midi as gm;
 use crate::harmony::{Scale, ScaleKind};
 use crate::meter::TimeSignature;
@@ -558,6 +561,26 @@ fn bars_of(text: &'static str, first: usize, count: usize) -> &'static str {
     if text.trim().is_empty() {
         return text;
     }
+    // Each voice of a written-out accompaniment (see `chart::parse_melody`)
+    // has bars of its own: they are cut one by one and put together again,
+    // in text made once for each piece and kept for as long as the program
+    // runs, as the songs are.
+    if text.contains('&') {
+        type Pieces = HashMap<(usize, usize, usize, usize), &'static str>;
+        static PIECES: OnceLock<Mutex<Pieces>> = OnceLock::new();
+        let key = (text.as_ptr() as usize, text.len(), first, count);
+        let mut pieces = PIECES
+            .get_or_init(Default::default)
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        return pieces.entry(key).or_insert_with(|| {
+            let voices: Vec<&str> = text
+                .split('&')
+                .map(|voice| bars_of(voice, first, count))
+                .collect();
+            Box::leak(voices.join(" & ").into_boxed_str())
+        });
+    }
     // Where each bar starts and ends, in bytes.
     let mut cuts = vec![0];
     cuts.extend(text.match_indices('|').map(|(at, _)| at));
@@ -597,6 +620,13 @@ const RAKS_AKSAGI: TimeSignature = TimeSignature::of_groups(&[2, 3, 2, 2], 8);
 const CURCUNA: TimeSignature = TimeSignature::of_groups(&[3, 2, 2, 3], 8);
 const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
 const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
+// The short and odd bars of the Rite of Spring, for which Stravinsky marks
+// no grouping: every eighth note is a beat.
+const TWO_EIGHT: TimeSignature = TimeSignature::new(2, 8);
+const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
+const FOUR_EIGHT: TimeSignature = TimeSignature::new(4, 8);
+const FIVE_EIGHT_UNGROUPED: TimeSignature = TimeSignature::new(5, 8);
+const SEVEN_EIGHT: TimeSignature = TimeSignature::new(7, 8);
 
 // The bands the songs are dressed in, named after their style. Each is
 // melody, chords, bass. A piece from the concert hall names its own
@@ -1010,6 +1040,8 @@ pub static SONGS: &[Song] = &[
     classical::HIMNO_NACIONAL_ARGENTINO,
     classical::BOLERO,
     classical::LA_MER_DAWN,
+    classical::AUGURS_OF_SPRING,
+    classical::RITUAL_OF_ABDUCTION,
 ];
 
 #[cfg(test)]
@@ -1072,6 +1104,14 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn a_run_of_bars_keeps_every_voice_of_the_accompaniment() {
+        let left = "D2:3 | D2:5 | D2:3 & A3:3 | B3:5 | C4:3";
+        assert_eq!(bars_of(left, 1, 1), "D2:5 & B3:5");
+        assert_eq!(bars_of(left, 1, 2), "D2:5 | D2:3 & B3:5 | C4:3");
+        assert_eq!(bars_of(left, 0, 1), "D2:3 & A3:3");
     }
 
     #[test]
