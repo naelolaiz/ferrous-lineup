@@ -38,7 +38,7 @@ pub use hints::HintLevel;
 pub use key_finding::key_fits;
 pub use micromode::{Micromode, MicromodeFamily, micromode_content, micromodes_in, trichords};
 pub use pitch_set::PitchSet;
-pub use progression::{Suggestion, next_chords};
+pub use progression::{Suggestion, next_chords, next_chords_over};
 pub(crate) use row::Random;
 pub use row::{ROW_PRESETS, RowForm, RowLabel, RowPreset, ToneRow};
 pub use scale::{Scale, ScaleKind, with_figures};

@@ -13,7 +13,7 @@ use eframe::egui::{
 };
 use lineup_core::band::solo::{NoteRole, Over};
 use lineup_core::harmony::keys::{self, ChordSize};
-use lineup_core::harmony::{Harmony, HintLevel, analyze, next_chords};
+use lineup_core::harmony::{Harmony, HintLevel, analyze, next_chords_over};
 use lineup_core::tools::{self, ArpeggioOrder};
 use lineup_core::{
     Chord, ChordQuality, ChordStamp, Note, NoteEvent, Pattern, PitchClass, PitchSet, Project,
@@ -1485,7 +1485,7 @@ impl PianoRoll {
             return String::new();
         }
         let suggestions = current
-            .map(|(_, chord, _)| next_chords(scale, chord))
+            .map(|(_, chord, bass)| next_chords_over(scale, chord, bass))
             .unwrap_or_default();
         ui.horizontal_wrapped(|ui| {
             ui.label(format!("Chords in {}", scale.name()));
