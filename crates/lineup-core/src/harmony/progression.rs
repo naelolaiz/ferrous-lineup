@@ -15,8 +15,11 @@
 //! also know the chords they most often borrow from the minor key: iv,
 //! bIII, bVI and bVII.
 
+use std::borrow::Cow;
+
 use super::{Chord, ChordFamily, ChordQuality, HintLevel, Scale, ScaleKind};
 use crate::PitchClass;
+use crate::library::numeral;
 
 /// A chord that often follows another one, and why.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,17 +30,17 @@ pub struct Suggestion {
     pub chord: Chord,
     /// Why, in a sentence: "IV to V: a step up to the dominant, ready to
     /// come home."
-    pub reason: &'static str,
+    pub reason: Cow<'static, str>,
     /// The same reason in a few words: "step up to the dominant".
-    pub short: &'static str,
+    pub short: Cow<'static, str>,
 }
 
 impl Suggestion {
     /// The reason at `level`: the sentence, the few words, or nothing.
-    pub fn why(&self, level: HintLevel) -> Option<&'static str> {
+    pub fn why(&self, level: HintLevel) -> Option<&str> {
         match level {
-            HintLevel::Detailed => Some(self.reason),
-            HintLevel::Short => Some(self.short),
+            HintLevel::Detailed => Some(&self.reason),
+            HintLevel::Short => Some(&self.short),
             HintLevel::Minimal => None,
         }
     }
@@ -465,11 +468,12 @@ pub fn next_chords(scale: Scale, current: Chord) -> Vec<Suggestion> {
     let suggest = |to: u8, short: &'static str, reason: &'static str| -> Option<Suggestion> {
         let &(_, quality) = chords.iter().find(|(root, _)| *root == to)?;
         let root = scale.root.transpose(i32::from(to));
+        let written = |text| numeral::written_in(text, scale);
         Some(Suggestion {
             degree: scale.degree_of(root)?,
             chord: Chord::new(root, quality),
-            reason,
-            short,
+            reason: written(reason),
+            short: written(short),
         })
     };
     let root = scale.root.semitones_up_to(current.root);
@@ -531,8 +535,8 @@ pub fn next_chords_over(scale: Scale, current: Chord, bass: PitchClass) -> Vec<S
         Some(degree) => vec![Suggestion {
             degree,
             chord: Chord::new(dominant, ChordQuality::Major),
-            reason: CADENTIAL_SIX_FOUR,
-            short: CADENTIAL_SIX_FOUR_SHORT,
+            reason: Cow::Borrowed(CADENTIAL_SIX_FOUR),
+            short: Cow::Borrowed(CADENTIAL_SIX_FOUR_SHORT),
         }],
         None => next_chords(scale, current),
     }
@@ -648,6 +652,39 @@ mod tests {
     }
 
     #[test]
+    fn minor_key_reasons_write_numerals_as_the_keys_do() {
+        let a_minor = Scale::new(A, ScaleKind::NaturalMinor);
+        let after = |root, quality| next_chords(a_minor, Chord::new(root, quality));
+        let g = after(G, ChordQuality::Major);
+        assert_eq!(
+            g[0].reason,
+            "bVII to bIII: bVII is the dominant of bIII, the relative major."
+        );
+        assert!(matches!(g[0].reason, Cow::Borrowed(_)));
+        crate::harmony::MinorNumerals::FromMinor.with(|| {
+            let g = after(G, ChordQuality::Major);
+            assert_eq!(
+                g[0].reason,
+                "VII to III: VII is the dominant of III, the relative major."
+            );
+            assert_eq!(g[0].short, "V of the relative major");
+            let am = after(A, ChordQuality::Minor);
+            let reasons: Vec<&str> = am.iter().map(|s| &*s.reason).collect();
+            assert!(
+                reasons.contains(&"i to VI: a bright major chord, a major third below home."),
+                "{reasons:?}"
+            );
+            // The leading-tone chord keeps its numeral.
+            let g_sharp = after(GSharp, ChordQuality::Diminished);
+            assert!(g_sharp[0].reason.starts_with("vii° to i:"));
+            // Major keys say what they said.
+            let c_major = Scale::new(C, ScaleKind::Major);
+            let bb = next_chords(c_major, Chord::new(ASharp, ChordQuality::Major));
+            assert!(bb[0].reason.starts_with("bVII to I:"));
+        });
+    }
+
+    #[test]
     fn short_reasons_are_shorter() {
         for scale in [
             Scale::new(C, ScaleKind::Major),
@@ -660,7 +697,7 @@ mod tests {
                     // Every suggestion is on a note of the scale.
                     assert_eq!(scale.degree_of(s.chord.root), Some(s.degree));
                     assert!(s.short.len() < s.reason.len(), "{:?}", s.short);
-                    assert_eq!(s.why(HintLevel::Short), Some(s.short));
+                    assert_eq!(s.why(HintLevel::Short), Some(&*s.short));
                     assert_eq!(s.why(HintLevel::Minimal), None);
                 }
             }

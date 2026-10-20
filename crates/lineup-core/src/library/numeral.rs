@@ -10,12 +10,17 @@
 //! lowers it by one. So the chords of a minor key are written i, ii°,
 //! bIII, iv, v, bVI, bVII. This is how most pop and jazz books write
 //! them, and it means one table of progressions works for every mode.
+//! The library's progressions are always read this way; what you type
+//! on the chord sheet can be read from the minor scale too (see
+//! [`parse_in`]).
 //!
 //! A chord written by name, such as "Am7" or "G/B", becomes a
 //! [`RomanChord`] too once the key is known (see
 //! [`RomanChord::from_symbol`]), so charts can mix both.
 
-use crate::harmony::{Chord, ChordQuality, ChordSymbol, Scale};
+use std::borrow::Cow;
+
+use crate::harmony::{Chord, ChordQuality, ChordSymbol, MinorNumerals, Scale, ScaleKind};
 use crate::pitch::{PitchClass, Spelling};
 
 /// A chord relative to the tonic of a key: so many semitones above it,
@@ -83,17 +88,17 @@ impl RomanChord {
     }
 }
 
-/// The seven numerals, and how far above the tonic each one is in the
-/// major scale. Longer numerals come first, so "III" is not read as "I"
+/// The seven numerals, and the degree each one names, from 0 for the
+/// tonic. Longer numerals come first, so "III" is not read as "I"
 /// followed by "II".
-const NUMERALS: [(&str, u8); 7] = [
-    ("III", 4),
-    ("VII", 11),
-    ("II", 2),
-    ("IV", 5),
-    ("VI", 9),
+const NUMERALS: [(&str, usize); 7] = [
+    ("III", 2),
+    ("VII", 6),
+    ("II", 1),
+    ("IV", 3),
+    ("VI", 5),
     ("I", 0),
-    ("V", 7),
+    ("V", 4),
 ];
 
 /// The qualities a suffix can give, for an upper-case (major) numeral
@@ -128,6 +133,38 @@ const SUFFIXES: [(&str, Option<ChordQuality>, Option<ChordQuality>); 20] = {
 /// Reads one chord, such as "bVII", "ii7" or "V7b9". Returns `None` if
 /// it is not a chord this module knows how to write.
 pub fn parse(text: &str) -> Option<RomanChord> {
+    parse_in(text, Scale::default(), MinorNumerals::FromMajor)
+}
+
+/// Reads one chord written in `key`, counting a minor key's degrees as
+/// `numerals` says: written [`MinorNumerals::FromMinor`], "VII" in A
+/// minor is G major and "vii°" G#dim. In a major key, and written
+/// [`MinorNumerals::FromMajor`], it is the same as [`parse`].
+pub fn parse_in(text: &str, key: Scale, numerals: MinorNumerals) -> Option<RomanChord> {
+    let (degree, shift, quality) = read(text)?;
+    let unaltered = key.unaltered_degree(degree, quality, numerals);
+    let semitones = (i32::from(unaltered) + shift).rem_euclid(12) as u8;
+    let spelling = match shift {
+        0 => None,
+        down if down < 0 => Some(Spelling::Flats),
+        _ => Some(Spelling::Sharps),
+    };
+    Some(RomanChord {
+        semitones,
+        quality,
+        spelling,
+        bass: None,
+    })
+}
+
+/// The degree a numeral is on, from 0 for the tonic: 6 for "bVII7".
+pub fn degree_of(text: &str) -> Option<usize> {
+    read(text).map(|(degree, ..)| degree)
+}
+
+/// Reads a numeral: the degree it is on (0 for the tonic), the
+/// semitones its sharps and flats move it, and the chord's quality.
+fn read(text: &str) -> Option<(usize, i32, ChordQuality)> {
     // Flats and sharps in front move the chord down or up a semitone.
     let mut shift: i32 = 0;
     let mut rest = text;
@@ -144,7 +181,7 @@ pub fn parse(text: &str) -> Option<RomanChord> {
     }
     // The numeral, in either case. `get(..len)` gives `None` instead of
     // panicking when `rest` is shorter than the numeral.
-    let (numeral, semitones) = NUMERALS.iter().find(|(numeral, _)| {
+    let (numeral, degree) = NUMERALS.iter().find(|(numeral, _)| {
         rest.get(..numeral.len())
             .is_some_and(|start| start.eq_ignore_ascii_case(numeral))
     })?;
@@ -156,18 +193,54 @@ pub fn parse(text: &str) -> Option<RomanChord> {
     let suffix = &rest[numeral.len()..];
     let (_, major, minor) = SUFFIXES.iter().find(|(text, ..)| *text == suffix)?;
     let quality = if upper { *major } else { *minor }?;
-    let semitones = (*semitones as i32 + shift).rem_euclid(12) as u8;
-    let spelling = match shift {
-        0 => None,
-        down if down < 0 => Some(Spelling::Flats),
-        _ => Some(Spelling::Sharps),
+    Some((*degree, shift, quality))
+}
+
+/// `text`, about the chords of `key` and with numerals written as the
+/// library writes them ("i bVI bIII bVII" in a minor key), with each
+/// numeral written as [`MinorNumerals::current`] writes it: "i VI III
+/// VII" from the minor scale. Words that are not numerals, punctuation
+/// and bar lines are left as they are; so is the whole text when nothing
+/// changes, as in a major key.
+pub fn written_in(text: &str, key: Scale) -> Cow<'_, str> {
+    if MinorNumerals::current() == MinorNumerals::FromMajor || !key.is_minor_key() {
+        return Cow::Borrowed(text);
+    }
+    let minor = Scale::new(PitchClass::C, ScaleKind::NaturalMinor);
+    let rewrite = |word: &str| -> Option<String> {
+        let chord = parse(word)?;
+        let new = minor.numeral_on_degree(degree_of(word)?, chord.in_key(PitchClass::C))?;
+        (new != word).then_some(new)
     };
-    Some(RomanChord {
-        semitones,
-        quality,
-        spelling,
-        bass: None,
-    })
+    let separator = |c: char| c.is_whitespace() || "|()\",:;".contains(c);
+    let mut written = String::with_capacity(text.len());
+    let mut changed = false;
+    let mut rest = text;
+    while !rest.is_empty() {
+        let end = rest.find(separator).unwrap_or(rest.len()).max(
+            // A separator is copied on its own.
+            rest.chars()
+                .next()
+                .map_or(0, |c| if separator(c) { c.len_utf8() } else { 0 }),
+        );
+        let (word, after) = rest.split_at(end);
+        // A full stop ends a sentence; it is not part of the numeral.
+        let numeral = word.trim_end_matches('.');
+        match rewrite(numeral) {
+            Some(new) => {
+                changed = true;
+                written.push_str(&new);
+                written.push_str(&word[numeral.len()..]);
+            }
+            None => written.push_str(word),
+        }
+        rest = after;
+    }
+    if changed {
+        Cow::Owned(written)
+    } else {
+        Cow::Borrowed(text)
+    }
 }
 
 /// Reads a progression: chords separated by spaces. Returns `None` if
@@ -180,6 +253,52 @@ pub fn parse_progression(text: &str) -> Option<Vec<RomanChord>> {
 mod tests {
     use super::*;
     use ChordQuality::*;
+
+    #[test]
+    fn minor_keys_read_from_their_own_scale() {
+        let a_minor = Scale::new(PitchClass::A, crate::harmony::ScaleKind::NaturalMinor);
+        let read = |text, numerals| {
+            let chord = parse_in(text, a_minor, numerals).unwrap();
+            (chord.semitones, chord.quality)
+        };
+        use MinorNumerals::{FromMajor, FromMinor};
+        // G major, the subtonic: VII from the minor scale, bVII from the
+        // major one, where VII is G# major.
+        assert_eq!(read("VII", FromMinor), (10, Major));
+        assert_eq!(read("bVII", FromMajor), (10, Major));
+        assert_eq!(read("VII", FromMajor), (11, Major));
+        // The leading-tone chord is vii° either way.
+        assert_eq!(read("vii°", FromMinor), (11, Diminished));
+        assert_eq!(read("vii°", FromMajor), (11, Diminished));
+        // F and F#dim: VI and vi° (of melodic minor).
+        assert_eq!(read("VI", FromMinor), (8, Major));
+        assert_eq!(read("vi°", FromMinor), (9, Diminished));
+        assert_eq!(read("III", FromMinor), (3, Major));
+        // The Neapolitan and the dominant are the same both ways.
+        assert_eq!(read("bII", FromMinor), (1, Major));
+        assert_eq!(read("V7", FromMinor), (7, Dominant7));
+        // In a major key nothing changes.
+        let c_major = Scale::default();
+        assert_eq!(parse_in("VI", c_major, FromMinor), parse("VI"));
+    }
+
+    #[test]
+    fn minor_key_texts_are_written_as_numerals_are_counted() {
+        let minor = Scale::new(PitchClass::E, ScaleKind::HarmonicMinor);
+        let text = "i | bVI | bIII bVII7 | iv (bII6), v.";
+        assert_eq!(written_in(text, minor), text);
+        MinorNumerals::FromMinor.with(|| {
+            let written = |text| written_in(text, minor);
+            assert_eq!(written(text), "i | VI | III VII7 | iv (bII6), v.");
+            assert_eq!(written("V7 to i"), "V7 to i");
+            assert!(matches!(written("V7 to i"), Cow::Borrowed(_)));
+            // A raised degree that is not in the minor key keeps its sign.
+            assert_eq!(written("VII to bVII"), "#VII to VII");
+            // Major keys and modes are counted from the major scale.
+            let dorian = Scale::new(PitchClass::D, ScaleKind::Dorian);
+            assert_eq!(written_in(text, dorian), text);
+        });
+    }
 
     fn chord(text: &str) -> (u8, ChordQuality) {
         let chord = parse(text).unwrap_or_else(|| panic!("{text} did not parse"));

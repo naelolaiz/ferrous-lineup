@@ -1,9 +1,64 @@
 //! Scales and keys: which notes belong together.
 
+use std::cell::Cell;
+
 use serde::{Deserialize, Serialize};
 
 use super::{Chord, ChordQuality, PitchSet, ToneRow};
 use crate::{Note, NoteName, PitchClass, Spelling};
+
+/// How Roman numerals count the degrees of a minor key. Both ways are
+/// correct, and books use one or the other; major keys are written the
+/// same way by both.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum MinorNumerals {
+    /// From the major scale on the same tonic: i, ii°, bIII, iv, v, bVI,
+    /// bVII. A flat marks each degree that is a semitone below the major
+    /// scale's, so one table of progressions works in every mode. Most
+    /// pop and jazz books write numerals this way.
+    #[default]
+    FromMajor,
+    /// From the minor scale itself: i, ii°, III, iv, v, VI, VII, as
+    /// classical harmony books write them. The sixth and seventh
+    /// degrees have two forms in minor, and both are written without an
+    /// accidental: in A minor, G major is VII and the leading-tone chord
+    /// G#dim is vii°, F major is VI and F#dim (of melodic minor) vi°.
+    FromMinor,
+}
+
+thread_local! {
+    /// How the numerals written on this thread count a minor key's
+    /// degrees. The window's thread sets it from the settings each frame;
+    /// each thread has its own, so tests running side by side never see
+    /// each other's.
+    static MINOR_NUMERALS: Cell<MinorNumerals> = const { Cell::new(MinorNumerals::FromMajor) };
+}
+
+impl MinorNumerals {
+    /// How numerals are written on this thread.
+    pub fn current() -> MinorNumerals {
+        MINOR_NUMERALS.with(Cell::get)
+    }
+
+    /// Writes numerals this way on this thread from now on.
+    pub fn set(self) {
+        MINOR_NUMERALS.with(|numerals| numerals.set(self));
+    }
+
+    /// Runs `f` with numerals written this way, then goes back to the way
+    /// they were, even if `f` panics.
+    pub fn with<T>(self, f: impl FnOnce() -> T) -> T {
+        struct Restore(MinorNumerals);
+        impl Drop for Restore {
+            fn drop(&mut self) {
+                self.0.set();
+            }
+        }
+        let _restore = Restore(MinorNumerals::current());
+        self.set();
+        f()
+    }
+}
 
 /// How many letters above the tonic a note outside the scale is written,
 /// by how many semitones above the tonic it is. Notes a semitone or
@@ -514,6 +569,9 @@ impl Scale {
     /// A, where A major has C#), E Phrygian has its bII, and C Lydian
     /// its #iv°. A chord from outside the key is numbered the same way:
     /// Bb major in C major is bVII.
+    ///
+    /// Minor keys can be written from their own scale instead (III, VI,
+    /// VII), as [`MinorNumerals::current`] says.
     pub fn roman_numeral(self, chord: Chord) -> Option<String> {
         self.numeral_on(self.letters_above_tonic(chord.root), chord)
     }
@@ -539,6 +597,12 @@ impl Scale {
         Some(with_figures(&numeral, chord.inversion_figures(bass)))
     }
 
+    /// The Roman numeral of `chord` on the degree `degree` (0 for the
+    /// tonic), with or without accidentals: bVII for Bb in C major.
+    pub(crate) fn numeral_on_degree(self, degree: usize, chord: Chord) -> Option<String> {
+        self.numeral_on(u8::try_from(degree).ok().filter(|&d| d < 7)?, chord)
+    }
+
     /// The Roman numeral of `chord` on the degree `letters` letters above
     /// the tonic.
     fn numeral_on(self, letters: u8, chord: Chord) -> Option<String> {
@@ -547,10 +611,12 @@ impl Scale {
             return None;
         }
         let letters = usize::from(letters);
-        let in_major = ScaleKind::Major.tonal_intervals()[letters] as i8;
+        let unaltered =
+            self.unaltered_degree(letters, chord.quality, MinorNumerals::current()) as i8;
         let semitones = self.root.semitones_up_to(chord.root) as i8;
-        // How far the root is from the major scale's note, from -6 to 5.
-        let shift = (semitones - in_major + 18).rem_euclid(12) - 6;
+        // How far the root is from the note the numeral names without an
+        // accidental, from -6 to 5.
+        let shift = (semitones - unaltered + 18).rem_euclid(12) - 6;
         let accidentals = if shift < 0 { "b" } else { "#" }.repeat(shift.unsigned_abs() as usize);
         let numeral = if chord.quality.is_minor() {
             NUMERALS[letters].to_lowercase()
@@ -561,6 +627,55 @@ impl Scale {
             "{accidentals}{numeral}{}",
             chord.quality.numeral_suffix()
         ))
+    }
+
+    /// Whether this is a minor key, natural, harmonic or melodic: the
+    /// keys whose numerals [`MinorNumerals`] counts in two ways. The
+    /// minor modes, such as Dorian, are counted from the major scale.
+    pub fn is_minor_key(self) -> bool {
+        use ScaleKind::{HarmonicMinor, MelodicMinor, NaturalMinor};
+        matches!(self.kind, NaturalMinor | HarmonicMinor | MelodicMinor)
+    }
+
+    /// The note a numeral on the degree `letters` letters above the tonic
+    /// names when it has no sharp or flat, in semitones above the tonic,
+    /// for a chord of `quality`: the major scale's note, or in a minor
+    /// key written [`MinorNumerals::FromMinor`], the minor scale's.
+    ///
+    /// The sixth and seventh degrees of a minor key have two forms, as
+    /// in A minor F and F#, G and G#. A numeral without an accidental
+    /// names the form whose chord belongs to the key: VII is G major,
+    /// from natural minor, but vii° is G#dim, from harmonic minor, since
+    /// G B Db is no chord of A minor. When neither form makes a chord of
+    /// the key, it names the natural one.
+    pub(crate) fn unaltered_degree(
+        self,
+        letters: usize,
+        quality: ChordQuality,
+        numerals: MinorNumerals,
+    ) -> u8 {
+        use ScaleKind::{HarmonicMinor, MelodicMinor, NaturalMinor};
+        if numerals == MinorNumerals::FromMajor || !self.is_minor_key() {
+            return ScaleKind::Major.tonal_intervals()[letters];
+        }
+        let natural = NaturalMinor.tonal_intervals()[letters];
+        if letters < 5 {
+            return natural;
+        }
+        // Whether the chord on `semitones` is in one of these scales,
+        // counted from C, since only the distance from the tonic counts.
+        let of_key = |semitones: u8, kinds: &[ScaleKind]| {
+            let chord = Chord::new(PitchClass::C.transpose(i32::from(semitones)), quality);
+            kinds
+                .iter()
+                .any(|&kind| Scale::new(PitchClass::C, kind).is_diatonic(chord))
+        };
+        if !of_key(natural, &[NaturalMinor]) && of_key(natural + 1, &[HarmonicMinor, MelodicMinor])
+        {
+            natural + 1
+        } else {
+            natural
+        }
     }
 
     /// The Roman numeral of `chord` with `bass` lowest, with the figures
@@ -1142,6 +1257,110 @@ mod tests {
             "i° bII biii iv bV bVI bvii"
         );
         assert_eq!(numerals(D, ScaleKind::Dorian), "i ii bIII IV v vi° bVII");
+    }
+
+    #[test]
+    fn minor_keys_can_be_numbered_from_their_own_scale() {
+        let numerals = |root, kind, size: fn(Scale, usize) -> Option<Chord>| {
+            let scale = Scale::new(root, kind);
+            (0..7)
+                .map(|degree| scale.roman_numeral(size(scale, degree).unwrap()).unwrap())
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        MinorNumerals::FromMinor.with(|| {
+            assert_eq!(
+                numerals(A, ScaleKind::NaturalMinor, Scale::triad),
+                "i ii° III iv v VI VII"
+            );
+            assert_eq!(
+                numerals(A, ScaleKind::HarmonicMinor, Scale::triad),
+                "i ii° III+ iv V VI vii°"
+            );
+            assert_eq!(
+                numerals(A, ScaleKind::MelodicMinor, Scale::triad),
+                "i ii III+ IV V vi° vii°"
+            );
+            assert_eq!(
+                numerals(A, ScaleKind::NaturalMinor, Scale::seventh),
+                "i7 iiø7 IIImaj7 iv7 v7 VImaj7 VII7"
+            );
+            assert_eq!(
+                numerals(A, ScaleKind::HarmonicMinor, Scale::seventh),
+                "imaj7 iiø7 III+maj7 iv7 V7 VImaj7 vii°7"
+            );
+            // Major keys and the modes are written as before.
+            assert_eq!(
+                numerals(C, ScaleKind::Major, Scale::triad),
+                "I ii iii IV V vi vii°"
+            );
+            assert_eq!(
+                numerals(E, ScaleKind::Phrygian, Scale::triad),
+                "i bII bIII iv v° bVI bvii"
+            );
+            let a_minor = Scale::new(A, ScaleKind::NaturalMinor);
+            let numeral = |root, quality| a_minor.roman_numeral(Chord::new(root, quality)).unwrap();
+            // A flat lowers the root from the form the bare numeral names:
+            // Bb is the Neapolitan bII, and G B Db is a G#dim lowered.
+            assert_eq!(numeral(ASharp, ChordQuality::Major), "bII");
+            assert_eq!(numeral(G, ChordQuality::Diminished), "bvii°");
+            // Raised, in neither form of the key: a sharp.
+            assert_eq!(numeral(GSharp, ChordQuality::Major), "#VII");
+            assert_eq!(numeral(FSharp, ChordQuality::Minor), "#vi");
+            assert_eq!(numeral(CSharp, ChordQuality::Major), "#III");
+            // The dominant of III is VII7 written as a secondary
+            // dominant too: V7/III.
+            assert_eq!(numeral(G, ChordQuality::Dominant7), "VII7");
+        });
+        // Back as it was afterwards.
+        assert_eq!(
+            numerals(A, ScaleKind::NaturalMinor, Scale::triad),
+            "i ii° bIII iv v bVI bVII"
+        );
+    }
+
+    #[test]
+    fn numerals_from_the_minor_scale_read_back_as_the_same_chords() {
+        use crate::library::numeral;
+        use ChordQuality::*;
+        let qualities = [
+            Major,
+            Minor,
+            Diminished,
+            Augmented,
+            Dominant7,
+            Major7,
+            Minor7,
+            Diminished7,
+            HalfDiminished7,
+        ];
+        for numerals in [MinorNumerals::FromMajor, MinorNumerals::FromMinor] {
+            numerals.with(|| {
+                for kind in [
+                    ScaleKind::NaturalMinor,
+                    ScaleKind::HarmonicMinor,
+                    ScaleKind::MelodicMinor,
+                    ScaleKind::Major,
+                ] {
+                    for tonic in PitchClass::ALL {
+                        let key = Scale::new(tonic, kind);
+                        for up in 0..12 {
+                            for quality in qualities {
+                                let chord = Chord::new(tonic.transpose(up), quality);
+                                let written = key.roman_numeral(chord).unwrap();
+                                let read = numeral::parse_in(&written, key, numerals)
+                                    .unwrap_or_else(|| panic!("{written} does not read"));
+                                assert_eq!(
+                                    read.in_key(tonic),
+                                    chord,
+                                    "{written} in {key:?}, {numerals:?}"
+                                );
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
     #[test]

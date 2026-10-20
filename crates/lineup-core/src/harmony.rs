@@ -45,6 +45,6 @@ pub use pitch_set::PitchSet;
 pub use progression::{Suggestion, next_chords, next_chords_over};
 pub(crate) use row::Random;
 pub use row::{ROW_PRESETS, RowForm, RowLabel, RowPreset, ToneRow};
-pub use scale::{Scale, ScaleKind, with_figures};
+pub use scale::{MinorNumerals, Scale, ScaleKind, with_figures};
 pub use set_class::{SetClass, digits, pc_digit};
 pub use symbol::ChordSymbol;

@@ -29,7 +29,7 @@ use eframe::egui::{
 };
 use lineup_core::band::solo::Soloist;
 use lineup_core::band::{Ending, Variation};
-use lineup_core::chord_sheet::{Push, Stop, read_bar, text, write_bar};
+use lineup_core::chord_sheet::{Push, Stop, read_typed_bar, text, write_bar};
 use lineup_core::general_midi;
 use lineup_core::library::{Genre, Style};
 use lineup_core::{
@@ -1144,7 +1144,7 @@ impl ChordSheet {
             return true;
         };
         let bar = cell.bar;
-        match read_bar(&editing.text, &bar, keys.key_at(bar.start)) {
+        match read_typed_bar(&editing.text, &bar, keys.key_at(bar.start)) {
             Ok(markers) => {
                 if markers != markers_in(project, &bar) {
                     actions.push(SheetAction::SetChords {
@@ -1445,7 +1445,7 @@ impl ChordSheet {
                 .map_err(|err| format!("The text pasted could not be read, {err}"))
         } else {
             let bar = project.meter().bar(first);
-            read_bar(pasted, &bar, project.key_map().key_at(bar.start))
+            read_typed_bar(pasted, &bar, project.key_map().key_at(bar.start))
                 .map(|markers| (bar.start..bar.end(), markers))
                 .map_err(|err| format!("Bar {}: {err}", first + 1))
         };
