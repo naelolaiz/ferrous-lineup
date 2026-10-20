@@ -1360,6 +1360,116 @@ fn meter_changes_start_from_the_original_timing_and_restore_the_original_song() 
     }
 }
 
+/// The melody of the song's first seconds as it is played: when each
+/// note starts and how long it lasts, in seconds (see [`super::trace`]).
+/// A low sample rate is enough to time the notes, and quick.
+fn played_melody(app: &mut LineupApp) -> Vec<(f64, f64)> {
+    const RATE: u32 = 8000;
+    const SECONDS: f64 = 12.0;
+    let lead = app
+        .project
+        .channels()
+        .iter()
+        .position(|channel| channel.name == "Lead")
+        .unwrap();
+    let mut render = app.song_render_traced(RATE);
+    render.renderer.skip((f64::from(RATE) * SECONDS) as usize);
+    render
+        .renderer
+        .take_trace()
+        .unwrap_or_default()
+        .notes()
+        .into_iter()
+        .filter(|note| note.channel == lead && note.start < SECONDS - 2.0)
+        .map(|note| (note.start, note.length.unwrap_or_default()))
+        .collect()
+}
+
+#[test]
+fn styles_tried_one_after_another_keep_the_songs_tempo() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::TimeSignature;
+    use lineup_core::library::{Song, Style};
+    let el_choclo = Song::named("El Choclo").unwrap();
+    for (mode, playing) in [
+        (PlayMode::Pattern, false),
+        (PlayMode::Song, false),
+        (PlayMode::Song, true),
+    ] {
+        let mut screen = Screen::new();
+        screen.app.open_demo(library::Demo::Song(el_choclo));
+        screen.app.set_mode(mode);
+        screen.app.set_playing(playing);
+        let tempo = screen.app.project.tempo;
+        let time = screen.app.project.time_signature;
+        let melody = played_melody(&mut screen.app);
+        assert!(!melody.is_empty());
+        let clicks: [&dyn Fn(&mut LineupApp); 7] = [
+            &|app| app.try_from_library(LibraryAction::Style(Style::named("Four chords").unwrap())),
+            &|app| {
+                app.try_from_library(LibraryAction::Style(Style::named("Emotional pop").unwrap()))
+            },
+            &|app| app.try_from_library(LibraryAction::Style(Style::named("Tango vals").unwrap())),
+            &|app| app.try_from_library(LibraryAction::Style(Style::named("Ranchera").unwrap())),
+            &|app| {
+                app.try_from_library(LibraryAction::Style(
+                    Style::named("Six-eight ballad").unwrap(),
+                ))
+            },
+            &|app| app.set_song_time(TimeSignature::new(7, 8)),
+            &|app| app.try_from_library(LibraryAction::Style(Style::named("Four chords").unwrap())),
+        ];
+        for (click, step) in clicks.iter().zip(1..) {
+            let before = (screen.app.project.time_signature, screen.app.project.tempo);
+            click(&mut screen.app);
+            screen.app.history.close();
+            let project = &screen.app.project;
+            let what = format!("{mode:?}, playing: {playing}, click {step}");
+            if project.time_signature == before.0 {
+                assert_eq!(project.tempo, before.1, "{what}");
+            }
+            if project.time_signature == time {
+                assert_eq!(project.tempo, tempo, "{what}");
+            }
+            // The song's own notes last as long as they did, in any meter.
+            assert_eq!(project.swing, 0, "{what}");
+            let now = played_melody(&mut screen.app);
+            assert_eq!(now.len(), melody.len(), "{what}");
+            for (now, then) in now.iter().zip(&melody) {
+                assert!((now.0 - then.0).abs() < 2e-3, "{what}: {now:?} {then:?}");
+                assert!((now.1 - then.1).abs() < 2e-3, "{what}: {now:?} {then:?}");
+            }
+        }
+    }
+}
+
+#[test]
+fn a_ticked_tempo_comes_with_a_style_only_in_the_same_meter() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::{Song, Style};
+    let mut screen = Screen::new();
+    screen
+        .app
+        .open_demo(library::Demo::Song(Song::named("El Choclo").unwrap()));
+    screen.app.set_playing(false);
+    screen.app.set_mode(PlayMode::Pattern);
+    screen.app.playlist.library_parts_mut().tempo = true;
+    let four_chords = Style::named("Four chords").unwrap();
+    screen
+        .app
+        .try_from_library(LibraryAction::Style(four_chords));
+    assert_eq!(screen.app.project.tempo.bpm(), four_chords.tempo);
+    // The trial pattern goes into 3/4, and the song keeps its tempo.
+    screen.app.history.close();
+    let waltz = Style::named("Tango vals").unwrap();
+    screen.app.try_from_library(LibraryAction::Style(waltz));
+    assert_eq!(
+        screen.app.project.pattern_time(screen.app.pattern),
+        waltz.time
+    );
+    assert_eq!(screen.app.project.tempo.bpm(), four_chords.tempo);
+}
+
 #[test]
 fn the_time_picker_routes_unchecked_matching_style_to_plain_accents() {
     let mut screen = meter_test_screen(true, true);
@@ -1664,7 +1774,7 @@ fn style_defaults_edit_separately_and_only_save_on_confirmation() {
     assert_eq!(
         screen.ctx.data_mut(
             |data| data.get_persisted::<lineup_core::library::apply::StyleParts>(egui::Id::unique(
-                "preset-copy-options"
+                "library-options"
             ))
         ),
         Some(saved)
@@ -3134,7 +3244,8 @@ mod part_sources {
         );
         assert_eq!(source(&screen, SongPart::Patterns), "El Choclo (demo)");
         assert_eq!(source(&screen, SongPart::Chords), "El Choclo (demo)");
-        assert_eq!(source(&screen, SongPart::Tempo), "Doo-wop (style)");
+        // The Tempo option starts off: the song keeps its own.
+        assert_eq!(source(&screen, SongPart::Tempo), "El Choclo (demo)");
     }
 
     #[test]
