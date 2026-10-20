@@ -76,6 +76,9 @@ else was needed:
 - more say over the band: [locking a track](locks.md),
   [a style for each section](section-styles.md) and
   [an orchestra for music that changes meter](orchestra.md);
+- harmony heard the way an ear hears it, an arpeggio as its chord and
+  two chords at once as a polychord:
+  [hearing chords](chord-hearing.md);
 - and this book, [online and as a PDF](book-online.md).
 
 ## Trying it
