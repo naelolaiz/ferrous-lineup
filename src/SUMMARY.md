@@ -106,6 +106,7 @@
   - [Step lights in the channel rack](step-9/rack-lights.md)
   - [Locking a track: styles play around it](step-9/locks.md)
   - [A style for each section](step-9/section-styles.md)
+  - [The Big Bang Theory theme: a TV theme from a transcription](step-9/big-bang-theory-theme.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
 ---
