@@ -40,6 +40,13 @@ pub struct Rhythm {
     /// even eighths. A swing beat is written in even eighths, as in sheet
     /// music, and played long-short by this much.
     pub swing: u8,
+    /// Whether it plays every bar in the bar's own meter, for music whose
+    /// meter changes from bar to bar: what each drum plays on the first
+    /// beat of its bar goes on the first beat of every bar, and what it
+    /// plays on its second felt beat goes on each other beat the bar is
+    /// felt in (see [`TimeSignature::felt_groups`]). Its lines are what
+    /// it plays in its own time signature (see [`Rhythm::notes_in`]).
+    pub follows_the_meter: bool,
 }
 
 /// One hit: how hard, and how many semitones up or down.
@@ -100,25 +107,25 @@ impl Rhythm {
         let Some((_, line)) = self.lines.iter().find(|(d, _)| *d == drum) else {
             return Vec::new();
         };
-        let bars = parse_line(line).unwrap_or_default();
-        if bars.is_empty() || bar == 0 {
+        line_notes(line, bar, length)
+    }
+
+    /// The notes `drum` plays over `length` steps of bars of `time`. A
+    /// rhythm that follows the meter is written out again for `time`, so
+    /// each bar keeps its felt beats; any other is laid out a bar at a
+    /// time, as [`Rhythm::notes`] does.
+    pub fn notes_in(&self, drum: Drum, time: TimeSignature, length: usize) -> Vec<NoteEvent> {
+        if !self.follows_the_meter || time == self.time {
+            return self.notes(drum, time.steps_per_bar(), length);
+        }
+        let Some((_, line)) = self.lines.iter().find(|(d, _)| *d == drum) else {
             return Vec::new();
-        }
-        let mut notes = Vec::new();
-        for start in (0..length).step_by(bar) {
-            let steps = &bars[(start / bar) % bars.len()];
-            for (step, hit) in steps.iter().enumerate().take(bar) {
-                let at = start + step;
-                if let (Some((velocity, shift)), true) = (hit, at < length) {
-                    let pitch = STEP_NOTE.transpose(*shift).unwrap_or(STEP_NOTE);
-                    notes.push(NoteEvent {
-                        velocity: *velocity,
-                        ..NoteEvent::new(pitch, at, 1)
-                    });
-                }
-            }
-        }
-        notes
+        };
+        line_notes(
+            &in_meter(line, self.time, time),
+            time.steps_per_bar(),
+            length,
+        )
     }
 
     /// The rhythm called `name` in [`RHYTHMS`] or [`FILLS`].
@@ -135,6 +142,71 @@ impl Rhythm {
     }
 }
 
+/// The notes of one drum's `line` over `length` steps of a pattern whose
+/// bars last `bar` steps, as [`Rhythm::notes`] lays them out.
+fn line_notes(line: &str, bar: usize, length: usize) -> Vec<NoteEvent> {
+    let bars = parse_line(line).unwrap_or_default();
+    if bars.is_empty() || bar == 0 {
+        return Vec::new();
+    }
+    let mut notes = Vec::new();
+    for start in (0..length).step_by(bar) {
+        let steps = &bars[(start / bar) % bars.len()];
+        for (step, hit) in steps.iter().enumerate().take(bar) {
+            let at = start + step;
+            if let (Some((velocity, shift)), true) = (hit, at < length) {
+                let pitch = STEP_NOTE.transpose(*shift).unwrap_or(STEP_NOTE);
+                notes.push(NoteEvent {
+                    velocity: *velocity,
+                    ..NoteEvent::new(pitch, at, 1)
+                });
+            }
+        }
+    }
+    notes
+}
+
+/// Where each beat of a bar of `time` starts, as the bar is felt (see
+/// [`TimeSignature::felt_groups`]): once in 2/4 and 3/4, on 1 and 3 in
+/// 4/4, on 1, 4 and 7 in 9/8, on 1 and 3 in 5/8.
+fn felt_starts(time: TimeSignature) -> Vec<usize> {
+    let unit = time.unit_steps();
+    let mut at = 0;
+    time.felt_groups()
+        .into_iter()
+        .map(|group| {
+            let start = at;
+            at += usize::from(group) * unit;
+            start
+        })
+        .collect()
+}
+
+/// A drum line of a rhythm that follows the meter, written in `own`,
+/// written again for a bar of `time`: its first beat's hit on the first
+/// beat, and its second felt beat's hit on each other felt beat.
+fn in_meter(line: &str, own: TimeSignature, time: TimeSignature) -> String {
+    let steps: Vec<char> = line
+        .split('|')
+        .next()
+        .unwrap_or_default()
+        .chars()
+        .filter(|character| !character.is_whitespace())
+        .collect();
+    let first = steps.first().copied().unwrap_or('.');
+    let other = felt_starts(own)
+        .get(1)
+        .and_then(|&start| steps.get(start).copied())
+        .unwrap_or('.');
+    let mut bar = vec!['.'; time.steps_per_bar()];
+    for (index, start) in felt_starts(time).into_iter().enumerate() {
+        if let Some(step) = bar.get_mut(start) {
+            *step = if index == 0 { first } else { other };
+        }
+    }
+    bar.into_iter().collect()
+}
+
 /// The rhythms a song in a time signature plays when nothing says which:
 /// the first one in the song's new time signature.
 const USUAL: [&str; 4] = ["Pop beat", "Waltz", "Six-eight", "Slow blues"];
@@ -146,9 +218,11 @@ impl Rhythm {
     /// else the usual one in `time` (a waltz for 3/4), else one with the
     /// same notes to the bar grouped its own way (7/8 plays as 2+2+3/8,
     /// a rachenitsa, or 3+2+2/8 for a song that is already Balkan), else
-    /// a plain beat made for `time` (see [`Rhythm::basic`]).
+    /// a plain beat made for `time` (see [`Rhythm::basic`]). A rhythm
+    /// that follows the meter is in no time signature of its own, so it
+    /// is never the one picked.
     pub fn for_time(time: TimeSignature, like: Option<&Rhythm>) -> &'static Rhythm {
-        let in_time = |rhythm: &&'static Rhythm| rhythm.time == time;
+        let in_time = |rhythm: &&'static Rhythm| rhythm.time == time && !rhythm.follows_the_meter;
         let same_kind =
             |rhythm: &&'static Rhythm| like.is_some_and(|like| like.genre == rhythm.genre);
         RHYTHMS
@@ -179,7 +253,9 @@ impl Rhythm {
             return None;
         }
         let grouped = |rhythm: &&'static Rhythm| {
-            rhythm.time.beats == time.beats && rhythm.time.unit == time.unit
+            rhythm.time.beats == time.beats
+                && rhythm.time.unit == time.unit
+                && !rhythm.follows_the_meter
         };
         let felt = time.felt_groups();
         RHYTHMS
@@ -224,6 +300,7 @@ impl Rhythm {
             fill: "",
             about: "A plain beat on the beats of the bar.",
             swing: 0,
+            follows_the_meter: false,
         }));
         made.push(beat);
         beat
@@ -293,6 +370,7 @@ const fn rhythm(
         fill,
         about,
         swing: 0,
+        follows_the_meter: false,
     }
 }
 
@@ -303,6 +381,13 @@ impl Rhythm {
 
     const fn swung(self, swing: u8) -> Rhythm {
         Rhythm { swing, ..self }
+    }
+
+    const fn following_the_meter(self) -> Rhythm {
+        Rhythm {
+            follows_the_meter: true,
+            ..self
+        }
     }
 }
 
@@ -1664,6 +1749,17 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Snare roll",
         "The military snare: a roll into every other beat.",
     ),
+    rhythm(
+        "Orchestra",
+        Classical,
+        100.0,
+        &[(Kick, "X... .... o... ....")],
+        "",
+        "The bass drum of an orchestra on the first beat of every bar, and softly on each \
+         other beat the bar is felt in, whatever the bar's meter: in 2/4 and 3/4 once a bar, \
+         in 9/8 on 1, 4 and 7. It follows music whose meter changes from bar to bar.",
+    )
+    .following_the_meter(),
 ];
 
 /// One-bar fills, for the end of a section.
@@ -1895,6 +1991,48 @@ mod tests {
             .map(|note| note.start)
             .collect();
         assert_eq!(kick, [0, 10, 22, 32, 42]);
+    }
+
+    #[test]
+    fn a_rhythm_that_follows_the_meter_plays_each_bar_in_its_own() {
+        let orchestra = named("Orchestra");
+        assert!(orchestra.follows_the_meter);
+        let hits = |time: TimeSignature| -> Vec<(usize, u8)> {
+            orchestra
+                .notes_in(Kick, time, time.steps_per_bar())
+                .iter()
+                .map(|note| (note.start, note.velocity))
+                .collect()
+        };
+        // In its own 4/4, its line: loud on 1, soft on 3.
+        assert_eq!(hits(TimeSignature::COMMON), [(0, 120), (8, 56)]);
+        assert_eq!(
+            orchestra.notes_in(Kick, TimeSignature::COMMON, 32),
+            orchestra.notes(Kick, 16, 32)
+        );
+        // 2/4 and 3/4 are felt in one, 9/8 in three, 5/8 as 2+3, 7/8 as
+        // 2+2+3, 3+2+2/8 with its long beat first.
+        assert_eq!(hits(TimeSignature::new(2, 4)), [(0, 120)]);
+        assert_eq!(hits(THREE_FOUR), [(0, 120)]);
+        assert_eq!(
+            hits(TimeSignature::new(9, 8)),
+            [(0, 120), (6, 56), (12, 56)]
+        );
+        assert_eq!(hits(TimeSignature::new(5, 8)), [(0, 120), (4, 56)]);
+        assert_eq!(hits(TimeSignature::new(7, 8)), [(0, 120), (4, 56), (8, 56)]);
+        let kalamatianos = TimeSignature::of_groups(&[3, 2, 2], 8);
+        assert_eq!(hits(kalamatianos), [(0, 120), (6, 56), (10, 56)]);
+        // Bar after bar, each in its own place.
+        let starts: Vec<usize> = orchestra
+            .notes_in(Kick, TimeSignature::new(5, 8), 30)
+            .iter()
+            .map(|note| note.start)
+            .collect();
+        assert_eq!(starts, [0, 4, 10, 14, 20, 24]);
+        // It has no time signature of its own to put a song in.
+        for time in TimeSignature::ALL {
+            assert_ne!(Rhythm::for_time(time, Some(orchestra)).name, "Orchestra");
+        }
     }
 
     #[test]

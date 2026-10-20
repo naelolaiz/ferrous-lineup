@@ -544,7 +544,12 @@ fn preset_label(
     ui.push_id(identity, |ui| {
         let response = ui
             .horizontal_wrapped(|ui| {
-                let response = ui.selectable_label(selected, label(preset.name(), preset.time()));
+                let name = if preset.follows_the_song() {
+                    format!("{}  (any meter)", preset.name())
+                } else {
+                    label(preset.name(), preset.time())
+                };
+                let response = ui.selectable_label(selected, name);
                 if view.purpose != LibraryPurpose::Progression {
                     ui.weak(if preset.has_progression() {
                         "+ chords"
@@ -596,6 +601,7 @@ fn preset_label(
                         ui,
                         &mut draft,
                         preset.has_progression(),
+                        preset.follows_the_song(),
                         Some(view.now),
                         view.locked,
                     );
@@ -655,16 +661,18 @@ fn preset_label(
 
 /// Shared option editor for applying a preset and editing the saved defaults.
 pub fn style_parts_checkboxes(ui: &mut Ui, parts: &mut StyleParts) {
-    style_parts_editor(ui, parts, true, None, "");
+    style_parts_editor(ui, parts, true, false, None, "");
 }
 
 /// The options for applying a preset. With `now`, each says where that
 /// part of the song comes from now, which it would replace. The
-/// `locked` channels, if any, are named as kept.
+/// `locked` channels, if any, are named as kept. A preset that `follows`
+/// the song keeps its time signatures and tempo.
 fn style_parts_editor(
     ui: &mut Ui,
     parts: &mut StyleParts,
     has_progression: bool,
+    follows: bool,
     now: Option<&[String; 6]>,
     locked: &str,
 ) {
@@ -677,7 +685,7 @@ fn style_parts_editor(
     if !locked.is_empty() {
         ui.weak(format!("🔒 Kept: {locked}"));
     }
-    copy_parts_ui(ui, parts, has_progression, now);
+    copy_parts_ui(ui, parts, has_progression, follows, now);
 }
 
 /// A part's option, and beside it where that part comes from now, if
@@ -717,6 +725,7 @@ fn copy_parts_ui(
     ui: &mut Ui,
     parts: &mut StyleParts,
     has_progression: bool,
+    follows: bool,
     now: Option<&[String; 6]>,
 ) {
     let (label, hint) = if parts.matching_style {
@@ -769,17 +778,25 @@ fn copy_parts_ui(
     }
     ui.add_space(2.0);
     ui.strong("Timing");
-    with_source(ui, now, SongPart::TimeSignature, |ui| {
-        ui.checkbox(&mut parts.time_signature, "Time signature")
-            .on_hover_text(
-                "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
-            );
-    });
-    with_source(ui, now, SongPart::Tempo, |ui| {
-        ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
-            "Use the usual tempo when the meter stays the same. Changing meter keeps each bar's duration.",
+    if follows {
+        // The ticks stay as they are for the other presets.
+        ui.weak(
+            "Keeps the song’s time signatures and tempo: this preset plays every bar in \
+             that bar’s meter.",
         );
-    });
+    } else {
+        with_source(ui, now, SongPart::TimeSignature, |ui| {
+            ui.checkbox(&mut parts.time_signature, "Time signature")
+                .on_hover_text(
+                    "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
+                );
+        });
+        with_source(ui, now, SongPart::Tempo, |ui| {
+            ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
+                "Use the usual tempo when the meter stays the same. Changing meter keeps each bar's duration.",
+            );
+        });
+    }
     with_source(ui, now, SongPart::Swing, |ui| {
         ui.checkbox(&mut parts.swing, "Swing")
             .on_hover_text("Use the preset’s swing amount.");
@@ -1025,14 +1042,20 @@ fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
     } else {
         format!(" · drums: {}", style.rhythm)
     };
+    let timing = if style.follows_the_song() {
+        format!(
+            "Any meter, at the song's tempo (on its own: {}, {} BPM)",
+            style.time, style.tempo
+        )
+    } else {
+        format!("{} · {} BPM", style.time, style.tempo)
+    };
     format!(
-        "{}\n\nIn {}: {}\n{}\n\n{} · {} BPM · {} bars{rhythm}",
+        "{}\n\nIn {}: {}\n{}\n\n{timing} · {} bars{rhythm}",
         style.about,
         scale.name(),
         style.chord_names(tonic),
         numerals,
-        style.time,
-        style.tempo,
         style.bars(),
     )
 }

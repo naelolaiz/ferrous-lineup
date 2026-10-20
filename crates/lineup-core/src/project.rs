@@ -24,8 +24,10 @@ use crate::{DRUM_CHANNEL, Note, Tempo, tools};
 pub const MAX_CHANNELS: usize = 32;
 
 /// The most patterns a project can have. The audio thread reserves room
-/// for this many too.
-pub const MAX_PATTERNS: usize = 99;
+/// for this many too. A band playing a piece whose meter changes nearly
+/// every bar needs a pattern for each player in each run of bars in one
+/// meter, on top of the piece's own.
+pub const MAX_PATTERNS: usize = 999;
 
 /// How long a new pattern is, in steps: one bar.
 const NEW_PATTERN_LENGTH: usize = 16;

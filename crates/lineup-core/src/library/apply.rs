@@ -82,6 +82,17 @@ impl StyleParts {
         self.progression = false;
         self.for_preset()
     }
+
+    /// A style that follows the song (see [`Style::follows_the_song`])
+    /// keeps the song's time signatures and tempo: these parts are left
+    /// out when `follows` is true.
+    pub fn following(mut self, follows: bool) -> Self {
+        if follows {
+            self.time_signature = false;
+            self.tempo = false;
+        }
+        self
+    }
 }
 
 /// How loud new channels start, so the melody stands out and the chords
@@ -300,7 +311,7 @@ pub fn write_rhythm(project: &mut Project, pattern: usize, rhythm: &Rhythm) -> b
         };
         rows.push((drum, channel));
     }
-    let bar = project.pattern_time(pattern).steps_per_bar();
+    let time = project.pattern_time(pattern);
     let old = drum_channels(project);
     let Some(mut target) = project.style_pattern(pattern) else {
         return false;
@@ -310,7 +321,7 @@ pub fn write_rhythm(project: &mut Project, pattern: usize, rhythm: &Rhythm) -> b
         wrote |= target.set_notes(channel, []);
     }
     for (drum, channel) in rows {
-        wrote |= target.set_notes(channel, rhythm.notes(drum, bar, length));
+        wrote |= target.set_notes(channel, rhythm.notes_in(drum, time, length));
     }
     wrote
 }
@@ -518,6 +529,7 @@ pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
 }
 
 pub fn use_rhythm_parts(project: &mut Project, rhythm: &Rhythm, parts: StyleParts) -> RhythmChange {
+    let parts = parts.following(rhythm.follows_the_meter);
     let (comping, bass) = if parts.matching_style {
         feel(rhythm)
     } else {
@@ -543,7 +555,7 @@ pub fn use_style(project: &mut Project, style: &Style) -> RhythmChange {
 }
 
 pub fn use_style_parts(project: &mut Project, style: &Style, parts: StyleParts) -> RhythmChange {
-    let parts = parts.for_preset();
+    let parts = parts.for_preset().following(style.follows_the_song());
     let (comping, bass) = if parts.matching_style {
         (style.comping, style.bass)
     } else {
