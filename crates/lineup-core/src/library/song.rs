@@ -100,6 +100,42 @@ pub struct Part {
     /// work here too. When there is one, the song's rhythm is not played
     /// in this part. A part whose meter changes bar by bar has none.
     pub drums: &'static [(Drum, &'static str)],
+    /// The other instruments' parts, written out in full, each on a
+    /// channel of its own (see [`Line`]): a choir humming under the
+    /// soloists, a second voice singing a third below the first, a
+    /// guitar, a double bass. A part with any is written out, as one with
+    /// a left hand is: its chords are not accompanied. A part whose
+    /// meter changes bar by bar has none.
+    pub lines: &'static [Line],
+}
+
+/// One instrument's part, written out in full beside the tune: the name
+/// of the channel it plays on, the General MIDI program that plays it,
+/// and its notes, in the notation of melodies (see
+/// [`chart::parse_melody`]), where `&` starts another voice on the same
+/// channel, as the four voices of a choir. Lines with the same name, in
+/// any part of the song, play on the same channel, with the program of
+/// the first.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Line {
+    pub name: &'static str,
+    pub program: u8,
+    pub notes: &'static str,
+}
+
+/// A line called `name`, played by `program`.
+pub const fn line(name: &'static str, program: u8, notes: &'static str) -> Line {
+    Line {
+        name,
+        program,
+        notes,
+    }
+}
+
+impl Line {
+    pub fn melody(&self) -> Melody {
+        chart::parse_melody(self.notes).unwrap_or_default()
+    }
 }
 
 /// How loud a part is played, as a score marks it, from pianissimo (pp,
@@ -281,6 +317,7 @@ impl Part {
             instruments: &[],
             dynamic: Dynamic::MezzoForte,
             drums: &[],
+            lines: &[],
         }
     }
 
@@ -347,6 +384,18 @@ impl Part {
         Part { drums, ..self }
     }
 
+    /// The same part with other instruments' parts written out (see
+    /// [`Part::lines`]).
+    pub const fn with_lines(self, lines: &'static [Line]) -> Part {
+        Part { lines, ..self }
+    }
+
+    /// Whether its accompaniment is written out, in a left hand or in
+    /// lines of other instruments, so its chords are not accompanied.
+    pub fn written_out(&self) -> bool {
+        !self.left.is_empty() || !self.lines.is_empty()
+    }
+
     pub fn melody(&self) -> Melody {
         chart::parse_melody(self.melody).unwrap_or_default()
     }
@@ -370,7 +419,8 @@ impl Part {
     }
 
     /// How many steps the part lasts: the longest of its melody, its
-    /// chords, its written-out accompaniment and its drums.
+    /// chords, its written-out accompaniment, its other instruments'
+    /// lines and its drums.
     pub fn length(&self, bar: usize) -> usize {
         let chords = if self.chords.trim().is_empty() {
             0
@@ -384,11 +434,18 @@ impl Part {
             .map(|melody| melody.length)
             .max()
             .unwrap_or(0);
+        let lines = self
+            .lines
+            .iter()
+            .map(|line| line.melody().length)
+            .max()
+            .unwrap_or(0);
         self.melody()
             .length
             .max(self.left().length)
             .max(chords)
             .max(drums)
+            .max(lines)
     }
 }
 
@@ -514,6 +571,7 @@ impl Song {
                 meters: &[],
                 tempo: if index == 0 { part.tempo } else { &[] },
                 drums: &[],
+                lines: &[],
                 ..*part
             })
             .collect()
@@ -1066,6 +1124,62 @@ mod tests {
     use std::collections::HashSet;
 
     #[test]
+    fn written_out_lines_play_on_channels_of_their_own() {
+        const PARTS: &[Part] = &[
+            Part::new("Verse", "A4:12 | E4:12", "i | V").with_lines(&[
+                line("Voice 2", gm::VOICE_OOHS, "C4:12 | G#3:12"),
+                line("Choir", gm::CHOIR_AAHS, "E4:12 | B3:12 & A2:12 | E2:12"),
+            ]),
+            Part::new("Coda", "A4:12", "i").with_lines(&[line(
+                "Choir",
+                gm::VOICE_OOHS,
+                "A2+E3:12",
+            )]),
+        ];
+        const SONG: Song = Song {
+            name: "Lines",
+            origin: "",
+            feel: "",
+            genre: Genre::Folklore,
+            tonic: A,
+            mode: NaturalMinor,
+            time: THREE_FOUR,
+            tempo: 72.0,
+            comping: Comping::Waltz,
+            bass: Bass::None,
+            rhythm: "",
+            band: Band::new(gm::VOICE_OOHS, gm::HARPSICHORD, gm::ACOUSTIC_BASS),
+            style: "",
+            parts: PARTS,
+            form: &["Verse", "Coda"],
+            drums_from: 0,
+            about: "",
+        };
+        let project = super::super::demo::song_demo(&SONG);
+        let channel = |name: &str| {
+            let index = project.channels().iter().position(|c| c.name == name);
+            index.unwrap_or_else(|| panic!("no {name} channel"))
+        };
+        let (voice, choir, keys) = (channel("Voice 2"), channel("Choir"), channel("Keys"));
+        // A line's channel plays the program of its first line.
+        assert_eq!(project.channels()[voice].program, Some(gm::VOICE_OOHS));
+        assert_eq!(project.channels()[choir].program, Some(gm::CHOIR_AAHS));
+        let pattern = |name: &str| project.patterns().iter().find(|p| p.name == name).unwrap();
+        let verse = pattern("Verse");
+        assert_eq!(verse.notes(voice).len(), 2);
+        let mut pitches: Vec<_> = verse.notes(choir).iter().map(|n| n.pitch).collect();
+        pitches.sort();
+        assert_eq!(pitches.len(), 4);
+        // Written out: the chart is not accompanied on the Keys.
+        assert!(verse.notes(keys).is_empty());
+        let coda = pattern("Coda");
+        assert_eq!(coda.notes(choir).len(), 2);
+        assert!(coda.notes(voice).is_empty());
+        // A song whose last part is written out ends where its score ends.
+        assert_eq!(project.song_length(), 36);
+    }
+
+    #[test]
     fn every_bar_of_every_part_adds_up() {
         for song in SONGS {
             for whole in song.parts {
@@ -1074,6 +1188,7 @@ mod tests {
                     assert_eq!(bars, whole.meters.len(), "{}: a meter per bar", song.name);
                     assert_eq!(whole.voices, [(1, 0)], "{}: one voice", song.name);
                     assert!(whole.drums.is_empty(), "{}: drums written out", song.name);
+                    assert!(whole.lines.is_empty(), "{}: lines written out", song.name);
                 }
             }
             for part in song.parts.iter().flat_map(|part| song.part_runs(part)) {
@@ -1107,6 +1222,14 @@ mod tests {
                 }
                 if !part.left.is_empty() {
                     assert_eq!(part.left().length, length, "{what}: left hand");
+                }
+                for line in part.lines {
+                    let notes = chart::parse_melody(line.notes)
+                        .unwrap_or_else(|| panic!("{what}: cannot read the {} line", line.name));
+                    for (index, length) in notes.bars.iter().enumerate() {
+                        assert_eq!(*length, bar, "{what}: {} bar {}", line.name, index + 1);
+                    }
+                    assert_eq!(notes.length, length, "{what}: {}", line.name);
                 }
                 for (drum, line) in part.drums {
                     let drums = drum_line(line)
