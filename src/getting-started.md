@@ -114,6 +114,8 @@ hear the song played that way. **File > Demos** opens whole songs: try *Für Eli
 *Frère Jacques*, press nothing, and watch the harmony keys follow the
 chords.
 
+[A tour of the app](tour.md) goes through every window, menu and key.
+
 To open a project straight away, give its file to the program:
 
 ```sh
