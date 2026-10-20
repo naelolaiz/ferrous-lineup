@@ -19,7 +19,7 @@
 //! ```
 //!
 //! Each bar holds what would be typed in a bar of the chord sheet (see
-//! [`read_bar`]): harmonies spread over the beats, "/" for a beat that
+//! [`read_typed_bar`]): harmonies spread over the beats, "/" for a beat that
 //! goes on with the harmony before, and "%" (or nothing) for a bar that
 //! goes on with the bar before. A harmony keeps its marks: "C." is a
 //! shot, "C.." a hold, "C..." a rest and "^C" a push. A line can hold any number of bars;
@@ -34,7 +34,7 @@
 use std::fmt;
 use std::ops::Range;
 
-use super::{ChordMarker, read_bar, write_bar};
+use super::{ChordMarker, read_typed_bar, write_bar};
 use crate::band::band_styles;
 use crate::harmony::{Scale, ScaleKind};
 use crate::key_map::KeyMarker;
@@ -356,7 +356,7 @@ pub fn paste(
                     .filter(|bar| bar.end() <= MAX_SONG_STEPS)
                     .ok_or_else(|| error(*line, "the song cannot be this long."))?;
                 let key = text_key.unwrap_or_else(|| keys.key_at(bar.start));
-                let written = read_bar(text, &bar, key).map_err(|message| {
+                let written = read_typed_bar(text, &bar, key).map_err(|message| {
                     error(*line, format!("bar {}: {message}", bar.number + 1))
                 })?;
                 markers.extend(written);
@@ -460,7 +460,7 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
     let mut markers = Vec::new();
     for (start, text, line) in bars {
         let bar = meter.bar_at(start);
-        let written = read_bar(text, &bar, keys.key_at(start))
+        let written = read_typed_bar(text, &bar, keys.key_at(start))
             .map_err(|message| error(line, format!("bar {}: {message}", bar.number + 1)))?;
         markers.extend(written);
     }
