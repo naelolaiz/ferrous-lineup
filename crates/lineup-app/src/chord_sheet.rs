@@ -2331,13 +2331,14 @@ mod tests {
             assert!(actions.is_empty(), "a normal click must only open options");
             let (mut output, _) = screen.frame(vec![]);
             let before = screen.library.parts;
-            // Tempo stays ticked: plain accents bring no chord progression,
+            // Tempo gets ticked: plain accents bring no chord progression,
             // so without it there would be nothing to apply.
             for label in [
                 "Playing patterns",
                 "Voices / instruments",
                 "Time signature",
                 "Chord progression",
+                "Tempo",
                 "Swing",
                 "Plain accents",
             ] {
@@ -2431,11 +2432,11 @@ mod tests {
                 let (output, _) = screen.frame(vec![]);
                 screen.click(&output, "Apply");
                 assert_eq!(screen.picked, Some(expected));
-                assert!(!screen.library.parts.tempo);
+                assert!(screen.library.parts.tempo);
                 let (output, _) = screen.frame(vec![]);
                 screen.click_with_modifiers(&output, name, Modifiers::CTRL);
                 assert_eq!(screen.picked, Some(expected));
-                assert!(!screen.library.parts.tempo);
+                assert!(screen.library.parts.tempo);
                 let (output, _) = screen.frame(vec![]);
                 assert!(!has_text(&output, "Apply"));
             }
