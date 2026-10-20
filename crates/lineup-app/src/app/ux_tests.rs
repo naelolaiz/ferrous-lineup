@@ -56,6 +56,21 @@ impl Screen {
         output
     }
 
+    /// Starts the app again, with what egui keeps of its state between
+    /// runs (saved and read back as eframe does), as when it is closed
+    /// and opened.
+    fn restart(&mut self) {
+        let saved = self.ctx.memory(|memory| ron::to_string(memory).unwrap());
+        self.ctx
+            .memory_mut(|memory| *memory = ron::from_str(&saved).unwrap());
+        // The styles are not saved: the app sets them as it starts.
+        theme::apply(&self.ctx);
+        self.ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        self.app = LineupApp::with_audio(&self.ctx, None, Audio::Unavailable("test".into()));
+        self.app.harmony_keys.open = false;
+        self.app.playlist.browser_open = false;
+    }
+
     fn click(&mut self, label: &str) {
         self.draw(vec![]);
         let output = self.draw(vec![]);
@@ -256,9 +271,7 @@ fn the_rack_fits_its_rows_again_when_the_app_starts() {
     assert!(wide.width() > fitted.width() + 100.0);
     // Started again on the short pattern, it fits its rows, not the
     // size remembered.
-    screen.app = LineupApp::with_audio(&screen.ctx, None, Audio::Unavailable("test".into()));
-    screen.app.harmony_keys.open = false;
-    screen.app.playlist.browser_open = false;
+    screen.restart();
     let restarted = rack(&mut screen);
     assert!(
         (restarted.width() - fitted.width()).abs() < 2.0,
@@ -274,6 +287,125 @@ fn the_rack_fits_its_rows_again_when_the_app_starts() {
     screen.app.rack_open = true;
     let reopened = rack(&mut screen);
     assert!((reopened.width() - wide.width()).abs() < 2.0);
+}
+
+/// Where the window `id` was in the last frame drawn, two frames after
+/// whatever changed.
+fn window_rect(screen: &mut Screen, id: egui::Id) -> Rect {
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    screen.ctx.memory(|memory| memory.area_rect(id)).unwrap()
+}
+
+/// Has egui remember the window `id` as `size` big, as if it had been
+/// dragged that big while open.
+fn remember_size(screen: &mut Screen, id: egui::Id, size: egui::Vec2) {
+    let mut output = screen.ctx.run_pass(
+        RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen.size)),
+            ..Default::default()
+        },
+        |ctx| {
+            egui::Window::new("")
+                .id(id)
+                .fixed_size(size)
+                .show(ctx, |_| {});
+        },
+    );
+    output.textures_delta.clear();
+    // A frame without it, so it opens again in the next.
+    screen.draw(vec![]);
+}
+
+#[test]
+fn the_mixer_is_as_big_as_its_channels() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    let id = egui::Id::unique("mixer");
+    let mixer = window_rect(&mut screen, id);
+    let output = screen.draw(vec![]);
+    let solo = text_rect(&output, "Solo").unwrap();
+    let last = text_rect(&output, "Lineup Osc").unwrap();
+    assert!(mixer.contains_rect(solo) && mixer.contains_rect(last));
+    // Only a margin past its last column and its last channel.
+    assert!(
+        mixer.right() - solo.right() < 30.0,
+        "{mixer:?}, Solo at {solo:?}"
+    );
+    assert!(
+        mixer.bottom() - last.bottom() < 30.0,
+        "{mixer:?}, last channel at {last:?}"
+    );
+    // Dragged bigger, closed and opened again, it fits them again.
+    screen.app.mixer_open = false;
+    screen.draw(vec![]);
+    remember_size(&mut screen, id, vec2(1300.0, 900.0));
+    screen.app.mixer_open = true;
+    let again = window_rect(&mut screen, id);
+    assert!(
+        (again.size() - mixer.size()).length() < 2.0,
+        "{again:?}, {mixer:?} at first"
+    );
+}
+
+#[test]
+fn windows_open_at_their_own_size_not_one_remembered_from_before() {
+    type Open = fn(&mut LineupApp, bool);
+    let windows: [(&str, egui::Id, Open); 7] = [
+        ("mixer", egui::Id::unique("mixer"), |app, open| {
+            app.mixer_open = open;
+        }),
+        (
+            "keyboard shortcuts",
+            egui::Id::unique("keyboard-shortcuts"),
+            |app, open| app.shortcuts_open = open,
+        ),
+        (
+            "ear training",
+            crate::ear_training::window_id(),
+            |app, open| app.ear_training.open = open,
+        ),
+        (
+            "chord sheet",
+            crate::chord_sheet::window_id(),
+            |app, open| app.chord_sheet.open = open,
+        ),
+        ("lead sheet", crate::lead_sheet::window_id(), |app, open| {
+            app.lead_sheet.open = open
+        }),
+        ("piano roll", PianoRoll::id(), |app, open| {
+            app.piano_roll.open = open;
+        }),
+        (
+            "settings",
+            egui::Id::unique("application-settings"),
+            |app, open| app.settings_open = open,
+        ),
+    ];
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = false;
+    for (name, id, open) in windows {
+        open(&mut screen.app, true);
+        let first = window_rect(&mut screen, id);
+        open(&mut screen.app, false);
+        screen.draw(vec![]);
+        // egui remembers the size it was dragged to, also when the app
+        // starts again.
+        remember_size(&mut screen, id, vec2(1300.0, 900.0));
+        screen.restart();
+        screen.app.rack_open = false;
+        screen.app.chord_sheet.open = false;
+        open(&mut screen.app, true);
+        let again = window_rect(&mut screen, id);
+        assert!(
+            (again.size() - first.size()).length() < 2.0,
+            "the {name}: {again:?} after starting again, {first:?} at first"
+        );
+        open(&mut screen.app, false);
+        screen.draw(vec![]);
+    }
 }
 
 #[test]

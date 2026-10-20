@@ -34,7 +34,7 @@ const ZOOMS: [f32; 7] = [0.5, 0.67, 0.8, 1.0, 1.25, 1.5, 2.0];
 /// The room between two pages.
 const PAGE_GAP: f32 = 16.0;
 
-fn window_id() -> egui::Id {
+pub(crate) fn window_id() -> egui::Id {
     egui::Id::unique("lead-sheet-window")
 }
 
@@ -131,17 +131,24 @@ impl LeadSheetWindow {
         }
         self.front.keep(ctx, window_id());
         let mut open = true;
-        egui::Window::new("Lead sheet")
+        let window = egui::Window::new("Lead sheet")
             .id(window_id())
             .open(&mut open)
             .default_pos([240.0, 90.0])
-            .default_size([780.0, 760.0])
             .min_width(420.0)
             .constrain_to(area)
-            .resizable(true)
-            .show(ctx, |ui| {
-                self.contents(ui, project, title, file_name, playing)
-            });
+            .resizable(true);
+        let size = vec2(780.0, 760.0);
+        crate::widgets::open_at(
+            ctx,
+            window,
+            window_id(),
+            size,
+            crate::widgets::Opening::FirstTime,
+        )
+        .show(ctx, |ui| {
+            self.contents(ui, project, title, file_name, playing)
+        });
         self.open = open;
         if self.settings != self.saved {
             self.saved = self.settings.clone();

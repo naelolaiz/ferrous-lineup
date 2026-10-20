@@ -6,6 +6,7 @@ use lineup_core::{Channel, ChannelKind, Mixer, SampleSource, general_midi};
 
 use super::LineupApp;
 use crate::theme;
+use crate::widgets::{self, Opening};
 
 /// How far channel names sit in from their section's heading.
 const INDENT: f32 = 10.0;
@@ -19,107 +20,108 @@ impl LineupApp {
         let mut mix = self.project.mixer;
         let mut levels = self.project.channels().to_vec();
         let locked = self.project.locked();
-        egui::Window::new("Mixer")
-            .id(egui::Id::unique("mixer"))
+        let id = egui::Id::unique("mixer");
+        let window = egui::Window::new("Mixer")
+            .id(id)
             .open(&mut open)
-            .default_size([650.0, 560.0])
-            .constrain_to(area)
-            .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.strong("Master");
-                    percent_slider(ui, &mut mix.master);
-                    if ui
-                        .button("Reset mix")
-                        .on_hover_text(
-                            "Reset master, reverb, solo, levels and mutes (the band's mutes stay); \
+            .constrain_to(area);
+        // As wide as its columns and as tall as its channels, up to the
+        // height of the playlist; the channels scroll past that.
+        let size = egui::vec2(320.0, area.height());
+        widgets::open_at(ctx, window, id, size, Opening::EveryTime).show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.strong("Master");
+                percent_slider(ui, &mut mix.master);
+                if ui
+                    .button("Reset mix")
+                    .on_hover_text(
+                        "Reset master, reverb, solo, levels and mutes (the band's mutes stay); \
                              Undo restores them",
-                        )
-                        .clicked()
-                    {
-                        let mut reset = self.project.clone();
-                        reset.reset_mix();
-                        mix = reset.mixer;
-                        levels = reset.channels().to_vec();
-                    }
-                });
-                ui.separator();
-                ui.horizontal(|ui| {
-                    ui.checkbox(&mut mix.reverb.enabled, "Reverb");
-                    ui.weak("Stereo room · SoundFont + Lineup Osc + samples");
-                });
-                ui.add_enabled_ui(mix.reverb.enabled, |ui| {
-                    egui::Grid::new("reverb-controls")
-                        .num_columns(4)
-                        .show(ui, |ui| {
-                            ui.label("Wet / dry");
-                            percent_slider(ui, &mut mix.reverb.mix);
-                            ui.label("Decay");
-                            ui.add(
-                                egui::Slider::new(&mut mix.reverb.decay, 0.1..=10.0).suffix(" s"),
-                            );
-                            ui.end_row();
-                            ui.label("Damping");
-                            percent_slider(ui, &mut mix.reverb.damping);
-                            ui.label("Pre-delay");
-                            ui.add(
-                                egui::Slider::new(&mut mix.reverb.pre_delay_ms, 0.0..=200.0)
-                                    .suffix(" ms"),
-                            );
-                            ui.end_row();
-                        });
-                });
-                ui.separator();
-                egui::ScrollArea::both().auto_shrink(false).show(ui, |ui| {
-                    egui::Grid::new("mixer-channels")
-                        .striped(true)
-                        .min_col_width(45.0)
-                        .show(ui, |ui| {
-                            ui.strong("Channel");
-                            ui.strong("Instrument");
-                            ui.strong("Volume");
-                            ui.strong("Mute");
-                            ui.strong("Solo");
-                            ui.end_row();
-                            for (section, indices) in score_order(&levels) {
-                                ui.label(egui::RichText::new(section.name()).color(theme::ACCENT));
-                                ui.end_row();
-                                for index in indices {
-                                    let channel = &mut levels[index];
-                                    ui.horizontal(|ui| {
-                                        ui.add_space(INDENT);
-                                        ui.label(&channel.name);
-                                        if locked.contains(index) {
-                                            ui.label("🔒").on_hover_text(
-                                                "Locked: styles keep its notes and sound",
-                                            );
-                                        }
-                                    });
-                                    ui.label(instrument(channel));
-                                    percent_slider(ui, &mut channel.volume);
-                                    ui.checkbox(&mut channel.muted, "")
-                                        .on_hover_text("Mute this channel");
-                                    if ui
-                                        .selectable_label(mix.solo == Some(index), "S")
-                                        .on_hover_text(
-                                            "Hear only this channel; click again to clear solo",
-                                        )
-                                        .clicked()
-                                    {
-                                        mix.solo = if mix.solo == Some(index) {
-                                            None
-                                        } else {
-                                            Some(index)
-                                        };
-                                    }
-                                    ui.end_row();
-                                }
-                            }
-                        });
-                    if levels.is_empty() {
-                        ui.weak("Add an instrument in the channel rack to mix it here.");
-                    }
-                });
+                    )
+                    .clicked()
+                {
+                    let mut reset = self.project.clone();
+                    reset.reset_mix();
+                    mix = reset.mixer;
+                    levels = reset.channels().to_vec();
+                }
             });
+            ui.separator();
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut mix.reverb.enabled, "Reverb");
+                ui.weak("Stereo room · SoundFont + Lineup Osc + samples");
+            });
+            ui.add_enabled_ui(mix.reverb.enabled, |ui| {
+                egui::Grid::new("reverb-controls")
+                    .num_columns(4)
+                    .show(ui, |ui| {
+                        ui.label("Wet / dry");
+                        percent_slider(ui, &mut mix.reverb.mix);
+                        ui.label("Decay");
+                        ui.add(egui::Slider::new(&mut mix.reverb.decay, 0.1..=10.0).suffix(" s"));
+                        ui.end_row();
+                        ui.label("Damping");
+                        percent_slider(ui, &mut mix.reverb.damping);
+                        ui.label("Pre-delay");
+                        ui.add(
+                            egui::Slider::new(&mut mix.reverb.pre_delay_ms, 0.0..=200.0)
+                                .suffix(" ms"),
+                        );
+                        ui.end_row();
+                    });
+            });
+            ui.separator();
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                egui::Grid::new("mixer-channels")
+                    .striped(true)
+                    .min_col_width(45.0)
+                    .show(ui, |ui| {
+                        ui.strong("Channel");
+                        ui.strong("Instrument");
+                        ui.strong("Volume");
+                        ui.strong("Mute");
+                        ui.strong("Solo");
+                        ui.end_row();
+                        for (section, indices) in score_order(&levels) {
+                            ui.label(egui::RichText::new(section.name()).color(theme::ACCENT));
+                            ui.end_row();
+                            for index in indices {
+                                let channel = &mut levels[index];
+                                ui.horizontal(|ui| {
+                                    ui.add_space(INDENT);
+                                    ui.label(&channel.name);
+                                    if locked.contains(index) {
+                                        ui.label("🔒").on_hover_text(
+                                            "Locked: styles keep its notes and sound",
+                                        );
+                                    }
+                                });
+                                ui.label(instrument(channel));
+                                percent_slider(ui, &mut channel.volume);
+                                ui.checkbox(&mut channel.muted, "")
+                                    .on_hover_text("Mute this channel");
+                                if ui
+                                    .selectable_label(mix.solo == Some(index), "S")
+                                    .on_hover_text(
+                                        "Hear only this channel; click again to clear solo",
+                                    )
+                                    .clicked()
+                                {
+                                    mix.solo = if mix.solo == Some(index) {
+                                        None
+                                    } else {
+                                        Some(index)
+                                    };
+                                }
+                                ui.end_row();
+                            }
+                        }
+                    });
+                if levels.is_empty() {
+                    ui.weak("Add an instrument in the channel rack to mix it here.");
+                }
+            });
+        });
         self.mixer_open = open;
         let master_only = levels == self.project.channels()
             && mix

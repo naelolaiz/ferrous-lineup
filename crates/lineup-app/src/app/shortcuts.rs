@@ -9,6 +9,7 @@ use eframe::egui::{self, Key, KeyboardShortcut, Modifiers, Rect};
 
 use super::{LineupApp, edit, files, view};
 use crate::piano_roll;
+use crate::widgets::{self, Opening};
 
 /// The keys of one line of the list.
 #[derive(Clone)]
@@ -255,38 +256,39 @@ impl LineupApp {
             return;
         }
         let mut open = self.shortcuts_open;
-        egui::Window::new("Keyboard shortcuts")
-            .id(egui::Id::unique("keyboard-shortcuts"))
+        let id = egui::Id::unique("keyboard-shortcuts");
+        let window = egui::Window::new("Keyboard shortcuts")
+            .id(id)
             .open(&mut open)
-            .default_size([460.0, 560.0])
-            .constrain_to(area)
-            .show(ctx, |ui| {
-                egui::ScrollArea::vertical()
-                    .auto_shrink(false)
-                    .show(ui, |ui| {
-                        for section in sections() {
-                            ui.add_space(4.0);
-                            ui.strong(section.title);
-                            if !section.note.is_empty() {
-                                ui.weak(section.note);
+            .constrain_to(area);
+        // As wide as the list and as tall, up to the height of the
+        // playlist; it scrolls past that.
+        let size = egui::vec2(320.0, area.height());
+        widgets::open_at(ctx, window, id, size, Opening::EveryTime).show(ctx, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                for section in sections() {
+                    ui.add_space(4.0);
+                    ui.strong(section.title);
+                    if !section.note.is_empty() {
+                        ui.weak(section.note);
+                    }
+                    // As wide as the longest keys, so the sections'
+                    // columns line up.
+                    egui::Grid::new(("shortcuts", section.title))
+                        .num_columns(2)
+                        .striped(true)
+                        .min_col_width(180.0)
+                        .show(ui, |ui| {
+                            for (keys, what) in &section.lines {
+                                ui.monospace(keys.text(ctx));
+                                ui.label(*what);
+                                ui.end_row();
                             }
-                            // As wide as the longest keys, so the sections'
-                            // columns line up.
-                            egui::Grid::new(("shortcuts", section.title))
-                                .num_columns(2)
-                                .striped(true)
-                                .min_col_width(180.0)
-                                .show(ui, |ui| {
-                                    for (keys, what) in &section.lines {
-                                        ui.monospace(keys.text(ctx));
-                                        ui.label(*what);
-                                        ui.end_row();
-                                    }
-                                });
-                            ui.add_space(6.0);
-                        }
-                    });
+                        });
+                    ui.add_space(6.0);
+                }
             });
+        });
         self.shortcuts_open = open;
     }
 }

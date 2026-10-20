@@ -473,6 +473,69 @@ pub fn zoom(ui: &egui::Ui) -> f32 {
         .unwrap_or(1.0)
 }
 
+/// When a window opens at a size of its own (see [`open_at`]).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Opening {
+    /// Each time it opens: a window as big as what it shows.
+    EveryTime,
+    /// The first time it opens after the app starts: a window to work
+    /// in, which keeps the size you give it while the app runs.
+    FirstTime,
+}
+
+/// Gives `window`, whose Id is `id`, the size `size` as it opens (see
+/// [`Opening`]).
+///
+/// egui remembers a window's size, in the app's saved state too, and
+/// gives it back when the window opens again. That size was fitted to
+/// what the window showed then, or dragged bigger, so a window could
+/// open far bigger than what it shows now: the mixer across the whole
+/// playlist, with its channels in one corner. A window as big as what it
+/// shows is given its narrowest width and its greatest height: it grows
+/// wider for wider contents, and is only as tall as they are, as long as
+/// nothing in it fills the room it is given (as a scroll area that does
+/// not shrink does).
+///
+/// The pass the window opens in is drawn again, so its first look is
+/// already at the new size. Called only while the window is open.
+pub fn open_at<'a>(
+    ctx: &egui::Context,
+    window: egui::Window<'a>,
+    id: egui::Id,
+    size: egui::Vec2,
+    opening: Opening,
+) -> egui::Window<'a> {
+    // Not saved with the app's state, so it starts out false each time
+    // the app starts.
+    let first = ctx.data_mut(|data| {
+        !std::mem::replace(data.get_temp_mut_or(id.with("has-opened"), false), true)
+    });
+    if opens(ctx, id) && (first || opening == Opening::EveryTime) {
+        ctx.request_discard("a window opens at its own size");
+        window.fixed_size(size)
+    } else {
+        window
+    }
+}
+
+/// Whether the window whose Id is `id` opens now: it was not shown in
+/// the last pass.
+pub fn opens(ctx: &egui::Context, id: egui::Id) -> bool {
+    let layer = egui::LayerId::new(egui::Order::Middle, id);
+    !ctx.memory(|memory| memory.areas().visible_last_frame(&layer))
+}
+
+/// The size of a window whose contents are `contents` big: a window's
+/// size is its outside, with the frame around the contents and the
+/// title bar. It is kept a little smaller than `area`, the room windows
+/// have.
+pub fn window_size(ctx: &egui::Context, contents: egui::Vec2, area: Rect) -> egui::Vec2 {
+    let style = ctx.global_style();
+    let frame = style.spacing.window_margin.sum();
+    let title = style.text_styles[&egui::TextStyle::Heading].size + 2.0 * frame.y;
+    (contents + frame + vec2(0.0, title)).min(area.size() - vec2(40.0, 80.0))
+}
+
 /// Turns off "rubber-banding" for the scroll areas `ui` shows next:
 /// scrolling past the end of the contents, which then springs back.
 ///
