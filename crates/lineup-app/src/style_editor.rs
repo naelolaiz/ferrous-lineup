@@ -270,7 +270,7 @@ impl StyleEditor {
                 });
                 let length = self.draft.style.bars * self.draft.project.time_signature.steps_per_bar();
                 self.draft.project.pattern_mut(0).unwrap().set_length(length);
-                ui.horizontal(|ui| { ui.label("Progression"); ui.text_edit_singleline(&mut self.draft.style.chart).on_hover_text("Roman numerals or chord names; separate bars with | (I | vi | ii7 | V7)"); });
+                ui.horizontal(|ui| { ui.label("Progression"); ui.text_edit_singleline(&mut self.draft.style.chart).on_hover_text("Roman numerals or chord names; separate bars with | (I | vi | ii7 | V7). In a minor key, write numerals from the major scale, as the library does: i bVI bIII bVII."); });
                 ui.horizontal(|ui| { ui.label("Description"); ui.text_edit_singleline(&mut self.draft.style.about); });
                 ui.collapsing("Part assignments", |ui| {
                     egui::ScrollArea::vertical().max_height(110.0).show(ui, |ui| {

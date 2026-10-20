@@ -1,6 +1,7 @@
 //! Application preferences, collected in Edit > Settings.
 
 use eframe::egui::{self, Align, Layout, RichText, vec2};
+use lineup_core::harmony::MinorNumerals;
 use lineup_core::library::apply::StyleParts;
 
 use super::{LineupApp, view};
@@ -13,17 +14,25 @@ use crate::theme;
 enum Page {
     #[default]
     Appearance,
+    Harmony,
     Library,
     Audio,
     Playback,
 }
 
 impl Page {
-    const ALL: [Self; 4] = [Self::Appearance, Self::Library, Self::Audio, Self::Playback];
+    const ALL: [Self; 5] = [
+        Self::Appearance,
+        Self::Harmony,
+        Self::Library,
+        Self::Audio,
+        Self::Playback,
+    ];
 
     fn name(self) -> &'static str {
         match self {
             Self::Appearance => "Appearance",
+            Self::Harmony => "Harmony",
             Self::Library => "Library",
             Self::Audio => "Audio",
             Self::Playback => "Playback",
@@ -35,6 +44,58 @@ impl Page {
 pub(super) struct SettingsView {
     page: Page,
     style_defaults: StyleParts,
+}
+
+fn minor_numerals_id() -> egui::Id {
+    egui::Id::unique("minor-numerals")
+}
+
+/// How Roman numerals count the degrees of a minor key, as chosen in
+/// Settings > Harmony.
+pub(super) fn minor_numerals(ctx: &egui::Context) -> MinorNumerals {
+    ctx.data_mut(|data| data.get_persisted(minor_numerals_id()).unwrap_or_default())
+}
+
+fn minor_numerals_ui(ui: &mut egui::Ui) {
+    card(
+        ui,
+        "Roman numerals in minor keys",
+        "Both ways are correct. They name the same chords and differ only in \
+         the chords on the third, sixth and seventh degrees of a minor key, \
+         as here in A minor.",
+        |ui| {
+            let mut numerals = minor_numerals(ui.ctx());
+            for (value, label, example) in [
+                (
+                    MinorNumerals::FromMajor,
+                    "bIII bVI bVII: counted from the major scale (pop and jazz)",
+                    "C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°.",
+                ),
+                (
+                    MinorNumerals::FromMinor,
+                    "III VI VII: counted from the minor scale (classical harmony)",
+                    "C is III, F is VI and G is VII; G#° is still vii°, and E major is V.",
+                ),
+            ] {
+                ui.radio_value(&mut numerals, value, label);
+                ui.indent(label, |ui| {
+                    ui.label(RichText::new(example).color(theme::TEXT_DIM));
+                });
+            }
+            ui.add_space(4.0);
+            ui.label(
+                RichText::new(
+                    "Applies to every view that shows numerals, and to numerals you \
+                     type or paste on the chord sheet. A style's Progression box is \
+                     always written bIII bVI bVII, as the library writes it.",
+                )
+                .small()
+                .color(theme::TEXT_DIM),
+            );
+            ui.ctx()
+                .data_mut(|data| data.insert_persisted(minor_numerals_id(), numerals));
+        },
+    );
 }
 
 /// A titled group with enough space to distinguish preferences from their help.
@@ -132,6 +193,10 @@ impl LineupApp {
                                         Page::Appearance => {
                                             ui.heading("Appearance");
                                             view::zoom_settings_ui(ui);
+                                        }
+                                        Page::Harmony => {
+                                            ui.heading("Harmony");
+                                            minor_numerals_ui(ui);
                                         }
                                         Page::Library => self.library_settings_ui(ui),
                                         Page::Audio => {

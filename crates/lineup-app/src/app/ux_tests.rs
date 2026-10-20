@@ -1229,6 +1229,40 @@ fn style_defaults_edit_separately_and_only_save_on_confirmation() {
     );
 }
 
+const MINOR_SCALE_NUMERALS: &str = "III VI VII: counted from the minor scale (classical harmony)";
+
+#[test]
+fn minor_key_numerals_follow_the_harmony_setting() {
+    use lineup_core::harmony::{MinorNumerals, Scale, ScaleKind};
+    // Restores the numerals of this thread when the test ends.
+    MinorNumerals::FromMajor.with(|| {
+        let mut screen = Screen::new();
+        screen.app.project.scale = Scale::new(lineup_core::PitchClass::A, ScaleKind::NaturalMinor);
+        screen.app.harmony_keys.open = true;
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        for numeral in ["i", "bIII", "bVI", "bVII"] {
+            assert!(text_rect(&output, numeral).is_some(), "{numeral} missing");
+        }
+        assert!(text_rect(&output, "III").is_none());
+        screen.app.settings_open = true;
+        screen.click("Harmony");
+        screen.click(MINOR_SCALE_NUMERALS);
+        screen.click("Done");
+        let output = screen.draw(vec![]);
+        for numeral in ["i", "III", "VI", "VII"] {
+            assert!(text_rect(&output, numeral).is_some(), "{numeral} missing");
+        }
+        assert!(text_rect(&output, "bVII").is_none());
+        assert_eq!(
+            screen.ctx.data_mut(
+                |data| data.get_persisted::<MinorNumerals>(egui::Id::unique("minor-numerals"))
+            ),
+            Some(MinorNumerals::FromMinor)
+        );
+    });
+}
+
 #[test]
 fn settings_navigation_and_footer_stay_visible_on_small_screens() {
     let mut screen = Screen::new();
@@ -1237,7 +1271,7 @@ fn settings_navigation_and_footer_stay_visible_on_small_screens() {
     screen.draw(vec![]);
     let output = screen.draw(vec![]);
     let footer = text_rect(&output, "Done").unwrap();
-    for page in ["Appearance", "Library", "Audio", "Playback"] {
+    for page in ["Appearance", "Harmony", "Library", "Audio", "Playback"] {
         screen.click(page);
         let output = screen.draw(vec![]);
         let done = text_rect(&output, "Done").expect("Settings footer is visible");
@@ -1246,7 +1280,7 @@ fn settings_navigation_and_footer_stay_visible_on_small_screens() {
             (done.bottom() - footer.bottom()).abs() < 1.0,
             "Changing categories must not grow the window"
         );
-        for page in ["Appearance", "Library", "Audio", "Playback"] {
+        for page in ["Appearance", "Harmony", "Library", "Audio", "Playback"] {
             assert!(
                 text_rect(&output, page).is_some(),
                 "Missing settings category {page}"
@@ -1267,6 +1301,7 @@ fn settings_categories_never_clip_controls_horizontally() {
         screen.ctx.set_zoom_factor(1.1);
         for page in [
             "Appearance",
+            "Harmony",
             "Library",
             "Audio",
             "Playback",
@@ -1279,6 +1314,7 @@ fn settings_categories_never_clip_controls_horizontally() {
             screen.click(page);
             match page {
                 "Appearance" => screen.scroll_to("Ctrl+0"),
+                "Harmony" => screen.scroll_to(MINOR_SCALE_NUMERALS),
                 "Library" => screen.scroll_to("Styles folder…"),
                 "Audio" => screen.scroll_to("Choose SoundFont…"),
                 "Playback" => screen.scroll_to("Practice speed"),

@@ -35,8 +35,8 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 use crate::harmony::{
-    Chord, ChordQuality, ChordSymbol, Micromode, PitchSet, RowLabel, Scale, ScaleKind, SetClass,
-    describe_chord, pc_digit,
+    Chord, ChordQuality, ChordSymbol, Micromode, MinorNumerals, PitchSet, RowLabel, Scale,
+    ScaleKind, SetClass, describe_chord, pc_digit,
 };
 use crate::library::numeral;
 use crate::meter::{Bar, TimeSignature};
@@ -397,10 +397,20 @@ impl HarmonyName {
     /// the tonic with a sixth (Bb6), not the row form I6, which needs a
     /// twelve-tone key.
     pub fn parse_in(text: &str, key: Scale) -> Result<HarmonyName, String> {
+        Self::parse_counting(text, key, MinorNumerals::FromMajor)
+    }
+
+    /// [`HarmonyName::parse_in`], with numerals in a minor key counting
+    /// its degrees as `numerals` says.
+    fn parse_counting(
+        text: &str,
+        key: Scale,
+        numerals: MinorNumerals,
+    ) -> Result<HarmonyName, String> {
         let row_key = matches!(key.kind, ScaleKind::Row(_));
         if !row_key
             && key.is_heptatonic()
-            && let Some(numeral) = numeral::parse(text.trim())
+            && let Some(numeral) = numeral::parse_in(text.trim(), key, numerals)
         {
             return Ok(HarmonyName::Chord(numeral.symbol_in(key)));
         }
@@ -686,12 +696,13 @@ enum Item {
 fn read_marked(
     text: &str,
     key: Scale,
+    numerals: MinorNumerals,
 ) -> Result<(HarmonyName, Option<Push>, Option<Stop>), String> {
     let (push, name, stop) = read_marks(text)?;
     if name.is_empty() {
         return Err(format!("\"{text}\" has marks but no harmony."));
     }
-    let harmony = HarmonyName::parse_in(name, key)?;
+    let harmony = HarmonyName::parse_counting(name, key, numerals)?;
     Ok((harmony, push, stop))
 }
 
@@ -711,7 +722,29 @@ const MOST_WORDS: usize = 4;
 ///
 /// Returns the markers, each on the step its beat starts on, or why the
 /// text could not be read.
+///
+/// Roman numerals are read as the library writes them, from the major
+/// scale (bVII in a minor key); [`read_typed_bar`] reads them as the
+/// sheet writes them.
 pub fn read_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, String> {
+    read_bar_counting(text, bar, key, MinorNumerals::FromMajor)
+}
+
+/// [`read_bar`] for a bar you type: numerals in a minor key count its
+/// degrees as [`MinorNumerals::current`] writes them, so that "VII"
+/// typed in A minor is the G major the sheet writes as VII. What is
+/// stored is the chord, so a song reads the same whichever way it was
+/// typed.
+pub fn read_typed_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, String> {
+    read_bar_counting(text, bar, key, MinorNumerals::current())
+}
+
+fn read_bar_counting(
+    text: &str,
+    bar: &Bar,
+    key: Scale,
+    numerals: MinorNumerals,
+) -> Result<Vec<ChordMarker>, String> {
     let words: Vec<&str> = text.split_whitespace().collect();
     if words.is_empty() || words == ["%"] {
         return Ok(Vec::new());
@@ -734,7 +767,7 @@ pub fn read_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, S
         let longest = (at + 1..=holds_at.min(at + MOST_WORDS))
             .rev()
             .find_map(|end| {
-                read_marked(&words[at..end].join(" "), key)
+                read_marked(&words[at..end].join(" "), key, numerals)
                     .ok()
                     .map(|marked| (marked, end))
             });
@@ -743,7 +776,7 @@ pub fn read_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, S
                 items.push(Item::Harmony(harmony, push, stop));
                 at = end;
             }
-            None => return Err(read_marked(words[at], key).unwrap_err()),
+            None => return Err(read_marked(words[at], key, numerals).unwrap_err()),
         }
     }
     let beats: Vec<usize> = bar.beat_starts().collect();
@@ -1025,6 +1058,29 @@ mod tests {
             HarmonyName::parse_in("I6", row),
             Ok(HarmonyName::Row(RowLabel::new(RowForm::Inversion, 6)))
         );
+    }
+
+    #[test]
+    fn typed_numerals_in_minor_follow_the_way_numerals_are_written() {
+        let a_minor = Scale::new(PitchClass::A, ScaleKind::NaturalMinor);
+        let bar = Meter::steady(TimeSignature::COMMON).bar(0);
+        let names = |markers: Vec<ChordMarker>| -> Vec<String> {
+            markers.iter().map(ChordMarker::text).collect()
+        };
+        let typed = |text| names(read_typed_bar(text, &bar, a_minor).unwrap());
+        // From the major scale, as the library writes them.
+        assert_eq!(typed("bVI bVII vii° i"), ["F", "G", "G#dim", "Am"]);
+        MinorNumerals::FromMinor.with(|| {
+            assert_eq!(typed("VI VII vii° i"), ["F", "G", "G#dim", "Am"]);
+            assert_eq!(typed("III+ V7 bII i"), ["Caug", "E7", "Bb", "Am"]);
+            // A song's or a style's own text is still read as the
+            // library writes it.
+            let stored = read_bar("bVI bVII", &bar, a_minor).unwrap();
+            assert_eq!(names(stored), ["F", "G"]);
+            // And the captions say it as typed.
+            let f = HarmonyName::parse("F").unwrap();
+            assert_eq!(f.caption(a_minor).as_deref(), Some("VI"));
+        });
     }
 
     #[test]

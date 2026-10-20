@@ -1811,6 +1811,8 @@ impl eframe::App for LineupApp {
         // Before anything is drawn: whether a menu is open as the mouse
         // button goes down.
         widgets::track_dismissing(&ctx);
+        // Every view writes numerals as the settings say.
+        settings::minor_numerals(&ctx).set();
         self.start_frame_for_undo(&ctx);
         self.keyboard_shortcuts(&ctx);
         self.keep_over_song();

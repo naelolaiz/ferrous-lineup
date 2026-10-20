@@ -1036,7 +1036,8 @@ fn names_a_word(filter: &str, words: &str) -> bool {
 /// The tooltip of a style: its chords in the project's key, and more.
 fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
     let scale = style.scale(tonic);
-    let numerals = style.chart.split_whitespace().collect::<Vec<_>>().join(" ");
+    let chart = style.chart.split_whitespace().collect::<Vec<_>>().join(" ");
+    let numerals = lineup_core::library::numeral::written_in(&chart, scale);
     let rhythm = if style.rhythm.is_empty() {
         String::new()
     } else {

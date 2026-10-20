@@ -14,6 +14,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
 
 use eframe::egui::{self, Color32, CursorIcon, Rect, RichText, Sense, Stroke, vec2};
+use lineup_core::harmony::MinorNumerals;
 use lineup_core::lead_sheet::default_melody_channel;
 use lineup_video::{VideoSettings, VideoWriter};
 
@@ -313,12 +314,15 @@ impl LineupApp {
 
         let done = Arc::new(AtomicUsize::new(0));
         let cancel = Arc::new(AtomicBool::new(false));
+        let numerals = MinorNumerals::current();
         let worker = {
             let done = Arc::clone(&done);
             let cancel = Arc::clone(&cancel);
             let path = path.clone();
             thread::spawn(move || {
-                // The views are made here, on the export's own thread.
+                // The views are made here, on the export's own thread,
+                // and write numerals as the app does.
+                numerals.set();
                 let mut scene = Scene::new(project, title, layout, size, FRAME_RATE, piano_channel);
                 let mut writer = VideoWriter::create(&path, settings)?;
                 let mut sound = vec![0.0; per_picture * 2];
