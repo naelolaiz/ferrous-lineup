@@ -9241,3 +9241,1885 @@ pub(super) const PETRUSHKA_MOOR: Song = Song {
             over the tritone B and F, cut by the trumpet's A over E flat, as the Moor throws \
             Petrushka out.",
 };
+
+// Copyright: this is Stravinsky's 1947 revision of Petrushka, which is still under
+// copyright (Boosey & Hawkes); it is added here at the request of the project's owner.
+// Source: Stravinsky's Petrushka, 1947 revision, fourth tableau, "The Shrovetide Fair (Towards
+// Evening)", MIDI bars 794 to 1194: from the drum roll that links it to the third tableau up to
+// the MIDI's last bar. The whole tableau fits in 99 patterns, so the Wet-nurses' Dance and the
+// Coachmen's Dance stay in it. The notes are converted by script from a MIDI file of the 1947
+// version (the person's own copy, at sounding pitch) and checked bar by bar against that file,
+// not against a printed score; MIDI bar numbers are given below (MIDI bar 1 is a silent
+// lead-in). The melody is the line in front, in the octave of the instrument that has it, and
+// played_by follows it from instrument to instrument. Everything else that matters is written
+// out on the Keys channel: the harmony, the bass, the ostinati and the timpani; lines doubled
+// in unison or octaves are written once. Rhythms are quantised to sixteenths and eighth-note
+// triplets; tremolos and rolls are written as held notes, grace notes are left out. The dynamic
+// of each part is read from the MIDI's velocities. The percussion is written out (triangle as
+// Ride, tambourine as Shaker, bass drum as Kick, side drum as Snare, cymbals as Crash). Where
+// the meter changes, every run of bars in one meter is a part of its own, named "..., bar N"
+// after the bar it starts on, with in_time: in_meters cannot cut a written-out left hand of
+// several voices into its runs, nor carry drums. No chord symbol is honest for this music,
+// which moves in drones, ostinati and parallel chords, so the charts are empty. Unlike the
+// first tableau, a tremolo between two chords (32nd notes taking turns) is written as the two
+// chords taking turns in sixteenths, and a run of 32nd notes keeps every other note. Where a
+// part starts on a chord held over from the bar before, the chord is struck again.
+//
+// Left out: the piano, which doubles the orchestra, in bars 797 to 805 and 824 to 831, and the
+// piano and the harp in bars 1054 to 1065. Where many lines play at once, the Keys channel
+// keeps seven of them and leaves out the rest, which mostly double these: in bars 806 to 817 it
+// keeps the first oboe, the ostinato of the clarinets, bass clarinet and first bassoon, the
+// first trumpet and the cellos (leaving out the piccolo, the second flute, the second oboe, the
+// cor anglais, the horns, the second trumpet, the piano, the celesta, the harp, the violins and
+// the violas, also pizzicato); in bars 838 to 844 the first clarinet, the first bassoon, the
+// trumpets, the first violins and the pizzicato violas and cellos (leaving out the second oboe,
+// the cor anglais, the second clarinet, the second bassoon and the pizzicato second violins);
+// in bars 845 to 852 the first oboe, the first clarinet, the first bassoon, the trumpets and
+// the pizzicato violas and cellos (leaving out the piccolo, the flutes, the second oboe, the
+// cor anglais, the second clarinet, the bass clarinet, the second bassoon, the second horn, the
+// violins, the double basses and the pizzicato second violins); in bars 853 to 860 the first
+// oboe, the trumpets, the first trombone, the first violas, the second cellos and the double
+// basses (leaving out the flutes, the second oboe, the cor anglais, the horns, the tuba, the
+// violins, the second violas and the first cellos); in bars 1066 to 1103 the third flute, the
+// second oboe, the clarinet, bass clarinet and first bassoon, the second horn and the double
+// basses (leaving out the second flute, the first oboe, the cor anglais, the second clarinet
+// and bassoon, the contrabassoon, the first horn, the trumpets, the trombones, the tuba, the
+// piano, the harp and the other strings); in bars 1113 to 1122 the oboes, the cor anglais, the
+// first horn, the trumpets and the double basses (leaving out the second and third flutes, the
+// clarinets, the bassoons, the second horn, the trombones, the tuba, the piano, the harp and
+// the other strings); in bars 1147 to 1158 the first clarinet, the bass clarinet, the first
+// horn, the first trumpet, the harp, the first violins and the pizzicato cellos (leaving out
+// the flutes, the oboes, the cor anglais, the second clarinet, the second horn, the piano, the
+// other strings with the bow and the other pizzicato strings); in the closing tremolo the
+// flutes, the cor anglais, the second clarinet and the first violins (bars 1186 to 1191), then
+// the flutes, the first horn, the first trumpet, the piano, the first violins and the cellos
+// (bars 1192 and 1193), leaving out the other woodwinds, brass and strings, which play the same
+// two chords. Grace notes are left out throughout.
+//
+// Not certain: the meters are the MIDI's: 4/4 in bars 794 to 796, 861 to 895 and 1104 to 1122,
+// 6/8 in bars 797 to 833, 912 to 933 and 958 to 969, 9/8 in bar 834, 6/4 in bars 835 to 860,
+// 2/2 in bars 896 to 899, 3/2 in bars 900 to 911, 3/4 in bars 1041, 1126 to 1129 and 1140, and
+// 5/8 in bars 1130 to 1139 and 1141 to 1158, where every eighth note is a beat, as the MIDI
+// marks no grouping; the rest is 2/4. The peasant's quintuplet in bar 900 and the strings'
+// dotted figures in bars 1123 to 1129 are written as the nearest triplets. The MIDI ends at bar
+// 1194 without Petrushka's death, the policeman, the Charlatan and Petrushka's ghost, which
+// close the ballet: its last bars (1180 to 1194) look like the short ending Stravinsky wrote
+// for concert performance, which the MIDI does not name. In the last bar the run C, D, E, F
+// sharp, in 32nd-note sextuplets, is written as sixteenth-note triplets a sixteenth early, so
+// that it lands on the last chord on time. The keys: the bars that keep to no scale or sound
+// two keys at once are marked chromatic (see the song's description): the drum roll, the
+// peasant and the bear (bars 900 to 911), and in the masqueraders' music the chromatic clarinet
+// (bars 1106 to 1112), the chords of F major against F sharp (1113 to 1122), the whole-tone
+// strings (1123 to 1129), the clarinet and horns (1174 to 1179), the chords over a rising bass
+// (1180 to 1185) and the ending on Petrushka's chord (1186 to 1194). The merchant's tune keeps
+// to the white notes and is marked D Dorian, after the D minor chords under the gypsy girls'
+// dance: it could as well be read in A minor or C major. The tutti in bars 824 to 831 is marked
+// D major though its bass holds A for most of it (A Mixolydian has the same notes). The
+// wet-nurses' tune in C (bars 888 to 899) is marked C Mixolydian, for its B flat over the pedal
+// on C. The passage in A flat major (bars 1159 to 1173) is written with the tonic G sharp, its
+// enharmonic name, and its notes are spelt with flats.
+pub(super) const PETRUSHKA_FAIR_EVENING: Song = Song {
+    name: "Petrushka, The Shrovetide Fair in the Evening",
+    origin: "Igor Stravinsky, Petrushka, 1911, revised 1947",
+    feel: "Orchestra",
+    genre: Genre::Classical,
+    tonic: D,
+    mode: Major,
+    time: TWO_FOUR,
+    tempo: 126.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::CONTRABASS),
+    style: "",
+    parts: &[
+        // MIDI bars 794 to 796.
+        Part::new(
+            "Drum roll",
+            "-:16 | - | -",
+            "",
+        )
+        .with_left(
+            "F2:1 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 | F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 \
+             F2 F2 F2 F2 F2 F2 | F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2 F2",
+        )
+        .in_time(COMMON)
+        .in_key(C, Chromatic)
+        .with_drums(&[
+            (Drum::Snare, "x:1 x x x x x x x x x x x x x x x | x x x x x x x x x x x x x x x x | \
+                           x x x x x x x x x x x x x x x x"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bars 797 to 805.
+        Part::new(
+            "Evening",
+            "-:12 | - | -:1 B5 A5 B5 C#6 B5 A5 G5 F#5 E5 D5 C#5 | -:12 | -:10 (3 A4:1 D5 F#5 | \
+             A5:2. -:10 | - (3 A4:1 D5 F#5 | A5:2. -:10 | - (3 C#5:1 F#5 A5",
+            "",
+        )
+        .with_left(
+            "-:12 | - | - | -:10 D3:2. | -:12 | -:10 D3:2. | -:10 D3:2. | -:12 | -:10 (3 \
+             D3+A3+B3+C#4:1 - - & -:12 | - | -:6 D4 | _:12 | _:10 -:2 | D4:12 | _:10 -:2 | D4:12 \
+             | _ & -:12 | - | - | -:10 (3 B4+C#5:1 _ - | -:12 | -:10 (3 E5:1. _ - | A5:2 -:8 (3 \
+             B4+C#5:1 _ - | -:12 | -:10 (3 E4+G4+B4:1 _ - & A5:12 | _ | _:8 -:4 | -:12 | - | \
+             F#4+A4:1 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 (3 D4+F#4+A4+D5+F#5 F#4+A4 - \
+             | F#4+A4 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 (3 F#4+A4+D5+F#5 _ - & \
+             D4+F#4+G4+B4:1 E4+G4+A4+C#5 G4+B4+C#5+E5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5+G5 F#4+A4+D5+F#5 G4+B4+C#5+E5+G5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5+G5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5 G4+B4+C#5 F#4+A4+F#5 \
+             E4+G4+B4+E5 | F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 | F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 (3 \
+             D4+F#4+A4+D5+F#5 F#4+A4 G4+B4+C#5+D5+E5 | D5+F#5:2. -:10 | - (3 -:1 - \
+             G4+B4+C#5+D5+E5 | D5+F#5:2. -:10 | - (3 -:1 C#5 G4+B4+C#5+E5+F#5 & A4+C#5+D5:1 \
+             B4+E5 E4+G5 E4+G5 D4 E4+G5 D4 E4+G5 D4 E4+G5 D4 E4+G5 | D4 E4+G5 D4 E4+G5 D4 E4+G5 \
+             D4 E4+G5 D4 E4+G5 D4 E4+G5 | D4 E4+D5 D4+E5 E4+D5 D4+E5 E4+D5 E5 E4+D5 E5+A5 \
+             E4+D5+G5 B4+C#5+E5 D5+G5 | A5 E4+G5 A5 E4+G5 A5 E4+G5 A5 E4+G5 A5 E4+G5 A5 E4+G5 | \
+             - C#4+E4+G5+B5 A5 C#4+E4+G5+B5 A5 C#4+E4+G5+B5 A5 E4+G5 A5 E4+G5 D3+A5 E3+E4+G5 | - \
+             E4+A4+G5 A5 E4+A4+G5 A5 E4+A4+G5 A5 E4+A4+G5 A5 E4+A4+G5 A5 E4+A4+G5 | - E4+G5 A5 \
+             E4+G5 A5 E4+G5 A5 C#4+E4+G5+B5 B3+C#6 C#4+E4+G5+B5 A5 E3+C#4+G5+B5 | - E4+G5 A5 \
+             E4+G5 A5 E4+G5 A5 E4+G5 A5 E4+G5 A5 E4+G5 | A5 C#4+E4+G5+B5 A5 C#4+E4+G5+B5 B3+C#6 \
+             C#4+E4+G5+B5 A5 E4+G5 A5 E4+G5 - E3+G5 & -:12 | - | - | -:10 (3 E5:1. _ - | A5:2 \
+             -:10 | - (3 B4+C#5:1 _ - | -:10 (3 E5:1. _ - | -:12 | -:10 (3 E5:1 _ -",
+        )
+        .in_time(SIX_EIGHT)
+        .with_tempo(&[tempo(0, 95)])
+        .in_key(D, Major)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 806 to 817.
+        Part::new(
+            "Flutes and piccolo",
+            "-:4 (3 C#6:1 E6 G6 F#6 A5:5 | _:8 (3 C#6:1 E6 G6 (3 F#6 _ - | -:4 A6:1 F#6 G5:2. \
+             -:4 | -:12 | A6:1 B6 D6:2. - A6:1 B6 F#6:2. - | B6:1 A6 F#6:2. -:8 | A6:1 B6 F#6:2. \
+             - B6:1 A6 F#6:2. - | - (3 A6:1 F#6 D6 A5:8 | _:2 - (3 C#6:1 E6 G6 (3 F#6 _ - -:4 | \
+             -:8 (3 C#6:1 E6 G6 (3 F#6 _ - | -:4 A6:1 F#6 G5:2. -:4 | B6:1 A6 C#6:2 B6:1 F#6 A6 \
+             C#6 B6:2 F#6:1 -",
+            "",
+        )
+        .with_left(
+            "D4:1 C#4 D4 C#4 B3 C#4 D4 E4 D4 E4 -:2 | -:3 E4:1 D4 C#4 D4 C#4 B3 C#4 D4 C#4 | D4 \
+             E4 - E4 -:3 E4:1 D4 C#4 D4 C#4 | B3 C#4 D4 - D4 -:6 E4:1 | D4 C#4 D4 C#4 B3 C#4 D4 \
+             - D4 -:3 | - E4:1 D4 C#4 D4 C#4 B3 C#4 D4 - | D4 -:6 E4:1 D4 C#4 D4 C#4 | B3 C#4 D4 \
+             - D4 -:6 E4:1 | D4 C#4 D4 C#4 B3 C#4 D4 - D4 -:3 | - E4:1 D4 C#4 D4 C#4 B3 C#4 D4 - \
+             | D4 -:6 E4:1 D4 C#4 D4 C#4 | B3 C#4 D4 - D4 -:6 E4:1 & -:6 F#4+A4+D5+F#5:1 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+C#5+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5+D6 \
+             G4+B4+C#5+E5+B5 F#4+A4+D5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 | F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+D5+E5 F#4+A4+D5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 | F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 | F#4+A4+C#5+D5+F#5 G4+B4+C#5+E5+F#5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5+C#6 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5+C#6 G4+B4+C#5+E5+A5 | F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | F#4+A4+D5+F#5+C#6 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5+F#5 F#4+A4+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+C#5+D5+F#5 - | - G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+C#5+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+C#5+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 | \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5+D6 \
+             G4+B4+C#5+E5+B5 F#4+A4+D5+F#5 G4+B4+C#5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 | F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+D5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 F#4+A4+D5+F#5 G4+B4+C#5+E5 \
+             F#4+A4+D5+F#5 G4+B4+C#5+E5 & F#4+A4+D5+F#5+C#6:1 G4+B4+C#5+E5 F#4+A4+D5+F#5 \
+             G4+B4+C#5+E5 F#4+A4+C#5+D5+F#5 G4+B4+C#5+E5 G5:2. -:4 | -:10 G5:2. | -:6 F#5:2. -:4 \
+             | - F#5:2. -:6 | -:12 | -:2 A5. -:8 | -:12 | -:6 D5:2. -:3 G4+B4+C#5+E5+F#5:1 | \
+             F#4+A4+D5+F#5+C#6 -:5 G5:2. -:4 | -:10 G5:2. | -:6 E5:2. -:4 | -:12 & -:12 | -:10 \
+             (3 A5:1 A5 F#5+A5 | A5 -:9 (3 -:1 C#5 - | -:10 (3 C#5:1 C#5+E5 G5 | A5 -:5 (3 C#5:1 \
+             C#5+E5 G5 A5 -:3 | -:12 | - | - | - | -:4 C#5:1 -:5 (3 A5:1 A5 F#5+A5 | A5 -:9 (3 \
+             -:1 C#5 - | -:10 (3 C#5:1 C#5+E5 G5",
+        )
+        .in_time(SIX_EIGHT)
+        .in_key(D, Major)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 818 to 819.
+        Part::new(
+            "Oboe",
+            "D5:1 E5 G5:2 F#5:1 E5 D5 E5 G5:2 F#5:1 E5 | D5 E5 B4:2 D5:1 F#5 E5 D5 B4 -:3",
+            "",
+        )
+        .with_left(
+            "B4:12 | _ & F#4:10 -:2 | -:12 & A4+F#5:1 -:5 D4:1 E4 G4:2 F#4:1 E4 | -:12 & D4+A5:1 \
+             -:11 | -:12",
+        )
+        .in_time(SIX_EIGHT)
+        .in_key(D, Major)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 820 to 823.
+        Part::new(
+            "Trumpets",
+            "-:4 D5:1 E5 B4 D5 F#5:2 E5:1 D5 | Bb4 -:11 | -:12 | -:6 A5",
+            "",
+        )
+        .with_left(
+            "F#4:11 -:1 | -:12 | -:6 B3 | _ A3+C#4 & D4:12 | _ | _ | _:6 - & -:12 | -:6 G4 | \
+             _:12 | _ & -:10 E4:1 F#4 | A4 G4 F#4:2 E4:1 F#4 C4 -:5 | Bb4:6 - | C#6:12 & -:12 | \
+             - | -:6 B4+F#5 | _:11 -:1 & D5:12 | _ | E4+D5 | _ & A5:12 | _ | _ | _",
+        )
+        .in_time(SIX_EIGHT)
+        .with_tempo(&[tempo(36, 84)])
+        .in_key(D, Major)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 824 to 831.
+        Part::new(
+            "The whole orchestra",
+            "F#6:1 E6 F#6 E6 D6 E6 F#6 G6 F#6 G6 A6 G6 | A6 B6 A6 G6 F#6 G6 F#6 G6 A6 G6 F#6 E6 \
+             | F#6 E6 D6 E6 F#6 E6 F#6 E6 F#6 E6 F#6 E6 | D6 E6 F#6 G6 F#6 G6 A6 G6 A6 B6 A6 G6 \
+             | F#6 G6 F#6 G6 A6 G6 F#6 E6 F#6 E6 D6 E6 | F#6 E6 F#6 E6 F#6 E6 F#6 E6 D6 E6 F#6 \
+             G6 | F#6 G6 A6 G6 A6 B6 A6 G6 F#6 G6 F#6 G6 | A6 G6 F#6 E6 F#6 E6 D6 E6 F#6 E6 F#6 \
+             E6",
+            "",
+        )
+        .with_left(
+            "D2:12 | _ | _ | _ | D2 | _ | _ | _ & A2:12 | _ | A2 | _ | A2 | _ | A2 | _ & \
+             D3+F#3+A3:2 E4:1 -:3 G4:1 - F#4+A4:2 E4+B4 | - E4 A3+C4+F#4 G3+B3+E4 F#3+A3+D4 \
+             E3+G3+B3 | F#3+A3 G3+B3 A3+C4 E4:1 - F#4+A4:2 G4+B4 | - E4 A3+C4+F#4 G3+E4 F#3+D4 - \
+             | - G3+B3+E4 A3+C4+F#4 B3+G4 - E4:1 - | D4+A4:2 C#4+G4 A3+C4+F#4 G3+B3 F#3+A3+D4 \
+             E3+G3+B3 | F#3+A3 G3+E4 A3:1 - E4:2 - G4:1 - | D4+F#4+A4:2 C#4+G4 A3+C4+F#4 G3+B3 \
+             F#3+A3+D4 E3+G3+B3 & -:2 G3+B3 A3+C4 B3+E4 - G4:1 - | D4+F#4+A4:2 C#4+G4:1 -:9 | \
+             -:2 E4:1 -:3 B3+G4:2 - E4:1 - | D4+A4:2 C#4+G4:1 -:5 A3:1 - E3+G3:2 | D3+F#3+A3 -:4 \
+             E4:1 - F#4+A4:2 G4+B4 | - E4:1 -:3 E4:1 -:5 | -:4 C4+F#4:2 G4:1 - F#4+A4:2 E4+B4 | \
+             - E4:1 -:3 E4:1 -:5 & -:12 | -:8 G4:1 - F#4+B4+C#5+E5:2 | F#4+D5+A5 G4+B4+C#5+E5 \
+             D4+D5+F#5 B4+C#5+E5 - C#5+E5 | - B4+C#5+E5 - F#4+B4+C#5+E5 - F#4+B4+C#5+E5 | - G4:1 \
+             -:9 | -:6 F#4+B4+C#5+E5:2 G4+D5+F#5 F#4+B4+C#5+E5 | F#4+D5+A5 B4+C#5+E5 D4+F#5+A5 \
+             B4+C#5+E5 D5+A5 C#5+E5 | F#5 B4+C#5+E5 D5+A5 B4+C#5+E5 D5+F#5 B4+C#5+E5 & \
+             F#4+D5+A5:2 G4+B4+C#5+E5 D4+D5+F#5 B4+C#5+E5 D5+A5 C#5+E5 | F#5+A5 B4+C#5+E5 D5+A5 \
+             F#4+B4+C#5+E5 F#5+A5 - | -:8 D5+A5:2 - | D5+F#5 - D5+A5 - G4+F#5+A5 - | F#4+D5+A5 \
+             B4+C#5+E5 D4+F#5+A5 B4+C#5+E5 D5+A5 C#5+E5 | D5+F#5 B4+C#5+E5 D5+A5 -:6 | -:2 G4:1 \
+             -:9 | -:8 G4:1 -:3 & D4+F#5+A6:1 E4+B5+C#6+G6 D4+F#5+A6 E4+B5+C#6+G6 \
+             F#4+A5+B5+C#6+F#6 E4+B5+C#6+G6 D4+F#5+A6 C#4+G4+E6+B6 D4+F#5+A6 C#4+G4+E6+B6 \
+             B3+D5+F#6+C#7 C#4+G4+E6+B6 | B3+D5+F#6+C#7 A3+C#5+E5+G6+D7 B3+D5+F#6+C#7 \
+             C#4+G4+E6+B6 D4+F#5+A6 C#4+G5+E6+B6 D4+F#5+A6 C#4+G4+E6+B6 B3+D5+F#6+C#7 \
+             C#4+G4+E6+B6 D4+F#5+A6 E4+B5+C#6+G6 | D4+F#5+A6 E4+B5+C#6+G6 F#4+A5+B5+C#6+F#6 \
+             E4+B5+C#6+G6 F#4+A5+B5+C#6+D6 G4+E5+A5+B5+C#6 F#4+A5+B5+C#6+D6 E4+B5+C#6+G6 \
+             D4+F#5+A6 E4+B5+C#6+G6 D4+F#5+A6 E4+B5+C#6+G6 | F#4+A5+B5+C#6+F#6 E4+B5+C#6+G6 \
+             D4+F#5+A6 C#4+G4+E6+B6 D4+F#5+A6 C#4+G4+E6+B6 B3+D5+F#6+C#7 C#4+G4+E6+B6 \
+             B3+D5+F#6+C#7 A3+C#5+E5+G6+D7 B3+D5+F#6+C#7 C#4+G4+E6+B6 | D4+F#5+A6 C#4+G5+E6+B6 \
+             D4+F#5+A6 C#4+G4+E6+B6 B3+D5+F#6+C#7 C#4+G4+E6+B6 D4+F#5+A6 E4+B5+C#6+G6 D4+F#5+A6 \
+             E4+B5+C#6+G6 F#4+A5+B5+C#6+F#6 E4+B5+C#6+G6 | F#4+A5+B5+C#6+D6 G4+E5+A5+B5+C#6 \
+             F#4+A5+B5+C#6+D6 E4+B5+C#6+G6 D4+F#5+A6 E4+B5+C#6+G6 D4+F#5+A6 E4+B5+C#6+G6 \
+             F#4+A5+B5+C#6+F#6 E4+B5+C#6+G6 D4+F#5+A6 C#4+G5+E6+B6 | D4+F#5+A6 C#4+G4+E6+B6 \
+             B3+D5+F#6+C#7 C#4+G4+E6+B6 B3+D5+F#6+C#7 A3+C#5+E5+D6+G6 B3+D5+F#6+C#7 C#4+G4+E6+B6 \
+             D4+F#5+A6 C#4+G5+E6+B6 D4+F#5+A6 C#4+G4+E6+B6 | B3+D5+A5+F#6+C#7 C#4+G5+E6+B6 \
+             D4+F#5+A6 E4+B5+C#6+G6 D4+F#5+A6 E4+B5+C#6+G6 F#4+A5+B5+C#6+F#6 E4+B5+C#6+G6 \
+             F#4+A5+B5+C#6+D6 G4+E5+A5+B5+C#6 F#4+A5+B5+C#6+D6 E4+B5+C#6+G6",
+        )
+        .in_time(SIX_EIGHT)
+        .in_key(D, Major)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 832 to 833.
+        Part::new(
+            "Oboes and horns",
+            "A5:2 G5 A5 G5 A5 G5 | A5 G5 A5 G5 A5 G5",
+            "",
+        )
+        .with_left(
+            "F#3+A3+D4:2 E3+G3+B3+E4 D3+F#3+A3+D4 E3+G3+B3+E4 D3+F#3+A3+D4 E3+G3+B3+E4 | \
+             D3+F#3+A3+D4 E3+G3+B3+E4 D3+F#3+A3+D4 E3+G3+B3 D3+F#3+A3+D4 E3+G3+B3 & \
+             F#4+A4+D5+F#5:1 - C#4+C#5+E5:2 F#4+D5+F#5 C#4+C#5+E5 F#4+D5+F#5 C#4+C#5+E5 | \
+             F#4+D5+F#5 C#4+C#5+E5 F#4+D5+F#5 E4+C#5+E5 C#4+D5+F#5 E4+C#5+E5",
+        )
+        .in_time(SIX_EIGHT)
+        .with_tempo(&[tempo(0, 95)])
+        .in_key(D, Major)
+        .played_by(&[(gm::OBOE, 0)]),
+        // MIDI bar 834.
+        Part::new(
+            "Oboes and horns, bar 3",
+            "A5:2 G5 A5 G5 A5 G5 A5 G5 A5:1 -",
+            "",
+        )
+        .with_left(
+            "D3+F#3+A3+D4:2 E3+G3+B3+E4 D3+F#3+A3+D4 E3+G3+B3+E4 D3+F#3+A3+D4 E3+G3+B3+E4 \
+             D3+F#3+A3+D4 E3+G3+B3+E4 D3+F#3+A3+D4:1 - & F#4+D5+F#5:2 C#4+C#5+E5 F#4+D5+F#5 \
+             C#4+C#5+E5 F#4+D5+F#5 C#4+C#5+E5 F#4+D5+F#5 C#4+C#5+E5 F#4+D5+F#5:1 -",
+        )
+        .in_time(NINE_EIGHT)
+        .in_key(D, Major)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 835 to 837.
+        Part::new(
+            "Wet-nurses' Dance",
+            "-:24 | -:8 C5:2 A4 A4 F4 F4 E4 F4 E4 | G4 F4 A4 A4 C5 Bb4 Bb4 G4 G4 E4 F4 E4:1 -",
+            "",
+        )
+        .with_left(
+            "-:2 A3 C4 A3 A3 A3 A3 A3 - A3 C4 A3 | A3 A3 A3 A3 (3 G4:1 _ G4 (3 F4 - - (3 - - E4 \
+             (3 D4 - - -:8 | -:4 C4:2 A3 - A3 A3 A3 - A3 C4 A3+E4 & -:24 | -:10 A3:2 C4 A3 A3 A3 \
+             A3 A3 | - A3 (3 -:1 - G4 (3 F4 - - (3 A3+G4 _ A4 (3 G4 - - -:12 & -:7 D4:2. \
+             Bb3+D4:1 - Bb3:2. -:3 A3:1 -:7 | - Bb3:2. Bb3+D4:1 C4+E4 Bb3+D4 -:3 D4:2. Bb3+D4:1 \
+             - Bb3:2. -:3 | A3:1 Bb3+D4 - Bb3+D4 -:4 C4+E4:1 - C4+E4 -:2 D4+F4:1 C4+E4 Bb3+D4+A4 \
+             E4:2. - A3+E4+G4:1 Bb3+D4+A4 C4+G4 D4+F4 & A3+E4:1 Bb3+D4 C4+E4 Bb3+D4 A3+E4+G4 \
+             Bb3+D4+A4 C4+E4+G4 F4 E4 - C4+E4 D4 C4+E4+G4 D4+F4 C4+E4+G4 Bb3+D4+A4 C4+E4:2. \
+             C4+E4:1 - A3+E4+G4 Bb3+D4+A4 C4+E4+G4 F4 | C4+E4 Bb3+D4 - Bb3+D4 C4:2. - A3:1 -:7 \
+             C4:2. C4:1 D4 -:4 | C4+E4:2. C4+E4:1 -:4 D4:2. Bb3+D4:1 - Bb3+D4 C4:2. - A3:1 \
+             Bb3+D4 C4 Bb3+D4 -:4 & -:8 C4:2. -:7 Bb3+D4:1 - Bb3+D4 -:3 D4:1. | -:2 C4+E4:1 - \
+             E4+G4 D4+F4 C4+E4+G4 D4+A4 E4:2. - A3+E4+G4:1 Bb3+D4+A4 C4+E4+G4 F4 E4 -:3 \
+             C4+E4+G4:1 D4+F4 C4+G4 Bb3+D4+A4 | -:4 A3+E4+G4:1 Bb3+D4+A4 C4+E4+G4 F4 -:4 E4+G4:1 \
+             -:11 & -:12 F4:1 - F4:2 D4:1 - D4 -:5 | -:2 D4:1 - F4 - F4:2 C4+D4:1 - D4 -:7 D4:1 \
+             -:3 F4:2 | D4:1 - D4 -:7 D4:1 - F4 - F4:2 C4+D4:1 - D4 -:5 & C4+D4:1 - D4 -:7 D4:1 \
+             - A4:2 A4:1 -:9 | -:4 A4:2 A4:1 -:13 A4:2 A4:1 - | -:12 A4:2 A4:1 -:9",
+        )
+        .in_time(SIX_FOUR)
+        .with_tempo(&[tempo(0, 118)])
+        .in_key(F, Major)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 838 to 844.
+        Part::new(
+            "The wet-nurses' tune",
+            "-:8 C5:6 A4:2 Bb4:4 A4:2 G4 | F4:6 - C5:2 A4 D5:4 D5 | C5 C5:2 A4 D5:4 D5 C5 - | \
+             -:24 | -:22 G5:1 A5 | Bb5:2 A5 A5 F5 F5 E5 F5 E5 G5 F5 A5 A5:1 C6 | Bb5:2 Bb5:1 Bb5 \
+             A5:2 G5 G5 E5 F5 E5 G5 F5 G5 G5:1 A5",
+            "",
+        )
+        .with_left(
+            "A3+F4:2 A3+G4 A3+Bb4 A3+Bb4 D5. -:14 | -:24 | - | -:6 A3+C4:2 A3+F4 A3 A3 A3+C4 - \
+             A3+F4 C4 A3 | -:14 A3+C4:2 -:8 | -:16 A3:2 A3 A3+C4 A3+C4 | A3 A3 A3 A3+C4 - A3 C4 \
+             A3 A3 A3 A3 A3 & -:8 A3:2 A3 A3+C4 A3+C4 A3 A3 A3 A3+C4 | - A3 C4 A3 A3 A3 A3 A3 A3 \
+             A3 A3+C4 A3+C4 | A3 A3 A3 A3+C4 - A3 C4 A3 A3 A3 A3 A3 | A3+C5 A3+A4 A3+C4 F4:1 -:9 \
+             G4:2 -:6 | A3+C5:2 A3+Bb4 A3+Bb4 A3+G4 A3+G4 A3+E4 A3+C4+F4 - A3+G4 A3+F4 A3+G4 \
+             A3+C4+G4:1 - | Bb4:2 A3+F5 C4+G5 A3+D5 A3+E5 A3+C5 A3+C5 A3+C5:1 -:9 | -:24 & C4:2. \
+             -:5 Bb3+D4:1 -:8 C4+E4:1 Bb3+D4 C4+E4 Bb3+D4 C4:2. - | A3:1 Bb3 C4 Bb3 -:4 C4:2. \
+             -:5 Bb3+D4:1 -:8 | C4+E4:1 Bb3+D4 C4+E4 Bb3+D4 C4:2. - A3:1 Bb3 C4 Bb3 -:4 C4:2. \
+             -:5 Bb3+D4:1 | -:8 C4+E4:1 Bb3+D4 C4+E4 Bb3+D4 C4:2. - A3:1 Bb3 C4 Bb3 -:4 | C4:2. \
+             -:5 Bb3+D4:1 -:8 C4+E4:1 Bb3+D4 C4+E4 Bb3+D4 C4:2. - | A3:1 Bb3 C4 Bb3 -:4 C4:2. \
+             -:5 Bb3+D4:1 -:8 | C4+E4:1 Bb3+D4 C4+E4 Bb3+D4 C4:2. - A3:1 Bb3 C4 Bb3 -:4 C4:2. \
+             -:5 Bb3+D4:1 & E4:1 D4 E4 D4 C4+E4 D4 C4+E4 - C4+E4:2. - G4:1 A4 G4 F4 -:4 E4:1 D4 \
+             E4 D4 | E4:2. - A3+G4:1 Bb3+A4 C4+G4 D4+F4 E4 D4 E4 D4 C4+E4 D4 C4+E4 - C4+E4:2. - \
+             G4:1 A4 G4 F4 | -:4 E4:1 D4 E4 D4 E4:2. - A3+G4:1 Bb3+A4 C4+G4 D4+F4 E4 D4 E4 D4 \
+             C4+E4 D4 C4+E4 - | C4+E4:2. - G4:1 A4 G4 F4 -:4 E4:1 D4 E4 D4 E4:2. - A3+G4:1 \
+             Bb3+A4 C4+G4 D4+F4 | E4 D4 E4 D4 C4+E4 D4 C4+E4 - C4+E4:2. - G4:1 A4 G4 F4 -:4 E4:1 \
+             D4 E4 D4 | E4:2. - A3+G4:1 Bb3+A4 C4+G4 D4+F4 E4 D4 E4 D4 C4+E4 D4 C4+E4 - C4+E4:2. \
+             - G4:1 A4 G4 F4 | -:4 E4:1 D4 E4 D4 E4:2. - A3+G4:1 Bb3+A4 C4+G4 D4+F4 E4 D4 E4 D4 \
+             C4+E4 D4 C4+E4 - & D4:1 - C4+D4 - F4+A4:2 F4+A4 D4:1 D4 C4+D4 D4 E4:2 E4 D4:1 - D4 \
+             - F4:2 F4+A4 | C4+D4:1 D4 D4 D4 E4:2 E4 D4:1 - C4+D4 - F4+A4:2 F4 D4:1 D4 C4+D4 D4 \
+             E4:2 E4 | D4:1 - D4 - F4+A4:2 F4 C4+D4:1 D4 D4 D4 E4:2 E4 D4:1 - C4+D4 - F4+A4:2 \
+             F4+A4 | D4:1 D4 C4+D4 D4 A4 - E4+A4:2 -:4 F4+G4:2 F4+G4 -:4 A4:1 - E4+A4:2 | -:4 \
+             F4+A4:2 F4+A4 -:12 F4+A4:2 F4+A4 | -:12 F4+A4:2 F4+A4 -:8 | -:4 F4+A4:2 F4+A4 -:12 \
+             F4+A4:2 F4+A4:1 - & -:24 | - | - | -:4 E4:2 - D4:1 - D4 -:5 C4+D4:1 D4 D4 D4 E4:2 - \
+             | D4:1 - C4+D4 -:5 D4:1 D4 C4+D4 D4 E4:2 E4 D4:1 - D4 -:5 | C4+D4:1 D4 D4 D4 E4:2 \
+             E4 D4:1 - C4+D4 -:5 D4:1 D4 C4+D4 D4 E4:2 E4 | D4:1 - D4 -:5 C4+D4:1 D4 D4 D4 E4:2 \
+             E4 D4:1 - C4+D4 -:5",
+        )
+        .in_time(SIX_FOUR)
+        .in_key(F, Major)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 845 to 852.
+        Part::new(
+            "Horn",
+            "C5:6 A4:2 Bb4:4 A4:2 G4 F4:6 -:2 | -:24 | -:4 C5:2 A4 D5:4 D5 C5 C5:2 - | -:24 | \
+             C5:6 A4:2 Bb4:4 A4:2 G4 F4:6 -:2 | -:4 C5:2 A4 D5:4 D5 C5 C5:2 - | G4:4 G4:2 A4 \
+             G4:4 F4:2 E4 D4:4 C4 | F4 F4 G4 G4 C5:8",
+            "",
+        )
+        .with_left(
+            "A3:2 A3 A3+C4 A3+C4 A3 A3 A3 A3+C4 - A3 C4 A3 | A3 A3 A3 A3 A3 A3 A3+C4 A3+C4 A3 A3 \
+             A3 A3+C4 | - A3 C4 A3 A3 A3 A3 A3 A3 A3 A3+C4 A3+C4 | A3 A3 A3 A3+C4 - A3 C4 A3 A3 \
+             A3 A3 A3 | A3 A3 A3+C4 A3+C4 A3 A3 A3 A3+C4 - A3 C4 A3 | A3 A3 A3 A3 A3 A3 A3+C4 \
+             A3+C4 A3 A3 A3 A3+C4 | - A3 C4 A3 A3 A3 A3 A3 A3 A3 A3 A3+C4 | A3 A3 A3 A3+C4 - A3 \
+             C4 A3 A3 A3 A3 A3 & D4:1 D4 C4+D4 D4 E4:2 E4 D4:1 - D4 - F4:2 F4+A4 C4+D4:1 D4 D4 \
+             D4 E4:2 E4 | D4:1 - C4+D4 - F4+A4:2 F4+A4 D4:1 D4 C4+D4 D4 E4:2 E4 D4:1 - D4 - \
+             F4+A4:2 F4+A4 | C4+D4:1 D4 D4 D4 E4:2 E4 D4:1 - C4+D4 - F4+A4:2 F4+A4 D4:1 D4 C4+D4 \
+             D4 E4:2 E4 | D4:1 - D4 - F4+A4:2 F4+A4 C4+D4:1 D4 D4 D4 E4:2 E4 D4:1 - C4+D4 - \
+             F4+A4:2 F4+A4 | D4:1 D4 C4+D4 D4 E4:2 E4 D4:1 - D4 - F4:2 F4+A4 C4+D4:1 D4 D4 D4 \
+             E4:2 E4 | D4:1 - C4+D4 - F4+A4:2 F4 D4:1 D4 C4+D4 D4 E4:2 E4 D4:1 - D4 - F4+A4:2 \
+             F4+A4 | C4+D4:1 D4 D4 D4 E4:2 E4 D4:1 - C4+D4 - A4:2 F4+A4 -:1 D4 C4+D4 D4 E4:2 E4 \
+             | D4:1 - D4 - A4:2 F4+A4 C4+D4:1 D4 D4 D4 E4:2 E4 D4:1 - C4+D4 - F4+A4:2 F4+A4:1 - \
+             & C4+E4:2. -:5 F4:1 C4+E4+F5 Bb3+D4 - Bb3+D4 C4:2. -:1 D4 E4:2. C4+F5:1 - A3+G4+A5 \
+             Bb3+A4 C4+G4+A5 D4+F4+C6 | E4+Bb5 D4 E4+A5 - C4+E4+A5 - C4+E4+F5 - F5:2 E5 G4+F5:1 \
+             A4 G4+E5 -:3 C4+E4+F5:1 - E4+A5 D4 E4+A5 - | A3+Bb5 Bb3 - Bb3 -:4 C4:2. -:1 D4 - D4 \
+             - Bb3+D4 C4+E4:2. -:4 (3 -:1 F4 _ | C4+E4+Bb5 Bb3+D4 C4+E4+A5 Bb3+D4 C4:2. -:1 D4 \
+             E4:2. C4+E5:1 - A3+G4+F5 Bb3+A4 C4+G4+E5 D4+F4 E4+G5 D4 E4+F5 - C4+E4+A5 - C4+E4+A5 \
+             Bb3+D4+C6 | Bb5:2 A5 G4+A5:1 A4 G4+F5 -:3 C4+E4+E5:1 - E4+F5 D4 E4+E5 - A3+G5 Bb3 - \
+             Bb3 -:4 | C4:2. -:1 D4 - D4 - Bb3+D4 C4+E4:2. -:5 F4:1 C4+E4+G5 Bb3+D4 - Bb3+D4 \
+             C4:2. (3 -:1 D4 _ | A3+Bb5 Bb3 - Bb3 -:4 C4:2. -:1 D4 - D4 - Bb3+D4 C4+E4:2. -:4 (3 \
+             -:1 F4 _ | C4+E4+Bb5 Bb3+D4 C4+E4+A5 Bb3+D4 C4:2. -:1 D4 E4:2. C4+E5:1 - A3+F5 \
+             Bb3+A4 C4+G4+E5 D4+F4 E4+G5 D4 E4+F5 - C4+E4+A5 - C4+E4+A5 Bb3+D4+C6 & Bb5:2 A5 \
+             G4+A5:1 A4 G4+F5 -:3 C4+E4+E5:1 - E4+F5 D4 E4+E5 - A3+G5 Bb3 - Bb3 -:4 | C4:2. -:1 \
+             D4 - D4 - Bb3+D4 C4+E4:2. -:5 F4:1 C4+E4+G5 Bb3+D4 - Bb3+D4 C4:2. -:1 D4 | E4:2. \
+             C4+A5:1 - A3+G4+A5 Bb3+A4 C4+G4+F5 D4+F4 E4+F5 D4 E4+E5 - C4+E4+F5 - C4+E4+E5 - \
+             G5:2 F5 G4+A5:1 A4 (3 G4+A5 - C6 | -:4 E4+A5:1 D4 E4+F5 - A3+F5 Bb3 - Bb3 -:4 C4:2. \
+             -:1 D4 - D4 -:2 | C4+E4. -:5 F4:1 C4+E4+F5 Bb3+D4 - Bb3+D4 C4:2. -:1 D4 E4:2. \
+             C4+F5:1 - A3+G4+A5 Bb3+A4 C4+G4+A5 D4+F4+C6 | E4+Bb5 D4 E4+A5 - C4+E4+A5 - C4+E4+F5 \
+             - F5:2 E5 G4+F5:1 A4 G4+E5 -:3 C4+E4+F5:1 - E4+A5 D4 (3 E4+A5 - C6 | E4:2. C4+A5:1 \
+             - A3+A5 Bb3+A4 C4+G4+F5 D4+F4 E4+F5 D4 E4+E5 - C4+E4+F5 - C4+E5 - G5:2 F5 G4+A5:1 \
+             A4 (3 G4+A5 - C6 | -:4 E4+A5:1 D4 E4+F5 - A3+F5 Bb3 - Bb3 -:4 C4:2. -:1 D4 - D4 -:2",
+        )
+        .in_time(SIX_FOUR)
+        .in_key(F, Major)
+        .played_by(&[(gm::FRENCH_HORN, 0)]),
+        // MIDI bars 853 to 860.
+        Part::new(
+            "Piccolo, horn and violins",
+            "C7:6 A6:2 Bb6:4 A6:2 G6 F6:8 | C7:4 C7:2 A6 D7:4 D7 C7 C7:2 A6 | G6:4 G6:2 A6 G6:4 \
+             F6:2 E6 D6:4 C6 | F6 F6 E6 D6 C6:8 | C7:6 A6:2 Bb6:4 A6:2 G6 F6:8 | C7:4 C7:2 A6 \
+             D7:4 D7 C7 C7:2 A6 | G6:4 G6:2 A6 G6:4 F6:2 E6 D6:4 C6 | F6 F6 G6:2 F6 E6 D6 C7:8",
+            "",
+        )
+        .with_left(
+            "F2+C3:4 F2+C3:20 | F2+C3:4 F2+C3:20 | F2+C3:4 F2+C3:20 | F2+C3:4 F2+C3:20 | C2+G2:4 \
+             C2+G2:8 F2+C3:4 F2+C3:8 | _:12 C2+G2:4 C2+G2:8 | _:12 F2+C3:4 F2+C3:8 | _:12 \
+             C2+G2:4 C2+G2:8 & Bb3+D4+F4+A4:2 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 \
+             Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 D4+F4+A4+C5 D4+F4+A4+C5 \
+             D4+F4+A4+C5 D4+F4+A4+C5 | F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 \
+             F4+A4+C5+E5 F4+A4+C5 F4+A4+C5+E5 F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 \
+             D4+F4+A4+C5 | Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 \
+             Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 \
+             D4+F4+A4+C5 | F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5 \
+             F4+A4+C5+E5 F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 | Bb3+D4+F4+A4 \
+             Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 \
+             Bb3+D4+F4+A4 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 | F4+A4+C5+E5 \
+             F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5 F4+A4+C5+E5 F4+A4+C5 \
+             D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 | Bb3+D4+F4+A4 Bb3+D4+F4+A4 \
+             Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 Bb3+D4+F4+A4 \
+             D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5 | F4+A4+C5+E5 F4+A4+C5+E5 \
+             F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5+E5 F4+A4+C5 F4+A4+C5+E5 F4+A4+C5 D4+F4+A4+C5 \
+             D4+F4+A4+C5 D4+F4+A4+C5 D4+F4+A4+C5:1 - & -:1 C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 \
+             - C4+G4 - C4+G4 - C4+G4 - Bb4 - Bb4 - Bb4 - Bb4 | - G4+D5 - G4+D5 - G4+D5 - G4+D5 - \
+             G4+D5 - G4+D5 - G4+D5 - G4+D5 - E4+Bb4 - E4+Bb4 - E4+Bb4 - E4+Bb4 | - C4+G4 - C4+G4 \
+             - C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 - E4+Bb4 - E4+Bb4 - E4+Bb4 - E4+Bb4 \
+             | - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - E4+Bb4 - E4+Bb4 \
+             - E4+Bb4 - E4+Bb4 | - C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 \
+             - E4+Bb4 - E4+Bb4 - E4+Bb4 - E4+Bb4 | - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - \
+             G4+D5 - G4+D5 - G4+D5 - E4+Bb4 - E4+Bb4 - E4+Bb4 - E4+Bb4 | - C4+G4 - C4+G4 - C4+G4 \
+             - C4+G4 - C4+G4 - C4+G4 - C4+G4 - C4+G4 - E4+Bb4 - E4+Bb4 - E4+Bb4 - E4+Bb4 | - \
+             G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - G4+D5 - E4+Bb4 - E4+Bb4 - \
+             E4+Bb4 - E4+Bb4 & Bb5:2 A5 A5 F5 F5 E5 F5 E5 G5 F5 A5 A5:1 C6 | Bb5:2 A5 A5 F5 F5 \
+             E5 F5 E5 G5 F5 A5 A5:1 C6 | Bb5:2 A5 A5 F5 F5 E5 F5 E5 G5 F5 A5 A5:1 C6 | Bb5:2 A5 \
+             A5 F5 F5 E5 F5 E5 G5 F5 A5 A5:1 C6 | Bb5:2 A5 A5 F5 F5 E5 F5 E5 G5 F5 A5 A5:1 C6 | \
+             Bb5:2 A5 A5 F5 F5 E5 F5 E5 G5 F5 A5 A5:1 C6 | Bb5:2 A5 A5 F5 F5 E5 F5 E5 G5 F5 A5 \
+             A5:1 C6 | Bb5:2 A5 A5 F5 F5 E5 F5 E5 G5 F5 A5 A5:1 -",
+        )
+        .in_time(SIX_FOUR)
+        .in_key(F, Major)
+        .played_by(&[(gm::PICCOLO, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 861 to 864.
+        Part::new(
+            "Flutes in fourths",
+            "A5:2 A5 D5 D5 G5 G5 D5 D5 | A5 A5 D5 D5 G5 G5 D5 D5 | A5 A5 D5 D5 G5 G5 D5 D5 | A5 \
+             A5 D5 D5 G5 G5 D5 D5",
+            "",
+        )
+        .with_left(
+            "F4+A4:2 F4 C4+D4 C4+D4 E4+G4 E4+G4 C4+D4 C4+D4 | F4 F4 C4+D4 C4+D4 E4+G4 E4+G4 \
+             C4+D4 C4+D4 | F4 F4 C4+D4 C4+D4 E4+G4 E4+G4 C4+D4 C4+D4 | F4 F4 C4+D4 C4+D4 E4+G4 \
+             E4+G4 C4+D4 C4+D4 & -:1 G3+Bb4+D5 A3+A4+C5+F5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 | A3+A4+C5+F5 G3+Bb4+D5 A3+A4+C5+F5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 | A3+A4+C5+F5 G3+Bb4+D5 A3+A4+C5+F5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 | A3+A4+C5+F5 G3+Bb4+D5 A3+A4+C5+F5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5+E5 G3+Bb4+D5 A3+A4+C5 G3+Bb4+D5 A3+A4+C5 \
+             G3+Bb4+D5 & F5:2 -:14 | -:16 | - | - & C5:2 -:14 | -:16 | - | -",
+        )
+        .in_time(COMMON)
+        .in_key(D, NaturalMinor)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 865 to 868.
+        Part::new(
+            "Flutes and harp",
+            "G5:2 G5:1 -:5 F#5:2 F#5:1 -:5 | G5:2 G5:1 -:5 F#5:2 F#5:1 -:5 | G5:2 G5:1 -:5 F#5:2 \
+             F#5:1 -:5 | E5:2 E5:1 -:5 F#5:2 F#5:1 -:5",
+            "",
+        )
+        .with_left(
+            "A4+C5+F#5:1 G4+B4+D5 A4+C5+F#5 G4+B4+D5 A4+C5 G4+B4+D5 A4+C5 G4+B4+D5 A4+C5+E5 \
+             G4+B4+D5 A4+C5+E5 G4+B4+D5 A4+C5 G4+B4+D5 A4+C5 G4+B4+D5 | A4+C5+F#5 G4+B4+D5 \
+             A4+C5+F#5 G4+B4+D5 A4+C5 G4+B4+D5 A4+C5 G4+B4+D5 A4+C5+E5 G4+B4+D5 A4+C5+E5 \
+             G4+B4+D5 A4+C5 G4+B4+D5 A4+C5 G4+B4+D5 | A4+C5+F#5 G4+B4+D5 A4+C5+F#5 G4+B4+D5 \
+             A4+C5 G4+B4+D5 A4+C5 G4+B4+D5 A4+C5+E5 B4+D5 A4+C5+E5 B4+D5 G4+A4+C5 B4+D5 G4+A4+C5 \
+             B4+D5 | G4+A4+C5+D5 B4+D5 G4+A4+C5+D5 B4+D5 A4+C5 B4+D5 G4+A4+C5 B4+D5 G4+A4+C5+E5 \
+             B4+D5 G4+A4+C5+E5 B4+D5 G4:2 G4+G#4+D5:1 - & -:2 G5 -:6 F#5:2 -:4 | -:2 G5 -:6 \
+             F#5:2 -:4 | -:2 G5 -:6 F#5:2 -:4 | -:2 E5 -:6 F#5:2 - D4 & -:4 D5:1 - D5 -:5 D5:1 - \
+             D5 - | -:4 D5:1 - D5 -:5 D5:1 - D5 - | -:4 D5:1 - D5 -:5 D5:1 - D5 - | -:4 D5:1 - \
+             D5 -:9",
+        )
+        .in_time(COMMON)
+        .in_key(D, Mixolydian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Pianissimo),
+        // MIDI bars 869 to 872.
+        Part::new(
+            "Oboes",
+            "G5:2 G5 G5 G5 F#5 D5 D5 D5 | G5 G5 G5 G5 F#5:1 -:3 A5:2 F#5 | E5 E5 E5 E5 F#5 F#5 \
+             A5 F#5 | E5 E5 E5 E5 F#5:1 -:7",
+            "",
+        )
+        .with_left(
+            "-:16 | - | - | -:12 F#4+F#5:1 G4+G5 - B4 & D4:2 D5:4 G4+D5:2 D4+F#4:1 - D5:4 D4:2 | \
+             D4+G4:1 - D5:4 G4+D5:2 D4+F#4:1 - D5:4 F#4+D5:2 | D4+E4:1 - D5:4 E4+D5:2 D4+F#4:1 - \
+             D5:4 F#4+D5:2 | D4+E4:1 - D5:4 E4+D5:2 D4+F#4:1 C#4+C#5 D5:4 A4+D5+A5:1 - & \
+             G4+C#5:1 - C#5:2 C#6. -:5 C#7:1 D7:2. - | -:4 C#5:2 C#5 C5:1 -:3 Eb5:2 C5 | Bb4 Bb4 \
+             Bb4 Bb4 C5 C5 Eb5 C5 | Bb4 Bb4 Bb4 Bb4 C5:1 -:6 B5:1 & -:4 D6 - D6 | - D6 - D6 | - \
+             D6 - D6 | - D6 -:2 D4:1 E4+E5 D6:4 & -:4 C#5:2 C#5 C5 G#4 G#4 G#4 | C#5 C#5 C#6. \
+             -:5 C#7:1 D7:2. - | -:4 C#6:2. -:5 C#7:1 D7:2. - | -:4 C#6:2. -:5 C#7:1 D7 -:3",
+        )
+        .in_time(COMMON)
+        .in_key(D, Major)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 873 to 876.
+        Part::new(
+            "Flutes and piano",
+            "B5:1 B5 B5 B5 B5 B5 B5 B5 A5 A5 G5 G5 G5 G5 G5 G5 | B5 B5 B5 B5 B5 B5 B5 B5 A5 A5 \
+             A5 A5 D6 D6 B5 B5 | A5 A5 A5 A5 A5 A5 A5 A5 B5 B5 B5 B5 D6 D6 B5 B5 | A5 A5 A5 A5 \
+             A5 A5 A5 A5 B5 -:7",
+            "",
+        )
+        .with_left(
+            "-:16 | -:9 B4:1 -:3 B4:1 B4 B4 | B4 B4 B4 B4 B4 B4 B4 B4 - B4 -:2 B4:1 B4 B4 B4 | \
+             D5 D5 D5 D5 D5 D5 D5 D5 B4 -:7 & -:4 C4:2. C#5. D4 - D6:4 | D4:2 D5:4 Eb5:2. D4 - \
+             D4. C#5. | D4 D5:4 D5:2 C#4. - D4. Eb5. | D4+Eb4:1 Eb4 D4 D4 C#4+C#5 C#4+C#5 C4+C5 \
+             C4+C5 B3 -:7 & D4:2 D5:4 D5:2 C#4. - D4. Eb5. | Eb4. E5. E4. D5 Eb4. D5 D6:4 | \
+             C#4:2. C5. C#4. C#5. D4 D5 D6:4 | -:16 & (3 G5:1 G5 _ -:2 C5+C6+D6. (3 -:1 - A5 -:2 \
+             (3 E5:1 E5 _ - E5 D5+F#5:2. | (3 G5:1 G5 _ -:2 C5+C6+D6. (3 -:1 - A5 -:5 B5:1 \
+             D5+F#5:2. | A4+A5. A4+E5. (3 E5+F#5:1 F#5 _ A4+E5:2. - B4+G5. - D5+F#5. | A4+A5. \
+             A4+E5. -:6 F4+F5:4 F4+F5:2 & C5+C6:2. C5+G5. (3 G5:1 G5 _ C5+G5:2. B4+F#5+B5:1 F#5 \
+             D5+F#5+G5:2. D5+E5+F#5+G5:1 - (3 E5+G5 E5 _ | C5+C6:2. C5+G5. (3 G5:1 G5 _ C5+G5:2. \
+             B4+F#5+B5:1 F#5 B4+F#5+B5:2. B4+D5+G5+B5:1 - (3 G5 G5 _ | (3 E5+F#5 F#5 _ (3 F#5+A5 \
+             F#5 _ A4+A5+D6:2. (3 F#5+A5:1 F#5 _ B4+G5+B5 G5 -:2 D5+A5+B5:1 B5 (3 G5 G5 _ | (3 \
+             E5+F#5 F#5 _ (3 F#5+A5 F#5 _ A4+E5+F#5+A5+D6 F#5 A4+F#5+A5 F#5 F#5+G5 -:7 & -:3 \
+             C6:1 -:3 C6:1 C6 B5 -:3 D5:1 -:2 | -:3 C6:1 -:3 C6:1 - B5 -:2 A5:1 A5 -:2 | -:1 E5 \
+             -:3 E5:1 -:7 A5:1 -:2 | -:1 E5 -:3 E5:1 E5 E5 B5:2 -:6 & (3 -:1 - A5 (3 C6 - B5+C#6 \
+             (3 - - A5 (3 C6 - - -:2 (3 -:1 - C#7 D7:2. (3 -:1 - B5 | (3 - - A5 (3 C6 - B5+C#6 \
+             (3 - - A5 (3 C6 - - -:2 (3 -:1 - C#7 D7:2. - | - (3 -:1 - G5+C#6 -:2 (3 -:1 - A5 \
+             -:2 (3 B5:1 - B5+C#7 D7:2. - | - (3 -:1 - G5+C#6 -:12",
+        )
+        .in_time(COMMON)
+        .in_key(G, Major)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 877 to 883.
+        Part::new(
+            "Trumpet tune",
+            "-:2 F5:4 F5 F5 F5:2 | _ F5:4 F5 F5 F5:2 | _ F5:4 F5 F5:2 G4 F5 | C5 C5 C5 C5 B4 G4 \
+             G4 G4 | C5 C5 C5 C5 B4:4 D5:2 B4 | A4 A4 A4 A4 B4 B4 D5 B4 | A4 A4 A4 A4 B4 - G5:1 \
+             -:3",
+            "",
+        )
+        .with_left(
+            "-:16 | -:2 F#4+F#5:4 F#4+F#5 F#4+F#5 F#4+F#5:2 | D3:4 D3 D3 D3 | G2+D3 G2+D3+F4 \
+             G2+D3+Eb4 G2+D3+Eb4 | G2+D3+F4 G2+D3 G2+D3+F4 G2+D3+Eb4 | G2+D3+Eb4 G2+D3+F4 G2+D3 \
+             G2+D3+F4 | G2+D3+Eb4 G2+D3+Eb4 G2+D3+F4 G2+D3 & -:16 | G3:2 A3 G3 A3 G3 A3 G3 A3 | \
+             G3 A3 G3 A3 G3 A3 G3 A3:1 - | -:16 | - | - | -:11 F#6:2. -:1 G5+G6:2 & -:16 | -:2 \
+             F4 - F4 - F4 - F4 | - E4+E5 - D4+D5 - C4+C5 - B3+B4 | G3+G4 A3+A4 G3+G4 A3+A4 G3+G4 \
+             A3+A4 G3 A3+A4 | G3+G4 A3+A4 G3+G4 A3+A4 G3+G4 A3+A4 G3+G4 A3+A4 | G3+G4 A3 G3+G4 \
+             A3 G3+G4 A3+A4 G3+G4 A3+A4 | G3+G4 A3 G3+G4 A3 G3+G4 A3+A4 G3+G4 A3+A4 & -:16 | - | \
+             -:2 F#4+F#5:4 G4+G5 G4+G5 G4+G5:2 | - F#4+F#5 F5 E4+E5 Eb5 D4+D5 Eb5 E4+E5 | F5 \
+             F#4+F#5 G5 F#4+F#5 F5 E4+E5 Eb5 D4+D5 | Eb5 E4+E5 F5 F#4+F#5 G5 F#4+F#5 F5 E4+E5 | \
+             Eb5 D4+D5 Eb5 E4+E5 F#5 F#4+F#5 D4+F4+D5+F5+G5 Eb4+G4+E5 & -:16 | - | - | - | - | - \
+             | -:12 G6:2 -",
+        )
+        .in_time(COMMON)
+        .in_key(G, Mixolydian)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 884 to 887.
+        Part::new(
+            "Tutti in G",
+            "C7:1 B6 C7:2 C7:1 B6 C7:2 B6 G6 G6 G6 | C7:1 B6 C7:2 C7:1 B6 C7:2 B6:4 D7:2 B6 | A6 \
+             F#6 F#6 F#6 B6 G6 D7 G6 | A6 F#6 A6 F#6 B6 -:6",
+            "",
+        )
+        .with_left(
+            "G2:2 D3 G2 D3 G2 D3 G2 D3 | G2 D3 G2 D3 G2 D3 G2 D3 | G2 D3 G2 D3 G2 D3 G2 D3 | G2 \
+             D3 G2 D3 G2 -:6 & -:16 | -:8 G1:2 -:6 | -:16 | -:8 (3 -:1 A2 C3 (3 F#3 B3 E4 (3 \
+             D4+A4 - F4 -:2 & Eb4+C5+Eb5:2 G2+D4+D5 C#4+C5+C#5 G2+D4+D5 B4 G2+E4+G4+E5 - \
+             G2+D4+G4 | C#4+C5+C#5 G2+D4+D5 Eb4+C5+Eb5 G2+E4+E5 - G2+F#4 D5+G5 G2+F#4+B4 | A4+G5 \
+             G2+F#4+F#5 A4 G2+E4 Eb4+B4+Eb5 G2+E4+B4+E5 D5+D6 G2+F#4+B4 | A4+G5 G2+F#4+F#5 \
+             F4+A4+F5 G2 Eb4+Eb5 - (3 D5:1 C5+E5 F#4+B4+F5 (3 G4+A4+G5 G4+A4+A5 E4+B4+B5 & \
+             G4+B4:1 B4 A3+A4+C5 C5 G4+B4 B4 A3+A4+C5 C5 G4+A4 A4 A3+A4 A4 G4+A4 A4 A3+A4 A4 | \
+             G4+B4 B4 A3+A4+C5 C5 G4+B4 B4 A3+A4+C5 C5 G4+B4 B4 A3+A4+B4 B4 G4+B4 B4 A3+A4+C5 C5 \
+             | G4+D5 D5 A3+A4+D5 D5 G4+D5 D5 A3+A4+D5 D5 G4+D5 D5 A3+A4+D5 D5 G4+C5 C5 A3+A4+D5 \
+             D5 | G4:2 A3+A4+Eb5:1 Eb5 G4+D5 D5 A3+A4+C#5 C#5 G4+B4:2 -:6 & D3+G3+G5+C6:2. \
+             G5+C6. (3 G1+G6+C7:1 _ B5+B6 G6:2 D3+G3+F#5+B5. D5+G5. G1+D6 - | D3+G3+G5+C6. \
+             G5+C6. (3 G1+G6+C7:1 _ B5+B6 G6:2 D3+G3. -:6 | (3 G1+E6:1 _ F#5+F#6 (3 E6+A6 _ F#6 \
+             D3+G3+E5+A5:2. E5+A5. (3 G1+F#6:1 _ G5+G6 F#6+B6:2 D3+G3+A5. F#5+B5. | (3 G1+E6:1 _ \
+             F#6 E6+A6:2 D3+G3+E5+A5. E5+A5. G1+D3+G3+F#5+B5+F#6:1 -:7 & -:2 F#4+F#5:1 F#5 F4+F5 \
+             F5 E4+E5 E5 Eb4+Eb5 Eb5 D4 - Eb4+Eb5 Eb5 E4+E5 E5 | F4+F5 F5 F#4+F#5 F#5 -:2 \
+             F#4+F#5:1 F#5 F4+F5 F5 E4+E5 E5 Eb4+Eb5 Eb5 D4+D5 D5 | Eb4+Eb5 Eb5 E4 - F4+F5 F5 \
+             F#4+F#5 F#5 G5 - F#4 - F4+F5 F5 E4+E5 E5 | Eb4+Eb5 Eb5 D4+D5 D5 Eb4+Eb5 Eb5 E4 - \
+             F4+F5:2. - (3 -:1 E4+D5 - (3 B4 D5 F5 & (3 G1+G6+C7:1 _ B5+B6 G6:2 D3+G3+G5+C6. \
+             G5+C6. (3 G1+F#6:1 _ F#6 D6:2 - D5+G5+D6 | (3 G1+G6+C7:1 _ B5+B6 G6:2 D3+G3+G5+C6. \
+             G5+C6. F#5+B5+F#6:4 G1+B5+D6+A6:2 F#5+B5+F#6 | D3+G3+E5+A5. E5+A5. (3 G1+E6+A6:1 _ \
+             F#5+F#6 E6+A6:2 D3+G3+F#5+B5. F#5+B5. (3 G1+A6:1 _ G5+G6 F#6+B6:2 | D3+G3+E5+A5. \
+             E5+A5. (3 G1+E6:1 _ F#6 E6+A6:2 -:8",
+        )
+        .in_time(COMMON)
+        .in_key(G, Major)
+        .played_by(&[(gm::PICCOLO, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 888 to 895.
+        Part::new(
+            "Trumpets in C",
+            "C5:2 C5 D5 D5 C5 C5 D5 D5 | C5 C5 D5 D5 C5 C5 D5 D5 | C5:1 D5 C5 D5 C5 D5 C5 D5 D5 \
+             E5 D5 E5 D5 E5 D5 E5 | D5 E5 D5 E5 F5 -:3 C5:2 C5 D5 D5 | C5 C5 D5:1 E5 D5 E5 D5 E5 \
+             D5 E5 D5 E5 D5 E5 | D5 E5 D5 E5 D5:2 - C5 C5 D5 D5 | C5 C5 D5 D5 C5 C5 D5:1 E5 D5 \
+             E5 | D5 E5 D5 E5 D5 E5 D5 E5 D5 E5 D5 E5 D5 E5 D5 E5",
+            "",
+        )
+        .with_left(
+            "F4+A4:2 F4+A4 G4+Bb4 G4+Bb4 F4+A4 F4+A4 G4+Bb4 G4+Bb4 | F4+A4 F4+A4 G4+Bb4 G4+Bb4 \
+             F4+A4 F4+A4 G4+Bb4 G4+Bb4 | F4+A4:1 G4+Bb4 F4+A4 G4+Bb4 F4+A4 G4 F4 Bb4 E4+G4+Bb4 \
+             A4 C4+G4 C5 C4+G4 - C4:2 | F4 G4:1 -:5 F4+A4:2 F4+A4 G4+Bb4 G4+Bb4 | F4+A4 F4+A4 \
+             G4+Bb4:1 - G4+Bb4 - E4+G4+Bb4 - D4+G4 - D4+G4 - D4:2 | - G4:1 -:5 F4+A4:2 F4+A4 \
+             G4+Bb4 G4+Bb4 | F4+A4 F4+A4 G4+Bb4 G4+Bb4 F4+A4 F4+A4 G4+Bb4:1 - E4+G4+Bb4 - | \
+             D4+G4+Bb4 - D4+G4 - D4+G4+Bb4 A4 D4+G4 - E4+G4+Bb4 A4 G4 - C3+C4+G4+Bb4 - C3+C4+G4 \
+             - & -:16 | - | -:15 C5:1 | G3 A3 Bb3 C4 D4 E4 F4 G4 -:8 | -:5 A4+C5:1 - A4+C5 - A4 \
+             - C5 -:3 C5:1 | G3 A3 Bb3 C4 D4 E4 F4 G4 -:8 | -:13 A4+C5:1 - A4+C5 | - A4 - C5 -:3 \
+             C5:1 -:3 C5:1 - A4 - C5 & -:16 | -:14 (3 -:1 - A4. | C5:6 -:10 | (3 F3:1 - - -:4 (3 \
+             -:1 G4 E4+Bb4 -:8 | (3 C4:1 D4 - -:4 A4:1 -:9 | -:4 (3 -:1 E4+C5+E5 Bb4+F5 (3 \
+             G4+A4+G5 A4 - -:8 | - (3 -:1 D4+D5 E4+E5 (3 - G4+G5 - Bb5:2. A5 | G5:4 G5:2 A5 G5 - \
+             (3 C5:1 D4+D5 - D4+D5:2 & -:16 | -:12 (3 -:1 D5 E4+E5 (3 F4+F5 - A5 | -:6 A5:2 \
+             Bb5:4 A5:2 G5 | F5 - (3 -:1 E4+C5+E5 Bb4+F5 (3 G4+A4+G5 A4 - -:8 | (3 -:1 - E4+E5 \
+             (3 - G4+G5 - Bb5:2. A5 D5+D6:8 | E5+C6:2 -:4 (3 -:1 G4 E4+Bb4 -:8 | - (3 C4:1 - - \
+             -:4 A4:1 - | -:6 A4:1 -:3 F4+F5:2 E4+E5 (3 F4+F5:1 G5 A5 & -:16 | - | - | -:14 (3 \
+             -:1 - D5. | (3 - - D4+D6 (3 - D4+D6 - (3 D4+C5+E5+G5+D6 C4+C6 D4+D6 C4+C6:2. -:1 C5 \
+             Bb4 A4 Bb4 A4+C5 G4+Bb4 F4+A4 | G4+Bb4 A4+C5 Bb4 A4+C5 G4+Bb4+F5 F4+C5+E5+G5 \
+             E4+D5+F5+A5 D4+E5+G5+Bb5 (3 C4+F5+A5+C6 D4+D5+D6 C4+C5+C6 (3 D4+D5+D6 - D4+D5+D6 (3 \
+             C4+C5+E5+G5+C6 D4+D5+D6 C4+C5+C6 (3 D4+D6 C4+C6 D4+D5+D6 | (3 - D4+D6 C4+C6 \
+             F5+A5+C6:2 - C5+E5+G5 (3 D4+F5+A5+C6+D6:1 - - F5+A5+C6:2 -:4 | -:16 & -:2 F5+A5+C6 \
+             - C5+E5+G5 (3 C4+F5+A5+C6:1 - - (3 D4+D6 C4 D4+D6 (3 C4+C5+E5+G5+C6 D4+D6 C4+C6 (3 \
+             D4+D6 C4+C6 D4+D6 | (3 - C4+C6 D4+D6 (3 C4 D4+D6 C4 -:6 F5+A5+C6:2 - C5+E5+G5 | (3 \
+             D4+F5+A5+C6+D6:1 - - -:10 Bb4:1 A4+C5 -:2 | -:1 A4+C5 Bb4 A4+C5 G4+Bb4+D5 \
+             F4+C5+E5+G5 E4+D5+F5+A5 D4+E5+G5+Bb5 (3 C4+F5+A5+C6 D4+D5+D6 C4+C5+C6 (3 D4+D5+D6 \
+             C4+C5 D4+D5+D6 (3 C4+C5+E5+G5+C6 D4+D5+D6 C4+C5+C6 (3 D4+D6 C4+C6 D4+D6 | (3 - \
+             C4+C6 - (3 C4 - C4 -:12 | -:10 (3 -:1 C4+C5 - -:4 | -:2 (3 -:1 C4 - -:6 (3 C4:1 - \
+             C4 -:4 | -:16 & (3 C4+F5+A5+C6:1 D4+D6 C4+C6 (3 D4+D6 C4 D4+D6 (3 C4+C5+E5+G5+C6 \
+             D4+D6 C4+C6 (3 D4+D6 C4+C6 D4+D6 (3 - D4+D6 C4+C6 F5+A5+C6:2 - C5+E5+G5 | (3 \
+             D4+F5+A5+C6+D6:1 - - F5+A5+C6:2 (3 D4+C5+E5+G5+D6:1 C4+C6 C4+C6 D4+C5+E5+G5+D6 \
+             C4+C6 (3 C4+F5+A5+C6 D4+D6 C4+C6 (3 D4+D6 C4 D4+D6 (3 C4+C5+E5+G5+C6 D4+D6 C4+C6 (3 \
+             D4+D6 C4+C6 D4+D6 | (3 - C4+C6 D4+D6. (3 _ _ - - Bb4 A4 G4 - C5 Bb4 A4:2. -:1 \
+             G4+Bb4 F4+A4 | G4+Bb4 -:9 F5+A5+C6:2 - C5+E5+G5 | (3 D4+F5+A5+C6+D6:1 - - \
+             F5+A5+C6:2 -:12 | -:10 F5+A5+C6:2 - C5+E5+G5 | (3 C4+F5+A5+C6:1 - - (3 D4+D6 - \
+             D4+D6 (3 C4+C5+E5+G5+C6 C4+C6 D4+D6 (3 C4+C6 D4+D6 C4+C6 (3 - C4+C6 D4+D6 (3 - \
+             D4+D6 - (3 D4+C5+E5+G5+D6 C4+C6 D4+D6 (3 D4+D6 - - | - C5 Bb4 A4 - C5 Bb4 A4 - C5 \
+             Bb4 A4 - C5 Bb4 A4",
+        )
+        .in_time(COMMON)
+        .in_key(C, Mixolydian)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 896 to 899.
+        Part::new(
+            "The wet-nurses' tune, tutti",
+            "C7:6 A6:2 Bb6:4 A6:2 G6 | F6:8 C7:4 C7:2 A6 | D7:4 D7 C7 C7:2 A6 | G6:4 G6:2 A6 \
+             G6:4 (3 G5:1 A5 Bb5 (3 C6 D6 E6",
+            "",
+        )
+        .with_left(
+            "F3+C4+F4+A4+C5:2 F3+C4+F4+A4+C5 F3+E4+G4+Bb4+D5 F3+E4+G4+Bb4+D5 E3+F4+A4+C5 \
+             C3+C4+F4+A4+C5 C3+E4+G4+Bb4+D5 C3+E4+G4+Bb4+D5 | F3+C4+F4+A4+C5 F3+C4+F4+A4+C5 \
+             F3+E4+G4+Bb4+D5 F3+E4+G4+Bb4+D5 C4+F4+A4+C5 C4+F4+A4+C5 G3+C4+E4+Bb4+D5 \
+             E3+C4+G4+Bb4+D5 | D3+F4+A4+C5 D3+F4+A4+C5 D3+E4+G4+Bb4+D5 D3+E4+G4+Bb4+D5 \
+             E3+F4+A4+C5 E3+F4+A4+C5 G3+E4+Bb4+D5 E3+C4+G4+Bb4+D5 | D3+F4+A4+C5 D3+F4+A4+C5 \
+             D3+E4+G4+Bb4+D5 D3+E4+G4+Bb4+D5 E3+C4+G4+Bb4+D5:1 -:7 & -:5 C5:1 A4+A5:2 Bb4+Bb5:4 \
+             A4+A5:2 - | -:8 E3+E4:4 - | D6:8 - | G4:4 -:2 A4 (3 -:1 - C#4+C#5. (3 _ _ C4+C5 (3 \
+             _ B3+B4. _ (3 _ Bb3+Bb4+A5 - & -:16 | - | -:12 (3 C5+E5+G5:1 - - C5+E5+G5+A5:2 | (3 \
+             E5+F5+A5+C6:1 - - E5+A5+C6:2 (3 C5+E5:1 - - -:2 (3 D4+C5+E5+G5:1 E4+C5+E5 F4+D5+F5 \
+             (3 _ G4+E5+G5 - (3 G4+Bb4+Bb5 - - -:2 & -:4 C6:2 -:7 C5:1 -:2 | -:5 C5:1 -:7 C5:1 \
+             -:2 | D5:4 -:1 C5 -:8 A4:2 | D5 C#5:1 - (3 - B4. _ (3 _ - - -:4 (3 D5:1 E5 F5 (3 G5 \
+             - Bb5 & E5+F5+A5+C6:1 - E5+A5+C6:2 C5+E5+G5:1 - C5+E5+G5:2 E5+F5+A5+C6:1 - \
+             E5+A5+C6:2 C5+E5+G5:1 - C5+E5+G5:2 | E5+F5+A5+C6:1 - E5+A5+C6:2 C5+E5+G5:1 - \
+             C5+E5+G5:2 E5+F5+A5+C6:1 - E5+A5+C6:2 C5+E5+G5:1 - C5+E5+G5:2 | E5+F5+A5+C6:1 - \
+             E5+A5+C6:2 C5+E5+G5:1 - C5+E5+G5:2 (3 D4+E5+F5+A5+C6:1 - C#4. (3 _ _ C4 (3 _ B3. _ \
+             (3 _ Bb3 _ | (3 D4 _ C#4. (3 _ _ C4 (3 _ B3. _ (3 _ Bb3 _ -:8 & -:16 | - | -:10 \
+             E5+A5+C6:2 C6 - | G5:4 G5:2 C5+E5+G5+A5 - (3 -:1 - A4+F5+A5 (3 - A4+C5+C6 \
+             Bb4+D5+Bb5+D6 (3 _ C5+E5+C6+E6 D5+F5+D6+F6",
+        )
+        .in_time(TWO_TWO)
+        .in_key(C, Mixolydian)
+        .played_by(&[(gm::PICCOLO, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 900.
+        Part::new(
+            "A peasant with a bear",
+            "(3 G6:1 G6 G6 (3 _ G6 G6 (3 G5 G5 G5 (3 _ G5 G5 G4 -:15",
+            "",
+        )
+        .with_left(
+            "F#1+F#2:4 F#1+F#2 E1+E2 E1+E2 F#1+F#2 F#1+F#2 & (3 D4:1 Eb4 - (3 - F4 F#4 Bb2+F#3:4 \
+             F#1+F#3 C3+E3 E1+E3 Bb2:2 - & -:4 (3 D3:1 Eb3 E3 (3 _ F3 - G3 G#3 A3 Bb3 -:8 F#3:4 \
+             & (3 E5:1 _ - -:6 B3:4 B3 -:8 & (3 D6:1 C#4+C#5+C#6 C4+C5+C6 (3 _ B3+B4+B5 \
+             Bb3+Bb4+Bb5 (3 D4+D5 C#3+C#4+C#5 C3+C4+C5 (3 _ B2+B3+B4 Bb3+Bb4 (3 D3+D4 C#3+C#4 \
+             C3+C4 (3 - B2 Bb2 -:8 Eb2:4 & -:6 (3 A4:1 - E4+G4+E5 (3 E4 E4+G4 E4+G4 (3 _ E4+G4 \
+             E4+G4 -:12 & (3 E4+D5+G5+E6:1 E4+Eb5+G5+E6 E4+G4+E5+G5+E6 (3 _ E4+F5+G5+E6 \
+             E4+F#5+G5+E6 (3 E4+G4+E5 E4+G4+G#4+E5 E4+G4+E5 (3 _ E4+G4+Bb4+E5 - -:16",
+        )
+        .in_time(THREE_TWO)
+        .with_tempo(&[tempo(0, 59)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 901 to 906.
+        Part::new(
+            "Clarinet and tuba",
+            "-:2 Bb5:1 B5 D6:2 Eb6:1 D6 C6:2 Bb5 E6:4 -:2 E6 E6 E6 | (3 D6:1 E6 Eb6 (3 _ D6 C6 \
+             Bb5:2 Bb5 Bb5 C6:1 D6 E6 Eb6 D6 C6 Bb5:2 Bb5 E6:4 | _:1 B5 C6 D6 E6 Eb6 D6 C6 Bb5:2 \
+             Bb5 Bb5 -:10 | -:2 Bb5:1 B5 D6:2 Eb6:1 D6 C6:2 Bb5 E6:4 -:2 E6 E6 E6 | (3 D6:1 E6 \
+             Eb6 (3 _ D6 C6 Bb5:2 Bb5 Bb5 C6:1 D6 E6 Eb6 D6 C6 Bb5:2 Bb5 E6:4 | _:1 B5 C6 D6 E6 \
+             Eb6 D6 C6 Bb5:2 Bb5 Bb5 -:10",
+            "",
+        )
+        .with_left(
+            "-:24 | - | - | - | - | -:16 F#1+F#2:4 F#1+F#2 & E1+E2:4 E1+E2 F#1+F#2 F#1+F#2 E1+E2 \
+             E1+E2 | F#1+F#2 F#1+F#2 E1+E2 E1+E2 F#1+F#2 F#1+F#2 | E1+E2 E1+E2 F#1+F#2 F#1+F#2 \
+             E1+E2 E1+E2 | F#1+F#2 F#1+F#2 E1+E2 E1+E2 F#1+F#2 F#1+F#2 | E1+E2 E1+E2 F#1+F#2 \
+             F#1+F#2 E1+E2 E1+E2 | F#1+F#2 F#1+F#2 E1+E2 E1+E2 (3 D4:1 _ D4 (3 _ D4 _ (3 D4 _ D4 \
+             (3 _ C4+D4 - & -:4 C3 - Eb2+Bb2 - C3 | - Eb2+Bb2 - C3 - Eb2+Bb2 | - C3 - Eb2+Bb2 - \
+             C3 | - Eb2+Bb2 - C3 - Eb2+Bb2 | - C3 - Eb2+Bb2 - C3 | - Eb2+Bb2 - C3 - Eb2+Bb2 & \
+             F#1+F#3:4 E3 E1+E3 F#3 F#1+F#3 E3 | E1+E3 F#3 F#1+F#3 E3 E1+E3 F#3 | F#1+F#3 E3 \
+             E1+E3 F#3 F#1+F#3 -:2 G#3 | _:12 E3:4 E1+E3 - | F#1+F#3 E3 E1+E3 F#3 F#1+F#3+G#3 \
+             -:2 G#3 | _:12 E3:4 E1+E3 F#3 & -:24 | - | -:10 G#3 E3:4 | E1+E3 F#3 F#1+F#3 -:2 \
+             A3:4 D4:1 - F#3:4 | -:2 D4 D4 D4 C4:1 D4 C4 Bb3 G#3:2 G#3 -:4 E3 | E1+E3 F#3 \
+             F#1+F#3 -:2 G#3:10 & -:24 | - | - | - | - | -:16 (3 -:1 C4 - (3 C4 - C4 (3 - C4 _ \
+             -:2",
+        )
+        .in_time(THREE_TWO)
+        .with_tempo(&[tempo(0, 69)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::CLARINET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 907 to 911.
+        Part::new(
+            "Woodwind trills",
+            "-:8 (3 F4:1 E4 F4 (3 E4 F4 E4 F4 E4 F4 E4 F4 E4 F4 E4 F4 E4 F4 E4 | F4 E4 F4 E4 F4 \
+             E4 F4 E4 F4 -:7 A4:1 G4 A4 G4 A4 G4 A4 G4 | A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 \
+             G4 A4 G4 A4 -:7 | A4:1 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 \
+             G4 A4 G4 | A4 -:7 A4:1 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4 A4 G4",
+            "",
+        )
+        .with_left(
+            "-:4 C3 - Eb2+Bb2 - C3 | - Eb2+Bb2 - C3 - Eb2+Bb2 | E1+E2 E2+C3+E3 F#1+F#2 \
+             Eb2+F#2+Bb2+F#3 E1+E2 E2+C3+E3 | -:24 | - & -:11 Bb3:1 G#3:2 G#3 G#3 - E3:4 | E1+E3 \
+             F#3 F#1+F#3 - E1+E3 - | F#1+F#3 -:20 | -:24 | (3 -:2 D4+F4 - (3 - D4+A4 A4 (3 A4 A4 \
+             - (3 A4 A4 A4 (3 A4 F4+A4 F4+A4 (3 F4+A4 F4+A4 F4+A4 & F#1+F#3:4 E3 E1+E3 F#3 \
+             F#1+F#3 -:3 Bb3:1 | G#3:2 G#3 G#3:8 E3:4 - F#3 | -:24 | -:8 (3 -:2 D4 D4 (3 - D4 D4 \
+             (3 - D4+F4 D4+F4 (3 - D4+F4 - | (3 A4 A4 A4 (3 A4 F4 D4 (3 D4 F4 D4+A4 (3 - D4+F4 - \
+             (3 - D4 - (3 - D4 - & E1+E2:4 E1+E2 F#1+F#2 F#1+F#2 E1+E2 E1+E2 | F#1+F#2 F#1+F#2 \
+             E1+E2 E1+E2 F#1+F#2 F#1+F#2 | -:16 (3 -:1 C4+E4+G4 _ (3 - C4+E4+F4+G4+A4 _ (3 \
+             D4+F4+A4 C4+E4+G4 _ -:2 | - (3 -:1 C4+D4+E4+F4+A4 _ (3 - E4 _ -:6 (3 \
+             C4+D4+F4+A4+B4:1 E4+C5 _ (3 C4+D4+B4 - - -:2 (3 C4+D4+F4+C5+D5:1 C4+E4+A4+B4+E5 - \
+             D4+F4+B4+D5 C4+E4+A4+C5+E5 D4+F4+B4+D5 C4+E4+A4+C5+E5 | D4+F4+B4+D5 C4+E4+C5+E5 \
+             D4+F4+B4+D5 C4+E4+B4+E5 D4+F4+C5+D5 - C4+F4+B4+D5 D4+E4+C5+E5 C4+F4+B4+D5+F5 -:3 \
+             C4+D4+F4+B4+D5+F5:1 - C4+D4+F4+B4+D5+F5 - C4+D4+F4+B4+D5+F5 - C4+D4+B4+D5+F5 -:5 & \
+             (3 -:1 C4 _ -:2 (3 -:1 C4 _ -:2 (3 -:1 C4 _ -:2 (3 -:1 C4 _ -:2 (3 -:1 C4 _ -:2 (3 \
+             -:1 C4 _ -:2 | (3 -:1 C4 _ -:2 (3 -:1 C4 _ -:2 (3 -:1 C4+E4 _ -:2 (3 -:1 C4+E4 _ \
+             -:2 (3 -:1 C4+E4 _ -:2 (3 -:1 C4+E4 _ -:2 | (3 -:1 C4+E4 _ -:2 (3 -:1 C4+E4 - (3 \
+             C4+F4 - C4 (3 - C4+E4 _ -:2 (3 -:1 C4+E4 _ -:2 D4 (3 D4:1 - - -:4 | (3 -:1 C4+E4 _ \
+             -:4 (3 C4:1 - - -:16 | -:24 & (3 D4:1 _ D4 (3 _ C4+D4 _ (3 D4 _ D4 (3 _ C4+D4 _ (3 \
+             D4+F4 _ D4+F4 (3 _ C4+D4+F4 _ (3 D4+F4 _ D4+F4 (3 _ C4+D4+F4 _ (3 D4+F4 _ D4+F4 (3 \
+             _ C4+D4+F4 _ (3 D4+F4 _ D4+F4 (3 _ C4+D4+F4 _ | (3 D4+F4 _ D4+F4 (3 _ C4+D4+F4 _ (3 \
+             D4+F4 _ D4+F4 (3 _ C4+D4+F4 _ (3 D4+F4 _ D4+F4 (3 _ C4+D4+E4+F4 _ (3 D4+F4 _ D4+F4 \
+             (3 _ C4+D4+E4+F4 _ (3 D4+F4+A4 _ D4+F4+A4 (3 _ C4+D4+E4+F4+A4 _ (3 D4+F4+A4 _ \
+             D4+F4+A4 (3 _ C4+D4+E4+F4+A4 _ | (3 D4+F4+A4 - D4+F4+A4 (3 _ C4+D4+E4+F4+A4 _ (3 \
+             D4+F4+A4 - D4+F4+A4 (3 - D4+E4+F4+A4 - (3 D4+F4+A4 - D4+F4+A4 (3 _ C4+D4+E4+F4+A4 _ \
+             (3 D4+F4+A4 - D4+F4+A4 (3 _ C4+D4+E4+F4+A4 _ (3 F4+A4 _ F4+A4 (3 _ - - (3 - - \
+             D4+F4+A4 (3 _ C4+E4+F4+G4+A4 _ | (3 D4+F4+A4 - D4+F4+A4 (3 _ - - (3 D4+F4+A4 - \
+             D4+F4+A4 (3 _ D4+E4+F4+A4 _ (3 C4+F4+A4+B4 D4+E4+C5 F4+A4+B4 (3 F4+C5 E4+F4+A4+B4 \
+             C5 (3 - - F4+A4 (3 _ E4+F4+A4+C5 _ (3 C4+D4+F4+A4+B4+D5 C4+E4+C5+E5 A4+B4 (3 - - C5 \
+             -:4 | -:5 E4+C5+E5:1 -:3 D4+E4+C5+E5+G5:1 F4+B4+D5+F5 E4+C5+E5+G5 - E4+C5+E5+G5 - \
+             E4+C5+E5+G5 - C4+C5+E5+G5 - C4+C5+E5+G5 D4+B4+D5+F5 C4+C5+E5+G5 D4+B4+D5+F5 \
+             C4+C5+E5+G5",
+        )
+        .in_time(THREE_TWO)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::CLARINET, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 912 to 917.
+        Part::new(
+            "A merchant",
+            "F5:1 G5 F5 E5 F5 E5 D5:2 D5:1 E5 F5 G5 | F5 G5 F5 G5 F5 G5 F5 G5 F5 G5 F5:2 | F5:1 \
+             G5 F5 G5 F5 G5 A5 G5 A5 G5 A5 G5 | F5 G5 F5 G5 F5 G5 F5 G5 F5 G5 F5 G5 | F5 -:3 \
+             B4:1 C5 D5 C5 B4 C5 D5 E5 | F5 G5 F5 G5 F5 G5 F5 G5 F5 -:3",
+            "",
+        )
+        .with_left(
+            "D4+F4+A4+D5:1 C4+E5 D4+F4+A4+B4+D5 E4+F4+A4+B4+C5 D4+G4+A4+B4 E4+F4+A4+B4 \
+             F4+G4+A4+C5 E4+G4+A4+B4+E5 D4+F4+A4+B4+F5 C4+C5+G5 D4+D5 C4+E5 | D4+F4 C4+G4 D4+F4 \
+             C4+E4 D4+F4 C4+E4+G4 D4+A4+D5 C4+C5 D4+D5 C4+E4+E5 D4+F4 C4+G4+G5 | D4+F4+A4 \
+             C4+E4+E5 D4+F4 C4+E4+G4+E5 D4+F4 C4+E4+G4+E5 B3+D4+A4+F5 C4+E5 B3+D4+F5 C4+E5 \
+             B3+D4+F5 C4+E5 | D4+F4 C4+G4 D4+F4 C4+E4 D4+F4 C4+E4+G4 D4+A4+D5 C4+C5 D4+D5 \
+             C4+E4+E5 D4+F4 C4+G4 | D4+A4+B4 E4+A4+E5 D4+F4+B4+F5 C4+E4+C5+G5 D4+D5+F5 C4+E5+G5 \
+             B3+D4+F5+A5 C4+E5+G5 D4+D5+F5 E4+E5 D4+F4+B4+F5 E4+G4+A4 | D4+A4+B4+D5 C4 D4 C4+E4 \
+             D4+F4 C4+G4 D4+A4+B4 C4+C5 D4+D5 C4+E4+E5+G5 D4+F4+F5 C4+G4+E5+G5 & B4:1 E4+G4+C5 - \
+             G4 F4+D5 G4+C5 B4 C5 - E4+G4 F4+A4+B4 E4+G4+C5 | A4+B4+D5 E4+C5+E5 A4+B4+D5 \
+             G4+C5+E5 A4+B4+D5 C5+E5 F4+B4 E4+G4+E5 F4+A4+B4 G4+C5 A4+B4+D5 E4+C5+E5 | B4+D5 \
+             G4+C5 A4+B4+D5 C5 A4+B4+D5 C5 F4+B4+D5 E4+G4+C5 F4+A4+B4+D5 E4+G4+C5 F4+A4+B4+D5 \
+             E4+G4+C5 | A4+B4+D5 E4+C5+E5 A4+B4+D5 G4+C5+E5 A4+B4+D5 C5+E5 F4+B4 E4+G4+E5 \
+             F4+A4+B4 G4+C5 A4+B4+D5 E4+C5+E5 | F4+D5 G4+C5 A4+D5+E5 G4+E5 F4+A4 E4+G4 F4+A4+B4 \
+             E4+G4 F4+A4 G4 A4 C5 | F4 E4+G4+C5+E5 F4+A4+B4+D5 G4+C5+E5 A4+B4+D5 E4+C5+E5 F4+D5 \
+             E4+G4+E5 F4+A4+B4 G4+C5 A4+B4+D5 E4+C5",
+        )
+        .in_time(SIX_EIGHT)
+        .with_tempo(&[tempo(0, 104)])
+        .in_key(D, Dorian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 918 to 933.
+        Part::new(
+            "The merchant's tune",
+            "F5:1 G5 F5 E5 F5 E5 D5 E5 F5 G5 F5 G5 | F5:2 F5:1 G5 A5 G5 A5 B5 A5 B5 C6 B5 | A5 \
+             G5 A5 G5 A5 B5 A5 G5 F5 G5 F5 E5 | F5 -:3 F5:1 G5 F5 G5 F5 E5 F5 G5 | F5 G5 F5:2 \
+             F5:1 E5 D5 E5 F5 G5 F5 G5 | F5 G5 F5:2 F5:1 E5 D5 E5 F5 G5 F5 G5 | F5 G5 F5:2 F5:1 \
+             E5 D5 E5 F5 G5 F5 G5 | F5:2 F5:1 G5 A5 G5 A5 B5 A5 B5 C6 B5 | A5 G5 A5 G5 A5 B5 A5 \
+             G5 F5 G5 F5 E5 | F5 -:3 F5:1 G5 F5 G5 F5 E5 F5 G5 | A5 G5 A5 B5 A5 B5 C6 B5 A5 G5 \
+             A5 G5 | A5 B5 A5 G5 F5 G5 F5 E5 F5:2 D5:1 E5 | F5 G5 F5 G5 F5:2 F5:1 G5 A5 G5 A5 B5 \
+             | A5 B5 C6 B5 A5 G5 A5 G5 A5 B5 A5:2 | A5:1 B5 C6 B5 A5 G5 A5 G5 A5 B5 A5:2 | A5:1 \
+             B5 C6 B5 A5 G5 A5 G5 A5 B5 A5 -",
+            "",
+        )
+        .with_left(
+            "-:12 | - | - | - | - | - | - | - | - | G3:2 (3 _:1 _ A3 (3 B3 - - -:6 | -:3 B3:1 \
+             -:6 G3:2 | -:6 G3:4 (3 A3:1 B3 C4 | -:3 B3:1 -:2 A3:1 -:5 | G3:2 (3 _:1 _ - (3 - C4 \
+             - -:6 | -:3 B3:2 -:1 A3 A3:2 -:3 | G3:2 (3 _:1 _ - -:8 & -:12 | - | - | - | - | - | \
+             - | -:2 (3 -:1 - A3+A4 (3 - C4+C5 D4+D5 -:6 | -:3 B3+B4:1 -:2 A3:1 -:2 D4+D5:1 -:2 \
+             | (3 G4:1 _ - -:2 (3 -:1 C4+C5 D4+D5 -:6 | -:5 B3+B4:1 C4+C5 -:2 A3+A4:1 -:2 | G4:1 \
+             -:11 | -:12 | (3 G4:1 _ - (3 - - A3+A4 (3 B3 C5 D4+D5 -:6 | -:3 B4:1 - B3+B4 -:4 \
+             G4+G5:1 - | (3 G4 _ - (3 - - A3+A4 (3 B3 C4 D4+D5 -:6 & -:12 | - | - | - | - | - | \
+             - | -:6 B3+D4+F4+C5+F5:1 A3+C4+E4+B4 B3+D4+A4+F5 A3+C4+E4 G3+B3+D4+F4+A5 A3+C4+E4 | \
+             B3+D4+F5 C4+E4+E5 B3+D4+F4+F5 C4+E4+G4+E5 B3+D4+F4+A4+F5 A3+C4+G4+B4+G5 B3+D4+C5+F5 \
+             C4+E4+B4+E5 D4+F4+A4+D5 C4+E4+G4 D4+F4+A4+D5 E4+B4+C5 | D4+F4+A4+B4 E4+A4+B4 \
+             F4+G4+C5 G4+A4+B4 D4+A4+B4 C4+E4+G4+B4+C5 D4+F4+C5+D5 C4+B4+C5 D4+F4+A4+B4 - \
+             D4+F4+A4+B4 C4+E4 | -:12 | -:5 C4+E4+G4:1 -:6 | -:12 | -:6 D4:2 -:4 | -:1 C4+E4 \
+             -:10 | -:12 & D4+A4+D5:1 C4+E4+C5+E5 D4+F4+B4+D5 G4+A4+B4+C5 D4+A4+B4+D5 A4+B4+C5 \
+             G4+B4+C5 A4+B4 D4+A4+D5 C4+G4+C5 D4+F4+A4+B4 C4+E4+G4+C5 | D4+F4+B4 E4+A4 D4+F4+A4 \
+             C4+G4 B3+D4+F4+A4+F5 C4+E4+B4+E5 B3+D4+F4+C5+F5 A3+C4+E4+B4+G5 B3+D4+A4+F5 \
+             A3+C4+E4+G4+G5 G3+B3+D4+F4+A5 A3+C4+E4+G5 | B3+D4+F5 C4+E4+E5 B3+D4+F4+F5 \
+             C4+E4+G4+E5 B3+D4+F4+A4+F5 A3+C4+G4+B4+G5 B3+D4+C5+F5 C4+E4+B4 D4+F4+A4 C4+E4+G4 \
+             D4+F4+A4+D5 E4+B4+C5 | D4+F4+A4+B4 E4+A4+B4 F4+G4+C5 G4+A4+B4 D4+A4+B4 \
+             C4+E4+G4+B4+C5 D4+F4+A4+C5+D5 C4+G4+B4+C5 D4+F4+A4+B4 G4+A4+B4 D4+F4+A4+B4 \
+             C4+E4+G4+C5 | D4+F4+A4+D5 C4+E4+C5 D4+F4+A4+B4 E4+G4+A4+B4 D4+F4+A4+D5 \
+             E4+G4+A4+B4+C5 F4+G4+A4+B4+C5 A4+B4 D4+A4+B4 C4+G4 D4+F4+A4+B4 C4+E4+G4+C5 | \
+             D4+F4+D5 C4+E4+C5 D4+F4+A4+B4 E4+G4+A4+B4 D4+F4+A4+D5 E4+G4+A4+B4+C5 F4+G4+A4+B4+C5 \
+             A4+B4 D4+A4+B4 C4+G4 D4+F4+A4+B4 C4+E4+G4+C5 | D4+F4+D5 C4+E4+C5 D4+F4+A4+B4 \
+             E4+G4+A4+B4 D4+F4+A4+D5 E4+G4+A4+B4+C5 F4+G4+A4+B4+C5 A4+B4 D4+A4+B4 C4+G4 \
+             D4+F4+A4+B4 C4+E4+G4+C5 | D4+F4+B4 E4+A4 D4+F4+A4+B4 C4+G4+E5 B3+D4+F4+A4+F5 \
+             C4+E4+B4+E5 G4+G5:6 | _:3 -:9 | -:6 G4+G5 | _:3 -:9 | -:12 | -:6 A4+C5+F5:1 -:5 | \
+             -:6 G4+G5 | _:3 -:8 E4+B4+G5:1 | -:2 B3+D4+E5+A5:1 C4+E4+D5+G5 D4+F4+C5+F5 - \
+             D4+G4+A4+E5+F5+G5 E4+B4+D5+E5 -:3 E4+A4+G5:1 & -:12 | - | - | - | - | - | - | - | - \
+             | -:6 A4:2 -:1 A4+B4 -:2 | B3+D4+F4+A4+F5:1 C4+E4+B4+E5 B3+D4+F4+C5+F5 \
+             A3+C4+E4+B4+G5 B3+D4+A4+F5 A3+C4+E4+E5+G5 G3+B3+D4+F5+A5 A3+C4+E4+G4+G5 B3+D4+F5 \
+             C4+E4+E5 B3+D4+F4+F5 C4+E4+G4+E5 | B3+D4+F4+A4+F5 A3+C4+G4+B4+G5 B3+D4+C5+F5 \
+             C4+E4+B4+E5 D4+F4+A4+D5 - D4+F4+A4+D5 E4+G4+B4+C5 D4+F4+A4+B4 E4+A4+B4 F4+G4+A4+C5 \
+             E4+G4+A4+B4 | D4+A4+B4+C5 E4+B4+C5 F4+A4+C5+D5 G4+B4+E5 F4+A4+C5+D5 E4+G4+B4+D5+E5 \
+             - G4+B4 D4+F4+A4+F5 E4+G4+B4+E5 D4+F4+A4+F5 C4+G4+G5 | D4+F4+A4+F5 C4+E4+G5 \
+             B3+D4+F5+A5 C4+E4+E5+G5 D4+F4+D5+F5 E4+G4+C5 A4+F5 E4+B4+E5 D4+F4+A4+D5+F5 C4+E5 \
+             D4+A4+F5 E4+B4 | D4+F4+A4+F5 - B3+D4+F5+A5 C4+E4+E5+G5 D4+F4+D5+F5 E4+G4+C5 \
+             D4+A4+F5 E4+B4+E5 D4+F4+A4+D5+F5 C4+G4+E5+G5 D4+A4+F5 - | D4+F4+A4+F5 C4+E4+G5 -:3 \
+             E4+G4+B4:1 -:2 D4+F4+A4+C5+F5:1 C4+G4+D5+G5 D4+G4+A4+F5 - & F4+B4:1 G4 A4 E4 F4 \
+             E4+G4 F4+A4 E4+G4+C5 F4+B4 E4+E5 D5 E5 | A4 G4+C5+E5 B4+D5 E4+C5+E5 B4+D5 G4+A4+C5 \
+             G4+A4+B4+D5 G4+A4+C5+E5 F4+B4+D5 C5+E5 A4+B4+D5 G4+C5+E5 | F4+A4+B4+D5 G4+C5 \
+             A4+B4+D5 C5 B4+D5 E4+A4+C5+E5 F4+G4+A4+B4+D5 G4+A4+C5+E5 B4+D5 C5+E5 B4 G4 | - \
+             G4+C5+E5 A4+B4+D5 E4+C5+E5 F4+D5 A4+E5 G4+B4 E4+A4+E5 D5 E4+C5 D5 E5 | B4 G4+E5 D5 \
+             C5+E5 B4 -:2 E4+G4+C5:1 F4+D5 E4+C5+E5 D5 E5 | A4+B4 G4+E5 D5 C5+E5 B4 -:2 \
+             E4+G4+C5:1 F4+D5 E4+C5+E5 D5 E5 | A4+B4 G4+E5 D5 C5+E5 B4 -:2 E4+G4+C5:1 F4+D5 \
+             E4+C5+E5 D5 E5 | A4 G4+C5+E5 D5 E4+C5 B4+D5 G4+A4+C5 A4+B4+D5 A4+C5+E5 F4+B4+D5 \
+             C5+E5 A4+B4+D5 C5+E5 | F4+A4+B4+D5 C5 A4+B4+D5 C5 B4+D5 E4+A4+C5+E5 F4+G4+A4+B4+D5 \
+             G4+A4+C5 B4 C5+E5 B4 G4 | - G4+C5+E5 A4+B4+D5 E4+C5+E5 F4+D5 A4+E5 B4 E4+E5 D5 \
+             E4+C5 D5 C5+E5 | B4+D5 C5 A4+B4+D5 G4+C5+E5 F4+B4+D5 G4+A4+C5 F4+G4+A4+B4+D5 \
+             A4+C5+E5 F4+A4+B4+D5 G4+C5 A4+B4+D5 C5 | B4 E4+C5+E5 F4+A4+B4+D5 G4+C5 B4 A4+C5+E5 \
+             G4+B4 A4 D5 G4+C5+E5 B4 C5 | F4+D5 G4+E5 B4 E4+C5 B4 A4+C5 F4+G4+B4+D5 E4+A4+C5+E5 \
+             B4+D5 C5 B4+D5 E4+C5+E5 | B4 G4+C5+E5 F4+A4+B4+D5 G4+C5 A4+B4 A4+E5 F4+B4+D5 A4+C5 \
+             B4 E4+C5 F4+B4+D5 C5+E5 | B4+D5 C5+E5 F4+A4+B4+D5 G4+C5 A4+B4 A4+E5 F4+G4+B4+D5 \
+             G4+A4+C5 B4 E4+C5 F4+B4+D5 G4+C5+E5 | B4 G4+C5+E5 F4+A4+B4+D5 G4+C5+E5 A4+B4+D5 \
+             A4+C5+E5 F4+B4+D5 G4+A4+C5 B4+D5 E4+C5+E5 F4+B4+D5 G4+C5+E5",
+        )
+        .in_time(SIX_EIGHT)
+        .in_key(D, Dorian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "-:12 | - | - | - | - | - | - | - | - | - | - | - | - | - | - | -:10 \
+                           (3 -:1 x x"),
+        ])
+        .marked(Dynamic::Piano),
+        // MIDI bars 934 to 937.
+        Part::new(
+            "Two gypsy girls",
+            "F5:2. -:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5 | F5 F5:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5:1 \
+             -",
+            "",
+        )
+        .with_left(
+            "D2:1 -:7 | -:8 | - | - & F2+A2+F3+A4:1 -:7 | -:8 | - | - & -:1 D4 - D4 - D4 D4 D4 | \
+             - D4 D4 D4 - D4 - D4 | - D4 - D4 - D4 D4 D4 | - D4 D4 D4 - D4 - D4 & D4:1 C4+D5+A5 \
+             D4+D5+A5 E4+A5 D4+F4+D5+A5 G4+A5 A4+D5+A5 B4+D5 | D4+C5+D5+A5 B4+D5+A5 A4+D5+A5 \
+             G4+D5+A5 D4+F4+D5+A5 E4+D5+A5 D4+D5+A5 C4+D5+A5 | D4+D5+A5 C4+D5+A5 D4+D5+A5 E4+A5 \
+             D4+F4+D5+A5 G4+A5 A4+D5+A5 B4+D5 | D4+C5+D5+A5 B4+D5+A5 A4+D5+A5 G4+D5+A5 \
+             D4+F4+D5+A5 E4+D5+A5 D4+D5+A5 C4+D5+A5 & G4+D5+A5:1 -:7 | -:8 | - | -",
+        )
+        .with_tempo(&[tempo(0, 138)])
+        .in_key(D, Dorian)
+        .played_by(&[(gm::OBOE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "x:8 | - | - | -"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bars 938 to 939.
+        Part::new(
+            "Clarinets and horns",
+            "A4:4 A4 | A4 A4",
+            "",
+        )
+        .with_left(
+            "F4:4 F4 | F4 F4 & -:2 G4 - G4 | _ G4 - G4 & A4:8 | _",
+        )
+        .in_key(D, Dorian)
+        .played_by(&[(gm::CLARINET, 0)])
+        .with_drums(&[
+            (Drum::Snare, "-:8 | -:6 (3 -:1 x x"),
+        ]),
+        // MIDI bars 940 to 943.
+        Part::new(
+            "Gypsy girls again",
+            "F5:2. -:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5 | F5 F5:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5:1 \
+             -",
+            "",
+        )
+        .with_left(
+            "D2:1 -:7 | -:8 | - | - & F2+A2+F3:1 -:7 | -:8 | - | - & -:1 D4 - D4 - D4 D4 D4 | - \
+             D4 D4 D4 - D4 - D4 | - D4 - D4 - D4 D4 D4 | - D4 D4 D4 - D4 - D4 & D4:1 C4+D5+A5 \
+             D4+D5+A5 E4+A5 D4+F4+D5+A5 G4+A5 A4+D5+A5 B4+D5 | D4+C5+D5+A5 B4+D5+A5 A4+D5+A5 \
+             G4+D5+A5 D4+F4+D5+A5 E4+D5+A5 D4+D5+A5 C4+D5+A5 | D4+D5+A5 C4+D5+A5 D4+D5+A5 E4+A5 \
+             D4+F4+D5+A5 G4+A5 A4+D5+A5 B4+D5 | D4+C5+D5+A5 B4+D5+A5 A4+D5+A5 G4+D5+A5 \
+             D4+F4+D5+A5 E4+D5+A5 D4+D5+A5 C4+D5+A5 & D5+A5:1 -:7 | -:8 | - | -",
+        )
+        .in_key(D, Dorian)
+        .played_by(&[(gm::OBOE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "x:8 | - | - | -"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bars 944 to 948.
+        Part::new(
+            "Celesta and violins",
+            "-:2 (3 B4:1 C5 D5 (3 E5 - - (3 D5 C5 B4 | A4 -:7 | -:8 | -:2 (3 B4:1 C5 D5 (3 E5 - \
+             - (3 D5 C5 B4 | A4 -:7",
+            "",
+        )
+        .with_left(
+            "F4+A4:8 | _:2 - F4+A4:4 | F4+A4 F4+A4 | F4+A4:8 | _:2 - F4+A4:4 & -:8 | -:2 G4 - G4 \
+             | _ G4 - G4 | G4 -:6 | G4:2 G4 - G4",
+        )
+        .in_key(D, Dorian)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .with_drums(&[
+            (Drum::Snare, "-:2 (3 x:1 x x X:2 (3 x:1 x x | X:8 | - | -:2 (3 x:1 x x X:2 (3 x:1 x \
+                           x | X:8"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bars 949 to 957.
+        Part::new(
+            "Oboes in thirds",
+            "-:2 (3 E5:1 F5 G5 (3 A5 - - (3 G5 F5 E5 | D5 -:7 | -:8 | -:2 (3 E5:1 F5 G5 (3 A5 - \
+             - (3 G5 F5 E5 | D5 -:7 | -:2 (3 E5:1 F5 G5 (3 A5 - - (3 G5 F5 E5 | D5 -:5 (3 E5:1 \
+             F5 G5 | (3 A5 - - (3 G5 F5 E5 (3 D5 - - (3 E5 F5 G5 | (3 A5 - - (3 G5 F5 E5 (3 D5 - \
+             - (3 E5 F5 G5",
+            "",
+        )
+        .with_left(
+            "F4+A4:8 | _:2 - F4+A4:4 | F4+A4 F4+A4 | F4:6 -:2 | F4:4 F4+A4 | F4 F4 | _:8 | _:6 \
+             (3 C4+E4+G4+C5:1 B3+D4+F4+B4+D5 A3+C4+E4+C5+E5 | (3 G3+B3+D4+D5+F5 - - (3 \
+             A3+C4+E4+C5+E5 B3+D4+B4+D5 C4+E4+G4+A4+C5 (3 D4+G4+B4 - - (3 - B3+D4+B4+D5 - & -:8 \
+             | - | - | -:2 (3 C5:1 B4+D5 C5+E5 (3 D5+F5 - - (3 C5+E5 B4+D5 C5 | G4+B4 -:7 | -:2 \
+             (3 C4+E4+G4+C5:1 B3+D4+B4+D5 A3+C4+E4+C5+E5 (3 G3+B3+D4+D5+F5 - - (3 A3+C4+E4+C5+E5 \
+             B3+D4+B4+D5 C4+E4+G4+C5 | D4+G4+B4 -:5 (3 C4+E4+G4+C5:1 B3+D4+B4+D5 A3+C4+E4+C5+E5 \
+             | (3 G3+B3+D4+D5+F5 - - (3 A3+C4+E4+C5+E5 B3+D4+B4+D5 C4+E4+G4+C5 (3 D4+G4+B4 - - \
+             -:2 | F4:4 -:2 (3 C4+E4+G4+C5:1 - A3+C4+E4+C5+E5 & G4:2 -:6 | -:2 G4+B4+D5 G4+B4+D5 \
+             G4+B4+D5 | G4+B4+D5 G4+B4+D5 G4+B4+D5 G4+B4+D5 | G4+B4+D5 -:6 | -:2 G4+B4+D5 \
+             G4+B4+D5 G4+B4+D5 | G4+B4+D5 -:6 | -:2 G4+B4+D5 G4+B4+D5 - | -:8 | - & -:2 (3 C5:1 \
+             B4+D5 C5+E5 (3 D5+F5 - - (3 C5+E5 B4+D5 C5 | G4+B4 -:7 | -:8 | A4 | _:2 -:6 | A4:8 \
+             | _:2 - A4:4 | A4:8 | _:2 - F4+A4:4",
+        )
+        .in_key(D, Dorian)
+        .played_by(&[(gm::OBOE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "-:2 (3 x:1 x x X:2 (3 x:1 x x | X:8 | - | -:2 (3 x:1 x x X:2 (3 x:1 x \
+                           x | X:8 | -:2 (3 x:1 x x X:2 (3 x:1 x x | X:6 (3 x:1 x x | X:2 (3 x:1 \
+                           x x X:2 (3 x:1 x x | X:2 (3 x:1 x x X:2 (3 x:1 x x"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bars 958 to 969.
+        Part::new(
+            "The merchant again",
+            "A5:1 B5 A5 B5 A5 -:7 | A5:1 B5 A5 B5 C6 B5 A5 -:5 | A5:1 B5 A5 B5 C6 B5 A5 -:5 | \
+             F5:1 G5 A5 B5 C6 B5 A5 B5 A5 B5 C6 B5 | A5 G5 A5 G5 A5 B5 A5 G5 F5 G5 F5 E5 | F5 \
+             -:3 F5:1 G5 F5 G5 F5 E5 F5 G5 | A5 G5 A5 B5 A5 B5 C6 B5 A5 G5 A5 G5 | A5 B5 A5 G5 \
+             F5 G5 F5 E5 F5:2 D5:1 E5 | F5 G5 F5 G5 F5:2 F5:1 G5 A5 G5 A5 B5 | A5 B5 C6 B5 A5 G5 \
+             A5 G5 A5 B5 A5:2 | A5:1 B5 C6 B5 A5 G5 A5 G5 A5 B5 A5:2 | A5:1 B5 C6 B5 A5 G5 A5 G5 \
+             A5 B5 A5 -",
+            "",
+        )
+        .with_left(
+            "-:12 | - | - | - | - | G3:2 (3 _:1 _ A3 (3 B3 - - -:6 | -:3 B3:1 -:6 G3:2 | -:6 \
+             G3:4 (3 A3:1 - - | -:6 A3:1 -:5 | G3:2 (3 _:1 _ - (3 - C4 - -:6 | -:3 B3:2 -:1 A3 \
+             A3:2 -:3 | G3:2 (3 _:1 _ - -:8 & (3 -:1 A3 - (3 A3 G3 - (3 G3 A3 - (3 G3 A3 G3 (3 \
+             G3 A3 G3 (3 A3 A3 G3 | (3 G3 - - (3 A3 - C4 -:2 (3 C4:1 - - G3:4 | _ -:2 (3 A3:1 - \
+             - -:2 (3 C4:1 B3 - | (3 G3 _ - (3 - G3+G4 A4 (3 - C4+C5 D4+D5 -:6 | -:3 B3+B4:1 -:2 \
+             A3:1 -:2 D4+D5:1 -:2 | (3 G4:1 _ - -:2 (3 -:1 C4+C5 D4+D5 -:6 | -:5 B3+B4:1 C4+C5 \
+             -:2 A3+A4:1 -:2 | G3+G4:1 -:9 (3 -:1 B3 C4 | -:3 B3:1 -:8 | (3 G4:1 _ - (3 - - \
+             A3+A4 (3 B3 C5 D4+D5 -:6 | -:3 B4:1 - B3+B4 -:4 G4+G5:1 - | (3 G4 _ - (3 - - A3+A4 \
+             (3 B3 C4 D4+D5 -:6 & -:12 | - | - | -:6 B3+D4+F4+C5+F5:1 A3+C4+E4+B4 B3+D4+A4+F5 \
+             A3+C4+E4+E5 G3+B3+D4+F5+A5 A3+C4+E4 | B3+D4+F5 C4+E4+E5 B3+D4+F4+F5 C4+E4+G4+E5 \
+             B3+D4+F4+A4+F5 A3+C4+G4+B4+G5 B3+D4+C5+F5 C4+E4+B4+E5 D4+F4+A4+D5 C4+E4+G4 \
+             D4+F4+A4+D5 E4+B4+C5 | D4+F4+A4+B4 E4+A4+B4 F4+G4+C5 G4+A4+B4 D4+A4+B4 \
+             C4+E4+G4+B4+C5 D4+F4+C5+D5 C4+B4+C5 D4+F4+A4+B4 - D4+F4+A4+B4 C4+E4 | -:12 | -:5 \
+             C4+E4+G4:1 -:6 | -:12 | -:6 D4:2 -:4 | -:1 C4+E4 -:10 | -:12 & -:12 | - | - | - | - \
+             | -:6 A4:2 -:1 A4+B4 -:2 | B3+D4+F4+A4+F5:1 C4+E4+B4+E5 B3+D4+F4+C5+F5 \
+             A3+C4+E4+B4+G5 B3+D4+A4+F5 A3+C4+E4+E5+G5 G3+B3+D4+F5+A5 A3+C4+E4+G4+G5 B3+D4+F5 \
+             C4+E4+E5 B3+D4+F4+F5 C4+E4+G4+E5 | B3+D4+F4+A4+F5 A3+C4+G4+B4+G5 B3+D4+C5+F5 \
+             C4+E4+B4+E5 D4+F4+A4+D5 - D4+F4+A4+D5 E4+G4+B4+C5 D4+F4+A4+B4 E4+A4+B4 F4+G4+A4+C5 \
+             E4+G4+A4+B4 | D4+A4+B4+C5 E4+B4+C5 F4+A4+C5+D5 G4+B4+E5 F4+A4+C5+D5 E4+G4+B4+D5+E5 \
+             - G4+B4 D4+F4+A4+F5 E4+G4+B4+E5 D4+F4+A4+F5 C4+G4+G5 | D4+F4+A4+F5 C4+E4+G5 \
+             B3+D4+F5+A5 C4+E4+E5+G5 D4+F4+D5+F5 E4+G4+C5 A4+F5 E4+B4+E5 D4+F4+A4+D5+F5 C4+E5 \
+             D4+A4+F5 E4+B4 | D4+F4+A4+F5 - B3+D4+F5+A5 C4+E4+E5+G5 D4+F4+D5+F5 E4+G4+C5 \
+             D4+A4+F5 E4+B4+E5 D4+F4+A4+D5+F5 C4+G4+E5+G5 D4+A4+F5 - | D4+F4+A4+F5 C4+E4+G5 -:3 \
+             E4+G4+B4:1 -:2 D4+F4+A4+C5+F5:1 C4+G4+D5+G5 D4+G4+A4+F5 - & G3:2 -:3 C4:1 - C4 - C4 \
+             - C4 | D4 -:6 C4:1 - C4 - C4 | D4 -:11 | -:3 C4+C5:1 B3+F4+A4+B4 -:7 | \
+             F4+A4+B4+D5:1 -:4 E4+A4+C5+E5:1 F4+G4+A4+B4+D5 G4+A4+C5 -:2 B4:1 G4 | -:9 E4+C5:1 \
+             -:2 | -:8 F4+A4+B4+D5:1 G4+C5 -:2 | - F4+A4+B4+D5:1 G4+C5 -:2 G4+B4:1 A4 -:4 | \
+             F4+D5:1 -:2 E4+C5:1 -:2 F4+G4+B4+D5:1 -:4 E4+C5+E5:1 | B4 G4+C5+E5 F4+A4+B4+D5 \
+             G4+C5 A4+B4 - F4+B4+D5 A4+C5 B4 E4+C5 F4+B4+D5 - | -:2 F4+A4+B4+D5:1 G4+C5 A4+B4 - \
+             F4+G4+B4+D5 G4+A4+C5 - E4+C5 -:2 | - F4+A4+B4+D5:1 -:3 F4+B4+D5:1 G4+A4+C5 - \
+             E4+C5+E5 F4+B4+D5 - & B3+D4+F4+A4+D5+F5:1 C4+E4+E5+G5 D4+F4+D5+F5 A3+E4+E5+G5 \
+             B3+F4+D5+F5 A3+E4+E5+G5+B5 B3+F4+D5+F5+A5 A3+E4+E5+G5+B5 B3+F4+D5+F5+A5 \
+             A3+E4+E5+G5+B5 B3+F4+D5+F5+A5 A3+E4+E5+G5+B5 | B3+F4+B4+D5+F5 A3+E4+C5+G5 B3+D5+F5 \
+             A3+C5+E5+G5 G3+B3+D5+F5+A5 A3+C4+E4+E5+G5 B3+D4+F4+D5+F5 A3+E4+E5+G5+B5 \
+             B3+F4+D5+F5+A5 A3+E4+E5+G5+B5 B3+F4+D5+F5+A5 A3+E4+E5+G5+B5 | B3+F4+B4+D5+F5 \
+             A3+E4+C5+G5 B3+D4+F4+D5+F5 A3+C4+E4+E5+G5 G3+B3+D4+F5+A5 A3+C4+E4+G5 B3+D4+F4+B4+F5 \
+             A3+E4+C5+G5+B5 B3+D5+F5+A5 A3+C4+E5+G5+B5 G3+D4+F5+A5+C6 A3+E4+C5+G5+B5 | \
+             B3+D4+F4+B4+A5 A3+C4+E4+C5+B5 B3+D4+F4+D5+F5 A3+E4+E5+G5 G3+D4+D5+F5+A5 A3+E4+G5 \
+             G4+G5:6 | _:3 -:9 | -:6 G4+G5 | _:3 -:9 | -:12 | -:6 A4+C5+F5:1 -:5 | -:6 G4+G5 | \
+             _:3 -:8 E4+B4+G5:1 | -:2 B3+D4+E5+A5:1 C4+E4+D5+G5 D4+F4+C5+F5 - D4+G4+A4+E5+F5+G5 \
+             E4+B4+D5+E5 -:3 E4+A4+G5:1 & -:1 A3 B3+A4 C4 D4+A4 - D4+A4 - D4+A4 - D4+A4 - | - \
+             C4+E5 D4+F4+A4:2 D4+F4+A4+B4:1 C5 A4+B4 - D4+A4 - D4+A4 - | - C4+E5 A4+B4 C5 \
+             F4+A4+B4+D5 C5+E5 A4+D5 C4+E5 D4+F4+A4+B4 C5 F4+A4+B4+D5+E5 E5+F5 | E5 E5+F5 A4+B4 \
+             -:2 C4+A4+C5+E5:1 A4+B4+D5 A4+C5+E5 F4+B4+D5 C5 F4+A4+B4+D5 C5+E5 | - C5 A4+B4+D5 \
+             C5 B4+D5 -:3 B4:1 C5+E5 -:2 | -:1 G4+C5+E5 A4+B4+D5 E4+C5+E5 F4+D5 A4+E5 B4 E4+E5 \
+             D5 - D5 C5+E5 | B4+D5 C5 A4+B4+D5 G4+C5+E5 F4+B4+D5 G4+A4+C5 F4+G4+A4+B4+D5 \
+             A4+C5+E5 -:2 A4+B4+D5:1 C5 | B4 E4+C5+E5 -:2 B4:1 A4+C5+E5 -:2 D5:1 G4+C5+E5 B4 C5 \
+             | - G4+E5 B4 - B4 A4+C5 - E4+A4+C5+E5 B4+D5 C5 B4+D5 - | -:5 A4+E5:1 -:5 C5+E5:1 | \
+             B4+D5 C5+E5 -:3 A4+E5:1 -:2 B4:1 - F4+B4+D5 G4+C5+E5 | B4 G4+C5+E5 - G4+C5+E5 \
+             A4+B4+D5 A4+C5+E5 -:2 B4+D5:1 -:2 G4+C5+E5:1",
+        )
+        .in_time(SIX_EIGHT)
+        .with_tempo(&[tempo(0, 104)])
+        .in_key(D, Dorian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "X:2 x:1 x x x x x x x X:2 | - x:1 x X:2 x:1 x X:4 | x:1 x x x X:2 x:1 \
+                           x X:2 x:1 x | X:2 x:1 x X:8 | -:12 | - | - | - | - | - | - | -:10 (3 \
+                           -:1 x x"),
+        ])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 970 to 977.
+        Part::new(
+            "Gypsy girls, last time",
+            "F5:2. -:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5 | F5 F5:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5 | \
+             F5 F5:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5 | F5 F5:1 D5 F5 D5 F5 A5 | E5:2 C5 E5 G5:1 -",
+            "",
+        )
+        .with_left(
+            "D2:1 -:7 | -:8 | - | - | - | - | - | - & F2+A2+F3+A4:1 -:7 | -:8 | - | - | - | - | \
+             - | - & -:1 C4+D4 D4 D4+E4 F4 D4+G4 D4+A4 D4+B4 | C5 D4+B4 D4+A4 D4+G4 F4 D4+E4 D4 \
+             C4+D4 | - C4+D4 D4 D4+E4 F4 D4+G4 D4+A4 D4+B4 | C5 D4+B4 D4+A4 D4+G4 F4 D4+E4 D4 \
+             C4+D4 | - C4+D4 D4 D4+E4 F4 D4+G4 D4+A4 D4+B4 | C5 D4+B4 D4+A4 D4+G4 F4 D4+E4 D4 \
+             C4+D4 | - C4+D4 D4 D4+E4 F4 D4+G4 D4+A4 D4+B4 | C5 D4+B4 D4+A4 D4+G4 F4 D4+E4 D4 \
+             C4+D4 & G4+D5:1 -:7 | -:8 | - | - | - | - | - | - & D4:1 D5 D5+A5 A5 D4+D5+A5 A5 \
+             D5+A5 D5 | D4+D5+A5 D5+A5 D5+A5 D5+A5 D4+D5+A5 D5+A5 D5+A5 D5+A5 | D4+D5+A5 D5+A5 \
+             D5+A5 A5 D4+D5+A5 A5 D5+A5 D5 | D4+D5+A5 D5+A5 D5+A5 D5+A5 D4+D5+A5 D5+A5 D5+A5 \
+             D5+A5 | D4+D5+A5 D5+A5 D5+A5 A5 D4+D5+A5 A5 D5+A5 D5 | D4+D5 D5 D5 D5 D4+D5+A5 \
+             D5+A5 D5+A5 D5+A5 | D4+D5+A5 D5+A5 D5+A5 A5 D4+D5+A5 A5 D5+A5 D5 | D4+D5 D5 D5 D5 \
+             D4+D5+A5 D5+A5 D5+A5 D5+A5 & A5:2. -:6 | -:8 | - | - | E5+E6 | A5+A6:4 - | E5+E6:8 \
+             | A5+A6:4 -",
+        )
+        .with_tempo(&[tempo(0, 138)])
+        .in_key(D, Dorian)
+        .played_by(&[(gm::OBOE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "x:8 | - | - | - | - | - | - | -"),
+        ]),
+        // MIDI bars 978 to 985.
+        Part::new(
+            "Trumpet and harp",
+            "F4:2 F4:1 D4 F4 D4 F4 A4 | E4 -:7 | F4:2 F4:1 D4 F4 D4 F4 A4 | E4 -:7 | F4:2 F4:1 \
+             D4 F4 D4 F4 A4 | E4 -:7 | F4:2 D4 F4 A4:1 - | -:8",
+            "",
+        )
+        .with_left(
+            "C4+G4:1 G4 C4+G4 G4 C4+G4 G4 C4+G4 G4 | C4+G4 G4 G4 G4 C4+G4 G4 C4 G4 | C4+G4 G4 \
+             C4+G4 G4 C4+G4 G4 C4+G4 G4 | C4+G4 G4 G4 G4 C4+G4 G4 C4 G4 | Bb3 F4 Bb3 F4 Bb3 F4 \
+             Bb3 F4 | Bb3+F4 F4 Bb3+F4 F4 Bb3+F4 F4 Bb3+F4 F4 | Bb3 F4 Bb3+F4 F4 Bb3 F4 Bb3+F4 \
+             F4 | Bb3+F4 F4 Bb3+F4 F4 Bb3+F4 F4 Bb3+F4 F4 & -:8 | -:2 C4 E4 G4:1 - | -:8 | -:2 \
+             C4 E4 G4:1 - | -:8 | -:2 C4 E4 G4:1 - | -:8 | E4:2 C4 E4 G4:1 -",
+        )
+        .with_tempo(&[glide(53, 106, 5)])
+        .in_key(F, Major)
+        .played_by(&[(gm::TRUMPET, 0)]),
+        // MIDI bars 986 to 1004.
+        Part::new(
+            "Coachmen's Dance",
+            "-:2 E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 \
+             F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. \
+             -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 \
+             | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 \
+             F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. \
+             -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2 | - E4:1 F#3:2. -:1 E4:2",
+            "",
+        )
+        .with_left(
+            "E2:4 E2 | E2 E2 | E2 E2 | E2 E2 | -:8 | - | E2:4 E2 | E2 E2 | -:8 | E2:4 E2 | E2 E2 \
+             | E2 E2 | E2 E2 | -:8 | E2:4 E2 | E2 E2 | -:8 | E2:4 E2 | E2 E2 & \
+             E1+F#3+A3+D4+E4:2. -:6 | -:8 | - | -:4 E1+E4 | E1+E4 E1+E4 | E1+E4 E1+E4 | -:8 | \
+             -:4 E1+E4 | -:8 | E1+E4:4 - | - E1+E4 | E1+E4 - | - E1+E4 | E1+E4 - | -:8 | - | -:4 \
+             E1+E4 | E1+E4 - | -:8 & -:8 | - | - | -:4 F#3:3 -:1 | -:4 F#3:3 -:1 | -:4 F#3:3 -:1 \
+             | -:8 | -:4 F#3:3 -:1 | E1+C#4+E4:4 E1+B3+E4 | -:8 | -:4 F#3:3 -:1 | -:8 | -:4 \
+             F#3:3 -:1 | -:4 E1+C#4+E4 | E1+B3+E4 - | - E1+B3+E4 | E1+B3+E4 F#3:3 -:1 | -:8 | - \
+             & -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 \
+             A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 \
+             A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 \
+             F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | \
+             -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 \
+             -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3. | -:2 A3:1 -:3 A3:1 F#3 & E3:4 E3 | E3 E3 | \
+             E3 E3 | E3 E3 | -:8 | - | E3:4 E3 | E3 E3 | -:8 | E3:4 E3 | E3 E3 | E3 E3 | E3 E3 | \
+             -:8 | E3:4 E3 | E3 E3 | -:8 | E3:4 E3 | E3 E3 & -:8 | - | - | -:4 A3+D4:2 - | A3+D4 \
+             - A3+D4 - | A3+D4 - A3+D4 - | -:8 | -:4 A3+D4:2 - | A3+D4 - A3+D4 - | A3+D4 -:6 | \
+             -:4 A3+D4:2 - | A3+D4 -:6 | -:4 A3+D4:2 - | A3+D4 - A3+D4 - | A3+D4 -:6 | -:4 \
+             A3+D4:2 - | A3+D4 - A3+D4 - | A3+D4 -:6 | -:8 & -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | \
+             -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - \
+             D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | \
+             -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - \
+             D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 - | -:2 D4 - D4:1 -",
+        )
+        .with_tempo(&[tempo(0, 112)])
+        .in_key(E, Mixolydian)
+        .played_by(&[(gm::FRENCH_HORN, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1005 to 1014.
+        Part::new(
+            "Trumpet, violins, trombone",
+            "-:2 E4:1 F#3. E5:4 | E5 E5 | E5 - | - B4:2 D5 | C#5:4 B4 | A4 E4:2 E4 | A4 A4 G#4 \
+             G#4 | F#4 -:6 | -:4 E4:2 G#4 | B4 B4 E5:4",
+            "",
+        )
+        .with_left(
+            "E2:4 E2 | -:8 | E2:4 E2 | E2 E2 | E2 E2 | E2 E2 | E2 E2 | E2 E2 | E2 E2 | E2 E2 & \
+             E3:4 E3 | -:8 | E3:4 E3 | E3 E3 | E3 E3 | E3 E3 | E3 E3 | E3 E3 | E3 E3 | E3 E3 & \
+             -:2 A3:1 F#3:2. -:1 A3+D5+E5 F#3+F#4. | -:2 A3+D5+E5:1 F#3+F#4:2. -:1 A3+D5+E5 \
+             F#3+F#4. | -:2 A3+D5+E5:1 F#3+F#4:2. -:1 A3+D5+E5 F#3+F#4. | -:2 A3+D5+E5:1 \
+             F#3+F#4:2. -:1 A3+D4+E4+A4+E5 F#3+F#4. | -:2 A3+D5+E5:1 F#3+F#4:2. -:1 A3+D5+E5 \
+             F#3+F#4. | -:2 A3+D5+E5:1 F#3+F#4:2. -:1 A3+D4+A4+D5+E5 F#3+F#4. | -:2 \
+             A3+D4+E4+D5+E5:1 F#3+F#4:2. -:1 A3+D5+E5 F#3+F#4. | -:2 A3+D5+E5:1 F#3+F#4:2. -:1 \
+             A3+D5+E5 F#3+F#4. | -:2 A3+D5+E5:1 F#3+F#4:2. -:1 A3+D5+E5 F#3+F#4. | -:2 \
+             A3+D5+E5:1 F#3+F#4:2. -:1 A3+D5+E5 F#3+F#4 & -:2 D4 -:4 | -:8 | - | - | - | - | - | \
+             - | - | -",
+        )
+        .in_key(E, Mixolydian)
+        .played_by(&[(gm::TRUMPET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 1015 to 1029.
+        Part::new(
+            "Woodwinds",
+            "-:2 E5 D6:1 -:3 | D5:2. -:4 E5:1 - | -:2 E5:1 -:3 E5:1 - | -:2 E5:1 -:3 E5:1 - | \
+             -:2 E5:1 -:3 E5:1 - | -:2 E5 D6:1 -:3 | D6:1 -:3 D5:1 -:3 | D4:2. -:4 D6:1 - | -:2 \
+             C#6:1 -:3 B5:1 - | -:2 A5:1 -:3 A5:1 - | -:2 D6:1 -:3 C#6:1 - | -:2 B5:1 -:3 E6:1 - \
+             | -:2 D6:1 -:3 C#6:2 | B5:1 -:3 D6:1 -:3 | D6:1 -:3 D5:1 -:3",
+            "",
+        )
+        .with_left(
+            "E2+E5:4 - | - E2 | E2 E2 | E2 E2 | -:8 | E4:2 - B4+B5:4 | - F#3+A3:1 -:3 | E2:2 -:6 \
+             | -:8 | - | - | - | - | - | -:4 F#3+A3:1 -:3 & -:2 A3+D4+E4+A4+D5:1 F#4 F#5+A5+E6 \
+             -:3 | -:4 E3 | E3 E3 | E3 E3 | E3 E3 | -:3 F#3:2. -:3 | -:8 | F#3+A3+E4:2. -:6 | \
+             -:8 | - | - | - | - | - | -:4 E4+F#4+A4:1 -:3 & E4:2 - A4+D5+E5:1 -:3 | D4+E4+E5:2. \
+             -:6 | -:8 | -:4 G#3+G#4:2 F#3+F#4:1 - | E2+B3+B4:4 E2+E4+E5 | E2+E5 - | C#4+C#5 \
+             D3+D4 | -:6 E4:1 - | -:2 D4+E4+F#4:1 -:3 G#3+D4+E4+G#4:1 - | -:2 D4+E4:1 -:3 \
+             D4+E4:1 - | -:2 D4+E4:1 -:3 D4+E4+F#4:1 - | -:2 G#3+D4+E4+G#4:1 -:3 A3+D4+E4+A4:1 - \
+             | -:2 B3+D4+E4+B4:1 -:3 C#4+D4+E4+C#5:2 | C#4+E4+C#5:1 -:3 B4+B5:4 | C#4+C#5 D3+D4 \
+             & -:8 | F#3+A3:1 -:3 B3+B4:2 - | C#4+C#5:4 B3+B4 | A3+A4:2 -:6 | -:8 | -:4 E5:1 -:3 \
+             | E5:1 -:3 E5:1 -:3 | -:8 | - | - | - | - | -:6 F#4+E5:2 | F#3+B3+E5:4 E5+E6:1 -:3 \
+             | E5:1 -:3 E5:1 -:3 & -:3 F#3:2. -:3 | F#4+A4:2. -:4 A3+D4+E4+A4+D5:1 F#3+F#4. | \
+             -:2 A3+D4+A4+D5:1 F#3+F#4:2. -:1 A3+D4+A4+D5 F#3+F#4. | -:2 A3+D4+A4+D5:1 \
+             F#3+F#4:2. -:1 A3+D4+A4+D5 F#3+F#4. | -:2 A3+D4+A4+D5:1 F#3+F#4:2. -:1 A3+D4+A4+D5 \
+             F#3+F#4. | -:2 A3+D4+E4+A4+D5:1 F#4 F#5+A5+F#6+A6+E7 -:3 | F#4+A4+F#5+A5+E6:1 -:3 \
+             E4+F#4+A4:1 -:3 | -:6 E3+D5+F#5+E6:1 - | -:2 E3+F#5+D6+E6:1 -:3 E3+F#5+D6+E6:1 - | \
+             -:2 E3+F#5+D6+E6:1 -:3 E3+F#5+D6+E6:1 - | -:2 E3+F#3+D5+F#5+E6:1 -:3 E3+F#5+D6+E6:1 \
+             - | -:2 E3+F#5+D6+E6:1 -:3 E3+F#3+D5+F#5+D6:1 - | -:2 E3+F#3+D5+F#5+E6:1 -:3 \
+             E3+F#3+D5+F#5+D6+E6:1 - | E3+B4+F#5+D6+E6 -:3 F#5+A5+F#6+A6+E7:1 -:3 | \
+             F#4+A4+F#5+A5+E6:1 -:7",
+        )
+        .in_key(E, Mixolydian)
+        .played_by(&[(gm::OBOE, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:8 | x | - | - | - | - | - | x | - | - | - | - | - | - | -"),
+            (Drum::Crash, "-:4 x | -:8 | - | - | - | -:4 x | -:8 | - | - | - | - | - | - | -:4 x \
+                           | -:8"),
+        ])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1030 to 1040.
+        Part::new(
+            "Flutes and clarinets",
+            "-:6 A5:1 - | -:2 A5 - B5 | - C#6 - D6 | - E6 - F#6 | - E6 - F#6 | - G#6 - A6 | - B6 \
+             A6:1 -:3 | -:6 D6:1 - | -:2 E6:1 -:3 F#6:1 - | -:2 G#6:1 -:3 F#6:1 - | -:2 G#6:1 \
+             -:3 A6:1 -",
+            "",
+        )
+        .with_left(
+            "-:8 | -:2 B3:1 - B3:4 | A3 - | -:8 | -:4 E3:2 G#3 | B3 B3 -:4 | -:8 | E2:2 -:6 | \
+             -:8 | -:4 G#3:2 F#3 | -:8 & E2:2 - B3 B3:1 - | C#4:4 -:2 C#4:1 - | -:2 D4:1 -:5 | \
+             A4:2 F#4:1 - G#4:2 G#4:1 - | F#4:4 - | -:8 | -:4 B4+B5 | C#5 B3+E4:2 D4 | C#4+E4:4 \
+             B3+E4 | A3+E4 E4 | B3+E4 E4 & -:6 A5:2 | -:6 A4:2 | - G#4+B4 - F#4+A4+C#5 | - \
+             G#4+B4 - D4+F#4+A4+C#5 | - C#4+G#4+B4 - B3+D4+F#4+A4 | - A3+C#4+G#4 - G#3+B3+D4+F#4 \
+             | F#3+A3:4 - | E3 - | -:8 | -:2 D4+F#4 - C#4+G#4+B4 | - D4+F#4+A4 - A3+C#4+G#4 & \
+             -:6 B4:1 - | -:2 B4:1 -:3 C#5:1 - | -:8 | - | - | - | -:4 E5+E6:1 -:3 | -:6 F#5:2 | \
+             -:8 | -:7 F#4+A4+A5:1. | -:3 G#4+B4+B5:2. -:3 & F#3+A3+D4+E4:2. - E4+D5+E5:4 | \
+             E4+D5+E5 E4+D5+E5 | E4+D5+E5 E4+D5+E5 | E4+D5+E5 E4+D5+E5 | E4+D5+E5 E4+D5+E5 | \
+             E4+D5+E5 E4+D5+E5 | E4+D5+E5 - | F#3+A3+C#4+D4+E4:2. -:4 E4+G#4+B4+G#5+B5:1 - | -:2 \
+             F#4+A4+C#5+A5+C#6:1 F#5:2. -:1 G#4+B4+B5+D6 F#5+G#5. | -:2 A4+C#5+C#6+E6:1 \
+             G#5+A5:2. -:1 B3+F#5+D6+A6 B5 | -:2 C#4+G#5+E6+B6:1 C#6 -:2 D4+A5+F#6+C#7:1 \
+             A4+C#5+C#6+D6 & -:6 D4+F#4+F#5:1 A4+B4. | -:2 D4+F#4+F#5:1 A4+B4:2. -:1 G#4+G#5 \
+             B4+C#5. | -:2 F#4+A4+F#5+A5:1 C#5:2. -:1 G#4+B4+G#5+B5 - | -:2 A4+C#5+A5+C#6:1 \
+             F#5:2. -:1 B4+B5+D6 F#5+G#5. | -:2 A4+C#5+C#6+G#6:1 G#5+A5:2. -:1 B4+F#5+D6+A6 \
+             A5+B5. | -:2 C#5+G#5+E6+B6:1 B5+C#6:2. -:1 F#5+A5+F#6+C#7 C#6+D6. | -:2 \
+             G#5+B5+G#6+D7:1 D6+E6 D5+A5+C#6+F#6+E7 -:3 | -:4 D5+E5 | D5+E5 D5+E5 | D5+E5 D5+E5 \
+             | D5+E5 D5+E5",
+        )
+        .in_key(E, Mixolydian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Kick, "x:8 | - | - | - | - | - | - | x | - | - | -"),
+            (Drum::Crash, "-:8 | - | - | - | - | - | -:4 x | -:8 | - | - | -"),
+        ])
+        .marked(Dynamic::Forte),
+        // MIDI bar 1041.
+        Part::new(
+            "Flutes and clarinets, bar 12",
+            "-:2 G#6:1 E6:2. -:1 A6 F#6:2. -:1 B6 G#6",
+            "",
+        )
+        .with_left(
+            "-:2 G#3+B3+D4+F#4 - F#3+A3+C#4 - E3+G#3+B3+D4 & E4:2 - E4:4 E4 & -:3 B4:2. - C#5. \
+             -:3 & D5+E5:4 D5+E5 D5+E5 & -:2 E4+G#5+B5+D7:1 D6 -:2 F#4+A5+C#6+E7:1 E6 -:2 \
+             G#4+B5+D6+F#7:1 F#5+F#6",
+        )
+        .in_time(THREE_FOUR)
+        .in_key(E, Mixolydian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1042 to 1053.
+        Part::new(
+            "Clarinet and trombones",
+            "G5:6 E5:2 | F5:4 E5:2 D5 | C5:8 | G5:4 G5:2 E5 | A5:4 A5 | G5 G5:2 E5 | D5:4 D5:2 \
+             E5 | D5:4 C5:2 B4 | A4:4 G4 | C5 C5 | B4 A4 | G4:6 -:2",
+            "",
+        )
+        .with_left(
+            "G1+G3+E4+C5+E5:1 -:7 | -:8 | -:1 A3+C4+F4 G3+B3+E4 F3+A3+D4 E3+G3+C4:2 E3+G3+C4:1 - \
+             | -:8 | - | -:1 G3+B3+D4 A3+C4+E4 B3+D4+F4 C4+E4+G4:2 C4+E4+G4:1 - | -:8 | - | -:1 \
+             B3+E4+G4 A3+D4+F4 G3+C4+E4 F3+B3+D4:2 F3+B3+D4:1 - | -:8 | - | -:1 E3+G3+C4 \
+             F3+A3+D4 G3+B3+E4 A3+C4+F4:2 A3+C4+F4:1 - & -:2 B2+D3+G3:1 -:3 C3+E3+A3:1 - | -:2 \
+             D3+F3+B3:1 -:3 D3+F3+B3:1 - | -:8 | -:2 G3+B3+D4:1 -:3 A3+C4+E4:1 - | -:2 \
+             B3+D4+F4:1 -:3 B3+D4+F4:1 - | -:8 | -:2 C4+F4+A4:1 -:3 B3+E4+G4:1 - | -:2 \
+             A3+D4+F4:1 -:3 A3+D4+F4:1 - | -:8 | -:2 A3+C4+F4:1 -:3 G3+B3+E4:1 - | -:2 \
+             F3+A3+D4:1 -:3 F3+A3+D4:1 - | (3 G3 A3+A4 B3+B4 (3 C4+C5 D5 E5 (3 F5 G4+G5 B4+B5 (3 \
+             C5+C6 D5+D6 E5+E6 & E6+C7+G7:1 -:7 | -:8 | - | - | - | - | - | - | - | - | - | -",
+        )
+        .in_key(G, Mixolydian)
+        .played_by(&[(gm::CLARINET, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 1054 to 1065.
+        Part::new(
+            "Woodwinds in C",
+            "-:2 G4. - A4. | - B4. - B4. | -:1 F5 E5 D5 C5:2 C5:1 - | -:2 D5. - E5. | - F5. - \
+             F5. | -:1 D5 E5 F5 G5:2 G5:1 - | -:2 A5. - G5. | - F5. - F5. | -:1 G5 F5 E5 D5:2 \
+             D5:1 - | -:2 F5. - E5. | - D5. - D5:1 - | - C5 D5 E5 F5:2 F5:1 -",
+            "",
+        )
+        .with_left(
+            "-:8 | - | - | - | - | - | - | - | - | -:2 A3+C4. - G3+B3. | - F3+A3. - F3+A3+D4:1 - \
+             | - E3 F3 G3 A3:2 - & -:2 B2+D3+G3. - C3+E3+A3. | - D3+F3+B3. - D3+F3+B3. | -:1 \
+             A3+A4 G3+G4 F3+F4 E3+E4:2 E3+E4:1 - | -:2 G3+B3. - A3+C4+E4. | - B3. - B3. | -:1 G3 \
+             A3 B3 C4:2 C4:1 - | -:6 B3:2. | - A3+F4. - A3. | -:1 B3+B4 A3+A4 G3+G4 F3:2 F3:1 - \
+             | -:2 F4:1. -:3 E4:1. - | -:8 | -:6 A3+A4:1 - & G4:1 -:7 | -:4 E4+E6:2 - | C4+C6:8 \
+             | G4:1 -:3 G4:1 -:3 | -:8 | G4:1 -:3 G4:1 - E4+E6:2 | -:4 D4:1 -:3 | D4:2 - C4+C6 \
+             B3 | A3 - G3:4 | C4:2 - C4:4 | - A3:2 - | (3 G3:1 A3 B3 (3 C4 D4 E4 F4+G4 A4 C5 E5 \
+             & D4+F4+A4:1 G4+B4+D5 D4+F4+A4 G4+B4+D5 D4+F4+A4 G4+B4 C5+E5+G5 G4+B4 | - G4+B4+D5 \
+             - G4+B4+D5 - G4+B4+D5 - G4+B4+D5 | - G4+B4+D5 A4+C5+E5 B4+F5 E5+G5 - E5+G5 - | -:2 \
+             D4+F4+A4:1 D5 -:2 G5:1 G4+B4 | D4+F4+A4 - D4+F4+A4 G4 D4+F4+A4 - D4+F4+A4 G4 | \
+             D4+F4+A4 -:7 | D4+F4+A4:1 E4:2. -:3 C4+E4+G4+C5:1 - | E4+F4+G4+B4 F4+A4+C5 D4+G4+B4 \
+             E4+C5+E5 D4+F4+B4+D5+F5 - D4+F4+A5 - | - F4+A4+C5 D4+G4+B4+D5 E4+A4+C5 D4+F4+B4+F5 \
+             -:3 | -:2 A4+C5. - G4+B4. | -:1 C4+E4+A4+C5+E5 F4+A4:2. -:4 | (3 B3+D4+G4:1 \
+             C4+E4+A4 D4+F4+B4 (3 E4+G4+C5 F4+A4+D5 - -:4 & -:8 | - | - | - | - | - | -:2 \
+             C4+F4+A4:1 D4+G4+B4+D5 C4+E4+A4+C5+E5 D4+F4+B4+D5+F5 - F4+A4+D5+F5+A5 | -:2 A4+D5. \
+             -:1 E4+G4+C5+E5+G5 A4+D5:2. | -:5 E4+G4+C5+E5+G5:1 D4+F4+A4+F5+A5 - | - G4+B4+D5 \
+             E4+E5 F4+B4+D5+F5 D4+G4+C5+E5+G5 -:3 | -:2 D4+B4+F5:1 E4+G4+C5+E5+G5 D4+F4+D5+F5+A5 \
+             -:3 | -:2 (3 -:1 - G4+B4+E5 (3 A4+B4+D5+G5 B4+C5+E5+A5 - -:2 & -:2 B3. - C4+E4. | \
+             D4+F4+A4:1 - D4+F4+A4 - D4+F4+A4 - D4+F4+A4 - | D4+F4+A4 -:4 G4+B4+D5:1 - G4+B4+D5 \
+             | D4+F4+A4 G4+B4+D5 G4+B4:2. D4+F4+A4:1 G4+B4 A4+C5:2. | -:1 G4+B4+D5 B4+D5:2. -:1 \
+             G4+B4+D5 B4+D5:2. | -:1 G4+B4 A4+C5+E5 B4+D5 C5+E5 G4+B4+D5 C5+E5 G4+B4+D5 | - \
+             G4+B4 C5+F5:2. - B4+E5. | E5+G5+B5. -:5 E4+G5+B5:1 | F4+A4+C5+F5+A5+C6 -:6 \
+             E4+G5+B5:1 | F4+A4+C5+F5+A5+C6 -:4 E4+A4+D5+F5+A5:1 D4+G5+B5 E4+F5+A5+C6 | B3+G5+D6 \
+             -:4 E4+G4+E5+G5+B5:1 F4+A4+F5+A5+C6 G4+B4+G5+B5+D6 | -:4 (3 -:1 - D5+F5+B5 (3 \
+             E5+G5+C6 G5+B5+E6 A5+C6+F6 & G6:6 E6:2 | F6:4 -:2 D6 | -:8 | G6:4 G6:2 E6 | A6:4 A6 \
+             | G6 G6:2 - | D6:4 D6:2 E6 | D6:4 -:2 B5:1 - | -:4 G5:1 -:3 | -:4 C6:3 -:1 | B5:4 - \
+             | G6 -",
+        )
+        .in_key(C, Major)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 1066 to 1083.
+        Part::new(
+            "The coachmen, tutti",
+            "A6:1 F#6 E6 F#6 E6 F#6 E6 F#6 | E6 F#6 E6 F#6 E6 F#6 E6 F#6 | E6 -:7 | E6:1 D6 E6 \
+             D6 E6 D6 E6 D6 | E6 D6 E6 D6 C#6 D6 E6 F#6 | E6 -:7 | E6:1 F#6 E6 F#6 G#6 F#6 E6 D6 \
+             | E6 D6 E6 D6 C#6 B5 C#6 D6 | E6 -:7 | E6:1 F#6 G#6 F#6 G#6 A6 G#6 F#6 | E6 F#6 E6 \
+             F#6 G#6 F#6 E6 D6 | E6 -:7 | E6:1 D6 E6 D6 C#6 D6 E6 F#6 | E6 F#6 G#6 F#6 G#6 A6 \
+             G#6 F#6 | E6 -:7 | E6:1 D6 E6 D6 C#6 B5 C#6 D6 | E6 D6 E6 D6 C#6 D6 E6 F#6 | E6 -:7",
+            "",
+        )
+        .with_left(
+            "E1+E2:2. - E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 & -:3 \
+             F#4:1 -:3 F#4:1 | -:3 F#4:1 -:3 F#4:1 | -:2 A3+E4:1 F#4 -:2 A3+E4:1 F#4 | -:8 | -:7 \
+             F#4:1 | -:2 A3+E4:1 F#4 -:2 A3+E4:1 F#4 | -:3 F#4:1 -:4 | -:6 A3:1 - | -:2 A3+E4:1 \
+             F#4 -:2 A3+E4:1 F#4 | -:2 A3+E4:1 F#4 -:2 A3+E4:1 F#4 | -:3 F#4:1 -:4 | -:2 E4:1 \
+             F#4 -:2 A3:1 F#4 | -:2 A3:1 -:3 A3:1 F#4 | -:2 E4:1 F#4 -:2 E4:1 F#4 | -:2 E4:1 F#4 \
+             -:2 E4:1 F#4 | -:6 A3+E4:1 - | -:2 A3:1 -:3 A3:1 F#4 | -:2 E4:1 F#4 -:2 E4:1 F#4 & \
+             A3+E4+E5+C#6:1 G#3+D4+F#5 A3+E4+E5 G#3+D4+F#5 A3+E4+E5 G#3+D4+F#5 A3+E4+E5 \
+             G#3+D4+F#5 | A3+C#4+E4+C#6 G#3+B3+D4+D6 A3+C#4+E4+C#6 G#3+B3+D4+D6 A3+C#4+E4+C#6 \
+             G#3+B3+D4+D6 A3+C#4+E4+C#6 G#3+B3+D4+D6 | A3+C#4+E5+C#6 B3+F#5+D6 C#4+E5+C#6 \
+             B3+F#5+D6 A3+E5+E6 B3+D6 C#4+C#6 D4+B5 | A3+C#4+E4+A5+C#6 B3+F#4+G#5 A3+E4+A5 \
+             B3+F#4+G#5 A3+E4+A5 B3+F#4+G#5 A3+E4+A5 B3+F#4+G#5 | A3+C#4+E4+A5+C#6 \
+             B3+D4+F#4+G#5+B5 A3+C#4+E4+A5+C#6 B3+D4+F#4+G#5+B5 C#4+E4+G#4+F#5+A5 \
+             B3+D4+F#4+G#5+B5 A3+C#4+E4+A5+C#6 G#3+B3+D4+B5+D6 | A3+C#4+A5+C#6 D4+B5 C#4+C#6 \
+             D4+B5 C#4+C#6 D4+B5 C#4+C#6 D4+B5 | A3+C#4+E4+C#6 G#3+D4 A3+E4 G#3+D4 F#3+C#4 \
+             G#3+D4 A3+E4 B3+F#4 | A3+C#4+E4+A5+C#6 B3+D4+F#4+G#5+B5 A3+C#4+E4+A5+C#6 \
+             B3+D4+F#4+G#5+B5 C#4+E4+G#4+F#5+A5 D4+F#4+A4+E5+G#5 C#4+E4+G#4+F#5+A5 \
+             B3+D4+F#4+G#5+B5 | A3+A5+C#6 D4+G#5+B5 C#4+A5+C#6 D4+G#5+B5 E4+F#5+A5 D4+G#5+B5 \
+             C#4+A5+C#6 B3+B5+D6 | E4+C#6 D4 C#4 D4 C#4 B3 C#4 D4 | A3+C#4+E4+C#6 G#3+B3+D4+D6 \
+             A3+C#4+E4+C#6 G#3+B3+D4+D6 F#3+A3+C#4+E6 G#3+B3+D4+D6 A3+C#4+E4+C#6 B3+D4+F#4+B5 | \
+             A3+C#4+A5+C#6 B3+D4+G#5+B5 A3+C#4+A5+C#6 B3+D4+G#5+B5 C#4+E4+F#5+A5 D4+F#4+E5+G#5 \
+             C#4+E4+F#5+A5 B3+D4+G#5+B5 | A3+C#4+E4+A5+C#6 F#4+G#5 E4+A5 F#4+G#5 G#4+F#5 F#4+G#5 \
+             E4+A5 D4+B5 | E4 B3+D4+D6 A3+C#4+E6 B3+D4+D6 A3+C#4+E6 G#3+B3+F#6 A3+C#4+E6 \
+             B3+D4+D6 | A3+C#4+C#6 G#3+B3+D6 A3+C#4+C#6 G#3+B3+D6 F#3+A3+E6 G#3+B3+D6 A3+C#4+C#6 \
+             B3+D4+B5 | A3+C#4+E4+A5+C#6 B3+F#4+G#5 A3+E4+A5 B3+F#4+G#5 C#4+G#4+F#5 D4+A4+E5 \
+             C#4+G#4+F#5 B3+F#4+G#5 | A3+C#4+E4+A5+C#6 D4+F#4+G#5+B5 C#4+E4+A5+C#6 D4+F#4+G#5+B5 \
+             E4+G#4+F#5+A5 D4+F#4+G#5+B5 C#4+E4+A5+C#6 B3+D4+B5+D6 | C#4 B3 A3 B3 A3 G#3 A3 B3",
+        )
+        .in_key(E, Mixolydian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x | x x | x x | x x | x x | x x | x x | x x | x x | x x | x x | x \
+                          x | x x | x x | x x | x x | x x | x x"),
+        ])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1084 to 1103.
+        Part::new(
+            "The coachmen dance on",
+            "E6:1 F#6 E6 F#6 G#6 F#6 E6 D6 | E6 D6 E6 D6 C#6 B5 C#6 D6 | E6 -:7 | E6:1 F#6 G#6 \
+             F#6 G#6 A6 G#6 F#6 | E6 F#6 E6 F#6 G#6 F#6 E6 D6 | E6 -:7 | E6:1 D6 E6 D6 C#6 D6 E6 \
+             F#6 | E6 F#6 G#6 F#6 G#6 A6 G#6 F#6 | E6 -:7 | E6:1 D6 E6 D6 C#6 B5 C#6 D6 | E6 D6 \
+             E6 D6 C#6 D6 E6 F#6 | E6 -:7 | E6:1 F#6 E6 F#6 G#6 F#6 E6 D6 | E6 D6 E6 D6 C#6 B5 \
+             C#6 D6 | E6 -:7 | E6:1 F#6 G#6 F#6 G#6 A6 G#6 F#6 | E6 F#6 E6 F#6 G#6 F#6 E6 D6 | \
+             E6 -:7 | E6:1 D6 E6 D6 C#6 D6 E6 F#6 | E6 F#6 G#6 F#6 G#6 A6 G#6 F#6",
+            "",
+        )
+        .with_left(
+            "E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 | \
+             E1+E2:1 -:3 E1+E2:1 -:3 | E1+E2:1 -:3 E1+E2:1 -:3 & -:3 F#4:1 -:4 | -:6 A3:1 - | \
+             -:2 A3+E4:1 F#4 -:2 A3+E4:1 F#4 | -:2 A3+E4:1 F#4 -:2 A3+E4:1 F#4 | -:3 F#4:1 -:4 | \
+             -:2 E4:1 F#4 -:2 A3:1 F#4 | -:2 A3:1 -:3 A3:1 F#4 | -:2 E4:1 F#4 -:2 E4:1 F#4 | -:2 \
+             E4:1 F#4 -:2 E4:1 F#4 | -:6 A3+E4:1 - | -:2 A3:1 -:3 A3:1 F#4 | -:2 E4:1 F#4 -:2 \
+             E4:1 F#4 | -:3 F#4:1 -:4 | -:6 A3:1 - | -:2 A3+E4:1 F#4 -:2 A3+E4:1 F#4 | -:2 \
+             A3+E4:1 F#4 -:2 A3+E4:1 F#4 | -:3 F#4:1 -:4 | -:2 E4:1 F#4 -:2 A3:1 F#4 | -:2 A3:1 \
+             -:3 A3:1 F#4 | -:2 E4:1 F#4 -:2 E4:1 F#4 & A3+C#4+E4+C#6:1 G#3+D4 A3+E4 G#3+D4 \
+             F#3+C#4 G#3+D4 A3+E4 B3+F#4 | A3+C#4+E4+A5+C#6 B3+D4+F#4+G#5+B5 A3+C#4+E4+A5+C#6 \
+             B3+D4+F#4+G#5+B5 C#4+E4+G#4+F#5+A5 D4+F#4+A4+E5+G#5 C#4+E4+G#4+F#5+A5 \
+             B3+D4+F#4+G#5+B5 | A3+A5+C#6 D4+G#5+B5 C#4+A5+C#6 D4+G#5+B5 E4+F#5+A5 D4+G#5+B5 \
+             C#4+A5+C#6 B3+B5+D6 | E4+C#6 D4 C#4 D4 C#4 B3 C#4 D4 | A3+C#4+E4+C#6 G#3+B3+D4+D6 \
+             A3+C#4+E4+C#6 G#3+B3+D4+D6 F#3+A3+C#4+E6 G#3+B3+D4+D6 A3+C#4+E4+C#6 B3+D4+F#4+B5 | \
+             A3+C#4+A5+C#6 B3+D4+G#5+B5 A3+C#4+A5+C#6 B3+D4+G#5+B5 C#4+E4+F#5+A5 D4+F#4+E5+G#5 \
+             C#4+E4+F#5+A5 B3+D4+G#5+B5 | A3+C#4+E4+A5+C#6 F#4+G#5 E4+A5 F#4+G#5 G#4+F#5 F#4+G#5 \
+             E4+A5 D4+B5 | E4 B3+D4+D6 A3+C#4+E6 B3+D4+D6 A3+C#4+E6 G#3+B3+F#6 A3+C#4+E6 \
+             B3+D4+D6 | A3+C#4+C#6 G#3+B3+D6 A3+C#4+C#6 G#3+B3+D6 F#3+A3+E6 G#3+B3+D6 A3+C#4+C#6 \
+             B3+D4+B5 | A3+C#4+E4+A5+C#6 B3+F#4+G#5 A3+E4+A5 B3+F#4+G#5 C#4+G#4+F#5 D4+A4+E5 \
+             C#4+G#4+F#5 B3+F#4+G#5 | A3+C#4+E4+A5+C#6 D4+F#4+G#5+B5 C#4+E4+A5+C#6 D4+F#4+G#5+B5 \
+             E4+G#4+F#5+A5 D4+F#4+G#5+B5 C#4+E4+A5+C#6 B3+D4+B5+D6 | C#4 B3 A3 B3 A3 G#3 A3 B3 | \
+             A3+C#4+E4+C#6 G#3+D4 A3+E4 G#3+D4 F#3+C#4 G#3+D4 A3+E4 B3+F#4 | A3+C#4+E4+A5+C#6 \
+             B3+D4+F#4+G#5+B5 A3+C#4+E4+A5+C#6 B3+D4+F#4+G#5+B5 C#4+E4+G#4+F#5+A5 \
+             D4+F#4+A4+E5+G#5 C#4+E4+G#4+F#5+A5 B3+D4+F#4+G#5+B5 | A3+C#4+A5+C#6 D4+G#5+B5 \
+             C#4+A5+C#6 D4+G#5+B5 E4+F#5+A5 D4+G#5+B5 C#4+A5+C#6 B3+B5+D6 | E4+C#6 D4 C#4 D4 C#4 \
+             B3 C#4 D4 | A3+C#4+E4+C#6 G#3+B3+D4+D6 A3+C#4+E4+C#6 G#3+B3+D4+D6 F#3+A3+C#4+E6 \
+             G#3+B3+D4+D6 A3+C#4+E4+C#6 B3+D4+F#4+B5 | A3+C#4+A5+C#6 B3+D4+G#5+B5 A3+C#4+A5+C#6 \
+             B3+D4+G#5+B5 C#4+E4+F#5+A5 D4+F#4+E5+G#5 C#4+E4+F#5+A5 B3+D4+G#5+B5 | \
+             A3+C#4+E4+A5+C#6 F#4+G#5 E4+A5 F#4+G#5 G#4+F#5 F#4+G#5 E4+A5 D4+B5 | E4 B3+D4+D6 \
+             A3+C#4+E6 B3+D4+D6 A3+C#4+E6 G#3+B3+F#6 A3+C#4+E6 B3+D4+D6",
+        )
+        .in_key(E, Mixolydian)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Kick, "x:4 x | x x | x x | x x | x x | x x | x x | x x | x x | x x | x x | x \
+                          x | x x | x x | x x | x x | x x | x x | x x | x x"),
+        ])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1104 to 1105.
+        Part::new(
+            "The masqueraders",
+            "D5:1 E5 D5 F#5 D5 E5 D5 F#5 D5 E5 D5 F#5 D5 E5 D5 F#5 | D5 E5 D5 F#5 D5 E5 D5 F#5 \
+             D5 E5 D5 F#5 D5 E5 D5 F#5",
+            "",
+        )
+        .with_left(
+            "D4:1 F#4 D4 F#4 D4 F#4 D4 F#4 D4 F#4 D4 F#4 D4 F#4 D4 F#4 | D4 F#4 D4 F#4 D4 F#4 D4 \
+             F#4 D4 F#4 D4 F#4 D4 F#4 D4 F#4",
+        )
+        .in_time(COMMON)
+        .in_key(D, Major)
+        .played_by(&[(gm::ACOUSTIC_GRAND_PIANO, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 1106 to 1112.
+        Part::new(
+            "Clarinet, chromatic",
+            "-:16 | (3 D5:1 Eb5 D5 (3 C#5 - - -:8 (3 E5:1 F5 E5 (3 Eb5 - - | -:8 (3 D5:1 Eb5 D5 \
+             (3 C#5 - - (3 F#5 G5 F#5 (3 F5 - - | (3 E5 F5 E5 (3 Eb5 - - (3 E5 F5 E5 (3 Eb5 - - \
+             (3 E5 F5 E5 (3 Eb5 - - (3 E5 F5 E5 (3 Eb5 - - | (3 F#5 G5 F#5 (3 F5 - - (3 F#5 G5 \
+             F#5 (3 F5 - - (3 F#5 G5 F#5 (3 F5 - - (3 G#5 A5 G#5 (3 G5 - - | (3 G#5 A5 G#5 (3 G5 \
+             - - (3 Bb5 A5 G#5 (3 Bb5 - - (3 G#5 A5 G#5 (3 G5 - - (3 A5 Bb5 A5 (3 G#5 - - | (3 \
+             G#5 A5 G#5 (3 G5 - - (3 Bb5 A5 G#5 (3 Bb5 - - (3 G#5 A5 G#5 (3 G5 - - (3 A5 Bb5 A5 \
+             (3 G#5 - -",
+            "",
+        )
+        .with_left(
+            "F#4:1 G#4 B3+F4+A4 - F#4 G#4 B3+F4+A4 - F#4 G#4 B3+F4+A4 - G#4 A4 B3+F4+A4 - | F#4 \
+             G#4 B3+F4+A4 - G#4 A4 B3+F4+A4 - F#4 G#4 B3+F4+A4 - F#4 G#4 Bb3+F4+C#5 - | F#4 G#4 \
+             B3+F4+A4 - G#4 A4 B3+F4+A4 - F#4 G#4 B3+F4+A4 - G#4 Bb4 Bb3+G4+C#5 - | G#4 Bb4 \
+             C#4+G4+B4 - Bb4 B4 C#4+G4+B4 - Bb4 B4 C#4+G4+B4 - Bb4 C5 C4+A4+Eb5 - | Bb4 C5 \
+             Eb4+A4+C#5 - Bb4 C5 Eb4+A4+C#5 - Bb4 C5 Eb4+A4+C#5 - C5 D5 D4+B4+F5 - | C5 D5 \
+             F4+B4+Eb5 - C5 D5 F4+B4+Eb5 - C5 D5 F4+B4+Eb5 - C5 D5 Eb4+B4+F#5 - | C5 D5 \
+             F4+B4+Eb5 - C5+F#5+A5+C6 D5+D6 Eb6+F6:2. C5:1 D5 F4+B4+Eb5 -:5 & -:16 | (3 -:1 G#4 \
+             - (3 - F#4+Bb4+C5 A4. _ -:2 F#4:1 -:3 F#4:1 (3 - G#4 - (3 - F#4+C5+D5 B4+C#5. | -:3 \
+             F#4:1 -:2 A3+B4 D4+E4 A3+B4 D4+E4 - | E4+F#4 B3+C#5 D4+F4 B3+C#5 E4+F#4 B3+C#5 \
+             E4+F#4 - | F#4+G#4 C#4+Eb5 F#4+G#4 C#4+Eb5 F#4+A4 C#4+Eb5 F#4+G#4 - | G#4+Bb4 \
+             Eb4+F5 F#4+A4 Eb4+F5 G#4+Bb4 Eb4+F5 (3 -:1 D5 - (3 - C5+F5+G5 E5+F#5 | (3 - G5 F#5 \
+             -:2 (3 -:1 B5 _ (3 G5 C5+F#5+A5 - (3 Bb5 G5 F#5 -:2 (3 B5:1 G#5 G5 -:2 & -:3 F#4:1 \
+             -:3 F#4:1 -:3 F#4:1 -:2 A3+B4 | D4+E4 A3+B4 C4+Eb4 A3+B4 D4+E4 A3+B4 D4+E4 - | \
+             D4+E4 A3+B4 C4+Eb4 -:1 F#4 -:4 (3 -:1 Bb4 - -:2 | (3 -:1 Bb4 - (3 - G#4+C5 B4+C5 (3 \
+             - B4 - (3 - G#4+F5 C5 (3 - B4 - (3 - G#4+C5 B4+C5 (3 - C5 - (3 - Bb4+C#5+E5 C5+Eb5 \
+             | (3 - C5 - (3 - Bb4+D5+E5 C#5 (3 - C5 - (3 - Bb4+D5+E5 C#5 (3 - C5 - (3 - \
+             Bb4+D5+E5 C#5 (3 - D5 - (3 - E5 Eb5+F5 | (3 - D5 - (3 - C5+E5+F#5 Eb5 (3 - D5 - -:2 \
+             (3 -:1 D5 - (3 - C5+E5+F#5 Eb5 (3 F#4+A4+B5 _ - E4:2 | G#4+Bb4 Eb4+F5 F#4+A4 Eb4+F5 \
+             G#4+Bb4 Eb4+F5 F#4+A4 E4 & D4+E4:2 A3+B4 D4+E4 A3+B4 D4+E4 A3+B4 C4+Eb4 -:1 F#4 | \
+             (3 E5 C#5 C5 -:10 (3 F#5:1 Eb5 D5 -:2 | -:8 (3 G#4+E5:1 A4+C#5 C5 (3 - F#4+Bb4+C5 \
+             A4 (3 G#5 F5 E5 (3 Eb5 G#4+D5+E5 C#5+Eb5 | (3 F#5 Eb5 D5 -:2 (3 F#5+G#5:1 G5 _ (3 \
+             F#5 - - (3 F#5 Eb5 D5 -:2 (3 F#5+G#5:1 G5 F#5 (3 F5 - - | (3 G#5 F5 E5 -:2 (3 G#5:1 \
+             F5 E5 -:2 (3 G#5:1 F5 E5 -:2 (3 Bb5:1 G5 F#5 (3 F#5 _ - | (3 Bb5 G5 F#5 -:2 (3 C6:1 \
+             B5 _ (3 G5 C5+F#5+A5 - (3 Bb5 G5 F#5 -:2 (3 -:1 G#5 G5 -:2 | (3 Bb5:1 D5 - (3 - \
+             C5+E5+F#5 Eb5 (3 - D5 - -:2 (3 -:1 D5 - (3 - C5+E5+F#5 Eb5 (3 - D5 - (3 - C5+F5+G5 \
+             E5+F#5 & -:16 | - | - | - | - | - | -:6 F4+B4+Eb5+B5:1 C6:2. -:3 C5+F#5+A5+C6:1 \
+             D5+D6 Eb4+F#5+B5+F6 C6",
+        )
+        .in_time(COMMON)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::CLARINET, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 1113 to 1122.
+        Part::new(
+            "Chords of F against F sharp",
+            "F6:2 F6 F6 F6:1 F6 F6:2 F6 F6 F6:1 F6 | F6:2 F6 F6 F6:1 F6 F6:2 F6 F6 F6:1 F6 | \
+             F6:2 F6 F6 F6:1 F6 F6:2 F6 F6 F6:1 F6 | F6:2 F6 F6 F6:1 F6 F6:2 F6 F6 F6:1 F6 | \
+             F6:2 F6 F6 F6:1 F6 F6:2 F6 F6 F6:1 F6 | F6:2 F6 F6 F6:1 F6 F6:2 F6 F6 F6:1 F6 | (3 \
+             -:2 F6 F6. (3 _ F6 F6 _:1 F6 F6 F6 (3 F6:2 F6 F6. | (3 - F6 F6. (3 _ F6 F6 _:1 F6 \
+             F6 F6 (3 F6:2 F6 F6. | (3 - F6 F6. (3 _ F6 F6 _:1 F6 F6 F6 (3 F6:2 F6 F6. | (3 - F6 \
+             F6. (3 _ F6 F6 _:1 F6 F6 F6 (3 F6:2 F6 F6",
+            "",
+        )
+        .with_left(
+            "-:16 | - | -:15 A1:1 | C2:2. -:14 | -:15 F1:1 | A1:2. -:14 | - (3 -:1 D2 C2 | B1:2. \
+             -:14 | -:15 A1:1 | A1 -:15 & -:16 | - | - | - | F4:2 F4 F4 F4:1 F4 F4:2 F4 F4 F4:1 \
+             F4 | -:16 | (3 -:2 F4 F4+A4. (3 _ F4+A4 F4 _:1 F4 F4+A4 F4 C5+Eb5:4 | -:12 (3 \
+             F4+C5+F5:2 - - | Eb5:8 Eb5:4 C5+Eb5 | -:12 (3 F4+C5+F5:2 - - & F4+C5:2 F4+C5 F4+C5 \
+             F4+C5:1 F4+C5 F4+C5:2 F4+C5 F4+C5 F4+C5:1 F4+C5 | F4+C5:2 F4+C5 F4+C5 F4+C5:1 F4+C5 \
+             F4+C5:2 F4+C5 F4+C5 F4+C5:1 F4+C5 | F4+C5:2 F4+C5 F4+C5 F4+C5:1 F4+C5 F4+C5:2 F4+C5 \
+             F4+C5 F4+C5:1 F4+C5 | F4+C5:2 F4+C5 F4+C5 F4+C5:1 F4+C5 F4+C5:2 F4+C5 F4+C5 F4+C5:1 \
+             F4+C5 | C4+C5:8 C4+C5:4 C4+C5 | F4+C5:2 F4+C5 F4+C5 F4+C5:1 F4+C5 F4+C5:2 F4+C5 \
+             F4+C5 F4+C5:1 F4+C5 | C5+Eb5:8 C5+Eb5:4 (3 F4+F5:2 F4 F4. | (3 - F4+C5 F4+A4+C5. (3 \
+             _ F4+A4+C5 F4+C5 _:1 F4+C5 F4+A4+C5 F4+C5 (3 -:2 F4+C5 F4+C5. | (3 - F4+C5 \
+             F4+A4+C5. (3 _ F4+A4+C5 F4+C5 _:1 F4+C5 F4+A4+C5 F4+C5 (3 F4+F5:2 F4 F4. | (3 - \
+             F4+C5 F4+A4+C5. (3 _ F4+A4+C5 F4+C5 _:1 F4+C5 F4+A4+C5 F4+C5 (3 -:2 F4+C5 F4+C5 & \
+             F5+F#5+A5:1 F5:2. -:1 F5+F#5+A5 F5:2. F5+A5:1 - F5:2. - F5. -:1 | F5+F#5+A5 F5:2. \
+             -:1 F5+F#5+A5 F5:2. F5+A5:1 - F5:2. - F5. -:1 | F5+F#5+A5 F5:2. -:1 F5+F#5+A5 F5:2. \
+             F5+A5:1 - F5:2. - F5. -:1 | F5+F#5+A5 F5:2. -:1 F5+F#5+A5 F5:2. F5+A5:1 - F5:2. - \
+             F5. -:1 | F5+F#5+A5 F5:2. -:1 F5+F#5+A5 F5:2. F5+A5:1 - F5:2. - F5. -:1 | F5+F#5+A5 \
+             F5:2. -:1 F5+F#5+A5 F5:2. F5+A5:1 - F5:2. - F5. -:1 | -:16 | - | - | - & -:2 A5+C6 \
+             - A5+C6:1 - F#5+A5+C6 - A5:2 F#5+A5+C6:1 - A5 A5+C6 | -:2 A5+C6 - A5+C6:1 - \
+             F#5+A5+C6 - A5:2 F#5+A5+C6:1 - A5 A5+C6 | -:2 A5+C6 - A5+C6:1 - F#5+A5+C6 - A5:2 \
+             F#5+A5+C6:1 - A5 A5+C6 | -:2 A5+C6 - A5+C6:1 - F#5+A5+C6 - A5:2 F#5+A5+C6:1 - A5 \
+             A5+C6 | -:2 A5+C6 - A5+C6:1 - F#5+A5+C6 - A5:2 F#5+A5+C6:1 - A5 A5+C6 | -:2 A5+C6 - \
+             A5+C6:1 - F#5+A5+C6 - A5:2 F#5+A5+C6:1 - A5 A5+C6 | (3 -:2 F#5+A5+C6 F#5+A5+C6. (3 \
+             _ F#5+A5+C6 F#5+A5+C6 _:1 F#5+A5+C6 F#5+A5+C6 F#5+A5+C6 (3 F#5+A5+C6:2 F#5+A5+C6 \
+             F#5+A5+C6. | (3 - F#5+A5+C6 F#5+A5+C6. (3 _ F#5+A5+C6 F#5+A5+C6 _:1 F#5+A5+C6 \
+             F#5+A5+C6 F#5+A5+C6 (3 F#5+A5+C6:2 F#5+A5+C6 F#5+A5+C6. | (3 - F#5+A5+C6 F#5+A5+C6. \
+             (3 _ F#5+A5+C6 F#5+A5+C6 _:1 F#5+A5+C6 F#5+A5+C6 F#5+A5+C6 (3 F#5+A5+C6:2 F#5+A5+C6 \
+             F#5+A5+C6. | (3 - F#5+A5+C6 F#5+A5+C6. (3 _ F#5+A5+C6 F#5+A5+C6 _:1 F#5+A5+C6 \
+             F#5+A5+C6 F#5+A5+C6 (3 F#5+A5+C6:2 F#5+A5+C6 F#5+A5+C6",
+        )
+        .in_time(COMMON)
+        .with_tempo(&[tempo(0, 132)])
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1123 to 1125.
+        Part::new(
+            "Strings",
+            "(3 F5:1 _ G5 (3 F5 _ G5 (3 F5 _ G5 (3 F5 _ G5 | (3 F5 _ G5 (3 F5 _ G5 (3 F5 _ G5 (3 \
+             F5 _ A5 | G5 A5 G5 A5 (3 G5 _ B5 (3 A5 _ G5",
+            "",
+        )
+        .with_left(
+            "-:8 | - | -:6 B3+Eb4+A4:1 - & -:2 Eb4+G4+A4+C5+C#5. Eb4+G4+A4+C5+C#5. \
+             Eb4+G4+A4+C5+C#5. | Eb4+G4+A4+C5+C#5. Eb4+G4+A4+C5+C#5. Eb4+G4+A4+C5+C#5. \
+             Eb4+G4+A4+C5+C#5. | C#4+F4+B4+D5. C#4+F4+B4+D5. C#4+F4+B4+D5. - & \
+             Eb4+A4+C5+C#5+F5:2 -:6 | -:8 | -:6 C#5+E5:1 - & (3 -:1 - G5. (3 _ _ G5. (3 _ _ G5. \
+             (3 _ _ G5. | (3 - - G5. (3 _ _ G5. (3 _ _ G5. (3 _ _ A5. | (3 - - A5. (3 _ _ A5. (3 \
+             _ _ B5. (3 _ _ -",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 1126 to 1129.
+        Part::new(
+            "Strings, bar 4",
+            "F5:1 A5 G5 A5 G5 A5 G5 A5 G5 A5 G5 A5 | G5 A5 G5 A5 (3 G5 _ A5 (3 G5 _ B5 (3 A5 _ \
+             B5 (3 A5 _ B5 | (3 A5 _ C#6 (3 B5 _ A5 (3 G5 _ B5 (3 A5 _ B5 (3 A5 _ C#6 (3 B5 _ \
+             C#6 | (3 B5 _ C#6 (3 B5 _ C#6 (3 B5 _ C#6 (3 B5 _ C#6 B5 C#6 B5 -",
+            "",
+        )
+        .with_left(
+            "-:2 C#4+F4. -:8 | -:12 | -:2 A3+C#4+G4. - B3+Eb4+A4. - A3+C#4+G4:1 - | -:12 & \
+             Eb4+G4+A4+C5+C#5:2. - C#4+F4+B4+D5. C#4+F4+B4+D5. C#4+F4+B4+D5. C#4+F4+B4+D5. | \
+             C#4+F4+B4+D5. C#4+F4+B4+D5. C#4+F4+B4+D5. C#4+F4+B4+D5. B3+Eb4+A4+C#5+E5. \
+             B3+Eb4+A4+C#5+E5. | B3+Eb4+A4+C#5+E5. - C4+F4+B4+D5. - B3+Eb4+A4+C#5+E5. C4. | \
+             A3+C#4+G4+Eb5+F#5. A3+C#4+G4+Eb5+F#5. A3+C#4+G4+Eb5+F#5. A3+C#4+G4+Eb5+F#5. \
+             A3+C#4+G4+Eb5+F#5 A3+C#4+G4+Eb5+F#5:1 - & -:2 B4+D5+G5. -:8 | -:12 | -:2 \
+             Eb5+F#5+B5. - C#5+E5+A5. - Eb5+F#5:1 - | -:12 & (3 -:1 - A5. (3 _ _ A5. (3 _ _ A5. \
+             (3 _ _ A5. (3 _ _ A5. (3 _ _ A5. | (3 - - A5. (3 _ _ A5. (3 _ _ A5. (3 _ _ B5. (3 _ \
+             _ B5. (3 _ _ B5. | (3 - - C#6. (3 _ _ A5. (3 _ _ B5. (3 _ _ B5. (3 _ _ C#6. (3 _ _ \
+             C#6. | (3 - - C#6. (3 _ _ C#6. (3 _ _ C#6. (3 _ _ - -:4",
+        )
+        .in_time(THREE_FOUR)
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 1130 to 1139.
+        Part::new(
+            "Trombones",
+            "Bb2:2 C3 Eb3 D3 C3 | Bb2 C3 G2 Bb2 D3 | C3 Bb2 G2. -:4 | F5:2 G5 G5 G5 G5 | C6 G5 \
+             G5. -:4 | Bb2:2 C3 Eb3 D3 C3 | Bb2 C3 G2 Bb2 D3 | C3 Bb2 D3 C3 G2 | Bb2 D3 C3 G2:1 \
+             -:3 | F5:2 G5 G5 G5 G5:1 -",
+            "",
+        )
+        .with_left(
+            "G2:2 Bb2 G2 Bb2 G2 | - G2 Bb2 G2 Bb2 | G2 -:8 | F4+C5:2 D4+D5 D4+D5 D4+G4+D5 \
+             D4+G4+D5 | Eb4+C5+F5 D4+G#4+D5 D4+G#4+D5. -:4 | G2:2 Bb2 G2 Bb2 G2 | - G2 Bb2 G2 \
+             Bb2 | G2 - G2 Bb2 - | - G2 Bb2 -:4 | F4+C5:2 D4+D5 D4+D5 D4+D5 D4+G4+D5:1 - & -:10 \
+             | - | - | G#3:2 -:8 | F3+C4+F4+G#5:2 - G3 -:4 | -:10 | - | - | - | G#3:2 -:8 & -:10 \
+             | - | - | Eb3+Bb3+C4+Eb4+Bb4:2 Eb3+G#3+Eb4+G4+G#4 Eb3+G#3+Eb4+G4+G#4 \
+             Eb3+G#3+Eb4+G#4+C5 Eb3+G#3+Eb4+G#4 | Eb3+Bb3+Bb4 Eb3+G#3+Eb4+G4 Eb3+G#3+Eb4. -:4 | \
+             -:10 | - | - | - | Eb3+Bb3+C4+Eb4+Bb4:2 Eb3+G#3+Eb4+G4+G#4 Eb3+G#3+Eb4+G4+G#4 \
+             Eb3+G#3+Eb4+G#4+C5 Eb3+G#3+Eb4+G#4:1 - & -:10 | - | - | - | -:4 G4:1 -:5 | -:10 | - \
+             | - | - | -",
+        )
+        .in_time(FIVE_EIGHT_UNGROUPED)
+        .with_tempo(&[tempo(0, 144)])
+        .in_key(C, Dorian)
+        .played_by(&[(gm::TROMBONE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bar 1140.
+        Part::new(
+            "Trombones, bar 11",
+            "C6:2 A5 A5 A5 A5:1 -:3",
+            "",
+        )
+        .with_left(
+            "F3+Bb3+F4+Bb4+C5:2 Eb3+Bb3+Eb4+Bb4 Eb3+Bb3+D4+Eb4+Bb4 Eb3+D4+A4+Bb4 \
+             Eb3+Bb3+D4+Eb4+Bb4:1 -:3 & G4+G5+Bb5:2 D4+A4+D5:1 - A4+D5:2 D5 A4+D5:1 -:3 & -:8 \
+             A5:4",
+        )
+        .in_time(THREE_FOUR)
+        .in_key(C, Dorian)
+        .played_by(&[(gm::TROMBONE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1141 to 1146.
+        Part::new(
+            "Flute and clarinets",
+            "F5:2 G5 G5 G5 G5 | C6 A5 A5 A5 A5 | G5 A5 A5 A5 A5 | D6 B5 B5 B5 B5 | D6 E6 E6 E6 \
+             E6 | D6 E6 E6 E6 E6:1 -",
+            "",
+        )
+        .with_left(
+            "-:10 | - | - | - | - | Bb3+D5:2 Bb3 Bb3+F5:1 - Bb3+D5:2 Bb3+D5:1 - & Bb4+C5+Eb5:2 \
+             G#4+D5+Eb5 G#4+D5+Eb5 G#4+D5+Eb5 G#4+D5+Eb5 | Bb4+F5+G5 Bb4+D5+Eb5 Bb4+D5+Eb5 \
+             Bb4+D5+Eb5 Bb4+D5+Eb5 | C5+D5+F5 Bb4+E5+F5 Bb4+E5+F5 Bb4+E5+F5 Bb4+E5+F5 | \
+             C5+G5+G#5 C5+E5+F5 C5+E5+F5 C5+E5+F5 C5+E5+F5:1 - | C4+G4+G#4+A5:2 C4+F4+B4+C5+B5 \
+             C4+F4+B4+C5+B5 C4+F4+B4+C5+B5 C4+F4+B4+C5+B5 | C4+G4+G#4+C5+A5 C4+F4+B4+C5+B5 \
+             C4+F4+B4+C5+B5 C4+F4+E5+B5 C4+F4+E5+B5:1 - & -:1 D5 (3 C5 - C5 (3 - C5 - C5 - (3 C5 \
+             - C5 | D5 C5 (3 - C5 - C5 - (3 C5 - C5 - C5 | (3 F#5 G5 G5 (3 D5 C5+G5 G5 (3 \
+             C5+F#5+G5 D5+G5 C5+F#5 (3 D5+G5 G5 F#5+G5 (3 G5 D5+F#5 C5+G5 | (3 D5+F5+F#5 - \
+             D5+F#5 (3 _ - D5+F#5 (3 - D5+F#5 - (3 - D5+F#5+G5 - (3 D5 D5+G5 C5+D5+F5+F#5 | (3 - \
+             C5+F5+C6 D5+G5 (3 F5+F#5 D5+G5+C6 F5+F#5 (3 D5+G5+C6 F5+F#5 G5 (3 D5+F5+C6 F#5 - (3 \
+             D5+F5 - D5+F5+G5 | -:2 (3 -:1 F5+F#5 - (3 - - D5+G5 -:2 (3 -:1 - C5+F5+C6 & -:10 | \
+             - | - | (3 -:1 - F5 (3 - G5 - (3 G5 - G5 (3 - - G5 -:2 | (3 G5+B5:1 - - -:4 (3 -:1 \
+             - G5+C6 (3 - G5+C6 - | G5+C6 F5+F#5+B5 (3 D5+G5+C6 - D5+G5+C6 (3 G5 F#5+C6 - (3 \
+             F5+C6 G5 F5+G5 (3 F#5+C6 G5 -",
+        )
+        .in_time(FIVE_EIGHT_UNGROUPED)
+        .in_key(C, Major)
+        .played_by(&[(gm::FLUTE, 0)]),
+        // MIDI bars 1147 to 1158.
+        Part::new(
+            "Piccolo and harp",
+            "-:2 Bb6:4 C7 | Eb7 D7 C7:2 | _ Bb6 C7 G6:4 | Bb6 D7:2 C7 Bb6 | G6 Bb6 C7 G6 Bb6 | \
+             D7 C7 Bb6 G6:4 | -:2 Bb6:4 C7 | Eb7 D7 C7:2 | _ Bb6 C7 G6:4 | Bb6 D7:2 C7 Bb6 | G6 \
+             Bb6 C7 G6 Bb6 | D7 C7 Bb6 G6:4",
+            "",
+        )
+        .with_left(
+            "-:10 | - | - | - | - | Bb4:4 C5:2 - Eb5 | Eb3 Eb3 Eb3:4 Eb3:2 | Eb3+Bb4 Eb3:4 \
+             Eb3+F4:2 Eb3+F4 | Eb3+F4:4 Eb3+F4+C5:2 Eb3+F4+Bb4 Eb3+F4 | _ Eb3+F4+C5 Eb3+F4+G4 \
+             Eb3+F4:4 | Eb3+F4+C5:2 Eb3+F4+Bb4 Eb3+F4+Ab4:4 Eb3+F4:2 | Eb3+F4 Eb3+F4:4 Eb3 & \
+             -:10 | - | - | - | - | - | -:6 C5:4 | - G4 Bb4:2 | _ -:6 G4:2 | Bb4 -:4 Bb4:2 - | \
+             -:10 | - & D3+C6:1 Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 | C3+Ab5 G5 D3+C6 \
+             Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 | D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 \
+             Bb5 | C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 | D3+C6 Bb5 C3+Ab5 G5 D3+C6 \
+             Bb5 C3+Ab5 G5 D3+C6 Bb5 | C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 | D3+C6 \
+             Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 | C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 \
+             Bb5 C3+Ab5 G5 | D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 | C3+Ab5 G5 D3+C6 \
+             Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 | D3+C6 Bb5 C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 D3+C6 \
+             Bb5 | C3+Ab5 G5 D3+C6 Bb5 C3+Ab5 G5 Bb3:4 & F5+Bb5:1 Eb5 G5 C5+F5 Bb4 Ab4+D5 F5 \
+             Eb5+Ab5 D5+G5 F5 | Bb4+Eb5 Ab4 F5+Bb5 - G5 C5+F5 Bb4+Eb5 Ab4+D5 F5 Eb5+Ab5 | D5+G5 \
+             C5+F5 Bb4+Eb5 Ab4 F5+Bb5 Eb5 G5 C5+F5 Bb4 Ab4+D5 | F5 Eb5+Ab5 D5+G5 F5 Bb4+Eb5 Ab4 \
+             F5+Bb5 - G5 C5+F5 | Bb4+Eb5 Ab4+D5 F5 Eb5+Ab5 D5+G5 C5+F5 Bb4+Eb5 Ab4 F5+Bb5 Eb5 | \
+             G5 C5+F5 - Ab4+D5 F5 Eb5+Ab5 D5+G5 F5 Bb4 Ab4 | F5+Bb5 - G5 C5+F5 Bb4+Eb5 Ab4+D5 F5 \
+             Eb5+Ab5 D5+G5 F5 | Eb5 Ab4 F5+Bb5 Eb5 G5 C5+F5 Bb4 Ab4+D5 F5 Eb5+Ab5 | D5+G5 F5 \
+             Bb4+Eb5 Ab4 F5+Bb5 - G5 C5+F5 Bb4+Eb5 Ab4+D5 | F5 Eb5+Ab5 D5+G5 F5 Bb4+Eb5 Ab4 \
+             F5+Bb5 Eb5 G5 C5+F5 | Bb4 Ab4+D5 F5 Eb5+Ab5 D5+G5 F5 Bb4+Eb5 - F5+Bb5 - | G5 C5+F5 \
+             Bb4+Eb5 Ab4+D5 F5 Eb5+Ab5 Bb4+Bb5:4 & C5+Ab5:2 D5+Bb5 Eb5+Ab5 D5+Bb5 C5+Ab5 | \
+             D5+Bb5 Eb5+Ab5 D5+Bb5 C5+Ab5 D5+Bb5 | Eb5+Ab5 D5+Bb5 C5+Ab5 D5+Bb5 Eb5+Ab5 | D5+Bb5 \
+             C5+Ab5 D5+Bb5 Eb5+Ab5 D5+Bb5 | C5+Ab5 D5+Bb5 Eb5+Ab5 D5+Bb5 C5+Ab5 | D5+Bb5 Eb5+Ab5 \
+             D5+Bb5 C5+Ab5 D5+Bb5 | Eb5+Ab5 D5+Bb5 C5+Ab5 D5+Bb5 Eb5+Ab5 | D5+Bb5 C5+Ab5 D5+Bb5 \
+             Eb5+Ab5 D5+Bb5 | C5+Ab5 D5+Bb5 Eb5+Ab5 D5+Bb5 C5+Ab5 | D5+Bb5 Eb5+Ab5 D5+Bb5 C5+Ab5 \
+             D5+Bb5 | Eb5+Ab5 D5+Bb5 C5+Ab5 D5+Bb5 Eb5+Ab5 | D5+Bb5 C5+Ab5 D5+Bb5 Eb5+Eb6:4",
+        )
+        .in_time(FIVE_EIGHT_UNGROUPED)
+        .in_key(C, NaturalMinor)
+        .played_by(&[(gm::PICCOLO, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 1159 to 1161.
+        Part::new(
+            "Oboes in A flat",
+            "Db6:4 Ab5:2 Ab5 | Ab5:4 Bb4 | Bb4 Eb5",
+            "",
+        )
+        .with_left(
+            "Ab2+Eb3:4 Ab2:2 Ab2 | -:8 | - & Ab1+Bb3:4 Ab1+C4:2 Ab1+C4 | Ab1+C4:4 - | -:8 & \
+             Ab5:4 Eb5:2 Eb5 | Eb5:4 Ab2+Eb3+Db4:2 Ab2+Eb3+Db4 | Ab2+Eb3+Bb3:4 Ab2+Eb3+Bb3:2 \
+             Ab2+Eb3+Bb3:1 - & Db4+Ab4+Db5:4 G3+Ab5:2 (3 _:1 - Bb5 | G3+Ab4:4 - | -:8",
+        )
+        .in_key(GSharp, Major)
+        .played_by(&[(gm::OBOE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bars 1162 to 1168.
+        Part::new(
+            "Flutes in A flat",
+            "-:3 F6:1 Eb6:3 Eb6:1 | Db6:3 Bb5:1 Ab5:3 F6:1 | Eb6:3 Eb6:1 Db6:3 Bb5:1 | Ab5:3 \
+             F6:1 Eb6:3 Eb6:1 | Db6:3 Bb5:1 Ab5:2 Ab5 | Ab5:3 C6:1 Bb5:3 F6:1 | Eb6:3 Eb6:1 \
+             Db6:3 Bb5:1",
+            "",
+        )
+        .with_left(
+            "-:8 | - | - | - | -:4 Ab2+G3+C4 | Ab2+G3+C4+Eb5 Ab2+F3+Db4+F5 | Ab2+Eb3+Bb3+Eb5 \
+             Ab2+F3+Bb3+Ab5 & Ab2+Eb3+Bb3:4 Ab2+Eb3+C4+Eb5 | Ab2+F3+Db4+Ab5 Ab2+G3+C4+Eb5 | \
+             Ab2+Eb3+C4+Bb5 Ab2+F3+Db4+Db5 | Ab2+G3+C4+Eb5 Ab2+Eb3+C4+Bb5 | Ab2+F3+Db4+Db5 Db5:2 \
+             Db5 | -:8 | - & Db5:4 C5:2 Bb4 | Ab4:4 C5 | Bb4 Bb4 | C5 Bb4:2 Ab4 | Bb4:4 Ab4 | C5 \
+             Bb4:2 Ab4 | Bb4:4 Bb4 & -:4 Bb4:2 - | -:4 Ab4+Ab5 | -:8 | Ab4+Ab5:4 - | - Eb5+Ab5 | \
+             Ab4+Ab5 - | - Ab4+Db5+Db6 & -:4 Bb5+Eb6 | Db5+Db6 - | Eb5+Eb6 Ab4+Ab5+Db6 | - \
+             Eb5+Eb6 | Ab5+Db6 - | - Bb5 | Bb5+Eb6 -",
+        )
+        .in_key(GSharp, Major)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::MezzoPiano),
+        // MIDI bars 1169 to 1173.
+        Part::new(
+            "Violins in A flat",
+            "-:3 F6:1 Eb6:3 Eb6:1 | Db6:3 Bb5:1 Ab5:3 F6:1 | Eb6:3 Eb6:1 Db6:3 Bb5:1 | Ab5:3 \
+             F6:1 Eb6:3 Eb6:1 | Db6:3 Bb5:1 Ab5:4",
+            "",
+        )
+        .with_left(
+            "Ab2+Ab4:4 Ab2+Eb5+Bb5 | Ab2+Eb3+Bb3+Db5+Ab5 Ab2+G3+C4+Ab4+Eb5 | Ab2+Eb5+Bb5 \
+             Ab2+Eb3+Bb3+Db5+Ab5 | Ab2+F3+C4+Ab4+Eb5 Ab2+Eb5+Bb5 | Bb2+F3+Db5+Ab5 \
+             C3+G3+C4+Ab4+Eb5 & F3+C4+Eb5+Ab5:4 - | -:8 | - | - | -:7 F#5:1 & -:3 F6:2. - Eb6:1. \
+             | -:3 Bb5:2. - F6:1. | -:3 Eb6:2. - Bb5:1. | -:3 F6:2. - Eb6:1. | -:8",
+        )
+        .in_key(GSharp, Major)
+        .played_by(&[(gm::VIOLIN, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1174 to 1179.
+        Part::new(
+            "Clarinet and horns",
+            "G5:3 E5:1 F5:2 - | B4. -:1 F#5 G5:2 - | E5. - B4. -:1 F#5 | G5:3 E5:1 F5:2 - | A4. \
+             -:1 F#5 G5:3 E5:1 | F5:3 B4:1 C5:4",
+            "",
+        )
+        .with_left(
+            "G3+A3+C4:2 - A3+Bb3+D4 - | B3+E4 - B3+C4 - | C4+D4+Eb4 - C#4+Eb4+E4 - | E2+G#3+D4 - \
+             F2+A3+Eb4 - | F#2+Bb3+E4 - E2+G#3+B3+D4:4 | A3+Eb4 Bb3+E4 & C3+G5:4 D3+F5 | E3+C5 \
+             E3+G5 | F3+F5 F#3 | E3+G5 F3+F5 | F#3 E3+G5 | F3+C4+F5 F#3+C#4 & -:8 | - | - | - | \
+             -:4 G4 | F4 G4:2 - & G4+D5:2 - F4+C5 - | C4+G4 - D4+G4+D5 - | F4+C5 - C4+G4+C5 - | \
+             G4+D5 - F4+C5 - | C4+G4+C5 - D5 - | C5 - C4:4",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::CLARINET, 0)])
+        .marked(Dynamic::Piano),
+        // MIDI bars 1180 to 1185.
+        Part::new(
+            "Chords over a rising bass",
+            "G6:1 -:3 F6:1 -:3 | C6:1 -:3 G6:1 -:3 | F6:1 -:3 C6:1 -:3 | G6:1 -:3 F6:1 -:3 | \
+             C6:1 -:3 G6:1 -:3 | F6:1 -:3 C6:1 -:3",
+            "",
+        )
+        .with_left(
+            "G4+B4+G5:1 -:3 Bb3+E4+F4+A4+F5:1 -:3 | A1+C4+C5:1 -:3 Bb1+G3+B3+G4+B4:1 -:3 | \
+             B1+Bb3+F4:1 -:3 C2+C5:1 -:3 | C#2+G3+D4+G4+G5:1 -:3 D2+Bb3+E4+F4+F5:1 -:3 | \
+             Eb2+C4+E4+C5:1 -:3 E2+G3+B3+G4:1 -:3 | F2+Bb3+E4:1 -:3 F#2+C4+G4+C5:1 -:3 & \
+             G1+G3+B3+D4+F4:1 -:3 G#1+G#3+C4+Eb4+F#4:1 -:3 | A3+C#4+E4+G4:1 -:3 Bb3+D4+F4+G#4:1 \
+             -:3 | B3+Eb4+E4+F#4+A4:1 -:3 C4+E4+G4+Bb4:1 -:3 | C#4+F4+G#4+B4:1 -:3 D4+F#4+A4:1 \
+             -:3 | Eb4+G4+Bb4+C#5:1 -:3 E4+G#4+B4+D5:1 -:3 | F4+A4+C5+Eb5:1 -:3 F#4+Bb4+C#5:1 \
+             -:3 & G2+F3+D5+B5+D6:1 -:3 G#2+F#3+C5+A5+C6:1 -:3 | A2+G3+E5+G5:1 -:3 \
+             Bb2+G#3+G5+B5+D6:1 -:3 | B2+F5+A5+C6:1 -:3 C3+Bb3+E5+G5:1 -:3 | C#3+B3+D5+B5+D6:1 \
+             -:3 D3+C4+C5+A5+C6:1 -:3 | Eb3+C#4+E5+G5:1 -:3 E3+D4+G5+B5+D6:1 -:3 | \
+             F3+Eb4+F5+A5+C6:1 -:3 F#3+E4+E5+G5:1 -:3",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Fortissimo),
+        // MIDI bars 1186 to 1191.
+        Part::new(
+            "Tremolo",
+            "F#6:1 E6 F#6 E6 F#6 E6 F#6 E6 | F#6 E6 F#6 E6 F#6 E6 F#6 E6 | F#6 E6 F#6 E6 F#6 E6 \
+             F#6 E6 | F#6 E6 F#6 E6 F#6 E6 F#6 E6 | F#6 E6 F#6 E6 F#6 E6 F#6 E6 | F#6 E6 F#6 E6 \
+             F#6 E6 F#6 E6",
+            "",
+        )
+        .with_left(
+            "-:1 G6 - G6 -:4 | Bb5:1 - Bb5 - Bb5 - Bb5 - | Bb5 - Bb5 - Bb5 - Bb5 - | Bb5 - Bb5 - \
+             Bb5 - Bb5 - | Bb5 - Bb5 - Bb5 - Bb5 - | Bb5 - Bb5 - Bb5 - Bb5 - & -:4 G6:1 G6 G6 G6 \
+             | C#6+G6 C6+G6 C#6+G6 C6+G6 C#6+G6 C6+G6 C#6+G6 C6+G6 | C#6+G6 C6+G6 C#6+G6 C6+G6 \
+             C#6+G6 C6+G6 C#6+G6 C6+G6 | E5+C#6+G6 C#5+C6+G6 E5+C#6+G6 C#5+C6+G6 E5+C#6+G6 \
+             C#5+C6+G6 E5+C#6+G6 C#5+C6+G6 | E5+C#6+G6 C#5+C6+G6 E5+C#6+G6 C#5+C6+G6 E5+C#6+G6 \
+             C#5+C6+G6 E5+C#6+G6 C#5+C6+G6 | Bb4+E5+C#6+G6 C5+C#5+C6+G6 Bb4+E5+C#6+G6 \
+             C5+C#5+C6+G6 Bb4+E5+C#6+G6 C5+C#5+C6+G6 Bb4+E5+C#6+G6 C5+C#5+C6+G6",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Pianissimo),
+        // MIDI bars 1192 to 1193.
+        Part::new(
+            "Crescendo",
+            "F#6:1 E6 F#6 E6 F#6 E6 F#6 E6 | F#6 E6 F#6 E6 F#6 E6 F#6 E6",
+            "",
+        )
+        .with_left(
+            "-:4 C#4:1 C#4 C#4 C#4 | C#4 C#4 C#4 C#4 C#4 C#4 C#4 C#4 & F#4+Bb4+C#5+F#5:1 G4+G5 \
+             F#4+Bb4+C#5+F#5 G4+G5 F#4+Bb4+C#5+F#5 G4+G5 F#4+Bb4+C#5+F#5 G4+G5 | F#4+Bb4 E5+G5 \
+             F#4+Bb4 E5+G5 F#4+Bb4 E5+G5 F#4+Bb4 G4+C5+E5+G5 & C5+E5:8 | G4+C5+C#5+F#5:7 -:1 & \
+             C#6+G6:1 C6+G6 C#6+G6 C6+G6 C#6+G6 C6+G6 C#6+G6 C6+G6 | C#6+G6 C6+G6 C#6+G6 C6+G6 \
+             C#6+G6 C6+G6 C#6+G6 C6+G6",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .marked(Dynamic::Forte),
+        // MIDI bar 1194.
+        Part::new(
+            "The last chord",
+            "-:2 (3 C4:1 D4 E4 F#4 -:3",
+            "",
+        )
+        .with_left(
+            "-:2 (3 C2:1 B1 A1+C3 G1 -:3 & -:3 F#2:2 -:3 & -:2 Bb2+E3:1 A2+Eb3 F#1+G2+C#3+C4+F#4 \
+             -:3 & C#4:1 C#4 C#4 C#4 -:4 & G6:1 G6 G6 E2+E3+G6 F2+D3+F3 -:3",
+        )
+        .in_key(C, Chromatic)
+        .played_by(&[(gm::FLUTE, 0)])
+        .with_drums(&[
+            (Drum::Snare, "-:3 x:1 X:4"),
+        ])
+        .marked(Dynamic::Fortissimo),
+    ],
+    form: &["Drum roll", "Evening", "Flutes and piccolo", "Oboe", "Trumpets", "The whole orchestra", "Oboes and horns", "Oboes and horns, bar 3", "Wet-nurses' Dance", "The wet-nurses' tune", "Horn", "Piccolo, horn and violins", "Flutes in fourths", "Flutes and harp", "Oboes", "Flutes and piano", "Trumpet tune", "Tutti in G", "Trumpets in C", "The wet-nurses' tune, tutti", "A peasant with a bear", "Clarinet and tuba", "Woodwind trills", "A merchant", "The merchant's tune", "Two gypsy girls", "Clarinets and horns", "Gypsy girls again", "Celesta and violins", "Oboes in thirds", "The merchant again", "Gypsy girls, last time", "Trumpet and harp", "Coachmen's Dance", "Trumpet, violins, trombone", "Woodwinds", "Flutes and clarinets", "Flutes and clarinets, bar 12", "Clarinet and trombones", "Woodwinds in C", "The coachmen, tutti", "The coachmen dance on", "The masqueraders", "Clarinet, chromatic", "Chords of F against F sharp", "Strings", "Strings, bar 4", "Trombones", "Trombones, bar 11", "Flute and clarinets", "Piccolo and harp", "Oboes in A flat", "Flutes in A flat", "Violins in A flat", "Clarinet and horns", "Chords over a rising bass", "Tremolo", "Crescendo", "The last chord"],
+    drums_from: 0,
+    about: "The fourth tableau of Petrushka (1911, revised 1947): the Shrovetide fair again, \
+            towards evening. A side drum roll links it to the third tableau. The crowd's music \
+            comes back in D major, in 6/8: the oboes, the flutes and piccolo over an ostinato of \
+            the clarinets and bassoon, the trumpets, and the whole orchestra. The wet-nurses \
+            dance to a folk tune in F major (C, A, B flat, A, G, F), on the oboe, then the horn, \
+            then the piccolo, horn and violins together; after it come flutes in fourths in D \
+            minor, a figure over the harp in D Mixolydian (D major with C natural), a tune in G \
+            major and G Mixolydian (with F natural) on the flutes and the trumpet, and, over a \
+            pedal on C, the trumpets' figure and the wet-nurses' tune once more, fortissimo, in \
+            C Mixolydian (with B flat). A peasant leads in a bear: high on the clarinet he plays \
+            his pipe, and the tuba, the bear, lumbers in 3/2 between B flat, F sharp, C and E, \
+            notes of a whole-tone scale, which keeps to no major or minor key. A merchant \
+            arrives with two gypsy girls: his tune keeps to the white notes and turns around D \
+            (D Dorian, the minor mode with a raised sixth, B natural); the girls dance over \
+            chords of D minor, and a trumpet and the harp take up their figure in F major. Then \
+            the coachmen and grooms stamp in, a heavy dance in E Mixolydian (E major with D \
+            natural) over a pedal on E, with a clarinet tune in G Mixolydian and an episode of \
+            the woodwinds in C major. Masqueraders burst in: a figure of the piano and harp in D \
+            major, a chromatic clarinet, chords of F major hammered against F sharp, A and C, \
+            the strings in the whole-tone scale, the trombones and tuba in bars of 5/8 in C \
+            Dorian (the minor mode with A natural), the piccolo over the harp in C minor, and a \
+            tune in A flat major over a pedal on A flat. The MIDI ends here, without Petrushka's \
+            death: chords over a bass rising by half steps, then a tremolo that starts \
+            pianissimo in the flutes and violins and grows to the whole orchestra, the piano \
+            alternating the chords of F sharp major and C major. This is Petrushka's chord from \
+            the second tableau: two major triads a tritone apart that share no note, whose six \
+            notes all lie in the octatonic scale (half step and whole step in turn), which no \
+            major or minor key holds. A last fortissimo run, C, D, E, F sharp, lands on F sharp \
+            and C, the tritone again. The bars that keep to no scale, or sound two keys at once \
+            like these, are marked chromatic.",
+};

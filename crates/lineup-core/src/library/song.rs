@@ -629,6 +629,8 @@ const FIVE_EIGHT_UNGROUPED: TimeSignature = TimeSignature::new(5, 8);
 const SEVEN_EIGHT: TimeSignature = TimeSignature::new(7, 8);
 // A single beat, a bar of one quarter note (Petrushka).
 const ONE_FOUR: TimeSignature = TimeSignature::new(1, 4);
+// Two half notes to the bar, cut time (Petrushka).
+const TWO_TWO: TimeSignature = TimeSignature::new(2, 2);
 // Three half notes to the bar (Petrushka).
 const THREE_TWO: TimeSignature = TimeSignature::new(3, 2);
 // Thirteen sixteenth notes, a single odd bar of Petrushka's third tableau.
@@ -1052,6 +1054,7 @@ pub static SONGS: &[Song] = &[
     classical::PETRUSHKA_RUSSIAN_DANCE,
     classical::PETRUSHKA_ROOM,
     classical::PETRUSHKA_MOOR,
+    classical::PETRUSHKA_FAIR_EVENING,
 ];
 
 #[cfg(test)]
