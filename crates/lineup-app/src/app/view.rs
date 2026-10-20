@@ -42,15 +42,18 @@ pub(super) const RACK: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE,
 pub(super) const PIANO_ROLL: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F7);
 pub(super) const HARMONY: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F8);
 pub(super) const BROWSER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::ALT, Key::F8);
+pub(super) const MIXER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F9);
+/// Help > Keyboard shortcuts.
+pub(super) const HELP: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F1);
 
 /// The zoom keys. `+` is also typed as `=` without Shift on most keyboards.
-const WIDER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Plus);
-const WIDER_2: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Equals);
-const NARROWER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Minus);
-const TALLER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::ALT, Key::Plus);
-const TALLER_2: KeyboardShortcut = KeyboardShortcut::new(Modifiers::ALT, Key::Equals);
-const SHORTER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::ALT, Key::Minus);
-const RESET: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Num0);
+pub(super) const WIDER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Plus);
+pub(super) const WIDER_2: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Equals);
+pub(super) const NARROWER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Minus);
+pub(super) const TALLER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::ALT, Key::Plus);
+pub(super) const TALLER_2: KeyboardShortcut = KeyboardShortcut::new(Modifiers::ALT, Key::Equals);
+pub(super) const SHORTER: KeyboardShortcut = KeyboardShortcut::new(Modifiers::ALT, Key::Minus);
+pub(super) const RESET: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Num0);
 
 /// The zooms the keys and buttons step through. Each step is about a
 /// fifth bigger than the last, so it takes as many steps to double the
@@ -352,12 +355,7 @@ impl LineupApp {
             window(&mut self.harmony_keys.open, "Harmony keys", HARMONY, ui);
             let browser = &mut self.playlist.browser_open;
             window(browser, "Patterns and library", BROWSER, ui);
-            if ui
-                .add(egui::Button::selectable(self.mixer_open, "Mixer").shortcut_text("F9"))
-                .clicked()
-            {
-                self.mixer_open = !self.mixer_open;
-            }
+            window(&mut self.mixer_open, "Mixer", MIXER, ui);
             ui.separator();
             let ear = egui::Button::selectable(self.ear_training.open, "Ear training")
                 .shortcut_text("experimental");
@@ -428,7 +426,7 @@ impl LineupApp {
         Area::Rack.zoom(ctx, Axis::Horizontal)
     }
 
-    /// F5, F6, F7, F8 and Alt+F8 show or hide the windows and panels.
+    /// F1, F5 to F9 and Alt+F8 show or hide the windows and panels.
     pub(super) fn view_shortcuts(&mut self, ctx: &egui::Context) {
         let pressed = |shortcut| ctx.input_mut(|input| input.consume_shortcut(&shortcut));
         // Alt+F8 is checked first, so it never counts as F8 as well.
@@ -446,8 +444,11 @@ impl LineupApp {
         if pressed(PIANO_ROLL) {
             self.piano_roll.open = !self.piano_roll.open;
         }
-        if ctx.input_mut(|input| input.consume_key(Modifiers::NONE, egui::Key::F9)) {
+        if pressed(MIXER) {
             self.mixer_open = !self.mixer_open;
+        }
+        if pressed(HELP) {
+            self.shortcuts_open = !self.shortcuts_open;
         }
     }
 }

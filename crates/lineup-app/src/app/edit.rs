@@ -14,11 +14,11 @@ use lineup_core::{Change, Project, diff};
 
 use super::LineupApp;
 
-const UNDO: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Z);
-const REDO: KeyboardShortcut =
+pub(super) const UNDO: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Z);
+pub(super) const REDO: KeyboardShortcut =
     KeyboardShortcut::new(Modifiers::COMMAND.plus(Modifiers::SHIFT), Key::Z);
 /// The other common shortcut for redo, used on Windows.
-const REDO_Y: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Y);
+pub(super) const REDO_Y: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Y);
 
 impl LineupApp {
     /// Changes the project with `change`, as one undoable step called
