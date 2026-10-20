@@ -4865,11 +4865,11 @@ pub(super) const RITUAL_OF_ABDUCTION: Song = Song {
 //
 // Not certain: the piccolo's and first flute's septuplets (seven notes to a bar of 3/4, MIDI
 // bars 26 to 41 and 169 to 174) are written as the nearest sixteenths; quintuplet and septuplet
-// runs (bars 12, 14, 22, 23) as sextuplets; the 5/8 bars are counted 2 + 3, which the MIDI
-// cannot tell. The Charlatan's flute cadenza (bars 277 to 286) is free in the score and has odd
-// meters in the MIDI (6/8, 21/16, four bars of 32/32, two of 15/16, 3/8 and 15/32): it is
-// written here in eight bars of 4/4 and one of 3/4, with the MIDI's notes and tempos and a
-// rhythm of this transcription's own. The keys of the Charlatan and of the puppets coming to
+// runs (bars 12, 14, 22, 23) as sextuplets; in the 5/8 bars every eighth note is a beat, as the
+// MIDI marks no grouping. The Charlatan's flute cadenza (bars 277 to 286) is free in the score
+// and has odd meters in the MIDI (6/8, 21/16, four bars of 32/32, two of 15/16, 3/8 and 15/32):
+// it is written here in eight bars of 4/4 and one of 3/4, with the MIDI's notes and tempos and
+// a rhythm of this transcription's own. The keys of the Charlatan and of the puppets coming to
 // life (bars 270 to 276 and 287 to 298) are chromatic: no scale fits them.
 pub(super) const PETRUSHKA_FAIR: Song = Song {
     name: "Petrushka, The Shrovetide Fair",
@@ -5302,7 +5302,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              E5:2 D4+E5 D4+E5 D4:3 -:1 | E4:2 D4+E4 D4+E4:4 E4:2. | E5 D4+E5 D4+F#4+E5 - D4+E5:1 \
              - & E4+A4:2 G4+D5 F#4+D5 A4+E5 E4. | -:10 | E4:2 G4+D5 D5 A4+E5 D5+G5",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(E, Dorian)
         .played_by(&[(gm::VIOLIN, 0)])
         .marked(Dynamic::Forte),
@@ -5351,7 +5351,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              | B5+G6+B6 F5+D6+F6 F5+D6+F6 B5+G6+B6 B5+G6+B6 | F5+D6+F6 F5+D6+F6 B5+G6+B6 \
              B5+G6+B6 F5+D6+F6:1 -",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(D, Dorian)
         .played_by(&[(gm::PICCOLO, 0)])
         .with_drums(&[
@@ -5428,7 +5428,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
         .with_left(
             "(3 Bb3+D4:1 _ - -:2 Bb3+D4:1 - F3:2 Bb3:4 | _:2 D3 D3+Bb3:1 - D3:2 (3 F2+F3:1 _ - \
              -:2 & E4:4 F4:8 | _:12 & (3 -:1 F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 (3 Bb2:1 _ - -:2 | \
-             (3 D4:1 _ - -:8 Bb3:2 & -:8 (3 -:1 F5+D6 D6+F6 (3 F5 D6+F6. _ | (3 _ F5+D6 D6+F6 (3 \
+             (3 D4:1 _ - -:8 Bb3:2 & -:8 (3 -:1 F5+D6 D6+F6 (3 F5 D6+F6. _ | (3 - F5+D6 D6+F6 (3 \
              F5 D6+F6. _ _ -:3 (3 -:1 F5+E6 E6+F6 (3 F5 E6+F6 -",
         )
         .with_tempo(&[tempo(0, 88)])
@@ -5508,7 +5508,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              B5+G6+B6 F5+D6+F6 F5+D6+F6 | B5+G6+B6 B5+G6+B6 F5+D6+F6 F5+D6+F6 B5+G6+B6 | \
              D5+F#5+A5+D6+F#6 A4+E5+A5+C6 A4+E5+A5+C6 D5+F#5+A5+D6+F#6 D5+F#5+A5+D6+F#6:1 -",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(D, Dorian)
         .played_by(&[(gm::PICCOLO, 0)])
         .with_drums(&[
@@ -5641,23 +5641,23 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              -:4 (3 G5:1 F5+Bb5 _ D5+D6:2 C5+C6 | Bb4+Bb5:4 Bb4+Bb5:6 -:2 | (3 Bb4+F5:1 G5 F5 (3 \
              G5 F5+Bb5 _ Eb5+Eb6:2 (3 G5:1 F5+Bb5 _ -:4 | F5+F6:8 F5+F6:4 | (3 G6:1 _ - -:4 (3 \
              -:1 - F6 Bb6:2 (3 G6:1 - Bb5. | (3 Bb4+F5 - F5 (3 - F5+Bb5 _ (3 Bb4+F5 - Bb4+F5 (3 \
-             F5 F5+Bb5 _ -:2 (3 -:1 - Bb5. | (3 _ _ - D5+D6:2 C5:4 - | (3 Bb4:1 G5 - (3 G5 - - \
-             (3 Bb4 - Bb4 -:6 | (3 F5:1 G5 F5 -:2 C5+C6 (3 -:1 - F6 F6+Bb6:2 (3 G6:1 F6 - | -:12 \
-             & -:12 | - | - | - | - | - | - | -:6 (3 -:1 - F6 -:2 (3 G6:1 - - | -:6 (3 -:1 - F6 \
-             Bb6:2 (3 -:1 F6 Bb5. | (3 _ _ - (3 - Bb5 _ (3 - G5 - (3 G5 Bb5 _ Bb6:2 (3 G6:1 F6 \
-             Bb5. | (3 _ _ - (3 - Bb5 _ (3 - G5 - (3 G5 Bb5 _ -:2 (3 C6:1 _ Bb5 | Bb4:4 Bb4:6 \
-             -:2 & (3 -:1 F5+D6 D6+F6 (3 F5 D6+F6. _ (3 _ F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 \
-             -:1 F5+D6 D6+F6 (3 F5 D6+F6. _ (3 _ F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 -:1 F5+E6 \
-             E6+F6 (3 F5 E6+F6. _ (3 _ F5+E6 E6+F6 (3 F5 E6+F6. _ _ -:3 | (3 -:1 F5+D6 D6+F6 (3 \
-             F5 D6+F6. _ (3 _ F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 -:1 F5+D6 D6+F6 (3 F5 D6+F6. \
-             _ (3 _ F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 -:1 G5+Eb6 Eb6+G6 (3 G5 G6. _ (3 _ \
-             G5+Eb6 Eb6+G6 (3 G5 G6. _ _ -:3 | (3 -:1 G5+D6 D6+G6 (3 G5 D6+G6. _ (3 _ G5+D6 \
-             D6+G6 (3 G5 D6+G6. _ _ -:3 | (3 -:1 Bb5+D6 D6+Bb6 (3 Bb5 D6+Bb6. _ (3 _ Bb5+D6 \
-             D6+Bb6 (3 Bb5 D6+Bb6. _ _ -:3 | (3 -:1 Eb5+C6+Eb6 C6+C7 (3 C6+Eb6 C6+Eb6+C7. _ (3 _ \
-             Eb5+C6+Eb6 C6+C7 (3 C6+Eb6 C6+Eb6+C7. _ _ -:3 | (3 -:1 Eb5+C6+Eb6 C6+C7 (3 C6+Eb6 \
-             C6+Eb6+C7. _ (3 _ Eb5+C6+Eb6 C6+C7 (3 C6+Eb6 C6+Eb6+C7. _ _ -:3 | -:2 \
-             G4+F5+Eb6+A6:1 F5+Eb6+A6 C4+Eb4+Eb6+A6 - F5+Eb6+A6:2 (3 -:1 F5+D6 G5+Eb6 (3 A5+F6 \
-             Bb5+G6 C6+A6 | - Bb5+D6+Bb6 F4+Bb5+D6+Bb6 Bb5+D6+Bb6 - Bb5+D6+Bb6 -:6",
+             F5 F5+Bb5 _ -:2 (3 -:1 - Bb5. | -:2 D5+D6 C5:4 - | (3 Bb4:1 G5 - (3 G5 - - (3 Bb4 - \
+             Bb4 -:6 | (3 F5:1 G5 F5 -:2 C5+C6 (3 -:1 - F6 F6+Bb6:2 (3 G6:1 F6 - | -:12 & -:12 | \
+             - | - | - | - | - | - | -:6 (3 -:1 - F6 -:2 (3 G6:1 - - | -:6 (3 -:1 - F6 Bb6:2 (3 \
+             -:1 F6 Bb5. | -:2 (3 -:1 Bb5 _ (3 - G5 - (3 G5 Bb5 _ Bb6:2 (3 G6:1 F6 Bb5. | -:2 (3 \
+             -:1 Bb5 _ (3 - G5 - (3 G5 Bb5 _ -:2 (3 C6:1 _ Bb5 | Bb4:4 Bb4:6 -:2 & (3 -:1 F5+D6 \
+             D6+F6 (3 F5 D6+F6. _ (3 _ F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 -:1 F5+D6 D6+F6 (3 \
+             F5 D6+F6. _ (3 _ F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 -:1 F5+E6 E6+F6 (3 F5 E6+F6. \
+             _ (3 _ F5+E6 E6+F6 (3 F5 E6+F6. _ _ -:3 | (3 -:1 F5+D6 D6+F6 (3 F5 D6+F6. _ (3 _ \
+             F5+D6 D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 -:1 F5+D6 D6+F6 (3 F5 D6+F6. _ (3 _ F5+D6 \
+             D6+F6 (3 F5 D6+F6. _ _ -:3 | (3 -:1 G5+Eb6 Eb6+G6 (3 G5 G6. _ (3 _ G5+Eb6 Eb6+G6 (3 \
+             G5 G6. _ _ -:3 | (3 -:1 G5+D6 D6+G6 (3 G5 D6+G6. _ (3 _ G5+D6 D6+G6 (3 G5 D6+G6. _ \
+             _ -:3 | (3 -:1 Bb5+D6 D6+Bb6 (3 Bb5 D6+Bb6. _ (3 _ Bb5+D6 D6+Bb6 (3 Bb5 D6+Bb6. _ _ \
+             -:3 | (3 -:1 Eb5+C6+Eb6 C6+C7 (3 C6+Eb6 C6+Eb6+C7. _ (3 _ Eb5+C6+Eb6 C6+C7 (3 \
+             C6+Eb6 C6+Eb6+C7. _ _ -:3 | (3 -:1 Eb5+C6+Eb6 C6+C7 (3 C6+Eb6 C6+Eb6+C7. _ (3 _ \
+             Eb5+C6+Eb6 C6+C7 (3 C6+Eb6 C6+Eb6+C7. _ _ -:3 | -:2 G4+F5+Eb6+A6:1 F5+Eb6+A6 \
+             C4+Eb4+Eb6+A6 - F5+Eb6+A6:2 (3 -:1 F5+D6 G5+Eb6 (3 A5+F6 Bb5+G6 C6+A6 | - \
+             Bb5+D6+Bb6 F4+Bb5+D6+Bb6 Bb5+D6+Bb6 - Bb5+D6+Bb6 -:6",
         )
         .in_key(ASharp, Major)
         .played_by(&[(gm::CLARINET, 0)]),
@@ -5687,13 +5687,13 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              - F6 Bb6:2 (3 G6:1 - - | (3 Bb4+F5 G5 F5 (3 G5 F5+Bb5 _ C5+C6:4 G5+G6 & (3 Bb4+F5:1 \
              G5 F5 (3 G5 F5+Bb5 _ (3 Bb4+F5 G5 F5 (3 G5 F5+Bb5 _ C5+C6:2 Bb4+Bb5 | F5:4 (3 Bb4:1 \
              - - (3 G5 F5 _ D5:2 - | Bb4:4 (3 F5:1 G5 F5 (3 G5 F5 _ -:4 | (3 -:1 G5 F5 (3 G5 Bb5 \
-             _ (3 - G5 F5 D5+D6:2 -:4 | F5+F6:8 F5+F6:4 | G5+G6 G6:6 (3 G6:1 - Bb5. | (3 _ _ F5 \
-             (3 - F5+Bb5 _ -:2 (3 F5:1 F5+Bb5 _ -:2 (3 -:1 - Bb5. | (3 _ _ - -:2 (3 -:1 G5 - (3 \
-             F5+G5 F5 _ -:4 & -:12 | - | - | - | - | - | - | C6:1 F6:6 Eb5:1 G#4+Bb4+D5+C6 F6 \
-             G#4 - & D5+D6:4 Eb5+Eb6:2 D5+D6 -:4 | F6:6 - | -:12 | D6:4 Eb6:2 -:6 | (3 -:1 G5 - \
-             (3 G5 Bb5 _ (3 - G5 - (3 G5 Bb5 _ -:4 | -:2 (3 -:1 F5+Bb5 _ G5:2 (3 F5:1 F5+Bb5 _ \
-             -:2 F5+F6 | G5+G6:4 G5+G6:6 F5+F6:2 | Eb5+Eb6 D5+D6 (3 Bb4:1 - Bb4 (3 - - F6 Bb6:2 \
-             (3 -:1 F6 -",
+             _ (3 - G5 F5 D5+D6:2 -:4 | F5+F6:8 F5+F6:4 | G5+G6 G6:6 (3 G6:1 - Bb5. | (3 - - F5 \
+             (3 - F5+Bb5 _ -:2 (3 F5:1 F5+Bb5 _ -:2 (3 -:1 - Bb5. | -:4 (3 -:1 G5 - (3 F5+G5 F5 \
+             _ -:4 & -:12 | - | - | - | - | - | - | C6:1 F6:6 Eb5:1 G#4+Bb4+D5+C6 F6 G#4 - & \
+             D5+D6:4 Eb5+Eb6:2 D5+D6 -:4 | F6:6 - | -:12 | D6:4 Eb6:2 -:6 | (3 -:1 G5 - (3 G5 \
+             Bb5 _ (3 - G5 - (3 G5 Bb5 _ -:4 | -:2 (3 -:1 F5+Bb5 _ G5:2 (3 F5:1 F5+Bb5 _ -:2 \
+             F5+F6 | G5+G6:4 G5+G6:6 F5+F6:2 | Eb5+Eb6 D5+D6 (3 Bb4:1 - Bb4 (3 - - F6 Bb6:2 (3 \
+             -:1 F6 -",
         )
         .in_key(ASharp, Major)
         .played_by(&[(gm::FLUTE, 0), (gm::CLARINET, -12)])
@@ -5759,7 +5759,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
             "E1+E2:8 -:2 & -:8 Bb2:2 & -:8 (3 A1+A2+D4+E4+D5:1 G1+G2 F1+F2 & E3:2 -:6 Bb3:1 A3 & \
              -:2 D4+E4+D5 D4+E4+D5 -:4",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(E, Dorian)
         .played_by(&[(gm::VIOLIN, 0)])
         .marked(Dynamic::Fortissimo),
@@ -5798,7 +5798,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
             "-:8 Bb2:2 & D4+E5:2 D4+E5 D4+E5 D4 (3 A1+A2+D4+E5:1 G1+G2 F1+F2 & E4+A4:2 G4+D5 \
              F#4+D5 A4+E5 Bb3+E4:1 A3",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(E, Dorian)
         .played_by(&[(gm::VIOLIN, 0)])
         .marked(Dynamic::Forte),
@@ -5811,7 +5811,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
         .with_left(
             "E4+A4:2 G4+D5 F#4+D5 A4+E5 E4:1 - & D4+E5:2 D4+E5 D4+E5 D4 D4+E5:1 -",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(E, Dorian)
         .played_by(&[(gm::VIOLIN, 0)])
         .marked(Dynamic::Forte),
@@ -6085,7 +6085,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              F5+D6+F6 F5+D6+F6 | B5+G6+B6 B5+G6+B6 F5+D6+F6 F5+D6+F6 B5+G6+B6 | D5+F#5+A5+D6+F#6 \
              A4+E5+A5+C6 A4+E5+A5+C6 D5+F#5+A5+D6+F#6 -",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(D, Dorian)
         .played_by(&[(gm::PICCOLO, 0)])
         .with_drums(&[
@@ -6132,7 +6132,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              (3 E3+D5:1 D3 C3 & A4+A5:1 A4+A5 G5 G5 F#4+F#5 F#4+E5+F#5 A4+A5 A4+E5+A5 (3 E4+G5 _ \
              -",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(D, NaturalMinor)
         .played_by(&[(gm::CLARINET, 0)])
         .marked(Dynamic::Forte),
@@ -6175,7 +6175,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              D5+E5+D6 D6+G6 D5+E5+E6:2 D5+E5+A5:1 - (3 E3+D5+E5+D6+E6 D3 C3 & -:5 F#6:1 - A5+A6 \
              -:2",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(E, Dorian)
         .played_by(&[(gm::PICCOLO, 0)])
         .marked(Dynamic::Forte),
@@ -6203,7 +6203,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              D4+E4+E5 & A6:1 A6 G5+G6 G5+G6 F#5 F#5 A4 A4 G4 G4+D5+D6 & A5:2. D5+E6 D5+D6+F#6 \
              D5+C6+D6+E6 D5+D6+E6:1 - & D5+D6+E6:2 -:1 D6 - E6 - A6 - G6",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(E, Dorian)
         .played_by(&[(gm::PICCOLO, 0)])
         .marked(Dynamic::Forte),
@@ -6265,7 +6265,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              D5+F5+A5+D6+F6 G5+B5+G6+B6 | D5+F#5+A5+D6+F#6 A4+C5+E5+A5+C6 A4+C5+E5+A5+C6 \
              D5+F#5+A5+D6+F#6 D5+F#5+A5+D6+F#6:1 -",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(D, Dorian)
         .played_by(&[(gm::PICCOLO, 0)])
         .with_drums(&[
@@ -6312,8 +6312,8 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              G5 - Bb5 (3 C6 D6 E6 (3 D6 E6 D6 (3 E6 D6 E6 D6 E6 | (3 D6 E6 D6 (3 E6 D6 E6 (3 D6 \
              E6 D6 E6 D6 (3 E6 D6 E6 (3 D6 E6 D6 | (3 D5 - F5 (3 G5 - Bb5 (3 C6 D6 E6 (3 D6 E6 \
              D6 (3 E6 D6 E6 D6 E6 | D6 - (3 E6 D6 E6 (3 D6 E6 D6 E6 D6 (3 - Bb4 C5 (3 D5 E5 F5. \
-             | _:2 -:10 | -:8 (3 -:1 - G2+C6 (3 C#6 - - | (3 C6 - - -:2 (3 -:1 - F#6 (3 E6 F#6 - \
-             (3 F#6 - - -:2",
+             | -:12 | -:8 (3 -:1 - G2+C6 (3 C#6 - - | (3 C6 - - -:2 (3 -:1 - F#6 (3 E6 F#6 - (3 \
+             F#6 - - -:2",
         )
         .in_key(D, Dorian)
         .played_by(&[(gm::PICCOLO, 0)])
@@ -6341,7 +6341,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              C#5+G5+A5+F#6+G6 (3 B4+D5+E6+F#6+G6 E5+D6+A6+Bb6 F5+A5+C6+G6 (3 A4+Bb5+E6+A6 \
              G5+A5+Bb5+C6 G5+A5 A4+Bb5+A6 -",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(D, NaturalMinor)
         .played_by(&[(gm::PICCOLO, 0)])
         .with_drums(&[
@@ -6387,8 +6387,8 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              D2:1 - | -:3 D3+F#3:1 (3 E3+A3 _ F#3 (3 _ F3 _ _:2 - | -:12 | -:3 D3+F#3+F#4:1 (3 \
              E3+G#3 _ F#3 (3 _ G3 _ (3 F#3+A3 _ G3 (3 _ G#3 _ | -:12 & -:12 | - | - | - | -:3 \
              C#3:1 C3+C4:4 B2+B3:2 Bb2+Bb3:1 - | -:3 C#3:1 C3+C4:4 B2+B3:2 Bb2:1 - | -:12 & -:12 \
-             | - | - | -:6 Bb3:2 (3 _:1 _ A3 (3 _ Bb3. _ | _ -:2 F#4:1 -:8 | -:6 Bb3:2 -:4 | \
-             -:12 & -:12 | - | - | - | (3 -:1 - G#4+C#5+E5 (3 Eb5 D5 C5 Bb4:2. -:6 | (3 -:1 - \
+             | - | - | -:6 Bb3:2 (3 _:1 _ A3 (3 _ Bb3. _ | -:3 F#4:1 -:8 | -:6 Bb3:2 -:4 | -:12 \
+             & -:12 | - | - | - | (3 -:1 - G#4+C#5+E5 (3 Eb5 D5 C5 Bb4:2. -:6 | (3 -:1 - \
              G#4+C#5+E5 (3 Eb5 D5 C5 Bb4:2. -:6 | -:12 & -:12 | - | - | - | (3 -:1 - D6+D8 (3 \
              E6+E7 E5+G#7 G#5+D7 G#4+G#6:2. -:6 | (3 -:1 - D6+D8 (3 E6+E7 E5+G#7 G#5+D7 G#4+G#6 \
              -:7 | -:12",
@@ -6417,8 +6417,8 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
             "Puppets",
             "Eb6:1 -:2 F#6:1 F6:4 E6:2 Eb6. | (3 -:1 - G5 (3 F#5 F5 Eb5 C#5:2. - E6 Eb6. | (3 \
              -:1 - G5 (3 F#5 F5 Eb5 C#5:2. - E6 Eb6. | -:6 B5:2 Eb6 C6 | _ C#6 B6 G#6:1 - (3 - \
-             G#6 A6 (3 A6 A6. _ | _ -:5 C6:2 E6 C#6 | _ D6 C7 A6:1 - (3 - - A6 (3 Bb6 Bb6. _ | _ \
-             -:11 | -:3 G#6:1 D6:2 -:6 | -:7 G#6:1 F#6:2. - | -:11 Bb6:1 | F#6 -:11",
+             G#6 A6 (3 A6 A6. _ | -:6 C6:2 E6 C#6 | _ D6 C7 A6:1 - (3 - - A6 (3 Bb6 Bb6. _ | \
+             -:12 | -:3 G#6:1 D6:2 -:6 | -:7 G#6:1 F#6:2. - | -:11 Bb6:1 | F#6 -:11",
             "",
         )
         .with_left(
@@ -6428,7 +6428,7 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
              | - | - & -:12 | - | - | -:7 A3:1 Bb3+F4 -:3 | -:8 Eb4:4 | -:3 A3+Eb4:1 -:3 \
              Bb3+E4:1 B3 -:3 | -:8 E4:4 | -:12 | - | - | - | - & -:12 | - | - | -:3 G#3+D4:1 -:3 \
              Eb4:4 Eb4:1 | F4:4 E4+F#4 - | -:11 F4:1 | F#4:4 G4 G#4:1 -:3 | -:12 | - | - | - | - \
-             & -:12 | (3 -:2 - A5 (3 B3 B4 B4 (3 B4:1 B3 _ (3 _ _ B3. | _:2 -:1 G3+B3+B4+A5 (3 \
+             & -:12 | (3 -:2 - A5 (3 B3 B4 B4 (3 B4:1 B3 _ (3 _ _ B3. | -:3 G3+B3+B4+A5:1 (3 \
              A3+B3+C#4+D5 _ B4 (3 _ B4 _ -:4 | (3 -:2 - A4. (3 _:1 - - (3 G#4 F#4. _ (3 _ Bb4 E5 \
              (3 Eb5 E5 _ | Eb5:2. - (3 -:1 F#5 E5 (3 Eb5 E5 _ Eb5:2. - | -:3 A4:1 (3 Bb3+G#4 E4 \
              - -:2 F4 - | -:8 (3 -:1 - G#4 (3 A4 G#4 G#4 | (3 E4+G#4 F4+A4 F4+G#4 (3 F4+G#4 \
@@ -6501,9 +6501,9 @@ pub(super) const PETRUSHKA_FAIR: Song = Song {
 // Not certain: bar 393 is 9/16 in the MIDI: written here as 2/4, the last sixteenth (a breath
 // before the piano comes back a tempo) left out. Bars 388 and 391 are 5/8 in the MIDI, each
 // with a silent last eighth that may be a pause rather than a bar of 5/8; they are kept as 5/8,
-// counted 2 + 3. The tempo of the slow bars, 386 to 393, is the MIDI's: a fall from 116 within
-// the first beat to 34, written as 35 (the slowest the demos allow at a tempo of 116), and 116
-// again from bar 394.
+// every eighth note a beat. The tempo of the slow bars, 386 to 393, is the MIDI's: a fall from
+// 116 within the first beat to 34, written as 35 (the slowest the demos allow at a tempo of
+// 116), and 116 again from bar 394.
 pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
     name: "Petrushka, Russian Dance",
     origin: "Igor Stravinsky, Petrushka, 1911, revised 1947",
@@ -6702,28 +6702,27 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
              F3+F4+B4+G5+A5 F3+G5+A5 G3+C5+F5+G5+A5 G3+A4+D5+G5+A5 F3+F4+Eb5+G5+A5 F3+G5+A5 | \
              G3+A4+C5+F5+A5+B5 G3+F5+A5 F3+F4+B4+D5+G5+B5 F3+B4+C6 G3+D5+F5+B5+C6+A6 \
              G3+C5+D5+A5+D6 F3+A4+Eb5+G5+C6+D6+Eb6 F3+G5+C6 | G3+A4+C5+F5+A5+B5 G3+F5+A5 C6:2. \
-             -:1 G5:2. -:1 | -:2 C6. -:1 G5:2. B5:1. | _ -:7 | -:8 | -:6 F4:2 | _:1 \
-             G3+B3+G4+B4+E5 F3+A3+C4+A4+C5+F5 -:5 | -:8 & -:8 | - | - | -:2 F3+D5+G5+B5:1 \
-             F3+B4+B5 G3+A4+C5+D5+F5+A5+C6 G3+C5+D5+D6 F3+A4+Eb5+A5+Eb6 F3+G5+B5 | \
-             G3+A4+C5+F5+A5 G3+F5+B5 F3+D5+G5+B5 F3+B4+B5 G3+A4+C5+D5+F5+A5+C6 G3+C5+D5+D6 \
-             F3+A4+Eb5+A5+Eb6 F3+G5 | G3+A4+C5+F5+A5 G3+F5 F3+F4+B4+D5+G5+B5 F3+B4 \
+             -:1 G5:2. -:1 | -:2 C6. -:1 G5:2. B5:1. | -:8 | - | -:6 F4:2 | _:1 G3+B3+G4+B4+E5 \
+             F3+A3+C4+A4+C5+F5 -:5 | -:8 & -:8 | - | - | -:2 F3+D5+G5+B5:1 F3+B4+B5 \
+             G3+A4+C5+D5+F5+A5+C6 G3+C5+D5+D6 F3+A4+Eb5+A5+Eb6 F3+G5+B5 | G3+A4+C5+F5+A5 \
+             G3+F5+B5 F3+D5+G5+B5 F3+B4+B5 G3+A4+C5+D5+F5+A5+C6 G3+C5+D5+D6 F3+A4+Eb5+A5+Eb6 \
+             F3+G5 | G3+A4+C5+F5+A5 G3+F5 F3+F4+B4+D5+G5+B5 F3+B4 G3+A4+C5+D5+F5+C6 G3+C5+D5+D6 \
+             F3+A4+Eb5+G5+Eb6 F3+G5 | G3+A4+C5+F5+A5 G3+F5 F3+F4+B4+D5+G5+B5 F3+B4 \
              G3+A4+C5+D5+F5+C6 G3+C5+D5+D6 F3+A4+Eb5+G5+Eb6 F3+G5 | G3+A4+C5+F5+A5 G3+F5 \
-             F3+F4+B4+D5+G5+B5 F3+B4 G3+A4+C5+D5+F5+C6 G3+C5+D5+D6 F3+A4+Eb5+G5+Eb6 F3+G5 | \
-             G3+A4+C5+F5+A5 G3+F5 F3+F4+B4+D5+G5+B5 F3+B4 G3+A4+C5+D5+F5+C6 G3+C5+D5+D6 \
-             F3+A4+Eb5+G5+Eb6:2 | F6. -:6 | E6:2. -:6 & -:8 | - | - | - | - | - | - | - | \
-             G3+A4+E5+F5+A5:1 -:2 F3+B4+D5+G5:1 E3+C5+A5 E3+D5+F5+B5 D3+E4+G4+E5+G5+C6 \
-             D3+F5+A5+D6 | C3+G4+E5+G5+B5 C3+A4+A5+C6 B2+B4+B5+D6 B2+C5+C6+E6 A2+B4+D5+D6+F6 \
-             A2+C5+E5+E6+G6 G2+D5+F5+F6+A6 G2+E5+G5+G6+B6 & -:8 | - | -:1 B5 A5 A5+B5 A5 B5 \
-             A5+B5 A5+B5 | - B5 A5 A5 B5 A5+B5 B5 A5 | B5 A5 A5 A5 B5 A5+B5 B5 A5 | - A5+B5 A5 \
-             A5+B5 A5+B5 A5+B5 A5+B5 A5+B5 | B5 A5+B5 A5 A5+B5 A5+B5 A5+B5 A5+B5 A5+B5 | B5 \
-             A5+B5 A5 A5+B5 A5+B5 A5+B5 A5+B5 A5+B5 | G4+B5 A4 G4 G4+A4 G4+A4 G4+A4 A4 G4 | A4 \
-             G4 G4+A4 G4+A4 G4+A4 G4+A4 G4+A4 G4+A4 & E6:1 E5+F5+F6 B5+D6+G6 D5+F5+F6 \
-             A4+B5+E6+G6 E5+F5+C6+F6 G4+B5+D6+G6 D5+Eb5+F5+F6 | F4+D5+D6+E6+G6 E5+F5+F6 G4+D6 \
-             B4+D5+F5+F6 E6 E5+F5+F6 G4+B5+D6+G6 D5+Eb5+F5+F6 | G5+E6+G6 E5+C6+F6 D6+G6 \
-             D5+F5+G5+F6 C5+G5+D6+E6+G6 E5+F5+F6 - D5+Eb5+F5+F6 | G5+E6 E5+F6 G4+D6 D5+F5+F6 \
-             G5+E6 E5+F5+F6 G4+D6+G6 D5+Eb5+F5+F6 | G5+C6+E6+G6 E5+F6 D6+G6 D5+F5+G5+F6 G5+E6+G6 \
-             E5+F5+F6 D6 D5+Eb5+F5+F6 | G5+E6 E5+F6 B3+D6 F4+D5+F5+F6 G5+E6 E5+F5+F6 G3+F5+D6 \
-             G3+D5+F6 | F4+G5+E6 F4+B4+E5+F6 G3+C5+F5+C6+D6 G3+F4+D5+F5+F6 F4+G5+E6 \
+             F3+F4+B4+D5+G5+B5 F3+B4 G3+A4+C5+D5+F5+C6 G3+C5+D5+D6 F3+A4+Eb5+G5+Eb6:2 | F6. -:6 \
+             | E6:2. -:6 & -:8 | - | - | - | - | - | - | - | G3+A4+E5+F5+A5:1 -:2 F3+B4+D5+G5:1 \
+             E3+C5+A5 E3+D5+F5+B5 D3+E4+G4+E5+G5+C6 D3+F5+A5+D6 | C3+G4+E5+G5+B5 C3+A4+A5+C6 \
+             B2+B4+B5+D6 B2+C5+C6+E6 A2+B4+D5+D6+F6 A2+C5+E5+E6+G6 G2+D5+F5+F6+A6 G2+E5+G5+G6+B6 \
+             & -:8 | - | -:1 B5 A5 A5+B5 A5 B5 A5+B5 A5+B5 | - B5 A5 A5 B5 A5+B5 B5 A5 | B5 A5 \
+             A5 A5 B5 A5+B5 B5 A5 | - A5+B5 A5 A5+B5 A5+B5 A5+B5 A5+B5 A5+B5 | B5 A5+B5 A5 A5+B5 \
+             A5+B5 A5+B5 A5+B5 A5+B5 | B5 A5+B5 A5 A5+B5 A5+B5 A5+B5 A5+B5 A5+B5 | G4+B5 A4 G4 \
+             G4+A4 G4+A4 G4+A4 A4 G4 | A4 G4 G4+A4 G4+A4 G4+A4 G4+A4 G4+A4 G4+A4 & E6:1 E5+F5+F6 \
+             B5+D6+G6 D5+F5+F6 A4+B5+E6+G6 E5+F5+C6+F6 G4+B5+D6+G6 D5+Eb5+F5+F6 | F4+D5+D6+E6+G6 \
+             E5+F5+F6 G4+D6 B4+D5+F5+F6 E6 E5+F5+F6 G4+B5+D6+G6 D5+Eb5+F5+F6 | G5+E6+G6 E5+C6+F6 \
+             D6+G6 D5+F5+G5+F6 C5+G5+D6+E6+G6 E5+F5+F6 - D5+Eb5+F5+F6 | G5+E6 E5+F6 G4+D6 \
+             D5+F5+F6 G5+E6 E5+F5+F6 G4+D6+G6 D5+Eb5+F5+F6 | G5+C6+E6+G6 E5+F6 D6+G6 D5+F5+G5+F6 \
+             G5+E6+G6 E5+F5+F6 D6 D5+Eb5+F5+F6 | G5+E6 E5+F6 B3+D6 F4+D5+F5+F6 G5+E6 E5+F5+F6 \
+             G3+F5+D6 G3+D5+F6 | F4+G5+E6 F4+B4+E5+F6 G3+C5+F5+C6+D6 G3+F4+D5+F5+F6 F4+G5+E6 \
              F4+B4+E5+F5+F6 G3+C5+F5+C6+D6 G3+B4+D5+F6 | F4+G5+E6 F4+B4+E5+F6 G3+C5+F5+C6+D6 \
              G3+F4+D5+F5+F6 F4+G5+E6 F4+B4+E5+F5+F6 G3+C5+F5+C6+D6 G3+B4+D5+F6 | A3+B4+G5+C6+E6 \
              F5 D6 E5+E6 C6 F3+C5+D6 A3+B5 C4+B4+C5+C6 | F4+A5 B4 C5+G5 E5+B5 (3 F5+A5 F4+A5+C6 \
@@ -6793,7 +6792,7 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
              G#4:1 G#4 G#4:2 | A4:1 A4 A4:2 Bb4:1 Bb4 Bb4 - | -:2 F#3+F#4+D5+E5:1 -:5 | -:8 | - \
              | - | - | - | - & -:8 | - | - | -:4 E2:1 - B1 - | -:8 | - | - | -:4 E2:1 - B1 - | \
              F1+F2 -:7 | -:8 | - | B4:2 E5 D5:1 C5 B4:2 | D5+E5 E5+A5 D5+G#5:1 E5 C#5+A5:2 | \
-             G#5+B5 A5+E6 G#5+D6:1 B5 F#5+E6:2 & -:8 | - | -:7 Bb5:1. | _ A3+A4+B4+B5+B6 \
+             G#5+B5 A5+E6 G#5+D6:1 B5 F#5+E6:2 & -:8 | - | -:7 Bb5:1. | - A3+A4+B4+B5+B6 \
              A3+A4+F#5+B5+E6+E7 -:5 | -:2 E5 D5:1 B4 E5:2 | D5 E5 D5 B4 | E5:4 D5:1 -:2 \
              Bb5+Bb6:1 | Bb4+D6+D7 A3+A4+B4+B5+B6 A3+G4+A4+F#5+B5+E7 -:5 | -:2 E3+E5 E3+D5:1 \
              E3+B4 E3+E5:2 | E3+D5:1 - E3+E5:2 E3+D5:1 - E3+C#5:2 | E3+B4:1 - E3+E5:2 E3+D5:1 \
@@ -6840,25 +6839,25 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
              D4+F#4 (3 C#4 E4 - (3 - C#4+E4 - | (3 - - C#4+E4 (3 - E4 E4 (3 - E4 C#4+A4 (3 D4 \
              C#4+E4 C#4 | (3 C#4 - C#4+E4 (3 D4 C#4+E4 C#4+E4 (3 D4 F#4 F#4 (3 - D4+F#4 - | -:2 \
              (3 -:1 A4 - (3 D5 _ - -:2 | - (3 -:1 A4 - (3 C#5 _ A4 -:2 | - (3 -:1 A4 - (3 C#5 _ \
-             A4 -:2 | - (3 -:1 A4 - D5 -:3 & -:4 (3 -:1 - C#5 (3 Bb4 A4 E4. | (3 _ _ E4 (3 - B4 \
-             - (3 A5 G#5. _ (3 _ - - | (3 - D4 - -:2 (3 -:1 F#5 D5 (3 B4 A4 F#4. | (3 _ _ F#4 (3 \
-             - B4 F#5 (3 A5 G#5. _ (3 _ A4 F#4. | (3 _ _ F#4 (3 G#5+G#6 - - (3 A5+B5+B6 F#5 D5 \
-             (3 B4+F5+G#6 - - | (3 E6 C#4 Eb4 -:2 (3 -:1 - C#5 (3 B4 A4 E4. | (3 _ _ Eb4 (3 - B4 \
-             - (3 - G#5. _ (3 _ - - | (3 - D4 - -:4 (3 -:1 A4 F#4. | (3 _ _ F#4 (3 - B4 F#5 (3 \
-             A5+C#6 G#5. _ (3 _ - - | (3 - C#4 - -:4 (3 -:1 A4 E4. | (3 _ _ E4 (3 - B4 - (3 - \
+             A4 -:2 | - (3 -:1 A4 - D5 -:3 & -:4 (3 -:1 - C#5 (3 Bb4 A4 E4. | (3 - - E4 (3 - B4 \
+             - (3 A5 G#5. _ (3 _ - - | (3 - D4 - -:2 (3 -:1 F#5 D5 (3 B4 A4 F#4. | (3 - - F#4 (3 \
+             - B4 F#5 (3 A5 G#5. _ (3 _ A4 F#4. | (3 - - F#4 (3 G#5+G#6 - - (3 A5+B5+B6 F#5 D5 \
+             (3 B4+F5+G#6 - - | (3 E6 C#4 Eb4 -:2 (3 -:1 - C#5 (3 B4 A4 E4. | (3 - - Eb4 (3 - B4 \
+             - (3 - G#5. _ (3 _ - - | (3 - D4 - -:4 (3 -:1 A4 F#4. | (3 - - F#4 (3 - B4 F#5 (3 \
+             A5+C#6 G#5. _ (3 _ - - | (3 - C#4 - -:4 (3 -:1 A4 E4. | (3 - - E4 (3 - B4 - (3 - \
              G#5. _ (3 _ - - | (3 - D4 - -:6 & A4+E5:1 E5 A5 A4 A4 E4+E5+F#5 B4+B5 - | A4+A5 E5 \
              B5 A4 A4 E4+E5 B5 - | A4+B5 E5 - A4 A4 E4+E5 C#6 - | A4+D6 E4+E5 G#5 A4 A4+E5 E4+E5 \
              -:2 | (3 A4:1 D5+E5 F#5 (3 B4+A5 A4+B5 F#6 (3 A6 E5+G#6 D6 (3 B5 G#5 D5 | A4+E5 \
              E4+E5 A5 A4 A4 E4+E5+F#5 B5 - | A4 E5 B5 A4 A4 E4+E5 -:2 | A4+B5:1 E5 - A4 A4 E4+E5 \
              -:2 | A4+B5:1 E4+E5 G#5 A4 A4+E5 E4+E5 -:2 | A4+E5:1 E5 A5 A4 A4 E4+E5+F#5 E5 - | \
              A4 E5 B5 A4+A5 A4 E4+E5 F#5 - | A4+E5 E5 B5 A4 A4 E4+E5 G#5 F#5 & (3 -:1 C#4 E4 (3 \
-             - B4 - (3 A5 G#5. _ (3 _ - - | (3 - C#4 - -:2 (3 -:1 - C#5 (3 B4 A4 E4. | (3 _ _ \
+             - B4 - (3 A5 G#5. _ (3 _ - - | (3 - C#4 - -:2 (3 -:1 - C#5 (3 B4 A4 E4. | (3 - - \
              F#4 (3 - B4 F#5 (3 A5 G#5. _ (3 _ - - | (3 - D4 - -:2 (3 -:1 F#5 D5 (3 B4+B6 - - | \
-             (3 A5+A6 D4 - (3 - B4 F#5 (3 - G#5. _ (3 _ A4+F#5+F#6 F#4. | (3 _ _ - (3 - B4 - (3 \
-             A5 G#5. _ (3 _ - - | A5:2 E6 (3 A5+C#6:1 B5 _ (3 B4+F6 - - | D6:2 E6 (3 A5+D6:1 F#5 \
-             D5 (3 B4+C#6 - - | (3 - D4 - -:4 (3 B4:1 A4 F#4. | (3 _ _ E4 -:2 (3 -:1 - C#5 (3 \
-             B4+C#6 - - | (3 - C#4 - -:2 (3 -:1 - C#5 (3 B4+A5 A4 E4. | (3 _ _ F#4 -:4 (3 -:1 A4 \
-             F#4 & -:8 | - | - | - | - | - | (3 -:1 C#4 - -:2 (3 -:1 - C#5 (3 - A4 E4. | (3 _ _ \
+             (3 A5+A6 D4 - (3 - B4 F#5 (3 - G#5. _ (3 _ A4+F#5+F#6 F#4. | -:2 (3 -:1 B4 - (3 A5 \
+             G#5. _ (3 _ - - | A5:2 E6 (3 A5+C#6:1 B5 _ (3 B4+F6 - - | D6:2 E6 (3 A5+D6:1 F#5 D5 \
+             (3 B4+C#6 - - | (3 - D4 - -:4 (3 B4:1 A4 F#4. | (3 - - E4 -:2 (3 -:1 - C#5 (3 \
+             B4+C#6 - - | (3 - C#4 - -:2 (3 -:1 - C#5 (3 B4+A5 A4 E4. | (3 - - F#4 -:4 (3 -:1 A4 \
+             F#4 & -:8 | - | - | - | - | - | (3 -:1 C#4 - -:2 (3 -:1 - C#5 (3 - A4 E4. | (3 - - \
              F#4 (3 - B4 F#5 (3 - G#5. _ (3 _ - - | E6:4 (3 -:1 F#5 D5 F#6:2 | E6 (3 C#6:1 B4+B5 \
              - (3 A5 G#5. _ (3 _ - - | (3 A5 - - (3 D6 - - (3 A5+C#6 B5 _ -:2 | D6 (3 E6:1 B4+D6 \
              F#5 (3 A5+C#6 F#5+G#5 D5 (3 B4+B5 - -",
@@ -6936,7 +6935,7 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
         // MIDI bar 388.
         Part::new("Slower, bar 2", "A4:2 A4 B4 -:4", "")
             .with_left("Eb4+F#4:4 D4+F4 -:2")
-            .in_time(FIVE_EIGHT)
+            .in_time(FIVE_EIGHT_UNGROUPED)
             .in_key(A, NaturalMinor)
             .played_by(&[(gm::CLARINET, 0)])
             .marked(Dynamic::Piano),
@@ -6953,7 +6952,7 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
         // MIDI bar 391.
         Part::new("Slower, bar 5", "B4:1 C5 D5:2 E5:1 D5 C5 B4 -:2", "")
             .with_left("G3:8 -:2 & F4+A4:4 F4+G#4 -:2")
-            .in_time(FIVE_EIGHT)
+            .in_time(FIVE_EIGHT_UNGROUPED)
             .in_key(A, NaturalMinor)
             .played_by(&[(gm::CLARINET, 0)])
             .marked(Dynamic::Piano),
@@ -7067,39 +7066,39 @@ pub(super) const PETRUSHKA_RUSSIAN_DANCE: Song = Song {
         // MIDI bars 421 to 432.
         Part::new(
             "Coda",
-            "C6:1 D6 C6 G6 D6 E6 C6 C7. | _ - C6:2. - C6 | D6:1 E6 C6 C7 D6 E6 C6 C7 | D6:2 C7 \
-             D6 C6:1 C7. | _ - C6:2. - C6 | D6 C7 D6:1 E6 C6:2 | D6 C7 D6:1 E6 C6:2 | D6 C7 D6:1 \
-             E6 C6:2 | D6:1 E6 C6:2 D6:1 E6 C6:2 | D6:1 E6 C6:2 D6:1 E6 C6 - | -:2 C6:4 C6:2 | \
-             C6:1 -:7",
+            "C6:1 D6 C6 G6 D6 E6 C6 C7. | -:2 C6. - C6 | D6:1 E6 C6 C7 D6 E6 C6 C7 | D6:2 C7 D6 \
+             C6:1 C7. | -:2 C6. - C6 | D6 C7 D6:1 E6 C6:2 | D6 C7 D6:1 E6 C6:2 | D6 C7 D6:1 E6 \
+             C6:2 | D6:1 E6 C6:2 D6:1 E6 C6:2 | D6:1 E6 C6:2 D6:1 E6 C6 - | -:2 C6:4 C6:2 | C6:1 \
+             -:7",
             "",
         )
         .with_left(
             "-:8 | -:2 F3+B3+A4+C5. - F3+B3+A4+C5. | -:8 | - | -:2 G3+C4+E4+A4+C5. - B3+A4+C5:1 \
              - | -:6 (3 -:1 G3 A3 | (3 G3+G4 - G3+G4 C5:2 (3 G3+G4+B5:1 A3+F4+Bb5 - (3 G3+A5 A3 \
-             G3 | (3 G3+A4 - G3+B4 (3 A3+A5 G3+Bb5+G6 A3 -:2 (3 -:1 G5. _ | (3 _ - - F5:2 G4:4 | \
-             _:8 | -:2 C4+E4+G4+A4:4 G3+C4+F4+A4:1 - | G3+C4+E4+A4 -:7 & -:8 | - | -:2 G3+B4+F5 \
-             G4:1 - G3+E4:2 | G4:1 - G3+E4+C6:2 G4:1 - G3+B4+F5:2 | -:6 G3+D4+B4+G5:2 | - \
-             E4+C5+G5+C6 G4:1 - D4+F5:2 | - E4+G5+C6 - D4+B4+F5 | - E4+C6 - D4+B4 | - D4+B4 - \
-             D4+B4+F5 | - B4+F5 - B4+F5 | -:6 F3:2 | G2+C3:1 -:7 & -:8 | - | - | - | - | - | - | \
-             - | - | (3 G3+D4+C6:1 A3+E4+G5 G3+D4+C5+D5 (3 A3+E4+G5+A5 - A3+E4+G5 (3 \
-             G3+D4+C5+D5+B5 A3+E4+E5+G5+Bb5 G3+D4+D5+C6 (3 - - A3+E5 | G3+D5:2 -:6 | -:8 & G3:1 \
-             G4+D7 A4+C7 G4 G3 G4 A4 G4 | -:2 C3+A3 - C3+A3 | G3+D6:1 G4 A4 G4+C6 G3+D6 G4 A4 \
-             G4+C6 | G3 G4 A4+A6 G4+E6 G3 G4 A4 G4+C6 | -:2 C3+A3 - C3+A3 | -:1 G4 A6 G4+E6 - G4 \
-             A4 G4+C6 | -:2 A4+A6:1 G4+E6 - G4 A4 G4+C6 | -:2 A4+A6:1 G4+E6 -:2 A4:1 G4+C6 | -:2 \
-             A4:1 G4+C6 -:2 A4:1 C6 | -:2 A4:1 -:3 A4:1 C6 | -:4 C6:1 - C5:2 | C2+C5+E5:1 -:7 & \
-             G4:1 - G3+E4+C6:2 G4:1 - G3+B4+F5+C6:2 | - G3+D4+B4+G5 - G3+D4+B4+G5 | G4:1 - C6 \
-             -:3 C6:1 - | -:6 C6:1 - | -:6 F3+C4:2. | -:8 | - | - | - | -:6 C6:1 - | -:8 | C6:2 \
-             -:6 & -:1 G5 A5 Bb5 - Bb5 A5 G5. | _ - G2+D3+D5+F5+A5:2. - G2+D3+D5+F5+A5. | -:8 | \
-             - | -:2 G2+E5+A5. - G2+D5+F5+A5. | (3 -:1 A3+C4+G5+D7 - (3 A3+A5 G3+Bb5+G6 A3 (3 \
-             G3+A4+B5 A3+D4+Bb5 G3+F4 (3 A3+A5 G5+C7. _ | (3 _ - - -:2 D6 (3 -:1 G5+C7. _ | (3 _ \
-             - - -:2 D6 F5+B5 | D6 - C6+D6 (3 -:1 G5. _ | (3 _ - - (3 - G3+D4+Bb5+C6+C7 - -:2 (3 \
-             A3+E5+G5+A5:1 G3+D4+C5+D5+C7 E4. | _:2 D2+D3+C5+G5+A5:4 G1+G2+B4+G5+A5:1 - | -:8 & \
-             C6:2 - B5+D6:1 -:3 | -:8 | -:1 G5 A5 Bb5+C7:2 G5:1 A5 Bb5+C7 | _ G5+D7 A5 Bb5+G6 B5 \
-             Bb5 A5 G5. | _ -:5 D3+F4:1 - | (3 G3+G4 - G3+E4 A4:2 D6 B4 | (3 -:1 A3+E4+G5+D7 - \
-             (3 A3+A5 G3+Bb5+G6 A3 (3 - - G3+A4 D5:2 | (3 -:1 A3+G4+G5+D7 - E5:2 (3 \
-             G3+C5+F5+B5:1 A3+G4+C5+Bb5 G3+C5+F5 (3 A3+A5 G3+C7 A3 | (3 A3+C5 G3+G4+G5 A3+C5 (3 \
-             G3+G5+A5 A3+D5+Bb5+C7 G3+G5 (3 A3+C5+B5 G3+Bb5 A3+D4 (3 G3+G5+A5 A3+D5+C7 G3 | D6:2 \
-             - D6 (3 -:1 G5. _ | _ -:7 | G5+A5:1 -:7",
+             G3 | (3 G3+A4 - G3+B4 (3 A3+A5 G3+Bb5+G6 A3 -:2 (3 -:1 G5. _ | -:2 F5 G4:4 | _:8 | \
+             -:2 C4+E4+G4+A4:4 G3+C4+F4+A4:1 - | G3+C4+E4+A4 -:7 & -:8 | - | -:2 G3+B4+F5 G4:1 - \
+             G3+E4:2 | G4:1 - G3+E4+C6:2 G4:1 - G3+B4+F5:2 | -:6 G3+D4+B4+G5:2 | - E4+C5+G5+C6 \
+             G4:1 - D4+F5:2 | - E4+G5+C6 - D4+B4+F5 | - E4+C6 - D4+B4 | - D4+B4 - D4+B4+F5 | - \
+             B4+F5 - B4+F5 | -:6 F3:2 | G2+C3:1 -:7 & -:8 | - | - | - | - | - | - | - | - | (3 \
+             G3+D4+C6:1 A3+E4+G5 G3+D4+C5+D5 (3 A3+E4+G5+A5 - A3+E4+G5 (3 G3+D4+C5+D5+B5 \
+             A3+E4+E5+G5+Bb5 G3+D4+D5+C6 (3 - - A3+E5 | G3+D5:2 -:6 | -:8 & G3:1 G4+D7 A4+C7 G4 \
+             G3 G4 A4 G4 | -:2 C3+A3 - C3+A3 | G3+D6:1 G4 A4 G4+C6 G3+D6 G4 A4 G4+C6 | G3 G4 \
+             A4+A6 G4+E6 G3 G4 A4 G4+C6 | -:2 C3+A3 - C3+A3 | -:1 G4 A6 G4+E6 - G4 A4 G4+C6 | \
+             -:2 A4+A6:1 G4+E6 - G4 A4 G4+C6 | -:2 A4+A6:1 G4+E6 -:2 A4:1 G4+C6 | -:2 A4:1 G4+C6 \
+             -:2 A4:1 C6 | -:2 A4:1 -:3 A4:1 C6 | -:4 C6:1 - C5:2 | C2+C5+E5:1 -:7 & G4:1 - \
+             G3+E4+C6:2 G4:1 - G3+B4+F5+C6:2 | - G3+D4+B4+G5 - G3+D4+B4+G5 | G4:1 - C6 -:3 C6:1 \
+             - | -:6 C6:1 - | -:6 F3+C4:2. | -:8 | - | - | - | -:6 C6:1 - | -:8 | C6:2 -:6 & -:1 \
+             G5 A5 Bb5 - Bb5 A5 G5. | -:2 G2+D3+D5+F5+A5. - G2+D3+D5+F5+A5. | -:8 | - | -:2 \
+             G2+E5+A5. - G2+D5+F5+A5. | (3 -:1 A3+C4+G5+D7 - (3 A3+A5 G3+Bb5+G6 A3 (3 G3+A4+B5 \
+             A3+D4+Bb5 G3+F4 (3 A3+A5 G5+C7. _ | -:4 D6:2 (3 -:1 G5+C7. _ | -:4 D6:2 F5+B5 | D6 \
+             - C6+D6 (3 -:1 G5. _ | -:2 (3 -:1 G3+D4+Bb5+C6+C7 - -:2 (3 A3+E5+G5+A5:1 \
+             G3+D4+C5+D5+C7 E4. | -:2 D2+D3+C5+G5+A5:4 G1+G2+B4+G5+A5:1 - | -:8 & C6:2 - B5+D6:1 \
+             -:3 | -:8 | -:1 G5 A5 Bb5+C7:2 G5:1 A5 Bb5+C7 | _ G5+D7 A5 Bb5+G6 B5 Bb5 A5 G5. | \
+             -:6 D3+F4:1 - | (3 G3+G4 - G3+E4 A4:2 D6 B4 | (3 -:1 A3+E4+G5+D7 - (3 A3+A5 \
+             G3+Bb5+G6 A3 (3 - - G3+A4 D5:2 | (3 -:1 A3+G4+G5+D7 - E5:2 (3 G3+C5+F5+B5:1 \
+             A3+G4+C5+Bb5 G3+C5+F5 (3 A3+A5 G3+C7 A3 | (3 A3+C5 G3+G4+G5 A3+C5 (3 G3+G5+A5 \
+             A3+D5+Bb5+C7 G3+G5 (3 A3+C5+B5 G3+Bb5 A3+D4 (3 G3+G5+A5 A3+D5+C7 G3 | D6:2 - D6 (3 \
+             -:1 G5. _ | -:8 | G5+A5:1 -:7",
         )
         .in_key(C, Major)
         .played_by(&[(gm::FLUTE, 0)])
@@ -7388,9 +7387,9 @@ pub(super) const PETRUSHKA_ROOM: Song = Song {
         // MIDI bars 468 to 472.
         Part::new(
             "Clarinet again",
-            "-:4 (3 A4:1 B4 G#4 (3 C#5 G4. _ | _ -:3 (3 G4:1 B4 D5 (3 C#5 - - | (3 G4 B4 D5 (3 \
-             C#5 - - (3 G4 B4 D5 (3 C#5 - - | (3 G5 D5 B4 (3 C#5 - - (3 G5 D5 B4 (3 C#5 - - | (3 \
-             G5 D5 B4 (3 C#5 - - (3 G5 E5 C5 (3 C#5 - -",
+            "-:4 (3 A4:1 B4 G#4 (3 C#5 G4. _ | -:4 (3 G4:1 B4 D5 (3 C#5 - - | (3 G4 B4 D5 (3 C#5 \
+             - - (3 G4 B4 D5 (3 C#5 - - | (3 G5 D5 B4 (3 C#5 - - (3 G5 D5 B4 (3 C#5 - - | (3 G5 \
+             D5 B4 (3 C#5 - - (3 G5 E5 C5 (3 C#5 - -",
             "",
         )
         .with_left(
@@ -7885,13 +7884,13 @@ pub(super) const PETRUSHKA_ROOM: Song = Song {
             "",
         )
         .with_left(
-            "-:8 | - | -:6 (3 -:1 - D5. | _:2 -:6 | - (3 -:1 - D5. | (3 _ _ - (3 - - D5. (3 _ _ \
-             - (3 - - D5. | (3 _ _ - (3 - - D5. (3 _ _ - (3 - - D5. | (3 _ _ - (3 - - D5. (3 _ _ \
-             - (3 - - D5. | (3 _ _ - -:6 & -:8 | - | -:2 (3 -:1 - F5. (3 _:2 F5 D5 | -:8 | -:4 \
-             (3 -:2 F5 D5 | (3 - - D5 (3 - - D5 | (3 - - D5 (3 - - D5 | (3 - - D5 (3 - - D5 | (3 \
-             - - D5 (3 - - D5 & -:8 | - | -:4 (3 A5:2 - - | -:8 | -:4 (3 A5:2 - - | (3 G#5+A5 \
-             F5+F#5 - (3 G#5+A5 F5+F#5 - | (3 G#5+A5 F5+F#5 - (3 G#5+A5 F5+F#5 - | (3 G#5+A5 \
-             F5+F#5 - (3 G#5+A5 F5+F#5 - | (3 G#5+A5 F5+F#5 - (3 G#5+A5 F5+F#5 -",
+            "-:8 | - | -:2 (3 -:1 - F5. (3 _:2 F5 D5 | -:8 | -:4 (3 -:2 F5 D5 | (3 - - D5 (3 - - \
+             D5 | (3 - - D5 (3 - - D5 | (3 - - D5 (3 - - D5 | (3 - - D5 (3 - - D5 & -:8 | - | \
+             -:4 (3 A5:2 - - | -:8 | -:4 (3 A5:2 - - | (3 G#5+A5 F5+F#5 - (3 G#5+A5 F5+F#5 - | \
+             (3 G#5+A5 F5+F#5 - (3 G#5+A5 F5+F#5 - | (3 G#5+A5 F5+F#5 - (3 G#5+A5 F5+F#5 - | (3 \
+             G#5+A5 F5+F#5 - (3 G#5+A5 F5+F#5 - & -:8 | - | -:6 (3 -:1 - D5. | -:8 | -:6 (3 -:1 \
+             - D5. | -:2 (3 -:1 - D5. (3 _ _ - (3 - - D5. | -:2 (3 -:1 - D5. (3 _ _ - (3 - - D5. \
+             | -:2 (3 -:1 - D5. (3 _ _ - (3 - - D5. | -:8",
         )
         .with_tempo(&[tempo(0, 100)])
         .in_key(C, Chromatic)
@@ -8076,12 +8075,12 @@ pub(super) const PETRUSHKA_ROOM: Song = Song {
 // pizzicato violins. Grace notes are left out throughout.
 //
 // Not certain: the meters are the MIDI's: 2/8 in bars 604 and 609, 3/8 in bars 605, 610, 612,
-// 785 to 789 and 791, 4/8 in bars 611, 790, 792 and 793, 9/8 in bar 617, 5/8 in bar 667
-// (counted 2 + 3, which the MIDI cannot tell), 13/16 in bar 730 and 6/8 in bars 764 to 783,
-// between bars of 2/4, 3/4 and 4/4. The MIDI's ritardandos (bars 667 and 668, 735) are written
-// as glides. The keys: the bars that keep to no scale are marked chromatic (see the song's
-// description): the flourish of bar 570, the trombones' and strings' chromatic descents, the
-// whole-tone chords of the Lento (bars 580 to 585), the Moor's frantic bars 600 to 621, and
+// 785 to 789 and 791, 4/8 in bars 611, 790, 792 and 793, 9/8 in bar 617, 5/8 in bar 667 (every
+// eighth note a beat, as the MIDI marks no grouping), 13/16 in bar 730 and 6/8 in bars 764 to
+// 783, between bars of 2/4, 3/4 and 4/4. The MIDI's ritardandos (bars 667 and 668, 735) are
+// written as glides. The keys: the bars that keep to no scale are marked chromatic (see the
+// song's description): the flourish of bar 570, the trombones' and strings' chromatic descents,
+// the whole-tone chords of the Lento (bars 580 to 585), the Moor's frantic bars 600 to 621, and
 // Petrushka's entrance, the fight and the chase (bars 751 to 793), where two keys sound at
 // once. The opening (bars 566 to 568) is marked G sharp Phrygian, though bar 568's chord of E
 // has a D natural, its seventh, which is outside it. The Moor's tune is marked B flat Lydian,
@@ -8328,11 +8327,11 @@ pub(super) const PETRUSHKA_MOOR: Song = Song {
              D2 E2:2 D2:8 | -:12 & -:1 Bb3:4 Bb3 Bb3:3 | _:1 Bb3:4 Bb3 Bb3:3 | _:1 Bb3:4 Bb3 \
              Bb3:3 | _:1 Bb3:4 Bb3 Bb3:3 | _:1 Bb3:4 Bb3 Bb3:3 | _:1 G#3:4 Bb3 G#3:3 | _:1 Bb3:4 \
              G#3 Bb3:3 | _:1 G#3:4 Bb3 G#3:3 | _:1 Bb3:4 G#3 Bb3:3 | -:12 & -:12 | - | - | -:6 \
-             D4:3 E2+E4:1 F2+F4 G2+G4. | _ - A2 -:9 | -:12 | - | - | - | - & -:2 Bb4:3 -:1 Bb4:3 \
-             -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 \
-             - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - G#4:3 -:1 \
-             Bb4:3 -:1 G#4:2 | _:1 - Bb4:3 -:1 G#4:3 -:1 Bb4:2 | _:1 - G#4:3 -:1 Bb4:3 -:1 G#4:2 \
-             | _:1 - Bb4:3 -:1 G#4:3 -:1 Bb4:2 | -:12",
+             D4:3 E2+E4:1 F2+F4 G2+G4. | -:2 A2:1 -:9 | -:12 | - | - | - | - & -:2 Bb4:3 -:1 \
+             Bb4:3 -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 \
+             | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - Bb4:3 -:1 Bb4:3 -:1 Bb4:2 | _:1 - G#4:3 \
+             -:1 Bb4:3 -:1 G#4:2 | _:1 - Bb4:3 -:1 G#4:3 -:1 Bb4:2 | _:1 - G#4:3 -:1 Bb4:3 -:1 \
+             G#4:2 | _:1 - Bb4:3 -:1 G#4:3 -:1 Bb4:2 | -:12",
         )
         .in_key(ASharp, Lydian)
         .played_by(&[(gm::CLARINET, 0)])
@@ -8676,7 +8675,7 @@ pub(super) const PETRUSHKA_MOOR: Song = Song {
             "Ab6:7 F6:1 D6 Bb5",
             "",
         )
-        .in_time(FIVE_EIGHT)
+        .in_time(FIVE_EIGHT_UNGROUPED)
         .in_key(DSharp, Major)
         .played_by(&[(gm::FLUTE, 0)]),
         // MIDI bar 668.
@@ -8972,10 +8971,10 @@ pub(super) const PETRUSHKA_MOOR: Song = Song {
              Bb3+Eb4+G4 A3+C#4+E4 Eb4+G4 A3+C#4+E4 Eb4+G4 A3+C#4 Eb4 A3+C#4+E4 Eb4+G4 A3+C#4+E4 \
              & C#3:1 -:7 Eb4:8 | (3 C#4:2 - - (3 A4 Bb4 Eb5 (3 C#5 A4 E4 -:4 & -:2 (3 -:1 - \
              B4+F5 G4+C#5 -:2 B4+F5:1 G4+C#5 -:5 (3 -:1 - B4+F5 | (3 G4+C#5 - - (3 - G5. _ _ -:5 \
-             (3 -:1 - B5. (3 _ _ - -:2 & -:2 (3 -:1 - B5. _:2 -:1 B5:2. -:5 (3 -:1 - B5. | (3 _ \
-             _ - (3 G5+D6 E5+B5 C5 G4+C#5 -:5 (3 -:1 - B4+F5 (3 G4+C#5 - - (3 - - B4+Eb5+B5 & \
-             -:3 E5+B6:1 (3 G5 _ - (3 - - E5+Eb6+B6 -:7 E5+B6:1 | (3 G5 _ - (3 - - E5+Eb6+B6 -:6 \
-             (3 -:1 - E5+Eb6+B6 -:3 E5+B6:1",
+             (3 -:1 - B5. (3 _ _ - -:2 & -:2 (3 -:1 - B5. _:2 -:1 B5:2. -:5 (3 -:1 - B5. | -:2 \
+             (3 G5+D6:1 E5+B5 C5 G4+C#5 -:5 (3 -:1 - B4+F5 (3 G4+C#5 - - (3 - - B4+Eb5+B5 & -:3 \
+             E5+B6:1 (3 G5 _ - (3 - - E5+Eb6+B6 -:7 E5+B6:1 | (3 G5 _ - (3 - - E5+Eb6+B6 -:6 (3 \
+             -:1 - E5+Eb6+B6 -:3 E5+B6:1",
         )
         .in_time(COMMON)
         .in_key(C, Chromatic)
@@ -8990,11 +8989,11 @@ pub(super) const PETRUSHKA_MOOR: Song = Song {
         )
         .with_left(
             "F#2+E4:1 -:11 | -:12 | - | - | - & -:3 B3:1 Bb3:2 Eb4 Bb3+D4 F#3 | -:1 G3 -:10 | \
-             -:1 G3 -:10 | -:11 G3:1. | _ G3 -:5 G4:1 - G3 A3:2 & F#3+C#5+G5:1 - Bb3:2 C#4 F#4 \
+             -:1 G3 -:10 | -:11 G3:1. | - G3 -:5 G4:1 - G3 A3:2 & F#3+C#5+G5:1 - Bb3:2 C#4 F#4 \
              C#4 Bb3 | F#3 Bb3 C#4 F#4 C#4 Bb3 | F#3 Bb3 C#4 F#4 C#4 Bb3 | F#4 C#4 Bb3 F#4 C#4 \
-             Bb3 | F#3 Bb3 C#4 F#4 F#3 Bb3:1 - & -:1 G3 F#3:2 -:1 D4:2. G4:1 - E4 - C4. | _ -:2 \
-             B3:1 - D4:2. G4:1 - E4 - C4. | _ -:2 B3:1 - D4:2. G4:1 - E4 - C4. | _ G4 - E4 - \
-             C4:2. E4:1 - C4 -:2 | -:3 B3:2. D4:1 F4:2 F3 -:1 B3 & G4:1 -:11 | -:12 | - | - | -",
+             Bb3 | F#3 Bb3 C#4 F#4 F#3 Bb3:1 - & -:1 G3 F#3:2 -:1 D4:2. G4:1 - E4 - C4. | -:3 \
+             B3:1 - D4:2. G4:1 - E4 - C4. | -:3 B3:1 - D4:2. G4:1 - E4 - C4. | - G4 - E4 - C4:2. \
+             E4:1 - C4 -:2 | -:3 B3:2. D4:1 F4:2 F3 -:1 B3 & G4:1 -:11 | -:12 | - | - | -",
         )
         .in_time(SIX_EIGHT)
         .with_tempo(&[tempo(0, 150)])
@@ -9036,7 +9035,7 @@ pub(super) const PETRUSHKA_MOOR: Song = Song {
              F#3+Bb4+C5+C#5+E5 Bb3+C5+C#5+E5+F#5+G5 Bb3+C#5+E5+G5 F#3+F#4+G4 F#4+G4 \
              F#4+G4+Bb4+B4 F#4+G4+B4 | F#3+Bb4+B4+D5 F#3+Bb4+B4+C#5 F#3+F#4+G5 F#4+G4 - \
              F#4+G4+Bb4+B4 - F#3+E4+G4+Bb4+C5 - E4+F#4+G4+Bb4 - E4+F#4 & -:12 | - | - | -:11 \
-             F#4:1. | _ -:6 C5:2. -:3 | -:1 G4:2. -:1 F#4+G4+Bb4+B5 - F#3+E4+Bb4+C#5+C6+C#6 - \
+             F#4:1. | -:7 C5:2. -:3 | -:1 G4:2. -:1 F#4+G4+Bb4+B5 - F#3+E4+Bb4+C#5+C6+C#6 - \
              F#3+E4+F#4+G4+Bb4+G5+Bb5 - E4+F#4+F#5 - & F#4:1 G4 Bb4 - C#5 -:2 G5:1 C#5 E5 Bb4 C5 \
              | - G4 Bb4 B4 C#5 D5 F#5 G5 C#5 E5 Bb4 C5 | F#4 G4 Bb4 B4 C#5 D5 F#5 G5 C#5 E5 Bb4 \
              C5 | F#5 E5 C4+C#5 F#4+C5:2. -:1 C4+C5:2. - Bb4:1 C5 | -:8 B4:1 C#5 D5 - | \
