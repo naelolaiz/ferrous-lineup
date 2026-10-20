@@ -43,6 +43,7 @@ use crate::meter::{Bar, TimeSignature};
 use crate::pitch::{Note, NoteName, PitchClass};
 use crate::tools;
 
+pub mod notation;
 pub mod text;
 
 /// The harmony of a bar, or of part of one, named in one of the ways
