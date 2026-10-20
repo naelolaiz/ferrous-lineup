@@ -546,6 +546,29 @@ fn searching_vals_reveals_the_normal_waltz_in_both_browser_layouts() {
 }
 
 #[test]
+fn f1_and_the_help_menu_show_the_keyboard_shortcuts() {
+    let mut screen = Screen::new();
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Keyboard shortcuts").is_none());
+
+    screen.key(Key::F1);
+    let output = screen.draw(vec![]);
+    assert!(screen.app.shortcuts_open);
+    assert!(text_rect(&output, "Keyboard shortcuts").is_some());
+    assert!(text_rect(&output, "Home").is_some());
+    assert!(text_rect(&output, "Go to the start").is_some());
+
+    screen.key(Key::F1);
+    let output = screen.draw(vec![]);
+    assert!(!screen.app.shortcuts_open);
+    assert!(text_rect(&output, "Keyboard shortcuts").is_none());
+
+    screen.click("Help");
+    screen.click("Keyboard shortcuts");
+    assert!(screen.app.shortcuts_open);
+}
+
+#[test]
 fn main_transport_toggles_are_visible_reversible_and_saved() {
     for size in [vec2(1400.0, 1000.0), vec2(800.0, 600.0)] {
         let mut screen = Screen::new();

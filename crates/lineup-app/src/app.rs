@@ -27,6 +27,7 @@ mod live;
 mod mixer;
 mod practice;
 mod settings;
+mod shortcuts;
 mod sounds;
 mod styles;
 mod swing;
@@ -113,6 +114,8 @@ pub struct LineupApp {
     /// that changes.
     over_song: Option<usize>,
     mixer_open: bool,
+    /// Help > Keyboard shortcuts.
+    shortcuts_open: bool,
     settings_open: bool,
     settings: settings::SettingsView,
     style_editor: crate::style_editor::StyleEditor,
@@ -225,6 +228,7 @@ impl LineupApp {
             cursor: 0,
             marker: 0,
             mixer_open: false,
+            shortcuts_open: false,
             settings_open: false,
             settings: settings::SettingsView::default(),
             style_editor: crate::style_editor::StyleEditor::new(),
@@ -1254,6 +1258,7 @@ impl LineupApp {
             self.edit_menu(ui);
             self.view_menu(ui);
             self.midi_menu(ui);
+            self.help_menu(ui);
             ui.separator();
             self.hint_bar.show(ui);
         });
@@ -2011,6 +2016,7 @@ impl eframe::App for LineupApp {
         self.lead_sheet_window(&ctx, area);
         self.sound_font_window(&ctx);
         self.mixer_window(&ctx, area);
+        self.shortcuts_window(&ctx, area);
         self.style_editor_window(&ctx, area);
         self.settings_window(&ctx);
         self.video_dialog(&ctx);
