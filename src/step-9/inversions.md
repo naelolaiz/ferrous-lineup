@@ -113,6 +113,34 @@ The key that plays names the chord heard, inversion and all. With
 Triads on, G7/F lights the key of V, which reads V⁴₂ and G7/F while it
 sounds. The hint and Find the key name it the same way.
 
+## What comes after I⁶₄
+
+![The harmony keys on C/G: the I⁶₄ key lit, the V key outlined, and the hint "C/G → G: cadential six-four, on to V"](../images/step-9-six-four.png)
+
+An inversion can change where a chord goes, not only its name. C in
+root position can go almost anywhere. C/G, the tonic in its **second
+inversion**, mostly goes one way: on to G. Over the bass G, the C is a
+fourth and the E a sixth, and both want to fall a step, C to B and E
+to D, which makes G. So C/G is heard as G with two notes arriving late,
+and is called the **cadential six-four**: it comes just before the V of
+a cadence, as in I⁶₄ – V7 – I.
+
+The suggestions follow that. `next_chords_over` (in
+[`harmony/progression.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/harmony/progression.rs))
+takes the bass as well as the chord. When the chord is the key's tonic
+triad and `tone_of(bass)` is 5, it suggests V; for every other chord it
+asks `next_chords`, which knows only the chord:
+
+```rust
+let six_four = current == Chord::new(scale.root, tonic) && current.tone_of(bass) == Some(5);
+if !six_four {
+    return next_chords(scale, current);
+}
+```
+
+In minor keys it is the same: Am/E goes on to E, the major V with the
+leading tone G#.
+
 ## Try it
 
 1. File > New, and type C/E, F/A, G7/F and C/G in the first four bars
@@ -122,3 +150,5 @@ sounds. The hint and Find the key name it the same way.
    after the slashes.
 3. Change bar 3 to G7/B. Which figures does the All row's chord get in
    the line above the grid?
+4. Type C/G in bar 1 and G7 in bar 2. Which key is outlined while bar 1
+   plays, and what does the hint say?
