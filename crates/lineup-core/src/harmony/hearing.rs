@@ -208,6 +208,17 @@ const LAYER_QUALITIES: [ChordQuality; 5] = [
     ChordQuality::Minor7,
 ];
 
+/// A part plays chords one note at a time (see [`breaks_chords`]) with
+/// this many notes at least, most of them this many steps long at most
+/// (an eighth note), and this share of its moves leaps.
+const BROKEN_NOTES: usize = 4;
+const BROKEN_LENGTH: f32 = 2.0;
+const BROKEN_LEAPS: f32 = 0.75;
+
+/// How well a tune alone must fit a harmony to name it (see
+/// [`hear_inside`]).
+const ALONE: f32 = 0.85;
+
 /// How long each pitch class sounds in some notes.
 #[derive(Debug, Clone, Copy)]
 struct Profile {
@@ -228,6 +239,16 @@ impl Profile {
             total: weight.iter().sum(),
             loudest: weight.iter().copied().fold(0.0, f32::max),
         }
+    }
+
+    /// The profile of a stretch `length` steps long, where a pitch class
+    /// sounding all through it is as loud as a pitch class can be, however
+    /// many parts double it: a bass holding A flat under a broken chord
+    /// that strikes A flat again does not make the chord's C and E flat
+    /// passing notes.
+    fn within(mut self, length: f32) -> Profile {
+        self.loudest = self.loudest.min(length);
+        self
     }
 
     fn of(&self, pitch_class: PitchClass) -> f32 {
@@ -595,8 +616,16 @@ fn covered(spans: &[(f32, f32, PitchClass)], pitch_classes: PitchSet, length: f3
 /// every line counts in full.
 ///
 /// `planing` are the parts that move their chords along with a tune
-/// (see [`moves_in_parallel`]): their chords colour the tune.
-fn weights<'a>(notes: &'a [HeardNote], length: f32, planing: &[usize]) -> Vec<Weighed<'a>> {
+/// (see [`moves_in_parallel`]): their chords colour the tune. `broken`
+/// are the parts that play chords one note at a time (see
+/// [`breaks_chords`]): they play chords as much as a part striking
+/// them does.
+fn weights<'a>(
+    notes: &'a [HeardNote],
+    length: f32,
+    planing: &[usize],
+    broken: &[usize],
+) -> Vec<Weighed<'a>> {
     let span = |note: &HeardNote| (note.end.min(length) - note.start.max(0.0)).max(0.0);
     let inside = |note: &&HeardNote| span(note) > 0.0;
     // A part plays chords when three different notes sound together in
@@ -623,10 +652,21 @@ fn weights<'a>(notes: &'a [HeardNote], length: f32, planing: &[usize]) -> Vec<We
     let mut parts: Vec<usize> = notes.iter().map(|note| note.part).collect();
     parts.sort_unstable();
     parts.dedup();
+    // Chords that move along in parallel colour a tune, unless they
+    // hold the bass themselves: the off-beat chords of Rachmaninoff's
+    // C sharp minor prelude step down in parallel too, with the bells
+    // of its bass among them, and they are the harmony.
+    let bass_part = notes
+        .iter()
+        .filter(inside)
+        .min_by_key(|note| note.pitch)
+        .map(|note| note.part);
     let chordal: Vec<usize> = parts
         .iter()
         .copied()
-        .filter(|&p| together(p) && !planing.contains(&p))
+        .filter(|&p| {
+            (together(p) || broken.contains(&p)) && (!planing.contains(&p) || bass_part == Some(p))
+        })
         .collect();
     let in_chords = |note: &&HeardNote| chordal.contains(&note.part) && inside(note);
     let lowest_chord = notes.iter().filter(in_chords).map(|note| note.pitch).min();
@@ -644,10 +684,11 @@ fn weights<'a>(notes: &'a [HeardNote], length: f32, planing: &[usize]) -> Vec<We
         })
     };
     // A line that plays three notes or more of one triad or seventh
-    // chord, two of them from outside the chords, is a layer of the
-    // harmony of its own, not a tune: the Rite of Spring's ostinato D
-    // flat, B flat, E flat, B flat (E flat seventh, broken) over C major
-    // and E minor arpeggios.
+    // chord, none of them the chords', is a layer of the harmony of its
+    // own, not a tune: the Rite of Spring's ostinato D flat, B flat, E
+    // flat, B flat (E flat seventh, broken) over C major and E minor
+    // arpeggios. A tune that shares a note with the chords, as Für
+    // Elise's B, E, C over E major does, is a tune.
     let layer = |part: usize| {
         let own: PitchSet = notes
             .iter()
@@ -656,7 +697,7 @@ fn weights<'a>(notes: &'a [HeardNote], length: f32, planing: &[usize]) -> Vec<We
             .collect();
         let added = own.iter().filter(|&p| !chord_notes.contains(p)).count();
         own.len() >= 3
-            && added >= 2
+            && added == own.len()
             && PitchClass::ALL.into_iter().any(|root| {
                 LAYER_QUALITIES
                     .iter()
@@ -758,6 +799,40 @@ fn moves_in_parallel(notes: &[HeardNote], part: usize) -> bool {
         && changes as f32 * PLANING_EVERY >= span
 }
 
+/// Whether `part` plays chords one note at a time, as an Alberti bass,
+/// the left hand of Für Elise or the triplets of the Moonlight Sonata
+/// do: short notes (an eighth of a 4/4 bar at most, as a rule), nearly
+/// all a leap of a minor third or more from the one before, on three
+/// pitch classes at least. A tune moves mostly by step; a bass line
+/// leaping from root to fifth plays longer notes. The ear holds a
+/// broken chord's notes together, so they say what the harmony is, and
+/// a tune sung over them is a tune: its passing notes weigh little.
+fn breaks_chords(notes: &[HeardNote], part: usize) -> bool {
+    let mut own: Vec<&HeardNote> = notes.iter().filter(|note| note.part == part).collect();
+    own.sort_by(|a, b| a.start.total_cmp(&b.start));
+    if own.len() < BROKEN_NOTES {
+        return false;
+    }
+    // One note at a time: each ends before the next starts, or nearly.
+    let one_at_a_time = own
+        .windows(2)
+        .all(|pair| pair[0].end <= pair[1].start + 0.5 * (pair[1].end - pair[1].start));
+    let mut lengths: Vec<f32> = own.iter().map(|note| note.end - note.start).collect();
+    lengths.sort_by(f32::total_cmp);
+    let short = lengths[lengths.len() / 2] <= BROKEN_LENGTH;
+    let leaps = own
+        .windows(2)
+        .filter(|pair| {
+            (i32::from(pair[1].pitch.midi()) - i32::from(pair[0].pitch.midi())).abs() >= 3
+        })
+        .count();
+    let pitch_classes: PitchSet = own.iter().map(|note| note.pitch.pitch_class()).collect();
+    one_at_a_time
+        && short
+        && leaps as f32 >= BROKEN_LEAPS * (own.len() - 1) as f32
+        && pitch_classes.len() >= 3
+}
+
 /// A note with how much it weighs (see [`weights`]), and whether it
 /// belongs to a tune: a tune's notes never make a layer of a polychord.
 #[derive(Debug, Clone, Copy)]
@@ -792,6 +867,8 @@ pub struct Listening<'a> {
     notes: &'a [HeardNote],
     /// The parts that move their chords along with a tune.
     planing: Vec<usize>,
+    /// The parts that play chords one note at a time.
+    broken: Vec<usize>,
 }
 
 impl<'a> Listening<'a> {
@@ -801,10 +878,19 @@ impl<'a> Listening<'a> {
         parts.sort_unstable();
         parts.dedup();
         let planing = parts
-            .into_iter()
+            .iter()
+            .copied()
             .filter(|&part| moves_in_parallel(notes, part))
             .collect();
-        Listening { notes, planing }
+        let broken = parts
+            .into_iter()
+            .filter(|&part| breaks_chords(notes, part))
+            .collect();
+        Listening {
+            notes,
+            planing,
+            broken,
+        }
     }
 
     /// How the stretch from `start` to `end` is heard, timed as the
@@ -820,7 +906,7 @@ impl<'a> Listening<'a> {
                 ..*note
             })
             .collect();
-        hear_inside(&inside, end - start, &self.planing)
+        hear_inside(&inside, end - start, &self.planing, &self.broken)
     }
 }
 
@@ -832,9 +918,9 @@ pub fn hear(notes: &[HeardNote], length: f32) -> Hearing {
 
 /// [`hear`], with the parts that move their chords along with a tune
 /// already known.
-fn hear_inside(notes: &[HeardNote], length: f32, planing: &[usize]) -> Hearing {
-    let weighted = weights(notes, length, planing);
-    let profile = Profile::from_notes(weighted.iter().map(|w| (w.note, w.weight)));
+fn hear_inside(notes: &[HeardNote], length: f32, planing: &[usize], broken: &[usize]) -> Hearing {
+    let weighted = weights(notes, length, planing, broken);
+    let profile = Profile::from_notes(weighted.iter().map(|w| (w.note, w.weight))).within(length);
     let significant = profile.significant();
     let Some(bass_note) = bass_of(&weighted) else {
         return Hearing {
@@ -911,6 +997,19 @@ fn hear_inside(notes: &[HeardNote], length: f32, planing: &[usize]) -> Hearing {
         }
     }
     readings.sort_by(|a, b| b.fit.total_cmp(&a.fit));
+    // A tune alone, one note at a time, names a harmony only when its
+    // notes make one clearly, as a broken chord or a figure on a stack of
+    // fourths does: Für Elise's E, D sharp, E, B, D, C with nothing under
+    // it is a tune, not C major ninth, and the harmony goes on from
+    // before it.
+    let part = weighted[0].note.part;
+    let alone = weighted.iter().all(|w| w.line && w.note.part == part);
+    if alone && readings.first().is_some_and(|reading| reading.fit < ALONE) {
+        readings = vec![Reading {
+            harmony: Harmony::Single(bass),
+            fit: 1.0,
+        }];
+    }
     let best = readings.first().map_or(0.0, |reading| reading.fit);
     readings.retain(|reading| reading.fit >= best - CLOSE);
     readings.truncate(MOST_READINGS);
