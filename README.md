@@ -1,18 +1,17 @@
 # Ferrous Lineup
 
-An open source music studio written in Rust, for playing songs with a
+An open source program written in Rust, for playing songs with a
 backing band and learning harmony along the way. Type the chords of a
 song, pick a style, and a band (bass, drums, piano and more) plays it in
-any key and tempo. Inside is a pattern studio in the spirit of FL
-Studio, with a step sequencer, a piano roll and a playlist, where every
-part can be written or changed by hand.
+any key and tempo. Every part the band plays lands on a track of its
+own, and a playlist, a step sequencer and a piano roll let you write or
+change any of it by hand. The app names every chord you hear, and also
+speaks the other languages of harmony: pitch-class sets, twelve-tone
+rows and micromodes.
 
 Ferrous Lineup was called Ferrous Loom until October 2026. Its project
 files end in `.lineup` now, and the `.loom` files saved before still
 open.
-
-> Ferrous Lineup is an independent project. It is not affiliated with
-> Image-Line or FL Studio.
 
 ![Ferrous Lineup playing the demo song: the playlist, the channel rack with the Lineup Osc, and the harmony keys lighting up the chord that sounds](screenshots/main-window.png)
 
@@ -31,7 +30,7 @@ Early development. Runs on Linux, macOS and Windows.
 | 7 | MIDI in and out: keyboards, external synths, recording, chord names as you play, `.mid` export | Done |
 | 8 | Harmony keys, time signatures, a library of styles and rhythms, public-domain songs as demos | Done |
 | Spike | Import a recording: tempo, key and chords heard from an MP3 or WAV file | Done |
-| 9 | The band: chord names, a chord sheet the band plays, song form, swing, instrument sounds, lead sheets | In progress |
+| 9 | The band: chord names, a chord sheet the band plays, song form, swing, instrument sounds, lead sheets, a mixer, video export, a playback trace | Done |
 
 ## Build and run
 
@@ -115,7 +114,7 @@ coloured by what it does: home, away or tension. Hold one, or press
 **1** to **7**, to play its chord; the chords that often come next
 light up, and while the music plays, the chord you hear lights up too.
 The **Library** tab next to the pattern list holds an alphabetical
-**Presets** list, combining all 145 harmony presets, 81 rhythm presets
+**Presets** list, combining all 171 harmony presets, 107 rhythm presets
 and your saved styles. **Edit > Settings… > Library > Style list** can instead group
 them by genre, with a separate **User styles** group. Equivalent
 style/rhythm entries are combined; distinct playing patterns remain available. They cover pop, rock, blues, jazz, soul, hip hop,
@@ -125,10 +124,13 @@ Click one to review its copy options, then **Apply** to hear it in your key.
 Right-click and choose **Play the whole
 song with this preset** to apply it throughout the song while stopped.
 The melody stays in place. **File > Demos** opens
-177 songs with their melodies, sorted by genre: public-domain tunes from *Ode to Joy* to
-*Für Elise* and the *Habanera*, and new tunes written to show off the
-blues, tango, flamenco and more. It also plays every style as a short
-song.
+306 songs with their melodies, by genre and in alphabetical order: from
+*Ode to Joy*, *Für Elise* and the *Habanera* to tangos, Latin American
+songs, swing and big band tunes, dances in odd meters and orchestral
+pieces such as *Boléro* and *The Rite of Spring*, plus new tunes written
+to show off the blues, tango, flamenco and more. It also plays every
+style as a short song. Type a few letters of a title, composer, genre,
+key or time signature as soon as the menu opens to search them all.
 
 The Library groups its application options into accompaniment, harmony and timing: **Playing patterns**, **Voices / instruments**, **Time
 signature**, **Chord progression**, **Tempo**, and **Swing**.
@@ -205,8 +207,9 @@ list, including rhythm presets. Applied styles are
 embedded in project files, so reopening a song keeps its custom patterns.
 
 **Mixer** in the toolbar, **View > Mixer**, or **F9** opens master and
-per-instrument volume, mute and solo controls. They work with both
-SoundFont and Lineup Osc sounds, plus samples. The master stereo reverb
+per-instrument volume, mute and solo controls, listed in the order of a
+conductor's score, in sections, with all the drums together. They work
+with both SoundFont and Lineup Osc sounds, plus samples. The master stereo reverb
 has wet/dry, decay, damping and pre-delay controls. Mixer settings are
 saved with the project, support undo, and are used for WAV export.
 
@@ -464,9 +467,20 @@ hides the Patterns and Library panel to give the playlist more room. The
 zoom, the window size and where you left the windows are remembered for
 next time.
 
+**File > Export video…** saves the song as an MP4 file, with the views
+you pick playing along: the chord sheet with the bar playing framed, the
+lead sheet, the playlist, the piano roll and the harmony keys, arranged
+on a preview, in HD or Full HD. The encoders are built into the app, so
+nothing else needs installing.
+
 Ready-built programs for all three systems are attached to every CI run
 as `ferrous-lineup-linux`, `ferrous-lineup-macos` and `ferrous-lineup-windows`.
-They are not signed yet, so macOS and Windows warn before the first start.
+The **Release** workflow packs them ready to use, with this README and
+the licence: a `.tar.gz` and an AppImage for Linux, a `.zip` for
+Windows, and builds for Apple Silicon and Intel Macs. They are attached
+to every Release run, and pushing a `v` tag (`v0.2.0`) publishes them on
+the repository's Releases page. They are not signed yet, so macOS and
+Windows warn before the first start.
 
 ### Checking playback with a trace
 
@@ -496,7 +510,7 @@ use `--out`: the ready-built program has no terminal to print to.
 | | |
 |---|---|
 | ![The piano roll on the chords of the demo song, with the chord names above the grid and the chords that often come next lit up](screenshots/piano-roll.png) | ![The Library tab: Bossa nova has just been tried, and its tooltip shows its chords in C major](screenshots/library.png) |
-| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 145 harmony styles and 81 rhythms to try in your key. |
+| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 171 harmony styles and 107 rhythms to try in your key. |
 | ![A recording imported with File > Import recording: the chords heard on every beat in the piano roll](screenshots/import-recording.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
 | An imported recording, with the chords heard on every beat. | Right-click a track's name to insert, move or delete tracks. |
 | ![The twelve-tone window beside the piano roll: the matrix of a row with all its forms, and the piano roll numbering the notes of the row](screenshots/twelve-tone-row.png) | ![The pitch-class set browser showing the octatonic scale, 8-28, beside the piano roll](screenshots/pitch-class-sets.png) |
@@ -515,6 +529,7 @@ use `--out`: the ready-built program has no terminal to print to.
 | `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, lead sheets laid out on pages, and the library of styles, rhythms and songs. No audio, no UI. |
 | `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, offline rendering to WAV files, and traces of every note played. |
 | `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
+| `crates/lineup-video` | Video files: the app's views painted in memory, encoded as H.264 and MP3 in an MP4 file, with the encoders built from source. |
 | `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
 
 ## License

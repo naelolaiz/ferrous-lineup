@@ -480,8 +480,8 @@ pub fn no_rubber_band(ui: &mut egui::Ui) {
 ///
 /// egui closes a menu when you click outside it, but the click still
 /// reaches whatever is under the pointer. On the grids that would draw a
-/// note, place a clip or turn on a step just to close a menu; in FL
-/// Studio, as in most programs, that click only closes the menu. The
+/// note, place a clip or turn on a step just to close a menu; in most
+/// programs that click only closes the menu. The
 /// grids ask [`dismissing`] and leave such a click alone, from the frame
 /// the button goes down to the frame it comes up.
 pub fn track_dismissing(ctx: &egui::Context) {
