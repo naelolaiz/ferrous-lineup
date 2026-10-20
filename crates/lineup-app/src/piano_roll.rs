@@ -188,7 +188,7 @@ struct GroupDrag {
     /// The notes as they are now, after the moves so far.
     moved: Vec<NoteEvent>,
     /// Whether the notes have moved at all. With snap to scale on, notes
-    /// snap only once they are moved, as in FL Studio: dragging a
+    /// snap only once they are moved: dragging a
     /// selection up a semitone and back down snaps it into the key.
     edited: bool,
 }
@@ -401,11 +401,11 @@ pub struct PianoRoll {
     /// How much the next-chord hints explain. Set by the app from the
     /// harmony keys bar, where it is chosen.
     pub hints: HintLevel,
-    /// Whether notes drawn or moved land on the notes of the key, like
-    /// FL Studio's "Snap to scale".
+    /// Whether notes drawn or moved land on the notes of the key ("Snap to
+    /// scale").
     snap_to_scale: bool,
     /// Whether notes played on the typing or MIDI keyboard are moved to
-    /// the nearest note of the key, like FL Studio's "Snap incoming MIDI".
+    /// the nearest note of the key.
     /// The app reads it.
     pub snap_played: bool,
     /// The twelve-tone row window and the set browser.
@@ -672,7 +672,7 @@ impl PianoRoll {
 
     /// Changes the zoom, keeping the step and the pitch under the pointer
     /// where they are, or those in the middle of the view if the pointer
-    /// is elsewhere: as in FL Studio, you zoom into what you point at.
+    /// is elsewhere: you zoom into what you point at.
     fn zoom_to(&mut self, ctx: &egui::Context, zoom: Vec2) {
         let ratio = zoom / self.zoom;
         self.zoom = zoom;
@@ -1446,7 +1446,7 @@ impl PianoRoll {
         picked
     }
 
-    /// FL Studio's snap to scale: a click turns it on and off, and a
+    /// Snap to scale: a click turns it on and off, and a
     /// right click opens its menu, which can also snap the notes played on
     /// the keyboards.
     fn snap_button(&mut self, ui: &mut Ui) {

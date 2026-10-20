@@ -1321,7 +1321,7 @@ impl LineupApp {
             theme::group(ui, |ui| self.playback_controls(ui));
 
             // While a song whose tempo changes plays, the box follows the
-            // tempo at the playhead, as FL Studio's does; stopped, it is
+            // tempo at the playhead; stopped, it is
             // the tempo the song starts at, to change.
             let map = self.project.tempo_map();
             let now = if map.is_steady() || !self.playing {
