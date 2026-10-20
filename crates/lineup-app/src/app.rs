@@ -717,17 +717,19 @@ impl LineupApp {
                 channel,
                 midi_channel,
             } => {
-                self.edit("change MIDI channel", |project| {
+                let sent = self
+                    .project
+                    .channels()
+                    .get(channel)
+                    .is_some_and(|state| matches!(state.kind, ChannelKind::MidiOut { .. }));
+                let label = if sent {
+                    "change MIDI channel"
+                } else {
+                    "send over MIDI"
+                };
+                self.edit(label, |project| {
                     if let Some(state) = project.channel_mut(channel) {
-                        // A name nobody changed follows the channel number.
-                        if let ChannelKind::MidiOut { channel: old } = state.kind
-                            && state.name == Channel::midi_out(old).name
-                        {
-                            state.name = Channel::midi_out(midi_channel).name;
-                        }
-                        state.kind = ChannelKind::MidiOut {
-                            channel: midi_channel,
-                        };
+                        state.send_over_midi(midi_channel);
                     }
                 });
             }
@@ -738,6 +740,14 @@ impl LineupApp {
                     }
                 });
             }
+            RackAction::PlayHere(channel) => {
+                self.edit("play here", |project| {
+                    if let Some(state) = project.channel_mut(channel) {
+                        state.play_here();
+                    }
+                });
+            }
+            RackAction::ConnectMidiOutput(port) => self.connect_midi_output(port.as_ref()),
             RackAction::LoadSample { channel, path } => self.load_sample(channel, path),
         }
     }
@@ -1821,6 +1831,7 @@ impl eframe::App for LineupApp {
         self.keyboard_shortcuts(&ctx);
         self.keep_over_song();
         self.live_input(&ctx);
+        self.share_midi_outputs(&ctx);
         self.practice_frame(&ctx);
         self.handle_dropped_files(&ctx);
         self.check_export(&ctx);
