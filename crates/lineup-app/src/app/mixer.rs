@@ -116,7 +116,7 @@ impl LineupApp {
                                         channel_rack::instrument_choices(
                                             ui,
                                             index,
-                                            channel.program,
+                                            channel,
                                             &mut picked,
                                         );
                                     })
@@ -193,7 +193,10 @@ fn instrument(channel: &Channel) -> String {
             .program
             .map_or("Lineup Osc", general_midi::name)
             .to_string(),
-        ChannelKind::MidiOut { channel } => format!("MIDI Out {}", channel + 1),
+        ChannelKind::MidiOut { channel: midi } => match channel.program {
+            Some(program) => format!("{} · MIDI {}", general_midi::name(program), midi + 1),
+            None => format!("MIDI Out {}", midi + 1),
+        },
         ChannelKind::Sampler(SampleSource::Builtin(_)) => "Built-in drum".to_string(),
         ChannelKind::Sampler(SampleSource::File(_)) => "Sample".to_string(),
     }

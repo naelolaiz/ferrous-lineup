@@ -175,6 +175,35 @@ impl Channel {
         }
     }
 
+    /// Sends its notes over MIDI, on MIDI channel `midi_channel` (0–15),
+    /// keeping its instrument. A name that only said what played it
+    /// ("Lineup Osc", "MIDI Out 2") follows to the new MIDI channel.
+    pub fn send_over_midi(&mut self, midi_channel: u8) {
+        let plain = match self.kind {
+            ChannelKind::Synth => self.name == Channel::synth().name,
+            ChannelKind::MidiOut { channel } => self.name == Channel::midi_out(channel).name,
+            _ => false,
+        };
+        if plain {
+            self.name = Channel::midi_out(midi_channel).name;
+        }
+        self.kind = ChannelKind::MidiOut {
+            channel: midi_channel,
+        };
+    }
+
+    /// Plays it with the built-in sound again, if it was sent over MIDI,
+    /// keeping its instrument. A name that only said which MIDI channel
+    /// it was sent on becomes the Lineup Osc's.
+    pub fn play_here(&mut self) {
+        if let ChannelKind::MidiOut { channel } = self.kind {
+            if self.name == Channel::midi_out(channel).name {
+                self.name = Channel::synth().name;
+            }
+            self.kind = ChannelKind::Synth;
+        }
+    }
+
     /// Whether the channel's notes count in the harmony heard: a synth
     /// or a MIDI Out channel that is not muted, other than the MIDI drum
     /// channel (10). Samplers, such as an imported recording, do not.
@@ -2161,6 +2190,56 @@ mod tests {
     const CHORDS: usize = 1;
     const FILL: usize = 2;
     const SYNTH: usize = 4;
+
+    #[test]
+    fn a_channel_goes_over_midi_with_its_instrument() {
+        let mut piano = Channel::synth();
+        piano.program = Some(crate::general_midi::ACOUSTIC_GRAND_PIANO);
+        piano.send_over_midi(2);
+        assert_eq!(piano.kind, ChannelKind::MidiOut { channel: 2 });
+        assert_eq!(piano.name, "MIDI Out 3");
+        assert_eq!(
+            piano.program,
+            Some(crate::general_midi::ACOUSTIC_GRAND_PIANO)
+        );
+        // Moving it to another MIDI channel renames it again.
+        piano.send_over_midi(9);
+        assert_eq!(piano.name, "MIDI Out 10");
+        // A name of your own stays.
+        let mut lead = Channel {
+            name: "Lead".into(),
+            ..Channel::synth()
+        };
+        lead.send_over_midi(0);
+        assert_eq!(
+            (lead.name.as_str(), lead.kind),
+            ("Lead", ChannelKind::MidiOut { channel: 0 })
+        );
+    }
+
+    #[test]
+    fn a_channel_sent_over_midi_can_play_here_again() {
+        let mut sent = Channel::midi_out(2);
+        sent.program = Some(crate::general_midi::VIOLIN);
+        sent.play_here();
+        assert_eq!(sent.kind, ChannelKind::Synth);
+        assert_eq!(sent.name, Channel::synth().name);
+        assert_eq!(sent.program, Some(crate::general_midi::VIOLIN));
+        // A name of your own stays.
+        let mut lead = Channel {
+            name: "Lead".into(),
+            ..Channel::midi_out(0)
+        };
+        lead.play_here();
+        assert_eq!(
+            (lead.name.as_str(), lead.kind),
+            ("Lead", ChannelKind::Synth)
+        );
+        // A synth stays as it is.
+        let mut synth = Channel::synth();
+        synth.play_here();
+        assert_eq!(synth, Channel::synth());
+    }
 
     #[test]
     fn a_key_shown_as_a_set_moves_on_like_the_key() {

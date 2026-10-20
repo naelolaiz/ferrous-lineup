@@ -16,7 +16,7 @@ use lineup_core::{DEFAULT_VELOCITY, MidiMessage, Note, Pattern, Scale, tools};
 use super::follow::Follow;
 use super::{Audio, LineupApp};
 use crate::midi::{self, Midi, Played, Port, Route};
-use crate::theme;
+use crate::{channel_rack, theme};
 
 /// The typing keyboard, laid out like a piano on the letter keys, as in
 /// other studios. Z X C V B N M are the white keys from C4, and S D G H J
@@ -410,6 +410,25 @@ impl LineupApp {
         self.live.routes_sent = Some(wanted);
     }
 
+    /// Sends every MIDI Out channel to `port`, or to none.
+    pub(super) fn connect_midi_output(&mut self, port: Option<&Port>) {
+        if let Err(err) = self.live.midi.connect_output(port) {
+            self.message = Some(format!("Could not connect: {err}"));
+        }
+    }
+
+    /// Tells the instrument menus which MIDI outputs there are, once a
+    /// frame: they offer them under "Send over MIDI".
+    pub(super) fn share_midi_outputs(&self, ctx: &egui::Context) {
+        channel_rack::set_midi_outputs(
+            ctx,
+            channel_rack::MidiOutputs {
+                ports: self.live.midi.outputs().to_vec(),
+                connected: self.live.midi.output().cloned(),
+            },
+        );
+    }
+
     /// The MIDI menu, next to the Edit menu.
     pub(super) fn midi_menu(&mut self, ui: &mut egui::Ui) {
         let response = ui.menu_button("MIDI", |ui| {
@@ -464,9 +483,7 @@ impl LineupApp {
         ui.label("Output: an external synth to play");
         let current = self.live.midi.output().cloned();
         if let Some(choice) = pick_port(ui, self.live.midi.outputs(), current.as_ref()) {
-            if let Err(err) = self.live.midi.connect_output(choice.as_ref()) {
-                self.message = Some(format!("Could not connect: {err}"));
-            }
+            self.connect_midi_output(choice.as_ref());
             ui.close();
         }
         ui.checkbox(&mut self.live.send_all, "Send every channel")

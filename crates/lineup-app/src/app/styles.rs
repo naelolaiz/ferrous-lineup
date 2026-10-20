@@ -166,6 +166,7 @@ impl LineupApp {
                 EditorEvent::Preview(project) => self.preview_style(&project),
                 EditorEvent::Stop => self.send(Command::StopPhrase),
                 EditorEvent::StartFrom(style) => self.start_style_editor(style, None),
+                EditorEvent::ConnectMidiOutput(port) => self.connect_midi_output(port.as_ref()),
                 EditorEvent::Hear { channel, pitches } => {
                     let rate = self.sample_rate();
                     let instrument = self.build_instrument(&channel, rate);
