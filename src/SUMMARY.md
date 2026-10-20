@@ -3,6 +3,7 @@
 [Introduction](introduction.md)
 
 - [Getting started](getting-started.md)
+- [A tour of the app](tour.md)
 - [Step 1: The foundation](step-1/README.md)
   - [Cargo, workspaces and crates](step-1/workspace.md)
   - [lineup-core: notes and tempo](step-1/lineup-core.md)
