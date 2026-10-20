@@ -8,7 +8,7 @@ use crate::{theme, widgets};
 
 /// Instrument lineups drawn from the existing arrangements. Only their sounds
 /// and players are copied; their rhythm and timing are never applied here.
-const LINEUPS: [(&str, &str); 7] = [
+const LINEUPS: [(&str, &str); 8] = [
     ("Grand piano + acoustic bass", "Chorale"),
     ("Electric piano + synth bass", "Boom bap"),
     ("Piano, acoustic guitar + strings", "Pop beat"),
@@ -16,6 +16,7 @@ const LINEUPS: [(&str, &str); 7] = [
     ("Piano + strings", "Jazz ballad"),
     ("Piano + nylon guitar", "Bossa nova"),
     ("Accordion + acoustic bass", "Rachenitsa"),
+    ("Horns, timpani + strings", "Orchestra"),
 ];
 
 pub(super) fn menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction>) {

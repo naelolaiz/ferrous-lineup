@@ -1592,7 +1592,8 @@ fn variation_menu(
 /// The styles the band can play part of the song in, in a bar's menu.
 /// They apply to the bars `selection` holds, when the bar right-clicked
 /// is one of them, or else from bar `number` on. Only the styles in that
-/// bar's time signature are offered: another would change the bars.
+/// bar's time signature, or that follow every bar's meter, are offered:
+/// another would change the bars.
 fn style_menu(
     ui: &mut Ui,
     project: &Project,
@@ -1636,7 +1637,9 @@ fn style_menu(
             for genre in Genre::ALL {
                 let styles: Vec<&'static BandStyle> = band_styles()
                     .iter()
-                    .filter(|style| style.genre == genre && style.time == time)
+                    .filter(|style| {
+                        style.genre == genre && (style.time == time || style.follows_the_song())
+                    })
                     .collect();
                 if styles.is_empty() {
                     continue;
