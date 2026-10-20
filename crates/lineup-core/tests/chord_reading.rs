@@ -73,8 +73,8 @@ fn petrushka_s_chord_is_c_over_f_sharp() {
 
 #[test]
 fn the_fair_opens_on_a_stack_of_fourths() {
-    // The flute's D, E, G and A: the set 4-23, fourths stacked A D G C
-    // without the C.
+    // The flute's D, E, G and A: the set 4-23, the fourths E, A, D and
+    // G stacked one on another.
     let project = heard("Petrushka, The Shrovetide Fair");
     for number in 1..=5 {
         let start = project.meter().bar(number - 1).start;
