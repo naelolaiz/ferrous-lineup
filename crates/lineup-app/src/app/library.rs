@@ -572,19 +572,28 @@ impl LineupApp {
             self.notice = Some(why + &kept(&self.project));
             return;
         }
+        let audition = (!own_pattern).then_some(Audition {
+            pattern,
+            written,
+            style: tried.style,
+            rhythm: tried.rhythm,
+            row_style: tried.row_style,
+            micromode_style: tried.micromode_style,
+        });
+        self.play_written_pattern(pattern, audition);
+    }
+
+    /// Selects `pattern`, which the library has just written, and plays
+    /// it on its own. `audition` remembers what was written there, so
+    /// that the next click rewrites the same pattern while it is
+    /// unchanged; only the last [`REMEMBERED`] are kept.
+    fn play_written_pattern(&mut self, pattern: usize, audition: Option<Audition>) {
         self.select_pattern(pattern);
-        if !own_pattern {
+        if let Some(audition) = audition {
             if self.auditions.len() == REMEMBERED {
                 self.auditions.remove(0);
             }
-            self.auditions.push(Audition {
-                pattern,
-                written,
-                style: tried.style,
-                rhythm: tried.rhythm,
-                row_style: tried.row_style,
-                micromode_style: tried.micromode_style,
-            });
+            self.auditions.push(audition);
         }
         self.set_mode(PlayMode::Pattern);
         if !self.playing {
@@ -896,51 +905,22 @@ impl LineupApp {
     /// pattern is rewritten while it is unchanged. The row starts on the
     /// project's key note.
     fn try_row_style(&mut self, style: &'static RowStyle) {
-        let target = self.unchanged_audition().map(|audition| audition.pattern);
-        let from = self.pattern;
-        let selected = self.piano_roll.selected_channel();
         let start = self.project.scale.root;
-        let use_tempo = self.playlist.library_tempo();
-        let source = Source::new(SourceKind::Style, style.name);
-        let taken = PartSet::of(&[SongPart::Tempo]);
-        let written = self.edit("try from the library", |project| {
-            project.bring_in(&source, taken, PartSet::NONE, |project| {
-                let index = match target {
-                    Some(index) => index,
-                    None => project.add_pattern_around_locked(from)?,
-                };
-                project.pattern_mut(index)?.name = style.name.to_string();
-                project.clear_unlocked(index);
+        let selected = self.piano_roll.selected_channel();
+        let written =
+            self.write_pattern_style(style.name, style.tempo, style.rhythm(), |project, index| {
                 rows::write_row_style(project, index, style, start, selected);
-                if let Some(rhythm) = style.rhythm() {
-                    apply::write_rhythm(project, index, rhythm);
-                }
-                if use_tempo {
-                    project.scale_tempo(Tempo::new(style.tempo));
-                }
-                Some((index, project.pattern(index)?.clone()))
-            })
-        });
-        let Some((pattern, written)) = written else {
-            self.message = Some("There is no room for another pattern.".to_string());
-            return;
-        };
-        self.select_pattern(pattern);
-        if self.auditions.len() == REMEMBERED {
-            self.auditions.remove(0);
-        }
-        self.auditions.push(Audition {
-            pattern,
-            written,
-            style: None,
-            rhythm: style.rhythm(),
-            row_style: Some(style),
-            micromode_style: None,
-        });
-        self.set_mode(PlayMode::Pattern);
-        if !self.playing {
-            self.rewind_for_new_pattern();
-            self.set_playing(true);
+            });
+        if let Some((pattern, written)) = written {
+            let audition = Audition {
+                pattern,
+                written,
+                style: None,
+                rhythm: style.rhythm(),
+                row_style: Some(style),
+                micromode_style: None,
+            };
+            self.play_written_pattern(pattern, Some(audition));
         }
     }
 
@@ -948,12 +928,44 @@ impl LineupApp {
     /// [`Self::try_row_style`] does for a row style. The micromode starts
     /// on the project's key note.
     fn try_micromode_style(&mut self, style: &'static MicromodeStyle) {
+        let key = self.project.scale.root;
+        let selected = self.piano_roll.selected_channel();
+        let start = micromodes::DEMO_SECTIONS[0].0;
+        let written =
+            self.write_pattern_style(style.name, style.tempo, style.rhythm(), |project, index| {
+                micromodes::write_micromode_style(project, index, style, key, start, selected);
+            });
+        if let Some((pattern, written)) = written {
+            let audition = Audition {
+                pattern,
+                written,
+                style: None,
+                rhythm: style.rhythm(),
+                row_style: None,
+                micromode_style: Some(style),
+            };
+            self.play_written_pattern(pattern, Some(audition));
+        }
+    }
+
+    /// Writes a style named `name` into a pattern, as one step to undo:
+    /// the pattern the library wrote last if it is unchanged, or else a
+    /// new one next to the current pattern. `write` writes its notes in
+    /// the cleared pattern, then its `rhythm` plays the drums and, if the
+    /// library takes tempos, `tempo` becomes the song's. Returns the
+    /// pattern and what was written there, or `None`, saying why, when
+    /// there is no room for another pattern.
+    fn write_pattern_style(
+        &mut self,
+        name: &'static str,
+        tempo: f32,
+        rhythm: Option<&'static Rhythm>,
+        write: impl FnOnce(&mut Project, usize),
+    ) -> Option<(usize, Pattern)> {
         let target = self.unchanged_audition().map(|audition| audition.pattern);
         let from = self.pattern;
-        let selected = self.piano_roll.selected_channel();
-        let key = self.project.scale.root;
         let use_tempo = self.playlist.library_tempo();
-        let source = Source::new(SourceKind::Style, style.name);
+        let source = Source::new(SourceKind::Style, name);
         let taken = PartSet::of(&[SongPart::Tempo]);
         let written = self.edit("try from the library", |project| {
             project.bring_in(&source, taken, PartSet::NONE, |project| {
@@ -961,40 +973,22 @@ impl LineupApp {
                     Some(index) => index,
                     None => project.add_pattern_around_locked(from)?,
                 };
-                project.pattern_mut(index)?.name = style.name.to_string();
+                project.pattern_mut(index)?.name = name.to_string();
                 project.clear_unlocked(index);
-                let start = micromodes::DEMO_SECTIONS[0].0;
-                micromodes::write_micromode_style(project, index, style, key, start, selected);
-                if let Some(rhythm) = style.rhythm() {
+                write(project, index);
+                if let Some(rhythm) = rhythm {
                     apply::write_rhythm(project, index, rhythm);
                 }
                 if use_tempo {
-                    project.scale_tempo(Tempo::new(style.tempo));
+                    project.scale_tempo(Tempo::new(tempo));
                 }
                 Some((index, project.pattern(index)?.clone()))
             })
         });
-        let Some((pattern, written)) = written else {
+        if written.is_none() {
             self.message = Some("There is no room for another pattern.".to_string());
-            return;
-        };
-        self.select_pattern(pattern);
-        if self.auditions.len() == REMEMBERED {
-            self.auditions.remove(0);
         }
-        self.auditions.push(Audition {
-            pattern,
-            written,
-            style: None,
-            rhythm: style.rhythm(),
-            row_style: None,
-            micromode_style: Some(style),
-        });
-        self.set_mode(PlayMode::Pattern);
-        if !self.playing {
-            self.rewind_for_new_pattern();
-            self.set_playing(true);
-        }
+        written
     }
 
     /// Opens a demo in place of the project, and plays it, with its
