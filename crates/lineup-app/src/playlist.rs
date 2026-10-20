@@ -670,7 +670,7 @@ impl PlaylistView {
                 None,
             );
         } else if let Some(step) = playhead {
-            widgets::follow_x(ui, playhead, layout.x(step), cells);
+            widgets::follow_x(ui, playhead, layout.x(step), cells, HEADER_WIDTH);
         }
 
         let painter = ui.painter_at(visible);
