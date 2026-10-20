@@ -620,6 +620,13 @@ const RAKS_AKSAGI: TimeSignature = TimeSignature::of_groups(&[2, 3, 2, 2], 8);
 const CURCUNA: TimeSignature = TimeSignature::of_groups(&[3, 2, 2, 3], 8);
 const ELEVEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 3, 2, 2], 8);
 const FIFTEEN_EIGHT: TimeSignature = TimeSignature::of_groups(&[2, 2, 2, 2, 3, 2, 2], 8);
+// The short and odd bars of the Rite of Spring, for which Stravinsky marks
+// no grouping: every eighth note is a beat.
+const TWO_EIGHT: TimeSignature = TimeSignature::new(2, 8);
+const THREE_EIGHT: TimeSignature = TimeSignature::new(3, 8);
+const FOUR_EIGHT: TimeSignature = TimeSignature::new(4, 8);
+const FIVE_EIGHT_UNGROUPED: TimeSignature = TimeSignature::new(5, 8);
+const SEVEN_EIGHT: TimeSignature = TimeSignature::new(7, 8);
 
 // The bands the songs are dressed in, named after their style. Each is
 // melody, chords, bass. A piece from the concert hall names its own
@@ -1034,6 +1041,7 @@ pub static SONGS: &[Song] = &[
     classical::BOLERO,
     classical::LA_MER_DAWN,
     classical::AUGURS_OF_SPRING,
+    classical::RITUAL_OF_ABDUCTION,
 ];
 
 #[cfg(test)]
