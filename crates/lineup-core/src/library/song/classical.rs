@@ -652,8 +652,11 @@ pub(super) const AVE_MARIA: Song = Song {
 // public domain), compiled to MIDI with LilyPond. The dynamics are the piano's, and the
 // voice follows them. The engraving writes D natural for the right hand's last eighth
 // in bars 43 and 44, against the D flat in the left hand; in bars 19 and 20, where the
-// first verse has the same music, it is D flat, so it is D flat here too. With that
-// the second verse's last lines are the first verse's, and the form plays them again.
+// first verse has the same music, it is D flat. The OpenScore Lieder edition of the
+// 1820 version (https://github.com/OpenScore/Lieder, from IMSLP #10602, CC0) puts the
+// first two verses under one repeat sign, with D flat in those bars, so it is D flat
+// here too. With that the second verse's last lines are the first verse's, and the
+// form plays them again.
 pub(super) const DIE_FORELLE: Song = Song {
     name: "Die Forelle",
     origin: "Franz Schubert, D 550, 1817",
