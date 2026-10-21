@@ -5,7 +5,8 @@
 //! side (Alt+F8) and the harmony keys along the bottom (F8). The chord
 //! sheet, the channel rack, the piano roll and the mixer are windows on
 //! top of it, opened with F5, F6, F7 and F9, and F1 lists every keyboard
-//! shortcut. Opening and saving files lives in the
+//! shortcut. The chord sheet can also take the playlist's place ("Fill
+//! the window"). Opening and saving files lives in the
 //! [`files`] module, undo and redo in [`edit`], saving the song as a WAV
 //! or MIDI file in [`export`], and playing and recording on a keyboard in
 //! [`live`], and the count-in, metronome and practice speed in
