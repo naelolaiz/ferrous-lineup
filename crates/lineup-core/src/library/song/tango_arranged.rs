@@ -13,6 +13,8 @@ const BANDONEON_AND_PIANO: Band = Band::new(
     gm::ACOUSTIC_BASS,
 );
 
+// Copyright: public domain in Argentina, where a work is protected for 70 years after its author's
+// death: Castriota and Contursi both died in 1932.
 // Written out from a piano arrangement in B minor (MIDI, 88 bars of 2/4, written here two to a bar of 4/4).
 pub(super) const MI_NOCHE_TRISTE: Song = Song {
     name: "Mi noche triste",
@@ -142,6 +144,8 @@ pub(super) const MI_NOCHE_TRISTE: Song = Song {
             with a strain in D major, the relative major, and back.",
 };
 
+// Copyright: Francisco Canaro died in 1964 and Rafael Canaro in 1972; not public domain; added at
+// the owner's request.
 // Written out from a piano arrangement in F sharp minor (MIDI, 50 bars of 2/4, here two to
 // a bar of 4/4 after the first; a bar of 2/4 before the second strain keeps its tune on the
 // downbeat). The tune is the file's own track over the piano.
@@ -263,6 +267,7 @@ pub(super) const SENTIMIENTO_GAUCHO: Song = Song {
             the relative major, with the piano trilling high above the tune.",
 };
 
+// Copyright: Tuegols died in 1960; not public domain; added at the owner's request.
 // Written out from a piano arrangement in F sharp minor (MIDI, 89 bars of 2/4: a bar of
 // pickup, then here two to a bar of 4/4). The tune is the top note of the right hand.
 pub(super) const ZORRO_GRIS: Song = Song {
