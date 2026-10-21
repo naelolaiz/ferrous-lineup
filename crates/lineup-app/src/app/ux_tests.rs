@@ -1155,7 +1155,10 @@ fn preset_workflows_keep_their_apply_buttons_visible_in_small_windows() {
     screen.app.playlist.browser_open = true;
     screen.click("📚 Library");
     screen.click("🔍 Search: bossa, 6/8, tango…");
-    screen.draw(vec![Event::Text("Aeolian climb".into())]);
+    screen.draw(vec![Event::Text("Aeolian".into())]);
+    // The side panel keeps its width, so in a window this small the
+    // list starts below the window's edge.
+    screen.scroll_to_at("Aeolian climb", Pos2::new(100.0, 300.0));
     screen.click("Aeolian climb");
     for mode in ["Plain accents", "Preset patterns"] {
         screen.click(mode);
@@ -1204,6 +1207,27 @@ fn presets_listed(output: &FullOutput) -> usize {
             _ => None,
         })
         .expect("The presets heading is visible")
+}
+
+#[test]
+fn a_long_line_in_the_library_leaves_the_side_panel_as_wide_as_it_was() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.playlist.browser_open = true;
+    let playlist_left = |screen: &mut Screen| {
+        let output = screen.draw(vec![]);
+        text_rect(&output, "Playlist").unwrap().left()
+    };
+    let width = playlist_left(&mut screen);
+    // "168 BPM · Shchedryk (Carol of the Bells) (demo)" is cut short.
+    screen.app.open_demo(library::Demo::Song(
+        lineup_core::library::Song::named("Shchedryk (Carol of the Bells)").unwrap(),
+    ));
+    screen.click("📚 Library");
+    assert_eq!(playlist_left(&mut screen), width);
+    screen.restart();
+    screen.app.playlist.browser_open = true;
+    assert_eq!(playlist_left(&mut screen), width);
 }
 
 #[test]
