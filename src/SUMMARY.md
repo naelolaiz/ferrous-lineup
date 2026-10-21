@@ -116,6 +116,7 @@
   - [Styles keep the song's tempo](step-9/style-tempo.md)
   - [The Misa Criolla: a Mass to the dances of Argentina](step-9/misa-criolla.md)
   - [Tangos and folk songs from MIDI files](step-9/midi-songs.md)
+  - [Four pieces from their scores: a zamba, a song, an aria and a chorus](step-9/four-scores.md)
   - [Quicker to work in: songs open on their chords, one row of buttons, every key in a list](step-9/workflow.md)
   - [Roman numerals in minor keys: bIII or III](step-9/minor-numerals.md)
   - [The mixer: pan, a reverb send, level meters and the instrument on every line](step-9/mixer.md)
