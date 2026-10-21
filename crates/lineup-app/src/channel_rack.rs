@@ -11,7 +11,8 @@ use std::path::PathBuf;
 
 use eframe::egui::{self, Color32, Rect, Ui};
 use lineup_core::{
-    Channel, ChannelKind, DRUM_CHANNEL, Drum, MAX_CHANNELS, Project, file, general_midi,
+    Channel, ChannelKind, DRUM_CHANNEL, Drum, MAX_CHANNELS, Project, TimeSignature, file,
+    general_midi,
 };
 
 use crate::midi::Port;
@@ -282,293 +283,36 @@ pub fn show(
     let Some(pattern) = project.pattern(pattern) else {
         return actions;
     };
-    // The time signature where the pattern is used in the song.
-    let time = project.pattern_time(pattern_index);
-    let mut row_rects: Vec<Rect> = Vec::with_capacity(project.channels().len());
-    let length = pattern.length();
     let files_hovering = ui.ctx().input(|input| !input.raw.hovered_files.is_empty());
     let pointer = ui.ctx().input(|input| input.pointer.hover_pos());
     let dismissing = widgets::dismissing(ui.ctx());
 
     if let Some(playback) = playback {
-        ui.horizontal_wrapped(|ui| {
-            if playback.song_playing {
-                if ui
-                    .add(egui::Button::new("▶ Play over the song").selected(playback.over_song))
-                    .on_hover_text(
-                        "Play this pattern on top of the song from its next bar, in time with \
-                         it, to try it out with the rest. Click again to stop it.",
-                    )
-                    .clicked()
-                    && !dismissing
-                {
-                    actions.push(RackAction::PlayOverSong(!playback.over_song));
-                }
-            } else {
-                let play = if playback.playing {
-                    "⏸ Pause pattern"
-                } else {
-                    "▶ Play pattern"
-                };
-                if ui
-                    .button(play)
-                    .on_hover_text(
-                        "Play every channel in this pattern with its current instruments",
-                    )
-                    .clicked()
-                    && !dismissing
-                {
-                    actions.push(if playback.playing {
-                        RackAction::PausePattern
-                    } else {
-                        RackAction::PlayPattern
-                    });
-                }
-            }
-            if ui
-                .add_enabled(playback.can_stop, egui::Button::new("■ Stop pattern"))
-                .clicked()
-                && !dismissing
-            {
-                actions.push(RackAction::StopPattern);
-            }
-            egui::ComboBox::from_id_salt("rack-pattern")
-                .selected_text(&pattern.name)
-                .show_ui(ui, |ui| {
-                    for (index, choice) in project.patterns().iter().enumerate() {
-                        if ui
-                            .selectable_label(index == pattern_index, &choice.name)
-                            .clicked()
-                        {
-                            actions.push(RackAction::SelectPattern(index));
-                        }
-                    }
-                });
-        });
+        playback_row(
+            ui,
+            project,
+            pattern_index,
+            playback,
+            dismissing,
+            &mut actions,
+        );
     }
     ui.weak("Click a channel to select and hear it; click it again or empty space to deselect. Double-click for the piano roll.");
 
     drums_elsewhere(ui, project, pattern, &mut actions);
 
-    // The rack scrolls when the window is smaller than its rows. When all
-    // the rows fit, the mouse wheel scrolls the steps sideways, without
-    // having to hold Shift.
-    ui.style_mut().always_scroll_the_only_direction = true;
-    let rows_height = project.channels().len() as f32
-        * (widgets::step_size(ui).y + ui.spacing().item_spacing.y)
-        + widgets::step_lights_height(ui)
-        + ui.spacing().item_spacing.y
-        + 4.0
-        + ui.spacing().interact_size.y
-        + ui.spacing().item_spacing.y;
-    let vertical = rows_height > ui.available_height();
-    let mut content_bottom = ui.cursor().top();
-    let scroll = egui::ScrollArea::new([true, vertical])
-        .auto_shrink(false)
-        .show(ui, |ui| {
-            // A row of lights over the steps, lit over the one sounding.
-            // Its lights are drawn once the rows below have shown where
-            // the steps start.
-            let (lights, _) = ui.allocate_exact_size(
-                egui::vec2(1.0, widgets::step_lights_height(ui)),
-                egui::Sense::hover(),
-            );
-            let mut steps_left = None;
-            for (index, channel) in project.channels().iter().enumerate() {
-                let row = ui.horizontal(|ui| {
-                    // Lit while the channel is heard: not muted, and not
-                    // silenced by another channel's solo in the mixer.
-                    let hint = if !channel.muted && project.channel_muted(index) {
-                        "Silent while another channel plays solo (see the Mixer). \
-                         Click to mute or unmute"
-                    } else {
-                        "Click to mute or unmute"
-                    };
-                    if widgets::mute_light(ui, !project.channel_muted(index))
-                        .on_hover_text(hint)
-                        .clicked() && !dismissing
-                    {
-                        actions.push(RackAction::ToggleMute(index));
-                    }
+    let rack = Rows {
+        project,
+        pattern,
+        // The time signature where the pattern is used in the song.
+        time: project.pattern_time(pattern_index),
+        selected,
+        playhead,
+        locks,
+        dismissing,
+    };
+    let (row_rects, empty) = rack.show(ui, &mut actions);
 
-                    let mut volume = channel.volume;
-                    let knob = widgets::knob(ui, &mut volume, 0.8)
-                        .on_hover_text(format!("Volume {:.0}%", volume * 100.0));
-                    if knob.changed() && !dismissing {
-                        actions.push(RackAction::SetVolume {
-                            channel: index,
-                            volume,
-                        });
-                    }
-
-                    let locked = project.is_locked(index);
-                    if locks
-                        && widgets::lock_light(ui, locked)
-                            .on_hover_text(if locked {
-                                "Locked: styles keep its notes and sound. Click to unlock"
-                            } else {
-                                "Lock: styles keep its notes and sound"
-                            })
-                            .clicked()
-                        && !dismissing
-                    {
-                        actions.push(RackAction::SetLocked {
-                            channel: index,
-                            locked: !locked,
-                        });
-                    }
-
-                    let name = egui::Button::new(&channel.name)
-                        .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y) * widgets::zoom(ui))
-                        .selected(selected == Some(index))
-                        .truncate();
-                    let hover = "Click to select and hear this channel; click again to deselect. \
-                                 Double-click to open its piano roll. Keyboards play the selected \
-                                 channel. Delete removes the selected channel. Right-click for options. \
-                                 Drop a WAV file here to load it.";
-                    let hover = if locks && locked {
-                        format!("🔒 Locked\n\n{hover}")
-                    } else {
-                        hover.to_string()
-                    };
-                    let name = match channel.program {
-                        Some(program) => ui.add(name).on_hover_text(format!(
-                            "Plays: {} (General MIDI {})\n\n{hover}",
-                            general_midi::name(program),
-                            u16::from(program) + 1
-                        )),
-                        None => ui.add(name).on_hover_text(hover),
-                    };
-                    if !dismissing {
-                        if name.double_clicked() {
-                            actions.push(RackAction::OpenPianoRoll(index));
-                        } else if name.clicked() {
-                            if selected == Some(index) {
-                                actions.push(RackAction::SelectChannel(None));
-                            } else {
-                                actions.push(RackAction::SelectChannel(Some(index)));
-                                actions.push(RackAction::Preview(index));
-                            }
-                        }
-                    }
-                    name.context_menu(|ui| {
-                        if ui.button("Piano roll").clicked() {
-                            actions.push(RackAction::OpenPianoRoll(index));
-                            ui.close();
-                        }
-                        if matches!(
-                            channel.kind,
-                            ChannelKind::Synth | ChannelKind::MidiOut { .. }
-                        ) {
-                            instrument_menu(ui, index, channel, &mut actions);
-                        } else if channel.can_go_over_midi() {
-                            midi_part(ui, index, channel, &mut actions);
-                        }
-                        if locks && ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
-                            actions.push(RackAction::SetLocked {
-                                channel: index,
-                                locked: !locked,
-                            });
-                            ui.close();
-                        }
-                        if ui.button("Remove channel").clicked() {
-                            actions.push(RackAction::Remove(index));
-                            ui.close();
-                        }
-                    });
-
-                    ui.add_space(6.0 * widgets::zoom(ui));
-                    steps_left.get_or_insert(ui.cursor().left());
-                    // Plain steps are shown as buttons; melodies and chords as
-                    // a small preview of the piano roll.
-                    if pattern.is_step_row(index) {
-                        for step in 0..length {
-                            let on = pattern.is_on(index, step);
-                            // Beats alternate colours, so you can count them,
-                            // starting again in every bar so all bars look
-                            // alike: in 3/4, dark, light, dark.
-                            let beat_group = time.beat_at(step).index;
-                            let response =
-                                widgets::step_button(ui, on, beat_group, playhead == Some(step));
-                            if response.clicked() && !widgets::dismissing(ui.ctx()) {
-                                actions.push(RackAction::ToggleStep {
-                                    channel: index,
-                                    step,
-                                });
-                            } else if response.secondary_clicked() && !dismissing {
-                                actions.push(RackAction::ClearStep {
-                                    channel: index,
-                                    step,
-                                });
-                            }
-                        }
-                    } else {
-                        let preview =
-                            widgets::mini_roll(ui, pattern.notes(index), length, playhead)
-                                .on_hover_text("Click to open the piano roll");
-                        if preview.clicked() && !dismissing {
-                            actions.push(RackAction::OpenPianoRoll(index));
-                        }
-                    }
-                });
-                row_rects.push(row.response.rect);
-            }
-            if let Some(left) = steps_left {
-                let steps_per_bar = time.steps_per_bar();
-                let marks: Vec<_> = (0..length)
-                    .map(|step| {
-                        if step % steps_per_bar == 0 {
-                            widgets::StepMark::Bar
-                        } else if time.beat_at(step).start == step % steps_per_bar {
-                            widgets::StepMark::Beat
-                        } else {
-                            widgets::StepMark::Plain
-                        }
-                    })
-                    .collect();
-                widgets::step_lights(ui, lights, left, &marks, playhead);
-            }
-
-            ui.add_space(4.0);
-            let rack_full = project.channels().len() >= MAX_CHANNELS;
-            ui.add_enabled_ui(!rack_full, |ui| {
-                ui.menu_button("➕ Add channel", |ui| {
-                    widgets::scroll_menu(ui, |ui| {
-                        for drum in Drum::ALL {
-                            if ui.button(drum.name()).clicked() {
-                                actions.push(RackAction::AddDrum(drum));
-                                ui.close();
-                            }
-                        }
-                        ui.separator();
-                        if ui.button("Lineup Osc (synth)").clicked() {
-                            actions.push(RackAction::AddSynth);
-                            ui.close();
-                        }
-                        if ui
-                            .button("MIDI Out (external synth)")
-                            .on_hover_text(
-                                "Plays its notes on a synth outside Ferrous Lineup: pick where in \
-                             MIDI > Output.",
-                            )
-                            .clicked()
-                        {
-                            actions.push(RackAction::AddMidiOut);
-                            ui.close();
-                        }
-                    });
-                });
-            });
-            content_bottom = ui.cursor().top();
-        });
-
-    let empty = Rect::from_min_max(
-        egui::pos2(
-            scroll.inner_rect.left(),
-            content_bottom.max(scroll.inner_rect.top()),
-        ),
-        scroll.inner_rect.max,
-    );
     if empty.is_positive()
         && ui
             .interact(
@@ -598,9 +342,386 @@ pub fn show(
         ui.painter()
             .rect_filled(row_rects[row], 3.0, DROP_HIGHLIGHT);
     }
+    load_dropped_files(ui, target_row, &mut actions);
 
-    // A file dropped on a row loads into that channel; anywhere else, into
-    // a new one. Project files are left for the app to open.
+    actions
+}
+
+/// The buttons over the rows that play the pattern, or play it over the
+/// song while the song plays, and the menu that picks another pattern.
+fn playback_row(
+    ui: &mut Ui,
+    project: &Project,
+    pattern_index: usize,
+    playback: RackPlayback,
+    dismissing: bool,
+    actions: &mut Vec<RackAction>,
+) {
+    ui.horizontal_wrapped(|ui| {
+        if playback.song_playing {
+            if ui
+                .add(egui::Button::new("▶ Play over the song").selected(playback.over_song))
+                .on_hover_text(
+                    "Play this pattern on top of the song from its next bar, in time with \
+                     it, to try it out with the rest. Click again to stop it.",
+                )
+                .clicked()
+                && !dismissing
+            {
+                actions.push(RackAction::PlayOverSong(!playback.over_song));
+            }
+        } else {
+            let play = if playback.playing {
+                "⏸ Pause pattern"
+            } else {
+                "▶ Play pattern"
+            };
+            if ui
+                .button(play)
+                .on_hover_text("Play every channel in this pattern with its current instruments")
+                .clicked()
+                && !dismissing
+            {
+                actions.push(if playback.playing {
+                    RackAction::PausePattern
+                } else {
+                    RackAction::PlayPattern
+                });
+            }
+        }
+        if ui
+            .add_enabled(playback.can_stop, egui::Button::new("■ Stop pattern"))
+            .clicked()
+            && !dismissing
+        {
+            actions.push(RackAction::StopPattern);
+        }
+        egui::ComboBox::from_id_salt("rack-pattern")
+            .selected_text(&project.patterns()[pattern_index].name)
+            .show_ui(ui, |ui| {
+                for (index, choice) in project.patterns().iter().enumerate() {
+                    if ui
+                        .selectable_label(index == pattern_index, &choice.name)
+                        .clicked()
+                    {
+                        actions.push(RackAction::SelectPattern(index));
+                    }
+                }
+            });
+    });
+}
+
+/// What every row of the rack is drawn from: the same for all of them.
+#[derive(Clone, Copy)]
+struct Rows<'a> {
+    project: &'a Project,
+    pattern: &'a lineup_core::Pattern,
+    /// The time signature where the pattern is used in the song.
+    time: TimeSignature,
+    selected: Option<usize>,
+    playhead: Option<usize>,
+    locks: bool,
+    dismissing: bool,
+}
+
+impl Rows<'_> {
+    /// Draws a row for each channel, the lights over their steps and the
+    /// "Add channel" menu, scrolling when they don't fit. Returns where
+    /// each row is, for dropped files, and the empty space under them,
+    /// where a click deselects.
+    fn show(self, ui: &mut Ui, actions: &mut Vec<RackAction>) -> (Vec<Rect>, Rect) {
+        let project = self.project;
+        let mut row_rects: Vec<Rect> = Vec::with_capacity(project.channels().len());
+        // The rack scrolls when the window is smaller than its rows. When
+        // all the rows fit, the mouse wheel scrolls the steps sideways,
+        // without having to hold Shift.
+        ui.style_mut().always_scroll_the_only_direction = true;
+        let rows_height = project.channels().len() as f32
+            * (widgets::step_size(ui).y + ui.spacing().item_spacing.y)
+            + widgets::step_lights_height(ui)
+            + ui.spacing().item_spacing.y
+            + 4.0
+            + ui.spacing().interact_size.y
+            + ui.spacing().item_spacing.y;
+        let vertical = rows_height > ui.available_height();
+        let mut content_bottom = ui.cursor().top();
+        let scroll = egui::ScrollArea::new([true, vertical])
+            .auto_shrink(false)
+            .show(ui, |ui| {
+                // A row of lights over the steps, lit over the one
+                // sounding. Its lights are drawn once the rows below have
+                // shown where the steps start.
+                let (lights, _) = ui.allocate_exact_size(
+                    egui::vec2(1.0, widgets::step_lights_height(ui)),
+                    egui::Sense::hover(),
+                );
+                let mut steps_left = None;
+                for (index, channel) in project.channels().iter().enumerate() {
+                    let row = ui.horizontal(|ui| self.row(ui, index, channel, actions));
+                    steps_left.get_or_insert(row.inner);
+                    row_rects.push(row.response.rect);
+                }
+                if let Some(left) = steps_left {
+                    let marks = step_marks(self.time, self.pattern.length());
+                    widgets::step_lights(ui, lights, left, &marks, self.playhead);
+                }
+
+                ui.add_space(4.0);
+                add_channel_menu(ui, project, actions);
+                content_bottom = ui.cursor().top();
+            });
+        let empty = Rect::from_min_max(
+            egui::pos2(
+                scroll.inner_rect.left(),
+                content_bottom.max(scroll.inner_rect.top()),
+            ),
+            scroll.inner_rect.max,
+        );
+        (row_rects, empty)
+    }
+
+    /// Draws channel `index`'s row: its light, knob and lock, its name,
+    /// and its steps. Returns where its steps start.
+    fn row(
+        self,
+        ui: &mut Ui,
+        index: usize,
+        channel: &Channel,
+        actions: &mut Vec<RackAction>,
+    ) -> f32 {
+        let locked = self.controls(ui, index, channel, actions);
+        self.name(ui, index, channel, locked, actions);
+        ui.add_space(6.0 * widgets::zoom(ui));
+        let steps_left = ui.cursor().left();
+        self.steps(ui, index, actions);
+        steps_left
+    }
+
+    /// The mute light, the volume knob and, in the song's rack, the
+    /// lock. Returns whether the channel is locked.
+    fn controls(
+        self,
+        ui: &mut Ui,
+        index: usize,
+        channel: &Channel,
+        actions: &mut Vec<RackAction>,
+    ) -> bool {
+        let (project, dismissing) = (self.project, self.dismissing);
+        // Lit while the channel is heard: not muted, and not silenced by
+        // another channel's solo in the mixer.
+        let hint = if !channel.muted && project.channel_muted(index) {
+            "Silent while another channel plays solo (see the Mixer). \
+             Click to mute or unmute"
+        } else {
+            "Click to mute or unmute"
+        };
+        if widgets::mute_light(ui, !project.channel_muted(index))
+            .on_hover_text(hint)
+            .clicked()
+            && !dismissing
+        {
+            actions.push(RackAction::ToggleMute(index));
+        }
+
+        let mut volume = channel.volume;
+        let knob = widgets::knob(ui, &mut volume, 0.8)
+            .on_hover_text(format!("Volume {:.0}%", volume * 100.0));
+        if knob.changed() && !dismissing {
+            actions.push(RackAction::SetVolume {
+                channel: index,
+                volume,
+            });
+        }
+
+        let locked = project.is_locked(index);
+        if self.locks
+            && widgets::lock_light(ui, locked)
+                .on_hover_text(if locked {
+                    "Locked: styles keep its notes and sound. Click to unlock"
+                } else {
+                    "Lock: styles keep its notes and sound"
+                })
+                .clicked()
+            && !dismissing
+        {
+            actions.push(RackAction::SetLocked {
+                channel: index,
+                locked: !locked,
+            });
+        }
+        locked
+    }
+
+    /// The channel's name: a click selects it and plays it, a double
+    /// click opens its piano roll, and a right click opens its menu.
+    fn name(
+        self,
+        ui: &mut Ui,
+        index: usize,
+        channel: &Channel,
+        locked: bool,
+        actions: &mut Vec<RackAction>,
+    ) {
+        let selected = self.selected;
+        let name = egui::Button::new(&channel.name)
+            .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y) * widgets::zoom(ui))
+            .selected(selected == Some(index))
+            .truncate();
+        let hover = "Click to select and hear this channel; click again to deselect. \
+                     Double-click to open its piano roll. Keyboards play the selected \
+                     channel. Delete removes the selected channel. Right-click for options. \
+                     Drop a WAV file here to load it.";
+        let hover = if self.locks && locked {
+            format!("🔒 Locked\n\n{hover}")
+        } else {
+            hover.to_string()
+        };
+        let name = match channel.program {
+            Some(program) => ui.add(name).on_hover_text(format!(
+                "Plays: {} (General MIDI {})\n\n{hover}",
+                general_midi::name(program),
+                u16::from(program) + 1
+            )),
+            None => ui.add(name).on_hover_text(hover),
+        };
+        if !self.dismissing {
+            if name.double_clicked() {
+                actions.push(RackAction::OpenPianoRoll(index));
+            } else if name.clicked() {
+                if selected == Some(index) {
+                    actions.push(RackAction::SelectChannel(None));
+                } else {
+                    actions.push(RackAction::SelectChannel(Some(index)));
+                    actions.push(RackAction::Preview(index));
+                }
+            }
+        }
+        name.context_menu(|ui| self.channel_menu(ui, index, channel, locked, actions));
+    }
+
+    /// The menu on a channel's name.
+    fn channel_menu(
+        self,
+        ui: &mut Ui,
+        index: usize,
+        channel: &Channel,
+        locked: bool,
+        actions: &mut Vec<RackAction>,
+    ) {
+        if ui.button("Piano roll").clicked() {
+            actions.push(RackAction::OpenPianoRoll(index));
+            ui.close();
+        }
+        if matches!(
+            channel.kind,
+            ChannelKind::Synth | ChannelKind::MidiOut { .. }
+        ) {
+            instrument_menu(ui, index, channel, actions);
+        } else if channel.can_go_over_midi() {
+            midi_part(ui, index, channel, actions);
+        }
+        if self.locks && ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
+            actions.push(RackAction::SetLocked {
+                channel: index,
+                locked: !locked,
+            });
+            ui.close();
+        }
+        if ui.button("Remove channel").clicked() {
+            actions.push(RackAction::Remove(index));
+            ui.close();
+        }
+    }
+
+    /// Plain steps are shown as buttons; melodies and chords as a small
+    /// preview of the piano roll.
+    fn steps(self, ui: &mut Ui, index: usize, actions: &mut Vec<RackAction>) {
+        let (pattern, playhead) = (self.pattern, self.playhead);
+        let length = pattern.length();
+        if pattern.is_step_row(index) {
+            for step in 0..length {
+                let on = pattern.is_on(index, step);
+                // Beats alternate colours, so you can count them,
+                // starting again in every bar so all bars look alike:
+                // in 3/4, dark, light, dark.
+                let beat_group = self.time.beat_at(step).index;
+                let response = widgets::step_button(ui, on, beat_group, playhead == Some(step));
+                if response.clicked() && !widgets::dismissing(ui.ctx()) {
+                    actions.push(RackAction::ToggleStep {
+                        channel: index,
+                        step,
+                    });
+                } else if response.secondary_clicked() && !self.dismissing {
+                    actions.push(RackAction::ClearStep {
+                        channel: index,
+                        step,
+                    });
+                }
+            }
+        } else {
+            let preview = widgets::mini_roll(ui, pattern.notes(index), length, playhead)
+                .on_hover_text("Click to open the piano roll");
+            if preview.clicked() && !self.dismissing {
+                actions.push(RackAction::OpenPianoRoll(index));
+            }
+        }
+    }
+}
+
+/// How each of the `length` steps is marked in the row of lights: the
+/// first step of a bar, of a beat, or neither.
+fn step_marks(time: TimeSignature, length: usize) -> Vec<widgets::StepMark> {
+    let steps_per_bar = time.steps_per_bar();
+    (0..length)
+        .map(|step| {
+            if step % steps_per_bar == 0 {
+                widgets::StepMark::Bar
+            } else if time.beat_at(step).start == step % steps_per_bar {
+                widgets::StepMark::Beat
+            } else {
+                widgets::StepMark::Plain
+            }
+        })
+        .collect()
+}
+
+/// The "Add channel" menu under the rows: a drum, a synth or a MIDI Out
+/// channel, while the rack has room.
+fn add_channel_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<RackAction>) {
+    let rack_full = project.channels().len() >= MAX_CHANNELS;
+    ui.add_enabled_ui(!rack_full, |ui| {
+        ui.menu_button("➕ Add channel", |ui| {
+            widgets::scroll_menu(ui, |ui| {
+                for drum in Drum::ALL {
+                    if ui.button(drum.name()).clicked() {
+                        actions.push(RackAction::AddDrum(drum));
+                        ui.close();
+                    }
+                }
+                ui.separator();
+                if ui.button("Lineup Osc (synth)").clicked() {
+                    actions.push(RackAction::AddSynth);
+                    ui.close();
+                }
+                if ui
+                    .button("MIDI Out (external synth)")
+                    .on_hover_text(
+                        "Plays its notes on a synth outside Ferrous Lineup: pick where in \
+                     MIDI > Output.",
+                    )
+                    .clicked()
+                {
+                    actions.push(RackAction::AddMidiOut);
+                    ui.close();
+                }
+            });
+        });
+    });
+}
+
+/// A file dropped on a row loads into that channel; anywhere else, into
+/// a new one. Project files are left for the app to open.
+fn load_dropped_files(ui: &Ui, target_row: Option<usize>, actions: &mut Vec<RackAction>) {
     let dropped: Vec<PathBuf> = ui.ctx().input(|input| {
         input
             .raw
@@ -615,8 +736,6 @@ pub fn show(
         let channel = if i == 0 { target_row } else { None };
         actions.push(RackAction::LoadSample { channel, path });
     }
-
-    actions
 }
 
 /// When a pattern has no drum steps but other patterns do, says so, with
