@@ -1928,22 +1928,47 @@ impl eframe::App for LineupApp {
             view::Area::Main.zoom(&ctx, view::Axis::Horizontal),
             view::Area::Main.zoom(&ctx, view::Axis::Vertical),
         );
+        // The chord sheet can take the playlist's place, beside the
+        // pattern picker and the library.
+        self.chord_sheet.remember(&ctx);
+        let sheet_fills = self.chord_sheet.fills_window();
+        let playing = self.song_position().filter(|_| self.playing);
+        let typing = self.live.typing();
+        let practice = self.practice.view();
         let playlist = egui::CentralPanel::default_margins().show(ui, |ui| {
-            self.playlist.show(
-                ui,
-                &self.project,
-                self.pattern,
-                song_position,
-                tried,
-                playlist_zoom,
-            )
+            if sheet_fills {
+                let actions = self
+                    .playlist
+                    .browser(ui, &self.project, self.pattern, tried);
+                let sheet = self.chord_sheet.main(
+                    ui,
+                    &self.project,
+                    playing,
+                    typing,
+                    (practice, self.playlist.library_browser_mut()),
+                );
+                (actions, sheet)
+            } else {
+                let actions = self.playlist.show(
+                    ui,
+                    &self.project,
+                    self.pattern,
+                    song_position,
+                    tried,
+                    playlist_zoom,
+                );
+                (actions, Vec::new())
+            }
         });
         // The windows stay over the playlist, so they never hide the
         // toolbar, the harmony keys or the status bar.
         let area = playlist.response.rect;
-        let playlist_actions = playlist.inner;
+        let (playlist_actions, main_sheet_actions) = playlist.inner;
         for action in playlist_actions {
             self.apply_playlist(action);
+        }
+        for action in main_sheet_actions {
+            self.apply_sheet(action);
         }
 
         // The channel rack and the piano roll float on top of the playlist.
@@ -2045,7 +2070,6 @@ impl eframe::App for LineupApp {
         }
 
         // The chord sheet is drawn last, so it opens over the others.
-        let playing = self.song_position().filter(|_| self.playing);
         let sheet_actions = self.chord_sheet.show(
             &ctx,
             area,
