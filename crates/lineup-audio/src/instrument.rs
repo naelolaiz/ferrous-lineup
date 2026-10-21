@@ -76,17 +76,24 @@ impl Instrument {
     /// Builds the instrument for a channel of the project. Drums are
     /// synthesized and files are loaded here, on the calling thread; a
     /// file that was loaded before comes from `samples`. A synth takes the
-    /// sound of the channel's General MIDI program, and a MIDI Out sends
-    /// the program to the external synth.
+    /// sound of the channel's General MIDI program, a MIDI Out sends the
+    /// program to the external synth, and a drum sent over MIDI sends its
+    /// note of a General MIDI drum set.
     pub fn for_channel(
         channel: &Channel,
         sample_rate: u32,
         samples: &mut SampleCache,
     ) -> Result<Self, SampleError> {
         Ok(match &channel.kind {
-            ChannelKind::Sampler(SampleSource::Builtin(drum)) => {
-                Instrument::Sampler(Sampler::new(Arc::new(drums::render(*drum, sample_rate))))
-            }
+            // A drum sent over MIDI is its note of a General MIDI drum set.
+            ChannelKind::Sampler(SampleSource::Builtin(drum)) => match channel.sent_on {
+                Some(number) => Instrument::MidiOut(
+                    MidiOut::new(number).playing_as(Some(general_midi_drum(*drum))),
+                ),
+                None => {
+                    Instrument::Sampler(Sampler::new(Arc::new(drums::render(*drum, sample_rate))))
+                }
+            },
             ChannelKind::Sampler(SampleSource::File(path)) => {
                 Instrument::Sampler(Sampler::new(samples.get(path)?))
             }
@@ -104,8 +111,8 @@ impl Instrument {
     /// SoundFont has one for it. A synth with a General MIDI program
     /// plays that program, and a built-in drum plays the same drum of
     /// the General MIDI drum kit when `drums` is true. A synth with the
-    /// Lineup Osc's own sound, a sample file and a MIDI Out have nothing
-    /// to play from a SoundFont: for them this is `None`, and
+    /// Lineup Osc's own sound, a sample file, a MIDI Out and a drum sent
+    /// over MIDI have nothing to play from a SoundFont: for them this is `None`, and
     /// [`Instrument::for_channel`] builds them as usual.
     pub fn from_sound_font(
         channel: &Channel,
@@ -115,7 +122,9 @@ impl Instrument {
     ) -> Option<Self> {
         let player = match &channel.kind {
             ChannelKind::Synth => SoundFontPlayer::new(sound_font, sample_rate, channel.program?),
-            ChannelKind::Sampler(SampleSource::Builtin(drum)) if drums => {
+            ChannelKind::Sampler(SampleSource::Builtin(drum))
+                if drums && channel.sent_on.is_none() =>
+            {
                 SoundFontPlayer::drum(sound_font, sample_rate, general_midi_drum(*drum))
             }
             _ => None,
@@ -1226,6 +1235,26 @@ mod tests {
             })
             .collect();
         assert_eq!(pitches, [(true, 9, 36), (false, 9, 36)]);
+    }
+
+    #[test]
+    fn a_drum_channel_sent_over_midi_plays_its_general_midi_note_there() {
+        let mut clap = Channel::drum(lineup_core::Drum::Clap);
+        clap.send_over_midi(3);
+        let mut sent = Instrument::for_channel(&clap, RATE, &mut SampleCache::new()).unwrap();
+        assert!(matches!(sent, Instrument::MidiOut(_)));
+        sent.note_on(STEP_NOTE, 100, 100, RATE);
+        assert!(render(&mut sent, 1_000).iter().all(|&s| s == 0.0));
+        let on = MidiMessage::NoteOn {
+            channel: 3,
+            pitch: Note::new(39),
+            velocity: 100,
+        };
+        let off = MidiMessage::NoteOff {
+            channel: 3,
+            pitch: Note::new(39),
+        };
+        assert_eq!(sent_by(&mut sent), [on, off]);
     }
 
     #[test]

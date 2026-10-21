@@ -480,6 +480,68 @@ fn an_exported_song_keeps_each_channel_where_the_mixer_put_it() {
 }
 
 #[test]
+fn the_mixer_and_the_rack_send_a_drum_over_midi_and_back() {
+    use lineup_core::{Drum, SampleSource};
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    let drum = |screen: &Screen, drum: Drum| {
+        let index = screen
+            .app
+            .project
+            .channels()
+            .iter()
+            .position(|channel| channel.kind == ChannelKind::Sampler(SampleSource::Builtin(drum)))
+            .unwrap();
+        (index, screen.app.project.channels()[index].clone())
+    };
+    // The kick's own row in the mixer.
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let row = text_rect(&output, "Kick").unwrap().center().y;
+    let built_in = text_rect_in_row(&output, "Built-in drum", row).unwrap();
+    screen.click_at(built_in.center(), Modifiers::NONE);
+    screen.click("Send over MIDI");
+    screen.click("10");
+    let (kick, sent) = drum(&screen, Drum::Kick);
+    assert_eq!(sent.sent_over_midi(), Some(9));
+    assert_eq!(sent.name, "Kick", "a drum keeps its name");
+    assert_eq!(screen.app.history.undo_label(), Some("send over MIDI"));
+    // The mixer says which drum of a General MIDI set it plays.
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Bass Drum 1 · MIDI 10").is_some());
+    screen.click("Bass Drum 1 · MIDI 10");
+    screen.click("Play it here instead");
+    assert_eq!(drum(&screen, Drum::Kick).1.sent_over_midi(), None);
+
+    // The rack offers it on a drum's right-click menu too.
+    screen.app.mixer_open = false;
+    screen.app.rack_open = true;
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let name = text_rect(&output, "Snare").unwrap().center();
+    screen.draw(vec![
+        Event::PointerMoved(name),
+        Event::PointerButton {
+            pos: name,
+            button: PointerButton::Secondary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    screen.draw(vec![Event::PointerButton {
+        pos: name,
+        button: PointerButton::Secondary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+    screen.click("Send over MIDI");
+    screen.click("4");
+    assert_eq!(drum(&screen, Drum::Snare).1.sent_over_midi(), Some(3));
+    assert_ne!(drum(&screen, Drum::Snare).0, kick);
+}
+
+#[test]
 fn the_mixer_sends_a_channel_over_midi_and_back() {
     use lineup_core::general_midi::ACOUSTIC_GRAND_PIANO;
     let mut screen = Screen::new();
@@ -497,7 +559,7 @@ fn the_mixer_sends_a_channel_over_midi_and_back() {
     screen.click("Send over MIDI");
     let output = screen.draw(vec![]);
     // The outputs this machine has, if any (Windows always has one).
-    assert!(text_rect(&output, "Output, for every MIDI Out channel").is_some());
+    assert!(text_rect(&output, "Output, for every channel sent over MIDI").is_some());
     let ports = screen.app.live.midi.outputs();
     assert_eq!(
         text_rect(&output, "No outputs found (the MIDI menu looks again)").is_some(),

@@ -133,7 +133,8 @@ impl LineupApp {
                                     }
                                 });
                                 // A synth's instrument is picked here as in
-                                // the rack; a drum or a sample has none.
+                                // the rack. A drum has none, but can be sent
+                                // over MIDI; a sample can't be either.
                                 if matches!(
                                     channel.kind,
                                     ChannelKind::Synth | ChannelKind::MidiOut { .. }
@@ -148,6 +149,15 @@ impl LineupApp {
                                     })
                                     .response
                                     .on_hover_text("Choose the instrument it plays");
+                                } else if channel.can_go_over_midi() {
+                                    ui.menu_button(instrument(channel), |ui| {
+                                        channel_rack::midi_part(ui, index, channel, &mut picked);
+                                    })
+                                    .response
+                                    .on_hover_text(
+                                        "Send it over MIDI, to a synth or a drum machine, as \
+                                         its drum of a General MIDI drum set",
+                                    );
                                 } else {
                                     ui.label(instrument(channel));
                                 }
@@ -241,7 +251,14 @@ fn instrument(channel: &Channel) -> String {
             Some(program) => format!("{} · MIDI {}", general_midi::name(program), midi + 1),
             None => format!("MIDI Out {}", midi + 1),
         },
-        ChannelKind::Sampler(SampleSource::Builtin(_)) => "Built-in drum".to_string(),
+        ChannelKind::Sampler(SampleSource::Builtin(drum)) => match channel.sent_on {
+            Some(midi) => {
+                let note = lineup_core::general_midi_drum(drum).midi();
+                let name = general_midi::drum_name(note).unwrap_or("Drum");
+                format!("{name} · MIDI {}", midi + 1)
+            }
+            None => "Built-in drum".to_string(),
+        },
         ChannelKind::Sampler(SampleSource::File(_)) => "Sample".to_string(),
     }
 }

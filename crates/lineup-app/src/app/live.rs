@@ -410,7 +410,7 @@ impl LineupApp {
         self.live.routes_sent = Some(wanted);
     }
 
-    /// Sends every MIDI Out channel to `port`, or to none.
+    /// Sends every channel sent over MIDI to `port`, or to none.
     pub(super) fn connect_midi_output(&mut self, port: Option<&Port>) {
         if let Err(err) = self.live.midi.connect_output(port) {
             self.message = Some(format!("Could not connect: {err}"));
@@ -490,7 +490,7 @@ impl LineupApp {
             .on_hover_text(
                 "On: every channel plays on the output instead of the speakers, on the MIDI channels File > \
                  Export MIDI uses: drums on channel 10 as a General MIDI drum set, the others \
-                 on 1, 2, 3 and so on. Off: only MIDI Out channels play there.",
+                 on 1, 2, 3 and so on. Off: only the channels sent over MIDI play there.",
             );
         if !self.live.midi.can_send() {
             ui.colored_label(
