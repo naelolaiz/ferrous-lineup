@@ -1076,6 +1076,7 @@ impl LineupApp {
             SheetAction::EndHere(bar) => {
                 self.edit("end the song", |project| project.end_song_at(bar));
             }
+            SheetAction::Bars(edit) => self.edit_bars(edit),
             SheetAction::Seek(step) => self.apply_playlist(PlaylistAction::Seek(step)),
             SheetAction::NoteOn(notes) => self.apply_harmony(HarmonyAction::NoteOn(notes)),
             SheetAction::NoteOff(notes) => self.apply_harmony(HarmonyAction::NoteOff(notes)),
@@ -1200,6 +1201,7 @@ impl LineupApp {
             PlaylistAction::UnrollSection(index) => {
                 self.edit("write out repeats", |project| project.unroll_section(index));
             }
+            PlaylistAction::Bars(edit) => self.edit_bars(edit),
             // Back to the whole song from the same place in it, as the
             // practice bar's loop does.
             PlaylistAction::SetLoop(None) => self.loop_bars(None),
