@@ -1,5 +1,7 @@
-//! Custom widgets for the channel rack: step buttons, knobs, mute lights
-//! and the small piano roll preview.
+//! Custom widgets and the helpers the views share: the channel rack's
+//! step buttons, knobs, mute and lock lights and small piano roll
+//! preview; menus that scroll; which view gets the keyboard; following
+//! the playhead; and where a window opens and how big.
 //!
 //! An egui widget is just a function that reserves some space, reads the
 //! mouse for that space and paints into it. It returns a [`Response`] so

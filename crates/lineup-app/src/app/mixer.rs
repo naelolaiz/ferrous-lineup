@@ -1,4 +1,7 @@
-//! One mixer for every internal instrument and the master reverb.
+//! The mixer window: every channel, in the order of a score's sections,
+//! with its instrument (click it to choose another, or to send the
+//! channel over MIDI), its volume, pan, reverb send and level meter; and
+//! the master volume, reverb and meter.
 
 use eframe::egui::{self, Rect};
 use lineup_core::score_order::score_order;

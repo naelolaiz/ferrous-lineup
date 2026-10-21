@@ -70,8 +70,9 @@ fn decibels(level: f32) -> f32 {
 }
 
 /// How much of a meter is lit for `level`, from 0 (at the floor or
-/// below) to 1 (full scale or more). Decibels, because that is how the
-/// ear hears loudness: each 6 dB is half as loud again.
+/// below) to 1 (full scale or more). Decibels, because the ear hears
+/// loudness by ratios: every 6 dB down halves the level, wherever on the
+/// meter it is.
 fn lit(level: f32) -> f32 {
     if level > 0.0 {
         ((decibels(level) - FLOOR_DB) / -FLOOR_DB).clamp(0.0, 1.0)
