@@ -37,8 +37,8 @@ them as a draft for now.
    Bandoneón, Guitar, Contrabass and Strings are the arrangement's
    other instruments, each on a strip of its own.
 3. Open **Balderrama** and look at the key in the harmony bar: **E
-   Dorian**. Then open the piano roll of the Lead channel and look for
-   C sharp.
+   minor**. Then open the piano roll of the Lead channel at bars 21
+   and 22 and find the C sharps.
 4. Open **Acuarela del río**. Solo **Double bass**, then **Keys**,
    then the drums, and listen to where each one strikes in the bar.
 5. Open **Zamba de mi esperanza** and mute **Lead**. The **Second
@@ -92,14 +92,33 @@ Litoral. Listen to its band, bar by bar:
 
 The bass walks in 3/4 while the drums count 6/8, in the same bar.
 
-### Balderrama: E minor with a raised sixth
+### Balderrama: a chromatic note is not a new mode
 
-**Balderrama** is in E minor, but its tune sings C sharp 24 times and C
-natural only 8. The natural minor scale on E is E F# G A B **C** D.
-With C sharp it becomes E F# G A B **C#** D: the **Dorian** mode, the
-minor scale with a raised sixth, the mode of much of the music of the
-Andes. The introduction of the Misa Criolla's Credo is in A Dorian
-([The Misa Criolla](misa-criolla.md)).
+**Balderrama** is in E minor, the natural minor: E F# G A B **C** D.
+Yet its tune sings C sharp 24 times and C natural only 8. Is it in **E
+Dorian**, E F# G A B **C#** D, the minor scale with a raised sixth?
+
+Look at where the C sharps are. All of them come in one turn of the
+tune, in bars 21 and 22, which comes back five times later in the
+song:
+
+```text
+G A B | D C# C# B  C# B C# E
+```
+
+The tune falls from D to B through C sharp, and then circles round B.
+Under it the band plays a **G major** chord: G, B and D. C sharp is not
+in that chord, and not in E minor: it is a **chromatic passing note**,
+a note from outside the scale that fills the gap between two notes of
+it. The chords themselves keep C natural: where A is the root, the
+band plays A minor, the **iv** of E minor, never A major.
+
+A mode is the scale the harmony lives in, not the notes a tune touches
+on its way. A piece in Dorian would have the raised sixth in its chords
+too, as the introduction of the Misa Criolla's Credo does with its D
+major chord in A minor ([The Misa Criolla](misa-criolla.md)).
+Balderrama keeps its C natural there, so it is in E minor, with a
+little chromatic colour in one phrase.
 
 ### Acuarela del río: one tonic, two modes
 
@@ -125,7 +144,7 @@ pub(super) const BALDERRAMA: Song = Song {
     feel: "Zamba",
     genre: Genre::Folklore,
     tonic: E,
-    mode: Dorian,
+    mode: NaturalMinor,
     time: SIX_EIGHT,
     tempo: 98.0,
     // ...
@@ -259,8 +278,10 @@ fn melodies_are_mostly_in_their_key() {
 
 At least four notes in five of every tune must be in the key of their
 part. `inside * 100 >= total * 80` compares whole numbers, so there is
-no rounding to worry about. Balderrama failed it in E natural minor,
-because of all those C sharps, and passes in E Dorian.
+no rounding to worry about. Balderrama would fail it in E harmonic
+minor, the app's usual minor (228 of 288 notes), because its tune sings
+D natural, the seventh of the natural minor, far more often than D
+sharp. In E natural minor it passes.
 
 ### The chords
 
@@ -299,8 +320,9 @@ lost 10 notes of 2408.
 2. Clap the two groupings of six eighths, 3+3 and 2+2+2, then both at
    once with a friend. Then play **Acuarela del río** and clap along
    with the bass, then with the drums.
-3. Write the E Dorian scale, and the D major scale. What do you notice?
-   Which other scale has the same notes as A Dorian?
+3. Write the scales of E natural minor, E harmonic minor and E
+   Dorian. Which note differs in each? Then play Balderrama's bars 21
+   to 23 and name the chord under the C sharps.
 4. Pick a demo with a chord sheet marked as a draft and check one part
    against a lead sheet. Which chords did the notes alone get wrong?
 5. Rust: `in_key` and `with_tempo` are `const fn` methods that take
