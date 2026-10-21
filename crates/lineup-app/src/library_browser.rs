@@ -1,5 +1,7 @@
 //! The Library tab: searchable accompaniment presets, shown alphabetically
-//! or grouped by family, with optional chord progressions and copy controls.
+//! or grouped by family, with tick boxes that keep only the presets like
+//! the song (its time signature, its speed, bringing chords), and the
+//! choice of what a preset copies into the song.
 //!
 //! Like the other views, it only draws and reads the mouse. A click
 //! returns a [`LibraryAction`], and the app writes the style or rhythm
