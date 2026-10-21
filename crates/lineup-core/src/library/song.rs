@@ -1130,6 +1130,7 @@ pub static SONGS: &[Song] = &[
     classical::LA_DONNA_E_MOBILE,
     classical::JUPITER_HYMN,
     classical::AVE_MARIA,
+    classical::DIE_FORELLE,
     classical::PRELUDE_IN_C_SHARP_MINOR,
     classical::WEDDING_MARCH,
     classical::HALLELUJAH_CHORUS,
