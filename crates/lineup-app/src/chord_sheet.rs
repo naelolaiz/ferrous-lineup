@@ -1,7 +1,9 @@
-//! The chord sheet window: the song's harmony bar by bar, the way a lead
-//! sheet writes it.
+//! The chord sheet: the song's harmony bar by bar, the way a lead sheet
+//! writes it, in a window over the playlist or, with "Fill the window",
+//! in the playlist's place.
 //!
-//! Bars are drawn four to a line, and each section of the playlist
+//! A line holds as many bars as fit with every name at its full size, or
+//! as many as you choose ([`layout`]), and each section of the playlist
 //! (Intro, Verse, Chorus…) starts a new line under its name, so the
 //! sheet reads like a printed chart. So do the parts of the band's form
 //! ([`form`]): the intro, the chorus, between repeat signs when the band
