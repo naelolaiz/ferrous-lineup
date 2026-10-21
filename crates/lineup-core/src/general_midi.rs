@@ -65,6 +65,7 @@ pub const BASSOON: u8 = 70;
 pub const CLARINET: u8 = 71;
 pub const PICCOLO: u8 = 72;
 pub const FLUTE: u8 = 73;
+pub const RECORDER: u8 = 74;
 pub const PAN_FLUTE: u8 = 75;
 pub const SQUARE_LEAD: u8 = 80;
 pub const SAW_LEAD: u8 = 81;
