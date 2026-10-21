@@ -115,6 +115,7 @@
   - [One harmony, four names: chords, sets and micromodes on the chord sheet](step-9/harmony-notations.md)
   - [Styles keep the song's tempo](step-9/style-tempo.md)
   - [The Misa Criolla: a Mass to the dances of Argentina](step-9/misa-criolla.md)
+  - [Tangos and folk songs from MIDI files](step-9/midi-songs.md)
   - [The book online and as a PDF](step-9/book-online.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 
