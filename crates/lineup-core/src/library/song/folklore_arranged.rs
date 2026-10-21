@@ -861,6 +861,188 @@ pub(super) const LA_CULTURA_ES_LA_SONRISA: Song = Song {
             D, F sharp, A and A, C sharp, E in a lilting three, three, two.",
 };
 
+// Copyright: Alfonsina y el mar (Ariel Ramírez and Félix Luna, 1969) is still under
+// copyright (Luna died in 2009, Ramírez in 2010); it is added here at the request of the
+// project's owner.
+// Source: an arrangement for four voices (MIDI, 45 bars of 6/8 in C minor) given by the
+// project's owner, converted by script: each note given back the written length that the
+// sequence cuts to four fifths, quantised to sixteenths, the dynamics from its velocities.
+// The arrangement's second voice from the top sings the tune, except in the second phrase
+// of each verse, where the voice below takes the tune and the second holds long notes:
+// there the two are swapped, so the Lead always sings the tune; "Choir" has the other three
+// voices. The arrangement writes out the first half of the zamba, the introduction, two
+// verses and the chorus; the second half sings verses three and four to the same music, so
+// the demo sings it twice, the introduction coming back as the interlude after the opening
+// upbeat, held again. The chord chart is read from the four voices. The words are left
+// out: the voices sing without them.
+pub(super) const ALFONSINA_Y_EL_MAR: Song = Song {
+    name: "Alfonsina y el mar",
+    origin: "Ariel Ramírez and Félix Luna, 1969",
+    feel: "Zamba",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: HarmonicMinor,
+    time: SIX_EIGHT,
+    tempo: 81.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "Zamba",
+    band: SONG_AND_GUITAR,
+    style: "Zamba",
+    parts: &[
+        // Bars 1-1 of the file.
+        Part::new("Pickup", "!mf F#4:2", "")
+            .in_time(ONE_EIGHT)
+            .played(Comping::Held, Bass::None, "")
+            .with_tempo(&[fermata(0, 2)]),
+        // Bars 2-9 of the file.
+        Part::new(
+            "Intro",
+            "!mf G4:3 Eb4:1 C4 G3 G4:4 E4:2 | F4:3 D4:1 B3 G3 F4:6 | Eb4:3 D4:1 C4:2 D4:6 | \
+            C4 -:4 F#4:2 | G4:3 Eb4:1 C4 G3 G4:4 E4:2 | F4:3 D4:1 B3 G3 F4:6 | \
+            Eb4:3 D4:1 C4:2 D4:6 | C4 -:2 Bb4:1 C5 Db5 C5",
+            "Cm | G7 | Fm7/Ab G | Cm | Cm | G7 | Ab G | Cm",
+        )
+        .with_lines(&[line(
+            "Choir",
+            gm::CHOIR_AAHS,
+            "-:12 | - | !mf F4:6 G4 | Eb4 - | G4:2 G4:4 C5 -:2 | B4 G4:4 G4:6 | \
+                C5:3 B4:1 A4:2 B4:6 | C5:10 -:2 & !mf Eb4:2 -:4 Eb4:2 -:4 | D4:2 -:4 D4:2 -:4 | \
+                C4:6 B3 | C4 -:4 D4:2 | Eb4:3 C4:1 G3:2 Eb4 - C4 | D4:3 Bb3:1 G3:2 D4:6 | \
+                Eb4:3 D4:1 C4:2 D4:6 | C4:8 -:4 & !mf C3:2 C3:4 C3:2 C3:4 | G3:2 G2:4 G2:6 | \
+                Ab2 G2:2 A2 B2 | C3:4 Eb3:1 C3 F3:2 Eb3 D3 | C3 C3:4 C3:2 C3:4 | \
+                G3:2 G2:4 G2:2 A2:1 B2 C3 D3 | Ab2:6 G2:2 A2 B2 | C3 G3 Eb3 C3 -:4",
+        )])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 10-21 of the file.
+        Part::new(
+            "Verse",
+            "!mf Db5:3 !f C5:1 B4:2 C5:4 Bb4:2 | Ab4:6 -:2 F4:1 G4 Ab4 G4 | \
+            Ab4:3 G4:1 F#4:2 G4:4 F4:2 | Eb4:8 C4:1 D4 Eb4 D4 | Eb4:3 D4:1 Eb4:2 F4:3 Eb4:1 F4:2 | \
+            G4:3 F4:1 Eb4:2 F4:3 Eb4:1 D4:2 | Eb4:3 D4:1 C4:2 D4:6 | C4 -:2 !ff F4:1 G4 Ab4 G4 | \
+            Ab4:3 !f G4:1 Ab4:2 D5:4 C5:2 | G4:3 F4:1 Eb4:2 F4:6 | Eb4:3 D4:1 C4:2 !mf D4:6 | \
+            !mp C4 -:2 !f Bb4:1 C5 Db5 C5",
+            "Bbm C7/G | Fm | Dm7b5/F G7/D | Cm | F7sus4 Bb7 | Ebmaj7 G7sus4/D | Cm/G G7 | C7 | \
+            Bb7 Bbaug | Eb Dm7b5 | Cm/G G | Cm",
+        )
+        .with_lines(&[line(
+            "Choir",
+            gm::CHOIR_AAHS,
+            "!mp Db5:4 Db5:2 C5:4 C5:2 | C5:10 -:2 | Ab4:4 Ab4:2 G4:4 G4:2 | G4:10 -:2 | \
+                C5:6 D5 | D5 C5 | _ B4 | Bb4 -:2 !f F5:1 F5 F5 Eb5 | D5:3 D5:1 D5:2 Bb4:4 Bb4:2 | \
+                Bb4:3 Bb4:1 Bb4:2 Ab4:6 | G4:3 G4:1 G4:2 G4:6 | \
+                C5 - & !mf F4:4 !mp F4:2 E4:4 E4:2 | G4:4 F4:5 -:3 | D4:4 C4:2 B3:4 B3:2 | \
+                D4:4 C4 - | Bb4:6 Ab4 | Ab4 G4 | _ F4 | E4 -:2 !f F4:1 G4 Ab4 G4 | \
+                F4:3 !ff F4:1 F4:2 F#4:4 F#4:2 | G4:3 F4:1 Eb4:2 C4:6 | C4:3 C4:1 C4:2 C4:4 B3:2 | \
+                C4:6 - & !mp Bb3:4 Ab3:2 !mf G3:4 !mp G3:2 | F3:10 -:2 | F3:4 Eb3:2 D3:4 D3:2 | \
+                C3:10 -:2 | F3:6 Bb2 | Eb3 D3 | G3 G2 | C3 -:2 !f F3:1 F3 F3 F3 | \
+                Bb3:3 Bb3:1 Bb3:2 Bb2:4 Bb2:2 | Eb3:3 Eb3:1 Eb3:2 D3:6 | G3:3 G3:1 G3:2 G2:6 | \
+                C3 -",
+        )])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 22-33 of the file.
+        Part::new(
+            "Verse again",
+            "!f Db5:3 C5:1 B4:2 C5:4 Bb4:2 | Ab4:6 -:2 F4:1 G4 Ab4 G4 | \
+            Ab4:3 G4:1 F#4:2 G4:4 F4:2 | Eb4:8 C4:1 D4 Eb4 D4 | Eb4:3 D4:1 Eb4:2 F4:3 Eb4:1 F4:2 | \
+            G4:3 F4:1 Eb4:2 F4:3 !ff Eb4:1 D4:2 | Eb4:3 D4:1 C4:2 D4:6 | \
+            C4 -:2 !f F4:1 G4 Ab4 G4 | Ab4:3 G4:1 Ab4:2 D5:4 C5:2 | G4:3 F4:1 Eb4:2 F4:6 | \
+            Eb4:3 D4:1 !ff C4:2 D4:6 | !f C4 -:2 C5:1 D5 Eb5 D5",
+            "Bbm C7/G | Fm | Dm7b5/F G7/D | Cm | F7sus4 Bb7 | Ebmaj7 G7sus4/D | Cm/G G7 | C7 | \
+            Bb7 Bbaug | Eb Dm7b5 | Cm/G G | Cm",
+        )
+        .with_lines(&[line(
+            "Choir",
+            gm::CHOIR_AAHS,
+            "!mp Db5:4 Db5:2 C5:4 C5:2 | C5:10 -:2 | Ab4:4 Ab4:2 G4:4 G4:2 | G4:10 -:2 | \
+                C5:6 D5 | D5 C5 | _ B4 | Bb4 -:2 !f F5:1 F5 F5 Eb5 | D5:3 D5:1 D5:2 Bb4:4 Bb4:2 | \
+                Bb4:3 Bb4:1 Bb4:2 Ab4:6 | !ff G4:3 G4:1 G4:2 G4:6 | \
+                C5 -:2 C5:1 C5 C5 C5 & !ff F4:4 !mp F4:2 E4:4 E4:2 | G4:4 F4:5 -:3 | \
+                D4:4 C4:2 B3:4 B3:2 | D4:4 C4 - | Bb4:6 Ab4 | Ab4 G4 | _ F4 | \
+                E4 -:2 !ff F4:1 G4 Ab4 G4 | F4:3 F4:1 F4:2 F#4:4 F#4:2 | G4:3 F4:1 Eb4:2 C4:6 | \
+                C4:3 C4:1 C4:2 C4:4 B3:2 | \
+                C4:6 -:2 C5:1 C5 C5 Bb4 & !mp Bb3:4 Ab3:2 !mf G3:4 !mp G3:2 | F3:10 -:2 | \
+                !mf F3:4 Eb3:2 D3:4 D3:2 | C3:10 -:2 | F3:6 Bb2 | Eb3 D3 | G3 G2 | \
+                C3 -:2 !f F3:1 F3 F3 F3 | Bb3:3 Bb3:1 Bb3:2 Bb2:4 Bb2:2 | Eb3:3 Eb3:1 Eb3:2 D3:6 | \
+                G3:3 G3:1 G3:2 G2:6 | C3 -",
+        )])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 34-45 of the file.
+        Part::new(
+            "Chorus",
+            "!f Eb5:3 D5:1 Eb5:2 F5 D5 Bb4 | G4:6 -:2 !ff G4:1 Ab4 Bb4 C5 | \
+            Db5:3 C5:1 Bb4:2 Ab4:4 G4:2 | C5:6 -:2 F4:1 G4 Ab4 G4 | F4:3 C5:1 Bb4:2 Ab4 G4 F4 | \
+            Eb4:3 C5:1 B4:2 D5 C5 B4 | _:3 D5:1 C#5:2 Eb5 D5 Db5 | _:4 C5 C5:2 Bb4 | \
+            Ab4:3 C5:1 Bb4:2 Ab4 G4 F4 | G4:4 F#4:1 G4 Ab4:4 G4:1 !f Ab4 | \
+            A4:4 !mf G4:1 A4 B4:4 A4:1 B4 | !ff C5:10 !mf F#4:2",
+            "Fm7 Bb7 | Eb | Gm7b5 Gm7b5 C7 | Fm | Fm | Cm G7 | G7 G7 G7 G7 G7 Bbm7 | \
+            Bbm7 C7/Bb C7/Bb | Fm/Ab | Cm/Eb Ab/Eb | D G7 | Cm",
+        )
+        .with_lines(&[line(
+            "Choir",
+            gm::CHOIR_AAHS,
+            "!ff C5:3 C5:1 C5:2 D5 Bb4 Bb4 | Bb4:10 -:2 | Bb4:4 Bb4 Bb4 | Ab4:10 -:2 | -:12 | \
+                -:4 D5:2 F5 Eb5 D5 | _:3 F5:1 E5:2 G5 F5 F5 | _:4 E5:5 -:3 | -:12 | \
+                -:5 C5:1 C5:4 C5:1 C5 | F#5:4 F#5:1 F#5 F5:4 F5:1 F5 | Eb5:12 & -:12 | - | - | - | \
+                - | -:11 !ff Eb5:1 | -:12 | - | - | - | - | - & !ff Ab4:3 Ab4:1 Ab4:2 Ab4 F4 D4 | \
+                F4:4 Eb4:5 -:3 | F4:4 F4 E4 | G4 F4 F4:1 G4 Ab4 G4 | F4:3 Ab4:1 G4:2 F4 Eb4 D4 | \
+                !mf C4:3 G4:1 !ff G4:2 G4 G4 G4 | _:3 G4:1 G4:2 G4 G4 Ab4 | _:4 G4:5 -:3 | \
+                - Ab4:1 G4:2 F4 Eb4 D4 | Eb4:4 Eb4:1 Eb4 Eb4:4 Eb4:1 Eb4 | \
+                D4:4 D4:1 D4 G4:4 G4:1 G4 | G4:12 & !f F3:4 F3:2 Bb2:4 Bb2:2 | !ff Eb3:10 -:2 | \
+                G3:4 G3 C3 | F3:10 -:2 | -:12 | - | -:3 G3:1 G3:2 G3 - Bb3 | _:4 Bb3:5 -:3 | \
+                -:12 | - | -:5 D4:1 D4:2 G3 D4 | D4 C4 G3 C3:6",
+        )])
+        .played(Comping::Held, Bass::None, "")
+        .with_tempo(&[fermata(142, 2)]),
+        // Bars 34-45 of the file.
+        Part::new(
+            "Chorus, last time",
+            "!f Eb5:3 D5:1 Eb5:2 F5 D5 Bb4 | G4:6 -:2 !ff G4:1 Ab4 Bb4 C5 | \
+            Db5:3 C5:1 Bb4:2 Ab4:4 G4:2 | C5:6 -:2 F4:1 G4 Ab4 G4 | F4:3 C5:1 Bb4:2 Ab4 G4 F4 | \
+            Eb4:3 C5:1 B4:2 D5 C5 B4 | _:3 D5:1 C#5:2 Eb5 D5 Db5 | _:4 C5 C5:2 Bb4 | \
+            Ab4:3 C5:1 Bb4:2 Ab4 G4 F4 | G4:4 F#4:1 G4 Ab4:4 G4:1 !f Ab4 | \
+            A4:4 !mf G4:1 A4 B4:4 A4:1 B4 | !ff C5:12",
+            "Fm7 Bb7 | Eb | Gm7b5 Gm7b5 C7 | Fm | Fm | Cm G7 | G7 G7 G7 G7 G7 Bbm7 | \
+            Bbm7 C7/Bb C7/Bb | Fm/Ab | Cm/Eb Ab/Eb | D G7 | Cm",
+        )
+        .with_lines(&[line(
+            "Choir",
+            gm::CHOIR_AAHS,
+            "!ff C5:3 C5:1 C5:2 D5 Bb4 Bb4 | Bb4:10 -:2 | Bb4:4 Bb4 Bb4 | Ab4:10 -:2 | -:12 | \
+                -:4 D5:2 F5 Eb5 D5 | _:3 F5:1 E5:2 G5 F5 F5 | _:4 E5:5 -:3 | -:12 | \
+                -:5 C5:1 C5:4 C5:1 C5 | F#5:4 F#5:1 F#5 F5:4 F5:1 F5 | Eb5:12 & -:12 | - | - | - | \
+                - | -:11 !ff Eb5:1 | -:12 | - | - | - | - | - & !ff Ab4:3 Ab4:1 Ab4:2 Ab4 F4 D4 | \
+                F4:4 Eb4:5 -:3 | F4:4 F4 E4 | G4 F4 F4:1 G4 Ab4 G4 | F4:3 Ab4:1 G4:2 F4 Eb4 D4 | \
+                !mf C4:3 G4:1 !ff G4:2 G4 G4 G4 | _:3 G4:1 G4:2 G4 G4 Ab4 | _:4 G4:5 -:3 | \
+                - Ab4:1 G4:2 F4 Eb4 D4 | Eb4:4 Eb4:1 Eb4 Eb4:4 Eb4:1 Eb4 | \
+                D4:4 D4:1 D4 G4:4 G4:1 G4 | G4:12 & !f F3:4 F3:2 Bb2:4 Bb2:2 | !ff Eb3:10 -:2 | \
+                G3:4 G3 C3 | F3:10 -:2 | -:12 | - | -:3 G3:1 G3:2 G3 - Bb3 | _:4 Bb3:5 -:3 | \
+                -:12 | - | -:5 D4:1 D4:2 G3 D4 | D4 C4 G3 C3:6",
+        )])
+        .played(Comping::Held, Bass::None, ""),
+    ],
+    form: &[
+        "Pickup",
+        "Intro",
+        "Verse",
+        "Verse again",
+        "Chorus",
+        "Intro",
+        "Verse",
+        "Verse again",
+        "Chorus, last time",
+    ],
+    drums_from: 0,
+    about: "Ariel Ramírez and Félix Luna's zamba for Mercedes Sosa, about the poet Alfonsina \
+            Storni, who walked into the sea at Mar del Plata in 1938. Here it is sung by a \
+            choir in four parts, in C minor. The introduction rises from F sharp, the lower \
+            neighbour of G, to G and falls down the C minor chord. Each verse turns to the \
+            relative major, E flat, through B flat seventh and B flat augmented, whose F \
+            sharp rises to G. The chorus reaches F minor through G half-diminished and C \
+            seventh, and ends on D major and G seventh: the melodic minor's A and B climb to \
+            the tonic.",
+};
+
 // Written out from an arrangement for solo guitar (MIDI, 26 bars of 6/8): the tune is its top line.
 pub(super) const EL_NOI_DE_LA_MARE: Song = Song {
     name: "El Noi de la Mare",
