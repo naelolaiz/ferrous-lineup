@@ -812,6 +812,7 @@ mod rock;
 mod soul;
 mod tango;
 mod tango_arranged;
+mod tango_played;
 
 /// All the songs, sorted by genre in the order of [`Genre::ALL`].
 pub static SONGS: &[Song] = &[
@@ -961,6 +962,7 @@ pub static SONGS: &[Song] = &[
     latin::RODA_YOYO,
     latin::DONA_ADELAIDE,
     latin::GAROTA_DE_IPANEMA,
+    folklore_arranged::QUE_NADIE_SEPA_MI_SUFRIR,
     tango::HABANERA,
     tango::TANGO_DEL_TELAR,
     tango::MILONGA_DEL_RIO,
@@ -988,6 +990,23 @@ pub static SONGS: &[Song] = &[
     tango_arranged::MI_NOCHE_TRISTE,
     tango_arranged::SENTIMIENTO_GAUCHO,
     tango_arranged::ZORRO_GRIS,
+    tango_played::UNO,
+    tango_played::SUR,
+    tango_played::SOLEDAD,
+    tango_played::NOSTALGIAS,
+    tango_played::PASIONAL,
+    tango_played::PATOTERO_SENTIMENTAL,
+    tango_played::QUE_FALTA_QUE_ME_HACES,
+    tango_played::QUE_ME_VAN_A_HABLAR_DE_AMOR,
+    tango_played::MARIONETAS,
+    tango_played::TIEMPOS_VIEJOS,
+    tango_played::YIRA_YIRA,
+    tango_played::LOS_MAREADOS,
+    tango_played::MANO_A_MANO,
+    tango_played::LA_CASITA_DE_MIS_VIEJOS,
+    tango_played::LLUVIA_DE_ESTRELLAS,
+    tango_played::LA_PULPERA_DE_SANTA_LUCIA,
+    tango_played::MALENA,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,
@@ -1038,6 +1057,10 @@ pub static SONGS: &[Song] = &[
     folklore_arranged::CINCO_SIGLOS_IGUAL,
     folklore_arranged::LA_CULTURA_ES_LA_SONRISA,
     folklore_arranged::ALFONSINA_Y_EL_MAR,
+    folklore_arranged::ZAMBA_DE_MI_ESPERANZA,
+    folklore_arranged::ZAMBA_POR_VOS,
+    folklore_arranged::BALDERRAMA,
+    folklore_arranged::ACUARELA_DEL_RIO,
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
