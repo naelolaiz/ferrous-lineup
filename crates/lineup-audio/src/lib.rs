@@ -6,7 +6,8 @@
 //!   from a SoundFont file, [`drums`] synthesizes the built-in drum kit and [`dsp`]
 //!   has the small filters and smoothers they share. They are plain
 //!   structs that compute samples, so they can be tested without a sound card.
-//! - `metronome` makes the metronome's clicks and times the count-in.
+//! - `metronome` makes the metronome's clicks and times the count-in, and
+//!   `reverb` is the master reverb each channel sends to.
 //! - [`sample`] loads WAV files.
 //! - [`phrase`] plays a few notes apart from the song, on instruments of
 //!   their own: the questions of the ear training.
@@ -17,6 +18,8 @@
 //!   a song as a WAV file.
 //! - [`trace`] writes down every note the audio thread plays, to check
 //!   playback by reading instead of listening.
+//! - [`levels`] measures how loud each channel and the master play, for
+//!   the mixer's meters.
 
 pub mod drums;
 pub mod dsp;
