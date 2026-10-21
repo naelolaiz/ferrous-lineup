@@ -800,52 +800,12 @@ impl AudioThread {
     pub(crate) fn apply(&mut self, command: Command) {
         match command {
             Command::Play => self.begin_play(),
-            Command::Seek(step) => {
-                self.start = step;
-                self.pending.clear();
-                if self.counting.is_some() {
-                    // Counted again, into the bar playback now starts in.
-                    self.begin_play();
-                }
-                if self.playing {
-                    // Notes that were playing would otherwise hang on
-                    // until the end they will now never reach.
-                    for channel in &mut self.channels {
-                        channel.instrument.release_all();
-                    }
-                    if let Some(trace) = &mut self.trace {
-                        trace.jumped(self.now, step);
-                    }
-                    self.sequencer.start_at(step);
-                }
-            }
+            Command::Seek(step) => self.seek(step),
             Command::Stop => {
                 self.end_overlay();
                 self.stop();
             }
-            Command::SetMode(mode) => {
-                self.end_overlay();
-                self.mode = mode;
-                self.pending.clear();
-                self.update_loop_length();
-                self.start = 0;
-                self.sequencer.reset();
-                // As after a seek: the notes of the old loop would hang
-                // on over the new one until ends they will never reach.
-                if self.playing {
-                    for channel in &mut self.channels {
-                        channel.instrument.release_all();
-                    }
-                    // The steps from now on are another loop's.
-                    if let Some(trace) = &mut self.trace {
-                        trace.cut(self.now, None, |_| false);
-                    }
-                    self.trace_play(0);
-                }
-                if self.counting.is_some() {
-                    self.begin_play();
-                }
-            }
+            Command::SetMode(mode) => self.set_mode(mode),
             Command::SelectPattern(pattern) => {
                 self.pattern = pattern;
                 self.update_loop_length();
@@ -866,109 +826,27 @@ impl AudioThread {
             }
             Command::SetMasterVolume(volume) => self.master_volume.set(volume),
             Command::SetReverb(settings) => self.reverb.configure(settings),
-            Command::InsertPattern { index, length } => {
-                if self.pattern_lengths.len() < MAX_PATTERNS {
-                    let index = index.min(self.pattern_lengths.len());
-                    self.pattern_lengths.insert(index, length);
-                    for channel in &mut self.channels {
-                        channel.notes.insert_empty(index);
-                    }
-                    self.update_loop_length();
-                    self.overlay_moved(|pattern| Some(pattern + usize::from(pattern >= index)));
-                }
-            }
-            Command::RemovePattern(pattern) => {
-                if pattern < self.pattern_lengths.len() {
-                    self.pattern_lengths.remove(pattern);
-                    for index in 0..self.channels.len() {
-                        if let Some(notes) = self.channels[index].notes.remove(pattern) {
-                            self.throw_away(Garbage::Notes(notes));
-                        }
-                    }
-                    self.update_loop_length();
-                    let removed = pattern;
-                    self.overlay_moved(|pattern| match pattern.cmp(&removed) {
-                        std::cmp::Ordering::Less => Some(pattern),
-                        std::cmp::Ordering::Equal => None,
-                        std::cmp::Ordering::Greater => Some(pattern - 1),
-                    });
-                }
-            }
+            Command::InsertPattern { index, length } => self.insert_pattern(index, length),
+            Command::RemovePattern(pattern) => self.remove_pattern(pattern),
             Command::SetPatternLength { pattern, length } => {
                 if let Some(slot) = self.pattern_lengths.get_mut(pattern) {
                     *slot = length;
                     self.update_loop_length();
                 }
             }
-            Command::SetSong { plays, length } => {
-                let old = std::mem::replace(&mut self.plays, plays);
-                self.throw_away(Garbage::Song(old));
-                self.song_length = length;
-                self.update_loop_length();
-                if self.playing && self.mode == PlayMode::Song {
-                    self.release_notes_left_out();
-                }
-            }
+            Command::SetSong { plays, length } => self.set_song(plays, length),
             Command::InsertChannel {
                 index,
                 instrument,
                 notes,
                 volume,
                 muted,
-            } => {
-                let channel = ChannelState {
-                    instrument,
-                    notes,
-                    volume: Smoothed::new(volume, VOLUME_SMOOTHING, self.sample_rate),
-                    muted,
-                    // In the middle, all of it in the reverb, until a
-                    // `SetPan` or `SetReverbSend` says otherwise.
-                    pan: Smoothed::new(0.0, VOLUME_SMOOTHING, self.sample_rate),
-                    reverb_send: Smoothed::new(1.0, VOLUME_SMOOTHING, self.sample_rate),
-                    peak: 0.0,
-                };
-                if self.channels.len() < MAX_CHANNELS {
-                    // The channels are about to move, and `live_keys`
-                    // and the notes waiting to start know them by position.
-                    self.release_live_keys();
-                    self.pending.clear();
-                    // `insert` moves the channels after `index` along by
-                    // one, inside the room reserved up front.
-                    let index = index.min(self.channels.len());
-                    self.channels.insert(index, channel);
-                    if let Some(trace) = &mut self.trace {
-                        trace.channel_inserted(index);
-                    }
-                } else {
-                    self.throw_away(Garbage::Channel(channel));
-                }
-            }
-            Command::RemoveChannel(index) => {
-                if index < self.channels.len() {
-                    self.release_live_keys();
-                    self.pending.clear();
-                    let mut removed = self.channels.remove(index);
-                    silence(&mut removed.instrument, &mut self.midi_out);
-                    if let Some(trace) = &mut self.trace {
-                        trace.channel_removed(self.now, index);
-                    }
-                    self.throw_away(Garbage::Channel(removed));
-                }
-            }
+            } => self.insert_channel(index, instrument, notes, volume, muted),
+            Command::RemoveChannel(index) => self.remove_channel(index),
             Command::SetInstrument {
                 channel,
                 instrument,
-            } => match self.channels.get_mut(channel) {
-                Some(state) => {
-                    let mut old = std::mem::replace(&mut state.instrument, instrument);
-                    silence(&mut old, &mut self.midi_out);
-                    if let Some(trace) = &mut self.trace {
-                        trace.cut(self.now, Some(channel), |_| false);
-                    }
-                    self.throw_away(Garbage::Instrument(old));
-                }
-                None => self.throw_away(Garbage::Instrument(instrument)),
-            },
+            } => self.set_instrument(channel, instrument),
             Command::SetNotes {
                 pattern,
                 channel,
@@ -995,20 +873,7 @@ impl AudioThread {
                     state.reverb_send.set(send);
                 }
             }
-            Command::SetMuted { channel, muted } => {
-                if let Some(state) = self.channels.get_mut(channel) {
-                    state.muted = muted;
-                    if muted {
-                        // Every note of the song on this channel stops,
-                        // and those about to start never do.
-                        state.instrument.release_unless(|_| false);
-                        self.pending.retain(|note| note.channel != channel);
-                        if let Some(trace) = &mut self.trace {
-                            trace.cut(self.now, Some(channel), |_| false);
-                        }
-                    }
-                }
-            }
+            Command::SetMuted { channel, muted } => self.set_muted(channel, muted),
             Command::Preview(channel) => self.preview(channel, STEP_NOTE),
             Command::PreviewNote { channel, pitch } => self.preview(channel, pitch),
             Command::Live(message) => self.play_live(message),
@@ -1028,29 +893,7 @@ impl AudioThread {
             }
             Command::SetMetronome(on) => self.metronome = on,
             Command::SetCountIn(on) => self.count_in = on,
-            Command::Clear => {
-                self.end_overlay();
-                self.stop();
-                self.reverb.clear();
-                self.start = 0;
-                // `pop` takes the last channel out of the list; `while let`
-                // keeps going until there are none left.
-                while let Some(mut channel) = self.channels.pop() {
-                    silence(&mut channel.instrument, &mut self.midi_out);
-                    self.throw_away(Garbage::Channel(channel));
-                }
-                // `clear` empties the list but keeps its memory: nothing is freed.
-                self.pattern_lengths.clear();
-                let old = std::mem::take(&mut self.plays);
-                self.throw_away(Garbage::Song(old));
-                let old = std::mem::take(&mut self.song_tempos);
-                self.throw_away(Garbage::Tempos(old));
-                let old = std::mem::take(&mut self.song_clicks);
-                self.throw_away(Garbage::Clicks(old));
-                self.song_length = 0;
-                self.pattern = 0;
-                self.update_loop_length();
-            }
+            Command::Clear => self.clear(),
             Command::PlayPhrase(phrase) => {
                 if let Some(old) = self.phrase.replace(phrase) {
                     self.throw_away(Garbage::Phrase(old));
@@ -1061,23 +904,229 @@ impl AudioThread {
                     phrase.stop();
                 }
             }
-            Command::SetOverlay(Some(pattern)) => {
-                if self.mode == PlayMode::Song {
-                    let overlay = self.overlay.get_or_insert_default();
-                    let playing = overlay.playing.map(|(playing, _)| playing);
-                    overlay.coming = (playing != Some(pattern)).then_some(pattern);
-                }
-            }
+            Command::SetOverlay(Some(pattern)) => self.set_overlay(pattern),
             Command::SetOverlay(None) => self.end_overlay(),
-            Command::SetTrace(trace) => {
-                if let Some(old) = std::mem::replace(&mut self.trace, trace) {
-                    self.throw_away(Garbage::Trace(old));
-                }
-                // A trace started while playing starts where playback is.
-                if self.playing {
-                    self.trace_play(self.sequencer.position() as usize);
+            Command::SetTrace(trace) => self.set_trace(trace),
+        }
+    }
+
+    /// Moves playback to `step`: counted in again if a count-in is
+    /// running, and on from there at once if playing.
+    fn seek(&mut self, step: usize) {
+        self.start = step;
+        self.pending.clear();
+        if self.counting.is_some() {
+            // Counted again, into the bar playback now starts in.
+            self.begin_play();
+        }
+        if self.playing {
+            // Notes that were playing would otherwise hang on
+            // until the end they will now never reach.
+            for channel in &mut self.channels {
+                channel.instrument.release_all();
+            }
+            if let Some(trace) = &mut self.trace {
+                trace.jumped(self.now, step);
+            }
+            self.sequencer.start_at(step);
+        }
+    }
+
+    /// Plays the selected pattern or the song from now on, from the top.
+    fn set_mode(&mut self, mode: PlayMode) {
+        self.end_overlay();
+        self.mode = mode;
+        self.pending.clear();
+        self.update_loop_length();
+        self.start = 0;
+        self.sequencer.reset();
+        // As after a seek: the notes of the old loop would hang
+        // on over the new one until ends they will never reach.
+        if self.playing {
+            for channel in &mut self.channels {
+                channel.instrument.release_all();
+            }
+            // The steps from now on are another loop's.
+            if let Some(trace) = &mut self.trace {
+                trace.cut(self.now, None, |_| false);
+            }
+            self.trace_play(0);
+        }
+        if self.counting.is_some() {
+            self.begin_play();
+        }
+    }
+
+    /// Adds an empty pattern of `length` steps at `index`, moving the
+    /// patterns from there on up by one, if there is room for it.
+    fn insert_pattern(&mut self, index: usize, length: usize) {
+        if self.pattern_lengths.len() < MAX_PATTERNS {
+            let index = index.min(self.pattern_lengths.len());
+            self.pattern_lengths.insert(index, length);
+            for channel in &mut self.channels {
+                channel.notes.insert_empty(index);
+            }
+            self.update_loop_length();
+            self.overlay_moved(|pattern| Some(pattern + usize::from(pattern >= index)));
+        }
+    }
+
+    /// Takes pattern `pattern` away, with its notes in every channel,
+    /// moving the patterns after it down by one.
+    fn remove_pattern(&mut self, pattern: usize) {
+        if pattern < self.pattern_lengths.len() {
+            self.pattern_lengths.remove(pattern);
+            for index in 0..self.channels.len() {
+                if let Some(notes) = self.channels[index].notes.remove(pattern) {
+                    self.throw_away(Garbage::Notes(notes));
                 }
             }
+            self.update_loop_length();
+            let removed = pattern;
+            self.overlay_moved(|pattern| match pattern.cmp(&removed) {
+                std::cmp::Ordering::Less => Some(pattern),
+                std::cmp::Ordering::Equal => None,
+                std::cmp::Ordering::Greater => Some(pattern - 1),
+            });
+        }
+    }
+
+    /// Takes the song's new clips, `plays`, and its length in steps.
+    fn set_song(&mut self, plays: Vec<Play>, length: usize) {
+        let old = std::mem::replace(&mut self.plays, plays);
+        self.throw_away(Garbage::Song(old));
+        self.song_length = length;
+        self.update_loop_length();
+        if self.playing && self.mode == PlayMode::Song {
+            self.release_notes_left_out();
+        }
+    }
+
+    /// Adds a channel at position `index`, if there is room for it.
+    fn insert_channel(
+        &mut self,
+        index: usize,
+        instrument: Instrument,
+        notes: ChannelNotes,
+        volume: f32,
+        muted: bool,
+    ) {
+        let channel = ChannelState {
+            instrument,
+            notes,
+            volume: Smoothed::new(volume, VOLUME_SMOOTHING, self.sample_rate),
+            muted,
+            // In the middle, all of it in the reverb, until a
+            // `SetPan` or `SetReverbSend` says otherwise.
+            pan: Smoothed::new(0.0, VOLUME_SMOOTHING, self.sample_rate),
+            reverb_send: Smoothed::new(1.0, VOLUME_SMOOTHING, self.sample_rate),
+            peak: 0.0,
+        };
+        if self.channels.len() < MAX_CHANNELS {
+            // The channels are about to move, and `live_keys`
+            // and the notes waiting to start know them by position.
+            self.release_live_keys();
+            self.pending.clear();
+            // `insert` moves the channels after `index` along by
+            // one, inside the room reserved up front.
+            let index = index.min(self.channels.len());
+            self.channels.insert(index, channel);
+            if let Some(trace) = &mut self.trace {
+                trace.channel_inserted(index);
+            }
+        } else {
+            self.throw_away(Garbage::Channel(channel));
+        }
+    }
+
+    /// Takes channel `index` away, silencing what it was playing.
+    fn remove_channel(&mut self, index: usize) {
+        if index < self.channels.len() {
+            self.release_live_keys();
+            self.pending.clear();
+            let mut removed = self.channels.remove(index);
+            silence(&mut removed.instrument, &mut self.midi_out);
+            if let Some(trace) = &mut self.trace {
+                trace.channel_removed(self.now, index);
+            }
+            self.throw_away(Garbage::Channel(removed));
+        }
+    }
+
+    /// Gives `channel` a new instrument, silencing the old one.
+    fn set_instrument(&mut self, channel: usize, instrument: Instrument) {
+        match self.channels.get_mut(channel) {
+            Some(state) => {
+                let mut old = std::mem::replace(&mut state.instrument, instrument);
+                silence(&mut old, &mut self.midi_out);
+                if let Some(trace) = &mut self.trace {
+                    trace.cut(self.now, Some(channel), |_| false);
+                }
+                self.throw_away(Garbage::Instrument(old));
+            }
+            None => self.throw_away(Garbage::Instrument(instrument)),
+        }
+    }
+
+    /// Mutes or unmutes `channel`.
+    fn set_muted(&mut self, channel: usize, muted: bool) {
+        if let Some(state) = self.channels.get_mut(channel) {
+            state.muted = muted;
+            if muted {
+                // Every note of the song on this channel stops,
+                // and those about to start never do.
+                state.instrument.release_unless(|_| false);
+                self.pending.retain(|note| note.channel != channel);
+                if let Some(trace) = &mut self.trace {
+                    trace.cut(self.now, Some(channel), |_| false);
+                }
+            }
+        }
+    }
+
+    /// Stops and throws everything away, for another project.
+    fn clear(&mut self) {
+        self.end_overlay();
+        self.stop();
+        self.reverb.clear();
+        self.start = 0;
+        // `pop` takes the last channel out of the list; `while let`
+        // keeps going until there are none left.
+        while let Some(mut channel) = self.channels.pop() {
+            silence(&mut channel.instrument, &mut self.midi_out);
+            self.throw_away(Garbage::Channel(channel));
+        }
+        // `clear` empties the list but keeps its memory: nothing is freed.
+        self.pattern_lengths.clear();
+        let old = std::mem::take(&mut self.plays);
+        self.throw_away(Garbage::Song(old));
+        let old = std::mem::take(&mut self.song_tempos);
+        self.throw_away(Garbage::Tempos(old));
+        let old = std::mem::take(&mut self.song_clicks);
+        self.throw_away(Garbage::Clicks(old));
+        self.song_length = 0;
+        self.pattern = 0;
+        self.update_loop_length();
+    }
+
+    /// Plays `pattern` over the song from its next bar line, while the
+    /// song plays (see [`Command::SetOverlay`]).
+    fn set_overlay(&mut self, pattern: usize) {
+        if self.mode == PlayMode::Song {
+            let overlay = self.overlay.get_or_insert_default();
+            let playing = overlay.playing.map(|(playing, _)| playing);
+            overlay.coming = (playing != Some(pattern)).then_some(pattern);
+        }
+    }
+
+    /// Starts or stops writing down what plays.
+    fn set_trace(&mut self, trace: Option<Box<Tracer>>) {
+        if let Some(old) = std::mem::replace(&mut self.trace, trace) {
+            self.throw_away(Garbage::Trace(old));
+        }
+        // A trace started while playing starts where playback is.
+        if self.playing {
+            self.trace_play(self.sequencer.position() as usize);
         }
     }
 

@@ -5,7 +5,8 @@
 //! side (Alt+F8) and the harmony keys along the bottom (F8). The chord
 //! sheet, the channel rack, the piano roll and the mixer are windows on
 //! top of it, opened with F5, F6, F7 and F9, and F1 lists every keyboard
-//! shortcut. Opening and saving files lives in the
+//! shortcut. The chord sheet can also take the playlist's place ("Fill
+//! the window"). Opening and saving files lives in the
 //! [`files`] module, undo and redo in [`edit`], saving the song as a WAV
 //! or MIDI file in [`export`], and playing and recording on a keyboard in
 //! [`live`], and the count-in, metronome and practice speed in
@@ -1836,108 +1837,120 @@ impl LineupApp {
     }
 }
 
-impl eframe::App for LineupApp {
-    /// Called by eframe every time the window needs to be redrawn.
-    /// egui is "immediate mode": we describe the whole UI on every call.
-    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        if let Audio::Running(engine) = &mut self.audio {
-            engine.collect_garbage();
-        }
-        self.check_trace();
-        let ctx = ui.ctx().clone();
+/// The parts of a frame, in the order [`LineupApp::ui`] draws them.
+impl LineupApp {
+    /// What is done before anything is drawn: the settings every view
+    /// reads, the keyboard, MIDI and files coming in, and the work
+    /// running in the background.
+    fn before_drawing(&mut self, ctx: &egui::Context) {
         // Before anything is drawn: whether a menu is open as the mouse
         // button goes down.
-        widgets::track_dismissing(&ctx);
+        widgets::track_dismissing(ctx);
         // Every view writes numerals as the settings say.
-        settings::minor_numerals(&ctx).set();
-        self.start_frame_for_undo(&ctx);
-        self.keyboard_shortcuts(&ctx);
+        settings::minor_numerals(ctx).set();
+        self.start_frame_for_undo(ctx);
+        self.keyboard_shortcuts(ctx);
         self.keep_over_song();
-        self.live_input(&ctx);
-        self.share_midi_outputs(&ctx);
-        self.practice_frame(&ctx);
-        self.handle_dropped_files(&ctx);
-        self.check_export(&ctx);
-        self.check_sounds(&ctx);
-        self.check_import(&ctx);
-        self.store_swings(&ctx);
+        self.live_input(ctx);
+        self.share_midi_outputs(ctx);
+        self.practice_frame(ctx);
+        self.handle_dropped_files(ctx);
+        self.check_export(ctx);
+        self.check_sounds(ctx);
+        self.check_import(ctx);
+        self.store_swings(ctx);
         if self.playing {
             // Keep redrawing so the playhead moves.
             ctx.request_repaint();
         }
+    }
 
-        self.hint_bar.start_frame(&ctx);
-        let bar = |fill| {
-            egui::Frame::new()
-                .fill(fill)
-                .inner_margin(egui::Margin::symmetric(6, 3))
-                .stroke(egui::Stroke::new(1.0, theme::OUTLINE))
-        };
+    /// The bars along the edges of the window: the menus and the
+    /// transport at the top, the status bar and the harmony keys at the
+    /// bottom.
+    fn panels(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+        self.hint_bar.start_frame(ctx);
         egui::Panel::top("menu-bar")
-            .frame(bar(theme::BACKGROUND))
+            .frame(panel_frame(theme::BACKGROUND))
             .show(ui, |ui| self.menu_bar(ui));
         egui::Panel::top("transport")
-            .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(6, 5)))
+            .frame(panel_frame(theme::PANEL).inner_margin(egui::Margin::symmetric(6, 5)))
             .show(ui, |ui| self.transport_bar(ui));
         egui::Panel::bottom("status")
-            .frame(bar(theme::BACKGROUND))
+            .frame(panel_frame(theme::BACKGROUND))
             .show(ui, |ui| self.status_bar(ui));
         // Added after the status bar, so it sits just above it.
         let harmony_actions = if self.harmony_keys.open {
-            let seconds = ctx.input(|input| input.stable_dt).min(0.25);
-            self.find_key_live(seconds);
-            let key_heard = self.key_heard();
-            let held = self.live.held_pitches();
-            let channel = self.piano_roll.selected_channel();
-            let channel_name = self
-                .project
-                .channels()
-                .get(channel.unwrap_or(usize::MAX))
-                .map_or("", |channel| channel.name.as_str());
-            let heard = self.chord_playing();
-            let hearing = self.hearing_playing();
-            // While the chord sheet has the keyboard, digits are sets
-            // and figures typed in a bar.
-            let digits = !self.live.typing()
-                && !ctx.text_edit_focused()
-                && !self.chord_sheet.has_keyboard()
-                && !widgets::modal_open(&ctx);
-            let here = self.key_here();
-            egui::Panel::bottom("harmony-keys")
-                .frame(bar(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))
-                .show(ui, |ui| {
-                    self.harmony_keys.show(
-                        ui,
-                        &self.project,
-                        here,
-                        channel_name,
-                        &held,
-                        &heard,
-                        hearing.as_ref(),
-                        digits,
-                        key_heard.as_ref(),
-                        self.playlist.library_parts_mut(),
-                    )
-                })
-                .inner
+            self.harmony_keys_panel(ui, ctx)
         } else {
             self.harmony_keys.release()
         };
         for action in harmony_actions {
             self.apply_harmony(action);
         }
+    }
 
+    /// The harmony keys, with what they show about the song and the keys
+    /// held down.
+    fn harmony_keys_panel(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) -> Vec<HarmonyAction> {
+        let seconds = ctx.input(|input| input.stable_dt).min(0.25);
+        self.find_key_live(seconds);
+        let key_heard = self.key_heard();
+        let held = self.live.held_pitches();
+        let channel = self.piano_roll.selected_channel();
+        let channel_name = self
+            .project
+            .channels()
+            .get(channel.unwrap_or(usize::MAX))
+            .map_or("", |channel| channel.name.as_str());
+        let heard = self.chord_playing();
+        let hearing = self.hearing_playing();
+        // While the chord sheet has the keyboard, digits are sets
+        // and figures typed in a bar.
+        let digits = !self.live.typing()
+            && !ctx.text_edit_focused()
+            && !self.chord_sheet.has_keyboard()
+            && !widgets::modal_open(ctx);
+        let here = self.key_here();
+        egui::Panel::bottom("harmony-keys")
+            .frame(panel_frame(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))
+            .show(ui, |ui| {
+                self.harmony_keys.show(
+                    ui,
+                    &self.project,
+                    here,
+                    channel_name,
+                    &held,
+                    &heard,
+                    hearing.as_ref(),
+                    digits,
+                    key_heard.as_ref(),
+                    self.playlist.library_parts_mut(),
+                )
+            })
+            .inner
+    }
+
+    /// The middle of the window: the patterns and the library on the
+    /// left, and the playlist, or the chord sheet in its place. Returns
+    /// the room it takes, which the windows stay inside. `playing` is
+    /// where the song is, if it plays: its step, and the pass through it.
+    fn main_area(
+        &mut self,
+        ui: &mut egui::Ui,
+        ctx: &egui::Context,
+        playing: Option<(usize, lineup_core::Pass)>,
+    ) -> egui::Rect {
         let song_position = self.song_position();
         let tried = self.tried();
         let playlist_zoom = egui::vec2(
-            view::Area::Main.zoom(&ctx, view::Axis::Horizontal),
-            view::Area::Main.zoom(&ctx, view::Axis::Vertical),
+            view::Area::Main.zoom(ctx, view::Axis::Horizontal),
+            view::Area::Main.zoom(ctx, view::Axis::Vertical),
         );
         // The chord sheet can take the playlist's place, beside the
         // pattern picker and the library.
-        self.chord_sheet.remember(&ctx);
+        self.chord_sheet.remember(ctx);
         let sheet_fills = self.chord_sheet.fills_window();
-        let playing = self.song_position().filter(|_| self.playing);
         let typing = self.live.typing();
         let practice = self.practice.view();
         let playlist = egui::CentralPanel::default_margins().show(ui, |ui| {
@@ -1965,9 +1978,6 @@ impl eframe::App for LineupApp {
                 (actions, Vec::new())
             }
         });
-        // The windows stay over the playlist, so they never hide the
-        // toolbar, the harmony keys or the status bar.
-        let area = playlist.response.rect;
         let (playlist_actions, main_sheet_actions) = playlist.inner;
         for action in playlist_actions {
             self.apply_playlist(action);
@@ -1975,25 +1985,33 @@ impl eframe::App for LineupApp {
         for action in main_sheet_actions {
             self.apply_sheet(action);
         }
+        playlist.response.rect
+    }
 
-        // The channel rack and the piano roll float on top of the playlist.
-        let playhead = self.pattern_playhead();
-        let mut rack_open = self.rack_open;
-        let pattern_name = &self.project.patterns()[self.pattern].name;
+    /// Brings the window asked for to the front, with the keyboard: a
+    /// double-clicked clip's piano roll, for example.
+    fn bring_window_to_front(&mut self, ctx: &egui::Context) {
         if let Some(id) = self.bring_to_front.take() {
             let layer = egui::LayerId::new(egui::Order::Middle, id);
             ctx.move_to_top(layer);
             // Its keys go with it: Delete after double-clicking a clip
             // deletes notes in the piano roll, not clips in the playlist.
-            widgets::give_keyboard(&ctx, layer);
+            widgets::give_keyboard(ctx, layer);
         }
+    }
+
+    /// The channel rack's window, inside `area`. `playhead` is the step
+    /// of the pattern playing, if any.
+    fn rack_window(&mut self, ctx: &egui::Context, area: egui::Rect, playhead: Option<usize>) {
+        let mut rack_open = self.rack_open;
+        let pattern_name = &self.project.patterns()[self.pattern].name;
         // The rack opens as big as its rows, up to the size of the
         // playlist; it can be resized, and scrolls when made smaller.
         // When the rows grow or shrink (a longer pattern, a new channel),
         // it is fitted to them again, so no step hides past its edge. So
         // it is the first time it shows after the app starts: the size
         // egui remembers from last time was fitted to other rows.
-        let rack_scale = Self::rack_scale(&ctx);
+        let rack_scale = Self::rack_scale(ctx);
         let style = ctx.global_style();
         let natural = (channel_rack::natural_size(&style, &self.project, self.pattern, 1.0)
             + egui::vec2(
@@ -2001,7 +2019,7 @@ impl eframe::App for LineupApp {
                 style.spacing.interact_size.y + style.spacing.item_spacing.y,
             ))
             * rack_scale;
-        let rack_size = widgets::window_size(&ctx, natural, area);
+        let rack_size = widgets::window_size(ctx, natural, area);
         let mut rack = egui::Window::new(format!("Channel rack · {pattern_name}"))
             .id(rack_id())
             .open(&mut rack_open)
@@ -2016,7 +2034,7 @@ impl eframe::App for LineupApp {
             self.rack_natural = natural;
         }
         let rack_actions = rack
-            .show(&ctx, |ui| {
+            .show(ctx, |ui| {
                 widgets::zoom_contents(ui, rack_scale);
                 let selected = self.piano_roll.selected_channel();
                 ui.horizontal(|ui| {
@@ -2054,15 +2072,24 @@ impl eframe::App for LineupApp {
         for action in rack_actions {
             self.apply(action);
         }
+    }
 
+    /// The piano roll's window, inside `area`. `playhead` is the step
+    /// of the pattern playing, if any.
+    fn piano_roll_window(
+        &mut self,
+        ctx: &egui::Context,
+        area: egui::Rect,
+        playhead: Option<usize>,
+    ) {
         let held = self.live.held_pitches();
         self.piano_roll.hints = self.harmony_keys.hints;
         let roll_zoom = egui::vec2(
-            view::Area::PianoRoll.zoom(&ctx, view::Axis::Horizontal),
-            view::Area::PianoRoll.zoom(&ctx, view::Axis::Vertical),
+            view::Area::PianoRoll.zoom(ctx, view::Axis::Horizontal),
+            view::Area::PianoRoll.zoom(ctx, view::Axis::Vertical),
         );
         let roll_actions = self.piano_roll.show(
-            &ctx,
+            ctx,
             &self.project,
             self.pattern,
             playhead,
@@ -2073,10 +2100,18 @@ impl eframe::App for LineupApp {
         for action in roll_actions {
             self.apply_roll(action);
         }
+    }
 
-        // The chord sheet is drawn last, so it opens over the others.
+    /// The chord sheet's window, when it is not in the main window.
+    /// `playing` is where the song is, if it plays.
+    fn chord_sheet_window(
+        &mut self,
+        ctx: &egui::Context,
+        area: egui::Rect,
+        playing: Option<(usize, lineup_core::Pass)>,
+    ) {
         let sheet_actions = self.chord_sheet.show(
-            &ctx,
+            ctx,
             area,
             &self.project,
             playing,
@@ -2086,6 +2121,40 @@ impl eframe::App for LineupApp {
         for action in sheet_actions {
             self.apply_sheet(action);
         }
+    }
+}
+
+/// The frame of the bars along the window's edges, filled with `fill`.
+fn panel_frame(fill: egui::Color32) -> egui::Frame {
+    egui::Frame::new()
+        .fill(fill)
+        .inner_margin(egui::Margin::symmetric(6, 3))
+        .stroke(egui::Stroke::new(1.0, theme::OUTLINE))
+}
+
+impl eframe::App for LineupApp {
+    /// Called by eframe every time the window needs to be redrawn.
+    /// egui is "immediate mode": we describe the whole UI on every call.
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        if let Audio::Running(engine) = &mut self.audio {
+            engine.collect_garbage();
+        }
+        self.check_trace();
+        let ctx = ui.ctx().clone();
+        self.before_drawing(&ctx);
+        self.panels(ui, &ctx);
+        let playing = self.song_position().filter(|_| self.playing);
+        // The windows stay over the playlist, so they never hide the
+        // toolbar, the harmony keys or the status bar.
+        let area = self.main_area(ui, &ctx, playing);
+
+        // The channel rack and the piano roll float on top of the playlist.
+        let playhead = self.pattern_playhead();
+        self.bring_window_to_front(&ctx);
+        self.rack_window(&ctx, area, playhead);
+        self.piano_roll_window(&ctx, area, playhead);
+        // The chord sheet is drawn last, so it opens over the others.
+        self.chord_sheet_window(&ctx, area, playing);
 
         self.ear_training_window(&ctx, area);
         self.lead_sheet_window(&ctx, area);
