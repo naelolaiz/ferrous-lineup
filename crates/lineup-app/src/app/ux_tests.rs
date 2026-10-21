@@ -385,6 +385,37 @@ fn a_click_on_an_instrument_in_the_mixer_changes_it() {
     assert!(text_rect(&output, "Guitar").is_none());
 }
 
+#[test]
+fn an_instrument_menu_opened_low_in_the_window_opens_no_submenu_by_itself() {
+    use lineup_core::general_midi;
+    let mut screen = Screen::new();
+    // Too low for the menu to fit under its button: it opens above it,
+    // and scrolls.
+    screen.size = vec2(1280.0, 560.0);
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    screen.click("Acoustic Grand Piano");
+    let output = screen.draw(vec![]);
+    let button = text_rect(&output, "Acoustic Grand Piano").unwrap();
+    // The menu is above the button, its last families hidden over it.
+    assert!(text_rect(&output, "Organ").unwrap().bottom() < button.top());
+    assert!(text_rect(&output, "Synth effects").is_none());
+    // The pointer is still on the button, where a family is hidden:
+    // no family opens.
+    let programs = (0..=127u8)
+        .filter(|&program| {
+            let name = format!("{} {}", u16::from(program) + 1, general_midi::name(program));
+            text_rect(&output, &name).is_some()
+        })
+        .count();
+    assert_eq!(programs, 0);
+    // Over a family in sight, its instruments open as before.
+    let brass = text_rect(&output, "Brass").unwrap().center();
+    screen.draw(vec![Event::PointerMoved(brass)]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "57 Trumpet").is_some());
+}
+
 /// Where `label` was drawn on the row at height `y`.
 fn text_rect_in_row(output: &FullOutput, label: &str, y: f32) -> Option<Rect> {
     output.shapes.iter().find_map(|shape| match &shape.shape {

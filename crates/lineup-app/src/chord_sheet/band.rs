@@ -31,7 +31,7 @@ pub(super) fn menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction
             ui.weak("Choose who plays and their sounds. Playing patterns are chosen in the Library.");
             ui.separator();
             if let Some(band) = project.band() {
-                ui.menu_button("Instrument lineup", |ui| {
+                widgets::scroll_menu_button(ui, "Instrument lineup", |ui| {
                     ui.weak("The current rhythm, chords and timing are kept.");
                     for (name, source) in LINEUPS {
                         if let Some(style) = BandStyle::named(source)
@@ -82,7 +82,7 @@ pub(super) fn menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction
 fn voice_menu(ui: &mut Ui, project: &Project, channel: usize, actions: &mut Vec<SheetAction>) {
     let current = project.channels()[channel].program;
     let label = current.map_or("Lineup Osc", general_midi::name);
-    ui.menu_button(label, |ui| {
+    widgets::scroll_menu_button(ui, label, |ui| {
         if ui
             .selectable_label(current.is_none(), "Lineup Osc")
             .clicked()

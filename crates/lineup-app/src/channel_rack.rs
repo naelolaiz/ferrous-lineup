@@ -165,7 +165,7 @@ pub fn instrument_choices(
             } else {
                 family_name.to_string()
             };
-            ui.menu_button(family_label, |ui| {
+            widgets::scroll_menu_button(ui, family_label, |ui| {
                 for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
                     let text =
                         format!("{} {}", u16::from(program) + 1, general_midi::name(program));
