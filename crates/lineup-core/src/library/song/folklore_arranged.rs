@@ -5077,5 +5077,6 @@ pub(super) const ACUARELA_DEL_RIO: Song = Song {
     about: "A canción of the Litoral by the Argentine Abel Montes, words and music, first \
             recorded by Tres para el Folklore in 1963: a watercolour of the Paraná river, two \
             lovers drifting on it in a boat. Here as a polca, the 6/8 dance of Paraguay and \
-            the Litoral, the bass on the quarters across it. A major, its verses in A minor.",
+            the Litoral, the bass on the quarters across it. Its sections go from A minor to \
+            A major, twice.",
 };
