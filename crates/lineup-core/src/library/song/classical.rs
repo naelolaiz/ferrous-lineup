@@ -1060,6 +1060,707 @@ pub(super) const HALLELUJAH_CHORUS: Song = Song {
             rest for two bars in the middle while the basses take the tune.",
 };
 
+// Source: https://github.com/MutopiaProject/MutopiaProject/tree/master/ftp/HandelGF/HWV56/Messiah/Messiah-lys
+// (the AMchorus folder; Mutopia 2009/12/15-1732, Nicolas Sceaux's engraving of Chrysander's
+// edition, Händel-Gesellschaft volume 45, 1902, under the Creative Commons Attribution 3.0
+// licence), compiled to MIDI with LilyPond. The engraving prints the fortes in the first
+// violins only and the pianos in every string part; here each mark holds for all the strings.
+// It marks the forte runs into the first two Wonderfuls; the last two get the same, and the
+// closing ritornello is forte like the opening one. The voices have no marks: mezzo forte, and
+// forte in each Wonderful. The oboes play with the violins in the opening ritornello and with
+// the sopranos after it, and rest in the closing one, as in the engraving. The three wedged
+// notes of bar 37 are staccato. Each voice of the choir has a channel of its own, so two
+// voices on one note do not cut each other short; the bassi play on the Keys channel. The
+// chord chart is read from the parts, with Chrysander's figures over the bass where he gives
+// them.
+pub(super) const FOR_UNTO_US: Song = Song {
+    name: "For Unto Us a Child Is Born",
+    origin: "George Frideric Handel, Messiah, 1741",
+    feel: "Choral",
+    genre: Genre::Classical,
+    tonic: G,
+    mode: Major,
+    time: COMMON,
+    tempo: 96.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::CHOIR_AAHS, gm::CELLO, gm::CELLO),
+    style: "Hymn",
+    parts: &[
+        // Bars 1-6 of the score.
+        Part::new(
+            "Ritornello",
+            "-:16 | - | - | - | - | -",
+            "G G/B Am D7/F# | G G/B Am D7/F# | G G/B C C | Am Am D D | Bm Bm Em Am/C | \
+            D7 Em G/D D7",
+        )
+        .with_left("!f G3:2 A3 B3 B2 A2 G3 F#3 D3 | G3 A3 B3 B2 A2 G3 F#3 D3 | G3 G2 B2 G2 C3:4 - | \
+            A2 - D3 - | B2 - E3 C3:2 A2 | D3 B2 E3 C3 D3 C3 D3 D2")
+        .with_lines(&[
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!f D6:4 G5:2 G5 C6 C6 C6 C6 | C6 B5 -:6 E5:2 A5 F#5 | \
+                D5 D5 G5 F#5 E5:1 D5 E5 F#5 E5 G5 F#5 G5 | \
+                A5 G5 A5 B5 A5 B5 G5 A5 F#5 E5 F#5 G5 F#5 A5 G5 A5 | \
+                B5 A5 B5 C6 B5 C6 A5 B5 G5:2 E5:4 A5:2 | F#5 D5 G5:6 A5:2 F#5:3 G5:1",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!f B4:4 -:12 | D5:4 G4:2 G4 C5 C5 C5 C5 | \
+                B4:1 A4 B4 C5 B4 C5 A4 B4 G4 F#4 G4 A4 G4 B4 A4 B4 | \
+                C5 B4 C5 D5 C5 D5 B4 C5 A4 G4 A4 B4 A4 C5 B4 C5 | \
+                D5 C5 D5 E5 D5 E5 C5 D5 B4:2 G4 C5:4 | _:2 D5 B4 A4 B4:4 A4:3 G4:1",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!f G4:4 D4:2 D4 E4 E4 D4 F#4 | G4:4 D4:2 D4 E4 A4 D4 A4 | G4 G4 D4 D4 C5:4 - | \
+                E4 - F#4 - | F#4 - G4 A4 | A4:2 B4 G4 E4 D4:6 C5:2",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "!f B4+D6:4 G5:2 G5 C6 C6 C6 C6 | D5:4 G4:2 G4 C5 C5+E5 C5+A5 C5+F#5 | \
+                D5 D5 G5 F#5 G4+E5:1 F#4+D5 G4+E5 A4+F#5 G4+E5 B4+G5 A4+F#5 B4+G5 | \
+                C5+A5 B4+G5 C5+A5 D5+B5 C5+A5 D5+B5 B4+G5 C5+A5 A4+F#5 G4+E5 A4+F#5 B4+G5 A4+F#5 C5+A5 B4+G5 C5+A5 | \
+                D5+B5 C5+A5 D5+B5 E5+C6 D5+B5 E5+C6 C5+A5 D5+B5 B4+G5:2 E5:4 A5:2 | \
+                F#5 D5 G5:6 A5:2 A4+F#5:3 G4+G5:1 & -:16 | !f C6:2 B5 -:12 | \
+                B4:1 A4 B4 C5 B4 C5 A4 B4 -:8 | -:16 | -:10 G4:2 C5:4 | _:2 - B4 A4 B4:4 -",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 7-17 of the score.
+        Part::new(
+            "For unto us",
+            "!mf D5:4 G4:2 G4 C5 C5 C5 C5 | C5 B4 -:8 G4:2 F#4 | E4:4 -:6 E4:2 A4 G4 | \
+            F#4 F#4 -:8 B4:2 A4 | G4:4 -:6 G4:2 C5 B4 | A4 A4 -:12 | -:8 D5:4 G4:2 G4 | \
+            C5 C5 C5 C5 B4:1 A4 B4 C5 B4 C5 A4 B4 | \
+            G4 F#4 G4 A4 G4 B4 A4 B4 C5 B4 C5 D5 C5 D5 B4 C5 | \
+            A4 G4 A4 B4 A4 C5 B4 C5 D5 C5 D5 E5 D5 E5 C5 D5 | \
+            B4 A4 B4 C5 B4 D5 C5 D5 E5 D5 E5 F#5 E5 F#5 G5 A5",
+            "G G/B Am D7/F# | G G G G/B | C C Am Am/C | D D Bm Bm/D | Em Em C Am | \
+            D/F# D7 G/B G/B | Am D7/F# G G/B | Am D7/F# G G | C C Am Am | D D Bm Bm | Em Em C C",
+        )
+        .with_left("!f G3:2 !p A3 B3 B2 A2 G3 F#3 D3 | G3:4 -:6 G3:2 B3 G3 | C4:4 -:6 A2:2 C3 A2 | \
+            D3:4 -:6 B2:2 D3 B2 | E3:4 -:6 E3:2 A3 G3 | F#3 D3 D4 C4 B3:4 B2:2 E3 | \
+            A2 G3 F#3 D3 G3 G2 B2 G2 | A2 G3 F#3 D3 G3:4 G2:2 B2 | C3:4 - A2 - | D3 - B2 - | \
+            E3 - C3 -")
+        .with_lines(&[
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "-:16 | - | - | - | - | -:8 !mf D4:4 G3:2 G3 | C4 C4 C4 C4 C4 B3 -:4 | \
+                -:12 G3:2 F#3 | E3:4 -:6 E3:2 A3 G3 | F#3 F#3 -:8 B3:2 A3 | G3:4 -:6 G3:2 C4 B3",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!f G5:4 -:12 | -:2 !p D5 G5 D5 B4:4 - | -:2 E5 G5 E5 A5:4 - | \
+                -:2 F#4 A4 F#4 B4:4 - | -:2 G4 B4 G4 C5:4 - | -:2 D5 F#5 D5 - G4 G5:4 | \
+                -:2 E5 A5:4 -:2 D5 G5:4 | -:16 | -:4 G4 - C5 | - A4 - D5 | - B4 - E5",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!f G4:4 -:12 | -:2 !p B4 D5 B4 D4:4 - | -:2 C5 E5 C5 C4:4 - | \
+                -:2 D4 F#4 D4 D5:4 - | -:2 E4 G4 E4 E5:4 - | -:2 A4 D5 A4 - D4 D5:4 | \
+                -:2 C5 C5:4 -:2 B4 B4:4 | -:16 | -:4 E4 - A4 | - F#4 - B4 | - G4 - C5",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!f B4:4 -:12 | -:2 !p G4 B4 G4 G3:4 - | -:2 G4 C5 C4 E4:4 - | \
+                -:2 A3 D4 A4 F#4:4 - | -:2 B3 E4 B4 G4:4 - | -:2 D4 A4 F#4 - B3 B4:4 | \
+                -:2 E4 D4:4 -:2 D4 D4:4 | -:16 | -:4 C4 - E4 | - D4 - F#4 | - E4 - G4",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "!mf G4:4 G4:2 G4 C5 C5 C5 C5 | C5 B4 -:8 G4:2 F#4 | E4:4 -:6 E4:2 A4 G4 | \
+                F#4 F#4 -:8 B4:2 A4 | G4:4 -:6 G4:2 C5 B4 | A4 A4 -:12 | -:8 D5:4 G4:2 G4 | \
+                C5 C5 C5 C5 B4:1 A4 B4 C5 B4 C5 A4 B4 | \
+                G4 F#4 G4 A4 G4 B4 A4 B4 C5 B4 C5 D5 C5 D5 B4 C5 | \
+                A4 G4 A4 B4 A4 C5 B4 C5 D5 C5 D5 E5 D5 E5 C5 D5 | \
+                B4 A4 B4 C5 B4 D5 C5 D5 E5 D5 E5 F#5 E5 F#5 G5 A5 & !mf G5:2 D5 -:12 | -:16 | - | \
+                - | - | - | - | - | - | - | -",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 18-32 of the score.
+        Part::new(
+            "Unto us a son, in D major",
+            "!mf F#5:4 -:12 | -:16 | - | - | - | - | - | - | - | - | \
+            -:4 A4:3 C#5:1 B4:3 D5:1 C#5:3 E5:1 | D5:3 F#5:1 E5:3 G5:1 F#5:2 E5:1 D5 C#5:2 B4 | \
+            A4:16 | A4:3 D5:1 C#5:3 E5:1 D5:3 F#5:1 E5:3 D5:1 | C#5:4 D5:2 D5 C#5 C#5 -:4",
+            "D D D/F# D/F# | Em C#dim/E D D/F# | Em A7/C# D D | G G Em Em | A A F#m F#m | \
+            Bm Bm G G | A A D/F# D/F# | G G/D Em/G Em | A F#m G C#dim/E | D/F# C#dim D C#dim/E | \
+            D/F# A Bm7/A A7/G | D/F# A7/C# D A/E | A/C# A Bm7 A/C# | D C#dim/E D/F# Em/G | \
+            A D/F# A D",
+        )
+        .in_key(D, Major)
+        .with_left("!p D3:4 -:2 E3 F#3 E3 F#3 B3 | E3:4 -:2 E3 D3:4 F#2:2 B2 | E2 D3 C#3 A2 D3:4 - | \
+            G2 - E2 - | A2 - F#2 - | B2 - G2 - | A2:2 E3 A3 G3 F#3 E3 F#3 D3 | \
+            G3 B2 D3 B2 G2 G3 E3 G3 | A3:4 F#3 G3 E3 | F#3 C#3 D3 E3 | F#3:2 D3 A3:8 G3:4 | \
+            F#3 C#3 D3 E3 | C#3 A2:3 C#3:1 B2:3 D3:1 C#3:3 E3:1 | \
+            D3:3 F#3:1 E3:3 G3:1 F#3:3 A3:1 G3:3 B3:1 | A3:4 F#3:2 D3 A3 !f A2 -:4")
+        .with_lines(&[
+            line(
+                "Altos",
+                gm::CHOIR_AAHS,
+                "-:8 !mf A4:4 D4:2 D4 | G4 G4 G4 G4 G4 F#4 -:4 | -:12 D4:2 C#4 | \
+                B3:4 -:6 B3:2 E4 D4 | C#4 C#4 -:8 F#4:2 E4 | D4:4 -:6 D4:2 G4 F#4 | \
+                E4 E4 -:8 A4:2 F#4 | D4:4 -:6 B4:2 G4 E4 | C#4 C#4 -:12 | -:16 | - | - | \
+                -:4 C#4:3 E4:1 D4:3 F#4:1 E4:3 G4:1 | F#4:3 A4:1 G4:3 E4:1 A4:3 F#4:1 B4:3 G4:1 | \
+                E4:4 A4:2 A4 A4 A4 -:4",
+            ),
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "!mf A3:2 A3 -:12 | -:16 | - | - | - | - | - | - | \
+                -:4 A3:3 C#4:1 B3:3 D4:1 C#4:3 E4:1 | \
+                D4:3 F#4:1 E4:3 G4:1 F#4:2 E4:1 D4 C#4:2 B3 | A3:16 | A3:8 - | -:16 | \
+                -:12 E4:3 G4:1 | A3:4 D4:2 F#4 E4 E4 -:4",
+            ),
+            line(
+                "Basses",
+                gm::CHOIR_AAHS,
+                "-:16 | -:8 !mf A3:4 D3:2 D3 | G3 G3 G3 G3 F#3:1 E3 F#3 G3 F#3 G3 E3 F#3 | \
+                D3 C#3 D3 E3 D3 F#3 E3 F#3 G3 F#3 G3 A3 G3 A3 F#3 G3 | \
+                E3 D3 E3 F#3 E3 G3 F#3 G3 A3 G3 A3 B3 A3 B3 G3 A3 | \
+                F#3 E3 F#3 G3 F#3 A3 G3 A3 B3 A3 B3 C#4 B3 C#4 D4 E4 | C#4:4 E4:2 C#4 A3:4 - | \
+                -:2 D4 B3 G3 E3 E3 -:4 | -:16 | - | - | - | -:4 A2:3 C#3:1 B2:3 D3:1 C#3:3 E3:1 | \
+                D3:3 F#3:1 E3:3 G3:1 F#3:3 A3:1 G3:3 B3:1 | A3:4 F#3:2 D3 A3 A2 -:4",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "-:4 !p A4 - A5 | -:2 G5 G5 G5 - A4 D5:4 | -:16 | -:4 B4 - E5 | - C#5 - F#5 | \
+                - D5 - G5 | - E5 - D5 | D5 - E5 - | E5 -:12 | -:16 | - | - | - | - | \
+                -:9 !f C#5:1 D5 E5 F#5 E5 F#5 G5",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "-:4 !p F#4 - D5 | -:2 D5 C#5 C#5 - D5 F#5:4 | -:16 | -:4 D4 - G4 | - E4 - A4 | \
+                - F#4 - B4 | - C#5 - A4 | B4 - B4 - | C#5 -:12 | -:16 | - | - | - | - | \
+                -:9 !f A4:1 B4 C#5 D5 C#5 D5 E5",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "-:4 !p D4 - A4 | -:2 B3 E4 E4 - F#4 A4:4 | -:16 | -:4 G3 - B3 | - A3 - C#4 | \
+                - B3 - D4 | - A4 - F#4 | G4 - G4 - | A4 -:12 | -:16 | - | - | - | - | -",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "!mf F#5:4 -:12 | -:16 | - | - | - | - | - | - | - | - | \
+                -:4 A4:3 C#5:1 B4:3 D5:1 C#5:3 E5:1 | \
+                D5:3 F#5:1 E5:3 G5:1 F#5:2 E5:1 D5 C#5:2 B4 | A4:16 | \
+                A4:3 D5:1 C#5:3 E5:1 D5:3 F#5:1 E5:3 D5:1 | C#5:4 D5:2 D5 C#5 C#5 -:4",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 33-37 of the score.
+        Part::new(
+            "Wonderful, in D major",
+            "!f D5:3 A4:1 A4:4 -:8 | D5:3 A4:1 A4:4 -:8 | -:2 A4 A4 A4 D5:4 -:2 D5 | \
+            D5 D5 G5 G5 F#5 F#5 - D5 | D5:4. C#5. D5. -",
+            "D | D | D | G/B G D D | Em7/G A D D",
+        )
+        .in_key(D, Major)
+        .with_left("!f D4:3 D3:1 D3:4 -:8 | D4:3 D3:1 D3:4 -:8 | -:2 D3 D3 D3 D4:4 -:2 D4 | \
+            B3 B3 G3 G3 D4 D3 - F#3 | G3:4 A3 D3 -:2 !p F#3")
+        .with_lines(&[
+            line(
+                "Altos",
+                gm::CHOIR_AAHS,
+                "!f A4:3 G4:1 F#4:4 -:8 | A4:3 G4:1 F#4:4 -:8 | -:2 F#4 F#4 F#4 A4:4 -:2 A4 | \
+                B4 B4 B4 B4 A4 A4 - A4 | B4:4 A4 A4 D4:2 D4",
+            ),
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "!f F#4:3 E4:1 D4:4 -:8 | F#4:3 E4:1 D4:4 -:8 | -:2 D4 D4 D4 F#4:4 -:2 F#4 | \
+                G4 G4 D4 D4 F#4 F#4 - F#4 | E4:4 E4 F#4 -",
+            ),
+            line(
+                "Basses",
+                gm::CHOIR_AAHS,
+                "!f D4:3 D3:1 D3:4 -:8 | D4:3 D3:1 D3:4 -:8 | -:2 D3 D3 D3 D4:4 -:2 D4 | \
+                B3 B3 G3 G3 D4 D4 - F#3 | G3:4 A3 D3 -",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!f A5:1 G5 A5 G5 F#5 G5 F#5 G5 A5 G5 A5 G5 F#5 G5 F#5 G5 | \
+                A5 G5 A5 G5 F#5 G5 F#5 G5 A5 G5 A5 G5 F#5 G5 F#5 G5 | \
+                A5 G5 A5 G5 F#5 G5 F#5 G5 A5 G5 A5 G5 F#5 A5 G5 A5 | \
+                B5 A5 B5 C#6 B5 C#6 B5 C#6 D6:2 A5 D6:4 | _ C#6. D6. -",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!f F#5:1 E5 F#5 E5 D5 E5 D5 E5 F#5 E5 F#5 E5 D5 E5 D5 E5 | \
+                F#5 E5 F#5 E5 D5 E5 D5 E5 F#5 E5 F#5 E5 D5 E5 D5 E5 | \
+                F#5 E5 F#5 E5 D5 E5 D5 E5 F#5 E5 F#5 E5 D5 F#5 E5 F#5 | \
+                G5 F#5 G5 A5 G5 A5 G5 A5 F#5 E5 F#5 G5 F#5 G5 F#5 G5 | E5:4. E5. F#5. -",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!f D5:3 A4:1 A4:4 -:8 | D5:3 A4:1 A4:4 -:8 | -:2 A4 A4 A4 D5:4 -:2 D5 | \
+                D4 D4 D4 G4 A4 A4 - A4 | B4:4. A4. A4. -",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "!f D5:3 A4:1 A4:4 -:8 | D5:3 A4:1 A4:4 -:8 | -:2 A4 A4 A4 D5:4 -:2 D5 | \
+                D5 D5 G5 G5 F#5 F#5 - D5 | D5:4. C#5. D5. -",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 38-48 of the score.
+        Part::new(
+            "For unto us again",
+            "-:16 | - | - | -:4 !mf D5:2 B4 G4 E5 C5 A4 | F#4:4 -:12 | -:16 | - | - | - | \
+            -:4 A4:2 D5 B4:4 - | - D5:2 G5 F#5 D5 -:4",
+            "Em A7/C# D G/B | Am D7/F# G G | C C Am Am | D Bm Em Am | D G C D7/C | G D Em7/D D7/C | \
+            G/B D7/F# G D/A | G D Em7/D D7/C | G/B D7/F# G Am/C | D D G G | D G/B D D7",
+        )
+        .with_left("!p E3:2 D4 C#4 A3 D3:4 B2:2 G2 | A2 G3 F#3 D3 G3:4 G2 | C3 - A2 - | \
+            D3 B2 E3:2 C3 A2 C3 | D3:4 G2 C3:6 A2:2 | B2 G2 D3:8 C3:4 | B2 F#3 G3:2 G2 A2:4 | \
+            B2:2 G2 D3:8 C3:4 | B2 F#2 G2 C3 | D3 D2 G2 B3:2 G3 | D4:4 B3:2 G3 D4 !f D3 -:4")
+        .with_lines(&[
+            line(
+                "Altos",
+                gm::CHOIR_AAHS,
+                "!mf G4:2 G4 G4 G4 G4 F#4 -:4 | -:12 G4:2 F#4 | E4:4 -:6 E4:2 A4 G4 | \
+                F#4 F#4 -:12 | -:16 | -:4 D4:3 F#4:1 E4:3 G4:1 F#4:3 A4:1 | \
+                G4:3 B4:1 A4:3 C5:1 B4:2 A4:1 G4 F#4:2 E4 | D4:16 | _:10 E4:1 D4 C4:2 B3 | \
+                A3:4 A3 - D4:2 G4 | F#4:4 G4:2 B4 A4 A4 -:4",
+            ),
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "-:8 !mf D4:4 G3:2 G3 | C4 C4 C4 C4 B3:1 A3 B3 C4 B3 C4 A3 B3 | \
+                G3 F#3 G3 A3 G3 B3 A3 B3 C4 B3 C4 D4 C4 D4 B3 C4 | A3:4 -:12 | -:16 | - | - | - | \
+                - | -:4 F#4:2 F#4 G4:4 - | - D4:2 D4 F#4 F#4 -:4",
+            ),
+            line(
+                "Basses",
+                gm::CHOIR_AAHS,
+                "-:16 | - | - | - | -:4 !mf B3:2 G3 E3 C4 A3 F#3 | D3 D3 -:12 | -:16 | \
+                -:4 D3:3 F#3:1 E3:3 G3:1 F#3:3 A3:1 | G3:3 B3:1 A3:3 C4:1 B3:2 C4:1 B3 A3:2 G3 | \
+                F#3:4 D3 - B3:2 G3 | D4:4 B3:2 G3 D4 D3 -:4",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "-:10 !p D5:2 G5:4 | -:2 E5 A5 D5 D5:4 G5 | - E5 - A5 | A4 -:12 | -:16 | - | - | \
+                - | - | - | -:9 !f D5:1 E5 F#5 G5 A5 B5 C6",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "-:10 !p A4:2 D5:4 | -:2 C5 C5 A4 B4:4 B4 | - G4 - C5 | F#4 -:12 | -:16 | - | - | \
+                - | - | - | -:9 !f F#5:1 G5 A5 G5 F#5 G5 A5",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "-:10 !p F#4:2 B4:4 | -:2 A4 D4 F#4 G4:4 D4 | - C4 - E4 | D4 -:12 | -:16 | - | - | \
+                - | - | - | -",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "-:16 | - | - | -:4 !mf D5:2 B4 G4 E5 C5 A4 | F#4:4 -:12 | -:16 | - | - | - | \
+                -:4 A4:2 D5 B4:4 - | - D5:2 G5 F#5 D5 -:4",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 49-55 of the score.
+        Part::new(
+            "Wonderful",
+            "!f D5:3 C5:1 B4:4 -:8 | D5:3 C5:1 B4:4 -:8 | -:2 D5 D5 D5 G5:4 -:2 D5 | \
+            D5 D5 G5 G5 E5 E5 - G5 | C5:6 C5:2 B4:4 - | -:8 !mf D5:4 G4:2 G4 | \
+            C5 C5 C5 C5 C5 B4 -:4",
+            "G | G | G G G/B G | G G C G/B | Am7 Am7 Am7 D7/A G G G/B Em | Am D7/F# G G/B | \
+            Am D7/F# G C",
+        )
+        .with_left("!f G3:3 G2:1 G2:4 -:8 | G3:3 G2:1 G2:4 -:8 | -:2 G3 G3 G3 B3:4 -:2 G3 | \
+            G3 G3 G3 G3 C4 C3 - B3 | A3:6 A3:2 G3:4 !p B2:2 E3 | A2 G3 F#3 D3 G3 A3 B3 B2 | \
+            A2 G3 F#3 D3 G3:4 C3:2 C3")
+        .with_lines(&[
+            line(
+                "Altos",
+                gm::CHOIR_AAHS,
+                "!f B4:3 A4:1 G4:4 -:8 | B4:3 A4:1 G4:4 -:8 | -:2 G4 G4 G4 G4:4 -:2 G4 | \
+                G4 G4 B4 B4 G4 G4 - G4 | G4:6 F#4:2 G4:4 - | -:16 | -",
+            ),
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "!f G4:3 D4:1 D4:4 -:8 | G4:3 D4:1 D4:4 -:8 | -:2 B3 B3 B3 D4:4 -:2 B3 | \
+                B3 B3 D4 D4 E4 E4 - D4 | E4:6 C4:2 D4:4 !mf G3:2 G3 | C4 C4 C4 C4 C4 B3 -:4 | \
+                -:16",
+            ),
+            line(
+                "Basses",
+                gm::CHOIR_AAHS,
+                "!f G3:3 G3:1 G3:4 -:8 | G3:3 G3:1 G3:4 -:8 | -:2 G3 G3 G3 B3:4 -:2 G3 | \
+                G3 G3 G3 G3 C4 C4 - B3 | A3:6 A3:2 G3:4 - | -:16 | -:8 !mf G3:4 C3:2 C3",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!f D6:1 C6 D6 C6 B5 C6 B5 C6 D6 C6 D6 C6 B5 C6 B5 C6 | \
+                D6 C6 D6 C6 B5 C6 B5 C6 D6 C6 D6 C6 B5 C6 B5 C6 | \
+                D6 C6 D6 C6 B5 C6 B5 C6 D6 C6 D6 C6 B5 C6 B5 C6 | \
+                D6 C6 D6 C6 B5 A5 B5 A5 G5 A5 G5 A5 B5 A5 B5 G5 | C6 B5 A5 B5 C6 B5 C6 D6 B5:4 - | \
+                -:16 | -:10 !p D5:2 E5 G5",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!f B5:1 A5 B5 A5 G5 A5 G5 A5 B5 A5 B5 A5 G5 A5 G5 A5 | \
+                B5 A5 B5 A5 G5 A5 G5 A5 B5 A5 B5 A5 G5 A5 G5 A5 | \
+                B5 A5 B5 A5 G5 A5 G5 A5 B5 A5 B5 A5 G5 A5 G5 A5 | \
+                B5 A5 B5 A5 G5 F#5 G5 F#5 E5 F#5 E5 F#5 G5 F#5 G5 D5 | \
+                E5 D5 C5 D5 E5 D5 E5 F#5 G5:4 - | -:16 | -:10 !p B4:2 C5 E5",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!f G4:3 D4:1 D4:4 -:8 | G4:3 D4:1 D4:4 -:8 | -:2 G4 G4 G4 D5:4 -:2 D4 | \
+                G4 G4 D4 D4 C5 C5 - G4 | G4 G4 G4 F#4 D5:4 - | -:16 | -:10 !p G4:2 G4 C5",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "!f D5:3 C5:1 B4:4 -:8 | D5:3 C5:1 B4:4 -:8 | -:2 D5 D5 D5 G5:4 -:2 D5 | \
+                D5 D5 G5 G5 E5 E5 - G5 | C5:6 C5:2 B4:4 - | -:8 !mf D5:4 G4:2 G4 | \
+                C5 C5 C5 C5 C5 B4 -:4",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 56-70 of the score.
+        Part::new(
+            "In C major",
+            "-:16 | - | - | -:12 !mf B4:2 B4 | C5:4 -:6 D5:2 C5:3 B4:1 | A4:2 A4 -:12 | -:16 | \
+            -:4 G4:3 B4:1 A4:3 C5:1 B4:3 D5:1 | C5:3 E5:1 D5:3 F5:1 E5 D5 C5:2 E5 F#5 | \
+            G5:4 G4 -:8 | -:12 D5:2 G5 | E5:4 G5:2 D5 E5 C5 -:4 | !f C5:3 G4:1 G4:4 -:8 | \
+            C5:3 G4:1 G4:4 -:8 | -:2 G4 G4 G4 C5:4 -:2 C5",
+            "F F F Bdim/F C/F C/E C/E C/E | Dm G7 C C | F F Dm Dm | G G Em Em | Am Am Am Am/C | \
+            D G/B D7/F# G | C/E Bdim C Am | G G F G/D | C/E Bdim C Am | G/B G Am Bdim | \
+            C F G G/B | C C C/E G C C F F | C | C | C",
+        )
+        .in_key(C, Major)
+        .with_left("!p F3:2 F3 F3 F3 F3 E3 E3 E3 | D3:4 -:2 G3 C3:4 - | F3 - D3 - | G3 - E3 - | \
+            A3 - A2 -:2 C3 | D3:4 B2 F#2 G2 | E3 B2 C3 A2 | G2 G3 F3 D3 | E3 B2 C3 A2 | \
+            B2 G2 A2 B2 | C3 F3 G3 B3 | C4:2 C3 E3 G3 C4 !f C3 -:4 | C4:3 C3:1 C3:4 -:8 | \
+            C4:3 C3:1 C3:4 -:8 | -:2 C3 C3 C3 C4:4 -:2 C4")
+        .with_lines(&[
+            line(
+                "Altos",
+                gm::CHOIR_AAHS,
+                "-:8 !mf G4:4 C4:2 C4 | F4 F4 F4 F4 E4:1 D4 E4 F4 E4 F4 D4 E4 | \
+                C4 B3 C4 D4 C4 E4 D4 E4 F4 E4 F4 G4 F4 G4 E4 F4 | \
+                D4 C4 D4 E4 D4 F4 E4 F4 G4 F4 G4 A4 G4 A4 F4 G4 | \
+                E4 D4 E4 F#4 E4 G4 F#4 G4 A4 G4 A4 B4 A4 B4 A4 G4 | F#4:4 -:12 | -:16 | - | - | \
+                -:4 B3:3 D4:1 C4:3 E4:1 D4:3 F4:1 | E4:3 G4:1 F4:3 E4:1 D4:2 D4 G4 G4 | \
+                G4:4 G4:2 G4 G4 G4 -:4 | !f G4:3 F4:1 E4:4 -:8 | G4:3 F4:1 E4:4 -:8 | \
+                -:2 E4 E4 E4 G4:4 -:2 G4",
+            ),
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "-:16 | - | - | -:12 !mf E4:2 D4 | C4:4 -:6 B3:2 C4 C4 | \
+                D4 D4 G3:3 B3:1 A3:3 C4:1 B3:3 D4:1 | C4:3 E4:1 D4:3 F4:1 E4 D4 C4:2 E4 F#4 | \
+                G4:4 G3 -:8 | -:16 | - | -:12 D4:2 D4 | E4:4 C4:2 B3 C4 C4 -:4 | \
+                !f E4:3 D4:1 C4:4 -:8 | E4:3 D4:1 C4:4 -:8 | -:2 C4 C4 C4 E4:4 -:2 E4",
+            ),
+            line(
+                "Basses",
+                gm::CHOIR_AAHS,
+                "!mf F3:2 F3 F3 F3 F3 E3 -:4 | -:12 C4:2 B3 | A3:4 -:6 A3:2 D4 C4 | B3 B3 -:12 | \
+                -:16 | - | - | - | - | -:4 G3:3 B3:1 A3:3 C4:1 B3:3 D4:1 | \
+                C4:3 E3:1 A3:3 C4:1 B3:2 G3 B3 B3 | C4:4 E3:2 G3 C4 C3 -:4 | \
+                !f C4:3 C3:1 C3:4 -:8 | C4:3 C3:1 C3:4 -:8 | -:2 C3 C3 C3 C4:4 -:2 C4",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!p A5:2 G5 A5 B5 C6 C5 G5:4 | -:2 C5 C5 B4 - G4 C5:4 | - A5 - F5 | - D5 - E5 | \
+                - E5 -:2 D5 C5:3 B4:1 | A4:2 D4 D5:4 -:8 | -:16 | - | - | - | - | \
+                -:9 !f E5:1 F5 G5 A5 G5 A5 F5 | G5 F5 G5 F5 E5 F5 E5 F5 G5 F5 G5 F5 E5 F5 E5 F5 | \
+                G5 F5 G5 F5 E5 F5 E5 F5 G5 F5 G5 F5 E5 F5 E5 F5 | \
+                G5 F5 G5 F5 E5 F5 E5 F5 G5 F5 G5 F5 E5 F5 E5 F5",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!p C5:2 B4 C5 D5 G4 G4 E5:4 | -:2 D4 D4 D4 - E4 G4:4 | - F4 - A4 | - B4 - B4 | \
+                - C5 -:2 B4 A4:1 B4 A4 G4 | F#4:2 F#4 G4:4 -:8 | -:16 | - | - | - | - | \
+                -:9 !f C5:1 D5 E5 F5 E5 F5 D5 | E5 D5 E5 D5 C5 D5 C5 D5 E5 D5 E5 D5 C5 D5 C5 D5 | \
+                E5 D5 E5 D5 C5 D5 C5 D5 E5 D5 E5 D5 C5 D5 C5 D5 | \
+                E5 D5 E5 D5 C5 D5 C5 D5 E5 D5 E5 D5 C5 D5 C5 D5",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!p A4:4 F4:2 F4 G4 G4 C5:4 | -:2 F4 G3 G3 - C4 E4:4 | - C5 - D4 | - G4 - G4 | \
+                - A4 -:2 E4 E4 E4 | F#4 F#4 D4:4 -:8 | -:16 | - | - | - | - | - | \
+                !f C5:3 G4:1 G4:4 -:8 | C5:3 G4:1 G4:4 -:8 | -:2 C5 G4 G4 C5:4 -:2 G4",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "-:16 | - | - | -:12 !mf B4:2 B4 | C5:4 -:6 D5:2 C5:3 B4:1 | A4:2 A4 -:12 | -:16 | \
+                -:4 G4:3 B4:1 A4:3 C5:1 B4:3 D5:1 | C5:3 E5:1 D5:3 F5:1 E5 D5 C5:2 E5 F#5 | \
+                G5:4 G4 -:8 | -:12 D5:2 G5 | E5:4 G5:2 D5 E5 C5 -:4 | !f C5:3 G4:1 G4:4 -:8 | \
+                C5:3 G4:1 G4:4 -:8 | -:2 G4 G4 G4 C5:4 -:2 C5",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 71-84 of the score.
+        Part::new(
+            "Back in G",
+            "!f C5:2 C5 C5 C5 C5:4 B4 | A4:6 A4:2 B4:4 - | -:8 !mf D5:4 G4:2 G4 | \
+            C5 C5 C5 C5 B4:1 A4 B4 C5 B4 C5 A4 B4 | \
+            G4 F#4 G4 A4 G4 B4 A4 B4 C5 B4 C5 D5 C5 D5 B4 C5 | \
+            A4 G4 A4 B4 A4 C5 B4 C5 D5 C5 D5 E5 D5 E5 C5 D5 | \
+            B4 A4 B4 C5 B4 C5 A4 B4 C5 B4 C5 D5 C5 D5 B4 C5 | A4:4 D5:2 C5 B4:4 - | \
+            -:2 D5 C5 B4 A4 A4 G4:3 B4:1 | A4:3 C5:1 B4:3 D5:1 C5:3 E5:1 A4:3 C5:1 | \
+            B4:3 D5:1 C5:3 E5:1 D5:8 | D5:4 C5:3 A4:1 B4:3 G4:1 C5:3 A4:1 | \
+            D5:3 D5:1 C5:3 B4:1 A4:2 A4 D5 D5 | D5:4 D5:2 D5 D5 D5 -:4",
+            "C C D7 G | Dsus4 D G G | C C C C G/C G/B G/B G/B | Am7 D7 G G | C C Am Am | \
+            D D Bm Bm | Em Em Em Em Am Am Am G | D D D/F# D7 G G G/B G7 | C Am/C D G/B | \
+            D/F# G C D7 | G Am/C D D | Em7 F#dim G F#dim/A | G/B Am/C D G/B | D G/B D D7",
+        )
+        .with_left("!f C4:2 C4 C4 C4 D3:4 G2 | D3:6 D3:2 G2:4 !p G3:2 G3 | C4 C4 C4 C4 C4 B3 B3 B3 | \
+            A3 A3 D3 D3 G3:4 G3:2 G3 | C4:4 -:6 A3:2 A3 A3 | D4 D3 -:8 B3:2 D3 | \
+            E3:4 -:2 E3 A3:6 G3:2 | D4 D3 F#3 D3 G3 G2 B2 G2 | C3 C3 C3 C3 D3 D3 B2 G2 | \
+            F#3 D3 G3:4 C3 D3 | G2 C3 D3 D3:3 F#3:1 | E3:3 G3:1 F#3:3 A3:1 G3:3 B3:1 A3:3 C4:1 | \
+            B3:3 G3:1 C4:3 A3:1 D4:2 D3 B2 G2 | D3 D4 B3 G3 D4 D3 -:4")
+        .with_lines(&[
+            line(
+                "Altos",
+                gm::CHOIR_AAHS,
+                "!f G4:2 G4 G4 G4 F#4:4 D4:2 G4 | G4:4 F#4 G4 - | -:8 !mf G4:4 G4:2 G4 | \
+                G4 G4 F#4 F#4 G4:1 F#4 G4 A4 G4 A4 F#4 G4 | \
+                E4 D4 E4 F#4 E4 G4 F#4 G4 A4 G4 A4 B4 A4 B4 G4 A4 | \
+                F#4 E4 F#4 G4 F#4 A4 G4 A4 B4 A4 B4 C5 B4 C5 A4 B4 | \
+                G4 F#4 G4 A4 G4 A4 F#4 G4 E4 D4 E4 F#4 E4 F#4 G4 A4 | F#4:4 A4:2 A4 G4:4 - | \
+                -:2 B4 A4 G4 F#4 F#4 -:4 | - D4:3 F#4:1 E4:3 G4:1 F#4:3 A4:1 | \
+                G4:3 B4:1 A4:3 G4:1 F#4:3 E4:1 D4:4 | - F#4:3 F#4:1 D4:3 G4:1 F#4:3 A4:1 | \
+                G4:3 G4:1 A4:3 G4:1 F#4:2 F#4 G4 B4 | A4:4 G4:2 B4 A4 A4 -:4",
+            ),
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "!f E4:2 E4 E4 E4 A3:4 B3:2 C4 | D4:6 D4:2 D4:4 - | -:8 !mf D4:4 D4:2 D4 | \
+                E4 E4 D4 D4 D4:4 D4:2 D4 | E4:4 -:6 E4:2 E4 E4 | F#4 F#4 -:8 F#4:2 F#4 | \
+                G4:4 -:2 E4 C4:6 D4:2 | D4 D4 D4 F#4 D4:4 - | -:2 E4 E4 E4 A3 A3 -:4 | -:16 | \
+                -:12 F#3:3 A3:1 | G3:3 B3:1 A3:3 C4:1 B3:3 D4:1 C4:3 E4:1 | \
+                D4:3 B3:1 E4:3 E4:1 F#4:2 D4 D4 G4 | F#4:4 D4:2 G4 F#4 F#4 -:4",
+            ),
+            line(
+                "Basses",
+                gm::CHOIR_AAHS,
+                "!f C4:2 C4 C4 C4 D3:4 G3 | D3:6 D3:2 G3:4 !mf G3:2 G3 | C4 C4 C4 C4 C4 B3 B3 B3 | \
+                A3 A3 D3 D3 G3:4 G3:2 G3 | C4:4 -:6 A3:2 A3 A3 | D4 D4 -:8 B3:2 D3 | \
+                E3:4 -:2 E3 A3:6 G3:2 | D4 D4 F#3 D3 G3:4 - | -:2 C3 C3 C3 D3 D3 -:4 | -:16 | \
+                -:12 D3:3 F#3:1 | E3:3 G3:1 F#3:3 A3:1 G3:3 B3:1 A3:3 C4:1 | \
+                B3:3 G3:1 C4:3 A3:1 D4:2 D3 B3 G3 | D4:4 B3:2 G3 D4 D3 -:4",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!f G5:1 F#5 G5 A5 G5:2 C6:3 B5:1 C6 A5 B5 A5 B5 C6 | \
+                A5:6 A5:2 B5:1 D5 E5 F#5 !p G5 B4 C5 D5 | E5 D5 C5 D5 E5 D5 E5 F#5 G5:2 G4 D5 D5 | \
+                C6 C6 C6 C6 B5:1 A5 B5 C6 B5 C6 A5 B5 | \
+                G5 F#5 G5 A5 G5 B5 A5 B5 C6 B5 C6 D6 C6 D6 B5 C6 | \
+                A5 G5 A5 B5 A5 C6 B5 C6 D6 C6 D6 E6 D6 E6 C6 D6 | \
+                B5 A5 B5 C6 B5 C6 A5 B5 C6 B5 C6 D6 C6 D6 B5 C6 | A5:2 D5 -:8 G5:2 F5 | \
+                E5:1 F5 D5 E5 C5 D5 B4 C5 A4:2 D4 G4:3 B4:1 | \
+                A4:3 C5:1 B4:3 D5:1 C5:3 E5:1 A4:3 C5:1 | B4:3 D5:1 C5:3 E5:1 D5:8 | \
+                _:4 C6:3 A5:1 B5:3 G5:1 C6:3 A5:1 | D6:3 D6:1 C6:3 B5:1 A5 D5 E5 F#5 G5 A5 B5 C6 | \
+                A5 D5 E5 F#5 G5 A5 B5 C6 A5 D5 E5 F#5 G5 A5 B5 C6",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!f E5:1 D5 E5 F#5 E5 F#5 G5 E5 F#5 G5 A5 F#5 D5:2 G5 | G5:4 F#5 G5:2 D5 !p B4 B4 | \
+                G4:4 - D6 G5:2 G5 | G5 G5 F#5 F#5 G5:1 F#5 G5 A5 G5 A5 F#5 G5 | \
+                E5 D5 E5 F#5 E5 G5 F#5 G5 A5 G5 A5 B5 A5 B5 G5 A5 | \
+                F#5 E5 F#5 G5 F#5 A5 G5 A5 B5 A5 B5 C6 B5 C6 A5 B5 | \
+                G5 F#5 G5 A5 G5 A5 F#5 G5 E5 D5 E5 F#5 E5 F#5 G5 A5 | F#5:2 F#5 -:8 D5:2 B4 | \
+                G4 B4 A4:1 B4 G4 A4 F#4:2 F#4 -:4 | - D5:3 F#5:1 E5:3 G5:1 F#5:3 A5:1 | \
+                G5:3 B5:1 A5:3 G5:1 F#5:3 E5:1 D5:4 | - A5:3 F#5:1 D5:3 G4:1 F#5:3 A4:1 | \
+                G5:3 B5:1 A5:3 G5:1 F#5 F#5 G5 A5 D5 F#5 G5 A5 | \
+                F#5 F#5 G5 A5 D5 F#5 G5 A5 F#5 F#5 G5 A5 G5 F#5 G5 A5",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!f C5:2 C5 C5 E4 A4:4 G4:2 D4 | D5:6 D5:2 D4 G4 !p D4 G4 | \
+                G4:1 F#4 E4 F#4 G4 F#4 G4 A4 D4:4 B4:2 B4 | E4 A4 A4 D4 D4:4 D4:2 D4 | \
+                E4:4 C5:2 C5 A4 E4 E4 E4 | D5:4 D5:2 D5 D4:4 F#4:2 F#4 | G4:4 -:2 G4 A4:6 D5:2 | \
+                D5 A4 -:8 G4:2 D4 | E4 G4 E4 E4 A3 D4 -:4 | -:16 | -:12 F#4:3 A4:1 | \
+                G4:3 B4:1 A4:3 C5:1 B4:3 D4:1 C4:3 E4:1 | D4:3 D4:1 E4:3 E4:1 F#4:2 D4 D5 D5 | \
+                D5:4 D4:2 D5 D5 A4 -:4",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "!f C5:2 C5 C5 C5 C5:4 B4 | A4:6 A4:2 B4:4 - | -:8 !mf D5:4 G4:2 G4 | \
+                C5 C5 C5 C5 B4:1 A4 B4 C5 B4 C5 A4 B4 | \
+                G4 F#4 G4 A4 G4 B4 A4 B4 C5 B4 C5 D5 C5 D5 B4 C5 | \
+                A4 G4 A4 B4 A4 C5 B4 C5 D5 C5 D5 E5 D5 E5 C5 D5 | \
+                B4 A4 B4 C5 B4 C5 A4 B4 C5 B4 C5 D5 C5 D5 B4 C5 | A4:4 D5:2 C5 B4:4 - | \
+                -:2 D5 C5 B4 A4 A4 G4:3 B4:1 | A4:3 C5:1 B4:3 D5:1 C5:3 E5:1 A4:3 C5:1 | \
+                B4:3 D5:1 C5:3 E5:1 D5:8 | D5:4 C5:3 A4:1 B4:3 G4:1 C5:3 A4:1 | \
+                D5:3 D5:1 C5:3 B4:1 A4:2 A4 D5 D5 | D5:4 D5:2 D5 D5 D5 -:4",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 85-91 of the score.
+        Part::new(
+            "Wonderful, last time",
+            "!f D5:3 C5:1 B4:4 -:8 | D5:3 C5:1 B4:4 -:8 | -:2 D5 D5 D5 G5:4 -:2 G5 | \
+            E5 D5 C5 B4 A4 A4 - C5 | A4:6 A4:2 B4:4 -:2 B4 | E5 D5 C5 C5 C5 B4:4 A4:2 | \
+            A4:6 A4:2 G4:8",
+            "G | G | G G G/B G/B | C C Am/C Am/C D D G C | D D G G | \
+            C G/B F#dim/A C/G D7/F# G G Am7/C | D D7 G G",
+        )
+        .with_left("!f G3:3 G2:1 G2:4 -:8 | G3:3 G2:1 G2:4 -:8 | -:2 G3 G3 G3 B3:4 -:2 B2 | \
+            C3 C3 C3 C3 D3 D3 - C3 | D3:6 D3:2 G3:4 -:2 G3 | C4 B3 A3 G3 F#3 G3:4 C3:2 | \
+            D3:4 D2 G2:8")
+        .with_lines(&[
+            line(
+                "Altos",
+                gm::CHOIR_AAHS,
+                "!f B4:3 A4:1 G4:4 -:8 | B4:3 A4:1 G4:4 -:8 | -:2 G4 G4 G4 G4:4 -:2 G4 | \
+                G4 B4 A4 G4 F#4 F#4 - G4 | F#4:6 F#4:2 G4:4 -:2 G4 | G4 G4 F#4 G4 A4 G4:4 G4:2 | \
+                F#4:6 D4:2 D4:8",
+            ),
+            line(
+                "Tenors",
+                gm::CHOIR_AAHS,
+                "!f G4:3 D4:1 D4:4 -:8 | G4:3 D4:1 D4:4 -:8 | -:2 B3 B3 B3 D4:4 -:2 D4 | \
+                E4 E4 E4 E4 A3 A3 - E4 | A3:6 D4:2 D4:4 -:2 D4 | E4 B3 C4 E4 D4 D4:4 E4:2 | \
+                D4:6 C4:2 B3:8",
+            ),
+            line(
+                "Basses",
+                gm::CHOIR_AAHS,
+                "!f G3:3 G3:1 G3:4 -:8 | G3:3 G3:1 G3:4 -:8 | -:2 G3 G3 G3 B3:4 -:2 B2 | \
+                C3 C3 C3 C3 D3 D3 - C3 | D3:6 D3:2 G3:4 -:2 G3 | C4 B3 A3 G3 F#3 G3:4 C3:2 | \
+                D3:6 D3:2 G2:8",
+            ),
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!f D6:1 C6 D6 C6 B5 C6 B5 C6 D6 C6 D6 C6 B5 C6 B5 C6 | \
+                D6 C6 D6 C6 B5 C6 B5 C6 D6 C6 D6 C6 B5 C6 B5 C6 | \
+                D6 C6 D6 C6 B5 A5 B5 A5 G5 F#5 G5 F#5 E5 D5 E5 D5 | \
+                C5 B4 C5 B4 A4 G4 A4 G4 F#4 A5 G5 F#5 G5:2 E5 | F#5:6 F#5:2 G5 D5 G5 F#5 | \
+                E5 D5 C5:6 B4:4 A4:2 | A4:6 A4:2 B4:1 D4 E4 F#4 G4 A4 B4 C5",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!f B5:1 A5 B5 A5 G5 A5 G5 A5 B5 A5 B5 A5 G5 A5 G5 A5 | \
+                B5 A5 B5 A5 G5 A5 G5 A5 B5 A5 B5 A5 G5 A5 G5 A5 | \
+                B5 A5 B5 A5 G5 F#5 G5 F#5 B5 A5 B5 A5 G5 F#5 G5 F#5 | \
+                E5 D5 E5 D5 C5 B4 C5 B4 A4 C5 B4 A4 B4:2 C5 | A4:6 A4:2 B4 B4 D5 B4 | \
+                G4 G4 F#4 G4 A4 G4:4 G4:2 | F#4:6 F#4:2 G4:3 D4:1 E4 F#4 G4 A4",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!f G4:3 D4:1 D4:4 -:8 | G4:3 D4:1 D4:4 -:8 | -:2 D4 D4 D4 D5:4 -:2 G4 | \
+                G4 G4 E4 E4 F#4 D4 - G4 | D4:6 D4:2 D4 D4 B4 D4 | E4 G4 C4 E4 D4 D4:4 E4:2 | \
+                D4:6 D4:2 D4:8",
+            ),
+            line(
+                "Oboes",
+                gm::OBOE,
+                "!f D5:3 C5:1 B4:4 -:8 | D5:3 C5:1 B4:4 -:8 | -:2 D5 D5 D5 G5:4 -:2 G5 | \
+                E5 D5 C5 B4 A4 A4 - C5 | A4:6 A4:2 B4:4 -:2 B4 | E5 D5 C5 C5 C5 B4:4 A4:2 | \
+                A4:6 A4:2 G4:8",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 92-99 of the score.
+        Part::new(
+            "Postlude",
+            "-:16 | - | - | - | - | - | - | -",
+            "G G/B Am7 D7 | G G/B Am7 D7 | G G/B C C | Am C D D | Bm D7 Em Em | Am Am/C D D | \
+            Em7 Em7 C/E Am D7 D G Am7/C | Dsus4 D G G",
+        )
+        .with_left("!f G3:2 A3 B3 B2 A2 A3 D4 D3 | G3 G2 B2 E3 A2 A3 D4 D3 | G3 G2 B2 G2 C3 B2 C3 E3 | \
+            A2 A3 B3 C4 D4:4 D3 | -:2 B3 C4 D4 E4:4 E3:2 G3 | A3 B3 C4 C3 D3 C3 D3 B2 | \
+            E3 D3 E3 A2 D3:4 G3:2 C3 | D3:4 D2 G2:8")
+        .with_lines(&[
+            line(
+                "Violins I",
+                gm::VIOLIN,
+                "!f D5:6 G4:2 C5 C5 C5 C5 | C5 B4 G5:6 F#5:1 E5 F#5 G5 E5 F#5 | \
+                G5:2 D5 G5 F#5 E5:1 D5 E5 F#5 E5 G5 F#5 G5 | \
+                A5 G5 A5 B5 A5 B5 G5 A5 F#5 E5 F#5 G5 F#5 A5 G5 A5 | \
+                B5 A5 B5 C6 B5 C6 A5 B5 G5 F#5 G5 A5 G5 A5 F#5 G5 | \
+                E5 F#5 D5 E5 C5 D5 B4 C5 A4:2 D4 D5:4 | _:2 G4 C5:6 D5:2 B4 A4 | A4:6 G4:2 G4:8",
+            ),
+            line(
+                "Violins II",
+                gm::VIOLIN,
+                "!f B4:4 G5:6 G4:2 F#4:4 | D6 -:2 G5 C6 C6 C6 C6 | C6 B5 -:8 E5:2 D5 | \
+                C5:1 B4 C5 D5 C5 D5 B4 C5 A4 G4 A4 B4 A4 C5 B4 C5 | \
+                D5 C5 D5 E5 D5 E5 C5 D5 B4 A4 B4 C5 B4 C5 A4 B4 | \
+                C5 D5 B4 C5 A4 B4 G4 A4 F#4:4 -:2 D4 | G4:6 E4:2 F#4:4 G4 | _ F#4 G4:8",
+            ),
+            line(
+                "Violas",
+                gm::VIOLA,
+                "!f G4:6 D4:2 E4 A3 A4 A4 | G4:4 D4:2 B4 A4 A4 A4 A4 | \
+                G4:4 D5:2 B4 G4:1 F#4 G4 A4 G4:2 G4 | E4:4 -:2 E4 F#4:4 D5 | \
+                -:2 F#4 B4 F#4 G4:4 -:2 E4 | E4:4 -:2 E4 F#4:4 -:2 F#4 | E4:6 C4:2 A3 D4 D4 E4 | \
+                A3:4 D4 B3:8",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+    ],
+    form: &[
+        "Ritornello",
+        "For unto us",
+        "Unto us a son, in D major",
+        "Wonderful, in D major",
+        "For unto us again",
+        "Wonderful",
+        "In C major",
+        "Back in G",
+        "Wonderful, last time",
+        "Postlude",
+    ],
+    drums_from: 0,
+    about: "A chorus on a tune Handel took from one of his Italian duets: the voices come in \
+            one after another with running sixteenths over a continuo that walks in eighths. \
+            Four times the whole choir stops to call out the names in block chords, forte, \
+            over the violins' quick figures: in D major, the dominant (bar 33), in G (bar \
+            49), in C, the subdominant (bar 68), and in G again (bar 85). On the way the bass \
+            goes round the circle of fifths (D, Bm, Em, Am, D, G, C), and an F major chord \
+            turns the music to C major; there and later the bass holds its note under the \
+            next chord (C over F, G over C) and then steps down into it. The sopranos are on \
+            the Lead and the altos, tenors and basses each on a line of their own; the oboes \
+            play with the sopranos.",
+};
+
 // Source: https://www.mutopiaproject.org/ftp/MussorgskyM/pictures-at-an-exhibition/pictures-at-an-exhibition-lys.zip
 // (great-gate-allegro.ily, Pavel Lamm's edition)
 pub(super) const GREAT_GATE_OF_KIEV: Song = Song {
