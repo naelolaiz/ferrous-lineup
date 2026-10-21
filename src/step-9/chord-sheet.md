@@ -25,7 +25,9 @@ it changes, and write itself from what the song plays.
 The sheet is laid out like a printed chart:
 
 - **Four bars to a line.** Each bar shows its number in the corner, and
-  the time signature where it changes (the "4/4" in bar 1).
+  the time signature where it changes (the "4/4" in bar 1). (Later the
+  sheet learned to fit as many bars to a line as its names allow: see
+  [The chord sheet fills the window](chord-sheet-layout.md).)
 - **Each section starts a new line**, under its name: "Chorus 1",
   "Chorus 2". A section played three times is headed "Verse ×3". A
   double bar line marks where a section starts, and the final bar line
@@ -519,7 +521,8 @@ project at all; the borrow checker would refuse it.
 3. **Bars per line.** Charts of songs in 3/4 often have eight bars to a
    line. Make `BARS_PER_LINE` a setting of the window, with a choice of
    2, 4 or 8. Where is it used, and do the up and down arrows still land
-   in the right column?
+   in the right column? (The app does this now; try it before reading
+   [how](chord-sheet-layout.md).)
 4. **Read back what the song plays.** After "Write the chords the song
    plays", change a few notes in the piano roll. Write a method that
    compares the sheet with what is heard now, bar by bar, and returns
