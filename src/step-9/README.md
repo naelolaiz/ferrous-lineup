@@ -82,6 +82,17 @@ else was needed:
 - the same harmony named four ways on the chord sheet, as chords, sets
   or micromodes, and the song's own notes cut into sets, vertically or
   in a line: [one harmony, four names](harmony-notations.md);
+- less in the way of the music: songs that open on their chords, one
+  row of buttons and a list of every key ([quicker to work in](workflow.md)),
+  [numerals in minor keys](minor-numerals.md) written as your book
+  writes them, a [mixer](mixer.md) with pan, a reverb send and meters,
+  [any channel sent over MIDI](midi-out-menus.md) from its instrument
+  menu, and [Library tick boxes](library-filters.md) that keep the
+  presets like the song;
+- a chord sheet that can [fill the main window](chord-sheet-layout.md)
+  with as many bars to a line as show every name in full, and bars
+  [inserted and deleted](insert-delete-bars.md) with the whole song
+  moving along;
 - and this book, [online and as a PDF](book-online.md).
 
 ## Trying it

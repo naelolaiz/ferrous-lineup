@@ -54,7 +54,12 @@ WAV…** saves the song as a sound file.
 
 The **MIDI** menu connects a MIDI keyboard, which plays the channel
 selected in the channel rack, and an output port for **MIDI Out**
-channels, which play an external synth. No MIDI keyboard? Turn on
+channels, which play an external synth. Any one channel can be sent
+there too: its instrument menu, in the mixer or on the rack's
+right-click, starts with **Send over MIDI**, where you pick its MIDI
+channel (1 to 16) and the output. It keeps its instrument, sent as a
+program change, and a drum goes out as its note of a General MIDI drum
+set. **Play it here instead** brings back the app's own sound. No MIDI keyboard? Turn on
 **Typing keyboard to piano** there, and the letter keys play notes. The
 status bar names the chord you hold down, and **● Rec** records what
 you play into the pattern while it loops. **File > Export song as
@@ -79,12 +84,21 @@ of the project, and a big key for each chord of the key (I to vii°),
 coloured by what it does: home, away or tension. Hold one, or press
 **1** to **7**, to play its chord; the chords that often come next
 light up, and while the music plays, the chord you hear lights up too.
+In a minor key, **Edit > Settings… > Harmony** chooses how the numerals
+on the third, sixth and seventh degrees are written: bIII bVI bVII,
+counted from the major scale as pop and jazz books do, or III VI VII,
+counted from the minor scale as classical books do.
 The **Library** tab next to the pattern list holds an alphabetical
 **Presets** list, combining all 171 harmony presets, 107 rhythm presets
 and your saved styles. **Edit > Settings… > Library > Style list** can instead group
 them by genre, with a separate **User styles** group. Equivalent
 style/rhythm entries are combined; distinct playing patterns remain available. They cover pop, rock, blues, jazz, soul, hip hop,
 electronic, Latin, tango, flamenco, reggae, folk and classical music.
+Tick boxes under the search keep only the presets like the song: in
+its time signature (**In 4/4**), made for about its tempo (**Near 120
+BPM**, at most 1.15 times faster or slower) and **With chords** (those
+that bring a progression). Their labels show the song's own time
+signature and tempo.
 Click one to review its copy options, then **Apply** to hear it in your key.
 **Ctrl-click** (also ⌘-click on a Mac) applies the previous options immediately.
 Right-click and choose **Play the whole
@@ -97,6 +111,8 @@ pieces such as *Boléro* and *The Rite of Spring*, plus new tunes written
 to show off the blues, tango, flamenco and more. It also plays every
 style as a short song. Type a few letters of a title, composer, genre,
 key or time signature as soon as the menu opens to search them all.
+A song demo opens with the chord sheet in front; **File > New beat**
+opens with the channel rack instead.
 
 The Library groups its application options into accompaniment, harmony and timing: **Playing patterns**, **Voices / instruments**, **Time
 signature**, **Chord progression**, **Tempo**, and **Swing**.
@@ -180,11 +196,15 @@ embedded in project files, so reopening a song keeps its custom patterns.
 
 ## The mixer
 
-**Mixer** in the toolbar, **View > Mixer**, or **F9** opens master and
-per-instrument volume, mute and solo controls, listed in the order of a
-conductor's score, in sections, with all the drums together. They work
-with both SoundFont and Lineup Osc sounds, plus samples. The master stereo reverb
-has wet/dry, decay, damping and pre-delay controls. Mixer settings are
+The mixer button in the toolbar (three faders), **View > Mixer**, or
+**F9** opens the mixer. Its channels are listed in the order of a
+conductor's score, in sections, with all the drums together. Each has
+its instrument (click it to choose another, or to send the channel over
+MIDI), a level meter, a volume, a pan from L100 to R100 (double-click
+for the middle), how much of it goes into the reverb, mute and solo.
+The master has a meter for each speaker. They work with both SoundFont
+and Lineup Osc sounds, plus samples. The master stereo reverb has
+wet/dry, decay, damping and pre-delay controls. Mixer settings are
 saved with the project, support undo, and are used for WAV export.
 
 ## Track heights, selections and shortcuts
@@ -193,6 +213,9 @@ Resize an individual playlist track by dragging the lower edge of its
 name header. Double-click that edge to reset it, or use **Track height**
 in the header’s right-click menu. Heights follow track moves, are saved
 with the project, and support Undo.
+
+**F1**, or **Help > Keyboard shortcuts**, lists every key the app
+answers to, window by window.
 
 **Follow playhead** in the toolbar and **Settings > Playback** keeps the playing
 position visible in the playlist, chord sheet and piano roll. Turning it
@@ -216,9 +239,12 @@ are deleted. Open popups and configuration controls keep their own keys.
 
 ## The chord sheet and the band
 
-**F5**, or **📝 Chords** in the toolbar, opens the **chord sheet**: the
-song's harmony bar by bar, four bars to a line and each section under
-its name, as a lead sheet writes it. Click a bar and type its harmony:
+**F5**, or the first window button in the toolbar (a page of chord
+names), opens the **chord sheet**: the
+song's harmony bar by bar, each section under its name, as a lead sheet
+writes it. **Bars per line** puts as many bars on a line as show every
+name in full, at its full size (1, 2, 4, 8, 12 or 16, so that lines
+start where phrases do), or the number you pick. Click a bar and type its harmony:
 chords (`Am7 D7`, `G7/B`, `F#m7b5`), Roman numerals in the key
 (`ii7 V7`), pitch-class sets (`3-11 T2`, `{0,1,4}`), micromodes
 (`Menor 3`), twelve-tone row forms (`P0`, `RI7`) or `N.C.`; a `/` holds
@@ -234,8 +260,15 @@ the same harmony **As written**, as **Chords**, as **Pitch-class sets**
 without changing a note. For sets and micromodes it can also read the
 song's notes, **together** (vertically) or **in a line** (serially), in
 groups of 2 to 12 notes, from every track or one. The sheet is saved with the project and
-follows key changes, re-metering and copied sections. It is an extra
-window: the playlist stays as it is.
+follows key changes, re-metering and copied sections. Right-click a bar
+to **Insert a bar before**, **Insert a bar after** or **Delete this
+bar** (or the bars selected): everything after it moves along, notes,
+chords, markers and sections, and a new bar is empty, so the harmony
+before it goes on through it. The bar numbers on the playlist's ruler
+have the same items. The sheet is a window over the playlist, or, with
+**⛶ Fill the window** (also **View > Chord sheet in the main window**),
+takes the playlist's place in the main window, with longer lines;
+**Back to the playlist** puts it back.
 
 **File > New** opens an empty chord sheet with a **band**: type chords
 and a piano, a bass and drums play them, written as patterns on their
@@ -447,9 +480,10 @@ the text, buttons and menus bigger or smaller everywhere, as **Settings > Appear
 Interface size** does. **Ctrl+0** takes what is under the pointer back
 to 100%. The playlist's two zooms are also at the right end of the
 status bar.
-**Edit > Settings…** separates preferences into **Appearance**, **Library**,
-**Audio** and **Playback** categories. Appearance holds interface size and
-all editor zoom levels; Library holds style grouping, saved style defaults
+**Edit > Settings…** separates preferences into **Appearance**, **Harmony**,
+**Library**, **Audio** and **Playback** categories. Appearance holds interface size and
+all editor zoom levels; Harmony holds how numerals are written in minor
+keys; Library holds style grouping, saved style defaults
 and the styles folder; Audio holds output information and SoundFont settings;
 Playback holds follow playback and practice controls. The former zoom,
 Sounds and Practice menus are replaced by these categories. Zoom controls
@@ -457,8 +491,11 @@ share the current values with the keyboard and wheel shortcuts, which
 continue to work as before.
 The View menu also shows or hides each window and panel, and **Alt+F8**
 hides the Patterns and Library panel to give the playlist more room. The
-zoom, the window size and where you left the windows are remembered for
-next time.
+zoom, the size of the app's window and where you left the windows are
+remembered for next time. A window opens at the size of what it shows
+(the mixer, the channel rack, the shortcuts) or, for a window you work
+in (the piano roll, the chord sheet), at its own size the first time
+after the app starts.
 
 ## Exporting video, and ready-built programs
 
