@@ -238,8 +238,8 @@ struct BarClicks {
     start_typing: Option<(usize, String)>,
 }
 
-/// One line of the sheet: up to four bars, and the name of the section
-/// it starts, if it starts one.
+/// One line of the sheet: its bars (as many as fit, or as chosen), and the
+/// name of the section it starts, if it starts one.
 struct Line {
     heading: Option<String>,
     bars: Vec<Bar>,
@@ -268,6 +268,216 @@ impl Marks {
     fn ending_in(&self, bar: &Bar) -> Option<Ending> {
         self.ending
             .filter(|ending| (ending.start..ending.end).contains(&bar.start))
+    }
+}
+
+/// One bar being drawn: the song it is in, the bar and where it is.
+#[derive(Clone, Copy)]
+struct BarView<'a> {
+    project: &'a Project,
+    meter: &'a Meter,
+    keys: &'a KeyMap,
+    bar: Bar,
+    rect: Rect,
+    marks: Marks,
+    /// The band's ending, if the bar is in it.
+    ending: Option<Ending>,
+}
+
+impl BarView<'_> {
+    /// Whether a repeated chorus starts on this bar.
+    fn repeat_from(&self) -> bool {
+        self.marks
+            .repeat
+            .is_some_and(|(start, _)| start == self.bar.start)
+    }
+
+    /// Whether a repeated chorus ends with this bar.
+    fn repeat_to(&self) -> bool {
+        self.marks
+            .repeat
+            .is_some_and(|(_, end)| end == self.bar.end())
+    }
+
+    /// The paper and the bar lines: a double one where a section
+    /// starts, repeat signs around a chorus played more than once, and
+    /// the final bar line where the song ends.
+    fn bar_lines(
+        &self,
+        painter: &egui::Painter,
+        hovered: bool,
+        starts_section: bool,
+        ends_line: bool,
+    ) {
+        let (bar, rect) = (self.bar, self.rect);
+        let fill = if hovered { PAPER_HOVER } else { PAPER };
+        painter.rect_filled(rect.shrink2(vec2(0.0, 0.5)), 0.0, fill);
+        let line = Stroke::new(1.0, BAR_LINE);
+        let thick = Stroke::new(3.0, BAR_LINE);
+        painter.vline(rect.left(), rect.y_range(), line);
+        if self.repeat_from() {
+            painter.vline(rect.left() + 1.5, rect.y_range(), thick);
+            painter.vline(rect.left() + 5.0, rect.y_range(), line);
+            repeat_dots(painter, rect.left() + 8.5, rect.center().y);
+        } else if starts_section && bar.number > 0 {
+            painter.vline(rect.left() + 3.0, rect.y_range(), line);
+        }
+        let song_end = self.project.song_length();
+        if self.repeat_to() {
+            repeat_dots(painter, rect.right() - 8.5, rect.center().y);
+            painter.vline(rect.right() - 5.0, rect.y_range(), line);
+            painter.vline(rect.right() - 1.5, rect.y_range(), thick);
+        } else if song_end > 0 && bar.start < song_end && bar.end() >= song_end {
+            painter.vline(rect.right() - 5.0, rect.y_range(), line);
+            painter.vline(rect.right() - 1.5, rect.y_range(), thick);
+        } else if ends_line {
+            painter.vline(rect.right(), rect.y_range(), line);
+        }
+    }
+
+    /// The bar number, which moves the playhead there, and what changes
+    /// in this bar: the time signature, the band's variation and style,
+    /// and the key; or "held" on the ending's last bar.
+    fn changes(
+        &self,
+        ui: &mut Ui,
+        painter: &egui::Painter,
+        id: egui::Id,
+        actions: &mut Vec<SheetAction>,
+    ) {
+        let (project, bar, rect) = (self.project, self.bar, self.rect);
+        let key = self.keys.key_at(bar.start);
+        let number_rect = painter.text(
+            rect.left_top() + vec2(PADDING, 2.0),
+            Align2::LEFT_TOP,
+            (bar.number + 1).to_string(),
+            FontId::proportional(SMALL_SIZE),
+            theme::TEXT_DIM,
+        );
+        let number = ui.interact(number_rect.expand(3.0), id.with("number"), Sense::click());
+        if theme::hint(number, "Move the playhead to this bar").clicked() {
+            actions.push(SheetAction::Seek(bar.start));
+        }
+        let previous = (bar.number > 0).then(|| self.meter.bar(bar.number - 1));
+        let mut marks_right = number_rect.right();
+        if previous.is_none_or(|previous| previous.time != bar.time) {
+            let time = painter.text(
+                number_rect.right_top() + vec2(6.0, 0.0),
+                Align2::LEFT_TOP,
+                bar.time.to_string(),
+                FontId::proportional(SMALL_SIZE),
+                theme::ACCENT,
+            );
+            marks_right = time.right();
+        }
+        // Where the band changes variation: its letter in a box, as a
+        // rehearsal mark is printed.
+        if let Some(marker) = project
+            .variations()
+            .iter()
+            .find(|marker| marker.start == bar.start)
+        {
+            let letter = painter.text(
+                pos2(marks_right + 9.0, number_rect.top()),
+                Align2::LEFT_TOP,
+                marker.variation.letter(),
+                FontId::proportional(SMALL_SIZE),
+                theme::ACCENT,
+            );
+            painter.rect_stroke(
+                letter.expand2(vec2(3.0, 0.5)),
+                2.0,
+                Stroke::new(1.0, theme::ACCENT),
+                StrokeKind::Middle,
+            );
+            marks_right = letter.right() + 3.0;
+        }
+        // Where the band changes style: the style's name.
+        if project
+            .section_styles()
+            .iter()
+            .any(|marker| marker.start == bar.start)
+        {
+            painter.text(
+                pos2(marks_right + 9.0, number_rect.top()),
+                Align2::LEFT_TOP,
+                project.style_name_at(bar.start),
+                FontId::proportional(SMALL_SIZE),
+                theme::ACCENT,
+            );
+        }
+        if bar.number > 0 && self.keys.key_at(bar.start - 1) != key {
+            painter.text(
+                rect.right_top() + vec2(-PADDING, 2.0),
+                Align2::RIGHT_TOP,
+                format!("→ {}", key.name()),
+                FontId::proportional(SMALL_SIZE),
+                theme::ACCENT,
+            );
+        } else if self.ending.is_some_and(|ending| ending.end == bar.end()) {
+            painter.text(
+                rect.right_top() + vec2(-PADDING - 6.0, 2.0),
+                Align2::RIGHT_TOP,
+                "held",
+                FontId::proportional(SMALL_SIZE),
+                ENDING,
+            );
+        }
+    }
+
+    /// The menu on a bar. `here` are the harmonies written in it, and
+    /// `selection` the bars selected, when it is one of several.
+    fn menu(
+        &self,
+        ui: &mut Ui,
+        here: &[ChordMarker],
+        selection: Option<(usize, usize)>,
+        clicks: &mut BarClicks,
+        actions: &mut Vec<SheetAction>,
+    ) {
+        let (project, meter, bar) = (self.project, self.meter, self.bar);
+        if ui.button("Type in this bar").clicked() {
+            clicks.start_typing = Some((bar.number, write_bar(here, &bar)));
+        }
+        let clear = ui.add_enabled(!here.is_empty(), egui::Button::new("Clear this bar"));
+        if clear.clicked() {
+            actions.push(SheetAction::SetChords {
+                start: bar.start,
+                end: bar.end(),
+                markers: Vec::new(),
+            });
+        }
+        if ui.button("Move the playhead here").clicked() {
+            actions.push(SheetAction::Seek(bar.start));
+        }
+        ui.separator();
+        if let Some(edit) = bar_edits(ui, bar.number, selection) {
+            actions.push(SheetAction::Bars(edit));
+        }
+        if project.band().is_some() {
+            ui.separator();
+            variation_menu(ui, project, meter, bar.number, selection, actions);
+            style_menu(ui, project, meter, bar.number, selection, actions);
+            for marker in here
+                .iter()
+                .filter(|marker| marker.harmony != HarmonyName::NoChord)
+            {
+                ui.menu_button(format!("Band on {}", marker.harmony), |ui| {
+                    breaks_menu(ui, &bar, here, *marker, actions);
+                });
+            }
+        }
+        if project.band().is_some() && self.ending.is_none() {
+            let end = ui.button("End the song here");
+            if theme::hint(
+                end,
+                "The band stops after this bar; chords after it are cleared",
+            )
+            .clicked()
+            {
+                actions.push(SheetAction::EndHere(bar.number));
+            }
+        }
     }
 }
 
@@ -931,128 +1141,44 @@ impl ChordSheet {
         actions: &mut Vec<SheetAction>,
     ) -> BarClicks {
         let Cell { bar, rect, .. } = cell;
-        let ending = marks.ending_in(&bar);
+        let view = BarView {
+            project,
+            meter,
+            keys,
+            bar,
+            rect,
+            marks,
+            ending: marks.ending_in(&bar),
+        };
         let id = ui.scope_id().with(("chord-sheet-bar", bar.number));
         let response = ui.interact(rect, id, Sense::click_and_drag());
-        let key = keys.key_at(bar.start);
-        let here = markers_in(project, &bar);
+        view.bar_lines(painter, response.hovered(), starts_section, ends_line);
+        view.changes(ui, painter, id, actions);
+        let playing_here = playing.is_some_and(|step| (bar.start..bar.end()).contains(&step));
+        let names = self.names(view, (playing, heard), playing_here);
+        draw_names(painter, &names);
+        self.highlight(painter, view, playing_here);
+        self.read_mouse(ui, view, response, &names, actions)
+    }
 
-        // The paper and the bar lines: a double one where a section
-        // starts, repeat signs around a chorus played more than once, and
-        // the final bar line where the song ends.
-        let fill = if response.hovered() {
-            PAPER_HOVER
-        } else {
-            PAPER
-        };
-        painter.rect_filled(rect.shrink2(vec2(0.0, 0.5)), 0.0, fill);
-        let line = Stroke::new(1.0, BAR_LINE);
-        let thick = Stroke::new(3.0, BAR_LINE);
-        let repeat_from = marks.repeat.is_some_and(|(start, _)| start == bar.start);
-        let repeat_to = marks.repeat.is_some_and(|(_, end)| end == bar.end());
-        painter.vline(rect.left(), rect.y_range(), line);
-        if repeat_from {
-            painter.vline(rect.left() + 1.5, rect.y_range(), thick);
-            painter.vline(rect.left() + 5.0, rect.y_range(), line);
-            repeat_dots(painter, rect.left() + 8.5, rect.center().y);
-        } else if starts_section && bar.number > 0 {
-            painter.vline(rect.left() + 3.0, rect.y_range(), line);
-        }
-        let song_end = project.song_length();
-        if repeat_to {
-            repeat_dots(painter, rect.right() - 8.5, rect.center().y);
-            painter.vline(rect.right() - 5.0, rect.y_range(), line);
-            painter.vline(rect.right() - 1.5, rect.y_range(), thick);
-        } else if song_end > 0 && bar.start < song_end && bar.end() >= song_end {
-            painter.vline(rect.right() - 5.0, rect.y_range(), line);
-            painter.vline(rect.right() - 1.5, rect.y_range(), thick);
-        } else if ends_line {
-            painter.vline(rect.right(), rect.y_range(), line);
-        }
-
-        // The bar number, which moves the playhead there, and what
-        // changes in this bar: the time signature and the key.
-        let number_rect = painter.text(
-            rect.left_top() + vec2(PADDING, 2.0),
-            Align2::LEFT_TOP,
-            (bar.number + 1).to_string(),
-            FontId::proportional(SMALL_SIZE),
-            theme::TEXT_DIM,
-        );
-        let number = ui.interact(number_rect.expand(3.0), id.with("number"), Sense::click());
-        if theme::hint(number, "Move the playhead to this bar").clicked() {
-            actions.push(SheetAction::Seek(bar.start));
-        }
-        let previous = (bar.number > 0).then(|| meter.bar(bar.number - 1));
-        let mut marks_right = number_rect.right();
-        if previous.is_none_or(|previous| previous.time != bar.time) {
-            let time = painter.text(
-                number_rect.right_top() + vec2(6.0, 0.0),
-                Align2::LEFT_TOP,
-                bar.time.to_string(),
-                FontId::proportional(SMALL_SIZE),
-                theme::ACCENT,
-            );
-            marks_right = time.right();
-        }
-        // Where the band changes variation: its letter in a box, as a
-        // rehearsal mark is printed.
-        if let Some(marker) = project
-            .variations()
-            .iter()
-            .find(|marker| marker.start == bar.start)
-        {
-            let letter = painter.text(
-                pos2(marks_right + 9.0, number_rect.top()),
-                Align2::LEFT_TOP,
-                marker.variation.letter(),
-                FontId::proportional(SMALL_SIZE),
-                theme::ACCENT,
-            );
-            painter.rect_stroke(
-                letter.expand2(vec2(3.0, 0.5)),
-                2.0,
-                Stroke::new(1.0, theme::ACCENT),
-                StrokeKind::Middle,
-            );
-            marks_right = letter.right() + 3.0;
-        }
-        // Where the band changes style: the style's name.
-        if project
-            .section_styles()
-            .iter()
-            .any(|marker| marker.start == bar.start)
-        {
-            painter.text(
-                pos2(marks_right + 9.0, number_rect.top()),
-                Align2::LEFT_TOP,
-                project.style_name_at(bar.start),
-                FontId::proportional(SMALL_SIZE),
-                theme::ACCENT,
-            );
-        }
-        if bar.number > 0 && keys.key_at(bar.start - 1) != key {
-            painter.text(
-                rect.right_top() + vec2(-PADDING, 2.0),
-                Align2::RIGHT_TOP,
-                format!("→ {}", key.name()),
-                FontId::proportional(SMALL_SIZE),
-                theme::ACCENT,
-            );
-        } else if ending.is_some_and(|ending| ending.end == bar.end()) {
-            painter.text(
-                rect.right_top() + vec2(-PADDING - 6.0, 2.0),
-                Align2::RIGHT_TOP,
-                "held",
-                FontId::proportional(SMALL_SIZE),
-                ENDING,
-            );
-        }
-
-        // The harmonies, each where its beat falls, in the notation
-        // chosen: what is written, or the groups of notes the song plays.
-        // While the song plays, the one sounding is the brightest thing
-        // on the sheet.
+    /// The harmonies of a bar, each where its beat falls, in the
+    /// notation chosen: what is written, or the groups of notes the song
+    /// plays. While the song plays, the one sounding is the brightest
+    /// thing on the sheet.
+    fn names(
+        &self,
+        view: BarView,
+        (playing, heard): (Option<usize>, &[Shown]),
+        playing_here: bool,
+    ) -> Vec<Name> {
+        let BarView {
+            project,
+            bar,
+            rect,
+            marks,
+            ending,
+            ..
+        } = view;
         let reads_notes = self.notation.reads_notes();
         let sounding = playing.and_then(|step| {
             if reads_notes {
@@ -1064,9 +1190,8 @@ impl ChordSheet {
                 _ => project.chord_at(step).map(|marker| marker.start),
             }
         });
-        let playing_here = playing.is_some_and(|step| (bar.start..bar.end()).contains(&step));
-        let inner_left = rect.left() + PADDING + if repeat_from { 8.0 } else { 0.0 };
-        let inner_right = rect.right() - PADDING - if repeat_to { 8.0 } else { 0.0 };
+        let inner_left = rect.left() + PADDING + if view.repeat_from() { 8.0 } else { 0.0 };
+        let inner_right = rect.right() - PADDING - if view.repeat_to() { 8.0 } else { 0.0 };
         let x_of = |step: usize| {
             let along = (step - bar.start) as f32 / bar.length.max(1) as f32;
             inner_left + (inner_right - inner_left) * along
@@ -1077,7 +1202,7 @@ impl ChordSheet {
                 rect.top() + TOP..=rect.bottom(),
             )
         };
-        let (going_on, shown) = self.harmonies(project, meter, keys, &bar, marks, heard);
+        let (going_on, shown) = self.harmonies(project, view.meter, view.keys, &bar, marks, heard);
         let mut names: Vec<Name> = Vec::new();
         if let Some(item) = going_on {
             let right = shown
@@ -1117,17 +1242,21 @@ impl ChordSheet {
                 going_on: false,
             });
         }
-        draw_names(painter, &names);
+        names
+    }
 
-        // A selection of several bars is shaded, and the bars that loop
-        // have the loop's colour along their top.
+    /// Shades a bar in a selection of several, gives the bars that loop
+    /// the loop's colour along their top, and frames the bar playing, or
+    /// else the bar selected.
+    fn highlight(&self, painter: &egui::Painter, view: BarView, playing_here: bool) {
+        let BarView { bar, rect, .. } = view;
         if let Some((first, last)) = self.selected_bars()
             && first < last
             && (first..=last).contains(&bar.number)
         {
             painter.rect_filled(rect.shrink(1.0), 0.0, theme::ACCENT.gamma_multiply(0.12));
         }
-        if let Some(region) = project.playlist().loop_region()
+        if let Some(region) = view.project.playlist().loop_region()
             && bar.start < region.end
             && bar.end() > region.start
         {
@@ -1150,9 +1279,20 @@ impl ChordSheet {
                 egui::StrokeKind::Inside,
             );
         }
+    }
 
-        // The mouse: hold a harmony down to hear it, click to select the
-        // bar, double-click to type in it, right-click for more.
+    /// The mouse on a bar: hold a harmony down to hear it, click to
+    /// select the bar, double-click to type in it, right-click for more.
+    fn read_mouse(
+        &mut self,
+        ui: &mut Ui,
+        view: BarView,
+        response: egui::Response,
+        names: &[Name],
+        actions: &mut Vec<SheetAction>,
+    ) -> BarClicks {
+        let BarView { bar, ending, .. } = view;
+        let here = markers_in(view.project, &bar);
         let under = |pos: Option<Pos2>| {
             let pos = pos?;
             names
@@ -1209,48 +1349,7 @@ impl ChordSheet {
             .selected_bars()
             .filter(|&(first, last)| first < last && (first..=last).contains(&bar.number));
         theme::hint(response, hint).context_menu(|ui| {
-            if ui.button("Type in this bar").clicked() {
-                clicks.start_typing = Some((bar.number, write_bar(&here, &bar)));
-            }
-            let clear = ui.add_enabled(!here.is_empty(), egui::Button::new("Clear this bar"));
-            if clear.clicked() {
-                actions.push(SheetAction::SetChords {
-                    start: bar.start,
-                    end: bar.end(),
-                    markers: Vec::new(),
-                });
-            }
-            if ui.button("Move the playhead here").clicked() {
-                actions.push(SheetAction::Seek(bar.start));
-            }
-            ui.separator();
-            if let Some(edit) = bar_edits(ui, bar.number, selection) {
-                actions.push(SheetAction::Bars(edit));
-            }
-            if project.band().is_some() {
-                ui.separator();
-                variation_menu(ui, project, meter, bar.number, selection, actions);
-                style_menu(ui, project, meter, bar.number, selection, actions);
-                for marker in here
-                    .iter()
-                    .filter(|marker| marker.harmony != HarmonyName::NoChord)
-                {
-                    ui.menu_button(format!("Band on {}", marker.harmony), |ui| {
-                        breaks_menu(ui, &bar, &here, *marker, actions);
-                    });
-                }
-            }
-            if project.band().is_some() && ending.is_none() {
-                let end = ui.button("End the song here");
-                if theme::hint(
-                    end,
-                    "The band stops after this bar; chords after it are cleared",
-                )
-                .clicked()
-                {
-                    actions.push(SheetAction::EndHere(bar.number));
-                }
-            }
+            view.menu(ui, &here, selection, &mut clicks, actions);
         });
         clicks
     }
