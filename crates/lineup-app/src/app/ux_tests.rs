@@ -3755,6 +3755,137 @@ mod locks {
     }
 }
 
+mod bars {
+    use super::*;
+
+    /// A song of four chords, C G Am F, a bar each, with a band and the
+    /// chord sheet open.
+    fn song() -> Screen {
+        let mut screen = Screen::new();
+        let mut project = Project::with_band();
+        project.write_progression(
+            lineup_core::library::Style::named("Four chords").unwrap(),
+            0,
+        );
+        project.follow_chord_sheet();
+        screen.app.replace_project(project, None);
+        screen.app.rack_open = false;
+        screen.app.chord_sheet.open = true;
+        screen
+    }
+
+    fn chords(screen: &Screen) -> Vec<(usize, String)> {
+        screen
+            .app
+            .project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| (marker.start, marker.harmony.to_string()))
+            .collect()
+    }
+
+    /// Right-clicks the topmost `label`.
+    fn right_click(screen: &mut Screen, label: &str) {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        let at = text_rect(&output, label)
+            .unwrap_or_else(|| panic!("Missing: {label}"))
+            .center();
+        screen.draw(vec![Event::PointerMoved(at)]);
+        for pressed in [true, false] {
+            screen.draw(vec![Event::PointerButton {
+                pos: at,
+                button: PointerButton::Secondary,
+                pressed,
+                modifiers: Modifiers::NONE,
+            }]);
+        }
+    }
+
+    #[test]
+    fn a_bars_menu_inserts_a_bar_and_deletes_it() {
+        let mut screen = song();
+        let before = chords(&screen);
+        assert_eq!(
+            before,
+            [
+                (0, "C".to_string()),
+                (16, "G".into()),
+                (32, "Am".into()),
+                (48, "F".into())
+            ]
+        );
+        let length = screen.app.project.song_length();
+        right_click(&mut screen, "G");
+        screen.click("Insert a bar after");
+        // An empty bar after the G: the G goes on through it, and the
+        // rest comes a bar later.
+        assert_eq!(
+            chords(&screen),
+            [
+                (0, "C".to_string()),
+                (16, "G".into()),
+                (48, "Am".into()),
+                (64, "F".into())
+            ]
+        );
+        assert_eq!(screen.app.project.song_length(), length + 16);
+        assert_eq!(screen.app.history.undo_label(), Some("insert bar"));
+        assert_eq!(screen.app.chord_sheet.selected_bars(), Some((2, 2)));
+        // Typing goes in the new bar.
+        screen.draw(vec![Event::Text("D7".into())]);
+        screen.key(Key::Enter);
+        assert_eq!(screen.app.project.chord_at(32).map(|m| m.start), Some(32));
+        // The bar's menu deletes it again.
+        right_click(&mut screen, "D7");
+        screen.click("Delete this bar");
+        assert_eq!(chords(&screen), before);
+        assert_eq!(screen.app.project.song_length(), length);
+        assert_eq!(screen.app.history.undo_label(), Some("delete bar"));
+    }
+
+    #[test]
+    fn the_bar_numbers_insert_and_delete_bars_too() {
+        let mut screen = song();
+        screen.app.chord_sheet.open = false;
+        let before = chords(&screen);
+        // The playlist's bar number 2.
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        let two = output
+            .shapes
+            .iter()
+            .find_map(|shape| match &shape.shape {
+                Shape::Text(text) if text.galley.text() == "2" => Some(text.pos),
+                _ => None,
+            })
+            .expect("bar 2 on the ruler");
+        let at = two + vec2(2.0, 4.0);
+        screen.draw(vec![Event::PointerMoved(at)]);
+        for pressed in [true, false] {
+            screen.draw(vec![Event::PointerButton {
+                pos: at,
+                button: PointerButton::Secondary,
+                pressed,
+                modifiers: Modifiers::NONE,
+            }]);
+        }
+        screen.click("Insert a bar before");
+        assert_eq!(
+            chords(&screen),
+            [
+                (0, "C".to_string()),
+                (32, "G".into()),
+                (48, "Am".into()),
+                (64, "F".into())
+            ]
+        );
+        screen.key_with_modifiers(Key::Z, Modifiers::COMMAND);
+        assert_eq!(chords(&screen), before);
+    }
+}
+
 mod section_styles {
     use super::*;
     use lineup_core::BandStyle;

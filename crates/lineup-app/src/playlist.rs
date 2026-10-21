@@ -12,8 +12,9 @@
 //!
 //! Above the bar numbers is the section strip, where the song's structure
 //! is marked; [`sections`] draws it and the loop region. A right-click on
-//! the bar numbers changes the time signature from that bar on, the way a
-//! chart writes a new time signature where it changes.
+//! the bar numbers inserts an empty bar or deletes that one, and changes
+//! the time signature or the key from that bar on, the way a chart writes
+//! a new time signature or key signature where it changes.
 
 mod sections;
 mod tempo;
@@ -91,6 +92,8 @@ pub enum PlaylistAction {
     UnrollSection(usize),
     /// Loop part of the song, or (with `None`) the whole song again.
     SetLoop(Option<LoopRegion>),
+    /// Insert or delete bars (a right-click on the bar numbers).
+    Bars(crate::chord_sheet::BarEdit),
     /// Change the time signature from a bar on (a right-click on the bar
     /// numbers).
     SetTimeMarker(TimeMarker),

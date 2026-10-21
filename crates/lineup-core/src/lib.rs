@@ -12,6 +12,7 @@
 
 pub mod arrangement;
 pub mod band;
+pub mod bars;
 pub mod chord_sheet;
 pub mod diff;
 pub mod ear_training;

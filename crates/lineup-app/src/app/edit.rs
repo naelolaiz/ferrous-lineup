@@ -13,6 +13,7 @@ use lineup_audio::Command;
 use lineup_core::{Change, Project, diff};
 
 use super::LineupApp;
+use crate::chord_sheet::BarEdit;
 
 pub(super) const UNDO: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Z);
 pub(super) const REDO: KeyboardShortcut =
@@ -60,6 +61,35 @@ impl LineupApp {
             self.sync_audio(&before);
             self.restore_song_library();
             self.keep_place_in_song(&before);
+        }
+    }
+
+    /// Inserts or deletes bars, as one step to undo, and selects the bar
+    /// inserted, or the one now where the deleted bars were, on the
+    /// chord sheet, ready to type in.
+    pub(super) fn edit_bars(&mut self, edit: BarEdit) {
+        let (label, done, selected) = match edit {
+            BarEdit::Insert { bar, after } => (
+                "insert bar",
+                self.edit("insert bar", |project| project.insert_bars(bar, after, 1)),
+                bar + usize::from(after),
+            ),
+            BarEdit::Delete { first, last } => {
+                let label = if first == last {
+                    "delete bar"
+                } else {
+                    "delete bars"
+                };
+                let done = self.edit(label, |project| project.delete_bars(first, last));
+                (label, done, first)
+            }
+        };
+        if done {
+            self.chord_sheet.select(selected);
+        } else if label == "insert bar" {
+            self.message = Some("There is no room for another bar in the song.".into());
+        } else {
+            self.message = Some("There is no room for the patterns the cut needs.".into());
         }
     }
 

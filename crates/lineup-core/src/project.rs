@@ -652,7 +652,7 @@ impl Project {
     }
 
     /// Adds a pattern at the end, in the colour after the last pattern's.
-    fn push_pattern(&mut self, mut pattern: Pattern) -> Option<usize> {
+    pub(crate) fn push_pattern(&mut self, mut pattern: Pattern) -> Option<usize> {
         if self.patterns.len() >= MAX_PATTERNS {
             return None;
         }
