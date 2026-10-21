@@ -333,6 +333,15 @@ impl LineupApp {
                 }
             };
             window(&mut self.chord_sheet.open, "Chord sheet", CHORD_SHEET, ui);
+            let fills = self.chord_sheet.fills_window();
+            let main = egui::Button::selectable(fills, "Chord sheet in the main window");
+            if ui
+                .add(main)
+                .on_hover_text("The chord sheet in the playlist's place, with more bars on a line")
+                .clicked()
+            {
+                self.chord_sheet.fill_window(!fills);
+            }
             let lead = egui::Button::selectable(self.lead_sheet.open, "Lead sheet");
             if ui.add(lead).clicked() {
                 self.lead_sheet.open = !self.lead_sheet.open;

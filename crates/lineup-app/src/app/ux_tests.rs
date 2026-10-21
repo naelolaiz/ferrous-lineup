@@ -3901,3 +3901,136 @@ fn the_chord_sheet_shows_its_chords_as_sets_and_micromodes_and_reads_the_notes()
     assert!(shows(&mut screen, "Am") && !shows(&mut screen, "Notes in a line (serial)"));
     assert_eq!(screen.app.project, before);
 }
+
+mod chord_sheet_layout {
+    use super::*;
+
+    /// A song of four chords whose first bar changes harmony on every
+    /// beat, with the chord sheet open in its window.
+    fn busy_song() -> Screen {
+        let mut screen = Screen::new();
+        let mut project = Project::with_band();
+        project.write_progression(
+            lineup_core::library::Style::named("Four chords").unwrap(),
+            0,
+        );
+        let bar = project.meter().bar(0);
+        let markers =
+            lineup_core::chord_sheet::read_bar("Dm7/C F/C G7/D C/E", &bar, project.scale).unwrap();
+        assert!(project.set_chords(bar.start, bar.end(), &markers));
+        project.follow_chord_sheet();
+        screen.app.replace_project(project, None);
+        screen.app.rack_open = false;
+        screen.app.chord_sheet.open = true;
+        screen
+    }
+
+    /// The size `name` is written at on the sheet.
+    fn size(output: &FullOutput, name: &str) -> f32 {
+        output
+            .shapes
+            .iter()
+            .rev()
+            .find_map(|shape| match &shape.shape {
+                Shape::Text(text) if text.galley.text() == name => text
+                    .galley
+                    .job
+                    .sections
+                    .first()
+                    .map(|section| section.format.font_id.size),
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("Missing: {name}"))
+    }
+
+    /// How many bars the lines hold, as "Bars per line" says when they
+    /// fit the names.
+    fn fit(output: &FullOutput) -> usize {
+        (1..=crate::chord_sheet::layout::MOST_BARS)
+            .find(|bars| text_rect(output, &format!("Fit ({bars})")).is_some())
+            .expect("Bars per line says how many fit")
+    }
+
+    /// Opens the "Bars per line" choices: the numbers on it are also
+    /// bars' numbers, so it is found by its label.
+    fn open_bars_per_line(screen: &mut Screen) {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        let label = text_rect(&output, "Bars per line").expect("Bars per line");
+        screen.click_at(
+            Pos2::new(label.right() + 24.0, label.center().y),
+            Modifiers::NONE,
+        );
+    }
+
+    #[test]
+    fn lines_hold_as_many_bars_as_show_every_name_in_full() {
+        let mut screen = busy_song();
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        // Four harmonies in a bar need more room than a quarter of the
+        // window: the lines hold fewer bars, and every name is whole.
+        let fits = fit(&output);
+        assert!(fits < 4, "{fits}");
+        for name in ["Dm7/C", "F/C", "G7/D", "C/E"] {
+            assert_eq!(size(&output, name), 20.0, "{name}");
+        }
+        // A number chosen is kept, and the names that don't fit then
+        // are written smaller.
+        open_bars_per_line(&mut screen);
+        screen.click("8");
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "Fit (8)").is_none());
+        assert!(size(&output, "Dm7/C") < 20.0);
+        // Back to fitting the names.
+        open_bars_per_line(&mut screen);
+        screen.click("Fit the names");
+        let output = screen.draw(Vec::new());
+        assert_eq!(fit(&output), fits);
+        assert_eq!(size(&output, "Dm7/C"), 20.0);
+    }
+
+    #[test]
+    fn the_sheet_fills_the_main_window_and_goes_back() {
+        let mut screen = busy_song();
+        screen.app.playlist.browser_open = true;
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        let in_window = fit(&output);
+        assert!(text_rect(&output, "Playlist").is_some());
+        screen.click("⛶ Fill the window");
+        assert!(screen.app.chord_sheet.fills_window());
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        // The sheet is where the playlist was, beside the patterns, with
+        // more bars on a line and the names still whole.
+        assert!(text_rect(&output, "Playlist").is_none());
+        assert!(text_rect(&output, "Patterns").is_some());
+        assert!(text_rect(&output, "Back to the playlist").is_some());
+        assert!(fit(&output) > in_window);
+        assert_eq!(size(&output, "Dm7/C"), 20.0);
+        // F5 puts it away and brings it back where it was.
+        screen.key(Key::F5);
+        assert!(!screen.app.chord_sheet.open);
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "Playlist").is_some());
+        screen.key(Key::F5);
+        assert!(screen.app.chord_sheet.fills_window());
+        // The next run opens it there too.
+        screen.restart();
+        screen.app.chord_sheet.open = true;
+        screen.draw(Vec::new());
+        assert!(screen.app.chord_sheet.fills_window());
+        // The button puts it back in its window, and the View menu
+        // there again.
+        screen.click("Back to the playlist");
+        assert!(!screen.app.chord_sheet.fills_window());
+        assert!(screen.app.chord_sheet.open);
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "Playlist").is_some());
+        assert!(text_rect(&output, "⛶ Fill the window").is_some());
+        screen.click("View");
+        screen.click("Chord sheet in the main window");
+        assert!(screen.app.chord_sheet.fills_window());
+    }
+}

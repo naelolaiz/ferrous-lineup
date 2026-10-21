@@ -1,7 +1,9 @@
-//! The chord sheet window: the song's harmony bar by bar, the way a lead
-//! sheet writes it.
+//! The chord sheet: the song's harmony bar by bar, the way a lead sheet
+//! writes it, in a window over the playlist or, with "Fill the window",
+//! in the playlist's place.
 //!
-//! Bars are drawn four to a line, and each section of the playlist
+//! A line holds as many bars as fit with every name at its full size, or
+//! as many as you choose ([`layout`]), and each section of the playlist
 //! (Intro, Verse, Chorus…) starts a new line under its name, so the
 //! sheet reads like a printed chart. So do the parts of the band's form
 //! ([`form`]): the intro, the chorus, between repeat signs when the band
@@ -46,10 +48,12 @@ use crate::twelve_tone::Front;
 
 mod band;
 mod form;
+pub(crate) mod layout;
 mod notation;
 mod practice;
 
 pub use form::FormAction;
+use layout::LayoutView;
 use notation::{NotationView, Shown};
 pub use practice::{PracticeAction, PracticeView, SPEEDS};
 
@@ -58,8 +62,6 @@ pub(crate) fn window_id() -> egui::Id {
     egui::Id::unique("chord-sheet")
 }
 
-/// Bars on a line, as on most printed charts.
-const BARS_PER_LINE: usize = 4;
 const CELL_HEIGHT: f32 = 58.0;
 /// The space above a line that starts a section, for its name.
 const HEADING_HEIGHT: f32 = 18.0;
@@ -235,6 +237,11 @@ pub struct ChordSheet {
     reveal_step: Option<usize>,
     /// How the harmony is named, and which notes are grouped.
     notation: NotationView,
+    /// How many bars a line holds, and whether the sheet fills the
+    /// main window.
+    layout: LayoutView,
+    /// Where the sheet is drawn in the main window, when it fills it.
+    main_area: Option<Rect>,
     front: Front,
 }
 
@@ -253,6 +260,8 @@ impl ChordSheet {
             reveal: false,
             reveal_step: None,
             notation: NotationView::new(),
+            layout: LayoutView::new(),
+            main_area: None,
             front: Front::default(),
         }
     }
@@ -261,6 +270,27 @@ impl ChordSheet {
     /// and sets, not harmony keys.
     pub fn has_keyboard(&self) -> bool {
         self.open && self.focused
+    }
+
+    /// Reads back the choices of the last run, the first time; then
+    /// saves them for the next when they change. Called before anything
+    /// asks where the sheet goes, so it opens where it was left.
+    pub fn remember(&mut self, ctx: &egui::Context) {
+        self.notation.remember(ctx);
+        self.layout.remember(ctx);
+    }
+
+    /// Whether the sheet is shown in the main window, in the playlist's
+    /// place, rather than in a window over it.
+    pub fn fills_window(&self) -> bool {
+        self.open && self.layout.fills()
+    }
+
+    /// Shows the sheet in the main window, in the playlist's place, or
+    /// in a window over the playlist.
+    pub fn fill_window(&mut self, fills: bool) {
+        self.layout.set_fills(fills);
+        self.open = true;
     }
 
     pub fn reveal_step(&mut self, step: usize) {
@@ -291,13 +321,18 @@ impl ChordSheet {
     ) -> Vec<SheetAction> {
         let (practice, library) = controls;
         let mut actions = Vec::new();
-        self.notation.remember(ctx);
+        self.remember(ctx);
         if !self.open {
             self.release(&mut actions);
             self.editing = None;
             self.focused = false;
             return actions;
         }
+        // In the main window, [`ChordSheet::main`] draws it.
+        if self.layout.fills() {
+            return actions;
+        }
+        self.main_area = None;
         let mut open = self.open;
         self.front.keep(ctx, window_id());
         let window = egui::Window::new("Chord sheet")
@@ -331,6 +366,24 @@ impl ChordSheet {
             self.editing = None;
             self.focused = false;
         }
+        actions
+    }
+
+    /// Draws the sheet in `ui`, the main window's room for the playlist,
+    /// when it fills it (see [`ChordSheet::fills_window`]). The rest is as
+    /// in [`ChordSheet::show`].
+    pub fn main(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        playing: Option<(usize, Pass)>,
+        typing_keys: bool,
+        controls: (PracticeView, &mut LibraryBrowser),
+    ) -> Vec<SheetAction> {
+        let mut actions = Vec::new();
+        self.main_area = Some(ui.available_rect_before_wrap());
+        ui.heading("Chord sheet");
+        self.contents(ui, project, playing, typing_keys, controls, &mut actions);
         actions
     }
 
@@ -385,7 +438,8 @@ impl ChordSheet {
                 }
             }
         });
-        self.notation.row(ui, project);
+        let layout = &mut self.layout;
+        self.notation.row(ui, project, |ui| layout.items(ui));
         let round = playing.and_then(|(_, pass)| pass.chorus);
         form::row(ui, project, round, actions);
         practice::row(ui, project, practice, self.selected_bars(), actions);
@@ -466,9 +520,27 @@ impl ChordSheet {
         let meter = project.meter();
         let keys = project.key_map();
         let heard = self.notation.heard(project, &keys);
-        let lines = self.lines(project, &meter);
-        let width = ui.available_width().max(BARS_PER_LINE as f32 * 80.0);
-        let cell_width = (width - 2.0) / BARS_PER_LINE as f32;
+        let marks = Marks::of(project);
+        // Lines hold as many bars as chosen, or as fit with every name
+        // in full.
+        let needed = match self.layout.columns() {
+            layout::Columns::Fit => meter
+                .bars()
+                .take(self.bar_count(project, &meter))
+                .map(|bar| {
+                    self.needed_width(ui.painter(), project, &meter, &keys, &bar, marks, &heard)
+                })
+                .fold(0.0, f32::max),
+            layout::Columns::Bars(_) => 0.0,
+        };
+        let per_line = self
+            .layout
+            .columns()
+            .count(ui.available_width() - 2.0, needed);
+        self.layout.shown = per_line;
+        let lines = self.lines(project, &meter, per_line);
+        let width = ui.available_width().max(per_line as f32 * 40.0);
+        let cell_width = (width - 2.0) / per_line as f32;
         let height: f32 = lines
             .iter()
             .map(|line| {
@@ -572,7 +644,6 @@ impl ChordSheet {
             .reveal_step
             .take()
             .map(|step| meter.bar_at(step).number);
-        let marks = Marks::of(project);
         let mut start_typing = None;
         let mut clicked = sheet.clicked() || heading_selection.is_some();
         for cell in &cells {
@@ -644,12 +715,146 @@ impl ChordSheet {
         }
         // The key that ended the typing (Enter, Escape) is not read
         // again as a key for the sheet.
-        let has_keyboard = crate::widgets::editor_keyboard(ui.ctx(), ui.layer_id());
+        // In the main window, the sheet shares its layer with the
+        // toolbars and the side panel: only a click on it gives it the
+        // keys.
+        let has_keyboard = match self.main_area {
+            Some(area) => crate::widgets::editor_keyboard_in(ui.ctx(), ui.layer_id(), area),
+            None => crate::widgets::editor_keyboard(ui.ctx(), ui.layer_id()),
+        };
         if has_keyboard && self.editing.is_none() && !was_editing {
             ui.memory_mut(|memory| memory.set_focus_lock_filter(sheet.id, KEEP_KEYS));
             self.keys(ui, project, &cells, typing_keys, actions);
         }
         self.focused = has_keyboard || self.editing.is_some();
+    }
+
+    /// What bar `bar` shows, in the notation chosen: the harmony going on
+    /// from an earlier bar, if the bar does not start with one of its
+    /// own, and the bar's own harmonies. `heard` is what the song plays,
+    /// when the sheet reads its notes. The bar being typed in shows only
+    /// the text field.
+    #[allow(clippy::too_many_arguments)]
+    fn harmonies(
+        &self,
+        project: &Project,
+        meter: &Meter,
+        keys: &KeyMap,
+        bar: &Bar,
+        marks: Marks,
+        heard: &[Shown],
+    ) -> (Option<Shown>, Vec<Shown>) {
+        let typed_in = self
+            .editing
+            .as_ref()
+            .is_some_and(|editing| editing.bar == bar.number);
+        if typed_in {
+            return (None, Vec::new());
+        }
+        if self.notation.reads_notes() {
+            let first = heard.partition_point(|shown| shown.start < bar.start);
+            let end = heard.partition_point(|shown| shown.start < bar.end());
+            let shown = heard[first..end].to_vec();
+            let going_on = (first > 0
+                && bar.start < project.song_length()
+                && shown.first().is_none_or(|first| first.start > bar.start))
+            .then(|| heard[first - 1].clone());
+            return (going_on, shown);
+        }
+        let key = keys.key_at(bar.start);
+        let written = |marker: &ChordMarker| {
+            self.notation.written(
+                marker,
+                key,
+                |shown| caption(shown, key),
+                |shown| describe(shown, key),
+                voicing,
+            )
+        };
+        let here = markers_in(project, bar);
+        // After the song and the last harmony written, nothing goes on.
+        let last_bar_written = project
+            .playlist()
+            .chord_markers()
+            .last()
+            .map_or(0, |last| meter.bar_at(last.start).end());
+        let sheet_end = project.song_length().max(last_bar_written);
+        let before = (bar.start > 0 && bar.start < sheet_end)
+            .then(|| project.chord_at(bar.start - 1))
+            .flatten();
+        let going_on = here
+            .first()
+            .is_none_or(|first| first.start > bar.start)
+            .then_some(before)
+            .flatten();
+        // The ending's harmony is the band's, not written on the sheet.
+        let ending = marks
+            .ending_in(bar)
+            .map(|ending| ChordMarker::new(ending.start, ending.harmony));
+        let (going_on, markers) = match ending {
+            Some(marker) if marker.start == bar.start => (None, vec![marker]),
+            Some(marker) => (Some(marker), Vec::new()),
+            None => (going_on, here),
+        };
+        // A harmony going on from before is not struck again: its marks
+        // are left out.
+        (
+            going_on.map(|marker| written(&ChordMarker::new(marker.start, marker.harmony))),
+            markers.iter().map(written).collect(),
+        )
+    }
+
+    /// How wide bar `bar` must be to show its harmonies and the words
+    /// under them in full, at their own size: each name has the part of
+    /// the bar from its beat to the next name's.
+    #[allow(clippy::too_many_arguments)]
+    fn needed_width(
+        &self,
+        painter: &egui::Painter,
+        project: &Project,
+        meter: &Meter,
+        keys: &KeyMap,
+        bar: &Bar,
+        marks: Marks,
+        heard: &[Shown],
+    ) -> f32 {
+        let (going_on, shown) = self.harmonies(project, meter, keys, bar, marks, heard);
+        let width = |text: &str, size: f32| {
+            painter
+                .layout_no_wrap(text.to_string(), FontId::proportional(size), theme::TEXT)
+                .size()
+                .x
+        };
+        let length = bar.length.max(1) as f32;
+        let starts: Vec<usize> = going_on
+            .iter()
+            .map(|_| bar.start)
+            .chain(shown.iter().map(|item| item.start.max(bar.start)))
+            .collect();
+        let inner = going_on
+            .iter()
+            .chain(&shown)
+            .enumerate()
+            .map(|(index, item)| {
+                let end = starts.get(index + 1).copied();
+                // A name before another keeps a gap from it.
+                let gap = if end.is_some() { 4.0 } else { 0.0 };
+                let end = end.unwrap_or(bar.end()).max(starts[index] + 1);
+                let share = (end - starts[index]) as f32 / length;
+                let text = width(&item.text, NAME_SIZE);
+                let caption = item
+                    .caption
+                    .as_deref()
+                    .map_or(0.0, |caption| width(caption, CAPTION_SIZE));
+                (text.max(caption) + gap) / share
+            })
+            .fold(0.0, f32::max);
+        let repeats = marks.repeat.map_or(0.0, |(start, end)| {
+            let from = if start == bar.start { 8.0 } else { 0.0 };
+            let to = if end == bar.end() { 8.0 } else { 0.0 };
+            from + to
+        });
+        inner + 2.0 * PADDING + repeats
     }
 
     /// Draws one bar and reads the mouse on it.
@@ -673,21 +878,6 @@ impl ChordSheet {
         let response = ui.interact(rect, id, Sense::click_and_drag());
         let key = keys.key_at(bar.start);
         let here = markers_in(project, &bar);
-        // After the song and the last harmony written, nothing goes on.
-        let last_bar_written = project
-            .playlist()
-            .chord_markers()
-            .last()
-            .map_or(0, |last| meter.bar_at(last.start).end());
-        let sheet_end = project.song_length().max(last_bar_written);
-        let before = (bar.start > 0 && bar.start < sheet_end)
-            .then(|| project.chord_at(bar.start - 1))
-            .flatten();
-        let going_on = here
-            .first()
-            .is_none_or(|first| first.start > bar.start)
-            .then_some(before)
-            .flatten();
 
         // The paper and the bar lines: a double one where a section
         // starts, repeat signs around a chorus played more than once, and
@@ -829,47 +1019,7 @@ impl ChordSheet {
                 rect.top() + TOP..=rect.bottom(),
             )
         };
-        // The bar being typed in shows only the text field.
-        let typed_in = self
-            .editing
-            .as_ref()
-            .is_some_and(|editing| editing.bar == bar.number);
-        let written = |marker: &ChordMarker| {
-            self.notation.written(
-                marker,
-                key,
-                |shown| caption(shown, key),
-                |shown| describe(shown, key),
-                voicing,
-            )
-        };
-        let (going_on, shown): (Option<Shown>, Vec<Shown>) = if typed_in {
-            (None, Vec::new())
-        } else if reads_notes {
-            let first = heard.partition_point(|shown| shown.start < bar.start);
-            let end = heard.partition_point(|shown| shown.start < bar.end());
-            let shown = heard[first..end].to_vec();
-            let going_on = (first > 0
-                && bar.start < project.song_length()
-                && shown.first().is_none_or(|first| first.start > bar.start))
-            .then(|| heard[first - 1].clone());
-            (going_on, shown)
-        } else {
-            // The ending's harmony is the band's, not written on the
-            // sheet.
-            let ending_marker = ending.map(|ending| ChordMarker::new(ending.start, ending.harmony));
-            let (going_on, markers) = match ending_marker {
-                Some(marker) if marker.start == bar.start => (None, vec![marker]),
-                Some(marker) => (Some(marker), Vec::new()),
-                None => (going_on, here.clone()),
-            };
-            // A harmony going on from before is not struck again: its
-            // marks are left out.
-            (
-                going_on.map(|marker| written(&ChordMarker::new(marker.start, marker.harmony))),
-                markers.iter().map(written).collect(),
-            )
-        };
+        let (going_on, shown) = self.harmonies(project, meter, keys, &bar, marks, heard);
         let mut names: Vec<Name> = Vec::new();
         if let Some(item) = going_on {
             let right = shown
@@ -1106,9 +1256,9 @@ impl ChordSheet {
         after_chords.max(after_band)
     }
 
-    /// The lines of bars: as many as the song has, or as the chords
-    /// written reach, and one more empty line to write on.
-    fn lines(&self, project: &Project, meter: &Meter) -> Vec<Line> {
+    /// How many bars the sheet has: as many as the song has, or as the
+    /// chords written reach, or up to the one selected or typed in.
+    fn bar_count(&self, project: &Project, meter: &Meter) -> usize {
         let markers = project.playlist().chord_markers();
         let reach = project
             .song_length()
@@ -1121,7 +1271,15 @@ impl ChordSheet {
         for bar in [self.selected, typed].into_iter().flatten() {
             count = count.max(bar + 1);
         }
-        let count = (count.div_ceil(BARS_PER_LINE) + 1).max(2) * BARS_PER_LINE;
+        count
+    }
+
+    /// The lines of bars, `per_line` to a line: as many as the sheet has
+    /// (see [`ChordSheet::bar_count`]), and one more empty line to write
+    /// on.
+    fn lines(&self, project: &Project, meter: &Meter, per_line: usize) -> Vec<Line> {
+        let count = self.bar_count(project, meter);
+        let count = (count.div_ceil(per_line) + 1).max(2) * per_line;
         let sections = project.playlist().sections();
         let marks = Marks::of(project);
         let form = project.form().filter(|form| !form.is_plain());
@@ -1155,9 +1313,7 @@ impl ChordSheet {
                 (Some(part), Some(section)) => Some(format!("{part} · {section}")),
                 (part, section) => part.or(section),
             };
-            let full = lines
-                .last()
-                .is_none_or(|line| line.bars.len() == BARS_PER_LINE);
+            let full = lines.last().is_none_or(|line| line.bars.len() == per_line);
             if full || heading.is_some() {
                 lines.push(Line {
                     heading,
