@@ -2162,8 +2162,7 @@ pub(super) const QUE_NADIE_SEPA_MI_SUFRIR: Song = Song {
     drums_from: 0,
     about: "\"Amor de mis amores, reina mía, ¿qué me hiciste?\": a man left by the woman he \
             adored begs that no one should know his pain. Cabral wrote it as a vals criollo; \
-            in France it became Édith Piaf's \"La foule\". Here in a tropical arrangement, \
-            after Soledad Pastorutti's version.",
+            in France it became Édith Piaf's \"La foule\". Here in a tropical arrangement.",
 };
 
 // Written out from a band arrangement (MIDI in 3/4, written here in 6/8, the zamba's own meter,
@@ -3448,10 +3447,9 @@ pub(super) const ZAMBA_POR_VOS: Song = Song {
     ],
     form: &["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8", "Part 9", "Part 10", "Part 11", "Part 12"],
     drums_from: 0,
-    about: "\"Yo no canto por vos, te canta la zamba\": a zamba by the Uruguayan singer \
-            Alfredo Zitarrosa, recorded also by Los Chalchaleros. A love left waiting looked \
-            at him on his return and went away without saying why; the zamba sings to it for \
-            him. C major.",
+    about: "\"Yo no canto por vos\": a zamba by the Uruguayan singer Alfredo Zitarrosa, \
+            sung also by Abel Pintos. A love went away without saying why; he no longer sings \
+            for her, the zamba sings to her for him. C major.",
 };
 
 // Written out from a band arrangement (MIDI, sequenced at a steady 98 to the quarter but saved
