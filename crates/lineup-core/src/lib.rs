@@ -6,9 +6,12 @@
 //! undo and redo, the piano roll's tools for changing many notes at once,
 //! MIDI note messages, MIDI files, swing, turning keys played on a keyboard into
 //! notes, twelve-tone rows and serialism, Kröpfl's micromodes, and a
-//! library of styles,
-//! rhythms and songs. It has no audio and no UI code, which keeps it
-//! small, fast to compile and easy to test with plain `cargo test`.
+//! library of styles, rhythms and songs. It also holds the backing band
+//! that plays from the chord sheet ([`band`], [`chord_sheet`]), the lead
+//! sheet, the ear training, hearing chords and keys in the notes
+//! ([`harmony`]), putting a song in another time signature ([`remeter`]),
+//! and the mixer's settings. It has no audio and no UI code, which keeps
+//! it small, fast to compile and easy to test with plain `cargo test`.
 
 pub mod arrangement;
 pub mod band;

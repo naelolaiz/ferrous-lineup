@@ -181,7 +181,7 @@ impl LineupApp {
         self.project != self.file.saved
     }
 
-    /// The File menu at the left of the transport bar.
+    /// The File menu, first in the menu bar along the top.
     pub(super) fn file_menu(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         let item = |text, shortcut: KeyboardShortcut| {

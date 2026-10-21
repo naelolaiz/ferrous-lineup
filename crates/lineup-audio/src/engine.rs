@@ -31,6 +31,10 @@
 //! And a fifth, while a trace is on: a [`Tracer`] writes down every note
 //! the thread starts and ends, for another thread to read (see
 //! [`crate::trace`]).
+//!
+//! The mixer's meters read how loud each channel and the master play
+//! from shared atomics, [`Levels`], which the audio thread raises and the
+//! UI takes once a frame (see [`crate::levels`]).
 
 use std::fmt;
 use std::sync::Arc;
