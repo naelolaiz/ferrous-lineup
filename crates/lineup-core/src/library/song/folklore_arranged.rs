@@ -1130,3 +1130,3952 @@ pub(super) const EL_NOI_DE_LA_MARE: Song = Song {
             chords change above it; the second half falls from the high D, twice, to end on \
             the tonic.",
 };
+
+// Written out from a band arrangement (MIDI): the tune on an electric piano, with fretless bass,
+// steel guitar, trumpet, trombone, piano, a pad, and Latin percussion.
+pub(super) const QUE_NADIE_SEPA_MI_SUFRIR: Song = Song {
+    name: "Que nadie sepa mi sufrir (Amor de mis amores)",
+    origin: "Ángel Cabral, words by Enrique Dizeo, 1936",
+    feel: "Tropical",
+    genre: Genre::Latin,
+    tonic: B,
+    mode: HarmonicMinor,
+    time: COMMON,
+    tempo: 95.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::ELECTRIC_PIANO, gm::ACOUSTIC_GRAND_PIANO, gm::FRETLESS_BASS),
+    style: "",
+    parts: &[
+        // Bars 1-8 of the file.
+        Part::new(
+            "Part 1",
+            "-:16 | - | - | - | - | - | - | -",
+            "Bm7 D | Em7 | Bm | F# | Bm7 | Em | Bm | F#",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "-:2 B1:3 D2 A2 F#2 D2:2 | _:1 -:2 B1:3 E1:4 -:1 F#1:2 -:1 B1:2 | \
+                _ -:1 F#1:3 B1:5 C#2:2 -:1 F#1:2 | _:3 C#2 F#1:4 -:1 C#2:2 -:1 F#1:2 | \
+                B1 -:1 B2:3 D2:2 A2:3 F#2 D2:2 | E2:3 B1:2 -:1 E1:5 F#1:2 -:1 B1:2 | \
+                _ -:1 F#1:3 B1:5 C#2:2 -:1 F#1:2 | _ -:1 C#2:3 F#1:5 C#2:3 F#1:2 & -:16 | \
+                E2:3 -:13 | -:16 | - | - | - | - | -",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "-:2 B3:3 D4 A4 F#4 D4:2 | E4:16 | F#3 | _:11 -:1 F#3+C#4:4 | F#3+D4:16 | \
+                G3:15 -:1 | F#4:11 -:1 F#4:4 | _:11 -:1 A#3+F#4:4 & -:16 | G3:15 -:1 | \
+                D4:11 -:1 D4:4 | C#4:11 -:5 | -:16 | E4:12 G4:4 | B3:10 -:2 B3:4 | A#3:11 -:5",
+            ),
+            line(
+                "Trumpet",
+                gm::TRUMPET,
+                "-:2 D4:3 F#4 D5 A4 F#4:2 | B4:11 -:1 B4:4 | B4:10 -:2 B4:4 | A#4:11 -:1 A#4:4 | \
+                B4:2 -:1 D4:3 F#4:2 D5 -:1 B4:3 F#4:2 | B4:11 -:1 B4:3 -:1 | D5:11 -:1 D5:4 | \
+                C#5:11 -:1 C#5:4",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "-:2 D4+F#4:3 F#4+A4 D5+F#5 A4 F#4:2 | E3:5 E4:1 - D4:2 E4:1 - D4 - C#4 - B3 | \
+                _:3 B2+A#3:1 - B3 - C#4:2 D4:1 - E4 - F#4 - G4 | \
+                _:2 F#4+F#5:1 -:4 G4+G5:1 - G4+G5 F#4:2 -:3 G4+G5:1 | \
+                - F#4+F#5 - D4+F#4:3 F#4+A4:2 D5+F#5:3 A4 F#4:2 | \
+                G4+G5 E5:1 B4 - G4 - B4 - E5 - G5 - E5 - F#5 | \
+                - D5 - B4 - D5 - F#5:2 B4:1 - F#5 G4+G5:2 -:1 G4+G5 | \
+                _ A#4+C#5 - F#4+F#5:3 A#4+C#5:1 - G4:2 -:1 F#4+F#5:2 A#4+C#5:1 - F#4+F#5 & -:11 D5:1 -:2 A4:1 - | \
+                G4:3 F#4:1 -:12 | -:2 F#2:1 -:12 G5:1 | _ -:9 F#5:1 -:5 | -:11 D5:1 -:2 A4:1 - | \
+                -:16 | - | -:8 G5:1 -:7",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:16 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "-:16 | x:1 - x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x - x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:9 x:1 -:6 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "-:9 x:1 -:6 | -:2 x:1 x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             -:2 x:1 x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x -"),
+            (Drum::Shaker, "-:16 | -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x"),
+            (Drum::Rim, "-:16 | -:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:16 | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 -"),
+            (Drum::HighTom, "-:8 x:1 -:5 x:1 - | -:16 | - | - | -:11 x:1 -:2 x:1 - | -:16 | - | -"),
+            (Drum::LowTom, "-:10 x:1 - x x -:2 | X:1 -:15 | -:16 | - | -:9 x:1 x x - x -:2 | X:1 -:15 | -:16 | \
+             -"),
+            (Drum::Crash, "-:16 | X:1 -:15 | -:16 | - | -:14 x:1 - | X -:15 | -:16 | -"),
+        ]),
+        // Bars 9-16 of the file.
+        Part::new(
+            "Part 2",
+            "-:16 | -:13 F#4:1 - F#4 | B4:3 A#4:2 B4:1 - C#5 D5 - C#5 B4 - A#4 - B4 | \
+            _:2 G4:6 -:3 D5:2 C#5:1 - E5 | _:2 -:1 D5 D5 - C#5 E5:4 A4:1 - B4 - A4 | \
+            A4:8 -:5 F#4:1 - F#4 | A#4:3 A#4:2 B4:1 - C#5 D5 - C#5 B4 - A#4 - C#5 | \
+            _ B4:7 -:5 B4:1 - B4",
+            "Bm | Bm | Bm | Em | A | D | F# | Bm",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "B1:2 -:1 F#1:2 -:1 B1:5 F#1:2 -:1 B1:2 | _ -:1 F#1:3 B1:5 F#1:3 F#2:1 - | \
+                B1:3 F#1:2 -:1 B1:5 F#1:3 E1:2 | _:3 B1 E1:5 B1:3 A1:2 | \
+                _:3 E2:2 -:1 A1:5 E2:2 -:1 D2:2 | _:3 A1 D2:5 A1:3 F#1:2 | \
+                _ -:1 C#2:3 F#1:5 C#2:3 B1:2 | _ -:1 F#1:2 -:1 B1:5 F#1:2 -:1 G1:2",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "F#3+B3+D4:2 -:1 F#3+B3+D4 - F#3+B3+D4 - B3:4 F#3+B3+D4 -:1 | \
+                - F#4 G4 E4 F#4 D4 E4 C#4 D4 B3 C#4 A#3 B3:4 | \
+                _:2 -:1 F#3+B3+D4 - F#3+B3+D4 - B3+D4:3 F#3+B3+D4:1 - B2 F#3+B3+D4 - G3+B3+E4 | \
+                _ - G3+B3+E4 - E3 G3+B3+E4 - G3+B3+E4 - G3+B3+E4 - G3+B3+E4 E3 G3+B3+E4 - G3+B3+E4 | \
+                A2:4 -:1 A3+C#4+E4 - A3+C#4:4 -:2 A3+C#4+E4:1 - A3 | \
+                _:3 -:1 D3 F#3+A3+D4 - F#3+A3+D4:2 -:1 F#3+A3+D4:2 D3 -:1 F#3+A#3+C#4 | \
+                _ - F#3+A#3+C#4 - F#2 F#3+A#3+C#4 - F#3+A#3+C#4:2 F#2:1 F#3+A#3+C#4:2 F#2 -:1 F#3+B3 | \
+                _ - F#3+B3+D4 -:2 F#3+B3+D4:1 - F#3+B3+D4:2 -:1 F#3+B3+D4:2 B2 -:1 G2+G3+B3+D4 & -:7 F#3+D4:3 -:6 | \
+                -:16 | F#3+D4:2 -:5 F#3:2 -:7 | E3:2 -:14 | \
+                C#4+E4:3 A3+C#4+E4:1 -:3 E4 A2 -:2 D4:1 | _:2 F#3+D4:1 -:10 F#3+A3+D4:1 -:2 | \
+                -:13 F#3+A#3+C#4:1 - D4 | B2:2 -:6 B2:2 -:3 F#3+B3+D4:1 -:2 & -:16 | - | - | - | \
+                A3:2 -:13 F#3:1 | _ -:15 | -:16 | -",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "B3:16 | _:9 -:7 | -:16 | - | - | - | - | - & F#4:16 | _:6 -:10 | -:16 | - | - | \
+                - | - | -",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "-:16 | - | B3 | _:15 A3:1 | _:16 | _:14 -:2 | C#4:15 B3+D4:1 | _:15 -:1 & -:16 | \
+                - | D4+F#4:15 -:1 | E4:16 | _:15 F#4:1 | _:16 | _ | _:15 -:1 & -:16 | - | - | \
+                G4:15 C#4:1 | _:15 D4:1 | _:14 -:2 | A#3:14 -:2 | -:16",
+            ),
+            line(
+                "Trumpet",
+                gm::TRUMPET,
+                "D5:16 | - | - | - | - | - | - | -",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "-:1 D5 - B4 - F#4 - D4+D5 - C#4+C#5 - B3+B4 - A#3+A#4 - B3+B4 | _ -:2 F#4:13 | \
+                -:16 | - | - | - | - | - & -:16 | -:3 D4:12 -:1 | -:16 | - | - | - | - | \
+                - & -:16 | -:6 B3+B4:9 -:1 | -:16 | - | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 x x x x x x x x x - x x x x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x -"),
+            (Drum::Shaker, "-:2 x:1 x - x x x - x x x - x x x | X - x x - x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x -"),
+            (Drum::HighTom, "-:16 | -:11 x:1 -:4 | -:16 | - | - | - | - | -"),
+            (Drum::LowTom, "-:16 | -:10 x:1 x -:4 | -:16 | - | - | - | - | -"),
+        ]),
+        // Bars 17-24 of the file.
+        Part::new(
+            "Part 3",
+            "B4:2 -:1 B4:2 B4:1 - B4 B4 - B4 C#5 - D5 - C#5 | _:8 -:5 F#4:1 - F#4 | \
+            B4:3 A#4:1 - B4 C#5 - D5:2 C#5:1 - B4:2 A#4:1 B4 | _:5 G4:6 -:2 D5:1 - C#5 | \
+            E5:3 -:1 D5 - D5 C#5 - E5:4 A4:1 B4 - | A4 A4:8 -:4 F#4:1 - F#4 | \
+            A#4 - A#4 - A#4 B4 - C#5:2 C#5:3 -:1 B4 A#4 - | C#5:3 B4:9 -:1 B4 B4 -",
+            "G | F# | Bm | Em | A | D | F# | Bm",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "-:3 D2 G1:4 -:1 G1 G1:2 D2:1 - | F#1:3 C#2:2 -:1 F#1:5 C#2:3 F#1:2 | \
+                B1 -:1 F#1:3 B1:5 F#1:2 -:1 E1:2 | _:3 B1 E1:5 B1:3 E1:2 | \
+                A1:3 E2:2 -:1 A1:5 E2:3 D2:2 | _:3 A1 D2:4 -:1 A1:3 F#1:2 | \
+                _ -:1 C#2:2 -:1 F#1:5 C#2:3 B1:2 | _ -:1 F#1:3 B1:4 -:1 F#1:3 B1:2",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G3+B3+D4:1 - G2:2 -:1 B3:3 G3+B3+D4:2 G2:1 G3+B3+D4 - A#3 | \
+                _ - F#3+A#3+C#4 - F#2:2 -:1 F#3+A#3+C#4:3 F#3+A#3+C#4:2 F#2 -:1 B3 | \
+                _:2 F#3+B3+D4:1 - B2 F#3+B3+D4 - F#3+B3+D4:2 -:1 F#3+B3+D4:2 B2 -:1 B3 | \
+                _:3 -:1 E3 G3+B3+E4 - G3+B3+E4:2 -:1 B3:3 E4:2 A3+C#4+E4:1 | \
+                _ - A3+C#4+E4 - A2 A3+C#4+E4 - A3+C#4+E4:2 -:1 A3+C#4+E4:2 A2 -:1 D4+F#4 | \
+                _:2 A3+D4+F#4:1 - D3 A3+D4+F#4 - A3+D4+F#4:2 -:1 A3+D4+F#4 - D3 A3+D4+F#4 - C#4+F#4 | \
+                _:2 A#3+C#4+F#4:1 - F#2 A#3+C#4+F#4 - A#3+C#4+F#4:2 -:1 F#4:2 F#2 -:1 B3+D4+F#4 | \
+                _ - B3+D4+F#4 - B2 B3+D4+F#4 - F#4:3 B3+D4+F#4:2 B2 -:1 G3+B3+D4 & -:5 G3+B3+D4:1 - G3+D4:2 -:6 F#3+C#4:1 | \
+                F#2 -:4 F#3+A#3+C#4:1 -:7 F#3+A#3+C#4:1 - F#3+D4 | _ B2 -:11 F#3+B3+D4:1 - G3+E4 | \
+                _ - G3+E4 -:7 G3+E4:2 E3:1 G3+B3 -:2 | -:13 A3+C#4+E4:1 - A3 | _ -:14 A#3:1 | \
+                _ -:9 A#3+C#4:1 -:2 A#3+C#4+F#4:1 -:2 | -:7 B3+D4:2 -:4 B3+D4+F#4:1 -:2 & -:16 | \
+                - | - | -:10 E3:1 -:5 | -:16 | - | - | -",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "G4:15 -:1 | F#4:16 | _:15 -:1 | E4:16 | _ | -:15 C#4:1 | _:15 -:1 | \
+                B3+D4:16 & B3:14 -:2 | A#3+C#4:15 -:1 | B3:16 | _:14 -:1 A3 | _:16 | \
+                _:14 -:1 A#3 | _:14 -:2 | -:16 & D4:13 -:3 | -:16 | D4:15 -:1 | G4:15 C#4:1 | \
+                _:15 F#4:1 | _:16 | _ | _ & -:16 | - | - | - | -:15 D4:1 | _:14 -:2 | -:16 | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x -:2 x:1 x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x -"),
+            (Drum::Shaker, "X:1 - x x x x x x - x x x - x x x | X - x x - x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x"),
+            (Drum::Rim, "x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:1 x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x -"),
+            (Drum::HighTom, "-:16 | -:12 x:1 -:3 | -:16 | - | - | - | - | -"),
+            (Drum::LowTom, "-:16 | -:9 x:1 - x -:2 x:1 - | -:16 | - | - | - | - | -"),
+            (Drum::Crash, "-:16 | -:14 x:1 - | -:16 | - | - | - | - | -"),
+        ]),
+        // Bars 25-32 of the file.
+        Part::new(
+            "Part 4",
+            "B4:1 - G4 G4 - G4 - F#4:2 F#4 D5:4 C#5:1 | B4:7 -:4 A4:1 A4 A4 A4 A4 | \
+            C#5 B4 - B4 - A4 - C#5 - B4 - B4:2 A4:1 - D5 | \
+            _ B4:3 -:1 B4 - A4 D5:2 B4:1 B4:2 A4:1 - C#5 | \
+            _:3 B4:1 B4 A4 - C#5:2 -:1 B4 A4 - G4 - F#4 | _:6 -:5 F#4:1 F#4 F#4 F#4 F#4 | \
+            A#4:3 A#4:1 B4 - C#5 D5:2 C#5:1 - B4 - A#4:2 C#5:1 | _ B4:7 -:1 D5 - D5 D5 - D5 D5",
+            "G F# | Bm Bm7 | A | D | A | D | F# | Bm",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "G1:3 D2 G1:1 - F#1:3 C#2 F#1:1 - | B1:3 F#1 B1:1 - B2:2 -:6 | \
+                A1:3 E2:2 -:1 A1:4 -:1 A1:3 D2:2 | _ -:1 A1:3 D2:4 -:1 A1:2 -:1 D2 - | \
+                A1:3 E2:2 -:1 A1:4 -:1 E2:2 -:1 D2:2 | _ -:1 A1:2 -:1 D2:4 -:1 A1:2 -:1 F#1:2 | \
+                _:3 C#2:2 -:1 F#1:5 C#2:2 -:1 F#1 - | B1:2 -:1 F#1:2 -:1 B1:4 -:1 F#1:3 B1:1 -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G3+B3+D4:1 - G2:2 -:1 F#3+A#3+C#4:2 -:1 F#3+A#3+C#4:2 F#2 -:1 F#3+B3+D4 | \
+                _ - F#3+B3+D4:2 B2:4 B3+D4+F#4+B4:2 -:6 | \
+                A2:5 A3+C#4+E4:1 - A3+C#4+E4:3 A3+C#4+E4:2 A2 -:1 D4+F#4 | \
+                _:2 A3+D4+F#4:1 -:2 A3+D4+F#4:1 - A3+D4+F#4:2 D3 -:1 D3:2 -:1 A3+C#4+E4 | \
+                _ - A3+C#4+E4 - A2:3 A3+C#4+E4:2 -:1 A3+C#4+E4:2 A2:3 A3+D4+F#4:1 | \
+                _ - A3+D4+F#4 - D3 A3+D4+F#4 - A3+D4+F#4:2 -:1 A3+D4+F#4:2 D3:3 A#3+C#4+F#4:1 | \
+                _ - A#3+C#4+F#4 - F#2:4 F#2:2 A#3+C#4+F#4 F#2 -:1 B3+D4+F#4 | \
+                _ - B3+D4+F#4 - B2:4 -:1 B2:2 -:1 B2:3 G3+B3+D4:1 & -:5 G3+B3+D4:1 -:7 F#3+A#3+C#4:1 -:2 | \
+                -:5 B3+D4:2 -:1 B2 -:7 | E4:3 A3+C#4+E4:1 -:5 A2:2 - A3+C#4+E4:1 - A3 | \
+                _ -:9 A3+D4+F#4:2 -:1 A3+D4+F#4 -:2 | \
+                A2 -:3 A3+C#4+E4:1 -:2 A2 -:3 A3+C#4+E4:1 -:2 | \
+                D3:3 -:5 D3:3 -:2 A3+D4+F#4:1 -:2 | \
+                -:5 A#3+C#4+F#4:1 - A#3+C#4+F#4:2 -:4 A#3+C#4+F#4:1 -:2 | \
+                B2 -:3 B3+D4+F#4:1 - B3+D4+F#4:2 -:1 B3+D4+F#4:2 -:1 B3+D4+F#4 -:2 & -:16 | \
+                -:5 F#3:1 -:10 | A3+C#4:2 -:14 | -:16 | - | - | - | -",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "G4:8 F#4 | _:9 -:7 | A3:16 | _ | _ | _:14 -:1 A#3+C#4 | _:14 -:1 B3+D4 | \
+                _:16 & -:8 A#3+C#4:7 -:1 | B3+D4:9 -:7 | C#4+E4:14 -:1 F#4 | _:15 C#4+E4:1 | \
+                _:15 -:1 | F#4:16 | _ | _:15 -:1 & -:16 | - | -:15 D4:1 | _:14 -:2 | -:16 | \
+                D4:15 -:1 | -:16 | -",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "-:16 | -:14 G4:1 G#4 | A4 - C#5 E4 - F#4 - A4 - C#5 - E4 - F#4 - B4 | \
+                - D5 - F#4 - A4 - B4 - D5 - F#4 - A4 - B4 | \
+                A4 - C#5 E4 - F#4 - A4 - C#5 - E4 - F#4 - B4 | \
+                - D5 - F#4 - A4 - B4 - D5 - F#4 - A4 - A#4 | \
+                - C#5 - E4 - F#4 - A#4 - C#5 - E4 - F#4 - A#4 | \
+                B4:2 D5:1 F#4 - A4 - B4 - D5 - F#4 - A4 - B4",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:7 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x -:8 | \
+             x:1 - x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:5 x:1 -:6 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x x -:6 | \
+             -:2 x:1 x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x -"),
+            (Drum::Shaker, "X:1 - x x x x x x - x x x - x x x | X - x x - x x x -:8 | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x"),
+            (Drum::Rim, "x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:9 | \
+             -:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:1 x - x x x x -:2 x:1 - x x x x - | - x - x x x x - X -:7 | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 -"),
+            (Drum::HighTom, "-:16 | -:8 x:1 -:5 x:1 - | -:16 | - | - | - | - | -"),
+            (Drum::LowTom, "-:16 | -:10 x:1 - x x -:2 | X:1 -:15 | -:16 | - | - | - | -"),
+            (Drum::Crash, "-:16 | - | X:1 -:15 | -:16 | - | - | - | -"),
+        ]),
+        // Bars 33-40 of the file.
+        Part::new(
+            "Part 5",
+            "D5:4 -:1 D5 E5 D5 E5 - D5 C#5 - B4 - A#4 | _:7 -:4 A4:1 A4 A4 A4 A4 | \
+            C#5 B4 - B4:2 A4:1 - C#5:2 B4:1 - B4:2 A4:1 - D5 | \
+            _ B4:3 -:1 B4 - A4 D5 - B4 B4:2 A4:1 -:2 | C#5:3 B4:1 B4 - A4 C#5:3 -:1 B4 - B4 G4 - | \
+            F#4:8 -:3 F#4:1 F#4 F#4 F#4 F#4 | A#4:3 A#4:1 B4 C#5 - D5 - C#5 - B4 - A#4 - C#5 | \
+            - B4:4 - D5:1 - D5 - D5 D5 -",
+            "G | F# | A | D | A | D | F# | Bm",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "G1:3 D2:2 -:1 G1:5 D2:2 -:1 G1 - | F#1:3 C#2:2 -:1 F#1:4 -:1 C#2:3 F#1:1 - | \
+                A1:3 E2:2 -:1 A1:5 E2:3 A1:2 | D2 -:1 A1:2 -:1 D2:4 -:1 A1:3 E2:2 | \
+                A1:3 E2:2 -:1 A1:4 -:1 A1:3 D2:2 | _ -:1 A1:2 -:1 D2:5 A1:2 -:1 F#1:2 | \
+                _:3 C#2:2 -:1 F#1:4 -:1 C#2:3 F#1:1 - | \
+                B1:2 -:1 F#1:2 -:1 B1:4 -:1 F#1:2 -:1 B1:2",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G3+B3+D4:1 - G2:2 -:1 G3+B3+D4:2 -:1 G3+B3+D4:2 G2:3 F#3+A#3+C#4:1 | \
+                _ - A#3:2 F#2:3 F#3+A#3+C#4:2 -:1 F#3+A#3+C#4:2 F#2:3 A3+C#4+E4:1 | \
+                _ A2 E4:2 A2:4 -:1 A2:2 -:1 A2:3 A3+D4+F#4:1 | \
+                _ D3 A3+D4+F#4 - D3:2 -:1 A3+D4+F#4:2 -:1 A3+D4+F#4:2 D3 -:1 A3+C#4+E4 | \
+                _ - A3+E4:2 A2:3 A3+C#4+E4:2 -:1 A3+C#4+E4:2 A2:3 A3+D4+F#4:1 | \
+                _ - A3+D4+F#4:2 D3:3 A3+D4+F#4:2 -:1 A3+D4+F#4:2 D3 -:1 A#3+C#4+F#4 | \
+                _ - A#3+C#4+F#4:2 F#2:1 A#3+C#4+F#4 - A#3+C#4+F#4:2 F#2:1 A#3+C#4+F#4:2 F#2 -:1 B3+D4+F#4 | \
+                _ - D4+F#4:3 B3+D4+F#4:1 - B3+D4+F#4:2 -:1 B3+D4+F#4:2 B2 -:1 G3+B3+D4 & -:5 G3+B3+D4:1 -:7 G3+B3+D4:1 -:2 | \
+                F#2 F#3+C#4:1 -:2 F#3+A#3+C#4:1 -:2 F#2 -:3 F#3+A#3+C#4:1 -:2 | \
+                - A3+C#4:1 -:2 A3+C#4+E4:1 - E4:3 A3+C#4+E4:2 -:1 A3+C#4+E4 -:2 | \
+                -:5 A3+D4+F#4:1 -:7 A3+D4+F#4:1 -:2 | \
+                A2:3 -:2 A3+C#4+E4:1 -:2 A2:3 -:2 A3+C#4+E4:1 -:2 | \
+                D3 -:3 A3+D4+F#4:1 -:2 D3 -:3 A3+D4+F#4:1 -:2 | -:13 A#3+C#4+F#4:1 -:2 | \
+                - B3 B2:1 -:8 B3+D4+F#4:1 -:2 & -:16 | - | -:7 A3+C#4:2 -:7 | -:16 | \
+                -:2 C#4:1 -:13 | -:16 | - | -",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "G4:16 | C#4 | _:14 -:1 F#4 | _:15 -:1 | E4:15 F#4:1 | _:16 | _ | _ & -:16 | \
+                F#4:15 -:1 | A3:16 | _ | _ | _:14 -:2 | C#4:15 B3+D4:1 | _:16 & -:16 | \
+                A#3:14 -:2 | E4:14 -:1 D4 | _:14 -:2 | C#4:14 -:1 D4 | _:14 -:2 | A#3:14 -:2 | \
+                -:16",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "-:1 D5 - G4 - B4 - D5 - G4 - B4 - D5 - G4 | \
+                C#5 - A#4 F#4 - A#4 - C#5 - F#4 - A#4 - C#5 - A4 | \
+                - C#5 - E4 - F#4 - A4 - C#5 - E4 - F#4 - A4 | \
+                B4 - D5 F#4 - A4 - B4 - D5 - A4 - D5 G4 G#4 | \
+                A4 - C#5 E4 - F#4 - A4 - C#5 - E4 - F#4 - B4 | \
+                - D5 - F#4 - A4 - B4 - D5 - F#4 - A4 - A#4 | \
+                - C#5 - E4 - F#4 - A#4 - C#5 - E4 - F#4 - A#4 | \
+                B4 - D5 F#4 - A4 - B4 - D5 - F#4 - A4 - B4",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x - x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             -:2 x:1 x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x -"),
+            (Drum::Shaker, "-:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:2 X:1 - X - X - X - X X - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 -"),
+            (Drum::HighTom, "-:16 | -:14 X:1 - | -:16 | - | - | - | - | -"),
+            (Drum::LowTom, "-:16 | - | X:1 -:15 | -:16 | - | - | - | -"),
+            (Drum::Crash, "-:16 | -:14 X:1 - | X -:15 | -:16 | - | - | - | -"),
+        ]),
+        // Bars 41-48 of the file.
+        Part::new(
+            "Part 6",
+            "D5:1 D5:4 -:1 D5 D5 D5 - C#5:2 A#4 D5:1 - | C#5 B4:7 -:8 | -:16 | - | - | - | - | -",
+            "G F# | Bm | Em7 | Bm | F#7 | Bm | Em7 | Bm",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "G1:3 D2 G1:1 - F#1:3 C#2 F#1:2 | B1 -:1 F#1:3 B1:2 B2:1 -:7 | \
+                E1:2 -:1 B1:2 -:1 E1:4 -:1 F#1:3 B1:2 | _ -:1 F#1:3 B1:4 -:1 C#2:3 F#1:2 | \
+                _ -:1 C#2:2 -:1 F#1:5 C#2:3 F#1:2 | B1 -:1 F#1:3 B1:4 -:1 F#1:3 B1:1 - | \
+                E1:2 -:1 B1:2 -:1 E1:5 F#1:3 B1:2 | _ -:1 F#1:2 -:1 B1:4 -:1 C#2:3 F#1:2",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G3+B3+D4 G2 -:1 G3+B3+D4 F#2:2 F#3+A#3+C#4 F#2:1 F#3+A#3+C#4 F#2:2 | \
+                B2 F#3+D4 B2:1 B3+D4 - B2:2 -:7 | \
+                -:2 B3+E4+G4:1 -:2 B3+E4+G4:1 - B3+E4+G4:3 B3+E4+G4:1 -:2 B3+E4+G4:1 - B3+D4+F#4 | \
+                _:2 B3+D4+F#4:1 -:2 B3+D4+F#4:1 - B3+D4+F#4:3 B3+D4+F#4:1 -:2 B3+D4+F#4:1 - A#3+C#4+F#4 | \
+                _ - A#3+C#4+F#4 -:2 A#3+C#4+F#4:1 - A#3+C#4+F#4:2 -:1 F#4:3 A#3+C#4+F#4:1 - B3+D4+F#4 | \
+                _ - B3+D4+F#4 -:2 B3+D4+F#4:1 - B3+D4+F#4:2 -:1 B3+D4+F#4:2 -:1 B3+D4+F#4 - B3+E4+G4 | \
+                _ - B3+E4+G4 -:2 B3+E4+G4:1 - B3+E4+G4:2 -:1 B3+E4+G4 -:2 B3+E4+G4:1 - B3+D4+F#4 | \
+                _ - B3+D4+F#4 -:2 B3+D4+F#4:1 - F#4:3 B3+D4+F#4:1 -:2 B3+D4+F#4:1 - A#3+C#4+F#4 & -:5 G3+B3+D4:1 -:9 B3:1 | \
+                _:4 - B4:2 -:6 | -:16 | - | -:10 A#3+C#4:2 -:4 | -:16 | - | \
+                -:7 B3+D4:2 -:7 & -:15 F#3+D4:1 | _ -:7 B3+D4+F#4:1 -:7 | -:16 | - | - | - | - | \
+                -",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "-:16 | - | -:4 B3+G4:3 G3+E4:7 -:2 | -:4 B3+F#4:3 D4:9 | \
+                -:4 A#3+F#4:3 F#3+C#4:8 -:1 | -:4 B3+F#4:3 F#3+D4:7 -:2 | \
+                -:4 B3+G4:3 G3+E4:6 -:3 | -:4 B3+F#4:3 F#3+D4:7 -:2 & -:16 | - | - | \
+                -:7 F#3:8 -:1 | -:16 | - | - | -",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "G4:8 F#4 | _:9 -:7 | -:16 | - | - | - | - | - & -:8 C#4 | B3+D4:9 -:7 | -:16 | - | \
+                - | - | - | - & -:8 A#3:7 -:1 | -:16 | - | - | - | - | - | -",
+            ),
+            line(
+                "Trumpet",
+                gm::TRUMPET,
+                "-:16 | - | -:4 E5:3 B4:6 -:3 | -:4 D5:3 B4:7 -:2 | -:4 C#5:3 A#4:7 -:2 | \
+                -:4 D5:3 B4:7 -:2 | -:4 E5:3 B4:7 -:2 | -:4 D5:3 B4:8 -:1",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "G4:1 - D5 G4 - B4 - A#4 - C#5 - F#4 - A#4 - C#5 | \
+                B4:2 D5:1 B4:2 F#4:1 - D5 -:6 D4+D5:1 D#4+D#5 | \
+                E4:2 G4+G5:1 D4+D5 - D#4+D#5 - E4+E5 - G4+G5 - D4+D5 - D#4+D#5 - E4+E5 | \
+                D4+D5:2 F#4+F#5:1 B3+B4 - C#4+C#5 - D4+D5 - F#4+F#5 - B3+B4 - C#4+C#5 - D4+D5 | \
+                C#4:2 E4+E5:1 A#3+A#4 - B3+B4 - C#5:2 E4+E5:1 - A#3+A#4 - B3+B4 - C#4+C#5 | \
+                B4:2 A#3+A#4:1 B3+B4 - D4+D5 - F#4+F#5 - D4+D5 - B3+B4 - F#4+F#5 D4+D5 D#4+D#5 | \
+                E5:2 G4+G5:1 D4+D5 - D#4+D#5 - E4+E5 - G4+G5 - D4+D5 - D#4+D#5 - E4+E5 | \
+                D4+D5 - F#4+F#5 B3+B4 - C#4+C#5 - D4+D5 - F#4+F#5 - B3+B4 - C#4+C#5 - D4+D5 & -:16 | \
+                - | E5:1 -:15 | -:16 | C#5:1 -:6 C#4:1 -:8 | B3:1 -:15 | E4:1 -:15 | -:16",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:7 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x -:8 | \
+             x:1 - x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:5 x:1 -:6 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 x x x x x x x x x - x x x x - | x -:3 x:1 - x x x x -:6 | \
+             -:2 x:1 x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x -"),
+            (Drum::Shaker, "-:2 x:1 x - x x x - x x x - x x x | X - x x - x x x -:8 | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:9 | \
+             -:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | - x - x x x x - X -:7 | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 -"),
+            (Drum::HighTom, "-:16 | -:8 x:1 -:5 x:1 - | -:16 | - | - | - | - | -"),
+            (Drum::LowTom, "-:16 | -:10 x:1 - x x -:2 | X:1 -:15 | -:16 | - | - | - | -"),
+            (Drum::Crash, "-:16 | - | X:1 -:15 | -:16 | - | - | - | -"),
+        ]),
+        // Bars 49-56 of the file.
+        Part::new(
+            "Part 7",
+            "-:16 | - | -:13 F#4:1 - F#4 | B4:3 A#4:2 B4:1 - C#5 D5 - C#5 B4 - A#4 - B4 | \
+            _:2 G4:6 -:3 D5:2 C#5:1 - E5 | _:2 -:1 D5 D5 - C#5 E5:4 A4:1 - B4 - A4 | \
+            A4:8 -:5 F#4:1 - F#4 | A#4:3 A#4:2 B4:1 - C#5 D5 - C#5 B4 - A#4 - C#5",
+            "F#7 | Bm | Bm | Bm | Em | A | D | F#",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "-:3 C#2:2 -:1 F#1:4 -:1 C#2:3 F#1:1 - | B1:3 F#1 B1:4 -:1 F#1:2 -:1 B1:2 | \
+                _:3 F#1 B1:4 -:1 F#1:2 -:1 F#2 - | B1:3 F#1:2 -:1 B1:5 F#1:2 -:1 E1:2 | \
+                _:3 B1:2 -:1 E1:5 B1:3 A1:2 | _:3 E2:1 -:2 A1:5 E2:2 -:1 D2:2 | \
+                _:3 A1 D2:5 A1:3 F#1:2 | _ -:1 C#2:3 F#1:5 C#2:3 B1:2",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 A#3+C#4+F#4:1 -:2 A#3+C#4+F#4:1 - A#3+C#4+F#4:2 -:1 A#3+C#4+F#4:2 -:1 A#3+C#4+F#4 - B3+D4 | \
+                _:2 B3+D4+F#4 -:1 B3+D4+F#4 - F#4:3 D4+F#4:2 -:1 D4+F#4:3 | \
+                -:1 F#4 G4 E4 F#4 D4 E4 C#4 B3:8 | \
+                F#3+B3+D4:2 -:1 F#3+B3+D4 - F#3+B3+D4 - B3+D4:3 F#3+B3+D4:1 - B2 F#3+B3+D4 - G3+B3+E4 | \
+                _ - G3+B3+E4 - E3 G3+B3+E4 - G3+B3+E4 - G3+B3+E4 - G3+B3+E4 E3 G3+B3+E4 - G3+B3+E4 | \
+                A2:4 -:1 A3+C#4+E4 - A3+C#4:4 -:2 A3+C#4+E4:1 - A3 | \
+                _:3 -:1 D3 F#3+A3+D4 - A3:3 F#3+A3+D4:2 D3 -:1 F#3+A#3+C#4 | \
+                _ - F#3+A#3+C#4 - F#2 F#3+A#3+C#4 - F#3+A#3+C#4:2 F#2:1 F#3+A#3+C#4:2 F#2 -:1 F#3+B3+D4 & -:15 F#4:1 | \
+                _ -:6 B3+D4:2 -:7 | -:16 | -:7 F#3:2 -:7 | E3:2 -:14 | \
+                C#4+E4:3 A3+C#4+E4:1 -:3 E4 A2 -:2 D4:1 | \
+                _:2 F#3+D4:1 -:4 F#3+D4:2 -:4 F#3+A3+D4:1 -:2 | -:13 F#3+A#3+C#4:1 -:2 & -:16 | \
+                - | - | - | - | A3:2 -:13 F#3:1 | _ -:15 | -:16",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "-:4 A#3+F#4:3 F#3+C#4:9 | F#3+D4:15 -:1 | -:16 | - | - | - | - | -",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "-:16 | - | - | B3 | _:15 A3:1 | _:16 | _:14 -:2 | C#4:15 B3+D4:1 & -:16 | - | - | \
+                D4+F#4:15 -:1 | E4:16 | _:15 F#4:1 | _:16 | _ & -:16 | - | - | - | G4:15 C#4:1 | \
+                _:15 D4:1 | _:14 -:2 | A#3:14 -:2",
+            ),
+            line(
+                "Trumpet",
+                gm::TRUMPET,
+                "-:4 C#5:3 A#4:9 | B4:13 -:3 | -:16 | - | - | - | - | -",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "C#4+C#5:2 E4+E5:1 A#3+A#4 - B3+B4 - C#4+C#5 - E4+E5 - A#3+A#4 - B3+B4 - C#4+C#5 | \
+                B3+B4 F#3+F#4 - E3+E4 - D3+D4 - C#3+C#4 B2+B3:7 -:1 | -:16 | - | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x -"),
+            (Drum::Shaker, "-:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             X - x x x x x x - x X x X x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             - x - x x x x -:2 X:1 - X - X X - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x -"),
+        ]),
+        // Bars 57-64 of the file.
+        Part::new(
+            "Part 8",
+            "-:1 B4:7 -:5 B4:1 - B4 | B4:2 -:1 B4:2 B4:1 - B4 B4 - B4 C#5 - D5 - C#5 | \
+            _:8 -:5 F#4:1 - F#4 | B4:3 A#4:1 - B4 C#5 - D5:2 C#5:1 - B4:2 A#4:1 B4 | \
+            _:5 G4:6 -:2 D5:1 - C#5 | E5:3 -:1 D5 - D5 C#5 - E5:4 A4:1 B4 - | \
+            A4 A4:8 -:4 F#4:1 - F#4 | A#4 - A#4 - A#4 B4 - C#5:2 C#5:3 -:1 B4 A#4 -",
+            "Bm | G | F# | Bm | Em | A | D | F#",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "-:3 F#1:2 -:1 B1:5 F#1:2 -:1 G1:2 | _:3 D2 G1:4 -:1 G1 G1:2 D2:1 - | \
+                F#1:3 C#2:2 -:1 F#1:5 C#2:3 F#1:2 | B1 -:1 F#1:3 B1:5 F#1:2 -:1 E1:2 | \
+                _:3 B1 E1:5 B1:3 E1:2 | A1:3 E2:2 -:1 A1:5 E2:3 D2:2 | \
+                _:3 A1 D2:4 -:1 A1:3 F#1:2 | _ -:1 C#2:2 -:1 F#1:5 C#2:3 B1:2",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "B2:2 F#3+B3+D4:1 -:2 F#3+B3+D4:1 - F#3+B3+D4:2 -:1 F#3+B3+D4:2 B2 -:1 G2 | \
+                _:2 G3+B3+D4:1 - G2:2 -:1 B3:3 G3+B3+D4:2 G2:1 G3+B3+D4 - A#3 | \
+                _ - F#3+A#3+C#4 - F#2:2 -:1 F#3+A#3+C#4:3 F#3+A#3+C#4:2 F#2 -:1 B3 | \
+                _:2 F#3+B3+D4:1 - B2 F#3+B3+D4 - F#3+B3+D4:2 -:1 F#3+B3+D4:2 B2 -:1 B3 | \
+                _:3 -:1 E3 G3+B3+E4 - G3+B3+E4:2 -:1 G3+B3+E4:2 E3:1 G3+B3+E4 - A3+C#4+E4 | \
+                _ - A3+C#4+E4 - A2 A3+C#4+E4 - A3+C#4+E4:2 -:1 A3+C#4+E4:2 A2 -:1 F#4 | \
+                _:2 A3+D4+F#4:1 - D3 A3+D4+F#4 - A3+D4+F#4:2 -:1 A3+D4+F#4 - D3 A3+D4+F#4 - C#4+F#4 | \
+                _:2 A#3+C#4+F#4:1 - F#2 A#3+C#4+F#4 - A#3+C#4+F#4:2 -:1 F#4:2 F#2 -:1 B3+D4+F#4 & -:8 B2:2 -:3 F#3+B3+D4:1 - G3+B3+D4 | \
+                _ -:4 G3+B3+D4:1 - G3+D4:2 -:6 F#3+C#4:1 | \
+                F#2 -:4 F#3+A#3+C#4:1 -:7 F#3+A#3+C#4:1 - F#3+D4 | _ B2 -:11 F#3+B3+D4:1 - G3+E4 | \
+                _ - G3+E4 -:7 E3:1 -:5 | -:13 A3+C#4+E4:1 - A3+D4 | _ -:14 A#3:1 | \
+                _ -:9 A#3+C#4:1 -:2 A#3+C#4+F#4:1 -:2",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "-:16 | G4:15 -:1 | F#4:16 | _:15 -:1 | E4:16 | _ | -:15 C#4:1 | _:15 -:1 & -:16 | \
+                B3:14 -:2 | A#3+C#4:15 -:1 | B3:16 | _:14 -:1 A3 | _:16 | _:14 -:1 A#3 | \
+                _:14 -:2 & -:16 | D4:13 -:3 | -:16 | D4:15 -:1 | G4:15 C#4:1 | _:15 F#4:1 | _:16 | \
+                _ & -:16 | - | - | - | - | -:15 D4:1 | _:14 -:2 | -:16",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x -:2 x:1 x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x -"),
+            (Drum::Shaker, "X:1 - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x - x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x"),
+            (Drum::Rim, "x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:1 x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x -"),
+            (Drum::HighTom, "-:16 | - | -:12 x:1 -:3 | -:16 | - | - | - | -"),
+            (Drum::LowTom, "-:16 | - | -:9 x:1 - x -:2 x:1 - | -:16 | - | - | - | -"),
+            (Drum::Crash, "-:16 | - | -:14 x:1 - | -:16 | - | - | - | -"),
+        ]),
+        // Bars 65-72 of the file.
+        Part::new(
+            "Part 9",
+            "C#5:3 B4:9 -:1 B4 B4 - | B4 - G4 G4 - G4 - F#4:2 F#4 D5:4 C#5:1 | \
+            B4:7 -:4 A4:1 A4 A4 A4 A4 | C#5 B4 - B4 - A4 - C#5 - B4 - B4:2 A4:1 - D5 | \
+            _ B4:3 -:1 B4 - A4 D5:2 B4:1 B4:2 A4:1 - C#5 | \
+            _:3 B4:1 B4 A4 - C#5:2 -:1 B4 A4 - G4 - F#4 | _:6 -:5 F#4:1 F#4 F#4 F#4 F#4 | \
+            A#4:3 A#4:1 B4 - C#5 D5:2 C#5:1 - B4 - A#4:2 C#5:1",
+            "Bm | G F# | Bm Bm7 | A | D | A | D | F#",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "-:3 F#1 B1:4 -:1 F#1:3 B1:2 | G1:3 D2 G1:1 - F#1:3 C#2 F#1:1 - | \
+                B1:3 F#1 B1:1 - B2:2 -:6 | A1:3 E2:2 -:1 A1:4 -:1 A1:3 D2:2 | \
+                _ -:1 A1:3 D2:4 -:1 A1:2 -:1 D2 - | A1:3 E2:2 -:1 A1:4 -:1 E2:2 -:1 D2:2 | \
+                _ -:1 A1:2 -:1 D2:4 -:1 A1:2 -:1 F#1:2 | \
+                _ -:1 C#2:2 -:1 F#1:4 -:1 C#2:2 -:1 F#1 -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 B3+D4+F#4:1 - B2 B3+D4+F#4 - F#4:3 B3+D4+F#4:2 B2:3 G3+B3+D4:1 | \
+                _:2 G3+B3+D4:1 - G2 G3+B3+D4 - C#4:3 F#3+A#3+C#4:2 F#2 -:1 D4 | \
+                _:2 F#3+B3+D4 B2:4 D4+F#4+B4:2 -:6 | \
+                A2:5 A3+C#4+E4:1 - A3+C#4+E4:3 A3+C#4+E4:2 A2 -:1 D4+F#4 | \
+                _:2 A3+D4+F#4:1 -:2 A3+D4+F#4:1 - A3+D4+F#4:2 D3 -:1 D3:2 -:1 A3+C#4+E4 | \
+                _ - A3+C#4+E4 - A2:3 A3+C#4+E4:2 -:1 A3+C#4+E4:2 A2:3 D4+F#4:1 | \
+                _:2 A3+D4+F#4:1 - D3 A3+D4+F#4 - A3+D4+F#4:2 -:1 A3+D4+F#4:2 D3:3 A#3+C#4+F#4:1 | \
+                _ - A#3+C#4+F#4 - F#2:4 F#2:2 A#3+C#4+F#4 F#2 -:1 B3+D4+F#4 & -:7 B3+D4:2 -:4 B3+D4+F#4:1 -:2 | \
+                -:7 F#3+A#3:2 -:4 F#3+A#3+C#4:1 - F#3+B3 | _ -:4 B3+D4:2 -:1 B2+B3 -:7 | \
+                E4:3 A3+C#4+E4:1 -:5 A2:2 - A3+C#4+E4:1 - A3 | \
+                _ -:9 A3+D4+F#4:2 -:1 A3+D4+F#4 -:2 | \
+                A2 -:3 A3+C#4+E4:1 -:2 A2 -:3 A3+C#4+E4:1 - A3 | _ -:7 D3:3 -:2 A3+D4+F#4:1 -:2 | \
+                -:5 A#3+C#4+F#4:1 - A#3+C#4+F#4:2 -:4 A#3+C#4+F#4:1 -:2 & -:16 | - | \
+                -:5 F#3:1 -:10 | A3+C#4:2 -:14 | -:16 | - | D3:3 -:13 | -:16",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "B3:16 | _:7 -:1 F#4:8 | _:9 -:7 | A3:16 | _ | _ | _:14 -:1 A#3+C#4 | \
+                _:14 -:1 B3+D4 & D4:16 | _:6 -:2 A#3+C#4:7 -:1 | B3+D4:9 -:7 | C#4+E4:14 -:1 F#4 | \
+                _:15 C#4+E4:1 | _:15 -:1 | F#4:16 | _ & -:16 | G4:8 - | -:16 | -:15 D4:1 | \
+                _:14 -:2 | -:16 | D4:15 -:1 | -:16",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "-:16 | - | -:14 G4:1 G#4 | A4 - C#5 E4 - F#4 - A4 - C#5 - E4 - F#4 - B4 | \
+                - D5 - F#4 - A4 - B4 - D5 - F#4 - A4 - B4 | \
+                A4 - C#5 E4 - F#4 - A4 - C#5 - E4 - F#4 - B4 | \
+                - D5 - F#4 - A4 - B4 - D5 - F#4 - A4 - A#4 | \
+                - C#5 - E4 - F#4 - A#4 - C#5 - E4 - F#4 - A#4",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:7 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x -:8 | x:1 - x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:5 x:1 -:6 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 -:3 x:1 - x x x -:3 x:1 - x - | x -:3 x:1 - x x x -:3 x:1 - x - | \
+             x -:3 x:1 - x x x x -:6 | -:2 x:1 x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x -"),
+            (Drum::Shaker, "X:1 - x x x x x x - x x x - x x x | X - x x x x x x - x x x - x x x | \
+             X - x x - x x x -:8 | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x"),
+            (Drum::Rim, "x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | x:1 -:2 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             x:1 -:2 x:1 -:2 x:1 -:9 | -:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:1 x - x x x x -:2 x:1 - x x x x - | - x - x x x x -:2 x:1 - x x x x - | \
+             - x - x x x x - X -:7 | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 -"),
+            (Drum::HighTom, "-:16 | - | -:8 x:1 -:5 x:1 - | -:16 | - | - | - | -"),
+            (Drum::LowTom, "-:16 | - | -:10 x:1 - x x -:2 | X:1 -:15 | -:16 | - | - | -"),
+            (Drum::Crash, "-:16 | - | - | X:1 -:15 | -:16 | - | - | -"),
+        ]),
+        // Bars 73-80 of the file.
+        Part::new(
+            "Part 10",
+            "-:1 B4:7 -:1 D5 - D5 D5 - D5 D5 | D5:4 -:1 D5 E5 D5 E5 - D5 C#5 - B4 - A#4 | \
+            _:7 -:4 A4:1 A4 A4 A4 A4 | C#5 B4 - B4:2 A4:1 - C#5:2 B4:1 - B4:2 A4:1 - D5 | \
+            _ B4:3 -:1 B4 - A4 D5 - B4 B4:2 A4:1 -:2 | C#5:3 B4:1 B4 - A4 C#5:3 -:1 B4 - B4 G4 - | \
+            F#4:8 -:3 F#4:1 F#4 F#4 F#4 F#4 | A#4:3 A#4:1 B4 C#5 - D5 - C#5 - B4 - A#4 - C#5",
+            "Bm | G | F# | A | D | A | D | F#",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "B1:2 -:1 F#1:2 -:1 B1:4 -:1 F#1:3 B1:1 - | G1:3 D2:2 -:1 G1:5 D2:2 -:1 G1 - | \
+                F#1:3 C#2:2 -:1 F#1:4 -:1 C#2:3 F#1:1 - | A1:3 E2:2 -:1 A1:5 E2:3 A1:2 | \
+                D2 -:1 A1:2 -:1 D2:4 -:1 A1:3 E2:2 | A1:3 E2:2 -:1 A1:4 -:1 A1:3 D2:2 | \
+                _ -:1 A1:2 -:1 D2:5 A1:2 -:1 F#1:2 | _:3 C#2:2 -:1 F#1:4 -:1 C#2:3 F#1:1 -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "B2:2 B3+D4+F#4:1 - B2:4 -:1 B2:2 -:1 B2:3 G3+B3+D4:1 | \
+                _ - G3+B3+D4 - G2:2 -:1 G3+B3+D4:2 -:1 G3+B3+D4:2 G2:3 F#3+A#3+C#4:1 | \
+                _ - A#3:2 F#2:4 F#2:2 F#3+A#3+C#4 F#2:3 A3+C#4+E4:1 | \
+                _ A2 E4:2 A2:4 -:1 A2:2 -:1 A2:3 A3+D4+F#4:1 | \
+                _ D3 A3+D4+F#4 - D3:2 -:1 A3+D4+F#4:2 -:1 A3+D4+F#4:2 D3 -:1 A3+C#4+E4 | \
+                _ - A3+E4:2 A2:3 A3+C#4+E4:2 -:1 A3+C#4+E4:2 A2:3 A3+D4+F#4:1 | \
+                _ - A3+D4+F#4:2 D3:3 A3+D4+F#4:2 -:1 A3+D4+F#4:2 D3 -:1 A#3+C#4+F#4 | \
+                _ - A#3+C#4+F#4:2 F#2:1 A#3+C#4+F#4 - A#3+C#4+F#4:2 F#2:1 A#3+C#4+F#4:2 F#2 -:1 B3+D4+F#4 & -:5 B3+D4+F#4:1 - B3+D4+F#4:2 -:1 B3+D4+F#4:2 -:1 B3+D4+F#4 -:2 | \
+                -:5 G3+B3+D4:1 -:7 G3+B3+D4:1 -:2 | \
+                F#2 F#3+C#4:1 -:2 F#3+A#3+C#4:1 - F#3+A#3+C#4:2 -:4 F#3+A#3+C#4:1 -:2 | \
+                - A3+C#4:1 -:2 A3+C#4+E4:1 - C#4+E4:3 A3+C#4+E4:2 -:1 A3+C#4+E4 -:2 | \
+                -:5 A3+D4+F#4:1 -:7 A3+D4+F#4:1 -:2 | \
+                A2:3 -:2 A3+C#4+E4:1 -:2 A2 -:3 A3+C#4+E4:1 -:2 | \
+                D3 -:3 A3+D4+F#4:1 -:2 D3 -:3 A3+D4+F#4:1 -:2 | -:13 F#4:2 -:1 & -:16 | - | - | \
+                -:7 A3:2 -:7 | -:16 | -:2 C#4:1 -:13 | -:16 | -:13 A#3+C#4:1 -:2",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "-:16 | G4 | C#4 | _:14 -:1 F#4 | _:16 | C#4+E4:14 -:1 F#4 | _:16 | _ & -:16 | - | \
+                F#4:15 -:1 | A3:16 | _ | _ | _:14 -:2 | C#4:15 B3+D4:1 & -:16 | - | A#3:14 -:2 | \
+                E4:14 -:1 D4 | _:14 -:2 | -:15 D4:1 | _:14 -:2 | A#3:14 -:2",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "B4:2 D5:1 F#4 - A4 - B4 - D5 - F#4 - A4 - B4 | \
+                - D5 - G4 - B4 - D5 - G4 - B4 - D5 - G4 | \
+                C#5 - A#4 F#4 - A#4 - C#5 - F#4 - A#4 - C#5 - A4 | \
+                - C#5 - E4 - F#4 - A4 - C#5 - E4 - F#4 - A4 | \
+                B4 - D5 F#4 - A4 - B4 - D5 - A4 - D5 G4 G#4 | \
+                A4 - C#5 E4 - F#4 - A4 - C#5 - E4 - F#4 - B4 | \
+                - D5 - F#4 - A4 - B4 - D5 - F#4 - A4 - A#4 | \
+                - C#5 - E4 - F#4 - A#4 - C#5 - E4 - F#4 - A#4",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x - x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | -:2 x:1 x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x -"),
+            (Drum::Shaker, "-:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:2 X:1 - X - X - X - X X - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 -"),
+            (Drum::HighTom, "-:16 | - | -:14 X:1 - | -:16 | - | - | - | -"),
+            (Drum::LowTom, "-:16 | - | - | X:1 -:15 | -:16 | - | - | -"),
+            (Drum::Crash, "-:16 | - | -:14 X:1 - | X -:15 | -:16 | - | - | -"),
+        ]),
+        // Bars 81-88 of the file.
+        Part::new(
+            "Part 11",
+            "-:1 B4:4 - D5:1 - D5 - D5 D5 - | D5 D5:4 -:1 D5 D5 D5 - C#5:2 A#4 D5:1 - | \
+            C#5 B4:7 -:8 | -:16 | - | - | - | -",
+            "Bm | G F# | Bm7 D | Em7 | Bm | F# | Bm7 | Em",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "B1:2 -:1 F#1:2 -:1 B1:5 F#1:2 -:1 B1:2 | G1:3 D2 G1:1 - F#1:3 C#2 F#1:2 | \
+                B2:1 - B1:3 D2 A2 F#2 D2:2 | _:1 -:2 B1:3 E1:4 -:1 F#1:2 -:1 B1:2 | \
+                _ -:1 F#1:3 B1:4 -:1 C#2:3 F#1:2 | _ -:1 C#2:2 -:1 F#1:4 -:1 C#2:2 -:1 F#1:2 | \
+                B1 -:1 B2:3 D2:2 A2:3 F#2 D2:2 | E2:3 B1:2 -:1 E1:5 F#1:2 -:1 B1:2 & -:16 | - | \
+                - | E2:3 -:13 | -:16 | - | - | -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 D4+F#4:3 B3+D4+F#4:1 - B3+D4+F#4:2 -:1 B3+D4+F#4:2 B2 -:1 G3+B3+D4 | \
+                _ - G3+B3+D4:2 G2 -:1 G3+B3+D4 F#2:2 F#3+A#3+C#4 F#2:1 F#3+A#3+C#4 F#2 F#3+B3 | \
+                _:2 -:14 | -:16 | - | - | - | - & -:2 B3 B2:1 -:8 B3+D4+F#4:1 -:2 | \
+                -:5 G3+B3+D4:1 -:9 D4:1 | _ -:15 | -:16 | - | - | - | -",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "-:16 | - | -:2 B3:3 D4 A4 F#4 D4:2 | G3+E4:16 | F#3 | _:11 -:1 F#3+C#4:4 | \
+                F#3+D4:16 | G3 & -:16 | - | - | - | D4:11 -:1 D4:4 | C#4:11 -:5 | -:16 | \
+                E4:11 -:1 G4:4",
+            ),
+            line(
+                "Pad",
+                gm::WARM_PAD,
+                "-:16 | G4:8 F#4 | _:7 -:9 | -:16 | - | - | - | - & -:16 | -:8 C#4 | D4:7 -:9 | \
+                -:16 | - | - | - | - & -:16 | -:8 A#3:7 -:1 | B3:6 -:10 | -:16 | - | - | - | -",
+            ),
+            line(
+                "Trumpet",
+                gm::TRUMPET,
+                "-:16 | - | -:2 D4:3 F#4 D5 A4 F#4:2 | B4:11 -:1 B4:4 | B4:10 -:2 B4:4 | \
+                A#4:11 -:1 A#4:4 | B4:2 -:1 D4:3 F#4:2 D5 -:1 B4:3 F#4:2 | B4:10 -:2 B4:3 -:1",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "B4:1 - D5 F#4 - A4 - B4 - D5 - F#4 - A4 - B4 | \
+                G4 - D5 G4 - B4 - A#4 - C#5 - F#4 - A#4 - C#5 | \
+                B4 - D4+F#4:3 F#4+A4 D5+F#5 A4 F#4:2 | E3:5 E4:1 - D4:2 E4:1 - D4 - C#4 - B3 | \
+                _:3 B2+A#3:1 - B3 - C#4:2 D4:1 - E4 - F#4 - G4+G5 | \
+                _:2 F#4+F#5:1 -:4 G4+G5:1 - G4+G5 F#4:2 -:3 G4:1 | \
+                _ F#4+F#5 - D4+F#4:3 F#4+A4:2 D5+F#5:3 A4 F#4:2 | \
+                G4+G5 E5:1 B4 - G4 - B4 - E5 - G5 - E5 - F#5 & -:16 | - | -:11 D5:1 -:2 A4:1 - | \
+                G4:2 -:1 F#4 -:12 | -:2 F#2:1 -:13 | -:10 F#5:1 -:4 G5:1 | -:11 D5:1 -:2 A4:1 - | \
+                -:16",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:7 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x -:2 x:1 - x x x x | x - x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | x - x - x x x x x x x - x x x x"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:5 x:1 - x -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | \
+             -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4"),
+            (Drum::Cowbell, "x:1 x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x - x x x x x X X | -:2 x:1 x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | -:2 x:1 x x x x x x x - x x x x -"),
+            (Drum::Shaker, "-:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x -:3 x:1 - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3"),
+            (Drum::Conga, "-:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x - x x x x x X X | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 -"),
+            (Drum::HighTom, "-:16 | - | x:1 -:8 x:1 x x x x x x | -:16 | - | - | -:11 x:1 -:2 x:1 - | -:16"),
+            (Drum::LowTom, "-:16 | - | x:1 -:8 x:1 x x x x x x | X -:15 | -:16 | - | -:9 x:1 x x - x -:2 | \
+             X:1 -:15"),
+            (Drum::Crash, "-:16 | - | - | X:1 -:15 | -:16 | - | -:14 x:1 - | X -:15"),
+        ]),
+        // Bars 89-96 of the file.
+        Part::new(
+            "Part 12",
+            "-:16 | - | - | - | - | - | - | -",
+            "Bm | F# | Bm | Bm | Bm | Bm | Bm | Bm",
+        )
+        .with_lines(&[
+            line(
+                "Bass",
+                gm::FRETLESS_BASS,
+                "-:3 F#1 B1:5 C#2:2 -:1 F#1:2 | _ -:1 C#2:3 F#1:5 C#2:3 F#1:1 - | \
+                B1:2 -:1 F#1:2 -:1 B1:5 F#1:2 -:1 F#2:2 | B1:16 | _ | _ | _:15 -:1 | -:16",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:16 | - | \
+                F#3+B3+D4:2 -:1 F#3+B3+D4 - F#3+B3+D4 - F#3+B3+D4:3 -:1 F#3+B3+D4:4 -:1 | \
+                B2+B3:16 | _ | _ | _:4 -:12 | -:16 & -:16 | - | - | -:1 D4+F#4:15 | _:16 | _ | \
+                _:5 -:11 | -:16 & -:16 | - | - | -:1 B4:15 | _:16 | _ | _:4 -:12 | -:16",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "F#4:11 -:1 F#4:4 | _:11 -:1 A#3+F#4:4 | B3:16 | _:9 -:7 | -:16 | - | - | \
+                - & B3:10 -:2 B3:4 | A#3:11 -:5 | F#4:16 | _:6 -:10 | -:16 | - | - | -",
+            ),
+            line(
+                "Trumpet",
+                gm::TRUMPET,
+                "D5:11 -:1 D5:4 | C#5:11 -:1 C#5:4 | D5:16 | - | - | - | - | -",
+            ),
+            line(
+                "Piano",
+                gm::ACOUSTIC_GRAND_PIANO,
+                "-:1 D5 - B4 - D5 - F#5 - B4 - F#5 G4+G5:2 -:1 G4+G5 | \
+                _ A#4+C#5 - F#4+F#5:3 A#4+C#5:1 - G4+G5:2 -:1 F#4+F#5:2 A#4+C#5:1 - F#4+F#5 | \
+                _ D5 - B4 - F#4 - D4+D5 - C#4+C#5 - B3+B4 - A#3+A#4 - B3+B4 | B2+D4+B4:16 | _ | \
+                _ | _ | _:6 -:10 & -:16 | - | - | F#4 | _ | _ | _ | _:5 -:11",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | \
+             x:1 -:3 x:1 -:3 x:1 -:3 x:1 -:3 | X:1 -:15 | -:16 | - | - | -"),
+            (Drum::HiHat, "x:1 x x - x x x x x x x - x x x x | x x x - x x x x x x x - x x x x | \
+             x x x - x x x x x x x - x x x x | -:16 | - | - | - | -"),
+            (Drum::OpenHat, "-:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:3 x:1 -:7 x:1 -:4 | -:16 | - | - | - | \
+             -"),
+            (Drum::Cowbell, "x:1 x x x x x x x x x - x x x x - | x x x x x x x x x x - x x x x - | \
+             x x x x x x x x x x - x x x x - | -:16 | - | - | - | -"),
+            (Drum::Shaker, "-:2 x:1 x - x x x - x x x - x x x | -:2 x:1 x - x x x - x x x - x x x | \
+             -:2 x:1 x - x x x - x x x - x x x | -:16 | - | - | - | -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 -:3 x:1 - x -:3 | - x:1 -:2 x:1 -:3 x:1 - x -:3 | \
+             - x:1 -:2 x:1 -:3 x:1 - x -:3 | -:16 | - | - | - | -"),
+            (Drum::Conga, "-:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | \
+             -:2 X:1 -:3 x:1 x -:2 X:1 X -:2 X:1 - | -:16 | - | - | - | -"),
+            (Drum::HighTom, "-:16 | - | -:13 X:1 -:2 | -:16 | - | - | - | -"),
+            (Drum::LowTom, "-:16 | - | -:13 X:1 -:2 | X:1 -:15 | -:16 | - | - | -"),
+            (Drum::Crash, "-:16 | - | - | X:1 -:15 | -:16 | - | - | -"),
+        ]),
+    ],
+    form: &["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8", "Part 9", "Part 10", "Part 11", "Part 12"],
+    drums_from: 0,
+    about: "\"Amor de mis amores, reina mía, ¿qué me hiciste?\": a man left by the woman he \
+            adored begs that no one should know his pain. Cabral wrote it as a vals criollo; \
+            in France it became Édith Piaf's \"La foule\". Here in a tropical arrangement.",
+};
+
+// Written out from a band arrangement (MIDI in 3/4, written here in 6/8, the zamba's own meter,
+// with bars of the same length): the tune on a guitar, a second voice under it where the file
+// sings in two, with guitars, bass, strings, a choir and the bombo.
+pub(super) const ZAMBA_DE_MI_ESPERANZA: Song = Song {
+    name: "Zamba de mi esperanza",
+    origin: "Luis Profili",
+    feel: "Zamba",
+    genre: Genre::Folklore,
+    tonic: F,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 70.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::JAZZ_GUITAR, gm::NYLON_GUITAR, gm::FINGER_BASS),
+    style: "Zamba",
+    parts: &[
+        // Bars 1-8 of the file.
+        Part::new(
+            "Part 1",
+            "-:12 | - | - | - | - | - | - | -",
+            "F | Bb | F Dm7 | Gm C7 | F Am7 | Bb | F Dm7 | Gm6 C7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F2:6 F3:1 - C3 -:3 | - Bb3+D4+F4:2 -:1 Bb3+D4+F4:3 -:1 Bb3+D4 - | \
+                F2:3 F3+A3+C4:1 F2:2 F3+A3+C4:5 -:1 | G2:3 E3+Bb3:1 G2:2 E3:5 -:1 | \
+                F2:5 C4:1 A3:2 F3 F#2+F#3:1 - | \
+                A2:2 -:1 Bb3+D4+F4 Bb2:2 Bb3+D4+F4:3 -:1 Bb3+D4+F4 - | \
+                F2:3 F3+A3+C4:1 C2 - F3:5 -:1 | E3:10 G3:1 - & C3+A3:5 -:7 | \
+                -:4 D3:3 -:1 Bb2:2 - | -:8 C2:1 - F#2 - | -:6 G3:4 G3+Bb3:1 - | \
+                -:3 F3:2 -:1 C2 - E2+F2 -:3 | -:8 Ab2:2 - | -:6 A3+C4:4 G2:2 | \
+                _:5 -:1 Bb3:4 -:2 & F3:4 -:8 | -:12 | - | -:8 C2:2 - | -:4 A3:1 -:7 | -:12 | \
+                -:6 F2:1 - F#2 -:3 | - Bb3:1 G3 -:3 C2 -:1",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "F1:2 A1:1 - C2 - F1 - F#1 G1 Ab1 A1 | Bb1:3 -:1 D2+E2 - F2 - D2 - Bb1 - | \
+                F1:3 -:1 A1 - C2 - F1 - F#1 - | G1:3 -:1 D2 - C2 - E1 - G1 - | \
+                F1:3 F1:1 A1 Ab1 G1 - F#1 - G1 - | Bb1:2 -:1 D2 -:2 F2:1 - Bb1 - D2 - | \
+                F1:2 - A1:1 - C2 - F1 - F#1 - | G1:3 -:1 D2 - C2 -:3 G1:1 -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | - | - | - | C4:6 D4:5 -:1 | -:6 A3:4 C4:2 | Bb3:6 C4:4 Bb3:2 & -:12 | \
+                - | - | - | - | -:10 C4:2 | _:6 - | -:12",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "F2:9 -:3 | D4:2 -:1 D4 Bb4 - E4:2 -:1 E4 Bb4 - | \
+                C4:2 -:1 C4 A4 - C4+D4 Bb4 - D4 A4 - | Bb3 G4 - Bb3 G4 - C4 A4 - C4 G4 - | \
+                F4:3 C4+E4:1 E4+F4 C4+G4 C4:5 -:1 | D4:2 -:1 D4 Bb4 - E4:2 -:1 E4 Bb4 - | \
+                C4:2 -:1 C4 A4 - D4:2 -:1 D4 A4 - | \
+                Bb3 G4 - Bb3 G4 - C4 A4 - C4 G4 - & A2+C3:3 A2+F3:1 A2+C3 - A2 - A2+C3 -:3 | \
+                -:1 Bb4 -:5 C5:1 -:4 | -:1 A4 -:10 | -:12 | -:6 A4:2 F4 E4:1 - | \
+                - Bb4 -:5 C5:1 -:4 | -:1 A4 -:5 Bb4:1 -:4 | -:12 & F3:2 -:10 | -:12 | - | - | - | \
+                - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 9-16 of the file.
+        Part::new(
+            "Part 2",
+            "-:12 | -:11 D4:1 | F4:4 C4:5 -:1 F4 G4 | A4:4 F4:2 -:3 C4:1 F4 A4 | \
+            A4:2 A4:1 - C5 - F4:2 A4:3 F#4:1 | G4:10 -:2 | Bb4:4 G4:1 -:4 D4:1 G4 Bb4 | \
+            A4:4 F4:1 -:4 C4:1 F4 A4",
+            "F Dm7 | F Dm7 | F7 F | F | F F7b9 | Em7b5/Bb C7 | Gm/D Gm | F",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "-:12 | - | Eb4+E4:1 -:9 C4:1 - | F4:3 -:8 F4:1 | F4:2 F4:3 -:7 | D4:10 -:2 | \
+                D4:4 -:7 D4:1 | C4:4 -:8 & -:12 | - | - | Ab4:1 -:11 | -:12 | - | - | -",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F2+A3:7 -:5 | F3:11 -:1 | F2:6 F3+A3+C4:4 F2+G2+F3+A3:1 - | \
+                C2:3 F3+A3+C4:1 F2:2 F3:5 -:1 | C2:3 F3+A3+C4:1 F2:3 -:1 F#2:3 -:1 | \
+                G2:3 E3+G3+Bb3:2 -:1 E3+G3+Bb3:4 E3+G3+Bb3:1 - | Bb2:6 D4:4 G3+Bb3+C#4:2 | \
+                F2:6 F3+A3+C4:5 -:1 & C3+F3:6 - | A3+C4:7 -:1 D4:2 C4:1 - | \
+                -:3 F3+C4:2 A2 -:1 A2 -:3 | -:6 A3+C4:4 C3:1 - | -:6 A3+C4:3 -:1 F#3+C4:2 | \
+                -:4 C2:2 - C2:1 -:3 | - G3+Bb3+D4:2 -:1 G3+Bb3:3 - | \
+                - F3+A3+C4:2 -:3 C2:1 - F#2 - & -:12 | F2:5 -:7 | -:12 | -:8 A2:1 -:3 | \
+                -:6 F3:2 - A3:1 - | -:12 | -:4 D3:2 - C#3 - | -:12",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "F1:3 -:1 A1 - D2 - C2 - A1 - | F1:3 D2:1 C2 A1 F1 - C2 - A1 - | F1:3 -:9 | \
+                F1:3 - A1:1 - C2 - A1 - | F1:3 C2:1 F1 - F1 - F#1:2 G1 | \
+                Bb1:3 -:1 D2 - C2 - Bb1 - G1 - | D2:3 F2:1 D2 - Bb1 - C#2 - C2 - | \
+                F1:2 -:1 A1 C2 - F1:2 C2:1 - F1 -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:12 | - | - | -:3 D3+E3:1 F3 A3 C4 - A3+C4+F4 - A3+C4:2 | F3:7 -:5 | \
+                -:2 F#3:1 G3 Bb3 D4 F4:2 E4 - | -:12 | - & -:12 | - | - | - | -:2 A3:4 -:6 | \
+                -:12 | - | - & -:12 | - | - | - | -:4 C4:3 -:5 | -:12 | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "A3:8 -:4 | -:12 | - | - | F4:6 F#4 | G4:7 -:5 | -:12 | -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "F4:2 -:1 B2 C3:4 E3:2 G3 | F3:9 -:1 A3:2 | F3+C4:1 -:11 | -:12 | - | - | - | \
+                - & -:12 | -:4 A3+B3+C4:1 F3:5 -:2 | -:12 | - | - | - | - | - & -:12 | \
+                -:6 D4:2 C4 - | -:12 | - | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 17-24 of the file.
+        Part::new(
+            "Part 3",
+            "G4:2 -:1 G4 G4 - G4:2 F4:3 Ab4:1 | A4:8 -:4 | D5:3 D5:1 D5 - F5:4 D5:2 | \
+            C5 A4 F4 A4 C5:4 | Bb4:3 G4:1 G4 - F4 - E4:3 -:1 | F4:7 -:5 | \
+            F4:4 C4:1 -:4 C4:1 F4 G4 | A4:4 F4:1 -:4 C4:1 F4 A4",
+            "Gm6 | Fmaj7/C Dm7 | Gm Bbm | F | Gm7 C7 | F | F7 Dm7 | F",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "E4:2 -:1 E4 E4 - E4 - E4:3 -:1 | C4:8 -:4 | Bb4:3 Bb4:1 Bb4 - Bb4:3 -:1 Bb4 - | \
+                A4:2 -:6 F4:3 -:1 | G4:2 -:10 | A3+C4:8 -:4 | C4+Eb4+E4:1 -:10 F4:1 | \
+                C4:5 -:7 & -:12 | - | - | - | - | - | - | Ab4:1 -:11",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "G2:4 G2:1 - E3+G3+Bb3:3 -:1 E3+G3+Bb3:2 | F2:4 F2:3 -:1 F2 - F#2 - | \
+                Bb2:4 D3:2 Bb3+F4:3 -:1 Bb3+C#4+F4:2 | \
+                F2:3 F3+C4:2 -:1 F3+A3+C4:3 -:1 F3+A3+C4:2 | \
+                G2:4 C2:2 E3+G3+Bb3:3 -:1 E3+G3+Bb3:2 | F2:3 F3+A3+C4:1 A2 - C4:4 F3+A3:1 - | \
+                C2:4 F2 A2:1 - C3 - | C2:3 F3+A3+C4:2 -:1 F3+A3+C4:5 -:1 & -:3 Bb3 -:2 C2:3 -:1 | \
+                -:3 F3+A3+C4:2 -:1 F3+A3+C4:6 | -:3 Bb3+D4:2 -:1 D4:2 Bb2 - | \
+                -:3 A3:1 F2:2 - C2:1 -:3 | - E3+G3+Bb3:2 -:3 C2:1 -:3 | -:6 F3+A3:3 - | \
+                - F3+A3+C4:2 -:1 F3+A3+C4:6 | -:4 F2:3 -:1 A2 - C3 - & -:3 E3+G3:2 -:7 | -:12 | \
+                -:3 E4+F4:1 -:8 | -:12 | -:4 B1:1 -:7 | -:8 C3:2 - | -:12 | -",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "G1:3 C2:1 Bb1 - G1 - E1 - F1 - | C2:4 -:2 C1:1 - D1 - E1 - | \
+                G1:3 Bb1:1 D2 - F2:2 D2:1 - C2 - | F1:4 C2:1 - F1:2 F#1:4 | \
+                G1:3 D2:1 C2 - Bb1:2 G1 - | F1:5 -:3 C1:1 D1 E1 F1 | \
+                F1:3 A1:1 C2 - D2 - C2 - A1 - | F1:3 A1:1 C2 - F1:2 A1:1 - C2 - & -:12 | - | - | \
+                -:3 A1:1 -:8 | -:12 | - | - | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:12 | -:2 A3:1 Bb3 C4 D4 Eb4 D4 C4 Bb3 A3 - | -:12 | - | - | \
+                -:3 C4+F4:1 A3:2 A3+C4+F4:1 - A3+E4 - A3+C4 - | -:12 | \
+                -:3 E3:1 F3 A3 C4 F4 C4:3 -:1 & -:12 | - | - | - | - | -:5 C4:1 -:6 | -:12 | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "D5:12 | C5+E5:10 -:2 | Bb4:12 | A4+C5:6 F#4+A4 | F4+Bb4 E4+C5 | C4+A4 - | -:12 | \
+                - & Bb4:11 -:1 | -:12 | D5:6 C#5 | -:12 | - | - | - | -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | - | Bb3 | A3+C4:6 A3 | Bb3 G3 | F3:8 -:4 | -:12 | - & -:12 | - | D4:6 C#4 | \
+                - F3:5 -:1 | G3:5 -:1 E3:5 -:1 | C3:7 -:5 | -:12 | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 25-32 of the file.
+        Part::new(
+            "Part 4",
+            "A4:1 - A4 - C5 - F4:2 A4:3 F#4:1 | G4:9 -:3 | Bb4:4 G4:1 -:4 D4:1 G4 Bb4 | \
+            A4:4 F4:1 -:4 C4:1 F4 A4 | G4:2 -:1 G4 G4 - G4:2 F4:3 Ab4:1 | A4:8 -:4 | \
+            D5:3 D5:1 D5 - F5:4 D5:2 | C5 A4 F4 A4:1 - C5:4",
+            "F D7 | Gm Em7b5 | Gm7/D Gm | F Dm7 | Gm6 C7 | F | Bb Gm7b5 | F",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "F4:1 - F4 -:9 | D4 -:3 | D4:4 -:8 | F4:3 -:9 | E4:2 -:1 E4 E4 - E4 - E4:3 -:1 | \
+                C4:8 -:4 | Bb4:3 Bb4:1 Bb4 - Bb4:3 -:1 Bb4 - | A4 -:11",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F2:5 -:1 F#2+G2 - F#3+A3:4 | G2:3 G3+C4:1 G2:2 Bb3:4 E3+G3+Bb3:1 - | \
+                Bb2:6 G3+Bb3+D4:3 -:1 G3+Bb3+C#4:2 | F2:3 F3+A3+C4:2 -:1 F3+A3+C4:6 | \
+                G2:4 -:1 C2:2 -:1 C2:2 E3+G3+Bb3 | _:1 -:2 F3+A3+C4 -:1 F3+A3+C4:6 | \
+                Bb2 Bb3+D4:4 G3+Bb3+C#4:2 | \
+                F2:3 F3+A3+C4:2 -:1 F3+A3+C4:3 -:1 F3+A3+C4:2 & -:3 F3+A3+C4:1 F3+A3 -:3 D3 -:1 | \
+                -:6 E3+G3:3 - | - G3+Bb3+D4:2 -:3 C#3:2 - | -:4 C2:3 -:1 F2 - F#2 - | \
+                -:3 G3+Bb3 E3+G3+Bb3 - | F2:4 F2:2 - F2:1 - F#2 - | -:3 G3+Bb3+D4:1 D3:2 G3:3 - | \
+                -:4 F2:2 - C2 - & -:10 F#2:1 - | -:8 C2:2 - | -:4 D3:2 -:6 | -:12 | -:3 E3:2 -:7 | \
+                -:12 | -:4 G3+Bb3+D4:1 -:3 C#3:2 - | -:12",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "F1:3 A1:1 C2 - F1:2 F#1:4 | G1:3 D2:1 C2 - Bb1:2 G1:1 A1 Bb1 - | \
+                D2:3 -:1 F2:2 D2:1 - Bb1 C#2 -:2 | F1:3 A1:1 C2 - F1 - F#1:3 -:1 | \
+                G1:3 D2:1 C2 - Bb1:2 G1 Bb1 | F1:4 C2:1 - F1 - F#1 G1 Ab1 A1 | \
+                Bb1:4 D2:1 - F2 - D2 - Bb1 - | F1:3 A1:1 C2 - F1:2 F#1:4 & -:12 | - | - | - | - | \
+                -:3 A1:1 -:8 | -:12 | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "F3+A3:4 -:1 A3:4 -:3 | -:1 G3 F#3 G3 Bb3 D4 D4:3 - | G3:7 -:5 | F3:10 -:2 | \
+                D3:1 G3 Bb3 D4 G3 Bb3 C4:2 Bb3+C4:1 -:3 | \
+                -:1 A3 Ab3 A3 Bb3 C4 D4 Eb4 D4 C4 Bb3 - | -:3 F4:1 D4:2 Bb3 -:4 | \
+                -:3 D4:1 C4:2 A3:3 - & -:1 C4:4 -:1 C4+E4:3 - | -:6 F4:2 E4:1 -:3 | Bb3+D4:6 - | \
+                A3:9 -:3 | -:12 | - | - | -:6 A3+C4:1 -:5 & -:12 | - | - | C4:4 -:1 D4:5 -:2 | \
+                -:12 | - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "F4:6 F#4 | G4:10 -:2 | -:12 | - | D5:6 C5+E5 | A4+C5:8 -:4 | Bb4:11 -:1 | \
+                A4:12 & -:12 | - | - | - | Bb4:5 -:7 | -:12 | D5:6 C#5 | C5 F#4",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | - | - | - | - | - | Bb3 | A3+C4:6 A3 & -:12 | - | - | - | - | - | \
+                D4:6 C#4 | - F3:5 -:1",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 33-40 of the file.
+        Part::new(
+            "Part 5",
+            "Bb4:2 G4:1 - G4 - G4 - E4:4 | F4:8 -:2 G4:1 - | A4 -:2 A4:1 A4 A4 C5 - C5:3 Bb4:1 | \
+            C5:4 Bb4:3 -:1 G4 G4 A4 - | Bb4:2 -:1 Bb4 Bb4 - A4 - G4:2 - | C5:9 -:2 F4:1 | \
+            F4:4 C4:1 -:5 F4:1 G4 | A4:3 -:1 F4 -:4 C4:1 A4 -",
+            "Gm7 C7 | F Dm7 | F | C7 | Gm C7 | Dm7 F | F | F",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "-:6 F4:2 -:4 | C4:8 -:4 | F4:1 -:2 F4:1 F4 - Bb4 - A4:3 A4:1 | _:3 -:1 G4:3 -:5 | \
+                -:12 | F4:10 -:2 | -:10 C4:1 - | C4:4 -:6 F4:1 - & -:12 | - | - | - | - | \
+                A4:9 -:3 | -:12 | Ab4:1 -:11",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "G2:2 E3+G3+Bb3:1 F2 D3+E3+G3+Bb3 E2 Bb3:6 | \
+                F2:3 F3+A3+C4:1 A2:2 F3+A3+C4:3 -:1 C3 - | F2:4 F3+A3+C4:1 - F2:2 F3+A3+C4:4 | \
+                G2:6 E3+G3:4 Bb3:2 | G2:5 -:1 E3:5 -:1 | F2:5 F3 F2:1 - | \
+                C2:3 F3+C4:1 F2:2 F3+A3+C4:6 | C2:3 F3+A3+D4:1 F2:2 F3+A3+C4:6 & -:6 G3:2 -:4 | \
+                E2:1 -:7 C3:1 -:3 | - F3+A3+C4:1 -:6 F#2:2 | -:3 G3:2 -:3 C2:2 E3+G3:1 - | \
+                G3+Bb3+D4:2 -:1 G3+Bb3+D4 G3+Bb3+D4 - C4:2 C2 G3+Bb3 | - D4:1 C4 A3 - A3:4 -:2 | \
+                -:8 A2:1 - C3 - | -:8 D2+E2:1 - F#2 - & -:6 D3:1 C2:5 | -:12 | - | \
+                -:3 C4:1 Bb3 -:7 | -:12 | -:8 C3:1 -:3 | -:12 | -",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "G1:3 D2:1 C2 - Bb1 - G1:3 -:1 | F1:3 A1:1 C2 - D2 - C2 - A1 - | \
+                F1:3 C2:1 F1 - F1 - F#1:2 G1 | Bb1 -:1 D2 C2 - Bb1 - E1 - G1 - | \
+                G1:3 D2:1 C2 - Bb1 - G1 - Ab1 - | D2:3 C2:1 A1 - F1 - C1 D1 E1 - | \
+                F1:3 A1:1 C2 - F1 -:3 D2:1 - | F1:2 -:1 A1 C2 - F1 - F1:2 F#1",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "D3:1 E3 F3 - F#3+G3 A3 Bb3:2 A3:1 A3+Bb3 -:2 | -:3 A3+C4+F4:1 A3+E4+F4 - A3:3 - | \
+                -:12 | C4:1 E3 G3 Bb3 D4 G3 Bb3:4 -:2 | D4:1 G3 Bb3 C4 D4 G3 Bb3:2 -:4 | \
+                D4:1 F3 A3 C4 E4 D4 C4+D4 C4:3 -:2 | -:4 D3+E3:1 F3+A3 C4:4 -:2 | \
+                -:3 D4:1 C4 A3+C4 A3:3 - & -:12 | -:6 C4:2 E4:1 -:3 | -:12 | - | - | - | \
+                -:6 B3:1 -:5 | -:12",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "Bb4:6 E4+C5 | F4+A4 - | -:12 | - | - | - | - | - & F4:5 -:7 | -:12 | - | - | - | \
+                - | - | -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "G3+Bb3:6 G3 | F3:10 -:2 | -:12 | - | - | - | - | - & -:6 D3:5 -:1 | C3:9 -:3 | \
+                -:12 | - | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 41-48 of the file.
+        Part::new(
+            "Part 6",
+            "G4:3 G4:1 G4 - G4:2 F4:4 | A4:9 -:3 | D5:2 D5:1 - D5 - F5:2 D5:4 | \
+            C5:2 A4 F4 A4 C5:3 -:1 | Bb4:2 G4:1 - G4:2 G4:1 - E4:3 -:1 | C4 F4:11 | _:1 -:11 | \
+            -:12",
+            "C7/G C7 | F | Bb Gm7 | F | Gm C | F | F | Bb",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "E4:2 -:1 E4 E4 - E4 -:5 | C4:9 -:3 | Bb4:2 Bb4:1 - Bb4 - Bb4:2 Bb4:3 -:1 | \
+                A4 -:5 F4 -:1 | G4 -:5 F4:1 -:5 | A3:12 | - | - & -:12 | Ab4:1 -:11 | -:12 | - | \
+                - | - | - | -",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "G2:4 C2:2 E3+G3+Bb3:6 | F2:3 -:1 F2 - F2:2 F3+A3+C4:1 F2 F#2+F3+A3+C4 - | \
+                Bb2:6 Bb3+D4:4 G3+Bb3+C#4:2 | F2:3 F3+A3+C4:1 C2:2 F3+A3+C4:6 | \
+                G2:5 -:1 E3+G3:2 C2:3 -:1 | F2:3 C3+F3+A3:1 A2:2 F3:6 | F2 F3:1 - C3 -:3 | \
+                - Bb3+D4+F4:2 -:1 Bb3+D4+F4:3 -:1 Bb3+D4 - & -:3 E3+G3+Bb3:2 -:3 G2:1 - Ab2 - | \
+                -:2 F3+A3+C4:4 -:6 | -:3 G3+Bb3+D4:2 -:1 G3:3 - | -:8 F#2:1 -:3 | \
+                - E3:2 -:5 C3+E3:2 | -:6 C4:4 A3:2 | C3+A3:5 -:7 | -:4 D3:3 -:1 Bb2:2 - & -:12 | \
+                - | -:4 D3:2 - C#3 - | -:12 | -:3 Bb3:1 G3 -:7 | -:8 C3:3 -:1 | F3:4 -:8 | \
+                -:12 & -:12 | - | - | - | - | - | F2:1 -:11 | -:12",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "G1:3 D2:1 C2 - Bb1 - G1 - E1 - | F1:5 -:1 F1 F#1 G1 Ab1 A1 Bb1 | \
+                Bb1:3 D2:1 E2+F2 - D2+E2 - Bb1:4 | F1:3 A1:1 C2 - F1 - F#1:2 F#1:1 - | \
+                G1:3 C2:1 Bb1:2 G1 E1:3 -:1 | F1:2 D2:1 C2 A1 F1:2 -:5 | \
+                F1:2 A1:1 - C2 - F1 - F#1 G1 Ab1 A1 | Bb1:3 -:1 D2+E2 - F2 - D2 - Bb1 - & -:12 | \
+                - | - | - | - | -:6 C2:5 -:1 | -:12 | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "G3:5 -:1 G3 - Ab3 - A3 - | F3:2 F3:1 G3 A3 Bb3 C4 Bb3 A3 Bb3 C4 - | \
+                F4:3 D4:1 Bb3:2 F4 -:4 | C4:1 A3 F3 A3 D4 A3 F3:2 F#3 G3 | \
+                D4:3 C4:1 Bb3 - E3:2 -:4 | A3:1 D4 A3 C4 F3:2 C4:1 -:5 | -:12 | - & -:12 | - | - | \
+                - | - | -:5 A3:1 -:6 | -:12 | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | Bb4 | A4+C5:6 F4+A4:5 -:1 | Bb4:6 E4+G4 | C4+F4 - | -:12 | - & -:12 | \
+                - | D5:6 C#5 | -:12 | D4:5 -:7 | -:12 | - | -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | - | Bb3:11 -:1 | A3+C4:6 A3 | G3+Bb3 G3 | F3:9 -:3 | -:12 | - & -:12 | - | \
+                D4:6 C#4 | - F3:5 -:1 | -:6 D3:5 -:1 | C3:8 -:4 | -:12 | -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:12 | - | - | - | - | - | F2:9 -:3 | D4:2 -:1 D4 Bb4 - E4:2 -:1 E4 Bb4 - & -:12 | \
+                - | - | - | - | - | A2+C3:3 A2+F3:1 A2+C3 - A2 - A2+C3 -:3 | \
+                -:1 Bb4 -:5 C5:1 -:4 & -:12 | - | - | - | - | - | F3:2 -:10 | -:12 & -:12 | - | \
+                - | - | - | - | E2:1 -:11 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 49-56 of the file.
+        Part::new(
+            "Part 7",
+            "-:12 | - | - | - | - | - | - | -:11 D4:1",
+            "F Dm7 | Gm C7 | F Am7 | Bb | F Dm7 | Gm6 C7 | F Dm7 | F Dm7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F2:3 F3+A3+C4:1 F2:2 F3+A3+C4:5 -:1 | G2:3 E3+Bb3:1 G2:2 E3:5 -:1 | \
+                F2:5 C4:1 A3:2 F3 F#2+F#3:1 - | \
+                A2:2 -:1 Bb3+D4+F4 Bb2:2 Bb3+D4+F4:3 -:1 Bb3+D4+F4 - | \
+                F2:3 F3+A3+C4:1 C2 - F3:5 -:1 | E3:10 G3:1 - | F2+A3:7 -:5 | \
+                F3:11 -:1 & -:8 C2:1 - F#2 - | -:6 G3:4 G3+Bb3:1 - | -:3 F3:2 -:1 C2 - E2+F2 -:3 | \
+                -:8 Ab2:2 - | -:6 A3+C4:4 G2:2 | _:5 -:1 Bb3:4 -:2 | C3+F3:6 - | \
+                A3+C4:7 -:1 D4:2 C4:1 - & -:12 | -:8 C2:2 - | -:4 A3:1 -:7 | -:12 | \
+                -:6 F2:1 - F#2 -:3 | - Bb3:1 G3 -:3 C2 -:1 | -:12 | F2:5 -:7",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "F1:3 -:1 A1 - C2 - F1 - F#1 - | G1:3 -:1 D2 - C2 - E1 - G1 - | \
+                F1:3 F1:1 A1 Ab1 G1 - F#1 - G1 - | Bb1:2 -:1 D2 -:2 F2:1 - Bb1 - D2 - | \
+                F1:2 - A1:1 - C2 - F1 - F#1 - | G1:3 -:1 D2 - C2 -:3 G1:1 - | \
+                F1:3 -:1 A1 - D2 - C2 - A1 - | F1:3 D2:1 C2 A1 F1 - C2 - A1 -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | - | Bb4:6 D5 | C5 A4 | Bb4:8 E4:4 | F4:7 -:5 | -:12",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "C4:2 -:1 C4 A4 - C4+D4 Bb4 - D4 A4 - | Bb3 G4 - Bb3 G4 - C4 A4 - C4 G4 - | \
+                F4:3 C4+E4:1 E4+F4 C4+G4 C4:5 -:1 | D4:2 -:1 D4 Bb4 - E4:2 -:1 E4 Bb4 - | \
+                C4:2 -:1 C4 A4 - D4:2 -:1 D4 A4 - | Bb3 G4 - Bb3 G4 - C4 A4 - C4 G4 - | \
+                F4:2 -:1 B2 C3:4 E3:2 G3 | F3:9 -:1 A3:2 & -:1 A4 -:10 | -:12 | \
+                -:6 A4:2 F4 E4:1 - | - Bb4 -:5 C5:1 -:4 | -:1 A4 -:5 Bb4:1 -:4 | -:12 | - | \
+                -:4 A3+B3+C4:1 F3:5 -:2 & -:12 | - | - | - | - | - | - | -:6 D4:2 C4 -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 57-64 of the file.
+        Part::new(
+            "Part 8",
+            "F4:4 C4:5 -:1 F4 G4 | A4:4 F4:2 -:3 C4:1 F4 A4 | A4:2 A4:1 - C5 - F4:2 A4:3 F#4:1 | \
+            G4:10 -:2 | Bb4:4 G4:1 -:4 D4:1 G4 Bb4 | A4:4 F4:1 -:4 C4:1 F4 A4 | \
+            G4:2 -:1 G4 G4 - G4:2 F4:3 Ab4:1 | A4:8 -:4",
+            "F7 F | F | F F7b9 | Em7b5/Bb C7 | Gm/D Gm | F | Gm6 | F/C Dm7",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "Eb4+E4:1 -:9 C4:1 - | F4:3 -:8 F4:1 | F4:2 F4:3 -:7 | D4:10 -:2 | D4:4 -:7 D4:1 | \
+                C4:4 -:8 | E4:2 -:1 E4 E4 - E4 - E4:3 -:1 | C4:8 -:4 & -:12 | Ab4:1 -:11 | -:12 | \
+                - | - | - | - | -",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F2:6 F3+A3+C4:4 F2+G2+F3+A3:1 - | C2:3 F3+A3+C4:1 F2:2 F3:5 -:1 | \
+                C2:3 F3+A3+C4:1 F2:3 -:1 F#2:3 -:1 | \
+                G2:3 E3+G3+Bb3:2 -:1 E3+G3+Bb3:4 E3+G3+Bb3:1 - | Bb2:6 D4:4 G3+Bb3+C#4:2 | \
+                F2:6 F3+A3+C4:5 -:1 | G2:4 G2:1 - E3+G3+Bb3:3 -:1 E3+G3+Bb3:2 | \
+                F2:4 F2:3 -:1 F2 - F#2 - & -:3 F3+C4:2 A2 -:1 A2 -:3 | -:6 A3+C4:4 C3:1 - | \
+                -:6 A3+C4:3 -:1 F#3+C4:2 | -:4 C2:2 - C2:1 -:3 | - G3+Bb3+D4:2 -:1 G3+Bb3:3 - | \
+                - F3+A3+C4:2 -:3 C2:1 - F#2 - | -:3 Bb3 -:2 C2:3 -:1 | \
+                -:3 F3+A3+C4:2 -:1 F3+A3+C4:6 & -:12 | -:8 A2:1 -:3 | -:6 F3:2 - A3:1 - | -:12 | \
+                -:4 D3:2 - C#3 - | -:12 | -:3 E3+G3:2 -:7 | -:12",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "F1:3 -:9 | F1:3 - A1:1 - C2 - A1 - | F1:3 C2:1 F1 - F1 - F#1:2 G1 | \
+                Bb1:3 -:1 D2 - C2 - Bb1 - G1 - | D2:3 F2:1 D2 - Bb1 - C#2 - C2 - | \
+                F1:2 -:1 A1 C2 - F1:2 C2:1 - F1 - | G1:3 C2:1 Bb1 - G1 - E1 - F1 - | \
+                C2:4 -:2 C1:1 - D1 - E1 -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:12 | -:3 D3+E3:1 F3 A3 C4 - A3+C4+F4 - A3+C4:2 | F3:7 -:5 | \
+                -:2 F#3:1 G3 Bb3 D4 F4:2 E4 - | -:12 | - | - | \
+                -:2 A3:1 Bb3 C4 D4 Eb4 D4 C4 Bb3 A3 - & -:12 | - | -:2 A3:4 -:6 | -:12 | - | - | \
+                - | - & -:12 | - | -:4 C4:3 -:5 | -:12 | - | - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | F4:5 -:1 F#4:6 | G4:9 -:3 | -:12 | - | D5:10 F5:2 | _:8 -:4",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "F3+C4:1 -:11 | -:12 | - | - | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 65-72 of the file.
+        Part::new(
+            "Part 9",
+            "D5:3 D5:1 D5 - F5:4 D5:2 | C5 A4 F4 A4 C5:4 | Bb4:3 G4:1 G4 - F4 - E4:3 -:1 | \
+            F4:7 -:5 | F4:4 C4:1 -:4 C4:1 F4 G4 | A4:4 F4:1 -:4 C4:1 F4 A4 | \
+            A4 - A4 - C5 - F4:2 A4:3 F#4:1 | G4:9 -:3",
+            "Gm Bbm | F | Gm C7 | F | F7 Dm7 | F | F D7 | Gm Em7b5",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "Bb4:3 Bb4:1 Bb4 - Bb4:3 -:1 Bb4 - | A4:2 -:6 F4:3 -:1 | G4:2 -:10 | A3+C4:8 -:4 | \
+                C4+Eb4+E4:1 -:10 F4:1 | C4:5 -:7 | F4:1 - F4 -:9 | D4 -:3 & -:12 | - | - | - | - | \
+                Ab4:1 -:11 | -:12 | -",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "Bb2:4 D3:2 Bb3+F4:3 -:1 Bb3+C#4+F4:2 | \
+                F2:3 F3+C4:2 -:1 F3+A3+C4:3 -:1 F3+A3+C4:2 | \
+                G2:4 C2:2 E3+G3+Bb3:3 -:1 E3+G3+Bb3:2 | F2:3 F3+A3+C4:1 A2 - C4:4 F3+A3:1 - | \
+                C2:4 F2 A2:1 - C3 - | C2:3 F3+A3+C4:2 -:1 F3+A3+C4:5 -:1 | \
+                F2:5 -:1 F#2+G2 - F#3+A3:4 | \
+                G2:3 G3+C4:1 G2:2 Bb3:4 E3+G3+Bb3:1 - & -:3 Bb3+D4:2 -:1 D4:2 Bb2 - | \
+                -:3 A3:1 F2:2 - C2:1 -:3 | - E3+G3+Bb3:2 -:3 C2:1 -:3 | -:6 F3+A3:3 - | \
+                - F3+A3+C4:2 -:1 F3+A3+C4:6 | -:4 F2:3 -:1 A2 - C3 - | \
+                -:3 F3+A3+C4:1 F3+A3 -:3 D3 -:1 | -:6 E3+G3:3 - & -:3 E4+F4:1 -:8 | -:12 | \
+                -:4 B1:1 -:7 | -:8 C3:2 - | -:12 | - | -:10 F#2:1 - | -:8 C2:2 -",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "G1:3 Bb1:1 D2 - F2:2 D2:1 - C2 - | F1:4 C2:1 - F1:2 F#1:4 | \
+                G1:3 D2:1 C2 - Bb1:2 G1 - | F1:5 -:3 C1:1 D1 E1 F1 | \
+                F1:3 A1:1 C2 - D2 - C2 - A1 - | F1:3 A1:1 C2 - F1:2 A1:1 - C2 - | \
+                F1:3 A1:1 C2 - F1:2 F#1:4 | G1:3 D2:1 C2 - Bb1:2 G1:1 A1 Bb1 - & -:12 | \
+                -:3 A1:1 -:8 | -:12 | - | - | - | - | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:12 | - | - | -:3 C4+F4:1 A3:2 A3+C4+F4:1 - A3+E4 - A3+C4 - | -:12 | \
+                -:3 D3+E3:1 F3 A3 C4 F4 C4:3 -:1 | F3+A3:4 -:1 A3:4 -:3 | \
+                -:1 G3 F#3 G3 Bb3 D4 D4:3 - & -:12 | - | - | -:5 C4:1 -:6 | -:12 | - | \
+                -:1 C4:4 -:1 C4+E4:3 - | -:6 F4:2 E4:1 -:3",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "Bb4:12 | C5:6 F4+A4:5 -:1 | Bb4:7 -:5 | F4+A4:7 -:5 | -:12 | - | F4:6 F#4 | \
+                G4:9 -:3 & D5:6 C#5 | A4:5 -:7 | D4:5 -:1 G4:6 | Ab4:1 -:11 | -:12 | - | - | \
+                - & -:12 | - | -:6 E4:5 -:1 | -:12 | - | - | - | -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "Bb3:12 | A3+C4:6 A3 | Bb3 G3 | F3:8 -:4 | -:12 | - | - | - & D4:6 C#4 | \
+                - F3:5 -:1 | G3:5 -:1 E3:5 -:1 | C3:7 -:5 | -:12 | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 73-80 of the file.
+        Part::new(
+            "Part 10",
+            "Bb4:4 G4:1 -:4 D4:1 G4 Bb4 | A4:4 F4:1 -:4 C4:1 F4 A4 | \
+            G4:2 -:1 G4 G4 - G4:2 F4:3 Ab4:1 | A4:8 -:4 | D5:3 D5:1 D5 - F5:4 D5:2 | \
+            C5 A4 F4 A4:1 - C5:4 | Bb4:2 G4:1 - G4 - G4 - E4:4 | F4:8 -:2 G4:1 -",
+            "Gm7/D Gm | F Dm7 | Gm6 C7 | F | Bb Gm7b5 | F | Gm6 C7 | F Dm7",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "D4:4 -:8 | F4:3 -:9 | E4:2 -:1 E4 E4 - E4 - E4:3 -:1 | C4:8 -:4 | \
+                Bb4:3 Bb4:1 Bb4 - Bb4:3 -:1 Bb4 - | A4 -:11 | -:6 F4:2 -:4 | C4:8 -:4",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "Bb2:6 G3+Bb3+D4:3 -:1 G3+Bb3+C#4:2 | F2:3 F3+A3+C4:2 -:1 F3+A3+C4:6 | \
+                G2:4 -:1 C2:2 -:1 C2:2 E3+G3+Bb3 | _:1 -:2 F3+A3+C4 -:1 F3+A3+C4:6 | \
+                Bb2 Bb3+D4:4 G3+Bb3+C#4:2 | F2:3 F3+A3+C4:2 -:1 F3+A3+C4:3 -:1 F3+A3+C4:2 | \
+                G2 E3+G3+Bb3:1 F2 D3+E3+G3+Bb3 E2 Bb3:6 | \
+                F2:3 F3+A3+C4:1 A2:2 F3+A3+C4:3 -:1 C3 - & -:3 G3+Bb3+D4:2 -:3 C#3:2 - | \
+                -:4 C2:3 -:1 F2 - F#2 - | -:3 G3+Bb3 E3+G3+Bb3 - | F2:4 F2:2 - F2:1 - F#2 - | \
+                -:3 G3+Bb3+D4:1 D3:2 G3:3 - | -:4 F2:2 - C2 - | -:6 G3:2 -:4 | \
+                E2:1 -:7 C3:1 -:3 & -:4 D3:2 -:6 | -:12 | -:3 E3:2 -:7 | -:12 | \
+                -:4 G3+Bb3+D4:1 -:3 C#3:2 - | -:12 | -:6 D3:1 C2:5 | -:12",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "D2:3 -:1 F2:2 D2:1 - Bb1 C#2 -:2 | F1:3 A1:1 C2 - F1 - F#1:3 -:1 | \
+                G1:3 D2:1 C2 - Bb1:2 G1 Bb1 | F1:4 C2:1 - F1 - F#1 G1 Ab1 A1 | \
+                Bb1:4 D2:1 - F2 - D2 - Bb1 - | F1:3 A1:1 C2 - F1:2 F#1:4 | \
+                G1:3 D2:1 C2 - Bb1 - G1:3 -:1 | F1:3 A1:1 C2 - D2 - C2 - A1 - & -:12 | - | - | \
+                -:3 A1:1 -:8 | -:12 | - | - | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "G3:7 -:5 | F3:10 -:2 | D3:1 G3 Bb3 D4 G3 Bb3 C4:2 Bb3+C4:1 -:3 | \
+                -:1 A3 Ab3 A3 Bb3 C4 D4 Eb4 D4 C4 Bb3 - | -:3 F4:1 D4:2 Bb3 -:4 | \
+                -:3 D4:1 C4:2 A3:3 - | D3:1 E3 F3 - F#3+G3 A3 Bb3:2 A3:1 A3+Bb3 -:2 | \
+                -:3 A3+C4+F4:1 A3+E4+F4 - A3:3 - & Bb3+D4:6 - | A3:9 -:3 | -:12 | - | - | \
+                -:6 A3+C4:1 -:5 | -:12 | -:6 C4:2 E4:1 -:3 & -:12 | C4:4 -:1 D4:5 -:2 | -:12 | - | \
+                - | - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | D5:6 F5 | _ - | Bb4:11 -:1 | A4+C5:6 F4+A4 | Bb4 E4+G4 | \
+                F4+A4:7 -:5 & -:12 | - | - | - | D5:6 C#5 | -:12 | D4:5 -:7 | E4:1 -:11",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | - | - | - | Bb3 | A3+C4:6 A3 | G3+Bb3 G3 | F3:10 -:2 & -:12 | - | - | - | \
+                D4:6 C#4 | - F3:5 -:1 | -:6 D3:5 -:1 | C3:9 -:3",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 81-88 of the file.
+        Part::new(
+            "Part 11",
+            "A4:1 -:2 A4:1 A4 A4 C5 - C5:3 Bb4:1 | C5:4 Bb4:3 -:1 G4 G4 A4 - | \
+            Bb4:2 -:1 Bb4 Bb4 - A4 - G4:2 - | C5:9 -:2 F4:1 | F4:4 C4:1 -:5 F4:1 G4 | \
+            A4:3 -:1 F4 -:4 C4:1 A4 - | G4:3 G4:1 G4 - G4:2 F4:4 | A4:9 -:3",
+            "F | C7 | Gm C7 | Dm7 F | F | F | C7/G C7 | Dm7/F Dm7",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "F4:1 -:2 F4:1 F4 - Bb4 - A4:3 A4:1 | _:3 -:1 G4:3 -:5 | -:12 | F4:10 -:2 | \
+                -:10 C4:1 - | C4:4 -:6 F4:1 - | E4:2 -:1 E4 E4 - E4 -:5 | C4:9 -:3 & -:12 | - | \
+                - | A4:9 -:3 | -:12 | Ab4:1 -:11 | -:12 | Ab4:1 -:11",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F2:4 F3+A3+C4:1 - F2:2 F3+A3+C4:4 | G2:6 E3+G3:4 Bb3:2 | G2:5 -:1 E3:5 -:1 | \
+                F2:5 F3 F2:1 - | C2:3 F3+C4:1 F2:2 F3+A3+C4:6 | C2:3 F3+A3+D4:1 F2:2 F3+A3+C4:6 | \
+                G2:4 C2:2 E3+G3+Bb3:6 | \
+                F2:3 -:1 F2 - F2:2 F3+A3+C4:1 F2 F#2+F3+A3+C4 - & -:3 F3+A3+C4:1 -:6 F#2:2 | \
+                -:3 G3:2 -:3 C2:2 E3+G3:1 - | \
+                G3+Bb3+D4:2 -:1 G3+Bb3+D4 G3+Bb3+D4 - C4:2 C2 G3+Bb3 | - D4:1 C4 A3 - A3:4 -:2 | \
+                -:8 A2:1 - C3 - | -:8 D2+E2:1 - F#2 - | -:3 E3+G3+Bb3:2 -:3 G2:1 - Ab2 - | \
+                -:2 F3+A3+C4:4 -:6 & -:12 | -:3 C4:1 Bb3 -:7 | -:12 | -:8 C3:1 -:3 | -:12 | - | \
+                - | -",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "F1:3 C2:1 F1 - F1 - F#1:2 G1 | Bb1 -:1 D2 C2 - Bb1 - E1 - G1 - | \
+                G1:3 D2:1 C2 - Bb1 - G1 - Ab1 - | D2:3 C2:1 A1 - F1 - C1 D1 E1 - | \
+                F1:3 A1:1 C2 - F1 -:3 D2:1 - | F1:2 -:1 A1 C2 - F1 - F1:2 F#1 | \
+                G1:3 D2:1 C2 - Bb1 - G1 - E1 - | F1:5 -:1 F1 F#1 G1 Ab1 A1 Bb1",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:12 | C4:1 E3 G3 Bb3 D4 G3 Bb3:4 -:2 | D4:1 G3 Bb3 C4 D4 G3 Bb3:2 -:4 | \
+                D4:1 F3 A3 C4 E4 D4 C4+D4 C4:3 -:2 | -:4 D3+E3:1 F3+A3 C4:4 -:2 | \
+                -:3 D4:1 C4 A3+C4 A3:3 - | G3:5 -:1 G3 - Ab3 - A3 - | \
+                F3:2 F3:1 G3 A3 Bb3 C4 Bb3 A3 Bb3 C4 - & -:12 | - | - | - | -:6 B3:1 -:5 | -:12 | \
+                - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | - | - | - | - | G4:6 C5 | _:1 -:11 & -:12 | - | - | - | - | - | - | \
+                D5:10 -:2",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 -"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x -"),
+        ]),
+        // Bars 89-93 of the file.
+        Part::new(
+            "Part 12",
+            "D5:2 D5:1 - D5 - F5:2 D5:4 | C5:2 A4 F4 A4 C5:3 -:1 | \
+            Bb4:2 G4:1 - G4:2 G4:1 - E4:3 -:1 | C4 F4:11 | _:1 -:11",
+            "Bb Gm7 | F | Gm7 C | F | F",
+        )
+        .with_lines(&[
+            line(
+                "Second voice",
+                gm::JAZZ_GUITAR,
+                "Bb4:2 Bb4:1 - Bb4 - Bb4:2 Bb4:3 -:1 | A4 -:5 F4 -:1 | G4 -:5 F4:1 -:5 | A3:12 | \
+                -",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "Bb2:6 Bb3+D4:4 G3+Bb3+C#4:2 | F2:3 F3+A3+C4:1 C2:2 F3+A3+C4:6 | \
+                G2:5 -:1 E3+G3:2 C2:3 -:1 | F2:3 C3+F3+A3:1 A2:2 -:4 A3+C4:1 - | \
+                F2+A3:8 -:4 & -:3 G3+Bb3+D4:2 -:1 G3:3 - | -:8 F#2:1 -:3 | - E3:2 -:5 C3+E3:2 | \
+                -:12 | C4+F4:7 -:5 & -:4 D3:2 - C#3 - | -:12 | -:3 Bb3:1 G3 -:7 | -:12 | -",
+            ),
+            line(
+                "Bass",
+                gm::FINGER_BASS,
+                "Bb1:3 D2:1 E2+F2 - D2+E2 - Bb1:4 | F1:3 A1:1 C2 - F1 - F#1:2 F#1:1 - | \
+                G1:3 C2:1 Bb1:2 G1 E1:3 -:1 | F1:2 D2:1 C2 A1 F1:2 -:3 C2:1 - | F2:7 -:5 & -:12 | \
+                - | - | -:6 C2:4 -:2 | -:12",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "F4:3 D4:1 Bb3:2 F4 -:4 | C4:1 A3 F3 A3 D4 A3 F3:2 F#3 G3 | \
+                D4:3 C4:1 Bb3 - E3:2 -:4 | A3:1 D4 A3 C4 F3:2 C4:1 -:5 | -:12 & -:12 | - | - | \
+                -:5 A3:1 -:6 | -:12",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "Bb4:12 | C5:6 A4 | F4+Bb4 G4 | C4+F4:7 -:5 | -:12 & D5:6 C#5 | \
+                A4:5 -:1 F#4:5 -:1 | -:6 E4:5 -:1 | -:12 | -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "Bb3:11 -:1 | A3+C4:6 A3 | G3+Bb3 G3 | F3:9 -:3 | -:12 & D4:6 C#4 | - F3:5 -:1 | \
+                -:6 D3:5 -:1 | C3:8 -:4 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | x -:2 x:1 x - x -:3 x:1 - | \
+             x -:2 x:1 x - x -:3 x:1 - | -:12"),
+            (Drum::Rim, "-:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | -:3 x:1 -:2 x:1 - x - x - | \
+             -:3 x:1 -:2 x:1 - x - x - | -:12"),
+        ]),
+    ],
+    form: &["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8", "Part 9", "Part 10", "Part 11", "Part 12"],
+    drums_from: 0,
+    about: "\"Zamba de mi esperanza, amanecida como queriendo llorar\": the zamba, the slow \
+            dance of the handkerchiefs from the north of Argentina, sung to a hope that went \
+            away. Jorge Cafrune's record made it known all over the country. F major.",
+};
+
+// Written out from a band arrangement (MIDI in 6/4, its quarters the eighths of 6/8 here):
+// the tune on a soprano saxophone, with four guitars.
+pub(super) const ZAMBA_POR_VOS: Song = Song {
+    name: "Zamba por vos",
+    origin: "Alfredo Zitarrosa",
+    feel: "Zamba",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 81.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::SOPRANO_SAX, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS),
+    style: "Zamba",
+    parts: &[
+        // Bars 1-8 of the file.
+        Part::new(
+            "Part 1",
+            "-:12 | - | - | - | - | - | - | -",
+            "C | C | C/G Am7 | G | F | C | C/G F | G F",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "-:12 | C4+E4:5 -:1 C4+E4:4 -:1 G2 | _:7 -:1 F2+F3+F4:3 G2:1 | _:8 D3:3 -:1 | \
+                F2:12 | C4+E4:5 -:1 C4+E4:5 G3:1 | _ -:2 G3:1 C3:3 -:1 F2+F4:3 G2:1 | \
+                _:5 -:1 F4:5 -:1 & -:12 | C3:4 C3:3 -:1 C3 -:2 G3:1 | \
+                _ -:2 G3 -:1 C4+E4:2 A3+C4 -:1 D3 | B3+G4:5 -:1 G4:6 | F4 F4 | \
+                G3:2 -:1 G3:2 -:3 C3:4 | G2:8 F3+A3+C4:2 C3:1 - | G4:6 F3+A3+C4:4 -:2 & -:12 | \
+                G3:2 -:1 G3:2 -:7 | C4+E4:5 -:1 G3 -:5 | G3:2 -:1 G3:2 -:1 B3:4 G3:1 - | \
+                -:2 F3:1 A3:2 C4:7 | -:4 G2 - | C4:5 -:1 C4+E4 -:5 | D4:4 A3:1 -:7 & -:12 | - | \
+                C3:4 C3 - | - D3:3 -:5 | -:4 F3:2 - F3 A3:1 C3 | _:4 -:8 | E4:4 -:8 | B3:2 -:10",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:12 | -:7 C3:1 D3 C3 B2 C3 | E3 C3:2 F3:1 D3:2 G3:1 E3 A3:3 Bb3:1 | \
+                B3:7 -:1 B3 A3 B3 C4 | A3:7 -:1 A3 G3 A3 B3 | G3:6 -:1 C3 D3 C3 B2 C3 | \
+                E3 C3:2 F3:1 D3:2 G3:1 E3 A3:3 Bb3:1 | B3 G3 B3 A3 B3 C4 A3 F3 A3:4",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:12 | -:7 G3:1 G3+A3 G3 F#3 G3 | C4 E3:2 D4:1 F3:2 E4:1 G3 F4:3 F#4:1 | \
+                G4:7 B3:1 G4 F#4 G4 A4 | F4:7 A3:2 E4:1 F4 F4+G4 | E4:7 G3:1 A3 G3 F#3 G3 | \
+                C4 E3:2 D4:1 F3:2 E4:1 G3 F4:3 F#4:1 | G4 B3 G4 F#4 G4 A4 F4 A3 F4:4 & -:12 | - | \
+                - | - | -:8 F4:1 -:3 | -:12 | - | -",
+            ),
+        ]),
+        // Bars 9-16 of the file.
+        Part::new(
+            "Part 2",
+            "-:12 | - | -:4 C4:1 E4 A4:2 -:1 A4 - A4 | G4:11 -:1 | -:3 D4:1 E4 - F4:2 E4 G4 | \
+            _:1 - E4:10 | -:2 C4 E4 A4:3 -:1 A4:2 | G4:3 G4:1 - G4 F4:2 -:1 G4 F4 -",
+            "Em G7 | C | Am7/C F/C | G7 | G7 | C C/G | Am7 F | G G7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "E3+B3:5 G3 -:2 | C2:11 G3:1 | _:2 -:1 G3 C3:2 C4+E4:1 - C3+F3+A3+F4:4 | \
+                G4:5 -:1 G4:5 G3:1 | _:2 -:1 G4:2 -:1 G4:6 | C3+G3:3 C4+E4:1 C3:2 E4:5 C3+G3:1 | \
+                _:2 -:1 G3+C4+E4 C3:3 -:1 F3+F4:3 -:1 | G2:7 -:1 F4:4 & G3:4 -:2 B3+D4:5 -:1 | \
+                E4:4 C3:2 C4+E4:1 - C3:2 -:1 G2 | C2:11 G2:1 | _:11 -:1 | G2:12 | \
+                C4+E4:2 -:4 G3+C4 -:2 | C4:3 - G3+C4+E4:1 - A3+C4:2 - | \
+                B3:6 -:2 F2+F3+A3+C4:3 -:1 & -:1 E4:5 G2:4 -:2 | G3 -:1 G3:2 -:7 | \
+                C4+E4:5 -:6 G3:1 | _:2 -:1 G3 D3:3 -:1 D3:3 -:1 | B3:3 B3:1 D3:3 -:1 D3:4 | \
+                -:8 G2:3 -:1 | E4:2 -:10 | G3+G4:3 G4:4 -:5 & -:12 | C3+C4:1 -:11 | C3:3 -:9 | \
+                B3:4 -:2 B3:4 G3:1 - | G4:2 -:4 G3+B3 -:2 | -:12 | - | D3:1 -:2 G3:3 -:6 & -:12 | \
+                - | - | D3:2 -:10 | -:12 | - | - | -:3 D3:1 -:8",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "G3:1 E3 G3 F3 G3 A3 F3 - G3+A3 D3 B2 G2 | C3:6 -:2 E4:1 A4 G4 E4 | C4:9 -:3 | \
+                -:2 A3 -:1 Bb3 B3 A3 F3 D3 B2 Bb2 | A2 B2 C3 D3 E3 F3 G3:2 A3:3 B3:1 | \
+                G3:2 E3:1 G3 C4 E4 E4:2 G4:3 E4:1 | C4:8 -:4 | -:2 D3:1 D3 B3:2 D3:1 B3 A3:4",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "E4:1 G3 E4 D4 - E4+F4 D4 F4 D4 B3 G3 F3 | E3:6 -:2 G4:1 C5 B4 G4 | A4:10 -:2 | \
+                - F4 -:1 F#4 G4 F4 D4 B3 G3 F#3 | F3 G3 A3 B3 C4 D4 E4 - F4:2 -:1 G4 | \
+                E4:2 C4:1 E4 G4 C5 B4 - E5:3 B4:1 | A4:7 -:5 | -:2 B2:1 B2 G3:2 B2:1 G3 F3:4",
+            ),
+        ]),
+        // Bars 17-24 of the file.
+        Part::new(
+            "Part 3",
+            "E4:3 E4:1 E4 - D4:3 C4:2 D4:1 | E4:7 -:5 | -:1 C4 - E4:2 A4:4 -:1 B4 - | \
+            G4:2 -:1 G4 - G4 F4:2 G4 -:1 F4 | E4:3 E4:1 - E4 D4:3 E4:2 D4:1 | C4:6 - | \
+            -:4 C4:1 E4 A4:2 -:1 A4 - A4 | G4:11 -:1",
+            "Em G7 | C Am7 | C F | G G7 | Em Em7 | C | C Fmaj7 | G7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "B3:7 -:1 G2+D4:3 -:1 | C4+E4:5 -:1 E4:4 -:1 C3 | _:2 -:1 G3:2 -:1 G3 - F3:4 | \
+                G2 G2:3 -:1 F2+F4:4 | E3+G3+B3:3 E4:4 -:1 G2+D4:4 | E4:5 -:1 E4:5 G2:1 | \
+                C3+G3+C4+E4:3 E4:2 -:1 E4:2 F2+A3+F4:4 | G4:5 -:1 G4:5 G3:1 & E4:6 -:2 G3+B3 - | \
+                C3+G3:3 G3:1 C3:3 -:1 C3:3 G3:1 | _ -:3 C3 -:1 A3+F4:3 G3:1 | \
+                _:2 -:1 G4:4 -:1 F3+A3:3 -:1 | E4:2 -:1 B3:3 G3:1 - G3:3 -:1 | C3:4 C3:3 -:5 | \
+                -:3 G3+C4:1 C3:3 -:1 F3:3 G2:1 | _:11 -:1 & E3+G3:3 G3:4 -:5 | -:6 C4:3 - | \
+                E4:7 -:1 C4:2 - | B3+G4:3 B3 -:2 C4 - | -:3 G3:2 -:3 B3:2 - | \
+                G3+C4:3 C4:2 -:1 C4:3 - | -:11 G3:1 | \
+                _:2 -:1 G3 D3:3 -:1 D3:3 -:1 & -:4 E3:3 -:5 | -:12 | C4:5 -:7 | -:3 G3:2 -:7 | \
+                -:4 E3:3 -:5 | -:3 G3:1 -:2 G3 -:4 | -:11 D3:1 | _ -:5 B3:4 G3:1 - & -:12 | - | \
+                - | - | - | - | - | B3:3 -:9",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:2 B2:1 B2 G3:2 B2:1 G3 F3:3 -:1 | E3 D3 F3 E3 G3 F3 A3 G3 B3 A3 B3+C4 - | \
+                C4+D4 - E4 D4 F4 E4 G4 - A4:2 -:1 Bb4 | B4:2 D4:1 D4 B4:2 D4:1 B4 A4:3 -:1 | \
+                G4 - B3 B3 G4:2 B3:1 G4 F4:4 | E4:6 -:1 C4 B3 E3 F3 F#3 | G3:8 -:4 | \
+                -:2 A3 -:1 Bb3 B3 A3 F3 D3 B2 Bb2 & -:12 | - | - | -:4 C5:1 -:7 | -:12 | - | - | \
+                -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G2:1 G2 E3:2 G2:1 E3 D3:4 | C3:1 B2 D3 C3 E3 D3 F3 E3 G3 F3 A3 G3 | \
+                B3 A3 C4 B3 D4 C4 E4 - F4:2 -:1 F#4 | G4 - B3 B3 G4:2 B3:1 G4 F4:4 | \
+                -:2 G3:1 G3 E4:2 G3:1 E4 D4:4 | C4:6 -:1 A4 G4 C4 D4 Eb4 | E4:8 -:4 | \
+                -:2 F4 -:1 F#4 G4 F4 D4 B3 G3 F#3",
+            ),
+        ]),
+        // Bars 25-32 of the file.
+        Part::new(
+            "Part 4",
+            "-:3 D4:1 E4 - F4:2 E4 G4 | _:1 - E4:10 | -:2 C4 E4 A4:3 -:1 A4:2 | \
+            G4:3 G4:1 - G4 F4:3 -:1 F4 - | E4:3 E4:1 E4 - D4:3 -:1 D4:2 | E4:11 -:1 | \
+            - C4 - E4:2 A4:4 -:1 B4 - | G4:3 G4:1 - G4 F4:3 -:1 F4 -",
+            "G7 | C C/G | Am7 F | G G7 | Em G7 | C Am7 | C F | G G7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "G2:12 | C3+G3:3 C4+E4:1 C3:2 E4:5 C3+G3:1 | \
+                _:2 -:1 G3+C4+E4 C3:3 -:1 F3+F4:3 -:1 | G2:7 -:1 F4:4 | B3:7 -:1 G2+G3+D4:3 -:1 | \
+                C4+E4:5 -:1 E4:4 -:1 C3+G3 | _:2 -:1 G3:2 -:1 G3 - F3:4 | \
+                G2 G2:3 -:1 F2+F4:4 & B3:3 G4:2 -:1 G4:6 | C4+E4:2 -:4 G3+C4 -:2 | \
+                C4:3 - G3+C4+E4:1 - A3+C4:2 - | B3:6 -:2 F2+F3+A3+C4:3 -:1 | E4:6 -:2 B3 - | \
+                C3+G3:3 G3:1 C3:2 C4:3 - | E4:7 -:1 A3+F4:3 G3:1 | \
+                _:2 -:1 G4:4 -:1 F3+A3:3 -:1 & G4:2 -:1 B3 D3:3 -:1 D3:4 | -:8 G2:3 -:1 | \
+                E4:2 -:10 | G3+G4:3 G4:4 -:5 | E3+G3:3 G3:4 -:5 | -:8 C3:3 -:1 | C4:5 -:3 C4:2 - | \
+                B3+G4:3 B3 -:2 C4 - & -:6 B3:5 -:1 | -:12 | - | -:1 D3 - G3:3 -:6 | -:4 E3:3 -:5 | \
+                -:12 | -:4 C3:3 -:5 | -:3 G3:2 -:7 & -:6 G3:4 -:2 | -:12 | - | -:3 D3:1 -:8 | \
+                -:12 | - | - | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "A2:1 B2 C3 D3 E3 F3 G3:2 A3:3 B3:1 | G3:2 E3:1 G3 C4 E4 E4:2 G4:3 E4:1 | \
+                C4:8 -:4 | -:2 D3:1 D3 B3:2 D3:1 B3 A3:4 | -:2 B2:1 B2 G3:2 B2:1 G3 F3:3 -:1 | \
+                E3 D3 F3 E3 G3 F3 A3 G3 B3 A3 C4 B3 | D4 C4 D4+E4 - F4 E4 G4 - A4:2 -:1 Bb4 | \
+                B4:2 D4:1 D4 B4:2 D4:1 B4 A4:3 -:1 & -:12 | - | - | - | - | - | - | -:4 C5:1 -:7",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "F3:1 G3 A3 B3 C4 D4 E4:2 F4 -:1 G4 | E4:2 C4:1 E4 G4 C5 B4 - E5:3 B4:1 | \
+                A4:7 -:5 | -:2 B2:1 B2 G3:2 B2:1 G3 F3:4 | -:2 G2:1 G2 E3:2 G2:1 E3 D3:4 | \
+                C3:1 B2 D3 C3 E3 D3 F3 E3 G3 F3 A3 G3 | B3 A3 C4 B3 D4 C4 E4 - F4:2 -:1 F#4 | \
+                G4 - B3 B3 G4:2 B3:1 G4 F4:4",
+            ),
+        ]),
+        // Bars 33-40 of the file.
+        Part::new(
+            "Part 5",
+            "E4:3 E4:1 - E4 D4:3 -:1 D4:2 | C4:9 -:3 | -:2 C5 B4:1 - D5:4 C5:1 - | A4:12 | \
+            -:2 D5 C5:1 - B4:4 A4:1 - | G4:12 | -:2 C5 B4:1 - D5:4 C5:1 - | \
+            B4:2 -:1 B4 - B4 A4:3 -:1 A4 -",
+            "Em Em7 | C | C7 C7/G | F | F F/C | C | C Dm7 | G F",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "E3+G3+B3:3 E4:4 -:1 G2+D4:4 | E4:5 -:1 E4:5 G2:1 | C3:4 C3:3 -:1 G3:3 F2:1 | \
+                F2:10 F2:2 | F3+C4:3 C4+F4:2 -:1 F4:6 | G3+C4:3 C4+E4:2 -:1 C4+E4:5 G2:1 | \
+                C2:7 -:1 F3+F4:4 | G2:7 -:1 F4:4 & E4:2 -:1 B3:3 G3:1 - G3:3 -:1 | C3:4 C3:3 -:5 | \
+                G3+Bb3:3 E4 E4:4 Bb3+E4:1 - | C3+A3:4 F3 A3:3 A3:1 | _:2 - F3 C4:4 A3:1 C3 | \
+                _:3 -:1 C2:7 -:1 | C4:3 C4+E4:2 -:1 C4+E4 - F2+A3+C4:3 -:1 | \
+                B3:6 -:2 F2+F3+A3+C4:3 C3:1 & -:3 G3:2 -:3 B3:2 - | G3+C4:3 C4:2 -:1 C4:4 -:2 | \
+                E4 -:1 G3:2 G2:6 -:1 | F3+F4:3 C4+F4:2 -:1 F4:6 | F4:2 -:6 F3:3 -:1 | \
+                E4:2 -:6 C3:2 G3:1 - | E4:2 - C3:3 -:5 | D3:3 G4:4 -:5 & -:4 E3:3 -:5 | \
+                -:3 G3:1 -:2 G3 -:4 | -:3 Bb3:1 -:8 | C4:2 -:4 C4:5 C3:1 | _ -:11 | -:12 | \
+                G3:1 -:11 | G3+G4:2 -:1 G3:3 -:6 & -:12 | - | - | - | - | - | - | -:4 D3:3 -:5",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "G4:1 - B3 B3 G4:2 B3:1 G4 F4:4 | E4:7 G4:1 C5 G4 F#4 F4 | E4:9 -:3 | \
+                -:4 A2:1 C3 F3 C3 F3 A3 C4 F4 | A4:7 -:5 | -:2 G3:1 C4 C4 E4 E4 G4 G4 C5 C5 E5 | \
+                E5:7 -:4 G2:1 | _:7 -:1 F4:4 & -:12 | - | - | - | - | - | -:11 G3:1 | \
+                _:2 -:1 G4:4 -:1 F3+A3:3 F2+C3+G3:1 & -:12 | - | - | - | - | - | - | \
+                B3+G4:3 B3:2 G3:1 B3 -:5 & -:12 | - | - | - | - | - | - | -:4 D3:1 -:7",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G3:1 G3 E4:2 G3:1 E4 D4:4 | -:12 | - | - | - | \
+                -:2 C3:1 E3 E3 G3 G3 C4 C4 E4 E4 G4 | G4:7 -:5 | -:12",
+            ),
+            line(
+                "Second steel guitar",
+                gm::STEEL_GUITAR,
+                "-:12 | C4:6 -:1 E5 G5 E5 C5 B4 | Bb4:9 -:3 | -:4 F3:1 A3 C4 A3 C4 F4 A4 C5 | \
+                F5:9 -:3 | -:12 | - | -",
+            ),
+        ]),
+        // Bars 41-48 of the file.
+        Part::new(
+            "Part 6",
+            "G4:2 -:1 G4 - G4 F4:3 E4:1 - F4 | G4:12 | -:1 C4 - E4:2 A4:3 -:1 A4 - G4 | \
+            _ - G4 - G4 F4:3 -:1 F4 - E4 | _ - E4 - E4 D4:3 -:1 D4 - C4 | _:10 -:2 | -:12 | -",
+            "Em Em7 | C Am7/G | C Dm7 | G F | Em7 G | C | C/G Am7 | G",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "E2:7 -:1 D4:4 | C3 C3:2 E4:5 C3:1 | _:3 C4:4 -:1 F3+F4:3 B3:1 | \
+                _:4 -:1 F3+A3:5 -:1 E3 | _:5 G2+G3+B3 -:1 C2 | _:12 | \
+                C4+E4:5 -:1 C4+E4:2 F2+F3+F4:3 G2:1 | _:8 D3:3 -:1 & B3:6 G3:1 - G2+G3:3 G3:1 | \
+                _:2 -:1 G3+C4+E4 -:2 C4:4 G3:1 G3 | _:2 -:1 G3:2 -:1 G3 - F2+A3+C4:2 -:1 D3 | \
+                G2+G4:6 F4 | E4:5 -:1 D4:5 C3+G3:1 | _:11 G2:1 | _:7 -:1 A3+C4:2 -:1 D3 | \
+                G4:5 -:1 G4:6 & E3+G3+E4:3 E4:4 -:1 B3:2 - | C4+E4:3 - G3 - | E4:7 -:5 | \
+                D4:4 -:2 F2:5 G3+B3:1 | _:4 -:8 | C4+E4:12 | C3:4 C3 - | \
+                B3 D3:3 - G3:1 - & -:3 G3:2 -:7 | -:8 G2:3 -:1 | C4:3 -:1 C3:3 -:5 | \
+                -:1 G3:3 -:2 C4:4 -:1 C3 | -:12 | -:11 G3:1 | -:3 G3:2 -:1 G3 -:5 | \
+                G3:2 -:1 G3:2 -:1 B3:4 -:2 & -:4 E3:3 -:5 | -:12 | - | - | - | - | - | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "E2:7 -:1 D4:4 | C4:6 -:1 A4:2 C4:1 D4 Eb4 | E4:6 - | -:2 B3+C4:1 A3 B3:5 -:3 | \
+                -:2 G3+A3:1 F3 G3:4 - | -:7 C3:1 D3 C3 B2 C3 | \
+                E3 C3:2 F3:1 D3:2 G3:1 E3 A3:3 Bb3:1 | \
+                B3:7 -:1 B3 A3 B3 C4 & E4:4 G3:1 E4:2 -:1 G2+G3:3 -:1 | C3+G3:5 -:3 G4:1 -:3 | \
+                -:12 | - | - | - | - | - & -:2 E3+G3:1 E3:2 -:1 E3 - B3:2 - | E4:4 -:8 | -:12 | \
+                - | - | - | - | -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:12 | -:7 C4:1 B3 E3 F3 F#3 | G3:6 - | -:2 G4+A4:1 F#4 G4:5 -:3 | \
+                -:2 E4+F4:1 D4 E4:4 - | -:7 G3:1 G3+A3 G3 F#3 G3 | \
+                C4 E3:2 D4:1 F3:2 E4:1 G3 F4:3 F#4:1 | G4:7 B3:1 G4 F#4 G4 A4",
+            ),
+        ]),
+        // Bars 49-56 of the file.
+        Part::new(
+            "Part 7",
+            "-:12 | - | - | - | - | - | -:3 C4:1 E4:2 A4:3 -:1 A4:2 | G4:8 -:4",
+            "F | C | C/G F | G F | Em G7 | C | Am7/C F/C | G7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F2:12 | C4+E4:5 -:1 C4+E4:5 G3:1 | _ -:2 G3:1 C3:3 -:1 F2+F4:3 G2:1 | \
+                _:5 -:1 F4:5 -:1 | E3+B3+E4:5 G3 -:2 | C2:11 G3:1 | \
+                _:2 -:1 G3 C3:2 C4+E4:1 - C3+F3+A3+F4:4 | G4:5 -:1 G4:5 G3:1 & F4:5 C4:7 | \
+                G3:2 -:1 G3:2 -:3 C3:4 | G2:8 F3+A3+C4:2 C3:1 - | G4:6 F3+A3+C4:4 -:2 | \
+                G3:4 -:2 B3+D4:5 -:1 | E4:4 C3:2 E4:1 - C3:2 -:1 G2 | C2:11 G2:1 | \
+                _:11 -:1 & -:2 F3:1 A3:2 -:1 F4:6 | -:4 G2 - | C4:5 -:1 C4+E4 -:5 | \
+                D4:4 A3:1 -:7 | -:6 G2:4 -:2 | G3 -:1 G3 -:8 | C4+E4:5 -:6 G3:1 | \
+                _:2 -:1 G3 D3:3 -:1 D3:3 -:1 & -:4 F3:2 - F3 A3:1 C3 | _:4 -:8 | E4:4 -:8 | \
+                B3:2 -:10 | -:12 | C3+C4:1 -:11 | C3:3 -:9 | B3:4 -:2 B3:4 G3:1 - & -:12 | - | - | \
+                - | - | - | - | D3:2 -:10",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "A3:7 -:1 A3 G3 A3 B3 | G3:6 -:1 C3 D3 C3 B2 C3 | \
+                E3 C3:2 F3:1 D3:2 G3:1 E3 A3:3 Bb3:1 | B3 G3 B3 A3 B3 C4 A3 F3 A3:4 | \
+                G3:1 E3 G3 F3 G3 A3 F3 - G3+A3 D3 B2 G2 | C3:6 -:2 E4:1 A4 G4 E4 | C4:9 -:3 | \
+                -:2 A3 -:1 Bb3 B3 A3 F3 D3 B2 Bb2",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "F4:7 A3:2 E4:1 F4 F4+G4 | E4:7 G3:1 A3 G3 F#3 G3 | \
+                C4 E3:2 D4:1 F3:2 E4:1 G3 F4:3 F#4:1 | G4 B3 G4 F#4 G4 A4 F4 A3 F4:4 | \
+                E4:1 G3 E4 D4 - E4+F4 D4 F4 D4 B3 G3 F3 | E3:6 -:2 G4:1 C5:2 G4:1 | A4:10 -:2 | \
+                - F4 -:1 F#4 G4 F4 D4 B3 G3 F#3 & -:8 F4:1 -:3 | -:12 | - | - | - | -:10 B4:1 - | \
+                -:12 | -",
+            ),
+        ]),
+        // Bars 57-64 of the file.
+        Part::new(
+            "Part 8",
+            "-:3 D4:1 E4 - F4:2 E4 G4 | _:1 - E4:10 | -:2 C4 E4 A4:3 -:1 A4:2 | \
+            G4:3 G4:1 - G4 F4:3 -:1 F4 - | E4:3 E4:1 E4 - D4:3 -:1 D4:2 | E4:11 -:1 | \
+            - C4 - E4:2 A4:4 -:1 B4 - | G4:3 G4:1 - G4 F4:3 -:1 F4 -",
+            "G7 | C C/G | Am7 F | G G7 | Em G7 | C Am7 | C F | G G7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "G2:12 | C3+G3+C4:3 C4+E4:1 C3:2 E4:5 C3+G3:1 | \
+                _:2 -:1 G3+C4+E4 C3:3 -:1 F3+F4:3 -:1 | G2:7 -:1 F4:4 | B3:7 -:1 G2+D4:3 -:1 | \
+                C4+E4:5 -:1 E4:4 -:1 C3+G3 | _:2 -:1 G3:2 -:1 G3 - F3:4 | \
+                G2 G2:3 -:1 F2+F4:4 & B3:3 G4:2 -:1 G4:6 | E4:2 -:4 G3+C4 -:2 | \
+                C4:3 - G3+C4+E4:1 - A3+C4:2 - | B3:6 -:2 F2+F3+A3+C4:3 -:1 | E4:6 -:2 G3+B3 - | \
+                C3+G3:3 G3:1 C3:2 C4:3 - | E4:7 -:1 A3+F4:3 G3:1 | \
+                _:2 -:1 G4:4 -:1 F3+A3:3 -:1 & G4:2 -:1 B3 D3:3 -:1 D3:4 | -:8 G2:3 -:1 | \
+                E4:2 -:10 | G3+G4:3 G4:4 -:5 | E3+G3:3 G3:4 -:5 | -:8 C3:3 -:1 | C4:5 -:3 C4:2 - | \
+                B3+G4:3 B3 -:2 C4 - & -:6 G3+B3:4 -:2 | -:12 | - | D3:1 -:2 G3:3 -:6 | \
+                -:4 E3:3 -:5 | -:12 | -:4 C3:3 -:5 | -:3 G3:2 -:7 & -:12 | - | - | -:3 D3:1 -:8 | \
+                -:12 | - | - | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "A2:1 B2 C3 D3 E3 F3 G3:2 A3:3 B3:1 | G3:2 E3:1 G3 C4 E4 E4:2 G4:3 E4:1 | \
+                C4:8 -:4 | -:2 D3:1 D3 B3:2 D3:1 B3 A3:4 | -:2 B2:1 B2 G3:2 B2:1 G3 F3:3 -:1 | \
+                E3 D3 F3 E3 G3 F3 A3 G3 B3 A3 B3+C4 - | C4+D4 - D4+E4 - F4 E4 G4 - A4:2 -:1 Bb4 | \
+                B4:2 D4:1 D4 B4:2 D4:1 B4 A4:3 -:1 & -:12 | - | - | - | - | - | - | -:4 C5:1 -:7",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "F3:1 G3 A3 B3 C4 D4 E4 - F4:2 -:1 G4 | E4:2 C4:1 E4 G4 C5 B4 - E5:3 B4:1 | \
+                A4:7 -:5 | -:2 B2:1 B2 G3:2 B2:1 G3 F3:4 | -:2 G2:1 G2 E3:2 G2:1 E3 D3:4 | \
+                C3:1 B2 D3 C3 E3 D3 F3 E3 G3 F3 A3 G3 | B3 A3 C4 B3 D4 C4 E4 - F4:2 -:1 F#4 | \
+                G4 - B3 B3 G4:2 B3:1 G4 F4:4",
+            ),
+        ]),
+        // Bars 65-72 of the file.
+        Part::new(
+            "Part 9",
+            "E4:3 E4:1 - E4 D4:3 -:1 D4:2 | C4:9 -:3 | - C4:1 E4:2 A4:3 A4:2 -:1 | G4:9 -:3 | \
+            - D4:1 E4 - F4:2 E4 G4 | _:1 - E4:10 | -:2 C4 E4 A4:3 -:1 A4:2 | \
+            G4:3 G4:1 - G4 F4:3 -:1 F4 -",
+            "Em Em7 | C | C Fmaj7 | G7 | G7 | C C/G | Am7 F | G G7",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "E3+G3+B3:3 E4:4 -:1 G2+D4:4 | E4:5 -:1 E4:5 G2:1 | \
+                C3+G3+C4+E4:3 E4:2 -:1 E4:2 F2+A3+F4:4 | G4:5 -:1 G4:5 G3:1 | \
+                _:2 -:1 G4:2 -:1 G4:6 | C3+G3:3 C4+E4:1 C3:2 C4+E4:5 C3+G3:1 | \
+                _:2 -:1 G3+C4+E4 C3:3 -:1 F3+F4:3 -:1 | \
+                G2:7 -:1 F4:4 & E4:2 -:1 B3:3 G3:1 - G3:3 -:1 | C3:4 C3:3 -:5 | \
+                -:3 G3+C4:1 C3:3 -:1 F3:3 G2:1 | _:11 -:1 | G2:12 | C4+E4:2 -:4 G3 -:2 | \
+                C4:3 - G3+C4+E4:1 - A3+C4:2 - | B3:6 -:2 F2+F3+A3+C4:3 -:1 & -:3 G3:2 -:3 B3:2 - | \
+                G3+C4:3 C4:2 -:1 C4:4 -:2 | -:11 G3:1 | _:2 -:1 G3 D3:3 -:1 D3:3 -:1 | \
+                B3:3 B3:1 D3:3 -:1 D3:4 | -:8 G2:3 -:1 | E4:2 -:10 | \
+                G3+G4:3 G4:4 -:5 & -:4 E3:3 -:5 | -:3 G3:1 -:2 G3 -:4 | -:11 D3:1 | \
+                _ -:5 B3:4 G3:1 - | G4:2 -:4 B3:5 -:1 | -:12 | - | D3:1 -:2 G3:3 -:6 & -:12 | - | \
+                - | B3:3 -:9 | -:6 G3:4 -:2 | -:12 | - | -:3 D3:1 -:8",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "G4:1 - B3 B3 G4:2 B3:1 G4 F4:4 | E4:6 -:1 C4 B3 E3 F3 F#3 | G3:8 -:4 | \
+                -:2 A3 -:1 Bb3 B3 A3 F3 D3 B2 Bb2 | A2 B2 C3 D3 E3 F3 G3:2 A3:3 B3:1 | \
+                G3:2 E3:1 G3 C4 E4 E4:2 G4:3 E4:1 | C4:8 -:4 | -:2 D3:1 D3 B3:2 D3:1 B3 A3:4",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G3:1 G3 E4:2 G3:1 E4 D4:4 | C4:6 -:1 A4 G4 C4 D4 Eb4 | E4:8 -:4 | \
+                -:2 F4 -:1 F#4 G4 F4 D4 B3 G3 F#3 | F3 G3 A3 B3 C4 D4 E4 - F4:2 -:1 G4 | \
+                E4:2 C4:1 E4 G4 C5 B4 - E5:3 B4:1 | A4:7 -:5 | -:2 B2:1 B2 G3:2 B2:1 G3 F3:4",
+            ),
+        ]),
+        // Bars 73-80 of the file.
+        Part::new(
+            "Part 10",
+            "E4:3 E4:1 E4 - D4:3 -:1 D4:2 | E4:11 -:1 | - C4 - E4:2 A4:4 -:1 B4 - | \
+            G4:3 G4:1 - G4 F4:3 -:1 F4 - | E4:3 E4:1 - E4 D4:3 -:1 D4:2 | C4:9 -:3 | \
+            -:2 C5 B4:1 - D5:4 C5:1 - | A4:12",
+            "Em G7 | C Am7 | C F | G G7 | Em Em7 | C | C7 C7/G | F",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "B3:7 -:1 G2+G3+D4:3 -:1 | C4+E4:5 -:1 E4:4 -:1 C3+G3 | \
+                _:2 -:1 G3:2 -:1 G3 - F3:4 | G2 G2:3 -:1 F2+F4:4 | E3+G3+B3:3 E4:4 -:1 G2+D4:4 | \
+                E4:5 -:1 E4:5 G2:1 | C3:4 C3:3 -:1 G3:3 F2:1 | F2:10 F2:2 & E4:6 -:2 B3 - | \
+                C3+G3:3 G3:1 C3:3 -:1 C3:3 -:1 | E4:7 -:1 A3+F4:3 G3:1 | \
+                _:2 -:1 G4:4 -:1 F3+A3:3 -:1 | E4:2 -:1 B3:3 G3:1 - G3:3 -:1 | C3:4 C3:3 -:5 | \
+                G3+Bb3:3 E4 E4:4 Bb3+E4:1 - | C3+A3:4 F3:3 -:1 A3:3 C3+A3:1 & E3+G3:3 G3:4 -:5 | \
+                -:6 C4:3 - | C4:5 -:3 C4:2 - | B3+G4:3 B3 -:2 C4 - | -:3 G3:2 -:3 B3:2 - | \
+                G3+C4:3 G3+C4:2 -:1 C4:4 -:2 | E4 -:1 G3+Bb3 - G2:6 -:1 | \
+                F3+F4:3 C4+F4:2 -:1 F4:6 & -:4 E3:3 -:5 | -:12 | -:4 C3:3 -:5 | -:3 G3:2 -:7 | \
+                -:4 E3:3 -:5 | -:6 G3:2 -:4 | -:12 | C4:2 -:4 C4:5 -:1",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:2 B2:1 B2 G3:2 B2:1 G3 F3:3 -:1 | E3 D3 F3 E3 G3 F3 A3 G3 B3 A3 C4 B3 | \
+                D4 C4 E4 D4 F4 E4 G4 - A4:2 -:1 Bb4 | B4:2 D4:1 D4 B4:2 D4:1 B4 A4:3 -:1 | \
+                G4 - B3 B3 G4:2 B3:1 G4 F4:4 | E4:7 G4:1 C5 G4 F#4 F4 | E4:9 -:3 | \
+                -:4 A2:1 C3 F3 C3 F3 A3 C4 F4 & -:12 | - | - | -:4 C5:1 -:7 | -:12 | - | - | -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 G2:1 G2 E3:2 G2:1 E3 D3:4 | C3:1 B2 D3 C3 E3 D3 F3 E3 G3 F3 A3 G3 | \
+                B3 A3 C4 B3 D4 C4 E4 - F4:2 -:1 F#4 | G4 - B3 B3 G4:2 B3:1 G4 F4:4 | \
+                -:2 G3:1 G3 E4:2 G3:1 E4 D4:4 | -:12 | - | -",
+            ),
+            line(
+                "Second steel guitar",
+                gm::STEEL_GUITAR,
+                "-:12 | - | - | - | - | C4:6 -:1 E5 G5 E5 C5 B4 | Bb4:9 -:3 | \
+                -:4 F3:1 A3 C4 A3 C4 F4 A4 C5",
+            ),
+        ]),
+        // Bars 81-88 of the file.
+        Part::new(
+            "Part 11",
+            "-:2 D5 C5:1 - B4:4 A4:1 - | G4:12 | -:2 C5 B4:1 - D5:4 C5:1 - | \
+            B4:2 -:1 B4 - B4 A4:3 -:1 A4 - | G4:2 -:1 G4 - G4 F4:3 E4:1 - F4 | G4:12 | \
+            -:1 C4 - E4:2 A4:3 -:1 A4 - G4 | _ - G4 - G4 F4:3 -:1 F4 - E4",
+            "F F/C | C | C Dm7 | G F | Em Em7 | C Am7/G | C Dm7 | G F",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F3+C4:3 C4+F4:2 -:1 F4:6 | G3+C4:3 C4+E4:2 -:1 C4+E4:5 G2:1 | C2:7 -:1 F3+F4:4 | \
+                G2:7 -:1 F4:4 | E2:7 -:1 G2:4 | C3 C3:2 E4:5 C3:1 | _:3 C4:4 -:1 F3+F4:3 B3:1 | \
+                _:4 -:1 F3+A3:5 -:1 C3+E3+G3+B3 & F4:2 - F3 C4:4 A3:1 C3 | _:3 -:1 C2:7 -:1 | \
+                C4:3 C4+E4:2 -:1 C4+E4 - F2+A3+C4:3 -:1 | B3:6 -:2 F2+F3+A3+C4:3 C3:1 | \
+                B3:6 G3:1 - G3+D4:3 G3:1 | _:2 -:1 G3+C4+E4 -:2 C4:4 G3:1 G3 | \
+                _:2 -:1 G3:2 -:1 G3 - F2+A3+C4:2 -:1 D3 | G2+G4:6 F4 & -:8 F3:3 -:1 | \
+                E4:2 -:6 C3:2 G3:1 - | E4:2 - C3:3 -:5 | D3+G4:3 G4:4 -:5 | \
+                E3+G3+E4:3 E4:4 -:1 B3:2 - | C4+E4:3 - G3 - | E4:7 -:5 | \
+                D4:4 -:2 F2:5 -:1 & -:12 | - | G3:1 -:11 | G3:2 -:1 G3:3 -:6 | -:3 G3:2 -:7 | \
+                -:8 G2:3 -:1 | C4:3 -:1 C3:3 -:5 | -:1 G3:3 -:2 C4:4 -:2 & -:12 | - | - | \
+                -:4 D3:3 -:5 | -:4 E3:3 -:5 | -:12 | - | -",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "A4:7 -:5 | -:2 G3:1 C4 C4 E4 E4 G4 G4 C5 C5 E5 | E5:7 -:4 G2:1 | _:7 -:1 F4:4 | \
+                E2:7 -:1 D4:4 | C4:6 -:1 A4:2 C4:1 D4 Eb4 | E4:6 - | \
+                -:2 B3+C4:1 A3 B3:5 -:3 & -:12 | - | -:11 G3:1 | \
+                _:2 -:1 G4:3 B3:1 - F3+A3:3 G3:1 | _:2 E3+G3:1 E3:2 E4 -:1 G2+G3:3 -:1 | \
+                C3+G3:5 -:3 G4:1 -:3 | -:12 | - & -:12 | - | - | B3+G4:3 B3:2 G3:1 -:5 F2+C3:1 | \
+                E4:4 G3:1 - E3 - B3:2 - | E4:4 -:8 | -:12 | - & -:12 | - | - | -:4 D3:1 -:7 | \
+                -:12 | - | - | -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:12 | -:2 C3:1 E3 E3 G3 G3 C4 C4 E4 E4 G4 | G4:7 -:5 | -:12 | - | \
+                -:7 C4:1 B3 E3 F3 F#3 | G3:6 - | -:2 G4+A4:1 F#4 G4:5 -:3",
+            ),
+            line(
+                "Second steel guitar",
+                gm::STEEL_GUITAR,
+                "F5:9 -:3 | -:12 | - | - | - | - | - | -",
+            ),
+        ]),
+        // Bars 89-92 of the file.
+        Part::new(
+            "Part 12",
+            "-:2 E4:1 - E4 D4:3 -:1 D4 - C4 | _:10 -:2 | -:12 | -",
+            "Em7 G | C | C/G | C/G",
+        )
+        .with_lines(&[
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "E4:5 G2+G3+B3 -:1 C2 | _:12 | C3+G3+C4 | _ & -:6 D4:5 C3+G3:1 | _:11 G2:1 | _:12 | \
+                _ & -:12 | C4+E4 | -:1 E4:11 | _:12",
+            ),
+            line(
+                "Second guitar",
+                gm::NYLON_GUITAR,
+                "-:2 G3+A3:1 F3 G3:4 - | -:12 | - | -",
+            ),
+            line(
+                "Steel guitar",
+                gm::STEEL_GUITAR,
+                "-:2 E4+F4:1 D4 E4:4 - | -:11 C3+C4:1 | _:12 | _ & -:12 | - | G3+E4+C5 | _",
+            ),
+        ]),
+    ],
+    form: &["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8", "Part 9", "Part 10", "Part 11", "Part 12"],
+    drums_from: 0,
+    about: "\"Yo no canto por vos\": a zamba by the Uruguayan singer Alfredo Zitarrosa, \
+            sung also by Abel Pintos. A love went away without saying why; he no longer sings \
+            for her, the zamba sings to her for him. C major.",
+};
+
+// Written out from a band arrangement (MIDI, sequenced at a steady 98 to the quarter but saved
+// at another tempo, so that its beats fall off the file's own grid; the bars here follow the
+// beat). The tune on a bandoneón, with shakuhachi, charango, guitar, double bass, strings, a
+// choir, and the bombo legüero on the drums.
+pub(super) const BALDERRAMA: Song = Song {
+    name: "Balderrama",
+    origin: "Gustavo Leguizamón, words by Manuel J. Castilla",
+    feel: "Zamba",
+    genre: Genre::Folklore,
+    tonic: E,
+    mode: NaturalMinor,
+    time: SIX_EIGHT,
+    tempo: 98.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::TANGO_ACCORDION, gm::NYLON_GUITAR, gm::ACOUSTIC_BASS),
+    style: "Zamba",
+    parts: &[
+        // Bars 1-8.
+        Part::new(
+            "Part 1",
+            "-:12 | - | - | - | - | - | - | -",
+            "Em | Em | Em/G | Em/G | Em/G | Em/G | B B/D# | Em/G",
+        )
+        .with_lines(&[
+            line(
+                "Shakuhachi",
+                77,
+                "-:12 | - | - | -:8 E5:1 F#5 G5 A5 | A5 - A5+B5 - G5 - E6 - D6 - E6:2 | \
+                - B5:4 -:2 B5:1 B5 B5 B5 | B5 - A5 - G5 - A5 - G5 - B5:2 | \
+                - E5:4 -:2 E5:1 F#5 G5 A5",
+            ),
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 E1+E2:2 - E1+E2:4 | -:2 B1:4 -:2 B1:4 | - E1+E2:2 - E2:3 -:1 | \
+                -:2 B1:4 -:2 B1:3 -:1 | -:4 E1+E2:2 - E1+E2:4 | -:2 B1:4 -:2 B1:4 | \
+                B1:1 -:3 B1+B2:2 - B2:3 -:1 | -:2 B1:4 -:2 B1:3 -:1 & -:12 | - | -:8 E1:2 - | \
+                -:12 | - | - | -:8 B1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "-:4 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5 G4+E5+G5 G4+E5+G5:2 G4+E5+G5:1 - G4+G5:2 G4+E5 | \
+                G4+E5+G5:1 - G4+E5+G5 G4+E5+G5 G4+E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5:1 - | \
+                G4+E5+G5 - E5+G5 G4+E5+G5 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:2 -:1 G4+E5+G5 - G4+E5+G5:2 G4+E5+G5:1 - & -:4 G4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 E5:1 - G5 - | -:12 | -:4 G4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 B4:1 - D#5 - | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "-:4 G4:2 E4+G4:1 - E4+G4:2 E4 | E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                E4+G4 -:2 E4+G4:1 E4+G4:2 B3+E4+G4:1 - B3+E4+G4:2 G4 | \
+                B3+E4+G4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 | \
+                B3+G4:1 - G4 E4+G4 G4:2 E4+G4:1 - E4+G4:2 E4 | \
+                E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+E4+G4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 & -:4 E4+G4:1 -:5 G4:1 - | \
+                -:4 G4:1 -:3 G4:2 G4 | -:4 B3:1 -:5 B3+E4:1 - | -:4 G4:1 -:5 B3:1 - | \
+                -:4 E4+G4:1 -:5 G4:1 - | -:4 G4:1 -:3 G4:2 G4 | -:4 F#3:1 -:5 F#3+B3:1 - | \
+                -:4 G4:1 -:5 B3:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | - | B3 | _ | _ | _ | _ | _ & -:12 | - | E3 | _ | _ | _:11 -:1 | \
+                D#2+D#3+F#3:11 -:1 | G2+E3+G3:12 & -:12 | - | G2+G3 | _ | _ | _:10 -:2 | -:12 | \
+                - & -:12 | - | B2:1 -:11 | -:12 | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "-:4 X:1 - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:12 | - | - | - | x:1 -:3 x:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 x:1 -:3 x:1 -:3 | -:4 x:1 -:3 x:1 -:3"),
+        ]),
+        // Bars 9-16.
+        Part::new(
+            "Part 2",
+            "-:12 | - | - | -:8 G5:1 - F#5 - | E5:3 -:1 D5 - F#5:3 -:1 E5 - | D5:6 -:4 D4:1 - | \
+            D4:2 F#4 A4:1 - E5:2 D5 E5 | _:3 B4:6 -:3",
+            "Em Em7 | Em | B B/D# | Em/G | Em/G | D D/F# | D/F# | G G/B",
+        )
+        .with_lines(&[
+            line(
+                "Shakuhachi",
+                77,
+                "B5:1 - A5 - G5 - E6 - D6 - E6:2 | _:1 - B5:4 - B5:1 B5 | \
+                -:2 C6:1 - B5 - A5 - G5 - F#5 - | E5:6 - | -:12 | - | - | - & -:10 D6:1 - | -:12 | \
+                - | - | - | - | - | -",
+            ),
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 E1+E2:2 - E1+E2:4 | -:2 B1:4 -:2 B1:4 | B1:1 -:3 B1+B2:2 - B2:3 -:1 | \
+                -:2 B1:4 -:2 B1:3 -:1 | -:4 E1+E2:2 - E1+E2:4 | D2:1 - A1+A2:4 -:2 A1+A2:4 | \
+                - D2+D3:2 - D3:3 -:1 | -:2 G1+G2:4 -:2 D2:3 -:1 & -:12 | - | -:8 B1:2 - | -:12 | \
+                - | - | -:8 D2:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "G4+E5+G5:1 - E5+G5 G4+E5+G5 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                G4+E5+G5:1 - G4+E5+G5 G4+E5+G5 G4+E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5:1 - | \
+                G4+E5+G5 - E5+G5 G4+E5+G5 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                F#4+D5+F#5:1 - F#4+D5+F#5 F#5:3 F#4+D5+F#5:1 - F#4+D5+F#5:2 F#4+D5 | \
+                F#4+D5+F#5:1 - F#4+D5 F#4+D5+F#5 F#4+D5+F#5:2 F#4+D5+F#5:1 - F#4+F#5:2 F#4+D5 | \
+                F#4+B4+D5+F#5+G5+B5:1 - B4+G5+B5 B5:2 -:1 B4+G5+B5 - B4+G5+B5:2 B4+G5+B5:1 - & -:4 G4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 B4:1 - D#5 - | -:12 | -:4 G4:1 -:7 | \
+                -:3 F#4+D5:1 F#4+D5+F#5:2 -:4 D4+F#5:1 - | -:8 D5:1 - F#5 - | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "B3+G4:1 - G4 E4+G4 G4:2 E4+G4:1 - E4+G4:2 E4 | \
+                E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+E4+G4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 | \
+                B3+G4:1 - E4+G4 E4+G4 G4:2 E4+G4:1 - E4+G4:2 E4 | \
+                D4+F#4:1 - D4+F#4 D4+F#4 D4:2 D4+F#4:1 - D4:3 -:1 | \
+                D4+F#4 -:2 D4+F#4:1 D4+F#4:2 A3+D4+F#4:1 - A3+D4+F#4:2 F#4 | \
+                A3+D4+F#4+G4+B4:1 - D4+B4 D4+B4 D4:2 D4+B4:1 - D4+B4:2 B4 & -:4 E4+G4:1 -:5 G4:1 - | \
+                -:4 G4:1 -:3 G4:2 G4 | -:4 F#3+D#4:1 -:5 F#3+B3:1 - | -:4 G4:1 -:5 B3:1 - | \
+                -:4 E4+G4:1 -:5 G4:1 - | -:4 F#4:1 -:3 F#4:2 F#4 | -:4 A3:1 -:5 A3+D4:1 - | \
+                -:4 B4:1 -:5 D4:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | -:11 F#3:1 | _:11 -:1 | G2+E3+G3+B3:12 | _:10 -:2 | F#2+F#3+A3+D4:12 | \
+                _:11 -:1 | B2+G3+B3+D4:12 & -:12 | -:11 D#3:1 | _:10 -:2 | B2:1 -:11 | -:12 | \
+                D3:1 -:11 | -:12 | G2:1 -:11 & -:12 | -:11 F#2:1 | D#2:11 -:1 | -:12 | - | - | - | \
+                -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 x:1 -:3 x:1 -:3 | -:4 x:1 -:3 x:1 -:3 | -:4 X:1 -:3 x:1 -:3 | \
+             -:4 x:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 17-24.
+        Part::new(
+            "Part 3",
+            "B4:2 E5 D5 C5 B4 A4 | G4 F#4:4 -:2 F#4 E4 | D#4 B4 A4 G4:1 - F#4:4 | \
+            E4:6 -:2 G4:1 - G4 - | G4 - G4 - A4 - B4 - D5 - C#5 - | C#5 - B4:4 -:2 C#5 B4 | \
+            C#5 E5 B4:1 - B4 - B4:4 | G4:6 -:2 G5:1 - F#5 -",
+            "G | B/F# | B/F# | Em/G | G/D | G/D | B B/D# | Em",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 G1+G2:2 - G1+G2:3 B1+B2:1 | -:2 F#1+F#2:4 -:2 F#1+F#2:4 | \
+                - B1+B2:2 - B2:3 -:1 | -:2 B1:4 -:2 B1:3 -:1 | -:4 G1+G2:2 - G1+G2:4 | \
+                -:2 D2:4 -:2 D2:4 | F#1+B1+F#2:1 -:3 B1+B2:2 - B2:3 -:1 | \
+                -:2 B1:4 -:2 B1:3 -:1 & -:12 | - | -:8 B1:2 - | -:12 | - | - | -:8 B1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "B4+G5+B5:1 - G5+B5 B4+G5+B5 G5+B5:2 B4+G5+B5:1 - B4+G5+B5:2 B4 | \
+                D#4+B4+D#5:1 - D#4+B4+D#5 D#5:3 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:2 -:1 G4+E5+G5 - G4+E5+G5:2 G4+E5+G5:1 - | \
+                B4+G5+B5 - G5+B5 B4+G5+B5 G5+B5:2 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:3 B4+G5+B5:1 - B4+G5+B5:2 B4 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:2 -:1 G4+E5+G5 - G4+E5+G5:2 G4+E5+G5:1 - & -:4 B4:1 -:5 G5+B5:1 D#4+B4+D#5 | \
+                -:3 D#4+B4:1 D#4+B4+D#5:2 -:4 C#4+B4+D#5:1 - | -:8 B4:1 - D#5 - | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:6 | -:4 B4:1 -:7 | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:4 A4+G5+B5:1 - | -:8 B4:1 - D#5 - | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "D4+B4:1 - B4 G4+B4 B4:2 G4+B4:1 - G4+B4:2 G4+B4:1 B3+D#4 | \
+                B3+D#4 - B3+D#4 B3+D#4 B3:2 B3+D#4:1 - B3:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+E4+G4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 | \
+                D4+B4:1 - B4 G4+B4 B4:2 G4+B4:1 - G4+B4:2 G4 | \
+                G4+B4:1 - G4+B4 G4+B4 G4:2 G4+B4:1 - G4:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+E4+G4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 & -:4 G4+B4:1 -:7 | \
+                -:4 D#4:1 -:3 D#4:2 D#4 | -:4 F#3:1 -:5 F#3+B3:1 - | -:4 G4:1 -:5 B3:1 - | \
+                -:4 G4+B4:1 -:5 B4:1 - | -:4 B4:1 -:3 B4:2 B4 | -:4 F#3:1 -:5 F#3+B3:1 - | \
+                -:4 G4:1 -:5 B3:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | F#2+F#3+B3+D#4 | _:10 -:2 | G2+G3+B3:11 -:1 | D3+G3+B3+D4:12 | _:9 -:3 | \
+                B3:12 | E2+E3+G3+B3 & -:12 | - | - | E3:10 -:2 | -:12 | - | D#3+F#3:11 -:1 | \
+                B2 -:11 & -:12 | - | - | - | - | - | B2:4 D#3:8 | -:12 & -:12 | - | - | - | - | \
+                - | -:4 D#4:7 -:1 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 x:1 -:3 X:1 -:3 | -:4 x:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 x:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 25-32.
+        Part::new(
+            "Part 4",
+            "E5:3 -:1 D5 - F#5:3 -:1 E5 - | D5:8 -:4 | D4:2 F#4 A4:1 - D5 - E5 - E5:2 | \
+            _:1 B4:7 -:4 | B4:2 E5 D5 C5 B4 A4 | G4 F#4:4 -:2 F#4 E4 | D#4 B4 A4 G4:1 - F#4:4 | \
+            E4:6 -:4 G4:1 -",
+            "Em | D | D | G | G | B B/F# | B/F# B | Em/G",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 E1+E2:2 - E1+E2:4 | F#1:1 - D2:4 -:2 A1+A2:4 | - D2+D3:2 - D3:3 -:1 | \
+                -:2 D2:4 -:2 D2:3 -:1 | -:4 G1+G2:2 - G1+G2:4 | B1:1 - F#1+F#2:4 -:2 F#1+F#2:4 | \
+                - B1+B2:2 - B2:3 -:1 | -:2 B1:4 -:2 B1:3 -:1 & -:12 | - | -:8 D2:2 - | -:12 | - | \
+                - | -:8 B1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "G4+E5+G5:1 - E5+G5 G4+E5+G5 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                F#4+A#4+D5+F#5+A#5:1 - F#4+D5+F#5 F#5:3 F#4+D5+F#5:1 - F#4+D5+F#5:2 F#4 | \
+                F#4+D5+F#5:1 - F#4 F#4+D5+F#5 F#4+D5+F#5:2 F#4+D5+F#5:1 - F#4+F#5:2 F#4+D5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:2 -:1 B4+G5+B5 - B4+G5+B5:2 B4+G5+B5:1 - | \
+                B4+G5+B5 - G5+B5 B4+G5+B5 G5+B5:2 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                D#4+B4+D#5:1 - D#4+B4+D#5 D#5:3 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:2 -:1 G4+E5+G5 - G4+E5+G5:2 G4+E5+G5:1 - & -:4 G4:1 -:7 | \
+                -:3 F#4+D5:1 F#4+D5+F#5:2 -:4 D4+D5+F#5:1 - | -:8 D5:1 - F#5 - | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:6 | -:4 B4:1 -:7 | \
+                -:3 D#4+B4:1 D#4+B4+D#5:2 -:4 C#4+B4+D#5:1 - | -:8 B4:1 - D#5 - | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "B3+G4:1 - E4+G4 E4+G4 G4:2 E4+G4:1 - E4+G4:2 E4 | \
+                D4+F#4+G4+A#4:1 - D4+F#4 D4+F#4 D4:2 D4+F#4:1 - D4:3 -:1 | \
+                D4+F#4 -:2 D4+F#4:1 D4+F#4:2 A3+D4+F#4:1 - A3+D4+F#4:2 A3+F#4 | \
+                A3+D4+F#4+G4+B4:1 - D4+B4 D4+B4 D4:2 D4+B4:1 - D4+B4:2 B4 | \
+                D4+B4:1 - G4+B4 G4+B4 B4:2 G4+B4:1 - G4+B4:2 G4 | \
+                B3+D#4:1 - B3+D#4 B3+D#4 B3:2 B3+D#4:1 - B3:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+D#4+E4+G4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 & -:4 E4+G4:1 -:5 G4:1 - | \
+                -:4 F#4:1 -:3 F#4:2 F#4 | -:4 A3:1 -:5 D4:1 - | -:4 B4:1 -:5 D4:1 - | \
+                -:4 G4+B4:1 -:5 B4:1 - | -:4 D#4:1 -:3 D#4:2 D#4 | -:4 F#3:1 -:5 F#3+B3:1 - | \
+                -:4 G4:1 -:5 B3:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "E3:11 D4:1 | _:12 | _:10 -:1 B3 | _:12 | _:10 -:2 | F#3+D#4:12 | _:11 -:1 | \
+                G2+E3+G3+B3:11 -:1 & E4:10 -:1 A3 | _:12 | _:9 -:2 G2+G3+D4:1 | _:12 | _:9 -:3 | \
+                B3:12 | _:10 -:2 | -:12 & -:12 | D2+D3+F#3 | _:10 -:1 B2+D3 | -:12 | - | \
+                F#2:9 F#4:3 | _:10 -:2 | -:12 & -:12 | - | - | - | - | B2+D#3:1 -:11 | -:12 | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 33-40.
+        Part::new(
+            "Part 5",
+            "G4:1 - G4:2 A4 B4 D5 C#5:1 - | C#5:2 B4:5 -:1 C#5:2 B4 | C#5 E5 B4:1 - B4:2 G5:4 | \
+            E5:6 -:4 E5:1 - | G5:5 E5:3 -:2 E5:1 - | A5:5 -:1 E5:6 | \
+            -:2 D5:1 - D5 - E5 - D5 - E5:2 | _ B4:8 -:2",
+            "G | G | B | Em Em/G | C/G | Am | D | G",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 G1+G2:2 - G1+G2:4 | -:2 D2:4 -:2 D2:4 | B1:1 -:3 B1+B2:2 - B2:3 -:1 | \
+                -:2 E1+E2:4 -:2 B1:3 -:1 | -:4 C2+C3:2 - C2+C3:4 | -:2 A1:4 -:2 E1+E2:4 | \
+                D2:1 -:3 D2+D3:2 - D3:3 -:1 | -:2 D2:4 -:2 D2:3 -:1 & -:12 | - | -:8 B1:2 - | \
+                -:12 | - | - | -:8 D2:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "B4+G5+B5:1 - G5+B5 B4+G5+B5 G5+B5:2 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:3 B4+G5+B5:1 - B4+G5+B5:2 B4+G5 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                D#4+B4+D#5:1 - G4+E5+G5 G5:2 -:1 G4+E5+G5 - G4+E5+G5:2 G4+E5+G5:1 - | \
+                E4+C5+E5 - C5+E5 E4+C5+E5 C5+E5:2 E4+C5+E5:1 - E4+C5+E5:2 E4+C5+E5 | \
+                E4+C5+E5:1 - C4+A4+C5 C5:3 C4+A4+C5:1 - C4+A4+C5:2 C4+A4+C5 | \
+                F#4+D5+F#5:1 - F#4+D5 F#4+D5+F#5 F#4+D5+F#5:2 F#4+D5+F#5:1 - F#4+F#5:2 F#4+D5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:2 -:1 B4+G5+B5 - B4+G5+B5:2 B4+G5+B5:1 - & -:4 B4:1 -:7 | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:4 A4+B5:1 - | -:8 B4:1 - D#5 - | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:6 | -:4 E4:1 -:7 | -:3 C4+A4:1 C4+A4+C5:2 -:4 B3:1 - | \
+                -:8 D5:1 - F#5 - | -:3 B4+G5:1 B4+G5+B5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "D4+B4:1 - B4 G4+B4 B4:2 G4+B4:1 - G4+B4:2 G4 | \
+                G4+B4:1 - G4+B4 G4+B4 G4:2 G4+B4:1 - G4:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+D#4+E4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 | \
+                G3+B3+E4:1 - E4 C4+E4 E4:2 C4+E4:1 - C4+E4:2 C4 | \
+                C4+E4:1 - A3+C4 A3+C4 A3:2 A3+C4:1 - A3:3 -:1 | \
+                D4+F#4 -:2 D4+F#4:1 D4+F#4:2 A3+D4+F#4:1 - A3+D4+F#4:2 A3+F#4 | \
+                D4+G4+B4:1 - D4+B4 D4+B4 D4:2 D4+B4:1 - D4+B4:2 B4 & -:4 G4+B4:1 -:5 B4:1 - | \
+                -:4 B4:1 -:3 B4:2 B4 | -:4 F#3:1 -:5 F#3+B3:1 - | -:4 G4:1 -:5 B3:1 - | \
+                -:4 C4+E4:1 -:5 E4:1 - | -:4 C4:1 -:3 C4:2 C4 | -:4 A3:1 -:5 D4:1 - | \
+                -:4 B4:1 -:5 D4:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "G2+G3+B3:12 | _:11 -:1 | F#3+B3+D#4:11 -:1 | G2+E3+G3+B3:10 -:1 C4+E4 | _:11 -:1 | \
+                A2+A3+C4+E4:11 -:1 | D4:12 | G2+G3+B3+D4 & D4:12 | _:10 -:2 | B2:4 F#3+F#4:7 -:1 | \
+                E2 -:10 G2+G3:1 | _:10 -:2 | -:12 | D3+F#3:11 -:1 | B2+D3 -:11 & -:12 | - | - | \
+                - | - | - | B3:6 - | -:12 & -:12 | - | - | - | - | - | \
+                D2+F#2+A2+C3+A3+C4:1 - A3:8 -:2 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 41-48.
+        Part::new(
+            "Part 6",
+            "B4:1 - E5 - D5 - C5 - B4 - A4 - | G4 - F#4:4 -:2 F#4 E4 | \
+            D#4:1 - B4:2 A4 G4:1 - F#4:4 | E4:6 -:3 G4:1 - G4 | G4 - G4:2 A4 B4 D5:3 C#5:1 | \
+            C#5:2 B4:4 -:2 C#5 B4 | C#5 F5:1 - C5 - B4:2 G5:4 | E5:6 -",
+            "G | B B/F# | B/F# B | Em Em/B | G/D | G/D | B | Em/G",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 G1+G2:2 - G1+G2:4 | B1+B2:1 - F#1+F#2:4 -:2 F#1+F#2:4 | - B1+B2:2 - B2:3 -:1 | \
+                -:2 B1:4 -:2 B1:3 -:1 | -:4 G1+G2:2 - G1+G2:4 | -:2 D2:4 -:2 D2:4 | \
+                B1:1 -:3 B1+B2:2 - B2:3 -:1 | -:2 B1 -:8 & -:12 | - | -:8 B1:2 - | -:12 | - | - | \
+                -:8 B1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "B4+G5+B5:1 - B5 B4+G5+B5 G5+B5:2 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5:1 - | \
+                D#4+B4+D#5 - D#4+B4+D#5 D#5:3 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                G4+E5+G5:1 - G4+E5+G5 G4+E5+G5 G4+E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5:1 - | \
+                B4+G5+B5 - G5+B5 B4+G5+B5 G5+B5:2 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:3 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                G4+E5+G5:1 - G4+E5+G5 G4+E5+G5 G4+E5+G5 -:7 & -:4 B4:1 -:7 | \
+                -:3 D#4+B4:1 D#4+B4+D#5:2 -:4 C#4+D#5:1 - | -:8 B4:1 - D#5 - | -:12 | \
+                -:4 B4:1 -:7 | -:3 B4+G5:1 B4+G5+B5:2 -:4 A4:1 - | -:8 B4:1 - D#5 - | -:12",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "D4+B4:1 - B4 G4+B4 B4:2 G4+B4:1 - G4+B4:2 G4 | \
+                B3+D#4:1 - B3+D#4 B3+D#4 B3:2 B3+D#4:1 - B3:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+E4+G4:1 - B3+G4 B3+G4 B3:2 B3+G4:1 - B3+G4:2 G4 | \
+                D4+B4:1 - B4 G4+B4 B4:2 G4+B4:1 - G4+B4:2 G4 | \
+                G4+B4:1 - G4+B4 G4+B4 G4:2 G4+B4:1 - G4:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+E4+G4:1 - B3+G4 B3+G4 B3+G4 -:7 & -:4 G4+B4:1 -:5 B4:1 - | \
+                -:4 D#4:1 -:3 D#4:2 D#4 | -:4 F#3:1 -:5 F#3+B3:1 - | -:4 G4:1 -:5 B3:1 - | \
+                -:4 G4+B4:1 -:5 B4:1 - | -:4 B4:1 -:3 B4:2 B4 | -:4 F#3:1 -:5 F#3+B3:1 - | -:12",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | B3+D#4 | _:10 -:2 | B2+G3+B3:11 -:1 | D3+B3+D4:12 | _:11 -:1 | \
+                F#3+B3+D#4+F#4:10 -:2 | G2+E3+G3+B3:6 - & -:12 | F#3:9 C#4:3 | _:9 -:3 | \
+                E3:10 -:2 | G3:12 | _:10 -:2 | -:12 | - & -:12 | F#2:3 F#3+F#4:9 | _:10 -:2 | \
+                G2:1 -:11 | -:12 | - | - | - & -:12 | B2+D#3:1 -:11 | -:12 | - | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:7"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X -:7"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 x:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 49-56.
+        Part::new(
+            "Part 7",
+            "-:12 | - | - | - | - | - | - | -",
+            "Em | Em/G | B | B/D# | Em | Em/G | B | B",
+        )
+        .with_lines(&[
+            line(
+                "Shakuhachi",
+                77,
+                "-:12 | E5:1 - F#5 - G5 - B5 - A5 - B5:2 | _:1 - E6 - D6 - B5:4 -:2 | \
+                B5:1 - B5 - A5 - B5 - A5 - B5:2 | _:1 - E5:4 -:2 E5:1 F#5 G5 A5 | \
+                B5 - E6 - D6 - E6 - D6 - B5:2 | - B5:1 B5 B5 - B5 -:3 B5:1 B5 | \
+                B5 - C6 - B5 - A5 - G5 - F#5 -",
+            ),
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 E1+E2:2 - E1+E2:4 | -:2 B1:4 -:2 B1:4 | B1:1 -:3 B1+B2:2 - B2:3 -:1 | \
+                -:2 F#1+F#2:4 -:2 F#1+F#2:3 -:1 | -:4 E1+E2:2 - E1+E2:4 | -:2 B1:4 -:2 B1:4 | \
+                - B1+B2:2 - B2:3 -:1 | -:2 F#1+F#2:4 -:2 F#1+F#2:3 -:1 & -:12 | - | -:8 B1:2 - | \
+                -:12 | - | - | -:8 B1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "-:2 B4+E5+G5:1 B4+E5+G5 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                D#4+B4+D#5:1 - D#4+B4+D#5 D#5:2 -:1 D#4+B4+D#5 - D#4+B4+D#5:2 D#4+B4+D#5:1 - | \
+                G4+E5+G5 - E5+G5 G4+E5+G5 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                D#4+B4+D#5:1 - D#4+B4 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+D#5:2 D#4+B4 | \
+                D#4+B4+D#5:1 - D#4+B4+D#5 D#4+B4+D#5 D#4+B4+D#5:2 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4+D#5:1 - & -:4 G4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 B4:1 - D#5 - | \
+                -:3 D#4+B4:1 D#4+B4+D#5:2 -:6 | -:4 G4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 B4:1 - D#5 - | -:12",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "-:2 G4:1 G4 G4:2 E4+G4:1 - E4+G4:2 E4 | \
+                E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+D#4:1 - F#3+D#4 F#3+D#4 F#3:2 F#3+D#4:1 - F#3+D#4:2 D#4 | \
+                B3+G4:1 - E4+G4 E4+G4 G4:2 E4+G4:1 - E4+G4:2 E4 | \
+                E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                B3+D#4 -:2 B3+D#4:1 B3+D#4:2 F#3+B3+D#4:1 - F#3+B3+D#4:2 D#4 | \
+                F#3+B3+D#4:1 - F#3+D#4 F#3+D#4 F#3:2 F#3+D#4:1 - F#3+D#4:2 D#4 & -:4 E4+G4:1 -:5 G4:1 - | \
+                -:4 G4:1 -:3 G4:2 G4 | -:4 F#3:1 -:5 F#3+B3:1 - | -:4 D#4:1 -:5 F#3:1 - | \
+                -:4 E4+G4:1 -:5 G4:1 - | -:4 G4:1 -:3 G4:2 G4:1 - | -:4 F#3:1 -:5 F#3+B3:1 - | \
+                -:4 D#4:1 -:5 F#3:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | B3 | _ | _:11 -:1 | E2+E3+G3+B3:10 -:2 | B3:12 | _ | _:11 -:1 & -:12 | G3 | \
+                _:8 -:2 D#3+F#3 | _:11 -:1 | -:12 | G2+G3+E4 | _:2 D#4:10 | _ -:2 & -:12 | E3 | \
+                _:5 - D#2:2 | _:4 D#3+D#4:7 -:1 | -:12 | - | -:2 D#3:1 F#3:9 | _:10 -:2 & -:12 | \
+                G2:10 E3:2 | _:8 -:4 | -:12 | - | - | -:3 F#2:4 -:5 | -:12 & -:12 | -:10 E4:2 | \
+                _:5 -:7 | -:12 | - | - | -:6 F#3+F#4 | _:10 -:2",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "-:4 X:1 - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 57-64.
+        Part::new(
+            "Part 8",
+            "-:12 | -:8 G5:1 - F#5 - | E5:3 -:1 D5 - F#5:4 E5:2 | E5 D5:7 -:2 E4:1 | \
+            -:2 F#4 A4:1 - D5 - E5 - E5:2 | _:1 C5:2 B4:6 -:2 B4:1 | _ E5:3 D5:2 C5 B4 A4 | \
+            A4:1 - F#4:4 -:2 F#4 E4",
+            "Em/G | Em Em/B | Em | D | D | G | G | B",
+        )
+        .with_lines(&[
+            line(
+                "Shakuhachi",
+                77,
+                "E5:6 - | -:12 | - | - | - | - | - | -",
+            ),
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 E1+E2:2 - E1+E2:4 | -:2 B1:4 -:2 B1:4 | - E1+E2:2 - E2:3 -:1 | \
+                -:2 A1+A2:4 -:2 A1+A2:3 -:1 | -:4 D2+D3:2 - D2+D3:4 | -:2 D2:4 -:2 D2:4 | \
+                - G1+G2:2 - G2:3 -:1 | -:2 F#1+F#2:4 -:2 F#1+F#2:3 -:1 & -:12 | - | -:8 E1:2 - | \
+                -:12 | - | - | -:8 G1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "G4+E5+G5:1 - E5+G5 G4+E5+G5 E5+G5:2 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5 G4+E5+G5 G4+E5+G5:2 G4+E5+G5:1 - G4+G5:2 G4+E5 | \
+                F#4+D5+F#5:1 - F#4+D5+F#5 F#5:2 -:1 F#4+D5+F#5 - F#4+D5+F#5:2 F#4+D5+F#5:1 - | \
+                F#4+D5+F#5 - F#5 F#4+D5+F#5 D5+F#5:2 F#4+D5+F#5:1 - F#4+D5+F#5:2 F#4+D5+F#5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:3 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                B4+G5+B5:1 - B4+G5 B4+G5+B5 B4+G5+B5:2 B4+G5+B5:1 - B4+B5:2 B4+G5 | \
+                D#4+B4+D#5:1 - D#4+B4+D#5 D#5:2 -:1 D#4+B4+D#5 - D#4+B4+D#5:2 D#4+B4+D#5:1 - & -:4 G4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 E5:1 - G5 - | \
+                -:3 F#4+D5:1 F#4+D5+F#5:2 -:6 | -:4 F#4:1 -:7 | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:4 A4:1 - | -:8 G5:1 - B5 - | \
+                -:3 D#4+B4:1 D#4+B4+D#5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "B3+G4:1 - E4 E4+G4 G4:2 E4+G4:1 - E4+G4:2 E4 | \
+                E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                E4+G4 -:2 E4+G4:1 E4+G4:2 B3+E4+G4:1 - B3+E4+G4:2 G4 | \
+                A3+B3+C4+D4+F#4+G4+A#4:1 - A3+F#4 A3+F#4 A3:2 A3+F#4:1 - A3+F#4:2 F#4 | \
+                A3+F#4:1 - D4+F#4 D4+F#4 F#4:2 D4+F#4:1 - D4+F#4:2 D4 | \
+                G4+B4:1 - G4+B4 G4+B4 G4:2 G4+B4:1 - G4:3 -:1 | \
+                G4+B4 -:2 G4+B4:1 G4+B4:2 D4+G4+B4:1 - D4+G4+B4:2 B4 | \
+                F#3+B3+D#4:1 - F#3+D#4 F#3+D#4 F#3:2 F#3+D#4:1 - F#3+D#4:2 D#4 & -:4 E4+G4:1 -:5 G4:1 - | \
+                -:4 G4:1 -:3 G4:2 G4 | -:4 B3:1 -:5 B3+E4:1 - | -:4 F#4:1 -:5 A3:1 - | \
+                -:4 D4+F#4:1 -:5 F#4:1 - | -:4 B4:1 -:3 B4:2 B4 | -:4 D4:1 -:5 D4+G4:1 - | \
+                -:4 D#4:1 -:5 F#3:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "B3+E4:12 | _:1 - G3+B3:10 | _ -:1 D4 | _:10 -:1 F#3+A3 | _:10 -:1 B3+D4 | _:12 | \
+                _:10 -:1 F#3+B3+D#4+F#4 | _:12 & G2+G3:11 -:1 | E3:12 | _:10 -:2 | \
+                D3+F#3+A3:11 D3:1 | _:9 -:2 G2+G3:1 | _:12 | _:9 -:2 D#3:1 | -:12 & E3:1 -:11 | \
+                E2:2 B2:9 E3+E4:1 | _:10 -:2 | D2+B2+B3:1 -:11 | D3+D4 D3:1 | -:12 | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 65-72.
+        Part::new(
+            "Part 9",
+            "D#4:1 - B4:2 A4 G4:1 - F#4:4 | E4:5 -:3 G4:1 - G4 G4 | -:2 G4 A4 B4 D5 C#5:1 - | \
+            C#5:2 B4:4 -:2 C#5 B4 | C#5 E5 B4:1 - B4 - B4:4 | G4:6 -:2 G5 F#5 | \
+            E5:4 D5:1 - F#5:4 E5:2 | D5:6 -:4 D4:1 -",
+            "B | Em | G | G | B B/F# | Em/G | Em | D/A D",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 B1+B2:2 - B1+B2:4 | E1+E2:1 - B1:4 -:2 B1:4 | G1+G2:1 -:3 G1+G2:2 - G2:3 -:1 | \
+                -:2 D2:4 -:2 D2:3 -:1 | -:4 B1+B2:2 - B1+B2:4 | -:2 E1+E2:4 -:2 B1:4 | \
+                - E1+E2:2 - E2:3 -:1 | -:2 A1+A2:4 -:2 A1+A2:3 -:1 & -:12 | - | -:8 G1:2 - | \
+                -:12 | - | - | -:8 E1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "D#4+B4+D#5:1 - B4+D#5 D#4+B4+D#5 B4+D#5:2 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4+D#5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                B4+G5+B5:1 - B4+G5 B4+G5+B5 B4+G5+B5:2 B4+G5+B5:1 - B4+B5:2 B4+G5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:2 -:1 B4+G5+B5 - B4+G5+B5:2 B4+G5+B5:1 - | \
+                D#4+B4+D#5 - B4+D#5 D#4+B4+D#5 B4+D#5:2 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4+D#5 | \
+                D#4+B4+D#5+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                G4+E5+G5:1 - G4+E5 G4+E5+G5 G4+E5+G5:2 G4+E5+G5:1 - G4+G5:2 G4+E5 | \
+                F#4+D5+F#5:1 - F#4+D5+F#5 F#5:2 -:1 F#4+D5+F#5 - F#4+D5+F#5:2 F#4+D5+F#5:1 - & -:4 D#4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 G5:1 - B5 - | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:6 | -:4 D#4:1 -:7 | -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | \
+                -:8 E5:1 - G5 - | -:3 F#4+D5:1 F#4+D5+F#5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F#3+D#4:1 - D#4 B3+D#4 D#4:2 B3+D#4:1 - B3+D#4:2 B3 | \
+                E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                G4+B4 -:2 G4+B4:1 G4+B4:2 D4+G4+B4:1 - D4+G4+B4:2 B4 | \
+                D4+G4+B4:1 - D4+B4 D4+B4 D4:2 D4+B4:1 - D4+B4:2 B4 | \
+                F#3+D#4:1 - D#4 B3+D#4 D#4:2 B3+D#4:1 - B3+D#4:2 B3 | \
+                B3+D#4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                E4+G4 -:2 E4+G4:1 E4+G4:2 B3+E4+G4:1 - B3+E4+G4:2 G4 | \
+                A3+B3+C#4+D4+F#4+A#4:1 - A3+F#4 A3+F#4 A3:2 A3+F#4:1 - A3+F#4:2 F#4 & -:4 B3+D#4:1 -:5 D#4:1 - | \
+                -:4 G4:1 -:3 G4:2 G4 | -:4 D4:1 -:5 D4+G4:1 - | -:4 B4:1 -:5 D4:1 - | \
+                -:4 B3+D#4:1 -:5 D#4:1 - | -:4 G4:1 -:3 G4:2 G4 | -:4 B3:1 -:5 B3+E4:1 - | \
+                -:4 F#4:1 -:5 A3:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | E2+E3+G3+B3:10 -:2 | G2+G3+B3+D4:12 | _:10 -:2 | B3:10 -:2 | G3:12 | \
+                _:10 -:2 | F#3+A3+D4:12 & -:12 | B2:1 -:11 | -:12 | - | F#3+D#4+F#4:9 -:3 | \
+                E3+B3:12 | _:9 -:3 | A2:4 D2+D3:8 & -:12 | - | - | - | - | G2 | E3+E4:10 -:2 | \
+                -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 73-80.
+        Part::new(
+            "Part 10",
+            "D4:2 F#4 A4:1 - D5 - E5 - E5:2 | _:1 B4:7 -:2 B4:1 B4 | \
+            B4 - E5 - D5 - C5 - B4 - A4 - | G4 - F#4:4 -:2 F#4 E4 | D#4:1 - B4:2 A4 G4:1 - F#4:4 | \
+            E4:6 -:4 G4:1 - | G4 - G4 A4:2 B4 -:1 D5:2 C#5:1 - | C#5 - B4:5 -:1 C#5:2 B4",
+            "D | Em7 Em7/B | Em Em7 | B7 | B | Em | G | G",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 D2+D3:2 - D2+D3:4 | G1+G2:1 - D2:4 -:2 D2:4 | - G1+G2:2 - G2:3 -:1 | \
+                -:2 B1:4 -:2 F#1+F#2:3 -:1 | -:4 B1+B2:2 - B1+B2:4 | E1:1 - B1:4 -:2 B1:4 | \
+                G1+G2:1 -:3 G1+G2:2 - G2:3 -:1 | -:2 D2:4 -:2 D2:3 -:1 & -:12 | - | -:8 G1:2 - | \
+                -:12 | - | - | -:8 G1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "F#4+D5+F#5:1 - D5+F#5 F#4+D5+F#5 D5+F#5:2 F#4+D5+F#5:1 - F#4+D5+F#5:2 F#4+D5+F#5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:3 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                B4+G5+B5:1 - B4+G5 B4+G5+B5 B4+G5+B5:2 B4+G5+B5:1 - B4+B5:2 B4+G5 | \
+                D#4+A4+B4+D#5+F#5+A5:1 - D#4+B4+D#5 D#5:2 -:1 D#4+B4+D#5 - D#4+B4+D#5:2 D#4+B4+D#5:1 - | \
+                D#4+B4+D#5 - B4+D#5 D#4+B4+D#5 B4+D#5:2 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4+D#5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                B4+G5+B5:1 - B4+G5 B4+G5+B5 B4+G5+B5:2 B4+G5+B5:1 - B4+B5:2 B4+G5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:2 -:1 B4+G5+B5 - B4+G5+B5:2 B4+G5+B5:1 - & -:4 F#4:1 -:7 | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:4 A4:1 - | -:8 G5:1 - B5 - | \
+                -:3 D#4+B4:1 D#4+B4+D#5:2 -:6 | -:4 D#4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 G5:1 - B5 - | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "A3+F#4:1 - F#4 D4+F#4 F#4:2 D4+F#4:1 - D4+F#4:2 D4 | \
+                G4+B4:1 - G4+B4 G4+B4 G4:2 G4+B4:1 - G4:3 -:1 | \
+                G4+B4 -:2 G4+B4:1 G4+B4:2 D4+G4+B4:1 - D4+G4+B4:2 B4 | \
+                F#3+B3+C#4+D4+D#4+F#4+A4:1 - F#3+D#4 F#3+D#4 F#3:2 F#3+D#4:1 - F#3+D#4:2 D#4 | \
+                F#3+D#4:1 - D#4 B3+D#4 D#4:2 B3+D#4:1 - B3+D#4:2 B3 | \
+                D#4+E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                G4+B4 -:2 G4+B4:1 G4+B4:2 D4+G4+B4:1 - D4+G4+B4:2 B4 | \
+                D4+G4+B4:1 - D4+B4 D4+B4 D4:2 D4+B4:1 - D4+B4:2 B4 & -:4 D4+F#4:1 -:5 F#4:1 - | \
+                -:4 B4:1 -:3 B4:2 B4 | -:4 D4+B4:1 -:5 D4+G4:1 - | -:4 D#4:1 -:5 F#3:1 - | \
+                -:4 B3+D#4:1 -:5 D#4:1 - | -:4 G4:1 -:3 G4:2 G4 | -:4 D4:1 -:5 D4+G4:1 - | \
+                -:4 B4:1 -:5 D4:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | -:1 G3+B3:11 | _:9 -:2 F#4:1 | _:12 | _:9 -:3 | E3+B3:9 -:2 B3+D4:1 | \
+                _:12 | _:9 -:3 & -:12 | -:1 E3:11 | _:8 -:4 | D#4:12 | _:10 -:2 | \
+                G2+G3:7 -:1 F#2+F#3 -:2 G2+G3:1 | _:12 | _:8 -:4 & -:12 | -:1 B2:11 | \
+                _:2 E3+E4:7 -:3 | B2+B3:7 B3:5 | _:10 -:2 | B2:1 -:11 | -:12 | - & -:12 | - | - | \
+                -:7 A4+B4:4 -:1 | -:12 | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 81-88.
+        Part::new(
+            "Part 11",
+            "C#5:2 E5 B4:1 - B4 - G5:4 | E5:6 -:4 E5:1 - | G5:6 E5:3 -:1 E5 - | A5:5 -:1 E5:6 | \
+            -:2 D5:1 - D5 - E5 - D5 - E5:2 | _:1 - B4:7 -:3 | B4:2 E5 D5 C5 B4 A4:1 - | \
+            G4 - F#4:5 -:1 F#4:2 E4",
+            "B | Em Em/G | C C/E | Am/C | D D/F# | G | G | B",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 B1+B2:2 - B1+B2:4 | -:2 E1+E2:4 -:2 B1:4 | C2+C3:1 -:3 C2+C3:2 - C3:3 -:1 | \
+                -:2 E1+E2:4 -:2 E1+E2:3 -:1 | -:4 D2+D3:2 - D2+D3:4 | G1+G2:1 - D2:4 -:2 D2:4 | \
+                - G1+G2:2 - G2:3 -:1 | -:2 F#1+F#2:4 -:2 F#1+F#2:3 -:1 & -:12 | - | -:8 C2:2 - | \
+                -:12 | - | - | -:8 G1:2 - | -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "D#4+B4+D#5:1 - B4+D#5 D#4+B4+D#5 B4+D#5:2 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4+D#5 | \
+                D#4+G4+B4+D#5+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                E4+C5+E5:1 - E4+C5 E4+C5+E5 C5:3 -:1 E4+E5:2 E4+C5 | \
+                C4+A4+C5:1 - C4+A4+C5 C4+A4+C5 C4+A4+C5:2 C4+A4+C5:1 - C4+A4+C5:2 C4+A4+C5:1 - | \
+                F#4+D5+F#5 - D5+F#5 F#4+D5+F#5 D5+F#5:2 F#4+D5+F#5:1 - F#4+D5+F#5:2 F#4+D5+F#5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:3 B4+G5+B5:1 - B4+G5+B5:2 B4+G5+B5 | \
+                B4+G5+B5:1 - B4+G5 B4+G5+B5 B4+G5+B5:2 B4+G5+B5:1 - B4+B5:2 B4+G5 | \
+                D#4+B4+D#5:1 - D#4+B4+D#5 D#5:2 -:1 D#4+B4+D#5 - D#4+B4+D#5:2 D#4+B4+D#5:1 - & -:4 D#4:1 -:7 | \
+                -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:4 E4+C5+E5:2 E4+C5+E5:1 - C5 - E5 - | \
+                -:12 | -:4 F#4:1 -:7 | -:3 B4+G5:1 B4+G5+B5:2 -:4 A4:1 - | -:8 G5:1 - B5 - | \
+                -:3 D#4+B4:1 D#4+B4+D#5:2 -:6",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F#3+D#4:1 - D#4 B3+D#4 D#4:2 B3+D#4:1 - B3+D#4:2 B3 | \
+                D#4+E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                C4+E4 -:2 C4+E4:1 C4+E4:2 G3+C4+E4:1 - G3+C4+E4:2 E4 | \
+                G3+A3+C4:1 - E3+C4 E3+C4 E3:2 E3+C4:1 - E3+C4:2 C4 | \
+                A3+F#4:1 - F#4 D4+F#4 F#4:2 D4+F#4:1 - D4+F#4:2 D4 | \
+                G4+B4:1 - G4+B4 G4+B4 G4:2 G4+B4:1 - G4:3 -:1 | \
+                G4+B4 -:2 G4+B4:1 G4+B4:2 D4+G4+B4:1 - D4+G4+B4:2 B4 | \
+                F#3+B3+D#4:1 - F#3+D#4 F#3+D#4 F#3:2 F#3+D#4:1 - F#3+D#4:2 D#4 & -:4 B3+D#4:1 -:5 D#4:1 - | \
+                -:4 G4:1 -:3 G4:2 G4 | -:4 G3:1 -:5 G3+C4:1 - | -:4 C4:1 -:5 E3:1 - | \
+                -:4 D4+F#4:1 -:5 F#4:1 - | -:4 B4:1 -:3 B4:2 B4 | -:4 D4:1 -:5 D4+G4:1 - | \
+                -:4 D#4:1 -:5 F#3:1 -",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "B2+B3+D#4+F#4:10 -:2 | G2+E3+G3+B3:11 -:1 | E2+E3+G3:11 -:1 | C3+A3+C4+E4:11 -:1 | \
+                D4:12 | _:11 G2+G3+B3+D4:1 | _:10 -:2 | -:1 D#4:11 & -:12 | E2:1 -:11 | \
+                C3:10 -:2 | -:12 | F#3+A3:11 -:1 | G2+G3+B3:11 -:1 | -:12 | \
+                -:2 F#3+B3+F#4:10 & -:12 | - | - | - | F#2+A#2+A#3:1 -:11 | -:12 | - | \
+                -:2 B2+C3+C4:1 -:9",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x - x - X - | \
+             x - x - X - x - x - X - | x - x - X - x - x - x -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 x:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3"),
+        ]),
+        // Bars 89-96.
+        Part::new(
+            "Part 12",
+            "D#4:1 - B4:2 A4 G4:1 - F#4:4 | E4:6 -:4 G4:1 G4 | G4 - G4 A4:3 B4:2 D5 C#5:1 - | \
+            C#5:2 B4:5 -:1 C#5:2 B4 | C#5 E5 B4:1 - B4 - G5:3 -:1 | E5:10 -:2 | -:12 | -",
+            "B | Em Em/B | Em G | G | B/D# B | Em Em/G | Em | Em/B",
+        )
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:4 B1+B2:2 - B1+B2:4 | E1:1 - B1:4 -:2 B1:4 | G1+G2:1 -:3 G1+G2:2 - G2:3 -:1 | \
+                -:2 D2:4 -:2 D2:3 -:1 | -:4 B1+B2:2 - B1+B2:4 | -:2 E1+E2:4 -:6 | \
+                B1:3 -:1 E1+E2:7 -:1 | -:12 & -:12 | - | -:8 G1:2 - | -:12 | - | - | B1:2 -:10 | \
+                -:12",
+            ),
+            line(
+                "Charango",
+                gm::NYLON_GUITAR,
+                "D#4+B4+D#5:1 - B4+D#5 D#4+B4+D#5 B4+D#5:2 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4+D#5 | \
+                G4+E5+G5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 - G4+E5+G5:2 G4+E5+G5 | \
+                B4+G5+B5:1 - B4+G5 B4+G5+B5 B4+G5+B5:2 B4+G5+B5:1 - B4+B5:2 B4+G5 | \
+                B4+G5+B5:1 - B4+G5+B5 B5:2 -:1 B4+G5+B5 - B4+G5+B5:2 B4+G5+B5:1 - | \
+                D#4+B4+D#5 - B4+D#5 D#4+B4+D#5 B4+D#5:2 D#4+B4+D#5:1 - D#4+B4+D#5:2 D#4+B4+D#5 | \
+                D#4+B4+D#5:1 - G4+E5+G5 G5:3 G4+E5+G5:1 -:5 | E5+F#5:3 -:1 G5:8 | \
+                _:4 -:8 & -:4 D#4:1 -:7 | -:3 G4+E5:1 G4+E5+G5:2 -:4 F#4:1 - | -:8 G5:1 - B5 - | \
+                -:3 B4+G5:1 B4+G5+B5:2 -:6 | -:4 D#4:1 -:7 | -:3 G4+E5:1 G4+E5+G5:2 -:6 | \
+                B4:2 - B4+E5:8 | _:3 -:9",
+            ),
+            line(
+                "Guitar",
+                gm::NYLON_GUITAR,
+                "F#3+D#4:1 - D#4 B3+D#4 D#4:2 B3+D#4:1 - B3+D#4:2 B3 | \
+                D#4+E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4:3 -:1 | \
+                G4+B4 -:2 G4+B4:1 G4+B4:2 D4+G4+B4:1 - D4+G4+B4:2 B4 | \
+                D4+G4+B4:1 - D4+B4 D4+B4 D4:2 D4+B4:1 - D4+B4:2 B4 | \
+                F#3+D#4:1 - D#4 B3+D#4 D#4:2 B3+D#4:1 - B3+D#4:2 B3 | \
+                D#4+E4+G4:1 - E4+G4 E4+G4 E4:2 E4+G4:1 - E4+G4 -:3 | \
+                E4+F#4+B4:1 -:3 G4+B4+E5:2 -:6 | -:12 & -:4 B3+D#4:1 -:5 D#4:1 - | \
+                -:4 G4:1 -:3 G4:2 G4 | -:4 D4:1 -:5 D4+G4:1 - | -:4 B4:1 -:5 D4:1 - | \
+                -:4 B3+D#4:1 -:5 D#4:1 - | -:4 G4:1 -:7 | -:12 | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | - | - | - | - | E5+F#5+A5+E6:1 -:3 E5+G5+B5+E6:1 -:7 | -:12",
+            ),
+            line(
+                "Choir",
+                gm::CHOIR_AAHS,
+                "-:12 | B2+E3+G3+B3:10 -:2 | G2+G3+B3+E4:8 G2+G3+B3+D4:4 | _:11 D#4+F#4:1 | \
+                _:8 -:4 | G3+B3+E4+G4:12 | _:1 -:11 | -:12 & -:12 | - | -:8 B2+D3:1 -:3 | \
+                -:11 B3:1 | _:6 - | G2+E3+F3+G3+F4:1 -:11 | -:12 | - & -:12 | - | - | -:11 D#3:1 | \
+                _:3 B3:5 -:4 | -:12 | - | - & -:12 | - | - | -:11 B2+F#3:1 | -:3 B4 -:6 | -:12 | \
+                - | - & -:12 | - | - | - | -:3 A4:1 -:8 | -:12 | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::Kick, "-:4 x:1 -:7 | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | -:4 x:1 -:5 x:1 - | \
+             -:4 x:1 -:7 | -:4 x:1 -:7 | -:12 | -"),
+            (Drum::Rim, "x:1 - x - X - x - x - x - | x - x - X - x - x - X - | x - x - X - x - x - X - | \
+             x - x - X - x - x - x - | x - x - X - x - x - x - | x - x - X - x -:5 | -:12 | -"),
+            (Drum::LowTom, "-:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | \
+             -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 -:3 | -:4 X:1 -:3 X:1 - X - | -:12 | -"),
+        ]),
+    ],
+    form: &["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8", "Part 9", "Part 10", "Part 11", "Part 12"],
+    drums_from: 0,
+    about: "\"A orillita del canal, cuando llega la mañana\": a zamba about Balderrama, the \
+            all-night bar in Salta where the musicians and poets of the north met; Castilla \
+            wrote the words and Cuchi Leguizamón the tune. E minor. One turn of the tune, \
+            heard six times, falls from D through C sharp to B over a G major chord, a \
+            chromatic passing note; the chords keep C natural.",
+};
+
+// Written out from a band arrangement (MIDI, sequenced at a steady 130 to the quarter but saved
+// at another tempo, so that its beats fall off the file's own grid; the bars here follow the
+// beat). The tune on a flute, then a clarinet, with piano, guitar, double bass, trombone,
+// strings and percussion.
+pub(super) const ACUARELA_DEL_RIO: Song = Song {
+    name: "Acuarela del río",
+    origin: "Abel Montes",
+    feel: "Polca",
+    genre: Genre::Folklore,
+    tonic: A,
+    mode: Major,
+    time: SIX_EIGHT,
+    tempo: 130.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::FLUTE, gm::ACOUSTIC_GRAND_PIANO, gm::ACOUSTIC_BASS),
+    style: "Chamamé",
+    parts: &[
+        // Bars 1-8.
+        Part::new(
+            "Part 1",
+            "-:12 | - | - | - | - | - | - | -",
+            "A | A | A | F# | F# F#7 | Bm | Bm Bm7 | E D",
+        )
+        .with_left("-:12 | -:2 A3+C#4+E4+A4:4 -:2 E4 - | - A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | -:2 B3+D4+F#4+B4:4 -:2 F#4 - | \
+            - B3+D4+F#4+B4:4 -:2 B3+D4+F#4+B4:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 F#4+A4+A#4+C#5+F#5:1 - D4+F#4+A4+D5 -:3 & -:12 | \
+            -:8 A3+C#4+A4:1 -:3 | -:12 | - | - | -:8 B3+D4+B4:1 -:3 | -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "-:12 | A1:3 -:1 C#2:3 -:1 E2:2 - | A1:3 -:1 C#2:2 - E2 - | \
+                F#1:3 -:1 A#1:2 - C#2:3 -:1 | F#1:3 -:1 A#1:3 -:1 C#2:3 -:1 | \
+                B1:3 -:1 D2:3 -:1 F#2:2 - | B1:3 -:1 D2:2 - F#2 - | \
+                E1:3 -:1 G#1:2 D2:1 - A2:3 -:1",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "-:12 | - | -:2 C#3:1 - D3 - E3 - D3 - C#3 - | F#3:12 | \
+                -:2 C#3:1 - D3 - E3 - D3 - C#3:2 | F#3 - B2:7 -:1 | \
+                -:2 F#3:1 - G#3 - A3 - G#3 - F#3 - | G#3 - B3 -:3 F#3:1 - A3 -:3",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "-:12 | - | - | A3:4 G#3:3 -:1 G3:2 - | F#3:9 -:3 | A#3:4 B3:3 -:5 | D4:10 -:2 | \
+                E4:6 D4:5 -:1 & -:12 | - | - | - | - | -:6 C#4:5 -:1 | -:12 | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "-:12 | x:1 - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "-:12 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 9-16.
+        Part::new(
+            "Part 2",
+            "-:12 | - | - | -:2 E5:1 - E5 - E5 - E5 - E5 - | E5 - E5 - E5 - E5 - E5 - E5 - | \
+            E5 - C5 - C5 - C5:2 D5 E5 | F5:5 -:1 A5:6 | _:1 - D5 - D5 - D5 - D5 - D5 -",
+            "C#m E | A | Am | Am | Am | Am7 F#m7b5 | Dm | Dm Dm/A",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 C#4+E4+G#4+C#5:4 G#3+C4+D#4+E4+G#4+E5:1 - E4+G#4+B4+E5 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 E4 - | - A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 E4 - | E5:1 - D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 | \
+            -:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 & -:12 | -:8 A3+C#4+A4:1 -:3 | -:12 | - | - | \
+            -:8 A3+C#4+A4:1 -:3 | -:12 | -")
+        .with_lines(&[
+            line(
+                "Clarinet",
+                gm::CLARINET,
+                "-:12 | - | - | - | - | - | E5:1 -:11 | -:12",
+            ),
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "C#2:3 -:1 E2:2 E2:1 - B1:3 -:1 | A1:3 -:1 C#2:3 -:1 E2:2 - | \
+                A1:3 -:1 C2:2 - E2 - | A1:3 -:1 C2:2 - E2:3 -:1 | A1:3 -:1 C2:3 -:1 E2:3 -:1 | \
+                A1:3 -:1 C#2:3 -:1 E2:2 - | D2:3 -:1 F2:2 - A2 - | \
+                D2:3 -:1 F2:2 - A2:3 -:1 & C#2:1 -:11 | -:12 | - | - | - | - | - | -",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "E3:1 - G#3 -:3 E3:1 - F#3 - G#3 - | A3 -:3 E3:1 -:3 C#3:1 -:3 | A2:8 -:4 | -:12 | \
+                - | - | - | -",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "C#4:5 -:1 B3:5 -:1 | A3:12 | - | - | A3:5 -:1 G#3:5 -:1 | \
+                G3:4 E4:1 - F#3:3 E4:1 -:2 | D3:9 -:3 | D4:9 -:3 & -:12 | - | - | - | \
+                -:2 C4:3 - C4:2 E4 | - C4:3 - C4:2 - | -:4 F3:8 | _:2 -:10 & -:12 | - | - | - | \
+                -:4 E4:2 -:6 | -:12 | -:8 A3:4 | _:2 -:10",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | - | -:6 E4:1 D#4 - D4:2 -:1 | C4:12 | _ | _:11 -:1 | D4+F4:12 | _ & -:12 | \
+                - | -:10 C#4:1 - | - A3:11 | _:12 | _ | _ | _:10 -:1 G3+B3 & -:12 | - | - | \
+                -:2 E4:10 | _:12 | _:11 -:1 | -:12 | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 17-24.
+        Part::new(
+            "Part 3",
+            "D5:1 - D5 - D5 - D5 - D5 - D5 - | D5 - D5 - D5 - D5:2 E5:1 - F5 - | G5:8 F#5:2 G5 | \
+            G#5:8 G5:2 G#5 | A5 - E5:1 - E5 -:3 C5:1 - | C5 -:3 A4:1 -:3 A4:1 - A4 - | \
+            E5:6 -:2 B4:3 -:1 | -:2 B4 C5 D5 C5 B4",
+            "G G7 | G7 | C | E | Am | Am | E7 E | E E/G#",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 G4+B4+D5+G5:4 -:2 G4+B4+D5+G5:1 -:3 | -:2 G4+B4+D5+F5:4 -:2 G4+B4+D5+F5:1 -:3 | \
+            -:2 C4+E4+G4+C5:4 -:2 C4+E4+G4+C5:1 -:3 | -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 E4 - | \
+            - E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 & -:12 | - | - | - | - | \
+            -:8 A3+C4+A4:1 -:3 | -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "G1:3 -:1 B1:3 -:1 D2:3 -:1 | G1:3 -:1 B1:3 -:1 D2:2 - | C2:3 -:1 E2:2 - G2 - | \
+                E1:3 -:1 G#1:2 - B1:3 -:1 | A1:3 -:1 C2:3 -:1 E2:3 -:1 | \
+                A1:3 -:1 C2:3 -:1 E2:3 -:1 | E1:3 -:1 G#1:2 - B1 - | E1:3 -:1 G#1:2 - B1:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "G3:5 -:1 F3:5 -:1 | G3:6 F3:4 D4:1 - | C3:9 -:3 | E3:9 -:1 G3 G#3 | A3:6 E3 | \
+                C4 A3:5 -:1 | D3:6 E3 | G#3:10 -:2 & -:2 B3:3 - B3 -:1 | -:2 B3:5 -:1 B3:2 - | \
+                -:12 | - | - | - | - | - & -:4 D4:1 -:5 D4:1 - | -:4 D4:2 -:6 | -:12 | - | - | - | \
+                - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:10 G4:2 | _:11 -:1 | E4:12 | _ | _ | _ | _ | _ & -:12 | - | C4:10 -:2 | \
+                G#3:11 A3+C4:1 | _:12 | _:10 -:2 | G#3+B3:12 | _ & -:12 | - | - | B3:10 -:2 | \
+                -:12 | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 25-32.
+        Part::new(
+            "Part 4",
+            "E5:6 -:1 B4:5 | -:2 B4 C5 D5 C5:1 B4:3 | E5:9 -:3 | -:2 E5:1 - E5 - E5 - E5 - E5 - | \
+            E5 - E5 - E5 - E5 - E5 - E5 - | E5 - C#5 - C#5 - C#5:2 D5 E5 | F5:6 A5 | \
+            -:2 D5:1 - D5 - D5 - D5 - D5 -",
+            "E7 E | E E7 | Am | Am | Am Caug | Am7 F#m7b5 | Dm | Dm",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 A3+C#4+E4+G4:4 -:2 E4 - | - D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 | \
+            -:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 & -:12 | - | - | - | - | -:8 A3+C#4+G4:1 -:3 | \
+            -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "E1:3 -:1 G#1:3 -:1 B1:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | A1:3 -:1 C2:2 - E2 - | \
+                A1:3 -:1 C2:2 - E2:3 -:1 | A1:3 -:1 C2:3 -:1 E2:3 -:1 | \
+                A1:3 -:1 C#2:3 -:1 E2 -:3 | D2 -:1 F2:2 - A2 - | D2:3 -:1 F2:2 - A2:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "D3:3 -:1 E3:5 -:3 | B3:9 -:3 | A3:12 | _:6 - | A3:4 E4:1 - G#3:5 -:1 | \
+                G3:5 -:1 F#3:5 -:1 | D3:8 A3:4 | _:8 -:2 F#3 & -:8 G#3:4 | -:12 | -:4 C4:8 | \
+                _:6 - | -:2 C4:3 - C4 -:1 | -:2 C4:3 - C4:2 E4:1 - | -:4 F3:8 | \
+                _:7 -:3 F3:1 G3 & -:12 | - | -:8 E4:4 | _:6 - | -:10 E4:1 - | -:4 E4:1 -:7 | \
+                -:12 | D4:7 -:5 & -:12 | - | - | A4:6 - | -:12 | - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "G#4:12 | _:10 -:1 A3+C4 | _:12 | _:11 -:1 | C4+E4:12 | _:11 -:1 | F4:12 | \
+                _ & -:12 | - | - | - | A3:5 -:1 G#3:6 | G3:5 -:1 A3:6 | _:12 | \
+                _:11 G3+B3+D4:1 & -:12 | - | - | - | - | - | D4 | _:10 -:2 & -:12 | - | - | - | \
+                - | - | -:7 A4:5 | _:9 -:3",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 33-40.
+        Part::new(
+            "Part 5",
+            "D5:1 - D5 - D5 - D5 - D5 - D5 - | D5 - D5 - D5 - D5 - E5 - F5 - | G5:8 F#5:1 - G5 - | \
+            G#5:7 -:1 G5 - G#5 - | A5 -:3 E5:1 - E5:2 - C5:1 - | C5 -:3 A4 -:1 C5 - C5 - | \
+            A5 -:3 F5:1 - F5 -:3 D5:1 - | D5 - B4 - C5:2 D5 C5 B4",
+            "G | G Em7 | C | E | Am | Am7 F#m7b5 | Ddim7 G#dim7 | Dm Bm7b5",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 G4+B4+D5+G5:4 -:2 G4+B4+D5+G5:1 -:3 | -:2 G4+B4+D5+G5:4 -:2 G4+B4+D5+G5:1 -:3 | \
+            -:2 C4+E4+G4+C5:4 -:2 C4+E4+G4+C5:1 -:3 | -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 E4 - | \
+            - D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 | \
+            -:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 & -:12 | - | - | - | - | -:8 A3+C4+A4:1 -:3 | \
+            -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "G1:3 -:1 B1:3 -:1 D2:3 -:1 | G1:3 -:1 B1:3 -:1 D2:2 - | C2:3 -:1 E2:2 - G2 - | \
+                E1:3 -:1 G#1:2 - B1:3 -:1 | A1:3 -:1 C2:3 -:1 E2:3 -:1 | \
+                A1:3 -:1 C2:3 -:1 E2:2 - | D2:3 -:1 F2:2 - A2 - | D2:3 -:1 F2:2 - A2:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "-:6 B2 | _:1 -:5 G3:6 | C3:8 -:2 D3:1 D#3 | E3:9 -:3 | \
+                A3:4 C4:1 - G#3 -:3 C4+E4:1 - | G3 -:3 G3+C4:1 - F#3 -:3 F#3+A3+C4:1 - | \
+                D3 -:3 F3:1 - A3 -:3 F3:1 - | F3+D4 -:3 A3:1 - F3 -:3 D3:1 - & -:12 | D3:7 -:5 | \
+                -:12 | - | - | - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | G4:11 E4:1 | _:12 | _ | _ | _ | _:10 A3:2 | _:11 B3+E4:1 & -:12 | - | \
+                C4:10 -:1 B3 | _:9 -:2 A3:1 | _:12 | _ | -:1 G#3+B3:9 -:1 D4+F4 | _:9 -:3 & -:12 | \
+                - | - | G#3:11 C4:1 | _:12 | _:11 -:1 | -:12 | - & -:12 | - | - | - | -:11 A4:1 | \
+                _:9 -:3 | -:12 | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 41-48.
+        Part::new(
+            "Part 6",
+            "E5:3 -:1 E5:7 -:1 | -:2 E5:1 - F#5 - G#5:2 F#5:1 E5:2 -:1 | \
+            A5 -:3 E5:1 -:3 C#5:1 -:3 | A4:1 -:3 C#4:1 - F#4 -:3 C#4:1 - | \
+            E4 -:3 C#4:1 - F#4 -:3 C#4:1 - | E4 - A4 - G#4 - F#4 E4 D4 - C#4 - | D4 - E4:6 -:4 | \
+            - B3:1 - E4 -:3 E4:1 -",
+            "E E7 | E7 G#m7b5 | A | A A/C# | A Amaj7 | F#m7/A F#m7 | E7 Bm7/A | E7",
+        )
+        .with_left("-:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+D5:4 -:2 E4+G#4+B4+D5:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | -:2 A3+C#4+E4+A4:4 -:2 E4 - | \
+            - E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 & -:12 | - | - | - | - | \
+            -:8 A3+C#4+A4:1 -:3 | -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "E1:3 -:1 G#1:3 -:1 B1:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | A1:3 -:1 C#2:2 - E2 - | \
+                A1:3 -:1 C#2:2 - E2:3 -:1 | A1:3 -:1 C#2:3 -:1 E2:3 -:1 | \
+                A1:3 -:1 C#2:3 -:1 E2 -:3 | E1 -:1 G#1:2 - B1 - | E1:3 -:1 G#1:2 - B1:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "E3:7 -:3 D3:1 E3 | _:5 -:3 G#3 -:1 | A3 -:3 E3:1 -:3 C#3:1 -:3 | A2:4 -:8 | \
+                A3:5 -:1 G#3:5 -:1 | A3:5 -:1 G#3:5 -:1 | B3:5 -:1 A3:5 -:1 | \
+                G#3:5 -:1 A3:4 F#4:1 - & -:11 D#3:1 | -:4 F#3 - | -:12 | - | \
+                -:2 C#4:3 - C#4:2 F#4:1 - | -:2 C#4:3 - C#4:2 F#4:1 - | \
+                -:2 D4 F#4:1 -:3 D4:2 F#4:1 - | -:2 D4 F#4:1 -:3 D4:2 - & -:12 | - | - | - | \
+                -:4 F#4:1 -:7 | -:4 F#4:1 -:7 | -:12 | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "G#3:12 | _:10 -:1 A3 | _:7 -:1 E4:4 | _:2 -:10 | E4:12 | _ | _:8 -:3 E4:1 | \
+                _:10 -:2 & -:12 | G#4:11 G#3:1 | -:4 C#4:6 -:1 C#4 | _:10 -:2 | C#4:12 | _ | \
+                B3+D4 | _ & -:12 | - | - | A4:10 -:2 | A3:12 | _:11 -:1 | A4:11 -:1 | \
+                G#4:11 -:1 & -:12 | - | - | - | -:11 F#4:1 | _:12 | _:11 -:1 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 49-56.
+        Part::new(
+            "Part 7",
+            "D4:1 -:3 B3:1 - E4 -:3 E4:1 - | D4 - G#4 - F#4 - E4 D4 C#4 - B3 - | C#4 C#4:8 -:3 | \
+            -:2 C#4:1 - D4 - E4 - D4 - C#4 - | F#4 -:3 F#4:7 -:1 | \
+            -:2 C#4:1 - D4 - E4 - D4 - C#4 - | F#4 -:3 B3:4 - | -:2 F#4:1 - G#4 - A4 -:3 F#4:1 -",
+            "E7 Bm7 | E7 | A Amaj7/G# | F#m7/A A/E | F# | F# | Bm | Bm",
+        )
+        .with_left("-:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | \
+            -:2 B3+D4+F#4+B4:4 -:2 B3+D4+F#4+B4:1 -:3 | \
+            -:2 B3+D4+F#4+B4:4 -:2 B3+D4+F#4+B4:1 -:3")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "E1:3 -:1 G#1:3 -:1 B1:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | A1:3 -:1 C#2:2 - E2 - | \
+                A1:3 -:1 C#2:2 - E2:3 -:1 | F#1:3 -:1 A#1:3 -:1 C#2:3 -:1 | \
+                F#1:3 -:1 A#1:3 -:1 C#2:2 - | B1:3 -:1 D2:3 -:1 F#2:2 - | \
+                B1:3 -:1 D2:2 - F#2:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "B3:5 -:1 A3:5 -:1 | G#3:5 -:1 A3:4 F#4:1 - | E3:5 -:1 G#3:5 -:1 | F#3:6 E3:4 -:2 | \
+                F#3:8 G#3:1 - A#3 - | C#4:10 -:2 | B3:4 F#3 D3 | \
+                _:1 -:3 B3:6 -:2 & -:2 D4:3 - D4:2 F#4:1 - | -:2 D4 F#4:1 -:3 D4:2 - | \
+                E#3:1 - A3:2 C#4:1 -:3 C#4 -:1 | -:12 | - | A#3:1 -:11 | -:12 | \
+                C#4:4 -:8 & -:4 F#4:1 -:7 | -:12 | -:10 E3:2 | -:12 | - | - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "F#4+A4:11 -:1 | E4:12 | _:1 -:3 C#4:8 | _:12 | _ | _:11 B3:1 | _:12 | _ & -:12 | \
+                G#4 | A3 | _:11 -:1 | F#4:12 | _ | _ | _:10 -:1 G#4 & -:12 | - | -:8 E4:4 | \
+                _:10 -:2 | A#3:12 | _:10 -:1 D4 | _:12 | _:9 -:3 & -:12 | - | -:11 A4:1 | \
+                _:9 -:3 | -:11 A#4:1 | _:10 -:2 | -:7 B4:5 | _:9 -:3",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 57-64.
+        Part::new(
+            "Part 8",
+            "G#4:1 - B4 - G#4 - F#4 - A4 - F#4 - | E4 - G#4 - E4 - E4 - F#4 - G#4 - | \
+            A4 -:3 E4:1 -:3 C#4:1 -:3 | A3:1 -:11 | -:12 | - | - | -",
+            "E Bm7 | C#m7/E E | A | A | F#7 F# | F# | Bm | Bm Bm7",
+        )
+        .with_left("-:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | \
+            -:2 B3+D4+F#4+B4:4 -:2 B3+D4+F#4+B4:1 -:3 | \
+            -:2 B3+D4+F#4+B4:4 -:2 B3+D4+F#4+B4:1 -:3")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "E1:3 -:1 G#1:3 -:1 B1:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | \
+                A1:3 -:1 C#2:3 -:1 E2:2 - | A1:3 -:1 C#2:2 - E2:3 -:1 | \
+                F#1:3 -:1 A#1:3 -:1 C#2:3 -:1 | F#1:3 -:1 A#1:3 -:1 C#2:2 - | \
+                B1:3 -:1 D2:2 - F#2 - | B1:3 -:1 D2:2 - F#2:3 -:1 & -:12 | - | A1:1 -:11 | -:12 | \
+                - | - | - | -",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "-:12 | - | - | -:2 C#3:1 - D3 - E3 - D3 - C#3 - | F#3:2 - F#3:4 - | \
+                -:2 C#3:1 - D3 - E3 - D3 - C#3 - | F#3 -:3 B2:4 - | \
+                -:2 F#3:1 - G#3 - A3 - G#3 - F#3 -",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "E4:5 -:1 D4:5 -:1 | C#4:5 -:1 B3:5 -:1 | A3:4 E3 C#3 | A2 -:8 | \
+                -:4 A#3:1 -:3 B3:1 -:3 | C#4:11 -:1 | -:4 B3:1 -:3 C#4:1 -:3 | D4:8 -:4 & -:12 | \
+                - | - | - | - | - | - | C#4:1 -:11",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "B4:6 F#4:5 -:1 | G#3:10 -:2 | A3:12 | _ | _:5 F#4:2 A#3:5 | _:11 B3:1 | _:12 | \
+                _ & E4:5 A3 -:2 | C#4+E4:4 -:2 E4:6 | _:12 | _:3 -:9 | C#4:12 | _ | -:11 B4:1 | \
+                _:10 -:2 & -:6 D4:4 -:2 | -:6 B3:4 -:2 | C#4:12 | _:4 -:8 | E4:5 -:3 F#4:4 | \
+                _:12 | _ | _:10 -:2 & -:7 A4:4 -:1 | -:12 | - | - | - | A#4:10 -:1 D4 | _:12 | \
+                _:9 -:3",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 65-72.
+        Part::new(
+            "Part 9",
+            "-:12 | - | - | - | -:2 E5:1 - E5 - E5 - E5 - E5 - | E5 - E5 - E5 - E5 - E5 - E5 - | \
+            E5 - C5 - C5 - C5 - D5 - E5 - | F5:3 -:1 A5:7 -:1",
+            "E D | C#m E | A | Am A | Am | Am7 F#m7b5 | Am7 Am | Dm",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 E4+G#4+B4+E5:4 D4:1 - D4+F#4+A4+D5 -:3 | -:12 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 E4 - | \
+            - A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 & -:12 | - | - | - | - | -:8 A3+C4+A4:1 -:3 | \
+            -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "E1:3 -:1 G#1:2 - A2:3 -:1 | C#2:2 -:6 B1:2 - | A1:3 -:1 C#2:2 - E2 - | \
+                A1:3 -:1 C2:2 - E2:3 -:1 | A1:3 -:1 C2:3 -:1 E2:3 -:1 | A1:3 -:1 C2:3 -:1 E2:2 - | \
+                A1:3 -:1 C#2:2 - E2 - | D2:3 -:1 F2:2 - A2:3 -:1 & E1:1 -:11 | -:12 | - | - | - | \
+                - | - | -",
+            ),
+            line(
+                "Trombone",
+                gm::TROMBONE,
+                "G#3:1 - B3 - G#3 - F#3 - A3 - F#3 - | E3 - G#3 - E3 - E3 - F#3 - G#3 - | \
+                A3 -:3 E3:1 -:3 C#3:1 -:3 | A2:8 -:4 | -:12 | - | - | -",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "E4:3 - D4 -:1 D4 - | C#4:4 -:2 B3:4 -:2 | A3:1 -:11 | E3:6 - | \
+                A3:5 -:1 G#3:5 -:1 | G3:5 -:1 F#3:4 E4:1 - | G3:4 E4:1 - A3:4 E4:1 - | \
+                D3:9 -:1 F3 - & -:2 G#4 -:4 F#4:2 - | - E4:3 -:7 | -:12 | - | \
+                -:2 C4:3 - C4:2 E4:1 - | -:2 C4:3 - C4:2 - | - C4 -:4 C4:2 - | -:12 & -:12 | - | \
+                - | - | -:4 E4:1 -:7 | -:4 E4:1 -:7 | -:12 | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "E4+G#4+B4:5 A3 -:1 E4 | _:4 -:2 E4:6 | A3:12 | _:6 E4:2 D4 - | A3:12 | _ | _ | \
+                _ & -:6 F#4:5 -:1 | G#3:11 -:1 | -:11 C#4:1 | _:4 -:3 D#4:1 - C#4:2 -:1 | \
+                C4+E4:12 | _ | _:11 F4:1 | _:12 & -:6 D4:4 -:2 | C#4:4 -:2 B3:4 -:2 | -:12 | \
+                E4:3 -:9 | -:11 A4:1 | _:12 | _:10 -:1 D4 | _:10 -:2 & -:7 A4:3 -:2 | -:12 | - | \
+                - | - | - | - | A4",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 73-80.
+        Part::new(
+            "Part 10",
+            "-:2 D5:1 - D5 - D5 - D5 - D5 - | D5 - D5 - D5 - D5 - D5 - D5 - | \
+            D5 - D5 - D5 - D5 - E5 - F5 - | G5:7 -:1 F#5 - G5 - | G#5:6 -:2 G#5:1 - G#5 - | \
+            A5 -:3 E5:1 - E5 -:3 C5:1 - | C5 -:3 A4:1 -:3 B4:2 C5 | E5:5 -:1 B4:6",
+            "Dm | G | G7 | C | E | Am | Am Am/E | E7 E",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 | -:2 G4+B4+D5+G5:4 -:2 G4+B4+D5+G5:1 -:3 | \
+            -:2 G4+B4+D5+F5:4 -:2 G4+B4+D5+F5:1 -:3 | -:2 C4+E4+G4+C5:4 -:2 C4+E4+G4+C5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 E4 - | \
+            - A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 & -:12 | - | - | - | - | \
+            -:8 A3+C4+A4:1 -:3 | -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "D2:3 -:1 F2:3 -:1 A2:3 -:1 | G1:3 -:1 B1:3 -:1 D2:2 - | G1:3 -:1 B1:3 -:1 D2:2 - | \
+                C2:3 -:1 E2:2 - G2:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:3 -:1 | \
+                A1:3 -:1 C2:3 -:1 E2 -:3 | A1 -:1 C2:2 - E2 - | E1:3 -:1 G#1:2 - B1:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "A3:10 -:2 | G3:6 D4:2 - G3:1 - | F3:8 -:2 C3:1 - | C3:6 -:4 D3+D#3:1 E3 | \
+                _:7 -:1 E3:2 - | A3:4 C4 C4+E4:1 -:3 | E3:9 -:3 | D3:4 F3 A3:3 -:1 & -:12 | \
+                -:4 B3:3 -:5 | -:6 C4:1 -:5 | -:4 E3 -:3 D3:1 | -:12 | - | -:4 A3 C4:1 -:3 | \
+                -:12",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "C#4:11 -:1 | G3:12 | _ | _:9 -:2 G#3:1 | _:10 -:1 C4 | _:12 | _:11 -:1 | \
+                -:6 E4 & -:12 | D4 | _ | -:11 B3:1 | _:9 -:3 | A3:12 | _ | _:7 B3:5 & -:12 | B3 | \
+                _:10 -:1 E4 | _:12 | _ | _ | _ | -:8 G#3:4 & -:12 | -:1 C4 -:9 G4:1 | \
+                _:10 -:1 C4+G4 | _:8 -:4 | -:5 G#4:4 -:3 | -:5 A4:7 | _:9 -:3 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 81-88.
+        Part::new(
+            "Part 11",
+            "-:2 B4:1 - C5 - D5 - C5:2 B4 | E5:5 -:1 B4:6 | -:2 B4:1 - C5 - D5 - C5 - B4 - | \
+            E5:9 -:3 | -:2 E5:1 - E5 - E5 - E5 - E5 - | E5 - E5 - E5 - E5 - E5 - E5 - | \
+            E5 - C#5 - C#5 - C#5 - D5 - E5 - | F5:2 - A5:6 -:2",
+            "E | E | E | Am | Am | Am | Am7 F#m7b5 | Dm Dm/F",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 E4 - | \
+            - A3+C#4+E4+G4:4 -:2 A3+C#4+E4+G4:1 -:3 | \
+            -:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 & -:12 | - | - | - | - | -:8 A3+C4+A4:1 -:3 | \
+            -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "E1:3 -:1 G#1:3 -:1 B1:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | E1:3 -:1 G#1:2 - B1 - | \
+                A1:3 -:1 C2:2 - E2:3 -:1 | A1:3 -:1 C2:3 -:1 E2:3 -:1 | A1:3 -:1 C2:3 -:1 E2 -:3 | \
+                A1 -:1 C#2:2 - E2 - | D2:3 -:1 F2:2 - A2:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "G#3:9 -:3 | -:4 E3:8 | _:9 -:3 | A3:5 -:3 C4 -:1 | E4:6 -:4 A3:1 - | \
+                A3:4 E4:1 - G#3:5 -:1 | G3:4 E4:1 - F#3:4 E4:1 - | D3:4 F3:8 & -:12 | -:10 G#3:2 | \
+                B3:9 -:3 | -:4 B3:5 -:3 | D4:1 -:11 | -:2 C4 -:4 C4:2 E4:1 - | -:2 C4 -:4 C4:2 - | \
+                -:8 A3:4",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "G#4:12 | _ | _:11 -:1 | A3:12 | _:5 -:6 A3:1 | _:12 | _ | _ & -:12 | - | - | \
+                -:4 C4:8 | _:12 | _ | _ | _:1 D4:11 & -:12 | - | - | -:8 E4:4 | _:12 | _ | \
+                _:11 -:1 | F4:12 & -:12 | - | - | - | A4 | - | A4:11 -:1 | -:7 A4:5",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 89-96.
+        Part::new(
+            "Part 12",
+            "-:2 D5:1 - D5 - D5 - D5 - D5 - | D5 - D5 - D5 - D5 - D5 - D5 - | \
+            D5 - D5 - D5 - D5 - E5 - F5 - | G5:7 -:1 F#5 - G5 - | G#5:7 -:1 G5 - G#5 - | \
+            A5 -:5 E5:1 -:3 C5:1 - | C5 -:3 A4:1 - C5 -:2 E5:1 -:2 | \
+            A5:1 -:3 F5:1 - F5 -:3 D5:1 -",
+            "Dm7 | G | G7 | C C/G | E | Am | Am7 F#m7b5 | Dm Dm/A",
+        )
+        .in_key(A, HarmonicMinor)
+        .with_left("-:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 | -:2 G4+B4+D5+G5:4 -:2 G4+B4+D5+G5:1 -:3 | \
+            -:2 G4+B4+D5+G5:4 -:2 G4+B4+D5+G5:1 -:3 | -:2 C4+E4+G4+C5:4 -:2 C4+E4+G4+C5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | -:2 A3+C4+E4+A4:4 -:2 E4 - | \
+            - A3+C4+E4+A4:4 -:2 A3+C4+E4+A4:1 -:3 | \
+            -:2 D4+F4+A4+D5:4 -:2 D4+F4+A4+D5:1 -:3 & -:12 | - | - | - | - | -:8 A3+C4+A4:1 -:3 | \
+            -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "D2:3 -:1 F2:3 -:1 A2:3 -:1 | G1:3 -:1 B1:3 -:1 D2:2 - | G1:3 -:1 B1:3 -:1 D2:2 - | \
+                C2:3 -:1 E2:2 - G2:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:3 -:1 | \
+                A1:3 -:1 C2:3 -:1 E2 -:3 | A1 -:1 C2:2 - E2 - | D2:3 -:1 F2:2 - A2:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "D4:8 -:2 F3:1 F#3 | G3:12 | B3:9 -:3 | C3:4 E3:2 G3:3 D3:1 D#3 E3 | _:8 E3:1 -:3 | \
+                A3 - G#3 - | G3:4 -:2 F#3:3 - | D3:4 A3:1 - C4 -:3 A3:1 - & -:12 | -:4 D3:7 -:1 | \
+                -:4 D3:5 -:3 | -:12 | -:2 E4:6 -:4 | -:2 C4:1 -:5 C4:1 -:3 | \
+                -:2 C4+E4:1 -:5 C4+D4+E4:1 -:3 | -:2 F3 -:8 & -:12 | - | -:6 D4:4 -:2 | -:12 | - | \
+                - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "C4:11 D4:1 | _:12 | _ | _ | _:1 -:11 | A3:12 | _ | _ & -:12 | G3 | _ | \
+                _:10 -:1 G#3 | _:11 -:1 | C4:12 | _:11 -:1 | F4+A4:12 & -:12 | B3 | _:11 E4:1 | \
+                _:12 | _ | _ | _:11 -:1 | D4:10 -:2 & -:12 | -:11 G4:1 | _:10 -:2 | \
+                C4+G4:10 -:1 B3 | _:10 -:2 | - D4:10 | _ -:2 | -:12 & -:12 | -:11 F4:1 | _:9 -:3 | \
+                -:12 | G#4:10 -:2 | -:6 A4 | _:11 -:1 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 97-104.
+        Part::new(
+            "Part 13",
+            "D5:1 - B4 - C5:2 D5:1 - D5 C5 B4 - | E5:2 - E5:8 | -:2 E5:1 - F#5 - G#5 - F#5 - E5 - | \
+            A5 -:3 E5:1 -:3 C#5:1 -:3 | A4:1 -:3 C#4:1 - F#4 -:3 C#4:1 - | \
+            E4 -:3 C#4:1 - F#4 -:3 C#4:1 - | E4 - A4 - G#4 - F#4 E4 D4 - C#4 - | D4 - E4:6 -:4",
+            "Dm7 | E | E7 E7/G# | A | A | A | F#m7/A | E7 Bm7/A",
+        )
+        .with_left("-:2 D4+E#4+A4+D5:4 -:2 D4+E#4+A4+C5+D5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+D5:4 -:2 E4+G#4+B4+D5:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | -:2 A3+C#4+E4+A4:4 -:2 E4 - | \
+            - A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 & -:12 | - | - | - | - | \
+            -:8 A3+C#4+A4:1 -:3 | -:12 | -")
+        .with_lines(&[
+            line(
+                "Clarinet",
+                gm::CLARINET,
+                "-:8 C5:1 -:3 | -:12 | - | - | - | - | - | -",
+            ),
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "D2:3 -:1 E#2:3 -:1 A2:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | E1:3 -:1 G#1:2 - B1 - | \
+                A1:3 -:1 C#2:2 - E2:3 -:1 | A1:3 -:1 C#2:3 -:1 E2:3 -:1 | \
+                A1:3 -:1 C#2:3 -:1 E2 -:3 | A1 -:1 C#2:2 - E2 - | E1:3 -:1 G#1:2 - B1:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "D3:7 -:3 D3:1 E3 | _:9 -:3 | E4 -:1 D4:4 C#4:3 -:1 | A3:9 -:3 | C#4:6 - | \
+                A3:1 C#4:2 F#4:1 -:2 C#4:1 - C#4+G#4 -:3 | A3+C#4:2 F#4:1 -:3 C#4 - | \
+                B3 - A3 - & -:4 E#3:2 A3:1 -:4 D#3:1 | -:4 G#3:5 -:3 | -:12 | -:8 B3:4 | -:12 | \
+                - | F#4:1 -:5 G#4:1 - G#4 -:3 | -:2 D4+F#4:1 -:5 D4+F#4:1 -:3 & -:12 | -:8 B3:4 | \
+                -:12 | - | - | - | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "C4:11 -:1 | B3+E4:12 | _:11 -:1 | A3:6 -:2 E4:4 | _:9 -:3 | C#4:12 | _ | \
+                B3+D4 & D4:10 -:2 | G#3:12 | _:10 -:2 | -:4 C#4:8 | _:9 -:3 | A3:12 | _:11 -:1 | \
+                A4:11 -:1 & -:12 | -:6 G#4 | _:10 -:2 | -:12 | A4:11 -:1 | E4:12 | F#4 | _",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 105-112.
+        Part::new(
+            "Part 14",
+            "-:4 B3:1 - E4 -:3 B3:1 - | D4 -:3 B3:1 - E4 -:3 B3:1 - | \
+            D4 - G#4 - F#4 - E4 D4 C#4 - B3 - | C#4 D4 D4 -:9 | -:2 C#4:1 - D4 - E4 - D4 - C#4 - | \
+            F#4 -:3 F#4:7 -:1 | -:2 C#4:1 - D4 - E4 - D4 - C#4 - | F#4 -:3 B3:5 -:3",
+            "E | E G#m7b5 | E E7/G# | A | A | F# | F# F#/A# | Bm",
+        )
+        .with_left("-:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | -:1 C#4 C#4:9 -:1 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | \
+            -:2 F#4+A#4+C#5+F#5:4 -:2 F#4+A#4+C#5+F#5:1 -:3 | \
+            -:2 B3+D4+F#4+B4:4 -:2 B3+D4+F#4+B4:1 -:3 & -:12 | - | - | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | -:12 | - | - | -")
+        .with_lines(&[
+            line(
+                "Clarinet",
+                gm::CLARINET,
+                "-:12 | - | - | -:1 C#4 C#4:9 -:1 | -:12 | - | - | -",
+            ),
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "E1:3 -:1 G#1:3 -:1 B1:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | E1:3 -:1 G#1:2 - B1 - | \
+                A1:3 -:1 C#2:2 - E2:3 -:1 | A1:3 -:1 C#2:3 -:1 E2:3 -:1 | \
+                F#1:3 -:1 A#1:3 -:1 C#2:2 - | F#1:3 -:1 A#1:2 - C#2 - | \
+                B1:3 -:1 D2:2 - F#2:3 -:1",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "G#3:4 -:2 A3:3 -:1 A#3 - | B3:3 -:1 F#4 - A#3:3 -:1 F#4 - | \
+                A3:2 D4:1 - F#4 - G#3:3 -:1 G#3 - | E3:2 F#3:1 - G#3 - A3 - B3 - B3 - | \
+                C#4:7 -:5 | -:2 F#3:1 - G#3 - A#3 - B3 - C#4 - | C#4:10 -:2 | \
+                - A3:1 - B3 - C#4 - D4 - C#4 - & -:2 D4+F#4:1 -:5 D4+F#4:1 -:3 | \
+                B3+C4:1 - D4 -:5 D4:1 -:3 | -:8 D4+F#4:1 -:3 | -:12 | B3:1 -:11 | -:12 | - | -",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "E4:12 | _:8 -:3 E4:1 | _:12 | -:4 C#4:8 | _:12 | _ | _ | B3+D4 & G#4:10 -:2 | \
+                B3:12 | _:10 -:1 A3 | _:9 -:2 G#4:1 | _:7 -:5 | F#4:12 | _ | _ & -:12 | \
+                F#4+A4:11 -:1 | G#4:12 | -:8 E4:4 | _:11 -:1 | A#3:12 | _ | -:6 B4 & -:12 | - | \
+                - | - | -:4 A3:6 -:2 | -:4 A#4:8 | _:11 -:1 | -:12",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | x - x - x - x - x - x -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5"),
+        ]),
+        // Bars 113-122.
+        Part::new(
+            "Part 15",
+            "-:2 F#4:1 - G#4 - A4 - G#4 - F#4 - | G#4 - B4 - G#4 - F#4 - A4 - F#4 - | \
+            E4 - G#4 - E4 - E4 - F#4 - G#4 - | A4:12 | _:11 C#5:1 | _:12 | _:1 -:11 | -:12 | - | \
+            -",
+            "Bm Bm7 | E Bm7 | Dmaj7 E7/G# | A | Dm A | A | A | A | A | A",
+        )
+        .with_left("-:2 B3+D4+F#4+B4:4 -:2 B3+D4+F#4+B4:1 -:3 | \
+            -:2 E4+G#4+B4+E5:4 -:2 E4+G#4+B4+E5:1 -:3 | \
+            -:2 D4+F#4+A4+D5:4 -:2 D4+F#4+A4+D5:1 -:3 | \
+            -:2 A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:3 | -:2 D4+E#4+A4+D5:4 -:2 A4 - | \
+            - A3+C#4+E4+A4:4 -:2 A3+C#4+E4+A4:1 -:2 A3:1 | _ -:5 E4:1 -:5 | A3:11 -:1 | -:12 | \
+            - & -:12 | - | - | - | -:8 D4+E#4+D5:1 -:3 | -:11 C#4+E4+A4:1 | -:12 | E4+A4:10 -:2 | \
+            -:12 | - & -:12 | - | - | - | - | - | - | C#4:9 -:3 | -:12 | -")
+        .with_lines(&[
+            line(
+                "Double bass",
+                gm::ACOUSTIC_BASS,
+                "B1:3 -:1 D2:3 -:1 F#2:3 -:1 | E1:3 -:1 G#1:3 -:1 B1:2 - | D2:3 -:1 F#2:2 - A2 - | \
+                A1:3 -:1 C#2:2 - E2:3 -:1 | D2:3 -:1 E#2:3 -:1 A2 -:3 | A2 -:1 E2:2 - C#2 - | \
+                A1:1 -:5 E1:2 -:3 A1:1 | _:9 -:3 | -:12 | - & -:12 | - | - | A1:1 -:11 | -:12 | \
+                - | - | - | - | -",
+            ),
+            line(
+                "Guitar",
+                gm::JAZZ_GUITAR,
+                "E4:4 D4:5 -:3 | E4:5 -:1 D4:5 -:1 | C#4:5 -:1 B3:5 -:1 | A3:4 E3 C#3 | A2:3 -:9 | \
+                -:12 | -:11 C#4+E4:1 | _:12 | _ | _:8 -:4 & -:12 | - | - | - | - | - | -:11 A3:1 | \
+                _:12 | _ | _:7 -:5 & -:12 | - | - | - | - | - | - | -:1 A4:11 | _:12 | _:8 -:4",
+            ),
+            line(
+                "Strings",
+                gm::STRING_ENSEMBLE,
+                "-:12 | G#4:5 F#4 -:2 | E4:11 -:1 | A3+C#4:12 | _ | _:10 -:2 | C#5:12 | _:3 -:9 | \
+                -:12 | - & -:12 | E4+B4:4 -:2 A3+D4:5 -:1 | G#3:10 -:2 | E4:12 | _:2 -:10 | \
+                E4 -:2 | E4+A4:12 | _:2 -:10 | -:12 | - & -:12 | -:6 A4:4 -:2 | \
+                C#4:4 -:2 B3:5 -:1 | -:12 | A4 | _:1 -:3 A4:6 -:2 | -:11 E5:1 | _:2 -:10 | -:12 | \
+                - & -:12 | - | -:7 G#4:4 -:1 | -:12 | - | - | - | - | - | -",
+            ),
+        ])
+        .with_drums(&[
+            (Drum::HiHat, "x:1 - x - x - x - x - x - | x - x - x - x - x - x - | x - x - x - x - x - x - | \
+             x - x - x - x - x - x - | X - x - x - x - x - x - | x - x - x - x - x - x - | \
+             X -:5 x:1 -:5 | X:1 -:11 | -:12 | -"),
+            (Drum::Conga, "X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | \
+             X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:5 X:1 -:5 | X:1 -:11 | -:12 | -"),
+            (Drum::Crash, "-:12 | - | - | - | - | - | - | X:1 -:11 | -:12 | -"),
+            (Drum::Ride, "-:12 | - | - | - | - | - | -:6 X:1 -:5 | -:12 | - | -"),
+        ]),
+    ],
+    form: &["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8", "Part 9", "Part 10", "Part 11", "Part 12", "Part 13", "Part 14", "Part 15"],
+    drums_from: 0,
+    about: "A canción of the Litoral by the Argentine Abel Montes, words and music, first \
+            recorded by Tres para el Folklore in 1963: a watercolour of the Paraná river, two \
+            lovers drifting on it in a boat. Here as a polca, the 6/8 dance of Paraguay and \
+            the Litoral, the bass on the quarters across it. Its sections go from A minor to \
+            A major, twice.",
+};
