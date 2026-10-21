@@ -433,7 +433,7 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
                 if songs.is_empty() {
                     continue;
                 }
-                ui.menu_button(genre.name(), |ui| {
+                crate::widgets::scroll_menu_button(ui, genre.name(), |ui| {
                     crate::widgets::scroll_menu(ui, |ui| {
                         for entry in songs {
                             button(ui, entry, &entry.label);
@@ -455,7 +455,7 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
                 if styles.is_empty() {
                     continue;
                 }
-                ui.menu_button(genre.name(), |ui| {
+                crate::widgets::scroll_menu_button(ui, genre.name(), |ui| {
                     crate::widgets::scroll_menu(ui, |ui| {
                         for entry in styles {
                             button(ui, entry, &entry.label);

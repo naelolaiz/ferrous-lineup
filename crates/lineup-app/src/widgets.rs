@@ -18,6 +18,41 @@ pub fn scroll_menu<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
         .inner
 }
 
+/// A submenu inside a [`scroll_menu`], as [`Ui::menu_button`] makes it.
+/// egui opens a submenu while the pointer is over its button even where
+/// the scroll area hides the button. A long menu opened above its button,
+/// low in the window, hides its last submenus over that button, and the
+/// one under the pointer opened at once. While the pointer is over the
+/// hidden part of the button, the button opens nothing.
+pub fn scroll_menu_button<'a, R>(
+    ui: &mut Ui,
+    label: impl egui::IntoAtoms<'a>,
+    add: impl FnOnce(&mut Ui) -> R,
+) -> egui::InnerResponse<Option<R>> {
+    // Where the button goes: at the cursor, across the menu, as tall as
+    // it was last time. egui looks for the pointer half the spacing
+    // around it.
+    let id = ui.next_auto_id();
+    let height_id = id.with("height");
+    let height = ui
+        .data(|data| data.get_temp(height_id))
+        .unwrap_or(ui.spacing().interact_size.y);
+    let rect = Rect::from_min_size(ui.cursor().min, vec2(ui.available_width(), height))
+        .expand2(ui.spacing().item_spacing / 2.0);
+    let hidden_under_pointer = ui
+        .ctx()
+        .pointer_hover_pos()
+        .is_some_and(|pos| rect.contains(pos) && !ui.clip_rect().contains(pos));
+    let shown = if hidden_under_pointer {
+        let arrow = egui::containers::menu::SubMenuButton::arrow_atom(None);
+        egui::InnerResponse::new(None, ui.add(egui::Button::new(label).right_text(arrow)))
+    } else {
+        ui.menu_button(label, add)
+    };
+    ui.data_mut(|data| data.insert_temp(height_id, shown.response.rect.height()));
+    shown
+}
+
 /// Editor shortcuts belong to the last clicked window, including its title
 /// and toolbar. Popup controls and text fields keep their own keyboard input.
 pub fn editor_keyboard(ctx: &egui::Context, layer: egui::LayerId) -> bool {
