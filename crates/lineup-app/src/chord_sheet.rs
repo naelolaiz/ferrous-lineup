@@ -21,8 +21,11 @@
 //! goes on to the next bar. Holding the mouse down on a harmony plays
 //! it. Shift+click (or Shift and an arrow) selects several bars, to loop
 //! them from the practice row ([`practice`]). A bar's menu (right-click)
-//! also chooses the variation of the band's style from that bar on, or
-//! for the bars selected; a boxed "a" or "b" marks where it changes.
+//! inserts an empty bar before or after it, or deletes it (or the bars
+//! selected), with everything after moving along (see
+//! `lineup_core::bars`). It also chooses the variation of the band's
+//! style from that bar on, or for the bars selected; a boxed "a" or "b"
+//! marks where it changes.
 //! Ctrl+C copies the bars selected as text, "| Dm7 G7 | C |", and Ctrl+V
 //! writes text from the selected bar on (Ctrl+A selects every bar). The
 //! reading and writing of what is typed is in `lineup_core::chord_sheet`;
@@ -134,6 +137,8 @@ pub enum SheetAction {
     },
     /// End the song with this bar.
     EndHere(usize),
+    /// Insert or delete bars.
+    Bars(BarEdit),
     /// Move the playhead to this step of the playlist's timeline.
     Seek(usize),
     /// Play these notes now, as a harmony key does.
@@ -143,6 +148,59 @@ pub enum SheetAction {
     Practice(PracticeAction),
     /// Something from the form row.
     Form(FormAction),
+}
+
+/// A change to the song's bars, from the menu on a bar of the sheet or
+/// on the playlist's bar numbers. Bars are counted from 0.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BarEdit {
+    /// An empty bar next to bar `bar`, after it or before it.
+    Insert { bar: usize, after: bool },
+    /// Bars `first` to `last` taken out.
+    Delete { first: usize, last: usize },
+}
+
+/// The menu items that insert a bar next to bar `bar` or delete it, or
+/// delete the bars of `selection` when it holds more than one.
+pub fn bar_edits(ui: &mut Ui, bar: usize, selection: Option<(usize, usize)>) -> Option<BarEdit> {
+    let mut edit = None;
+    let moves = "everything after it moves a bar later. The harmony before it goes on \
+                 through it until you write one";
+    let before = ui.button("Insert a bar before");
+    if theme::hint(
+        before,
+        format!("An empty bar before bar {}: {moves}", bar + 1),
+    )
+    .clicked()
+    {
+        edit = Some(BarEdit::Insert { bar, after: false });
+    }
+    let after = ui.button("Insert a bar after");
+    if theme::hint(
+        after,
+        format!("An empty bar after bar {}: {moves}", bar + 1),
+    )
+    .clicked()
+    {
+        edit = Some(BarEdit::Insert { bar, after: true });
+    }
+    let (first, last) = selection.unwrap_or((bar, bar));
+    let (text, hint) = match first == last {
+        true => (
+            "Delete this bar".to_string(),
+            "Takes the bar out with its chords and notes; everything after it moves a bar \
+             earlier. Undo puts it back",
+        ),
+        false => (
+            format!("Delete bars {}–{}", first + 1, last + 1),
+            "Takes the bars out with their chords and notes; everything after them moves \
+             earlier. Undo puts them back",
+        ),
+    };
+    if theme::hint(ui.button(text), hint).clicked() {
+        edit = Some(BarEdit::Delete { first, last });
+    }
+    edit
 }
 
 /// A bar being typed in.
@@ -1165,6 +1223,10 @@ impl ChordSheet {
             if ui.button("Move the playhead here").clicked() {
                 actions.push(SheetAction::Seek(bar.start));
             }
+            ui.separator();
+            if let Some(edit) = bar_edits(ui, bar.number, selection) {
+                actions.push(SheetAction::Bars(edit));
+            }
             if project.band().is_some() {
                 ui.separator();
                 variation_menu(ui, project, meter, bar.number, selection, actions);
@@ -1231,7 +1293,7 @@ impl ChordSheet {
 
     /// The first and the last bar selected, if any: one bar, or several
     /// selected with Shift.
-    fn selected_bars(&self) -> Option<(usize, usize)> {
+    pub(crate) fn selected_bars(&self) -> Option<(usize, usize)> {
         let selected = self.selected?;
         let anchor = self.anchor.unwrap_or(selected);
         Some((anchor.min(selected), anchor.max(selected)))

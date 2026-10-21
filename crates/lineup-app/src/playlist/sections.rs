@@ -13,8 +13,9 @@
 //!   has "Loop this section", ticked while that section loops: tick it to
 //!   loop the section, untick it to play the whole song again.
 //!   A plain click on the bar numbers moves the playhead there.
-//! - Right-click the bar numbers to change the time signature from that
-//!   bar on, or to take a change away.
+//! - Right-click the bar numbers to insert an empty bar before or after
+//!   that one, or delete it, and to change the time signature or the key
+//!   from that bar on, or take a change away.
 //!
 //! When the band plays its chorus more than once (see the chord sheet's
 //! form row), repeat signs along the bottom of the section strip show
@@ -338,8 +339,9 @@ impl Strips {
     }
 }
 
-/// The menu on the bar numbers: the time signature from the bar that
-/// starts on step `at` on.
+/// The menu on the bar numbers: a bar inserted next to the bar that
+/// starts on step `at`, or that bar deleted, and the time signature from
+/// it on.
 fn time_menu(
     ui: &mut Ui,
     project: &Project,
@@ -354,6 +356,11 @@ fn time_menu(
         .time_markers()
         .iter()
         .find(|marker| marker.start == at);
+    if let Some(edit) = crate::chord_sheet::bar_edits(ui, bar.number, None) {
+        actions.push(PlaylistAction::Bars(edit));
+        ui.close();
+    }
+    ui.separator();
     ui.label(format!("Time signature from bar {}", bar.number + 1));
     if let Some(time) = time_picker(
         ui,
