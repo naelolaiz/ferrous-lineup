@@ -1059,6 +1059,8 @@ pub static SONGS: &[Song] = &[
     folklore_arranged::ALFONSINA_Y_EL_MAR,
     folklore_arranged::ZAMBA_DE_MI_ESPERANZA,
     folklore_arranged::ZAMBA_POR_VOS,
+    folklore_arranged::BALDERRAMA,
+    folklore_arranged::ACUARELA_DEL_RIO,
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
