@@ -225,6 +225,24 @@ struct View<'a> {
     roles: Option<&'a [Option<(NoteRole, Over)>]>,
 }
 
+/// What every part of the roll is drawn from in a frame, gathered in one
+/// value as [`View`] is for the grid.
+#[derive(Clone, Copy)]
+struct Drawing<'a> {
+    project: &'a Project,
+    pattern: &'a Pattern,
+    /// The pattern's key: the song's key where the pattern is played.
+    scale: Scale,
+    /// The channels heard together: this one, and the others when they
+    /// are shown behind it.
+    heard: &'a [usize],
+    /// For the soloist's part, what each note is.
+    roles: Option<&'a [Option<(NoteRole, Over)>]>,
+    playhead: Option<usize>,
+    /// The notes held down on a keyboard.
+    held: &'a [Note],
+}
+
 /// Where the grid is on screen, and how to turn steps and pitches into
 /// pixels and back. It is `Copy`, so it can be handed around freely.
 #[derive(Debug, Clone, Copy)]
@@ -936,6 +954,15 @@ impl PianoRoll {
         if self.ghosts {
             heard.extend(&others);
         }
+        let drawing = Drawing {
+            project,
+            pattern,
+            scale,
+            heard: &heard,
+            roles: roles.as_deref(),
+            playhead,
+            held,
+        };
 
         let tool = if self.for_video {
             None
@@ -946,74 +973,52 @@ impl PianoRoll {
         // move into the tooltip of the line naming the chord, so a small
         // screen still shows a dozen rows of notes.
         let compact = ui.available_height() < COMPACT_HEIGHT;
-        // A chord held on a keyboard comes first: it is what you are
-        // thinking about right now.
-        let held_chord = match analyze(held.iter().copied()) {
+        let current = self.current_chord(drawing);
+        let next_hint = self.chords_in_key(ui, scale, current, compact, actions);
+        self.about_the_notes(ui, drawing, &next_hint, compact);
+        ui.add_space(2.0);
+        self.grid_and_lanes(ui, drawing, &others, actions);
+
+        if let Some(step) = self.hovered_step {
+            self.last_step = Some(step);
+        }
+        self.use_picked_tool(ui, tool, pattern, scale, actions);
+    }
+
+    /// The chord that the next-chord hints follow. A chord held on a
+    /// keyboard comes first: it is what you are thinking about right
+    /// now. Then the chord at the last step pointed at, or playing.
+    fn current_chord(&self, drawing: Drawing) -> Option<(ChordAt, Chord, PitchClass)> {
+        let held_chord = match analyze(drawing.held.iter().copied()) {
             Harmony::Chord { chord, bass } => Some((ChordAt::Keys, chord, bass)),
             _ => None,
         };
-        let current = held_chord.or_else(|| {
-            let step = self.last_step.or(playhead)?;
-            match analyze(sounding(pattern, &heard, step)) {
+        held_chord.or_else(|| {
+            let step = self.last_step.or(drawing.playhead)?;
+            match analyze(sounding(drawing.pattern, drawing.heard, step)) {
                 Harmony::Chord { chord, bass } => Some((ChordAt::Step(step), chord, bass)),
                 _ => None,
             }
-        });
-        let next_hint = self.chords_in_key(ui, scale, current, compact, actions);
+        })
+    }
 
+    /// The lines above the grid that name what is pointed at: the chord
+    /// at the step under the pointer (or the keys held down, or a
+    /// soloist's note), and the set classes of those notes and of the
+    /// selection. In a `compact` window, the sets and `next_hint` go in
+    /// the first line's tooltip.
+    fn about_the_notes(&self, ui: &mut Ui, drawing: Drawing, next_hint: &str, compact: bool) {
+        let Drawing {
+            scale,
+            playhead,
+            held,
+            ..
+        } = drawing;
         // The step under the pointer was found while drawing the last
         // frame; one frame late is too fast for anyone to notice.
         let (info, set) = if held.is_empty() {
             match self.hovered_step.or(playhead) {
-                Some(step) => {
-                    let set: PitchSet = sounding(pattern, &heard, step)
-                        .map(|note| note.pitch_class())
-                        .collect();
-                    // The chord of all the tracks, heard over the beat,
-                    // and this track's own when it is another (a piano's
-                    // C/E over a bass's C).
-                    let hearing = project.hearing_with_pattern(self.pattern, step);
-                    let all = hearing.best();
-                    let or = hearing
-                        .alternatives()
-                        .iter()
-                        .filter_map(|reading| reading.harmony.label_in(scale))
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    let track = analyze(sounding(pattern, &[self.channel], step));
-                    let own = match track.label_in(scale) {
-                        Some(label) if track != all => {
-                            let name = project
-                                .channels()
-                                .get(self.channel)
-                                .map_or("This track", |channel| channel.name.as_str());
-                            match track {
-                                Harmony::Chord { chord, bass } => {
-                                    match scale.figured_numeral(chord, bass) {
-                                        Some(numeral) => format!("{name}: {label} ({numeral}). "),
-                                        None => format!("{name}: {label}. "),
-                                    }
-                                }
-                                _ => format!("{name}: {label}. "),
-                            }
-                        }
-                        _ => String::new(),
-                    };
-                    (
-                        format!(
-                            "Step {}: {own}{}{}{}",
-                            step + 1,
-                            if own.is_empty() { "" } else { "All: " },
-                            all.describe(scale),
-                            if or.is_empty() {
-                                String::new()
-                            } else {
-                                format!(" (or {or})")
-                            }
-                        ),
-                        set,
-                    )
-                }
+                Some(step) => self.step_info(drawing, step),
                 None => (
                     "Point at a step to name the chord there.".to_string(),
                     PitchSet::EMPTY,
@@ -1024,9 +1029,95 @@ impl PianoRoll {
             let set: PitchSet = held.iter().map(|note| note.pitch_class()).collect();
             (format!("Keys down: {}", harmony.describe(scale)), set)
         };
-        // Over a soloist's note, what that note is.
-        let solo_note = roles
-            .as_ref()
+        let solo_note = self.solo_note(drawing);
+        let info = ui.label(solo_note.unwrap_or(info));
+        let sets = self.set_lines(drawing, set);
+        if compact {
+            let sets = sets.join("\n");
+            let more: Vec<&str> = [next_hint, sets.as_str()]
+                .into_iter()
+                .filter(|text| !text.trim().is_empty())
+                .collect();
+            if !more.is_empty() {
+                info.on_hover_text(more.join("\n\n"));
+            }
+        } else {
+            ui.weak(sets.join("    ")).on_hover_text(
+                "Pitch-class set theory names any group of notes: its Forte number, its \
+                     notes packed as tightly as they go (normal form), the same packed from 0 \
+                     with its inversion (prime form), and how many of each interval it holds. \
+                     Sets... opens the list of every set.",
+            );
+        }
+    }
+
+    /// What sounds at `step`: the chord of all the tracks, heard over the
+    /// beat, and this track's own when it is another (a piano's C/E over
+    /// a bass's C), with the notes of the tracks heard as a set.
+    fn step_info(&self, drawing: Drawing, step: usize) -> (String, PitchSet) {
+        let Drawing {
+            project,
+            pattern,
+            scale,
+            heard,
+            ..
+        } = drawing;
+        let set: PitchSet = sounding(pattern, heard, step)
+            .map(|note| note.pitch_class())
+            .collect();
+        let hearing = project.hearing_with_pattern(self.pattern, step);
+        let all = hearing.best();
+        let or = hearing
+            .alternatives()
+            .iter()
+            .filter_map(|reading| reading.harmony.label_in(scale))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let track = analyze(sounding(pattern, &[self.channel], step));
+        let own = match track.label_in(scale) {
+            Some(label) if track != all => {
+                let name = project
+                    .channels()
+                    .get(self.channel)
+                    .map_or("This track", |channel| channel.name.as_str());
+                match track {
+                    Harmony::Chord { chord, bass } => match scale.figured_numeral(chord, bass) {
+                        Some(numeral) => format!("{name}: {label} ({numeral}). "),
+                        None => format!("{name}: {label}. "),
+                    },
+                    _ => format!("{name}: {label}. "),
+                }
+            }
+            _ => String::new(),
+        };
+        (
+            format!(
+                "Step {}: {own}{}{}{}",
+                step + 1,
+                if own.is_empty() { "" } else { "All: " },
+                all.describe(scale),
+                if or.is_empty() {
+                    String::new()
+                } else {
+                    format!(" (or {or})")
+                }
+            ),
+            set,
+        )
+    }
+
+    /// Over a soloist's note, what that note is.
+    fn solo_note(&self, drawing: Drawing) -> Option<String> {
+        let Drawing {
+            project,
+            pattern,
+            roles,
+            playhead,
+            held,
+            ..
+        } = drawing;
+        let notes = pattern.notes(self.channel);
+        roles
             .zip(self.hovered_step.or(playhead).filter(|_| held.is_empty()))
             .and_then(|(roles, step)| {
                 let (note, role) = notes
@@ -1043,17 +1134,21 @@ impl PianoRoll {
                     (bar, beat, step) => format!("Bar {bar}, beat {beat}, step {step}"),
                 };
                 Some(format!("{place} · {}", role.describe(&name, &over, key)))
-            });
-        let info = ui.label(solo_note.unwrap_or(info));
-        // Any group of notes, chord or not, has a set class. Shown for
-        // three notes or more, and for the selection.
+            })
+    }
+
+    /// The set lines: any group of notes, chord or not, has a set class.
+    /// Shown for `set`, the notes pointed at, when it has three notes or
+    /// more, and for the selection; for a soloist, what the colours mean.
+    fn set_lines(&self, drawing: Drawing, set: PitchSet) -> Vec<String> {
+        let scale = drawing.scale;
         let selected: PitchSet = self
             .selection
             .iter()
             .map(|note| note.pitch.pitch_class())
             .collect();
         let mut sets = Vec::new();
-        if roles.is_some() {
+        if drawing.roles.is_some() {
             sets.push(
                 "Soloist: chord tones green (R 3 5 7), scale notes blue (p passing, n \
                  neighbour, s other), chromatic orange (a approach, cp passing)"
@@ -1078,25 +1173,29 @@ impl PianoRoll {
                     .to_string(),
             });
         }
-        if compact {
-            let sets = sets.join("\n");
-            let more: Vec<&str> = [next_hint.as_str(), sets.as_str()]
-                .into_iter()
-                .filter(|text| !text.trim().is_empty())
-                .collect();
-            if !more.is_empty() {
-                info.on_hover_text(more.join("\n\n"));
-            }
-        } else {
-            ui.weak(sets.join("    ")).on_hover_text(
-                "Pitch-class set theory names any group of notes: its Forte number, its \
-                     notes packed as tightly as they go (normal form), the same packed from 0 \
-                     with its inversion (prime form), and how many of each interval it holds. \
-                     Sets... opens the list of every set.",
-            );
-        }
-        ui.add_space(2.0);
+        sets
+    }
 
+    /// The grid of notes, scrolling both ways, with the chord lane above
+    /// it, the velocity lane below it, and over it a banner when the
+    /// channel has no notes. `others` are the channels that can be shown
+    /// faintly behind this one's notes.
+    fn grid_and_lanes(
+        &mut self,
+        ui: &mut Ui,
+        drawing: Drawing,
+        others: &[usize],
+        actions: &mut Vec<RollAction>,
+    ) {
+        let Drawing {
+            project,
+            pattern,
+            scale,
+            roles,
+            playhead,
+            held,
+            ..
+        } = drawing;
         let length = pattern.length();
         // At 100% the whole pattern fits the window. Zooming in makes the
         // steps wider, and the grid scrolls sideways (Shift+wheel).
@@ -1150,19 +1249,19 @@ impl PianoRoll {
                     KEY_WIDTH,
                 );
             }
-            let ghosts = if self.ghosts { &others[..] } else { &[] };
+            let ghosts = if self.ghosts { others } else { &[] };
             let view = View {
                 scale,
                 step_width,
                 playhead,
                 held,
-                roles: roles.as_deref(),
+                roles,
             };
             self.grid(ui, pattern, ghosts, view, actions)
         });
         self.scrolled = output.state.clamped_offset();
         self.view_rect = Some(output.inner_rect);
-        self.banner = notes.is_empty().then(|| {
+        self.banner = pattern.notes(self.channel).is_empty().then(|| {
             // Drawn after the grid, so it is painted over it.
             let view = output.inner_rect;
             let place = Rect::from_min_max(
@@ -1197,17 +1296,24 @@ impl PianoRoll {
             ui.add_space(4.0);
             self.velocity_lane(ui, pattern, lanes, actions);
         }
+    }
 
-        if let Some(step) = self.hovered_step {
-            self.last_step = Some(step);
-        }
+    /// Uses the tool picked from the Tools menu (`tool`), or with a key.
+    /// Notes copied in another roll are on the system clipboard, so the
+    /// menu's Paste reads it too, the frame after asking.
+    fn use_picked_tool(
+        &mut self,
+        ui: &mut Ui,
+        tool: Option<Tool>,
+        pattern: &Pattern,
+        scale: Scale,
+        actions: &mut Vec<RollAction>,
+    ) {
         let key_tool = if self.has_keyboard && !ui.ctx().text_edit_focused() {
             self.tool_from_keys(ui.ctx())
         } else {
             None
         };
-        // Notes copied in another roll are on the system clipboard, so
-        // the menu's Paste reads it too, the frame after asking.
         let tool = match tool {
             Some(Tool::Paste) => {
                 ui.ctx()
