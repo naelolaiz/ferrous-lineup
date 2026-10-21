@@ -647,6 +647,230 @@ pub(super) const AVE_MARIA: Song = Song {
             fourth beat of the second bar, A7 and F sharp diminished in the fourth.",
 };
 
+// Source: https://github.com/MutopiaProject/MutopiaProject/tree/master/ftp/SchubertF/D550/forelle/forelle-lys
+// (Mutopia 2013/02/21-502, Maurizio Tomasi's engraving of the Peters edition, in the
+// public domain), compiled to MIDI with LilyPond. The dynamics are the piano's, and the
+// voice follows them. The engraving writes D natural for the right hand's last eighth
+// in bars 43 and 44, against the D flat in the left hand; in bars 19 and 20, where the
+// first verse has the same music, it is D flat, so it is D flat here too. With that
+// the second verse's last lines are the first verse's, and the form plays them again.
+pub(super) const DIE_FORELLE: Song = Song {
+    name: "Die Forelle",
+    origin: "Franz Schubert, D 550, 1817",
+    feel: "Art song",
+    genre: Genre::Classical,
+    tonic: CSharp,
+    mode: Major,
+    time: TWO_FOUR,
+    tempo: 75.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(
+        gm::VOICE_OOHS,
+        gm::ACOUSTIC_GRAND_PIANO,
+        gm::ACOUSTIC_GRAND_PIANO,
+    ),
+    style: "",
+    parts: &[
+        // Bars 1-6 of the score.
+        Part::new(
+            "Intro",
+            "-:8 | - | - | - | - | -:6 !pp Ab4:2",
+            "Db | Db | Db | Db | Db | Db",
+        )
+        .with_left("(3 -:1 !p Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 | F4+Ab4:4 F4+Ab4 | F4+Ab4 F4+Ab4 | \
+            -:2 !pp Db4:4 F4:2 | - Db4:4 F4:2 | Db4:6 -:2 & -:8 | -:2 !p Db5:4 F5:2 | \
+            - Db5:4 F5:2 | -:8 | - | - & !p Db3:2 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | \
+            (3 -:1 Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | (3 -:1 Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | \
+            !pp F3+Ab3:4 F3+Ab3 | F3+Ab3 F3+Ab3 | Db2+Ab2+Db3+F3+Ab3:6 -:2 & -:8 | - | - | \
+            (3 -:1 !pp Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2 | \
+            (3 -:1 Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2 | -:8")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 7-18 of the score.
+        Part::new(
+            "Verse",
+            "!p Db5:2 Db5 F5 F5 | Db5:4 Ab4:2 Ab4 | Ab4:3 Ab4:1 Eb5 Db5 C5 Bb4 | Ab4:4 -:2 Ab4 | \
+            Db5 Db5 F5 F5 | Db5:4 Ab4:2 Db5 | C5 Bb4:1 C5 Db5:2 G4 | Ab4:4 -:2 Ab4 | \
+            C5 C5 Db5:1 C5 Bb4 C5 | Db5:4 Ab4:2 Db5 | C5 C5 C5:1 Gb5 Eb5 C5 | Db5:6 Db5:2",
+            "Db | Db | Ab7 | Ab7 | Db | Db | Ab/Eb Eb7 | Ab | Ab7 | Db | Ab7 | Db",
+        )
+        .with_left("(3 -:1 !p Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | \
+            (3 -:1 Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | \
+            (3 -:1 Ab3 Gb4 (3 Eb4:1 Ab4 Gb4 >Eb5:2 Ab4 | \
+            (3 -:1 Ab3 Gb4 (3 Eb4:1 Ab4 Gb4 >Eb5:2 Ab4 | \
+            (3 -:1 Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | (3 -:1 Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | \
+            (3 -:1 C4 Ab4 (3 Eb4:1 C5 Ab4 >Eb5:2 G4 | (3 -:1 Ab3 Eb4 (3 C4:1 Ab4 Eb4 >C5:2 Ab4 | \
+            (3 -:1 C4 Eb4 (3 Gb4:1 G4 Ab4 >Bb4:2 Ab4 | (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 | \
+            (3 -:1 C4 Eb4 (3 Gb4:1 G4 Ab4 >Bb4:2 Ab4 | \
+            (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 & !p Db3:2 F3+Ab3 Db3 F3+Ab3+Db4 | \
+            Db3 F3+Ab3 Db3 F3+Ab3+Db4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | Db3 F3+Ab3 Db3 F3+Ab3+Db4 | \
+            Db3 F3+Ab3 Db3 F3+Ab3+Db4 | Eb2 Eb3+Ab3+C4 Eb2 Eb3+Bb3+Db4 | \
+            Ab2 Eb3+Ab3 Ab2 Eb3+Ab3+C4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 19-26 of the score.
+        Part::new(
+            "Verse, last lines",
+            "!p Bb4:2 Bb4 Bb4 Db5 | Db5:4 Ab4:2 Ab4 | Ab4:3 Ab4:1 Eb5:2 C5 | Db5:6 Db5:2 | \
+            C5:1 Bb4 Bb4:2 Bb4:1 Db5 C5 Eb5 | Db5:4 Ab4:2 Ab4 | Ab4:3 Ab4:1 Eb5:2 C5 | Db5:4 -",
+            "Gb | Db | Ab7 | Db | Gb | Db | Ab7 | Db",
+        )
+        .with_left("(3 -:1 !p Db4 Gb4 (3 Bb4:1 Cb5 C5 >Eb5:2 Db5 | \
+            (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >Eb5:2 Db5 | (3 -:1 Eb4 Gb4 (3 G4:1 Ab4 C5 >Gb5:2 Eb5 | \
+            (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 | (3 -:1 Db4 Gb4 (3 Bb4:1 Cb5 C5 >Eb5:2 Db5 | \
+            (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >Eb5:2 Db5 | (3 -:1 Eb4 Gb4 (3 G4:1 Ab4 C5 >Gb5:2 Eb5 | \
+            (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 & !p Gb2:2 Gb3+Bb3+Db4 Gb2 Gb3+Bb3+Db4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | Gb2 Gb3+Bb3+Db4 Gb2 Gb3+Bb3+Db4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 27-30 of the score.
+        Part::new(
+            "Interlude",
+            "-:8 | - | - | -:6 !pp Ab4:2",
+            "Db | Db | Db | Db",
+        )
+        .with_left("!p F4+Ab4:4 F4+Ab4 | F4+Ab4 F4+Ab4 | !pp F3+Ab3 F3+Ab3 | \
+            F3+Ab3 F3+Ab3 & -:2 !p Db5:4 F5:2 | - Db5:4 F5:2 | - !pp Db4:4 F4:2 | \
+            - Db4:4 F4:2 & (3 -:1 !p Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | \
+            (3 -:1 Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | \
+            (3 -:1 !pp Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2 | \
+            (3 -:1 Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 31-42 of the score.
+        Part::new(
+            "Second verse",
+            "!p Db5:2 Db5 F5 F5 | Db5:4 Ab4:2 Ab4 | Ab4:3 Ab4:1 Eb5 Db5 C5 Bb4 | Ab4:4 -:2 Ab4 | \
+            Db5 Db5 F5 F5 | Db5:4 Ab4:2 Db5 | C5 Bb4:1 C5 Db5:2 G4 | Ab4:4 -:2 Ab4 | \
+            C5 C5 Db5:1 C5 Bb4 C5 | Db5:4 Ab4:2 Db5 | C5 C5 C5:1 Gb5 Eb5 C5 | Db5:6 Db5:2",
+            "Db | Db | Ab7 | Ab7 | Db | Db | Ab/Eb Eb7 | Ab | Ab7 | Db | Ab7 | Db",
+        )
+        .with_left("(3 -:1 !p Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | \
+            (3 -:1 Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | \
+            (3 -:1 Ab3 Gb4 (3 Eb4:1 Ab4 Gb4 >Eb5:2 Ab4 | \
+            (3 -:1 Ab3 Gb4 (3 Eb4:1 Ab4 Gb4 >Eb5:2 Ab4 | \
+            (3 -:1 Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | (3 -:1 Ab3 F4 (3 Db4:1 Ab4 F4 >Db5:2 Ab4 | \
+            (3 -:1 C4 Ab4 (3 Eb4:1 C5 Ab4 >Eb5:2 G4 | (3 -:1 Ab3 Eb4 (3 C4:1 Ab4 Eb4 >C5:2 Ab4 | \
+            (3 -:1 C4 Eb4 (3 Gb4:1 G4 Ab4 >Bb4:2 Ab4 | (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 | \
+            (3 -:1 C4 Eb4 (3 Gb4:1 G4 Ab4 >Bb4:2 Ab4 | \
+            (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 & !p Db3:2. F3+Ab3. Db3. F3+Ab3+Db4. | \
+            Db3 F3+Ab3 Db3 F3+Ab3+Db4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | Db3 F3+Ab3 Db3 F3+Ab3+Db4 | \
+            Db3 F3+Ab3 Db3 F3+Ab3+Db4 | Eb2 Eb3+Ab3+C4 Eb2 Eb3+Bb3+Db4 | \
+            Ab2 Eb3+Ab3 Ab2 Eb3+Ab3+C4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | \
+            Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 51-54 of the score.
+        Part::new(
+            "Interlude again",
+            "-:8 | - | - | -:6 !pp F4:2",
+            "Db | Db | Db | Db",
+        )
+        .with_left("!p F4+Ab4:4 F4+Ab4 | F4+Ab4 F4+Ab4 | -:2 !pp Db4:4 F4:2 | \
+            - Db4:4 F4:2 & -:2 !p Db5:4 F5:2 | - Db5:4 F5:2 | -:8 | \
+            - & (3 -:1 !p Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | \
+            (3 -:1 Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | !pp F3+Ab3:4 F3+Ab3 | F3+Ab3 F3+Ab3 & -:8 | \
+            - | (3 -:1 !pp Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2 | \
+            (3 -:1 Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 55-67 of the score.
+        Part::new(
+            "Third verse",
+            "!pp F4:2 F4 F4 C5 | Db5:4 Bb4:2 - | - F4 F4:3 C5:1 | Db5:4 - | -:2 !p Db5 Db5 Db5 | \
+            Db5 Db5 Db5 Db5 | Db5:4 Bb4:2 -:1 Bb4 | Eb5:5 Bb4:1 G4 Eb4 | C5:4 -:2 Ab4 | \
+            Db5:3 Db5:1 C5:3 C5:1 | F5:2 Bb4 - Bb4 | Eb5:4 !mf Eb5:2 !f E5 | F5 Db5 C5 Eb5",
+            "F7/A | Bbm | F7/A | Bbm | Eb7/G | Eb7/G | Eb7/G | Eb7/G | Ab7/Gb | Db/F Ab/Eb | \
+            Bb7/D Eb7/Db | Ab/C Ab7/C | Db Ab7",
+        )
+        .with_left("(3 -:1 !pp C4 F4 (3 Eb4:1 Gb4 F4 (3 -:1 C4 F4 (3 Eb4:1 Gb4 F4 | \
+            (3 -:1 Bb3 F4 (3 Db4:1 Gb4 F4 (3 -:1 Bb3 F4 (3 Db4:1 Gb4 F4 | \
+            (3 -:1 C4 F4 (3 Eb4:1 Gb4 F4 (3 -:1 C4 F4 (3 Eb4:1 Gb4 F4 | \
+            (3 -:1 Bb3 F4 (3 Db4:1 Gb4 F4 (3 -:1 Bb3 F4 (3 Db4:1 Gb4 F4 | \
+            (3 !p Bb3:1 Eb4 Db4 (3 Bb3:1 Fb4 Db4 (3 Bb3:1 Eb4 Db4 (3 Bb3:1 Fb4 Db4 | \
+            (3 Bb3:1 Eb4 Db4 (3 Bb3:1 Fb4 Db4 (3 Bb3:1 Eb4 Db4 (3 Bb3:1 Fb4 Db4 | \
+            (3 Bb3:1 Eb4 Db4 (3 Bb3:1 Fb4 Db4 (3 Bb3:1 Eb4 Db4 (3 Bb3:1 Fb4 Db4 | \
+            -:1 Bb3+Db4+Eb4. Bb3+Db4+Eb4. Bb3+Db4+Eb4. Bb3+Db4+Eb4. -:3 | \
+            -:1 Ab3+C4+Eb4. Ab3+C4+Eb4. Ab3+C4+Eb4. Ab3+C4+Eb4. -:3 | \
+            -:1 Ab3+Db4. Ab3+Db4. -:2 Ab3+C4:1. Ab3+C4. - | -:8 | \
+            Eb4:1 Eb4 !mp Eb4 !mf Eb4 Eb4 Eb4 !f E4 E4 | \
+            F4 F4 Db4 Db4 C4 C4 Eb4 Eb4 & !pp A2:2 C3+Eb3+F3 A2 C3+Eb3+F3 | \
+            Bb2 Db3+F3 Bb2 Db3+F3 | A2 C3+Eb3+F3 A2 C3+Eb3+F3 | Bb2 Db3+F3 Bb2 Db3+F3 | \
+            !p G2+Db3+Eb3. Ab2+Db3+Fb3. G2+Db3+Eb3. Ab2+Db3+Fb3. | \
+            G2+Db3+Eb3. Ab2+Db3+Fb3. G2+Db3+Eb3. Ab2+Db3+Fb3. | \
+            G2+Db3+Eb3. Ab2+Db3+Fb3. G2+Db3+Eb3. Ab2+Db3+Fb3. | \
+            -:1 G2+Eb3. G2+Eb3. G2+Eb3. G2+Eb3. -:3 | \
+            -:1 Gb2+Eb3. Gb2+Eb3. Gb2+Eb3. Gb2+Eb3. -:3 | F2+F3:2 -:1 F3. Eb3:2. -:1 Eb3. | \
+            D3:2 F3+Ab3+Bb3:1 D3 Db3:2. Eb3+G3+Bb3:1 Db3 | \
+            C3+Eb3+Ab3+Eb4 C3+Eb3+Ab3+Eb4 !mp C3+Eb3+Ab3+Eb4 !mf C3+Eb3+Ab3+Eb4 C3+Eb3+Ab3+Eb4 C3+Eb3+Ab3+Eb4 !f C3+Gb3+Ab3 C3+Gb3+Ab3 | \
+            Db3+F3+Ab3 Db3+F3+Ab3 F2+F3+Ab3 F2+F3+Ab3 Ab2+Eb3+Ab3 Ab2+Eb3+Ab3 Ab1+Gb3+Ab3 Ab1+Gb3+Ab3 & -:8 | \
+            - | - | - | - | - | - | - | - | - | -:1 !p F3+Ab3+Bb3 -:3 Eb3+G3+Bb3:1 -:2 | -:8 | -")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 68-76 of the score.
+        Part::new(
+            "Third verse, last lines",
+            "!p Db5:4 -:2 Db5 | Bb4 Bb4 Bb4 Db5 | Db5:4 Ab4:2 Ab4 | Ab4:3 Ab4:1 Eb5:2 C5 | \
+            Db5:6 Db5:2 | C5:1 Bb4 Bb4:2 Bb4:1 Db5 C5 Eb5 | Db5:4 Ab4:2 Ab4 | \
+            Ab4:3 Ab4:1 Eb5:2 C5 | Db5:4 -",
+            "Db | Gb | Db | Ab7 | Db | Gb | Db | Ab7 | Db",
+        )
+        .with_left("(3 -:1 !p Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 | \
+            (3 -:1 Db4 Gb4 (3 Bb4:1 Cb5 C5 >Eb5:2 Db5 | (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >Eb5:2 Db5 | \
+            (3 -:1 Eb4 Gb4 (3 G4:1 Ab4 C5 >Gb5:2 Eb5 | (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 | \
+            (3 -:1 Db4 Gb4 (3 Bb4:1 Cb5 C5 >Eb5:2 Db5 | (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >Eb5:2 Db5 | \
+            (3 -:1 Eb4 Gb4 (3 G4:1 Ab4 C5 >Gb5:2 Eb5 | \
+            (3 -:1 Db4 F4 (3 Gb4:1 G4 Ab4 >F5:2 Db5 & !p Db3:2 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | \
+            Gb2 Gb3+Bb3+Db4 Gb2 Gb3+Bb3+Db4 | Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | \
+            Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | \
+            Gb2 Gb3+Bb3+Db4 Gb2 Gb3+Bb3+Db4 | Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4 | \
+            Ab2 Gb3+Ab3+C4 Ab2 Gb3+Ab3+C4 | Db3 F3+Ab3+Db4 Db3 F3+Ab3+Db4")
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 77-81 of the score.
+        Part::new(
+            "Postlude",
+            "-:8 | - | - | - | -",
+            "Db | Db | Db | Db | Db",
+        )
+        .with_left("!p F4+Ab4:4 F4+Ab4 | F4+Ab4 F4+Ab4 | -:2 Db4:4 F4:2 | - !pp Db4:4 F4:2 | \
+            Db4:8 & -:2 !p Db5:4 F5:2 | - Db5:4 F5:2 | -:8 | - | \
+            - & (3 -:1 !p Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | \
+            (3 -:1 Db3 F3 (3 Gb3:1 G3 Ab3 >Db4:2 Ab3 | F3+Ab3:4 F3+Ab3 | !pp F3+Ab3 F3+Ab3 | \
+            Db2+Ab2+Db3+F3+Ab3:8 & -:8 | - | (3 -:1 !p Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2 | \
+            (3 -:1 !pp Db2 F2 (3 Gb2:1 G2 Ab2 >Db3:2 Ab2 | -:8")
+        .played(Comping::Held, Bass::None, "")
+        .with_tempo(&[fermata(32, 8)]),
+    ],
+    form: &[
+        "Intro",
+        "Verse",
+        "Verse, last lines",
+        "Interlude",
+        "Second verse",
+        "Verse, last lines",
+        "Interlude again",
+        "Third verse",
+        "Third verse, last lines",
+        "Postlude",
+    ],
+    drums_from: 0,
+    about: "The trout, in D flat major: the piano's right hand darts up in sextuplet \
+            sixteenths, D flat, F, G flat, G natural, A flat, and lands on an accented \
+            eighth, over a left hand that plucks bass and chord. The first two verses have \
+            the same music, nearly all I and V7 (D flat and A flat seven); the middle of each \
+            verse cadences in A flat through its own dominant, E flat seven, and the last \
+            lines bring in IV, G flat, and are sung twice. In the third verse the fisherman \
+            muddies the water: B flat minor (vi) after its dominant F7, then four bars of E \
+            flat seven in staccato chords under repeated D flats, and a chain of dominants \
+            round the circle of fifths, B flat seven, E flat seven, A flat seven, back to D \
+            flat, while the right hand's repeated notes grow to forte and rise from E flat \
+            through E natural to F. The last lines return and the postlude ends on a held \
+            chord.",
+};
+
 // Source: https://www.mutopiaproject.org/ftp/RachmaninoffS/O3/rach-prelude-op3-no2/rach-prelude-op3-no2.ly
 pub(super) const PRELUDE_IN_C_SHARP_MINOR: Song = Song {
     name: "Prelude in C-sharp minor",
