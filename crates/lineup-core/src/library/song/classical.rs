@@ -1227,6 +1227,273 @@ pub(super) const AIR_ON_THE_G_STRING: Song = Song {
             into the next is played again where the next part starts.",
 };
 
+// Source: https://github.com/MutopiaProject/MutopiaProject/tree/master/ftp/BachJS/BWV208/Sheep
+// (Mutopia 2011/10/25-1794, Jeremy Visser's engraving of the Bach-Gesellschaft edition of
+// 1881, in the public domain), compiled to MIDI with LilyPond. Bach's "flauti" are
+// recorders, which the engraving calls flutes. It marks only their echoes; before each
+// piano echo they play forte, so the opening ritornello, the closing one (from bar 17) and
+// their interlude in C minor (from bar 26) are forte up to the echoes, and piano under the
+// voice. The voice's three trills are written out in thirty-second notes from the note
+// above. The engraving has no figures over the continuo: the chord chart is read from the
+// recorders, the voice and the bass. The continuo is on the Keys channel, played by a cello.
+pub(super) const SHEEP_MAY_SAFELY_GRAZE: Song = Song {
+    name: "Sheep May Safely Graze",
+    origin: "Johann Sebastian Bach, Cantata BWV 208, 1713",
+    feel: "Baroque",
+    genre: Genre::Classical,
+    tonic: ASharp,
+    mode: Major,
+    time: COMMON,
+    tempo: 60.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::VOICE_OOHS, gm::CELLO, gm::CELLO),
+    style: "Hymn",
+    parts: &[
+        // Bars 1-4 of the score.
+        Part::new(
+            "Ritornello",
+            "-:16 | - | - | -",
+            "Bb Bb Bb Eb/Bb | F7/Bb | Bb F7/A Gm F7 | Ebmaj7 F7 Gm F7",
+        )
+        .with_left("!mf Bb2:2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 | Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 | \
+            Bb3 Bb3 A3 A3 G3 G3 F3 F3 | Eb3 Eb3 F3 F3 G3 F3:1 Eb3 F3:2 F2")
+        .with_lines(&[
+            line(
+                "Recorder 1",
+                gm::RECORDER,
+                "!f F5:2 F5:1 D5 F5:2 F5:1 D5 F5:2 G5 G5 Bb5 | \
+                Eb5 Eb5:1 C5 Eb5:2 Eb5:1 C5 Eb5:2 A5 A5 C6 | \
+                Bb5:5/2 C6:1/2 D6:1 Bb5 D6 C6 F5 Bb5:5/2 !p C6:1/2 D6:1 Bb5 D6 C6 F5 | \
+                Bb5:2 !f D6:1/2 Eb6 F6:1 D6 Bb5 C6 A5 Bb5:2 !p D6:1/2 Eb6 F6:1 D6 Bb5 C6 A5",
+            ),
+            line(
+                "Recorder 2",
+                gm::RECORDER,
+                "!f D5:2 D5:1 Bb4 D5:2 D5:1 Bb4 D5:2 Eb5 Eb5 G5 | \
+                C5 C5:1 A4 C5:2 C5:1 A4 C5:2 Eb5 C5 Eb5 | \
+                D5:5/2 Eb5:1/2 F5:1 D5 F5 Eb5 C5 D5:5/2 !p Eb5:1/2 F5:1 D5 F5 Eb5 C5 | \
+                D5:2 !f Bb5:1/2 C6 D6:1 Bb5 D5 Eb5 F5 D5:2 !p Bb5:1/2 C6 D6:1 Bb5 D5 Eb5 C5",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 5-12 of the score.
+        Part::new(
+            "First lines",
+            "!mf Bb4:4 D5:2 C5 C5:6 D5:2 | Eb5:4 G5:2 F5 Eb5:1/2 D5 Eb5 D5 Eb5 D5 Eb5 D5 C5:2 Bb4 | \
+            D5 Bb4 A4 G4 C5:6 D5:2 | A4:4 G4:2 F4 F4:8 | F4:4 Ab4:2 G4 G4:6 A4:2 | \
+            Bb4:4 D5:2 C5 A4:4 G4:2 F4 | F5:4 G5:2 F5 F5 D5 C5 Bb4 | F5:4 G5:2 F5 F5 D5 C5 Bb4",
+            "Bb Bb F7/Bb F7/Bb | F7/A F7/A Bb Bb | Bb Bb C7/Bb F/A | F/C C7 F F7/Eb | \
+            Bb/D Bb7 Eb Gm/D | Cm7 Cm7 F7 F7/Eb | Bb/D Eb Bb F/C | Bb/D Eb Bb Bb/D",
+        )
+        .with_left("!mf Bb2:2 Bb2 Bb3 Bb3 Bb3 Bb3 Bb3 Bb3 | A3 A3 A3 A3 Bb3 Bb3 Bb3 Bb3 | \
+            Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 A2 Bb2 | C3 C3 C3 C3 F3 F3 Eb3 Eb3 | \
+            D3 D3 Bb2 Bb2 Eb3 Eb3 D3 D3 | C3 C3 C3 C3 F3 F3 Eb3 Eb3 | \
+            D3 D3 Eb3 Eb3 Bb2 Bb2 C3 C3 | D3 D3 Eb3 Eb3 Bb2 Bb2 D3 D3")
+        .with_lines(&[
+            line(
+                "Recorder 1",
+                gm::RECORDER,
+                "!p Bb5:4 -:12 | -:16 | - | - | F5:2 F5:1 D5 F5:2 F5:1 D5 F5:2 G5 G5 Bb5 | \
+                G5 G5:1 Eb5 G5:2 G5:1 Eb5 G5:2 A5 A5 C6 | \
+                - Bb5:1/2 C6 D6:1 Bb5 D6 C6 F5 Bb5:2 -:6 | \
+                -:2 Bb5:1/2 C6 D6:1 Bb5 D6 C6 F5 Bb5:2 -:6",
+            ),
+            line(
+                "Recorder 2",
+                gm::RECORDER,
+                "!p D5:4 -:12 | -:16 | - | - | D5:2 D5:1 Bb4 D5:2 D5:1 Bb4 D5:2 Eb5 Eb5 G5 | \
+                Eb5 Eb5:1 C5 Eb5:2 Eb5:1 C5 Eb5:2 F5 F5 A5 | \
+                - D5:1/2 Eb5 F5:1 D5 F5 Eb5 C5 D5:2 -:6 | \
+                -:2 D5:1/2 Eb5 F5:1 D5 F5 Eb5 C5 D5:2 -:6",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 13-16 of the score.
+        Part::new(
+            "Last lines",
+            "!mf Eb5:6 F5:2 D5 C5 Bb4 C5 | A4:6 Bb4:2 Bb4:8 | - G5:2 Eb5 D5 C5 | \
+            F5:6 G5:2 Eb5:1/2 D5 Eb5 D5 Eb5 D5 Eb5 D5 Eb5 D5 Eb5 D5 C5:1 Bb4",
+            "Cm F7 Bb Cm/Eb | F F Bb Bb | Bb Eb/Bb F7/Bb F7/A | Bb Eb Bb/F F7",
+        )
+        .with_left("!mf C3:2 C3 F3 F3 Bb2 C3 D3 Eb3 | F3 F3 F2 F2 Bb2 Bb2 Bb2 Bb2 | \
+            Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 A2 A2 | Bb2 Bb2 Eb3 Eb3 F3 F3 F2 F2")
+        .with_lines(&[
+            line(
+                "Recorder 1",
+                gm::RECORDER,
+                "-:16 | -:8 !p F5:2 F5:1 D5 F5:2 F5:1 D5 | \
+                F5:2 G5 G5 Bb5 Eb5 Eb5:1 C5 Eb5:2 Eb5:1 C5 | \
+                A5:2 Bb5 Bb5 C6 - D6:1/2 Eb6 F6:1 D6 Bb5 F5 A5",
+            ),
+            line(
+                "Recorder 2",
+                gm::RECORDER,
+                "-:16 | -:8 !p D5:2 D5:1 Bb4 D5:2 D5:1 Bb4 | \
+                D5:2 Eb5 Eb5 G5 C5 C5:1 A4 C5:2 C5:1 A4 | \
+                C5:2 D5 D5 Eb5 - Bb5:1/2 C6 D6:1 Bb5 D5 Eb5 C5",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 17-20 of the score.
+        Part::new(
+            "Ritornello again",
+            "!mf Bb4:4 -:12 | -:16 | - | -",
+            "Bb Bb Bb Eb/Bb | F7/Bb | Bb F7/A Gm F7 | Ebmaj7 F7 Gm F7",
+        )
+        .with_left("!mf Bb2:2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 | Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 Bb2 | \
+            Bb3 Bb3 A3 A3 G3 G3 F3 F3 | Eb3 Eb3 F3 F3 G3 F3:1 Eb3 F3:2 F2")
+        .with_lines(&[
+            line(
+                "Recorder 1",
+                gm::RECORDER,
+                "!f Bb5:2 F5:1 D5 F5:2 F5:1 D5 F5:2 G5 G5 Bb5 | \
+                Eb5 Eb5:1 C5 Eb5:2 Eb5:1 C5 Eb5:2 A5 A5 C6 | \
+                Bb5:5/2 C6:1/2 D6:1 Bb5 D6 C6 F5 Bb5:5/2 !p C6:1/2 D6:1 Bb5 D6 C6 F5 | \
+                Bb5:2 !f D6:1/2 Eb6 F6:1 D6 Bb5 C6 A5 Bb5:2 !p D6:1/2 Eb6 F6:1 D6 Bb5 C6 A5",
+            ),
+            line(
+                "Recorder 2",
+                gm::RECORDER,
+                "!f D5:2 D5:1 Bb4 D5:2 D5:1 Bb4 D5:2 Eb5 Eb5 G5 | \
+                C5 C5:1 A4 C5:2 C5:1 A4 C5:2 Eb5 C5 Eb5 | \
+                D5:5/2 Eb5:1/2 F5:1 D5 F5 Eb5 C5 D5:5/2 !p Eb5:1/2 F5:1 D5 F5 Eb5 C5 | \
+                D5:2 !f Bb5:1/2 C6 D6:1 Bb5 D5 Eb5 F5 D5:2 !p Bb5:1/2 C6 D6:1 Bb5 D5 Eb5 C5",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 21-22 of the score.
+        Part::new(
+            "Middle, in G minor",
+            "!mf D5:4 G5 F#5:6 G5:2 | Eb5:4 D5 C5:1/2 Bb4 C5 Bb4 C5 Bb4 C5 Bb4 A4:2 G4",
+            "Bb Gm/Bb D7/A Gm/Bb | Cm D Gm Gm7/F",
+        )
+        .in_key(G, HarmonicMinor)
+        .with_left("!mf Bb2:2 Bb2 Bb3 Bb3 A3 A3 Bb3 Bb3 | C4 C4 D4 D4 G3 G3 F3 F3")
+        .with_lines(&[
+            line(
+                "Recorder 1",
+                gm::RECORDER,
+                "!p Bb5:4 -:12 | -:16",
+            ),
+            line(
+                "Recorder 2",
+                gm::RECORDER,
+                "!p D5:4 -:12 | -:16",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 23-30 of the score.
+        Part::new(
+            "Middle, in C minor",
+            "!mf C5:4 D5:2 B4 C5:6 D5:2 | Eb5:4 F5:2 D5 Eb5:4 G5:2 F5 | G5:4 Ab5 B4 C5:2 D5 | \
+            Eb5:4 D5:2 C5 C5:8 | -:16 | - | - | -:8 G4:4 Bb4:2 A4",
+            "Cm/Eb G7/D Cm/Eb G7/B | Cm G7/B Cm G7/D | Cm/Eb Fm G7/F Cm/Eb | Cm/G G Cm Cm | \
+            Cm Fm/C G7/C G7/C | G7/C G7/C Cm Cm7/Bb | Ab G7 Fm7 G7 | Ab G7 Cm Cm7",
+        )
+        .in_key(C, HarmonicMinor)
+        .with_left("!mf Eb3:2 Eb3 D3 D3 Eb3 Eb3 B2 B2 | C3 C3 B2 B2 C3 C3 D3 D3 | \
+            Eb3 Eb3 F3 F3 F3 F3 Eb3 F3 | G3 G3 G2 G2 C3 C3 C3 C3 | C3 C3 C3 C3 C3 C3 C3 C3 | \
+            C3 C3 C3 C3 C4 C4 Bb3 Bb3 | Ab3 Ab3 G3 G3 F3 F3 G3 G3 | \
+            Ab3 G3:1 F3 G3:2 G2 C3 C3 C3 C3")
+        .with_lines(&[
+            line(
+                "Recorder 1",
+                gm::RECORDER,
+                "-:16 | - | - | -:8 !f G5:2 G5:1 Eb5 G5:2 G5:1 Eb5 | \
+                G5:2 Ab5 Ab5 C6 F5 F5:1 D5 F5:2 F5:1 D5 | \
+                F5:2 B5 B5 D6 C6:5/2 D6:1/2 Eb6:1 C6 Eb6 D6 G5 | \
+                C6:5/2 !p D6:1/2 Eb6:1 C6 Eb6 D6 G5 C6:2 !f Eb6:1/2 F6 G6:1 Eb6 C6 D6 B5 | \
+                C6:2 !p Eb6:1/2 F6 G6:1 Eb6 C6 D6 B5 C6:4 -",
+            ),
+            line(
+                "Recorder 2",
+                gm::RECORDER,
+                "-:16 | - | - | -:8 !f Eb5:2 Eb5:1 C5 Eb5:2 Eb5:1 C5 | \
+                Eb5:2 F5 F5 Ab5 D5 D5:1 B4 D5:2 D5:1 B4 | \
+                D5:2 F5 D5 F5 Eb5:5/2 F5:1/2 G5:1 Eb5 G5 F5 D5 | \
+                Eb5:5/2 !p F5:1/2 G5:1 Eb5 G5 F5 D5 Eb5:2 !f C6:1/2 D6 Eb6:1 C6 Eb5 F5 G5 | \
+                Eb5:2 !p C6:1/2 D6 Eb6:1 C6 Eb5 F5 G5 Eb5:4 -",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // Bars 31-40 of the score.
+        Part::new(
+            "Middle, in F major",
+            "!mf Bb4:6 D5:2 C5:4 Bb4:2 A4:1 Bb4 | A4:4 G4:2 F4 F5:4 E5:2 D5 | \
+            D5:6 F5:2 E5 F5:1 G5 E5:2 D5 | C#5:4 B4:2 A4 C5:8 | _:4 Bb4:2 C5:1 A4 Bb4:8 | \
+            _:2 A4 A4:4 Eb5:8 | _:4 D5:2 F5:1 E5 F5:8 | _:2 E5 D5 E5 E5:4 D5:2 C5 | \
+            Bb4:4 A4:2 Bb4:1 G4 C5 Bb4 A4 Bb4 C5 Bb4 C5 D5 | A4:4 G4:2 F4 F4:8",
+            "Bb/D Bb/D C7/E C7/E | F C/E Dm Dm7/C | Gm/Bb Gm/Bb C7/G C7/G | A7 A7/G F#dim7 D7 | \
+            Gm Gm7/F C7/E C7 | F F F7 F7 | Bbsus4 Bb G7 G7 | C C C7/Bb F/A | C7/G C7/G F/A Bb | \
+            F/C C7 F F",
+        )
+        .in_key(F, Major)
+        .with_left("!mf D3:2 D3 D3 D3 E3 E3 E3 E3 | F3 F3 E3 E3 D3 D3 C3 C3 | Bb2 Bb2 A2 A2 G2 G2 G2 G2 | \
+            A2 A2 G2 G2 F#2 F#2 D2 D2 | G2 G2 F2 F2 E2 E2 C2 C2 | F2 F2 F2 F2 F2 F2 F2 F2 | \
+            Bb2 Bb2 Bb2 Bb2 G2 G2 G2 G2 | C3 C3 C3 C3 Bb2 Bb2 A2 A2 | G2 G2 G2 G2 A2 A2 Bb2 Bb2 | \
+            C3 C3 C2 C2 F2:8")
+        .with_lines(&[
+            line(
+                "Recorder 1",
+                gm::RECORDER,
+                "-:16 | -:8 !p A5:2 A5:1 F5 A5:2 A5:1 F5 | \
+                A5:2 Bb5 Bb5 D6 G5 G5:1 E5 G5:2 G5:1 E5 | \
+                G5:2 C#6 C#6 E6 A5 A5:1 F#5 A5:2 A5:1 F#5 | \
+                A5:2 Bb5 Bb5 D6 G5 G5:1 E5 G5:2 G5:1 E5 | G5:2 A5 A5 C6 C5 C5:1 A4 C5:2 C5:1 A4 | \
+                C5:2 D5 D5 Bb4 D5 D5:1 B4 D5:2 D5:1 B4 | D5:2 E5 E5 G5 G5 G5:1 E5 A5:2 A5:1 F5 | \
+                Bb5:2 C6 Bb5 E6 -:8 | -:16",
+            ),
+            line(
+                "Recorder 2",
+                gm::RECORDER,
+                "-:16 | -:8 !p F5:2 F5:1 D5 F5:2 F5:1 D5 | \
+                F5:2 G5 G5 Bb5 Bb4 Bb4:1 G4 Bb4:2 Bb4:1 G4 | \
+                E5:2 G5 E5 G5 Eb5 Eb5:1 C5 F#5:2 F#5:1 D5 | \
+                F#5:2 G5 G5 Bb5 C6 C6:1 G5 E5:2 E5:1 C5 | E5:2 F5 F5 A5 A4 A4:1 F4 A4:2 A4:1 F4 | \
+                A4:2 Bb4 Bb4 D5 B4 B4:1 G4 B4:2 B4:1 G4 | B4:2 C5 C5 E5 E5 E5:1 C5 F5:2 F5:1 D5 | \
+                E5:2 G5 E5 G5 -:8 | -:16",
+            ),
+        ])
+        .played(Comping::Held, Bass::None, ""),
+        // The da capo ends on the first beat of bar 21, under the fermata.
+        Part::new("Fine", "-:4", "Bb")
+            .in_time(ONE_FOUR)
+            .with_left("!mf Bb2:4")
+            .with_lines(&[
+                line("Recorder 1", gm::RECORDER, "!p Bb5:4"),
+                line("Recorder 2", gm::RECORDER, "!p D5:4"),
+            ])
+            .played(Comping::Held, Bass::None, "")
+            .with_tempo(&[fermata(0, 4)]),
+    ],
+    form: &[
+        "Ritornello",
+        "First lines",
+        "Last lines",
+        "Ritornello again",
+        "Middle, in G minor",
+        "Middle, in C minor",
+        "Middle, in F major",
+        "Ritornello",
+        "First lines",
+        "Last lines",
+        "Ritornello again",
+        "Fine",
+    ],
+    drums_from: 0,
+    about: "A da capo aria from the Hunting Cantata: a soprano over two recorders in \
+            thirds and a continuo that walks in pairs of eighths. The ritornello sits on a B \
+            flat pedal (I, then V7 over it), walks down Bb, A, G, F and cadences with an \
+            echo, forte then piano. The voice's lines touch E flat (IV) and C minor (ii), \
+            with a cadence on the dominant, F, in their fourth bar. The middle section moves \
+            away: to G minor (D7, and a cadence iv, V, i), to C minor (G7 and B naturals) and \
+            to F major, turning through D minor (A7) and G minor (an F sharp diminished \
+            seventh and D7) on the way. Then the first part is played again and ends on the \
+            first beat of its last bar, under the fermata.",
+};
+
 // Source: https://raw.githubusercontent.com/baobach/abc_search/main/database/abc/QmfHw5KYvE3na6LB6W77W5KqiSuhtgqPdkLmr4tuWFUowx.abc
 // (an ABC arrangement for two violins and cello; SBurrell23/Sheets danse-macabre.abc, in
 // A minor, has the same two themes)
