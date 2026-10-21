@@ -96,7 +96,8 @@ struct Filters {
 }
 
 /// How far a preset's own speed may be from the song's for "Near the
-/// song's speed": 15% either way, so 110 to 150 BPM for a song at 130.
+/// song's speed": at most 1.15 times faster or slower, so from 113 to
+/// 149.5 BPM for a song at 130.
 const NEAR_SPEED: f32 = 1.15;
 
 /// The [`Filters`] ticked, with what they compare against.
