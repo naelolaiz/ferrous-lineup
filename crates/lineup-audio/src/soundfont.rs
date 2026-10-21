@@ -551,6 +551,7 @@ mod tests {
             program,
             pan: 0.0,
             reverb_send: 1.0,
+            sent_on: None,
         }
     }
 

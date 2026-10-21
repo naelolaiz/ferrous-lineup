@@ -54,13 +54,14 @@ pub type Route = (u8, Option<Note>);
 /// The route of each channel when every channel is sent, as File >
 /// Export MIDI writes them: drums on channel 10, as the notes of a
 /// General MIDI drum set, and the others on channels 1, 2, 3 and so on.
-/// MIDI Out channels send their notes themselves, so they have none.
+/// Channels sent over MIDI (MIDI Out channels, and drums sent over MIDI)
+/// send their notes themselves, so they have none.
 pub fn routes(channels: &[Channel]) -> Vec<Option<Route>> {
     channels
         .iter()
         .zip(midi_channels(channels))
         .map(|(channel, midi_channel)| match &channel.kind {
-            ChannelKind::MidiOut { .. } => None,
+            _ if channel.sent_over_midi().is_some() => None,
             ChannelKind::Sampler(SampleSource::Builtin(drum)) => {
                 Some((midi_channel, Some(general_midi_drum(*drum))))
             }

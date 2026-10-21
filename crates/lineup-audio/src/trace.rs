@@ -667,7 +667,10 @@ fn instrument_name(channel: &Channel) -> String {
     match (&channel.kind, channel.program) {
         (ChannelKind::Synth, Some(program)) => general_midi::name(program).to_string(),
         (ChannelKind::Synth, None) => "Lineup Osc".to_string(),
-        (ChannelKind::Sampler(SampleSource::Builtin(drum)), _) => format!("drum {}", drum.name()),
+        (ChannelKind::Sampler(SampleSource::Builtin(drum)), _) => match channel.sent_on {
+            Some(number) => format!("drum {} on MIDI channel {}", drum.name(), number + 1),
+            None => format!("drum {}", drum.name()),
+        },
         (ChannelKind::Sampler(SampleSource::File(path)), _) => format!(
             "sample {}",
             path.file_name()

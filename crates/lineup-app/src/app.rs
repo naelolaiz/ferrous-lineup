@@ -736,7 +736,7 @@ impl LineupApp {
                     .project
                     .channels()
                     .get(channel)
-                    .is_some_and(|state| matches!(state.kind, ChannelKind::MidiOut { .. }));
+                    .is_some_and(|state| state.sent_over_midi().is_some());
                 let label = if sent {
                     "change MIDI channel"
                 } else {
@@ -1285,6 +1285,7 @@ impl LineupApp {
                     program: None,
                     pan: 0.0,
                     reverb_send: 1.0,
+                    sent_on: None,
                 }),
             }
         });

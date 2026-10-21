@@ -156,7 +156,10 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
         let Some(old) = channels.old_index(index).map(|old| &before.channels()[old]) else {
             continue; // a new channel arrives complete
         };
-        if old.kind != channel.kind || old.program != channel.program {
+        if old.kind != channel.kind
+            || old.program != channel.program
+            || old.sent_on != channel.sent_on
+        {
             changes.push(Change::Instrument(index));
         }
         if old.volume != channel.volume {
