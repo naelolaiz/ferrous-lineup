@@ -7,7 +7,7 @@ and [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferr
 
 A pile of MIDI files of tangos and Argentine folk songs became 28 new
 demos, each complete as its file plays it, note for note (PRs #158 and
-#164). The files came in three kinds, and each kind needed its own way
+#164, checked further in #174). The files came in three kinds, and each kind needed its own way
 of finding the beat:
 
 | Module | Demos | How the file was made |
@@ -23,9 +23,11 @@ own, with its General MIDI program, and the bombo or the percussion
 plays on the drums. On the piano, everything under the tune is the left
 hand, on the Keys.
 
-The chord sheets are a first reading from the notes, made by a script.
-They are being checked song by song against the sheet music, so treat
-them as a draft for now.
+The chord sheets were read from the notes by a script. For eleven of
+the piano songs the reading was then checked against a lead sheet, and
+those songs are cut into their verses and refrains, each in its own key
+(PR #174). The other six, and the band arrangements, are still a reading
+of the notes alone, so treat their chords as a draft.
 
 ## Trying it
 
@@ -44,6 +46,9 @@ them as a draft for now.
 5. Open **Zamba de mi esperanza** and mute **Lead**. The **Second
    voice** channel sings the lower note wherever the tune is sung in
    two.
+6. Open **Yira, yira** and watch the parts go by in the playlist:
+   Verse 1a, Verse 1b, Refrain 1, and the song again. The harmony bar
+   shows **B minor** in the verses and **D major** in the refrains.
 
 ## The music
 
@@ -293,8 +298,92 @@ of the key get a small bonus, so a passing note in a performance does
 not turn A minor into something exotic. A bar is split only where the
 split scores clearly better.
 
-That is a first reading. The next step, song by song, is to check every
-chord against the sheet music and fix what the notes alone got wrong.
+That is a first reading. Notes alone name every colour as a chord of
+its own: a sixth the pianist adds turns Bm into Bm6, a note of the tune
+on its way adds a flat ninth to F#7, and a passing note can make a chord
+that is not there at all.
+
+### Checking the chords against a lead sheet
+
+A **lead sheet** is the tune with the chord names over it, the page a
+singer and a band play from. Its chords are what the song is meant to
+have, but its bars do not line up with a free performance: the pianist
+adds an introduction, plays a strain twice, stretches a bar. So the
+sheet's chords were not laid over the bars one by one. Instead the
+sheet gives the reader its **vocabulary**: only the chords the sheet
+uses may be chosen.
+
+The sheet is often in another key than the pianist. Uno's sheet is in
+G and the pianist plays in C, five semitones higher, so every chord of
+the sheet moves up a fourth before it is used: G becomes C, D7 becomes
+G7, Em becomes Am. Moving all the chords by the same interval is
+**transposing**. It keeps every chord's job in the key, so the song is
+the same song.
+
+Yira, yira shows what the vocabulary does. Its sheet uses Bm, F#7, A7,
+D, G, B7 and Em. Bars 38 to 40, read from the notes alone, were
+
+```text
+Bm6 F#7b9 | Bm F#7 | Bm A7
+```
+
+and limited to the sheet's chords they are
+
+```text
+Bm F#7 | Bm F#7 | Bm A7
+```
+
+The pianist's left hand colours the B minor with a G sharp, its sixth,
+and the tune touches G at the end of the bar, a flat ninth over F#7.
+Under those colours are the chords the song is built on, the ones the
+sheet names: Bm and F#7, **i** and **V7** of B minor, the tonic and the
+dominant seventh.
+
+Five songs were also cut where their form changes: Yira, yira, Sur,
+Malena, Soledad and Los mareados. Each part has its own key, so the
+harmony bar shows the key the music is in, and chords of that key win
+close calls. Yira, yira's verses are in B minor and its refrain in D
+major, the **relative major**: the same key signature, two sharps, with
+D as the tonic instead of B. Sur goes the other way, from a verse in D
+major to a refrain in D minor, the **parallel minor**: the same tonic
+with a flat third, sixth and seventh. A few bars were fixed by hand,
+like the first four bars of Yira, yira, where the left hand comes in
+late in each bar and the reading missed it.
+
+For the songs with no lead sheet, the notes were checked one by one.
+Tiempos viejos ends on D, F, A and B. The script had called that
+**Bm7b5** (B D F A), and it is the same four notes, but the bass plays
+D under it and it comes after A7, the dominant of D minor, so it is
+**Dm6**: D minor with an added sixth. (The tune's last note, a high E,
+adds a ninth on top.) The name follows the bass and what the chord
+does, not just the notes.
+
+### Spelling the notes
+
+A MIDI file has numbers, not names. Note 70 is A sharp or B flat, and
+the file does not say which. The key names the seven notes of its scale;
+the other five need a rule, and the rule is the chord around the note:
+
+- **A note of the chord is spelled as the chord has it.** In F#7 (F#,
+  A#, C#, E) note 70 is **A sharp**, the chord's third. In Gm (G, B♭, D)
+  it is **B flat**.
+- **A chord on a note outside the key is named by where it goes.** A
+  dominant seventh resolves down a fifth, so G#7 going to C#m is G
+  sharp, because G# is the fifth of C#. A seventh chord that falls a
+  semitone onto its target is a **tritone substitute**: Ab7 going to G
+  is A flat, not G sharp. A diminished seventh leads up a semitone:
+  G#dim7 goes to A.
+- **A note outside the chord is spelled by where it goes.** A
+  **chromatic passing note** between two notes a whole tone apart is a
+  sharp on the way up and a flat on the way down: A, A♯, B and G, G♭, F.
+- **No E sharp, B sharp, C flat or F flat for a passing note.** On the
+  page they look like typos for F, C, B and E. The key's own names
+  still can use them: in B minor the note between E and F sharp, on the
+  way up, is E sharp, the raised fourth that leads up to F sharp, the
+  dominant.
+- **Two notes on one line of the staff get letters of their own.** E
+  and E sharp sounding together would sit on the same line, so the
+  sharp one becomes F.
 
 ## Checking it
 
@@ -323,9 +412,15 @@ lost 10 notes of 2408.
 3. Write the scales of E natural minor, E harmonic minor and E
    Dorian. Which note differs in each? Then play Balderrama's bars 21
    to 23 and name the chord under the C sharps.
-4. Pick a demo with a chord sheet marked as a draft and check one part
-   against a lead sheet. Which chords did the notes alone get wrong?
-5. Rust: `in_key` and `with_tempo` are `const fn` methods that take
+4. Pick one of the six piano songs with no lead sheet yet (Patotero
+   sentimental, Qué falta que me hacés, Qué me van a hablar de amor,
+   Tiempos viejos, La casita de mis viejos, Lluvia de estrellas), find
+   a lead sheet and check one part against it. Which chords did the
+   notes alone get wrong?
+5. In C major, name the black key between F and G: over a D7 chord; in
+   the line G, ?, F; and over an Ab7 going to G. Then check your
+   answers against the rules above.
+6. Rust: `in_key` and `with_tempo` are `const fn` methods that take
    `self` by value and return a new `Part`. Why does that let them be
    chained inside a constant, and why would `&mut self` not work
    there?
