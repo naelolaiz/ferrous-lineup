@@ -385,6 +385,37 @@ fn a_click_on_an_instrument_in_the_mixer_changes_it() {
     assert!(text_rect(&output, "Guitar").is_none());
 }
 
+#[test]
+fn an_instrument_menu_opened_low_in_the_window_opens_no_submenu_by_itself() {
+    use lineup_core::general_midi;
+    let mut screen = Screen::new();
+    // Too low for the menu to fit under its button: it opens above it,
+    // and scrolls.
+    screen.size = vec2(1280.0, 560.0);
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    screen.click("Acoustic Grand Piano");
+    let output = screen.draw(vec![]);
+    let button = text_rect(&output, "Acoustic Grand Piano").unwrap();
+    // The menu is above the button, its last families hidden over it.
+    assert!(text_rect(&output, "Organ").unwrap().bottom() < button.top());
+    assert!(text_rect(&output, "Synth effects").is_none());
+    // The pointer is still on the button, where a family is hidden:
+    // no family opens.
+    let programs = (0..=127u8)
+        .filter(|&program| {
+            let name = format!("{} {}", u16::from(program) + 1, general_midi::name(program));
+            text_rect(&output, &name).is_some()
+        })
+        .count();
+    assert_eq!(programs, 0);
+    // Over a family in sight, its instruments open as before.
+    let brass = text_rect(&output, "Brass").unwrap().center();
+    screen.draw(vec![Event::PointerMoved(brass)]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "57 Trumpet").is_some());
+}
+
 /// Where `label` was drawn on the row at height `y`.
 fn text_rect_in_row(output: &FullOutput, label: &str, y: f32) -> Option<Rect> {
     output.shapes.iter().find_map(|shape| match &shape.shape {
@@ -1124,7 +1155,10 @@ fn preset_workflows_keep_their_apply_buttons_visible_in_small_windows() {
     screen.app.playlist.browser_open = true;
     screen.click("📚 Library");
     screen.click("🔍 Search: bossa, 6/8, tango…");
-    screen.draw(vec![Event::Text("Aeolian climb".into())]);
+    screen.draw(vec![Event::Text("Aeolian".into())]);
+    // The side panel keeps its width, so in a window this small the
+    // list starts below the window's edge.
+    screen.scroll_to_at("Aeolian climb", Pos2::new(100.0, 300.0));
     screen.click("Aeolian climb");
     for mode in ["Plain accents", "Preset patterns"] {
         screen.click(mode);
@@ -1173,6 +1207,27 @@ fn presets_listed(output: &FullOutput) -> usize {
             _ => None,
         })
         .expect("The presets heading is visible")
+}
+
+#[test]
+fn a_long_line_in_the_library_leaves_the_side_panel_as_wide_as_it_was() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.playlist.browser_open = true;
+    let playlist_left = |screen: &mut Screen| {
+        let output = screen.draw(vec![]);
+        text_rect(&output, "Playlist").unwrap().left()
+    };
+    let width = playlist_left(&mut screen);
+    // "168 BPM · Shchedryk (Carol of the Bells) (demo)" is cut short.
+    screen.app.open_demo(library::Demo::Song(
+        lineup_core::library::Song::named("Shchedryk (Carol of the Bells)").unwrap(),
+    ));
+    screen.click("📚 Library");
+    assert_eq!(playlist_left(&mut screen), width);
+    screen.restart();
+    screen.app.playlist.browser_open = true;
+    assert_eq!(playlist_left(&mut screen), width);
 }
 
 #[test]

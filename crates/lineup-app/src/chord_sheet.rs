@@ -1923,7 +1923,7 @@ fn style_menu(
                     true => format!("{} •", genre.name()),
                     false => genre.name().to_string(),
                 };
-                ui.menu_button(name, |ui| {
+                crate::widgets::scroll_menu_button(ui, name, |ui| {
                     for style in styles {
                         let item = ui.radio(playing == Some(style), style.name);
                         let about = format!(
