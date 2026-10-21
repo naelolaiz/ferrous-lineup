@@ -1140,6 +1140,7 @@ pub static SONGS: &[Song] = &[
     classical::PATHETIQUE,
     classical::MOONLIGHT_SONATA,
     classical::AIR_ON_THE_G_STRING,
+    classical::SHEEP_MAY_SAFELY_GRAZE,
     classical::DANSE_MACABRE,
     classical::HUMORESQUE,
     classical::TRAUMEREI,
