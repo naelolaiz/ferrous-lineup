@@ -3464,7 +3464,7 @@ pub(super) const BALDERRAMA: Song = Song {
     feel: "Zamba",
     genre: Genre::Folklore,
     tonic: E,
-    mode: Dorian,
+    mode: NaturalMinor,
     time: SIX_EIGHT,
     tempo: 98.0,
     comping: Comping::Held,
@@ -4294,8 +4294,9 @@ pub(super) const BALDERRAMA: Song = Song {
     drums_from: 0,
     about: "\"A orillita del canal, cuando llega la mañana\": a zamba about Balderrama, the \
             all-night bar in Salta where the musicians and poets of the north met; Castilla \
-            wrote the words and Cuchi Leguizamón the tune. E minor, the tune often on the \
-            raised sixth, C sharp, as in the Dorian mode.",
+            wrote the words and Cuchi Leguizamón the tune. E minor. One turn of the tune, \
+            heard six times, falls from D through C sharp to B over a G major chord, a \
+            chromatic passing note; the chords keep C natural.",
 };
 
 // Written out from a band arrangement (MIDI, sequenced at a steady 130 to the quarter but saved
