@@ -31,7 +31,7 @@ pub(super) const UNO: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:4 G4:1 - G4 - G4 G4 G4 - G4 - F#4 G4 | \
@@ -57,7 +57,7 @@ pub(super) const UNO: Song = Song {
             - | -:13 A2:1 C#4:2 | _ -:14 | -:16 | -:10 D3:1 -:5 | -:16 | -:2 A3:4 -:10 & -:16 | \
             - | -:14 E3:2 | _:1 -:15 | -:16 | - | - | -")
         .with_tempo(&[tempo(16, 92), tempo(64, 94), tempo(80, 92), tempo(96, 89), tempo(112, 81)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:3 A4:2 -:1 G4 A4 G4 A4:2 G4:1 - A4 G4 D4 | \
@@ -80,7 +80,7 @@ pub(super) const UNO: Song = Song {
             _ -:14 | -:3 G3:4 -:9 | -:4 G#3:5 -:7 | -:5 A2:3 -:8 & -:16 | - | - | -:2 A3 -:12 | \
             -:16 | -:3 A3:1 -:12 | -:8 D4:1 -:7 | -:16")
         .with_tempo(&[tempo(0, 85), tempo(32, 87), tempo(48, 92), tempo(64, 88), tempo(80, 82), tempo(96, 89), tempo(112, 86)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "F4:1 E4 -:2 F4:1 - F4 E4 D4 C4 E4:6 | _ C4:1 - E4:2 F4:1 G4 - A4 -:2 | - D4:12 -:2 | \
@@ -102,7 +102,7 @@ pub(super) const UNO: Song = Song {
             -:16 | - | - | - | -:1 B3:2 -:13 | -:4 F#4:2 F#3+C4+F#4:1 -:9 & -:16 | \
             -:12 A3:1 C#4+E4 -:2 | -:16 | - | - | - | -:1 Eb4 -:14 | -:16")
         .with_tempo(&[tempo(0, 89), tempo(16, 95), tempo(32, 88), tempo(48, 94), tempo(64, 90), tempo(80, 92), tempo(96, 84), tempo(112, 85)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "-:1 G4:5 -:1 D4:2 E4:1 - F4 G4 A4 B4 - | \
@@ -124,7 +124,7 @@ pub(super) const UNO: Song = Song {
             -:9 B3:2 -:5 | -:16 | A3+C#4:1 -:15 | -:16 | -:10 Eb3:2 -:1 F#4 -:2 & -:16 | \
             -:15 Eb4:1 | _ -:15 | -:16 | - | - | - | -:11 A3:2 -:3")
         .with_tempo(&[tempo(0, 88), tempo(16, 96), tempo(32, 93), tempo(48, 94), tempo(64, 92), tempo(96, 97), tempo(112, 87)]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "D5:1 C5 E4 C5:4 C4:1 G4 C5 -:6 | E4:1 F4 G4 - A4 - F4 A4 E4 D4 F4:4 -:1 F4 | \
@@ -149,7 +149,7 @@ pub(super) const UNO: Song = Song {
             -:3 A3:1 C#4+E4 -:7 F3:2 - | -:7 G3:3 -:6 | -:2 E3+G3:1 -:13 | -:11 C4+G#4+C5:1 -:4 | \
             -:16 | - | - & -:16 | -:13 A3:1 -:2 | -:8 B3:2 -:6 | -:16 | - | - | - | -")
         .with_tempo(&[tempo(0, 96), tempo(16, 84), tempo(32, 89), tempo(48, 85), tempo(64, 93), tempo(80, 95), tempo(96, 83), tempo(112, 98)]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "B5:1 - B5 - B5 B5 D4 B5 B5 Bb5 B5 C5 C6:4 | \
@@ -173,7 +173,7 @@ pub(super) const UNO: Song = Song {
             _:1 -:5 G3:4 -:6 & -:12 A5:4 | A3:1 -:15 | -:4 A4:1 B4 -:6 Bb2:1 -:3 | \
             -:10 G4:1 A4 -:4 | -:2 F3:1 -:13 | -:7 G3:2 -:7 | -:13 C4:2 -:1 | -:9 C4:2 -:5")
         .with_tempo(&[tempo(0, 90), tempo(16, 78), tempo(32, 86), tempo(48, 84), tempo(64, 91), tempo(80, 82), tempo(96, 86), tempo(112, 95)]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "A4:1 -:2 E4:1 A4 A5 -:2 E4:1 - G4 F4 E4 F4 A4 C5 | \
@@ -195,7 +195,7 @@ pub(super) const UNO: Song = Song {
             -:13 A3:1 E4 - | -:16 | - | -:10 B3:1 F4 -:4 & -:16 | -:8 D4:1 -:7 | -:16 | - | - | \
             - | - | -")
         .with_tempo(&[tempo(0, 85), tempo(32, 88), tempo(48, 84), tempo(64, 87), tempo(80, 90), tempo(96, 94), tempo(112, 87)]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "E4:1 -:2 D4:1 C4 -:2 C4:1 -:4 E4:2 F4 | \
@@ -220,7 +220,7 @@ pub(super) const UNO: Song = Song {
             -:13 A2+A3:1 E4 - & -:16 | - | - | F3:2 -:14 | -:15 F3:1 | _:2 -:14 | -:16 | \
             - & -:16 | - | - | G2:1 -:15 | -:16 | Eb4+F#4:1 -:15 | -:16 | -")
         .with_tempo(&[tempo(32, 89), tempo(48, 94), tempo(64, 93), tempo(80, 89), tempo(112, 87)]),
-        // Bars 65-71 of the file.
+        // Bars 65-71.
         Part::new(
             "Part 9",
             "-:3 D4:12 -:1 | D4:2 E4 F4:1 G4 A4 B4 C5:7 C4:1 | \
@@ -263,7 +263,7 @@ pub(super) const SUR: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:7 F#4:1 F#4:2 -:1 F#4 -:2 F#4:1 F#4 | F#4:5 -:1 F#4:4 - G4:1 G#4 | \
@@ -288,7 +288,7 @@ pub(super) const SUR: Song = Song {
             tempo(64, 96),
             tempo(80, 84),
         ]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:6 D4:2 C#4:3 -:4 A4:1 | A4:2 F#4:1 - A4 F#4 - G4:3 E4:2 G4 E4 | A4:12 -:1 A4:3 | \
@@ -318,7 +318,7 @@ pub(super) const SUR: Song = Song {
             tempo(96, 119),
             tempo(112, 82),
         ]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "D4:3 - F4:1 -:3 C4:1 -:5 | G4:12 E4:1 D4 C#4:2 | \
@@ -347,7 +347,7 @@ pub(super) const SUR: Song = Song {
             tempo(80, 105),
             tempo(112, 101),
         ]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "-:13 G4:1 A4 - | Bb4:2 A4:3 G4:1 F4:2 E4:3 -:1 E4 D4 C#4:2 | \
@@ -379,7 +379,7 @@ pub(super) const SUR: Song = Song {
             tempo(96, 104),
             tempo(112, 101),
         ]),
-        // Bars 33-35 of the file.
+        // Bars 33-35.
         Part::new(
             "Part 5",
             "-:2 D4:1 -:3 F4 -:1 E4:4 D4:1 - | E4:2 C#4:1 -:3 D4:1 Eb4 E4 C#4 F4:5 E4:1 | \
@@ -417,7 +417,7 @@ pub(super) const SOLEDAD: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:7 A4:5 B4:2 C#5:1 D5 | C#5:6 B4:1 C#5 B4:8 | \
@@ -436,7 +436,7 @@ pub(super) const SOLEDAD: Song = Song {
             - | - | - | - | - | -:3 B3 -:10 | -:16 & -:16 | - | - | - | - | - | -:5 E5:1 -:10 | \
             -:16")
         .with_tempo(&[tempo(32, 74), tempo(48, 59), tempo(64, 72), tempo(96, 91), tempo(112, 57)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "A5:1 - B5:2 C#6 D6:3 -:1 A5:2 B5 C#6 | B5:6 A5:2 B5 A5 G5 F#5 | \
@@ -453,7 +453,7 @@ pub(super) const SOLEDAD: Song = Song {
             -:6 A3:2 -:8 | -:2 F#4:4 -:5 A3:3 -:2 | - B3:5 -:9 | -:6 A2:3 -:7 & -:16 | - | - | - | \
             - | - | -:5 E3:3 -:8 | - F#2:1 -:7")
         .with_tempo(&[tempo(0, 123), tempo(16, 132), tempo(32, 145), tempo(48, 77), tempo(64, 72), tempo(80, 91), tempo(96, 79), tempo(112, 75)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "C#6:5 C#4:1 A5 G#5 G5:4 D4:1 A5 B5 G5 | A5:8 E5:2 F#5 G5:1 B5:2 A5:1 | \
@@ -474,7 +474,7 @@ pub(super) const SOLEDAD: Song = Song {
             -:10 E3:1 C#3:5 | -:4 A3:2 -:6 Bb3:2 - & -:16 | - | -:5 F#5:1 D5:2 -:5 G3:3 | \
             _:1 -:15 | -:16 | - | -:12 E3:4 | -:16")
         .with_tempo(&[tempo(0, 73), tempo(16, 91), tempo(32, 69), tempo(48, 76), tempo(64, 97), tempo(80, 94), tempo(112, 83)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "D5:5 E5:1 F5 G5 A5:5 Bb5:1 C6 Bb5 | A5:2 G5 C6:1 G5 A5:2 -:4 A5:1 -:3 | \
@@ -493,7 +493,7 @@ pub(super) const SOLEDAD: Song = Song {
             -:4 F5:2 - F3 -:6 | D4:11 -:1 G#4:4 | C#4:2 -:14 | -:11 Bb3:4 -:1 | -:12 C2:3 -:1 | \
             -:6 D4:2 -:8 | -:16 & -:16 | - | G#4:3 -:9 D4:2 - | -:16 | - | - | - | -")
         .with_tempo(&[tempo(0, 88), tempo(16, 90), tempo(32, 84), tempo(48, 80), tempo(64, 91), tempo(80, 96), tempo(96, 85), tempo(112, 74)]),
-        // Bars 33-36 of the file.
+        // Bars 33-36.
         Part::new(
             "Part 5",
             "D4:2 E4 F4:1 G4 A4:4 Bb4:2 C5:4 | A4:2 -:1 G4:2 F4:1 G4:2 A4 - Bb4:1 -:3 | \
@@ -530,7 +530,7 @@ pub(super) const NOSTALGIAS: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:8 A4:4 D4:1 E4:2 F4:1 | A4:3 D4:1 E4:2 F4 A4:5 E4:1 F4:2 | \
@@ -548,7 +548,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             -:2 E3:5 -:3 G3 - | -:4 F3:5 -:7 & -:16 | -:11 D4:2 -:3 | -:9 Bb3:2 -:5 | \
             -:9 A3:2 -:5 | -:16 | -:4 G4:1 -:11 | -:16 | -:5 Bb3:3 -:8")
         .with_tempo(&[tempo(16, 137), tempo(32, 119), tempo(48, 121), tempo(64, 126), tempo(96, 131), tempo(112, 136)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:1 G#4:2 A4:1 C4 A4 D5 - C5 Bb4 - A4 A4:2 G4:1 - | \
@@ -567,7 +567,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             -:15 G#2:1 | -:6 A3:3 -:1 D3:5 -:1 | A3 -:15 | -:10 G3:5 -:1 | -:16 | \
             -:8 D2:4 A3:3 -:1 & -:16 | - | - | - | - | -:11 Bb3:1 -:4 | -:16 | -")
         .with_tempo(&[tempo(0, 113), tempo(16, 121), tempo(32, 138), tempo(48, 133), tempo(64, 130), tempo(80, 133), tempo(96, 134), tempo(112, 130)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "-:4 C#4:1 G4:3 -:1 F4:3 D4:2 E4 | -:1 C#4 F4:2 E4:1 F4 G4 - D4 A4:2 -:1 A4:2 D4:1 E4 | \
@@ -585,7 +585,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             _:1 -:5 E3:4 Bb3:2 E3 - | G2 G#2:1 A2:12 -:1 | -:16 & -:3 G3:2 -:6 A3:2 -:3 | -:16 | \
             - | - | -:8 Bb3:2 -:5 Bb3:1 | -:8 G3:4 - | -:1 D4:3 -:12 | -:16")
         .with_tempo(&[tempo(0, 135), tempo(32, 131), tempo(48, 129), tempo(64, 140), tempo(80, 130), tempo(96, 133), tempo(112, 122)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "C#5:3 E5:1 C#5 E5 Bb4:2 A4:1 -:2 G4:4 -:1 | A4:2 -:1 G#4 - G4:3 F4:8 | \
@@ -605,7 +605,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             G2:2 G3:1 -:4 A4:2 - C5:1 A2 -:3 & -:5 C#5:1 -:10 | -:16 | -:4 F3:3 -:9 | A4:4 -:12 | \
             -:16 | - | - | -:8 F#3:3 -:5 & -:16 | - | -:6 A3:2 -:8 | -:16 | - | - | - | -")
         .with_tempo(&[tempo(0, 140), tempo(16, 139), tempo(32, 125), tempo(48, 130), tempo(64, 135), tempo(80, 129), tempo(96, 136), tempo(112, 118)]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "-:1 D4 Bb4 D5 D5 D6 - Bb4 D5 Bb4 - A4:2 -:1 D5 - | \
@@ -624,7 +624,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             -:5 E2:6 -:5 | -:16 | -:6 D3:4 -:2 A3 - | -:4 A3:1 F4 -:10 | -:7 Bb3:1 -:8 | \
             - F3:2 A3 B3:1 -:3")
         .with_tempo(&[tempo(0, 120), tempo(16, 121), tempo(64, 134), tempo(80, 126), tempo(112, 136)]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "F4:4 A4:1 -:2 G#4 A4 -:1 G4 D5 - C5 | _ Bb4 A4 - A4:3 D4:1 G4:2 Bb4:1 - A4 Bb4 - A4 | \
@@ -643,7 +643,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             - | A4:1 -:15 | C#4:1 -:9 F3:6 | _:2 -:14 | -:16 | - | - & -:16 | - | - | -:12 A3:4 | \
             _:2 -:14 | -:16 | - | -")
         .with_tempo(&[tempo(0, 135), tempo(16, 129), tempo(32, 137), tempo(48, 128), tempo(64, 139), tempo(80, 140), tempo(96, 137)]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "C#4:1 G4:2 - A4:3 D4:2 E4:1 F4 - F4 A4:2 | \
@@ -662,7 +662,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             -:4 A3:1 F4 -:10 | -:12 A4:1 -:2 D3:1 & -:7 D3:6 C#4:1 -:2 | -:16 | -:7 Bb3:1 -:8 | \
             -:16 | -:15 G3:1 | _ -:6 F3+A3:3 -:6 | -:16 | -")
         .with_tempo(&[tempo(0, 133), tempo(16, 132), tempo(48, 129), tempo(64, 133), tempo(80, 136), tempo(96, 130), tempo(112, 124)]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "D4:2 Bb4 A4 G#4:1 - G4:8 | _:2 - D4:1 G4:2 D4 F4:3 D4:1 G4 - G4 | \
@@ -682,7 +682,7 @@ pub(super) const NOSTALGIAS: Song = Song {
             -:16 | - | -:8 D4 | _:4 -:12 & -:16 | - | - | -:3 A3:1 -:12 | -:16 | - | \
             -:8 D2:4 -:2 E2 | _:1 -:15 & -:16 | - | - | - | - | - | -:11 Eb2:3 -:2 | F2:1 -:15")
         .with_tempo(&[tempo(0, 128), tempo(16, 137), tempo(32, 139), tempo(48, 123), tempo(64, 122), tempo(80, 118), tempo(96, 140), tempo(112, 134)]),
-        // Bars 65-74 of the file.
+        // Bars 65-74.
         Part::new(
             "Part 9",
             "D5:6 G4:1 - F#4:2 -:1 D5:3 C5:1 - | \
@@ -728,7 +728,7 @@ pub(super) const PASIONAL: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:2 A4:1 -:3 B4:1 A4 B4:3 A4:1 B4 -:3 | -:2 A4:1 -:3 B4:1 A4 B4:3 A4:1 B4 -:3 | \
@@ -744,7 +744,7 @@ pub(super) const PASIONAL: Song = Song {
             -:2 F5:4 -:2 D4:4 - | -:2 E5:4 -:2 E5 -:6 | -:2 D4 -:12 | C4:2 -:7 Bb2:5 -:2 & -:16 | \
             - | - | -:4 B2 -:8 | -:16 | - | - | -:9 D4+G#4:1 -:3 E5")
         .with_tempo(&[tempo(112, 86)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "C4:1 E4:11 -:1 E4:2 -:1 | E4 E4 E4:10 -:2 E4:1 - | - E4 E4 - D#4:5 -:1 C4 - C4 -:3 | \
@@ -761,7 +761,7 @@ pub(super) const PASIONAL: Song = Song {
             -:2 F#2:3 -:1 F#2 -:3 F2:2 -:4 | -:16 & -:16 | - | -:12 B3:3 -:1 | -:16 | \
             -:11 A4+C#5:3 -:2 | -:16 | - | - & -:16 | - | -:12 B3:1 -:3 | -:16 | - | - | - | -")
         .with_tempo(&[tempo(0, 90), tempo(16, 102), tempo(64, 106)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "-:5 C4:2 -:6 D4:1 C4 - | -:2 C4 E4 D4:1 -:3 D4:2 F4 E4:1 - | \
@@ -775,7 +775,7 @@ pub(super) const PASIONAL: Song = Song {
             _:4 - E3:3 -:5 | A2:4 B2 C3:3 -:1 C#3 -:3 & -:3 A3:2 -:6 B3:2 -:3 | -:16 | \
             -:2 B3:3 -:10 E2+D3:1 | _ -:3 F3:4 E3:2 -:6 | -:12 G#3:1 -:3 | -:15 F2:1 | \
             _:3 -:5 B4:1 -:7 | -:16 & -:16 | - | - | - | - | -:15 A4:1 | _ -:15 | -:16"),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "-:2 A5:1 -:3 B5:1 A5 B5:3 A5:1 B5 -:3 | -:2 A4:3 B4:1 A4 - B4:2 -:1 A4 B4 -:3 | \
@@ -793,7 +793,7 @@ pub(super) const PASIONAL: Song = Song {
             E4:15 -:1 & -:16 | - | - | -:3 B2:4 C3:3 -:6 | -:8 D4+E4+Bb4:1 -:7 | -:16 | \
             -:3 E2:4 -:9 | A2:5 -:3 C3:4 C#3 & -:16 | - | - | - | - | - | - | -:4 B2 -:8")
         .with_tempo(&[tempo(48, 104), tempo(64, 101), tempo(112, 97)]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "-:2 F4:3 -:2 F4:1 F4:3 -:1 F4 - F4 F4 | A4:8 E4:5 -:3 | \
@@ -810,7 +810,7 @@ pub(super) const PASIONAL: Song = Song {
             -:1 D#4 -:5 E3:3 -:1 A2 -:4 & -:8 D2:4 - | -:16 | - | - | -:15 D4:1 | _ -:15 | \
             -:7 B3:1 -:8 | -:7 C4:2 -:7")
         .with_tempo(&[tempo(0, 100), tempo(64, 109)]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "B4:2 - B4:1 B4 B4:5 A4:1 G#4 - A4:2 | _:5 E4:7 -:3 B4:1 | \
@@ -828,7 +828,7 @@ pub(super) const PASIONAL: Song = Song {
             -:2 D4:3 - G#2:1 -:3 C4 -:1 | - C4+E4:4 -:6 D4:4 -:1 | -:16 | \
             -:2 C3 -:6 C3:2 -:4 & -:10 E2:3 -:1 B3 - | -:5 C3:3 -:7 D4:1 | _ -:15 | -:16 | \
             -:4 A3+B3:2 -:6 E4+G#4:1 -:3 | -:16 | - | -"),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "-:1 E4:3 -:6 E4:2 -:1 E4 E4 D#4 | _:4 -:1 C4:2 -:1 C4 -:6 E4:1 | _:12 -:1 D4 E4 F4 | \
@@ -843,7 +843,7 @@ pub(super) const PASIONAL: Song = Song {
             _:3 -:12 D3:1 | _:8 C#3:7 C3:1 | _:3 -:1 D#3:2 -:3 F4:1 -:4 F2:2 | _:10 -:5 E2+E3:1 | \
             -:3 B3:4 A3 -:1 G#3 -:3 | - A3:2 - B3:1 -:3 B3:2 -:3 & -:16 | - | -:15 D2:1 | \
             _:3 -:5 C#4:4 - | -:16 | -:7 F3:3 -:6 | -:16 | -"),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "-:2 C4:1 - E4:2 D4:1 -:3 D4:1 - F4:2 E4:1 - | \
@@ -859,7 +859,7 @@ pub(super) const PASIONAL: Song = Song {
             _:2 -:1 B2:4 C3:1 -:4 C#3:1 B2 C3 C#3 | \
             D3:2 D5+F5 -:3 B4:1 F5:2 -:3 G2:1 G#2 A2 & -:16 | -:1 B3:2 -:13 | -:16 | - | \
             G3:5 -:11 | A4:1 -:7 B4:2 -:6 | -:16 | -"),
-        // Bars 65-71 of the file.
+        // Bars 65-71.
         Part::new(
             "Part 9",
             "-:1 A4:2 - B4:1 A4 B4:3 A4:1 B4 -:4 | \
@@ -898,7 +898,7 @@ pub(super) const PATOTERO_SENTIMENTAL: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:10 G4:3 -:1 Eb5 - | D5:4 C5:6 B4:2 -:1 D5 C5 - | C5:4 B4:6 -:1 G4 -:2 F5:1 - | \
@@ -914,7 +914,7 @@ pub(super) const PATOTERO_SENTIMENTAL: Song = Song {
             F2:3 -:13 & -:16 | - | -:4 F4:5 -:7 | -:16 | -:15 C4+Eb4:1 | _:3 -:9 Bb3:1 -:3 | \
             -:4 Ab3:1 -:3 Db4+E4:5 -:3 | -:16")
         .with_tempo(&[tempo(80, 101), tempo(96, 95), tempo(112, 109)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:4 C6:1 -:3 B5:1 B4 A4 Ab4 G4 - Eb5 - | D5:4 C5:5 -:1 C5 - B4 C5 D5 C5 | \
@@ -928,7 +928,7 @@ pub(super) const PATOTERO_SENTIMENTAL: Song = Song {
             C3+C4:3 -:4 C3+E4 -:5 | F2:2 C3 F3 G3 -:7 Eb2+Eb3:1 | _:4 - F4:6 -:2 & -:16 | - | \
             -:6 F3+F#3:1 -:9 | -:4 D3:6 - | -:7 Eb4:2 -:7 | -:8 Bb3:4 - | -:7 Ab3:3 -:6 | \
             -:8 D2:4 - & -:16 | - | - | -:7 F3:2 -:7 | -:16 | - | - | -"),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "C5:1 -:3 G5:1 -:3 C6:2 - C4 D4:1 Eb4 | _:4 D4:2 C4:1 F#4 -:5 C4:2 -:1 | \
@@ -944,7 +944,7 @@ pub(super) const PATOTERO_SENTIMENTAL: Song = Song {
             -:4 C3:3 E2:4 - F2:1 | _:2 C3 F3 -:1 D3:5 -:3 F4:1 | _:3 -:6 D4:2 -:5 | \
             Eb2:1 -:3 G3:4 -:7 Eb5:1 | _ -:6 Eb5:1 -:2 Eb5:1 -:2 Db5:1 -:2 | \
             D5+A5 -:6 F#4+G4:1 -:6 F4:1 | _:2 -:14"),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "Eb5:7 D4:1 Eb4:2 C6:3 D6:1 -:2 | Eb6:1 -:4 D5:1 C5 - C5:2 B4:3 C5 | \
@@ -960,7 +960,7 @@ pub(super) const PATOTERO_SENTIMENTAL: Song = Song {
             Eb5:2 -:14 | -:1 Ab3 -:13 Ab2:1 | _:3 -:1 Ab3 -:11 | Eb2:1 -:3 G2:4 -:8 | \
             G4:3 -:1 C4 -:2 G4:4 -:5 | -:16 | -:4 F4:1 -:11 & -:16 | - | - | - | -:4 F#2:1 -:11 | \
             -:16 | - | -"),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "C5:1 -:3 G5:1 -:3 C6:2 G4:3 -:1 Eb5 - | D5:4 C5:6 B4:2 -:1 D5 C5 - | \
@@ -975,7 +975,7 @@ pub(super) const PATOTERO_SENTIMENTAL: Song = Song {
             -:2 G2 -:3 Eb3:5 -:4 | -:2 D3:6 -:8 | -:7 B3:3 -:6 | -:15 C3:1 | _:4 - Bb2:5 -:3 | \
             Ab2+Eb4:5 -:2 B2:1 Bb3:6 -:2 | F2:3 -:13 & -:16 | - | -:4 F4:5 -:7 | -:16 | \
             -:15 C4+Eb4:1 | _:3 -:9 Bb3:1 -:3 | -:4 Ab3:1 -:3 Db4+E4:5 -:3 | -:16"),
-        // Bars 57-66 of the file.
+        // Bars 57-66.
         Part::new(
             "Part 8",
             "Eb5:7 D4:1 Eb4:2 C6:3 D6:1 -:2 | Eb6:1 -:4 D5:1 C5 - C5:2 B4:3 C5 | \
@@ -1017,7 +1017,7 @@ pub(super) const QUE_FALTA_QUE_ME_HACES: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:16 | -:4 C4 -:8 | -:16 | -:4 C4 -:7 D4:1 | D4:13 -:1 F4 F4 | \
@@ -1033,7 +1033,7 @@ pub(super) const QUE_FALTA_QUE_ME_HACES: Song = Song {
             D3:1 -:15 | D3:1 -:3 F3:1 -:3 D3:1 -:3 A3:1 -:3 | D3:1 -:7 B3:1 -:7 | -:16 | - | - | \
             -",
         ),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:4 A4:6 F4:3 -:1 A4 - | A4:4 G#4:3 - D5:1 - E5 - D5 C#5 | _:11 A4:5 | \
@@ -1050,7 +1050,7 @@ pub(super) const QUE_FALTA_QUE_ME_HACES: Song = Song {
             C2:2 G2 C3 -:1 E3:2 -:3 G2:4 | C2:11 -:5 & -:16 | - | -:3 E3:4 -:9 | -:16 | - | \
             -:4 D3:3 -:9 | -:5 D3:2 -:9 | -:8 E4:2 -:6",
         ),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "Bb4:2 A4:1 -:2 A4:1 C5 - Bb4:2 A4:1 - A4 - C5 - | Bb4:8 A4:2 -:3 F4:1 E4 Eb4 | \
@@ -1066,7 +1066,7 @@ pub(super) const QUE_FALTA_QUE_ME_HACES: Song = Song {
             _:3 Bb2:4 A2 C#2:1 -:4 & F4:2 -:6 C#4:3 -:5 | -:6 E3:2 -:8 | -:16 | - | - | \
             -:10 Bb4:1 -:5 | Bb4:1 -:3 A4 C3:7 -:2 | -:16",
         ),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "D4:1 -:3 D6 -:1 D6:2 -:1 D6 - D6 D6 - | D6 - D6:2 - D6:1 D6 -:2 D6:1 - D6 D6 D6 - | \
@@ -1086,7 +1086,7 @@ pub(super) const QUE_FALTA_QUE_ME_HACES: Song = Song {
             -:2 F#4:3 -:4 D4:3 -:4 & -:16 | -:7 D5+Bb5:1 -:8 | -:16 | - | -:5 Bb3+G4:4 -:7 | \
             -:16 | -:3 E4:1 -:12 | -:16",
         ),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "Bb4:3 A4:1 - A4 G4 - F4 -:3 D6 -:1 | D6:2 -:1 D6 - D6 D6 - D6:2 D6 - D6:1 D6 | \
@@ -1110,7 +1110,7 @@ pub(super) const QUE_FALTA_QUE_ME_HACES: Song = Song {
             tempo(96, 91),
             tempo(112, 105),
         ]),
-        // Bars 41-47 of the file.
+        // Bars 41-47.
         Part::new(
             "Part 6",
             "-:7 D4:2 -:1 D4:5 -:1 | -:2 D4:1 F4 - A4 D5 - F5:2 A5 D6:3 -:1 | \
@@ -1148,7 +1148,7 @@ pub(super) const QUE_ME_VAN_A_HABLAR_DE_AMOR: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:2 D5:3 -:1 G5 A5 B5:2 - D6:1 C6 - B5 | _:7 -:1 A5:7 -:1 | \
@@ -1174,7 +1174,7 @@ pub(super) const QUE_ME_VAN_A_HABLAR_DE_AMOR: Song = Song {
             tempo(64, 109),
             tempo(80, 110),
         ]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:2 D#4:3 -:1 D#4 - D#4 G#4 C5 -:2 B4:1 A4 - | A4:4 G4:3 -:5 G5:1 - A5 B5 | \
@@ -1192,7 +1192,7 @@ pub(super) const QUE_ME_VAN_A_HABLAR_DE_AMOR: Song = Song {
             _:2 -:14 | -:7 G3:1 -:4 G#2:1 -:3 & -:16 | - | -:15 G4:1 | -:16 | - | - | - | -",
         )
         .with_tempo(&[tempo(112, 114)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "A4:4 E4 -:8 | -:2 E4 -:1 C5 B4 A4:2 -:1 G4:4 F#4:1 A4 | \
@@ -1219,7 +1219,7 @@ pub(super) const QUE_ME_VAN_A_HABLAR_DE_AMOR: Song = Song {
             tempo(80, 93),
             tempo(96, 102),
         ]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "G5:3 -:13 | -:2 B4:3 E5:1 - F#5 G5:2 B5:4 A5:2 | G5:4 F#5:8 -:2 A5 | \
@@ -1235,7 +1235,7 @@ pub(super) const QUE_ME_VAN_A_HABLAR_DE_AMOR: Song = Song {
             -:4 F#2 D#2 -:2 A4 | G4:3 - F4:2 -:4 F#2:1 -:3 | E2:2 B2 -:12 | -:16 | - | - & -:16 | \
             - | - | -:2 F#4:3 -:11 | -:3 E4:7 -:6 | -:16 | - | -",
         ),
-        // Bars 33-42 of the file.
+        // Bars 33-42.
         Part::new(
             "Part 5",
             "A4:8 G4:3 -:5 | B5:2 Bb5:4 B5:2 Bb5:4 B5:2 Bb5 | C#6 B5:4 C#6:2 B5:4 Bb5:2 G#5:1 - | \
@@ -1291,7 +1291,7 @@ pub(super) const MARIONETAS: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:6 C4:2 D4 -:1 E4:2 F4:1 A4 - | C5:3 A4 Bb4:1 - C5:3 Bb4:2 A4:1 Bb4 - | \
@@ -1308,7 +1308,7 @@ pub(super) const MARIONETAS: Song = Song {
             _:2 C3 -:1 C3:2 -:1 D3:2 E3 F3 - & -:16 | - | - | - | - | - | -:8 D3:2 -:6 | \
             -:13 A3:2 -:1",
         ),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:3 C5:1 C5:3 -:1 D5:2 E5 F5 A5:1 C6 | _:2 A5:4 Bb5:1 C6:3 Bb5 A5:1 Bb5 C6 | \
@@ -1327,7 +1327,7 @@ pub(super) const MARIONETAS: Song = Song {
             -:16 | -:2 A4:1 -:13 | -:16",
         )
         .with_tempo(&[tempo(64, 102), tempo(80, 106)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "F4:4 -:1 C5:2 -:1 C6:3 Bb5:2 A5:1 Bb5 A5 | _:6 -:1 G5:9 | \
@@ -1346,7 +1346,7 @@ pub(super) const MARIONETAS: Song = Song {
             - G3:3 -:9 | -:16 | - | - | -",
         )
         .with_tempo(&[tempo(0, 84), tempo(16, 113), tempo(112, 102)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "F#4:2 - D4:1 -:3 D6:2 C6:1 - C6 - D6 C6 | _:2 -:6 Bb5:5 -:3 | \
@@ -1372,7 +1372,7 @@ pub(super) const MARIONETAS: Song = Song {
             tempo(96, 107),
             tempo(112, 111),
         ]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "C5:3 A4 Bb4:1 - C5:3 Bb4:2 A4:1 Bb4 - | C5:2 G4:4 A4:1 Bb4:2 A4:3 G4:1 - F4 E4 | \
@@ -1390,7 +1390,7 @@ pub(super) const MARIONETAS: Song = Song {
             -:8 D3:2 -:6 | -:13 A3:2 -:1 | -:16",
         )
         .with_tempo(&[tempo(112, 86)]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "-:2 A5:4 Bb5:1 C6:3 Bb5 A5:1 Bb5 C6 | _:2 G5:3 -:1 A4 Bb4:3 A4:2 -:1 G4 F4 E4 | \
@@ -1415,7 +1415,7 @@ pub(super) const MARIONETAS: Song = Song {
             tempo(96, 103),
             tempo(112, 86),
         ]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "-:7 G5:9 | -:3 C5 -:1 C6:3 Bb5:2 -:1 Bb5 C6 Bb5 | _:7 A5:4 -:5 | \
@@ -1433,7 +1433,7 @@ pub(super) const MARIONETAS: Song = Song {
             -:7 C5:3 -:1 C2 -:4 | - G3:3 -:9 | -:16 | - | - | - | -",
         )
         .with_tempo(&[tempo(0, 111), tempo(96, 97), tempo(112, 111)]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "-:8 Bb5:5 -:3 | -:4 E6:3 E6:1 -:2 D6:1 - C6 - B5 C6 | _:2 -:6 A5:8 | \
@@ -1476,7 +1476,7 @@ pub(super) const TIEMPOS_VIEJOS: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:8 A4:3 A4:2 D5:1 C#5 - | D5:5 C5:1 B4 C5:6 Bb4:1 A4 C5 | \
@@ -1491,7 +1491,7 @@ pub(super) const TIEMPOS_VIEJOS: Song = Song {
             -:3 D3:4 -:8 G2:1 | _:10 -:6 | -:4 E3 G3 - & -:16 | - | - | - | -:3 F3:2 -:11 | -:16 | \
             - | -")
         .with_tempo(&[tempo(16, 101), tempo(32, 102)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:3 F4:2 C5:1 B4 A4:2 Bb4:1 A4:3 D5:1 C#5 Eb5 | _:4 -:1 D5 C5:2 Eb5 D5:1 Eb5 D5:2 C5 | \
@@ -1507,7 +1507,7 @@ pub(super) const TIEMPOS_VIEJOS: Song = Song {
             -:7 A2:4 - D4:1 | _:2 -:13 E4:1 | _:4 -:12 | -:16 & -:16 | - | -:15 E4:1 | _ -:15 | \
             -:16 | - | -:1 E4:5 -:10 | -:16")
         .with_tempo(&[tempo(48, 108), tempo(64, 100), tempo(80, 104)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "D4:1 -:3 A4:1 -:3 D5:2 A4:3 -:1 Bb4 - | A4:5 G4:1 F#4 G4:5 -:1 Bb4 A4:2 | \
@@ -1521,7 +1521,7 @@ pub(super) const TIEMPOS_VIEJOS: Song = Song {
             E2:8 A2:4 - & -:4 C#4:1 -:3 D2+F4:1 -:7 | D4:4 - C#4:6 -:2 | -:7 F3:4 -:5 | \
             G#3:3 -:13 | -:7 F3:5 -:4 | D5:3 -:4 G3 -:5 | - E3:2 -:9 | G#4+D5:4 -:12 & -:16 | - | \
             - | D4:2 -:14 | -:16 | Bb4:2 -:6 C#5:5 -:3 | -:16 | -"),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "-:4 D5 -:8 | -:15 D4:1 | _:4 C4:9 -:1 C4 D4 | _:2 C4:4 -:2 C4:4 -:2 C4 | \
@@ -1536,7 +1536,7 @@ pub(super) const TIEMPOS_VIEJOS: Song = Song {
             C3:5 E3:2 Bb3:5 -:2 Bb3:1 - | -:2 C3 -:12 | -:8 E3:4 Bb3:2 - | A3:1 -:7 A2:3 -:5 | \
             D5:4 -:12 | -:8 C3 | G#4:4 Bb2:3 -:1 A2:4 - & -:16 | -:6 G3:1 - C3:8 | -:16 | - | - | \
             Bb4:2 -:14 | -:16 | -"),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "D5:1 -:2 A6:4 -:1 A4:3 A4:2 D5:1 C#5 - | D5:5 C5:1 B4 C5:6 Bb4:1 A4 C5 | \
@@ -1551,7 +1551,7 @@ pub(super) const TIEMPOS_VIEJOS: Song = Song {
             -:3 A4:4 A3 - D4:1 | -:3 D3:4 -:8 G2:1 | _:10 -:6 | -:4 E3 G3 - & -:16 | - | - | - | \
             -:3 F3:2 -:11 | -:16 | - | -")
         .with_tempo(&[tempo(0, 94), tempo(16, 104)]),
-        // Bars 41-50 of the file.
+        // Bars 41-50.
         Part::new(
             "Part 6",
             "-:3 F4:2 C5:1 B4 A4:2 Bb4:1 A4:3 D5:1 C#5 Eb5 | _:4 -:1 D5 C5:2 Eb5 D5:1 Eb5 D5:2 C5 | \
@@ -1594,7 +1594,7 @@ pub(super) const YIRA_YIRA: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:14 E4:1 E#4 | F#4 F#4 F#4 F#4 F#4:5 E4:1 - G4 F#4:2 D4:1 - | \
@@ -1620,7 +1620,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(96, 108),
             tempo(112, 110),
         ]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "D4:5 D4:1 - C#4 C4:2 -:6 | -:2 D4 -:1 D4 - C#4 -:2 C#4:4 D4:1 - | \
@@ -1644,7 +1644,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(64, 112),
             tempo(112, 115),
         ]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "F#5:1 -:3 B4:1 -:3 E4:1 -:3 D#4:1 -:3 | -:1 E5 -:3 E4:1 - E4 E4:2 B4:4 G4:1 - | \
@@ -1670,7 +1670,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(80, 105),
             tempo(96, 107),
         ]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "A4:1 -:3 B5:1 A5 F#5 D5 B4 A4 F#4 D4 -:4 | -:2 C#5 - C#5:1 C#5 C#5:5 B4:1 A4 - | \
@@ -1698,7 +1698,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(96, 112),
             tempo(112, 117),
         ]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "A4:1 -:3 B5:2 A5:1 - D4 - B4:2 A4:1 -:3 | -:1 E5 E4 -:3 E4:1 E4 E4 - F#4:4 G4:1 - | \
@@ -1724,7 +1724,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(96, 112),
             tempo(112, 110),
         ]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "F#4:16 | -:2 A4:1 - G#4 A4 - A4 B4:3 -:1 A4 - G4 - | F#4:8 D4:6 -:2 | \
@@ -1751,7 +1751,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(96, 114),
             tempo(112, 119),
         ]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "F#4:1 -:3 F#6:1 -:3 F#4:4 D4:1 -:3 | -:2 F#5:1 - F#5 - F#5 - F#5:2 E5:1 -:3 G5:1 - | \
@@ -1777,7 +1777,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(96, 114),
             tempo(112, 113),
         ]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "B4:2 - A#4:1 -:3 A4:1 -:2 A6:1 A5 -:3 | -:2 D4 -:1 D4 - D4 D4:2 E4:3 F#4 | \
@@ -1805,7 +1805,7 @@ pub(super) const YIRA_YIRA: Song = Song {
             tempo(96, 116),
             tempo(112, 114),
         ]),
-        // Bars 65-74 of the file.
+        // Bars 65-74.
         Part::new(
             "Part 9",
             "-:2 F#5 D5:1 - F#4 - A5:4 - | -:1 D5 D4 -:2 D4:1 - D4 D4:2 E4:3 F#4 | \
@@ -1864,7 +1864,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:8 D5:4 A4 | _:2 D5:3 -:1 A4 D5 C5:8 | _:2 A4 -:1 Bb4:2 C5:1 Bb4:6 -:2 | \
@@ -1880,7 +1880,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             Eb3:6 -:2 Bb3:4 D4:2 - | G#3:5 -:11 | -:4 F#2:1 -:11 | -:16 | -:2 G5 -:12 | \
             -:4 D4:1 -:11")
         .with_tempo(&[tempo(32, 105), tempo(48, 109), tempo(64, 95), tempo(96, 99), tempo(112, 92)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "C5:2 B4:1 A4 C5 B4 Bb4 A4 D5:4 A4:1 -:3 | - D5:5 A4:1 D5 C5:6 | \
@@ -1898,7 +1898,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             _:3 -:9 G3:4 | E3:3 -:7 Bb3:6 | _:1 -:3 C#4:2 - G3:4 - | -:12 B2:4 | \
             _:3 -:7 A4:2 -:4 & -:16 | - | - | - | - | - | - | -:2 E4:1 -:13")
         .with_tempo(&[tempo(0, 94), tempo(16, 104), tempo(32, 101), tempo(48, 95), tempo(64, 93), tempo(96, 99), tempo(112, 90)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "F#4:1 - G4:4 F#4:1 -:3 G4:1 G#4 A4 - E5 F5 | F#5 A5 G5:6 E5:1 D#5 F#5:4 E5:1 F#5 | \
@@ -1918,7 +1918,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:4 E3+A#3 G3:1 -:3 G#2:1 -:3 & -:16 | - | - | - | -:2 G3:3 -:7 A3:2 - | \
             -:7 B3:1 -:8 | -:16 | -")
         .with_tempo(&[tempo(0, 95), tempo(16, 98), tempo(32, 101), tempo(48, 103), tempo(64, 97), tempo(96, 107), tempo(112, 103)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "A4:4 -:2 C#4 G4 - G#4:1 -:3 | A4:2 - G4 F#4 -:1 E4:2 D#4:1 F#4:4 | \
@@ -1939,7 +1939,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:3 C#3:2 -:11 | A5:2 -:14 | -:4 D4 -:7 D3:1 | _:3 -:4 A#4+B4:1 -:8 | \
             D4:4 -:6 G3:3 E3:2 -:1 & -:16 | - | - | - | - | - | - | -:14 D#3:1 -")
         .with_tempo(&[tempo(0, 98), tempo(32, 90), tempo(48, 100), tempo(80, 99), tempo(96, 95)]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "-:4 C#4:1 C4 -:2 A4:7 C#4:1 | -:4 A5:3 - F4:1 G4 A4:3 -:1 | \
@@ -1956,7 +1956,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:10 D3+B3:1 -:2 Eb4:1 -:2 | - D2:3 -:2 F#2:1 -:8 | -:12 D3:3 C#3:1 | \
             C3:8 G#3+D4:3 -:1 E2:3 -:1 & -:16 | -:14 D3:2 | _:1 -:15 | -:16 | - | - | - | -")
         .with_tempo(&[tempo(0, 96), tempo(16, 92), tempo(32, 97), tempo(48, 98), tempo(80, 104), tempo(96, 99), tempo(112, 96)]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "E4:6 F4:2 E4:1 -:2 G#4:1 A5 - A4 B4 | C6:2 -:1 B5 -:2 Bb5:1 A5 A5:2 - F4:1 F4 F4 - | \
@@ -1974,7 +1974,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:2 D2:4 D3:1 -:5 G2:1 -:3 | -:12 G4:1 -:3 | -:7 C#4:1 -:8 | \
             D2:1 -:3 C3:8 -:4 & -:8 A2:1 -:7 | -:16 | - | - | - | - | - | -:4 G5:1 -:11")
         .with_tempo(&[tempo(0, 92), tempo(16, 104), tempo(32, 98), tempo(48, 99), tempo(64, 96), tempo(96, 103), tempo(112, 89)]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "G5:1 -:3 F5:2 E5:4 D5:1 C#5 D5 -:3 | A5:1 -:3 D6:1 -:11 | -:4 D5 A4:6 D5:2 | \
@@ -1991,7 +1991,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:6 A3 -:2 A3+G5 & D5:1 -:15 | -:16 | - | -:12 Eb3:4 | _:2 - Bb3:4 D4:2 - G#3:4 | \
             _:1 -:15 | F#2:1 -:15 | -:16")
         .with_tempo(&[tempo(0, 85), tempo(16, 99), tempo(32, 105), tempo(80, 107), tempo(96, 93), tempo(112, 99)]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "F5:1 G5 F5:4 E5:1 - E5:4 -:2 B4 | D5 C#5:1 E5:3 C#5:1 -:3 A4:2 C5 B4:1 A4 | \
@@ -2008,7 +2008,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:4 D2:3 -:6 D4:2 -:1 | A2:6 -:10 & -:16 | D4:1 -:15 | -:4 G3:1 -:7 G#2+C#3:1 -:3 | \
             -:12 G4:4 | _:2 -:4 D4:9 -:1 | -:8 G3:4 E3:3 -:1 | -:6 Bb3 -:4 | C#4:2 - G3:4 -:8")
         .with_tempo(&[tempo(0, 91), tempo(16, 97), tempo(32, 100), tempo(80, 93), tempo(96, 98), tempo(112, 91)]),
-        // Bars 65-72 of the file.
+        // Bars 65-72.
         Part::new(
             "Part 9",
             "A4:2 G4:1 F4 G4 - F4:4 -:3 E4:1 F4 D#4 | E4:5 A#4:2 F4:1 D4:4 F#4:1 - G4:2 | \
@@ -2029,7 +2029,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:16 | - | - | -:14 G3:2 | _:1 -:7 A3:2 -:6 | -:3 B3:1 -:12 & -:14 E4:1 - | -:16 | - | \
             - | - | - | - | -")
         .with_tempo(&[tempo(0, 99), tempo(16, 90), tempo(32, 96), tempo(48, 98), tempo(64, 102), tempo(80, 103), tempo(96, 91), tempo(112, 103)]),
-        // Bars 73-80 of the file.
+        // Bars 73-80.
         Part::new(
             "Part 10",
             "E6:1 - A6 -:5 D6:1 -:4 F5:3 | E5 D5:2 C5:1 Bb4 Bb4:3 C4:2 A4:4 | \
@@ -2047,7 +2047,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             _ -:4 C3:2 -:8 | Bb3:5 -:3 Bb3:1 -:3 F#2:4 & -:16 | - | -:12 Eb2:1 -:3 | \
             B3+F#4:1 -:15 | -:16 | -:2 C#3 -:12 | A5:2 -:14 | -:4 D4 -:7 D3:1")
         .with_tempo(&[tempo(0, 112), tempo(16, 98), tempo(32, 96), tempo(48, 101), tempo(64, 107), tempo(96, 101), tempo(112, 99)]),
-        // Bars 81-88 of the file.
+        // Bars 81-88.
         Part::new(
             "Part 11",
             "D4:1 F#4 - A4 C#5:2 C#5:1 C5 B4 D5:7 | _:1 B4 A4 G4 F#4:3 - F#4:5 D4:1 | \
@@ -2067,7 +2067,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             D4:4 -:6 G3:3 E3:2 -:1 | -:16 | -:14 D3:2 | _:1 -:15 | -:16 | - | - & -:16 | \
             -:14 D#3:1 - | -:16 | - | - | - | - | -")
         .with_tempo(&[tempo(0, 95), tempo(32, 96), tempo(48, 92), tempo(64, 97), tempo(80, 98), tempo(112, 104)]),
-        // Bars 89-96 of the file.
+        // Bars 89-96.
         Part::new(
             "Part 12",
             "A4:1 Bb4 G4:2 F4:1 E4 G4:5 F4:1 F4:4 | _:2 - F4:4 E4:3 - F4:2 | \
@@ -2087,7 +2087,7 @@ pub(super) const LOS_MAREADOS: Song = Song {
             -:2 D2:4 D3:1 -:5 G2:1 -:3 | -:12 G4:1 -:3 & -:16 | - | -:8 A2:1 -:7 | -:16 | - | - | \
             - | -")
         .with_tempo(&[tempo(0, 99), tempo(16, 96), tempo(32, 92), tempo(48, 104), tempo(64, 98), tempo(80, 99), tempo(96, 96)]),
-        // Bars 97-100 of the file.
+        // Bars 97-100.
         Part::new(
             "Part 13",
             "A4:1 G4:2 A4:6 G4:1 F4 E4 F4 -:3 | -:2 A5:1 - A5 G5 F5 - E5 D5 E5:3 - | \
@@ -2123,7 +2123,7 @@ pub(super) const MANO_A_MANO: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:6 D4:2 -:1 F4 G4 A4 Bb4:3 G#4:1 | G4 - E4:4 Bb5 A5:1 G#5 A5:2 G5 | \
@@ -2143,7 +2143,7 @@ pub(super) const MANO_A_MANO: Song = Song {
             -:6 C#4:2 C#2:4 - & -:16 | - | - | - | - | -:8 E2:4 - | -:16 | - & -:16 | - | - | - | \
             - | -:8 A4:1 -:7 | -:16 | -")
         .with_tempo(&[tempo(32, 109), tempo(48, 110), tempo(96, 108), tempo(112, 112)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "A5:1 -:3 B5:1 -:3 C#6:1 -:3 A5:1 -:2 D4:1 | D4 - E4 - F4:2 - G4:1 F4 E4:4 D4:1 E4 | \
@@ -2163,7 +2163,7 @@ pub(super) const MANO_A_MANO: Song = Song {
             -:16 | - | -:10 B3:1 -:5 | -:16 | G4:1 E4+G4+A4 -:2 C2:5 -:7 & -:16 | - | -:8 G3:4 - | \
             -:16 | - | - | - | -")
         .with_tempo(&[tempo(0, 104), tempo(32, 106), tempo(64, 108), tempo(80, 105), tempo(96, 108)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "-:1 G#4:2 A4:1 Bb4 A4 - A4 G#4 A4:5 G4:1 - | \
@@ -2182,7 +2182,7 @@ pub(super) const MANO_A_MANO: Song = Song {
             -:4 C6+F6+A6:1 - D6 - A5 -:7 | -:4 Bb4:6 G4:1 -:5 | C4:2 -:14 & -:16 | - | - | \
             Bb2:4 -:12 | -:4 D5+F5+A5:1 -:11 | -:16 | - | -")
         .with_tempo(&[tempo(0, 110), tempo(16, 109), tempo(48, 107), tempo(64, 112), tempo(80, 115), tempo(96, 108)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "-:3 A5:2 G#5:1 A5:3 G#5:1 -:2 G5:1 F#5 F5:2 | -:12 C4:1 C#4 D4 - | \
@@ -2200,7 +2200,7 @@ pub(super) const MANO_A_MANO: Song = Song {
             E3:5 -:3 G3:7 -:1 | -:16 | -:8 G4:1 - G4 - E3:4 & -:16 | - | - | - | - | \
             -:2 B3:4 -:10 | -:16 | -")
         .with_tempo(&[tempo(0, 105), tempo(32, 121), tempo(48, 105), tempo(80, 103), tempo(96, 106)]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "D5:1 -:3 A5:1 -:3 F5:1 - D4 E4 F4 G4 G#4 A4 | Bb4:3 G#4:1 G4:6 Bb4:2 A4:1 - G#4 - | \
@@ -2217,7 +2217,7 @@ pub(super) const MANO_A_MANO: Song = Song {
             -:2 Bb3:1 -:5 A2:3 -:4 C#2:1 | -:6 C#2:2 - F5 B1:4 | -:6 Bb2:2 A1:7 -:1 & -:16 | - | \
             - | -:12 A1:4 | -:16 | - | -:12 E5:1 -:3 | -:10 F#4:1 -:5")
         .with_tempo(&[tempo(16, 109), tempo(48, 111), tempo(64, 112), tempo(80, 110)]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "D4:1 -:3 A5:1 -:3 B5:1 -:3 C#6:1 -:3 | A5:1 - Eb4 -:3 E4:2 F4 E4 G4:1 F4 E4:2 | \
@@ -2237,7 +2237,7 @@ pub(super) const MANO_A_MANO: Song = Song {
             -:2 D3:1 -:3 E4:2 C2:4 - & -:8 D5+A5:1 -:3 G5:1 -:3 | F5:1 -:15 | -:12 C#3:1 -:3 | \
             -:16 | - | -:8 G4+C#5:1 -:7 | -:16 | -:6 B4:1 -:3 E4:1 -:5")
         .with_tempo(&[tempo(0, 101), tempo(16, 104), tempo(32, 106), tempo(80, 103), tempo(96, 105)]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "-:2 A4:1 Bb4 G#4 - A4 - Bb4 - A4 - A4 G#4 A4:2 | \
@@ -2255,7 +2255,7 @@ pub(super) const MANO_A_MANO: Song = Song {
             A5:1 - C6:2 -:12 | -:4 E3 - C2:1 -:3 | -:4 A3:1 -:11 & -:16 | - | -:8 C3 | _:1 -:15 | \
             -:4 A4+C#5+E5:1 -:11 | -:16 | - | -")
         .with_tempo(&[tempo(0, 109), tempo(16, 103), tempo(32, 106), tempo(96, 105), tempo(112, 106)]),
-        // Bars 57-66 of the file.
+        // Bars 57-66.
         Part::new(
             "Part 8",
             "-:4 D4:1 - A5:3 -:1 G#5 -:3 G5:1 F#5 | G5:5 -:1 F5:8 -:2 | \
@@ -2300,7 +2300,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:12 F4:1 E4 F4 Gb4 | _:8 F4:1 - E4 F4 A4 C5 Bb4 A4 | C5 Bb4 - Db5:6 Bb4:2 Ab4:5 | \
@@ -2319,7 +2319,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             -:8 E4:1 -:7 | -:16 | -:11 C5:1 -:4 | -:16 | - | -",
         )
         .with_tempo(&[tempo(32, 94), tempo(48, 101), tempo(64, 99), tempo(96, 105)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "Db5:2 C5:9 Bb4:1 Ab4 G4:2 C5:1 | Ab4:5 E4:3 G4:2 A4:5 F4:1 | \
@@ -2349,7 +2349,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 99),
             tempo(112, 94),
         ]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "Db5:2 C5 Eb5:1 Db5 C5:5 -:2 Db5:1 Eb5 - | Db5:2 C5 Eb5 Db5:1 -:2 C5:7 | \
@@ -2377,7 +2377,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 93),
             tempo(112, 100),
         ]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "C6:1 D6:10 C6:1 - C6 - B5 | B5:2 Bb5:1 Bb5 A5 Ab5 A5 C6:5 -:3 Bb5:1 | \
@@ -2405,7 +2405,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 105),
             tempo(112, 101),
         ]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "A4:6 G4:2 - D5 -:1 B4 C5:2 | D5:5 C5:1 C5 B4 Bb4:2 A4 Ab4:1 A4 C5:2 | \
@@ -2435,7 +2435,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 108),
             tempo(112, 94),
         ]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "A4:3 - G4 - F4:4 | -:6 C4:1 - C4 F4 C5 D5 F5 A5 C6 C6 | \
@@ -2461,7 +2461,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 105),
             tempo(112, 101),
         ]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "-:2 D4:1 C#4 C4:8 E4:1 F4 G4:2 | -:4 G5:1 -:3 A5:1 -:3 A6:1 -:3 | \
@@ -2490,7 +2490,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 109),
             tempo(112, 100),
         ]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "G4:9 -:3 E4:1 F4 G4:2 | -:4 C4:1 - G4 - A4:3 -:1 B4 A4 C5:2 | \
@@ -2519,7 +2519,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 104),
             tempo(112, 100),
         ]),
-        // Bars 65-72 of the file.
+        // Bars 65-72.
         Part::new(
             "Part 9",
             "C6:1 - F4 F#4 G4:4 G5:3 -:1 G5 -:2 G5:1 | F5 F5:9 E5:1 - E5:4 | \
@@ -2548,7 +2548,7 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
             tempo(96, 105),
             tempo(112, 103),
         ]),
-        // Bars 73-81 of the file.
+        // Bars 73-81.
         Part::new(
             "Part 10",
             "-:1 B4 - B4 G4 -:6 B4:1 G5:2 -:1 G5 | -:2 G5:1 F5 F5:6 E5:1 - E5:3 -:1 | \
@@ -2607,7 +2607,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "D4:4 G4:1 A4 C5 D5 A5:6 -:2 | F5:1 E5 D5 C5 B4 G4 F4 C4 E4:5 -:3 | \
@@ -2624,7 +2624,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
             -:1 F3:3 -:12 | -:8 A3+E4 | B3+D#4+A4:5 -:11 | -:16 | - | -:8 B3:1 -:7 | \
             B3:1 -:7 G2:8 & -:16 | - | -:8 C4:7 -:1 | -:16 | - | - | - | -:8 B3:1 -:7")
         .with_tempo(&[tempo(16, 82), tempo(32, 93), tempo(48, 87), tempo(64, 146), tempo(80, 132), tempo(96, 133), tempo(112, 132)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "C4:2 D4:1 - D#4 C#4 C4 - C4 -:4 G4:1 F#4 - | \
@@ -2645,7 +2645,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
             -:1 A3:7 -:2 G3+B3:1 -:5 | -:2 D#3+F#3+A3:3 -:11 | -:16 | - | - & -:14 E4:1 B3 | \
             -:16 | - | -:1 F#3+B3:6 -:9 | -:16 | - | - | -")
         .with_tempo(&[tempo(16, 133), tempo(32, 140), tempo(64, 128), tempo(80, 133), tempo(96, 135), tempo(112, 134)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "-:8 E6:1 D#6 E6 D#6 E6 D6 C6 B5 | \
@@ -2666,7 +2666,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
             -:8 F#3+A3:7 -:1 & -:16 | -:12 A4:1 -:3 | -:16 | -:4 E4:1 -:7 A3:1 -:3 | -:16 | \
             -:12 B3:2 - | -:16 | -:12 F#5:1 -:3")
         .with_tempo(&[tempo(0, 127), tempo(16, 132), tempo(48, 129), tempo(64, 133), tempo(80, 129), tempo(96, 134), tempo(112, 131)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "E5:1 -:6 D6:1 B5:2 -:5 E5:1 | D5:2 G4:1 -:2 F#4:1 G4 - C5:2 - C4:1 D#4 F#4 A4 | \
@@ -2686,7 +2686,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
             -:12 C6:1 -:3 | -:11 F#3:2 -:3 | -:16 | - | - | - & -:16 | - | - | -:12 A3:1 -:3 | \
             -:16 | - | - | -")
         .with_tempo(&[tempo(0, 114), tempo(16, 125), tempo(32, 126), tempo(48, 123), tempo(64, 119), tempo(80, 121), tempo(96, 119), tempo(112, 117)]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "A4:1 -:3 A5:1 -:2 D6:1 B5 -:5 F5:1 E5 | D5 -:3 F#4:1 G4 C5:2 -:3 E4:1 F#4 A4 C5:2 | \
@@ -2704,7 +2704,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
             C#5:1 -:3 D3:4 B4+D5:2 -:6 & -:8 G5:1 -:7 | -:16 | -:14 C5:1 - | -:2 G3:4 -:10 | \
             -:7 F5:1 -:8 | -:16 | - | -:4 C5+F#5:1 -:11")
         .with_tempo(&[tempo(0, 105), tempo(16, 114), tempo(32, 124), tempo(48, 116), tempo(64, 121), tempo(112, 118)]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "E4:2 F#4 G4 B4 D5 -:6 | G5:2 -:1 C4 F#5:2 E5 D5 -:6 | \
@@ -2724,7 +2724,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
             - G#3:2 - G#3 -:1 E4:2 -:6 | D3:5 A2:2 -:1 B3+D4:3 -:5 & -:16 | - | - | - | - | \
             -:9 D#3:2 -:5 | - B3:1 -:10 | -:4 C4:2 -:10")
         .with_tempo(&[tempo(0, 121), tempo(16, 123), tempo(48, 125), tempo(64, 128), tempo(80, 125), tempo(96, 119), tempo(112, 125)]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "B4:1 B4 A#4 B4 A4 B4 G#4 B4 G4 B4 F#4 B4 F4 B4 E4 B4 | D#4 B4 D4 B4 C#4 B4 C4 B4 -:8 | \
@@ -2744,7 +2744,7 @@ pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
             -:4 B3:1 - E4 G2:7 -:2 | -:16 | - & -:16 | - | - | - | - | -:7 B3:1 -:3 B3:1 -:4 | \
             -:16 | -")
         .with_tempo(&[tempo(0, 127), tempo(16, 135), tempo(32, 127), tempo(48, 124), tempo(64, 126), tempo(96, 130), tempo(112, 141)]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "F#4:1 E4 D#4 E4 E5 D5 C5 B4 D5 C5 B4 A4 B4 A4 G4 F#4 | \
@@ -2788,7 +2788,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
     band: SOLO_PIANO,
     style: "Vals in minor",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "C5:2 B4 C5 E5:1 - G5:2 E5 | C5:1 - Db5:2 C5:1 - Bb4:4 G4:2 | \
@@ -2811,7 +2811,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 200),
             tempo(84, 193),
         ]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "F4:2 G4:3 Ab4:1 Bb4 - B4 - D5:2 | _:4 F4:1 -:5 G4:2 | C5:9 -:3 | \
@@ -2835,7 +2835,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 191),
             tempo(84, 196),
         ]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "-:12 | C5:2 -:1 D4 -:2 B4 D5:4 | -:8 G4:1 -:3 | -:2 Eb4:1 Eb4 C4 -:3 F4:1 -:3 | \
@@ -2860,7 +2860,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 188),
             tempo(84, 200),
         ]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "G4:8 -:1 E4:3 | F4:2 - Eb4 -:3 D4 | Eb4:9 -:3 | - C5:1 -:3 D5:1 -:3 Eb5:1 | \
@@ -2884,7 +2884,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(60, 200),
             tempo(84, 194),
         ]),
-        // Bars 33-40 of the file.
+        // Bars 33-40.
         Part::new(
             "Part 5",
             "-:6 Eb5:2 D5 - | C5:4 B4:3 D5:4 C5:1 | _:5 -:1 G5 Eb5 G4:2 - | \
@@ -2908,7 +2908,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 200),
             tempo(84, 198),
         ]),
-        // Bars 41-48 of the file.
+        // Bars 41-48.
         Part::new(
             "Part 6",
             "-:1 B4 -:4 G4:1 - G4:2 - | -:1 F4 G4 Eb4 -:4 D4:1 -:3 | D4:5 C4:1 -:6 | \
@@ -2931,7 +2931,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 199),
             tempo(84, 204),
         ]),
-        // Bars 49-56 of the file.
+        // Bars 49-56.
         Part::new(
             "Part 7",
             "C6:8 C4:1 A5:3 | Bb5:8 C6:2 Ab5 | G5:8 F5:1 -:3 | \
@@ -2956,7 +2956,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 204),
             tempo(84, 212),
         ]),
-        // Bars 57-64 of the file.
+        // Bars 57-64.
         Part::new(
             "Part 8",
             "-:1 Ab4 -:2 G4:1 -:3 G4:1 -:3 | Ab4:1 D4:2 -:1 G4 -:2 G4 -:3 | Ab4:11 -:1 | \
@@ -2982,7 +2982,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 219),
             tempo(84, 198),
         ]),
-        // Bars 65-72 of the file.
+        // Bars 65-72.
         Part::new(
             "Part 9",
             "-:1 C5:2 -:5 Bb4:2 -:1 A4 | _ Bb4:3 C5:2 -:4 Ab4:2 | _ -:10 | \
@@ -3005,7 +3005,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(48, 204),
             tempo(84, 202),
         ]),
-        // Bars 73-80 of the file.
+        // Bars 73-80.
         Part::new(
             "Part 10",
             "G4:1 Ab4 G4:2 F4:1 -:3 E4:1 -:3 | F4:1 -:3 Eb4 - D4:2 | C4:6 - | -:12 | \
@@ -3029,7 +3029,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 234),
             tempo(84, 189),
         ]),
-        // Bars 81-88 of the file.
+        // Bars 81-88.
         Part::new(
             "Part 11",
             "Bb4:2 A4 Bb4:1 - D5:2 F5 D5:1 - | Bb4:2 C5:6 G4:1 - F4:2 | \
@@ -3054,7 +3054,7 @@ pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
             tempo(72, 236),
             tempo(84, 196),
         ]),
-        // Bars 89-92 of the file.
+        // Bars 89-92.
         Part::new(
             "Part 12",
             "F4:1 Bb4 G4:2 Ab4:1 Bb4 - C5 - D5:3 | B4:2 -:7 D5:1 - C5 | \
@@ -3096,7 +3096,7 @@ pub(super) const MALENA: Song = Song {
     band: SOLO_PIANO,
     style: "Tango",
     parts: &[
-        // Bars 1-8 of the file.
+        // Bars 1-8.
         Part::new(
             "Part 1",
             "-:3 G4 C5:2 -:1 C5 -:2 Eb5:1 Eb5 Db5 D5 | _:3 -:5 F4:2 F5 -:1 Ab5 - D6 | \
@@ -3153,7 +3153,7 @@ pub(super) const MALENA: Song = Song {
             ),
         ])
         .with_tempo(&[tempo(32, 91), tempo(48, 89), tempo(64, 94), tempo(80, 96), tempo(96, 92), tempo(112, 96)]),
-        // Bars 9-16 of the file.
+        // Bars 9-16.
         Part::new(
             "Part 2",
             "-:1 Eb4 F4 G4:2 -:3 G4:2 Bb4:1 Ab4:2 G4:1 F#4 G4 | Bb4:6 Ab4 F4:1 -:3 | \
@@ -3213,7 +3213,7 @@ pub(super) const MALENA: Song = Song {
             ),
         ])
         .with_tempo(&[tempo(0, 89), tempo(16, 96), tempo(48, 89), tempo(96, 91), tempo(112, 96)]),
-        // Bars 17-24 of the file.
+        // Bars 17-24.
         Part::new(
             "Part 3",
             "C4:1 -:6 C4:1 C#4:2 D4:5 E4:1 | F4 - G4:5 -:1 G4 F#4 F4:2 -:3 A4:1 | \
@@ -3269,7 +3269,7 @@ pub(super) const MALENA: Song = Song {
             ),
         ])
         .with_tempo(&[tempo(0, 93), tempo(16, 88), tempo(32, 90), tempo(48, 86), tempo(64, 91), tempo(80, 96), tempo(96, 97), tempo(112, 100)]),
-        // Bars 25-32 of the file.
+        // Bars 25-32.
         Part::new(
             "Part 4",
             "F4:4 G4:1 Ab4 A4:3 -:1 A4 G4 F#4 A4:2 -:1 | A4 G4 G4 C5 D5 E5 - A4:6 F#4:3 | \
@@ -3325,7 +3325,7 @@ pub(super) const MALENA: Song = Song {
             ),
         ])
         .with_tempo(&[tempo(0, 91), tempo(16, 93), tempo(32, 95), tempo(48, 97), tempo(64, 89), tempo(80, 90), tempo(96, 82), tempo(112, 94)]),
-        // Bars 33-39 of the file.
+        // Bars 33-39.
         Part::new(
             "Part 5",
             "-:7 G4:2 Ab4:1 Bb4 Ab4 G4 B4:3 | _ G4:1 -:3 D4 Eb4:1 F4 G4 -:3 | \
