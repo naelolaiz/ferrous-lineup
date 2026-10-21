@@ -689,6 +689,8 @@ const FIVE_EIGHT_UNGROUPED: TimeSignature = TimeSignature::new(5, 8);
 const SEVEN_EIGHT: TimeSignature = TimeSignature::new(7, 8);
 // A single beat, a bar of one quarter note (Petrushka).
 const ONE_FOUR: TimeSignature = TimeSignature::new(1, 4);
+// A bar of one eighth note: the upbeat of a song in 6/8 (Alfonsina y el mar).
+const ONE_EIGHT: TimeSignature = TimeSignature::new(1, 8);
 // Two half notes to the bar, cut time (Petrushka).
 const TWO_TWO: TimeSignature = TimeSignature::new(2, 2);
 // Three half notes to the bar (Petrushka).
@@ -1035,6 +1037,7 @@ pub static SONGS: &[Song] = &[
     folklore::CANDOMBE_DEL_BARRIO,
     folklore_arranged::CINCO_SIGLOS_IGUAL,
     folklore_arranged::LA_CULTURA_ES_LA_SONRISA,
+    folklore_arranged::ALFONSINA_Y_EL_MAR,
     flamenco::RUMBA_DEL_SUR,
     flamenco::NOCHE_FRIGIA,
     flamenco::ASTURIAS,
