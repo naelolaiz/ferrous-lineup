@@ -158,51 +158,58 @@ impl NotationView {
         }
     }
 
-    /// Draws the row.
-    pub fn row(&mut self, ui: &mut Ui, project: &Project) {
+    /// Draws the row, with `after` at its end.
+    pub fn row(&mut self, ui: &mut Ui, project: &Project, after: impl FnOnce(&mut Ui)) {
         ui.horizontal_wrapped(|ui| {
-            ui.label("Show");
-            let notation = self.notation();
-            let combo = egui::ComboBox::from_id_salt("chord-sheet-notation")
-                .selected_text(notation.name())
-                .show_ui(ui, |ui| {
-                    for choice in Notation::ALL {
-                        let item =
-                            ui.selectable_value(&mut self.choices.notation, choice, choice.name());
-                        theme::hint(item, choice.describe());
-                    }
-                });
-            theme::hint(
-                combo.response,
-                "How the sheet names its harmony. The notes stay as they are: a set or a \
-                 micromode is another way to write the same chord",
-            );
-            if !self.notation().groups() {
-                return;
-            }
+            self.items(ui, project);
             ui.separator();
-            let grouping = self.choices.grouping;
-            let combo = egui::ComboBox::from_id_salt("chord-sheet-grouping")
-                .selected_text(grouping.name())
-                .show_ui(ui, |ui| {
-                    for choice in Grouping::ALL {
-                        let item =
-                            ui.selectable_value(&mut self.choices.grouping, choice, choice.name());
-                        theme::hint(item, choice.describe());
-                    }
-                });
-            theme::hint(
-                combo.response,
-                format!(
-                    "{}. Typing in a bar still writes its harmony",
-                    self.choices.grouping.describe()
-                ),
-            );
-            if self.reads_notes() {
-                self.size_choice(ui);
-                self.track_choice(ui, project);
-            }
+            after(ui);
         });
+    }
+
+    /// The row's own choices.
+    fn items(&mut self, ui: &mut Ui, project: &Project) {
+        ui.label("Show");
+        let notation = self.notation();
+        let combo = egui::ComboBox::from_id_salt("chord-sheet-notation")
+            .selected_text(notation.name())
+            .show_ui(ui, |ui| {
+                for choice in Notation::ALL {
+                    let item =
+                        ui.selectable_value(&mut self.choices.notation, choice, choice.name());
+                    theme::hint(item, choice.describe());
+                }
+            });
+        theme::hint(
+            combo.response,
+            "How the sheet names its harmony. The notes stay as they are: a set or a \
+             micromode is another way to write the same chord",
+        );
+        if !self.notation().groups() {
+            return;
+        }
+        ui.separator();
+        let grouping = self.choices.grouping;
+        let combo = egui::ComboBox::from_id_salt("chord-sheet-grouping")
+            .selected_text(grouping.name())
+            .show_ui(ui, |ui| {
+                for choice in Grouping::ALL {
+                    let item =
+                        ui.selectable_value(&mut self.choices.grouping, choice, choice.name());
+                    theme::hint(item, choice.describe());
+                }
+            });
+        theme::hint(
+            combo.response,
+            format!(
+                "{}. Typing in a bar still writes its harmony",
+                self.choices.grouping.describe()
+            ),
+        );
+        if self.reads_notes() {
+            self.size_choice(ui);
+            self.track_choice(ui, project);
+        }
     }
 
     /// How many notes a group holds: in a micromode, always three.

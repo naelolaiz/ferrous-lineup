@@ -415,27 +415,17 @@ impl PlaylistView {
         &mut self.library
     }
 
-    /// Draws the pattern picker and the playlist. `current` is the
-    /// selected pattern; `playhead` is the step of the playlist being
-    /// played, and which time round, if the song is playing; `tried` is
-    /// what the library put in the selected pattern, if it was the library.
-    /// Steps are drawn `zoom.x` times wider than usual, tracks `zoom.y`
-    /// times taller.
-    pub fn show(
+    /// Draws the pattern picker and the library at the side of `ui`,
+    /// when they are open. The chord sheet keeps them beside it when it
+    /// fills the main window.
+    pub fn browser(
         &mut self,
         ui: &mut Ui,
         project: &Project,
         current: usize,
-        playhead: Option<(usize, Pass)>,
         tried: Tried,
-        zoom: Vec2,
     ) -> Vec<PlaylistAction> {
         let mut actions = Vec::new();
-        self.reconcile_selection(project.playlist().clips());
-        if zoom != self.zoom {
-            self.zoom_to(ui.ctx(), zoom);
-        }
-
         let mut browser_open = self.browser_open;
         egui::Panel::left("pattern-picker")
             .resizable(true)
@@ -459,6 +449,29 @@ impl PlaylistView {
                 }
             });
         self.browser_open = browser_open;
+        actions
+    }
+
+    /// Draws the pattern picker and the playlist. `current` is the
+    /// selected pattern; `playhead` is the step of the playlist being
+    /// played, and which time round, if the song is playing; `tried` is
+    /// what the library put in the selected pattern, if it was the library.
+    /// Steps are drawn `zoom.x` times wider than usual, tracks `zoom.y`
+    /// times taller.
+    pub fn show(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        current: usize,
+        playhead: Option<(usize, Pass)>,
+        tried: Tried,
+        zoom: Vec2,
+    ) -> Vec<PlaylistAction> {
+        self.reconcile_selection(project.playlist().clips());
+        if zoom != self.zoom {
+            self.zoom_to(ui.ctx(), zoom);
+        }
+        let mut actions = self.browser(ui, project, current, tried);
         self.area = ui.available_rect_before_wrap();
 
         let current_name = project.pattern(current).map_or("", |p| p.name.as_str());
