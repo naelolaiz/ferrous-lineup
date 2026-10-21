@@ -1107,6 +1107,7 @@ pub static SONGS: &[Song] = &[
     classical::PRELUDE_IN_C_SHARP_MINOR,
     classical::WEDDING_MARCH,
     classical::HALLELUJAH_CHORUS,
+    classical::FOR_UNTO_US,
     classical::GREAT_GATE_OF_KIEV,
     classical::ANITRAS_DANCE,
     classical::DIES_IRAE_MOZART,
