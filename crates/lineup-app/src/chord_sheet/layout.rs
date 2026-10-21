@@ -122,10 +122,8 @@ impl LayoutView {
             Columns::Fit => format!("Fit ({})", self.shown),
             bars => shown(bars),
         };
-        // Tall enough for every choice, with no scrolling.
         let combo = egui::ComboBox::from_id_salt("chord-sheet-columns")
             .selected_text(selected)
-            .height(f32::INFINITY)
             .show_ui(ui, |ui| {
                 let fit = ui.selectable_value(
                     &mut self.choices.columns,
@@ -137,10 +135,18 @@ impl LayoutView {
                     "As many bars as fit with every name in full at its normal size: 1, 2, 4, \
                      8, 12 or 16, so lines start where four-bar phrases do",
                 );
-                for bars in 1..=MOST_BARS {
-                    let choice = Columns::Bars(bars);
-                    ui.selectable_value(&mut self.choices.columns, choice, shown(choice));
-                }
+                // The numbers in rows of four: in one column, seventeen
+                // choices are taller than egui lets a menu be (400 points
+                // when it first measures it), and the menu would scroll.
+                egui::Grid::new("chord-sheet-columns-numbers").show(ui, |ui| {
+                    for bars in 1..=MOST_BARS {
+                        let choice = Columns::Bars(bars);
+                        ui.selectable_value(&mut self.choices.columns, choice, shown(choice));
+                        if bars % 4 == 0 {
+                            ui.end_row();
+                        }
+                    }
+                });
             });
         theme::hint(
             combo.response,
