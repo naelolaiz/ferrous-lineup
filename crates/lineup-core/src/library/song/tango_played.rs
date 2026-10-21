@@ -2629,7 +2629,7 @@ pub(super) const MALENA: Song = Song {
         .with_lines(&[
             line(
                 "Bandoneón",
-                23,
+                gm::TANGO_ACCORDION,
                 "-:15 F3:1 | _:15 B4:1 | _ D5:6 -:1 C5:8 | _:9 B4:3 - G4:1 | \
                 _:5 -:1 G4 -:3 D5:1 C5+D5 -:2 Eb4 | \
                 -:4 F3:3 -:1 Ab3+D5 -:3 F3+Ab3+C4+F4+Ab4+D5:1 -:3 | \
@@ -2642,7 +2642,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Guitar",
-                24,
+                gm::NYLON_GUITAR,
                 "-:13 C4:1 D4 Eb4 | _ -:7 Eb4 C4+Db4:1 | D4:8 C4 | G3:7 A3:1 Bb3 B3:6 C4:1 | \
                 D4:4 Eb4:5 -:3 C4:4 | D4:1 - Eb4:2 F4:1 -:3 Eb4:1 -:3 D4:1 -:3 | \
                 -:2 F4:1 D4+Eb4 Eb4 - D4 -:3 C4:1 - Eb4 -:3 | D4:1 - A3 Bb3 B3:4 A3 B3 & -:16 | \
@@ -2650,14 +2650,14 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Contrabass",
-                43,
+                gm::CONTRABASS,
                 "-:15 F3:1 | _:8 -:1 Eb3:7 | _:1 -:8 C3:7 | _:1 B2:8 G2:7 | B2:2 C3:11 -:1 C3 - | \
                 D3 - E3:2 F3:1 -:3 Eb3:1 -:3 D3:1 -:3 | C3:1 -:3 Eb3:1 -:3 D3:1 -:3 C3:1 -:3 | \
                 G2:4 D2:5 -:1 F#2 - G2:4 & -:16 | - | D3:8 - | -:15 A2:1 | -:16 | - | - | -",
             ),
             line(
                 "Strings",
-                49,
+                gm::STRING_ENSEMBLE,
                 "-:15 D4+Eb4:1 | E4:2 -:10 G4:3 Ab4:1 | _ -:7 Eb4:4 C4 | F4:8 Ab4 | \
                 G4:9 C4:3 D4:2 Eb4 | _ - F4:6 G4:2 Ab4:3 C5:1 | _:2 D5 -:3 G4:5 -:1 F4:3 | \
                 -:4 D4:9 -:3 & -:16 | -:1 F4:12 -:3 | G4:8 - | -:16 | - | -:1 E4:2 -:13 | \
@@ -2686,7 +2686,7 @@ pub(super) const MALENA: Song = Song {
         .with_lines(&[
             line(
                 "Bandoneón",
-                23,
+                gm::TANGO_ACCORDION,
                 "D4:1 -:3 C3+C4:4 - E4+G4+Bb4+Db5:1 -:2 E4:1 | _ F3:8 -:1 F3:6 | _:1 - Eb3:14 | \
                 _:1 - D3+A4 - Ab4+C5+Eb5 -:3 D3:2 F#4+A4+C5+Eb5:1 -:4 D3+F#3+A3+F4:1 | \
                 F#4+G4 G3 G5 - F#5 G5 G6 G5 G6 -:7 | F3:6 G4:1 Ab4 Eb3:7 F4:1 | \
@@ -2700,7 +2700,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Guitar",
-                24,
+                gm::NYLON_GUITAR,
                 "-:2 D4 C4:7 -:5 | Eb3:1 F3:7 -:1 Ab3:7 | _:1 Bb3 C4:4 Bb3 D4:3 - | \
                 Eb4:1 D4 F4 - Eb4 -:3 D4:1 - C4:2 D4:1 -:2 C4:1 | _ B3:4 -:3 G3:1 -:7 | \
                 -:2 F3:4 G3:2 Ab3:8 | C3:2 D3:1 Eb3 G3 C4 D4 D4:5 C4:4 | \
@@ -2709,7 +2709,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Contrabass",
-                43,
+                gm::CONTRABASS,
                 "-:2 A2:1 B2 C3:6 Bb2:5 -:1 | Eb2 F2:8 Bb2:7 | _:2 Eb2:1 E2 - Eb2:6 -:5 | \
                 F2:1 G2:2 -:1 G2 -:3 D2:6 -:1 F2+F#2 | G2:4 A2 B2 D3 | C3:2 F2:13 C3:1 | \
                 _:7 G2:9 | -:2 D2:4 -:1 F2+F#2 G2:4 A2:2 B2 & -:16 | - | - | -:2 Ab2 -:12 | -:16 | \
@@ -2717,7 +2717,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Strings",
-                49,
+                gm::STRING_ENSEMBLE,
                 "-:2 Eb4:1 D4:2 - D4:4 E4:5 | _:2 -:7 Eb4:5 Bb4:2 | _:5 -:3 G4:4 F4:2 Eb4 | \
                 D4:6 F4:5 Ab4:4 -:1 | G4:8 -:7 D4:1 | F4:12 Eb4:2 D4 | \
                 Eb4 C4:3 D4:2 Eb4:3 G4:5 F4:1 | Eb4:5 -:3 C4:4 B3 & -:4 C4:3 -:9 | -:1 F4:9 -:6 | \
@@ -2746,7 +2746,7 @@ pub(super) const MALENA: Song = Song {
         .with_lines(&[
             line(
                 "Bandoneón",
-                23,
+                gm::TANGO_ACCORDION,
                 "C3+C4+C5:1 -:7 G3:1 -:7 | C3:9 B4:2 -:4 D5:1 | Eb5 E5:8 D5:7 | -:1 B4:13 -:2 | \
                 -:1 F3:3 A4:1 C5 F5+G5 - G5:6 F5:2 | - A4:8 -:5 C5:1 | \
                 _:6 C3+D5:1 -:3 C5:1 -:3 C3:1 - | \
@@ -2757,7 +2757,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Guitar",
-                24,
+                gm::NYLON_GUITAR,
                 "C4:8 - | -:3 C4:4 -:1 D4 Eb4 E4:5 F4:1 | F#4 G4:13 -:2 | \
                 -:3 E4:4 Eb4+E4:1 B4:6 A4:2 | _:6 G4:1 A4 F4:4 E4 | D4:7 -:1 F4:7 D4:1 | \
                 - E4:3 -:4 B3:7 -:1 | C4 -:3 D4:1 -:3 C4:1 -:3 A3 -:1 & -:16 | - | - | - | \
@@ -2765,7 +2765,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Contrabass",
-                43,
+                gm::CONTRABASS,
                 "-:6 G2:3 -:7 | -:1 C3:8 D3:7 | _:1 E3:8 -:1 Eb3:6 | _:1 E3:7 E2:4 Eb2 | \
                 D2:12 F2:2 G2 | _:7 -:1 B2:8 | C3:7 -:1 E3:8 | \
                 B2:1 -:7 E3:1 -:3 D3:1 -:3 & -:8 C3:7 -:1 | -:16 | - | - | -:12 E2:1 -:3 | \
@@ -2773,7 +2773,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Strings",
-                49,
+                gm::STRING_ENSEMBLE,
                 "C4:4 D4 E4:5 -:3 | G4:9 -:3 F4 G4:1 | _:7 C5:9 | E5:1 D5:6 -:1 G4:8 | \
                 A4:11 -:3 D5:2 | _:4 B4:1 - C5:6 A4:3 -:1 | -:2 C5:5 - F4:3 -:1 | \
                 D4:8 E4:5 -:1 F#4:2 & -:12 F4:4 | -:8 E4:4 -:3 F#4:1 | -:16 | -:6 B4:2 -:8 | \
@@ -2801,7 +2801,7 @@ pub(super) const MALENA: Song = Song {
         .with_lines(&[
             line(
                 "Bandoneón",
-                23,
+                gm::TANGO_ACCORDION,
                 "G3:1 - F5 -:3 E5:1 Eb5 D5:6 -:2 | -:4 A4:5 G4:3 F#4:4 | \
                 -:2 B3 Eb4:3 -:1 B4:2 C5 D5:4 | _:3 -:1 Eb5:4 F#5:6 -:2 | \
                 G4+E5:1 - G4+Eb5 - G4+E5 -:3 F5:1 - G5 - Ab5 - A5 - | \
@@ -2812,7 +2812,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Guitar",
-                24,
+                gm::NYLON_GUITAR,
                 "B3:6 C4:1 D4 E4:2 F4:3 G4:1 A4:2 | G4:5 F4:4 E4 -:3 | F#4:4 Eb4 B3:7 -:1 | \
                 -:4 Eb4:6 F#4:1 Eb4:2 F#4 -:1 | E4:4 Eb4:1 - D4:8 C4:2 | _:6 B3 C4+D4:1 C4:3 | \
                 _:4 -:7 D3:1 F3:4 | G3 Ab3 -:2 D4 C4:4 & -:10 E4:1 -:5 | -:12 G4:4 | -:14 Db4:2 | \
@@ -2820,7 +2820,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Contrabass",
-                43,
+                gm::CONTRABASS,
                 "B2:9 -:5 E3:2 | _:8 -:2 A2:1 Bb2 B2:4 | _ Eb3:6 E3:2 F#3:4 | _:5 -:4 Eb3:5 E3:2 | \
                 _:6 D3:8 C3:2 | _:3 -:1 F#2 G2:3 A2:4 B2:2 C3 | _:6 -:5 D2:1 Eb2+E2 F2:3 | \
                 _ -:1 Ab2:4 D3 C3 & A2:1 -:7 Eb3:6 -:2 | -:16 | -:2 Db3 -:12 | -:4 E3 -:8 | -:16 | \
@@ -2828,7 +2828,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Strings",
-                49,
+                gm::STRING_ENSEMBLE,
                 "G4:7 -:1 A4:5 A4:3 | -:1 G4:9 G4:1 F#4 F4:2 F#4 | _ G4 A4:5 -:3 C5:4 | \
                 _:3 -:1 D5:4 Db5:2 C5 B4:4 | _:5 -:2 C5 -:1 A4:2 G4 F4 | _:3 E4 G4 - D4 C4:1 | \
                 _:5 -:8 F3:3 | _ -:5 Ab3:4 C4 & -:6 Ab4:2 -:4 B4:1 -:3 | -:9 A4:1 -:6 | \
@@ -2857,7 +2857,7 @@ pub(super) const MALENA: Song = Song {
         .with_lines(&[
             line(
                 "Bandoneón",
-                23,
+                gm::TANGO_ACCORDION,
                 "Eb3:4 G3+G4+C5+D5+G5:1 -:3 C4+G4+C5+Eb5:1 -:3 G3 D4+D5:1 | \
                 - Ab4:2 F#4:1 G4:8 C3:3 -:1 | D4 Eb4 F4 F#4 G4:4 C5:1 - C4:2 F3 Eb5:1 - | \
                 -:2 D5:1 C5 D5:4 F3+Bb3+D4+F5:1 E5 Eb5 D5 Eb3+G3+Bb3+D5 - D5 - | \
@@ -2869,7 +2869,7 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Guitar",
-                24,
+                gm::NYLON_GUITAR,
                 "G3:5 -:3 F3:4 G3 | _:1 -:2 D4:5 Eb4:1 D4 D4:2 -:1 C4:3 | \
                 _:4 G3:5 -:1 F3:4 G3:1 - | Ab3 - C4 -:3 Eb4:1 - D4 - C4 Db4 Db4+D4 -:2 C4:1 | \
                 B3 - C4 - G4 - F4 - Eb4 - D4 - C4 - Bb3+B3 - | A3 - G3 - G3 - A3 - B3 - D4:2 -:4 | \
@@ -2877,14 +2877,14 @@ pub(super) const MALENA: Song = Song {
             ),
             line(
                 "Contrabass",
-                43,
+                gm::CONTRABASS,
                 "G2:4 Ab2 F2:2 F#2 G2:4 | F2:3 -:1 Eb2:4 D2:3 -:1 C2:4 | G2:6 -:2 F3:4 F2 | \
                 G2 Ab2 C3 G2 | F2 Eb2 D2:3 -:1 D2:4 | F#2 G2 A2:2 B2 C3:1 -:3 | \
                 G2:1 -:3 C2:1 -:11 & -:16 | - | -:4 C3 -:8 | -:16 | - | - | -",
             ),
             line(
                 "Strings",
-                49,
+                gm::STRING_ENSEMBLE,
                 "D4:4 Eb4:5 -:1 F#4:2 G4:4 | _:5 -:1 G4:3 Eb4:2 D4 -:3 | -:4 Bb3 C4:5 -:1 Eb4:2 | \
                 G4 F4 Ab4 G4 Bb4 Ab4 G4:4 | F4 Eb4 - C4 | D4:5 - Eb5:1 D5 C5 -:3 | \
                 G4:1 -:3 C4:1 -:11 & -:8 F4:3 -:5 | -:3 Ab4 -:6 C4:4 | _ -:8 F4:3 -:1 | -:16 | \
