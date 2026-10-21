@@ -1,10 +1,10 @@
-//! Tangos played on the piano, written out from MIDI files of pianists
-//! playing freely, without a click: the beats and bar lines were found from
-//! the playing, and the tempo follows the player bar by bar. The tune, which
-//! the singer sings, is the top line, on the Lead channel; everything else
-//! the pianist plays is the left hand. The chords on the chord sheet were
-//! read from the notes, a first reading still to be checked against the
-//! sheet music.
+//! Tangos and a vals played on the piano, written out from MIDI files of
+//! pianists playing freely, without a click: the beats and bar lines were
+//! found from the playing, and the tempo follows the player bar by bar. The
+//! tune, which the singer sings, is the top line, on the Lead channel;
+//! everything else the pianist plays is the left hand. The chords on the
+//! chord sheet were read from the notes, a first reading still to be checked
+//! against the sheet music.
 
 use super::*;
 
@@ -2589,6 +2589,494 @@ pub(super) const LA_CASITA_DE_MIS_VIEJOS: Song = Song {
     about: "\"Vuelvo vencido a la casita de mis viejos\": a son comes home beaten after years \
             away, to the little house where his old parents live. F minor; this performance \
             turns to F major and ends in C major.",
+};
+
+// Written out from a piano performance (MIDI in 2/4, here two bars to a bar of 4/4).
+pub(super) const LLUVIA_DE_ESTRELLAS: Song = Song {
+    name: "Lluvia de estrellas",
+    origin: "Osmar Maderna, 1948",
+    feel: "Tango",
+    genre: Genre::Tango,
+    tonic: E,
+    mode: NaturalMinor,
+    time: COMMON,
+    tempo: 79.2,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: SOLO_PIANO,
+    style: "Tango",
+    parts: &[
+        // Bars 1-8 of the file.
+        Part::new(
+            "Part 1",
+            "D4:4 G4:1 A4 C5 D5 A5:6 -:2 | F5:1 E5 D5 C5 B4 G4 F4 C4 E4:5 -:3 | \
+            D4:5 C4:1 G4 C5 D5 -:7 | B4:5 -:3 B4:1 B4 A#4 B4 A4 B4 G#4 B4 | \
+            G4 B4 F#4 B4 F4 B4 E4 B4 D#4 B4 D4 B4 C#4 B4 C4 B4 | -:16 | \
+            -:9 C4:1 C#4 D4 D#4 D4 C#4 C4 | - C4 C#4 D4 D#4 D4 C#4 C4 - C#4 D4 D#4 - D4 C#4 -",
+            "G7/F Edim7 | Dm7 G# | G7 F#m7b5 | B7 E | Em B | A#7b9 A#7b9 Gmaj7 E7b9 | B C#7 Bm Bm | \
+            Bm7/A G",
+        )
+        .with_left("F3+G3+B3:6 B4:1 - E3+A#3+C#4:6 -:2 | D3+A3+C4:4 A4:1 - D4+E4 A3 G#2+C4:5 -:3 | \
+            G2:5 -:1 D4+E4+F4 A4+B4 F#3:8 | _:1 -:15 | -:16 | \
+            B3:1 - A#3+B3 B3 A3 B3 G#3 B3 G3 B3 F#3 B3 F3 B3 E3 B3 | \
+            D#3 B3 D3 B3 C#3 B3 C3 B3 B2:8 | A2:9 C4:1 -:4 C4:1 F#2+B3 & -:8 G3:5 -:3 | \
+            -:1 F3:3 -:12 | -:8 A3+E4 | B3+D#4+A4:5 -:11 | -:16 | - | -:8 B3:1 -:7 | \
+            B3:1 -:7 G2:8 & -:16 | - | -:8 C4:7 -:1 | -:16 | - | - | - | -:8 B3:1 -:7")
+        .with_tempo(&[tempo(16, 82), tempo(32, 93), tempo(48, 87), tempo(64, 146), tempo(80, 132), tempo(96, 133), tempo(112, 132)]),
+        // Bars 9-16 of the file.
+        Part::new(
+            "Part 2",
+            "C4:2 D4:1 - D#4 C#4 C4 - C4 -:4 G4:1 F#4 - | \
+            C4 -:3 G4:1 F#4 E4 C4 D4 C4 - C4 A4 G4 F#4:2 | \
+            D4:1 C4 - C4 C5 B4 A#4 B4 - C#4 D#4 E4 F#4 G4 A4 B4 | \
+            F#4 F4 F#4 B4 A4 G4 - F#4 F#4 E4 D#4 E4 E5 D5 C5 B4 | \
+            D5 C5 B4 A4 B4 A4 G4 -:2 C4:1 -:2 G4:1 F#4 E4 - | \
+            C4 -:3 G4:1 F#4 E4 C4 D4 C4 - C4 A4 G4 F#4 C4 | \
+            D4 C4 - C4 C5 B4 B4:3 -:2 D#4:1 E4 F#4 A4 B4 | _ F#4 F4 F#4 B4 A4 G4 F#4 E4 -:7",
+            "C#/E# Bm Em Em | G Am7/G D7 D7 | Bm7 B7 | B7/D# Em7 | B7 Em | Bmaj7 Am7 Am7 Am7 | \
+            A#7b9 B7 | B7 Em",
+        )
+        .with_left("F2:3 -:1 B1:3 E2:8 G2:1 | _ B3 A#3 B3 - G2:2 A2 A1:3 -:2 C4:1 A2 | \
+            _:3 -:4 B2:5 -:3 D#3:1 | _:6 -:2 E3:3 -:5 | B2 -:1 F#4 B3 E2 B3 A#3 B3 -:3 B2+B3:1 | \
+            - B3 A#3 B3 -:3 A2:1 -:7 A2+E3:1 | -:2 B3:1 -:3 A#4:2 B2+D#3+A3:1 B3 -:4 G4:1 - | \
+            D#3+F#3+A3+B3 -:8 B2:1 A#2 B2 A2+B2 - G2 B2 & -:2 C#4:1 - D4 - D2+D#2 B3 - B3 A#3 B3 B2:4 | \
+            _:1 -:5 G#2:1 -:2 A#1:1 B3 -:5 | -:2 B3:1 -:5 B3:1 D#3+A3:4 -:3 | \
+            -:1 A3:7 -:2 G3+B3:1 -:5 | -:2 D#3+F#3+A3:3 -:11 | -:16 | - | - & -:14 E4:1 B3 | \
+            -:16 | - | -:1 F#3+B3:6 -:9 | -:16 | - | - | -")
+        .with_tempo(&[tempo(16, 133), tempo(32, 140), tempo(64, 128), tempo(80, 133), tempo(96, 135), tempo(112, 134)]),
+        // Bars 17-24 of the file.
+        Part::new(
+            "Part 3",
+            "-:8 E6:1 D#6 E6 D#6 E6 D6 C6 B5 | \
+            D6 C#6 D6 C#6 D6 C6 B5 A#5 B5 A#5 B5 A#5 B5 A5 G5 F#5 | \
+            A5 G#5 A5 G#5 A5 G5 F#5 E5 D5 C5 D5 E5 F#5 E5 D5 C5 | \
+            C5 B4 C#5 D#5 E5 F#5 G5 A5 B5 F#5 F5 F#5 G5 A5 D6 C6 | \
+            B5 C6 B5 A#5 B5 C6 D6 D#6 E6 D#6 E6 D#6 E6 D6 C6 B5 | \
+            D6 C#6 D6 C#6 D6 C6 B5 A#5 B5 A#5 B5 A#5 B5 A5 G5 F#5 | \
+            A5 G#5 A5 G#5 A5 G5 F#5 E5 D5 C5 D5 F#5:2 E5:1 D5 C5 | \
+            C5:2 B4:1 C#5 E5 F#5 A5 B5:2 -:1 F#5 F5 B5 A5 G5 F#5",
+            "B Em E7/G# E7/G# | A B7/D# | E Am | Em D#dim7 | Em7/G E7 | A B7/D# | E Am | Em B7",
+        )
+        .with_left("F#2:1 B2 F2 B2 E2 -:3 G#3+D4:4 B3:1 -:3 | A2+E3:4 - D#4:5 -:3 | \
+            E2:4 - A2:2 E3 C4:3 A3:1 | _ - B3:3 - D#3:5 -:3 | G2:4 - G#2:2 E3:1 - G#3:3 -:1 | \
+            A2:2 E3:3 - D#3:6 A3:1 - | E3:5 -:3 A2+E3+A3:2 -:1 E5 -:4 | \
+            E3+G3+B3:3 -:1 D#5 - G5 - B2+D#3:8 & -:16 | -:10 F#4:3 - | -:2 B2 -:12 | \
+            E3:5 - F#3:3 - | -:2 E3 -:10 D4:1 - | -:4 A3:1 -:5 F#3:4 -:2 | - B3 E4:1 -:11 | \
+            -:8 F#3+A3:7 -:1 & -:16 | -:12 A4:1 -:3 | -:16 | -:4 E4:1 -:7 A3:1 -:3 | -:16 | \
+            -:12 B3:2 - | -:16 | -:12 F#5:1 -:3")
+        .with_tempo(&[tempo(0, 127), tempo(16, 132), tempo(48, 129), tempo(64, 133), tempo(80, 129), tempo(96, 134), tempo(112, 131)]),
+        // Bars 25-32 of the file.
+        Part::new(
+            "Part 4",
+            "E5:1 -:6 D6:1 B5:2 -:5 E5:1 | D5:2 G4:1 -:2 F#4:1 G4 - C5:2 - C4:1 D#4 F#4 A4 | \
+            C5 D#5 F#5 A5 C6 F#6 A6 C7 B6 -:3 D6:1 C6 B5:2 | _:4 E5:1 G5 E5 G5 B5 -:6 D#4:1 | \
+            -:2 D#4:1 F#4 A4 D#5:2 F#5:1 E5:6 F#5:2 | \
+            G5:1 - C#4 E4 F#5:2 E5 D5:1 -:2 E5:3 G5:1 B5 | \
+            D6:3 -:1 C6 B5 E6:2 -:3 C#4:1 E4 D#4 D4 C#4 | \
+            A4 - E5:3 F#5:1 G5 - A#5 -:2 A#4:1 A#4 -:2 A4:1",
+            "Em7 Em7 Gmaj7 C | G Cdim7 | Cdim7 F Em Em | Em B7 | B7 C | Gdim7 G | E7 A | A7 D#7",
+        )
+        .with_left("E3+G3+B3:1 -:4 D2:3 G2+D5 -:4 C5:1 | B4:2 B3:1 -:5 C3:2 F#3:1 A3 -:4 | \
+            -:5 F6:1 -:2 E3:8 | E3:6 -:2 B2:5 -:1 B3 - | B3:4 - C3:2 G3:1 C4 E3:2 C4:1 - | \
+            G3:2 - G3+A#3 C#4+E4:1 - G3+B3:4 - | G#3:3 -:5 A2:3 -:5 | \
+            -:2 A2+G3:1 -:5 D#2+C#5:1 -:2 C#4+G4:1 D#3+C#4+G4 -:2 C4+F#4:1 & -:5 E2:1 E2 F2 F#2+G5 -:7 | \
+            -:9 D#3:2 -:5 | -:10 G3+B3:6 | -:2 G3+B3:3 -:4 D#3 -:3 | -:9 E3:2 -:1 C3 G3 -:2 | \
+            -:1 A#3:2 -:5 D4+G4:3 -:5 | E3+B3+D4:2 -:8 E3:1 -:5 | -:16 & -:16 | - | \
+            -:12 C6:1 -:3 | -:11 F#3:2 -:3 | -:16 | - | - | - & -:16 | - | - | -:12 A3:1 -:3 | \
+            -:16 | - | - | -")
+        .with_tempo(&[tempo(0, 114), tempo(16, 125), tempo(32, 126), tempo(48, 123), tempo(64, 119), tempo(80, 121), tempo(96, 119), tempo(112, 117)]),
+        // Bars 33-40 of the file.
+        Part::new(
+            "Part 5",
+            "A4:1 -:3 A5:1 -:2 D6:1 B5 -:5 F5:1 E5 | D5 -:3 F#4:1 G4 C5:2 -:3 E4:1 F#4 A4 C5:2 | \
+            B4:1 C4 D#4 A4 C5 D#5 F#5 B4:5 -:2 D5:1 C5 | B4:4 E4:1 G4 E4 G4 B4:6 G#4:1 G4 | \
+            -:6 F6:1 C6 -:4 F#5:1 - G5:2 | _ F#5 E5:1 C#5 D5:3 -:1 E5:4 G5:1 B5 | \
+            D6:2 D4:1 - C6 B5 E6:2 G4 E5 -:1 F#5 G5:2 | A#5:1 -:3 B5:1 -:3 G5:2 -:4 D4:2",
+            "D7 Em7/G | D7 F#m7b5 | F#dim7 Em | Em/B B7 | B7 C C C | A#dim7 Em7 | E7 A7 | \
+            D#7 D7 G G",
+        )
+        .with_left("D2+D3+C4+F#4:1 -:3 F#4+C5+F#5:1 -:3 G2:4 -:2 E5:1 - | -:7 C3:2 F#3:1 A3:4 -:1 F#3 | \
+            _:4 -:3 E2:4 -:1 E3:4 | _ -:6 B2+D#3+A3 | _:2 -:4 E6:1 E5:3 G2:1 -:5 | \
+            A#3+C#4:3 - C5:1 - G2+D3 -:7 | D5:2 E3+G#3:1 -:5 A3+C#4:2 -:6 | \
+            D#3:5 -:2 C#3:1 G2:3 -:5 & -:8 D5:2 D3:3 - | -:8 E3:2 -:6 | A3:3 -:6 B2:2 -:3 B2:2 | \
+            _:6 -:9 F#4:1 | -:7 C2+C3:2 -:7 | G4:2 E4:1 -:13 | -:16 | \
+            C#5:1 -:3 D3:4 B4+D5:2 -:6 & -:8 G5:1 -:7 | -:16 | -:14 C5:1 - | -:2 G3:4 -:10 | \
+            -:7 F5:1 -:8 | -:16 | - | -:4 C5+F#5:1 -:11")
+        .with_tempo(&[tempo(0, 105), tempo(16, 114), tempo(32, 124), tempo(48, 116), tempo(64, 121), tempo(112, 118)]),
+        // Bars 41-48 of the file.
+        Part::new(
+            "Part 6",
+            "E4:2 F#4 G4 B4 D5 -:6 | G5:2 -:1 C4 F#5:2 E5 D5 -:6 | \
+            C5:4 B4:2 A4 G4:1 -:2 E4:1 F#5 - G5:2 | B5:3 -:1 A5 -:3 A5:1 -:2 C4:1 - F#4 A4 D5 | \
+            D4 F#4 C5 E5 F#5 G5 B5 C6 D6:2 -:6 | G5:2 -:1 C4 F#5:7 -:1 D5:2 D#5:1 - | \
+            E5 -:2 D4:1 D5 -:3 C5 -:1 B4 - A4:2 | D5:1 -:3 F#4 -:1 G4:3 -:5",
+            "F#7 G G G | C G | B7 Em7 | A7 D7 | D7 G | C B7 | E7 Am | D7 G",
+        )
+        .with_left("-:8 G2:1 B2:2 G3:1 G2:2 D3+G3:1 - | \
+            C3 E3:2 -:1 E3:2 G3+C4:1 - G2:2 D3:1 G3 B2:2 D3:1 G3 | \
+            B2:2 F#3:1 A3 B2:2 F#3:1 A3 D3+E3 G3:2 -:1 G3:2 - | \
+            C#3 G3:1 A3 C#3:3 G3+A3:1 D3:2 F#3+A3:1 -:2 C4+D4:1 -:2 | \
+            - A4:1 D5 -:2 A5:1 D3 G2 B2 D3 G3 B2:2 G3:1 - | C3+E3:2 - E3 E5 D#5:4 B2:2 F#3:1 A3 | \
+            E3:2 B3:1 - E3:3 -:1 A2+A3:4 E4:3 -:1 | D2:7 G#2:1 G2:4 - & -:10 D3:1 -:2 B2 -:1 | \
+            -:2 G3:1 -:6 B2:2 -:1 G2 -:3 | -:1 D#3:2 - D#3 -:3 B3:1 -:2 B3:1 -:2 | \
+            -:1 E3:2 - E3 -:9 | -:13 D3:1 -:2 | -:1 G3 -:3 G3:1 C4 - B2:2 F#3:1 A3 - D#3:2 -:1 | \
+            - G#3:2 - G#3 -:1 E4:2 -:6 | D3:5 A2:2 -:1 B3+D4:3 -:5 & -:16 | - | - | - | - | \
+            -:9 D#3:2 -:5 | - B3:1 -:10 | -:4 C4:2 -:10")
+        .with_tempo(&[tempo(0, 121), tempo(16, 123), tempo(48, 125), tempo(64, 128), tempo(80, 125), tempo(96, 119), tempo(112, 125)]),
+        // Bars 49-56 of the file.
+        Part::new(
+            "Part 7",
+            "B4:1 B4 A#4 B4 A4 B4 G#4 B4 G4 B4 F#4 B4 F4 B4 E4 B4 | D#4 B4 D4 B4 C#4 B4 C4 B4 -:8 | \
+            -:16 | -:1 C4 C#4 D4 D#4 D4 C#4 C4 - C#4 - D4 D#4 D4 C#4 C4 | \
+            - C4 C#4 D4 D#4 D4 C#4 C4 C4 C#4 D4 - D#4 D4 - C4 | \
+            C4 -:4 G4:1 F#4:2 C4:1 -:3 G4:1 F#4 E4 C4 | \
+            D4 C4 - C4 A4 G4 F#4 - D4 C4 - C4 C5 B4:2 -:1 | \
+            - C#4 D#4 E4 F#4 G4 A4 B4 F#4 F4:2 F#4:1 B4 A4 G4 F#4",
+            "E Em | B A#7b9 | Gmaj7 E7b9 B C#7 | Bm Bm7/A | G Bm | Em Em/G | Am B7b9/C | B7",
+        )
+        .with_left("-:16 | -:8 B3:1 B3 A#3 B3 A3 B3 G#3 B3 | \
+            G3 B3 F#3 B3 F3 - E3+B3 B3 D#3 B3 D3 B3 C#3 B3 C3 B3 | B2:9 C4:1 -:6 | \
+            G2:8 -:3 B1:4 D#2+B3:1 | E2:8 -:1 B3 A#3 E2:3 G#2:1 A2 | _:3 E2:4 C2:5 -:3 B1:1 | \
+            _:3 -:4 B2:6 -:3 & -:16 | - | - | B3:1 -:7 A2:8 | B3:2 -:5 F#2:4 -:2 C#4:1 D2:2 | \
+            - B3:1 A#3 B2:4 -:3 F#2:2 -:3 | -:2 B3:1 -:3 C4:1 -:3 B3:1 A1:4 B3:1 | \
+            _ -:8 D#3+A3:5 -:2 & -:16 | - | - | -:8 B3:1 -:7 | - B3:1 -:8 | \
+            -:4 B3:1 - E4 G2:7 -:2 | -:16 | - & -:16 | - | - | - | - | -:7 B3:1 -:3 B3:1 -:4 | \
+            -:16 | -")
+        .with_tempo(&[tempo(0, 127), tempo(16, 135), tempo(32, 127), tempo(48, 124), tempo(64, 126), tempo(96, 130), tempo(112, 141)]),
+        // Bars 57-64 of the file.
+        Part::new(
+            "Part 8",
+            "F#4:1 E4 D#4 E4 E5 D5 C5 B4 D5 C5 B4 A4 B4 A4 G4 F#4 | \
+            - C4 -:3 G4:1 F#4 E4 - C4 -:2 G4:1 F#4 E4 C4 | \
+            D4 C4 - C4 A4 G4 F#4 C4 D4 C4:2 C4:1 C5 B4:3 | \
+            -:1 D#4 E4 F#4:2 G4:1 A4 B4 F#4 F4 F#4 B4 A4:2 G4:1 F#4 | \
+            -:6 C5:1 B4 B4 B4 C#5 D#5 F#5 G5 B5 G5 | F#5 -:5 C6:1 B5 B5 B5 D#6 E6 G6 - B6 A6 | \
+            F#6 -:3 B6:1 -:3 E4:1 -:7 | -:16",
+            "Em7 Bm7 | Em G | Am Bm7/A | B7 | Em B7/F# | Em B7 | Em B7 | Em",
+        )
+        .with_left("E3+G3+B3:1 -:15 | E2:5 -:3 G2:7 A2:1 | _:3 E2:4 A1:6 -:1 B1:2 | \
+            _:1 B2+C#4 -:5 B2 -:4 | E3:6 -:1 A#4:2 -:1 A3+B3+D#4:3 -:1 A5:2 | \
+            E5 G3+B3:1 -:4 A#5:2 -:1 A3+B3+D#4+C#6 - F#6 - B3 A3+G6 | \
+            E3+G3+E6 -:3 B4+B5:1 -:7 B3:2 A2+B2 | -:16 & -:16 | \
+            B3:1 - B3 A#3 B2:4 B3:1 - A#3+B3 B3 -:2 G#2:1 - | -:2 B3:1 -:7 B3:1 -:3 A#4:1 B3 | \
+            _ -:8 D#3+F#3+A3:4 -:3 | F#3:1 - G3+B3:4 -:2 F#3:5 -:3 | -:1 E3:3 -:4 F#3:3 -:5 | \
+            -:12 A#3:1 -:2 E2:1 | _ -:15 & -:16 | -:4 B3:1 -:11 | -:16 | - | -:12 E5:1 -:3 | \
+            -:16 | - | -")
+        .with_tempo(&[tempo(0, 132), tempo(16, 122), tempo(32, 135), tempo(48, 145), tempo(64, 129), tempo(80, 126), tempo(96, 109), tempo(112, 115)]),
+    ],
+    form: &["Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8"],
+    drums_from: 0,
+    about: "\"Shower of stars\": an instrumental tango by Osmar Maderna, the pianist of Miguel \
+            Caló's orchestra and later the leader of his own. E minor.",
+};
+
+// Written out from a piano performance (MIDI in 3/8, its eighths the quarters of 3/4
+// here).
+pub(super) const LA_PULPERA_DE_SANTA_LUCIA: Song = Song {
+    name: "La pulpera de Santa Lucía",
+    origin: "Enrique Maciel, words by Héctor Pedro Blomberg, 1929",
+    feel: "Vals criollo",
+    genre: Genre::Tango,
+    tonic: C,
+    mode: HarmonicMinor,
+    time: THREE_FOUR,
+    tempo: 195.9,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: SOLO_PIANO,
+    style: "Vals in minor",
+    parts: &[
+        // Bars 1-8 of the file.
+        Part::new(
+            "Part 1",
+            "C5:2 B4 C5 E5:1 - G5:2 E5 | C5:1 - Db5:2 C5:1 - Bb4:4 G4:2 | \
+            F4 E4:1 C4 F4:2 G4:1 Ab4:2 Bb4:3 | C5:4 -:8 | Bb4:2 A4 Bb4:1 - D5:2 F5 D5 | \
+            Bb4 C5:6 G4:2 F4 | Eb4 D4 Eb4:1 - F4:2 G4 Ab4 | G4:4 -:8",
+            "C | C7 | Fm | Fm | Bb7 | Bb7/Ab | Eb | Eb",
+        )
+        .with_left(
+            "-:12 | E3+Bb3:5 -:2 Ab4:3 -:2 | F3:5 -:7 | F2:4 -:8 | Bb2:4 -:8 | Ab3:6 Ab4:4 -:2 | \
+            Eb2:4 Bb2:1 -:7 | -:4 Eb3:1 -:7 & -:12 | C3:4 -:8 | -:12 | -:3 Ab2+C3+F3:1 -:8 | \
+            -:3 Ab3:1 -:8 | -:4 Bb4:6 -:2 | -:12 | - & -:12 | - | - | - | - | -:4 Bb3+D4:1 -:7 | \
+            -:12 | -",
+        )
+        .with_tempo(&[
+            tempo(12, 197),
+            tempo(24, 205),
+            tempo(36, 200),
+            tempo(48, 206),
+            tempo(60, 205),
+            tempo(72, 200),
+            tempo(84, 193),
+        ]),
+        // Bars 9-16 of the file.
+        Part::new(
+            "Part 2",
+            "F4:2 G4:3 Ab4:1 Bb4 - B4 - D5:2 | _:4 F4:1 -:5 G4:2 | C5:9 -:3 | \
+            -:4 C6:1 -:3 D6:1 C4 Eb4 G5 | _ Eb6:4 -:2 D6 -:1 C6:2 | -:1 Eb6:2 -:1 D6:2 C6 Eb6:4 | \
+            _:1 -:9 Ab5:1 - | -:4 C5 D5:2 F5",
+            "Fm | G | Cm | Cm | Cm | Cm | Fm7 | Fm",
+        )
+        .with_left(
+            "F#3:2 -:10 | B4:11 -:1 | C3:4 B2:2 C3:3 -:1 Eb2:2 | _:1 -:3 C5:1 -:3 D5:2 -:1 Eb5 | \
+            _:2 -:10 | C3:3 -:1 G3 -:7 | F2:4 C3:1 -:5 C5:1 - | F3:5 - B4:2 & -:1 Ab3:5 -:6 | \
+            -:1 G3:4 -:7 | -:8 G2:3 -:1 | C2:2 -:9 G4:1 | _ -:11 | -:1 F5+G5:2 -:9 | -:12 | \
+            -:4 Ab3+C4:1 -:7 & -:1 F3+C4:4 -:7 | -:4 B3+D4:1 -:7 | -:12 | - | - | - | - | -",
+        )
+        .with_tempo(&[
+            tempo(0, 196),
+            tempo(12, 191),
+            tempo(24, 209),
+            tempo(36, 189),
+            tempo(48, 200),
+            tempo(60, 214),
+            tempo(72, 191),
+            tempo(84, 196),
+        ]),
+        // Bars 17-24 of the file.
+        Part::new(
+            "Part 3",
+            "-:12 | C5:2 -:1 D4 -:2 B4 D5:4 | -:8 G4:1 -:3 | -:2 Eb4:1 Eb4 C4 -:3 F4:1 -:3 | \
+            G4:4 F#4:1 -:3 G4:1 -:3 | C5:8 G4:2 Ab4 | F4:4 -:5 D4:1 -:2 | \
+            -:3 Bb4:1 -:4 Ab4:1 -:3",
+            "Ebmaj7 | Dm7/F | Cm | Cm | Cm | Cm | G7/D | G7",
+        )
+        .with_left(
+            "G2:3 -:2 Eb5:5 -:2 | F3:6 -:4 C5:2 | _:9 -:3 | C3:4 - Eb3+G3+C4:1 -:3 | \
+            C4:5 -:3 Eb3+G3+C4:1 -:3 | Eb3:4 - Eb3+G3+C4:1 -:3 | D3:9 -:3 | \
+            G2 D3+F3+Ab4:1 -:4 F3+G3+B3:1 -:3 & -:2 D3+F3:1 -:4 D5 -:1 | -:3 B3:1 -:8 | \
+            Eb2:4 G2:1 -:3 Eb3:1 -:3 | -:2 C4:1 Eb3+G3 -:8 | C3:4 Eb3+G3:1 -:7 | -:3 G3+C4:1 -:8 | \
+            -:3 F3+G3+B3:2 -:3 G3+B3:1 -:3 | -:12 & -:12 | - | - | - | Eb4:3 -:9 | -:12 | - | -",
+        )
+        .with_tempo(&[
+            tempo(0, 183),
+            tempo(12, 194),
+            tempo(24, 195),
+            tempo(36, 200),
+            tempo(48, 191),
+            tempo(60, 198),
+            tempo(72, 188),
+            tempo(84, 200),
+        ]),
+        // Bars 25-32 of the file.
+        Part::new(
+            "Part 4",
+            "G4:8 -:1 E4:3 | F4:2 - Eb4 -:3 D4 | Eb4:9 -:3 | - C5:1 -:3 D5:1 -:3 Eb5:1 | \
+            G5:3 D5:7 C5:2 | Eb5:8 D5:3 C5:1 | Eb5:3 -:5 Ab5:2 - | -:3 C5:4 -:1 D5 -:2 F5:1",
+            "G7 | G7 | Cm | Cm | Cm | Cm | Fm7 | Fm6",
+        )
+        .with_left(
+            "D3:4 -:2 F4 F3+G3+B3:1 -:3 | G2:4 -:3 D3:4 -:1 | G3:7 G2:3 -:2 | C2:1 -:11 | \
+            -:1 Eb5:3 -:4 Eb3+G3+C4:1 -:3 | C3 G3+C4:1 -:4 Eb3+G3+C4:1 -:3 | \
+            F2 C3+F3:1 -:4 C4+Ab4:1 Ab3 -:2 | F3:4 -:6 D3:2 & -:3 G3+B3:1 -:8 | \
+            -:3 B2+D3+F3:1 -:6 Db3:1 - | C3:4 -:1 C3:3 -:1 Eb2:3 | _:1 -:11 | \
+            -:1 C3:2 G3+C4:1 -:8 | -:12 | - | -:3 Ab3+C4:1 -:7 B4:1 & -:12 | - | -:3 B2:1 -:8 | \
+            -:12 | - | - | - | -",
+        )
+        .with_tempo(&[
+            tempo(0, 198),
+            tempo(12, 193),
+            tempo(24, 212),
+            tempo(36, 198),
+            tempo(48, 204),
+            tempo(60, 200),
+            tempo(84, 194),
+        ]),
+        // Bars 33-40 of the file.
+        Part::new(
+            "Part 5",
+            "-:6 Eb5:2 D5 - | C5:4 B4:3 D5:4 C5:1 | _:5 -:1 G5 Eb5 G4:2 - | \
+            - C5:1 C4 -:4 C5:1 -:3 | C5:5 -:1 Bb4:2 A4:1 -:3 | C5:4 -:2 Bb4:4 -:2 | \
+            G4:1 -:8 Eb4:1 -:2 | -:3 C5:1 - C5 -:3 C5:1 -:2",
+            "G | G7 | Cm | Cm | Cm7 | Bb7 | Eb | Cm",
+        )
+        .with_left(
+            "G3:4 -:2 B4 - B3 | F3:5 -:6 Eb2:1 | _:3 G2+C3:1 -:3 C5:2 - Eb3:1 | _:4 -:8 | -:12 | \
+            Bb2+D4:4 F3:1 - D4:3 - | Eb2+Eb3:5 -:4 G3:1 -:2 | Eb2:1 -:11 & G2:3 D3:1 -:8 | \
+            -:3 B3:1 D4 -:7 | -:12 | -:3 G3:1 -:8 | -:12 | Ab3:3 -:5 Ab4:3 -:1 | \
+            - F#2 -:2 Bb2:4 - | -:12",
+        )
+        .with_tempo(&[
+            tempo(0, 200),
+            tempo(12, 198),
+            tempo(24, 204),
+            tempo(36, 200),
+            tempo(48, 207),
+            tempo(60, 197),
+            tempo(72, 200),
+            tempo(84, 198),
+        ]),
+        // Bars 41-48 of the file.
+        Part::new(
+            "Part 6",
+            "-:1 B4 -:4 G4:1 - G4:2 - | -:1 F4 G4 Eb4 -:4 D4:1 -:3 | D4:5 C4:1 -:6 | \
+            -:4 C5:1 -:3 D5:1 -:2 Db5:1 | Eb5 Db5:3 C5:1 B4 C5 - B4:2 C5 | \
+            Db5:3 C5:2 B4:1 C5:2 B4 C5 | Db5:4 C5:2 B4 C5:1 -:3 | -:2 C6:1 - C6 -:3 C6:1 -:3",
+            "G7 | G7 | Cm | C7 | Eb7/Bb C Cmaj7 | C7 | Fm | Ab",
+        )
+        .with_left(
+            "-:1 D3:4 -:3 F3+G3:1 -:3 | -:2 F4:1 - G2:7 -:1 | C3:4 B2:1 - C3:3 Eb2:2 C2:1 | \
+            -:8 C5:1 -:2 Bb3:1 | _:2 - E4:1 -:3 E4+G4:1 -:3 | -:1 E3:5 -:2 Bb3+C4:1 -:3 | \
+            -:1 F3:4 -:3 Ab3+C4:1 -:3 | -:4 Ab3+C4:1 -:3 Ab3+C4:1 -:3 & -:4 G3+B3:1 -:7 | \
+            -:4 B2:6 -:2 | -:8 G2:3 -:1 | -:12 | - | -:4 Bb3:1 C4 -:6 | -:4 Ab3+C4:1 -:7 | \
+            -:12 & -:12 | -:4 D3+F3:1 -:3 D3:2 - | -:12 | - | - | - | - | -",
+        )
+        .with_tempo(&[
+            tempo(0, 207),
+            tempo(12, 189),
+            tempo(24, 200),
+            tempo(60, 204),
+            tempo(72, 199),
+            tempo(84, 204),
+        ]),
+        // Bars 49-56 of the file.
+        Part::new(
+            "Part 7",
+            "C6:8 C4:1 A5:3 | Bb5:8 C6:2 Ab5 | G5:8 F5:1 -:3 | \
+            -:2 Bb4:1 C4 Bb4 -:3 Bb4:1 -:2 C5:1 | -:6 Bb4:1 - Bb4 -:3 | \
+            C5:1 -:3 D4:1 - Bb4 Bb4 F4 -:3 | C5:4 - Eb4:1 Bb4 -:2 | - Ab4:1 - Ab4 -:3 Ab4:1 -:3",
+            "C7/E | C7/G | Fm | Fm | Bb7 | Bb7 | Cm7 | Fm7",
+        )
+        .with_left(
+            "E3:8 G3+Bb3:1 -:3 | G2:10 -:2 | F2:3 -:1 C3+F3 -:3 Ab3+C4:1 -:2 F3:1 | \
+            _:2 -:1 Ab3 -:4 Ab3+C4:1 -:2 Bb2:1 | _:2 -:1 Ab3 -:8 | Ab3:5 -:1 F4+Ab4 -:2 Bb2 -:1 | \
+            Eb2+Eb4:4 Bb2:1 -:4 G4:1 -:2 | \
+            Eb3:4 Eb4:1 -:3 Eb4:1 -:2 F3:1 & B5:1 -:3 G3+Bb3+C4:1 - Bb5:3 - | \
+            -:4 Bb2+C3+E3:2 - Bb2+C3+E3:1 -:3 | -:12 | - | - | F4:1 -:3 Bb3:1 -:7 | \
+            -:3 Eb3:1 -:8 | -:2 Eb4:1 Bb3 -:8",
+        )
+        .with_tempo(&[
+            tempo(0, 196),
+            tempo(12, 193),
+            tempo(24, 189),
+            tempo(48, 222),
+            tempo(60, 208),
+            tempo(72, 204),
+            tempo(84, 212),
+        ]),
+        // Bars 57-64 of the file.
+        Part::new(
+            "Part 8",
+            "-:1 Ab4 -:2 G4:1 -:3 G4:1 -:3 | Ab4:1 D4:2 -:1 G4 -:2 G4 -:3 | Ab4:11 -:1 | \
+            -:4 B4:1 -:3 C5:1 -:2 Db5:1 | _:2 -:1 E4 -:2 C5:1 - C5 -:3 | \
+            -:1 Db5:3 E4:1 - C5 - C5 -:3 | Db5:4 C4:1 -:3 C5:2 - | - C6:1 Ab5 C5:2 - B4:3 -:1",
+            "G7 | G | Ab | D7b9 | C7 | A C7 C7 | Fm | Fm",
+        )
+        .with_left(
+            "-:1 B2:3 F3+G3+B3+D4:1 -:3 B3+D4+F#4:1 - Eb2 - | G1:4 D2+B3+D4:1 -:2 B3:1 -:2 G2 | \
+            C4:8 D3:2 -:1 D3 | _ -:10 C5:1 | _:2 -:1 Bb3+C4 -:4 Bb3+C4+E4:1 -:3 | \
+            -:4 Bb3+C4:1 -:3 Bb3+C4+E4:1 -:3 | F3:9 -:3 | -:1 F2:4 -:7 & -:1 B3+D4 -:10 | \
+            -:1 G2:4 -:7 | Eb4 -:2 Db3 -:1 | Eb3:2 -:10 | -:12 | - | \
+            F4:3 -:1 Ab3 -:3 Ab3+C4+F4+Ab4:1 -:3 | - F5:1 -:8 & -:12 | -:1 B3:2 -:9 | \
+            C2:2 G2 C3:4 - | -:12 | - | - | Bb4:1 -:11 | -:12",
+        )
+        .with_tempo(&[
+            tempo(0, 188),
+            tempo(12, 200),
+            tempo(24, 186),
+            tempo(36, 185),
+            tempo(48, 241),
+            tempo(60, 186),
+            tempo(72, 219),
+            tempo(84, 198),
+        ]),
+        // Bars 65-72 of the file.
+        Part::new(
+            "Part 9",
+            "-:1 C5:2 -:5 Bb4:2 -:1 A4 | _ Bb4:3 C5:2 -:4 Ab4:2 | _ -:10 | \
+            Ab4:2 -:1 Ab4 -:6 Ab4:1 - | Ab4:3 G4:5 B4:4 | D5 C5:5 -:1 B4:2 | C5:7 -:2 G4:1 -:2 | \
+            - G4:1 - G4 -:3 Ab4:1 -:3",
+            "C7 | C7 | G7 | Abmaj7 | G7/D | G7 | Cm | Cm",
+        )
+        .with_left(
+            "-:1 E3:4 -:7 | -:1 C2:4 -:3 G2:1 -:3 | G4:6 -:3 G3 | _:1 -:11 | D3:8 -:2 Db2:1 - | \
+            G1:9 -:3 | Eb4:5 -:7 | Eb3:5 -:3 Eb3+G3+C4:1 -:3 & -:4 Bb3:1 -:7 | -:4 E2 - | \
+            F2:5 -:7 | Ab3:6 - | -:3 F3:4 -:5 | F4:6 -:2 D2:1 -:3 | C2:4 C3:1 -:7 | \
+            -:4 G3+C4:1 -:7 & -:12 | -:4 G2:2 -:6 | -:3 C3:2 -:7 | -:12 | -:4 G3 - | - B1 - | \
+            -:3 G2:1 -:8 | -:12 & -:12 | - | -:4 F3:3 -:5 | -:12 | -:4 B3:3 -:5 | -:12 | - | -",
+        )
+        .with_tempo(&[
+            tempo(0, 202),
+            tempo(12, 192),
+            tempo(24, 197),
+            tempo(36, 203),
+            tempo(48, 204),
+            tempo(84, 202),
+        ]),
+        // Bars 73-80 of the file.
+        Part::new(
+            "Part 10",
+            "G4:1 Ab4 G4:2 F4:1 -:3 E4:1 -:3 | F4:1 -:3 Eb4 - D4:2 | C4:6 - | -:12 | \
+            C5:1 - B4 - C5:2 E5 G5 E5 | C5:1 - Db5:2 C5:1 - Bb4:2 Ab4 G4 | F4 E4 F4 G4 Ab4 Bb4 | \
+            _:1 C5:5 -:2 C4:1 -:3",
+            "G7/D | G7 | Cm | Cm | C7 | C7 | Fm | F",
+        )
+        .with_left(
+            "-:1 D3:11 | -:1 D3:4 -:7 | C3:4 B2:1 - C3:2 - Eb2 | _:1 -:11 | Bb3:3 -:9 | C3:4 -:8 | \
+            F3:4 Ab3:1 -:7 | -:1 F2:3 C3:1 -:5 F2:2 & -:4 F3+B3:8 | _:4 -:8 | -:7 G2:3 -:2 | \
+            C2 -:10 | G3+E4:2 -:10 | -:3 E3:2 -:7 | -:12 | - & -:4 G3:8 | _:3 -:9 | -:12 | - | - | \
+            - | - | -",
+        )
+        .with_tempo(&[
+            tempo(0, 198),
+            tempo(12, 212),
+            tempo(24, 216),
+            tempo(36, 195),
+            tempo(48, 202),
+            tempo(60, 204),
+            tempo(72, 234),
+            tempo(84, 189),
+        ]),
+        // Bars 81-88 of the file.
+        Part::new(
+            "Part 11",
+            "Bb4:2 A4 Bb4:1 - D5:2 F5 D5:1 - | Bb4:2 C5:6 G4:1 - F4:2 | \
+            Eb4 D4 Eb4:1 - F4:2 G4 Ab4 | Bb4 -:10 | G4:1 Ab4 G4:2 F#4:1 G4:2 -:4 B4:1 | \
+            _ G4:2 Ab4:3 F4:1 - Eb4:2 D4 | C4 - C4:1 Eb4 -:2 F4:3 F#4:1 | G4:3 -:9",
+            "Bb | Bb7/F | Fm7 | Gm | G | G | Cm | Cm",
+        )
+        .with_left(
+            "Bb2:3 -:9 | F3:6 Ab4:3 - | Eb2 -:9 | -:12 | -:3 B3 -:6 | -:2 G2:10 | -:1 C3:10 -:1 | \
+            -:4 C2:1 -:7 & Bb1:2 -:10 | -:4 Bb4 - | -:12 | - | -:4 D3:1 -:7 | \
+            -:2 G3 -:1 G4:2 - Db3:3 | -:2 B3 -:1 G2:7 | -:12 & -:12 | -:4 Ab3+Bb3:2 -:6 | -:12 | \
+            - | - | -:6 B2 | -:9 Eb2:3 | _:2 -:10 & -:12 | -:4 D4:1 -:7 | -:12 | - | - | - | - | \
+            -",
+        )
+        .with_tempo(&[
+            tempo(0, 200),
+            tempo(12, 214),
+            tempo(24, 191),
+            tempo(36, 222),
+            tempo(48, 196),
+            tempo(60, 189),
+            tempo(72, 236),
+            tempo(84, 196),
+        ]),
+        // Bars 89-92 of the file.
+        Part::new(
+            "Part 12",
+            "F4:1 Bb4 G4:2 Ab4:1 Bb4 - C5 - D5:3 | B4:2 -:7 D5:1 - C5 | \
+            - D5 C5 B4 - C5:2 Eb5:1 - G5:2 C6:1 | _ -:11",
+            "Fm6 | G | Cm | Cm",
+        )
+        .with_left(
+            "Ab3:6 - | G2:12 | _:3 B2:1 - C3:2 G2 Eb2:3 | -:12 & -:1 F3+C4:5 -:6 | G3:11 -:1 | \
+            C3:3 -:8 C2:1 | _:3 -:9 & -:1 D4:4 -:7 | -:10 B2:2 | -:12 | - & -:1 F#4 -:10 | -:12 | \
+            - | -",
+        )
+        .with_tempo(&[tempo(12, 197), tempo(24, 220), tempo(36, 173)]),
+    ],
+    form: &[
+        "Part 1", "Part 2", "Part 3", "Part 4", "Part 5", "Part 6", "Part 7", "Part 8", "Part 9",
+        "Part 10", "Part 11", "Part 12",
+    ],
+    drums_from: 0,
+    about: "\"Era rubia y sus ojos celestes reflejaban la gloria del día\": a vals criollo \
+            about the fair-haired keeper of a country store in Buenos Aires in the days of \
+            Rosas, whom every gaucho loved. Ignacio Corsini's record of 1929 made it a hit. C \
+            minor.",
 };
 
 // Written out from an arrangement (MIDI in 4/4): the tune on the piano, with bandoneón,
