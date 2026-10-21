@@ -241,8 +241,10 @@ are deleted. Open popups and configuration controls keep their own keys.
 
 **F5**, or the first window button in the toolbar (a page of chord
 names), opens the **chord sheet**: the
-song's harmony bar by bar, four bars to a line and each section under
-its name, as a lead sheet writes it. Click a bar and type its harmony:
+song's harmony bar by bar, each section under its name, as a lead sheet
+writes it. **Bars per line** puts as many bars on a line as show every
+name in full, at its full size (1, 2, 4, 8, 12 or 16, so that lines
+start where phrases do), or the number you pick. Click a bar and type its harmony:
 chords (`Am7 D7`, `G7/B`, `F#m7b5`), Roman numerals in the key
 (`ii7 V7`), pitch-class sets (`3-11 T2`, `{0,1,4}`), micromodes
 (`Menor 3`), twelve-tone row forms (`P0`, `RI7`) or `N.C.`; a `/` holds
@@ -258,8 +260,15 @@ the same harmony **As written**, as **Chords**, as **Pitch-class sets**
 without changing a note. For sets and micromodes it can also read the
 song's notes, **together** (vertically) or **in a line** (serially), in
 groups of 2 to 12 notes, from every track or one. The sheet is saved with the project and
-follows key changes, re-metering and copied sections. It is an extra
-window: the playlist stays as it is.
+follows key changes, re-metering and copied sections. Right-click a bar
+to **Insert a bar before**, **Insert a bar after** or **Delete this
+bar** (or the bars selected): everything after it moves along, notes,
+chords, markers and sections, and a new bar is empty, so the harmony
+before it goes on through it. The bar numbers on the playlist's ruler
+have the same items. The sheet is a window over the playlist, or, with
+**⛶ Fill the window** (also **View > Chord sheet in the main window**),
+takes the playlist's place in the main window, with longer lines;
+**Back to the playlist** puts it back.
 
 **File > New** opens an empty chord sheet with a **band**: type chords
 and a piano, a bass and drums play them, written as patterns on their

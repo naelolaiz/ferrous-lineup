@@ -121,6 +121,8 @@
   - [The mixer: pan, a reverb send, level meters and the instrument on every line](step-9/mixer.md)
   - [Sending a channel over MIDI from its instrument menu, drums too](step-9/midi-out-menus.md)
   - [Library tick boxes: presets like the song, and one helper to try them](step-9/library-filters.md)
+  - [The chord sheet fills the window, with lines that fit the names](step-9/chord-sheet-layout.md)
+  - [Inserting and deleting bars](step-9/insert-delete-bars.md)
   - [The book online and as a PDF](step-9/book-online.md)
 - [Spike: listening to a recording](spike-listen/README.md)
 

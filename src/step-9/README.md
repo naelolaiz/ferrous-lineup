@@ -89,6 +89,10 @@ else was needed:
   [any channel sent over MIDI](midi-out-menus.md) from its instrument
   menu, and [Library tick boxes](library-filters.md) that keep the
   presets like the song;
+- a chord sheet that can [fill the main window](chord-sheet-layout.md)
+  with as many bars to a line as show every name in full, and bars
+  [inserted and deleted](insert-delete-bars.md) with the whole song
+  moving along;
 - and this book, [online and as a PDF](book-online.md).
 
 ## Trying it
