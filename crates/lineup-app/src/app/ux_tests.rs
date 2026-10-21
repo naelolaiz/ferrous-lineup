@@ -4107,8 +4107,13 @@ mod chord_sheet_layout {
             assert_eq!(size(&output, name), 20.0, "{name}");
         }
         // A number chosen is kept, and the names that don't fit then
-        // are written smaller.
+        // are written smaller. The numbers are in rows of four, every one
+        // in sight: 16 is next to 13, not scrolled out of the menu.
         open_bars_per_line(&mut screen);
+        let output = screen.draw(Vec::new());
+        let row = |number: &str| text_rect(&output, number).expect(number).center().y;
+        assert_eq!(row("16"), row("13"));
+        assert!(row("1") < row("16"));
         screen.click("8");
         let output = screen.draw(Vec::new());
         assert!(text_rect(&output, "Fit (8)").is_none());
