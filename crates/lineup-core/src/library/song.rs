@@ -812,6 +812,7 @@ mod rock;
 mod soul;
 mod tango;
 mod tango_arranged;
+mod tango_played;
 
 /// All the songs, sorted by genre in the order of [`Genre::ALL`].
 pub static SONGS: &[Song] = &[
@@ -988,6 +989,21 @@ pub static SONGS: &[Song] = &[
     tango_arranged::MI_NOCHE_TRISTE,
     tango_arranged::SENTIMIENTO_GAUCHO,
     tango_arranged::ZORRO_GRIS,
+    tango_played::UNO,
+    tango_played::SUR,
+    tango_played::SOLEDAD,
+    tango_played::NOSTALGIAS,
+    tango_played::PASIONAL,
+    tango_played::PATOTERO_SENTIMENTAL,
+    tango_played::QUE_FALTA_QUE_ME_HACES,
+    tango_played::QUE_ME_VAN_A_HABLAR_DE_AMOR,
+    tango_played::MARIONETAS,
+    tango_played::TIEMPOS_VIEJOS,
+    tango_played::YIRA_YIRA,
+    tango_played::LOS_MAREADOS,
+    tango_played::MANO_A_MANO,
+    tango_played::LA_CASITA_DE_MIS_VIEJOS,
+    tango_played::MALENA,
     folklore::EL_CONDOR_PASA,
     folklore::ALMA_LLANERA,
     folklore::DOS_PALOMITAS,
