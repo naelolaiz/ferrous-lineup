@@ -2620,6 +2620,18 @@ fn the_unsaved_mark_is_worked_out_again_after_an_edit_and_undo() {
 }
 
 #[test]
+fn changes_in_one_drag_are_one_undo_step() {
+    let mut screen = Screen::new();
+    let before = screen.app.project.clone();
+    screen.app.edit("drag", |project| project.swing = 1);
+    screen.app.edit("drag", |project| project.swing = 2);
+    screen.app.edit("drag", |project| project.swing = 3);
+    assert_eq!(screen.app.project.swing, 3);
+    screen.app.undo();
+    assert_eq!(screen.app.project, before, "one undo takes back the drag");
+}
+
+#[test]
 fn unsaved_work_from_a_crash_recovers_as_unsaved() {
     let mut screen = Screen::new();
     let recovered = Project::template();
