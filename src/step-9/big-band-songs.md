@@ -16,9 +16,10 @@ get something no demo had before: a **horn section** behind the tune.
 
 Open **File > Demos > Songs > Jazz > Tea for Two** (or type "tea" in
 the search box at the top of the Demos menu). Besides Lead, Keys and Bass, the
-channel rack now has a fourth channel, **Horns**. With **Sounds >
-SoundFont instruments** on, the tune is a trumpet and the Horns channel
-is the saxophones, holding each chord for as long as it lasts. Mute
+channel rack now has a fourth channel, **Horns**. With **Edit >
+Settings… > Audio > SoundFont instruments** on, the tune is a trumpet
+and the Horns channel is the saxophones, holding each chord for as long
+as it lasts. Mute
 Horns (click its light in the rack) and play again: the band sounds
 like a small group. Unmute it, and it is a big band.
 

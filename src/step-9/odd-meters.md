@@ -13,7 +13,7 @@ Files: [`crates/lineup-core/src/meter.rs`](https://github.com/naelolaiz/ferrous-
 and [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs)
 
 The app could already be set to 5/4 or 7/8 by hand (see
-[Free time signatures](../step-8/free-time-signatures.md)), but the
+[Any time signature](../step-8/any-time-signature.md#how-to-use-it)), but the
 library had nothing to play in them: changing a song's Time to 7/8
 gave it a plain "basic beat", and no demo was in an odd meter. This
 change adds **eleven rhythms and harmony styles** in odd meters, a way
