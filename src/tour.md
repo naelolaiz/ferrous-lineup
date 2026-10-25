@@ -104,7 +104,7 @@ Click one to review its copy options, then **Apply** to hear it in your key.
 Right-click and choose **Play the whole
 song with this preset** to apply it throughout the song while stopped.
 The melody stays in place. **File > Demos** opens
-306 songs with their melodies, by genre and in alphabetical order: from
+343 songs with their melodies, by genre and in alphabetical order: from
 *Ode to Joy*, *Für Elise* and the *Habanera* to tangos, Latin American
 songs, swing and big band tunes, dances in odd meters and orchestral
 pieces such as *Boléro* and *The Rite of Spring*, plus new tunes written

@@ -314,7 +314,7 @@ apart.
 ## Making it fast
 
 The first working version was correct and about **60 times slower**
-than the old way. Writing the chord sheet for all 306 demos took
+than the old way. Writing the chord sheet for every song demo took
 3.6 seconds instead of 0.06, and the test suite, which writes chord
 sheets for every demo and style many times over, crawled. Four changes
 brought it back down.
