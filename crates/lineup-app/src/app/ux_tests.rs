@@ -22,6 +22,8 @@ impl Screen {
         let mut app = LineupApp::with_audio(&ctx, None, Audio::Unavailable("test".into()));
         app.harmony_keys.open = false;
         app.playlist.browser_open = false;
+        // Never read or remove a real recovery copy while testing.
+        app.recovery = super::recovery::Recovery::new(None);
         Self {
             ctx,
             app,
@@ -32,26 +34,47 @@ impl Screen {
     }
 
     fn draw(&mut self, events: Vec<Event>) -> FullOutput {
-        let mut output = self.ctx.run_pass(
-            RawInput {
-                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.size)),
-                time: Some(self.ctx.cumulative_frame_nr() as f64 * 0.2),
-                events,
+        let raw = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.size)),
+            time: Some(self.ctx.cumulative_frame_nr() as f64 * 0.2),
+            events,
+            ..Default::default()
+        };
+        self.run(raw)
+    }
+
+    /// A frame in which the window is asked to close, as its title bar's
+    /// button does.
+    fn request_close(&mut self) -> FullOutput {
+        let mut raw = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.size)),
+            time: Some(self.ctx.cumulative_frame_nr() as f64 * 0.2),
+            ..Default::default()
+        };
+        raw.viewports = std::iter::once((
+            egui::ViewportId::ROOT,
+            egui::ViewportInfo {
+                events: vec![egui::ViewportEvent::Close],
                 ..Default::default()
             },
-            |ctx| {
-                if self.settings_only {
-                    self.app.settings_window(ctx);
-                    return;
-                }
-                let mut ui = egui::Ui::new(
-                    ctx.clone(),
-                    egui::Id::unique("test-root"),
-                    egui::UiBuilder::new().max_rect(ctx.content_rect()),
-                );
-                self.app.ui(&mut ui, &mut self.frame);
-            },
-        );
+        ))
+        .collect();
+        self.run(raw)
+    }
+
+    fn run(&mut self, raw: RawInput) -> FullOutput {
+        let mut output = self.ctx.run_pass(raw, |ctx| {
+            if self.settings_only {
+                self.app.settings_window(ctx);
+                return;
+            }
+            let mut ui = egui::Ui::new(
+                ctx.clone(),
+                egui::Id::unique("test-root"),
+                egui::UiBuilder::new().max_rect(ctx.content_rect()),
+            );
+            self.app.ui(&mut ui, &mut self.frame);
+        });
         output.textures_delta.clear();
         output
     }
@@ -69,6 +92,7 @@ impl Screen {
         self.app = LineupApp::with_audio(&self.ctx, None, Audio::Unavailable("test".into()));
         self.app.harmony_keys.open = false;
         self.app.playlist.browser_open = false;
+        self.app.recovery = super::recovery::Recovery::new(None);
     }
 
     fn click(&mut self, label: &str) {
@@ -2584,6 +2608,72 @@ fn initial_space_plays_the_song_until_an_editor_is_clicked() {
 }
 
 #[test]
+fn the_unsaved_mark_is_worked_out_again_after_an_edit_and_undo() {
+    let mut screen = Screen::new();
+    assert!(!screen.app.has_unsaved_changes());
+    screen
+        .app
+        .edit("change swing", |project| project.swing = 20);
+    assert!(screen.app.has_unsaved_changes());
+    screen.app.undo();
+    assert!(!screen.app.has_unsaved_changes(), "undoing back is saved");
+}
+
+#[test]
+fn unsaved_work_from_a_crash_recovers_as_unsaved() {
+    let mut screen = Screen::new();
+    let recovered = Project::template();
+    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+        recovered.clone(),
+        None,
+        Some("Recovered song".to_string()),
+    ));
+    // The modal needs a frame to lay itself out.
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Recover unsaved work?").is_some());
+    screen.click("Recover it");
+    assert_eq!(screen.app.project, recovered);
+    assert!(
+        screen.app.has_unsaved_changes(),
+        "recovered work has never been saved"
+    );
+}
+
+#[test]
+fn a_recovery_copy_can_be_discarded() {
+    let mut screen = Screen::new();
+    let before = screen.app.project.clone();
+    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+        Project::template(),
+        None,
+        None,
+    ));
+    screen.click("Discard it");
+    assert!(screen.app.recovery.pending.is_none());
+    assert_eq!(screen.app.project, before);
+}
+
+#[test]
+fn the_file_menu_lists_recent_projects() {
+    let mut screen = Screen::new();
+    screen.app.recent.add(&PathBuf::from("/music/Song.lineup"));
+    screen.click("File");
+    screen.click("Open recent");
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Song.lineup").is_some());
+}
+
+#[test]
+fn audio_settings_offer_a_retry_when_audio_is_unavailable() {
+    let mut screen = Screen::new();
+    screen.app.settings_open = true;
+    screen.click("Audio");
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Try again").is_some());
+}
+
+#[test]
 fn save_confirmation_blocks_background_shortcuts_and_escape_keeps_the_project() {
     let mut screen = Screen::new();
     screen
@@ -2892,6 +2982,59 @@ fn the_tools_menu_pastes_what_another_roll_copied() {
         .map(|note| note.pitch.midi())
         .collect();
     assert_eq!(pitches, [72]);
+}
+
+/// An export whose thread runs until it is cancelled.
+fn running_export() -> super::export::Export {
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+    let cancel = Arc::new(AtomicBool::new(false));
+    let worker_cancel = Arc::clone(&cancel);
+    let worker = std::thread::spawn(move || {
+        while !worker_cancel.load(Ordering::Relaxed) {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        Ok(())
+    });
+    super::export::Export::new(
+        PathBuf::from("test.wav"),
+        10,
+        Arc::new(AtomicUsize::new(0)),
+        Some(cancel),
+        worker,
+    )
+}
+
+#[test]
+fn closing_while_an_export_runs_asks_before_stopping_it() {
+    use std::time::Duration;
+
+    let mut screen = Screen::new();
+    screen.app.export = Some(running_export());
+    screen.request_close();
+    assert!(
+        text_rect(&screen.draw(vec![]), "An export is still running").is_some(),
+        "the export question is asked"
+    );
+
+    // Keeping the export leaves it running, and keeps the window open.
+    screen.click("Keep exporting");
+    assert!(screen.app.export.is_some());
+    assert!(!screen.app.file.is_quitting());
+
+    // Stopping it cancels the thread, waits for it, then closes.
+    screen.request_close();
+    assert!(text_rect(&screen.draw(vec![]), "An export is still running").is_some());
+    screen.click("Stop it and quit");
+    for _ in 0..100 {
+        if screen.app.file.is_quitting() {
+            break;
+        }
+        screen.draw(vec![]);
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    assert!(screen.app.export.is_none(), "the export was waited for");
+    assert!(screen.app.file.is_quitting(), "the window closes");
 }
 
 mod library_parts {

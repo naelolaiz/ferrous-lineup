@@ -209,6 +209,25 @@ impl LineupApp {
                                             "Uses your system’s default audio device.",
                                             |ui| {
                                                 self.audio_status(ui);
+                                                ui.add_space(6.0);
+                                                let label = match &self.audio {
+                                                    super::Audio::Running(engine)
+                                                        if !engine.is_broken() =>
+                                                    {
+                                                        "Restart audio"
+                                                    }
+                                                    _ => "Try again",
+                                                };
+                                                if ui
+                                                    .button(label)
+                                                    .on_hover_text(
+                                                        "Open the system’s default output \
+                                                         device again",
+                                                    )
+                                                    .clicked()
+                                                {
+                                                    self.start_audio();
+                                                }
                                             },
                                         );
                                         self.sound_settings_ui(ui);

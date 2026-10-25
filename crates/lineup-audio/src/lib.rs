@@ -41,7 +41,7 @@ pub use engine::{
 pub use instrument::Instrument;
 pub use levels::Levels;
 pub use phrase::{Phrase, PhraseNote};
-pub use render::{Renderer, export_wav};
+pub use render::{Renderer, WavExport, export_wav, export_wav_cancellable};
 pub use sample::{SampleCache, SampleData, SampleError};
 pub use soundfont::{SoundFont, SoundFontError};
 pub use timbre::{Timbre, Wave};

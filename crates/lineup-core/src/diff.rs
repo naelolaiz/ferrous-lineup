@@ -153,9 +153,10 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
 
     // Channels that were there before: their instrument, volume and mute.
     for (index, channel) in after.channels().iter().enumerate() {
-        let Some(old) = channels.old_index(index).map(|old| &before.channels()[old]) else {
+        let Some(old_index) = channels.old_index(index) else {
             continue; // a new channel arrives complete
         };
+        let old = &before.channels()[old_index];
         if old.kind != channel.kind
             || old.program != channel.program
             || old.sent_on != channel.sent_on
@@ -171,7 +172,7 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
         if old.reverb_send != channel.reverb_send {
             changes.push(Change::ReverbSend(index));
         }
-        if before.channel_muted(channels.old_index(index).unwrap()) != after.channel_muted(index) {
+        if before.channel_muted(old_index) != after.channel_muted(index) {
             changes.push(Change::Muted(index));
         }
     }
