@@ -73,6 +73,11 @@ impl<T> History<T> {
         self.open = true;
     }
 
+    /// Whether the newest step still takes in changes.
+    pub fn is_open(&self) -> bool {
+        self.open
+    }
+
     /// Ends the open step, if there is one: the next change starts a new step.
     pub fn close(&mut self) {
         self.open = false;
