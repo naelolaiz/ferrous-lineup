@@ -30,6 +30,8 @@ mod library;
 mod live;
 mod mixer;
 mod practice;
+mod recent;
+mod recovery;
 mod settings;
 mod shortcuts;
 mod sounds;
@@ -149,6 +151,10 @@ pub struct LineupApp {
     /// Sources before meter changes, including the latest independent preset options.
     song_sources: Vec<(Project, library::SongSource)>,
     file: files::FileState,
+    /// The projects opened or saved lately.
+    recent: recent::Recent,
+    /// Unsaved-work autosave, and the copy left by an earlier run.
+    recovery: recovery::Recovery,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
     /// Sample files already read, so undo and export do not read them again.
@@ -216,7 +222,11 @@ impl LineupApp {
             Ok(engine) => Audio::Running(Box::new(engine)),
             Err(err) => Audio::Unavailable(err.to_string()),
         };
-        Self::with_audio(&cc.egui_ctx, path, audio)
+        let mut app = Self::with_audio(&cc.egui_ctx, path, audio);
+        // Only the real window recovers work: tracing and rendering a
+        // video use `with_audio` too and must not touch that copy.
+        app.recovery = recovery::Recovery::new(eframe::storage_dir(APP_NAME));
+        app
     }
 
     fn with_audio(ctx: &egui::Context, path: Option<PathBuf>, mut audio: Audio) -> Self {
@@ -232,6 +242,8 @@ impl LineupApp {
         let mut app = LineupApp {
             audio,
             file: files::FileState::new(&project),
+            recent: recent::Recent::restore(ctx),
+            recovery: recovery::Recovery::new(None),
             project,
             pattern: 0,
             mode: PlayMode::Song,
@@ -297,6 +309,38 @@ impl LineupApp {
             self.message = Some(
                 "The audio engine stopped taking commands. Restart Ferrous Lineup.".to_string(),
             );
+        }
+    }
+
+    /// Opens the sound card again, after it was unavailable or its stream
+    /// stopped. The project and the MIDI ports stay.
+    pub(super) fn start_audio(&mut self) {
+        let position = self.playhead();
+        let playing = self.playing && position.is_some();
+        // Close the old stream first: a device being reopened cannot be
+        // held by the dead one.
+        let old = std::mem::replace(&mut self.audio, Audio::Unavailable(String::new()));
+        drop(old);
+        match AudioEngine::start() {
+            Ok(mut engine) => {
+                let live = engine.take_live_input();
+                let output = engine.take_midi_output();
+                self.audio = Audio::Running(Box::new(engine));
+                self.live.midi.reconnect_audio(live, output);
+                self.send_whole_project();
+                if let Some(position) = position.filter(|_| playing) {
+                    self.send(Command::Seek(position));
+                    self.send(Command::Play);
+                }
+                self.playing = playing;
+                self.message = None;
+                self.notice = Some("Audio is playing again.".to_string());
+            }
+            Err(err) => {
+                let reason = err.to_string();
+                self.message = Some(format!("Could not start audio: {reason}"));
+                self.audio = Audio::Unavailable(reason);
+            }
         }
     }
 
@@ -1883,6 +1927,7 @@ impl LineupApp {
         settings::minor_numerals(ctx).set();
         self.start_frame_for_undo(ctx);
         self.check_audio();
+        self.autosave();
         self.keyboard_shortcuts(ctx);
         self.keep_over_song();
         self.live_input(ctx);
@@ -2199,9 +2244,17 @@ impl eframe::App for LineupApp {
         self.settings_window(&ctx);
         self.video_dialog(&ctx);
         self.playlist.library_browser_mut().store_preferences(&ctx);
+        self.recent.store(&ctx);
+        self.recovery_dialog(&ctx);
         self.export_quit_dialog(&ctx);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
         self.end_frame_for_undo(&ctx);
+    }
+
+    /// A clean shutdown needs no recovery copy: remove the one this run
+    /// wrote, as an edit that was undone may have left it behind.
+    fn on_exit(&mut self) {
+        self.forget_recovery();
     }
 }

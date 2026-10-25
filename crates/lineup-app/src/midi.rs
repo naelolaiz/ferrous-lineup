@@ -219,6 +219,28 @@ impl Midi {
         midi
     }
 
+    /// Points MIDI at a new audio engine, after the sound card was
+    /// reopened: keys go to its live input, and MIDI Out messages to its
+    /// queue. The old sending thread stops when the old engine's queue is
+    /// dropped.
+    pub fn reconnect_audio(&mut self, live: Option<LiveInput>, messages: Option<MidiOutput>) {
+        if let Some(live) = live {
+            if let Some(shared) = self.live.as_ref() {
+                *lock(shared) = live;
+            } else {
+                self.live = Some(Arc::new(Mutex::new(live)));
+                // The input callback was made while there was no audio:
+                // make it again with the new live input.
+                if let Some(port) = self.input().cloned() {
+                    let _ = self.connect_input(Some(&port));
+                }
+            }
+        }
+        if let Some(messages) = messages {
+            self.sending = start_sending(messages, Arc::clone(&self.output));
+        }
+    }
+
     /// Snaps the notes of the MIDI keyboard to `scale` from now on, or
     /// stops snapping them if `None`.
     pub fn snap_to(&self, scale: Option<Scale>) {

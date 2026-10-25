@@ -22,6 +22,8 @@ impl Screen {
         let mut app = LineupApp::with_audio(&ctx, None, Audio::Unavailable("test".into()));
         app.harmony_keys.open = false;
         app.playlist.browser_open = false;
+        // Never read or remove a real recovery copy while testing.
+        app.recovery = super::recovery::Recovery::new(None);
         Self {
             ctx,
             app,
@@ -90,6 +92,7 @@ impl Screen {
         self.app = LineupApp::with_audio(&self.ctx, None, Audio::Unavailable("test".into()));
         self.app.harmony_keys.open = false;
         self.app.playlist.browser_open = false;
+        self.app.recovery = super::recovery::Recovery::new(None);
     }
 
     fn click(&mut self, label: &str) {
@@ -2614,6 +2617,60 @@ fn the_unsaved_mark_is_worked_out_again_after_an_edit_and_undo() {
     assert!(screen.app.has_unsaved_changes());
     screen.app.undo();
     assert!(!screen.app.has_unsaved_changes(), "undoing back is saved");
+}
+
+#[test]
+fn unsaved_work_from_a_crash_recovers_as_unsaved() {
+    let mut screen = Screen::new();
+    let recovered = Project::template();
+    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+        recovered.clone(),
+        None,
+        Some("Recovered song".to_string()),
+    ));
+    // The modal needs a frame to lay itself out.
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Recover unsaved work?").is_some());
+    screen.click("Recover it");
+    assert_eq!(screen.app.project, recovered);
+    assert!(
+        screen.app.has_unsaved_changes(),
+        "recovered work has never been saved"
+    );
+}
+
+#[test]
+fn a_recovery_copy_can_be_discarded() {
+    let mut screen = Screen::new();
+    let before = screen.app.project.clone();
+    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+        Project::template(),
+        None,
+        None,
+    ));
+    screen.click("Discard it");
+    assert!(screen.app.recovery.pending.is_none());
+    assert_eq!(screen.app.project, before);
+}
+
+#[test]
+fn the_file_menu_lists_recent_projects() {
+    let mut screen = Screen::new();
+    screen.app.recent.add(&PathBuf::from("/music/Song.lineup"));
+    screen.click("File");
+    screen.click("Open recent");
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Song.lineup").is_some());
+}
+
+#[test]
+fn audio_settings_offer_a_retry_when_audio_is_unavailable() {
+    let mut screen = Screen::new();
+    screen.app.settings_open = true;
+    screen.click("Audio");
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Try again").is_some());
 }
 
 #[test]

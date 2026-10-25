@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
 use lineup_audio::PlayMode;
-use lineup_core::{Project, file};
+use lineup_core::{History, Project, file};
 
 use super::LineupApp;
 use super::export::MidiExport;
@@ -67,7 +67,9 @@ pub(super) struct FileState {
     /// project differs from it, there are unsaved changes. Comparing the
     /// two (thanks to the derived `PartialEq`) means even undoing a change
     /// by hand counts as "no changes".
-    saved: Project,
+    /// The project as last opened or saved, or `None` when it has never
+    /// been saved (recovered work with no file of its own).
+    saved: Option<Project>,
     /// Whether the project differs from `saved`, as last worked out.
     /// Comparing the two walks the whole project, so it is only done
     /// after an edit or an undo, not on every frame.
@@ -89,6 +91,11 @@ impl FileState {
         self.quitting
     }
 
+    /// The file the project came from, if any.
+    pub(super) fn path(&self) -> Option<&Path> {
+        self.path.as_deref()
+    }
+
     /// The project was edited or undone: work out whether it differs
     /// from `saved` again the next time that is asked.
     pub(super) fn project_edited(&mut self) {
@@ -107,7 +114,7 @@ impl FileState {
             path: None,
             demo: Some(Demo::Start.name()),
             name: None,
-            saved: project.clone(),
+            saved: Some(project.clone()),
             dirty: false,
             check_dirty: false,
             pending: None,
@@ -215,7 +222,11 @@ fn project_path(mut path: PathBuf) -> PathBuf {
 impl LineupApp {
     pub(super) fn has_unsaved_changes(&mut self) -> bool {
         if self.file.check_dirty {
-            self.file.dirty = self.project != self.file.saved;
+            self.file.dirty = match &self.file.saved {
+                Some(saved) => self.project != *saved,
+                // Recovered work with no file has never been saved.
+                None => true,
+            };
             self.file.check_dirty = false;
         }
         self.file.dirty
@@ -242,6 +253,7 @@ impl LineupApp {
                 self.request(&ctx, Pending::Open);
                 ui.close();
             }
+            self.recent_menu(ui);
             self.demos_menu(ui);
             if ui
                 .button("Import recording…")
@@ -363,6 +375,7 @@ impl LineupApp {
     /// waits behind an export, so the question is not asked twice.
     pub(super) fn close_now(&mut self, ctx: &egui::Context) {
         self.file.quitting = true;
+        self.forget_recovery();
         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
     }
 
@@ -446,8 +459,14 @@ impl LineupApp {
             return;
         }
         match file::load(&path) {
-            Ok(project) => self.replace_project(project, Some(path)),
-            Err(err) => self.message = Some(format!("Could not open {}: {err}", path.display())),
+            Ok(project) => {
+                self.recent.add(&path);
+                self.replace_project(project, Some(path));
+            }
+            Err(err) => {
+                self.recent.remove(&path);
+                self.message = Some(format!("Could not open {}: {err}", path.display()));
+            }
         }
     }
 
@@ -463,8 +482,11 @@ impl LineupApp {
         self.song_library = Tried::default();
         self.song_versions.clear();
         self.song_sources.clear();
-        self.file.saved = self.project.clone();
+        self.file.saved = Some(self.project.clone());
         self.file.project_saved();
+        // The project being left behind was saved or discarded (the
+        // caller asked); its autosave is no longer needed.
+        self.forget_recovery();
         self.file.path = path;
         self.file.demo = None;
         self.file.name = None;
@@ -481,9 +503,24 @@ impl LineupApp {
         self.notice = stopped_import.then_some("Stopped importing the recording.".to_string());
         // Undo cannot go back into another file, and its samples may
         // not be needed any more.
-        self.history.clear();
+        self.history = History::new(super::edit::undo_limit_for(&self.project));
         self.samples.clear();
         self.send_whole_project();
+    }
+
+    /// Swaps in recovered work. `saved` is what the project's file says,
+    /// or `None` when it had no file, so recovered work shows unsaved.
+    pub(super) fn replace_recovered(
+        &mut self,
+        project: Project,
+        path: Option<PathBuf>,
+        name: Option<String>,
+        saved: Option<Project>,
+    ) {
+        self.replace_project(project, path);
+        self.file.name = name;
+        self.file.saved = saved;
+        self.file.project_edited();
     }
 
     /// Saves to the project's file, or asks for one if it has none yet,
@@ -508,8 +545,10 @@ impl LineupApp {
     fn save_to(&mut self, path: PathBuf) -> bool {
         match file::save(&self.project, &path) {
             Ok(()) => {
-                self.file.saved = self.project.clone();
+                self.file.saved = Some(self.project.clone());
                 self.file.project_saved();
+                self.recent.add(&path);
+                self.forget_recovery();
                 self.file.path = Some(path);
                 self.file.demo = None;
                 self.file.name = None;
