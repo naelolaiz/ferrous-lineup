@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
 use lineup_audio::PlayMode;
-use lineup_core::{Project, file};
+use lineup_core::{History, Project, file};
 
 use super::LineupApp;
 use super::export::MidiExport;
@@ -67,7 +67,16 @@ pub(super) struct FileState {
     /// project differs from it, there are unsaved changes. Comparing the
     /// two (thanks to the derived `PartialEq`) means even undoing a change
     /// by hand counts as "no changes".
-    saved: Project,
+    /// The project as last opened or saved, or `None` when it has never
+    /// been saved (recovered work with no file of its own).
+    saved: Option<Project>,
+    /// Whether the project differs from `saved`, as last worked out.
+    /// Comparing the two walks the whole project, so it is only done
+    /// after an edit or an undo, not on every frame.
+    dirty: bool,
+    /// Set when the project may differ from `saved`; `dirty` is worked
+    /// out again the next time it is asked for.
+    check_dirty: bool,
     pending: Option<Pending>,
     /// Set once the user agreed to quit, so closing is no longer stopped.
     quitting: bool,
@@ -76,13 +85,38 @@ pub(super) struct FileState {
 }
 
 impl FileState {
+    /// Whether the window is already closing, so a close request must not
+    /// be asked about again.
+    pub(super) fn is_quitting(&self) -> bool {
+        self.quitting
+    }
+
+    /// The file the project came from, if any.
+    pub(super) fn path(&self) -> Option<&Path> {
+        self.path.as_deref()
+    }
+
+    /// The project was edited or undone: work out whether it differs
+    /// from `saved` again the next time that is asked.
+    pub(super) fn project_edited(&mut self) {
+        self.check_dirty = true;
+    }
+
+    /// The project is now exactly what is saved.
+    pub(super) fn project_saved(&mut self) {
+        self.dirty = false;
+        self.check_dirty = false;
+    }
+
     /// The app starts with the starting song, so that is the demo open.
     pub(super) fn new(project: &Project) -> Self {
         FileState {
             path: None,
             demo: Some(Demo::Start.name()),
             name: None,
-            saved: project.clone(),
+            saved: Some(project.clone()),
+            dirty: false,
+            check_dirty: false,
             pending: None,
             quitting: false,
             title: String::new(),
@@ -176,9 +210,26 @@ fn project_dialog() -> rfd::FileDialog {
     rfd::FileDialog::new().add_filter("Ferrous Lineup project", &extensions)
 }
 
+/// `path` with a project extension, replacing any other. A project saved
+/// as "song.txt" would open later as a chord sheet, not as a project.
+fn project_path(mut path: PathBuf) -> PathBuf {
+    if !file::is_project(&path) {
+        path.set_extension(file::EXTENSION);
+    }
+    path
+}
+
 impl LineupApp {
-    fn has_unsaved_changes(&self) -> bool {
-        self.project != self.file.saved
+    pub(super) fn has_unsaved_changes(&mut self) -> bool {
+        if self.file.check_dirty {
+            self.file.dirty = match &self.file.saved {
+                Some(saved) => self.project != *saved,
+                // Recovered work with no file has never been saved.
+                None => true,
+            };
+            self.file.check_dirty = false;
+        }
+        self.file.dirty
     }
 
     /// The File menu, first in the menu bar along the top.
@@ -202,6 +253,7 @@ impl LineupApp {
                 self.request(&ctx, Pending::Open);
                 ui.close();
             }
+            self.recent_menu(ui);
             self.demos_menu(ui);
             if ui
                 .button("Import recording…")
@@ -318,8 +370,29 @@ impl LineupApp {
         self.request(ctx, Pending::OpenPath(path));
     }
 
+    /// Closes the window now that quitting is settled: any save question
+    /// is answered and any export has stopped. Used for the close that
+    /// waits behind an export, so the question is not asked twice.
+    pub(super) fn close_now(&mut self, ctx: &egui::Context) {
+        self.file.quitting = true;
+        self.forget_recovery();
+        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+    }
+
     /// Does `action` now if nothing would be lost, or asks first.
     pub(super) fn request(&mut self, ctx: &egui::Context, action: Pending) {
+        // An export running in the background would be cut off by a close.
+        // With unsaved changes too, the save question comes first, and
+        // `perform` asks about the export after that.
+        if matches!(&action, Pending::Quit)
+            && self.export.is_some()
+            && !self.quit_after_export
+            && !self.has_unsaved_changes()
+            && !self.style_editor.has_unsaved_changes()
+        {
+            self.export_quit = true;
+            return;
+        }
         if self.has_unsaved_changes()
             || (matches!(&action, Pending::Quit) && self.style_editor.has_unsaved_changes())
         {
@@ -361,8 +434,13 @@ impl LineupApp {
             Pending::ImportMidi => self.import_midi(),
             Pending::ImportChordSheet => self.import_chord_sheet(),
             Pending::Quit => {
-                self.file.quitting = true;
-                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                // The changes are settled, but an export may still be
+                // writing: ask about it before the window closes.
+                if self.export.is_some() && !self.quit_after_export {
+                    self.export_quit = true;
+                    return;
+                }
+                self.close_now(ctx);
             }
         }
     }
@@ -381,13 +459,22 @@ impl LineupApp {
             return;
         }
         match file::load(&path) {
-            Ok(project) => self.replace_project(project, Some(path)),
-            Err(err) => self.message = Some(format!("Could not open {}: {err}", path.display())),
+            Ok(project) => {
+                self.recent.add(&path);
+                self.replace_project(project, Some(path));
+            }
+            Err(err) => {
+                self.recent.remove(&path);
+                self.message = Some(format!("Could not open {}: {err}", path.display()));
+            }
         }
     }
 
     /// Swaps in another project and tells the audio thread about it.
     pub(super) fn replace_project(&mut self, mut project: Project, path: Option<PathBuf>) {
+        // An import that is still listening would replace this project
+        // when it finished: it was started for the one being left behind.
+        let stopped_import = self.import.take().is_some();
         // The chords heard in the song are still the song's.
         project.follow_along(fill_chord_sheet);
         self.project = project;
@@ -395,7 +482,11 @@ impl LineupApp {
         self.song_library = Tried::default();
         self.song_versions.clear();
         self.song_sources.clear();
-        self.file.saved = self.project.clone();
+        self.file.saved = Some(self.project.clone());
+        self.file.project_saved();
+        // The project being left behind was saved or discarded (the
+        // caller asked); its autosave is no longer needed.
+        self.forget_recovery();
         self.file.path = path;
         self.file.demo = None;
         self.file.name = None;
@@ -409,12 +500,27 @@ impl LineupApp {
         self.harmony_keys.forget_chords();
         self.key_finder.new_project(&self.project, Vec::new());
         self.message = None;
-        self.notice = None;
+        self.notice = stopped_import.then_some("Stopped importing the recording.".to_string());
         // Undo cannot go back into another file, and its samples may
         // not be needed any more.
-        self.history.clear();
+        self.history = History::new(super::edit::undo_limit_for(&self.project));
         self.samples.clear();
         self.send_whole_project();
+    }
+
+    /// Swaps in recovered work. `saved` is what the project's file says,
+    /// or `None` when it had no file, so recovered work shows unsaved.
+    pub(super) fn replace_recovered(
+        &mut self,
+        project: Project,
+        path: Option<PathBuf>,
+        name: Option<String>,
+        saved: Option<Project>,
+    ) {
+        self.replace_project(project, path);
+        self.file.name = name;
+        self.file.saved = saved;
+        self.file.project_edited();
     }
 
     /// Saves to the project's file, or asks for one if it has none yet,
@@ -430,19 +536,19 @@ impl LineupApp {
     /// Asks where to save, then saves. Returns whether the project was saved.
     fn save_as(&mut self) -> bool {
         let suggested = self.file.export_name(file::EXTENSION);
-        let Some(mut path) = project_dialog().set_file_name(suggested).save_file() else {
+        let Some(path) = project_dialog().set_file_name(suggested).save_file() else {
             return false;
         };
-        if path.extension().is_none() {
-            path.set_extension(file::EXTENSION);
-        }
-        self.save_to(path)
+        self.save_to(project_path(path))
     }
 
     fn save_to(&mut self, path: PathBuf) -> bool {
         match file::save(&self.project, &path) {
             Ok(()) => {
-                self.file.saved = self.project.clone();
+                self.file.saved = Some(self.project.clone());
+                self.file.project_saved();
+                self.recent.add(&path);
+                self.forget_recovery();
                 self.file.path = Some(path);
                 self.file.demo = None;
                 self.file.name = None;
@@ -470,8 +576,16 @@ impl LineupApp {
         });
         let (projects, samples): (Vec<PathBuf>, Vec<PathBuf>) =
             dropped.into_iter().partition(|path| is_project_file(path));
-        if let Some(path) = projects.into_iter().next() {
-            self.open_path(ctx, path);
+        let mut projects = projects.into_iter();
+        if let Some(path) = projects.next() {
+            if projects.next().is_some() {
+                // Opening one after another would throw each away before
+                // it could be seen; ask for one at a time instead.
+                self.message =
+                    Some("Drop one project file at a time: none was opened.".to_string());
+            } else {
+                self.open_path(ctx, path);
+            }
         }
         if !self.rack_open {
             for path in samples {
@@ -483,6 +597,11 @@ impl LineupApp {
     /// Shows "Save changes?" while an action is waiting for an answer.
     /// Also stops the window from closing while there are unsaved changes.
     pub(super) fn unsaved_changes_dialog(&mut self, ctx: &egui::Context) {
+        // While the export question is open, or the export is stopping so
+        // the window can close, it owns the close request.
+        if self.export_quit || self.quit_after_export {
+            return;
+        }
         let close_requested = ctx.input(|input| input.viewport().close_requested());
         if close_requested
             && !self.file.quitting
@@ -587,7 +706,8 @@ impl LineupApp {
     /// Shows the file or demo name in the window's title bar, with a star
     /// after it when there are unsaved changes.
     pub(super) fn update_title(&mut self, ctx: &egui::Context) {
-        let title = self.file.title(self.has_unsaved_changes());
+        let changed = self.has_unsaved_changes();
+        let title = self.file.title(changed);
         if title != self.file.title {
             ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
             self.file.title = title;
@@ -655,5 +775,23 @@ mod tests {
         state.path = None;
         state.name_imported("  ");
         assert_eq!(state.title(false), "Untitled · Ferrous Lineup");
+    }
+
+    #[test]
+    fn saving_as_gives_the_project_its_own_extension() {
+        for (typed, saved) in [
+            ("song", "song.lineup"),
+            ("song.txt", "song.lineup"),
+            ("song.mid", "song.lineup"),
+            ("song.lineup", "song.lineup"),
+            // An old Ferrous Loom file keeps its name.
+            ("song.LOOM", "song.LOOM"),
+        ] {
+            assert_eq!(
+                project_path(PathBuf::from(typed)),
+                PathBuf::from(saved),
+                "saving as {typed}"
+            );
+        }
     }
 }

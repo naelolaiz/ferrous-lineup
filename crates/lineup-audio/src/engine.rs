@@ -36,9 +36,10 @@
 //! from shared atomics, [`Levels`], which the audio thread raises and the
 //! UI takes once a frame (see [`crate::levels`]).
 
+use std::collections::VecDeque;
 use std::fmt;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
@@ -55,14 +56,32 @@ use crate::phrase::Phrase;
 use crate::trace::Tracer;
 
 /// How many commands can wait in the queue before `send` starts failing.
-/// The audio thread empties the queue every few milliseconds, so this is
-/// far more than the UI will ever send in that time.
-const COMMAND_QUEUE_SIZE: usize = 1024;
+/// The audio thread empties the queue every few milliseconds. A full
+/// project sends one command per pattern and a few per channel, so this
+/// holds a whole large project; `send_wait` covers what is left.
+const COMMAND_QUEUE_SIZE: usize = 4096;
+
+/// How many times [`AudioEngine::send_wait`] tries to hand a command to a
+/// full queue before giving up. The audio thread drains it every block,
+/// so this only runs out when the stream has stopped.
+const SEND_WAIT_ROUNDS: usize = 1_000;
 
 /// How many old instruments and note lists can wait to be freed by the UI
 /// thread. Removing a pattern throws away one list per channel, and
 /// loading a project throws away every channel, so this is generous.
 pub(crate) const TRASH_QUEUE_SIZE: usize = 1024;
+
+/// How many values can wait on the audio thread while the trash queue is
+/// full. The UI empties it every frame, so this only happens in a burst
+/// between two frames; the waiting values are never freed on the audio
+/// thread unless this fills too.
+const TRASH_BACKLOG: usize = 256;
+
+/// How many MIDI messages can wait for room in the output queue. A lost
+/// note off leaves a note stuck on the external synth, so these are kept
+/// rather than dropped. The sending thread empties the queue every
+/// millisecond, far faster than a block makes messages.
+const MIDI_BACKLOG: usize = 256;
 
 /// How many keys from a MIDI keyboard can wait for the next block. Ten
 /// fingers and a sustain-happy pianist are nowhere near it.
@@ -430,7 +449,20 @@ pub struct AudioEngine {
     levels: Arc<Levels>,
     live_input: Option<LiveInput>,
     midi_output: Option<MidiOutput>,
+    /// The last problem the stream reported, for the UI to show, and
+    /// whether it has stopped working.
+    problems: Arc<StreamProblems>,
     info: EngineInfo,
+}
+
+/// What the stream's error callback tells the rest of the program.
+#[derive(Default)]
+struct StreamProblems {
+    /// The last error, taken by the window.
+    error: Mutex<Option<String>>,
+    /// Set when the stream reports an error, so a command sent to a dead
+    /// stream fails at once instead of waiting for room that never comes.
+    broken: AtomicBool,
 }
 
 impl AudioEngine {
@@ -478,13 +510,26 @@ impl AudioEngine {
 
         // The sound card decides the sample type. We pick the matching
         // version of the generic `build_stream` function for each one.
+        let problems = Arc::new(StreamProblems::default());
         let stream = match sample_format {
-            SampleFormat::F32 => build_stream::<f32>(&device, config, audio_thread),
-            SampleFormat::F64 => build_stream::<f64>(&device, config, audio_thread),
-            SampleFormat::I16 => build_stream::<i16>(&device, config, audio_thread),
-            SampleFormat::I32 => build_stream::<i32>(&device, config, audio_thread),
-            SampleFormat::U16 => build_stream::<u16>(&device, config, audio_thread),
-            SampleFormat::U8 => build_stream::<u8>(&device, config, audio_thread),
+            SampleFormat::F32 => {
+                build_stream::<f32>(&device, config, audio_thread, Arc::clone(&problems))
+            }
+            SampleFormat::F64 => {
+                build_stream::<f64>(&device, config, audio_thread, Arc::clone(&problems))
+            }
+            SampleFormat::I16 => {
+                build_stream::<i16>(&device, config, audio_thread, Arc::clone(&problems))
+            }
+            SampleFormat::I32 => {
+                build_stream::<i32>(&device, config, audio_thread, Arc::clone(&problems))
+            }
+            SampleFormat::U16 => {
+                build_stream::<u16>(&device, config, audio_thread, Arc::clone(&problems))
+            }
+            SampleFormat::U8 => {
+                build_stream::<u8>(&device, config, audio_thread, Arc::clone(&problems))
+            }
             other => return Err(EngineError::UnsupportedFormat(other)),
         }?;
         stream.play().map_err(EngineError::Play)?;
@@ -499,8 +544,28 @@ impl AudioEngine {
             levels,
             live_input: Some(live_input),
             midi_output: Some(MidiOutput(midi_consumer)),
+            problems,
             info,
         })
+    }
+
+    /// Whether the stream has reported an error and stopped working.
+    pub fn is_broken(&self) -> bool {
+        self.problems.broken.load(Ordering::Relaxed)
+    }
+
+    /// Takes the last problem the stream reported, if any. The window
+    /// shows it, so an unplugged interface is not silent in both senses.
+    pub fn take_error(&self) -> Option<String> {
+        // No error has ever been reported: do not lock on every frame.
+        if !self.problems.broken.load(Ordering::Relaxed) {
+            return None;
+        }
+        self.problems
+            .error
+            .lock()
+            .ok()
+            .and_then(|mut error| error.take())
     }
 
     /// Sends a command to the audio thread.
@@ -508,6 +573,28 @@ impl AudioEngine {
     /// Returns `false` if the queue was full and the command was dropped.
     pub fn send(&mut self, command: Command) -> bool {
         self.commands.push(command).is_ok()
+    }
+
+    /// Sends a command, waiting if the queue is full.
+    ///
+    /// The audio thread empties the queue at the start of every block, so
+    /// a full queue means the UI got ahead of it: waiting a moment is
+    /// better than losing the command. Returns `false` if there is still
+    /// no room after a short wait, as when the device has stopped.
+    pub fn send_wait(&mut self, mut command: Command) -> bool {
+        for _ in 0..SEND_WAIT_ROUNDS {
+            match self.commands.push(command) {
+                Ok(()) => return true,
+                Err(rtrb::PushError::Full(returned)) => command = returned,
+            }
+            // A stream that has reported an error will not empty the
+            // queue, so waiting for room would only freeze the window.
+            if self.problems.broken.load(Ordering::Relaxed) {
+                return false;
+            }
+            std::thread::yield_now();
+        }
+        false
     }
 
     /// How loud each channel and the master have been since the last
@@ -579,6 +666,7 @@ fn build_stream<T>(
     device: &cpal::Device,
     config: StreamConfig,
     mut audio_thread: AudioThread,
+    problems: Arc<StreamProblems>,
 ) -> Result<cpal::Stream, EngineError>
 where
     T: SizedSample + FromSample<f32>,
@@ -590,8 +678,16 @@ where
     };
 
     // Called by cpal if something goes wrong while the stream runs, for
-    // example when the device is unplugged. This one is allowed to print.
-    let error_callback = |err: cpal::Error| eprintln!("audio stream error: {err}");
+    // example when the device is unplugged. It does not run on the audio
+    // callback, so it may lock and print; it keeps the newest problem for
+    // the window to show, and prints it for a run without one.
+    let error_callback = move |err: cpal::Error| {
+        problems.broken.store(true, Ordering::Relaxed);
+        if let Ok(mut slot) = problems.error.lock() {
+            *slot = Some(err.to_string());
+        }
+        eprintln!("audio stream error: {err}");
+    };
 
     device
         .build_output_stream(config, data_callback, error_callback, None)
@@ -651,6 +747,9 @@ pub(crate) struct AudioThread {
     reverb: crate::reverb::Reverb,
     commands: rtrb::Consumer<Command>,
     trash: rtrb::Producer<Garbage>,
+    /// Values that found the trash queue full. Reserved up front, so
+    /// keeping them never allocates on the audio thread.
+    trash_backlog: VecDeque<Garbage>,
     playhead: Arc<AtomicUsize>,
     /// The sequencer's position, stored after every block.
     position: Arc<AtomicU64>,
@@ -659,6 +758,9 @@ pub(crate) struct AudioThread {
     live_input: Option<rtrb::Consumer<MidiMessage>>,
     /// Where MIDI Out channels send their messages, if anywhere.
     midi_out: Option<rtrb::Producer<MidiMessage>>,
+    /// Messages that found the MIDI Out queue full in an earlier block,
+    /// oldest first. Reserved up front, so keeping them never allocates.
+    midi_backlog: VecDeque<MidiMessage>,
     /// The channel that keys play.
     live_channel: Option<usize>,
     /// For each of the 128 notes whose key is down, the channel it went
@@ -743,10 +845,12 @@ impl AudioThread {
             reverb: crate::reverb::Reverb::new(sample_rate),
             commands,
             trash,
+            trash_backlog: VecDeque::with_capacity(TRASH_BACKLOG),
             playhead,
             position,
             live_input: None,
             midi_out: None,
+            midi_backlog: VecDeque::with_capacity(MIDI_BACKLOG),
             live_channel: Some(0),
             live_keys: [None; 128],
             song_clicks: Vec::new(),
@@ -771,9 +875,45 @@ impl AudioThread {
 
     /// Hands something to the UI thread to be freed there.
     fn throw_away(&mut self, garbage: Garbage) {
-        // If the trash queue is full, it is freed here after all. That
-        // should never happen, because the UI empties it every frame.
-        let _ = self.trash.push(garbage);
+        // The queue is emptied every frame, so a full one is a burst
+        // between two frames: keep the value until there is room.
+        let garbage = match self.trash.push(garbage) {
+            Ok(()) => return,
+            Err(rtrb::PushError::Full(garbage)) => garbage,
+        };
+        if self.trash_backlog.len() < TRASH_BACKLOG {
+            self.trash_backlog.push_back(garbage);
+        }
+        // A full backlog too means the UI has not collected for a long
+        // time; the value is freed here as a last resort.
+    }
+
+    /// Moves values that waited for room in the trash queue into it,
+    /// oldest first, for the UI to free.
+    fn flush_trash(&mut self) {
+        while let Some(garbage) = self.trash_backlog.pop_front() {
+            match self.trash.push(garbage) {
+                Ok(()) => {}
+                Err(rtrb::PushError::Full(garbage)) => {
+                    self.trash_backlog.push_front(garbage);
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Moves MIDI messages that waited for room into the output queue,
+    /// oldest first. Called before a block makes new messages.
+    fn flush_midi_backlog(&mut self) {
+        let Some(out) = &mut self.midi_out else {
+            return;
+        };
+        while let Some(&message) = self.midi_backlog.front() {
+            if out.push(message).is_err() {
+                break;
+            }
+            self.midi_backlog.pop_front();
+        }
     }
 
     /// The length of a pattern, in steps (0 if there is no such pattern).
@@ -1045,7 +1185,11 @@ impl AudioThread {
             self.release_live_keys();
             self.pending.clear();
             let mut removed = self.channels.remove(index);
-            silence(&mut removed.instrument, &mut self.midi_out);
+            silence(
+                &mut removed.instrument,
+                &mut self.midi_out,
+                &mut self.midi_backlog,
+            );
             if let Some(trace) = &mut self.trace {
                 trace.channel_removed(self.now, index);
             }
@@ -1058,7 +1202,7 @@ impl AudioThread {
         match self.channels.get_mut(channel) {
             Some(state) => {
                 let mut old = std::mem::replace(&mut state.instrument, instrument);
-                silence(&mut old, &mut self.midi_out);
+                silence(&mut old, &mut self.midi_out, &mut self.midi_backlog);
                 if let Some(trace) = &mut self.trace {
                     trace.cut(self.now, Some(channel), |_| false);
                 }
@@ -1093,7 +1237,11 @@ impl AudioThread {
         // `pop` takes the last channel out of the list; `while let`
         // keeps going until there are none left.
         while let Some(mut channel) = self.channels.pop() {
-            silence(&mut channel.instrument, &mut self.midi_out);
+            silence(
+                &mut channel.instrument,
+                &mut self.midi_out,
+                &mut self.midi_backlog,
+            );
             self.throw_away(Garbage::Channel(channel));
         }
         // `clear` empties the list but keeps its memory: nothing is freed.
@@ -1386,14 +1534,14 @@ impl AudioThread {
 
     /// Passes on the messages MIDI Out channels made during this block.
     fn send_midi(&mut self) {
+        // Three different fields, borrowed apart so the closure can use
+        // two of them while the channels are changed.
+        let midi_out = &mut self.midi_out;
+        let backlog = &mut self.midi_backlog;
         for channel in &mut self.channels {
-            // The closure changes `self.midi_out` while `self.channels` is
-            // borrowed: two different fields again.
-            channel.instrument.send_midi(|message| {
-                if let Some(out) = &mut self.midi_out {
-                    let _ = out.push(message);
-                }
-            });
+            channel
+                .instrument
+                .send_midi(|message| queue_midi(midi_out, backlog, message));
         }
     }
 
@@ -1489,6 +1637,8 @@ impl AudioThread {
     where
         T: SizedSample + FromSample<f32>,
     {
+        self.flush_trash();
+        self.flush_midi_backlog();
         while let Ok(command) = self.commands.pop() {
             self.apply(command);
         }
@@ -1692,13 +1842,35 @@ fn one_per_pitch(instrument: &Instrument) -> bool {
 ///
 /// A plain function, so the caller can pass a field of the audio thread
 /// while it holds an instrument taken out of another one.
-fn silence(instrument: &mut Instrument, midi_out: &mut Option<rtrb::Producer<MidiMessage>>) {
+fn silence(
+    instrument: &mut Instrument,
+    midi_out: &mut Option<rtrb::Producer<MidiMessage>>,
+    backlog: &mut VecDeque<MidiMessage>,
+) {
     instrument.release_all();
-    instrument.send_midi(|message| {
-        if let Some(out) = midi_out {
-            let _ = out.push(message);
-        }
-    });
+    instrument.send_midi(|message| queue_midi(midi_out, backlog, message));
+}
+
+/// Adds `message` to the MIDI Out queue, or keeps it in `backlog` for the
+/// next block if the queue is full. A message lost here can be a note off
+/// that never stops a note on the external synth.
+fn queue_midi(
+    midi_out: &mut Option<rtrb::Producer<MidiMessage>>,
+    backlog: &mut VecDeque<MidiMessage>,
+    mut message: MidiMessage,
+) {
+    let Some(out) = midi_out else {
+        return;
+    };
+    match out.push(message) {
+        Ok(()) => return,
+        Err(rtrb::PushError::Full(returned)) => message = returned,
+    }
+    if backlog.len() < MIDI_BACKLOG {
+        backlog.push_back(message);
+    }
+    // A full backlog too means the port has been stuck for hundreds of
+    // messages, and there is nowhere left to keep this one.
 }
 
 /// How long a step is, the sample rate the instruments run at, how
@@ -2919,6 +3091,47 @@ mod tests {
             pitch: Note::C4,
         };
         assert_eq!(received(&mut out), [off]);
+    }
+
+    #[test]
+    fn a_midi_message_waits_for_room_instead_of_being_dropped() {
+        let (producer, mut consumer) = rtrb::RingBuffer::new(1);
+        let mut out = Some(producer);
+        let mut backlog = VecDeque::new();
+        let on = MidiMessage::NoteOn {
+            channel: 3,
+            pitch: Note::A4,
+            velocity: DEFAULT_VELOCITY,
+        };
+        let off = note_off(Note::A4);
+        queue_midi(&mut out, &mut backlog, on);
+        queue_midi(&mut out, &mut backlog, off);
+        assert_eq!(backlog, VecDeque::from([off]), "the note off waits");
+        assert_eq!(consumer.pop().unwrap(), on);
+
+        // The next block has room, so the waiting message goes out.
+        let mut h = harness();
+        h.audio.midi_out = out;
+        h.audio.midi_backlog = backlog;
+        h.audio.flush_midi_backlog();
+        assert!(h.audio.midi_backlog.is_empty());
+        assert_eq!(consumer.pop().unwrap(), off);
+    }
+
+    #[test]
+    fn trash_waits_for_the_ui_instead_of_being_freed_on_the_audio_thread() {
+        let mut h = harness();
+        let (producer, mut consumer) = rtrb::RingBuffer::new(1);
+        h.audio.trash = producer;
+        h.audio.throw_away(Garbage::Song(Vec::new()));
+        h.audio.throw_away(Garbage::Song(Vec::new()));
+        assert_eq!(h.audio.trash_backlog.len(), 1, "the second value waits");
+
+        // The UI collects, and the next block hands over what waited.
+        assert!(consumer.pop().is_ok());
+        h.audio.flush_trash();
+        assert!(h.audio.trash_backlog.is_empty());
+        assert!(consumer.pop().is_ok(), "the waiting value reached the UI");
     }
 
     #[test]

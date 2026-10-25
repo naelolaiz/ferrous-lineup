@@ -10,10 +10,28 @@
 
 use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
 use lineup_audio::Command;
+use lineup_core::history::DEFAULT_LIMIT;
 use lineup_core::{Change, Project, diff};
 
 use super::LineupApp;
 use crate::chord_sheet::BarEdit;
+
+/// How many bytes of undo snapshots to keep at most. A snapshot is about
+/// the size of the project, so a large song keeps fewer steps.
+const UNDO_BYTES: usize = 256 * 1024 * 1024;
+
+/// The fewest undo steps even a very large song keeps.
+const MIN_UNDO_STEPS: usize = 10;
+
+/// How many undo steps fit in [`UNDO_BYTES`] for `project`, between
+/// [`MIN_UNDO_STEPS`] and [`DEFAULT_LIMIT`].
+pub(super) fn undo_limit_for(project: &Project) -> usize {
+    limit_for_bytes(project.heap_bytes())
+}
+
+fn limit_for_bytes(bytes: usize) -> usize {
+    (UNDO_BYTES / bytes.max(1)).clamp(MIN_UNDO_STEPS, DEFAULT_LIMIT)
+}
 
 pub(super) const UNDO: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Z);
 pub(super) const REDO: KeyboardShortcut =
@@ -40,6 +58,8 @@ impl LineupApp {
         self.project.follow_chord_sheet();
         if self.project != before {
             self.sync_audio(&before);
+            self.file.project_edited();
+            self.recovery.project_changed();
             // `before` is moved into the history here, after its last use.
             self.history.record(label, before);
         }
@@ -50,6 +70,8 @@ impl LineupApp {
         let before = self.project.clone();
         if self.history.undo(&mut self.project).is_some() {
             self.sync_audio(&before);
+            self.file.project_edited();
+            self.recovery.project_changed();
             self.restore_song_library();
             self.keep_place_in_song(&before);
         }
@@ -59,6 +81,8 @@ impl LineupApp {
         let before = self.project.clone();
         if self.history.redo(&mut self.project).is_some() {
             self.sync_audio(&before);
+            self.file.project_edited();
+            self.recovery.project_changed();
             self.restore_song_library();
             self.keep_place_in_song(&before);
         }
@@ -267,5 +291,36 @@ impl LineupApp {
         } else if pressed(UNDO) {
             self.undo();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn undo_steps_follow_the_memory_budget() {
+        assert_eq!(limit_for_bytes(1), DEFAULT_LIMIT);
+        assert_eq!(limit_for_bytes(UNDO_BYTES / 20), 20);
+        assert_eq!(limit_for_bytes(UNDO_BYTES), MIN_UNDO_STEPS);
+        assert_eq!(limit_for_bytes(UNDO_BYTES * 4), MIN_UNDO_STEPS);
+    }
+
+    #[test]
+    fn notes_count_toward_the_size_estimate() {
+        let empty = Project::template();
+        let mut busy = Project::template();
+        let pattern = busy.pattern_mut(0).unwrap();
+        pattern.set_length(256);
+        for step in 0..256 {
+            for pitch in 0..12u8 {
+                pattern.add_note(
+                    0,
+                    lineup_core::NoteEvent::new(lineup_core::Note::new(60 + pitch), step, 1),
+                );
+            }
+        }
+        assert!(busy.heap_bytes() > empty.heap_bytes());
+        assert!(undo_limit_for(&busy) <= undo_limit_for(&empty));
     }
 }

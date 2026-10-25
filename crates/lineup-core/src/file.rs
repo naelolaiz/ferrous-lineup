@@ -739,6 +739,9 @@ pub fn to_text(project: &Project) -> Result<String, FileError> {
 /// names this version does not know: then the format number alone says
 /// why.
 pub fn from_text(text: &str) -> Result<Project, FileError> {
+    // A text editor may start the file with a byte-order mark, which is
+    // not part of the RON text or of the format number.
+    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     let file: ProjectFile = match ron::from_str(text) {
         Ok(file) => file,
         Err(err) => {
@@ -779,8 +782,14 @@ fn format_number(text: &str) -> Option<u32> {
 pub fn save(project: &Project, path: &Path) -> Result<(), FileError> {
     let text = to_text(project)?;
     let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
-    fs::write(&temporary, text)?;
-    fs::rename(&temporary, path)?;
+    if let Err(err) = fs::write(&temporary, text) {
+        let _ = fs::remove_file(&temporary);
+        return Err(err.into());
+    }
+    if let Err(err) = fs::rename(&temporary, path) {
+        let _ = fs::remove_file(&temporary);
+        return Err(err.into());
+    }
     Ok(())
 }
 
@@ -1318,6 +1327,17 @@ mod tests {
         assert_ne!(broken, text, "{text}");
         let error = from_text(&broken).unwrap_err();
         assert!(error.to_string().contains("\"Chorus\""), "{error}");
+    }
+
+    #[test]
+    fn a_byte_order_mark_is_not_part_of_the_text() {
+        let project = plain_demo();
+        let text = to_text(&project).unwrap();
+        assert_eq!(from_text(&format!("\u{feff}{text}")).unwrap(), project);
+        assert!(matches!(
+            from_text("\u{feff}(format: 99)"),
+            Err(FileError::NewerFormat(99))
+        ));
     }
 
     #[test]

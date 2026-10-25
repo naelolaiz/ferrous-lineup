@@ -18,6 +18,11 @@ use symphonia::core::formats::{FormatOptions, TrackType};
 use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
 use symphonia::core::meta::MetadataOptions;
 
+/// The longest recording the importer listens to. Analysis holds the
+/// recording, and a copy of it, in memory while it works, so a longer
+/// one would need more than a small machine can spare.
+pub const MAX_SECONDS: f64 = 10.0 * 60.0;
+
 /// A recording, mixed down to one channel, between -1.0 and 1.0.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Recording {
@@ -41,6 +46,8 @@ pub enum DecodeError {
     Format(String),
     /// The file has no audio in it.
     Empty,
+    /// The recording is longer than [`MAX_SECONDS`].
+    TooLong,
 }
 
 impl fmt::Display for DecodeError {
@@ -49,6 +56,11 @@ impl fmt::Display for DecodeError {
             DecodeError::Io(err) => write!(f, "could not open the file: {err}"),
             DecodeError::Format(why) => write!(f, "could not decode the file: {why}"),
             DecodeError::Empty => write!(f, "the file contains no audio"),
+            DecodeError::TooLong => write!(
+                f,
+                "the recording is longer than {} minutes",
+                MAX_SECONDS / 60.0
+            ),
         }
     }
 }
@@ -117,6 +129,9 @@ pub fn decode_file(path: &Path) -> Result<Recording, DecodeError> {
                 .chunks(channels)
                 .map(|frame| frame.iter().sum::<f32>() / channels as f32),
         );
+        if too_long(samples.len(), sample_rate) {
+            return Err(DecodeError::TooLong);
+        }
     }
     if samples.is_empty() || sample_rate == 0 {
         return Err(DecodeError::Empty);
@@ -125,4 +140,26 @@ pub fn decode_file(path: &Path) -> Result<Recording, DecodeError> {
         samples,
         sample_rate,
     })
+}
+
+/// Whether `samples` at `sample_rate` last longer than [`MAX_SECONDS`].
+fn too_long(samples: usize, sample_rate: u32) -> bool {
+    sample_rate > 0 && samples as f64 / f64::from(sample_rate) > MAX_SECONDS
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_recording_longer_than_the_limit_is_refused() {
+        let rate = 44_100;
+        let limit = (f64::from(rate) * MAX_SECONDS) as usize;
+        assert!(!too_long(limit, rate));
+        assert!(too_long(limit + 1, rate));
+        assert_eq!(
+            DecodeError::TooLong.to_string(),
+            "the recording is longer than 10 minutes"
+        );
+    }
 }
