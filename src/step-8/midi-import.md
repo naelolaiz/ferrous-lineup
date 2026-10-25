@@ -479,13 +479,12 @@ and gets E Dorian, C♯ harmonic minor or a twelve-tone row exactly.
 ## Testing it with every demo
 
 The best test of an import is an export. `every_demo_comes_back_note_for_note`
-exports each of the 177 demo songs as a MIDI file, imports it, exports
-the result again, and compares the two files event by event: every note
-on with its key and velocity, every note off, every tempo change, time
-signature, key signature and program change, each at the same tick. It
-also checks the imported project has exactly the demo's key and key
-markers. All 177 come back
-identical, including the tempo changes and the subtly shaped
+exports each song demo as a MIDI file, imports it, exports the result
+again, and compares the two files event by event: every note on with its
+key and velocity, every note off, every tempo change, time signature, key
+signature and program change, each at the same tick. It also checks the
+imported project has exactly the demo's key and key markers. All of them
+come back identical, including the tempo changes and the subtly shaped
 velocities.
 
 The other tests build small files by hand for the cases a demo never
