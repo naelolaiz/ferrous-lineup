@@ -2605,6 +2605,18 @@ fn initial_space_plays_the_song_until_an_editor_is_clicked() {
 }
 
 #[test]
+fn the_unsaved_mark_is_worked_out_again_after_an_edit_and_undo() {
+    let mut screen = Screen::new();
+    assert!(!screen.app.has_unsaved_changes());
+    screen
+        .app
+        .edit("change swing", |project| project.swing = 20);
+    assert!(screen.app.has_unsaved_changes());
+    screen.app.undo();
+    assert!(!screen.app.has_unsaved_changes(), "undoing back is saved");
+}
+
+#[test]
 fn save_confirmation_blocks_background_shortcuts_and_escape_keeps_the_project() {
     let mut screen = Screen::new();
     screen

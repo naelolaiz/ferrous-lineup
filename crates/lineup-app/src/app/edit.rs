@@ -40,6 +40,7 @@ impl LineupApp {
         self.project.follow_chord_sheet();
         if self.project != before {
             self.sync_audio(&before);
+            self.file.project_edited();
             // `before` is moved into the history here, after its last use.
             self.history.record(label, before);
         }
@@ -50,6 +51,7 @@ impl LineupApp {
         let before = self.project.clone();
         if self.history.undo(&mut self.project).is_some() {
             self.sync_audio(&before);
+            self.file.project_edited();
             self.restore_song_library();
             self.keep_place_in_song(&before);
         }
@@ -59,6 +61,7 @@ impl LineupApp {
         let before = self.project.clone();
         if self.history.redo(&mut self.project).is_some() {
             self.sync_audio(&before);
+            self.file.project_edited();
             self.restore_song_library();
             self.keep_place_in_song(&before);
         }

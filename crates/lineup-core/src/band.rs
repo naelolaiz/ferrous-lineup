@@ -1174,8 +1174,15 @@ impl Project {
         if self.band.is_none() && parts.rhythm {
             // The players the style has no lanes for play as the band
             // usually does in its time signature (a waltz for 3/4).
-            let base = BandStyle::named(crate::library::Rhythm::for_time(style.time, None).name)
-                .unwrap_or_else(|| BandStyle::named("Pop beat").unwrap());
+            let Some(base) =
+                BandStyle::named(crate::library::Rhythm::for_time(style.time, None).name)
+                    .or_else(|| BandStyle::named("Pop beat"))
+            else {
+                return Err(format!(
+                    "there is no band style to play a song in {}",
+                    style.time
+                ));
+            };
             let mut band = Band::new(base);
             band.end = self.song_length();
             band.since = self.channels.len();

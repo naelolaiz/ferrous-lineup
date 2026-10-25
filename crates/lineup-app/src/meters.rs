@@ -100,7 +100,18 @@ pub fn meter(ui: &mut Ui, level: f32, size: Vec2) -> egui::Response {
             painter.rect_filled(bar, 1.0, color);
         }
     }
-    response
+    // The bar is colour and length only; hovering says the level.
+    response.on_hover_text(level_text(level))
+}
+
+/// What a meter says on hover: its level in decibels, or that it is
+/// silent.
+fn level_text(level: f32) -> String {
+    if level > 0.0 {
+        format!("{:.0} dB", decibels(level))
+    } else {
+        "silent".to_string()
+    }
 }
 
 #[cfg(test)]
@@ -126,6 +137,13 @@ mod tests {
         // Once below the floor nothing is lit any more.
         meters.update(&levels, 2, 3.0);
         assert!(!meters.moving());
+    }
+
+    #[test]
+    fn a_meter_says_its_level() {
+        assert_eq!(level_text(0.0), "silent");
+        assert_eq!(level_text(0.5), "-6 dB");
+        assert_eq!(level_text(1.0), "0 dB");
     }
 
     #[test]
