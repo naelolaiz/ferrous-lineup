@@ -932,6 +932,36 @@ impl Project {
     ///
     /// This is the song as drawn. With repeated sections, the song as
     /// played is longer: see [`Project::arrangement`].
+    /// An estimate of the heap memory this project uses, in bytes: its
+    /// note lists, clips and names. Undo uses it to remember fewer copies
+    /// of a large song.
+    pub fn heap_bytes(&self) -> usize {
+        let mut bytes = std::mem::size_of::<Self>()
+            + self.channels.capacity() * std::mem::size_of::<Channel>()
+            + self.patterns.capacity() * std::mem::size_of::<Pattern>();
+        for channel in &self.channels {
+            bytes += channel.name.capacity();
+        }
+        for pattern in &self.patterns {
+            bytes += pattern.name.capacity();
+            for _ in pattern.all_notes() {
+                bytes += std::mem::size_of::<NoteEvent>();
+            }
+        }
+        bytes
+            + std::mem::size_of_val(self.playlist.clips())
+            + std::mem::size_of_val(self.playlist.tracks())
+            + std::mem::size_of_val(self.playlist.sections())
+            + std::mem::size_of_val(self.playlist.chord_markers())
+            + std::mem::size_of_val(self.playlist.tempo_markers())
+            + std::mem::size_of_val(self.playlist.time_markers())
+            + std::mem::size_of_val(self.playlist.key_markers())
+            + self
+                .band
+                .as_ref()
+                .map_or(0, |_| std::mem::size_of::<Band>())
+    }
+
     pub fn song_length(&self) -> usize {
         let clips = self
             .playlist

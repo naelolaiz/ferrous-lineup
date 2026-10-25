@@ -549,6 +549,11 @@ impl AudioEngine {
         })
     }
 
+    /// Whether the stream has reported an error and stopped working.
+    pub fn is_broken(&self) -> bool {
+        self.problems.broken.load(Ordering::Relaxed)
+    }
+
     /// Takes the last problem the stream reported, if any. The window
     /// shows it, so an unplugged interface is not silent in both senses.
     pub fn take_error(&self) -> Option<String> {
