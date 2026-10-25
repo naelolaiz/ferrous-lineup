@@ -50,6 +50,19 @@ Usage:
   ferrous-lineup --demos
       Lists the names of the demos.";
 
+/// The window icon: 256 x 256 RGBA pixels, made from
+/// `packaging/icon/ferrous-lineup.svg` by `packaging/icon/generate.py`.
+const WINDOW_ICON: &[u8] = include_bytes!("../assets/icon/icon-256.rgba");
+const WINDOW_ICON_SIZE: u32 = 256;
+
+fn window_icon() -> eframe::egui::IconData {
+    eframe::egui::IconData {
+        rgba: WINDOW_ICON.to_vec(),
+        width: WINDOW_ICON_SIZE,
+        height: WINDOW_ICON_SIZE,
+    }
+}
+
 fn main() -> eframe::Result {
     // The first command-line argument, if there is one, is a file to open,
     // or what to do instead of opening the window. `args_os` keeps file
@@ -73,11 +86,25 @@ fn main() -> eframe::Result {
     }
     let path = first.map(PathBuf::from);
 
+    let mut viewport = eframe::egui::ViewportBuilder::default()
+        .with_title(app::APP_NAME)
+        .with_inner_size([1280.0, 800.0])
+        .with_min_inner_size([800.0, 520.0])
+        .with_icon(window_icon());
+
+    // Inside a Flatpak sandbox the desktop entry is named after the app
+    // id, so the window must use the same id for the dock and the icon to
+    // find it. Native builds keep eframe's default (the app name), which
+    // is also the folder where the settings and the SoundFont live.
+    if let Some(app_id) = std::env::var("FLATPAK_ID")
+        .ok()
+        .filter(|app_id| !app_id.is_empty())
+    {
+        viewport = viewport.with_app_id(app_id);
+    }
+
     let options = eframe::NativeOptions {
-        viewport: eframe::egui::ViewportBuilder::default()
-            .with_title(app::APP_NAME)
-            .with_inner_size([1280.0, 800.0])
-            .with_min_inner_size([800.0, 520.0]),
+        viewport,
         ..Default::default()
     };
 

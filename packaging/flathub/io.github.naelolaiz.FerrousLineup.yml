@@ -1,0 +1,46 @@
+app-id: io.github.naelolaiz.FerrousLineup
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: ferrous-lineup
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  # Audio output.
+  - --socket=pulseaudio
+  # The window is drawn with OpenGL.
+  - --device=dri
+  # MIDI keyboards and synths, and ALSA's sequencer.
+  - --device=all
+  # The band's SoundFont is downloaded on first use.
+  - --share=network
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+
+modules:
+  - name: ferrous-lineup
+    buildsystem: simple
+    build-options:
+      env:
+        # cargo-sources.json unpacks the crates and a Cargo config here.
+        CARGO_HOME: /run/build/ferrous-lineup/cargo
+    build-commands:
+      - cargo build --release --offline --locked
+      - install -Dm755 target/release/ferrous-lineup -t /app/bin/
+      - install -Dm644 packaging/linux/io.github.naelolaiz.FerrousLineup.desktop -t /app/share/applications/
+      - install -Dm644 packaging/icon/ferrous-lineup.svg /app/share/icons/hicolor/scalable/apps/io.github.naelolaiz.FerrousLineup.svg
+      - install -Dm644 packaging/linux/application-x-ferrous-lineup.xml -t /app/share/mime/packages/
+      - install -Dm644 packaging/linux/io.github.naelolaiz.FerrousLineup.metainfo.xml -t /app/share/metainfo/
+      - install -Dm644 README.md LICENSE -t /app/share/doc/ferrous-lineup/
+    sources:
+      - type: git
+        url: https://github.com/naelolaiz/ferrous-lineup.git
+        tag: v0.2.0
+        # Pin the commit too when the tag is made:
+        # commit: <sha of v0.2.0>
+      - cargo-sources.json

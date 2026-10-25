@@ -1,6 +1,6 @@
 [package]
 name = "lineup-app"
-description = "Ferrous Lineup desktop application"
+description = "Play songs with a backing band and learn harmony"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -25,3 +25,32 @@ ron.workspace = true
 ureq.workspace = true
 pdf-writer.workspace = true
 ttf-parser.workspace = true
+
+[target."cfg(windows)".build-dependencies]
+winresource = "0.1.34"
+
+# Debian and Ubuntu packages: `cargo deb -p lineup-app`.
+# The desktop file, icon, MIME type and AppStream data are the same ones
+# the AppImage and the Flatpak install.
+[package.metadata.deb]
+name = "ferrous-lineup"
+maintainer = "naelolaiz <naelolaiz@users.noreply.github.com>"
+copyright = "2026, Ferrous Lineup contributors"
+license-file = ["../../LICENSE", "0"]
+extended-description = """\
+Ferrous Lineup plays songs with a backing band and teaches harmony along \
+the way. Type a song's chords, pick a style, and the band plays it in any \
+key and tempo; a playlist, a step sequencer, a piano roll and a mixer let \
+you change every part by hand. It also names the chords you hear and works \
+with pitch-class sets, twelve-tone rows and Kröpfl's micromodes."""
+depends = "$auto, desktop-file-utils, hicolor-icon-theme, libasound2, libstdc++6, libwayland-client0, libxkbcommon0, libxkbcommon-x11-0, shared-mime-info, xdg-desktop-portal"
+section = "sound"
+priority = "optional"
+assets = [
+    ["target/release/ferrous-lineup", "usr/bin/", "755"],
+    ["../../packaging/linux/io.github.naelolaiz.FerrousLineup.desktop", "usr/share/applications/", "644"],
+    ["../../packaging/icon/ferrous-lineup.svg", "usr/share/icons/hicolor/scalable/apps/io.github.naelolaiz.FerrousLineup.svg", "644"],
+    ["../../packaging/linux/application-x-ferrous-lineup.xml", "usr/share/mime/packages/", "644"],
+    ["../../packaging/linux/io.github.naelolaiz.FerrousLineup.metainfo.xml", "usr/share/metainfo/", "644"],
+    ["../../README.md", "usr/share/doc/ferrous-lineup/README.md", "644"],
+]

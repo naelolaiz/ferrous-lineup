@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <!-- Ferrous Lineup projects. `.loom` is the name the files had before
+       the app was renamed in October 2026; they still open. -->
+  <mime-type type="application/x-ferrous-lineup">
+    <comment>Ferrous Lineup project</comment>
+    <glob pattern="*.lineup"/>
+    <glob pattern="*.loom"/>
+    <icon name="io.github.naelolaiz.FerrousLineup"/>
+  </mime-type>
+</mime-info>

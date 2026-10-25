@@ -5,7 +5,8 @@ name: Release
 #
 # - Every pull request, every push to main and every manual run (Actions
 #   > Release > Run workflow) keeps the packages as artifacts of the run:
-#   one per system, plus a Linux AppImage.
+#   one per system, plus a Linux AppImage and .deb, a Windows installer,
+#   and a macOS .dmg.
 # - Pushing a tag that starts with `v` (v0.2.0) also publishes them on a
 #   GitHub Release for that tag.
 on:
@@ -85,14 +86,14 @@ jobs:
           RUSTFLAGS: ${{ matrix.rustflags }}
         run: cargo build --release --locked --target ${{ matrix.target }}
 
-      # ferrous-lineup-v0.2.0-linux-x86_64.tar.gz for a tag, or
-      # ferrous-lineup-1a2b3c4-linux-x86_64.tar.gz (the commit) otherwise.
-      # Windows gets a .zip; the others a .tar.gz, which keeps the
-      # program's "executable" permission.
+      # Linux and Windows: a folder with the program, README and licence,
+      # wrapped in a .tar.gz (Linux) or a .zip (Windows). macOS gets a
+      # real .app inside a .dmg in the step below.
       - name: Package
+        if: runner.os != 'macOS'
         shell: bash
         env:
-          # Stops macOS's tar from adding hidden "._" files.
+          # Keeps archive tools from adding their own hidden files.
           COPYFILE_DISABLE: 1
           # For a pull request GitHub builds a merge commit of its own;
           # the label names the pull request's latest commit instead.
@@ -120,10 +121,54 @@ jobs:
             echo "PACKAGE=dist/$name.tar.gz" >> "$GITHUB_ENV"
           fi
 
+      # macOS: a real .app (icon, Info.plist, version) inside a .dmg with
+      # an Applications link, so people drag it into place instead of
+      # unpacking a bare Unix program.
+      - name: Package for macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          COPYFILE_DISABLE: 1
+          COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            label="$GITHUB_REF_NAME"
+          else
+            label="${COMMIT::7}"
+          fi
+          version=$(sed -n '/^\[workspace\.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          name="ferrous-lineup-$label-${{ matrix.platform }}"
+          app="dist/Ferrous Lineup.app"
+
+          mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+          cp "target/${{ matrix.target }}/release/ferrous-lineup" "$app/Contents/MacOS/"
+          cp packaging/macos/Info.plist "$app/Contents/"
+          cp packaging/macos/AppIcon.icns "$app/Contents/Resources/"
+          cp README.md LICENSE "$app/Contents/Resources/"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" "$app/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $version" "$app/Contents/Info.plist"
+
+          # An ad-hoc signature needs no Apple account, and is enough for
+          # Apple Silicon, which refuses a completely unsigned arm64
+          # program. Notarizing would need a paid Apple Developer ID;
+          # until then Gatekeeper asks the first time.
+          codesign --force --sign - "$app"
+
+          mkdir -p dist/dmg
+          cp -R "$app" dist/dmg/
+          ln -s /Applications dist/dmg/Applications
+          hdiutil create -volname "Ferrous Lineup" -srcfolder dist/dmg -ov -format UDZO "dist/$name.dmg"
+
+          echo "LABEL=$label" >> "$GITHUB_ENV"
+          echo "NAME=$name" >> "$GITHUB_ENV"
+          echo "PACKAGE=dist/$name.dmg" >> "$GITHUB_ENV"
+
       # `archive: false` uploads the package as it is, so the artifact
-      # downloads as the .zip or .tar.gz itself, not wrapped in another zip.
+      # downloads as the .zip, .tar.gz or .dmg itself, not wrapped in
+      # another zip.
       - uses: actions/upload-artifact@v7
         with:
+          name: ${{ env.NAME }}
           path: ${{ env.PACKAGE }}
           archive: false
           if-no-files-found: error
@@ -152,12 +197,17 @@ jobs:
 
           # The AppDir is the folder the AppImage is made from, laid out
           # like a system's /usr. AppRun is what the AppImage starts.
+          # The desktop file, icon, MIME type and AppStream data are named
+          # after the app id, as Flathub and the software centers expect.
+          app_id=io.github.naelolaiz.FerrousLineup
           install -Dm755 target/${{ matrix.target }}/release/ferrous-lineup AppDir/usr/bin/ferrous-lineup
-          install -Dm644 packaging/linux/ferrous-lineup.desktop AppDir/usr/share/applications/ferrous-lineup.desktop
-          install -Dm644 packaging/linux/ferrous-lineup.svg AppDir/usr/share/icons/hicolor/scalable/apps/ferrous-lineup.svg
+          install -Dm644 "packaging/linux/$app_id.desktop" "AppDir/usr/share/applications/$app_id.desktop"
+          install -Dm644 packaging/icon/ferrous-lineup.svg "AppDir/usr/share/icons/hicolor/scalable/apps/$app_id.svg"
+          install -Dm644 packaging/linux/application-x-ferrous-lineup.xml AppDir/usr/share/mime/packages/application-x-ferrous-lineup.xml
+          install -Dm644 "packaging/linux/$app_id.metainfo.xml" "AppDir/usr/share/metainfo/$app_id.metainfo.xml"
           ln -s usr/bin/ferrous-lineup AppDir/AppRun
-          ln -s usr/share/applications/ferrous-lineup.desktop AppDir/ferrous-lineup.desktop
-          ln -s usr/share/icons/hicolor/scalable/apps/ferrous-lineup.svg AppDir/ferrous-lineup.svg
+          ln -s "usr/share/applications/$app_id.desktop" "AppDir/$app_id.desktop"
+          ln -s "usr/share/icons/hicolor/scalable/apps/$app_id.svg" "AppDir/$app_id.svg"
 
           # The window needs the keyboard library xkbcommon, which some
           # systems lack (libxkbcommon-x11 above all), so the AppImage
@@ -182,7 +232,65 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: matrix.appimage
         with:
+          name: ${{ env.NAME }}-appimage
           path: ${{ env.APPIMAGE }}
+          archive: false
+          if-no-files-found: error
+
+      # The desktop entry, the MIME type and the AppStream file are the
+      # part the software centers and file managers read. A typo here is
+      # silent on a desktop, so check the syntax in CI.
+      - name: Check the Linux metadata
+        if: matrix.platform == 'linux-x86_64'
+        run: |
+          sudo apt-get install -y desktop-file-utils libxml2-utils
+          desktop-file-validate packaging/linux/io.github.naelolaiz.FerrousLineup.desktop
+          xmllint --noout packaging/linux/application-x-ferrous-lineup.xml
+          xmllint --noout packaging/linux/io.github.naelolaiz.FerrousLineup.metainfo.xml
+
+      # Inno Setup is part of the windows-latest image. The installer adds
+      # a Start-menu entry, an uninstaller and the .lineup association;
+      # the .zip above stays for people who want no installation.
+      - name: Build the Windows installer
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          version=$(sed -n '/^\[workspace\.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          if [ ! -f "$iscc" ]; then
+            iscc="/c/Program Files/Inno Setup 6/ISCC.exe"
+          fi
+          if [ ! -f "$iscc" ]; then
+            choco install innosetup --no-progress -y
+            iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          fi
+          "$iscc" /DAppVersion="$version" /DBuildLabel="$LABEL" packaging/windows/ferrous-lineup.iss
+          echo "SETUP=dist/ferrous-lineup-$LABEL-windows-x86_64-setup.exe" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Windows'
+        with:
+          name: ferrous-lineup-${{ env.LABEL }}-windows-x86_64-setup
+          path: ${{ env.SETUP }}
+          archive: false
+          if-no-files-found: error
+
+      # A .deb for Debian, Ubuntu and their derivatives, built from the
+      # same release binary and the same desktop/icon/MIME/AppStream files.
+      - name: Build the .deb
+        if: matrix.platform == 'linux-x86_64'
+        run: |
+          sudo apt-get install -y dpkg-dev
+          if ! command -v cargo-deb >/dev/null; then
+            cargo install cargo-deb --version 3.8.0 --locked
+          fi
+          cargo deb -p lineup-app --no-build --target ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v7
+        if: matrix.platform == 'linux-x86_64'
+        with:
+          name: ferrous-lineup-${{ env.LABEL }}-linux-x86_64-deb
+          path: target/${{ matrix.target }}/debian/*.deb
           archive: false
           if-no-files-found: error
 
@@ -213,13 +321,15 @@ jobs:
 
       - name: Collect the packages and their checksums
         run: |
+          shopt -s nullglob
           mkdir release
           for folder in downloads/*/; do
-            name=$(basename "$folder")
-            mv "$folder"* "release/$name"
+            for file in "$folder"*; do
+              mv "$file" "release/$(basename "$file")"
+            done
           done
           cd release
-          sha256sum ferrous-lineup-* > SHA256SUMS.txt
+          sha256sum -- * > SHA256SUMS.txt
           ls -l
 
       # A tag with a dash (v0.2.0-beta.1) makes a pre-release. Running the
