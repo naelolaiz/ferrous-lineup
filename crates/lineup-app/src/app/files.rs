@@ -96,9 +96,18 @@ impl FileState {
         self.path.as_deref()
     }
 
-    /// The project was edited or undone: work out whether it differs
-    /// from `saved` again the next time that is asked.
+    /// The project was edited: work out whether it differs from `saved`
+    /// again, unless it already did. A project that differs stays so
+    /// through more edits, so a drag does not compare it every frame.
     pub(super) fn project_edited(&mut self) {
+        if !self.dirty {
+            self.check_dirty = true;
+        }
+    }
+
+    /// The project was undone or redone, which can make it match `saved`
+    /// again: work out whether it does whenever that is next asked.
+    pub(super) fn project_reverted(&mut self) {
         self.check_dirty = true;
     }
 

@@ -8,6 +8,8 @@
 //! way the audio thread learns about changes, and undo cannot get it wrong
 //! in a way that normal editing would not show at once.
 
+use std::time::{Duration, Instant};
+
 use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
 use lineup_audio::Command;
 use lineup_core::history::DEFAULT_LIMIT;
@@ -22,6 +24,11 @@ const UNDO_BYTES: usize = 256 * 1024 * 1024;
 
 /// The fewest undo steps even a very large song keeps.
 const MIN_UNDO_STEPS: usize = 10;
+
+/// How often, at most, a drag's changes reach the audio thread. The
+/// window still draws every frame; only the sound waits this long, and
+/// the whole project is copied only when this comes round.
+const SYNC_INTERVAL: Duration = Duration::from_millis(50);
 
 /// How many undo steps fit in [`UNDO_BYTES`] for `project`, between
 /// [`MIN_UNDO_STEPS`] and [`DEFAULT_LIMIT`].
@@ -52,12 +59,41 @@ impl LineupApp {
         label: &'static str,
         change: impl FnOnce(&mut Project) -> R,
     ) -> R {
+        if self.history.is_open() {
+            // A drag or a typing session is under way, and its first change
+            // made the undo step. Keep changing the project without copying
+            // the whole of it every frame; the audio catches up steadily
+            // from the last state it was given.
+            let (patterns, channels) =
+                (self.project.patterns().len(), self.project.channels().len());
+            let result = change(&mut self.project);
+            self.project.follow_chord_sheet();
+            self.file.project_edited();
+            self.recovery.project_changed();
+            self.step_unsynced = true;
+            if self.project.patterns().len() != patterns
+                || self.project.channels().len() != channels
+            {
+                // A pattern or channel came or went: the views and the
+                // audio thread's rows have to move now, not in 50 ms.
+                self.sync_step();
+            } else {
+                self.sync_step_if_due();
+            }
+            return result;
+        }
+        // A step left open by a direct history call: send it before the
+        // audio's state is assumed to be this project.
+        self.finish_step_sync();
         let before = self.project.clone();
         let result = change(&mut self.project);
         // The band plays what the chord sheet says now, in the same step.
         self.project.follow_chord_sheet();
         if self.project != before {
             self.sync_audio(&before);
+            self.synced = self.project.clone();
+            self.step_unsynced = false;
+            self.last_sync = Instant::now();
             self.file.project_edited();
             self.recovery.project_changed();
             // `before` is moved into the history here, after its last use.
@@ -66,11 +102,41 @@ impl LineupApp {
         result
     }
 
+    /// Sends a drag's changes to the audio thread, at most every
+    /// [`SYNC_INTERVAL`].
+    fn sync_step_if_due(&mut self) {
+        if self.last_sync.elapsed() >= SYNC_INTERVAL {
+            self.sync_step();
+        }
+    }
+
+    /// Sends everything the audio thread is missing, from the state it
+    /// was last given, and keeps that state for the next time.
+    fn sync_step(&mut self) {
+        let before = std::mem::replace(&mut self.synced, Project::empty());
+        self.sync_audio(&before);
+        self.synced = self.project.clone();
+        self.step_unsynced = false;
+        self.last_sync = Instant::now();
+    }
+
+    /// Sends the last changes of a step before its state must match the
+    /// project's, as when it closes or undo replaces the project.
+    fn finish_step_sync(&mut self) {
+        if self.step_unsynced {
+            self.sync_step();
+        }
+    }
+
     pub(super) fn undo(&mut self) {
+        self.finish_step_sync();
         let before = self.project.clone();
         if self.history.undo(&mut self.project).is_some() {
             self.sync_audio(&before);
-            self.file.project_edited();
+            self.synced = self.project.clone();
+            self.step_unsynced = false;
+            self.last_sync = Instant::now();
+            self.file.project_reverted();
             self.recovery.project_changed();
             self.restore_song_library();
             self.keep_place_in_song(&before);
@@ -78,10 +144,14 @@ impl LineupApp {
     }
 
     pub(super) fn redo(&mut self) {
+        self.finish_step_sync();
         let before = self.project.clone();
         if self.history.redo(&mut self.project).is_some() {
             self.sync_audio(&before);
-            self.file.project_edited();
+            self.synced = self.project.clone();
+            self.step_unsynced = false;
+            self.last_sync = Instant::now();
+            self.file.project_reverted();
             self.recovery.project_changed();
             self.restore_song_library();
             self.keep_place_in_song(&before);
@@ -240,6 +310,7 @@ impl LineupApp {
     /// always begins a new undo step.
     pub(super) fn start_frame_for_undo(&mut self, ctx: &egui::Context) {
         if ctx.input(|input| input.pointer.any_pressed()) {
+            self.finish_step_sync();
             self.history.close();
         }
     }
@@ -251,6 +322,7 @@ impl LineupApp {
     pub(super) fn end_frame_for_undo(&mut self, ctx: &egui::Context) {
         let holding = ctx.input(|input| input.pointer.any_down());
         if !holding && !ctx.text_edit_focused() && !self.is_recording() {
+            self.finish_step_sync();
             self.history.close();
         }
     }
