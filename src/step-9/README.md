@@ -20,9 +20,11 @@ then plays. Step 9 brings that to the front, one change at a time:
    "F#m7b5", "G/B" ([Chord names: reading a lead sheet](chord-names.md)),
    and then a new name for the app ([A new name](new-name.md)),
 2. **a chord sheet**: a window of bars where you type the chords, stored
-   in the project. A bar can also hold a pitch-class set, a micromode or
-   a row form, the other ways Ferrous Lineup names harmony
-   ([The chord sheet: writing a song bar by bar](chord-sheet.md)),
+   in the project. A bar can also hold a pitch-class set, a micromode, a
+   row form, or two chords at once, a polychord (`Eb7|Fb`), the other
+   ways Ferrous Lineup names harmony
+   ([The chord sheet: writing a song bar by bar](chord-sheet.md),
+   [hearing chords](chord-hearing.md)),
 3. **the band plays the chord sheet**: styles split into "band styles"
    (how to play) and "progressions" (what to play)
    ([The band plays the chord sheet](band.md)),
@@ -59,41 +61,35 @@ window beside them.
 ## After the plan
 
 With those thirteen in place, playing songs with the band showed what
-else was needed:
+else was needed. The chapters after this one are best read as a map of
+that work, not as a second list to work through:
 
-- downloads for every system ([Release builds](releases.md)), and a
-  second and a third round of fixes ([A second bug hunt](bug-hunt.md),
-  [a third](bug-hunt-3.md));
-- many more songs: [swing and big band](big-band-songs.md),
+- **More music**: [swing and big band](big-band-songs.md),
   [Latin American](latin-american-songs.md), [odd meters](odd-meters.md),
-  [a TV theme](big-bang-theory-theme.md), and
+  [a TV theme](big-bang-theory-theme.md) and
   [the concert hall](concert-hall.md), with a
   [search](demo-search.md) to find them;
-- the band's sound and what it plays, to see and check:
-  [the mixer in score order](mixer-score-order.md),
-  [export video](video-export.md), [a playback trace](playback-trace.md)
-  and [step lights in the channel rack](rack-lights.md);
-- more say over the band: [locking a track](locks.md),
-  [a style for each section](section-styles.md) and
+- **The band's own tools**: [the style editor](style-editor.md), where a
+  style is made and saved; [locking a track](locks.md); [a style for each
+  section](section-styles.md); and
   [an orchestra for music that changes meter](orchestra.md);
-- harmony heard the way an ear hears it, an arpeggio as its chord and
-  two chords at once as a polychord:
-  [hearing chords](chord-hearing.md);
-- the same harmony named four ways on the chord sheet, as chords, sets
-  or micromodes, and the song's own notes cut into sets, vertically or
-  in a line: [one harmony, four names](harmony-notations.md);
-- less in the way of the music: songs that open on their chords, one
-  row of buttons and a list of every key ([quicker to work in](workflow.md)),
-  [numerals in minor keys](minor-numerals.md) written as your book
-  writes them, a [mixer](mixer.md) with pan, a reverb send and meters,
-  [any channel sent over MIDI](midi-out-menus.md) from its instrument
-  menu, and [Library tick boxes](library-filters.md) that keep the
-  presets like the song;
-- a chord sheet that can [fill the main window](chord-sheet-layout.md)
-  with as many bars to a line as show every name in full, and bars
-  [inserted and deleted](insert-delete-bars.md) with the whole song
-  moving along;
-- and this book, [online and as a PDF](book-online.md).
+- **Harmony and the sheet**: [hearing chords](chord-hearing.md),
+  [one harmony, four names](harmony-notations.md),
+  [numerals in minor keys](minor-numerals.md), a
+  [sheet that fills the window](chord-sheet-layout.md) and
+  [bars inserted and deleted](insert-delete-bars.md);
+- **The sound and the screen**: [the mixer in score order](mixer-score-order.md),
+  [a mixer with pan, reverb and meters](mixer.md),
+  [any channel sent over MIDI](midi-out-menus.md),
+  [export video](video-export.md), [a playback trace](playback-trace.md),
+  [step lights in the channel rack](rack-lights.md),
+  [Library tick boxes](library-filters.md) and
+  [quicker to work in](workflow.md);
+- **When something goes wrong**: [recovery, recent projects and
+  restarting audio](recovery.md), [a second bug hunt](bug-hunt.md) and
+  [a third](bug-hunt-3.md);
+- **Downloads and the book**: [release builds](releases.md) for every
+  system, and [this book, online and as a PDF](book-online.md).
 
 ## Trying it
 
@@ -106,10 +102,9 @@ git pull
 cargo run --release
 ```
 
-## A new name
+## The end of the plan
 
-With the band at the front, the app is now called **Ferrous Lineup**:
-a lineup is the players of a band, and "ferrous" (made of iron, the
-metal that rusts) keeps the nod to Rust. The rename came as a change of
-its own, right after chord names; [A new name](new-name.md) shows what
-it touched and what kept the old name.
+The thirteen changes above are the plan this step set out to make, and
+the map above is what came after them. [The conclusion](conclusion.md)
+looks back at the app they made, what this book leaves out, and where to
+go next.

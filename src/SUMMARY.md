@@ -4,6 +4,9 @@
 
 - [Getting started](getting-started.md)
 - [A tour of the app](tour.md)
+
+# Part I: Foundations
+
 - [Step 1: The foundation](step-1/README.md)
   - [Cargo, workspaces and crates](step-1/workspace.md)
   - [lineup-core: notes and tempo](step-1/lineup-core.md)
@@ -25,6 +28,9 @@
   - [Playing notes: voices and envelopes](step-3/voices.md)
   - [The piano roll window](step-3/piano-roll-ui.md)
   - [Exercises](step-3/exercises.md)
+
+# Part II: The studio
+
 - [Step 4: The playlist, saving, and three operating systems](step-4/README.md)
   - [Many patterns, and a playlist to arrange them](step-4/patterns.md)
   - [Playing a song on the audio thread](step-4/song-playback.md)
@@ -78,6 +84,9 @@
   - [One set of zoom keys that follows the pointer](step-8/zoom-follows-the-pointer.md)
   - [A key as a pitch-class set: the same notes, another name](step-8/key-as-a-set.md)
   - [Exercises](step-8/exercises.md)
+
+# Part III: The band
+
 - [Step 9: The band](step-9/README.md)
   - [Chord names: reading a lead sheet](step-9/chord-names.md)
   - [A new name](step-9/new-name.md)
@@ -98,6 +107,7 @@
   - [Release builds: a download for every system](step-9/releases.md)
   - [A second bug hunt: crashes, spelling and the beat](step-9/bug-hunt.md)
   - [A third bug hunt: a slow file, a jumping pattern and names cut short](step-9/bug-hunt-3.md)
+  - [Losing nothing: recovery, recent projects and audio that comes back](step-9/recovery.md)
   - [Swing and big band songs, with a horn section](step-9/big-band-songs.md)
   - [Finding a demo: alphabetical order and search](step-9/demo-search.md)
   - [Latin American songs, from Mexico to the Río de la Plata](step-9/latin-american-songs.md)
@@ -118,6 +128,7 @@
   - [Tangos and folk songs from MIDI files](step-9/midi-songs.md)
   - [Four pieces from their scores: a zamba, a song, an aria and a chorus](step-9/four-scores.md)
   - [Quicker to work in: songs open on their chords, one row of buttons, every key in a list](step-9/workflow.md)
+  - [The style editor: writing your own band parts](step-9/style-editor.md)
   - [Roman numerals in minor keys: bIII or III](step-9/minor-numerals.md)
   - [The mixer: pan, a reverb send, level meters and the instrument on every line](step-9/mixer.md)
   - [Sending a channel over MIDI from its instrument menu, drums too](step-9/midi-out-menus.md)
@@ -125,9 +136,15 @@
   - [The chord sheet fills the window, with lines that fit the names](step-9/chord-sheet-layout.md)
   - [Inserting and deleting bars](step-9/insert-delete-bars.md)
   - [The book online and as a PDF](step-9/book-online.md)
-- [Spike: listening to a recording](spike-listen/README.md)
+  - [Where the band ends up](step-9/conclusion.md)
+  - [Exercises](step-9/exercises.md)
 
----
+# Part IV: Reference
 
-[Rust glossary](glossary.md)
-[Roadmap](roadmap.md)
+- [Importing a recording (experimental)](spike-listen/README.md)
+- [Keyboard shortcuts](appendix-shortcuts.md)
+- [Project file format](appendix-project-format.md)
+- [Troubleshooting](troubleshooting.md)
+- [Music glossary](music-glossary.md)
+- [Rust glossary](glossary.md)
+- [Roadmap](roadmap.md)

@@ -25,8 +25,8 @@ never more than 127, and why `Note` in step 1 used the same numbers: C4
 is 60 in Ferrous Lineup because it is 60 in MIDI.
 
 There are many kinds of message: knobs and pedals ("control change"),
-pitch bends, clock ticks for keeping machines in time. Ferrous Lineup only
-needs two, and `MidiMessage` has only two variants:
+pitch bends, clock ticks for keeping machines in time. In step 7 Ferrous
+Lineup needed only two, and `MidiMessage` had only two variants:
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -40,12 +40,22 @@ const NOTE_OFF: u8 = 0x80;
 const NOTE_ON: u8 = 0x90;
 ```
 
+> **Forward: step 8 adds a third.** A program change tells a synth which
+> instrument a channel plays. It is two bytes: `0xC0 | channel` and a
+> program number from 0 to 127, with no velocity. `MidiMessage` now has a
+> `ProgramChange { channel, program }` variant as well
+> ([Every voice on its own channel](../step-8/voices-and-instruments.md)).
+> The note messages and the slice patterns below are still the same;
+> `parse` still reads only notes, while `bytes` writes all three kinds.
+
 The status byte holds two things at once, so the code splits it with bit
 operations (step 3 used the same ones for pitch sets): `status & 0xF0`
 keeps the top four bits, the kind, and `status & 0x0F` keeps the bottom
 four, the channel.
 
 ## Reading a message: slice patterns
+
+In step 7, reading a note message looked like this:
 
 ```rust
 pub fn parse(bytes: &[u8]) -> Option<MidiMessage> {
@@ -85,7 +95,7 @@ Many keyboards really send that instead of a note-off: a stream of
 messages of the same kind may leave out the repeated status byte
 ("running status"), which saved time on the slow cables of 1983.
 
-Turning a message back into bytes is the same in reverse:
+In step 7, turning a message back into bytes was the same in reverse:
 
 ```rust
 pub fn bytes(self) -> [u8; 3] {
@@ -99,14 +109,18 @@ pub fn bytes(self) -> [u8; 3] {
 }
 ```
 
+That `[u8; 3]` is the step-7 version. Today `bytes` returns a small
+`MidiBytes` that derefs to a slice of the right length, because a program
+change has only two bytes. The note arms are unchanged.
+
 The `clamp(1, 127)` matters. A note-on with velocity 0 would be read as
 a note-off by the synth, so a note played "as softly as possible" would
 not be played at all.
 
-One other message is written, never read: control change 123, "All Notes
-Off". It tells a synth to stop every note on a channel. Ferrous Lineup
-sends it on all 16 channels before it lets go of an output port, in
-case a note-off got lost on the way:
+Step 7 also writes one message it never reads: control change 123, "All
+Notes Off". It tells a synth to stop every note on a channel. Ferrous
+Lineup sends it on all 16 channels before it lets go of an output port,
+in case a note-off got lost on the way:
 
 ```rust
 pub fn all_notes_off(channel: u8) -> [u8; 3] {

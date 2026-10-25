@@ -324,6 +324,15 @@ channel, and `the_rack_fits_its_rows_again_when_the_app_starts` makes
 the rack wide with a 64-step pattern, starts the app again on a short
 one and checks that the rack fits the short one.
 
+## If the app stops
+
+These changes are about the way in, not about losing work. If the app
+closes unexpectedly, it offers the recovery copy it wrote; **File >
+Open recent** brings back the last ten projects; and **Settings > Audio
+> Restart audio** starts the sound card again without reopening the app.
+[Recovery, recent projects and restarting
+audio](recovery.md) has the details.
+
 ## Exercises
 
 1. Add a picture to `icons.rs` for **Follow playhead** in another

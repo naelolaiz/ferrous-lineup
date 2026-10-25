@@ -5,15 +5,18 @@ and [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-
 
 ## What a project file looks like
 
-A `.lineup` file is plain text. Run this to see the demo song as a file:
+A `.lineup` file is plain text. To see one, start the app, choose a demo
+under File > Demos, then use File > Save As… and open the saved file in a
+text editor:
 
 ```sh
-cargo run -p lineup-core --example print_demo
+cargo run --release
+# File > Demos > The starting song, then File > Save As… song.lineup
+head -n 30 song.lineup
 ```
 
-(`examples/` is a Cargo convention: each file in a crate's `examples`
-folder is a small program that can use the crate, built only when you
-ask for it.) The start of the output:
+A new project (File > New) has no notes yet, so its file is short. This is
+the real start of the file that `Project::template()` writes:
 
 ```text
 (
@@ -30,17 +33,38 @@ ask for it.) The start of the output:
             volume: 0.8,
             muted: false,
         ),
+        (
+            name: "Clap",
+            kind: Sampler(Builtin(Clap)),
+            volume: 0.8,
+            muted: false,
+        ),
         ...
+        (
+            name: "Lineup Osc",
+            kind: Synth,
+            volume: 0.6,
+            muted: false,
+        ),
     ],
     patterns: [
         (
-            name: "Beat",
+            name: "Pattern 1",
             length: 16,
             notes: [
-                [
-                    (pitch: 60, start: 0, length: 1, velocity: 100),
-                    (pitch: 60, start: 4, length: 1, velocity: 100),
-                    ...
+                [],
+                ...
+```
+
+The starting song is a little different: its synth channel plays a
+General MIDI piano, so it carries `program: Some(0)` and its file says
+`format: 9`. Its chords read as notes, one per line:
+
+```text
+                    (pitch: 48, start: 0, length: 8, velocity: 100),
+                    (pitch: 60, start: 0, length: 8, velocity: 100),
+                    (pitch: 64, start: 0, length: 8, velocity: 100),
+                    (pitch: 67, start: 0, length: 8, velocity: 100),
 ```
 
 The format is **RON**, "Rusty Object Notation". It looks like Rust: a
@@ -136,22 +160,40 @@ the file, agreeing or not. So the file has its own struct:
 #[derive(Debug, Serialize, Deserialize)]
 struct ProjectFile {
     format: u32,
+    #[serde(default, skip_serializing_if = "crate::Mixer::is_default")]
+    mixer: crate::Mixer,
     tempo: Tempo,
     scale: Scale,
+    #[serde(default, skip_serializing_if = "TimeSignature::is_common")]
+    time_signature: TimeSignature,
     channels: Vec<Channel>,
     patterns: Vec<PatternFile>,
     tracks: Vec<Track>,
     clips: Vec<Clip>,
+    // ...sections, a loop region, time, tempo, key and chord markers,
+    // the band, and where each part came from. Later chapters add them.
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PatternFile {
     name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    color: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    time: Option<TimeSignature>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    player: Option<Player>,
     length: usize,
     /// One list of notes per channel, in the order of `channels`.
     notes: Vec<Vec<NoteEvent>>,
 }
 ```
+
+The `#[serde(default, skip_serializing_if = ...)]` lines are the file
+format's quiet way of growing: a field that is at its default is not
+written at all, and a field missing from an older file is filled in with
+the type's default. That is why a project with nothing special in it is
+still written as the same short format-1 text as before.
 
 A `ProjectFile` accepts anything shaped right. Turning it into a
 `Project` is where the checking happens, and it is written as a
@@ -164,24 +206,28 @@ impl TryFrom<ProjectFile> for Project {
 
     fn try_from(file: ProjectFile) -> Result<Self, Self::Error> {
         let mut project = Project::empty();
+        project.mixer = file.mixer;
         project.tempo = file.tempo;
         project.scale = file.scale;
-        // ...
+        // ...checks on the mixer, the time signature and the channel mix...
         for channel in file.channels {
             project.add_channel(channel);
         }
-        // ...
+        for (index, saved) in file.patterns.into_iter().enumerate() {
+            if index > 0 {
+                project.add_pattern();
+            }
+            let pattern = project.pattern_mut(index).unwrap();
+            pattern.set_length(saved.length);
+            for (channel, notes) in saved.notes.into_iter().enumerate() {
                 for note in notes {
                     if pattern.add_note(channel, note).is_none() {
                         return invalid(format!(/* where, and what is wrong */));
                     }
                 }
-        // ...
-        for (index, clip) in file.clips.into_iter().enumerate() {
-            if project.add_clip(clip).is_none() {
-                return invalid(format!(/* ... */));
             }
         }
+        // ...tracks, clips, sections, markers and the band...
         Ok(project)
     }
 }
@@ -191,8 +237,9 @@ The project is rebuilt **through its front door**: `add_channel`,
 `add_pattern`, `add_note`, `add_clip`, the same methods the app calls
 when you click. Those methods already keep every rule, so a file can never
 create a project that the UI could not have created. When a method
-refuses (a note that does not fit, a clip that plays pattern 99), the
-error says where, so a person editing the file by hand can fix it.
+refuses (a note that does not fit, a clip that plays a pattern that is
+not there), the error says where, so a person editing the file by hand
+can fix it.
 
 `type Error = FileError;` is an **associated type**: part of the trait
 that each implementation chooses. With `TryFrom` in place, the standard
@@ -206,40 +253,77 @@ copies the data out with `to_vec()` and `map`. It cannot fail, so it is a
 ## The version number
 
 ```rust
-pub const FORMAT_VERSION: u32 = 1;
+pub const FORMAT_VERSION: u32 = 27;
 ```
 
-Every file starts with `format: 1`. One day, version 2 of Ferrous Lineup
-may store something differently. It can then read old files by checking
-the number, and *this* version can refuse new files politely instead of
-misreading them. But a version-1 program cannot parse a version-2 file to
-find its version, if the rest of the file has changed shape. The trick is
-a tiny struct with just that one field:
+`FORMAT_VERSION` is the newest layout this program can read. A file does
+not always use it: `format_for` writes the **lowest** format that can hold
+the project. A project that uses nothing new stays format 1, so an older
+Ferrous Lineup can still open it. The starting song needs format 9,
+because its synth channel plays a General MIDI program; a song with a
+chord sheet needs at least format 12; and so on. The current list goes up to 27,
+for a drum sent over MIDI. Each entry in the long comment above
+`FORMAT_VERSION` says what that version added and what an older program
+would get wrong without it.
+
+Refusing a newer file is harder than it sounds. The obvious way is to
+read a tiny struct first:
 
 ```rust
 #[derive(Deserialize)]
 struct Header {
     format: u32,
 }
+```
 
+By default, serde skips fields that a struct does not list, so a `Header`
+can be read from the whole file. But to skip the rest of the file RON has
+to look ahead through all of it. On a long song such as Boléro, that took
+85 seconds, even in a release build. The whole file now opens in a
+fraction of a second, because `format_number` reads only the first few
+bytes:
+
+```rust
 pub fn from_text(text: &str) -> Result<Project, FileError> {
-    let header: Header = ron::from_str(text)?;
-    if header.format > FORMAT_VERSION {
-        return Err(FileError::NewerFormat(header.format));
+    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
+    let file: ProjectFile = match ron::from_str(text) {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(match format_number(text) {
+                Some(format) if format > FORMAT_VERSION => FileError::NewerFormat(format),
+                _ => err.into(),
+            });
+        }
+    };
+    if file.format > FORMAT_VERSION {
+        return Err(FileError::NewerFormat(file.format));
     }
-    let file: ProjectFile = ron::from_str(text)?;
     Project::try_from(file)
+}
+
+/// Reads `(format: 25, ...` without the RON reader.
+fn format_number(text: &str) -> Option<u32> {
+    let rest = text.trim_start().strip_prefix('(')?.trim_start();
+    let rest = rest.strip_prefix("format")?.trim_start();
+    let rest = rest.strip_prefix(':')?.trim_start();
+    let digits = rest
+        .find(|c: char| !c.is_ascii_digit())
+        .unwrap_or(rest.len());
+    rest[..digits].parse().ok()
 }
 ```
 
-By default, serde skips fields that a struct does not list, so reading a
-`Header` from a whole project file just finds `format` and ignores the
-rest. The test `files_from_the_future_are_refused` reads
-`(format: 2, sparkles: true)` and expects `NewerFormat(2)`.
+`to_text` always writes `format` first, so this looks only where the
+number must be. If the file is so broken that even the number cannot be
+read, the original RON error is the one reported. And if the file parses
+but still says a newer format, the number is checked once more. A
+byte-order mark at the start (some text editors add one) is stripped
+first, so it cannot hide the `(`.
 
-That default is also how a future version can add a field without
-breaking old files: mark the new field `#[serde(default)]`, and files
-that do not have it get the type's default value.
+That `#[serde(default)]` from `ProjectFile` is also how a future version
+can add a field without breaking old files: files that do not have it get
+the type's default value. The test `files_from_the_future_are_refused`
+reads `(format: 28, sparkles: true)` and expects `NewerFormat(28)`.
 
 ## Errors as an enum
 
@@ -307,8 +391,14 @@ method return an `io::Error` in one case and a `ron` error in another.
 pub fn save(project: &Project, path: &Path) -> Result<(), FileError> {
     let text = to_text(project)?;
     let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
-    fs::write(&temporary, text)?;
-    fs::rename(&temporary, path)?;
+    if let Err(err) = fs::write(&temporary, text) {
+        let _ = fs::remove_file(&temporary);
+        return Err(err.into());
+    }
+    if let Err(err) = fs::rename(&temporary, path) {
+        let _ = fs::remove_file(&temporary);
+        return Err(err.into());
+    }
     Ok(())
 }
 ```
@@ -372,19 +462,57 @@ Linux system with neither a portal nor `zenity`, `pick_file` returns
 ### "Save changes?"
 
 How does the app know there are unsaved changes? It keeps a copy of the
-project as it was last opened or saved, and compares:
+project as it was last opened or saved, and compares. But `Project`
+derives `PartialEq`, so `!=` walks every channel, note and clip. That is
+cheap once, but a drag edits the project on every frame, and comparing the
+whole song every frame is wasted work. `FileState` therefore caches the
+answer:
 
 ```rust
-fn has_unsaved_changes(&self) -> bool {
-    self.project != self.file.saved
+/// Whether the project differs from `saved`, as last worked out.
+dirty: bool,
+/// Set when the project may differ from `saved`.
+check_dirty: bool,
+```
+
+An edit sets `check_dirty`, but only if the project was not already dirty.
+While it is dirty, more edits do not ask for the whole comparison again;
+undo, redo and saving will ask when they need it:
+
+```rust
+pub(super) fn project_edited(&mut self) {
+    if !self.dirty {
+        self.check_dirty = true;
+    }
 }
 ```
 
-`Project` derives `PartialEq`, so `!=` compares every channel, note and
-clip. Comparing a few thousand numbers takes microseconds, so the app can
-afford to do it every frame. And it gets something right that a "dirty"
-flag would not: change a step and change it back, and the project equals
-the saved copy again, so there are no unsaved changes.
+Undo and redo, on the other hand, can make the project match the saved
+copy again, so they always ask for a new comparison
+(`project_reverted`). The cached answer is read every frame for the
+title, but the comparison itself runs only when an edit or undo set the
+flag:
+
+```rust
+pub(super) fn has_unsaved_changes(&mut self) -> bool {
+    if self.file.check_dirty {
+        self.file.dirty = match &self.file.saved {
+            Some(saved) => self.project != *saved,
+            None => true, // recovered work has never been saved
+        };
+        self.file.check_dirty = false;
+    }
+    self.file.dirty
+}
+```
+
+This gets something right that a plain dirty flag would not: undo sets
+`check_dirty` even when the project is already dirty, so undoing back to
+the saved copy makes the comparison find them equal again and clears the
+star. The price is that ordinary edits do not rewalk the project once it
+is dirty; changing a step back by hand may leave the star until the next
+undo, save or reopen. That is a fair trade for not comparing a whole song
+on every frame of a drag.
 
 Anything that would throw the project away waits for an answer first:
 
@@ -466,10 +594,11 @@ These `const` values call `KeyboardShortcut::new` while compiling. That
 is allowed because egui marked it as a `const fn`, a function simple
 enough to run at compile time.
 
-The window title shows the file's name and a dot for unsaved changes
-("● song.lineup · Ferrous Lineup"). The app sends a `ViewportCommand::Title`
-only when the text changes, not on every frame. (Later the dot became a
-star after the name, "song.lineup*", and a demo shows its own name: see
+The window title shows the file's name and a star for unsaved changes
+("song.lineup* · Ferrous Lineup"). The app sends a
+`ViewportCommand::Title` only when the text changes, not on every frame.
+(Earlier versions used a dot before the name; a demo now shows its own
+name and says it is read-only: see
 [A demo keeps its name](../step-8/demo-names.md).)
 
 ### Opening a file from outside

@@ -115,12 +115,13 @@ queue is full), but this way the renderer behaves like the real thing.
 ## Writing the file
 
 ```rust
-pub fn export_wav(
+pub fn export_wav_cancellable(
     renderer: &mut Renderer,
     path: &Path,
     frames: usize,
     mut progress: impl FnMut(usize),
-) -> Result<(), hound::Error> {
+    cancel: &AtomicBool,
+) -> Result<WavExport, hound::Error> {
     let spec = hound::WavSpec {
         channels: renderer.channels() as u16,
         sample_rate: renderer.sample_rate(),
@@ -134,6 +135,11 @@ pub fn export_wav(
     let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
     let mut done = 0;
     while done < frames {
+        if cancel.load(Ordering::Relaxed) {
+            drop(writer);
+            let _ = fs::remove_file(&temporary);
+            return Ok(WavExport::Cancelled);
+        }
         let count = (frames - done).min(BLOCK_FRAMES);
         let samples = &mut block[..count * renderer.channels()];
         renderer.render(samples);
@@ -145,9 +151,13 @@ pub fn export_wav(
     }
     writer.finalize()?;
     fs::rename(&temporary, path)?;
-    Ok(())
+    Ok(WavExport::Written)
 }
 ```
+
+`export_wav` is a thin wrapper for callers that cannot cancel: it passes a
+flag that is never set and returns the old `Result<(), hound::Error>`.
+The app uses the cancellable version.
 
 The sound is made in blocks of 4,096 frames, in one buffer that is reused
 for every block. The last block is usually shorter, so `samples` is a
@@ -200,16 +210,32 @@ cuts anything.
 The song's length is known in steps; the file's length is in frames:
 
 ```rust
-let step_frames = frames_per_step(self.project.tempo, EXPORT_SAMPLE_RATE);
-let song_length = self.project.song_length();
-let tail_frames = TAIL_SECONDS * f64::from(EXPORT_SAMPLE_RATE);
+// The whole song, every repeat and section included, even when song
+// mode only loops part of it.
+let song = self.project.arrangement();
+let song_length = song.length;
+let tempos = self.project.played_tempos(&song);
+let end_tempo = tempos.last().copied().unwrap_or(self.project.tempo);
+let step_frames = frames_per_step(end_tempo, EXPORT_SAMPLE_RATE);
+let reverb = self.project.mixer.reverb;
+let tail_seconds = if reverb.enabled {
+    TAIL_SECONDS + f64::from(reverb.decay + reverb.pre_delay_ms / 1000.0)
+} else {
+    TAIL_SECONDS
+};
+let tail_frames = tail_seconds * f64::from(EXPORT_SAMPLE_RATE);
+let song_frames = self.project.played_seconds(&song) * f64::from(EXPORT_SAMPLE_RATE);
 ...
-let frames = (song_length as f64 * step_frames + tail_frames) as usize;
+let frames = (song_frames + tail_frames) as usize;
 ```
 
 At 130 BPM there are 4 steps per beat, so a step lasts 60 / 130 / 4 =
 0.115 seconds, 5,088.46 frames at 44,100. The demo's 128 steps take
 651,323 frames, plus a two-second tail of 88,200, makes 739,523.
+`played_seconds` adds up each step at the tempo in force there, so a song
+with tempo changes still gets the right length. With the reverb on, the
+tail also waits for its decay and pre-delay, so the room can die away
+instead of being cut off.
 
 The tail lets the last notes ring out. But there is a catch: in song mode
 the audio thread *loops*. When the playhead reaches the end of the song,
@@ -223,9 +249,10 @@ one, that the song is longer than it really is, by some silent steps:
 // export ends before the song would start again.
 let silent_steps = (tail_frames / step_frames).ceil() as usize + 1;
 renderer.send(Command::SetSong {
-    clips: self.project.playlist().audible_clips().collect(),
+    plays: song.plays,
     length: song_length + silent_steps,
 });
+renderer.send(Command::SetSongTempos(tempos));
 ```
 
 For the demo that is 17.33, rounded up to 18, plus one: 19 silent steps.
@@ -244,19 +271,30 @@ its own:
 
 ```rust
 let done = Arc::new(AtomicUsize::new(0));
-// The thread gets its own `Arc` pointing to the same counter, and
-// its own copy of the path. `move` gives the closure ownership of
-// them, and of the renderer: from now on they belong to the thread.
+let cancel = Arc::new(AtomicBool::new(false));
+// The thread gets its own `Arc`s pointing to the same counter and
+// flag, and its own copy of the path. `move` gives the closure
+// ownership of them, and of the renderer: from now on they belong
+// to the thread.
 let worker = {
     let done = Arc::clone(&done);
+    let cancel = Arc::clone(&cancel);
     let path = path.clone();
     thread::spawn(move || {
-        export_wav(&mut renderer, &path, frames, |frames_done| {
-            done.store(frames_done, Ordering::Relaxed);
-        })
-        .map_err(|err| err.to_string())
+        match export_wav_cancellable(
+            &mut renderer,
+            &path,
+            frames,
+            |frames_done| done.store(frames_done, Ordering::Relaxed),
+            &cancel,
+        ) {
+            Ok(WavExport::Written) => Ok(()),
+            Ok(WavExport::Cancelled) => Err(CANCELLED.to_string()),
+            Err(err) => Err(err.to_string()),
+        }
     })
 };
+self.export = Some(Export::new(path, frames, done, Some(cancel), worker));
 ```
 
 `std::thread::spawn` starts a new thread running a closure, and wants
@@ -304,6 +342,8 @@ pub(super) struct Export {
     path: PathBuf,
     frames: usize,
     done: Arc<AtomicUsize>,
+    /// Set to ask the thread to stop, for exports that can be cancelled.
+    cancel: Option<Arc<AtomicBool>>,
     worker: JoinHandle<Result<(), String>>,
 }
 ```
@@ -312,7 +352,9 @@ pub(super) struct Export {
 `Ok(())` if the file was written, or an error message. The error is
 turned into a `String` on the export thread (`map_err(|err|
 err.to_string())`), since a message for the status bar is all the window
-needs.
+needs. A cancelled export also comes back as an `Err`, with the special
+string `CANCELLED`; the status bar turns that into "Stopped exporting
+song.wav" instead of showing it as a failure.
 
 Every frame, the app checks on it:
 
@@ -358,6 +400,35 @@ A few things to notice:
   `Result`. Patterns can be nested, so `Ok(Ok(()))` matches "the thread
   ended normally, and the file was written".
 
+### Stopping an export
+
+The status bar draws a small Stop button while `Export::can_cancel()` is
+true. It calls `export.cancel()`, which sets an `AtomicBool`; the export
+thread checks that flag between blocks:
+
+```rust
+while done < frames {
+    if cancel.load(Ordering::Relaxed) {
+        drop(writer);
+        let _ = fs::remove_file(&temporary);
+        return Ok(WavExport::Cancelled);
+    }
+    // ...render and write one block...
+}
+```
+
+`export_wav_cancellable` takes the flag, and returns a `WavExport`:
+`Written` or `Cancelled`. The plain `export_wav` builds a flag that is
+never set and keeps its old `Result<(), hound::Error>` interface for
+tests. A cancelled export deletes the temporary file, so a half-written
+WAV is never left where a finished one should be. The app turns
+`Cancelled` into the `CANCELLED` message above.
+
+Closing the window while an export runs asks first: "Stop it and quit?"
+or "Keep exporting". That is a second use of the same flag, and it gives
+the export thread time to remove its temporary file before the process
+ends.
+
 ## Putting the song into the renderer
 
 The export builds its renderer with the same commands the app sends at
@@ -366,8 +437,7 @@ frames per second, whatever rate your sound card runs at:
 
 ```rust
 let mut renderer = Renderer::new(EXPORT_SAMPLE_RATE, EXPORT_CHANNELS);
-renderer.send(Command::SetMasterVolume(self.master_volume));
-for command in self.project_commands(EXPORT_SAMPLE_RATE) {
+for command in self.project_commands(EXPORT_SAMPLE_RATE, 1.0) {
     renderer.send(command);
 }
 // ...the longer song...
@@ -375,13 +445,17 @@ renderer.send(Command::SetMode(PlayMode::Song));
 renderer.send(Command::Play);
 ```
 
-`project_commands` is new in this step: it lists the tempo, every pattern
-(`InsertPattern`), every channel (`InsertChannel`, with its notes in all
-patterns) and the song. `send_whole_project`, which talks to the real
-audio thread, uses it too, so both are built the same way. The built-in
-drums are synthesized again at 44,100, the Lineup Osc is made for that
-rate, and samplers get their sounds from the `SampleCache` of the
-previous chapter, so no file is read.
+`project_commands` is new in this step: it lists the tempo and loose
+timing, the master volume and reverb, every pattern (`InsertPattern`),
+every channel (`InsertChannel`, with its notes in all patterns) and the
+song, its tempos and its clicks. The second argument is
+the practice speed: playback can slow the song down for practice, but an
+export is always at the song's own speed, so it passes `1.0`.
+`send_whole_project`, which talks to the real audio thread, uses the same
+function with `self.practice.speed()`, so both are built the same way.
+The built-in drums are synthesized again at 44,100, the Lineup Osc is
+made for that rate, and samplers get their sounds from the `SampleCache`
+of the previous chapter, so no file is read.
 
 The renderer owns its own instruments and its own copy of every note. It
 is a snapshot, like the copies in the undo history: you can keep playing
@@ -401,7 +475,8 @@ first sample, and no `.tmp` file is left behind), the demo song was
 exported from the running app and the file read back:
 
 - exactly 739,523 frames, as calculated above,
-- left and right are equal (every instrument is in the middle for now),
+- left and right are equal (the demo's channels are all in the middle
+  and the reverb is off),
 - bars 1 and 2 hold chords alone, bars 3 to 7 the beat, bar 8 the fill,
 - the tail is quiet, with no chord from the song starting again.
 

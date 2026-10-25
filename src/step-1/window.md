@@ -3,6 +3,11 @@
 Files: [`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/main.rs)
 and [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs)
 
+> **A note on names:** the code below uses today's names. At this step
+> the crate was `loom-app` and the type `LoomApp`; step 9 renamed them to
+> `lineup-app` and `LineupApp`, along with `loom-*` to `lineup-*`. The
+> old `step-1-foundation` checkpoint branch is no longer published.
+
 The window is drawn with [egui](https://github.com/emilk/egui), a GUI
 library written in Rust, and [eframe](https://docs.rs/eframe), egui's
 framework for running it as a native app on Linux, macOS and Windows (and

@@ -19,10 +19,13 @@ and a library to go with them:
   plays, the harmony key of the chord playing lights up, and the
   keyboard shows its notes in blue. Press Play on any demo and watch
   the progression move between home, away and tension,
-- **time signatures**: 2/4, 3/4, 4/4, 5/4, 3/8, 5/8, 6/8, 7/8, 9/8 and
-  12/8. The playlist's bars, the snap, the channel rack's beat colours,
-  the piano roll's lines and the pattern lengths all follow it, and it
-  goes into project files and MIDI files,
+- **time signatures**: ten common ones — 2/4, 3/4, 4/4, 5/4, 3/8, 5/8,
+  6/8, 7/8, 9/8 and 12/8 — plus any other top and bottom number you type,
+  including irregular groupings such as 2+2+3/8
+  ([Any time signature, and irregular meters](any-time-signature.md)).
+  The playlist's bars, the snap, the channel rack's beat colours, the
+  piano roll's lines and the pattern lengths all follow it, and it goes
+  into project files and MIDI files,
 - **a library** in a new **Library** tab next to the pattern list:
   **78 harmony styles** and **49 rhythms** from 13 genres, from pop and
   the blues to bossa nova, flamenco, reggae and, of course, **tango**
@@ -36,6 +39,11 @@ and a library to go with them:
   classics, like tango and flamenco, get new tunes written for them
   ([More demos](more-demos.md)). And every harmony style as a short
   song,
+- **a recording, heard and followed (experimental)**: **File > Import
+  recording…** opens an MP3, WAV, FLAC or Ogg file and puts a harmony
+  track on it, from the beats, keys, chords and meter it hears
+  ([Importing a recording](../spike-listen/README.md)). The results are
+  approximate,
 - **a new rhythm for a song**: pick a rhythm after a style, or
   right-click a rhythm and play the whole song in it, and the chords
   and bass follow the new rhythm, keeping the same chords, as a band
@@ -118,9 +126,9 @@ of replacing it.
   and rhythm can be written into a project, every demo survives saving
   and loading, and at least 80% of every melody's notes are in its key
   (the rest are passing notes).
-- Every one of the 94 demos (16 songs and 78 styles) was rendered
-  offline, through the same audio code as the WAV export, and measured:
-  none clips, and the loudest peaks at 0.96 of full scale.
+- Every one of the 140 demos at this step (62 songs and 78 styles) was
+  rendered offline, through the same audio code as the WAV export, and
+  measured: none clips, and the loudest peaks at 0.96 of full scale.
 - In the running app: the harmony keys with the mouse and the number
   keys, the suggestions, the Library tab (trying, swapping, undoing),
   the Demos menu with its "Save changes?" question, and time
@@ -201,8 +209,19 @@ crates/lineup-app/src/piano_roll.rs           bar and beat lines by time signatu
 crates/lineup-app/src/app/view.rs             the View menu and the zoom control (new)
 ```
 
-The chapters start with the harmony keys, the part you see first. Then
-time signatures, which everything else depends on. Then the library:
-how a style, a rhythm and a song are written as data, and how they
-become patterns and demos. The last chapter is about making every
-control fit, whatever the size of the window, and about zoom.
+The format numbers in the lists above are step 8's: step 8 introduced
+format 3 for its new drums, long patterns and time signatures. Today
+`FORMAT_VERSION` is 27, and `format_for` still returns 3 for a project
+that needs only those things, such as a long pattern or a plain 3/4; a
+later feature, or a grouped time signature, needs a higher number.
+
+Where this step goes, in the order of the chapters: the harmony keys;
+time signatures; the library and the demos it builds; fitting the
+window and finding your notes; song structure, the transport and more
+demos; hearing chords and using only the tracks a song needs; time
+markers and key changes; the accompaniment and MIDI Out on every
+channel; South American folklore; twelve-tone rows and micromodes; the
+bug hunt, tempo and feel, and the Turkish March; MIDI import; voices and
+instruments; finding the key; any time signature and re-metering; demo
+names; pointer zoom; and, last, a key as a pitch-class set. The
+[exercises](exercises.md) follow.

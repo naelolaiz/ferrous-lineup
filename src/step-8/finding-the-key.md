@@ -83,8 +83,9 @@ gets a share about 1.8 times larger.
 A key is **clear** when its share is at least twice the second best.
 Otherwise the next keys whose share is at least 40% of the best are its
 **alternatives**, at most two of them. That is what the app shows fainter
-after the best key. The numbers were chosen by measuring (see below): a
-key shown as clear is right 97% of the time.
+after the best key. The numbers were chosen by measuring (see below): in
+the current report a key shown as clear is right on 13,900 of 16,153
+bars, about 86%.
 
 ![Find the key on Dorian Strut, a song in E Dorian: the notes fit A minor best, with E minor and A major close behind, fainter. Each key shows what the chord playing, A7, is in it.](../images/step-8-find-key-unclear.png)
 
@@ -190,8 +191,10 @@ mattered:
   C major, D for G). Taking away 0.3 of the note a fifth below from each
   pitch class cancels much of that.
 - **Only the treble.** The bass chroma is mostly overtones of low notes.
-  With treble and bass together, 66% of the beats were in the right key;
-  with the treble alone, 83%, and 84% with the overtone correction.
+  In an earlier, smaller report, treble and bass together put 66% of the
+  beats in the right key; the treble alone put 83%, and 84% with the
+  overtone correction. The larger report below uses the treble alone and
+  the same correction.
 
 ## Putting it on the playlist
 
@@ -205,20 +208,22 @@ file without key signatures the key changes it really has.
 
 ## How well it works
 
-Measured on the library's demo songs, whose keys (and key markers) come
-from their scores. The reports are tests you can run yourself:
-`cargo test -p lineup-core --test key_finding -- --ignored --nocapture` for
-the notes, and `cargo test --release -p lineup-listen --test key_changes --
---ignored --nocapture` for the demos rendered to audio.
+Measured on 26 October 2026 on the library's demo songs, whose keys (and
+key markers) come from their scores. The reports are tests you can run
+yourself: `cargo test -p lineup-core --test key_finding -- --ignored
+--nocapture` for the notes, and `cargo test --release -p lineup-listen
+--test key_changes report -- --ignored --nocapture` for the demos
+rendered to audio. (The `report` filter skips the ignored test that
+writes a WAV file for trying the import by hand.)
 
 | | from the notes | from audio |
 |---|---|---|
-| in the right key | 95.2% of 6 091 bars | 84% of 7 303 beats |
-| key changes found (within a bar / two beats) | 17 of 37 | 9 of 37 |
-| one-key songs given a change that is not there | 6 of 166 | 1 of 34 |
+| in the right key | 87.0% of 18,828 bars | 73.7% of 36,306 beats |
+| key changes found (within a bar / two beats) | 132 of 315 | 63 of 315 |
+| one-key songs given a change that is not there | 18 of 259 | 3 of 52 |
 
-For a whole recording's main key, it is right on 34 of 45 songs, against
-32 for the `bpm-key` crate the import used until now.
+For a whole recording's main key, it is right on 91 of 136 songs, against
+82 of 136 for `bpm-key`, which gives the import its first guess.
 
 Where it goes wrong, and why:
 

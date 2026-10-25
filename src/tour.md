@@ -48,7 +48,10 @@ Tools menu, and set velocities in the lane under the grid. The chord
 buttons light up with the chords that often come next.
 **Ctrl+S** saves the project as a `.lineup` file (⌘S on a Mac), **Ctrl+Z**
 undoes any change and **Ctrl+Shift+Z** redoes it, and **File > Export
-WAV…** saves the song as a sound file.
+WAV…** saves the song as a sound file. **File > Open recent** lists the
+last ten projects. If the app did not close cleanly, it offers the
+recovery copy it wrote at startup; [Losing nothing](step-9/recovery.md)
+explains both.
 
 ## MIDI
 
@@ -184,7 +187,8 @@ undo/redo. A meter change keeps each bar's duration by adjusting tempo.
 ## The style editor
 
 Use **Edit style…** or **New style…** in the channel rack (also **View >
-Style editor…**) to edit repeating drum, chord and bass parts. The editor
+Style editor…**) to edit repeating drum, chord and bass parts.
+[The style editor](step-9/style-editor.md) tells how it works. The editor
 reuses the rack and piano roll, with its own undo history and a four-repeat
 preview. **Start from…** copies an existing style; right-clicking a style
 or rhythm in the Library also opens an editable copy. Pitched templates
@@ -215,7 +219,8 @@ in the header’s right-click menu. Heights follow track moves, are saved
 with the project, and support Undo.
 
 **F1**, or **Help > Keyboard shortcuts**, lists every key the app
-answers to, window by window.
+answers to, window by window. The same list is in the
+[Keyboard shortcuts appendix](appendix-shortcuts.md), for printing.
 
 **Follow playhead** in the toolbar and **Settings > Playback** keeps the playing
 position visible in the playlist, chord sheet and piano roll. Turning it

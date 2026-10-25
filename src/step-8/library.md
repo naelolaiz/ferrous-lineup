@@ -11,7 +11,7 @@ person can read and check, and to keep the code that uses it small.
 
 Step 6 did this for chord suggestions, with a `const` table. Step 8
 does it for a whole library: 78 harmony styles, 49 rhythms, 6 fills
-and 16 songs. Each one is a few lines in a table. This chapter goes
+and 62 songs. Each one is a few lines in a table. This chapter goes
 through the notations, from chords to songs, and the Rust that reads
 them.
 
@@ -38,6 +38,9 @@ pub struct RomanChord {
     pub semitones: u8,
     pub quality: ChordQuality,
     pub spelling: Option<Spelling>,
+    /// The bass note of a slash chord, in semitones above the tonic:
+    /// in C, G/B has 11. `None` means the root is in the bass.
+    pub bass: Option<u8>,
 }
 ```
 
@@ -67,6 +70,10 @@ allowed": "V°" is not a chord anybody writes.
 `spelling` remembers a flat or a sharp in front, so bII7 in C is
 written D♭7, not C♯7: same key on the piano, but the name tells a
 musician what the chord does.
+
+`bass` remembers the bass note of a slash chord, also in semitones above
+the tonic: G/B in C is G major with 11, for B, in the bass. `None` means
+the root is in the bass, which is almost every chord.
 
 ## Chord charts: chords by the bar
 
@@ -313,18 +320,36 @@ would be long and easy to get wrong, so a part can say where its
 voices start, in bars:
 
 ```rust
-Part::new("Round", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&[0, 2, 4, 6]),
-Part::new("Round again", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS)
-    .with_voices(&[0, -6, 2, -4, 4, -2, 6]),
+Part::new("Round", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&[
+    (1, 0),
+    (2, 2),
+    (3, 4),
+    (4, 6),
+]),
+Part::new("Round again", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&[
+    (1, 0),
+    (2, -6),
+    (2, 2),
+    (3, -4),
+    (3, 4),
+    (4, -2),
+    (4, 6),
+]),
 ```
 
-In "Round again", the voices that started in the part before carry on:
-a voice at -6 started six bars earlier, so in this part you hear its
-last two bars. Notes that fall outside the part are dropped:
+Each pair is `(voice, bar)`: which voice sings, and the bar of the part
+where it enters. The first field also picks the channel: voice 1 is the
+Lead channel, and voices 2, 3 and 4 get "Voice 2", "Voice 3" and
+"Voice 4". In "Round again", the copies that started in the part before
+carry on: voice 2 at -6 started six bars earlier, so in this part you
+hear its last two bars. Notes that fall outside the part are dropped:
 
 ```rust
-for &voice in part.voices {
-    let offset = voice as isize * bar as isize;
+for &(voice, start_bar) in part.voices {
+    let Some(notes) = voice.checked_sub(1).and_then(|index| sung.get_mut(index)) else {
+        continue;
+    };
+    let offset = start_bar as isize * bar as isize;
     for note in &melody.notes {
         let start = note.start as isize + offset;
         if (0..length as isize).contains(&start) {
@@ -337,12 +362,13 @@ for &voice in part.voices {
 }
 ```
 
-The offsets can be negative, so the sums are done in `isize`, a signed
-integer the size of `usize`. Only starts inside the part,
-`0..length`, are kept, so the conversion back to `usize` cannot go
-wrong. `..*note` is struct update syntax again: a copy of the note
-with a new start. *Canon in D* uses the same trick for its three
-violins.
+`checked_sub(1)` turns voice 1 into index 0, and `get_mut` refuses a
+voice the song does not have. The offsets can be negative, so the sums
+are done in `isize`, a signed integer the size of `usize`. Only starts
+inside the part, `0..length`, are kept, so the conversion back to
+`usize` cannot go wrong. `..*note` is struct update syntax again: a copy
+of the note with a new start. *Canon in D* uses the same trick for its
+three violins.
 
 ## Is it right?
 

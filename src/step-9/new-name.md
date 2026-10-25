@@ -3,6 +3,7 @@
 Files: [`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml),
 [`crates/lineup-app/Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/Cargo.toml),
 [`crates/lineup-app/src/main.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/main.rs),
+[`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs),
 [`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/midi.rs),
 [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs),
 [`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/midi_file.rs)
@@ -186,11 +187,14 @@ entry, Cargo would name the program after the package, `lineup-app`.
 
 ## Where the window size is remembered
 
-`main` hands the app's name to eframe:
+`main` hands the app's name to eframe. The name is the constant
+`app::APP_NAME`, in
+[`app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs),
+so the title bar and the settings folder use one string:
 
 ```rust
 eframe::run_native(
-    "Ferrous Lineup",
+    app::APP_NAME,
     options,
     Box::new(|cc| Ok(Box::new(app::LineupApp::new(cc, path)))),
 )
@@ -228,11 +232,15 @@ with "Ferrous Lineup" is someone else's.
 
 ## Exercises
 
-1. The app's name is written out in `main.rs` (twice), `files.rs`,
-   `midi.rs`, `midi_file.rs` and a few messages. Put it in one
-   `pub const APP_NAME: &str` in `lineup-core` and use it everywhere.
-   Which places cannot use it, because they need the old name on
-   purpose? (Look for `OLD_` in the code.)
+1. The app's name is already a constant: `pub const APP_NAME` in
+   `app.rs`, which `main.rs` uses. Finish the job in the places that
+   still spell it out: the window titles in `files.rs`, the MIDI client
+   name in `midi.rs`, the PDF producer in `lead_sheet/pdf.rs`, the trace
+   headers and the clipboard label. Which places can use `APP_NAME`, and
+   which need a constant of their own? `lineup-core` (the track name and
+   the hidden key in `.mid` files) cannot depend on the app crate, and
+   the old name has to stay in the `OLD_` constants. Where would a shared
+   constant have to live to serve both crates?
 2. Make Ctrl+S on a `.loom` file save it as `.lineup` instead, and
    delete the old file only once the new one is safely written. What
    should happen to the title, and to the file that was open?

@@ -302,9 +302,10 @@ variant `HarmonyName::Polychord` holds two chord symbols. Each one can
 have a bass of its own, and the lower chord's bass is the bass of the
 whole harmony.
 
-A project whose sheet has a polychord is saved as **format 25**. An
-older version of the app could not read `Eb7|Fb`, so it is told the
-file is newer instead of losing the bar.
+A project whose sheet has a polychord needs at least **format 25**
+([the project file format](../appendix-project-format.md)). An older
+version of the app could not read `Eb7|Fb`, so it is told the file is
+newer instead of losing the bar.
 
 The band plays both chords. `polychord_voicing` puts the lower chord
 from the G below middle C upward and stacks the upper chord right above
@@ -381,7 +382,7 @@ notes to how it was cut. The notes go into the key as whole numbers,
 `(start, end, pitch, part)`, since `f32` cannot be a key: it has no
 `Hash` and no `Eq`, because `NaN` is not equal to itself.
 
-Writing every demo's sheet now takes about 0.85 seconds. The slowest
+Writing every demo's sheet now takes about a second. The slowest
 test that writes chord sheets takes as long as it did before the
 change.
 
@@ -397,11 +398,11 @@ notes with the chart of every demo that has one, beat by beat:
 cargo test --release -p lineup-core --test chord_reading -- --ignored --nocapture
 ```
 
-| | Before | Now |
+| | Before | Now (26 October 2026: 330 charted demos, 60,322 beats) |
 |---|---|---|
-| Exactly the chart's chord | 74.9% | 87.9% |
-| A compatible chord (same notes, or same root with notes added or left out) | 77.7% | 94.0% |
-| The right root | 77.2% | 94.5% |
+| Exactly the chart's chord | 74.9% | 84.0% |
+| A compatible chord (same notes, or same root with notes added or left out) | 77.7% | 91.1% |
+| The right root | 77.2% | 92.1% |
 | Bars checked against the Rite and Petrushka scores | 0 of 64 | 64 of 64 |
 
 The report also lists every demo where fewer than 70% of the beats

@@ -12,6 +12,7 @@ new ones.
 ```rust
 pub fn transpose(notes: &[NoteEvent], semitones: i32) -> Option<Vec<NoteEvent>>
 pub fn shift(notes: &[NoteEvent], steps: isize, pattern_length: usize) -> Option<Vec<NoteEvent>>
+pub fn quantize(notes: &[NoteEvent], pattern_length: usize) -> Vec<NoteEvent>
 pub fn transpose_in_key(notes: &[NoteEvent], scale: Scale, steps: i32) -> Option<Vec<NoteEvent>>
 pub fn snap_to_scale(notes: &[NoteEvent], scale: Scale) -> Vec<NoteEvent>
 pub fn invert(notes: &[NoteEvent], up: bool) -> Option<Vec<NoteEvent>>
@@ -145,6 +146,36 @@ turn -1 into a huge number without a word.
 `bool::then_some(value)` turns a condition into an `Option`: `Some(value)`
 if the condition is true, `None` if not. The two lines read as the rule
 itself: the new start must exist, and must be inside the pattern.
+
+### Back onto the grid: `quantize`
+
+Notes played by hand, or imported from a MIDI file, may start a few ticks
+off the grid. `NoteEvent::quantized` moves both the start and the end to
+the nearest step, and `quantize` applies it to a whole group, keeping the
+result inside the pattern:
+
+```rust
+pub fn quantize(notes: &[NoteEvent], pattern_length: usize) -> Vec<NoteEvent> {
+    let last = pattern_length.saturating_sub(1);
+    notes
+        .iter()
+        .map(|note| {
+            let quantized = note.quantized();
+            let start = quantized.start.min(last);
+            NoteEvent {
+                start,
+                length: quantized.end() - start,
+                ..quantized
+            }
+        })
+        .collect()
+}
+```
+
+The `..quantized` carries the pitch and velocity; `start` and `length`
+are recalculated so a note at the very end does not leave the pattern.
+Tools > Quantize to the steps calls this on the selection, or on the whole
+channel when nothing is selected.
 
 ## Staying in the key
 
@@ -337,9 +368,12 @@ chords.
 
 A tool's result has to replace the notes it was given. A pattern keeps
 one rule about its notes, since step 3: no two notes of a channel start
-on the same step with the same pitch (they would sound as one, louder,
-and could never be told apart). Replacing a group must keep that rule,
-and do it all at once, so `Pattern` has a method for exactly that:
+at the same moment with the same pitch (they would sound as one, louder,
+and could never be told apart). Since step 8 "the same moment" includes
+the note's `nudge` inside its step, so two notes a few ticks apart are
+allowed. `same_place` compares pitch, start and nudge. Replacing a group
+must keep that rule, and do it all at once, so `Pattern` has a method for
+exactly that:
 
 ```rust
 pub fn replace_notes(&mut self, channel: usize, old: &[NoteEvent], new: &[NoteEvent]) -> bool
@@ -361,11 +395,9 @@ fn replaced(&self, channel: usize, old: &[NoteEvent], new: &[NoteEvent]) -> Opti
         .copied()
         .collect();
     let new = tidy_notes(new.iter().copied());
-    let lands_on_another = new.iter().any(|note| {
-        notes
-            .iter()
-            .any(|other| other.pitch == note.pitch && other.start == note.start)
-    });
+    let lands_on_another = new
+        .iter()
+        .any(|note| notes.iter().any(|other| other.same_place(note)));
     if lands_on_another {
         return None;
     }
@@ -382,11 +414,13 @@ asks the same question without changing anything, so the piano roll can
 check first, and simply not move a selection onto other notes.
 
 `tidy_notes` cleans up the new notes before they go in: each note is
-fitted to the grid (shortened if it runs past the end of the longest
-pattern, 64 steps, and left out if it starts beyond it), and of several new
-notes with the same pitch and start, only the first is kept. That second
-case is easy to reach: snap C and C# played together to C major, and
-both become C. Rather than make every tool careful, the pattern tidies
+fitted to the allowed steps (shortened if it runs past `MAX_STEPS`, 256
+steps, and left out if it starts beyond it; `nudge` and `trim` are kept
+below a step), and of several new notes at the same place, only the first
+is kept. "The same place" is `same_place`: same pitch, same start and same
+`nudge`, so two notes a few ticks apart both survive. The duplicate case
+is easy to reach: snap C and C# played together to C major, and both
+become C. Rather than make every tool careful, the pattern tidies
 whatever it is given.
 
 Why does `old` hold notes and not positions in the list? Because the

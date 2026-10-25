@@ -342,7 +342,7 @@ end of the frame.
 The best test of a pair of functions like `write` and `read` is a
 **round trip**: write something, read it back, and check you got the
 same thing. The test `every_song_demo_comes_back_from_its_text` does
-that for all 177 song demos: each one's chord sheet is written as text,
+that for every song demo: each one's chord sheet is written as text,
 imported, and its chords, keys and time signatures are compared with
 the demo's.
 
