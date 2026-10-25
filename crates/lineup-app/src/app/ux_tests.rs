@@ -32,26 +32,47 @@ impl Screen {
     }
 
     fn draw(&mut self, events: Vec<Event>) -> FullOutput {
-        let mut output = self.ctx.run_pass(
-            RawInput {
-                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.size)),
-                time: Some(self.ctx.cumulative_frame_nr() as f64 * 0.2),
-                events,
+        let raw = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.size)),
+            time: Some(self.ctx.cumulative_frame_nr() as f64 * 0.2),
+            events,
+            ..Default::default()
+        };
+        self.run(raw)
+    }
+
+    /// A frame in which the window is asked to close, as its title bar's
+    /// button does.
+    fn request_close(&mut self) -> FullOutput {
+        let mut raw = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.size)),
+            time: Some(self.ctx.cumulative_frame_nr() as f64 * 0.2),
+            ..Default::default()
+        };
+        raw.viewports = std::iter::once((
+            egui::ViewportId::ROOT,
+            egui::ViewportInfo {
+                events: vec![egui::ViewportEvent::Close],
                 ..Default::default()
             },
-            |ctx| {
-                if self.settings_only {
-                    self.app.settings_window(ctx);
-                    return;
-                }
-                let mut ui = egui::Ui::new(
-                    ctx.clone(),
-                    egui::Id::unique("test-root"),
-                    egui::UiBuilder::new().max_rect(ctx.content_rect()),
-                );
-                self.app.ui(&mut ui, &mut self.frame);
-            },
-        );
+        ))
+        .collect();
+        self.run(raw)
+    }
+
+    fn run(&mut self, raw: RawInput) -> FullOutput {
+        let mut output = self.ctx.run_pass(raw, |ctx| {
+            if self.settings_only {
+                self.app.settings_window(ctx);
+                return;
+            }
+            let mut ui = egui::Ui::new(
+                ctx.clone(),
+                egui::Id::unique("test-root"),
+                egui::UiBuilder::new().max_rect(ctx.content_rect()),
+            );
+            self.app.ui(&mut ui, &mut self.frame);
+        });
         output.textures_delta.clear();
         output
     }
@@ -2892,6 +2913,59 @@ fn the_tools_menu_pastes_what_another_roll_copied() {
         .map(|note| note.pitch.midi())
         .collect();
     assert_eq!(pitches, [72]);
+}
+
+/// An export whose thread runs until it is cancelled.
+fn running_export() -> super::export::Export {
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+    let cancel = Arc::new(AtomicBool::new(false));
+    let worker_cancel = Arc::clone(&cancel);
+    let worker = std::thread::spawn(move || {
+        while !worker_cancel.load(Ordering::Relaxed) {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        Ok(())
+    });
+    super::export::Export::new(
+        PathBuf::from("test.wav"),
+        10,
+        Arc::new(AtomicUsize::new(0)),
+        Some(cancel),
+        worker,
+    )
+}
+
+#[test]
+fn closing_while_an_export_runs_asks_before_stopping_it() {
+    use std::time::Duration;
+
+    let mut screen = Screen::new();
+    screen.app.export = Some(running_export());
+    screen.request_close();
+    assert!(
+        text_rect(&screen.draw(vec![]), "An export is still running").is_some(),
+        "the export question is asked"
+    );
+
+    // Keeping the export leaves it running, and keeps the window open.
+    screen.click("Keep exporting");
+    assert!(screen.app.export.is_some());
+    assert!(!screen.app.file.is_quitting());
+
+    // Stopping it cancels the thread, waits for it, then closes.
+    screen.request_close();
+    assert!(text_rect(&screen.draw(vec![]), "An export is still running").is_some());
+    screen.click("Stop it and quit");
+    for _ in 0..100 {
+        if screen.app.file.is_quitting() {
+            break;
+        }
+        screen.draw(vec![]);
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    assert!(screen.app.export.is_none(), "the export was waited for");
+    assert!(screen.app.file.is_quitting(), "the window closes");
 }
 
 mod library_parts {
