@@ -68,6 +68,13 @@ pub(super) struct FileState {
     /// two (thanks to the derived `PartialEq`) means even undoing a change
     /// by hand counts as "no changes".
     saved: Project,
+    /// Whether the project differs from `saved`, as last worked out.
+    /// Comparing the two walks the whole project, so it is only done
+    /// after an edit or an undo, not on every frame.
+    dirty: bool,
+    /// Set when the project may differ from `saved`; `dirty` is worked
+    /// out again the next time it is asked for.
+    check_dirty: bool,
     pending: Option<Pending>,
     /// Set once the user agreed to quit, so closing is no longer stopped.
     quitting: bool,
@@ -82,6 +89,18 @@ impl FileState {
         self.quitting
     }
 
+    /// The project was edited or undone: work out whether it differs
+    /// from `saved` again the next time that is asked.
+    pub(super) fn project_edited(&mut self) {
+        self.check_dirty = true;
+    }
+
+    /// The project is now exactly what is saved.
+    pub(super) fn project_saved(&mut self) {
+        self.dirty = false;
+        self.check_dirty = false;
+    }
+
     /// The app starts with the starting song, so that is the demo open.
     pub(super) fn new(project: &Project) -> Self {
         FileState {
@@ -89,6 +108,8 @@ impl FileState {
             demo: Some(Demo::Start.name()),
             name: None,
             saved: project.clone(),
+            dirty: false,
+            check_dirty: false,
             pending: None,
             quitting: false,
             title: String::new(),
@@ -192,8 +213,12 @@ fn project_path(mut path: PathBuf) -> PathBuf {
 }
 
 impl LineupApp {
-    pub(super) fn has_unsaved_changes(&self) -> bool {
-        self.project != self.file.saved
+    pub(super) fn has_unsaved_changes(&mut self) -> bool {
+        if self.file.check_dirty {
+            self.file.dirty = self.project != self.file.saved;
+            self.file.check_dirty = false;
+        }
+        self.file.dirty
     }
 
     /// The File menu, first in the menu bar along the top.
@@ -439,6 +464,7 @@ impl LineupApp {
         self.song_versions.clear();
         self.song_sources.clear();
         self.file.saved = self.project.clone();
+        self.file.project_saved();
         self.file.path = path;
         self.file.demo = None;
         self.file.name = None;
@@ -483,6 +509,7 @@ impl LineupApp {
         match file::save(&self.project, &path) {
             Ok(()) => {
                 self.file.saved = self.project.clone();
+                self.file.project_saved();
                 self.file.path = Some(path);
                 self.file.demo = None;
                 self.file.name = None;
@@ -510,8 +537,16 @@ impl LineupApp {
         });
         let (projects, samples): (Vec<PathBuf>, Vec<PathBuf>) =
             dropped.into_iter().partition(|path| is_project_file(path));
-        if let Some(path) = projects.into_iter().next() {
-            self.open_path(ctx, path);
+        let mut projects = projects.into_iter();
+        if let Some(path) = projects.next() {
+            if projects.next().is_some() {
+                // Opening one after another would throw each away before
+                // it could be seen; ask for one at a time instead.
+                self.message =
+                    Some("Drop one project file at a time: none was opened.".to_string());
+            } else {
+                self.open_path(ctx, path);
+            }
         }
         if !self.rack_open {
             for path in samples {
@@ -632,7 +667,8 @@ impl LineupApp {
     /// Shows the file or demo name in the window's title bar, with a star
     /// after it when there are unsaved changes.
     pub(super) fn update_title(&mut self, ctx: &egui::Context) {
-        let title = self.file.title(self.has_unsaved_changes());
+        let changed = self.has_unsaved_changes();
+        let title = self.file.title(changed);
         if title != self.file.title {
             ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
             self.file.title = title;

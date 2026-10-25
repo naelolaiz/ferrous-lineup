@@ -286,10 +286,29 @@ impl LineupApp {
         app
     }
 
-    /// Sends a command to the audio thread, if audio is running.
+    /// Sends a command to the audio thread, if audio is running. Waits
+    /// for room if the thread is behind, so setting up a large project
+    /// cannot lose the commands that build it.
     fn send(&mut self, command: Command) {
-        if let Audio::Running(engine) = &mut self.audio {
-            engine.send(command);
+        if let Audio::Running(engine) = &mut self.audio
+            && !engine.send_wait(command)
+            && self.message.is_none()
+        {
+            self.message = Some(
+                "The audio engine stopped taking commands. Restart Ferrous Lineup.".to_string(),
+            );
+        }
+    }
+
+    /// Notices when the sound card reports a problem while it runs, as
+    /// when the device is unplugged.
+    fn check_audio(&mut self) {
+        if let Audio::Running(engine) = &mut self.audio
+            && let Some(error) = engine.take_error()
+        {
+            self.message = Some(format!(
+                "Audio stopped: {error}. Restart Ferrous Lineup to use the sound card again."
+            ));
         }
     }
 
@@ -1684,11 +1703,18 @@ impl LineupApp {
         self.sounds_status(ui);
         if let Some(notice) = &self.notice {
             ui.separator();
-            ui.label(notice);
+            // The bar is one line: hovering shows a message that was cut.
+            ui.label(notice).on_hover_text(notice.as_str());
         }
         if let Some(message) = &self.message {
             ui.separator();
-            ui.colored_label(ui.visuals().error_fg_color, message);
+            // The button goes before the message so the truncated label
+            // cannot push it out of the bar.
+            if ui.small_button("Copy").clicked() {
+                ui.ctx().copy_text(message.clone());
+            }
+            ui.colored_label(ui.visuals().error_fg_color, message)
+                .on_hover_text(message.as_str());
         }
     }
 
@@ -1856,6 +1882,7 @@ impl LineupApp {
         // Every view writes numerals as the settings say.
         settings::minor_numerals(ctx).set();
         self.start_frame_for_undo(ctx);
+        self.check_audio();
         self.keyboard_shortcuts(ctx);
         self.keep_over_song();
         self.live_input(ctx);
