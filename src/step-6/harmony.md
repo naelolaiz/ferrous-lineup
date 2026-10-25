@@ -11,7 +11,8 @@ data.
 ## Seven new chords
 
 Step 3's exercise 1 suggested adding a chord or two. Step 6 adds seven,
-the extended chords of jazz, soul and funk, for 28 in all:
+the extended chords of jazz, soul and funk, which made 28 in all (two
+more qualities arrived in later steps; `ChordQuality::ALL` has 30 today):
 
 | Name | Semitones above the root | In C | Where you hear it |
 |------|--------------------------|------|-------------------|
@@ -160,44 +161,86 @@ kind.
 
 `next_chords(scale, current)` gives the chords that often follow
 `current`, most usual first, each with the reason. The knowledge is not
-in code; it is in a table, one entry per degree of the key:
+in code; it is in a table. Each chord is found by its root (a number of
+semitones above the tonic) and its triad family, and each entry lists the
+moves that often follow:
 
 ```rust
-/// For each degree of a major key, the degrees that often come next.
-const MAJOR: [&[(usize, &str)]; 7] = [
-    // I
-    &[
-        (3, "I to IV: moving away from home, toward the dominant."),
-        (4, "I to V: tension that wants to come back to I."),
-        (5, "I to vi: the relative minor, the same notes with a darker colour."),
-        (1, "I to ii: a minor chord that leads on to V."),
-    ],
-    // ii
-    &[
-        (4, "ii to V: the root falls a fifth. ii, V, I is everywhere, from jazz to pop."),
-        (6, "ii to vii°: another chord that leads home to I."),
-    ],
-    // ...
+use ChordFamily::{Diminished, Major, Minor};
+
+struct Move {
+    /// The root of the next chord, in semitones above the tonic.
+    to: u8,
+    short: &'static str,
+    reason: &'static str,
+}
+
+struct Slot {
+    root: u8,
+    family: ChordFamily,
+    moves: &'static [Move],
+}
+
+const fn go(to: u8, short: &'static str, reason: &'static str) -> Move {
+    Move { to, short, reason }
+}
+
+const fn slot(root: u8, family: ChordFamily, moves: &'static [Move]) -> Slot {
+    Slot { root, family, moves }
+}
+
+/// The chords of a major key, and the ones it borrows from minor.
+const MAJOR: &[Slot] = &[
+    slot(
+        0,
+        Major,
+        &[
+            go(5, "away from home",
+               "I to IV: moving away from home, toward the dominant."),
+            go(7, "tension, wants to go home",
+               "I to V: tension that wants to come back to I."),
+            go(9, "relative minor, darker",
+               "I to vi: the relative minor, a darker colour."),
+            go(2, "leads on to V",
+               "I to ii: a minor chord that leads on to V."),
+        ],
+    ),
+    // ...ii, iii, IV, V, vi, vii°, and the borrowed iv, ii°, bIII, bVI, bVII
 ];
 ```
 
-Read the type from the outside in: an array of 7 items (one per degree),
-each a `&[(usize, &str)]`, a slice of pairs of "the degree that can come
-next" and "why". An array needs all its items to have the same type, and
-each degree has a different number of suggestions; a slice can have any
-length, so every item is a slice. All of it is `const`: it is built into
-the program, and lives as long as the program does. The `&str`s are
-really `&'static str`, so a `Suggestion` can carry its reason without
-copying it:
+Read a slot from the inside out: `go` builds a move with its reason in a
+sentence and in a few words; `slot` builds a chord's entry; `MAJOR` is a
+slice of slots, so it can hold a different number of entries for each
+kind of key and for borrowed chords. All of it is `const`: it is built
+into the program, and lives as long as the program does.
+
+A suggestion carries both kinds of reason:
 
 ```rust
+use std::borrow::Cow;
+
 pub struct Suggestion {
     /// The degree of the key the chord is built on, from 0 (the tonic).
     pub degree: usize,
     pub chord: Chord,
-    pub reason: &'static str,
+    pub reason: Cow<'static, str>,
+    pub short: Cow<'static, str>,
 }
 ```
+
+`short` is the reason in a few words ("root falls a fifth"), for a small
+hint line; `reason` is the full sentence. They are `Cow<'static, str>`,
+"clone on write": usually `Cow::Borrowed`, pointing straight at the
+table's `&'static str`, with no allocation. But the reason can be
+*rewritten* at run time: step 9 lets the chord sheet write minor-key
+Roman numerals one way or another, and then a sentence such as "I to IV"
+has to become owned text. `Cow` holds either case.
+
+**Changed in step 8.** `Suggestion` also gained a `why(level)` method:
+`HintLevel::Detailed` returns the sentence, `Short` the few words, and
+`Minimal` nothing. The piano roll's hint setting chooses. The table and
+the idea are the ones above.
 
 Keeping knowledge as data has a nice consequence: changing what the
 piano roll suggests means editing a table, not logic, and the tests
@@ -214,28 +257,35 @@ G#, making it E major, and most music in minor keys still does. That
 raised note is what the *harmonic minor* scale is made of.
 
 So in all three minor scales, `next_chords` uses the chords of the
-natural minor scale, except on the fifth degree, where it uses a major
-chord:
+natural minor scale, with two harmonic-minor exceptions. The table of
+roots and qualities makes both plain:
 
 ```rust
-let chord_on = |degree: usize| -> Option<Chord> {
-    if !minor {
-        return scale.triad(degree);
-    }
-    if degree == 4 {
-        let root = scale.pitch_classes().nth(4)?;
-        return Some(Chord::new(root, ChordQuality::Major));
-    }
-    Scale::new(scale.root, ScaleKind::NaturalMinor).triad(degree)
-};
+/// Natural minor, with a major V and the leading-tone vii°.
+const MINOR_CHORDS: [(u8, ChordQuality); 8] = [
+    (0, ChordQuality::Minor),        // i
+    (2, ChordQuality::Diminished),   // ii°
+    (3, ChordQuality::Major),        // bIII
+    (5, ChordQuality::Minor),        // iv
+    (7, ChordQuality::Major),        // V, not v
+    (8, ChordQuality::Major),        // bVI
+    (10, ChordQuality::Major),       // bVII
+    (11, ChordQuality::Diminished),  // vii°
+];
 ```
 
-This closure has its own `?`: it returns `Option<Chord>`, so `?` inside
-it leaves the closure, not `next_chords`.
+The roots are semitones above the tonic, so the lookup works in every
+minor key without naming the notes. The fifth entry gives `V` major, with
+the leading tone; the last gives the leading-tone chord. `MINOR` itself
+also has an entry for a *minor* v (E minor in A minor), because a song
+may use the natural-minor chord; its moves are the same "home or bVI"
+moves as the major V's.
 
 The "Chords in A minor" buttons show the key's own chords, so in A
 natural minor the button for the fifth degree says "v · Em". When E major is suggested,
-that button lights up, and its hover text says "played as E".
+that button lights up, and its hover text says "played as E". This is
+also why a suggestion carries its own `chord`: the degree is the key's,
+but the quality can be the harmonic-minor one.
 
 ### Secondary dominants
 
@@ -249,43 +299,41 @@ and it is one of the most common ways to add colour to a progression.
 `next_chords` checks for it before looking at the table:
 
 ```rust
-// A major chord on a degree where the key has none (D major in C) is
-// most often the dominant of the chord a fifth below it (G).
-let target = current.root.transpose(5);
-let dominant_kind = matches!(
-    current.quality,
-    ChordQuality::Major
-        | ChordQuality::Dominant7
-        | ChordQuality::Dominant9
-        | ChordQuality::Dominant7Flat9
-        | ChordQuality::Dominant7Sharp9
-        | ChordQuality::Dominant11
-        | ChordQuality::Dominant13
-);
+// A major or dominant chord from outside the key, a fifth above one
+// of the key's chords, is most often its dominant: D major in C
+// major leads to G.
+let root = scale.semitones_up_to(current.root);
+let dominant_kind =
+    current.quality == ChordQuality::Major || current.quality.is_dominant();
+let target = (root + 5) % 12;
 if dominant_kind
-    && !scale.is_diatonic(current)
-    && let Some(target_degree) = scale.degree_of(target)
-    && target_degree != 0
-    && let Some(chord) = chord_on(target_degree)
-    && chord.quality != ChordQuality::Diminished
+    && !scale.is_chord_of_key(current)
+    && target != 0
+    && let Some(suggestion) = suggest(target, SECONDARY_DOMINANT_SHORT, SECONDARY_DOMINANT)
+    && suggestion.chord.quality != ChordQuality::Diminished
 {
-    return vec![Suggestion { degree: target_degree, chord, reason: SECONDARY_DOMINANT }];
+    return vec![suggestion];
 }
 ```
 
 The `if` is a **let chain**: plain conditions and `let` patterns joined
 with `&&`, each one able to use what the ones before it bound. Read it
-as the rule it is: the chord sounds like a dominant, it is not in the
-key, the note a fifth below it *is* in the key, that note is not the
-tonic, and the chord built there is not diminished.
+as the rule it is: the chord sounds like a dominant, it is not one of the
+key's own chords, the note a fifth below it *is* in the key, that note is
+not the tonic, and the chord built there is not diminished.
 
-- "a fifth below" is `transpose(5)`: a fifth down and a fourth up are the
-  same pitch class, and `transpose` on a `PitchClass` wraps around.
-- `target_degree != 0`: a dominant of the tonic is just V. In A minor,
-  E major is not in the natural minor key, but it is the minor key's own
-  V, so it goes to the table, which sends it home to A minor.
+- "a fifth below" is `(root + 5) % 12`: a fifth down and a fourth up are
+  the same pitch class, and `% 12` wraps around the octave.
+- `is_chord_of_key` is more than "its notes are in the scale": it also
+  accepts the minor key's major V, which is the key's own dominant even
+  though the natural-minor scale has no G#.
+- `target != 0`: a dominant of the tonic is just V. In A minor,
+  E major is not the key's natural-minor chord, but it *is* the minor
+  key's own V, so it goes to the table, which sends it home to A minor.
 - `!= Diminished`: a diminished chord is too unstable to feel like home,
   even for a moment, so it is never "tonicized" this way.
+- `suggest` returns an `Option<Suggestion>`; the `let Some` also refuses
+  a target whose root is not a degree of the scale.
 
 A test checks the classic cases in C major:
 
@@ -306,29 +354,45 @@ for (chord, target) in [
 C7 is a nice one: C is the tonic, but C7 has a Bb, so it is not the
 tonic chord any more. It is the V of F, and sounds it.
 
-Chords whose root is not in the key at all, like Bb major in C major
-(borrowed from C minor, and common in rock), get no suggestions yet.
-Exercise 4 is about them.
+The table already knows the common chords borrowed from the parallel
+minor key: iv, ii°, bIII, bVI and bVII. Bb major in C major is bVII, and
+it suggests C (the rock cadence) or F (the "double plagal"). What it does
+not know is the **Neapolitan** bII, the major chord on the lowered second
+degree (Db in C). Exercise 4 adds it.
 
 ### In the piano roll
 
-The piano roll asks for suggestions about one chord, the one at the last
-step the pointer was over:
+The piano roll asks for suggestions about one chord, chosen by
+`current_chord`:
 
 ```rust
-let current = self.last_step.or(playhead).and_then(|step| {
-    match analyze(sounding(pattern, &heard, step)) {
-        Harmony::Chord { chord, .. } => Some((step, chord)),
+fn current_chord(&self, drawing: Drawing) -> Option<(ChordAt, Chord, PitchClass)> {
+    let held_chord = match analyze(drawing.held.iter().copied()) {
+        Harmony::Chord { chord, bass } => Some((ChordAt::Keys, chord, bass)),
         _ => None,
-    }
-});
+    };
+    held_chord.or_else(|| {
+        let step = self.last_step.or(drawing.playhead)?;
+        match analyze(sounding(drawing.pattern, drawing.heard, step)) {
+            Harmony::Chord { chord, bass } => Some((ChordAt::Step(step), chord, bass)),
+            _ => None,
+        }
+    })
+}
 ```
 
-`last_step` is remembered on purpose when the pointer leaves the grid.
-Otherwise the suggestions would vanish as soon as you moved the mouse up
-to the buttons to read them. When nothing has been pointed at yet, the
-step being played is used, so during playback the suggestions follow the
+A chord held on a keyboard comes first: it is what you are thinking
+about right now. Otherwise the chord at the last step pointed at is used,
+or the step being played when the pointer has not been over the grid.
+`last_step` is remembered on purpose when the pointer leaves the grid;
+otherwise the suggestions would vanish as soon as you moved the mouse up
+to the buttons to read them. During playback the suggestions follow the
 music.
+
+The call is `next_chords_over(scale, chord, bass)`, not `next_chords`,
+because the bass matters: a tonic chord with its fifth in the bass
+(C/G in C major) is heard as a cadential six-four and leads to V. For
+everything else it simply passes the work to `next_chords`.
 
 Each suggested chord's button is drawn with `Button::selected(true)`,
 the same highlighted look as a chosen tab, and its reason goes first in

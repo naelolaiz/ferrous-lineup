@@ -253,7 +253,7 @@ code says **what** you did, as a value (`RackAction::SetProgram {
 channel, program }`), and one place in the app does it, as one step to
 undo.
 
-## Saved with the song: format 26
+## Saved with the song: at least format 26
 
 A channel now has two more fields:
 
@@ -268,10 +268,11 @@ pub reverb_send: f32,
 plain value (0.0 and 1.0), and `default` fills it in when it is missing.
 So a song whose channels are all in the middle with a full send is
 written exactly as before, in the format it had, and older versions of
-the app can still open it. Only a song with another mix needs format
-26, which `file::format_for` works out from the channels. A file edited
-by hand with a pan of −3 is refused with a message, rather than playing
-a channel louder than full.
+the app can still open it. Only a song with another mix needs at least
+format 26, which `file::format_for` works out from the channels ([the
+project file format](../appendix-project-format.md)). A file edited by
+hand with a pan of −3 is refused with a message, rather than playing a
+channel louder than full.
 
 ## The tests
 

@@ -14,6 +14,29 @@ press Space, and they play it.
 
 ![The chord sheet with the band: "🎷 Band: Pop beat", a Progression button, "Key: C major · 4/4 · 110 BPM", and the bars C | Am | F | G7 with their numerals](../images/step-9-band-sheet.png)
 
+> **The band's words.** A few words come up all through this step:
+>
+> - **comp**: a chord played under the tune; as a verb, to play those
+>   chords.
+> - **comping**: the rhythm and voicings a chord player uses to comp,
+>   such as the piano's syncopated hits.
+> - **voicing**: which notes of a chord sound, and in which octaves.
+> - **voice leading**: moving each voice of a chord to the nearest voice
+>   of the next, so the chords join smoothly.
+> - **changes**: the chord progression of a song, bar by bar; "the
+>   changes" are what the chord sheet holds.
+> - **head / chorus**: the head is the written tune, played at the start
+>   and the end; a chorus is one pass through the form (in a pop song,
+>   the part that comes back after each verse).
+> - **walking bass**: one note per beat: the root, notes of the chord,
+>   and a half step into the next root.
+> - **turnaround**: the chords at the end of a section that lead back to
+>   its start, such as I vi ii V.
+>
+> Voicings and voice leading are harmony's own words: [Music theory as
+> types](../step-3/theory.md) and [The harmony
+> keys](../step-8/harmony-keys.md) show them at work.
+
 ## Trying it
 
 **File > New** now opens an empty chord sheet with a band ready, in

@@ -33,8 +33,12 @@ it comes.
 5. Click **Export…** and choose where to save the `.mp4` file.
 
 The export runs in the background, with its progress in the status bar
-and a **Stop** button beside it. A stopped export leaves no file
-behind. The dialog remembers your choices for next time.
+and a **Stop** button beside it. Closing the window while a WAV or video
+export runs asks first, and the window closes only once the export has
+stopped. A stopped export removes its temporary file, and a failed one
+never replaces an older file: the new file is renamed into place only
+when it is complete.
+The dialog remembers your choices for next time.
 
 ![Lead sheet, playlist and piano roll together](../images/step-9-video-three-views.png)
 

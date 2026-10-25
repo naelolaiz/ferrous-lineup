@@ -28,7 +28,7 @@ ways to tell the audio thread about it:
 
 Ferrous Lineup does the third, and then goes one step further: *normal*
 edits use the same comparison too. No edit sends its own commands any
-more. This is what every change in the app looks like now:
+more. This is what a change looks like now:
 
 ```rust
 pub(super) fn edit<R>(
@@ -36,10 +36,21 @@ pub(super) fn edit<R>(
     label: &'static str,
     change: impl FnOnce(&mut Project) -> R,
 ) -> R {
+    if self.history.is_open() {
+        // A drag or typing session is under way: its first change made
+        // the undo step. Change the project without copying the whole
+        // of it, and let the audio catch up every 50 ms at most.
+        let result = change(&mut self.project);
+        self.step_unsynced = true;
+        self.sync_step_if_due();
+        return result;
+    }
     let before = self.project.clone();
     let result = change(&mut self.project);
     if self.project != before {
         self.sync_audio(&before);
+        self.synced = self.project.clone();
+        self.step_unsynced = false;
         // `before` is moved into the history here, after its last use.
         self.history.record(label, before);
     }
@@ -47,13 +58,25 @@ pub(super) fn edit<R>(
 }
 ```
 
-and undo:
+The `is_open` branch is the important performance detail. A drag changes
+notes on every frame, but only the first frame needs the full comparison
+and the undo copy. While the step is open, `synced` holds the last state
+the audio thread was given; `sync_step_if_due` compares the project with
+that state and sends the differences, at most every 50 ms. When the mouse
+is released, `finish_step_sync` sends the last missing changes and the
+step closes. So one drag is one undo step, one copy, and a handful of
+messages, not one of each per frame.
+
+Undo replaces a whole project, so it always does the full comparison:
 
 ```rust
 pub(super) fn undo(&mut self) {
+    self.finish_step_sync();
     let before = self.project.clone();
     if self.history.undo(&mut self.project).is_some() {
         self.sync_audio(&before);
+        self.synced = self.project.clone();
+        self.step_unsynced = false;
     }
 }
 ```
@@ -80,12 +103,10 @@ borrow checker refuses that. Handing the closure `&mut self.project` as
 an argument lends it exactly the part it needs, for exactly as long as
 the call lasts.
 
-The closure's type is `impl FnOnce(&mut Project) -> R`. **`FnOnce`** is
-the most generous of the closure traits: a closure that can be called at
-least once. That allows closures that *move* something into the project,
-such as `|project| project.add_channel(channel)`, which gives `channel`
-away and so could not be called twice. `edit` only calls it once, so it
-asks for nothing more.
+The closure's type is `impl FnOnce(&mut Project) -> R`. `FnOnce` is the
+same closure trait [step 4 used for `edit_notes`](../step-4/patterns.md):
+it lets the closure move a value into the project, such as a new
+`channel`, because `edit` calls it exactly once.
 
 `R` is whatever the closure returns, and `edit` passes it back to the
 caller. Many `Project` methods return something: `add_clip` returns the
@@ -98,10 +119,12 @@ need braces and a semicolon to throw the value away:
 but the day one needs it, it is there.
 
 `self.project != before` compares the two projects completely (the
-derived `PartialEq` compares every field, every list, every note). It
-runs once per edit, not once per frame. If nothing changed, such as a
-clip dragged back onto the same cell or a note deleted where there was
-none, nothing is sent and no undo step is recorded.
+derived `PartialEq` compares every field, every list, every note). On a
+drag it runs once, when the step opens, not once per frame. If nothing
+changed, such as a clip dragged back onto the same cell or a note deleted
+where there was none, nothing is sent and no undo step is recorded. While
+the step stays open, the later changes are compared with the smaller
+`synced` copy only when the 50 ms sync is due.
 
 ## `diff`: the list of changes
 
@@ -118,9 +141,13 @@ pub enum Change {
     Instrument(usize),
     Volume(usize),
     Muted(usize),
+    Pan(usize),
+    ReverbSend(usize),
     PatternLength(usize),
     Notes { pattern: usize, channel: usize },
     Tempo,
+    LooseTiming,
+    Mixer,
     Song,
 }
 
@@ -138,6 +165,15 @@ Only what makes a sound is compared. Pattern names, channel names, track
 names and the key give no change at all, because the audio thread never
 sees them. Muting a track does give one: it takes that track's clips out
 of the song, so the clips the audio thread plays change.
+
+The mixer is audible too. Moving a channel between the speakers gives
+`Pan`, changing how much of it goes to the reverb gives `ReverbSend`, and
+changing the master volume or the reverb itself gives `Mixer`. Soloing a
+channel is a mixer change *and* changes which channels are heard, so
+`diff` also reports `Muted` for every channel whose effective mute
+changed. Loose timing gives `LooseTiming`: it decides how far off the
+grid a note may start. None of these was in the first version of
+`Change`; they were added as the mixer and feel controls arrived.
 
 ### Lining up two lists
 
@@ -159,7 +195,7 @@ was removed from the old list and inserted in the new one:
 ```
 
 ```rust
-fn new<T: PartialEq>(before: &[T], after: &[T]) -> Self {
+fn new<T>(before: &[T], after: &[T], same: impl Fn(&T, &T) -> bool) -> Self {
     if before.len() == after.len() {
         return Alignment { start: 0, removed: 0, inserted: 0 };
     }
@@ -167,7 +203,7 @@ fn new<T: PartialEq>(before: &[T], after: &[T]) -> Self {
     let start = before
         .iter()
         .zip(after)
-        .take_while(|(old, new)| old == new)
+        .take_while(|(old, new)| same(old, new))
         .count();
     // ...and the same at the end, without counting an item twice.
     let room = before.len().min(after.len()) - start;
@@ -175,7 +211,7 @@ fn new<T: PartialEq>(before: &[T], after: &[T]) -> Self {
         .iter()
         .rev()
         .zip(after[start..].iter().rev())
-        .take_while(|(old, new)| old == new)
+        .take_while(|(old, new)| same(old, new))
         .count()
         .min(room);
     Alignment {
@@ -202,10 +238,30 @@ When both lists are as long, nothing was added or removed, so items are
 simply compared position by position. That covers the most common
 edits: a click on a step changes one pattern, in place.
 
-`Alignment` works for any `T: PartialEq`, so the same code lines up
-patterns and channels. Two patterns are equal only if their names,
-lengths and every note are equal, so a pattern that is the same at both
-ends really is the same pattern.
+`Alignment` works for any `T`, because the caller says what "the same"
+means with the `same` closure. For channels that is full equality:
+`|old, new| old == new`. For patterns it is **not**, and that is the
+subtle part. A pattern's rows change when channels come and go: add a
+channel and every pattern gets another (empty) row, so comparing whole
+patterns would say every pattern changed. The alignment would then send
+every pattern's notes again, and the app would select a pattern that
+looks new.
+
+So patterns are lined up by the things that identify them, not by their
+contents:
+
+```rust
+/// Whether two patterns are the same pattern, perhaps with other notes.
+fn same_pattern(old: &Pattern, new: &Pattern) -> bool {
+    old.name == new.name && old.color == new.color && old.player == new.player
+}
+```
+
+The notes and the length are what the aligner lets change in place. Name,
+colour and player say *which* pattern it is; the notes that differ are
+sent afterwards as `Notes` and `PatternLength` changes anyway. The same
+reason makes the test for "did the user add a pattern?" right: a new row
+in every pattern is not a new pattern.
 
 ### `fn` pointers: enum variants are functions
 
@@ -254,8 +310,8 @@ of `insertions`. The function returns `impl Iterator<Item = Change>`,
 
 ```rust
 pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
-    let patterns = Alignment::new(before.patterns(), after.patterns());
-    let channels = Alignment::new(before.channels(), after.channels());
+    let patterns = Alignment::new(before.patterns(), after.patterns(), same_pattern);
+    let channels = Alignment::new(before.channels(), after.channels(), |old, new| old == new);
 
     let mut changes: Vec<Change> = patterns
         .changes(Change::RemovePattern, Change::InsertPattern)
@@ -274,20 +330,38 @@ order matters because of what the audio thread does with each change:
   when it comes, or it would bring notes for the wrong number of patterns.
 
 Then, for every channel that existed before (`old_index` says where it
-was, or `None` if it is new), the instrument, volume and mute are
-compared:
+was, or `None` if it is new), the instrument and mix are compared:
 
 ```rust
 for (index, channel) in after.channels().iter().enumerate() {
-    let Some(old) = channels.old_index(index).map(|old| &before.channels()[old]) else {
+    let Some(old_index) = channels.old_index(index) else {
         continue; // a new channel arrives complete
     };
-    if old.kind != channel.kind {
+    let old = &before.channels()[old_index];
+    if old.kind != channel.kind
+        || old.program != channel.program
+        || old.sent_on != channel.sent_on
+    {
         changes.push(Change::Instrument(index));
     }
-    ...
+    if old.volume != channel.volume {
+        changes.push(Change::Volume(index));
+    }
+    if old.pan != channel.pan {
+        changes.push(Change::Pan(index));
+    }
+    if old.reverb_send != channel.reverb_send {
+        changes.push(Change::ReverbSend(index));
+    }
+    if before.channel_muted(old_index) != after.channel_muted(index) {
+        changes.push(Change::Muted(index));
+    }
 }
 ```
+
+`channel_muted` is not simply the channel's `muted` box: it also takes
+the mixer's solo into account. That is why a solo change shows up as a
+`Muted` change on the other channels, as well as a `Mixer` change.
 
 `let ... else` (from step 2) either takes the value out of the `Some`, or
 runs the `else` block, which must leave: here `continue` jumps to the
@@ -324,19 +398,25 @@ compared with "no notes", which is exactly what the audio thread has for
 it, so a `Notes` change is sent only for the channels that have notes in
 it.
 
-Last come the tempo and the song. The song is compared through the clips
-that can be heard:
+Last come the tempo, the looseness, the mixer and the song. The song is
+compared through the arrangement that song mode actually plays:
 
 ```rust
-let same_clips = before
-    .playlist()
-    .audible_clips()
-    .eq(after.playlist().audible_clips());
+let (old_song, new_song) = (before.playback_arrangement(), after.playback_arrangement());
+if old_song.plays != new_song.plays
+    || old_song.length != new_song.length
+    || before.played_tempos(&old_song) != after.played_tempos(&new_song)
+{
+    changes.push(Change::Song);
+}
 ```
 
-`audible_clips()` returns an iterator, not a list. **`Iterator::eq`**
-compares two iterators item by item and stops at the first difference,
-without collecting either into a `Vec` first.
+An `Arrangement` is the clips with their repeats and the sections'
+repeats already unrolled, cut to the loop region if there is one. Comparing
+it catches a moved clip, a mute, a repeat count, a changed loop and a
+tempo marker in one `Song` change. Tempo markers are part of the song
+because the length of a step changes partway through; the audio thread
+gets them with `SetSongTempos`.
 
 ### When the story is ambiguous
 
@@ -365,12 +445,25 @@ per pattern, the tempo, and the song. It is simple enough to trust at a
 glance:
 
 ```rust
+struct ModelChannel {
+    kind: ChannelKind,
+    program: Option<u8>,
+    volume: f32,
+    muted: bool,
+    pan: f32,
+    reverb_send: f32,
+    /// One list per pattern.
+    notes: Vec<Vec<NoteEvent>>,
+}
+
 struct Model {
     lengths: Vec<usize>,
     channels: Vec<ModelChannel>,
     tempo: Tempo,
-    clips: Vec<Clip>,
+    loose_timing: u8,
+    plays: Vec<Play>,
     song_length: usize,
+    tempos: Vec<Tempo>,
 }
 ```
 
@@ -437,7 +530,7 @@ fn sync_audio(&mut self, before: &Project) {
                 patterns_moved = true;
             }
             Change::Notes { pattern, channel } => {
-                let notes = self.project.patterns()[pattern].notes(channel).to_vec();
+                let notes = self.project.played_notes(pattern, channel).into_owned();
                 self.send(Command::SetNotes { pattern, channel, notes });
             }
             ...
@@ -446,6 +539,18 @@ fn sync_audio(&mut self, before: &Project) {
     ...
 }
 ```
+
+The other arms are just as direct: `Volume`, `Pan` and `ReverbSend` send
+their one value, `Muted` sends the channel's effective mute, `LooseTiming`
+sends the new amount, `Mixer` sends the master volume and the reverb
+settings, and `Song` sends the three commands that replace the song,
+its tempos and its clicks.
+
+`Notes` asks for `played_notes`, not `notes`, because step 9's swing can
+move notes off their steps without changing what is written; the audio
+thread must be sent what is *heard*. `played_notes` returns a `Cow`
+("clone on write"): usually it borrows the written notes, and only with
+swing does it build a changed copy.
 
 It also keeps the UI's own numbers pointing at the right things. The
 selected pattern is a position, so it moves down when a pattern before it
@@ -458,9 +563,8 @@ undo did.
 ## The audio thread learns to insert
 
 Undoing "delete pattern 0" must put a pattern back at position 0, not at
-the end. In step 4 the audio thread could only add patterns and channels
-at the end (`AddPattern`, `AddChannel`). Now the commands take a
-position:
+the end. The audio thread's commands used to add patterns and channels
+only at the end; now they take a position:
 
 ```rust
 /// Add an empty pattern at position `index`; the patterns from there

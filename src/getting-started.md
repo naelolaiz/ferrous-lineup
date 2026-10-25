@@ -17,8 +17,9 @@ rustc --version
 ```
 
 Ferrous Lineup needs Rust 1.88 or newer. It uses the 2024 edition of the
-language (more on editions in the next chapter) and `if let` chains, which
-arrived in 1.88. If your Rust is older, `rustup update` fixes it.
+language (more on editions in [Cargo, workspaces and crates](step-1/workspace.md))
+and `if let` chains, which arrived in 1.88. If your Rust is older,
+`rustup update` fixes it.
 
 ## 2. Install the system's build tools
 
@@ -67,9 +68,18 @@ the `curl` command above. When it asks, let it install the Visual Studio
 Build Tools: Rust uses their linker. Then use the commands below in
 PowerShell or the Command Prompt.
 
-## 3. Build and run
+## 3. Get the code and build it
 
-From the repository folder:
+Clone the repository (Git is part of the build tools on macOS and Linux;
+on Windows, install it from <https://git-scm.com>) and enter its folder:
+
+```sh
+git clone https://github.com/naelolaiz/ferrous-lineup
+cd ferrous-lineup
+```
+
+If you downloaded a source archive instead, unpack it and enter that
+folder. Then build and run:
 
 ```sh
 cargo run --release
@@ -163,9 +173,10 @@ history with the app's code. Open that branch in a folder next to the
 app, install mdBook once, then build:
 
 ```sh
-git worktree add ../ferrous-lineup-book book
+git fetch origin book
+git worktree add ../ferrous-lineup-book -b book origin/book
 cd ../ferrous-lineup-book
-cargo install mdbook --locked
+cargo install mdbook --version 0.5.4 --locked
 mdbook build
 ```
 

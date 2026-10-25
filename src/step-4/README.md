@@ -13,7 +13,7 @@ that you can keep working on tomorrow, on Linux, macOS or Windows:
 - **pattern and song mode**: PAT loops the selected pattern while you work
   on it, SONG plays the playlist from the start and loops at the end,
 - **saving and loading** projects as `.lineup` files, which are plain text
-  you can read, with a dot in the window title when there are unsaved
+  you can read, with a star in the window title when there are unsaved
   changes and a "Save changes?" question before anything is lost,
 - **macOS and Windows** builds, made and tested by CI on every push next
   to the Linux one.
@@ -85,7 +85,6 @@ crates/lineup-core/src/playlist.rs     Track, Clip, Playlist (new)
 crates/lineup-core/src/project.rs      many patterns, the playlist, the demo song
 crates/lineup-core/src/pattern.rs      patterns have names; no duplicate notes
 crates/lineup-core/src/file.rs         project files: save, load, FileError (new)
-crates/lineup-core/examples/print_demo.rs   prints the demo as a project file (new)
 crates/lineup-core/src/{pitch,tempo}.rs and harmony/scale.rs   serde derives
 crates/lineup-audio/src/engine.rs      ChannelNotes, PlayMode, song playback
 crates/lineup-app/src/playlist.rs      the playlist window (new)
@@ -109,3 +108,7 @@ windows on screen, and last the other operating systems.
 > action: every change goes through `edit`, which compares the project
 > before and after. And `Instrument::for_channel` takes a `SampleCache`.
 > [Step 5](../step-5/README.md) explains why.
+>
+> **Changed later still.** Step 8 gave clips a `repeats` count, and
+> `SetSong` now carries `plays`: the pieces of patterns with repeats and
+> sections already unrolled. The chapters say where that changed.

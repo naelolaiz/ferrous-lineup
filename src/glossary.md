@@ -1,16 +1,16 @@
 # Rust glossary
 
 Short definitions of the Rust terms used in this book, with the chapter
-where each one first appears in real code.
+that explains each one.
 
-| Term | Meaning | First seen in |
-|------|---------|---------------|
+| Term | Meaning | Explained in |
+|------|---------|--------------|
 | **Anonymous lifetime (`'_`)** | A lifetime written without a name, meaning "the lifetime of the borrowed argument". | [Steps to notes](step-3/notes.md) |
 | **`Arc<T>`** | A shared, reference-counted pointer that is safe to use across threads; the data is freed when the last `Arc` goes. | [Instruments](step-2/instruments.md) |
 | **Array** | A fixed number of values stored inline, like `[bool; 64]`; the length is part of the type. | [Patterns](step-2/project.md) |
 | **Array `map`** | `[T; N]::map` calls a closure on each item of an array and gives back a new array of the same length, with no `Vec` and no `collect`. | [Twelve-tone rows](step-8/twelve-tone.md#every-form-from-one-function) |
 | **`array::from_fn`** | Builds an array by calling a closure once for each element. | [Voices](step-3/voices.md) |
-| **`as` cast** | Converts between number types, or a fieldless enum to its number: `PitchClass::D as u8` is 2. | [Pitch classes and scales](step-3/theory.md) |
+| **`as` cast** | Converts between number types, or a fieldless enum to its number: `PitchClass::D as u8` is 2. | [lineup-core](step-1/lineup-core.md) |
 | **Associated function** | A function in an `impl` block without `self`, called as `Type::name()`. `Note::new` is one. | [lineup-core](step-1/lineup-core.md) |
 | **Associated type** | A type that each implementation of a trait chooses, like `type Error = FileError;` in an `impl TryFrom`. | [Saving](step-4/saving.md) |
 | **Atomic** | A value (like `AtomicUsize`) that threads can read and write without a lock. | [Audio thread](step-2/realtime.md) |
@@ -43,12 +43,12 @@ where each one first appears in real code.
 | **Crate** | One library or program; the unit Cargo builds and publishes. | [Workspace](step-1/workspace.md) |
 | **`cycle`** | Repeats an iterator forever. Safe because iterators are lazy: something else, like `zip`, decides when to stop. | [Tools](step-6/tools.md) |
 | **Declarative macro (`macro_rules!`)** | A macro defined by patterns: `macro_rules! hit { ($at:expr, ...) => { ... } }` matches what it is given and pastes it into a template, before the code is compiled. | [The library](step-8/library.md#macro_rules-and-why-not-a-function) |
-| **`Default`** | A trait for "the default value" of a type; on an enum, `#[derive(Default)]` needs `#[default]` on one variant. | [Pitch classes and scales](step-3/theory.md) |
+| **`Default`** | A trait for "the default value" of a type; on an enum, `#[derive(Default)]` needs `#[default]` on one variant. | [lineup-core](step-1/lineup-core.md) |
 | **Deref coercion** | Rust turning `&Vec<T>` into `&[T]` (or `&String` into `&str`) automatically where needed. | [Steps to notes](step-3/notes.md) |
 | **Dereference (`*`)** | Follow a reference to the value it points at, to read or write it. | [Patterns](step-2/project.md) |
 | **Derive** | `#[derive(Trait)]` asks the compiler to implement common traits automatically. | [lineup-core](step-1/lineup-core.md) |
 | **Derive macro** | Code that writes a trait implementation for a type; serde's `#[derive(Serialize)]` comes from a crate, not from the compiler. | [Saving](step-4/saving.md) |
-| **`Display`** | The trait behind `{}` in `format!` and behind `to_string()`. Implement its `fmt` method once, and every place writes the value the same way. | [Time signatures](step-8/time-signatures.md) |
+| **`Display`** | The trait behind `{}` in `format!` and behind `to_string()`. Implement its `fmt` method once, and every place writes the value the same way. | [lineup-core](step-1/lineup-core.md) |
 | **Disjoint borrows** | Borrowing two different fields of a struct at once, even one mutably; allowed because they cannot overlap. | [Voices](step-3/voices.md) |
 | **`div_ceil`** | Integer division that rounds up: `16.div_ceil(6)` is 3, where `16 / 6` is 2. | [Micromodes](step-8/micromodes.md#the-walk-choosing-with-a-tuple) |
 | **`drain(..)`** | Takes every item out of a `Vec`, in order, and keeps the `Vec`'s memory for later. | [Live keys](step-7/live.md) |
@@ -100,7 +100,7 @@ where each one first appears in real code.
 | **`Mutex<T>` and poisoning** | A lock that lets one thread at a time reach the `T` inside. If a thread panics while holding it, the mutex is *poisoned*, and `lock` returns an error until you take the data anyway with `PoisonError::into_inner`. | [Live keys](step-7/live.md) |
 | **Newtype** | A struct with one field that wraps another type to give it its own meaning. | [lineup-core](step-1/lineup-core.md) |
 | **`?` operator** | Return early with the error if a `Result` is `Err` (or an `Option` is `None`). | [lineup-audio](step-1/audio-engine.md) |
-| **`Option::and_then`** | Calls a closure that itself returns an `Option` on the value, if there is one; `None` stays `None`. | [Live keys](step-7/live.md) |
+| **`Option::and_then`** | Calls a closure that itself returns an `Option` on the value, if there is one; `None` stays `None`. | [Patterns](step-2/project.md) |
 | **`Option::as_mut`** | Turns `&mut Option<T>` into `Option<&mut T>`, to use the value inside without moving it out. | [Live keys](step-7/live.md) |
 | **`Option::filter`** | Keeps a `Some` only if a closure says yes, and gives `None` otherwise. | [Recording](step-7/recording.md) |
 | **`Option<T>`** | `Some(value)` or `None`; Rust's replacement for null. | [lineup-audio](step-1/audio-engine.md) |
@@ -148,7 +148,7 @@ where each one first appears in real code.
 | **Turbofish (`::<>`)** | Writing a generic function's type out at the call, as in `collect::<Vec<Note>>()`, when Rust cannot work it out. | [lineup-audio](step-1/audio-engine.md) |
 | **Type alias** | A second name for an existing type: `type StepRow = [bool; 64];`. | [Patterns](step-2/project.md) |
 | **`VecDeque<T>`** | A double-ended queue: a ring buffer that is cheap to add to and take from at both ends. | [Undo and redo](step-5/history.md) |
-| **`windows`** | Every run of n neighbours of a slice, overlapping: `[1, 2, 3].windows(2)` gives `[1, 2]` and `[2, 3]`. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
+| **`windows`** | Every run of n neighbours of a slice, overlapping: `[1, 2, 3].windows(2)` gives `[1, 2]` and `[2, 3]`. | [Tests](step-1/ci.md) |
 | **`wrapping_add` / `wrapping_mul`** | Arithmetic that wraps around on overflow instead of stopping a debug build, for when wrapping is what you want, as in random numbers. | [Twelve-tone rows](step-8/twelve-tone.md#what-makes-a-row-interesting) |
 | **Workspace** | A group of crates built together with one `Cargo.lock`. | [Workspace](step-1/workspace.md) |
 | **`zip`** | Pairs the items of two iterators, `(a, b)`, and stops when either runs out. | [What changed](step-5/diff.md) |

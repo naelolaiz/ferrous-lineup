@@ -15,22 +15,27 @@ same?
 
 *Practices:* `const fn` tables, struct literals, reading test failures.
 
-## 2. A chacarera (lineup-core, easy)
+## 2. A second chacarera (lineup-core, easy)
 
-The chacarera, a folk dance from the north of Argentina, is in 6/8 with
-a bass drum (the *bombo legüero*) that plays across the beats. Add it
-as a rhythm in the Folk genre, with `.in_time(SIX_EIGHT)`. A bar of 6/8
-is twelve steps, so each line has twelve characters:
+The library already has `Chacarera` and `Chacarera trunca` in `STYLES`
+and `RHYTHMS`, and *Chacarera del patio* in `SONGS`. Read the two
+rhythms first: `Chacarera` in 6/8 sets the bombo's head against its rim,
+and `Chacarera trunca` in 3/4 cuts its phrases short. Then add a third
+rhythm for the same dance with a different bombo pattern, and a style
+that uses it. Keep 6/8 if you write a chacarera: a bar is twelve steps,
+so each line has twelve characters:
 
 ```text
-Kick  "X.....  ..x.x."
-Rim   "..x.x.  x....."
+LowTom  "X.....  ..x.x."
+Rim     "..x.x.  x....."
 ```
 
-Write a style that uses it, and check in the rack that the beat colours
-come in two groups of six.
+Check in the rack that the beat colours come in two groups of six. Why
+does the existing `Chacarera` style fit a 6/8 bar while the trunca needs
+3/4?
 
-*Practices:* the rhythm notation, `const` time signatures.
+*Practices:* reading existing data before adding to it, the rhythm
+notation, `const` time signatures.
 
 ## 3. Latch (lineup-app, easy)
 
@@ -58,37 +63,49 @@ says which minor-key chord each one is.
 
 *Practices:* reusing the library's numerals, egui layout.
 
-## 5. A song of your own (lineup-core, medium)
+## 5. Extend a song that is already there (lineup-core, medium)
 
-Add a song in the public domain to the right genre file in
-`library/song/`, and to `SONGS`. Some that are not in the library yet:
-*La Paloma* (a habanera from 1863, so it can use `Comping::Habanera`),
-*O Sole Mio* (1898), *Shenandoah* (a sea shanty), *Danny Boy* (the
-Londonderry Air, 3/4).
+*La Paloma*, *Shenandoah* and *Danny Boy* are in `SONGS` now, and each
+shows something different: *La Paloma* has verse, chorus and coda;
+*Shenandoah* is a river song that starts on a pickup and reaches high;
+*Danny Boy* keeps its verse low and leaps up in the chorus. Pick one and
+add a part the demo does not play yet: an introduction, a second verse,
+or a coda. Write the melody bar by bar with `|` between bars, give it a
+chord chart, and add it to the song's `form`.
 
-Write the melody bar by bar, with `|` between bars, and let the tests
-tell you which bars do not add up. Then open it from **File > Demos**.
-Does `analyze` find the chords you wrote while it plays? If not, which
-notes confuse it?
+Let the tests tell you which bars do not add up. Then open it from
+**File > Demos**. Does `analyze` find the chords you wrote while it
+plays? If not, which notes confuse it?
 
-*Practices:* the melody notation, tests as a safety net for data.
+*Practices:* the melody notation, reading existing data, tests as a
+safety net for data.
 
-## 6. Changing time in the middle (lineup-core, hard)
+## 6. A meter map inside a pattern (lineup-core, hard)
 
-A project has one time signature. Real songs sometimes change: a bar of
-2/4 at the end of a phrase, a chorus that goes from 4/4 to 3/4. Design
-a *meter map*: a list of `(bar, TimeSignature)` changes, sorted by bar.
+Step 8 already has a song-level meter map: `Meter` keeps the starting
+`TimeSignature` and a sorted list of `TimeMarker`s, and `bar_at`,
+`time_at` and `click` read it. A `Pattern` still has only one
+`time: Option<TimeSignature>`, so a part that changes meter every bar
+is cut into a pattern per run of bars.
 
-- Write `fn bar_start(&self, bar: usize) -> usize` and
-  `fn bar_at(&self, step: usize) -> usize`, with tests first. Which one
-  is a search, and could it use `partition_point`?
-- Which parts of the app would have to ask the map instead of
-  `project.time_signature`? Make a list before you write any code.
-- How would you save it, so that projects with one time signature are
+Take the next step: let one pattern hold a meter map of its own, with
+changes at bar lines. `Pattern::length` counts steps, and a bar is no
+longer one fixed number of them, so:
+
+- Which code that asks `TimeSignature::steps_per_bar` or `Meter::bar_at`
+  for a pattern would need to ask the pattern's map instead: the note
+  tools, `Project::pattern_clicks`, the piano roll's bar lines?
+- What should the playlist and the piano roll ask when a clip starts
+  partway through a pattern?
+- How would `format_for` account for it, so a pattern in one meter is
   written exactly as now?
 
-*Practices:* designing a data structure, binary search on sorted data,
-keeping files compatible.
+Start with `Meter` rather than inventing a second type. Why does keeping
+the changes in a sorted list make `bar_at` a search, and why does the
+existing `Meter` not simply use `partition_point`?
+
+*Practices:* reading an existing data structure before extending it,
+bar arithmetic, keeping files compatible.
 
 ## 7. Remember the hint level (lineup-app, medium)
 
