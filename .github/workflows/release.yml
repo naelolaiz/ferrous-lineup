@@ -254,6 +254,10 @@ jobs:
       - name: Build the Windows installer
         if: runner.os == 'Windows'
         shell: bash
+        env:
+          # Git Bash rewrites arguments that start with "/" as Windows
+          # paths, which would turn ISCC's /D... defines into script names.
+          MSYS2_ARG_CONV_EXCL: '*'
         run: |
           version=$(sed -n '/^\[workspace\.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
           iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
