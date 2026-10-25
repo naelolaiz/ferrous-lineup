@@ -19,7 +19,7 @@ lets Ferrous Lineup do the same, with a **SoundFont**.
 
 ## What you see
 
-There is a new menu, **Sounds**, between View and MIDI. Tick
+There is a new page in **Edit > Settings… > Audio**. Tick
 **SoundFont instruments**. The first time, a window explains what a
 SoundFont is and offers to download one:
 
@@ -42,13 +42,13 @@ on:
   Osc. Right-click a channel's name and pick an instrument under
   **Instrument** to move it to the SoundFont.
 
-![The Sounds menu, with the hover text of SoundFont instruments](../images/step-9-sounds-menu.png)
+![The old Sounds menu, with the hover text of SoundFont instruments. The screenshot predates the move to Edit > Settings… > Audio.](../images/step-9-sounds-menu.png)
 
 The SoundFont is downloaded once. The app keeps it in its data folder
 (`~/.local/share/ferrouslineup/soundfonts` on Linux,
 `~/Library/Application Support/Ferrous-Lineup/soundfonts` on macOS,
 `AppData\Roaming\Ferrous Lineup\data\soundfonts` on Windows) and
-remembers the menu's ticks: next time it starts with the sounds on.
+remembers the settings' ticks: next time it starts with the sounds on.
 **Choose SoundFont…** plays any other `.sf2` file instead; **Use
 GeneralUser GS** goes back.
 

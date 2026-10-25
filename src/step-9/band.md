@@ -32,17 +32,18 @@ bar, or where a walking bass puts its lead-in note.
 
 On the sheet's top line:
 
-- **🎷 Band** picks how the band plays. Each of the library's 81
-  rhythms is a band style, sorted by genre, and four more play without
-  drums: **Chorale** (each chord held, as an organ plays a hymn),
-  **Alberti bass** (the chord broken low, high, middle, high, as in
-  Mozart's sonatas), **Arpeggios** and **Sarabande** in 3/4. Pointing at
-  one says what it is, its time signature and its usual tempo. **No
-  band** sends the band home.
+- **🎷 Band** picks how the band plays. At this step, each of the
+  library's 81 rhythms is a band style (112 today), sorted by genre,
+  and four more play without drums: **Chorale** (each chord held, as an
+  organ plays a hymn), **Alberti bass** (the chord broken low, high,
+  middle, high, as in Mozart's sonatas), **Arpeggios** and **Sarabande**
+  in 3/4. Pointing at one says what it is, its time signature and its
+  usual tempo. **No band** sends the band home.
 - **Progression** writes a well-known chord progression from the
-  selected bar, in the song's key: the 145 harmony styles of the
-  library, by genre, each with its chords in the tooltip ("Cmaj7 – Am7
-  – Dm7 – G7. I vi ii V: the progression that ends so many standards").
+  selected bar, in the song's key: the 145 harmony styles of the library
+  at this step (177 today), by genre, each with its chords in the
+  tooltip ("Cmaj7 – Am7 – Dm7 – G7. I vi ii V: the progression that ends
+  so many standards").
   Pick another and it goes on after the first.
 - **End the song here**, when you right-click a bar, says where the
   band stops. A bar with nothing written goes on with the harmony

@@ -89,7 +89,7 @@ on the third, sixth and seventh degrees are written: bIII bVI bVII,
 counted from the major scale as pop and jazz books do, or III VI VII,
 counted from the minor scale as classical books do.
 The **Library** tab next to the pattern list holds an alphabetical
-**Presets** list, combining all 171 harmony presets, 107 rhythm presets
+**Presets** list, combining all 177 harmony presets, 112 rhythm presets
 and your saved styles. **Edit > Settings… > Library > Style list** can instead group
 them by genre, with a separate **User styles** group. Equivalent
 style/rhythm entries are combined; distinct playing patterns remain available. They cover pop, rock, blues, jazz, soul, hip hop,
@@ -505,14 +505,19 @@ lead sheet, the playlist, the piano roll and the harmony keys, arranged
 on a preview, in HD or Full HD. The encoders are built into the app, so
 nothing else needs installing.
 
-Ready-built programs for all three systems are attached to every CI run
-as `ferrous-lineup-linux`, `ferrous-lineup-macos` and `ferrous-lineup-windows`.
-The **Release** workflow packs them ready to use, with this README and
-the licence: a `.tar.gz` and an AppImage for Linux, a `.zip` for
-Windows, and builds for Apple Silicon and Intel Macs. They are attached
-to every Release run, and pushing a `v` tag (`v0.2.0`) publishes them on
-the repository's Releases page. They are not signed yet, so macOS and
-Windows warn before the first start.
+Bare programs for all three systems are attached to every CI run as
+`ferrous-lineup-linux`, `ferrous-lineup-macos` and
+`ferrous-lineup-windows`. The **Release** workflow builds the packages
+ready to use, with the README and the licence: a Linux AppImage, `.deb`
+and `.tar.gz`; a Windows Setup `.exe` and portable `.zip`; and a macOS
+`.dmg` with `Ferrous Lineup.app`, for Apple Silicon and Intel. They are
+attached to every Release run, and pushing a `v` tag (`v0.2.0`)
+publishes them on the repository's
+[Releases page](https://github.com/naelolaiz/ferrous-lineup/releases).
+The Windows programs are unsigned, and the macOS app is ad-hoc signed
+but not notarized, so both warn before the first start;
+[Release builds](step-9/releases.md) explains each download and the
+warnings.
 
 ## Checking playback with a trace
 

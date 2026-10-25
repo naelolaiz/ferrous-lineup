@@ -7,21 +7,25 @@ build it. The CI workflow did attach the program it built to each run
 ([Proving it: the CI matrix](../step-4/platforms.md#proving-it-the-ci-matrix)),
 but only as a bare file, with no Intel Mac build, and nothing a person
 without a GitHub account could find. A second workflow, **Release**,
-now builds the program for four systems and packs each one to
-download, plus an AppImage for Linux:
+now runs four build jobs (Linux, Windows, and macOS for Apple Silicon
+and Intel) and packs seven downloads:
 
 | Package | System |
 |---------|--------|
 | `ferrous-lineup-…-linux-x86_64.AppImage` | Linux on a PC (Intel or AMD): one file, nothing to unpack |
 | `ferrous-lineup-…-linux-x86_64.tar.gz` | Linux on a PC, as a plain folder |
-| `ferrous-lineup-…-windows-x86_64.zip` | Windows on a PC |
-| `ferrous-lineup-…-macos-arm64.tar.gz` | Macs with Apple Silicon (M1 and later) |
-| `ferrous-lineup-…-macos-x86_64.tar.gz` | Macs with an Intel processor |
+| `ferrous-lineup_…_amd64.deb` | Debian, Ubuntu and their derivatives |
+| `ferrous-lineup-…-windows-x86_64-setup.exe` | Windows on a PC, with an uninstaller and file associations |
+| `ferrous-lineup-…-windows-x86_64.zip` | Windows on a PC, portable: unzip and run |
+| `ferrous-lineup-…-macos-arm64.dmg` | Macs with Apple Silicon (M1 and later) |
+| `ferrous-lineup-…-macos-x86_64.dmg` | Macs with an Intel processor |
 
-Each `.zip` and `.tar.gz` holds a folder with the program, the README
-and the licence. The `…` is the version for a release (`v0.1.0`), or
-the first seven characters of the commit for any other build
-(`1a2b3c4`), so you always know what you downloaded.
+The `.tar.gz` and `.zip` hold a folder with the program, the README and
+the licence; a `.dmg` holds `Ferrous Lineup.app`. The AppImage is the
+program in one file, and the `.deb` and Setup `.exe` install it. The `…`
+is the version for a release (`v0.2.0`), or the first seven characters
+of the commit for any other build (`1a2b3c4`), so you always know what
+you downloaded.
 
 ## Where the downloads are
 
@@ -30,7 +34,7 @@ the first seven characters of the commit for any other build
   builds any branch on demand). Open the repository's **Actions** tab,
   choose **Release**, then the run, or click **Details** next to a
   pull request's "Build" checks. At the bottom of the run's page, under
-  **Artifacts**, are the five packages, each one a download of its own.
+  **Artifacts**, are the seven packages, each one a download of its own.
   Artifacts need a GitHub login to download, and GitHub deletes them
   after 90 days.
 - **A tag** that starts with `v` also publishes the packages on the
@@ -64,7 +68,7 @@ A release is a tag: a name stuck on one commit. To make version 0.2.0:
    git push origin v0.2.0
    ```
 
-The push starts the workflow. When the four builds have passed, the
+The push starts the workflow. When the four build jobs have passed, the
 release appears on the Releases page, called "Ferrous Lineup v0.2.0",
 with notes that list the pull requests merged since the last release.
 
@@ -91,9 +95,12 @@ replaces the release's files.
 
 ## Opening what you downloaded
 
-None of the programs is **signed**: signing needs a paid certificate
-from Apple and from a Windows certificate authority. Both systems warn
-about an unsigned program the first time, and both let you run it.
+The Linux and Windows programs are not **signed**, and the macOS app is
+**ad-hoc signed** but not **notarized**. An ad-hoc signature is free and
+is what Apple Silicon requires; notarization is the extra check Apple
+does for a paid Developer ID, so Gatekeeper still asks the first time.
+Windows SmartScreen asks about the unsigned Setup program too. Both
+systems let you run it.
 
 - **Linux, the AppImage**: a downloaded file is never executable, so
   allow it once and start it:
@@ -107,6 +114,17 @@ about an unsigned program the first time, and both let you run it.
   file as program**, then double-click it.) An AppImage mounts itself
   with FUSE, which desktop systems have; where FUSE is missing, as in
   some containers, add `--appimage-extract-and-run`.
+- **Linux, the `.deb`**: install it with `apt`, which also installs the
+  libraries it needs:
+
+  ```sh
+  sudo apt install ./ferrous-lineup_0.2.0-1_amd64.deb
+  ```
+
+  It puts `ferrous-lineup` in `/usr/bin`, adds the menu entry and icon,
+  and installs the `.lineup` project type so file managers can open a
+  project with it. Remove it with `sudo apt remove ferrous-lineup`; your
+  project files stay.
 - **Linux, the `.tar.gz`**: unpack and start it:
 
   ```sh
@@ -114,22 +132,29 @@ about an unsigned program the first time, and both let you run it.
   ./ferrous-lineup-v0.2.0-linux-x86_64/ferrous-lineup
   ```
 
-  Both need ALSA's library (`libasound2`, on every desktop Linux) and
-  load the window and graphics libraries the desktop already has. The
-  plain folder also needs the keyboard library `libxkbcommon-x11-0`,
-  which the AppImage brings along.
-- **Windows**: unzip and double-click `ferrous-lineup.exe`. If a blue
-  window says "Windows protected your PC", choose **More info**, then
-  **Run anyway**.
-- **macOS**: double-click the `.tar.gz` to unpack it, then start
-  `ferrous-lineup` from the Terminal (or double-click it, which opens a
-  Terminal window for it). If macOS says it can't check the program for
-  malicious software, open **System Settings > Privacy & Security** and
-  click **Open Anyway**, or take away the mark macOS puts on downloaded
-  files:
+  All three Linux downloads need ALSA's library (`libasound2`, on every
+  desktop Linux) and load the window and graphics libraries the desktop
+  already has. The plain folder also needs the keyboard library
+  `libxkbcommon-x11-0`, which the AppImage brings along; the `.deb`
+  declares it and apt installs it.
+- **Windows, the Setup `.exe`**: run it. It installs the program, a
+  Start-menu entry, an uninstaller under **Settings > Apps**, and the
+  `.lineup` (and old `.loom`) file association, so double-clicking a
+  project opens it in Ferrous Lineup. If a blue window says "Windows
+  protected your PC", choose **More info**, then **Run anyway**.
+- **Windows, the `.zip`**: unzip and double-click
+  `ferrous-lineup.exe`. It is the same program without an installer or
+  a file association.
+- **macOS**: open the `.dmg`, then drag **Ferrous Lineup** onto the
+  **Applications** folder in the same window. Start it from
+  Applications. If macOS says it can't check the program for malicious
+  software, try to open it once, then allow it in **System Settings >
+  Privacy & Security** (on older versions, right-click the app and
+  choose **Open**). You can also take away the mark macOS puts on
+  downloaded files:
 
   ```sh
-  xattr -dr com.apple.quarantine ferrous-lineup-v0.2.0-macos-arm64
+  xattr -dr com.apple.quarantine "/Applications/Ferrous Lineup.app"
   ```
 
 To check that a download arrived whole, compare it with the checksum
@@ -264,9 +289,10 @@ is empty. No console window opens behind the program, thanks to the
 
 ### Packing
 
-The **Package** step is a small Bash script (Windows runs Bash too, from
-Git for Windows, with `shell: bash`). It picks the label, copies the
-program, the README and the licence into a folder, and packs it:
+The **Package** step runs for Linux and Windows (`if: runner.os !=
+'macOS'`; Windows runs Bash too, from Git for Windows, with `shell:
+bash`). It picks the label, copies the program, the README and the
+licence into a folder, and packs it:
 
 ```bash
 if [[ "$GITHUB_REF_TYPE" == tag ]]; then
@@ -285,12 +311,21 @@ into main, to test what main would become), which you never see, so
 the name takes the branch's latest commit instead. `||` picks the first
 value that isn't empty.
 
-Windows gets a `.zip`, which Windows opens by itself. Linux and macOS
-get a `.tar.gz`, because a tar file keeps file permissions: the
-program's "executable" bit survives, and it starts without a `chmod +x`.
-On macOS, `COPYFILE_DISABLE=1` stops `tar` from adding hidden `._`
-files with Finder information.
+Windows gets a `.zip`, which Windows opens by itself. Linux gets a
+`.tar.gz`, because a tar file keeps file permissions: the program's
+"executable" bit survives, and it starts without a `chmod +x`.
 
+macOS does not use that step. **Package for macOS** builds a real
+`Ferrous Lineup.app`: the program in `Contents/MacOS`, `Info.plist`
+and the icon in `Contents/Resources`, the README and licence beside
+them, and the version from `Cargo.toml` written into the plist. It
+signs the app ad-hoc (`codesign --force --sign -`), puts it in a folder
+with a link to `/Applications`, and `hdiutil` makes the `.dmg`. In the
+mounted image, dragging the app onto that link copies it into
+Applications. `COPYFILE_DISABLE=1` stops the archive tools from adding
+hidden `._` files with Finder information.
+
+The AppImage and the `.deb` are built by steps of their own, below.
 The package is uploaded with `archive: false`:
 
 ```yaml
@@ -321,8 +356,8 @@ The AppDir is laid out like a system's `/usr`:
 ```text
 AppDir/
 ├── AppRun -> usr/bin/ferrous-lineup          what the runtime starts
-├── ferrous-lineup.desktop -> usr/share/…     the menu entry
-├── ferrous-lineup.svg -> usr/share/…         the icon
+├── io.github.naelolaiz.FerrousLineup.desktop -> usr/share/…  the menu entry
+├── io.github.naelolaiz.FerrousLineup.svg -> usr/share/…      the icon
 └── usr/
     ├── bin/ferrous-lineup
     ├── lib/libxkbcommon.so.0, libxkbcommon-x11.so.0, libxcb-xkb.so.1
@@ -330,13 +365,14 @@ AppDir/
 ```
 
 The **desktop entry**
-([`packaging/linux/ferrous-lineup.desktop`](https://github.com/naelolaiz/ferrous-lineup/blob/main/packaging/linux/ferrous-lineup.desktop))
+([`packaging/linux/io.github.naelolaiz.FerrousLineup.desktop`](https://github.com/naelolaiz/ferrous-lineup/blob/main/packaging/linux/io.github.naelolaiz.FerrousLineup.desktop))
 is the small text file every Linux menu reads: the app's name, its
 icon, its category, and how to start it (`Exec=ferrous-lineup %f`,
 where `%f` is a file to open). The icon
-([`packaging/linux/ferrous-lineup.svg`](https://github.com/naelolaiz/ferrous-lineup/blob/main/packaging/linux/ferrous-lineup.svg))
-is five players of a band in a line, in the app's orange. Tools that
-add AppImages to the menu (AppImageLauncher, for one) use both.
+([`packaging/icon/ferrous-lineup.svg`](https://github.com/naelolaiz/ferrous-lineup/blob/main/packaging/icon/ferrous-lineup.svg))
+is an F and a trumpeter, in the app's orange. Tools that add AppImages
+to the menu (AppImageLauncher, for one) use both, and so does the
+`.deb`.
 
 `appimagetool` turns the AppDir into the AppImage. It and the runtime
 are downloaded from their GitHub releases, pinned to one version, and
@@ -384,10 +420,28 @@ a graphics driver belongs to its graphics card and kernel, and ALSA to
 the system's sound setup. The AppImage community keeps a list of such
 libraries, the *excludelist*, that an AppImage should never carry.
 
+### The Debian package
+
+The `.deb` is built by `cargo-deb`, pinned to 3.8.0, from the same
+release binary and the same desktop entry, icon, MIME type and AppStream
+file:
+
+```bash
+cargo deb -p lineup-app --no-build --target x86_64-unknown-linux-gnu
+```
+
+`--no-build` uses the binary the matrix just built. The
+`[package.metadata.deb]` table in `crates/lineup-app/Cargo.toml` lists
+the files and the dependencies the package needs: ALSA, Wayland,
+xkbcommon, the desktop portal, `desktop-file-utils`, `hicolor-icon-theme`
+and `shared-mime-info`. That is why `sudo apt install
+./ferrous-lineup_0.2.0-1_amd64.deb` installs those too, while `dpkg -i`
+on its own would leave them missing.
+
 ### Publishing: a job that waits for the others
 
 The second job, `release`, runs only for tags, and only once all four
-builds have passed:
+build jobs have passed:
 
 ```yaml
 release:
@@ -406,7 +460,7 @@ password that expires when the job ends. At the top of the file,
 else, so a build step can't change the repository. Only this job
 asks for `contents: write`, which a release needs.
 
-The job downloads the five packages (each into a folder of its own
+The job downloads the seven packages (each into a folder of its own
 name; `skip-decompress` keeps the Windows `.zip` from being unpacked),
 writes their checksums with `sha256sum`, and hands everything to `gh`,
 GitHub's command-line tool, which every GitHub machine has:
@@ -464,11 +518,12 @@ never cancelled.
    Apple Silicon and an Intel program into one "universal" program.
    Where in the workflow could the two Mac builds meet to do that, since
    they run on different machines?
-3. **A Mac app.** Finder treats a folder `Ferrous Lineup.app` with
-   `Contents/MacOS/ferrous-lineup` and a `Contents/Info.plist` as an
-   application with a name and an icon. Write the smallest `Info.plist`
-   that works. What would it take for double-clicking a `.lineup` file
-   to open it?
+3. **Notarize the Mac app.** The workflow signs the app ad-hoc with
+   `codesign --force --sign -`. With a paid Apple Developer ID, it could
+   sign with `codesign --sign "Developer ID Application: …"`, submit the
+   `.dmg` with `xcrun notarytool submit … --wait`, and staple Apple's
+   ticket with `xcrun stapler staple`. Why can an ad-hoc signature not
+   be notarized, and which of those steps needs the Apple account?
 4. **Stop on a wrong version.** Make the version check fail instead of
    warn. Where should it run, so a wrong tag stops before 20 minutes of
    building, not after?

@@ -124,22 +124,26 @@ cargo run --release -- my-song.lineup
 
 The `--` tells Cargo that what follows is for the program, not for Cargo.
 
-### Without building: the CI downloads
+### Without building: ready-made downloads
 
-Every CI run on GitHub builds the program for all three systems. On the
-run's page, under **Artifacts**, download `ferrous-lineup-linux`,
-`ferrous-lineup-macos` or `ferrous-lineup-windows` and unzip it. On Linux and
-macOS, make it executable first with `chmod +x ferrous-lineup`. These
-programs are not signed, so macOS and Windows will warn you before the
-first start; [Linux, macOS and Windows](step-4/platforms.md#what-is-not-there-yet)
+Every CI run on GitHub builds the program for Linux, macOS and Windows.
+On the run's page, under **Artifacts**, download
+`ferrous-lineup-linux`, `ferrous-lineup-macos` or
+`ferrous-lineup-windows` and unzip it. On Linux and macOS, make it
+executable first with `chmod +x ferrous-lineup`. These are bare
+programs, not installers, and they are not signed, so macOS and Windows
+will warn you before the first start;
+[Linux, macOS and Windows](step-4/platforms.md#what-is-not-there-yet)
 explains how to get past the warning.
 
-The **Release** workflow packs the same programs ready to use, each
-with the README and the licence: a `.tar.gz` and an AppImage for Linux,
-a `.zip` for Windows, and builds for Macs with Apple Silicon and with
-Intel. They are under **Artifacts** of every Release run, and on the
-repository's **Releases** page for each version
-([Release builds: a download for every system](step-9/releases.md)).
+For something ready to install, use the repository's
+**[Releases page](https://github.com/naelolaiz/ferrous-lineup/releases)**.
+Each `v` tag publishes the packages the **Release** workflow builds:
+Linux AppImage, `.deb` and `.tar.gz`; Windows Setup `.exe` and portable
+`.zip`; and a macOS `.dmg` with `Ferrous Lineup.app`, for Apple Silicon
+and for Intel. The Release run also keeps them under **Artifacts**.
+[Release builds: a download for every system](step-9/releases.md)
+explains each one, and what macOS and Windows say on the first start.
 
 ## 4. Run the tests
 
