@@ -1,0 +1,50 @@
+# Maintainer: naelolaiz <naelolaiz@users.noreply.github.com>
+pkgname=ferrous-lineup-git
+pkgver=0.2.0.r0.g0000000
+pkgrel=1
+pkgdesc="Play songs with a backing band and learn harmony (development version)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/naelolaiz/ferrous-lineup"
+license=('GPL-3.0-or-later')
+provides=('ferrous-lineup')
+conflicts=('ferrous-lineup')
+depends=(
+  'alsa-lib'
+  'desktop-file-utils'
+  'hicolor-icon-theme'
+  'libxkbcommon'
+  'libxkbcommon-x11'
+  'shared-mime-info'
+  'wayland'
+  'xdg-desktop-portal'
+)
+makedepends=('git' 'rust')
+source=("git+$url.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd ferrous-lineup
+  git describe --long --tags --abbrev=7 2>/dev/null |
+    sed 's/^v//; s/\([^-]*-g\)/r\1/; s/-/./g' ||
+    printf 'r%s.%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+build() {
+  cd ferrous-lineup
+  cargo build --release --locked
+}
+
+package() {
+  cd ferrous-lineup
+
+  install -Dm755 target/release/ferrous-lineup "$pkgdir/usr/bin/ferrous-lineup"
+  install -Dm644 packaging/linux/io.github.naelolaiz.FerrousLineup.desktop \
+    "$pkgdir/usr/share/applications/io.github.naelolaiz.FerrousLineup.desktop"
+  install -Dm644 packaging/icon/ferrous-lineup.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/io.github.naelolaiz.FerrousLineup.svg"
+  install -Dm644 packaging/linux/application-x-ferrous-lineup.xml \
+    "$pkgdir/usr/share/mime/packages/application-x-ferrous-lineup.xml"
+  install -Dm644 packaging/linux/io.github.naelolaiz.FerrousLineup.metainfo.xml \
+    "$pkgdir/usr/share/metainfo/io.github.naelolaiz.FerrousLineup.metainfo.xml"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

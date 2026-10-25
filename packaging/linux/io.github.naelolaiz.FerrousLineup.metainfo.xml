@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.naelolaiz.FerrousLineup</id>
+
+  <name>Ferrous Lineup</name>
+  <summary>Play songs with a backing band and learn harmony</summary>
+
+  <developer id="io.github.naelolaiz">
+    <name>Ferrous Lineup contributors</name>
+  </developer>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <description>
+    <p>
+      Type the chords of a song on the chord sheet, pick a style, and a
+      band (bass, drums, piano and more) plays it in any key and tempo.
+      Every part lands on a track of its own, and a playlist, a step
+      sequencer and a piano roll let you write or change any of it by hand.
+    </p>
+    <p>
+      The app names every chord you hear, with its numeral and function,
+      and speaks the other languages of harmony too: pitch-class sets,
+      twelve-tone rows and Kröpfl's micromodes. Count-in, metronome,
+      loops, slower playback and leaving a part out make it a practice
+      tool as well as a writing one.
+    </p>
+    <p>
+      Songs come in and out as MIDI, WAV, lead-sheet PDF and MP4 video;
+      MIDI keyboards and synths work as input and output, and a recording
+      can be imported to hear its tempo, key and chords.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.naelolaiz.FerrousLineup.desktop</launchable>
+
+  <url type="homepage">https://github.com/naelolaiz/ferrous-lineup</url>
+  <url type="bugtracker">https://github.com/naelolaiz/ferrous-lineup/issues</url>
+  <url type="help">https://naelolaiz.github.io/ferrous-lineup/</url>
+  <url type="vcs-browser">https://github.com/naelolaiz/ferrous-lineup</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://raw.githubusercontent.com/naelolaiz/ferrous-lineup/main/screenshots/main-window.png</image>
+      <caption>The playlist, the channel rack and the harmony keys, with the demo song</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/naelolaiz/ferrous-lineup/main/screenshots/piano-roll.png</image>
+      <caption>The piano roll names the chords as they play</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/naelolaiz/ferrous-lineup/main/screenshots/library.png</image>
+      <caption>The library of harmony styles and rhythms, in any key</caption>
+    </screenshot>
+  </screenshots>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Music</category>
+  </categories>
+
+  <keywords>
+    <keyword>music</keyword>
+    <keyword>band</keyword>
+    <keyword>chords</keyword>
+    <keyword>harmony</keyword>
+    <keyword>sequencer</keyword>
+    <keyword>MIDI</keyword>
+    <keyword>backing track</keyword>
+  </keywords>
+
+  <provides>
+    <binary>ferrous-lineup</binary>
+  </provides>
+
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.2.0" date="2026-10-25">
+      <description>
+        <p>Adds lead sheets, video export, and recovery of unsaved work.</p>
+      </description>
+    </release>
+  </releases>
+</component>

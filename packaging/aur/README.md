@@ -1,0 +1,42 @@
+# AUR
+
+Two packages, following the AUR's usual split:
+
+- `PKGBUILD` — the released version (0.2.0), built from the GitHub tag
+  tarball.
+- `ferrous-lineup-git/PKGBUILD` — the development version, built from
+  `main`.
+
+Both install the binary, the desktop entry, the icon, the MIME type and
+the AppStream data from `packaging/`.
+
+## Before pushing the stable package
+
+The tag must exist first, because the checksum is of GitHub's archive of
+that tag, not of the working tree:
+
+```sh
+git tag v0.2.0 && git push origin v0.2.0
+cd packaging/aur
+updpkgsums
+makepkg --printsrcinfo > .SRCINFO
+```
+
+Then push `PKGBUILD` and `.SRCINFO` to the
+`ferrous-lineup` AUR repository.
+
+The `-git` package needs no checksum:
+
+```sh
+cd packaging/aur/ferrous-lineup-git
+makepkg --printsrcinfo > .SRCINFO
+```
+
+and goes to the `ferrous-lineup-git` AUR repository.
+
+## Building locally
+
+```sh
+cd packaging/aur
+makepkg -si
+```

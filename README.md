@@ -53,11 +53,31 @@ was built, why, and which Rust it uses. Its sources live on the
 
 ## Download
 
-Ready-built programs for Linux (including an AppImage), Windows and
-macOS (Apple Silicon and Intel) are attached to every run of the
-**Release** workflow, and to the repository's Releases page for each
-version. They are not signed yet, so macOS and Windows warn before the
-first start.
+Every run of the **Release** workflow keeps these as artifacts, and each
+version's GitHub Release has them too:
+
+- **Linux**: an AppImage (one file, nothing to install), a `.deb` for
+  Debian and Ubuntu, and a `.tar.gz` with the program, README and licence.
+- **Windows**: a Setup `.exe` with a Start-menu entry, an uninstaller and
+  the `.lineup` file association, or a portable `.zip`.
+- **macOS** (Apple Silicon and Intel): a `.dmg` with a real
+  `Ferrous Lineup.app`; open it and drag the app to Applications.
+
+The Windows installer is not code-signed, and the macOS app is
+ad-hoc signed but not notarized. Neither of those needs a paid
+developer account to build: only notarizing the macOS app (and signing
+the Windows installer) would. Windows SmartScreen and macOS Gatekeeper
+therefore ask before the first start: on Windows choose **More info >
+Run anyway**; on macOS try to open the app once, then allow it in
+**System Settings > Privacy & Security** (on older versions, right-click
+the app and choose **Open**). Building from source avoids both prompts.
+
+In particular, **macOS does not need an Apple Developer ID**. The app is
+ad-hoc signed, which is what Apple Silicon requires; it is simply not
+notarized, so the first launch asks for confirmation.
+
+The Flatpak and AUR manifests live in `packaging/flathub` and
+`packaging/aur`; they are not published on Flathub or the AUR yet.
 
 ## Build and run
 
@@ -78,6 +98,8 @@ Press **Space** to play the demo song, or **File > New** to start a song
 of your own with the band. `cargo test` runs the tests, and
 `ferrous-lineup --trace song.lineup` lists every note a song plays
 ([Checking playback with a trace](https://naelolaiz.github.io/ferrous-lineup/tour.html#checking-playback-with-a-trace)).
+On macOS the program is inside the app bundle:
+`"/Applications/Ferrous Lineup.app/Contents/MacOS/ferrous-lineup" --trace song.lineup`.
 
 ## Screenshots
 
@@ -105,6 +127,7 @@ of your own with the band. `cargo test` runs the tests, and
 | `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
 | `crates/lineup-video` | Video files: the app's views painted in memory, encoded as H.264 and MP3 in an MP4 file, with the encoders built from source. |
 | `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
+| `packaging` | The app icon (and the macOS `.icns`, Windows `.ico` and window pixels generated from it), the desktop entry, MIME type and AppStream data, the Inno Setup script, the Flatpak manifest, the AUR PKGBUILDs, and the Debian metadata. |
 
 ## License
 

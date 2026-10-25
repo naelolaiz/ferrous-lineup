@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Ferrous Lineup: the F of Ferrous, and a trumpeter for the band.
+       The tile is 824 px in a 1024 px canvas: Apple's icon grid, so the
+       same drawing works on macOS, Windows and Linux. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c343a"/>
+      <stop offset="1" stop-color="#15191c"/>
+    </linearGradient>
+    <linearGradient id="rust" gradientUnits="userSpaceOnUse" x1="140" y1="220" x2="620" y2="860">
+      <stop offset="0" stop-color="#f7a24a"/>
+      <stop offset="0.55" stop-color="#e07a35"/>
+      <stop offset="1" stop-color="#c4562a"/>
+    </linearGradient>
+    <clipPath id="tileclip"><rect x="100" y="100" width="824" height="824" rx="185"/></clipPath>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+  <g clip-path="url(#tileclip)">
+    <!-- The F. -->
+    <g fill="url(#rust)">
+      <rect x="140" y="220" width="160" height="620" rx="36"/>
+      <rect x="140" y="220" width="420" height="180" rx="36"/>
+      <rect x="140" y="500" width="340" height="150" rx="36"/>
+    </g>
+    <!-- The player: head, neck and shoulders are one connected mass, so
+         the neck never looks cut. The nose points at the F. -->
+    <g fill="#f2ece2" transform="translate(10,0)">
+      <path d="M 606 700 L 578 870" stroke="#f2ece2" stroke-width="46" stroke-linecap="round"/>
+      <path d="M 676 700 L 714 870" stroke="#f2ece2" stroke-width="46" stroke-linecap="round"/>
+      <path d="M 566 580 Q 566 520 620 512 L 680 512 Q 734 520 734 580 L 718 710 L 582 710 Z"/>
+      <rect x="620" y="470" width="40" height="70"/>
+      <circle cx="640" cy="430" r="56"/>
+      <circle cx="696" cy="418" r="11"/>
+      <!-- Arms up to the trumpet: elbows out, forearms under the tube. -->
+      <path d="M 580 570 L 632 620 L 762 468" stroke="#f2ece2" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M 720 570 L 752 608 L 790 468" stroke="#f2ece2" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+    <!-- The trumpet: a dark halo keeps it readable against the player,
+         then the cream tube, valve caps and bell. -->
+    <g fill="#1b2024" stroke="#1b2024" stroke-width="14" stroke-linejoin="round" transform="translate(10,0)">
+      <path d="M 700 442 L 816 442" stroke-width="36" stroke-linecap="round"/>
+      <path d="M 812 412 L 884 378 Q 906 442 884 506 L 812 472 Z"/>
+      <rect x="742" y="400" width="14" height="46" rx="6"/>
+      <rect x="764" y="394" width="14" height="52" rx="6"/>
+      <rect x="786" y="400" width="14" height="46" rx="6"/>
+    </g>
+    <g fill="#f2ece2" transform="translate(10,0)">
+      <path d="M 700 442 L 816 442" stroke="#f2ece2" stroke-width="22" stroke-linecap="round"/>
+      <path d="M 812 412 L 884 378 Q 906 442 884 506 L 812 472 Z"/>
+      <rect x="742" y="400" width="14" height="46" rx="6"/>
+      <rect x="764" y="394" width="14" height="52" rx="6"/>
+      <rect x="786" y="400" width="14" height="46" rx="6"/>
+    </g>
+    <!-- Hands under the tube. -->
+    <g fill="#f2ece2" transform="translate(10,0)">
+      <circle cx="770" cy="460" r="22"/>
+      <circle cx="812" cy="462" r="19"/>
+    </g>
+  </g>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="3"/>
+</svg>
