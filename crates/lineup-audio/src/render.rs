@@ -12,7 +12,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, AtomicUsize};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 
 use crate::engine::{
     AudioThread, Command, Garbage, NO_POSITION, NO_STEP, TRASH_QUEUE_SIZE, load_position,
@@ -160,8 +160,32 @@ pub fn export_wav(
     renderer: &mut Renderer,
     path: &Path,
     frames: usize,
-    mut progress: impl FnMut(usize),
+    progress: impl FnMut(usize),
 ) -> Result<(), hound::Error> {
+    export_wav_cancellable(renderer, path, frames, progress, &AtomicBool::new(false))?;
+    Ok(())
+}
+
+/// How an export to a WAV file ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WavExport {
+    /// The whole song was written.
+    Written,
+    /// The export was asked to stop, and the partial file was removed.
+    Cancelled,
+}
+
+/// [`export_wav`], stopping when `cancel` is set.
+///
+/// A stopped export leaves no file behind, not even the temporary one,
+/// so a half-written WAV is never mistaken for a finished one.
+pub fn export_wav_cancellable(
+    renderer: &mut Renderer,
+    path: &Path,
+    frames: usize,
+    mut progress: impl FnMut(usize),
+    cancel: &AtomicBool,
+) -> Result<WavExport, hound::Error> {
     let spec = hound::WavSpec {
         channels: renderer.channels() as u16,
         sample_rate: renderer.sample_rate(),
@@ -175,6 +199,11 @@ pub fn export_wav(
     let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
     let mut done = 0;
     while done < frames {
+        if cancel.load(Ordering::Relaxed) {
+            drop(writer);
+            let _ = fs::remove_file(&temporary);
+            return Ok(WavExport::Cancelled);
+        }
         let count = (frames - done).min(BLOCK_FRAMES);
         let samples = &mut block[..count * renderer.channels()];
         renderer.render(samples);
@@ -186,7 +215,7 @@ pub fn export_wav(
     }
     writer.finalize()?;
     fs::rename(&temporary, path)?;
-    Ok(())
+    Ok(WavExport::Written)
 }
 
 #[cfg(test)]
@@ -358,5 +387,23 @@ mod tests {
             !Path::new(&temporary).exists(),
             "the temporary file is gone"
         );
+    }
+
+    #[test]
+    fn a_cancelled_export_leaves_no_file() {
+        let path = std::env::temp_dir().join(format!(
+            "ferrous-lineup-cancelled-{}.wav",
+            std::process::id()
+        ));
+        let mut renderer = clicking();
+        let cancel = AtomicBool::new(true);
+        let outcome =
+            export_wav_cancellable(&mut renderer, &path, BLOCK_FRAMES * 2, |_| {}, &cancel)
+                .unwrap();
+        assert_eq!(outcome, WavExport::Cancelled);
+        assert!(!path.exists(), "no finished file");
+        let mut temporary = path.into_os_string();
+        temporary.push(".tmp");
+        assert!(!Path::new(&temporary).exists(), "no temporary file");
     }
 }

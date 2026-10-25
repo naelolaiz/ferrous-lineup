@@ -173,3 +173,28 @@ impl LineupApp {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::Audio;
+    use super::*;
+
+    #[test]
+    fn opening_another_project_stops_the_import_that_was_listening() {
+        let ctx = egui::Context::default();
+        let mut app = LineupApp::with_audio(&ctx, None, Audio::Unavailable("test".into()));
+        app.import = Some(Import {
+            worker: thread::spawn(|| Ok((Project::empty(), String::new(), Vec::new()))),
+        });
+
+        let opened = Project::template();
+        app.replace_project(opened.clone(), None);
+
+        assert!(app.import.is_none(), "the import was let go");
+        assert_eq!(app.project, opened, "the opened project stays");
+        assert_eq!(
+            app.notice.as_deref(),
+            Some("Stopped importing the recording.")
+        );
+    }
+}

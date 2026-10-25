@@ -76,6 +76,12 @@ pub(super) struct FileState {
 }
 
 impl FileState {
+    /// Whether the window is already closing, so a close request must not
+    /// be asked about again.
+    pub(super) fn is_quitting(&self) -> bool {
+        self.quitting
+    }
+
     /// The app starts with the starting song, so that is the demo open.
     pub(super) fn new(project: &Project) -> Self {
         FileState {
@@ -176,8 +182,17 @@ fn project_dialog() -> rfd::FileDialog {
     rfd::FileDialog::new().add_filter("Ferrous Lineup project", &extensions)
 }
 
+/// `path` with a project extension, replacing any other. A project saved
+/// as "song.txt" would open later as a chord sheet, not as a project.
+fn project_path(mut path: PathBuf) -> PathBuf {
+    if !file::is_project(&path) {
+        path.set_extension(file::EXTENSION);
+    }
+    path
+}
+
 impl LineupApp {
-    fn has_unsaved_changes(&self) -> bool {
+    pub(super) fn has_unsaved_changes(&self) -> bool {
         self.project != self.file.saved
     }
 
@@ -318,8 +333,28 @@ impl LineupApp {
         self.request(ctx, Pending::OpenPath(path));
     }
 
+    /// Closes the window now that quitting is settled: any save question
+    /// is answered and any export has stopped. Used for the close that
+    /// waits behind an export, so the question is not asked twice.
+    pub(super) fn close_now(&mut self, ctx: &egui::Context) {
+        self.file.quitting = true;
+        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+    }
+
     /// Does `action` now if nothing would be lost, or asks first.
     pub(super) fn request(&mut self, ctx: &egui::Context, action: Pending) {
+        // An export running in the background would be cut off by a close.
+        // With unsaved changes too, the save question comes first, and
+        // `perform` asks about the export after that.
+        if matches!(&action, Pending::Quit)
+            && self.export.is_some()
+            && !self.quit_after_export
+            && !self.has_unsaved_changes()
+            && !self.style_editor.has_unsaved_changes()
+        {
+            self.export_quit = true;
+            return;
+        }
         if self.has_unsaved_changes()
             || (matches!(&action, Pending::Quit) && self.style_editor.has_unsaved_changes())
         {
@@ -361,8 +396,13 @@ impl LineupApp {
             Pending::ImportMidi => self.import_midi(),
             Pending::ImportChordSheet => self.import_chord_sheet(),
             Pending::Quit => {
-                self.file.quitting = true;
-                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                // The changes are settled, but an export may still be
+                // writing: ask about it before the window closes.
+                if self.export.is_some() && !self.quit_after_export {
+                    self.export_quit = true;
+                    return;
+                }
+                self.close_now(ctx);
             }
         }
     }
@@ -388,6 +428,9 @@ impl LineupApp {
 
     /// Swaps in another project and tells the audio thread about it.
     pub(super) fn replace_project(&mut self, mut project: Project, path: Option<PathBuf>) {
+        // An import that is still listening would replace this project
+        // when it finished: it was started for the one being left behind.
+        let stopped_import = self.import.take().is_some();
         // The chords heard in the song are still the song's.
         project.follow_along(fill_chord_sheet);
         self.project = project;
@@ -409,7 +452,7 @@ impl LineupApp {
         self.harmony_keys.forget_chords();
         self.key_finder.new_project(&self.project, Vec::new());
         self.message = None;
-        self.notice = None;
+        self.notice = stopped_import.then_some("Stopped importing the recording.".to_string());
         // Undo cannot go back into another file, and its samples may
         // not be needed any more.
         self.history.clear();
@@ -430,13 +473,10 @@ impl LineupApp {
     /// Asks where to save, then saves. Returns whether the project was saved.
     fn save_as(&mut self) -> bool {
         let suggested = self.file.export_name(file::EXTENSION);
-        let Some(mut path) = project_dialog().set_file_name(suggested).save_file() else {
+        let Some(path) = project_dialog().set_file_name(suggested).save_file() else {
             return false;
         };
-        if path.extension().is_none() {
-            path.set_extension(file::EXTENSION);
-        }
-        self.save_to(path)
+        self.save_to(project_path(path))
     }
 
     fn save_to(&mut self, path: PathBuf) -> bool {
@@ -483,6 +523,11 @@ impl LineupApp {
     /// Shows "Save changes?" while an action is waiting for an answer.
     /// Also stops the window from closing while there are unsaved changes.
     pub(super) fn unsaved_changes_dialog(&mut self, ctx: &egui::Context) {
+        // While the export question is open, or the export is stopping so
+        // the window can close, it owns the close request.
+        if self.export_quit || self.quit_after_export {
+            return;
+        }
         let close_requested = ctx.input(|input| input.viewport().close_requested());
         if close_requested
             && !self.file.quitting
@@ -655,5 +700,23 @@ mod tests {
         state.path = None;
         state.name_imported("  ");
         assert_eq!(state.title(false), "Untitled · Ferrous Lineup");
+    }
+
+    #[test]
+    fn saving_as_gives_the_project_its_own_extension() {
+        for (typed, saved) in [
+            ("song", "song.lineup"),
+            ("song.txt", "song.lineup"),
+            ("song.mid", "song.lineup"),
+            ("song.lineup", "song.lineup"),
+            // An old Ferrous Loom file keeps its name.
+            ("song.LOOM", "song.LOOM"),
+        ] {
+            assert_eq!(
+                project_path(PathBuf::from(typed)),
+                PathBuf::from(saved),
+                "saving as {typed}"
+            );
+        }
     }
 }

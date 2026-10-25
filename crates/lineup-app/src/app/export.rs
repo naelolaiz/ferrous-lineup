@@ -17,7 +17,7 @@ use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 use eframe::egui;
-use lineup_audio::{Command, PlayMode, Renderer, export_wav};
+use lineup_audio::{Command, PlayMode, Renderer, WavExport, export_wav_cancellable};
 use lineup_core::sequencer::frames_per_step;
 use lineup_core::{pattern_to_midi, song_to_midi};
 
@@ -147,20 +147,30 @@ impl LineupApp {
         } = self.song_render(EXPORT_SAMPLE_RATE);
 
         let done = Arc::new(AtomicUsize::new(0));
-        // The thread gets its own `Arc` pointing to the same counter, and
-        // its own copy of the path. `move` gives the closure ownership of
-        // them, and of the renderer: from now on they belong to the thread.
+        let cancel = Arc::new(AtomicBool::new(false));
+        // The thread gets its own `Arc`s pointing to the same counter and
+        // flag, and its own copy of the path. `move` gives the closure
+        // ownership of them, and of the renderer: from now on they belong
+        // to the thread.
         let worker = {
             let done = Arc::clone(&done);
+            let cancel = Arc::clone(&cancel);
             let path = path.clone();
             thread::spawn(move || {
-                export_wav(&mut renderer, &path, frames, |frames_done| {
-                    done.store(frames_done, Ordering::Relaxed);
-                })
-                .map_err(|err| err.to_string())
+                match export_wav_cancellable(
+                    &mut renderer,
+                    &path,
+                    frames,
+                    |frames_done| done.store(frames_done, Ordering::Relaxed),
+                    &cancel,
+                ) {
+                    Ok(WavExport::Written) => Ok(()),
+                    Ok(WavExport::Cancelled) => Err(CANCELLED.to_string()),
+                    Err(err) => Err(err.to_string()),
+                }
             })
         };
-        self.export = Some(Export::new(path, frames, done, None, worker));
+        self.export = Some(Export::new(path, frames, done, Some(cancel), worker));
         self.message = None;
         self.notice = None;
     }
@@ -274,6 +284,84 @@ impl LineupApp {
                 // `join` fails only if the thread panicked.
                 Err(_) => self.message = Some(format!("Exporting {name} failed")),
             }
+        }
+        // The user asked to quit while it ran: the export is done, so
+        // close now. Any save question was answered before this.
+        if self.quit_after_export {
+            self.quit_after_export = false;
+            self.close_now(ctx);
+        }
+    }
+
+    /// Asks, before closing, whether to stop an export that is still
+    /// running. The window closes once the export has stopped, and after
+    /// any unsaved changes are dealt with.
+    pub(super) fn export_quit_dialog(&mut self, ctx: &egui::Context) {
+        let close_requested = ctx.input(|input| input.viewport().close_requested());
+        // While the question is open, or the export is stopping so the
+        // window can close, the window must not close under it.
+        if close_requested && (self.export_quit || self.quit_after_export) {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+        }
+        // Unsaved changes are asked about first: their dialog owns the
+        // close, and `perform` comes back here once they are settled.
+        // The checks come before the comparison, which walks the whole
+        // project, so it only runs when a close was actually asked for.
+        if close_requested
+            && self.export.is_some()
+            && !self.file.is_quitting()
+            && !self.export_quit
+            && !self.quit_after_export
+            && !self.has_unsaved_changes()
+            && !self.style_editor.has_unsaved_changes()
+        {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+            self.export_quit = true;
+        }
+        if self.export_quit && self.export.is_none() {
+            // It finished while the question was open, so there is
+            // nothing left to stop: carry on with the close that was
+            // asked for. Any save question was answered first.
+            self.export_quit = false;
+            self.close_now(ctx);
+            return;
+        }
+        if !self.export_quit {
+            return;
+        }
+        let Some(name) = self.export.as_ref().map(|export| export.file_name()) else {
+            return;
+        };
+        let mut choice = None;
+        let modal = egui::Modal::new(egui::Id::unique("export-running-on-quit")).show(ctx, |ui| {
+            ui.set_width(320.0);
+            ui.heading("An export is still running");
+            ui.add_space(4.0);
+            ui.label(format!("\"{name}\" is still being written."));
+            ui.add_space(8.0);
+            ui.horizontal(|ui| {
+                if ui.button("Stop it and quit").clicked() {
+                    choice = Some(true);
+                }
+                if ui.button("Keep exporting").clicked() {
+                    choice = Some(false);
+                }
+            });
+        });
+        // Escape, or a click outside the dialog, means "Keep exporting".
+        if modal.should_close() && choice.is_none() {
+            choice = Some(false);
+        }
+        match choice {
+            Some(true) => {
+                self.export_quit = false;
+                self.quit_after_export = true;
+                if let Some(export) = &self.export {
+                    export.cancel();
+                }
+            }
+            Some(false) => self.export_quit = false,
+            None => {}
         }
     }
 }

@@ -155,6 +155,11 @@ pub struct LineupApp {
     samples: SampleCache,
     /// The WAV or video export running in the background, if any.
     export: Option<export::Export>,
+    /// The "Stop the export and quit?" question, while it is open.
+    export_quit: bool,
+    /// Set when the user chose to stop an export and quit: the window
+    /// closes once the export has stopped.
+    quit_after_export: bool,
     /// The dialog that asks what a video shows.
     video_dialog: video::VideoDialog,
     /// The trace of what is played, while Settings > Playback > Trace is on.
@@ -254,6 +259,8 @@ impl LineupApp {
             history: History::default(),
             samples: SampleCache::new(),
             export: None,
+            export_quit: false,
+            quit_after_export: false,
             video_dialog: video::VideoDialog::default(),
             trace: None,
             import: None,
@@ -2165,6 +2172,7 @@ impl eframe::App for LineupApp {
         self.settings_window(&ctx);
         self.video_dialog(&ctx);
         self.playlist.library_browser_mut().store_preferences(&ctx);
+        self.export_quit_dialog(&ctx);
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
         self.end_frame_for_undo(&ctx);
