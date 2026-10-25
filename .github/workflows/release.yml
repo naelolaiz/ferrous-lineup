@@ -316,10 +316,11 @@ jobs:
           fi
 
       # Each artifact lands in a folder of its own name. `skip-decompress`
-      # keeps the Windows .zip as it is instead of unpacking it.
+      # keeps the Windows .zip as it is instead of unpacking it. No
+      # `pattern`: the .deb is named ferrous-lineup_0.2.0-1_amd64.deb
+      # (an underscore), and a pattern with a dash would leave it out.
       - uses: actions/download-artifact@v8
         with:
-          pattern: ferrous-lineup-*
           path: downloads
           skip-decompress: true
 
