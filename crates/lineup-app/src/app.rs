@@ -47,6 +47,7 @@ pub use trace::{TRACE_SAMPLE_RATE, demo_names, trace_table};
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Instant;
 
 use eframe::egui;
 use lineup_audio::instrument::Sampler;
@@ -157,6 +158,14 @@ pub struct LineupApp {
     recovery: recovery::Recovery,
     /// Earlier versions of the project, for undo and redo.
     history: History<Project>,
+    /// The project the audio thread has: what a drag's changes are sent
+    /// from, so it does not have to copy the whole project every frame.
+    synced: Project,
+    /// Whether the open undo step has changes the audio thread has not
+    /// been given yet.
+    step_unsynced: bool,
+    /// When the open step was last sent to the audio thread.
+    last_sync: Instant,
     /// Sample files already read, so undo and export do not read them again.
     samples: SampleCache,
     /// The WAV or video export running in the background, if any.
@@ -269,6 +278,9 @@ impl LineupApp {
             song_versions: Vec::new(),
             song_sources: Vec::new(),
             history: History::default(),
+            synced: Project::empty(),
+            step_unsynced: false,
+            last_sync: Instant::now(),
             samples: SampleCache::new(),
             export: None,
             export_quit: false,
@@ -423,6 +435,10 @@ impl LineupApp {
         self.live.resend_channel();
         self.live.follow.forget();
         self.live.channels_changed(self.project.channels().len());
+        // The audio thread now has the whole project.
+        self.synced = self.project.clone();
+        self.step_unsynced = false;
+        self.last_sync = Instant::now();
     }
 
     /// The commands that insert channel `index` of the project, with its
