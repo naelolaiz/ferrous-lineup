@@ -329,6 +329,8 @@ pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
              -:2 Cb4:2 -:2 F4:2 -:2 Db4:2 -:4 | -:12 A3:4",
             "VI I | I | I | I | V7 I | I | I | V",
         )
+        // Gb major, the same keys of the piano as F# major: the tune is
+        // written in flats, which names the key (see `written_as_tune`).
         .in_key(FSharp, Major)
         .with_tempo(&[tempo(8, 96), glide(120, 72, 8)]),
         // Bars 62-89: Tristan's A, F, E, "avec une grande émotion", four
@@ -3463,6 +3465,7 @@ pub(super) const TAKE_FIVE: Song = Song {
     origin: "Paul Desmond, for the Dave Brubeck Quartet's Time Out, 1959",
     feel: "Five-four swing",
     genre: Genre::Jazz,
+    // Eb minor: the tune is written in flats (see `written_as_tune`).
     tonic: DSharp,
     mode: NaturalMinor,
     time: FIVE_FOUR,

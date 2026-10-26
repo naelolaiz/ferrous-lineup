@@ -175,7 +175,10 @@ pub fn is_project(path: &Path) -> bool {
 ///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
-/// nothing they could play.
+/// nothing they could play. In the same way, a key can be written the
+/// other way round, Gb major rather than F# major (see
+/// [`Scale::other_spelling`]): older versions name it the usual way and
+/// play the same notes.
 pub const FORMAT_VERSION: u32 = 27;
 
 /// The oldest format that can hold `project`.
