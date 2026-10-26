@@ -38,6 +38,15 @@
 //! too), and nobody expects a jazz seventh to resolve: the check is a
 //! teacher of the classical style, not a judge of all music.
 //!
+//! Where the key is a twelve-tone row, the music has no tonic, no
+//! leading tone and no sevenths to resolve, and these rules mean
+//! nothing. The rules of twelve-tone writing take their place (see
+//! [`serial`]): the notes follow the forms of the row in order, no note
+//! comes back before the other eleven have sounded, no note is doubled
+//! in octaves, and no chord sounds like tonal harmony. Where the key is
+//! a pitch-class set, neither style's rules apply, and nothing is
+//! checked.
+//!
 //! ## Which notes make a part
 //!
 //! A track that plays one note at a time is one part. A track that plays
@@ -52,8 +61,13 @@
 //! louder, not two parts in parallel octaves: such a pair is reported as
 //! a doubling, and only one of the two is checked.
 
+pub mod serial;
+
 use super::hearing::{HeardNote, Listening};
-use super::{Chord, ChordFamily, ChordQuality, Harmony, Scale, analyze, with_figures};
+use super::{
+    Chord, ChordFamily, ChordQuality, Harmony, PitchSet, RowLabel, Scale, ScaleKind, analyze,
+    with_figures,
+};
 use crate::{Note, NoteEvent, PitchClass, TICKS_PER_STEP, TimeSignature};
 
 /// A rest this long or longer ends a part's line: a quarter note, in
@@ -219,6 +233,19 @@ pub enum SlipKind {
     LeadingTone,
     /// A seventh that does not fall by step.
     Seventh,
+    /// In a row: a note that comes before its turn in the row.
+    RowOrder,
+    /// In a row: a note that comes back before the row has sounded all
+    /// twelve.
+    EarlyRepeat,
+    /// In a row: a form of the row that stops before its twelfth note,
+    /// when the next one starts.
+    RowUnfinished,
+    /// In a row: two parts sounding the same note in octaves or unison.
+    OctaveDoubling,
+    /// In a row: notes that sound together as a chord of tonal music,
+    /// a major or minor triad or a dominant seventh.
+    TonalChord,
 }
 
 impl SlipKind {
@@ -232,6 +259,11 @@ impl SlipKind {
             SlipKind::ContraryOctaves => "Octaves by contrary motion",
             SlipKind::LeadingTone => "Leading tone not rising",
             SlipKind::Seventh => "Seventh not falling",
+            SlipKind::RowOrder => "Out of row order",
+            SlipKind::EarlyRepeat => "Note repeated early",
+            SlipKind::RowUnfinished => "Row left unfinished",
+            SlipKind::OctaveDoubling => "Octave doubling",
+            SlipKind::TonalChord => "Sounds tonal",
         }
     }
 
@@ -243,6 +275,11 @@ impl SlipKind {
             SlipKind::ParallelUnisons => "1sns",
             SlipKind::LeadingTone => "LT",
             SlipKind::Seventh => "7th",
+            SlipKind::RowOrder => "order",
+            SlipKind::EarlyRepeat => "rep",
+            SlipKind::RowUnfinished => "gap",
+            SlipKind::OctaveDoubling => "8ve",
+            SlipKind::TonalChord => "tonal",
         }
     }
 }
@@ -254,6 +291,46 @@ pub struct PartMove {
     pub voice: usize,
     pub from: NoteEvent,
     pub to: NoteEvent,
+}
+
+/// A note one part plays, for what is about notes rather than moves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PartNote {
+    /// The part, as an index into [`VoiceLeading::voices`].
+    pub voice: usize,
+    pub note: NoteEvent,
+}
+
+/// Where a note stands in a form of the row, for the twelve-tone rules.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RowPlace {
+    /// The form of the row the notes there are read as.
+    pub label: RowLabel,
+    /// The note's place in that form, from 1 to 12.
+    pub order: usize,
+    /// The note the row wanted at that moment, and its place.
+    pub wanted: Option<(PitchClass, usize)>,
+    /// How many of the form's twelve notes had sounded.
+    pub heard: usize,
+    /// For a form left unfinished: the notes that never sounded.
+    pub missing: PitchSet,
+}
+
+/// One form of the row played through, for the twelve-tone rules.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RowStatement {
+    pub label: RowLabel,
+    /// From its first note's step to the step after its last note ends.
+    pub start: usize,
+    pub end: usize,
+    /// The track that plays it, or `None` when the row runs through all
+    /// the tracks together.
+    pub channel: Option<usize>,
+    /// For a form the pattern starts in the middle of: how many of its
+    /// notes come before, in the pattern before. Otherwise 0.
+    pub before: usize,
+    /// The key there, the row.
+    pub key: Scale,
 }
 
 /// The two chords a leading tone or a seventh goes between.
@@ -281,15 +358,42 @@ pub struct Slip {
     pub chords: Option<Resolution>,
     /// For a leading tone or a seventh: where it should have gone.
     pub expected: Option<Note>,
-    /// Whether another part has the same leading tone, which classical
-    /// part writing avoids: both cannot rise without parallel octaves.
+    /// For a leading tone: whether another part has the same one, which
+    /// classical part writing avoids, since both cannot rise without
+    /// parallel octaves. For an octave doubling: whether the two parts
+    /// double each other all the way through, as one line.
     pub doubled: bool,
+    /// For the twelve-tone rules, which are about notes rather than
+    /// moves: the notes concerned.
+    pub notes: Vec<PartNote>,
+    /// For the row's order: where the note stands in the row.
+    pub row: Option<RowPlace>,
+    /// For a chord that sounds tonal: the chord, and its lowest note.
+    pub chord: Option<(Chord, PitchClass)>,
 }
 
 impl Slip {
-    /// The step where the move lands, where the chord lane marks it.
+    /// A slip of `kind` in `key`, with nothing else filled in yet.
+    fn of(kind: SlipKind, key: Scale) -> Slip {
+        Slip {
+            kind,
+            moves: Vec::new(),
+            key,
+            chords: None,
+            expected: None,
+            doubled: false,
+            notes: Vec::new(),
+            row: None,
+            chord: None,
+        }
+    }
+
+    /// The step where the move lands, or where the notes concerned
+    /// start: where the chord lane marks it.
     pub fn step(&self) -> usize {
-        self.moves.iter().map(|m| m.to.start).max().unwrap_or(0)
+        let moved = self.moves.iter().map(|m| m.to.start);
+        let played = self.notes.iter().map(|n| n.note.start);
+        moved.chain(played).max().unwrap_or(0)
     }
 
     /// The steps where the parts arrive, from where the move lands to
@@ -297,7 +401,9 @@ impl Slip {
     /// them.
     pub fn steps(&self) -> std::ops::Range<usize> {
         let start = self.step();
-        let end = self.moves.iter().map(|m| m.to.end()).min().unwrap_or(start);
+        let moved = self.moves.iter().map(|m| m.to.end());
+        let played = self.notes.iter().map(|n| n.note.end());
+        let end = moved.chain(played).min().unwrap_or(start);
         start..end.max(start + 1)
     }
 
@@ -362,7 +468,7 @@ impl Slip {
                     .map(|to| format!(" to {}", note(to)))
                     .unwrap_or_default(),
             ),
-            _ => format!("{}.", self.kind.name()),
+            _ => serial::what(self, voice_name),
         }
     }
 
@@ -412,6 +518,7 @@ fn why(kind: SlipKind) -> &'static str {
             "A chord's seventh is a dissonance, and classical part writing resolves it down \
              by step into the next chord."
         }
+        kind => serial::why(kind),
     }
 }
 
@@ -483,6 +590,33 @@ pub struct VoiceLeading {
     /// Pairs of parts that play one line in octaves or unison: the part
     /// checked, then the one that doubles it, which is not checked.
     pub doublings: Vec<(usize, usize)>,
+    /// Which rules were checked: those of the key at the start.
+    pub rules: Rules,
+    /// Where the key is a row: the forms of the row played, in order.
+    pub rows: Vec<RowStatement>,
+}
+
+/// Which style's rules the check follows, from the key.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Rules {
+    /// In a key of tonal music: classical part writing.
+    #[default]
+    Classical,
+    /// In a twelve-tone row: twelve-tone writing.
+    TwelveTone,
+    /// In a pitch-class set: none.
+    Neither,
+}
+
+impl Rules {
+    /// The rules for music in `key`.
+    pub fn of(key: Scale) -> Rules {
+        match key.kind {
+            ScaleKind::Row(_) => Rules::TwelveTone,
+            ScaleKind::Set(_) => Rules::Neither,
+            _ => Rules::Classical,
+        }
+    }
 }
 
 impl VoiceLeading {
@@ -496,12 +630,35 @@ impl VoiceLeading {
     /// A line summing up the check: how many parts, and how many of each
     /// kind of slip.
     pub fn summary(&self) -> String {
+        match self.rules {
+            Rules::Classical => {}
+            Rules::TwelveTone => return serial::summary(self),
+            Rules::Neither => {
+                return "Voice leading: the classical rules are for keys, and the twelve-tone \
+                        rules for rows; a pitch-class set has no rules of its own here."
+                    .to_string();
+            }
+        }
         let parts = self.voices.len() - self.doublings.len();
         if parts < 2 {
             return "Voice leading: it takes two parts or more; show the other tracks \
                     (Ghost notes) or write chords."
                 .to_string();
         }
+        let found = self
+            .counts()
+            .unwrap_or_else(|| "nothing classical part writing avoids".to_string());
+        let doubled = match self.doublings.len() {
+            0 => String::new(),
+            1 => ", one line doubled in octaves".to_string(),
+            n => format!(", {n} lines doubled in octaves"),
+        };
+        format!("Voice leading, {parts} parts{doubled}: {found}.")
+    }
+
+    /// How many of each kind of slip there are, as "parallel fifths (2),
+    /// seventh not falling (1)", or `None` when there are none.
+    fn counts(&self) -> Option<String> {
         let mut counts: Vec<(SlipKind, usize)> = Vec::new();
         for slip in &self.slips {
             match counts.iter_mut().find(|(kind, _)| *kind == slip.kind) {
@@ -510,21 +667,13 @@ impl VoiceLeading {
             }
         }
         counts.sort_by_key(|(kind, _)| *kind as usize);
-        let found = if counts.is_empty() {
-            "nothing classical part writing avoids".to_string()
-        } else {
+        (!counts.is_empty()).then(|| {
             counts
                 .iter()
                 .map(|(kind, count)| format!("{} ({count})", kind.name().to_lowercase()))
                 .collect::<Vec<_>>()
                 .join(", ")
-        };
-        let doubled = match self.doublings.len() {
-            0 => String::new(),
-            1 => ", one line doubled in octaves".to_string(),
-            n => format!(", {n} lines doubled in octaves"),
-        };
-        format!("Voice leading, {parts} parts{doubled}: {found}.")
+        })
     }
 }
 
@@ -559,11 +708,15 @@ pub fn check(
         .filter(|&voice| !doublings.iter().any(|&(_, doubling)| doubling == voice))
         .collect();
     let mut slips = Vec::new();
-    for (index, &a) in checked.iter().enumerate() {
-        for &b in &checked[index + 1..] {
+    // The classical rules hold only where the key is one of tonal music.
+    let classical = beats
+        .iter()
+        .any(|&(start, _)| Rules::of(key_at(start)) == Rules::Classical);
+    let pairs = if classical { checked.as_slice() } else { &[] };
+    for (index, &a) in pairs.iter().enumerate() {
+        for &b in &pairs[index + 1..] {
             for (kind, first, second) in consecutive(&voices[a], &voices[b]) {
                 let mut slip = Slip {
-                    kind,
                     moves: vec![
                         PartMove {
                             voice: a,
@@ -576,22 +729,26 @@ pub fn check(
                             to: second.1,
                         },
                     ],
-                    key: Scale::default(),
-                    chords: None,
-                    expected: None,
-                    doubled: false,
+                    ..Slip::of(kind, Scale::default())
                 };
                 slip.key = key_at(slip.step());
                 slips.push(slip);
             }
         }
     }
-    slips.extend(resolutions(&voices, &checked, beats, &key_at));
+    if classical {
+        slips.extend(resolutions(&voices, &checked, beats, &key_at));
+    }
+    slips.retain(|slip| Rules::of(slip.key) == Rules::Classical);
+    let (row_slips, rows) = serial::check(&voices, &doublings, beats, &key_at);
+    slips.extend(row_slips);
     slips.sort_by_key(|slip| (slip.step(), slip.kind as usize));
     VoiceLeading {
         voices,
         slips,
         doublings,
+        rules: Rules::of(key_at(0)),
+        rows,
     }
 }
 
@@ -997,16 +1154,15 @@ fn resolutions(
                 .map(|before| i32::from(note.pitch.midi()) - i32::from(before.pitch.midi()));
             let by_step = |semitones: i32| (1..=2).contains(&semitones.abs());
             let slip = |kind, expected: Option<Note>| Slip {
-                kind,
                 moves: vec![PartMove {
                     voice: v,
                     from: note,
                     to: next,
                 }],
-                key,
                 chords: Some(resolution),
                 expected,
                 doubled: kind == SlipKind::LeadingTone && leading_count > 1,
+                ..Slip::of(kind, key)
             };
             if let Some(tone) = leading
                 && tone == pitch_class
