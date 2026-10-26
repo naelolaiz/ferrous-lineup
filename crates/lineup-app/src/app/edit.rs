@@ -324,6 +324,15 @@ impl LineupApp {
         if !holding && !ctx.text_edit_focused() && !self.is_recording() {
             self.finish_step_sync();
             self.history.close();
+        } else if self.step_unsynced {
+            // The step goes on, but its last change may still be waiting
+            // for its turn: a drag held still, or the last key typed, has
+            // no next edit to carry it to the audio thread. Send it when
+            // it is due, and make sure a frame comes then.
+            self.sync_step_if_due();
+            if self.step_unsynced {
+                ctx.request_repaint_after(SYNC_INTERVAL.saturating_sub(self.last_sync.elapsed()));
+            }
         }
     }
 

@@ -2632,6 +2632,33 @@ fn changes_in_one_drag_are_one_undo_step() {
 }
 
 #[test]
+fn a_drag_held_still_reaches_the_sound() {
+    let mut screen = Screen::new();
+    // The mouse button goes down on the empty end of the menu bar and
+    // stays down, as in a drag.
+    let pos = Pos2::new(1390.0, 8.0);
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    screen.app.edit("drag", |project| project.swing = 1);
+    screen.app.edit("drag", |project| project.swing = 2);
+    assert!(screen.app.step_unsynced, "the second change waits its turn");
+
+    // The pointer is held still: no change follows, but its turn comes.
+    screen.app.last_sync -= std::time::Duration::from_millis(100);
+    screen.draw(vec![]);
+    assert!(!screen.app.step_unsynced, "the waiting change was sent");
+    assert_eq!(screen.app.synced, screen.app.project);
+    assert!(screen.app.history.is_open(), "the drag is still one step");
+}
+
+#[test]
 fn unsaved_work_from_a_crash_recovers_as_unsaved() {
     let mut screen = Screen::new();
     let recovered = Project::template();
