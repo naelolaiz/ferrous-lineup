@@ -314,8 +314,7 @@ impl LineupApp {
     /// always begins a new undo step.
     pub(super) fn start_frame_for_undo(&mut self, ctx: &egui::Context) {
         if ctx.input(|input| input.pointer.any_pressed()) {
-            self.finish_step_sync();
-            self.history.close();
+            self.close_step();
         }
     }
 
@@ -326,8 +325,7 @@ impl LineupApp {
     pub(super) fn end_frame_for_undo(&mut self, ctx: &egui::Context) {
         let holding = ctx.input(|input| input.pointer.any_down());
         if !holding && !ctx.text_edit_focused() && !self.is_recording() {
-            self.finish_step_sync();
-            self.history.close();
+            self.close_step();
         } else if self.step_unsynced {
             // The step goes on, but its last change may still be waiting
             // for its turn: a drag held still, or the last key typed, has
@@ -338,6 +336,18 @@ impl LineupApp {
                 ctx.request_repaint_after(SYNC_INTERVAL.saturating_sub(self.last_sync.elapsed()));
             }
         }
+    }
+
+    /// Ends the open undo step, if there is one, once its last changes
+    /// are sent. The frames of a drag leave the star alone, but the drag
+    /// may end where it started, as a note dragged away and back does, so
+    /// the star is worked out again once the step is over.
+    fn close_step(&mut self) {
+        self.finish_step_sync();
+        if self.history.is_open() {
+            self.file.project_reverted();
+        }
+        self.history.close();
     }
 
     /// The Edit menu, next to the File menu.

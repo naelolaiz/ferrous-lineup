@@ -2639,6 +2639,36 @@ fn changing_a_project_back_by_hand_clears_the_unsaved_mark() {
 }
 
 #[test]
+fn a_drag_that_ends_where_it_started_clears_the_unsaved_mark() {
+    let mut screen = Screen::new();
+    let swing = screen.app.project.swing;
+    // The mouse button goes down on the empty end of the menu bar and
+    // stays down, as in a drag.
+    let pos = Pos2::new(1390.0, 8.0);
+    let press = |pressed| Event::PointerButton {
+        pos,
+        button: PointerButton::Primary,
+        pressed,
+        modifiers: Modifiers::NONE,
+    };
+    screen.draw(vec![Event::PointerMoved(pos), press(true)]);
+    screen
+        .app
+        .edit("drag", |project| project.swing = swing + 20);
+    screen.draw(vec![]);
+    screen.app.edit("drag", |project| project.swing = swing);
+    screen.draw(vec![]);
+    assert!(screen.app.history.is_open(), "the drag goes on");
+    // Letting go ends the drag back where it started.
+    screen.draw(vec![press(false)]);
+    assert!(!screen.app.history.is_open());
+    assert!(
+        !screen.app.has_unsaved_changes(),
+        "the drag put back what was saved"
+    );
+}
+
+#[test]
 fn changes_in_one_drag_are_one_undo_step() {
     let mut screen = Screen::new();
     let before = screen.app.project.clone();
