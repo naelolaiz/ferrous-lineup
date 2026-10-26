@@ -1578,14 +1578,18 @@ impl PianoRoll {
             if let Some(tool) = self.tools_menu(ui) {
                 picked = Some(tool);
             }
-            ui.add_enabled(!alone, egui::Checkbox::new(&mut self.ghosts, "Ghost notes"))
-                .on_hover_text(
-                    "Show the notes of the other channels faintly, and name the chords \
-                     all of them make together.",
-                )
-                .on_disabled_hover_text("No other channel plays melodies or chords yet.");
-            ui.checkbox(&mut self.voice_leading, "Voice leading")
-                .on_hover_text(VOICE_LEADING_HELP);
+            // The two boxes wrap onto the next row together: the check
+            // takes the other tracks when their notes are shown.
+            theme::keep_together(ui, 220.0, |ui| {
+                ui.add_enabled(!alone, egui::Checkbox::new(&mut self.ghosts, "Ghost notes"))
+                    .on_hover_text(
+                        "Show the notes of the other channels faintly, and name the chords \
+                         all of them make together.",
+                    )
+                    .on_disabled_hover_text("No other channel plays melodies or chords yet.");
+                ui.checkbox(&mut self.voice_leading, "Voice leading")
+                    .on_hover_text(VOICE_LEADING_HELP);
+            });
         });
         picked
     }
