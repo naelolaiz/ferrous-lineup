@@ -13,13 +13,31 @@ settled than with C lowest. A chord with a note other than its root in
 the bass is an **inversion**, and the labels in Ferrous Lineup now say
 which one, for each track and for the whole band.
 
-## The two names, in one line
+## Two ways to write an inversion
 
-A **chord symbol** puts the bass after a slash (`C/E`, `G7/B`), and a
-**Roman numeral** puts the figures of *figured bass* above the bass
-(`I⁶`, `V⁶₅`), the numbers being the intervals above it;
-[Chord names](chord-names.md) shows the table and [the chord
-sheet](chord-sheet.md#reading-the-sheet) shows the numerals under each
+| Chord | Lowest note | Chord symbol | Roman numeral in C major |
+|-------|-------------|--------------|--------------------------|
+| C major | C, the root | C | I |
+| C major | E, the third | C/E | I⁶ (first inversion) |
+| C major | G, the fifth | C/G | I⁶₄ (second inversion) |
+| G7 | G, the root | G7 | V7 |
+| G7 | B, the third | G7/B | V⁶₅ (first inversion) |
+| G7 | D, the fifth | G7/D | V⁴₃ (second inversion) |
+| G7 | F, the seventh | G7/F | V⁴₂ (third inversion) |
+
+A **chord symbol** puts the bass after a slash, as on a lead sheet
+([Chord names](chord-names.md)). A **Roman numeral** takes the figures of
+*figured bass*, the shorthand of Baroque keyboard players: the numbers
+are the intervals above the bass. C/E has C a sixth above E and G a
+third above it: "6/3", shortened to ⁶. C/G has a sixth and a fourth:
+⁶₄. A seventh chord has four notes, so three intervals; the figures
+keep the two that tell its inversions apart: ⁶₅, ⁴₃ and ⁴₂. They stand
+in for the 7, so G7/B is V⁶₅, not V7⁶₅. A secondary dominant keeps its
+target: E7/G# in C major is V⁶₅/vi.
+
+Sus chords, sixth chords and ninth chords have no figures of their own;
+they keep the slash name only. [The chord
+sheet](chord-sheet.md#reading-the-sheet) shows these numerals under each
 bar. What this chapter adds is what the app does with the bass now that
 it knows which note it is.
 
