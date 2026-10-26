@@ -15,6 +15,7 @@
 //! Ferrous Lineup" are new tunes, written to show off a genre that has
 //! few well-known tunes old enough to be free.
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
@@ -22,7 +23,7 @@ use crate::general_midi as gm;
 use crate::harmony::{Scale, ScaleKind};
 use crate::meter::TimeSignature;
 use crate::pattern::{DEFAULT_VELOCITY, NoteEvent, STEP_NOTE};
-use crate::pitch::PitchClass;
+use crate::pitch::{NoteName, PitchClass, Spelling};
 use crate::project::Drum;
 
 use super::Genre;
@@ -531,8 +532,11 @@ impl Song {
         }
     }
 
+    /// The key the song is in, written as its tune is (see
+    /// [`written_as_tune`]): Take Five is in Eb minor, not D# minor.
     pub fn scale(&self) -> Scale {
-        Scale::new(self.tonic, self.mode)
+        let tune = self.parts.iter().filter(|part| part.key.is_none());
+        written_as_tune(Scale::new(self.tonic, self.mode), tune)
     }
 
     /// The time signature `part` is in: its own, or else the song's. A
@@ -589,7 +593,7 @@ impl Song {
     /// The key `part` is in: its own, if it modulates, or the song's.
     pub fn part_scale(&self, part: &Part) -> Scale {
         match part.key {
-            Some((tonic, mode)) => Scale::new(tonic, mode),
+            Some((tonic, mode)) => written_as_tune(Scale::new(tonic, mode), [part]),
             None => self.scale(),
         }
     }
@@ -813,6 +817,43 @@ mod soul;
 mod tango;
 mod tango_arranged;
 mod tango_played;
+
+/// `key` written as the tune of `parts` is. A key that can be written
+/// either way (see [`Scale::other_spelling`]) takes the name its tune's
+/// notes are written in, since the songs here write their tunes as their
+/// scores do: Take Five's tune, with its Gb and Db, is in Eb minor, not
+/// D# minor, and the middle of Golliwogg's Cakewalk in Gb major. A tune
+/// with as many sharps as flats, or none, leaves the key its usual name.
+fn written_as_tune<'a>(key: Scale, parts: impl IntoIterator<Item = &'a Part>) -> Scale {
+    let (sharps, flats) = parts
+        .into_iter()
+        .map(|part| accidentals(part.melody))
+        .fold((0, 0), |(sharps, flats), (s, f)| (sharps + s, flats + f));
+    match sharps.cmp(&flats) {
+        Ordering::Greater => key.with_spelling(Spelling::Sharps),
+        Ordering::Less => key.with_spelling(Spelling::Flats),
+        Ordering::Equal => key,
+    }
+}
+
+/// How many of the notes of `tune` (see [`chart::parse_melody`]) are
+/// written with sharps, and how many with flats.
+fn accidentals(tune: &str) -> (usize, usize) {
+    let mut counts = (0, 0);
+    for (at, c) in tune.char_indices() {
+        // A note's name starts with its letter: the "b" of "Bb4" is not
+        // a note B.
+        if !('A'..='G').contains(&c) || tune[..at].ends_with(char::is_alphanumeric) {
+            continue;
+        }
+        match NoteName::read(&tune[at..]).map(|(name, _)| name.accidental.signum()) {
+            Some(1) => counts.0 += 1,
+            Some(-1) => counts.1 += 1,
+            _ => {}
+        }
+    }
+    counts
+}
 
 /// All the songs, sorted by genre in the order of [`Genre::ALL`].
 pub static SONGS: &[Song] = &[
@@ -1415,6 +1456,39 @@ mod tests {
         assert!(
             SONGS.windows(2).all(|pair| pair[0].genre <= pair[1].genre),
             "SONGS is sorted by genre"
+        );
+    }
+
+    #[test]
+    fn keys_are_written_as_their_tunes_are() {
+        let key = |song: &str, part: Option<&str>| {
+            let song = Song::named(song).unwrap();
+            match part {
+                Some(part) => song.part_scale(song.part(part).unwrap()),
+                None => song.scale(),
+            }
+            .name()
+        };
+        // Tunes written in flats, in keys that are often named with sharps.
+        assert_eq!(key("Take Five", None), "Eb minor");
+        assert_eq!(key("Golliwogg's Cakewalk", Some("G flat")), "Gb major");
+        assert_eq!(key("Golliwogg's Cakewalk", Some("Tristan")), "Gb major");
+        assert_eq!(key("Desarma y sangra", Some("E flat minor")), "Eb minor");
+        // Tunes written as their keys are usually named keep the name.
+        assert_eq!(
+            key("In the Hall of the Mountain King", Some("Stretto")),
+            "F# major"
+        );
+        assert_eq!(
+            key("Petrushka, The Moor's Room", Some("The Moor's waltz")),
+            "B major"
+        );
+        assert_eq!(key("Maple Leaf Rag", Some("C")), "Db major");
+        assert_eq!(key("Funeral March", None), "Bb minor");
+
+        assert_eq!(
+            accidentals("Bb3:2 Eb4 F#4 -:2 !pp >C#5. A4+Cb5 | !sfz B4"),
+            (2, 3)
         );
     }
 

@@ -638,10 +638,7 @@ mod tests {
     use crate::harmony::{ChordSymbol, ScaleKind};
     use crate::meter::{Meter, TimeSignature};
 
-    const C_MAJOR: Scale = Scale {
-        root: PitchClass::C,
-        kind: ScaleKind::Major,
-    };
+    const C_MAJOR: Scale = Scale::new(PitchClass::C, ScaleKind::Major);
 
     /// One harmony a bar of `time`, "N.C." for none.
     fn chart(names: &[&str], time: TimeSignature, key: Scale) -> (Vec<Bar>, Vec<Over>) {

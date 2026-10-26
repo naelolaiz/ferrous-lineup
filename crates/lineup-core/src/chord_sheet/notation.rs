@@ -449,10 +449,7 @@ mod tests {
     use crate::harmony::{ROW_PRESETS, ScaleKind};
     use crate::pitch::PitchClass;
 
-    const C_MAJOR: Scale = Scale {
-        root: PitchClass::C,
-        kind: ScaleKind::Major,
-    };
+    const C_MAJOR: Scale = Scale::new(PitchClass::C, ScaleKind::Major);
 
     fn set(semitones: &[u8]) -> PitchSet {
         PitchSet::from_semitones(semitones)
