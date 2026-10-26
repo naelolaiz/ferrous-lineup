@@ -26,9 +26,13 @@ seconds:
 const INTERVAL: Duration = Duration::from_secs(30);
 ```
 
-The files are `recovery.lineup` and `recovery.info` in the app's data
-folder, the one `eframe::storage_dir(APP_NAME)` gives it. On Linux that
-is usually `~/.local/share/ferrouslineup`. The copy is **not** written
+The files are in a `recovery` folder inside the app's data folder, the
+one `eframe::storage_dir(APP_NAME)` gives it. On Linux that is usually
+`~/.local/share/ferrouslineup/recovery`. Each run of the app names its
+files after itself, such as `4211-1793047912612-0.lineup` and
+`4211-1793047912612-0.info`: the process number, the time it started in
+milliseconds, and a count. Why each run needs its own is in [Two windows
+at once](#two-windows-at-once) below. The copy is **not** written
 next to the project because a project may be on a read-only medium, and
 an autosave file in a folder of songs would surprise anyone looking at
 it. The small `.info` file carries the project's path and name, so a
@@ -53,6 +57,64 @@ and names the file:
 A clean exit removes the copy, because there is nothing to recover. The
 copy that remains is the sign of a crash, a kill, or a power cut. A copy
 whose project will not load is removed at startup rather than offered.
+Version 0.2.0 kept one copy, `recovery.lineup`, straight in the data
+folder; a copy left there is still offered after an update.
+
+### Two windows at once
+
+Nothing stops you from starting Ferrous Lineup twice. When every run
+wrote the same `recovery.lineup`, the second window found the first
+one's copy at startup and offered it as if the first had crashed, while
+it was still open. Each window's autosave also replaced the other's
+copy, and the first to save removed it.
+
+So each run writes its own copy, and next to it a third file,
+`<run>.lock`, which it **locks** before the first copy is written and
+holds while it runs. A file lock is a promise kept by the operating
+system: only one open file can hold it, and when the program that holds
+it ends, the system lets go of it, even in a crash or a power cut. That
+makes it the right question to ask at startup: "is the run that wrote
+this copy still going?" If its lock can be taken, it is not, and the
+copy is offered; if not, the copy belongs to a window that is still open
+and is left alone.
+
+The standard library has file locks since Rust 1.89 (`File::lock`,
+`File::try_lock` and friends). `try_lock` does not wait: it says at once
+whether it got the lock, and its error tells "someone else holds it"
+apart from "this system cannot lock files":
+
+```rust
+fn take_lock(path: &Path) -> Lock {
+    // A copy whose lock file is gone was left by a run that closed with
+    // work unsaved: the file is made again, to be taken.
+    let Ok(file) = OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(path)
+    else {
+        return Lock::Unknown;
+    };
+    match file.try_lock() {
+        Ok(()) => Lock::Taken(file),
+        Err(TryLockError::WouldBlock) => Lock::Held,
+        Err(TryLockError::Error(_)) => Lock::Unknown,
+    }
+}
+```
+
+The lock lasts as long as the `File` value: dropping it lets go. So a
+window that finds a copy keeps the `File` in the `Recovered` value until
+you answer the question; a third window opened meanwhile cannot take the
+lock and does not offer the same copy twice. When the app closes, the
+`Drop` of `Recovery` removes its lock file; a copy of unsaved work stays,
+without its lock, to be offered next time. A system that cannot lock
+files (`Lock::Unknown`) offers the copy anyway: offering it twice loses
+nothing, never offering it would.
+
+If two runs crashed, there are two copies. The newest is offered first,
+and the next waits until the work recovered before it is saved or let
+go, so recovering one never replaces another.
 
 ## File > Open recent
 
@@ -81,9 +143,10 @@ Three smaller fixes keep the project you meant to keep:
   "Stopped importing the recording."
 - **File > Quit** during a WAV or video export asks **An export is still
   running**, with **Stop it and quit** and **Keep exporting**. Stopping
-  waits for the export to finish, then closes; any unsaved-changes
-  question comes first. The export is not cut off mid-file, and the
-  project is not closed underneath it.
+  asks the export to stop, waits until it has, removes the unfinished
+  file, and then closes; any unsaved-changes question comes first. A
+  half-written WAV or video is never left behind looking finished, and
+  the project is not closed underneath an export that is still writing.
 
 The style editor has its own unsaved state. Quitting with an edited
 draft asks **Save style changes?**, offering **Save style**, **Don't
@@ -101,7 +164,10 @@ Now the first change of a drag opens one undo step and keeps a copy from
 before it. The following frames change the project in place. The audio
 thread is sent what it is missing from a shadow copy of the last state
 it received, at most every 50 milliseconds, and once more when the step
-closes:
+closes. A drag held still, or a pause in typing, has no next change to
+carry the last one, so the end of each frame sends it once its 50
+milliseconds are up, and asks egui for a frame at that moment even if
+nothing else moves:
 
 ```rust
 const SYNC_INTERVAL: Duration = Duration::from_millis(50);
@@ -110,8 +176,12 @@ const SYNC_INTERVAL: Duration = Duration::from_millis(50);
 A change to the number of patterns or channels is structural and is
 sent at once, because the audio thread's rows have to move with it. The
 unsaved star is no longer worked out by comparing the whole project
-every frame: a project already known to differ stays that way, and the
-comparison runs only when it might have changed. Undo still keeps up to
+every frame. A change made in one go, such as a click, an undo or a
+redo, compares the project with the saved one again, so a step clicked
+on and then off clears the star. The frames of a drag do not compare;
+the comparison runs once when the drag's undo step closes, so a note
+dragged away and back clears the star when you let go. Undo still keeps
+up to
 256 MB of snapshots, with at least ten steps even for a very large song.
 
 ## Audio that comes back
