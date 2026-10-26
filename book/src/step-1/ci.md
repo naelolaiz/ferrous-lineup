@@ -59,9 +59,9 @@ artifact (`ferrous-loom-linux` then, `ferrous-lineup-linux` today; see
 > matrix of Linux, macOS and Windows. Each runner uploads its own
 > artifact (`ferrous-lineup-linux`, `ferrous-lineup-macos` and
 > `ferrous-lineup-windows`), and the Linux runner still checks
-> formatting. The book is not a job in that workflow: it has its own
-> [`.github/workflows/book.yml`](https://github.com/naelolaiz/ferrous-lineup/blob/book/.github/workflows/book.yml)
-> on the `book` branch, where **build** makes the website and the PDF and
+> formatting. The book is not a job in that workflow: it has its own,
+> [`.github/workflows/book.yml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/.github/workflows/book.yml),
+> where **build** makes the website and the PDF from `book/` and
 > **deploy** publishes them on GitHub Pages (see [The book online and as
 > a PDF](../step-9/book-online.md)).
 

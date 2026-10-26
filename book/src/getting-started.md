@@ -169,19 +169,17 @@ are written.
 ## 5. Build this book
 
 The book is written with [mdBook](https://rust-lang.github.io/mdBook/), a
-Rust tool. It lives on a branch of its own, `book`, which shares no
-history with the app's code. Open that branch in a folder next to the
-app, install mdBook once, then build:
+Rust tool. Its sources are in the `book/` folder, next to the app's
+code. Install mdBook once, then build:
 
 ```sh
-git fetch origin book
-git worktree add ../ferrous-lineup-book -b book origin/book
-cd ../ferrous-lineup-book
 cargo install mdbook --version 0.5.4 --locked
+cd book
 mdbook build
 ```
 
-Open `book/index.html` in your browser. It works without internet.
+Open `book/book/index.html` (the website mdBook wrote inside `book/`) in
+your browser. It works without internet.
 While writing, `mdbook serve --open` rebuilds the pages every time you
 save a file. The same book is online, and as one PDF
 ([The book online and as a PDF](step-9/book-online.md)).
