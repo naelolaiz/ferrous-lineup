@@ -63,12 +63,11 @@ pub(super) struct FileState {
     /// The name of a song made from another kind of file (a MIDI file, a
     /// chord sheet as text), until it is saved.
     name: Option<String>,
-    /// A copy of the project as it was when last opened or saved. If the
-    /// project differs from it, there are unsaved changes. Comparing the
-    /// two (thanks to the derived `PartialEq`) means even undoing a change
-    /// by hand counts as "no changes".
-    /// The project as last opened or saved, or `None` when it has never
-    /// been saved (recovered work with no file of its own).
+    /// A copy of the project as it was when last opened or saved, or
+    /// `None` when it has never been saved (recovered work with no file of
+    /// its own). If the project differs from it, there are unsaved
+    /// changes. Comparing the two (thanks to the derived `PartialEq`)
+    /// means even undoing a change by hand counts as "no changes".
     saved: Option<Project>,
     /// Whether the project differs from `saved`, as last worked out.
     /// Comparing the two walks the whole project, so it is only done
@@ -105,8 +104,9 @@ impl FileState {
         }
     }
 
-    /// The project was undone or redone, which can make it match `saved`
-    /// again: work out whether it does whenever that is next asked.
+    /// The project was undone, redone or changed in one step, which can
+    /// make it match `saved` again: work out whether it does whenever that
+    /// is next asked.
     pub(super) fn project_reverted(&mut self) {
         self.check_dirty = true;
     }

@@ -319,7 +319,8 @@ impl LineupApp {
             && self.message.is_none()
         {
             self.message = Some(
-                "The audio engine stopped taking commands. Restart Ferrous Lineup.".to_string(),
+                "The audio engine stopped taking commands. Restart it in Edit > Settings… > Audio."
+                    .to_string(),
             );
         }
     }
@@ -363,7 +364,7 @@ impl LineupApp {
             && let Some(error) = engine.take_error()
         {
             self.message = Some(format!(
-                "Audio stopped: {error}. Restart Ferrous Lineup to use the sound card again."
+                "Audio stopped: {error}. Try again in Edit > Settings… > Audio."
             ));
         }
     }

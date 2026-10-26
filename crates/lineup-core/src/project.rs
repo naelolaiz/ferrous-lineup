@@ -926,12 +926,6 @@ impl Project {
         self.patterns.get(clip.pattern).map_or(0, Pattern::length) * clip.repeats
     }
 
-    /// The length of the playlist's timeline in steps: up to the end of
-    /// the last clip or section, rounded up to the next bar line. An
-    /// empty playlist has length 0.
-    ///
-    /// This is the song as drawn. With repeated sections, the song as
-    /// played is longer: see [`Project::arrangement`].
     /// An estimate of the heap memory this project uses, in bytes: its
     /// note lists, clips and names. Undo uses it to remember fewer copies
     /// of a large song.
@@ -962,6 +956,12 @@ impl Project {
                 .map_or(0, |_| std::mem::size_of::<Band>())
     }
 
+    /// The length of the playlist's timeline in steps: up to the end of
+    /// the last clip or section, rounded up to the next bar line. An
+    /// empty playlist has length 0.
+    ///
+    /// This is the song as drawn. With repeated sections, the song as
+    /// played is longer: see [`Project::arrangement`].
     pub fn song_length(&self) -> usize {
         let clips = self
             .playlist
