@@ -137,6 +137,7 @@
   - [Inserting and deleting bars](step-9/insert-delete-bars.md)
   - [Before the next release: keys with two names, notes that stop, and damaged files](step-9/before-the-release.md)
   - [Lead sheets for B♭, E♭ and F instruments](step-9/transposing-instruments.md)
+  - [The speed trainer: start slow, get a little faster each time](step-9/speed-trainer.md)
   - [The book online and as a PDF](step-9/book-online.md)
   - [Where the band ends up](step-9/conclusion.md)
   - [Exercises](step-9/exercises.md)

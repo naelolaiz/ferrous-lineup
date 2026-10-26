@@ -32,7 +32,9 @@ there is now a second row:
 - **Speed**: how fast the band plays, as a percentage of the song's
   tempo, from 25% to 200%. The song keeps its own tempo: the TEMPO box
   still says 110, with "TEMPO 80%" over it, and a saved song or a WAV
-  export is at full speed.
+  export is at full speed. The **Speed trainer** beside it raises the
+  speed a little each time the loop comes round (see [The speed
+  trainer](speed-trainer.md)).
 - **Tap**: click it on the beat a few times and the song's tempo
   becomes yours. Taps in a row are one undo step, "Undo tap tempo".
 - **You play: Piano, Bass, Drums**: the band leaves that part out and
