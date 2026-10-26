@@ -293,7 +293,10 @@ pattern with a drum kit.
 To practise with the band, the chord sheet's second row has a **Count-in** (a bar of clicks before the music
 starts), a **Metronome**, the **Speed** to play at (25% to 200% of the
 song's tempo, which the song itself keeps) and **Tap**, which sets the
-tempo from a few clicks on the beat. **You play** leaves a player (the
+tempo from a few clicks on the beat. The **Speed trainer** starts the
+band slower (70%) and plays a little faster each time the loop comes
+round, up to the song's own tempo; Stop starts it again from the slow
+speed. **You play** leaves a player (the
 piano, the bass, the drums, or a guitar, strings or organ) out of the
 band so you can play the part yourself; your keyboard then plays that
 part's sound. Shift+click a second bar to select several, and **Loop
