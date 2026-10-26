@@ -76,8 +76,9 @@ that work, not as a second list to work through:
 - **Harmony and the sheet**: [hearing chords](chord-hearing.md),
   [one harmony, four names](harmony-notations.md),
   [numerals in minor keys](minor-numerals.md), a
-  [sheet that fills the window](chord-sheet-layout.md) and
-  [bars inserted and deleted](insert-delete-bars.md);
+  [sheet that fills the window](chord-sheet-layout.md),
+  [bars inserted and deleted](insert-delete-bars.md) and
+  [lead sheets for B♭, E♭ and F instruments](transposing-instruments.md);
 - **The sound and the screen**: [the mixer in score order](mixer-score-order.md),
   [a mixer with pan, reverb and meters](mixer.md),
   [any channel sent over MIDI](midi-out-menus.md),
