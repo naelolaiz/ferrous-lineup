@@ -29,21 +29,23 @@ Shift come up properly when Shift is let go first?
 
 *Practices:* egui sliders, keyboard modifiers.
 
-## 3. A metronome (lineup-audio, medium)
+## 3. A click on the offbeats (lineup-audio, medium)
 
-Recording is much easier with a click on every beat. Add
-`Command::SetMetronome(bool)` and a "Metronome" checkbox next to Rec.
-The audio thread plays a short click on each step where
-`step % STEPS_PER_BEAT == 0`, louder on the first step of each bar
-(`STEPS_PER_BAR`). Make the click with a few lines of synthesis, the way
-[`drums.rs`](../step-2/instruments.md) makes its sounds, so no sample
-file is needed.
+The basic metronome this exercise once asked for now exists: the
+practice row has `Command::SetMetronome`, and the count-in uses the same
+clicks. It clicks only the beats. Add a **subdivision** setting
+(eighths, triplets or sixteenths) that makes the metronome click between
+the beats too, quieter than the beat and with the bar accent kept.
+`Project::played_clicks` and `pattern_clicks` build a `Click` for every
+step, `metronome::click_at` chooses it, and `ClickVoice` makes the
+sound; decide whether the subdivision belongs in `Click` or in a second
+setting sent to the audio thread. Should the count-in stay on the beat?
 
 The click must not be in the WAV export, or in the MIDI export. Where
 does each of those come from, and which one would get the click by
 accident if it lived in a channel?
 
-*Practices:* a new command end to end, real-time sound without
+*Practices:* a new setting end to end, real-time sound without
 allocating.
 
 ## 4. Notes across the loop (lineup-core, medium)
@@ -81,29 +83,28 @@ studios you know handle it?
 
 *Practices:* designing behaviour before code, the playlist from step 4.
 
-## 6. Import MIDI files (lineup-core, harder)
+## 6. The other pieces of a format 2 file (lineup-core, harder)
 
-Ferrous Lineup can write `.mid` files. Add `midi_file::read(bytes) ->
-Result<Project, MidiFileError>`, and **File > Import MIDI…**. The tests
-of `midi_file.rs` already have a small reader to start from, but files
-made by other programs need more:
+Opening MIDI files, which this exercise once asked for, now exists:
+`midi_file::read::read` turns the bytes into events, and
+`midi_file::import::import` makes the project behind **File > Import
+MIDI file…**. Two corners are still missing.
 
-- the header's ticks per beat can be anything (480 and 960 are common),
-  so ticks must be converted to steps by rounding,
-- *running status* ([the first chapter](messages.md#reading-a-message-slice-patterns)):
-  a message may leave out its status byte when it repeats the one before,
-- format 0 files put every channel in one track, so notes are split by
-  their MIDI channel instead,
-- notes on channel 10 are drums: map General MIDI's 36, 38, 39 and 42
-  back to the built-in drums,
-- the tempo meta event (`FF 51`) sets the project's tempo.
+A **format 2** file is not one song but several independent pieces, one
+per track. `import` keeps only the first track and says nothing about
+the rest. Add a way to choose a piece: list them in the notice, ask in
+the dialog, or import each as its own project. What should the tests say
+about a format 2 file with three pieces?
 
-Each note-on must be matched with the next note-off of the same pitch
-and channel. A `HashMap<(u8, u8), u32>` of the ticks where notes
-started does it. What should happen to a note that never ends?
+The other is the **SMPTE offset** meta event (`FF 54`): five bytes that
+say where a track starts on a timecode, for music written against film.
+The header's SMPTE timing (`Timing::PerSecond`) already works; this
+event is read past and dropped. Read it and decide what a project with
+no video should do with it. Test both cases with small files built in
+the test module, the way the existing tests do.
 
-*Practices:* parsing binary data with slice patterns, error types,
-`HashMap`.
+*Practices:* parsing binary data with slice patterns, designing a
+choice, error types.
 
 ## 7. Latency compensation (lineup-audio and lineup-app, harder)
 

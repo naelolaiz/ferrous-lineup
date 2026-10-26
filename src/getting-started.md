@@ -17,8 +17,9 @@ rustc --version
 ```
 
 Ferrous Lineup needs Rust 1.88 or newer. It uses the 2024 edition of the
-language (more on editions in the next chapter) and `if let` chains, which
-arrived in 1.88. If your Rust is older, `rustup update` fixes it.
+language (more on editions in [Cargo, workspaces and crates](step-1/workspace.md))
+and `if let` chains, which arrived in 1.88. If your Rust is older,
+`rustup update` fixes it.
 
 ## 2. Install the system's build tools
 
@@ -67,9 +68,18 @@ the `curl` command above. When it asks, let it install the Visual Studio
 Build Tools: Rust uses their linker. Then use the commands below in
 PowerShell or the Command Prompt.
 
-## 3. Build and run
+## 3. Get the code and build it
 
-From the repository folder:
+Clone the repository (Git is part of the build tools on macOS and Linux;
+on Windows, install it from <https://git-scm.com>) and enter its folder:
+
+```sh
+git clone https://github.com/naelolaiz/ferrous-lineup
+cd ferrous-lineup
+```
+
+If you downloaded a source archive instead, unpack it and enter that
+folder. Then build and run:
 
 ```sh
 cargo run --release
@@ -124,22 +134,26 @@ cargo run --release -- my-song.lineup
 
 The `--` tells Cargo that what follows is for the program, not for Cargo.
 
-### Without building: the CI downloads
+### Without building: ready-made downloads
 
-Every CI run on GitHub builds the program for all three systems. On the
-run's page, under **Artifacts**, download `ferrous-lineup-linux`,
-`ferrous-lineup-macos` or `ferrous-lineup-windows` and unzip it. On Linux and
-macOS, make it executable first with `chmod +x ferrous-lineup`. These
-programs are not signed, so macOS and Windows will warn you before the
-first start; [Linux, macOS and Windows](step-4/platforms.md#what-is-not-there-yet)
+Every CI run on GitHub builds the program for Linux, macOS and Windows.
+On the run's page, under **Artifacts**, download
+`ferrous-lineup-linux`, `ferrous-lineup-macos` or
+`ferrous-lineup-windows` and unzip it. On Linux and macOS, make it
+executable first with `chmod +x ferrous-lineup`. These are bare
+programs, not installers, and they are not signed, so macOS and Windows
+will warn you before the first start;
+[Linux, macOS and Windows](step-4/platforms.md#what-is-not-there-yet)
 explains how to get past the warning.
 
-The **Release** workflow packs the same programs ready to use, each
-with the README and the licence: a `.tar.gz` and an AppImage for Linux,
-a `.zip` for Windows, and builds for Macs with Apple Silicon and with
-Intel. They are under **Artifacts** of every Release run, and on the
-repository's **Releases** page for each version
-([Release builds: a download for every system](step-9/releases.md)).
+For something ready to install, use the repository's
+**[Releases page](https://github.com/naelolaiz/ferrous-lineup/releases)**.
+Each `v` tag publishes the packages the **Release** workflow builds:
+Linux AppImage, `.deb` and `.tar.gz`; Windows Setup `.exe` and portable
+`.zip`; and a macOS `.dmg` with `Ferrous Lineup.app`, for Apple Silicon
+and for Intel. The Release run also keeps them under **Artifacts**.
+[Release builds: a download for every system](step-9/releases.md)
+explains each one, and what macOS and Windows say on the first start.
 
 ## 4. Run the tests
 
@@ -159,9 +173,10 @@ history with the app's code. Open that branch in a folder next to the
 app, install mdBook once, then build:
 
 ```sh
-git worktree add ../ferrous-lineup-book book
+git fetch origin book
+git worktree add ../ferrous-lineup-book -b book origin/book
 cd ../ferrous-lineup-book
-cargo install mdbook --locked
+cargo install mdbook --version 0.5.4 --locked
 mdbook build
 ```
 

@@ -33,10 +33,11 @@ So the selection holds the notes themselves:
 selection: Vec<NoteEvent>,
 ```
 
-This works because a channel never holds two equal notes: the pattern's
-rule (no two notes with the same pitch and start) makes every note's
-value unique, so a value names exactly one note. `NoteEvent` is `Copy`
-and `PartialEq`, so keeping copies and comparing them is cheap and easy.
+This works because a channel never holds two notes in the same place: the
+pattern's rule (`same_place`: same pitch, same start, same `nudge`) makes
+every note's value unique, so a value names exactly one note. `NoteEvent`
+is `Copy` and `PartialEq`, so keeping copies and comparing them is cheap
+and easy.
 
 At the start of every frame, notes that have gone are forgotten:
 
@@ -177,10 +178,14 @@ part of `self` would be borrowed while all of `self` is borrowed
 mutably. `Option::take` moves the drag out and leaves `None`, so `drag`
 is a separate value and `self` is free; the drag is put back at the end.
 
-Every frame of the drag sends a `ReplaceNotes`, and each one goes
-through `edit` and the history. They still make a single undo step:
+Every frame of the drag produces a `ReplaceNotes`, and each one goes
+through `edit`. They still make a single undo step:
 [step 5's history](../step-5/history.md) keeps a step open while a mouse
-button is held. Nothing in the piano roll had to know about that.
+button is held. And because the step is already open, `edit` does not
+copy the whole project again on every frame; it sends the audio thread
+the difference from the last state it was given at most every 50 ms, and
+the rest when the button is released. Nothing in the piano roll had to
+know about either detail.
 
 ## The keyboard
 
@@ -283,6 +288,12 @@ menu or a key, it takes exactly the same path, so the two can never
 behave differently. The menu shows each tool's key next to it, written
 the way the system writes keys (`ctx.format_shortcut`), so it doubles as
 the list of shortcuts.
+
+**Changed later.** The enum has grown as more tools arrived: `Quantize`,
+and `Copy`, `Cut`, `Paste` and `Duplicate` for the note clipboard. They
+all still become a `Tool` and go through `use_tool`; a paste adds the
+notes with `AddNotes`, and a cut replaces the selection with an empty
+`new` through `ReplaceNotes`.
 
 ### A menu that stays open
 

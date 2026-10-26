@@ -21,7 +21,8 @@ Press **Ctrl+N** for a new chord sheet (the band plays **Pop beat**),
 then **Progression > Pop > Four chords**. Next to the piano, bass and
 drums, the playlist has a fourth track, **Guitar**, and the channel
 rack a **Guitar** channel on the steel-string acoustic guitar. With
-**Sounds > SoundFont instruments** on, it sounds like one.
+**Edit > Settings… > Audio > SoundFont instruments** on, it sounds
+like one.
 
 Hover over a style in the **Band** menu: its hint now ends with who
 else plays, as in "With a strummed guitar and strings in variation b".

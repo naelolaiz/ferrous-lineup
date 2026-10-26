@@ -165,7 +165,8 @@ cymbal and the piano's offbeats in bar 5 start at 2.667 sixteenths
 into the beat, the last third of a triplet, while in bars 1 to 4 they
 are on the grid.
 
-A song with section styles is saved as format 24.
+A song with section styles needs at least format 24 ([the project file
+format](../appendix-project-format.md)).
 
 ## Exercises
 

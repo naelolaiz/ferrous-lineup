@@ -16,10 +16,12 @@ chapter answer the last question.)
 
 *Practices:* iterators over private fields, `rev()`, reusing `diff`.
 
-## 2. Export one pattern (lineup-app, easy)
+## 2. Export one pattern as audio (lineup-app, easy)
 
-Add "Export pattern…" to the ⋯ pattern menu: it saves the selected
-pattern, played four times, as a WAV file.
+File > Export pattern as MIDI… already writes the selected pattern as a
+MIDI file. What is missing is the same thing as *audio*: "Export
+pattern…" in the ⋯ pattern menu, saving the selected pattern, played
+four times, as a WAV file.
 
 The obvious plan is to use pattern mode: `SetMode(Pattern)`,
 `SelectPattern`, and render four pattern lengths plus the tail. But
@@ -33,24 +35,24 @@ other than `self.project`?
 
 *Practices:* working on a copy, making a function more general.
 
-## 3. Cancel an export (lineup-audio and lineup-app, medium)
+## 3. Export the loop region (lineup-app, medium)
 
-Put a ✖ button next to the progress bar that stops the export, and
-deletes the unfinished `.tmp` file.
+Stopping an export is already implemented: `export_wav_cancellable` takes
+an `AtomicBool`, the status bar has a Stop button, and a cancelled export
+removes its temporary file. Read that code first; it is also the model
+for this exercise.
 
-The export thread has to check, between blocks, whether it should stop.
-Share an `Arc<AtomicBool>` with it, as the progress counter is shared.
-`export_wav` could take a second closure, or its progress closure could
-return whether to go on (`impl FnMut(usize) -> bool`, or the standard
-library's `ControlFlow`). What should `export_wav` return when it is
-cancelled: `Ok`, an error, or a new enum? What should the status bar say?
+Songs can have a loop region, and song mode plays only that part. Add
+File > Export loop region…, which writes just the region to a WAV file.
+`Project::playback_arrangement()` already returns exactly the part song
+mode plays, with repeats unrolled. Generalize `song_render` so it can
+take an `Arrangement` instead of always calling `project.arrangement()`,
+and work out the frame count from that arrangement's own length and
+tempos. What should the file name be? What should the menu item do when
+there is no loop region, or when the region is empty?
 
-While you are there: what happens today if you quit Ferrous Lineup in the
-middle of an export? Which file is left behind, and how could quitting
-wait for the export, or cancel it, first?
-
-*Practices:* atomics as signals between threads, cleaning up after
-yourself, designing return types.
+*Practices:* reusing a calculation, making a function more general,
+thinking about an empty input.
 
 ## 4. Stems: one file per channel (lineup-app, medium)
 
@@ -106,9 +108,11 @@ do? Is that a problem?
 
 ## 6. Cheaper snapshots (lineup-core, harder)
 
-Every edit copies the whole project, every pattern included, even though
-a click on a step changes one pattern. Make the copies cheap by sharing
-what did not change: store the patterns as `Vec<Arc<Pattern>>`.
+Every undo step copies the whole project, every pattern included, even
+though a click on a step changes one pattern. (A drag copies once, when
+its step opens, not on every frame, but the copy is still the whole
+project.) Make the copies cheap by sharing what did not change: store the
+patterns as `Vec<Arc<Pattern>>`.
 
 Cloning a `Vec<Arc<Pattern>>` copies only the pointers and adds one to
 each count; the patterns themselves are shared between the current
@@ -119,7 +123,7 @@ private copy *only if* the pattern is shared ("clone on write"). So
 
 Then `diff` can skip unchanged patterns quickly: if `Arc::ptr_eq` says
 two patterns are the same memory, they are certainly equal. Make a test
-project with 99 patterns full of notes, and measure the time of an edit
+project with 999 patterns full of notes, and measure the time of an edit
 before and after with `std::time::Instant`. Does `PartialEq` for the
 project still work unchanged? Does the file format need to change?
 

@@ -68,10 +68,11 @@ impl ChannelNotes {
         ChannelNotes(patterns)
     }
 
-    /// Adds an empty list for a new pattern, without allocating.
-    fn push_empty(&mut self) {
+    /// Adds an empty list for a new pattern at `pattern`, without
+    /// allocating. The lists from there on move up one place.
+    fn insert_empty(&mut self, pattern: usize) {
         if self.0.len() < self.0.capacity() {
-            self.0.push(Vec::new());
+            self.0.insert(pattern.min(self.0.len()), Vec::new());
         }
     }
 }
@@ -80,9 +81,11 @@ impl ChannelNotes {
 Because the field is private, code outside `engine.rs` cannot write
 `ChannelNotes(some_vec)`. The only way to make one is `ChannelNotes::new`,
 which always reserves room for `MAX_PATTERNS` lists. So every
-`ChannelNotes` the audio thread receives has the room, and `push_empty`
+`ChannelNotes` the audio thread receives has the room, and `insert_empty`
 can never allocate. The check `len < capacity` makes extra sure: if it
-were ever full, it would rather skip the push than allocate.
+were ever full, it would rather skip the insert than allocate. A pattern
+is inserted at a position, not always at the end, because step 5's undo
+can bring one back in the middle of the list.
 
 `.0` is how you reach the field of a tuple struct (one whose fields have
 no names). A test pins the promise down:
@@ -116,10 +119,10 @@ iterator, an array like `[steps(&[0]), steps(&[2])]` in the tests, or a
 ```rust
 SetMode(PlayMode),
 SelectPattern(usize),
-AddPattern { length: usize },
+InsertPattern { index: usize, length: usize },
 RemovePattern(usize),
 SetPatternLength { pattern: usize, length: usize },
-SetSong { clips: Vec<Clip>, length: usize },
+SetSong { plays: Vec<Play>, length: usize },
 SetNotes { pattern: usize, channel: usize, notes: Vec<NoteEvent> },
 Clear,
 ```
@@ -151,10 +154,19 @@ borrow of part of `self` for the whole loop, and `self.throw_away` would
 need another. With an index, each `self.channels[index]` borrow ends on
 the same line.
 
-`SetSong` brings the song's length along with its clips. The audio
+`SetSong` brings the song's length along with its pieces. The audio
 thread could compute it, but `Project::song_length` already does, and two
 copies of the same calculation can drift apart. The UI sends a new song
 whenever a clip moves, a track is muted, or a pattern's length changes.
+
+**Changed later.** In step 4 the audio thread received the clips
+themselves (`SetSong { clips }`) and worked out each clip's pattern step
+itself. Step 8 added clips that repeat and sections that repeat, so
+`Project::playback_arrangement` now unrolls all of that *before* sending.
+The pieces are `Play`s: a pattern, a start in the song, how far into the
+clip to start (`skip`, for a loop that begins mid-clip), and a length.
+The audio thread still knows nothing about repeats or sections; it just
+walks the pieces it is given.
 
 `Clear` empties everything before a new project is sent, when a file is
 opened:
@@ -164,8 +176,10 @@ while let Some(channel) = self.channels.pop() {
     self.throw_away(Garbage::Channel(channel));
 }
 self.pattern_lengths.clear();
-let old = std::mem::take(&mut self.clips);
+let old = std::mem::take(&mut self.plays);
 self.throw_away(Garbage::Song(old));
+let old = std::mem::take(&mut self.song_tempos);
+self.throw_away(Garbage::Tempos(old));
 ```
 
 - `pop` takes the last item out of a `Vec`, or returns `None` when it is
@@ -186,13 +200,27 @@ per track, and each clip has its own idea of "which step":
 
 ```rust
 PlayMode::Song => {
-    // `self.clips` is read while `self.channels` is changed: two
+    // `self.plays` is read while `self.channels` is changed: two
     // different fields, so the borrows do not overlap.
-    for clip in &self.clips {
-        let length = self.pattern_lengths.get(clip.pattern).copied().unwrap_or(0);
-        if (clip.start..clip.start + length).contains(&step) {
-            let local_step = step - clip.start;
-            start_pattern_notes(&mut self.channels, clip.pattern, local_step, length, timing);
+    for play in &self.plays {
+        let length = self.pattern_lengths.get(play.pattern).copied().unwrap_or(0);
+        if let Some(local_step) = play.pattern_step(step, length) {
+            // Notes stop at the end of the pattern, or of the piece,
+            // whichever comes first.
+            let room = (length - local_step).min(play.end() - step);
+            start_pattern_notes(
+                &mut self.channels,
+                Origin {
+                    pattern: play.pattern,
+                    pattern_step: local_step,
+                    song_step: step,
+                    over_song: false,
+                },
+                room,
+                timing,
+                &mut self.pending,
+                self.trace.as_deref_mut(),
+            );
         }
     }
 }
@@ -200,42 +228,52 @@ PlayMode::Song => {
 
 A clip that starts on song step 32 plays its pattern's step 2 on song
 step 34. If two clips overlap (the Chords clip and a Beat clip, on two
-tracks), both start their notes.
+tracks), both start their notes. A clip that repeats its pattern is one
+long `Play`, and `pattern_step` takes the song step modulo the pattern
+length, so the pattern comes round again and again inside it.
 
 `start_pattern_notes` is a plain function, not a method:
 
 ```rust
 fn start_pattern_notes(
     channels: &mut [ChannelState],
-    pattern: usize,
-    step: usize,
-    length: usize,
+    origin: Origin,
+    room: usize,
     timing: Timing,
+    pending: &mut Vec<Pending>,
+    trace: Option<&mut Tracer>,
 ) { ... }
 ```
 
-If it were a method taking `&mut self`, calling it inside
-`for clip in &self.clips` would not compile: the loop borrows `self.clips`
-to read, and the call would borrow *all* of `self` to change. As a
-function taking `&mut self.channels`, it borrows only that field, which
-does not overlap with `self.clips`. This is the same "disjoint fields"
-rule from step 3, used on purpose: shape the function's arguments so it
-borrows only what it needs.
+`Origin` groups the three numbers that say where the notes come from:
+the pattern, the step of the pattern, and the step of the song. The two
+extra arguments are for loose timing (notes that start a little late wait
+in `pending`) and for the trace. If this were a method taking
+`&mut self`, calling it inside `for play in &self.plays` would not
+compile: the loop borrows `self.plays` to read, and the call would borrow
+*all* of `self` to change. As a function taking `&mut self.channels`, it
+borrows only that field, which does not overlap with `self.plays`. This
+is the same "disjoint fields" rule from step 3, used on purpose: shape
+the function's arguments so it borrows only what it needs.
 
-`Timing` bundles two numbers that always travel together:
+`Timing` bundles the numbers that always travel together:
 
 ```rust
 #[derive(Debug, Clone, Copy)]
 struct Timing {
     step_frames: f64,
     sample_rate: u32,
+    loose_frames: f64,
+    now: u64,
 }
 ```
 
-Without it, the function would take six arguments, five of them plain
-numbers, and a call with five numbers in a row is easy to get in the
-wrong order. (Clippy's `too_many_arguments` lint only complains from
-eight, but readability suffers well before that.)
+Without it, the function would take nine arguments, several of them
+plain numbers, and a call with four numbers in a row is easy to get in the
+wrong order. (Clippy's `too_many_arguments` lint complains from eight, and
+readability suffers before that.) The two extra fields are for loose
+timing: how far a note may be late, and the audio thread's clock in
+frames.
 
 ## Testing it
 
@@ -258,8 +296,11 @@ silence. Then a song can be checked in one line:
 fn song_mode_plays_the_clips() {
     let mut h = two_patterns();
     // Pattern 1 at bar 1, pattern 0 at bar 2: a two-bar song.
-    let clips = vec![Clip::new(1, 0, 0), Clip::new(0, 0, 16)];
-    send(&mut h, Command::SetSong { clips, length: 32 });
+    let plays = vec![
+        Play { pattern: 1, start: 0, skip: 0, length: 16 },
+        Play { pattern: 0, start: 16, skip: 0, length: 16 },
+    ];
+    send(&mut h, Command::SetSong { plays, length: 32 });
     send(&mut h, Command::SetMode(PlayMode::Song));
     send(&mut h, Command::Play);
     let out = render(&mut h, 40 * STEP);

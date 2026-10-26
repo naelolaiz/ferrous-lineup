@@ -18,18 +18,21 @@ clip that used it, and renumber the clips of the patterns after it again.
 If one detail is forgotten, undo quietly gives back a slightly different
 song.
 
-**Snapshots** keep a whole copy of the project from before each change.
+**Snapshots** keep a whole copy of the project from before each undoable
+step.
 Undo puts the copy back. There is nothing to reverse, so there is nothing
 to reverse wrongly: whatever the change did, the copy is exactly what was
 there before. The cost is memory, and the time to make a copy.
 
 Ferrous Lineup uses snapshots. A `NoteEvent` takes 24 bytes, and the demo
-song has 37 of them, so a copy of the whole demo project is a few
+song has a few dozen of them, so a copy of the whole demo project is a few
 kilobytes. Even a big project with 10,000 notes holds about 240 KB of
-notes, so 100 copies of it are about 24 MB, and making one copy takes far
-less than a millisecond. That is a fair price for undo that is correct by
-construction. (Exercise 6 shows how to make the copies much cheaper, if a
-project ever gets big enough to need it.)
+notes, and making one copy takes far less than a millisecond. The app
+aims to keep at most 256 MiB of snapshots: a small song gets the full 100
+steps, while a very large one still gets at least 10 (which can go over
+the budget). That is a fair price for
+undo that is correct by construction. (Exercise 6 shows how to make the
+copies much cheaper, if a project ever gets big enough to need it.)
 
 ## `History<T>`
 
@@ -109,12 +112,36 @@ program builds it. Exercise 7 asks how to allow both.
 
 ### `VecDeque`: a list with two cheap ends
 
-When there are already 100 steps, recording one more forgets the oldest.
-In a `Vec`, removing the first item (`remove(0)`) moves every other item
-one place down. A **`VecDeque`** ("double-ended queue", said "vec deck")
-is a ring buffer, like the queues between the threads in step 2: it keeps
-track of where its front is, so `push_back` and `pop_front` are both
-cheap.
+When there are already `limit` steps, recording one more forgets the
+oldest. In a `Vec`, removing the first item (`remove(0)`) moves every
+other item one place down. A **`VecDeque`** ("double-ended queue", said
+"vec deck") is a ring buffer, like the queues between the threads in step
+2: it keeps track of where its front is, so `push_back` and `pop_front`
+are both cheap.
+
+The limit is not a constant in the app. `History::new` takes it, and
+`undo_limit_for` works it out from the project's size:
+
+```rust
+const UNDO_BYTES: usize = 256 * 1024 * 1024;
+const MIN_UNDO_STEPS: usize = 10;
+
+pub(super) fn undo_limit_for(project: &Project) -> usize {
+    limit_for_bytes(project.heap_bytes())
+}
+
+fn limit_for_bytes(bytes: usize) -> usize {
+    (UNDO_BYTES / bytes.max(1)).clamp(MIN_UNDO_STEPS, DEFAULT_LIMIT)
+}
+```
+
+`heap_bytes` counts the notes and names, the things whose number grows
+with the song. A tiny project divides 256 MiB by a few kilobytes and gets
+more than `DEFAULT_LIMIT`, so it is clamped to 100. A huge project gets
+fewer, but never fewer than 10, so undo does not vanish just because the
+song is long. Opening a file builds a fresh `History` with the limit for
+that project. `History::default()` still means 100, which is what the
+little tests use.
 
 ```rust
 pub fn record(&mut self, label: &'static str, before: T) {
@@ -186,16 +213,19 @@ frame:
 /// always begins a new undo step.
 pub(super) fn start_frame_for_undo(&mut self, ctx: &egui::Context) {
     if ctx.input(|input| input.pointer.any_pressed()) {
+        self.finish_step_sync();
         self.history.close();
     }
 }
 
 /// Called at the end of each frame. While a mouse button is held (a
-/// drag) or a text field has the keyboard (typing a name), changes
-/// join one undo step; once both are let go, the step ends.
+/// drag), a text field has the keyboard (typing a name), or a take is
+/// being recorded, changes join one undo step; once all are over, the
+/// step ends.
 pub(super) fn end_frame_for_undo(&mut self, ctx: &egui::Context) {
     let holding = ctx.input(|input| input.pointer.any_down());
-    if !holding && !ctx.text_edit_focused() {
+    if !holding && !ctx.text_edit_focused() && !self.is_recording() {
+        self.finish_step_sync();
         self.history.close();
     }
 }
@@ -219,6 +249,15 @@ Follow a few gestures through these two functions:
 `start_frame_for_undo` matters for one case: a click that starts while a
 text field still has the focus. The press closes the typing step, so the
 click's change does not join it.
+
+Closing a step is more than setting `open = false` now. While a step is
+open, the app does not copy the project again and again, and it does not
+send every frame's change to the audio thread. It keeps a `synced` copy
+of the last state the audio thread was given, and at most every 50 ms it
+sends the difference from that copy. Closing the step calls
+`finish_step_sync`, which sends whatever is still missing before the
+history stops accepting changes. The next chapter shows the `edit`
+function that does this.
 
 ### Everything goes through `edit`
 
@@ -281,13 +320,15 @@ The Edit menu shows the same shortcuts, written the way the system writes
 them, with `ctx.format_shortcut(&UNDO)` ("Ctrl+Z" on Linux, "⌘Z" on a
 Mac), and puts the label in the item: `format!("Undo {label}")`.
 
-## Undo and the unsaved changes dot
+## Undo and the unsaved changes star
 
-Step 4 shows a dot in the window title when the project differs from the
-saved file, by comparing the two projects. That choice pays off now:
-make a change, the dot appears; undo it, and the dot goes away by itself,
-because the project is equal to the saved one again. A `dirty: bool` flag
-set on every edit would have kept the dot after the undo.
+Step 4 shows a star in the window title when the project differs from
+the saved file. It does not compare the two projects on every frame: an
+edit sets a `check_dirty` flag, and the comparison happens when the title
+is next worked out. Undo and redo set the flag again, so they can make
+the star go away, because the project is equal to the saved one again. A
+plain `dirty: bool` set on every edit would have kept the star after the
+undo.
 
 Opening a file, or File > New, replaces the whole project and clears the
 history. Undoing into a different song would be surprising, and the

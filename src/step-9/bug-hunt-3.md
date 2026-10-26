@@ -377,13 +377,18 @@ The test opens "A" in the piano roll, finds every piece of text painted
 in the lane's colour, and checks that each is no wider than its block.
 Before the fix it failed on "D#": 14.9 points wide, in a block of 6.2.
 
-## What is left
+## What shipped after this hunt
 
-The same hunt produced a list of ideas for the workflow and the screen
-(inserting and deleting bars, Open recent and a recovery copy, a one-row
-toolbar, a choice of numerals in minor keys, and more) and some cleanup
-in the code. They are in the project files, in
-`ideas/ideas-2026-10-20.md`, numbered so they can be picked one by one.
+The same hunt produced a list of ideas for the workflow and the screen:
+inserting and deleting bars, Open recent, a recovery copy, a one-row
+toolbar, a choice of numerals in minor keys, and more. The main ones
+have since shipped. Bars can be
+[inserted and deleted](insert-delete-bars.md) with the whole song moving
+along; **File > Open recent** keeps the last ten projects; a crash leaves
+a [recovery copy](recovery.md) that is offered at the next start; [the
+workflow chapter](workflow.md) covers the one-row toolbar and the
+shortcut list; and [numerals in minor keys](minor-numerals.md) are
+written as your book writes them.
 
 The RON search could also be fixed where it is, by looking for `..`
 only among the characters that could be part of the number. That is a

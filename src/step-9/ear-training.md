@@ -402,9 +402,9 @@ the ones not started yet.
 The instruments come from `build_instrument`, the same function the
 channels use ([app/ear.rs](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ear.rs)):
 the piano is a channel with General MIDI program 0, the bass program
-33, the drums the built-in kit. So with **Sounds > SoundFont
-instruments** on, the questions play the SoundFont's piano, bass and
-drums, like the band ([Real instrument sounds](soundfont.md)).
+33, the drums the built-in kit. So with **Edit > Settings… > Audio >
+SoundFont instruments** on, the questions play the SoundFont's piano,
+bass and drums, like the band ([Real instrument sounds](soundfont.md)).
 
 ### The window: actions out
 
@@ -438,7 +438,7 @@ match self.asked.take() {
 `Option::take` leaves `None` behind, so for those few lines `self` and
 the question are two separate values, and both can be borrowed freely.
 
-The window's choices are remembered the way the Sounds menu's are:
+The window's choices are remembered the way the SoundFont settings' are:
 a `#[serde(default)]` struct kept in egui's memory, which eframe saves
 with the window's size.
 

@@ -156,6 +156,12 @@ longer than four bars, which it would cut short without a word.
 `format_for` checks all three, and returns the oldest format that can
 hold the project, as in step 7.
 
+**Today.** `FORMAT_VERSION` is 27, not 3, but this is still the rule: a
+project whose only new feature is a plain time signature, such as 3/4,
+is written as format 3, so an older app refuses it and a newer one opens
+it. A grouped time signature, such as 2+2+3/8, needs format 11, and any
+other later feature needs its own higher number.
+
 ## In MIDI files
 
 A Standard MIDI File has a *meta event* for the time signature, which

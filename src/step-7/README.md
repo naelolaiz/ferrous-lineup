@@ -90,11 +90,15 @@ What was tested in the running app:
   Python's `mido` library, which found the right tracks, notes, drum
   channel, tempo and length.
 
-What could not be tested: a real MIDI keyboard or synth. That code is
-small, and every part after the first byte is shared with the typing
-keyboard or covered by tests. It builds for Linux, macOS and Windows,
-but it has not met real hardware yet. If you have a MIDI keyboard, you
-are the first to try it.
+To be exact: the message and file round-trips were tested, but a real
+MIDI keyboard or synth was not. The build machine's missing
+`/dev/snd/seq`, and the **MIDI unavailable** menu that followed from it,
+are why. The hardware path is small, and every part after the first byte
+is shared with the typing keyboard or covered by tests. It builds for
+Linux, macOS and Windows, but it has not met real hardware. If you try a
+MIDI keyboard or synth, a report of what worked — the port, the operating
+system and what happened — would be welcome; please
+[open an issue](https://github.com/naelolaiz/ferrous-lineup/issues).
 
 ## What changed in the architecture
 

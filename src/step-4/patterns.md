@@ -16,6 +16,7 @@ pub struct Project {
     channels: Vec<Channel>,
     patterns: Vec<Pattern>,
     playlist: Playlist,
+    // ...time signature, mixer, band and the later chapters' fields
 }
 ```
 
@@ -29,33 +30,55 @@ The playlist is two lists:
 pub struct Track {
     pub name: String,
     pub muted: bool,
+    // ...a display height, which older files leave out
 }
 
 pub struct Clip {
     pub pattern: usize,
     pub track: usize,
     pub start: usize,
+    /// How many times the pattern plays, one after the other.
+    pub repeats: usize,
 }
 
 pub struct Playlist {
     pub(crate) tracks: Vec<Track>,
     pub(crate) clips: Vec<Clip>,
+    // ...sections, a loop region, and time, tempo, key and chord markers
 }
 ```
 
-A clip is three numbers: which pattern, on which track, starting at which
-step of the song. Notice what is *not* there: the clip's length. A clip
-is as long as its pattern, so it is worked out when needed:
+A clip is three numbers and a repeat count: which pattern, on which
+track, starting at which step of the song, and how many times the pattern
+plays. Notice what is *not* there: the clip's length. It is the pattern's
+length times the number of repeats, so it is worked out when needed:
 
 ```rust
 pub fn clip_length(&self, clip: &Clip) -> usize {
-    self.patterns.get(clip.pattern).map_or(0, Pattern::length)
+    self.patterns.get(clip.pattern).map_or(0, Pattern::length) * clip.repeats
+}
+
+impl Clip {
+    /// A clip that plays its pattern once.
+    pub fn new(pattern: usize, track: usize, start: usize) -> Self {
+        Clip { pattern, track, start, repeats: 1 }
+    }
 }
 ```
 
 Storing the length too would mean two places that must agree. Make the
 pattern longer and every clip's stored length would be wrong. A value
 that can be computed from others is usually better computed than stored.
+The same goes for the end of a repeated clip: it is `start +
+clip_length`, not another field.
+
+Step 4's clips always played their pattern once, and the audio thread
+received the clips themselves. Step 8 added repeats, and now
+`Project::playback_arrangement` unrolls them into `Play`s before the song
+reaches the audio thread. The chapter on [playing a
+song](song-playback.md#starting-notes-in-song-mode) has the current
+snippet; the clip is still the thing you draw, and its `repeats` is the
+little "×2" on it.
 
 `map_or(0, Pattern::length)` says "if there is a pattern, call
 `Pattern::length` on it; otherwise use 0". A method can be passed by name,
@@ -122,10 +145,11 @@ pattern 0, and the fill still plays at bar 8.
 Why use positions at all, instead of giving each pattern a permanent id?
 Ids would make removal simpler (nothing to renumber) but everything else
 harder: every lookup would search for an id instead of indexing a `Vec`.
-For a list of at most 99 patterns, positions plus one careful method are
-the simpler choice. It is the kind of trade-off with no single right
-answer; the [last exercise](exercises.md#7-think-about-it) of this step
-asks you to think about it.
+For a list of at most 999 patterns (usually far fewer), positions plus
+one careful method are the simpler choice. It is the kind of trade-off
+with no single right answer; the
+[last exercise](exercises.md#7-think-about-it) of this step asks you to
+think about it.
 
 ## Handing out `&mut Pattern` safely
 
@@ -224,19 +248,23 @@ straight away if there is no such pattern.
 ## One fewer duplicate
 
 Saving files (two chapters on) found a hole in step 3's rules. `add_note`
-refused to add a note with the same pitch and start as another, but
-`replace_note`, used when dragging, did not check, so you could drag one
-note exactly on top of another. The new `replace_note` checks every note
-except the one being replaced:
+refused to add a note in the same place as another, but `replace_note`,
+used when dragging, did not check, so you could drag one note exactly on
+top of another. The new `replace_note` checks every note except the one
+being replaced:
 
 ```rust
-let duplicate = row.iter().enumerate().any(|(other_index, other)| {
-    other_index != index && other.pitch == note.pitch && other.start == note.start
-});
+let duplicate = row
+    .iter()
+    .enumerate()
+    .any(|(other_index, other)| other_index != index && other.same_place(&note));
 ```
 
-Now "no two notes of the same pitch start on the same step" is true for
-every pattern, and loading a file can insist on it.
+Now "no two notes of the same pitch start at the same moment" is true for
+every pattern, and loading a file can insist on it. Step 8 later gave
+notes a `nudge` inside their step, for imported and loose playing;
+`same_place` compares the pitch, the step and the nudge, so two notes that
+start a few ticks apart are still two notes.
 
 ## How long is the song?
 
@@ -244,24 +272,27 @@ The song ends where its last clip ends, rounded up to a whole bar:
 
 ```rust
 pub fn song_length(&self) -> usize {
-    let end = self
+    let clips = self
         .playlist
         .clips
         .iter()
-        .map(|clip| clip.start + self.clip_length(clip))
-        .max()
-        .unwrap_or(0);
-    round_up_to_bar(end)
-}
-
-pub fn round_up_to_bar(steps: usize) -> usize {
-    steps.div_ceil(STEPS_PER_BAR) * STEPS_PER_BAR
+        .map(|clip| clip.start + self.clip_length(clip));
+    let sections = self.playlist.sections.iter().map(Section::end);
+    let end = clips.chain(sections).max().unwrap_or(0);
+    self.meter().round_up_to_bar(end)
 }
 ```
 
 `max` returns an `Option`, because an empty list has no maximum;
-`unwrap_or(0)` turns "no clips" into a length of 0. `div_ceil` is
-division that rounds up: 17 steps is `17.div_ceil(16) = 2` bars.
+`unwrap_or(0)` turns "no clips" into a length of 0. `chain` joins the two
+iterators, because a song can end with a clip or with a section that has
+no clip at its very end. `self.meter()` knows the time signature, and its
+`round_up_to_bar` is division that rounds up: in 4/4, 17 steps is
+`17.div_ceil(16) = 2` bars.
+
+Step 8 added sections and time signatures; in step 4 the last line was a
+plain `round_up_to_bar(end)` over the clips alone. The rule is the same:
+the song ends where its last piece ends, on a bar line.
 
 ## Where is a pattern, while the song plays?
 
@@ -274,15 +305,26 @@ pub fn pattern_step_in_song(&self, pattern: usize, song_step: usize) -> Option<u
     self.playlist
         .audible_clips()
         .filter(|clip| clip.pattern == pattern)
-        .find(|clip| (clip.start..clip.start + self.clip_length(clip)).contains(&song_step))
-        .map(|clip| song_step - clip.start)
+        .find_map(|clip| self.step_in_clip(&clip, song_step))
+}
+
+/// The step of its pattern the clip plays on song step `step`.
+fn step_in_clip(&self, clip: &Clip, step: usize) -> Option<usize> {
+    let pattern_length = self.patterns.get(clip.pattern).map_or(0, Pattern::length);
+    let end = clip.start + pattern_length * clip.repeats;
+    (clip.start..end)
+        .contains(&step)
+        .then(|| (step - clip.start) % pattern_length)
 }
 ```
 
 Read it as a sentence: of the clips that can be heard, take those of this
 pattern, find the first one that covers this song step, and tell me how
-far into the clip that step is. `audible_clips` skips clips on muted
-tracks:
+far into the clip that step is. The `% pattern_length` is what makes a
+repeated clip start its pattern again each time round: a 16-step clip
+that repeats at song step 16 is on pattern step 0 there. In step 4 every
+clip played once, so the `%` was not there. `audible_clips` skips clips
+on muted tracks:
 
 ```rust
 pub fn audible_clips(&self) -> impl Iterator<Item = Clip> + '_ {

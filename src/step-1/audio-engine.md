@@ -276,11 +276,18 @@ close, locks unlock and memory frees itself when its owner goes away.
 
 ## The test tone
 
-File: [`crates/lineup-audio/src/synth.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/synth.rs)
+At this step the test tone lived in `crates/lineup-audio/src/synth.rs`.
+Step 2 replaced it with the instrument channels: its click-free gain
+became
+[`dsp::Smoothed`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/dsp.rs),
+and its oscillator grew into the
+[`Synth`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/instrument.rs)
+that plays the channel rack's notes today. The code below is the test
+tone as it was.
 
-`TestTone` generates a sine wave with a **phase accumulator**: `phase`
-goes from 0.0 to 1.0 once per cycle, and each sample advances it by
-`frequency / sample_rate`. The sample is `sin(phase × 2π)`.
+`TestTone` generated a sine wave with a **phase accumulator**: `phase`
+went from 0.0 to 1.0 once per cycle, and each sample advanced it by
+`frequency / sample_rate`. The sample was `sin(phase × 2π)`.
 
 ```rust
 pub fn next_sample(&mut self) -> f32 {
