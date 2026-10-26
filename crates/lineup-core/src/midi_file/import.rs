@@ -36,7 +36,7 @@ use crate::pattern::{MAX_STEPS, NoteEvent, STEP_NOTE, TICKS_PER_STEP};
 use crate::playlist::{Clip, MAX_SONG_STEPS};
 use crate::project::{Channel, Drum, MAX_CHANNELS, MAX_PATTERNS, Project};
 use crate::tempo::{Tempo, TempoMarker};
-use crate::{DRUM_CHANNEL, Note, PitchClass, STEPS_PER_BEAT};
+use crate::{DRUM_CHANNEL, Note, PitchClass, STEPS_PER_BEAT, Spelling};
 
 /// Our ticks to the beat: [`TICKS_PER_STEP`] to each of the four steps.
 const TICKS_PER_BEAT: u64 = (TICKS_PER_STEP * STEPS_PER_BEAT as usize) as u64;
@@ -813,14 +813,20 @@ fn set_keys(
 }
 
 /// The key a key signature names: `sharps` sharps (flats if negative),
-/// major or minor.
+/// major or minor. It keeps the signature's sharps or flats: six flats
+/// are Gb major, six sharps F# major.
 fn signature_key(sharps: i8, minor: bool) -> Scale {
     let major = major_tonic(sharps);
-    if minor {
+    let key = if minor {
         Scale::new(major.transpose(9), ScaleKind::NaturalMinor)
     } else {
         Scale::new(major, ScaleKind::Major)
-    }
+    };
+    key.with_spelling(if sharps < 0 {
+        Spelling::Flats
+    } else {
+        Spelling::Sharps
+    })
 }
 
 /// The key the notes fit best, if it fits them clearly better than
@@ -1217,10 +1223,22 @@ mod tests {
     #[test]
     fn any_other_key_signature_is_taken_as_written() {
         // Whoever wrote the file chose the key; the notes do not overrule it.
+        // Six flats are Gb major, six sharps F# major: the same keys of
+        // the piano, written as the file writes them.
         for (sharps, minor, name) in [
             (0, true, "A minor"),
             (3, false, "A major"),
             (-2, false, "Bb major"),
+            (6, false, "F# major"),
+            (-6, false, "Gb major"),
+            (7, false, "C# major"),
+            (-5, false, "Db major"),
+            (5, false, "B major"),
+            (-7, false, "Cb major"),
+            (6, true, "D# minor"),
+            (-6, true, "Eb minor"),
+            (7, true, "A# minor"),
+            (-7, true, "Ab minor"),
         ] {
             let mut events = vec![(0, EventKind::KeySignature { sharps, minor })];
             events.extend(in_d_major());

@@ -344,6 +344,7 @@ impl LineupApp {
                 self.audio = Audio::Running(Box::new(engine));
                 self.live.midi.reconnect_audio(live, output);
                 self.send_whole_project();
+                self.resume_trace();
                 if let Some(position) = position.filter(|_| playing) {
                     self.send(Command::Seek(position));
                     self.send(Command::Play);

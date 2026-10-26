@@ -916,10 +916,7 @@ mod tests {
         PitchSet::from_semitones(semitones)
     }
 
-    const C_MAJOR: Scale = Scale {
-        root: PitchClass::C,
-        kind: ScaleKind::Major,
-    };
+    const C_MAJOR: Scale = Scale::new(PitchClass::C, ScaleKind::Major);
 
     #[test]
     fn marks_tell_the_band_where_to_stop_and_push() {
