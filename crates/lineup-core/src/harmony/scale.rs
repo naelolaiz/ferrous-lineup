@@ -235,11 +235,79 @@ impl ScaleKind {
 pub struct Scale {
     pub root: PitchClass,
     pub kind: ScaleKind,
+    /// Whether the key is written the other way round on the same keys
+    /// of the piano: Gb major rather than F# major, Eb minor rather than
+    /// D# minor. Only a few keys can be (see [`Scale::other_spelling`]);
+    /// for the rest it stays `false`. Files leave it out when it is
+    /// `false`, and older versions, which do not know it, read the key
+    /// under its usual name, with the same notes.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    respelled: bool,
 }
 
 impl Scale {
-    pub fn new(root: PitchClass, kind: ScaleKind) -> Self {
-        Scale { root, kind }
+    /// The key on `root`, under its usual name (see [`Scale::spelling`]).
+    pub const fn new(root: PitchClass, kind: ScaleKind) -> Self {
+        Scale {
+            root,
+            kind,
+            respelled: false,
+        }
+    }
+
+    /// The key on `tonic` as it is written: Gb major, or F# major. A
+    /// key that is not written with that tonic, like Gb minor, which
+    /// would need a double flat in its key signature, gets its usual
+    /// name: F# minor.
+    pub fn written(tonic: NoteName, kind: ScaleKind) -> Self {
+        let key = Scale::new(tonic.pitch_class(), kind);
+        match key.other_spelling() {
+            Some(other) if other.spell(other.root) == tonic => other,
+            _ => key,
+        }
+    }
+
+    /// The same key written the other way round, if it can be: F# major
+    /// and Gb major, C# major and Db major, B major and Cb major, and
+    /// the minor keys and modes with the same notes (D# minor and Eb
+    /// minor, A# minor and Bb minor, G# minor and Ab minor). These are
+    /// the keys whose signature has six or more sharps or flats, so the
+    /// other way round needs seven at most. Any other key would need
+    /// eight or more: D# major is written with nine sharps, so it is
+    /// always Eb major.
+    ///
+    /// The notes stay the same; only their names change. Composers
+    /// choose the name that fits the music around it: Debussy writes
+    /// the middle of Golliwogg's Cakewalk in Gb major, a key of flats
+    /// like the Eb major it comes from.
+    pub fn other_spelling(self) -> Option<Scale> {
+        use PitchClass::*;
+        let key = self.as_key();
+        let major = key.root.transpose(key.kind.relative_major() as i32);
+        let either_way = key.kind.is_tonal()
+            && key.kind != ScaleKind::Chromatic
+            && matches!(major, FSharp | CSharp | B);
+        either_way.then_some(Scale {
+            respelled: !self.respelled,
+            ..self
+        })
+    }
+
+    /// The key written with sharps or with flats, when it can be written
+    /// either way (see [`Scale::other_spelling`]): six flats in a key
+    /// signature are Gb major, six sharps F# major. Any other key stays
+    /// as it is.
+    pub fn with_spelling(self, spelling: Spelling) -> Self {
+        match self.other_spelling() {
+            Some(other) if self.spelling() != spelling => other,
+            _ => self,
+        }
+    }
+
+    /// Whether the key is written the other way round from its usual
+    /// name (see [`Scale::other_spelling`]).
+    pub fn is_respelled(self) -> bool {
+        self.respelled && self.other_spelling().is_some()
     }
 
     /// A twelve-tone row as a scale: rooted on the note it starts on.
@@ -308,7 +376,20 @@ impl Scale {
     /// or just flats is not enough, though: D harmonic minor has a Bb
     /// and a C#, and F# major has an E#. [`Scale::spell`] names each
     /// note properly.
+    ///
+    /// A key written the other way round (see [`Scale::other_spelling`])
+    /// turns this round too: Gb major has flats.
     pub fn spelling(self) -> Spelling {
+        let usual = self.as_key().usual_spelling();
+        match (self.is_respelled(), usual) {
+            (false, _) => usual,
+            (true, Spelling::Sharps) => Spelling::Flats,
+            (true, Spelling::Flats) => Spelling::Sharps,
+        }
+    }
+
+    /// [`Scale::spelling`] for the key's usual name.
+    fn usual_spelling(self) -> Spelling {
         use PitchClass::*;
         match self.root.transpose(self.kind.relative_major() as i32) {
             F | ASharp | DSharp | GSharp | CSharp => Spelling::Flats,
@@ -328,7 +409,8 @@ impl Scale {
     /// has no key signature.
     ///
     /// The signature follows the names the app gives keys (see
-    /// [`Scale::spelling`]): F# major has six sharps, Db major five flats.
+    /// [`Scale::spelling`]): F# major has six sharps, Db major five flats,
+    /// and Gb major, written the other way round, six flats.
     pub fn key_signature(self) -> Option<(i8, bool)> {
         if !self.kind.is_tonal() || self.kind == ScaleKind::Chromatic {
             return None;
@@ -407,7 +489,7 @@ impl Scale {
             .into_iter()
             .filter(|&kind| kind != ScaleKind::Chromatic)
             .find(|kind| kind.tonal_intervals() == semitones.as_slice())
-            .map(|kind| Scale::new(self.root, kind))
+            .map(|kind| Scale { kind, ..self })
     }
 
     /// A note's name and octave, spelled in this key: in C# harmonic
@@ -418,9 +500,19 @@ impl Scale {
     }
 
     /// The name of the tonic: the root, with sharps or flats as the key
-    /// signature has them (see [`Scale::spelling`]).
+    /// signature has them (see [`Scale::spelling`]). Written the other
+    /// way round, the tonic takes the next letter: F# is Gb, B is Cb,
+    /// and Db is C#.
     fn tonic_name(self) -> NoteName {
-        NoteName::plain(self.root, self.spelling())
+        let usual = NoteName::plain(self.root, self.usual_spelling());
+        if !self.is_respelled() {
+            return usual;
+        }
+        let next = match self.usual_spelling() {
+            Spelling::Sharps => 1,
+            Spelling::Flats => -1,
+        };
+        NoteName::with_letter(self.root, usual.letter.up(next))
     }
 
     /// Whether `pitch_class` is a note the scale gives a letter of its
@@ -1069,9 +1161,15 @@ mod tests {
             line(Scale::new(B, ScaleKind::Lydian)),
             "B C# D# E# F# G# A#"
         );
+        let either_way = |root, kind| {
+            let usual = Scale::new(root, kind);
+            [Some(usual), usual.other_spelling()].into_iter().flatten()
+        };
         for kind in ScaleKind::ALL {
-            for root in PitchClass::ALL {
-                let scale = Scale::new(root, kind);
+            for scale in PitchClass::ALL
+                .into_iter()
+                .flat_map(|root| either_way(root, kind))
+            {
                 if !scale.is_heptatonic() {
                     continue;
                 }
@@ -1090,6 +1188,161 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn keys_written_the_other_way_round() {
+        let f_sharp = Scale::new(FSharp, ScaleKind::Major);
+        let g_flat = f_sharp.other_spelling().unwrap();
+        assert_eq!(line(g_flat), "Gb Ab Bb Cb Db Eb F");
+        assert_eq!(g_flat.name(), "Gb major");
+        assert_eq!(g_flat.key_signature(), Some((-6, false)));
+        assert_eq!(g_flat.spelling(), Spelling::Flats);
+        assert!(g_flat.is_respelled());
+        // The same keys of the piano, and back again.
+        assert_eq!(g_flat.pitch_set(), f_sharp.pitch_set());
+        assert_eq!(g_flat.other_spelling(), Some(f_sharp));
+        let ab = Chord::new(GSharp, ChordQuality::Minor);
+        assert_eq!(g_flat.chord_name(ab), "Abm");
+        assert_eq!(f_sharp.chord_name(ab), "G#m");
+        assert_eq!(g_flat.roman_numeral(ab), f_sharp.roman_numeral(ab));
+
+        // Usual name, the other one, and both key signatures.
+        let keys = [
+            (FSharp, ScaleKind::Major, "F# major", "Gb major", 6, -6),
+            (CSharp, ScaleKind::Major, "Db major", "C# major", -5, 7),
+            (B, ScaleKind::Major, "B major", "Cb major", 5, -7),
+            (
+                DSharp,
+                ScaleKind::NaturalMinor,
+                "D# minor",
+                "Eb minor",
+                6,
+                -6,
+            ),
+            (
+                ASharp,
+                ScaleKind::NaturalMinor,
+                "Bb minor",
+                "A# minor",
+                -5,
+                7,
+            ),
+            (
+                GSharp,
+                ScaleKind::NaturalMinor,
+                "G# minor",
+                "Ab minor",
+                5,
+                -7,
+            ),
+            (GSharp, ScaleKind::Dorian, "G# Dorian", "Ab Dorian", 6, -6),
+            (F, ScaleKind::Locrian, "F Locrian", "E# Locrian", -6, 6),
+        ];
+        for (root, kind, usual, other, sharps, other_sharps) in keys {
+            let key = Scale::new(root, kind);
+            let respelled = key.other_spelling().unwrap();
+            assert_eq!(key.name(), usual);
+            assert_eq!(respelled.name(), other);
+            assert_eq!(key.key_signature().unwrap().0, sharps, "{usual}");
+            assert_eq!(
+                respelled.key_signature().unwrap().0,
+                other_sharps,
+                "{other}"
+            );
+            // Written by its name, each key is itself.
+            assert_eq!(Scale::written(key.spell(root), kind), key);
+            assert_eq!(Scale::written(respelled.spell(root), kind), respelled);
+            // Asked for by sharps or flats.
+            let (with_sharps, with_flats) = if sharps > 0 {
+                (key, respelled)
+            } else {
+                (respelled, key)
+            };
+            assert_eq!(key.with_spelling(Spelling::Sharps), with_sharps);
+            assert_eq!(respelled.with_spelling(Spelling::Flats), with_flats);
+        }
+
+        // Every other key would need eight sharps or flats or more, so it
+        // has one name: D# major is always Eb major.
+        for root in PitchClass::ALL {
+            for kind in [ScaleKind::Major, ScaleKind::NaturalMinor] {
+                let key = Scale::new(root, kind);
+                let either_way = keys.iter().any(|k| (k.0, k.1) == (root, kind));
+                assert_eq!(key.other_spelling().is_some(), either_way, "{}", key.name());
+                if !either_way {
+                    assert_eq!(key.with_spelling(Spelling::Flats), key);
+                    assert_eq!(key.with_spelling(Spelling::Sharps), key);
+                }
+            }
+        }
+        assert_eq!(
+            Scale::written(NoteName::parse("D#").unwrap(), ScaleKind::Major).name(),
+            "Eb major"
+        );
+        assert_eq!(
+            Scale::written(NoteName::parse("Gb").unwrap(), ScaleKind::NaturalMinor).name(),
+            "F# minor"
+        );
+        // Rows, sets that are no scale, and the chromatic scale have no
+        // key signature to write either way.
+        assert_eq!(
+            Scale::new(FSharp, ScaleKind::Chromatic).other_spelling(),
+            None
+        );
+        let row = crate::harmony::ROW_PRESETS[0].row;
+        assert_eq!(Scale::row(row).other_spelling(), None);
+
+        // A set that is Gb major is spelled as Gb major.
+        let set = Scale::set(FSharp, f_sharp.pitch_set()).with_spelling(Spelling::Flats);
+        assert_eq!(line(set), "Gb Ab Bb Cb Db Eb F");
+        assert_eq!(set.as_key(), g_flat);
+    }
+
+    #[test]
+    fn diatonic_keys_have_their_signatures_sharps_or_flats() {
+        let diatonic = [
+            ScaleKind::Major,
+            ScaleKind::NaturalMinor,
+            ScaleKind::Dorian,
+            ScaleKind::Phrygian,
+            ScaleKind::Lydian,
+            ScaleKind::Mixolydian,
+            ScaleKind::Locrian,
+        ];
+        for kind in diatonic {
+            for root in PitchClass::ALL {
+                let usual = Scale::new(root, kind);
+                for key in [Some(usual), usual.other_spelling()].into_iter().flatten() {
+                    let (sharps, _) = key.key_signature().unwrap();
+                    let written: i32 = key
+                        .pitch_classes()
+                        .map(|p| i32::from(key.spell(p).accidental))
+                        .sum();
+                    assert_eq!(written, i32::from(sharps), "{}", key.name());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn respelled_keys_in_files() {
+        let g_flat = Scale::new(FSharp, ScaleKind::Major)
+            .other_spelling()
+            .unwrap();
+        let text = ron::to_string(&g_flat).unwrap();
+        assert_eq!(ron::from_str::<Scale>(&text).unwrap(), g_flat);
+        // The usual name writes no more than before, so older files and
+        // older versions read the same text.
+        let f_sharp = Scale::new(FSharp, ScaleKind::Major);
+        assert_eq!(
+            ron::to_string(&f_sharp).unwrap(),
+            "(root:FSharp,kind:Major)"
+        );
+        assert_eq!(
+            ron::from_str::<Scale>("(root:FSharp,kind:Major)").unwrap(),
+            f_sharp
+        );
     }
 
     #[test]

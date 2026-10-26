@@ -36,7 +36,8 @@ pub mod timbre;
 pub mod trace;
 
 pub use engine::{
-    AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, LiveInput, MidiOutput, PlayMode,
+    AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, LapTempos, LiveInput, MidiOutput,
+    PlayMode,
 };
 pub use instrument::Instrument;
 pub use levels::Levels;
