@@ -10,6 +10,7 @@ use crate::arrangement::{Arrangement, arrange};
 use crate::band::{Band, StyleMarker, VariationMarker};
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
+use crate::harmony::voice_leading::{self, VoiceLeading, voices_of};
 use crate::harmony::{Chord, ChordSymbol, Harmony, HeardNote, Hearing, Listening, Scale, hear};
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
 use crate::meter::{Bar, Click, Meter, TimeMarker, TimeSignature};
@@ -1112,13 +1113,20 @@ impl Project {
     /// starts, or the project's if it has no clips. The piano roll
     /// highlights its notes and names its chords in it.
     pub fn pattern_key(&self, pattern: usize) -> Scale {
+        self.pattern_key_at(pattern, 0)
+    }
+
+    /// The key on step `step` of a pattern, where its first clip plays
+    /// it (the song may change key inside it), or the project's if it
+    /// has no clips.
+    pub fn pattern_key_at(&self, pattern: usize, step: usize) -> Scale {
         self.playlist
             .clips
             .iter()
             .filter(|clip| clip.pattern == pattern)
             .map(|clip| clip.start)
             .min()
-            .map_or(self.scale, |start| self.key_at(start))
+            .map_or(self.scale, |start| self.key_at(start + step))
     }
 
     /// Changes the key from `marker.start` on, without moving any note:
@@ -2092,6 +2100,30 @@ impl Project {
         heard
     }
 
+    /// How the parts on `channels` move from chord to chord in pattern
+    /// `pattern`: the parallel fifths and octaves, leading tones and
+    /// sevenths classical part writing avoids (see
+    /// [`crate::harmony::voice_leading`]). Drum channels have no parts.
+    /// The chords are heard beat by beat in the pattern's time
+    /// signature, and the notes are named in the song's key where the
+    /// pattern is first played.
+    pub fn voice_leading(&self, pattern: usize, channels: &[usize]) -> VoiceLeading {
+        let Some(notes) = self.patterns.get(pattern) else {
+            return VoiceLeading::default();
+        };
+        let voices = channels
+            .iter()
+            .filter(|&&channel| {
+                self.channels
+                    .get(channel)
+                    .is_some_and(|channel| channel.is_pitched())
+            })
+            .flat_map(|&channel| voices_of(channel, notes.notes(channel)))
+            .collect();
+        let beats = voice_leading::beats(self.pattern_time(pattern), notes.length());
+        voice_leading::check(voices, &beats, |step| self.pattern_key_at(pattern, step))
+    }
+
     /// The notes the whole band holds while step `step` of pattern
     /// `pattern` plays: where the pattern is first heard in the song, the
     /// notes of every track then (see [`Project::chord_notes_in_song`]);
@@ -2485,6 +2517,35 @@ mod tests {
         let chords = project.pattern_mut(CHORDS).unwrap();
         chords.set_notes(bass, vec![NoteEvent::new(Note::new(26), 0, 4)]);
         assert_eq!(label(project.chord_notes_in_song(0)).unwrap(), "C");
+    }
+
+    #[test]
+    fn the_voice_leading_check_takes_the_pitched_tracks_asked_for() {
+        let mut project = Project::demo();
+        let bass = project.add_channel(Channel::synth()).unwrap();
+        let lead = project.add_channel(Channel::synth()).unwrap();
+        let chords = project.pattern_mut(CHORDS).unwrap();
+        // C3 and G4, then D3 and A4: parallel fifths, a twelfth apart.
+        chords.set_notes(
+            bass,
+            vec![
+                NoteEvent::new(Note::new(48), 0, 4),
+                NoteEvent::new(Note::new(50), 4, 4),
+            ],
+        );
+        chords.set_notes(
+            lead,
+            vec![
+                NoteEvent::new(Note::new(67), 0, 4),
+                NoteEvent::new(Note::new(69), 4, 4),
+            ],
+        );
+        // The kick, a drum, has no part to check.
+        let check = project.voice_leading(CHORDS, &[BEAT, bass, lead]);
+        assert_eq!(check.voices.len(), 2);
+        let kinds: Vec<_> = check.slips.iter().map(|slip| slip.kind).collect();
+        assert_eq!(kinds, [voice_leading::SlipKind::ParallelFifths]);
+        assert_eq!(check.slips[0].step(), 4);
     }
 
     #[test]
