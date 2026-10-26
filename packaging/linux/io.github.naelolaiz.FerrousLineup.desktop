@@ -11,4 +11,4 @@ Categories=AudioVideo;Audio;Music;
 Keywords=music;band;chords;harmony;sequencer;MIDI;backing track;
 MimeType=application/x-ferrous-lineup;
 StartupNotify=true
-StartupWMClass=ferrous-lineup
+StartupWMClass=Ferrous Lineup
