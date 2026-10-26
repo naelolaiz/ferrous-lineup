@@ -9,9 +9,9 @@
 //! [`Command`] messages through a lock-free ring buffer (`rtrb`), and the
 //! audio thread applies them at the start of each block. Two things travel
 //! the other way: the current step (through an atomic integer, for the
-//! playhead in the UI) and old instruments, note lists and songs that need
-//! freeing (through a second ring buffer, so the memory is freed on the
-//! UI thread).
+//! playhead in the UI, and another counts the times the loop came round)
+//! and old instruments, note lists and songs that need freeing (through
+//! a second ring buffer, so the memory is freed on the UI thread).
 //!
 //! The audio thread keeps its own copy of what it needs to play: the
 //! notes of every channel in every pattern, the length of every pattern,
@@ -166,6 +166,15 @@ impl ChannelNotes {
     }
 }
 
+/// The tempos for the next lap (see [`Command::SetLapTempos`]).
+#[derive(Debug)]
+pub struct LapTempos {
+    /// In place of the [`Command::SetTempo`] tempo.
+    pub tempo: Tempo,
+    /// In place of the [`Command::SetSongTempos`] list.
+    pub song: Vec<Tempo>,
+}
+
 /// A message from the UI thread to the audio thread.
 ///
 /// Channel and pattern numbers are positions in the UI's lists, counted
@@ -199,6 +208,13 @@ pub enum Command {
     /// usual case) plays the whole song at the [`Command::SetTempo`]
     /// tempo. Sent together with [`Command::SetSong`].
     SetSongTempos(Vec<Tempo>),
+    /// Tempos to play from the next time the loop comes round (see
+    /// [`AudioEngine::laps`]) on, in place of those of
+    /// [`Command::SetTempo`] and [`Command::SetSongTempos`]. They take
+    /// over on the loop's first step, once; `None` takes back tempos
+    /// asked for before. The practice speed trainer uses it, so that
+    /// each new speed starts exactly with the loop.
+    SetLapTempos(Option<LapTempos>),
     /// How far off the grid notes may start, in milliseconds: each one
     /// starts up to this much late. 0 plays every note on its step.
     SetLooseTiming(u8),
@@ -446,6 +462,7 @@ pub struct AudioEngine {
     playhead: Arc<AtomicUsize>,
     position: Arc<AtomicU64>,
     overlay: Arc<AtomicU64>,
+    laps: Arc<AtomicUsize>,
     levels: Arc<Levels>,
     live_input: Option<LiveInput>,
     midi_output: Option<MidiOutput>,
@@ -502,6 +519,7 @@ impl AudioEngine {
         audio_thread.live_input = Some(live_consumer);
         audio_thread.midi_out = Some(midi_producer);
         let overlay = Arc::clone(&audio_thread.overlay_playhead);
+        let laps = Arc::clone(&audio_thread.laps);
         let levels = Arc::clone(audio_thread.levels());
         let live_input = LiveInput {
             notes: live_producer,
@@ -541,6 +559,7 @@ impl AudioEngine {
             playhead,
             position,
             overlay,
+            laps,
             levels,
             live_input: Some(live_input),
             midi_output: Some(MidiOutput(midi_consumer)),
@@ -620,6 +639,14 @@ impl AudioEngine {
     /// the step of it being played, or `None` while none is.
     pub fn overlay(&self) -> Option<(usize, usize)> {
         load_overlay(&self.overlay)
+    }
+
+    /// How many times playback has come round to the start of what it
+    /// loops (the selected pattern, the song or the part of it set to
+    /// loop) by playing on past its end, since the audio thread started.
+    /// A jump back to the start does not count.
+    pub fn laps(&self) -> usize {
+        self.laps.load(Ordering::Relaxed)
     }
 
     /// The way in for a MIDI keyboard. It can be taken once; after that
@@ -785,6 +812,12 @@ pub(crate) struct AudioThread {
     overlay: Option<Overlay>,
     /// What it is playing, for the UI (see [`store_overlay`]).
     overlay_playhead: Arc<AtomicU64>,
+    /// The sequencer's laps (see [`AudioEngine::laps`]), stored on every
+    /// step.
+    laps: Arc<AtomicUsize>,
+    /// The tempos to play from the next lap on, if asked (see
+    /// [`Command::SetLapTempos`]).
+    lap_tempos: Option<LapTempos>,
     /// Where every note played is written down, while a trace is on.
     trace: Option<Box<Tracer>>,
     /// How loud each channel and the master were, for the mixer's meters.
@@ -863,6 +896,8 @@ impl AudioThread {
             phrase: None,
             overlay: None,
             overlay_playhead: Arc::new(AtomicU64::new(NO_POSITION)),
+            laps: Arc::new(AtomicUsize::new(0)),
+            lap_tempos: None,
             trace: None,
             levels: Arc::default(),
         }
@@ -960,6 +995,11 @@ impl AudioThread {
             Command::SetSongTempos(tempos) => {
                 let old = std::mem::replace(&mut self.song_tempos, tempos);
                 self.throw_away(Garbage::Tempos(old));
+            }
+            Command::SetLapTempos(tempos) => {
+                if let Some(old) = std::mem::replace(&mut self.lap_tempos, tempos) {
+                    self.throw_away(Garbage::Tempos(old.song));
+                }
             }
             Command::SetLooseTiming(ms) => {
                 self.loose_frames = f64::from(ms) / 1000.0 * f64::from(self.sample_rate);
@@ -1660,6 +1700,13 @@ impl AudioThread {
                 // A step about to start plays at its own tempo, which is
                 // set before it starts, so it lasts as long as it should.
                 if let Some(step) = self.sequencer.due() {
+                    if self.sequencer.comes_round()
+                        && let Some(tempos) = self.lap_tempos.take()
+                    {
+                        self.tempo = tempos.tempo;
+                        let old = std::mem::replace(&mut self.song_tempos, tempos.song);
+                        self.throw_away(Garbage::Tempos(old));
+                    }
                     let tempo = self.tempo_of_step(step);
                     if tempo != self.tempo_now {
                         self.set_tempo(tempo);
@@ -1667,6 +1714,7 @@ impl AudioThread {
                 }
                 if let Some(step) = self.sequencer.tick() {
                     self.playhead.store(step, Ordering::Relaxed);
+                    self.laps.store(self.sequencer.laps(), Ordering::Relaxed);
                     if let Some(trace) = &mut self.trace {
                         trace.step(self.now, step, self.tempo_now);
                     }
@@ -2112,6 +2160,61 @@ mod tests {
         let out = render(&mut h, 100);
         assert!(out[0] != 0.0, "step 2 should sound at once");
         assert_eq!(h.playhead.load(Ordering::Relaxed), 2);
+    }
+
+    #[test]
+    fn laps_count_the_times_the_loop_came_round() {
+        let mut h = harness();
+        send(&mut h, Command::Play);
+        render(&mut h, 16 * STEP);
+        assert_eq!(h.audio.laps.load(Ordering::Relaxed), 0);
+        render(&mut h, 1);
+        assert_eq!(h.audio.laps.load(Ordering::Relaxed), 1);
+        // A jump back to the start is not a lap.
+        render(&mut h, 8 * STEP);
+        send(&mut h, Command::Seek(0));
+        render(&mut h, 12 * STEP);
+        assert_eq!(h.audio.laps.load(Ordering::Relaxed), 1);
+        render(&mut h, 4 * STEP + 1);
+        assert_eq!(h.audio.laps.load(Ordering::Relaxed), 2);
+    }
+
+    fn lap_tempos(bpm: f32) -> Command {
+        Command::SetLapTempos(Some(LapTempos {
+            tempo: Tempo::new(bpm),
+            song: Vec::new(),
+        }))
+    }
+
+    #[test]
+    fn lap_tempos_start_on_the_loops_first_step() {
+        let mut h = harness();
+        send(&mut h, Command::Play);
+        send(&mut h, lap_tempos(240.0));
+        // The pass playing keeps its tempo: 16 steps of 6000 frames.
+        render(&mut h, 16 * STEP);
+        assert_eq!(h.playhead.load(Ordering::Relaxed), 15);
+        // The next starts at twice the speed, on its very first step.
+        render(&mut h, 1);
+        assert_eq!(h.audio.tempo_now, Tempo::new(240.0));
+        render(&mut h, STEP / 2);
+        assert_eq!(h.playhead.load(Ordering::Relaxed), 1);
+        // It happens once.
+        render(&mut h, 15 * STEP / 2);
+        assert_eq!(h.audio.laps.load(Ordering::Relaxed), 2);
+        assert_eq!(h.audio.tempo_now, Tempo::new(240.0));
+        // Tempos taken back are not played; the lists left go to the UI
+        // thread to be freed.
+        send(&mut h, lap_tempos(60.0));
+        send(&mut h, Command::SetLapTempos(None));
+        render(&mut h, 16 * STEP / 2);
+        assert_eq!(h.audio.tempo_now, Tempo::new(240.0));
+        let mut freed = 0;
+        while let Ok(garbage) = h.trash.pop() {
+            assert!(matches!(garbage, Garbage::Tempos(_)));
+            freed += 1;
+        }
+        assert_eq!(freed, 2, "the song's list before, and the list taken back");
     }
 
     #[test]

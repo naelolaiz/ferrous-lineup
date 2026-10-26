@@ -209,6 +209,8 @@ fn setting(line: &str) -> Option<(String, &str)> {
 }
 
 /// A key of tonal music: "C major", "A minor", "F# Dorian", "Bb", "Am".
+/// It keeps the name it is written with: "Gb major" stays Gb major,
+/// not F# major (see [`Scale::written`]).
 fn read_key(text: &str) -> Result<Scale, String> {
     let (first, rest) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
     let rest = rest.trim().to_lowercase();
@@ -247,10 +249,7 @@ fn read_key(text: &str) -> Result<Scale, String> {
                 )
             })?,
     };
-    Ok(Scale {
-        root: root.pitch_class(),
-        kind,
-    })
+    Ok(Scale::written(root, kind))
 }
 
 /// "120", "120 BPM" or "96.5".
@@ -654,7 +653,7 @@ Style: Pop beat
 ";
 
     fn key(root: PitchClass, kind: ScaleKind) -> Scale {
-        Scale { root, kind }
+        Scale::new(root, kind)
     }
 
     fn bars(sheet: &TextSheet) -> Vec<&str> {
@@ -740,6 +739,14 @@ Style: Pop beat
             key(PitchClass::E, ScaleKind::HarmonicMinor)
         );
         assert_eq!(read("D dorian"), key(PitchClass::D, ScaleKind::Dorian));
+        // A key keeps the name it is written with.
+        assert_eq!(read("Gb major").name(), "Gb major");
+        assert_eq!(read("F# major").name(), "F# major");
+        assert_eq!(read("Ebm").name(), "Eb minor");
+        assert_eq!(read("Cb").name(), "Cb major");
+        // A name no key signature has is the usual key: Gb minor would
+        // need a double flat, so it is F# minor.
+        assert_eq!(read("Gb minor").name(), "F# minor");
         assert!(read_key("H major").is_err());
         assert!(read_key("C bebop").is_err());
 

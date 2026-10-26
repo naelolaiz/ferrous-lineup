@@ -16,6 +16,8 @@
 //!   key and the chord, and which accidentals a bar needs;
 //! - `rhythm` writes each length as note values the eye can count,
 //!   tied across beats where needed, and groups eighths under beams;
+//! - [`transpose`] moves the key, the notes and the chords for players
+//!   of B♭, E♭ and F instruments, who read in keys of their own;
 //! - `score` puts these together, bar by bar;
 //! - `layout` places everything on pages, as a list of [`Mark`]s: music
 //!   symbols, text, lines, beams and ties, in points.
@@ -29,9 +31,11 @@ pub mod melody;
 mod rhythm;
 mod score;
 mod spelling;
+pub mod transpose;
 
 pub use melody::{MelodyNote, default_melody_channel, melody_channels};
 pub use spelling::Clef;
+pub use transpose::Transposition;
 
 use serde::{Deserialize, Serialize};
 
@@ -74,9 +78,12 @@ pub struct Options {
     /// The channel whose notes are the melody, or `None` to write only
     /// the chords, over rhythm slashes.
     pub melody: Option<usize>,
-    /// The clef, or `None` to choose it from the melody's notes.
+    /// The clef, or `None` to choose it from the melody's notes. Parts
+    /// for transposing instruments are in the treble clef unless told.
     pub clef: Option<Clef>,
     pub paper: Paper,
+    /// Who reads it: concert pitch, or a B♭, E♭ or F instrument.
+    pub transposition: Transposition,
 }
 
 /// The two weights of the text font.
@@ -229,6 +236,6 @@ pub struct LeadSheet {
 
 /// Writes the lead sheet of `project`.
 pub fn lead_sheet(project: &Project, options: &Options, measure: &dyn TextWidth) -> LeadSheet {
-    let score = score::build(project, options.melody, options.clef);
+    let score = score::build(project, options.melody, options.clef, options.transposition);
     layout::lay_out(&score, options, measure)
 }

@@ -5,8 +5,9 @@
 //! song: the melody from one channel's notes, the chord symbols from
 //! the chord sheet, the sections, repeats and key and time signatures
 //! from the playlist. This window only picks what to write (which
-//! channel is the melody, the clef, the paper), draws the pages, lights
-//! up the bar that plays, and saves or prints a PDF of the same pages.
+//! channel is the melody, the clef, who reads it, the paper), draws the
+//! pages, lights up the bar that plays, and saves or prints a PDF of the
+//! same pages.
 
 mod fonts;
 mod pdf;
@@ -16,7 +17,8 @@ use std::path::{Path, PathBuf};
 use eframe::egui::{self, Color32, FontId, Pos2, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use lineup_core::Project;
 use lineup_core::lead_sheet::{
-    self, Clef, LeadSheet, Mark, Options, Paper, Point, default_melody_channel, melody_channels,
+    self, Clef, LeadSheet, Mark, Options, Paper, Point, Transposition, default_melody_channel,
+    melody_channels,
 };
 use serde::{Deserialize, Serialize};
 
@@ -48,6 +50,9 @@ fn settings_id() -> egui::Id {
 struct Settings {
     paper: Paper,
     zoom: f32,
+    /// Who reads the sheet: a player keeps their instrument from song to
+    /// song.
+    transposition: Transposition,
 }
 
 impl Default for Settings {
@@ -55,7 +60,52 @@ impl Default for Settings {
         Settings {
             paper: Paper::A4,
             zoom: 1.0,
+            transposition: Transposition::Concert,
         }
+    }
+}
+
+/// How the window names who reads the sheet.
+fn transposition_name(transposition: Transposition) -> &'static str {
+    match transposition {
+        Transposition::Concert => "Concert pitch",
+        Transposition::BFlat => "Bb instruments",
+        Transposition::EFlat => "Eb instruments",
+        Transposition::F => "F instruments",
+    }
+}
+
+/// Which instruments read it, and how it is written for them.
+fn transposition_hint(transposition: Transposition) -> &'static str {
+    match transposition {
+        Transposition::Concert => {
+            "As it sounds: piano, guitar, bass, voice, flute, violin, trombone"
+        }
+        Transposition::BFlat => {
+            "Trumpet, clarinet, soprano and tenor sax: written a major second higher, \
+             in the octave that fits the staff"
+        }
+        Transposition::EFlat => {
+            "Alto and baritone sax: written a major sixth higher, \
+             in the octave that fits the staff"
+        }
+        Transposition::F => {
+            "Horn and English horn: written a perfect fifth higher, \
+             in the octave that fits the staff"
+        }
+    }
+}
+
+/// The PDF's file name: for a transposing instrument, with who reads it
+/// before the extension, "Song (Bb instruments).pdf".
+fn part_file_name(file_name: &str, transposition: Transposition) -> String {
+    if transposition == Transposition::Concert {
+        return file_name.to_string();
+    }
+    let name = transposition_name(transposition);
+    match file_name.rsplit_once('.') {
+        Some((stem, extension)) => format!("{stem} ({name}).{extension}"),
+        None => format!("{file_name} ({name})"),
     }
 }
 
@@ -147,7 +197,8 @@ impl LeadSheetWindow {
             crate::widgets::Opening::FirstTime,
         )
         .show(ctx, |ui| {
-            self.contents(ui, project, title, file_name, playing)
+            let file_name = part_file_name(file_name, self.settings.transposition);
+            self.contents(ui, project, title, &file_name, playing)
         });
         self.open = open;
         if self.settings != self.saved {
@@ -169,6 +220,7 @@ impl LeadSheetWindow {
             melody,
             clef: self.clef,
             paper: self.settings.paper,
+            transposition: self.settings.transposition,
         }
     }
 
@@ -299,7 +351,7 @@ impl LeadSheetWindow {
         self.laid = Some(laid);
     }
 
-    /// The melody, clef, paper and zoom pickers.
+    /// The melody, clef, instrument, paper and zoom pickers.
     fn choices(&mut self, ui: &mut Ui, project: &Project) {
         let channels = melody_channels(project);
         let name = |channel: usize| project.channels()[channel].name.clone();
@@ -343,6 +395,21 @@ impl LeadSheetWindow {
                 ui.selectable_value(&mut self.clef, Some(Clef::Treble), "Treble");
                 ui.selectable_value(&mut self.clef, Some(Clef::Bass), "Bass");
             });
+
+        ui.label("For");
+        let transposition = &mut self.settings.transposition;
+        egui::ComboBox::from_id_salt("lead-sheet-transposition")
+            .selected_text(transposition_name(*transposition))
+            .show_ui(ui, |ui| {
+                for choice in Transposition::ALL {
+                    ui.selectable_value(transposition, choice, transposition_name(choice))
+                        .on_hover_text(transposition_hint(choice));
+                }
+            })
+            .response
+            .on_hover_text(
+                "Who reads it: players of Bb, Eb and F instruments read in keys of their own",
+            );
 
         ui.label("Paper");
         egui::ComboBox::from_id_salt("lead-sheet-paper")
@@ -534,4 +601,25 @@ fn tie_mesh(outer: [Point; 4], inner: [Point; 4], at: &dyn Fn(Point) -> Pos2) ->
         mesh.add_triangle(i + 1, i + 3, i + 2);
     }
     mesh
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_part_is_saved_under_a_name_of_its_own() {
+        assert_eq!(
+            part_file_name("Op. 24.pdf", Transposition::Concert),
+            "Op. 24.pdf"
+        );
+        assert_eq!(
+            part_file_name("Op. 24.pdf", Transposition::BFlat),
+            "Op. 24 (Bb instruments).pdf"
+        );
+        assert_eq!(
+            part_file_name("Malena", Transposition::F),
+            "Malena (F instruments)"
+        );
+    }
 }

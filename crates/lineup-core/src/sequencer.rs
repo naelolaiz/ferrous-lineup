@@ -21,6 +21,11 @@ pub struct Sequencer {
     frames_until_next: f64,
     next_step: usize,
     length: usize,
+    /// How many times playback has played on from the last step to step 0.
+    laps: usize,
+    /// Whether the next step is step 0 because the last step played: a
+    /// lap ends when it starts.
+    coming_round: bool,
 }
 
 impl Sequencer {
@@ -32,6 +37,8 @@ impl Sequencer {
             frames_until_next: 0.0,
             next_step: 0,
             length: length.max(1),
+            laps: 0,
+            coming_round: false,
         }
     }
 
@@ -43,11 +50,12 @@ impl Sequencer {
     }
 
     /// Changes the pattern length. If the next step is now past the end,
-    /// playback wraps to step 0.
+    /// playback wraps to step 0, which does not count as a lap.
     pub fn set_length(&mut self, length: usize) {
         self.length = length.max(1);
         if self.next_step >= self.length {
             self.next_step = 0;
+            self.coming_round = false;
         }
     }
 
@@ -65,6 +73,20 @@ impl Sequencer {
     /// How many steps are played before the pattern loops.
     pub fn length(&self) -> usize {
         self.length
+    }
+
+    /// How many times playback has come round to step 0 by playing on
+    /// past the last step. A jump back to the start does not count, so
+    /// this counts the times the whole loop was played (the practice
+    /// speed trainer goes faster on each).
+    pub fn laps(&self) -> usize {
+        self.laps
+    }
+
+    /// Whether the next step to fire is step 0 coming round again: the
+    /// step that ends a lap.
+    pub fn comes_round(&self) -> bool {
+        self.coming_round
     }
 
     /// Where playback is, in steps, with the fraction of the step that
@@ -86,6 +108,7 @@ impl Sequencer {
     pub fn reset(&mut self) {
         self.frames_until_next = 0.0;
         self.next_step = 0;
+        self.coming_round = false;
     }
 
     /// Jumps to `step`, so it fires on the next tick. A step past the end
@@ -93,6 +116,7 @@ impl Sequencer {
     pub fn start_at(&mut self, step: usize) {
         self.frames_until_next = 0.0;
         self.next_step = step % self.length;
+        self.coming_round = false;
     }
 
     /// The step that starts on the next tick, if one does. A new tempo
@@ -106,7 +130,11 @@ impl Sequencer {
     pub fn tick(&mut self) -> Option<usize> {
         let fired = if self.frames_until_next <= 0.0 {
             let step = self.next_step;
+            if self.coming_round {
+                self.laps += 1;
+            }
             self.next_step = (self.next_step + 1) % self.length;
+            self.coming_round = self.next_step == 0;
             self.frames_until_next += self.frames_per_step;
             Some(step)
         } else {
@@ -202,6 +230,34 @@ mod tests {
         assert_eq!(sequencer.frames_to_next_step(), 4_500.0);
         let fired = run(&mut sequencer, 4_500 + 12_000 + 1);
         assert_eq!(fired, vec![(4_500, 1), (16_500, 2)]);
+    }
+
+    #[test]
+    fn laps_count_the_loops_played_to_the_end() {
+        let mut sequencer = Sequencer::new(Tempo::new(120.0), 48_000, 4);
+        run(&mut sequencer, 6_000 * 4);
+        assert_eq!(sequencer.laps(), 0, "the last step is still playing");
+        assert!(sequencer.comes_round());
+        run(&mut sequencer, 1);
+        assert_eq!(sequencer.laps(), 1, "step 0 has come round");
+        assert!(!sequencer.comes_round());
+        run(&mut sequencer, 6_000 * 8);
+        assert_eq!(sequencer.laps(), 3);
+        // Jumping back to the start, or stopping and starting again, is
+        // not playing the loop through.
+        run(&mut sequencer, 6_000 * 2);
+        sequencer.start_at(0);
+        run(&mut sequencer, 6_000 * 3);
+        sequencer.reset();
+        run(&mut sequencer, 1);
+        assert_eq!(sequencer.laps(), 3);
+        // Nor is a loop made shorter than where playback had got to.
+        run(&mut sequencer, 6_000 * 2); // steps 1 and 2: step 3 is next
+        sequencer.set_length(2);
+        run(&mut sequencer, 6_000 * 2); // steps 0 and 1 of the shorter loop
+        assert_eq!(sequencer.laps(), 3);
+        run(&mut sequencer, 6_000);
+        assert_eq!(sequencer.laps(), 4);
     }
 
     #[test]
