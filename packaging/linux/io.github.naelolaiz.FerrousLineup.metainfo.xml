@@ -83,6 +83,19 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.3.0" date="2026-10-26">
+      <description>
+        <p>Adds practice and theory tools, and makes the app sturdier.</p>
+        <ul>
+          <li>A speed trainer: loop a section and play it a little faster each time round.</li>
+          <li>A voice-leading check for written parts: parallel fifths and octaves, and leading notes and sevenths that do not resolve.</li>
+          <li>Lead sheets for B-flat, E-flat and F instruments.</li>
+          <li>Keys with two names are written as the music needs: G-flat major or F-sharp major, E-flat minor or D-sharp minor.</li>
+          <li>Restart audio stops notes left sounding on external synths, and the playback trace carries on.</li>
+          <li>Each open window keeps its own recovery copy, and damaged files no longer crash the app.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.2.0" date="2026-10-25">
       <description>
         <p>Adds lead sheets, video export, and recovery of unsaved work.</p>

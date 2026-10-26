@@ -2,7 +2,7 @@
 
 Two packages, following the AUR's usual split:
 
-- `PKGBUILD` — the released version (0.2.0), built from the GitHub tag
+- `PKGBUILD` — the released version (0.3.0), built from the GitHub tag
   tarball.
 - `ferrous-lineup-git/PKGBUILD` — the development version, built from
   `main`.
@@ -16,7 +16,7 @@ The tag must exist first, because the checksum is of GitHub's archive of
 that tag, not of the working tree:
 
 ```sh
-git tag v0.2.0 && git push origin v0.2.0
+git tag v0.3.0 && git push origin v0.3.0
 cd packaging/aur
 updpkgsums
 makepkg --printsrcinfo > .SRCINFO
