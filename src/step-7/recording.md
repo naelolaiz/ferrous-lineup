@@ -282,7 +282,7 @@ callback gets an `OutputCallbackInfo` with two timestamps, when the
 callback ran and when its sound will be played. That is [exercise
 7](exercises.md).
 
-## Format 2: only when needed
+## Format 2: only when needed (step 7)
 
 A MIDI Out channel is a new kind of channel, and an older Ferrous Lineup
 that reads `MidiOut(channel: 4)` in a project file would not know what
@@ -325,6 +325,13 @@ fn midi_out_channels_need_format_two() {
 }
 ```
 
-`FORMAT_VERSION`, now 2, is still what the reader accepts: this version
-reads formats 1 and 2, and refuses 3. The test for files from the
-future moved from 2 to 3 for that reason.
+In step 7, `FORMAT_VERSION` became 2, and that was what the reader
+accepted: it read formats 1 and 2, and refused 3. The test for files from
+the future moved from 2 to 3 for that reason.
+
+**Today.** `FORMAT_VERSION` is 27, and `format_for` checks many more
+features than a MIDI Out channel: from step 8's format 3 (nine new drums,
+patterns longer than four bars, and time signatures) up to format 27
+(sending a built-in drum over MIDI). The rule has not changed: write the
+lowest format that can hold the project. A project whose only new feature
+is a MIDI Out channel is still written as format 2.

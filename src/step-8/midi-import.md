@@ -10,11 +10,12 @@ Files: [`crates/lineup-core/src/midi_file/read.rs`](https://github.com/naelolaiz
 and [`crates/lineup-app/src/app/import.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/import.rs)
 
 Ferrous Lineup could already *write* MIDI files (see
-[MIDI messages and MIDI files](../step-7/messages.md)) and import a
-recording, but it could not *open* a MIDI file. That is a pity, because
-MIDI files are the easiest way to get real music into the app: almost
-every piece ever written can be found as one, often typed in by someone
-from the score, sometimes played in on a keyboard.
+[MIDI messages and MIDI files](../step-7/messages.md)) and
+[import a recording](../spike-listen/README.md), but it could not *open*
+a MIDI file. That is a pity, because MIDI files are the easiest way to
+get real music into the app: almost every piece ever written can be
+found as one, often typed in by someone from the score, sometimes played
+in on a keyboard.
 
 **File > Import MIDI file…** (or opening a `.mid` file from the command
 line, or dropping one on the window) now turns a MIDI file into a new
@@ -479,13 +480,12 @@ and gets E Dorian, C♯ harmonic minor or a twelve-tone row exactly.
 ## Testing it with every demo
 
 The best test of an import is an export. `every_demo_comes_back_note_for_note`
-exports each of the 177 demo songs as a MIDI file, imports it, exports
-the result again, and compares the two files event by event: every note
-on with its key and velocity, every note off, every tempo change, time
-signature, key signature and program change, each at the same tick. It
-also checks the imported project has exactly the demo's key and key
-markers. All 177 come back
-identical, including the tempo changes and the subtly shaped
+exports each song demo as a MIDI file, imports it, exports the result
+again, and compares the two files event by event: every note on with its
+key and velocity, every note off, every tempo change, time signature, key
+signature and program change, each at the same tick. It also checks the
+imported project has exactly the demo's key and key markers. All of them
+come back identical, including the tempo changes and the subtly shaped
 velocities.
 
 The other tests build small files by hand for the cases a demo never
@@ -505,3 +505,7 @@ digits of π) were opened in the app and played.
 - Export a demo in a mode, such as *Scarborough Fair* in D Dorian, open
   the file in another program and look at its key signature. Then open
   it again in Ferrous Lineup: the key is D Dorian again.
+- Try the other way in: **File > Import recording…** listens to an MP3 or
+  WAV file and builds a harmony track from what it hears
+  ([Importing a recording](../spike-listen/README.md)). It is
+  experimental; a MIDI file carries the notes exactly.

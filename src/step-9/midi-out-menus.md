@@ -153,8 +153,9 @@ they were; only the sound goes elsewhere.
 **File > Export song as MIDI** puts a drum sent over MIDI on its own
 channel, and gives the other channels the free ones around it, and the
 [playback trace](playback-trace.md) names it. A song with a drum sent
-over MIDI is saved as format 27. A song without one is saved in the
-format it had, since `sent_on` is left out of the file when it is
+over MIDI needs at least format 27 ([the project file
+format](../appendix-project-format.md)). A song without one is saved in
+the format it had, since `sent_on` is left out of the file when it is
 `None`.
 
 ## The menu needs the list of outputs

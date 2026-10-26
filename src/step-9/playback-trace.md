@@ -115,6 +115,19 @@ taken for the new note. None of that is in the trace. For a problem
 inside an instrument, listening (or looking at the samples) is still the
 way.
 
+## Notes that must not get lost
+
+A trace may lose events on purpose: if the window falls behind, the ring
+buffer fills, and the table's header says how many events were lost,
+because a trace is a report and not the music. The queues that carry the
+music are treated differently. Commands wait for room (`send_wait`); a
+MIDI message that finds the output queue full waits in a backlog for the
+next block; and a note-off is never thrown away, so an external synth
+cannot be left with a stuck note. A recording longer than ten minutes is
+refused when it is imported, rather than filling memory.
+[Recovery](recovery.md) covers what the app does when something does go
+wrong.
+
 ## The code
 
 ### Writing on the audio thread

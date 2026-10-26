@@ -14,6 +14,29 @@ press Space, and they play it.
 
 ![The chord sheet with the band: "🎷 Band: Pop beat", a Progression button, "Key: C major · 4/4 · 110 BPM", and the bars C | Am | F | G7 with their numerals](../images/step-9-band-sheet.png)
 
+> **The band's words.** A few words come up all through this step:
+>
+> - **comp**: a chord played under the tune; as a verb, to play those
+>   chords.
+> - **comping**: the rhythm and voicings a chord player uses to comp,
+>   such as the piano's syncopated hits.
+> - **voicing**: which notes of a chord sound, and in which octaves.
+> - **voice leading**: moving each voice of a chord to the nearest voice
+>   of the next, so the chords join smoothly.
+> - **changes**: the chord progression of a song, bar by bar; "the
+>   changes" are what the chord sheet holds.
+> - **head / chorus**: the head is the written tune, played at the start
+>   and the end; a chorus is one pass through the form (in a pop song,
+>   the part that comes back after each verse).
+> - **walking bass**: one note per beat: the root, notes of the chord,
+>   and a half step into the next root.
+> - **turnaround**: the chords at the end of a section that lead back to
+>   its start, such as I vi ii V.
+>
+> Voicings and voice leading are harmony's own words: [Music theory as
+> types](../step-3/theory.md) and [The harmony
+> keys](../step-8/harmony-keys.md) show them at work.
+
 ## Trying it
 
 **File > New** now opens an empty chord sheet with a band ready, in
@@ -32,17 +55,18 @@ bar, or where a walking bass puts its lead-in note.
 
 On the sheet's top line:
 
-- **🎷 Band** picks how the band plays. Each of the library's 81
-  rhythms is a band style, sorted by genre, and four more play without
-  drums: **Chorale** (each chord held, as an organ plays a hymn),
-  **Alberti bass** (the chord broken low, high, middle, high, as in
-  Mozart's sonatas), **Arpeggios** and **Sarabande** in 3/4. Pointing at
-  one says what it is, its time signature and its usual tempo. **No
-  band** sends the band home.
+- **🎷 Band** picks how the band plays. At this step, each of the
+  library's 81 rhythms is a band style (112 today), sorted by genre,
+  and four more play without drums: **Chorale** (each chord held, as an
+  organ plays a hymn), **Alberti bass** (the chord broken low, high,
+  middle, high, as in Mozart's sonatas), **Arpeggios** and **Sarabande**
+  in 3/4. Pointing at one says what it is, its time signature and its
+  usual tempo. **No band** sends the band home.
 - **Progression** writes a well-known chord progression from the
-  selected bar, in the song's key: the 145 harmony styles of the
-  library, by genre, each with its chords in the tooltip ("Cmaj7 – Am7
-  – Dm7 – G7. I vi ii V: the progression that ends so many standards").
+  selected bar, in the song's key: the 145 harmony styles of the library
+  at this step (177 today), by genre, each with its chords in the
+  tooltip ("Cmaj7 – Am7 – Dm7 – G7. I vi ii V: the progression that ends
+  so many standards").
   Pick another and it goes on after the first.
 - **End the song here**, when you right-click a bar, says where the
   band stops. A bar with nothing written goes on with the harmony

@@ -72,6 +72,7 @@ A bar can hold any of these, separated by spaces:
 | Typed | What it is | Example |
 |-------|------------|---------|
 | A chord symbol | any chord [Chord names](chord-names.md) reads | `Am7`, `G/B`, `F#m7b5`, `C6/9` |
+| A polychord | two chords at once, the upper chord first, joined by `\|` | `Eb7\|Fb`, `C\|F#` |
 | A Roman numeral | a chord of the key, in a key of seven notes | `ii7 V7` in C major is written Dm7 G7 |
 | A pitch-class set | by its Forte name, moved with `Tn` or `TnI` | `3-11 T2` is D F A |
 | | or by its notes, in braces | `{0,1,4}`, `{D F A}`, `{t e 0}` |
@@ -80,6 +81,11 @@ A bar can hold any of these, separated by spaces:
 | No chord | nothing plays the harmony | `N.C.` or `NC` |
 | A hold | the harmony before goes on one more beat | `/` or `.` |
 | The bar before | the bar goes on with the harmony before | `%`, or nothing |
+
+Two chords at once came later, with format 25: `Eb7|Fb` is E♭7 over F♭
+major, the chord that opens the Augurs of Spring. A slash would mean a
+bass note, so the two layers are joined by a pipe instead
+([Hearing chords](chord-hearing.md)).
 
 What you type is written down in one way. A numeral becomes the chord
 it is in the key, so "V7" typed in Bb major is written F7, and a chord
@@ -294,12 +300,19 @@ pub struct ChordMarker {
 
 pub enum HarmonyName {
     Chord(ChordSymbol),
+    /// Two chords at once, the upper one first: "Eb7|Fb". Added later,
+    /// with format 25.
+    Polychord(ChordSymbol, ChordSymbol),
     NoChord,
     Set(PitchSet),
     Micromode(PitchSet),
     Row(RowLabel),
 }
 ```
+
+`Polychord` came after this chapter, with format 25. The chords this
+chapter writes are saved as format 12; a project with `Eb7|Fb` on its
+sheet needs at least format 25 ([Hearing chords](chord-hearing.md)).
 
 A harmony lasts until the next marker, the way a chord on a lead sheet
 lasts until the next chord is written. That is why a bar with nothing

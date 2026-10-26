@@ -1,9 +1,10 @@
-# Spike: listening to a recording
+# Importing a recording (experimental)
 
-A *spike* is an experiment: a branch that tries something out to learn
-whether it can work and how, without the polish a real step gets. This
-one asks: can Ferrous Lineup take an MP3 or a WAV file, hear its tempo,
-key and chords, and play a harmony track along with it?
+This chapter began as a *spike*: a branch that tried out whether Ferrous
+Lineup could take an MP3 or WAV file, hear its tempo, key and chords,
+and play a harmony track along with it. It shipped in 0.2.0, and it is
+still experimental: the tempo, the key changes, the chords and the first
+downbeat are estimates, not a score read from the sound.
 
 It can, well enough to be useful. **File > Import recording…** (or
 dropping the file on the window, or `ferrous-lineup song.mp3`) opens the
@@ -15,31 +16,39 @@ chord that is playing.
 
 ![Vibe Ace imported, with the harmony keys following its chords](../images/spike-listen-vibe-ace.png)
 
-The code lives in a new crate, `lineup-listen`, plus one file in the app
-(`app/import.rs`) and a small change to the sampler. This chapter
-explains how it works and what was learned. The crate's
+The code lives in a crate of its own, `lineup-listen`, plus one file in
+the app (`app/import.rs`) and a small change to the sampler. This
+chapter explains how it works and what was learned. The crate's
 [`README.md`](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-listen)
 has the detailed numbers from trying the alternatives.
 
 ## The pipeline
 
-Listening is five stages, each its own module, each a plain function
+Listening is six stages, each its own module, each a plain function
 from one kind of data to the next:
 
 1. **Decode** (`decode.rs`): the file becomes samples, with the
    [Symphonia](https://crates.io/crates/symphonia) crate.
 2. **Beats** (`beats.rs`): when each beat falls, in seconds, and the
-   tempo. The spike used the `beat-track-rs` crate here; once it was
-   merged, the crate was replaced by our own port (see below).
-3. **Key** (with the `bpm-key` crate): the key the recording is in.
+   tempo. The first version used the `beat-track-rs` crate here; once
+   the import shipped, the crate was replaced by our own port (see
+   below).
+3. **Key** (with the `bpm-key` crate): the key the recording is in as a
+   whole, and the first guess for the harmony keys.
 4. **Chords** (`chroma.rs` and `chords.rs`, our own): which chord sounds
    from each beat to the next.
 5. **Meter** (`meter.rs`, our own): three or four beats to the bar, and
    which beat is the first downbeat.
+6. **Key changes** (`keys.rs`, our own): the key of each bar, found with
+   `lineup_core::harmony::key_finding` from the chroma of the bars. The
+   result is a `Vec<KeySpan>` in `Analysis.keys`, with `start` and `end`
+   counted in beats.
 
 Then `arrange.rs` turns the result into a `Project`, with the same types
 the rest of Ferrous Lineup uses: `Channel`, `Pattern`, `NoteEvent`, `Clip`.
-Nothing downstream knows the notes came from a recording.
+`arrange::key_spans` moves the key spans from beats to song steps, so
+the key finder can mark them on the playlist. Nothing downstream knows
+the notes came from a recording.
 
 ### Decoding with Symphonia
 
@@ -160,9 +169,9 @@ only knows whole frames, so the tempo it reports is a little quantized;
 This module started as the `beat-track-rs` crate, which proved the
 approach. But the crate also decodes files, so it brought a second copy
 of Symphonia (an older version, with every codec) and `ndarray` into
-every build. Its tracker is about 250 lines, so after the spike was
-merged it was ported into `beats.rs`, in the project's own style and on
-the `realfft` crate the chroma already used. A comparison program ran
+every build. Its tracker is about 250 lines, so after the import shipped
+it was ported into `beats.rs`, in the project's own style and on the
+`realfft` crate the chroma already used. A comparison program ran
 both on all 38 test recordings: the same tempo and the same beats on
 every one, about ten times faster, and 285 lines fewer in `Cargo.lock`.
 A crate that proves an approach and is then replaced by a small port is
@@ -204,10 +213,12 @@ whose sound is longer than ten seconds when playback stops.
 `app/import.rs` follows `app/export.rs` exactly: the work runs on a
 thread, the app holds its `JoinHandle`, and every frame `check_import`
 asks `is_finished()` and, when it is, `join()`s the thread to get its
-result, a `Result<(Project, String), String>`. The UI thread never
-blocks, so the music keeps playing while a new recording is being
-listened to. The project is swapped in with the same `replace_project`
-that File > Open uses.
+result, a `Result<(Project, String, Vec<KeySpan>), String>`: the project,
+a summary of what was heard, and the key changes in song steps. The UI
+thread never blocks, so the music keeps playing while a new recording is
+being listened to. The project is swapped in with the same
+`replace_project` that File > Open uses, and `key_finder.new_project`
+keeps the key spans for **Find the key**.
 
 Opening an audio file from the command line or by dropping it on the
 window goes through the same place as a `.lineup` file, `open_now`, which
@@ -231,6 +242,14 @@ librosa as the reference. The crate's README has the tables. In short:
   into `beats.rs`, as described above.
 - **Key**: `bpm-key` was right 24 times out of 29, `stratum-dsp` 13.
 - **Chords**: no crate did well enough, hence our own 300 lines.
+
+## Not tried
+
+- Neural beat trackers (`beat-this`, `beatnet-rs`): they need ONNX
+  models, so the import would no longer be pure Rust at run time.
+- Separating the melody from the chords: a tune played in single notes is
+  not followed by its implied harmony. The chords come from the whole
+  mix.
 
 ## Exercises
 

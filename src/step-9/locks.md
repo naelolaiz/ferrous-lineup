@@ -130,7 +130,8 @@ rules (in `band/locks.rs`):
 The band keeps a fingerprint of what it plays from, to know when to
 write again. The lock counts in that fingerprint only when something is
 locked, so songs saved before this change sound exactly as they did.
-A song with a locked channel is saved as format 23.
+A song with a locked channel needs at least format 23 ([the project
+file format](../appendix-project-format.md)).
 
 ## Exercises
 

@@ -21,7 +21,9 @@ to write next:
   the bass, "2nd inversion" the fifth, and so on. The note you click stays
   the root, and the others are arranged around it,
 - **seven new chord types**: 6/9, 7b9, 7#9, 11, m11, 13 and maj13, which
-  the chord lane can now name and the Draw menu can stamp (28 in all),
+  the chord lane can now name and the Draw menu can stamp. That made 28;
+  two more were added in later steps, so `ChordQuality::ALL` holds 30
+  today,
 - **next-chord suggestions**: point at a chord, and the "Chords in C
   major" buttons light up for the chords that often come after it. Hover
   one to read why ("V to I: the strongest ending"). A major chord that is
@@ -74,27 +76,33 @@ On a Mac, use ⌘ instead of Ctrl and Option instead of Alt. When no note
 is selected, the tools change every note of the channel, except Delete,
 which never deletes notes you have not selected.
 
-## What is not here: strumming
+## What is not here: a strum tool
 
 A guitarist strums a chord: the notes start one after the other, a few
-milliseconds apart, low to high. It was on the plan for this step, and
-it was left out on purpose, because a strum needs a finer clock than
-the one Ferrous Lineup has.
+milliseconds apart, low to high. It was on the plan for this step and was
+left out, but *not* because the clock is too coarse.
 
-A `NoteEvent` starts on a step, and a step is a sixteenth note: 115
-milliseconds at 130 BPM. A strum spreads the notes over 10 to 40
-milliseconds in all, a small fraction of one step. Placing each note on
-its own step would sound like a slow arpeggio, not a strum. To strum,
-notes need positions *between* steps, which means changing `NoteEvent`,
-the sequencer, the audio thread and the file format. That is a step of
-its own; exercise 6 explains how it could be done.
+A `NoteEvent` has `nudge`, how many ticks after the start of its step it
+really begins, and `trim`, how many ticks before the end of its last step
+it stops. A step is divided into 24 ticks, so at 130 BPM one tick is
+about 4.8 milliseconds: fine enough for a strum. MIDI import already uses
+this to keep notes that do not fall on the grid, and Tools > Quantize to
+the steps moves them back onto it. The band's guitar, in a later step,
+strums its chords by nudging each string a tick later than the one below
+(`crates/lineup-core/src/band/guitar.rs`).
+
+What is missing is the tool and the setting for *your* notes: a "Strum"
+item that spreads the selected chord over ticks, and a per-channel strum
+amount that the audio thread applies when several notes start together.
+Exercise 6 works through both designs. The file format does not need a
+new field for the first one; `nudge` is already there.
 
 ## What changed in the architecture
 
 ```text
   lineup-core
     tools.rs (new):               plain functions that change groups of notes
-    harmony/progression.rs (new): next_chords: what often comes after a chord
+    harmony/progression.rs (new): Suggestion, next_chords: what often comes after a chord
     harmony/chord.rs:             seven new chord types
     pattern.rs:                   replace_notes, can_replace_notes, tidy_notes
 
@@ -135,8 +143,8 @@ Four ideas carry this step:
 ## Files in this step
 
 ```text
-crates/lineup-core/src/tools.rs               transpose, shift, in key, snap, invert, arpeggiate (new)
-crates/lineup-core/src/harmony/progression.rs Suggestion and next_chords (new)
+crates/lineup-core/src/tools.rs               chords, transpose, shift, quantize, in key, snap, invert, arpeggiate (new)
+crates/lineup-core/src/harmony/progression.rs Suggestion, next_chords and borrowed chords (new)
 crates/lineup-core/src/harmony/chord.rs       6/9, 7b9, 7#9, 11, m11, 13, maj13
 crates/lineup-core/src/harmony/analysis.rs    a test for the new chords
 crates/lineup-core/src/pattern.rs             replace_notes, can_replace_notes, tidy_notes

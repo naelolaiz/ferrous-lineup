@@ -7,13 +7,15 @@ you have written something you like:
   clips, tracks, channels, samples, patterns, the tempo, names and the key.
   The Edit menu says what will be undone ("Undo move clip"). A drag is one
   step, however many frames it lasts, and typing a name is one step too.
-  The last 100 steps are kept,
+  The history keeps 10 to 100 steps, depending on the song: small songs
+  keep 100, and a large one keeps fewer to stay near a 256 MiB budget,
+  but never fewer than 10,
 - **Export WAV**: File > Export WAV… saves the song as a sound file that
   any music player, video editor or other studio can open: 16-bit stereo
   at 44,100 frames per second, like a CD. The export runs in the
-  background with a progress bar in the status bar. You can keep playing
-  and editing while it runs, and nothing you do changes the file being
-  written.
+  background with a progress bar in the status bar and a Stop button. You
+  can keep playing and editing while it runs, and nothing you do changes
+  the file being written.
 
 ![The Edit menu after clicking two steps: "Undo change steps"](../images/step-5-edit-menu.png)
 
@@ -41,9 +43,10 @@ brought back by undo is selected, so you can see it). Opening a file or
 starting a new one forgets the history.
 
 The export plays the song once, from the first bar to the end of the last
-clip, then two more seconds so the last notes can ring out. The file is
-named after the project ("song.lineup" suggests "song.wav"). Export WAV is
-greyed out when the playlist has no clips.
+clip, then a tail so the last notes can ring out: two seconds, plus the
+reverb's decay when the reverb is on. The file is named after the project
+("song.lineup" suggests "song.wav"). Export WAV is greyed out when the
+song has no length (no clips and no sections).
 
 ## What changed in the architecture
 
@@ -67,11 +70,21 @@ Every change to the project now takes the same path:
 ```text
   click on a step
     └▶ edit("change steps", |project| ...)
-         before = project.clone()
-         change the project
-         diff(&before, &project)  ──▶  [Notes { pattern: 0, channel: 3 }]
-                                            └▶ Command::SetNotes ──▶ audio thread
-         history.record("change steps", before)
+         the step is not open yet:
+           before = project.clone()
+           change the project
+           diff(&before, &project)  ──▶  [Notes { pattern: 0, channel: 3 }]
+                                              └▶ Command::SetNotes ──▶ audio
+           history.record("change steps", before)   (the step stays open)
+
+  a drag's next frame
+    └▶ edit("move notes", |project| ...)
+         the step is still open:
+           change the project, no copy
+           sync at most every 50 ms
+
+  mouse released
+    └▶ close the step and send its last changes
 
   Ctrl+Z
     └▶ undo()
@@ -84,8 +97,9 @@ Three ideas carry this step:
 
 1. **Keep copies, not instructions.** The history keeps whole copies of
    the project, not a list of "how to reverse what I did". A copy cannot
-   be reversed wrongly, and the project is small enough to copy on every
-   change.
+   be reversed wrongly. A drag copies once, when it opens its step, not
+   on every frame; the history's bytes budget decides how many copies a
+   song can keep.
 2. **One way to tell the audio thread.** Before this step, each kind of
    edit sent its own commands to the audio thread. Now every edit, and
    every undo and redo, compares the project before and after and sends
@@ -101,7 +115,7 @@ Three ideas carry this step:
 ```text
 crates/lineup-core/src/history.rs        History<T>: undo and redo (new)
 crates/lineup-core/src/diff.rs           Change and diff(): what changed between two projects (new)
-crates/lineup-audio/src/render.rs        Renderer and export_wav (new)
+crates/lineup-audio/src/render.rs        Renderer, export_wav and WavExport (new)
 crates/lineup-audio/src/engine.rs        InsertPattern, InsertChannel, settle_volumes
 crates/lineup-audio/src/sample.rs        SampleCache
 crates/lineup-audio/src/instrument.rs    Instrument::for_channel takes the cache

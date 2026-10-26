@@ -162,8 +162,8 @@ guitar.
 
 D1 would be below a bass guitar, so the line jumps up to D2 there. A
 chart with no slash chords plays exactly as before: every root between
-C2 and B2. A test checks that, and every one of the 145 styles is still
-heard as its own chart.
+C2 and B2. At this step, a test checks that, and every one of the 145
+styles is still heard as its own chart.
 
 You cannot hear it in the app yet; the chord sheet comes next. Until
 then the tests show it working:

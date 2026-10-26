@@ -33,7 +33,10 @@ the next version of the app would bring its own copy anyway.
 So **Save** on a demo does what **Save as…** does: it asks for a new
 file. The dialog already has the demo's name in it:
 
-![Save on Für Elise suggests "Für Elise.loom".](../images/step-8-demo-save-as.png)
+![Save on Für Elise suggests "Für Elise.lineup". The screenshot still shows the old ".loom" extension, from before the rename.](../images/step-8-demo-save-as.png)
+
+(The screenshot was taken before the rename; the save dialog now
+suggests "Für Elise.lineup".)
 
 Once saved, the project is that file: the title shows "Für Elise.lineup",
 "(demo, read-only)" goes away, and the next Save writes to the file
@@ -42,8 +45,9 @@ suggest the demo's name too: "Für Elise.wav".
 
 The app starts with "The starting song", which is a demo as well (it is
 the first entry of **File > Demos**), so it shows that name from the
-start. **File > New**, an imported recording or an imported MIDI file
-still start as "Untitled".
+start. **File > New** and an imported recording still start as
+"Untitled"; an imported MIDI file or chord sheet gets its file's name
+(`name_imported`), until it is saved.
 
 ## The code
 
@@ -97,27 +101,42 @@ ordinary file from then on.
 
 ### Matching on two things at once
 
-What to show depends on two `Option`s. Rust can match on both at once by
-putting them in a tuple:
+What to show depends on where the project came from: a file, a demo, or
+a name given to an imported song. `song_name` matches the first two in a
+tuple, and falls back to `self.name`:
 
 ```rust
-fn display_name(&self) -> String {
+pub(super) fn song_name(&self) -> Option<String> {
     match (&self.path, self.demo) {
-        (Some(path), _) => file_name(path, Path::file_name),
-        (None, Some(demo)) => demo.to_string(),
-        (None, None) => "Untitled".to_string(),
+        (Some(path), _) => Some(file_name(path, Path::file_stem)),
+        (None, Some(demo)) => Some(demo.to_string()),
+        (None, None) => self.name.clone(),
     }
 }
 ```
 
 The arms are tried from top to bottom. `_` means "anything", so a file
 wins over a demo name; the compiler checks that the three arms together
-cover every case, and would refuse to build if one were missing.
+cover every case, and would refuse to build if one were missing. The
+last arm is the name given to an imported MIDI file or chord sheet
+(`name_imported`), which is a `String` and is cloned.
 
 `&self.path` borrows the path: matching on `self.path` itself would try
 to move the `PathBuf` out of `self`, which a method that only has
 `&self` may not do. `self.demo` is fine as it is, because an
 `Option<&str>` is `Copy`: matching on it copies it.
+
+`display_name` then keeps the extension for a file, and says
+"Untitled" when there is no name at all:
+
+```rust
+fn display_name(&self) -> String {
+    match &self.path {
+        Some(path) => file_name(path, Path::file_name),
+        None => self.song_name().unwrap_or_else(|| "Untitled".to_string()),
+    }
+}
+```
 
 ### A function as a value
 
@@ -141,11 +160,14 @@ Path::file_stem)`.
 
 ### A slash in a name
 
-A demo name becomes a suggested file name. A name with `/` in it would
-be read as a folder by the dialog, so it is replaced first:
+A song's name becomes a suggested file name. A name with `/` in it would
+be read as a folder by the dialog, so `stem` replaces it first:
 
 ```rust
-(None, Some(demo)) => demo.replace(['/', '\\'], "-"),
+self.song_name().map_or_else(
+    || "Untitled".to_string(),
+    |name| name.replace(['/', '\\'], "-"),
+)
 ```
 
 `str::replace` takes a *pattern*, and an array of `char`s is a pattern

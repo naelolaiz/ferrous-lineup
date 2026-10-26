@@ -24,7 +24,9 @@ dialogs itself. Four crates do:
 Each of these crates contains the code for every system, and keeps only
 the right one while compiling. The app calls `cpal::default_host()`, draws
 with egui and opens an `rfd::FileDialog`; none of that names an operating
-system. A search of the workspace for `target_os` finds nothing.
+system. The workspace's own code has only two `target_os` checks, in the
+lead sheet's preview command, which chooses `cmd`, `open` or `xdg-open`
+to show a PDF. The audio, window and dialog code never names a system.
 
 This was a choice made in step 1, when each library was picked: anything
 that only worked on Linux would have had to be replaced now.
@@ -210,11 +212,12 @@ system can fail on another (a path with `/` in it, a file that cannot be
 renamed while open).
 
 Each job ends by uploading its program. On the page of a CI run, under
-**Artifacts**, there are now four downloads: `ferrous-lineup-linux`,
-`ferrous-lineup-macos`, `ferrous-lineup-windows` and the book. GitHub puts
-each in a zip file, and zip files made this way forget that the program
-was executable, so on Linux and macOS run `chmod +x ferrous-lineup` after
-unzipping.
+**Artifacts**, there are now three downloads: `ferrous-lineup-linux`,
+`ferrous-lineup-macos` and `ferrous-lineup-windows`. GitHub puts each in
+a zip file, and zip files made this way forget that the program was
+executable, so on Linux and macOS run `chmod +x ferrous-lineup` after
+unzipping. (The book has its own workflow on the book branch, and its
+PDF is an artifact of that workflow.)
 
 ## Checking Windows code from Linux
 
@@ -260,14 +263,18 @@ Being honest about the limits:
 
 - The CI machines have no sound card and no screen. The jobs prove that
   the program builds and that the music logic is right on each system,
-  not that you hear anything. The first person to run it on a Mac or a
-  Windows computer is the real test.
-- The programs are not **signed**. macOS will refuse to open a
-  downloaded one at first ("cannot be verified"); right-click it and
-  choose Open, or run `xattr -d com.apple.quarantine ferrous-lineup`.
-  Windows SmartScreen will warn too; choose "More info", then "Run
-  anyway". Signing needs paid certificates from Apple and others.
-- There is no installer, no icon, and no macOS `.app` bundle, so the Mac
-  program is a file you start from the terminal, and double-clicking a
-  `.lineup` file does not open it in Ferrous Lineup on any system. Each of
-  these needs packaging work per system, which is a good later step.
+  not that you hear anything. A run on a real Mac or Windows computer is
+  still the real test.
+- The programs are not fully **signed**. The macOS app is ad-hoc
+  signed, which Apple Silicon requires, but not notarized; the Windows
+  Setup and `.exe` are unsigned. macOS will refuse to open a downloaded
+  app at first ("cannot be verified"), and Windows SmartScreen will warn
+  too. [Release builds: a download for every system](../step-9/releases.md#opening-what-you-downloaded)
+  shows how to get past each warning. Notarizing the Mac app and signing
+  the Windows programs need paid Apple and Windows certificates.
+- The macOS app has an icon and is a real `.app` inside the `.dmg`, but
+  its `Info.plist` does not declare the `.lineup` document type yet, so
+  double-clicking a project on macOS may not open it in Ferrous Lineup.
+  The Windows installer registers `.lineup` (and the old `.loom`), and
+  the Linux desktop entry and MIME type do too. Adding the document type
+  to `packaging/macos/Info.plist` is the missing piece.

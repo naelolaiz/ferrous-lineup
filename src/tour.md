@@ -48,7 +48,10 @@ Tools menu, and set velocities in the lane under the grid. The chord
 buttons light up with the chords that often come next.
 **Ctrl+S** saves the project as a `.lineup` file (⌘S on a Mac), **Ctrl+Z**
 undoes any change and **Ctrl+Shift+Z** redoes it, and **File > Export
-WAV…** saves the song as a sound file.
+WAV…** saves the song as a sound file. **File > Open recent** lists the
+last ten projects. If the app did not close cleanly, it offers the
+recovery copy it wrote at startup; [Losing nothing](step-9/recovery.md)
+explains both.
 
 ## MIDI
 
@@ -89,7 +92,7 @@ on the third, sixth and seventh degrees are written: bIII bVI bVII,
 counted from the major scale as pop and jazz books do, or III VI VII,
 counted from the minor scale as classical books do.
 The **Library** tab next to the pattern list holds an alphabetical
-**Presets** list, combining all 171 harmony presets, 107 rhythm presets
+**Presets** list, combining all 177 harmony presets, 112 rhythm presets
 and your saved styles. **Edit > Settings… > Library > Style list** can instead group
 them by genre, with a separate **User styles** group. Equivalent
 style/rhythm entries are combined; distinct playing patterns remain available. They cover pop, rock, blues, jazz, soul, hip hop,
@@ -104,7 +107,7 @@ Click one to review its copy options, then **Apply** to hear it in your key.
 Right-click and choose **Play the whole
 song with this preset** to apply it throughout the song while stopped.
 The melody stays in place. **File > Demos** opens
-306 songs with their melodies, by genre and in alphabetical order: from
+343 songs with their melodies, by genre and in alphabetical order: from
 *Ode to Joy*, *Für Elise* and the *Habanera* to tangos, Latin American
 songs, swing and big band tunes, dances in odd meters and orchestral
 pieces such as *Boléro* and *The Rite of Spring*, plus new tunes written
@@ -184,7 +187,8 @@ undo/redo. A meter change keeps each bar's duration by adjusting tempo.
 ## The style editor
 
 Use **Edit style…** or **New style…** in the channel rack (also **View >
-Style editor…**) to edit repeating drum, chord and bass parts. The editor
+Style editor…**) to edit repeating drum, chord and bass parts.
+[The style editor](step-9/style-editor.md) tells how it works. The editor
 reuses the rack and piano roll, with its own undo history and a four-repeat
 preview. **Start from…** copies an existing style; right-clicking a style
 or rhythm in the Library also opens an editable copy. Pitched templates
@@ -215,7 +219,8 @@ in the header’s right-click menu. Heights follow track moves, are saved
 with the project, and support Undo.
 
 **F1**, or **Help > Keyboard shortcuts**, lists every key the app
-answers to, window by window.
+answers to, window by window. The same list is in the
+[Keyboard shortcuts appendix](appendix-shortcuts.md), for printing.
 
 **Follow playhead** in the toolbar and **Settings > Playback** keeps the playing
 position visible in the playlist, chord sheet and piano roll. Turning it
@@ -505,14 +510,19 @@ lead sheet, the playlist, the piano roll and the harmony keys, arranged
 on a preview, in HD or Full HD. The encoders are built into the app, so
 nothing else needs installing.
 
-Ready-built programs for all three systems are attached to every CI run
-as `ferrous-lineup-linux`, `ferrous-lineup-macos` and `ferrous-lineup-windows`.
-The **Release** workflow packs them ready to use, with this README and
-the licence: a `.tar.gz` and an AppImage for Linux, a `.zip` for
-Windows, and builds for Apple Silicon and Intel Macs. They are attached
-to every Release run, and pushing a `v` tag (`v0.2.0`) publishes them on
-the repository's Releases page. They are not signed yet, so macOS and
-Windows warn before the first start.
+Bare programs for all three systems are attached to every CI run as
+`ferrous-lineup-linux`, `ferrous-lineup-macos` and
+`ferrous-lineup-windows`. The **Release** workflow builds the packages
+ready to use, with the README and the licence: a Linux AppImage, `.deb`
+and `.tar.gz`; a Windows Setup `.exe` and portable `.zip`; and a macOS
+`.dmg` with `Ferrous Lineup.app`, for Apple Silicon and Intel. They are
+attached to every Release run, and pushing a `v` tag (`v0.2.0`)
+publishes them on the repository's
+[Releases page](https://github.com/naelolaiz/ferrous-lineup/releases).
+The Windows programs are unsigned, and the macOS app is ad-hoc signed
+but not notarized, so both warn before the first start;
+[Release builds](step-9/releases.md) explains each download and the
+warnings.
 
 ## Checking playback with a trace
 

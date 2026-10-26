@@ -10,13 +10,21 @@ almost never call the compiler `rustc` directly.
 ## Crates
 
 A **crate** is Rust's unit of compilation: one library or one program.
-Ferrous Lineup is split into three crates:
+At this step, Ferrous Lineup was split into three crates:
 
 | Crate | Kind | Job |
 |-------|------|-----|
 | `lineup-core` | library | Music concepts: notes, tempo, later patterns and chords. No audio, no UI. |
 | `lineup-audio` | library | Talks to the sound card and generates sound. |
 | `lineup-app` | binary (program) | The window. Produces the `ferrous-lineup` executable. |
+
+> **At this step / today:** the workspace had these three crates and
+> version 0.1.0. Today there are five: `lineup-listen` (decoding and
+> analysing a recording for **File > Import recording**) and
+> `lineup-video` (painting egui pictures into an MP4) joined them, and
+> the version is 0.2.0. The source links in this chapter go to `main`, so
+> the files they open are the final ones, not the step-1 snapshot. [A new
+> name](../step-9/new-name.md) explains why `loom-*` became `lineup-*`.
 
 Why three crates instead of one?
 
