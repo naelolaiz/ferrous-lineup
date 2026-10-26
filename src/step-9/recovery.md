@@ -81,9 +81,10 @@ Three smaller fixes keep the project you meant to keep:
   "Stopped importing the recording."
 - **File > Quit** during a WAV or video export asks **An export is still
   running**, with **Stop it and quit** and **Keep exporting**. Stopping
-  waits for the export to finish, then closes; any unsaved-changes
-  question comes first. The export is not cut off mid-file, and the
-  project is not closed underneath it.
+  asks the export to stop, waits until it has, removes the unfinished
+  file, and then closes; any unsaved-changes question comes first. A
+  half-written WAV or video is never left behind looking finished, and
+  the project is not closed underneath an export that is still writing.
 
 The style editor has its own unsaved state. Quitting with an edited
 draft asks **Save style changes?**, offering **Save style**, **Don't
@@ -101,7 +102,10 @@ Now the first change of a drag opens one undo step and keeps a copy from
 before it. The following frames change the project in place. The audio
 thread is sent what it is missing from a shadow copy of the last state
 it received, at most every 50 milliseconds, and once more when the step
-closes:
+closes. A drag held still, or a pause in typing, has no next change to
+carry the last one, so the end of each frame sends it once its 50
+milliseconds are up, and asks egui for a frame at that moment even if
+nothing else moves:
 
 ```rust
 const SYNC_INTERVAL: Duration = Duration::from_millis(50);
@@ -110,8 +114,11 @@ const SYNC_INTERVAL: Duration = Duration::from_millis(50);
 A change to the number of patterns or channels is structural and is
 sent at once, because the audio thread's rows have to move with it. The
 unsaved star is no longer worked out by comparing the whole project
-every frame: a project already known to differ stays that way, and the
-comparison runs only when it might have changed. Undo still keeps up to
+every frame. A change made in one go, such as a click, an undo or a
+redo, compares the project with the saved one again, so a step clicked
+on and then off clears the star. The frames of a drag do not compare,
+so a note dragged away and back keeps the star until the next change.
+Undo still keeps up to
 256 MB of snapshots, with at least ten steps even for a very large song.
 
 ## Audio that comes back
