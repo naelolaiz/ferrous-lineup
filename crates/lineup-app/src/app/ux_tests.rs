@@ -2620,6 +2620,55 @@ fn the_unsaved_mark_is_worked_out_again_after_an_edit_and_undo() {
 }
 
 #[test]
+fn changing_a_project_back_by_hand_clears_the_unsaved_mark() {
+    let mut screen = Screen::new();
+    let swing = screen.app.project.swing;
+    screen
+        .app
+        .edit("change swing", |project| project.swing = swing + 20);
+    assert!(screen.app.has_unsaved_changes());
+    // A frame ends the step, as after a click.
+    screen.draw(vec![]);
+    screen
+        .app
+        .edit("change swing", |project| project.swing = swing);
+    assert!(
+        !screen.app.has_unsaved_changes(),
+        "putting the swing back by hand is what was saved"
+    );
+}
+
+#[test]
+fn a_drag_that_ends_where_it_started_clears_the_unsaved_mark() {
+    let mut screen = Screen::new();
+    let swing = screen.app.project.swing;
+    // The mouse button goes down on the empty end of the menu bar and
+    // stays down, as in a drag.
+    let pos = Pos2::new(1390.0, 8.0);
+    let press = |pressed| Event::PointerButton {
+        pos,
+        button: PointerButton::Primary,
+        pressed,
+        modifiers: Modifiers::NONE,
+    };
+    screen.draw(vec![Event::PointerMoved(pos), press(true)]);
+    screen
+        .app
+        .edit("drag", |project| project.swing = swing + 20);
+    screen.draw(vec![]);
+    screen.app.edit("drag", |project| project.swing = swing);
+    screen.draw(vec![]);
+    assert!(screen.app.history.is_open(), "the drag goes on");
+    // Letting go ends the drag back where it started.
+    screen.draw(vec![press(false)]);
+    assert!(!screen.app.history.is_open());
+    assert!(
+        !screen.app.has_unsaved_changes(),
+        "the drag put back what was saved"
+    );
+}
+
+#[test]
 fn changes_in_one_drag_are_one_undo_step() {
     let mut screen = Screen::new();
     let before = screen.app.project.clone();
@@ -2632,14 +2681,41 @@ fn changes_in_one_drag_are_one_undo_step() {
 }
 
 #[test]
+fn a_drag_held_still_reaches_the_sound() {
+    let mut screen = Screen::new();
+    // The mouse button goes down on the empty end of the menu bar and
+    // stays down, as in a drag.
+    let pos = Pos2::new(1390.0, 8.0);
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    screen.app.edit("drag", |project| project.swing = 1);
+    screen.app.edit("drag", |project| project.swing = 2);
+    assert!(screen.app.step_unsynced, "the second change waits its turn");
+
+    // The pointer is held still: no change follows, but its turn comes.
+    screen.app.last_sync -= std::time::Duration::from_millis(100);
+    screen.draw(vec![]);
+    assert!(!screen.app.step_unsynced, "the waiting change was sent");
+    assert_eq!(screen.app.synced, screen.app.project);
+    assert!(screen.app.history.is_open(), "the drag is still one step");
+}
+
+#[test]
 fn unsaved_work_from_a_crash_recovers_as_unsaved() {
     let mut screen = Screen::new();
     let recovered = Project::template();
-    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+    screen.app.recovery.pending = vec![super::recovery::Recovered::new(
         recovered.clone(),
         None,
         Some("Recovered song".to_string()),
-    ));
+    )];
     // The modal needs a frame to lay itself out.
     screen.draw(vec![]);
     let output = screen.draw(vec![]);
@@ -2656,13 +2732,13 @@ fn unsaved_work_from_a_crash_recovers_as_unsaved() {
 fn a_recovery_copy_can_be_discarded() {
     let mut screen = Screen::new();
     let before = screen.app.project.clone();
-    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+    screen.app.recovery.pending = vec![super::recovery::Recovered::new(
         Project::template(),
         None,
         None,
-    ));
+    )];
     screen.click("Discard it");
-    assert!(screen.app.recovery.pending.is_none());
+    assert!(screen.app.recovery.pending.is_empty());
     assert_eq!(screen.app.project, before);
 }
 

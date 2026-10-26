@@ -13,7 +13,7 @@ version = "0.2.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/naelolaiz/ferrous-lineup"
-rust-version = "1.88"
+rust-version = "1.95"
 
 [workspace.dependencies]
 lineup-core = { path = "crates/lineup-core" }

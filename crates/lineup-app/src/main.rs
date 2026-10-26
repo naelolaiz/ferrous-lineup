@@ -95,7 +95,8 @@ fn main() -> eframe::Result {
     // Inside a Flatpak sandbox the desktop entry is named after the app
     // id, so the window must use the same id for the dock and the icon to
     // find it. Native builds keep eframe's default (the app name), which
-    // is also the folder where the settings and the SoundFont live.
+    // is also the folder where the settings and the SoundFont live; the
+    // desktop entry's StartupWMClass names it, so docks match the window.
     if let Some(app_id) = std::env::var("FLATPAK_ID")
         .ok()
         .filter(|app_id| !app_id.is_empty())

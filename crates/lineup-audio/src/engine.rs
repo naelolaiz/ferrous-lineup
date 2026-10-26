@@ -1862,9 +1862,13 @@ fn queue_midi(
     let Some(out) = midi_out else {
         return;
     };
-    match out.push(message) {
-        Ok(()) => return,
-        Err(rtrb::PushError::Full(returned)) => message = returned,
+    // Messages already waiting go first: a note on sent past a waiting
+    // note off for the same key would be cut off by it.
+    if backlog.is_empty() {
+        match out.push(message) {
+            Ok(()) => return,
+            Err(rtrb::PushError::Full(returned)) => message = returned,
+        }
     }
     if backlog.len() < MIDI_BACKLOG {
         backlog.push_back(message);
@@ -3116,6 +3120,31 @@ mod tests {
         h.audio.flush_midi_backlog();
         assert!(h.audio.midi_backlog.is_empty());
         assert_eq!(consumer.pop().unwrap(), off);
+    }
+
+    #[test]
+    fn a_new_midi_message_does_not_pass_one_that_waits() {
+        let (producer, mut consumer) = rtrb::RingBuffer::new(1);
+        let mut out = Some(producer);
+        let mut backlog = VecDeque::new();
+        let on = |velocity| MidiMessage::NoteOn {
+            channel: 3,
+            pitch: Note::A4,
+            velocity,
+        };
+        let off = note_off(Note::A4);
+        queue_midi(&mut out, &mut backlog, on(DEFAULT_VELOCITY));
+        queue_midi(&mut out, &mut backlog, off);
+        assert_eq!(consumer.pop().unwrap(), on(DEFAULT_VELOCITY));
+
+        // The port took the first note, so there is room again, but the
+        // note off is still waiting: the key's next note on goes after it.
+        queue_midi(&mut out, &mut backlog, on(64));
+        assert_eq!(backlog, VecDeque::from([off, on(64)]));
+        assert!(
+            consumer.pop().is_err(),
+            "nothing went ahead of the note off"
+        );
     }
 
     #[test]
