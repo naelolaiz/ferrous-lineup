@@ -135,6 +135,7 @@
   - [Library tick boxes: presets like the song, and one helper to try them](step-9/library-filters.md)
   - [The chord sheet fills the window, with lines that fit the names](step-9/chord-sheet-layout.md)
   - [Inserting and deleting bars](step-9/insert-delete-bars.md)
+  - [The speed trainer: start slow, get a little faster each time](step-9/speed-trainer.md)
   - [The book online and as a PDF](step-9/book-online.md)
   - [Where the band ends up](step-9/conclusion.md)
   - [Exercises](step-9/exercises.md)
