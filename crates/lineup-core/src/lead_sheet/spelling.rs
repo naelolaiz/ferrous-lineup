@@ -24,6 +24,15 @@ impl Clef {
         }
     }
 
+    /// The note on the middle line: B4 in the treble clef, D3 in the
+    /// bass clef.
+    pub fn middle_line(self) -> Note {
+        match self {
+            Clef::Treble => Note::new(71),
+            Clef::Bass => Note::new(50),
+        }
+    }
+
     /// The clef that suits a tune whose middle note is `median`: the
     /// bass clef for tunes centred below G3, where the treble clef would
     /// need many leger lines.
@@ -316,6 +325,15 @@ mod tests {
         assert_eq!(written(a_minor, 68, None, None), "G#");
         let d_minor = key(PitchClass::D, ScaleKind::NaturalMinor);
         assert_eq!(written(d_minor, 61, None, None), "C#");
+    }
+
+    #[test]
+    fn the_middle_line_is_b4_or_d3() {
+        for (clef, letter) in [(Clef::Treble, Letter::B), (Clef::Bass, Letter::D)] {
+            let note = clef.middle_line();
+            let name = NoteName::with_letter(note.pitch_class(), letter);
+            assert_eq!(staff_step(note, name), clef.bottom_line() + 4);
+        }
     }
 
     #[test]

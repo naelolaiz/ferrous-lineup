@@ -350,10 +350,7 @@ mod tests {
         notes.iter().map(|note| note.pitch.midi()).collect()
     }
 
-    const C_MAJOR: Scale = Scale {
-        root: PitchClass::C,
-        kind: ScaleKind::Major,
-    };
+    const C_MAJOR: Scale = Scale::new(PitchClass::C, ScaleKind::Major);
 
     /// C major, then F major a bar later.
     fn two_chords() -> Vec<NoteEvent> {

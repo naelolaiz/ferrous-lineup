@@ -18,6 +18,7 @@ use super::glyphs::{self, Glyph, engraving};
 use super::rhythm::{Base, Value};
 use super::score::{BarScore, Content, Piece, Score};
 use super::spelling::Clef;
+use super::transpose::Transposition;
 use super::{BarBox, LeadSheet, Mark, Options, Page, Point, TextFont, TextWidth};
 use crate::chord_sheet::HarmonyName;
 use crate::meter::TimeSignature;
@@ -38,6 +39,8 @@ const CHORD_SIZE: f32 = 3.2 * SPACE;
 /// How tall the text font's capital letters are, as a part of its size.
 const CAP_HEIGHT: f32 = 0.727;
 const TITLE_SIZE: f32 = 20.0;
+/// The size of the words that say who reads a part: "B♭ instruments".
+const PART_SIZE: f32 = 12.0;
 const SMALL_SIZE: f32 = 9.0;
 const REHEARSAL_SIZE: f32 = 13.0;
 const TEMPO_SIZE: f32 = 11.0;
@@ -174,6 +177,22 @@ fn chord_runs(harmony: HarmonyName) -> Vec<Run> {
         name(&mut runs, bass);
     }
     runs
+}
+
+/// The words at the top left of a part for a transposing instrument,
+/// where parts name who reads them: "B♭ instruments". None at concert
+/// pitch.
+fn part_label(transposition: Transposition) -> Option<Vec<Run>> {
+    if transposition == Transposition::Concert {
+        return None;
+    }
+    let note = transposition.note();
+    let mut runs = vec![Run::Text(note.letter.as_char().to_string(), PART_SIZE)];
+    if note.accidental != 0 {
+        runs.push(Run::Accidental(note.accidental, PART_SIZE));
+    }
+    runs.push(Run::Text(" instruments".to_string(), PART_SIZE));
+    Some(runs)
 }
 
 /// The music font size of an accidental among letters of `size`.
@@ -1086,9 +1105,23 @@ pub fn lay_out(score: &Score, options: &Options, measure: &dyn TextWidth) -> Lea
     }
 
     // Lines on pages: as many as fit, spread out on every page but the
-    // last.
-    let title_room = if options.title.is_empty() {
+    // last. The first page starts with the title and, for a transposing
+    // instrument, who reads the part: on the title's line, left of it,
+    // or under it when the title leaves no room.
+    let title_width = measure.text_width(&options.title, TextFont::SemiBold, TITLE_SIZE);
+    let label = part_label(options.transposition);
+    let label_width: f32 = label
+        .iter()
+        .flatten()
+        .map(|run| run_width(run, measure))
+        .sum();
+    let label_below = label.is_some()
+        && !options.title.is_empty()
+        && MARGIN + label_width + sp(2.0) > (page_width - title_width) / 2.0;
+    let title_room = if options.title.is_empty() && label.is_none() {
         0.0
+    } else if label_below {
+        TITLE_SIZE + PART_SIZE + 24.0
     } else {
         TITLE_SIZE + 18.0
     };
@@ -1118,15 +1151,25 @@ pub fn lay_out(score: &Score, options: &Options, measure: &dyn TextWidth) -> Lea
     for (page_number, page) in pages.iter().enumerate() {
         let mut marks = Vec::new();
         let mut y = MARGIN;
-        if page_number == 0 && !options.title.is_empty() {
-            let title_width = measure.text_width(&options.title, TextFont::SemiBold, TITLE_SIZE);
-            marks.push(text(
-                options.title.clone(),
-                TextFont::SemiBold,
-                (page_width - title_width) / 2.0,
-                MARGIN + TITLE_SIZE * CAP_HEIGHT,
-                TITLE_SIZE,
-            ));
+        if page_number == 0 {
+            let baseline = MARGIN + TITLE_SIZE * CAP_HEIGHT;
+            if !options.title.is_empty() {
+                marks.push(text(
+                    options.title.clone(),
+                    TextFont::SemiBold,
+                    (page_width - title_width) / 2.0,
+                    baseline,
+                    TITLE_SIZE,
+                ));
+            }
+            if let Some(runs) = &label {
+                let y = if label_below {
+                    baseline + PART_SIZE + 6.0
+                } else {
+                    baseline
+                };
+                marks.extend(chord_marks(runs, MARGIN, y, measure));
+            }
             y += title_room;
         }
         if score.bars.is_empty() {
@@ -1396,6 +1439,7 @@ mod tests {
             melody: None,
             clef: None,
             paper: Paper::A4,
+            transposition: Transposition::Concert,
         }
     }
 
@@ -1424,7 +1468,7 @@ mod tests {
             melody: channel,
             ..options()
         };
-        let score = score::build(project, options.melody, options.clef);
+        let score = score::build(project, options.melody, options.clef, options.transposition);
         lay_out(&score, &options, &Even)
     }
 
@@ -1586,6 +1630,63 @@ mod tests {
         assert!(texts.contains(&"Chorus"));
         assert!(texts.contains(&"×3"));
         assert!(texts.contains(&"Test"));
+    }
+
+    #[test]
+    fn a_part_says_who_reads_it() {
+        let (project, channel) = song(4);
+        let part = |title: &str, transposition| {
+            let options = Options {
+                title: title.to_string(),
+                melody: Some(channel),
+                transposition,
+                ..options()
+            };
+            let score = score::build(
+                &project,
+                options.melody,
+                options.clef,
+                options.transposition,
+            );
+            lay_out(&score, &options, &Even)
+        };
+        let texts = |sheet: &LeadSheet| -> Vec<(String, f32)> {
+            sheet.pages[0]
+                .marks
+                .iter()
+                .filter_map(|mark| match mark {
+                    Mark::Text { text, at, .. } => Some((text.clone(), at.y)),
+                    _ => None,
+                })
+                .collect()
+        };
+        let has = |sheet: &LeadSheet, word: &str| texts(sheet).iter().any(|(text, _)| text == word);
+        // C Am7 Dm7 G7 at concert pitch, with no words but the title.
+        let concert = part("Test", Transposition::Concert);
+        assert!(!has(&concert, " instruments"));
+        assert!(has(&concert, "C") && has(&concert, "G"));
+        assert_eq!(glyph_count(&concert, glyphs::CHORD_FLAT), 0);
+        // For B-flat instruments, "B♭ instruments" at the top (the only
+        // flat: the chords are D Bm7 Em7 A7, a whole tone up).
+        let trumpet = part("Test", Transposition::BFlat);
+        assert!(has(&trumpet, "B") && has(&trumpet, " instruments"));
+        assert_eq!(glyph_count(&trumpet, glyphs::CHORD_FLAT), 1);
+        assert!(has(&trumpet, "D") && has(&trumpet, "E") && has(&trumpet, "A"));
+        assert!(!has(&trumpet, "C") && !has(&trumpet, "G"));
+        // The label sits on the title's line, or under a title too wide
+        // to leave it room.
+        let y_of = |sheet: &LeadSheet, word: &str| {
+            texts(sheet)
+                .into_iter()
+                .find(|(text, _)| text == word)
+                .map(|(_, y)| y)
+                .unwrap()
+        };
+        assert_eq!(y_of(&trumpet, " instruments"), y_of(&trumpet, "Test"));
+        let long = "A title long enough to fill the line from side to side";
+        let wide = part(long, Transposition::EFlat);
+        assert!(y_of(&wide, " instruments") > y_of(&wide, long));
+        assert!(has(&wide, "E"));
     }
 
     #[test]

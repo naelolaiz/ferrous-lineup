@@ -22,7 +22,7 @@ use std::cmp::Ordering;
 use std::sync::LazyLock;
 
 use eframe::egui;
-use lineup_core::harmony::{Scale, ScaleKind};
+use lineup_core::harmony::ScaleKind;
 use lineup_core::library::{Genre, MICROMODE_STYLES, ROW_STYLES, RowStyle, SONGS, STYLES};
 
 use super::LineupApp;
@@ -142,7 +142,7 @@ fn all_entries() -> Vec<Entry> {
         "The beat and chords Ferrous Lineup opens with".into(),
     )];
     for song in SONGS {
-        let scale = Scale::new(song.tonic, song.mode);
+        let scale = song.scale();
         let tonic = scale.spell(song.tonic);
         let mut key = format!("{tonic} {}", song.mode.name());
         // A song in D harmonic minor is in D minor too.
