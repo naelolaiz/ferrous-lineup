@@ -2620,6 +2620,25 @@ fn the_unsaved_mark_is_worked_out_again_after_an_edit_and_undo() {
 }
 
 #[test]
+fn changing_a_project_back_by_hand_clears_the_unsaved_mark() {
+    let mut screen = Screen::new();
+    let swing = screen.app.project.swing;
+    screen
+        .app
+        .edit("change swing", |project| project.swing = swing + 20);
+    assert!(screen.app.has_unsaved_changes());
+    // A frame ends the step, as after a click.
+    screen.draw(vec![]);
+    screen
+        .app
+        .edit("change swing", |project| project.swing = swing);
+    assert!(
+        !screen.app.has_unsaved_changes(),
+        "putting the swing back by hand is what was saved"
+    );
+}
+
+#[test]
 fn changes_in_one_drag_are_one_undo_step() {
     let mut screen = Screen::new();
     let before = screen.app.project.clone();

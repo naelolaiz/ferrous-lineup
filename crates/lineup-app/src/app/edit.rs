@@ -94,7 +94,11 @@ impl LineupApp {
             self.synced = self.project.clone();
             self.step_unsynced = false;
             self.last_sync = Instant::now();
-            self.file.project_edited();
+            // A change made in one go can put back what was saved, as a
+            // step clicked on and then off again does. This path compares
+            // the whole project anyway, so the star is worked out again;
+            // only the frames of a drag skip it.
+            self.file.project_reverted();
             self.recovery.project_changed();
             // `before` is moved into the history here, after its last use.
             self.history.record(label, before);
