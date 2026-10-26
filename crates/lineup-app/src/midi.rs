@@ -19,8 +19,8 @@
 
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
-use std::thread;
-use std::time::Duration;
+use std::thread::{self, JoinHandle};
+use std::time::{Duration, Instant};
 
 use eframe::egui;
 use lineup_audio::{LiveInput, MidiOutput};
@@ -36,6 +36,10 @@ const CLIENT_NAME: &str = "Ferrous Lineup";
 /// The queue has no way to wake a thread that waits on it, so the thread
 /// looks often: a thousand times a second costs almost nothing.
 const SEND_INTERVAL: Duration = Duration::from_millis(1);
+
+/// How long a new sending thread waits for the old one to stop, after the
+/// sound card was opened again.
+const SENDER_STOP_WAIT: Duration = Duration::from_millis(100);
 
 /// A key that went down or up, and where playback was at that moment.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -178,8 +182,8 @@ pub struct Midi {
     /// The output connection, shared with the sending thread.
     output: Arc<Mutex<Option<MidiOutputConnection>>>,
     live: Option<Arc<Mutex<LiveInput>>>,
-    /// Whether the sending thread is running.
-    sending: bool,
+    /// The sending thread, while audio runs.
+    sending: Option<JoinHandle<()>>,
     to_ui: mpsc::Sender<Played>,
     from_keyboard: mpsc::Receiver<Played>,
     ctx: egui::Context,
@@ -195,7 +199,7 @@ impl Midi {
         let output = Arc::new(Mutex::new(None));
         // Opening a client is the test: it fails when the system has no MIDI.
         let unavailable = MidiInput::new(CLIENT_NAME).err().map(|err| err.to_string());
-        let mut sending = false;
+        let mut sending = None;
         if unavailable.is_none()
             && let Some(messages) = messages
         {
@@ -222,7 +226,7 @@ impl Midi {
     /// Points MIDI at a new audio engine, after the sound card was
     /// reopened: keys go to its live input, and MIDI Out messages to its
     /// queue. The old sending thread stops when the old engine's queue is
-    /// dropped.
+    /// dropped, and stops the notes that engine left sounding as it goes.
     pub fn reconnect_audio(&mut self, live: Option<LiveInput>, messages: Option<MidiOutput>) {
         if let Some(live) = live {
             if let Some(shared) = self.live.as_ref() {
@@ -237,6 +241,15 @@ impl Midi {
             }
         }
         if let Some(messages) = messages {
+            // Wait for the old thread's All Notes Off, so that it cannot
+            // cut off the first notes of the new engine. The old engine is
+            // gone already, so this takes a millisecond or so.
+            if let Some(old) = self.sending.take() {
+                let start = Instant::now();
+                while !old.is_finished() && start.elapsed() < SENDER_STOP_WAIT {
+                    thread::sleep(SEND_INTERVAL);
+                }
+            }
             self.sending = start_sending(messages, Arc::clone(&self.output));
         }
     }
@@ -302,6 +315,8 @@ impl Midi {
     /// only runs while audio does, because the audio thread makes them.
     pub fn can_send(&self) -> bool {
         self.sending
+            .as_ref()
+            .is_some_and(|thread| !thread.is_finished())
     }
 
     /// The output port that is connected, if any.
@@ -384,7 +399,7 @@ impl Midi {
 fn start_sending(
     mut messages: MidiOutput,
     output: Arc<Mutex<Option<MidiOutputConnection>>>,
-) -> bool {
+) -> Option<JoinHandle<()>> {
     let sender = move || {
         while !messages.is_abandoned() {
             thread::sleep(SEND_INTERVAL);
@@ -397,12 +412,19 @@ fn start_sending(
                 }
             }
         }
+        // The engine is gone, as when the sound card is opened again, and
+        // with it the note offs of notes still sounding on the synth.
+        if let Some(connection) = lock(&output).as_mut() {
+            for channel in 0..16 {
+                let _ = connection.send(&all_notes_off(channel));
+            }
+        }
     };
     // If the thread cannot start, MIDI Out stays silent; nothing else breaks.
     thread::Builder::new()
         .name("midi-out".to_string())
         .spawn(sender)
-        .is_ok()
+        .ok()
 }
 
 #[cfg(test)]
