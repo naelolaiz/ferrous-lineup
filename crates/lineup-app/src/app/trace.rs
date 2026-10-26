@@ -149,6 +149,30 @@ impl LineupApp {
         });
     }
 
+    /// The sound card was opened again: the new audio thread is given a
+    /// way to hand over its notes, and the trace goes on in the same file.
+    /// A playback the old audio thread was in the middle of ends here.
+    pub(super) fn resume_trace(&mut self) {
+        self.check_trace();
+        let sample_rate = self.sample_rate();
+        let Some(live) = &mut self.trace else {
+            return;
+        };
+        let rest = std::mem::replace(&mut live.trace, Trace::new(sample_rate));
+        let written = if rest.events.is_empty() {
+            Ok(())
+        } else {
+            live.write(&rest)
+        };
+        live.playing.clear();
+        let (tracer, reader) = trace_queue();
+        live.reader = reader;
+        if let Err(err) = written {
+            self.message = Some(format!("Could not write {}: {err}", live.path.display()));
+        }
+        self.send(Command::SetTrace(Some(Box::new(tracer))));
+    }
+
     /// Once a frame: writes down what the audio thread traced.
     pub(super) fn check_trace(&mut self) {
         let Some(live) = &mut self.trace else {

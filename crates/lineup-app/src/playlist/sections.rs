@@ -421,20 +421,28 @@ fn key_menu(
     ui.horizontal_wrapped(|ui| {
         ui.set_max_width(260.0);
         for root in PitchClass::ALL {
-            let key = Scale::new(root, kind);
-            if ui
-                .selectable_label(here == key, key.spell(root).to_string())
-                .clicked()
-            {
-                actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
-                ui.close();
+            // A key written either way is offered both ways: F# and Gb.
+            let usual = Scale::new(root, kind);
+            let mut keys: Vec<Scale> = [Some(usual), usual.other_spelling()]
+                .into_iter()
+                .flatten()
+                .collect();
+            keys.sort_by_key(|key| std::cmp::Reverse(key.spell(root).accidental));
+            for key in keys {
+                if ui
+                    .selectable_label(here == key, key.spell(root).to_string())
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
+                    ui.close();
+                }
             }
         }
     });
     ui.horizontal_wrapped(|ui| {
         ui.set_max_width(260.0);
         for kind in ScaleKind::ALL {
-            let key = Scale::new(here.root, kind);
+            let key = Scale::written(here.spell(here.root), kind);
             if ui.selectable_label(here == key, kind.name()).clicked() {
                 actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
                 ui.close();
