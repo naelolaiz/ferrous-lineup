@@ -58,7 +58,7 @@ mod practice;
 pub use form::FormAction;
 use layout::LayoutView;
 use notation::{NotationView, Shown};
-pub use practice::{PracticeAction, PracticeView, SPEEDS};
+pub use practice::{PracticeAction, PracticeView, SPEEDS, Trainer, trainer_controls};
 
 /// The id of the window.
 pub(crate) fn window_id() -> egui::Id {
@@ -2328,6 +2328,8 @@ mod tests {
                                 count_in: false,
                                 metronome: false,
                                 speed: 100,
+                                training: false,
+                                trainer: Trainer::default(),
                             },
                             library,
                         ),
@@ -2442,6 +2444,8 @@ mod tests {
                                 count_in: false,
                                 metronome: false,
                                 speed: 100,
+                                training: false,
+                                trainer: Trainer::default(),
                             },
                             &mut library,
                         ),
@@ -2492,6 +2496,8 @@ mod tests {
                                 count_in: false,
                                 metronome: false,
                                 speed: 100,
+                                training: false,
+                                trainer: Trainer::default(),
                             },
                             &mut library,
                         ),
