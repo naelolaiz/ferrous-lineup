@@ -175,7 +175,10 @@ pub fn is_project(path: &Path) -> bool {
 ///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
-/// nothing they could play.
+/// nothing they could play. In the same way, a key can be written the
+/// other way round, Gb major rather than F# major (see
+/// [`Scale::other_spelling`]): older versions name it the usual way and
+/// play the same notes.
 pub const FORMAT_VERSION: u32 = 27;
 
 /// The oldest format that can hold `project`.
@@ -625,7 +628,7 @@ impl TryFrom<ProjectFile> for Project {
                             "pattern \"{}\" has a note that does not fit, or a duplicate, \
                              at step {} on channel {}",
                             pattern.name,
-                            note.start + 1,
+                            note.start.saturating_add(1),
                             channel + 1
                         ));
                     }
@@ -645,8 +648,8 @@ impl TryFrom<ProjectFile> for Project {
                 return invalid(format!(
                     "clip {} (pattern {}, track {}) does not fit in the playlist",
                     index + 1,
-                    clip.pattern + 1,
-                    clip.track + 1
+                    clip.pattern.saturating_add(1),
+                    clip.track.saturating_add(1)
                 ));
             }
         }
@@ -666,7 +669,7 @@ impl TryFrom<ProjectFile> for Project {
                 return invalid(format!(
                     "its change to {} at step {} is too late, too long or on the first step",
                     marker.time,
-                    marker.start + 1
+                    marker.start.saturating_add(1)
                 ));
             }
         }
@@ -675,7 +678,7 @@ impl TryFrom<ProjectFile> for Project {
                 return invalid(format!(
                     "its change to {} BPM at step {} is too late or on the first step",
                     marker.tempo.bpm(),
-                    marker.start + 1
+                    marker.start.saturating_add(1)
                 ));
             }
         }
@@ -684,16 +687,16 @@ impl TryFrom<ProjectFile> for Project {
                 return invalid(format!(
                     "its change to {} at step {} is too late or on the first step",
                     marker.scale.name(),
-                    marker.start + 1
+                    marker.start.saturating_add(1)
                 ));
             }
         }
         for marker in file.chord_markers {
-            if !project.set_chords(marker.start, marker.start + 1, &[marker]) {
+            if !project.set_chords(marker.start, marker.start.saturating_add(1), &[marker]) {
                 return invalid(format!(
                     "its chord {} at step {} is too late",
                     marker.harmony,
-                    marker.start + 1
+                    marker.start.saturating_add(1)
                 ));
             }
         }

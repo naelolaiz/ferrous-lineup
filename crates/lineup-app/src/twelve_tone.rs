@@ -71,7 +71,13 @@ fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
         return Scale::set(root, group.transpose(up));
     }
     if scale.kind.is_tonal() && scale.kind != ScaleKind::Chromatic {
-        return Scale::set(root, scale.pitch_set().transpose(up));
+        let set = Scale::set(root, scale.pitch_set().transpose(up));
+        // Gb major as a set still writes its notes Gb Ab Bb Cb...
+        return if up == 0 {
+            set.with_spelling(scale.spelling())
+        } else {
+            set
+        };
     }
     let set = remembered_set(ctx);
     let start = set.normal_form().first().copied().unwrap_or(root);
@@ -130,17 +136,57 @@ impl Front {
     }
 }
 
+/// The root half of a key menu: the tonics a key of `scale`'s kind can
+/// have, each written as the key writes it. A key that can be written
+/// either way is listed both ways, F# and Gb (see
+/// [`Scale::other_spelling`]), so all fifteen major keys of the circle
+/// of fifths are there. A row, a set or the chromatic scale has no key
+/// signature, and lists the twelve notes by both their names. Returns
+/// the tonic chosen.
+pub fn root_menu(ui: &mut Ui, salt: &str, scale: Scale, width: f32, text: RichText) -> NoteName {
+    let mut tonic = scale.spell(scale.root);
+    let keyed = scale.kind.is_tonal() && scale.kind != ScaleKind::Chromatic;
+    egui::ComboBox::from_id_salt(salt)
+        .width(width)
+        .selected_text(text)
+        .show_ui(ui, |ui| {
+            for pitch_class in PitchClass::ALL {
+                if !keyed {
+                    let name = scale.spell(pitch_class);
+                    let label = crate::piano_roll::both_names(pitch_class);
+                    ui.selectable_value(&mut tonic, name, label);
+                    continue;
+                }
+                let key = Scale::new(pitch_class, scale.kind);
+                let mut names: Vec<NoteName> = [Some(key), key.other_spelling()]
+                    .into_iter()
+                    .flatten()
+                    .map(|key| key.spell(key.root))
+                    .collect();
+                // Sharps first: C# and then Db, B and then Cb.
+                names.sort_by_key(|name| std::cmp::Reverse(name.accidental));
+                for name in names {
+                    ui.selectable_value(&mut tonic, name, name.to_string());
+                }
+            }
+        })
+        .response
+        .on_hover_text(crate::piano_roll::KEY_HELP);
+    tonic
+}
+
 /// The kind half of a key menu: the scales, then a twelve-tone row and a
-/// pitch-class set. Returns the scale picked, if it changed; `root` is
-/// the root chosen in the menu beside it.
+/// pitch-class set. Returns the scale picked, if it changed; `tonic` is
+/// the tonic chosen in the menu beside it (see [`root_menu`]).
 pub fn kind_menu(
     ui: &mut Ui,
     salt: &str,
     scale: Scale,
-    root: PitchClass,
+    tonic: NoteName,
     width: f32,
 ) -> Option<Scale> {
     let ctx = ui.ctx().clone();
+    let root = tonic.pitch_class();
     let mut picked = None;
     let response = egui::ComboBox::from_id_salt(salt)
         .width(width)
@@ -151,7 +197,7 @@ pub fn kind_menu(
                     .selectable_label(scale.kind == option, option.name())
                     .clicked()
                 {
-                    picked = Some(Scale::new(root, option));
+                    picked = Some(Scale::written(tonic, option));
                 }
             }
             ui.separator();
@@ -186,8 +232,8 @@ pub fn kind_menu(
         .response;
     crate::theme::hint(response, crate::piano_roll::KEY_HELP);
     // A new root keeps the kind, and with it the row or the set.
-    if picked.is_none() && root != scale.root {
-        picked = Some(Scale::new(root, scale.kind));
+    if picked.is_none() && tonic != scale.spell(scale.root) {
+        picked = Some(Scale::written(tonic, scale.kind));
     }
     picked.filter(|new| *new != scale)
 }

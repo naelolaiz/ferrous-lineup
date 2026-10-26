@@ -36,7 +36,6 @@ use lineup_core::harmony::{
 };
 use lineup_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
 
-use crate::piano_roll::{KEY_HELP, both_names};
 use crate::time_picker::{describe_time, time_picker};
 
 /// Something the user did in the harmony keys bar.
@@ -553,18 +552,10 @@ impl HarmonyKeys {
         let scale = project.scale;
         ui.horizontal(|ui| {
             ui.strong("Key");
-            let mut root = scale.root;
-            egui::ComboBox::from_id_salt("harmony-root")
-                .width(56.0)
-                .selected_text(egui::RichText::new(scale.spell(root).to_string()).strong())
-                .show_ui(ui, |ui| {
-                    for pitch_class in PitchClass::ALL {
-                        ui.selectable_value(&mut root, pitch_class, both_names(pitch_class));
-                    }
-                })
-                .response
-                .on_hover_text(KEY_HELP);
-            if let Some(new) = crate::twelve_tone::kind_menu(ui, "harmony-kind", scale, root, 110.0)
+            let name = egui::RichText::new(scale.spell(scale.root).to_string()).strong();
+            let tonic = crate::twelve_tone::root_menu(ui, "harmony-root", scale, 56.0, name);
+            if let Some(new) =
+                crate::twelve_tone::kind_menu(ui, "harmony-kind", scale, tonic, 110.0)
             {
                 actions.push(HarmonyAction::SetScale(new));
             }

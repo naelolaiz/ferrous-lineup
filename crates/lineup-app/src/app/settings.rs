@@ -400,6 +400,26 @@ impl LineupApp {
                         .small()
                         .color(theme::TEXT_DIM),
                 );
+                ui.separator();
+                let mut training = practice.training;
+                if ui.checkbox(&mut training, "Speed trainer").changed() {
+                    self.set_training(training);
+                }
+                ui.horizontal_wrapped(|ui| {
+                    if let Some(trainer) =
+                        crate::chord_sheet::trainer_controls(ui, practice.trainer)
+                    {
+                        self.set_trainer(trainer);
+                    }
+                });
+                ui.label(
+                    RichText::new(
+                        "Each time the loop comes round, the band plays a little faster, up \
+                         to the target. Stop starts again from the first speed.",
+                    )
+                    .small()
+                    .color(theme::TEXT_DIM),
+                );
             },
         );
         card(

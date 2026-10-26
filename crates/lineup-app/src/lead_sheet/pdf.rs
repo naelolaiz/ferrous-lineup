@@ -296,6 +296,7 @@ mod tests {
             melody: default_melody_channel(&project),
             clef: None,
             paper: Paper::Letter,
+            transposition: Default::default(),
         };
         let sheet = lead_sheet(&project, &options, &fonts);
         assert!(sheet.pages.len() >= 2);
