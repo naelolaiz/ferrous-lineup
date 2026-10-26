@@ -2226,7 +2226,8 @@ fn marked<'a>(functions: &'a Functions, shown: &ChordMarker) -> Option<&'a Funct
 
 /// The colour of the numeral under a chord the sheet marks: the pivot
 /// of a key change in the colour of the key change, a borrowed chord in
-/// blue, a secondary chord in yellow, the Neapolitan in pink.
+/// blue, a secondary chord in yellow, the Neapolitan in pink, and a chord
+/// in a key that came before its marker in the colour of the key change.
 fn tint(function: &Function) -> Color32 {
     if function.pivot.is_some() {
         return theme::ACCENT;
@@ -2235,6 +2236,7 @@ fn tint(function: &Function) -> Color32 {
         Role::Borrowed { .. } => BORROWED,
         Role::SecondaryDominant { .. } | Role::SecondaryLeadingTone { .. } => SECONDARY,
         Role::Neapolitan => NEAPOLITAN,
+        Role::Plain if function.early => theme::ACCENT,
         Role::Plain => theme::TEXT_DIM,
     }
 }
@@ -2873,6 +2875,8 @@ mod tests {
         assert_eq!(colour("V7/V"), Some(SECONDARY));
         assert_eq!(colour("bVI · borrowed"), Some(BORROWED));
         assert_eq!(colour("vi = ii · pivot"), Some(theme::ACCENT));
+        // The D7 after the pivot is G major's, before the key change.
+        assert_eq!(colour("V7 · in G major"), Some(theme::ACCENT));
         assert_eq!(colour("V7"), Some(theme::TEXT_DIM));
     }
 

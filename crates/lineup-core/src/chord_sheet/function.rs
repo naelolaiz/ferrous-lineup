@@ -66,6 +66,10 @@ pub struct Function {
     pub next: Option<ChordSymbol>,
     /// Whether it is the last chord of the sheet.
     pub last: bool,
+    /// Whether the new key of the key change after it has already come:
+    /// it stands between the first chord of that key alone and the key
+    /// marker, and is read in the new key.
+    pub early: bool,
     /// The key change it is the pivot chord of, if it is one.
     pub pivot: Option<Modulation>,
 }
@@ -127,6 +131,7 @@ impl Functions {
                 role: role(key, symbol, next),
                 next,
                 last,
+                early: false,
                 pivot: None,
             });
         }
@@ -141,6 +146,17 @@ impl Functions {
                 && let Some(chord) = chords.iter_mut().find(|chord| chord.start == step)
             {
                 chord.pivot = Some(*change);
+            }
+            // Where the new key came before its marker, the chords from
+            // its first chord on are the new key's.
+            if let Some((arrival, _)) = change.arrival {
+                for chord in &mut chords {
+                    if (arrival..change.start).contains(&chord.start) {
+                        chord.key = change.to;
+                        chord.role = role(change.to, chord.symbol, chord.next);
+                        chord.early = true;
+                    }
+                }
             }
         }
         Functions {
@@ -351,20 +367,22 @@ impl Function {
 
     /// The word the chord sheet writes after the numeral, for a chord
     /// from outside the key: "borrowed", "pivot".
-    pub fn tag(&self) -> Option<&'static str> {
+    pub fn tag(&self) -> Option<String> {
         if self.pivot.is_some() {
-            return Some("pivot");
+            return Some("pivot".to_string());
         }
         match self.role {
-            Role::Borrowed { .. } => Some("borrowed"),
+            Role::Borrowed { .. } => Some("borrowed".to_string()),
+            _ if self.early => Some(format!("in {}", self.key.name())),
             _ => None,
         }
     }
 
-    /// Whether it is anything but a plain chord: borrowed, secondary,
-    /// Neapolitan or a pivot.
+    /// Whether it is anything but a plain chord of the key on its step:
+    /// borrowed, secondary, Neapolitan, a pivot, or read in a key that
+    /// has come before its marker.
     pub fn is_marked(&self) -> bool {
-        self.role != Role::Plain || self.pivot.is_some()
+        self.role != Role::Plain || self.pivot.is_some() || self.early
     }
 
     /// The numeral of the chord a secondary chord leads to, in its key:
@@ -503,6 +521,15 @@ impl Function {
                 text.push(' ');
             }
             text.push_str(&pivot_text(&change));
+        }
+        if self.early {
+            if !text.is_empty() {
+                text.push(' ');
+            }
+            text.push_str(&format!(
+                "{key_name} has already come here, before the key change is marked: after the \
+                 pivot chord the music is read in {key_name}."
+            ));
         }
         (!text.is_empty()).then_some(text)
     }
@@ -653,7 +680,7 @@ mod tests {
                 from: minor(PitchClass::C)
             }
         );
-        assert_eq!(ab.tag(), Some("borrowed"));
+        assert_eq!(ab.tag().as_deref(), Some("borrowed"));
         let about = ab.explain().unwrap();
         assert!(about.contains("C minor"), "{about}");
         assert!(about.contains("Its Ab and Eb come from C minor"), "{about}");
@@ -811,7 +838,14 @@ mod tests {
             let described = am.describe();
             assert!(described.starts_with("Am: A minor, "), "{described}");
             assert!(described.contains(". The pivot chord"), "{described}");
-            assert_eq!(am.tag(), Some("pivot"));
+            assert_eq!(am.tag().as_deref(), Some("pivot"));
+            // From the D7 on the music is in G major, wherever the key
+            // change is marked.
+            let d7 = &sheet.chords[2];
+            assert_eq!(d7.numeral().as_deref(), Some("V7"));
+            assert_eq!(d7.key, g);
+            assert_eq!(d7.early, marker == 3);
+            assert_eq!(d7.is_marked(), marker == 3);
             let about = am.explain().unwrap();
             assert!(
                 about.contains("Am is vi in C major and ii in G major"),

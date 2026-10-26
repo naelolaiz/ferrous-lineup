@@ -16,6 +16,7 @@ use eframe::egui::{
 use lineup_core::band::solo::{NoteRole, Over};
 use lineup_core::harmony::keys::{self, ChordSize};
 use lineup_core::harmony::voice_leading::{self, Rules, Slip, VoiceLeading};
+use lineup_core::harmony::voice_motion::{self, Change};
 use lineup_core::harmony::{Harmony, HintLevel, analyze, next_chords_over};
 use lineup_core::tools::{self, ArpeggioOrder};
 use lineup_core::{
@@ -164,6 +165,17 @@ const SLIP: Color32 = Color32::from_rgb(236, 116, 220);
 const LANE_SLIP: Color32 = Color32::from_rgb(112, 52, 108);
 /// A form of the twelve-tone row, in the chord lane.
 const LANE_ROW_FORM: Color32 = Color32::from_rgb(46, 82, 98);
+/// The lines that join the notes of each part, with the voice-leading
+/// check on: one colour for each part, from the top down, over again
+/// after the last.
+const PART_LINES: [Color32; 6] = [
+    Color32::from_rgb(110, 196, 236),
+    Color32::from_rgb(240, 200, 96),
+    Color32::from_rgb(126, 214, 140),
+    Color32::from_rgb(244, 150, 112),
+    Color32::from_rgb(172, 150, 240),
+    Color32::from_rgb(220, 220, 220),
+];
 
 /// What "Voice leading" checks, for its tooltips.
 const VOICE_LEADING_HELP: &str = "Checks the parts as classical harmony teaches four-part \
@@ -173,6 +185,14 @@ const VOICE_LEADING_HELP: &str = "Checks the parts as classical harmony teaches 
     rules of the style of Bach's chorales and of harmony exercises, not of all music: jazz \
     and pop move in parallel on purpose. Where the key is a twelve-tone row, it checks the \
     rules of twelve-tone writing instead.";
+
+/// What the line of moves under the chord names says, for its tooltip.
+const MOVES_HELP: &str = "A step is a second, a skip a third, a leap a fourth or more. \
+    Parallel motion keeps the interval between two parts, similar motion goes the same way \
+    by another, contrary motion goes opposite ways and oblique motion holds one part while \
+    the other moves. Classical part writing moves the inner parts by step where it can, and \
+    keeps the top part and the bass in contrary or oblique motion. The coloured lines over \
+    the notes join the notes of each part.";
 
 /// What "Voice leading" checks where the key is a twelve-tone row.
 const TWELVE_TONE_HELP: &str = "Checks the rules of twelve-tone writing, as Schoenberg and his \
@@ -1091,7 +1111,40 @@ impl PianoRoll {
             .or(drawing.playhead)
             .map(|step| check.slips_at(step).collect())
             .unwrap_or_default();
-        if here.is_empty() {
+        // Where nothing is found, how each part moves at the change
+        // pointed at (or the last one before it).
+        let changes = part_moves(check);
+        let change = self
+            .hovered_step
+            .or(drawing.playhead)
+            .and_then(|step| voice_motion::change_at(&changes, step, usize::MAX));
+        if here.is_empty()
+            && let Some(change) = change
+        {
+            // On one track, the parts are told apart by their place.
+            let one_track = check
+                .voices
+                .windows(2)
+                .all(|pair| pair[0].channel == pair[1].channel);
+            let moves = match one_track {
+                true => {
+                    let track = drawing
+                        .project
+                        .channels()
+                        .get(check.voices[0].channel)
+                        .map_or("Track", |channel| channel.name.as_str());
+                    let place = |voice: usize| part_place(&check.voices[voice]);
+                    format!("{track}: {}", change.summary(drawing.scale, place))
+                }
+                false => change.summary(drawing.scale, name),
+            };
+            ui.add(egui::Label::new(egui::RichText::new(moves).color(theme::TEXT_DIM)).truncate())
+                .on_hover_text(format!(
+                    "How each part moves at step {}, highest first:\n\n{}\n\n{MOVES_HELP}",
+                    change.step + 1,
+                    change.describe(drawing.scale, name)
+                ));
+        } else if here.is_empty() {
             let help = match check.rules {
                 Rules::TwelveTone => TWELVE_TONE_HELP,
                 _ => VOICE_LEADING_HELP,
@@ -2269,6 +2322,7 @@ impl PianoRoll {
         }
         self.paint_notes(&painter, grid, notes, scale, roles);
         if let Some(check) = voices {
+            paint_parts(&painter, grid, check, self.hovered_step.or(playhead));
             paint_slips(&painter, grid, check, self.hovered_step.or(playhead));
         }
 
@@ -3002,6 +3056,64 @@ fn voice_name(project: &Project, check: &VoiceLeading, voice: usize) -> String {
         .get(part.channel)
         .map_or("Track", |channel| channel.name.as_str());
     part.name(track)
+}
+
+/// Which of its track's parts `voice` is, in a word or two: "top",
+/// "2nd", "lowest", or nothing for a track's only part.
+fn part_place(voice: &voice_leading::Voice) -> String {
+    match (voice.rank, voice.of) {
+        (_, 0 | 1) => String::new(),
+        (0, _) => "top".to_string(),
+        (rank, of) if rank + 1 == of => "lowest".to_string(),
+        (1, _) => "2nd".to_string(),
+        (2, _) => "3rd".to_string(),
+        (rank, _) => format!("{}th", rank + 1),
+    }
+}
+
+/// How each part of a voice-leading check moves at every change, the
+/// part that doubles another in octaves left out.
+fn part_moves(check: &VoiceLeading) -> Vec<Change> {
+    let mut changes = voice_motion::changes(&check.voices);
+    for change in &mut changes {
+        change.moves.retain(|part| {
+            !check
+                .doublings
+                .iter()
+                .any(|&(_, doubled)| doubled == part.voice)
+        });
+    }
+    changes.retain(|change| !change.moves.is_empty());
+    changes
+}
+
+/// The parts of a voice-leading check, over the notes: a line from each
+/// note of a part to the next one it moves to, in the part's colour, so
+/// the eye can follow each part from chord to chord as on a score. The
+/// moves at the change pointed at (or the last one before `step`) are
+/// drawn bolder. A move the check finds wrong is drawn over it.
+fn paint_parts(painter: &Painter, grid: Grid, check: &VoiceLeading, step: Option<usize>) {
+    let changes = part_moves(check);
+    let pointed = step.and_then(|step| voice_motion::change_at(&changes, step, usize::MAX));
+    for change in &changes {
+        let bold = pointed.is_some_and(|pointed| pointed.step == change.step);
+        for part in &change.moves {
+            if part.size() == voice_motion::Size::Held || part.to.start >= grid.length {
+                continue;
+            }
+            let color = PART_LINES[part.voice % PART_LINES.len()];
+            let stroke = match bold {
+                true => Stroke::new(2.5, color),
+                false => Stroke::new(1.25, color.gamma_multiply(0.6)),
+            };
+            let (from, to) = (grid.note_rect(&part.from), grid.note_rect(&part.to));
+            // From near the end of one note to near the start of the
+            // next, as the check draws a move it finds wrong.
+            let start = pos2((from.right() - 6.0).max(from.center().x), from.center().y);
+            let end = pos2((to.left() + 6.0).min(to.center().x), to.center().y);
+            painter.line_segment([start, end], stroke);
+        }
+    }
 }
 
 /// What the voice-leading check found, over the notes: a line along
