@@ -109,6 +109,11 @@ impl KeyMap {
 /// major march of a song in A minor stays major when the song goes to
 /// A Dorian). Where the song's notes stay put, as from a key to a
 /// twelve-tone row or a set, its key changes stay put too.
+///
+/// A key that moves takes the usual name of the key it lands on (see
+/// [`Scale::spelling`]). One that stays where it is keeps its name, so
+/// writing the song's key the other way round, as Gb major rather than
+/// F# major, leaves the key changes as they were written.
 pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     let from = crate::tools::from_key(from, to);
     if !from.kind.notes_follow(to.kind) {
@@ -121,6 +126,9 @@ pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     } else {
         key.kind
     };
+    if root == key.root && kind == key.kind {
+        return key;
+    }
     Scale::new(root, kind)
 }
 

@@ -2466,6 +2466,41 @@ mod tests {
     }
 
     #[test]
+    fn writing_the_key_the_other_way_round_moves_no_note() {
+        use crate::{PitchClass, ScaleKind, Spelling};
+        let mut project = Project::demo();
+        let f_sharp = Scale::new(PitchClass::FSharp, ScaleKind::Major);
+        project.change_key(f_sharp);
+        let sheet: Vec<ChordMarker> = ["F#", "D#m7", "B", "C#7"]
+            .into_iter()
+            .enumerate()
+            .map(|(bar, name)| ChordMarker::new(16 * bar, HarmonyName::parse(name).unwrap()))
+            .collect();
+        assert!(project.set_chords(0, 64, &sheet));
+        let names = |project: &Project| -> Vec<String> {
+            project
+                .playlist()
+                .chord_markers()
+                .iter()
+                .map(|marker| marker.harmony.to_string())
+                .collect()
+        };
+        let sharps = names(&project);
+        assert_eq!(sharps, ["F#", "D#m7", "B", "C#7"]);
+        let before = project.clone();
+        // Gb major: the same keys of the piano.
+        let g_flat = f_sharp.with_spelling(Spelling::Flats);
+        project.change_key(g_flat);
+        assert_eq!(project.scale.name(), "Gb major");
+        assert_eq!(project.patterns(), before.patterns());
+        // The chord sheet is written in flats now: F# is Gb, B is Cb.
+        assert_eq!(names(&project), ["Gb", "Ebm7", "Cb", "Db7"]);
+        // And back.
+        project.change_key(f_sharp);
+        assert_eq!(names(&project), sharps);
+    }
+
+    #[test]
     fn a_bass_line_under_the_chords_gives_their_inversion() {
         let mut project = Project::demo();
         let spelling = project.scale.spelling();
