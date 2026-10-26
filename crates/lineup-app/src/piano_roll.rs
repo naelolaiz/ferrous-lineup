@@ -1348,18 +1348,9 @@ impl PianoRoll {
             // does not fit, rather than being squeezed into a column.
             ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
             ui.label("Key");
-            let mut root = song.root;
-            egui::ComboBox::from_id_salt("scale-root")
-                .width(64.0)
-                .selected_text(song.spell(root).to_string())
-                .show_ui(ui, |ui| {
-                    for pitch_class in PitchClass::ALL {
-                        ui.selectable_value(&mut root, pitch_class, both_names(pitch_class));
-                    }
-                })
-                .response
-                .on_hover_text(KEY_HELP);
-            if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", song, root, 120.0) {
+            let name = egui::RichText::new(song.spell(song.root).to_string());
+            let tonic = twelve_tone::root_menu(ui, "scale-root", song, 64.0, name);
+            if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", song, tonic, 120.0) {
                 // Picking a row or a set opens the window to change it.
                 match new.kind {
                     ScaleKind::Row(_) if song.kind.is_tonal() => self.row_window.open = true,
