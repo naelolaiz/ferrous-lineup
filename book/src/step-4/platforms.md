@@ -216,8 +216,8 @@ Each job ends by uploading its program. On the page of a CI run, under
 `ferrous-lineup-macos` and `ferrous-lineup-windows`. GitHub puts each in
 a zip file, and zip files made this way forget that the program was
 executable, so on Linux and macOS run `chmod +x ferrous-lineup` after
-unzipping. (The book has its own workflow on the book branch, and its
-PDF is an artifact of that workflow.)
+unzipping. (The book has its own workflow, `book.yml`, and its PDF is an
+artifact of that workflow.)
 
 ## Checking Windows code from Linux
 

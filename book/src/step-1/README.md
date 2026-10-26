@@ -48,7 +48,7 @@ crates/
   lineup-audio/src/engine.rs    AudioEngine: sound card, audio thread, commands
   lineup-app/src/main.rs        program entry point, opens the window
   lineup-app/src/app.rs         LineupApp: everything drawn in the window
-docs/                         this book (now on the book branch)
+docs/                         this book (today in book/)
 .github/workflows/ci.yml      automatic build and test on GitHub
 ```
 
