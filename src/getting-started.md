@@ -16,10 +16,11 @@ cargo --version
 rustc --version
 ```
 
-Ferrous Lineup needs Rust 1.88 or newer. It uses the 2024 edition of the
-language (more on editions in [Cargo, workspaces and crates](step-1/workspace.md))
-and `if let` chains, which arrived in 1.88. If your Rust is older,
-`rustup update` fixes it.
+Ferrous Lineup needs Rust 1.95 or newer. It uses the 2024 edition of the
+language (more on editions in [Cargo, workspaces and crates](step-1/workspace.md)),
+`if let` chains, which arrived in 1.88, and file locks, which arrived in
+1.89; egui and eframe, which draw the window, need 1.95. If your Rust is
+older, `rustup update` fixes it.
 
 ## 2. Install the system's build tools
 

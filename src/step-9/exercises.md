@@ -15,9 +15,9 @@ one finished; CI runs both.
 ## 1. A recovery copy that is damaged (lineup-app, easy)
 
 **Goal.** Make crash recovery trustworthy when the copy on disk is not.
-`app/recovery.rs` already writes `recovery.lineup` and `recovery.info`
-to the app's data folder, offers the copy at startup, and removes a
-copy that will not load. The existing test
+`app/recovery.rs` already writes a `.lineup` and a `.info` file for each
+run to the `recovery` folder in the app's data folder, offers the copy
+at startup, and removes a copy that will not load. The existing test
 `a_recovery_copy_comes_back_with_its_file` covers the happy path. Add
 the unhappy ones.
 
@@ -29,22 +29,23 @@ the unhappy ones.
    moment, and force-quit the app. Do not use **File > Quit**. Start it
    again and choose **Recover it**. Close the recovered song without
    saving it.
-2. Read `load`, `write` and `remove_files`, and the existing test at the
+2. Read `Files`, `load` and `write`, and the existing tests at the
    bottom of the file.
-3. Add a test that writes rubbish into `recovery.lineup`, puts a valid
-   `recovery.info` beside it, calls `load`, and checks that it returns
-   `None` **and** that both files are gone.
+3. Add a test that takes `Files::of_run(&folder, "test")`, writes
+   rubbish into its `project` file, puts a valid `info` file beside it,
+   calls `load(files, None)`, and checks that it returns `None` **and**
+   that both files are gone.
 4. Add a second test that creates the folder, writes a valid project
-   there with `file::save`, but leaves out `recovery.info`. Check that
-   `load` still returns the project, with no path and no name, so the
-   dialog can call it "Untitled".
+   to `files.project` with `file::save`, but leaves out the info file.
+   Check that `load` still returns the project, with no path and no
+   name, so the dialog can call it "Untitled".
 5. Clean up the temporary folder at the end of each test, as the
    existing one does.
 
 **Run.** `cargo test -p lineup-app recovery`.
 
 **Done when.** Both tests pass, and the first fails if the
-`remove_files(folder)` call in `load`'s error branch is deleted.
+`files.remove()` call in `load`'s error branch is deleted.
 
 ## 2. Trace a bar inserted and deleted (app, easy)
 
