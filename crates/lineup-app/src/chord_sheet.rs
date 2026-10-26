@@ -37,6 +37,7 @@ use eframe::egui::{
 };
 use lineup_core::band::solo::Soloist;
 use lineup_core::band::{Ending, Variation};
+use lineup_core::chord_sheet::function::{Function, Functions, Role};
 use lineup_core::chord_sheet::{Push, Stop, read_typed_bar, text, write_bar};
 use lineup_core::general_midi;
 use lineup_core::library::{Genre, Style};
@@ -92,6 +93,12 @@ const GROUP_TEXT: Color32 = Color32::from_rgb(196, 176, 246);
 const GOING_ON: Color32 = Color32::from_rgb(92, 104, 112);
 /// The harmony of the band's ending, which is not written on the sheet.
 const ENDING: Color32 = Color32::from_rgb(150, 162, 170);
+/// The numeral under a chord borrowed from the parallel key.
+const BORROWED: Color32 = Color32::from_rgb(120, 172, 238);
+/// The numeral under a secondary dominant or leading-tone chord.
+const SECONDARY: Color32 = Color32::from_rgb(232, 202, 96);
+/// The numeral under a Neapolitan chord.
+const NEAPOLITAN: Color32 = Color32::from_rgb(230, 142, 176);
 
 /// Something done on the chord sheet.
 pub enum SheetAction {
@@ -277,6 +284,8 @@ struct BarView<'a> {
     project: &'a Project,
     meter: &'a Meter,
     keys: &'a KeyMap,
+    /// What every chord does in its key, and the key changes.
+    functions: &'a Functions,
     bar: Bar,
     rect: Rect,
     marks: Marks,
@@ -407,13 +416,24 @@ impl BarView<'_> {
             );
         }
         if bar.number > 0 && self.keys.key_at(bar.start - 1) != key {
-            painter.text(
+            let label = painter.text(
                 rect.right_top() + vec2(-PADDING, 2.0),
                 Align2::RIGHT_TOP,
                 format!("→ {}", key.name()),
                 FontId::proportional(SMALL_SIZE),
                 theme::ACCENT,
             );
+            // Where the key changes, how the music gets there: through a
+            // pivot chord, or directly.
+            let change = self
+                .functions
+                .modulations
+                .iter()
+                .find(|change| (bar.start..bar.end()).contains(&change.start));
+            if let Some(change) = change {
+                let hint = ui.interact(label.expand(3.0), id.with("key change"), Sense::hover());
+                theme::hint(hint, change.describe());
+            }
         } else if self.ending.is_some_and(|ending| ending.end == bar.end()) {
             painter.text(
                 rect.right_top() + vec2(-PADDING - 6.0, 2.0),
@@ -511,6 +531,9 @@ pub struct ChordSheet {
     /// Where the sheet is drawn in the main window, when it fills it.
     main_area: Option<Rect>,
     front: Front,
+    /// What every chord does in its key, read from the chords and the
+    /// keys it was read from, again only when they change.
+    functions: Option<(Vec<ChordMarker>, KeyMap, std::rc::Rc<Functions>)>,
 }
 
 impl ChordSheet {
@@ -531,6 +554,7 @@ impl ChordSheet {
             layout: LayoutView::new(),
             main_area: None,
             front: Front::default(),
+            functions: None,
         }
     }
 
@@ -789,6 +813,7 @@ impl ChordSheet {
         let keys = project.key_map();
         let heard = self.notation.heard(project, &keys);
         let marks = Marks::of(project);
+        self.read_functions(project, &keys);
         // Lines hold as many bars as chosen, or as fit with every name
         // in full.
         let needed = match self.layout.columns() {
@@ -997,6 +1022,29 @@ impl ChordSheet {
         self.focused = has_keyboard || self.editing.is_some();
     }
 
+    /// Reads what every chord of the sheet does in its key, if the
+    /// chords or the keys changed since it was last read.
+    fn read_functions(&mut self, project: &Project, keys: &KeyMap) {
+        let markers = project.playlist().chord_markers();
+        let fresh = self
+            .functions
+            .as_ref()
+            .is_some_and(|(read, read_keys, _)| read == markers && read_keys == keys);
+        if !fresh {
+            let functions = Functions::read(markers, keys);
+            self.functions = Some((markers.to_vec(), keys.clone(), std::rc::Rc::new(functions)));
+        }
+    }
+
+    /// What every chord of the sheet does in its key, as last read.
+    fn functions(&self) -> std::rc::Rc<Functions> {
+        self.functions
+            .as_ref()
+            .map_or_else(Default::default, |(_, _, functions)| {
+                std::rc::Rc::clone(functions)
+            })
+    }
+
     /// What bar `bar` shows, in the notation chosen: the harmony going on
     /// from an earlier bar, if the bar does not start with one of its
     /// own, and the bar's own harmonies. `heard` is what the song plays,
@@ -1029,13 +1077,18 @@ impl ChordSheet {
             .then(|| heard[first - 1].clone());
             return (going_on, shown);
         }
-        let key = keys.key_at(bar.start);
+        let functions = self.functions();
         let written = |marker: &ChordMarker| {
+            // Each harmony is read in the key on its own step: a key can
+            // change partway through a bar.
+            let key = keys.key_at(marker.start);
+            let function = |shown: &ChordMarker| marked(&functions, shown);
             self.notation.written(
                 marker,
                 key,
-                |shown| caption(shown, key),
-                |shown| describe(shown, key),
+                |shown| caption(shown, key, function(shown)),
+                |shown| describe(shown, key, function(shown)),
+                |shown| function(shown).map(tint),
                 voicing,
             )
         };
@@ -1141,10 +1194,12 @@ impl ChordSheet {
         actions: &mut Vec<SheetAction>,
     ) -> BarClicks {
         let Cell { bar, rect, .. } = cell;
+        let functions = self.functions();
         let view = BarView {
             project,
             meter,
             keys,
+            functions: &functions,
             bar,
             rect,
             marks,
@@ -2150,19 +2205,57 @@ fn draw_names(painter: &egui::Painter, names: &[Name]) {
                 Align2::LEFT_TOP,
                 caption,
                 FontId::proportional(CAPTION_SIZE),
-                theme::TEXT_DIM,
+                name.shown.tint.unwrap_or(theme::TEXT_DIM),
             );
         }
     }
 }
 
+/// What the sheet says a chord does in its key, if it marks it: the
+/// function read for the chord written on `shown`'s step, when `shown`
+/// is that chord (not the same notes named as a set) and is borrowed,
+/// secondary, Neapolitan or a pivot.
+fn marked<'a>(functions: &'a Functions, shown: &ChordMarker) -> Option<&'a Function> {
+    let HarmonyName::Chord(symbol) = shown.harmony else {
+        return None;
+    };
+    functions
+        .at(shown.start)
+        .filter(|function| function.symbol == symbol && function.is_marked())
+}
+
+/// The colour of the numeral under a chord the sheet marks: the pivot
+/// of a key change in the colour of the key change, a borrowed chord in
+/// blue, a secondary chord in yellow, the Neapolitan in pink.
+fn tint(function: &Function) -> Color32 {
+    if function.pivot.is_some() {
+        return theme::ACCENT;
+    }
+    match function.role {
+        Role::Borrowed { .. } => BORROWED,
+        Role::SecondaryDominant { .. } | Role::SecondaryLeadingTone { .. } => SECONDARY,
+        Role::Neapolitan => NEAPOLITAN,
+        Role::Plain => theme::TEXT_DIM,
+    }
+}
+
 /// The words under a harmony on the sheet: its numeral or its notes (see
-/// [`HarmonyName::caption`]), and what the band does there if it leaves
-/// its style: "V · push · shot".
-fn caption(marker: &ChordMarker, key: lineup_core::Scale) -> Option<String> {
-    let words: Vec<String> = marker
-        .harmony
-        .caption(key)
+/// [`HarmonyName::caption`]), what it does in the key when `function`
+/// says (see [`Function::numeral`]), and what the band does there if it
+/// leaves its style: "V7/V · push · shot", "bVI · borrowed".
+fn caption(
+    marker: &ChordMarker,
+    key: lineup_core::Scale,
+    function: Option<&Function>,
+) -> Option<String> {
+    let numeral = match function {
+        Some(function) => function.numeral().map(|numeral| match function.tag() {
+            Some(tag) => format!("{numeral} · {tag}"),
+            None => numeral,
+        }),
+        None => marker.harmony.caption(key),
+    };
+    let words: Vec<String> = numeral
         .into_iter()
         .chain(marker.push.map(|_| "push".to_string()))
         .chain(marker.stop.map(|stop| stop.name().to_string()))
@@ -2171,9 +2264,13 @@ fn caption(marker: &ChordMarker, key: lineup_core::Scale) -> Option<String> {
 }
 
 /// A sentence about a harmony and what the band does there, for its
-/// hint.
-fn describe(marker: &ChordMarker, key: lineup_core::Scale) -> String {
-    let mut text = marker.harmony.describe(key);
+/// hint. A chord from outside the key, or the pivot of a key change, is
+/// described as `function` reads it.
+fn describe(marker: &ChordMarker, key: lineup_core::Scale, function: Option<&Function>) -> String {
+    let mut text = match function {
+        Some(function) => function.describe(),
+        None => marker.harmony.describe(key),
+    };
     if let Some(push) = marker.push {
         text.push_str(&format!(" Push: {}.", push.describe()));
     }
@@ -2715,6 +2812,68 @@ mod tests {
                 Shape::Text(shape) if shape.galley.text() == text
             )
         })
+    }
+
+    #[test]
+    fn chords_from_outside_the_key_are_named_by_what_they_do() {
+        let ctx = egui::Context::default();
+        ctx.all_styles_mut(|style| style.animation_time = 0.0);
+        let mut project = Project::empty();
+        project.pattern_mut(0).unwrap().set_length(128);
+        project.add_clip(lineup_core::Clip::new(0, 0, 0));
+        let markers: Vec<ChordMarker> = ["C", "D7", "G7", "C", "Ab", "Am", "D7", "G"]
+            .iter()
+            .enumerate()
+            .map(|(bar, name)| ChordMarker::new(bar * 16, HarmonyName::parse(name).unwrap()))
+            .collect();
+        assert!(project.set_chords(0, 128, &markers));
+        // G major from bar 8, the G: Am in bar 6 is the pivot.
+        let g = lineup_core::Scale::new(lineup_core::PitchClass::G, lineup_core::ScaleKind::Major);
+        project.set_key_marker(lineup_core::KeyMarker::new(7 * 16, g));
+        let mut sheet = ChordSheet::new();
+        sheet.open = true;
+        let mut library = LibraryBrowser::new();
+        let mut output: Option<FullOutput> = None;
+        for _ in 0..2 {
+            let mut pass = ctx.run_pass(
+                RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1280.0, 1000.0))),
+                    ..Default::default()
+                },
+                |ctx| {
+                    sheet.show(
+                        ctx,
+                        ctx.content_rect(),
+                        &project,
+                        None,
+                        false,
+                        (
+                            PracticeView {
+                                count_in: false,
+                                metronome: false,
+                                speed: 100,
+                                training: false,
+                                trainer: Trainer::default(),
+                            },
+                            &mut library,
+                        ),
+                    );
+                },
+            );
+            pass.textures_delta.clear();
+            output = Some(pass);
+        }
+        let output = output.unwrap();
+        let colour = |text: &str| {
+            output.shapes.iter().find_map(|shape| match &shape.shape {
+                Shape::Text(shape) if shape.galley.text() == text => Some(shape.fallback_color),
+                _ => None,
+            })
+        };
+        assert_eq!(colour("V7/V"), Some(SECONDARY));
+        assert_eq!(colour("bVI · borrowed"), Some(BORROWED));
+        assert_eq!(colour("vi = ii · pivot"), Some(theme::ACCENT));
+        assert_eq!(colour("V7"), Some(theme::TEXT_DIM));
     }
 
     #[test]
