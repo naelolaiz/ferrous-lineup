@@ -503,7 +503,7 @@ impl Scale {
     /// signature has them (see [`Scale::spelling`]). Written the other
     /// way round, the tonic takes the next letter: F# is Gb, B is Cb,
     /// and Db is C#.
-    fn tonic_name(self) -> NoteName {
+    pub(crate) fn tonic_name(self) -> NoteName {
         let usual = NoteName::plain(self.root, self.usual_spelling());
         if !self.is_respelled() {
             return usual;
@@ -790,11 +790,39 @@ impl Scale {
     /// (not the tonic), pulls to that chord as V pulls to I: in C major,
     /// D major is the V of G ("V/V") and E7 the V7 of Am ("V7/vi").
     ///
-    /// In minor keys the key's chords are those of natural minor.
+    /// In minor keys the key's chords are those of natural minor, but
+    /// for the dominant, which is major, as harmonic minor has it: in A
+    /// minor, B7 is the V7 of E major, "V7/V".
     pub fn secondary_dominant_target(self, chord: Chord) -> Option<Chord> {
+        let dominant = chord.quality == ChordQuality::Major || chord.quality.is_dominant();
+        if !dominant {
+            return None;
+        }
+        self.tonicized(chord, 5)
+    }
+
+    /// If `chord` is a **secondary leading-tone chord** in this key, the
+    /// chord it leads to. A diminished triad, diminished seventh or
+    /// half-diminished seventh from outside the key, a semitone below
+    /// one of the key's major or minor chords (not the tonic), pulls up
+    /// into that chord as vii° pulls into I: in C major, F#°7 leads to G
+    /// ("vii°7/V") and G#° to Am ("vii°/vi").
+    pub fn secondary_leading_tone_target(self, chord: Chord) -> Option<Chord> {
+        use ChordQuality::{Diminished, Diminished7, HalfDiminished7};
+        if !matches!(chord.quality, Diminished | Diminished7 | HalfDiminished7) {
+            return None;
+        }
+        self.tonicized(chord, 1)
+    }
+
+    /// The chord of the key whose root is `semitones` above the root of
+    /// `chord`, when `chord` is from outside the key and that chord is
+    /// one of its major or minor chords other than the tonic: the chord
+    /// a secondary dominant or leading-tone chord makes a tonic of for a
+    /// moment.
+    fn tonicized(self, chord: Chord, semitones: i32) -> Option<Chord> {
         use ChordQuality::*;
-        let dominant = chord.quality == Major || chord.quality.is_dominant();
-        if !dominant || !self.is_heptatonic() || self.is_chord_of_key(chord) {
+        if !self.is_heptatonic() || self.is_chord_of_key(chord) {
             return None;
         }
         let reference = match self.kind {
@@ -803,8 +831,12 @@ impl Scale {
             }
             _ => self,
         };
-        let degree = reference.degree_of(chord.root.transpose(5))?;
+        let degree = reference.degree_of(chord.root.transpose(semitones))?;
         let target = reference.triad(degree)?;
+        let target = match degree {
+            4 if self.is_minor_key() => Chord::new(target.root, Major),
+            _ => target,
+        };
         (degree != 0 && matches!(target.quality, Major | Minor)).then_some(target)
     }
 
