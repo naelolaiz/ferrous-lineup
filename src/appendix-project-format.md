@@ -100,9 +100,10 @@ minute to report the real problem.
 `file::save` writes to a temporary file next to the target, then renames
 it. A crash or a full disk therefore leaves the old project intact, and
 a half-written file is never mistaken for a saved one. The temporary
-ends in `.lineup.tmp` (or `.loom.tmp` for an old name) and is removed
-if the save fails. Line endings are always `\n`, whatever the system,
-and a byte-order mark at the start of a file is ignored when reading.
+ends in `.lineup.tmp`, even next to an old `.loom` file, and is
+removed if the save fails. Line endings are always `\n`, whatever the
+system, and a byte-order mark at the start of a file is ignored when
+reading.
 
 The same pattern is used by WAV and video export, and by the recovery
 copy. See [Troubleshooting](troubleshooting.md) if an export fails.
