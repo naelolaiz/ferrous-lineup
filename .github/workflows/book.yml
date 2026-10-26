@@ -1,27 +1,36 @@
 name: Book
 
-# Builds the book with mdBook, prints it to one PDF, and publishes both on
-# GitHub Pages. Pull requests into the book build it too, so a change can
-# be checked before it is merged; only a push to `book` publishes.
+# Builds the book in book/ with mdBook, prints it to one PDF, and
+# publishes both on GitHub Pages. Every pull request that changes the book
+# builds it too, whichever branch it goes into (a book page stacked on the
+# pull request of the change it describes included), so a change can be
+# checked before it is merged; only a push to main, or a run by hand,
+# publishes.
 on:
   push:
-    branches: [book]
+    branches: [main]
+    paths:
+      - "book/**"
+      - ".github/workflows/book.yml"
   pull_request:
-    branches: [book]
+    paths:
+      - "book/**"
+      - ".github/workflows/book.yml"
+  # Actions > Book > Run workflow publishes the book again by hand.
+  workflow_dispatch:
 
 permissions:
   contents: read
-
-# One deployment at a time. A newer push waits for the one that is
-# publishing instead of cancelling it halfway.
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
   build:
     name: Build the website and the PDF
     runs-on: ubuntu-latest
+    # The book's own files (book.toml, print.css, src/) are in book/, so
+    # every command runs there, as if the book were the whole repository.
+    defaults:
+      run:
+        working-directory: book
     steps:
       - uses: actions/checkout@v5
 
@@ -63,25 +72,32 @@ jobs:
 
       # The PDF is a download on every run, pull requests included. It is
       # also part of the website, next to its pages.
+      # Paths given to actions (`with: path:`) start at the top of the
+      # repository: working-directory only applies to `run:` steps.
       - uses: actions/upload-artifact@v7
         with:
-          path: book/ferrous-lineup-book.pdf
+          path: book/book/ferrous-lineup-book.pdf
           archive: false
           if-no-files-found: error
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: book
+          path: book/book
 
   # Before the first run: Settings > Pages > Source: "GitHub Actions". The
-  # `github-pages` environment that creates only lets the default branch
-  # deploy, so add `book` under Settings > Environments > github-pages >
-  # Deployment branches and tags.
+  # `github-pages` environment that creates lets the default branch, main,
+  # deploy.
   deploy:
     name: Publish on GitHub Pages
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    # One deployment at a time. A newer push waits for the one that is
+    # publishing instead of cancelling it halfway. Builds of pull requests
+    # don't wait for each other.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
