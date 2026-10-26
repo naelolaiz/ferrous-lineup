@@ -2711,11 +2711,11 @@ fn a_drag_held_still_reaches_the_sound() {
 fn unsaved_work_from_a_crash_recovers_as_unsaved() {
     let mut screen = Screen::new();
     let recovered = Project::template();
-    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+    screen.app.recovery.pending = vec![super::recovery::Recovered::new(
         recovered.clone(),
         None,
         Some("Recovered song".to_string()),
-    ));
+    )];
     // The modal needs a frame to lay itself out.
     screen.draw(vec![]);
     let output = screen.draw(vec![]);
@@ -2732,13 +2732,13 @@ fn unsaved_work_from_a_crash_recovers_as_unsaved() {
 fn a_recovery_copy_can_be_discarded() {
     let mut screen = Screen::new();
     let before = screen.app.project.clone();
-    screen.app.recovery.pending = Some(super::recovery::Recovered::new(
+    screen.app.recovery.pending = vec![super::recovery::Recovered::new(
         Project::template(),
         None,
         None,
-    ));
+    )];
     screen.click("Discard it");
-    assert!(screen.app.recovery.pending.is_none());
+    assert!(screen.app.recovery.pending.is_empty());
     assert_eq!(screen.app.project, before);
 }
 
