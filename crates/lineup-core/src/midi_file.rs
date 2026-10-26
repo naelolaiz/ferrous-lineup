@@ -619,6 +619,18 @@ mod tests {
             [vec![0xFF, 0x59, 2, 2, 0]],
             "E Dorian: as D major"
         );
+        project.scale = crate::Scale::new(crate::PitchClass::FSharp, crate::ScaleKind::Major);
+        assert_eq!(
+            signature(&project),
+            [vec![0xFF, 0x59, 2, 6, 0]],
+            "F# major: six sharps"
+        );
+        project.scale = project.scale.with_spelling(crate::Spelling::Flats);
+        assert_eq!(
+            signature(&project),
+            [vec![0xFF, 0x59, 2, 0xFA, 0]],
+            "Gb major, the same keys of the piano: six flats"
+        );
         project.scale = crate::Scale::row(crate::harmony::ROW_PRESETS[0].row);
         assert!(signature(&project).is_empty(), "a row has no key signature");
     }
@@ -649,6 +661,8 @@ mod tests {
         let scales = [
             crate::Scale::new(crate::PitchClass::E, crate::ScaleKind::Dorian),
             crate::Scale::new(crate::PitchClass::CSharp, crate::ScaleKind::HarmonicMinor),
+            crate::Scale::new(crate::PitchClass::DSharp, crate::ScaleKind::NaturalMinor)
+                .with_spelling(crate::Spelling::Flats),
             crate::Scale::row(crate::harmony::ROW_PRESETS[0].row),
         ];
         for scale in scales {

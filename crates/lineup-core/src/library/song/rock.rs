@@ -525,6 +525,7 @@ pub(super) const DESARMA_Y_SANGRA: Song = Song {
              Gb4:8 F4:4 | !< Eb4:4 F4 Gb4 | Ab4:8 Gb4:4 | E4:4 Gb4 Ab4 !mf",
             DESARMA_EB_MINOR_CHORDS,
         )
+        // Eb minor: the tune is written in flats (see `written_as_tune`).
         .in_key(DSharp, NaturalMinor),
         // Bars 65-76 (choral bars 66-77, "na ra ra"), two flats. The D chords carry C in the right
         // hand ("Dsus", "D"): V7sus4 and V7.
