@@ -30,3 +30,5 @@ the music.
 | **Push** | A chord struck before its beat and held over it, written `^F`; also called an anticipation. It makes the music lean forward. | [Shots, holds, rests and pushes](step-9/stops.md#pushes) |
 | **Hold** | A chord struck and held until the next harmony, with the beat going on underneath. It is not a fermata. | [Shots, holds, rests and pushes](step-9/stops.md#holds) |
 | **Rest** | The band dropping out for a bar or more; in jazz, a break. In the app a rest also leaves the drums silent. | [Shots, holds, rests and pushes](step-9/stops.md#rests) |
+| **Concert pitch** | Music written as it sounds, "in C": what piano, guitar, bass, voice, flute and violin read. A song's concert key is the key the band hears. | [Lead sheets for B♭, E♭ and F instruments](step-9/transposing-instruments.md) |
+| **Transposing instrument** | An instrument whose written notes are not the notes it sounds, named after the note a written C sounds: a trumpet in B♭, an alto saxophone in E♭, a horn in F. Its music is written higher by that distance, so a song in C is in D for a trumpet. | [Lead sheets for B♭, E♭ and F instruments](step-9/transposing-instruments.md) |
