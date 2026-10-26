@@ -18,6 +18,8 @@
 //!   notes, the smallest sets, which larger sets are made of.
 //! - [`key_fits`] finds the key a piece is in from how long each note
 //!   sounds.
+//! - [`voice_leading`] checks how the parts move from chord to chord:
+//!   parallel fifths and octaves, leading tones and sevenths.
 
 mod analysis;
 mod chord;
@@ -33,6 +35,7 @@ mod row;
 mod scale;
 mod set_class;
 mod symbol;
+pub mod voice_leading;
 
 pub use analysis::{Harmony, analyze, describe_chord, interval_name, spelled_interval_name};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};

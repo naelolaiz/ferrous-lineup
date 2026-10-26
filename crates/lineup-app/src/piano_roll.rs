@@ -7,12 +7,15 @@
 //! a drag in progress), so it is a struct with methods instead of a
 //! single function.
 
+use std::rc::Rc;
+
 use eframe::egui::{
     self, Align, Align2, Color32, FontId, Key, KeyboardShortcut, Modifiers, Painter, Pos2, Rect,
     Response, Sense, Stroke, StrokeKind, Ui, Vec2, pos2, vec2,
 };
 use lineup_core::band::solo::{NoteRole, Over};
 use lineup_core::harmony::keys::{self, ChordSize};
+use lineup_core::harmony::voice_leading::{self, Slip, VoiceLeading};
 use lineup_core::harmony::{Harmony, HintLevel, analyze, next_chords_over};
 use lineup_core::tools::{self, ArpeggioOrder};
 use lineup_core::{
@@ -81,6 +84,9 @@ const KEY_WIDTH: f32 = 54.0;
 const MIN_STEP_WIDTH: f32 = 8.0;
 /// Two rows of chords: the track's and all the tracks'.
 const LANE_HEIGHT: f32 = 32.0;
+/// Three rows when the voice leading is checked: what the check finds
+/// goes under the chords.
+const LANE_HEIGHT_WITH_VOICES: f32 = 48.0;
 const VELOCITY_HEIGHT: f32 = 56.0;
 /// How close to a note's right end (in pixels) a click resizes it instead of moving it.
 const EDGE_GRAB: f32 = 6.0;
@@ -149,6 +155,18 @@ const LANE_CHORD: Color32 = Color32::from_rgb(72, 88, 120);
 pub(crate) const LANE_TEXT: Color32 = Color32::from_rgb(235, 238, 245);
 const NO_NOTES_BACKGROUND: Color32 = Color32::from_rgb(70, 52, 30);
 const NO_NOTES_TEXT: Color32 = Color32::from_rgb(150, 156, 170);
+/// The voice-leading check: a move classical part writing avoids, over
+/// the notes, and its block in the chord lane.
+const SLIP: Color32 = Color32::from_rgb(236, 116, 220);
+const LANE_SLIP: Color32 = Color32::from_rgb(112, 52, 108);
+
+/// What "Voice leading" checks, for its tooltips.
+const VOICE_LEADING_HELP: &str = "Checks the parts as classical harmony teaches four-part \
+    writing: no parallel fifths or octaves, the leading tone rising to the tonic in the top \
+    part and the bass, a chord's seventh falling a step. Each track is a part, or several \
+    when it plays chords; with Ghost notes the other tracks are checked too. These are the \
+    rules of the style of Bach's chorales and of harmony exercises, not of all music: jazz \
+    and pop move in parallel on purpose.";
 
 /// A drag that started on a note and lasts until the mouse button is released.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -223,6 +241,8 @@ struct View<'a> {
     held: &'a [Note],
     /// For the soloist's part, what each note is.
     roles: Option<&'a [Option<(NoteRole, Over)>]>,
+    /// The voice-leading check, when it is on.
+    voices: Option<&'a VoiceLeading>,
 }
 
 /// What every part of the roll is drawn from in a frame, gathered in one
@@ -241,6 +261,20 @@ struct Drawing<'a> {
     playhead: Option<usize>,
     /// The notes held down on a keyboard.
     held: &'a [Note],
+    /// The voice-leading check of the channels heard, when it is on.
+    voices: Option<&'a VoiceLeading>,
+}
+
+/// What a voice-leading check was made from: while none of it changes,
+/// the check stands, and is not made again on every frame.
+#[derive(Debug, Clone, PartialEq)]
+struct VoiceInput {
+    pattern: usize,
+    /// The notes of each channel checked.
+    notes: Vec<(usize, Vec<NoteEvent>)>,
+    time: TimeSignature,
+    /// The key on each beat.
+    keys: Vec<Scale>,
 }
 
 /// Where the grid is on screen, and how to turn steps and pitches into
@@ -383,6 +417,10 @@ pub struct PianoRoll {
     /// Show the notes of the other channels behind this one's, and name
     /// the chords they make together.
     ghosts: bool,
+    /// Check the parts as classical harmony teaches ("Voice leading"),
+    /// and the last check, with what it was made from.
+    voice_leading: bool,
+    voice_check: Option<(VoiceInput, Rc<VoiceLeading>)>,
     arpeggio: ArpeggioOrder,
     arpeggio_rate: usize,
     /// Scroll to the channel's notes the next time the grid is drawn.
@@ -456,6 +494,8 @@ impl PianoRoll {
             selection_box: None,
             selection: Vec::new(),
             ghosts: true,
+            voice_leading: false,
+            voice_check: None,
             arpeggio: ArpeggioOrder::Up,
             arpeggio_rate: 1,
             scroll_to_notes: true,
@@ -954,6 +994,9 @@ impl PianoRoll {
         if self.ghosts {
             heard.extend(&others);
         }
+        let voices = self
+            .voice_leading
+            .then(|| self.check_voices(project, pattern, &heard));
         let drawing = Drawing {
             project,
             pattern,
@@ -962,6 +1005,7 @@ impl PianoRoll {
             roles: roles.as_deref(),
             playhead,
             held,
+            voices: voices.as_deref(),
         };
 
         let tool = if self.for_video {
@@ -976,6 +1020,9 @@ impl PianoRoll {
         let current = self.current_chord(drawing);
         let next_hint = self.chords_in_key(ui, scale, current, compact, actions);
         self.about_the_notes(ui, drawing, &next_hint, compact);
+        if let Some(check) = drawing.voices {
+            self.voice_line(ui, drawing, check);
+        }
         ui.add_space(2.0);
         self.grid_and_lanes(ui, drawing, &others, actions);
 
@@ -983,6 +1030,61 @@ impl PianoRoll {
             self.last_step = Some(step);
         }
         self.use_picked_tool(ui, tool, pattern, scale, actions);
+    }
+
+    /// The voice leading of the channels `heard` in `pattern`, the
+    /// pattern shown, checked again only when their notes, the keys or
+    /// the meter change.
+    fn check_voices(
+        &mut self,
+        project: &Project,
+        pattern: &Pattern,
+        heard: &[usize],
+    ) -> Rc<VoiceLeading> {
+        let time = project.pattern_time(self.pattern);
+        let keys = voice_leading::beats(time, pattern.length())
+            .iter()
+            .map(|&(start, _)| project.pattern_key_at(self.pattern, start))
+            .collect();
+        let input = VoiceInput {
+            pattern: self.pattern,
+            notes: heard
+                .iter()
+                .map(|&channel| (channel, pattern.notes(channel).to_vec()))
+                .collect(),
+            time,
+            keys,
+        };
+        if let Some((made_from, check)) = &self.voice_check
+            && *made_from == input
+        {
+            return Rc::clone(check);
+        }
+        let check = Rc::new(project.voice_leading(self.pattern, heard));
+        self.voice_check = Some((input, Rc::clone(&check)));
+        check
+    }
+
+    /// The line under the chord names with what the voice-leading check
+    /// found at the step pointed at, or else in the whole pattern. Its
+    /// tooltip says why classical part writing avoids it. It is cut to
+    /// one line, so the grid does not jump as the pointer moves.
+    fn voice_line(&self, ui: &mut Ui, drawing: Drawing, check: &VoiceLeading) {
+        let name = |voice: usize| voice_name(drawing.project, check, voice);
+        let here: Vec<&Slip> = self
+            .hovered_step
+            .or(drawing.playhead)
+            .map(|step| check.slips_at(step).collect())
+            .unwrap_or_default();
+        if here.is_empty() {
+            ui.add(egui::Label::new(egui::RichText::new(check.summary()).weak()).truncate())
+                .on_hover_text(VOICE_LEADING_HELP);
+        } else {
+            let what: Vec<String> = here.iter().map(|slip| slip.what(name)).collect();
+            let why: Vec<String> = here.iter().map(|slip| slip.describe(name)).collect();
+            ui.add(egui::Label::new(egui::RichText::new(what.join(" ")).color(SLIP)).truncate())
+                .on_hover_text(why.join("\n\n"));
+        }
     }
 
     /// The chord that the next-chord hints follow. A chord held on a
@@ -1194,6 +1296,7 @@ impl PianoRoll {
             roles,
             playhead,
             held,
+            voices,
             ..
         } = drawing;
         let length = pattern.length();
@@ -1205,8 +1308,12 @@ impl PianoRoll {
 
         // The chord lane's place is taken now, but it is drawn after the
         // grid, once it is known how far the grid is scrolled sideways.
+        let lane_height = match voices {
+            Some(_) => LANE_HEIGHT_WITH_VOICES,
+            None => LANE_HEIGHT,
+        };
         let (lane_rect, lane_response) =
-            ui.allocate_exact_size(vec2(ui.available_width(), LANE_HEIGHT), Sense::hover());
+            ui.allocate_exact_size(vec2(ui.available_width(), lane_height), Sense::hover());
         // The velocity lane goes below the grid, so the grid leaves room
         // for it: the lane, the gap, and egui's spacing between widgets.
         // Taking even a pixel too much would make the window grow a
@@ -1256,6 +1363,7 @@ impl PianoRoll {
                 playhead,
                 held,
                 roles,
+                voices,
             };
             self.grid(ui, pattern, ghosts, view, actions)
         });
@@ -1283,15 +1391,7 @@ impl PianoRoll {
             scroll_x,
             length,
         };
-        self.chord_lane(
-            ui,
-            (lane_rect, &lane_response),
-            project,
-            pattern,
-            scale,
-            lanes,
-            playhead,
-        );
+        self.chord_lane(ui, (lane_rect, &lane_response), drawing, lanes);
         if !self.for_video {
             ui.add_space(4.0);
             self.velocity_lane(ui, pattern, lanes, actions);
@@ -1484,6 +1584,8 @@ impl PianoRoll {
                      all of them make together.",
                 )
                 .on_disabled_hover_text("No other channel plays melodies or chords yet.");
+            ui.checkbox(&mut self.voice_leading, "Voice leading")
+                .on_hover_text(VOICE_LEADING_HELP);
         });
         picked
     }
@@ -1770,18 +1872,23 @@ impl PianoRoll {
     /// two chords at once or a set of notes are named so. Each is named
     /// with its bass after a slash when it is an inversion: a piano
     /// playing C/E over a bass playing C is C/E on the track and C for
-    /// all.
-    #[allow(clippy::too_many_arguments)]
+    /// all. With the voice leading checked, a third row marks what the
+    /// check finds.
     fn chord_lane(
         &mut self,
         ui: &mut Ui,
         (rect, response): (Rect, &Response),
-        project: &Project,
-        pattern: &Pattern,
-        scale: Scale,
+        drawing: Drawing,
         lanes: Lanes,
-        playhead: Option<usize>,
     ) {
+        let Drawing {
+            project,
+            pattern,
+            scale,
+            playhead,
+            voices,
+            ..
+        } = drawing;
         let length = lanes.length;
         let track_name = project
             .channels()
@@ -1797,11 +1904,96 @@ impl PianoRoll {
             ),
             ("All", heard_by_beat(project, self.pattern, length)),
         ];
-        let row_height = rect.height() / rows.len() as f32;
-        for (index, (name, harmonies)) in rows.iter().enumerate() {
+        let row_height = LANE_HEIGHT / rows.len() as f32;
+        let row = |index: usize| {
             let top = rect.top() + row_height * index as f32;
-            let row = Rect::from_min_size(pos2(rect.left(), top), vec2(rect.width(), row_height));
-            self.chord_row(ui, row, response, name, harmonies, scale, lanes, playhead);
+            Rect::from_min_size(pos2(rect.left(), top), vec2(rect.width(), row_height))
+        };
+        for (index, (name, harmonies)) in rows.iter().enumerate() {
+            self.chord_row(
+                ui,
+                row(index),
+                response,
+                name,
+                harmonies,
+                scale,
+                lanes,
+                playhead,
+            );
+        }
+        if let Some(check) = voices {
+            self.slip_row(ui, row(rows.len()), response, drawing, check, lanes);
+        }
+    }
+
+    /// The chord lane's row for the voice-leading check: a block over
+    /// the steps of every move classical part writing avoids, named in a
+    /// few letters ("5ths", "LT"). Pointing at one explains it.
+    fn slip_row(
+        &mut self,
+        ui: &mut Ui,
+        rect: Rect,
+        response: &Response,
+        drawing: Drawing,
+        check: &VoiceLeading,
+        lanes: Lanes,
+    ) {
+        let length = lanes.length;
+        let lane = lanes.grid(rect, self.time);
+        let cells = lane.cells();
+        let pointed = response
+            .hover_pos()
+            .filter(|pos| rect.contains(*pos) && cells.contains(*pos))
+            .map(|pos| lane.cell_at(pos).0);
+        if pointed.is_some() {
+            self.hovered_step = pointed;
+        }
+
+        let painter = ui.painter_at(rect);
+        paint_lane_name(ui, &painter, rect, "Voices");
+        painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
+        let painter = painter.with_clip_rect(cells);
+        // What is found on each step, so that a run of steps with the
+        // same findings makes one block.
+        let marks: Vec<Vec<&str>> = (0..length)
+            .map(|step| {
+                let mut marks: Vec<&str> = check.slips_at(step).map(|s| s.kind.short()).collect();
+                marks.sort_unstable();
+                marks.dedup();
+                marks
+            })
+            .collect();
+        let mut start = 0;
+        for run in marks.chunk_by(|a, b| a == b) {
+            let end = start + run.len();
+            if !run[0].is_empty() {
+                let block = Rect::from_min_max(
+                    pos2(lane.x(start), lane.rect.top()),
+                    pos2(lane.x(end), lane.rect.bottom()),
+                )
+                .shrink2(vec2(1.0, 1.0));
+                painter.rect_filled(block, 3.0, LANE_SLIP);
+                let name =
+                    painter.layout_no_wrap(run[0].join(" "), FontId::proportional(11.0), LANE_TEXT);
+                if name.size().x <= block.width() - 2.0 {
+                    let shown = block.intersect(cells);
+                    painter.with_clip_rect(block).galley(
+                        shown.center() - name.size() / 2.0,
+                        name,
+                        LANE_TEXT,
+                    );
+                }
+            }
+            start = end;
+        }
+        if let Some(step) = pointed {
+            let name = |voice: usize| voice_name(drawing.project, check, voice);
+            let found: Vec<String> = check.slips_at(step).map(|s| s.describe(name)).collect();
+            if !found.is_empty() {
+                response
+                    .clone()
+                    .on_hover_text_at_pointer(found.join("\n\n"));
+            }
         }
     }
 
@@ -1831,15 +2023,7 @@ impl PianoRoll {
         }
 
         let painter = ui.painter_at(rect);
-        let name_rect =
-            Rect::from_min_max(rect.min, pos2(rect.left() + KEY_WIDTH - 2.0, rect.bottom()));
-        painter.with_clip_rect(name_rect).text(
-            pos2(rect.left() + 4.0, rect.center().y),
-            Align2::LEFT_CENTER,
-            name,
-            FontId::proportional(11.0),
-            ui.visuals().weak_text_color(),
-        );
+        paint_lane_name(ui, &painter, rect, name);
         painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
         let painter = painter.with_clip_rect(cells);
 
@@ -1901,6 +2085,7 @@ impl PianoRoll {
             playhead,
             held,
             roles,
+            voices,
         } = view;
         let length = pattern.length();
         let rows = (HIGHEST - LOWEST + 1) as f32;
@@ -1985,6 +2170,9 @@ impl PianoRoll {
             }
         }
         self.paint_notes(&painter, grid, notes, scale, roles);
+        if let Some(check) = voices {
+            paint_slips(&painter, grid, check, self.hovered_step.or(playhead));
+        }
 
         // Show what a click would place: an outline of the note or chord.
         let ctrl = ui.input(|input| input.modifiers.command);
@@ -2693,6 +2881,76 @@ pub(crate) const SELECT_ALL: KeyboardShortcut = shortcut(Modifiers::COMMAND, Key
 pub(crate) const DELETE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Delete);
 pub(crate) const BACKSPACE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Backspace);
 pub(crate) const ESCAPE: KeyboardShortcut = shortcut(Modifiers::NONE, Key::Escape);
+
+/// A lane row's name, in `rect` where the keyboard is under the grid.
+fn paint_lane_name(ui: &Ui, painter: &Painter, rect: Rect, name: &str) {
+    let name_rect =
+        Rect::from_min_max(rect.min, pos2(rect.left() + KEY_WIDTH - 2.0, rect.bottom()));
+    painter.with_clip_rect(name_rect).text(
+        pos2(rect.left() + 4.0, rect.center().y),
+        Align2::LEFT_CENTER,
+        name,
+        FontId::proportional(11.0),
+        ui.visuals().weak_text_color(),
+    );
+}
+
+/// The name of part `voice` of a voice-leading check: its track's name,
+/// and which of the track's parts it is when the track plays chords.
+fn voice_name(project: &Project, check: &VoiceLeading, voice: usize) -> String {
+    let part = &check.voices[voice];
+    let track = project
+        .channels()
+        .get(part.channel)
+        .map_or("Track", |channel| channel.name.as_str());
+    part.name(track)
+}
+
+/// What the voice-leading check found, over the notes: a line along
+/// every move classical part writing avoids, from the note a part
+/// leaves to the one it goes to, and a dashed outline where a leading
+/// tone or a seventh should have gone. Those at `step` (pointed at, or
+/// playing) are drawn bolder.
+fn paint_slips(painter: &Painter, grid: Grid, check: &VoiceLeading, step: Option<usize>) {
+    for slip in &check.slips {
+        let bold = step.is_some_and(|step| slip.steps().contains(&step));
+        let stroke = match bold {
+            true => Stroke::new(3.0, SLIP),
+            false => Stroke::new(1.5, SLIP.gamma_multiply(0.75)),
+        };
+        for part in &slip.moves {
+            if part.to.start >= grid.length {
+                continue;
+            }
+            let (from, to) = (grid.note_rect(&part.from), grid.note_rect(&part.to));
+            // From near the end of one note to near the start of the
+            // next, leaving the note names clear.
+            let start = pos2((from.right() - 6.0).max(from.center().x), from.center().y);
+            let end = pos2((to.left() + 6.0).min(to.center().x), to.center().y);
+            painter.line_segment([start, end], stroke);
+            painter.circle_filled(start, stroke.width + 0.5, stroke.color);
+            painter.circle_filled(end, stroke.width + 0.5, stroke.color);
+        }
+        if let (Some(expected), Some(part)) = (slip.expected, slip.moves.first())
+            && part.to.start < grid.length
+        {
+            let target = NoteEvent {
+                pitch: expected,
+                ..part.to
+            };
+            let rect = grid.note_rect(&target).shrink2(vec2(0.5, 1.0));
+            let outline = [
+                rect.left_top(),
+                rect.right_top(),
+                rect.right_bottom(),
+                rect.left_bottom(),
+                rect.left_top(),
+            ];
+            let dashes = Stroke::new(stroke.width.min(2.0), stroke.color);
+            painter.extend(egui::Shape::dashed_line(&outline, dashes, 4.0, 3.0));
+        }
+    }
+}
 
 /// The harmony of all the tracks at every step of pattern `pattern`,
 /// `length` steps long, heard beat by beat with the whole band (see
