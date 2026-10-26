@@ -154,7 +154,9 @@ These are the rules of one style: the part writing of Bach through
 Brahms, and of harmony exercises. Pop and jazz move whole chords in
 parallel on purpose, and so did Debussy. Nobody expects a jazz seventh
 to resolve. Read the check as a teacher of the classical style, not a
-judge of all music.
+judge of all music. Where the key is a twelve-tone row, the check
+follows the rules of twelve-tone writing instead: see
+[Twelve-tone rules](twelve-tone-rules.md).
 
 Some rules from harmony books are not checked yet: direct (hidden)
 fifths and octaves in the outer parts, spacing between the parts, parts
