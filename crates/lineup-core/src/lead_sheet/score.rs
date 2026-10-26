@@ -6,7 +6,8 @@ use std::ops::Range;
 use super::melody::{MelodyNote, melody};
 use super::rhythm::{self, Base, Value};
 use super::spelling::{self, BarAccidentals, Clef, KeySignature};
-use crate::chord_sheet::HarmonyName;
+use super::transpose::Transposition;
+use crate::chord_sheet::{ChordMarker, HarmonyName};
 use crate::meter::{Bar, TimeSignature};
 use crate::pitch::Note;
 use crate::playlist::MAX_SONG_STEPS;
@@ -104,23 +105,49 @@ fn song_end(project: &Project) -> usize {
 }
 
 /// Reads the song: the melody from `channel` (none: chords only) and
-/// everything else from the playlist.
-pub fn build(project: &Project, channel: Option<usize>, clef: Option<Clef>) -> Score {
+/// everything else from the playlist, written for the instruments of
+/// `transposition`.
+pub fn build(
+    project: &Project,
+    channel: Option<usize>,
+    clef: Option<Clef>,
+    transposition: Transposition,
+) -> Score {
     let end = song_end(project);
     let meter = project.meter();
     let keys = project.key_map();
-    let tune = channel.map_or_else(Vec::new, |channel| melody(project, channel, end));
+    // The key each step is written in, and each harmony as written: for
+    // a transposing instrument, moved from the key the song sounds in.
+    let key_at = |step: usize| transposition.key(keys.key_at(step));
+    let harmony_of =
+        |marker: ChordMarker| transposition.harmony(marker.harmony, keys.key_at(marker.start));
+    let heard = channel.map_or_else(Vec::new, |channel| melody(project, channel, end));
+    let pitches: Vec<Note> = heard.iter().map(|note| note.pitch).collect();
     let clef = clef.unwrap_or_else(|| {
-        let mut pitches: Vec<Note> = tune.iter().map(|note| note.pitch).collect();
+        if transposition != Transposition::Concert {
+            return Clef::Treble;
+        }
+        let mut pitches = pitches.clone();
         pitches.sort();
         pitches
             .get(pitches.len() / 2)
             .map_or(Clef::Treble, |&median| Clef::for_median(median))
     });
+    // The tune as the part writes it, higher than it sounds for a
+    // transposing instrument.
+    let shift = transposition.shift(&pitches, clef);
+    let tune: Vec<MelodyNote> = heard
+        .iter()
+        .map(|&note| MelodyNote {
+            pitch: note.pitch.transpose(shift).unwrap_or(note.pitch),
+            ..note
+        })
+        .collect();
 
-    // How each note of the tune is spelled, from the key and the chord
-    // where it starts and the note after it.
-    let names: Vec<(i32, crate::pitch::NoteName)> = tune
+    // How each note of the tune is spelled: at concert pitch, from the
+    // key and the chord where it starts and the note after it, and then
+    // moved to the part's key, so that its intervals keep their names.
+    let names: Vec<(i32, crate::pitch::NoteName)> = heard
         .iter()
         .enumerate()
         .map(|(index, note)| {
@@ -128,9 +155,10 @@ pub fn build(project: &Project, channel: Option<usize>, clef: Option<Clef>) -> S
                 Some(HarmonyName::Chord(symbol)) => Some(symbol),
                 _ => None,
             };
-            let next = tune.get(index + 1).map(|next| next.pitch);
-            let name = spelling::spell(keys.key_at(note.start), note.pitch, chord, next);
-            (spelling::staff_step(note.pitch, name), name)
+            let next = heard.get(index + 1).map(|next| next.pitch);
+            let key = keys.key_at(note.start);
+            let name = transposition.name(spelling::spell(key, note.pitch, chord, next), key);
+            (spelling::staff_step(tune[index].pitch, name), name)
         })
         .collect();
 
@@ -140,7 +168,7 @@ pub fn build(project: &Project, channel: Option<usize>, clef: Option<Clef>) -> S
     let mut bars: Vec<BarScore> = Vec::new();
     let mut next_note = 0;
     for bar in meter.bars().take_while(|bar| bar.start < end) {
-        let signature = KeySignature::of(keys.key_at(bar.start));
+        let signature = KeySignature::of(key_at(bar.start));
         let previous = bars.last();
         let key_change = previous
             .filter(|previous| previous.signature != signature)
@@ -161,7 +189,7 @@ pub fn build(project: &Project, channel: Option<usize>, clef: Option<Clef>) -> S
         let chords: Vec<(usize, HarmonyName)> = markers
             .iter()
             .filter(|marker| (bar.start..bar.end()).contains(&marker.start))
-            .map(|marker| (marker.start - bar.start, marker.harmony))
+            .map(|marker| (marker.start - bar.start, harmony_of(*marker)))
             .collect();
         let sounding = project
             .chord_at(bar.start)
@@ -368,7 +396,7 @@ mod tests {
     fn a_note_over_the_bar_line_is_tied() {
         // C5 from beat 4 of bar 1 to beat 2 of bar 2.
         let (project, channel) = song(2, &[(72, 12, 8)]);
-        let score = build(&project, Some(channel), None);
+        let score = build(&project, Some(channel), None, Transposition::Concert);
         assert_eq!(score.bars.len(), 2);
         assert_eq!(
             pieces(&score.bars[0]),
@@ -392,7 +420,7 @@ mod tests {
             2,
             &[(66, 0, 4), (66, 4, 4), (67, 8, 4), (66, 12, 4), (66, 16, 4)],
         );
-        let score = build(&project, Some(channel), None);
+        let score = build(&project, Some(channel), None, Transposition::Concert);
         let printed = |bar: &BarScore| -> Vec<Option<i8>> {
             let Content::Notes { pieces, .. } = &bar.content else {
                 unreachable!()
@@ -410,7 +438,7 @@ mod tests {
     fn eighths_are_beamed_in_beats() {
         let notes: Vec<(u8, usize, usize)> = (0..8).map(|i| (60 + i as u8, i * 2, 2)).collect();
         let (project, channel) = song(1, &notes);
-        let score = build(&project, Some(channel), None);
+        let score = build(&project, Some(channel), None, Transposition::Concert);
         let Content::Notes { beams, .. } = &score.bars[0].content else {
             unreachable!()
         };
@@ -420,9 +448,18 @@ mod tests {
     #[test]
     fn low_tunes_are_written_in_the_bass_clef() {
         let (project, channel) = song(1, &[(43, 0, 8), (48, 8, 8)]);
-        assert_eq!(build(&project, Some(channel), None).clef, Clef::Bass);
         assert_eq!(
-            build(&project, Some(channel), Some(Clef::Treble)).clef,
+            build(&project, Some(channel), None, Transposition::Concert).clef,
+            Clef::Bass
+        );
+        assert_eq!(
+            build(
+                &project,
+                Some(channel),
+                Some(Clef::Treble),
+                Transposition::Concert
+            )
+            .clef,
             Clef::Treble
         );
     }
@@ -434,12 +471,12 @@ mod tests {
         let (mut project, channel) = song(4, &[(72, 16, 16), (72, 48, 16)]);
         let c = HarmonyName::parse("C").unwrap();
         assert!(project.set_chords(0, 64, &[ChordMarker::new(0, c)]));
-        let score = build(&project, Some(channel), None);
+        let score = build(&project, Some(channel), None, Transposition::Concert);
         assert_eq!(score.bars[0].content, Content::Slashes);
         assert_eq!(score.bars[2].content, Content::WholeRest);
         assert_eq!(score.bars[0].chords, [(0, c)]);
         // With no tune at all, every bar with a chord gets slashes.
-        let chords_only = build(&project, None, None);
+        let chords_only = build(&project, None, None, Transposition::Concert);
         assert!(
             chords_only
                 .bars
@@ -455,7 +492,7 @@ mod tests {
         let mut b = Section::new("B", 32, 32);
         b.repeats = 3;
         project.add_section(b).unwrap();
-        let score = build(&project, Some(channel), None);
+        let score = build(&project, Some(channel), None, Transposition::Concert);
         assert_eq!(score.bars[0].section.as_deref(), Some("A"));
         assert_eq!(score.bars[2].section.as_deref(), Some("B"));
         assert!(score.bars[1].double_bar);
@@ -465,13 +502,113 @@ mod tests {
     }
 
     #[test]
+    fn a_trumpet_part_is_written_a_whole_tone_higher() {
+        // C5 B4 C5 over C, G7 and C in C major: for a trumpet in Bb,
+        // D5 C#5 D5 over D, A7 and D in D major.
+        let (mut project, channel) = song(2, &[(72, 0, 8), (71, 8, 8), (72, 16, 16)]);
+        let chord = |start, name| ChordMarker::new(start, HarmonyName::parse(name).unwrap());
+        assert!(project.set_chords(0, 32, &[chord(0, "C"), chord(8, "G7"), chord(16, "C")]));
+        let score = build(&project, Some(channel), None, Transposition::BFlat);
+        assert_eq!(score.clef, Clef::Treble);
+        assert_eq!(score.bars[0].signature, KeySignature(2));
+        let names: Vec<String> = score.bars[0]
+            .chords
+            .iter()
+            .map(|(_, harmony)| harmony.to_string())
+            .collect();
+        assert_eq!(names, ["D", "A7"]);
+        // D5 sits a step above C5 (35), and C#5 on C5's space with no
+        // sharp printed: the key signature has it.
+        assert_eq!(
+            pieces(&score.bars[0]),
+            [(0, 8, Some(36)), (8, 16, Some(35))]
+        );
+        let Content::Notes { pieces, .. } = &score.bars[0].content else {
+            unreachable!()
+        };
+        assert!(
+            pieces
+                .iter()
+                .all(|piece| piece.note.unwrap().accidental.is_none())
+        );
+    }
+
+    #[test]
+    fn a_part_keeps_the_intervals_of_the_tune() {
+        // E5 D#5 E5 in A minor: the D# leans on E, a semitone below it.
+        // For a trumpet in B minor it is E# leaning on F#, with a sharp,
+        // never F natural going to F#.
+        let (mut project, channel) = song(1, &[(76, 0, 4), (75, 4, 4), (76, 8, 8)]);
+        project.scale = Scale::new(PitchClass::A, ScaleKind::NaturalMinor);
+        let score = build(&project, Some(channel), None, Transposition::BFlat);
+        assert_eq!(score.bars[0].signature, KeySignature(2));
+        // An octave lower than it would sound, nearer the middle of the
+        // staff: F#4 sits on step 31, E#4 on E4's line (30).
+        assert_eq!(
+            pieces(&score.bars[0]),
+            [(0, 4, Some(31)), (4, 8, Some(30)), (8, 16, Some(31))]
+        );
+        let Content::Notes { pieces, .. } = &score.bars[0].content else {
+            unreachable!()
+        };
+        let printed: Vec<Option<i8>> = pieces
+            .iter()
+            .map(|piece| piece.note.unwrap().accidental)
+            .collect();
+        assert_eq!(printed, [None, Some(1), None]);
+    }
+
+    #[test]
+    fn a_key_change_is_written_in_the_parts_keys() {
+        // C major, then E major from bar 2: for an alto saxophone, A
+        // major (three sharps) and then Db major (five flats), with
+        // the E major V7 (B7) written as Ab7 and its G# as F.
+        let (mut project, channel) = song(2, &[(72, 0, 16), (68, 16, 16)]);
+        project.set_key_marker(KeyMarker::new(
+            16,
+            Scale::new(PitchClass::E, ScaleKind::Major),
+        ));
+        let b7 = HarmonyName::parse("B7").unwrap();
+        assert!(project.set_chords(16, 32, &[ChordMarker::new(16, b7)]));
+        let score = build(&project, Some(channel), None, Transposition::EFlat);
+        assert_eq!(score.bars[0].signature, KeySignature(3));
+        assert_eq!(score.bars[1].signature, KeySignature(-5));
+        assert_eq!(score.bars[1].key_change, Some(KeySignature(3)));
+        assert_eq!(score.bars[1].chords[0].1.to_string(), "Ab7");
+        // C5 and G#4 are written a minor third lower, A4 and F4 (staff
+        // steps 33 and 31): the octave nearest the middle of the staff.
+        assert_eq!(pieces(&score.bars[0]), [(0, 16, Some(33))]);
+        assert_eq!(pieces(&score.bars[1]), [(0, 16, Some(31))]);
+    }
+
+    #[test]
+    fn parts_are_in_the_treble_clef_unless_told() {
+        // A bass line: concert pitch takes the bass clef, a part for a
+        // B-flat instrument the treble clef, high enough to read on it.
+        let (project, channel) = song(1, &[(40, 0, 8), (43, 8, 8)]);
+        let concert = build(&project, Some(channel), None, Transposition::Concert);
+        assert_eq!(concert.clef, Clef::Bass);
+        let part = build(&project, Some(channel), None, Transposition::BFlat);
+        assert_eq!(part.clef, Clef::Treble);
+        let told = build(
+            &project,
+            Some(channel),
+            Some(Clef::Bass),
+            Transposition::BFlat,
+        );
+        assert_eq!(told.clef, Clef::Bass);
+        // On the bass staff, F#2 and A2 (a whole tone up) are steps 17 and 19.
+        assert_eq!(pieces(&told.bars[0]), [(0, 8, Some(17)), (8, 16, Some(19))]);
+    }
+
+    #[test]
     fn key_changes_are_marked() {
         let (mut project, channel) = song(2, &[(72, 0, 32)]);
         project.set_key_marker(KeyMarker::new(
             16,
             Scale::new(PitchClass::D, ScaleKind::Major),
         ));
-        let score = build(&project, Some(channel), None);
+        let score = build(&project, Some(channel), None, Transposition::Concert);
         assert_eq!(score.bars[0].key_change, None);
         assert_eq!(score.bars[1].key_change, Some(KeySignature(0)));
         assert_eq!(score.bars[1].signature, KeySignature(2));
