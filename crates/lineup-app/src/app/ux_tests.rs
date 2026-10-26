@@ -2112,6 +2112,63 @@ fn settings_owns_preferences_and_view_keeps_window_actions() {
 }
 
 #[test]
+fn the_speed_trainer_speeds_up_each_lap_and_stop_starts_it_again() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = true;
+    let project = screen.app.project.clone();
+    screen.click("Speed trainer");
+    let practice = screen.app.practice.view();
+    assert!(practice.training);
+    assert_eq!(practice.speed, 70, "the trainer starts at its first speed");
+    let output = screen.draw(vec![]);
+    assert!(
+        text_rect(&output, "every").is_some(),
+        "its speeds show beside it"
+    );
+    // There is no sound card here: hand over the laps the audio thread
+    // would count as the loop comes round.
+    screen.app.playing = true;
+    screen.app.train(0);
+    assert_eq!(screen.app.practice.view().speed, 70);
+    screen.app.train(1);
+    assert_eq!(screen.app.practice.view().speed, 75);
+    screen.app.train(3);
+    assert_eq!(screen.app.practice.view().speed, 85);
+    // A speed chosen by hand is where it carries on from.
+    screen.app.set_speed(90);
+    screen.app.train(4);
+    assert_eq!(screen.app.practice.view().speed, 95);
+    screen.app.train(9);
+    assert_eq!(screen.app.practice.view().speed, 100, "the target holds");
+    // Pause keeps the speed; Stop starts the next run slow again.
+    screen.app.pause();
+    assert_eq!(screen.app.practice.view().speed, 100);
+    screen.app.playing = true;
+    screen.app.set_playing(false);
+    assert_eq!(screen.app.practice.view().speed, 70);
+    // A new first speed, while stopped, is the speed Play starts at, and
+    // the trainer's speeds are remembered.
+    let trainer = chord_sheet::Trainer {
+        from: 60,
+        to: 90,
+        by: 10,
+        every: 2,
+    };
+    screen.app.set_trainer(trainer);
+    assert_eq!(screen.app.practice.view().speed, 60);
+    screen.draw(vec![]);
+    assert_eq!(practice::Practice::new(&screen.ctx).view().trainer, trainer);
+    // Off, the speed stays where it got to, and laps change nothing.
+    screen.click("Speed trainer");
+    assert!(!screen.app.practice.view().training);
+    screen.app.train(20);
+    assert_eq!(screen.app.practice.view().speed, 60);
+    // None of it is part of the song.
+    assert_eq!(screen.app.project, project);
+}
+
+#[test]
 fn style_defaults_edit_separately_and_only_save_on_confirmation() {
     let mut screen = Screen::new();
     screen.app.settings_open = true;

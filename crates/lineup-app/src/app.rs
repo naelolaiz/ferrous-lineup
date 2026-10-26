@@ -314,6 +314,9 @@ impl LineupApp {
     /// for room if the thread is behind, so setting up a large project
     /// cannot lose the commands that build it.
     fn send(&mut self, command: Command) {
+        if matches!(command, Command::SetTempo(_) | Command::SetSongTempos(_)) {
+            self.practice.tempos_sent();
+        }
         if let Audio::Running(engine) = &mut self.audio
             && !engine.send_wait(command)
             && self.message.is_none()
@@ -529,6 +532,7 @@ impl LineupApp {
             self.halt();
             self.cursor = self.marker;
             self.send(Command::Seek(self.cursor));
+            self.trainer_stopped();
         }
     }
 
@@ -1475,9 +1479,20 @@ impl LineupApp {
             };
             // At a practice speed, the box still shows the song's own
             // tempo, and says how fast it is played.
-            let speed = self.practice.view().speed;
-            let (at_speed, width, slower) = if speed == practice::FULL_SPEED {
+            let pace = self.practice.view();
+            let speed = pace.speed;
+            let (at_speed, width, slower) = if speed == practice::FULL_SPEED && !pace.training {
                 (String::new(), 62.0, String::new())
+            } else if pace.training {
+                (
+                    format!(" {speed}%"),
+                    80.0,
+                    format!(
+                        ". The speed trainer plays it at {speed}% now, and moves it towards \
+                         {}% each time the loop comes round (Settings > Playback)",
+                        pace.trainer.to
+                    ),
+                )
             } else {
                 (
                     format!(" {speed}%"),
