@@ -76,7 +76,11 @@ carry only what they need.
 
 A file can also say where the parts of the song came from, in any
 format. Older versions skip that record and lose nothing they could
-play.
+play. The same goes for a key written the other way round, such as G♭
+major rather than F# major: the key is saved as `(root: FSharp, kind:
+Major, respelled: true)`, and an older version reads it as F# major,
+with the same notes ([Keys with two
+names](step-9/before-the-release.md#keys-with-two-names)).
 
 ## Files from the future
 

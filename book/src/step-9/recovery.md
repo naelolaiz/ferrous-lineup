@@ -201,6 +201,13 @@ fails, the status bar says why, and the button remains **Try again**.
 An unplugged interface, a changed default device, or a sound server that
 restarted can all be fixed without closing the app.
 
+Notes the old engine left sounding on an external synth stop: before the
+old MIDI Out thread finishes, it sends All Notes Off on all sixteen
+channels, and the new one waits for it. If the playback trace is on, it
+goes on in the same file. [Before the next
+release](before-the-release.md#restart-audio-notes-that-stop-and-a-trace-that-goes-on)
+shows how.
+
 ## Commands that must arrive
 
 The audio thread may not wait, so the UI talks to it through a ring

@@ -90,7 +90,7 @@ Everything is optional except the bars.
 | Line | Means |
 |------|-------|
 | `Title: Autumn Leaves` | The song's name. A first line that is nothing else is the title too, as at the top of a printed chart. |
-| `Key: G major` | The key. `G`, `Em`, `E minor`, `A Dorian`, `C harmonic minor` and the other scales of the key menu (not rows or sets, which are chosen in the app). |
+| `Key: G major` | The key. `G`, `Em`, `E minor`, `A Dorian`, `C harmonic minor` and the other scales of the key menu (not rows or sets, which are chosen in the app). A key with two names keeps the one written: `Gb major` stays G♭ major, `F# major` stays F# major. |
 | `Time: 3/4` | The time signature, any the app takes: `6/8`, `5/4`, `2+2+3/8`. |
 | `Tempo: 132` | Quarter notes per minute; `132 BPM` reads too. |
 | `Style: Bossa nova` | The band style, by its name in the Library. |
