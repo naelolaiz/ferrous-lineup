@@ -42,6 +42,10 @@ Along the top:
   as a rhythm section reads its part.
 - **Clef**: **Auto** writes a low tune in the bass clef and the others
   in the treble clef; **Treble** and **Bass** choose one.
+- **For** writes the sheet for players of B♭, E♭ or F instruments
+  (trumpet, saxophones, horn), in the key they read in
+  ([Lead sheets for B♭, E♭ and F instruments](transposing-instruments.md)).
+  **Concert pitch** writes it as it sounds.
 - **Paper**: A4 (used almost everywhere) or Letter (in the USA and
   Canada).
 - **−** and **+** zoom the pages from 50% to 200%.
@@ -53,7 +57,8 @@ Along the top:
 
 ![The same song with None: chords only: four slashes in every bar under the chord symbols](../images/step-9-lead-sheet-chords.png)
 
-The paper and the zoom are remembered for next time.
+The paper, the zoom and the instruments under **For** are remembered
+for next time.
 
 ## Reading a lead sheet
 
@@ -420,7 +425,9 @@ a bar line, and a double bar line before a change of key.
 2. **For B♭ instruments.** A trumpet or a tenor saxophone reads music a
    major second higher than it sounds. Add a choice that writes
    everything, key signature and chord symbols too, a major second up.
-   Which module changes, and which don't?
+   Which module changes, and which don't? (The app does this now: see
+   [Lead sheets for B♭, E♭ and F instruments](transposing-instruments.md)
+   for one answer.)
 3. **Endings.** When the last bar of a repeated section differs the
    second time, lead sheets use first and second endings: a bracket
    "1." over one bar, "2." over the other. What would the playlist need

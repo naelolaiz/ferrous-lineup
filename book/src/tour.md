@@ -467,6 +467,9 @@ pages. The melody is the channel called Lead (or else the highest one;
 any other can be picked), and every note is spelled for the key and the
 chord that sounds, so a G♯ over E7 stays G♯ and an A♭ over Fm stays A♭.
 **None: chords only** writes rhythm slashes under the chords instead.
+**For** writes the sheet for B♭, E♭ or F instruments, so a trumpet,
+saxophone or horn player reads it in their own key: the key signature,
+the tune and the chords all move.
 While the song plays, the bar that sounds lights up. **Export PDF…**
 saves the sheet to print or share, and **Print…** opens it in your PDF
 viewer. The music is drawn with the Bravura font and the words with
