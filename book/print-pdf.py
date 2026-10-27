@@ -42,7 +42,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
-from pypdf.generic import Fit
+from pypdf.generic import ArrayObject, DictionaryObject, Fit, NameObject, TextStringObject
 
 # mdBook puts this between chapters in print.html, so each one starts on a
 # new page.
@@ -62,9 +62,9 @@ STYLE = """
 .pdf-title-page { text-align: center; padding-top: 70mm; }
 .pdf-title-page .title { font-size: 2.6em; font-weight: bold; margin: 0; }
 .pdf-title-page .subtitle { font-size: 1.6em; margin: 0.4em 0 3em; }
-/* Black like the rest of the line, not the blue of a link. */
+/* In the blue of a link, so it shows that a click goes there. */
 .content .pdf-contents a:link,
-.content .pdf-contents a:visited { color: inherit; text-decoration: none; }
+.content .pdf-contents a:visited { text-decoration: none; }
 .pdf-contents .part { font-weight: bold; margin: 1.1em 0 0.3em; break-after: avoid; }
 .pdf-contents .entry { display: flex; align-items: baseline; break-inside: avoid; margin: 0.1em 0; }
 .pdf-contents .entry .dots {
@@ -75,6 +75,7 @@ STYLE = """
 .pdf-contents .depth-0 { font-weight: 600; margin-top: 0.5em; }
 .pdf-contents .depth-1 { padding-left: 1.5em; }
 .pdf-contents .depth-2 { padding-left: 3em; }
+.pdf-contents .index { margin-top: 1.1em; }
 .pdf-index { columns: 2; column-gap: 2em; font-size: 0.9em; }
 .pdf-index .letter {
     font-weight: bold; font-size: 1.3em; margin: 0.8em 0 0.2em; break-after: avoid;
@@ -285,6 +286,12 @@ def contents_html(chapters: list[Chapter], pages: dict[str, int]) -> str:
             '<span class="dots"></span>'
             f'<span class="page">{page_text(pages.get(chapter.id))}</span></a>'
         )
+    # The index is at the back, after the last part.
+    lines.append(
+        '<a class="entry depth-0 index" href="#pdf-index">'
+        '<span class="name">Index</span><span class="dots"></span>'
+        f'<span class="page">{page_text(pages.get("pdf-index"))}</span></a>'
+    )
     lines.append("</nav>")
     return "\n".join(lines)
 
@@ -402,6 +409,35 @@ def add_bookmarks(
     add("Index", "pdf-index")
 
 
+def point_links_at_pages(writer: PdfWriter) -> None:
+    """Gives every link inside the PDF its page and place, instead of a
+    name to look up.
+
+    Chrome writes a link to #step-9-the-band as "go to the place named
+    step-9-the-band", and a table at the back of the PDF says where that
+    is. Chrome's and Firefox's readers look the name up, but not every
+    reader does: in some, those links do nothing. A link that says "go to
+    page 543, this far down" works in all of them."""
+    names = writer.root_object.get("/Dests")
+    if names is None:
+        return
+    names = names.get_object()
+    for page in writer.pages:
+        for annotation in page.get("/Annots", []):
+            link = annotation.get_object()
+            name = link.get("/Dest")
+            if not isinstance(name, (NameObject, TextStringObject)):
+                continue
+            place = names.get(name)
+            if place is None:
+                continue
+            place = place.get_object()
+            # A name can also lead to a dictionary that holds the place.
+            if isinstance(place, DictionaryObject):
+                place = place["/D"].get_object()
+            link[NameObject("/Dest")] = ArrayObject(place)
+
+
 def main() -> None:
     if len(sys.argv) != 3:
         sys.exit(__doc__)
@@ -484,6 +520,7 @@ def main() -> None:
 
         writer = PdfWriter(clone_from=reader)
         add_bookmarks(writer, chapters, dests)
+        point_links_at_pages(writer)
         writer.page_mode = "/UseOutlines"
         out.parent.mkdir(parents=True, exist_ok=True)
         with open(out, "wb") as f:
