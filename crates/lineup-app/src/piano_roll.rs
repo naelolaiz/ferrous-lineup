@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use eframe::egui::{
     self, Align, Align2, Color32, FontId, Key, KeyboardShortcut, Modifiers, Painter, Pos2, Rect,
-    Response, Sense, Stroke, StrokeKind, Ui, Vec2, pos2, vec2,
+    Response, Sense, Stroke, StrokeKind, TextStyle, Ui, Vec2, pos2, vec2,
 };
 use lineup_core::band::solo::{NoteRole, Over};
 use lineup_core::harmony::keys::{self, ChordSize};
@@ -1103,21 +1103,26 @@ impl PianoRoll {
     /// The line under the chord names with what the voice-leading check
     /// found at the step pointed at, or else in the whole pattern. Its
     /// tooltip says why classical part writing avoids it. It is cut to
-    /// one line, so the grid does not jump as the pointer moves.
+    /// one line, so the grid does not jump as the pointer moves. With the
+    /// pointer on the line itself, it keeps what it said for the step
+    /// pointed at last, so that its tooltip can be read.
     fn voice_line(&self, ui: &mut Ui, drawing: Drawing, check: &VoiceLeading) {
         let name = |voice: usize| voice_name(drawing.project, check, voice);
-        let here: Vec<&Slip> = self
+        let line = Rect::from_min_size(
+            ui.cursor().min,
+            vec2(ui.available_width(), ui.text_style_height(&TextStyle::Body)),
+        );
+        let step = self
             .hovered_step
             .or(drawing.playhead)
+            .or(self.last_step.filter(|_| ui.rect_contains_pointer(line)));
+        let here: Vec<&Slip> = step
             .map(|step| check.slips_at(step).collect())
             .unwrap_or_default();
         // Where nothing is found, how each part moves at the change
         // pointed at (or the last one before it).
         let changes = part_moves(check);
-        let change = self
-            .hovered_step
-            .or(drawing.playhead)
-            .and_then(|step| voice_motion::change_at(&changes, step, usize::MAX));
+        let change = step.and_then(|step| voice_motion::change_at(&changes, step, usize::MAX));
         if here.is_empty()
             && let Some(change) = change
         {
