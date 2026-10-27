@@ -51,23 +51,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y fonts-freefont-ttf fonts-noto-color-emoji
 
+      # pypdf, a Python library for PDF files, adds the bookmarks to the
+      # PDF. The runner's Python won't install packages for everyone, so it
+      # goes into a virtual environment of its own.
+      - name: Install pypdf
+        run: |
+          python3 -m venv "$RUNNER_TEMP/pdf-tools"
+          "$RUNNER_TEMP/pdf-tools/bin/pip" install --quiet pypdf==6.17.0
+
       # mdBook also writes print.html, every chapter on one page. A second
       # build in the light theme (the website stays dark) gives black text
       # on white paper; the MDBOOK_ variables override book.toml for this
-      # build only. Chrome, which the runner already has, then prints that
-      # page the way a browser's Print button does, without the date and
-      # address at the top and bottom of each page. print.css sets the
-      # paper size.
+      # build only. print-pdf.py adds a title page, the contents and an
+      # index to that page, has Chrome (which the runner already has)
+      # print it the way a browser's Print button does, without the date
+      # and address at the top and bottom of each page, and adds the
+      # bookmarks. print.css sets the paper size and the page numbers.
       - name: Print the PDF
         env:
           MDBOOK_OUTPUT__HTML__DEFAULT_THEME: light
           MDBOOK_OUTPUT__HTML__PREFERRED_DARK_THEME: light
         run: |
           mdbook build --dest-dir pdf
-          google-chrome --headless --no-sandbox --disable-gpu \
-            --no-pdf-header-footer --virtual-time-budget=30000 \
-            --print-to-pdf="$PWD/book/ferrous-lineup-book.pdf" \
-            "file://$PWD/pdf/print.html"
+          "$RUNNER_TEMP/pdf-tools/bin/python" print-pdf.py pdf book/ferrous-lineup-book.pdf
           test -s book/ferrous-lineup-book.pdf
 
       # The PDF is a download on every run, pull requests included. It is
