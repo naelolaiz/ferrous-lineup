@@ -6,7 +6,7 @@
 
 use std::rc::Rc;
 
-use eframe::egui::{self, Ui};
+use eframe::egui::{self, Color32, Ui};
 use lineup_core::chord_sheet::notation::{
     Grouping, HeardGroups, Notation, heard_groups, spelled_set, stacked_notes, stacked_text,
 };
@@ -81,6 +81,9 @@ pub(super) struct Shown {
     /// "3-11|3-11", where the whole one does not fit.
     pub short: Option<String>,
     pub caption: Option<String>,
+    /// The colour of the caption, when it is not the usual one: the
+    /// numeral of a borrowed or a secondary chord, or of a pivot.
+    pub tint: Option<Color32>,
     /// It is a set, a micromode or a row form, written in their colour.
     pub group: bool,
     pub no_chord: bool,
@@ -415,6 +418,7 @@ impl NotationView {
                     text: stacked_text(&names),
                     short: short_text(&names),
                     caption: Some(stacked_notes(&heard.groups, key)),
+                    tint: None,
                     group: true,
                     no_chord: false,
                     notes,
@@ -426,13 +430,15 @@ impl NotationView {
 
     /// A harmony written on the sheet, as the notation names it.
     /// `caption` and `describe` say what the sheet writes under and
-    /// about a single harmony; `voicing` gives the notes to hear.
+    /// about a single harmony, and `tint` in which colour, if not the
+    /// usual one; `voicing` gives the notes to hear.
     pub fn written(
         &self,
         marker: &ChordMarker,
         key: Scale,
         caption: impl Fn(&ChordMarker) -> Option<String>,
         describe: impl Fn(&ChordMarker) -> String,
+        tint: impl Fn(&ChordMarker) -> Option<Color32>,
         voicing: impl Fn(HarmonyName) -> Vec<Note>,
     ) -> Shown {
         let names = self.notation().rename(marker.harmony, key);
@@ -458,6 +464,7 @@ impl NotationView {
                 text: shown.text(),
                 short: short_text(&names).map(marks),
                 caption: caption(&shown),
+                tint: tint(&shown),
                 group,
                 no_chord,
                 notes,
@@ -486,6 +493,7 @@ impl NotationView {
             text: format!("{carets}{}{dots}", stacked_text(&names)),
             short: short_text(&names).map(|short| format!("{carets}{short}{dots}")),
             caption: Some(words.join(" · ")),
+            tint: None,
             group,
             no_chord,
             notes,

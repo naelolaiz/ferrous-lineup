@@ -30,6 +30,11 @@ impl Smoothed {
         self.target
     }
 
+    /// Where it is now, on its way to the target.
+    pub fn value(&self) -> f32 {
+        self.current
+    }
+
     /// Jumps straight to the target, with no smoothing.
     pub fn settle(&mut self) {
         self.current = self.target;

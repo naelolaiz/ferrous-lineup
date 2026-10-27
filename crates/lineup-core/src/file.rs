@@ -173,13 +173,19 @@ pub fn is_project(path: &Path) -> bool {
 /// [`Channel::sent_on`]). Older versions would play it here, so a song
 /// with a drum sent over MIDI needs format 27.
 ///
+/// Format 28 added the horn section (see [`Project::set_horns`]), and the
+/// equalizer, compressor and delay of each channel (see
+/// [`Channel::effects`]). Older versions know neither, so a song with
+/// horns, or with a channel going through any of its effects, needs
+/// format 28.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play. In the same way, a key can be written the
 /// other way round, Gb major rather than F# major (see
 /// [`Scale::other_spelling`]): older versions name it the usual way and
 /// play the same notes.
-pub const FORMAT_VERSION: u32 = 27;
+pub const FORMAT_VERSION: u32 = 28;
 
 /// The oldest format that can hold `project`.
 ///
@@ -267,7 +273,23 @@ pub fn format_for(project: &Project) -> u32 {
         .channels()
         .iter()
         .any(|channel| channel.sent_on.is_some());
-    if sends_drums {
+    let has_horns = project.band().is_some_and(|band| {
+        band.has_horns()
+            || [&band.custom_rhythm, &band.custom_instruments]
+                .into_iter()
+                .flatten()
+                .any(|style| style.players().contains(&Player::Horns))
+    }) || project
+        .patterns()
+        .iter()
+        .any(|pattern| pattern.player == Some(Player::Horns));
+    let has_effects = project
+        .channels()
+        .iter()
+        .any(|channel| !channel.has_plain_effects());
+    if has_horns || has_effects {
+        28
+    } else if sends_drums {
         27
     } else if has_channel_mix {
         26
@@ -569,6 +591,16 @@ impl TryFrom<ProjectFile> for Project {
         if let Some(channel) = file.channels.iter().find(|channel| !channel.mix_is_valid()) {
             return invalid(format!(
                 "channel \"{}\" has its pan or reverb send outside its range",
+                channel.name
+            ));
+        }
+        if let Some(channel) = file
+            .channels
+            .iter()
+            .find(|channel| !channel.effects.is_valid())
+        {
+            return invalid(format!(
+                "channel \"{}\" has an effect set outside its range",
                 channel.name
             ));
         }
@@ -1276,6 +1308,25 @@ mod tests {
         assert_eq!(from_text(&text).unwrap(), project);
         // A file edited by hand cannot send it past MIDI channel 16.
         let text = text.replace("sent_on: Some(9)", "sent_on: Some(16)");
+        assert!(matches!(from_text(&text), Err(FileError::Invalid(_))));
+    }
+
+    #[test]
+    fn effects_need_format_twenty_eight() {
+        let mut project = plain_demo();
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("effects"), "{text}");
+        let channel = project.channel_mut(0).unwrap();
+        channel.effects.eq.low = -6.0;
+        channel.effects.delay.mix = 0.3;
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 28,"), "{text}");
+        assert!(text.contains("low: -6.0"), "{text}");
+        // The compressor, off, is left out.
+        assert!(!text.contains("compressor"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
+        // A file edited by hand cannot have echoes that never die away.
+        let text = text.replace("feedback: 0.35", "feedback: 1.5");
         assert!(matches!(from_text(&text), Err(FileError::Invalid(_))));
     }
 
