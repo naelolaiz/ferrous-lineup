@@ -405,7 +405,8 @@ def add_bookmarks(
 def main() -> None:
     if len(sys.argv) != 3:
         sys.exit(__doc__)
-    built, out = Path(sys.argv[1]), Path(sys.argv[2])
+    # Chrome opens the page by its full address, file:///...
+    built, out = Path(sys.argv[1]).resolve(), Path(sys.argv[2])
     here = Path(__file__).resolve().parent
     chrome = os.environ.get("CHROME", "google-chrome")
     # Chrome's PDFs make pypdf warn that they have more objects than they
