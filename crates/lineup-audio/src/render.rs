@@ -320,12 +320,14 @@ mod tests {
     #[test]
     fn a_channel_with_a_delay_echoes_in_time_with_the_song() {
         let mut renderer = clicking();
-        let mut effects = lineup_core::Effects::default();
         // An eighth note at 120 BPM: a quarter of a second.
-        effects.delay = lineup_core::Delay {
-            steps: 2,
-            feedback: 0.0,
-            mix: 0.5,
+        let effects = lineup_core::Effects {
+            delay: lineup_core::Delay {
+                steps: 2,
+                feedback: 0.0,
+                mix: 0.5,
+            },
+            ..Default::default()
         };
         renderer.send(Command::SetEffects {
             channel: 0,

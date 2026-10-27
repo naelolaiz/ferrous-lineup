@@ -349,12 +349,16 @@ fn effects_menu(ui: &mut egui::Ui, effects: &mut Effects) {
     } else {
         egui::RichText::new(summary)
     };
-    ui.menu_button(label, |ui| {
+    // It stays open while its settings change, until a click outside it.
+    let menu = egui::containers::menu::MenuButton::new(label).config(
+        egui::containers::menu::MenuConfig::new()
+            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
+    );
+    let (response, _) = menu.ui(ui, |ui| {
         ui.set_min_width(300.0);
         effects_settings(ui, effects);
-    })
-    .response
-    .on_hover_text(
+    });
+    response.on_hover_text(
         "Its own equalizer, compressor and delay, which shape its sound before it joins \
          the others",
     );

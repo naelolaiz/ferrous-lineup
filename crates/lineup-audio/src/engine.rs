@@ -342,6 +342,9 @@ pub enum Command {
 
 /// Something the audio thread has finished with. It is sent back to the
 /// UI thread, because freeing memory is not allowed on the audio thread.
+// A channel is much bigger than the rest, but it cannot come in a box:
+// the audio thread builds channels, and must not allocate.
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum Garbage {
     Instrument(Instrument),
     Notes(Vec<NoteEvent>),
