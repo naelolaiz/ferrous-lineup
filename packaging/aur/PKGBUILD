@@ -20,7 +20,7 @@ makedepends=('rust')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
 # Run `updpkgsums` after the v$pkgver tag is pushed; GitHub's archive of a
 # tag is not the same file as the working tree.
-sha256sums=('SKIP')
+sha256sums=('807c40b79d1749e51f2f32354b20e3abeb1bd1e35d4c9b122481c90cdc0c9105')
 
 build() {
   cd "$pkgname-$pkgver"
