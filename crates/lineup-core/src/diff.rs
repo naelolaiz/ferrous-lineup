@@ -38,6 +38,8 @@ pub enum Change {
     Pan(usize),
     /// Channel `n` sends more or less of itself to the reverb.
     ReverbSend(usize),
+    /// Channel `n` has other effects (see [`crate::effects`]).
+    Effects(usize),
     PatternLength(usize),
     Notes {
         pattern: usize,
@@ -172,6 +174,9 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
         if old.reverb_send != channel.reverb_send {
             changes.push(Change::ReverbSend(index));
         }
+        if old.effects != channel.effects {
+            changes.push(Change::Effects(index));
+        }
         if before.channel_muted(old_index) != after.channel_muted(index) {
             changes.push(Change::Muted(index));
         }
@@ -261,6 +266,7 @@ mod tests {
         muted: bool,
         pan: f32,
         reverb_send: f32,
+        effects: crate::Effects,
         /// One list per pattern.
         notes: Vec<Vec<NoteEvent>>,
     }
@@ -288,6 +294,7 @@ mod tests {
                 muted: project.channel_muted(index),
                 pan: channel.pan,
                 reverb_send: channel.reverb_send,
+                effects: channel.effects,
                 notes: (0..project.patterns().len())
                     .map(|pattern| project.played_notes(pattern, index).into_owned())
                     .collect(),
@@ -340,6 +347,9 @@ mod tests {
                 Change::Pan(index) => self.channels[index].pan = after.channels()[index].pan,
                 Change::ReverbSend(index) => {
                     self.channels[index].reverb_send = after.channels()[index].reverb_send;
+                }
+                Change::Effects(index) => {
+                    self.channels[index].effects = after.channels()[index].effects;
                 }
                 Change::PatternLength(index) => {
                     self.lengths[index] = after.patterns()[index].length();
@@ -485,7 +495,7 @@ mod tests {
     }
 
     #[test]
-    fn volume_mute_and_instrument() {
+    fn volume_mute_instrument_and_effects() {
         let before = Project::demo();
         let mut after = before.clone();
         after.channel_mut(0).unwrap().volume = 0.3;
@@ -495,6 +505,7 @@ mod tests {
         after.channel_mut(3).unwrap().program = Some(crate::general_midi::VIOLIN);
         after.channel_mut(4).unwrap().pan = -0.5;
         after.channel_mut(0).unwrap().reverb_send = 0.25;
+        after.channel_mut(4).unwrap().effects.compressor.ratio = 4.0;
         assert_eq!(
             check_both_ways(&before, &after),
             vec![
@@ -504,6 +515,7 @@ mod tests {
                 Change::Instrument(2),
                 Change::Instrument(3),
                 Change::Pan(4),
+                Change::Effects(4),
             ]
         );
     }

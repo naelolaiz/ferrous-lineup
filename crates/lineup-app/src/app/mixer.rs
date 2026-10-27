@@ -1,11 +1,14 @@
 //! The mixer window: every channel, in the order of a score's sections,
 //! with its instrument (click it to choose another, or to send the
-//! channel over MIDI), its volume, pan, reverb send and level meter; and
-//! the master volume, reverb and meter.
+//! channel over MIDI), its volume, pan, reverb send, effects (an
+//! equalizer, a compressor and a delay) and level meter; and the master
+//! volume, reverb and meter.
 
 use eframe::egui::{self, Rect};
 use lineup_core::score_order::score_order;
-use lineup_core::{Channel, ChannelKind, Mixer, SampleSource, general_midi};
+use lineup_core::{
+    Channel, ChannelKind, Compressor, Delay, Effects, Equalizer, Mixer, SampleSource, general_midi,
+};
 
 use super::{Audio, LineupApp};
 use crate::meters::{self, Meters};
@@ -71,8 +74,8 @@ impl LineupApp {
                 if ui
                     .button("Reset mix")
                     .on_hover_text(
-                        "Reset master, reverb, solo, levels, pans, reverb sends and mutes (the \
-                         band's mutes stay); Undo restores them",
+                        "Reset master, reverb, solo, levels, pans, reverb sends, effects and \
+                         mutes (the band's mutes stay); Undo restores them",
                     )
                     .clicked()
                 {
@@ -118,6 +121,7 @@ impl LineupApp {
                         ui.strong("Volume");
                         ui.strong("Pan");
                         ui.strong("Reverb");
+                        ui.strong("Effects");
                         ui.strong("Mute");
                         ui.strong("Solo");
                         ui.end_row();
@@ -181,6 +185,7 @@ impl LineupApp {
                                      above is on"
                                     },
                                 );
+                                effects_menu(ui, &mut channel.effects);
                                 ui.checkbox(&mut channel.muted, "")
                                     .on_hover_text("Mute this channel");
                                 if ui
@@ -223,6 +228,7 @@ impl LineupApp {
                         state.muted = channel.muted;
                         state.pan = channel.pan;
                         state.reverb_send = channel.reverb_send;
+                        state.effects = channel.effects;
                     }
                 }
             });
@@ -332,6 +338,150 @@ fn pan_value(text: &str) -> Option<f64> {
         text.parse::<f64>().ok()?
     };
     Some(percent / 100.0)
+}
+
+/// A channel's effects: a button that says which are on, and opens their
+/// settings.
+fn effects_menu(ui: &mut egui::Ui, effects: &mut Effects) {
+    let summary = effects.summary();
+    let label = if summary.is_empty() {
+        egui::RichText::new("none").weak()
+    } else {
+        egui::RichText::new(summary)
+    };
+    ui.menu_button(label, |ui| {
+        ui.set_min_width(300.0);
+        effects_settings(ui, effects);
+    })
+    .response
+    .on_hover_text(
+        "Its own equalizer, compressor and delay, which shape its sound before it joins \
+         the others",
+    );
+}
+
+const EQ_HELP: &str = "Turns bands of frequencies up or down. The lows are the weight of a bass \
+                       or a kick drum, the middle the body of most instruments, the highs the \
+                       air and sparkle of cymbals. Turn a piano's lows down to leave the bass \
+                       room.";
+const COMPRESSOR_HELP: &str = "Evens out how loud it plays: above the threshold it turns the \
+                               sound down, the more the higher the ratio (at 4:1, 8 dB over \
+                               comes out 2 dB over). The gain brings the whole part back up. \
+                               A ratio of 1:1 turns nothing down.";
+const DELAY_HELP: &str = "Plays it again a little later, in time with the song, and again, \
+                          each echo quieter: the feedback says how much of each echo comes \
+                          back. A mix of 0% turns it off.";
+
+/// The settings of the equalizer, the compressor and the delay.
+fn effects_settings(ui: &mut egui::Ui, effects: &mut Effects) {
+    ui.horizontal(|ui| {
+        ui.strong("Equalizer").on_hover_text(EQ_HELP);
+        if ui
+            .add_enabled(!effects.eq.is_flat(), egui::Button::new("Flat"))
+            .on_hover_text("Every band back to 0 dB")
+            .clicked()
+        {
+            effects.eq = Equalizer::default();
+        }
+    });
+    egui::Grid::new("eq").num_columns(2).show(ui, |ui| {
+        let bands = [
+            ("Low", "below 200 Hz", &mut effects.eq.low),
+            ("Mid", "around 1 kHz", &mut effects.eq.mid),
+            ("High", "above 4 kHz", &mut effects.eq.high),
+        ];
+        for (name, band, gain) in bands {
+            ui.label(name).on_hover_text(band);
+            decibel_slider(ui, gain, -Equalizer::RANGE..=Equalizer::RANGE)
+                .on_hover_text(format!("{name}: {band}. Double-click for 0 dB."));
+            ui.end_row();
+        }
+    });
+    ui.separator();
+    ui.strong("Compressor").on_hover_text(COMPRESSOR_HELP);
+    let compressor = &mut effects.compressor;
+    egui::Grid::new("compressor").num_columns(2).show(ui, |ui| {
+        ui.label("Threshold");
+        ui.add(
+            egui::Slider::new(
+                &mut compressor.threshold,
+                Compressor::LOWEST_THRESHOLD..=0.0,
+            )
+            .suffix(" dB"),
+        )
+        .on_hover_text("The level it starts turning down at");
+        ui.end_row();
+        ui.label("Ratio");
+        ui.add(
+            egui::Slider::new(&mut compressor.ratio, 1.0..=Compressor::MOST_RATIO)
+                .logarithmic(true)
+                .custom_formatter(|ratio, _| format!("{ratio:.1}:1"))
+                .custom_parser(|text| text.trim().trim_end_matches(":1").parse().ok()),
+        )
+        .on_hover_text("How much it turns down over the threshold: 1:1 is off");
+        ui.end_row();
+        ui.label("Gain");
+        ui.add(egui::Slider::new(&mut compressor.gain, 0.0..=Compressor::MOST_GAIN).suffix(" dB"))
+            .on_hover_text("How much it turns the whole part up afterwards");
+        ui.end_row();
+    });
+    ui.separator();
+    ui.strong("Delay").on_hover_text(DELAY_HELP);
+    let delay = &mut effects.delay;
+    egui::Grid::new("delay").num_columns(2).show(ui, |ui| {
+        ui.label("Time");
+        ui.horizontal_wrapped(|ui| {
+            for (steps, name) in Delay::TIMES {
+                ui.selectable_value(&mut delay.steps, steps, name)
+                    .on_hover_text(
+                        "How long after the sound each echo comes, in notes of the song",
+                    );
+            }
+        });
+        ui.end_row();
+        ui.label("Feedback");
+        ui.add(
+            egui::Slider::new(&mut delay.feedback, 0.0..=Delay::MOST_FEEDBACK)
+                .custom_formatter(|value, _| format!("{:.0}%", value * 100.0)),
+        )
+        .on_hover_text("How loud each echo is next to the one before");
+        ui.end_row();
+        ui.label("Mix");
+        percent_slider(ui, &mut delay.mix);
+        ui.end_row();
+    });
+    ui.separator();
+    if ui
+        .add_enabled(!effects.is_plain(), egui::Button::new("No effects"))
+        .on_hover_text("Turn every effect of this channel off")
+        .clicked()
+    {
+        *effects = Effects::default();
+    }
+}
+
+/// A gain in decibels, that a double-click puts back at 0.
+fn decibel_slider(
+    ui: &mut egui::Ui,
+    gain: &mut f32,
+    range: std::ops::RangeInclusive<f32>,
+) -> egui::Response {
+    let response = ui.add(
+        egui::Slider::new(gain, range)
+            .trailing_fill(false)
+            .step_by(0.5)
+            .custom_formatter(|value, _| format!("{value:+.1} dB"))
+            .custom_parser(|text| text.trim().trim_end_matches("dB").trim().parse().ok()),
+    );
+    let double_click = ui.input(|input| {
+        input
+            .pointer
+            .button_double_clicked(egui::PointerButton::Primary)
+    });
+    if double_click && response.contains_pointer() {
+        *gain = 0.0;
+    }
+    response
 }
 
 fn percent_slider(ui: &mut egui::Ui, value: &mut f32) {

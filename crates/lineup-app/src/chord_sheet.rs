@@ -137,6 +137,8 @@ pub enum SheetAction {
     SetSoloist(bool),
     /// Have the soloist play another solo.
     AnotherSolo,
+    /// Have the horn section play with the band, or not.
+    SetHorns(bool),
     /// Write a progression's chords from this bar on.
     WriteProgression {
         style: &'static Style,
@@ -1928,6 +1930,22 @@ fn soloist_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
     let again = ui.add_enabled(band.has_soloist(), egui::Button::new("Another solo"));
     if theme::hint(again, "Have the soloist improvise again, a different solo").clicked() {
         actions.push(SheetAction::AnotherSolo);
+        ui.close();
+    }
+}
+
+/// The horn section: on or off, and what it plays in this style.
+fn horns_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
+    let mut on = band.has_horns();
+    let check = ui.checkbox(&mut on, "Horns");
+    let hint = format!(
+        "A horn section plays the chords in close harmony, each horn moving as little as it \
+         can from chord to chord. In {}, {}.",
+        band.style.name,
+        band.horn_section().describe()
+    );
+    if theme::hint(check, hint).clicked() {
+        actions.push(SheetAction::SetHorns(on));
         ui.close();
     }
 }

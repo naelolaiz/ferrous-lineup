@@ -153,6 +153,7 @@ pub fn follow(analysis: &Analysis, lead_in: LeadIn, wav: PathBuf, title: &str) -
             pan: 0.0,
             reverb_send: 1.0,
             sent_on: None,
+            effects: Default::default(),
         })
         .unwrap_or(0);
     let harmony = project

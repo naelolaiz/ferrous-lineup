@@ -448,7 +448,8 @@ impl LineupApp {
 
     /// The commands that insert channel `index` of the project, with its
     /// instrument and its notes in every pattern, and set its pan and
-    /// reverb send unless it has the plain mix a new channel starts with.
+    /// reverb send unless it has the plain mix a new channel starts with,
+    /// and its effects unless it has none.
     fn channel_commands(&mut self, index: usize, sample_rate: u32) -> Vec<Command> {
         let channel = self.project.channels()[index].clone();
         // The notes as they are played, with the song's swing.
@@ -471,6 +472,17 @@ impl LineupApp {
             commands.push(Command::SetReverbSend {
                 channel: index,
                 send: channel.reverb_send,
+            });
+        }
+        if !channel.has_plain_effects() {
+            commands.push(Command::SetEffects {
+                channel: index,
+                effects: channel.effects,
+                line: channel
+                    .effects
+                    .delay
+                    .is_on()
+                    .then(|| lineup_audio::DelayLine::new(sample_rate)),
             });
         }
         commands
@@ -1153,6 +1165,22 @@ impl LineupApp {
                 self.edit("play another solo", Project::another_solo);
                 self.notice = Some("The soloist plays another solo".to_string());
             }
+            SheetAction::SetHorns(_) if self.project.plays_locked(lineup_core::Player::Horns) => {
+                self.notice =
+                    Some("The horns are locked: unlock them in the rack first.".to_string());
+            }
+            SheetAction::SetHorns(on) => {
+                let what = if on {
+                    "add the horns"
+                } else {
+                    "take the horns out"
+                };
+                self.edit(what, |project| project.set_horns(on));
+                self.notice = Some(match on {
+                    true => "The horns play the chords with the band".to_string(),
+                    false => "No horns".to_string(),
+                });
+            }
             SheetAction::WriteProgression { style, from } => {
                 let source = Source::new(SourceKind::Style, style.name);
                 let chords = PartSet::of(&[SongPart::Chords]);
@@ -1384,6 +1412,7 @@ impl LineupApp {
                     pan: 0.0,
                     reverb_send: 1.0,
                     sent_on: None,
+                    effects: Default::default(),
                 }),
             }
         });

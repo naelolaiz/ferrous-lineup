@@ -507,6 +507,64 @@ fn the_mixer_pans_a_channel_and_sets_its_reverb_send() {
 }
 
 #[test]
+fn the_mixer_sets_a_channels_effects() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.mixer_open = true;
+    let osc = screen
+        .app
+        .project
+        .channels()
+        .iter()
+        .position(|channel| channel.name == "Lineup Osc")
+        .unwrap();
+    let effects = |screen: &Screen| screen.app.project.channels()[osc].effects;
+    assert!(effects(&screen).is_plain());
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let row = text_rect(&output, "Acoustic Grand Piano")
+        .unwrap()
+        .center()
+        .y;
+    let none = text_rect_in_row(&output, "none", row).unwrap();
+    screen.click_at(none.center(), Modifiers::NONE);
+    // The menu has the equalizer, the compressor and the delay.
+    let output = screen.draw(vec![]);
+    for heading in ["Equalizer", "Compressor", "Delay"] {
+        assert!(text_rect(&output, heading).is_some(), "{heading}");
+    }
+    screen.click("dotted 1/4");
+    assert_eq!(effects(&screen).delay.steps, 6);
+    assert_eq!(screen.app.history.undo_label(), Some("mixer"));
+    screen.click("No effects");
+    assert!(effects(&screen).is_plain());
+}
+
+#[test]
+fn an_exported_song_plays_each_channels_effects() {
+    const RATE: u32 = 8000;
+    let mut screen = Screen::new();
+    let loudness = |app: &mut LineupApp| {
+        let mut render = app.song_render(RATE);
+        let mut out = vec![0.0; 2 * 2 * RATE as usize];
+        render.renderer.render(&mut out);
+        out.iter().map(|sample| sample.abs()).sum::<f32>()
+    };
+    let plain = loudness(&mut screen.app);
+    // Every band of every channel turned all the way down.
+    screen.app.edit("mixer", |project| {
+        for index in 0..project.channels().len() {
+            let eq = &mut project.channel_mut(index).unwrap().effects.eq;
+            eq.low = -12.0;
+            eq.mid = -12.0;
+            eq.high = -12.0;
+        }
+    });
+    let cut = loudness(&mut screen.app);
+    assert!(cut < 0.6 * plain, "{cut} {plain}");
+}
+
+#[test]
 fn an_exported_song_keeps_each_channel_where_the_mixer_put_it() {
     const RATE: u32 = 8000;
     let mut screen = Screen::new();
