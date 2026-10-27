@@ -34,8 +34,9 @@ The sheet is laid out like a printed chart:
   (thin, then thick) where the song ends.
 - **Each harmony sits where its beat falls.** "C A7" in a bar of four
   beats puts C at the left edge and A7 halfway along, on beat 3.
-- **Under each chord, its Roman numeral in the key**: A7 in C major is
-  VI7, Fm is iv. An inversion gets the figures of figured bass: G7/B is
+- **Under each chord, its Roman numeral in the key**: Fm in C major
+  is iv, and A7, the dominant of Dm, is V7/ii (see
+  [Borrowed chords, secondary dominants and pivot chords](chord-functions.md)). An inversion gets the figures of figured bass: G7/B is
   V⁶₅, C/E is I⁶. Under a set or a micromode, its notes.
 - **A bar with nothing written goes on with the harmony before it**,
   which is shown faintly so the bar does not look empty.
