@@ -43,6 +43,9 @@ You can read it in four ways:
 3. Online, at <https://naelolaiz.github.io/ferrous-lineup/>.
 4. As one PDF with every chapter in order, to read offline or print:
    [ferrous-lineup-book.pdf](https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf).
+   It has page numbers, the contents at the front, an index of words at
+   the back, and bookmarks for every chapter in your PDF reader's side
+   panel.
 
 [The book online and as a PDF](step-9/book-online.md) tells how the last
 two are made.
