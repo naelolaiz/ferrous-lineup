@@ -492,6 +492,9 @@ fn read(forms: &[Form], played: &[PartNote]) -> Reading {
     ];
     best[0] = 0;
     for start in 0..n {
+        if best[start] == usize::MAX {
+            continue;
+        }
         // The notes that ended the form before, which may also start
         // the next: one note, or a chord played again.
         let shared = start

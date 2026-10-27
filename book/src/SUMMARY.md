@@ -139,6 +139,7 @@
   - [Lead sheets for B♭, E♭ and F instruments](step-9/transposing-instruments.md)
   - [The speed trainer: start slow, get a little faster each time](step-9/speed-trainer.md)
   - [Voice leading: checking the parts as a harmony teacher would](step-9/voice-leading.md)
+  - [Twelve-tone rules: checking music written with a row](step-9/twelve-tone-rules.md)
   - [The book online and as a PDF](step-9/book-online.md)
   - [Where the band ends up](step-9/conclusion.md)
   - [Exercises](step-9/exercises.md)
