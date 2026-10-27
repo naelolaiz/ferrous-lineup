@@ -83,12 +83,16 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
-    <release version="0.3.0" date="2026-10-26">
+    <release version="0.3.0" date="2026-10-27">
       <description>
-        <p>Adds practice and theory tools, and makes the app sturdier.</p>
+        <p>Adds practice and theory tools, a horn section and channel effects, and makes the app sturdier.</p>
         <ul>
           <li>A speed trainer: loop a section and play it a little faster each time round.</li>
-          <li>A voice-leading check for written parts: parallel fifths and octaves, and leading notes and sevenths that do not resolve.</li>
+          <li>A voice-leading check for written parts: parallel fifths and octaves, and leading notes and sevenths that do not resolve. Where the key is a twelve-tone row, it checks the rules of twelve-tone writing instead.</li>
+          <li>The piano roll shows how each part moves from chord to chord: by step, skip or leap, in parallel, similar, contrary or oblique motion.</li>
+          <li>The chord sheet names borrowed chords, secondary dominants, the Neapolitan chord and the pivot chord of a key change, and reads a minor key's chords from all three of its scales.</li>
+          <li>A horn section that plays along with any style.</li>
+          <li>Each mixer channel has an equalizer, a compressor and a delay.</li>
           <li>Lead sheets for B-flat, E-flat and F instruments.</li>
           <li>Keys with two names are written as the music needs: G-flat major or F-sharp major, E-flat minor or D-sharp minor.</li>
           <li>Restart audio stops notes left sounding on external synths, and the playback trace carries on.</li>
