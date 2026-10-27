@@ -264,8 +264,9 @@ impl LineupApp {
                 }
                 Change::Effects(channel) => {
                     let effects = self.project.channels()[channel].effects;
-                    // A line only the first time the delay is on: the
-                    // audio thread gives back one it already has.
+                    // A line whenever the delay is on, since only the
+                    // audio thread knows whether the channel has one yet:
+                    // it keeps the first and gives back the others.
                     let line = effects.delay.is_on().then(|| DelayLine::new(sample_rate));
                     self.send(Command::SetEffects {
                         channel,
