@@ -6,8 +6,8 @@ a clear end. Some are mostly in the app, some mostly in Rust, and a few
 touch both. Do them in any order.
 
 Each exercise says what is **already there**, so you extend it rather
-than build it again. Exercises 6 and 8 both grow the project format; if
-you do both, give the second one the next free number. Run
+than build it again. Exercises 6 and 8 both grow the project format, to 29; if
+you do both, give the second one the next free number, 30. Run
 `cargo fmt --all --check` and
 `cargo clippy --workspace --all-targets -- -D warnings` before you call
 one finished; CI runs both.
@@ -201,8 +201,11 @@ tooltip, and the fill plays into the next section.
 
 **Goal.** The mixer already has a per-channel **Reverb** send and a
 master reverb. Add a **Delay** send beside it, so a channel can go into
-an echo without losing its dry sound. This is a capstone: it crosses
-the project file, the audio thread and the mixer window.
+an echo without losing its dry sound. Each channel already has a delay
+of its own among its [effects](channel-effects.md); this one is shared,
+like the reverb, so several channels echo together in one delay. This
+is a capstone: it crosses the project file, the audio thread and the
+mixer window.
 
 **Files.** `crates/lineup-core/src/project.rs`,
 `crates/lineup-core/src/mixer.rs`, `crates/lineup-core/src/file.rs`,
@@ -217,20 +220,21 @@ the project file, the audio thread and the mixer window.
    the default.
 2. In `Mixer`, add the delay's own settings: time in milliseconds,
    feedback, and wet/dry. Validate them in `Mixer::valid`.
-3. Add `Command::SetDelay` and `Command::SetDelaySend`, and a `Delay`
-   struct that allocates its buffer when the engine is built, never in
-   `process`. Follow the reverb's pattern: take `amount` of the sample
+3. Add `Command::SetDelay` and `Command::SetDelaySend`, and a shared
+   delay that allocates its buffer when the engine is built, never in
+   `process`. The channel delay's ring buffer in
+   `crates/lineup-audio/src/effects.rs` shows how to read the echo. Follow the reverb's pattern: take `amount` of the sample
    out of the dry mix as `send`, and add the delayed signal back.
 4. Add a **Delay** slider to each mixer line, next to **Reverb**, and a
    small delay section beside the reverb controls. Send the command
    through the same path as `SetReverbSend`.
-5. Bump `FORMAT_VERSION` to 28, teach `format_for` that a non-zero
-   delay send or non-default delay settings need 28, and leave the
+5. Bump `FORMAT_VERSION` to 29, teach `format_for` that a non-zero
+   delay send or non-default delay settings need 29, and leave the
    fields out of the text when they are at their defaults.
 6. Test the audio path: a send of 0 produces no echo, a send above 0
    produces one, and the dry sample is reduced by the wet amount. Test the
    file: an old file opens with send 0; a song with a delay send is
-   written as format 28 and round-trips.
+   written as format 29 and round-trips.
 
 **Run.**
 
@@ -297,17 +301,17 @@ format.
 2. Add `notes: String` to `ProjectFile`, with
    `#[serde(default, skip_serializing_if = "String::is_empty")]`, and
    copy it in both directions.
-3. Raise `FORMAT_VERSION` to 28. In `format_for`, return 28 first when
+3. Raise `FORMAT_VERSION` to 29. In `format_for`, return 29 first when
    `!project.notes.is_empty()`; leave everything else as it is.
 4. Write three tests in `file.rs`: an empty project stays at its old
-   format and has no `notes:` line; a project with notes is format 28
+   format and has no `notes:` line; a project with notes is format 29
    and round-trips; and a file written before the field existed reads
    back with empty notes.
 
 **Run.** `cargo test -p lineup-core file`.
 
 **Done when.** Old project texts still open, the new field survives a
-round trip, and `format_for` names 28 only for a song that needs it.
+round trip, and `format_for` names 29 only for a song that needs it.
 
 ## 9. Two views in a video, and a sync check (app, medium)
 

@@ -76,7 +76,7 @@ A paste is one change of the sheet, so **Ctrl+Z** takes it back in one
 go. The message above the bars says what was copied or pasted, and
 goes away when you click another bar.
 
-![Twenty-four bars pasted into a new song in C major: the same chord names, now with their numerals in C (Am7 vi7, D7 II7, F#m7b5 #ivø7)](../images/step-9-text-pasted.png)
+![Twenty-four bars pasted into a new song in C major: the same chord names, now with their numerals in C (Am7 vi7, D7 V7/V, F#m7b5 #ivø7, B7 V7/iii). [Secondary dominants](chord-functions.md#secondary-dominants-v-of-v) such as V7/V are named after the chord they lead to](../images/step-9-text-pasted.png)
 
 Pasting takes only the chords. The song keeps its own key, time
 signature, tempo, band and sections; the pasted Autumn Leaves above is

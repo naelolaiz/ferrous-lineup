@@ -71,16 +71,20 @@ that work, not as a second list to work through:
   [search](demo-search.md) to find them;
 - **The band's own tools**: [the style editor](style-editor.md), where a
   style is made and saved; [locking a track](locks.md); [a style for each
-  section](section-styles.md); and
-  [an orchestra for music that changes meter](orchestra.md);
+  section](section-styles.md);
+  [an orchestra for music that changes meter](orchestra.md); and
+  [a horn section for any style](horn-section.md);
 - **Harmony and the sheet**: [hearing chords](chord-hearing.md),
   [one harmony, four names](harmony-notations.md),
   [numerals in minor keys](minor-numerals.md), a
   [sheet that fills the window](chord-sheet-layout.md),
-  [bars inserted and deleted](insert-delete-bars.md) and
-  [lead sheets for B♭, E♭ and F instruments](transposing-instruments.md);
+  [bars inserted and deleted](insert-delete-bars.md),
+  [lead sheets for B♭, E♭ and F instruments](transposing-instruments.md),
+  [borrowed chords, secondary dominants and pivot chords](chord-functions.md)
+  and [how each part moves from chord to chord](part-motion.md);
 - **The sound and the screen**: [the mixer in score order](mixer-score-order.md),
   [a mixer with pan, reverb and meters](mixer.md),
+  [EQ, compression and delay on each channel](channel-effects.md),
   [any channel sent over MIDI](midi-out-menus.md),
   [export video](video-export.md), [a playback trace](playback-trace.md),
   [step lights in the channel rack](rack-lights.md),

@@ -10,7 +10,7 @@ name.
 
 ```text
 (
-    format: 27,
+    format: 28,
     tempo: 130.0,
     scale: (root: C, kind: Major),
     channels: [
@@ -24,7 +24,7 @@ name.
 [Saving and loading projects](step-4/saving.md) introduces RON, serde
 and the `ProjectFile` struct that stands between the file and the live
 `Project`. This page is the reference for the number at the top:
-`FORMAT_VERSION` is **27** in
+`FORMAT_VERSION` is **28** in
 [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs).
 
 ## The format number
@@ -33,7 +33,7 @@ The number says which features a file may contain. It is not the app's
 version: 0.1 and 0.2 both write format 1 when the song uses nothing new.
 
 `format_for` writes the **lowest** format that can hold the project, not
-always 27. A plain project stays format 1, so an older Ferrous Lineup
+always 28. A plain project stays format 1, so an older Ferrous Lineup
 can still open it. A song with a chord sheet but no band is format 12;
 a band is format 13; a locked channel is at least format 23. The number
 is the highest feature in the song, and features are cumulative.
@@ -73,6 +73,7 @@ carry only what they need.
 | 25 | Two chords at once on the chord sheet, written `Eb7` over `Fb`. | It could not read a polychord, so it could not open the file. | [Hearing chords](step-9/chord-hearing.md) |
 | 26 | A pan and a reverb send on each channel. | It would play every channel in the middle with all of it in the reverb. | [The mixer](step-9/mixer.md) |
 | 27 | Sending a built-in drum over MIDI. | It would play the drum itself instead of sending it to the external synth. | [Sending a channel over MIDI](step-9/midi-out-menus.md) |
+| 28 | A horn section in the band, and EQ, compression and delay on a channel. | It would play no horns, and every channel without its effects. | [A horn section](step-9/horn-section.md), [EQ, compression and delay](step-9/channel-effects.md) |
 
 A file can also say where the parts of the song came from, in any
 format. Older versions skip that record and lose nothing they could
@@ -90,7 +91,7 @@ if it parses, the meaning may have changed. So the reader checks the
 format number and refuses anything above `FORMAT_VERSION` with:
 
 ```text
-this file uses format 28, made by a newer version of Ferrous Lineup (this one reads up to format 27)
+this file uses format 29, made by a newer version of Ferrous Lineup (this one reads up to format 28)
 ```
 
 It checks after reading the whole file, so a RON error in a future file

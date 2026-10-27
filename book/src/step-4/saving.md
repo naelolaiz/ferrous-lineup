@@ -323,7 +323,8 @@ first, so it cannot hide the `(`.
 That `#[serde(default)]` from `ProjectFile` is also how a future version
 can add a field without breaking old files: files that do not have it get
 the type's default value. The test `files_from_the_future_are_refused`
-reads `(format: 28, sparkles: true)` and expects `NewerFormat(28)`.
+reads a file one format newer than this version, `(format: 29,
+sparkles: true)` today, and expects `NewerFormat(29)`.
 
 ## Errors as an enum
 

@@ -108,12 +108,7 @@ workflow in [The book online and as a PDF](book-online.md).
 The roadmap is careful to say that none of its ideas is planned yet.
 Some are small; some would change the shape of the app:
 
-- a horn section the band can bring to any style, not only the big band
-  songs;
 - a soloist that is no longer an experiment;
-- more harmony help: borrowed chords and modulations explained, and a
-  view of how each voice moves from chord to chord;
-- effects for each instrument, beside the shared reverb;
 - automation, drawn or recorded over the tracks;
 - audio clips on the tracks, to play along with a recording;
 - recording in song mode.
