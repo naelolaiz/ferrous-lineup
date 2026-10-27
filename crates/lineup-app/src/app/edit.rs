@@ -11,7 +11,7 @@
 use std::time::{Duration, Instant};
 
 use eframe::egui::{self, Key, KeyboardShortcut, Modifiers};
-use lineup_audio::Command;
+use lineup_audio::{Command, DelayLine};
 use lineup_core::history::DEFAULT_LIMIT;
 use lineup_core::{Change, Project, diff};
 
@@ -261,6 +261,18 @@ impl LineupApp {
                 Change::ReverbSend(channel) => {
                     let send = self.project.channels()[channel].reverb_send;
                     self.send(Command::SetReverbSend { channel, send });
+                }
+                Change::Effects(channel) => {
+                    let effects = self.project.channels()[channel].effects;
+                    // A line whenever the delay is on, since only the
+                    // audio thread knows whether the channel has one yet:
+                    // it keeps the first and gives back the others.
+                    let line = effects.delay.is_on().then(|| DelayLine::new(sample_rate));
+                    self.send(Command::SetEffects {
+                        channel,
+                        effects,
+                        line,
+                    });
                 }
                 Change::Muted(channel) => {
                     let muted = self.project.channel_muted(channel);

@@ -156,6 +156,7 @@ pub fn synth_named(project: &mut Project, name: &str) -> Option<usize> {
         pan: 0.0,
         reverb_send: 1.0,
         sent_on: None,
+        effects: Default::default(),
     })
 }
 

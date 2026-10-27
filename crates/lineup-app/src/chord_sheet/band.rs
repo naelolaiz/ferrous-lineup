@@ -3,7 +3,7 @@
 use eframe::egui::{self, Ui};
 use lineup_core::{BandStyle, ChannelKind, Player, Project, general_midi};
 
-use super::{SheetAction, soloist_items};
+use super::{SheetAction, horns_items, soloist_items};
 use crate::{theme, widgets};
 
 /// Instrument lineups drawn from the existing arrangements. Only their sounds
@@ -56,6 +56,7 @@ pub(super) fn menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction
                     });
                 }
                 ui.separator();
+                horns_items(ui, band, actions);
                 soloist_items(ui, band, actions);
                 ui.separator();
                 if ui.button("No band").clicked() {

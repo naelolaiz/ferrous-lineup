@@ -10,7 +10,7 @@
 | 6. Harmony tools | Done | Selecting and moving groups of notes, a Tools menu (transpose, move in key, snap to the key, invert, arpeggiate), stamped inversions, seven more chord types, next-chord suggestions with secondary dominants, ghost notes from the other channels, a velocity lane |
 | 7. MIDI | Done | MIDI keyboards in, external synths out (MIDI Out channels), a typing keyboard, chords named as you play, recording takes, `.mid` export of songs and patterns, file format 2 |
 | 8. Harmony keys and library | Done | The harmony keys (the seven chords of the key, coloured by function, with next-chord suggestions and the chord playing), time signatures, 78 harmony styles and 49 rhythms in 13 genres including tango, 16 public-domain songs, demos, nine new drums, patterns up to sixteen bars, file format 3 |
-| 9. The band | Done | Chord names and slash chords, a chord sheet the band plays, a practice bar, SoundFont sounds, chord inversions, ear training, song form, variations, swing, chord sheets as text, a lead sheet, a bigger band, shots, holds, rests and pushes, and an experimental soloist; then release packages (Linux AppImage, `.deb` and `.tar.gz`; Windows Setup and `.zip`; macOS `.dmg` for Apple Silicon and Intel), odd meters, a mixer in score order, a mixer with pan, a reverb send and meters, video export, a playback trace, locked tracks, a style for each section, the style editor, many more songs, a library of 177 harmony styles and 112 rhythms, crash recovery, recent projects and restarting audio, and this book online and as a PDF; see [step 9](step-9/README.md) |
+| 9. The band | Done | Chord names and slash chords, a chord sheet the band plays, a practice bar, SoundFont sounds, chord inversions, ear training, song form, variations, swing, chord sheets as text, a lead sheet, a bigger band, shots, holds, rests and pushes, and an experimental soloist; then release packages (Linux AppImage, `.deb` and `.tar.gz`; Windows Setup and `.zip`; macOS `.dmg` for Apple Silicon and Intel), odd meters, a mixer in score order, a mixer with pan, a reverb send and meters, video export, a playback trace, locked tracks, a style for each section, the style editor, many more songs, a library of 177 harmony styles and 112 rhythms, crash recovery, recent projects and restarting audio, chords from outside the key explained (borrowed chords, secondary dominants, pivot chords), how each part moves from chord to chord, a horn section for any style, EQ, compression and delay on each channel, and this book online and as a PDF; see [step 9](step-9/README.md) |
 
 Ferrous Lineup is a backing band you can learn harmony with: type the
 chords of a song, pick a style, and the band plays it, while the app
@@ -41,14 +41,9 @@ and a `.deb` for Linux.
 None of these are planned yet. They are ideas, roughly from smaller to
 bigger:
 
-- **More of the band**: more styles, and a horn section the band can
-  bring to any style, not only to the big band songs.
+- **More of the band**: more styles, and more instruments it can
+  bring to any of them, as it brings the horns now.
 - **A soloist that is no longer an experiment.**
-- **Even more harmony help**: borrowed chords and modulations
-  explained (exercise 4 of step 8 starts it), and a view of how each
-  voice moves from chord to chord.
-- **Effects for each instrument** in the mixer, next to the reverb they
-  share now.
 - **Automation**: knob movements recorded or drawn over time, on the
   tracks.
 - **Audio clips** on the tracks, next to the patterns, to play along

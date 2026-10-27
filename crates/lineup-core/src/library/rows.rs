@@ -578,6 +578,36 @@ mod tests {
         }
     }
 
+    /// The voice-leading check reads every style as forms of its row,
+    /// with no note out of order: the styles and the check follow the
+    /// same rules.
+    #[test]
+    fn the_voice_leading_check_reads_every_style_as_forms_of_its_row() {
+        use crate::harmony::voice_leading::SlipKind;
+        for style in &ROW_STYLES {
+            for start in [PitchClass::C, PitchClass::FSharp] {
+                let mut project = Project::empty();
+                assert!(write_row_style(&mut project, 0, style, start, None));
+                let channels: Vec<usize> = (0..project.channels().len()).collect();
+                let check = project.voice_leading(0, &channels);
+                assert!(!check.rows.is_empty(), "{}", style.name);
+                let out_of_order = check.slips.iter().filter(|slip| {
+                    matches!(
+                        slip.kind,
+                        SlipKind::RowOrder | SlipKind::EarlyRepeat | SlipKind::RowUnfinished
+                    )
+                });
+                assert_eq!(
+                    out_of_order.count(),
+                    0,
+                    "{}: {}",
+                    style.name,
+                    check.summary()
+                );
+            }
+        }
+    }
+
     #[test]
     fn a_song_takes_a_row_style() {
         let mut project = Project::demo();

@@ -20,6 +20,8 @@
 //!   sounds.
 //! - [`voice_leading`] checks how the parts move from chord to chord:
 //!   parallel fifths and octaves, leading tones and sevenths.
+//! - [`voice_motion`] says how each part moves there: by step, skip or
+//!   leap, and in which motion against the others.
 
 mod analysis;
 mod chord;
@@ -36,6 +38,7 @@ mod scale;
 mod set_class;
 mod symbol;
 pub mod voice_leading;
+pub mod voice_motion;
 
 pub use analysis::{Harmony, analyze, describe_chord, interval_name, spelled_interval_name};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};

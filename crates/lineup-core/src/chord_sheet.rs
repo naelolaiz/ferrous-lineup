@@ -43,6 +43,7 @@ use crate::meter::{Bar, TimeSignature};
 use crate::pitch::{Note, NoteName, PitchClass};
 use crate::tools;
 
+pub mod function;
 pub mod notation;
 pub mod text;
 
