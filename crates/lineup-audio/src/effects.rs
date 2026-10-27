@@ -354,13 +354,14 @@ mod tests {
 
     #[test]
     fn the_compressor_turns_loud_sounds_down() {
-        let mut settings = Effects::default();
-        settings.compressor = Compressor {
-            threshold: -20.0,
-            ratio: 4.0,
-            gain: 0.0,
-        };
-        let mut effects = with(settings);
+        let mut effects = with(Effects {
+            compressor: Compressor {
+                threshold: -20.0,
+                ratio: 4.0,
+                gain: 0.0,
+            },
+            ..Effects::default()
+        });
         // A wave at full scale is 20 dB over: it comes out 15 dB lower.
         let loud = response(&mut effects, 220.0);
         assert!((loud + 15.0).abs() < 1.5, "{loud}");
@@ -375,13 +376,14 @@ mod tests {
 
     #[test]
     fn the_delay_echoes_in_time_with_the_song() {
-        let mut settings = Effects::default();
-        settings.delay = Delay {
-            steps: 2,
-            feedback: 0.5,
-            mix: 1.0,
-        };
-        let mut effects = with(settings);
+        let mut effects = with(Effects {
+            delay: Delay {
+                steps: 2,
+                feedback: 0.5,
+                mix: 1.0,
+            },
+            ..Effects::default()
+        });
         // Let the mix settle, in silence.
         for _ in 0..RATE {
             effects.process(0.0);
