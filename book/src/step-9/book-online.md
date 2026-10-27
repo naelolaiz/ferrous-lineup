@@ -143,7 +143,7 @@ adds what a printed book needs to find things in it:
 
 | What | Made from |
 |------|-----------|
-| A title page and the **contents**: every chapter with the page it starts on | `SUMMARY.md`, the list the sidebar shows |
+| A title page and the **contents**: every chapter, and the index, with the page it starts on | `SUMMARY.md`, the list the sidebar shows |
 | A **page number** at the bottom of every page | `print.css` |
 | An **index** at the back: words, and the pages that explain them | the [music](../music-glossary.md) and [Rust](../glossary.md) glossaries, and `index-words.txt` |
 | **Bookmarks**, the outline a PDF reader shows beside the pages | the parts, the chapters and their sections |
@@ -263,6 +263,34 @@ where on the page to land (the destination of the heading). The parts
 are at the top, each chapter under its part or its step, and a chapter's
 sections, its `##` headings, under the chapter. `/UseOutlines` asks the
 reader to show the panel when it opens the PDF.
+
+### Links every reader follows
+
+A PDF link can say where it goes in two ways. Chrome writes the first:
+"go to the place named `step-9-the-band`", and the PDF keeps a table of
+names at the back (`/Dests`) that gives each one a page. The other way is
+older and plainer: "go to page 543, this far down". Chrome's and
+Firefox's readers look a name up in the table; not every reader does,
+and in those the first PDF's contents, index and links between chapters
+did nothing when clicked. So the script's last step, after the bookmarks,
+looks up every name itself and writes the place into the link:
+
+```python
+for page in writer.pages:
+    for annotation in page.get("/Annots", []):
+        link = annotation.get_object()
+        name = link.get("/Dest")
+        ...
+        place = names.get(name)
+        ...
+        link[NameObject("/Dest")] = ArrayObject(place)
+```
+
+A link is an *annotation* on its page: a rectangle with what to do when
+it is clicked. `/Dest` is where it goes. The value in the table is already
+the plain form, an array such as `[page /XYZ 11 826 0]` (the page, then
+"keep the zoom and put this point at the top left"), so the script copies
+it into the link. The bookmarks were written that way from the start.
 
 ### In the workflow
 
