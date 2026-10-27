@@ -355,7 +355,7 @@ fn effects_menu(ui: &mut egui::Ui, effects: &mut Effects) {
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
     );
     let (response, _) = menu.ui(ui, |ui| {
-        ui.set_min_width(300.0);
+        ui.set_min_width(340.0);
         effects_settings(ui, effects);
     });
     response.on_hover_text(
@@ -434,7 +434,7 @@ fn effects_settings(ui: &mut egui::Ui, effects: &mut Effects) {
     let delay = &mut effects.delay;
     egui::Grid::new("delay").num_columns(2).show(ui, |ui| {
         ui.label("Time");
-        ui.horizontal_wrapped(|ui| {
+        ui.horizontal(|ui| {
             for (steps, name) in Delay::TIMES {
                 ui.selectable_value(&mut delay.steps, steps, name)
                     .on_hover_text(
