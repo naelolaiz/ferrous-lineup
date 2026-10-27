@@ -1937,7 +1937,7 @@ fn soloist_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
 /// The horn section: on or off, and what it plays in this style.
 fn horns_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
     let mut on = band.has_horns();
-    let check = ui.checkbox(&mut on, "Horns");
+    let check = ui.checkbox(&mut on, "Horn section");
     let hint = format!(
         "A horn section plays the chords in close harmony, each horn moving as little as it \
          can from chord to chord. In {}, {}.",
