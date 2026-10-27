@@ -206,8 +206,18 @@ fn has_chords(key: Scale) -> bool {
 
 /// What `symbol` is in `key`, going on to `next`.
 fn role(key: Scale, symbol: ChordSymbol, next: Option<ChordSymbol>) -> Role {
+    use ScaleKind::{HarmonicMinor, MelodicMinor, NaturalMinor};
     let chord = symbol.chord();
-    if !has_chords(key) || key.is_chord_of_key(chord) {
+    // Borrowed and secondary chords are what major and minor keys call
+    // them. In a mode a chord from outside it has its numeral only: E
+    // major in E Phrygian is the tonic of flamenco, not the dominant of
+    // A minor.
+    let major_or_minor = key.kind == ScaleKind::Major || key.is_minor_key();
+    if !has_chords(key)
+        || !major_or_minor
+        || key.is_chord_of_key(chord)
+        || in_minor(key, chord, &[NaturalMinor, HarmonicMinor])
+    {
         return Role::Plain;
     }
     let goes_to = |of: Chord| next.is_some_and(|next| arrives(next, of));
@@ -228,13 +238,72 @@ fn role(key: Scale, symbol: ChordSymbol, next: Option<ChordSymbol>) -> Role {
     {
         return secondary.unwrap_or(Role::Plain);
     }
-    if let Some(from) = key.borrowed_from(chord) {
+    // So is a chord of melodic minor, such as D major in A minor: the V
+    // of G going to G, and the key's own IV anywhere else.
+    if in_minor(key, chord, &[MelodicMinor]) {
+        return Role::Plain;
+    }
+    if let Some(from) = borrowed_from(key, symbol) {
         return Role::Borrowed { from };
     }
     if is_neapolitan(key, symbol) {
         return Role::Neapolitan;
     }
     secondary.unwrap_or(Role::Plain)
+}
+
+/// Whether `chord` is a chord of one of the minor scales `kinds` on the
+/// tonic of `key`, a minor key. Music in A minor plays C and G from the
+/// natural minor as readily as E7 and G#dim7 from the harmonic minor,
+/// whichever of the two the key is set to, and Bm and D from the melodic
+/// minor.
+fn in_minor(key: Scale, chord: Chord, kinds: &[ScaleKind]) -> bool {
+    minor_scales(key)
+        .iter()
+        .any(|scale| kinds.contains(&scale.kind) && scale.is_chord_of_key(chord))
+}
+
+/// Whether `pitch_class` is a note of `key`: in a minor key, a note of
+/// any of its three minor scales, so in A minor only C#, D# and A# are
+/// not.
+fn in_key(key: Scale, pitch_class: PitchClass) -> bool {
+    key.contains(pitch_class)
+        || minor_scales(key)
+            .iter()
+            .any(|scale| scale.contains(pitch_class))
+}
+
+/// The key `symbol` is borrowed from, if it is borrowed: a chord of the
+/// parallel key, every note of it written as that key or `key` writes
+/// it, on the letters up from their tonic. Gaug in C major has the notes
+/// of Eb augmented, the III+ of C minor, but its D# rises to E: it is no
+/// Eb from C minor.
+fn borrowed_from(key: Scale, symbol: ChordSymbol) -> Option<Scale> {
+    let from = key.borrowed_from(symbol.chord())?;
+    // A major key borrows from harmonic minor too: Bdim7 in C major.
+    let mut scales = vec![key, from, Scale::new(from.root, ScaleKind::HarmonicMinor)];
+    scales.extend(minor_scales(key));
+    let tonic = key.tonic_name().letter;
+    let written = |name: &NoteName| {
+        scales.iter().any(|scale| {
+            scale.degree_of(name.pitch_class()).is_some_and(|degree| {
+                NoteName::with_letter(name.pitch_class(), tonic.up(degree as i32)) == *name
+            })
+        })
+    };
+    symbol.notes().iter().all(written).then_some(from)
+}
+
+/// The three minor scales on the tonic of `key`, if it is a minor key.
+fn minor_scales(key: Scale) -> Vec<Scale> {
+    use ScaleKind::{HarmonicMinor, MelodicMinor, NaturalMinor};
+    if !key.is_minor_key() {
+        return Vec::new();
+    }
+    [NaturalMinor, HarmonicMinor, MelodicMinor]
+        .into_iter()
+        .map(|kind| Scale::new(key.root, kind))
+        .collect()
 }
 
 /// Whether `next` comes to `of`, the chord a secondary chord leads to:
@@ -270,9 +339,11 @@ fn is_neapolitan(key: Scale, symbol: ChordSymbol) -> bool {
         && key.tonic_name().letter.steps_up_to(symbol.root.letter) == 1
 }
 
-/// Whether `chord` belongs to `key`: one of its chords.
+/// Whether `chord` belongs to `key`: one of its chords, or in a minor
+/// key one of the chords of its three minor scales.
 fn belongs(key: Scale, chord: Chord) -> bool {
-    key.is_chord_of_key(chord)
+    use ScaleKind::{HarmonicMinor, MelodicMinor, NaturalMinor};
+    key.is_chord_of_key(chord) || in_minor(key, chord, &[NaturalMinor, HarmonicMinor, MelodicMinor])
 }
 
 /// Whether `chord` can be heard in `key` before the music leaves it: one
@@ -576,7 +647,7 @@ impl Function {
         self.symbol
             .notes()
             .into_iter()
-            .filter(|name| !self.key.contains(name.pitch_class()))
+            .filter(|name| !in_key(self.key, name.pitch_class()))
             .collect()
     }
 }
@@ -950,5 +1021,56 @@ mod tests {
         assert!(change.describe().contains("change of mode"));
         // In C minor, Cm and Fm are the key's own.
         assert_eq!(sheet.chords[5].role, Role::Plain);
+    }
+
+    #[test]
+    fn a_minor_key_has_the_chords_of_its_three_scales() {
+        let harmonic = Scale::new(PitchClass::A, ScaleKind::HarmonicMinor);
+        // C and G are A minor's own chords, set as harmonic minor or not:
+        // not secondary dominants of F and C.
+        for key in [harmonic, minor(PitchClass::A)] {
+            let sheet = read("Am C G7 C F Dm E7 Am", key, &[]);
+            assert!(
+                sheet.chords.iter().all(|chord| chord.role == Role::Plain),
+                "{:?}",
+                numerals(&sheet)
+            );
+        }
+        // D major, from melodic minor, is the IV on its way to E, and the
+        // V of G when it goes there.
+        let sheet = read("Am D E7 Am D G C", harmonic, &[]);
+        assert_eq!(sheet.chords[1].role, Role::Plain);
+        assert!(matches!(
+            sheet.chords[4].role,
+            Role::SecondaryDominant { of } if of.root == PitchClass::G
+        ));
+        // B7, the V7/V, has one note from outside A minor: D#.
+        let sheet = read("Am B7 E7 Am", harmonic, &[]);
+        let about = sheet.chords[1].explain().unwrap();
+        assert!(!about.contains("not in"), "{about}");
+        assert!(about.contains("Its third, D#"), "{about}");
+    }
+
+    #[test]
+    fn a_mode_names_no_borrowed_or_secondary_chords() {
+        // E major in E Phrygian is the tonic of flamenco, going to F.
+        let phrygian = Scale::new(PitchClass::E, ScaleKind::Phrygian);
+        let sheet = read("E F G F E", phrygian, &[]);
+        assert!(sheet.chords.iter().all(|chord| !chord.is_marked()));
+    }
+
+    #[test]
+    fn a_borrowed_chord_is_written_as_the_other_key_writes_it() {
+        let c = major(PitchClass::C);
+        // G augmented has the notes of Eb augmented, from C minor, but
+        // its D# is no Eb.
+        let sheet = read("C Gaug C Bdim7 C", c, &[]);
+        assert_eq!(sheet.chords[1].role, Role::Plain);
+        assert_eq!(
+            sheet.chords[3].role,
+            Role::Borrowed {
+                from: minor(PitchClass::C)
+            }
+        );
     }
 }
