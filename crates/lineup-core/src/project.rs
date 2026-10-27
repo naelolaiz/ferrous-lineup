@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::arrangement::{Arrangement, arrange};
 use crate::band::{Band, StyleMarker, VariationMarker};
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
+use crate::effects::Effects;
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::harmony::voice_leading::{self, VoiceLeading, voices_of};
 use crate::harmony::{Chord, ChordSymbol, Harmony, HeardNote, Hearing, Listening, Scale, hear};
@@ -159,6 +160,9 @@ pub struct Channel {
     /// the band and the styles.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sent_on: Option<u8>,
+    /// Its equalizer, compressor and delay (see [`crate::effects`]).
+    #[serde(default, skip_serializing_if = "Effects::is_plain")]
+    pub effects: Effects,
 }
 
 fn is_centred(pan: &f32) -> bool {
@@ -185,6 +189,12 @@ impl Channel {
         self.pan == 0.0 && self.reverb_send == 1.0
     }
 
+    /// Whether its sound goes through no effects of its own, as a new
+    /// channel's does. Files older than format 28 can only say that.
+    pub fn has_plain_effects(&self) -> bool {
+        self.effects.is_plain()
+    }
+
     /// How loud it is in the left and the right speaker for its pan: both
     /// full in the middle, and the far side fading out as it moves away.
     pub fn pan_gains(pan: f32) -> [f32; 2] {
@@ -202,6 +212,7 @@ impl Channel {
             pan: 0.0,
             reverb_send: 1.0,
             sent_on: None,
+            effects: Effects::default(),
         }
     }
 
@@ -216,6 +227,7 @@ impl Channel {
             pan: 0.0,
             reverb_send: 1.0,
             sent_on: None,
+            effects: Effects::default(),
         }
     }
 
@@ -232,6 +244,7 @@ impl Channel {
             pan: 0.0,
             reverb_send: 1.0,
             sent_on: None,
+            effects: Effects::default(),
         }
     }
 

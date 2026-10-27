@@ -6,7 +6,8 @@
 //!   from a SoundFont file, [`drums`] synthesizes the built-in drum kit and [`dsp`]
 //!   has the small filters and smoothers they share. They are plain
 //!   structs that compute samples, so they can be tested without a sound card.
-//! - `metronome` makes the metronome's clicks and times the count-in, and
+//! - `metronome` makes the metronome's clicks and times the count-in,
+//!   [`effects`] is each channel's equalizer, compressor and delay, and
 //!   `reverb` is the master reverb each channel sends to.
 //! - [`sample`] loads WAV files.
 //! - [`phrase`] plays a few notes apart from the song, on instruments of
@@ -23,6 +24,7 @@
 
 pub mod drums;
 pub mod dsp;
+pub mod effects;
 pub mod engine;
 pub mod instrument;
 pub mod levels;
@@ -35,6 +37,7 @@ pub mod soundfont;
 pub mod timbre;
 pub mod trace;
 
+pub use effects::DelayLine;
 pub use engine::{
     AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, LapTempos, LiveInput, MidiOutput,
     PlayMode,

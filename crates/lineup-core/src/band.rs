@@ -45,6 +45,7 @@ mod extras;
 mod following;
 mod form;
 mod guitar;
+pub mod horns;
 pub mod locks;
 pub mod sections;
 pub mod solo;
@@ -72,11 +73,14 @@ pub enum Player {
     /// The soloist: experimental, and only when it is switched on (see
     /// [`Project::set_soloist`]).
     Soloist,
+    /// The horn section, when it is switched on (see
+    /// [`Project::set_horns`]).
+    Horns,
 }
 
 impl Player {
     /// How many there are.
-    pub const COUNT: usize = 7;
+    pub const COUNT: usize = 8;
 
     pub const ALL: [Player; Player::COUNT] = [
         Player::Piano,
@@ -86,6 +90,7 @@ impl Player {
         Player::Strings,
         Player::Organ,
         Player::Soloist,
+        Player::Horns,
     ];
 
     /// Its name, which its playlist track and patterns are called by.
@@ -98,6 +103,7 @@ impl Player {
             Player::Strings => "Strings",
             Player::Organ => "Organ",
             Player::Soloist => "Soloist",
+            Player::Horns => "Horns",
         }
     }
 
@@ -225,7 +231,7 @@ impl BandStyle {
                 Player::Guitar => extras.guitar.is_some(),
                 Player::Strings => extras.strings.is_some(),
                 Player::Organ => extras.organ.is_some(),
-                Player::Soloist => false,
+                Player::Soloist | Player::Horns => false,
             })
             .collect()
     }
@@ -345,6 +351,8 @@ pub struct Band {
     pub(crate) styles: Vec<StyleMarker>,
     /// The seed of the soloist's solo, while there is a soloist.
     pub(crate) solo: Option<u64>,
+    /// Whether the horn section plays.
+    pub(crate) horns: bool,
 }
 
 impl Band {
@@ -366,6 +374,7 @@ impl Band {
             variations: Vec::new(),
             styles: Vec::new(),
             solo: None,
+            horns: false,
         }
     }
 
@@ -389,7 +398,27 @@ impl Band {
         self.solo.is_some()
     }
 
-    /// Who plays: the style's players, and the soloist when there is one.
+    /// Whether the horn section plays with the band.
+    pub fn has_horns(&self) -> bool {
+        self.horns
+    }
+
+    /// The horn section, when it plays (see [`Band::horn_section`]).
+    pub fn horns(&self) -> Option<horns::Horns> {
+        self.horns.then(|| self.horn_section())
+    }
+
+    /// The horn section the band would bring: what it plays in the style
+    /// the band plays, on the instrument of the band's instruments.
+    pub fn horn_section(&self) -> horns::Horns {
+        horns::Horns {
+            program: horns::Horns::of(self.instrument_style).program,
+            ..horns::Horns::of(self.style)
+        }
+    }
+
+    /// Who plays: the style's players, and the soloist and the horns
+    /// when they are there.
     pub fn players(&self) -> Vec<Player> {
         if let Some(style) = &self.custom_rhythm {
             let mut players = self
@@ -410,6 +439,9 @@ impl Band {
             if self.has_soloist() && !players.contains(&Player::Soloist) {
                 players.push(Player::Soloist);
             }
+            if self.has_horns() && !players.contains(&Player::Horns) {
+                players.push(Player::Horns);
+            }
             return players;
         }
         let mut players = self.instrument_style.players();
@@ -419,6 +451,9 @@ impl Band {
         }
         if self.has_soloist() {
             players.push(Player::Soloist);
+        }
+        if self.has_horns() {
+            players.push(Player::Horns);
         }
         players
     }
@@ -540,6 +575,14 @@ pub(crate) struct BandFile {
     /// The fingerprint of the soloist's part.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub written_solo: Option<u64>,
+    /// Whether the horn section plays, its channel and the fingerprint
+    /// of its part.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub with_horns: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub horns: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub written_horns: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heard: Option<u64>,
     #[serde(default)]
@@ -560,7 +603,7 @@ fn none_written(written: &[Option<u64>; 3]) -> bool {
 
 impl From<&Band> for BandFile {
     fn from(band: &Band) -> Self {
-        let [piano, bass, drums, guitar, strings, organ, soloist] = band.written;
+        let [piano, bass, drums, guitar, strings, organ, soloist, horns] = band.written;
         BandFile {
             style: band.style.name.to_string(),
             custom_rhythm: band.custom_rhythm.clone(),
@@ -580,6 +623,9 @@ impl From<&Band> for BandFile {
             written: [piano, bass, drums],
             written_too: [guitar, strings, organ],
             written_solo: soloist,
+            with_horns: band.horns,
+            horns: band.channel(Player::Horns),
+            written_horns: horns,
             heard: band.heard,
             muted: band.muted.clone(),
             since: band.since,
@@ -641,6 +687,7 @@ impl BandFile {
                 channel(self.strings)?,
                 channel(self.organ)?,
                 channel(self.soloist)?,
+                channel(self.horns)?,
             ],
             written: [
                 piano,
@@ -650,6 +697,7 @@ impl BandFile {
                 strings,
                 organ,
                 self.written_solo,
+                self.written_horns,
             ],
             heard: self.heard,
             muted: self.muted,
@@ -676,6 +724,7 @@ impl BandFile {
                 markers
             },
             solo: self.solo,
+            horns: self.with_horns,
         })
     }
 }
@@ -709,7 +758,7 @@ fn player_volume(player: Player) -> f32 {
     match player {
         Player::Piano => 0.45,
         Player::Bass => 0.7,
-        Player::Guitar => 0.4,
+        Player::Guitar | Player::Horns => 0.4,
         Player::Strings | Player::Organ => 0.3,
         Player::Soloist => 0.6,
         Player::Drums => Channel::drum(Drum::Kick).volume,
@@ -1481,6 +1530,25 @@ impl Project {
         true
     }
 
+    /// Has the horn section play with the band, or stops it. Returns
+    /// `false` if there is no band, or the horns' channel is locked.
+    pub fn set_horns(&mut self, on: bool) -> bool {
+        if self.plays_locked(Player::Horns) {
+            return false;
+        }
+        let Some(band) = &mut self.band else {
+            return false;
+        };
+        if band.horns == on {
+            return true;
+        }
+        band.horns = on;
+        band.written[Player::Horns.index()] = None;
+        self.band_channels(false);
+        self.write_band();
+        true
+    }
+
     /// Writes the band's parts again if what they are played from (the
     /// chord sheet, the keys, the bars or the style) changed since they
     /// were written. The app calls this after every change, so the band
@@ -1569,8 +1637,8 @@ impl Project {
     /// Puts the mix back as it starts: the master level, the reverb and no
     /// solo, each channel as loud as a new one of its kind (a band
     /// player's as the band sets it), in the middle with all of it in the
-    /// reverb, and nothing muted but the song's own parts the band plays
-    /// instead.
+    /// reverb and no effects of its own, and nothing muted but the song's
+    /// own parts the band plays instead.
     pub fn reset_mix(&mut self) {
         self.mixer = crate::Mixer::default();
         let band = self.band.as_ref();
@@ -1591,6 +1659,7 @@ impl Project {
             channel.muted = band.is_some_and(|band| band.muted().channels.contains(&channel.name));
             channel.pan = 0.0;
             channel.reverb_send = 1.0;
+            channel.effects = crate::Effects::default();
         }
     }
 
@@ -1617,6 +1686,7 @@ impl Project {
                 Player::Soloist => band
                     .solo
                     .map(|_| (player.name(), Soloist::of(style.genre).program)),
+                Player::Horns => band.horns().map(|horns| (player.name(), horns.program)),
             };
             if let Some((other, program)) = sound {
                 let volume = player_volume(player);
@@ -1729,6 +1799,7 @@ impl Project {
                     pan: 0.0,
                     reverb_send: 1.0,
                     sent_on: None,
+                    effects: Default::default(),
                 })?
             }
         };
@@ -1802,6 +1873,11 @@ impl Project {
                 )
                 .as_bytes(),
             );
+            // Only bands with horns count them, so a song saved before
+            // there were horns plays as it was written.
+            if band.horns {
+                print.bytes(b"horns");
+            }
             // Only songs with section styles count them, so a song saved
             // before there were any plays as it was written.
             for marker in &band.styles {
@@ -1828,7 +1904,9 @@ impl Project {
         // were locks plays as it was written.
         if !self.locked().is_empty() {
             print.bytes(format!("{:?}", self.locked()).as_bytes());
-            for player in Player::ALL {
+            // The horns came later: leaving them out keeps the songs
+            // saved before them as they were.
+            for player in Player::ALL.into_iter().filter(|&p| p != Player::Horns) {
                 print.number(usize::from(self.song_keeps(player)));
             }
         }
@@ -2169,6 +2247,24 @@ impl Project {
                     }
                 })
             }
+            // The horns play the chords in close harmony, each voiced
+            // from the one before all through the song (see [`horns`]),
+            // and hold the last chord and the shots and holds.
+            Player::Horns => match band.horns() {
+                Some(horns) => {
+                    let voiced = horns::voiced(&score.harmonies);
+                    let mut notes = played_in_runs(&score.runs, &voiced, |_, bars, played| {
+                        horns.play(bars, played)
+                    });
+                    notes.extend(held_bar(score.held, &voiced, |_, played| {
+                        horns::held(played)
+                    }));
+                    score.breaks.apply(notes, &voiced, |played| {
+                        horns::held(std::slice::from_ref(played))
+                    })
+                }
+                None => Vec::new(),
+            },
             // The soloist plays over the chorus, not the intro or the
             // ending, and goes on through shots and rests: the gaps
             // are where a soloist is heard.
@@ -2188,11 +2284,12 @@ impl Project {
         };
         // A saved style with only drums (a rhythm's copy) leaves the
         // harmony to the band, as a built-in rhythm does, and the
-        // soloist improvises unless the style has a lane for one.
+        // soloist and the horns play unless the style has a lane for
+        // them.
         let in_style = |style: &crate::library::UserStyle| {
             player == Player::Drums
                 || style.lanes.iter().any(|lane| lane.player == player)
-                || (player != Player::Soloist
+                || (!matches!(player, Player::Soloist | Player::Horns)
                     && style.lanes.iter().any(|lane| lane.player != Player::Drums))
         };
         if let Some(style) = &band.custom_rhythm
@@ -3413,6 +3510,99 @@ mod tests {
                 assert_eq!(role, NoteRole::ChordTone(None), "at {}", note.start);
             }
         }
+    }
+
+    #[test]
+    fn horns_come_to_any_style_when_asked() {
+        let chords = ["C", "Ab", "G7", "C"];
+        for (style, program) in [
+            ("Motown", general_midi::BRASS_SECTION),
+            ("Swing", general_midi::BRASS_SECTION),
+            ("Chorale", general_midi::FRENCH_HORN),
+            ("Techno", general_midi::SYNTH_BRASS),
+            ("Zamba", general_midi::BRASS_SECTION),
+            ("Rachenitsa", general_midi::BRASS_SECTION),
+        ] {
+            let mut project = band(style, &chords);
+            assert!(part(&project, Player::Horns).is_empty());
+            assert!(!channel_names(&project).contains(&"Horns"));
+            assert!(project.set_horns(true));
+            let channel = project.player_channel(Player::Horns).unwrap();
+            assert_eq!(
+                project.channels()[channel].program,
+                Some(program),
+                "{style}"
+            );
+            let horns = part(&project, Player::Horns);
+            assert!(!horns.is_empty(), "{style}");
+            let bar = project.time_signature.steps_per_bar();
+            let sets = chords.map(|name| {
+                crate::harmony::ChordSymbol::parse(name)
+                    .unwrap()
+                    .chord()
+                    .pitch_set()
+            });
+            let mut starts: Vec<usize> = horns.iter().map(|&(at, ..)| at).collect();
+            starts.dedup();
+            for start in starts {
+                let notes: Vec<u8> = horns
+                    .iter()
+                    .filter(|&&(at, ..)| at == start)
+                    .map(|&(.., midi)| midi)
+                    .collect();
+                // Notes of the chord of the bar, in close position under
+                // a lead from F4 to F5.
+                for &midi in &notes {
+                    let class = PitchClass::from_semitone(midi % 12);
+                    assert!(
+                        sets[start / bar].contains(class),
+                        "{style}: {midi} at {start}"
+                    );
+                }
+                let (low, high) = (notes[0], notes[notes.len() - 1]);
+                assert!(high - low < 12, "{style}: {notes:?} at {start}");
+                assert!((65..=77).contains(&high), "{style}: {notes:?} at {start}");
+            }
+            assert!(project.set_horns(false));
+            assert!(part(&project, Player::Horns).is_empty());
+            assert!(!channel_names(&project).contains(&"Horns"));
+            assert!(project.player_track(Player::Horns).is_none());
+        }
+    }
+
+    #[test]
+    fn the_horns_play_in_the_style() {
+        let starts = |style: &str| {
+            let mut project = band(style, &["C", "F", "G7", "C"]);
+            assert!(project.set_horns(true));
+            let mut starts: Vec<usize> = part(&project, Player::Horns)
+                .into_iter()
+                .map(|(at, ..)| at)
+                .collect();
+            starts.dedup();
+            starts
+        };
+        // Long notes in a ballad, one for each chord.
+        assert_eq!(starts("Pop ballad"), [0, 16, 32, 48]);
+        // The big band's kicks: beat 1 and the "and" of 2.
+        assert_eq!(&starts("Swing")[..4], [0, 6, 16, 22]);
+        // A march's afterbeats, on 2 and 4.
+        assert_eq!(&starts("March")[..4], [4, 12, 20, 28]);
+    }
+
+    #[test]
+    fn horns_are_saved_in_format_twenty_eight() {
+        let mut project = band("Funk", &["Em7", "A7", "Em7", "A7"]);
+        let without = crate::file::format_for(&project);
+        assert!(project.set_horns(true));
+        assert_eq!(crate::file::format_for(&project), 28);
+        let text = crate::file::to_text(&project).unwrap();
+        let loaded = crate::file::from_text(&text).unwrap();
+        assert_eq!(loaded, project);
+        assert!(loaded.band().unwrap().has_horns());
+        assert!(!loaded.is_frozen(Player::Horns));
+        assert!(project.set_horns(false));
+        assert_eq!(crate::file::format_for(&project), without);
     }
 
     #[test]

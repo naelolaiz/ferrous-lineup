@@ -318,6 +318,31 @@ mod tests {
     }
 
     #[test]
+    fn a_channel_with_a_delay_echoes_in_time_with_the_song() {
+        let mut renderer = clicking();
+        let mut effects = lineup_core::Effects::default();
+        // An eighth note at 120 BPM: a quarter of a second.
+        effects.delay = lineup_core::Delay {
+            steps: 2,
+            feedback: 0.0,
+            mix: 0.5,
+        };
+        renderer.send(Command::SetEffects {
+            channel: 0,
+            effects,
+            line: Some(crate::DelayLine::new(RATE)),
+        });
+        let eighth = RATE as usize / 4;
+        let mut out = vec![0.0; 2 * (eighth + 100)];
+        renderer.render(&mut out);
+        assert!((out[0] - 0.5_f32.tanh()).abs() < 1e-6, "the click itself");
+        assert_eq!(out[2 * (eighth - 10)], 0.0, "nothing before the echo");
+        let echo = out[2 * eighth];
+        assert!((echo - 0.25_f32.tanh()).abs() < 1e-3, "{echo}");
+        assert_eq!(echo, out[2 * eighth + 1], "in the middle, as the channel");
+    }
+
+    #[test]
     fn the_meters_see_each_channel_and_the_master() {
         let mut renderer = clicking();
         renderer.send(Command::SetVolume {

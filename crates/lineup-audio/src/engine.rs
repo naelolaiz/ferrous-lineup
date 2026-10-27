@@ -49,6 +49,7 @@ use lineup_core::{
 };
 
 use crate::dsp::Smoothed;
+use crate::effects::{ChannelEffects, DelayLine};
 use crate::instrument::{HELD, Instrument, Origin};
 use crate::levels::Levels;
 use crate::metronome::{ClickVoice, click_at, count_in_bar};
@@ -278,6 +279,15 @@ pub enum Command {
         channel: usize,
         send: f32,
     },
+    /// Change a channel's equalizer, compressor and delay (see
+    /// [`lineup_core::Channel::effects`]). A delay needs a `line` the
+    /// first time it is on; one the channel does not need comes back to
+    /// be freed.
+    SetEffects {
+        channel: usize,
+        effects: lineup_core::Effects,
+        line: Option<DelayLine>,
+    },
     /// Mute or unmute a channel. Muting it also stops the notes it is
     /// playing, but not keys held on a keyboard: those play on a muted
     /// channel too.
@@ -341,6 +351,7 @@ pub(crate) enum Garbage {
     Clicks(Vec<Click>),
     Phrase(Box<Phrase>),
     Trace(Box<Tracer>),
+    DelayLine(DelayLine),
 }
 
 /// What the engine found when it opened the sound card.
@@ -675,6 +686,7 @@ impl AudioEngine {
                 Garbage::Clicks(clicks) => drop(clicks),
                 Garbage::Phrase(phrase) => drop(phrase),
                 Garbage::Trace(trace) => drop(trace),
+                Garbage::DelayLine(line) => drop(line),
             }
         }
     }
@@ -729,6 +741,7 @@ pub(crate) struct ChannelState {
     muted: bool,
     pan: Smoothed,
     reverb_send: Smoothed,
+    effects: ChannelEffects,
     /// The loudest sample since the end of the last block, for the meters.
     peak: f32,
 }
@@ -1053,6 +1066,20 @@ impl AudioThread {
                     state.reverb_send.set(send);
                 }
             }
+            Command::SetEffects {
+                channel,
+                effects,
+                line,
+            } => {
+                let tempo = self.tempo_now;
+                let spare = match self.channels.get_mut(channel) {
+                    Some(state) => state.effects.set(effects, line, tempo),
+                    None => line,
+                };
+                if let Some(spare) = spare {
+                    self.throw_away(Garbage::DelayLine(spare));
+                }
+            }
             Command::SetMuted { channel, muted } => self.set_muted(channel, muted),
             Command::Preview(channel) => self.preview(channel, STEP_NOTE),
             Command::PreviewNote { channel, pitch } => self.preview(channel, pitch),
@@ -1200,6 +1227,8 @@ impl AudioThread {
             // `SetPan` or `SetReverbSend` says otherwise.
             pan: Smoothed::new(0.0, VOLUME_SMOOTHING, self.sample_rate),
             reverb_send: Smoothed::new(1.0, VOLUME_SMOOTHING, self.sample_rate),
+            // No effects, until a `SetEffects` says otherwise.
+            effects: ChannelEffects::new(self.sample_rate),
             peak: 0.0,
         };
         if self.channels.len() < MAX_CHANNELS {
@@ -1409,6 +1438,7 @@ impl AudioThread {
         let stretch = self.sequencer.step_frames() / before;
         for channel in &mut self.channels {
             channel.instrument.tempo_changed(next_step, stretch);
+            channel.effects.set_tempo(tempo);
         }
         if let Some(trace) = &mut self.trace {
             trace.tempo_changed(self.now, next_step, stretch);
@@ -1729,7 +1759,8 @@ impl AudioThread {
             }
             self.now += 1;
 
-            // Each channel goes to the speakers as its pan says, and as
+            // Each channel goes through its own effects first. Then it
+            // goes to the speakers as its pan says, and as
             // much of it as its send says to the reverb, which plays only
             // the room: what goes in is taken out of the dry sound in
             // the reverb's wet / dry mix, so a channel with all of it in
@@ -1740,7 +1771,7 @@ impl AudioThread {
             let mut send = 0.0;
             for channel in &mut self.channels {
                 let volume = channel.volume.next_value();
-                let sample = channel.instrument.next_sample() * volume;
+                let sample = channel.effects.process(channel.instrument.next_sample()) * volume;
                 channel.peak = channel.peak.max(sample.abs());
                 let amount = channel.reverb_send.next_value();
                 let gains = lineup_core::Channel::pan_gains(channel.pan.next_value());
@@ -2273,7 +2304,8 @@ mod tests {
                 | Garbage::Tempos(_)
                 | Garbage::Clicks(_)
                 | Garbage::Phrase(_)
-                | Garbage::Trace(_) => {}
+                | Garbage::Trace(_)
+                | Garbage::DelayLine(_) => {}
             }
         }
         assert_eq!(instruments, 1, "the replaced instrument");
@@ -2879,7 +2911,8 @@ mod tests {
                 Garbage::Instrument(_)
                 | Garbage::Notes(_)
                 | Garbage::Phrase(_)
-                | Garbage::Trace(_) => "other",
+                | Garbage::Trace(_)
+                | Garbage::DelayLine(_) => "other",
             });
         }
         // The empty song from the start, the real one, then the channel and the song.
