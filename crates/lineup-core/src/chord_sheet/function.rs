@@ -32,7 +32,7 @@ use crate::harmony::{
     Chord, ChordFamily, ChordQuality, ChordSymbol, Scale, ScaleKind, with_figures,
 };
 use crate::key_map::KeyMap;
-use crate::pitch::NoteName;
+use crate::pitch::{NoteName, PitchClass};
 
 use super::{ChordMarker, HarmonyName};
 
@@ -210,12 +210,14 @@ fn role(key: Scale, symbol: ChordSymbol, next: Option<ChordSymbol>) -> Role {
     if !has_chords(key) || key.is_chord_of_key(chord) {
         return Role::Plain;
     }
-    let goes_to = |of: Chord| next.is_some_and(|next| next.root.pitch_class() == of.root);
+    let goes_to = |of: Chord| next.is_some_and(|next| arrives(next, of));
     let dominant = key.secondary_dominant_target(chord);
     let leading = key.secondary_leading_tone_target(chord);
     let secondary = match (dominant, leading) {
         (Some(of), _) => Some(Role::SecondaryDominant { of }),
-        (_, Some(of)) => Some(Role::SecondaryLeadingTone { of }),
+        // A leading-tone chord is named after where it goes: F#ø7 going
+        // on to B7 in C major is the ii of E minor, not the vii of G.
+        (_, Some(of)) if goes_to(of) => Some(Role::SecondaryLeadingTone { of }),
         _ => None,
     };
     // A chord that is both, such as A major in A minor (the major tonic,
@@ -233,6 +235,22 @@ fn role(key: Scale, symbol: ChordSymbol, next: Option<ChordSymbol>) -> Role {
         return Role::Neapolitan;
     }
     secondary.unwrap_or(Role::Plain)
+}
+
+/// Whether `next` comes to `of`, the chord a secondary chord leads to:
+/// on its root, or on a six-four chord over its root, which holds it
+/// back for a moment (C/G before G: the cadential six-four).
+fn arrives(next: ChordSymbol, of: Chord) -> bool {
+    next.root.pitch_class() == of.root || is_six_four_over(next, of.root)
+}
+
+/// Whether `symbol` is a major or minor triad with its fifth in the
+/// bass, over `bass`: C/G over G.
+fn is_six_four_over(symbol: ChordSymbol, bass: PitchClass) -> bool {
+    symbol.bass.is_some()
+        && symbol.bass_pitch_class() == bass
+        && symbol.root.pitch_class().transpose(7) == bass
+        && matches!(symbol.quality, ChordQuality::Major | ChordQuality::Minor)
 }
 
 /// Whether `symbol` is the Neapolitan chord of `key`: a major triad on
@@ -537,14 +555,18 @@ impl Function {
     /// Where a secondary chord goes, as a sentence: whether it goes on to
     /// the chord `of` it leads to, `how`.
     fn resolution(&self, of: Chord, how: &str) -> String {
+        let name = self.key.chord_name(of);
         match self.next {
             Some(next) if next.root.pitch_class() == of.root => {
                 format!(" Here it goes on to {next}, {how}.")
             }
-            Some(next) => format!(
-                " Here it goes to {next} instead of {}.",
-                self.key.chord_name(of)
+            Some(next) if arrives(next, of) => format!(
+                " Here it goes on to {next}, a six-four chord over {}: the bass has arrived, \
+                 and {name} comes when the two notes above it fall a step (as in the cadential \
+                 six-four).",
+                self.key.spell_root(of),
             ),
+            Some(next) => format!(" Here it goes to {next} instead of {name}."),
             None => String::new(),
         }
     }
@@ -771,6 +793,41 @@ mod tests {
             "{about}"
         );
         assert!(about.contains("Here it goes on to G"), "{about}");
+    }
+
+    #[test]
+    fn a_leading_tone_chord_that_goes_elsewhere_keeps_its_own_numeral() {
+        // Autumn Leaves in C: F#ø7 B7 Em is ii, V and i of E minor.
+        let sheet = read("Am7 D7 Gmaj7 Cmaj7 F#m7b5 B7 Em", major(PitchClass::C), &[]);
+        assert_eq!(
+            numerals(&sheet),
+            ["vi7", "V7/V", "Vmaj7", "Imaj7", "#ivø7", "V7/iii", "iii"]
+        );
+        assert_eq!(sheet.chords[4].role, Role::Plain);
+    }
+
+    #[test]
+    fn a_six_four_chord_over_its_root_is_where_a_secondary_chord_goes() {
+        // V/V and vii°7/V going on to the cadential six-four, I⁶₄, and
+        // then to V.
+        for chord in ["D7", "F#dim7"] {
+            let text = format!("C {chord} C/G G7 C");
+            let sheet = read(&text, major(PitchClass::C), &[]);
+            let secondary = &sheet.chords[1];
+            assert!(secondary.role != Role::Plain, "{chord}");
+            let about = secondary.explain().unwrap();
+            assert!(
+                about.contains("Here it goes on to C/G, a six-four chord over G"),
+                "{about}"
+            );
+        }
+        // C/E is no six-four chord: D7 goes to it instead of G.
+        let sheet = read("C D7 C/E G7 C", major(PitchClass::C), &[]);
+        let about = sheet.chords[1].explain().unwrap();
+        assert!(
+            about.contains("Here it goes to C/E instead of G"),
+            "{about}"
+        );
     }
 
     #[test]
