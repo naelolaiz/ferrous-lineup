@@ -133,8 +133,25 @@ keeps its plain numeral, ♯ivø7.
 
 ### In a minor key
 
-In A minor, the dominant is E or E7, with G♯ raised from the scale's G.
-The chord sheet reads secondary dominants against the **natural** minor
+A minor key has three scales, and music in minor takes its chords from
+all of them. From the **natural** minor, A B C D E F G: C (III), Dm
+(iv), F (VI) and G (VII). From the **harmonic** minor, with G♯: the
+dominant E or E7 (V) and G♯dim7 (vii°7). From the **melodic** minor,
+with F♯ and G♯: Bm (ii) and D (IV), usually on the way up to E. All of
+them are the key's own chords, whichever of the three scales the key
+is set to. So El Choclo, set in A harmonic minor, has its C and its G7
+read as III and VII7, not as secondary dominants of F and C. A secondary
+chord brings a note that none of the three has: in A minor, C♯, D♯ or
+A♯. The one exception is a chord of melodic minor that goes where a
+secondary chord would: D going on to G is the V of G.
+
+In a **mode**, such as D Dorian or E Phrygian, the chord sheet writes
+the numerals only. Borrowed chords and secondary dominants are names
+from major and minor keys, and a mode's chords do other things: E major
+in E Phrygian is the tonic chord of much flamenco, not the dominant of
+A minor.
+
+The chord sheet reads secondary dominants against the natural minor
 scale. The dominant's own dominant is B7, with D♯, written V7/V. When
 B7 goes to Em, a minor v, it is written V7/v.
 
@@ -255,9 +272,28 @@ from: `..` ignores the fields.
 
 ### Which role comes first
 
-Some chords could be two things. In A minor, A major is both the
-dominant of Dm and the major tonic chord borrowed from A major. `role`
-decides by where the chord goes:
+First, `role` sends away the chords that need no name beyond their
+numeral: every chord in a mode, a chord of the key, and in a minor key
+a chord of its natural or harmonic minor:
+
+```rust
+let major_or_minor = key.kind == ScaleKind::Major || key.is_minor_key();
+if !has_chords(key)
+    || !major_or_minor
+    || key.is_chord_of_key(chord)
+    || in_minor(key, chord, &[NaturalMinor, HarmonicMinor])
+{
+    return Role::Plain;
+}
+```
+
+`in_minor` builds the minor scales on the key's tonic and asks whether
+the chord belongs to one of the kinds it is given.
+
+Some chords could then be two things. In A minor, A major is both the
+dominant of Dm and the major tonic chord borrowed from A major. D major
+is the IV of melodic minor, and the dominant of G. `role` decides by
+where the chord goes:
 
 ```rust
 let goes_to = |of: Chord| next.is_some_and(|next| arrives(next, of));
@@ -273,7 +309,10 @@ if let Some(of) = dominant.or(leading)
 {
     return secondary.unwrap_or(Role::Plain);
 }
-if let Some(from) = key.borrowed_from(chord) {
+if in_minor(key, chord, &[MelodicMinor]) {
+    return Role::Plain;
+}
+if let Some(from) = borrowed_from(key, symbol) {
     return Role::Borrowed { from };
 }
 if is_neapolitan(key, symbol) {
@@ -282,15 +321,22 @@ if is_neapolitan(key, symbol) {
 secondary.unwrap_or(Role::Plain)
 ```
 
-A chord that goes to the chord it leads to is a secondary chord. Then
-comes borrowing, then the Neapolitan. Last comes a secondary dominant
-that goes elsewhere. `match (dominant, leading)` matches on a tuple of
-two `Option`s, and the guard `if goes_to(of)` adds a condition to a
-pattern.
+A chord that goes to the chord it leads to is a secondary chord. Then a
+chord of melodic minor is the key's own. Then comes borrowing, then the
+Neapolitan. Last comes a secondary dominant that goes elsewhere.
+`match (dominant, leading)` matches on a tuple of two `Option`s, and
+the guard `if goes_to(of)` adds a condition to a pattern.
 
 `is_some_and` asks a question about what is inside an `Option` and
 answers `false` for `None`, so the last chord, with no next chord, goes
 nowhere.
+
+`borrowed_from` checks the spelling as well as the sound. G augmented
+(G B D♯) has the same three keys of the piano as E♭ augmented (E♭ G
+B), a chord of C harmonic minor. But its D♯ rises to E, where an E♭
+would fall: it is not a note of C minor. So every note of a borrowed
+chord must be written on the letter the key's scales give it, counting
+up from the tonic.
 
 ### Finding the pivot
 
@@ -308,7 +354,8 @@ let common = |chord: &Function| {
 };
 ```
 
-`heard_in` counts the old key's borrowed chords as its own. That is why
+`belongs` means a chord of the key, in a minor key from any of its three
+scales. `heard_in` also counts the old key's borrowed chords as its own. That is why
 Fm, borrowed in C major, can be a pivot into A♭ major. The arrival is
 the first `new_only` chord. It is looked for just before the marker
 first, in case the new key came early, and then after it. The pivot is
@@ -345,6 +392,13 @@ say:
 - B7 in A minor is V7/V, or V7/v going to Em.
 - A7 in A minor going to Dm is V7/iv, and A major at the end is a
   Picardy third.
+- Am C G7 C F Dm E7 Am in A minor, set as natural or as harmonic minor:
+  every chord is the key's own. D is IV going to E7 and V of G going to
+  G. B7's tooltip names only D♯ as coming from outside A minor.
+- E major in E Phrygian has no secondary name: borrowed and secondary
+  chords are named in major and minor keys only.
+- G augmented in C major is not borrowed: its D♯ is not the E♭ of C
+  minor. Bdim7, whose A♭ is, is.
 - C, Am, D7, G into G major with the marker on the Am, the D7 or the G:
   Am is the pivot each time.
 - Fm as a borrowed pivot into A♭ major, a direct modulation to D♭ major,
