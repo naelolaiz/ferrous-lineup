@@ -185,10 +185,10 @@ como formato 15.
 
 ## Ejercicios
 
-1. Elige el estilo **Jazz ballad**, escribe | Domaj7 | Lam7 | Rem7 | Sol7 |
+1. Elige el estilo **Jazz ballad**, escribe | Cmaj7 | Am7 | Dm7 | G7 |
    dos veces, y pon los compases 5 a 8 en la variación b. Abre los
    patrones del bajo en el piano roll. ¿Cuántas notas tiene un compás
-   en a, y en b? ¿Qué notas toca el bajo en un compás de Rem7 en la
+   en a, y en b? ¿Qué notas toca el bajo en un compás de Dm7 en la
    variación a?
 2. En un **Pop beat** de ocho compases, pon el compás 5 en la variación
    b y el compás 6 de vuelta en a. ¿Qué compases reciben un fill de

@@ -258,7 +258,7 @@ contorno algo más brillante que los demás, y la línea de ayuda habla de
 
 ### Ahora y después
 
-![Las harmony keys en cuatro momentos de la canción inicial: el acorde que suena (Do, Do, Lam, Fa) está iluminado y enmarcado en blanco; los acordes que suelen venir después tienen un contorno amarillo fino](../images/step-8-now-and-next.png)
+![Las harmony keys en cuatro momentos de la canción inicial: el acorde que suena (C, C, Am, F) está iluminado y enmarcado en blanco; los acordes que suelen venir después tienen un contorno amarillo fino](../images/step-8-now-and-next.png)
 
 Dos marcas comparten la barra, y no hay que confundirlas: el acorde que
 **está sonando** y los acordes que **pueden venir después**. Al
@@ -293,7 +293,7 @@ menú del principio de la línea de ayuda:
 
 | Nivel | Tras Do, la línea de ayuda dice |
 |---|---|
-| Detailed | Tras Do, Fa suele venir después: I a IV: alejarse del hogar, hacia la dominante. |
+| Detailed | Tras C, F suele venir después: I a IV: alejarse del hogar, hacia la dominante. |
 | Short (por defecto) | Do → Fa: lejos del hogar |
 | Minimal | Do → Fa |
 

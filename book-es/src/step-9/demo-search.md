@@ -25,7 +25,7 @@ entran directamente, y los submenús dan paso a una sola lista: primero
 cada demo con «tango» en su título, luego las canciones tocadas como
 tango o milonga, luego los estilos de tango, y al final, más apagadas,
 las demos cuyas notas solo mencionan el tango, como Candombe y *St.
-Louis Blues*, que abre con una introducción de tango. La la derecha, cada
+Louis Blues*, que abre con una introducción de tango. A la derecha, cada
 línea dice dónde vive la demo en el menú, como **Songs ▸ Tango**.
 
 ![El menú Demos con «tango» escrito en la caja de búsqueda. Tango, Tango de salón, Tango del telar, Tango nuevo, Tango síncopa, Tango vals y Tangos flamencos van primero; luego El Choclo, Gallo ciego, Habanera, La Cumparsita, La Paloma, Milonga, Milonga del río, Vals del puerto y Vals in minor; al final, más apagadas, Candombe y St. Louis Blues. La la derecha de cada una, «Songs ▸ Tango» o «Styles ▸ Tango».](../images/step-9-demo-search.png)
@@ -78,9 +78,9 @@ en espacio. «Für Elise» se ordena como «fur elise», justo después de
 «Tico-Tico» como «tico tico». El menú sigue mostrando el título real.
 
 Los catálogos de bibliotecas van un paso más allá y se saltan un «The»,
-«El» o «La» inicial, archivando *El Choclo* bajo la Do. El menú no:
+«El» o «La» inicial, archivando *El Choclo* bajo la C. El menú no:
 ordena por el título exactamente como lo lees, así que las primeras
-letras van de la La a la Z y *El Choclo* se sienta bajo la Mi. La
+letras van de la A a la Z y *El Choclo* se sienta bajo la E. La
 búsqueda lo compensa: `choclo` lo encuentra enseguida.
 
 ## El código
@@ -236,7 +236,7 @@ enum Rank {
 cada palabra que escribiste empieza una palabra del título. `Details`:
 lo que escribiste, tal como lo escribiste, está en quién lo escribió, el
 feel, el género, la tonalidad o el compás, como «d minor» en una canción
-cuya tonalidad es «Re minor». `Words`: todas las palabras se encontraron
+cuya tonalidad es «D minor». `Words`: todas las palabras se encontraron
 en esos, pero separadas. `About`: alguna palabra solo se encontró en las
 notas sobre la demo.
 
@@ -244,8 +244,8 @@ La tonalidad necesitó un poco de cuidado musical. Muchas canciones
 menores están escritas en la escala **menor armónica**, cuya séptima
 nota se eleva para dar un tirón fuerte de vuelta a la tónica. Una
 canción en Re menor armónica sigue estando en la tonalidad de Re menor,
-así que sus detalles buscables dicen ambas cosas, «Re harmonic minor» y
-«Re minor», y `d minor` encuentra el Dies irae del Réquiem de Mozart
+así que sus detalles buscables dicen ambas cosas, «D harmonic minor» y
+«D minor», y `d minor` encuentra el Dies irae del Réquiem de Mozart
 además de la Toccata in D minor.
 
 Derivar `Ord` en un enum ordena sus variantes tal como están escritas,
@@ -288,7 +288,7 @@ Tres detalles de egui, la biblioteca de GUI, necesitaron cuidado:
   entre sus elementos con las flechas, pero una caja de texto se queda
   las flechas para sí. Así que antes de que la caja se dibuje, mientras
   tiene el foco, el menú quita la flecha abajo de la entrada con
-  `consume_key`, y le da el foco a la primera coincidencia. La partir de
+  `consume_key`, y le da el foco a la primera coincidencia. A partir de
   ahí, las flechas propias del menú toman el control.
 
 Lo que escribiste se conserva entre frames en la memoria propia de egui

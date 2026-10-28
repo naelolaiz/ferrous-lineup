@@ -70,11 +70,11 @@ aquí, y el `use` de dentro solo vale dentro del bloque. `None` significa
 "no permitido": "V°" no es un acorde que nadie escriba.
 
 `spelling` recuerda un bemol o un sostenido delante, así que bII7 en Do
-se escribe Re♭7, no Do♯7: la misma tecla en el piano, pero el nombre le
+se escribe D♭7, no C♯7: la misma tecla en el piano, pero el nombre le
 dice a un músico qué hace el acorde.
 
 `bass` recuerda la nota del bajo de un acorde con barra, también en
-semitonos sobre la tónica: Sol/Si en Do es Sol mayor con 11, por Si, en el
+semitonos sobre la tónica: G/B en Do es Sol mayor con 11, por Si, en el
 bajo. `None` significa que la fundamental está en el bajo, que es casi
 todo acorde.
 

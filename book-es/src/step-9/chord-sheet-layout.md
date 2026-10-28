@@ -154,9 +154,9 @@ Antes de dibujar, el sheet pregunta a cada compás de la canción cuánto
 debe medir de ancho, y se queda con el más ancho. Los nombres de un
 compás no comparten su anchura a partes iguales: **cada nombre tiene la
 parte del compás que va de su pulso al del siguiente nombre**, porque
-ahí es donde lo dibuja el sheet. En un compás de 4/4 de "C La7", C tiene
-los pulsos 1 y 2, la mitad del compás, y La7 lo mismo. En "C / / La7", C
-tiene tres cuartos y La7 uno.
+ahí es donde lo dibuja el sheet. En un compás de 4/4 de "C A7", C tiene
+los pulsos 1 y 2, la mitad del compás, y A7 lo mismo. En "C / / A7", C
+tiene tres cuartos y A7 uno.
 
 Así que un nombre de 30 píxeles de ancho que ocupa un cuarto del compás
 necesita un compás de 120 píxeles:

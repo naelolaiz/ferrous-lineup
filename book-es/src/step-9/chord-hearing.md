@@ -13,7 +13,7 @@ y [`crates/lineup-core/tests/chord_reading.rs`](https://github.com/naelolaiz/fer
 primavera y Petrushka a la app, pero los acordes que mostraba para
 ellos estaban en su mayoría mal. Abrir **The Augurs of Spring** escribía
 un chord sheet con 25 compases vacíos, y donde sí escribía un acorde
-era algo como Fasus2 o Do♯dim. El acorde de los Augurios primaverales,
+era algo como Fsus2 o C♯dim. El acorde de los Augurios primaverales,
 que las cuerdas martillean durante páginas, no tenía nombre ninguno.
 De 64 compases comprobados contra las partituras, ninguno salió bien.
 
@@ -33,13 +33,13 @@ La música que se mueve es más difícil de nombrar así:
   acorde.
 - Una **melodía** pasa por notas ajenas al acorde. Bajo un acorde de Do
   mayor, una melodía que toca Re hace del instante Do, Re, Mi, Sol, que
-  se lee como Doadd9 aunque la armonía siga siendo un simple Do.
+  se lee como Cadd9 aunque la armonía siga siendo un simple C.
 - Un **walking bass** camina entre los acordes: Do, Si♭, La de camino
-  de Do a La7. El Si♭ bajo Do, Mi y Sol convierte el acorde en Do7 por un
-  momento, aunque nadie en la banda esté tocando Do7.
+  de C a A7. El Si♭ bajo Do, Mi y Sol convierte el acorde en C7 por un
+  momento, aunque nadie en la banda esté tocando C7.
 - Una orquesta puede tocar **dos acordes a la vez**, uno sobre otro. Es
   un *polychord*. En los Augurios primaverales, las cuerdas graves
-  tocan Fa♭ mayor (Fa♭, La♭, Do♭) mientras suena Mi♭7 (Mi♭, Sol, Si♭,
+  tocan Fa♭ mayor (Fa♭, La♭, Do♭) mientras suena E♭7 (Mi♭, Sol, Si♭,
   Re♭) por encima. En Petrushka, los clarinetes tocan Do mayor sobre
   Fa♯ mayor. Ningún símbolo de acorde contiene ninguno de los dos.
 - Algunas armonías **no son pilas de terceras** en absoluto. La feria
@@ -92,7 +92,7 @@ y el siguiente:
 | Layer | una parte que sería una melodía, pero cuyas notas pertenecen todas a una tríada o un acorde de séptima: tres notas al menos, dos de ellas fuera de los acordes | por completo |
 
 La fila de **Layer** está ahí por La consagración de la primavera. Su
-ostinato Re♭, Si♭, Mi♭, Si♭ es una sola línea, pero deletrea Mi♭7
+ostinato Re♭, Si♭, Mi♭, Si♭ es una sola línea, pero deletrea E♭7
 contra los arpegios de Do mayor y Mi menor que hay debajo. Es una
 armonía propia, no una melodía.
 
@@ -136,19 +136,19 @@ y las notas de `also`» en una sola instrucción.
 
 ### Un walking bass, paso a paso
 
-Rhythm changes empieza con un compás de Do que camina hacia La7. El piano
+Rhythm changes empieza con un compás de C que camina hacia A7. El piano
 toca Do, Mi y Sol en los pulsos 1 y 2, y el bajo toca Do, luego Si♭.
 Sobre esos dos pulsos el perfil es Do 9, Mi 5, Sol 5, y el Si♭ de paso
 4 × 0,15 = 0,6.
 
 - **Do** explica todo salvo el Si♭: (19 − 1,5 × 0,6) / 19,6 = 0,92, más
   0,06 por Do en el bajo: **0,98**.
-- **Do7** lo explica todo, pero su Si♭ apenas se oye, lo que cuesta
+- **C7** lo explica todo, pero su Si♭ apenas se oye, lo que cuesta
   0,12, y su cuarta nota cuesta 0,06. Con el bono del bajo puntúa
   1 − 0,12 − 0,06 + 0,06 = **0,88**.
 
 Gana Do, como dice el chart. Una versión anterior ponderaba las notas de
-paso del bajo con 0,35, y allí ganaba Do7 por un pelo. Lo atrapó una
+paso del bajo con 0,35, y allí ganaba C7 por un pelo. Lo atrapó una
 prueba que escribe el chord sheet de Rhythm changes.
 
 ## Dos acordes a la vez
@@ -159,7 +159,7 @@ superior, de todas las maneras que tienen sentido:
 
 - **por registro**: todo lo que está por debajo de una altura es la
   capa inferior. Se salta una división cuando cortaría una línea, ya
-  que una línea que va de La hasta Sol es un arpegio de La7, no la parte
+  que una línea que va de La hasta Sol es un arpegio de A7, no la parte
   alta de Sol mayor;
 - **por instrumento**: los instrumentos ordenados del que suena más
   grave al más agudo, y cortados entre dos cualesquiera de ellos.
@@ -169,12 +169,12 @@ con tres de sus notas oídas y su fundamental entre ellas. Después el
 par tiene que pasar cuatro comprobaciones:
 
 1. Las fundamentales difieren, y el acorde superior añade al menos dos
-   notas propias. Do sobre La menor es solo Lam7.
+   notas propias. Do sobre La menor es solo Am7.
 2. Los dos acordes no forman **una sola tonalidad** entre ambos. Fa
    mayor sobre Sol mayor usa solo las notas de Do mayor: eso es Sol
    oncena, una sola armonía en Do, no dos tonalidades a la vez.
 3. Ambos acordes **suenan juntos** durante al menos el 80% del tramo.
-   Do mayor y luego Sol7 es una progresión, no un polychord. El oído
+   Do mayor y luego G7 es una progresión, no un polychord. El oído
    retiene las notas de un acorde en staccato golpeado una y otra vez,
    así que los huecos de dos pasos o menos cuentan como que suena.
 4. El par, menos un coste de 0,2 por necesitar dos acordes, puntúa
@@ -237,11 +237,11 @@ demás más tenues.
 - En las **harmony keys**, cada acorde de un polychord ilumina su tecla,
   donde la tecla tiene una, y un acorde como el que también podría
   oírse la música ilumina su tecla tenuemente. Junto a la pista, una
-  línea lo dice con palabras: «Heard: Eb7|Fa♭, dos acordes a la vez», o
+  línea lo dice con palabras: «Heard: Eb7|Fb, dos acordes a la vez», o
   «Heard: las notas 4-23».
 - En el **piano roll**, la fila All del carril de acordes se oye ahora
   pulso a pulso con toda la banda, y la línea sobre la cuadrícula añade
-  las otras lecturas entre paréntesis: «(o Do6)».
+  las otras lecturas entre paréntesis: «(o C6)».
 
 ## Cortar un compás en acordes
 
@@ -285,10 +285,10 @@ cortes.
 Un polychord **sigue** mientras siguen sus notas. En La habitación de
 Petrushka, la mitad Fa♯ mayor del acorde descansa un compás mientras Do
 mayor sigue. Oído solo, ese compás es solo Do. Pero Do mayor y Fa♯
-mayor aún explican casi todo, así que el sheet mantiene «Do|Fa♯» allí en
+mayor aún explican casi todo, así que el sheet mantiene «C|F♯» allí en
 lugar de saltar a Do y volver.
 
-## Escribir dos acordes: Eb7|Fa♭
+## Escribir dos acordes: Eb7|Fb
 
 Un lead sheet dibuja un polychord como una fracción, el acorde superior
 sobre una línea sobre el inferior. El chord sheet lo escribe en una
@@ -429,7 +429,7 @@ pulsos coinciden con su chart: el lugar donde mirar a continuación.
    la vez: un polychord. Superior: Mi♭ Sol Si♭ Re♭. Inferior: Fa♭ La♭ Do♭. En
    Mi♭ mixolidio: I7 sobre ♭II».
 2. Pulsa Play con las harmony keys a la vista. La tecla de I se ilumina
-   para Mi♭7 (Fa♭ mayor no es un acorde de Mi♭ mixolidio, así que no
+   para E♭7 (Fa♭ mayor no es un acorde de Mi♭ mixolidio, así que no
    tiene tecla), y la línea junto a la pista nombra los dos acordes.
 3. Abre **Petrushka, Petrushka's Room** y busca el compás 47, donde
    entran los clarinetes con el acorde de Petrushka. El sheet lo
@@ -450,13 +450,13 @@ pulsos coinciden con su chart: el lugar donde mirar a continuación.
    Comprueba que cada nota del acorde está en ella. ¿Por qué
    `in_one_key` tuvo que dejar fuera la menor armónica?
 2. En el ejemplo del walking bass, calcula otra vez las puntuaciones de
-   Do y Do7 con la nota de paso pesando 0,35 en lugar de 0,15 (el Si♭ es
+   C y C7 con la nota de paso pesando 0,35 en lugar de 0,15 (el Si♭ es
    entonces 1,4 y el total 20,4). ¿Qué acorde gana?
 3. Los costes de corte son 0,15 a mitad del compás y 0,25 en los demás
-   pulsos. Un compás de 4/4 toca Do, luego Sol7, y cada uno de ellos, oído
+   pulsos. Un compás de 4/4 toca C, luego G7, y cada uno de ellos, oído
    solo, puntúa 1,06 (un encaje perfecto con su fundamental en el
    bajo). Supón que el compás entero, oído como un solo tramo, puntúa
-   1,0 por pulso. ¿Corta el sheet el compás cuando Sol7 entra en el pulso
+   1,0 por pulso. ¿Corta el sheet el compás cuando G7 entra en el pulso
    4, durante un pulso? ¿Y cuando entra en el pulso 3, durante dos?
 4. ¿Por qué `HeardBars` usa en su clave las notas de los compases de
    alrededor de un compás, y no solo las notas del propio compás?

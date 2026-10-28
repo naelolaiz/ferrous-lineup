@@ -47,7 +47,7 @@ Las partes con altura se escriben **sobre Do mayor**. Cuando se aplica
 el estilo, cada nota se mueve al acorde del momento: un Do toca la
 fundamental, un Mi la tercera, un Sol la quinta, y las demás notas siguen
 la tonalidad o conservan su color. Los campos dicen: «Write pitched
-parts over Do major. They follow the song's chords when applied.»
+parts over C major. They follow the song's chords when applied.»
 
 **Preview ×4** toca el patrón cuatro veces y se detiene. **Space** lo
 arranca o lo para mientras el editor tiene el teclado. La vista previa

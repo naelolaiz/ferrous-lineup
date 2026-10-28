@@ -5,10 +5,10 @@ Archivos: [`crates/lineup-core/src/chord_sheet/function.rs`](https://github.com/
 y [`crates/lineup-app/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet.rs)
 
 Un número romano dice dónde se encuentra un acorde en la tonalidad. En
-Do mayor, Rem es ii y Sol7 es V7. La mayoría de los acordes de una canción
+Do mayor, Dm es ii y G7 es V7. La mayoría de los acordes de una canción
 son propios de la tonalidad, construidos solo con sus siete notas. Los
 que no lo son suelen ser los que recuerdas: el iv menor que oscurece la
-última línea de una balada, el Re7 que lleva al puente de un estándar.
+última línea de una balada, el D7 que lleva al puente de un estándar.
 La armonía tiene nombres para explicar por qué están ahí esos acordes,
 y el chord sheet los escribe ahora debajo de los acordes:
 
@@ -21,13 +21,13 @@ y el chord sheet los escribe ahora debajo de los acordes:
 - **Acordes pivote**, donde la música cambia de tonalidad a través de
   un acorde que pertenece a ambas tonalidades.
 
-![Dieciséis compases en Do mayor que van a Sol mayor. Fam y La♭ están marcados como «prestados» en azul, Mi7 y Re7/Fa♯ son dominantes secundarias en amarillo (V7/vi, V⁶₅/V), Re♭/Fa es la sexta napolitana en rosa (N⁶) y Lam en el compás 14 es el acorde pivote, «vi = ii», en naranja. El cambio de tonalidad a Sol mayor está marcado en el compás 15.](../images/step-9-chord-functions.png)
+![Dieciséis compases en Do mayor que van a Sol mayor. Fm y A♭ están marcados como «prestados» en azul, E7 y D7/F♯ son dominantes secundarias en amarillo (V7/vi, V⁶₅/V), D♭/F es la sexta napolitana en rosa (N⁶) y Am en el compás 14 es el acorde pivote, «vi = ii», en naranja. El cambio de tonalidad a Sol mayor está marcado en el compás 15.](../images/step-9-chord-functions.png)
 
 ## Cómo probarlo
 
 1. Crea una canción nueva, abre el chord sheet (**F5**) y escribe estos
-   dieciséis compases, un acorde en cada uno: Do, Fam, La♭, Sol7, Do, Mi7, Lam,
-   Re7/Fa♯, Sol, Do, Re♭/Fa, Sol, Do, Lam, Re7, Sol.
+   dieciséis compases, un acorde en cada uno: C, Fm, A♭, G7, C, E7, Am,
+   D7/F♯, G, C, D♭/F, G, C, Am, D7, G.
 2. Haz clic derecho en el compás 15 de los números de compás del
    playlist y elige la tonalidad **Sol mayor** de ahí en adelante. El
    chord sheet escribe «→ Sol mayor» en el compás 15.
@@ -49,18 +49,18 @@ tonalidad mayor suele tomar un acorde de su menor homónima sin salir de la tona
 
 | Acorde | En Do mayor | Sus notas | De Do menor |
 |---|---|---|---|
-| Fam | iv | Fa La♭ Do | La♭ |
-| La♭ | ♭VI | La♭ Do Mi♭ | La♭ y Mi♭ |
-| Si♭ | ♭VII | Si♭ Re Fa | Si♭ |
-| Mi♭ | ♭III | Mi♭ Sol Si♭ | Mi♭ y Si♭ |
-| Re° | ii° | Re Fa La♭ | La♭ |
+| Fm | iv | Fa La♭ Do | La♭ |
+| A♭ | ♭VI | La♭ Do Mi♭ | La♭ y Mi♭ |
+| B♭ | ♭VII | Si♭ Re Fa | Si♭ |
+| E♭ | ♭III | Mi♭ Sol Si♭ | Mi♭ y Si♭ |
+| D° | ii° | Re Fa La♭ | La♭ |
 | Bdim7 | vii°7 | Si Re Fa La♭ | La♭ |
 
 El ♭ de ♭VI dice que el acorde se construye sobre un sexto grado
 rebajado: La♭, donde Do mayor tiene La. El tooltip nombra las notas que
 vienen de la tonalidad menor:
 
-> Fam: Fa menor, iv en Do mayor. Un acorde prestado: Do mayor lo toma de Do
+> Fm: Fa menor, iv en Do mayor. Un acorde prestado: Do mayor lo toma de Do
 > menor, la tonalidad menor sobre la misma tónica (esto se llama
 > mixtura modal). Su La♭ viene de Do menor, no de Do mayor: oscurece la
 > tonalidad mayor por un momento sin salir de ella.
@@ -77,21 +77,21 @@ elevada. En Do menor esa séptima elevada es Si, la sensible, y Bdim7
 
 ## Dominantes secundarias: V de V
 
-En Do mayor, Sol7 es V7, la dominante. Su tercera, Si, es la sensible, un
+En Do mayor, G7 es V7, la dominante. Su tercera, Si, es la sensible, un
 semitono por debajo de Do, y tira hacia arriba, hacia Do. Ese tirón es lo
 que hace que Do suene como hogar.
 
 Cualquier acorde mayor o menor de la tonalidad puede tener su propio
-dominante. Re7 es la dominante de Sol: su tercera, Fa♯, está un semitono
+dominante. D7 es la dominante de Sol: su tercera, Fa♯, está un semitono
 por debajo de Sol y tira hacia arriba, hacia él. Fa♯ no está en Do mayor,
 así que por un momento Sol suena como una tónica, el hogar de una
-tonalidad propia. Esto se llama **tonicización**. Re7 en Do mayor se
+tonalidad propia. Esto se llama **tonicización**. D7 en Do mayor se
 escribe **V7/V**, «cinco siete de cinco»: el V7 del acorde que es V
 en Do.
 
-![Señalando a Re7/Fa♯: «Una dominante secundaria: Re7/Fa♯ es la dominante de Sol, el V de Do mayor, como si Sol fuera una tónica. Su tercera, Fa♯, es la sensible de Sol, un semitono por debajo, y tira hacia arriba, hacia ella, así que Sol suena por un momento como una tonalidad propia (una tonicización). Aquí sigue hacia Sol, como una dominante que va a su tónica».](../images/step-9-chord-functions-secondary.png)
+![Señalando a D7/F♯: «Una dominante secundaria: D7/F♯ es la dominante de Sol, el V de Do mayor, como si Sol fuera una tónica. Su tercera, Fa♯, es la sensible de Sol, un semitono por debajo, y tira hacia arriba, hacia ella, así que Sol suena por un momento como una tonalidad propia (una tonicización). Aquí sigue hacia Sol, como una dominante que va a su tónica».](../images/step-9-chord-functions-secondary.png)
 
-Las cifras de una inversión van sobre el V. Re7 con Fa♯ en el bajo es
+Las cifras de una inversión van sobre el V. D7 con Fa♯ en el bajo es
 V⁶₅/V, y el Fa♯ del bajo sube directo a Sol.
 
 Todo acorde mayor y menor de la tonalidad puede ser tonicizado, salvo
@@ -100,23 +100,23 @@ ser tónica. En Do mayor:
 
 | Acorde | Su dominante | Escrito | Su sensible |
 |---|---|---|---|
-| Rem (ii) | La7 | V7/ii | Do♯ |
-| Mim (iii) | Si7 | V7/iii | Re♯ |
-| Fa (IV) | Do7 | V7/IV | Mi |
-| Sol (V) | Re7 | V7/V | Fa♯ |
-| Lam (vi) | Mi7 | V7/vi | Sol♯ |
+| Dm (ii) | A7 | V7/ii | Do♯ |
+| Em (iii) | B7 | V7/iii | Re♯ |
+| F (IV) | C7 | V7/IV | Mi |
+| G (V) | D7 | V7/V | Fa♯ |
+| Am (vi) | E7 | V7/vi | Sol♯ |
 
-Do7 es el caso raro. Su sensible, Mi, ya está en Do mayor. Lo que hace que
-Do7 suene como una dominante es su séptima, Si♭, que el tooltip nombra:
+C7 es el caso raro. Su sensible, Mi, ya está en Do mayor. Lo que hace que
+C7 suene como una dominante es su séptima, Si♭, que el tooltip nombra:
 «Su Si♭ no está en Do mayor».
 
-Una dominante secundaria no siempre va adonde apunta. Mi7 que va a Fa en
-lugar de Lam es un movimiento **deceptivo**, como V que va a vi. El
-acorde sigue siendo V7/vi, y el tooltip añade: «Aquí va a Fa en lugar
-de Lam».
+Una dominante secundaria no siempre va adonde apunta. E7 que va a F en
+lugar de Am es un movimiento **deceptivo**, como V que va a vi. El
+acorde sigue siendo V7/vi, y el tooltip añade: «Aquí va a F en lugar
+de Am».
 
 También puede ir ahí pasando por un **acorde de sexta y cuarta**: una
-tríada con su quinta en el bajo, como Do/Sol. Re7 que va a Do/Sol y luego a Sol7
+tríada con su quinta en el bajo, como C/G. D7 que va a C/G y luego a G7
 es el camino de libro hacia una cadencia. El bajo ya ha llegado a Sol, y
 el Do y el Mi por encima caen a Si y Re un momento después. Esta es la
 **sexta y cuarta cadencial**. El tooltip dice que el bajo ha llegado y
@@ -125,27 +125,27 @@ que el acorde de Sol llega cuando las dos notas por encima caen un grado.
 ### Acordes de sensible secundarios
 
 Un acorde disminuido también puede hacer el trabajo de una dominante. En
-Do mayor, Sidim es vii°, construido sobre la sensible, y tira hacia Do
-como hace V. Fa♯dim7 se construye sobre Fa♯, la sensible de Sol, así que
+Do mayor, Bdim es vii°, construido sobre la sensible, y tira hacia Do
+como hace V. F♯dim7 se construye sobre Fa♯, la sensible de Sol, así que
 tira hacia Sol. Se escribe **vii°7/V**.
 
 A diferencia de una dominante secundaria, solo se nombra así cuando va a
 su acorde, o a un acorde de sexta y cuarta sobre él. Autumn Leaves
-tiene Fa♯m7♭5 que va a Si7 y luego a Mim, un ii–V–i en Mi menor. Leído en Do
+tiene F♯m7♭5 que va a B7 y luego a Em, un ii–V–i en Mi menor. Leído en Do
 mayor, como en la página sobre [pegar chord sheets](text-chord-sheets.md),
-Fa♯m7♭5 sigue siendo allí el ii de Mi menor, no el vii de Sol. Así que el
+F♯m7♭5 sigue siendo allí el ii de Mi menor, no el vii de Sol. Así que el
 chord sheet mantiene su número llano, ♯ivø7.
 
 ### En una tonalidad menor
 
 Una tonalidad menor tiene tres escalas, y la música en menor toma sus
-acordes de todas ellas. De la menor **natural**, La Si Do Re Mi Fa Sol: Do
-(III), Rem (iv), Fa (VI) y Sol (VII). De la menor **armónica**, con Sol♯: la
-dominante Mi o Mi7 (V) y Sol♯dim7 (vii°7). De la menor **melódica**, con
-Fa♯ y Sol♯: Sim (ii) y Re (IV), normalmente de camino hacia Mi. Todos son
+acordes de todas ellas. De la menor **natural**, La Si Do Re Mi Fa Sol: C
+(III), Dm (iv), F (VI) y G (VII). De la menor **armónica**, con Sol♯: la
+dominante E o E7 (V) y G♯dim7 (vii°7). De la menor **melódica**, con
+Fa♯ y Sol♯: Bm (ii) y D (IV), normalmente de camino hacia E. Todos son
 acordes propios de la tonalidad, sea cual sea la escala a la que esté
-ajustada. Así que El Choclo, en La menor armónica, tiene su Do y su Sol7
-leídos como III y VII7, no como dominantes secundarias de Fa y Do. Un
+ajustada. Así que El Choclo, en La menor armónica, tiene su C y su G7
+leídos como III y VII7, no como dominantes secundarias de F y C. Un
 acorde secundario trae una nota que ninguna de las tres tiene: en La
 menor, Do♯, Re♯ o La♯. La única excepción es un acorde de la menor
 melódica que va adonde iría un acorde secundario: Re que sigue hacia Sol
@@ -158,11 +158,11 @@ hacen otras cosas: Mi mayor en Mi frigio es el acorde de tónica de gran
 parte del flamenco, no la dominante de La menor.
 
 El chord sheet lee las dominantes secundarias contra la escala menor
-natural. La dominante de la propia dominante es Si7, con Re♯, escrito V7/V.
-Cuando Si7 va a Mim, un v menor, se escribe V7/v.
+natural. La dominante de la propia dominante es B7, con Re♯, escrito V7/V.
+Cuando B7 va a Em, un v menor, se escribe V7/v.
 
-Un acorde mayor de tónica en menor es dos cosas a la vez. La7 que va a
-Rem es V7/iv, la dominante de la subdominante. La mayor al final de la
+Un acorde mayor de tónica en menor es dos cosas a la vez. A7 que va a
+Dm es V7/iv, la dominante de la subdominante. La mayor al final de la
 pieza es la tercera de Picardía, tomado en préstamo de La mayor.
 
 ## La sexta napolitana
@@ -170,14 +170,14 @@ pieza es la tercera de Picardía, tomado en préstamo de La mayor.
 El acorde **napolitano** es un acorde mayor sobre el segundo grado
 rebajado: Re♭ mayor en Do, donde la tonalidad tiene Re. Lleva el nombre de
 los compositores de ópera napolitanos del siglo XVIII, que lo usaban a
-menudo. Se toca casi siempre con su tercera en el bajo, Re♭/Fa, así que
+menudo. Se toca casi siempre con su tercera en el bajo, D♭/F, así que
 se lo conoce como **sexta napolitana**, escrita N⁶ (un acorde con su
 tercera en el bajo es un acorde de «sexta» en el bajo cifrado). Va
 hacia la dominante, y su Re♭ cae a Si, la sensible. Esa caída es una
 tercera disminuida, un paso melódico llamativo.
 
 El chord sheet escribe N⁶ solo para un acorde mayor escrito sobre la
-segunda letra de la tonalidad, Re♭ en Do. Do♯ mayor son las mismas notas
+segundo nombre de nota de la tonalidad, Re♭ en Do. Do♯ mayor son las mismas notas
 en el piano, pero escrito sobre Do es un acorde cromático sobre la
 tónica, no un napolitano.
 
@@ -185,24 +185,24 @@ tónica, no un napolitano.
 
 Una **modulación** es un paso a una tonalidad nueva en la que la música
 se queda. El camino más suave pasa por un acorde que las dos
-tonalidades comparten. En Do mayor, Lam es vi. En Sol mayor, Lam es ii.
-Cuando la música hace Do, Lam, Re7, Sol, el oído oye Lam como vi en Do. Luego
-llega Re7, que Do mayor no tiene, y el oído oye que Lam era en realidad ii
-en Sol. Lam es el **acorde pivote**: hace girar la música de una tonalidad
+tonalidades comparten. En Do mayor, Am es vi. En Sol mayor, Am es ii.
+Cuando la música hace C, Am, D7, G, el oído oye Am como vi en Do. Luego
+llega D7, que Do mayor no tiene, y el oído oye que Am era en realidad ii
+en Sol. Am es el **acorde pivote**: hace girar la música de una tonalidad
 a la otra.
 
 El chord sheet busca el pivote alrededor de cada cambio de tonalidad.
 Encuentra el primer acorde cerca del cambio que pertenece a la
 tonalidad nueva y no a la vieja. Ese acorde es la **llegada** (aquí
-Re7). El acorde anterior es el pivote si pertenece a ambas tonalidades.
+D7). El acorde anterior es el pivote si pertenece a ambas tonalidades.
 El pivote lleva los dos números, primero el de la tonalidad vieja:
 `vi = ii · pivot`.
 
-![Señalando al acorde pivote: «Lam: La menor, vi en Do mayor. El acorde pivote de la modulación a Sol mayor: Lam es vi en Do mayor y ii en Sol mayor, un acorde de ambas tonalidades. El oído lo oye en Do mayor; Re7, que Do mayor no tiene, viene a continuación y muestra que era el ii de Sol mayor».](../images/step-9-chord-functions-pivot.png)
+![Señalando al acorde pivote: «Am: La menor, vi en Do mayor. El acorde pivote de la modulación a Sol mayor: Am es vi en Do mayor y ii en Sol mayor, un acorde de ambas tonalidades. El oído lo oye en Do mayor; D7, que Do mayor no tiene, viene a continuación y muestra que era el ii de Sol mayor».](../images/step-9-chord-functions-pivot.png)
 
 Dónde va el marcador de tonalidad es cosa tuya. Los músicos marcan la
 tonalidad nueva donde sienten que ha llegado, que puede ser un compás o
-dos después del pivote. Si el marcador está sobre el Sol, el Re7 anterior
+dos después del pivote. Si el marcador está sobre el G, el D7 anterior
 ya pertenece a Sol mayor. El chord sheet lo lee igualmente en Sol mayor y
 escribe debajo `V7 · in G major`, en naranja.
 
@@ -215,9 +215,9 @@ No todo cambio de tonalidad tiene pivote:
 - **Un cambio de modo** mantiene la tónica y cambia el modo, de Do mayor
   a Do menor. No hace falta ningún acorde que lleve hasta allí.
 
-Un acorde prestado también puede ser pivote. Fam es iv tomado en
-préstamo de Do menor, y es vi en La♭ mayor. En Do, Fa, Fam, Mi♭7, La♭, Fam es
-el pivote `iv = vi`, y Mi♭7 es la llegada.
+Un acorde prestado también puede ser pivote. Fm es iv tomado en
+préstamo de Do menor, y es vi en La♭ mayor. En C, F, Fm, E♭7, A♭, Fm es
+el pivote `iv = vi`, y E♭7 es la llegada.
 
 ## En el código
 
@@ -303,7 +303,7 @@ tonalidad y pregunta si el acorde pertenece a uno de los tipos que
 recibe.
 
 Algunos acordes podrían ser entonces dos cosas. En La menor, La mayor es
-a la vez la dominante de Rem y el acorde mayor de tónica tomado en
+a la vez la dominante de Dm y el acorde mayor de tónica tomado en
 préstamo de La mayor. Re mayor es el IV de la menor melódica, y el
 dominante de Sol. `role` decide por adónde va el acorde:
 
@@ -348,7 +348,7 @@ ninguna parte.
 (Sol Si Re♯) tiene las mismas tres teclas del piano que Mi♭ aumentado
 (Mi♭ Sol Si), un acorde de Do menor armónica. Pero su Re♯ sube a Mi, donde un
 Mi♭ caería: no es una nota de Do menor. Así que cada nota de un acorde
-prestado debe estar escrita sobre la letra que le dan las escalas de la
+prestado debe estar escrita con el nombre de nota que le dan las escalas de la
 tonalidad, contando hacia arriba desde la tónica.
 
 ### Encontrar el pivote
@@ -370,7 +370,7 @@ let common = |chord: &Function| {
 
 `belongs` significa un acorde de la tonalidad, en una tonalidad menor
 de cualquiera de sus tres escalas. `heard_in` cuenta también como
-propios los acordes prestados de la tonalidad vieja. Por eso Fam,
+propios los acordes prestados de la tonalidad vieja. Por eso Fm,
 prestado en Do mayor, puede ser un pivote hacia La♭ mayor. La llegada es
 el primer acorde `new_only`. Se busca primero justo antes del marcador,
 por si la tonalidad nueva llegó pronto, y después de él. El pivote es
@@ -394,30 +394,30 @@ Las pruebas de `function.rs` son pequeños chord sheets al estilo de un
 libro de texto de armonía. Cada una comprueba los números y lo que
 dicen los tooltips:
 
-- Do Lam La♭ Fam Sol7 Do: ♭VI e iv están prestados de Do menor.
-- Do Mi7 Lam Re7/Fa♯ Sol7 Do La7 Rem: V7/vi, V⁶₅/V y V7/ii, cada uno yendo a su
+- C Am A♭ Fm G7 C: ♭VI e iv están prestados de Do menor.
+- C E7 Am D7/F♯ G7 C A7 Dm: V7/vi, V⁶₅/V y V7/ii, cada uno yendo a su
   acorde.
-- Mi7 que va a Fa: sigue siendo V7/vi, y el tooltip dice que va a Fa en
-  lugar de Lam.
-- Do7 que va a Fa: V7/IV, cuya Si♭ se nombra.
-- Fa♯dim7, Sol♯dim y Do♯m7♭5: vii°7/V, vii°/vi y viiø7/ii.
-- Autumn Leaves en Do: Fa♯m7♭5 que va a Si7 mantiene ♯ivø7.
-- Re7 y Fa♯dim7 que van a Do/Sol: la sexta y cuarta cadencial.
-- Re♭/Fa en Do menor es N⁶, y Do♯ en Do mayor no es un napolitano.
-- Si7 en La menor es V7/V, o V7/v yendo a Mim.
-- La7 en La menor yendo a Rem es V7/iv, y La mayor al final es una tercera
+- E7 que va a F: sigue siendo V7/vi, y el tooltip dice que va a F en
+  lugar de Am.
+- C7 que va a F: V7/IV, cuyo Si♭ se nombra.
+- F♯dim7, G♯dim y C♯m7♭5: vii°7/V, vii°/vi y viiø7/ii.
+- Autumn Leaves en Do: F♯m7♭5 que va a B7 mantiene ♯ivø7.
+- D7 y F♯dim7 que van a C/G: la sexta y cuarta cadencial.
+- D♭/F en Do menor es N⁶, y C♯ en Do mayor no es un napolitano.
+- B7 en La menor es V7/V, o V7/v yendo a Em.
+- A7 en La menor yendo a Dm es V7/iv, y La mayor al final es una tercera
   de Picardía.
-- Lam Do Sol7 Do Fa Rem Mi7 Lam en La menor, ajustada como menor natural o
-  armónica: todos los acordes son propios de la tonalidad. Re es IV
-  yendo a Mi7 y V de Sol yendo a Sol. El tooltip de Si7 nombra solo Re♯ como
+- Am C G7 C F Dm E7 Am en La menor, ajustada como menor natural o
+  armónica: todos los acordes son propios de la tonalidad. D es IV
+  yendo a E7 y V de G yendo a G. El tooltip de B7 nombra solo Re♯ como
   venido de fuera de La menor.
 - Mi mayor en Mi frigio no tiene nombre secundario: los acordes prestados
   y secundarios se nombran solo en tonalidades mayores y menores.
 - Sol aumentado en Do mayor no es prestado: su Re♯ no es el Mi♭ de Do menor.
-  Bdim7, cuya La♭ sí lo es, sí lo es.
-- Do, Lam, Re7, Sol hacia Sol mayor con el marcador sobre el Lam, el Re7 o el Sol:
-  Lam es el pivote en cada caso.
-- Fam como pivote prestado hacia La♭ mayor, una modulación directa a Re♭
+  Bdim7, cuyo La♭ sí lo es, sí lo es.
+- C, Am, D7, G hacia Sol mayor con el marcador sobre el Am, el D7 o el G:
+  Am es el pivote en cada caso.
+- Fm como pivote prestado hacia La♭ mayor, una modulación directa a Re♭
   mayor y un cambio de modo de Do mayor a Do menor.
 
 ## Ejercicios

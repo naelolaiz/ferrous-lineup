@@ -38,7 +38,7 @@ La mayor y Fa♯ menor. Oyes la diferencia por dónde vuelve a casa la
 música. En los compases 33–40 el bajo no deja de volver a Fa♯, y la
 melodía se apoya en Mi♯ (la séptima elevada de Fa♯ menor armónica, la
 nota justo debajo de Fa♯). La demo marca la tonalidad en la que está la
-música, no solo la armadura, así que la regla dice *Fa♯ harmonic minor*
+música, no solo la armadura, así que la regla dice *F# harmonic minor*
 desde el compás 33.
 
 Los compases en Do mayor del tema (9–16) son distintos: la música
@@ -97,9 +97,9 @@ Ferrous Lineup pueden seguir abriéndola.
   empieza la canción, *Now in A major* aparece bajo los menús Key, y
   las siete teclas de acorde son los acordes de esa tonalidad.
 - El piano roll resalta las notas de un patrón en la tonalidad en la
-  que se toca, y dice *This pattern: La major* junto a los menús Key.
+  que se toca, y dice *This pattern: A major* junto a los menús Key.
 
-![La Marcha turca en el compás 27, en la marcha: la regla dice La major en el compás 26 y Fa♯ harmonic minor en el compás 34, y las harmony keys son las de La mayor.](../images/step-8-key-change-march.png)
+![La Marcha turca en el compás 27, en la marcha: la regla dice A major en el compás 26 y F# harmonic minor en el compás 34, y las harmony keys son las de La mayor.](../images/step-8-key-change-march.png)
 
 ![El clic derecho en los números de compás: el compás, luego la tonalidad desde ese compás en adelante.](../images/step-8-key-menu.png)
 
@@ -122,7 +122,7 @@ como acordes. Unos pocos acordes necesitan una explicación:
 - **Compás 27, Re♯ Fa♯ La** es un acorde disminuido sobre el cuarto grado
   elevado (♯iv°), que lleva a Mi: el bajo de la marcha sube Re, Re♯, Mi.
 - **Compases 38–40** terminan el episodio en Fa♯ menor en Do♯ menor, su
-  quinto grado vuelto menor (v), mediante Sol♯7 (II7).
+  quinto grado vuelto menor (v), mediante G♯7 (II7).
 
 Las notas de adorno (las notas rápidas antes de un pulso) se omiten, y
 el trino del compás 23 es una nota normal.

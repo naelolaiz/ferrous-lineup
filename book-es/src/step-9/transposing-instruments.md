@@ -55,8 +55,8 @@ Abre **View > Lead sheet**. Junto a **Clef** está ahora **For**:
 
 - **Concert pitch** escribe la canción como suena, como antes.
 - **B♭ instruments**: trompeta, clarinete, saxofones soprano y tenor.
-- **Mi♭ instruments**: saxofones alto y barítono.
-- **Fa instruments**: trompa y corno inglés.
+- **E♭ instruments**: saxofones alto y barítono.
+- **F instruments**: trompa y corno inglés.
 
 Pasa el ratón sobre una elección para ver para qué instrumentos es y
 cuánto más aguda está escrita. La hoja cambia al momento: la armadura,
@@ -76,11 +76,11 @@ jazz están en tonalidades con bemoles: el Si♭ de concierto es Do para la
 trompeta y el saxofón tenor, y el Mi♭ de concierto es Do para el saxofón
 alto.
 
-![El lead sheet de I Got Rhythm para instrumentos en B♭: «B♭ instruments» arriba a la izquierda, sin armadura, los acordes Am, E7, Am, Dm, luego Am6, F7, Am, F, Am6, Fm6.](../images/step-9-transposing-b-flat.png)
+![El lead sheet de I Got Rhythm para instrumentos en Si♭: «B♭ instruments» arriba a la izquierda, sin armadura, los acordes Am, E7, Am, Dm, luego Am6, F7, Am, F, Am6, Fm6.](../images/step-9-transposing-b-flat.png)
 
-La demo empieza con una introducción sobre acordes de Sol menor (Solm, Re7,
-Dom). En la parte en Si♭ son Lam, Mi7 y Rem; en la parte en Mi♭, en Sol mayor,
-Mim, Si7 y Lam; en la parte en Fa, en Fa mayor, Rem, La7 y Solm.
+La demo empieza con una introducción sobre acordes de Sol menor (Gm, D7,
+Cm). En la parte en Si♭ son Am, E7 y Dm; en la parte en Mi♭, en Sol mayor,
+Em, B7 y Am; en la parte en Fa, en Fa mayor, Dm, A7 y Gm.
 
 La canción en sí, su archivo y lo que toca la banda se quedan como
 están. Solo la hoja se escribe de otra manera.
@@ -112,7 +112,7 @@ nombra como la app nombra toda tonalidad ([¿Qué escritura usa una
 tonalidad?](../step-3/theory.md#qué-ortografía-usa-una-tonalidad)): cada
 una de las doce tonalidades tiene un nombre con como mucho seis
 sostenidos o bemoles, y es ese el que se usa. Esto importa para las
-partes, porque contar hacia arriba por letras daría a veces tonalidades
+partes, porque contar hacia arriba por nombres de nota daría a veces tonalidades
 en las que nadie escribe:
 
 | Canción | Parte en Si♭ | Parte en Mi♭ | Parte en Fa |
@@ -138,11 +138,11 @@ sostenido en su armadura; La♭ mayor, cuatro bemoles, tiene las mismas
 notas. Una prueba recorre las doce tonalidades mayores y menores para
 cada instrumento y comprueba que ninguna parte tiene más de seis.
 
-## Los acordes: movidos con letras y todo
+## Los acordes: movidos con nombre y todo
 
 Un acorde debe conservar su lugar en la tonalidad: el V7 de la canción
 es el V7 de la parte. [Nombres de acordes](chord-names.md) mostró cómo
-se mueve un chart a otra tonalidad, contando letras además de
+se mueve un chart a otra tonalidad, contando nombres de nota además de
 semitonos, y el chord sheet ya lo usa cuando la canción cambia de
 tonalidad (`HarmonyName::moved`). La parte usa la misma función, de la
 tonalidad de la canción a la de la parte:
@@ -154,30 +154,30 @@ pub fn harmony(self, harmony: HarmonyName, key: Scale) -> HarmonyName {
 ```
 
 Como va de tónica a tónica, sigue también la escritura de la tonalidad.
-De Do a Re toda letra sube una, así que Rem7 Sol7 Domaj7 se vuelve Mim7 La7
-Remaj7. De Fa♯ a La♭ toda letra sube dos, así que el V7 de Fa♯, Do♯7, se
-vuelve Mi♭7, el V7 de La♭, y nunca Re♯7. La demo de bossa nova Garota de
-Ipanema está en Re♭ en la app; para un saxofón alto, en Si♭, su Re♭maj7
-Mi♭7 Mi♭m7 Re7 son Si♭maj7 Do7 Dom7 Si7.
+De Do a Re todo nombre sube uno, así que Dm7 G7 Cmaj7 se vuelve Em7 A7
+Dmaj7. De Fa♯ a La♭ todo nombre sube dos, así que el V7 de Fa♯, C♯7, se
+vuelve E♭7, el V7 de La♭, y nunca D♯7. La demo de bossa nova Garota de
+Ipanema está en Re♭ en la app; para un saxofón alto, en Si♭, su D♭maj7
+E♭7 E♭m7 D7 son B♭maj7 C7 Cm7 B7.
 
 ## Las notas: cada intervalo conserva su nombre
 
 La melodía se mueve los mismos semitonos, pero sus notas necesitan
-letras también, y aquí un atajo saldría mal. La manera obvia es mover
+nombres también, y aquí un atajo saldría mal. La manera obvia es mover
 cada nota hacia arriba y luego volver a escribirla en la tonalidad
-nueva con las reglas del [lead sheet](lead-sheet.md#qué-letra-spellingrs).
+nueva con las reglas del [lead sheet](lead-sheet.md#qué-nombre-de-nota-spellingrs).
 El Turkish March de Mozart, en La menor, muestra el problema. Su melodía
 se apoya en Mi desde el semitono de abajo, Re♯–Mi. En Si menor, la
 tonalidad de la trompeta, los mismos sonidos se reescribirían como
 Fa–Fa♯: las reglas dejan llana una tecla blanca del piano fuera de la
 tonalidad, así que escriben Fa en lugar de Mi♯. Pero Re♯–Mi es una segunda
 menor, una nota que se apoya en la siguiente, y Fa–Fa♯ es un unísono
-aumentado, una letra doblada hacia arriba. Un músico lee una línea
+aumentado, un mismo nombre alterado hacia arriba. Un músico lee una línea
 distinta.
 
 Así que las notas se escriben primero en afinación de concierto, donde
 las reglas conocen la tonalidad y los acordes en los que se escribió la
-canción, y luego cada nombre se mueve las mismas letras y semitonos que
+canción, y luego cada nombre se mueve tantos nombres y semitonos como
 la tonalidad:
 
 ```rust
@@ -201,24 +201,24 @@ pub fn name(self, name: NoteName, key: Scale) -> NoteName {
 ```
 
 `NoteName::above` es la misma función que mueve las fundamentales de
-los acordes, así que las notas y los acordes se mueven exactamente las
-mismas letras. El Re♯–Mi del Turkish March es Mi♯–Fa♯ para una trompeta,
+los acordes, así que las notas y los acordes se mueven exactamente
+igual. El Re♯–Mi del Turkish March es Mi♯–Fa♯ para una trompeta,
 Si♯–Do♯ para un saxofón alto y La♯–Si para una trompa: una segunda menor en
 cada caso, como lo escribió Mozart.
 
 Las últimas líneas se ocupan de las tonalidades que se renombraron. Una
 canción en Mi tiene una sexta rebajada, Do. Para un saxofón alto, en Re♭
-en lugar de Do♯, las letras se mueven de Mi a Re, y Do se vuelve Si doble
+en lugar de Do♯, los nombres se mueven de Mi a Re, y Do se vuelve Si doble
 bemol (Si♭♭), la sexta rebajada de Re♭ escrita estrictamente. Nadie
 quiere leer eso, y es la misma nota que La, así que el nombre se
 simplifica, como se hace con los símbolos de acorde. Un doble sostenido
 o doble bemol que la tonalidad nueva sí tiene se queda: la sensible de
 Do♯ menor armónica es Si♯, y en la parte de trompeta, en Re♯ menor
-armónica, es Do doble sostenido (Do♯#), la sensible de esa tonalidad.
+armónica, es Do doble sostenido (Do♯♯), la sensible de esa tonalidad.
 
 Para comprobar todo esto, la melodía de cada demo se escribió para cada
 instrumento y se comparó con la hoja de concierto: la altura de cada
-nota era correcta, y cada nombre se movía con las letras de la
+nota era correcta, y cada nombre se movía con los nombres de la
 tonalidad salvo los pocos que necesitaban el nombre simplificado. Las
 hojas de concierto de las 343 demos están exactamente como estaban
 antes de este cambio.
@@ -259,8 +259,8 @@ segunda mayor arriba para los instrumentos en Si♭, una sexta mayor
 arriba para los instrumentos en Mi♭, una quinta arriba para los
 instrumentos en Fa, de modo que trompeta, saxofón alto y trompa suenan
 la melodía donde está. El Turkish March sube hasta Do6, y para los
-instrumentos en Si♭ sale una séptima menor *más grave*, las mismas
-letras una octava abajo, donde una trompeta puede tocarla.
+instrumentos en Si♭ sale una séptima menor *más grave*, los mismos
+nombres una octava abajo, donde una trompeta puede tocarla.
 
 `min_by_key` se queda con el candidato cuya clave de ordenación es más
 pequeña, y la clave de ordenación aquí es un par. Los pares se comparan
@@ -344,10 +344,10 @@ Trece pruebas nuevas en `lineup-core` y una en la app:
 - ninguna tonalidad de parte con más de seis sostenidos o bemoles, para
   las doce tonalidades mayores y menores y cada instrumento; Mi es Re♭
   para un saxofón alto, Fa♯ es La♭ para una trompeta;
-- los acordes conservan su lugar: ii–V–I en Do es Mim7 La7 Remaj7, Do♯7 en
-  Fa♯ es Mi♭7 en La♭, un poliacorde y N.C. también se escriben;
+- los acordes conservan su lugar: ii–V–I en Do es Em7 A7 Dmaj7, C♯7 en
+  Fa♯ es E♭7 en La♭, un poliacorde y N.C. también se escriben;
 - las notas conservan sus intervalos: Re♯–Mi en La menor se vuelve Mi♯–Fa♯,
-  Si♯–Do♯ y La♯–Si; la sexta rebajada de Mi es La en Re♭; Do♯# se queda en Re♯
+  Si♯–Do♯ y La♯–Si; la sexta rebajada de Mi es La en Re♭; Do♯♯ se queda en Re♯
   menor armónica;
 - la octava para una melodía alrededor de Sol4, una melodía aguda y una
   línea de bajo, en ambas claves; la afinación de concierto no cambia
@@ -362,7 +362,7 @@ Trece pruebas nuevas en `lineup-core` y una en la app:
 Luego se miraron las partes en la app para I Got Rhythm, el Turkish
 March, con sus muchos cambios de tonalidad, y Garota de Ipanema.
 
-![El Turkish March para instrumentos en Mi♭: «Mi♭ instruments» arriba a la izquierda, Fa♯ menor con tres sostenidos, Do♯ menor con cuatro desde el compás 4, Fa♯ menor otra vez desde el compás 6, y los acordes Fa♯m, Do♯m, Sol♯ y Do♯.](../images/step-9-transposing-key-changes.png)
+![El Turkish March para instrumentos en Mi♭: «E♭ instruments» arriba a la izquierda, Fa♯ menor con tres sostenidos, Do♯ menor con cuatro desde el compás 4, Fa♯ menor otra vez desde el compás 6, y los acordes F♯m, C♯m, G♯ y C♯.](../images/step-9-transposing-key-changes.png)
 
 ## Ejercicios
 

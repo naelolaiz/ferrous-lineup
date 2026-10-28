@@ -53,7 +53,7 @@ Luego amplíalo con un voicing **drop 2**: para cada acorde, baja una
 octava la segunda nota más aguda. Añádelo junto a `invert` con una
 prueba como `inverting_chords_up_and_down`, y devuelve `None` cuando la
 nota caería por debajo de `Note::MIN`. ¿El carril de acordes sigue
-nombrando Do/Mi, o cambia el bajo? ¿Por qué?
+nombrando C/E, o cambia el bajo? ¿Por qué?
 
 *Practica:* manipulación de `Vec` (`remove`, `push`, `sort`), pruebas
 que comprueban tu propia salida.

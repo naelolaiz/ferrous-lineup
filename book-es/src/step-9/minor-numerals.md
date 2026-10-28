@@ -27,7 +27,7 @@ qué significa el número romano sin alteración: ¿construido sobre **qué**
 nota?
 
 Toma La menor. Su escala menor natural es La Si Do Re Mi Fa Sol, y sus acordes
-son Lam, Si°, Do, Rem, Mim, Fa y Sol.
+son Am, B°, C, Dm, Em, F y G.
 
 **Contados desde la escala mayor.** Los números romanos se miden contra
 la escala mayor sobre la misma tónica, La mayor: La Si Do♯ Re Mi Fa♯ Sol♯. Do está
@@ -76,10 +76,10 @@ tiene que nombrar a uno de ellos. La regla que sigue la app es la que
 usan los libros clásicos: **un número romano sin alteración nombra la
 forma cuyo acorde pertenece a la tonalidad.**
 
-- **VII** es Sol mayor (Sol Si Re), de la menor natural. **vii°** es Sol♯°
-  (Sol♯ Si Re), el acorde de sensible de la menor armónica. Sol° (Sol Si♭ Re♭) no
+- **VII** es Sol mayor (Sol Si Re), de la menor natural. **vii°** es G#°
+  (Sol♯ Si Re), el acorde de sensible de la menor armónica. G° (Sol Si♭ Re♭) no
   es un acorde de La menor, así que vii° no puede significar eso.
-- **VI** es Fa mayor, de la menor natural. **vi°** es Fa♯° (Fa♯ La Do), de la
+- **VI** es Fa mayor, de la menor natural. **vi°** es F#° (Fa♯ La Do), de la
   menor melódica.
 
 Los mismos acordes, contados desde la escala mayor, son bVII, vii°, bVI
@@ -98,7 +98,7 @@ menor melódica  i ii  bIII+ IV V  vi° vii°     i ii  III+ IV V  vi° vii°
 Un acorde fuera de la tonalidad recibe una alteración medida contra la
 forma que nombra el número romano sin alteración. Si♭ mayor en La menor,
 el napolitano, es **bII** de las dos maneras. Contado desde la escala
-menor, Sol° es **bvii°** (Sol♯° rebajado) y Sol♯ mayor es **#VII** (elevado
+menor, G° es **bvii°** (G#° rebajado) y Sol♯ mayor es **#VII** (elevado
 por encima de las dos formas de Sol).
 
 La elección no se aplica en absoluto a las tonalidades mayores ni a los
@@ -122,7 +122,7 @@ la escala mayor, porque así es como están escritas: el cuadro
 Progression de un estilo muestra `i | bVII | bVI | V`, por ejemplo, y
 toca los mismos acordes para todo el mundo.
 
-![El Choclo, en La menor armónica, contado desde la escala menor: Sol7 y Do son VII7 y III en el chord sheet, y las harmony keys dicen III+, VI y vii°.](../images/step-9-minor-numerals-keys.png)
+![El Choclo, en La menor armónica, contado desde la escala menor: G7 y C son VII7 y III en el chord sheet, y las harmony keys dicen III+, VI y vii°.](../images/step-9-minor-numerals-keys.png)
 
 ## En el código
 
@@ -254,7 +254,7 @@ Dos piezas de Rust hacen que esto sea seguro:
   lo haría, y la otra prueba fallaría de vez en cuando, según la
   temporización.
 - **`Cell`** permite cambiar el valor a través de una referencia
-  compartida. La los valores thread-local solo se llega con `&`, así que
+  compartida. A los valores thread-local solo se llega con `&`, así que
   un valor normal nunca podría fijarse. `Cell` funciona con tipos `Copy`
   moviendo valores enteros hacia dentro y hacia fuera (`get`, `set`),
   sin entregar nunca una referencia a lo que hay dentro, de modo que

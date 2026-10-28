@@ -40,17 +40,17 @@ Cada uno es un único paso para deshacer ("Undo insert bar").
    teclea `C`, `F`, `G7` y `C` en los cuatro primeros compases.
 2. Haz clic derecho en el Fa y elige **Insert a bar after**. Aparece un
    compás 3 nuevo, con el Fa escrito tenue dentro: el Fa continúa a través
-   del compás vacío, como hace `%` en un chart impreso. El Sol7 ahora está
+   del compás vacío, como hace `%` en un chart impreso. El G7 ahora está
    en el compás 4.
-3. Teclea `D7` en el compás nuevo. La banda toca Do, Fa, Re7, Sol7, Do.
-4. Haz clic derecho en el Re7 y elige **Delete this bar**. La canción
+3. Teclea `D7` en el compás nuevo. La banda toca C, F, D7, G7, C.
+4. Haz clic derecho en el D7 y elige **Delete this bar**. La canción
    queda como estaba.
 5. En la playlist, haz clic derecho en el número de compás **2** de la
    regla y elige **Insert a bar before**. Los clips, las secciones y los
    marcadores posteriores al compás 1 se mueven todos un compás más
    tarde.
 
-![Después de Insert a bar after en el compás 3 de Embraceable You: el nuevo compás 4 está vacío, así que el Lam7 continúa a través de él, escrito tenue, y el Re7 se ha movido al compás 5. El patrón de la sección A también se toca en otro sitio de la canción, así que su clip se ha cortado en dos, La (1) y La (2), y su batería con él.](../images/step-9-insert-bar-after.png)
+![Después de Insert a bar after en el compás 3 de Embraceable You: el nuevo compás 4 está vacío, así que el Am7 continúa a través de él, escrito tenue, y el D7 se ha movido al compás 5. El patrón de la sección A también se toca en otro sitio de la canción, así que su clip se ha cortado en dos, A (1) y A (2), y su batería con él.](../images/step-9-insert-bar-after.png)
 
 ## Qué es un compás insertado
 
@@ -73,7 +73,7 @@ acordes, y las variaciones de la banda y los estilos de sección.
 
 Un compás borrado se lleva sus notas y sus acordes, y todo lo que hay
 después se mueve un compás antes. La pregunta es qué pasa con **lo que
-estaba sonando al final**. Toma Do, Fa, Sol7, Do con la tonalidad cambiando a
+estaba sonando al final**. Toma C, F, G7, C con la tonalidad cambiando a
 Sol mayor en el compás 3 y el tempo a 90 en el compás 4, y borra el compás
 3. Los marcadores del compás 3 se van con él, pero la tonalidad de Sol
 mayor debía continuar después, y debe seguir haciéndolo. Así que, antes
@@ -92,10 +92,10 @@ marcadores que dicen lo mismo que el anterior se limpian, así que borrar
 en mitad de un tramo largo en una tonalidad no deja un marcador de
 tonalidad detrás.
 
-La armonía es la sutil. Si un Sol7 empieza en un compás borrado y se
+La armonía es la sutil. Si un G7 empieza en un compás borrado y se
 mantiene hasta el siguiente (el compás siguiente no tiene acorde
-propio), el Sol7 debe continuar allí. Pero si el compás anterior al
-borrado ya es un Sol7, escribir otro Sol7 sería un segundo marcador diciendo
+propio), el G7 debe continuar allí. Pero si el compás anterior al
+borrado ya es un G7, escribir otro G7 sería un segundo marcador diciendo
 lo mismo. El código comprueba ambas cosas:
 
 ```rust
@@ -173,7 +173,7 @@ un clip tiene que hacer sitio en las notas que reproduce. Dos casos:
   sale, y cada mitad reproduce un patrón propio: "Riff (1)" y
   "Riff (2)".
 
-![La playlist después de insertar: La (1) toca los compases 1 a 3, el compás 4 está vacío, y La (2) toca el resto de la vieja La desde el compás 5, con la batería cortada igual.](../images/step-9-insert-bar-playlist.png)
+![La playlist después de insertar: A (1) toca los compases 1 a 3, el compás 4 está vacío, y A (2) toca el resto del viejo A desde el compás 5, con la batería cortada igual.](../images/step-9-insert-bar-playlist.png)
 
 La comprobación es `only_clip`:
 
@@ -319,7 +319,7 @@ dibujar, recoger acciones, aplicarlas después.
 ## Las pruebas
 
 Las pruebas de `bars.rs` trabajan sobre una canción pequeña: un patrón
-de cuatro compases que toca Do, Fa, Sol7, Do, una estrofa sobre todo él, un
+de cuatro compases que toca C, F, G7, C, una estrofa sobre todo él, un
 loop sobre los compases 2 y 3, la tonalidad de Sol desde el compás 3 y 90
 BPM desde el compás 4.
 
@@ -341,7 +341,7 @@ BPM desde el compás 4.
   comprueba que ninguna parte quedó congelada.
 
 En la app, `a_bars_menu_inserts_a_bar_and_deletes_it` hace clic derecho
-en el Sol de Do, Sol, Lam, Fa, inserta un compás después, teclea Re7 dentro y lo
+en el G de C, G, Am, F, inserta un compás después, teclea D7 dentro y lo
 borra otra vez; `the_bar_numbers_insert_and_delete_bars_too` lo hace
 desde la regla de la playlist y lo deshace con Ctrl+Z.
 

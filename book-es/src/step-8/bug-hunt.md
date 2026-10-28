@@ -326,7 +326,7 @@ simplemente usa `ui.add_enabled` en lugar de un grupo.
 
 El channel rack tenía el mismo problema al revés: elegir un patrón con
 menos canales dejaba la ventana tan alta como antes, con un espacio
-vacío. La su ventana se le da su tamaño natural durante un frame
+vacío. A su ventana se le da su tamaño natural durante un frame
 (`fixed_size`) cada vez que cambian sus filas, y luego se la deja
 libre otra vez para que puedas seguir redimensionándola.
 
@@ -339,7 +339,7 @@ La mitad se calculaba así:
 let middle = lowest / 2 + highest / 2;
 ```
 
-Con enteros, `/` tira el resto. Los acordes de la demo van de F2 (MIDI
+Con enteros, `/` tira el resto. Los acordes de la demo van de Fa2 (MIDI
 41) a Sol4 (67), cuya mitad es 54; pero `41 / 2 + 67 / 2` es
 `20 + 33 = 53`. Las dos mitades perdieron su media parte, así que la
 vista quedaba una fila demasiado baja, y la nota de arriba quedaba
@@ -365,14 +365,14 @@ se nombraban desde una tabla de doce nombres, con sostenidos o bemoles
 según la tonalidad. Eso está bien para la mayoría de las tonalidades,
 pero la música no funciona así:
 
-- En **Fa♯ mayor** la séptima nota es **Mi♯**, no Fa. Cada una de las
-  siete letras se usa una vez en una escala de siete notas, y Fa♯ ya se
-  ha llevado la letra F. Su acorde vii° es **Mi♯dim**, no Fadim.
+- En **Fa♯ mayor** la séptima nota es **Mi♯**, no Fa. Cada uno de los
+  siete nombres de nota se usa una vez en una escala de siete notas, y Fa♯ ya se
+  ha llevado el nombre Fa. Su acorde vii° es **E#dim**, no Fdim.
 - En **Re menor armónica** la séptima elevada es **Do♯**, aunque la
   armadura tenga un bemol.
-- En **Sol♯ menor armónica** es **Fa♯#** (Fa doble sostenido).
-- La séptima de **Do séptima disminuida** es **Bbb**: Do Mi♭ Sol♭ Bbb,
-  porque es una séptima por encima de Do, y B está a siete letras de Do.
+- En **Sol♯ menor armónica** es **Fa♯♯** (Fa doble sostenido).
+- La séptima de **Do séptima disminuida** es **Si♭♭**: Do Mi♭ Sol♭ Si♭♭,
+  porque es una séptima por encima de Do, y Si es el séptimo nombre contando desde Do.
 
 Así que las notas ahora tienen un nombre con una letra, separado de la
 tonalidad en la que están:
@@ -393,7 +393,7 @@ Mantenerlos separados en dos tipos es una manera muy Rust de evitar
 toda una familia de bugs: el compilador no te dejará imprimir una
 `PitchClass` donde se espera un nombre deletreado.
 
-Una escala deletrea una nota contando letras desde su tónica:
+Una escala deletrea una nota contando nombres de nota desde su tónica:
 
 ```rust
 pub fn spell(self, pitch_class: PitchClass) -> NoteName {
@@ -414,21 +414,21 @@ pub fn spell(self, pitch_class: PitchClass) -> NoteName {
 }
 ```
 
-Una nota de la escala toma la letra de su lugar en la escala. Una nota
+Una nota de la escala toma el nombre de su lugar en la escala. Una nota
 de fuera se escribe como la encuentran más a menudo los músicos,
 contada desde la tónica: segunda, tercera, sexta o séptima bemol,
 cuarta sostenida. Las series y los conjuntos no tienen letras propias,
 así que usan los nombres de siempre (Do♯ Mi♭ Fa♯ La♭ Si♭).
 
-![Fa♯ mayor: la escala termina en Mi♯, el acorde de séptima es Mi♯dim, y las harmony keys van de Fa♯ a Mi♯dim.](../images/step-8-f-sharp-major.png)
+![Fa♯ mayor: la escala termina en Mi♯, el acorde de séptima es E#dim, y las harmony keys van de F# a E#dim.](../images/step-8-f-sharp-major.png)
 
 **Los acordes** se deletrean desde su propia fundamental, por
-terceras: la calidad dice qué letras toma cada nota (1, 3, 5, 7,
-9...). La tercera de La está a dos letras, así que La mayor es A Do♯ E,
-en cualquier tonalidad. La novena sostenida de Mi7#9 está a una letra
-por encima de Mi: Fa♯#, no Sol.
+terceras: la calidad dice qué nombre toma cada nota (1, 3, 5, 7,
+9...). La tercera de La está dos nombres más arriba, así que La mayor es La Do♯ Mi,
+en cualquier tonalidad. La novena sostenida de E7#9 está un nombre
+por encima de Mi: Fa♯♯, no Sol.
 
-**Los intervalos** también se nombran desde las letras. De C hacia
+**Los intervalos** también se nombran desde los nombres de nota. De Do hacia
 arriba hasta Mi es una tercera (Do, Re, Mi) y de Do hasta Re♯ es una segunda
 (Do, Re), aunque Re♯ suene como Mi♭:
 
@@ -439,7 +439,7 @@ let semitones = low.pitch_class().semitones_up_to(high.pitch_class()) as i8;
 let off = (semitones - MAJOR[letters] + 18).rem_euclid(12) - 6;
 ```
 
-Las letras dan el número (tercera, quinta...), y la distancia respecto
+Los nombres de nota dan el número (tercera, quinta...), y la distancia respecto
 del intervalo mayor o justo de ese número da la cualidad: 0 es mayor o
 justo, −1 menor (o disminuido, para cuartas y quintas), +1 aumentado.
 `rem_euclid` es el resto que nunca es negativo, a diferencia de `%`,
@@ -451,14 +451,14 @@ que conserva el signo: `-1 % 12` es `-1`, `(-1i8).rem_euclid(12)` es
 La parte de teoría pasó por todas las sugerencias y etiquetas:
 
 - **Las tonalidades menores son dueñas de su V.** En La menor, Mi mayor y
-  Mi7 son la dominante de la tonalidad, hechos con el Sol♯ del menor
-  armónico, y también lo son Sol♯dim y Sol♯dim7. La app solía tratar Mi
+  E7 son la dominante de la tonalidad, hechos con el Sol♯ del menor
+  armónico, y también lo son G#dim y G#dim7. La app solía tratar Mi
   mayor en La menor como un acorde de fuera de la tonalidad. Ahora
   `uses_raised_seventh` dice cuándo un acorde pertenece a la tonalidad
   gracias a la séptima elevada.
 - **Se distinguen las dominantes secundarias de los acordes tomados en
-  préstamo.** En Do mayor, Mi mayor es V/vi, la dominante de Lam; Re mayor
-  es V/V. Fam se *toma en préstamo* de Do menor. Cada uno se nombra por
+  préstamo.** En Do mayor, Mi mayor es V/vi, la dominante de Am; Re mayor
+  es V/V. Fm se *toma en préstamo* de Do menor. Cada uno se nombra por
   lo que es.
 - **Los números romanos cuentan desde la escala mayor** en todas
   partes, como los escriben los libros de pop y jazz: en Do menor, Mi♭ es
@@ -476,9 +476,9 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   Ahora tocan la propia quinta del acorde, y la propia sexta o séptima
   del acorde: Am6 recibe Fa♯.
 - **Dos acordes más**: la séptima de dominante con quinta bemol
-  (C7b5: Do Mi Sol♭ Si♭) y con quinta sostenida (Do7#5: Do Mi Sol♯ Si♭, la
+  (C7b5: Do Mi Sol♭ Si♭) y con quinta sostenida (C7#5: Do Mi Sol♯ Si♭, la
   séptima aumentada, escrita V+7 como numeral). Antes no tenían nombre.
-  C7b5 tiene una simetría especial: Fa♯7b5 (Fa♯ La♯ Do Mi) son las mismas
+  C7b5 tiene una simetría especial: F#7b5 (Fa♯ La♯ Do Mi) son las mismas
   cuatro teclas, que es también el sonido de la sexta aumentada
   francesa. Ambos cuentan como dominantes donde la app pregunte «¿es
   esto una dominante?», que ahora es un único método,
@@ -487,7 +487,7 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
 - **Las tonalidades de conjunto se nombran por su acorde.** Con un
   conjunto de clases de alturas como tonalidad, las harmony keys apilan
   las notas del conjunto en acordes y los nombran: el conjunto 3-11 en
-  Do da Dom, Dom/Mi♭ y Dom/Sol, no tres copias de «3-11». Ninguna tonalidad
+  Do da Cm, Cm/Eb y Cm/G, no tres copias de «3-11». Ninguna tonalidad
   ofrece un acorde con más notas de las que tiene el conjunto.
 - La nota extra de la **escala de blues** se escribe como quinta bemol:
   Sol♭ en el blues de Do, Fa♭ en el blues de Si♭.
@@ -497,7 +497,7 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   tríadas, como la del Concierto para violín de Berg, pueden sonar
   casi tonales. Su descripción dice ahora qué tríadas son.
 
-![El conjunto 3-11 en Do como tonalidad. Las harmony keys son Dom, Dom/Mi♭ y Dom/Sol, los acordes que forma el conjunto, cada uno etiquetado con sus notas y el conjunto; las notas rojas del piano roll están fuera del conjunto.](../images/step-8-set-keys.png)
+![El conjunto 3-11 en Do como tonalidad. Las harmony keys son Cm, Cm/Eb y Cm/G, los acordes que forma el conjunto, cada uno etiquetado con sus notas y el conjunto; las notas rojas del piano roll están fuera del conjunto.](../images/step-8-set-keys.png)
 
 ## Una reproducción que cumple sus promesas
 
@@ -601,12 +601,12 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
 ## Cómo se probó
 
 - 53 pruebas nuevas, entre ellas: cada dirección de zoom por su cuenta
-  y la rueda haciendo zoom un paso por frame; cada letra usada una vez
+  y la rueda haciendo zoom un paso por frame; cada nombre de nota usado una vez
   en cada escala de siete notas; Fa♯ mayor, Re y Sol♯ menor armónica, Fa
   locrio y la escala de blues bien deletreados; intervalos nombrados
-  por sus letras; tonalidades menores dueñas de su dominante elevada;
+  por sus nombres de nota; tonalidades menores dueñas de su dominante elevada;
   acordes tomados en préstamo y dominantes secundarias; modos sin
-  funciones; C7b5, Fa♯7b5 y Sol7#5 nombrados y deletreados; una sección
+  funciones; C7b5, F#7b5 y G7#5 nombrados y deletreados; una sección
   reproducida una vez sin cortar una nota; silenciar deteniendo las
   notas de la canción pero no las teclas mantenidas; un tempo nuevo
   moviendo el final de las notas sostenidas y los note-off MIDI; las
@@ -618,7 +618,7 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   redimensionar notas, cambiar el conjunto, volver a hacer zoom),
   toques rápidos, la primera nota después de abrir, clics que cierran
   menús sobre el playlist y el piano roll, el botón «Todavía no hay
-  notas aquí», el rack reajustando sus filas, Fa♯ mayor y Mi♯dim, las
+  notas aquí», el rack reajustando sus filas, Fa♯ mayor y E#dim, las
   harmony keys de menor armónica y dórico, tonalidades de conjunto
   nombradas por sus acordes, la prueba de la biblioteca conservando la
   canción en Do mayor 4/4, borrar un patrón conservando los colores, el

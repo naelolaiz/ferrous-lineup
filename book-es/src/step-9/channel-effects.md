@@ -311,7 +311,7 @@ cada canal, para que los ecos se muevan con él.
 ## Ejercicios
 
 1. Pon un delay de corchea con puntillo con 30% de mix en el Lead de una
-   demo, y reprodúcela a 60 BPM y a 140 BPM. ¿La cuántos milisegundos de
+   demo, y reprodúcela a 60 BPM y a 140 BPM. ¿A cuántos milisegundos de
    distancia están los ecos en cada caso? Compruébalo con
    `Delay::seconds`.
 2. Pon un compresor a −30 dB y 10:1 en la batería. Luego sube su Gain

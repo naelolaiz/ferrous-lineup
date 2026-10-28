@@ -39,7 +39,7 @@ semitono por debajo de ella. Ferrous Lineup hace lo mismo, y lo dice en
 un comentario junto a los números. El *nombrado* de acordes va un paso
 más allá, como hace desde el paso 3: si a un acorde de cuatro notas o
 más solo le falta la quinta, se le pone nombre igualmente. Así que
-Do, Mi, Si♭, Re, La se llama Do13.
+Do, Mi, Si♭, Re, La se llama C13.
 
 Añadir un acorde fue tan poca cosa como prometía el paso 3: una variante
 en el enum, una línea en `ALL` y una rama en cada `match`. El compilador
@@ -139,7 +139,7 @@ así que lo que ves es siempre lo que coloca un clic.
 
 ## Lo que viene después: armonía funcional
 
-Algunos acordes suenan como si quisieran ir a algún sitio. Toca Sol7 y
+Algunos acordes suenan como si quisieran ir a algún sitio. Toca G7 y
 detente: sientes que la canción no ha terminado, y Do mayor es donde
 quiere aterrizar. La teoría musical llama a esto **armonía funcional**:
 cada acorde de una tonalidad tiene un trabajo.
@@ -156,12 +156,12 @@ movimientos fuertes entre estos trabajos:
 
 | Movimiento | Ejemplo en Do | Por qué funciona |
 |------------|--------------|------------------|
-| V a I | Sol a Do | el final más fuerte; la sensible sube a la fundamental |
-| IV a V | Fa a Sol | un paso arriba, de alejarse a querer volver a casa |
-| ii a V | Rem a Sol | la fundamental cae una quinta; ii, V, I está en todas partes, del jazz al pop |
-| IV a I | Fa a Do | la cadencia suave de «amén» (plagal) |
-| V a vi | Sol a Lam | la cadencia «rota»: esperas Do y recibes su relativo menor |
-| vi a IV | Lam a Fa | como en I, V, vi, IV, la progresión de incontables canciones |
+| V a I | G a C | el final más fuerte; la sensible sube a la fundamental |
+| IV a V | F a G | un paso arriba, de alejarse a querer volver a casa |
+| ii a V | Dm a G | la fundamental cae una quinta; ii, V, I está en todas partes, del jazz al pop |
+| IV a I | F a C | la cadencia suave de «amén» (plagal) |
+| V a vi | G a Am | la cadencia «rota»: esperas C y recibes su relativo menor |
+| vi a IV | Am a F | como en I, V, vi, IV, la progresión de incontables canciones |
 
 Una fundamental que **cae una quinta** (Sol a Do, Re a Sol, La a Re...) es el
 movimiento más fuerte que existe, y por eso tantas sugerencias son de
@@ -299,7 +299,7 @@ del V mayor.
 
 Los botones «Acordes en La menor» muestran los acordes propios de la
 tonalidad, así que en La menor natural el botón del quinto grado dice
-«v · Mim». Cuando se sugiere Mi mayor, ese botón se ilumina y su texto al
+«v · Em». Cuando se sugiere Mi mayor, ese botón se ilumina y su texto al
 pasar el ratón dice «tocado como Mi». También por eso una sugerencia
 lleva su propio `chord`: el grado es el de la tonalidad, pero la
 cualidad puede ser la de la menor armónica.
@@ -373,7 +373,7 @@ for (chord, target) in [
 }
 ```
 
-Do7 es uno bonito: Do es la tónica, pero Do7 tiene un Si♭, así que ya no es
+C7 es uno bonito: Do es la tónica, pero C7 tiene un Si♭, así que ya no es
 el acorde de tónica. Es el V de Fa, y suena como tal.
 
 La tabla ya conoce los acordes comunes tomados prestados de la tonalidad
@@ -413,12 +413,12 @@ reproducción, las sugerencias siguen a la música.
 
 La llamada es `next_chords_over(scale, chord, bass)`, no `next_chords`,
 porque el bajo importa: un acorde de tónica con la quinta en el bajo
-(Do/Sol en Do mayor) se oye como una sexta y cuarta cadencial y conduce a V.
+(C/G en Do mayor) se oye como una sexta y cuarta cadencial y conduce a V.
 Para todo lo demás, simplemente le pasa el trabajo a `next_chords`.
 
 El botón de cada acorde sugerido se dibuja con `Button::selected(true)`,
 el mismo aspecto resaltado que una pestaña elegida, y su motivo va
 primero en su texto al pasar el ratón. La línea gris bajo los botones
 enumera todas las sugerencias en orden, para poder leerlas de un
-vistazo: «Después de Do (I) en el step 5, prueba: Fa (IV), Sol (V), Lam (vi),
-Rem (ii)».
+vistazo: «Después de C (I) en el step 5, prueba: F (IV), G (V), Am (vi),
+Dm (ii)».

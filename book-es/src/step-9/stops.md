@@ -15,7 +15,7 @@ siguiente un poco antes del pulso. Los arreglistas escriben estos
 momentos en el chart, y son lo que hace que una banda suene arreglada
 en lugar de en loop. Ahora el chord sheet tiene marcas para ellos.
 
-![El chord sheet con Do, ^Fa, Sol7., Lam.. en la primera fila y Fa Sol7..., ^^Do, Rem7, Sol7 en la segunda. Bajo cada armonía, su numeral y su marca: «IV · push», «V7 · shot», «vi · hold», «V7 · rest». El compás 3 está con clic derecho, y el menú «Band on Sol7» está abierto: «As the style goes», «Shot (.)» (elegido), «Hold (..)», «Rest (...)», luego «On the beat» (elegido), «Push (^)» y «Push a sixteenth (^^)»](../images/step-9-stops-menu.png)
+![El chord sheet con C, ^F, G7., Am.. en la primera fila y F G7..., ^^C, Dm7, G7 en la segunda. Bajo cada armonía, su numeral y su marca: «IV · push», «V7 · shot», «vi · hold», «V7 · rest». El compás 3 está con clic derecho, y el menú «Band on G7» está abierto: «As the style goes», «Shot (.)» (elegido), «Hold (..)», «Rest (...)», luego «On the beat» (elegido), «Push (^)» y «Push a sixteenth (^^)»](../images/step-9-stops-menu.png)
 
 ## Pruébalo
 
@@ -31,14 +31,14 @@ Bajo cada armonía marcada, una palabra dice lo que la banda hace ahí:
 una para la frase completa, como en «Hold: la banda lo golpea y lo
 sostiene hasta la siguiente armonía». Pulsa Space y escucha:
 
-- compás 2: la banda toca Fa en el «y» del pulso 4 del compás 1, una
+- compás 2: la banda toca F en el «y» del pulso 4 del compás 1, una
   corchea antes, y lo deja sonar sobre la línea de compás, donde está
   escrito;
-- compás 3: toda la banda golpea Sol7 una vez, corto, con un bombo y un
+- compás 3: toda la banda golpea G7 una vez, corto, con un bombo y un
   platillo, y luego nada hasta el compás 4;
-- compás 4: Lam golpeado y sostenido todo el compás;
-- compás 5: Fa en el estilo durante dos pulsos, luego silencio para Sol7;
-- compás 6: Do una semicorchea antes;
+- compás 4: Am golpeado y sostenido todo el compás;
+- compás 5: F en el estilo durante dos pulsos, luego silencio para G7;
+- compás 6: C una semicorchea antes;
 - compases 7 y 8: el estilo otra vez.
 
 El playlist muestra lo mismo: las partes de la banda tienen huecos y
@@ -47,7 +47,7 @@ notas largas donde están las marcas.
 ![El playlist con las pistas Piano, Bass, Drums y Guitar a lo largo de ocho compases. Cada pista está ocupada en los compases 1, 2, 7 y 8. En el compás 3 cada pista tiene un golpe corto al principio y luego nada; en el compás 4 una nota larga o un golpe; el compás 5 está vacío en su segunda mitad, y las notas del compás 6 empiezan justo antes de su línea de compás](../images/step-9-stops-playlist.png)
 
 Las marcas también se pueden poner sin teclear: haz clic derecho en un
-compás y elige **Band on Sol7** (un elemento por cada armonía del
+compás y elige **Band on G7** (un elemento por cada armonía del
 compás), luego una parada o un push. **As the style goes** y **On the
 beat** quitan las marcas. Como todo cambio del chord sheet, la banda
 vuelve a tocar, el undo lo deshace, y las marcas se copian con los
@@ -83,7 +83,7 @@ manera (el piano su voicing, el bajo la nota grave, la guitarra un
 rasgueo), un poco más fuerte que el estilo, y la batería toca un bombo
 y un platillo. Luego la banda queda en silencio hasta la siguiente
 armonía. Así funciona el final del compás 3 de arriba: el silencio es
-parte de la música, y la armonía sigue siendo Sol7 para quien toque
+parte de la música, y la armonía sigue siendo G7 para quien toque
 sobre ella.
 
 ### Holds

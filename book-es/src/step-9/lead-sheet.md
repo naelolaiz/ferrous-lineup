@@ -31,7 +31,7 @@ tal como se imprimirá, y el compás que suena se ilumina mientras suena
 la canción. Cuando el compás que suena queda fuera de la vista, la
 ventana se desplaza hasta él.
 
-![La ventana Lead sheet con I Got Rhythm en Si bemol mayor mientras suena: la melodía en un pentagrama en clave de sol con dos bemoles, los símbolos de acorde encima (Si♭, Solm7, Dom7, F7), cuatro compases por línea, y el compás 2 iluminado en amarillo](../images/step-9-lead-sheet-playing.png)
+![La ventana Lead sheet con I Got Rhythm en Si bemol mayor mientras suena: la melodía en un pentagrama en clave de sol con dos bemoles, los símbolos de acorde encima (B♭, Gm7, Cm7, F7), cuatro compases por línea, y el compás 2 iluminado en amarillo](../images/step-9-lead-sheet-playing.png)
 
 Arriba del todo:
 
@@ -67,7 +67,7 @@ próxima vez.
 Aquí está la primera página de La Cumparsita tal como la imprime el
 PDF:
 
-![La primera página de La Cumparsita como PDF: el título, una indicación de tempo «negra = 112», un pentagrama en clave de sol en Sol menor con dos bemoles, los símbolos de acorde Re7, Solm, Dom, Em7b5, Am7b5, y los números de compás 4, 7, 11 al principio de cada línea](../images/step-9-lead-sheet-pdf.png)
+![La primera página de La Cumparsita como PDF: el título, una indicación de tempo «negra = 112», un pentagrama en clave de sol en Sol menor con dos bemoles, los símbolos de acorde D7, Gm, Cm, Em7b5, Am7b5, y los números de compás 4, 7, 11 al principio de cada línea](../images/step-9-lead-sheet-pdf.png)
 
 De izquierda a derecha en la primera línea:
 
@@ -108,7 +108,7 @@ Más adelante, un lead sheet puede contener:
 
 La notación no es una imagen del piano roll. El piano roll dice «esta
 tecla, desde este paso, durante tantos pasos»; la notación tiene que
-elegir una letra para cada nota (¿La♯ o Si♭?), escribir cada duración
+elegir un nombre para cada nota (¿La♯ o Si♭?), escribir cada duración
 como figuras que se puedan contar, y mostrar dónde están los pulsos.
 Los músicos leen con soltura porque estas elecciones siguen reglas, y
 las reglas son de lo que trata este punto. Cada paso es un módulo de
@@ -129,7 +129,7 @@ importadas desde un archivo MIDI) se mueven a la semicorchea más
 cercana. Un lead sheet muestra lo que se quiere decir, no cada matiz de
 una interpretación.
 
-### Qué letra (`spelling.rs`)
+### Qué nombre de nota (`spelling.rs`)
 
 La misma tecla del piano se puede escribir de dos maneras: la tecla
 negra entre Sol y La es Sol♯ o La♭. Cuál es la correcta depende de lo que
@@ -153,14 +153,14 @@ pub fn spell(key: Scale, pitch: Note, chord: Option<ChordSymbol>, next: Option<N
 1. **Una nota de la tonalidad** se escribe como la escribe la
    tonalidad: en La mayor, la tecla negra encima de Do es Do♯, nunca Re♭.
 2. **Una nota del acorde** que suena con ella se escribe como la
-   escribe el acorde. Sobre Mi7 en Do mayor, la tecla negra encima de
-   Sol es Sol♯, la tercera mayor de Mi (Mi Sol♯ Si Re). Sobre Fam en Do mayor,
-   la misma tecla es La♭, la tercera menor de Fa (Fa La♭ Do). Las letras
+   escribe el acorde. Sobre E7 en Do mayor, la tecla negra encima de
+   Sol es Sol♯, la tercera mayor de Mi (Mi Sol♯ Si Re). Sobre Fm en Do mayor,
+   la misma tecla es La♭, la tercera menor de Fa (Fa La♭ Do). Los nombres
    siguen las terceras del acorde.
 3. **Una nota cromática vecina**, una nota que se mueve un semitono
-   hacia la siguiente, toma su letra del camino que sigue la línea:
-   hacia arriba, es la letra elevada de abajo (Fa♯ que va a Sol); hacia
-   abajo, la letra rebajada de arriba (Si♭ que va a La). La nota «se
+   hacia la siguiente, toma su nombre del camino que sigue la línea:
+   hacia arriba, es el nombre de abajo elevado (Fa♯ que va a Sol); hacia
+   abajo, el nombre de arriba rebajado (Si♭ que va a La). La nota «se
    inclina» hacia donde va.
 4. **Cualquier otra cosa** recibe el nombre que la tonalidad da a las
    notas ajenas a ella.
@@ -171,7 +171,7 @@ tonalidad con muchos bemoles, una nota Si entre Do y Si♭ se escribe
 Do – Si – Si♭, no Do – Do♭ – Si♭, que se lee peor aunque Do♭ sea la
 «misma» nota.
 
-Una vez que cada nota tiene su letra, el compás decide qué
+Una vez que cada nota tiene su nombre, el compás decide qué
 **alteraciones** imprimir. Una alteración dura hasta la línea de
 compás: en Sol menor, el primer Fa♯ de un compás recibe un sostenido,
 el siguiente Fa♯ de ese compás no, y un Fa después de él recibe un
@@ -238,7 +238,7 @@ al lado de una corchea recibe una segunda barra corta propia, un
 ### Qué contiene un compás (`score.rs`)
 
 `score.rs` lo junta todo compás a compás. Un compás contiene sus notas
-y silencios (cada uno con su figura, letra, alteración y ligadura), los
+y silencios (cada uno con su figura, nombre de nota, alteración y ligadura), los
 acordes que empiezan en él, y lo que sea que se escriba en sus bordes:
 una tonalidad o un compás nuevos, el inicio de una sección, signos de
 repetición. Antes de la primera nota de la melodía y después de la
@@ -268,7 +268,7 @@ fn spring(steps: usize) -> f32 {
 ```
 
 Un símbolo de acorde es más ancho que una nota, así que un cambio de
-acorde rápido («Solm Sol7» sobre dos negras) separa sus notas hasta que los
+acorde rápido («Gm G7» sobre dos negras) separa sus notas hasta que los
 símbolos no se tocan.
 
 Una línea contiene hasta cuatro compases, menos si no caben, y una
@@ -412,8 +412,8 @@ cualquier visor de PDF, sin nada que instalar.
 
 `lineup-core` tiene 41 pruebas para el lead sheet. Entre ellas:
 
-- **spelling**: las letras de la tonalidad; las letras de un acorde
-  (Sol♯ sobre Mi7 y La♭ sobre Fam en Do mayor); vecinas cromáticas según la
+- **spelling**: los nombres de la tonalidad; los nombres de un acorde
+  (Sol♯ sobre E7 y La♭ sobre Fm en Do mayor); vecinas cromáticas según la
   dirección; las teclas blancas ajenas a la tonalidad se quedan
   sencillas (Si en Fa mayor, pero Mi♯ en Fa♯ mayor, donde es una nota
   de la tonalidad); alteraciones que duran hasta la línea de compás;
@@ -465,6 +465,6 @@ cambio de tonalidad.
    compases podría mostrar un compás con una línea gruesa y un «8»
    encima. ¿Dónde iría en `systems`, y cómo cambia los números de
    compás de la línea siguiente?
-5. **Semidisminuido.** Algunos lead sheets escriben Mim7♭5 como Eø7.
+5. **Semidisminuido.** Algunos lead sheets escriben Em7♭5 como Eø7.
    Añade una opción para ello. ¿Es una opción de `layout.rs` o del
    nombre del acorde?

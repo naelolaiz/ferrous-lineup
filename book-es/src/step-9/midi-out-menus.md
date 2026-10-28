@@ -10,7 +10,7 @@ y [`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous
 
 [MIDI Out para cada canal](../step-8/midi-out-every-channel.md) dio al
 menú MIDI un interruptor, **Send every channel**: la canción entera va
-a un sintetizador externo, o no va nada de ella. La menudo quieres algo
+a un sintetizador externo, o no va nada de ella. A menudo quieres algo
 intermedio. El bajo en un sintetizador de hardware y el resto de la
 banda en la app, o la batería en una caja de ritmos. Cada una de esas
 cosas solía significar añadir un canal MIDI Out en el rack y mover las

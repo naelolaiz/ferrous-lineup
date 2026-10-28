@@ -322,8 +322,8 @@ algo exótico. Un compás se parte solo donde la partición puntúa
 claramente mejor.
 
 Esa es una primera lectura. Solo las notas nombran cada color como un
-acorde propio: una sexta que añade el pianista convierte Sim en Bm6, una
-nota de la melodía de paso añade una novena bemol a Fa♯7, y una nota de
+acorde propio: una sexta que añade el pianista convierte Bm en Bm6, una
+nota de la melodía de paso añade una novena bemol a F#7, y una nota de
 paso puede crear un acorde que no está en absoluto.
 
 ### Comprobar los acordes contra un lead sheet
@@ -340,12 +340,12 @@ el sheet.
 El sheet suele estar en otra tonalidad que el pianista. El sheet de Uno
 está en Sol y el pianista toca en Do, cinco semitonos más agudo, así
 que cada acorde del sheet se mueve una cuarta hacia arriba antes de
-usarse: Sol se convierte en Do, Re7 en Sol7, Mim en Lam. Mover todos los
+usarse: G se convierte en C, D7 en G7, Em en Am. Mover todos los
 acordes por el mismo intervalo es **transportar**. Conserva el papel de
 cada acorde en la tonalidad, así que la canción es la misma canción.
 
-Yira, yira muestra lo que hace el vocabulario. Su sheet usa Sim, Fa♯7,
-La7, Re, Sol, Si7 y Mim. Los compases 38 a 40, leídos solo desde las notas,
+Yira, yira muestra lo que hace el vocabulario. Su sheet usa Bm, F#7,
+A7, D, G, B7 y Em. Los compases 38 a 40, leídos solo desde las notas,
 eran
 
 ```text
@@ -360,8 +360,8 @@ Bm F#7 | Bm F#7 | Bm A7
 
 La mano izquierda del pianista colorea el Si menor con un sol
 sostenido, su sexta, y la melodía toca sol al final del compás, una
-novena bemol sobre Fa♯7. Bajo esos colores están los acordes sobre los
-que está construida la canción, los que nombra el sheet: Sim y Fa♯7, **i**
+novena bemol sobre F#7. Bajo esos colores están los acordes sobre los
+que está construida la canción, los que nombra el sheet: Bm y F#7, **i**
 y **V7** de Si menor, la tónica y la séptima de dominante.
 
 Cinco canciones se cortaron también donde cambia su forma: Yira, yira,
@@ -380,7 +380,7 @@ lectura la perdía.
 Para las canciones sin lead sheet, las notas se comprobaron una a una.
 Tiempos viejos acaba en Re, Fa, La y Si. El script lo había llamado
 **Bm7b5** (Si Re Fa La), y son las mismas cuatro notas, pero el bajo
-toca Re debajo y llega después de La7, la dominante de Re menor, así que
+toca Re debajo y llega después de A7, la dominante de Re menor, así que
 es **Dm6**: Re menor con una sexta añadida. (La última nota de la
 melodía, un Mi agudo, añade una novena encima.) El nombre sigue al bajo
 y a lo que hace el acorde, no solo a las notas.
@@ -392,15 +392,15 @@ si bemol, y el archivo no dice cuál. La tonalidad nombra las siete
 notas de su escala; las otras cinco necesitan una regla, y la regla es
 el acorde alrededor de la nota:
 
-- **Una nota del acorde se deletrea como la tiene el acorde.** En Fa♯7
+- **Una nota del acorde se deletrea como la tiene el acorde.** En F#7
   (Fa♯, La♯, Do♯, Mi) la nota 70 es **la sostenido**, la tercera del
-  acorde. En Solm (Sol, Si♭, Re) es **si bemol**.
+  acorde. En Gm (Sol, Si♭, Re) es **si bemol**.
 - **Un acorde sobre una nota ajena a la tonalidad se nombra por donde
-  va.** Una séptima de dominante resuelve una quinta abajo, así que Sol♯7
-  que va a Do♯m es sol sostenido, porque Sol♯ es la quinta de Do♯. Un
+  va.** Una séptima de dominante resuelve una quinta abajo, así que G#7
+  que va a C#m es sol sostenido, porque Sol♯ es la quinta de Do♯. Un
   acorde de séptima que cae un semitono sobre su objetivo es un
   **sustituto de tritono**: Ab7 que va a Sol es la bemol, no sol
-  sostenido. Una séptima disminuida conduce un semitono arriba: Sol♯dim7
+  sostenido. Una séptima disminuida conduce un semitono arriba: G#dim7
   va a La.
 - **Una nota ajena al acorde se deletrea por donde va.** Una **nota de
   paso cromática** entre dos notas a un tono de distancia es un
@@ -411,8 +411,8 @@ el acorde alrededor de la nota:
   nombres propios de la tonalidad sí pueden usarlos: en Si menor, la
   nota entre Mi y Fa sostenido, de subida, es mi sostenido, la cuarta
   elevada que conduce a Fa sostenido, la dominante.
-- **Dos notas en una misma línea del pentagrama reciben letras
-  propias.** Mi y mi sostenido sonando juntos se sentarían en la misma
+- **Dos notas en una misma línea del pentagrama reciben nombres
+  propios.** Mi y mi sostenido sonando juntos se sentarían en la misma
   línea, así que el sostenido pasa a ser Fa.
 
 ## Comprobarlo
@@ -448,7 +448,7 @@ del río perdió 10 notas de 2408.
    estrellas), encuentra un lead sheet y comprueba una parte contra él.
    ¿Qué acordes fallaron las notas solas?
 5. En Do mayor, nombra la tecla negra entre Fa y Sol: sobre un acorde
-   Re7; en la línea Sol, ?, Fa; y sobre un Ab7 que va a Sol. Después
+   D7; en la línea Sol, ?, Fa; y sobre un Ab7 que va a G. Después
    comprueba tus respuestas contra las reglas de arriba.
 6. Rust: `in_key` y `with_tempo` son métodos `const fn` que toman
    `self` por valor y devuelven un `Part` nuevo. ¿Por qué eso permite

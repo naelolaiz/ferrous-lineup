@@ -31,7 +31,7 @@ Las teclas negras tienen dos nombres. La tecla entre La y Si es La♯
 («La sostenido», un semitono por encima de La) y también Si♭ («Si bemol», un
 semitono por debajo de Si). Qué nombre es el correcto depende de la
 tonalidad: las notas de Fa mayor son Fa Sol La **Si♭** Do Re Mi, porque cada
-letra se usa una vez. Ferrous Lineup sigue esa regla de una forma
+nombre de nota se usa una vez. Ferrous Lineup sigue esa regla de una forma
 sencilla: las tonalidades cuya armadura tiene bemoles (Fa, Si♭, Mi♭, La♭, Re♭
 y sus relativas menores) se escriben con bemoles, y todas las demás con
 sostenidos.
@@ -347,9 +347,9 @@ compositor aprende:
 
 | Grado | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |-------|---|---|---|---|---|---|---|
-| Tríada | Do | Rem | Mim | Fa | Sol | Lam | Sidim |
+| Tríada | C | Dm | Em | F | G | Am | Bdim |
 | Numeral | I | ii | iii | IV | V | vi | vii° |
-| Séptima | Domaj7 | Rem7 | Mim7 | Famaj7 | Sol7 | Lam7 | Bm7b5 |
+| Séptima | Cmaj7 | Dm7 | Em7 | Fmaj7 | G7 | Am7 | Bm7b5 |
 
 Los botones de «Acordes en Do mayor» del piano roll son esta tabla.
 Cambia la tonalidad y los botones la siguen, porque se calculan, no se

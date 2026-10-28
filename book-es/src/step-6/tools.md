@@ -267,7 +267,7 @@ arriba, por encima de las demás. Do, Mi, Sol pasa a ser Mi, Sol, Do (la primera
 inversión), y hacerlo otra vez da Sol, Do, Mi (la segunda). Las notas, y por
 tanto el acorde, siguen siendo las mismas; lo que cambia es la nota del
 bajo, y eso cambia mucho el color del acorde. El carril de acordes lo
-escribe con una barra: Mi, Sol, Do es «Do/Mi», Do mayor sobre Mi.
+escribe con una barra: Mi, Sol, Do es «C/E», Do mayor sobre Mi.
 
 ```rust
 pub fn inversion(pitches: &[Note], times: usize) -> Vec<Note> {

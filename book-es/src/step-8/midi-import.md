@@ -211,7 +211,7 @@ Dos cosas más con las que se encuentra un lector por ahí:
 - **Archivos RMID** (`.rmi`). Windows solía envolver los archivos MIDI
   en RIFF, el contenedor de los archivos WAV: `RIFF`, un tamaño,
   `RMID`, y luego chunks. El archivo MIDI es el chunk llamado `data`;
-  otros guardan un título o un copyright. La diferencia de MIDI, RIFF
+  otros guardan un título o un copyright. A diferencia de MIDI, RIFF
   escribe sus números empezando por el byte menos significativo, así
   que `unwrap_riff` usa `u32::from_le_bytes` donde MIDI usa
   `u32::from_be_bytes`.

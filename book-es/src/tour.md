@@ -8,7 +8,7 @@ usarla.
 ## La reproducción, el playlist y el channel rack
 
 Pulsa **Space** para reproducir la canción de demostración: dos
-compases de una progresión de acordes Do, Lam, Fa, Sol, luego entra un pulso,
+compases de una progresión de acordes C, Am, F, G, luego entra un pulso,
 y un relleno de batería la termina. El botón de reproducción pausa
 mientras suena, y Stop vuelve a donde se puso el cabezal de
 reproducción. **Home** va al principio, **End** al último paso, y
@@ -386,7 +386,7 @@ waltz y Shuffle 100%, Rock and roll 50%), y recuerda la cantidad que
 fijaste por última vez para él.
 
 Muchos estilos traen más músicos que el piano, el bajo y la batería. Una
-**guitarra** toca las posiciones que tocaría un guitarrista (el Do o Sol
+**guitarra** toca las posiciones que tocaría un guitarrista (el C o G
 abiertos de un libro de acordes, acordes con cejilla en otras
 tonalidades, el bajo más grave bajo un acorde con barra) y las rasguea:
 púas hacia abajo a lo largo de las cuerdas, púas hacia arriba más
@@ -414,7 +414,7 @@ solista que improvisa sobre el estribillo: un saxo tenor en el jazz, una
 armónica en el blues, un violín en el folk, etcétera. La línea pone
 notas del acorde en los pulsos y rellena el espacio entre ellos con
 notas de la escala del acorde (elegidas de la tonalidad, de modo que en
-do mayor Sol7 toca Sol mixolidio y Mi7, que lleva a Lam, toca la escala de la
+do mayor G7 toca Sol mixolidio y E7, que lleva a Am, toca la escala de la
 menor armónica desde Mi: Mi frigio dominante) o con notas cromáticas a un
 semitono de distancia. Respira entre frases, y **Another solo** toca uno
 nuevo. Abre su parte en el piano roll para ver qué es cada nota: las
@@ -530,8 +530,8 @@ melodía en notación sobre un pentagrama, los símbolos de acordes encima,
 y la tonalidad y los compases, secciones y repeticiones, dispuestos en
 páginas La4 o Letter. La melodía es el canal llamado Lead (o si no, el
 más agudo; se puede elegir cualquier otro), y cada nota se escribe para
-la tonalidad y el acorde que suena, de modo que un Sol♯ sobre Mi7 sigue
-siendo Sol♯ y un La♭ sobre Fam sigue siendo La♭. **None: chords only**
+la tonalidad y el acorde que suena, de modo que un Sol♯ sobre E7 sigue
+siendo Sol♯ y un La♭ sobre Fm sigue siendo La♭. **None: chords only**
 escribe barras de ritmo bajo los acordes en su lugar. **For** escribe el
 lead sheet para instrumentos en Si♭, Mi♭ o Fa, de modo que un trompetista,
 un saxofonista o un trompista lo lee en su propia tonalidad: la

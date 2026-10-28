@@ -6,8 +6,8 @@ Archivos: [`crates/lineup-app/src/twelve_tone.rs`](https://github.com/naelolaiz/
 Toca la canción de inicio en Do mayor y elige **conjunto de clases de
 alturas** en el menú Key. Hasta ahora el menú tomaba el último conjunto
 que hubieras usado, o el acorde de séptima disminuida Do Mi♭ Sol♭ La si no
-habías usado ninguno. La canción seguía tocando Do, Lam, Rem y Sol, pero las
-harmony keys mostraban Dodim, Re♯dim, Fa♯dim y Ladim. Ninguno de esos
+habías usado ninguno. La canción seguía tocando C, Am, Dm y G, pero las
+harmony keys mostraban Cdim, D#dim, F#dim y Adim. Ninguno de esos
 sonaba, así que las teclas estaban equivocadas sobre la música.
 
 ## Por qué aquí las notas no deben moverse
@@ -28,12 +28,12 @@ cada nota y solo muestra la misma armonía en notación de conjuntos:
 | Tonalidad | Notas | Clase de conjunto |
 |---|---|---|
 | Do | Do Mi Sol | 3-11 |
-| Rem | Re Fa La | 3-11 |
-| Mim | Mi Sol Si | 3-11 |
+| Dm | Re Fa La | 3-11 |
+| Em | Mi Sol Si | 3-11 |
 | Fa | Fa La Do | 3-11 |
 | Sol | Sol Si Re | 3-11 |
-| Lam | La Do Mi | 3-11 |
-| Sidim | Si Re Fa | 3-10 |
+| Am | La Do Mi | 3-11 |
+| Bdim | Si Re Fa | 3-10 |
 
 Esto merece una mirada por sí solo. Las tríadas mayor y menor tienen la
 **misma** clase de conjunto, 3-11, porque una tríada menor es una
@@ -70,7 +70,7 @@ usado.
 
 ## Deletrear un conjunto que es una escala
 
-Los conjuntos no tienen letras propias, así que sus notas tomaron los
+Los conjuntos no tienen nombres de nota propios, así que sus notas tomaron los
 nombres de siempre: Do♯ Mi♭ Fa♯ La♭ Si♭. Para Mi mayor como conjunto eso
 está mal: Mi Fa♯ **La♭** La Si Do♯ **Mi♭**, y el acorde sobre la tercera se
 llamaría Abm. Un conjunto cuyas notas son exactamente una escala sobre
@@ -96,7 +96,7 @@ fundamental. La fundamental importa: las teclas blancas sobre Do son Do
 mayor, pero sobre Re son Re dórico, así que `Scale::spell` y
 `Scale::spell_root` preguntan primero a `set_as_scale` y deletrean como
 esa escala. Mi mayor como conjunto es otra vez Mi Fa♯ Sol♯ La Si Do♯ Re♯, y su
-tercer acorde es Sol♯m. Un conjunto que no es una escala, como Do Mi♭ Fa♯ La,
+tercer acorde es G#m. Un conjunto que no es una escala, como Do Mi♭ Fa♯ La,
 mantiene los nombres de siempre.
 
 ## Probarlo

@@ -12,7 +12,7 @@ canción cambia, sin embargo la casilla del tempo pasó de 112 a 132.
 Cada nota de la canción se acortó: la melodía que conoces se aceleró,
 solo porque querías oír otro acompañamiento.
 
-Una banda de acompañamiento no se comporta así. La una banda a la que le
+Una banda de acompañamiento no se comporta así. A una banda a la que le
 piden que lo toque «como tango nuevo» conserva el tempo del cantante.
 Ahora Ferrous Lineup también: **un estilo conserva el tempo de la
 canción**, y las propias notas de la canción duran lo mismo que antes,

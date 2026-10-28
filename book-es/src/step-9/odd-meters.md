@@ -161,7 +161,7 @@ sobre La.
 
 Con las canciones turcas llegaron dos makams más. El **hüseyni**, en
 **Sarı gelin**, es La, Si, Do, Re, Mi, Fa♯, Sol: cerca del modo **dórico**, una
-escala menor con sexta mayor, así que su acorde de IV, Re7, es mayor. El
+escala menor con sexta mayor, así que su acorde de IV, D7, es mayor. El
 **segâh**, en **İzmir'in kavakları**, reposa sobre Si: Si, Do, Re, Mi, Fa♯,
 Sol, La, el modo **frigio**, con su segunda bemol, Do, justo encima de la
 nota sobre la que reposa. Su Si y su Mi están en realidad una **coma**
@@ -176,7 +176,7 @@ los makams: acierta las notas y falla la nota sobre la que reposan.
 
 **Mândrele** está en Do con Fa♯, el modo **lidio**, una escala mayor con
 la cuarta elevada; su Fa♯ reposa sobre un acorde de Re mayor (II), y
-secciones posteriores traen un Si♭, que convierte Do en Do7.
+secciones posteriores traen un Si♭, que convierte C en C7.
 
 **Gankino horo** tiene otro color: Re, Mi, Fa, Sol♯, La, Si, Do, una escala
 menor con la cuarta elevada y un Si natural, el modo dórico con cuarta

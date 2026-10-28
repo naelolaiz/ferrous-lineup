@@ -18,9 +18,9 @@ bajo y la melodía suben todos un tono. Elige menor y cada nota se mueve
 al mismo grado de la escala menor. La batería se queda como está, y
 **Ctrl+Z** lo devuelve todo de una vez.
 
-![Frère Jacques en Do mayor. Las filas de Do mayor son más claras, Do está teñido, y las harmony keys van de Do a Sidim.](../images/step-8-key-before.png)
+![Frère Jacques en Do mayor. Las filas de Do mayor son más claras, Do está teñido, y las harmony keys van de C a Bdim.](../images/step-8-key-before.png)
 
-![El mismo patrón tras elegir Re, y luego menor. La melodía empieza ahora Re, Mi, Fa, Re, las harmony keys van de Rem a Do, y la batería (las notas fantasma grises) no se ha movido.](../images/step-8-key-after.png)
+![El mismo patrón tras elegir Re, y luego menor. La melodía empieza ahora Re, Mi, Fa, Re, las harmony keys van de Dm a C, y la batería (las notas fantasma grises) no se ha movido.](../images/step-8-key-after.png)
 
 ## Por qué el menú de tonalidad mueve las notas
 
