@@ -1400,6 +1400,55 @@ fn f1_and_the_help_menu_show_the_keyboard_shortcuts() {
 }
 
 #[test]
+fn help_about_shows_the_version_the_license_and_where_the_book_is() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.click("Help");
+    screen.click("About Ferrous Lineup");
+    assert!(screen.app.about_open);
+    let output = screen.draw(vec![]);
+    let version = format!("Version {}", env!("CARGO_PKG_VERSION"));
+    for text in [
+        "Ferrous Lineup",
+        &version,
+        "Read the license",
+        "The book",
+        "The book (PDF)",
+        "Source code",
+        "Report an issue",
+    ] {
+        assert!(text_rect(&output, text).is_some(), "{text}");
+    }
+    // A link opens its page in the browser.
+    let book = text_rect(&output, "The book").unwrap().center();
+    screen.draw(vec![
+        Event::PointerMoved(book),
+        Event::PointerButton {
+            pos: book,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    let output = screen.draw(vec![Event::PointerButton {
+        pos: book,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+    let opened: Vec<&str> = output
+        .platform_output
+        .commands
+        .iter()
+        .filter_map(|command| match command {
+            egui::OutputCommand::OpenUrl(open) => Some(open.url.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(opened, ["https://naelolaiz.github.io/ferrous-lineup/"]);
+}
+
+#[test]
 fn main_transport_toggles_are_visible_reversible_and_saved() {
     const TOGGLES: [&str; 3] = ["Follow playhead", "Count-in", "Metronome"];
     for size in [vec2(1400.0, 1000.0), vec2(800.0, 600.0)] {
