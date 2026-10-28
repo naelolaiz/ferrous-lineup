@@ -150,9 +150,13 @@ impl PitchClass {
 }
 
 impl fmt::Display for PitchClass {
-    /// Writes the sharp name. Use [`PitchClass::name`] to choose flats.
+    /// Writes the sharp name, in letters or solfège as the active note naming chooses.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.name(Spelling::Sharps))
+        write!(
+            f,
+            "{}",
+            self.name_with(Spelling::Sharps, global_note_naming())
+        )
     }
 }
 
@@ -507,15 +511,9 @@ impl NoteName {
 }
 
 impl fmt::Display for NoteName {
-    /// Writes the letter and its sharps or flats: "C", "F#", "Bb", "F##".
+    /// Writes the note name as letters or solfège, with its sharps or flats.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let sign = if self.accidental > 0 { "#" } else { "b" };
-        write!(
-            f,
-            "{}{}",
-            self.letter.as_char(),
-            sign.repeat(self.accidental.unsigned_abs() as usize)
-        )
+        write!(f, "{}", self.format(global_note_naming()))
     }
 }
 
@@ -683,5 +681,12 @@ mod tests {
             NoteName::new(Letter::A, -1).format(NoteNaming::Solfege),
             "Lab"
         );
+
+        set_global_note_naming(NoteNaming::Solfege);
+        assert_eq!(NoteName::new(Letter::C, 0).to_string(), "Do");
+        assert_eq!(PitchClass::A.to_string(), "La");
+        set_global_note_naming(NoteNaming::Letters);
+        assert_eq!(NoteName::new(Letter::C, 0).to_string(), "C");
+        assert_eq!(PitchClass::A.to_string(), "A");
     }
 }

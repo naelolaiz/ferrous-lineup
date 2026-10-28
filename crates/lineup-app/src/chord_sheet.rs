@@ -707,7 +707,18 @@ impl ChordSheet {
         ui.horizontal_wrapped(|ui| {
             band::menu(ui, project, actions);
             progression_menu(ui, project, self.next_bar(project), library, actions);
-            ui.label(egui::RichText::new(format!("Key: {}", project.scale.name())).strong());
+            let key_str = match project.scale.kind {
+                lineup_core::ScaleKind::Row(_) | lineup_core::ScaleKind::Set(_) => {
+                    format!("{}: {}", crate::i18n::tr("Key"), project.scale.name())
+                }
+                kind => format!(
+                    "{}: {} {}",
+                    crate::i18n::tr("Key"),
+                    project.scale.spell(project.scale.root),
+                    crate::i18n::tr(kind.name()),
+                ),
+            };
+            ui.label(egui::RichText::new(key_str).strong());
             ui.weak(format!("· {}", project.time_signature));
             if project.band().is_some() {
                 ui.weak(format!("· {} BPM", project.tempo.bpm().round()));
@@ -718,7 +729,7 @@ impl ChordSheet {
             }
             // A band plays from the sheet, so its own notes are not heard.
             if project.song_length() > 0 && (markers.is_empty() || project.band().is_none()) {
-                let button = ui.button("Write the chords the song plays");
+                let button = ui.button(crate::i18n::tr("Write the chords the song plays"));
                 if theme::hint(
                     button,
                     "Fill the sheet with the chords heard in the song, in place of what it \
@@ -737,15 +748,15 @@ impl ChordSheet {
         let round = playing.and_then(|(_, pass)| pass.chorus);
         form::row(ui, project, round, actions);
         practice::row(ui, project, practice, self.selected_bars(), actions);
-        ui.weak(
+        ui.weak(crate::i18n::tr(
             "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), \
              sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C.",
-        );
-        ui.weak(
+        ));
+        ui.weak(crate::i18n::tr(
             "Each / holds the harmony before it one more beat, as in C / / G7. The band stops \
              with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and \
              Ctrl+V copy and paste bars as text.",
-        );
+        ));
         for player in Player::ALL {
             let name = player.name().to_lowercase();
             if project.plays_locked(player) {
@@ -1960,7 +1971,7 @@ fn progression_menu(
 ) {
     let tonal = project.scale.kind.is_tonal();
     ui.add_enabled_ui(tonal, |ui| {
-        let menu = egui::containers::menu::MenuButton::new("Progression").config(
+        let menu = egui::containers::menu::MenuButton::new(crate::i18n::tr("Progression")).config(
             egui::containers::menu::MenuConfig::new()
                 .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
         );
