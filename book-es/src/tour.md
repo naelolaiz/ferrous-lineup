@@ -407,7 +407,7 @@ intercalación antes es un **push** (`^C`): la banda lo toca una corchea
 antes y lo sostiene sobre el pulso, y `^^C` llega una semicorchea antes.
 La batería se detiene con la banda y golpea un bombo y un platillo con
 cada shot, hold y push. Haz clic derecho en un compás y elige
-**Band on Do** para fijar las mismas marcas desde un menú.
+**Band on C** para fijar las mismas marcas desde un menú.
 
 **Soloist (experimental)**, al final del menú de la banda, añade un
 solista que improvisa sobre el estribillo: un saxo tenor en el jazz, una

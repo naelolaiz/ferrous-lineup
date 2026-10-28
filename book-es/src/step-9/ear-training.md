@@ -60,7 +60,7 @@ fundamental (más sobre eso abajo).
 
 **Progressions.** Este es el ejercicio que pedía el plan: la banda
 toca unos cuantos acordes en una tonalidad, un compás cada uno, y tú
-los nombras por sus numerales. La pregunta dice la tonalidad («In Fa
+los nombras por sus numerales. La pregunta dice la tonalidad («In F
 major») y el primer acorde es siempre I, el hogar, así que sabes dónde
 empiezas. Las respuestas son las harmony keys que conoces de la barra
 de abajo de la ventana, con sus colores y su trabajo (hogar, lejos,

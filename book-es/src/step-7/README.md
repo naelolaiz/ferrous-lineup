@@ -24,8 +24,8 @@ enseña a Ferrous Lineup a hablarlo, en ambas direcciones:
   externo)** crea un canal que no suena por sí mismo. Sus notas van a
   otro sintetizador, uno de hardware u otro programa, elegido en **MIDI
   > Salida**. Haz clic derecho para elegir su canal MIDI, del 1 al 16,
-- **archivos MIDI**: **Archivo > Exportar canción como MIDI…** y
-  **Exportar patrón como MIDI…** escriben un archivo `.mid` con las
+- **archivos MIDI**: **File > Export song as MIDI…** y
+  **Export pattern as MIDI…** escriben un archivo `.mid` con las
   notas, que cualquier otro estudio puede abrir. La batería integrada va
   en el canal 10 con las notas que esperan las baterías de General MIDI,
   así que allí también salen como batería.
@@ -49,8 +49,8 @@ enseña a Ferrous Lineup a hablarlo, en ambas direcciones:
 | Ctrl+Z | deshacer toda la toma |
 | Añadir canal > MIDI Out | añadir un canal para un sintetizador externo |
 | clic derecho en un canal MIDI Out > Canal MIDI | elegir su canal, del 1 al 16 |
-| Archivo > Exportar canción como MIDI… | guardar las notas de la canción en un archivo `.mid` |
-| Archivo > Exportar patrón como MIDI… | guardar las notas del patrón seleccionado |
+| File > Export song as MIDI… | guardar las notas de la canción en un archivo `.mid` |
+| File > Export pattern as MIDI… | guardar las notas del patrón seleccionado |
 
 El teclado de escritura usa dos filas de letras para las teclas
 blancas, y la fila de encima de cada una para las teclas negras, como
@@ -182,7 +182,7 @@ crates/lineup-audio/src/render.rs        el hilo de audio de la exportación no 
 crates/lineup-app/src/midi.rs            el envoltorio de midir (nuevo)
 crates/lineup-app/src/app/live.rs        teclado de escritura, teclas pulsadas, grabación (nuevo)
 crates/lineup-app/src/app/export.rs      exportar MIDI
-crates/lineup-app/src/app/files.rs       los elementos MIDI del menú Archivo
+crates/lineup-app/src/app/files.rs       los elementos MIDI del menú File
 crates/lineup-app/src/app/edit.rs        una toma es un paso de deshacer
 crates/lineup-app/src/app.rs             el menú MIDI, Rec, el canal seleccionado
 crates/lineup-app/src/channel_rack.rs    selección, canales MIDI Out

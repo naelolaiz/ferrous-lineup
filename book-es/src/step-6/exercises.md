@@ -12,7 +12,7 @@ Las notas que se tocan todas exactamente con la misma fuerza suenan
 mecánicas. Añade `tools::humanize(notes, amount, seed) -> Vec<NoteEvent>`,
 que mueve cada velocidad hacia arriba o hacia abajo una cantidad
 aleatoria de como mucho `amount`, mantenida dentro de 1..=127, y una
-opción «Humanizar velocidad» en el menú Herramientas.
+opción «Humanize velocity» en el menú Tools.
 
 Ferrous Lineup no tiene ningún crate de números aleatorios, y no
 necesita ninguno: un generador minúsculo como *xorshift* son tres líneas
@@ -41,7 +41,7 @@ Averigua qué significa «reflejado» para una nota de longitud 2 en un
 tramo de 16 steps: ¿se refleja su *inicio*, su *final*, o ambos? ¿Qué
 elección mantiene la frase dentro del tramo y suena más como la original
 tocada al revés? ¿Qué pasa con `nudge` y `trim`? Añade una opción
-«Retrograde» al menú Herramientas, con una prueba sobre una frase de
+«Retrograde» al menú Tools, con una prueba sobre una frase de
 cuatro notas que puedas cantar. El resultado pasa por `replace` como el
 de cualquier otra herramienta.
 
@@ -111,7 +111,7 @@ herramientas:
 ticks antes del final de su último step se detiene. Una nota acortada a
 un step debe mantener su `trim` por debajo de un step; una nota más
 larga que se acorta debe limpiar cualquier `trim` que ya no quepa.
-Añade ambas al menú Herramientas, y comprueba qué pasa cuando dos notas
+Añade ambas al menú Tools, y comprueba qué pasa cuando dos notas
 se solaparían entonces en el mismo canal. ¿Por qué `set_note_length` no
 es simplemente `note.length = steps`?
 

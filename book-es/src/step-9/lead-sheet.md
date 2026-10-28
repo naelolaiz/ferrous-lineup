@@ -437,8 +437,8 @@ se convierte en un PDF con un objeto de página por página y sus formas
 escritas una vez cada una.
 
 Después los sheets se leyeron, como los lee un músico, para Ode to Joy,
-Für Elise, Minuet in Sol, Careless Love, Korobeiniki, Funiculì,
-funiculà, The Entertainer, the Moonlight Sonata, El Choclo,
+Für Elise, Minuet in G, Careless Love, Korobeiniki, Funiculì,
+funiculà, The Entertainer, la Moonlight Sonata, El Choclo,
 Greensleeves, La Cumparsita, When the Saints Go Marching In e I Got
 Rhythm. Esa lectura encontró las reglas de arriba que las pruebas aún
 no tenían: la escritura Do – Si – Si♭, la síncopa «♪ ♩ ♪», más espacio

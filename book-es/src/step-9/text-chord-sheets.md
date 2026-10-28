@@ -57,7 +57,7 @@ estado dice dónde:
 
 > No se pudo importar bad.txt: línea 4: compás 3: «Qx7» no es un acorde
 > (Lam7, Sol/Si), un conjunto (3-11 T2, {0,4,7}), un micromodo (Menor 3),
-> una forma de serie (P0, RI7) ni N.Do.
+> una forma de serie (P0, RI7) ni N.C.
 
 **File > Export chord sheet…** escribe el chord sheet de la canción en
 un archivo de texto, en el formato de arriba, con los compases

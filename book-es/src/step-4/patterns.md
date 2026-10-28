@@ -358,6 +358,6 @@ project.add_clip(Clip::new(fill, drum_track, 7 * 16));
 
 `2..7` es un rango de 2 hasta, pero sin incluir, el 7: compases 3 a 7
 contando desde 1, como hace la regla. El fill ocupa el lugar del beat en el
-compás 8. Un proyecto nuevo (Archivo > Nuevo) empieza desde
+compás 8. Un proyecto nuevo (File > New) empieza desde
 `Project::template` en su lugar: los mismos cinco canales, un patrón vacío
 y un playlist vacío.

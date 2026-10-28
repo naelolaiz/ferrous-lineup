@@ -61,7 +61,7 @@ encaminar un cambio de UI a través de `edit`.
 
 ## 4. Olvidar un proyecto reciente (lineup-app, medio)
 
-Archivo > Abrir recientes ya recuerda los últimos diez proyectos, en los
+File > Open recent ya recuerda los últimos diez proyectos, en los
 datos persistidos de egui, y se mantiene correcto cuando un archivo se ha
 movido o borrado (la apertura falla y la ruta se retira). Lee
 `app/recent.rs`.
@@ -102,7 +102,7 @@ tu diseño con él.*
 
 Las pruebas del motor ya reproducen canciones sin tarjeta de sonido: crean
 un `AudioThread`, le envían comandos y llaman a `process` sobre un búfer.
-Usa la misma idea para Archivo > Exportar WAV. Construye un `AudioThread`
+Usa la misma idea para File > Export WAV. Construye un `AudioThread`
 separado en el hilo de UI (nunca se acerca al real), envíale el proyecto
 entero como hace `send_whole_project`, después `SetMode(Song)` y `Play`, y
 llama a `process` bloque a bloque durante `song_length` pasos, escribiendo

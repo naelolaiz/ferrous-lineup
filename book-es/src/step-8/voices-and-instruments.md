@@ -5,7 +5,7 @@ Archivos: [`crates/lineup-core/src/general_midi.rs`](https://github.com/naelolai
 [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
 y [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs)
 
-Abre **Canon in Re** antes de este cambio y mira el channel rack: un
+Abre **Canon in D** antes de este cambio y mira el channel rack: un
 canal Lead tiene los tres violines. Pachelbel escribió tres partes de
 violín que tocan la misma línea, cada una dos compases por detrás de la
 anterior; en el rack eran una maraña de notas, y no podías silenciar el
@@ -21,7 +21,7 @@ Ahora cada voz tiene un canal, y cada canal tiene un instrumento.
 
 ## Lo que ves
 
-Abre **File > Demos > Songs > Classical and film > Canon in Re**. El rack
+Abre **File > Demos > Songs > Classical and film > Canon in D**. El rack
 tiene **Lead**, **Voice 2** y **Voice 3**, los tres violines, luego
 **Keys** (el clavecín, que toca los acordes) y **Bass** (el
 violonchelo, que toca el bajo ostinato). En el patrón **Entries**, Voice
@@ -187,7 +187,7 @@ instrumentos para los que fueron escritas:
 
 | Pieza | Melodía | Acordes | Bajo |
 |---|---|---|---|
-| Canon in Re | violines | clavecín | violonchelo |
+| Canon in D | violines | clavecín | violonchelo |
 | Für Elise, Moonlight Sonata, Träumerei | piano | piano | piano |
 | Shchedryk | coro | coro | coro |
 | New World Largo | corno inglés (cor anglais) | cuerdas | contrabajo |

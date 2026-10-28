@@ -11,7 +11,7 @@ una vez escritos, y más ayuda para decidir qué escribir a continuación:
   seleccionar todas las notas de un recuadro, Ctrl+A para seleccionarlas
   todas, Escape para no seleccionar ninguna. Las notas seleccionadas
   tienen un borde blanco. Arrastrar una de ellas las mueve todas,
-- **un menú Herramientas**, con una tecla para la mayoría de las
+- **un menú Tools**, con una tecla para la mayoría de las
   herramientas, que cambia las notas seleccionadas, o todas las notas
   cuando no hay ninguna seleccionada: moverlas hacia arriba o hacia
   abajo un semitono, una octava o una nota *de la tonalidad* (Do, Mi, Sol
@@ -48,7 +48,7 @@ es una acción, vaya lo lejos que vaya.
 
 ![Apuntando al acorde Do: la línea sobre la cuadrícula dice qué suele venir después de él, y esos botones de acordes se iluminan.](../images/step-6-suggestions.png)
 
-![El menú Herramientas, con el acorde La menor seleccionado (bordes blancos)](../images/step-6-tools.png)
+![El menú Tools, con el acorde La menor seleccionado (bordes blancos)](../images/step-6-tools.png)
 
 ![El mismo acorde después de «Arpegiar acordes», arriba y abajo, una nota cada step](../images/step-6-arpeggio.png)
 
@@ -74,9 +74,9 @@ para que nunca te sorprendan mientras trabajas en la playlist.
 | Shift+← / Shift+→ | mover las notas un pulso |
 | Delete o Backspace | eliminar las notas seleccionadas |
 | clic o arrastre en el carril de velocidad | fijar con qué fuerza se tocan las notas |
-| Herramientas > Ajustar a la tonalidad | meter en la tonalidad las notas que están fuera |
-| Herramientas > Invertir acordes arriba / abajo | invertir cada acorde una vez |
-| Herramientas > Arpegiar acordes | convertir acordes en arpegios |
+| Tools > Snap to the key | meter en la tonalidad las notas que están fuera |
+| Tools > Invert chords up / down | invertir cada acorde una vez |
+| Tools > Arpeggiate chords | convertir acordes en arpegios |
 
 En un Mac, usa ⌘ en lugar de Ctrl y Option en lugar de Alt. Cuando no
 hay ninguna nota seleccionada, las herramientas cambian todas las notas
@@ -95,7 +95,7 @@ step empieza realmente, y `trim`, cuántos ticks antes del final de su
 último step se detiene. Un step se divide en 24 ticks, así que a 130 BPM
 un tick son unos 4,8 milisegundos: suficiente para un rasgueo. La
 importación de MIDI ya usa esto para conservar las notas que no caen
-sobre la cuadrícula, y Herramientas > Cuantizar a los steps las devuelve
+sobre la cuadrícula, y Tools > Quantize to the steps las devuelve
 a ella. La guitarra de la banda, en un paso posterior, rasguea sus
 acordes desplazando cada cuerda un tick más tarde que la de abajo
 (`crates/lineup-core/src/band/guitar.rs`).
@@ -117,7 +117,7 @@ El formato de archivo no necesita un campo nuevo para el primero;
     pattern.rs:                     replace_notes, can_replace_notes, tidy_notes
 
   lineup-app
-    piano_roll.rs: la selección, el menú Herramientas y sus teclas, inversiones,
+    piano_roll.rs: la selección, el menú Tools y sus teclas, inversiones,
                    sugerencias, notas fantasma, el carril de velocidad
     app.rs:        aplica RollAction::ReplaceNotes mediante edit_pattern
 ```

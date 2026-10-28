@@ -172,7 +172,7 @@ con pruebas.
 ## 11. Un cambio de tempo en un patrón (lineup-core, pequeño)
 
 `TempoMark` pone las marcas de una demo en el playlist (ver [Cambios de
-tempo, y tocar como una persona](tempo-and-feel.md)). La Toccata in Re
+tempo, y tocar como una persona](tempo-and-feel.md)). La Toccata in D
 minor tiene seis fermatas en los compases que toca su demo, dejadas
 fuera porque la demo ya escribe esas notas largas. Acorta las notas a lo
 que escribió Bach, añade las fermatas con `.with_tempo`, y escucha las

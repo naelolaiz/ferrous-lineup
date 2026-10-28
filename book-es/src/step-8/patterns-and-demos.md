@@ -78,7 +78,7 @@ absoluto, y su mano izquierda está escrita nota a nota en lugar de
 hacerse a partir de acordes, porque la mano izquierda de Beethoven *es*
 el acompañamiento.
 
-![Für Elise desde Archivo > Demos: un patrón por parte, colocado en el orden de la forma de la canción. Está en 3/8, así que un compás tiene seis pasos, y en La menor armónica, que las harmony keys muestran con sus siete acordes propios.](../images/step-8-fur-elise.png)
+![Für Elise desde File > Demos: un patrón por parte, colocado en el orden de la forma de la canción. Está en 3/8, así que un compás tiene seis pasos, y en La menor armónica, que las harmony keys muestran con sus siete acordes propios.](../images/step-8-fur-elise.png)
 
 Ambas devuelven un `Project` normal. Una demo no es especial en ningún
 sentido: puedes cambiarla, guardarla y desmontarla como cualquier cosa
@@ -190,9 +190,9 @@ sitio para otro patrón, `add_pattern` da `None`, la closure se detiene
 ahí, y `edit` devuelve el `None`. Nada cambió, así que tampoco se
 registra nada para deshacer.
 
-## Archivo > Demos
+## File > Demos
 
-Abrir una demo tira el proyecto actual, igual que **Archivo > Abrir**,
+Abrir una demo tira el proyecto actual, igual que **File > Open**,
 así que primero debe preguntar por los cambios sin guardar. El paso 4
 construyó esa pregunta alrededor de un enum de cosas que esperan
 respuesta; una demo es una más:

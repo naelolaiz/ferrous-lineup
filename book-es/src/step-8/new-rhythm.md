@@ -324,7 +324,7 @@ let change = self.edit("change the rhythm", |project| {
 Los 78 estilos, tocados a su manera, se oyen exactamente bien, y también
 las canciones, salvo dos acordes muy cortos: uno que dura un solo pulso
 al final mismo de Amazing Grace, y otro que cambia en mitad de un pulso
-en el Minuet in Sol. Tocar cada estilo de todas las maneras de comping con
+en el Minuet in G. Tocar cada estilo de todas las maneras de comping con
 siete líneas de bajo (unas 14.000 combinaciones) acierta exactamente
 alrededor del 91%. La mayoría de los fallos son arpegios sobre un bajo
 caminante o tumbao, donde un cambio puede salir un pulso antes o

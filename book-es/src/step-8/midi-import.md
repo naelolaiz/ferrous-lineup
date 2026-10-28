@@ -297,7 +297,7 @@ nuevo» en lugar de mover las notas a la cuadrícula sin avisar.
 El piano roll dibuja una nota con nudge donde empieza de verdad, y el
 motor de audio la reproduce ahí: la nota se retiene `nudge` ticks,
 igual que la [temporización loose](tempo-and-feel.md) retiene una
-nota, y se suelta `trim` ticks antes. **Herramientas > Cuantizar a los
+nota, y se suelta `trim` ticks antes. **Tools > Quantize to the
 steps** mueve las notas seleccionadas (o todas) al paso más cercano,
 para cuando las quieras en la cuadrícula.
 
@@ -539,7 +539,7 @@ un archivo de 25 MB con los dígitos de π).
   Play con las harmony keys abiertas (F8). ¿Qué acordes usa más?
 - Abre el piano roll sobre un archivo tocado en un teclado y mira a
   qué distancia de la cuadrícula están las notas. Selecciona unas
-  cuantas y usa **Herramientas > Cuantizar a los steps**: ¿suena mejor
+  cuantas y usa **Tools > Quantize to the steps**: ¿suena mejor
   o peor?
 - Exporta una demo en un modo, como *Scarborough Fair* en Re dórico,
   abre el archivo en otro programa y mira su armadura de clave. Luego

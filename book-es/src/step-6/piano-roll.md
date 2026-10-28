@@ -279,7 +279,7 @@ cortos, ni siquiera se les pregunta.
 
 ### Un enum para el menú y las teclas
 
-El menú Herramientas y las teclas producen ambos un `Tool`:
+El menú Tools y las teclas producen ambos un `Tool`:
 
 ```rust
 enum Tool {
@@ -312,7 +312,7 @@ sustituye la selección por un `new` vacío mediante `ReplaceNotes`.
 ### Un menú que se queda abierto
 
 Los menús de egui se cierran con cualquier clic dentro de ellos, lo cual
-está bien para una lista de comandos. Pero el menú Herramientas también
+está bien para una lista de comandos. Pero el menú Tools también
 contiene opciones: el orden y la velocidad del arpegio. Que el menú se
 cerrara al elegir «arriba y abajo» te obligaría a abrirlo otra vez para
 pulsar «Arpegiar acordes». Así que a este menú se le dice que se cierre
@@ -513,7 +513,7 @@ roll solo puede probarse usándolo. Ejecutar la app y probar cada función
 encontró tres problemas que ninguna prueba unitaria habría encontrado:
 
 - la ventana que crecía en cada frame (arriba),
-- el menú Herramientas que se cerraba al elegir un orden de arpegio
+- el menú Tools que se cerraba al elegir un orden de arpegio
   (arreglado con `CloseOnClickOutside`),
 - las inversiones estampadas que caían por encima del puntero en lugar
   de a su alrededor (`stamp_notes` bajando el acorde de nuevo).

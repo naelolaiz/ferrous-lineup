@@ -22,14 +22,14 @@ género tenga algo que escuchar:
 | Blues | Midnight Shuffle\*, Rolling Boogie\*, Minor Mood Blues\* |
 | Jazz | Jingle Bells, When the Saints, The Entertainer, Happy Birthday, Two-Five Walk\* |
 | Soul, funk y R&Si | Amazing Grace, Joy to the World, Dorian Strut\*, Sunday Seventh\* |
-| Hip hop y lo-fi | Twinkle Twinkle, Gymnopédie, Prelude in Do, Sakura Sakura, Dies Irae |
-| Electrónica | Ode to Joy, Korobeiniki, Symphony No. 40, Eine kleine Nachtmusik, Toccata in Re minor, Turkish March |
+| Hip hop y lo-fi | Twinkle Twinkle, Gymnopédie, Prelude in C, Sakura Sakura, Dies Irae |
+| Electrónica | Ode to Joy, Korobeiniki, Symphony No. 40, Eine kleine Nachtmusik, Toccata in D minor, Turkish March |
 | Latina | La Cucaracha, Rio Afternoon\*, Carnival Morning\* |
 | Tango | Habanera, Tango del telar\*, Milonga del río\*, Vals del puerto\* |
 | Flamenco | Rumba del sur\*, Noche frigia\* |
 | Reggae y ska | Mary Had a Little Lamb, This Old Man, Valley Dub\* |
 | Country y folk | Frère Jacques, Greensleeves, Oh! Susanna, Scarborough Fair, Clementine, Camptown Races, Row Row Row Your Boat, Silent Night, We Wish You a Merry Christmas |
-| Clásica y cine | Canon in Re, Für Elise, Mountain King, Minuet in Sol, The Blue Danube, Brahms' Lullaby, Morning Mood, New World Largo, Shchedryk, Funeral March |
+| Clásica y cine | Canon in D, Für Elise, Mountain King, Minuet in G, The Blue Danube, Brahms' Lullaby, Morning Mood, New World Largo, Shchedryk, Funeral March |
 
 Las marcadas con \* dicen "Written for Ferrous Lineup" en su tooltip.
 Algunos géneros tienen muy pocas melodías famosas lo bastante antiguas

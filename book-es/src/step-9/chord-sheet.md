@@ -176,7 +176,7 @@ encima del sheet en rojo:
 
 > Compás 3: "Hm7" no es un acorde (Lam7, Sol/Si), un conjunto (3-11 T2,
 > {0,4,7}), un micromodo (Menor 3), una forma de serie (P0, RI7) ni
-> N.Do.
+> N.C.
 
 > Compás 5: este compás tiene 3 pulsos, y en él hay 4 armonías
 > escritas.
