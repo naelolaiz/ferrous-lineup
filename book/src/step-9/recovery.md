@@ -135,7 +135,7 @@ Three smaller fixes keep the project you meant to keep:
 
 - **Save as…** now gives the file a project extension even if you type
   another one. `song.txt` is saved as `song.lineup`, not as a chord
-  sheet that opens in the wrong importer. A `.loom` file keeps its name.
+  sheet that opens in the wrong importer.
 - Opening a project, a demo, a MIDI file or a chord sheet stops a
   **File > Import recording…** that is still listening. The import was
   started for the project being left behind; without this, its result

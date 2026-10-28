@@ -34,14 +34,6 @@ click: open the Chords pattern, pick *pitch-class set* as the key, pick
 a set, zoom with Ctrl+wheel and Alt+wheel, drag notes, change the set,
 zoom again.
 
-The rest was split into three parts that could go on at the same time:
-playback, music theory, and the user interface. Each part had its own
-copy of the repository, made with `git worktree add`, so the three
-could build and test without stepping on each other, and their branches
-were merged back at the end. A worktree is a second working folder for
-the same repository: it shares the history, but has its own checked-out
-branch.
-
 ## Zoom in two directions
 
 In most music programs the playlist and the piano roll zoom each

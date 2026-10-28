@@ -1451,6 +1451,33 @@ mod tests {
     }
 
     #[test]
+    fn solfege_changes_how_names_look_not_what_is_saved() {
+        use crate::NoteNaming;
+        use crate::chord_sheet::text;
+        for song in SONGS {
+            let project = song_demo(song);
+            let file = crate::file::to_text(&project).unwrap();
+            let sheet = text::write(&project, None);
+            NoteNaming::Solfege.with(|| {
+                let project = song_demo(song);
+                assert_eq!(
+                    crate::file::to_text(&project).unwrap(),
+                    file,
+                    "{}",
+                    song.name
+                );
+                assert_eq!(text::write(&project, None), sheet, "{}", song.name);
+                // Each chord as the sheet shows it reads back as itself.
+                for marker in project.playlist().chord_markers() {
+                    let shown = marker.harmony.to_string();
+                    let read = HarmonyName::parse(&shown);
+                    assert_eq!(read, Ok(marker.harmony), "{}: {shown}", song.name);
+                }
+            });
+        }
+    }
+
+    #[test]
     fn every_demo_keeps_a_sensible_tempo() {
         for song in SONGS {
             let project = song_demo(song);

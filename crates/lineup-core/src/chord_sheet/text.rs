@@ -39,7 +39,7 @@ use crate::band::band_styles;
 use crate::harmony::{Scale, ScaleKind};
 use crate::key_map::KeyMarker;
 use crate::meter::{TimeMarker, TimeSignature};
-use crate::pitch::NoteName;
+use crate::pitch::{NoteName, NoteNaming};
 use crate::playlist::{MAX_REPEATS, MAX_SONG_STEPS, Section};
 use crate::project::Project;
 use crate::tempo::Tempo;
@@ -471,7 +471,14 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
 /// The whole chord sheet of `project` as text: the settings, then the
 /// bars, four to a line, with a new line at each section and each change
 /// of key or time signature.
+///
+/// Chords and keys are written in letters, whichever way the app shows
+/// them, so the text reads the same anywhere it is pasted.
 pub fn write(project: &Project, title: Option<&str>) -> String {
+    NoteNaming::Letters.with(|| write_sheet(project, title))
+}
+
+fn write_sheet(project: &Project, title: Option<&str>) -> String {
     let meter = project.meter();
     let keys = project.key_map();
     let mut text = String::new();
@@ -496,7 +503,7 @@ pub fn write(project: &Project, title: Option<&str>) -> String {
 /// The bars `bars` (by number) of `project`, four to a line, without
 /// settings or sections: for copying some bars to paste them elsewhere.
 pub fn write_bars(project: &Project, bars: Range<usize>) -> String {
-    layout(&lines(project, bars, false))
+    NoteNaming::Letters.with(|| layout(&lines(project, bars, false)))
 }
 
 /// How many bars the chord sheet has: as many as the song plays, or the

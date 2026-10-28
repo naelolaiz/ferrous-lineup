@@ -32,6 +32,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::NoteNaming;
+
 use crate::band::{Band, BandFile, Player};
 use crate::chord_sheet::{ChordMarker, HarmonyName};
 use crate::key_map::KeyMarker;
@@ -49,22 +51,11 @@ use crate::{Scale, Tempo, TimeSignature};
 /// The file name extension of Ferrous Lineup projects, without the dot.
 pub const EXTENSION: &str = "lineup";
 
-/// The extension projects had while the app was called Ferrous Loom.
-/// Such files open as before, and saving one keeps its name.
-pub const OLD_EXTENSION: &str = "loom";
-
-/// What new synth channels were called while the app was called
-/// Ferrous Loom. Channels with this name open as "Lineup Osc".
-const OLD_SYNTH_NAME: &str = "Loom Osc";
-
-/// Whether `path` names a project file: one ending in `.lineup`, or in
-/// `.loom` from before the rename, in capitals or not.
+/// Whether `path` names a project file: one ending in `.lineup`, in
+/// capitals or not.
 pub fn is_project(path: &Path) -> bool {
-    path.extension().is_some_and(|extension| {
-        [EXTENSION, OLD_EXTENSION]
-            .iter()
-            .any(|known| extension.eq_ignore_ascii_case(known))
-    })
+    path.extension()
+        .is_some_and(|extension| extension.eq_ignore_ascii_case(EXTENSION))
 }
 
 /// The version of the file layout. A later version of Ferrous Lineup that
@@ -614,13 +605,7 @@ impl TryFrom<ProjectFile> for Project {
                 channel.name
             ));
         }
-        for mut channel in file.channels {
-            // The synth was called the Loom Osc while the app was called
-            // Ferrous Loom; a channel still named after it takes the new
-            // name, as the synth it plays did.
-            if channel.kind == ChannelKind::Synth && channel.name == OLD_SYNTH_NAME {
-                channel.name = Channel::synth().name;
-            }
+        for channel in file.channels {
             project.add_channel(channel);
         }
 
@@ -761,8 +746,10 @@ pub fn to_text(project: &Project) -> Result<String, FileError> {
     // takes one line instead of one line per field. Lines always end in
     // "\n" (RON would use "\r\n" on Windows), so a project is the same
     // file on every system.
+    // Names are written in letters, whichever way the app shows them.
     let style = ron::ser::PrettyConfig::new().depth_limit(5).new_line("\n");
-    let mut text = ron::ser::to_string_pretty(&ProjectFile::from(project), style)?;
+    let file = NoteNaming::Letters.with(|| ProjectFile::from(project));
+    let mut text = NoteNaming::Letters.with(|| ron::ser::to_string_pretty(&file, style))?;
     text.push('\n');
     Ok(text)
 }
@@ -777,7 +764,7 @@ pub fn from_text(text: &str) -> Result<Project, FileError> {
     // A text editor may start the file with a byte-order mark, which is
     // not part of the RON text or of the format number.
     let text = text.strip_prefix('\u{feff}').unwrap_or(text);
-    let file: ProjectFile = match ron::from_str(text) {
+    let file: ProjectFile = match NoteNaming::Letters.with(|| ron::from_str(text)) {
         Ok(file) => file,
         Err(err) => {
             return Err(match format_number(text) {
@@ -789,7 +776,7 @@ pub fn from_text(text: &str) -> Result<Project, FileError> {
     if file.format > FORMAT_VERSION {
         return Err(FileError::NewerFormat(file.format));
     }
-    Project::try_from(file)
+    NoteNaming::Letters.with(|| Project::try_from(file))
 }
 
 /// The format number at the start of a project file, `(format: 25, ...`,
@@ -880,19 +867,6 @@ mod tests {
         assert!(text.contains("kind: Sampler(Builtin(Kick))"), "{text}");
         let loaded = from_text(&text).unwrap();
         assert_eq!(loaded, demo);
-    }
-
-    #[test]
-    fn the_loom_osc_opens_as_the_lineup_osc() {
-        let demo = plain_demo();
-        let text = to_text(&demo).unwrap();
-        assert!(text.contains("name: \"Lineup Osc\""), "{text}");
-        let old = text.replace("name: \"Lineup Osc\"", "name: \"Loom Osc\"");
-        assert_eq!(from_text(&old).unwrap(), demo);
-        // A channel the user named so, but that is not the synth, keeps
-        // its name.
-        let kick = text.replace("name: \"Kick\"", "name: \"Loom Osc\"");
-        assert_eq!(from_text(&kick).unwrap().channels()[0].name, "Loom Osc");
     }
 
     #[test]
@@ -1447,9 +1421,9 @@ mod tests {
     }
 
     #[test]
-    fn files_from_before_the_rename_are_projects_too() {
+    fn project_files_end_in_lineup() {
         assert!(is_project(Path::new("song.lineup")));
-        assert!(is_project(Path::new("/music/Song.LOOM")));
+        assert!(is_project(Path::new("/music/Song.LINEUP")));
         assert!(!is_project(Path::new("song.mid")));
         assert!(!is_project(Path::new("lineup")));
     }

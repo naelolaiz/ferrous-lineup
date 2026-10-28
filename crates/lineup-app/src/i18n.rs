@@ -5,10 +5,11 @@
 //! the translation catalog; any untranslated string cleanly falls back
 //! to its English original.
 
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::cell::Cell;
 
 use eframe::egui;
-use lineup_core::NoteNaming;
+use lineup_core::harmony::{Scale, ScaleKind};
+use lineup_core::{NoteName, NoteNaming};
 use serde::{Deserialize, Serialize};
 
 /// The user interface language.
@@ -19,76 +20,152 @@ pub enum Language {
     Spanish,
 }
 
+thread_local! {
+    /// The language this thread writes the interface in. The window's
+    /// thread sets it from the settings each frame; each thread has its
+    /// own, so tests running side by side never see each other's.
+    static LANGUAGE: Cell<Language> = const { Cell::new(Language::English) };
+}
+
 impl Language {
     pub const ALL: [Language; 2] = [Language::English, Language::Spanish];
 
+    /// The language's name, written in that language, so that anyone
+    /// can find their own.
     pub fn name(self) -> &'static str {
         match self {
             Language::English => "English",
             Language::Spanish => "Español",
         }
     }
+
+    /// The language this thread writes in.
+    pub fn current() -> Language {
+        LANGUAGE.with(Cell::get)
+    }
+
+    /// Writes in this language on this thread from now on.
+    pub fn set(self) {
+        LANGUAGE.with(|language| language.set(self));
+    }
+
+    /// Runs `f` in this language, then goes back to the one before, even
+    /// if `f` panics.
+    #[cfg(test)]
+    pub fn with<T>(self, f: impl FnOnce() -> T) -> T {
+        struct Restore(Language);
+        impl Drop for Restore {
+            fn drop(&mut self) {
+                self.0.set();
+            }
+        }
+        let _restore = Restore(Language::current());
+        self.set();
+        f()
+    }
 }
 
-pub fn language_id() -> egui::Id {
+fn language_id() -> egui::Id {
     egui::Id::unique("app-language")
 }
 
-pub fn note_naming_id() -> egui::Id {
+fn note_naming_id() -> egui::Id {
     egui::Id::unique("app-note-naming")
 }
 
-static CURRENT_LANG: AtomicU8 = AtomicU8::new(0);
-static CURRENT_NOTE_NAMING: AtomicU8 = AtomicU8::new(0);
-
-/// The currently selected interface language.
-pub fn current_language() -> Language {
-    match CURRENT_LANG.load(Ordering::Relaxed) {
-        1 => Language::Spanish,
-        _ => Language::English,
-    }
+/// The language chosen in Settings > Appearance, kept with the window's
+/// other preferences.
+pub fn language(ctx: &egui::Context) -> Language {
+    ctx.data_mut(|data| data.get_persisted(language_id()).unwrap_or_default())
 }
 
-/// Changes the active language, updating both atomic cache and egui persistence.
-pub fn set_language(ctx: &egui::Context, lang: Language) {
-    CURRENT_LANG.store(lang as u8, Ordering::Relaxed);
-    ctx.data_mut(|data| data.insert_persisted(language_id(), lang));
+/// Chooses the interface language, from this frame on.
+pub fn set_language(ctx: &egui::Context, language: Language) {
+    language.set();
+    ctx.data_mut(|data| data.insert_persisted(language_id(), language));
 }
 
-/// Loads the persisted language setting from egui context.
-pub fn init_language(ctx: &egui::Context) -> Language {
-    let lang: Language = ctx.data_mut(|data| data.get_persisted(language_id()).unwrap_or_default());
-    CURRENT_LANG.store(lang as u8, Ordering::Relaxed);
-    lang
+/// The note naming chosen in Settings > Harmony.
+pub fn note_naming(ctx: &egui::Context) -> NoteNaming {
+    ctx.data_mut(|data| data.get_persisted(note_naming_id()).unwrap_or_default())
 }
 
-/// The currently selected note naming convention.
-pub fn current_note_naming() -> NoteNaming {
-    match CURRENT_NOTE_NAMING.load(Ordering::Relaxed) {
-        1 => NoteNaming::Solfege,
-        _ => NoteNaming::Letters,
-    }
-}
-
-/// Changes the active note naming convention.
+/// Chooses how notes and keys are named, from this frame on.
 pub fn set_note_naming(ctx: &egui::Context, naming: NoteNaming) {
-    CURRENT_NOTE_NAMING.store(naming as u8, Ordering::Relaxed);
+    naming.set();
     ctx.data_mut(|data| data.insert_persisted(note_naming_id(), naming));
 }
 
-/// Loads the persisted note naming setting from egui context.
-pub fn init_note_naming(ctx: &egui::Context) -> NoteNaming {
-    let naming: NoteNaming =
-        ctx.data_mut(|data| data.get_persisted(note_naming_id()).unwrap_or_default());
-    CURRENT_NOTE_NAMING.store(naming as u8, Ordering::Relaxed);
-    naming
+/// Makes this thread write in the language and name notes the way the
+/// settings say. The window calls it before drawing each frame.
+pub fn apply_settings(ctx: &egui::Context) {
+    language(ctx).set();
+    note_naming(ctx).set();
+}
+
+/// The language this thread writes the interface in.
+pub fn current_language() -> Language {
+    Language::current()
+}
+
+/// The name of a key as the settings say: "C major", "Do major" with
+/// solfège, and "Do mayor" in Spanish. A row is named by its form, "row
+/// P4 (on E)", and a set by its set class, "set 4-28 on C", as
+/// [`Scale::name`] names them in letters for files and text.
+pub fn key_name(scale: Scale) -> String {
+    let root = scale.spell(scale.root).to_string();
+    match scale.kind {
+        ScaleKind::Row(_) => format!(
+            "{} P{} ({} {root})",
+            tr("row"),
+            scale.root.semitone(),
+            tr("on")
+        ),
+        ScaleKind::Set(set) => {
+            format!(
+                "{} {} {} {root}",
+                tr("set"),
+                set.set_class().name(),
+                tr("on")
+            )
+        }
+        kind => format!("{root} {}", tr(kind.name())),
+    }
+}
+
+/// `text` with each note written in braces, {A} or {G#}, named as the
+/// settings say: "as here in {A} minor" reads "as here in La minor" in
+/// solfège. Braces around anything else, as in the set {0,1,4}, stay.
+pub fn with_notes(text: &str) -> String {
+    let mut shown = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(open) = rest.find('{') {
+        shown.push_str(&rest[..open]);
+        let after = &rest[open + 1..];
+        let note = after.find('}').and_then(|close| {
+            let name = NoteName::read(&after[..close]).filter(|(_, left)| left.is_empty());
+            name.map(|(name, _)| (name, close))
+        });
+        match note {
+            Some((name, close)) => {
+                shown.push_str(&name.to_string());
+                rest = &after[close + 1..];
+            }
+            None => {
+                shown.push('{');
+                rest = after;
+            }
+        }
+    }
+    shown.push_str(rest);
+    shown
 }
 
 /// Translates a static string into the current language.
 /// If untranslated or if the language is English, returns the original text.
 #[inline]
 pub fn tr(text: &'static str) -> &'static str {
-    if current_language() == Language::Spanish {
+    if Language::current() == Language::Spanish {
         translate_es(text).unwrap_or(text)
     } else {
         text
@@ -98,7 +175,7 @@ pub fn tr(text: &'static str) -> &'static str {
 /// Translates a borrowed string slice into the current language.
 #[inline]
 pub fn tr_str(text: &str) -> &str {
-    if current_language() == Language::Spanish {
+    if Language::current() == Language::Spanish {
         translate_es(text).unwrap_or(text)
     } else {
         text
@@ -417,24 +494,24 @@ fn translate_es(text: &str) -> Option<&'static str> {
         }
         "Letters (C, D, E…)" => "Letras (C, D, E…)",
         "Solfège (Do, Re, Mi…)" => "Solfeo (Do, Re, Mi…)",
-        "Roman numerals in minor keys" => "Numerales romanos en tonalidades menores",
-        "Both ways are correct. They name the same chords and differ only in the chords on the third, sixth and seventh degrees of a minor key, as here in A minor." => {
-            "Ambas formas son correctas. Nombran los mismos acordes y solo difieren en los acordes sobre los grados tercero, sexto y séptimo de una tonalidad menor, como aquí en La menor."
+        "Roman numerals in minor keys" => "Números romanos en tonalidades menores",
+        "Both ways are correct. They name the same chords and differ only in the chords on the third, sixth and seventh degrees of a minor key, as here in {A} minor." => {
+            "Ambas formas son correctas. Nombran los mismos acordes y solo difieren en los acordes sobre los grados tercero, sexto y séptimo de una tonalidad menor, como aquí en {A} menor."
         }
         "bIII bVI bVII: counted from the major scale (pop and jazz)" => {
             "bIII bVI bVII: contados desde la escala mayor (pop y jazz)"
         }
-        "C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°." => {
-            "Do es bIII, Fa es bVI y Sol es bVII; el acorde de sensible Sol#° es vii°."
+        "{C} is bIII, {F} is bVI and {G} is bVII; the leading-tone chord {G#}° is vii°." => {
+            "{C} es bIII, {F} es bVI y {G} es bVII; el acorde de sensible {G#}° es vii°."
         }
         "III VI VII: counted from the minor scale (classical harmony)" => {
             "III VI VII: contados desde la escala menor (armonía clásica)"
         }
-        "C is III, F is VI and G is VII; G#° is still vii°, and E major is V." => {
-            "Do es III, Fa es VI y Sol es VII; Sol#° sigue siendo vii°, y Mi mayor es V."
+        "{C} is III, {F} is VI and {G} is VII; {G#}° is still vii°, and {E} major is V." => {
+            "{C} es III, {F} es VI y {G} es VII; {G#}° sigue siendo vii°, y {E} mayor es V."
         }
         "Applies to every view that shows numerals, and to numerals you type or paste on the chord sheet. A style's Progression box is always written bIII bVI bVII, as the library writes it." => {
-            "Se aplica a todas las vistas que muestran numerales, y a los que escribes o pegas en la hoja de acordes. El cuadro Progresión de un estilo siempre se escribe bIII bVI bVII."
+            "Se aplica a todas las vistas que muestran números romanos, y a los que escribes o pegas en la hoja de acordes. El cuadro Progresión de un estilo siempre se escribe bIII bVI bVII, como lo escribe la biblioteca."
         }
         "Output" => "Salida",
         "Uses your system’s default audio device." => {
@@ -464,26 +541,29 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "minor" => "menor",
         "harmonic minor" => "menor armónica",
         "melodic minor" => "menor melódica",
-        "Dorian" => "Dórico",
-        "Phrygian" => "Frigio",
-        "Lydian" => "Lidio",
-        "Mixolydian" => "Mixolidio",
-        "Locrian" => "Locrio",
+        "Dorian" => "dórico",
+        "Phrygian" => "frigio",
+        "Lydian" => "lidio",
+        "Mixolydian" => "mixolidio",
+        "Locrian" => "locrio",
         "major pentatonic" => "pentatónica mayor",
         "minor pentatonic" => "pentatónica menor",
         "blues" => "blues",
         "chromatic" => "cromática",
         "twelve-tone row" => "serie dodecafónica",
         "pitch-class set" => "conjunto de clases de alturas",
+        "row" => "serie",
+        "set" => "conjunto",
+        "on" => "sobre",
         "Write the chords the song plays" => "Escribir los acordes que toca la canción",
         "Fill the sheet with the chords heard in the song, in place of what it says now: an arpeggio counts as its chord, two chords at once are written Eb7|Fb, notes that make no chord as their set; in a set or a row, the sets or micromodes heard. Undo brings the sheet back" => {
             "Llena la hoja con los acordes escuchados en la canción en lugar de lo escrito ahora. Deshacer recupera la hoja"
         }
-        "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C." => {
-            "Haz clic en un compás y escribe su armonía: acordes (Am7 D7, G/B o Lam7 Re7, Sol/Si), numerales romanos (ii7 V7), conjuntos (3-11 T2, {0,1,4}), micromodos (Menor 3), formas de serie (P0, RI7) o N.C."
+        "Click a bar and type its harmony: chords ({A}m7 {D}7, {G}/{B}), Roman numerals (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C." => {
+            "Haz clic en un compás y escribe su armonía: acordes ({A}m7 {D}7, {G}/{B}), números romanos (ii7 V7), conjuntos (3-11 T2, {0,1,4}), micromodos (Menor 3), formas de serie (P0, RI7) o N.C."
         }
-        "Each / holds the harmony before it one more beat, as in C / / G7. The band stops with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and Ctrl+V copy and paste bars as text." => {
-            "Cada / mantiene la armonía anterior un pulso más, como en C / / G7. La banda se detiene con un golpe (C.), sostenido (C..) o silencio (C...), y ^C entra antes. Ctrl+C y Ctrl+V copian y pegan compases como texto."
+        "Each / holds the harmony before it one more beat, as in {C} / / {G}7. The band stops with a shot ({C}.), a hold ({C}..) or a rest ({C}...), and ^{C} comes in early. Ctrl+C and Ctrl+V copy and paste bars as text." => {
+            "Cada / mantiene la armonía anterior un pulso más, como en {C} / / {G}7. La banda se detiene con un golpe ({C}.), sostenido ({C}..) o silencio ({C}...), y ^{C} entra antes. Ctrl+C y Ctrl+V copian y pegan compases como texto."
         }
         "Speed" => "Velocidad",
         "Tap" => "Pulsar",
@@ -555,63 +635,75 @@ mod tests {
 
     #[test]
     fn english_by_default() {
-        CURRENT_LANG.store(0, Ordering::Relaxed);
-        assert_eq!(current_language(), Language::English);
+        assert_eq!(Language::current(), Language::English);
         assert_eq!(tr("File"), "File");
         assert_eq!(tr("Edit"), "Edit");
     }
 
     #[test]
     fn spanish_translation() {
-        CURRENT_LANG.store(1, Ordering::Relaxed);
-        assert_eq!(current_language(), Language::Spanish);
-        assert_eq!(tr("File"), "Archivo");
-        assert_eq!(tr("Edit"), "Edición");
-        assert_eq!(tr("View"), "Ver");
-        assert_eq!(tr("Help"), "Ayuda");
-        assert_eq!(tr("Save"), "Guardar");
-        assert_eq!(tr("Settings"), "Ajustes");
-        assert_eq!(tr("Chord sheet"), "Hoja de acordes");
-        assert_eq!(tr("Channel rack"), "Rack de canales");
-        assert_eq!(tr("Piano roll"), "Piano roll");
-        assert_eq!(tr("Mixer"), "Mezclador");
-        assert_eq!(tr("Master"), "Principal");
-        assert_eq!(tr("Untranslated String"), "Untranslated String");
-        CURRENT_LANG.store(0, Ordering::Relaxed);
+        Language::Spanish.with(|| {
+            assert_eq!(Language::current(), Language::Spanish);
+            assert_eq!(tr("File"), "Archivo");
+            assert_eq!(tr("Edit"), "Edición");
+            assert_eq!(tr("View"), "Ver");
+            assert_eq!(tr("Help"), "Ayuda");
+            assert_eq!(tr("Save"), "Guardar");
+            assert_eq!(tr("Settings"), "Ajustes");
+            assert_eq!(tr("Chord sheet"), "Hoja de acordes");
+            assert_eq!(tr("Channel rack"), "Rack de canales");
+            assert_eq!(tr("Piano roll"), "Piano roll");
+            assert_eq!(tr("Mixer"), "Mezclador");
+            assert_eq!(tr("Master"), "Principal");
+            assert_eq!(tr("Untranslated String"), "Untranslated String");
+        });
+        assert_eq!(tr("File"), "File", "with() puts English back");
     }
 
     #[test]
-    fn note_naming_settings() {
-        CURRENT_NOTE_NAMING.store(0, Ordering::Relaxed);
-        assert_eq!(current_note_naming(), NoteNaming::Letters);
-        CURRENT_NOTE_NAMING.store(1, Ordering::Relaxed);
-        assert_eq!(current_note_naming(), NoteNaming::Solfege);
-        CURRENT_NOTE_NAMING.store(0, Ordering::Relaxed);
+    fn settings_are_kept_and_applied() {
+        let ctx = egui::Context::default();
+        assert_eq!(language(&ctx), Language::English);
+        assert_eq!(note_naming(&ctx), NoteNaming::Letters);
+        set_language(&ctx, Language::Spanish);
+        set_note_naming(&ctx, NoteNaming::Solfege);
+        Language::English.set();
+        NoteNaming::Letters.set();
+        apply_settings(&ctx);
+        assert_eq!(Language::current(), Language::Spanish);
+        assert_eq!(NoteNaming::current(), NoteNaming::Solfege);
+        // This thread only: put it back for the next test it runs.
+        Language::English.set();
+        NoteNaming::Letters.set();
     }
 
     #[test]
-    fn solfege_chord_formatting() {
+    fn solfege_is_a_way_of_showing_names() {
+        use lineup_core::PitchClass;
         use lineup_core::chord_sheet::{ChordMarker, HarmonyName};
-        use lineup_core::harmony::ChordSymbol;
-        use lineup_core::pitch::set_global_note_naming;
 
-        let chord: ChordSymbol = "Am7".parse().unwrap();
-        let marker = ChordMarker::new(0, HarmonyName::Chord(chord));
-
-        set_global_note_naming(NoteNaming::Letters);
-        assert_eq!(marker.text(), "Am7");
-
-        set_global_note_naming(NoteNaming::Solfege);
-        assert_eq!(marker.text(), "Lam7");
-
-        let c_major: ChordSymbol = "C".parse().unwrap();
-        let c_marker = ChordMarker::new(0, HarmonyName::Chord(c_major));
-        assert_eq!(c_marker.text(), "Do");
-
-        let g_over_b: ChordSymbol = "G/B".parse().unwrap();
-        let g_marker = ChordMarker::new(0, HarmonyName::Chord(g_over_b));
-        assert_eq!(g_marker.text(), "Sol/Si");
-
-        set_global_note_naming(NoteNaming::Letters);
+        let marker = |text: &str| ChordMarker::new(0, HarmonyName::parse(text).unwrap());
+        let b_flat = Scale::new(PitchClass::ASharp, ScaleKind::Major);
+        let d_dorian = Scale::new(PitchClass::D, ScaleKind::Dorian);
+        assert_eq!(key_name(b_flat), "Bb major");
+        assert_eq!(marker("Am7").text(), "Am7");
+        NoteNaming::Solfege.with(|| {
+            assert_eq!(marker("Am7").text(), "Lam7");
+            assert_eq!(marker("G/B").text(), "Sol/Si");
+            // Typed either way, it is the same chord.
+            assert_eq!(marker("Lam7"), marker("Am7"));
+            assert_eq!(key_name(b_flat), "Sib major");
+            Language::Spanish.with(|| {
+                assert_eq!(key_name(b_flat), "Sib mayor");
+                assert_eq!(key_name(d_dorian), "Re dórico");
+            });
+        });
+        Language::Spanish.with(|| assert_eq!(key_name(b_flat), "Bb mayor"));
+        // Notes in braces in a text show as the settings name them.
+        let text = "as in {C} / / {G#}7, or a set {0,1,4}";
+        assert_eq!(with_notes(text), "as in C / / G#7, or a set {0,1,4}");
+        NoteNaming::Solfege.with(|| {
+            assert_eq!(with_notes(text), "as in Do / / Sol#7, or a set {0,1,4}");
+        });
     }
 }

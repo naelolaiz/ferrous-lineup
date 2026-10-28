@@ -190,11 +190,11 @@ pub fn kind_menu(
     let mut picked = None;
     let response = egui::ComboBox::from_id_salt(salt)
         .width(width)
-        .selected_text(RichText::new(scale.kind.name()).strong())
+        .selected_text(RichText::new(crate::i18n::tr(scale.kind.name())).strong())
         .show_ui(ui, |ui| {
             for option in ScaleKind::ALL {
                 if ui
-                    .selectable_label(scale.kind == option, option.name())
+                    .selectable_label(scale.kind == option, crate::i18n::tr(option.name()))
                     .clicked()
                 {
                     picked = Some(Scale::written(tonic, option));
@@ -203,7 +203,7 @@ pub fn kind_menu(
             ui.separator();
             let is_row = matches!(scale.kind, ScaleKind::Row(_));
             if ui
-                .selectable_label(is_row, "twelve-tone row")
+                .selectable_label(is_row, crate::i18n::tr("twelve-tone row"))
                 .on_hover_text(
                     "Music without a key: all twelve notes in an order, used in turn. \
                      The piano roll numbers the notes in the order of the row. Notes \
@@ -216,7 +216,7 @@ pub fn kind_menu(
             }
             let is_set = matches!(scale.kind, ScaleKind::Set(_));
             if ui
-                .selectable_label(is_set, "pitch-class set")
+                .selectable_label(is_set, crate::i18n::tr("pitch-class set"))
                 .on_hover_text(
                     "Any group of notes as a scale, such as the octatonic scale or a \
                      chord with no name. Notes already written stay as they are: from a \

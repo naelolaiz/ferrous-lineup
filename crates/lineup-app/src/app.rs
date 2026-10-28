@@ -242,10 +242,7 @@ impl LineupApp {
     }
 
     fn with_audio(ctx: &egui::Context, path: Option<PathBuf>, mut audio: Audio) -> Self {
-        crate::i18n::init_language(ctx);
-        let naming = crate::i18n::init_note_naming(ctx);
-        lineup_core::pitch::set_global_note_naming(naming);
-
+        crate::i18n::apply_settings(ctx);
         // The engine's ways in and out for MIDI go to the MIDI threads.
         let (live_input, midi_output) = match &mut audio {
             Audio::Running(engine) => (engine.take_live_input(), engine.take_midi_output()),
@@ -1968,7 +1965,8 @@ impl LineupApp {
         if !typing && !controls_active && pressed(egui::Key::PageDown) {
             self.skip_bars(1);
         }
-        if !typing && !controls_active && pressed(egui::Key::L) {
+        let l_types = self.chord_sheet.takes_l() && !self.live.typing();
+        if !typing && !controls_active && !l_types && pressed(egui::Key::L) {
             self.set_mode(match self.mode {
                 PlayMode::Pattern => PlayMode::Song,
                 PlayMode::Song => PlayMode::Pattern,
@@ -1993,10 +1991,9 @@ impl LineupApp {
         // Before anything is drawn: whether a menu is open as the mouse
         // button goes down.
         widgets::track_dismissing(ctx);
-        // Sync language and note naming preferences with persisted settings.
-        crate::i18n::init_language(ctx);
-        let naming = crate::i18n::init_note_naming(ctx);
-        lineup_core::pitch::set_global_note_naming(naming);
+        // Every view writes in the language and names notes as the
+        // settings say.
+        crate::i18n::apply_settings(ctx);
         // Every view writes numerals as the settings say.
         settings::minor_numerals(ctx).set();
         self.start_frame_for_undo(ctx);
