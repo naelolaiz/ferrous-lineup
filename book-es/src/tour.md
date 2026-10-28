@@ -258,6 +258,10 @@ que responde la aplicación, ventana por ventana. La misma lista está en
 el [apéndice de atajos de teclado](appendix-shortcuts.md), para
 imprimir.
 
+**Help > About Ferrous Lineup** muestra la versión que estás usando, la
+licencia, y enlaces a este libro, a su PDF, al código fuente y a la
+lista de problemas conocidos.
+
 **Follow playhead** en la barra de herramientas y **Settings > Playback**
 mantienen visible la posición de reproducción en el playlist, el chord
 sheet y el piano roll. Desactivarlo te deja desplazarte libremente; la
