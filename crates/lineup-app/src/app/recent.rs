@@ -87,7 +87,7 @@ impl LineupApp {
         let ctx = ui.ctx().clone();
         let paths = self.recent.paths().to_vec();
         ui.add_enabled_ui(!paths.is_empty(), |ui| {
-            ui.menu_button("Open recent", |ui| {
+            ui.menu_button(crate::i18n::tr("Open recent"), |ui| {
                 for path in &paths {
                     let name = path.file_name().map_or_else(
                         || path.display().to_string(),

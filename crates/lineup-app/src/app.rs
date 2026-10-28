@@ -15,6 +15,7 @@
 //! Every change to the project goes through [`LineupApp::edit`], which
 //! records it for undo and tells the audio thread what changed.
 
+mod about;
 mod chord_text;
 mod demo_menu;
 mod ear;
@@ -126,6 +127,8 @@ pub struct LineupApp {
     meters: crate::meters::Meters,
     /// Help > Keyboard shortcuts.
     shortcuts_open: bool,
+    /// Help > About.
+    about_open: bool,
     settings_open: bool,
     settings: settings::SettingsView,
     style_editor: crate::style_editor::StyleEditor,
@@ -239,6 +242,7 @@ impl LineupApp {
     }
 
     fn with_audio(ctx: &egui::Context, path: Option<PathBuf>, mut audio: Audio) -> Self {
+        crate::i18n::apply_settings(ctx);
         // The engine's ways in and out for MIDI go to the MIDI threads.
         let (live_input, midi_output) = match &mut audio {
             Audio::Running(engine) => (engine.take_live_input(), engine.take_midi_output()),
@@ -263,6 +267,7 @@ impl LineupApp {
             mixer_open: false,
             meters: Default::default(),
             shortcuts_open: false,
+            about_open: false,
             settings_open: false,
             settings: settings::SettingsView::default(),
             style_editor: crate::style_editor::StyleEditor::new(),
@@ -1707,20 +1712,20 @@ impl LineupApp {
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
         let menu = egui::containers::menu::MenuButton::new("⋯").config(stay_open);
         let (menu, _) = menu.ui(ui, |ui| {
-            ui.label("Name");
+            ui.label(crate::i18n::tr("Name"));
             // The field edits a copy, so the change can go through `edit`.
             let mut name = self.project.patterns()[self.pattern].name.clone();
             if ui.text_edit_singleline(&mut name).changed() {
                 self.edit_pattern("rename pattern", |pattern| pattern.name = name);
             }
-            if ui.button("Clone").clicked() {
+            if ui.button(crate::i18n::tr("Clone")).clicked() {
                 self.clone_pattern();
                 ui.close();
             }
             let can_delete = self.project.patterns().len() > 1;
             if ui
-                .add_enabled(can_delete, egui::Button::new("Delete"))
-                .on_hover_text("Also removes its clips from the playlist")
+                .add_enabled(can_delete, egui::Button::new(crate::i18n::tr("Delete")))
+                .on_hover_text(crate::i18n::tr("Also removes its clips from the playlist"))
                 .clicked()
             {
                 self.remove_pattern();
@@ -1960,7 +1965,8 @@ impl LineupApp {
         if !typing && !controls_active && pressed(egui::Key::PageDown) {
             self.skip_bars(1);
         }
-        if !typing && !controls_active && pressed(egui::Key::L) {
+        let l_types = self.chord_sheet.takes_l() && !self.live.typing();
+        if !typing && !controls_active && !l_types && pressed(egui::Key::L) {
             self.set_mode(match self.mode {
                 PlayMode::Pattern => PlayMode::Song,
                 PlayMode::Song => PlayMode::Pattern,
@@ -1985,6 +1991,9 @@ impl LineupApp {
         // Before anything is drawn: whether a menu is open as the mouse
         // button goes down.
         widgets::track_dismissing(ctx);
+        // Every view writes in the language and names notes as the
+        // settings say.
+        crate::i18n::apply_settings(ctx);
         // Every view writes numerals as the settings say.
         settings::minor_numerals(ctx).set();
         self.start_frame_for_undo(ctx);
@@ -2161,7 +2170,8 @@ impl LineupApp {
             ))
             * rack_scale;
         let rack_size = widgets::window_size(ctx, natural, area);
-        let mut rack = egui::Window::new(format!("Channel rack · {pattern_name}"))
+        let rack_title = format!("{} · {pattern_name}", crate::i18n::tr("Channel rack"));
+        let mut rack = egui::Window::new(rack_title)
             .id(rack_id())
             .open(&mut rack_open)
             .default_pos([240.0, 380.0])
@@ -2302,6 +2312,7 @@ impl eframe::App for LineupApp {
         self.sound_font_window(&ctx);
         self.mixer_window(&ctx, area);
         self.shortcuts_window(&ctx, area);
+        self.about_window(&ctx);
         self.style_editor_window(&ctx, area);
         self.settings_window(&ctx);
         self.video_dialog(&ctx);

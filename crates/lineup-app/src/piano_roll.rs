@@ -719,14 +719,17 @@ impl PianoRoll {
         // below needs `&mut self`, and both cannot borrow `self` at once.
         let mut open = self.open;
         let id = self.instance.unwrap_or_else(Self::id);
-        let window = egui::Window::new(format!(
-            "Piano roll · {} · {}",
-            pattern_notes.name, channel.name
-        ))
-        .id(id)
-        .open(&mut open)
-        .default_pos([150.0, 160.0])
-        .constrain_to(area);
+        let roll_title = format!(
+            "{} · {} · {}",
+            crate::i18n::tr("Piano roll"),
+            pattern_notes.name,
+            channel.name
+        );
+        let window = egui::Window::new(roll_title)
+            .id(id)
+            .open(&mut open)
+            .default_pos([150.0, 160.0])
+            .constrain_to(area);
         // The window is built while closed too, and egui then hides it.
         let window = if self.open {
             let size = egui::vec2(1120.0, 580.0);
@@ -1538,12 +1541,15 @@ impl PianoRoll {
                 actions.push(RollAction::SetScale(new));
             }
             if scale != song {
-                ui.label(egui::RichText::new(format!("This pattern: {}", scale.name())).strong())
-                    .on_hover_text(
-                        "The song changes key where this pattern plays (see the key names on \
+                ui.label(
+                    egui::RichText::new(format!("This pattern: {}", crate::i18n::key_name(scale)))
+                        .strong(),
+                )
+                .on_hover_text(
+                    "The song changes key where this pattern plays (see the key names on \
                          the playlist's bar numbers), so it is highlighted in that key. The \
                          menus are the key the song starts in",
-                    );
+                );
             }
             let names: Vec<String> = scale
                 .pitch_classes()
@@ -1790,7 +1796,7 @@ impl PianoRoll {
             .map(|(_, chord, bass)| next_chords_over(scale, chord, bass))
             .unwrap_or_default();
         ui.horizontal_wrapped(|ui| {
-            ui.label(format!("Chords in {}", scale.name()));
+            ui.label(format!("Chords in {}", crate::i18n::key_name(scale)));
             for degree in 0..7 {
                 let Some(chord) = scale.triad(degree) else {
                     continue;
@@ -1914,8 +1920,8 @@ impl PianoRoll {
     ) {
         ui.horizontal_wrapped(|ui| {
             let what = match scale.kind {
-                ScaleKind::Row(_) => format!("Trichords of {}", scale.name()),
-                _ => format!("Chords of {}", scale.name()),
+                ScaleKind::Row(_) => format!("Trichords of {}", crate::i18n::key_name(scale)),
+                _ => format!("Chords of {}", crate::i18n::key_name(scale)),
             };
             ui.label(what);
             for group in groups {
@@ -3250,10 +3256,12 @@ pub(crate) const KEY_HELP: &str = "The key of the song. A new key or mode moves 
     chords, bass and melody into it (the drums stay), so the song plays in the new key. \
     Ctrl+Z puts them back.";
 
-/// "C" for white keys, "C#/Db" for black keys.
+/// "C" for white keys, "C#/Db" for black keys, or "Do" and "Do#/Reb"
+/// when notes are named in solfège.
 pub(crate) fn both_names(pitch_class: PitchClass) -> String {
-    let sharp = pitch_class.name(Spelling::Sharps);
-    let flat = pitch_class.name(Spelling::Flats);
+    let naming = lineup_core::NoteNaming::current();
+    let sharp = pitch_class.name_with(Spelling::Sharps, naming);
+    let flat = pitch_class.name_with(Spelling::Flats, naming);
     if sharp == flat {
         sharp.to_string()
     } else {

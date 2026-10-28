@@ -50,7 +50,7 @@ impl LineupApp {
         let locked = self.project.locked();
         let mut picked = Vec::new();
         let id = egui::Id::unique("mixer");
-        let window = egui::Window::new("Mixer")
+        let window = egui::Window::new(crate::i18n::tr("Mixer"))
             .id(id)
             .open(&mut open)
             .constrain_to(area);
@@ -68,11 +68,11 @@ impl LineupApp {
         let window = widgets::open_at(ctx, window, id, size, Opening::EveryTime);
         widgets::fit_when_changed(ctx, window, id, size, &rows).show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.strong("Master");
+                ui.strong(crate::i18n::tr("Master"));
                 master_meter(ui, meters);
                 percent_slider(ui, &mut mix.master);
                 if ui
-                    .button("Reset mix")
+                    .button(crate::i18n::tr("Reset mix"))
                     .on_hover_text(
                         "Reset master, reverb, solo, levels, pans, reverb sends, effects and \
                          mutes (the band's mutes stay); Undo restores them",

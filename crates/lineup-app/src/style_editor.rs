@@ -238,7 +238,7 @@ impl StyleEditor {
         let line = style.spacing.interact_size.y + style.spacing.item_spacing.y;
         let natural = channel_rack::natural_size(&style, &self.draft.project, 0, 1.0)
             + egui::vec2(0.0, self.header - line);
-        let mut window = egui::Window::new(title)
+        let mut window = egui::Window::new(crate::i18n::tr(title))
             .id(window_id())
             .open(&mut open)
             .constrain_to(area);

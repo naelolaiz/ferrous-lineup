@@ -190,11 +190,11 @@ pub fn kind_menu(
     let mut picked = None;
     let response = egui::ComboBox::from_id_salt(salt)
         .width(width)
-        .selected_text(RichText::new(scale.kind.name()).strong())
+        .selected_text(RichText::new(crate::i18n::tr(scale.kind.name())).strong())
         .show_ui(ui, |ui| {
             for option in ScaleKind::ALL {
                 if ui
-                    .selectable_label(scale.kind == option, option.name())
+                    .selectable_label(scale.kind == option, crate::i18n::tr(option.name()))
                     .clicked()
                 {
                     picked = Some(Scale::written(tonic, option));
@@ -203,7 +203,7 @@ pub fn kind_menu(
             ui.separator();
             let is_row = matches!(scale.kind, ScaleKind::Row(_));
             if ui
-                .selectable_label(is_row, "twelve-tone row")
+                .selectable_label(is_row, crate::i18n::tr("twelve-tone row"))
                 .on_hover_text(
                     "Music without a key: all twelve notes in an order, used in turn. \
                      The piano roll numbers the notes in the order of the row. Notes \
@@ -216,7 +216,7 @@ pub fn kind_menu(
             }
             let is_set = matches!(scale.kind, ScaleKind::Set(_));
             if ui
-                .selectable_label(is_set, "pitch-class set")
+                .selectable_label(is_set, crate::i18n::tr("pitch-class set"))
                 .on_hover_text(
                     "Any group of notes as a scale, such as the octatonic scale or a \
                      chord with no name. Notes already written stay as they are: from a \
@@ -419,7 +419,7 @@ impl RowWindow {
         let mut actions = Vec::new();
         let mut open = self.open;
         self.front.keep(ctx, row_window_id());
-        let window = egui::Window::new("Twelve-tone row")
+        let window = egui::Window::new(crate::i18n::tr("Twelve-tone row"))
             .id(row_window_id())
             .open(&mut open)
             .default_pos([260.0, 120.0])
@@ -848,7 +848,7 @@ impl SetWindow {
         if self.reveal {
             ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, set_window_id()));
         }
-        let window = egui::Window::new("Pitch-class sets")
+        let window = egui::Window::new(crate::i18n::tr("Pitch-class sets"))
             .id(set_window_id())
             .open(&mut open)
             .default_pos([320.0, 140.0])

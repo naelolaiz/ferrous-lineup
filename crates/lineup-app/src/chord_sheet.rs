@@ -421,7 +421,7 @@ impl BarView<'_> {
             let label = painter.text(
                 rect.right_top() + vec2(-PADDING, 2.0),
                 Align2::RIGHT_TOP,
-                format!("→ {}", key.name()),
+                format!("→ {}", crate::i18n::key_name(key)),
                 FontId::proportional(SMALL_SIZE),
                 theme::ACCENT,
             );
@@ -566,6 +566,16 @@ impl ChordSheet {
         self.open && self.focused
     }
 
+    /// Whether an L typed now starts typing in the selected bar: with
+    /// notes named in solfège, La chords start with it, so L is a
+    /// letter there, not the key that switches pattern and song.
+    pub fn takes_l(&self) -> bool {
+        self.has_keyboard()
+            && self.selected.is_some()
+            && self.editing.is_none()
+            && lineup_core::NoteNaming::current() == lineup_core::NoteNaming::Solfege
+    }
+
     /// Reads back the choices of the last run, the first time; then
     /// saves them for the next when they change. Called before anything
     /// asks where the sheet goes, so it opens where it was left.
@@ -629,7 +639,7 @@ impl ChordSheet {
         self.main_area = None;
         let mut open = self.open;
         self.front.keep(ctx, window_id());
-        let window = egui::Window::new("Chord sheet")
+        let window = egui::Window::new(crate::i18n::tr("Chord sheet"))
             .id(window_id())
             .open(&mut open)
             .default_pos([260.0, 110.0])
@@ -676,7 +686,7 @@ impl ChordSheet {
     ) -> Vec<SheetAction> {
         let mut actions = Vec::new();
         self.main_area = Some(ui.available_rect_before_wrap());
-        ui.heading("Chord sheet");
+        ui.heading(crate::i18n::tr("Chord sheet"));
         self.contents(ui, project, playing, typing_keys, controls, &mut actions);
         actions
     }
@@ -707,7 +717,12 @@ impl ChordSheet {
         ui.horizontal_wrapped(|ui| {
             band::menu(ui, project, actions);
             progression_menu(ui, project, self.next_bar(project), library, actions);
-            ui.label(egui::RichText::new(format!("Key: {}", project.scale.name())).strong());
+            let key_str = format!(
+                "{}: {}",
+                crate::i18n::tr("Key"),
+                crate::i18n::key_name(project.scale)
+            );
+            ui.label(egui::RichText::new(key_str).strong());
             ui.weak(format!("· {}", project.time_signature));
             if project.band().is_some() {
                 ui.weak(format!("· {} BPM", project.tempo.bpm().round()));
@@ -718,7 +733,7 @@ impl ChordSheet {
             }
             // A band plays from the sheet, so its own notes are not heard.
             if project.song_length() > 0 && (markers.is_empty() || project.band().is_none()) {
-                let button = ui.button("Write the chords the song plays");
+                let button = ui.button(crate::i18n::tr("Write the chords the song plays"));
                 if theme::hint(
                     button,
                     "Fill the sheet with the chords heard in the song, in place of what it \
@@ -737,15 +752,17 @@ impl ChordSheet {
         let round = playing.and_then(|(_, pass)| pass.chorus);
         form::row(ui, project, round, actions);
         practice::row(ui, project, practice, self.selected_bars(), actions);
-        ui.weak(
-            "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), \
-             sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C.",
-        );
-        ui.weak(
-            "Each / holds the harmony before it one more beat, as in C / / G7. The band stops \
-             with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and \
-             Ctrl+V copy and paste bars as text.",
-        );
+        // Chords are written in braces, so they show as the settings
+        // name notes; both ways can be typed.
+        ui.weak(crate::i18n::with_notes(crate::i18n::tr(
+            "Click a bar and type its harmony: chords ({A}m7 {D}7, {G}/{B}), Roman numerals \
+             (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C.",
+        )));
+        ui.weak(crate::i18n::with_notes(crate::i18n::tr(
+            "Each / holds the harmony before it one more beat, as in {C} / / {G}7. The band \
+             stops with a shot ({C}.), a hold ({C}..) or a rest ({C}...), and ^{C} comes in \
+             early. Ctrl+C and Ctrl+V copy and paste bars as text.",
+        )));
         for player in Player::ALL {
             let name = player.name().to_lowercase();
             if project.plays_locked(player) {
@@ -1637,7 +1654,7 @@ impl ChordSheet {
         let field = egui::TextEdit::singleline(&mut editing.text)
             .id(id)
             .font(FontId::proportional(16.0))
-            .hint_text("Am7 D7")
+            .hint_text(crate::i18n::with_notes("{A}m7 {D}7"))
             .desired_width(rect.width() - 2.0 * PADDING);
         let place = Rect::from_min_size(
             rect.left_top() + vec2(PADDING - 2.0, TOP),
@@ -1759,7 +1776,8 @@ impl ChordSheet {
         }
         // Typing starts typing in the bar, over what it held. With the
         // typing keyboard on, letters play notes instead; L is the key
-        // that switches between pattern and song.
+        // that switches between pattern and song, unless notes are
+        // named in solfège, where La chords start with it.
         let typed: String = ui.input(|input| {
             input
                 .events
@@ -1772,7 +1790,9 @@ impl ChordSheet {
         });
         let starts = typed.chars().next().is_some_and(|c| {
             let letter = c.is_ascii_alphabetic();
-            !c.is_whitespace() && !(letter && typing_keys) && !matches!(c, 'l' | 'L')
+            let switches = matches!(c, 'l' | 'L')
+                && lineup_core::NoteNaming::current() == lineup_core::NoteNaming::Letters;
+            !c.is_whitespace() && !(letter && typing_keys) && !switches
         });
         if starts && !ui.input(|input| input.modifiers.command) {
             self.start_editing(selected, typed, Fresh::CursorAtEnd);
@@ -1960,7 +1980,7 @@ fn progression_menu(
 ) {
     let tonal = project.scale.kind.is_tonal();
     ui.add_enabled_ui(tonal, |ui| {
-        let menu = egui::containers::menu::MenuButton::new("Progression").config(
+        let menu = egui::containers::menu::MenuButton::new(crate::i18n::tr("Progression")).config(
             egui::containers::menu::MenuConfig::new()
                 .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
         );

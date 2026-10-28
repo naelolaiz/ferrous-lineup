@@ -65,7 +65,7 @@ pub use mixer::{Mixer, ReverbSettings};
 pub use pattern::{
     DEFAULT_VELOCITY, MAX_STEPS, NoteEvent, Pattern, STEP_NOTE, TICKS_PER_STEP, tidy_notes,
 };
-pub use pitch::{Letter, Note, NoteName, PitchClass, Spelling};
+pub use pitch::{Letter, Note, NoteName, NoteNaming, PitchClass, Spelling};
 pub use playlist::{
     Clip, LoopRegion, MAX_REPEATS, MAX_SONG_STEPS, MAX_TRACKS, Playlist, SECTION_NAMES,
     STEPS_PER_BAR, Section, Track,

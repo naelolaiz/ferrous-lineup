@@ -20,7 +20,8 @@ const LINEUPS: [(&str, &str); 8] = [
 ];
 
 pub(super) fn menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction>) {
-    let menu = egui::containers::menu::MenuButton::new("🎷 Band").config(
+    let band_label = format!("🎷 {}", crate::i18n::tr("Band"));
+    let menu = egui::containers::menu::MenuButton::new(band_label).config(
         egui::containers::menu::MenuConfig::new()
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
     );
