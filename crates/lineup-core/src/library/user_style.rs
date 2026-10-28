@@ -6,6 +6,7 @@ use super::{
     apply::StyleParts,
     comping::{BassPart, Played},
 };
+use crate::i18n::{tr, trf};
 use crate::{
     Bar, Channel, ChordMarker, HarmonyName, KeyMap, MAX_CHANNELS, MAX_STEPS, Note, NoteEvent,
     NoteNaming, Player, Project, Scale, ScaleKind, Tempo, TimeSignature,
@@ -39,7 +40,7 @@ impl UserStyle {
     pub fn blank() -> Self {
         let mut style = Self {
             format: 1,
-            name: "New style".into(),
+            name: crate::i18n::tr("New style").into(),
             about: String::new(),
             time: TimeSignature::COMMON,
             tempo: Tempo::default(),
@@ -173,41 +174,44 @@ impl UserStyle {
 
     pub fn validate(&self) -> Result<(), String> {
         if self.format != 1 {
-            return Err("Unsupported style format".into());
+            return Err(tr("Unsupported style format").to_string());
         }
         if self.name.trim().is_empty() {
-            return Err("Give the style a name".into());
+            return Err(tr("Give the style a name").to_string());
         }
         if !(1..=16).contains(&self.bars) || self.length() > MAX_STEPS {
-            return Err("The pattern must fit in 1–16 bars and 256 steps".into());
+            return Err(tr("The pattern must fit in 1–16 bars and 256 steps").to_string());
         }
         if self.lanes.len() > MAX_CHANNELS {
-            return Err("Too many instrument lanes".into());
+            return Err(tr("Too many instrument lanes").to_string());
         }
         if self.swing > crate::MAX_SWING {
-            return Err("Swing is outside its range".into());
+            return Err(tr("Swing is outside its range").to_string());
         }
         let scale = Scale::new(crate::PitchClass::C, self.mode);
         for (index, chart) in self.chart.split('|').enumerate() {
             if index >= 256 {
-                return Err("The progression is too long".into());
+                return Err(tr("The progression is too long").to_string());
             }
             crate::chord_sheet::read_bar(
                 chart.trim(),
                 &crate::Meter::new(self.time, []).bar(index),
                 scale,
             )
-            .map_err(|error| format!("Progression bar {}: {error}", index + 1))?;
+            .map_err(|error| trf("Progression bar {}: {}", &[&(index + 1), &error]))?;
         }
         let mut players = std::collections::HashSet::new();
         for lane in &self.lanes {
             if lane.player != Player::Drums && !players.insert(lane.player) {
-                return Err(format!("Assign only one lane to {}", lane.player.name()));
+                return Err(trf(
+                    "Assign only one lane to {}",
+                    &[&tr(lane.player.name())],
+                ));
             }
             if !(0.0..=1.0).contains(&lane.channel.volume)
                 || lane.channel.program.is_some_and(|p| p > 127)
             {
-                return Err("An instrument setting is outside its range".into());
+                return Err(tr("An instrument setting is outside its range").to_string());
             }
             if lane.notes.iter().any(|note| {
                 note.start >= self.length()
@@ -221,7 +225,7 @@ impl UserStyle {
                     || usize::from(note.trim) >= crate::TICKS_PER_STEP
                     || note.start_tick() >= note.end_tick()
             }) {
-                return Err("A note is outside the repeating pattern".into());
+                return Err(tr("A note is outside the repeating pattern").to_string());
             }
         }
         Ok(())

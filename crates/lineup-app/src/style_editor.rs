@@ -1,6 +1,7 @@
 //! Style drafting reuses the channel rack and piano roll. Its history is
 //! independent of the song until the user applies the saved style.
 
+use crate::i18n::{tr, tr_name};
 use crate::{
     channel_rack::{self, RackAction},
     piano_roll::{PianoRoll, RollAction},
@@ -10,6 +11,9 @@ use eframe::egui::{self, Key, Modifiers, Rect};
 use lineup_core::library::{StyleLane, UserStyle};
 use lineup_core::{Channel, ChannelKind, History, MAX_STEPS, Note, Player, Project, Tempo};
 use std::path::PathBuf;
+
+/// What the editor says when it is closed with edits not saved.
+const UNSAVED: &str = "Unsaved edits. Save the style, or use Discard edits to close.";
 
 pub fn window_id() -> egui::Id {
     egui::Id::unique("style-editor")
@@ -200,13 +204,13 @@ impl StyleEditor {
             let mut discard = false;
             let modal =
                 egui::Modal::new(egui::Id::unique("replace-unsaved-style")).show(ctx, |ui| {
-                    ui.heading("Replace unsaved style?");
-                    ui.label("The current style has unsaved edits.");
+                    ui.heading(tr("Replace unsaved style?"));
+                    ui.label(tr("The current style has unsaved edits."));
                     ui.horizontal(|ui| {
-                        if ui.button("Keep editing").clicked() {
+                        if ui.button(tr("Keep editing")).clicked() {
                             self.pending_start = None;
                         }
-                        if ui.button("Discard and start").clicked() {
+                        if ui.button(tr("Discard and start")).clicked() {
                             discard = true;
                         }
                     });
@@ -250,14 +254,14 @@ impl StyleEditor {
         window.show(ctx, |ui| {
                 let top = ui.cursor().top();
                 ui.horizontal_wrapped(|ui| {
-                    let menu = egui::containers::menu::MenuButton::new("Start from…").config(
+                    let menu = egui::containers::menu::MenuButton::new(tr("Start from…")).config(
                         egui::containers::menu::MenuConfig::new().close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside));
                     menu.ui(ui, |ui| {
-                        ui.add(egui::TextEdit::singleline(&mut self.source_filter).hint_text("Search presets"));
+                        ui.add(egui::TextEdit::singleline(&mut self.source_filter).hint_text(tr("Search presets")));
                         egui::ScrollArea::vertical().max_height(260.0).show(ui, |ui| {
-                            if ui.button("Empty style").clicked() { events.push(EditorEvent::StartFrom(UserStyle::blank())); ui.close(); }
+                            if ui.button(tr("Empty style")).clicked() { events.push(EditorEvent::StartFrom(UserStyle::blank())); ui.close(); }
                             for preset in crate::library_browser::catalogue::presets(&self.source_filter, user_styles, false) {
-                                if ui.button(preset.name()).clicked() {
+                                if ui.button(tr_name(preset.name())).clicked() {
                                     use crate::library_browser::catalogue::Preset;
                                     let copy = match preset {
                                         Preset::Style(style) => UserStyle::from_builtin(style),
@@ -269,48 +273,48 @@ impl StyleEditor {
                             }
                         });
                     });
-                    if ui.button("Save style").clicked() { self.save_requested = true; }
-                    if ui.button("Save as…").clicked() { events.push(EditorEvent::Save { style: self.draft.style.clone(), save_as: true }); }
-                    if ui.add_enabled(self.history.undo_label().is_some(), egui::Button::new("Undo")).clicked() { self.history.undo(&mut self.draft); history_action = true; }
-                    if ui.add_enabled(self.history.redo_label().is_some(), egui::Button::new("Redo")).clicked() { self.history.redo(&mut self.draft); history_action = true; }
-                    if ui.button("Preview ×4").clicked() {
+                    if ui.button(tr("Save style")).clicked() { self.save_requested = true; }
+                    if ui.button(tr("Save as…")).clicked() { events.push(EditorEvent::Save { style: self.draft.style.clone(), save_as: true }); }
+                    if ui.add_enabled(self.history.undo_label().is_some(), egui::Button::new(tr("Undo"))).clicked() { self.history.undo(&mut self.draft); history_action = true; }
+                    if ui.add_enabled(self.history.redo_label().is_some(), egui::Button::new(tr("Redo"))).clicked() { self.history.redo(&mut self.draft); history_action = true; }
+                    if ui.button(tr("Preview ×4")).clicked() {
                         let seconds = self.draft.project.pattern(0).unwrap().length() as f64 * 60.0 / f64::from(self.draft.project.tempo.bpm()) / 4.0;
                         self.preview_started = Some((ctx.input(|input| input.time), seconds));
                         events.push(EditorEvent::Preview(Box::new(self.draft.project.clone())));
                     }
-                    if ui.add_enabled(self.preview_started.is_some(), egui::Button::new("Stop preview")).clicked() { events.push(EditorEvent::Stop); self.preview_started = None; }
+                    if ui.add_enabled(self.preview_started.is_some(), egui::Button::new(tr("Stop preview"))).clicked() { events.push(EditorEvent::Stop); self.preview_started = None; }
                 });
                 // On one line, so the window is fitted to be as wide.
                 ui.horizontal(|ui| {
-                    ui.label("Name"); ui.text_edit_singleline(&mut self.draft.style.name);
+                    ui.label(tr("Name")); ui.text_edit_singleline(&mut self.draft.style.name);
                     let mut tempo = self.draft.project.tempo.bpm();
-                    ui.label("BPM"); if ui.add(egui::DragValue::new(&mut tempo).range(Tempo::MIN..=Tempo::MAX)).changed() { self.draft.project.tempo = Tempo::new(tempo); }
+                    ui.label(tr("BPM")); if ui.add(egui::DragValue::new(&mut tempo).range(Tempo::MIN..=Tempo::MAX)).changed() { self.draft.project.tempo = Tempo::new(tempo); }
                     let time = self.draft.project.time_signature;
                     egui::ComboBox::from_id_salt("style-time").selected_text(time.to_string()).show_ui(ui, |ui| {
                         if let Some(time) = crate::time_picker::time_picker(ui, egui::Id::unique("style-meter"), time, None) { self.draft.project.time_signature = time; }
                     });
                     let max_bars = (MAX_STEPS / self.draft.project.time_signature.steps_per_bar()).clamp(1,16);
                     self.draft.style.bars = self.draft.style.bars.clamp(1,max_bars);
-                    ui.label("Bars"); ui.add(egui::DragValue::new(&mut self.draft.style.bars).range(1..=max_bars));
-                    ui.label("Swing"); ui.add(egui::DragValue::new(&mut self.draft.project.swing).range(0..=lineup_core::MAX_SWING).suffix("%"));
+                    ui.label(tr("Bars")); ui.add(egui::DragValue::new(&mut self.draft.style.bars).range(1..=max_bars));
+                    ui.label(tr("Swing")); ui.add(egui::DragValue::new(&mut self.draft.project.swing).range(0..=lineup_core::MAX_SWING).suffix("%"));
                 });
                 let length = self.draft.style.bars * self.draft.project.time_signature.steps_per_bar();
                 self.draft.project.pattern_mut(0).unwrap().set_length(length);
-                ui.horizontal(|ui| { ui.label("Progression"); ui.text_edit_singleline(&mut self.draft.style.chart).on_hover_text("Roman numerals or chord names; separate bars with | (I | vi | ii7 | V7). In a minor key, write numerals from the major scale, as the library does: i bVI bIII bVII."); });
-                ui.horizontal(|ui| { ui.label("Description"); ui.text_edit_singleline(&mut self.draft.style.about); });
-                ui.collapsing("Part assignments", |ui| {
+                ui.horizontal(|ui| { ui.label(tr("Progression")); ui.text_edit_singleline(&mut self.draft.style.chart).on_hover_text(tr("Roman numerals or chord names; separate bars with | (I | vi | ii7 | V7). In a minor key, write numerals from the major scale, as the library does: i bVI bIII bVII.")); });
+                ui.horizontal(|ui| { ui.label(tr("Description")); ui.text_edit_singleline(&mut self.draft.style.about); });
+                ui.collapsing(tr("Part assignments"), |ui| {
                     egui::ScrollArea::vertical().max_height(110.0).show(ui, |ui| {
                         for (index, channel) in self.draft.project.channels().iter().enumerate() {
                             ui.horizontal(|ui| {
-                                ui.label(&channel.name);
-                                egui::ComboBox::from_id_salt(("style-role",index)).selected_text(self.draft.roles[index].name()).show_ui(ui, |ui| {
-                                    for player in Player::ALL { ui.selectable_value(&mut self.draft.roles[index], player, player.name()); }
+                                ui.label(tr_name(&channel.name));
+                                egui::ComboBox::from_id_salt(("style-role",index)).selected_text(tr(self.draft.roles[index].name())).show_ui(ui, |ui| {
+                                    for player in Player::ALL { ui.selectable_value(&mut self.draft.roles[index], player, tr(player.name())); }
                                 });
                             });
                         }
                     });
                 });
-                ui.weak("Write pitched parts over C major. They follow the song’s chords when applied. Click steps to edit drums; click a note preview for the piano roll.");
+                ui.weak(tr("Write pitched parts over C major. They follow the song’s chords when applied. Click steps to edit drums; click a note preview for the piano roll."));
                 if let Some(error) = &self.error { ui.colored_label(ui.visuals().error_fg_color, error); }
                 let playhead = self.preview_started.and_then(|(start, period)| {
                     let elapsed = ctx.input(|input| input.time)-start;
@@ -354,8 +358,7 @@ impl StyleEditor {
         }
         if !open {
             if self.draft.style != self.saved {
-                self.error =
-                    Some("Unsaved edits. Save the style, or use Discard edits to close.".into());
+                self.error = Some(tr(UNSAVED).into());
             } else {
                 self.open = false;
                 self.roll.open = false;
@@ -365,20 +368,20 @@ impl StyleEditor {
         if self
             .error
             .as_deref()
-            .is_some_and(|error| error.starts_with("Unsaved edits"))
+            .is_some_and(|error| error == tr(UNSAVED))
         {
             let modal = egui::Modal::new(egui::Id::unique("close-unsaved-style")).show(ctx, |ui| {
-                ui.heading("Unsaved style");
-                ui.label("Save your style before closing?");
+                ui.heading(tr("Unsaved style"));
+                ui.label(tr("Save your style before closing?"));
                 ui.horizontal(|ui| {
-                    if ui.button("Save").clicked() {
+                    if ui.button(tr("Save")).clicked() {
                         self.save_requested = true;
                         self.error = None;
                     }
-                    if ui.button("Keep editing").clicked() {
+                    if ui.button(tr("Keep editing")).clicked() {
                         self.error = None;
                     }
-                    if ui.button("Discard edits").clicked() {
+                    if ui.button(tr("Discard edits")).clicked() {
                         self.open = false;
                         self.roll.open = false;
                         self.error = None;
@@ -578,7 +581,7 @@ impl StyleEditor {
             }
             RollAction::NewPattern { .. } => {
                 self.error = Some(
-                    "Styles contain a single pattern. Save new patterns from the song piano roll."
+                    tr("Styles contain a single pattern. Save new patterns from the song piano roll.")
                         .into(),
                 );
             }
@@ -748,7 +751,7 @@ mod tests {
             if replace {
                 editor.start(UserStyle::blank(), None);
             } else {
-                editor.error = Some("Unsaved edits. Save the style before closing.".into());
+                editor.error = Some(UNSAVED.into());
             }
             frame(&mut editor, &ctx, vec![]);
             let before = editor.draft.clone();

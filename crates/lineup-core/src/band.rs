@@ -29,6 +29,7 @@ use serde::{Deserialize, Serialize};
 use crate::chord_sheet::{ChordMarker, HarmonyName, read_bar};
 use crate::general_midi;
 use crate::harmony::{Chord, PitchSet, Scale, ScaleKind};
+use crate::i18n::{tr, trf};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
 use crate::library::interpret::{self, Role};
@@ -640,26 +641,28 @@ impl BandFile {
     /// The band it describes, in a project with `channels` channels.
     pub(crate) fn band(self, channels: usize) -> Result<Band, String> {
         let style = BandStyle::named(&self.style).ok_or_else(|| {
-            format!(
+            trf(
                 "its band plays \"{}\", a style this version does not know",
-                self.style
+                &[&self.style],
             )
         })?;
         let instrument_style = self.instrument_style.as_deref().map_or(Ok(style), |name| {
-            BandStyle::named(name).ok_or_else(|| format!("unknown instrument style: {name}"))
+            BandStyle::named(name).ok_or_else(|| trf("unknown instrument style: {}", &[&name]))
         })?;
         let harmony_style = self
             .harmony_style
             .as_deref()
-            .map(|name| Style::named(name).ok_or_else(|| format!("unknown harmony style: {name}")))
+            .map(|name| {
+                Style::named(name).ok_or_else(|| trf("unknown harmony style: {}", &[&name]))
+            })
             .transpose()?;
         if self.end > MAX_SONG_STEPS {
-            return Err("its band plays past the end of the song".to_string());
+            return Err(tr("its band plays past the end of the song").to_string());
         }
         let channel = |index: Option<usize>| match index {
-            Some(index) if index >= channels => Err(format!(
+            Some(index) if index >= channels => Err(trf(
                 "its band plays on channel {}, which does not exist",
-                index + 1
+                &[&(index + 1)],
             )),
             index => Ok(index),
         };
@@ -1227,9 +1230,9 @@ impl Project {
                 BandStyle::named(crate::library::Rhythm::for_time(style.time, None).name)
                     .or_else(|| BandStyle::named("Pop beat"))
             else {
-                return Err(format!(
+                return Err(trf(
                     "there is no band style to play a song in {}",
-                    style.time
+                    &[&style.time],
                 ));
             };
             let mut band = Band::new(base);

@@ -36,6 +36,7 @@ use lineup_core::harmony::{
 };
 use lineup_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
 
+use crate::i18n::{tr, trc, trf};
 use crate::time_picker::{describe_time, time_picker};
 
 /// Something the user did in the harmony keys bar.
@@ -312,13 +313,29 @@ impl HarmonyKeys {
                 let response = chord_key(ui, key, tonal, lit, faintly, sounding, rank);
                 let mut hover = describe_key(key, tonal, self.hints);
                 if let Some(rank) = rank {
-                    let often = if rank == 0 { "Most often" } else { "Often" };
+                    let most = rank == 0;
                     hover = match suggestions[rank].why(self.hints) {
                         Some(why) if self.hints == HintLevel::Detailed => {
-                            format!("{hover}\n\n{often} comes next. {why}")
+                            let often = match most {
+                                true => tr("Most often comes next."),
+                                false => tr("Often comes next."),
+                            };
+                            format!("{hover}\n\n{often} {why}")
                         }
-                        Some(why) => format!("{hover}\n\n{often} next: {why}."),
-                        None => format!("{hover}\n\n{often} next."),
+                        Some(why) => {
+                            let often = match most {
+                                true => trf("Most often next: {}.", &[&why]),
+                                false => trf("Often next: {}.", &[&why]),
+                            };
+                            format!("{hover}\n\n{often}")
+                        }
+                        None => {
+                            let often = match most {
+                                true => tr("Most often next."),
+                                false => tr("Often next."),
+                            };
+                            format!("{hover}\n\n{often}")
+                        }
                     };
                 }
                 let response = crate::theme::hint(response, hover);
@@ -412,24 +429,29 @@ impl HarmonyKeys {
         });
         ui.horizontal_wrapped(|ui| {
             self.hints_menu(ui);
-            let keys = format!("1 to {}", groups.len().min(7));
+            let keys = trf("1 to {}", &[&groups.len().min(7)]);
+            let channel_name = crate::i18n::tr_name(channel_name);
             let hint = match (self.hints, scale.kind) {
                 (HintLevel::Minimal, _) => String::new(),
-                (HintLevel::Short, ScaleKind::Row(_)) => {
-                    format!("The row's notes in groups, in order. Hold a key or press {keys}.")
-                }
-                (HintLevel::Short, _) => {
-                    format!("Chords stacked from the set's notes. Hold a key or press {keys}.")
-                }
-                (_, ScaleKind::Row(_)) => format!(
+                (HintLevel::Short, ScaleKind::Row(_)) => trf(
+                    "The row's notes in groups, in order. Hold a key or press {}.",
+                    &[&keys],
+                ),
+                (HintLevel::Short, _) => trf(
+                    "Chords stacked from the set's notes. Hold a key or press {}.",
+                    &[&keys],
+                ),
+                (_, ScaleKind::Row(_)) => trf(
                     "Twelve-tone music has no home chord: each key plays the next notes of \
                      the row together, as twelve-tone composers build their chords. Hold one \
-                     (or press {keys}) to play on \"{channel_name}\". 3, 4 or 6 notes on the left."
+                     (or press {}) to play on \"{}\". 3, 4 or 6 notes on the left.",
+                    &[&keys, &channel_name],
                 ),
-                _ => format!(
+                _ => trf(
                     "Each key stacks every other note of the set, from one of its notes, as \
                      the chords of a key stack every other note of the scale. Hold one (or \
-                     press {keys}) to play it."
+                     press {}) to play it.",
+                    &[&keys],
                 ),
             };
             ui.weak(hint);
@@ -457,26 +479,25 @@ impl HarmonyKeys {
         actions: &mut Vec<HarmonyAction>,
     ) {
         ui.horizontal_wrapped(|ui| {
-            ui.toggle_value(&mut self.find_key, "🔍 Find the key")
-                .on_hover_text(FIND_KEY_HELP);
+            ui.toggle_value(&mut self.find_key, tr("🔍 Find the key"))
+                .on_hover_text(tr(FIND_KEY_HELP));
             if !self.find_key {
                 return;
             }
             let Some(heard) = heard else {
-                ui.weak("Nothing to listen to yet.");
+                ui.weak(tr("Nothing to listen to yet."));
                 return;
             };
-            ui.weak(format!("Sounds {}:", heard.from));
+            ui.weak(trf("Sounds {}:", &[&tr(heard.from)]));
             let reading = |guess: &KeyGuess| {
                 self.last_chord
                     .and_then(|chord| {
                         let bass = self.last_bass.unwrap_or(chord.root);
                         let reading =
                             read_chord(chord, guess.key)?.inverted(chord.inversion_figures(bass));
-                        Some(format!(
+                        Some(trf(
                             "{} is {}",
-                            chord_label(chord, bass, guess.key),
-                            reading.label()
+                            &[&chord_label(chord, bass, guess.key), &reading.label()],
                         ))
                     })
                     .unwrap_or_default()
@@ -487,24 +508,24 @@ impl HarmonyKeys {
                 .strong()
                 .size(15.0);
             let clear = if heard.alternatives.is_empty() {
-                "It is well ahead of every other key."
+                tr("It is well ahead of every other key.")
             } else {
-                "Other keys come close, so they are shown too."
+                tr("Other keys come close, so they are shown too.")
             };
-            ui.label(text).on_hover_text(format!(
-                "The key that fits the notes best ({}% of the weight of all 24 keys). {clear}",
-                share(&best)
+            ui.label(text).on_hover_text(trf(
+                "The key that fits the notes best ({}% of the weight of all 24 keys). {}",
+                &[&share(&best), &clear],
             ));
             let chord = reading(&best);
             if !chord.is_empty() {
                 ui.label(chord);
             }
             for guess in &heard.alternatives {
-                ui.weak("·  or");
+                ui.weak(tr("·  or"));
                 ui.label(egui::RichText::new(crate::i18n::key_name(guess.key)).weak())
-                    .on_hover_text(format!(
+                    .on_hover_text(trf(
                         "Fits almost as well ({}% of the weight).",
-                        share(guess)
+                        &[&share(guess)],
                     ));
                 let chord = reading(guess);
                 if !chord.is_empty() {
@@ -513,11 +534,11 @@ impl HarmonyKeys {
             }
             if heard.can_mark
                 && ui
-                    .small_button("Mark on the playlist")
-                    .on_hover_text(
+                    .small_button(tr("Mark on the playlist"))
+                    .on_hover_text(tr(
                         "Write the key changes heard in the whole song as key markers, \
                          replacing the ones there. No note moves; Undo takes them back.",
-                    )
+                    ))
                     .clicked()
             {
                 actions.push(HarmonyAction::MarkHeardKeys);
@@ -529,15 +550,15 @@ impl HarmonyKeys {
     fn hints_menu(&mut self, ui: &mut Ui) {
         egui::ComboBox::from_id_salt("harmony-hints")
             .width(78.0)
-            .selected_text(self.hints.label())
+            .selected_text(tr(self.hints.label()))
             .show_ui(ui, |ui| {
                 for level in HintLevel::ALL {
-                    ui.selectable_value(&mut self.hints, level, level.label())
-                        .on_hover_text(level.description());
+                    ui.selectable_value(&mut self.hints, level, tr(level.label()))
+                        .on_hover_text(tr(level.description()));
                 }
             })
             .response
-            .on_hover_text("How much the hints explain, here and in the piano roll");
+            .on_hover_text(tr("How much the hints explain, here and in the piano roll"));
     }
 
     /// The key, the time signature and the size of the chords. The key
@@ -553,7 +574,7 @@ impl HarmonyKeys {
     ) {
         let scale = project.scale;
         ui.horizontal(|ui| {
-            ui.strong("Key");
+            ui.strong(tr("Key"));
             let name = egui::RichText::new(scale.spell(scale.root).to_string()).strong();
             let tonic = crate::twelve_tone::root_menu(ui, "harmony-root", scale, 56.0, name);
             if let Some(new) =
@@ -564,17 +585,17 @@ impl HarmonyKeys {
         });
         if here != scale {
             ui.label(
-                egui::RichText::new(format!("Now in {}", crate::i18n::key_name(here)))
+                egui::RichText::new(trf("Now in {}", &[&crate::i18n::key_name(here)]))
                     .color(SUGGESTED),
             )
-            .on_hover_text(
+            .on_hover_text(tr(
                 "The song changes key here (see the key names on the playlist's bar \
                      numbers), so the chord keys are this key's. The menus above are the key \
                      the song starts in",
-            );
+            ));
         }
         ui.horizontal(|ui| {
-            ui.strong("Time");
+            ui.strong(trc("meter", "Time"));
             let time = project.time_signature;
             let mut chosen = None;
             // The list holds fields to type a time signature in, so it
@@ -597,7 +618,7 @@ impl HarmonyKeys {
             if let Some(chosen) = chosen.filter(|&chosen| chosen != time) {
                 actions.push(HarmonyAction::SetTime(chosen));
             }
-            ui.weak(format!("{} steps a bar", time.steps_per_bar()));
+            ui.weak(trf("{} steps a bar", &[&time.steps_per_bar()]));
         });
         let scale = here;
         ui.horizontal(|ui| {
@@ -607,36 +628,36 @@ impl HarmonyKeys {
                     (ScaleKind::Row(_), _) => {
                         let n = keys::row_group(size);
                         let name = match n {
-                            3 => "trichords",
-                            4 => "tetrachords",
-                            _ => "hexachords",
+                            3 => tr("trichords"),
+                            4 => tr("tetrachords"),
+                            _ => tr("hexachords"),
                         };
                         (
-                            format!("{n} notes"),
-                            format!("The row in groups of {n}: {name}"),
+                            trf("{} notes", &[&n]),
+                            trf("The row in groups of {}: {}", &[&n, &name]),
                         )
                     }
                     (ScaleKind::Set(set), _) => {
                         // A set of two notes makes chords of two.
                         let n = (size as usize + 3).min(set.len());
                         let hover = if n == set.len() {
-                            format!("All {n} notes of the set, from each of them in turn")
+                            trf("All {} notes of the set, from each of them in turn", &[&n])
                         } else {
-                            format!("Chords of {n} notes of the set")
+                            trf("Chords of {} notes of the set", &[&n])
                         };
-                        (format!("{n} notes"), hover)
+                        (trf("{} notes", &[&n]), hover)
                     }
                     (_, ChordSize::Triads) => (
-                        size.label().to_string(),
-                        "Three notes: every other note of the scale".to_string(),
+                        tr(size.label()).to_string(),
+                        tr("Three notes: every other note of the scale").to_string(),
                     ),
                     (_, ChordSize::Sevenths) => (
-                        size.label().to_string(),
-                        "Four notes: the triad and its seventh".to_string(),
+                        tr(size.label()).to_string(),
+                        tr("Four notes: the triad and its seventh").to_string(),
                     ),
                     (_, ChordSize::Ninths) => (
-                        size.label().to_string(),
-                        "Five notes: the seventh chord and its ninth".to_string(),
+                        tr(size.label()).to_string(),
+                        tr("Five notes: the seventh chord and its ninth").to_string(),
                     ),
                 };
                 if ui
@@ -795,39 +816,47 @@ fn hint_line(
             let from = chord_label(chord, bass, scale);
             let to = scale.chord_name(next.chord);
             match level {
-                HintLevel::Detailed => {
-                    format!("After {from}, {to} often comes next: {}", next.reason)
-                }
+                HintLevel::Detailed => trf(
+                    "After {}, {} often comes next: {}",
+                    &[&from, &to, &next.reason],
+                ),
                 HintLevel::Short => format!("{from} → {to}: {}", next.short),
                 HintLevel::Minimal => format!("{from} → {to}"),
             }
         }
         (Some((chord, bass)), None) if outside => match level {
-            HintLevel::Detailed => format!(
+            HintLevel::Detailed => trf(
                 "{} is not one of the seven chords of {}: it comes from outside the key.",
-                chord_label(chord, bass, scale),
-                crate::i18n::key_name(scale)
+                &[
+                    &chord_label(chord, bass, scale),
+                    &crate::i18n::key_name(scale),
+                ],
             ),
-            _ => format!("{}: outside the key", chord_label(chord, bass, scale)),
+            _ => trf("{}: outside the key", &[&chord_label(chord, bass, scale)]),
         },
         _ if !suggests => match level {
             HintLevel::Detailed => {
-                "Suggestions of what comes next are given in major and minor keys.".to_string()
+                tr("Suggestions of what comes next are given in major and minor keys.").to_string()
             }
-            HintLevel::Short => "Suggestions in major and minor keys only.".to_string(),
+            HintLevel::Short => tr("Suggestions in major and minor keys only.").to_string(),
             HintLevel::Minimal => String::new(),
         },
-        _ => match level {
-            HintLevel::Detailed => format!(
-                "Hold a key (or 1 to 7) to play its chord on \"{channel_name}\". With Rec on, \
-                 the chords are recorded. Outlined keys are chords that often come next, \
-                 the brightest the most usual."
-            ),
-            HintLevel::Short => {
-                format!("Hold a key or press 1 to 7 to play on \"{channel_name}\".")
+        _ => {
+            let channel_name = crate::i18n::tr_name(channel_name);
+            match level {
+                HintLevel::Detailed => trf(
+                    "Hold a key (or 1 to 7) to play its chord on \"{}\". With Rec on, \
+                     the chords are recorded. Outlined keys are chords that often come next, \
+                     the brightest the most usual.",
+                    &[&channel_name],
+                ),
+                HintLevel::Short => trf(
+                    "Hold a key or press 1 to 7 to play on \"{}\".",
+                    &[&channel_name],
+                ),
+                HintLevel::Minimal => String::new(),
             }
-            HintLevel::Minimal => String::new(),
-        },
+        }
     }
 }
 
@@ -838,11 +867,11 @@ fn heard_line(hearing: &Hearing, scale: Scale) -> Option<(String, String)> {
     let label = |harmony: Harmony| harmony.label_in(scale);
     let best = match hearing.best() {
         harmony @ Harmony::Polychord { .. } => {
-            format!("Heard: {}, two chords at once", label(harmony)?)
+            trf("Heard: {}, two chords at once", &[&label(harmony)?])
         }
-        harmony @ Harmony::Unknown(_) => format!("Heard: the notes {}", label(harmony)?),
+        harmony @ Harmony::Unknown(_) => trf("Heard: the notes {}", &[&label(harmony)?]),
         harmony @ Harmony::Chord { .. } if !hearing.is_clear() => {
-            format!("Heard: {}", label(harmony)?)
+            trf("Heard: {}", &[&label(harmony)?])
         }
         _ => return None,
     };
@@ -854,7 +883,7 @@ fn heard_line(hearing: &Hearing, scale: Scale) -> Option<(String, String)> {
     let others = if others.is_empty() {
         String::new()
     } else {
-        format!("or {}", others.join(", "))
+        trf("or {}", &[&others.join(", ")])
     };
     Some((best, others))
 }
@@ -961,7 +990,7 @@ fn chord_key(
         painter.text(
             rect.center_bottom() - vec2(0.0, 9.0),
             Align2::CENTER_CENTER,
-            function.name(),
+            tr(function.name()),
             FontId::proportional(10.0),
             KEY_TEXT_DIM,
         );
@@ -1070,27 +1099,26 @@ fn describe_group(group: &GroupKey, index: usize, level: HintLevel) -> String {
     let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
     let class = group.pitch_set().set_class();
     let chord = match &group.chord {
-        Some(chord) if *chord != group.label => format!(", the chord {chord}"),
+        Some(chord) if *chord != group.label => trf(", the chord {}", &[chord]),
         _ => String::new(),
     };
-    let mut text = format!(
-        "{}: {}{chord} · set {}",
-        group.label,
-        names.join(" "),
-        class.name()
+    let mut text = trf(
+        "{}: {}{} · set {}",
+        &[&group.label, &names.join(" "), &chord, &class.name()],
     );
     if let Some(nickname) = class.nickname() {
-        text += &format!(", {nickname}");
+        text += &format!(", {}", tr(nickname));
     }
     match level {
         HintLevel::Detailed => format!(
-            "{text}.\nPrime form {}, interval vector {}. Hold to play; key {} on the computer \
-             keyboard too.",
-            class.prime_text(),
-            class.vector_text(),
-            index + 1
+            "{text}.\n{}",
+            trf(
+                "Prime form {}, interval vector {}. Hold to play; key {} on the computer \
+                 keyboard too.",
+                &[&class.prime_text(), &class.vector_text(), &(index + 1)],
+            )
         ),
-        HintLevel::Short => format!("{text}. Key {}.", index + 1),
+        HintLevel::Short => format!("{text}. {}", trf("Key {}.", &[&(index + 1)])),
         HintLevel::Minimal => text,
     }
 }
@@ -1111,24 +1139,27 @@ fn describe_key(key: &ChordKey, scale: Scale, level: HintLevel) -> String {
         "{}: {} {} ({})",
         key.numeral,
         scale.spell_root(key.chord),
-        key.chord.quality.name(),
+        tr(key.chord.quality.name()),
         notes.join(" "),
+    );
+    let play = trf(
+        "Hold to play; key {} on the computer keyboard too.",
+        &[&digit],
     );
     match (level, key.function) {
         (HintLevel::Detailed, Some(function)) => format!(
-            "{chord}. The {}: {}.\nHold to play; key {digit} on the computer keyboard too.",
-            function.name(),
-            function.feel(),
+            "{chord}. {}: {}.\n{play}",
+            crate::i18n::tr_string(format!("The {}", function.name())),
+            tr(function.feel()),
         ),
-        (HintLevel::Detailed, None) => {
-            format!("{chord}.\nHold to play; key {digit} on the computer keyboard too.")
-        }
+        (HintLevel::Detailed, None) => format!("{chord}.\n{play}"),
         (HintLevel::Short, Some(function)) => format!(
-            "{chord}, {}: {}. Key {digit}.",
-            function.name(),
-            function.short_feel(),
+            "{chord}, {}: {}. {}",
+            tr(function.name()),
+            tr(function.short_feel()),
+            trf("Key {}.", &[&digit]),
         ),
-        (HintLevel::Short, None) => format!("{chord}. Key {digit}."),
+        (HintLevel::Short, None) => format!("{chord}. {}", trf("Key {}.", &[&digit])),
         (HintLevel::Minimal, _) => chord,
     }
 }

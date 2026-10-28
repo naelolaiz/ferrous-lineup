@@ -33,6 +33,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use crate::NoteNaming;
+use crate::i18n::{Language, tr, trf};
 
 use crate::band::{Band, BandFile, Player};
 use crate::chord_sheet::{ChordMarker, HarmonyName};
@@ -450,14 +451,16 @@ impl fmt::Display for FileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             FileError::Io(err) => write!(f, "{err}"),
-            FileError::Parse(err) => write!(f, "not a valid project file: {err}"),
-            FileError::Write(err) => write!(f, "could not write the project: {err}"),
-            FileError::NewerFormat(version) => write!(
-                f,
-                "this file uses format {version}, made by a newer version of Ferrous Lineup \
-                 (this one reads up to format {FORMAT_VERSION})"
-            ),
-            FileError::Invalid(reason) => write!(f, "the project file is damaged: {reason}"),
+            FileError::Parse(err) => f.write_str(&trf("not a valid project file: {}", &[err])),
+            FileError::Write(err) => f.write_str(&trf("could not write the project: {}", &[err])),
+            FileError::NewerFormat(version) => f.write_str(&trf(
+                "this file uses format {}, made by a newer version of Ferrous Lineup \
+                 (this one reads up to format {})",
+                &[version, &FORMAT_VERSION],
+            )),
+            FileError::Invalid(reason) => {
+                f.write_str(&trf("the project file is damaged: {}", &[reason]))
+            }
         }
     }
 }
@@ -555,15 +558,15 @@ impl TryFrom<ProjectFile> for Project {
 
         let mut project = Project::empty();
         if !file.mixer.valid() {
-            return invalid("its mixer settings are outside their ranges".to_string());
+            return invalid(tr("its mixer settings are outside their ranges").to_string());
         }
         project.mixer = file.mixer;
         project.tempo = file.tempo;
         project.scale = file.scale;
         if file.time_signature.steps_per_bar() > MAX_STEPS {
-            return invalid(format!(
+            return invalid(trf(
                 "its time signature {} is too long",
-                file.time_signature
+                &[&file.time_signature],
             ));
         }
         project.time_signature = file.time_signature;
@@ -573,16 +576,16 @@ impl TryFrom<ProjectFile> for Project {
             .solo
             .is_some_and(|solo| solo >= file.channels.len())
         {
-            return invalid("its solo channel does not exist".to_string());
+            return invalid(tr("its solo channel does not exist").to_string());
         }
         if file.channels.len() > MAX_CHANNELS {
-            return invalid(format!("it has more than {MAX_CHANNELS} channels"));
+            return invalid(trf("it has more than {} channels", &[&MAX_CHANNELS]));
         }
         let channels = file.channels.len();
         if let Some(channel) = file.channels.iter().find(|channel| !channel.mix_is_valid()) {
-            return invalid(format!(
+            return invalid(trf(
                 "channel \"{}\" has its pan or reverb send outside its range",
-                channel.name
+                &[&channel.name],
             ));
         }
         if let Some(channel) = file
@@ -590,9 +593,9 @@ impl TryFrom<ProjectFile> for Project {
             .iter()
             .find(|channel| !channel.effects.is_valid())
         {
-            return invalid(format!(
+            return invalid(trf(
                 "channel \"{}\" has an effect set outside its range",
-                channel.name
+                &[&channel.name],
             ));
         }
         if let Some(channel) = file.channels.iter().find(|channel| {
@@ -600,9 +603,9 @@ impl TryFrom<ProjectFile> for Project {
                 .sent_on
                 .is_some_and(|midi_channel| midi_channel > 15)
         }) {
-            return invalid(format!(
+            return invalid(trf(
                 "channel \"{}\" is sent over a MIDI channel other than 1 to 16",
-                channel.name
+                &[&channel.name],
             ));
         }
         for channel in file.channels {
@@ -610,7 +613,7 @@ impl TryFrom<ProjectFile> for Project {
         }
 
         if file.patterns.is_empty() || file.patterns.len() > MAX_PATTERNS {
-            return invalid(format!("it must have 1 to {MAX_PATTERNS} patterns"));
+            return invalid(trf("it must have 1 to {} patterns", &[&MAX_PATTERNS]));
         }
         for (index, saved) in file.patterns.into_iter().enumerate() {
             // `Project::empty` already has one pattern; add the others.
@@ -618,7 +621,7 @@ impl TryFrom<ProjectFile> for Project {
                 project.add_pattern();
             }
             let Some(pattern) = project.pattern_mut(index) else {
-                return invalid(format!("pattern {} could not be added", index + 1));
+                return invalid(trf("pattern {} could not be added", &[&(index + 1)]));
             };
             pattern.name = saved.name;
             pattern.color = saved.color.unwrap_or(index);
@@ -626,27 +629,24 @@ impl TryFrom<ProjectFile> for Project {
                 .time
                 .is_some_and(|time| time.steps_per_bar() > MAX_STEPS)
             {
-                return invalid(format!("pattern \"{}\" has too long a bar", pattern.name));
+                return invalid(trf("pattern \"{}\" has too long a bar", &[&pattern.name]));
             }
             pattern.time = saved.time;
             pattern.player = saved.player;
             pattern.set_length(saved.length);
             if saved.notes.len() != channels {
-                return invalid(format!(
-                    "pattern \"{}\" has notes for {} channels, but there are {channels}",
-                    pattern.name,
-                    saved.notes.len()
+                return invalid(trf(
+                    "pattern \"{}\" has notes for {} channels, but there are {}",
+                    &[&pattern.name, &saved.notes.len(), &channels],
                 ));
             }
             for (channel, notes) in saved.notes.into_iter().enumerate() {
                 for note in notes {
                     if pattern.add_note(channel, note).is_none() {
-                        return invalid(format!(
+                        return invalid(trf(
                             "pattern \"{}\" has a note that does not fit, or a duplicate, \
                              at step {} on channel {}",
-                            pattern.name,
-                            note.start.saturating_add(1),
-                            channel + 1
+                            &[&pattern.name, &note.start.saturating_add(1), &(channel + 1)],
                         ));
                     }
                 }
@@ -654,7 +654,7 @@ impl TryFrom<ProjectFile> for Project {
         }
 
         if file.tracks.is_empty() || file.tracks.len() > MAX_TRACKS {
-            return invalid(format!("it must have 1 to {MAX_TRACKS} playlist tracks"));
+            return invalid(trf("it must have 1 to {} playlist tracks", &[&MAX_TRACKS]));
         }
         project.replace_tracks(file.tracks);
         for (index, clip) in file.clips.into_iter().enumerate() {
@@ -662,58 +662,56 @@ impl TryFrom<ProjectFile> for Project {
             // not a new track as it is when placed by hand.
             let on_a_track = clip.track < project.playlist().tracks().len();
             if !on_a_track || project.add_clip(clip).is_none() {
-                return invalid(format!(
+                return invalid(trf(
                     "clip {} (pattern {}, track {}) does not fit in the playlist",
-                    index + 1,
-                    clip.pattern.saturating_add(1),
-                    clip.track.saturating_add(1)
+                    &[
+                        &(index + 1),
+                        &clip.pattern.saturating_add(1),
+                        &clip.track.saturating_add(1),
+                    ],
                 ));
             }
         }
         for section in file.sections {
             if project.add_section(section.clone()).is_none() {
-                return invalid(format!(
+                return invalid(trf(
                     "section \"{}\" is empty, too long, repeats too often or overlaps another",
-                    section.name
+                    &[&section.name],
                 ));
             }
         }
         if !project.set_loop_region(file.loop_region) {
-            return invalid("its loop region is empty or too long".to_string());
+            return invalid(tr("its loop region is empty or too long").to_string());
         }
         for marker in file.time_markers {
             if marker.start == 0 || !project.set_time_marker(marker) {
-                return invalid(format!(
+                return invalid(trf(
                     "its change to {} at step {} is too late, too long or on the first step",
-                    marker.time,
-                    marker.start.saturating_add(1)
+                    &[&marker.time, &marker.start.saturating_add(1)],
                 ));
             }
         }
         for marker in file.tempo_markers {
             if marker.start == 0 || !project.set_tempo_marker(marker) {
-                return invalid(format!(
+                return invalid(trf(
                     "its change to {} BPM at step {} is too late or on the first step",
-                    marker.tempo.bpm(),
-                    marker.start.saturating_add(1)
+                    &[&marker.tempo.bpm(), &marker.start.saturating_add(1)],
                 ));
             }
         }
         for marker in file.key_markers {
             if marker.start == 0 || !project.set_key_marker(marker) {
-                return invalid(format!(
+                return invalid(trf(
                     "its change to {} at step {} is too late or on the first step",
-                    marker.scale.name(),
-                    marker.start.saturating_add(1)
+                    &[&marker.scale.name(), &marker.start.saturating_add(1)],
                 ));
             }
         }
         for marker in file.chord_markers {
             if !project.set_chords(marker.start, marker.start.saturating_add(1), &[marker]) {
-                return invalid(format!(
+                return invalid(trf(
                     "its chord {} at step {} is too late",
-                    marker.harmony,
-                    marker.start.saturating_add(1)
+                    &[&marker.harmony, &marker.start.saturating_add(1)],
                 ));
             }
         }
@@ -748,7 +746,7 @@ pub fn to_text(project: &Project) -> Result<String, FileError> {
     // file on every system.
     // Names are written in letters, whichever way the app shows them.
     let style = ron::ser::PrettyConfig::new().depth_limit(5).new_line("\n");
-    let file = NoteNaming::Letters.with(|| ProjectFile::from(project));
+    let file = Language::English.with(|| NoteNaming::Letters.with(|| ProjectFile::from(project)));
     let mut text = NoteNaming::Letters.with(|| ron::ser::to_string_pretty(&file, style))?;
     text.push('\n');
     Ok(text)

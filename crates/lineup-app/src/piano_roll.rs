@@ -24,6 +24,7 @@ use lineup_core::{
     Scale, ScaleKind, Spelling, TICKS_PER_STEP, TimeSignature, tidy_notes,
 };
 
+use crate::i18n::{tr, tr_name, tr_str, trf};
 use crate::micromodes::{MicroAction, MicromodeWindow};
 use crate::theme;
 use crate::twelve_tone::{self, RowAction, RowWindow, SetAction, SetWindow};
@@ -722,8 +723,8 @@ impl PianoRoll {
         let roll_title = format!(
             "{} · {} · {}",
             crate::i18n::tr("Piano roll"),
-            pattern_notes.name,
-            channel.name
+            tr_name(&pattern_notes.name),
+            tr_name(&channel.name)
         );
         let window = egui::Window::new(roll_title)
             .id(id)
@@ -933,7 +934,8 @@ impl PianoRoll {
         let channel = project
             .channels()
             .get(self.channel)
-            .map_or("This channel", |channel| channel.name.as_str());
+            .map_or(tr("This channel"), |channel| channel.name.as_str());
+        let channel = tr_name(channel);
         // Other patterns where this channel has notes.
         let elsewhere: Vec<(usize, &str)> = project
             .patterns()
@@ -959,16 +961,17 @@ impl PianoRoll {
             .inner_margin(egui::Margin::symmetric(8, 4))
             .show(ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
-                    ui.strong(format!(
-                        "{channel} has no notes in \"{}\". Click the grid to draw some.",
-                        pattern.name
+                    ui.strong(trf(
+                        "{} has no notes in \"{}\". Click the grid to draw some.",
+                        &[&channel, &tr_name(&pattern.name)],
                     ));
                     if !elsewhere.is_empty() {
-                        ui.label(format!("{channel} plays in:"));
+                        ui.label(trf("{} plays in:", &[&channel]));
                         for &(index, name) in &elsewhere {
+                            let name = tr_name(name);
                             if ui
-                                .button(name)
-                                .on_hover_text(format!("Show the pattern \"{name}\""))
+                                .button(name.as_ref())
+                                .on_hover_text(trf("Show the pattern \"{}\"", &[&name]))
                                 .clicked()
                             {
                                 actions.push(RollAction::SelectPattern(index));
@@ -977,16 +980,16 @@ impl PianoRoll {
                     }
                     let melodies: Vec<_> = others.iter().filter(|other| !other.2).collect();
                     if !melodies.is_empty() {
-                        ui.label("Notes here are on:");
+                        ui.label(tr("Notes here are on:"));
                         for &&(index, name, _) in &melodies {
-                            if ui.button(name).clicked() {
+                            if ui.button(tr_name(name)).clicked() {
                                 switch_to = Some(index);
                             }
                         }
                     }
                     if others.iter().any(|other| other.2) {
-                        ui.label("The drums in this pattern are edited in the");
-                        if ui.button("Channel rack").clicked() {
+                        ui.label(tr("The drums in this pattern are edited in the"));
+                        if ui.button(tr("Channel rack")).clicked() {
                             actions.push(RollAction::OpenRack);
                         }
                     }
@@ -1140,22 +1143,30 @@ impl PianoRoll {
                         .project
                         .channels()
                         .get(check.voices[0].channel)
-                        .map_or("Track", |channel| channel.name.as_str());
+                        .map_or(tr("Track"), |channel| channel.name.as_str());
                     let place = |voice: usize| part_place(&check.voices[voice]);
-                    format!("{track}: {}", change.summary(drawing.scale, place))
+                    format!(
+                        "{}: {}",
+                        tr_name(track),
+                        change.summary(drawing.scale, place)
+                    )
                 }
                 false => change.summary(drawing.scale, name),
             };
             ui.add(egui::Label::new(egui::RichText::new(moves).color(theme::TEXT_DIM)).truncate())
                 .on_hover_text(format!(
-                    "How each part moves at step {}, highest first:\n\n{}\n\n{MOVES_HELP}",
-                    change.step + 1,
-                    change.describe(drawing.scale, name)
+                    "{}\n\n{}\n\n{}",
+                    trf(
+                        "How each part moves at step {}, highest first:",
+                        &[&(change.step + 1)]
+                    ),
+                    change.describe(drawing.scale, name),
+                    tr(MOVES_HELP)
                 ));
         } else if here.is_empty() {
             let help = match check.rules {
-                Rules::TwelveTone => TWELVE_TONE_HELP,
-                _ => VOICE_LEADING_HELP,
+                Rules::TwelveTone => tr(TWELVE_TONE_HELP),
+                _ => tr(VOICE_LEADING_HELP),
             };
             ui.add(egui::Label::new(egui::RichText::new(check.summary()).weak()).truncate())
                 .on_hover_text(help);
@@ -1202,14 +1213,14 @@ impl PianoRoll {
             match self.hovered_step.or(playhead) {
                 Some(step) => self.step_info(drawing, step),
                 None => (
-                    "Point at a step to name the chord there.".to_string(),
+                    tr("Point at a step to name the chord there.").to_string(),
                     PitchSet::EMPTY,
                 ),
             }
         } else {
             let harmony = analyze(held.iter().copied());
             let set: PitchSet = held.iter().map(|note| note.pitch_class()).collect();
-            (format!("Keys down: {}", harmony.describe(scale)), set)
+            (trf("Keys down: {}", &[&harmony.describe(scale)]), set)
         };
         let solo_note = self.solo_note(drawing);
         let info = ui.label(solo_note.unwrap_or(info));
@@ -1224,12 +1235,12 @@ impl PianoRoll {
                 info.on_hover_text(more.join("\n\n"));
             }
         } else {
-            ui.weak(sets.join("    ")).on_hover_text(
+            ui.weak(sets.join("    ")).on_hover_text(tr(
                 "Pitch-class set theory names any group of notes: its Forte number, its \
                      notes packed as tightly as they go (normal form), the same packed from 0 \
                      with its inversion (prime form), and how many of each interval it holds. \
                      Sets... opens the list of every set.",
-            );
+            ));
         }
     }
 
@@ -1261,7 +1272,8 @@ impl PianoRoll {
                 let name = project
                     .channels()
                     .get(self.channel)
-                    .map_or("This track", |channel| channel.name.as_str());
+                    .map_or(tr("This track"), |channel| channel.name.as_str());
+                let name = tr_name(name);
                 match track {
                     Harmony::Chord { chord, bass } => match scale.figured_numeral(chord, bass) {
                         Some(numeral) => format!("{name}: {label} ({numeral}). "),
@@ -1274,16 +1286,16 @@ impl PianoRoll {
         };
         (
             format!(
-                "Step {}: {own}{}{}{}",
-                step + 1,
-                if own.is_empty() { "" } else { "All: " },
+                "{} {own}{}{}{}",
+                trf("Step {}:", &[&(step + 1)]),
+                if own.is_empty() { "" } else { tr("All:") },
+                if own.is_empty() { "" } else { " " },
                 all.describe(scale),
-                if or.is_empty() {
-                    String::new()
-                } else {
-                    format!(" (or {or})")
-                }
-            ),
+            ) + &if or.is_empty() {
+                String::new()
+            } else {
+                trf(" (or {})", &[&or])
+            },
             set,
         )
     }
@@ -1312,8 +1324,8 @@ impl PianoRoll {
                 // Band parts start at the top of the song, so the note's
                 // place is counted as the transport counts it.
                 let place = match project.meter().position(note.start) {
-                    (bar, beat, 1) => format!("Bar {bar}, beat {beat}"),
-                    (bar, beat, step) => format!("Bar {bar}, beat {beat}, step {step}"),
+                    (bar, beat, 1) => trf("Bar {}, beat {}", &[&bar, &beat]),
+                    (bar, beat, step) => trf("Bar {}, beat {}, step {}", &[&bar, &beat, &step]),
                 };
                 Some(format!("{place} · {}", role.describe(&name, &over, key)))
             })
@@ -1332,18 +1344,20 @@ impl PianoRoll {
         let mut sets = Vec::new();
         if drawing.roles.is_some() {
             sets.push(
-                "Soloist: chord tones green (R 3 5 7), scale notes blue (p passing, n \
-                 neighbour, s other), chromatic orange (a approach, cp passing)"
-                    .to_string(),
+                tr(
+                    "Soloist: chord tones green (R 3 5 7), scale notes blue (p passing, n \
+                 neighbour, s other), chromatic orange (a approach, cp passing)",
+                )
+                .to_string(),
             );
         }
         if set.len() >= 3 {
-            sets.push(format!("Set: {}", twelve_tone::describe_set(set, scale)));
+            sets.push(trf("Set: {}", &[&twelve_tone::describe_set(set, scale)]));
         }
         if selected.len() >= 2 && self.selection.len() >= 2 {
-            sets.push(format!(
+            sets.push(trf(
                 "Selected: {}",
-                twelve_tone::describe_set(selected, scale)
+                &[&twelve_tone::describe_set(selected, scale)],
             ));
         }
         // The line is always there, even empty, so the grid below does not
@@ -1351,7 +1365,7 @@ impl PianoRoll {
         if sets.is_empty() {
             sets.push(match self.hints {
                 HintLevel::Minimal => " ".to_string(),
-                _ => "Set: point at three notes or more, or select some, to name their set."
+                _ => tr("Set: point at three notes or more, or select some, to name their set.")
                     .to_string(),
             });
         }
@@ -1528,7 +1542,7 @@ impl PianoRoll {
             // Each label stays whole and moves to the next line when it
             // does not fit, rather than being squeezed into a column.
             ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-            ui.label("Key");
+            ui.label(tr("Key"));
             let name = egui::RichText::new(song.spell(song.root).to_string());
             let tonic = twelve_tone::root_menu(ui, "scale-root", song, 64.0, name);
             if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", song, tonic, 120.0) {
@@ -1542,14 +1556,14 @@ impl PianoRoll {
             }
             if scale != song {
                 ui.label(
-                    egui::RichText::new(format!("This pattern: {}", crate::i18n::key_name(scale)))
+                    egui::RichText::new(trf("This pattern: {}", &[&crate::i18n::key_name(scale)]))
                         .strong(),
                 )
-                .on_hover_text(
+                .on_hover_text(tr(
                     "The song changes key where this pattern plays (see the key names on \
                          the playlist's bar numbers), so it is highlighted in that key. The \
                          menus are the key the song starts in",
-                );
+                ));
             }
             let names: Vec<String> = scale
                 .pitch_classes()
@@ -1557,25 +1571,25 @@ impl PianoRoll {
                 .collect();
             ui.weak(names.join(" "));
             self.snap_button(ui);
-            ui.toggle_value(&mut self.row_window.open, "Row…")
-                .on_hover_text(
+            ui.toggle_value(&mut self.row_window.open, tr("Row…"))
+                .on_hover_text(tr(
                     "Twelve-tone rows: type, draw or pick a row, see all its forms in the \
                      matrix, and write them into the pattern",
-                );
-            ui.toggle_value(&mut self.set_window.open, "Sets…")
-                .on_hover_text(
+                ));
+            ui.toggle_value(&mut self.set_window.open, tr("Sets…"))
+                .on_hover_text(tr(
                     "Pitch-class sets: every group of notes there is, by Forte number, to \
                      draw with or use as a scale",
-                );
-            ui.toggle_value(&mut self.micromode_window.open, "Micromodes…")
-                .on_hover_text(
+                ));
+            ui.toggle_value(&mut self.micromode_window.open, tr("Micromodes…"))
+                .on_hover_text(tr(
                     "Kröpfl's micromodes: the twelve groups of three notes, the smallest sets, \
                      to hear, draw with or use as a key",
-                );
+                ));
 
             ui.separator();
             theme::keep_together(ui, 200.0, |ui| {
-                ui.label("Draw");
+                ui.label(tr("Draw"));
                 egui::ComboBox::from_id_salt("chord-stamp")
                     .width(150.0)
                     .truncate()
@@ -1591,12 +1605,14 @@ impl PianoRoll {
                         if let ChordStamp::Set(_) = self.stamp {
                             let _ = ui.selectable_label(true, self.stamp.label());
                         }
-                        if ui.button("A set from the set browser…").clicked() {
+                        if ui.button(tr("A set from the set browser…")).clicked() {
                             self.set_window.open = true;
                         }
                     })
                     .response
-                    .on_hover_text("What a click on the grid places: one note, or a whole chord.");
+                    .on_hover_text(tr(
+                        "What a click on the grid places: one note, or a whole chord.",
+                    ));
             });
 
             // A chord of n notes has n - 1 inversions. A single note has
@@ -1613,38 +1629,38 @@ impl PianoRoll {
                 }
                 egui::ComboBox::from_id_salt("inversion")
                     .width(76.0)
-                    .selected_text(INVERSIONS_SHORT[if chord { self.inversion } else { 0 }])
+                    .selected_text(tr(INVERSIONS_SHORT[if chord { self.inversion } else { 0 }]))
                     .show_ui(ui, |ui| {
                         for (times, name) in INVERSIONS.iter().enumerate().take(chord_size) {
-                            ui.selectable_value(&mut self.inversion, times, *name);
+                            ui.selectable_value(&mut self.inversion, times, tr(name));
                         }
                     })
                     .response
-                    .on_hover_text(
+                    .on_hover_text(tr(
                         "Which note of the chord is lowest. Each inversion moves the \
                          lowest note up an octave, above the others. The note you click \
                          stays the root, and the chord is arranged around it.",
-                    )
-                    .on_disabled_hover_text(
+                    ))
+                    .on_disabled_hover_text(tr(
                         "A single note has no inversions: pick a chord under Draw to \
                          choose which of its notes is lowest.",
-                    );
+                    ));
             });
 
             // The label and its list wrap onto the next row together.
             theme::keep_together(ui, 140.0, |ui| {
-                ui.label("Length");
+                ui.label(tr("Length"));
                 let length_name = NOTE_LENGTHS
                     .iter()
                     .find(|(steps, _)| *steps == self.note_length)
-                    .map(|(_, name)| name.to_string())
-                    .unwrap_or_else(|| format!("{} steps", self.note_length));
+                    .map(|(_, name)| tr(name).to_string())
+                    .unwrap_or_else(|| trf("{} steps", &[&self.note_length]));
                 egui::ComboBox::from_id_salt("note-length")
                     .width(76.0)
                     .selected_text(length_name)
                     .show_ui(ui, |ui| {
                         for (steps, name) in NOTE_LENGTHS {
-                            ui.selectable_value(&mut self.note_length, steps, name);
+                            ui.selectable_value(&mut self.note_length, steps, tr(name));
                         }
                     });
             });
@@ -1656,14 +1672,17 @@ impl PianoRoll {
             // The two boxes wrap onto the next row together: the check
             // takes the other tracks when their notes are shown.
             theme::keep_together(ui, 220.0, |ui| {
-                ui.add_enabled(!alone, egui::Checkbox::new(&mut self.ghosts, "Ghost notes"))
-                    .on_hover_text(
-                        "Show the notes of the other channels faintly, and name the chords \
+                ui.add_enabled(
+                    !alone,
+                    egui::Checkbox::new(&mut self.ghosts, tr("Ghost notes")),
+                )
+                .on_hover_text(tr(
+                    "Show the notes of the other channels faintly, and name the chords \
                          all of them make together.",
-                    )
-                    .on_disabled_hover_text("No other channel plays melodies or chords yet.");
-                ui.checkbox(&mut self.voice_leading, "Voice leading")
-                    .on_hover_text(VOICE_LEADING_HELP);
+                ))
+                .on_disabled_hover_text(tr("No other channel plays melodies or chords yet."));
+                ui.checkbox(&mut self.voice_leading, tr("Voice leading"))
+                    .on_hover_text(tr(VOICE_LEADING_HELP));
             });
         });
         picked
@@ -1678,15 +1697,17 @@ impl PianoRoll {
         // somewhere else.
         let stay_open = egui::containers::menu::MenuConfig::new()
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
-        let menu = egui::containers::menu::MenuButton::new("Tools").config(stay_open);
+        let menu = egui::containers::menu::MenuButton::new(tr("Tools")).config(stay_open);
         menu.ui(ui, |ui| {
             crate::widgets::scroll_menu(ui, |ui| {
-                ui.weak("Changes the selected notes, or every note if none is selected.");
+                ui.weak(tr(
+                    "Changes the selected notes, or every note if none is selected.",
+                ));
                 let mut item =
                     |ui: &mut Ui, text: &str, tool: Tool, shortcut: Option<KeyboardShortcut>| {
-                        let mut button = egui::Button::new(text);
+                        let mut button = egui::Button::new(tr_str(text));
                         if let Some(shortcut) = shortcut {
-                            button = button.shortcut_text(ctx.format_shortcut(&shortcut));
+                            button = button.shortcut_text(crate::i18n::shortcut(&ctx, &shortcut));
                         }
                         if ui.add(button).clicked() {
                             picked = Some(tool);
@@ -1721,15 +1742,15 @@ impl PianoRoll {
                 item(ui, "Invert chords down", Tool::Invert { up: false }, None);
                 ui.separator();
                 ui.horizontal(|ui| {
-                    ui.label("Arpeggio");
+                    ui.label(tr("Arpeggio"));
                     for order in ArpeggioOrder::ALL {
-                        ui.selectable_value(&mut self.arpeggio, order, order.name());
+                        ui.selectable_value(&mut self.arpeggio, order, tr(order.name()));
                     }
                 });
                 ui.horizontal(|ui| {
-                    ui.label("Each note");
+                    ui.label(tr("Each note"));
                     for (steps, name) in ARPEGGIO_RATES {
-                        ui.selectable_value(&mut self.arpeggio_rate, steps, name);
+                        ui.selectable_value(&mut self.arpeggio_rate, steps, tr(name));
                     }
                 });
                 item(ui, "Arpeggiate chords", Tool::Arpeggiate, None);
@@ -1758,19 +1779,19 @@ impl PianoRoll {
     /// right click opens its menu, which can also snap the notes played on
     /// the keyboards.
     fn snap_button(&mut self, ui: &mut Ui) {
-        ui.toggle_value(&mut self.snap_to_scale, "Snap to scale")
-            .on_hover_text(
+        ui.toggle_value(&mut self.snap_to_scale, tr("Snap to scale"))
+            .on_hover_text(tr(
                 "Notes you draw or move land on the notes of the key. Notes already \
                  there stay put until you move them: to snap them all, select them \
                  (Ctrl+A) and drag them up a semitone and back. Right-click for more.",
-            )
+            ))
             .context_menu(|ui| {
-                ui.checkbox(&mut self.snap_to_scale, "Snap notes you draw or move");
-                ui.checkbox(&mut self.snap_played, "Snap notes you play")
-                    .on_hover_text(
+                ui.checkbox(&mut self.snap_to_scale, tr("Snap notes you draw or move"));
+                ui.checkbox(&mut self.snap_played, tr("Snap notes you play"))
+                    .on_hover_text(tr(
                         "Keys played on the typing keyboard or a MIDI keyboard sound, \
                          and are recorded, as the nearest note of the key.",
-                    );
+                    ));
             });
     }
 
@@ -1796,19 +1817,21 @@ impl PianoRoll {
             .map(|(_, chord, bass)| next_chords_over(scale, chord, bass))
             .unwrap_or_default();
         ui.horizontal_wrapped(|ui| {
-            ui.label(format!("Chords in {}", crate::i18n::key_name(scale)));
+            ui.label(trf("Chords in {}", &[&crate::i18n::key_name(scale)]));
             for degree in 0..7 {
                 let Some(chord) = scale.triad(degree) else {
                     continue;
                 };
                 let numeral = scale.roman_numeral(chord).unwrap_or_default();
                 let text = format!("{numeral} · {}", scale.chord_name(chord));
-                let full_name = format!("{} {}", scale.spell_root(chord), chord.quality.name());
+                let full_name =
+                    format!("{} {}", scale.spell_root(chord), tr(chord.quality.name()));
                 let mut hint = match self.hints {
-                    HintLevel::Detailed => format!(
-                        "{full_name}. Click to hear it. Pick \"Chord in key\" under Draw to place chords like it."
+                    HintLevel::Detailed => trf(
+                        "{}. Click to hear it. Pick \"Chord in key\" under Draw to place chords like it.",
+                        &[&full_name],
                     ),
-                    _ => format!("{full_name}. Click to hear it."),
+                    _ => trf("{}. Click to hear it.", &[&full_name]),
                 };
                 let suggestion = suggestions.iter().find(|s| s.degree == degree);
                 if let Some(suggestion) = suggestion {
@@ -1817,17 +1840,21 @@ impl PianoRoll {
                     let played_as = if suggestion.chord == chord {
                         String::new()
                     } else {
-                        format!(", played as {}", scale.chord_name(suggestion.chord))
+                        trf(", played as {}", &[&scale.chord_name(suggestion.chord)])
                     };
                     hint = match self.hints {
                         HintLevel::Detailed => format!(
-                            "Often comes next{played_as}. {}\n\n{hint}",
+                            "{} {}\n\n{hint}",
+                            trf("Often comes next{}.", &[&played_as]),
                             suggestion.reason
                         ),
-                        HintLevel::Short => {
-                            format!("Often next{played_as}: {}.\n\n{hint}", suggestion.short)
+                        HintLevel::Short => format!(
+                            "{}\n\n{hint}",
+                            trf("Often next{}: {}.", &[&played_as, &suggestion.short])
+                        ),
+                        HintLevel::Minimal => {
+                            format!("{}\n\n{hint}", trf("Often next{}.", &[&played_as]))
                         }
-                        HintLevel::Minimal => format!("Often next{played_as}.\n\n{hint}"),
                     };
                 }
                 let button = egui::Button::new(text).selected(suggestion.is_some());
@@ -1842,11 +1869,13 @@ impl PianoRoll {
         });
         let hint = match current {
             None => match self.hints {
-                HintLevel::Detailed => "Point at a chord in the grid, or hold one on a keyboard, \
-                                        to see which chords often follow it."
-                    .to_string(),
+                HintLevel::Detailed => {
+                    tr("Point at a chord in the grid, or hold one on a keyboard, \
+                                        to see which chords often follow it.")
+                    .to_string()
+                }
                 HintLevel::Short => {
-                    "Point at or hold a chord to see what often follows.".to_string()
+                    tr("Point at or hold a chord to see what often follows.").to_string()
                 }
                 HintLevel::Minimal => String::new(),
             },
@@ -1856,8 +1885,8 @@ impl PianoRoll {
                     .label_in(scale)
                     .unwrap_or_else(|| scale.chord_name(chord));
                 let place = match at {
-                    ChordAt::Step(step) => format!("at step {}", step + 1),
-                    ChordAt::Keys => "on the keys".to_string(),
+                    ChordAt::Step(step) => trf("at step {}", &[&(step + 1)]),
+                    ChordAt::Keys => tr("on the keys").to_string(),
                 };
                 let numeral = scale
                     .figured_numeral(chord, bass)
@@ -1875,27 +1904,27 @@ impl PianoRoll {
                 // chord is not one of the key's own, or nothing usually
                 // follows it.
                 let why = if !scale.contains(chord.root) {
-                    "has a root outside the key"
+                    tr("has a root outside the key")
                 } else if !scale.is_chord_of_key(chord) {
-                    "is not one of the key's chords"
+                    tr("is not one of the key's chords")
                 } else {
-                    "has no usual next chord here"
+                    tr("has no usual next chord here")
                 };
                 match (self.hints, next.is_empty(), major_or_minor) {
                     (HintLevel::Minimal, true, true) => format!("{name}: {why}"),
                     (_, true, true) => format!("{name} {place} {why}."),
                     (HintLevel::Minimal, true, false) => String::new(),
                     (_, true, false) => {
-                        "Next-chord hints are given in major and minor keys.".to_string()
+                        tr("Next-chord hints are given in major and minor keys.").to_string()
                     }
-                    (HintLevel::Detailed, false, _) => format!(
-                        "After {name}{numeral} {place}, try: {}. Hover the highlighted chords to see why.",
-                        next.join(", ")
+                    (HintLevel::Detailed, false, _) => trf(
+                        "After {}{} {}, try: {}. Hover the highlighted chords to see why.",
+                        &[&name, &numeral, &place, &next.join(", ")],
                     ),
                     (HintLevel::Short, false, _) => {
-                        format!("After {name}{numeral}, try: {}.", next.join(", "))
+                        trf("After {}{}, try: {}.", &[&name, &numeral, &next.join(", ")])
                     }
-                    (HintLevel::Minimal, false, _) => format!("Next: {}", next.join(", ")),
+                    (HintLevel::Minimal, false, _) => trf("Next: {}", &[&next.join(", ")]),
                 }
             }
         };
@@ -1920,18 +1949,17 @@ impl PianoRoll {
     ) {
         ui.horizontal_wrapped(|ui| {
             let what = match scale.kind {
-                ScaleKind::Row(_) => format!("Trichords of {}", crate::i18n::key_name(scale)),
-                _ => format!("Chords of {}", crate::i18n::key_name(scale)),
+                ScaleKind::Row(_) => trf("Trichords of {}", &[&crate::i18n::key_name(scale)]),
+                _ => trf("Chords of {}", &[&crate::i18n::key_name(scale)]),
             };
             ui.label(what);
             for group in groups {
                 let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
                 let class = group.pitch_set().set_class();
                 let text = format!("{} · {}", group.label, names.join(" "));
-                let hover = format!(
+                let hover = trf(
                     "{}: set {}. Click to hear it.",
-                    names.join(" "),
-                    class.describe()
+                    &[&names.join(" "), &class.describe()],
                 );
                 if ui.button(text).on_hover_text(hover).clicked() {
                     actions.push(RollAction::Preview {
@@ -1973,16 +2001,17 @@ impl PianoRoll {
         let track_name = project
             .channels()
             .get(self.channel)
-            .map_or("Track", |channel| channel.name.as_str());
+            .map_or(tr("Track"), |channel| channel.name.as_str());
+        let track_name = tr_name(track_name);
         let channel = [self.channel];
         let rows: [(&str, Vec<Harmony>); 2] = [
             (
-                track_name,
+                &track_name,
                 (0..length)
                     .map(|step| analyze(sounding(pattern, &channel, step)))
                     .collect(),
             ),
-            ("All", heard_by_beat(project, self.pattern, length)),
+            (tr("All"), heard_by_beat(project, self.pattern, length)),
         ];
         let row_height = LANE_HEIGHT / rows.len() as f32;
         let row = |index: usize| {
@@ -2034,7 +2063,7 @@ impl PianoRoll {
         }
 
         let painter = ui.painter_at(rect);
-        paint_lane_name(ui, &painter, rect, "Row");
+        paint_lane_name(ui, &painter, rect, tr("Row"));
         painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
         let painter = painter.with_clip_rect(cells);
         // The forms the track shown plays: its own, or those running
@@ -2069,13 +2098,15 @@ impl PianoRoll {
                     .project
                     .channels()
                     .get(channel)
-                    .map_or("Track", |channel| channel.name.as_str())
+                    .map_or(tr("Track"), |channel| channel.name.as_str())
                     .to_string()
             };
             let found: Vec<String> = shown
                 .filter(|row| (row.start..row.end).contains(&step))
                 .map(|row| match row.channel {
-                    Some(channel) => format!("{} plays {}", track(channel), row.describe()),
+                    Some(channel) => {
+                        trf("{} plays {}", &[&tr_name(&track(channel)), &row.describe()])
+                    }
                     None => row.describe(),
                 })
                 .collect();
@@ -2112,14 +2143,15 @@ impl PianoRoll {
         }
 
         let painter = ui.painter_at(rect);
-        paint_lane_name(ui, &painter, rect, "Voices");
+        paint_lane_name(ui, &painter, rect, tr("Voices"));
         painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
         let painter = painter.with_clip_rect(cells);
         // What is found on each step, so that a run of steps with the
         // same findings makes one block.
         let marks: Vec<Vec<&str>> = (0..length)
             .map(|step| {
-                let mut marks: Vec<&str> = check.slips_at(step).map(|s| s.kind.short()).collect();
+                let mut marks: Vec<&str> =
+                    check.slips_at(step).map(|s| tr(s.kind.short())).collect();
                 marks.sort_unstable();
                 marks.dedup();
                 marks
@@ -2301,7 +2333,7 @@ impl PianoRoll {
             painter.text(
                 visible.center() + vec2(KEY_WIDTH / 2.0, 0.0),
                 Align2::CENTER_CENTER,
-                "No notes here yet: click to draw one",
+                tr("No notes here yet: click to draw one"),
                 FontId::proportional(18.0),
                 NO_NOTES_TEXT,
             );
@@ -2688,7 +2720,7 @@ impl PianoRoll {
         painter.text(
             pos2(rect.left() + 4.0, rect.top() + 8.0),
             Align2::LEFT_CENTER,
-            "Velocity",
+            tr("Velocity"),
             FontId::proportional(11.0),
             ui.visuals().weak_text_color(),
         );
@@ -3065,8 +3097,8 @@ fn voice_name(project: &Project, check: &VoiceLeading, voice: usize) -> String {
     let track = project
         .channels()
         .get(part.channel)
-        .map_or("Track", |channel| channel.name.as_str());
-    part.name(track)
+        .map_or(tr("Track"), |channel| channel.name.as_str());
+    part.name(&tr_name(track))
 }
 
 /// Which of its track's parts `voice` is, in a word or two: "top",
@@ -3074,11 +3106,11 @@ fn voice_name(project: &Project, check: &VoiceLeading, voice: usize) -> String {
 fn part_place(voice: &voice_leading::Voice) -> String {
     match (voice.rank, voice.of) {
         (_, 0 | 1) => String::new(),
-        (0, _) => "top".to_string(),
-        (rank, of) if rank + 1 == of => "lowest".to_string(),
-        (1, _) => "2nd".to_string(),
-        (2, _) => "3rd".to_string(),
-        (rank, _) => format!("{}th", rank + 1),
+        (0, _) => tr("top").to_string(),
+        (rank, of) if rank + 1 == of => tr("lowest").to_string(),
+        (1, _) => tr("2nd").to_string(),
+        (2, _) => tr("3rd").to_string(),
+        (rank, _) => trf("{}th", &[&(rank + 1)]),
     }
 }
 

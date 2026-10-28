@@ -25,6 +25,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::i18n::{tr, trf};
 use crate::tempo::Tempo;
 
 /// The effects of one channel. All of them leave the sound as it is when
@@ -70,13 +71,13 @@ impl Effects {
     pub fn summary(&self) -> String {
         let mut on = Vec::new();
         if !self.eq.is_flat() {
-            on.push("EQ");
+            on.push(tr("EQ"));
         }
         if self.compressor.is_on() {
-            on.push("comp");
+            on.push(tr("comp"));
         }
         if self.delay.is_on() {
-            on.push("delay");
+            on.push(tr("delay"));
         }
         on.join(", ")
     }
@@ -237,8 +238,8 @@ impl Delay {
             .iter()
             .find(|(steps, _)| *steps == self.steps)
             .map_or_else(
-                || format!("{} steps", self.steps),
-                |(_, name)| name.to_string(),
+                || trf("{} steps", &[&self.steps]),
+                |(_, name)| tr(name).to_string(),
             )
     }
 

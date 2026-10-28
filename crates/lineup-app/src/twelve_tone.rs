@@ -20,6 +20,7 @@ use lineup_core::{
     Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
 };
 
+use crate::i18n::{tr, tr_name, trf};
 use crate::widgets::{self, Opening};
 
 /// Where the row and set last used are remembered.
@@ -171,7 +172,7 @@ pub fn root_menu(ui: &mut Ui, salt: &str, scale: Scale, width: f32, text: RichTe
             }
         })
         .response
-        .on_hover_text(crate::piano_roll::KEY_HELP);
+        .on_hover_text(crate::i18n::tr(crate::piano_roll::KEY_HELP));
     tonic
 }
 
@@ -204,11 +205,11 @@ pub fn kind_menu(
             let is_row = matches!(scale.kind, ScaleKind::Row(_));
             if ui
                 .selectable_label(is_row, crate::i18n::tr("twelve-tone row"))
-                .on_hover_text(
+                .on_hover_text(tr(
                     "Music without a key: all twelve notes in an order, used in turn. \
                      The piano roll numbers the notes in the order of the row. Notes \
                      already written stay as they are.",
-                )
+                ))
                 .clicked()
                 && !is_row
             {
@@ -217,12 +218,12 @@ pub fn kind_menu(
             let is_set = matches!(scale.kind, ScaleKind::Set(_));
             if ui
                 .selectable_label(is_set, crate::i18n::tr("pitch-class set"))
-                .on_hover_text(
+                .on_hover_text(tr(
                     "Any group of notes as a scale, such as the octatonic scale or a \
                      chord with no name. Notes already written stay as they are: from a \
                      key, the set is the key's own notes (C major is 7-35), so the harmony \
                      keys still match the song.",
-                )
+                ))
                 .clicked()
                 && !is_set
             {
@@ -230,7 +231,7 @@ pub fn kind_menu(
             }
         })
         .response;
-    crate::theme::hint(response, crate::piano_roll::KEY_HELP);
+    crate::theme::hint(response, crate::i18n::tr(crate::piano_roll::KEY_HELP));
     // A new root keeps the kind, and with it the row or the set.
     if picked.is_none() && tonic != scale.spell(scale.root) {
         picked = Some(Scale::written(tonic, scale.kind));
@@ -296,18 +297,20 @@ pub fn describe_set(set: PitchSet, names: impl NoteNames) -> String {
     }
     let class = set.set_class();
     let normal = normal_names(set, names);
-    let mut text = format!(
+    let mut text = trf(
         "{} · normal form {} · prime form {} · intervals {}",
-        class.name(),
-        normal,
-        class.prime_text(),
-        class.vector_text()
+        &[
+            &class.name(),
+            &normal,
+            &class.prime_text(),
+            &class.vector_text(),
+        ],
     );
     if let Some(nickname) = class.nickname() {
-        text += &format!(" · {nickname}");
+        text += &format!(" · {}", tr(nickname));
     }
     if let Some(micromode) = Micromode::of(set) {
-        text += &format!(" · micromode {}", micromode.name);
+        text += &trf(" · micromode {}", &[&micromode.name]);
     }
     text
 }
@@ -449,29 +452,29 @@ impl RowWindow {
         can_create_pattern: bool,
         actions: &mut Vec<RowAction>,
     ) {
-        ui.weak(
+        ui.weak(tr(
             "All twelve notes in an order. Type them (E F G C#… or 4 5 7 1…), draw them in \
              the piano roll, or pick one. Click a label around the matrix to choose a form.",
-        );
+        ));
         ui.horizontal(|ui| {
             let edit = ui.add(
                 egui::TextEdit::singleline(&mut self.text)
                     .desired_width(260.0)
-                    .hint_text("E F G C# F# Eb Ab D B C A Bb"),
+                    .hint_text(tr("E F G C# F# Eb Ab D B C A Bb")),
             );
             let enter = edit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
-            if ui.button("Use").clicked() || enter {
+            if ui.button(tr("Use")).clicked() || enter {
                 match ToneRow::parse(&self.text) {
                     Ok(row) => self.set_row(row),
                     Err(error) => self.error = Some(error),
                 }
             }
             if ui
-                .button("From the notes")
-                .on_hover_text(
+                .button(tr("From the notes"))
+                .on_hover_text(tr(
                     "The first twelve different notes of the selection (or of the channel, \
                      if nothing is selected), in the order they start",
-                )
+                ))
                 .clicked()
             {
                 match ToneRow::from_notes(drawn.iter().copied()) {
@@ -481,31 +484,39 @@ impl RowWindow {
             }
         });
         ui.horizontal(|ui| {
-            if ui.button("🎲 Random").clicked() {
+            if ui.button(tr("🎲 Random")).clicked() {
                 self.seed = self.seed.wrapping_add(1);
                 self.set_row(ToneRow::random(self.seed.wrapping_mul(7919)));
             }
             if ui
-                .button("🎲 All-interval")
-                .on_hover_text("A random row whose eleven steps are all different sizes")
+                .button(tr("🎲 All-interval"))
+                .on_hover_text(tr(
+                    "A random row whose eleven steps are all different sizes",
+                ))
                 .clicked()
             {
                 self.seed = self.seed.wrapping_add(1);
                 self.set_row(ToneRow::random_all_interval(self.seed));
             }
-            ui.menu_button("Famous and example rows", |ui| {
+            ui.menu_button(tr("Famous and example rows"), |ui| {
                 crate::widgets::scroll_menu(ui, |ui| {
                     for preset in ROW_PRESETS {
-                        let hover = format!("{}\n\n{}", preset.source, preset.about);
-                        if ui.button(preset.name).on_hover_text(hover).clicked() {
+                        let hover = format!("{}\n\n{}", tr(preset.source), tr(preset.about));
+                        if ui
+                            .button(tr_name(preset.name))
+                            .on_hover_text(hover)
+                            .clicked()
+                        {
                             self.set_row(preset.row);
                             ui.close();
                         }
                     }
                 });
             });
-            ui.checkbox(&mut self.numbers, "Numbers")
-                .on_hover_text("Show pitch classes as numbers: C is 0, C# is 1… T is 10, E is 11");
+            ui.checkbox(&mut self.numbers, tr("Numbers"))
+                .on_hover_text(tr(
+                    "Show pitch classes as numbers: C is 0, C# is 1… T is 10, E is 11",
+                ));
         });
         if let Some(error) = &self.error {
             ui.colored_label(Color32::from_rgb(240, 120, 110), error);
@@ -549,7 +560,7 @@ impl RowWindow {
                 .color(color);
             let hover = format!(
                 "{} {}: {}",
-                form.name(),
+                tr(form.name()),
                 number,
                 self.row.form(label).note_names()
             );
@@ -600,16 +611,16 @@ impl RowWindow {
         let form = self.row.form(self.writing.label);
         ui.label(RichText::new(format!("{}: {}", self.writing.label, form.note_names())).strong());
         let intervals: Vec<String> = self.row.intervals().iter().map(u8::to_string).collect();
-        let mut facts = vec![format!("Steps up, in semitones: {}", intervals.join(" "))];
+        let mut facts = vec![trf("Steps up, in semitones: {}", &[&intervals.join(" ")])];
         if self.row.is_all_interval() {
-            facts.push("An all-interval row: every step is a different size.".to_string());
+            facts.push(tr("An all-interval row: every step is a different size.").to_string());
         }
         let combinatorial = self.row.combinatorial_forms();
         if !combinatorial.is_empty() {
             let forms: Vec<String> = combinatorial.iter().map(|l| l.to_string()).collect();
-            facts.push(format!(
+            facts.push(trf(
                 "Combinatorial: its first six notes and those of {} make all twelve.",
-                forms.join(", ")
+                &[&forms.join(", ")],
             ));
         }
         for size in [3, 4, 6] {
@@ -628,7 +639,7 @@ impl RowWindow {
                 4 => "Tetrachords",
                 _ => "Hexachords",
             };
-            facts.push(format!("{name}: {}", classes.join(", ")));
+            facts.push(format!("{}: {}", tr(name), classes.join(", ")));
         }
         for fact in facts {
             ui.weak(fact);
@@ -644,54 +655,54 @@ impl RowWindow {
     ) {
         let writing = &mut self.writing;
         ui.horizontal_wrapped(|ui| {
-            ui.label("Then");
+            ui.label(tr("Then"));
             egui::ComboBox::from_id_salt("row-chain")
-                .selected_text(writing.chain.name())
+                .selected_text(tr(writing.chain.name()))
                 .show_ui(ui, |ui| {
                     for chain in Chain::ALL {
-                        ui.selectable_value(&mut writing.chain, chain, chain.name());
+                        ui.selectable_value(&mut writing.chain, chain, tr(chain.name()));
                     }
                 })
                 .response
-                .on_hover_text("What comes after the form, until the pattern is full");
-            ui.label("Together");
+                .on_hover_text(tr("What comes after the form, until the pattern is full"));
+            ui.label(tr("Together"));
             let together = TOGETHER
                 .iter()
                 .find(|(n, _)| *n == writing.together)
-                .map_or("", |(_, name)| *name);
+                .map_or("", |(_, name)| tr(name));
             egui::ComboBox::from_id_salt("row-together")
                 .selected_text(together)
                 .show_ui(ui, |ui| {
                     for (n, name) in TOGETHER {
-                        ui.selectable_value(&mut writing.together, n, name);
+                        ui.selectable_value(&mut writing.together, n, tr(name));
                     }
                 })
                 .response
-                .on_hover_text("How many notes of the row sound at once, as a chord");
-            ui.label("Each");
+                .on_hover_text(tr("How many notes of the row sound at once, as a chord"));
+            ui.label(tr("Each"));
             let step = STEPS
                 .iter()
                 .find(|(n, _)| *n == writing.step)
-                .map_or("", |(_, name)| *name);
+                .map_or("", |(_, name)| tr(name));
             egui::ComboBox::from_id_salt("row-step")
                 .selected_text(step)
                 .show_ui(ui, |ui| {
                     for (n, name) in STEPS {
-                        ui.selectable_value(&mut writing.step, n, name);
+                        ui.selectable_value(&mut writing.step, n, tr(name));
                     }
                 });
         });
         ui.horizontal_wrapped(|ui| {
-            ui.label("Octaves");
+            ui.label(tr("Octaves"));
             egui::ComboBox::from_id_salt("row-register")
-                .selected_text(writing.register.name())
+                .selected_text(tr(writing.register.name()))
                 .show_ui(ui, |ui| {
                     for register in Register::ALL {
-                        ui.selectable_value(&mut writing.register, register, register.name())
-                            .on_hover_text(register.about());
+                        ui.selectable_value(&mut writing.register, register, tr(register.name()))
+                            .on_hover_text(tr(register.about()));
                     }
                 });
-            ui.label("from");
+            ui.label(tr("from"));
             egui::ComboBox::from_id_salt("row-low")
                 .selected_text(writing.low.to_string())
                 .show_ui(ui, |ui| {
@@ -705,60 +716,62 @@ impl RowWindow {
                 });
         });
         ui.horizontal_wrapped(|ui| {
-            ui.label("Serialism:");
-            ui.checkbox(&mut writing.durations, "Durations")
-                .on_hover_text(
+            ui.label(tr("Serialism:"));
+            ui.checkbox(&mut writing.durations, tr("Durations"))
+                .on_hover_text(tr(
                     "Each note lasts as many steps as the row's number at its place, plus one",
-                );
-            ui.checkbox(&mut writing.dynamics, "Dynamics")
-                .on_hover_text(
+                ));
+            ui.checkbox(&mut writing.dynamics, tr("Dynamics"))
+                .on_hover_text(tr(
                     "Twelve levels from very soft to very loud, in the order of the inversion",
-                );
-            ui.checkbox(&mut writing.octaves, "Octaves").on_hover_text(
-                "One of three octaves for each note, from the numbers of the retrograde",
-            );
+                ));
+            ui.checkbox(&mut writing.octaves, tr("Octaves"))
+                .on_hover_text(tr(
+                    "One of three octaves for each note, from the numbers of the retrograde",
+                ));
         });
         let notes = write_row(self.row, writing, length);
         let heard: PitchSet = notes.iter().map(|note| note.pitch.pitch_class()).collect();
         if heard.len() < 12 {
-            ui.weak(format!(
+            ui.weak(trf(
                 "The pattern only has room for {} of the 12 notes. Make it longer, or the \
                  steps shorter, to hear the whole row.",
-                heard.len()
+                &[&heard.len()],
             ));
         }
-        ui.weak(format!(
-            "Selected instrument · pattern length: {length} steps"
+        ui.weak(trf(
+            "Selected instrument · pattern length: {} steps",
+            &[&length],
         ));
         ui.horizontal_wrapped(|ui| {
             if ui
-                .button(format!("Write {} into current pattern", writing.label))
+                .button(trf("Write {} into current pattern", &[&writing.label]))
                 .on_hover_text(
-                    "Replaces this channel's notes in the pattern. Ctrl+Z puts them back.",
+                    tr("Replaces this channel's notes in the pattern. Ctrl+Z puts them back."),
                 )
                 .clicked()
             {
                 actions.push(RowAction::Write(notes.clone()));
             }
             if ui
-                .add_enabled(can_create_pattern, egui::Button::new("Save to new pattern"))
-                .on_hover_text("Create and select a new pattern with these notes, the selected instrument, and the current pattern’s length and time signature. Ctrl+Z undoes it.")
-                .on_disabled_hover_text(format!(
+                .add_enabled(can_create_pattern, egui::Button::new(tr("Save to new pattern")))
+                .on_hover_text(tr("Create and select a new pattern with these notes, the selected instrument, and the current pattern’s length and time signature. Ctrl+Z undoes it."))
+                .on_disabled_hover_text(trf(
                     "New patterns are available in the song piano roll, up to {} patterns per project.",
-                    lineup_core::MAX_PATTERNS
+                    &[&lineup_core::MAX_PATTERNS],
                 ))
                 .clicked()
             {
                 actions.push(RowAction::NewPattern {
-                    name: format!("Row {}", writing.label),
+                    name: trf("Row {}", &[&writing.label]),
                     notes,
                 });
             }
             if ui
-                .button("Use as the key")
+                .button(tr("Use as the key"))
                 .on_hover_text(
-                    "The piano roll numbers the notes 1 to 12 in this form's order, and the \
-                     harmony keys play its groups of notes",
+                    tr("The piano roll numbers the notes 1 to 12 in this form's order, and the \
+                     harmony keys play its groups of notes"),
                 )
                 .clicked()
             {
@@ -875,32 +888,34 @@ impl SetWindow {
     ) {
         if selected.len() >= 2 {
             ui.horizontal_wrapped(|ui| {
-                ui.label(RichText::new("Selected notes:").strong());
+                ui.label(RichText::new(tr("Selected notes:")).strong());
                 ui.label(describe_set(selected, names));
-                if ui.button("Show it").clicked() {
+                if ui.button(tr("Show it")).clicked() {
                     self.pick(selected);
                 }
             });
         } else {
-            ui.weak("Select two or more notes in the piano roll to see their set.");
+            ui.weak(tr(
+                "Select two or more notes in the piano roll to see their set.",
+            ));
         }
         ui.separator();
         ui.horizontal_wrapped(|ui| {
-            ui.label("Notes");
+            ui.label(tr("Notes"));
             for size in 2..=10 {
                 ui.selectable_value(&mut self.size, size, size.to_string());
             }
             ui.add(
                 egui::TextEdit::singleline(&mut self.search)
-                    .hint_text("🔍 triad, octatonic, menor 3…")
+                    .hint_text(tr("🔍 triad, octatonic, menor 3…"))
                     .desired_width(160.0),
             );
             if ui
-                .button("Micromodes…")
-                .on_hover_text(
+                .button(tr("Micromodes…"))
+                .on_hover_text(tr(
                     "The twelve sets of three notes are Kröpfl's micromodes: see them, \
                      with their names, families and sound",
-                )
+                ))
                 .clicked()
             {
                 actions.push(SetAction::OpenMicromodes);
@@ -958,29 +973,31 @@ impl SetWindow {
         ui.label(RichText::new(class.describe()).strong());
         let mut facts = Vec::new();
         if let Some(partner) = class.z_partner() {
-            facts.push(format!(
+            facts.push(trf(
                 "Z-related to {}: the same intervals, yet a different set.",
-                partner.name()
+                &[&partner.name()],
             ));
         }
         let complement = class.prime.complement().set_class();
-        facts.push(format!(
+        facts.push(trf(
             "The notes it leaves out form {}{}.",
-            complement.name(),
-            complement
-                .nickname()
-                .map(|n| format!(", {n}"))
-                .unwrap_or_default()
+            &[
+                &complement.name(),
+                &complement
+                    .nickname()
+                    .map(|n| format!(", {}", tr(n)))
+                    .unwrap_or_default(),
+            ],
         ));
         if class.is_symmetric() {
-            facts.push("Upside down it is the same set, moved.".to_string());
+            facts.push(tr("Upside down it is the same set, moved.").to_string());
         }
         for fact in facts {
             ui.weak(fact);
         }
         self.micromodes(ui, actions);
         ui.horizontal_wrapped(|ui| {
-            ui.label("Move it up");
+            ui.label(tr("Move it up"));
             egui::ComboBox::from_id_salt("set-transposition")
                 .width(48.0)
                 .selected_text(format!("T{}", self.transposition))
@@ -990,9 +1007,9 @@ impl SetWindow {
                     }
                 })
                 .response
-                .on_hover_text("Transpose: move every note up this many semitones");
-            ui.checkbox(&mut self.inverted, "Inverted (I)")
-                .on_hover_text("Turn every interval upside down first");
+                .on_hover_text(tr("Transpose: move every note up this many semitones"));
+            ui.checkbox(&mut self.inverted, tr("Inverted (I)"))
+                .on_hover_text(tr("Turn every interval upside down first"));
             let set = self.chosen();
             let notes = normal_names(set, names);
             let label = if self.inverted {
@@ -1005,8 +1022,8 @@ impl SetWindow {
         ui.horizontal_wrapped(|ui| {
             let set = self.chosen();
             if ui
-                .button("▶ Hear it")
-                .on_hover_text("Play this set together on the current instrument")
+                .button(tr("▶ Hear it"))
+                .on_hover_text(tr("Play this set together on the current instrument"))
                 .clicked()
             {
                 let names: Vec<_> = set
@@ -1018,8 +1035,10 @@ impl SetWindow {
             }
             draw_set_control(ui, set, drawing);
             if ui
-                .button("Use as the key")
-                .on_hover_text("The piano roll highlights these notes and snaps to them")
+                .button(tr("Use as the key"))
+                .on_hover_text(tr(
+                    "The piano roll highlights these notes and snaps to them",
+                ))
                 .clicked()
                 && let Some(&root) = set.normal_form().first()
             {
@@ -1034,10 +1053,10 @@ impl SetWindow {
         let set = self.chosen();
         if let Some(micromode) = Micromode::of(set) {
             ui.horizontal_wrapped(|ui| {
-                ui.weak("This is Kröpfl's micromode");
+                ui.weak(tr("This is Kröpfl's micromode"));
                 if ui
                     .small_button(format!("{} →", micromode.full_name()))
-                    .on_hover_text(micromode.about)
+                    .on_hover_text(tr(micromode.about))
                     .clicked()
                 {
                     actions.push(SetAction::ShowMicromode(set));
@@ -1051,8 +1070,9 @@ impl SetWindow {
         }
         let groups = set.len() * (set.len() - 1) * (set.len() - 2) / 6;
         ui.horizontal_wrapped(|ui| {
-            ui.weak(format!(
-                "Micromodes inside, in its {groups} groups of three:"
+            ui.weak(trf(
+                "Micromodes inside, in its {} groups of three:",
+                &[&groups],
             ));
             for (micromode, count) in found {
                 let text = crate::micromodes::found_text(micromode, count);
@@ -1062,7 +1082,11 @@ impl SetWindow {
                     .find(|trio| Micromode::of(*trio) == Some(micromode));
                 if ui
                     .small_button(text)
-                    .on_hover_text(format!("{}: {}", micromode.full_name(), micromode.about))
+                    .on_hover_text(format!(
+                        "{}: {}",
+                        micromode.full_name(),
+                        tr(micromode.about)
+                    ))
                     .clicked()
                     && let Some(trio) = example
                 {
@@ -1076,18 +1100,18 @@ impl SetWindow {
 /// Both browsers edit the piano roll's actual drawing mode, so changing the
 /// toolbar or either browser is reflected in all three places.
 pub(crate) fn draw_set_control(ui: &mut Ui, set: PitchSet, drawing: &mut ChordStamp) {
-    ui.selectable_value(drawing, ChordStamp::Single, "Single note")
-        .on_hover_text("Return to drawing one note per click");
+    ui.selectable_value(drawing, ChordStamp::Single, tr("Single note"))
+        .on_hover_text(tr("Return to drawing one note per click"));
     let Some(&first) = set.normal_form().first() else {
         return;
     };
     let stamp = ChordStamp::Set(set.relative_to(first));
     let active = *drawing == stamp;
     if ui
-        .selectable_label(active, "Draw with it")
-        .on_hover_text(
+        .selectable_label(active, tr("Draw with it"))
+        .on_hover_text(tr(
             "Draw this set above each clicked note. Click again to return to single notes.",
-        )
+        ))
         .clicked()
     {
         *drawing = if active { ChordStamp::Single } else { stamp };

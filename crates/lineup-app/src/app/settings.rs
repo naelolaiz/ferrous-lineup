@@ -6,7 +6,7 @@ use lineup_core::harmony::MinorNumerals;
 use lineup_core::library::apply::StyleParts;
 
 use super::{LineupApp, view};
-use crate::i18n::{self, Language, tr, tr_str};
+use crate::i18n::{self, Language, tr, tr_str, trf};
 use crate::library_browser::{
     StyleEditorRequest, grouped_presets, set_grouped_presets, style_mode_ui, style_parts_checkboxes,
 };
@@ -60,30 +60,25 @@ pub(super) fn minor_numerals(ctx: &egui::Context) -> MinorNumerals {
 }
 
 fn language_settings_ui(ui: &mut egui::Ui) {
-    card(
-        ui,
-        tr("Language"),
-        tr("Choose the interface language."),
-        |ui| {
-            let mut current = i18n::language(ui.ctx());
-            let mut changed = false;
-            for language in Language::ALL {
-                changed |= ui
-                    .radio_value(&mut current, language, language.name())
-                    .changed();
-            }
-            if changed {
-                i18n::set_language(ui.ctx(), current);
-            }
-        },
-    );
+    card(ui, "Language", "Choose the interface language.", |ui| {
+        let mut current = i18n::language(ui.ctx());
+        let mut changed = false;
+        for language in Language::ALL {
+            changed |= ui
+                .radio_value(&mut current, language, language.name())
+                .changed();
+        }
+        if changed {
+            i18n::set_language(ui.ctx(), current);
+        }
+    });
 }
 
 fn note_naming_ui(ui: &mut egui::Ui) {
     card(
         ui,
-        tr("Note naming"),
-        tr("How note names are written throughout the app."),
+        "Note naming",
+        "How note names are written throughout the app.",
         |ui| {
             let mut naming = i18n::note_naming(ui.ctx());
             let mut changed = false;
@@ -102,12 +97,9 @@ fn note_naming_ui(ui: &mut egui::Ui) {
 fn minor_numerals_ui(ui: &mut egui::Ui) {
     card(
         ui,
-        tr("Roman numerals in minor keys"),
-        &crate::i18n::with_notes(tr(
-            "Both ways are correct. They name the same chords and differ only in \
-         the chords on the third, sixth and seventh degrees of a minor key, \
-         as here in {A} minor.",
-        )),
+        "Roman numerals in minor keys",
+        "Both ways are correct. They name the same chords and differ only in the chords on \
+         the third, sixth and seventh degrees of a minor key, as here in {A} minor.",
         |ui| {
             let mut numerals = minor_numerals(ui.ctx());
             for (value, label, example) in [
@@ -165,7 +157,8 @@ pub(super) fn card(
             ui.set_min_width(ui.available_width());
             ui.strong(tr_str(title));
             if !description.is_empty() {
-                ui.label(RichText::new(tr_str(description)).color(theme::TEXT_DIM));
+                let description = crate::i18n::with_notes(tr_str(description));
+                ui.label(RichText::new(description).color(theme::TEXT_DIM));
             }
             ui.add_space(6.0);
             contents(ui);
@@ -306,15 +299,15 @@ impl LineupApp {
     }
 
     fn library_settings_ui(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Style library");
+        ui.heading(tr("Style library"));
         card(
             ui,
             "Style list",
             "Presentation in the Library and Progression browsers.",
             |ui| {
                 let mut grouped = grouped_presets(ui.ctx());
-                ui.radio_value(&mut grouped, false, "Alphabetical list");
-                ui.radio_value(&mut grouped, true, "Group by genre");
+                ui.radio_value(&mut grouped, false, tr("Alphabetical list"));
+                ui.radio_value(&mut grouped, true, tr("Group by genre"));
                 set_grouped_presets(ui.ctx(), grouped);
             },
         );
@@ -325,7 +318,7 @@ impl LineupApp {
             |ui| {
                 let parts = self.playlist.library_parts_mut();
                 style_mode_ui(ui, parts);
-                ui.strong("Apply by default");
+                ui.strong(tr("Apply by default"));
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing = vec2(6.0, 6.0);
                     for (label, value, visible) in [
@@ -344,12 +337,12 @@ impl LineupApp {
                         ("Tempo", &mut parts.tempo, true),
                         ("Swing", &mut parts.swing, true),
                     ] {
-                        if visible && theme::light_button(ui, label, *value, None).clicked() {
+                        if visible && theme::light_button(ui, tr(label), *value, None).clicked() {
                             *value = !*value;
                         }
                     }
                 });
-                let edit = ui.button("Edit defaults…");
+                let edit = ui.button(tr("Edit defaults…"));
                 if edit.clicked() {
                     self.settings.style_defaults = *parts;
                 }
@@ -357,7 +350,7 @@ impl LineupApp {
                     .width(340.0)
                     .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
                     .show(|ui| {
-                        ui.strong("Default style options");
+                        ui.strong(tr("Default style options"));
                         egui::ScrollArea::vertical()
                             .max_height((ui.ctx().content_rect().height() - 160.0).max(80.0))
                             .show(ui, |ui| {
@@ -365,19 +358,21 @@ impl LineupApp {
                             });
                         ui.separator();
                         ui.horizontal(|ui| {
-                            if ui.button("Save defaults").clicked() {
+                            if ui.button(tr("Save defaults")).clicked() {
                                 *self.playlist.library_parts_mut() = self.settings.style_defaults;
                                 ui.close();
                             }
-                            if ui.button("Cancel").clicked() {
+                            if ui.button(tr("Cancel")).clicked() {
                                 ui.close();
                             }
                         });
                     });
                 ui.label(
-                    RichText::new("Click a style to review. Ctrl-click to apply immediately.")
-                        .small()
-                        .color(theme::TEXT_DIM),
+                    RichText::new(tr(
+                        "Click a style to review. Ctrl-click to apply immediately.",
+                    ))
+                    .small()
+                    .color(theme::TEXT_DIM),
                 );
             },
         );
@@ -386,7 +381,7 @@ impl LineupApp {
             "Your styles",
             "Choose where your saved styles are stored.",
             |ui| {
-                if ui.button("Styles folder…").clicked() {
+                if ui.button(tr("Styles folder…")).clicked() {
                     self.playlist.library_browser_mut().editor_request =
                         Some(StyleEditorRequest::Folder);
                 }
@@ -395,7 +390,7 @@ impl LineupApp {
     }
 
     fn playback_settings_ui(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Playback");
+        ui.heading(tr("Playback"));
         card(
             ui,
             "Playhead",
@@ -409,26 +404,26 @@ impl LineupApp {
             |ui| {
                 let practice = self.practice.view();
                 let mut count_in = practice.count_in;
-                if ui.checkbox(&mut count_in, "Count-in").changed() {
+                if ui.checkbox(&mut count_in, tr("Count-in")).changed() {
                     self.set_count_in(count_in);
                 }
                 ui.label(
-                    RichText::new("One bar of clicks before playback starts.")
+                    RichText::new(tr("One bar of clicks before playback starts."))
                         .small()
                         .color(theme::TEXT_DIM),
                 );
                 let mut metronome = practice.metronome;
-                if ui.checkbox(&mut metronome, "Metronome").changed() {
+                if ui.checkbox(&mut metronome, tr("Metronome")).changed() {
                     self.set_metronome(metronome);
                 }
                 ui.label(
-                    RichText::new("A click on every beat during playback.")
+                    RichText::new(tr("A click on every beat during playback."))
                         .small()
                         .color(theme::TEXT_DIM),
                 );
                 ui.separator();
                 ui.horizontal_wrapped(|ui| {
-                    ui.label("Practice speed");
+                    ui.label(tr("Practice speed"));
                     let mut speed = practice.speed;
                     if ui
                         .add(
@@ -441,20 +436,22 @@ impl LineupApp {
                         self.set_speed(speed);
                     }
                     if ui
-                        .add_enabled(speed != 100, egui::Button::new("Reset"))
+                        .add_enabled(speed != 100, egui::Button::new(tr("Reset")))
                         .clicked()
                     {
                         self.set_speed(100);
                     }
                 });
                 ui.label(
-                    RichText::new("Relative to the song tempo. Starts at 100% each session.")
-                        .small()
-                        .color(theme::TEXT_DIM),
+                    RichText::new(tr(
+                        "Relative to the song tempo. Starts at 100% each session.",
+                    ))
+                    .small()
+                    .color(theme::TEXT_DIM),
                 );
                 ui.separator();
                 let mut training = practice.training;
-                if ui.checkbox(&mut training, "Speed trainer").changed() {
+                if ui.checkbox(&mut training, tr("Speed trainer")).changed() {
                     self.set_training(training);
                 }
                 ui.horizontal_wrapped(|ui| {
@@ -465,10 +462,10 @@ impl LineupApp {
                     }
                 });
                 ui.label(
-                    RichText::new(
+                    RichText::new(tr(
                         "Each time the loop comes round, the band plays a little faster, up \
                          to the target. Stop starts again from the first speed.",
-                    )
+                    ))
                     .small()
                     .color(theme::TEXT_DIM),
                 );
@@ -484,15 +481,15 @@ impl LineupApp {
                 if ui
                     .add_enabled(
                         can,
-                        egui::Checkbox::new(&mut on, "Write a trace while playing"),
+                        egui::Checkbox::new(&mut on, tr("Write a trace while playing")),
                     )
                     .changed()
                 {
                     self.set_tracing(on);
                 }
                 let note = match &self.trace {
-                    Some(trace) => format!("Writing to {}", trace.path().display()),
-                    None => "Off each time the app starts.".to_string(),
+                    Some(trace) => trf("Writing to {}", &[&trace.path().display()]),
+                    None => tr("Off each time the app starts.").to_string(),
                 };
                 ui.label(RichText::new(note).small().color(theme::TEXT_DIM));
             },

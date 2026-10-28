@@ -357,6 +357,14 @@ impl Letter {
             Letter::B => "Si",
         }
     }
+
+    /// The letter as the settings name notes: "A", or "La" in solfège.
+    pub fn shown(self) -> String {
+        match NoteNaming::current() {
+            NoteNaming::Letters => self.as_char().to_string(),
+            NoteNaming::Solfege => self.solfege().to_string(),
+        }
+    }
 }
 
 /// The name of a note as musicians write it: a letter, and how many

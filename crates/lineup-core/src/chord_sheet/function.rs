@@ -31,6 +31,7 @@
 use crate::harmony::{
     Chord, ChordFamily, ChordQuality, ChordSymbol, Scale, ScaleKind, with_figures,
 };
+use crate::i18n::{key_name, tr, trf};
 use crate::key_map::KeyMap;
 use crate::pitch::{NoteName, PitchClass};
 
@@ -458,11 +459,11 @@ impl Function {
     /// from outside the key: "borrowed", "pivot".
     pub fn tag(&self) -> Option<String> {
         if self.pivot.is_some() {
-            return Some("pivot".to_string());
+            return Some(tr("pivot").to_string());
         }
         match self.role {
-            Role::Borrowed { .. } => Some("borrowed".to_string()),
-            _ if self.early => Some(format!("in {}", self.key.name())),
+            Role::Borrowed { .. } => Some(tr("borrowed").to_string()),
+            _ if self.early => Some(trf("in {}", &[&key_name(self.key)])),
             _ => None,
         }
     }
@@ -497,13 +498,15 @@ impl Function {
     /// What the chord sheet says about a chord it marks: its name, its
     /// numeral in its key, what it does there, and its notes.
     pub fn describe(&self) -> String {
-        let quality = self.symbol.quality.name();
+        let quality = tr(self.symbol.quality.name());
         let mut text = format!("{}: {} {quality}", self.symbol, self.symbol.root);
         if let Some(bass) = self.symbol.bass {
-            text.push_str(&format!(" with {bass} in the bass"));
+            text.push_str(&trf(" with {} in the bass", &[&bass]));
         }
         match self.own_numeral() {
-            Some(numeral) => text.push_str(&format!(", {numeral} in {}.", self.key.name())),
+            Some(numeral) => {
+                text.push_str(&trf(", {} in {}.", &[&numeral, &key_name(self.key)]));
+            }
             None => text.push('.'),
         }
         if let Some(about) = self.explain() {
@@ -516,7 +519,7 @@ impl Function {
             .iter()
             .map(NoteName::to_string)
             .collect();
-        text.push_str(&format!(" Its notes: {}.", notes.join(" ")));
+        text.push_str(&trf(" Its notes: {}.", &[&notes.join(" ")]));
         text
     }
 
@@ -524,33 +527,52 @@ impl Function {
     /// chord sheet. `None` for a plain chord.
     pub fn explain(&self) -> Option<String> {
         let key = self.key;
-        let key_name = key.name();
+        let key_name = key_name(key);
         let mut text = match self.role {
             Role::Plain => String::new(),
             Role::Borrowed { from } => {
                 let outside = self.outside_notes();
-                let (mode, colour, mood) = match from.kind {
-                    ScaleKind::Major => ("major", "brighten", "the minor key"),
-                    _ => ("minor", "darken", "the major key"),
+                // Whole sentences, for the words that go with how many
+                // notes there are.
+                let template = match (from.kind, outside.len()) {
+                    (ScaleKind::Major, 1) => {
+                        "A borrowed chord: {} takes it from {}, the major key on the same tonic \
+                         (this is called modal mixture). Its {} comes from {}, not {}: it \
+                         brightens the minor key for a moment without leaving it."
+                    }
+                    (ScaleKind::Major, _) => {
+                        "A borrowed chord: {} takes it from {}, the major key on the same tonic \
+                         (this is called modal mixture). Its {} come from {}, not {}: they \
+                         brighten the minor key for a moment without leaving it."
+                    }
+                    (_, 1) => {
+                        "A borrowed chord: {} takes it from {}, the minor key on the same tonic \
+                         (this is called modal mixture). Its {} comes from {}, not {}: it \
+                         darkens the major key for a moment without leaving it."
+                    }
+                    _ => {
+                        "A borrowed chord: {} takes it from {}, the minor key on the same tonic \
+                         (this is called modal mixture). Its {} come from {}, not {}: they \
+                         darken the major key for a moment without leaving it."
+                    }
                 };
-                let (comes, they, colour) = match outside.len() {
-                    1 => ("comes", "it", format!("{colour}s")),
-                    _ => ("come", "they", colour.to_string()),
-                };
-                let mut text = format!(
-                    "A borrowed chord: {key_name} takes it from {}, the {mode} key on the same \
-                     tonic (this is called modal mixture). Its {} {comes} from {}, not \
-                     {key_name}: {they} {colour} {mood} for a moment without leaving it.",
-                    from.name(),
-                    listed(&outside),
-                    from.name(),
+                let from_name = crate::i18n::key_name(from);
+                let mut text = trf(
+                    template,
+                    &[
+                        &key_name,
+                        &from_name,
+                        &listed(&outside),
+                        &from_name,
+                        &key_name,
+                    ],
                 );
                 let tonic = self.symbol.root.pitch_class() == key.root;
                 if tonic && from.kind == ScaleKind::Major && self.last {
-                    text.push_str(
+                    text.push_str(tr(
                         " Ending a piece in minor on the major tonic chord like this is called a \
                          Picardy third.",
-                    );
+                    ));
                 }
                 text
             }
@@ -562,17 +584,29 @@ impl Function {
                     .spell(self.symbol.root)
                     .get(1)
                     .map_or_else(String::new, NoteName::to_string);
-                let mut text = format!(
-                    "A secondary dominant: {} is the dominant of {name}, the {numeral} of \
-                     {key_name}, as if {name} were a tonic. Its third, {third}, is the leading \
-                     tone of {}, a semitone below it, and pulls up to it, so {name} sounds for a \
-                     moment like a key of its own (a tonicization).",
-                    self.symbol,
-                    key.spell_root(of),
+                let mut text = trf(
+                    "A secondary dominant: {} is the dominant of {}, the {} of {}, as if {} \
+                     were a tonic. Its third, {}, is the leading tone of {}, a semitone below \
+                     it, and pulls up to it, so {} sounds for a moment like a key of its own \
+                     (a tonicization).",
+                    &[
+                        &self.symbol,
+                        &name,
+                        &numeral,
+                        &key_name,
+                        &name,
+                        &third,
+                        &key.spell_root(of),
+                        &name,
+                    ],
                 );
                 let outside = self.outside_notes();
                 if !outside.is_empty() && !outside.iter().any(|name| name.to_string() == third) {
-                    text.push_str(&format!(" {} not in {key_name}.", notes_are(&outside)));
+                    let template = match outside.len() {
+                        1 => " Its {} is not in {}.",
+                        _ => " Its {} are not in {}.",
+                    };
+                    text.push_str(&trf(template, &[&listed(&outside), &key_name]));
                 }
                 text.push_str(&self.resolution(of, "as a dominant goes to its tonic"));
                 text
@@ -580,12 +614,20 @@ impl Function {
             Role::SecondaryLeadingTone { of } => {
                 let name = key.chord_name(of);
                 let numeral = self.target_numeral(of).unwrap_or_default();
-                let mut text = format!(
-                    "A secondary leading-tone chord: {} is built on {}, the leading tone of \
-                     {name} (the {numeral} of {key_name}), a semitone below its root, and pulls \
-                     up into {name} as vii° pulls into I, so {name} sounds for a moment like a \
-                     key of its own (a tonicization).",
-                    self.symbol, self.symbol.root,
+                let mut text = trf(
+                    "A secondary leading-tone chord: {} is built on {}, the leading tone of {} \
+                     (the {} of {}), a semitone below its root, and pulls up into {} as vii° \
+                     pulls into I, so {} sounds for a moment like a key of its own (a \
+                     tonicization).",
+                    &[
+                        &self.symbol,
+                        &self.symbol.root,
+                        &name,
+                        &numeral,
+                        &key_name,
+                        &name,
+                        &name,
+                    ],
                 );
                 text.push_str(&self.resolution(of, "its root rising a semitone into it"));
                 text
@@ -596,12 +638,12 @@ impl Function {
                 let second = key.spell(key.root.transpose(2));
                 let third = notes.get(1).map_or_else(String::new, NoteName::to_string);
                 let dominant = key.spell(key.root.transpose(7));
-                format!(
+                trf(
                     "The Neapolitan chord: a major chord on the lowered second degree, {} where \
-                     {key_name} has {second}. It is most often played with its third, {third}, in \
-                     the bass (N⁶, the Neapolitan sixth), and leads to the dominant, {dominant}, \
-                     often by way of the tonic six-four chord.",
-                    self.symbol.root,
+                     {} has {}. It is most often played with its third, {}, in the bass (N⁶, \
+                     the Neapolitan sixth), and leads to the dominant, {}, often by way of the \
+                     tonic six-four chord.",
+                    &[&self.symbol.root, &key_name, &second, &third, &dominant],
                 )
             }
         };
@@ -615,9 +657,10 @@ impl Function {
             if !text.is_empty() {
                 text.push(' ');
             }
-            text.push_str(&format!(
-                "{key_name} has already come here, before the key change is marked: after the \
-                 pivot chord the music is read in {key_name}."
+            text.push_str(&trf(
+                "{} has already come here, before the key change is marked: after the pivot \
+                 chord the music is read in {}.",
+                &[&key_name, &key_name],
             ));
         }
         (!text.is_empty()).then_some(text)
@@ -625,19 +668,18 @@ impl Function {
 
     /// Where a secondary chord goes, as a sentence: whether it goes on to
     /// the chord `of` it leads to, `how`.
-    fn resolution(&self, of: Chord, how: &str) -> String {
+    fn resolution(&self, of: Chord, how: &'static str) -> String {
         let name = self.key.chord_name(of);
         match self.next {
             Some(next) if next.root.pitch_class() == of.root => {
-                format!(" Here it goes on to {next}, {how}.")
+                trf(" Here it goes on to {}, {}.", &[&next, &tr(how)])
             }
-            Some(next) if arrives(next, of) => format!(
-                " Here it goes on to {next}, a six-four chord over {}: the bass has arrived, \
-                 and {name} comes when the two notes above it fall a step (as in the cadential \
-                 six-four).",
-                self.key.spell_root(of),
+            Some(next) if arrives(next, of) => trf(
+                " Here it goes on to {}, a six-four chord over {}: the bass has arrived, and {} \
+                 comes when the two notes above it fall a step (as in the cadential six-four).",
+                &[&next, &self.key.spell_root(of), &name],
             ),
-            Some(next) => format!(" Here it goes to {next} instead of {name}."),
+            Some(next) => trf(" Here it goes to {} instead of {}.", &[&next, &name]),
             None => String::new(),
         }
     }
@@ -656,26 +698,37 @@ impl Modulation {
     /// What happens at the change, for the tooltip of the key change on
     /// the chord sheet.
     pub fn describe(&self) -> String {
-        let (from, to) = (self.from.name(), self.to.name());
-        let head = format!("A modulation from {from} to {to}.");
+        let (from, to) = (key_name(self.from), key_name(self.to));
+        let head = trf("A modulation from {} to {}.", &[&from, &to]);
         if !has_chords(self.from) || !has_chords(self.to) {
             return head;
         }
         if self.from.root == self.to.root {
             return format!(
-                "{head} The tonic stays and the mode changes: a change of mode, with no chord \
-                 needed to lead there."
+                "{head} {}",
+                tr(
+                    "The tonic stays and the mode changes: a change of mode, with no chord \
+                    needed to lead there."
+                )
             );
         }
         match (self.pivot, self.arrival) {
             (Some(_), _) => format!("{head} {}", pivot_text(self)),
             (None, Some((_, arrival))) => format!(
-                "{head} {arrival} is the first chord of {to} alone, and the chord before it is \
-                 not one of both keys: a direct modulation, with no pivot chord."
+                "{head} {}",
+                trf(
+                    "{} is the first chord of {} alone, and the chord before it is not one of \
+                     both keys: a direct modulation, with no pivot chord.",
+                    &[&arrival, &to],
+                )
             ),
             (None, None) => format!(
-                "{head} No chord near the change belongs to {to} alone, so the chord sheet \
-                 names no pivot chord."
+                "{head} {}",
+                trf(
+                    "No chord near the change belongs to {} alone, so the chord sheet names no \
+                     pivot chord.",
+                    &[&to],
+                )
             ),
         }
     }
@@ -686,13 +739,16 @@ fn pivot_text(change: &Modulation) -> String {
     let (Some((_, pivot)), Some((_, arrival))) = (change.pivot, change.arrival) else {
         return String::new();
     };
-    let (from, to) = (change.from.name(), change.to.name());
+    let (from, to) = (key_name(change.from), key_name(change.to));
     let old = figured(change.from, pivot).unwrap_or_default();
     let new = figured(change.to, pivot).unwrap_or_default();
-    format!(
-        "The pivot chord of the modulation to {to}: {pivot} is {old} in {from} and {new} in {to}, \
-         a chord of both keys. The ear hears it in {from}; {arrival}, which {from} does not \
-         have, comes next and shows that it was the {new} of {to}."
+    trf(
+        "The pivot chord of the modulation to {}: {} is {} in {} and {} in {}, a chord of both \
+         keys. The ear hears it in {}; {}, which {} does not have, comes next and shows that it \
+         was the {} of {}.",
+        &[
+            &to, &pivot, &old, &from, &new, &to, &from, &arrival, &from, &new, &to,
+        ],
     )
 }
 
@@ -702,22 +758,10 @@ fn figured(key: Scale, symbol: ChordSymbol) -> Option<String> {
     key.spelled_figured_numeral(symbol.root, symbol.chord(), symbol.bass_pitch_class())
 }
 
-/// "Its Ab is", "Its Ab and Eb are".
-fn notes_are(notes: &[NoteName]) -> String {
-    match notes.len() {
-        1 => format!("Its {} is", listed(notes)),
-        _ => format!("Its {} are", listed(notes)),
-    }
-}
-
 /// Note names in words: "Ab", "Ab and Eb", "F#, A and C".
 fn listed(notes: &[NoteName]) -> String {
     let names: Vec<String> = notes.iter().map(NoteName::to_string).collect();
-    match names.as_slice() {
-        [] => String::new(),
-        [one] => one.clone(),
-        [rest @ .., last] => format!("{} and {last}", rest.join(", ")),
-    }
+    crate::i18n::list(&names)
 }
 
 #[cfg(test)]

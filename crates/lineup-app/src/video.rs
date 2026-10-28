@@ -532,7 +532,7 @@ impl Scene {
     pub fn place_name(&self, step: usize) -> String {
         let here = self.song.timeline_step(step).unwrap_or(0);
         let (bar, beat, _) = self.views.project.meter().position(here);
-        format!("Bar {bar}, beat {beat}")
+        crate::i18n::trf("Bar {}, beat {}", &[&bar, &beat])
     }
 }
 
@@ -570,13 +570,18 @@ impl Views {
                             .project
                             .playlist()
                             .section_at(step)
-                            .map(|(_, section)| format!(" · {}", section.name))
+                            .map(|(_, section)| {
+                                format!(" · {}", crate::i18n::tr_name(&section.name))
+                            })
                             .unwrap_or_default();
                         let (bar, beat, _) = meter.position(step);
                         ui.label(
-                            RichText::new(format!("Bar {bar}, beat {beat}{section}    "))
-                                .size(15.0)
-                                .color(theme::ACCENT),
+                            RichText::new(format!(
+                                "{}{section}    ",
+                                crate::i18n::trf("Bar {}, beat {}", &[&bar, &beat])
+                            ))
+                            .size(15.0)
+                            .color(theme::ACCENT),
                         );
                     }
                 });
@@ -620,7 +625,7 @@ impl Views {
             .frame(frame)
             .show(ui, |ui| match view {
                 View::ChordSheet => {
-                    caption(ui, "Chord sheet");
+                    caption(ui, crate::i18n::tr("Chord sheet"));
                     self.chord_sheet.video(ui, &self.project, step);
                 }
                 View::LeadSheet => {
@@ -629,7 +634,7 @@ impl Views {
                     }
                 }
                 View::Playlist => {
-                    caption(ui, "Playlist");
+                    caption(ui, crate::i18n::tr("Playlist"));
                     self.playlist.video(ui, &self.project, at);
                 }
                 View::PianoRoll => {
@@ -656,7 +661,15 @@ impl Views {
                         .project
                         .pattern(self.piano_pattern)
                         .map_or("", |pattern| pattern.name.as_str());
-                    caption(ui, &format!("Piano roll · {pattern} · {channel}"));
+                    caption(
+                        ui,
+                        &format!(
+                            "{} · {} · {}",
+                            crate::i18n::tr("Piano roll"),
+                            crate::i18n::tr_name(pattern),
+                            crate::i18n::tr_name(channel)
+                        ),
+                    );
                     self.piano_roll.video(
                         ui,
                         &self.project,

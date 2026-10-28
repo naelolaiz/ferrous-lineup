@@ -16,6 +16,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::{Band, BandStyle};
+use crate::i18n::trf;
 use crate::pattern::NoteEvent;
 use crate::project::Project;
 
@@ -55,8 +56,9 @@ impl StyleMarkerFile {
     pub(crate) fn marker(&self) -> Result<StyleMarker, String> {
         let style = match &self.style {
             Some(name) => Some(BandStyle::named(name).ok_or_else(|| {
-                format!(
-                    "a section of its band plays \"{name}\", a style this version does not know"
+                trf(
+                    "a section of its band plays \"{}\", a style this version does not know",
+                    &[&name],
                 )
             })?),
             None => None,

@@ -28,6 +28,7 @@ use lineup_core::library::{Genre, MICROMODE_STYLES, ROW_STYLES, RowStyle, SONGS,
 use super::LineupApp;
 use super::files::Pending;
 use super::library::Demo;
+use crate::i18n::{Language, tr, tr_name};
 use crate::theme;
 
 /// A demo as the menu lists it and a search finds it.
@@ -49,12 +50,17 @@ struct Entry {
 
 impl Entry {
     fn new(demo: Demo, label: String, place: String, hover: String) -> Entry {
+        // A search finds the title in English too.
+        let title = match tr_name(demo.name()) {
+            std::borrow::Cow::Borrowed(name) if name == demo.name() => fold(name),
+            shown => fold(&format!("{shown} {}", demo.name())),
+        };
         Entry {
             demo,
             label,
             place,
             hover,
-            title: fold(demo.name()),
+            title,
             details: String::new(),
             about: String::new(),
         }
@@ -121,9 +127,22 @@ struct Demos {
     genres: Vec<Genre>,
 }
 
-static DEMOS: LazyLock<Demos> = LazyLock::new(|| {
+/// The demos as the menu shows them in English, and in Spanish.
+static DEMOS: LazyLock<Demos> = LazyLock::new(|| Language::English.with(all_demos));
+static DEMOS_ES: LazyLock<Demos> = LazyLock::new(|| Language::Spanish.with(all_demos));
+
+/// The demos in the language chosen.
+fn shown_demos() -> &'static Demos {
+    match Language::current() {
+        Language::English => &DEMOS,
+        Language::Spanish => &DEMOS_ES,
+    }
+}
+
+/// Every demo, in the language of this thread.
+fn all_demos() -> Demos {
     let mut genres = Genre::ALL.to_vec();
-    genres.sort_by(|a, b| by_title(a.name(), b.name()));
+    genres.sort_by(|a, b| by_title(tr(a.name()), tr(b.name())));
     let mut entries = all_entries();
     entries.sort_by(|a, b| {
         a.title
@@ -132,14 +151,14 @@ static DEMOS: LazyLock<Demos> = LazyLock::new(|| {
             .then_with(|| a.place.cmp(&b.place))
     });
     Demos { entries, genres }
-});
+}
 
 fn all_entries() -> Vec<Entry> {
     let mut entries = vec![Entry::new(
         Demo::Start,
-        "The starting song".into(),
+        tr("The starting song").into(),
         String::new(),
-        "The beat and chords Ferrous Lineup opens with".into(),
+        tr("The beat and chords Ferrous Lineup opens with").into(),
     )];
     for song in SONGS {
         let scale = song.scale();
@@ -153,45 +172,69 @@ fn all_entries() -> Vec<Entry> {
         ) {
             key.push_str(&format!(" {tonic} minor"));
         }
+        // And in Spanish, in both namings: "re menor", "D menor".
+        if Language::current() == Language::Spanish {
+            key.push(' ');
+            key.push_str(&crate::i18n::key_name(scale));
+            key.push(' ');
+            key.push_str(&lineup_core::NoteNaming::Letters.with(|| crate::i18n::key_name(scale)));
+        }
         let time = song.time.to_string();
         let entry = Entry::new(
             Demo::Song(song),
-            format!("{} · {}", song.name, song.feel),
-            format!("Songs ▸ {}", song.genre.name()),
-            format!("{}\n\n{}", song.origin, song.about),
+            format!("{} · {}", tr_name(song.name), tr(song.feel)),
+            format!("{} ▸ {}", tr("Songs"), tr(song.genre.name())),
+            format!("{}\n\n{}", tr(song.origin), tr(song.about)),
         );
         entries.push(
             entry
-                .details(&[song.origin, song.feel, song.genre.name(), &key, &time])
-                .about(&[song.about]),
+                .details(&[
+                    song.origin,
+                    tr(song.origin),
+                    song.feel,
+                    tr(song.feel),
+                    song.genre.name(),
+                    tr(song.genre.name()),
+                    &key,
+                    &time,
+                ])
+                .about(&[song.about, tr(song.about)]),
         );
     }
     for style in STYLES {
         let time = style.time.to_string();
         let entry = Entry::new(
             Demo::Style(style),
-            style.name.into(),
-            format!("Styles ▸ {}", style.genre.name()),
-            style.about.into(),
+            tr_name(style.name).into(),
+            format!("{} ▸ {}", tr("Styles"), tr(style.genre.name())),
+            tr(style.about).into(),
         );
         entries.push(
             entry
-                .details(&[style.genre.name(), style.mode.name(), style.rhythm, &time])
-                .about(&[style.about]),
+                .details(&[
+                    style.genre.name(),
+                    tr(style.genre.name()),
+                    style.mode.name(),
+                    tr(style.mode.name()),
+                    style.rhythm,
+                    &tr_name(style.rhythm),
+                    &time,
+                ])
+                .about(&[style.about, tr(style.about)]),
         );
     }
     for style in &ROW_STYLES {
         let time = style.time.to_string();
         let entry = Entry::new(
             Demo::Row(style),
-            style.name.into(),
-            "Twelve-tone".into(),
-            style.about.into(),
+            tr_name(style.name).into(),
+            tr("Twelve-tone").into(),
+            tr(style.about).into(),
         );
         entries.push(
             entry
-                .details(&["twelve-tone row", style.row, &time])
-                .about(&[style.about]),
+                .details(&["twelve-tone row", tr("twelve-tone row"), style.row, &time])
+                .about(&[style.about, tr(style.about)]),
         );
     }
     for style in &MICROMODE_STYLES {
@@ -199,14 +242,30 @@ fn all_entries() -> Vec<Entry> {
         let time = style.time.to_string();
         let entry = Entry::new(
             Demo::Micromode(style),
-            format!("{} · {}", style.name, micromode.name),
-            "Micromodes".into(),
-            format!("{}\n\n{}: {}", style.about, micromode.name, micromode.about),
+            format!("{} · {}", tr_name(style.name), micromode.name),
+            tr("Micromodes").into(),
+            format!(
+                "{}\n\n{}: {}",
+                tr(style.about),
+                micromode.name,
+                tr(micromode.about)
+            ),
         );
         entries.push(
             entry
-                .details(&["micromode", micromode.name, micromode.english, &time])
-                .about(&[style.about, micromode.about]),
+                .details(&[
+                    "micromode",
+                    tr("micromode"),
+                    micromode.name,
+                    micromode.english,
+                    &time,
+                ])
+                .about(&[
+                    style.about,
+                    tr(style.about),
+                    micromode.about,
+                    tr(micromode.about),
+                ]),
         );
     }
     entries
@@ -284,7 +343,7 @@ fn starts_a_word(text: &str, words: &str) -> bool {
 fn search(query: &str) -> Vec<(&'static Entry, Rank)> {
     let words: Vec<String> = fold(query).split(' ').map(str::to_owned).collect();
     let words: Vec<String> = words.into_iter().filter(|word| !word.is_empty()).collect();
-    let mut found: Vec<(&'static Entry, Rank)> = DEMOS
+    let mut found: Vec<(&'static Entry, Rank)> = shown_demos()
         .entries
         .iter()
         .filter_map(|entry| entry.rank(&words).map(|rank| (entry, rank)))
@@ -346,7 +405,7 @@ fn demos(ui: &mut egui::Ui) -> Option<Demo> {
     let field = ui.add(
         egui::TextEdit::singleline(&mut query)
             .id(field_id)
-            .hint_text("🔍 Search demos")
+            .hint_text(tr("🔍 Search demos"))
             .desired_width(240.0),
     );
     if opened {
@@ -354,9 +413,11 @@ fn demos(ui: &mut egui::Ui) -> Option<Demo> {
     }
     let field = theme::hint(
         field,
-        "Find a demo by its title, composer, genre, key or time signature, \
+        crate::i18n::tr(
+            "Find a demo by its title, composer, genre, key or time signature, \
          such as \"choclo\", \"bach\", \"tango\", \"D minor\" or \"3/4\". \
          Enter opens the first one; the arrow keys go through the rest",
+        ),
     );
     let enter = field.lost_focus() && ui.input(|input| input.key_pressed(egui::Key::Enter));
     ui.ctx()
@@ -372,7 +433,7 @@ fn demos(ui: &mut egui::Ui) -> Option<Demo> {
     }
     ui.separator();
     if found.is_empty() {
-        ui.weak("No demo matches");
+        ui.weak(tr("No demo matches"));
         return None;
     }
     let mut picked = None;
@@ -411,7 +472,7 @@ fn demos(ui: &mut egui::Ui) -> Option<Demo> {
 
 /// The demos in their submenus, each list in alphabetical order.
 fn listed(ui: &mut egui::Ui) -> Option<Demo> {
-    let demos = &*DEMOS;
+    let demos = shown_demos();
     let mut picked = None;
     let mut button = |ui: &mut egui::Ui, entry: &Entry, label: &str| {
         if ui.button(label).on_hover_text(&entry.hover).clicked() {
@@ -437,7 +498,7 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
                 if songs.is_empty() {
                     continue;
                 }
-                crate::widgets::scroll_menu_button(ui, genre.name(), |ui| {
+                crate::widgets::scroll_menu_button(ui, tr(genre.name()), |ui| {
                     crate::widgets::scroll_menu(ui, |ui| {
                         for entry in songs {
                             button(ui, entry, &entry.label);
@@ -459,7 +520,7 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
                 if styles.is_empty() {
                     continue;
                 }
-                crate::widgets::scroll_menu_button(ui, genre.name(), |ui| {
+                crate::widgets::scroll_menu_button(ui, tr(genre.name()), |ui| {
                     crate::widgets::scroll_menu(ui, |ui| {
                         for entry in styles {
                             button(ui, entry, &entry.label);
@@ -497,11 +558,11 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
                 button(ui, entry, &entry.label);
             }
             ui.separator();
-            ui.weak("A famous row made of one micromode");
+            ui.weak(tr("A famous row made of one micromode"));
             if let Some(style) = RowStyle::named("Webern's trichords")
                 && let Some(entry) = demos.entries.iter().find(|e| e.demo == Demo::Row(style))
             {
-                button(ui, entry, &format!("{} · Menor 3", style.name));
+                button(ui, entry, &format!("{} · Menor 3", tr_name(style.name)));
             }
         });
     });

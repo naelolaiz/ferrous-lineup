@@ -7,6 +7,7 @@ use lineup_core::band::{INTRO_BARS, Variation};
 use lineup_core::{BandStyle, MAX_REPEATS, Project};
 
 use super::SheetAction;
+use crate::i18n::tr;
 use crate::theme;
 
 /// What the form row asks for.
@@ -50,22 +51,28 @@ pub(super) fn row(
     let intro_bars = form.intro / steps_per_bar;
     let has_chorus = project.chorus().is_some();
     ui.horizontal_wrapped(|ui| {
-        ui.label(egui::RichText::new("Form").strong());
+        ui.label(egui::RichText::new(tr("Form")).strong());
         ui.separator();
 
         let shown = match intro_bars {
-            0 => "No intro".to_string(),
-            bars => format!("Intro: {bars} bars"),
+            0 => tr("No intro").to_string(),
+            bars => crate::i18n::trf("Intro: {} bars", &[&bars]),
         };
         ui.add_enabled_ui(has_chorus || intro_bars > 0, |ui| {
             let combo = egui::ComboBox::from_id_salt("chord-sheet-intro")
                 .selected_text(shown)
                 .show_ui(ui, |ui| {
-                    if ui.selectable_label(intro_bars == 0, "No intro").clicked() {
+                    if ui
+                        .selectable_label(intro_bars == 0, tr("No intro"))
+                        .clicked()
+                    {
                         act(FormAction::Intro(0));
                     }
                     for bars in INTRO_BARS {
-                        let item = ui.selectable_label(intro_bars == bars, format!("{bars} bars"));
+                        let item = ui.selectable_label(
+                            intro_bars == bars,
+                            crate::i18n::trf("{} bars", &[&bars]),
+                        );
                         if item.clicked() {
                             act(FormAction::Intro(bars));
                         }
@@ -73,15 +80,17 @@ pub(super) fn row(
                 });
             theme::hint(
                 combo.response,
-                "Bars the band plays before the chorus, with chords that lead into its first \
+                crate::i18n::tr(
+                    "Bars the band plays before the chorus, with chords that lead into its first \
                  one: a turnaround, ii–V or I–vi–ii–V. They are written on the sheet, so you \
                  can change them; picking a length again writes them anew",
+                ),
             )
-            .on_disabled_hover_text("Write a chord first: the intro leads into it");
+            .on_disabled_hover_text(tr("Write a chord first: the intro leads into it"));
         });
 
         ui.separator();
-        ui.label("Choruses");
+        ui.label(tr("Choruses"));
         let mut choruses = form.choruses;
         let drag = ui.add_enabled(
             has_chorus,
@@ -89,29 +98,36 @@ pub(super) fn row(
         );
         if theme::hint(
             drag,
-            "How many times the band plays the chorus: every bar written on the sheet after \
+            crate::i18n::tr(
+                "How many times the band plays the chorus: every bar written on the sheet after \
              the intro, one time through the tune, as jazz musicians say. The sheet shows it \
              once, between repeat signs. Drag, or double-click to type",
+            ),
         )
         .changed()
         {
             act(FormAction::Choruses(choruses));
         }
         if let Some((time, times)) = round {
-            ui.colored_label(theme::ACCENT, format!("▶ {time} of {times}"));
+            ui.colored_label(
+                theme::ACCENT,
+                crate::i18n::trf("▶ {} of {}", &[&time, &times]),
+            );
         }
 
         ui.separator();
         let ending = ui
             .add_enabled_ui(has_chorus, |ui| {
-                theme::light_button(ui, "Ending", form.ending, None)
+                theme::light_button(ui, tr("Ending"), form.ending, None)
             })
             .inner;
         if theme::hint(
             ending,
-            "Two bars after the last chorus: the band goes to the key's tonic, then strikes \
+            crate::i18n::tr(
+                "Two bars after the last chorus: the band goes to the key's tonic, then strikes \
              it once and holds it, with a crash of the cymbal. Type a chord in them, and the \
              chorus takes that bar in",
+            ),
         )
         .clicked()
         {

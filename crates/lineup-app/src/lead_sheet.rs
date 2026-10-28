@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 
 use fonts::{Font, Fonts};
 
+use crate::i18n::{tr, tr_name, trc, trf};
 use crate::twelve_tone::Front;
 
 /// Paper is white and ink is black, in dark mode too: the page is shown
@@ -102,7 +103,7 @@ fn part_file_name(file_name: &str, transposition: Transposition) -> String {
     if transposition == Transposition::Concert {
         return file_name.to_string();
     }
-    let name = transposition_name(transposition);
+    let name = tr(transposition_name(transposition));
     match file_name.rsplit_once('.') {
         Some((stem, extension)) => format!("{stem} ({name}).{extension}"),
         None => format!("{file_name} ({name})"),
@@ -123,6 +124,8 @@ enum Melody {
 struct Laid {
     project: Project,
     options: Options,
+    /// The language and note names it was written in.
+    written_in: (crate::i18n::Language, lineup_core::NoteNaming),
     sheet: LeadSheet,
 }
 
@@ -227,15 +230,19 @@ impl LeadSheetWindow {
     /// Lays the sheet out again if the song or the choices changed.
     fn sheet(&mut self, project: &Project, title: &str) -> &LeadSheet {
         let options = self.options(project, title);
-        let stale = self
-            .laid
-            .as_ref()
-            .is_none_or(|laid| laid.options != options || laid.project != *project);
+        let written_in = (
+            crate::i18n::Language::current(),
+            lineup_core::NoteNaming::current(),
+        );
+        let stale = self.laid.as_ref().is_none_or(|laid| {
+            laid.options != options || laid.project != *project || laid.written_in != written_in
+        });
         if stale {
             let sheet = lead_sheet::lead_sheet(project, &options, &self.fonts);
             self.laid = Some(Laid {
                 project: project.clone(),
                 options,
+                written_in,
                 sheet,
             });
         }
@@ -254,15 +261,17 @@ impl LeadSheetWindow {
             self.choices(ui, project);
             ui.separator();
             if ui
-                .button("Export PDF…")
-                .on_hover_text("Save the lead sheet as a PDF file")
+                .button(tr("Export PDF…"))
+                .on_hover_text(tr("Save the lead sheet as a PDF file"))
                 .clicked()
             {
                 self.export(project, title, file_name);
             }
             if ui
-                .button("Print…")
-                .on_hover_text("Open the lead sheet in your PDF viewer, to print it from there")
+                .button(tr("Print…"))
+                .on_hover_text(tr(
+                    "Open the lead sheet in your PDF viewer, to print it from there",
+                ))
                 .clicked()
             {
                 self.print(project, title, file_name);
@@ -354,25 +363,25 @@ impl LeadSheetWindow {
     /// The melody, clef, instrument, paper and zoom pickers.
     fn choices(&mut self, ui: &mut Ui, project: &Project) {
         let channels = melody_channels(project);
-        let name = |channel: usize| project.channels()[channel].name.clone();
-        let auto = default_melody_channel(project).map_or("none".to_string(), name);
+        let name = |channel: usize| tr_name(&project.channels()[channel].name).into_owned();
+        let auto = default_melody_channel(project).map_or(tr("none").to_string(), name);
         let shown = match self.melody {
-            Melody::Auto => format!("Auto ({auto})"),
+            Melody::Auto => trf("Auto ({})", &[&auto]),
             Melody::Channel(channel) if channels.contains(&channel) => name(channel),
-            Melody::Channel(_) => format!("Auto ({auto})"),
-            Melody::None => "None: chords only".to_string(),
+            Melody::Channel(_) => trf("Auto ({})", &[&auto]),
+            Melody::None => tr("None: chords only").to_string(),
         };
-        ui.label("Melody");
+        ui.label(tr("Melody"));
         egui::ComboBox::from_id_salt("lead-sheet-melody")
             .selected_text(shown)
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.melody, Melody::Auto, format!("Auto ({auto})"))
-                    .on_hover_text("The channel called Lead, or else the highest one");
+                ui.selectable_value(&mut self.melody, Melody::Auto, trf("Auto ({})", &[&auto]))
+                    .on_hover_text(tr("The channel called Lead, or else the highest one"));
                 for &channel in &channels {
                     ui.selectable_value(&mut self.melody, Melody::Channel(channel), name(channel));
                 }
-                ui.selectable_value(&mut self.melody, Melody::None, "None: chords only")
-                    .on_hover_text("Write only the chords, over a slash for each beat");
+                ui.selectable_value(&mut self.melody, Melody::None, tr("None: chords only"))
+                    .on_hover_text(tr("Write only the chords, over a slash for each beat"));
             });
 
         let chosen = self
@@ -380,43 +389,43 @@ impl LeadSheetWindow {
             .as_ref()
             .map_or(Clef::Treble, |laid| laid.sheet.clef);
         let clef_name = |clef: Clef| match clef {
-            Clef::Treble => "Treble",
-            Clef::Bass => "Bass",
+            Clef::Treble => trc("clef", "Treble"),
+            Clef::Bass => trc("clef", "Bass"),
         };
-        ui.label("Clef");
+        ui.label(tr("Clef"));
         egui::ComboBox::from_id_salt("lead-sheet-clef")
             .selected_text(match self.clef {
-                None => format!("Auto ({})", clef_name(chosen).to_lowercase()),
+                None => trf("Auto ({})", &[&clef_name(chosen).to_lowercase()]),
                 Some(clef) => clef_name(clef).to_string(),
             })
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.clef, None, "Auto")
-                    .on_hover_text("Bass clef for low tunes, treble clef for the others");
-                ui.selectable_value(&mut self.clef, Some(Clef::Treble), "Treble");
-                ui.selectable_value(&mut self.clef, Some(Clef::Bass), "Bass");
+                ui.selectable_value(&mut self.clef, None, tr("Auto"))
+                    .on_hover_text(tr("Bass clef for low tunes, treble clef for the others"));
+                ui.selectable_value(&mut self.clef, Some(Clef::Treble), trc("clef", "Treble"));
+                ui.selectable_value(&mut self.clef, Some(Clef::Bass), trc("clef", "Bass"));
             });
 
-        ui.label("For");
+        ui.label(tr("For"));
         let transposition = &mut self.settings.transposition;
         egui::ComboBox::from_id_salt("lead-sheet-transposition")
-            .selected_text(transposition_name(*transposition))
+            .selected_text(tr(transposition_name(*transposition)))
             .show_ui(ui, |ui| {
                 for choice in Transposition::ALL {
-                    ui.selectable_value(transposition, choice, transposition_name(choice))
-                        .on_hover_text(transposition_hint(choice));
+                    ui.selectable_value(transposition, choice, tr(transposition_name(choice)))
+                        .on_hover_text(tr(transposition_hint(choice)));
                 }
             })
             .response
-            .on_hover_text(
+            .on_hover_text(tr(
                 "Who reads it: players of Bb, Eb and F instruments read in keys of their own",
-            );
+            ));
 
-        ui.label("Paper");
+        ui.label(tr("Paper"));
         egui::ComboBox::from_id_salt("lead-sheet-paper")
-            .selected_text(self.settings.paper.name())
+            .selected_text(tr(self.settings.paper.name()))
             .show_ui(ui, |ui| {
                 for paper in Paper::ALL {
-                    ui.selectable_value(&mut self.settings.paper, paper, paper.name());
+                    ui.selectable_value(&mut self.settings.paper, paper, tr(paper.name()));
                 }
             });
 
@@ -424,7 +433,7 @@ impl LeadSheetWindow {
         let place = ZOOMS.iter().position(|&z| z >= zoom - 0.01).unwrap_or(3);
         if ui
             .add_enabled(place > 0, egui::Button::new("−"))
-            .on_hover_text("Zoom out")
+            .on_hover_text(tr("Zoom out"))
             .clicked()
         {
             self.settings.zoom = ZOOMS[place - 1];
@@ -432,7 +441,7 @@ impl LeadSheetWindow {
         ui.label(format!("{:.0}%", zoom * 100.0));
         if ui
             .add_enabled(place + 1 < ZOOMS.len(), egui::Button::new("+"))
-            .on_hover_text("Zoom in")
+            .on_hover_text(tr("Zoom in"))
             .clicked()
         {
             self.settings.zoom = ZOOMS[(place + 1).min(ZOOMS.len() - 1)];
@@ -448,7 +457,7 @@ impl LeadSheetWindow {
 
     fn export(&mut self, project: &Project, title: &str, file_name: &str) {
         let Some(mut path) = rfd::FileDialog::new()
-            .add_filter("PDF document", &["pdf"])
+            .add_filter(tr("PDF document"), &["pdf"])
             .set_file_name(file_name)
             .save_file()
         else {
@@ -459,8 +468,8 @@ impl LeadSheetWindow {
         }
         let bytes = self.pdf(project, title);
         self.message = Some(match std::fs::write(&path, bytes) {
-            Ok(()) => format!("Saved {}.", shown_name(&path)),
-            Err(error) => format!("Could not save {}: {error}.", shown_name(&path)),
+            Ok(()) => trf("Saved {}.", &[&shown_name(&path)]),
+            Err(error) => trf("Could not save {}: {}.", &[&shown_name(&path), &error]),
         });
     }
 
@@ -471,13 +480,13 @@ impl LeadSheetWindow {
         let bytes = self.pdf(project, title);
         self.message = Some(match std::fs::write(&path, bytes) {
             Ok(()) => match open_in_viewer(&path) {
-                Ok(()) => "Opened in your PDF viewer: print it from there.".to_string(),
-                Err(_) => format!(
+                Ok(()) => tr("Opened in your PDF viewer: print it from there.").to_string(),
+                Err(_) => trf(
                     "No PDF viewer opened. The file is at {}: open it to print.",
-                    path.display()
+                    &[&path.display()],
                 ),
             },
-            Err(error) => format!("Could not write {}: {error}.", path.display()),
+            Err(error) => trf("Could not write {}: {}.", &[&path.display(), &error]),
         });
     }
 }

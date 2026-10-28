@@ -30,6 +30,7 @@ use lineup_core::{
     MAX_TRACKS, Meter, Pass, Pattern, Project, STEPS_PER_BAR, Section, TempoMarker, TimeMarker,
 };
 
+use crate::i18n::{tr, tr_name, trc, trf};
 use crate::library_browser::{LibraryAction, LibraryBrowser, Tried};
 use crate::{theme, widgets};
 use sections::Strips;
@@ -437,9 +438,9 @@ impl PlaylistView {
             .show_collapsible(ui, &mut browser_open, |ui| {
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
-                    ui.selectable_value(&mut self.tab, Tab::Patterns, "Patterns");
-                    ui.selectable_value(&mut self.tab, Tab::Library, "📚 Library")
-                        .on_hover_text("Search all presets by name, genre or meter");
+                    ui.selectable_value(&mut self.tab, Tab::Patterns, tr("Patterns"));
+                    ui.selectable_value(&mut self.tab, Tab::Library, tr("📚 Library"))
+                        .on_hover_text(tr("Search all presets by name, genre or meter"));
                 });
                 ui.separator();
                 match self.tab {
@@ -479,27 +480,27 @@ impl PlaylistView {
 
         let current_name = project.pattern(current).map_or("", |p| p.name.as_str());
         ui.horizontal(|ui| {
-            ui.heading("Playlist");
+            ui.heading(tr("Playlist"));
             ui.separator();
-            ui.label("Snap");
+            ui.label(tr("Snap"));
             egui::ComboBox::from_id_salt("playlist-snap")
                 .width(60.0)
-                .selected_text(self.snap.label())
+                .selected_text(trc("snap", self.snap.label()))
                 .show_ui(ui, |ui| {
                     for snap in Snap::ALL {
-                        ui.selectable_value(&mut self.snap, snap, snap.label());
+                        ui.selectable_value(&mut self.snap, snap, trc("snap", snap.label()));
                     }
                 });
             let room = project.playlist().tracks().len() < MAX_TRACKS;
             if ui
-                .add_enabled(room, egui::Button::new("➕ Track"))
+                .add_enabled(room, egui::Button::new(tr("➕ Track")))
                 .clicked()
             {
                 actions.push(PlaylistAction::AddTrack);
             }
             if ui
-                .button("➕ Section")
-                .on_hover_text("Mark the next stretch of the song as a section")
+                .button(tr("➕ Section"))
+                .on_hover_text(tr("Mark the next stretch of the song as a section"))
                 .clicked()
             {
                 actions.push(PlaylistAction::AddSection(next_section(project)));
@@ -513,11 +514,13 @@ impl PlaylistView {
                 let meter = project.meter();
                 let first = meter.bar_at(region.start).number + 1;
                 let last = meter.bar_at(region.end.saturating_sub(1)).number + 1;
-                let text = egui::RichText::new(format!("🔁 Looping bars {first}–{last}  ✖"))
+                let text = egui::RichText::new(trf("🔁 Looping bars {}–{}  ✖", &[&first, &last]))
                     .color(sections::LOOP);
                 if ui
                     .button(text)
-                    .on_hover_text("Song mode loops this part. Click to play the whole song again.")
+                    .on_hover_text(tr(
+                        "Song mode loops this part. Click to play the whole song again.",
+                    ))
                     .clicked()
                 {
                     actions.push(PlaylistAction::SetLoop(None));
@@ -526,10 +529,11 @@ impl PlaylistView {
             ui.separator();
             // Cut short with "…" when the window is narrow; the whole
             // sentence shows when you point at it.
-            let help = format!(
-                "Click to place \"{current_name}\". Double-click a clip to edit it, drag to \
+            let help = trf(
+                "Click to place \"{}\". Double-click a clip to edit it, drag to \
                  move it, drag its right edge to repeat it, right-click to delete. Drag along \
-                 the top strip to mark a section, along the bar numbers to loop."
+                 the top strip to mark a section, along the bar numbers to loop.",
+                &[&tr_name(current_name)],
             );
             ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate());
         });
@@ -815,7 +819,7 @@ impl PlaylistView {
             let enabled = !track.muted;
             let light_response = ui
                 .put(light, |ui: &mut Ui| widgets::mute_light(ui, enabled))
-                .on_hover_text("Click to mute or unmute the track");
+                .on_hover_text(tr("Click to mute or unmute the track"));
             if light_response.clicked() {
                 actions.push(PlaylistAction::ToggleTrackMute(index));
             }
@@ -826,20 +830,23 @@ impl PlaylistView {
                 pos2(light.right() + 4.0, row.center().y - line / 2.0),
                 pos2(row.right() - 6.0, row.center().y + line / 2.0),
             );
-            let mut name = track.name.clone();
+            // A name the app gave shows in the chosen language; a new
+            // one typed here is kept as typed.
+            let shown = tr_name(&track.name).into_owned();
+            let mut name = shown.clone();
             let field = egui::TextEdit::singleline(&mut name)
                 .frame(egui::Frame::NONE)
                 .text_color(HEADER_TEXT);
-            let name_response = ui
-                .put(name_rect, field)
-                .on_hover_text("Click to rename. Right-click to insert, delete or move tracks");
-            if name_response.changed() {
+            let name_response = ui.put(name_rect, field).on_hover_text(tr(
+                "Click to rename. Right-click to insert, delete or move tracks",
+            ));
+            if name_response.changed() && name != shown {
                 actions.push(PlaylistAction::RenameTrack { track: index, name });
             }
             let tracks = project.playlist().tracks().len();
             name_response.context_menu(|ui| {
                 ui.horizontal(|ui| {
-                    ui.label("Track height");
+                    ui.label(tr("Track height"));
                     let mut height = track.height() as u16;
                     if ui
                         .add(
@@ -855,36 +862,36 @@ impl PlaylistView {
                         });
                     }
                 });
-                if ui.button("Reset track height").clicked() {
+                if ui.button(tr("Reset track height")).clicked() {
                     actions.push(PlaylistAction::ResizeTrack {
                         track: index,
                         height: 36,
                     });
                 }
                 ui.separator();
-                if ui.button("Insert track above").clicked() {
+                if ui.button(tr("Insert track above")).clicked() {
                     actions.push(PlaylistAction::InsertTrack(index));
                 }
-                if ui.button("Insert track below").clicked() {
+                if ui.button(tr("Insert track below")).clicked() {
                     actions.push(PlaylistAction::InsertTrack(index + 1));
                 }
                 ui.separator();
                 if ui
-                    .add_enabled(index > 0, egui::Button::new("Move up"))
+                    .add_enabled(index > 0, egui::Button::new(tr("Move up")))
                     .clicked()
                 {
                     actions.push(PlaylistAction::SwapTracks(index - 1));
                 }
                 if ui
-                    .add_enabled(index + 1 < tracks, egui::Button::new("Move down"))
+                    .add_enabled(index + 1 < tracks, egui::Button::new(tr("Move down")))
                     .clicked()
                 {
                     actions.push(PlaylistAction::SwapTracks(index));
                 }
                 ui.separator();
                 if ui
-                    .add_enabled(tracks > 1, egui::Button::new("Delete track"))
-                    .on_hover_text("Deletes its clips too. Undo brings them back")
+                    .add_enabled(tracks > 1, egui::Button::new(tr("Delete track")))
+                    .on_hover_text(tr("Deletes its clips too. Undo brings them back"))
                     .clicked()
                 {
                     actions.push(PlaylistAction::RemoveTrack(index));
@@ -896,7 +903,9 @@ impl PlaylistView {
             let resize = ui
                 .interact(edge, id, Sense::click_and_drag())
                 .on_hover_cursor(egui::CursorIcon::ResizeVertical)
-                .on_hover_text("Drag to resize this track; double-click to reset its height");
+                .on_hover_text(tr(
+                    "Drag to resize this track; double-click to reset its height",
+                ));
             if resize.drag_started() {
                 ui.ctx()
                     .data_mut(|data| data.insert_temp(id, track.height()));
@@ -933,12 +942,14 @@ impl PlaylistView {
             );
             if row.top() >= cells.top() && row.top() <= visible.bottom() {
                 let button = egui::Button::new(
-                    egui::RichText::new("➕ New track").color(HEADER_TEXT.gamma_multiply(0.6)),
+                    egui::RichText::new(tr("➕ New track")).color(HEADER_TEXT.gamma_multiply(0.6)),
                 )
                 .frame(false);
                 if ui
                     .put(row.shrink2(vec2(6.0, 6.0)), button)
-                    .on_hover_text("Add a track here, or place a clip on this row to add one")
+                    .on_hover_text(tr(
+                        "Add a track here, or place a clip on this row to add one",
+                    ))
                     .clicked()
                 {
                     actions.push(PlaylistAction::AddTrack);
@@ -1257,7 +1268,7 @@ pub(crate) fn swing_control(ui: &mut Ui, project: &Project) -> Option<u8> {
     let swings =
         swings_in(meter.first()) || meter.markers().iter().any(|marker| swings_in(marker.time));
     let mut swing = project.swing;
-    let label = ui.label("Swing");
+    let label = ui.label(tr("Swing"));
     let value = ui.add_enabled(
         swings,
         egui::DragValue::new(&mut swing)
@@ -1265,29 +1276,33 @@ pub(crate) fn swing_control(ui: &mut Ui, project: &Project) -> Option<u8> {
             .speed(0.5)
             .custom_formatter(|amount, _| {
                 if amount == 0.0 {
-                    "straight".to_string()
+                    tr("straight").to_string()
                 } else {
                     format!("{amount:.0}%")
                 }
             })
             .custom_parser(|text| {
                 let text = text.trim().trim_end_matches('%').trim();
-                if text.eq_ignore_ascii_case("straight") {
+                if text.eq_ignore_ascii_case("straight")
+                    || text.eq_ignore_ascii_case(tr("straight"))
+                {
                     Some(0.0)
                 } else {
                     text.parse().ok()
                 }
             }),
     );
-    let text = "Swing: the second eighth note of every beat comes late, so pairs of eighths \
+    let text = tr(
+        "Swing: the second eighth note of every beat comes late, so pairs of eighths \
                 are played long-short, as in jazz, blues and shuffles. \"straight\" plays them \
                 even, 50% is a light swing and 100% a triplet: two thirds and one third. Each \
-                style remembers what you set. Drag up or down, or double-click to type";
+                style remembers what you set. Drag up or down, or double-click to type",
+    );
     theme::hint(label, text);
-    let value = theme::hint(value, text).on_disabled_hover_text(format!(
+    let value = theme::hint(value, text).on_disabled_hover_text(trf(
         "The song is in {}: its beats are eighth notes, or already split in three, so \
          there are no pairs of eighths to swing",
-        meter.first()
+        &[&meter.first()],
     ));
     value.changed().then_some(swing)
 }
@@ -1296,31 +1311,33 @@ pub(crate) fn swing_control(ui: &mut Ui, project: &Project) -> Option<u8> {
 /// play, from "off" to [`MAX_LOOSE_TIMING`] milliseconds.
 fn loose_timing(ui: &mut Ui, project: &Project, actions: &mut Vec<PlaylistAction>) {
     let mut loose = project.loose_timing;
-    let label = ui.label("Loose");
+    let label = ui.label(tr("Loose"));
     let value = ui.add(
         egui::DragValue::new(&mut loose)
             .range(0..=MAX_LOOSE_TIMING)
             .speed(0.2)
             .custom_formatter(|ms, _| {
                 if ms == 0.0 {
-                    "off".to_string()
+                    tr("off").to_string()
                 } else {
                     format!("{ms:.0} ms")
                 }
             })
             .custom_parser(|text| {
                 let text = text.trim().trim_end_matches("ms").trim();
-                if text.eq_ignore_ascii_case("off") {
+                if text.eq_ignore_ascii_case("off") || text.eq_ignore_ascii_case(tr("off")) {
                     Some(0.0)
                 } else {
                     text.parse().ok()
                 }
             }),
     );
-    let text = "Loose timing: as the song plays, notes land up to this many milliseconds \
+    let text = tr(
+        "Loose timing: as the song plays, notes land up to this many milliseconds \
                 after their step, a different amount each time, as when a person plays. \
                 \"off\" plays every note exactly on the grid. Drag up or down, or \
-                double-click to type";
+                double-click to type",
+    );
     label.on_hover_text(text);
     if value.on_hover_text(text).changed() {
         actions.push(PlaylistAction::SetLooseTiming(loose));
@@ -1339,7 +1356,7 @@ fn picker(ui: &mut Ui, project: &Project, current: usize, actions: &mut Vec<Play
                     2.0,
                     pattern_color(project, index),
                 );
-                let label = ui.selectable_label(index == current, &pattern.name);
+                let label = ui.selectable_label(index == current, tr_name(&pattern.name));
                 if label.clicked() && index != current {
                     actions.push(PlaylistAction::SelectPattern(index));
                 }
@@ -1444,9 +1461,9 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
         let title = Rect::from_min_size(rect.min, vec2(rect.width(), CLIP_TITLE));
         painter.rect_filled(title, 3.0, color);
         let name = if clip.repeats > 1 {
-            format!("{}  ×{}", pattern.name, clip.repeats)
+            format!("{}  ×{}", tr_name(&pattern.name), clip.repeats)
         } else {
-            pattern.name.clone()
+            tr_name(&pattern.name).into_owned()
         };
         painter.with_clip_rect(title.intersect(cells)).text(
             title.left_center() + vec2(3.0, 0.0),
@@ -1647,7 +1664,7 @@ fn paint_ruler(
     painter.text(
         pos2(corner.left() + 6.0, corner.top() + SECTION_HEIGHT / 2.0),
         Align2::LEFT_CENTER,
-        "Sections",
+        tr("Sections"),
         FontId::proportional(11.0),
         RULER_TEXT,
     );
@@ -1657,14 +1674,14 @@ fn paint_ruler(
             corner.top() + SECTION_HEIGHT + TEMPO_HEIGHT / 2.0,
         ),
         Align2::LEFT_CENTER,
-        "Tempo",
+        tr("Tempo"),
         FontId::proportional(11.0),
         RULER_TEXT,
     );
     painter.text(
         pos2(corner.left() + 6.0, ruler.center().y),
         Align2::LEFT_CENTER,
-        "Bars · Tracks",
+        tr("Bars · Tracks"),
         FontId::proportional(11.0),
         RULER_TEXT,
     );
