@@ -18,7 +18,6 @@ then plays. Step 9 brings that to the front, one change at a time:
 
 1. **Chord names**: reading chords as lead sheets write them, "Am7",
    "F#m7b5", "G/B" ([Chord names: reading a lead sheet](chord-names.md)),
-   and then a new name for the app ([A new name](new-name.md)),
 2. **a chord sheet**: a window of bars where you type the chords, stored
    in the project. A bar can also hold a pitch-class set, a micromode, a
    row form, or two chords at once, a polychord (`Eb7|Fb`), the other
@@ -38,8 +37,8 @@ then plays. Step 9 brings that to the front, one change at a time:
 6. **swing**, from straight to triplet
    ([Swing: eighth notes played long-short](swing.md)),
 7. **real instrument sounds** from a SoundFont, and the band through
-   MIDI out to an external synth. The SoundFont came early, before
-   items 4 to 6 ([Real instrument sounds: a SoundFont](soundfont.md)),
+   MIDI out to an external synth
+   ([Real instrument sounds: a SoundFont](soundfont.md)),
 8. **a bigger band**: a guitar, strings and an organ, each where the
    style has them ([A bigger band: guitar, strings and organ](bigger-band.md)),
 9. **rests, shots, holds and pushes** typed on the chord sheet
@@ -49,9 +48,8 @@ then plays. Step 9 brings that to the front, one change at a time:
 11. **a lead sheet**: the melody in notation, the chords above it,
    ready to print ([The lead sheet: the tune in notation](lead-sheet.md)),
 12. **a soloist** and 13. **ear training**, both experimental and off by
-   default ([The soloist: an improvised line over the chords](soloist.md)).
-   Ear training came early, in a window of its own
-   ([Ear training](ear-training.md)).
+   default ([The soloist: an improvised line over the chords](soloist.md),
+   [Ear training](ear-training.md)).
 
 Nothing goes away. The playlist with its tracks, the channel rack, the
 piano roll, the harmony keys, the twelve-tone rows, the pitch-class sets
@@ -95,17 +93,6 @@ that work, not as a second list to work through:
   [a third](bug-hunt-3.md);
 - **Downloads and the book**: [release builds](releases.md) for every
   system, and [this book, online and as a PDF](book-online.md).
-
-## Trying it
-
-The changes of this step were first tried on a branch of their own,
-and are now all on `main`:
-
-```sh
-git checkout main
-git pull
-cargo run --release
-```
 
 ## The end of the plan
 
