@@ -19,6 +19,7 @@
 #
 #     Function: not step-5/diff.md
 
+About window: step-9/workflow.md#who-made-it-and-which-version
 Arpeggio: step-6/tools.md#arpeggios-cycle-step_by-and-zip
 Audio thread: step-1/audio-engine.md, step-2/realtime.md, step-4/song-playback.md, step-5/diff.md
 Autosave: step-9/recovery.md
@@ -85,6 +86,7 @@ Twelve-tone row: step-9/twelve-tone-rules.md
 Undo: step-5/history.md
 Variations: step-9/variations.md
 Velocity: step-6/piano-roll.md#the-velocity-lane, step-8/tempo-and-feel.md#velocities-the-shape-of-a-phrase
+Version: step-9/releases.md, step-9/workflow.md#who-made-it-and-which-version
 Video export: step-9/video-export.md
 Voice leading: step-9/voice-leading.md
 WAV export: step-5/export.md
