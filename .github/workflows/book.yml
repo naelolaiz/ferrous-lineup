@@ -83,14 +83,19 @@ jobs:
           test -s book-es/book-es/ferrous-lineup-book-es.pdf
 
       # The PDFs are a download on every run, pull requests included. They
-      # are also part of the website, next to their pages.
+      # are also part of the website, next to their pages. One artifact
+      # each: with `archive: false` only a single file can be uploaded.
       # Paths given to actions (`with: path:`) start at the top of the
       # repository: working-directory only applies to `run:` steps.
       - uses: actions/upload-artifact@v7
         with:
-          path: |
-            book/book/ferrous-lineup-book.pdf
-            book-es/book-es/ferrous-lineup-book-es.pdf
+          path: book/book/ferrous-lineup-book.pdf
+          archive: false
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: book-es/book-es/ferrous-lineup-book-es.pdf
           archive: false
           if-no-files-found: error
 
