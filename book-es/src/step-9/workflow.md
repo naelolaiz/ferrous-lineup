@@ -283,7 +283,7 @@ ui.weak(tr(env!("CARGO_PKG_DESCRIPTION")));
 
 Así, cuando una versión nueva cambia el número en `Cargo.toml`, la
 ventana cambia con él, y nadie tiene que acordarse de un segundo sitio.
-Las [compilaciones de las versiones](releases.md) comparan la etiqueta
+Las [compilaciones de lanzamiento](releases.md) comparan la etiqueta
 con ese mismo número.
 
 Los textos pasan por `tr`, como los menús, así que con la interfaz en
