@@ -103,28 +103,34 @@ fn minor_numerals_ui(ui: &mut egui::Ui) {
     card(
         ui,
         tr("Roman numerals in minor keys"),
-        tr(
+        &crate::i18n::with_notes(tr(
             "Both ways are correct. They name the same chords and differ only in \
          the chords on the third, sixth and seventh degrees of a minor key, \
-         as here in A minor.",
-        ),
+         as here in {A} minor.",
+        )),
         |ui| {
             let mut numerals = minor_numerals(ui.ctx());
             for (value, label, example) in [
                 (
                     MinorNumerals::FromMajor,
                     tr("bIII bVI bVII: counted from the major scale (pop and jazz)"),
-                    tr("C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°."),
+                    tr(
+                        "{C} is bIII, {F} is bVI and {G} is bVII; the leading-tone chord {G#}° is vii°.",
+                    ),
                 ),
                 (
                     MinorNumerals::FromMinor,
                     tr("III VI VII: counted from the minor scale (classical harmony)"),
-                    tr("C is III, F is VI and G is VII; G#° is still vii°, and E major is V."),
+                    tr(
+                        "{C} is III, {F} is VI and {G} is VII; {G#}° is still vii°, and {E} major is V.",
+                    ),
                 ),
             ] {
                 ui.radio_value(&mut numerals, value, label);
                 ui.indent(label, |ui| {
-                    ui.label(RichText::new(example).color(theme::TEXT_DIM));
+                    ui.label(
+                        RichText::new(crate::i18n::with_notes(example)).color(theme::TEXT_DIM),
+                    );
                 });
             }
             ui.add_space(4.0);
