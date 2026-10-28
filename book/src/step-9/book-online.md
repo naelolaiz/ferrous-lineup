@@ -6,51 +6,14 @@ Files: [`.github/workflows/book.yml`](https://github.com/naelolaiz/ferrous-lineu
 [`book/print-pdf.py`](https://github.com/naelolaiz/ferrous-lineup/blob/main/book/print-pdf.py)
 and [`book/index-words.txt`](https://github.com/naelolaiz/ferrous-lineup/blob/main/book/index-words.txt)
 
-Until now this book lived only as Markdown files and as a website you
-built yourself with `mdbook build`. It now lives in the `book/` folder
-of the repository, next to the code it describes, and a workflow,
-**Book**, turns it into two things anyone can open:
+The book lives in the `book/` folder of the repository, next to the
+code it describes, and a workflow, **Book**, turns it into two things
+anyone can open:
 
 | What | Where |
 |------|-------|
 | The website | <https://naelolaiz.github.io/ferrous-lineup/> |
 | One PDF with every chapter | <https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf>, and as a download on every run in the **Actions** tab |
-
-## A branch of its own, then a folder
-
-For its first week online the book had a branch of its own, `book`,
-that shared no history with `main`: its first commit was the book's
-first chapter, not the app's first line of code. Git does not mind. A
-branch is only a name for a commit, and nothing says all the commits in
-a repository have to share a root.
-
-That had one cost. GitHub shows a pull request as what its branch
-changes since the last commit it shares with the branch it goes into.
-A book branch and an app branch share no commit, so GitHub cannot
-compare them: a book page could never be a pull request stacked on the
-pull request for the change it describes, and pointing a book pull
-request at an app branch made GitHub close it. So the book moved into
-`book/` on `main`, with its history:
-
-```sh
-git merge -s ours --no-commit --allow-unrelated-histories origin/book
-git read-tree --prefix=book/ -u origin/book
-git commit
-```
-
-- `--allow-unrelated-histories` lets `git merge` join two histories with
-  no commit in common; without it Git refuses.
-- `-s ours` (the "ours" strategy) records the merge but keeps `main`'s
-  files exactly as they are, so the book's `src/` does not land at the
-  top of the repository.
-- `git read-tree --prefix=book/ -u origin/book` then puts every file of
-  the book under `book/`, in the index and (`-u`) in the folder.
-
-The commit has two parents, the last commit of `main` and the last
-commit of `book`, so every commit of the book is still there.
-`git blame book/src/tour.md` names the commit that wrote each line, and
-`git log --full-history -- src/tour.md` lists a chapter's commits from
-before the move, under the path it had then.
 
 ## Step by step
 
@@ -135,10 +98,10 @@ make the same pages:
 
 ## Finding your way in the PDF
 
-The first PDF was the website's print page, printed: over a thousand
-pages with no page numbers, no contents and no index. On the website the
+The website's print page, printed as it is, is over a thousand pages
+with no page numbers, no contents and no index. On the website the
 sidebar and the search box find a chapter; in a PDF reader, or on paper,
-nothing did. `book/print-pdf.py`, a Python script, now prints the PDF and
+nothing would. `book/print-pdf.py`, a Python script, prints the PDF and
 adds what a printed book needs to find things in it:
 
 | What | Made from |
@@ -271,8 +234,8 @@ A PDF link can say where it goes in two ways. Chrome writes the first:
 names at the back (`/Dests`) that gives each one a page. The other way is
 older and plainer: "go to page 543, this far down". Chrome's and
 Firefox's readers look a name up in the table; not every reader does,
-and in those the first PDF's contents, index and links between chapters
-did nothing when clicked. So the script's last step, after the bookmarks,
+and in those a link that only has a name does nothing when clicked. So
+the script's last step, after the bookmarks,
 looks up every name itself and writes the place into the link:
 
 ```python
@@ -290,7 +253,7 @@ A link is an *annotation* on its page: a rectangle with what to do when
 it is clicked. `/Dest` is where it goes. The value in the table is already
 the plain form, an array such as `[page /XYZ 11 826 0]` (the page, then
 "keep the zoom and put this point at the top left"), so the script copies
-it into the link. The bookmarks were written that way from the start.
+it into the link. The bookmarks are written that way too.
 
 ### In the workflow
 
@@ -323,8 +286,7 @@ Two settings on GitHub, made once:
   `configure-pages` stops the run and says Pages is not set up.
 - **Settings > Environments > github-pages > Deployment branches and
   tags**: turning Pages on creates this environment, and it lets the
-  default branch, `main`, publish. While the book had its own branch,
-  `book` had to be added there too; now `main` is enough.
+  default branch, `main`, publish.
 
 `site-url` in `book.toml` is the path Pages serves the book from,
 `/ferrous-lineup/`. Most pages find their styles with relative links,
@@ -370,13 +332,10 @@ If Chrome is not called `google-chrome` on your system, say where it is:
 3. Open a pull request that only changes a file in `crates/`. Which
    workflows run, and which line of `book.yml` keeps the Book workflow
    from running?
-4. Run `git log --oneline --graph -5` on the commit that moved the book
-   (its message starts "Bring the book's history"). How many parents does
-   it have, and where does each line of the graph come from?
-5. Add `Metronome: step-9/practice.md#where-the-clicks-come-from` to
+4. Add `Metronome: step-9/practice.md#where-the-clicks-come-from` to
    `index-words.txt` and print the PDF. Where does "Metronome" land in the
    index, and does its page number take you to the section? Then misspell
    the section and print again: what does the script say?
-6. Change `BLANK` in `print-pdf.py` from `"0000"` to `"0"`. How many times
+5. Change `BLANK` in `print-pdf.py` from `"0000"` to `"0"`. How many times
    does the script print the book now, and why can a narrower blank make
    the pages move?

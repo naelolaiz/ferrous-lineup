@@ -6,9 +6,9 @@ Files: [`crates/lineup-core/src/library/song/tango_played.rs`](https://github.co
 and [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
 
 A pile of MIDI files of tangos and Argentine folk songs became 28 new
-demos, each complete as its file plays it, note for note (PRs #158 and
-#164, checked further in #174). The files came in three kinds, and each kind needed its own way
-of finding the beat:
+demos, each complete as its file plays it, note for note. The files
+came in three kinds, and each kind needed its own way of finding the
+beat:
 
 | Module | Demos | How the file was made |
 |---|---|---|
@@ -25,8 +25,8 @@ hand, on the Keys.
 
 The chord sheets were read from the notes by a script. For eleven of
 the piano songs the reading was then checked against a lead sheet, and
-those songs are cut into their verses and refrains, each in its own key
-(PR #174). The other six, and the band arrangements, are still a reading
+those songs are cut into their verses and refrains, each in its own
+key. The other six, and the band arrangements, are still a reading
 of the notes alone, so treat their chords as a draft.
 
 ## Trying it

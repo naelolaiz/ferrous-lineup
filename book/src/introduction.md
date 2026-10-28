@@ -20,9 +20,6 @@ tracks, a piano roll with harmony help, MIDI, and a library of styles,
 rhythms and songs. Step 9 puts the band in front: a chord sheet to type
 the song into, and a band that plays it.
 
-Until step 9 the app was called **Ferrous Loom** ([A new name](step-9/new-name.md)
-tells how it was renamed).
-
 This book has a third goal: it is a **Rust course built around a real
 project**. Every step of the project adds a chapter that explains:
 
@@ -73,7 +70,7 @@ a promise that the file still looks exactly like the snippet.
 
 | Step | What gets built | Rust topics |
 |------|-----------------|-------------|
-| 1 | Window, audio engine, test tone, CI | Cargo, crates, modules, structs, enums, traits, closures, threads, errors |
+| 1 | Window, audio engine, test tone, CI | Cargo, crates, `[[bin]]` targets, modules, structs, enums, traits, closures, threads, errors |
 | 2 | Channel rack and step sequencer | Arrays, `Option` combinators, `Arc`, atomics, closures as `FnMut`, custom widgets, sample-accurate timing |
 | 3 | Piano roll with harmony helpers | Enums and pattern matching for music theory, bit sets, iterators, your own traits and generics, state machines |
 | 4 | Playlist, saving projects, macOS and Windows builds | Keeping rules across lists, serde and derive macros, error enums, newtypes, trait objects, `FnOnce`, `cfg` and features, a CI matrix |
@@ -81,16 +78,14 @@ a promise that the file still looks exactly like the snippet.
 | 6 | Harmony tools: selections, transposing, arpeggios, inversions, suggestions, ghost notes, velocities | Pure functions, collecting `Option`s, `checked_add_signed`, `find_map`, `cycle`, `step_by` and `zip`, knowledge as `const` tables, `Option::take` against the borrow checker, `flat_map` and lifetimes on returned iterators |
 | 7 | MIDI in and out: keyboards, external synths, recording, `.mid` files | Slice patterns, byte strings and `to_be_bytes`, an `f64` in an `AtomicU64`, `Option::as_mut`, `Mutex` and poisoning, `mpsc` channels, `thread::Builder`, closures that capture fields, `Box` for a large enum variant, float `as` casts |
 | 8 | Harmony keys, time signatures, a library of styles, rhythms and songs, demos | Knowledge as data, `macro_rules!`, constant promotion, `static` tables, struct update syntax, `Display`, `is_multiple_of` and `ilog2`, serde field attributes, enum variants with data, `&'static` references in actions, comparing snapshots with `PartialEq` |
-| 9 | The band: chord names, a chord sheet, song form, swing, instrument sounds, then the repertoire, mixer, video, and reliability | `FromStr` and `str::parse`, `rsplit_once`, closures as `impl Fn` parameters, `[[bin]]` targets, byte strings as file-format tags, H.264/MP3 encoding, PDF drawing, recovery state, command and MIDI queues |
+| 9 | The band: chord names, a chord sheet, song form, swing, instrument sounds, then the repertoire, mixer, video, and reliability | `FromStr` and `str::parse`, `rsplit_once`, closures as `impl Fn` parameters, byte strings as file-format tags, H.264/MP3 encoding, PDF drawing, recovery state, command and MIDI queues |
 
 The [Roadmap](roadmap.md) chapter keeps this table up to date.
 
 ## Name and license
 
 "Ferrous" means "made of iron", and rust is iron oxide; a lineup is the
-players of a band, the band that plays your songs. The first name,
-Ferrous Loom, came from the playlist: a loom weaves threads together the
-way the playlist weaves patterns into a song.
+players of a band, the band that plays your songs.
 
 Ferrous Lineup is free software, released under the GNU General Public
 License, version 3 or later.

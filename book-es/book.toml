@@ -1,0 +1,23 @@
+# Each step's overview is a README.md, so it shows on GitHub. mdBook's
+# default "index" preprocessor would publish it as index.html, and links
+# to README.md from other chapters would break; without it, the page is
+# README.html and every link works in both places. "links" (for
+# {{#include}}) is the other default, kept on.
+[book]
+title = "Ferrous Lineup: Construyendo un estudio de música en Rust"
+authors = ["Ferrous Lineup contributors"]
+language = "es"
+src = "src"
+
+[build]
+use-default-preprocessors = false
+
+[preprocessor.links]
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+additional-css = ["print.css"]
+# Where GitHub Pages serves the book, so the "page not found" page can
+# find its styles from any address.
+site-url = "/ferrous-lineup/es/"

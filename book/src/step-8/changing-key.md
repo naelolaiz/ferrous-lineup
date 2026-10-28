@@ -21,7 +21,7 @@ everything back in one go.
 
 ![The same pattern after picking D, then minor. The melody now starts D, E, F, D, the harmony keys go from Dm to C, and the drums (the grey ghost notes) did not move.](../images/step-8-key-after.png)
 
-## What other music programs do, and what we do
+## Why the key menu moves the notes
 
 In many music programs the piano roll's key and scale menu never moves a
 note: it only highlights the scale and makes notes you draw or drag

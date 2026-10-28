@@ -31,12 +31,8 @@ it. There is nothing to write your changes back to, and if there were,
 the next version of the app would bring its own copy anyway.
 
 So **Save** on a demo does what **Save as…** does: it asks for a new
-file. The dialog already has the demo's name in it:
-
-![Save on Für Elise suggests "Für Elise.lineup". The screenshot still shows the old ".loom" extension, from before the rename.](../images/step-8-demo-save-as.png)
-
-(The screenshot was taken before the rename; the save dialog now
-suggests "Für Elise.lineup".)
+file. The dialog already has the demo's name in it: on Für Elise it
+suggests "Für Elise.lineup".
 
 Once saved, the project is that file: the title shows "Für Elise.lineup",
 "(demo, read-only)" goes away, and the next Save writes to the file
