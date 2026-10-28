@@ -103,9 +103,9 @@ queda con las que una mano puede tocar y las puntúa:
 
 - toda nota **necesaria** debe estar: la fundamental, la tercera (o la
   segunda o la cuarta de un acorde sus), la sexta o la séptima, una
-  quinta que no sea perfecta, y la extensión más alta, que da nombre al
+  quinta que no sea justa, y la extensión más alta, que da nombre al
   acorde (la 13 de un Sol13);
-- una quinta perfecta y las extensiones más bajas son **bienvenidas**,
+- una quinta justa y las extensiones más bajas son **bienvenidas**,
   y las formas con más de ellas son mejores;
 - las formas bajas del mástil, con **cuerdas al aire**, y en más
   cuerdas son mejores;

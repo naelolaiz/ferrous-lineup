@@ -186,7 +186,7 @@ el numeral romano (contado a lo largo de la escala mayor de la tónica,
 como en todo Ferrous Lineup, así que Sol en La menor es ♭VII, no VII),
 la función de los acordes de la tonalidad (tónica, subdominante,
 dominante), una séptima dominante oída como la dominante del acorde al
-que resuelve, y los acordes prestados de la tonalidad paralela (La♭ en
+que resuelve, y los acordes prestados de la tonalidad homónima (La♭ en
 Do mayor es ♭VI, prestado de Do menor).
 
 ![Manteniendo Sol7 mientras la tonalidad oída es La menor: «G7 es bVII7 = V7/bIII», o Sol mayor, donde es I7 = V7/IV, o Do mayor, donde es V7, la dominante.](../images/step-8-find-key-g7.png)

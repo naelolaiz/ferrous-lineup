@@ -106,7 +106,7 @@ pub custom_instruments: Option<Box<crate::library::UserStyle>>,
 
 El primero guarda los patrones, el segundo los instrumentos y sus
 ajustes. El proyecto no necesita acceso al archivo `.lineup-style`:
-bórralo, muévelo, o abre la canción en otro ordenador, y la banda sigue
+bórralo, muévelo, o abre la canción en otra computadora, y la banda sigue
 tocando. **Format 22** lo introdujo ([el formato de archivo de
 proyecto](../appendix-project-format.md)); un proyecto así se escribe
 como 22, o más alto si también usa una función posterior. Las versiones

@@ -456,7 +456,7 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   mayor en La menor como un acorde de fuera de la tonalidad. Ahora
   `uses_raised_seventh` dice cuándo un acorde pertenece a la tonalidad
   gracias a la séptima elevada.
-- **Se distinguen los dominantes secundarios de los acordes tomados en
+- **Se distinguen las dominantes secundarias de los acordes tomados en
   préstamo.** En Do mayor, Mi mayor es V/vi, la dominante de Lam; Re mayor
   es V/V. Fam se *toma en préstamo* de Do menor. Cada uno se nombra por
   lo que es.
@@ -605,7 +605,7 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   en cada escala de siete notas; Fa♯ mayor, Re y Sol♯ menor armónica, Fa
   locrio y la escala de blues bien deletreados; intervalos nombrados
   por sus letras; tonalidades menores dueñas de su dominante elevada;
-  acordes tomados en préstamo y dominantes secundarios; modos sin
+  acordes tomados en préstamo y dominantes secundarias; modos sin
   funciones; C7b5, Fa♯7b5 y Sol7#5 nombrados y deletreados; una sección
   reproducida una vez sin cortar una nota; silenciar deteniendo las
   notas de la canción pero no las teclas mantenidas; un tempo nuevo

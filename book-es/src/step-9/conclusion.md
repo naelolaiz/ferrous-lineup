@@ -120,8 +120,8 @@ la app:
 - clips de audio en las pistas, para tocar junto a una grabación;
 - grabar en modo canción.
 
-También está el hueco honesto del paso 7: MIDI se construyó en un
-ordenador sin hardware MIDI, así que los teclados y sintetizadores
+También está el hueco honesto del paso 7: MIDI se construyó en una
+computadora sin hardware MIDI, así que los teclados y sintetizadores
 reales se probaron por otros medios. La app ha crecido mucho desde
 entonces; el hueco sigue mereciendo la pena cerrarlo.
 

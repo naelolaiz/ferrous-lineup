@@ -1,4 +1,4 @@
-# Acordes prestados, dominantes secundarios y acordes pivote
+# Acordes prestados, dominantes secundarias y acordes pivote
 
 Archivos: [`crates/lineup-core/src/chord_sheet/function.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/chord_sheet/function.rs),
 [`crates/lineup-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/harmony/scale.rs)
@@ -14,14 +14,14 @@ y el chord sheet los escribe ahora debajo de los acordes:
 
 - **Acordes prestados**, tomados de la tonalidad menor sobre la misma
   tónica.
-- **Dominantes secundarios**, que hacen que otro acorde de la tonalidad
+- **Dominantes secundarias**, que hacen que otro acorde de la tonalidad
   suene por un momento como su hogar.
 - **El acorde napolitano**, un acorde mayor sobre el segundo grado
   rebajado.
 - **Acordes pivote**, donde la música cambia de tonalidad a través de
   un acorde que pertenece a ambas tonalidades.
 
-![Dieciséis compases en Do mayor que van a Sol mayor. Fam y La♭ están marcados como «prestados» en azul, Mi7 y Re7/Fa♯ son dominantes secundarios en amarillo (V7/vi, V⁶₅/V), Re♭/Fa es la sexta napolitana en rosa (N⁶) y Lam en el compás 14 es el acorde pivote, «vi = ii», en naranja. El cambio de tonalidad a Sol mayor está marcado en el compás 15.](../images/step-9-chord-functions.png)
+![Dieciséis compases en Do mayor que van a Sol mayor. Fam y La♭ están marcados como «prestados» en azul, Mi7 y Re7/Fa♯ son dominantes secundarias en amarillo (V7/vi, V⁶₅/V), Re♭/Fa es la sexta napolitana en rosa (N⁶) y Lam en el compás 14 es el acorde pivote, «vi = ii», en naranja. El cambio de tonalidad a Sol mayor está marcado en el compás 15.](../images/step-9-chord-functions.png)
 
 ## Cómo probarlo
 
@@ -35,7 +35,7 @@ y el chord sheet los escribe ahora debajo de los acordes:
    Señala «→ Sol mayor» para leer cómo cambia la tonalidad.
 
 Los números romanos se colorean según lo que hace el acorde: **azul**
-para un acorde prestado, **amarillo** para un dominante secundario,
+para un acorde prestado, **amarillo** para una dominante secundaria,
 **rosa** para el napolitano y **naranja**, el color de los cambios de
 tonalidad, para un acorde pivote. Los acordes propios de la tonalidad
 quedan en gris.
@@ -43,8 +43,8 @@ quedan en gris.
 ## Acordes prestados: mixtura modal
 
 Do mayor y Do menor comparten su tónica, Do, y su dominante, Sol. Se llaman
-**tonalidades paralelas**. La música en una tonalidad mayor suele tomar
-un acorde de su menor paralela sin salir de la tonalidad. Esto se llama
+**tonalidades homónimas** (en inglés, *parallel keys*). La música en una
+tonalidad mayor suele tomar un acorde de su menor homónima sin salir de la tonalidad. Esto se llama
 **préstamo**, o **mixtura modal**: los dos modos se mezclan.
 
 | Acorde | En Do mayor | Sus notas | De Do menor |
@@ -75,21 +75,21 @@ prestado de la menor **armónica**, la escala menor con la séptima
 elevada. En Do menor esa séptima elevada es Si, la sensible, y Bdim7
 (Si Re Fa La♭) es el acorde de sensible de Do menor.
 
-## Dominantes secundarios: V de V
+## Dominantes secundarias: V de V
 
 En Do mayor, Sol7 es V7, la dominante. Su tercera, Si, es la sensible, un
 semitono por debajo de Do, y tira hacia arriba, hacia Do. Ese tirón es lo
 que hace que Do suene como hogar.
 
 Cualquier acorde mayor o menor de la tonalidad puede tener su propio
-dominante. Re7 es el dominante de Sol: su tercera, Fa♯, está un semitono
+dominante. Re7 es la dominante de Sol: su tercera, Fa♯, está un semitono
 por debajo de Sol y tira hacia arriba, hacia él. Fa♯ no está en Do mayor,
 así que por un momento Sol suena como una tónica, el hogar de una
 tonalidad propia. Esto se llama **tonicización**. Re7 en Do mayor se
 escribe **V7/V**, «cinco siete de cinco»: el V7 del acorde que es V
 en Do.
 
-![Señalando a Re7/Fa♯: «Un dominante secundario: Re7/Fa♯ es el dominante de Sol, el V de Do mayor, como si Sol fuera una tónica. Su tercera, Fa♯, es la sensible de Sol, un semitono por debajo, y tira hacia arriba, hacia ella, así que Sol suena por un momento como una tonalidad propia (una tonicización). Aquí sigue hacia Sol, como un dominante que va a su tónica».](../images/step-9-chord-functions-secondary.png)
+![Señalando a Re7/Fa♯: «Una dominante secundaria: Re7/Fa♯ es la dominante de Sol, el V de Do mayor, como si Sol fuera una tónica. Su tercera, Fa♯, es la sensible de Sol, un semitono por debajo, y tira hacia arriba, hacia ella, así que Sol suena por un momento como una tonalidad propia (una tonicización). Aquí sigue hacia Sol, como una dominante que va a su tónica».](../images/step-9-chord-functions-secondary.png)
 
 Las cifras de una inversión van sobre el V. Re7 con Fa♯ en el bajo es
 V⁶₅/V, y el Fa♯ del bajo sube directo a Sol.
@@ -107,10 +107,10 @@ ser tónica. En Do mayor:
 | Lam (vi) | Mi7 | V7/vi | Sol♯ |
 
 Do7 es el caso raro. Su sensible, Mi, ya está en Do mayor. Lo que hace que
-Do7 suene como un dominante es su séptima, Si♭, que el tooltip nombra:
+Do7 suene como una dominante es su séptima, Si♭, que el tooltip nombra:
 «Su Si♭ no está en Do mayor».
 
-Un dominante secundario no siempre va adonde apunta. Mi7 que va a Fa en
+Una dominante secundaria no siempre va adonde apunta. Mi7 que va a Fa en
 lugar de Lam es un movimiento **deceptivo**, como V que va a vi. El
 acorde sigue siendo V7/vi, y el tooltip añade: «Aquí va a Fa en lugar
 de Lam».
@@ -124,12 +124,12 @@ que el acorde de Sol llega cuando las dos notas por encima caen un grado.
 
 ### Acordes de sensible secundarios
 
-Un acorde disminuido también puede hacer el trabajo de un dominante. En
+Un acorde disminuido también puede hacer el trabajo de una dominante. En
 Do mayor, Sidim es vii°, construido sobre la sensible, y tira hacia Do
 como hace V. Fa♯dim7 se construye sobre Fa♯, la sensible de Sol, así que
 tira hacia Sol. Se escribe **vii°7/V**.
 
-A diferencia de un dominante secundario, solo se nombra así cuando va a
+A diferencia de una dominante secundaria, solo se nombra así cuando va a
 su acorde, o a un acorde de sexta y cuarta sobre él. Autumn Leaves
 tiene Fa♯m7♭5 que va a Si7 y luego a Mim, un ii–V–i en Mi menor. Leído en Do
 mayor, como en la página sobre [pegar chord sheets](text-chord-sheets.md),
@@ -145,24 +145,24 @@ dominante Mi o Mi7 (V) y Sol♯dim7 (vii°7). De la menor **melódica**, con
 Fa♯ y Sol♯: Sim (ii) y Re (IV), normalmente de camino hacia Mi. Todos son
 acordes propios de la tonalidad, sea cual sea la escala a la que esté
 ajustada. Así que El Choclo, en La menor armónica, tiene su Do y su Sol7
-leídos como III y VII7, no como dominantes secundarios de Fa y Do. Un
+leídos como III y VII7, no como dominantes secundarias de Fa y Do. Un
 acorde secundario trae una nota que ninguna de las tres tiene: en La
 menor, Do♯, Re♯ o La♯. La única excepción es un acorde de la menor
 melódica que va adonde iría un acorde secundario: Re que sigue hacia Sol
 es el V de Sol.
 
 En un **modo**, como Re dórico o Mi frigio, el chord sheet escribe solo
-los números. Los acordes prestados y los dominantes secundarios son
+los números. Los acordes prestados y las dominantes secundarias son
 nombres de las tonalidades mayores y menores, y los acordes de un modo
 hacen otras cosas: Mi mayor en Mi frigio es el acorde de tónica de gran
-parte del flamenco, no el dominante de La menor.
+parte del flamenco, no la dominante de La menor.
 
-El chord sheet lee los dominantes secundarios contra la escala menor
-natural. El dominante del propio dominante es Si7, con Re♯, escrito V7/V.
+El chord sheet lee las dominantes secundarias contra la escala menor
+natural. La dominante de la propia dominante es Si7, con Re♯, escrito V7/V.
 Cuando Si7 va a Mim, un v menor, se escribe V7/v.
 
 Un acorde mayor de tónica en menor es dos cosas a la vez. La7 que va a
-Rem es V7/iv, el dominante de la subdominante. La mayor al final de la
+Rem es V7/iv, la dominante de la subdominante. La mayor al final de la
 pieza es la tercera de Picardía, tomado en préstamo de La mayor.
 
 ## La sexta napolitana
@@ -303,7 +303,7 @@ tonalidad y pregunta si el acorde pertenece a uno de los tipos que
 recibe.
 
 Algunos acordes podrían ser entonces dos cosas. En La menor, La mayor es
-a la vez el dominante de Rem y el acorde mayor de tónica tomado en
+a la vez la dominante de Rem y el acorde mayor de tónica tomado en
 préstamo de La mayor. Re mayor es el IV de la menor melódica, y el
 dominante de Sol. `role` decide por adónde va el acorde:
 
@@ -336,7 +336,7 @@ secondary.unwrap_or(Role::Plain)
 Un acorde que va al acorde al que lleva es un acorde secundario.
 Después, un acorde de la menor melódica es propio de la tonalidad.
 Luego viene el préstamo, y después el napolitano. En último lugar queda
-un dominante secundario que va a otro sitio. `match (dominant, leading)`
+una dominante secundaria que va a otro sitio. `match (dominant, leading)`
 encaja con una tupla de dos `Option`, y la guarda `if goes_to(of)`
 añade una condición a un patrón.
 

@@ -38,7 +38,7 @@ El sheet se organiza como un chart impreso:
   cuatro pulsos pone Do en el borde izquierdo y La7 a mitad de camino, en
   el pulso 3.
 - **Bajo cada acorde, su número romano en la tonalidad**: Fam en Do
-  mayor es iv, y La7, el dominante de Rem, es V7/ii (véase [Acordes
+  mayor es iv, y La7, la dominante de Rem, es V7/ii (véase [Acordes
   prestados, dominantes secundarias y acordes
   pivote](chord-functions.md)). Una inversión lleva las cifras del bajo
   cifrado: Sol7/Si es V⁶₅, Do/Mi es I⁶. Bajo un conjunto o un micromodo, sus
@@ -51,7 +51,7 @@ El sheet se organiza como un chart impreso:
 
 Señalar una armonía dice qué es, con las mismas palabras que las
 harmony keys: «La7: séptima de dominante de La, V7/ii en Do mayor: una
-dominante secundaria, el dominante de Rem. Sus notas: La Do♯ Mi Sol».
+dominante secundaria, la dominante de Rem. Sus notas: La Do♯ Mi Sol».
 Mantener pulsado el botón del ratón sobre ella la toca, con su nota de
 bajo debajo.
 

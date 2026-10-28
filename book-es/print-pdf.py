@@ -37,6 +37,7 @@ import subprocess
 import sys
 import tempfile
 import tomllib
+import unicodedata
 import urllib.parse
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -139,6 +140,9 @@ def forms(word: str) -> set[str]:
     found = {word, word + "s", word + "es"}
     if word.endswith("y"):
         found.add(word[:-1] + "ies")
+    # Spanish plurals that change the word: "inversión", "inversiones".
+    if word.endswith("ión"):
+        found.add(word[:-3] + "iones")
     return found
 
 
@@ -154,7 +158,10 @@ def read_summary(path: Path) -> list[Chapter]:
 
 
 def sort_key(label: str) -> str:
-    return re.sub(r"^[^0-9a-z]+", "", normal(plain(label)))
+    # Accents don't move a word: "Índice" sorts with the I's.
+    text = unicodedata.normalize("NFD", normal(plain(label)))
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    return re.sub(r"^[^0-9a-z]+", "", text)
 
 
 def is_code(fragment: str) -> bool:
@@ -289,7 +296,7 @@ def contents_html(chapters: list[Chapter], pages: dict[str, int]) -> str:
     # The index is at the back, after the last part.
     lines.append(
         '<a class="entry depth-0 index" href="#pdf-index">'
-        '<span class="name">Índice</span><span class="dots"></span>'
+        '<span class="name">Índice alfabético</span><span class="dots"></span>'
         f'<span class="page">{page_text(pages.get("pdf-index"))}</span></a>'
     )
     lines.append("</nav>")
@@ -298,7 +305,7 @@ def contents_html(chapters: list[Chapter], pages: dict[str, int]) -> str:
 
 def index_html(entries: list[Entry], pages: dict[str, int]) -> str:
     lines = [
-        heading("pdf-index", "Índice"),
+        heading("pdf-index", "Índice alfabético"),
         "<p>Las palabras de los glosarios de música y de Rust, las partes "
         "de la aplicación y los capítulos que las explican. Un número en "
         "<strong>negrita</strong> es la página a la que el glosario te "
@@ -407,7 +414,7 @@ def add_bookmarks(
             if heading.level == 2 and heading.id in dests:
                 add(heading.title, heading.id, item)
         parents.append(item)
-    add("Índice", "pdf-index")
+    add("Índice alfabético", "pdf-index")
 
 
 def point_links_at_pages(writer: PdfWriter) -> None:

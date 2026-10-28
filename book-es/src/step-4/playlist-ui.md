@@ -220,7 +220,7 @@ if let Some(pos) = pressed_at {
 que `pressed_at` es `Some` solo en el frame de una pulsación, sobre la
 rejilla. El piano roll tenía el mismo bug y recibió el mismo arreglo. Una
 persona rara vez se mueve tan rápido, pero «rara vez» no es «nunca», y en
-un ordenador lento un frame dura más.
+una computadora lenta un frame dura más.
 
 Las posiciones se ajustan a la rejilla que elijas en la barra de
 herramientas:

@@ -138,7 +138,7 @@ En **Acuarela del río**, la flauta toca la melodía con do, fa y sol, y
 el clarinete con do sostenido, fa sostenido y sol sostenido. Las
 secciones de la flauta están en **La menor** y las del clarinete en
 **La mayor**, dos veces cada una: la misma tónica, dos modos. Las
-tonalidades que comparten tónica son tonalidades **paralelas**. Cada
+tonalidades que comparten tónica son tonalidades **homónimas**. Cada
 parte de la demo lleva su propia tonalidad con `in_key`, así que la
 barra de armonía sigue el cambio.
 
@@ -371,7 +371,7 @@ está la música, y los acordes de esa tonalidad ganan las decisiones
 dudosas. Las estrofas de Yira, yira están en Si menor y su estribillo
 en Re mayor, la **relativa mayor**: la misma armadura de clave, dos
 sostenidos, con Re como tónica en lugar de Si. Sur va al revés, de una
-estrofa en Re mayor a un estribillo en Re menor, la **menor paralela**:
+estrofa en Re mayor a un estribillo en Re menor, la **menor homónima**:
 la misma tónica con tercera, sexta y séptima bemoles. Unos pocos
 compases se arreglaron a mano, como los cuatro primeros compases de
 Yira, yira, donde la mano izquierda entra tarde en cada compás y la
@@ -380,7 +380,7 @@ lectura la perdía.
 Para las canciones sin lead sheet, las notas se comprobaron una a una.
 Tiempos viejos acaba en Re, Fa, La y Si. El script lo había llamado
 **Bm7b5** (Si Re Fa La), y son las mismas cuatro notas, pero el bajo
-toca Re debajo y llega después de La7, el dominante de Re menor, así que
+toca Re debajo y llega después de La7, la dominante de Re menor, así que
 es **Dm6**: Re menor con una sexta añadida. (La última nota de la
 melodía, un Mi agudo, añade una novena encima.) El nombre sigue al bajo
 y a lo que hace el acorde, no solo a las notas.
@@ -410,7 +410,7 @@ el acorde alrededor de la nota:
   de paso.** En la página parecen erratas de Fa, Do, Si y Mi. Los
   nombres propios de la tonalidad sí pueden usarlos: en Si menor, la
   nota entre Mi y Fa sostenido, de subida, es mi sostenido, la cuarta
-  elevada que conduce a Fa sostenido, el dominante.
+  elevada que conduce a Fa sostenido, la dominante.
 - **Dos notas en una misma línea del pentagrama reciben letras
   propias.** Mi y mi sostenido sonando juntos se sentarían en la misma
   línea, así que el sostenido pasa a ser Fa.

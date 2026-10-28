@@ -68,7 +68,7 @@ Añade File > Export stems…, que pide una carpeta y escribe `Kick.wav`,
 
 Cada stem es una exportación con todos los demás canales silenciados
 (`SetMuted`). Renderizarlos uno tras otro es lo más sencillo;
-renderizarlos en varios hilos a la vez es más rápido en un ordenador con
+renderizarlos en varios hilos a la vez es más rápido en una computadora con
 varios núcleos. Busca `std::thread::scope`: lanza hilos que pueden
 *tomar prestado* de la función que los lanzó, porque el scope espera a
 todos antes de terminar. ¿Por qué hace eso innecesaria la regla

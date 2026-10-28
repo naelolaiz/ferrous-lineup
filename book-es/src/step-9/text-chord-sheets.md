@@ -81,7 +81,7 @@ Un pegado es un solo cambio del chord sheet, así que **Ctrl+Z** lo
 deshace de una vez. El mensaje sobre los compases dice qué se copió o
 pegó, y desaparece cuando haces clic en otro compás.
 
-![Veinticuatro compases pegados en una canción nueva en Do mayor: los mismos nombres de acorde, ahora con sus numerales en Do (Lam7 vi7, Re7 V7/V, Fa♯m7b5 #ivø7, Si7 V7/iii). [Dominantes secundarias](chord-functions.md#dominantes-secundarios-v-de-v) como V7/V se nombran por el acorde al que llevan](../images/step-9-text-pasted.png)
+![Veinticuatro compases pegados en una canción nueva en Do mayor: los mismos nombres de acorde, ahora con sus numerales en Do (Lam7 vi7, Re7 V7/V, Fa♯m7b5 #ivø7, Si7 V7/iii). [Dominantes secundarias](chord-functions.md#dominantes-secundarias-v-de-v) como V7/V se nombran por el acorde al que llevan](../images/step-9-text-pasted.png)
 
 Pegar solo lleva los acordes. La canción conserva su propia tonalidad,
 compás, tempo, banda y secciones; el Autumn Leaves pegado de arriba
