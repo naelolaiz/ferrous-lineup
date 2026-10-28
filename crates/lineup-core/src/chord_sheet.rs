@@ -40,7 +40,7 @@ use crate::harmony::{
 };
 use crate::library::numeral;
 use crate::meter::{Bar, TimeSignature};
-use crate::pitch::{Note, NoteName, PitchClass};
+use crate::pitch::{Note, NoteName, NoteNaming, PitchClass};
 use crate::tools;
 
 pub mod function;
@@ -384,7 +384,7 @@ impl HarmonyName {
             let lower = ChordSymbol::parse(lower)?;
             return Ok(HarmonyName::Polychord(upper, lower));
         }
-        if text.starts_with(|c: char| ('A'..='G').contains(&c)) {
+        if NoteName::read_either(text, |_| true).is_some() {
             return ChordSymbol::parse(text).map(HarmonyName::Chord);
         }
         Err(format!(
@@ -672,10 +672,11 @@ impl FromStr for HarmonyName {
 }
 
 /// Project files write a harmony as its name, so they stay readable:
-/// `(start: 32, harmony: "G7/B")`.
+/// `(start: 32, harmony: "G7/B")`. Always in letters, whichever way the
+/// app names notes, so the file is the same for everyone.
 impl From<HarmonyName> for String {
     fn from(harmony: HarmonyName) -> Self {
-        harmony.to_string()
+        NoteNaming::Letters.with(|| harmony.to_string())
     }
 }
 
@@ -683,7 +684,7 @@ impl TryFrom<String> for HarmonyName {
     type Error = String;
 
     fn try_from(text: String) -> Result<Self, String> {
-        HarmonyName::parse(&text)
+        NoteNaming::Letters.with(|| HarmonyName::parse(&text))
     }
 }
 

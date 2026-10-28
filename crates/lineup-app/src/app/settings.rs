@@ -65,12 +65,12 @@ fn language_settings_ui(ui: &mut egui::Ui) {
         tr("Language"),
         tr("Choose the interface language."),
         |ui| {
-            let mut current = i18n::current_language();
+            let mut current = i18n::language(ui.ctx());
             let mut changed = false;
-            for lang in Language::ALL {
-                if ui.radio_value(&mut current, lang, lang.name()).changed() {
-                    changed = true;
-                }
+            for language in Language::ALL {
+                changed |= ui
+                    .radio_value(&mut current, language, language.name())
+                    .changed();
             }
             if changed {
                 i18n::set_language(ui.ctx(), current);
@@ -85,19 +85,15 @@ fn note_naming_ui(ui: &mut egui::Ui) {
         tr("Note naming"),
         tr("How note names are written throughout the app."),
         |ui| {
-            let mut naming = i18n::current_note_naming();
+            let mut naming = i18n::note_naming(ui.ctx());
             let mut changed = false;
-            for (value, label) in [
-                (NoteNaming::Letters, tr("Letters (C, D, E…)")),
-                (NoteNaming::Solfege, tr("Solfège (Do, Re, Mi…)")),
-            ] {
-                if ui.radio_value(&mut naming, value, label).changed() {
-                    changed = true;
-                }
+            for value in NoteNaming::ALL {
+                changed |= ui
+                    .radio_value(&mut naming, value, tr(value.name()))
+                    .changed();
             }
             if changed {
                 i18n::set_note_naming(ui.ctx(), naming);
-                lineup_core::pitch::set_global_note_naming(naming);
             }
         },
     );
@@ -107,28 +103,34 @@ fn minor_numerals_ui(ui: &mut egui::Ui) {
     card(
         ui,
         tr("Roman numerals in minor keys"),
-        tr(
+        &crate::i18n::with_notes(tr(
             "Both ways are correct. They name the same chords and differ only in \
          the chords on the third, sixth and seventh degrees of a minor key, \
-         as here in A minor.",
-        ),
+         as here in {A} minor.",
+        )),
         |ui| {
             let mut numerals = minor_numerals(ui.ctx());
             for (value, label, example) in [
                 (
                     MinorNumerals::FromMajor,
                     tr("bIII bVI bVII: counted from the major scale (pop and jazz)"),
-                    tr("C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°."),
+                    tr(
+                        "{C} is bIII, {F} is bVI and {G} is bVII; the leading-tone chord {G#}° is vii°.",
+                    ),
                 ),
                 (
                     MinorNumerals::FromMinor,
                     tr("III VI VII: counted from the minor scale (classical harmony)"),
-                    tr("C is III, F is VI and G is VII; G#° is still vii°, and E major is V."),
+                    tr(
+                        "{C} is III, {F} is VI and {G} is VII; {G#}° is still vii°, and {E} major is V.",
+                    ),
                 ),
             ] {
                 ui.radio_value(&mut numerals, value, label);
                 ui.indent(label, |ui| {
-                    ui.label(RichText::new(example).color(theme::TEXT_DIM));
+                    ui.label(
+                        RichText::new(crate::i18n::with_notes(example)).color(theme::TEXT_DIM),
+                    );
                 });
             }
             ui.add_space(4.0);

@@ -5,8 +5,7 @@ Run `cargo test` and `cargo clippy` after each change.
 
 > These exercises target today's `main`, not the step-1 snapshot. The
 > test tone and `synth.rs` were replaced in step 2; the code below uses
-> the Lineup Osc in `instrument.rs` instead. The old
-> `step-1-foundation` branch is no longer published.
+> the Lineup Osc in `instrument.rs` instead.
 
 ## 1. Flat names, the existing way (lineup-core, easy)
 

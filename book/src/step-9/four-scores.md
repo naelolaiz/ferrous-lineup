@@ -9,12 +9,12 @@ After the [Misa Criolla](misa-criolla.md), four more demos were written
 out note for note from their scores, every voice and instrument on a
 channel of its own:
 
-| Demo | PR | What it is | Meter and key | Who plays |
-|---|---|---|---|---|
-| **Alfonsina y el mar** | #163 | Ariel Ramírez and Félix Luna's zamba, 1969 | 6/8, C minor | a choir in four parts |
-| **Die Forelle** | #166 | Franz Schubert's song "The Trout", D 550, 1817 | 2/4, D flat major | voice and piano |
-| **Sheep May Safely Graze** | #169 | an aria from Johann Sebastian Bach's Hunting Cantata, BWV 208, 1713 | 4/4, B flat major | soprano, two recorders, continuo |
-| **For Unto Us a Child Is Born** | #172 | a chorus from George Frideric Handel's Messiah, 1741 | 4/4, G major | choir, strings, oboes, continuo |
+| Demo | What it is | Meter and key | Who plays |
+|---|---|---|---|
+| **Alfonsina y el mar** | Ariel Ramírez and Félix Luna's zamba, 1969 | 6/8, C minor | a choir in four parts |
+| **Die Forelle** | Franz Schubert's song "The Trout", D 550, 1817 | 2/4, D flat major | voice and piano |
+| **Sheep May Safely Graze** | an aria from Johann Sebastian Bach's Hunting Cantata, BWV 208, 1713 | 4/4, B flat major | soprano, two recorders, continuo |
+| **For Unto Us a Child Is Born** | a chorus from George Frideric Handel's Messiah, 1741 | 4/4, G major | choir, strings, oboes, continuo |
 
 As in the Misa Criolla, the voices sing without the words.
 

@@ -483,7 +483,9 @@ impl HarmonyKeys {
             };
             let share = |guess: &KeyGuess| (guess.share * 100.0).round();
             let best = heard.best;
-            let text = egui::RichText::new(best.key.name()).strong().size(15.0);
+            let text = egui::RichText::new(crate::i18n::key_name(best.key))
+                .strong()
+                .size(15.0);
             let clear = if heard.alternatives.is_empty() {
                 "It is well ahead of every other key."
             } else {
@@ -499,7 +501,7 @@ impl HarmonyKeys {
             }
             for guess in &heard.alternatives {
                 ui.weak("·  or");
-                ui.label(egui::RichText::new(guess.key.name()).weak())
+                ui.label(egui::RichText::new(crate::i18n::key_name(guess.key)).weak())
                     .on_hover_text(format!(
                         "Fits almost as well ({}% of the weight).",
                         share(guess)
@@ -561,12 +563,15 @@ impl HarmonyKeys {
             }
         });
         if here != scale {
-            ui.label(egui::RichText::new(format!("Now in {}", here.name())).color(SUGGESTED))
-                .on_hover_text(
-                    "The song changes key here (see the key names on the playlist's bar \
+            ui.label(
+                egui::RichText::new(format!("Now in {}", crate::i18n::key_name(here)))
+                    .color(SUGGESTED),
+            )
+            .on_hover_text(
+                "The song changes key here (see the key names on the playlist's bar \
                      numbers), so the chord keys are this key's. The menus above are the key \
                      the song starts in",
-                );
+            );
         }
         ui.horizontal(|ui| {
             ui.strong("Time");
@@ -801,7 +806,7 @@ fn hint_line(
             HintLevel::Detailed => format!(
                 "{} is not one of the seven chords of {}: it comes from outside the key.",
                 chord_label(chord, bass, scale),
-                scale.name()
+                crate::i18n::key_name(scale)
             ),
             _ => format!("{}: outside the key", chord_label(chord, bass, scale)),
         },

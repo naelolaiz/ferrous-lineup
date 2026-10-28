@@ -79,8 +79,10 @@ impl LiveTrace {
         } else {
             Labels::pattern(&playing.title, &playing.project, playing.pattern)
         };
+        // The same table as `--trace` writes: names in letters, whichever
+        // way the window shows them.
         let mut table = Vec::new();
-        write_table(&mut table, trace, &labels)?;
+        lineup_core::NoteNaming::Letters.with(|| write_table(&mut table, trace, &labels))?;
         table.push(b'\n');
         self.file.write_all(&table)?;
         self.file.flush()

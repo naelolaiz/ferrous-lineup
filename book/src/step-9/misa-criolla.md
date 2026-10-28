@@ -10,8 +10,7 @@ Ariel Ramírez wrote the **Misa Criolla** in 1963 and 1964: a Mass, the
 five sung parts of the Catholic service, in Spanish, for two soloists,
 a choir and the instruments of Argentine folk music. Each part is set
 to a dance or a song of the country. The demos have all five, complete,
-every voice and instrument on a channel of its own (PRs #154, #156 and
-#159):
+every voice and instrument on a channel of its own:
 
 | Demo | Its rhythm | Meter and key |
 |---|---|---|
@@ -145,9 +144,9 @@ choir closes from D minor to A minor: iv to i, a **plagal close**, the
 Until now a demo part had a tune, a chord chart, sometimes a left hand
 for the Keys, and rounds for extra voices. The Misa Criolla has
 soloists, a choir of four voices, guitars, a harpsichord and a bass at
-once. PR #154 gives a [`Part`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
-a list of **lines**: each instrument's part written out, on a channel
-of its own.
+once. So a [`Part`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
+gets a list of **lines**: each instrument's part written out, on a
+channel of its own.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
