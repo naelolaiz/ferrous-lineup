@@ -52,8 +52,7 @@ At this step, every push and pull request ran one Linux job, **check**:
 it installed the system libraries, then ran `cargo fmt --check`,
 `cargo clippy -- -D warnings` (warnings count as errors), `cargo test` and
 a release build. The built program was attached to the run as the Linux
-artifact (`ferrous-loom-linux` then, `ferrous-lineup-linux` today; see
-[A new name](../step-9/new-name.md)).
+artifact, `ferrous-lineup-linux`.
 
 > **Today:** `.github/workflows/ci.yml` still has one `check` job, now a
 > matrix of Linux, macOS and Windows. Each runner uploads its own

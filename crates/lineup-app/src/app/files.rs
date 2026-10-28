@@ -213,10 +213,9 @@ pub(super) fn fill_chord_sheet(project: &mut Project) {
     }
 }
 
-/// A file dialog that shows project files, the old `.loom` ones too.
+/// A file dialog that shows project files.
 fn project_dialog() -> rfd::FileDialog {
-    let extensions = [file::EXTENSION, file::OLD_EXTENSION];
-    rfd::FileDialog::new().add_filter("Ferrous Lineup project", &extensions)
+    rfd::FileDialog::new().add_filter("Ferrous Lineup project", &[file::EXTENSION])
 }
 
 /// `path` with a project extension, replacing any other. A project saved
@@ -793,8 +792,8 @@ mod tests {
             ("song.txt", "song.lineup"),
             ("song.mid", "song.lineup"),
             ("song.lineup", "song.lineup"),
-            // An old Ferrous Loom file keeps its name.
-            ("song.LOOM", "song.LOOM"),
+            // The extension in capitals is a project's too.
+            ("song.LINEUP", "song.LINEUP"),
         ] {
             assert_eq!(
                 project_path(PathBuf::from(typed)),
