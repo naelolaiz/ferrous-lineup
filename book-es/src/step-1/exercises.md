@@ -6,7 +6,6 @@ Ejecuta `cargo test` y `cargo clippy` después de cada cambio.
 > Estos ejercicios apuntan al `main` de hoy, no a la instantánea del
 > paso 1. El tono de prueba y `synth.rs` se sustituyeron en el paso 2;
 > el código de abajo usa en su lugar el Lineup Osc de `instrument.rs`.
-> La antigua rama `step-1-foundation` ya no se publica.
 
 ## 1. Nombres con bemoles, a la manera existente (lineup-core, fácil)
 

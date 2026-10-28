@@ -7,8 +7,6 @@
 > ganaron voces. El paso 4 cambió más: un proyecto contiene muchos
 > patrones, así que `SetNotes` también nombra el patrón, y el rack se
 > convirtió en una ventana flotante que muestra el patrón seleccionado.
-> Este capítulo es una instantánea histórica, y la antigua rama de
-> checkpoint `step-2-sequencer` ya no se publica.
 
 El paso 2 convierte el tono de prueba en una caja de ritmos real, aunque
 pequeña:

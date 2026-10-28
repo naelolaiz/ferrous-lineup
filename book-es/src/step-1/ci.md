@@ -53,9 +53,8 @@ En este paso, cada push y pull request ejecutaba un trabajo de Linux,
 **check**: instalaba las librerías del sistema, y luego ejecutaba
 `cargo fmt --check`, `cargo clippy -- -D warnings` (las advertencias
 cuentan como errores), `cargo test` y una compilación de release. El
-programa compilado se adjuntaba a la ejecución como artefacto de Linux
-(`ferrous-loom-linux` entonces, `ferrous-lineup-linux` hoy; ver
-[Un nombre nuevo](../step-9/new-name.md)).
+programa compilado se adjuntaba a la ejecución como artefacto de Linux,
+`ferrous-lineup-linux`.
 
 > **Hoy:** `.github/workflows/ci.yml` sigue teniendo un trabajo `check`,
 > ahora una matriz de Linux, macOS y Windows. Cada runner sube su propio

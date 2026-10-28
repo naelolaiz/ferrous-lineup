@@ -10,8 +10,7 @@ Ariel Ramírez escribió la **Misa Criolla** en 1963 y 1964: una misa,
 las cinco partes cantadas del servicio católico, en español, para dos
 solistas, un coro y los instrumentos del folclore argentino. Cada parte
 está puesta sobre una danza o una canción del país. Las demos tienen
-las cinco, completas, cada voz e instrumento en un canal propio (PRs
-#154, #156 y #159):
+las cinco, completas, cada voz e instrumento en un canal propio:
 
 | Demo | Su ritmo | Compás y tonalidad |
 |---|---|---|
@@ -151,9 +150,9 @@ son muy suaves, y el coro cierra de Re menor a La menor: iv a i, un
 Hasta ahora una parte de demo tenía una melodía, un cuadro de acordes, a
 veces una mano izquierda para las Keys, y rounds para las voces extra.
 La Misa Criolla tiene solistas, un coro de cuatro voces, guitarras, un
-clavecín y un bajo a la vez. El PR #154 le da a un [`Part`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
-una lista de **líneas**: la parte de cada instrumento escrita, en un
-canal propio.
+clavecín y un bajo a la vez. Así que un [`Part`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
+recibe una lista de **líneas**: la parte de cada instrumento escrita,
+en un canal propio.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

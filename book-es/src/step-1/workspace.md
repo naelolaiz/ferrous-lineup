@@ -22,11 +22,9 @@ programa. En este paso, Ferrous Lineup estaba dividido en tres crates:
 > **En este paso / hoy:** el workspace tenía estos tres crates y la
 > versión 0.1.0. Hoy hay cinco: se unieron `lineup-listen` (decodifica y
 > analiza una grabación para **File > Import recording**) y
-> `lineup-video` (pinta imágenes de egui en un MP4), y la versión es la
-> 0.2.0. Los enlaces al código de este capítulo van a `main`, de modo que
-> los archivos que abren son los finales, no la instantánea del paso 1.
-> [Un nombre nuevo](../step-9/new-name.md) explica por qué `loom-*` pasó
-> a ser `lineup-*`.
+> `lineup-video` (pinta imágenes de egui en un MP4). Los enlaces al
+> código de este capítulo van a `main`, de modo que los archivos que
+> abren son los finales, no la instantánea del paso 1.
 
 ¿Por qué tres crates en lugar de uno?
 
@@ -45,6 +43,32 @@ Las dependencias solo apuntan en una dirección:
 lineup-app ──▶ lineup-audio ──▶ lineup-core
     └─────────────────────────▲
 ```
+
+### Nombre del paquete y nombre del programa
+
+El programa se compila a partir del paquete `lineup-app`, pero el
+archivo que escribe Cargo se llama `ferrous-lineup`. Los dos nombres
+están en lugares distintos de
+[`crates/lineup-app/Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/Cargo.toml):
+
+```toml
+[package]
+name = "lineup-app"
+
+[[bin]]
+name = "ferrous-lineup"
+path = "src/main.rs"
+```
+
+`[package] name` es el nombre con el que Cargo y los demás crates se
+refieren al paquete (`cargo test -p lineup-app`). `[[bin]]` describe un
+programa que compila el paquete; los corchetes dobles son la manera de
+TOML de decir «una entrada de una lista», porque un paquete puede
+compilar varios programas. Sin una entrada `[[bin]]`, Cargo llamaría al
+programa como el paquete, `lineup-app`. Un crate llamado `lineup-core`
+se escribe `lineup_core` en las líneas `use`, porque en Rust un guion es
+un signo menos y no puede formar parte de un nombre; Cargo convierte los
+guiones en guiones bajos por ti.
 
 ## El workspace
 

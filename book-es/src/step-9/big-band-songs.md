@@ -252,8 +252,8 @@ todas partes. Seis son libres en Estados Unidos (publicadas antes de
 años tras la muerte del autor (Sweet Georgia Brown, Ain't Misbehavin',
 It Had to Be You, Tiger Rag, After You've Gone, St. Louis Blues), y
 cuatro siguen bajo copyright en todas partes (In the Mood, Sing, Sing,
-Sing, Take the "A" Train, Hit the Road Jack). Se incluyen a petición
-del dueño, y un comentario encima de cada una dice de qué caso se trata.
+Sing, Take the "A" Train, Hit the Road Jack). Un comentario encima de
+cada una dice de qué caso se trata.
 
 ## Ejercicios
 

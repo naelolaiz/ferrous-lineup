@@ -145,8 +145,7 @@ dejan ejecutarlo.
   que el AppImage trae consigo; el `.deb` la declara y apt la instala.
 - **Windows, el Setup `.exe`**: ejecútalo. Instala el programa, una
   entrada del menú Inicio, un desinstalador bajo **Settings > Apps**, y
-  la asociación de archivos `.lineup` (y la antigua `.loom`), de modo
-  que hacer doble clic en un proyecto lo abre en Ferrous Lineup. Si una
+  la asociación de archivos `.lineup`, de modo que hacer doble clic en un proyecto lo abre en Ferrous Lineup. Si una
   ventana azul dice «Windows protected your PC», elige **More info**, y
   después **Run anyway**.
 - **Windows, el `.zip`**: descomprímelo y haz doble clic en

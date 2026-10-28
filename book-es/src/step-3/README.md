@@ -5,9 +5,7 @@
 > proyecto ahora contiene muchos patrones, así que los métodos de notas
 > de `Project` (`add_note`, `replace_note`...) dieron paso a
 > `project.pattern_mut(index)`, `Command::SetNotes` también nombra el
-> patrón, y el piano roll edita el patrón seleccionado. Este capítulo
-> es una instantánea histórica, y la antigua rama de checkpoint
-> `step-3-piano-roll` ya no se publica.
+> patrón, y el piano roll edita el patrón seleccionado.
 
 El paso 3 le da a Ferrous Lineup melodías y acordes, y empieza a enseñar
 armonía:
