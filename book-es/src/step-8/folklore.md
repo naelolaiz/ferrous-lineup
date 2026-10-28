@@ -228,7 +228,7 @@ Las demos nuevas, por género en el menú Songs:
   Toreador Song de Bizet como marcha rock.
 - **Clásica y cine**: La donna è mobile, Ave Maria, el Hallelujah
   Chorus, la Wedding March, The Great Gate of Kiev, Anitra's Dance, el
-  Prelude in Do sostenido minor de Rachmaninoff, el himno Jupiter de Holst y
+  Prelude in C-sharp minor de Rachmaninoff, el himno Jupiter de Holst y
   el Dies irae de Mozart; la Rêverie de Debussy aparece como lo-fi hip
   hop y su Golliwogg's Cakewalk como jazz.
 

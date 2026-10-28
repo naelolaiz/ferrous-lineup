@@ -299,7 +299,7 @@ Las demos necesitaban canciones que todo el mundo conozca, y tenían que
 ser libres de usar. Una canción es libre cuando está en el **dominio
 público**: canciones folclóricas que no son de nadie, y música de
 compositores que murieron hace mucho. *Ode to Joy* (Beethoven, 1824),
-*Für Elise*, *Canon in Re*, *Greensleeves*, *Frère Jacques*,
+*Für Elise*, *Canon in D*, *Greensleeves*, *Frère Jacques*,
 *Korobeiniki* y las demás lo están todas. Algunas melodías antiguas
 famosas no, o no en todas partes, porque un arreglo más nuevo o la letra
 siguen protegidos; esas se dejaron fuera.
@@ -381,7 +381,7 @@ negativos, así que las sumas se hacen en `isize`, un entero con signo
 del tamaño de `usize`. Solo se conservan los comienzos dentro de la
 parte, `0..length`, así que la conversión de vuelta a `usize` no puede
 salir mal. `..*note` es otra vez sintaxis de actualización de struct:
-una copia de la nota con un comienzo nuevo. *Canon in Re* usa el mismo
+una copia de la nota con un comienzo nuevo. *Canon in D* usa el mismo
 truco para sus tres violines.
 
 ## ¿Está bien?

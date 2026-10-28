@@ -3,7 +3,7 @@
 Archivos: [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/files.rs)
 y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
-Abre "Für Elise" desde **Archivo > Demos** y, hasta ahora, el título de
+Abre "Für Elise" desde **File > Demos** y, hasta ahora, el título de
 la ventana decía "Untitled". La app solo conocía dos clases de
 proyecto: uno que venía de un archivo (mostrado por su nombre de
 archivo) y uno que no ("Untitled"). Una demo no viene de ningún
@@ -21,7 +21,7 @@ programas los cambios sin guardar:
 ![Tras un cambio: "Für Elise*". Pasar el ratón sobre Guardar explica lo que hará.](../images/step-8-demo-changed.png)
 
 La estrella reemplaza al punto que solía ir delante del nombre
-(["En la app: menú Archivo, atajos de teclado y barra de título"](../step-4/saving.md#en-la-app-menú-archivo-atajos-de-teclado-y-barra-de-título)),
+(["En la app: menú File, atajos de teclado y barra de título"](../step-4/saving.md#en-la-app-menú-file-atajos-de-teclado-y-barra-de-título)),
 también para los archivos: "song.lineup*".
 
 ## Por qué una demo es de solo lectura
@@ -33,7 +33,7 @@ vez que lo abres. No hay nada donde escribir tus cambios, y si lo
 hubiera, la siguiente versión de la app traería su propia copia de
 todas formas.
 
-Así que **Guardar** en una demo hace lo que hace **Guardar como…**:
+Así que **Save** en una demo hace lo que hace **Save as…**:
 pide un archivo nuevo. El diálogo ya lleva el nombre de la demo: en
 Für Elise sugiere "Für Elise.lineup".
 
@@ -44,8 +44,8 @@ como estaba. Las exportaciones (WAV, MIDI) sugieren también el nombre
 de la demo: "Für Elise.wav".
 
 La app empieza con "The starting song", que también es una demo (es la
-primera entrada de **Archivo > Demos**), así que muestra ese nombre
-desde el principio. **Archivo > Nuevo** y una grabación importada
+primera entrada de **File > Demos**), así que muestra ese nombre
+desde el principio. **File > New** y una grabación importada
 siguen empezando como "Untitled"; un archivo MIDI importado o un chord
 sheet recibe el nombre de su archivo (`name_imported`), hasta que se
 guarda.
@@ -200,11 +200,11 @@ sin cambios, y comprueban el nombre de archivo sugerido.
 ## Cómo se comprobó
 
 En la app en marcha: el título al arrancar ("The starting song (demo,
-read-only)"), un paso cambiado (estrella), **Archivo > Demos >
+read-only)"), un paso cambiado (estrella), **File > Demos >
 Canciones > Clásica y cine > Für Elise** (el diálogo "¿Guardar los
 cambios?" nombra "The starting song"), No guardar, el título "Für Elise
 (demo, read-only)" mientras suena, un paso cambiado (estrella),
-**Archivo > Guardar** abriendo el diálogo de guardar del sistema con
+**File > Save** abriendo el diálogo de guardar del sistema con
 "Für Elise.lineup", guardar, el título volviéndose el nombre del
 archivo sin estrella, y un segundo Guardar escribiendo el archivo sin
 diálogo.

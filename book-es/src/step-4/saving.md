@@ -6,7 +6,7 @@ y [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-li
 ## Cómo es un archivo de proyecto
 
 Un archivo `.lineup` es texto plano. Para ver uno, arranca la app, elige
-una demo en Archivo > Demos, luego usa Archivo > Guardar como… y abre el
+una demo en File > Demos, luego usa File > Save As… y abre el
 archivo guardado en un editor de texto:
 
 ```sh
@@ -15,7 +15,7 @@ cargo run --release
 head -n 30 song.lineup
 ```
 
-Un proyecto nuevo (Archivo > Nuevo) todavía no tiene notas, así que su
+Un proyecto nuevo (File > New) todavía no tiene notas, así que su
 archivo es corto. Este es el comienzo real del archivo que escribe
 `Project::template()`:
 
@@ -428,7 +428,7 @@ archivos temporales (`/tmp` en Linux, algo dentro de tu carpeta de usuario
 en Windows), con el id del proceso en el nombre para que dos ejecuciones
 de pruebas a la vez no colisionen, y borran el archivo después.
 
-## En la app: menú Archivo, atajos de teclado y barra de título
+## En la app: menú File, atajos de teclado y barra de título
 
 El lado de la app está en `crates/lineup-app/src/app/files.rs`. Sus
 primeras líneas explican un layout poco habitual:
@@ -595,7 +595,7 @@ if pressed(SAVE_AS) {
 ```
 
 - `Modifiers::COMMAND` es Ctrl en Linux y Windows y ⌘ en macOS, así que
-  cada sistema tiene el atajo que esperan sus usuarios. El menú Archivo
+  cada sistema tiene el atajo que esperan sus usuarios. El menú File
   muestra también el correcto: `ctx.format_shortcut(&SAVE)` da «Ctrl+S» o
   «⌘S».
 - `consume_shortcut` comprueba las teclas y las retira de la entrada, para

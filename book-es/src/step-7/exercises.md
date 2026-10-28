@@ -92,8 +92,8 @@ del paso 4.
 
 Abrir archivos MIDI, que una vez pedía este ejercicio, ya existe:
 `midi_file::read::read` convierte los bytes en eventos, y
-`midi_file::import::import` crea el proyecto detrás de **Archivo >
-Importar archivo MIDI…**. Quedan dos rincones.
+`midi_file::import::import` crea el proyecto detrás de **File >
+Import MIDI file…**. Quedan dos rincones.
 
 Un archivo de **formato 2** no es una canción, sino varias piezas
 independientes, una por pista. `import` conserva solo la primera pista

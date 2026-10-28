@@ -26,7 +26,7 @@ La app corrió en una pantalla virtual (`Xvfb`) y se manejó con
 `xdotool`, como antes. Cada parte del código recibió una pregunta
 distinta:
 
-- la banda: ¿toca cada estilo todo tipo de compás, incluidos N.Do.,
+- la banda: ¿toca cada estilo todo tipo de compás, incluidos N.C.,
   pushes y métricas irregulares?
 - la teoría: ¿es cada nombre que la app escribe (notas, acordes,
   numerales, armaduras) el que escribiría un músico?
@@ -43,9 +43,9 @@ su alrededor.
 
 ## Crasheos y trabajo perdido
 
-### N.Do. cerraba la app
+### N.C. cerraba la app
 
-Teclea N.Do. en un compás con la banda **Pop ballad**, y la ventana se
+Teclea N.C. en un compás con la banda **Pop ballad**, y la ventana se
 cerraba. Lo hacían dieciséis estilos: todos aquellos cuyo piano o bajo
 toca el acorde **una nota cada vez** (arpegios, el bajo Alberti, el
 montuno de la salsa). Esos patrones piden «la nota número *n* del
@@ -58,7 +58,7 @@ Voices::Nth(index) => {
     voicing[index % voicing.len()]
 ```
 
-N.Do. es una armonía sin notas, así que `voicing.len()` es 0, y
+N.C. es una armonía sin notas, así que `voicing.len()` es 0, y
 `index / 0` es una división por cero. En Rust una división entera por
 cero no es un número raro, como puede ser en otros sitios: el programa
 **hace panic** (se detiene con un error), porque no hay una respuesta
@@ -70,7 +70,7 @@ Voices::Nth(_) if voicing.is_empty() => Vec::new(),
 ```
 
 Los brazos del match se prueban en orden, así que un voicing vacío
-nunca llega al `%`. Una prueba toca ahora un compás de N.Do. en
+nunca llega al `%`. Una prueba toca ahora un compás de N.C. en
 **cada** estilo de banda y comprueba que ninguna nota de piano, bajo o
 guitarra empieza en él.
 
@@ -341,14 +341,14 @@ compás 1: detenido en el compás 7, se iba al compás 3. La casilla de
 loop de la barra de práctica ya volvía a sumar el inicio del loop; el
 botón del playlist ahora hace lo mismo.
 
-### Un N.Do. con push ganaba un punto
+### Un N.C. con push ganaba un punto
 
 «N.C.» tiene puntos en su nombre, y los puntos después de una armonía
-son una parada (Do. es un shot). El lector lo sabía para N.Do., pero no
-para un **^N.Do.** con push: leía el último punto como un shot, y lo
-escribía de vuelta como «^N.Do..». Cada copia y pegado añadía un punto.
+son una parada (C. es un shot). El lector lo sabía para N.C., pero no
+para un **^N.C.** con push: leía el último punto como un shot, y lo
+escribía de vuelta como «^N.C..». Cada copia y pegado añadía un punto.
 Los signos de intercalación de un push ahora se quitan primero, y lo
-que queda se comprueba como N.Do. antes de leer ningún punto.
+que queda se comprueba como N.C. antes de leer ningún punto.
 
 ## Ejercicios
 

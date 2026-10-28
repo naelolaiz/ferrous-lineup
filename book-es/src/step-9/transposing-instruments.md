@@ -345,7 +345,7 @@ Trece pruebas nuevas en `lineup-core` y una en la app:
   las doce tonalidades mayores y menores y cada instrumento; Mi es Re♭
   para un saxofón alto, Fa♯ es La♭ para una trompeta;
 - los acordes conservan su lugar: ii–V–I en Do es Mim7 La7 Remaj7, Do♯7 en
-  Fa♯ es Mi♭7 en La♭, un poliacorde y N.Do. también se escriben;
+  Fa♯ es Mi♭7 en La♭, un poliacorde y N.C. también se escriben;
 - las notas conservan sus intervalos: Re♯–Mi en La menor se vuelve Mi♯–Fa♯,
   Si♯–Do♯ y La♯–Si; la sexta rebajada de Mi es La en Re♭; Do♯# se queda en Re♯
   menor armónica;

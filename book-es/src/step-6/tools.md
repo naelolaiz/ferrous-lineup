@@ -5,7 +5,7 @@ y [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-lin
 
 ## Notas que entran, notas que salen
 
-Cada herramienta del menú Herramientas del piano roll es una función de
+Cada herramienta del menú Tools del piano roll es una función de
 `lineup_core::tools` con la misma forma: toma prestadas unas notas y
 devuelve otras nuevas.
 
@@ -183,7 +183,7 @@ pub fn quantize(notes: &[NoteEvent], pattern_length: usize) -> Vec<NoteEvent> {
 
 El `..quantized` lleva la altura y la velocidad; `start` y `length` se
 recalculan para que una nota situada justo al final no se salga del
-patrón. Herramientas > Cuantizar a los steps llama a esto sobre la
+patrón. Tools > Quantize to the steps llama a esto sobre la
 selección, o sobre todo el canal cuando no hay nada seleccionado.
 
 ## Mantenerse en la tonalidad

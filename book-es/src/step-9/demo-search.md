@@ -55,7 +55,7 @@ de juntas, o solo en las notas sobre una demo, esta aparece al final,
 más apagada, para que sobresalgan las coincidencias que probablemente
 querías:
 
-![El menú Demos con «d minor» escrito. Primero, a todo color, Toccata in Re minor y las otras ocho canciones en Re menor: Alma llanera, Dies Irae, Dies irae (Mozart), Gallo ciego, Habanera, House of the Rising Sun, Marinera del callejón y When Johnny Comes Marching Home. Debajo, más apagadas, Anitra's Dance, Asturias, Bambuco del páramo y más, que solo tienen una palabra que empieza con «d» y un «minor» en alguna parte.](../images/step-9-demo-search-key.png)
+![El menú Demos con «d minor» escrito. Primero, a todo color, Toccata in D minor y las otras ocho canciones en Re menor: Alma llanera, Dies Irae, Dies irae (Mozart), Gallo ciego, Habanera, House of the Rising Sun, Marinera del callejón y When Johnny Comes Marching Home. Debajo, más apagadas, Anitra's Dance, Asturias, Bambuco del páramo y más, que solo tienen una palabra que empieza con «d» y un «minor» en alguna parte.](../images/step-9-demo-search-key.png)
 
 Pulsa **Esc**, o pasa a otro menú, para cerrarlo; la caja vuelve a estar
 vacía la próxima vez.
@@ -246,7 +246,7 @@ nota se eleva para dar un tirón fuerte de vuelta a la tónica. Una
 canción en Re menor armónica sigue estando en la tonalidad de Re menor,
 así que sus detalles buscables dicen ambas cosas, «Re harmonic minor» y
 «Re minor», y `d minor` encuentra el Dies irae del Réquiem de Mozart
-además de la Toccata in Re minor.
+además de la Toccata in D minor.
 
 Derivar `Ord` en un enum ordena sus variantes tal como están escritas,
 así que `Rank::TitleStart < Rank::About`, y ordenar las coincidencias

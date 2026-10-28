@@ -103,7 +103,7 @@ las features `default`. La feature `derive` de `serde`, del capítulo de
 guardar, es una que enciendes tú.
 
 `rfd` normalmente enciende dos: `xdg-portal`, que le pide al escritorio de
-Linux que muestre su diálogo de archivos (a través de Re-Bus, el sistema de
+Linux que muestre su diálogo de archivos (a través de D-Bus, el sistema de
 mensajes del escritorio, así que no hay GTK que instalar), y `wayland`,
 que le dice al portal a qué ventana pertenece el diálogo, si el programa
 lo indica. Ferrous Lineup no lo indica, así que `default-features = false`

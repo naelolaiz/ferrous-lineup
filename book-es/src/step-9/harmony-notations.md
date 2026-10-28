@@ -80,7 +80,7 @@ Algunas cosas que notar:
   acordes de séptima van antes que los de sexta. Un conjunto que no
   forma ningún acorde que la app conozca, como 3-1 (Do Do♯ Re) o Menor 3
   (Do Re♭ Mi), conserva su nombre.
-- **Sin acorde** sigue como N.Do. en todas las vistas, y una **forma de
+- **Sin acorde** sigue como N.C. en todas las vistas, y una **forma de
   serie** (P0, RI7) sigue como forma de serie: una serie es una línea
   de doce notas, no un grupo.
 

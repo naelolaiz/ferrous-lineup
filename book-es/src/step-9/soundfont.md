@@ -482,7 +482,7 @@ opt-level = 3
 
 1. **Otro SoundFont.** Descarga otro SoundFont General MIDI en formato
    `.sf2` (*FluidR3_GM*, o el pequeño *TimGM6mb*), elígelo con
-   **Choose SoundFont…** y toca el Canon in Re. (Los archivos `.sf3`,
+   **Choose SoundFont…** y toca el Canon in D. (Los archivos `.sf3`,
    que comprimen sus muestras, no están soportados.) ¿Qué cuerdas
    prefieres? ¿Suena una mucho más alta que la otra? ¿Dónde pondrías un
    ajuste de volumen para el SoundFont entero?

@@ -8,8 +8,8 @@ Todo playlist solía empezar con dieciséis pistas. Una demo con melodía
 y batería se abría con la pista 3 a la pista 16 vacías debajo, que es
 mucho gris que desplazar para descubrir que no hay nada.
 
-Ahora un proyecto tiene solo las pistas hasta su último clip. Archivo >
-Nuevo tiene una pista, las demos tienen las dos que usan. Debajo de la
+Ahora un proyecto tiene solo las pistas hasta su último clip. File >
+New tiene una pista, las demos tienen las dos que usan. Debajo de la
 última pista hay una **fila libre** más tenue: coloca un clip en ella
 (o arrastra uno) y se vuelve una pista. Su cabecera tiene también un
 botón **➕ New track**, y "➕ Track" y el menú de pista con clic derecho

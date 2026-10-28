@@ -203,7 +203,7 @@ sus notas:
   como un acorde es una manera habitual de armonizarla; Webern
   construyó la serie de su Concierto Op. 24 a partir de cuatro grupos
   así de tres.
-- **N.Do.** no toca nada; la batería sigue.
+- **N.C.** no toca nada; la batería sigue.
 
 **2. El ritmo, ceñido a los compases.** Los patrones de comping y de
 bajo de la biblioteca (`Comping::play`, `Bass::play`) empiezan de nuevo
@@ -498,7 +498,7 @@ que suenen bien por MIDI hacia un sintetizador externo.
 
 ## Una banda sobre una demo
 
-Abre una demo, pongamos **Canon in Re**, abre el chord sheet y elige una
+Abre una demo, pongamos **Canon in D**, abre el chord sheet y elige una
 banda. Una demo ya toca su propio acompañamiento, así que primero la
 banda:
 
@@ -512,7 +512,7 @@ para que los dos no toquen uno encima del otro. La melodía sigue
 sonando, ahora con la banda detrás, y la barra de estado dice qué se
 silencia.
 
-![El chord sheet de Canon in Re con una banda Pop ballad: Re La Sim Fa♯m | Sol Re Sol La, la progresión del Canon de Pachelbel, escrita compás a compás](../images/step-9-band-demo.png)
+![El chord sheet de Canon in D con una banda Pop ballad: Re La Sim Fa♯m | Sol Re Sol La, la progresión del Canon de Pachelbel, escrita compás a compás](../images/step-9-band-demo.png)
 
 **No band** quita los patrones de la banda, sus pistas y sus canales
 (solo los que añadió, y solo si nada más suena en ellos), y le quita el
@@ -568,7 +568,7 @@ existe, se rechaza con un mensaje que lo dice en lugar de abrirse mal.
 4. Edita una nota del bajo, y luego escribe un acorde nuevo en el
    compás 2. ¿Qué partes cambiaron? Haz clic en **Play it again**. ¿Qué
    le pasó a tu nota?
-5. Abre **Canon in Re**, elige **Pop ballad**, y mira el channel rack.
+5. Abre **Canon in D**, elige **Pop ballad**, y mira el channel rack.
    ¿Qué canales están silenciados? Elige **No band**: ¿la demo ha
    vuelto exactamente a como era?
 6. En `band.rs`, `part_print` deja fuera la pista en la que está un

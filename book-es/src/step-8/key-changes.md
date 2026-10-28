@@ -94,7 +94,7 @@ Ferrous Lineup pueden seguir abriéndola.
   la canción, que cambian los menús Key.
 - En modo canción, las harmony keys siguen la tonalidad en el playhead
   (o donde vaya a empezar Play). Cuando no es la tonalidad en la que
-  empieza la canción, *Now in La major* aparece bajo los menús Key, y
+  empieza la canción, *Now in A major* aparece bajo los menús Key, y
   las siete teclas de acorde son los acordes de esa tonalidad.
 - El piano roll resalta las notas de un patrón en la tonalidad en la
   que se toca, y dice *This pattern: La major* junto a los menús Key.
