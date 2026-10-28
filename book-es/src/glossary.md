@@ -3,7 +3,7 @@
 Definiciones breves de los términos de Rust usados en este libro, con el
 capítulo que explica cada uno.
 
-| Term | Meaning | Explained in |
+| Término | Significado | Se explica en |
 |------|---------|--------------|
 | **Anonymous lifetime (`'_`)** | Un lifetime escrito sin nombre, que significa «el lifetime del argumento prestado». | [De los pasos a las notas](step-3/notes.md) |
 | **`Arc<T>`** | Un puntero compartido con conteo de referencias que es seguro de usar entre hilos; los datos se liberan cuando se va el último `Arc`. | [Instrumentos](step-2/instruments.md) |

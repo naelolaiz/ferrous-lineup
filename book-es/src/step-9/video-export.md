@@ -75,7 +75,7 @@ La manera habitual de hacer un video desde un programa es entregar
 imágenes a FFmpeg. Pero FFmpeg es un programa aparte que Windows y macOS
 no tienen, así que cada usuario tendría que instalarlo. En su lugar, la
 aplicación compila dos codificadores muy conocidos desde sus fuentes en
-Do junto con ella misma, a través de dos crates:
+C junto con ella misma, a través de dos crates:
 
 | Qué | Formato | Codificador | Crate |
 |------|--------|---------|-------|
@@ -83,7 +83,7 @@ Do junto con ella misma, a través de dos crates:
 | Sonido | MP3, 256 kbit/s estéreo | LAME (LGPL) | `mp3lame-encoder` |
 | Ambos juntos | MP4 | escrito a mano, unas 500 líneas | (nuestro) |
 
-Un crate con Do dentro tiene un `build.rs` que ejecuta un compilador de Do
+Un crate con C dentro tiene un `build.rs` que ejecuta un compilador de C
 antes de que Rust compile el resto, usando el crate [`cc`](https://docs.rs/cc).
 La matriz de CI ya compila en Linux, Windows y los dos tipos de Mac, así
 que prueba que esto funciona en todas partes.

@@ -56,7 +56,7 @@ archivo `.sf2`; **Use GeneralUser GS** vuelve atrás.
 
 Dos cosas más usan el SoundFont sin que se les diga: **File > Export
 WAV** escribe la canción tal como la oyes, SoundFont incluido, y el
-teclado del ordenador y un teclado MIDI también lo tocan. **MIDI > Send
+teclado de la computadora y un teclado MIDI también lo tocan. **MIDI > Send
 every channel** sigue enviando las notas al sintetizador externo, como
 antes.
 
@@ -113,7 +113,7 @@ rápido: 494 Hz.
 Leer un archivo `.sf2` y tocarlo es mucho código: parsear el archivo,
 las regiones, las envolventes, los filtros, los loops, mezclar hasta
 cientos de voces. El crate `rustysynth` lo hace todo, en Rust puro sin
-bibliotecas de Do, bajo la licencia MIT (que un programa GPL puede
+bibliotecas de C, bajo la licencia MIT (que un programa GPL puede
 usar). Su interfaz es pequeña:
 
 ```rust

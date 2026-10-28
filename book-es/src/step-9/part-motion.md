@@ -15,7 +15,7 @@ cambio de acorde, y cada parte se nombra con adónde va.
 ![Los dieciséis compases del ejemplo de funciones de acordes en el piano roll, cuatro partes en una pista Piano. Las notas de cada parte se unen con una línea de su propio color, y los movimientos del compás 5, donde Sol7 va a Do, van en negrita. La línea sobre los nombres de los acordes dice «Piano: superior Re5→Do5 · 2.ª F4→Mi4 · 3.ª Si3→Sol3 · inferior Sol2→Do3; partes externas en movimiento contrario».](../images/step-9-part-motion.png)
 
 El ejemplo son los dieciséis compases de [Acordes prestados,
-dominantes secundarios y acordes
+dominantes secundarias y acordes
 pivote](chord-functions.md), escritos como cuatro partes en una pista
 Piano: un bajo en la mano izquierda y tres partes en la derecha. La
 comprobación no encuentra nada que marcar: «Voice leading, 4 partes:
@@ -39,25 +39,25 @@ nada de lo que la escritura de partes clásica evita».
   puntero desde las notas hacia arriba, a la línea: la línea mantiene
   el cambio al que apuntaste por última vez mientras lo lees.
 
-![El tooltip de la línea de movimientos en el cambio de Sol7 a Do: «Piano (voz superior): baja una segunda mayor de Re5 a Do5, un grado. Piano (voz 2 de 4): baja una segunda menor de F4 a Mi4, un grado. Piano (voz 3 de 4): baja una tercera mayor de Si3 a Sol3, un salto. Piano (voz inferior): sube una cuarta justa de Sol2 a Do3, un brinco». Luego el movimiento entre cada par de partes contiguas, y entre las partes externas: movimiento contrario.](../images/step-9-part-motion-tooltip.png)
+![El tooltip de la línea de movimientos en el cambio de Sol7 a Do: «Piano (voz superior): baja una segunda mayor de Re5 a Do5, un grado. Piano (voz 2 de 4): baja una segunda menor de F4 a Mi4, un grado. Piano (voz 3 de 4): baja una tercera mayor de Si3 a Sol3, un salto. Piano (voz inferior): sube una cuarta justa de Sol2 a Do3, un salto grande». Luego el movimiento entre cada par de partes contiguas, y entre las partes externas: movimiento contrario.](../images/step-9-part-motion-tooltip.png)
 
 Donde la comprobación encuentra algo en el paso al que apuntas, la
 línea dice eso en su lugar, en rojo, como en la página de
 [conducción de voces](voice-leading.md).
 
-## Grados, saltos y brincos
+## Grado conjunto, salto y salto grande
 
 Cuánto se mueve una parte tiene un nombre:
 
 | Movimiento | Intervalo | Semitonos | Ejemplo |
 |---|---|---|---|
 | **Mantenida** | la misma nota | 0 | Sol3 a Sol3 |
-| **Grado** | una segunda | 1 o 2 | F4 a Mi4 |
+| **Grado conjunto** | una segunda | 1 o 2 | F4 a Mi4 |
 | **Salto** | una tercera | 3 o 4 | Si3 a Sol3 |
-| **Brinco** | una cuarta o más | 5 o más | Sol2 a Do3 |
+| **Salto grande** | una cuarta o más | 5 o más | Sol2 a Do3 |
 
 Las partes internas de un coral se mueven sobre todo por grado o
-mantienen sus notas. El bajo brinca más, porque se mueve de
+mantienen sus notas. El bajo salta más, porque se mueve de
 fundamental a fundamental: Sol2 subiendo una cuarta a Do3 en una cadencia
 es uno de los movimientos de bajo más comunes que hay.
 
@@ -103,7 +103,7 @@ En el cambio de Sol7 a Do (compás 5):
   V7 a I: entonces el acorde de Do recibe su quinta, Sol, y tiene las
   tres notas. La comprobación de conducción de voces deja en paz a una
   sensible interna por esta razón.
-- El **bajo** brinca una cuarta de fundamental a fundamental, y la voz
+- El **bajo** salta una cuarta de fundamental a fundamental, y la voz
   **superior** baja un grado: las partes externas están en movimiento
   contrario.
 

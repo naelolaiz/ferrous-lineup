@@ -179,7 +179,7 @@ es completamente distinta.
 
 ## Cómo funciona
 
-### Targets: para qué ordenador es un programa
+### Targets: para qué computadora es un programa
 
 Un programa compilado es código máquina para una clase de procesador,
 en el formato de archivo de un sistema operativo. Rust nombra cada
@@ -188,12 +188,12 @@ architecture-vendor-system(-environment):
 
 | Target | Procesador | Sistema |
 |--------|------------|---------|
-| `x86_64-unknown-linux-gnu` | Intel/AMD de 64 bits | Linux, con la biblioteca Do de GNU |
+| `x86_64-unknown-linux-gnu` | Intel/AMD de 64 bits | Linux, con la biblioteca C de GNU |
 | `x86_64-pc-windows-msvc` | Intel/AMD de 64 bits | Windows, con las herramientas de Microsoft |
 | `aarch64-apple-darwin` | ARM de 64 bits (Apple Silicon) | macOS («Darwin» es su núcleo) |
 | `x86_64-apple-darwin` | Intel de 64 bits | macOS |
 
-`rustc --version --verbose` muestra el target de tu propio ordenador en
+`rustc --version --verbose` muestra el target de tu propia computadora en
 la línea `host:`. `cargo build` compila para él; `cargo build --target
 <triple>` compila para otro, una vez que `rustup target add <triple>` ha
 traído la biblioteca estándar compilada para ese target. Con
@@ -237,10 +237,10 @@ procesador distinto del que usas para compilar se llama
 sus bibliotecas de sistema cubren ambos procesadores, porque los Macs
 pasaron de Intel a Apple Silicon hace solo unos años. Así que el
 trabajo de Intel se ejecuta en la misma clase de máquina que el de
-Apple Silicon; solo difiere su target. Los trozos de código en Do del
+Apple Silicon; solo difiere su target. Los trozos de código en C del
 build, como la criptografía de `ring` (para descargar el SoundFont por
 HTTPS), los compila el crate `cc`, que pasa el target al compilador de
-Do de Apple.
+C de Apple.
 
 El workflow no puede ejecutar el programa de Intel (no hay ningún Mac
 Intel donde ejecutarlo), lo cual está bien: las pruebas se ejecutan en
@@ -248,7 +248,7 @@ CI, y el código es el mismo.
 
 ### Por qué Linux se compila en un Ubuntu viejo
 
-Un programa de Linux llama a la biblioteca Do, glibc, para archivos,
+Un programa de Linux llama a la biblioteca C, glibc, para archivos,
 memoria e hilos. Cada función de glibc lleva una versión, y un programa
 registra la versión más nueva que usó: compilado en Ubuntu 24.04,
 Ferrous Lineup pide `GLIBC_2.39`:
@@ -281,12 +281,12 @@ programa corre (con `dlopen`), y eligen la que tenga el escritorio. Por
 eso un solo build de Linux funciona tanto en escritorios Wayland como
 X11.
 
-### El runtime de Do dentro del programa de Windows
+### El runtime de C dentro del programa de Windows
 
-Los programas de Rust en Windows usan el runtime de Do de Microsoft para
+Los programas de Rust en Windows usan el runtime de C de Microsoft para
 unas pocas cosas básicas. Por defecto es una DLL aparte,
 `vcruntime140.dll`, que viene con el «Visual C++ Redistributable» que
-tienen la mayoría, pero no todos, de los ordenadores con Windows. La
+tienen la mayoría, pero no todas, de las computadoras con Windows. La
 línea de Windows de la matriz añade una flag de compilador:
 
 ```yaml
@@ -434,9 +434,9 @@ encuentre a sus propios compañeros, `libxkbcommon` y `libxcb-xkb`, a su
 lado. Las comillas simples evitan que el shell reemplace `$ORIGIN` por
 una variable (vacía).
 
-Lo que el AppImage **no** trae: la biblioteca Do (glibc), ALSA, y los
-drivers de gráficos (OpenGL, Vulkan). Esos tienen que coincidir con el
-ordenador: un driver de gráficos pertenece a su tarjeta gráfica y su
+Lo que el AppImage **no** trae: la biblioteca C (glibc), ALSA, y los
+drivers de gráficos (OpenGL, Vulkan). Esos tienen que coincidir con la
+computadora: un driver de gráficos pertenece a su tarjeta gráfica y su
 kernel, y ALSA a la configuración de sonido del sistema. La comunidad
 de AppImage mantiene una lista de esas bibliotecas, la *excludelist*,
 que un AppImage nunca debería llevar.

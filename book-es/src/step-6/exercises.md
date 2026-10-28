@@ -72,7 +72,7 @@ pruebas sobre música que conoces.
 
 ## 4. El acorde napolitano (lineup-core, medio)
 
-Los acordes tomados prestados de la menor paralela ya están en la tabla:
+Los acordes tomados prestados de la menor homónima ya están en la tabla:
 iv, ii°, bIII, bVI y bVII sugieren todos sus acordes siguientes
 habituales. Toca Do, y después Si♭ mayor, en Do mayor, y `next_chords`
 responde.

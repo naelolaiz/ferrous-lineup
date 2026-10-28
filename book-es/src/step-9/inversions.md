@@ -33,7 +33,7 @@ Do una sexta por encima de Mi y Sol una tercera por encima de él: «6/3»,
 abreviado a ⁶. Do/Sol tiene una sexta y una cuarta: ⁶₄. Un acorde de
 séptima tiene cuatro notas, así que tres intervalos; las cifras
 conservan las dos que distinguen sus inversiones: ⁶₅, ⁴₃ y ⁴₂.
-Sustituyen al 7, así que Sol7/Si es V⁶₅, no V7⁶₅. Un dominante secundario
+Sustituyen al 7, así que Sol7/Si es V⁶₅, no V7⁶₅. Una dominante secundaria
 conserva su objetivo: Mi7/Sol♯ en Do mayor es V⁶₅/vi.
 
 Los acordes sus, de sexta y de novena no tienen cifras propias;

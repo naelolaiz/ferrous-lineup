@@ -49,7 +49,7 @@ pub enum Command {
 }
 ```
 
-Es un **enum** de Rust. La diferencia de los enums de Do o Java, cada
+Es un **enum** de Rust. La diferencia de los enums de C o Java, cada
 variante puede llevar sus propios datos: `SetToneOn` lleva un `bool`,
 `SetFrequency` un `f32`. Un valor de enum es exactamente una de sus
 variantes.

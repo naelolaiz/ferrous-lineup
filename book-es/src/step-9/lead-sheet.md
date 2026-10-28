@@ -52,7 +52,7 @@ Arriba del todo:
   y Canadá).
 - **−** y **+** amplían las páginas del 50% al 200%.
 - **Export PDF…** guarda el sheet como un archivo PDF.
-- **Print…** escribe el PDF en la carpeta temporal del ordenador y lo
+- **Print…** escribe el PDF en la carpeta temporal de la computadora y lo
   abre en tu visor de PDF, para imprimir desde allí. Imprimir así
   funciona igual en Linux, macOS y Windows, y el visor muestra los
   ajustes propios de la impresora.
@@ -341,7 +341,7 @@ SMuFL, de Steinberg. Las palabras y los símbolos de acorde van en
 **Inter**, una fuente hecha para pantallas que también imprime con
 limpieza. Ambas son libres, bajo la SIL Open Font License, y van
 integradas en el programa con `include_bytes!`, de modo que el sheet se
-ve igual en todos los ordenadores:
+ve igual en todas las computadoras:
 
 ```rust
 const BRAVURA: &[u8] = include_bytes!("../../assets/fonts/Bravura.otf");

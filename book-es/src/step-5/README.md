@@ -111,7 +111,7 @@ Tres ideas sostienen este paso:
 3. **El mismo código, más rápido que el tiempo real.** La exportación no
    tiene su propia forma de producir sonido. Ejecuta exactamente el mismo
    código del hilo de audio que usa la tarjeta de sonido, en un hilo
-   propio, tan rápido como pueda ir el ordenador, y escribe el resultado
+   propio, tan rápido como pueda ir la computadora, y escribe el resultado
    en un archivo.
 
 ## Archivos de este paso

@@ -311,7 +311,7 @@ en Do mayor. Re mayor tiene un Fa♯, que Do mayor no tiene. Suena como si
 fuera a algún sitio, y es cierto: Re mayor es el V de Sol. Por un momento,
 la música se comporta como si Sol fuera el hogar, y Re tira hacia Sol igual
 que Sol tira hacia Do. A esto se le llama **dominante secundaria**, escrita
-V/V («cinco de cinco»), y es una de las maneras más comunes de añadir
+V/V («dominante de la dominante»), y es una de las maneras más comunes de añadir
 color a una progresión.
 
 `next_chords` lo comprueba antes de mirar la tabla:
@@ -377,7 +377,7 @@ Do7 es uno bonito: Do es la tónica, pero Do7 tiene un Si♭, así que ya no es
 el acorde de tónica. Es el V de Fa, y suena como tal.
 
 La tabla ya conoce los acordes comunes tomados prestados de la tonalidad
-menor paralela: iv, ii°, bIII, bVI y bVII. Si♭ mayor en Do mayor es bVII,
+menor homónima: iv, ii°, bIII, bVI y bVII. Si♭ mayor en Do mayor es bVII,
 y sugiere Do (la cadencia de rock) o Fa (el «doble plagal»). Lo que no
 conoce es el **napolitano** bII, el acorde mayor sobre el segundo grado
 rebajado (Re♭ en Do). El ejercicio 4 lo añade.

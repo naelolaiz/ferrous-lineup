@@ -36,8 +36,8 @@ pub(crate) fn process(&mut self, output: &mut [f32])
 
 No sabe ni le importa que sea cpal quien pregunta. Con una tarjeta de
 sonido, cpal pide unos cientos de fotogramas cada vez, tan rápido como se
-reproducen. Para hacer un archivo, un loop los pide tan rápido como el
-ordenador puede producirlos, y los escribe. Es el mismo código
+reproducen. Para hacer un archivo, un loop los pide tan rápido como la
+computadora puede producirlos, y los escribe. Es el mismo código
 produciendo el mismo sonido, así que una exportación suena exactamente
 como la reproducción: no hay un segundo motor que mantener de acuerdo con
 el primero. (Las pruebas del motor hacen esto desde el paso 2: tampoco
@@ -271,7 +271,7 @@ redondee.
 
 ## Un hilo propio
 
-Renderizar lleva un rato. En el ordenador donde se escribió esto, la demo
+Renderizar lleva un rato. En la computadora donde se escribió esto, la demo
 se exporta en una fracción de segundo, y una canción de 15 minutos tardó
 unos tres segundos (en una compilación release; una debug es muchas veces
 más lenta). La ventana no debe congelarse mientras tanto. Así que la

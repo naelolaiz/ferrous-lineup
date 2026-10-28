@@ -197,6 +197,6 @@ match &self.audio {
 las llaves, `{reason}` imprime la variable `reason` directamente;
 `{:.1}`, más adelante en el archivo, imprime un float con un decimal.
 
-Si el ordenador no tiene una tarjeta de sonido que funcione, la app se
+Si la computadora no tiene una tarjeta de sonido que funcione, la app se
 abre igualmente y la barra de estado muestra el motivo en naranja. Un
 fallo se convierte en datos que mostramos, en lugar de en un crash.

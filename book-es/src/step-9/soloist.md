@@ -47,7 +47,7 @@ piano roll. Sus notas están coloreadas por lo que son:
 - **verde** para las notas del acorde, marcadas con cuál: `R` para la
   fundamental, `3`, `5`, `7` (y `6`, `9` cuando el acorde las tiene);
 - **azul** para las otras notas de la escala del acorde: `p` una nota
-  de paso, `n` una nota vecina, `s` cualquier otra;
+  de paso, `n` una bordadura, `s` cualquier otra;
 - **naranja** para las notas cromáticas, de fuera de la escala: `a` una
   aproximación, `cp` una nota de paso cromática.
 
@@ -126,7 +126,7 @@ en la tonalidad, en este orden:
    que usa la 7ª elevada (Mi7 en La menor, con Sol♯) toca la **menor
    armónica** de la tonalidad desde su fundamental: La menor armónica
    desde Mi, Mi Fa Sol♯ La Si Do Re, llamada **Mi frigio dominante**.
-2. **Un acorde tomado en préstamo de la tonalidad paralela** toca la
+2. **Un acorde tomado en préstamo de la tonalidad homónima** toca la
    escala de esa tonalidad: Fam en Do mayor viene de Do menor, así que
    toca Do menor desde Fa, que es Fa dórico. Si♭7 en Do mayor (también de Do
    menor) toca Si♭ mixolidio.
@@ -169,7 +169,7 @@ mayoría son más viejos que el jazz: los libros de armonía las llaman
 - Una **nota de paso** llena el hueco entre dos notas del acorde a una
   tercera de distancia, por pasos, en la misma dirección: Do **Re** Mi
   sobre Do.
-- Una **nota vecina** (o nota auxiliar) se aleja un paso de una nota
+- Una **bordadura** (o nota auxiliar) se aleja un paso de una nota
   del acorde y vuelve: Mi **Fa** Mi.
 - Una **nota de paso cromática** llena un tono entero con el semitono
   que hay en medio: Re **Re♯** Mi.
@@ -288,7 +288,7 @@ Tres trozos de Rust que merecen atención:
   («never»), que encaja en cualquier sitio.
 - `else if let Some(parallel) = key.borrowed_from(chord)` a la vez
   comprueba y desestructura: la rama corre solo cuando hay una
-  tonalidad paralela, y dentro de ella `parallel` es esa tonalidad.
+  tonalidad homónima, y dentro de ella `parallel` es esa tonalidad.
 - `harmonic` es una **closure**, una función pequeña escrita en su
   sitio, usada tres veces. `|root: PitchClass| Scale::new(...)` toma
   una fundamental y da una escala.
@@ -410,7 +410,7 @@ match (before, after) {
 
 Hacer match sobre una **tupla** de dos `Option`s comprueba ambos a la
 vez, y el `if` después de un patrón, un **match guard**, añade una
-condición. Los brazos se prueban en orden, así que la nota vecina (la
+condición. Los brazos se prueban en orden, así que la bordadura (la
 misma nota antes y después) se encuentra antes que la nota de paso.
 `(before < pitch) == (pitch < after)` compara dos `bool`s: true cuando
 la línea sube las dos veces o baja las dos veces, que es lo que hace
@@ -542,7 +542,7 @@ de Rust, el `let` necesitaba un `if` propio dentro del primero.
 
 `fill` elige qué va entre dos notas del acorde: notas de paso cuando
 las notas de la escala entre ellas caben en el tiempo y cada una está a
-un paso de la siguiente, una nota vecina cuando las dos notas del
+un paso de la siguiente, una bordadura cuando las dos notas del
 acorde son la misma, el semitono entre ellas cuando están a un tono
 entero de distancia, y, para un salto demasiado ancho para caminarlo,
 las notas de la escala justo antes del objetivo o un semitono por

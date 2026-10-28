@@ -103,7 +103,7 @@ semitono abajo y arriba, y el lead sostiene el Do. De La♭ a Sol7 es lo de la
 imagen: el lead cae de Do5 a Si4, el segundo viento de La♭4 a Sol4, y el
 tercero sube de Mi♭4 a F4, mientras un cuarto viento entra en Re4 para el
 acorde de séptima. Luego, de Sol7 a Do, Si4 sube a Do5 y F4 cae a Mi4, como
-hacen la sensible y la séptima de un dominante.
+hacen la sensible y la séptima de una dominante.
 
 Los vientos evitan también las **quintas paralelas** donde pueden. Dos
 vientos a una quinta justa de distancia que se mueven a otra quinta
