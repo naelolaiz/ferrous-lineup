@@ -241,8 +241,7 @@ in countries where copyright lasts 70 years after the author's death
 (Sweet Georgia Brown, Ain't Misbehavin', It Had to Be You, Tiger Rag,
 After You've Gone, St. Louis Blues), and four are still under copyright
 everywhere (In the Mood, Sing, Sing, Sing, Take the "A" Train, Hit the
-Road Jack). They are included at the owner's request, and a comment
-above each says which case it is.
+Road Jack). A comment above each says which case it is.
 
 ## Exercises
 

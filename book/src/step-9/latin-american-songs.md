@@ -7,9 +7,9 @@ Files: [`crates/lineup-core/src/library/song/tango.rs`](https://github.com/naelo
 and [`crates/lineup-core/src/library/comping.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/comping.rs)
 
 The demos had a handful of tangos, a few Andean songs and some Cuban
-and Brazilian ones. Five changes (PRs #91 to #95) add **44 Latin
-American songs**, make **six older ones play their whole score**, and
-add five dance rhythms the library did not have. Every new song was
+and Brazilian ones. This chapter adds **44 Latin American songs**,
+makes **six older ones play their whole score**, and adds five dance
+rhythms the library did not have. Every new song was
 written down from a score, never from memory, and every chord was
 checked by listening to the rendered band.
 
@@ -26,8 +26,8 @@ music:
 - **Aquellos ojos verdes** (Cuba): a bolero.
 - **Luna de Xelajú** (Guatemala): a waltz on the marimba.
 
-The genre that used to be called "South American folklore" is now
-**Latin American folklore**, since it reaches from Mexico to Argentina.
+The folklore genre in **File > Demos** is **Latin American folklore**,
+since it reaches from Mexico to Argentina.
 
 The new songs:
 

@@ -9,10 +9,6 @@ change any of it by hand. The app names every chord you hear, and also
 speaks the other languages of harmony: pitch-class sets, twelve-tone
 rows and micromodes.
 
-Ferrous Lineup was called Ferrous Loom until October 2026. Its project
-files end in `.lineup` now, and the `.loom` files saved before still
-open.
-
 ![Ferrous Lineup playing the demo song: the playlist, the channel rack with the Lineup Osc, and the harmony keys lighting up the chord that sounds](screenshots/main-window.png)
 
 ## The book

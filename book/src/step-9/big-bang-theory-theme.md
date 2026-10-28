@@ -6,8 +6,8 @@ and [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferr
 The **File > Demos** menu gets the opening theme of the television series
 *The Big Bang Theory*, written by Ed Robertson and played by Barenaked
 Ladies in 2007. It is the television version, all of it: twelve bars,
-about twenty seconds. The song is still under copyright; it was added at
-the owner's request, and the comment above it in the code says so.
+about twenty seconds. The song is still under copyright, and the
+comment above it in the code says so.
 
 ## Trying it
 
