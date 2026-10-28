@@ -111,7 +111,8 @@ pub(super) fn row(
 ) {
     let mut act = |action| actions.push(SheetAction::Practice(action));
     ui.horizontal_wrapped(|ui| {
-        let count_in = theme::light_button(ui, "Count-in", practice.count_in, None);
+        let count_in =
+            theme::light_button(ui, crate::i18n::tr("Count-in"), practice.count_in, None);
         if theme::hint(
             count_in,
             "A bar of clicks before the music starts, so you come in on time",
@@ -120,13 +121,14 @@ pub(super) fn row(
         {
             act(PracticeAction::CountIn(!practice.count_in));
         }
-        let metronome = theme::light_button(ui, "Metronome", practice.metronome, None);
+        let metronome =
+            theme::light_button(ui, crate::i18n::tr("Metronome"), practice.metronome, None);
         if theme::hint(metronome, "A click on every beat while the music plays").clicked() {
             act(PracticeAction::Metronome(!practice.metronome));
         }
 
         ui.separator();
-        ui.label("Speed");
+        ui.label(crate::i18n::tr("Speed"));
         let mut speed = practice.speed;
         let drag = ui.add(egui::DragValue::new(&mut speed).range(SPEEDS).suffix("%"));
         if theme::hint(
@@ -139,7 +141,7 @@ pub(super) fn row(
         {
             act(PracticeAction::Speed(speed));
         }
-        let tap = ui.button("Tap");
+        let tap = ui.button(crate::i18n::tr("Tap"));
         if theme::hint(
             tap,
             "Click on every beat, a few times, to set the song's tempo to yours",
@@ -148,7 +150,8 @@ pub(super) fn row(
         {
             act(PracticeAction::Tap(ui.input(|input| input.time)));
         }
-        let trainer = theme::light_button(ui, "Speed trainer", practice.training, None);
+        let trainer =
+            theme::light_button(ui, crate::i18n::tr("Speed trainer"), practice.training, None);
         let hint = if practice.training {
             "The speed goes up each time the loop comes round, until it reaches the \
              target. Stop starts again from the first speed; Pause carries on. Click to \
@@ -169,7 +172,7 @@ pub(super) fn row(
 
         if let Some(band) = project.band() {
             ui.separator();
-            ui.label("You play");
+            ui.label(crate::i18n::tr("You play"));
             // The style's players, and any other that still has a part:
             // one you edited before changing the style.
             let players = Player::ALL.into_iter().filter(|&player| {
@@ -206,7 +209,7 @@ pub(super) fn row(
 /// every 1 pass". Returns the settings when one of them was changed.
 pub fn trainer_controls(ui: &mut Ui, trainer: Trainer) -> Option<Trainer> {
     let mut changed = trainer;
-    ui.label("from");
+    ui.label(crate::i18n::tr("from"));
     let from = ui.add(
         egui::DragValue::new(&mut changed.from)
             .range(SPEEDS)
@@ -216,7 +219,7 @@ pub fn trainer_controls(ui: &mut Ui, trainer: Trainer) -> Option<Trainer> {
         from,
         "The speed Play starts at, in percent of the song's tempo",
     );
-    ui.label("to");
+    ui.label(crate::i18n::tr("to"));
     let to = ui.add(
         egui::DragValue::new(&mut changed.to)
             .range(SPEEDS)
@@ -226,18 +229,18 @@ pub fn trainer_controls(ui: &mut Ui, trainer: Trainer) -> Option<Trainer> {
         to,
         "The speed to get to: 100% is the song's own tempo. Once there, the speed stays",
     );
-    ui.label("by");
+    ui.label(crate::i18n::tr("by"));
     let by = ui.add(
         egui::DragValue::new(&mut changed.by)
             .range(TRAINER_STEPS)
             .suffix("%"),
     );
     theme::hint(by, "How much faster each new speed is");
-    ui.label("every");
+    ui.label(crate::i18n::tr("every"));
     let passes = if changed.every == 1 {
-        " pass"
+        format!(" {}", crate::i18n::tr("pass"))
     } else {
-        " passes"
+        format!(" {}", crate::i18n::tr("passes"))
     };
     let every = ui.add(
         egui::DragValue::new(&mut changed.every)
@@ -268,9 +271,20 @@ fn loop_buttons(
         .filter(|&(start, end)| start < end)
         .map(|(start, end)| LoopRegion::new(start, end));
     let text = match selected {
-        Some((first, last)) if first == last => format!("🔁 Loop bar {}", first + 1),
-        Some((first, last)) => format!("🔁 Loop bars {}–{}", first + 1, last + 1),
-        None => "🔁 Loop".to_string(),
+        Some((first, last)) if first == last => format!(
+            "🔁 {} {} {}",
+            crate::i18n::tr("Loop"),
+            crate::i18n::tr("bar"),
+            first + 1
+        ),
+        Some((first, last)) => format!(
+            "🔁 {} {} {}–{}",
+            crate::i18n::tr("Loop"),
+            crate::i18n::tr("bars"),
+            first + 1,
+            last + 1
+        ),
+        None => crate::i18n::tr("🔁 Loop").to_string(),
     };
     let on = wanted.is_some() && wanted == looping;
     let button = ui.add_enabled(wanted.is_some(), egui::Button::selectable(on, text));

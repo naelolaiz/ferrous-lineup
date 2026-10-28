@@ -464,8 +464,41 @@ fn translate_es(text: &str) -> Option<&'static str> {
 
         // --- Chord Sheet ---
         "Band" => "Banda",
+        "Progression" => "Progresión",
         "Style" => "Estilo",
         "Key" => "Tonalidad",
+        "major" => "mayor",
+        "minor" => "menor",
+        "harmonic minor" => "menor armónica",
+        "melodic minor" => "menor melódica",
+        "Dorian" => "Dórico",
+        "Phrygian" => "Frigio",
+        "Lydian" => "Lidio",
+        "Mixolydian" => "Mixolidio",
+        "Locrian" => "Locrio",
+        "major pentatonic" => "pentatónica mayor",
+        "minor pentatonic" => "pentatónica menor",
+        "blues" => "blues",
+        "chromatic" => "cromática",
+        "twelve-tone row" => "serie dodecafónica",
+        "pitch-class set" => "conjunto de clases de alturas",
+        "Write the chords the song plays" => "Escribir los acordes que toca la canción",
+        "Fill the sheet with the chords heard in the song, in place of what it says now: an arpeggio counts as its chord, two chords at once are written Eb7|Fb, notes that make no chord as their set; in a set or a row, the sets or micromodes heard. Undo brings the sheet back" => "Llena la hoja con los acordes escuchados en la canción en lugar de lo escrito ahora. Deshacer recupera la hoja",
+        "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C." => "Haz clic en un compás y escribe su armonía: acordes (Am7 D7, G/B o Lam7 Re7, Sol/Si), numerales romanos (ii7 V7), conjuntos (3-11 T2, {0,1,4}), micromodos (Menor 3), formas de serie (P0, RI7) o N.C.",
+        "Each / holds the harmony before it one more beat, as in C / / G7. The band stops with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and Ctrl+V copy and paste bars as text." => "Cada / mantiene la armonía anterior un pulso más, como en C / / G7. La banda se detiene con un golpe (C.), sostenido (C..) o silencio (C...), y ^C entra antes. Ctrl+C y Ctrl+V copian y pegan compases como texto.",
+        "Speed" => "Velocidad",
+        "Tap" => "Pulsar",
+        "You play" => "Tocas tú",
+        "🔁 Loop" => "🔁 Bucle",
+        "Loop" => "Bucle",
+        "bar" => "compás",
+        "bars" => "compases",
+        "from" => "desde",
+        "to" => "hasta",
+        "by" => "por",
+        "every" => "cada",
+        "pass" => "pasada",
+        "passes" => "pasadas",
         "Sections" => "Secciones",
         "Practice" => "Práctica",
         "Notation" => "Notación",
@@ -563,5 +596,17 @@ mod tests {
         // This thread only: put it back for the next test it runs.
         Language::English.set();
         NoteNaming::Letters.set();
+    }
+
+    #[test]
+    fn solfege_chord_formatting() {
+        use lineup_core::chord_sheet::{ChordMarker, HarmonyName};
+        use lineup_core::harmony::ChordSymbol;
+
+        let chord: ChordSymbol = "Am7".parse().unwrap();
+        let marker = ChordMarker::new(0, HarmonyName::Chord(chord));
+        assert_eq!(marker.text(), "Am7");
+        // Chord symbols stay in letters, as on lead sheets.
+        NoteNaming::Solfege.with(|| assert_eq!(marker.text(), "Am7"));
     }
 }
