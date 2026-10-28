@@ -21,10 +21,9 @@ At this step, Ferrous Lineup was split into three crates:
 > **At this step / today:** the workspace had these three crates and
 > version 0.1.0. Today there are five: `lineup-listen` (decoding and
 > analysing a recording for **File > Import recording**) and
-> `lineup-video` (painting egui pictures into an MP4) joined them, and
-> the version is 0.2.0. The source links in this chapter go to `main`, so
-> the files they open are the final ones, not the step-1 snapshot. [A new
-> name](../step-9/new-name.md) explains why `loom-*` became `lineup-*`.
+> `lineup-video` (painting egui pictures into an MP4) joined them. The
+> source links in this chapter go to `main`, so the files they open are
+> the final ones, not the step-1 snapshot.
 
 Why three crates instead of one?
 
@@ -42,6 +41,31 @@ The dependencies only point one way:
 lineup-app ──▶ lineup-audio ──▶ lineup-core
     └─────────────────────────▲
 ```
+
+### Package name and program name
+
+The program is built from the package `lineup-app`, but the file Cargo
+writes is called `ferrous-lineup`. The two names live in different
+places of
+[`crates/lineup-app/Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/Cargo.toml):
+
+```toml
+[package]
+name = "lineup-app"
+
+[[bin]]
+name = "ferrous-lineup"
+path = "src/main.rs"
+```
+
+`[package] name` is how Cargo and other crates refer to the package
+(`cargo test -p lineup-app`). `[[bin]]` describes one program the
+package builds; the double brackets are TOML for "one entry of a list",
+because a package can build several programs. Without a `[[bin]]`
+entry, Cargo would name the program after the package, `lineup-app`.
+A crate called `lineup-core` is written `lineup_core` in `use` lines,
+because a hyphen is a minus sign in Rust and cannot be part of a name;
+Cargo turns the hyphens into underscores for you.
 
 ## The workspace
 

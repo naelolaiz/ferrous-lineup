@@ -179,6 +179,11 @@ saves and opens again every demo spent almost three minutes in that
 header, and all of `lineup-core`'s tests now take 14 seconds in an
 optimized build, so the checks on every pull request are faster too.
 
+The RON search could also be fixed where it is, by looking for `..`
+only among the characters that could be part of the number. That is a
+change to someone else's library, so the app does not depend on it: it
+simply no longer asks RON to skip fields.
+
 ## Trying a style moved you to another pattern
 
 Open El Choclo, select its "Pickup" pattern in the pattern box, and
@@ -376,24 +381,6 @@ in full in the line under the toolbar ("Step 12: E7/B").
 The test opens "A" in the piano roll, finds every piece of text painted
 in the lane's colour, and checks that each is no wider than its block.
 Before the fix it failed on "D#": 14.9 points wide, in a block of 6.2.
-
-## What shipped after this hunt
-
-The same hunt produced a list of ideas for the workflow and the screen:
-inserting and deleting bars, Open recent, a recovery copy, a one-row
-toolbar, a choice of numerals in minor keys, and more. The main ones
-have since shipped. Bars can be
-[inserted and deleted](insert-delete-bars.md) with the whole song moving
-along; **File > Open recent** keeps the last ten projects; a crash leaves
-a [recovery copy](recovery.md) that is offered at the next start; [the
-workflow chapter](workflow.md) covers the one-row toolbar and the
-shortcut list; and [numerals in minor keys](minor-numerals.md) are
-written as your book writes them.
-
-The RON search could also be fixed where it is, by looking for `..`
-only among the characters that could be part of the number. That is a
-change to someone else's library, so the app does not depend on it: it
-simply no longer asks RON to skip fields.
 
 ## Exercises
 

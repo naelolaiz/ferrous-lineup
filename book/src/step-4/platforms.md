@@ -275,6 +275,6 @@ Being honest about the limits:
 - The macOS app has an icon and is a real `.app` inside the `.dmg`, but
   its `Info.plist` does not declare the `.lineup` document type yet, so
   double-clicking a project on macOS may not open it in Ferrous Lineup.
-  The Windows installer registers `.lineup` (and the old `.loom`), and
+  The Windows installer registers `.lineup`, and
   the Linux desktop entry and MIME type do too. Adding the document type
   to `packaging/macos/Info.plist` is the missing piece.

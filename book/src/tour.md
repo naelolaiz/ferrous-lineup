@@ -1,9 +1,8 @@
 # A tour of the app
 
 This chapter is the app's manual on one page: what each window does, and
-the keys and menus that work it. It used to be the README of the app's
-repository. The chapters of each step tell how every part was built and
-why; this one only says how to use it.
+the keys and menus that work it. The chapters of each step tell how
+every part was built and why; this one only says how to use it.
 
 ## Playing, the playlist and the channel rack
 
