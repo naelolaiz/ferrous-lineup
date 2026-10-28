@@ -44,14 +44,14 @@ nombres:
 
 | Written | Chords | Pitch-class sets | Micromodes |
 |---------|--------|------------------|------------|
-| Do | Do | 3-11 T7I | Acorde menor-mayor T7I |
-| Rem | Rem | 3-11 T2 | Acorde menor-mayor T2 |
-| Sol | Sol | 3-11 T2I | Acorde menor-mayor T2I |
-| Lam | Lam | 3-11 T9 | Acorde menor-mayor T9 |
-| Fa | Fa | 3-11 T0I | Acorde menor-mayor T0I |
-| Sol7 | Sol7 | 4-27 T7I | 4-27 T7I |
-| Mi7 | Mi7 | 4-27 T4I | 4-27 T4I |
-| 3-11 T2 | Rem | 3-11 T2 | Acorde menor-mayor T2 |
+| C | C | 3-11 T7I | Acorde menor-mayor T7I |
+| Dm | Dm | 3-11 T2 | Acorde menor-mayor T2 |
+| G | G | 3-11 T2I | Acorde menor-mayor T2I |
+| Am | Am | 3-11 T9 | Acorde menor-mayor T9 |
+| F | F | 3-11 T0I | Acorde menor-mayor T0I |
+| G7 | G7 | 4-27 T7I | 4-27 T7I |
+| E7 | E7 | 4-27 T4I | 4-27 T4I |
+| 3-11 T2 | Dm | 3-11 T2 | Acorde menor-mayor T2 |
 | Menor 3 | Menor 3 | 3-3 | Menor 3 |
 
 Algunas cosas que notar:
@@ -63,19 +63,19 @@ Algunas cosas que notar:
   revés, [0, 3, 7] se convierte en 0, −3 y −7, es decir Do, La y Fa.
   Subida 7, eso es Sol, Mi y Do, Do mayor. Una tríada mayor es una tríada
   menor al revés, así que todo acorde mayor lleva una I en su nombre,
-  y ningún acorde menor la lleva. Rem (3-11 T2) y Sol (3-11 T2I) comparten
+  y ningún acorde menor la lleva. Dm (3-11 T2) y G (3-11 T2I) comparten
   el número 2 pero no las notas. La propia forma prima, T0, se escribe
   sin ninguna T: Menor 3 es Do Re♭ Mi, 3-3 sobre Do.
 - **Un micromodo siempre tiene tres notas.** Los doce micromodos de
   Kröpfl son las doce clases de tres notas, 3-1 a 3-12. El micromodo
   3-11 es **Acorde menor-mayor**, el acorde menor-mayor, porque las
-  tríadas mayor y menor son una sola clase. Sol7 tiene cuatro notas, así
+  tríadas mayor y menor son una sola clase. G7 tiene cuatro notas, así
   que no es un micromodo: en la vista Micromodes se escribe como su
   conjunto, 4-27.
 - **Chords** convierte conjuntos en acordes **cuando sus notas forman
   uno**. El conjunto 3-11 T2 es Re Fa La, así que la vista Chords escribe
-  Rem, con la fundamental escrita como la tonalidad la escribe. Do Mi Sol La
-  se escribe **Lam7**: esas cuatro notas también son Do6, y la app toma
+  Dm, con la fundamental escrita como la tonalidad la escribe. Do Mi Sol La
+  se escribe **Am7**: esas cuatro notas también son C6, y la app toma
   la primera calidad de acorde de su lista que encaje, donde los
   acordes de séptima van antes que los de sexta. Un conjunto que no
   forma ningún acorde que la app conozca, como 3-1 (Do Do♯ Re) o Menor 3
@@ -86,7 +86,7 @@ Algunas cosas que notar:
 
 ### Dos acordes a la vez siguen siendo dos
 
-Un policordio ([Oír acordes](chord-hearing.md#escribir-dos-acordes-eb7fa))
+Un policordio ([Oír acordes](chord-hearing.md#escribir-dos-acordes-eb7fb))
 es dos grupos de notas, uno sobre el otro. Fundirlos en un solo
 conjunto de siete notas perdería lo que lo hace un policordio, así que
 cada acorde se nombra por su cuenta y se escriben como se escribe el
@@ -96,7 +96,7 @@ policordio, **primero el de arriba**:
 Eb7|Fb   →   4-27 T3I|3-11 T11I
 ```
 
-Mi♭7 (Mi♭ Sol Si♭ Re♭) es una séptima de dominante, el conjunto 4-27, y Fa♭
+E♭7 (Mi♭ Sol Si♭ Re♭) es una séptima de dominante, el conjunto 4-27, y Fa♭
 mayor (Fa♭ La♭ Do♭) es una tríada mayor, 3-11. La ayuda bajo el puntero lo
 dice con palabras: «4-27 T3I: Sol Si♭ Re♭ Mi♭. Debajo, 3-11 T11I: Fa♭ La♭
 Do♭».
@@ -220,7 +220,7 @@ Dos reglas pequeñas mantienen los grupos musicales:
 El acorde de los Augurs muestra por qué importa la primera regla. De
 abajo arriba las cuerdas tocan Fa♭ La♭ Do♭, luego Sol Si♭ Re♭, luego Mi♭
 arriba. En grupos de tres eso es Fa♭ La♭ Do♭ | Sol Si♭ Re♭ | Mi♭, y el Mi♭
-solitario se une al grupo de debajo: Sol Si♭ Re♭ Mi♭, que es Mi♭7. El chord
+solitario se une al grupo de debajo: Sol Si♭ Re♭ Mi♭, que es E♭7. El chord
 sheet escribe **4-27 T3I|3-11 T11I**, los dos acordes que Stravinsky
 puso juntos, encontrados solo desde las notas.
 
@@ -289,7 +289,7 @@ micromodo se escribe **solo por su clase**: «Acorde menor-mayor» o
 el puntero siempre da el nombre completo, sus notas y cuál es la
 clase.
 
-![El Choclo, en la menor armónica, como micromodos. Lam es Acorde menor-mayor T9 y Mi7, cuatro notas, es el conjunto 4-27 T4I. En los compases más cargados, donde dos armonías comparten un compás, el micromodo se escribe solo por su clase, Acorde menor-mayor, o como … donde ni eso cabe.](../images/step-9-notation-el-choclo.png)
+![El Choclo, en la menor armónica, como micromodos. Am es Acorde menor-mayor T9 y E7, cuatro notas, es el conjunto 4-27 T4I. En los compases más cargados, donde dos armonías comparten un compás, el micromodo se escribe solo por su clase, Acorde menor-mayor, o como … donde ni eso cabe.](../images/step-9-notation-el-choclo.png)
 
 ## Leer las notas solo cuando cambian
 
@@ -369,15 +369,15 @@ un campo, las elecciones guardadas por esta versión siguen cargando.
 
 El módulo core tiene diez pruebas, entre ellas:
 
-- **las mismas notas en cada notación**: Do, Rem y Sol7 en cada vista.
+- **las mismas notas en cada notación**: C, Dm y G7 en cada vista.
 - **los conjuntos que forman un acorde se escriben como el acorde**:
-  3-11 T2 es Rem, Do Mi Sol La es Lam7, Mi La Re Sol es A7sus4, mientras Menor 3 y
+  3-11 T2 es Dm, Do Mi Sol La es Am7, Mi La Re Sol es A7sus4, mientras Menor 3 y
   3-1 siguen siendo conjuntos.
-- **dos acordes a la vez son dos conjuntos**: Eb7|Fa♭ es
+- **dos acordes a la vez son dos conjuntos**: Eb7|Fb es
   4-27 T3I|3-11 T11I.
 - **el acorde de Petrushka leído verticalmente en grupos de tres**, y
   como 6-30 todo junto.
-- **el acorde de los Augurs en grupos de tres es Fa♭ bajo Mi♭7**, y
+- **el acorde de los Augurs en grupos de tres es F♭ bajo E♭7**, y
   7-32 T7 todo junto.
 - **la serie de Webern en línea son cuatro grupos de Menor 3**, con
   6-20 para cada mitad y el agregado para las doce, y la **demo de

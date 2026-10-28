@@ -354,13 +354,13 @@ comprueba que el playhead acaba a la derecha de los nombres.
 
 Abre el patrón «A» de El Choclo en el piano roll. Debajo de las notas,
 el carril de acordes nombra el acorde de cada tramo de pasos. Con el
-zoom habitual mostraba «n», «7/», «/La7»; la fila de la pista, que
+zoom habitual mostraba «n», «7/», «/A7»; la fila de la pista, que
 nombra notas sueltas, mostraba «E♭E» y «G♯B», dos nombres pegados.
 
 Un nombre se dibujaba centrado en su bloque y **recortado** a él: lo
 que caía fuera del bloque se cortaba. «E7/B» en un bloque demasiado
 estrecho mostraba solo su mitad, «7/», que no es ningún nombre, y
-«/La7» parece otro acorde. Para alguien que aprende armonía mirando la
+«/A7» parece otro acorde. Para alguien que aprende armonía mirando la
 pantalla, un nombre equivocado es peor que ninguno.
 
 ### Medir, y luego dibujar
@@ -404,7 +404,7 @@ un bloque de 6.2.
 
 1. Guardada, «The Shrovetide Fair» son 780 KB de texto con unos 43,000
    números. Si la búsqueda de cada número lee, de media, la mitad del
-   archivo, ¿cuántos bytes se leen en total? La unos 2 GB por segundo,
+   archivo, ¿cuántos bytes se leen en total? A unos 2 GB por segundo,
    ¿cuánto se tarda? Compáralo con los 10 segundos medidos.
 2. Arregla la lectura anticipada de RON: reescribe la línea del
    `find("..")` para que busque solo los primeros `raw_float_len`

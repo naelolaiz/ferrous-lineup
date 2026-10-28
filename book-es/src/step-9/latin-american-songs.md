@@ -55,15 +55,15 @@ son dos o tres **secciones** de 16 compases (en 2/4), cada una tocada
 dos veces, a menudo con la última en otra tonalidad. La partitura
 ahorra papel con signos de repetición, casillas de primera y segunda
 vez, y **D.C.** (*da capo*, «desde el comienzo»: volver al principio)
-o **Re.S.** (*dal segno*, volver a un signo), hasta **Fine** («fin») o
+o **D.S.** (*dal segno*, volver a un signo), hasta **Fine** («fin») o
 un salto a una **coda** («cola»).
 
 Una demo toca todo ello escrito, en el orden que dice la partitura. En
-el playlist puedes ver la forma: **El Choclo** es Anacrusa, La, Si, Si,
-Do, luego el D.C. lo lleva de vuelta a La y Si una vez más (las
-repeticiones no se repiten una segunda vez tras un Re.Do.), y Do con su
+el playlist puedes ver la forma: **El Choclo** es Anacrusa, A, B, B,
+C, luego el D.C. lo lleva de vuelta a A y B una vez más (las
+repeticiones no se repiten una segunda vez tras un D.C.), y C con su
 casilla de segunda vez cierra la pieza. Antes, la demo se detenía tras
-Do y nunca volvía.
+C y nunca volvía.
 
 ### Cambios de tonalidad que puedes ver
 
@@ -73,10 +73,10 @@ tonalidad](../step-8/key-changes.md)):
 
 - **El Choclo** pasa de La menor a **La mayor** para su tercera sección
   (la armadura de la partitura cambia de ninguna a tres sostenidos),
-  vuelve a La menor con el Re.Do. y termina en La mayor.
+  vuelve a La menor con el D.C. y termina en La mayor.
 - **Gallo ciego** visita el **relativo mayor**, Fa, en su segunda
-  sección (misma armadura que Re menor, pero las cadencias son Do7 a
-  Fa), y su tercera sección está en **Si bemol**, un cambio real de
+  sección (misma armadura que Re menor, pero las cadencias son C7 a
+  F), y su tercera sección está en **Si bemol**, un cambio real de
   armadura.
 - **Volver** tiene su estrofa en Sol menor y su estribillo en **Sol
   mayor**: la misma tónica, el otro modo. Escucha cómo el Si bemol se
@@ -112,7 +112,7 @@ compases por compás de la app:
 
 Toca **El día que me quieras** y mira el canal Lead frente al nombre
 del acorde: muchas frases empiezan en una nota que **no** está en el
-acorde (Fa sobre Do7, Mi bemol sobre Si bemol menor) y solo después se
+acorde (Fa sobre C7, Mi bemol sobre Si bemol menor) y solo después se
 mueven a una que sí está. Eso es una **apoyatura**, una nota que se
 «apoya»: la tensión en el pulso fuerte y su resolución a un grado de
 distancia son lo que hacen que la melodía suene a añoranza. Una
@@ -135,7 +135,7 @@ i bVII7 bIII | bIII bVII7 bIII | ...
 Un acorde por pulso. El patrón de vals de las teclas toca en los
 pulsos 2 y 3, así que, reiniciado en cada acorde, su primer golpe cae
 un pulso después de que empiece el acorde, que ya es el siguiente
-acorde: el Re7 de un pulso (`bVII7`) nunca llegaba a tocarse.
+acorde: el D7 de un pulso (`bVII7`) nunca llegaba a tocarse.
 
 Las demos de canciones usan ahora `chart::accompany_in_bars`, que
 mantiene el patrón de las teclas **en paso con los compases**, igual
@@ -229,8 +229,8 @@ se pueden añadir.
    mayor? Encuéntrala en la melodía de los primeros compases del
    estribillo.
 2. En **El Choclo**, silencia todos los canales menos Bass y toca la
-   tercera sección. Encuentra el círculo de quintas Fa♯7, Si menor, Si7,
-   Mi7: cada fundamental está una quinta por encima de la siguiente.
+   tercera sección. Encuentra el círculo de quintas F#7, Si menor, B7,
+   E7: cada fundamental está una quinta por encima de la siguiente.
    ¿Dónde aterriza?
 3. En `folklore.rs`, cambia el estribillo de Papel de plata a
    `.played(Comping::Sway, Bass::Waltz, "Vidala")`, ejecuta la app y

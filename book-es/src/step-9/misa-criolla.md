@@ -58,8 +58,8 @@ dominante, por semitonos desde Do. Encima:
 | Compás | Bajo | Acorde | Qué hace |
 |---|---|---|---|
 | 3 | La, luego Si | La menor, luego Mi mayor sobre Si | i, y un V6/4 de paso |
-| 4 | Do, luego Do sostenido | La menor sobre Do, luego La7 sobre Do sostenido | i6, luego V7 de Re menor: una **dominante secundaria** |
-| 5 | Re | Re menor | iv, adonde llevaba el La7 |
+| 4 | Do, luego Do sostenido | La menor sobre Do, luego A7 sobre Do sostenido | i6, luego V7 de Re menor: una **dominante secundaria** |
+| 5 | Re | Re menor | iv, adonde llevaba el A7 |
 | 6 | Re sostenido | Fa, La, Do y Re sostenido | una **sexta aumentada alemana**: Fa y Re sostenido, a una sexta aumentada de distancia, se abren hacia las dos Mi del compás siguiente |
 | 7 | Mi | La menor sobre Mi | la **cuarta y sexta cadencial**, i6/4, que retrasa la dominante |
 | 8 | Mi | Mi, La y Re | V7 con una **cuarta suspendida**: La en lugar de Sol sostenido |
@@ -80,7 +80,7 @@ compás. El bombo golpea cada pulso y lo responde con dos semicorcheas
 rápidas, y las guitarras rasguean **La menor y Mi mayor, un pulso cada
 una**: i y V, tónica y dominante, cada compás. Luego la armonía se mueve
 a Do mayor, la **relativa mayor** (la tonalidad mayor con las mismas
-notas que La menor), a través de Fa, Sol y Do: IV, V y I de Do, o bVI, bVII y
+notas que La menor), a través de F, G y C: IV, V y I de Do, o bVI, bVII y
 bIII contados desde La.
 
 La Library ya tenía un carnavalito, escrito como pares de compases de

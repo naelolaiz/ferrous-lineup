@@ -7,7 +7,7 @@ armonía. El paso 8 las añade a Ferrous Lineup, y una biblioteca que las
 acompañe:
 
 - **las harmony keys**, a lo largo de la parte inferior de la ventana
-  principal. La la izquierda, la **tonalidad** y el **compás** del
+  principal. A la izquierda, la **tonalidad** y el **compás** del
   proyecto, siempre a la vista. En el medio, siete teclas grandes, de
   **I** a **vii°**, una por cada acorde de la tonalidad. Se colorean
   según lo que *hace* el acorde: azul para casa (tónica), verde para
@@ -15,7 +15,7 @@ acompañe:
   Mantén una pulsada, con el ratón o las teclas de número **1** a
   **7**, y toca su acorde en el canal seleccionado; con **● Rec**
   activado, se graba. Los acordes que suelen venir después se iluminan
-  con un contorno amarillo, y la línea de abajo dice por qué. La la
+  con un contorno amarillo, y la línea de abajo dice por qué. A la
   derecha, un teclado muestra las notas de la escala y las notas que
   suenan,
 - **los acordes seguidos mientras suena la música**: mientras un patrón
@@ -84,7 +84,7 @@ acompañe:
   entero de doce compases quepa en un patrón.
 - **una cacería de errores**: el playlist y el piano roll hacen zoom
   horizontal y vertical por su cuenta; las notas, escalas y acordes se
-  escriben con las letras correctas (Mi# en Fa# mayor, Mi#dim); los
+  escriben con los nombres correctos (Mi♯ en Fa♯ mayor, E#dim); los
   hints y las harmony keys aplican bien su teoría en tonalidades
   menores, modos y conjuntos; las notas mantenidas sobreviven a los
   bordes de sección, al silenciado y a los cambios de tempo; y muchos

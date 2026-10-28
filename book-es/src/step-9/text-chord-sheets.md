@@ -56,7 +56,7 @@ Si algo del chart no se puede leer, no se importa nada, y la barra de
 estado dice dónde:
 
 > No se pudo importar bad.txt: línea 4: compás 3: «Qx7» no es un acorde
-> (Lam7, Sol/Si), un conjunto (3-11 T2, {0,4,7}), un micromodo (Menor 3),
+> (Am7, G/B), un conjunto (3-11 T2, {0,4,7}), un micromodo (Menor 3),
 > una forma de serie (P0, RI7) ni N.C.
 
 **File > Export chord sheet…** escribe el chord sheet de la canción en
@@ -66,8 +66,8 @@ alineados en columnas para que el texto se lea como la ventana.
 En la propia ventana del chord sheet:
 
 - **Ctrl+C** copia los compases seleccionados (haz clic en uno,
-  Shift+clic en otro para seleccionar varios) como texto, «| Lam7 | Re7 |
-  Solmaj7 | Domaj7 |». Con todos los compases seleccionados, o ninguno,
+  Shift+clic en otro para seleccionar varios) como texto, «| Am7 | D7 |
+  Gmaj7 | Cmaj7 |». Con todos los compases seleccionados, o ninguno,
   copia todo el chord sheet con sus ajustes y secciones, como lo
   escribe Export.
 - **Ctrl+A** selecciona todos los compases.
@@ -81,7 +81,7 @@ Un pegado es un solo cambio del chord sheet, así que **Ctrl+Z** lo
 deshace de una vez. El mensaje sobre los compases dice qué se copió o
 pegó, y desaparece cuando haces clic en otro compás.
 
-![Veinticuatro compases pegados en una canción nueva en Do mayor: los mismos nombres de acorde, ahora con sus numerales en Do (Lam7 vi7, Re7 V7/V, Fa♯m7b5 #ivø7, Si7 V7/iii). [Dominantes secundarias](chord-functions.md#dominantes-secundarias-v-de-v) como V7/V se nombran por el acorde al que llevan](../images/step-9-text-pasted.png)
+![Veinticuatro compases pegados en una canción nueva en Do mayor: los mismos nombres de acorde, ahora con sus numerales en Do (Am7 vi7, D7 V7/V, F#m7b5 #ivø7, B7 V7/iii). [Dominantes secundarias](chord-functions.md#dominantes-secundarias-v-de-v) como V7/V se nombran por el acorde al que llevan](../images/step-9-text-pasted.png)
 
 Pegar solo lleva los acordes. La canción conserva su propia tonalidad,
 compás, tempo, banda y secciones; el Autumn Leaves pegado de arriba
@@ -96,7 +96,7 @@ Todo es opcional salvo los compases.
 | Línea | Significa |
 |------|-------|
 | `Title: Autumn Leaves` | El nombre de la canción. Una primera línea que no es otra cosa también es el título, como arriba de un chart impreso. |
-| `Key: G major` | La tonalidad. `G`, `Em`, `E minor`, `A Dorian`, `C harmonic minor` y las otras escalas del menú de tonalidad (no series ni conjuntos, que se eligen en la app). Una tonalidad con dos nombres conserva el que se escribió: `Gb major` sigue como Sol♭ major, `F# major` sigue como Fa♯ major. |
+| `Key: G major` | La tonalidad. `G`, `Em`, `E minor`, `A Dorian`, `C harmonic minor` y las otras escalas del menú de tonalidad (no series ni conjuntos, que se eligen en la app). Una tonalidad con dos nombres conserva el que se escribió: `Gb major` sigue como Sol♭ mayor, `F# major` sigue como Fa♯ mayor. |
 | `Time: 3/4` | El compás, cualquiera que la app acepte: `6/8`, `5/4`, `2+2+3/8`. |
 | `Tempo: 132` | Negras por minuto; `132 BPM` también se lee. |
 | `Style: Bossa nova` | El estilo de la banda, por su nombre en la biblioteca. |
@@ -136,8 +136,8 @@ Key: F major
 | I | vi | ii7 V7 | I |
 ```
 
-se convierte en Fa, Rem, Solm7 Do7, Fa, el turnaround más común que hay, en
-Fa. El mismo texto con `Key: D major` daría Re, Sim, Mim7 La7, Re: una sola
+se convierte en F, Dm, Gm7 C7, F, el turnaround más común que hay, en
+Fa. El mismo texto con `Key: D major` daría D, Bm, Em7 A7, D: una sola
 progresión en cualquier tonalidad, que es por lo que a los músicos
 que tocan de oído les gustan los numerales.
 

@@ -10,7 +10,7 @@ y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-
 El chord sheet del [último cambio](chord-sheet.md) contenía la armonía
 de una canción pero no tocaba nada. Este cambio pone una banda detrás:
 un piano, un bajo y una batería. Escribe `C`, Tab, `Am`, Tab, `Dm7
-Sol7`, Tab, `Do`, pulsa Space, y la tocan.
+G7`, Tab, `C`, pulsa Space, y la tocan.
 
 ![El chord sheet con la banda: «🎷 Band: Pop beat», un botón Progression, «Key: C major · 4/4 · 110 BPM», y los compases C | Am | F | G7 con sus numerales](../images/step-9-band-sheet.png)
 
@@ -51,7 +51,7 @@ armonía, aparecen tres pistas en el playlist, **Piano**, **Bass** y
 Son patrones corrientes. Haz doble clic en uno y el piano roll muestra
 cada nota que toca la banda; el channel rack muestra la batería paso a
 paso. Nada de ellos está oculto, lo que importa en un programa que usas
-para aprender: puedes ver cómo un pianista de bossa nova reparte un Rem7
+para aprender: puedes ver cómo un pianista de bossa nova reparte un Dm7
 por el compás, o dónde pone su nota de entrada un walking bass.
 
 En la línea de arriba del sheet:
@@ -67,7 +67,7 @@ En la línea de arriba del sheet:
 - **Progression** escribe una progresión de acordes conocida desde el
   compás seleccionado, en la tonalidad de la canción: los 145 estilos
   de armonía de la biblioteca en este paso (177 hoy), por género, cada
-  uno con sus acordes en el tooltip («Domaj7 – Lam7 – Rem7 – Sol7. I vi ii
+  uno con sus acordes en el tooltip («Cmaj7 – Am7 – Dm7 – G7. I vi ii
   V: la progresión que cierra tantos standards»). Elige otro y continúa
   después del primero.
 - **End the song here**, cuando haces clic derecho en un compás, dice
@@ -85,7 +85,7 @@ estilo si **Use their tempo** está marcado.
 
 En la biblioteca del [paso 8](../step-8/library.md), un estilo es un
 paquete: un chart de acordes, una manera de comparlos, un patrón de
-bajo y un ritmo. «Bossa nova» significa Rem7 Sol7 Domaj7 *y* los acordes
+bajo y un ritmo. «Bossa nova» significa Dm7 G7 Cmaj7 *y* los acordes
 sincopados del piano *y* el bajo en el 1 y el «y» del 2 *y* los clics
 del rim. Una banda de acompañamiento separa las dos mitades. Los
 acordes son tuyos (el sheet); el estilo solo dice cómo tocarlos. Así
@@ -183,7 +183,7 @@ pub enum BassPart {
 
 Los acordes se voicean como la biblioteca voicea un chart: cada uno
 desde el anterior, moviendo cada voz lo menos que puede
-(`voice_progression`), para que Do Lam Fa Sol7 no salte por el teclado. Sus
+(`voice_progression`), para que C Am F G7 no salte por el teclado. Sus
 notas de bajo forman una línea (`bass_line`), así que el bajo de un
 slash chord es la nota después de la barra: `G7/B` tiene Si en el bajo.
 
@@ -243,7 +243,7 @@ for bar in bars {
 > `checked_sub(1)` convierte «ninguna ha empezado todavía» en `None` en
 > lugar de un desbordamiento.
 
-Un acorde tan corto que ningún golpe cae en él (un Sol7 en el «y» del 4,
+Un acorde tan corto que ningún golpe cae en él (un G7 en el «y» del 4,
 en un patrón que solo golpea en 1 y 3) se saltaría. Saltarse un acorde
 es una armonía equivocada, así que ese acorde se golpea una vez donde
 empieza.
@@ -447,7 +447,7 @@ implementa FNV-1a obtiene el mismo resultado.
 
 ### Mover la canción entera no es una edición
 
-**Key > Re major** transpone cada nota de la canción, incluidas las de
+**Key > D major** transpone cada nota de la canción, incluidas las de
 la banda (mira [Cambiar de tonalidad](../step-8/changing-key.md)). Las
 partes de la banda ya no encajan con sus huellas, pero tú no las
 editaste: la herramienta lo movió todo. Cambiar la métrica y copiar una
@@ -512,7 +512,7 @@ para que los dos no toquen uno encima del otro. La melodía sigue
 sonando, ahora con la banda detrás, y la barra de estado dice qué se
 silencia.
 
-![El chord sheet de Canon in D con una banda Pop ballad: Re La Sim Fa♯m | Sol Re Sol La, la progresión del Canon de Pachelbel, escrita compás a compás](../images/step-9-band-demo.png)
+![El chord sheet de Canon in D con una banda Pop ballad: D A Bm F#m | G D G A, la progresión del Canon de Pachelbel, escrita compás a compás](../images/step-9-band-demo.png)
 
 **No band** quita los patrones de la banda, sus pistas y sus canales
 (solo los que añadió, y solo si nada más suena en ellos), y le quita el
@@ -559,11 +559,11 @@ existe, se rechaza con un mensaje que lo dice en lugar de abrirse mal.
    fundamental lleva? Luego elige **Swing** (4/4): ¿qué pone la
    caminata en el pulso 3 ahora?
 2. Escribe un compás `Dm7 G7` y un compás `C / / G7`. Abre la parte de
-   piano. ¿En qué pulso empieza el Sol7 en cada uno, y cambia el ritmo de
+   piano. ¿En qué pulso empieza el G7 en cada uno, y cambia el ritmo de
    comping en esos compases?
 3. Elige **Alberti bass** sobre los mismos acordes. El patrón es
    «grave, agudo, medio, agudo». ¿Qué nota del acorde está grave en el
-   compás de Lam, y por qué podría no ser la fundamental La? (Pista:
+   compás de Am, y por qué podría no ser la fundamental La? (Pista:
    voice leading.)
 4. Edita una nota del bajo, y luego escribe un acorde nuevo en el
    compás 2. ¿Qué partes cambiaron? Haz clic en **Play it again**. ¿Qué

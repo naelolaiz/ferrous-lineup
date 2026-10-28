@@ -75,7 +75,7 @@ if stretch.bass == Some(chord.root) {
   acordes pequeños ganan salvo que las notas pidan uno grande.
 - `gaps`: cuánto tiempo no se oye cada nota del acorde mientras suenan
   los acordes. Esto es lo que distingue «un compás de Do, luego un
-  compás de Do7» de «dos compases de Do7».
+  compás de C7» de «dos compases de C7».
 - `quiet`: pasos sin ninguna nota. Un pulso de silencio pertenece al
   acorde que lo rodea; un compás de silencio se oye mejor como ningún
   acorde.
@@ -87,7 +87,7 @@ if stretch.bass == Some(chord.root) {
 Dos excepciones vienen de cómo se tocan de verdad los acordes. Una
 fundamental que solo toca el bajo no está "ausente" (los pianistas se la
 dejan al bajo), y tampoco la quinta de un acorde de cuatro notas (los
-pianistas la omiten, mira `voicing.rs`). Sin la primera regla, un Sol7
+pianistas la omiten, mira `voicing.rs`). Sin la primera regla, un G7
 tocado en un bajo de Alberti que nunca llega a su Sol se oiría como un
 acorde de Si disminuido.
 
@@ -175,7 +175,7 @@ los acordes en la música real.
 
 Dos tramos seguidos pueden salir con el mismo acorde: se juntan. Y un
 arpegio toca sus notas de una en una, así que su primer pulso puede
-sonar como Do y el segundo como Do7. El loop que los junta usa **match
+sonar como C y el segundo como C7. El loop que los junta usa **match
 guards**, un `if` después de un patrón:
 
 ```rust

@@ -388,7 +388,7 @@ la app, su icono, su categoría, y cómo arrancarla
 (`Exec=ferrous-lineup %f`, donde `%f` es un archivo que abrir). El
 icono
 ([`packaging/icon/ferrous-lineup.svg`](https://github.com/naelolaiz/ferrous-lineup/blob/main/packaging/icon/ferrous-lineup.svg))
-es una Fa y un trompetista, en el naranja de la app. Las herramientas
+es una F y un trompetista, en el naranja de la app. Las herramientas
 que añaden AppImages al menú (AppImageLauncher, por ejemplo) usan
 ambos, y también lo hace el `.deb`.
 

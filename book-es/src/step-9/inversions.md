@@ -18,23 +18,23 @@ Lineup dicen ahora cuál es, para cada pista y para toda la banda.
 | Acorde | Nota más grave | Símbolo de acorde | Número romano en Do mayor |
 |-------|-------------|--------------|--------------------------|
 | Do mayor | Do, la fundamental | Do | I |
-| Do mayor | Mi, la tercera | Do/Mi | I⁶ (primera inversión) |
-| Do mayor | Sol, la quinta | Do/Sol | I⁶₄ (segunda inversión) |
-| Sol7 | Sol, la fundamental | Sol7 | V7 |
-| Sol7 | Si, la tercera | Sol7/Si | V⁶₅ (primera inversión) |
-| Sol7 | Re, la quinta | Sol7/Re | V⁴₃ (segunda inversión) |
-| Sol7 | Fa, la séptima | Sol7/Fa | V⁴₂ (tercera inversión) |
+| Do mayor | Mi, la tercera | C/E | I⁶ (primera inversión) |
+| Do mayor | Sol, la quinta | C/G | I⁶₄ (segunda inversión) |
+| G7 | Sol, la fundamental | G7 | V7 |
+| G7 | Si, la tercera | G7/B | V⁶₅ (primera inversión) |
+| G7 | Re, la quinta | G7/D | V⁴₃ (segunda inversión) |
+| G7 | Fa, la séptima | G7/F | V⁴₂ (tercera inversión) |
 
 Un **símbolo de acorde** pone el bajo después de una barra, como en un
 lead sheet ([Nombres de acordes](chord-names.md)). Un **número romano**
 toma las cifras del *bajo cifrado*, la taquigrafía de los teclistas
-barrocos: los números son los intervalos por encima del bajo. Do/Mi tiene
+barrocos: los números son los intervalos por encima del bajo. C/E tiene
 Do una sexta por encima de Mi y Sol una tercera por encima de él: «6/3»,
-abreviado a ⁶. Do/Sol tiene una sexta y una cuarta: ⁶₄. Un acorde de
+abreviado a ⁶. C/G tiene una sexta y una cuarta: ⁶₄. Un acorde de
 séptima tiene cuatro notas, así que tres intervalos; las cifras
 conservan las dos que distinguen sus inversiones: ⁶₅, ⁴₃ y ⁴₂.
-Sustituyen al 7, así que Sol7/Si es V⁶₅, no V7⁶₅. Una dominante secundaria
-conserva su objetivo: Mi7/Sol♯ en Do mayor es V⁶₅/vi.
+Sustituyen al 7, así que G7/B es V⁶₅, no V7⁶₅. Una dominante secundaria
+conserva su objetivo: E7/G# en Do mayor es V⁶₅/vi.
 
 Los acordes sus, de sexta y de novena no tienen cifras propias;
 conservan solo el nombre con barra. [El chord
@@ -50,10 +50,10 @@ La franja de acordes del piano roll tiene ahora dos filas:
 
 - la fila de arriba, con el nombre de la pista (aquí «Piano»), nombra
   los acordes de las notas de esa pista por sí solas. El piano de la
-  banda toca Sol7 como Si Re Fa Sol, así que por sí solo es Sol7/Si.
+  banda toca G7 como Si Re Fa Sol, así que por sí solo es G7/B.
 - **All** nombra el acorde de todas las pistas tocando juntas en ese
   momento de la canción: el piano, el bajo y cualquier otra cosa.
-  Debajo de ese Sol7 el bajo toca Fa, así que la banda toca Sol7/Fa, V⁴₂.
+  Debajo de ese G7 el bajo toca Fa, así que la banda toca G7/F, V⁴₂.
 
 La línea encima de la cuadrícula dice ambos cuando difieren.
 
@@ -85,7 +85,7 @@ if let Some(lowest) = lowest
 `if let ... && ...` es una *let chain*: el bloque se ejecuta solo
 cuando el patrón encaja y todas las condiciones que le siguen son
 ciertas. Un bajo en Mi debajo de Do Mi Sol se les une, y `analyze` encuentra
-entonces Do con Mi como nota más grave: Do/Mi. Un bajo caminante que pasa
+entonces Do con Mi como nota más grave: C/E. Un bajo caminante que pasa
 por Re no se une, porque Re no está en Do mayor, así que el acorde sigue
 siendo Do en lugar de convertirse en un acorde sin nombre.
 
@@ -123,7 +123,7 @@ misma manera.
 ![Las harmony keys mientras la banda toca C/E, F/A, G7/F y C/G: la tecla que suena lee I⁶ C/E, luego IV⁶ F/A, luego V⁴₂ G7/F, luego I⁶₄ C/G, y Find the key dice "C/E is I⁶, tonic", "G7/F is V⁴₂, dominant"](../images/step-9-inversions-keys.png)
 
 La tecla que suena nombra el acorde oído, inversión incluida. Con
-Triads activado, Sol7/Fa enciende la tecla de V, que lee V⁴₂ y Sol7/Fa
+Triads activado, G7/F enciende la tecla de V, que lee V⁴₂ y G7/F
 mientras suena. El aviso y Find the key lo nombran igual.
 
 ## Qué viene después de I⁶₄
@@ -131,10 +131,10 @@ mientras suena. El aviso y Find the key lo nombran igual.
 ![Las harmony keys en C/G: la tecla I⁶₄ encendida, la tecla V resaltada, y el aviso "C/G → G: cadential six-four, on to V"](../images/step-9-six-four.png)
 
 Una inversión puede cambiar a dónde va un acorde, no solo su nombre. Do
-en estado fundamental puede ir a casi cualquier sitio. Do/Sol, la tónica
-en su **segunda inversión**, va sobre todo a un sitio: hacia Sol. Sobre
+en estado fundamental puede ir a casi cualquier sitio. C/G, la tónica
+en su **segunda inversión**, va sobre todo a un sitio: hacia G. Sobre
 el bajo Sol, el Do es una cuarta y el Mi una sexta, y ambos quieren bajar un
-grado, Do a Si y Mi a Re, lo que forma Sol. Así que Do/Sol se oye como Sol con dos
+grado, Do a Si y Mi a Re, lo que forma G. Así que C/G se oye como G con dos
 notas que llegan tarde, y se llama la **sexta y cuarta cadencial**:
 llega justo antes del V de una cadencia, como en I⁶₄ – V7 – I.
 
@@ -152,17 +152,17 @@ if !six_four {
 }
 ```
 
-En tonalidades menores es igual: Lam/Mi va hacia Mi, el V mayor con la
+En tonalidades menores es igual: Am/E va hacia E, el V mayor con la
 sensible Sol♯.
 
 ## Pruébalo
 
-1. File > New, y escribe Do/Mi, Fa/La, Sol7/Fa y Do/Sol en los cuatro primeros
+1. File > New, y escribe C/E, F/A, G7/F y C/G en los cuatro primeros
    compases del chord sheet. Pulsa Play y mira las harmony keys.
 2. Abre Piano 1 en el piano roll (F7). La fila Piano y la fila All
    difieren: el piano toca sus propias inversiones, el bajo toca las
    notas después de las barras.
-3. Cambia el compás 3 a Sol7/Si. ¿Qué cifras recibe el acorde de la fila
+3. Cambia el compás 3 a G7/B. ¿Qué cifras recibe el acorde de la fila
    All en la línea encima de la cuadrícula?
-4. Escribe Do/Sol en el compás 1 y Sol7 en el compás 2. ¿Qué tecla está
+4. Escribe C/G en el compás 1 y G7 en el compás 2. ¿Qué tecla está
    resaltada mientras suena el compás 1, y qué dice el aviso?

@@ -19,7 +19,7 @@ pulsa Play.
   los primeros cuatro compases, luego 159 desde el compás 5. La banda
   no acelera poco a poco: salta.
 - La **hoja de acordes** muestra cuatro acordes en círculo, dos pulsos
-  cada uno: Doadd9, Re, Sol, Mim7.
+  cada uno: Cadd9, D, G, Em7.
 - En el **último compás** la banda se detiene en seco en el pulso 1,
   toca Sol una vez en el pulso 2, corto, con un platillo crash, y
   vuelve a callar. La canción termina ahí: no viene después ningún
@@ -57,10 +57,10 @@ Dos de los acordes llevan una nota extra, como los toca un guitarrista:
 
 | Acorde | Numeral | Notas | La nota extra |
 |---|---|---|---|
-| Doadd9 | IVadd9 | Do Mi Sol **Re** | Re, la novena sobre Do |
+| Cadd9 | IVadd9 | Do Mi Sol **Re** | Re, la novena sobre Do |
 | Re | V | Re Fa♯ La | |
 | Sol | I | Sol Si Re | |
-| Mim7 | vi7 | Mi Sol Si **Re** | Re, la séptima sobre Mi |
+| Em7 | vi7 | Mi Sol Si **Re** | Re, la séptima sobre Mi |
 
 Así que Re está en los cuatro acordes: añadido a Do y a Mi menor, y
 nota de su propio acorde y de Sol. En una guitarra en Sol, estas cuatro
@@ -202,10 +202,10 @@ y Re.
 1. Traza la demo y encuentra la primera nota del compás 5 y del compás
    6. ¿Cuánto dura un compás a 159? (4 × 60 / 159 = 1,509 segundos.)
    ¿Y a 130? (1,846 segundos.)
-2. Mim7 sin su séptima es Mim. ¿Qué nota desaparece, y cuál de los cuatro
+2. Em7 sin su séptima es Em. ¿Qué nota desaparece, y cuál de los cuatro
    acordes se quedaría entonces sin Re?
 3. Nombra los mismos cuatro acordes en La mayor. (Re add9, Mi, La, Fa
    sostenido menor séptima.)
 4. En el compás 10 la melodía alterna Sol5 y Fa♯5 sobre Sol, y luego sobre
-   Mim7. Sobre Sol, el Fa sostenido es la séptima del acorde; ¿qué es
+   Em7. Sobre Sol, el Fa sostenido es la séptima del acorde; ¿qué es
    sobre Mi menor? (La novena.)

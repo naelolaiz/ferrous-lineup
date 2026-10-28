@@ -22,14 +22,14 @@ tercera menor son 3.
 La nota más grave es la **fundamental** cuando el acorde está en
 **posición fundamental**. Toca Do mayor como Mi Sol Do (Mi abajo) y sigue
 siendo Do mayor, en su primera **inversión**. Los símbolos de acordes
-escriben las inversiones con una barra: Do/Mi es «Do mayor con Mi en el
+escriben las inversiones con una barra: C/E es «Do mayor con Mi en el
 bajo».
 
 El **número romano** de un acorde dice sobre qué grado de la tonalidad
 está construido, en mayúsculas para los acordes mayores y en minúsculas
-para los menores. En Do mayor, Lam es **vi** y Sol7 es **V7**. Los numerales
+para los menores. En Do mayor, Am es **vi** y G7 es **V7**. Los numerales
 te permiten hablar de progresiones en cualquier tonalidad a la vez:
-I, vi, IV, V es Do, Lam, Fa, Sol en Do mayor y Sol, Mim, Do, Re en Sol mayor.
+I, vi, IV, V es C, Am, F, G en Do mayor y G, Em, C, D en Sol mayor.
 
 ## Cualidades de acorde: una tabla en un `match`
 
@@ -203,14 +203,14 @@ fn find_chord(pitch_set: PitchSet, bass: PitchClass) -> Option<Chord> {
   `None`. La segunda búsqueda, que permite una quinta ausente, solo se
   ejecuta cuando la búsqueda exacta no encontró nada. Los músicos suelen
   omitir la quinta en los acordes de séptima, y Do, Mi, Si♭ se sigue
-  escuchando como Do7.
+  escuchando como C7.
 - `Option::filter` conserva un `Some` solo si el closure dice que sí.
-  Aquí evita que «Do y Mi, más una Sol adivinada» se nombre como un acorde
+  Aquí evita que «Do y Mi, más un Sol adivinado» se nombre como un acorde
   de Do mayor completo; adivinar solo se permite en acordes de cuatro
   notas o más.
 
-Empezar por el bajo resuelve ambigüedades reales. Do Mi Sol La es a la vez Do6
-y Lam7; tocado sobre un Do es Do6, sobre un La es Lam7. Las pruebas fijan
+Empezar por el bajo resuelve ambigüedades reales. Do Mi Sol La es a la vez C6
+y Am7; tocado sobre un Do es C6, sobre un La es Am7. Las pruebas fijan
 estos casos:
 
 ```rust
@@ -261,7 +261,7 @@ Funciona porque todos los campos son `Copy`; los patrones copian los
 campos hacia fuera.
 
 `describe` usa la tonalidad para escribir una frase completa, como
-«Lam: La menor, acorde vi de Do mayor» o «Mi: Mi mayor, III prestado de
+«Am: La menor, acorde vi de Do mayor» o «Mi: Mi mayor, III prestado de
 fuera de Do mayor». Un acorde cuya fundamental está en la tonalidad pero
 cuyas notas no están todas en ella (Mi mayor tiene un Sol♯, que Do mayor
 no tiene) está **prestado** de otra tonalidad. Los acordes prestados son

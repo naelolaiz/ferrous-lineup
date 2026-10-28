@@ -99,7 +99,7 @@ Vienen en dos formas:
   contrastante y la frase una última vez. Oh, Lady Be Good!, Honeysuckle
   Rose, Ain't Misbehavin', Take the "A" Train, Sing, Sing, Sing e I Got
   Rhythm son AABA. Mira el playlist de una: la sección A es un patrón,
-  usado tres veces, y el final de la segunda La es un patrón propio.
+  usado tres veces, y el final de la segunda A es un patrón propio.
 - **ABAC**: dos mitades que empiezan igual y acaban distinto, la primera
   mitad abierta, la segunda cerrando en la tónica. Indiana, Rose Room,
   Embraceable You, But Not for Me y Carolina in the Morning son ABAC.
@@ -120,7 +120,7 @@ que puedes ver moverse las harmony keys:
   tercera mayor más aguda, en Do. El último acorde de esa frase, Mi bemol
   7, es el V7 de La bemol, y lleva directamente a casa.
 - **'S Wonderful** pasa la primera mitad de su puente en Sol, una tercera
-  mayor por encima de su Mi bemol; la segunda mitad vuelve por Sol7, Do7, F7
+  mayor por encima de su Mi bemol; la segunda mitad vuelve por G7, C7, F7
   y Si bemol 7, una cadena de dominantes.
 - **Los rags y King Porter Stomp** se mueven a la **subdominante**, la
   tonalidad una cuarta más aguda (una quinta más grave), para el trío:
@@ -138,11 +138,11 @@ que puedes ver moverse las harmony keys:
 
 Escucha esto:
 
-- **Sweet Georgia Brown** abre con Re7, Sol7 y Do7, cuatro compases cada
+- **Sweet Georgia Brown** abre con D7, G7 y C7, cuatro compases cada
   uno, antes del primer acorde de Fa, en su compás trece: cada acorde es
   el V del siguiente, así que la canción está en casa solo cuando llega
   a Fa.
-- El puente de **I Got Rhythm** (Re7, Sol7, Do7, F7, dos compases cada uno)
+- El puente de **I Got Rhythm** (D7, G7, C7, F7, dos compases cada uno)
   es la misma idea, de dos compases en dos compases, y su sección A
   gira I-vi-ii-V. Cientos de melodías se escribieron sobre estos
   «rhythm changes».

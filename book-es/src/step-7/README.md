@@ -13,7 +13,7 @@ enseña a Ferrous Lineup a hablarlo, en ambas direcciones:
   Activa **MIDI > Teclado de escritura como piano**, y las teclas de
   letras tocan notas, dispuestas como un piano (más abajo),
 - **acordes nombrados mientras tocas**: mantén pulsadas algunas teclas,
-  y la barra de estado nombra el acorde («Lam: La menor, acorde vi de Do
+  y la barra de estado nombra el acorde («Am: La menor, acorde vi de Do
   mayor»). En el piano roll, las teclas se iluminan en el teclado, y los
   botones de acordes se iluminan con los acordes que suelen venir
   *después del que estás manteniendo*,

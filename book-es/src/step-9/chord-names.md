@@ -22,17 +22,17 @@ Un símbolo de acorde tiene hasta tres partes:
 
 | Parte | Ejemplo | Qué dice |
 |------|---------|--------------|
-| Fundamental | el **Fa♯** de Fa♯m7b5 | La nota sobre la que está construido el acorde: una letra mayúscula, quizá un sostenido o un bemol. |
-| Cualidad | el **m7b5** de Fa♯m7b5 | Qué clase de acorde: menor, séptima de dominante, semidisminuido... |
-| Bajo | el **/Si** de Sol/Si | La nota más grave, cuando no es la fundamental. |
+| Fundamental | el **F#** de F#m7b5 | La nota sobre la que está construido el acorde: una letra mayúscula, quizá un sostenido o un bemol. |
+| Cualidad | el **m7b5** de F#m7b5 | Qué clase de acorde: menor, séptima de dominante, semidisminuido... |
+| Bajo | el **/B** de G/B | La nota más grave, cuando no es la fundamental. |
 
 Los músicos escriben la misma cualidad de varias maneras, y todas estas
 se leen:
 
 | Acorde | Escrito como |
 |-------|-----------|
-| mayor | Do, Domaj, CM |
-| menor | Dom, Cmin, Cmi, Do- |
+| mayor | C, Cmaj, CM |
+| menor | Cm, Cmin, Cmi, C- |
 | séptima menor | Cm7, Cmin7, C-7 |
 | séptima mayor | Cmaj7, CM7, CΔ, CΔ7 |
 | semidisminuido | Cm7b5, C-7b5, Cø, Cø7 |
@@ -42,14 +42,14 @@ se leen:
 | menor con séptima mayor | Cm(maj7), CmM7, C-Δ7 |
 | cuarta suspendida | Csus4, Csus |
 | seis-nueve | C6/9, C69 |
-| novenas alteradas | C7b9, Do7(b9), Do7#9 |
+| novenas alteradas | C7b9, C7(b9), C7#9 |
 
 Los corchetes y los espacios se ignoran, y los signos de bemol y de
 sostenido ♭ y ♯ funcionan igual que `b` y `#`. Las mayúsculas y las
 minúsculas importan en un solo lugar, pero es uno importante: **CM7** es
-una séptima mayor (Do Mi Sol Si) y **Dom7** una séptima menor (Do Mi♭ Sol Si♭).
+una séptima mayor (Do Mi Sol Si) y **Cm7** una séptima menor (Do Mi♭ Sol Si♭).
 Cuando Ferrous Lineup escribe un acorde de vuelta, usa una manera para
-cada uno, la que ya usan el piano roll y las harmony keys: Domaj7, Dom7,
+cada uno, la que ya usan el piano roll y las harmony keys: Cmaj7, Cm7,
 Cm7b5, Cdim7.
 
 La fundamental es siempre una letra mayúscula, porque una «b» minúscula
@@ -60,13 +60,13 @@ libros alemanes usan para Si, no se lee.
 
 Una barra pone otra nota en el bajo. Hay dos clases:
 
-- **Inversiones**: la nota del bajo está en el acorde. Do/Mi es Do mayor con
-  su **tercera** en el bajo (la primera inversión), Do/Sol con su **quinta**
-  (la segunda), y Sol7/Fa tiene la **séptima** de Sol7 en el bajo (la tercera
+- **Inversiones**: la nota del bajo está en el acorde. C/E es Do mayor con
+  su **tercera** en el bajo (la primera inversión), C/G con su **quinta**
+  (la segunda), y G7/F tiene la **séptima** de G7 en el bajo (la tercera
   inversión). `ChordSymbol::bass_in_chord` dice cuál: 3, 5 o 7.
 - **Un acorde sobre una nota de bajo**: la nota del bajo no está en el
-  acorde. Fa/Sol es Fa mayor (Fa La Do) sobre un Sol, un sonido suave y abierto
-  que los intérpretes de pop y góspel usan en lugar de Sol11.
+  acorde. F/G es Fa mayor (Fa La Do) sobre un Sol, un sonido suave y abierto
+  que los intérpretes de pop y góspel usan en lugar de G11.
   `bass_in_chord` dice `None`.
 
 La mayoría de los acordes con barra se escriben por la línea de bajo que
@@ -75,25 +75,25 @@ separado es normal, pero el bajo baja por una escala: Do, Si, La, Sol, Fa, Mi,
 Re. Esa línea es la razón de las barras, y es lo que toca ahora la banda
 (mira [más abajo](#la-banda-toca-la-barra)).
 
-Una barra no es una nota de bajo: la de **Do6/9**, el acorde seis-nueve.
+Una barra no es una nota de bajo: la de **C6/9**, el acorde seis-nueve.
 Ferrous Lineup solo toma lo que sigue a la última barra como bajo si es
 un nombre de nota, así que «C6/9» es un acorde seis-nueve y «C6/9/E» es
 un acorde seis-nueve sobre Mi.
 
 ## Deletreo
 
-Db7 y Do♯7 se tocan en las mismas teclas del piano, pero no se escriben
+Db7 y C#7 se tocan en las mismas teclas del piano, pero no se escriben
 igual. Un acorde se deletrea hacia arriba desde su fundamental por
-letras: la tercera está dos letras más arriba, la quinta cuatro, la
+nombres de nota: la tercera está dos nombres más arriba, la quinta cuatro, la
 séptima seis.
 
 | Acorde | Fundamental | Tercera | Quinta | Séptima |
 |-------|------|-------|-------|---------|
-| Do♯7 | Do♯ | Mi♯ | Sol♯ | Si |
+| C#7 | Do♯ | Mi♯ | Sol♯ | Si |
 | Db7 | Re♭ | Fa | La♭ | Do♭ |
 
-La séptima de Db7 es Do♭, no B: seis letras por encima de Re es C, y la
-nota a una séptima menor por encima de Re♭, escrita con una Do, es Do
+La séptima de Db7 es Do♭, no Si: seis nombres por encima de Re está Do, y la
+nota a una séptima menor por encima de Re♭, escrita como un Do, es Do
 bemol. `ChordSymbol` conserva la fundamental exactamente como se
 escribió, así que `notes()` deletrea el acorde como lo entiende el lead
 sheet. Para tocar, los dos se vuelven el mismo `Chord`, una clase de
@@ -102,42 +102,42 @@ alturas y una cualidad.
 ## Transponer un chart
 
 Para mover una canción a otra tonalidad, un músico mueve cada acorde la
-misma distancia, contada en **letras** además de en semitonos. De E
-menor a Re menor, cada letra baja una:
+misma distancia, contada en **nombres de nota** además de en semitonos. De Mi
+menor a Re menor, cada nombre baja uno:
 
-| Mi menor | Fa♯m7b5 | Si7 | Mim |
+| Mi menor | F#m7b5 | B7 | Em |
 |---------|--------|----|----|
-| Re menor | Em7b5 | La7 | Rem |
-| Do menor | Dm7b5 | Sol7 | Dom |
+| Re menor | Em7b5 | A7 | Dm |
+| Do menor | Dm7b5 | G7 | Cm |
 | Si♭ menor | Cm7b5 | F7 | Bbm |
-| Sol♯ menor | La♯m7b5 | Re♯7 | Sol♯m |
+| Sol♯ menor | A#m7b5 | D#7 | G#m |
 
 Es un **ii–V–i**, la manera más común de llegar a una tonalidad menor:
-en toda tonalidad, el ii está una letra por encima de la tónica y el V
-cuatro letras por encima. Contar por letras lo mantiene así: en Sol♯ menor
-el V es Re♯7, nunca Eb7. Una prueba comprueba las doce tonalidades,
+en toda tonalidad, el ii está un nombre por encima de la tónica y el V
+cuatro nombres por encima. Contar por nombres lo mantiene así: en Sol♯ menor
+el V es D#7, nunca Eb7. Una prueba comprueba las doce tonalidades,
 escritas con sostenidos y con bemoles.
 
 `transposed(from, to)` lo hace: el intervalo de la tónica antigua a la
-nueva, como semitonos y letras, se suma a la fundamental y al bajo con
+nueva, como semitonos y nombres de nota, se suma a la fundamental y al bajo con
 `NoteName::above`, la misma función que deletrea acordes.
 
 Una cosa se hace distinta de una partitura. Un símbolo de acorde nunca
-lleva un doble sostenido ni un doble bemol en su fundamental: Re♯°7 en Mi
-menor movido a Sol♯ menor sería en rigor Fa♯#°7, y Ferrous Lineup lo
-escribe Sol°7, las mismas teclas, como hacen los lead sheets. En una
-partitura, donde cada nota del acorde está escrita, Fa♯#°7 sería lo
+lleva un doble sostenido ni un doble bemol en su fundamental: D#°7 en Mi
+menor movido a Sol♯ menor sería en rigor F##°7, y Ferrous Lineup lo
+escribe G°7, las mismas teclas, como hacen los lead sheets. En una
+partitura, donde cada nota del acorde está escrita, F##°7 sería lo
 correcto.
 
 ## De nombres a números romanos, y de vuelta
 
 La biblioteca sigue pensando en números romanos, así que un acorde por
 nombre se vuelve un `RomanChord` una vez conocida la tonalidad: en La
-menor, Rem7 está cinco semitonos por encima de la tónica (iv7), y Mi7/Sol♯
+menor, Dm7 está cinco semitonos por encima de la tónica (iv7), y E7/G#
 siete, con su bajo en once. `RomanChord` ganó un campo `bass` para eso.
 El camino de vuelta, `RomanChord::symbol_in(key)`, deletrea el acorde en
-una tonalidad: los mismos números romanos son La7/Do♯ en Re menor, porque
-la tercera de La7 es Do♯, no Re♭.
+una tonalidad: los mismos números romanos son A7/C# en Re menor, porque
+la tercera de A7 es Do♯, no Re♭.
 
 Los charts pueden ahora nombrar sus acordes. `parse_chart_in` lee un
 chart como `parse_chart`, pero un acorde que empieza con una letra
@@ -150,7 +150,7 @@ nunca empieza con una mayúscula de A a G: «I | G7/B | vi».
 `accompany`, que convierte un chart en acordes y una línea de bajo, toca
 ahora la nota de bajo de un acorde con barra dondequiera que el bajo
 tocaría la fundamental. Los acordes de arriba siguen siendo los del
-acorde: Sol/Si es todavía Sol, Si y Re en el piano. Las demás notas de un
+acorde: G/B es todavía Sol, Si y Re en el piano. Las demás notas de un
 patrón de bajo (la tercera, la quinta, la séptima) se buscan justo por
 encima de la nota de bajo, y «la quinta por debajo» justo por debajo de
 ella.
@@ -164,9 +164,9 @@ el acorde justo después de uno, se tocan a un paso (uno o dos semitonos)
 de la nota anterior cuando la hay, hasta bajar a Mi1, la cuerda más grave
 de un bajo eléctrico.
 
-| Acorde | Do | Sol/Si | Lam | Lam/Sol | Fa | Do/Mi | Rem | Sol |
+| Acorde | C | G/B | Am | Am/G | F | C/E | Dm | G |
 |-------|---|-----|----|------|---|-----|----|---|
-| Nota de bajo | Do2 | Si1 | La1 | Sol1 | F1 | Mi1 | Re2 | Sol2 |
+| Nota de bajo | Do2 | Si1 | La1 | Sol1 | Fa1 | Mi1 | Re2 | Sol2 |
 
 Re1 quedaría por debajo de un bajo eléctrico, así que la línea salta
 hasta Re2 ahí. Un chart sin acordes con barra suena exactamente como
@@ -300,7 +300,7 @@ viene después hace `None` el chart entero.
 ## Ejercicios
 
 1. Los charts de pop escriben a veces **Cadd2**, que tiene las mismas
-   notas que Doadd9 con el Re tocado grave. Añade «add2» a `SPELLINGS`.
+   notas que Cadd9 con el Re tocado grave. Añade «add2» a `SPELLINGS`.
    ¿Qué se pierde al leerlo como `Add9`?
 2. **Do5** es un «power chord»: solo Do y Sol, sin tercera. No está en
    `ChordQuality`. ¿Qué más de Ferrous Lineup tendría que saber de él

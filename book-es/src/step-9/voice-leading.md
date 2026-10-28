@@ -39,7 +39,7 @@ rompiste. El piano roll ahora puede hacer esas marcas. Marca
   cursor sobre la línea, o sobre un bloque de la fila Voices, para leer
   por qué la escritura clásica a partes lo evita.
 
-![Apuntando al bloque 7th: la séptima Fa de Sol7 sube a Sol en lugar de bajar a Mi.](../images/step-9-voice-leading-tooltip.png)
+![Apuntando al bloque 7th: la séptima Fa de G7 sube a Sol en lugar de bajar a Mi.](../images/step-9-voice-leading-tooltip.png)
 
 ## Qué notas forman una parte
 
@@ -80,7 +80,7 @@ la escritura estricta a partes también las evita. Las octavas por
 movimiento contrario aparecen de vez en cuando entre la parte de arriba
 y el bajo en una cadencia, y el mensaje lo dice.
 
-En la imagen, el tenor va de Do4 a Re4 mientras el bajo va de F3 a Sol3.
+En la imagen, el tenor va de Do4 a Re4 mientras el bajo va de Fa3 a Sol3.
 Ambos suben un tono y se mantienen a una quinta de distancia: quintas
 paralelas. Luego el alto va de Do5 a Sol4 y el bajo de Do3 a Sol2, ambos
 bajando una cuarta y manteniéndose a dos octavas de distancia: octavas
@@ -106,9 +106,9 @@ La comprobación conoce tres sitios donde la sensible debe subir:
 - **V o vii° a I**, la cadencia.
 - **V a vi** (V a VI en menor), la **cadencia rota**. La sensible sigue
   subiendo, a la tónica, que ahora es la tercera de vi.
-- **Una dominante secundaria** que va a su acorde: Re7 a Sol en Do mayor. Re7
+- **Una dominante secundaria** que va a su acorde: D7 a G en Do mayor. D7
   toma prestado Fa♯ de fuera de la tonalidad, y Fa♯ es la sensible de Sol,
-  así que sube a Sol. Do7 yendo a Fa en Do mayor también es una dominante
+  así que sube a Sol. C7 yendo a F en Do mayor también es una dominante
   secundaria (V7/IV). Pero su sensible Mi pertenece a la tonalidad, y
   conserva la libertad que tiene en Do.
 
@@ -123,14 +123,14 @@ las dos copias no pueden subir sin formar octavas paralelas.
 
 ### Una séptima baja
 
-En un acorde de séptima como Sol7 (Sol Si Re Fa), la séptima, Fa, es una
+En un acorde de séptima como G7 (Sol Si Re Fa), la séptima, Fa, es una
 disonancia. **Resuelve bajando por grado conjunto** al siguiente acorde.
-En Sol7 a Do, Fa baja a Mi. En la imagen, la Fa de la soprano sube a Sol en su
+En G7 a C, Fa baja a Mi. En la imagen, el Fa de la soprano sube a Sol en su
 lugar, y el contorno discontinuo marca Mi.
 
 La comprobación lee unos pocos acordes como lo hacen los libros de
 armonía. Fa La Do Re yendo a Sol se llama F6 por sus notas, pero funciona
-como Rem7 con Fa en el bajo, ii⁶₅ en Do. Su séptima es Do, que debería
+como Dm7 con Fa en el bajo, ii⁶₅ en Do. Su séptima es Do, que debería
 bajar a Si. La fundamental de un acorde de séptima disminuida sale de
 adónde va: Sol♯ Si Re Fa yendo a La tiene su fundamental en Sol♯, y su séptima
 es Fa.
@@ -144,13 +144,13 @@ Las excepciones de los libros de texto no se marcan:
 - **Notas de paso y notas de adorno.** Una nota corta que viene y se va
   por grado conjunto forma una séptima solo de paso. Igual que una nota
   añadida fuera del pulso mientras las otras partes mantienen las suyas.
-- **V⁴₃ a I⁶.** La séptima (Fa en Sol7 con Re en el bajo) puede subir a Sol
+- **V⁴₃ a I⁶.** La séptima (Fa en G7 con Re en el bajo) puede subir a Sol
   mientras el bajo sube de Re a Mi una décima más abajo.
-- **Un acorde de paso.** En Do, luego Mim7 sobre Re, luego Do sobre Mi, la Re
+- **Un acorde de paso.** En C, luego Em7 sobre Re, luego C sobre Mi, el Re
   del bajo es una nota de paso entre dos formas del mismo acorde de Do.
 - **Conducción de voces cromática.** Una séptima puede subir un semitono
-  hacia la propia sensible del siguiente acorde. En Lam7 con Sol en el bajo
-  yendo a Mi7 con Sol♯ en el bajo, Sol sube a Sol♯. La línea sigue subiendo, y
+  hacia la propia sensible del siguiente acorde. En Am7 con Sol en el bajo
+  yendo a E7 con Sol♯ en el bajo, Sol sube a Sol♯. La línea sigue subiendo, y
   el siguiente acorde la resuelve.
 - **El bajo en otra octava.** El bajo puede tomar su nota a una octava
   de distancia: Si2 a Do2 es la sensible yendo a la tónica.
@@ -328,13 +328,13 @@ entero, sin copiar los hallazgos.
 
 ## Ejercicios
 
-1. Escribe I–IV–V–I en Do mayor con el bajo Do3 F3 Sol3 Do3 y la soprano
-   Mi5 F5 Re5 Mi5. Marca Conducción de voces. Luego mueve la Re5 de la
+1. Escribe I–IV–V–I en Do mayor con el bajo Do3 Fa3 Sol3 Do3 y la soprano
+   Mi5 Fa5 Re5 Mi5. Marca Conducción de voces. Luego mueve la Re5 de la
    soprano a Sol5 y mira qué dice la comprobación. ¿Por qué se evitan las
    octavas entre la soprano y el bajo, pero una tercera o una sexta
    entre ellos es bienvenida?
-2. Escribe Sol7 a Do con la séptima en el alto bajando a Mi. Luego escribe
-   Sol7 a Lam (la cadencia rota). ¿Adónde tiene que ir ahora la sensible?
+2. Escribe G7 a C con la séptima en el alto bajando a Mi. Luego escribe
+   G7 a Am (la cadencia rota). ¿Adónde tiene que ir ahora la sensible?
    ¿Y adónde va la séptima?
 3. La comprobación deja en paz a la sensible en las partes internas.
    Escribe V7 a I con el tenor yendo de Si a Sol. ¿Qué gana el acorde de Do,

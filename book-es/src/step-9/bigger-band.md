@@ -89,8 +89,8 @@ F    133211     el índice plano sobre el traste 1: una «ceja»
 La cuerda más grave que suena debe ser el **bajo** del acorde, la nota
 que toca el bajista (la fundamental, o, en un acorde con barra, la nota
 después de la barra). Por eso la forma de Do deja fuera la cuerda grave
-de Mi: un Mi ahí lo convertiría en Do/Mi. Los libros de acordes sí escriben
-Do/Mi así, `032010`.
+de Mi: un Mi ahí lo convertiría en C/E. Los libros de acordes sí escriben
+C/E así, `032010`.
 
 ### Encontrar la forma
 
@@ -104,7 +104,7 @@ queda con las que una mano puede tocar y las puntúa:
 - toda nota **necesaria** debe estar: la fundamental, la tercera (o la
   segunda o la cuarta de un acorde sus), la sexta o la séptima, una
   quinta que no sea justa, y la extensión más alta, que da nombre al
-  acorde (la 13 de un Sol13);
+  acorde (la 13 de un G13);
 - una quinta justa y las extensiones más bajas son **bienvenidas**,
   y las formas con más de ellas son mejores;
 - las formas bajas del mástil, con **cuerdas al aire**, y en más
@@ -124,10 +124,10 @@ debajo de su límite (Si♭2), y sigue siendo el Sol que toca todo
 guitarrista. Su sonido es parte del sonido de la guitarra.
 
 Con esas reglas, la búsqueda encuentra los acordes al aire de los
-libros de acordes (Do `x32010`, Sol `320003`, Re `xx0232`, Lam `x02210`, Sol7
-`320001`, Domaj7 `x32000`), los acordes con ceja en otras tonalidades (Fa
-`133211`, la forma de Mi al aire un traste más arriba, y Si `x24442`, la
-forma de La), y una forma para cada tipo de acorde en cada tonalidad.
+libros de acordes (C `x32010`, G `320003`, D `xx0232`, Am `x02210`, G7
+`320001`, Cmaj7 `x32000`), los acordes con ceja en otras tonalidades (F
+`133211`, la forma de E al aire un traste más arriba, y B `x24442`, la
+forma de A), y una forma para cada tipo de acorde en cada tonalidad.
 Las pruebas las comprueban todas.
 
 ### Abajo y arriba
@@ -160,8 +160,8 @@ se detiene el hit.
   cuarto un poco más fuerte. Así llevaba el tiempo Freddie Green en la
   banda de Count Basie durante casi cincuenta años. Las formas son los
   **shells** de jazz: desde una fundamental en la cuerda grave de Mi, la
-  séptima viene a continuación y la tercera una octava arriba (Sol7 = Sol2
-  F3 Si3); desde la cuerda de La, la tercera y luego la séptima (Do7 = Do3
+  séptima viene a continuación y la tercera una octava arriba (G7 = Sol2
+  Fa3 Si3); desde la cuerda de La, la tercera y luego la séptima (C7 = Do3
   Mi3 Si♭3).
 - **El boogie shuffle** (blues, rock and roll): solo dos cuerdas, la
   fundamental con su quinta en un pulso y con su sexta en el siguiente,
@@ -425,14 +425,14 @@ un mensaje en lugar de dejar caer en silencio el canal de la guitarra.
 
 ## Ejercicios
 
-1. Crea un chord sheet con **Do Lam Fa Sol** y prueba **Pop beat**, **Folk**,
+1. Crea un chord sheet con **C Am F G** y prueba **Pop beat**, **Folk**,
    **Rock beat** y **Swing**. Haz clic en **Piano**, **Bass** y
    **Drums** en la fila **You play**, de modo que solo quede la
    guitarra. ¿Cómo toca cada guitarrista los mismos cuatro acordes?
 2. Mira las notas de la guitarra en el piano roll para Sol y para Fa en
    Pop beat. Escribe sus formas como hacen los libros de acordes
    (`320003`). ¿Por qué la forma de Fa no tiene cuerdas al aire?
-3. ¿Qué forma tocarías para **Mi7**, y qué notas del acorde dobla?
+3. ¿Qué forma tocarías para **E7**, y qué notas del acorde dobla?
    Comprueba tu respuesta con la prueba
    `open_chords_are_the_ones_in_chord_books`.
 4. En `extras.rs`, cambia la guitarra de Rock beat de

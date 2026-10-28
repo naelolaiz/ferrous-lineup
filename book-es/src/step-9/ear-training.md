@@ -26,7 +26,7 @@ qué preguntar; luego **Start** hace la primera pregunta, y la toca. Si
 la canción estaba sonando, se pausa, para que la pregunta se oiga
 sola.
 
-![La pestaña Intervals: m3, M3, P4, P5 y P8 elegidos, tocados Up. La respuesta P5 está en verde, y el texto explica: «Bb3 hasta F4: una quinta justa, 7 semitonos. Abierta y estable: la fundamental y la quinta de todo acorde mayor y menor. Como Twinkle, Twinkle, Little Star, en su primer salto».](../images/step-9-ear-intervals.png)
+![La pestaña Intervals: m3, M3, P4, P5 y P8 elegidos, tocados Up. La respuesta P5 está en verde, y el texto explica: «Si♭3 hasta Fa4: una quinta justa, 7 semitonos. Abierta y estable: la fundamental y la quinta de todo acorde mayor y menor. Como Twinkle, Twinkle, Little Star, en su primer salto».](../images/step-9-ear-intervals.png)
 
 **Intervals.** Suenan dos notas, y los botones grandes son las
 respuestas. El cuadro de arriba elige qué intervalos se pueden
@@ -46,7 +46,7 @@ toca la pregunta tantas veces como quieras, antes o después de
 responder; **Next** pregunta otra (es **Skip** antes de responder, y una
 pregunta saltada no cuenta).
 
-![La pestaña Chords con los nueve tipos y Inversions marcado. La respuesta «maj» está en rojo, «dim7» en verde, y el texto: «Ddim7: séptima disminuida de D, en posición fundamental. D F Ab Cb: una tercera menor, una tercera menor y una tercera menor apiladas desde D. Cb es la tecla B, escrito Cb porque es la séptima del acorde...»](../images/step-9-ear-chords.png)
+![La pestaña Chords con los nueve tipos y Inversions marcado. La respuesta «maj» está en rojo, «dim7» en verde, y el texto: «Ddim7: séptima disminuida de Re, en posición fundamental. Re Fa La♭ Do♭: una tercera menor, una tercera menor y una tercera menor apiladas desde Re. Do♭ es la tecla Si, escrito Do♭ porque es la séptima del acorde...»](../images/step-9-ear-chords.png)
 
 **Chords.** Suena un acorde, y tú nombras su tipo: mayor, menor,
 disminuido, aumentado, o uno de cinco acordes de séptima. La
@@ -75,7 +75,7 @@ acorde («era IV»), y el cuadro explica los acordes, sus numerales y por
 qué cada uno sigue al anterior, con las palabras de las sugerencias de
 las harmony keys:
 
-![La progresión contestada: casillas I, vi (era IV), IV (era V), V (era I) y el texto «Fa – Si♭ – Do – Fa: I IV V I en Fa mayor. De I a IV: alejarse del hogar, hacia la dominante. De IV a V: un paso hacia la dominante, listo para volver al hogar. De V a I: el final más fuerte. La sensible sube a la fundamental».](../images/step-9-ear-progression.png)
+![La progresión contestada: casillas I, vi (era IV), IV (era V), V (era I) y el texto «F – Bb – C – F: I IV V I en Fa mayor. De I a IV: alejarse del hogar, hacia la dominante. De IV a V: un paso hacia la dominante, listo para volver al hogar. De V a I: el final más fuerte. La sensible sube a la fundamental».](../images/step-9-ear-progression.png)
 
 Después de responder, cada casilla y cada tecla tocan su acorde en el
 piano, y **Hear the key** toca I, IV, V e I: una cadencia que dice
@@ -101,9 +101,9 @@ es lo que dicen, y por qué.
 ### Intervalos
 
 El nombre de un intervalo tiene dos partes. El **número** cuenta
-letras, incluyendo los dos extremos: de Do hasta E son C, D, E, tres
-letras, una *tercera*. De C hasta Mi♭ es una tercera también: las mismas
-letras. La **cualidad** viene luego de los semitonos: una tercera de 4
+nombres de nota, incluyendo los dos extremos: de Do hasta Mi son Do, Re, Mi, tres
+nombres, una *tercera*. De Do hasta Mi♭ es una tercera también: los mismos
+nombres. La **cualidad** viene luego de los semitonos: una tercera de 4
 semitonos es *mayor*, de 3 *menor*.
 
 Las segundas, terceras, sextas y séptimas vienen en mayor y menor. Los
@@ -119,17 +119,17 @@ justo, *disminuido*.
 | Botón | Nombre | Semitonos | Desde Do | Una melodía que empieza con él |
 |-------|--------|-----------|---------|--------------------------------|
 | m2 | segunda menor | 1 | Do–Re♭ | Jaws, las dos notas del tiburón |
-| M2 | segunda mayor | 2 | C–D | Happy Birthday, en su primer paso hacia arriba |
+| M2 | segunda mayor | 2 | Do–Re | Happy Birthday, en su primer paso hacia arriba |
 | m3 | tercera menor | 3 | Do–Mi♭ | Greensleeves |
-| M3 | tercera mayor | 4 | C–E | When the Saints Go Marching In |
-| P4 | cuarta justa | 5 | C–F | Here Comes the Bride |
+| M3 | tercera mayor | 4 | Do–Mi | When the Saints Go Marching In |
+| P4 | cuarta justa | 5 | Do–Fa | Here Comes the Bride |
 | TT | tritono (cuarta aumentada) | 6 | Do–Fa♯ | Maria, de West Side Story |
-| P5 | quinta justa | 7 | C–G | Twinkle, Twinkle, Little Star, en su primer salto |
+| P5 | quinta justa | 7 | Do–Sol | Twinkle, Twinkle, Little Star, en su primer salto |
 | m6 | sexta menor | 8 | Do–La♭ | The Entertainer, en su primer salto hacia arriba |
-| M6 | sexta mayor | 9 | C–A | My Bonnie Lies over the Ocean |
+| M6 | sexta mayor | 9 | Do–La | My Bonnie Lies over the Ocean |
 | m7 | séptima menor | 10 | Do–Si♭ | Somewhere, de West Side Story |
-| M7 | séptima mayor | 11 | C–B | |
-| P8 | octava | 12 | C–C | Over the Rainbow |
+| M7 | séptima mayor | 11 | Do–Si | |
+| P8 | octava | 12 | Do–Do | Over the Rainbow |
 
 Las melodías empiezan con el intervalo hacia arriba, así que la app
 nombra una solo cuando la pregunta fue hacia arriba. La séptima mayor
@@ -137,7 +137,7 @@ no tiene ninguna: pocas melodías conocidas empiezan con ella.
 
 El **tritono** es el único intervalo con dos números. Seis semitonos
 por encima de Do son la tecla Fa♯ o la tecla Sol♭: de Do a Fa♯ hay cuatro
-letras (C D E F), una *cuarta aumentada*; de Do a Sol♭ hay cinco (C D E F
+nombres (Do Re Mi Fa), una *cuarta aumentada*; de Do a Sol♭ hay cinco (Do Re Mi Fa
 Sol), una *quinta disminuida*. Las mismas teclas, el mismo sonido, dos
 escrituras. Su nombre dice lo que es: tres tonos enteros, exactamente
 media octava.
@@ -162,38 +162,38 @@ apiladas desde la fundamental. Los nueve tipos, sobre Do:
 | Botón | Nombre | Símbolo | Notas | Terceras, desde abajo |
 |-------|--------|---------|-------|-----------------------|
 | maj | mayor | Do | Do Mi Sol | mayor, menor |
-| m | menor | Dom | Do Mi♭ Sol | menor, mayor |
-| dim | disminuido | Dodim | Do Mi♭ Sol♭ | menor, menor |
-| aug | aumentado | Doaug | Do Mi Sol♯ | mayor, mayor |
-| 7 | séptima de dominante | Do7 | Do Mi Sol Si♭ | mayor, menor, menor |
-| maj7 | séptima mayor | Domaj7 | Do Mi Sol Si | mayor, menor, mayor |
-| m7 | séptima menor | Dom7 | Do Mi♭ Sol Si♭ | menor, mayor, menor |
+| m | menor | Cm | Do Mi♭ Sol | menor, mayor |
+| dim | disminuido | Cdim | Do Mi♭ Sol♭ | menor, menor |
+| aug | aumentado | Caug | Do Mi Sol♯ | mayor, mayor |
+| 7 | séptima de dominante | C7 | Do Mi Sol Si♭ | mayor, menor, menor |
+| maj7 | séptima mayor | Cmaj7 | Do Mi Sol Si | mayor, menor, mayor |
+| m7 | séptima menor | Cm7 | Do Mi♭ Sol Si♭ | menor, mayor, menor |
 | m7b5 | séptima semidisminuida | Cm7b5 (Cø7) | Do Mi♭ Sol♭ Si♭ | menor, menor, mayor |
-| dim7 | séptima disminuida | Cdim7 (Do°7) | Do Mi♭ Sol♭ Bbb | menor, menor, menor |
+| dim7 | séptima disminuida | Cdim7 (C°7) | Do Mi♭ Sol♭ Si♭♭ | menor, menor, menor |
 
 Dos acordes que a menudo se enseñan pronto se **dejan fuera a
-propósito**: los acordes de sexta y los suspendidos. Do6 es Do Mi Sol La, las
-mismísimas teclas que Lam7 (La Do Mi Sol); Dosus2 (Do Re Sol) tiene las teclas de
-Solsus4 (Sol Do Re). Tocados solos, nada los distingue: lo que hace que uno
-sea Do6 y el otro Lam7 es el bajo y la música de alrededor. Un juego que
+propósito**: los acordes de sexta y los suspendidos. C6 es Do Mi Sol La, las
+mismísimas teclas que Am7 (La Do Mi Sol); Csus2 (Do Re Sol) tiene las teclas de
+Gsus4 (Sol Do Re). Tocados solos, nada los distingue: lo que hace que uno
+sea C6 y el otro Am7 es el bajo y la música de alrededor. Un juego que
 los preguntara marcaría mal respuestas correctas. Una prueba comprueba
 que no hay dos de los nueve tipos que compartan sus notas sobre dos
 fundamentales cualesquiera.
 
-Algunas escrituras parecen raras al principio: **Bbb** en Cdim7, **Do♭**
-en Fadim. No son errores. La séptima de un acorde de Do es algún tipo de
-B (C D E F G A B, siete letras), y una séptima disminuida está un
+Algunas escrituras parecen raras al principio: **Si♭♭** en Cdim7, **Do♭**
+en Fdim. No son errores. La séptima de un acorde de Do es algún tipo de
+Si (Do Re Mi Fa Sol La Si, siete nombres), y una séptima disminuida está un
 semitono por debajo de la séptima menor Si♭, así que se escribe Si doble
 bemol, aunque es la tecla La. De la misma manera la quinta de Fa es algún
 tipo de Do, y una quinta disminuida está un semitono por debajo de Do:
 Do♭, la tecla Si. La explicación lo dice siempre que escribe una nota con
-una letra distinta de los nombres habituales de su tecla, porque la
-letra dice qué trabajo hace la nota en el acorde.
+un nombre distinto de los habituales de su tecla, porque el
+nombre dice qué trabajo hace la nota en el acorde.
 
 **Inversiones.** Un acorde está *invertido* cuando una nota distinta de
 su fundamental es la más grave: la tercera (primera inversión), la
 quinta (segunda inversión) o la séptima (tercera inversión). El símbolo
-nombra el bajo tras una barra: Do/Mi es Do mayor con Mi como nota más grave
+nombra el bajo tras una barra: C/E es Do mayor con Mi como nota más grave
 ([Nombres de acordes](chord-names.md), [Inversiones](inversions.md)).
 Un acorde invertido conserva su tipo, así que la respuesta no cambia,
 pero suena menos asentado y es más difícil de nombrar; para eso está la
@@ -204,7 +204,7 @@ espaciadas por igual (a una tercera mayor, y a una tercera mayor desde
 la nota de arriba de vuelta a la fundamental), y las de la séptima
 disminuida también (a una tercera menor). Pon cualquiera de sus notas
 en el bajo y obtienes las mismísimas teclas que el acorde en posición
-fundamental sobre *esa* nota: Doaug/Mi es también Miaug (Mi Sol♯ Si♯, donde Si♯
+fundamental sobre *esa* nota: Caug/E es también Eaug (Mi Sol♯ Si♯, donde Si♯
 es la tecla Do). El oído no puede saber cuál nota es la fundamental, así
 que la explicación de un acorde aumentado o de séptima disminuida
 invertido dice qué otro acorde es también. El tipo sigue siendo seguro,
@@ -412,7 +412,7 @@ pub fn next_sample(&mut self) -> f32 {
 Las notas están ordenadas por comienzo, así que `next` solo avanza:
 una comparación por muestra cuando no empieza nada. `while let ... &&
 ...` es una let chain en un loop: sigue mientras *hay* una nota
-siguiente *y* le toca. La cada nota se le da su longitud (`gate`) cuando
+siguiente *y* le toca. A cada nota se le da su longitud (`gate`) cuando
 empieza, y el instrumento la suelta por sí mismo, así que la frase no
 necesita una lista de notas que detener.
 
@@ -475,7 +475,7 @@ El core tiene 21 pruebas. Las que protegen la teoría:
 - **Todo intervalo desde toda nota.** Para las 12 notas graves y los 12
   intervalos, las dos notas escritas son las teclas correctas, ninguna
   necesita un doble sostenido o bemol, y el nombre sacado de las dos
-  notas escritas (por `spelled_interval_name`, de sus letras y
+  notas escritas (por `spelled_interval_name`, de sus nombres de nota y
   semitonos) es el nombre del intervalo; para el tritono, cuarta
   aumentada o quinta disminuida.
 - **Escrituras a mano**: Do♯ Mi, Re♭ Fa, Fa Si, Mi La♯, Do Fa♯, Mi Do, Mi♭ Re, Fa♯ Fa♯,
@@ -483,11 +483,11 @@ El core tiene 21 pruebas. Las que protegen la teoría:
 - **Acordes contra el analizador.** Quinientas preguntas de acordes en
   posición fundamental se le dan al analizador que la app usa para
   nombrar lo que tocas en un teclado MIDI, que debe nombrar el mismo
-  tipo. (No invertidos: el analizador oye con razón Lam7/Do como Do6.)
+  tipo. (No invertidos: el analizador oye con razón Am7/C como C6.)
 - **Toda pregunta de acordes toca su acorde con el bajo correcto**,
   sobre 2.000 semillas con las inversiones activadas.
-- **Explicaciones escritas**: Bdim7, Ebmaj7/Sol, Fadim/Do♭, el Bbb de
-  Cdim7, Doaug/Mi (también Miaug), Ddim7/Do♭ (también Bdim7).
+- **Explicaciones escritas**: Bdim7, Ebmaj7/G, Fdim/Cb, el Si♭♭ de
+  Cdim7, Caug/E (también Eaug), Ddim7/Cb (también Bdim7).
 - Los **numerales** coinciden con las harmony keys en mayor y menor,
   tríadas y séptimas.
 - Las **progresiones** empiezan en I, nunca repiten un acorde, vuelven
@@ -500,7 +500,7 @@ Tres pruebas en el motor de audio comprueban que una frase suena sin
 canción cargada y se tira después de resonar, que una frase nueva ocupa
 el lugar de la última, y que una frase detenida no toca nada más. En la
 app corriendo, una grabación de la salida tras **Start** contenía dos
-notas, Re4 y luego F4: la tercera menor que preguntaba la ventana.
+notas, Re4 y luego Fa4: la tercera menor que preguntaba la ventana.
 
 ## Ejercicios
 
@@ -513,7 +513,7 @@ notas, Re4 y luego F4: la tercera menor que preguntaba la ventana.
    Chariot», para una tercera mayor hacia abajo. Añade un `tune_down` y
    úsalo en `explain` cuando la pregunta fue hacia abajo.
 3. **Acordes de sexta, con justicia.** Los acordes de sexta se dejan
-   fuera porque Do6 y Lam7 comparten sus teclas. Se podrían preguntar si
+   fuera porque C6 y Am7 comparten sus teclas. Se podrían preguntar si
    el acorde siempre sonara sobre su fundamental en el bajo, una octava
    más abajo. ¿Qué notas daría entonces `notes_as`? ¿Las inversiones
    seguirían teniendo sentido?

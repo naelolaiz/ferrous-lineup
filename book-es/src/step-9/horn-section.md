@@ -80,18 +80,18 @@ una octava, bajo el viento más agudo, el **lead**. Los arreglistas
 escriben así las partes de vientos porque hace que tres o cuatro vientos
 suenen como un solo instrumento grande.
 
-![La parte Horns del ejemplo de Motown en el piano roll con Voice leading activado. De La♭ a Sol7, la línea de movimientos dice «Horns: top Do5→Si4 · 2nd Ab4→Sol4 · 3rd Eb4→F4; outer parts in contrary motion». Las líneas de colores unen las notas de cada viento de acorde a acorde.](../images/step-9-horns.png)
+![La parte Horns del ejemplo de Motown en el piano roll con Voice leading activado. De A♭ a G7, la línea de movimientos dice «Horns: top C5→B4 · 2nd Ab4→G4 · 3rd Eb4→F4; outer parts in contrary motion». Las líneas de colores unen las notas de cada viento de acorde a acorde.](../images/step-9-horns.png)
 
 - **Cuántos vientos.** Los vientos tocan las notas que el piano toca en
   el acorde, sea cual sea su octava: tantos vientos como notas distintas
   tenga el voicing del piano, hasta cuatro. En el ejemplo, Do es Mi4 Sol4 Do5
-  y Sol7 es Re4 F4 Sol4 Si4.
-- **Un acorde grande.** Un acorde con más de cuatro notas, como un Do13
+  y G7 es Re4 Fa4 Sol4 Si4.
+- **Un acorde grande.** Un acorde con más de cuatro notas, como un C13
   (Do Mi Sol Si♭ Re La), deja fuera primero su quinta, y luego su fundamental,
   que toca el bajo de todos modos. Lo que queda es lo que hace que el
   acorde suene como suena: la tercera, la séptima y las notas de arriba.
   Los vientos tocan Mi, Si♭, Re, La.
-- **El lead** se queda entre F4 y F5, donde una sección de trompetas
+- **El lead** se queda entre Fa4 y Fa5, donde una sección de trompetas
   suena brillante sin forzar.
 
 ## Moverse lo menos posible
@@ -99,10 +99,10 @@ suenen como un solo instrumento grande.
 De un acorde al siguiente, los vientos toman el voicing cerrado que
 menos se mueve: cada viento va a la nota más cercana que puede. En el
 ejemplo, Do a La♭ es Mi4 Sol4 Do5 a Mi♭4 La♭4 Do5. Dos vientos se mueven un
-semitono abajo y arriba, y el lead sostiene el Do. De La♭ a Sol7 es lo de la
+semitono abajo y arriba, y el lead sostiene el Do. De A♭ a G7 es lo de la
 imagen: el lead cae de Do5 a Si4, el segundo viento de La♭4 a Sol4, y el
-tercero sube de Mi♭4 a F4, mientras un cuarto viento entra en Re4 para el
-acorde de séptima. Luego, de Sol7 a Do, Si4 sube a Do5 y F4 cae a Mi4, como
+tercero sube de Mi♭4 a Fa4, mientras un cuarto viento entra en Re4 para el
+acorde de séptima. Luego, de G7 a C, Si4 sube a Do5 y Fa4 cae a Mi4, como
 hacen la sensible y la séptima de una dominante.
 
 Los vientos evitan también las **quintas paralelas** donde pueden. Dos
@@ -186,7 +186,7 @@ debajo de la nota 0, y `filter_map` descarta esos.
 
 ### El voicing que menos se mueve
 
-`choose` prueba todo lead de F4 a F5 que sea una nota del acorde,
+`choose` prueba todo lead de Fa4 a Fa5 que sea una nota del acorde,
 construye el voicing cerrado debajo de él, y se queda con el más barato:
 
 ```rust
@@ -213,9 +213,9 @@ vuelven a entrar donde lo dejaron.
 
 ## Cómo sabemos que está bien
 
-- **Pruebas de voicing** en `horns.rs`: Do, La♭, Sol7, Do se mueve como se
+- **Pruebas de voicing** en `horns.rs`: C, A♭, G7, C se mueve como se
   describe arriba. Nunca dos vientos se mueven en quintas paralelas en
-  una progresión larga que los tienta a hacerlo. Do13 se toca Mi, Si♭, Re,
+  una progresión larga que los tienta a hacerlo. C13 se toca Mi, Si♭, Re,
   La. Swing recibe kicks, Motown punches, una balada de jazz, una zamba y
   un coral notas largas, una rachenitsa afterbeats y un estilo de rock
   en 5/4 un punch en cada pulso. Un coral recibe French Horns y Techno
@@ -223,7 +223,7 @@ vuelven a entrar donde lo dejaron.
 - **Pruebas de banda** en `band.rs` llevan los vientos a seis estilos:
   Motown, Swing, un coral, Techno, una zamba y una rachenitsa en 7/8.
   Cada nota de viento es una nota de su acorde, cada voicing está en
-  posición cerrada dentro de una octava, y el lead está entre F4 y F5.
+  posición cerrada dentro de una octava, y el lead está entre Fa4 y Fa5.
   Comprueban dónde caen los hits: una balada pop sostiene cada compás
   desde su primer step, el swing golpea en el pulso 1 y justo antes del
   pulso 3, una marcha toca en los afterbeats. Una canción con vientos se

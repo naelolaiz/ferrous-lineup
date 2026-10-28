@@ -95,7 +95,7 @@ cada extremo le parecería a la FFT un clic con todas las frecuencias. La
 FFT (del crate `realfft`) dice entonces cómo de fuerte es cada *bin* de
 frecuencia en la trama. El bin `k` es la frecuencia `k × sample_rate /
 8192`, así que a 44,1 kHz los bins están separados 5,4 Hz, lo bastante
-juntos para distinguir Mi2 de F2 (82,4 y 87,3 Hz) pero nada más grave, y
+juntos para distinguir Mi2 de Fa2 (82,4 y 87,3 Hz) pero nada más grave, y
 por eso la trama es tan larga.
 
 Cada bin pertenece a una nota: la fórmula `69 + 12 × log2(f / 440)`
@@ -137,7 +137,7 @@ de cuatro notas pierde un poco, de modo que gana una tríada sencilla
 salvo que la séptima esté de verdad.
 
 **Suavizado.** Tomado en solitario, el mejor acorde de cada pulso salta
-de un lado a otro: una nota de paso de la melodía hace que Do parezca Lam
+de un lado a otro: una nota de paso de la melodía hace que Do parezca Am
 durante un pulso. Los acordes reales duran. Así que cambiar de acorde
 cuesta una penalización, y el *algoritmo de Viterbi* encuentra la
 secuencia de acordes con la mejor puntuación total. Es un algoritmo de

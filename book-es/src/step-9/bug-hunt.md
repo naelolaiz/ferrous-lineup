@@ -78,10 +78,10 @@ guitarra empieza en él.
 
 En Sol♯ menor armónica el séptimo grado es Fa doble sostenido (la
 séptima elevada de Sol♯ menor: Fa♯ elevado una vez más), y el acorde
-sobre él es **Fa♯#dim7**: Fa♯# La♯ Do♯ Mi. La app escribía ese nombre al
+sobre él es **F##dim7**: Fa♯♯ La♯ Do♯ Mi. La app escribía ese nombre al
 guardar, pero el lector de notas solo leía **un** sostenido o bemol,
-así que al abrir el archivo leía «Fa♯» y luego «#dim7», que no es un
-acorde, y el archivo no se abría. Nadie teclea Fa♯#, pero la app sí,
+así que al abrir el archivo leía «F#» y luego «#dim7», que no es un
+acorde, y el archivo no se abría. Nadie teclea F##, pero la app sí,
 así que debe leer lo que escribe. `NoteName::read` ahora acepta hasta
 dos signos, mientras vayan en el mismo sentido:
 
@@ -184,28 +184,28 @@ prueba comprueba ahora, para cada modo sobre cada tónica, que los
 sostenidos y bemoles con los que se escriben las notas de la escala
 suman su armadura.
 
-### Los numerales siguen la letra
+### Los numerales siguen el nombre de la nota
 
-En Do mayor, Do♯°7 y Db7 suenan en la misma tecla del piano, pero son
+En Do mayor, C#°7 y Db7 suenan en la misma tecla del piano, pero son
 acordes distintos en la música:
 
-- **Do♯°7** (Do♯ Mi Sol Si♭) es una tónica elevada, **#i°7**: sube un
-  semitono hasta Rem, como acorde de paso entre I y ii.
-- **Db7** (Re♭ Fa La♭ Do♭) es **bII7**: el «sustituto tritonal» de Sol7, que
+- **C#°7** (Do♯ Mi Sol Si♭) es una tónica elevada, **#i°7**: sube un
+  semitono hasta Dm, como acorde de paso entre I y ii.
+- **Db7** (Re♭ Fa La♭ Do♭) es **bII7**: el «sustituto tritonal» de G7, que
   se desliza un semitono abajo hasta Do.
 
 Los rótulos del chord sheet leían el grado desde el sonido, así que
 ambos salían en el segundo grado («bii°7», «bII7»). El grado es
-cuestión de **letras**: Do♯ está en la letra C, el primer grado,
-elevado; Re♭ está en Re, el segundo, bajado. `Scale::spelled_numeral`
-cuenta ahora letras desde el nombre de la tónica hasta la fundamental
+cuestión de **nombres de nota**: Do♯ lleva el nombre Do, el primer grado,
+elevado; Re♭ lleva el nombre Re, el segundo, bajado. `Scale::spelled_numeral`
+cuenta ahora nombres desde el de la tónica hasta la fundamental
 escrita del acorde, y los rótulos y tooltips lo usan. En Sol♯ menor
-armónica, Fa♯#dim7 es vii°7: F es la séptima letra desde G.
+armónica, F##dim7 es vii°7: Fa es el séptimo nombre desde Sol.
 
 ### La intro de la banda se escribe desde el primer acorde
 
 La intro es un turnaround hacia el primer acorde, VI, iiø, V7: hacia
-Ebm es **Cbmaj7 Fm7b5 Bb7**. La app escribía **Simaj7 Mi♯m7b5 La♯7**, los
+Ebm es **Cbmaj7 Fm7b5 Bb7**. La app escribía **Bmaj7 E#m7b5 A#7**, los
 mismos sonidos escritos en Re♯ menor, porque la tónica de la tonalidad
 se nombra por su nombre habitual (Re♯ menor) y la intro se escribía en
 ella. Una canción que empieza en Ebm se escribe en bemoles, así que la
@@ -214,7 +214,7 @@ intro ahora se escribe desde la letra del primer acorde.
 ### bVII a IV: la fundamental sube una quinta
 
 La ayuda para bVII a IV decía «la fundamental baja una quinta». De Si♭
-subiendo hasta F hay cinco letras (Si♭ C D E F) y siete semitonos: una
+subiendo hasta Fa hay cinco nombres de nota (Si♭ Do Re Mi Fa) y siete semitonos: una
 quinta **hacia arriba** (o una cuarta hacia abajo). Es un movimiento
 plagal, como IV a I (Fa subiendo hasta Do también es una quinta), e I,
 bVII, IV, I es la cadencia «doble plagal» de mucho rock: dos pasos
@@ -223,8 +223,8 @@ plagales seguidos. La ayuda ahora lo dice.
 ### Ir a la cromática y volver conserva cada nota
 
 Elegir la escala cromática como tonalidad y luego volver a Do mayor
-sacaba los sostenidos y bemoles de la canción: Re7 (Re Fa♯ La Do) se
-convertía en Rem7. Mover notas de una escala a otra lleva cada nota de
+sacaba los sostenidos y bemoles de la canción: D7 (Re Fa♯ La Do) se
+convertía en Dm7. Mover notas de una escala a otra lleva cada nota de
 la escala vieja al mismo grado de la nueva (de Do mayor a Do menor, Mi
 baja a Mi♭). La escala cromática tiene todas las notas, así que al
 volver de ella, cada nota era «de la escala vieja», se emparejaba con
@@ -358,8 +358,8 @@ que queda se comprueba como N.C. antes de leer ningún punto.
    `slice::get` y `checked_rem`.
 2. Escribe el acorde de séptima sobre cada grado de Sol♯ menor armónica.
    ¿Cuáles necesitan un doble sostenido?
-3. En Re♭ mayor, ¿cuáles son los numerales romanos de Re°7 y de Ebb7?
-   Cuenta las letras desde Re♭.
+3. En Re♭ mayor, ¿cuáles son los numerales romanos de D°7 y de Ebb7?
+   Cuenta los nombres de nota desde Re♭.
 4. Escribe I, bVII, IV, I, la cadencia doble plagal, en Sol mayor y en Mi
    mayor.
 5. Tap tempo en 9/8: ¿cuántas negras es un pulso, y qué tempo dan

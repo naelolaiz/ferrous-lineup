@@ -39,9 +39,9 @@ acorde completo:
 | Teclas mantenidas | Acorde |
 |-------------------|--------|
 | una tecla, como Sol | su acorde mayor: Sol |
-| dos teclas a una tercera menor, como Re y Fa | el acorde menor sobre la de abajo: Rem |
+| dos teclas a una tercera menor, como Re y Fa | el acorde menor sobre la de abajo: Dm |
 | dos teclas a una tercera mayor o una quinta | el acorde mayor sobre la de abajo |
-| dos teclas a una séptima menor, como Sol y Fa | el acorde de séptima: Sol7 |
+| dos teclas a una séptima menor, como Sol y Fa | el acorde de séptima: G7 |
 | tres teclas o más | el acorde que forman, cualquiera de los 28 que Ferrous Lineup conoce |
 
 El último acorde se queda al soltar, como hace el botón de "memory" de
@@ -162,12 +162,12 @@ if !std::mem::take(&mut self.live.follow.key_went_down) {
 - Pruebas unitarias: las teclas se leen como acordes; las notas
   mantienen su rol; para cada uno de los 78 estilos, el canal de
   acordes toca solo notas del acorde mantenido (se probaron Mi menor,
-  Si♭7 y Famaj7); y para cada canción demo, cada comienzo de nota de los
+  B♭7 y Fmaj7); y para cada canción demo, cada comienzo de nota de los
   acordes y el bajo se sigue tocando después de seguir un acorde.
 - En la app en marcha, con el teclado de escritura (la máquina de
   pruebas no tiene dispositivo MIDI, y ambos teclados pasan por
   `key_played`), se grabó el sonido y se midieron las notas: el estilo
-  "Four chords" pasó de Do, Sol, Lam y Fa a solo Re, Fa♯ y La tras mantener Re;
+  "Four chords" pasó de C, G, Am y F a solo Re, Fa♯ y La tras mantener Re;
   a La, Do y Mi tras mantener La y Do, y se quedó ahí tras soltar; London
   Bridge en modo canción pasó a Fa♯, La♯ y Do♯ tras mantener Fa♯; y Stop y
   luego Play devolvieron los acordes escritos.

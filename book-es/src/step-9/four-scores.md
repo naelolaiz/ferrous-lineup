@@ -177,16 +177,16 @@ de la demo las sigue donde están dadas:
 |---|---|---|
 | ninguna | una tríada en estado fundamental | la mayoría de los compases |
 | 6 | una tríada en primera inversión: la tercera en el bajo | compás 1: Si con 6 es Sol sobre Si |
-| 6/5 | un acorde de séptima en primera inversión | compás 1: Fa sostenido con 6/5 es Re7 sobre Fa sostenido |
-| 4/2 | un acorde de séptima en tercera inversión: la séptima en el bajo | compás 28: Sol con 4/2 es La7 sobre Sol; compás 43: Do con 4/2 es Re7 sobre Do |
+| 6/5 | un acorde de séptima en primera inversión | compás 1: Fa sostenido con 6/5 es D7 sobre Fa sostenido |
+| 4/2 | un acorde de séptima en tercera inversión: la séptima en el bajo | compás 28: Sol con 4/2 es A7 sobre Sol; compás 43: Do con 4/2 es D7 sobre Do |
 | 6 con una barra | primera inversión, con la sexta elevada un semitono | compás 26: Mi con un 6 elevado es Do sostenido disminuido sobre Mi |
 | + (solo) | la tercera elevada | compás 22: La con Do sostenido, La mayor |
 | un becuadro | la tercera hecha natural | compás 58: Re con Fa natural, Re menor |
 
 Un acorde de séptima en tercera inversión tiene su séptima en el bajo,
 y una séptima quiere bajar un paso. Así que a un acorde 4/2 casi
-siempre le sigue un 6 sobre la nota de abajo. La7 sobre Sol va a Re sobre
-Fa sostenido en el compás 29. Re7 sobre Do va a Sol sobre Si en el compás
+siempre le sigue un 6 sobre la nota de abajo. A7 sobre Sol va a D sobre
+Fa sostenido en el compás 29. D7 sobre Do va a G sobre Si en el compás
 44.
 
 ## Cómo funciona

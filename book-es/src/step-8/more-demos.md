@@ -47,7 +47,7 @@ recibieron melodías nuevas, escritas como las escriben esos géneros:
   cuando las notas que caen en el pulso pertenecen al acorde que hay
   debajo. Las notas de en medio son libres de pasar: en *Midnight
   Shuffle*, el Sol y el Do de la escala de blues chocan a propósito con
-  el acorde de La7, que es el sonido del blues.
+  el acorde de A7, que es el sonido del blues.
 - **El ritmo del género en la melodía.** *Milonga del río* toca el 3 +
   3 + 2 de la milonga también en su melodía: `E5:3 E5 G5:2 C6:8`, dos
   corcheas con puntillo, una corchea y luego una nota larga.

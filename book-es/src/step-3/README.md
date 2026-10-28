@@ -19,8 +19,8 @@ armonía:
   sea una forma fija (mayor, séptima menor...) o «el acorde de la
   tonalidad» construido sobre la nota en la que haces clic,
 - **nombres de acordes en vivo**: un carril sobre la cuadrícula nombra el
-  acorde en cada paso (Do, Lam, Fa/La, Sol7...), y una línea de texto lo
-  explica en la tonalidad: «Lam: La menor, acorde vi de Do mayor»,
+  acorde en cada paso (C, Am, F/A, G7...), y una línea de texto lo
+  explica en la tonalidad: «Am: La menor, acorde vi de Do mayor»,
 - **acordes en la tonalidad**: siete botones con los acordes de la
   tonalidad actual y sus números romanos (I, ii, iii, IV, V, vi, vii°).
   Haz clic en uno para escucharlo,
@@ -30,7 +30,7 @@ armonía:
 
 ![El piano roll reproduciendo la progresión de la demo](../images/step-3-piano-roll.png)
 
-La demo ahora reproduce una progresión de acordes clásica, Do, Lam, Fa, Sol
+La demo ahora reproduce una progresión de acordes clásica, C, Am, F, G
 (I, vi, IV, V), sobre dos compases del ritmo del paso 2.
 
 ## Cómo usarlo

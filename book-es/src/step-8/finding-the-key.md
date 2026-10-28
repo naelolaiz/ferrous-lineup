@@ -14,7 +14,7 @@ coincidencia y las otras alternativas (menos resaltadas)».*
 
 Hasta ahora, una tonalidad venía de algún sitio: el menú Key del
 proyecto, un marcador de tonalidad, una armadura en un archivo MIDI, o
-una deducción para una grabación entera. La las propias notas nunca se
+una deducción para una grabación entera. A las propias notas nunca se
 les preguntaba. Este capítulo enseña a la app a escuchar la tonalidad,
 compás a compás, y a decirlo cuando no está segura.
 
@@ -95,7 +95,7 @@ se eligieron midiendo (mira más abajo): en el informe actual, una
 tonalidad mostrada como clara acierta en 13.900 de 16.153 compases,
 alrededor del 86%.
 
-![Find the key en Dorian Strut, una canción en Mi dórico: las notas encajan mejor en La menor, con Mi menor y La mayor cerca y más tenues. Cada tonalidad muestra qué es en ella el acorde que suena, La7.](../images/step-8-find-key-unclear.png)
+![Find the key en Dorian Strut, una canción en Mi dórico: las notas encajan mejor en La menor, con Mi menor y La mayor cerca y más tenues. Cada tonalidad muestra qué es en ella el acorde que suena, A7.](../images/step-8-find-key-unclear.png)
 
 Mi dórico usa las mismas notas que La menor y Sol mayor, así que los
 perfiles no pueden elegir su nota hogar con confianza, y la app lo dice:
@@ -107,8 +107,8 @@ este método, porque los perfiles solo conocen mayor y menor.
 Una canción entera no tiene un único chroma si modula. Así que la música
 se corta en compases, y cada compás recibe una puntuación para cada
 tonalidad. Un solo compás es poco en lo que basarse, sin embargo: un
-compás que solo contiene Re7 encaja mejor en Sol mayor que en Do mayor,
-incluso en medio de una canción en Do mayor (Re7 es el "V de V", una
+compás que solo contiene D7 encaja mejor en Sol mayor que en Do mayor,
+incluso en medio de una canción en Do mayor (D7 es el "V de V", una
 *dominante secundaria*). Así que cada compás se puntúa con los compases
 de alrededor: él mismo cuenta tres veces, sus vecinos dos, los que están
 a dos compases una.
@@ -164,15 +164,15 @@ Los compases anteriores a tu entrada también cuentan. Cuando empiezas a
 tocar, el listener arranca creyéndose la tonalidad en la que está la
 música a su alrededor (las notas en el playhead, o la tonalidad del
 proyecto), como si hubiera oído un compás en esa tonalidad. Toca Do, Fa
-y Sol7 sobre una canción en Mi dórico y primero los oye a la luz de La
+y G7 sobre una canción en Mi dórico y primero los oye a la luz de La
 menor; unos compases después se asienta en Do mayor, claro.
 
-![Tocando Do, Fa y Sol7 en el teclado de escritura sobre la canción dórica: tras unos pocos compases, la tonalidad oída es Do mayor, clara, y Do es I, la tónica.](../images/step-8-find-key-playing.png)
+![Tocando C, F y G7 en el teclado de escritura sobre la canción dórica: tras unos pocos compases, la tonalidad oída es Do mayor, clara, y Do es I, la tónica.](../images/step-8-find-key-playing.png)
 
 ## Qué es un acorde en cada tonalidad
 
 El mismo acorde hace un trabajo distinto en cada tonalidad a la que
-podría pertenecer, y ese es el sentido de mostrar las alternativas. Sol7
+podría pertenecer, y ese es el sentido de mostrar las alternativas. G7
 es:
 
 | tonalidad | numeral | qué hace |
@@ -189,7 +189,7 @@ dominante), una séptima dominante oída como la dominante del acorde al
 que resuelve, y los acordes prestados de la tonalidad homónima (La♭ en
 Do mayor es ♭VI, prestado de Do menor).
 
-![Manteniendo Sol7 mientras la tonalidad oída es La menor: «G7 es bVII7 = V7/bIII», o Sol mayor, donde es I7 = V7/IV, o Do mayor, donde es V7, la dominante.](../images/step-8-find-key-g7.png)
+![Manteniendo G7 mientras la tonalidad oída es La menor: «G7 es bVII7 = V7/bIII», o Sol mayor, donde es I7 = V7/IV, o Do mayor, donde es V7, la dominante.](../images/step-8-find-key-g7.png)
 
 ## En una grabación
 

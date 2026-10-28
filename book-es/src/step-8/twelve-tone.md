@@ -620,7 +620,7 @@ de los libros de texto.)
 
 La **forma prima** va un paso más allá: toma las formas normales del
 conjunto *y de su inversión*, mueve ambas para que empiecen en 0 y
-quédate con la más compacta. Para Domaj7, es **[0158]**: Si Do Mi Sol movido
+quédate con la más compacta. Para Cmaj7, es **[0158]**: Si Do Mi Sol movido
 hacia abajo para empezar en 0 es 0 1 5 8. Todo acorde de séptima mayor,
 sobre cualquier raíz, y su inversión, tiene la forma prima [0158].
 

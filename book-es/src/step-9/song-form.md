@@ -16,7 +16,7 @@ Hasta ahora la banda de Ferrous Lineup tocaba los compases del sheet una
 vez y se detenía en el último, en cualquier acorde que hubiera allí.
 Este cambio le da la forma de una actuación real.
 
-![El chord sheet con su fila Form: «Intro: 4 bars», Choruses 3, Ending encendido. El sheet lee Intro (Do, Lam7, Rem7, Sol7), luego «Chorus ×3» entre signos de repetición (Do, Lam, Fa, Sol7), luego Ending (Do, luego Do otra vez con «held» y la barra de compás final)](../images/step-9-song-form-sheet.png)
+![El chord sheet con su fila Form: «Intro: 4 bars», Choruses 3, Ending encendido. El sheet lee Intro (C, Am7, Dm7, G7), luego «Chorus ×3» entre signos de repetición (C, Am, F, G7), luego Ending (C, luego C otra vez con «held» y la barra de compás final)](../images/step-9-song-form-sheet.png)
 
 ## Probarlo
 
@@ -70,23 +70,23 @@ Un **turnaround** es el puñado de acordes al final de una melodía que la
 natural que existe: lleva al primer acorde, así que cuando la melodía
 empieza suena como una llegada, no como un comienzo salido de la nada.
 
-El motor de un turnaround es la **séptima de dominante**. En Do mayor, Sol7
+El motor de un turnaround es la **séptima de dominante**. En Do mayor, G7
 (Sol Si Re Fa) guarda dos notas que quieren moverse: Si, un semitono bajo Do,
 tira hacia arriba a Do, y Fa, un semitono sobre Mi, tira hacia abajo a Mi.
-Tocada antes de Do, Sol7 hace que Do suene a casa. Y el acorde una quinta
+Tocada antes de C, G7 hace que Do suene a casa. Y el acorde una quinta
 por encima de Sol, Re menor, lleva a Sol de la misma manera que Sol lleva a Do:
 las fundamentales que caen por quintas (La → Re → Sol → Do) son la manera más
 fuerte en que pueden moverse los acordes.
 
 | Intro | Hacia Do mayor | Hacia La menor |
 |---|---|---|
-| 2 compases | Rem7, Sol7 (ii7 V7) | Bm7b5, Mi7 (iiø7 V7) |
-| 4 compases | Do, Lam7, Rem7, Sol7 (I vi7 ii7 V7) | Lam, Famaj7, Bm7b5, Mi7 (i bVImaj7 iiø7 V7) |
+| 2 compases | Dm7, G7 (ii7 V7) | Bm7b5, E7 (iiø7 V7) |
+| 4 compases | C, Am7, Dm7, G7 (I vi7 ii7 V7) | Am, Fmaj7, Bm7b5, E7 (i bVImaj7 iiø7 V7) |
 | 8 compases | los cuatro acordes, dos compases cada uno | los mismos, dos compases cada uno |
 
-Hacia un acorde menor el ii es **semidisminuido** (Si Re Fa La sobre Lam):
+Hacia un acorde menor el ii es **semidisminuido** (Si Re Fa La sobre Am):
 ese es el acorde que está de verdad en la segunda nota de La menor. El V
-sigue siendo una séptima de dominante, Mi7, con Sol sostenido: la
+sigue siendo una séptima de dominante, E7, con Sol sostenido: la
 **sensible**, un semitono bajo La, tomada de la escala menor armónica,
 porque un Mi menor simple no tiraría hacia La ni de cerca con tanta
 fuerza.
@@ -94,10 +94,10 @@ fuerza.
 Los numerales se cuentan desde **el acorde al que lleva la intro**, como
 si fuera la tónica, no desde la tonalidad de la canción. La mayoría de
 las canciones empiezan en su tónica, y entonces las dos cosas son la
-misma. Una canción en Do que empieza en Fa (IV) recibe Solm7, Do7 para una
+misma. Una canción en Do que empieza en F (IV) recibe Gm7, C7 para una
 intro de dos compases: el ii y el V *de Fa*, así que la intro sigue
-llevando directamente al primer acorde. Un blues que empieza en Do7
-recibe Do7, Lam7, Rem7, Sol7.
+llevando directamente al primer acorde. Un blues que empieza en C7
+recibe C7, Am7, Dm7, G7.
 
 Un conjunto de clases de alturas, un micromodo o una forma de serie no
 tienen dominante que lleve a ellos, así que la intro los toca desde el
@@ -109,9 +109,9 @@ turnaround resuelve.
 
 El final va a la **tónica**, el acorde hacia el que se inclina toda la
 tonalidad. ¿Qué acorde de tónica? Si la melodía empieza en la tónica, el
-final toca ese mismo acorde: un blues en Do que empieza en Do7 termina en
-Do7, una balada que empieza en Domaj7 termina en Domaj7. Si no, toca la
-tríada propia de la tonalidad, Do en Do mayor y Lam en La menor. La
+final toca ese mismo acorde: un blues en Do que empieza en C7 termina en
+C7, una balada que empieza en Cmaj7 termina en Cmaj7. Si no, toca la
+tríada propia de la tonalidad, C en Do mayor y Am en La menor. La
 tonalidad es la del último chorus en el que termina, así que una canción
 que modula termina en su tonalidad nueva. Una canción en un conjunto o
 una serie no tiene tónica; termina donde empezó, en su primera armonía.
@@ -261,11 +261,11 @@ otro, así que el piano se mueve suavemente al último acorde.
 
 ## Ejercicios
 
-1. Escribe | Rem7 | Sol7 | Domaj7 | Domaj7 |, un ii–V–I en Do, y dale una
+1. Escribe | Dm7 | G7 | Cmaj7 | Cmaj7 |, un ii–V–I en Do, y dale una
    intro de 2 compases. ¿Qué acordes escribe la intro? No llevan a Do:
    ¿a qué llevan, y por qué?
 2. Pon la tonalidad en La menor (la caja Key de abajo a la izquierda),
-   escribe una canción que empiece en Lam, y enciende el final. ¿En qué
+   escribe una canción que empiece en Am, y enciende el final. ¿En qué
    acorde termina? Ahora cambia el primer acorde a Fa: ¿en qué acorde
    termina ahora, y por qué sigue estando bien?
 3. Exporta como archivo WAV una canción con una intro de 4 compases,

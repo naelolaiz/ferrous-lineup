@@ -206,5 +206,5 @@ printf '\x80\x45\x00' > /dev/snd/midiC0D0   # and up
 Este cambio se comprobó así, en una máquina virtual con esos módulos y
 una tarjeta de sonido emulada. Con el código viejo, la canción de demo
 no enviaba nada. Con el nuevo envió 137 notes on y 137 off, la batería
-en el canal 10 y los acordes en el canal 1, y la La del teclado salió por
+en el canal 10 y los acordes en el canal 1, y el La del teclado salió por
 el canal 1 con su velocity.

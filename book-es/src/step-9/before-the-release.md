@@ -60,7 +60,7 @@ piano. Por eso tres teclas del piano se cuentan dos veces:
 Los modos van con la tonalidad mayor cuya armadura comparten: Sol♯ dórico
 tiene las notas de Fa♯ mayor, así que también puede ser La♭ dórico.
 Cualquier otra tonalidad necesitaría ocho sostenidos o bemoles o más. Re♯
-mayor necesitaría nueve sostenidos, con Fa♯# y Do♯# dentro, así que
+mayor necesitaría nueve sostenidos, con Fa♯♯ y Do♯♯ dentro, así que
 siempre se escribe Mi♭ mayor.
 
 ### En la app
@@ -74,14 +74,14 @@ menor, la lista tiene Re♯ y Mi♭, y La♯ y Si♭.
 
 Elegir el otro nombre de la misma tonalidad **la renombra y no mueve
 ninguna nota**. El chord sheet se vuelve a escribir con el nombre nuevo:
-Fa♯, Re♯m7, Si y Do♯7 en Fa♯ mayor se convierten en Sol♭, Mi♭m7, Do♭ y Re♭7 en Sol♭
+F#, D#m7, B y C#7 en Fa♯ mayor se convierten en G♭, E♭m7, C♭ y D♭7 en Sol♭
 mayor. El menú de cambio de tonalidad en los números de compás de la
 playlist ofrece también los dos nombres.
 
 Golliwogg's Cakewalk muestra ahora su sección media en Sol♭ mayor, con
 los acordes de esa tonalidad:
 
-![El piano roll en el patrón "G flat" de Golliwogg's Cakewalk: "This pattern: Gb major, Gb Ab Bb Cb Db Eb F", y los acordes en Gb mayor: I Gb, ii Abm, iii Bbm, IV Cb, V Db, vi Ebm, vii° Fdim.](../images/step-9-g-flat-major.png)
+![El piano roll en el patrón "G flat" de Golliwogg's Cakewalk: "This pattern: Gb major, Gb Ab Bb Cb Db Eb F", y los acordes en Sol♭ mayor: I Gb, ii Abm, iii Bbm, IV Cb, V Db, vi Ebm, vii° Fdim.](../images/step-9-g-flat-major.png)
 
 Los demás sitios de donde sale una tonalidad también conservan su
 nombre:
@@ -142,12 +142,12 @@ ocuparse de eso.
 `const C_MAJOR: Scale = Scale::new(PitchClass::C, ScaleKind::Major);`
 funcionan aunque el campo sea privado.
 
-El nombre de la tónica sale de la letra siguiente: Fa♯ se convierte en
+El nombre de la tónica sale del nombre de nota siguiente: Fa♯ se convierte en
 Sol♭, Si en Do♭, Re♭ en Do♯. El resto de la escala no necesita código nuevo.
 La escritura de notas de [Notas bien
-escritas](../step-8/bug-hunt.md) ya da a cada nota la letra de su lugar
-en la escala, contando desde la letra de la tónica. Con G como letra de
-la tónica, la cuarta nota es una Do, así que Si se convierte en Do♭.
+escritas](../step-8/bug-hunt.md) ya da a cada nota el nombre de su lugar
+en la escala, contando desde el nombre de la tónica. Con Sol como nombre de
+la tónica, la cuarta nota es un Do, así que Si se convierte en Do♭.
 
 Los atributos de serde mantienen los archivos como estaban. `default`
 lee un archivo sin el campo como `false`. `skip_serializing_if` omite el
@@ -218,7 +218,7 @@ assert_eq!(written, i32::from(sharps), "{}", key.name());
 
 Sol♭ mayor escribe Sol♭ La♭ Si♭ Do♭ Re♭ Mi♭ Fa, seis bemoles, y su armadura es
 −6. Mi♯ locrio, el otro nombre de Fa locrio, escribe seis sostenidos y
-tiene la armadura +6. Si el nombre, las letras o la armadura estuvieran
+tiene la armadura +6. Si el nombre, los nombres de nota o la armadura estuvieran
 mal en algún sitio, las sumas no coincidirían.
 
 ## Restart audio: notas que se detienen, y una traza que continúa
@@ -334,11 +334,11 @@ desbordarse. Por esto mismo CI ejecuta las pruebas en modo debug
 
 1. Abre la demo **Golliwogg's Cakewalk**, elige el patrón **Sol flat** y
    abre el piano roll (F7). Dice "This pattern: Gb major" y lista los
-   acordes Sol♭, La♭m, Si♭m, Do♭, Re♭, Mi♭m y Fadim.
+   acordes G♭, A♭m, B♭m, C♭, D♭, E♭m y Fdim.
 2. Abre **Take Five**. Los menús de tonalidad dicen Mi♭ menor.
 3. En una canción nueva, abre el menú de tonalidad bajo las harmony keys
    y elige **Fa♯**. La canción sube a Fa♯ mayor. Ahora elige **Sol♭**: no se
-   mueve ninguna nota, pero las harmony keys dicen Sol♭, La♭m, Si♭m, Do♭…, y
+   mueve ninguna nota, pero las harmony keys dicen G♭, A♭m, B♭m, C♭…, y
    los acordes que haya en el chord sheet se renombran.
 4. Guarda la canción con **File > Export song as MIDI…** y abre el
    archivo con **File > Import MIDI file…**: sigue en Sol♭ mayor.
@@ -356,8 +356,8 @@ desbordarse. Por esto mismo CI ejecuta las pruebas en modo debug
 ## Ejercicios
 
 1. Elige **La♯ menor** y luego **menor armónica** en el menú de
-   tonalidad. La séptima elevada se escribe **Sol♯#**, un doble sostenido,
-   y las harmony keys muestran su acorde como Sol♯#dim. ¿Por qué la menor
+   tonalidad. La séptima elevada se escribe **Sol♯♯**, un doble sostenido,
+   y las harmony keys muestran su acorde como G##dim. ¿Por qué la menor
    armónica de Si♭, sobre las mismas teclas del piano, no necesita doble
    sostenido ni bemol? ¿Con qué nombre escribirías una pieza?
 2. `written_as_tune` conserva el nombre habitual cuando una melodía

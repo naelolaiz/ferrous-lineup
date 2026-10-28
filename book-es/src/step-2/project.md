@@ -31,7 +31,7 @@ pub type StepRow = [bool; MAX_STEPS];
 ```
 
 `[bool; 64]` es un **array**: exactamente 64 valores, almacenados en
-línea, con la longitud como parte del tipo. La diferencia de un `Vec`,
+línea, con la longitud como parte del tipo. A diferencia de un `Vec`,
 nunca reserva memoria y no puede crecer. Cada fila tiene sitio para 64
 pasos aunque el patrón tenga 16, de modo que cambiar la longitud nunca
 reserva memoria, algo que importa porque el hilo de audio guarda copias

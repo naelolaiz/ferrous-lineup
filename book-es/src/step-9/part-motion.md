@@ -12,7 +12,7 @@ sensible subiendo y la séptima bajando. Ahora el piano roll muestra
 cada movimiento, bueno o no. Marca **Voice leading**, apunta a un
 cambio de acorde, y cada parte se nombra con adónde va.
 
-![Los dieciséis compases del ejemplo de funciones de acordes en el piano roll, cuatro partes en una pista Piano. Las notas de cada parte se unen con una línea de su propio color, y los movimientos del compás 5, donde Sol7 va a Do, van en negrita. La línea sobre los nombres de los acordes dice «Piano: superior Re5→Do5 · 2.ª F4→Mi4 · 3.ª Si3→Sol3 · inferior Sol2→Do3; partes externas en movimiento contrario».](../images/step-9-part-motion.png)
+![Los dieciséis compases del ejemplo de funciones de acordes en el piano roll, cuatro partes en una pista Piano. Las notas de cada parte se unen con una línea de su propio color, y los movimientos del compás 5, donde G7 va a C, van en negrita. La línea sobre los nombres de los acordes dice «Piano: superior Re5→Do5 · 2.ª Fa4→Mi4 · 3.ª Si3→Sol3 · inferior Sol2→Do3; partes externas en movimiento contrario».](../images/step-9-part-motion.png)
 
 El ejemplo son los dieciséis compases de [Acordes prestados,
 dominantes secundarias y acordes
@@ -32,14 +32,14 @@ nada de lo que la escritura de partes clásica evita».
   llevó a él.
 - **Una línea de movimientos** sobre los nombres de los acordes.
   Nombra cada parte de arriba abajo, con adónde va: «superior Re5→Do5 ·
-  2.ª F4→Mi4 · 3.ª Si3→Sol3 · inferior Sol2→Do3». En una sola pista, las
+  2.ª Fa4→Mi4 · 3.ª Si3→Sol3 · inferior Sol2→Do3». En una sola pista, las
   partes se nombran por lugar. Con varias pistas, se nombran por
   pista. Luego nombra el movimiento entre las partes externas.
 - **Su tooltip**, que dice cada movimiento con palabras. Mueve el
   puntero desde las notas hacia arriba, a la línea: la línea mantiene
   el cambio al que apuntaste por última vez mientras lo lees.
 
-![El tooltip de la línea de movimientos en el cambio de Sol7 a Do: «Piano (voz superior): baja una segunda mayor de Re5 a Do5, un grado. Piano (voz 2 de 4): baja una segunda menor de F4 a Mi4, un grado. Piano (voz 3 de 4): baja una tercera mayor de Si3 a Sol3, un salto. Piano (voz inferior): sube una cuarta justa de Sol2 a Do3, un salto grande». Luego el movimiento entre cada par de partes contiguas, y entre las partes externas: movimiento contrario.](../images/step-9-part-motion-tooltip.png)
+![El tooltip de la línea de movimientos en el cambio de G7 a C: «Piano (voz superior): baja una segunda mayor de Re5 a Do5, un grado. Piano (voz 2 de 4): baja una segunda menor de Fa4 a Mi4, un grado. Piano (voz 3 de 4): baja una tercera mayor de Si3 a Sol3, un salto. Piano (voz inferior): sube una cuarta justa de Sol2 a Do3, un salto grande». Luego el movimiento entre cada par de partes contiguas, y entre las partes externas: movimiento contrario.](../images/step-9-part-motion-tooltip.png)
 
 Donde la comprobación encuentra algo en el paso al que apuntas, la
 línea dice eso en su lugar, en rojo, como en la página de
@@ -52,7 +52,7 @@ Cuánto se mueve una parte tiene un nombre:
 | Movimiento | Intervalo | Semitonos | Ejemplo |
 |---|---|---|---|
 | **Mantenida** | la misma nota | 0 | Sol3 a Sol3 |
-| **Grado conjunto** | una segunda | 1 o 2 | F4 a Mi4 |
+| **Grado conjunto** | una segunda | 1 o 2 | Fa4 a Mi4 |
 | **Salto** | una tercera | 3 o 4 | Si3 a Sol3 |
 | **Salto grande** | una cuarta o más | 5 o más | Sol2 a Do3 |
 
@@ -88,16 +88,16 @@ hacen que dos partes suenen como una.
 
 «El mismo intervalo» significa el mismo **número** de intervalo tal
 como la tonalidad lo escribe, no el mismo número de semitonos. En el
-Sol7 a Do de la imagen, la voz superior va de Re5 a Do5 y la segunda de F4
+G7 a C de la imagen, la voz superior va de Re5 a Do5 y la segunda de Fa4
 a Mi4. Re sobre Fa es una sexta mayor y Do sobre Mi es una sexta menor:
 una sexta en ambos casos, así que eso es movimiento paralelo, sextas
 paralelas. Un profesor de armonía lo cuenta igual.
 
 ## Lo que muestra el ejemplo
 
-En el cambio de Sol7 a Do (compás 5):
+En el cambio de G7 a C (compás 5):
 
-- La **séptima** de Sol7, F4, baja un grado a Mi4.
+- La **séptima** de G7, Fa4, baja un grado a Mi4.
 - La **sensible**, Si3, está en una parte interna, y baja una tercera a
   Sol3 en lugar de subir a Do. Una sensible interna puede hacer esto en
   V7 a I: entonces el acorde de Do recibe su quinta, Sol, y tiene las
@@ -107,9 +107,9 @@ En el cambio de Sol7 a Do (compás 5):
   **superior** baja un grado: las partes externas están en movimiento
   contrario.
 
-Apunta a otros cambios y compara. De La♭ a Sol7 (compás 4), el Mi♭ de la
+Apunta a otros cambios y compara. De A♭ a G7 (compás 4), el Mi♭ de la
 contralto sube a Fa en lugar de bajar a Re. Abajo, haría quintas
-paralelas con el bajo, La♭ a Mi♭ y luego Sol a Re. De Re♭/Fa a Sol
+paralelas con el bajo, La♭ a Mi♭ y luego Sol a Re. De Db/F a G
 (compás 12), la voz superior baja de Re♭5 a Si4, la tercera disminuida
 por la que se conoce la sexta napolitana.
 
@@ -174,8 +174,8 @@ par de signos resuelve primero los casos fáciles. Ambas mantenidas.
 Una mantenida (el `|` de un patrón significa «o»). Signos opuestos.
 Solo cuando ambas van en la misma dirección importa el intervalo.
 Entonces el closure `number` escribe ambas notas en la tonalidad y
-cuenta letras de la inferior a la superior: Re sobre Fa es
-`F.steps_up_to(D)`, 5 letras arriba, una sexta. Contar letras, no
+cuenta nombres de nota de la inferior a la superior: Re sobre Fa es
+`F.steps_up_to(D)`, 5 nombres arriba, una sexta. Contar nombres, no
 semitonos, es lo que hace que una sexta mayor que va a una sexta menor
 sea paralela.
 
@@ -205,15 +205,15 @@ closure dice que sí: cuando el puntero está dentro de ese rectángulo.
 
 ## Ejercicios
 
-1. Escribe Do a Fa a Sol7 a Do en cuatro partes, con el bajo Do3 F2 Sol2
+1. Escribe C a F a G7 a C en cuatro partes, con el bajo Do3 Fa2 Sol2
    Do3. Mantén cada parte interna moviéndose por grado o manteniendo.
    Mira la línea de movimientos en cada cambio: ¿están las partes
    externas alguna vez en movimiento paralelo o similar?
-2. En el ejemplo, mueve el F4 de la contralto en el compás 4 a Re4, de
-   modo que Sol7 sea Sol2 Si3 Re4 Re5. ¿Qué dice la línea de movimientos en
+2. En el ejemplo, mueve el Fa4 de la contralto en el compás 4 a Re4, de
+   modo que G7 sea Sol2 Si3 Re4 Re5. ¿Qué dice la línea de movimientos en
    el compás 4, y qué encuentra la comprobación de conducción de voces?
 3. `Move::size` llama grado a uno o dos semitonos. Una segunda
    aumentada, La♭ a Si, son tres semitonos, pero su nombre dice
    «segunda». ¿Qué tamaño le da el código, y cuál le daría un profesor
-   de armonía? Cambia `size` para que cuente letras, como hace
+   de armonía? Cambia `size` para que cuente nombres de nota, como hace
    `motion`, y escribe una prueba.

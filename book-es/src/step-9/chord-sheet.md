@@ -13,7 +13,7 @@ cuadrícula de compases, y en ella escribes una canción: "C", Tab,
 de herramientas o **View > Chord sheet**, como una ventana sobre la
 playlist, que se queda como estaba.
 
-![El chord sheet con la demo de Rhythm changes: dos choruses de ocho compases, Do La7 | Rem7 Sol7 y así, con números romanos bajo cada acorde](../images/step-9-chord-sheet.png)
+![El chord sheet con la demo de Rhythm changes: dos choruses de ocho compases, C A7 | Dm7 G7 y así, con números romanos bajo cada acorde](../images/step-9-chord-sheet.png)
 
 En este cambio el sheet es algo para leer y escribir; el cambio
 siguiente, [La banda toca el chord sheet](band.md), pone una banda
@@ -34,14 +34,14 @@ El sheet se organiza como un chart impreso:
   «Chorus 2». Una sección tocada tres veces se encabeza «Verse ×3». Una
   doble línea de compás marca dónde empieza una sección, y la línea de
   compás final (fina y después gruesa) dónde acaba la canción.
-- **Cada armonía se sienta donde cae su pulso.** "C La7" en un compás de
-  cuatro pulsos pone Do en el borde izquierdo y La7 a mitad de camino, en
+- **Cada armonía se sienta donde cae su pulso.** "C A7" en un compás de
+  cuatro pulsos pone C en el borde izquierdo y A7 a mitad de camino, en
   el pulso 3.
-- **Bajo cada acorde, su número romano en la tonalidad**: Fam en Do
-  mayor es iv, y La7, la dominante de Rem, es V7/ii (véase [Acordes
+- **Bajo cada acorde, su número romano en la tonalidad**: Fm en Do
+  mayor es iv, y A7, la dominante de Dm, es V7/ii (véase [Acordes
   prestados, dominantes secundarias y acordes
   pivote](chord-functions.md)). Una inversión lleva las cifras del bajo
-  cifrado: Sol7/Si es V⁶₅, Do/Mi es I⁶. Bajo un conjunto o un micromodo, sus
+  cifrado: G7/B es V⁶₅, C/E es I⁶. Bajo un conjunto o un micromodo, sus
   notas.
 - **Un compás sin nada escrito sigue con la armonía anterior**, que se
   muestra tenue para que el compás no parezca vacío.
@@ -50,8 +50,8 @@ El sheet se organiza como un chart impreso:
   secciones.
 
 Señalar una armonía dice qué es, con las mismas palabras que las
-harmony keys: «La7: séptima de dominante de La, V7/ii en Do mayor: una
-dominante secundaria, la dominante de Rem. Sus notas: La Do♯ Mi Sol».
+harmony keys: «A7: séptima de dominante de La, V7/ii en Do mayor: una
+dominante secundaria, la dominante de Dm. Sus notas: La Do♯ Mi Sol».
 Mantener pulsado el botón del ratón sobre ella la toca, con su nota de
 bajo debajo.
 
@@ -83,7 +83,7 @@ Un compás puede contener cualquiera de estos, separados por espacios:
 |-----------------|--------|---------|
 | Un símbolo de acorde | cualquier acorde que sepa leer [Nombres de acordes](chord-names.md) | `Am7`, `G/B`, `F#m7b5`, `C6/9` |
 | Un polychord | dos acordes a la vez, primero el de arriba, unidos por `\|` | `Eb7\|Fb`, `C\|F#` |
-| Un número romano | un acorde de la tonalidad, en una tonalidad de siete notas | `ii7 V7` en Do mayor se escribe Rem7 Sol7 |
+| Un número romano | un acorde de la tonalidad, en una tonalidad de siete notas | `ii7 V7` en Do mayor se escribe Dm7 G7 |
 | Un conjunto de clases de alturas | por su nombre de Forte, movido con `Tn` o `TnI` | `3-11 T2` es Re Fa La |
 | | o por sus notas, entre llaves | `{0,1,4}`, `{D F A}`, `{t e 0}` |
 | Un micromodo | uno de los doce de Kröpfl, movido de la misma manera | `Menor 3`, `Menor 3 T4I` |
@@ -93,14 +93,14 @@ Un compás puede contener cualquiera de estos, separados por espacios:
 | El compás anterior | el compás sigue con la armonía anterior | `%`, o nada |
 
 Dos acordes a la vez llegaron más tarde, con el formato 25: `Eb7|Fb` es
-Mi♭7 sobre Fa♭ mayor, el acorde que abre los Augurios primaverales. Una barra
+E♭7 sobre Fa♭ mayor, el acorde que abre los Augurios primaverales. Una barra
 significaría una nota de bajo, así que las dos capas se unen con una
 pleca ([Oír acordes](chord-hearing.md)).
 
 Lo que escribes se anota de una sola manera. Un número romano se
 convierte en el acorde que es en la tonalidad, de modo que "V7" escrito
 en Si♭ mayor se anota como F7, y un acorde se escribe como lo escriben
-las harmony keys: "CM7" se convierte en Domaj7. Un conjunto escrito por
+las harmony keys: "CM7" se convierte en Cmaj7. Un conjunto escrito por
 sus notas se convierte en su nombre de Forte: `{D F A}` es 3-11 T2.
 
 ### Dónde caen las armonías
@@ -110,12 +110,12 @@ y el sheet la sigue:
 
 | Escrito en 4/4 | Pulsos |
 |----------------|--------|
-| `Am7` | Lam7 en el 1, durante todo el compás |
-| `Am7 D7` | Lam7 en el 1, Re7 en el 3: dos pulsos cada uno |
-| `C F G` | Do en el 1, Fa en el 3, Sol en el 4: dos, uno y uno |
+| `Am7` | Am7 en el 1, durante todo el compás |
+| `Am7 D7` | Am7 en el 1, D7 en el 3: dos pulsos cada uno |
+| `C F G` | C en el 1, F en el 3, G en el 4: dos, uno y uno |
 | `C Am Dm G7` | uno en cada pulso |
-| `C / / G7` | Do en el 1, Sol7 en el 4 |
-| `/ G7` | el acorde anterior sigue un pulso, Sol7 en el 2 |
+| `C / / G7` | C en el 1, G7 en el 4 |
+| `/ G7` | el acorde anterior sigue un pulso, G7 en el 2 |
 
 En 3/4, dos acordes se reparten dos pulsos y uno: "C G7" pone G7 en el
 pulso 3. La regla detrás del reparto a partes iguales es una línea: la
@@ -164,7 +164,7 @@ es una armonía), luego "Menor 3 T2" (un micromodo) y sigue desde "C".
 
 Una serie nunca pasa de un `/` que está solo (`holds_at` es dónde está
 el siguiente), porque esa barra es un pulso: "A E / B" es A, E
-sostenido dos pulsos, luego Si, no La y el acorde con barra Mi/Si. Esa
+sostenido dos pulsos, luego B, no A y el acorde con barra E/B. Esa
 regla llegó más tarde, cuando leer charts como texto encontró el error
 ([Chord sheets como texto](text-chord-sheets.md#dos-errores-viejos-encontrados-por-un-viaje-de-ida-y-vuelta)).
 
@@ -174,7 +174,7 @@ Si una palabra no es una armonía, o hay más armonías que pulsos, el
 campo sigue abierto con el cursor al final, y el motivo se escribe
 encima del sheet en rojo:
 
-> Compás 3: "Hm7" no es un acorde (Lam7, Sol/Si), un conjunto (3-11 T2,
+> Compás 3: "Hm7" no es un acorde (Am7, G/B), un conjunto (3-11 T2,
 > {0,4,7}), un micromodo (Menor 3), una forma de serie (P0, RI7) ni
 > N.C.
 
@@ -209,7 +209,7 @@ salen depende de la canción:
 - **Una demo construida a partir de un chart** (las canciones y estilos
   del menú Demos) escribe su propio chart en el sheet, parte a parte,
   cada parte en su propia tonalidad. La tercera sección de El Choclo,
-  en La mayor, dice La Mi7 | Mi7 La | Fa♯7 Sim | Si7 Mi7: el VI7 ii | II7 V7
+  en La mayor, dice A E7 | E7 A | F#7 Bm | B7 E7: el VI7 ii | II7 V7
   del chart nombrado en La mayor. El acorde sostenido del final
   también se escribe.
 - **Cualquier otra canción** (la canción inicial, un archivo que
@@ -242,7 +242,7 @@ fn write_chart(project: &mut Project, at: usize, spans: &[ChordSpan], key: Scale
 
 `let ... else` toma el final del último span, o vuelve enseguida cuando
 el chart está vacío (`spans.last()` es `None`). `symbol_in(key)` es la
-misma función que usa el menú Progression para nombrar "V7" como La7 en
+misma función que usa el menú Progression para nombrar "V7" como A7 en
 Re menor, de modo que el sheet escribe los acordes de una demo
 exactamente como los leería la banda.
 
@@ -264,8 +264,8 @@ análisis:
    más grave de todos los canales, incluida la línea de bajo, cuando
    esa nota está en el acorde. Una nota de paso del bajo que no está en
    el acorde se omite, y el acorde se escribe sobre su fundamental.
-   "Four chords" sale como Do Sol Lam Fa, sin las inversiones del piano como
-   Sol/Si y Lam/Do.
+   "Four chords" sale como C G Am F, sin las inversiones del piano como
+   G/B y Am/C.
 2. **Una sección empieza con su acorde escrito otra vez.** Rhythm
    changes acaba sus ocho compases en Do y empieza los ocho siguientes
    en Do. Sin una regla, el segundo chorus se abriría con un compás
@@ -273,7 +273,7 @@ análisis:
    al principio de cada parte, y el sheet hace lo mismo.
 3. **En un conjunto o una serie, escribe conjuntos.** En una tonalidad
    que es un conjunto o una serie dodecafónica, un nombre de acorde
-   como "Do♯m(maj7)/Si♯" no dice nada verdadero sobre la música. Allí las
+   como "C#m(maj7)/B#" no dice nada verdadero sobre la música. Allí las
    notas oídas juntas se escriben como un conjunto por su nombre de
    Forte, o como un micromodo cuando la tonalidad es uno de los
    tricordios de Kröpfl y suenan tres notas.
@@ -435,11 +435,11 @@ herramienta que mueve cosas en el timeline los mueve también:
 - **Cambiar la tonalidad** ([Cambiar de
   tonalidad](../step-8/changing-key.md)): el sheet se mueve como lo
   hacen las notas, de modo que sigue nombrando lo que suena. Una
-  fundamental nueva mueve cada acorde, escrito por letras: G7/B en C
-  mayor es La7/Do♯ en Re mayor. Un modo nuevo mueve cada nota de un
+  fundamental nueva mueve cada acorde, contando nombres de nota: G7/B en Do
+  mayor es A7/C# en Re mayor. Un modo nuevo mueve cada nota de un
   acorde al mismo grado de la escala nueva, como se mueven las notas en
   los patrones: Do mayor en Do mayor pasa a ser Do menor en Do menor, y
-  Sol7 pasa a ser Solm7 porque Si se mueve a Si♭. Los conjuntos y los
+  G7 pasa a ser Gm7 porque Si se mueve a Si♭. Los conjuntos y los
   micromodos conservan su forma y se mueven con la fundamental.
 
 Cada una de estas cosas tiene una prueba en `project.rs` o `remeter.rs`
@@ -527,7 +527,7 @@ if has_keyboard && self.editing.is_none() && !was_editing {
 
 Las harmony keys tocan un acorde cuando pulsas del 1 al 7. En el chord
 sheet, los dígitos son parte de lo que escribes: "3-11 T2", "{0,1,4}",
-"Do6/9". Así que mientras el sheet tiene el teclado,
+"C6/9". Así que mientras el sheet tiene el teclado,
 `ChordSheet::has_keyboard()` es true y las harmony keys dejan en paz a
 los dígitos.
 

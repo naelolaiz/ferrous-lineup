@@ -175,7 +175,7 @@ formato de archivo de proyecto](../appendix-project-format.md)).
 
 ## Ejercicios
 
-1. Escribe | Do | Lam | Fa | Sol | dos veces en **Pop beat**, y pon los
+1. Escribe | C | Am | F | G | dos veces en **Pop beat**, y pon los
    compases 5 a 8 en **Bossa nova**. Abre los patrones del bajo en el
    piano roll. ¿Dónde empieza la línea de bajo de la bossa nova, y en
    qué se diferencia de la del pop?

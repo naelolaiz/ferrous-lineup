@@ -216,7 +216,7 @@ la que el piano roll resalta y nombra los acordes. `ChannelKind::Synth`
 perdió su campo `note`, porque la altura del sintetizador ahora viene de
 cada nota.
 
-La demo reproduce Do, Lam, Fa, Sol, una de las progresiones más usadas del
+La demo reproduce C, Am, F, G, una de las progresiones más usadas del
 pop (I, vi, IV, V). Cada acorde es una nota de bajo y tres notas del
 acorde:
 
@@ -236,7 +236,7 @@ for (i, chord) in chords.iter().enumerate() {
 ```
 
 Mira las tres notas superiores: Do4 se mantiene en los tres primeros
-acordes, Mi4 se mantiene de Do a Lam, La3 se mantiene de Lam a Fa. Cada acorde
+acordes, Mi4 se mantiene de C a Am, La3 se mantiene de Am a F. Cada acorde
 cambia la menor cantidad posible de notas, y esas se mueven uno o dos
 pasos. Esto se llama **conducción de voces**, y es por lo que una
 progresión suena suave en lugar de ir saltando. En el piano roll puedes

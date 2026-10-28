@@ -148,7 +148,7 @@ escritos muchos libros: imprime dos veces.
    El script también lee el segundo PDF y, si algo se movió, imprime una
    tercera vez.
 
-¿Cómo lees en un PDF dónde cayó un capítulo? La través de sus enlaces.
+¿Cómo lees en un PDF dónde cayó un capítulo? A través de sus enlaces.
 mdBook da a cada encabezado un `id` y un enlace a sí mismo:
 
 ```html

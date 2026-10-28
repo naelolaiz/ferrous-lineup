@@ -11,7 +11,7 @@ enmarcado en el chord sheet, el acorde iluminado en las harmony keys, el
 playhead moviéndose por el playlist y el piano roll, y cada cambio de
 tonalidad mostrado cuando llega.
 
-![Un frame de El Choclo al minuto: el compás 29 enmarcado, Mi7 iluminado como V7](../images/step-9-video-chord-sheet.png)
+![Un frame de El Choclo al minuto: el compás 29 enmarcado, E7 iluminado como V7](../images/step-9-video-chord-sheet.png)
 
 ## Usarlo
 

@@ -346,9 +346,9 @@ impediría.
 ## Notas fantasma: oír los otros canales
 
 Un acorde a menudo se reparte entre instrumentos: el pad toca Do y Sol, el
-bajo toca Mi, y juntos forman Do/Mi. Antes de este paso, el carril de
+bajo toca Mi, y juntos forman C/E. Antes de este paso, el carril de
 acordes solo miraba el canal que se estaba editando, así que decía «Do5»
-(un power chord) donde tú oyes Do/Mi.
+(un power chord) donde tú oyes C/E.
 
 Ahora el piano roll escucha también a los otros canales. No a todos: los
 canales de batería guardan steps planos, y un bombo no forma parte de la

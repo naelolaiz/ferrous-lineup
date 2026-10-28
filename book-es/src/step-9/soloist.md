@@ -54,11 +54,11 @@ piano roll. Sus notas están coloreadas por lo que son:
 Apunta a una nota, o toca la canción, y la línea sobre la cuadrícula
 dice qué es, en una frase:
 
-![El piano roll de «Soloist 1» sobre los compases 1 a 5. Las notas son verdes, azules o naranjas con marcas encima: «7», «p», «5», «3», «R», «B3 3», «D4 5», «cp» y así. Encima de la cuadrícula: «Compás 3, pulso 4, paso 3 · Bb3: una nota de paso cromática, a un semitono de las notas de cada lado. Sobre Cmaj7 la escala es C mayor (jónica): C D E F G A B.» y la leyenda «Solista: notas del acorde en verde (R 3 5 7), notas de la escala en azul (p de paso, n vecina, s otra), cromáticas en naranja (a aproximación, cp de paso)»](../images/step-9-soloist-piano-roll.png)
+![El piano roll de «Soloist 1» sobre los compases 1 a 5. Las notas son verdes, azules o naranjas con marcas encima: «7», «p», «5», «3», «R», «Si3 3», «Re4 5», «cp» y así. Encima de la cuadrícula: «Compás 3, pulso 4, paso 3 · Si♭3: una nota de paso cromática, a un semitono de las notas de cada lado. Sobre Cmaj7 la escala es Do mayor (jónica): Do Re Mi Fa Sol La Si.» y la leyenda «Solista: notas del acorde en verde (R 3 5 7), notas de la escala en azul (p de paso, n vecina, s otra), cromáticas en naranja (a aproximación, cp de paso)»](../images/step-9-soloist-piano-roll.png)
 
-En este solo, el compás 3 acaba con Si3 (la 7ª de Domaj7) en el pulso 4,
+En este solo, el compás 3 acaba con Si3 (la 7ª de Cmaj7) en el pulso 4,
 luego Si♭3 en el «y», y luego La3 en el pulso 1 del compás 4, la
-fundamental de La7: tres notas a un semitono una de otra, bajando hacia
+fundamental de A7: tres notas a un semitono una de otra, bajando hacia
 el acorde siguiente. El Si♭ no está en ninguno de los dos acordes, y no
 pasa nada: está en la mitad débil del pulso y lleva a algún sitio.
 
@@ -77,8 +77,8 @@ sin la banda.
 Las notas del acorde más reveladoras son la **3ª** y la **7ª**, las
 **notas guía**. Dicen si un acorde es mayor o menor y qué tipo de
 séptima tiene, y de un acorde al siguiente de un ii–V–I se mueven por
-semitonos: la 7ª de Rem7 (Do) cae a la 3ª de Sol7 (Si), y la 7ª de Sol7 (Fa)
-cae a la 3ª de Domaj7 (Mi). Muchos solos son notas guía unidas.
+semitonos: la 7ª de Dm7 (Do) cae a la 3ª de G7 (Si), y la 7ª de G7 (Fa)
+cae a la 3ª de Cmaj7 (Mi). Muchos solos son notas guía unidas.
 
 Aquí el solista elige, para cada pulso, la nota del acorde **más
 cercana** a donde va: la línea sube o baja, y mantiene su dirección
@@ -90,26 +90,26 @@ por pasos pequeños, como las melodías, con un salto aquí y allá.
 ### Escalas de acordes
 
 Entre las notas del acorde van otras notas, y cuáles dependen del
-acorde: sobre Rem7, ¿la nota entre La y Do es un Si o un Si♭? La enseñanza
+acorde: sobre Dm7, ¿la nota entre La y Do es un Si o un Si♭? La enseñanza
 del jazz responde con **escalas de acorde**: cada acorde recibe una
 escala de siete notas que lo contiene, y las notas intermedias salen
 de esa escala.
 
 La escala no se elige solo a partir del acorde, sino del acorde **en
-su tonalidad**. Sobre Rem7 en Do mayor, el Si es natural, porque la
+su tonalidad**. Sobre Dm7 en Do mayor, el Si es natural, porque la
 música está en Do: la escala es Do mayor desde Re, Re Mi Fa Sol La Si Do, llamada
 **Re dórico**. Los modos de Do mayor son lo que tocan los acordes de Do
 mayor:
 
 | Acorde en Do mayor | Su escala   | Notas             |
 |-------------------|-------------|-------------------|
-| Domaj7 (I)         | Do jónico    | Do Re Mi Fa Sol La Si     |
-| Rem7 (ii)          | Re dórico    | Re Mi Fa Sol La Si Do     |
-| Mim7 (iii)         | Mi frigio    | Mi Fa Sol La Si Do Re     |
-| Famaj7 (IV)        | Fa lidio     | Fa Sol La Si Do Re Mi     |
-| Sol7 (V)            | Sol mixolidio | Sol La Si Do Re Mi Fa     |
-| Lam7 (vi)          | La eólico    | La Si Do Re Mi Fa Sol     |
-| Sim7♭5 (vii)       | Si locrio    | Si Do Re Mi Fa Sol La     |
+| Cmaj7 (I)         | Do jónico    | Do Re Mi Fa Sol La Si     |
+| Dm7 (ii)          | Re dórico    | Re Mi Fa Sol La Si Do     |
+| Em7 (iii)         | Mi frigio    | Mi Fa Sol La Si Do Re     |
+| Fmaj7 (IV)        | Fa lidio     | Fa Sol La Si Do Re Mi     |
+| G7 (V)            | Sol mixolidio | Sol La Si Do Re Mi Fa     |
+| Am7 (vi)          | La eólico    | La Si Do Re Mi Fa Sol     |
+| Bm7♭5 (vii)       | Si locrio    | Si Do Re Mi Fa Sol La     |
 
 Siete nombres para las mismas siete notas. Los nombres importan porque
 dicen cuál es la fundamental y dónde caen los semitonos desde ella:
@@ -123,18 +123,18 @@ en la tonalidad, en este orden:
 
 1. **Un acorde de la tonalidad** toca la escala de la tonalidad desde
    su fundamental, como en la tabla. En una tonalidad menor, un acorde
-   que usa la 7ª elevada (Mi7 en La menor, con Sol♯) toca la **menor
+   que usa la 7ª elevada (E7 en La menor, con Sol♯) toca la **menor
    armónica** de la tonalidad desde su fundamental: La menor armónica
    desde Mi, Mi Fa Sol♯ La Si Do Re, llamada **Mi frigio dominante**.
 2. **Un acorde tomado en préstamo de la tonalidad homónima** toca la
-   escala de esa tonalidad: Fam en Do mayor viene de Do menor, así que
-   toca Do menor desde Fa, que es Fa dórico. Si♭7 en Do mayor (también de Do
+   escala de esa tonalidad: Fm en Do mayor viene de Do menor, así que
+   toca Do menor desde Fa, que es Fa dórico. B♭7 en Do mayor (también de Do
    menor) toca Si♭ mixolidio.
 3. **Una dominante secundaria** toca la escala del acorde al que
-   lleva. Re7 en Do mayor es el V7 de Sol, así que toca Sol mayor desde Re, Re
-   mixolidio. La7 en Do mayor es el V7 de Rem, un acorde menor, así que
+   lleva. D7 en Do mayor es el V7 de Sol, así que toca Sol mayor desde Re, Re
+   mixolidio. A7 en Do mayor es el V7 de Dm, un acorde menor, así que
    toca Re menor armónica desde La: La Si♭ Do♯ Re Mi Fa Sol, La frigio dominante.
-   Por eso el solo de arriba tiene Si♭ sobre La7: el Si♭ apunta al acorde
+   Por eso el solo de arriba tiene Si♭ sobre A7: el Si♭ apunta al acorde
    de Re menor que sigue.
 4. **Cualquier otra cosa** toca la escala que su tipo suele recibir:
    **lidio** para un acorde mayor de fuera de la tonalidad (el Re♭ de la
@@ -147,10 +147,10 @@ en la tonalidad, en este orden:
    escala de siete notas (una escala de blues, una pentatónica), cada
    acorde recibe esta escala habitual.
 
-Una regla más: **las propias notas del acorde ganan**. Mi9 en Do mayor
-lleva a Lam, así que empieza desde La menor armónica (Mi Fa Sol♯ La Si Do Re),
-pero su 9ª es Fa♯, y Fa y Fa♯ no pueden estar los dos en la escala con la
-misma letra. El Fa♯ del acorde reemplaza al Fa: Mi Fa♯ Sol♯ La Si Do Re,
+Una regla más: **las propias notas del acorde ganan**. E9 en Do mayor
+lleva a Am, así que empieza desde La menor armónica (Mi Fa Sol♯ La Si Do Re),
+pero su 9ª es Fa♯, y Fa y Fa♯ no pueden estar los dos en la escala con el
+mismo nombre. El Fa♯ del acorde reemplaza al Fa: Mi Fa♯ Sol♯ La Si Do Re,
 **mixolidio ♭6**.
 
 Hay una segunda escuela, que da a cada acorde su propia escala sin
@@ -222,7 +222,7 @@ y con el registro en el que toca:
 | Pop                   | saxo alto         | Sol3 a Sol5   |
 | Rock                  | guitarra saturada | La3 a Do6   |
 | Blues                 | armónica          | Do4 a Do6   |
-| Jazz                  | saxo tenor        | Re3 a F5   |
+| Jazz                  | saxo tenor        | Re3 a Fa5   |
 | Soul, funk y R&Si      | saxo alto         | Sol3 a Sol5   |
 | Hip hop y lo-fi       | vibráfono         | Do4 a Do6   |
 | Electrónica           | lead de sierra    | Do4 a Do6   |
@@ -232,7 +232,7 @@ y con el registro en el que toca:
 | Flamenco              | guitarra de nailon| Mi3 a La5   |
 | Reggae y ska          | trompeta          | Si♭3 a La5  |
 | Country y folk        | violín            | Sol3 a Mi6   |
-| Clásica y de cine     | flauta            | F4 a F6   |
+| Clásica y de cine     | flauta            | Fa4 a Fa6   |
 
 El acordeón de tango es el sustituto que General MIDI tiene del
 bandoneón. Los registros son el centro cómodo de cada instrumento, no
@@ -293,7 +293,7 @@ Tres trozos de Rust que merecen atención:
   sitio, usada tres veces. `|root: PitchClass| Scale::new(...)` toma
   una fundamental y da una escala.
 
-### Las notas del acorde ganan, letra a letra
+### Las notas del acorde ganan, nombre a nombre
 
 ```rust
 fn with_chord_notes(source: Scale, chord: Chord) -> PitchSet {
@@ -315,14 +315,14 @@ fn with_chord_notes(source: Scale, chord: Chord) -> PitchSet {
 ```
 
 El conjunto empieza con las notas del acorde, y cada nota de la escala
-de origen se le une salvo que una nota del acorde tenga la **misma
-letra** pero otra altura, de fuera de la escala. Las letras, no las
-alturas, deciden qué nota se reemplaza: el Fa♯ de Mi9 reemplaza a Fa, no a
-Sol. Por eso la escala se escribe con nombres de nota (`NoteName`, una
-letra y una alteración) antes de compararla, y no solo con números.
+de origen se le une salvo que una nota del acorde tenga el **mismo
+nombre** pero otra altura, de fuera de la escala. Los nombres, no las
+alturas, deciden qué nota se reemplaza: el Fa♯ de E9 reemplaza a Fa, no a
+Sol. Por eso la escala se escribe con nombres de nota (`NoteName`, un
+nombre y una alteración) antes de compararla, y no solo con números.
 
 La última condición, `!source.contains(...)`, vino de una prueba. Fdim7
-en Do mayor se escribe Fa La♭ Do♭ Mi♭♭, y Do♭ y Mi♭♭ tienen las letras C y
+en Do mayor se escribe Fa La♭ Do♭ Mi♭♭, y Do♭ y Mi♭♭ tienen los nombres Do y
 Mi: sin la condición sacarían Do y Mi de la escala, aunque Do♭ es Si y Mi♭♭
 es Re, ambas ya en Do mayor. La prueba
 `every_chord_scale_holds_its_chord` toca cada tipo de acorde sobre cada
@@ -582,16 +582,16 @@ campos nuevos se dejan fuera y el archivo es como antes.
    cambio de acorde? Luego canta (o toca) solo las 3ªs y 7ªs, una por
    compás, sobre la banda.
 2. **Escalas en la tonalidad.** Escribe `| Am7 | D7 | Gmaj7 | E7 | Am7
-   | D7 | G6 | G6 |` y pon la tonalidad en G mayor. Antes de apuntar a
+   | D7 | G6 | G6 |` y pon la tonalidad en Sol mayor. Antes de apuntar a
    las notas, saca la escala de cada acorde con las cuatro reglas. Un
    acorde toca un Fa natural, aunque la tonalidad tiene Fa♯: ¿cuál, y qué
    otra nota de su escala no está en Sol mayor? Luego compruébalo
    apuntando a sus notas azules.
 3. **Un ii–V–i menor.** En La menor, escribe `| Bm7♭5 | E7 | Am | Am |`
-   (escribe `b` para ♭). ¿Qué nota de la escala de Mi7 no está en La
+   (escribe `b` para ♭). ¿Qué nota de la escala de E7 no está en La
    menor natural? Escúchala en el solo.
-4. **Cromática o no.** Sobre Domaj7, el solista toca Si, Si♭, La hacia La7.
-   ¿Por qué el Si♭ es naranja y no azul, si la escala de La7 tiene un
+4. **Cromática o no.** Sobre Cmaj7, el solista toca Si, Si♭, La hacia A7.
+   ¿Por qué el Si♭ es naranja y no azul, si la escala de A7 tiene un
    Si♭? (Pista: ¿qué armonía suena cuando empieza el Si♭?)
 5. (Rust) El solista salta a la segunda nota del acorde una de cada
    cinco veces (`dice.chance(20)` en `target`). Ponlo a 60 y toca unos
