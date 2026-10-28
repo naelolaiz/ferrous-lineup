@@ -327,18 +327,16 @@ impl LineupApp {
         ui.menu_button(crate::i18n::tr("View"), |ui| {
             let window = |open: &mut bool, text: &'static str, shortcut, ui: &mut egui::Ui| {
                 let shortcut = ui.ctx().format_shortcut(&shortcut);
-                let button = egui::Button::selectable(*open, crate::i18n::tr(text))
-                    .shortcut_text(shortcut);
+                let button =
+                    egui::Button::selectable(*open, crate::i18n::tr(text)).shortcut_text(shortcut);
                 if ui.add(button).clicked() {
                     *open = !*open;
                 }
             };
             window(&mut self.chord_sheet.open, "Chord sheet", CHORD_SHEET, ui);
             let fills = self.chord_sheet.fills_window();
-            let main = egui::Button::selectable(
-                fills,
-                crate::i18n::tr("Chord sheet in the main window"),
-            );
+            let main =
+                egui::Button::selectable(fills, crate::i18n::tr("Chord sheet in the main window"));
             if ui
                 .add(main)
                 .on_hover_text(crate::i18n::tr(
@@ -373,8 +371,9 @@ impl LineupApp {
             window(browser, "Patterns and library", BROWSER, ui);
             window(&mut self.mixer_open, "Mixer", MIXER, ui);
             ui.separator();
-            let ear = egui::Button::selectable(self.ear_training.open, crate::i18n::tr("Ear training"))
-                .shortcut_text(crate::i18n::tr("experimental"));
+            let ear =
+                egui::Button::selectable(self.ear_training.open, crate::i18n::tr("Ear training"))
+                    .shortcut_text(crate::i18n::tr("experimental"));
             if ui.add(ear).clicked() {
                 self.ear_training.open = !self.ear_training.open;
             }
@@ -512,9 +511,10 @@ pub(super) fn zoom_settings_ui(ui: &mut egui::Ui) {
                         ui.label(area.name());
                         for axis in [Axis::Horizontal, Axis::Vertical] {
                             if axis == Axis::Vertical && !area.two_way() {
-                                ui.weak(crate::i18n::tr("Linked")).on_hover_text(crate::i18n::tr(
-                                    "The channel rack uses one scale for both directions.",
-                                ));
+                                ui.weak(crate::i18n::tr("Linked"))
+                                    .on_hover_text(crate::i18n::tr(
+                                        "The channel rack uses one scale for both directions.",
+                                    ));
                                 continue;
                             }
                             let current = area.zoom(&ctx, axis);
@@ -588,16 +588,8 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
     // The status bar lays this out right to left, so the vertical zoom
     // comes first, and + before −.
     for (axis, symbol, what) in [
-        (
-            Axis::Vertical,
-            "↕",
-            "Taller or shorter tracks (Alt+wheel)",
-        ),
-        (
-            Axis::Horizontal,
-            "↔",
-            "Wider or narrower bars (Ctrl+wheel)",
-        ),
+        (Axis::Vertical, "↕", "Taller or shorter tracks (Alt+wheel)"),
+        (Axis::Horizontal, "↔", "Wider or narrower bars (Ctrl+wheel)"),
     ] {
         let area = Area::Main;
         let zoom = area.zoom(&ctx, axis);
