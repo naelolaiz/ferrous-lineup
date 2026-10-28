@@ -224,6 +224,7 @@ with the project, and support Undo.
 **F1**, or **Help > Keyboard shortcuts**, lists every key the app
 answers to, window by window. The same list is in the
 [Keyboard shortcuts appendix](appendix-shortcuts.md), for printing.
+
 **Help > About Ferrous Lineup** shows the version you are running, the
 license, and links to this book, its PDF, the source code and the list
 of known problems.

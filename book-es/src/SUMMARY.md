@@ -126,7 +126,7 @@
   - [La Misa Criolla: una misa al compás de las danzas de Argentina](step-9/misa-criolla.md)
   - [Tangos y canciones folclóricas a partir de archivos MIDI](step-9/midi-songs.md)
   - [Cuatro piezas desde sus partituras: una zamba, una canción, un aria y un coro](step-9/four-scores.md)
-  - [Trabajar más rápido: las canciones se abren en sus acordes, una fila de botones, todas las tonalidades en una lista](step-9/workflow.md)
+  - [Trabajar más rápido: las canciones se abren en sus acordes, una fila de botones, cada tecla en una lista](step-9/workflow.md)
   - [El editor de estilos: escribir tus propias partes para la banda](step-9/style-editor.md)
   - [Los números romanos en tonalidades menores: bIII o III](step-9/minor-numerals.md)
   - [El mixer: paneo, un envío de reverb, medidores de nivel y el instrumento en cada línea](step-9/mixer.md)
