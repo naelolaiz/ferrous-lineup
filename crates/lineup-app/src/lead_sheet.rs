@@ -181,7 +181,7 @@ impl LeadSheetWindow {
         }
         self.front.keep(ctx, window_id());
         let mut open = true;
-        let window = egui::Window::new("Lead sheet")
+        let window = egui::Window::new(crate::i18n::tr("Lead sheet"))
             .id(window_id())
             .open(&mut open)
             .default_pos([240.0, 90.0])

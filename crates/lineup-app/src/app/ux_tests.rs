@@ -1400,6 +1400,55 @@ fn f1_and_the_help_menu_show_the_keyboard_shortcuts() {
 }
 
 #[test]
+fn help_about_shows_the_version_the_license_and_where_the_book_is() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.click("Help");
+    screen.click("About Ferrous Lineup");
+    assert!(screen.app.about_open);
+    let output = screen.draw(vec![]);
+    let version = format!("Version {}", env!("CARGO_PKG_VERSION"));
+    for text in [
+        "Ferrous Lineup",
+        &version,
+        "Read the license",
+        "The book",
+        "The book (PDF)",
+        "Source code",
+        "Report an issue",
+    ] {
+        assert!(text_rect(&output, text).is_some(), "{text}");
+    }
+    // A link opens its page in the browser.
+    let book = text_rect(&output, "The book").unwrap().center();
+    screen.draw(vec![
+        Event::PointerMoved(book),
+        Event::PointerButton {
+            pos: book,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    let output = screen.draw(vec![Event::PointerButton {
+        pos: book,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+    let opened: Vec<&str> = output
+        .platform_output
+        .commands
+        .iter()
+        .filter_map(|command| match command {
+            egui::OutputCommand::OpenUrl(open) => Some(open.url.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(opened, ["https://naelolaiz.github.io/ferrous-lineup/"]);
+}
+
+#[test]
 fn main_transport_toggles_are_visible_reversible_and_saved() {
     const TOGGLES: [&str; 3] = ["Follow playhead", "Count-in", "Metronome"];
     for size in [vec2(1400.0, 1000.0), vec2(800.0, 600.0)] {
@@ -4244,6 +4293,44 @@ mod bars {
         assert_eq!(chords(&screen), before);
         assert_eq!(screen.app.project.song_length(), length);
         assert_eq!(screen.app.history.undo_label(), Some("delete bar"));
+    }
+
+    #[test]
+    fn in_solfege_l_types_la_chords_and_in_letters_it_switches_mode() {
+        let mut screen = song();
+        let mode = screen.app.mode;
+        // A keyboard sends the key L and the text it types.
+        let type_l = |screen: &mut Screen, text: &str| {
+            screen.draw(vec![
+                Event::Key {
+                    key: Key::L,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: Modifiers::SHIFT,
+                },
+                Event::Text(text.into()),
+            ]);
+        };
+        crate::i18n::set_note_naming(&screen.ctx, lineup_core::NoteNaming::Solfege);
+        screen.click("Fa");
+        type_l(&mut screen, "Lam7");
+        screen.key(Key::Enter);
+        assert_eq!(screen.app.mode, mode, "L typed a chord");
+        let a_minor_seventh = lineup_core::chord_sheet::HarmonyName::parse("Am7").unwrap();
+        assert_eq!(
+            screen.app.project.chord_at(48).map(|marker| marker.harmony),
+            Some(a_minor_seventh)
+        );
+        // In letters, no chord starts with L: it switches pattern and song.
+        crate::i18n::set_note_naming(&screen.ctx, lineup_core::NoteNaming::Letters);
+        screen.click("Am7");
+        type_l(&mut screen, "L");
+        assert_ne!(screen.app.mode, mode);
+        assert_eq!(
+            screen.app.project.chord_at(48).map(|marker| marker.harmony),
+            Some(a_minor_seventh)
+        );
     }
 
     #[test]

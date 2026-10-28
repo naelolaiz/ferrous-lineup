@@ -143,7 +143,8 @@ fn all_entries() -> Vec<Entry> {
     )];
     for song in SONGS {
         let scale = song.scale();
-        let tonic = scale.spell(song.tonic);
+        // Searches read keys in letters, whatever names the app shows.
+        let tonic = lineup_core::NoteNaming::Letters.with(|| scale.spell(song.tonic).to_string());
         let mut key = format!("{tonic} {}", song.mode.name());
         // A song in D harmonic minor is in D minor too.
         if matches!(
@@ -310,7 +311,8 @@ impl LineupApp {
         // A click in the search box must not close the menu.
         let stay_open = egui::containers::menu::MenuConfig::new()
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
-        let menu = egui::containers::menu::SubMenuButton::new("Demos").config(stay_open);
+        let menu =
+            egui::containers::menu::SubMenuButton::new(crate::i18n::tr("Demos")).config(stay_open);
         let (_, picked) = menu.ui(ui, demos);
         let picked = picked.and_then(|inner| inner.inner);
         if let Some(demo) = picked {
@@ -420,9 +422,11 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
         button(ui, start, &start.label);
     }
     ui.separator();
-    ui.menu_button("Songs", |ui| {
+    ui.menu_button(crate::i18n::tr("Songs"), |ui| {
         crate::widgets::scroll_menu(ui, |ui| {
-            ui.weak("Tunes with their melodies, free for everyone to use");
+            ui.weak(crate::i18n::tr(
+                "Tunes with their melodies, free for everyone to use",
+            ));
             for &genre in &demos.genres {
                 let songs: Vec<&Entry> = demos
                     .entries
@@ -443,9 +447,9 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
             }
         });
     });
-    ui.menu_button("Styles", |ui| {
+    ui.menu_button(crate::i18n::tr("Styles"), |ui| {
         crate::widgets::scroll_menu(ui, |ui| {
-            ui.weak("Each harmony style as a short song");
+            ui.weak(crate::i18n::tr("Each harmony style as a short song"));
             for &genre in &demos.genres {
                 let styles: Vec<&Entry> = demos
                     .entries
@@ -465,9 +469,11 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
             }
         });
     });
-    ui.menu_button("Twelve-tone", |ui| {
+    ui.menu_button(crate::i18n::tr("Twelve-tone"), |ui| {
         crate::widgets::scroll_menu(ui, |ui| {
-            ui.weak("Each row style as a short piece: the row, backwards, upside down, both");
+            ui.weak(crate::i18n::tr(
+                "Each row style as a short piece: the row, backwards, upside down, both",
+            ));
             for entry in demos
                 .entries
                 .iter()
@@ -477,12 +483,12 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
             }
         });
     });
-    ui.menu_button("Micromodes", |ui| {
+    ui.menu_button(crate::i18n::tr("Micromodes"), |ui| {
         crate::widgets::scroll_menu(ui, |ui| {
-            ui.weak(
+            ui.weak(crate::i18n::tr(
                 "Each micromode style as a short piece: from the micromode, upside down, \
              a tritone away, upside down there, and back",
-            );
+            ));
             for entry in demos
                 .entries
                 .iter()

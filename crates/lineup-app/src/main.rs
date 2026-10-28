@@ -20,6 +20,7 @@ mod chord_sheet;
 mod clipboard;
 mod ear_training;
 mod harmony_keys;
+pub(crate) mod i18n;
 mod icons;
 mod lead_sheet;
 mod library_browser;

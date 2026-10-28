@@ -19,6 +19,7 @@
 #
 #     Function: not step-5/diff.md
 
+About window: step-9/workflow.md#who-made-it-and-which-version
 Arpeggio: step-6/tools.md#arpeggios-cycle-step_by-and-zip
 Audio thread: step-1/audio-engine.md, step-2/realtime.md, step-4/song-playback.md, step-5/diff.md
 Autosave: step-9/recovery.md
@@ -41,6 +42,7 @@ Importing a recording: spike-listen/README.md
 Key change: step-8/changing-key.md, step-8/key-changes.md
 Key marker: step-8/key-changes.md#a-key-marker
 Keyboard shortcuts: step-5/history.md#keyboard-shortcuts, step-6/piano-roll.md#the-keyboard, appendix-shortcuts.md
+Language: step-9/languages.md
 Latin American music: step-8/folklore.md, step-9/latin-american-songs.md, step-9/misa-criolla.md, step-9/midi-songs.md
 Lead sheet: step-9/lead-sheet.md, step-9/transposing-instruments.md
 Library: step-8/library.md, step-8/patterns-and-demos.md#the-library-tab, step-9/library-filters.md
@@ -52,6 +54,7 @@ MIDI keyboard: step-7/live.md, step-7/recording.md
 MIDI Out: step-7/live.md#midi-out-an-instrument-with-an-outbox, step-8/midi-out-every-channel.md, step-9/midi-out-menus.md
 Mixer: step-9/mixer-score-order.md, step-9/mixer.md, step-9/channel-effects.md
 Modulation: see Key change
+Note naming: step-9/languages.md
 Odd meter: step-8/any-time-signature.md, step-9/odd-meters.md
 Orchestra: step-9/concert-hall.md, step-9/orchestra.md
 Pattern: step-2/project.md, step-4/patterns.md
@@ -80,11 +83,13 @@ Tango: step-9/midi-songs.md
 Tempo: step-1/lineup-core.md#tempo-keeping-a-value-valid, step-8/tempo-and-feel.md, step-9/style-tempo.md
 Time signature: step-8/time-signatures.md, step-8/time-markers.md, step-8/any-time-signature.md, step-8/re-metering.md
 Track: step-8/look-and-transport.md#inserting-moving-and-deleting-tracks, step-8/only-the-tracks-you-use.md
+Translation: see Language
 Transport: step-8/look-and-transport.md#the-transport-where-does-play-start
 Twelve-tone row: step-9/twelve-tone-rules.md
 Undo: step-5/history.md
 Variations: step-9/variations.md
 Velocity: step-6/piano-roll.md#the-velocity-lane, step-8/tempo-and-feel.md#velocities-the-shape-of-a-phrase
+Version: step-9/releases.md, step-9/workflow.md#who-made-it-and-which-version
 Video export: step-9/video-export.md
 Voice leading: step-9/voice-leading.md
 WAV export: step-5/export.md

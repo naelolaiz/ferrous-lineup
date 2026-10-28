@@ -150,7 +150,7 @@ impl EarTraining {
         if self.open {
             self.front.keep(ctx, window_id());
             let mut open = true;
-            let window = egui::Window::new("Ear training")
+            let window = egui::Window::new(crate::i18n::tr("Ear training"))
                 .id(window_id())
                 .open(&mut open)
                 .default_pos([300.0, 110.0])
@@ -458,7 +458,7 @@ impl EarTraining {
                 Some(Asked::Chord { .. }) => "What kind of chord is this?".to_string(),
                 Some(Asked::Progression { question, .. }) => format!(
                     "In {}: what are the chords after {}?",
-                    question.scale.name(),
+                    crate::i18n::key_name(question.scale),
                     question.keys[0].numeral
                 ),
                 None => String::new(),
@@ -665,7 +665,7 @@ impl EarTraining {
             let mut text = format!(
                 "{names}: {} in {}.",
                 numerals.join(" "),
-                question.scale.name()
+                crate::i18n::key_name(question.scale)
             );
             for line in question.moves() {
                 text += "\n• ";

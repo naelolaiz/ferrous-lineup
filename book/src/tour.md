@@ -89,7 +89,11 @@ light up, and while the music plays, the chord you hear lights up too.
 In a minor key, **Edit > Settings… > Harmony** chooses how the numerals
 on the third, sixth and seventh degrees are written: bIII bVI bVII,
 counted from the major scale as pop and jazz books do, or III VI VII,
-counted from the minor scale as classical books do.
+counted from the minor scale as classical books do. **Harmony > Note
+naming** names notes, keys and chords with letters (C, Am7) or in
+solfège (Do, Lam7), and **Appearance > Language** shows the app in
+English or Spanish (see [The app in Spanish, and notes in letters or
+solfège](step-9/languages.md)).
 The **Library** tab next to the pattern list holds an alphabetical
 **Presets** list, combining all 177 harmony presets, 112 rhythm presets
 and your saved styles. **Edit > Settings… > Library > Style list** can instead group
@@ -220,6 +224,9 @@ with the project, and support Undo.
 **F1**, or **Help > Keyboard shortcuts**, lists every key the app
 answers to, window by window. The same list is in the
 [Keyboard shortcuts appendix](appendix-shortcuts.md), for printing.
+**Help > About Ferrous Lineup** shows the version you are running, the
+license, and links to this book, its PDF, the source code and the list
+of known problems.
 
 **Follow playhead** in the toolbar and **Settings > Playback** keeps the playing
 position visible in the playlist, chord sheet and piano roll. Turning it
@@ -491,14 +498,12 @@ Interface size** does. **Ctrl+0** takes what is under the pointer back
 to 100%. The playlist's two zooms are also at the right end of the
 status bar.
 **Edit > Settings…** separates preferences into **Appearance**, **Harmony**,
-**Library**, **Audio** and **Playback** categories. Appearance holds interface size and
-all editor zoom levels; Harmony holds how numerals are written in minor
-keys; Library holds style grouping, saved style defaults
+**Library**, **Audio** and **Playback** categories. Appearance holds the language, the
+interface size and all editor zoom levels; Harmony holds how notes are
+named and how numerals are written in minor keys; Library holds style grouping, saved style defaults
 and the styles folder; Audio holds output information and SoundFont settings;
-Playback holds follow playback and practice controls. The former zoom,
-Sounds and Practice menus are replaced by these categories. Zoom controls
-share the current values with the keyboard and wheel shortcuts, which
-continue to work as before.
+Playback holds follow playback and practice controls. Zoom controls
+share the current values with the keyboard and wheel shortcuts.
 The View menu also shows or hides each window and panel, and **Alt+F8**
 hides the Patterns and Library panel to give the playlist more room. The
 zoom, the size of the app's window and where you left the windows are

@@ -527,7 +527,9 @@ never cancelled.
 4. **Stop on a wrong version.** Make the version check fail instead of
    warn. Where should it run, so a wrong tag stops before 20 minutes of
    building, not after?
-5. **Read the version in the app.** `env!("CARGO_PKG_VERSION")` is the
-   crate's version, fixed at compile time. Show it in the window's
-   title or in a Help > About window. Why is it `env!` and not
-   `std::env::var`?
+5. **Read the version in the app.** **Help > About** shows
+   `env!("CARGO_PKG_VERSION")`, the crate's version, fixed at compile
+   time ([how it works](workflow.md#who-made-it-and-which-version)).
+   Show it in the window's title too. What would
+   `std::env::var("CARGO_PKG_VERSION")` give when the app runs on
+   someone else's computer?

@@ -26,6 +26,7 @@ that explains each one.
 | **Byte string (`b"..."`)** | A string literal that is a `&[u8; N]` of ASCII codes instead of a `&str`, like `b"MThd"`. | [MIDI messages](step-7/messages.md) |
 | **Capacity** | How many items a `Vec` can hold before it must allocate more memory. | [Audio thread](step-2/realtime.md) |
 | **Cargo** | Rust's build tool and package manager. | [Workspace](step-1/workspace.md) |
+| **`Cell<T>`** | A box whose value can be replaced through a shared reference, by moving whole values in and out with `get` and `set` (for `Copy` types); nothing can hold a reference to the inside, so nothing reads it while it changes. | [Roman numerals in minor keys](step-9/minor-numerals.md#a-setting-every-function-can-see-one-per-thread) |
 | **`cfg` / `cfg_attr`** | Conditional compilation: `#[cfg(target_os = "windows")]` keeps the next item only when the condition is true, and `cfg_attr` applies an attribute only then. | [Linux, macOS and Windows](step-4/platforms.md) |
 | **`#[cfg(test)]` on an item** | Keeps one function (or `use`, or struct) only in test builds, so a helper that only the tests call does not warn as unused in a normal build. | [Micromodes](step-8/micromodes.md#checking-a-table-with-tests) |
 | **`checked_add_signed`** | Adds a signed number to an unsigned one, like `usize + isize`, and gives `None` instead of going below zero or overflowing. | [Tools](step-6/tools.md) |
@@ -56,6 +57,7 @@ that explains each one.
 | **Edition** | A version of the language (2015, 2018, 2021, 2024) chosen per crate. | [Workspace](step-1/workspace.md) |
 | **Enum** | A type whose value is one of several variants, each of which can hold data. | [lineup-audio](step-1/audio-engine.md) |
 | **Enum size** | An enum takes as much room as its biggest variant; putting a big variant's data in a `Box` keeps every value small. Clippy's `large_enum_variant` lint points it out. | [Live keys](step-7/live.md) |
+| **`env!` and `concat!`** | Macros that run while the program is compiled: `env!("CARGO_PKG_VERSION")` becomes the version Cargo read from `Cargo.toml`, and `concat!` joins literals into one `&'static str`, so both can build a `const`. | [Quicker to work in](step-9/workflow.md#who-made-it-and-which-version) |
 | **`expect`** | Like `unwrap`, but panics with the message given. It states a promise ("this is always `Some`"), best kept by a test. | [Twelve-tone rows](step-8/twelve-tone.md#the-table-of-224-classes-and-how-to-trust-it) |
 | **Feature** | An optional part of a crate, turned on or off in `Cargo.toml`; features can only add, never take away. | [Saving](step-4/saving.md) |
 | **`find_map`** | Calls a closure on each item and returns the first `Some` it gives. | [Chords](step-3/chords.md) |
@@ -139,6 +141,7 @@ that explains each one.
 | **Struct update syntax** | `NoteEvent { length: 2, ..note }`: a new struct with some fields changed and the rest taken from `note`. | [Steps to notes](step-3/notes.md) |
 | **Target** | The kind of system a program is compiled for, like `x86_64-pc-windows-gnu`; `rustup target add` installs Rust's library for one. | [Linux, macOS and Windows](step-4/platforms.md) |
 | **`thread::Builder`** | Starts a thread with options such as a name; its `spawn` returns a `Result` instead of panicking when the system refuses. | [Live keys](step-7/live.md) |
+| **`thread_local!`** | Declares a value of which each thread has its own copy, reached with `.with(...)`; the app keeps its settings for numerals, note names and language this way, so tests running side by side never see each other's. | [The app in Spanish](step-9/languages.md#two-settings-kept-like-the-numerals-setting) |
 | **Trait** | A set of methods a type promises to provide, like an interface. | [lineup-core](step-1/lineup-core.md) |
 | **Trait bound** | A requirement on a generic type, such as `T: FromSample<f32>`. | [lineup-audio](step-1/audio-engine.md) |
 | **`TryFrom` / `TryInto`** | Conversions that can fail, returning a `Result`. | [Saving](step-4/saving.md) |

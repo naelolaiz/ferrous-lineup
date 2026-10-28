@@ -81,7 +81,10 @@ pub fn parse_chart(text: &str, bar: usize) -> Option<Vec<ChordSpan>> {
 pub fn parse_chart_in(text: &str, bar: usize, tonic: PitchClass) -> Option<Vec<ChordSpan>> {
     read_chart(text, bar, |token| {
         if token.starts_with(|c: char| ('A'..='G').contains(&c)) {
-            let symbol = ChordSymbol::parse(token).ok()?;
+            // Charts are written in letters, whatever names the app shows.
+            let symbol = crate::NoteNaming::Letters
+                .with(|| ChordSymbol::parse(token))
+                .ok()?;
             Some(RomanChord::from_symbol(symbol, tonic))
         } else {
             numeral::parse(token)

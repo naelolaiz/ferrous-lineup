@@ -335,15 +335,20 @@ impl LineupApp {
         let mut choice = None;
         let modal = egui::Modal::new(egui::Id::unique("export-running-on-quit")).show(ctx, |ui| {
             ui.set_width(320.0);
-            ui.heading("An export is still running");
+            ui.heading(crate::i18n::tr("An export is still running"));
             ui.add_space(4.0);
-            ui.label(format!("\"{name}\" is still being written."));
+            let msg = if crate::i18n::current_language() == crate::i18n::Language::Spanish {
+                format!("\"{name}\" aún se está escribiendo.")
+            } else {
+                format!("\"{name}\" is still being written.")
+            };
+            ui.label(msg);
             ui.add_space(8.0);
             ui.horizontal(|ui| {
-                if ui.button("Stop it and quit").clicked() {
+                if ui.button(crate::i18n::tr("Stop it and quit")).clicked() {
                     choice = Some(true);
                 }
-                if ui.button("Keep exporting").clicked() {
+                if ui.button(crate::i18n::tr("Keep exporting")).clicked() {
                     choice = Some(false);
                 }
             });
