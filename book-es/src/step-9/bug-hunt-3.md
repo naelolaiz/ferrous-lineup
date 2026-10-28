@@ -191,6 +191,11 @@ pasaba casi tres minutos en esa cabecera, y todas las pruebas de
 así que las comprobaciones de cada pull request también son más
 rápidas.
 
+La búsqueda de RON también se podría arreglar en su sitio, buscando
+`..` solo entre los caracteres que podrían formar parte del número. Eso
+es un cambio en la biblioteca de otra persona, así que la app no
+depende de ello: simplemente ya no le pide a RON que se salte campos.
+
 ## Probar un estilo te llevaba a otro patrón
 
 Abre El Choclo, selecciona su patrón «Pickup» en la caja de patrones y
@@ -394,26 +399,6 @@ La prueba abre «A» en el piano roll, encuentra cada trozo de texto
 pintado en el color del carril y comprueba que ninguno es más ancho que
 su bloque. Antes del arreglo fallaba en «Re♯»: 14.9 puntos de ancho, en
 un bloque de 6.2.
-
-## Qué se lanzó después de esta caza
-
-La misma caza produjo una lista de ideas para el flujo de trabajo y la
-pantalla: insertar y borrar compases, Open recent, una copia de
-recuperación, una barra de herramientas de una fila, poder elegir los
-números en tonalidades menores, y más. Las principales se han lanzado
-desde entonces. Los compases se pueden [insertar y
-eliminar](insert-delete-bars.md) moviéndose toda la canción con ellos;
-**File > Open recent** guarda los últimos diez proyectos; un cierre
-inesperado deja una [copia de recuperación](recovery.md) que se ofrece
-en el siguiente arranque; [el capítulo del flujo de
-trabajo](workflow.md) cubre la barra de herramientas de una fila y la
-lista de atajos; y los [números en tonalidades
-menores](minor-numerals.md) se escriben como los escribe tu libro.
-
-La búsqueda de RON también se podría arreglar en su sitio, buscando
-`..` solo entre los caracteres que podrían formar parte del número. Eso
-es un cambio en la biblioteca de otra persona, así que la app no
-depende de ello: simplemente ya no le pide a RON que se salte campos.
 
 ## Ejercicios
 

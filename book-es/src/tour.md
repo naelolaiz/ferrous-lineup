@@ -1,9 +1,9 @@
 # Un recorrido por la aplicación
 
 Este capítulo es el manual de la aplicación en una página: qué hace cada
-ventana, y las teclas y los menús que la manejan. Antes era el README
-del repositorio de la aplicación. Los capítulos de cada paso cuentan
-cómo se construyó cada parte y por qué; este solo dice cómo usarla.
+ventana, y las teclas y los menús que la manejan. Los capítulos de cada
+paso cuentan cómo se construyó cada parte y por qué; este solo dice cómo
+usarla.
 
 ## La reproducción, el playlist y el channel rack
 

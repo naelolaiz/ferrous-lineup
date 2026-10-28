@@ -6,9 +6,8 @@ y [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrou
 El menú **File > Demos** recibe el tema de apertura de la serie de
 televisión *The Big Bang Theory*, escrito por Ed Robertson y tocado por
 Barenaked Ladies en 2007. Es la versión de televisión, entera: doce
-compases, unos veinte segundos. La canción sigue bajo copyright; se
-añadió a petición de su dueño, y el comentario sobre ella en el código
-lo dice.
+compases, unos veinte segundos. La canción sigue bajo copyright, y
+el comentario sobre ella en el código lo dice.
 
 ## Probarlo
 

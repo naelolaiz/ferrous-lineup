@@ -6,53 +6,14 @@ Archivos: [`.github/workflows/book.yml`](https://github.com/naelolaiz/ferrous-li
 [`book/print-pdf.py`](https://github.com/naelolaiz/ferrous-lineup/blob/main/book/print-pdf.py)
 y [`book/index-words.txt`](https://github.com/naelolaiz/ferrous-lineup/blob/main/book/index-words.txt)
 
-Hasta ahora este libro vivía solo como archivos Markdown y como un sitio
-web que construías tú mismo con `mdbook build`. Ahora vive en la carpeta
-`book/` del repositorio, junto al código que describe, y un workflow,
-**Book**, lo convierte en dos cosas que cualquiera puede abrir:
+El libro vive en la carpeta `book/` del repositorio, junto al código que
+describe, y un workflow, **Book**, lo convierte en dos cosas que
+cualquiera puede abrir:
 
 | Qué | Dónde |
 |------|-------|
 | El sitio web | <https://naelolaiz.github.io/ferrous-lineup/es/> |
 | Un PDF con todos los capítulos | <https://naelolaiz.github.io/ferrous-lineup/es/ferrous-lineup-book-es.pdf>, y como descarga en cada ejecución, en la pestaña **Actions** |
-
-## Una rama propia, y luego una carpeta
-
-Durante su primera semana en línea, el libro tuvo una rama propia,
-`book`, que no compartía historia con `main`: su primer commit fue el
-primer capítulo del libro, no la primera línea de código de la app. La
-Git no le importa. Una rama solo es un nombre para un commit, y nada
-dice que todos los commits de un repositorio tengan que compartir una
-raíz.
-
-Eso tenía un costo. GitHub muestra un pull request como lo que su rama
-cambia desde el último commit que comparte con la rama a la que va. Una
-rama del libro y una rama de la app no comparten ningún commit, así que
-GitHub no puede compararlas: una página del libro nunca podía ser un
-pull request apilado sobre el pull request del cambio que describe, y
-apuntar un pull request del libro a una rama de la app hacía que GitHub
-lo cerrara. Así que el libro se mudó a `book/` en `main`, con su
-historia:
-
-```sh
-git merge -s ours --no-commit --allow-unrelated-histories origin/book
-git read-tree --prefix=book/ -u origin/book
-git commit
-```
-
-- `--allow-unrelated-histories` permite que `git merge` una dos
-  historias sin ningún commit en común; sin él, Git se niega.
-- `-s ours` (la estrategia "ours") registra el merge pero deja los
-  archivos de `main` exactamente como están, para que el `src/` del
-  libro no quede en la raíz del repositorio.
-- Luego `git read-tree --prefix=book/ -u origin/book` coloca cada
-  archivo del libro bajo `book/`, en el índice y (`-u`) en la carpeta.
-
-El commit tiene dos padres, el último commit de `main` y el último
-commit de `book`, así que todos los commits del libro siguen ahí.
-`git blame book/src/tour.md` nombra el commit que escribió cada línea, y
-`git log --full-history -- src/tour.md` lista los commits de un capítulo
-anteriores a la mudanza, bajo la ruta que tenía entonces.
 
 ## Paso a paso
 
@@ -142,11 +103,11 @@ sitio web hagan las mismas páginas:
 
 ## Orientarte en el PDF
 
-El primer PDF era la página de impresión del sitio web, impresa: más de
-mil páginas sin números de página, sin índice de contenidos y sin índice
-de términos. En el sitio web, la barra lateral y el buscador encuentran
-un capítulo; en un lector de PDF, o en papel, nada lo hacía.
-`book/print-pdf.py`, un script de Python, ahora imprime el PDF y añade
+La página de impresión del sitio web, impresa tal cual, son más de mil
+páginas sin números de página, sin índice de contenidos y sin índice de
+términos. En el sitio web, la barra lateral y el buscador encuentran un
+capítulo; en un lector de PDF, o en papel, nada lo haría.
+`book/print-pdf.py`, un script de Python, imprime el PDF y añade
 lo que un libro impreso necesita para encontrar cosas en él:
 
 | Qué | De dónde sale |
@@ -290,9 +251,8 @@ primera: "ve al lugar llamado `step-9-the-band`", y el PDF guarda una
 tabla de nombres al final (`/Dests`) que da una página a cada uno. La
 otra manera es más antigua y más simple: "ve a la página 543, hasta aquí
 abajo". Los lectores de Chrome y Firefox buscan un nombre en la tabla;
-no todos los lectores lo hacen, y en esos el índice de contenidos, el
-índice de términos y los enlaces entre capítulos del primer PDF no
-hacían nada al hacer clic. Así que el último paso del script, después de
+no todos los lectores lo hacen, y en esos un enlace que solo tiene un
+nombre no hace nada al hacer clic. Así que el último paso del script, después de
 los marcadores, busca cada nombre por sí mismo y escribe el lugar en el
 enlace:
 
@@ -312,7 +272,7 @@ hacer cuando se hace clic en él. `/Dest` es adónde va. El valor de la
 tabla ya tiene la forma simple, un array como `[page /XYZ 11 826 0]`
 (la página, y luego "mantén el zoom y pon este punto arriba a la
 izquierda"), así que el script lo copia en el enlace. Los marcadores se
-escribieron así desde el principio.
+escriben así también.
 
 ### En el workflow
 
@@ -346,8 +306,7 @@ Dos ajustes en GitHub, que se hacen una vez:
   configurado.
 - **Settings > Environments > github-pages > Deployment branches and
   tags**: activar Pages crea este environment, y deja publicar a la rama
-  por defecto, `main`. Mientras el libro tuvo su propia rama, `book`
-  también tuvo que añadirse ahí; ahora `main` basta.
+  por defecto, `main`.
 
 `site-url` en `book.toml` es la ruta desde la que Pages sirve el libro,
 `/ferrous-lineup/`. La mayoría de las páginas encuentran sus estilos con
@@ -395,13 +354,10 @@ Si en tu sistema Chrome no se llama `google-chrome`, di dónde está:
 3. Abre un pull request que solo cambie un archivo de `crates/`. ¿Qué
    workflows se ejecutan, y qué línea de `book.yml` impide que se
    ejecute el workflow Book?
-4. Ejecuta `git log --oneline --graph -5` en el commit que movió el
-   libro (su mensaje empieza por "Bring the book's history"). ¿Cuántos
-   padres tiene, y de dónde sale cada línea del grafo?
-5. Añade `Metronome: step-9/practice.md#where-the-clicks-come-from` a
+4. Añade `Metronome: step-9/practice.md#de-dónde-salen-los-clics` a
    `index-words.txt` e imprime el PDF. ¿Dónde cae "Metronome" en el
    índice de términos, y su número de página te lleva a la sección?
    Luego escribe mal la sección e imprime otra vez: ¿qué dice el script?
-6. Cambia `BLANK` en `print-pdf.py` de `"0000"` a `"0"`. ¿Cuántas veces
+5. Cambia `BLANK` en `print-pdf.py` de `"0000"` a `"0"`. ¿Cuántas veces
    imprime ahora el script el libro, y por qué un hueco más estrecho
    puede mover las páginas?

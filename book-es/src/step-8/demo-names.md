@@ -34,12 +34,8 @@ hubiera, la siguiente versión de la app traería su propia copia de
 todas formas.
 
 Así que **Guardar** en una demo hace lo que hace **Guardar como…**:
-pide un archivo nuevo. El diálogo ya lleva el nombre de la demo:
-
-![Guardar en Für Elise sugiere "Für Elise.lineup". La captura aún muestra la extensión vieja ".loom", de antes del renombrado.](../images/step-8-demo-save-as.png)
-
-(La captura se tomó antes del renombrado; el diálogo de guardar ahora
-sugiere "Für Elise.lineup".)
+pide un archivo nuevo. El diálogo ya lleva el nombre de la demo: en
+Für Elise sugiere "Für Elise.lineup".
 
 Una vez guardado, el proyecto es ese archivo: el título muestra "Für
 Elise.lineup", lo de "(demo, read-only)" desaparece, y el siguiente

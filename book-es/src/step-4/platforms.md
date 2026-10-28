@@ -287,7 +287,7 @@ Siendo honestos con los límites:
 - La app de macOS tiene un icono y es un `.app` real dentro del `.dmg`,
   pero su `Info.plist` todavía no declara el tipo de documento `.lineup`,
   así que hacer doble clic en un proyecto en macOS puede no abrirlo en
-  Ferrous Lineup. El instalador de Windows registra `.lineup` (y el viejo
-  `.loom`), y la entrada de escritorio y el tipo MIME de Linux también.
+  Ferrous Lineup. El instalador de Windows registra `.lineup`, y la
+  entrada de escritorio y el tipo MIME de Linux también.
   Añadir el tipo de documento a `packaging/macos/Info.plist` es la pieza
   que falta.

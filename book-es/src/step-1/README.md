@@ -1,11 +1,8 @@
 # Paso 1: Los fundamentos
 
 > El código que muestran los capítulos del paso 1 es el código tal como
-> era al final del paso 1, con los nombres de hoy: `LoomApp` y los crates
-> `loom-*` pasaron a ser `LineupApp` y `lineup-*` en el paso 9. Pasos
-> posteriores cambiaron parte de él (el tono de prueba, por ejemplo, se
-> reemplazó en el paso 2). Este capítulo es una instantánea histórica, y
-> la antigua rama de checkpoint `step-1-foundation` ya no se publica.
+> era al final del paso 1. Pasos posteriores cambiaron parte de él (el
+> tono de prueba, por ejemplo, se reemplazó en el paso 2).
 
 El paso 1 construye el esqueleto del que cuelga cada función posterior:
 

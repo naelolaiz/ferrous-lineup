@@ -7,10 +7,9 @@ Archivos: [`crates/lineup-core/src/library/song/tango.rs`](https://github.com/na
 y [`crates/lineup-core/src/library/comping.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/comping.rs)
 
 Las demos tenían un puñado de tangos, unas pocas canciones andinas y
-algunas cubanas y brasileñas. Cinco cambios (PR #91 a #95) añaden **44
-canciones latinoamericanas**, hacen que **seis antiguas toquen su
-partitura completa** y añaden cinco ritmos de baile que la biblioteca
-no tenía. Cada canción nueva se escribió a partir de una partitura,
+algunas cubanas y brasileñas. Este capítulo añade **44 canciones
+latinoamericanas**, hace que **seis antiguas toquen su partitura
+completa** y añade cinco ritmos de baile que la biblioteca no tenía. Cada canción nueva se escribió a partir de una partitura,
 nunca de memoria, y cada acorde se comprobó escuchando la banda
 renderizada.
 
@@ -29,8 +28,8 @@ por cada tipo de música:
 - **Aquellos ojos verdes** (Cuba): un bolero.
 - **Luna de Xelajú** (Guatemala): un vals en la marimba.
 
-El género que antes se llamaba «folclore sudamericano» es ahora
-**folclore latinoamericano**, ya que llega de México a Argentina.
+El género de folclore en **File > Demos** es **Latin American
+folklore**, ya que llega de México a Argentina.
 
 Las canciones nuevas:
 

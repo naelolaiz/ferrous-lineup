@@ -142,8 +142,7 @@ Tres arreglos menores conservan el proyecto que querías conservar:
 
 - **Save as…** da ahora al archivo una extensión de proyecto incluso si
   escribes otra. `song.txt` se guarda como `song.lineup`, no como un
-  chord sheet que se abre en el importador equivocado. Un archivo
-  `.loom` conserva su nombre.
+  chord sheet que se abre en el importador equivocado.
 - Abrir un proyecto, una demo, un archivo MIDI o un chord sheet detiene
   un **File > Import recording…** que siga escuchando. La importación se
   inició para el proyecto que se deja atrás; sin esto, su resultado

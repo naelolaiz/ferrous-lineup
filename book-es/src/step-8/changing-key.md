@@ -22,7 +22,7 @@ al mismo grado de la escala menor. La batería se queda como está, y
 
 ![El mismo patrón tras elegir Re, y luego menor. La melodía empieza ahora Re, Mi, Fa, Re, las harmony keys van de Rem a Do, y la batería (las notas fantasma grises) no se ha movido.](../images/step-8-key-after.png)
 
-## Qué hacen otros programas de música, y qué hacemos nosotros
+## Por qué el menú de tonalidad mueve las notas
 
 En muchos programas de música, el menú de tonalidad y escala del piano
 roll no mueve nunca una nota: solo resalta la escala y hace que las

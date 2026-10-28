@@ -18,26 +18,14 @@ la banda la toca, mientras la aplicación pone nombre a cada acorde que
 oyes. Funciona en Linux, macOS y Windows, usando el mismo código en los
 tres.
 
-Los pasos 1 a 8 construyeron aquello sobre lo que se apoya la banda. Los
-pasos 1 a 4 hicieron el sonido, los patrones y las pistas de una
-canción, y el paso 5 añadió deshacer y la exportación WAV. El paso 6 dio
-al piano roll su ayuda de armonía. El paso 7 nació de una pregunta:
-«¿tiene MIDI, de entrada y de salida?». Ahora lo tiene, en ambos
-sentidos, y pone nombre al acorde que mantienes pulsado. Se construyó en
-una computadora sin sistema MIDI, así que todavía no se ha probado con
-hardware MIDI real; el
-[paso 7](step-7/README.md#cómo-se-probó) dice qué se probó. El paso
-8 añadió las harmony keys, una para cada acorde de la tonalidad, y una
-biblioteca de estilos, ritmos y canciones: el conocimiento con el que
-toca la banda. En el paso 8 el acompañamiento ya podía seguir los
-acordes que tocas, como hace un teclado arreglista. El paso 9 puso a la
-banda al frente, con un chord sheet donde escribir la canción.
-
-Algunas ideas de la hoja de ruta inicial se cumplieron por el camino: un
-mixer, la importación de archivos MIDI, notas que empiezan entre pasos
-(swing, pushes, guitarras rasgueadas, MIDI importado), cambios de compás
-a mitad de una canción, y descargas instalables para Linux, Windows y
-macOS, con un AppImage y un `.deb` para Linux.
+Los pasos 1 a 8 construyeron aquello sobre lo que se apoya la banda: el
+sonido, los patrones y las pistas, deshacer y exportar, un piano roll
+con ayuda de armonía, MIDI, las harmony keys y una biblioteca de
+estilos, ritmos y canciones. El paso 9 puso a la banda al frente, con un
+chord sheet donde escribir la canción. El MIDI se construyó en una
+computadora sin sistema MIDI, así que todavía no se ha probado con
+hardware MIDI real; el [paso 7](step-7/README.md#cómo-se-probó) dice
+qué se probó.
 
 ## Ideas para lo que viene después
 

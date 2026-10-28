@@ -9,12 +9,12 @@ Después de la [Misa Criolla](misa-criolla.md), se escribieron cuatro
 demos más nota por nota desde sus partituras, cada voz e instrumento en
 un canal propio:
 
-| Demo | PR | Qué es | Compás y tonalidad | Quién toca |
-|---|---|---|---|---|
-| **Alfonsina y el mar** | #163 | la zamba de Ariel Ramírez y Félix Luna, 1969 | 6/8, Do menor | un coro a cuatro voces |
-| **Die Forelle** | #166 | la canción «La trucha» de Franz Schubert, Re 550, 1817 | 2/4, Re bemol mayor | voz y piano |
-| **Sheep May Safely Graze** | #169 | un aria de la Cantata de la caza de Johann Sebastian Bach, BWV 208, 1713 | 4/4, Si bemol mayor | soprano, dos flautas dulces, continuo |
-| **For Unto Us a Child Is Born** | #172 | un coro del Mesías de George Frideric Handel, 1741 | 4/4, Sol mayor | coro, cuerdas, oboes, continuo |
+| Demo | Qué es | Compás y tonalidad | Quién toca |
+|---|---|---|---|
+| **Alfonsina y el mar** | la zamba de Ariel Ramírez y Félix Luna, 1969 | 6/8, Do menor | un coro a cuatro voces |
+| **Die Forelle** | la canción «La trucha» de Franz Schubert, D 550, 1817 | 2/4, Re bemol mayor | voz y piano |
+| **Sheep May Safely Graze** | un aria de la Cantata de la caza de Johann Sebastian Bach, BWV 208, 1713 | 4/4, Si bemol mayor | soprano, dos flautas dulces, continuo |
+| **For Unto Us a Child Is Born** | un coro del Mesías de George Frideric Handel, 1741 | 4/4, Sol mayor | coro, cuerdas, oboes, continuo |
 
 Como en la Misa Criolla, las voces cantan sin las palabras.
 

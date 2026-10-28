@@ -382,10 +382,8 @@ dado.
 Las canciones y danzas populares son tradicionales, y la música de
 Músorgski lleva mucho tiempo en el dominio público. **Take Five** (Paul
 Desmond, 1959) y el **Mission: Impossible theme** (Lalo Schifrin, 1966)
-siguen bajo derechos de autor; están incluidos a petición del
-propietario, y un comentario encima de cada uno lo dice. Blue Rondo à
-la Turk también se pidió, pero no se pudo conseguir una partitura
-escrita.
+siguen bajo derechos de autor, y un comentario encima de cada uno lo
+dice.
 
 ## Ejercicios
 

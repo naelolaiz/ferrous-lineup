@@ -350,15 +350,6 @@ escribía de vuelta como «^N.Do..». Cada copia y pegado añadía un punto.
 Los signos de intercalación de un push ahora se quitan primero, y lo
 que queda se comprueba como N.Do. antes de leer ningún punto.
 
-## Lo que queda
-
-Algunas cosas encontradas cambian lo que oirías o verías, así que
-esperan una decisión: un acorde con push en un cambio de sección se
-golpea dos veces, un chord sheet de texto estira una sección hasta el
-siguiente encabezado, y unas cuantas más pequeñas. Están listadas, con
-el resto de los hallazgos, en las notas de la cacería en los archivos
-del proyecto.
-
 ## Ejercicios
 
 1. `Voices::Nth(n)` da la vuelta con `n % voicing.len()`. Escribe una

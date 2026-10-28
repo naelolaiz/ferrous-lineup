@@ -3,11 +3,7 @@
 Un proyecto de Ferrous Lineup es un archivo de texto en **RON**, "Rusty
 Object Notation", que se parece a la propia sintaxis de structs y enums
 de Rust. La aplicación lo escribe mediante `serde`, lo lee mediante los
-mismos tipos, y lo guarda con la extensión `.lineup`. Un archivo con la
-antigua extensión `.loom` sigue abriéndose: esa era la extensión
-mientras la aplicación se llamaba Ferrous Loom
-([Un nombre nuevo](step-9/new-name.md)). Guardar un archivo `.loom`
-conserva su nombre.
+mismos tipos, y lo guarda con la extensión `.lineup`.
 
 ```text
 (
@@ -113,8 +109,8 @@ informar del problema real.
 `file::save` escribe en un archivo temporal junto al destino, y luego lo
 renombra. Un cierre inesperado o un disco lleno dejan, por tanto,
 intacto el proyecto antiguo, y un archivo a medio escribir nunca se
-confunde con uno guardado. El temporal termina en `.lineup.tmp`, incluso
-junto a un archivo `.loom` antiguo, y se elimina si el guardado falla.
+confunde con uno guardado. El temporal termina en `.lineup.tmp` y se
+elimina si el guardado falla.
 Los finales de línea son siempre `\n`, sea cual sea el sistema, y una
 marca de orden de bytes al comienzo de un archivo se ignora al leer.
 

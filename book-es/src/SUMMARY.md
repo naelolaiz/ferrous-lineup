@@ -89,7 +89,6 @@
 
 - [Paso 9: La banda](step-9/README.md)
   - [Nombres de acordes: leer un lead sheet](step-9/chord-names.md)
-  - [Un nombre nuevo](step-9/new-name.md)
   - [El chord sheet: escribir una canción compás a compás](step-9/chord-sheet.md)
   - [La banda toca el chord sheet](step-9/band.md)
   - [Sonidos de instrumentos reales: un SoundFont](step-9/soundfont.md)

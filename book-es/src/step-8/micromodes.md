@@ -39,14 +39,6 @@ Qué gana Ferrous Lineup:
 
 ![La ventana Sets en 7-35, la escala diatónica, abierta desde la ventana Micromodes. Bajo los detalles, «Micromodes inside, en sus 35 grupos de tres», cada uno un botón de vuelta a la ventana Micromodes.](../images/step-8-micromodes-in-sets.png)
 
-## Qué hacen otros programas de música, y qué hacemos nosotros
-
-Los programas de música no tienen nada parecido; como el capítulo
-anterior, este no es una copia de nada. Es la herramienta que un
-estudiante del método de Kröpfl querría junto a un piano roll: algo que
-nombra los grupos de tres de lo que tocas, y te los toca de vuelta, para
-que tu oído aprenda sus colores.
-
 ## Tres notas, doce colores
 
 Francisco Kröpfl (1931–2021) nació en Timișoara, Rumania, y creció en

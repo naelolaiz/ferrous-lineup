@@ -7,9 +7,8 @@ y [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrou
 
 Un montón de archivos MIDI de tangos y canciones folclóricas argentinas
 se convirtió en 28 demos nuevas, cada una completa tal como la toca su
-archivo, nota por nota (PRs #158 y #164, comprobados después en el
-#174). Los archivos venían en tres clases, y cada clase necesitó su
-propia manera de encontrar el pulso:
+archivo, nota por nota. Los archivos venían en tres clases, y cada
+clase necesitó su propia manera de encontrar el pulso:
 
 | Módulo | Demos | Cómo se hizo el archivo |
 |---|---|---|
@@ -27,8 +26,8 @@ melodía es la mano izquierda, en las Keys.
 Los chord sheets se leyeron desde las notas con un script. Para once de
 las canciones de piano, la lectura se comprobó después contra un lead
 sheet, y esas canciones están cortadas en sus estrofas y estribillos,
-cada una en su propia tonalidad (PR #174). Las otras seis, y los
-arreglos de banda, siguen siendo una lectura solo de las notas, así que
+cada una en su propia tonalidad. Las otras seis, y los arreglos de
+banda, siguen siendo una lectura solo de las notas, así que
 trata sus acordes como un borrador.
 
 ## Probarlo

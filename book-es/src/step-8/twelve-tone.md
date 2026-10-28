@@ -35,17 +35,6 @@ Demos > Twelve-tone** toca cada uno como una pieza corta.
 
 ![La ventana Sets, buscando «octatonic»: el conjunto 8-28, su forma prima, su vector de intervalos y cuál es su complemento. Bajo la barra de herramientas del piano roll, las notas del paso bajo el puntero se nombran como conjunto 3-11.](../images/step-8-pitch-class-sets.png)
 
-## Qué hacen otros programas de música, y qué hacemos nosotros
-
-El piano roll de un programa de música típico conoce escalas y acordes,
-pero no series ni conjuntos. Algunos pueden voltear una selección de
-arriba abajo o de atrás hacia delante, lo que es una inversión o una
-retrógrada hechas a mano, y hasta ahí llegan. Así que este capítulo no
-es una copia de nada: es el tipo de ayuda que un estudiante de música
-dodecafónica querría junto a un piano roll, construido con las mismas
-piezas que el resto de la app (las escalas, las harmony keys, los
-sellos de acordes, la Library).
-
 ## Música sin nota base
 
 En Do mayor, Do es la base. Sol tira hacia ella, Si tira con fuerza, y una

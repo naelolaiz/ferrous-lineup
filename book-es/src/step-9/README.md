@@ -20,8 +20,7 @@ lo trae al frente, un cambio a la vez:
 
 1. **Nombres de acordes**: leer acordes como los escriben los lead
    sheets, "Am7", "F#m7b5", "G/B" ([Nombres de acordes: leer un lead
-   sheet](chord-names.md)), y luego un nombre nuevo para la app ([Un
-   nombre nuevo](new-name.md)),
+   sheet](chord-names.md)),
 2. **un chord sheet**: una ventana de compases donde escribes los
    acordes, guardados en el proyecto. Un compás también puede contener
    un conjunto de clases de alturas, un micromodo, una forma de la
@@ -43,9 +42,8 @@ lo trae al frente, un cambio a la vez:
 6. **swing**, desde straight hasta tresillo ([Swing: corcheas tocadas
    largo-corto](swing.md)),
 7. **sonidos de instrumentos reales** desde un SoundFont, y la banda
-   por MIDI out hacia un sintetizador externo. El SoundFont llegó
-   pronto, antes de los puntos 4 a 6 ([Sonidos de instrumentos reales:
-   un SoundFont](soundfont.md)),
+   por MIDI out hacia un sintetizador externo ([Sonidos de instrumentos
+   reales: un SoundFont](soundfont.md)),
 8. **una banda más grande**: una guitarra, cuerdas y un órgano, cada
    uno donde el estilo los tiene ([Una banda más grande: guitarra,
    cuerdas y órgano](bigger-band.md)),
@@ -58,8 +56,7 @@ lo trae al frente, un cambio a la vez:
     notación](lead-sheet.md)),
 12. **un solista** y 13. **entrenamiento auditivo**, ambos
     experimentales y apagados por defecto ([El solista: una línea
-    improvisada sobre los acordes](soloist.md)). El entrenamiento
-    auditivo llegó pronto, en una ventana propia ([Entrenamiento
+    improvisada sobre los acordes](soloist.md), [Entrenamiento
     auditivo](ear-training.md)).
 
 Nada desaparece. El playlist con sus pistas, el channel rack, el piano
@@ -107,17 +104,6 @@ avanzando:
   errores](bug-hunt.md) y [una tercera](bug-hunt-3.md);
 - **Descargas y el libro**: [compilaciones de lanzamiento](releases.md)
   para cada sistema, y [este libro, en línea y como PDF](book-online.md).
-
-## Probarlo
-
-Los cambios de este paso se probaron primero en una rama propia, y
-ahora están todos en `main`:
-
-```sh
-git checkout main
-git pull
-cargo run --release
-```
 
 ## El final del plan
 

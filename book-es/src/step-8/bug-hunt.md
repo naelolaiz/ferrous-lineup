@@ -37,14 +37,6 @@ elegir *conjunto de clases de alturas* como tonalidad, elegir un
 conjunto, hacer zoom con Ctrl+rueda y Alt+rueda, arrastrar notas,
 cambiar el conjunto, volver a hacer zoom.
 
-El resto se dividió en tres partes que podían avanzar al mismo tiempo:
-la reproducción, la teoría musical y la interfaz de usuario. Cada
-parte tuvo su propia copia del repositorio, hecha con
-`git worktree add`, para que las tres pudieran compilar y probar sin
-pisarse entre sí, y sus ramas se volvieron a fusionar al final. Un
-worktree es una segunda carpeta de trabajo para el mismo repositorio:
-comparte el historial, pero tiene su propia rama extraída.
-
 ## Zoom en dos direcciones
 
 En la mayoría de los programas de música, el playlist y el piano roll
