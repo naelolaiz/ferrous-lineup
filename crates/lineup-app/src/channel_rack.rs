@@ -821,7 +821,7 @@ pub fn natural_size(
     egui::vec2(width + bar, 2.0 * line + hint + rows + add_channel + bar)
 }
 
-/// Whether a path opens as a project: a `.lineup` or `.loom` file, or a
+/// Whether a path opens as a project: a `.lineup` file, or a
 /// MIDI file or a chord sheet saved as text, which are imported.
 pub fn is_project_file(path: &std::path::Path) -> bool {
     file::is_project(path)

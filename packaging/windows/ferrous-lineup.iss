@@ -62,10 +62,8 @@ Name: "{group}\Uninstall Ferrous Lineup"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\Ferrous Lineup"; Filename: "{app}\ferrous-lineup.exe"; Tasks: desktopicon
 
 [Registry]
-; .lineup is the current project file; .loom is the name the files had
-; before the app was renamed in October 2026, and they still open.
+; .lineup files open in Ferrous Lineup.
 Root: HKCU; Subkey: "Software\Classes\.lineup"; ValueType: string; ValueName: ""; ValueData: "FerrousLineup.Project"; Flags: uninsdeletevalue
-Root: HKCU; Subkey: "Software\Classes\.loom"; ValueType: string; ValueName: ""; ValueData: "FerrousLineup.Project"; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Classes\FerrousLineup.Project"; ValueType: string; ValueName: ""; ValueData: "Ferrous Lineup project"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\FerrousLineup.Project\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\ferrous-lineup.exe,0"
 Root: HKCU; Subkey: "Software\Classes\FerrousLineup.Project\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\ferrous-lineup.exe"" ""%1"""

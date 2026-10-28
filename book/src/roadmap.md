@@ -17,24 +17,13 @@ chords of a song, pick a style, and the band plays it, while the app
 names every chord you hear. It runs on Linux, macOS and Windows, using
 the same code on all three.
 
-Steps 1 to 8 built what the band stands on. Steps 1 to 4 made the
-sound, the patterns and the tracks of a song, and step 5 added undo and
-WAV export. Step 6 gave the piano roll its harmony help. Step 7 came
-from a question, "does it have MIDI, in and out?" Now it does, both
-ways, and it names the chord you hold down. It was built on a computer
-with no MIDI system, so real MIDI hardware has not been tried yet;
-[step 7](step-7/README.md#how-it-was-tested) says what was tested. Step
-8 added the harmony keys, one for each chord of the key, and a library
-of styles, rhythms and songs: the knowledge the band plays from. In
-step 8 the accompaniment could already follow the chords you play,
-the way an arranger keyboard does. Step 9 put the band in front, with a
-chord sheet to type the song into.
-
-Some ideas of the early roadmap are done along the way: a mixer, MIDI
-file import, notes that start between steps (swing, pushes, strummed
-guitars, imported MIDI), time signature changes partway through a song,
-and installable downloads for Linux, Windows and macOS, with an AppImage
-and a `.deb` for Linux.
+Steps 1 to 8 built what the band stands on: the sound, patterns and
+tracks, undo and export, a piano roll with harmony help, MIDI, the
+harmony keys and a library of styles, rhythms and songs. Step 9 put the
+band in front, with a chord sheet to type the song into. MIDI was built
+on a computer with no MIDI system, so real MIDI hardware has not been
+tried yet; [step 7](step-7/README.md#how-it-was-tested) says what was
+tested.
 
 ## Ideas for what comes next
 
