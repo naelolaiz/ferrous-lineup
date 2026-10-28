@@ -143,6 +143,7 @@
   - [Cómo se mueve cada parte de un acorde a otro](step-9/part-motion.md)
   - [Una sección de vientos para cualquier estilo](step-9/horn-section.md)
   - [EQ, compresión y delay en cada canal](step-9/channel-effects.md)
+  - [La app en español, y las notas en letras o en solfeo](step-9/languages.md)
   - [El libro en línea y como PDF](step-9/book-online.md)
   - [Dónde acaba la banda](step-9/conclusion.md)
   - [Ejercicios](step-9/exercises.md)

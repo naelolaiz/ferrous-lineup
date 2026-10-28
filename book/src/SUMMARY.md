@@ -143,6 +143,7 @@
   - [How each part moves from chord to chord](step-9/part-motion.md)
   - [A horn section for any style](step-9/horn-section.md)
   - [EQ, compression and delay on each channel](step-9/channel-effects.md)
+  - [The app in Spanish, and notes in letters or solfège](step-9/languages.md)
   - [The book online and as a PDF](step-9/book-online.md)
   - [Where the band ends up](step-9/conclusion.md)
   - [Exercises](step-9/exercises.md)

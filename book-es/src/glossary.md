@@ -26,6 +26,7 @@ capítulo que explica cada uno.
 | **Byte string (`b"..."`)** | Un literal de string que es un `&[u8; N]` de códigos ASCII en lugar de un `&str`, como `b"MThd"`. | [Mensajes MIDI](step-7/messages.md) |
 | **Capacity** | Cuántos elementos puede guardar un `Vec` antes de tener que reservar más memoria. | [Hilo de audio](step-2/realtime.md) |
 | **Cargo** | La herramienta de compilación y el gestor de paquetes de Rust. | [Workspace](step-1/workspace.md) |
+| **`Cell<T>`** | Una caja cuyo valor se puede reemplazar a través de una referencia compartida, moviendo valores enteros hacia dentro y hacia fuera con `get` y `set` (para tipos `Copy`); nada puede tener una referencia a lo de dentro, así que nada lo lee mientras cambia. | [Los números romanos en tonalidades menores](step-9/minor-numerals.md#un-ajuste-que-toda-función-puede-ver-uno-por-hilo) |
 | **`cfg` / `cfg_attr`** | Compilación condicional: `#[cfg(target_os = "windows")]` conserva el elemento siguiente solo cuando la condición es cierta, y `cfg_attr` aplica un atributo solo entonces. | [Linux, macOS y Windows](step-4/platforms.md) |
 | **`#[cfg(test)]` on an item** | Conserva una función (o `use`, o struct) solo en las compilaciones de test, para que un ayudante al que solo llaman los tests no dé avisos de no usado en una compilación normal. | [Micromodos](step-8/micromodes.md#comprobar-una-tabla-con-pruebas) |
 | **`checked_add_signed`** | Suma un número con signo a uno sin signo, como `usize + isize`, y da `None` en lugar de bajar de cero o desbordar. | [Herramientas](step-6/tools.md) |
@@ -139,6 +140,7 @@ capítulo que explica cada uno.
 | **Struct update syntax** | `NoteEvent { length: 2, ..note }`: un struct nuevo con algunos campos cambiados y el resto tomados de `note`. | [De los pasos a las notas](step-3/notes.md) |
 | **Target** | El tipo de sistema para el que se compila un programa, como `x86_64-pc-windows-gnu`; `rustup target add` instala la biblioteca de Rust para uno. | [Linux, macOS y Windows](step-4/platforms.md) |
 | **`thread::Builder`** | Arranca un hilo con opciones como un nombre; su `spawn` devuelve un `Result` en lugar de hacer panic cuando el sistema se niega. | [Teclas en vivo](step-7/live.md) |
+| **`thread_local!`** | Declara un valor del que cada hilo tiene su propia copia, al que se llega con `.with(...)`; la app guarda así sus ajustes de números romanos, nombres de notas e idioma, para que las pruebas que corren a la vez nunca vean los de las demás. | [La app en español](step-9/languages.md#dos-ajustes-guardados-como-el-de-los-números-romanos) |
 | **Trait** | Un conjunto de métodos que un tipo promete proporcionar, como una interfaz. | [lineup-core](step-1/lineup-core.md) |
 | **Trait bound** | Una exigencia sobre un tipo genérico, como `T: FromSample<f32>`. | [lineup-audio](step-1/audio-engine.md) |
 | **`TryFrom` / `TryInto`** | Conversiones que pueden fallar, devolviendo un `Result`. | [Guardar](step-4/saving.md) |
