@@ -54,6 +54,7 @@ Grabar desde un teclado MIDI: step-7/recording.md
 Guardado automático: step-9/recovery.md
 Harmony keys: step-8/harmony-keys.md, step-8/key-as-a-set.md
 Hilo de audio: step-1/audio-engine.md, step-2/realtime.md, step-4/song-playback.md, step-5/diff.md
+Idioma: step-9/languages.md
 Importar una grabación: spike-listen/README.md
 Integración continua: step-1/ci.md, step-4/platforms.md#demostrarlo-la-matriz-de-ci
 Lead sheet: step-9/lead-sheet.md, step-9/transposing-instruments.md
@@ -66,6 +67,7 @@ Mixer: step-9/mixer-score-order.md, step-9/mixer.md, step-9/channel-effects.md
 Modulación: véase Cambio de tonalidad
 Música latinoamericana: step-8/folklore.md, step-9/latin-american-songs.md, step-9/misa-criolla.md, step-9/midi-songs.md
 Nombres de acordes: step-3/chords.md, step-9/chord-names.md
+Nomenclatura de notas: step-9/languages.md
 Número romano: step-9/minor-numerals.md
 Oír acordes: step-9/chord-hearing.md
 Orquesta: step-9/concert-hall.md, step-9/orchestra.md
@@ -85,6 +87,7 @@ SoundFont: step-9/soundfont.md
 Tango: step-9/midi-songs.md
 Teclado MIDI: step-7/live.md, step-7/recording.md
 Tempo: step-1/lineup-core.md#tempo-mantener-válido-un-valor, step-8/tempo-and-feel.md, step-9/style-tempo.md
+Traducción: véase Idioma
 Transport: step-8/look-and-transport.md#el-transport-dónde-empieza-play
 Traza de reproducción: step-9/playback-trace.md
 Variaciones: step-9/variations.md

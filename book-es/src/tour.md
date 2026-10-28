@@ -102,7 +102,11 @@ ilumina el acorde que oyes. En una tonalidad menor, **Edit > Settings…
 > Harmony** elige cómo se escriben los numerales de los grados tercero,
 sexto y séptimo: bIII bVI bVII, contados desde la escala mayor como
 hacen los libros de pop y jazz, o III VI VII, contados desde la escala
-menor como hacen los libros clásicos. La pestaña **Library**, junto a la
+menor como hacen los libros clásicos. **Harmony > Note naming** nombra
+las notas, las tonalidades y los acordes con letras (C, Am7) o en solfeo
+(Do, Lam7), y **Appearance > Language** muestra la app en inglés o en
+español (ver [La app en español, y las notas en letras o en
+solfeo](step-9/languages.md)). La pestaña **Library**, junto a la
 lista de patrones, contiene una lista alfabética de **Presets** que
 combina los 177 presets de armonía, los 112 presets de ritmo y tus
 estilos guardados. **Edit > Settings… > Library > Style list** puede, en
@@ -557,16 +561,15 @@ Appearance > Interface size**. **Ctrl+0** devuelve al 100% lo que esté
 bajo el puntero. Los dos zooms del playlist también están en el extremo
 derecho de la barra de estado. **Edit > Settings…** separa las
 preferencias en las categorías **Appearance**, **Harmony**, **Library**,
-**Audio** y **Playback**. Appearance contiene el tamaño de la interfaz y
-todos los niveles de zoom del editor; Harmony contiene cómo se escriben
-los numerales en tonalidades menores; Library contiene la agrupación de
+**Audio** y **Playback**. Appearance contiene el idioma, el tamaño de la
+interfaz y todos los niveles de zoom del editor; Harmony contiene cómo
+se nombran las notas y cómo se escriben los numerales en tonalidades
+menores; Library contiene la agrupación de
 estilos, los valores por defecto de estilos guardados y la carpeta de
 estilos; Audio contiene la información de salida y los ajustes de
 SoundFont; Playback contiene el seguimiento de la reproducción y los
-controles de práctica. Los antiguos menús de zoom, Sounds y Practice
-quedan reemplazados por estas categorías. Los controles de zoom
-comparten los valores actuales con los atajos de teclado y de rueda, que
-siguen funcionando como antes. El menú View también muestra u oculta
+controles de práctica. Los controles de zoom comparten los valores
+actuales con los atajos de teclado y de rueda. El menú View también muestra u oculta
 cada ventana y panel, y **Alt+F8** oculta el panel Patterns y Library
 para dar más espacio al playlist. El zoom, el tamaño de la ventana de la
 aplicación y dónde dejaste las ventanas se recuerdan para la próxima
