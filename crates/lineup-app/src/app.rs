@@ -1961,7 +1961,8 @@ impl LineupApp {
         if !typing && !controls_active && pressed(egui::Key::PageDown) {
             self.skip_bars(1);
         }
-        if !typing && !controls_active && pressed(egui::Key::L) {
+        let l_types = self.chord_sheet.takes_l() && !self.live.typing();
+        if !typing && !controls_active && !l_types && pressed(egui::Key::L) {
             self.set_mode(match self.mode {
                 PlayMode::Pattern => PlayMode::Song,
                 PlayMode::Song => PlayMode::Pattern,

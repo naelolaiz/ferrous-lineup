@@ -8,8 +8,8 @@
 use std::cell::Cell;
 
 use eframe::egui;
-use lineup_core::NoteNaming;
 use lineup_core::harmony::{Scale, ScaleKind};
+use lineup_core::{NoteName, NoteNaming};
 use serde::{Deserialize, Serialize};
 
 /// The user interface language.
@@ -131,6 +131,34 @@ pub fn key_name(scale: Scale) -> String {
         }
         kind => format!("{root} {}", tr(kind.name())),
     }
+}
+
+/// `text` with each note written in braces, {A} or {G#}, named as the
+/// settings say: "as here in {A} minor" reads "as here in La minor" in
+/// solfège. Braces around anything else, as in the set {0,1,4}, stay.
+pub fn with_notes(text: &str) -> String {
+    let mut shown = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(open) = rest.find('{') {
+        shown.push_str(&rest[..open]);
+        let after = &rest[open + 1..];
+        let note = after.find('}').and_then(|close| {
+            let name = NoteName::read(&after[..close]).filter(|(_, left)| left.is_empty());
+            name.map(|(name, _)| (name, close))
+        });
+        match note {
+            Some((name, close)) => {
+                shown.push_str(&name.to_string());
+                rest = &after[close + 1..];
+            }
+            None => {
+                shown.push('{');
+                rest = after;
+            }
+        }
+    }
+    shown.push_str(rest);
+    shown
 }
 
 /// Translates a static string into the current language.
@@ -451,20 +479,20 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "Letters (C, D, E…)" => "Letras (C, D, E…)",
         "Solfège (Do, Re, Mi…)" => "Solfeo (Do, Re, Mi…)",
         "Roman numerals in minor keys" => "Números romanos en tonalidades menores",
-        "Both ways are correct. They name the same chords and differ only in the chords on the third, sixth and seventh degrees of a minor key, as here in A minor." => {
-            "Ambas formas son correctas. Nombran los mismos acordes y solo difieren en los acordes sobre los grados tercero, sexto y séptimo de una tonalidad menor, como aquí en La menor."
+        "Both ways are correct. They name the same chords and differ only in the chords on the third, sixth and seventh degrees of a minor key, as here in {A} minor." => {
+            "Ambas formas son correctas. Nombran los mismos acordes y solo difieren en los acordes sobre los grados tercero, sexto y séptimo de una tonalidad menor, como aquí en {A} menor."
         }
         "bIII bVI bVII: counted from the major scale (pop and jazz)" => {
             "bIII bVI bVII: contados desde la escala mayor (pop y jazz)"
         }
-        "C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°." => {
-            "C es bIII, F es bVI y G es bVII; el acorde de sensible G#° es vii°."
+        "{C} is bIII, {F} is bVI and {G} is bVII; the leading-tone chord {G#}° is vii°." => {
+            "{C} es bIII, {F} es bVI y {G} es bVII; el acorde de sensible {G#}° es vii°."
         }
         "III VI VII: counted from the minor scale (classical harmony)" => {
             "III VI VII: contados desde la escala menor (armonía clásica)"
         }
-        "C is III, F is VI and G is VII; G#° is still vii°, and E major is V." => {
-            "C es III, F es VI y G es VII; G#° sigue siendo vii°, y E es V."
+        "{C} is III, {F} is VI and {G} is VII; {G#}° is still vii°, and {E} major is V." => {
+            "{C} es III, {F} es VI y {G} es VII; {G#}° sigue siendo vii°, y {E} mayor es V."
         }
         "Applies to every view that shows numerals, and to numerals you type or paste on the chord sheet. A style's Progression box is always written bIII bVI bVII, as the library writes it." => {
             "Se aplica a todas las vistas que muestran números romanos, y a los que escribes o pegas en la hoja de acordes. El cuadro Progresión de un estilo siempre se escribe bIII bVI bVII, como lo escribe la biblioteca."
@@ -515,11 +543,11 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "Fill the sheet with the chords heard in the song, in place of what it says now: an arpeggio counts as its chord, two chords at once are written Eb7|Fb, notes that make no chord as their set; in a set or a row, the sets or micromodes heard. Undo brings the sheet back" => {
             "Llena la hoja con los acordes escuchados en la canción en lugar de lo escrito ahora. Deshacer recupera la hoja"
         }
-        "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C." => {
-            "Haz clic en un compás y escribe su armonía: acordes (Am7 D7, G/B o Lam7 Re7, Sol/Si), números romanos (ii7 V7), conjuntos (3-11 T2, {0,1,4}), micromodos (Menor 3), formas de serie (P0, RI7) o N.C."
+        "Click a bar and type its harmony: chords ({A}m7 {D}7, {G}/{B}), Roman numerals (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C." => {
+            "Haz clic en un compás y escribe su armonía: acordes ({A}m7 {D}7, {G}/{B}), números romanos (ii7 V7), conjuntos (3-11 T2, {0,1,4}), micromodos (Menor 3), formas de serie (P0, RI7) o N.C."
         }
-        "Each / holds the harmony before it one more beat, as in C / / G7. The band stops with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and Ctrl+V copy and paste bars as text." => {
-            "Cada / mantiene la armonía anterior un pulso más, como en C / / G7. La banda se detiene con un golpe (C.), sostenido (C..) o silencio (C...), y ^C entra antes. Ctrl+C y Ctrl+V copian y pegan compases como texto."
+        "Each / holds the harmony before it one more beat, as in {C} / / {G}7. The band stops with a shot ({C}.), a hold ({C}..) or a rest ({C}...), and ^{C} comes in early. Ctrl+C and Ctrl+V copy and paste bars as text." => {
+            "Cada / mantiene la armonía anterior un pulso más, como en {C} / / {G}7. La banda se detiene con un golpe ({C}.), sostenido ({C}..) o silencio ({C}...), y ^{C} entra antes. Ctrl+C y Ctrl+V copian y pegan compases como texto."
         }
         "Speed" => "Velocidad",
         "Tap" => "Pulsar",
@@ -655,5 +683,11 @@ mod tests {
             });
         });
         Language::Spanish.with(|| assert_eq!(key_name(b_flat), "Bb mayor"));
+        // Notes in braces in a text show as the settings name them.
+        let text = "as in {C} / / {G#}7, or a set {0,1,4}";
+        assert_eq!(with_notes(text), "as in C / / G#7, or a set {0,1,4}");
+        NoteNaming::Solfege.with(|| {
+            assert_eq!(with_notes(text), "as in Do / / Sol#7, or a set {0,1,4}");
+        });
     }
 }

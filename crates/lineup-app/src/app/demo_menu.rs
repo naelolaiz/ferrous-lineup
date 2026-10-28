@@ -143,7 +143,8 @@ fn all_entries() -> Vec<Entry> {
     )];
     for song in SONGS {
         let scale = song.scale();
-        let tonic = scale.spell(song.tonic);
+        // Searches read keys in letters, whatever names the app shows.
+        let tonic = lineup_core::NoteNaming::Letters.with(|| scale.spell(song.tonic).to_string());
         let mut key = format!("{tonic} {}", song.mode.name());
         // A song in D harmonic minor is in D minor too.
         if matches!(

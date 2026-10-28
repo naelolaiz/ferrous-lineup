@@ -4247,6 +4247,44 @@ mod bars {
     }
 
     #[test]
+    fn in_solfege_l_types_la_chords_and_in_letters_it_switches_mode() {
+        let mut screen = song();
+        let mode = screen.app.mode;
+        // A keyboard sends the key L and the text it types.
+        let type_l = |screen: &mut Screen, text: &str| {
+            screen.draw(vec![
+                Event::Key {
+                    key: Key::L,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: Modifiers::SHIFT,
+                },
+                Event::Text(text.into()),
+            ]);
+        };
+        crate::i18n::set_note_naming(&screen.ctx, lineup_core::NoteNaming::Solfege);
+        screen.click("Fa");
+        type_l(&mut screen, "Lam7");
+        screen.key(Key::Enter);
+        assert_eq!(screen.app.mode, mode, "L typed a chord");
+        let a_minor_seventh = lineup_core::chord_sheet::HarmonyName::parse("Am7").unwrap();
+        assert_eq!(
+            screen.app.project.chord_at(48).map(|marker| marker.harmony),
+            Some(a_minor_seventh)
+        );
+        // In letters, no chord starts with L: it switches pattern and song.
+        crate::i18n::set_note_naming(&screen.ctx, lineup_core::NoteNaming::Letters);
+        screen.click("Am7");
+        type_l(&mut screen, "L");
+        assert_ne!(screen.app.mode, mode);
+        assert_eq!(
+            screen.app.project.chord_at(48).map(|marker| marker.harmony),
+            Some(a_minor_seventh)
+        );
+    }
+
+    #[test]
     fn the_bar_numbers_insert_and_delete_bars_too() {
         let mut screen = song();
         screen.app.chord_sheet.open = false;

@@ -1608,7 +1608,7 @@ fn paint_ruler(
                 .text(
                     pos2(right + 4.0, ruler.center().y),
                     Align2::LEFT_CENTER,
-                    keys.key_at(bar.start).name(),
+                    crate::i18n::key_name(keys.key_at(bar.start)),
                     FontId::proportional(10.0),
                     KEY_TEXT,
                 )
