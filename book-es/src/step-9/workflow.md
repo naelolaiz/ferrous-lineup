@@ -3,6 +3,7 @@
 Archivos: [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs),
 [`crates/lineup-app/src/icons.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/icons.rs),
 [`crates/lineup-app/src/app/shortcuts.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/shortcuts.rs),
+[`crates/lineup-app/src/app/about.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/about.rs),
 [`crates/lineup-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/widgets.rs)
 y [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
@@ -18,6 +19,8 @@ quita un paso entre tú y la música:
   dibujos pintados para las ventanas;
 - **Help > Keyboard shortcuts** (F1) enumera todas las teclas a las que
   responde la aplicación;
+- **Help > About Ferrous Lineup** dice qué versión usas, con qué
+  licencia, y dónde están este libro y el código;
 - cada ventana se abre **al tamaño de lo que muestra**, no a un tamaño
   que egui recordó de otro día.
 
@@ -37,6 +40,10 @@ quita un paso entre tú y la música:
 5. Abre el mixer (**F9**), arrastra su esquina para hacerlo mucho más
    grande, ciérralo y ábrelo otra vez. Vuelve tan grande como sus
    canales.
+6. Abre **Help > About Ferrous Lineup** (**Ayuda > Acerca de Ferrous
+   Lineup** con la interfaz en español). Muestra la versión, la licencia
+   y enlaces a este libro, a su PDF, al código fuente y a la lista de
+   problemas conocidos.
 
 ![La barra de herramientas en una fila: los cinco botones de ventana y los conmutadores Count-in y Metronome son dibujos.](../images/step-9-workflow-toolbar.png)
 
@@ -242,6 +249,97 @@ que funcionan en cualquier sitio (Anywhere, Windows, File and Edit,
 Zoom) y falla si alguna tecla aparece dos veces, ya que esa tecla haría
 dos cosas a la vez.
 
+## Quién la hizo, y qué versión
+
+**Help > About Ferrous Lineup** dice qué versión estás usando, con qué
+licencia, y dónde encontrar este libro, el código y la lista de
+problemas conocidos. Es lo primero que conviene mirar antes de informar
+de uno.
+
+![Help > About con la interfaz en español: la versión, la licencia y los enlaces.](../images/step-9-about.png)
+
+Todo lo que dice del programa sale de `Cargo.toml`, leído mientras se
+compila el programa:
+
+```rust
+const ISSUES: &str = concat!(env!("CARGO_PKG_REPOSITORY"), "/issues");
+
+ui.label(format!("{} {}", tr("Version"), env!("CARGO_PKG_VERSION")));
+ui.weak(tr(env!("CARGO_PKG_DESCRIPTION")));
+```
+
+- `env!("NOMBRE")` es una macro que el compilador sustituye por el valor
+  de la variable de entorno `NOMBRE` *mientras compila*, como un
+  `&'static str`. Cargo define `CARGO_PKG_VERSION`,
+  `CARGO_PKG_DESCRIPTION`, `CARGO_PKG_REPOSITORY` y algunas más a partir
+  de la sección `[package]` de `Cargo.toml` (la app toma su versión, su
+  licencia y su repositorio del `[workspace.package]` del workspace).
+  Una variable que no está definida es un error de compilación, no una
+  sorpresa para quien usa la app.
+- `concat!` une literales en uno solo en tiempo de compilación, así que
+  `ISSUES` también es una constante. `format!` no serviría ahí: construye
+  un `String` mientras el programa se ejecuta, y una `const` tiene que
+  conocerse antes.
+
+Así, cuando una versión nueva cambia el número en `Cargo.toml`, la
+ventana cambia con él, y nadie tiene que acordarse de un segundo sitio.
+Las [compilaciones de las versiones](releases.md) comparan la etiqueta
+con ese mismo número.
+
+Los textos pasan por `tr`, como los menús, así que con la interfaz en
+español la ventana está en español. Los enlaces al libro cambian también:
+
+```rust
+let (book, book_pdf) = match i18n::current_language() {
+    Language::English => (BOOK, BOOK_PDF),
+    Language::Spanish => (BOOK_ES, BOOK_ES_PDF),
+};
+```
+
+El `match` no tiene brazo `_` a propósito. Añade un tercer idioma y el
+compilador se detiene aquí hasta que decidas qué libro reciben sus
+lectores.
+
+### El dibujo y los enlaces
+
+El icono es el mismo que el escritorio muestra para la ventana de la
+app: `WINDOW_ICON`, 256 × 256 píxeles de bytes rojo, verde, azul y alfa,
+incluidos en el programa con `include_bytes!`. egui dibuja las imágenes
+a partir de **texturas**, imágenes guardadas en la tarjeta gráfica, así
+que los bytes se convierten en una textura la primera vez que se abre la
+ventana y se guardan en la memoria de egui:
+
+```rust
+fn icon(ctx: &egui::Context) -> egui::TextureHandle {
+    let id = egui::Id::unique("about-icon");
+    if let Some(texture) = ctx.data(|data| data.get_temp(id)) {
+        return texture;
+    }
+    let size = crate::WINDOW_ICON_SIZE as usize;
+    let image = egui::ColorImage::from_rgba_unmultiplied([size, size], crate::WINDOW_ICON);
+    let texture = ctx.load_texture("about-icon", image, egui::TextureOptions::LINEAR);
+    ctx.data_mut(|data| data.insert_temp(id, texture.clone()));
+    texture
+}
+```
+
+Un `TextureHandle` funciona como un `Arc`: un clon es barato, y la
+textura sigue en la tarjeta gráfica mientras viva algún clon. El que se
+guarda en la memoria de egui hace que la imagen se envíe a la tarjeta una
+sola vez, no en cada fotograma que dibuja egui. `WINDOW_ICON` es una
+constante de `main.rs`, sin `pub`; `about.rs` puede leerla igualmente
+como `crate::WINDOW_ICON`, porque un elemento privado es visible en su
+propio módulo y en todos los módulos que hay dentro de él.
+
+`ui.hyperlink_to(texto, url)` dibuja un enlace. Al pulsarlo no se abre
+el navegador directamente: egui añade un `OutputCommand::OpenUrl` a lo
+que devuelve el fotograma, y eframe pide al sistema que abra la
+dirección. Eso hace que el clic sea fácil de probar.
+`help_about_shows_the_version_the_license_and_where_the_book_is` abre
+**Help > About**, comprueba que la línea de la versión y cada enlace se
+dibujan, pulsa **The book** y comprueba que el fotograma pidió la
+dirección del libro, sin que se abra ningún navegador.
+
 ## Ventanas del tamaño de lo que muestran
 
 egui recuerda el tamaño de cada ventana y lo guarda con el resto del
@@ -359,3 +457,7 @@ detalles.
    entonces la lista?
 3. El lead sheet se abre con `Opening::FirstTime`. ¿Qué cambiaría para
    ti si usara `EveryTime`? Pruébalo y di cuál prefieres.
+4. Añade a la ventana About un botón **Copy version** que ponga
+   «Ferrous Lineup 0.3.0» (con la versión real) en el portapapeles con
+   `ctx.copy_text`. ¿Puede el texto ser una `const`, construida con
+   `concat!`?

@@ -92,6 +92,8 @@ Transport: step-8/look-and-transport.md#el-transport-dónde-empieza-play
 Traza de reproducción: step-9/playback-trace.md
 Variaciones: step-9/variations.md
 Velocidad: step-6/piano-roll.md#el-carril-de-velocidad, step-8/tempo-and-feel.md#velocidades-la-forma-de-una-frase
+Ventana Acerca de: step-9/workflow.md#quién-la-hizo-y-qué-versión
+Versión: step-9/releases.md, step-9/workflow.md#quién-la-hizo-y-qué-versión
 Zoom: step-8/fitting-the-window.md#zoom, step-8/zoom-follows-the-pointer.md
 
 Array: no step-9/releases.md
