@@ -629,7 +629,7 @@ impl ChordSheet {
         self.main_area = None;
         let mut open = self.open;
         self.front.keep(ctx, window_id());
-        let window = egui::Window::new("Chord sheet")
+        let window = egui::Window::new(crate::i18n::tr("Chord sheet"))
             .id(window_id())
             .open(&mut open)
             .default_pos([260.0, 110.0])
@@ -676,7 +676,7 @@ impl ChordSheet {
     ) -> Vec<SheetAction> {
         let mut actions = Vec::new();
         self.main_area = Some(ui.available_rect_before_wrap());
-        ui.heading("Chord sheet");
+        ui.heading(crate::i18n::tr("Chord sheet"));
         self.contents(ui, project, playing, typing_keys, controls, &mut actions);
         actions
     }

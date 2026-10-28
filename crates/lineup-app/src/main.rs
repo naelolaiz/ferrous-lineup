@@ -21,6 +21,7 @@ mod clipboard;
 mod ear_training;
 mod harmony_keys;
 mod icons;
+pub(crate) mod i18n;
 mod lead_sheet;
 mod library_browser;
 mod meters;

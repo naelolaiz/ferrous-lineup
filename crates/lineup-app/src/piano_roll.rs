@@ -719,12 +719,15 @@ impl PianoRoll {
         // below needs `&mut self`, and both cannot borrow `self` at once.
         let mut open = self.open;
         let id = self.instance.unwrap_or_else(Self::id);
-        let window = egui::Window::new(format!(
-            "Piano roll · {} · {}",
-            pattern_notes.name, channel.name
-        ))
-        .id(id)
-        .open(&mut open)
+        let roll_title = format!(
+            "{} · {} · {}",
+            crate::i18n::tr("Piano roll"),
+            pattern_notes.name,
+            channel.name
+        );
+        let window = egui::Window::new(roll_title)
+            .id(id)
+            .open(&mut open)
         .default_pos([150.0, 160.0])
         .constrain_to(area);
         // The window is built while closed too, and egui then hides it.

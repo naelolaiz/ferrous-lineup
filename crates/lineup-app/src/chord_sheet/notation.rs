@@ -172,14 +172,17 @@ impl NotationView {
 
     /// The row's own choices.
     fn items(&mut self, ui: &mut Ui, project: &Project) {
-        ui.label("Show");
+        ui.label(crate::i18n::tr("Show"));
         let notation = self.notation();
         let combo = egui::ComboBox::from_id_salt("chord-sheet-notation")
-            .selected_text(notation.name())
+            .selected_text(crate::i18n::tr(notation.name()))
             .show_ui(ui, |ui| {
                 for choice in Notation::ALL {
-                    let item =
-                        ui.selectable_value(&mut self.choices.notation, choice, choice.name());
+                    let item = ui.selectable_value(
+                        &mut self.choices.notation,
+                        choice,
+                        crate::i18n::tr(choice.name()),
+                    );
                     theme::hint(item, choice.describe());
                 }
             });

@@ -239,6 +239,10 @@ impl LineupApp {
     }
 
     fn with_audio(ctx: &egui::Context, path: Option<PathBuf>, mut audio: Audio) -> Self {
+        crate::i18n::init_language(ctx);
+        let naming = crate::i18n::init_note_naming(ctx);
+        lineup_core::pitch::set_global_note_naming(naming);
+
         // The engine's ways in and out for MIDI go to the MIDI threads.
         let (live_input, midi_output) = match &mut audio {
             Audio::Running(engine) => (engine.take_live_input(), engine.take_midi_output()),
@@ -1707,20 +1711,20 @@ impl LineupApp {
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
         let menu = egui::containers::menu::MenuButton::new("⋯").config(stay_open);
         let (menu, _) = menu.ui(ui, |ui| {
-            ui.label("Name");
+            ui.label(crate::i18n::tr("Name"));
             // The field edits a copy, so the change can go through `edit`.
             let mut name = self.project.patterns()[self.pattern].name.clone();
             if ui.text_edit_singleline(&mut name).changed() {
                 self.edit_pattern("rename pattern", |pattern| pattern.name = name);
             }
-            if ui.button("Clone").clicked() {
+            if ui.button(crate::i18n::tr("Clone")).clicked() {
                 self.clone_pattern();
                 ui.close();
             }
             let can_delete = self.project.patterns().len() > 1;
             if ui
-                .add_enabled(can_delete, egui::Button::new("Delete"))
-                .on_hover_text("Also removes its clips from the playlist")
+                .add_enabled(can_delete, egui::Button::new(crate::i18n::tr("Delete")))
+                .on_hover_text(crate::i18n::tr("Also removes its clips from the playlist"))
                 .clicked()
             {
                 self.remove_pattern();
@@ -1985,6 +1989,10 @@ impl LineupApp {
         // Before anything is drawn: whether a menu is open as the mouse
         // button goes down.
         widgets::track_dismissing(ctx);
+        // Sync language and note naming preferences with persisted settings.
+        crate::i18n::init_language(ctx);
+        let naming = crate::i18n::init_note_naming(ctx);
+        lineup_core::pitch::set_global_note_naming(naming);
         // Every view writes numerals as the settings say.
         settings::minor_numerals(ctx).set();
         self.start_frame_for_undo(ctx);
@@ -2161,7 +2169,8 @@ impl LineupApp {
             ))
             * rack_scale;
         let rack_size = widgets::window_size(ctx, natural, area);
-        let mut rack = egui::Window::new(format!("Channel rack · {pattern_name}"))
+        let rack_title = format!("{} · {pattern_name}", crate::i18n::tr("Channel rack"));
+        let mut rack = egui::Window::new(rack_title)
             .id(rack_id())
             .open(&mut rack_open)
             .default_pos([240.0, 380.0])

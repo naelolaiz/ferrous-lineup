@@ -169,9 +169,9 @@ impl Area {
 
     fn name(self) -> &'static str {
         match self {
-            Area::Main => "Playlist",
-            Area::Rack => "Channel rack",
-            Area::PianoRoll => "Piano roll",
+            Area::Main => crate::i18n::tr("Playlist"),
+            Area::Rack => crate::i18n::tr("Channel rack"),
+            Area::PianoRoll => crate::i18n::tr("Piano roll"),
         }
     }
 
@@ -324,34 +324,41 @@ impl WheelZoom {
 impl LineupApp {
     /// The View menu: which windows and panels are shown.
     pub(super) fn view_menu(&mut self, ui: &mut egui::Ui) {
-        ui.menu_button("View", |ui| {
-            let window = |open: &mut bool, text: &str, shortcut, ui: &mut egui::Ui| {
+        ui.menu_button(crate::i18n::tr("View"), |ui| {
+            let window = |open: &mut bool, text: &'static str, shortcut, ui: &mut egui::Ui| {
                 let shortcut = ui.ctx().format_shortcut(&shortcut);
-                let button = egui::Button::selectable(*open, text).shortcut_text(shortcut);
+                let button = egui::Button::selectable(*open, crate::i18n::tr(text))
+                    .shortcut_text(shortcut);
                 if ui.add(button).clicked() {
                     *open = !*open;
                 }
             };
             window(&mut self.chord_sheet.open, "Chord sheet", CHORD_SHEET, ui);
             let fills = self.chord_sheet.fills_window();
-            let main = egui::Button::selectable(fills, "Chord sheet in the main window");
+            let main = egui::Button::selectable(
+                fills,
+                crate::i18n::tr("Chord sheet in the main window"),
+            );
             if ui
                 .add(main)
-                .on_hover_text("The chord sheet in the playlist's place, with more bars on a line")
+                .on_hover_text(crate::i18n::tr(
+                    "The chord sheet in the playlist's place, with more bars on a line",
+                ))
                 .clicked()
             {
                 self.chord_sheet.fill_window(!fills);
             }
-            let lead = egui::Button::selectable(self.lead_sheet.open, "Lead sheet");
+            let lead =
+                egui::Button::selectable(self.lead_sheet.open, crate::i18n::tr("Lead sheet"));
             if ui.add(lead).clicked() {
                 self.lead_sheet.open = !self.lead_sheet.open;
             }
             window(&mut self.rack_open, "Channel rack", RACK, ui);
             if ui
-                .button("Style editor…")
-                .on_hover_text(
+                .button(crate::i18n::tr("Style editor…"))
+                .on_hover_text(crate::i18n::tr(
                     "See and edit repeating parts, or create a style from an existing one",
-                )
+                ))
                 .clicked()
             {
                 if self.style_editor.open {
@@ -366,8 +373,8 @@ impl LineupApp {
             window(browser, "Patterns and library", BROWSER, ui);
             window(&mut self.mixer_open, "Mixer", MIXER, ui);
             ui.separator();
-            let ear = egui::Button::selectable(self.ear_training.open, "Ear training")
-                .shortcut_text("experimental");
+            let ear = egui::Button::selectable(self.ear_training.open, crate::i18n::tr("Ear training"))
+                .shortcut_text(crate::i18n::tr("experimental"));
             if ui.add(ear).clicked() {
                 self.ear_training.open = !self.ear_training.open;
             }
@@ -497,17 +504,17 @@ pub(super) fn zoom_settings_ui(ui: &mut egui::Ui) {
             egui::Grid::new("settings-zoom")
                 .spacing(egui::vec2(14.0, 12.0))
                 .show(ui, |ui| {
-                    ui.weak("Editor");
-                    ui.weak("Horizontal");
-                    ui.weak("Vertical");
+                    ui.weak(crate::i18n::tr("Editor"));
+                    ui.weak(crate::i18n::tr("Horizontal"));
+                    ui.weak(crate::i18n::tr("Vertical"));
                     ui.end_row();
                     for area in Area::ALL {
                         ui.label(area.name());
                         for axis in [Axis::Horizontal, Axis::Vertical] {
                             if axis == Axis::Vertical && !area.two_way() {
-                                ui.weak("Linked").on_hover_text(
+                                ui.weak(crate::i18n::tr("Linked")).on_hover_text(crate::i18n::tr(
                                     "The channel rack uses one scale for both directions.",
-                                );
+                                ));
                                 continue;
                             }
                             let current = area.zoom(&ctx, axis);
@@ -538,7 +545,10 @@ pub(super) fn zoom_settings_ui(ui: &mut egui::Ui) {
             let changed =
                 ctx.zoom_factor() != 1.0 || Area::ALL.into_iter().any(|area| !area.is_reset(&ctx));
             if ui
-                .add_enabled(changed, egui::Button::new("Reset all zoom levels to 100%"))
+                .add_enabled(
+                    changed,
+                    egui::Button::new(crate::i18n::tr("Reset all zoom levels to 100%")),
+                )
                 .clicked()
             {
                 for area in Area::ALL {
@@ -562,11 +572,11 @@ pub(super) fn zoom_settings_ui(ui: &mut egui::Ui) {
                         ("Ctrl+0", "Reset the current view"),
                     ] {
                         ui.label(keys);
-                        ui.weak(action);
+                        ui.weak(crate::i18n::tr(action));
                         ui.end_row();
                     }
                 });
-            ui.weak("Over toolbars and panels, zoom changes the interface size. Use ⌘ in place of Ctrl on Mac.");
+            ui.weak(crate::i18n::tr("Over toolbars and panels, zoom changes the interface size. Use ⌘ in place of Ctrl on Mac."));
         },
     );
 }
@@ -578,15 +588,23 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
     // The status bar lays this out right to left, so the vertical zoom
     // comes first, and + before −.
     for (axis, symbol, what) in [
-        (Axis::Vertical, "↕", "Taller or shorter tracks (Alt+wheel)"),
-        (Axis::Horizontal, "↔", "Wider or narrower bars (Ctrl+wheel)"),
+        (
+            Axis::Vertical,
+            "↕",
+            "Taller or shorter tracks (Alt+wheel)",
+        ),
+        (
+            Axis::Horizontal,
+            "↔",
+            "Wider or narrower bars (Ctrl+wheel)",
+        ),
     ] {
         let area = Area::Main;
         let zoom = area.zoom(&ctx, axis);
         let small = |text| egui::Button::new(text).small();
         if ui
             .add_enabled(area.can_step(&ctx, axis, true), small("+"))
-            .on_hover_text(what)
+            .on_hover_text(crate::i18n::tr(what))
             .clicked()
         {
             area.step_zoom(&ctx, axis, true);

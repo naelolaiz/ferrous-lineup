@@ -2,13 +2,16 @@
 Type=Application
 Name=Ferrous Lineup
 GenericName=Backing band
+GenericName[es]=Banda de acompañamiento
 Comment=Play songs with a backing band and learn harmony
+Comment[es]=Toca canciones con una banda de acompañamiento y aprende armonía
 Exec=ferrous-lineup %f
 TryExec=ferrous-lineup
 Icon=io.github.naelolaiz.FerrousLineup
 Terminal=false
 Categories=AudioVideo;Audio;Music;
 Keywords=music;band;chords;harmony;sequencer;MIDI;backing track;
+Keywords[es]=música;banda;acordes;armonía;secuenciador;MIDI;pista de acompañamiento;
 MimeType=application/x-ferrous-lineup;
 StartupNotify=true
 StartupWMClass=Ferrous Lineup

@@ -1,10 +1,12 @@
 //! Application preferences, collected in Edit > Settings.
 
 use eframe::egui::{self, Align, Layout, RichText, vec2};
+use lineup_core::NoteNaming;
 use lineup_core::harmony::MinorNumerals;
 use lineup_core::library::apply::StyleParts;
 
 use super::{LineupApp, view};
+use crate::i18n::{self, Language, tr, tr_str};
 use crate::library_browser::{
     StyleEditorRequest, grouped_presets, set_grouped_presets, style_mode_ui, style_parts_checkboxes,
 };
@@ -32,11 +34,11 @@ impl Page {
 
     fn name(self) -> &'static str {
         match self {
-            Self::Appearance => "Appearance",
-            Self::Harmony => "Harmony",
-            Self::Library => "Library",
-            Self::Audio => "Audio",
-            Self::Playback => "Playback",
+            Self::Appearance => tr("Appearance"),
+            Self::Harmony => tr("Harmony"),
+            Self::Library => tr("Library"),
+            Self::Audio => tr("Audio"),
+            Self::Playback => tr("Playback"),
         }
     }
 }
@@ -57,25 +59,69 @@ pub(super) fn minor_numerals(ctx: &egui::Context) -> MinorNumerals {
     ctx.data_mut(|data| data.get_persisted(minor_numerals_id()).unwrap_or_default())
 }
 
+fn language_settings_ui(ui: &mut egui::Ui) {
+    card(
+        ui,
+        tr("Language"),
+        tr("Choose the interface language."),
+        |ui| {
+            let mut current = i18n::current_language();
+            let mut changed = false;
+            for lang in Language::ALL {
+                if ui.radio_value(&mut current, lang, lang.name()).changed() {
+                    changed = true;
+                }
+            }
+            if changed {
+                i18n::set_language(ui.ctx(), current);
+            }
+        },
+    );
+}
+
+fn note_naming_ui(ui: &mut egui::Ui) {
+    card(
+        ui,
+        tr("Note naming"),
+        tr("How note names are written throughout the app."),
+        |ui| {
+            let mut naming = i18n::current_note_naming();
+            let mut changed = false;
+            for (value, label) in [
+                (NoteNaming::Letters, tr("Letters (C, D, E…)")),
+                (NoteNaming::Solfege, tr("Solfège (Do, Re, Mi…)")),
+            ] {
+                if ui.radio_value(&mut naming, value, label).changed() {
+                    changed = true;
+                }
+            }
+            if changed {
+                i18n::set_note_naming(ui.ctx(), naming);
+                lineup_core::pitch::set_global_note_naming(naming);
+            }
+        },
+    );
+}
+
 fn minor_numerals_ui(ui: &mut egui::Ui) {
     card(
         ui,
-        "Roman numerals in minor keys",
-        "Both ways are correct. They name the same chords and differ only in \
+        tr("Roman numerals in minor keys"),
+        tr("Both ways are correct. They name the same chords and differ only in \
          the chords on the third, sixth and seventh degrees of a minor key, \
-         as here in A minor.",
+         as here in A minor."),
         |ui| {
             let mut numerals = minor_numerals(ui.ctx());
             for (value, label, example) in [
                 (
                     MinorNumerals::FromMajor,
-                    "bIII bVI bVII: counted from the major scale (pop and jazz)",
-                    "C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°.",
+                    tr("bIII bVI bVII: counted from the major scale (pop and jazz)"),
+                    tr("C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°."),
                 ),
                 (
                     MinorNumerals::FromMinor,
-                    "III VI VII: counted from the minor scale (classical harmony)",
-                    "C is III, F is VI and G is VII; G#° is still vii°, and E major is V.",
+                    tr("III VI VII: counted from the minor scale (classical harmony)"),
+                    tr("C is III, F is VI and G is VII; G#° is still vii°, and E major is V."),
                 ),
             ] {
                 ui.radio_value(&mut numerals, value, label);
@@ -85,11 +131,11 @@ fn minor_numerals_ui(ui: &mut egui::Ui) {
             }
             ui.add_space(4.0);
             ui.label(
-                RichText::new(
+                RichText::new(tr(
                     "Applies to every view that shows numerals, and to numerals you \
                      type or paste on the chord sheet. A style's Progression box is \
                      always written bIII bVI bVII, as the library writes it.",
-                )
+                ))
                 .small()
                 .color(theme::TEXT_DIM),
             );
@@ -113,9 +159,9 @@ pub(super) fn card(
         .inner_margin(14)
         .show(ui, |ui| {
             ui.set_min_width(ui.available_width());
-            ui.strong(title);
+            ui.strong(tr_str(title));
             if !description.is_empty() {
-                ui.label(RichText::new(description).color(theme::TEXT_DIM));
+                ui.label(RichText::new(tr_str(description)).color(theme::TEXT_DIM));
             }
             ui.add_space(6.0);
             contents(ui);
@@ -130,7 +176,7 @@ impl LineupApp {
         let mut open = true;
         let available = (ctx.content_rect().size() - vec2(32.0, 64.0)).max(vec2(280.0, 180.0));
         let id = egui::Id::unique("application-settings");
-        let window = egui::Window::new("Settings")
+        let window = egui::Window::new(tr("Settings"))
             .id(id)
             .open(&mut open)
             .collapsible(false)
@@ -147,13 +193,13 @@ impl LineupApp {
                     ui.separator();
                     ui.horizontal(|ui| {
                         ui.label(
-                            RichText::new("Preferences are saved automatically.")
+                            RichText::new(tr("Preferences are saved automatically."))
                                 .small()
                                 .color(theme::TEXT_DIM),
                         );
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                             if ui
-                                .add_sized(vec2(80.0, 28.0), egui::Button::new("Done"))
+                                .add_sized(vec2(80.0, 28.0), egui::Button::new(tr("Done")))
                                 .clicked()
                             {
                                 self.settings_open = false;
@@ -193,16 +239,18 @@ impl LineupApp {
                                 ui.spacing_mut().item_spacing.y = 12.0;
                                 match self.settings.page {
                                     Page::Appearance => {
-                                        ui.heading("Appearance");
+                                        ui.heading(tr("Appearance"));
+                                        language_settings_ui(ui);
                                         view::zoom_settings_ui(ui);
                                     }
                                     Page::Harmony => {
-                                        ui.heading("Harmony");
+                                        ui.heading(tr("Harmony"));
+                                        note_naming_ui(ui);
                                         minor_numerals_ui(ui);
                                     }
                                     Page::Library => self.library_settings_ui(ui),
                                     Page::Audio => {
-                                        ui.heading("Audio");
+                                        ui.heading(tr("Audio"));
                                         card(
                                             ui,
                                             "Output",
@@ -219,11 +267,11 @@ impl LineupApp {
                                                     _ => "Try again",
                                                 };
                                                 if ui
-                                                    .button(label)
-                                                    .on_hover_text(
+                                                    .button(tr(label))
+                                                    .on_hover_text(tr(
                                                         "Open the system’s default output \
                                                          device again",
-                                                    )
+                                                    ))
                                                     .clicked()
                                                 {
                                                     self.start_audio();

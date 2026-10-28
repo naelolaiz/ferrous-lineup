@@ -113,13 +113,13 @@ impl LayoutView {
     /// The "Bars per line" choice and the button that moves the sheet
     /// into the main window or back out of it.
     pub fn items(&mut self, ui: &mut Ui) {
-        ui.label("Bars per line");
+        ui.label(crate::i18n::tr("Bars per line"));
         let shown = |columns: Columns| match columns {
-            Columns::Fit => "Fit the names".to_string(),
+            Columns::Fit => crate::i18n::tr("Fit the names").to_string(),
             Columns::Bars(bars) => bars.to_string(),
         };
         let selected = match self.choices.columns {
-            Columns::Fit => format!("Fit ({})", self.shown),
+            Columns::Fit => format!("{} ({})", crate::i18n::tr("Fit"), self.shown),
             bars => shown(bars),
         };
         let combo = egui::ComboBox::from_id_salt("chord-sheet-columns")
@@ -156,12 +156,12 @@ impl LayoutView {
         ui.separator();
         let (text, hint) = match self.choices.fills {
             false => (
-                "⛶ Fill the window",
+                crate::i18n::tr("⛶ Fill the window"),
                 "Show the sheet in the main window, in the playlist's place, with room for \
                  more bars on each line",
             ),
             true => (
-                "Back to the playlist",
+                crate::i18n::tr("Back to the playlist"),
                 "Show the playlist in the main window again, and the sheet over it",
             ),
         };

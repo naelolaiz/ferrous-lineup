@@ -431,7 +431,7 @@ impl LineupApp {
 
     /// The MIDI menu, next to the Edit menu.
     pub(super) fn midi_menu(&mut self, ui: &mut egui::Ui) {
-        let response = ui.menu_button("MIDI", |ui| {
+        let response = ui.menu_button(crate::i18n::tr("MIDI"), |ui| {
             if !self.live.menu_was_open {
                 self.live.midi.refresh_ports();
             }
@@ -441,36 +441,42 @@ impl LineupApp {
                         ui.visuals().warn_fg_color,
                         format!("MIDI unavailable: {reason}"),
                     )
-                    .on_hover_text(
+                    .on_hover_text(crate::i18n::tr(
                         "On Linux, MIDI needs the ALSA sequencer (the snd-seq kernel module, \
                          which makes /dev/snd/seq).",
-                    );
+                    ));
                 }
                 None => self.port_choices(ui),
             }
             ui.separator();
-            ui.checkbox(&mut self.live.typing, "Typing keyboard to piano")
-                .on_hover_text(
-                    "Play notes with the letter keys: Z X C V B N M from C4, with S D G H J \
+            ui.checkbox(
+                &mut self.live.typing,
+                crate::i18n::tr("Typing keyboard to piano"),
+            )
+            .on_hover_text(crate::i18n::tr(
+                "Play notes with the letter keys: Z X C V B N M from C4, with S D G H J \
                      as the black keys, and Q to P from C5, with the numbers above them.",
-                );
-            ui.checkbox(&mut self.live.follow.on, "Accompaniment follows chords")
-                .on_hover_text(
-                    "While the music plays, the chord you hold on a MIDI or typing keyboard \
+            ));
+            ui.checkbox(
+                &mut self.live.follow.on,
+                crate::i18n::tr("Accompaniment follows chords"),
+            )
+            .on_hover_text(crate::i18n::tr(
+                "While the music plays, the chord you hold on a MIDI or typing keyboard \
                      becomes the chord of the accompaniment: the chords and bass line keep \
                      their rhythm and move to your chord from their next note, as on an \
                      arranger keyboard. One key plays its major chord, two keys a minor third \
                      apart its minor chord. The last chord stays until you play another, and \
                      the written notes come back when playback stops. The song itself does \
                      not change.",
-                );
+            ));
         });
         self.live.menu_was_open = response.inner.is_some();
     }
 
     /// The input and output ports, to pick from.
     fn port_choices(&mut self, ui: &mut egui::Ui) {
-        ui.label("Input: a keyboard to play");
+        ui.label(crate::i18n::tr("Input: a keyboard to play"));
         let current = self.live.midi.input().cloned();
         if let Some(choice) = pick_port(ui, self.live.midi.inputs(), current.as_ref()) {
             self.release_all_keys();
@@ -480,22 +486,25 @@ impl LineupApp {
             ui.close();
         }
         ui.separator();
-        ui.label("Output: an external synth to play");
+        ui.label(crate::i18n::tr("Output: an external synth to play"));
         let current = self.live.midi.output().cloned();
         if let Some(choice) = pick_port(ui, self.live.midi.outputs(), current.as_ref()) {
             self.connect_midi_output(choice.as_ref());
             ui.close();
         }
-        ui.checkbox(&mut self.live.send_all, "Send every channel")
-            .on_hover_text(
+        ui.checkbox(
+            &mut self.live.send_all,
+            crate::i18n::tr("Send every channel"),
+        )
+            .on_hover_text(crate::i18n::tr(
                 "On: every channel plays on the output instead of the speakers, on the MIDI channels File > \
                  Export MIDI uses: drums on channel 10 as a General MIDI drum set, the others \
                  on 1, 2, 3 and so on. Off: only the channels sent over MIDI play there.",
-            );
+            ));
         if !self.live.midi.can_send() {
             ui.colored_label(
                 ui.visuals().warn_fg_color,
-                "Nothing is sent while audio is unavailable",
+                crate::i18n::tr("Nothing is sent while audio is unavailable"),
             );
         }
     }

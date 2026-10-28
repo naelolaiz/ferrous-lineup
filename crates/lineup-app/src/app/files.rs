@@ -245,15 +245,15 @@ impl LineupApp {
     pub(super) fn file_menu(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         let item = |text, shortcut: KeyboardShortcut| {
-            egui::Button::new(text).shortcut_text(ctx.format_shortcut(&shortcut))
+            egui::Button::new(crate::i18n::tr(text)).shortcut_text(ctx.format_shortcut(&shortcut))
         };
-        ui.menu_button("File", |ui| {
+        ui.menu_button(crate::i18n::tr("File"), |ui| {
             let new = ui.add(item("New", NEW));
             if theme::hint(new, "An empty chord sheet with a band to play it").clicked() {
                 self.request(&ctx, Pending::New);
                 ui.close();
             }
-            let beat = ui.button("New beat");
+            let beat = ui.button(crate::i18n::tr("New beat"));
             if theme::hint(beat, "An empty pattern and a drum kit").clicked() {
                 self.request(&ctx, Pending::NewBeat);
                 ui.close();
@@ -265,24 +265,30 @@ impl LineupApp {
             self.recent_menu(ui);
             self.demos_menu(ui);
             if ui
-                .button("Import recording…")
-                .on_hover_text("Open an MP3 or WAV file and add chords that follow it")
+                .button(crate::i18n::tr("Import recording…"))
+                .on_hover_text(crate::i18n::tr(
+                    "Open an MP3 or WAV file and add chords that follow it",
+                ))
                 .clicked()
             {
                 self.request(&ctx, Pending::Import);
                 ui.close();
             }
             if ui
-                .button("Import MIDI file…")
-                .on_hover_text("Open a .mid file: its notes, tempo, time signatures and key")
+                .button(crate::i18n::tr("Import MIDI file…"))
+                .on_hover_text(crate::i18n::tr(
+                    "Open a .mid file: its notes, tempo, time signatures and key",
+                ))
                 .clicked()
             {
                 self.request(&ctx, Pending::ImportMidi);
                 ui.close();
             }
             if ui
-                .button("Import chord sheet…")
-                .on_hover_text("Open a chord chart saved as text, as in | C | Am7 | Dm7 G7 |")
+                .button(crate::i18n::tr("Import chord sheet…"))
+                .on_hover_text(crate::i18n::tr(
+                    "Open a chord chart saved as text, as in | C | Am7 | Dm7 G7 |",
+                ))
                 .clicked()
             {
                 self.request(&ctx, Pending::ImportChordSheet);
@@ -291,7 +297,9 @@ impl LineupApp {
             ui.separator();
             let save = ui.add(item("Save", SAVE));
             let save = if self.file.path.is_none() && self.file.demo.is_some() {
-                save.on_hover_text("Demos are read-only: this saves a copy to a new file")
+                save.on_hover_text(crate::i18n::tr(
+                    "Demos are read-only: this saves a copy to a new file",
+                ))
             } else {
                 save
             };
@@ -305,41 +313,56 @@ impl LineupApp {
             }
             ui.separator();
             let export = ui
-                .add_enabled(self.can_export(), egui::Button::new("Export WAV…"))
-                .on_hover_text("Save the song as a sound file")
-                .on_disabled_hover_text("Put some clips in the playlist first");
+                .add_enabled(
+                    self.can_export(),
+                    egui::Button::new(crate::i18n::tr("Export WAV…")),
+                )
+                .on_hover_text(crate::i18n::tr("Save the song as a sound file"))
+                .on_disabled_hover_text(crate::i18n::tr("Put some clips in the playlist first"));
             if export.clicked() {
                 self.export_song();
                 ui.close();
             }
             let video = ui
-                .add_enabled(self.can_export(), egui::Button::new("Export video…"))
-                .on_hover_text("Save the song with the chord sheet or other views playing along")
-                .on_disabled_hover_text("Put some clips in the playlist first");
+                .add_enabled(
+                    self.can_export(),
+                    egui::Button::new(crate::i18n::tr("Export video…")),
+                )
+                .on_hover_text(crate::i18n::tr(
+                    "Save the song with the chord sheet or other views playing along",
+                ))
+                .on_disabled_hover_text(crate::i18n::tr("Put some clips in the playlist first"));
             if video.clicked() {
                 self.ask_for_video();
                 ui.close();
             }
             let has_song = self.project.song_length() > 0;
             let song_midi = ui
-                .add_enabled(has_song, egui::Button::new("Export song as MIDI…"))
-                .on_hover_text("Save the notes of the song, to open in another studio")
-                .on_disabled_hover_text("Put some clips in the playlist first");
+                .add_enabled(
+                    has_song,
+                    egui::Button::new(crate::i18n::tr("Export song as MIDI…")),
+                )
+                .on_hover_text(crate::i18n::tr(
+                    "Save the notes of the song, to open in another studio",
+                ))
+                .on_disabled_hover_text(crate::i18n::tr("Put some clips in the playlist first"));
             if song_midi.clicked() {
                 self.export_midi(MidiExport::Song);
                 ui.close();
             }
             if ui
-                .button("Export pattern as MIDI…")
-                .on_hover_text("Save the notes of the selected pattern")
+                .button(crate::i18n::tr("Export pattern as MIDI…"))
+                .on_hover_text(crate::i18n::tr("Save the notes of the selected pattern"))
                 .clicked()
             {
                 self.export_midi(MidiExport::Pattern);
                 ui.close();
             }
             if ui
-                .button("Export chord sheet…")
-                .on_hover_text("Save the chord sheet as text, to share or paste anywhere")
+                .button(crate::i18n::tr("Export chord sheet…"))
+                .on_hover_text(crate::i18n::tr(
+                    "Save the chord sheet as text, to share or paste anywhere",
+                ))
                 .clicked()
             {
                 self.export_chord_sheet();
@@ -671,18 +694,23 @@ impl LineupApp {
         let mut choice = None;
         let modal = egui::Modal::new(egui::Id::unique("unsaved-changes")).show(ctx, |ui| {
             ui.set_width(320.0);
-            ui.heading("Save changes?");
+            ui.heading(crate::i18n::tr("Save changes?"));
             ui.add_space(4.0);
-            ui.label(format!("\"{name}\" has changes that are not saved yet."));
+            let msg = if crate::i18n::current_language() == crate::i18n::Language::Spanish {
+                format!("\"{name}\" tiene cambios que aún no se han guardado.")
+            } else {
+                format!("\"{name}\" has changes that are not saved yet.")
+            };
+            ui.label(msg);
             ui.add_space(8.0);
             ui.horizontal(|ui| {
-                if ui.button("Save").clicked() {
+                if ui.button(crate::i18n::tr("Save")).clicked() {
                     choice = Some(Choice::Save);
                 }
-                if ui.button("Don't save").clicked() {
+                if ui.button(crate::i18n::tr("Don't save")).clicked() {
                     choice = Some(Choice::Discard);
                 }
-                if ui.button("Cancel").clicked() {
+                if ui.button(crate::i18n::tr("Cancel")).clicked() {
                     choice = Some(Choice::Cancel);
                 }
             });
