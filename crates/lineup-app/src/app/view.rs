@@ -33,6 +33,7 @@
 use eframe::egui::{self, Key, KeyboardShortcut, Modifiers, MouseWheelUnit};
 
 use super::LineupApp;
+use crate::i18n::tr;
 use crate::piano_roll::PianoRoll;
 
 /// The keys that show and hide the windows and panels, as in other
@@ -326,7 +327,7 @@ impl LineupApp {
     pub(super) fn view_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button(crate::i18n::tr("View"), |ui| {
             let window = |open: &mut bool, text: &'static str, shortcut, ui: &mut egui::Ui| {
-                let shortcut = ui.ctx().format_shortcut(&shortcut);
+                let shortcut = crate::i18n::shortcut(ui.ctx(), &shortcut);
                 let button =
                     egui::Button::selectable(*open, crate::i18n::tr(text)).shortcut_text(shortcut);
                 if ui.add(button).clicked() {
@@ -571,7 +572,7 @@ pub(super) fn zoom_settings_ui(ui: &mut egui::Ui) {
                         ("Alt +/− · Alt+wheel", "Vertical zoom"),
                         ("Ctrl+0", "Reset the current view"),
                     ] {
-                        ui.label(keys);
+                        ui.label(crate::i18n::tr(keys));
                         ui.weak(crate::i18n::tr(action));
                         ui.end_row();
                     }
@@ -624,7 +625,7 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
         }
         ui.label(symbol).on_hover_text(what);
     }
-    ui.weak("Playlist zoom");
+    ui.weak(tr("Playlist zoom"));
 }
 
 #[cfg(test)]

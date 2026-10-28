@@ -64,6 +64,7 @@ use crate::channel_rack::{self, RackAction};
 use crate::chord_sheet::{self, ChordSheet, SheetAction};
 use crate::ear_training::EarTraining;
 use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
+use crate::i18n::{tr, trf};
 use crate::icons;
 use crate::lead_sheet::LeadSheetWindow;
 use crate::library_browser::Tried;
@@ -327,7 +328,7 @@ impl LineupApp {
             && self.message.is_none()
         {
             self.message = Some(
-                "The audio engine stopped taking commands. Restart it in Edit > Settings… > Audio."
+                tr("The audio engine stopped taking commands. Restart it in Edit > Settings… > Audio.")
                     .to_string(),
             );
         }
@@ -356,11 +357,11 @@ impl LineupApp {
                 }
                 self.playing = playing;
                 self.message = None;
-                self.notice = Some("Audio is playing again.".to_string());
+                self.notice = Some(tr("Audio is playing again.").to_string());
             }
             Err(err) => {
                 let reason = err.to_string();
-                self.message = Some(format!("Could not start audio: {reason}"));
+                self.message = Some(trf("Could not start audio: {}", &[&reason]));
                 self.audio = Audio::Unavailable(reason);
             }
         }
@@ -372,8 +373,9 @@ impl LineupApp {
         if let Audio::Running(engine) = &mut self.audio
             && let Some(error) = engine.take_error()
         {
-            self.message = Some(format!(
-                "Audio stopped: {error}. Try again in Edit > Settings… > Audio."
+            self.message = Some(trf(
+                "Audio stopped: {}. Try again in Edit > Settings… > Audio.",
+                &[&error],
             ));
         }
     }
@@ -947,7 +949,7 @@ impl LineupApp {
                 notes,
             } => {
                 if self.project.patterns().len() >= lineup_core::MAX_PATTERNS {
-                    self.message = Some("There is no room for another pattern.".into());
+                    self.message = Some(tr("There is no room for another pattern.").into());
                     return;
                 }
                 let time = self.project.pattern_time(self.pattern);
@@ -963,7 +965,7 @@ impl LineupApp {
                 if let Some(pattern) = added {
                     self.select_pattern(pattern);
                 } else {
-                    self.message = Some("There is no room for another pattern.".into());
+                    self.message = Some(tr("There is no room for another pattern.").into());
                 }
             }
             RollAction::OpenRack => self.show_rack(),
@@ -1025,15 +1027,16 @@ impl LineupApp {
                 });
                 if written == 0 {
                     self.message = Some(
-                        "No chords to name: the song plays no chords yet. Type them in the \
-                         bars instead."
-                            .to_string(),
+                        tr(
+                            "No chords to name: the song plays no chords yet. Type them in the \
+                         bars instead.",
+                        )
+                        .to_string(),
                     );
+                } else if written == 1 {
+                    self.notice = Some(tr("Wrote 1 chord on the chord sheet").to_string());
                 } else {
-                    self.notice = Some(format!(
-                        "Wrote {written} chord{} on the chord sheet",
-                        if written == 1 { "" } else { "s" }
-                    ));
+                    self.notice = Some(trf("Wrote {} chords on the chord sheet", &[&written]));
                 }
             }
             SheetAction::SetSwing(swing) => self.set_swing(swing),
@@ -1118,26 +1121,32 @@ impl LineupApp {
                         let muted: Vec<String> = [&band.muted().channels, &band.muted().tracks]
                             .into_iter()
                             .flatten()
-                            .cloned()
+                            .map(|name| crate::i18n::tr_name(name).into_owned())
                             .collect();
-                        let names = match muted.split_last() {
-                            Some((last, [])) => last.clone(),
-                            Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
-                            None => String::new(),
-                        };
-                        Some(format!(
-                            "The band plays {}; the song's own {names} {} muted.{}",
-                            harmony.map_or(style.name, |style| style.name),
-                            if muted.len() == 1 { "is" } else { "are" },
-                            library::kept(&self.project)
-                        ))
+                        let names = crate::i18n::list(&muted);
+                        let style =
+                            crate::i18n::tr_str(harmony.map_or(style.name, |style| style.name));
+                        let kept = library::kept(&self.project);
+                        Some(if muted.len() == 1 {
+                            trf(
+                                "The band plays {}; the song's own {} is muted.{}",
+                                &[&style, &names, &kept],
+                            )
+                        } else {
+                            trf(
+                                "The band plays {}; the song's own {} are muted.{}",
+                                &[&style, &names, &kept],
+                            )
+                        })
                     }
-                    (Some(style), _) => Some(format!(
+                    (Some(style), _) => Some(trf(
                         "Applied selected parts of {}.{}",
-                        harmony.map_or(style.name, |style| style.name),
-                        library::kept(&self.project)
+                        &[
+                            &crate::i18n::tr_str(harmony.map_or(style.name, |style| style.name)),
+                            &library::kept(&self.project),
+                        ],
                     )),
-                    (None, _) => Some(format!("No band.{}", library::kept(&self.project))),
+                    (None, _) => Some(trf("No band.{}", &[&library::kept(&self.project)])),
                 };
                 if style.is_some() {
                     self.set_mode(PlayMode::Song);
@@ -1152,7 +1161,7 @@ impl LineupApp {
             ) && self.project.plays_locked(lineup_core::Player::Soloist) =>
             {
                 self.notice =
-                    Some("The soloist is locked: unlock it in the rack first.".to_string());
+                    Some(tr("The soloist is locked: unlock it in the rack first.").to_string());
             }
             SheetAction::SetSoloist(on) => {
                 let what = if on {
@@ -1162,17 +1171,17 @@ impl LineupApp {
                 };
                 self.edit(what, |project| project.set_soloist(on));
                 self.notice = Some(match on {
-                    true => "The soloist improvises over the chorus".to_string(),
-                    false => "No soloist".to_string(),
+                    true => tr("The soloist improvises over the chorus").to_string(),
+                    false => tr("No soloist").to_string(),
                 });
             }
             SheetAction::AnotherSolo => {
                 self.edit("play another solo", Project::another_solo);
-                self.notice = Some("The soloist plays another solo".to_string());
+                self.notice = Some(tr("The soloist plays another solo").to_string());
             }
             SheetAction::SetHorns(_) if self.project.plays_locked(lineup_core::Player::Horns) => {
                 self.notice =
-                    Some("The horns are locked: unlock them in the rack first.".to_string());
+                    Some(tr("The horns are locked: unlock them in the rack first.").to_string());
             }
             SheetAction::SetHorns(on) => {
                 let what = if on {
@@ -1182,8 +1191,8 @@ impl LineupApp {
                 };
                 self.edit(what, |project| project.set_horns(on));
                 self.notice = Some(match on {
-                    true => "The horns play the chords with the band".to_string(),
-                    false => "No horns".to_string(),
+                    true => tr("The horns play the chords with the band").to_string(),
+                    false => tr("No horns").to_string(),
                 });
             }
             SheetAction::WriteProgression { style, from } => {
@@ -1194,9 +1203,12 @@ impl LineupApp {
                         project.write_progression(style, from)
                     })
                 });
-                self.notice = Some(format!("Wrote {} from bar {}", style.name, from + 1));
+                self.notice = Some(trf(
+                    "Wrote {} from bar {}",
+                    &[&crate::i18n::tr_str(style.name), &(from + 1)],
+                ));
                 if bars == 0 {
-                    self.message = Some("There is no room for it on the sheet.".to_string());
+                    self.message = Some(tr("There is no room for it on the sheet.").to_string());
                 } else {
                     // The next progression goes on after this one.
                     self.chord_sheet.select(from + bars);
@@ -1450,13 +1462,14 @@ impl LineupApp {
         ui.horizontal_wrapped(|ui| {
             theme::group(ui, |ui| {
                 let mut mode = self.mode;
-                let pattern = theme::light_button(ui, "PAT", mode == PlayMode::Pattern, None);
-                if theme::hint(pattern, "Pattern mode: loop the selected pattern (L)").clicked() {
+                let pattern = theme::light_button(ui, tr("PAT"), mode == PlayMode::Pattern, None);
+                if theme::hint(pattern, tr("Pattern mode: loop the selected pattern (L)")).clicked()
+                {
                     mode = PlayMode::Pattern;
                 }
                 let song =
-                    theme::light_button(ui, "SONG", mode == PlayMode::Song, Some(theme::GREEN));
-                if theme::hint(song, "Song mode: play the playlist (L)").clicked() {
+                    theme::light_button(ui, tr("SONG"), mode == PlayMode::Song, Some(theme::GREEN));
+                if theme::hint(song, tr("Song mode: play the playlist (L)")).clicked() {
                     mode = PlayMode::Song;
                 }
                 self.set_mode(mode);
@@ -1464,17 +1477,20 @@ impl LineupApp {
 
             theme::group(ui, |ui| {
                 let start = theme::light_button(ui, "⏮", false, None);
-                if theme::hint(start, "Go to the start (Home)").clicked() {
+                if theme::hint(start, tr("Go to the start (Home)")).clicked() {
                     self.seek(0);
                 }
                 let back = theme::light_button(ui, "⏪", false, None);
-                if theme::hint(back, "Back one bar (Page Up)").clicked() {
+                if theme::hint(back, tr("Back one bar (Page Up)")).clicked() {
                     self.skip_bars(-1);
                 }
                 let (icon, text) = if self.playing {
-                    ("❚❚", "Pause: stop here, and carry on from here next time")
+                    (
+                        "❚❚",
+                        tr("Pause: stop here, and carry on from here next time"),
+                    )
                 } else {
-                    ("▶", "Play from the playhead (Space)")
+                    ("▶", tr("Play from the playhead (Space)"))
                 };
                 let play = theme::light_button(ui, icon, self.playing, Some(theme::GREEN));
                 if theme::hint(play, text).clicked() {
@@ -1487,14 +1503,14 @@ impl LineupApp {
                 let stop = theme::light_button(ui, "⏹", false, None);
                 if theme::hint(
                     stop,
-                    "Stop and go back to where you last put the playhead (Space)",
+                    tr("Stop and go back to where you last put the playhead (Space)"),
                 )
                 .clicked()
                 {
                     self.set_playing(false);
                 }
                 let forward = theme::light_button(ui, "⏩", false, None);
-                if theme::hint(forward, "Forward one bar (Page Down)").clicked() {
+                if theme::hint(forward, tr("Forward one bar (Page Down)")).clicked() {
                     self.skip_bars(1);
                 }
                 self.record_button(ui);
@@ -1522,33 +1538,39 @@ impl LineupApp {
                 (
                     format!(" {speed}%"),
                     80.0,
-                    format!(
-                        ". The speed trainer plays it at {speed}% now, and moves it towards \
+                    trf(
+                        ". The speed trainer plays it at {}% now, and moves it towards \
                          {}% each time the loop comes round (Settings > Playback)",
-                        pace.trainer.to
+                        &[&speed, &pace.trainer.to],
                     ),
                 )
             } else {
                 (
                     format!(" {speed}%"),
                     80.0,
-                    format!(". You practise at {speed}% of it (Settings > Playback)"),
+                    trf(
+                        ". You practise at {}% of it (Settings > Playback)",
+                        &[&speed],
+                    ),
                 )
             };
             if let Some(now) = now {
-                let label = format!("TEMPO NOW{at_speed}");
+                let label = format!("{}{at_speed}", tr("TEMPO NOW"));
                 let lcd = theme::lcd(ui, &label, &format!("{now:.1}"), width);
                 theme::hint(
                     lcd,
                     format!(
-                        "The tempo playing now: this song changes tempo (see the tempo strip \
+                        "{}{slower}",
+                        tr(
+                            "The tempo playing now: this song changes tempo (see the tempo strip \
                          at the top of the playlist). Stop to change the tempo it starts at; \
-                         every change moves with it{slower}"
+                         every change moves with it"
+                        )
                     ),
                 );
             } else {
                 let mut bpm = self.project.tempo.bpm();
-                let label = format!("TEMPO{at_speed}");
+                let label = format!("{}{at_speed}", tr("TEMPO"));
                 let tempo = theme::lcd_frame(ui, &label, width, |ui| {
                     ui.add(
                         egui::DragValue::new(&mut bpm)
@@ -1558,11 +1580,13 @@ impl LineupApp {
                     )
                 });
                 let text = if map.is_steady() {
-                    "Tempo in beats a minute. Drag up or down, or double-click to type"
+                    tr("Tempo in beats a minute. Drag up or down, or double-click to type")
                 } else {
-                    "The tempo the song starts at, in beats a minute. This song changes \
+                    tr(
+                        "The tempo the song starts at, in beats a minute. This song changes \
                      tempo (see the tempo strip at the top of the playlist), and every \
-                     change moves with this one. Drag up or down, or double-click to type"
+                     change moves with this one. Drag up or down, or double-click to type",
+                    )
                 };
                 let text = format!("{text}{slower}");
                 if theme::hint(tempo, text).changed() {
@@ -1571,11 +1595,13 @@ impl LineupApp {
                     });
                 }
             }
-            let position = theme::lcd(ui, "BAR : BEAT : STEP", &self.position_text(), 92.0);
+            let position = theme::lcd(ui, tr("BAR : BEAT : STEP"), &self.position_text(), 92.0);
             theme::hint(
                 position,
-                "Where the playhead is: in the pattern (PAT) or the song (SONG). Click the \
+                tr(
+                    "Where the playhead is: in the pattern (PAT) or the song (SONG). Click the \
              playlist's bar numbers to move it",
+                ),
             );
 
             theme::group(ui, |ui| self.pattern_selector(ui));
@@ -1617,7 +1643,7 @@ impl LineupApp {
                 ];
                 for (name, open, picture, about) in windows {
                     let button = icons::toggle(ui, name, *open, picture);
-                    if theme::hint(button, format!("{name}: {about}")).clicked() {
+                    if theme::hint(button, format!("{}: {}", tr(name), tr(about))).clicked() {
                         *open = !*open;
                     }
                 }
@@ -1626,7 +1652,11 @@ impl LineupApp {
             theme::group(ui, |ui| {
                 // The label goes first, as its own widget, so the slider
                 // and its name wrap to the next row together.
-                ui.label(egui::RichText::new("VOL").small().color(theme::TEXT_DIM));
+                ui.label(
+                    egui::RichText::new(tr("VOL"))
+                        .small()
+                        .color(theme::TEXT_DIM),
+                );
                 // Shorter than egui's usual slider, so the toolbar fits
                 // on one row in a window 1280 points wide (see
                 // `the_toolbar_fits_on_one_row_at_1280_points`).
@@ -1634,7 +1664,7 @@ impl LineupApp {
                 let mut master = self.project.mixer.master;
                 let volume_slider = egui::Slider::new(&mut master, 0.0..=1.0).show_value(false);
                 let volume = ui.add_sized([64.0, 22.0], volume_slider);
-                let text = format!("Master volume: {:.0}%", master * 100.0);
+                let text = trf("Master volume: {}%", &[&format!("{:.0}", master * 100.0)]);
                 if theme::hint(volume, text).changed() {
                     self.set_master_volume(master);
                 }
@@ -1664,7 +1694,7 @@ impl LineupApp {
         let mut selected = current;
         let name = self.project.patterns()[current].name.clone();
         ui.label(
-            egui::RichText::new("PATTERN")
+            egui::RichText::new(tr("PATTERN"))
                 .small()
                 .color(theme::TEXT_DIM),
         );
@@ -1679,12 +1709,12 @@ impl LineupApp {
                     .width(PATTERN_LIST_WIDTH)
                     .truncate()
                     .selected_text(
-                        egui::RichText::new(&name)
+                        egui::RichText::new(crate::i18n::tr_name(&name))
                             .color(playlist::pattern_color(&self.project, current)),
                     )
                     .show_ui(ui, |ui| {
                         for (index, pattern) in self.project.patterns().iter().enumerate() {
-                            let text = egui::RichText::new(&pattern.name)
+                            let text = egui::RichText::new(crate::i18n::tr_name(&pattern.name))
                                 .color(playlist::pattern_color(&self.project, index));
                             ui.selectable_value(&mut selected, index, text);
                         }
@@ -1694,16 +1724,17 @@ impl LineupApp {
             .inner;
         theme::hint(
             combo,
-            format!(
-                "The selected pattern, \"{name}\": the channel rack and the piano roll show \
-                 it, and new clips in the playlist use it"
+            trf(
+                "The selected pattern, \"{}\": the channel rack and the piano roll show \
+                 it, and new clips in the playlist use it",
+                &[&crate::i18n::tr_name(&name)],
             ),
         );
         if selected != current {
             self.select_pattern(selected);
         }
 
-        if theme::hint(ui.button("➕"), "Add a new, empty pattern").clicked() {
+        if theme::hint(ui.button("➕"), tr("Add a new, empty pattern")).clicked() {
             self.add_pattern();
         }
         // Menus normally close on any click. This one has a text field, so
@@ -1733,7 +1764,7 @@ impl LineupApp {
             }
         });
 
-        theme::hint(menu, "Rename, clone or delete the selected pattern");
+        theme::hint(menu, tr("Rename, clone or delete the selected pattern"));
 
         let length = self.project.patterns()[self.pattern].length();
         let mut new_length = length;
@@ -1750,7 +1781,7 @@ impl LineupApp {
             .response;
         theme::hint(
             length_combo,
-            format!("How long the selected pattern is: {length} steps"),
+            trf("How long the selected pattern is: {} steps", &[&length]),
         );
         if new_length != length {
             self.edit_pattern("change pattern length", |pattern| {
@@ -1778,15 +1809,15 @@ impl LineupApp {
         match &self.audio {
             Audio::Running(engine) => {
                 let info = engine.info();
-                ui.label(format!(
+                ui.label(trf(
                     "Audio: {} · {} Hz · {} channels",
-                    info.device_name, info.sample_rate, info.channels
+                    &[&info.device_name, &info.sample_rate, &info.channels],
                 ));
             }
             Audio::Unavailable(reason) => {
                 ui.colored_label(
                     ui.visuals().warn_fg_color,
-                    format!("Audio unavailable: {reason}"),
+                    trf("Audio unavailable: {}", &[reason]),
                 );
             }
         }
@@ -1805,9 +1836,9 @@ impl LineupApp {
             ui.add(
                 egui::ProgressBar::new(export.progress())
                     .desired_width(160.0)
-                    .text(format!("Exporting {}", export.file_name())),
+                    .text(trf("Exporting {}", &[&export.file_name()])),
             );
-            if export.can_cancel() && ui.small_button("Stop").clicked() {
+            if export.can_cancel() && ui.small_button(tr("Stop")).clicked() {
                 export.cancel();
             }
         }
@@ -1821,7 +1852,7 @@ impl LineupApp {
             ui.separator();
             // The button goes before the message so the truncated label
             // cannot push it out of the bar.
-            if ui.small_button("Copy").clicked() {
+            if ui.small_button(tr("Copy")).clicked() {
                 ui.ctx().copy_text(message.clone());
             }
             ui.colored_label(ui.visuals().error_fg_color, message)
@@ -2154,7 +2185,7 @@ impl LineupApp {
     /// of the pattern playing, if any.
     fn rack_window(&mut self, ctx: &egui::Context, area: egui::Rect, playhead: Option<usize>) {
         let mut rack_open = self.rack_open;
-        let pattern_name = &self.project.patterns()[self.pattern].name;
+        let pattern_name = crate::i18n::tr_name(&self.project.patterns()[self.pattern].name);
         // The rack opens as big as its rows, up to the size of the
         // playlist; it can be resized, and scrolls when made smaller.
         // When the rows grow or shrink (a longer pattern, a new channel),
@@ -2190,13 +2221,13 @@ impl LineupApp {
                 let selected = self.piano_roll.selected_channel();
                 ui.horizontal(|ui| {
                     if ui
-                        .button("Edit style…")
-                        .on_hover_text("Edit a copy of the current style’s repeating parts")
+                        .button(tr("Edit style…"))
+                        .on_hover_text(tr("Edit a copy of the current style’s repeating parts"))
                         .clicked()
                     {
                         self.edit_current_style();
                     }
-                    if ui.button("New style…").clicked() {
+                    if ui.button(tr("New style…")).clicked() {
                         self.start_style_editor(lineup_core::library::UserStyle::blank(), None);
                     }
                 });

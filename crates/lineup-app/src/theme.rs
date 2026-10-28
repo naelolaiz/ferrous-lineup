@@ -266,10 +266,9 @@ pub fn light_button(ui: &mut Ui, text: &str, on: bool, color: Option<Color32>) -
 }
 
 /// Gives a widget a hint for the hint bar, and the same text as a tooltip
-/// for those who wait.
+/// for those who wait. The text is shown as given: translate it first.
 pub fn hint(response: Response, text: impl Into<String>) -> Response {
     let text = text.into();
-    let text = crate::i18n::tr_str(&text).to_string();
     if response.hovered() {
         response
             .ctx

@@ -78,16 +78,16 @@ impl LineupApp {
                 self.playlist.library_browser_mut().user_styles = loaded.styles;
                 self.style_files.paths = loaded.paths;
                 if !loaded.errors.is_empty() {
-                    self.message = Some(format!(
+                    self.message = Some(crate::i18n::trf(
                         "Some styles could not be loaded: {}",
-                        loaded.errors.join("; ")
+                        &[&loaded.errors.join("; ")],
                     ));
                 }
             }
             Err(error) => {
                 self.playlist.library_browser_mut().user_styles.clear();
                 self.style_files.paths.clear();
-                self.message = Some(format!("Could not load styles: {error}"));
+                self.message = Some(crate::i18n::trf("Could not load styles: {}", &[&error]));
             }
         }
     }
@@ -214,7 +214,7 @@ impl LineupApp {
             rfd::FileDialog::new()
                 .set_directory(&self.style_files.folder)
                 .set_file_name(name)
-                .add_filter("Lineup style", &[EXTENSION])
+                .add_filter(crate::i18n::tr("Lineup style"), &[EXTENSION])
                 .save_file()
         });
         let Some(mut path) = path else {
@@ -230,7 +230,10 @@ impl LineupApp {
         if let Err(error) =
             std::fs::write(&temporary, text).and_then(|()| std::fs::rename(&temporary, &path))
         {
-            self.style_editor.error = Some(format!("Could not save {}: {error}", path.display()));
+            self.style_editor.error = Some(crate::i18n::trf(
+                "Could not save {}: {}",
+                &[&path.display(), &error],
+            ));
             return;
         }
         self.style_editor.saved(path.clone());
@@ -239,13 +242,12 @@ impl LineupApp {
         self.reload_user_styles();
         self.notice = Some(
             if path.parent() == Some(self.style_files.folder.as_path()) {
-                format!("Saved style: {}", path.display())
+                crate::i18n::trf("Saved style: {}", &[&path.display()])
             } else {
-                format!(
+                crate::i18n::trf(
                     "Saved style: {}. The Library lists the styles in {}; Settings > Styles \
                  folder changes it.",
-                    path.display(),
-                    self.style_files.folder.display()
+                    &[&path.display(), &self.style_files.folder.display()],
                 )
             },
         );
@@ -312,7 +314,8 @@ impl LineupApp {
                 || parts.tempo
                 || parts.swing)
         {
-            self.notice = Some("Choose a component to apply in the Library options.".into());
+            self.notice =
+                Some(crate::i18n::tr("Choose a component to apply in the Library options.").into());
             return;
         }
         let before = self.project.clone();
@@ -357,18 +360,18 @@ impl LineupApp {
             self.set_mode(lineup_audio::PlayMode::Song);
         }
         if self.project.band().is_none() && parts.instruments && !parts.rhythm {
-            self.notice = Some(format!(
+            self.notice = Some(crate::i18n::trf(
                 "{}'s instruments play in a band: tick Playing patterns too.",
-                style.name
+                &[&style.name],
             ));
         } else if self.project.playlist().chord_markers().is_empty() {
-            self.notice = Some(if parts.matching_style {
+            self.notice = Some(crate::i18n::tr(if parts.matching_style {
                 "Style applied. Write chords on the sheet or enable Chord progression when applying it."
             } else {
                 "Style applied. Plain accents play the chords on the sheet: write some there."
-            }.into());
+            }).into());
         } else {
-            self.notice = Some(format!("Applied {}", style.name));
+            self.notice = Some(crate::i18n::trf("Applied {}", &[&style.name]));
         }
     }
 }

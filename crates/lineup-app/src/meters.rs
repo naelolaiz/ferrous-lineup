@@ -110,7 +110,7 @@ fn level_text(level: f32) -> String {
     if level > 0.0 {
         format!("{:.0} dB", decibels(level))
     } else {
-        "silent".to_string()
+        crate::i18n::tr("silent").to_string()
     }
 }
 

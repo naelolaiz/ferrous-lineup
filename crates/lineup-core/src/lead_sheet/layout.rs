@@ -187,11 +187,22 @@ fn part_label(transposition: Transposition) -> Option<Vec<Run>> {
         return None;
     }
     let note = transposition.note();
-    let mut runs = vec![Run::Text(note.letter.as_char().to_string(), PART_SIZE)];
+    let letter = note.letter.shown();
+    // The words go where the language puts them: "Instrumentos en Si♭".
+    let (before, after) = crate::i18n::tr("{} instruments")
+        .split_once("{}")
+        .unwrap_or(("", " instruments"));
+    let mut runs = Vec::new();
+    if !before.is_empty() {
+        runs.push(Run::Text(before.to_string(), PART_SIZE));
+    }
+    runs.push(Run::Text(letter, PART_SIZE));
     if note.accidental != 0 {
         runs.push(Run::Accidental(note.accidental, PART_SIZE));
     }
-    runs.push(Run::Text(" instruments".to_string(), PART_SIZE));
+    if !after.is_empty() {
+        runs.push(Run::Text(after.to_string(), PART_SIZE));
+    }
     Some(runs)
 }
 
@@ -1174,7 +1185,7 @@ pub fn lay_out(score: &Score, options: &Options, measure: &dyn TextWidth) -> Lea
         }
         if score.bars.is_empty() {
             marks.push(text(
-                "The song has no bars yet.",
+                crate::i18n::tr("The song has no bars yet."),
                 TextFont::Regular,
                 MARGIN,
                 y + 20.0,

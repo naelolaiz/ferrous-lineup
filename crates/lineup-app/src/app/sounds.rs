@@ -34,6 +34,7 @@ use lineup_audio::soundfont;
 use serde::{Deserialize, Serialize};
 
 use super::{APP_NAME, LineupApp};
+use crate::i18n::{tr, trf};
 
 /// The SoundFont offered for download.
 const GENERAL_USER: &str = "GeneralUser GS";
@@ -157,7 +158,10 @@ impl Progress {
         let done = megabytes(self.done.load(Ordering::Relaxed));
         match self.total.load(Ordering::Relaxed) {
             0 => format!("{done:.1} MB"),
-            total => format!("{done:.1} of {:.1} MB", megabytes(total)),
+            total => trf(
+                "{} of {} MB",
+                &[&format!("{done:.1}"), &format!("{:.1}", megabytes(total))],
+            ),
         }
     }
 }
@@ -246,9 +250,9 @@ impl Sounds {
     fn activity(&self) -> Option<String> {
         let job = self.job.as_ref()?;
         Some(if job.download {
-            format!("Downloading {GENERAL_USER}: {}", job.progress.text())
+            trf("Downloading {}: {}", &[&GENERAL_USER, &job.progress.text()])
         } else {
-            format!("Reading {}…", file_name(&job.path))
+            trf("Reading {}…", &[&file_name(&job.path)])
         })
     }
 }
@@ -273,7 +277,7 @@ fn download_to(url: &str, path: &Path, progress: &Progress) -> Result<Arc<SoundF
 fn download_part(url: &str, part: &Path, progress: &Progress) -> Result<(), String> {
     if let Some(folder) = part.parent() {
         fs::create_dir_all(folder)
-            .map_err(|err| format!("could not make {}: {err}", folder.display()))?;
+            .map_err(|err| trf("could not make {}: {}", &[&folder.display(), &err]))?;
     }
     // The certificates that prove the server is who it says are the
     // ones the system trusts. A proxy set in HTTPS_PROXY is used.
@@ -304,7 +308,7 @@ fn download_part(url: &str, part: &Path, progress: &Progress) -> Result<(), Stri
         }
         done += read as u64;
         if done > MAX_DOWNLOAD {
-            return Err("the file is too big to be a SoundFont".to_string());
+            return Err(tr("the file is too big to be a SoundFont").to_string());
         }
         file.write_all(&buffer[..read])
             .map_err(|err| err.to_string())?;
@@ -322,15 +326,15 @@ impl LineupApp {
             "Use recorded instruments from a SoundFont, or the built-in Lineup Osc.",
             |ui| {
                 let mut on = self.sounds.settings.on;
-                if ui.checkbox(&mut on, "SoundFont instruments").on_hover_text(
-                "General MIDI channels use the SoundFont. Channels using a Lineup Osc sound keep it.",
+                if ui.checkbox(&mut on, tr("SoundFont instruments")).on_hover_text(
+                tr("General MIDI channels use the SoundFont. Channels using a Lineup Osc sound keep it."),
             ).changed() {
                 self.set_sound_font(on);
             }
                 let mut drums = self.sounds.settings.drums;
                 if ui
-                    .add_enabled(on, egui::Checkbox::new(&mut drums, "SoundFont drums"))
-                    .on_hover_text("The built-in drums play the SoundFont’s drum kit too.")
+                    .add_enabled(on, egui::Checkbox::new(&mut drums, tr("SoundFont drums")))
+                    .on_hover_text(tr("The built-in drums play the SoundFont’s drum kit too."))
                     .changed()
                 {
                     self.sounds.settings.drums = drums;
@@ -356,11 +360,11 @@ impl LineupApp {
                     ui.label(state);
                 }
                 ui.horizontal_wrapped(|ui| {
-                    if ui.button("Choose SoundFont…").clicked() {
+                    if ui.button(tr("Choose SoundFont…")).clicked() {
                         self.choose_sound_font();
                     }
                     if self.sounds.settings.file.is_some()
-                        && ui.button(format!("Use {GENERAL_USER}")).clicked()
+                        && ui.button(trf("Use {}", &[&GENERAL_USER])).clicked()
                     {
                         self.sounds.settings.file = None;
                         self.sounds.changed = true;
@@ -389,7 +393,7 @@ impl LineupApp {
         let sounds = &mut self.sounds;
         let Some(path) = sounds.wanted_path() else {
             sounds.turn_off();
-            self.message = Some("There is no folder to keep a SoundFont in".to_string());
+            self.message = Some(tr("There is no folder to keep a SoundFont in").to_string());
             return;
         };
         let loaded = sounds
@@ -406,7 +410,7 @@ impl LineupApp {
             sounds.offer_open = true;
         } else {
             sounds.turn_off();
-            self.message = Some(format!("The SoundFont {} is gone", path.display()));
+            self.message = Some(trf("The SoundFont {} is gone", &[&path.display()]));
         }
     }
 
@@ -448,7 +452,7 @@ impl LineupApp {
                 self.sounds.loaded = Some((job.path, sound_font));
                 self.sounds.offer_open = false;
                 if self.sounds.in_use().is_some() {
-                    self.notice = Some(format!("Instruments play from {}", self.sounds.name()));
+                    self.notice = Some(trf("Instruments play from {}", &[&self.sounds.name()]));
                     self.live.instruments_changed();
                 }
             }
@@ -458,14 +462,14 @@ impl LineupApp {
                     self.sounds.failure = Some(err);
                     self.sounds.offer_open = true;
                 } else {
-                    self.message = Some(format!("Could not read {name}: {err}"));
+                    self.message = Some(trf("Could not read {}: {}", &[&name, &err]));
                 }
                 if self.sounds.in_use().is_none() {
                     self.sounds.turn_off();
                 }
             }
             Err(_) => {
-                self.message = Some(format!("Reading {name} failed"));
+                self.message = Some(trf("Reading {} failed", &[&name]));
                 self.sounds.turn_off();
             }
         }
@@ -495,22 +499,23 @@ impl LineupApp {
         let mut download = false;
         let mut choose = false;
         let mut stop = false;
-        egui::Window::new("Real instrument sounds")
+        egui::Window::new(tr("Real instrument sounds"))
+            .id(egui::Id::unique("real-instrument-sounds"))
             .open(&mut open)
             .collapsible(false)
             .resizable(false)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
             .show(ctx, |ui| {
                 ui.set_width(420.0);
-                ui.label(
+                ui.label(tr(
                     "Real instrument sounds come from a SoundFont, a file of recorded \
                      instruments. GeneralUser GS, by S. Christian Collins, is a free \
                      General MIDI SoundFont of about 30 MB. It is downloaded once and \
                      kept in:",
-                );
+                ));
                 ui.monospace(&folder);
                 ui.hyperlink_to(
-                    format!("About {GENERAL_USER} and its licence"),
+                    trf("About {} and its licence", &[&GENERAL_USER]),
                     GENERAL_USER_PAGE,
                 );
                 ui.add_space(8.0);
@@ -519,24 +524,24 @@ impl LineupApp {
                         .text(job.progress.text());
                     ui.add(bar);
                     ui.add_space(4.0);
-                    stop = ui.button("Stop").clicked();
+                    stop = ui.button(tr("Stop")).clicked();
                     return;
                 }
                 if let Some(failure) = &self.sounds.failure {
                     ui.colored_label(
                         ui.visuals().error_fg_color,
-                        format!("Could not download it: {failure}"),
+                        trf("Could not download it: {}", &[failure]),
                     );
-                    ui.label(format!(
-                        "You can also download {GENERAL_USER_FILE} from its page yourself, \
-                         then choose it here."
+                    ui.label(trf(
+                        "You can also download {} from its page yourself, then choose it here.",
+                        &[&GENERAL_USER_FILE],
                     ));
                     ui.add_space(4.0);
                 }
                 ui.horizontal(|ui| {
-                    download = ui.button("Download").clicked();
-                    choose = ui.button("Choose a file…").clicked();
-                    if ui.button("Not now").clicked() {
+                    download = ui.button(tr("Download")).clicked();
+                    choose = ui.button(tr("Choose a file…")).clicked();
+                    if ui.button(tr("Not now")).clicked() {
                         stop = true;
                     }
                 });

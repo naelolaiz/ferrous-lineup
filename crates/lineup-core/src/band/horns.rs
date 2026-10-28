@@ -153,10 +153,12 @@ impl Horns {
     /// The section in words, for the Band menu: "the horns (Brass
     /// Section) play short punches in 3 + 3 + 2".
     pub fn describe(self) -> String {
-        format!(
+        crate::i18n::trf(
             "the horns ({}) play {}",
-            gm::name(self.program),
-            self.part.describe()
+            &[
+                &crate::i18n::tr(gm::name(self.program)),
+                &crate::i18n::tr(self.part.describe()),
+            ],
         )
     }
 }

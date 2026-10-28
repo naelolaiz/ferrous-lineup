@@ -138,7 +138,7 @@ impl LineupApp {
             self.video_dialog.preview = Some(Preview {
                 scene: Scene::new(
                     self.project.clone(),
-                    self.file.stem(),
+                    crate::i18n::tr_name(&self.file.stem()).into_owned(),
                     choices.layout,
                     choices.size,
                     FRAME_RATE,
@@ -174,7 +174,7 @@ impl LineupApp {
                             name = name.color(theme::ACCENT);
                         }
                         let shown = ui.checkbox(&mut placement.shown, name);
-                        theme::hint(shown.clone(), view.hint());
+                        theme::hint(shown.clone(), crate::i18n::tr(view.hint()));
                         if shown.changed() {
                             dialog.selected = placement.shown.then_some(view);
                             // A view added or taken away: the views are
@@ -287,7 +287,7 @@ impl LineupApp {
             return;
         }
         let Some(mut path) = rfd::FileDialog::new()
-            .add_filter("MP4 video", &["mp4"])
+            .add_filter(crate::i18n::tr("MP4 video"), &["mp4"])
             .set_file_name(self.file.export_name("mp4"))
             .save_file()
         else {
@@ -309,7 +309,7 @@ impl LineupApp {
         let pictures = frames.div_ceil(per_picture);
         let piano_channel = self.video_piano_channel();
         let project = self.project.clone();
-        let title = self.file.stem();
+        let title = crate::i18n::tr_name(&self.file.stem()).into_owned();
         let (width, height) = size.pixels();
         let settings = VideoSettings {
             width,
@@ -460,9 +460,13 @@ fn preview_picture(
         };
         painter.rect_stroke(area, 0.0, stroke, egui::StrokeKind::Inside);
         let label = if view.zooms() {
-            format!("{} · {:.0}%", view.name(), placement.zoom * 100.0)
+            format!(
+                "{} · {:.0}%",
+                crate::i18n::tr(view.name()),
+                placement.zoom * 100.0
+            )
         } else {
-            view.name().to_string()
+            crate::i18n::tr(view.name()).to_string()
         };
         let galley = painter.layout_no_wrap(label, egui::FontId::proportional(11.0), theme::TEXT);
         let tag = Rect::from_min_size(area.min, galley.size() + vec2(8.0, 4.0));

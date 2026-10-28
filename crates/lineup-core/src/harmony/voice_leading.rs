@@ -68,6 +68,7 @@ use super::{
     Chord, ChordFamily, ChordQuality, Harmony, PitchSet, RowLabel, Scale, ScaleKind, analyze,
     with_figures,
 };
+use crate::i18n::{tr, trf};
 use crate::{Note, NoteEvent, PitchClass, TICKS_PER_STEP, TimeSignature};
 
 /// A rest this long or longer ends a part's line: a quarter note, in
@@ -104,11 +105,11 @@ impl Voice {
     pub fn name(&self, track: &str) -> String {
         match (self.rank, self.of) {
             (_, 0 | 1) => track.to_string(),
-            (0, 2) => format!("{track} (upper voice)"),
-            (_, 2) => format!("{track} (lower voice)"),
-            (0, _) => format!("{track} (top voice)"),
-            (rank, of) if rank + 1 == of => format!("{track} (lowest voice)"),
-            (rank, of) => format!("{track} (voice {} of {of})", rank + 1),
+            (0, 2) => trf("{} (upper voice)", &[&track]),
+            (_, 2) => trf("{} (lower voice)", &[&track]),
+            (0, _) => trf("{} (top voice)", &[&track]),
+            (rank, of) if rank + 1 == of => trf("{} (lowest voice)", &[&track]),
+            (rank, of) => trf("{} (voice {} of {})", &[&track, &(rank + 1), &of]),
         }
     }
 
@@ -433,40 +434,48 @@ impl Slip {
                     (false, false) => "both down",
                     _ => "one up and one down",
                 };
-                format!(
-                    "{}: {} and {} go from {} over {} ({}) to {} over {} ({}), {way}.",
-                    self.kind.name(),
-                    voice_name(high.voice),
-                    voice_name(low.voice),
-                    note(high.from.pitch),
-                    note(low.from.pitch),
-                    perfect_name(high.from.pitch.midi().abs_diff(low.from.pitch.midi())),
-                    note(high.to.pitch),
-                    note(low.to.pitch),
-                    perfect_name(high.to.pitch.midi().abs_diff(low.to.pitch.midi())),
+                trf(
+                    "{}: {} and {} go from {} over {} ({}) to {} over {} ({}), {}.",
+                    &[
+                        &tr(self.kind.name()),
+                        &voice_name(high.voice),
+                        &voice_name(low.voice),
+                        &note(high.from.pitch),
+                        &note(low.from.pitch),
+                        &perfect_name(high.from.pitch.midi().abs_diff(low.from.pitch.midi())),
+                        &note(high.to.pitch),
+                        &note(low.to.pitch),
+                        &perfect_name(high.to.pitch.midi().abs_diff(low.to.pitch.midi())),
+                        &tr(way),
+                    ],
                 )
             }
-            (SlipKind::LeadingTone, [m], Some(chords)) => format!(
+            (SlipKind::LeadingTone, [m], Some(chords)) => trf(
                 "Leading tone not rising: {} has {}, the leading tone, in {} and {} in {} \
                  instead of rising a semitone to {}.",
-                voice_name(m.voice),
-                chord_note(key, chords.from, m.from.pitch),
-                chord_label(key, chords.from, chords.from_bass),
-                went(key, m.from.pitch, m.to.pitch),
-                chord_label(key, chords.to, chords.to_bass),
-                self.expected.map(note).unwrap_or_default(),
+                &[
+                    &voice_name(m.voice),
+                    &chord_note(key, chords.from, m.from.pitch),
+                    &chord_label(key, chords.from, chords.from_bass),
+                    &went(key, m.from.pitch, m.to.pitch),
+                    &chord_label(key, chords.to, chords.to_bass),
+                    &self.expected.map(note).unwrap_or_default(),
+                ],
             ),
-            (SlipKind::Seventh, [m], Some(chords)) => format!(
+            (SlipKind::Seventh, [m], Some(chords)) => trf(
                 "Seventh not falling: {} has {}, the seventh of {}, and {} in {} instead of \
                  falling a step{}.",
-                voice_name(m.voice),
-                chord_note(key, chords.from, m.from.pitch),
-                chord_label(key, chords.from, chords.from_bass),
-                went(key, m.from.pitch, m.to.pitch),
-                chord_label(key, chords.to, chords.to_bass),
-                self.expected
-                    .map(|to| format!(" to {}", note(to)))
-                    .unwrap_or_default(),
+                &[
+                    &voice_name(m.voice),
+                    &chord_note(key, chords.from, m.from.pitch),
+                    &chord_label(key, chords.from, chords.from_bass),
+                    &went(key, m.from.pitch, m.to.pitch),
+                    &chord_label(key, chords.to, chords.to_bass),
+                    &self
+                        .expected
+                        .map(|to| trf(" to {}", &[&note(to)]))
+                        .unwrap_or_default(),
+                ],
             ),
             _ => serial::what(self, voice_name),
         }
@@ -474,18 +483,20 @@ impl Slip {
 
     /// Why classical part writing avoids it.
     pub fn why(&self) -> String {
-        let mut text = why(self.kind).to_string();
+        let mut text = tr(why(self.kind)).to_string();
         if self.doubled {
-            text += " The leading tone is doubled here: another part has it too, and both \
-                     cannot rise without moving in octaves, so classical part writing does \
-                     not double it.";
+            text += tr(
+                " The leading tone is doubled here: another part has it too, and both \
+                        cannot rise without moving in octaves, so classical part writing does \
+                        not double it.",
+            );
         }
         text
     }
 }
 
 /// Why each kind of consecutive interval is avoided.
-fn why(kind: SlipKind) -> &'static str {
+pub(crate) fn why(kind: SlipKind) -> &'static str {
     match kind {
         SlipKind::ParallelFifths => {
             "Two parts a fifth apart that move the same way into another fifth blend into \
@@ -526,12 +537,12 @@ fn why(kind: SlipKind) -> &'static str {
 /// twelfth", "two octaves".
 fn perfect_name(semitones: u8) -> String {
     match semitones {
-        0 => "a unison".to_string(),
-        7 => "a fifth".to_string(),
-        12 => "an octave".to_string(),
-        19 => "a twelfth, a fifth plus an octave".to_string(),
-        s if s % 12 == 0 => format!("{} octaves", s / 12),
-        s => format!("a fifth plus {} octaves", s / 12),
+        0 => tr("a unison").to_string(),
+        7 => tr("a fifth").to_string(),
+        12 => tr("an octave").to_string(),
+        19 => tr("a twelfth, a fifth plus an octave").to_string(),
+        s if s % 12 == 0 => trf("{} octaves", &[&(s / 12)]),
+        s => trf("a fifth plus {} octaves", &[&(s / 12)]),
     }
 }
 
@@ -573,10 +584,10 @@ fn went(key: Scale, from: Note, to: Note) -> String {
     let name = key.note_name(to);
     let size = from.midi().abs_diff(to.midi());
     match (to > from, size) {
-        (true, 1 | 2) => format!("rises to {name}"),
-        (true, _) => format!("leaps up to {name}"),
-        (false, 1 | 2) => format!("falls to {name}"),
-        (false, _) => format!("leaps down to {name}"),
+        (true, 1 | 2) => trf("rises to {}", &[&name]),
+        (true, _) => trf("leaps up to {}", &[&name]),
+        (false, 1 | 2) => trf("falls to {}", &[&name]),
+        (false, _) => trf("leaps down to {}", &[&name]),
     }
 }
 
@@ -634,26 +645,33 @@ impl VoiceLeading {
             Rules::Classical => {}
             Rules::TwelveTone => return serial::summary(self),
             Rules::Neither => {
-                return "Voice leading: the classical rules are for keys, and the twelve-tone \
-                        rules for rows; a pitch-class set has no rules of its own here."
-                    .to_string();
+                return tr(
+                    "Voice leading: the classical rules are for keys, and the twelve-tone \
+                     rules for rows; a pitch-class set has no rules of its own here.",
+                )
+                .to_string();
             }
         }
         let parts = self.voices.len() - self.doublings.len();
         if parts < 2 {
-            return "Voice leading: it takes two parts or more; show the other tracks \
-                    (Ghost notes) or write chords."
-                .to_string();
+            return tr(
+                "Voice leading: it takes two parts or more; show the other tracks \
+                 (Ghost notes) or write chords.",
+            )
+            .to_string();
         }
         let found = self
             .counts()
-            .unwrap_or_else(|| "nothing classical part writing avoids".to_string());
+            .unwrap_or_else(|| tr("nothing classical part writing avoids").to_string());
         let doubled = match self.doublings.len() {
             0 => String::new(),
-            1 => ", one line doubled in octaves".to_string(),
-            n => format!(", {n} lines doubled in octaves"),
+            1 => tr(", one line doubled in octaves").to_string(),
+            n => trf(", {} lines doubled in octaves", &[&n]),
         };
-        format!("Voice leading, {parts} parts{doubled}: {found}.")
+        trf(
+            "Voice leading, {} parts{}: {}.",
+            &[&parts, &doubled, &found],
+        )
     }
 
     /// How many of each kind of slip there are, as "parallel fifths (2),
@@ -670,7 +688,7 @@ impl VoiceLeading {
         (!counts.is_empty()).then(|| {
             counts
                 .iter()
-                .map(|(kind, count)| format!("{} ({count})", kind.name().to_lowercase()))
+                .map(|(kind, count)| format!("{} ({count})", tr(kind.name()).to_lowercase()))
                 .collect::<Vec<_>>()
                 .join(", ")
         })

@@ -36,6 +36,7 @@ use lineup_core::{
 };
 
 use super::{Layout, PlaylistAction, Snap};
+use crate::i18n::{tr, tr_name, trf};
 use crate::time_picker::time_picker;
 
 /// How close to a section's right edge the pointer must be to resize it.
@@ -134,7 +135,7 @@ impl Strips {
             painter.text(
                 pos2(strip.left() + 8.0, strip.center().y),
                 Align2::LEFT_CENTER,
-                "Drag here to mark a section: Intro, Verse, Chorus…",
+                tr("Drag here to mark a section: Intro, Verse, Chorus…"),
                 FontId::proportional(11.0),
                 STRIP_HINT,
             );
@@ -146,7 +147,7 @@ impl Strips {
             let from = snap.floor(layout.step_at(pos.x), &meter);
             self.drag = Some(Drag::New { from });
         }
-        background.on_hover_text("Drag to mark a section of the song");
+        background.on_hover_text(tr("Drag to mark a section of the song"));
 
         for (index, section) in sections.iter().enumerate() {
             let rect = Rect::from_min_max(
@@ -190,10 +191,10 @@ impl Strips {
                     (self.selected != Some(region)).then_some(region),
                 ));
             }
-            let response = response.on_hover_text(format!(
+            let response = response.on_hover_text(trf(
                 "{}: click to rename, repeat, loop or copy it. Ctrl-click selects its clips; Ctrl-click again deselects. \
                  Drag to move it, drag its right edge to resize it.",
-                section.name
+                &[&tr_name(&section.name)],
             ));
             if !select {
                 section_menu(&response, index, section, project, actions);
@@ -281,11 +282,11 @@ impl Strips {
                 ui.scope_id().with("loop-ruler"),
                 Sense::click_and_drag(),
             )
-            .on_hover_text(
+            .on_hover_text(tr(
                 "Click the bar numbers to move the playhead there. Drag along them to loop \
                  that part of the song. Right-click to change the time signature or the key \
                  from that bar on",
-            );
+            ));
         if response.secondary_clicked()
             && let Some(pos) = response.interact_pointer_pos()
         {
@@ -361,7 +362,7 @@ fn time_menu(
         ui.close();
     }
     ui.separator();
-    ui.label(format!("Time signature from bar {}", bar.number + 1));
+    ui.label(trf("Time signature from bar {}", &[&(bar.number + 1)]));
     if let Some(time) = time_picker(
         ui,
         egui::Id::unique(("time-from", at)),
@@ -371,15 +372,17 @@ fn time_menu(
         actions.push(PlaylistAction::SetTimeMarker(TimeMarker::new(at, time)));
     }
     if at == 0 {
-        ui.weak("Bar 1 sets the time signature the song starts in.");
+        ui.weak(tr("Bar 1 sets the time signature the song starts in."));
     } else {
-        ui.weak("Changes the meter here; keeps the current style and instruments.");
+        ui.weak(tr(
+            "Changes the meter here; keeps the current style and instruments.",
+        ));
     }
     if marker.is_some() {
         ui.separator();
         let back = meter.time_at(at.saturating_sub(1));
         if ui
-            .button(format!("Remove this change (back to {back})"))
+            .button(trf("Remove this change (back to {})", &[&back]))
             .clicked()
         {
             actions.push(PlaylistAction::RemoveTimeMarker(at));
@@ -403,16 +406,15 @@ fn key_menu(
 ) {
     let keys = project.key_map();
     let here = keys.key_at(at);
-    ui.label(format!(
+    ui.label(trf(
         "Key from bar {}: {}",
-        bar + 1,
-        crate::i18n::key_name(here)
+        &[&(bar + 1), &crate::i18n::key_name(here)],
     ));
     if at == 0 {
-        ui.weak(
+        ui.weak(tr(
             "Bar 1 is the key the song starts in: change it in the harmony keys or the \
              piano roll, which also move the notes.",
-        );
+        ));
         return;
     }
     let marker = keys.markers().iter().find(|marker| marker.start == at);
@@ -456,13 +458,15 @@ fn key_menu(
             }
         }
     });
-    ui.weak("The notes stay as they are: this names the key they are in from here.");
+    ui.weak(tr(
+        "The notes stay as they are: this names the key they are in from here.",
+    ));
     if marker.is_some() {
         let back = keys.key_at(at - 1);
         if ui
-            .button(format!(
+            .button(trf(
                 "Remove this key change (back to {})",
-                crate::i18n::key_name(back)
+                &[&crate::i18n::key_name(back)],
             ))
             .clicked()
         {
@@ -477,11 +481,11 @@ fn key_menu(
 fn describe_length(project: &Project, section: &Section) -> String {
     let meter = project.meter();
     if !meter.is_bar_start(section.start) || !meter.is_bar_start(section.end()) {
-        return format!("{} steps", section.length);
+        return trf("{} steps", &[&section.length]);
     }
     match meter.bar_at(section.end()).number - meter.bar_at(section.start).number {
-        1 => "1 bar".to_string(),
-        bars => format!("{bars} bars"),
+        1 => tr("1 bar").to_string(),
+        bars => trf("{} bars", &[&bars]),
     }
 }
 
@@ -544,7 +548,7 @@ fn paint_chorus(
     }
     let mut label = format!("×{}", form.choruses);
     if let Some((time, times)) = pass.and_then(|pass| pass.chorus) {
-        label = format!("▶ {time} of {times}   {label}");
+        label = format!("{}   {label}", trf("▶ {} of {}", &[&time, &times]));
     }
     painter.text(
         pos2(right - 14.0, middle),
@@ -568,14 +572,17 @@ fn paint_section(painter: &Painter, rect: Rect, section: &Section, playing: Opti
     painter.rect_filled(rect, 3.0, fill);
     painter.vline(rect.left(), rect.y_range(), Stroke::new(2.0, color));
 
-    let mut label = section.name.clone();
+    let mut label = tr_name(&section.name).into_owned();
     if section.repeats > 1 {
         label.push_str(&format!("  ×{}", section.repeats));
     }
     if let Some(pass) = playing
         && pass.rounds > 1
     {
-        label.push_str(&format!("   ▶ {} of {}", pass.round, pass.rounds));
+        label.push_str(&format!(
+            "   {}",
+            trf("▶ {} of {}", &[&pass.round, &pass.rounds])
+        ));
     }
     painter.with_clip_rect(rect.shrink2(vec2(2.0, 0.0))).text(
         rect.left_center() + vec2(5.0, 0.0),
@@ -605,7 +612,7 @@ fn section_menu(
         .close_behavior(PopupCloseBehavior::CloseOnClickOutside)
         .show(|ui| {
             ui.set_min_width(220.0);
-            if ui.button("Select clips in this section").clicked() {
+            if ui.button(tr("Select clips in this section")).clicked() {
                 actions.push(PlaylistAction::SelectSection(Some(LoopRegion::new(
                     section.start,
                     section.end(),
@@ -614,7 +621,7 @@ fn section_menu(
             }
             let mut name = section.name.clone();
             ui.horizontal(|ui| {
-                ui.label("Name");
+                ui.label(tr("Name"));
                 if ui.text_edit_singleline(&mut name).changed() {
                     actions.push(set(Section {
                         name,
@@ -637,7 +644,7 @@ fn section_menu(
             ui.separator();
 
             ui.horizontal(|ui| {
-                ui.label("Play it");
+                ui.label(tr("Play it"));
                 let mut repeats = section.repeats;
                 if ui
                     .add_enabled(repeats > 1, egui::Button::new(" − "))
@@ -662,32 +669,34 @@ fn section_menu(
                         ..section.clone()
                     }));
                 }
-                ui.weak(format!("({} each time)", describe_length(project, section)));
+                ui.weak(trf("({} each time)", &[&describe_length(project, section)]));
             })
             .response
-            .on_hover_text(
+            .on_hover_text(tr(
                 "How many times the song plays this section before it moves on. \
                  It is drawn once, and played that many times.",
-            );
+            ));
             ui.separator();
 
             // Ticked while song mode loops exactly this section.
             let region = LoopRegion::new(section.start, section.end());
             let mut looping = project.playlist().loop_region() == Some(region);
             if ui
-                .checkbox(&mut looping, "🔁 Loop this section")
-                .on_hover_text(
+                .checkbox(&mut looping, tr("🔁 Loop this section"))
+                .on_hover_text(tr(
                     "Play only this section, over and over, until you untick it. \
                      Without a loop, the whole song plays and starts again from bar 1.",
-                )
+                ))
                 .clicked()
             {
                 actions.push(PlaylistAction::SetLoop(looping.then_some(region)));
                 ui.close();
             }
             if ui
-                .button("⧉ Duplicate")
-                .on_hover_text("Insert a copy of the section and its clips right after it")
+                .button(tr("⧉ Duplicate"))
+                .on_hover_text(tr(
+                    "Insert a copy of the section and its clips right after it",
+                ))
                 .clicked()
             {
                 actions.push(PlaylistAction::DuplicateSection(index));
@@ -700,26 +709,24 @@ fn section_menu(
             let unroll = ui
                 .add_enabled(
                     section.repeats > 1 && !cut,
-                    egui::Button::new("⇶ Write out the repeats"),
+                    egui::Button::new(tr("⇶ Write out the repeats")),
                 )
-                .on_hover_text(
-                    "Turn \"×3\" into three copies one after the other, \
-                     so each time round can be changed on its own",
-                )
-                .on_disabled_hover_text(if cut {
+                .on_hover_text(tr("Turn \"×3\" into three copies one after the other, \
+                     so each time round can be changed on its own"))
+                .on_disabled_hover_text(tr(if cut {
                     "A clip starts before this section or ends after it, so its repeats \
                      can't be written out as copies. Move or shorten the clip to fit the \
                      section first."
                 } else {
                     "The section plays only once: there are no repeats to write out."
-                });
+                }));
             if unroll.clicked() {
                 actions.push(PlaylistAction::UnrollSection(index));
                 ui.close();
             }
             if ui
-                .button("🗑 Delete section")
-                .on_hover_text("Remove the marker. The clips under it stay.")
+                .button(tr("🗑 Delete section"))
+                .on_hover_text(tr("Remove the marker. The clips under it stay."))
                 .clicked()
             {
                 actions.push(PlaylistAction::RemoveSection(index));

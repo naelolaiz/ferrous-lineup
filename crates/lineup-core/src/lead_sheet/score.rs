@@ -342,7 +342,7 @@ fn mark_sections(project: &Project, bars: &mut [BarScore]) {
         let Some(first) = bar_of(section.start, bars) else {
             continue;
         };
-        bars[first].section = Some(section.name.clone());
+        bars[first].section = Some(crate::i18n::tr_name(&section.name).into_owned());
         if first > 0 {
             bars[first - 1].double_bar = true;
         }

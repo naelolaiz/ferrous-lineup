@@ -23,6 +23,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use super::{Chord, ChordQuality};
+use crate::i18n::trf;
 use crate::pitch::{NoteName, PitchClass};
 
 /// A chord as a lead sheet writes it: a root, a quality and maybe a
@@ -153,14 +154,15 @@ impl ChordSymbol {
         let read = NoteName::read_either(text, |rest| read_rest(rest).is_some());
         let Some((root, rest)) = read else {
             return Err(match NoteName::read_either(text, |_| true) {
-                None => format!(
-                    "\"{text}\" does not start with a note: chords start with a letter from A \
-                     to G, like C, F#m or Bb7, or with a syllable, like Do, Fa#m or Sib7."
+                None => trf(
+                    "\"{}\" does not start with a note: chords start with a letter from A \
+                     to G, like C, F#m or Bb7, or with a syllable, like Do, Fa#m or Sib7.",
+                    &[&text],
                 ),
-                Some((_, rest)) => format!(
-                    "\"{text}\": \"{}\" is not a kind of chord Ferrous Lineup knows, \
+                Some((_, rest)) => trf(
+                    "\"{}\": \"{}\" is not a kind of chord Ferrous Lineup knows, \
                      such as m, 7, maj7, m7b5, sus4 or 13.",
-                    split_bass(rest).0
+                    &[&text, &split_bass(rest).0],
                 ),
             });
         };

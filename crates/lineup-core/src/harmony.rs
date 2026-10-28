@@ -25,7 +25,7 @@
 
 mod analysis;
 mod chord;
-mod chord_scale;
+pub(crate) mod chord_scale;
 pub mod hearing;
 mod hints;
 pub mod key_finding;
@@ -40,7 +40,10 @@ mod symbol;
 pub mod voice_leading;
 pub mod voice_motion;
 
-pub use analysis::{Harmony, analyze, describe_chord, interval_name, spelled_interval_name};
+pub use analysis::{
+    Harmony, analyze, describe_chord, interval_name, interval_with_article, shown_interval,
+    spelled_interval_name,
+};
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
 pub use chord_scale::{chord_scale, chord_scale_name};
 pub use hearing::{HeardNote, Hearing, Listening, Reading, hear};

@@ -19,6 +19,7 @@
 //! its own texture, so they always agree.
 
 use crate::harmony::{Micromode, PitchSet};
+use crate::i18n::{tr, trf};
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
 use crate::serial::{Register, above, in_octave, nearest};
@@ -47,10 +48,10 @@ pub enum Walk {
 impl Walk {
     pub fn name(self) -> String {
         match self {
-            Walk::CommonTones => "Keep two notes, move one".to_string(),
-            Walk::Transpose(1) => "Up a semitone each time".to_string(),
-            Walk::Transpose(11) => "Down a semitone each time".to_string(),
-            Walk::Transpose(n) => format!("Up {n} semitones each time"),
+            Walk::CommonTones => tr("Keep two notes, move one").to_string(),
+            Walk::Transpose(1) => tr("Up a semitone each time").to_string(),
+            Walk::Transpose(11) => tr("Down a semitone each time").to_string(),
+            Walk::Transpose(n) => trf("Up {} semitones each time", &[&n]),
         }
     }
 }

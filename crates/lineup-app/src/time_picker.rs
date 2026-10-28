@@ -9,6 +9,7 @@ use eframe::egui::{self, Id, Ui};
 use lineup_core::TimeSignature;
 use lineup_core::library::apply::StyleParts;
 
+use crate::i18n::{tr, trf};
 use crate::theme;
 
 /// What has been typed so far. It lives in egui's memory between frames
@@ -49,9 +50,9 @@ impl Draft {
         if time.beats == self.beats {
             Ok(time)
         } else {
-            Err(format!(
+            Err(trf(
                 "the groups add up to {}, not {}",
-                time.beats, self.beats
+                &[&time.beats, &self.beats],
             ))
         }
     }
@@ -69,19 +70,19 @@ pub fn time_picker(
 ) -> Option<TimeSignature> {
     let mut chosen = None;
     if let Some(parts) = parts {
-        ui.weak("Shared with the Library options");
-        ui.checkbox(&mut parts.matching_style, "Use matching style")
-            .on_hover_text(
+        ui.weak(tr("Shared with the Library options"));
+        ui.checkbox(&mut parts.matching_style, tr("Use matching style"))
+            .on_hover_text(tr(
                 "Turn off to mark the new meter's accents with your current instruments, \
                  even when the library has a matching style.",
-            );
-        ui.checkbox(&mut parts.rhythm, "Apply rhythm patterns / accents")
-            .on_hover_text(
+            ));
+        ui.checkbox(&mut parts.rhythm, tr("Apply rhythm patterns / accents"))
+            .on_hover_text(tr(
                 "Turn off to change the meter while keeping the current playing patterns",
-            );
+            ));
         crate::library_browser::instrument_option(ui, parts, "Use style instruments");
-        ui.checkbox(&mut parts.swing, "Use rhythm's swing")
-            .on_hover_text("Turn off to keep the current swing amount");
+        ui.checkbox(&mut parts.swing, tr("Use rhythm's swing"))
+            .on_hover_text(tr("Turn off to keep the current swing amount"));
         ui.separator();
     }
     ui.horizontal_wrapped(|ui| {
@@ -98,10 +99,10 @@ pub fn time_picker(
     });
 
     ui.separator();
-    ui.label("Any other").on_hover_text(
+    ui.label(tr("Any other")).on_hover_text(tr(
         "The top number is how many notes make a bar, the bottom one which note: 4 for \
          quarter notes, 8 for eighths, 16 for sixteenths",
-    );
+    ));
     let mut draft = ui.data_mut(|data| data.get_temp::<Draft>(id));
     let draft = match &mut draft {
         Some(draft) if draft.from == current => draft,
@@ -110,16 +111,16 @@ pub fn time_picker(
     ui.horizontal(|ui| {
         let max = TimeSignature::max_beats(draft.unit).max(1);
         ui.add(egui::DragValue::new(&mut draft.beats).range(1..=max))
-            .on_hover_text("The top number: how many notes make a bar");
+            .on_hover_text(tr("The top number: how many notes make a bar"));
         ui.label("/");
         // The bottom numbers as buttons, not a drop-down list: a list
         // inside another would close it.
         for unit in TimeSignature::UNITS {
             ui.selectable_value(&mut draft.unit, unit, unit.to_string())
-                .on_hover_text(format!(
+                .on_hover_text(trf(
                     "The bottom number: {}. Thirty-second notes would not fit the grid of \
                      sixteenth-note steps",
-                    unit_name(unit).to_lowercase()
+                    &[&tr(unit_name(unit)).to_lowercase()],
                 ));
         }
         // Changing the bottom number can leave too many notes for a
@@ -127,7 +128,7 @@ pub fn time_picker(
         draft.beats = draft.beats.min(TimeSignature::max_beats(draft.unit).max(1));
     });
     ui.horizontal(|ui| {
-        ui.label("Beats grouped as");
+        ui.label(tr("Beats grouped as"));
         ui.add(
             egui::TextEdit::singleline(&mut draft.groups)
                 .desired_width(70.0)
@@ -137,18 +138,18 @@ pub fn time_picker(
                     8 => "3+3+2",
                     9 => "2+2+2+3",
                     11 => "3+3+2+3",
-                    _ => "e.g. 2+3",
+                    _ => tr("e.g. 2+3"),
                 }),
         )
-        .on_hover_text(
+        .on_hover_text(tr(
             "Irregular meters group their notes in twos and threes: 7/8 is often counted \
              2+2+3, as in many Balkan dances. Leave it empty for the usual beats",
-        );
+        ));
     });
     match draft.time() {
         Ok(time) => {
             if ui
-                .button(format!("Use {time}"))
+                .button(trf("Use {}", &[&time]))
                 .on_hover_text(describe_time(time))
                 .clicked()
             {
@@ -182,28 +183,28 @@ fn unit_name(unit: u8) -> &'static str {
 /// What a time signature means, for its tooltip.
 pub fn describe_time(time: TimeSignature) -> String {
     let beats = time.beats;
-    let notes = unit_name(time.unit).to_lowercase();
+    let notes = tr(unit_name(time.unit)).to_lowercase();
     if time.is_grouped() {
         let groups: Vec<String> = time.groups().iter().map(u8::to_string).collect();
-        return format!(
-            "{beats} {notes} to the bar, felt as {} beats: {}",
-            groups.len(),
-            groups.join(" + ")
+        return trf(
+            "{} {} to the bar, felt as {} beats: {}",
+            &[&beats, &notes, &groups.len(), &groups.join(" + ")],
         );
     }
     match (time.unit, time.usual_groups()) {
-        (_, 3) => format!(
-            "{beats} {notes} to the bar, felt as {} beats of three",
-            beats / 3
+        (_, 3) => trf(
+            "{} {} to the bar, felt as {} beats of three",
+            &[&beats, &notes, &(beats / 3)],
         ),
-        (4, _) => format!("{beats} quarter-note beats to the bar"),
-        (8 | 16, _) if beats == 3 => format!("3 {notes} to the bar, felt as one quick beat"),
-        (8 | 16, _) if beats == 1 || beats == 2 => format!("{beats} {notes} to the bar"),
-        (8 | 16, _) => format!(
-            "{beats} {notes} to the bar, a line on each: give it a grouping, such as \
-             2+2+3, to see its beats"
+        (4, _) => trf("{} quarter-note beats to the bar", &[&beats]),
+        (8 | 16, _) if beats == 3 => trf("3 {} to the bar, felt as one quick beat", &[&notes]),
+        (8 | 16, _) if beats == 1 || beats == 2 => trf("{} {} to the bar", &[&beats, &notes]),
+        (8 | 16, _) => trf(
+            "{} {} to the bar, a line on each: give it a grouping, such as \
+             2+2+3, to see its beats",
+            &[&beats, &notes],
         ),
-        _ => format!("{beats} {notes} to the bar"),
+        _ => trf("{} {} to the bar", &[&beats, &notes]),
     }
 }
 

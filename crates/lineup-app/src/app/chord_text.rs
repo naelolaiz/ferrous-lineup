@@ -13,7 +13,7 @@ impl LineupApp {
     /// Asks for a chord sheet saved as text, then imports it.
     pub(super) fn import_chord_sheet(&mut self) {
         if let Some(path) = rfd::FileDialog::new()
-            .add_filter("Chord sheet as text", &text::EXTENSIONS)
+            .add_filter(crate::i18n::tr("Chord sheet as text"), &text::EXTENSIONS)
             .pick_file()
         {
             self.import_chord_sheet_path(&path);
@@ -44,24 +44,27 @@ impl LineupApp {
                 }
                 self.show_chord_sheet();
                 self.set_mode(PlayMode::Song);
-                let mut notice = format!(
-                    "Imported {name}: {bars} bar{}",
-                    if bars == 1 { "" } else { "s" }
-                );
+                let mut notice = if bars == 1 {
+                    crate::i18n::trf("Imported {}: 1 bar", &[&name])
+                } else {
+                    crate::i18n::trf("Imported {}: {} bars", &[&name, &bars])
+                };
                 for note in imported.notes {
                     notice.push_str(". ");
                     notice.push_str(note.trim_end_matches('.'));
                 }
                 self.notice = Some(notice);
             }
-            Err(err) => self.message = Some(format!("Could not import {name}: {err}")),
+            Err(err) => {
+                self.message = Some(crate::i18n::trf("Could not import {}: {}", &[&name, &err]));
+            }
         }
     }
 
     /// Saves the whole chord sheet as text.
     pub(super) fn export_chord_sheet(&mut self) {
         let Some(mut path) = rfd::FileDialog::new()
-            .add_filter("Chord sheet as text", &text::EXTENSIONS)
+            .add_filter(crate::i18n::tr("Chord sheet as text"), &text::EXTENSIONS)
             .set_file_name(self.file.export_name("txt"))
             .save_file()
         else {
@@ -74,10 +77,12 @@ impl LineupApp {
         let name = shown_name(&path);
         match std::fs::write(&path, written) {
             Ok(()) => {
-                self.notice = Some(format!("Exported {name}"));
+                self.notice = Some(crate::i18n::trf("Exported {}", &[&name]));
                 self.message = None;
             }
-            Err(err) => self.message = Some(format!("Could not export {name}: {err}")),
+            Err(err) => {
+                self.message = Some(crate::i18n::trf("Could not export {}: {}", &[&name, &err]));
+            }
         }
     }
 }

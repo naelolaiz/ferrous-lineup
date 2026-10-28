@@ -83,7 +83,10 @@ pub fn presets<'a>(
         }))
         .filter(|preset| !progressions_only || preset.has_progression())
         .collect();
-    presets.sort_by_cached_key(|preset| (preset.name().to_lowercase(), preset.name().to_string()));
+    presets.sort_by_cached_key(|preset| {
+        let shown = lineup_core::i18n::tr_name(preset.name());
+        (shown.to_lowercase(), preset.name().to_string())
+    });
     presets.dedup_by(|a, b| {
         matches!((*a, *b),
             (Preset::Style(a), Preset::Style(b)) if std::ptr::eq(a, b)
@@ -111,16 +114,26 @@ pub fn alphabetical<T>(
     name: impl Fn(&T) -> &'static str,
 ) -> Vec<T> {
     let mut entries: Vec<_> = entries.into_iter().collect();
-    entries.sort_by_cached_key(|entry| (name(entry).to_lowercase(), name(entry)));
+    // In the order of the names as shown, in the language chosen.
+    entries.sort_by_cached_key(|entry| {
+        let shown = lineup_core::i18n::tr_name(name(entry));
+        (shown.to_lowercase(), name(entry))
+    });
     entries
 }
 
+/// Whether `query` finds a preset, by its name, genre, meter or about
+/// text in English or in Spanish.
 pub fn matches(query: &str, name: &str, genre: Genre, time: TimeSignature, about: &str) -> bool {
+    let spanish = |text: &str| lineup_core::i18n::spanish(text).unwrap_or_default();
     let text = format!(
-        "{name} {} {time} {}/{} {about}",
+        "{name} {} {time} {}/{} {about} {} {} {}",
         genre.name(),
         time.beats,
-        time.unit
+        time.unit,
+        spanish(name),
+        spanish(genre.name()),
+        spanish(about),
     )
     .to_lowercase();
     matches_text(query, &text)
@@ -146,7 +159,12 @@ pub fn harmony_styles(query: &str, genre: Option<Genre>) -> Vec<&'static Style> 
                     style.name,
                     style.genre,
                     style.time,
-                    &format!("{} {}", style.about, style.rhythm),
+                    &format!(
+                        "{} {} {}",
+                        style.about,
+                        lineup_core::i18n::spanish(style.about).unwrap_or_default(),
+                        style.rhythm
+                    ),
                 )
         }),
         |style| style.name,
