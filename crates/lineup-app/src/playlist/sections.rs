@@ -403,7 +403,11 @@ fn key_menu(
 ) {
     let keys = project.key_map();
     let here = keys.key_at(at);
-    ui.label(format!("Key from bar {}: {}", bar + 1, here.name()));
+    ui.label(format!(
+        "Key from bar {}: {}",
+        bar + 1,
+        crate::i18n::key_name(here)
+    ));
     if at == 0 {
         ui.weak(
             "Bar 1 is the key the song starts in: change it in the harmony keys or the \
@@ -443,7 +447,10 @@ fn key_menu(
         ui.set_max_width(260.0);
         for kind in ScaleKind::ALL {
             let key = Scale::written(here.spell(here.root), kind);
-            if ui.selectable_label(here == key, kind.name()).clicked() {
+            if ui
+                .selectable_label(here == key, crate::i18n::tr(kind.name()))
+                .clicked()
+            {
                 actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
                 ui.close();
             }
@@ -453,7 +460,10 @@ fn key_menu(
     if marker.is_some() {
         let back = keys.key_at(at - 1);
         if ui
-            .button(format!("Remove this key change (back to {})", back.name()))
+            .button(format!(
+                "Remove this key change (back to {})",
+                crate::i18n::key_name(back)
+            ))
             .clicked()
         {
             actions.push(PlaylistAction::RemoveKeyMarker(at));

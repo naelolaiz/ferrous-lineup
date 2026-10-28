@@ -139,7 +139,7 @@ systems let you run it.
   declares it and apt installs it.
 - **Windows, the Setup `.exe`**: run it. It installs the program, a
   Start-menu entry, an uninstaller under **Settings > Apps**, and the
-  `.lineup` (and old `.loom`) file association, so double-clicking a
+  `.lineup` file association, so double-clicking a
   project opens it in Ferrous Lineup. If a blue window says "Windows
   protected your PC", choose **More info**, then **Run anyway**.
 - **Windows, the `.zip`**: unzip and double-click

@@ -9,10 +9,6 @@ change any of it by hand. The app names every chord you hear, and also
 speaks the other languages of harmony: pitch-class sets, twelve-tone
 rows and micromodes.
 
-Ferrous Lineup was called Ferrous Loom until October 2026. Its project
-files end in `.lineup` now, and the `.loom` files saved before still
-open.
-
 ![Ferrous Lineup playing the demo song: the playlist, the channel rack with the Lineup Osc, and the harmony keys lighting up the chord that sounds](screenshots/main-window.png)
 
 ## The book
@@ -23,6 +19,12 @@ Everything the app does, and how it was built, is in the book
 - **[Read it online](https://naelolaiz.github.io/ferrous-lineup/)**, or download it as **[one PDF](https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf)**.
 - **[A tour of the app](https://naelolaiz.github.io/ferrous-lineup/tour.html)**: every window, menu and key on one page.
 - **[Getting started](https://naelolaiz.github.io/ferrous-lineup/getting-started.html)**: installing Rust, building, and a first song with the band.
+
+The book is also available in Spanish as **Ferrous Lineup: Construyendo
+un estudio de música en Rust**:
+[read it online](https://naelolaiz.github.io/ferrous-lineup/es/) or as
+[a PDF](https://naelolaiz.github.io/ferrous-lineup/es/ferrous-lineup-book-es.pdf).
+Its sources are in [`book-es/`](book-es/).
 
 It is also a Rust course: each step of the project has a chapter on what
 was built, why, and which Rust it uses. Its sources are in

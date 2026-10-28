@@ -62,7 +62,7 @@ fn listen(path: &Path) -> Outcome {
     let keys = arrange::key_spans(&analysis, lead_in);
     let key = analysis
         .scale
-        .map_or_else(|| "no clear key".to_string(), |scale| scale.name());
+        .map_or_else(|| "no clear key".to_string(), crate::i18n::key_name);
     let chords = analysis.chords.iter().filter(|c| c.is_some()).count();
     let summary = format!(
         "{title}: {:.1} BPM, {}/4, {key}, chords on {chords} of {} beats",

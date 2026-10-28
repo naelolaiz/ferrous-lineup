@@ -8,7 +8,7 @@ use super::{
 };
 use crate::{
     Bar, Channel, ChordMarker, HarmonyName, KeyMap, MAX_CHANNELS, MAX_STEPS, Note, NoteEvent,
-    Player, Project, Scale, ScaleKind, Tempo, TimeSignature,
+    NoteNaming, Player, Project, Scale, ScaleKind, Tempo, TimeSignature,
 };
 use serde::{Deserialize, Serialize};
 
@@ -229,11 +229,15 @@ impl UserStyle {
 
     pub fn to_text(&self) -> Result<String, String> {
         self.validate()?;
-        ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default())
+        // Names are written in letters, whichever way the app shows them.
+        NoteNaming::Letters
+            .with(|| ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default()))
             .map_err(|e| e.to_string())
     }
     pub fn from_text(text: &str) -> Result<Self, String> {
-        let style: Self = ron::from_str(text).map_err(|e| e.to_string())?;
+        let style: Self = NoteNaming::Letters
+            .with(|| ron::from_str(text))
+            .map_err(|e| e.to_string())?;
         style.validate()?;
         Ok(style)
     }
