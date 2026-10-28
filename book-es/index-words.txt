@@ -1,0 +1,94 @@
+# The index at the back of the PDF (print-pdf.py makes it).
+#
+# Every word of the music and Rust glossaries is in the index, with the
+# page its "Explained in" link goes to, in bold, and every page where a
+# chapter introduces it in bold. This file adds the rest: the app's parts
+# and a few more words, each with the chapters that explain it.
+#
+#     Word: chapter.md, chapter.md#section, ...
+#
+# A place is a chapter as SUMMARY.md names it, or one of its sections by
+# the id of its heading. A word of a glossary listed here keeps its
+# glossary page and gets these too.
+#
+#     Word: see Another word
+#
+# sends the reader to another entry. And a word that a chapter writes in
+# bold with another meaning (the Rust "function" for the music one) is
+# left out of that chapter with "not":
+#
+#     Function: not step-5/diff.md
+
+Arpeggio: step-6/tools.md#arpegios-cycle-step_by-y-zip
+Audio thread: step-1/audio-engine.md, step-2/realtime.md, step-4/song-playback.md, step-5/diff.md
+Autosave: step-9/recovery.md
+Channel rack: step-2/README.md, step-2/channel-rack-ui.md, step-9/rack-lights.md
+Chord names: step-3/chords.md, step-9/chord-names.md
+Chord recognition: véase Hearing chords
+Chord sheet: step-9/chord-sheet.md, step-9/text-chord-sheets.md, step-9/harmony-notations.md, step-9/chord-sheet-layout.md, step-9/insert-delete-bars.md
+Clip: step-4/playlist-ui.md
+Continuous integration: step-1/ci.md, step-4/platforms.md#demostrarlo-la-matriz-de-ci
+Demo: step-8/patterns-and-demos.md#demos-arreglar-como-un-productor, step-8/more-demos.md, step-8/demo-names.md, step-9/demo-search.md
+Drum kit: step-2/instruments.md#sintetizar-una-batería, step-8/library.md#ritmos-una-línea-por-tambor, step-9/mixer-score-order.md
+Ear training: step-9/ear-training.md
+Envelope: step-3/voices.md#la-envolvente-una-máquina-de-estados
+Export: véase WAV export, Video export
+Finding the key: step-8/finding-the-key.md
+Harmony keys: step-8/harmony-keys.md, step-8/key-as-a-set.md
+Hearing chords: step-9/chord-hearing.md
+Horn section: step-9/big-band-songs.md, step-9/horn-section.md
+Importing a recording: spike-listen/README.md
+Key change: step-8/changing-key.md, step-8/key-changes.md
+Key marker: step-8/key-changes.md#un-marcador-de-tonalidad
+Keyboard shortcuts: step-5/history.md#atajos-de-teclado, step-6/piano-roll.md#el-teclado, appendix-shortcuts.md
+Latin American music: step-8/folklore.md, step-9/latin-american-songs.md, step-9/misa-criolla.md, step-9/midi-songs.md
+Lead sheet: step-9/lead-sheet.md, step-9/transposing-instruments.md
+Library: step-8/library.md, step-8/patterns-and-demos.md#la-pestaña-library, step-9/library-filters.md
+Lineup Osc: step-2/instruments.md#el-lineup-osc
+Locked track: step-9/locks.md
+Meter: véase Time signature
+MIDI file: step-7/messages.md#un-archivo-midi, step-8/midi-import.md, step-9/midi-songs.md
+MIDI keyboard: step-7/live.md, step-7/recording.md
+MIDI Out: step-7/live.md#midi-out-un-instrumento-con-bandeja-de-salida, step-8/midi-out-every-channel.md, step-9/midi-out-menus.md
+Mixer: step-9/mixer-score-order.md, step-9/mixer.md, step-9/channel-effects.md
+Modulation: véase Key change
+Odd meter: step-8/any-time-signature.md, step-9/odd-meters.md
+Orchestra: step-9/concert-hall.md, step-9/orchestra.md
+Pattern: step-2/project.md, step-4/patterns.md
+Piano roll: step-3/piano-roll-ui.md, step-6/piano-roll.md
+Pitch class: step-3/theory.md
+Pitch-class set: step-8/key-as-a-set.md, step-9/harmony-notations.md
+Playback trace: step-9/playback-trace.md
+Playlist: step-4/patterns.md, step-4/playlist-ui.md
+Practice: step-9/practice.md, step-9/speed-trainer.md
+Project file: step-4/saving.md, appendix-project-format.md
+Recording MIDI keys: step-7/recording.md
+Release builds: step-9/releases.md
+Roman numeral: step-9/minor-numerals.md
+Sampler: step-2/instruments.md#el-sampler
+Scale: step-3/theory.md#escalas, step-8/changing-key.md#snap-to-scale
+Section style: step-9/section-styles.md
+Snap to scale: step-8/changing-key.md#snap-to-scale
+Soloist: step-9/soloist.md
+Song form: step-9/song-form.md
+Song structure: step-8/song-structure.md
+SoundFont: step-9/soundfont.md
+Speed trainer: step-9/speed-trainer.md
+Style editor: step-9/style-editor.md
+Style: step-8/library.md#estilos, step-9/band.md#cambiar-el-estilo, step-9/bigger-band.md, step-9/section-styles.md, step-9/style-tempo.md
+Tango: step-9/midi-songs.md
+Tempo: step-1/lineup-core.md#tempo-mantener-válido-un-valor, step-8/tempo-and-feel.md, step-9/style-tempo.md
+Time signature: step-8/time-signatures.md, step-8/time-markers.md, step-8/any-time-signature.md, step-8/re-metering.md
+Track: step-8/look-and-transport.md#insertar-mover-y-borrar-pistas, step-8/only-the-tracks-you-use.md
+Transport: step-8/look-and-transport.md#el-transport-dónde-empieza-play
+Twelve-tone row: step-9/twelve-tone-rules.md
+Undo: step-5/history.md
+Variations: step-9/variations.md
+Velocity: step-6/piano-roll.md#el-carril-de-velocidad, step-8/tempo-and-feel.md#velocidades-la-forma-de-una-frase
+Video export: step-9/video-export.md
+Voice leading: step-9/voice-leading.md
+WAV export: step-5/export.md
+Zoom: step-8/fitting-the-window.md#zoom, step-8/zoom-follows-the-pointer.md
+
+Array: no step-9/releases.md
+Function: no step-5/diff.md

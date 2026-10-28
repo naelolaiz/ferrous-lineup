@@ -1,20 +1,23 @@
 name: Book
 
-# Builds the book in book/ with mdBook, prints it to one PDF, and
-# publishes both on GitHub Pages. Every pull request that changes the book
-# builds it too, whichever branch it goes into (a book page stacked on the
-# pull request of the change it describes included), so a change can be
-# checked before it is merged; only a push to main, or a run by hand,
-# publishes.
+# Builds the books in book/ (English) and book-es/ (Spanish) with mdBook,
+# prints each to one PDF, and publishes them on GitHub Pages: the English
+# book at the root, as always, and the Spanish one under /es/. Every pull
+# request that changes a book builds it too, whichever branch it goes into
+# (a book page stacked on the pull request of the change it describes
+# included), so a change can be checked before it is merged; only a push
+# to main, or a run by hand, publishes.
 on:
   push:
     branches: [main]
     paths:
       - "book/**"
+      - "book-es/**"
       - ".github/workflows/book.yml"
   pull_request:
     paths:
       - "book/**"
+      - "book-es/**"
       - ".github/workflows/book.yml"
   # Actions > Book > Run workflow publishes the book again by hand.
   workflow_dispatch:
@@ -24,13 +27,8 @@ permissions:
 
 jobs:
   build:
-    name: Build the website and the PDF
+    name: Build the websites and the PDFs
     runs-on: ubuntu-latest
-    # The book's own files (book.toml, print.css, src/) are in book/, so
-    # every command runs there, as if the book were the whole repository.
-    defaults:
-      run:
-        working-directory: book
     steps:
       - uses: actions/checkout@v5
 
@@ -40,20 +38,22 @@ jobs:
         with:
           tool: mdbook@0.5.4
 
-      - name: Build the website
-        run: mdbook build
+      - name: Build the websites
+        run: |
+          (cd book && mdbook build)
+          (cd book-es && mdbook build)
 
       # The book uses music symbols (𝄾, ♩) and a few emoji. FreeSerif has
       # the symbols and Noto Color Emoji the emoji, so the PDF shows them
       # instead of empty boxes.
-      - name: Install fonts for the PDF
+      - name: Install fonts for the PDFs
         run: |
           sudo apt-get update
           sudo apt-get install -y fonts-freefont-ttf fonts-noto-color-emoji
 
       # pypdf, a Python library for PDF files, adds the bookmarks to the
-      # PDF. The runner's Python won't install packages for everyone, so it
-      # goes into a virtual environment of its own.
+      # PDFs. The runner's Python won't install packages for everyone, so
+      # it goes into a virtual environment of its own.
       - name: Install pypdf
         run: |
           python3 -m venv "$RUNNER_TEMP/pdf-tools"
@@ -67,28 +67,44 @@ jobs:
       # print it the way a browser's Print button does, without the date
       # and address at the top and bottom of each page, and adds the
       # bookmarks. print.css sets the paper size and the page numbers.
-      - name: Print the PDF
+      # Each book has its own print-pdf.py, which reads the book.toml
+      # next to it, so the Spanish PDF's title page and index are in
+      # Spanish.
+      - name: Print the PDFs
         env:
           MDBOOK_OUTPUT__HTML__DEFAULT_THEME: light
           MDBOOK_OUTPUT__HTML__PREFERRED_DARK_THEME: light
         run: |
-          mdbook build --dest-dir pdf
-          "$RUNNER_TEMP/pdf-tools/bin/python" print-pdf.py pdf book/ferrous-lineup-book.pdf
-          test -s book/ferrous-lineup-book.pdf
+          (cd book && mdbook build --dest-dir pdf)
+          "$RUNNER_TEMP/pdf-tools/bin/python" book/print-pdf.py book/pdf book/book/ferrous-lineup-book.pdf
+          (cd book-es && mdbook build --dest-dir pdf)
+          "$RUNNER_TEMP/pdf-tools/bin/python" book-es/print-pdf.py book-es/pdf book-es/book-es/ferrous-lineup-book-es.pdf
+          test -s book/book/ferrous-lineup-book.pdf
+          test -s book-es/book-es/ferrous-lineup-book-es.pdf
 
-      # The PDF is a download on every run, pull requests included. It is
-      # also part of the website, next to its pages.
+      # The PDFs are a download on every run, pull requests included. They
+      # are also part of the website, next to their pages.
       # Paths given to actions (`with: path:`) start at the top of the
       # repository: working-directory only applies to `run:` steps.
       - uses: actions/upload-artifact@v7
         with:
-          path: book/book/ferrous-lineup-book.pdf
+          path: |
+            book/book/ferrous-lineup-book.pdf
+            book-es/book-es/ferrous-lineup-book-es.pdf
           archive: false
           if-no-files-found: error
 
+      # One site: the English book at the root (as today), the Spanish
+      # book under /es/.
+      - name: Assemble the site
+        run: |
+          mkdir -p site
+          cp -r book/book/. site/
+          cp -r book-es/book/. site/es/
+
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: book/book
+          path: site
 
   # Before the first run: Settings > Pages > Source: "GitHub Actions". The
   # `github-pages` environment that creates lets the default branch, main,

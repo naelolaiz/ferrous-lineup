@@ -24,6 +24,12 @@ Everything the app does, and how it was built, is in the book
 - **[A tour of the app](https://naelolaiz.github.io/ferrous-lineup/tour.html)**: every window, menu and key on one page.
 - **[Getting started](https://naelolaiz.github.io/ferrous-lineup/getting-started.html)**: installing Rust, building, and a first song with the band.
 
+The book is also available in Spanish as **Ferrous Lineup: Construyendo
+un estudio de música en Rust**:
+[read it online](https://naelolaiz.github.io/ferrous-lineup/es/) or as
+[a PDF](https://naelolaiz.github.io/ferrous-lineup/es/ferrous-lineup-book-es.pdf).
+Its sources are in [`book-es/`](book-es/).
+
 It is also a Rust course: each step of the project has a chapter on what
 was built, why, and which Rust it uses. Its sources are in
 [`book/`](book/), next to the code they describe.
