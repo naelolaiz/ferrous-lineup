@@ -3,6 +3,7 @@
 Files: [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs),
 [`crates/lineup-app/src/icons.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/icons.rs),
 [`crates/lineup-app/src/app/shortcuts.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/shortcuts.rs),
+[`crates/lineup-app/src/app/about.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/about.rs),
 [`crates/lineup-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/widgets.rs)
 and [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
@@ -16,6 +17,8 @@ you and the music:
 - the **toolbar** fits on one row again, with small painted pictures for
   the windows;
 - **Help > Keyboard shortcuts** (F1) lists every key the app answers to;
+- **Help > About Ferrous Lineup** says which version you run, under which
+  license, and where this book and the code are;
 - every window opens **at the size of what it shows**, not at a size
   egui remembered from another day.
 
@@ -34,6 +37,9 @@ you and the music:
    window's own keys.
 5. Open the mixer (**F9**), drag its corner to make it much bigger,
    close it and open it again. It comes back as big as its channels.
+6. Open **Help > About Ferrous Lineup**. It shows the version, the
+   license, and links to this book, its PDF, the source code and the
+   list of known problems.
 
 ![The toolbar on one row: the five window buttons and the Count-in and Metronome toggles are pictures.](../images/step-9-workflow-toolbar.png)
 
@@ -231,6 +237,94 @@ Because the list is data, it can also be tested as data.
 that work anywhere (Anywhere, Windows, File and Edit, Zoom) and fails if
 any key is listed twice, since that key would do two things at once.
 
+## Who made it, and which version
+
+**Help > About Ferrous Lineup** says which version you are running,
+under which license, and where to find this book, the code and the list
+of known problems. It is the first thing to look at before reporting
+one.
+
+![Help > About: the version, the license and the links.](../images/step-9-about.png)
+
+Everything it says about the program comes from `Cargo.toml`, read
+while the program is compiled:
+
+```rust
+const ISSUES: &str = concat!(env!("CARGO_PKG_REPOSITORY"), "/issues");
+
+ui.label(format!("{} {}", tr("Version"), env!("CARGO_PKG_VERSION")));
+ui.weak(tr(env!("CARGO_PKG_DESCRIPTION")));
+```
+
+- `env!("NAME")` is a macro that the compiler replaces with the value
+  of the environment variable `NAME` *while it compiles*, as a
+  `&'static str`. Cargo sets `CARGO_PKG_VERSION`,
+  `CARGO_PKG_DESCRIPTION`, `CARGO_PKG_REPOSITORY` and a few more from
+  the `[package]` section of `Cargo.toml` (the app takes its version,
+  license and repository from the workspace's `[workspace.package]`).
+  A variable that is not set is a compile error, not a surprise for the
+  user.
+- `concat!` joins literals into one at compile time, so `ISSUES` is a
+  constant too. `format!` could not be used there: it builds a `String`
+  while the program runs, and a `const` must be known before it runs.
+
+So when a release changes the version in `Cargo.toml`, the window
+changes with it, and nobody has to remember a second place. The
+[release builds](releases.md) compare the tag with this same number.
+
+The words go through `tr`, like the menus, so with the Spanish
+interface the window is in Spanish. The book links change too:
+
+```rust
+let (book, book_pdf) = match i18n::current_language() {
+    Language::English => (BOOK, BOOK_PDF),
+    Language::Spanish => (BOOK_ES, BOOK_ES_PDF),
+};
+```
+
+The `match` has no `_` arm on purpose. Add a third language, and the
+compiler stops here until you decide which book its readers get.
+
+### The picture and the links
+
+The icon is the one the desktop shows for the app's window:
+`WINDOW_ICON`, 256 × 256 pixels of red, green, blue and alpha bytes,
+built into the program with `include_bytes!`. egui draws pictures from
+**textures**, images kept on the graphics card, so the bytes are made
+into a texture the first time the window opens and kept in egui's
+memory:
+
+```rust
+fn icon(ctx: &egui::Context) -> egui::TextureHandle {
+    let id = egui::Id::unique("about-icon");
+    if let Some(texture) = ctx.data(|data| data.get_temp(id)) {
+        return texture;
+    }
+    let size = crate::WINDOW_ICON_SIZE as usize;
+    let image = egui::ColorImage::from_rgba_unmultiplied([size, size], crate::WINDOW_ICON);
+    let texture = ctx.load_texture("about-icon", image, egui::TextureOptions::LINEAR);
+    ctx.data_mut(|data| data.insert_temp(id, texture.clone()));
+    texture
+}
+```
+
+A `TextureHandle` works like an `Arc`: a clone is cheap, and the
+texture stays on the graphics card while any clone of it is alive. The
+one kept in egui's memory means the picture is sent to the card once,
+not on every frame egui draws. `WINDOW_ICON` is a constant of `main.rs`,
+not marked `pub`; `about.rs` can still read it as `crate::WINDOW_ICON`,
+because a private item is visible to its own module and to every module
+inside it.
+
+`ui.hyperlink_to(text, url)` draws a link. Clicking it does not start
+the browser: egui adds an `OutputCommand::OpenUrl` to what the frame
+gives back, and eframe asks the system to open the address. That makes
+the click easy to test.
+`help_about_shows_the_version_the_license_and_where_the_book_is` opens
+**Help > About**, checks that the version line and every link are
+drawn, clicks **The book**, and checks that the frame asked for the
+book's address, without any browser opening.
+
 ## Windows the size of what they show
 
 egui remembers each window's size, and saves it with the rest of the
@@ -343,3 +437,6 @@ audio](recovery.md) has the details.
    `Any`? What would the list show then?
 3. The lead sheet opens with `Opening::FirstTime`. What would change for
    you if it used `EveryTime`? Try it, and say which you prefer.
+4. Add a **Copy version** button to the About window that puts
+   "Ferrous Lineup 0.3.0" (with the real version) on the clipboard with
+   `ctx.copy_text`. Can the text be a `const`, built with `concat!`?
