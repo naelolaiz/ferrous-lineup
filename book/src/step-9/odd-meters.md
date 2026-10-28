@@ -367,9 +367,7 @@ every note twice as long, which sounds the same at the tempo given.
 
 The folk songs and dances are traditional, and Mussorgsky's music is long in the public domain. **Take Five** (Paul
 Desmond, 1959) and the **Mission: Impossible theme** (Lalo Schifrin,
-1966) are still under copyright; they are included at the owner's
-request, and a comment above each says so. Blue Rondo à la Turk was
-asked for too, but no written score of it could be reached.
+1966) are still under copyright, and a comment above each says so.
 
 ## Exercises
 

@@ -89,7 +89,6 @@
 
 - [Step 9: The band](step-9/README.md)
   - [Chord names: reading a lead sheet](step-9/chord-names.md)
-  - [A new name](step-9/new-name.md)
   - [The chord sheet: writing a song bar by bar](step-9/chord-sheet.md)
   - [The band plays the chord sheet](step-9/band.md)
   - [Real instrument sounds: a SoundFont](step-9/soundfont.md)

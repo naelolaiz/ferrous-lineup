@@ -560,7 +560,7 @@ impl Views {
                     ui.label(
                         RichText::new(format!(
                             "{} · {time} · {} BPM",
-                            key.name(),
+                            crate::i18n::key_name(key),
                             tempo.bpm().round()
                         ))
                         .size(15.0),

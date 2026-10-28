@@ -329,14 +329,6 @@ the playlist's button now goes the same way.
 taken off first, and what is left is checked for N.C. before any dots
 are read.
 
-## What is left
-
-Some things that were found change what you would hear or see, so
-they wait for a decision: a pushed chord at a section change is struck
-twice, a text chord sheet stretches a section to the next heading, and
-a few smaller ones. They are listed, with the rest of the findings, in
-the bug hunt's notes in the project files.
-
 ## Exercises
 
 1. `Voices::Nth(n)` wraps with `n % voicing.len()`. Write a function

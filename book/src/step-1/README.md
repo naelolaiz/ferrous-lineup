@@ -1,11 +1,8 @@
 # Step 1: The foundation
 
 > The code shown in step 1's chapters is the code as it was at the end of
-> step 1, under today's names: `LoomApp` and the `loom-*` crates became
-> `LineupApp` and `lineup-*` in step 9. Later steps changed some of it
-> (the test tone, for example, was replaced in step 2). This chapter is a
-> historical snapshot, and the old `step-1-foundation` checkpoint branch
-> is no longer published.
+> step 1. Later steps changed some of it (the test tone, for example, was
+> replaced in step 2).
 
 Step 1 builds the skeleton that every later feature hangs on:
 
