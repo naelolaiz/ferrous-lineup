@@ -405,7 +405,10 @@ impl NoteName {
 
     /// Reads a solfège syllable at the start of `text`.
     fn read_solfege(text: &str) -> Option<(Letter, &str)> {
-        if let Some(rest) = text.strip_prefix("Sol").or_else(|| text.strip_prefix("SOL")) {
+        if let Some(rest) = text
+            .strip_prefix("Sol")
+            .or_else(|| text.strip_prefix("SOL"))
+        {
             Some((Letter::G, rest))
         } else if let Some(rest) = text.strip_prefix("Do").or_else(|| text.strip_prefix("DO")) {
             Some((Letter::C, rest))
@@ -648,7 +651,10 @@ mod tests {
         assert_eq!(read("Sib"), Some(("Bb".to_string(), "")));
         assert_eq!(read("Lam"), Some(("A".to_string(), "m")));
         assert_eq!(read("Mi"), Some(("E".to_string(), "")));
-        let read_sol = |text| NoteName::read_with(text, NoteNaming::Solfege).map(|(name, rest)| (name.to_string(), rest));
+        let read_sol = |text| {
+            NoteName::read_with(text, NoteNaming::Solfege)
+                .map(|(name, rest)| (name.to_string(), rest))
+        };
         assert_eq!(read_sol("Dom7"), Some(("C".to_string(), "m7")));
         assert_eq!(read_sol("Fa#m"), Some(("F#".to_string(), "m")));
         assert_eq!(read_sol("Reb"), Some(("Db".to_string(), "")));
@@ -669,7 +675,13 @@ mod tests {
         assert_eq!(pc.name_with(Spelling::Sharps, NoteNaming::Letters), "C#");
         assert_eq!(pc.name_with(Spelling::Sharps, NoteNaming::Solfege), "Do#");
         assert_eq!(pc.name_with(Spelling::Flats, NoteNaming::Solfege), "Reb");
-        assert_eq!(NoteName::new(Letter::G, 0).format(NoteNaming::Solfege), "Sol");
-        assert_eq!(NoteName::new(Letter::A, -1).format(NoteNaming::Solfege), "Lab");
+        assert_eq!(
+            NoteName::new(Letter::G, 0).format(NoteNaming::Solfege),
+            "Sol"
+        );
+        assert_eq!(
+            NoteName::new(Letter::A, -1).format(NoteNaming::Solfege),
+            "Lab"
+        );
     }
 }
