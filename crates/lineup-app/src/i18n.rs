@@ -226,6 +226,22 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "Report an issue" => "Informar de un problema",
         "About Ferrous Lineup" => "Acerca de Ferrous Lineup",
 
+        // --- About Window ---
+        "Version" => "Versión",
+        "Play songs with a backing band and learn harmony" => {
+            "Toca canciones con una banda de acompañamiento y aprende armonía"
+        }
+        "Free software: you can share it and change it under the GNU General \
+         Public License, version 3 or later. It comes with no warranty." => {
+            "Software libre: puedes compartirlo y modificarlo según la Licencia \
+             Pública General de GNU, versión 3 o posterior. Se ofrece sin ninguna \
+             garantía."
+        }
+        "Read the license" => "Leer la licencia",
+        "Source code" => "Código fuente",
+        "The book" => "El libro",
+        "The book (PDF)" => "El libro (PDF)",
+
         // --- Transport Bar & Status Bar Hints ---
         "Pattern mode: loop the selected pattern (L)" => {
             "Modo patrón: repite el patrón seleccionado (L)"

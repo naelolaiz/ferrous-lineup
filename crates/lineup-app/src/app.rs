@@ -15,6 +15,7 @@
 //! Every change to the project goes through [`LineupApp::edit`], which
 //! records it for undo and tells the audio thread what changed.
 
+mod about;
 mod chord_text;
 mod demo_menu;
 mod ear;
@@ -126,6 +127,8 @@ pub struct LineupApp {
     meters: crate::meters::Meters,
     /// Help > Keyboard shortcuts.
     shortcuts_open: bool,
+    /// Help > About.
+    about_open: bool,
     settings_open: bool,
     settings: settings::SettingsView,
     style_editor: crate::style_editor::StyleEditor,
@@ -267,6 +270,7 @@ impl LineupApp {
             mixer_open: false,
             meters: Default::default(),
             shortcuts_open: false,
+            about_open: false,
             settings_open: false,
             settings: settings::SettingsView::default(),
             style_editor: crate::style_editor::StyleEditor::new(),
@@ -2311,6 +2315,7 @@ impl eframe::App for LineupApp {
         self.sound_font_window(&ctx);
         self.mixer_window(&ctx, area);
         self.shortcuts_window(&ctx, area);
+        self.about_window(&ctx);
         self.style_editor_window(&ctx, area);
         self.settings_window(&ctx);
         self.video_dialog(&ctx);

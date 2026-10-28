@@ -238,7 +238,7 @@ impl Keys {
 }
 
 impl LineupApp {
-    /// Help, at the right of the menus.
+    /// Help, at the right of the menus: the keyboard shortcuts and About.
     pub(super) fn help_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button(crate::i18n::tr("Help"), |ui| {
             let shortcut = ui.ctx().format_shortcut(&view::HELP);
@@ -249,6 +249,11 @@ impl LineupApp {
             .shortcut_text(shortcut);
             if ui.add(item).clicked() {
                 self.shortcuts_open = !self.shortcuts_open;
+                ui.close();
+            }
+            ui.separator();
+            if ui.button(crate::i18n::tr("About Ferrous Lineup")).clicked() {
+                self.about_open = true;
                 ui.close();
             }
         });
