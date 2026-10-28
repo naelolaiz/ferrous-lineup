@@ -245,6 +245,15 @@ impl Note {
         format!("{}{}", self.pitch_class().name(spelling), self.octave())
     }
 
+    /// The name and octave as the app shows it, with sharps: "C#4", or
+    /// "Do#4" when notes are named in solfège (see [`NoteName::shown`]).
+    pub fn shown(self) -> String {
+        let name = self
+            .pitch_class()
+            .name_with(Spelling::Sharps, NoteNaming::current());
+        format!("{name}{}", self.octave())
+    }
+
     /// The note written as `name` (which must name its pitch class),
     /// with the octave of its letter: middle C written as B# is "B#3",
     /// since B#3 is the B of the octave below raised a semitone, and the
@@ -490,6 +499,8 @@ impl NoteName {
 
 impl fmt::Display for NoteName {
     /// Writes the letter and its sharps or flats: "C", "F#", "Bb", "F##".
+    /// Project files and chord symbols use it, so it is always letters;
+    /// [`NoteName::shown`] names the note as the settings say.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let sign = if self.accidental > 0 { "#" } else { "b" };
         write!(
@@ -663,5 +674,24 @@ mod tests {
             NoteName::new(Letter::A, -1).format(NoteNaming::Solfege),
             "Lab"
         );
+        assert_eq!(
+            NoteName::new(Letter::F, 2).format(NoteNaming::Solfege),
+            "Fa##"
+        );
+        let names: Vec<&str> = Letter::ALL.into_iter().map(Letter::solfege).collect();
+        assert_eq!(names, ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"]);
+    }
+
+    #[test]
+    fn shown_follows_the_thread_naming() {
+        let b_flat = NoteName::new(Letter::B, -1);
+        assert_eq!(b_flat.shown(), "Bb");
+        assert_eq!(NoteNaming::Solfege.with(|| b_flat.shown()), "Sib");
+        assert_eq!(b_flat.shown(), "Bb", "with() puts the naming back");
+        // Files and chord symbols keep letters whatever the naming.
+        NoteNaming::Solfege.with(|| {
+            assert_eq!(b_flat.to_string(), "Bb");
+            assert_eq!(PitchClass::A.to_string(), "A");
+        });
     }
 }
