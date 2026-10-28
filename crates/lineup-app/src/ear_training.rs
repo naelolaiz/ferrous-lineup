@@ -150,7 +150,7 @@ impl EarTraining {
         if self.open {
             self.front.keep(ctx, window_id());
             let mut open = true;
-            let window = egui::Window::new("Ear training")
+            let window = egui::Window::new(crate::i18n::tr("Ear training"))
                 .id(window_id())
                 .open(&mut open)
                 .default_pos([300.0, 110.0])

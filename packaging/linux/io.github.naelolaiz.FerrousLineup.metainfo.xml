@@ -4,6 +4,7 @@
 
   <name>Ferrous Lineup</name>
   <summary>Play songs with a backing band and learn harmony</summary>
+  <summary xml:lang="es">Toca canciones con una banda de acompañamiento y aprende armonía</summary>
 
   <developer id="io.github.naelolaiz">
     <name>Ferrous Lineup contributors</name>
@@ -30,6 +31,26 @@
       Songs come in and out as MIDI, WAV, lead-sheet PDF and MP4 video;
       MIDI keyboards and synths work as input and output, and a recording
       can be imported to hear its tempo, key and chords.
+    </p>
+  </description>
+  <description xml:lang="es">
+    <p>
+      Escribe los acordes de una canción en la hoja de acordes, elige un estilo y una
+      banda (bajo, batería, piano y más) la tocará en cualquier tonalidad y tempo.
+      Cada parte se ubica en su propia pista, y una lista de reproducción, un secuenciador
+      por pasos y un piano roll te permiten escribir o modificar cualquier detalle a mano.
+    </p>
+    <p>
+      La aplicación nombra cada acorde que escuchas, con su numeral y función,
+      y maneja también otros lenguajes de la armonía: conjuntos de clases de alturas,
+      series dodecafónicas y los micromodos de Kröpfl. Cuenta de entrada, metrónomo,
+      bucles, reproducción lenta y silenciamiento de partes la convierten en una
+      herramienta tanto de práctica como de composición.
+    </p>
+    <p>
+      Las canciones se importan y exportan como MIDI, WAV, partituras guía en PDF y video MP4;
+      los teclados y sintetizadores MIDI funcionan como entrada y salida, y se puede
+      importar una grabación para detectar su tempo, tonalidad y acordes.
     </p>
   </description>
 

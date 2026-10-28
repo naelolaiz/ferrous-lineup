@@ -1,6 +1,7 @@
 //! Notes, pitch classes and their names.
 
 use std::fmt;
+use std::sync::atomic::{AtomicU8, Ordering};
 
 use serde::{Deserialize, Serialize};
 
@@ -8,11 +9,45 @@ use serde::{Deserialize, Serialize};
 ///
 /// The same key has two names, and which one is right depends on the
 /// key you are in: F major has a B flat, never an A sharp.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub enum Spelling {
     #[default]
     Sharps,
     Flats,
+}
+
+/// How to name notes: with letters (C, D, E...) or with solfège (Do, Re, Mi...).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+pub enum NoteNaming {
+    #[default]
+    Letters,
+    Solfege,
+}
+
+impl NoteNaming {
+    pub const ALL: [NoteNaming; 2] = [NoteNaming::Letters, NoteNaming::Solfege];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            NoteNaming::Letters => "Letters (C, D, E…)",
+            NoteNaming::Solfege => "Solfège (Do, Re, Mi…)",
+        }
+    }
+}
+
+static GLOBAL_NOTE_NAMING: AtomicU8 = AtomicU8::new(0);
+
+/// The active note naming convention in lineup-core (Letters or Solfege).
+pub fn global_note_naming() -> NoteNaming {
+    match GLOBAL_NOTE_NAMING.load(Ordering::Relaxed) {
+        1 => NoteNaming::Solfege,
+        _ => NoteNaming::Letters,
+    }
+}
+
+/// Sets the active note naming convention in lineup-core.
+pub fn set_global_note_naming(naming: NoteNaming) {
+    GLOBAL_NOTE_NAMING.store(naming as u8, Ordering::Relaxed);
 }
 
 /// One of the twelve notes of the octave, ignoring which octave it is in.
@@ -106,6 +141,11 @@ impl PitchClass {
             (ASharp, Flats) => "Bb",
             (B, _) => "B",
         }
+    }
+
+    /// The name of this pitch class, written as letters or solfège.
+    pub fn name_with(self, spelling: Spelling, naming: NoteNaming) -> String {
+        NoteName::plain(self, spelling).format(naming)
     }
 }
 
@@ -267,6 +307,19 @@ impl Letter {
     pub fn from_char(c: char) -> Option<Letter> {
         Self::ALL.into_iter().find(|letter| letter.as_char() == c)
     }
+
+    /// The name of this letter in solfège: C is Do, D is Re...
+    pub fn solfege(self) -> &'static str {
+        match self {
+            Letter::C => "Do",
+            Letter::D => "Re",
+            Letter::E => "Mi",
+            Letter::F => "Fa",
+            Letter::G => "Sol",
+            Letter::A => "La",
+            Letter::B => "Si",
+        }
+    }
 }
 
 /// The name of a note as musicians write it: a letter, and how many
@@ -340,15 +393,73 @@ impl NoteName {
         NoteName::with_letter(pitch_class, self.letter.up(i32::from(letters)))
     }
 
-    /// Reads a note name at the start of `text`: a capital letter and up
-    /// to two sharps (`#` or `♯`) or two flats (`b` or `♭`). Returns the
-    /// name and the rest of the text, so "F#m7" gives F# and "m7". The
-    /// app writes two when a key needs them: vii°7 in G# harmonic minor
-    /// is F##dim7, and it must read back as it was written.
+    /// Formats the note name with the chosen naming convention (Letters or Solfège).
+    pub fn format(self, naming: NoteNaming) -> String {
+        let sign = if self.accidental > 0 { "#" } else { "b" };
+        let acc = sign.repeat(self.accidental.unsigned_abs() as usize);
+        match naming {
+            NoteNaming::Letters => format!("{}{acc}", self.letter.as_char()),
+            NoteNaming::Solfege => format!("{}{acc}", self.letter.solfege()),
+        }
+    }
+
+    /// Reads a solfège syllable at the start of `text`.
+    fn read_solfege(text: &str) -> Option<(Letter, &str)> {
+        if let Some(rest) = text.strip_prefix("Sol").or_else(|| text.strip_prefix("SOL")) {
+            Some((Letter::G, rest))
+        } else if let Some(rest) = text.strip_prefix("Do").or_else(|| text.strip_prefix("DO")) {
+            Some((Letter::C, rest))
+        } else if let Some(rest) = text.strip_prefix("Re").or_else(|| text.strip_prefix("RE")) {
+            Some((Letter::D, rest))
+        } else if let Some(rest) = text.strip_prefix("Mi").or_else(|| text.strip_prefix("MI")) {
+            Some((Letter::E, rest))
+        } else if let Some(rest) = text.strip_prefix("Fa").or_else(|| text.strip_prefix("FA")) {
+            Some((Letter::F, rest))
+        } else if let Some(rest) = text.strip_prefix("La").or_else(|| text.strip_prefix("LA")) {
+            Some((Letter::A, rest))
+        } else if let Some(rest) = text.strip_prefix("Si").or_else(|| text.strip_prefix("SI")) {
+            Some((Letter::B, rest))
+        } else {
+            None
+        }
+    }
+
+    /// Reads a note name at the start of `text`: a letter or solfège name
+    /// and up to two sharps (`#` or `♯`) or two flats (`b` or `♭`). Returns
+    /// the name and the rest of the text, so "F#m7" gives F# and "m7", and
+    /// "Dom7" gives C and "m7". The app writes two when a key needs them:
+    /// vii°7 in G# harmonic minor is F##dim7, and it must read back as it was
+    /// written.
     pub fn read(text: &str) -> Option<(NoteName, &str)> {
-        let mut chars = text.chars();
-        let letter = Letter::from_char(chars.next()?)?;
-        let mut rest = chars.as_str();
+        Self::read_with(text, global_note_naming())
+    }
+
+    /// Reads a note name at the start of `text` using the specified naming convention.
+    pub fn read_with(text: &str, naming: NoteNaming) -> Option<(NoteName, &str)> {
+        let (letter, rest_after_letter) = match naming {
+            NoteNaming::Solfege => {
+                if let Some((l, r)) = Self::read_solfege(text) {
+                    (l, r)
+                } else {
+                    let mut chars = text.chars();
+                    let letter = Letter::from_char(chars.next()?)?;
+                    (letter, chars.as_str())
+                }
+            }
+            NoteNaming::Letters => {
+                let mut chars = text.chars();
+                let first = chars.next()?;
+                if let Some(letter) = Letter::from_char(first) {
+                    (letter, chars.as_str())
+                } else if let Some((l, r)) = Self::read_solfege(text) {
+                    (l, r)
+                } else {
+                    return None;
+                }
+            }
+        };
+
+        let mut rest = rest_after_letter;
         let sign = |c| match c {
             '#' | '♯' => 1,
             'b' | '♭' => -1,
@@ -532,8 +643,33 @@ mod tests {
         assert_eq!(read("c"), None, "lower case is a flat, not a note");
         assert_eq!(read("H"), None);
         assert_eq!(read(""), None);
+        assert_eq!(read("Faug"), Some(("F".to_string(), "aug")));
+        assert_eq!(read("Sol#dim"), Some(("G#".to_string(), "dim")));
+        assert_eq!(read("Sib"), Some(("Bb".to_string(), "")));
+        assert_eq!(read("Lam"), Some(("A".to_string(), "m")));
+        assert_eq!(read("Mi"), Some(("E".to_string(), "")));
+        let read_sol = |text| NoteName::read_with(text, NoteNaming::Solfege).map(|(name, rest)| (name.to_string(), rest));
+        assert_eq!(read_sol("Dom7"), Some(("C".to_string(), "m7")));
+        assert_eq!(read_sol("Fa#m"), Some(("F#".to_string(), "m")));
+        assert_eq!(read_sol("Reb"), Some(("Db".to_string(), "")));
         assert_eq!(NoteName::parse("Cb"), Some(NoteName::new(Letter::C, -1)));
         assert_eq!(NoteName::parse("E#"), Some(NoteName::new(Letter::E, 1)));
         assert_eq!(NoteName::parse("F#m"), None);
+        let parse_sol = |text| match NoteName::read_with(text, NoteNaming::Solfege)? {
+            (name, "") => Some(name),
+            _ => None,
+        };
+        assert_eq!(parse_sol("Do"), Some(NoteName::new(Letter::C, 0)));
+        assert_eq!(parse_sol("Sol#"), Some(NoteName::new(Letter::G, 1)));
+    }
+
+    #[test]
+    fn solfege_naming() {
+        let pc = PitchClass::CSharp;
+        assert_eq!(pc.name_with(Spelling::Sharps, NoteNaming::Letters), "C#");
+        assert_eq!(pc.name_with(Spelling::Sharps, NoteNaming::Solfege), "Do#");
+        assert_eq!(pc.name_with(Spelling::Flats, NoteNaming::Solfege), "Reb");
+        assert_eq!(NoteName::new(Letter::G, 0).format(NoteNaming::Solfege), "Sol");
+        assert_eq!(NoteName::new(Letter::A, -1).format(NoteNaming::Solfege), "Lab");
     }
 }

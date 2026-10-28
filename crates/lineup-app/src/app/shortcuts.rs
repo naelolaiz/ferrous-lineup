@@ -240,10 +240,13 @@ impl Keys {
 impl LineupApp {
     /// Help, at the right of the menus.
     pub(super) fn help_menu(&mut self, ui: &mut egui::Ui) {
-        ui.menu_button("Help", |ui| {
+        ui.menu_button(crate::i18n::tr("Help"), |ui| {
             let shortcut = ui.ctx().format_shortcut(&view::HELP);
-            let item = egui::Button::selectable(self.shortcuts_open, "Keyboard shortcuts")
-                .shortcut_text(shortcut);
+            let item = egui::Button::selectable(
+                self.shortcuts_open,
+                crate::i18n::tr("Keyboard shortcuts"),
+            )
+            .shortcut_text(shortcut);
             if ui.add(item).clicked() {
                 self.shortcuts_open = !self.shortcuts_open;
                 ui.close();
@@ -257,7 +260,7 @@ impl LineupApp {
         }
         let mut open = self.shortcuts_open;
         let id = egui::Id::unique("keyboard-shortcuts");
-        let window = egui::Window::new("Keyboard shortcuts")
+        let window = egui::Window::new(crate::i18n::tr("Keyboard shortcuts"))
             .id(id)
             .open(&mut open)
             .constrain_to(area);
@@ -268,9 +271,9 @@ impl LineupApp {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for section in sections() {
                     ui.add_space(4.0);
-                    ui.strong(section.title);
+                    ui.strong(crate::i18n::tr(section.title));
                     if !section.note.is_empty() {
-                        ui.weak(section.note);
+                        ui.weak(crate::i18n::tr(section.note));
                     }
                     // As wide as the longest keys, so the sections'
                     // columns line up.
@@ -281,7 +284,7 @@ impl LineupApp {
                         .show(ui, |ui| {
                             for (keys, what) in &section.lines {
                                 ui.monospace(keys.text(ctx));
-                                ui.label(*what);
+                                ui.label(crate::i18n::tr(what));
                                 ui.end_row();
                             }
                         });

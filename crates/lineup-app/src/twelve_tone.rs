@@ -419,7 +419,7 @@ impl RowWindow {
         let mut actions = Vec::new();
         let mut open = self.open;
         self.front.keep(ctx, row_window_id());
-        let window = egui::Window::new("Twelve-tone row")
+        let window = egui::Window::new(crate::i18n::tr("Twelve-tone row"))
             .id(row_window_id())
             .open(&mut open)
             .default_pos([260.0, 120.0])
@@ -848,7 +848,7 @@ impl SetWindow {
         if self.reveal {
             ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, set_window_id()));
         }
-        let window = egui::Window::new("Pitch-class sets")
+        let window = egui::Window::new(crate::i18n::tr("Pitch-class sets"))
             .id(set_window_id())
             .open(&mut open)
             .default_pos([320.0, 140.0])

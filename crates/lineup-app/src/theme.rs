@@ -269,6 +269,7 @@ pub fn light_button(ui: &mut Ui, text: &str, on: bool, color: Option<Color32>) -
 /// for those who wait.
 pub fn hint(response: Response, text: impl Into<String>) -> Response {
     let text = text.into();
+    let text = crate::i18n::tr_str(&text).to_string();
     if response.hovered() {
         response
             .ctx
@@ -310,7 +311,8 @@ impl HintBar {
     }
 
     pub fn show(&self, ui: &mut Ui) {
-        let text = self.text.as_deref().unwrap_or(DEFAULT_HINT);
+        let default_hint = crate::i18n::tr(DEFAULT_HINT);
+        let text = self.text.as_deref().unwrap_or(default_hint);
         // Only the first line: the bar is a single row.
         let line = text.lines().next().unwrap_or_default();
         let color = if self.text.is_some() { TEXT } else { TEXT_DIM };

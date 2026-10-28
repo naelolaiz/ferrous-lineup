@@ -122,7 +122,7 @@ impl MicromodeWindow {
         if std::mem::take(&mut self.raise) {
             ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, window_id()));
         }
-        let window = egui::Window::new("Micromodes")
+        let window = egui::Window::new(crate::i18n::tr("Micromodes"))
             .id(window_id())
             .open(&mut open)
             .default_pos([360.0, 120.0])
