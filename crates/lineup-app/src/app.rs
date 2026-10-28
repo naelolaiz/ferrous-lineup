@@ -231,6 +231,8 @@ impl LineupApp {
             options.input_options.zoom_modifier = egui::Modifiers::COMMAND | egui::Modifiers::ALT;
         });
 
+        // The reason audio is unavailable is written in the chosen language.
+        crate::i18n::apply_settings(&cc.egui_ctx);
         let audio = match AudioEngine::start() {
             Ok(engine) => Audio::Running(Box::new(engine)),
             Err(err) => Audio::Unavailable(err.to_string()),

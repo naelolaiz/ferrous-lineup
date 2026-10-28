@@ -343,7 +343,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Bossa nova", "Bossa nova"),
     ("both notes at once", "las dos notas a la vez"),
     ("BPM", "BPM"),
-    ("Built-in drum", "Tambor incorporado"),
+    ("Built-in drum", "Percusión incorporada"),
     (
         "Cancelled: \"{}\" stays open as it is.",
         "Cancelado: «{}» sigue abierto tal como está.",
@@ -661,7 +661,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("End the song here", "Terminar la canción aquí"),
     ("Ending", "Final"),
     ("Equalizer", "Ecualizador"),
-    ("even", "parejo"),
+    ("even", "sin swing"),
     (
         "Evens out how loud it plays: above the threshold it turns the sound down, the more the higher the ratio (at 4:1, 8 dB over comes out 2 dB over). The gain brings the whole part back up. A ratio of 1:1 turns nothing down.",
         "Empareja qué tan fuerte suena: por encima del umbral baja el sonido, tanto más cuanto mayor es la relación (a 4:1, 8 dB por encima salen 2 dB por encima). La ganancia vuelve a subir toda la parte. Una relación de 1:1 no baja nada.",
@@ -1776,7 +1776,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Stopped importing the recording.",
         "Se detuvo la importación de la grabación.",
     ),
-    ("straight", "derecho"),
+    ("straight", "sin swing"),
     ("style", "estilo"),
     (
         "Style application defaults",

@@ -494,7 +494,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "borrowed ii°, falls a fifth to V",
         "ii° prestado, baja una quinta a V",
     ),
-    ("Both", "Ambos"),
+    ("Both", "Ambas"),
     ("both down", "las dos bajan"),
     ("both lead on to V", "los dos llevan a V"),
     ("both up", "las dos suben"),
@@ -578,6 +578,34 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("comp", "comp"),
     ("Conga", "Conga"),
     ("contrary motion", "movimiento contrario"),
+    (
+        "could not decode the file: {}",
+        "no se pudo decodificar el archivo: {}",
+    ),
+    (
+        "could not open the audio stream: {}",
+        "no se pudo abrir el flujo de audio: {}",
+    ),
+    (
+        "could not open the file: {}",
+        "no se pudo abrir el archivo: {}",
+    ),
+    (
+        "could not read the device settings: {}",
+        "no se pudieron leer los ajustes del dispositivo: {}",
+    ),
+    (
+        "could not read the SoundFont: {}",
+        "no se pudo leer el SoundFont: {}",
+    ),
+    (
+        "could not read the WAV file: {}",
+        "no se pudo leer el archivo WAV: {}",
+    ),
+    (
+        "could not start the audio stream: {}",
+        "no se pudo iniciar el flujo de audio: {}",
+    ),
     (
         "could not write the project: {}",
         "no se pudo escribir el proyecto: {}",
@@ -971,16 +999,22 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("key|Backspace", "Retroceso"),
     ("key|Ctrl", "Ctrl"),
     ("key|Delete", "Supr"),
+    ("key|Down", "↓"),
     ("key|End", "Fin"),
     ("key|Enter", "Intro"),
     ("key|Escape", "Esc"),
     ("key|Home", "Inicio"),
     ("key|Insert", "Insert"),
+    ("key|Left", "←"),
+    ("key|Minus", "-"),
     ("key|PageDown", "AvPág"),
     ("key|PageUp", "RePág"),
+    ("key|Plus", "+"),
+    ("key|Right", "→"),
     ("key|Shift", "Mayús"),
     ("key|Space", "Espacio"),
     ("key|Tab", "Tab"),
+    ("key|Up", "↑"),
     ("Kick", "Bombo"),
     ("Leading tone not rising", "Sensible que no sube"),
     (
@@ -1114,6 +1148,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Metal", "Metal"),
     ("meter|Time", "Compás"),
     ("MIDI Out", "Salida MIDI"),
+    (
+        "MIDI support could not be initialized",
+        "no se pudo iniciar el MIDI",
+    ),
     ("Milonga", "Milonga"),
     ("Minimal", "Mínimo"),
     ("Minor", "Menor"),
@@ -1146,11 +1184,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Moombahton", "Moombahton"),
     ("Motown", "Motown"),
     ("mystic chord", "acorde místico"),
+    ("name|Beat", "Ritmo"),
     ("name|Keys", "Teclados"),
     ("natural minor (Aeolian)", "menor natural (eólica)"),
     ("neighbour note", "bordadura"),
     ("Neo soul", "Neo soul"),
     ("New style", "Nuevo estilo"),
+    (
+        "no audio output device found",
+        "no se encontró ningún dispositivo de salida de audio",
+    ),
     (
         "No chord near the change belongs to {} alone, so the chord sheet names no pivot chord.",
         "Ningún acorde cerca del cambio pertenece solo a {}, así que la hoja de acordes no nombra ningún acorde pivote.",
@@ -1179,6 +1222,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "no notes of the row yet",
         "todavía no hay notas de la serie",
+    ),
+    (
+        "not a SoundFont file ({})",
+        "no es un archivo SoundFont ({})",
     ),
     (
         "not a valid project file: {}",
@@ -1579,6 +1626,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "The Entertainer, at its first leap up",
         "The Entertainer, en su primer salto hacia arriba",
     ),
+    ("the file contains no audio", "el archivo no contiene audio"),
     (
         "the first two notes of Greensleeves",
         "las dos primeras notas de Greensleeves",
@@ -1661,6 +1709,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "el archivo del proyecto está dañado: {}",
     ),
     (
+        "the recording is longer than {} minutes",
+        "la grabación dura más de {} minutos",
+    ),
+    (
         "The Rite of Spring, Ritual of Abduction",
         "La consagración de la primavera, Juego del rapto",
     ),
@@ -1715,6 +1767,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "the top number must be a number, or numbers joined by +",
         "el número de arriba debe ser un número, o números unidos por +",
+    ),
+    (
+        "the WAV file contains no audio",
+        "el archivo WAV no contiene audio",
     ),
     ("then on to bIII or i", "y después a bIII o i"),
     (
@@ -1821,6 +1877,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Unsettled, floating: two major thirds, so its fifth is a semitone higher than a major chord's.",
         "Inestable, flotante: dos terceras mayores, así que su quinta está un semitono más arriba que la de un acorde mayor.",
+    ),
+    (
+        "unsupported sample format: {}",
+        "formato de muestra no compatible: {}",
     ),
     ("Unsupported style format", "Formato de estilo no admitido"),
     ("Up", "Arriba"),

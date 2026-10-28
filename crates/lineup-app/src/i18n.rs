@@ -55,7 +55,7 @@ pub fn apply_settings(ctx: &egui::Context) {
 pub fn shortcut(ctx: &egui::Context, shortcut: &egui::KeyboardShortcut) -> String {
     // The keys whose names differ by language; letters, digits, F1 and
     // the like read the same.
-    const NAMED: [&str; 14] = [
+    const NAMED: [&str; 20] = [
         "Ctrl",
         "Shift",
         "Alt",
@@ -70,6 +70,12 @@ pub fn shortcut(ctx: &egui::Context, shortcut: &egui::KeyboardShortcut) -> Strin
         "PageUp",
         "PageDown",
         "Insert",
+        "Plus",
+        "Minus",
+        "Up",
+        "Down",
+        "Left",
+        "Right",
     ];
     let name = |key: &str| -> String {
         match NAMED.iter().find(|&&named| named == key) {

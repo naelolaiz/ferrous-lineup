@@ -5,6 +5,8 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use lineup_core::i18n::{tr, trf};
+
 /// A mono sound held in memory, ready to play.
 ///
 /// Instruments hold it inside an `Arc` (a shared, reference-counted
@@ -79,8 +81,8 @@ pub enum SampleError {
 impl fmt::Display for SampleError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SampleError::Wav(err) => write!(f, "could not read the WAV file: {err}"),
-            SampleError::Empty => write!(f, "the WAV file contains no audio"),
+            SampleError::Wav(err) => f.write_str(&trf("could not read the WAV file: {}", &[err])),
+            SampleError::Empty => f.write_str(tr("the WAV file contains no audio")),
         }
     }
 }
