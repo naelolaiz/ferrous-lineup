@@ -215,14 +215,17 @@ pub fn lcd_frame(
             .corner_radius(3)
             .inner_margin(Margin::symmetric(6, 1))
             .show(ui, |ui| {
-                ui.set_width(width);
+                // A longer label, as in Spanish, widens the frame rather
+                // than wrapping onto a second line.
+                let label = ui.painter().layout_no_wrap(
+                    label.to_string(),
+                    FontId::proportional(9.0),
+                    LCD_LABEL,
+                );
+                ui.set_width(width.max(label.size().x));
                 ui.spacing_mut().item_spacing.y = 0.0;
                 ui.vertical(|ui| {
-                    ui.label(
-                        RichText::new(label)
-                            .font(FontId::proportional(9.0))
-                            .color(LCD_LABEL),
-                    );
+                    ui.label(label);
                     let visuals = &mut ui.visuals_mut().widgets;
                     for state in [
                         &mut visuals.inactive,

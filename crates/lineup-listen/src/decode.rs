@@ -11,6 +11,7 @@ use std::fmt;
 use std::fs::File;
 use std::path::Path;
 
+use lineup_core::i18n::{tr, trf};
 use symphonia::core::codecs::audio::AudioDecoderOptions;
 use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::probe::Hint;
@@ -53,14 +54,13 @@ pub enum DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::Io(err) => write!(f, "could not open the file: {err}"),
-            DecodeError::Format(why) => write!(f, "could not decode the file: {why}"),
-            DecodeError::Empty => write!(f, "the file contains no audio"),
-            DecodeError::TooLong => write!(
-                f,
+            DecodeError::Io(err) => f.write_str(&trf("could not open the file: {}", &[err])),
+            DecodeError::Format(why) => f.write_str(&trf("could not decode the file: {}", &[why])),
+            DecodeError::Empty => f.write_str(tr("the file contains no audio")),
+            DecodeError::TooLong => f.write_str(&trf(
                 "the recording is longer than {} minutes",
-                MAX_SECONDS / 60.0
-            ),
+                &[&(MAX_SECONDS / 60.0)],
+            )),
         }
     }
 }

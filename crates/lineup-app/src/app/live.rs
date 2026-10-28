@@ -442,7 +442,7 @@ impl LineupApp {
                 Some(reason) => {
                     ui.colored_label(
                         ui.visuals().warn_fg_color,
-                        crate::i18n::trf("MIDI unavailable: {}", &[&reason]),
+                        crate::i18n::trf("MIDI unavailable: {}", &[&crate::i18n::tr_str(reason)]),
                     )
                     .on_hover_text(crate::i18n::tr(
                         "On Linux, MIDI needs the ALSA sequencer (the snd-seq kernel module, \

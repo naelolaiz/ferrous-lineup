@@ -174,8 +174,8 @@ fn main_texts(text: &str) -> Option<&'static str> {
             "Modo canción: reproduce la lista de reproducción (L)"
         }
         "Go to the start (Home)" => "Ir al inicio (Inicio)",
-        "Back one bar (Page Up)" => "Un compás hacia atrás (Re Pág)",
-        "Forward one bar (Page Down)" => "Un compás hacia adelante (Av Pág)",
+        "Back one bar (Page Up)" => "Un compás hacia atrás (RePág)",
+        "Forward one bar (Page Down)" => "Un compás hacia adelante (AvPág)",
         "Play from the playhead (Space)" => "Reproducir desde el cursor (Espacio)",
         "Pause: stop here, and carry on from here next time" => {
             "Pausa: detenerse aquí y continuar desde aquí la próxima vez"
