@@ -4,9 +4,7 @@
 > step 3. Step 4 changed some of it: a project now holds many patterns,
 > so the note methods of `Project` (`add_note`, `replace_note`...) gave
 > way to `project.pattern_mut(index)`, `Command::SetNotes` also names the
-> pattern, and the piano roll edits the selected pattern. This chapter is
-> a historical snapshot, and the old `step-3-piano-roll` checkpoint
-> branch is no longer published.
+> pattern, and the piano roll edits the selected pattern.
 
 Step 3 gives Ferrous Lineup melodies and chords, and starts teaching harmony:
 
