@@ -5,7 +5,7 @@
 //! the translation catalog; any untranslated string cleanly falls back
 //! to its English original.
 
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::cell::Cell;
 
 use eframe::egui;
 use lineup_core::NoteNaming;
@@ -19,76 +19,99 @@ pub enum Language {
     Spanish,
 }
 
+thread_local! {
+    /// The language this thread writes the interface in. The window's
+    /// thread sets it from the settings each frame; each thread has its
+    /// own, so tests running side by side never see each other's.
+    static LANGUAGE: Cell<Language> = const { Cell::new(Language::English) };
+}
+
 impl Language {
     pub const ALL: [Language; 2] = [Language::English, Language::Spanish];
 
+    /// The language's name, written in that language, so that anyone
+    /// can find their own.
     pub fn name(self) -> &'static str {
         match self {
             Language::English => "English",
             Language::Spanish => "Español",
         }
     }
+
+    /// The language this thread writes in.
+    pub fn current() -> Language {
+        LANGUAGE.with(Cell::get)
+    }
+
+    /// Writes in this language on this thread from now on.
+    pub fn set(self) {
+        LANGUAGE.with(|language| language.set(self));
+    }
+
+    /// Runs `f` in this language, then goes back to the one before, even
+    /// if `f` panics.
+    #[cfg(test)]
+    pub fn with<T>(self, f: impl FnOnce() -> T) -> T {
+        struct Restore(Language);
+        impl Drop for Restore {
+            fn drop(&mut self) {
+                self.0.set();
+            }
+        }
+        let _restore = Restore(Language::current());
+        self.set();
+        f()
+    }
 }
 
-pub fn language_id() -> egui::Id {
+fn language_id() -> egui::Id {
     egui::Id::unique("app-language")
 }
 
-pub fn note_naming_id() -> egui::Id {
+fn note_naming_id() -> egui::Id {
     egui::Id::unique("app-note-naming")
 }
 
-static CURRENT_LANG: AtomicU8 = AtomicU8::new(0);
-static CURRENT_NOTE_NAMING: AtomicU8 = AtomicU8::new(0);
-
-/// The currently selected interface language.
-pub fn current_language() -> Language {
-    match CURRENT_LANG.load(Ordering::Relaxed) {
-        1 => Language::Spanish,
-        _ => Language::English,
-    }
+/// The language chosen in Settings > Appearance, kept with the window's
+/// other preferences.
+pub fn language(ctx: &egui::Context) -> Language {
+    ctx.data_mut(|data| data.get_persisted(language_id()).unwrap_or_default())
 }
 
-/// Changes the active language, updating both atomic cache and egui persistence.
-pub fn set_language(ctx: &egui::Context, lang: Language) {
-    CURRENT_LANG.store(lang as u8, Ordering::Relaxed);
-    ctx.data_mut(|data| data.insert_persisted(language_id(), lang));
+/// Chooses the interface language, from this frame on.
+pub fn set_language(ctx: &egui::Context, language: Language) {
+    language.set();
+    ctx.data_mut(|data| data.insert_persisted(language_id(), language));
 }
 
-/// Loads the persisted language setting from egui context.
-pub fn init_language(ctx: &egui::Context) -> Language {
-    let lang: Language = ctx.data_mut(|data| data.get_persisted(language_id()).unwrap_or_default());
-    CURRENT_LANG.store(lang as u8, Ordering::Relaxed);
-    lang
+/// The note naming chosen in Settings > Harmony.
+pub fn note_naming(ctx: &egui::Context) -> NoteNaming {
+    ctx.data_mut(|data| data.get_persisted(note_naming_id()).unwrap_or_default())
 }
 
-/// The currently selected note naming convention.
-pub fn current_note_naming() -> NoteNaming {
-    match CURRENT_NOTE_NAMING.load(Ordering::Relaxed) {
-        1 => NoteNaming::Solfege,
-        _ => NoteNaming::Letters,
-    }
-}
-
-/// Changes the active note naming convention.
+/// Chooses how notes and keys are named, from this frame on.
 pub fn set_note_naming(ctx: &egui::Context, naming: NoteNaming) {
-    CURRENT_NOTE_NAMING.store(naming as u8, Ordering::Relaxed);
+    naming.set();
     ctx.data_mut(|data| data.insert_persisted(note_naming_id(), naming));
 }
 
-/// Loads the persisted note naming setting from egui context.
-pub fn init_note_naming(ctx: &egui::Context) -> NoteNaming {
-    let naming: NoteNaming =
-        ctx.data_mut(|data| data.get_persisted(note_naming_id()).unwrap_or_default());
-    CURRENT_NOTE_NAMING.store(naming as u8, Ordering::Relaxed);
-    naming
+/// Makes this thread write in the language and name notes the way the
+/// settings say. The window calls it before drawing each frame.
+pub fn apply_settings(ctx: &egui::Context) {
+    language(ctx).set();
+    note_naming(ctx).set();
+}
+
+/// The language this thread writes the interface in.
+pub fn current_language() -> Language {
+    Language::current()
 }
 
 /// Translates a static string into the current language.
 /// If untranslated or if the language is English, returns the original text.
 #[inline]
 pub fn tr(text: &'static str) -> &'static str {
-    if current_language() == Language::Spanish {
+    if Language::current() == Language::Spanish {
         translate_es(text).unwrap_or(text)
     } else {
         text
@@ -98,7 +121,7 @@ pub fn tr(text: &'static str) -> &'static str {
 /// Translates a borrowed string slice into the current language.
 #[inline]
 pub fn tr_str(text: &str) -> &str {
-    if current_language() == Language::Spanish {
+    if Language::current() == Language::Spanish {
         translate_es(text).unwrap_or(text)
     } else {
         text
@@ -500,37 +523,45 @@ mod tests {
 
     #[test]
     fn english_by_default() {
-        CURRENT_LANG.store(0, Ordering::Relaxed);
-        assert_eq!(current_language(), Language::English);
+        assert_eq!(Language::current(), Language::English);
         assert_eq!(tr("File"), "File");
         assert_eq!(tr("Edit"), "Edit");
     }
 
     #[test]
     fn spanish_translation() {
-        CURRENT_LANG.store(1, Ordering::Relaxed);
-        assert_eq!(current_language(), Language::Spanish);
-        assert_eq!(tr("File"), "Archivo");
-        assert_eq!(tr("Edit"), "Edición");
-        assert_eq!(tr("View"), "Ver");
-        assert_eq!(tr("Help"), "Ayuda");
-        assert_eq!(tr("Save"), "Guardar");
-        assert_eq!(tr("Settings"), "Ajustes");
-        assert_eq!(tr("Chord sheet"), "Hoja de acordes");
-        assert_eq!(tr("Channel rack"), "Rack de canales");
-        assert_eq!(tr("Piano roll"), "Piano roll");
-        assert_eq!(tr("Mixer"), "Mezclador");
-        assert_eq!(tr("Master"), "Principal");
-        assert_eq!(tr("Untranslated String"), "Untranslated String");
-        CURRENT_LANG.store(0, Ordering::Relaxed);
+        Language::Spanish.with(|| {
+            assert_eq!(Language::current(), Language::Spanish);
+            assert_eq!(tr("File"), "Archivo");
+            assert_eq!(tr("Edit"), "Edición");
+            assert_eq!(tr("View"), "Ver");
+            assert_eq!(tr("Help"), "Ayuda");
+            assert_eq!(tr("Save"), "Guardar");
+            assert_eq!(tr("Settings"), "Ajustes");
+            assert_eq!(tr("Chord sheet"), "Hoja de acordes");
+            assert_eq!(tr("Channel rack"), "Rack de canales");
+            assert_eq!(tr("Piano roll"), "Piano roll");
+            assert_eq!(tr("Mixer"), "Mezclador");
+            assert_eq!(tr("Master"), "Principal");
+            assert_eq!(tr("Untranslated String"), "Untranslated String");
+        });
+        assert_eq!(tr("File"), "File", "with() puts English back");
     }
 
     #[test]
-    fn note_naming_settings() {
-        CURRENT_NOTE_NAMING.store(0, Ordering::Relaxed);
-        assert_eq!(current_note_naming(), NoteNaming::Letters);
-        CURRENT_NOTE_NAMING.store(1, Ordering::Relaxed);
-        assert_eq!(current_note_naming(), NoteNaming::Solfege);
-        CURRENT_NOTE_NAMING.store(0, Ordering::Relaxed);
+    fn settings_are_kept_and_applied() {
+        let ctx = egui::Context::default();
+        assert_eq!(language(&ctx), Language::English);
+        assert_eq!(note_naming(&ctx), NoteNaming::Letters);
+        set_language(&ctx, Language::Spanish);
+        set_note_naming(&ctx, NoteNaming::Solfege);
+        Language::English.set();
+        NoteNaming::Letters.set();
+        apply_settings(&ctx);
+        assert_eq!(Language::current(), Language::Spanish);
+        assert_eq!(NoteNaming::current(), NoteNaming::Solfege);
+        // This thread only: put it back for the next test it runs.
+        Language::English.set();
+        NoteNaming::Letters.set();
     }
 }
