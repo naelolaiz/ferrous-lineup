@@ -117,7 +117,9 @@ fn translate_es(text: &str) -> Option<&'static str> {
 
         // --- File Menu ---
         "New" => "Nuevo",
-        "An empty chord sheet with a band to play it" => "Una hoja de acordes vacía con una banda para tocarla",
+        "An empty chord sheet with a band to play it" => {
+            "Una hoja de acordes vacía con una banda para tocarla"
+        }
         "New beat" => "Nuevo ritmo",
         "An empty pattern and a drum kit" => "Un patrón vacío y una batería",
         "Open…" => "Abrir…",
@@ -127,24 +129,38 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "Clear recent songs" => "Borrar canciones recientes",
         "Demos" => "Demostraciones",
         "Import recording…" => "Importar grabación…",
-        "Open an MP3 or WAV file and add chords that follow it" => "Abre un archivo MP3 o WAV y añade acordes que lo sigan",
+        "Open an MP3 or WAV file and add chords that follow it" => {
+            "Abre un archivo MP3 o WAV y añade acordes que lo sigan"
+        }
         "Import MIDI file…" => "Importar archivo MIDI…",
-        "Open a .mid file: its notes, tempo, time signatures and key" => "Abre un archivo .mid: sus notas, tempo, compases y tonalidad",
+        "Open a .mid file: its notes, tempo, time signatures and key" => {
+            "Abre un archivo .mid: sus notas, tempo, compases y tonalidad"
+        }
         "Import chord sheet…" => "Importar hoja de acordes…",
-        "Open a chord chart saved as text, as in | C | Am7 | Dm7 G7 |" => "Abre un esquema de acordes guardado como texto, como | C | Am7 | Dm7 G7 |",
+        "Open a chord chart saved as text, as in | C | Am7 | Dm7 G7 |" => {
+            "Abre un esquema de acordes guardado como texto, como | C | Am7 | Dm7 G7 |"
+        }
         "Save" => "Guardar",
         "Save as…" => "Guardar como…",
-        "Demos are read-only: this saves a copy to a new file" => "Las demostraciones son de solo lectura: esto guarda una copia en un archivo nuevo",
+        "Demos are read-only: this saves a copy to a new file" => {
+            "Las demostraciones son de solo lectura: esto guarda una copia en un archivo nuevo"
+        }
         "Export WAV…" => "Exportar WAV…",
         "Save the song as a sound file" => "Guarda la canción como un archivo de sonido",
-        "Put some clips in the playlist first" => "Coloca primero algunos clips en la lista de reproducción",
+        "Put some clips in the playlist first" => {
+            "Coloca primero algunos clips en la lista de reproducción"
+        }
         "Export MIDI file…" => "Exportar archivo MIDI…",
         "Save the song as a .mid file" => "Guarda la canción como un archivo .mid",
         "Export video…" => "Exportar video…",
         "Make an MP4 video of the song" => "Crea un video MP4 de la canción",
         "Export lead sheet PDF…" => "Exportar partitura guía en PDF…",
-        "Save a printable PDF of the song's chords and melody" => "Guarda un PDF imprimible de los acordes y la melodía de la canción",
-        "Write some chords on the chord sheet first" => "Escribe primero algunos acordes en la hoja de acordes",
+        "Save a printable PDF of the song's chords and melody" => {
+            "Guarda un PDF imprimible de los acordes y la melodía de la canción"
+        }
+        "Write some chords on the chord sheet first" => {
+            "Escribe primero algunos acordes en la hoja de acordes"
+        }
         "Quit" => "Salir",
 
         // --- Edit Menu ---
@@ -164,11 +180,15 @@ fn translate_es(text: &str) -> Option<&'static str> {
         // --- View Menu ---
         "Chord sheet" => "Hoja de acordes",
         "Chord sheet in the main window" => "Hoja de acordes en la ventana principal",
-        "The chord sheet in the playlist's place, with more bars on a line" => "La hoja de acordes en lugar de la lista de reproducción, con más compases por línea",
+        "The chord sheet in the playlist's place, with more bars on a line" => {
+            "La hoja de acordes en lugar de la lista de reproducción, con más compases por línea"
+        }
         "Lead sheet" => "Partitura guía",
         "Channel rack" => "Rack de canales",
         "Style editor…" => "Editor de estilos…",
-        "See and edit repeating parts, or create a style from an existing one" => "Consulta y edita partes repetitivas o crea un estilo a partir de uno existente",
+        "See and edit repeating parts, or create a style from an existing one" => {
+            "Consulta y edita partes repetitivas o crea un estilo a partir de uno existente"
+        }
         "Piano roll" => "Piano roll",
         "Harmony keys" => "Teclas de armonía",
         "Patterns and library" => "Patrones y biblioteca",
@@ -188,12 +208,16 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "No MIDI inputs found" => "No se encontraron entradas MIDI",
         "No MIDI outputs found" => "No se encontraron salidas MIDI",
         "Typing keyboard to piano" => "Teclado del equipo como piano",
-        "Play notes with the letter keys: Z X C V B N M from C4, with S D G H J as the black keys, and Q to P from C5, with the numbers above them." => "Toca notas con las teclas de letras: Z X C V B N M desde Do4, con S D G H J como teclas negras, y de Q a P desde Do5, con los números encima de ellas.",
+        "Play notes with the letter keys: Z X C V B N M from C4, with S D G H J as the black keys, and Q to P from C5, with the numbers above them." => {
+            "Toca notas con las teclas de letras: Z X C V B N M desde Do4, con S D G H J como teclas negras, y de Q a P desde Do5, con los números encima de ellas."
+        }
         "Accompaniment follows chords" => "El acompañamiento sigue los acordes",
         "Input: a keyboard to play" => "Entrada: un teclado para tocar",
         "Output: an external synth to play" => "Salida: un sintetizador externo para tocar",
         "Send every channel" => "Enviar todos los canales",
-        "Nothing is sent while audio is unavailable" => "No se envía nada mientras el audio no esté disponible",
+        "Nothing is sent while audio is unavailable" => {
+            "No se envía nada mientras el audio no esté disponible"
+        }
 
         // --- Help Menu ---
         "Keyboard shortcuts" => "Atajos de teclado",
@@ -203,27 +227,47 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "About Ferrous Lineup" => "Acerca de Ferrous Lineup",
 
         // --- Transport Bar & Status Bar Hints ---
-        "Pattern mode: loop the selected pattern (L)" => "Modo patrón: repite el patrón seleccionado (L)",
-        "Song mode: play the playlist (L)" => "Modo canción: reproduce la lista de reproducción (L)",
+        "Pattern mode: loop the selected pattern (L)" => {
+            "Modo patrón: repite el patrón seleccionado (L)"
+        }
+        "Song mode: play the playlist (L)" => {
+            "Modo canción: reproduce la lista de reproducción (L)"
+        }
         "Go to the start (Home)" => "Ir al inicio (Inicio)",
         "Back one bar (Page Up)" => "Un compás hacia atrás (Re Pág)",
         "Forward one bar (Page Down)" => "Un compás hacia adelante (Av Pág)",
         "Play from the playhead (Space)" => "Reproducir desde el cursor (Espacio)",
-        "Pause: stop here, and carry on from here next time" => "Pausa: detenerse aquí y continuar desde aquí la próxima vez",
-        "Stop and go back to where you last put the playhead (Space)" => "Detener y volver a la última posición del cursor (Espacio)",
-        "Record notes from a MIDI keyboard or the computer keyboard (R)" => "Grabar notas desde un teclado MIDI o el teclado del equipo (R)",
+        "Pause: stop here, and carry on from here next time" => {
+            "Pausa: detenerse aquí y continuar desde aquí la próxima vez"
+        }
+        "Stop and go back to where you last put the playhead (Space)" => {
+            "Detener y volver a la última posición del cursor (Espacio)"
+        }
+        "Record notes from a MIDI keyboard or the computer keyboard (R)" => {
+            "Grabar notas desde un teclado MIDI o el teclado del equipo (R)"
+        }
         "Master volume" => "Volumen principal",
-        "Tempo in beats per minute: drag up or down to change, double-click to type" => "Tempo en pulsos por minuto: arrastra para cambiar, doble clic para escribir",
+        "Tempo in beats per minute: drag up or down to change, double-click to type" => {
+            "Tempo en pulsos por minuto: arrastra para cambiar, doble clic para escribir"
+        }
         "Time signature" => "Compás",
         "Metronome" => "Metrónomo",
         "Metronome (Ctrl+M)" => "Metrónomo (Ctrl+M)",
         "Count-in" => "Cuenta de entrada",
-        "Count-in: one bar before recording starts" => "Cuenta de entrada: un compás antes de empezar a grabar",
+        "Count-in: one bar before recording starts" => {
+            "Cuenta de entrada: un compás antes de empezar a grabar"
+        }
         "Speed trainer" => "Entrenador de velocidad",
-        "Speed trainer: play a loop faster each time" => "Entrenador de velocidad: reproduce un bucle más rápido cada vez",
-        "Rename, clone or delete the selected pattern" => "Renombrar, duplicar o eliminar el patrón seleccionado",
+        "Speed trainer: play a loop faster each time" => {
+            "Entrenador de velocidad: reproduce un bucle más rápido cada vez"
+        }
+        "Rename, clone or delete the selected pattern" => {
+            "Renombrar, duplicar o eliminar el patrón seleccionado"
+        }
         "Add a new, empty pattern" => "Añadir un nuevo patrón vacío",
-        "Also removes its clips from the playlist" => "También elimina sus clips de la lista de reproducción",
+        "Also removes its clips from the playlist" => {
+            "También elimina sus clips de la lista de reproducción"
+        }
         "Name" => "Nombre",
         "Patterns and Library (Alt+F8)" => "Patrones y Biblioteca (Alt+F8)",
         "Chord sheet (F5)" => "Hoja de acordes (F5)",
@@ -231,43 +275,81 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "Piano roll (F7)" => "Piano roll (F7)",
         "Harmony keys (F8)" => "Teclas de armonía (F8)",
         "Mixer (F9)" => "Mezclador (F9)",
-        "Chord sheet: the song's harmony bar by bar, to read and write (F5)" => "Hoja de acordes: la armonía de la canción compás a compás, para leer y escribir (F5)",
-        "Channel rack: the steps of the selected pattern (F6)" => "Rack de canales: los pasos del patrón seleccionado (F6)",
-        "Piano roll: melodies and chords, note by note (F7)" => "Piano roll: melodías y acordes, nota por nota (F7)",
-        "Harmony keys: the key, the time signature and a key for each chord (F8)" => "Teclas de armonía: la tonalidad, el compás y una tecla para cada acorde (F8)",
-        "Mixer: levels, meters, pan, solo, mute and reverb (F9)" => "Mezclador: niveles, medidores, balance, solo, silencio y reverberación (F9)",
-        "Where the playhead is: in the pattern (PAT) or the song (SONG). Click the playlist's bar numbers to move it" => "Dónde está el cursor de reproducción: en el patrón (PAT) o en la canción (SONG). Haz clic en los números de compás para moverlo",
-        "Tempo in beats a minute. Drag up or down, or double-click to type" => "Tempo en pulsos por minuto. Arrastra hacia arriba o abajo, o doble clic para escribir",
-        "Space plays and stops · L switches pattern and song · F5 chord sheet · F6 channel rack · F7 piano roll · F8 harmony keys" => "Espacio reproduce y detiene · L cambia patrón y canción · F5 hoja de acordes · F6 rack de canales · F7 piano roll · F8 teclas de armonía",
-        "Count-in: one bar of clicks before playback starts" => "Cuenta de entrada: un compás de clics antes de comenzar la reproducción",
-        "Metronome: a click on every beat during playback" => "Metrónomo: un clic en cada pulso durante la reproducción",
+        "Chord sheet: the song's harmony bar by bar, to read and write (F5)" => {
+            "Hoja de acordes: la armonía de la canción compás a compás, para leer y escribir (F5)"
+        }
+        "Channel rack: the steps of the selected pattern (F6)" => {
+            "Rack de canales: los pasos del patrón seleccionado (F6)"
+        }
+        "Piano roll: melodies and chords, note by note (F7)" => {
+            "Piano roll: melodías y acordes, nota por nota (F7)"
+        }
+        "Harmony keys: the key, the time signature and a key for each chord (F8)" => {
+            "Teclas de armonía: la tonalidad, el compás y una tecla para cada acorde (F8)"
+        }
+        "Mixer: levels, meters, pan, solo, mute and reverb (F9)" => {
+            "Mezclador: niveles, medidores, balance, solo, silencio y reverberación (F9)"
+        }
+        "Where the playhead is: in the pattern (PAT) or the song (SONG). Click the playlist's bar numbers to move it" => {
+            "Dónde está el cursor de reproducción: en el patrón (PAT) o en la canción (SONG). Haz clic en los números de compás para moverlo"
+        }
+        "Tempo in beats a minute. Drag up or down, or double-click to type" => {
+            "Tempo en pulsos por minuto. Arrastra hacia arriba o abajo, o doble clic para escribir"
+        }
+        "Space plays and stops · L switches pattern and song · F5 chord sheet · F6 channel rack · F7 piano roll · F8 harmony keys" => {
+            "Espacio reproduce y detiene · L cambia patrón y canción · F5 hoja de acordes · F6 rack de canales · F7 piano roll · F8 teclas de armonía"
+        }
+        "Count-in: one bar of clicks before playback starts" => {
+            "Cuenta de entrada: un compás de clics antes de comenzar la reproducción"
+        }
+        "Metronome: a click on every beat during playback" => {
+            "Metrónomo: un clic en cada pulso durante la reproducción"
+        }
         "Playlist" => "Lista de reproducción",
         "Export song as MIDI…" => "Exportar canción como MIDI…",
-        "Save the notes of the song, to open in another studio" => "Guarda las notas de la canción para abrir en otro estudio",
+        "Save the notes of the song, to open in another studio" => {
+            "Guarda las notas de la canción para abrir en otro estudio"
+        }
         "Export pattern as MIDI…" => "Exportar patrón como MIDI…",
         "Save the notes of the selected pattern" => "Guarda las notas del patrón seleccionado",
         "Export chord sheet…" => "Exportar hoja de acordes…",
-        "Save the chord sheet as text, to share or paste anywhere" => "Guarda la hoja de acordes como texto, para compartir o pegar en cualquier lugar",
-        "Save the song with the chord sheet or other views playing along" => "Guarda la canción con la hoja de acordes u otras vistas acompañando",
+        "Save the chord sheet as text, to share or paste anywhere" => {
+            "Guarda la hoja de acordes como texto, para compartir o pegar en cualquier lugar"
+        }
+        "Save the song with the chord sheet or other views playing along" => {
+            "Guarda la canción con la hoja de acordes u otras vistas acompañando"
+        }
         "Songs" => "Canciones",
         "Styles" => "Estilos",
         "Twelve-tone" => "Dodecafónico",
-        "Tunes with their melodies, free for everyone to use" => "Melodías libres para el uso de todos",
+        "Tunes with their melodies, free for everyone to use" => {
+            "Melodías libres para el uso de todos"
+        }
         "Each harmony style as a short song" => "Cada estilo armónico como una canción corta",
-        "Each row style as a short piece: the row, backwards, upside down, both" => "Cada estilo de serie como una pieza corta: la serie, retrógrada, invertida y ambas",
-        "Each micromode style as a short piece: from the micromode, upside down, a tritone away, upside down there, and back" => "Cada estilo de micromodo como una pieza corta: desde el micromodo, invertido, a un tritono, invertido allí y de regreso",
+        "Each row style as a short piece: the row, backwards, upside down, both" => {
+            "Cada estilo de serie como una pieza corta: la serie, retrógrada, invertida y ambas"
+        }
+        "Each micromode style as a short piece: from the micromode, upside down, a tritone away, upside down there, and back" => {
+            "Cada estilo de micromodo como una pieza corta: desde el micromodo, invertido, a un tritono, invertido allí y de regreso"
+        }
         "Editor" => "Editor",
         "Horizontal" => "Horizontal",
         "Vertical" => "Vertical",
         "Linked" => "Vinculado",
-        "The channel rack uses one scale for both directions." => "El rack de canales usa una misma escala para ambas direcciones.",
+        "The channel rack uses one scale for both directions." => {
+            "El rack de canales usa una misma escala para ambas direcciones."
+        }
         "Reset all zoom levels to 100%" => "Restablecer todos los niveles de zoom al 100%",
         "Zoom shortcuts" => "Atajos de zoom",
-        "Shortcuts act on the view under the pointer." => "Los atajos actúan sobre la vista bajo el cursor.",
+        "Shortcuts act on the view under the pointer." => {
+            "Los atajos actúan sobre la vista bajo el cursor."
+        }
         "Horizontal zoom" => "Zoom horizontal",
         "Vertical zoom" => "Zoom vertical",
         "Reset the current view" => "Restablecer la vista actual",
-        "Over toolbars and panels, zoom changes the interface size. Use ⌘ in place of Ctrl on Mac." => "Sobre barras de herramientas y paneles, el zoom cambia el tamaño de la interfaz. Usa ⌘ en lugar de Ctrl en Mac.",
+        "Over toolbars and panels, zoom changes the interface size. Use ⌘ in place of Ctrl on Mac." => {
+            "Sobre barras de herramientas y paneles, el zoom cambia el tamaño de la interfaz. Usa ⌘ en lugar de Ctrl en Mac."
+        }
         "Taller or shorter tracks (Alt+wheel)" => "Pistas más altas o más bajas (Alt+rueda)",
         "Wider or narrower bars (Ctrl+wheel)" => "Compases más anchos o más estrechos (Ctrl+rueda)",
         "Open recent" => "Abrir recientes",
@@ -280,14 +362,24 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "Stop it and quit" => "Detener y salir",
         "Keep exporting" => "Continuar exportando",
         "Export video" => "Exportar video",
-        "The song's sound, with the views you pick playing along." => "El sonido de la canción, acompañado de las vistas que elijas.",
-        "The lead sheet fills the width of its box: make the box wider to draw it bigger" => "La partitura guía llena el ancho de su cuadro: amplía el cuadro para agrandarla",
+        "The song's sound, with the views you pick playing along." => {
+            "El sonido de la canción, acompañado de las vistas que elijas."
+        }
+        "The lead sheet fills the width of its box: make the box wider to draw it bigger" => {
+            "La partitura guía llena el ancho de su cuadro: amplía el cuadro para agrandarla"
+        }
         "Stack" => "Apilar",
-        "Put the views one above the other again, sharing the picture" => "Coloca las vistas una sobre otra nuevamente, compartiendo la imagen",
+        "Put the views one above the other again, sharing the picture" => {
+            "Coloca las vistas una sobre otra nuevamente, compartiendo la imagen"
+        }
         "Preview at" => "Vista previa en",
-        "Drag a view to move it, drag its corner to resize it, and scroll over it to zoom." => "Arrastra una vista para moverla, arrastra su esquina para redimensionarla y gira la rueda sobre ella para hacer zoom.",
+        "Drag a view to move it, drag its corner to resize it, and scroll over it to zoom." => {
+            "Arrastra una vista para moverla, arrastra su esquina para redimensionarla y gira la rueda sobre ella para hacer zoom."
+        }
         "Size" => "Tamaño",
-        "An MP4 file: H.264 pictures, 30 a second, and MP3 sound." => "Un archivo MP4: imágenes H.264, 30 por segundo, y sonido MP3.",
+        "An MP4 file: H.264 pictures, 30 a second, and MP3 sound." => {
+            "Un archivo MP4: imágenes H.264, 30 por segundo, y sonido MP3."
+        }
         "Export…" => "Exportar…",
         "Tick a view to show" => "Marca una vista para mostrar",
         "Show" => "Mostrar",
@@ -304,28 +396,48 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "Language" => "Idioma",
         "Choose the interface language." => "Elige el idioma de la interfaz.",
         "Note naming" => "Nomenclatura de notas",
-        "How note names are written throughout the app." => "Cómo se escriben los nombres de las notas en la aplicación.",
+        "How note names are written throughout the app." => {
+            "Cómo se escriben los nombres de las notas en la aplicación."
+        }
         "Letters (C, D, E…)" => "Letras (C, D, E…)",
         "Solfège (Do, Re, Mi…)" => "Solfeo (Do, Re, Mi…)",
         "Roman numerals in minor keys" => "Numerales romanos en tonalidades menores",
-        "Both ways are correct. They name the same chords and differ only in the chords on the third, sixth and seventh degrees of a minor key, as here in A minor." => "Ambas formas son correctas. Nombran los mismos acordes y solo difieren en los acordes sobre los grados tercero, sexto y séptimo de una tonalidad menor, como aquí en La menor.",
-        "bIII bVI bVII: counted from the major scale (pop and jazz)" => "bIII bVI bVII: contados desde la escala mayor (pop y jazz)",
-        "C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°." => "Do es bIII, Fa es bVI y Sol es bVII; el acorde de sensible Sol#° es vii°.",
-        "III VI VII: counted from the minor scale (classical harmony)" => "III VI VII: contados desde la escala menor (armonía clásica)",
-        "C is III, F is VI and G is VII; G#° is still vii°, and E major is V." => "Do es III, Fa es VI y Sol es VII; Sol#° sigue siendo vii°, y Mi mayor es V.",
-        "Applies to every view that shows numerals, and to numerals you type or paste on the chord sheet. A style's Progression box is always written bIII bVI bVII, as the library writes it." => "Se aplica a todas las vistas que muestran numerales, y a los que escribes o pegas en la hoja de acordes. El cuadro Progresión de un estilo siempre se escribe bIII bVI bVII.",
+        "Both ways are correct. They name the same chords and differ only in the chords on the third, sixth and seventh degrees of a minor key, as here in A minor." => {
+            "Ambas formas son correctas. Nombran los mismos acordes y solo difieren en los acordes sobre los grados tercero, sexto y séptimo de una tonalidad menor, como aquí en La menor."
+        }
+        "bIII bVI bVII: counted from the major scale (pop and jazz)" => {
+            "bIII bVI bVII: contados desde la escala mayor (pop y jazz)"
+        }
+        "C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°." => {
+            "Do es bIII, Fa es bVI y Sol es bVII; el acorde de sensible Sol#° es vii°."
+        }
+        "III VI VII: counted from the minor scale (classical harmony)" => {
+            "III VI VII: contados desde la escala menor (armonía clásica)"
+        }
+        "C is III, F is VI and G is VII; G#° is still vii°, and E major is V." => {
+            "Do es III, Fa es VI y Sol es VII; Sol#° sigue siendo vii°, y Mi mayor es V."
+        }
+        "Applies to every view that shows numerals, and to numerals you type or paste on the chord sheet. A style's Progression box is always written bIII bVI bVII, as the library writes it." => {
+            "Se aplica a todas las vistas que muestran numerales, y a los que escribes o pegas en la hoja de acordes. El cuadro Progresión de un estilo siempre se escribe bIII bVI bVII."
+        }
         "Output" => "Salida",
-        "Uses your system’s default audio device." => "Usa el dispositivo de audio predeterminado del sistema.",
+        "Uses your system’s default audio device." => {
+            "Usa el dispositivo de audio predeterminado del sistema."
+        }
         "Restart audio" => "Reiniciar audio",
         "Try again" => "Reintentar",
-        "Open the system’s default output device again" => "Abre de nuevo el dispositivo de salida predeterminado del sistema",
+        "Open the system’s default output device again" => {
+            "Abre de nuevo el dispositivo de salida predeterminado del sistema"
+        }
         "Preferences are saved automatically." => "Las preferencias se guardan automáticamente.",
         "Done" => "Listo",
         "Close" => "Cerrar",
         "Cancel" => "Cancelar",
         "Discard" => "Descartar",
         "Save changes?" => "¿Guardar cambios?",
-        "There are unsaved changes. Do you want to save them before leaving?" => "Hay cambios sin guardar. ¿Deseas guardarlos antes de salir?",
+        "There are unsaved changes. Do you want to save them before leaving?" => {
+            "Hay cambios sin guardar. ¿Deseas guardarlos antes de salir?"
+        }
 
         // --- Chord Sheet ---
         "Band" => "Banda",
@@ -369,7 +481,9 @@ fn translate_es(text: &str) -> Option<&'static str> {
         // --- Keyboard shortcuts sections ---
         "Anywhere" => "En cualquier lugar",
         "Except while typing in a text field." => "Excepto al escribir en un campo de texto.",
-        "Play or stop (in the rack or the piano roll: the pattern)" => "Reproducir o detener (en el rack o piano roll: el patrón)",
+        "Play or stop (in the rack or the piano roll: the pattern)" => {
+            "Reproducir o detener (en el rack o piano roll: el patrón)"
+        }
         "Go to the start" => "Ir al inicio",
         "Go to the end" => "Ir al final",
         "Back / forward one bar" => "Atrás / adelante un compás",

@@ -728,8 +728,8 @@ impl PianoRoll {
         let window = egui::Window::new(roll_title)
             .id(id)
             .open(&mut open)
-        .default_pos([150.0, 160.0])
-        .constrain_to(area);
+            .default_pos([150.0, 160.0])
+            .constrain_to(area);
         // The window is built while closed too, and egui then hides it.
         let window = if self.open {
             let size = egui::vec2(1120.0, 580.0);

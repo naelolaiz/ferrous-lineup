@@ -107,9 +107,11 @@ fn minor_numerals_ui(ui: &mut egui::Ui) {
     card(
         ui,
         tr("Roman numerals in minor keys"),
-        tr("Both ways are correct. They name the same chords and differ only in \
+        tr(
+            "Both ways are correct. They name the same chords and differ only in \
          the chords on the third, sixth and seventh degrees of a minor key, \
-         as here in A minor."),
+         as here in A minor.",
+        ),
         |ui| {
             let mut numerals = minor_numerals(ui.ctx());
             for (value, label, example) in [
