@@ -9,6 +9,7 @@ use std::cell::Cell;
 
 use eframe::egui;
 use lineup_core::NoteNaming;
+use lineup_core::harmony::{Scale, ScaleKind};
 use serde::{Deserialize, Serialize};
 
 /// The user interface language.
@@ -105,6 +106,31 @@ pub fn apply_settings(ctx: &egui::Context) {
 /// The language this thread writes the interface in.
 pub fn current_language() -> Language {
     Language::current()
+}
+
+/// The name of a key as the settings say: "C major", "Do major" with
+/// solfège, and "Do mayor" in Spanish. A row is named by its form, "row
+/// P4 (on E)", and a set by its set class, "set 4-28 on C", as
+/// [`Scale::name`] names them in letters for files and text.
+pub fn key_name(scale: Scale) -> String {
+    let root = scale.spell(scale.root).to_string();
+    match scale.kind {
+        ScaleKind::Row(_) => format!(
+            "{} P{} ({} {root})",
+            tr("row"),
+            scale.root.semitone(),
+            tr("on")
+        ),
+        ScaleKind::Set(set) => {
+            format!(
+                "{} {} {} {root}",
+                tr("set"),
+                set.set_class().name(),
+                tr("on")
+            )
+        }
+        kind => format!("{root} {}", tr(kind.name())),
+    }
 }
 
 /// Translates a static string into the current language.
@@ -471,21 +497,30 @@ fn translate_es(text: &str) -> Option<&'static str> {
         "minor" => "menor",
         "harmonic minor" => "menor armónica",
         "melodic minor" => "menor melódica",
-        "Dorian" => "Dórico",
-        "Phrygian" => "Frigio",
-        "Lydian" => "Lidio",
-        "Mixolydian" => "Mixolidio",
-        "Locrian" => "Locrio",
+        "Dorian" => "dórico",
+        "Phrygian" => "frigio",
+        "Lydian" => "lidio",
+        "Mixolydian" => "mixolidio",
+        "Locrian" => "locrio",
         "major pentatonic" => "pentatónica mayor",
         "minor pentatonic" => "pentatónica menor",
         "blues" => "blues",
         "chromatic" => "cromática",
         "twelve-tone row" => "serie dodecafónica",
         "pitch-class set" => "conjunto de clases de alturas",
+        "row" => "serie",
+        "set" => "conjunto",
+        "on" => "sobre",
         "Write the chords the song plays" => "Escribir los acordes que toca la canción",
-        "Fill the sheet with the chords heard in the song, in place of what it says now: an arpeggio counts as its chord, two chords at once are written Eb7|Fb, notes that make no chord as their set; in a set or a row, the sets or micromodes heard. Undo brings the sheet back" => "Llena la hoja con los acordes escuchados en la canción en lugar de lo escrito ahora. Deshacer recupera la hoja",
-        "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C." => "Haz clic en un compás y escribe su armonía: acordes (Am7 D7, G/B o Lam7 Re7, Sol/Si), numerales romanos (ii7 V7), conjuntos (3-11 T2, {0,1,4}), micromodos (Menor 3), formas de serie (P0, RI7) o N.C.",
-        "Each / holds the harmony before it one more beat, as in C / / G7. The band stops with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and Ctrl+V copy and paste bars as text." => "Cada / mantiene la armonía anterior un pulso más, como en C / / G7. La banda se detiene con un golpe (C.), sostenido (C..) o silencio (C...), y ^C entra antes. Ctrl+C y Ctrl+V copian y pegan compases como texto.",
+        "Fill the sheet with the chords heard in the song, in place of what it says now: an arpeggio counts as its chord, two chords at once are written Eb7|Fb, notes that make no chord as their set; in a set or a row, the sets or micromodes heard. Undo brings the sheet back" => {
+            "Llena la hoja con los acordes escuchados en la canción en lugar de lo escrito ahora. Deshacer recupera la hoja"
+        }
+        "Click a bar and type its harmony: chords (Am7 D7, G/B), Roman numerals (ii7 V7), sets (3-11 T2, {0,1,4}), micromodes (Menor 3), row forms (P0, RI7) or N.C." => {
+            "Haz clic en un compás y escribe su armonía: acordes (Am7 D7, G/B o Lam7 Re7, Sol/Si), números romanos (ii7 V7), conjuntos (3-11 T2, {0,1,4}), micromodos (Menor 3), formas de serie (P0, RI7) o N.C."
+        }
+        "Each / holds the harmony before it one more beat, as in C / / G7. The band stops with a shot (C.), a hold (C..) or a rest (C...), and ^C comes in early. Ctrl+C and Ctrl+V copy and paste bars as text." => {
+            "Cada / mantiene la armonía anterior un pulso más, como en C / / G7. La banda se detiene con un golpe (C.), sostenido (C..) o silencio (C...), y ^C entra antes. Ctrl+C y Ctrl+V copian y pegan compases como texto."
+        }
         "Speed" => "Velocidad",
         "Tap" => "Pulsar",
         "You play" => "Tocas tú",
@@ -599,14 +634,26 @@ mod tests {
     }
 
     #[test]
-    fn solfege_chord_formatting() {
+    fn solfege_is_a_way_of_showing_names() {
+        use lineup_core::PitchClass;
         use lineup_core::chord_sheet::{ChordMarker, HarmonyName};
-        use lineup_core::harmony::ChordSymbol;
 
-        let chord: ChordSymbol = "Am7".parse().unwrap();
-        let marker = ChordMarker::new(0, HarmonyName::Chord(chord));
-        assert_eq!(marker.text(), "Am7");
-        // Chord symbols stay in letters, as on lead sheets.
-        NoteNaming::Solfege.with(|| assert_eq!(marker.text(), "Am7"));
+        let marker = |text: &str| ChordMarker::new(0, HarmonyName::parse(text).unwrap());
+        let b_flat = Scale::new(PitchClass::ASharp, ScaleKind::Major);
+        let d_dorian = Scale::new(PitchClass::D, ScaleKind::Dorian);
+        assert_eq!(key_name(b_flat), "Bb major");
+        assert_eq!(marker("Am7").text(), "Am7");
+        NoteNaming::Solfege.with(|| {
+            assert_eq!(marker("Am7").text(), "Lam7");
+            assert_eq!(marker("G/B").text(), "Sol/Si");
+            // Typed either way, it is the same chord.
+            assert_eq!(marker("Lam7"), marker("Am7"));
+            assert_eq!(key_name(b_flat), "Sib major");
+            Language::Spanish.with(|| {
+                assert_eq!(key_name(b_flat), "Sib mayor");
+                assert_eq!(key_name(d_dorian), "Re dórico");
+            });
+        });
+        Language::Spanish.with(|| assert_eq!(key_name(b_flat), "Bb mayor"));
     }
 }

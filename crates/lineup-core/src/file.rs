@@ -32,6 +32,8 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::NoteNaming;
+
 use crate::band::{Band, BandFile, Player};
 use crate::chord_sheet::{ChordMarker, HarmonyName};
 use crate::key_map::KeyMarker;
@@ -761,8 +763,10 @@ pub fn to_text(project: &Project) -> Result<String, FileError> {
     // takes one line instead of one line per field. Lines always end in
     // "\n" (RON would use "\r\n" on Windows), so a project is the same
     // file on every system.
+    // Names are written in letters, whichever way the app shows them.
     let style = ron::ser::PrettyConfig::new().depth_limit(5).new_line("\n");
-    let mut text = ron::ser::to_string_pretty(&ProjectFile::from(project), style)?;
+    let file = NoteNaming::Letters.with(|| ProjectFile::from(project));
+    let mut text = NoteNaming::Letters.with(|| ron::ser::to_string_pretty(&file, style))?;
     text.push('\n');
     Ok(text)
 }
@@ -777,7 +781,7 @@ pub fn from_text(text: &str) -> Result<Project, FileError> {
     // A text editor may start the file with a byte-order mark, which is
     // not part of the RON text or of the format number.
     let text = text.strip_prefix('\u{feff}').unwrap_or(text);
-    let file: ProjectFile = match ron::from_str(text) {
+    let file: ProjectFile = match NoteNaming::Letters.with(|| ron::from_str(text)) {
         Ok(file) => file,
         Err(err) => {
             return Err(match format_number(text) {
@@ -789,7 +793,7 @@ pub fn from_text(text: &str) -> Result<Project, FileError> {
     if file.format > FORMAT_VERSION {
         return Err(FileError::NewerFormat(file.format));
     }
-    Project::try_from(file)
+    NoteNaming::Letters.with(|| Project::try_from(file))
 }
 
 /// The format number at the start of a project file, `(format: 25, ...`,

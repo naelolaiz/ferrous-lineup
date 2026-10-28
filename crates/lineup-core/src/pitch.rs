@@ -16,10 +16,12 @@ pub enum Spelling {
     Flats,
 }
 
-/// How the app writes the names of notes and keys: with letters (C, D,
-/// E…) or with solfège syllables (Do, Re, Mi…). Chord symbols are always
-/// written with letters, as on lead sheets, and the chord sheet reads
-/// letters only, so a song's chords look and save the same either way.
+/// How the app shows the names of notes, keys and chords: with letters
+/// (C, D, E…, Am7) or with solfège syllables (Do, Re, Mi…, Lam7).
+///
+/// It is a way of looking only. Project files and the text the app saves
+/// are always written in letters (see [`NoteNaming::with`]), and what you
+/// type is read in either way (see [`NoteName::read_either`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub enum NoteNaming {
     #[default]
@@ -54,8 +56,18 @@ impl NoteNaming {
         NOTE_NAMING.with(|naming| naming.set(self));
     }
 
+    /// The ways of reading a name typed by someone who sees notes named
+    /// this way: their own first, then the other.
+    pub fn reading_order(self) -> [NoteNaming; 2] {
+        match self {
+            NoteNaming::Letters => [NoteNaming::Letters, NoteNaming::Solfege],
+            NoteNaming::Solfege => [NoteNaming::Solfege, NoteNaming::Letters],
+        }
+    }
+
     /// Runs `f` with notes named this way, then goes back to the way they
-    /// were, even if `f` panics.
+    /// were, even if `f` panics. Saving runs in `Letters`, so files are
+    /// the same whatever the settings.
     pub fn with<T>(self, f: impl FnOnce() -> T) -> T {
         struct Restore(NoteNaming);
         impl Drop for Restore {
@@ -170,9 +182,10 @@ impl PitchClass {
 }
 
 impl fmt::Display for PitchClass {
-    /// Writes the sharp name. Use [`PitchClass::name`] to choose flats.
+    /// Writes the sharp name, in letters or solfège as this thread names
+    /// notes. Use [`PitchClass::name`] to choose flats.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.name(Spelling::Sharps))
+        f.write_str(&self.name_with(Spelling::Sharps, NoteNaming::current()))
     }
 }
 
@@ -240,17 +253,12 @@ impl Note {
             .then_some(Note(midi as u8))
     }
 
-    /// The name and octave, such as `"Db4"` or `"C#4"`.
+    /// The name and octave, such as `"Db4"` or `"C#4"` (or `"Reb4"` and
+    /// `"Do#4"` when this thread names notes in solfège).
     pub fn name(self, spelling: Spelling) -> String {
-        format!("{}{}", self.pitch_class().name(spelling), self.octave())
-    }
-
-    /// The name and octave as the app shows it, with sharps: "C#4", or
-    /// "Do#4" when notes are named in solfège (see [`NoteName::shown`]).
-    pub fn shown(self) -> String {
         let name = self
             .pitch_class()
-            .name_with(Spelling::Sharps, NoteNaming::current());
+            .name_with(spelling, NoteNaming::current());
         format!("{name}{}", self.octave())
     }
 
@@ -425,21 +433,12 @@ impl NoteName {
     /// The name written as letters ("Bb", "F#") or solfège ("Sib",
     /// "Fa#"), with the same sharps and flats.
     pub fn format(self, naming: NoteNaming) -> String {
+        let sign = if self.accidental > 0 { "#" } else { "b" };
+        let accidentals = sign.repeat(self.accidental.unsigned_abs() as usize);
         match naming {
-            NoteNaming::Letters => self.to_string(),
-            NoteNaming::Solfege => {
-                let sign = if self.accidental > 0 { "#" } else { "b" };
-                let accidentals = sign.repeat(self.accidental.unsigned_abs() as usize);
-                format!("{}{accidentals}", self.letter.solfege())
-            }
+            NoteNaming::Letters => format!("{}{accidentals}", self.letter.as_char()),
+            NoteNaming::Solfege => format!("{}{accidentals}", self.letter.solfege()),
         }
-    }
-
-    /// The name as the app shows it, named the way this thread names notes
-    /// (see [`NoteNaming::current`]). Files and chord symbols use the
-    /// letters of [`fmt::Display`] instead.
-    pub fn shown(self) -> String {
-        self.format(NoteNaming::current())
     }
 
     /// Reads a note name at the start of `text`: a capital letter and up
@@ -447,13 +446,24 @@ impl NoteName {
     /// name and the rest of the text, so "F#m7" gives F# and "m7". The
     /// app writes two when a key needs them: vii°7 in G# harmonic minor
     /// is F##dim7, and it must read back as it was written.
-    ///
-    /// It reads letters only, whichever way notes are named: "Fa" would
-    /// clash with F and a chord kind starting with "a", as in "Faug".
     pub fn read(text: &str) -> Option<(NoteName, &str)> {
-        let mut chars = text.chars();
-        let letter = Letter::from_char(chars.next()?)?;
-        let mut rest = chars.as_str();
+        NoteName::read_as(text, NoteNaming::Letters)
+    }
+
+    /// Reads a note name at the start of `text` written as `naming` writes
+    /// it: a capital letter, or a solfège syllable ("Do", "Sol"), and its
+    /// sharps or flats. "Lab7" in solfège gives Ab and "7".
+    pub fn read_as(text: &str, naming: NoteNaming) -> Option<(NoteName, &str)> {
+        let (letter, mut rest) = match naming {
+            NoteNaming::Letters => {
+                let mut chars = text.chars();
+                (Letter::from_char(chars.next()?)?, chars.as_str())
+            }
+            NoteNaming::Solfege => Letter::ALL.into_iter().find_map(|letter| {
+                text.strip_prefix(letter.solfege())
+                    .map(|rest| (letter, rest))
+            })?,
+        };
         let sign = |c| match c {
             '#' | '♯' => 1,
             'b' | '♭' => -1,
@@ -472,13 +482,26 @@ impl NoteName {
         Some((NoteName::new(letter, accidental), rest))
     }
 
-    /// Reads a whole note name, such as "C", "F#" or "Bb". Returns `None`
-    /// if anything is left over.
+    /// Reads a whole note name, such as "C", "F#" or "Bb", or in solfège
+    /// "Do", "Fa#" or "Sib". Returns `None` if anything is left over. A
+    /// whole name is never both: "Do" in letters would be D and an "o".
     pub fn parse(text: &str) -> Option<NoteName> {
-        match NoteName::read(text)? {
-            (name, "") => Some(name),
-            _ => None,
-        }
+        NoteName::read_either(text, str::is_empty).map(|(name, _)| name)
+    }
+
+    /// Reads a note name at the start of `text`, in letters or solfège,
+    /// whose rest `fits`: first the way this thread names notes, then
+    /// the other. So "Faug" is F augmented even in solfège, where "Fa"
+    /// and "ug" would not fit, and "Fam" is F minor even in letters.
+    pub fn read_either<'a>(
+        text: &'a str,
+        fits: impl Fn(&'a str) -> bool,
+    ) -> Option<(NoteName, &'a str)> {
+        NoteNaming::current()
+            .reading_order()
+            .into_iter()
+            .filter_map(|naming| NoteName::read_as(text, naming))
+            .find(|&(_, rest)| fits(rest))
     }
 
     /// The same key with one sharp or flat at most: Ebb becomes D and
@@ -498,17 +521,10 @@ impl NoteName {
 }
 
 impl fmt::Display for NoteName {
-    /// Writes the letter and its sharps or flats: "C", "F#", "Bb", "F##".
-    /// Project files and chord symbols use it, so it is always letters;
-    /// [`NoteName::shown`] names the note as the settings say.
+    /// Writes the name and its sharps or flats as this thread names notes:
+    /// "C", "F#", "Bb", "F##", or "Do", "Fa#", "Sib", "Fa##".
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let sign = if self.accidental > 0 { "#" } else { "b" };
-        write!(
-            f,
-            "{}{}",
-            self.letter.as_char(),
-            sign.repeat(self.accidental.unsigned_abs() as usize)
-        )
+        f.write_str(&self.format(NoteNaming::current()))
     }
 }
 
@@ -646,18 +662,33 @@ mod tests {
     }
 
     #[test]
-    fn solfege_names_are_never_read() {
-        // Saved songs and the chord sheet keep letters, so naming notes
-        // in solfège must not change what is read: "Faug" is still F
-        // augmented, not "Fa" and "ug".
-        NoteNaming::Solfege.with(|| {
-            let read = |text| NoteName::read(text).map(|(name, rest)| (name.to_string(), rest));
-            assert_eq!(read("Faug"), Some(("F".to_string(), "aug")));
-            assert_eq!(read("Fadd9"), Some(("F".to_string(), "add9")));
-            assert_eq!(read("Do"), Some(("D".to_string(), "o")));
-            assert_eq!(NoteName::parse("Do"), None);
-            assert_eq!(NoteName::parse("Sol"), None);
-        });
+    fn names_are_read_in_letters_or_solfege() {
+        let read = |text| {
+            NoteName::read_either(text, |rest: &str| matches!(rest, "" | "7" | "m"))
+                .map(|(name, rest)| (name.to_string(), rest))
+        };
+        assert_eq!(read("Sib7"), Some(("Bb".to_string(), "7")));
+        assert_eq!(read("Fa#m"), Some(("F#".to_string(), "m")));
+        assert_eq!(NoteName::parse("Sol"), Some(NoteName::new(Letter::G, 0)));
+        assert_eq!(NoteName::parse("Reb"), Some(NoteName::new(Letter::D, -1)));
+        assert_eq!(NoteName::parse("Do"), Some(NoteName::new(Letter::C, 0)));
+        assert_eq!(
+            NoteName::parse("do"),
+            None,
+            "a syllable starts with a capital"
+        );
+        // The plain reader is for text the app writes: letters only.
+        assert_eq!(
+            NoteName::read("Do").map(|(name, _)| name),
+            Some(NoteName::new(Letter::D, 0))
+        );
+        // A name that reads both ways goes the way notes are named here.
+        let first = |text| NoteName::read_either(text, |_| true).map(|(name, _)| name.to_string());
+        assert_eq!(first("Do7"), Some("D".to_string()));
+        assert_eq!(
+            NoteNaming::Solfege.with(|| first("Do7")),
+            Some("Do".to_string())
+        );
     }
 
     #[test]
@@ -683,15 +714,16 @@ mod tests {
     }
 
     #[test]
-    fn shown_follows_the_thread_naming() {
+    fn names_follow_the_thread_naming() {
         let b_flat = NoteName::new(Letter::B, -1);
-        assert_eq!(b_flat.shown(), "Bb");
-        assert_eq!(NoteNaming::Solfege.with(|| b_flat.shown()), "Sib");
-        assert_eq!(b_flat.shown(), "Bb", "with() puts the naming back");
-        // Files and chord symbols keep letters whatever the naming.
+        assert_eq!(b_flat.to_string(), "Bb");
+        assert_eq!(NoteNaming::Solfege.with(|| b_flat.to_string()), "Sib");
+        assert_eq!(b_flat.to_string(), "Bb", "with() puts the naming back");
         NoteNaming::Solfege.with(|| {
-            assert_eq!(b_flat.to_string(), "Bb");
-            assert_eq!(PitchClass::A.to_string(), "A");
+            assert_eq!(PitchClass::A.to_string(), "La");
+            assert_eq!(Note::new(61).to_string(), "Do#4");
+            assert_eq!(Note::new(61).name(Spelling::Flats), "Reb4");
+            assert_eq!(Note::new(60).name_as(NoteName::new(Letter::B, 1)), "Si#3");
         });
     }
 }

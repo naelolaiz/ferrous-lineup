@@ -86,6 +86,26 @@ const SPELLINGS: [(ChordQuality, &[&str]); 30] = {
     ]
 };
 
+/// What follows a chord's root: its quality, and a bass note after a
+/// slash. A slash is a bass note only when a note name follows it: in
+/// "C6/9" the slash belongs to the six-nine chord, and in "C6/9/E" the
+/// last one puts E in the bass.
+fn split_bass(rest: &str) -> (&str, Option<NoteName>) {
+    match rest.rsplit_once('/') {
+        Some((before, after)) => match NoteName::parse(after.trim()) {
+            Some(bass) => (before, Some(bass)),
+            None => (rest, None),
+        },
+        None => (rest, None),
+    }
+}
+
+/// The quality and bass written after a root, if they are a chord.
+fn read_rest(rest: &str) -> Option<(ChordQuality, Option<NoteName>)> {
+    let (quality, bass) = split_bass(rest);
+    Some((read_quality(quality)?, bass))
+}
+
 /// The quality written as `text`, in any of its [`SPELLINGS`].
 fn read_quality(text: &str) -> Option<ChordQuality> {
     let plain: String = text
@@ -120,33 +140,31 @@ impl ChordSymbol {
     }
 
     /// Reads a chord symbol, such as "Am7", "F#m7b5", "Bb13", "C6/9" or
-    /// "G/B". The root is a capital letter; a lower-case "b" after it is
-    /// a flat.
+    /// "G/B". The root is a capital letter, or a solfège syllable as in
+    /// "Lam7" or "Sol/Si"; a lower-case "b" after it is a flat.
     ///
     /// A slash is a bass note only when a note name follows it: in
     /// "C6/9" the slash belongs to the six-nine chord, and in "C6/9/E"
     /// the last one puts E in the bass.
     pub fn parse(text: &str) -> Result<ChordSymbol, String> {
         let text = text.trim();
-        let Some((root, rest)) = NoteName::read(text) else {
-            return Err(format!(
-                "\"{text}\" does not start with a note: chords start with a letter from A to G, \
-                 like C, F#m or Bb7."
-            ));
+        // The root in letters or solfège ("Am7" or "Lam7"), whichever
+        // leaves a chord after it: "Faug" is F aug, "Faaug" Fa aug.
+        let read = NoteName::read_either(text, |rest| read_rest(rest).is_some());
+        let Some((root, rest)) = read else {
+            return Err(match NoteName::read_either(text, |_| true) {
+                None => format!(
+                    "\"{text}\" does not start with a note: chords start with a letter from A \
+                     to G, like C, F#m or Bb7, or with a syllable, like Do, Fa#m or Sib7."
+                ),
+                Some((_, rest)) => format!(
+                    "\"{text}\": \"{}\" is not a kind of chord Ferrous Lineup knows, \
+                     such as m, 7, maj7, m7b5, sus4 or 13.",
+                    split_bass(rest).0
+                ),
+            });
         };
-        let (quality_text, bass) = match rest.rsplit_once('/') {
-            Some((before, after)) => match NoteName::parse(after.trim()) {
-                Some(bass) => (before, Some(bass)),
-                None => (rest, None),
-            },
-            None => (rest, None),
-        };
-        let Some(quality) = read_quality(quality_text) else {
-            return Err(format!(
-                "\"{text}\": \"{quality_text}\" is not a kind of chord Ferrous Lineup knows, \
-                 such as m, 7, maj7, m7b5, sus4 or 13."
-            ));
-        };
+        let (quality, bass) = read_rest(rest).expect("read_either checked it");
         let chord = ChordSymbol::new(root, quality);
         Ok(match bass {
             Some(bass) => chord.over(bass),

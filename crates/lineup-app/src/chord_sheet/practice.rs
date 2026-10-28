@@ -150,8 +150,12 @@ pub(super) fn row(
         {
             act(PracticeAction::Tap(ui.input(|input| input.time)));
         }
-        let trainer =
-            theme::light_button(ui, crate::i18n::tr("Speed trainer"), practice.training, None);
+        let trainer = theme::light_button(
+            ui,
+            crate::i18n::tr("Speed trainer"),
+            practice.training,
+            None,
+        );
         let hint = if practice.training {
             "The speed goes up each time the loop comes round, until it reaches the \
              target. Stop starts again from the first speed; Pause carries on. Click to \
