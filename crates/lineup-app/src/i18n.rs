@@ -424,7 +424,7 @@ fn translate_es(text: &str) -> Option<&'static str> {
         }
         "Letters (C, D, E…)" => "Letras (C, D, E…)",
         "Solfège (Do, Re, Mi…)" => "Solfeo (Do, Re, Mi…)",
-        "Roman numerals in minor keys" => "Numerales romanos en tonalidades menores",
+        "Roman numerals in minor keys" => "Números romanos en tonalidades menores",
         "Both ways are correct. They name the same chords and differ only in the chords on the third, sixth and seventh degrees of a minor key, as here in A minor." => {
             "Ambas formas son correctas. Nombran los mismos acordes y solo difieren en los acordes sobre los grados tercero, sexto y séptimo de una tonalidad menor, como aquí en La menor."
         }
@@ -432,16 +432,16 @@ fn translate_es(text: &str) -> Option<&'static str> {
             "bIII bVI bVII: contados desde la escala mayor (pop y jazz)"
         }
         "C is bIII, F is bVI and G is bVII; the leading-tone chord G#° is vii°." => {
-            "Do es bIII, Fa es bVI y Sol es bVII; el acorde de sensible Sol#° es vii°."
+            "C es bIII, F es bVI y G es bVII; el acorde de sensible G#° es vii°."
         }
         "III VI VII: counted from the minor scale (classical harmony)" => {
             "III VI VII: contados desde la escala menor (armonía clásica)"
         }
         "C is III, F is VI and G is VII; G#° is still vii°, and E major is V." => {
-            "Do es III, Fa es VI y Sol es VII; Sol#° sigue siendo vii°, y Mi mayor es V."
+            "C es III, F es VI y G es VII; G#° sigue siendo vii°, y E es V."
         }
         "Applies to every view that shows numerals, and to numerals you type or paste on the chord sheet. A style's Progression box is always written bIII bVI bVII, as the library writes it." => {
-            "Se aplica a todas las vistas que muestran numerales, y a los que escribes o pegas en la hoja de acordes. El cuadro Progresión de un estilo siempre se escribe bIII bVI bVII."
+            "Se aplica a todas las vistas que muestran números romanos, y a los que escribes o pegas en la hoja de acordes. El cuadro Progresión de un estilo siempre se escribe bIII bVI bVII, como lo escribe la biblioteca."
         }
         "Output" => "Salida",
         "Uses your system’s default audio device." => {
