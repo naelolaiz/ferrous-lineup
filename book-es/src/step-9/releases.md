@@ -555,7 +555,9 @@ la contiene. Los tags nunca se cancelan.
    versión falle en lugar de avisar. ¿Dónde debería ejecutarse, para
    que un tag equivocado se detenga antes de 20 minutos de build, y no
    después?
-5. **Leer la versión en la app.** `env!("CARGO_PKG_VERSION")` es la
-   versión del crate, fijada en tiempo de compilación. Muéstrala en el
-   título de la ventana o en una ventana Help > About. ¿Por qué es
-   `env!` y no `std::env::var`?
+5. **Leer la versión en la app.** **Help > About** muestra
+   `env!("CARGO_PKG_VERSION")`, la versión del crate, fijada en tiempo
+   de compilación ([cómo funciona](workflow.md#quién-la-hizo-y-qué-versión)).
+   Muéstrala también en el título de la ventana. ¿Qué daría
+   `std::env::var("CARGO_PKG_VERSION")` cuando la app se ejecuta en el
+   ordenador de otra persona?

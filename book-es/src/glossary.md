@@ -57,6 +57,7 @@ capítulo que explica cada uno.
 | **Edition** | Una versión del lenguaje (2015, 2018, 2021, 2024) elegida por cada crate. | [Workspace](step-1/workspace.md) |
 | **Enum** | Un tipo cuyo valor es una de varias variantes, cada una de las cuales puede guardar datos. | [lineup-audio](step-1/audio-engine.md) |
 | **Enum size** | Un enum ocupa tanto como su variante más grande; poner los datos de una variante grande en un `Box` mantiene pequeño cada valor. El lint `large_enum_variant` de Clippy lo señala. | [Teclas en vivo](step-7/live.md) |
+| **`env!` y `concat!`** | Macros que se ejecutan mientras se compila el programa: `env!("CARGO_PKG_VERSION")` se convierte en la versión que Cargo leyó de `Cargo.toml`, y `concat!` une literales en un solo `&'static str`, así que ambas pueden construir una `const`. | [Trabajar más rápido](step-9/workflow.md#quién-la-hizo-y-qué-versión) |
 | **`expect`** | Como `unwrap`, pero hace panic con el mensaje dado. Afirma una promesa («esto siempre es `Some`»), que conviene respaldar con un test. | [Series dodecafónicas](step-8/twelve-tone.md#la-tabla-de-224-clases-y-cómo-fiarse-de-ella) |
 | **Feature** | Una parte opcional de un crate, que se activa o desactiva en `Cargo.toml`; los features solo pueden añadir, nunca quitar. | [Guardar](step-4/saving.md) |
 | **`find_map`** | Llama a una closure con cada elemento y devuelve el primer `Some` que dé. | [Acordes](step-3/chords.md) |
