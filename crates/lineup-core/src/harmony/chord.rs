@@ -389,7 +389,8 @@ impl Chord {
 
     /// The chord symbol, such as "F#m7" or "Bbmaj7".
     pub fn name(self, spelling: Spelling) -> String {
-        format!("{}{}", self.root.name(spelling), self.quality.symbol())
+        let root = self.root.name_with(spelling, crate::NoteNaming::current());
+        format!("{root}{}", self.quality.symbol())
     }
 
     /// The chord symbol with its root written as `root`: "C#m7" or

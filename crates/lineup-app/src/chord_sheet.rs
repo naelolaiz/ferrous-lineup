@@ -421,7 +421,7 @@ impl BarView<'_> {
             let label = painter.text(
                 rect.right_top() + vec2(-PADDING, 2.0),
                 Align2::RIGHT_TOP,
-                format!("→ {}", key.name()),
+                format!("→ {}", crate::i18n::key_name(key)),
                 FontId::proportional(SMALL_SIZE),
                 theme::ACCENT,
             );
@@ -707,17 +707,11 @@ impl ChordSheet {
         ui.horizontal_wrapped(|ui| {
             band::menu(ui, project, actions);
             progression_menu(ui, project, self.next_bar(project), library, actions);
-            let key_str = match project.scale.kind {
-                lineup_core::ScaleKind::Row(_) | lineup_core::ScaleKind::Set(_) => {
-                    format!("{}: {}", crate::i18n::tr("Key"), project.scale.name())
-                }
-                kind => format!(
-                    "{}: {} {}",
-                    crate::i18n::tr("Key"),
-                    project.scale.spell(project.scale.root),
-                    crate::i18n::tr(kind.name()),
-                ),
-            };
+            let key_str = format!(
+                "{}: {}",
+                crate::i18n::tr("Key"),
+                crate::i18n::key_name(project.scale)
+            );
             ui.label(egui::RichText::new(key_str).strong());
             ui.weak(format!("· {}", project.time_signature));
             if project.band().is_some() {
@@ -1971,11 +1965,10 @@ fn progression_menu(
 ) {
     let tonal = project.scale.kind.is_tonal();
     ui.add_enabled_ui(tonal, |ui| {
-        let menu =
-            egui::containers::menu::MenuButton::new(crate::i18n::tr("Progression")).config(
-                egui::containers::menu::MenuConfig::new()
-                    .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
-            );
+        let menu = egui::containers::menu::MenuButton::new(crate::i18n::tr("Progression")).config(
+            egui::containers::menu::MenuConfig::new()
+                .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
+        );
         let (response, _) = menu.ui(ui, |ui| {
             ui.set_width(300.0);
             // Nothing shows as chosen: the band's style says how it plays,

@@ -1192,7 +1192,7 @@ fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
     format!(
         "{}\n\nIn {}: {}\n{}\n\n{timing} · {} bars{rhythm}",
         style.about,
-        scale.name(),
+        crate::i18n::key_name(scale),
         style.chord_names(tonic),
         numerals,
         style.bars(),
