@@ -550,6 +550,7 @@ impl LineupApp {
             self.send(Command::Seek(self.cursor));
             self.send(Command::Play);
             self.playing = true;
+            self.offer_sound_font_on_first_play();
         } else {
             self.halt();
             self.cursor = self.marker;
