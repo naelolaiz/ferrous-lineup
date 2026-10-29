@@ -15,24 +15,50 @@
 #
 # envía al lector a otra entrada.
 
+Acentos simples: styles.md#probar-un-estilo
 Acerca de: main-window.md#teclas-que-funcionan-en-todas-partes
+Acompañamiento: styles.md
+Ajustes de la Biblioteca: styles.md#los-ajustes-de-la-biblioteca
+Anacrusa: soloist.md#notas-entre-los-pulsos
+Anticipación: stops.md
 AppImage: installing.md#linux
-Banda: first-song.md#1-una-hoja-de-acordes-nueva, first-song.md#4-elige-un-estilo
+Aproximación cromática: soloist.md#notas-entre-los-pulsos
+Armonía cerrada: bigger-band.md#armonía-cerrada
+Banda: first-song.md#1-una-hoja-de-acordes-nueva, first-song.md#4-elige-un-estilo, bigger-band.md#el-menú-banda
 Barra de estado: main-window.md#la-barra-de-estado
 Barra de herramientas: main-window.md#la-barra-de-herramientas
-Biblioteca: main-window.md#el-panel-patrones-y-biblioteca, first-song.md#4-elige-un-estilo
+Bebop: soloist.md#notas-entre-los-pulsos
+Biblioteca: main-window.md#el-panel-patrones-y-biblioteca, first-song.md#4-elige-un-estilo, styles.md
+Bloquear: locks.md#bloquear-una-pista
+Bordadura: soloist.md#notas-entre-los-pulsos
+Break: stops.md#la-música
 Buscar la tonalidad: keys-and-modes.md#buscar-la-tonalidad-experimental
+Calderón: stops.md#la-música
 Cambio de tonalidad: keys-and-modes.md#cambios-de-tonalidad-en-una-canción
+Carpeta de estilos: style-editor.md#guardar-y-usar-tus-estilos
+Cejilla: bigger-band.md#cómo-toca-la-guitarra
+Chop: bigger-band.md#cómo-toca-la-guitarra
+Colchón: bigger-band.md#cuerdas-y-órgano
 Compases, insertar y eliminar: chord-sheet.md#cambiar-los-compases
+Comping: véase Acompañamiento
+Cross-stick: song-form.md#variaciones-a-y-b
+Cuerdas: bigger-band.md#cuerdas-y-órgano
 Demostraciones: first-song.md#por-dónde-seguir
+Editor de estilos: style-editor.md
 Escala: notes-and-scales.md#escalas
+Escala de acorde: soloist.md#escalas-de-acorde
 Escribir acordes: chord-sheet.md#escribir-acordes
 Escribir los acordes que toca la canción: chord-sheet.md#escribir-lo-que-toca-la-canción
-Estilo: first-song.md#4-elige-un-estilo
-Final: first-song.md#6-dale-una-forma
+Estilo: first-song.md#4-elige-un-estilo, styles.md
+Estilo para algunos compases: song-form.md#un-estilo-para-algunos-compases
+Final: first-song.md#6-dale-una-forma, song-form.md#el-final-a-casa-y-sostenido
+Formación de instrumentos: bigger-band.md#el-menú-banda
 General MIDI: sounds.md#un-instrumento-para-cada-canal
 GeneralUser GS: sounds.md#la-primera-reproducción
+Golpe: stops.md
 Guardar: first-song.md#7-guárdala
+Guitarra: bigger-band.md#cómo-toca-la-guitarra
+Hi-hat: song-form.md#variaciones-a-y-b
 Hoja de acordes: chord-sheet.md, first-song.md#2-escribe-los-acordes
 Hoja de acordes como texto: chord-sheet.md#hojas-de-acordes-como-texto
 Homónima: keys-and-modes.md#tonalidades-mayores-y-menores
@@ -40,21 +66,53 @@ Idioma: installing.md#el-primer-arranque
 Instalar: installing.md
 Instrumento: sounds.md#un-instrumento-para-cada-canal
 Intervalo: notes-and-scales.md#intervalos
-Introducción: first-song.md#6-dale-una-forma
+Introducción: first-song.md#6-dale-una-forma, song-form.md#la-introducción-un-turnaround
 Letras: notes-and-scales.md#solfeo-o-letras
 Lineup Osc: sounds.md
 Lista de reproducción: main-window.md#la-lista-de-reproducción
 Menús: main-window.md#los-menús
 Modo: keys-and-modes.md#los-modos
+Nota de paso: soloist.md#notas-entre-los-pulsos
+Notas del acorde: soloist.md#notas-del-acorde-en-el-pulso
+Notas extrañas: soloist.md#notas-entre-los-pulsos
+Notas guía: soloist.md#notas-del-acorde-en-el-pulso
 Número romano: chord-sheet.md#leer-la-hoja
+Órgano: bigger-band.md#cuerdas-y-órgano
 Ortografía: notes-and-scales.md#sostenidos-bemoles-y-ortografía
+Otro solo: soloist.md#probarlo
+Patrón de prueba: styles.md#adónde-va-un-estilo
 Piano roll: main-window.md#las-ventanas, notes-and-scales.md#verlo-y-oírlo-en-la-aplicación
+Power chord: bigger-band.md#cómo-toca-la-guitarra
+Progresión: styles.md#progresiones-de-la-biblioteca
 Rack de canales: main-window.md#las-ventanas
+Rasgueo: bigger-band.md#cómo-toca-la-guitarra
 Relativa: keys-and-modes.md#tonalidades-mayores-y-menores
+Rellenos: styles.md#buscar-un-estilo, song-form.md#variaciones-a-y-b
+Ride: song-form.md#variaciones-a-y-b
+Sección de vientos: bigger-band.md#la-sección-de-vientos
+Secciones: song-form.md#secciones
+Sensible: song-form.md#la-introducción-un-turnaround
+Shuffle: swing.md#dónde-no-se-aplica-el-swing
+Silencio: stops.md
+Sin banda: bigger-band.md#el-menú-banda
+Síncopa: stops.md#la-música
 Solfeo: notes-and-scales.md#solfeo-o-letras
+Solista: soloist.md
+Soltura: swing.md#tiempo-suelto
+Sostenido (marca de la banda): stops.md
 SoundFont: sounds.md
+Stop-time: stops.md#la-música
+Swing: swing.md, styles.md#probar-un-estilo
 Teclas de armonía: main-window.md#las-ventanas
 Tempo: first-song.md#5-el-tempo-y-la-tonalidad, main-window.md#la-barra-de-herramientas
+Terminar la canción aquí: song-form.md#el-final-a-casa-y-sostenido
+Tocas tú: locks.md#tocas-tú
 Tonalidad: keys-and-modes.md#la-tonalidad-de-una-canción, first-song.md#5-el-tempo-y-la-tonalidad
 Tonalidades con dos nombres: keys-and-modes.md#tonalidades-con-dos-nombres
-Vueltas: first-song.md#6-dale-una-forma
+Tresillo: swing.md#el-control-swing, bigger-band.md#la-sección-de-vientos
+Tumbao: stops.md#la-música
+Turnaround: song-form.md#la-introducción-un-turnaround
+Vamp: song-form.md#la-introducción-un-turnaround
+Variaciones a y b: song-form.md#variaciones-a-y-b
+Volver a tocarla: locks.md#una-parte-que-editas-queda-tuya
+Vueltas: first-song.md#6-dale-una-forma, song-form.md#la-fila-forma

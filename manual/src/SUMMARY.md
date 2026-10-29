@@ -12,6 +12,14 @@
 # Part 2: Songs with the band
 
 - [The chord sheet](chord-sheet.md)
+- [Styles and the Library](styles.md)
+- [Song form and sections](song-form.md)
+- [Shots, holds, rests and pushes](stops.md)
+- [Swing and feel](swing.md)
+- [A bigger band and the horns](bigger-band.md)
+- [Locking a track, and playing your part](locks.md)
+- [The soloist (experimental)](soloist.md)
+- [Your own styles](style-editor.md)
 
 # Part 5: Learning harmony
 
