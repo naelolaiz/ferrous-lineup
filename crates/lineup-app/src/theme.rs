@@ -215,13 +215,20 @@ pub fn lcd_frame(
             .corner_radius(3)
             .inner_margin(Margin::symmetric(6, 1))
             .show(ui, |ui| {
-                // A longer label, as in Spanish, widens the frame rather
-                // than wrapping onto a second line.
-                let label = ui.painter().layout_no_wrap(
-                    label.to_string(),
-                    FontId::proportional(9.0),
-                    LCD_LABEL,
-                );
+                // A longer label, as in Spanish, is written a little
+                // smaller to fit, so the toolbar stays on one row; only
+                // one too long even then widens the frame.
+                let layout = |size: f32| {
+                    ui.painter().layout_no_wrap(
+                        label.to_string(),
+                        FontId::proportional(size),
+                        LCD_LABEL,
+                    )
+                };
+                let mut label = layout(9.0);
+                if label.size().x > width {
+                    label = layout((9.0 * width / label.size().x).max(7.0));
+                }
                 ui.set_width(width.max(label.size().x));
                 ui.spacing_mut().item_spacing.y = 0.0;
                 ui.vertical(|ui| {
