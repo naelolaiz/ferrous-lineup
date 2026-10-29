@@ -81,7 +81,7 @@ use crate::widgets;
 pub const APP_NAME: &str = "Ferrous Lineup";
 
 /// How wide the pattern list in the toolbar is.
-const PATTERN_LIST_WIDTH: f32 = 104.0;
+const PATTERN_LIST_WIDTH: f32 = 92.0;
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
@@ -1663,12 +1663,12 @@ impl LineupApp {
                         .color(theme::TEXT_DIM),
                 );
                 // Shorter than egui's usual slider, so the toolbar fits
-                // on one row in a window 1280 points wide (see
-                // `the_toolbar_fits_on_one_row_at_1280_points`).
-                ui.spacing_mut().slider_width = 64.0;
+                // on one row in a window 1280 points wide, in Spanish too
+                // (see `the_toolbar_fits_on_one_row_at_1280_points`).
+                ui.spacing_mut().slider_width = 52.0;
                 let mut master = self.project.mixer.master;
                 let volume_slider = egui::Slider::new(&mut master, 0.0..=1.0).show_value(false);
-                let volume = ui.add_sized([64.0, 22.0], volume_slider);
+                let volume = ui.add_sized([52.0, 22.0], volume_slider);
                 let text = trf("Master volume: {}%", &[&format!("{:.0}", master * 100.0)]);
                 if theme::hint(volume, text).changed() {
                     self.set_master_volume(master);

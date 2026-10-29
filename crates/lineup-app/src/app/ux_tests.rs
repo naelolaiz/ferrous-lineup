@@ -1626,38 +1626,78 @@ fn main_transport_toggles_are_visible_reversible_and_saved() {
 
 #[test]
 fn the_toolbar_fits_on_one_row_at_1280_points() {
-    let mut screen = Screen::new();
-    screen.size = vec2(1280.0, 800.0);
-    screen.draw(vec![]);
-    let output = screen.draw(vec![]);
-    let row = text_rect(&output, "PAT").unwrap().center().y;
-    let mut right: f32 = 0.0;
-    for label in ["SONG", "TEMPO", "BAR : BEAT : STEP", "PATTERN", "VOL"] {
-        let rect = text_rect(&output, label).unwrap_or_else(|| panic!("{label} missing"));
-        assert!(
-            (rect.center().y - row).abs() < 16.0,
-            "{label} is on another row"
-        );
-        right = right.max(rect.right());
-    }
-    for name in [
-        "Follow playhead",
-        "Count-in",
-        "Metronome",
-        "Chord sheet",
-        "Channel rack",
-        "Piano roll",
-        "Harmony keys",
-        "Mixer",
+    use crate::i18n::Language;
+    // In both languages, with the longest pattern and a long name.
+    for (language, labels) in [
+        (
+            Language::English,
+            [
+                "PAT",
+                "SONG",
+                "TEMPO",
+                "BAR : BEAT : STEP",
+                "PATTERN",
+                "VOL",
+            ],
+        ),
+        (
+            Language::Spanish,
+            [
+                "PAT",
+                "CANC",
+                "TEMPO",
+                "COMPÁS : PULSO : PASO",
+                "PATRÓN",
+                "VOL",
+            ],
+        ),
     ] {
-        let rect = icon_rect(&screen, name);
-        assert!(
-            (rect.center().y - row).abs() < 16.0,
-            "{name} is on another row"
-        );
-        right = right.max(rect.right());
+        let mut screen = Screen::new();
+        crate::i18n::set_language(&screen.ctx, language);
+        screen.size = vec2(1280.0, 800.0);
+        let pattern = screen.app.project.pattern_mut(0).unwrap();
+        pattern.set_length(lineup_core::MAX_STEPS);
+        pattern.name = "Introduction and first verse".into();
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        let row = text_rect(&output, "PAT").unwrap().center().y;
+        let mut right: f32 = 0.0;
+        for label in labels {
+            let rect = text_rect(&output, label).unwrap_or_else(|| panic!("{label} missing"));
+            assert!(
+                (rect.center().y - row).abs() < 16.0,
+                "{language:?}: {label} is on another row"
+            );
+            right = right.max(rect.right());
+        }
+        for name in [
+            "Follow playhead",
+            "Count-in",
+            "Metronome",
+            "Chord sheet",
+            "Channel rack",
+            "Piano roll",
+            "Harmony keys",
+            "Mixer",
+        ] {
+            let rect = icon_rect(&screen, name);
+            assert!(
+                (rect.center().y - row).abs() < 16.0,
+                "{language:?}: {name} is on another row"
+            );
+            right = right.max(rect.right());
+        }
+        // Everything drawn on the row, the volume slider too, ends with
+        // room to spare, as a song's numbers change while it plays.
+        for shape in &output.shapes {
+            let rect = shape.shape.visual_bounding_rect();
+            if rect.is_finite() && rect.height() < 40.0 && (rect.center().y - row).abs() < 14.0 {
+                right = right.max(rect.right());
+            }
+        }
+        assert!(right < 1280.0 - 24.0, "{language:?}: {right}");
     }
-    assert!(right < 1280.0);
+    crate::i18n::Language::English.set();
 }
 
 #[test]
