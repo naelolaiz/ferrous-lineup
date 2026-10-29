@@ -117,7 +117,8 @@ pub enum PlaylistAction {
     Library(LibraryAction),
 }
 
-/// The two tabs of the panel on the left.
+/// The two tabs of the panel on the left. The Library is in front when
+/// the app starts: it is where a song or a style is found.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Tab {
     Patterns,
@@ -348,7 +349,7 @@ impl PlaylistView {
             drag: None,
             strips: Strips::default(),
             tempo_strip: TempoStrip::default(),
-            tab: Tab::Patterns,
+            tab: Tab::Library,
             library: LibraryBrowser::new(),
             browser_open: true,
             zoom: Vec2::splat(1.0),

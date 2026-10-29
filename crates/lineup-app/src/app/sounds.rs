@@ -9,9 +9,10 @@
 //! SoundFont's drum kit.
 //!
 //! The app does not come with a SoundFont, because a good one is tens of
-//! megabytes. The first time the sounds are turned on, it offers to
-//! download GeneralUser GS, a free General MIDI SoundFont by S. Christian
-//! Collins, and keeps it in the app's data folder. Any other `.sf2` file
+//! megabytes. The first time anything plays, or the first time the sounds
+//! are turned on, it offers to download GeneralUser GS, a free General
+//! MIDI SoundFont by S. Christian Collins, and keeps it in the app's data
+//! folder. Any other `.sf2` file
 //! can be chosen instead. Downloading and reading a SoundFont take a
 //! while, so both run on a thread of their own, like the WAV export, and
 //! the window keeps drawing meanwhile. When the SoundFont is ready, every
@@ -66,6 +67,8 @@ struct Settings {
     /// A SoundFont file chosen with "Choose SoundFont…", or `None` for
     /// GeneralUser GS.
     file: Option<PathBuf>,
+    /// Whether the first Play has offered the SoundFont: it does once.
+    offered: bool,
 }
 
 impl Default for Settings {
@@ -74,6 +77,7 @@ impl Default for Settings {
             on: false,
             drums: true,
             file: None,
+            offered: false,
         }
     }
 }
@@ -114,6 +118,8 @@ pub(super) struct Sounds {
     /// The SoundFont read last, and the file it came from. Kept while
     /// the sounds are off, so turning them on again is instant.
     loaded: Option<(PathBuf, Arc<SoundFont>)>,
+    /// Where GeneralUser GS is kept: [`general_user_path`].
+    general_user: Option<PathBuf>,
     /// A download or a reading running in the background.
     job: Option<Job>,
     /// Whether the window that offers the download is open.
@@ -176,6 +182,7 @@ impl Sounds {
         let mut sounds = Sounds {
             settings,
             loaded: None,
+            general_user: general_user_path(),
             job: None,
             offer_open: false,
             failure: None,
@@ -200,7 +207,10 @@ impl Sounds {
 
     /// The SoundFont file the settings ask for.
     fn wanted_path(&self) -> Option<PathBuf> {
-        self.settings.file.clone().or_else(general_user_path)
+        self.settings
+            .file
+            .clone()
+            .or_else(|| self.general_user.clone())
     }
 
     /// The name of the SoundFont the settings ask for.
@@ -375,6 +385,25 @@ impl LineupApp {
         );
     }
 
+    /// The first time anything plays, offers the SoundFont, once: the
+    /// Lineup Osc makes every instrument out of a few simple waves, which
+    /// is not how a band should first sound. Said yes to, the instruments
+    /// play from it as soon as it is downloaded. Nothing is asked if they
+    /// play from a SoundFont already, or if one is on disk (then it was
+    /// turned off on purpose).
+    pub(super) fn offer_sound_font_on_first_play(&mut self) {
+        let sounds = &mut self.sounds;
+        if sounds.settings.offered {
+            return;
+        }
+        sounds.settings.offered = true;
+        sounds.changed = true;
+        let missing = sounds.wanted_path().is_some_and(|path| !path.is_file());
+        if !sounds.settings.on && sounds.settings.file.is_none() && missing {
+            self.set_sound_font(true);
+        }
+    }
+
     /// Turns the SoundFont on or off. Turned on, it is read if it is not
     /// yet, or its download is offered.
     fn set_sound_font(&mut self, on: bool) {
@@ -492,7 +521,10 @@ impl LineupApp {
             return;
         }
         let downloading = self.sounds.job.as_ref().is_some_and(|job| job.download);
-        let folder = general_user_path()
+        let folder = self
+            .sounds
+            .general_user
+            .as_deref()
             .and_then(|path| path.parent().map(Path::to_path_buf))
             .map_or_else(String::new, |folder| shown(&folder));
         let mut open = true;
@@ -547,7 +579,7 @@ impl LineupApp {
                 });
             });
 
-        if download && let Some(path) = general_user_path() {
+        if download && let Some(path) = self.sounds.general_user.clone() {
             self.sounds.start(path, true);
         } else if choose {
             self.choose_sound_font();
@@ -566,5 +598,27 @@ impl LineupApp {
                 self.sounds.turn_off();
             }
         }
+    }
+}
+
+#[cfg(test)]
+impl Sounds {
+    /// For the tests: GeneralUser GS kept at `path`, which need not be
+    /// there, instead of in the app's data folder.
+    pub(super) fn keep_general_user_in(&mut self, path: PathBuf) {
+        self.general_user = Some(path);
+    }
+
+    /// For the tests: whether the first Play is still to offer the
+    /// SoundFont.
+    pub(super) fn offer_on_first_play(&mut self, offer: bool) {
+        self.settings.offered = !offer;
+        self.changed = true;
+    }
+
+    /// Whether the window that offers the download is open, and whether
+    /// the instruments are to play from the SoundFont.
+    pub(super) fn offered_and_on(&self) -> (bool, bool) {
+        (self.offer_open, self.settings.on)
     }
 }
