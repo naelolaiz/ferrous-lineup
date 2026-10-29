@@ -284,20 +284,9 @@ fn loop_buttons(
         .filter(|&(start, end)| start < end)
         .map(|(start, end)| LoopRegion::new(start, end));
     let text = match selected {
-        Some((first, last)) if first == last => format!(
-            "🔁 {} {} {}",
-            crate::i18n::tr("Loop"),
-            crate::i18n::tr("bar"),
-            first + 1
-        ),
-        Some((first, last)) => format!(
-            "🔁 {} {} {}–{}",
-            crate::i18n::tr("Loop"),
-            crate::i18n::tr("bars"),
-            first + 1,
-            last + 1
-        ),
-        None => crate::i18n::tr("🔁 Loop").to_string(),
+        Some((first, last)) if first == last => trf("🔁 Loop bar {}", &[&(first + 1)]),
+        Some((first, last)) => trf("🔁 Loop bars {}–{}", &[&(first + 1), &(last + 1)]),
+        None => tr("🔁 Loop").to_string(),
     };
     let on = wanted.is_some() && wanted == looping;
     let button = ui.add_enabled(wanted.is_some(), egui::Button::selectable(on, text));

@@ -4372,6 +4372,25 @@ mod bars {
         screen.key_with_modifiers(Key::Z, Modifiers::COMMAND);
         assert_eq!(chords(&screen), before);
     }
+
+    #[test]
+    fn in_spanish_the_loop_button_and_the_bands_choruses_read_as_spanish() {
+        let mut screen = song();
+        crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+        assert!(screen.app.project.set_choruses(3));
+        // Bars 2 and 3 selected, with a click and a Shift+click.
+        screen.click("G");
+        screen.draw(vec![]);
+        let am = text_rect(&screen.draw(vec![]), "Am").unwrap().center();
+        screen.click_at(am, Modifiers::SHIFT);
+        assert_eq!(screen.app.chord_sheet.selected_bars(), Some((1, 2)));
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        assert!(text_rect(&output, "🔁 Repetir los compases 2–3").is_some());
+        // A chorus here is a pass through the tune, not a pop chorus.
+        assert!(text_rect(&output, "Vuelta ×3").is_some());
+        assert!(text_rect(&output, "Estribillo ×3").is_none());
+    }
 }
 
 mod section_styles {

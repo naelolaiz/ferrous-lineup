@@ -1147,6 +1147,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Messiaen's third mode", "tercer modo de Messiaen"),
     ("Metal", "Metal"),
     ("meter|Time", "Compás"),
+    ("form|Chorus", "Vuelta"),
     ("MIDI Out", "Salida MIDI"),
     (
         "MIDI support could not be initialized",
