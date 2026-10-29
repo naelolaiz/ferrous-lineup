@@ -262,9 +262,7 @@ fn main_texts(text: &str) -> Option<&'static str> {
         "Songs" => "Canciones",
         "Styles" => "Estilos",
         "Twelve-tone" => "Dodecafónico",
-        "Tunes with their melodies, free for everyone to use" => {
-            "Melodías libres para el uso de todos"
-        }
+        "Tunes with their melodies and chords" => "Canciones con su melodía y sus acordes",
         "Each harmony style as a short song" => "Cada estilo armónico como una canción corta",
         "Each row style as a short piece: the row, backwards, upside down, both" => {
             "Cada estilo de serie como una pieza corta: la serie, retrógrada, invertida y ambas"

@@ -485,9 +485,7 @@ fn listed(ui: &mut egui::Ui) -> Option<Demo> {
     ui.separator();
     ui.menu_button(crate::i18n::tr("Songs"), |ui| {
         crate::widgets::scroll_menu(ui, |ui| {
-            ui.weak(crate::i18n::tr(
-                "Tunes with their melodies, free for everyone to use",
-            ));
+            ui.weak(crate::i18n::tr("Tunes with their melodies and chords"));
             for &genre in &demos.genres {
                 let songs: Vec<&Entry> = demos
                     .entries
