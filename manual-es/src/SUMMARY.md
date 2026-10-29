@@ -50,3 +50,12 @@
 - [Más allá de las tonalidades: conjuntos, series y micromodos](sets-rows-micromodes.md)
 - [Practicar](practising.md)
 - [Partituras guía, también para instrumentos en Si♭, Mi♭ y Fa](lead-sheets.md)
+
+# Parte 6: Las demostraciones, guía de escucha
+
+- [Encontrar una demostración](finding-a-demo.md)
+- [El folclore sudamericano y la Misa Criolla](folk-and-misa-criolla.md)
+- [El tango y Latinoamérica](tango-and-latin-america.md)
+- [Jazz, blues, gospel y pop](jazz-and-pop.md)
+- [La sala de conciertos](concert-hall.md)
+- [Métricas irregulares y los Balcanes](odd-meters-and-balkans.md)
