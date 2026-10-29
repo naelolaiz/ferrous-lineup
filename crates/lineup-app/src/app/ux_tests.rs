@@ -4858,16 +4858,28 @@ mod chord_sheet_layout {
     /// A song of four chords whose first bar changes harmony on every
     /// beat, with the chord sheet open in its window.
     fn busy_song() -> Screen {
-        let mut screen = Screen::new();
+        song_starting(&["Dm7/C F/C G7/D C/E"])
+    }
+
+    /// A song of four chords in C major whose first bars are `bars`, as
+    /// typed on the sheet, with the chord sheet open in its window.
+    fn song_starting(bars: &[&str]) -> Screen {
         let mut project = Project::with_band();
         project.write_progression(
             lineup_core::library::Style::named("Four chords").unwrap(),
             0,
         );
-        let bar = project.meter().bar(0);
-        let markers =
-            lineup_core::chord_sheet::read_bar("Dm7/C F/C G7/D C/E", &bar, project.scale).unwrap();
-        assert!(project.set_chords(bar.start, bar.end(), &markers));
+        for (number, text) in bars.iter().enumerate() {
+            let bar = project.meter().bar(number);
+            let markers = lineup_core::chord_sheet::read_bar(text, &bar, project.scale).unwrap();
+            assert!(project.set_chords(bar.start, bar.end(), &markers));
+        }
+        sheet_of(project)
+    }
+
+    /// `project` with the chord sheet open in its window.
+    fn sheet_of(mut project: Project) -> Screen {
+        let mut screen = Screen::new();
         project.follow_chord_sheet();
         screen.app.replace_project(project, None);
         screen.app.rack_open = false;
@@ -4942,6 +4954,85 @@ mod chord_sheet_layout {
         screen.click("Fit the names");
         let output = screen.draw(Vec::new());
         assert_eq!(fit(&output), fits);
+        assert_eq!(size(&output, "Dm7/C"), 20.0);
+    }
+
+    #[test]
+    fn the_words_after_a_numeral_are_written_where_there_is_room() {
+        // Fm is borrowed from C minor: "iv · borrowed" under it. On the
+        // last beat of bar 1 there is room for "iv" only; bar 2 has room
+        // for all of it.
+        let mut screen = song_starting(&["C Am F Fm", "Fm"]);
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        // The lines are as long as the names and numerals allow, not as
+        // short as the words of one beat would make them.
+        assert_eq!(fit(&output), 4);
+        for name in ["C", "Am", "F", "Fm"] {
+            assert_eq!(size(&output, name), 20.0, "{name}");
+        }
+        let numeral = text_rect(&output, "iv").expect("iv alone in bar 1");
+        let whole = text_rect(&output, "iv · borrowed").expect("all of it in bar 2");
+        assert!(numeral.left() < whole.left());
+    }
+
+    #[test]
+    fn a_short_chord_keeps_its_name_whole_with_the_next_just_after_it() {
+        // Dm7/C for a sixteenth, then G7 to the end of the bar.
+        let mut project = Project::with_band();
+        project.write_progression(
+            lineup_core::library::Style::named("Four chords").unwrap(),
+            0,
+        );
+        let bar = project.meter().bar(0);
+        let chord = |step, text| {
+            lineup_core::chord_sheet::ChordMarker::new(
+                step,
+                lineup_core::chord_sheet::HarmonyName::parse(text).unwrap(),
+            )
+        };
+        let markers = [chord(bar.start, "Dm7/C"), chord(bar.start + 1, "G7")];
+        assert!(project.set_chords(bar.start, bar.end(), &markers));
+        let mut screen = sheet_of(project);
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        // One sixteenth of a bar would need a bar sixteen names wide;
+        // written one after the other, the two fit four bars to a line.
+        assert_eq!(fit(&output), 4);
+        assert_eq!(size(&output, "Dm7/C"), 20.0);
+        assert_eq!(size(&output, "G7"), 20.0);
+        let short = text_rect(&output, "Dm7/C").unwrap();
+        let next = text_rect(&output, "G7").unwrap();
+        assert!(next.left() > short.right(), "{short:?} {next:?}");
+    }
+
+    #[test]
+    fn the_zoom_keys_over_the_sheet_in_the_main_window_zoom_the_sheet() {
+        let mut screen = busy_song();
+        screen.draw(Vec::new());
+        screen.click("⛶ Fill the window");
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        let before = fit(&output);
+        let bar = text_rect(&output, "Dm7/C").unwrap().center();
+        // Smaller, twice: the names get smaller and more bars fit on a
+        // line. The playlist, out of sight, keeps its zoom.
+        screen.draw(vec![Event::PointerMoved(bar)]);
+        screen.key_with_modifiers(Key::Minus, Modifiers::COMMAND);
+        screen.draw(vec![Event::PointerMoved(bar)]);
+        screen.key_with_modifiers(Key::Minus, Modifiers::COMMAND);
+        assert!(screen.ctx.zoom_factor() < 1.0);
+        let playlist = super::view::Area::Main;
+        assert_eq!(
+            playlist.zoom(&screen.ctx, super::view::Axis::Horizontal),
+            1.0
+        );
+        // The app's window keeps its size on the screen, which is more
+        // points at a smaller zoom: eframe tells egui so.
+        screen.size /= screen.ctx.zoom_factor();
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        assert!(fit(&output) > before, "{} {before}", fit(&output));
         assert_eq!(size(&output, "Dm7/C"), 20.0);
     }
 
