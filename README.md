@@ -11,6 +11,17 @@ rows and micromodes.
 
 ![Ferrous Lineup playing the demo song: the playlist, the channel rack with the Lineup Osc, and the harmony keys lighting up the chord that sounds](screenshots/main-window.png)
 
+## The user manual
+
+How to use the app, and the harmony it teaches, without any code, is in
+the **user manual**:
+**[read it online](https://naelolaiz.github.io/ferrous-lineup/manual/)**
+or as **[one PDF](https://naelolaiz.github.io/ferrous-lineup/manual/ferrous-lineup-manual.pdf)**.
+In Spanish, the **manual de usuario**:
+[online](https://naelolaiz.github.io/ferrous-lineup/es/manual/) or as
+[a PDF](https://naelolaiz.github.io/ferrous-lineup/es/manual/ferrous-lineup-manual-es.pdf).
+Its sources are in [`manual/`](manual/) and [`manual-es/`](manual-es/).
+
 ## The book
 
 Everything the app does, and how it was built, is in the book
@@ -46,9 +57,9 @@ was built, why, and which Rust it uses. Its sources are in
   and Kröpfl's micromodes, on the chord sheet and in the piano roll.
 - **Writing by hand**: a playlist of tracks, a channel rack with a step
   sequencer, a piano roll, a style editor and a mixer.
-- **Songs**: over 300 demos, from folk songs and hymns to tangos, jazz
-  standards and whole orchestral pieces, plus a library of 171 styles
-  and 107 rhythms.
+- **Songs**: over 340 demos, from folk songs and hymns to tangos, jazz
+  standards and whole orchestral pieces, plus a library of 177 styles
+  and 112 rhythms.
 - **In and out**: MIDI keyboards and synths, MIDI files, recordings
   (tempo, key and chords heard from an MP3 or WAV), chord charts as
   text, lead sheets as PDF, and WAV, MIDI and MP4 video export.

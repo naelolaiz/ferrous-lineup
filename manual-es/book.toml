@@ -1,0 +1,19 @@
+[book]
+title = "Ferrous Lineup: Manual de usuario"
+authors = ["Ferrous Lineup contributors"]
+language = "es"
+src = "src"
+
+# The same settings as the book's (book/book.toml): no "index"
+# preprocessor, so every page keeps its own name.
+[build]
+use-default-preprocessors = false
+
+[preprocessor.links]
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+additional-css = ["print.css"]
+# Where GitHub Pages serves the manual, next to the Spanish book.
+site-url = "/ferrous-lineup/es/manual/"
