@@ -1,11 +1,19 @@
-//! Help > About: the app's name, version and license, and where its book,
-//! its code and its issues are.
+//! Help > About: the app's name, version and license, and where its
+//! manual, its book, its code and its issues are.
 
 use eframe::egui;
 
 use super::LineupApp;
 use crate::i18n::{self, Language, tr};
 
+/// The user manual on the web, in English and in Spanish, and as one PDF
+/// file.
+const MANUAL: &str = "https://naelolaiz.github.io/ferrous-lineup/manual/";
+const MANUAL_PDF: &str =
+    "https://naelolaiz.github.io/ferrous-lineup/manual/ferrous-lineup-manual.pdf";
+const MANUAL_ES: &str = "https://naelolaiz.github.io/ferrous-lineup/es/manual/";
+const MANUAL_ES_PDF: &str =
+    "https://naelolaiz.github.io/ferrous-lineup/es/manual/ferrous-lineup-manual-es.pdf";
 /// The book on the web, in English and in Spanish, and as one PDF file.
 const BOOK: &str = "https://naelolaiz.github.io/ferrous-lineup/";
 const BOOK_PDF: &str = "https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf";
@@ -15,15 +23,23 @@ const BOOK_ES_PDF: &str =
 const LICENSE: &str = "https://www.gnu.org/licenses/gpl-3.0.html";
 const ISSUES: &str = concat!(env!("CARGO_PKG_REPOSITORY"), "/issues");
 
+/// The user manual in the app's language: Help > User manual opens it.
+pub(super) fn manual() -> &'static str {
+    match i18n::current_language() {
+        Language::English => MANUAL,
+        Language::Spanish => MANUAL_ES,
+    }
+}
+
 impl LineupApp {
     pub(super) fn about_window(&mut self, ctx: &egui::Context) {
         if !self.about_open {
             return;
         }
         let mut open = self.about_open;
-        let (book, book_pdf) = match i18n::current_language() {
-            Language::English => (BOOK, BOOK_PDF),
-            Language::Spanish => (BOOK_ES, BOOK_ES_PDF),
+        let (manual_pdf, book, book_pdf) = match i18n::current_language() {
+            Language::English => (MANUAL_PDF, BOOK, BOOK_PDF),
+            Language::Spanish => (MANUAL_ES_PDF, BOOK_ES, BOOK_ES_PDF),
         };
         egui::Window::new(tr("About Ferrous Lineup"))
             .id(egui::Id::unique("about"))
@@ -48,6 +64,8 @@ impl LineupApp {
                 ));
                 ui.hyperlink_to(tr("Read the license"), LICENSE);
                 ui.separator();
+                ui.hyperlink_to(tr("User manual"), manual());
+                ui.hyperlink_to(tr("User manual (PDF)"), manual_pdf);
                 ui.hyperlink_to(tr("The book"), book);
                 ui.hyperlink_to(tr("The book (PDF)"), book_pdf);
                 ui.hyperlink_to(tr("Source code"), env!("CARGO_PKG_REPOSITORY"));

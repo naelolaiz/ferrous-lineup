@@ -1494,6 +1494,40 @@ fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
     crate::i18n::Language::English.set();
 }
 
+/// Clicks the link or button labelled `label` and gives the pages the
+/// click opened in the browser.
+fn opened_by(screen: &mut Screen, label: &str) -> Vec<String> {
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let pos = text_rect(&output, label)
+        .unwrap_or_else(|| panic!("Missing control: {label}"))
+        .center();
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    let output = screen.draw(vec![Event::PointerButton {
+        pos,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+    output
+        .platform_output
+        .commands
+        .iter()
+        .filter_map(|command| match command {
+            egui::OutputCommand::OpenUrl(open) => Some(open.url.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
 #[test]
 fn help_about_shows_the_version_the_license_and_where_the_book_is() {
     let mut screen = Screen::new();
@@ -1507,6 +1541,8 @@ fn help_about_shows_the_version_the_license_and_where_the_book_is() {
         "Ferrous Lineup",
         &version,
         "Read the license",
+        "User manual",
+        "User manual (PDF)",
         "The book",
         "The book (PDF)",
         "Source code",
@@ -1515,32 +1551,39 @@ fn help_about_shows_the_version_the_license_and_where_the_book_is() {
         assert!(text_rect(&output, text).is_some(), "{text}");
     }
     // A link opens its page in the browser.
-    let book = text_rect(&output, "The book").unwrap().center();
-    screen.draw(vec![
-        Event::PointerMoved(book),
-        Event::PointerButton {
-            pos: book,
-            button: PointerButton::Primary,
-            pressed: true,
-            modifiers: Modifiers::NONE,
-        },
-    ]);
-    let output = screen.draw(vec![Event::PointerButton {
-        pos: book,
-        button: PointerButton::Primary,
-        pressed: false,
-        modifiers: Modifiers::NONE,
-    }]);
-    let opened: Vec<&str> = output
-        .platform_output
-        .commands
-        .iter()
-        .filter_map(|command| match command {
-            egui::OutputCommand::OpenUrl(open) => Some(open.url.as_str()),
-            _ => None,
-        })
-        .collect();
-    assert_eq!(opened, ["https://naelolaiz.github.io/ferrous-lineup/"]);
+    assert_eq!(
+        opened_by(&mut screen, "The book"),
+        ["https://naelolaiz.github.io/ferrous-lineup/"]
+    );
+    assert_eq!(
+        opened_by(&mut screen, "User manual (PDF)"),
+        ["https://naelolaiz.github.io/ferrous-lineup/manual/ferrous-lineup-manual.pdf"]
+    );
+}
+
+#[test]
+fn help_user_manual_opens_the_manual_in_the_apps_language() {
+    for (language, help, manual, url) in [
+        (
+            crate::i18n::Language::English,
+            "Help",
+            "User manual",
+            "https://naelolaiz.github.io/ferrous-lineup/manual/",
+        ),
+        (
+            crate::i18n::Language::Spanish,
+            "Ayuda",
+            "Manual de usuario",
+            "https://naelolaiz.github.io/ferrous-lineup/es/manual/",
+        ),
+    ] {
+        let mut screen = Screen::new();
+        crate::i18n::set_language(&screen.ctx, language);
+        screen.app.rack_open = false;
+        screen.click(help);
+        assert_eq!(opened_by(&mut screen, manual), [url]);
+    }
+    crate::i18n::Language::English.set();
 }
 
 #[test]
