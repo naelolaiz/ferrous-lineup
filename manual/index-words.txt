@@ -17,6 +17,7 @@
 About window: main-window.md#keys-that-work-everywhere
 Accelerando: tempo-meter-key.md#changing-tempo-partway-through
 Accompaniment follows chords: harmony-keys.md#playing-chords-to-the-band, midi.md#playing-chords-to-the-band
+Aksak: see Odd meter
 Another solo: soloist.md#trying-it
 Anticipation: see Push
 AppImage: installing.md#linux
@@ -24,36 +25,52 @@ Arpeggio: piano-roll.md#tools
 Arranger keyboard: harmony-keys.md#playing-chords-to-the-band, midi.md#playing-chords-to-the-band
 Audio output: settings.md#audio
 Autosave: see Recovering unsaved work
-Backbeat: channel-rack.md#writing-drums
+Backbeat: channel-rack.md#writing-drums, rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation
 Band: first-song.md#1-a-new-chord-sheet, first-song.md#4-pick-a-style, bigger-band.md#the-band-menu
+Bar: rhythm-and-meter.md#beats-and-bars
 Barre chord: bigger-band.md#how-the-guitar-plays
 Bars, inserting and deleting: chord-sheet.md#changing-the-bars, tempo-meter-key.md#inserting-and-deleting-bars
+Beat: rhythm-and-meter.md#beats-and-bars
 Bebop: soloist.md#notes-between-the-beats
+Borrowed chord: outside-the-key.md#borrowed-chords
 BPM: tempo-meter-key.md#tempo
 Break: stops.md#the-music
+Cadence: chord-functions.md#cadences
 Channel rack: main-window.md#the-windows, channel-rack.md
 Chop: bigger-band.md#how-the-guitar-plays
+Chord: chords.md
+Chord names: chords.md#writing-chord-names
+Chord recognition: chords.md#how-the-app-hears-chords
 Chord scale: soloist.md#chord-scales
 Chord sheet: chord-sheet.md, first-song.md#2-type-the-chords
 Chord sheet as text: chord-sheet.md#chord-sheets-as-text
 Chord tones: soloist.md#chord-tones-on-the-beat
 Choruses: first-song.md#6-give-it-a-form, song-form.md#the-form-row
 Chromatic approach: soloist.md#notes-between-the-beats
+Circle of fifths: chord-functions.md#roots-that-fall-a-fifth
+Clave: rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation
+Clef: lead-sheets.md#reading-a-lead-sheet
 Clip: patterns-and-playlist.md#placing-and-moving-clips
 Close harmony: bigger-band.md#close-harmony
 Command line: saving.md#opening-files-in-other-ways
 Comping: styles.md
+Compound meter: rhythm-and-meter.md#two-and-three
 Compressor: mixer.md#effects
+Concert pitch: lead-sheets.md#for-b-e-and-f-instruments
+Contrary motion: voice-leading.md#how-each-part-moves
+Count-in: practising.md#count-in-and-metronome
 Cross-stick: song-form.md#variations-a-and-b
 Damping: mixer.md#the-reverb
 Data folder: saving.md#recovering-unsaved-work
 Decay: mixer.md#the-reverb
 Delay: mixer.md#effects
 Demos: first-song.md#where-to-go-from-here, saving.md#demos-are-read-only
-Dominant: harmony-keys.md#the-keys
+Dominant: harmony-keys.md#the-keys, chord-functions.md#home-away-and-tension
+Dominant seventh: chords.md#seventh-chords, chord-functions.md#home-away-and-tension
 Draw: piano-roll.md#writing-notes
 Dropping files: saving.md#opening-files-in-other-ways
 Drums, writing: channel-rack.md#writing-drums
+Ear training: practising.md#ear-training-experimental
 Effects: mixer.md#effects
 End the song here: song-form.md#the-ending-home-and-held
 Ending: first-song.md#6-give-it-a-form, song-form.md#the-ending-home-and-held
@@ -67,16 +84,23 @@ File menu: saving.md#the-file-menu
 Fills: styles.md#finding-a-style, song-form.md#variations-a-and-b
 Find the key: keys-and-modes.md#finding-the-key-experimental
 Follow playhead: patterns-and-playlist.md#moving-around, settings.md#playback
+Forte number: sets-rows-micromodes.md#pitch-class-sets
+Four-part writing: voice-leading.md
+Function: chord-functions.md#home-away-and-tension
 General MIDI: sounds.md#an-instrument-for-each-channel, midi.md#sending-to-a-synthesizer, exporting.md#a-midi-file
 GeneralUser GS: sounds.md#the-first-play
 Ghost notes: piano-roll.md#seeing-the-other-parts
+Grouped beats: rhythm-and-meter.md#odd-meters
 Guide tones: soloist.md#chord-tones-on-the-beat
 Guitar: bigger-band.md#how-the-guitar-plays
+Half-diminished chord: chords.md#seventh-chords
 Harmony keys: main-window.md#the-windows, harmony-keys.md
+Hemiola: rhythm-and-meter.md#two-and-three
 Hi-hat: song-form.md#variations-a-and-b
 Hints: harmony-keys.md#the-controls-at-the-left
 Hold: stops.md
 Horn section: bigger-band.md#the-horn-section
+ii–V–I: chord-functions.md#roots-that-fall-a-fifth
 Import chord sheet: importing.md#chord-sheets-as-text
 Import MIDI file: importing.md#midi-files
 Import recording: importing.md#recordings-experimental
@@ -85,75 +109,106 @@ Instrument: sounds.md#an-instrument-for-each-channel
 Instrument lineup: bigger-band.md#the-band-menu
 Interface size: settings.md#appearance
 Interval: notes-and-scales.md#intervals
+Interval vector: sets-rows-micromodes.md#pitch-class-sets
 Intro: first-song.md#6-give-it-a-form, song-form.md#the-intro-a-turnaround
-Inversion: piano-roll.md#writing-notes
+Inversion: piano-roll.md#writing-notes, chords.md#slash-chords-and-inversions
 Key: keys-and-modes.md#the-key-of-a-song, first-song.md#5-the-tempo-and-the-key
 Key change: keys-and-modes.md#key-changes-in-a-song, tempo-meter-key.md#key-changes
+Key signature: lead-sheets.md#reading-a-lead-sheet
 Keys with two names: keys-and-modes.md#keys-with-two-names
+Kröpfl, Francisco: sets-rows-micromodes.md#micromodes
 Language: installing.md#the-first-start, settings.md#appearance
-Leading note: song-form.md#the-intro-a-turnaround
+Lead sheet: lead-sheets.md
+Leading tone: song-form.md#the-intro-a-turnaround, chord-functions.md#home-away-and-tension, voice-leading.md#the-leading-tone-rises
 Level meter: mixer.md#the-lines
 Library: main-window.md#the-patterns-and-library-panel, first-song.md#4-pick-a-style, styles.md
 Library settings: styles.md#the-library-settings
 Lineup Osc: sounds.md
 Lock: locks.md#locking-a-track
-Loop: patterns-and-playlist.md#the-strips-above-the-tracks
+Loop: patterns-and-playlist.md#the-strips-above-the-tracks, practising.md#looping-bars
 Loose: swing.md#loose-timing
 Master volume: mixer.md#the-lines
+Matrix: sets-rows-micromodes.md#the-row-window
 Menus: main-window.md#the-menus
+Meter: rhythm-and-meter.md
+Metronome: practising.md#count-in-and-metronome
+Micromode: sets-rows-micromodes.md#micromodes
 MIDI: midi.md
 MIDI channel: midi.md#sending-to-a-synthesizer
 MIDI file: importing.md#midi-files, exporting.md#a-midi-file
 MIDI keyboard: midi.md#connecting-a-keyboard
 MIDI Out: channel-rack.md#channels, midi.md#sending-to-a-synthesizer
 Mixer: mixer.md
+Modal interchange: see Borrowed chord
 Mode: keys-and-modes.md#the-modes
+Modulation: outside-the-key.md#pivot-chords-changing-key
 MP4: exporting.md#a-video
 Mute: channel-rack.md#reading-it, patterns-and-playlist.md#tracks, mixer.md#the-lines
+Neapolitan sixth: outside-the-key.md#the-neapolitan-sixth
 Neighbour note: soloist.md#notes-between-the-beats
+Ninth, eleventh and thirteenth chords: chords.md#ninths-elevenths-and-thirteenths
 No band: bigger-band.md#the-band-menu
 Non-chord tones: soloist.md#notes-between-the-beats
 Note naming: settings.md#harmony
+Note values: rhythm-and-meter.md#note-values-and-steps
+Odd meter: rhythm-and-meter.md#odd-meters
 Open recent: saving.md#the-file-menu
 Organ: bigger-band.md#strings-and-organ
 Pad: bigger-band.md#strings-and-organ
 Pan: mixer.md#the-lines, mixer.md#placing-the-band
+Parallel fifths and octaves: voice-leading.md#no-parallel-fifths-or-octaves
 Parallel key: keys-and-modes.md#major-and-minor-keys
 Passing note: soloist.md#notes-between-the-beats
 Pattern mode: patterns-and-playlist.md#pattern-mode-and-song-mode
 Patterns: patterns-and-playlist.md#patterns
+PDF: lead-sheets.md#the-lead-sheet-window
 Piano roll: main-window.md#the-windows, notes-and-scales.md#seeing-and-hearing-it-in-the-app, piano-roll.md
+Picardy third: outside-the-key.md#borrowed-chords
 Pickup: soloist.md#notes-between-the-beats
+Pitch-class set: sets-rows-micromodes.md#pitch-class-sets
+Pivot chord: outside-the-key.md#pivot-chords-changing-key
 Plain accents: styles.md#trying-a-style
 Play it again: locks.md#a-part-you-edit-stays-yours
 Playlist: main-window.md#the-playlist, patterns-and-playlist.md
+Polychord: chords.md#two-chords-at-once
 Power chord: bigger-band.md#how-the-guitar-plays
+Practice speed: practising.md#speed-and-tap-tempo
 Pre-delay: mixer.md#the-reverb
+Prime form: sets-rows-micromodes.md#pitch-class-sets
 Progression: styles.md#progressions-from-the-library
 Push: stops.md
 Quantize: piano-roll.md#tools, midi.md#recording
 Recording: midi.md#recording
 Recording import: importing.md#recordings-experimental
 Recovering unsaved work: saving.md#recovering-unsaved-work
+Rehearsal mark: lead-sheets.md#reading-a-lead-sheet
 Relative key: keys-and-modes.md#major-and-minor-keys
 Reset mix: mixer.md#the-lines
 Rest: stops.md
 Reverb: mixer.md#the-reverb
 Ride cymbal: song-form.md#variations-a-and-b
 Ritardando: tempo-meter-key.md#changing-tempo-partway-through
-Roman numeral: chord-sheet.md#reading-the-sheet
+Roman numeral: chord-sheet.md#reading-the-sheet, chord-functions.md#roman-numerals
 Roman numerals in minor keys: settings.md#harmony
+Row window: sets-rows-micromodes.md#the-row-window
 Sample: channel-rack.md#your-own-sounds
 Save: saving.md#the-file-menu
 Save changes?: saving.md#before-your-changes-are-lost
 Saving: first-song.md#7-save-it
 Scale: notes-and-scales.md#scales
+Secondary dominant: outside-the-key.md#secondary-dominants
 Sections: song-form.md#sections
 Send every channel: midi.md#sending-to-a-synthesizer
 Send over MIDI: midi.md#sending-to-a-synthesizer
+Serialism: sets-rows-micromodes.md#the-row-window
+Sesquiáltera: see Hemiola
+Sets window: sets-rows-micromodes.md#in-the-app
 Settings: settings.md#settings
+Seventh chord: chords.md#seventh-chords
 Shot: stops.md
+Show (chord sheet): sets-rows-micromodes.md#one-harmony-four-names
 Shuffle: swing.md#where-swing-doesnt-apply
+Slash chord: chords.md#slash-chords-and-inversions
 Snap: patterns-and-playlist.md#placing-and-moving-clips
 Snap to scale: piano-roll.md#writing-notes
 Solfège: notes-and-scales.md#letters-or-solfège
@@ -161,8 +216,10 @@ Solo: mixer.md#the-lines
 Soloist: soloist.md
 Song mode: patterns-and-playlist.md#pattern-mode-and-song-mode
 SoundFont: sounds.md
+Speed trainer: practising.md#the-speed-trainer
 Spelling: notes-and-scales.md#sharps-flats-and-spelling
 Status bar: main-window.md#the-status-bar
+Step: rhythm-and-meter.md#note-values-and-steps
 Steps: channel-rack.md#reading-it
 Stop-time: stops.md#the-music
 Strings: bigger-band.md#strings-and-organ
@@ -171,27 +228,33 @@ Style: first-song.md#4-pick-a-style, styles.md
 Style editor: style-editor.md
 Style for some bars: song-form.md#a-style-for-some-bars
 Styles folder: style-editor.md#saving-and-using-your-styles
-Subdominant: harmony-keys.md#the-keys
+Subdominant: harmony-keys.md#the-keys, chord-functions.md#home-away-and-tension
+Suspended chord: chords.md#suspended-chords
 Swing: swing.md, styles.md#trying-a-style
-Syncopation: stops.md#the-music
+Syncopation: stops.md#the-music, rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation
 Synthesizer: midi.md#sending-to-a-synthesizer
-Tap tempo: tempo-meter-key.md#tempo
+Tap tempo: tempo-meter-key.md#tempo, practising.md#speed-and-tap-tempo
 Tempo: first-song.md#5-the-tempo-and-the-key, main-window.md#the-toolbar, tempo-meter-key.md#tempo
 Tempo change: tempo-meter-key.md#changing-tempo-partway-through
 Time signature: tempo-meter-key.md#time-signatures
 Time signature change: tempo-meter-key.md#changing-time-signature-partway-through
-Tonic: harmony-keys.md#the-keys
+Tonic: harmony-keys.md#the-keys, chord-functions.md#home-away-and-tension
+Tonicization: outside-the-key.md#secondary-dominants
 Toolbar: main-window.md#the-toolbar
 Tools: piano-roll.md#tools
 Trace: settings.md#playback
 Tracks: patterns-and-playlist.md#tracks
 Transposing: piano-roll.md#tools
+Transposing instrument: lead-sheets.md#for-b-e-and-f-instruments
 Tresillo: bigger-band.md#the-horn-section
+Triad: chords.md#triads
 Triads, sevenths and ninths: harmony-keys.md#the-controls-at-the-left
 Trial pattern: styles.md#where-a-style-goes
-Triplet: swing.md#the-swing-control
+Triplet: swing.md#the-swing-control, rhythm-and-meter.md#note-values-and-steps
+Tritone: chord-functions.md#home-away-and-tension
 Tumbao: stops.md#the-music
 Turnaround: song-form.md#the-intro-a-turnaround
+Twelve-tone row: sets-rows-micromodes.md#twelve-tone-rows
 Typing chords: chord-sheet.md#typing-chords
 Typing keyboard to piano: midi.md#the-computer-keyboard
 Undo: settings.md#undo-and-redo
@@ -199,9 +262,10 @@ Vamp: song-form.md#the-intro-a-turnaround
 Variations a and b: song-form.md#variations-a-and-b
 Velocity: piano-roll.md#velocity
 Video: exporting.md#a-video
-Voice leading: piano-roll.md#seeing-the-other-parts
+Voice leading: piano-roll.md#seeing-the-other-parts, voice-leading.md
 WAV: channel-rack.md#your-own-sounds, exporting.md#a-sound-file
 Wet / dry: mixer.md#the-reverb
+What often comes next: chord-functions.md#what-often-comes-next
 Windows: settings.md#windows
 Write the chords the song plays: chord-sheet.md#writing-what-the-song-plays
 You play: locks.md#you-play

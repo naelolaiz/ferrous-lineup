@@ -20,19 +20,30 @@ Accelerando: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino
 Acentos simples: styles.md#probar-un-estilo
 Acerca de: main-window.md#teclas-que-funcionan-en-todas-partes
 Acompañamiento: styles.md
+Acorde: chords.md
+Acorde con barra: chords.md#acordes-con-barra-e-inversiones
+Acorde de séptima: chords.md#acordes-de-séptima
+Acorde pivote: outside-the-key.md#acordes-pivote-cambiar-de-tonalidad
+Acorde prestado: outside-the-key.md#acordes-prestados
+Acorde semidisminuido: chords.md#acordes-de-séptima
+Acorde suspendido: chords.md#acordes-suspendidos
 Ajustar a la escala: piano-roll.md#escribir-notas
 Ajuste (lista de reproducción): patterns-and-playlist.md#colocar-y-mover-clips
 Ajustes: settings.md#ajustes
 Ajustes de la Biblioteca: styles.md#los-ajustes-de-la-biblioteca
+Aksak: véase Métrica irregular
+Altura real: lead-sheets.md#para-instrumentos-en-si-mi-y-fa
 Amortiguación: mixer.md#la-reverberación
 Anacrusa: soloist.md#notas-entre-los-pulsos
 Anticipación: stops.md
 AppImage: installing.md#linux
 Aproximación cromática: soloist.md#notas-entre-los-pulsos
 Archivo MIDI: importing.md#archivos-midi, exporting.md#un-archivo-midi
+Armadura: lead-sheets.md#leer-una-partitura-guía
 Armonía cerrada: bigger-band.md#armonía-cerrada
 Arpegio: piano-roll.md#herramientas
 Autoguardado: véase Recuperar el trabajo sin guardar
+Backbeat: rhythm-and-meter.md#pulsos-fuertes-pulsos-débiles-y-síncopa
 Balance: mixer.md#las-líneas, mixer.md#ubicar-a-la-banda
 Banda: first-song.md#1-una-hoja-de-acordes-nueva, first-song.md#4-elige-un-estilo, bigger-band.md#el-menú-banda
 Barra de estado: main-window.md#la-barra-de-estado
@@ -44,8 +55,9 @@ Bloquear: locks.md#bloquear-una-pista
 Bordadura: soloist.md#notas-entre-los-pulsos
 BPM: tempo-meter-key.md#el-tempo
 Break: stops.md#la-música
-Bucle: patterns-and-playlist.md#las-franjas-sobre-las-pistas
+Bucle: patterns-and-playlist.md#las-franjas-sobre-las-pistas, practising.md#repetir-compases
 Buscar la tonalidad: keys-and-modes.md#buscar-la-tonalidad-experimental
+Cadencia: chord-functions.md#cadencias
 Calderón: stops.md#la-música
 Cambio de compás: tempo-meter-key.md#cambiar-de-compás-a-mitad-de-camino
 Cambio de tempo: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino
@@ -55,41 +67,55 @@ Carpeta de datos: saving.md#recuperar-el-trabajo-sin-guardar
 Carpeta de estilos: style-editor.md#guardar-y-usar-tus-estilos
 Cejilla: bigger-band.md#cómo-toca-la-guitarra
 Chop: bigger-band.md#cómo-toca-la-guitarra
+Cifrado americano: chords.md#escribir-los-nombres-de-los-acordes, lead-sheets.md#leer-una-partitura-guía
+Círculo de quintas: chord-functions.md#fundamentales-que-bajan-una-quinta
+Clave cubana: rhythm-and-meter.md#pulsos-fuertes-pulsos-débiles-y-síncopa
+Clave (de sol, de fa): lead-sheets.md#leer-una-partitura-guía
 Clip: patterns-and-playlist.md#colocar-y-mover-clips
 Colchón: bigger-band.md#cuerdas-y-órgano
+Compás (grupo de pulsos): rhythm-and-meter.md#pulsos-y-compases
 Compás (indicación de compás): tempo-meter-key.md#los-compases
 Compases, insertar y eliminar: chord-sheet.md#cambiar-los-compases, tempo-meter-key.md#insertar-y-eliminar-compases
 Comping: véase Acompañamiento
 Compresor: mixer.md#efectos
-Conducción de voces: piano-roll.md#ver-las-otras-partes
+Conducción de voces: piano-roll.md#ver-las-otras-partes, voice-leading.md
+Conjunto de clases de alturas: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
 Contratiempo: channel-rack.md#escribir-la-batería
 Cross-stick: song-form.md#variaciones-a-y-b
 Cuantizar: piano-roll.md#herramientas, midi.md#grabar
+Cuenta de entrada: practising.md#cuenta-de-entrada-y-metrónomo
 Cuerdas: bigger-band.md#cuerdas-y-órgano
 Decaimiento: mixer.md#la-reverberación
 Delay: mixer.md#efectos
 Demostraciones: first-song.md#por-dónde-seguir, saving.md#las-demostraciones-son-de-solo-lectura
 Deshacer: settings.md#deshacer-y-rehacer
 Dibujar: piano-roll.md#escribir-notas
-Dominante: harmony-keys.md#las-teclas
+Dominante: harmony-keys.md#las-teclas, chord-functions.md#casa-alejarse-y-tensión
+Dominante secundaria: outside-the-key.md#dominantes-secundarias
 Ecualizador: mixer.md#efectos
 Editor de estilos: style-editor.md
 Efectos: mixer.md#efectos
 El acompañamiento sigue los acordes: harmony-keys.md#tocar-acordes-para-la-banda, midi.md#tocar-acordes-para-la-banda
+Entrenador de velocidad: practising.md#el-entrenador-de-velocidad
+Entrenamiento auditivo: practising.md#entrenamiento-auditivo-experimental
 Enviar por MIDI: midi.md#enviar-a-un-sintetizador
 Enviar todos los canales: midi.md#enviar-a-un-sintetizador
 Escala: notes-and-scales.md#escalas
 Escala de acorde: soloist.md#escalas-de-acorde
 Escribir acordes: chord-sheet.md#escribir-acordes
 Escribir los acordes que toca la canción: chord-sheet.md#escribir-lo-que-toca-la-canción
+Escritura a cuatro voces: voice-leading.md
 Estilo: first-song.md#4-elige-un-estilo, styles.md
 Estilo para algunos compases: song-form.md#un-estilo-para-algunos-compases
 Exportar hoja de acordes: exporting.md#una-hoja-de-acordes-en-texto
 Exportar MIDI: exporting.md#un-archivo-midi
 Exportar video: exporting.md#un-video
 Exportar WAV: exporting.md#un-archivo-de-sonido
+Figuras: rhythm-and-meter.md#figuras-y-pasos
 Final: first-song.md#6-dale-una-forma, song-form.md#el-final-a-casa-y-sostenido
+Forma prima: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
 Formación de instrumentos: bigger-band.md#el-menú-banda
+Función: chord-functions.md#casa-alejarse-y-tensión
 General MIDI: sounds.md#un-instrumento-para-cada-canal, midi.md#enviar-a-un-sintetizador, exporting.md#un-archivo-midi
 GeneralUser GS: sounds.md#la-primera-reproducción
 Golpe: stops.md
@@ -97,6 +123,7 @@ Grabar: midi.md#grabar
 Guardar: first-song.md#7-guárdala, saving.md#el-menú-archivo
 ¿Guardar cambios?: saving.md#antes-de-perder-tus-cambios
 Guitarra: bigger-band.md#cómo-toca-la-guitarra
+Hemiola: rhythm-and-meter.md#dos-y-tres
 Herramientas: piano-roll.md#herramientas
 Hi-hat: song-form.md#variaciones-a-y-b
 Hoja de acordes: chord-sheet.md, first-song.md#2-escribe-los-acordes
@@ -104,56 +131,82 @@ Hoja de acordes como texto: chord-sheet.md#hojas-de-acordes-como-texto
 Homónima: keys-and-modes.md#tonalidades-mayores-y-menores
 Húmedo / seco: mixer.md#la-reverberación
 Idioma: installing.md#el-primer-arranque, settings.md#apariencia
+ii–V–I: chord-functions.md#fundamentales-que-bajan-una-quinta
 Importar archivo MIDI: importing.md#archivos-midi
 Importar grabación: importing.md#grabaciones-experimental
 Importar hoja de acordes: importing.md#hojas-de-acordes-en-texto
 Importar una grabación: véase Importar grabación
 Instalar: installing.md
 Instrumento: sounds.md#un-instrumento-para-cada-canal
+Instrumento transpositor: lead-sheets.md#para-instrumentos-en-si-mi-y-fa
+Intercambio modal: véase Acorde prestado
 Intervalo: notes-and-scales.md#intervalos
 Introducción: first-song.md#6-dale-una-forma, song-form.md#la-introducción-un-turnaround
-Inversión: piano-roll.md#escribir-notas
+Inversión: piano-roll.md#escribir-notas, chords.md#acordes-con-barra-e-inversiones
+Kröpfl, Francisco: sets-rows-micromodes.md#micromodos
+Letra de ensayo: lead-sheets.md#leer-una-partitura-guía
 Letras: notes-and-scales.md#solfeo-o-letras
 Línea de comandos: saving.md#abrir-archivos-de-otras-maneras
 Lineup Osc: sounds.md
 Lista de reproducción: main-window.md#la-lista-de-reproducción, patterns-and-playlist.md
+Matriz: sets-rows-micromodes.md#la-ventana-serie-dodecafónica
 Medidor de nivel: mixer.md#las-líneas
 Menú Archivo: saving.md#el-menú-archivo
 Menús: main-window.md#los-menús
+Métrica: rhythm-and-meter.md
+Métrica compuesta: rhythm-and-meter.md#dos-y-tres
+Métrica irregular: rhythm-and-meter.md#métricas-irregulares
+Metrónomo: practising.md#cuenta-de-entrada-y-metrónomo
 Mezclador: mixer.md
+Micromodo: sets-rows-micromodes.md#micromodos
 MIDI: midi.md
 Modo: keys-and-modes.md#los-modos
 Modo canción: patterns-and-playlist.md#modo-patrón-y-modo-canción
 Modo patrón: patterns-and-playlist.md#modo-patrón-y-modo-canción
+Modulación: outside-the-key.md#acordes-pivote-cambiar-de-tonalidad
+Mostrar (hoja de acordes): sets-rows-micromodes.md#una-armonía-cuatro-nombres
+Movimiento contrario: voice-leading.md#cómo-se-mueve-cada-parte
 MP4: exporting.md#un-video
 Muestra: channel-rack.md#tus-propios-sonidos
+Nombres de los acordes: chords.md#escribir-los-nombres-de-los-acordes
 Nomenclatura de notas: settings.md#armonía
 Nota de paso: soloist.md#notas-entre-los-pulsos
 Notas del acorde: soloist.md#notas-del-acorde-en-el-pulso
 Notas extrañas: soloist.md#notas-entre-los-pulsos
 Notas fantasma: piano-roll.md#ver-las-otras-partes
 Notas guía: soloist.md#notas-del-acorde-en-el-pulso
-Número romano: chord-sheet.md#leer-la-hoja
+Novenas, oncenas y trecenas: chords.md#novenas-oncenas-y-trecenas
+Número de Forte: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
+Número romano: chord-sheet.md#leer-la-hoja, chord-functions.md#números-romanos
 Números romanos en tonalidades menores: settings.md#armonía
 Órgano: bigger-band.md#cuerdas-y-órgano
 Ortografía: notes-and-scales.md#sostenidos-bemoles-y-ortografía
 Otro solo: soloist.md#probarlo
-Pasos: channel-rack.md#leerlo
+Partitura guía: lead-sheets.md
+Pasos: channel-rack.md#leerlo, rhythm-and-meter.md#figuras-y-pasos
 Patrón de prueba: styles.md#adónde-va-un-estilo
 Patrones: patterns-and-playlist.md#los-patrones
+PDF: lead-sheets.md#la-ventana-partitura-guía
 Piano roll: main-window.md#las-ventanas, notes-and-scales.md#verlo-y-oírlo-en-la-aplicación, piano-roll.md
 Pistas: patterns-and-playlist.md#las-pistas
 Pistas (explicaciones): harmony-keys.md#los-controles-de-la-izquierda
+Poliacorde: chords.md#dos-acordes-a-la-vez
 Power chord: bigger-band.md#cómo-toca-la-guitarra
 Predelay: mixer.md#la-reverberación
 Progresión: styles.md#progresiones-de-la-biblioteca
-Pulsar (tempo): tempo-meter-key.md#el-tempo
+Pulsar (tempo): tempo-meter-key.md#el-tempo, practising.md#velocidad-y-tempo-con-pulsaciones
+Pulso: rhythm-and-meter.md#pulsos-y-compases
+Pulsos agrupados: rhythm-and-meter.md#métricas-irregulares
+Qué suele venir después: chord-functions.md#qué-suele-venir-después
+Quintas y octavas paralelas: voice-leading.md#ni-quintas-ni-octavas-paralelas
 Rack de canales: main-window.md#las-ventanas, channel-rack.md
 Rasgueo: bigger-band.md#cómo-toca-la-guitarra
+Reconocimiento de acordes: chords.md#cómo-oye-los-acordes-la-aplicación
 Recuperar el trabajo sin guardar: saving.md#recuperar-el-trabajo-sin-guardar
 Registro: settings.md#reproducción
 Relativa: keys-and-modes.md#tonalidades-mayores-y-menores
 Rellenos: styles.md#buscar-un-estilo, song-form.md#variaciones-a-y-b
+Repetir compases: practising.md#repetir-compases
 Restablecer mezcla: mixer.md#las-líneas
 Reverberación: mixer.md#la-reverberación
 Ride: song-form.md#variaciones-a-y-b
@@ -163,12 +216,17 @@ Salida MIDI: channel-rack.md#los-canales, midi.md#enviar-a-un-sintetizador
 Sección de vientos: bigger-band.md#la-sección-de-vientos
 Secciones: song-form.md#secciones
 Seguir el cursor de reproducción: patterns-and-playlist.md#moverse, settings.md#reproducción
-Sensible: song-form.md#la-introducción-un-turnaround
+Sensible: song-form.md#la-introducción-un-turnaround, chord-functions.md#casa-alejarse-y-tensión, voice-leading.md#la-sensible-sube
+Séptima de dominante: chords.md#acordes-de-séptima, chord-functions.md#casa-alejarse-y-tensión
+Serialismo: sets-rows-micromodes.md#la-ventana-serie-dodecafónica
+Serie dodecafónica: sets-rows-micromodes.md#series-dodecafónicas
+Sesquiáltera: véase Hemiola
+Sexta napolitana: outside-the-key.md#la-sexta-napolitana
 Shuffle: swing.md#dónde-no-se-aplica-el-swing
 Silenciar: channel-rack.md#leerlo, patterns-and-playlist.md#las-pistas, mixer.md#las-líneas
 Silencio: stops.md
 Sin banda: bigger-band.md#el-menú-banda
-Síncopa: stops.md#la-música
+Síncopa: stops.md#la-música, rhythm-and-meter.md#pulsos-fuertes-pulsos-débiles-y-síncopa
 Sintetizador: midi.md#enviar-a-un-sintetizador
 Solfeo: notes-and-scales.md#solfeo-o-letras
 Solista: soloist.md
@@ -178,7 +236,7 @@ Soltura: swing.md#tiempo-suelto
 Sostenido (marca de la banda): stops.md
 SoundFont: sounds.md
 Stop-time: stops.md#la-música
-Subdominante: harmony-keys.md#las-teclas
+Subdominante: harmony-keys.md#las-teclas, chord-functions.md#casa-alejarse-y-tensión
 Swing: swing.md, styles.md#probar-un-estilo
 Tamaño de la interfaz: settings.md#apariencia
 Teclado arreglador: harmony-keys.md#tocar-acordes-para-la-banda
@@ -187,19 +245,27 @@ Teclado del equipo como piano: midi.md#el-teclado-del-equipo
 Teclado MIDI: midi.md#conectar-un-teclado
 Teclas de armonía: main-window.md#las-ventanas, harmony-keys.md
 Tempo: first-song.md#5-el-tempo-y-la-tonalidad, main-window.md#la-barra-de-herramientas, tempo-meter-key.md#el-tempo
+Tercera de picardía: outside-the-key.md#acordes-prestados
 Terminar la canción aquí: song-form.md#el-final-a-casa-y-sostenido
 Tocas tú: locks.md#tocas-tú
 Tonalidad: keys-and-modes.md#la-tonalidad-de-una-canción, first-song.md#5-el-tempo-y-la-tonalidad
 Tonalidades con dos nombres: keys-and-modes.md#tonalidades-con-dos-nombres
-Tónica: harmony-keys.md#las-teclas
+Tónica: harmony-keys.md#las-teclas, chord-functions.md#casa-alejarse-y-tensión
+Tonicalización: outside-the-key.md#dominantes-secundarias
 Transportar: piano-roll.md#herramientas
-Tresillo: swing.md#el-control-swing, bigger-band.md#la-sección-de-vientos
+Tresillo: swing.md#el-control-swing, bigger-band.md#la-sección-de-vientos, rhythm-and-meter.md#figuras-y-pasos
+Tríada: chords.md#tríadas
 Tríadas, séptimas y novenas: harmony-keys.md#los-controles-de-la-izquierda
+Tritono: chord-functions.md#casa-alejarse-y-tensión
 Tumbao: stops.md#la-música
 Turnaround: song-form.md#la-introducción-un-turnaround
 Vamp: song-form.md#la-introducción-un-turnaround
 Variaciones a y b: song-form.md#variaciones-a-y-b
+Vector interválico: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
 Velocidad: piano-roll.md#velocidad
+Velocidad de práctica: practising.md#velocidad-y-tempo-con-pulsaciones
+Ventana Conjuntos: sets-rows-micromodes.md#en-la-aplicación
+Ventana Serie dodecafónica: sets-rows-micromodes.md#la-ventana-serie-dodecafónica
 Ventanas: settings.md#ventanas
 Video: exporting.md#un-video
 Volumen principal: mixer.md#las-líneas
