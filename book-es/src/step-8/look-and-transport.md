@@ -10,7 +10,7 @@ y [`crates/lineup-app/src/playlist.rs`](https://github.com/naelolaiz/ferrous-lin
 Hasta aquí, la app usaba el estilo oscuro de serie de egui, y se notaba:
 una fila larga de botones de texto planos, nada que dijera qué hace un
 control salvo que esperaras a un tooltip, y ninguna muestra de dónde
-está la canción. Peor aún, el transport era un único botón Play/Stop que
+está la canción. Peor aún, el transporte era un único botón ▶/⏹ que
 siempre empezaba desde el principio. No podías pausar, no podías saltar
 al compás 9 para oír el estribillo, y no podías insertar ni borrar una
 pista. Esta página arregla todo eso:
@@ -24,7 +24,7 @@ pista. Esta página arregla todo eso:
   que está bajo el ratón.
 - **Botones de transport**: ir al principio, un compás atrás,
   reproducir/pausar, detener, un compás adelante, grabar. Haz clic en
-  los números de compás del playlist para mover el cabezal de
+  los números de compás de la lista de reproducción para mover el cabezal de
   reproducción.
 - **Editar pistas**: haz clic derecho en el nombre de una pista para
   insertar, mover o borrar pistas.
@@ -35,12 +35,12 @@ pista. Esta página arregla todo eso:
 
 | Haz esto | Para |
 |---|---|
-| ▶ o Space | reproducir desde el cabezal de reproducción |
+| ▶ o Espacio | reproducir desde el cabezal de reproducción |
 | ❚❚ (mientras suena) | pausar; ▶ sigue desde ahí |
-| ⏹ o Space (mientras suena) | detener y volver a donde pusiste el cabezal de reproducción por última vez |
-| ⏮ o Home | ir al principio |
-| ◀◀ ▶▶ o Page Up, Page Down | mover un compás atrás o adelante |
-| haz clic en los números de compás del playlist | poner el cabezal de reproducción ahí (arrastrar sigue marcando el loop) |
+| ⏹ o Espacio (mientras suena) | detener y volver a donde pusiste el cabezal de reproducción por última vez |
+| ⏮ o Inicio | ir al principio |
+| ◀◀ ▶▶ o RePág, AvPág | mover un compás atrás o adelante |
+| haz clic en los números de compás de la lista de reproducción | poner el cabezal de reproducción ahí (arrastrar sigue marcando el bucle) |
 | haz clic derecho en el nombre de una pista | insertar una pista encima o debajo, moverla o borrarla |
 
 ## Un tema es una función
@@ -89,7 +89,7 @@ Tres cosas que hay que notar:
   nada cuando la app se ejecuta.
 
 Las vistas siguen teniendo sus propias constantes para las cosas que
-solo dibujan ellas (las filas del playlist, las teclas del piano roll,
+solo dibujan ellas (las filas de la lista de reproducción, las teclas del piano roll,
 los botones de paso). Esas simplemente recibieron valores nuevos que
 pegan con el tema.
 
@@ -179,7 +179,7 @@ Un frame de retraso es invisible a 60 frames por segundo, y el código
 sigue siendo sencillo. Es un truco habitual en las UIs de modo
 inmediato.
 
-## El transport: ¿dónde empieza Play?
+## El transporte: ¿dónde empieza la reproducción?
 
 Antes, `Command::Play` siempre reiniciaba el sequencer en el paso 0.
 Pausar y saltar necesitan una idea nueva: una **posición de inicio**. El
@@ -220,7 +220,7 @@ nunca.
 Todo lo demás es contabilidad en la app, con dos números:
 
 - `cursor`: dónde empieza la reproducción o desde dónde sigue;
-- `marker`: adónde vuelve Stop, el último lugar donde pusiste el cabezal
+- `marker`: adónde vuelve ⏹, el último lugar donde pusiste el cabezal
   de reproducción.
 
 ```rust
@@ -246,7 +246,7 @@ fn set_playing(&mut self, playing: bool) {
 
 Así se comportan los estudios basados en patrones: pausar mantiene tu
 sitio, detener te lleva de vuelta a donde empezaste a escuchar, para que
-puedas oír el mismo pasaje una y otra vez con Space.
+puedas oír el mismo pasaje una y otra vez con Espacio.
 
 ### Saltar con repeticiones
 
@@ -269,7 +269,7 @@ self.seek(step);
 dentro de un estribillo repetido va a su primera pasada. Un rango como
 `a..b` es un valor en Rust, con métodos como `contains`.
 
-La regla de compases ya usaba el arrastre para la región de loop. egui
+La regla de compases ya usaba el arrastre para la región de bucle. egui
 distingue un clic de un arrastre: `Sense::click_and_drag()` comunica
 `clicked()` solo cuando el ratón no se movió mucho entre pulsar y
 soltar, y `drag_started()` solo cuando sí lo hizo. Así que ambos viven

@@ -9,9 +9,9 @@ una vez escritos, y más ayuda para decidir qué escribir a continuación:
 - **seleccionar notas**: Ctrl+clic en una nota para seleccionarla (o
   sacarla de la selección), Ctrl+arrastrar sobre el espacio vacío para
   seleccionar todas las notas de un recuadro, Ctrl+A para seleccionarlas
-  todas, Escape para no seleccionar ninguna. Las notas seleccionadas
+  todas, Esc para no seleccionar ninguna. Las notas seleccionadas
   tienen un borde blanco. Arrastrar una de ellas las mueve todas,
-- **un menú Tools**, con una tecla para la mayoría de las
+- **un menú Herramientas**, con una tecla para la mayoría de las
   herramientas, que cambia las notas seleccionadas, o todas las notas
   cuando no hay ninguna seleccionada: moverlas hacia arriba o hacia
   abajo un semitono, una octava o una nota *de la tonalidad* (Do, Mi, Sol
@@ -48,7 +48,7 @@ es una acción, vaya lo lejos que vaya.
 
 ![Apuntando al acorde Do: la línea sobre la cuadrícula dice qué suele venir después de él, y esos botones de acordes se iluminan.](../images/step-6-suggestions.png)
 
-![El menú Tools, con el acorde La menor seleccionado (bordes blancos)](../images/step-6-tools.png)
+![El menú Herramientas, con el acorde La menor seleccionado (bordes blancos)](../images/step-6-tools.png)
 
 ![El mismo acorde después de «Arpegiar acordes», arriba y abajo, una nota cada step](../images/step-6-arpeggio.png)
 
@@ -58,29 +58,29 @@ es una acción, vaya lo lejos que vaya.
 
 Las teclas funcionan después de un clic en cualquier punto de la ventana
 del piano roll y dejan de funcionar después de un clic fuera de ella,
-para que nunca te sorprendan mientras trabajas en la playlist.
+para que nunca te sorprendan mientras trabajas en la lista de reproducción.
 
 | Haces esto | Para |
 |------------|------|
 | Ctrl+clic en una nota | añadirla a la selección, o sacarla |
 | Ctrl+arrastrar sobre el espacio vacío | seleccionar las notas de un recuadro |
 | Ctrl+A | seleccionar todas las notas |
-| Escape | no seleccionar ninguna |
+| Esc | no seleccionar ninguna |
 | arrastrar una nota seleccionada | mover todas las notas seleccionadas |
 | ↑ / ↓ | mover las notas un semitono |
-| Shift+↑ / Shift+↓ | mover las notas una octava |
+| Mayús+↑ / Mayús+↓ | mover las notas una octava |
 | Alt+↑ / Alt+↓ | mover las notas una nota de la tonalidad |
 | ← / → | mover las notas un step |
-| Shift+← / Shift+→ | mover las notas un pulso |
-| Delete o Backspace | eliminar las notas seleccionadas |
+| Mayús+← / Mayús+→ | mover las notas un pulso |
+| Supr o Retroceso | eliminar las notas seleccionadas |
 | clic o arrastre en el carril de velocidad | fijar con qué fuerza se tocan las notas |
-| Tools > Snap to the key | meter en la tonalidad las notas que están fuera |
-| Tools > Invert chords up / down | invertir cada acorde una vez |
-| Tools > Arpeggiate chords | convertir acordes en arpegios |
+| Herramientas > Ajustar a la tonalidad | meter en la tonalidad las notas que están fuera |
+| Herramientas > Invertir los acordes hacia arriba / abajo | invertir cada acorde una vez |
+| Herramientas > Arpegiar los acordes | convertir acordes en arpegios |
 
 En un Mac, usa ⌘ en lugar de Ctrl y Option en lugar de Alt. Cuando no
 hay ninguna nota seleccionada, las herramientas cambian todas las notas
-del canal, excepto Delete, que nunca elimina notas que no hayas
+del canal, excepto Supr, que nunca elimina notas que no hayas
 seleccionado.
 
 ## Lo que no está aquí: una herramienta de rasgueo
@@ -95,7 +95,7 @@ step empieza realmente, y `trim`, cuántos ticks antes del final de su
 último step se detiene. Un step se divide en 24 ticks, así que a 130 BPM
 un tick son unos 4,8 milisegundos: suficiente para un rasgueo. La
 importación de MIDI ya usa esto para conservar las notas que no caen
-sobre la cuadrícula, y Tools > Quantize to the steps las devuelve
+sobre la cuadrícula, y Herramientas > Cuantizar a los pasos las devuelve
 a ella. La guitarra de la banda, en un paso posterior, rasguea sus
 acordes desplazando cada cuerda un tick más tarde que la de abajo
 (`crates/lineup-core/src/band/guitar.rs`).
@@ -117,7 +117,7 @@ El formato de archivo no necesita un campo nuevo para el primero;
     pattern.rs:                     replace_notes, can_replace_notes, tidy_notes
 
   lineup-app
-    piano_roll.rs: la selección, el menú Tools y sus teclas, inversiones,
+    piano_roll.rs: la selección, el menú Herramientas y sus teclas, inversiones,
                    sugerencias, notas fantasma, el carril de velocidad
     app.rs:        aplica RollAction::ReplaceNotes mediante edit_pattern
 ```

@@ -12,14 +12,13 @@ desconocidas, o los acordes tocados por la entrada MIDI y el contexto de
 los compases anteriores? Si no está claro, debería resaltar la mejor
 coincidencia y las otras alternativas (menos resaltadas)».*
 
-Hasta ahora, una tonalidad venía de algún sitio: el menú Key del
+Hasta ahora, una tonalidad venía de algún sitio: el menú Tonalidad del
 proyecto, un marcador de tonalidad, una armadura en un archivo MIDI, o
 una deducción para una grabación entera. A las propias notas nunca se
 les preguntaba. Este capítulo enseña a la app a escuchar la tonalidad,
 compás a compás, y a decirlo cuando no está segura.
 
-Es un experimento, así que está apagado hasta que actives **🔍 Find the
-key** bajo las harmony keys.
+Es un experimento, así que está apagado hasta que actives **🔍 Buscar la tonalidad** bajo las teclas de armonía.
 
 ## Cómo suena una tonalidad
 
@@ -95,7 +94,7 @@ se eligieron midiendo (mira más abajo): en el informe actual, una
 tonalidad mostrada como clara acierta en 13.900 de 16.153 compases,
 alrededor del 86%.
 
-![Find the key en Dorian Strut, una canción en Mi dórico: las notas encajan mejor en La menor, con Mi menor y La mayor cerca y más tenues. Cada tonalidad muestra qué es en ella el acorde que suena, A7.](../images/step-8-find-key-unclear.png)
+![Buscar la tonalidad en Dorian Strut, una canción en Mi dórico: las notas encajan mejor en La menor, con Mi menor y La mayor cerca y más tenues. Cada tonalidad muestra qué es en ella el acorde que suena, A7.](../images/step-8-find-key-unclear.png)
 
 Mi dórico usa las mismas notas que La menor y Sol mayor, así que los
 perfiles no pueden elegir su nota hogar con confianza, y la app lo dice:
@@ -146,7 +145,7 @@ encajar en la tonalidad vieja a encajar en la nueva. En la Habanera de
 Bizet se vuelve Re mayor.
 
 `Project::heard_keys` hace todo esto con las notas de una canción:
-cuentan los sintetizadores y los canales MIDI Out, no la batería ni los
+cuentan los sintetizadores y los canales de salida MIDI, no la batería ni los
 samplers (como una grabación importada), y cada nota cuenta mientras
 suene en cada compás. Devuelve `KeySpan`s: un comienzo, un final y todas
 las tonalidades ordenadas.
@@ -162,7 +161,7 @@ solo después de ir por delante durante dos compases seguidos.
 
 Los compases anteriores a tu entrada también cuentan. Cuando empiezas a
 tocar, el listener arranca creyéndose la tonalidad en la que está la
-música a su alrededor (las notas en el playhead, o la tonalidad del
+música a su alrededor (las notas en el cursor de reproducción, o la tonalidad del
 proyecto), como si hubiera oído un compás en esa tonalidad. Toca Do, Fa
 y G7 sobre una canción en Mi dórico y primero los oye a la luz de La
 menor; unos compases después se asienta en Do mayor, claro.
@@ -212,9 +211,9 @@ Dos correcciones importaron:
   El informe más grande de abajo usa solo los agudos y la misma
   corrección.
 
-## Ponerlo en el playlist
+## Ponerlo en la lista de reproducción
 
-En modo canción, la barra ofrece **Mark on the playlist**: los cambios
+En modo canción, la barra ofrece **Marcar en la lista de reproducción**: los cambios
 de tonalidad oídos en toda la canción se vuelven marcadores de
 tonalidad (mira el capítulo sobre los cambios de tonalidad), el primero
 de ellos la tonalidad con la que empieza la canción. Ninguna nota se
@@ -265,7 +264,7 @@ Dónde falla, y por qué:
 
 ## Ejercicios
 
-1. Abre la Habanera, activa Find the key y haz clic en el compás 2 y
+1. Abre la Habanera, activa Buscar la tonalidad y haz clic en el compás 2 y
    luego en el 11 en la regla. ¿Dónde cambia exactamente la tonalidad,
    y por qué el estribillo en Re mayor no es solo «la misma melodía en
    otra tonalidad»?

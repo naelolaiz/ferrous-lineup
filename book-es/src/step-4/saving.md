@@ -6,16 +6,16 @@ y [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-li
 ## Cómo es un archivo de proyecto
 
 Un archivo `.lineup` es texto plano. Para ver uno, arranca la app, elige
-una demo en File > Demos, luego usa File > Save As… y abre el
+una demo en Archivo > Demostraciones, luego usa Archivo > Guardar As… y abre el
 archivo guardado en un editor de texto:
 
 ```sh
 cargo run --release
-# File > Demos > The starting song, then File > Save As… song.lineup
+# Archivo > Demostraciones > La canción inicial, luego Archivo > Guardar como… song.lineup
 head -n 30 song.lineup
 ```
 
-Un proyecto nuevo (File > New) todavía no tiene notas, así que su
+Un proyecto nuevo (Archivo > Nuevo) todavía no tiene notas, así que su
 archivo es corto. Este es el comienzo real del archivo que escribe
 `Project::template()`:
 
@@ -266,7 +266,7 @@ archivo no siempre lo usa: `format_for` escribe el formato más **bajo** que
 puede contener el proyecto. Un proyecto que no usa nada nuevo se queda en
 formato 1, para que un Ferrous Lineup más viejo pueda seguir abriéndolo.
 La canción de inicio necesita el formato 9, porque su canal de
-sintetizador toca un programa General MIDI; una canción con chord sheet
+sintetizador toca un programa General MIDI; una canción con hoja de acordes
 necesita al menos el formato 12; y así sucesivamente. La lista actual
 llega hasta 27, para una batería enviada por MIDI. Cada entrada del largo
 comentario encima de `FORMAT_VERSION` dice qué añadió esa versión y qué
@@ -428,7 +428,7 @@ archivos temporales (`/tmp` en Linux, algo dentro de tu carpeta de usuario
 en Windows), con el id del proceso en el nombre para que dos ejecuciones
 de pruebas a la vez no colisionen, y borran el archivo después.
 
-## En la app: menú File, atajos de teclado y barra de título
+## En la app: menú Archivo, atajos de teclado y barra de título
 
 El lado de la app está en `crates/lineup-app/src/app/files.rs`. Sus
 primeras líneas explican un layout poco habitual:
@@ -554,7 +554,7 @@ con todos los clics:
 
 Guardar guarda y después lleva a cabo la acción que esperaba, a menos que
 guardar fallara o el usuario cancelara el diálogo de Guardar como; No
-guardar la lleva a cabo inmediatamente; Cancelar, Escape o un clic fuera
+guardar la lleva a cabo inmediatamente; Cancelar, Esc o un clic fuera
 la olvida. El valor `pending` es toda la máquina de estados: `None`
 significa «nada esperando», `Some(Pending::Open)` significa «el usuario
 quiere abrir un archivo, en cuanto decida sobre los cambios».
@@ -595,12 +595,12 @@ if pressed(SAVE_AS) {
 ```
 
 - `Modifiers::COMMAND` es Ctrl en Linux y Windows y ⌘ en macOS, así que
-  cada sistema tiene el atajo que esperan sus usuarios. El menú File
+  cada sistema tiene el atajo que esperan sus usuarios. El menú Archivo
   muestra también el correcto: `ctx.format_shortcut(&SAVE)` da «Ctrl+S» o
   «⌘S».
 - `consume_shortcut` comprueba las teclas y las retira de la entrada, para
   que un campo de texto no las vea también.
-- Ctrl+S también encajaría con Ctrl+Shift+S (el Shift extra se ignora),
+- Ctrl+S también encajaría con Ctrl+Mayús+S (el Mayús extra se ignora),
   así que el atajo más largo se comprueba primero.
 
 Estos valores `const` llaman a `KeyboardShortcut::new` mientras se
@@ -630,4 +630,4 @@ del propio programa.
 
 Un archivo `.lineup` soltado sobre la ventana también se abre, tras la
 misma pregunta «¿Guardar los cambios?». Los archivos WAV soltados siguen
-yendo al channel rack.
+yendo al rack de canales.

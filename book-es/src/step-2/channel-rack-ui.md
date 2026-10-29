@@ -1,4 +1,4 @@
-# La interfaz del channel rack
+# La interfaz del rack de canales
 
 Archivos:
 [`channel_rack.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/channel_rack.rs),
@@ -117,10 +117,10 @@ name.context_menu(|ui| {
 ```
 
 `context_menu` abre un menú con clic derecho; `menu_button` abre uno con
-un clic normal (el botón «Add channel»). Ambos reciben un closure que
+un clic normal (el botón «Añadir canal»). Ambos reciben un closure que
 dibuja el contenido del menú, y `ui.close()` lo cierra tras una
 elección. `add_enabled_ui(false, ...)` pone en gris todo lo de dentro,
-que es como se desactiva «Add channel» cuando el rack está lleno.
+que es como se desactiva «Añadir canal» cuando el rack está lleno.
 
 ## Arrastrar y soltar
 
@@ -144,10 +144,10 @@ porque leer archivos es lento y nunca debe ocurrir en el hilo de audio.
 Un archivo roto deja el canal como estaba y pone el motivo en la barra
 de estado.
 
-## Mantener el playhead en movimiento
+## Mantener el cursor de reproducción en movimiento
 
 egui solo redibuja cuando pasa algo, como un movimiento de ratón.
-Mientras el patrón se reproduce, el playhead cambia solo, así que la app
+Mientras el patrón se reproduce, el cursor de reproducción cambia solo, así que la app
 pide redibujados continuos:
 
 ```rust

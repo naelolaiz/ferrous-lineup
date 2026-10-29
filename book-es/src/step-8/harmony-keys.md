@@ -1,4 +1,4 @@
-# Las harmony keys
+# Las teclas de armonía
 
 Archivos: [`crates/lineup-core/src/harmony/keys.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/harmony/keys.rs),
 [`crates/lineup-core/src/library/voicing.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/voicing.rs),
@@ -32,7 +32,7 @@ Cada acorde hace uno de tres trabajos en la tonalidad. Esto se llama su
 La mayoría de las canciones recorren este círculo una y otra vez:
 hogar, lejos, tensión, hogar. *I IV V I* es la versión más sencilla;
 *ii V I* es la versión de jazz; *vi IV I V* es el mismo paseo empezando
-desde un hogar más triste. Las harmony keys están coloreadas por
+desde un hogar más triste. Las teclas de armonía están coloreadas por
 función, azul, verde y naranja, para que veas el paseo mientras lo
 oyes.
 
@@ -42,11 +42,11 @@ menores: el acorde sobre V es **mayor**. El V natural de La menor es Mi
 menor, Mi Sol Si. Subir el Sol a Sol♯ da Mi mayor, Mi Sol♯ Si, y ese Sol♯ está un
 semitono por debajo de la tónica La: una *sensible* que tira hacia ella.
 Esa nota elevada es lo que es la escala menor armónica, así que las
-harmony keys toman su V de ahí.
+teclas de armonía toman su V de ahí.
 
 ## El modelo: `chord_keys`
 
-Las harmony keys son teoría musical pura, así que viven en
+Las teclas de armonía son teoría musical pura, así que viven en
 `lineup-core`, con pruebas, y no saben nada de egui:
 
 ```rust
@@ -93,7 +93,7 @@ pub enum ChordSize {
 Las novenas apilan cinco notas, y en dos grados de una tonalidad mayor
 (iii y vii) la quinta nota cae un semitono por encima de la fundamental,
 una octava más arriba. Esa «novena menor» choca, y los intérpretes la
-omiten, así que `Scale::ninth` devuelve `None` ahí y la harmony key
+omiten, así que `Scale::ninth` devuelve `None` ahí y la tecla de armonía
 recurre al acorde de séptima:
 
 ```rust
@@ -109,7 +109,7 @@ esto».
 Pulsar **Do** y luego **Fa** podría tocar Do Mi Sol y después Fa La Do, con las
 tres notas saltando hacia arriba. Un pianista no lo haría: de Do Mi Sol pasa
 a Do Fa La, mantiene el Do y mueve los otros dos dedos un paso cada uno. Eso
-es **voice leading**, y es la mayor parte de lo que hace que los
+es **conducción de voces**, y es la mayor parte de lo que hace que los
 acordes suenen suaves en lugar de mecánicos.
 
 `library::voicing::voice` hace esto. Prueba cada inversión del acorde
@@ -134,7 +134,7 @@ pub fn voice(chord: Chord, previous: Option<&[Note]>) -> Vec<Note> {
 closure da el número más pequeño. `distance` suma, para cada nota de un
 acorde, lo lejos que está de la nota más cercana del otro.
 
-Las harmony keys recuerdan el último voicing, y `keys::play` añade la
+Las teclas de armonía recuerdan el último voicing, y `keys::play` añade la
 fundamental del acorde debajo, como haría una mano izquierda:
 
 ```rust
@@ -163,7 +163,7 @@ devolver dos cosas; quien la llama la desmonta con
 ## Mantener una tecla pulsada
 
 Los botones de egui se *pulsan*: el clic ocurre cuando el botón del
-ratón sube. Una harmony key no es un botón, es una tecla. Su acorde debe
+ratón sube. Una tecla de armonía no es un botón, es una tecla. Su acorde debe
 empezar cuando el ratón baja y parar cuando sube. egui también responde
 a esa pregunta: `Response::is_pointer_button_down_on()` es `true` en
 cada frame mientras el botón del ratón está pulsado sobre ese widget.
@@ -209,8 +209,8 @@ HarmonyAction::NoteOn(notes) => {
 `play_typed` las envía al hilo de audio, que las toca en el canal
 seleccionado, y a `key_played`, que guarda la lista de teclas pulsadas
 y las graba. Así que el acorde recibe su nombre en la barra de estado,
-se ilumina en el piano roll y se graba con **● Rec**, sin que nada de
-ese código sepa que las harmony keys existen. Reutilizar un camino ya
+se ilumina en el piano roll y se graba con **⏺**, sin que nada de
+ese código sepa que las teclas de armonía existen. Reutilizar un camino ya
 probado es más barato y más seguro que construir un segundo.
 
 ## ¿Qué acorde está sonando?
@@ -287,15 +287,15 @@ sonando no ha cambiado: se sigue calculando a partir de las notas en el
 cabezal de reproducción, como arriba, así que también sigue los cambios
 de tempo.
 
-La línea de ayuda, los tooltips de las teclas y la fila «Chords in»
+La línea de ayuda, los tooltips de las teclas y la fila «Acordes en»
 del piano roll explican en uno de tres niveles, elegido en el pequeño
 menú del principio de la línea de ayuda:
 
 | Nivel | Tras Do, la línea de ayuda dice |
 |---|---|
-| Detailed | Tras C, F suele venir después: I a IV: alejarse del hogar, hacia la dominante. |
-| Short (por defecto) | Do → Fa: lejos del hogar |
-| Minimal | Do → Fa |
+| Detallado | Después de Do, suele seguir Fa: I a IV: se aleja de casa, hacia la dominante. |
+| Breve (por defecto) | Do → Fa: se aleja de casa |
+| Mínimo | Do → Fa |
 
 El nivel es un enum pequeño en `lineup-core/src/harmony/hints.rs`. Con
 `#[derive(Default)]`, la variante marcada con `#[default]` es la que
@@ -330,7 +330,7 @@ const fn go(to: usize, short: &'static str, reason: &'static str) -> Move {
 ```
 
 `Suggestion::why(level)` elige entonces las palabras que mostrar, y
-devuelve un `Option`, porque en el nivel Minimal no hay ninguna:
+devuelve un `Option`, porque en el nivel Mínimo no hay ninguna:
 
 ```rust
 pub fn why(&self, level: HintLevel) -> Option<&'static str> {
@@ -342,10 +342,10 @@ pub fn why(&self, level: HintLevel) -> Option<&'static str> {
 }
 ```
 
-El menú vive en la barra de harmony keys, pero el piano roll también
+El menú vive en la barra de teclas de armonía, pero el piano roll también
 necesita el nivel. En lugar de compartirlo mediante una referencia, la
 app lo copia en el piano roll cada frame (`self.piano_roll.hints =
 self.harmony_keys.hints`). `HintLevel` es `Copy`, así que es tan barato
 como copiar un número, y cada vista conserva la propiedad de su propio
-estado. El nivel no se guarda: empieza en Short cada vez que se abre la
+estado. El nivel no se guarda: empieza en Breve cada vez que se abre la
 app.

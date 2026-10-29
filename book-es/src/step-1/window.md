@@ -126,7 +126,7 @@ impl eframe::App for LineupApp {
 Aquí es donde nuestro tipo cumple la promesa del trait. eframe llama a
 `ui` cada vez que la ventana necesita repintarse.
 
-- Space alterna la reproducción, como en el estudio original, salvo que
+- Espacio alterna la reproducción, como en el estudio original, salvo que
   un campo de texto tenga el foco del teclado (para que puedas escribir
   en la casilla del tempo).
 - `ui.ctx().input(|input| ...)` da a un closure acceso temporal al
@@ -141,7 +141,7 @@ Aquí es donde nuestro tipo cumple la promesa del trait. eframe llama a
   cada closure se ejecuta y termina antes de que empiece el siguiente,
   algo que el borrow checker puede ver.
 
-## La transport bar
+## La barra de transporte
 
 ```rust
 let mut bpm = self.tempo.bpm();

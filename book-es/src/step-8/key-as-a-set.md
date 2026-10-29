@@ -4,10 +4,10 @@ Archivos: [`crates/lineup-app/src/twelve_tone.rs`](https://github.com/naelolaiz/
 [`crates/lineup-core/src/harmony/scale.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/harmony/scale.rs)
 
 Toca la canción de inicio en Do mayor y elige **conjunto de clases de
-alturas** en el menú Key. Hasta ahora el menú tomaba el último conjunto
+alturas** en el menú Tonalidad. Hasta ahora el menú tomaba el último conjunto
 que hubieras usado, o el acorde de séptima disminuida Do Mi♭ Sol♭ La si no
 habías usado ninguno. La canción seguía tocando C, Am, Dm y G, pero las
-harmony keys mostraban Cdim, D#dim, F#dim y Adim. Ninguno de esos
+teclas de armonía mostraban Cdim, D#dim, F#dim y Adim. Ninguno de esos
 sonaba, así que las teclas estaban equivocadas sobre la música.
 
 ## Por qué aquí las notas no deben moverse
@@ -41,14 +41,14 @@ tríada mayor puesta boca abajo (Do Mi Sol invertido alrededor de Do es Do La♭
 Fa, que es Fa menor), y las clases de conjunto cuentan un conjunto y su
 inversión como uno. La tríada disminuida es otra clase, 3-10.
 
-Un conjunto que eliges tú mismo es distinto: **Use as the key** en el
+Un conjunto que eliges tú mismo es distinto: **Usar como tonalidad** en el
 navegador de conjuntos hace de ese conjunto la tonalidad, y puede ser
 cualquier conjunto.
 
 ## El código
 
 `set_key` decide a qué conjunto cambia el menú. Una serie ya daba sus
-tres primeras notas (las notas que tocaban las harmony keys); ahora una
+tres primeras notas (las notas que tocaban las teclas de armonía); ahora una
 tonalidad da su escala entera:
 
 ```rust
@@ -102,8 +102,8 @@ mantiene los nombres de siempre.
 ## Probarlo
 
 1. Abre la canción de inicio y pulsa Espacio.
-2. Elige **conjunto de clases de alturas** en el menú Key bajo las
-   harmony keys. La canción suena igual, y la tecla que se ilumina es
+2. Elige **conjunto de clases de alturas** en el menú Tonalidad bajo las
+   teclas de armonía. La canción suena igual, y la tecla que se ilumina es
    el acorde que suena, ahora con su clase de conjunto debajo.
 3. Elige **mayor** otra vez: las teclas vuelven a I a vii°, y nada se
    mueve.

@@ -52,7 +52,7 @@ KDE ya traen. En un window manager a secas, instala
 `xdg-desktop-portal-gtk` o `zenity` para tenerlos.
 
 El MIDI pasa por el *sequencer* de ALSA. Los sistemas de escritorio ya
-lo cargan; si el menú MIDI de Ferrous Lineup dice **MIDI unavailable**,
+lo cargan; si el menú MIDI de Ferrous Lineup dice **MIDI no disponible**,
 cárgalo con `sudo modprobe snd-seq`.
 
 ### macOS
@@ -99,38 +99,37 @@ Deberías ver esta ventana:
 
 ![Ferrous Lineup al abrirse: la canción de demostración en el playlist, el channel rack encima con Kick, Clap, Hat, Snare y el Lineup Osc, y las harmony keys de do mayor en la parte de abajo.](images/getting-started-window.png)
 
-Pulsa **Space** o haz clic en **▶ Play** para oír la canción de
+Pulsa **Espacio** o haz clic en **▶** para oír la canción de
 demostración: dos compases de acordes, luego entra un pulso, y un
-relleno de batería la termina antes de que haga loop. El playlist llena
-la ventana; **F6** muestra y oculta el channel rack, **F7** el piano
-roll, y **L** alterna entre reproducir la canción y hacer loop del
+relleno de batería la termina antes de que se repita en bucle. La lista de reproducción llena
+la ventana; **F6** muestra y oculta el rack de canales, **F7** el piano
+roll, y **L** alterna entre reproducir la canción y repetir en bucle el
 patrón seleccionado. **Ctrl+S** (⌘S en un Mac) guarda el proyecto,
-**Ctrl+Z** deshace el último cambio y **Ctrl+Shift+Z** lo rehace, y
-**File > Export WAV…** guarda la canción como un archivo de sonido. En
+**Ctrl+Z** deshace el último cambio y **Ctrl+Mayús+Z** lo rehace, y
+**Archivo > Exportar WAV…** guarda la canción como un archivo de sonido. En
 el piano roll, **Ctrl+clic** selecciona notas, las **teclas de flecha**
-las mueven, y el menú **Tools** enumera todo lo demás que puede hacer
+las mueven, y el menú **Herramientas** enumera todo lo demás que puede hacer
 con ellas, con sus teclas. El menú **MIDI** conecta un teclado MIDI o un
-sintetizador, y convierte las teclas de letras en un piano; **● Rec**
+sintetizador, y convierte las teclas de letras en un piano; **⏺**
 graba lo que tocas. La barra de estado, abajo, muestra qué tarjeta de
 sonido está en uso, o por qué el audio no pudo arrancar, y pone nombre
 al acorde que mantienes pulsado.
 
-Para tocar una canción tuya con la banda, elige **File > New**. Se abre
-un **chord sheet** vacío: haz clic en un compás y escribe sus acordes
+Para tocar una canción tuya con la banda, elige **Archivo > Nuevo**. Se abre
+una **hoja de acordes** vacía: haz clic en un compás y escribe sus acordes
 (`C`, `Am7`, `G7/B`), y un piano, un bajo y una batería los tocan, cada
-uno en su propia pista. **🎷 Band** elige a los músicos, y la
-**Library**, el estilo en el que tocan. **F5**, o **📝 Chords** en la
-barra de herramientas, abre el chord sheet de cualquier canción, también
+uno en su propia pista. **🎷 Banda** elige a los músicos, y la
+**Biblioteca**, el estilo en el que tocan. **F5**, o **📝 Acordes** en la
+barra de herramientas, abre la hoja de acordes de cualquier canción, también
 de las demos. El [Paso 9](step-9/README.md) cuenta cómo funciona la
 banda.
 
-Encima de la barra de estado están las **harmony keys**: la tonalidad y
+Encima de la barra de estado están las **teclas de armonía**: la tonalidad y
 el compás, y una tecla grande para cada acorde de la tonalidad. Mantén
 una pulsada, o pulsa de **1** a **7**, para tocar su acorde. La pestaña
-**Library**, junto a la lista de patrones, contiene los estilos y los
-ritmos: haz clic en uno y luego en **Apply** para oír la canción tocada
-de esa manera. **File > Demos** abre canciones enteras: prueba *Für
-Elise* o *Frère Jacques*, no pulses nada y mira cómo las harmony keys
+**Biblioteca**, junto a la lista de patrones, contiene los estilos y los
+ritmos: haz clic en uno y luego en **Aplicar** para oír la canción tocada
+de esa manera. **Archivo > Demostraciones** abre canciones enteras: prueba *Para Elisa* o *Frère Jacques*, no pulses nada y mira cómo las teclas de armonía
 siguen a los acordes.
 
 [Un recorrido por la aplicación](tour.md) pasa por cada ventana, menú y

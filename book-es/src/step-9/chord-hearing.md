@@ -11,8 +11,8 @@ y [`crates/lineup-core/tests/chord_reading.rs`](https://github.com/naelolaiz/fer
 
 [La sala de conciertos](concert-hall.md) trajo La consagración de la
 primavera y Petrushka a la app, pero los acordes que mostraba para
-ellos estaban en su mayoría mal. Abrir **The Augurs of Spring** escribía
-un chord sheet con 25 compases vacíos, y donde sí escribía un acorde
+ellos estaban en su mayoría mal. Abrir **Augurios primaverales** escribía
+una hoja de acordes con 25 compases vacíos, y donde sí escribía un acorde
 era algo como Fsus2 o C♯dim. El acorde de los Augurios primaverales,
 que las cuerdas martillean durante páginas, no tenía nombre ninguno.
 De 64 compases comprobados contra las partituras, ninguno salió bien.
@@ -86,12 +86,12 @@ y el siguiente:
 
 | Papel | Cómo se distingue | Cuánto pesan sus notas |
 |-------|-------------------|------------------------|
-| Chords | tres notas distintas o más suenan juntas en ella | por completo |
-| Bass line | una nota cada vez, todas por debajo de los acordes | por completo si los acordes tienen la nota; 0,15 si no (una nota de paso) |
-| Tune | cualquier otra parte, cuando alguna parte toca acordes | un cuarto |
-| Layer | una parte que sería una melodía, pero cuyas notas pertenecen todas a una tríada o un acorde de séptima: tres notas al menos, dos de ellas fuera de los acordes | por completo |
+| Acordes | tres notas distintas o más suenan juntas en ella | por completo |
+| Línea de bajo | una nota cada vez, todas por debajo de los acordes | por completo si los acordes tienen la nota; 0,15 si no (una nota de paso) |
+| Melodía | cualquier otra parte, cuando alguna parte toca acordes | un cuarto |
+| Capa | una parte que sería una melodía, pero cuyas notas pertenecen todas a una tríada o un acorde de séptima: tres notas al menos, dos de ellas fuera de los acordes | por completo |
 
-La fila de **Layer** está ahí por La consagración de la primavera. Su
+La fila de **Capa** está ahí por La consagración de la primavera. Su
 ostinato Re♭, Si♭, Mi♭, Si♭ es una sola línea, pero deletrea E♭7
 contra los arpegios de Do mayor y Mi menor que hay debajo. Es una
 armonía propia, no una melodía.
@@ -149,7 +149,7 @@ Sobre esos dos pulsos el perfil es Do 9, Mi 5, Sol 5, y el Si♭ de paso
 
 Gana Do, como dice el chart. Una versión anterior ponderaba las notas de
 paso del bajo con 0,35, y allí ganaba C7 por un pelo. Lo atrapó una
-prueba que escribe el chord sheet de Rhythm changes.
+prueba que escribe la hoja de acordes de Rhythm changes.
 
 ## Dos acordes a la vez
 
@@ -234,18 +234,18 @@ pub struct Hearing {
 muestra como muestra otras pistas: la más probable más brillante, las
 demás más tenues.
 
-- En las **harmony keys**, cada acorde de un polychord ilumina su tecla,
+- En las **teclas de armonía**, cada acorde de un polychord ilumina su tecla,
   donde la tecla tiene una, y un acorde como el que también podría
   oírse la música ilumina su tecla tenuemente. Junto a la pista, una
-  línea lo dice con palabras: «Heard: Eb7|Fb, dos acordes a la vez», o
-  «Heard: las notas 4-23».
-- En el **piano roll**, la fila All del carril de acordes se oye ahora
+  línea lo dice con palabras: «Se escucha: Eb7|Fb, dos acordes a la vez», o
+  «Se escucha: las notas 4-23».
+- En el **piano roll**, la fila Todo del carril de acordes se oye ahora
   pulso a pulso con toda la banda, y la línea sobre la cuadrícula añade
   las otras lecturas entre paréntesis: «(o C6)».
 
 ## Cortar un compás en acordes
 
-**Write the chords the song plays** solía recorrer la canción pulso a
+**Escribir los acordes que toca la canción** solía recorrer la canción pulso a
 pulso y escribir un acorde donde cambiaba el nombre. Ahora
 `write_heard_chords` toma la canción compás a compás y pregunta: ¿dónde
 debería cortarse este compás? Un compás de 4/4 tiene líneas de pulso en
@@ -285,13 +285,13 @@ cortes.
 Un polychord **sigue** mientras siguen sus notas. En La habitación de
 Petrushka, la mitad Fa♯ mayor del acorde descansa un compás mientras Do
 mayor sigue. Oído solo, ese compás es solo Do. Pero Do mayor y Fa♯
-mayor aún explican casi todo, así que el sheet mantiene «C|F♯» allí en
+mayor aún explican casi todo, así que la hoja mantiene «C|F♯» allí en
 lugar de saltar a Do y volver.
 
 ## Escribir dos acordes: Eb7|Fb
 
-Un lead sheet dibuja un polychord como una fracción, el acorde superior
-sobre una línea sobre el inferior. El chord sheet lo escribe en una
+Una partitura guía dibuja un polychord como una fracción, el acorde superior
+sobre una línea sobre el inferior. La hoja de acordes lo escribe en una
 línea como `upper|lower`: `Eb7|Fb` o `C|F#`. Una barra ya significa una
 nota de bajo, como en `G/B`, así que aquí no se podía usar.
 
@@ -310,7 +310,7 @@ variante nueva `HarmonyName::Polychord` contiene dos símbolos de
 acorde. Cada uno puede tener su propio bajo, y el bajo del acorde
 inferior es el bajo de toda la armonía.
 
-Un proyecto cuyo sheet tiene un polychord necesita al menos el
+Un proyecto cuya hoja tiene un polychord necesita al menos el
 **formato 25** ([el formato de archivo de
 proyecto](../appendix-project-format.md)). Una versión anterior de la
 app no podría leer `Eb7|Fb`, así que se le dice que el archivo es más
@@ -324,9 +324,9 @@ hace una orquesta para mantenerlas separadas.
 ## Hacerlo rápido
 
 La primera versión que funcionaba era correcta y unas **60 veces más
-lenta** que la manera antigua. Escribir el chord sheet de cada demo de
+lenta** que la manera antigua. Escribir la hoja de acordes de cada demo de
 canción llevaba 3,6 segundos en lugar de 0,06, y la suite de pruebas,
-que escribe chord sheets de cada demo y estilo muchísimas veces, se
+que escribe hojas de acordes de cada demo y estilo muchísimas veces, se
 arrastraba. Cuatro cambios la volvieron a bajar.
 
 **1. Mide primero.** `valgrind --tool=callgrind` ejecuta un programa en
@@ -392,8 +392,8 @@ cómo se cortó. Las notas entran en la clave como números enteros,
 `(start, end, pitch, part)`, ya que `f32` no puede ser una clave: no
 tiene `Hash` ni `Eq`, porque `NaN` no es igual a sí mismo.
 
-Escribir el sheet de todas las demos lleva ahora alrededor de un
-segundo. La prueba más lenta que escribe chord sheets tarda lo mismo
+Escribir la hoja de todas las demos lleva ahora alrededor de un
+segundo. La prueba más lenta que escribe hojas de acordes tarda lo mismo
 que antes del cambio.
 
 ## Qué bien oye
@@ -402,7 +402,7 @@ El archivo de pruebas `tests/chord_reading.rs` comprueba compases cuya
 armonía se conoce por las partituras: el acorde de los Augurios
 primaverales en 52 compases, el acorde de Petrushka en los compases 47
 a 53 de La habitación de Petrushka, y las cuartas del principio de la
-feria. También tiene un informe, que compara el sheet oído desde las
+feria. También tiene un informe, que compara la hoja oído desde las
 notas con el chart de cada demo que tiene uno, pulso a pulso:
 
 ```sh
@@ -421,24 +421,23 @@ pulsos coinciden con su chart: el lugar donde mirar a continuación.
 
 ## Pruébalo
 
-1. Abre **File > Demos > Songs > Classical and film > The Rite of
-   Spring, The Augurs of Spring**. Una canción sin chart se abre con
-   los acordes que toca escritos en su sheet: abre **📝 Chords** y lee
+1. Abre **Archivo > Demostraciones > Canciones > Clásica y de cine > La consagración de la primavera, Augurios primaverales**. Una canción sin chart se abre con
+   los acordes que toca escritos en su hoja: abre **📝 Acordes** y lee
    `Eb7|Fb` compás tras compás. Pasa el puntero por un compás para leer
    qué es: «Séptima de dominante de Mi♭ sobre Fa♭ mayor, dos acordes a
    la vez: un polychord. Superior: Mi♭ Sol Si♭ Re♭. Inferior: Fa♭ La♭ Do♭. En
    Mi♭ mixolidio: I7 sobre ♭II».
-2. Pulsa Play con las harmony keys a la vista. La tecla de I se ilumina
+2. Pulsa ▶ con las teclas de armonía a la vista. La tecla de I se ilumina
    para E♭7 (Fa♭ mayor no es un acorde de Mi♭ mixolidio, así que no
    tiene tecla), y la línea junto a la pista nombra los dos acordes.
-3. Abre **Petrushka, Petrushka's Room** y busca el compás 47, donde
-   entran los clarinetes con el acorde de Petrushka. El sheet lo
+3. Abre **Petrushka, La habitación de Petrushka** y busca el compás 47, donde
+   entran los clarinetes con el acorde de Petrushka. La hoja lo
    escribe `C|F#/A#`: Do mayor sobre Fa♯ mayor, con La♯ en el bajo.
-4. Abre **Petrushka, The Shrovetide Fair** y mira los primeros
-   compases: el sheet escribe el conjunto como `4-23 T2`, 4-23
+4. Abre **Petrushka, La feria de carnaval** y mira los primeros
+   compases: la hoja escribe el conjunto como `4-23 T2`, 4-23
    transportado dos semitonos arriba, y el puntero dice «cuartas
    apiladas».
-5. En una canción nueva, escribe `C|F#` en un compás del chord sheet y
+5. En una canción nueva, escribe `C|F#` en un compás de la hoja de acordes y
    elige un estilo de banda. La banda toca los dos acordes, uno encima
    del otro.
 
@@ -456,7 +455,7 @@ pulsos coinciden con su chart: el lugar donde mirar a continuación.
    pulsos. Un compás de 4/4 toca C, luego G7, y cada uno de ellos, oído
    solo, puntúa 1,06 (un encaje perfecto con su fundamental en el
    bajo). Supón que el compás entero, oído como un solo tramo, puntúa
-   1,0 por pulso. ¿Corta el sheet el compás cuando G7 entra en el pulso
+   1,0 por pulso. ¿Corta la hoja el compás cuando G7 entra en el pulso
    4, durante un pulso? ¿Y cuando entra en el pulso 3, durante dos?
 4. ¿Por qué `HeardBars` usa en su clave las notas de los compases de
    alrededor de un compás, y no solo las notas del propio compás?

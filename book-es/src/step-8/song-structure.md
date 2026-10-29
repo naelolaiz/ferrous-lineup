@@ -1,4 +1,4 @@
-# La estructura de la canción: secciones, repeticiones y loops
+# La estructura de la canción: secciones, repeticiones y bucles
 
 Archivos: [`crates/lineup-core/src/playlist.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/playlist.rs),
 [`crates/lineup-core/src/arrangement.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/arrangement.rs),
@@ -6,42 +6,40 @@ Archivos: [`crates/lineup-core/src/playlist.rs`](https://github.com/naelolaiz/fe
 [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/engine.rs)
 y [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/playlist/sections.rs)
 
-Hasta ahora, el playlist solo conocía clips. Una canción tiene más forma
+Hasta ahora, la lista de reproducción solo conocía clips. Una canción tiene más forma
 que eso: una introducción, una estrofa, un estribillo que se oye dos
-veces, un beat que hace loop durante ocho compases. Para conseguir
+veces, un beat que se repite en bucle durante ocho compases. Para conseguir
 cualquiera de esas cosas colocabas cada clip a mano, y nada en la
 pantalla decía «esto es el estribillo». Esta página añade tres cosas:
 
-- **Secciones**: tramos con nombre de la canción (Intro, Verse, Chorus…)
+- **Secciones**: tramos con nombre de la canción (Introducción, Estrofa, Estribillo…)
   en una franja encima de los números de compás. Una sección puede
   tocarse varias veces seguidas: se dibuja una vez y se marca «×2».
 - **Repeticiones de clips**: arrastra el borde derecho de un clip y toca
   su patrón una y otra vez, como al estirar un clip de patrón en otros
   estudios basados en patrones.
 - **Una región de loop**: arrastra por los números de compás, y el modo
-  canción hace loop solo de esa parte mientras trabajas en ella.
+  canción repite en bucle solo esa parte mientras trabajas en ella.
 
 ![El estribillo está marcado «×2». Mientras la canción lo toca por segunda vez, la sección dice «▶ 2 de 2».](../images/step-8-sections-playing.png)
 
 ## Cómo usarlo
 
-- Arrastra por la franja oscura marcada **Sections** para marcar una
-  sección. Recibe el primer nombre común que no esté usado aún: Intro,
-  luego Verse, Chorus, Bridge, Outro. **➕ Section** en la barra de
-  herramientas del playlist añade una después de la última.
+- Arrastra por la franja oscura marcada **Secciones** para marcar una
+  sección. Recibe el primer nombre común que no esté usado aún: Introducción, luego Estrofa, Estribillo, Puente, Coda. **➕ Sección** en la barra de
+  herramientas de la lista de reproducción añade una después de la última.
 - Arrastra una sección para moverla, o su borde derecho para cambiarle
   el tamaño. Se ajusta como los clips (a compases, pulsos o pasos).
 - Haz clic en una sección (botón izquierdo o derecho) para ver su menú:
   escribe un nombre o elige uno, decide cuántas veces se toca con **−** y
-  **+**, duplícala, escribe sus repeticiones o bórrala. **Loop this
-  section** está marcado mientras el modo canción hace loop solo de esa
-  sección; márcalo para hacer loop de la sección, desmárcalo para volver
-  a tocar la canción entera. Sin loop, el modo canción toca la canción
+  **+**, duplícala, escribe sus repeticiones o bórrala. **Repetir esta sección** está marcado mientras el modo canción repite en bucle solo esa
+  sección; márcalo para repetir en bucle la sección, desmárcalo para volver
+  a tocar la canción entera. Sin bucle, el modo canción toca la canción
   entera y luego vuelve a empezar desde el compás 1.
 - Arrastra un clip por su borde derecho (el puntero se convierte en una
   flecha doble) para repetir su patrón.
-- Arrastra por los números de compás para hacer loop de esa parte. El
-  botón verde **Looping bars…** de la barra de herramientas lo muestra;
+- Arrastra por los números de compás para repetir en bucle esa parte. El
+  botón verde **Repitiendo compases…** de la barra de herramientas lo muestra;
   haz clic en él para volver a tocar la canción entera.
 
 Las secciones no poseen clips. Una sección es solo un nombre y un rango
@@ -53,7 +51,7 @@ sección deja los clips en paz.
 ## Dos tipos de paso
 
 Aquí está la única idea que hace sencillo todo lo demás. Una vez que una
-sección puede repetirse, el playlist tal como se *dibuja* y la canción
+sección puede repetirse, la lista de reproducción tal como se *dibuja* y la canción
 tal como se *toca* ya no miden lo mismo:
 
 ```text
@@ -63,7 +61,7 @@ canción:    | Intro | Chorus | Chorus | Outro |
 
 Así que el código habla ahora de dos tipos de paso:
 
-- un **paso de timeline** es un lugar del playlist, tal como se dibuja;
+- un **paso de timeline** es un lugar de la lista de reproducción, tal como se dibuja;
 - un **paso de canción** es un momento de la canción, tal como se oye.
 
 `Project::song_length` sigue siendo lo que era, la longitud del timeline.
@@ -90,14 +88,14 @@ pub struct Play {
 Un `Pass` dice «los pasos de timeline 32 a 63 suenan en los pasos de
 canción 64 a 95, y esta es la ronda 2 de 2 de la sección 1». Un `Play`
 dice «toca el patrón 3 desde el paso de canción 64 durante 32 pasos,
-empezando 0 pasos dentro de él». El patrón hace loop mientras dura el
+empezando 0 pasos dentro de él». El patrón se repite en bucle mientras dura el
 `Play`, así que un clip repetido tres veces es un `Play` de tres patrones
-de largo. `skip` no es cero cuando una sección o la región de loop
+de largo. `skip` no es cero cuando una sección o la región de bucle
 empieza a mitad de un clip.
 
 `Project::arrangement()` lo construye para la canción entera (las
 exportaciones lo usan), y `Project::playback_arrangement()` para lo que
-toca el modo canción: la región de loop si la hay, la canción entera si
+toca el modo canción: la región de bucle si la hay, la canción entera si
 no.
 
 ### Construir el arreglo
@@ -177,7 +175,7 @@ pub fn pattern_step(&self, step: usize, pattern_length: usize) -> Option<usize> 
 ```
 
 `%` envuelve el paso alrededor del patrón, que es todo lo que significa
-«repetir». Todo lo de nombres, rondas y loops se queda en `lineup-core`,
+«repetir». Todo lo de nombres, rondas y bucles se queda en `lineup-core`,
 donde puede probarse sin tarjeta de sonido. El hilo de audio sigue siendo
 pequeño, y sigue sin reservar memoria: el nuevo `Vec<Play>` se construye
 en el hilo de la UI y el viejo se devuelve para liberarlo allí, igual que
@@ -195,7 +193,7 @@ usa un iterador con `step_by`:
     .map(move |offset| self.start + offset)
 ```
 
-## De vuelta de la canción al playlist
+## De vuelta de la canción a la lista de reproducción
 
 El hilo de audio cuenta pasos de canción, así que el cabezal de
 reproducción que comunica es un paso de canción. Para dibujarlo, la app
@@ -213,9 +211,8 @@ fn song_position(&self) -> Option<(usize, Pass)> {
 }
 ```
 
-El `Pass` viaja con él hasta el playlist, que es como una sección sabe
-que debe mostrar «▶ 2 de 2». El channel rack, el piano roll y las harmony
-keys reciben el paso de timeline, así que muestran el paso correcto del
+El `Pass` viaja con él hasta la lista de reproducción, que es como una sección sabe
+que debe mostrar «▶ 2 de 2». El rack de canales, el piano roll y las teclas de armonía reciben el paso de timeline, así que muestran el paso correcto del
 clip correcto también durante una repetición.
 
 ## Guardar: formato 4
@@ -240,7 +237,7 @@ Una versión más antigua también abriría un proyecto que *sí* usa
 repeticiones: se salta los campos que no conoce. Pero tocaría cada
 repetición una vez, que es una canción que suena mal sin una palabra de
 aviso. Así que, siguiendo la regla del paso 7, `format_for` devuelve
-**4** para cualquier proyecto con secciones, una región de loop o un clip
+**4** para cualquier proyecto con secciones, una región de bucle o un clip
 repetido, y las versiones antiguas lo rechazan con un mensaje claro.
 
 ## Dibujarlo: un módulo dentro de un módulo
@@ -277,15 +274,14 @@ movería la sección equivocada.
 
 ## Escribir las repeticiones
 
-**Write out the repeats** en el menú de una sección convierte «Chorus
-×3» en Chorus, Chorus 2 y Chorus 3, uno detrás de otro, cada uno tocado
+**Escribir las repeticiones** en el menú de una sección convierte «Estribillo ×3» en Estribillo, Estribillo 2 y Estribillo 3, uno detrás de otro, cada uno tocado
 una vez, para que puedas cambiar el tercer estribillo sin cambiar los
 otros. La canción suena igual antes y después; una prueba lo comprueba
 comparando los dos arreglos.
 
 ![Antes (abajo) y después (arriba) de escribir las repeticiones de «Chorus ×2».](../images/step-8-write-out.png)
 
-Comparte su código con **Duplicate**: `make_room` mueve todo lo que hay
+Comparte su código con **Duplicar**: `make_room` mueve todo lo que hay
 después de la sección más tarde, y luego los clips que empiezan dentro de
 la sección se copian en el hueco. Una cosa que hay que vigilar: los clips
 se copian enteros. El relleno de la imagen empieza dentro del estribillo
@@ -298,7 +294,7 @@ abajo.
 
 ## Ejercicios
 
-1. Añade una entrada **Delete with clips** al menú de la sección que
+1. Añade una entrada **Eliminar con los clips** al menú de la sección que
    quite la sección, los clips que empiezan dentro de ella, y cierre el
    hueco. `make_room` muestra cómo mover todo lo que hay después de un
    punto.
@@ -308,7 +304,7 @@ abajo.
    necesitas.
 3. Da a `Clip` un `offset` (cuántos pasos dentro de su patrón empieza)
    para que un clip pueda cortarse en dos. `Play::skip` ya toca un clip
-   desde la mitad; el trabajo está en el playlist y en
+   desde la mitad; el trabajo está en la lista de reproducción y en
    `duplicate_section`.
 4. Muchos programas de música también pueden *marcar* un punto en el
    tiempo sin un rango, por ejemplo para saltar a él. Añade marcadores a

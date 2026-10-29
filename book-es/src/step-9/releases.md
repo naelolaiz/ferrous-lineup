@@ -144,19 +144,17 @@ dejan ejecutarlo.
   pelada necesita además la biblioteca de teclado `libxkbcommon-x11-0`,
   que el AppImage trae consigo; el `.deb` la declara y apt la instala.
 - **Windows, el Setup `.exe`**: ejecútalo. Instala el programa, una
-  entrada del menú Inicio, un desinstalador bajo **Settings > Apps**, y
+  entrada del menú Inicio, un desinstalador bajo **Ajustes > Apps**, y
   la asociación de archivos `.lineup`, de modo que hacer doble clic en un proyecto lo abre en Ferrous Lineup. Si una
-  ventana azul dice «Windows protected your PC», elige **More info**, y
-  después **Run anyway**.
+  ventana azul dice «Windows protegió su PC», elige **Más información**, y después **Ejecutar de todas formas**.
 - **Windows, el `.zip`**: descomprímelo y haz doble clic en
   `ferrous-lineup.exe`. Es el mismo programa sin instalador ni
   asociación de archivos.
 - **macOS**: abre el `.dmg`, y arrastra **Ferrous Lineup** a la carpeta
-  **Applications** de la misma ventana. Arráncalo desde Applications.
+  **Aplicaciones** de la misma ventana. Arráncalo desde Aplicaciones.
   Si macOS dice que no puede comprobar el programa en busca de software
-  malicioso, intenta abrirlo una vez, y permítelo después en **System
-  Settings > Privacy & Security** (en versiones anteriores, haz clic
-  derecho en la app y elige **Open**). También puedes quitar la marca
+  malicioso, intenta abrirlo una vez, y permítelo después en **Ajustes del Sistema > Privacidad y seguridad** (en versiones anteriores, haz clic
+  derecho en la app y elige **Abrir**). También puedes quitar la marca
   que macOS pone a los archivos descargados:
 
   ```sh
@@ -555,7 +553,7 @@ la contiene. Los tags nunca se cancelan.
    versión falle en lugar de avisar. ¿Dónde debería ejecutarse, para
    que un tag equivocado se detenga antes de 20 minutos de build, y no
    después?
-5. **Leer la versión en la app.** **Help > About** muestra
+5. **Leer la versión en la app.** **Ayuda > Acerca de Ferrous Lineup** muestra
    `env!("CARGO_PKG_VERSION")`, la versión del crate, fijada en tiempo
    de compilación ([cómo funciona](workflow.md#quién-la-hizo-y-qué-versión)).
    Muéstrala también en el título de la ventana. ¿Qué daría

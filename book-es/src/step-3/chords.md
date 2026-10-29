@@ -156,7 +156,7 @@ pub fn analyze(notes: impl IntoIterator<Item = Note>) -> Harmony {
 `impl IntoIterator<Item = Note>` en un *argumento* significa «cualquier
 cosa sobre la que puedas iterar que dé notas»: un `Vec<Note>`, un array
 o un iterador directo desde el patrón, sin recolectar nada por el medio.
-Un solo loop construye el conjunto y encuentra la nota más grave, y el
+Un solo bucle construye el conjunto y encuentra la nota más grave, y el
 `match` sobre un número (`1`, `2`, `_` para todo lo demás) elige el tipo
 de respuesta.
 
@@ -295,7 +295,7 @@ armonía: haz clic en cualquier fila resaltada y obtienes el acorde que
 la tonalidad te da sobre esa nota, sin necesidad de saber antes su
 nombre. El nombre aparece entonces en el carril de acordes.
 
-El menú Draw enumera todos los sellos. `all()` construye esa lista
+El menú Dibujar enumera todos los sellos. `all()` construye esa lista
 encadenando dos iteradores, los tres sellos especiales y luego un
 `Fixed` por cada cualidad:
 

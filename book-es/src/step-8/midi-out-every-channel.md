@@ -1,40 +1,38 @@
-# MIDI Out para cada canal
+# Salida MIDI para cada canal
 
 Archivos: [`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/instrument.rs),
 [`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/midi.rs)
 y [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/live.rs)
 
-[El paso 7](../step-7/live.md) construyó MIDI Out como suelen hacerlo
-los estudios basados en patrones: un canal de un tipo especial, *MIDI
-Out*, no toca ningún sonido y envía sus notas al puerto elegido en el
+[El paso 7](../step-7/live.md) construyó la salida MIDI como suelen hacerlo
+los estudios basados en patrones: un canal de un tipo especial, *Salida MIDI*, no toca ningún sonido y envía sus notas al puerto elegido en el
 menú MIDI. Todos los demás canales se quedan dentro de Ferrous Lineup.
 
 Eso está bien, y también es una trampa. Conecta un synth, elígelo en
-**MIDI > Output**, abre una demo, pulsa Play... y el synth no dice nada.
-Ninguna de las demos tiene un canal MIDI Out, así que no se envía nada.
+**MIDI > Salida**, abre una demo, pulsa ▶... y el synth no dice nada.
+Ninguna de las demos tiene un canal de salida MIDI, así que no se envía nada.
 Nada en la ventana dice por qué, tampoco. Alguien lo reportó tal cual:
 «MIDI output does nothing».
 
 ## Cómo usarlo
 
-1. Abre el menú **MIDI** y elige tu synth bajo **Output**.
-2. Deja marcado **Send every channel** (está encendido desde el
+1. Abre el menú **MIDI** y elige tu synth bajo **Salida**.
+2. Deja marcado **Enviar todos los canales** (está encendido desde el
    principio).
-3. Dale a Play. Cada canal suena en el synth en lugar de los altavoces,
-   como hace un canal MIDI Out. Elige **None** como salida, o desmarca
+3. Pulsa ▶. Cada canal suena en el synth en lugar de los altavoces,
+   como hace un canal de salida MIDI. Elige **Ninguna** como salida, o desmarca
    la casilla, para volver a oír los sonidos propios de Ferrous Lineup.
 
 ![El menú MIDI: una salida elegida, y Send every channel](../images/step-8-midi-out-menu.png)
 
-Las notas salen por los mismos canales MIDI que escribe **File > Export
-MIDI**, así que una canción suena igual tocada en vivo que desde su
+Las notas salen por los mismos canales MIDI que escribe **Archivo > Exportar canción como MIDI**, así que una canción suena igual tocada en vivo que desde su
 archivo MIDI:
 
 | Canal en el rack | Canal MIDI | Notas |
 |------------------|------------|-------|
-| un canal de batería integrado (Kick, Hat...) | 10 | su nota de batería de General MIDI: kick 36, snare 38, clap 39, hat cerrado 42... |
+| un canal de batería integrado (Bombo, Charles...) | 10 | su nota de batería de General MIDI: kick 36, snare 38, clap 39, hat cerrado 42... |
 | Lineup Osc, o un sample de un archivo | 1, 2, 3... (el 10 se salta) | las notas tal como están escritas |
-| un canal MIDI Out | el que le diste | como antes: envía sus notas él mismo |
+| un canal de salida MIDI | el que le diste | como antes: envía sus notas él mismo |
 
 El canal 10 es donde todo sintetizador de General MIDI guarda su kit de
 batería, y en él cada *nota* es un tambor distinto. Los pasos de un
@@ -43,9 +41,9 @@ batería toca como un bongó), así que el canal envía su propia nota en
 lugar de la del patrón.
 
 Las teclas que tocas también salen: un teclado MIDI, el teclado de
-escritura, las harmony keys, y hacer clic en el nombre de un canal para
-oírlo. Desmarca **Send every channel** para recuperar el comportamiento
-del paso 7, donde solo los canales MIDI Out llegan al puerto.
+escritura, las teclas de armonía, y hacer clic en el nombre de un canal para
+oírlo. Desmarca **Enviar todos los canales** para recuperar el comportamiento
+del paso 7, donde solo los canales de salida MIDI llegan al puerto.
 
 Dos cosas más pequeñas cambiaron en el menú:
 
@@ -56,7 +54,7 @@ Dos cosas más pequeñas cambiaron en el menú:
   enviar nada. Las notas se hacen en el hilo de audio, así que sin audio
   no se hace ninguna nota.
 
-## Un canal convertido en un MIDI Out
+## Un canal convertido en una salida MIDI
 
 `instrument.rs`
 
@@ -76,8 +74,8 @@ pub fn to_midi(self, channel: u8, pitch: Option<Note>) -> Self {
 ```
 
 `to_midi` recibe `self` por valor: el instrumento viejo se *mueve* a la
-función y se tira ahí, y quien llama recibe el nuevo a cambio. Un canal
-MIDI Out ya envía sus notas, así que vuelve sin cambios.
+función y se tira ahí, y quien llama recibe el nuevo a cambio. Un canal de
+salida MIDI ya envía sus notas, así que vuelve sin cambios.
 
 Lo único nuevo que aprendió un `MidiOut` es una nota fija, para la
 batería:
@@ -158,14 +156,14 @@ if self.live.routes_sent.as_ref() == Some(&wanted) {
 Calcular 32 rutas como mucho es mucho más barato que dibujar la
 ventana, y comparar dos `Vec` con `==` los compara elemento a elemento,
 porque las tuplas, `Option` y `Note` implementan todos `PartialEq`.
-Solo cuando difieren recibe un canal un instrumento nuevo, un MIDI Out o
+Solo cuando difieren recibe un canal un instrumento nuevo, una salida MIDI o
 el suyo, mediante `Command::SetInstrument`, y solo los canales cuya ruta
 cambió.
 
 `routes_sent` es un `Option<Vec<...>>`: `None` significa «no se sabe».
 Cuando se añaden, quitan o recargan canales, el hilo de audio recibe
 instrumentos normales para ellos, y los que se movieron se quedan con lo
-que tenían. Si alguno era un MIDI Out en lugar de su propio instrumento,
+que tenían. Si alguno era una salida MIDI en lugar de su propio instrumento,
 la app olvida lo que envió, y el siguiente frame envía cada canal otra
 vez. Es raro (hace falta un cambio en el rack), y no puede ir mal.
 
@@ -184,7 +182,7 @@ sudo modprobe snd-seq-dummy snd-virmidi
 aseqdump -p "Midi Through"
 ```
 
-Elige **Midi Through** en **MIDI > Output**, pulsa Play, y cada nota
+Elige **Midi Through** en **MIDI > Salida**, pulsa ▶, y cada nota
 aparece tal como se envía:
 
 ```text

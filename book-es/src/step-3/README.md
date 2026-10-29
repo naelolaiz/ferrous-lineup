@@ -40,14 +40,14 @@ La demo ahora reproduce una progresión de acordes clásica, C, Am, F, G
 | F7, o el botón 🎹 Piano roll | abrir o cerrar el piano roll |
 | Haz clic derecho en el nombre de un canal y luego en Piano roll | abrir el piano roll de ese canal |
 | Haz clic en la vista previa de notas pequeña del rack | abrir el piano roll de ese canal |
-| Haz clic en una celda vacía | añadir una nota, o un acorde (ver Draw) |
+| Haz clic en una celda vacía | añadir una nota, o un acorde (ver Dibujar) |
 | Arrastra una nota | moverla en el tiempo y en la altura |
 | Arrastra el extremo derecho de una nota | hacerla más larga o más corta |
 | Haz clic derecho en una nota, o arrastra el derecho sobre varias | borrarlas |
 | Haz clic en una tecla del piano | escuchar esa nota |
-| Los menús Key y Scale | elegir la tonalidad en la que resaltar y nombrar acordes |
-| El menú Draw | elegir qué coloca cada clic |
-| El menú Length | elegir cuánto duran las notas nuevas |
+| Los menús Tonalidad y Escala | elegir la tonalidad en la que resaltar y nombrar acordes |
+| El menú Dibujar | elegir qué coloca cada clic |
+| El menú Duración | elegir cuánto duran las notas nuevas |
 | Señala un paso | ver el acorde explicado debajo de la barra de herramientas |
 
 Un canal cuyas notas son todas pasos simples sigue mostrando botones de
@@ -73,7 +73,7 @@ en su lugar una imagen pequeña de sus notas.
 
 Dos ideas sostienen este paso:
 
-1. **Un tipo de dato, dos vistas.** El channel rack y el piano roll
+1. **Un tipo de dato, dos vistas.** El rack de canales y el piano roll
    editan las mismas notas. Un paso «encendido» no es más que una nota de
    un paso de duración en la altura predeterminada. Así funcionan los
    estudios basados en patrones, y significa que el hilo de audio tiene

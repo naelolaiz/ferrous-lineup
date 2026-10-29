@@ -7,13 +7,13 @@ Archivos: [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/f
 y [`crates/lineup-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/widgets.rs)
 
 Lo primero que hizo un usuario nuevo con el paso 8 terminado fue pulsar
-F7 en la canción de demo. El piano roll se abrió en «Beat · Lineup Osc»
-y mostró una cuadrícula vacía. La canción toca acordes, el playlist los
+F7 en la canción de demo. El piano roll se abrió en «Ritmo · Lineup Osc»
+y mostró una cuadrícula vacía. La canción toca acordes, la lista de reproducción los
 muestra, así que ¿dónde estaban?
 
-Estaban en otro patrón. El piano roll, como el channel rack, muestra
-**un patrón**: el seleccionado. La app empieza con «Beat» seleccionado,
-y en «Beat» el sintetizador no toca nada. Los acordes están en «Chords».
+Estaban en otro patrón. El piano roll, como el rack de canales, muestra
+**un patrón**: el seleccionado. La app empieza con «Ritmo» seleccionado,
+y en «Ritmo» el sintetizador no toca nada. Los acordes están en «Acordes».
 Los datos no tenían nada malo; la pantalla simplemente no decía qué
 estaba mostrando. Esta página trata de tres arreglos para eso, y del
 zoom, que el mismo usuario quería para cada ventana por su cuenta.
@@ -79,14 +79,14 @@ pub fn busiest_channel(pattern: &Pattern) -> Option<usize> {
 `max_by_key` devuelve el *último* de varios máximos iguales. Comparar la
 tupla `(count, Reverse(channel))` deshace los empates a favor del número
 de canal más bajo: `std::cmp::Reverse` envuelve un valor e invierte su
-orden. Los pasos de batería se dejan fuera a propósito. En «Beat» ningún
+orden. Los pasos de batería se dejan fuera a propósito. En «Ritmo» ningún
 canal toca una melodía, así que el piano roll se queda en el Lineup Osc
 y muestra el mensaje; no salta al bombo, cuyas «notas» son todas el
 mismo paso plano.
 
 Para notar que la ventana *se abre*, el piano roll recuerda si estaba
 abierta el frame anterior. `open` es un campo público que cambian el
-botón de la barra de herramientas, F7 y el menú View, así que este es el
+botón de la barra de herramientas, F7 y el menú Ver, así que este es el
 único sitio que ve todas las formas de entrar:
 
 ```rust
@@ -98,7 +98,7 @@ self.was_open = open;
 ## Doble clic en un clip para editarlo
 
 En la mayoría de los programas de música, haces doble clic en un clip
-del playlist para editarlo. El playlist hace ahora lo mismo. egui cuenta
+de la lista de reproducción para editarlo. La lista de reproducción hace ahora lo mismo. egui cuenta
 los clics por nosotros:
 
 ```rust
@@ -117,7 +117,7 @@ if double_clicked
 ```
 
 La app elige el editor: el piano roll, en el canal más ocupado, cuando
-el patrón tiene melodías o acordes; el channel rack cuando solo tiene
+el patrón tiene melodías o acordes; el rack de canales cuando solo tiene
 batería. De cualquier forma, la ventana pasa al frente con
 `Context::move_to_top`. La capa de una ventana se nombra por el id que
 se le dio a la ventana, por eso el rack y el piano roll reciben ahora
@@ -126,9 +126,8 @@ lugar de escribir `Id::unique("channel-rack")` en dos sitios.
 
 ![Hacer doble clic en un clip «Beat» abre el channel rack en «Beat», con el tamaño justo para sus filas.](../images/step-8-rack-double-click.png)
 
-El channel rack aprendió la misma lección que el piano roll. Las
-canciones de la Library guardan su batería en un patrón propio, «A
-drums» junto a «A», así que el rack de «A» mostraba filas de batería
+El rack de canales aprendió la misma lección que el piano roll. Las
+canciones de la Biblioteca guardan su batería en un patrón propio, «Batería de A» junto a «A», así que el rack de «A» mostraba filas de batería
 sin nada dentro. Cuando un patrón no tiene pasos de batería, el rack
 nombra ahora los patrones que sí los tienen, como botones.
 
@@ -149,7 +148,7 @@ egui::ScrollArea::new([true, vertical])
 
 [Adaptarse a cualquier ventana](fitting-the-window.md) usaba el zoom de
 egui, que hace *todo* más grande. Hacer zoom del piano roll para ver sus
-notas hacía zoom también del playlist, y el usuario pidió cada ventana
+notas hacía zoom también de la lista de reproducción, y el usuario pidió cada ventana
 por su cuenta, como un navegador hace zoom de una pestaña.
 
 ![La ventana principal al 110%, el channel rack aún al 100%: sus nombres y pasos conservan su tamaño.](../images/step-8-zoom-each.png)

@@ -299,7 +299,7 @@ canales de instrumentos: su ganancia sin clics se convirtió en
 [`dsp::Smoothed`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/dsp.rs),
 y su oscilador creció hasta convertirse en el
 [`Synth`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/instrument.rs)
-que hoy reproduce las notas del channel rack. El código de abajo es el
+que hoy reproduce las notas del rack de canales. El código de abajo es el
 tono de prueba tal como era.
 
 `TestTone` generaba una onda senoidal con un **acumulador de fase**:

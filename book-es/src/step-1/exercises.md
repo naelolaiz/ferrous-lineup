@@ -48,20 +48,19 @@ y luego `SynthVoice::next_sample` en `instrument.rs`.
 Añade una variante `Wave::Pulse` que valga `1.0` durante el primer
 cuarto del ciclo y `-1.0` el resto. El compilador enumera los matches
 que hay que actualizar en `Wave::at` y `Wave::gain`; luego da un pulso a
-un grupo de programas de General MIDI en `Timbre::for_program` (los Reed
-de onda cuadrada son una elección natural). Añade una prueba en
+un grupo de programas de General MIDI en `Timbre::for_program` (la familia Lengüetas, en onda cuadrada, es una elección natural). Añade una prueba en
 `timbre.rs` para los cuatro cuartos del ciclo. ¿Por qué `Eq` sigue
 funcionando en una variante sin campos, y qué se rompería si `Pulse`
 llevara un ancho `f32`?
 
 *Practica:* enums, `match`, `derive`, seguir un programa de General MIDI
-del channel rack al hilo de audio.
+del rack de canales al hilo de audio.
 
 ## 4. Un botón de reinicio (lineup-app, fácil)
 
 La nota y el volumen del tono de prueba se fueron con el tono de prueba.
 La misma idea vive en el volumen master de la barra de herramientas:
-añade un botón «Reset» junto a él que devuelva el master a
+añade un botón «Restablecer» junto a él que devuelva el master a
 `lineup_core::Mixer::default().master` (0.8).
 
 Llama a `LineupApp::set_master_volume` en

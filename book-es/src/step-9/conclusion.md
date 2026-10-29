@@ -4,8 +4,8 @@ Archivos: [`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/C
 y [`README.md`](https://github.com/naelolaiz/ferrous-lineup/blob/main/README.md)
 
 Ferrous Lineup empezó como un step sequencer con un tono de prueba.
-Acaba como banda de acompañamiento: un chord sheet, una biblioteca de
-estilos y canciones, un playlist, un piano roll, un mixer, MIDI de
+Acaba como banda de acompañamiento: una hoja de acordes, una biblioteca de
+estilos y canciones, una lista de reproducción, un piano roll, un mezclador, MIDI de
 entrada y salida, y una manera de oír lo que toca la banda. Los últimos
 capítulos trataron menos de música nueva que de hacer fiable esa banda:
 recuperación, proyectos recientes, una tarjeta de sonido que puede
@@ -17,9 +17,9 @@ El workspace son cinco crates, cada uno con un trabajo que puede
 probarse por su cuenta:
 
 - **`lineup-core`** guarda la música y la canción: notas, escalas,
-  acordes y armonía, el chord sheet, los patrones y el playlist, los
+  acordes y armonía, la hoja de acordes, los patrones y la lista de reproducción, los
   archivos de proyecto y los diffs, el historial de deshacer, los
-  archivos MIDI, los lead sheets, y la biblioteca de estilos, ritmos y
+  archivos MIDI, las partituras guía, y la biblioteca de estilos, ritmos y
   canciones. No tiene audio ni interfaz, y depende solo de `serde` y
   `ron`, así que `cargo test -p lineup-core` es rápido.
 - **`lineup-audio`** es el motor en tiempo real (`cpal`) y el
@@ -40,20 +40,20 @@ probarse por su cuenta:
 
 ## Qué hace ahora
 
-Una canción puede empezar en el chord sheet, en un archivo MIDI, en un
+Una canción puede empezar en la hoja de acordes, en un archivo MIDI, en un
 chart de acordes pegado como texto, en una grabación, o en una de las
 demos. Escribe acordes compás a compás, elige un estilo, y la banda los
 toca en cualquier tonalidad y tempo, con una intro, estribillos, un
-final, variaciones, swing, shots y pushes. Cada parte cae en una pista
+final, variaciones, swing, golpes y anticipaciones. Cada parte cae en una pista
 propia, donde el piano roll puede cambiarla a mano.
 
 Alrededor están las herramientas que la banda fue haciendo crecer: un
-editor de estilos para tus propias partes que se repiten, un mixer con
+editor de estilos para tus propias partes que se repiten, un mezclador con
 paneo, reverb y medidores, una barra de práctica con cuenta de entrada,
-metrónomo y loops, y las ventanas de armonía que nombran lo que oyes y
+metrónomo y bucles, y las ventanas de armonía que nombran lo que oyes y
 lo que podría venir después. Los teclados MIDI tocan hacia dentro; los
-canales MIDI Out y un SoundFont tocan hacia fuera. Una canción puede
-salir como WAV, MIDI, un PDF de lead sheet, o un vídeo MP4. Un proyecto
+canales de salida MIDI y un SoundFont tocan hacia fuera. Una canción puede
+salir como WAV, MIDI, un PDF de partitura guía, o un vídeo MP4. Un proyecto
 puede sobrevivir a un cierre inesperado, y el sonido puede volver
 después de desenchufar la interfaz.
 
@@ -65,10 +65,9 @@ La biblioteca integrada está escrita como datos en `lineup-core`:
 - **112** ritmos, más rellenos,
 - **343** demos de canciones.
 
-Eso basta para tocar *Ode to Joy* como pista de house o *When the
+Eso basta para tocar *Oda a la alegría* como pista de house o *When the
 Saints* como Dixieland. El capítulo de la [biblioteca](../step-8/library.md)
-explica cómo funcionan las tablas; el capítulo de las
-[Demos](demo-search.md) explica cómo buscarlas.
+explica cómo funcionan las tablas; el capítulo de la [búsqueda de demos](demo-search.md) explica cómo buscarlas.
 
 ## Ejecutarlo y probarlo
 

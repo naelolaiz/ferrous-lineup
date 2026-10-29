@@ -34,13 +34,13 @@ Los músicos hacen tres cosas que un secuenciador no hace:
    parte de lo que hace que una interpretación suene viva, y un
    secuenciador suene mecánico.
 
-Este capítulo añade las tres: cambios de tempo en el playlist, demos
+Este capítulo añade las tres: cambios de tempo en la lista de reproducción, demos
 que reproducen los cambios de tempo que marcan sus partituras y dan
 forma a sus velocidades, y una *temporización loose* opcional.
 
-## Cambios de tempo en el playlist
+## Cambios de tempo en la lista de reproducción
 
-Un cambio de tempo es un marcador en el playlist, como un [cambio de
+Un cambio de tempo es un marcador en la lista de reproducción, como un [cambio de
 compás](time-markers.md):
 
 ```rust
@@ -58,7 +58,7 @@ accelerando. Un paso es una semicorchea, así que un glide a lo largo
 de dos compases de 4/4 son 32 cambios pequeños, lo bastante cerca de
 una curva suave como para que nadie oiga las escaleras.
 
-La **tempo strip** (la franja de tempo), entre las secciones y los
+La **franja de tempo**, entre las secciones y los
 números de compás, dibuja el tempo como una línea: plana donde se
 mantiene, un salto donde cambia de golpe, una pendiente donde hace
 glide. Cada cambio se etiqueta como lo pondría una partitura:
@@ -115,7 +115,7 @@ pub fn tempo_at(&self, step: usize) -> Tempo {
 
 Un glide empieza desde el tempo que estuviera sonando en el paso
 anterior a su marcador, incluso si era la mitad de otro glide. Por eso
-el loop lleva `from` consigo: cada marcador le pregunta al anterior
+el bucle lleva `from` consigo: cada marcador le pregunta al anterior
 «¿dónde estabas, un paso antes de mí?». `bpm_on` es la línea recta de
 un glide:
 
@@ -135,11 +135,11 @@ Un glide de 4 pasos de 100 a 60 BPM reproduce 90, 80, 70 y 60: el
 exactamente eso.
 
 Las secciones pueden repetirse, así que la canción tal como suena es
-más larga que el playlist tal como se dibuja ([la estructura de la
+más larga que la lista de reproducción tal como se dibuja ([la estructura de la
 canción](song-structure.md)). Una sección que se frena al final debe
 frenarse en cada vuelta. `Project::played_tempos` calcula el tempo de
 cada paso de la canción tal como suena, preguntando al arreglo qué
-paso del playlist es cada paso de la canción y buscándolo en el mapa.
+paso de la lista de reproducción es cada paso de la canción y buscándolo en el mapa.
 Cuando el tempo nunca cambia devuelve una lista vacía, y nada más
 cambia para la canción de siempre.
 
@@ -167,7 +167,7 @@ pub fn due(&self) -> Option<usize> {
 }
 ```
 
-y el loop sobre los frames de cada bloque hace esto antes de hacer
+y el bucle sobre los frames de cada bloque hace esto antes de hacer
 tick:
 
 ```rust
@@ -181,7 +181,7 @@ if let Some(step) = self.sequencer.due() {
 
 `tempo_of_step` es el tempo de la canción para ese paso en el modo
 canción, y el del cuadro de tempo en el modo patrón, donde trabajas
-sobre un patrón y quieres un loop constante. `bool::then_some` es un
+sobre un patrón y quieres un bucle constante. `bool::then_some` es un
 pequeño truco que vale la pena conocer: `condition.then_some(value)`
 es `Some(value)` cuando la condición se cumple y `None` si no.
 
@@ -245,7 +245,7 @@ tempo de Chopin después de su stretto (no escribe ningún *a tempo*).
 La Tocata en re menor de Bach también tiene calderones, pero la demo
 ya escribe esas notas largas, así que no se le añadió ninguno. Se
 revisaron muchas otras demos y no tienen marca alguna en los compases
-que reproducen: Für Elise es *Poco moto* en toda su primera página, y
+que reproducen: Para Elisa es *Poco moto* en toda su primera página, y
 Rêverie solo se frena mucho después de que acabe la demo.
 
 Una parte de una canción demo puede ahora llevar las marcas de tempo
@@ -262,7 +262,7 @@ Part::new("Theme", MELODY, CHORDS).with_tempo(&[
 `TempoMark` tiene tres clases, nombradas como las nombra una
 partitura: `tempo(at, bpm)` para un tempo nuevo de golpe,
 `glide(at, bpm, over)` para un rit. o accel., y `fermata(at, steps)`.
-La demo pone un marcador de tempo en el playlist por cada una, cada
+La demo pone un marcador de tempo en la lista de reproducción por cada una, cada
 vez que suena la parte. Un calderón se convierte en dos marcadores: la
 mitad del tempo para los pasos sostenidos (para que duren el doble), y
 luego el tempo de antes.
@@ -278,7 +278,7 @@ géneros clásico, folk, soul (los espirituales y los himnos), tango y
 folclore sudamericano frenan hasta nueve décimas de su tempo a lo
 largo de su último compás, salvo que su última parte ya tenga marcas
 propias. Es un único marcador, así que si prefieres la demo sin él,
-haz clic sobre él en la tempo strip y quítalo.
+haz clic sobre él en la franja de tempo y quítalo.
 
 ### Velocidades: la forma de una frase
 
@@ -336,7 +336,7 @@ misma altura.
 
 ## Temporización loose
 
-**Loose**, en la barra de herramientas del playlist, fija a qué
+**Soltura**, en la barra de herramientas de la lista de reproducción, fija a qué
 distancia de la cuadrícula pueden caer las notas, desde *off* (el
 valor por defecto) hasta 40 milisegundos. Con él activado, cada nota
 de la canción empieza hasta ese tanto tarde, una cantidad distinta
@@ -380,7 +380,7 @@ y solo una quinta parte difiere de nota a nota: el acorde de un
 pianista va un poco tarde o pronto como un todo, no repartido como un
 arpa.
 
-Grabada desde la app con la canción sonda y Loose a 20 ms, los pulsos
+Grabada desde la app con la canción sonda y Soltura a 20 ms, los pulsos
 ya no estaban exactamente a medio segundo unos de otros:
 
 ```text
@@ -390,7 +390,7 @@ ya no estaban exactamente a medio segundo unos de otros:
 
 ## Qué llevarse
 
-- Un cambio de tempo es un dato en el playlist; un `TempoMap` lo
+- Un cambio de tempo es un dato en la lista de reproducción; un `TempoMap` lo
   convierte en un tempo por paso, igual que un `Meter` convierte los
   marcadores de tiempo en compases.
 - El hilo de audio recibe una lista que solo puede leer, hecha en otra

@@ -25,8 +25,7 @@ Lineup dicen ahora cuál es, para cada pista y para toda la banda.
 | G7 | Re, la quinta | G7/D | V⁴₃ (segunda inversión) |
 | G7 | Fa, la séptima | G7/F | V⁴₂ (tercera inversión) |
 
-Un **símbolo de acorde** pone el bajo después de una barra, como en un
-lead sheet ([Nombres de acordes](chord-names.md)). Un **número romano**
+Un **símbolo de acorde** pone el bajo después de una barra, como en una partitura guía ([Nombres de acordes](chord-names.md)). Un **número romano**
 toma las cifras del *bajo cifrado*, la taquigrafía de los teclistas
 barrocos: los números son los intervalos por encima del bajo. C/E tiene
 Do una sexta por encima de Mi y Sol una tercera por encima de él: «6/3»,
@@ -37,8 +36,7 @@ Sustituyen al 7, así que G7/B es V⁶₅, no V7⁶₅. Una dominante secundaria
 conserva su objetivo: E7/G# en Do mayor es V⁶₅/vi.
 
 Los acordes sus, de sexta y de novena no tienen cifras propias;
-conservan solo el nombre con barra. [El chord
-sheet](chord-sheet.md#leer-el-sheet) muestra estos numerales debajo
+conservan solo el nombre con barra. [La hoja de acordes](chord-sheet.md#leer-la-hoja) muestra estos numerales debajo
 de cada compás. Lo que añade este capítulo es lo que hace la app con el
 bajo ahora que sabe qué nota es.
 
@@ -51,7 +49,7 @@ La franja de acordes del piano roll tiene ahora dos filas:
 - la fila de arriba, con el nombre de la pista (aquí «Piano»), nombra
   los acordes de las notas de esa pista por sí solas. El piano de la
   banda toca G7 como Si Re Fa Sol, así que por sí solo es G7/B.
-- **All** nombra el acorde de todas las pistas tocando juntas en ese
+- **Todo** nombra el acorde de todas las pistas tocando juntas en ese
   momento de la canción: el piano, el bajo y cualquier otra cosa.
   Debajo de ese G7 el bajo toca Fa, así que la banda toca G7/F, V⁴₂.
 
@@ -62,7 +60,7 @@ después de la barra, o la fundamental; para dos acordes a la vez, el
 bajo del acorde más grave; para un conjunto o un micromodo, la primera
 nota de su forma normal, ya que un grupo sin fundamental no tiene bajo
 propio; y para una serie, la primera nota de cada grupo de tres (mira
-[la banda toca el chord sheet](band.md#qué-toca-cada-player)).
+[la banda toca la hoja de acordes](band.md#qué-toca-cada-player)).
 
 ¿Cómo se calcula «todas las pistas»? `Project::chord_notes_in_song` ya
 reunía las notas de las pistas que sostienen acordes (dos notas o más),
@@ -90,7 +88,7 @@ por Re no se une, porque Re no está en Do mayor, así que el acorde sigue
 siendo Do en lugar de convertirse en un acorde sin nombre.
 
 El piano roll muestra un patrón, no la canción entera, así que para la
-fila All `Project::chord_notes_with_pattern` busca dónde se toca por
+fila Todo `Project::chord_notes_with_pattern` busca dónde se toca por
 primera vez el patrón en la canción y reúne ahí todas las pistas.
 
 ## Las cifras en el código
@@ -112,19 +110,18 @@ match (self.tone_of(bass), triad, seventh) {
 
 Hacer match sobre una tupla comprueba varias cosas a la vez; `_`
 encaja con cualquier cosa. `Scale::figured_numeral` pone las cifras
-sobre el numeral, quitando el 7 al que sustituyen. El chord sheet tenía
+sobre el numeral, quitando el 7 al que sustituyen. La hoja de acordes tenía
 su propia copia de esto para los acordes con barra que escribes; ahora
-usa la misma función, así que el sheet, el piano roll, la barra de
-estado, las harmony keys y Find the key escriben una inversión de la
+usa la misma función, así que la hoja, el piano roll, la barra de
+estado, las teclas de armonía y Buscar la tonalidad escriben una inversión de la
 misma manera.
 
-## En las harmony keys
+## En las teclas de armonía
 
-![Las harmony keys mientras la banda toca C/E, F/A, G7/F y C/G: la tecla que suena lee I⁶ C/E, luego IV⁶ F/A, luego V⁴₂ G7/F, luego I⁶₄ C/G, y Find the key dice "C/E is I⁶, tonic", "G7/F is V⁴₂, dominant"](../images/step-9-inversions-keys.png)
+![Las harmony keys mientras la banda toca C/E, F/A, G7/F y C/G: la tecla que suena lee I⁶ C/E, luego IV⁶ F/A, luego V⁴₂ G7/F, luego I⁶₄ C/G, y Buscar la tonalidad dice "C/E is I⁶, tonic", "G7/F is V⁴₂, dominant"](../images/step-9-inversions-keys.png)
 
-La tecla que suena nombra el acorde oído, inversión incluida. Con
-Triads activado, G7/F enciende la tecla de V, que lee V⁴₂ y G7/F
-mientras suena. El aviso y Find the key lo nombran igual.
+La tecla que suena nombra el acorde oído, inversión incluida. Con Tríadas activado, G7/F enciende la tecla de V, que lee V⁴₂ y G7/F
+mientras suena. El aviso y Buscar la tonalidad lo nombran igual.
 
 ## Qué viene después de I⁶₄
 
@@ -157,12 +154,11 @@ sensible Sol♯.
 
 ## Pruébalo
 
-1. File > New, y escribe C/E, F/A, G7/F y C/G en los cuatro primeros
-   compases del chord sheet. Pulsa Play y mira las harmony keys.
-2. Abre Piano 1 en el piano roll (F7). La fila Piano y la fila All
+1. Archivo > Nuevo, y escribe C/E, F/A, G7/F y C/G en los cuatro primeros
+   compases de la hoja de acordes. Pulsa ▶ y mira las teclas de armonía.
+2. Abre Piano 1 en el piano roll (F7). La fila Piano y la fila Todo
    difieren: el piano toca sus propias inversiones, el bajo toca las
    notas después de las barras.
-3. Cambia el compás 3 a G7/B. ¿Qué cifras recibe el acorde de la fila
-   All en la línea encima de la cuadrícula?
+3. Cambia el compás 3 a G7/B. ¿Qué cifras recibe el acorde de la fila Todo en la línea encima de la cuadrícula?
 4. Escribe C/G en el compás 1 y G7 en el compás 2. ¿Qué tecla está
    resaltada mientras suena el compás 1, y qué dice el aviso?

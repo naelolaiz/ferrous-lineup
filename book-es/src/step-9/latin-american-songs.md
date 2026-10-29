@@ -15,7 +15,7 @@ renderizada.
 
 ## Probarlo
 
-Abre **File > Demos** y escribe «cabeza» en el cuadro de búsqueda:
+Abre **Archivo > Demostraciones** y escribe «cabeza» en el cuadro de búsqueda:
 **Por una cabeza**, el tango de Gardel de 1935. Luego prueba estos, uno
 por cada tipo de música:
 
@@ -28,8 +28,7 @@ por cada tipo de música:
 - **Aquellos ojos verdes** (Cuba): un bolero.
 - **Luna de Xelajú** (Guatemala): un vals en la marimba.
 
-El género de folclore en **File > Demos** es **Latin American
-folklore**, ya que llega de México a Argentina.
+El género de folclore en **Archivo > Demostraciones** es **Folclore latinoamericano**, ya que llega de México a Argentina.
 
 Las canciones nuevas:
 
@@ -59,7 +58,7 @@ o **D.S.** (*dal segno*, volver a un signo), hasta **Fine** («fin») o
 un salto a una **coda** («cola»).
 
 Una demo toca todo ello escrito, en el orden que dice la partitura. En
-el playlist puedes ver la forma: **El Choclo** es Anacrusa, A, B, B,
+la lista de reproducción puedes ver la forma: **El Choclo** es Anacrusa, A, B, B,
 C, luego el D.C. lo lleva de vuelta a A y B una vez más (las
 repeticiones no se repiten una segunda vez tras un D.C.), y C con su
 casilla de segunda vez cierra la pieza. Antes, la demo se detenía tras
@@ -89,7 +88,7 @@ tonalidad](../step-8/key-changes.md)):
 
 ### Cinco ritmos de baile nuevos
 
-Los menús Rhythms y Styles de la biblioteca tienen cinco entradas
+Los menús Ritmos y Estilos de la biblioteca tienen cinco entradas
 nuevas. Cuatro de ellas están en 2/4, escritas a razón de dos de sus
 compases por compás de la app:
 
@@ -110,7 +109,7 @@ compases por compás de la app:
 
 ### Apoyaturas
 
-Toca **El día que me quieras** y mira el canal Lead frente al nombre
+Toca **El día que me quieras** y mira el canal Melodía frente al nombre
 del acorde: muchas frases empiezan en una nota que **no** está en el
 acorde (Fa sobre C7, Mi bemol sobre Si bemol menor) y solo después se
 mueven a una que sí está. Eso es una **apoyatura**, una nota que se
@@ -228,7 +227,7 @@ se pueden añadir.
    el estribillo. ¿Qué nota de la escala de Sol menor cambia en Sol
    mayor? Encuéntrala en la melodía de los primeros compases del
    estribillo.
-2. En **El Choclo**, silencia todos los canales menos Bass y toca la
+2. En **El Choclo**, silencia todos los canales menos Bajo y toca la
    tercera sección. Encuentra el círculo de quintas F#7, Si menor, B7,
    E7: cada fundamental está una quinta por encima de la siguiente.
    ¿Dónde aterriza?

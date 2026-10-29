@@ -8,7 +8,7 @@ y [`crates/lineup-app/src/playlist.rs`](https://github.com/naelolaiz/ferrous-lin
 Hasta ahora cada compás de Ferrous Lineup tenía dieciséis pasos:
 cuatro pulsos de cuatro semicorcheas. Eso es 4/4, y la mayor parte del
 pop está en él. Pero un vals cuenta *un dos tres*, un tango vals
-también, y *Greensleeves*, *Amazing Grace* y *Für Elise* tampoco están
+también, y *Greensleeves*, *Amazing Grace* y *Para Elisa* tampoco están
 en cuatro. La biblioteca los necesita, así que el paso 8 añade compases.
 
 ## La música
@@ -102,7 +102,7 @@ etiqueta de la UI y todo mensaje de error escribe "3/4" igual.
 Encontrarlos fue cuestión de buscar `16`, `STEPS_PER_BAR` y `% 4`.
 Cada uno pregunta ahora el compás del proyecto:
 
-- **el playlist**: el ancho de un compás, los números de compás de la
+- **la lista de reproducción**: el ancho de un compás, los números de compás de la
   regla, las líneas de compás y de pulso, y dónde se ajustan los clips.
   `Snap::Bar` solía ser dieciséis pasos; ahora pregunta:
 
@@ -116,7 +116,7 @@ Cada uno pregunta ahora el compás del proyecto:
   }
   ```
 
-- **el channel rack**: los botones de paso alternan colores por pulso,
+- **el rack de canales**: los botones de paso alternan colores por pulso,
   y vuelven a empezar en cada compás, para que todos los compases se
   vean iguales,
 - **el piano roll**: sus líneas de compás y de pulso, en la cuadrícula

@@ -10,7 +10,7 @@ son propios de la tonalidad, construidos solo con sus siete notas. Los
 que no lo son suelen ser los que recuerdas: el iv menor que oscurece la
 última línea de una balada, el D7 que lleva al puente de un estándar.
 La armonía tiene nombres para explicar por qué están ahí esos acordes,
-y el chord sheet los escribe ahora debajo de los acordes:
+y la hoja de acordes los escribe ahora debajo de los acordes:
 
 - **Acordes prestados**, tomados de la tonalidad menor sobre la misma
   tónica.
@@ -25,12 +25,12 @@ y el chord sheet los escribe ahora debajo de los acordes:
 
 ## Cómo probarlo
 
-1. Crea una canción nueva, abre el chord sheet (**F5**) y escribe estos
+1. Crea una canción nueva, abre la hoja de acordes (**F5**) y escribe estos
    dieciséis compases, un acorde en cada uno: C, Fm, A♭, G7, C, E7, Am,
    D7/F♯, G, C, D♭/F, G, C, Am, D7, G.
 2. Haz clic derecho en el compás 15 de los números de compás del
-   playlist y elige la tonalidad **Sol mayor** de ahí en adelante. El
-   chord sheet escribe «→ Sol mayor» en el compás 15.
+   lista de reproducción y elige la tonalidad **Sol mayor** de ahí en adelante. El
+   hoja de acordes escribe «→ Sol mayor» en el compás 15.
 3. Señala un número romano coloreado para leer qué hace el acorde.
    Señala «→ Sol mayor» para leer cómo cambia la tonalidad.
 
@@ -132,9 +132,8 @@ tira hacia Sol. Se escribe **vii°7/V**.
 A diferencia de una dominante secundaria, solo se nombra así cuando va a
 su acorde, o a un acorde de sexta y cuarta sobre él. Autumn Leaves
 tiene F♯m7♭5 que va a B7 y luego a Em, un ii–V–i en Mi menor. Leído en Do
-mayor, como en la página sobre [pegar chord sheets](text-chord-sheets.md),
-F♯m7♭5 sigue siendo allí el ii de Mi menor, no el vii de Sol. Así que el
-chord sheet mantiene su número llano, ♯ivø7.
+mayor, como en la página sobre [pegar hojas de acordes](text-chord-sheets.md),
+F♯m7♭5 sigue siendo allí el ii de Mi menor, no el vii de Sol. Así que la hoja de acordes mantiene su número llano, ♯ivø7.
 
 ### En una tonalidad menor
 
@@ -151,13 +150,13 @@ menor, Do♯, Re♯ o La♯. La única excepción es un acorde de la menor
 melódica que va adonde iría un acorde secundario: Re que sigue hacia Sol
 es el V de Sol.
 
-En un **modo**, como Re dórico o Mi frigio, el chord sheet escribe solo
+En un **modo**, como Re dórico o Mi frigio, la hoja de acordes escribe solo
 los números. Los acordes prestados y las dominantes secundarias son
 nombres de las tonalidades mayores y menores, y los acordes de un modo
 hacen otras cosas: Mi mayor en Mi frigio es el acorde de tónica de gran
 parte del flamenco, no la dominante de La menor.
 
-El chord sheet lee las dominantes secundarias contra la escala menor
+La hoja de acordes lee las dominantes secundarias contra la escala menor
 natural. La dominante de la propia dominante es B7, con Re♯, escrito V7/V.
 Cuando B7 va a Em, un v menor, se escribe V7/v.
 
@@ -176,7 +175,7 @@ tercera en el bajo es un acorde de «sexta» en el bajo cifrado). Va
 hacia la dominante, y su Re♭ cae a Si, la sensible. Esa caída es una
 tercera disminuida, un paso melódico llamativo.
 
-El chord sheet escribe N⁶ solo para un acorde mayor escrito sobre la
+La hoja de acordes escribe N⁶ solo para un acorde mayor escrito sobre la
 segundo nombre de nota de la tonalidad, Re♭ en Do. Do♯ mayor son las mismas notas
 en el piano, pero escrito sobre Do es un acorde cromático sobre la
 tónica, no un napolitano.
@@ -191,7 +190,7 @@ llega D7, que Do mayor no tiene, y el oído oye que Am era en realidad ii
 en Sol. Am es el **acorde pivote**: hace girar la música de una tonalidad
 a la otra.
 
-El chord sheet busca el pivote alrededor de cada cambio de tonalidad.
+La hoja de acordes busca el pivote alrededor de cada cambio de tonalidad.
 Encuentra el primer acorde cerca del cambio que pertenece a la
 tonalidad nueva y no a la vieja. Ese acorde es la **llegada** (aquí
 D7). El acorde anterior es el pivote si pertenece a ambas tonalidades.
@@ -203,7 +202,7 @@ El pivote lleva los dos números, primero el de la tonalidad vieja:
 Dónde va el marcador de tonalidad es cosa tuya. Los músicos marcan la
 tonalidad nueva donde sienten que ha llegado, que puede ser un compás o
 dos después del pivote. Si el marcador está sobre el G, el D7 anterior
-ya pertenece a Sol mayor. El chord sheet lo lee igualmente en Sol mayor y
+ya pertenece a Sol mayor. La hoja de acordes lo lee igualmente en Sol mayor y
 escribe debajo `V7 · in G major`, en naranja.
 
 No todo cambio de tonalidad tiene pivote:
@@ -227,7 +226,7 @@ El número de un acorde solía depender solo del acorde y de la
 tonalidad. Ahora también depende de sus vecinos: un acorde de sensible
 secundario se nombra por adónde va, y un pivote se encuentra mirando
 los acordes alrededor de un cambio de tonalidad. Así que
-`Functions::read` lee todo el chord sheet de una pasada, y la hoja le
+`Functions::read` lee toda la hoja de acordes de una pasada, y la hoja le
 pregunta por cada acorde:
 
 ```rust
@@ -390,7 +389,7 @@ que un cambio que empieza en su llegada no tiene pivote, y ningún
 
 ## ¿Cómo sabemos que está bien?
 
-Las pruebas de `function.rs` son pequeños chord sheets al estilo de un
+Las pruebas de `function.rs` son pequeñas hojas de acordes al estilo de un
 libro de texto de armonía. Cada una comprueba los números y lo que
 dicen los tooltips:
 
@@ -426,7 +425,7 @@ dicen los tooltips:
    cambia es La a La♭. ¿Qué le hace al ambiente? Encuentra una canción
    que conozcas que haga esto.
 2. En Sol mayor, ¿qué acorde es V7/V? ¿Qué nota suya no está en Sol mayor,
-   y adónde quiere ir esa nota? Escríbelo en el chord sheet y
+   y adónde quiere ir esa nota? Escríbelo en la hoja de acordes y
    compruébalo.
 3. Escribe una modulación de Do mayor a Fa mayor pasando por un pivote.
    ¿Qué acordes comparten las dos tonalidades? ¿Qué acorde muestra que
@@ -436,7 +435,7 @@ dicen los tooltips:
    `key.tonic_name().letter.steps_up_to(symbol.root.letter) == 1`.
    Explica por qué Do♯ mayor en Do falla esa prueba mientras que Re♭ mayor
    la pasa, aunque ambas son las mismas teclas del piano.
-5. El chord sheet no nombra los acordes de **sexta aumentada**
+5. La hoja de acordes no nombra los acordes de **sexta aumentada**
    (italiano, francés y alemán), que también van a la dominante. Busca
    sus notas en Do menor. ¿Cuál de ellos suena como un acorde de
    séptima de dominante sobre La♭, y qué en su escritura los distingue?

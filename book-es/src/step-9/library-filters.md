@@ -1,11 +1,11 @@
-# Casillas de la Library: presets como la canción, y un ayudante para probarlos
+# Casillas de la Biblioteca: preajustes como la canción, y un ayudante para probarlos
 
 Archivos: [`crates/lineup-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/library_browser.rs),
 [`crates/lineup-app/src/library_browser/catalogue.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/library_browser/catalogue.rs),
 [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 y [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
-La Library contiene unos cientos de presets: estilos de armonía, ritmos,
+La Biblioteca contiene unos cientos de preajustes: estilos de armonía, ritmos,
 tus propios estilos, fills, estilos de filas dodecafónicas y estilos de
 micromodos. El cuadro de búsqueda encuentra uno por nombre, género o
 compás. Pero a menudo la pregunta no es «¿dónde está la bossa nova?».
@@ -13,30 +13,30 @@ Es «¿cuál de estos encajaría con **esta** canción?». Un vals no lo
 hará, si la canción está en 4/4; el Drum and bass beat, hecho para 174
 BPM, no encajará con una balada a 70.
 
-Tres casillas bajo la búsqueda reducen ahora la lista a presets como la
+Tres casillas bajo la búsqueda reducen ahora la lista a preajustes como la
 canción:
 
-- **In 4/4**: solo presets en el compás de la canción, y los que tocan
-  cada compás en su propio metro (como Orchestra). La etiqueta muestra
+- **En 4/4**: solo preajustes en el compás de la canción, y los que tocan
+  cada compás en su propio metro (como Orquesta). La etiqueta muestra
   el compás de la canción, sea cual sea.
-- **Near 112 BPM**: solo presets hechos para más o menos la velocidad
+- **Cerca de 112 BPM**: solo preajustes hechos para más o menos la velocidad
   de la canción, como mucho 1,15 veces más rápidos o más lentos. La
   etiqueta muestra el tempo de la canción.
-- **With chords**: solo presets que traen una progresión de acordes. Se
-  oculta donde todo preset trae una, como en el menú Progression de la
+- **Con acordes**: solo preajustes que traen una progresión de acordes. Se
+  oculta donde todo preajuste trae una, como en el menú Progresión de la
   hoja de acordes.
 
 ![La Library para El Choclo con In 4/4 y Near 112 BPM marcadas: quedan 72 presets.](../images/step-9-library-filters.png)
 
 ## Probarlo
 
-1. Abre **File > Demos > El Choclo** (4/4, 112 BPM) y la pestaña
-   **Library**. El encabezado dice **Presets** y cuántos hay.
-2. Marca **In 4/4**. Los valses y los estilos en 6/8 se van, y el
+1. Abre **Archivo > Demostraciones > El Choclo** (4/4, 112 BPM) y la pestaña
+   **Biblioteca**. El encabezado dice **Preajustes** y cuántos hay.
+2. Marca **En 4/4**. Los valses y los estilos en 6/8 se van, y el
    número baja.
-3. Marca **Near 112 BPM**. Lo que queda está hecho para 97 a 129 BPM.
+3. Marca **Cerca de 112 BPM**. Lo que queda está hecho para 97 a 129 BPM.
 4. Pon el tempo a 20 y mira otra vez: nada está hecho para eso, así que
-   la Library dice «Nada en la biblioteca encaja con las casillas
+   la Biblioteca dice «Nada en la biblioteca encaja con las casillas
    marcadas» y «Desmarca una casilla para ver más».
 
 Las marcas se guardan con el estado de la app, así que siguen ahí la
@@ -94,7 +94,7 @@ Tres detalles:
   quita antes de comparar.
 - **Más rápido o más lento, igual.** `ratio.max(1.0 / ratio)` convierte
   «la mitad de rápido» (0,5) y «el doble de rápido» (2,0) en el mismo
-  número, 2. Así que un preset 1,15 veces más lento y uno 1,15 veces
+  número, 2. Así que un preajuste 1,15 veces más lento y uno 1,15 veces
   más rápido quedan ambos justo dentro. A 112 BPM eso va de
   112 / 1,15 ≈ 97 a 112 × 1,15 ≈ 129. Comparar cocientes en lugar de
   una diferencia de BPM trata igual a una canción lenta y a una rápida:
@@ -102,9 +102,9 @@ Tres detalles:
 - **`self`, no `&self`.** `Narrowing` es `Copy`: tres marcas, un compás
   y un `f32`, unos pocos bytes. Tomarlo por valor no cuesta más que una
   referencia, y llamar a `keeps` no lo agota: un valor `Copy` se copia,
-  de modo que el siguiente preset también puede comprobarse con él.
+  de modo que el siguiente preajuste también puede comprobarse con él.
 
-El mismo `keeps` filtra toda lista. Los presets se filtran con
+El mismo `keeps` filtra toda lista. Los preajustes se filtran con
 `Vec::retain`, que conserva en el sitio los elementos a los que un
 closure dice que sí:
 
@@ -127,9 +127,9 @@ la biblioteca encaja» con la búsqueda, o «las casillas marcadas», con
 
 ## Un ayudante para probarlos: un pequeño refactoring
 
-Hacer clic en un preset en modo patrón lo **prueba**: la Library lo
+Hacer clic en un preajuste en modo patrón lo **prueba**: la Biblioteca lo
 escribe en un patrón propio y lo reproduce allí, de modo que la canción
-no se toca. Hay tres clases de preset con las que puede pasar esto
+no se toca. Hay tres clases de preajuste con las que puede pasar esto
 —estilos de armonía, estilos de filas dodecafónicas y estilos de
 micromodos—, y cada una tenía su propia copia de los mismos cinco
 pasos:
@@ -213,25 +213,25 @@ no tenía ninguna. Así que el cambio vino con
 `trying_row_and_micromode_styles_rewrites_one_pattern_while_it_is_unchanged`.
 Prueba dos estilos de fila y luego un estilo de micromodo, comprueba
 que todos aterrizan en el mismo patrón nuevo mientras está como lo
-escribió la Library, que reproduce en modo patrón, y que cada prueba es
+escribió la Biblioteca, que reproduce en modo patrón, y que cada prueba es
 un paso de deshacer.
 
 ## Las pruebas
 
 `the_library_tick_boxes_keep_only_presets_like_the_song` pone la
-canción a 4/4 a 120 BPM y cuenta los presets que lista la Library:
-todos, luego los que están en 4/4 (un vals se va, Orchestra se queda),
+canción a 4/4 a 120 BPM y cuenta los preajustes que lista la Biblioteca:
+todos, luego los que están en 4/4 (un vals se va, Orquesta se queda),
 luego los que están en 4/4 hechos para 104 a 138 BPM. Arranca la app de
 nuevo a 10 BPM, comprueba que las casillas siguen marcadas, que no se
-lista nada y que la Library dice por qué, y que desmarcar la velocidad
-trae de vuelta los presets en 4/4.
+lista nada y que la Biblioteca dice por qué, y que desmarcar la velocidad
+trae de vuelta los preajustes en 4/4.
 
 ## Ejercicios
 
-1. Marca **Near … BPM** en una canción a 60 BPM. ¿Qué rango conserva?
+1. Marca **Cerca de … BPM** en una canción a 60 BPM. ¿Qué rango conserva?
    Luego a 180. ¿Por qué habría sido peor ±15 BPM?
-2. Añade una cuarta casilla, **Same genre as the song's style**, que
-   conserve los presets del género del estilo que toca la banda. ¿Qué
+2. Añade una cuarta casilla, **Mismo género que el estilo de la canción**, que
+   conserve los preajustes del género del estilo que toca la banda. ¿Qué
    necesitaría saber `Narrowing`, y de dónde lo sacarías?
 3. `write_pattern_style` toma `impl FnOnce`. ¿Funcionaría `impl Fn`
    para los dos closures que se le pasan hoy? ¿Qué podría hacer un

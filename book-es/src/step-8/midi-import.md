@@ -17,7 +17,7 @@ meter música real en la app: casi toda pieza jamás escrita se puede
 encontrar como uno, a menudo tecleado por alguien desde la partitura,
 a veces tocado en un teclado.
 
-**File > Import MIDI file…** (o abrir un archivo `.mid` desde la línea
+**Archivo > Importar archivo MIDI…** (o abrir un archivo `.mid` desde la línea
 de comandos, o soltar uno sobre la ventana) ahora convierte un archivo
 MIDI en un proyecto nuevo, listo para reproducir:
 
@@ -32,14 +32,14 @@ MIDI en un proyecto nuevo, listo para reproducir:
   compases en marcadores de tiempo, y las armaduras de clave en la
   tonalidad del proyecto y sus [marcadores de tonalidad](key-changes.md);
 - la canción se corta en patrones por las líneas de compás y se coloca
-  en el playlist.
+  en la lista de reproducción.
 
 Como las notas caen en patrones corrientes, todo lo que ya entiende
-notas funciona con ellas: el carril **Chords** del piano roll nombra el
-acorde en cada paso, y las **harmony keys** iluminan el acorde que
+notas funciona con ellas: el carril **Acordes** del piano roll nombra el
+acorde en cada paso, y las **teclas de armonía** iluminan el acorde que
 suena ahora mientras la canción se reproduce.
 
-![El menú File: New, Open, Demos, Import recording…, Import MIDI file…, Save, Save as, Export WAV, Export song as MIDI, Export pattern as MIDI, Quit.](../images/step-8-midi-menu.png)
+![El menú File: New, Open, Demos, Import recording…, Import MIDI file…, Save, Save as, Exportar WAV, Export song as MIDI, Export pattern as MIDI, Quit.](../images/step-8-midi-menu.png)
 
 ![La Eine kleine Nachtmusik de Mozart, importada de un archivo MIDI, en el piano roll. Sobre las notas, el carril Chords nombra cada acorde: G, D, G, D, G, C, A, D... El cuadro de tonalidad dice Sol mayor. Debajo, el carril de velocidad muestra con qué fuerza se tocó cada nota.](../images/step-8-midi-mozart.png)
 
@@ -110,7 +110,7 @@ archivo entero: cada uno se lee sin un panic.
 
 Un delta time es una *cantidad de longitud variable*: siete bits por
 byte, con el bit superior puesto en todos los bytes menos el último.
-Escribirla era un loop que cortaba el número en trozos de siete bits;
+Escribirla era un bucle que cortaba el número en trozos de siete bits;
 leerla los pega de vuelta:
 
 ```rust
@@ -129,7 +129,7 @@ fn variable_length(&mut self) -> Option<u32> {
 
 `81 00` es `1 << 7 | 0` = 128. El estándar permite cuatro bytes como
 mucho; un quinto significaría que el archivo está dañado, así que
-después de cuatro el loop se rinde.
+después de cuatro el bucle se rinde.
 
 ### Running status
 
@@ -297,8 +297,7 @@ nuevo» en lugar de mover las notas a la cuadrícula sin avisar.
 El piano roll dibuja una nota con nudge donde empieza de verdad, y el
 motor de audio la reproduce ahí: la nota se retiene `nudge` ticks,
 igual que la [temporización loose](tempo-and-feel.md) retiene una
-nota, y se suelta `trim` ticks antes. **Tools > Quantize to the
-steps** mueve las notas seleccionadas (o todas) al paso más cercano,
+nota, y se suelta `trim` ticks antes. **Herramientas > Cuantizar a los pasos** mueve las notas seleccionadas (o todas) al paso más cercano,
 para cuando las quieras en la cuadrícula.
 
 ![Un archivo cuyas notas están un poco fuera de la cuadrícula, como cuando una pieza se toca en un teclado: en el piano roll las notas empiezan un poco después o antes de las líneas de los pasos, y las barras de velocidad de abajo tienen todas alturas distintas.](../images/step-8-midi-played-in.png)
@@ -351,7 +350,7 @@ El canal MIDI 10 es el **canal de batería** en General MIDI: cada
 tecla es un sonido de batería, 36 un bombo, 38 una caja, 42 un hi-hat
 cerrado. La importación da a cada batería integrada que usa el archivo
 un canal propio, como en un proyecto nuevo, de modo que la batería
-aparece en el channel rack como un step sequencer. Los sonidos que las
+aparece en el rack de canales como un step sequencer. Los sonidos que las
 baterías integradas no tienen van al más cercano (un triángulo al
 ride, una pandereta al shaker, los bongos a la conga); un sonido sin
 nada cercano, como un silbato, se deja fuera, y el aviso lo cuenta.
@@ -359,7 +358,7 @@ nada cercano, como un silbato, se deja fuera, y el aviso lo cuenta.
 El **program change** que eligió el instrumento de cada pista se
 conserva también en su canal, como `Channel::program`: 40 es un
 violín, 0 un piano de cola. Nombra al canal, el Lineup Osc toca un
-sonido parecido a ese instrumento, y MIDI Out y la exportación MIDI lo
+sonido parecido a ese instrumento, y la salida MIDI y la exportación MIDI lo
 reenvían (ver [cada voz en su propio canal](voices-and-instruments.md)).
 
 El **volumen** de un canal (controlador 7) fija el volumen del canal
@@ -370,7 +369,7 @@ del rack, de modo que un acompañamiento suave sigue suave.
 Un patrón contiene como mucho 256 pasos (16 compases de 4/4), y una
 canción puede durar 200 compases. Así que la importación corta la
 canción en patrones por las **líneas de compás**, de 16 compases como
-máximo cada uno, y los coloca uno tras otro en el playlist.
+máximo cada uno, y los coloca uno tras otro en la lista de reproducción.
 
 ¿Dónde cortar? Una nota que suena a través del corte tiene que
 partirse en dos, lo que es inofensivo para el sonido pero feo de
@@ -448,8 +447,7 @@ Un archivo también puede cambiar de tonalidad a mitad de camino, con
 más armaduras de clave: el *Rondo alla turca* pasa de La menor a La
 mayor y vuelve. La primera armadura de clave es la tonalidad con la
 que empieza la canción, y cada una de las siguientes que nombra una
-tonalidad distinta se convierte en un **marcador de tonalidad** en el
-playlist, como si lo hubieras añadido tú; el aviso los cuenta («9
+tonalidad distinta se convierte en un **marcador de tonalidad** en la lista de reproducción, como si lo hubieras añadido tú; el aviso los cuenta («9
 cambios de tonalidad»). Los archivos suelen repetir la misma armadura
 al principio de cada sección, y `KeyMap::tidy` los deja fuera.
 
@@ -536,16 +534,16 @@ un archivo de 25 MB con los dígitos de π).
 ## Cosas que probar
 
 - Encuentra un archivo MIDI de una pieza que conozcas, ábrelo y pulsa
-  Play con las harmony keys abiertas (F8). ¿Qué acordes usa más?
+  ▶ con las teclas de armonía abiertas (F8). ¿Qué acordes usa más?
 - Abre el piano roll sobre un archivo tocado en un teclado y mira a
   qué distancia de la cuadrícula están las notas. Selecciona unas
-  cuantas y usa **Tools > Quantize to the steps**: ¿suena mejor
+  cuantas y usa **Herramientas > Cuantizar a los pasos**: ¿suena mejor
   o peor?
 - Exporta una demo en un modo, como *Scarborough Fair* en Re dórico,
   abre el archivo en otro programa y mira su armadura de clave. Luego
   ábrelo otra vez en Ferrous Lineup: la tonalidad vuelve a ser Re
   dórico.
-- Prueba la otra vía de entrada: **File > Import recording…** escucha
+- Prueba la otra vía de entrada: **Archivo > Importar grabación…** escucha
   un archivo MP3 o WAV y construye una pista de armonía a partir de lo
   que oye ([Importar una grabación](../spike-listen/README.md)). Es
   experimental; un archivo MIDI trae las notas exactamente.

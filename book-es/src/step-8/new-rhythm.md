@@ -5,7 +5,7 @@ Archivos: [`crates/lineup-core/src/library/listen.rs`](https://github.com/naelol
 [`crates/lineup-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/library_browser.rs)
 y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
-Hasta ahora, elegir un ritmo en la Library solo cambiaba la batería. Pon
+Hasta ahora, elegir un ritmo en la Biblioteca solo cambiaba la batería. Pon
 un ritmo de reggae bajo una bossa nova y el piano seguía tocando bossa
 nova encima. Una banda lo hace mejor cuando alguien dice «hagamos esta
 como reggae»: los mismos acordes, una forma nueva de tocarlos todos, el
@@ -13,11 +13,10 @@ piano y el bajo también.
 
 Ahora Ferrous Lineup también lo hace, en dos sitios:
 
-- En la Library, un ritmo elegido después de un estilo cambia cómo se
-  toca el estilo. «Four chords» con el ritmo «Salsa» sale como un
+- En la Biblioteca, un ritmo elegido después de un estilo cambia cómo se
+  toca el estilo. «Cuatro acordes» con el ritmo «Salsa» sale como un
   montuno de piano sobre un bajo de tumbao.
-- Haz clic derecho en un ritmo y elige **Play the whole song in this
-  rhythm**. Cada patrón con batería recibe el ritmo nuevo, en cada
+- Haz clic derecho en un ritmo y elige **Tocar toda la canción con este ritmo**. Cada patrón con batería recibe el ritmo nuevo, en cada
   patrón con acordes se vuelven a tocar, y la melodía se queda como
   estaba. Ctrl+Z lo deshace todo en un solo paso.
 
@@ -175,7 +174,7 @@ los acordes en la música real.
 
 Dos tramos seguidos pueden salir con el mismo acorde: se juntan. Y un
 arpegio toca sus notas de una en una, así que su primer pulso puede
-sonar como C y el segundo como C7. El loop que los junta usa **match
+sonar como C y el segundo como C7. El bucle que los junta usa **match
 guards**, un `if` después de un patrón:
 
 ```rust
@@ -218,9 +217,9 @@ pub fn feel(rhythm: &Rhythm) -> (Comping, Bass) {
 }
 ```
 
-El ritmo «Salsa» es la batería del estilo «Salsa montuno», así que toca
+El ritmo «Salsa» es la batería del estilo «Montuno de salsa», así que toca
 los acordes como un montuno y el bajo como un tumbao. Un ritmo que
-ningún estilo usa, como «March», toma prestado un estilo de su género en
+ningún estilo usa, como «Marcha», toma prestado un estilo de su género en
 su compás, así que un ritmo en 3/4 nunca recibe una manera de tocar
 pensada para 4/4.
 
@@ -242,13 +241,13 @@ for (index, (chord, stretch)) in played.iter().enumerate() {
 }
 ```
 
-Es el mismo loop que `accompany` en `chart.rs`, con los acordes oídos en
+Es el mismo bucle que `accompany` en `chart.rs`, con los acordes oídos en
 lugar de una tabla. Los tramos donde no se oyó ningún acorde conservan
 sus notas antiguas, así que una intro sin acordes se queda como estaba.
 
 `use_rhythm` hace una canción entera. Para cada patrón, rehace el
 comping de los acordes y escribe la batería nueva. Tres cosas se dejan
-en paz a propósito: la melodía (el canal "Lead" nunca se usa para
+en paz a propósito: la melodía (el canal "Melodía" nunca se usa para
 acordes), el compás y los finales. Un final es un patrón cuyas notas
 empiezan todas en su primer paso, como el acorde final mantenido con un
 crash con el que terminan las demos. Convertirlo en un skank de reggae
@@ -284,7 +283,7 @@ patrones de dos compases o más.
 
 `library_browser.rs` y `app/library.rs`
 
-Las acciones de la Library son un `enum`, `LibraryAction`. Tocar una
+Las acciones de la Biblioteca son un `enum`, `LibraryAction`. Tocar una
 canción entera en un ritmo es una variante nueva, `RhythmInSong(&'static
 Rhythm)`, enviada desde un menú de clic derecho:
 
@@ -324,7 +323,7 @@ let change = self.edit("change the rhythm", |project| {
 Los 78 estilos, tocados a su manera, se oyen exactamente bien, y también
 las canciones, salvo dos acordes muy cortos: uno que dura un solo pulso
 al final mismo de Amazing Grace, y otro que cambia en mitad de un pulso
-en el Minuet in G. Tocar cada estilo de todas las maneras de comping con
+en el Minué en Sol. Tocar cada estilo de todas las maneras de comping con
 siete líneas de bajo (unas 14.000 combinaciones) acierta exactamente
 alrededor del 91%. La mayoría de los fallos son arpegios sobre un bajo
 caminante o tumbao, donde un cambio puede salir un pulso antes o

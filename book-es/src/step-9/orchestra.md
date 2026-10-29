@@ -11,49 +11,46 @@ Archivos: [`crates/lineup-core/src/library/rhythm.rs`](https://github.com/naelol
 y [`crates/lineup-app/src/library_browser.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/library_browser.rs)
 
 Abre una demo sencilla, pongamos **Old MacDonald Had a Farm**, y la
-**Library** ilumina el estilo que le encaja, Afropop. Hazle clic, haz
-clic en **Apply**, y entra una banda: un piano, un bajo y una batería
+**Biblioteca** ilumina el estilo que le encaja, Afropop. Hazle clic, haz
+clic en **Aplicar**, y entra una banda: un piano, un bajo y una batería
 tocando los acordes de la canción. Las demos de [la sala de
-conciertos](concert-hall.md) no tenían nada iluminado. The Rite of
-Spring, Petrushka, Boléro y las demás no tenían estilo que les
+conciertos](concert-hall.md) no tenían nada iluminado. La consagración de la primavera, Petrushka, Boléro y las demás no tenían estilo que les
 encajara, y cualquier estilo que eligieras hacía más mal que bien: el
-**Ritual of Abduction** cambia de métrica 32 veces en 67 compases, y un
+**Juego del rapto** cambia de métrica 32 veces en 67 compases, y un
 estilo en 4/4 lo convertía todo en 4/4, al tempo del estilo, con las
 partes propias de la partitura silenciadas.
 
-Ahora estas demos tienen un estilo propio, **Orchestra**. Toca cada
+Ahora estas demos tienen un estilo propio, **Orquesta**. Toca cada
 compás en la métrica de ese compás, conserva los compases y el tempo
 de la canción, y toca junto a la partitura en lugar de silenciarla. Es
 el estilo que encaja con las once demos de la sala de conciertos:
-Promenade, el vals *Pathétique* en cinco, Boléro, La Mer, the Augurs of
-Spring, the Ritual of Abduction y las cinco demos de Petrushka.
+Promenade, el vals *Pathétique* en cinco, Boléro, La Mer, los Augurios primaverales, el Juego del rapto y las cinco demos de Petrushka.
 
 ## Probarlo
 
-1. Abre **File > Demos**, escribe `Augurs` en el cuadro de búsqueda y
-   pulsa Enter: **The Rite of Spring, The Augurs of Spring** se abre y
+1. Abre **Archivo > Demostraciones**, escribe `augurios` en el cuadro de búsqueda y
+   pulsa Intro: **La consagración de la primavera, Augurios primaverales** se abre y
    suena. Detenlo.
-2. Haz clic en **Library**, encima de la lista de patrones.
-   **Orchestra (any meter)** está iluminado, como lo está siempre un
-   estilo que encaja. «Any meter» dice que el estilo no está en ningún
+2. Haz clic en **Biblioteca**, encima de la lista de patrones.
+   **Orquesta (cualquier métrica)** está iluminado, como lo está siempre un
+   estilo que encaja. «Cualquier métrica» dice que el estilo no está en ningún
    compás propio.
 
    ![La Library con «Orchestra (any meter)» iluminado, entre «One drop» y «Paidushko (2+3/8)».](../images/step-9-orchestra-library.png)
 
-3. Hazle clic. Bajo **Timing** ya no hay cuadros Time signature ni
-   Tempo, solo una línea que dice que el preset conserva los compases y
-   el tempo de la canción. Bajo **Accompaniment**, **Playing
-   patterns** y **Voices / instruments** están los dos marcados.
+3. Hazle clic. Bajo **Tiempo** ya no hay cuadros Compás ni
+   Tempo, solo una línea que dice que el preajuste conserva los compases y
+   el tempo de la canción. Bajo **Acompañamiento**, **Patrones de ejecución** y **Voces / instrumentos** están los dos marcados.
    Cualquiera de los dos por sí solo también hace entrar a la orquesta
    (mira [Solo las voces](#solo-las-voces)).
 
    ![El popup de Orchestra: Playing patterns y Voices / instruments marcados, Chord progression sin marcar, y bajo Timing: «Keeps the song's time signatures and tempo: this preset plays every bar in that bar's meter.»](../images/step-9-orchestra-popup.png)
 
-4. Haz clic en **Apply**. Aparecen cuatro pistas bajo la canción:
-   **Piano**, **Bass**, **Drums** y **Strings**. La pista Song sigue
-   encendida, el cuadro Time sigue diciendo 2/4 y el tempo sigue
+4. Haz clic en **Aplicar**. Aparecen cuatro pistas bajo la canción:
+   **Piano**, **Bajo**, **Batería** y **Cuerdas**. La pista Canción sigue
+   encendida, el cuadro Compás sigue diciendo 2/4 y el tempo sigue
    diciendo 112.
-5. Pulsa Play. Las cuerdas mantienen cada acorde bajo las cuerdas que
+5. Pulsa ▶. Las cuerdas mantienen cada acorde bajo las cuerdas que
    martillean de Stravinsky. Las trompas, los timbales y el bombo se
    quedan callados hasta el compás 3, y luego golpean *con* los acentos
    de la partitura: fuera del pulso dos veces en el compás 3, fuera del
@@ -63,7 +60,7 @@ Spring, the Ritual of Abduction y las cinco demos de Petrushka.
 
    ![The Augurs of Spring después de Apply: bajo la pista Song, las pistas Piano, Bass y Drums tienen trazos cortos en los compases 3 y 5 a 8, ninguno en los compases 9 a 13, y más desde el compás 14; la pista Strings mantiene acordes todo el rato.](../images/step-9-orchestra-augurs.png)
 
-Ahora haz lo mismo con **The Rite of Spring, Ritual of Abduction**, que
+Ahora haz lo mismo con **La consagración de la primavera, Juego del rapto**, que
 empieza en 9/8 a la negra con puntillo = 132 de Stravinsky (el cuadro
 de tempo muestra 198, la misma velocidad contada en negras) y pasa por
 4/8, 5/8, 12/8, 6/8, 7/8, 3/4, 2/8 y más. Las pistas se cortan en clips
@@ -72,38 +69,37 @@ sus compases como se siente esa métrica.
 
 ![Ritual of Abduction después de Apply: la pista Song arriba, y debajo las pistas Piano, Bass, Drums y Strings. Sobre los compases 9 a 11 la regla muestra 4/8, 5/8 y 9/8, y los clips de la banda están cortados en cada cambio.](../images/step-9-orchestra-ritual.png)
 
-La orquesta toca los acordes que la app reconoció en la partitura, los
-del chord sheet (**F5**). Donde no se reconoció ningún acorde, solo
-toca el bombo. Si marcas **Chord progression** en el popup, toca sus
+La orquesta toca los acordes que la app reconoció en la partitura, las de la hoja de acordes (**F5**). Donde no se reconoció ningún acorde, solo
+toca el bombo. Si marcas **Progresión de acordes** en el popup, toca sus
 propios acordes en su lugar, I y ♭VII del modo mixolidio, de la manera
 en que la progresión de un estilo siempre reemplaza los acordes de la
 canción.
 
 ### Solo las voces
 
-Desmarca **Playing patterns** antes de **Apply**, de modo que solo
-**Voices / instruments** quede marcado, y entran las mismas cuatro
+Desmarca **Patrones de ejecución** antes de **Aplicar**, de modo que solo
+**Voces / instrumentos** quede marcado, y entran las mismas cuatro
 pistas. Desmarca las voces y deja los patrones, y también entran: una
 orquesta que sigue a la canción siempre trae sus propios players y sus
 propios patrones, en pistas propias.
 
-Al principio no era así. Sin banda todavía, la Library solo traía una
+Al principio no era así. Sin banda todavía, la Biblioteca solo traía una
 cuando las dos casillas estaban marcadas. Con una casilla, hacía lo que
 hace con una canción sin banda: con las voces, daba los instrumentos
-del estilo a los canales propios de la canción llamados Keys y Bass;
+del estilo a los canales propios de la canción llamados Teclados y Bajo;
 con los patrones, tocaba el estilo como lo toca para un patrón, en una
-sola métrica, no junto a la partitura. The Rite no tiene canal Keys,
+sola métrica, no junto a la partitura. La consagración no tiene canal Teclados,
 así que las voces no cambiaban nada, y en Carol of the Bells el coro de
-la pista Song se convertía en trompas.
+la pista Canción se convertía en trompas.
 
 Ahora copiar las voces de un estilo trae su banda en pistas propias,
-para todo estilo, no solo el Orchestra, y los canales propios de la
+para todo estilo, no solo la Orquesta, y los canales propios de la
 canción conservan sus instrumentos y sus notas. Un estilo que no sigue
 a la canción, elegido con sus voces pero no con sus patrones, toca
-**Plain accents**: sus instrumentos golpean los acordes de la canción,
+**Acentos simples**: sus instrumentos golpean los acordes de la canción,
 sin los grooves del estilo. Elegido solo con sus patrones, sigue
-abriéndose en un patrón nuevo para que lo pruebes, como antes. El
-Orchestra siempre entra con sus trompas, timbales, bombo y cuerdas,
+abriéndose en un patrón nuevo para que lo pruebes, como antes. La
+Orquesta siempre entra con sus trompas, timbales, bombo y cuerdas,
 marques la casilla que marques.
 
 ## La música
@@ -118,10 +114,10 @@ tempo rápido pasa como un solo pulso. [Métricas
 irregulares](odd-meters.md) llama a estos los pulsos *sentidos*, y
 `TimeSignature::felt_groups` los da para cualquier compás.
 
-Un director marca los pulsos sentidos, no cada corchea: en el Ritual,
+Un director marca los pulsos sentidos, no cada corchea: en el Juego del rapto,
 tres pulsos para un compás de 9/8, dos para 5/8, uno para 2/8. En
 música cuya métrica cambia a cada rato, eso es lo que mantiene unida a
-una orquesta, y es lo que toca el estilo Orchestra:
+una orquesta, y es lo que toca el estilo Orquesta:
 
 | Métrica | Se siente como | Las trompas y los timbales golpean en la corchea (o negra) |
 |---|---|---|
@@ -145,8 +141,7 @@ bombo en cada pulso de un compás tranquilo taparía la partitura.
 
 Una banda toca el mismo groove compás tras compás. Una orquesta que se
 une a una sinfonía no puede: la música crece fuerte y suave, se
-detiene, y pone sus acentos donde el compositor los quiere. The Augurs
-of Spring es el caso famoso. Las cuerdas martillean el mismo acorde en
+detiene, y pone sus acentos donde el compositor los quiere. Augurios primaverales es el caso famoso. Las cuerdas martillean el mismo acorde en
 cada corchea, todas igual de fuerte, y ocho trompas tiran acentos sobre
 algunas de esas corcheas en lugares que nadie puede predecir: la
 segunda y la cuarta corchea de un compás, la segunda de otro, la
@@ -154,7 +149,7 @@ primera de los dos siguientes. El impacto de la pieza es que los
 acentos nunca se asientan en un patrón. Un bombo en cada primer pulso
 los convertiría en uno.
 
-Así que el Orchestra escucha la partitura antes de tocar, y cambia lo
+Así que la Orquesta escucha la partitura antes de tocar, y cambia lo
 que tocarían sus players:
 
 - **Dinámica.** Toca tan fuerte como la partitura, compás a compás: más
@@ -178,7 +173,7 @@ oirías:
    de fuerte. Un acorde tutti después de una textura fina.
 2. Un instrumento en él toca una nota corta, entre silencios: nada una
    corchea antes, nada una corchea después, y silencio cuando acaba la
-   nota. Las trompas de los Augurs hacen eso. Una melodía de negras no
+   nota. Las trompas de los Augurios hacen eso. Una melodía de negras no
    (sus notas se tocan), y tampoco un acorde mantenido cuatro
    compases, que solo entra. Por eso Carol of the Bells, cuyo coro
    mantiene un acorde bajo la melodía, no tiene acentos, y su orquesta
@@ -205,8 +200,8 @@ grande](bigger-band.md)).
 La orquesta toca *junto* con la partitura. En una demo pop, la banda
 silencia los acordes y el bajo propios de la canción, porque dos pianos
 tocando los mismos acordes con dos voicings distintos suenan a error.
-En The Rite, las partes de la canción *son* la pieza: silenciarlas
-dejaría solo a la banda. Así que el Orchestra entra por encima, y cada
+En La consagración, las partes de la canción *son* la pieza: silenciarlas
+dejaría solo a la banda. Así que la Orquesta entra por encima, y cada
 canal de la partitura conserva su propio mute.
 
 ## Cómo funciona
@@ -220,7 +215,7 @@ banda extiende una línea compás tras compás, y en una canción con
 marcadores de tiempo escribe cada tramo de compases en una métrica
 como un patrón propio.
 
-El ritmo del Orchestra tiene una línea, ese compás de 4/4 para el
+El ritmo de la Orquesta tiene una línea, ese compás de 4/4 para el
 bombo, y una bandera nueva en `Rhythm`:
 
 ```rust
@@ -304,17 +299,15 @@ pub fn following(mut self, follows: bool) -> Self {
 }
 ```
 
-El clic de la biblioteca y el menú Band del chord sheet pasan los dos
-por ahí, así que ninguno cambia la métrica de The Rite. El menú de
-estilos para una sección del chord sheet, que solo ofrece estilos en el
-compás del compás actual, ahora ofrece también el Orchestra en
-cualquier métrica. En la app, la misma bandera cambia los cuadros de
-Timing por la línea que viste en el popup, y la Library añade «(any
-meter)» al nombre del estilo.
+El clic de la biblioteca y el menú Banda de la hoja de acordes pasan los dos
+por ahí, así que ninguno cambia la métrica de La consagración. El menú de
+estilos para una sección de la hoja de acordes, que solo ofrece estilos en el
+compás del compás actual, ahora ofrece también la Orquesta en
+cualquier métrica. En la app, la misma bandera cambia los cuadros de Tiempo por la línea que viste en el popup, y la Biblioteca añade «(cualquier métrica)» al nombre del estilo.
 
 ### Unirse a la canción
 
-El **Apply** de la Library acaba en `band_plays_parts` en
+El **Aplicar** de la Biblioteca acaba en `band_plays_parts` en
 `crates/lineup-app/src/app/library.rs`. Primero decide si entra una
 banda siquiera:
 
@@ -345,8 +338,8 @@ if self.project.band().is_none() && !joins {
 ```
 
 Un `match` con `|` entre dos patrones corre el mismo brazo para ambos,
-y `_ => false` cubre cualquier otro tipo de elemento de la Library.
-`has_music` es true cuando la canción tiene acordes en el chord sheet,
+y `_ => false` cubre cualquier otro tipo de elemento de la Biblioteca.
+`has_music` es true cuando la canción tiene acordes en la hoja de acordes,
 o notas cualesquiera cuyos acordes la banda puede oír;
 `Iterator::any` se detiene en el primer clip cuyo patrón tiene una
 nota. Cuando `band_plays_parts` devuelve `false`, quien llama sigue
@@ -378,7 +371,7 @@ orden, así que `struck.range(bar.start..bar.end())` da las notas de un
 compás, en orden de tiempo, sin mirar los demás.
 
 Devuelve un `Option<Following>`: `None` cuando la canción no toca
-ninguna nota, un chord sheet sin nada más. No hay partitura que seguir
+ninguna nota, una hoja de acordes sin nada más. No hay partitura que seguir
 entonces, y la orquesta toca como su estilo escribió. Lo mismo vale
 para los compases antes de la primera nota de la partitura y después de
 que acabe la última:
@@ -492,11 +485,11 @@ patrón encaja y la condición después de `&&` se cumple.
 La banda escribe un patrón por cada player y cada tramo de compases en
 una métrica. Dos tramos pueden compartir un patrón cuando tocan las
 mismas notas, como hacen las baterías de dos tramos de 9/8, pero los
-acordes cambian de tramo a tramo. El Ritual of Abduction tiene 33
+acordes cambian de tramo a tramo. El Juego del rapto tiene 33
 tramos y la banda cuatro players, encima de los patrones propios de la
 partitura, y un proyecto solo podía contener 99 patrones. Cuando se
 alcanzaba el límite, la banda dejaba de escribir en silencio, y tramos
-enteros del Ritual se quedaban sin batería. El límite es ahora 999
+enteros del Juego del rapto se quedaban sin batería. El límite es ahora 999
 (`MAX_PATTERNS` en `project.rs`). La ventana dodecafónica, que dice
 cuándo una serie necesitaría más patrones de los que un proyecto puede
 contener, ahora lee el número de `MAX_PATTERNS` en lugar de decir 99.
@@ -506,7 +499,7 @@ contener, ahora lee el número de `MAX_PATTERNS` en lugar de decir 99.
 Las pruebas en `band.rs`:
 
 - `an_orchestra_plays_every_bar_of_the_rite_of_spring_in_its_own_meter`
-  comprueba que el Ritual conserva cada cambio de métrica, sus cambios
+  comprueba que el Juego del rapto conserva cada cambio de métrica, sus cambios
   de tempo y el mute de cada canal, que los players son una trompa,
   timbales y un conjunto de cuerdas, que el bombo toca solo con los
   acentos de la partitura o en el primer pulso de un compás, y no en
@@ -522,25 +515,25 @@ Las pruebas en `band.rs`:
   the Bells, y comprueba que las trompas tocan el primer pulso de cada
   uno de sus primeros ocho compases.
 - `with_no_score_to_follow_the_orchestra_plays_as_written` lo aplica a
-  un chord sheet sin notas, y comprueba que todo player toca.
+  una hoja de acordes sin notas, y comprueba que todo player toca.
 - `copying_only_the_voices_brings_a_band_that_plays_plain_accents`
   copia solo las voces de un estilo que no sigue a la canción,
-  Emotional pop, sobre el tango El Choclo, y comprueba que su banda
+  Pop emotivo, sobre el tango El Choclo, y comprueba que su banda
   entra tocando plain accents mientras la canción conserva sus sonidos
   y sus notas.
 - `picking_the_orchestra_keeps_the_meters_of_the_song` elige el
-  Orchestra para los Augurs desde el menú de banda y luego elige
-  **Pop beat**: el primero conserva el 2/4, el segundo pone la canción
+  Orquesta para los Augurios desde el menú de banda y luego elige
+  **Ritmo pop**: el primero conserva el 2/4, el segundo pone la canción
   en 4/4.
 
 En la app,
 `copying_only_the_voices_or_the_patterns_brings_the_band_and_leaves_the_song_alone`
-en `ux_tests.rs` hace clic por el popup de la Library para los Augurs,
-el Ritual, Petrushka's Room, Carol of the Bells y un tango, con una
+en `ux_tests.rs` hace clic por el popup de la Biblioteca para los Augurios,
+el Juego del rapto, La habitación de Petrushka, Carol of the Bells y un tango, con una
 casilla marcada, y comprueba que la banda entró y que los canales y las
 notas de la canción no cambiaron.
 
-Para oírlo sin escuchar, guarda los Augurs después de **Apply** y lee
+Para oírlo sin escuchar, guarda los Augurios después de **Aplicar** y lee
 su [traza de la reproducción](playback-trace.md):
 
 ```sh
@@ -571,26 +564,26 @@ el 14.
 
 ## Ejercicios
 
-1. Aplica el Orchestra a **The Rite of Spring, The Augurs of Spring** y
-   silencia la pista **Song**. Da palmas con el bombo. ¿Puedes predecir
+1. Aplica la Orquesta a **La consagración de la primavera, Augurios primaverales** y
+   silencia la pista **Canción**. Da palmas con el bombo. ¿Puedes predecir
    dónde viene el siguiente golpe? Quita el mute a la canción y escucha
    los acentos de las trompas cayendo en las mismas corcheas.
-2. Abre **Petrushka, The Moor's Room**, aplica el Orchestra y encuentra
+2. Abre **Petrushka, La habitación del moro**, aplica la Orquesta y encuentra
    el compás de 13/16 en la regla. ¿En qué semicorcheas golpean las
    trompas ahí, y toca el bombo? Comprueba tu respuesta en la traza de
    la reproducción, y di por qué a partir de las reglas de arriba.
-3. Con el Orchestra tocando el Ritual of Abduction, elige **Pop beat**
-   en el menú de banda del chord sheet. ¿Qué le pasa a la regla, y por
+3. Con la Orquesta tocando el Juego del rapto, elige **Ritmo pop**
+   en el menú de banda de la hoja de acordes. ¿Qué le pasa a la regla, y por
    qué tiene que hacer eso un estilo en 4/4?
 4. Saca a mano la línea que escribe `in_meter` para un compás de 7/8 a
-   partir del `X... .... o... ....` del Orchestra, usando los grupos
+   partir del `X... .... o... ....` de la Orquesta, usando los grupos
    sentidos 2 + 2 + 3. Luego escribe una prueba para ello junto a
    `a_rhythm_that_follows_the_meter_plays_each_bar_in_its_own` en
    `rhythm.rs`.
-5. Abre **Shchedryk (Carol of the Bells)**, aplica el Orchestra con
-   solo **Voices / instruments** marcado, y abre el **Mixer**. ¿Qué
-   instrumentos tocan los canales Lead, Keys y Bass de la pista Song?
-   ¿Cuáles tocan las pistas nuevas Piano y Bass?
+5. Abre **Shchedryk (Villancico de las campanas)**, aplica la Orquesta con
+   solo **Voces / instrumentos** marcado, y abre el **Mezclador**. ¿Qué
+   instrumentos tocan los canales Melodía, Teclados y Bajo de la pista Canción?
+   ¿Cuáles tocan las pistas nuevas Piano y Bajo?
 6. En `following.rs`, cambia `TUTTI` de `(9, 5)` a `(3, 2)` y ejecuta
    `cargo test -p lineup-core accents_of_the_augurs`. ¿Aparecen acentos
    que Stravinsky no escribió? Vuelve a dejarlo como estaba.

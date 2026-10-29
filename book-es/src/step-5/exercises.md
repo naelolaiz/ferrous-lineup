@@ -2,7 +2,7 @@
 
 ## 1. Una ventana de historial de deshacer (lineup-app, fácil)
 
-Añade Edit > History…, una ventana pequeña que lista cada paso que se
+Añade Edición > Historial…, una ventana pequeña que lista cada paso que se
 puede deshacer o rehacer, el más nuevo arriba, con la posición actual
 marcada. Hacer clic en un paso salta hasta allí.
 
@@ -20,33 +20,33 @@ pruebas de diff del segundo capítulo responden a la última pregunta.)
 
 ## 2. Exportar un patrón como audio (lineup-app, fácil)
 
-File > Export pattern as MIDI… ya escribe el patrón seleccionado como
-archivo MIDI. Lo que falta es lo mismo como *audio*: "Export pattern…"
+Archivo > Exportar patrón como MIDI… ya escribe el patrón seleccionado como
+archivo MIDI. Lo que falta es lo mismo como *audio*: "Exportar patrón…"
 en el menú ⋯ del patrón, que guarde el patrón seleccionado, reproducido
 cuatro veces, como archivo WAV.
 
 El plan evidente es usar el modo patrón: `SetMode(Pattern)`,
 `SelectPattern`, y renderizar cuatro longitudes de patrón más la cola.
-Pero el modo patrón repite el patrón en loop eternamente, así que la cola
+Pero el modo patrón repite el patrón en bucle eternamente, así que la cola
 contendría el patrón empezando una quinta vez: el mismo problema que la
 exportación resolvió con pasos en silencio, y el modo patrón no tiene
 longitud de canción que estirar. En su lugar, haz una *copia* del
-proyecto, sustituye su playlist por cuatro clips del patrón en una pista,
+proyecto, sustituye su lista de reproducción por cuatro clips del patrón en una pista,
 y exporta esa copia con el código que ya tienes. ¿Qué tiene que cambiar
 en `export_song` para poder exportar un proyecto distinto de
 `self.project`?
 
 *Prácticas:* trabajar sobre una copia, hacer una función más general.
 
-## 3. Exportar la región de loop (lineup-app, medio)
+## 3. Exportar la región de bucle (lineup-app, medio)
 
 Detener una exportación ya está implementado: `export_wav_cancellable`
-recibe un `AtomicBool`, la barra de estado tiene un botón Stop, y una
+recibe un `AtomicBool`, la barra de estado tiene un botón ⏹, y una
 exportación cancelada quita su archivo temporal. Lee primero ese código;
 también es el modelo para este ejercicio.
 
-Las canciones pueden tener una región de loop, y el modo canción
-reproduce solo esa parte. Añade File > Export loop region…, que escribe
+Las canciones pueden tener una región de bucle, y el modo canción
+reproduce solo esa parte. Añade Archivo > Exportar la región del bucle…, que escribe
 solo la región en un archivo WAV. `Project::playback_arrangement()` ya
 devuelve exactamente la parte que reproduce el modo canción, con las
 repeticiones desenrolladas. Generaliza `song_render` para que pueda
@@ -54,7 +54,7 @@ recibir un `Arrangement` en lugar de llamar siempre a
 `project.arrangement()`, y calcula el número de fotogramas a partir de la
 propia longitud y los tempos de ese arrangement. ¿Qué nombre debería
 tener el archivo? ¿Qué debería hacer el elemento de menú cuando no hay
-región de loop, o cuando la región está vacía?
+región de bucle, o cuando la región está vacía?
 
 *Prácticas:* reutilizar un cálculo, hacer una función más general, pensar
 en una entrada vacía.
@@ -63,7 +63,7 @@ en una entrada vacía.
 
 Los músicos a menudo quieren "stems": la canción exportada una vez por
 canal, cada archivo con solo ese canal, para mezclar en otro sitio.
-Añade File > Export stems…, que pide una carpeta y escribe `Kick.wav`,
+Añade Archivo > Exportar pistas por separado…, que pide una carpeta y escribe `Kick.wav`,
 `Clap.wav` y así sucesivamente.
 
 Cada stem es una exportación con todos los demás canales silenciados

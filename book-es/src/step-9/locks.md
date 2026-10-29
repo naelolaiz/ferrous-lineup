@@ -17,20 +17,20 @@ instrumento, y el estilo toca el resto de la canción a su alrededor.
 
 ## Probarlo
 
-1. Abre una demo, por ejemplo **Ode to Joy**, y muestra el rack con
+1. Abre una demo, por ejemplo **Oda a la alegría**, y muestra el rack con
    **F6**.
-2. Haz clic en el candado pequeño entre la perilla de **Keys** y su
+2. Haz clic en el candado pequeño entre la perilla de **Teclados** y su
    nombre. Se cierra y se pone naranja. El clic derecho en el nombre
-   tiene también **Lock** y **Unlock**, y **Ctrl+Z** lo deshace.
-3. En la **Library**, aplica otro estilo, por ejemplo **Bossa nova**.
-   La batería y el bajo cambian; la parte de Keys es la que tenías. El
-   aviso termina con **🔒 Kept: Keys.**, y la lista de la Library de
-   dónde viene cada parte tiene una fila **Locked**.
+   tiene también **Bloquear** y **Desbloquear**, y **Ctrl+Z** lo deshace.
+3. En la **Biblioteca**, aplica otro estilo, por ejemplo **Bossa nova**.
+   La batería y el bajo cambian; la parte de Teclados es la que tenías. El
+   aviso termina con **🔒 Se conservan: Teclados.**, y la lista de la Biblioteca de
+   dónde viene cada parte tiene una fila **Bloqueado**.
 4. Prueba estilos uno tras otro en modo patrón. Cada prueba copia las
    filas bloqueadas al patrón de prueba, así que el bajo nuevo sigue
    los acordes bloqueados.
-5. Desbloquea Keys otra vez. Si la banda estaba tocando, recupera la
-   parte de piano, y el aviso dice que tu Keys queda silenciado para
+5. Desbloquea Teclados otra vez. Si la banda estaba tocando, recupera la
+   parte de piano, y el aviso dice que tu Teclados queda silenciado para
    que los dos no suenen uno encima del otro.
 
 Lo que mueve la canción *entera* sigue moviendo con ella a una pista
@@ -128,10 +128,10 @@ tiene sus propias reglas (en `band/locks.rs`):
   como está;
 - los canales de batería bloqueados conservan sus notas mientras el
   resto de la batería cambia;
-- si tu Keys o Bass propio está bloqueado y toca, el piano o el bajo de
+- si tu Teclados o Bajo propio está bloqueado y toca, el piano o el bajo de
   la banda se queda en silencio, para que la parte de la canción no se
   doble;
-- cuando la banda se va (**No band**), una parte de banda bloqueada se
+- cuando la banda se va (**Sin banda**), una parte de banda bloqueada se
   queda en la canción como tuya.
 
 La banda guarda una huella de aquello desde lo que toca, para saber
@@ -143,9 +143,9 @@ proyecto](../appendix-project-format.md)).
 
 ## Ejercicios
 
-1. Bloquea **Keys** en Ode to Joy y aplica **Doo-wop**. ¿Qué pistas
-   cambiaron? Abre Keys en el piano roll: ¿hay algo distinto?
-2. Bloquea **Kick** en la canción inicial y aplica **Bossa nova**. Mira
+1. Bloquea **Teclados** en Oda a la alegría y aplica **Doo-wop**. ¿Qué pistas
+   cambiaron? Abre Teclados en el piano roll: ¿hay algo distinto?
+2. Bloquea **Bombo** en la canción inicial y aplica **Bossa nova**. Mira
    la batería: ¿qué conservó su ritmo antiguo, y qué sigue a la bossa
    nova?
 3. (Rust) `Locked` deriva `Copy`. ¿Por qué `contains` puede recibir

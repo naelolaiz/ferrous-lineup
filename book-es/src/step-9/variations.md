@@ -20,21 +20,21 @@ todo estilo tiene dos variaciones: **a** es el estilo tal como era, y
 ## Probarlo
 
 Haz clic derecho en un compás de la hoja de acordes (**F5**) y elige
-**Variation a** o **Variation b**. La banda toca esa variación desde
+**Variación a** o **Variación b**. La banda toca esa variación desde
 ese compás hasta el siguiente cambio, o hasta el final de la canción.
 Para cambiar solo algunos compases, selecciónalos primero: haz clic en
-el primero, Shift+clic en el último, y luego clic derecho en uno de
+el primero, Mayús+clic en el último, y luego clic derecho en uno de
 ellos. La selección se queda, y los compases de después conservan lo
 que tocaban antes. Así es como tocas más lleno solo el puente de una
 canción, o solo el último estribillo.
 
 Una letra enmarcada marca cada cambio, en la hoja tras el número de
-compás y en la regla de compases del playlist, como las letras de
+compás y en la regla de compases de la lista de reproducción, como las letras de
 ensayo impresas sobre el pentagrama en las partituras de banda. Elegir
 la variación que ya está sonando no pone ningún marcador; devolver un
 compás a lo de antes se lleva el marcador.
 
-La batería anuncia cada cambio: el compás anterior es un **fill**, y el
+La batería anuncia cada cambio: el compás anterior es un **relleno**, y el
 primer pulso de la variación nueva recibe un platillo **crash**. Es la
 misma señal que dan los bateristas reales, y por qué un oyente sabe que
 «algo nuevo empieza aquí» incluso sin oír las palabras.
@@ -171,7 +171,7 @@ necesita, y nunca si no: las canciones sin marcadores conservan
 exactamente los canales que tenían.
 
 Cada cambio de variación empieza también un **chunk** nuevo, el tramo
-que cubre un patrón, de modo que el playlist muestra las partes a y b
+que cubre un patrón, de modo que la lista de reproducción muestra las partes a y b
 como clips separados que puedes ver, mutear o editar.
 
 ### Los marcadores se mueven con la canción
@@ -179,18 +179,18 @@ como clips separados que puedes ver, mutear o editar.
 Todo lo que mueve la canción mueve también los marcadores: una intro
 puesta delante (`make_room`), una intro quitada (`cut_start`), una
 sección copiada (`copy_section`, que copia las variaciones dentro de
-ella), un compás nuevo (`remeter`), y «End the song here», que descarta
+ella), un compás nuevo (`remeter`), y «Terminar la canción aquí», que descarta
 los marcadores después del final. Una canción con marcadores se guarda
 como formato 15.
 
 ## Ejercicios
 
-1. Elige el estilo **Jazz ballad**, escribe | Cmaj7 | Am7 | Dm7 | G7 |
+1. Elige el estilo **Balada de jazz**, escribe | Cmaj7 | Am7 | Dm7 | G7 |
    dos veces, y pon los compases 5 a 8 en la variación b. Abre los
    patrones del bajo en el piano roll. ¿Cuántas notas tiene un compás
    en a, y en b? ¿Qué notas toca el bajo en un compás de Dm7 en la
    variación a?
-2. En un **Pop beat** de ocho compases, pon el compás 5 en la variación
+2. En un **Ritmo pop** de ocho compases, pon el compás 5 en la variación
    b y el compás 6 de vuelta en a. ¿Qué compases reciben un fill de
    batería, y dónde caen los crash? ¿Por qué podría sonar inquieto eso
    en una canción real?

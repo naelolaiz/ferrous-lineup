@@ -6,7 +6,7 @@
 
 El paso 1 construye el esqueleto del que cuelga cada función posterior:
 
-- una **ventana** con una transport bar (botón de reproducir, tempo,
+- una **ventana** con una barra de transporte (botón de reproducir, tempo,
   controles del tono de prueba) y una barra de estado,
 - un **motor de audio en tiempo real** que abre la tarjeta de sonido y
   reproduce un tono de prueba de onda senoidal,

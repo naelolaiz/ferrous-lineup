@@ -5,8 +5,8 @@ Archivos: [`crates/lineup-core/src/general_midi.rs`](https://github.com/naelolai
 [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
 y [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs)
 
-Abre **Canon in D** antes de este cambio y mira el channel rack: un
-canal Lead tiene los tres violines. Pachelbel escribió tres partes de
+Abre **Canon en Re** antes de este cambio y mira el rack de canales: un
+canal Melodía tiene los tres violines. Pachelbel escribió tres partes de
 violín que tocan la misma línea, cada una dos compases por detrás de la
 anterior; en el rack eran una maraña de notas, y no podías silenciar el
 segundo violín para oír qué hace el primero. Frère Jacques, Row, Row,
@@ -21,14 +21,13 @@ Ahora cada voz tiene un canal, y cada canal tiene un instrumento.
 
 ## Lo que ves
 
-Abre **File > Demos > Songs > Classical and film > Canon in D**. El rack
-tiene **Lead**, **Voice 2** y **Voice 3**, los tres violines, luego
-**Keys** (el clavecín, que toca los acordes) y **Bass** (el
-violonchelo, que toca el bajo ostinato). En el patrón **Entries**, Voice
-2 empieza dos compases después de Lead, y Voice 3 dos compases después
+Abre **Archivo > Demostraciones > Canciones > Clásica y de cine > Canon en Re**. El rack
+tiene **Melodía**, **Voz 2** y **Voz 3**, los tres violines, luego
+**Teclados** (el clavecín, que toca los acordes) y **Bajo** (el
+violonchelo, que toca el bajo ostinato). En el patrón **Entradas**, Voz 2 empieza dos compases después de Melodía, y Voz 3 dos compases después
 de eso. Silencia cualquiera con su luz para oír el canon sin ella.
 
-Haz clic derecho en el nombre de un canal: **Instrument** muestra el que
+Haz clic derecho en el nombre de un canal: **Instrumento** muestra el que
 toca, y su submenú tiene los 128 instrumentos de General MIDI, ordenados
 en sus dieciséis familias.
 
@@ -50,7 +49,7 @@ una flauta, en todo sintetizador que la siga, de un teléfono a un
 teclado de escenario. El canal 10 está reservado para la batería. Los
 programas vienen en familias de ocho: pianos del 0 al 7, órganos del 16
 al 23, guitarras del 24 al 31, bajos del 32 al 39, cuerdas del 40 al
-47, y así. Los manuales cuentan desde 1 («41 Violin»), los bytes desde
+47, y así. Los manuales cuentan desde 1 («41 Violín»), los bytes desde
 0; el menú muestra los números del manual.
 
 `general_midi.rs` guarda los nombres y los números que usan las demos:
@@ -174,8 +173,8 @@ en el compás 2 de una parte de seis compases, así que en la parte
 siguiente su melodía empezó hace cuatro compases, y solo se oye su
 final. `(2, 2)` es el mismo violín empezando la melodía otra vez.
 
-`song_demo` hace un canal por voz (Lead para la voz 1, luego «Voice 2»,
-«Voice 3»...) y `melody_notes` devuelve una lista de notas para cada
+`song_demo` hace un canal por voz (Melodía para la voz 1, luego «Voz 2»,
+«Voz 3»...) y `melody_notes` devuelve una lista de notas para cada
 una. Cada voz recibe sus propios acentos de [la interpretación](tempo-and-feel.md),
 como haría cada músico.
 
@@ -187,30 +186,30 @@ instrumentos para los que fueron escritas:
 
 | Pieza | Melodía | Acordes | Bajo |
 |---|---|---|---|
-| Canon in D | violines | clavecín | violonchelo |
-| Für Elise, Moonlight Sonata, Träumerei | piano | piano | piano |
+| Canon en Re | violines | clavecín | violonchelo |
+| Para Elisa, Sonata Claro de luna, Träumerei | piano | piano | piano |
 | Shchedryk | coro | coro | coro |
-| New World Largo | corno inglés (cor anglais) | cuerdas | contrabajo |
-| Morning Mood | flauta | cuerdas | violonchelo |
-| Anitra's Dance | violín | cuerdas en pizzicato | cuerdas en pizzicato |
-| Air on the G String | violín | violonchelo (el bajo continuo, en Keys) | contrabajo |
-| Wedding March | órgano de iglesia (la transcripción que sigue la demo) | órgano | órgano |
+| Largo del Nuevo Mundo | corno inglés (cor anglais) | cuerdas | contrabajo |
+| La mañana | flauta | cuerdas | violonchelo |
+| La danza de Anitra | violín | cuerdas en pizzicato | cuerdas en pizzicato |
+| Aria en la cuerda de Sol | violín | violonchelo (el bajo continuo, en Teclados) | contrabajo |
+| Marcha nupcial | órgano de iglesia (la transcripción que sigue la demo) | órgano | órgano |
 
 Una canción vestida con un estilo recibe la banda de ese estilo: fiddle,
 steel guitar y contrabajo para el country; fiddle y banjo para el
-bluegrass; bandoneón (el «Tango Accordion» del GM), piano y bajo para el
+bluegrass; bandoneón (el «Acordeón de tango» del GM), piano y bajo para el
 tango; flauta de pan y guitarra para el huayno; un arpa para el joropo,
 como en los *llanos* venezolanos; sintetizadores para el house y el
-techno. Silent Night recibe una guitarra de nailon bajo el coro: Gruber
+techno. Noche de paz recibe una guitarra de nailon bajo el coro: Gruber
 la escribió para guitarra, porque (cuenta la historia) el órgano de la
 iglesia estaba roto.
 
 ## Pruébalo
 
-1. Abre Frère Jacques, selecciona **Voice 3** y abre el piano roll:
+1. Abre Frère Jacques, selecciona **Voz 3** y abre el piano roll:
    empieza cuatro compases dentro.
-2. Cambia la Voice 2 del Canon a una flauta y la Voice 3 a un clarinete.
+2. Cambia la Voz 2 del Canon a una flauta y la Voz 3 a un clarinete.
    El canon es mucho más fácil de seguir cuando cada voz tiene su propio
    color; por eso los compositores escriben para instrumentos distintos.
-3. Exporta el Canon con **File > Export song as MIDI** y ábrelo en otro
+3. Exporta el Canon con **Archivo > Exportar canción como MIDI** y ábrelo en otro
    programa: cada pista ya tiene su instrumento.

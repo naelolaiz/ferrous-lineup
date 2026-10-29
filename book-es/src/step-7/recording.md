@@ -11,7 +11,7 @@ nota.
 
 ## Cuándo se graban las teclas
 
-El botón **● Rec** solo *arma* la grabación. Las teclas se graban
+El botón **⏺** (grabar) solo *arma* la grabación. Las teclas se graban
 mientras tres cosas son ciertas a la vez:
 
 ```rust
@@ -109,15 +109,15 @@ Línea por línea:
    en pánico. Un patrón nunca está vacío, pero una función no debería
    depender de quien la llama para eso.
 2. El patrón se repite. Si la tecla subió *antes* de donde bajó (baja
-   en 14,5, sube en 1,5), el loop volvió a empezar por el medio, y el
-   final es en realidad 17,5, un loop más allá.
+   en 14,5, sube en 1,5), el bucle volvió a empezar por el medio, y el
+   final es en realidad 17,5, un bucle más allá.
 3. `round()` mueve cada extremo al paso más cercano. `f64::round`
    redondea las mitades alejándose de cero, así que 2,5 se convierte en
    3.
 4. `.max(start + 1.0)`: una pulsación rápida redondearía ambos extremos
    al mismo paso, una nota de longitud 0. Una nota mide al menos un
    paso.
-5. Una tecla pulsada justo antes de que el loop vuelva a empezar (en
+5. Una tecla pulsada justo antes de que el bucle vuelva a empezar (en
    15,7 en un patrón de 16 pasos) redondea a 16, que es el paso 0 de la
    siguiente vuelta: `% length` la dobla de vuelta al 0. Ahí es donde
    la quería quien toca.
@@ -164,10 +164,10 @@ casi siempre quieres, y Rust lo hace así desde la versión 1.45.
 
 ### Lo que no puede saber
 
-Las posiciones dicen *dónde en el loop* estuvo una tecla, no *en qué
-vuelta*. Una tecla mantenida más de un loop entero se ve igual que una
-corta: baja en 2, sube en 3 un loop más tarde, y se lee como un paso de
-largo. Y una nota que cruza el final del loop se corta allí, en lugar
+Las posiciones dicen *dónde en el bucle* estuvo una tecla, no *en qué
+vuelta*. Una tecla mantenida más de un bucle entero se ve igual que una
+corta: baja en 2, sube en 3 un bucle más tarde, y se lee como un paso de
+largo. Y una nota que cruza el final del bucle se corta allí, en lugar
 de continuar en el paso 0. Ambas quedan como
 [ejercicio 4](exercises.md).
 
@@ -214,7 +214,7 @@ toma termina, y con ella el paso, cuando se detiene la reproducción, se
 desarma Rec o cambia el modo. Cualquier otra cosa que cambies durante
 la toma, como un paso pulsado en el rack, se une al mismo paso.
 
-## Terminar una toma: antes de Stop
+## Terminar una toma: antes de detener
 
 Cuando se detiene la reproducción, puede haber teclas aún pulsadas. Se
 graban como si hubieran subido justo entonces, mediante
@@ -256,8 +256,7 @@ fn set_playing(&mut self, playing: bool) {
 `finish_recording` necesita la posición, y `position()` da `None` en
 cuanto `self.playing` es false, o en cuanto el hilo de audio se ha
 detenido y ha guardado `NO_POSITION`. Así que la toma se termina
-primero, mientras ambos dicen aún «reproduciendo», y solo entonces se
-envía Stop.
+primero, mientras ambos dicen aún «reproduciendo», y solo entonces se envía la orden de detenerse.
 
 ## Latencia: lo que oyes está en el pasado
 
@@ -291,14 +290,14 @@ se ejecutó el callback y cuándo se reproducirá su sonido. Eso es el
 
 ## Formato 2: solo cuando hace falta (paso 7)
 
-Un canal MIDI Out es una clase nueva de canal, y un Ferrous Lineup
+Un canal de salida MIDI es una clase nueva de canal, y un Ferrous Lineup
 antiguo que lea `MidiOut(channel: 4)` en un archivo de proyecto no
 sabría qué es. El paso 4 se preparó para esto: cada archivo empieza con
 su número de formato, y una versión que ve un número mayor que el suyo
 rechaza el archivo con un mensaje claro, en lugar de leerlo mal. Así
 que este paso sube el formato a 2.
 
-Pero la mayoría de los proyectos no tienen ningún canal MIDI Out, y se
+Pero la mayoría de los proyectos no tienen ningún canal de salida MIDI, y se
 escriben exactamente con el mismo texto que antes. Marcarlos como
 formato 2 haría que las versiones antiguas los rechazaran sin motivo.
 Así que el archivo dice el formato más bajo capaz de contener el
@@ -338,9 +337,9 @@ el lector: leía los formatos 1 y 2, y rechazaba el 3. La prueba de los
 archivos del futuro se movió del 2 al 3 por esa razón.
 
 **Hoy.** `FORMAT_VERSION` es 27, y `format_for` comprueba muchas más
-características que un canal MIDI Out: del formato 3 del paso 8 (nueve
+características que un canal de salida MIDI: del formato 3 del paso 8 (nueve
 tambores nuevos, patrones de más de cuatro compases y compases) hasta
 el formato 27 (enviar una batería integrada por MIDI). La regla no ha
 cambiado: escribe el formato más bajo capaz de contener el proyecto. Un
-proyecto cuya única característica nueva es un canal MIDI Out se sigue
+proyecto cuya única característica nueva es un canal de salida MIDI se sigue
 escribiendo como formato 2.

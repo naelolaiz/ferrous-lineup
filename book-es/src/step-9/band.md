@@ -1,4 +1,4 @@
-# La banda toca el chord sheet
+# La banda toca la hoja de acordes
 
 Archivos: [`crates/lineup-core/src/band.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/band.rs),
 [`crates/lineup-core/src/library/comping.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/comping.rs),
@@ -7,10 +7,10 @@ Archivos: [`crates/lineup-core/src/band.rs`](https://github.com/naelolaiz/ferrou
 [`crates/lineup-app/src/app/edit.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/edit.rs)
 y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
-El chord sheet del [último cambio](chord-sheet.md) contenía la armonía
+La hoja de acordes del [último cambio](chord-sheet.md) contenía la armonía
 de una canción pero no tocaba nada. Este cambio pone una banda detrás:
 un piano, un bajo y una batería. Escribe `C`, Tab, `Am`, Tab, `Dm7
-G7`, Tab, `C`, pulsa Space, y la tocan.
+G7`, Tab, `C`, pulsa Espacio, y la tocan.
 
 ![El chord sheet con la banda: «🎷 Band: Pop beat», un botón Progression, «Key: C major · 4/4 · 110 BPM», y los compases C | Am | F | G7 con sus numerales](../images/step-9-band-sheet.png)
 
@@ -22,10 +22,10 @@ G7`, Tab, `C`, pulsa Space, y la tocan.
 > - **comping**: el ritmo y los voicings que usa quien toca los acordes
 >   para comp, como los golpes sincopados del piano.
 > - **voicing**: qué notas de un acorde suenan, y en qué octavas.
-> - **voice leading**: mover cada voz de un acorde a la voz más cercana
+> - **conducción de voces**: mover cada voz de un acorde a la voz más cercana
 >   del siguiente, para que los acordes se unan con suavidad.
 > - **changes**: la progresión de acordes de una canción, compás a
->   compás; «los changes» son lo que contiene el chord sheet.
+>   compás; «los changes» son lo que contiene la hoja de acordes.
 > - **head / chorus**: el head es la melodía escrita, tocada al
 >   principio y al final; un chorus es una pasada por la forma (en una
 >   canción pop, la parte que vuelve después de cada estrofa).
@@ -40,46 +40,46 @@ G7`, Tab, `C`, pulsa Space, y la tocan.
 
 ## Probarlo
 
-**File > New** abre ahora un chord sheet vacío con una banda lista, en
+**Archivo > Nuevo** abre ahora una hoja de acordes vacía con una banda lista, en
 modo canción. (La canción nueva de antes, un patrón vacío y una
-batería, es **File > New beat**.) En cuanto un compás contiene una
-armonía, aparecen tres pistas en el playlist, **Piano**, **Bass** y
-**Drums**, con patrones llamados «Piano 1», «Bass 1», «Drums 1»:
+batería, es **Archivo > Nuevo ritmo**.) En cuanto un compás contiene una
+armonía, aparecen tres pistas en la lista de reproducción, **Piano**, **Bajo** y
+**Batería**, con patrones llamados «Piano 1», «Bajo 1», «Batería 1»:
 
 ![El playlist con las tres pistas de la banda: Piano 1, Bass 1 y Drums 1, cuatro compases cada una](../images/step-9-band-playlist.png)
 
 Son patrones corrientes. Haz doble clic en uno y el piano roll muestra
-cada nota que toca la banda; el channel rack muestra la batería paso a
+cada nota que toca la banda; el rack de canales muestra la batería paso a
 paso. Nada de ellos está oculto, lo que importa en un programa que usas
 para aprender: puedes ver cómo un pianista de bossa nova reparte un Dm7
 por el compás, o dónde pone su nota de entrada un walking bass.
 
-En la línea de arriba del sheet:
+En la línea de arriba de la hoja:
 
-- **🎷 Band** elige cómo toca la banda. En este paso, cada uno de los 81
+- **🎷 Banda** elige cómo toca la banda. En este paso, cada uno de los 81
   ritmos de la biblioteca es un estilo de banda (112 hoy), ordenados
-  por género, y cuatro más tocan sin batería: **Chorale** (cada acorde
-  mantenido, como toca un órgano un himno), **Alberti bass** (el acorde
+  por género, y cuatro más tocan sin batería: **Coral** (cada acorde
+  mantenido, como toca un órgano un himno), **Bajo de Alberti** (el acorde
   desgranado grave, agudo, medio, agudo, como en las sonatas de
-  Mozart), **Arpeggios** y **Sarabande** en 3/4. Apuntar a uno dice qué
-  es, su compás y su tempo habitual. **No band** manda a la banda a
+  Mozart), **Arpegios** y **Zarabanda** en 3/4. Apuntar a uno dice qué
+  es, su compás y su tempo habitual. **Sin banda** manda a la banda a
   casa.
-- **Progression** escribe una progresión de acordes conocida desde el
+- **Progresión** escribe una progresión de acordes conocida desde el
   compás seleccionado, en la tonalidad de la canción: los 145 estilos
   de armonía de la biblioteca en este paso (177 hoy), por género, cada
   uno con sus acordes en el tooltip («Cmaj7 – Am7 – Dm7 – G7. I vi ii
   V: la progresión que cierra tantos standards»). Elige otro y continúa
   después del primero.
-- **End the song here**, cuando haces clic derecho en un compás, dice
+- **Terminar la canción aquí**, cuando haces clic derecho en un compás, dice
   dónde se detiene la banda. Un compás sin nada escrito continúa con la
   armonía anterior, así que una canción que acaba en un Do largo tiene
-  `C` en su último compás y «End the song here» unos compases después.
+  `C` en su último compás y «Terminar la canción aquí» unos compases después.
 
 ![El menú de banda abierto en Jazz: Swing, Jazz ballad, Jazz waltz (3/4) y Second line, con el tooltip «The swing ride pattern in three beats. 3/4, about 150 BPM.»](../images/step-9-band-menu.png)
 
-Hacer clic en un estilo o un ritmo en la **Library** mientras hay una
+Hacer clic en un estilo o un ritmo en la **Biblioteca** mientras hay una
 banda cambia también el estilo de la banda, con el tempo propio del
-estilo si **Use their tempo** está marcado.
+estilo si **Tempo** está marcado.
 
 ## Qué tocar, y cómo tocarlo
 
@@ -88,13 +88,13 @@ paquete: un chart de acordes, una manera de comparlos, un patrón de
 bajo y un ritmo. «Bossa nova» significa Dm7 G7 Cmaj7 *y* los acordes
 sincopados del piano *y* el bajo en el 1 y el «y» del 2 *y* los clics
 del rim. Una banda de acompañamiento separa las dos mitades. Los
-acordes son tuyos (el sheet); el estilo solo dice cómo tocarlos. Así
+acordes son tuyos (la hoja); el estilo solo dice cómo tocarlos. Así
 que este cambio divide la biblioteca de la misma manera, sin cambiarla:
 
 | Mitad | Qué es | Dónde vive ahora |
 |-------|--------|------------------|
-| Qué tocar | una progresión de numerales | menú **Progression**, del chart de cada `Style` |
-| Cómo tocarla | comping, bajo, batería | menú **Band**, un `BandStyle` |
+| Qué tocar | una progresión de numerales | menú **Progresión**, del chart de cada `Style` |
+| Cómo tocarla | comping, bajo, batería | menú **Banda**, un `BandStyle` |
 
 Un `BandStyle` es un estilo sin los acordes:
 
@@ -153,10 +153,10 @@ la biblioteca.
 
 ## Qué toca cada player
 
-Un estilo de banda sabe *cómo*; el sheet sabe *qué*. Juntarlos pasa en
+Un estilo de banda sabe *cómo*; la hoja sabe *qué*. Juntarlos pasa en
 tres pasos.
 
-**1. Las armonías, como notas.** `played_harmonies` recorre el sheet y
+**1. Las armonías, como notas.** `played_harmonies` recorre la hoja y
 convierte cada armonía en un `Played`: cuándo empieza y acaba, las
 notas que el piano mantiene para ella (su *voicing*), y lo que toca el
 bajo debajo.
@@ -208,7 +208,7 @@ sus notas:
 **2. El ritmo, ceñido a los compases.** Los patrones de comping y de
 bajo de la biblioteca (`Comping::play`, `Bass::play`) empiezan de nuevo
 en cada acorde. Eso está bien para un chart cuyos acordes cambian en la
-línea del compás, pero un sheet puede decir `Dm7 G7` (un cambio en el
+línea del compás, pero una hoja puede decir `Dm7 G7` (un cambio en el
 pulso 3) o `C / / G7` (en el pulso 4). Empezar el patrón de nuevo en el
 pulso 3 movería el groove cada vez que cambia el acorde, como si el
 baterista contara «uno» en medio del compás. Una banda mantiene su
@@ -278,11 +278,11 @@ compara las notas de cada tramo con las de antes. Los tramos que tocan
 exactamente las mismas notas comparten **un** patrón, con dos clips de
 él, como copia un clip un productor en lugar de tocar la parte dos
 veces. Una canción de dos estribillos idénticos recibe «Piano 1» dos
-veces en el playlist.
+veces en la lista de reproducción.
 
 Los patrones se escriben *sobre* los que el player ya tenía, así que
 «Piano 1» sigue siendo el patrón número 5 (pongamos) mientras editas el
-sheet: el piano roll que tienes abierto en él muestra las notas nuevas
+hoja: el piano roll que tienes abierto en él muestra las notas nuevas
 en lugar de cerrarse.
 
 Todo patrón que escribe la banda va etiquetado:
@@ -298,13 +298,12 @@ pub struct Pattern {
 ```
 
 Esa etiqueta es cómo la banda vuelve a encontrar su propio trabajo, y
-cómo la biblioteca sabe dejarlo en paz: «Play the whole song in this
-rhythm» se salta los patrones con player, porque las partes de la banda
+cómo la biblioteca sabe dejarlo en paz: «Tocar toda la canción con este ritmo» se salta los patrones con player, porque las partes de la banda
 cambian cuando cambia el estilo de la banda.
 
-## Volver a tocar cuando cambia el sheet
+## Volver a tocar cuando cambia la hoja
 
-La banda toca lo que el sheet dice *ahora*. Escribe un acorde, cambia
+La banda toca lo que la hoja dice *ahora*. Escribe un acorde, cambia
 la tonalidad, cambia la métrica de la canción, arrastra una sección:
 las partes se escriben de nuevo, en el mismo paso de deshacer que tu
 cambio, para que un solo Ctrl+Z deshaga ambos.
@@ -365,25 +364,25 @@ pub fn follow_chord_sheet(&mut self) -> bool {
 
 Una huella (un *hash*) es un número calculado a partir de unos datos,
 tal que datos distintos casi seguro dan números distintos. Comparar dos
-números de 64 bits es mucho más barato que comparar dos chord sheets, y
-la banda solo tiene que guardar el número, no una copia del sheet.
+números de 64 bits es mucho más barato que comparar dos hojas de acordes, y
+la banda solo tiene que guardar el número, no una copia de la hoja.
 
 ## Una parte que editas sigue siendo tuya
 
-Una banda que escribe sus pistas de nuevo cada vez que pulsas Play
+Una banda que escribe sus pistas de nuevo cada vez que pulsas ▶
 pierde una edición de la línea de bajo la próxima vez que algo cambia.
 Aquí, una parte que cambias a mano se **congela**: la banda la deja
-exactamente como la dejaste, y el sheet lo dice:
+exactamente como la dejaste, y la hoja lo dice:
 
 ![El chord sheet con el aviso «You edited the piano: the band keeps it as you left it.» y un botón «Play it again»](../images/step-9-band-frozen.png)
 
-**Play it again** tira tu versión y hace que la banda escriba la parte
-desde el sheet una vez más. Los demás players siguen siguiendo el sheet
+**Volver a tocarla** tira tu versión y hace que la banda escriba la parte
+desde la hoja una vez más. Los demás players siguen siguiendo la hoja
 como antes: en la imagen el piano está congelado, pero un acorde
 escrito en el compás 2 sigue cambiando el bajo.
 
 ¿Cómo sabe la banda que editaste una parte, uses la herramienta que
-uses (el piano roll, el channel rack, arrastrar un clip, la
+uses (el piano roll, el rack de canales, arrastrar un clip, la
 biblioteca)? No vigila las herramientas. Guarda, para cada player, una
 huella de la parte que escribió la última vez, y la compara con una
 huella de la parte tal como está ahora:
@@ -447,12 +446,12 @@ implementa FNV-1a obtiene el mismo resultado.
 
 ### Mover la canción entera no es una edición
 
-**Key > D major** transpone cada nota de la canción, incluidas las de
+**Tonalidad > Re mayor** transpone cada nota de la canción, incluidas las de
 la banda (mira [Cambiar de tonalidad](../step-8/changing-key.md)). Las
 partes de la banda ya no encajan con sus huellas, pero tú no las
 editaste: la herramienta lo movió todo. Cambiar la métrica y copiar una
 sección son lo mismo. Estas herramientas están envueltas en
-`moving_the_band`, que apunta qué partes seguían el sheet antes,
+`moving_the_band`, que apunta qué partes seguían la hoja antes,
 ejecuta la herramienta, y luego toma sus huellas nuevas como propias de
 la banda:
 
@@ -484,10 +483,10 @@ cosas pueden cambiar con él:
   a compás, como hace un ritmo de la biblioteca (mira [Un ritmo en otro
   compás](../step-8/re-metering.md)). Cada compás conserva su longitud,
   así que el tempo se escala: una canción en 4/4 a 110 BPM elegida como
-  Jazz waltz pasa a 3/4 a 82,5 BPM, y cada compás dura los mismos 2,18
+  Vals de jazz pasa a 3/4 a 82,5 BPM, y cada compás dura los mismos 2,18
   segundos que antes (4 × 60 / 110 = 3 × 60 / 82,5). Pon después el
   tempo que quieras.
-- **El tempo.** Mientras el sheet está vacío, la canción toma el tempo
+- **El tempo.** Mientras la hoja está vacía, la canción toma el tempo
   habitual del estilo. Una vez que has escrito acordes, el tempo es
   tuyo y se queda.
 
@@ -498,14 +497,14 @@ que suenen bien por MIDI hacia un sintetizador externo.
 
 ## Una banda sobre una demo
 
-Abre una demo, pongamos **Canon in D**, abre el chord sheet y elige una
+Abre una demo, pongamos **Canon en Re**, abre la hoja de acordes y elige una
 banda. Una demo ya toca su propio acompañamiento, así que primero la
 banda:
 
-1. escribe en el sheet los acordes que toca la canción, si está vacío
-   (el **Write the chords the song plays** del último cambio), y
+1. escribe en la hoja los acordes que toca la canción, si está vacía
+   (el **Escribir los acordes que toca la canción** del último cambio), y
 2. **silencia** los canales propios de acordes y bajo de la canción (la
-   biblioteca los llama «Keys» y «Bass») y sus pistas que solo
+   biblioteca los llama «Teclados» y «Bajo») y sus pistas que solo
    contienen batería,
 
 para que los dos no toquen uno encima del otro. La melodía sigue
@@ -514,12 +513,12 @@ silencia.
 
 ![El chord sheet de Canon in D con una banda Pop ballad: D A Bm F#m | G D G A, la progresión del Canon de Pachelbel, escrita compás a compás](../images/step-9-band-demo.png)
 
-**No band** quita los patrones de la banda, sus pistas y sus canales
+**Sin banda** quita los patrones de la banda, sus pistas y sus canales
 (solo los que añadió, y solo si nada más suena en ellos), y le quita el
 mute a lo que silenció. Recuerda lo que silenció por *nombre*, no por
 número, para que vuelvan los canales correctos incluso después de que
 hayas añadido o quitado otros por el camino. Los acordes se quedan en
-el sheet.
+la hoja.
 
 ## En el archivo
 
@@ -554,22 +553,22 @@ existe, se rechaza con un mensaje que lo dice en lugar de abrirse mal.
 
 ## Ejercicios
 
-1. Escribe `C | Am | F | G7` y elige **Jazz waltz**. Mira el bajo en el
+1. Escribe `C | Am | F | G7` y elige **Vals de jazz**. Mira el bajo en el
    piano roll: ¿qué nota toca en el pulso 3 de cada compás, y hacia qué
    fundamental lleva? Luego elige **Swing** (4/4): ¿qué pone la
    caminata en el pulso 3 ahora?
 2. Escribe un compás `Dm7 G7` y un compás `C / / G7`. Abre la parte de
    piano. ¿En qué pulso empieza el G7 en cada uno, y cambia el ritmo de
    comping en esos compases?
-3. Elige **Alberti bass** sobre los mismos acordes. El patrón es
+3. Elige **Bajo de Alberti** sobre los mismos acordes. El patrón es
    «grave, agudo, medio, agudo». ¿Qué nota del acorde está grave en el
    compás de Am, y por qué podría no ser la fundamental La? (Pista:
    voice leading.)
 4. Edita una nota del bajo, y luego escribe un acorde nuevo en el
-   compás 2. ¿Qué partes cambiaron? Haz clic en **Play it again**. ¿Qué
+   compás 2. ¿Qué partes cambiaron? Haz clic en **Volver a tocarla**. ¿Qué
    le pasó a tu nota?
-5. Abre **Canon in D**, elige **Pop ballad**, y mira el channel rack.
-   ¿Qué canales están silenciados? Elige **No band**: ¿la demo ha
+5. Abre **Canon en Re**, elige **Balada pop**, y mira el rack de canales.
+   ¿Qué canales están silenciados? Elige **Sin banda**: ¿la demo ha
    vuelto exactamente a como era?
 6. En `band.rs`, `part_print` deja fuera la pista en la que está un
    clip. ¿Qué iría mal para el usuario si no lo hiciera?

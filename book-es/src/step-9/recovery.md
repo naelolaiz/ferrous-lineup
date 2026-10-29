@@ -9,8 +9,8 @@ Archivos: [`crates/lineup-app/src/app/recovery.rs`](https://github.com/naelolaiz
 y [`crates/lineup-listen/src/decode.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/decode.rs)
 
 Una canción larga es mucho trabajo, y la mayor parte es invisible: un
-acorde escrito en el sheet, una nota arrastrada en el piano roll, una
-mezcla cambiada en el mixer. Octubre de 2026 se dedicó a las maneras en
+acorde escrito en la hoja, una nota arrastrada en el piano roll, una
+mezcla cambiada en el mezclador. Octubre de 2026 se dedicó a las maneras en
 que ese trabajo aún podía perderse, y a la tarjeta de sonido que podía
 pararse. Los arreglos no son musicales. Son la diferencia entre un
 programa del que te fías y uno que guardas dos veces.
@@ -38,7 +38,7 @@ junto al proyecto, porque un proyecto puede estar en un medio de solo
 lectura, y un archivo de guardado automático en una carpeta de canciones
 sorprendería a quien lo viera. El pequeño archivo `.info` lleva la ruta
 y el nombre del proyecto, de modo que una canción recuperada vuelve como
-sí misma, no como «Untitled».
+sí misma, no como «Sin título».
 
 La copia la escribe `file::save`, que escribe un archivo temporal y lo
 renombra. Un crasheo a mitad deja entera la copia anterior; el archivo
@@ -46,15 +46,15 @@ info se escribe después del proyecto, así que un crasheo entre los dos
 pierde el nombre en lugar de dar al proyecto uno equivocado.
 
 Al arrancar, si hay una copia, un modal pregunta
-**Recover unsaved work?** y nombra el archivo:
+**¿Recuperar el trabajo sin guardar?** y nombra el archivo:
 
-- **Recover it** devuelve el proyecto, con su ruta y su nombre, y quita
+- **Recuperarlo** devuelve el proyecto, con su ruta y su nombre, y quita
   la copia. También carga el archivo del disco, si aún existe, como la
   versión «guardada», de modo que el trabajo recuperado muestra
   correctamente la estrella de sin guardar; deshacer de vuelta al
   archivo la quita. Si el archivo ya no está, el proyecto recuperado
   queda sencillamente sin guardar.
-- **Discard it** quita la copia y deja el proyecto que la app habría
+- **Descartarlo** quita la copia y deja el proyecto que la app habría
   abierto en caso contrario.
 
 Una salida limpia quita la copia, porque no hay nada que recuperar. La
@@ -123,9 +123,9 @@ Si dos ejecuciones crashearon, hay dos copias. La más nueva se ofrece
 primero, y la siguiente espera hasta que el trabajo recuperado se guarda
 o se deja ir, de modo que recuperar una nunca sustituye a otra.
 
-## File > Open recent
+## Archivo > Abrir recientes
 
-**File > Open recent** lista los últimos diez proyectos abiertos o
+**Archivo > Abrir recientes** lista los últimos diez proyectos abiertos o
 guardados, el más reciente primero. La lista se guarda en los datos
 almacenados de egui, así que sobrevive a un reinicio. Cada elemento
 muestra el nombre del archivo, con la ruta completa en su tooltip. Abrir
@@ -140,25 +140,25 @@ intento de abrirla falla.
 
 Tres arreglos menores conservan el proyecto que querías conservar:
 
-- **Save as…** da ahora al archivo una extensión de proyecto incluso si
+- **Guardar como…** da ahora al archivo una extensión de proyecto incluso si
   escribes otra. `song.txt` se guarda como `song.lineup`, no como un
-  chord sheet que se abre en el importador equivocado.
-- Abrir un proyecto, una demo, un archivo MIDI o un chord sheet detiene
-  un **File > Import recording…** que siga escuchando. La importación se
+  hoja de acordes que se abre en el importador equivocado.
+- Abrir un proyecto, una demo, un archivo MIDI o una hoja de acordes detiene
+  un **Archivo > Importar grabación…** que siga escuchando. La importación se
   inició para el proyecto que se deja atrás; sin esto, su resultado
   podría llegar más tarde y sustituir al proyecto nuevo. El aviso dice
   «Stopped importing the recording».
-- **File > Quit** durante una exportación WAV o de vídeo pregunta
-  **An export is still running**, con **Stop it and quit** y
-  **Keep exporting**. Detener pide a la exportación que pare, espera
+- **Archivo > Salir** durante una exportación WAV o de vídeo pregunta
+  **Una exportación aún se está ejecutando**, con **Detener y salir** y
+  **Continuar exportando**. Detener pide a la exportación que pare, espera
   hasta que lo hace, quita el archivo inacabado y luego cierra;
   cualquier pregunta de cambios sin guardar va primero. Un WAV o un
   vídeo a medio escribir no se deja nunca atrás con aspecto de acabado,
   y el proyecto no se cierra debajo de una exportación que aún escribe.
 
 El editor de estilos tiene su propio estado sin guardar. Salir con un
-borrador editado pregunta **Save style changes?**, y ofrece
-**Save style**, **Don't save style** y **Cancel**, de modo que guardar
+borrador editado pregunta **¿Guardar los cambios del estilo?**, y ofrece
+**Guardar estilo**, **No guardar el estilo** y **Cancelar**, de modo que guardar
 una canción no descarta el estilo en silencio.
 
 ## Arrastrar sin copiar la canción
@@ -196,8 +196,8 @@ pasos incluso para una canción muy grande.
 
 ## Audio que vuelve
 
-**Edit > Settings… > Audio** tiene un botón bajo **Output**. Dice
-**Restart audio** mientras el stream está corriendo, y **Try again**
+**Edición > Ajustes… > Audio** tiene un botón bajo **Salida**. Dice
+**Reiniciar audio** mientras el stream está corriendo, y **Reintentar**
 cuando el audio no está disponible o el stream ha reportado un error.
 Vuelve a abrir el dispositivo de salida por defecto del sistema. El
 proyecto se queda; los puertos de entrada y salida MIDI siguen
@@ -209,16 +209,16 @@ de vuelta a la misma posición y suena otra vez, y el aviso dice
 El stream antiguo se suelta antes de que empiece el nuevo, porque un
 dispositivo que se reabre no puede seguir retenido por el stream muerto.
 Si abrirlo falla, la barra de estado dice por qué, y el botón sigue
-siendo **Try again**. Una interfaz desenchufada, un dispositivo por
+siendo **Reintentar**. Una interfaz desenchufada, un dispositivo por
 defecto cambiado o un servidor de sonido que se reinició se pueden
 arreglar todos sin cerrar la app.
 
 Las notas que el motor antiguo dejó sonando en un sintetizador externo
-se detienen: antes de que el hilo antiguo de MIDI Out acabe, envía All
+se detienen: antes de que el hilo antiguo de salida MIDI acabe, envía All
 Notes Off en los dieciséis canales, y el nuevo espera a que lo haga. Si
 la traza de reproducción está activa, continúa en el mismo archivo.
 [Antes de la próxima
-versión](before-the-release.md#restart-audio-notas-que-se-detienen-y-una-traza-que-continúa)
+versión](before-the-release.md#reiniciar-audio-notas-que-se-detienen-y-una-traza-que-continúa)
 muestra cómo.
 
 ## Comandos que deben llegar
@@ -230,7 +230,7 @@ llena: cede y vuelve a intentarlo, hasta mil veces. Solo un stream que
 ya ha reportado un error se rinde al momento, porque esperar a un hueco
 que nunca llegará congelaría la ventana.
 
-MIDI Out tiene la misma regla por una razón más estricta. Un note-off
+La salida MIDI tiene la misma regla por una razón más estricta. Un note-off
 perdido deja una nota sonando para siempre en un sintetizador externo.
 Los mensajes que encuentran la cola de salida llena esperan en un
 backlog reservado y salen al principio del bloque siguiente. Quitar un
@@ -240,9 +240,9 @@ dieciséis canales antes de que se cierre la conexión antigua. El backlog
 es finito, pero hacen falta cientos de mensajes atascados para llenarlo,
 lo que significa que el propio puerto ya no está.
 
-**File > Import recording…** rechaza una grabación de más de diez
+**Archivo > Importar grabación…** rechaza una grabación de más de diez
 minutos. La decodificación comprueba la longitud mientras lee, y se
-detiene con «the recording is longer than 10 minutes». El análisis
+detiene con «la grabación dura más de 10 minutos». El análisis
 mantiene la grabación, y una copia de ella, en memoria; una más larga
 necesitaría más de lo que puede dar una máquina pequeña. La importación
 muestra la razón en lugar de fallar en silencio o agotar la memoria.
@@ -255,19 +255,19 @@ que la música, que es el orden equivocado.
 
 ## Probarlo
 
-1. Ejecuta `cargo run --release`, abre **File > New**, haz un cambio y
+1. Ejecuta `cargo run --release`, abre **Archivo > Nuevo**, haz un cambio y
    guárdalo como `recovery-test.lineup`. Haz otro cambio. Espera medio
    minuto y mata la app desde la terminal (`Ctrl+C`) en lugar de
-   cerrarla. Arranca de nuevo. **Recover unsaved work?** nombra el
-   archivo; haz clic en **Recover it**. El cambio está ahí, con la
+   cerrarla. Arranca de nuevo. **¿Recuperar el trabajo sin guardar?** nombra el
+   archivo; haz clic en **Recuperarlo**. El cambio está ahí, con la
    estrella de sin guardar.
-2. Guárdalo, abre otro proyecto y usa **File > Open recent**: la canción
+2. Guárdalo, abre otro proyecto y usa **Archivo > Abrir recientes**: la canción
    de prueba está en la lista. Sal y arranca otra vez; sigue ahí.
-3. Pon una canción a sonar y abre **Edit > Settings… > Audio**. Haz clic
-   en **Restart audio** mientras suena. El sonido vuelve, el aviso dice
+3. Pon una canción a sonar y abre **Edición > Ajustes… > Audio**. Haz clic
+   en **Reiniciar audio** mientras suena. El sonido vuelve, el aviso dice
    «Audio is playing again», y la canción continúa desde donde estaba.
    Si el dispositivo no está disponible, el mismo botón dice
-   **Try again**.
+   **Reintentar**.
 4. Con un sintetizador MIDI conectado, toca una nota larga y quita el
    canal o cambia su instrumento mientras suena. La nota se detiene: su
    note-off se conservó y se envió en lugar de perderse. (Esto necesita

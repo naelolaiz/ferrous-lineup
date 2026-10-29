@@ -16,7 +16,7 @@ pequeños de tres notas, cada uno con un color que aprendes a reconocer.
 
 Qué gana Ferrous Lineup:
 
-- **Micromodes…** en el piano roll abre una ventana con los doce
+- **Micromodos…** en el piano roll abre una ventana con los doce
   micromodos de Kröpfl en sus tres familias. Cada uno se dibuja en un
   reloj, con su forma prima en solfeo (*do - do# - mi*), sus intervalos,
   su conjunto de clases de alturas y su hora en el Tone Clock de Peter
@@ -24,20 +24,20 @@ Qué gana Ferrous Lineup:
 - Selecciona algunas notas y la ventana lista los micromodos que hay
   dentro: las siete notas de Do mayor contienen 35 grupos de tres, y ves
   cuántos hay de cada color.
-- La ventana **Sets** y la ventana **Micromodes** se señalan la una a la
+- La ventana **Conjuntos** y la ventana **Micromodos** se señalan la una a la
   otra. Un conjunto de tres notas dice qué micromodo es, un conjunto
   más grande lista los micromodos que contiene, y cada nombre es un
   botón que abre la otra ventana en la clase correcta.
-- La Library tiene un grupo **Micromodes (Kröpfl)** con siete estilos, y
-  **File > Demos > Micromodes** toca cada uno como una pieza corta en
+- La Biblioteca tiene un grupo **Micromodos (Kröpfl)** con siete estilos, y
+  **Archivo > Demostraciones > Micromodos** toca cada uno como una pieza corta en
   cinco secciones.
 - La serie del *Concierto*, Op. 24, de Webern, hecha de cuatro grupos de
   tres que son todos el mismo micromodo, se une a las series famosas,
   con un estilo y un demo propios.
 
-![La ventana Micromodes sobre el piano roll. Los acordes de Do mayor de la canción inicial están seleccionados: sus siete notas contienen Mayor 2 ocho veces, Acorde menor-mayor seis veces, y así. Abajo, las tres familias, y Menor 3 dibujado en un reloj: Do, Re♭ y Mi unidos en un triángulo, con su forma prima do - do# - mi y dónde se oye.](../images/step-8-micromodes.png)
+![La ventana Micromodos sobre el piano roll. Los acordes de Do mayor de la canción inicial están seleccionados: sus siete notas contienen Mayor 2 ocho veces, Acorde menor-mayor seis veces, y así. Abajo, las tres familias, y Menor 3 dibujado en un reloj: Do, Re♭ y Mi unidos en un triángulo, con su forma prima do - do# - mi y dónde se oye.](../images/step-8-micromodes.png)
 
-![La ventana Sets en 7-35, la escala diatónica, abierta desde la ventana Micromodes. Bajo los detalles, «Micromodes inside, en sus 35 grupos de tres», cada uno un botón de vuelta a la ventana Micromodes.](../images/step-8-micromodes-in-sets.png)
+![La ventana Conjuntos en 7-35, la escala diatónica, abierta desde la ventana Micromodos. Bajo los detalles, «Micromodes inside, en sus 35 grupos de tres», cada uno un botón de vuelta a la ventana Micromodos.](../images/step-8-micromodes-in-sets.png)
 
 ## Tres notas, doce colores
 
@@ -209,10 +209,10 @@ Algunos ejemplos, todos comprobados por las pruebas:
   pieza.
 
 Así se enlazan las dos ventanas. Un micromodo *es* un conjunto de clases
-de alturas, uno de los doce con tres notas, así que la ventana Sets
+de alturas, uno de los doce con tres notas, así que la ventana Conjuntos
 marca esos doce con el nombre de su micromodo, y un conjunto más grande
-está *hecho de* micromodos, así que la ventana Sets los lista bajo sus
-detalles. En la ventana Micromodes, las notas que seleccionas se
+está *hecho de* micromodos, así que la ventana Conjuntos los lista bajo sus
+detalles. En la ventana Micromodos, las notas que seleccionas se
 analizan de la misma manera.
 
 ## Una serie hecha de un solo micromodo: el Concierto de Webern
@@ -249,9 +249,9 @@ Cetta señala que Kröpfl, como los compositores del círculo de
 Schoenberg, prefería los grupos de tres notas, y por eso los dos se
 encuentran aquí.
 
-La serie es ahora una de las series famosas de la ventana Row, como
-**Webern's Concerto**, y la Library y **File > Demos > Micromodes**
-tienen un estilo construido sobre ella, **Webern's trichords**: la serie
+La serie es ahora una de las series famosas de la ventana Serie, como
+**Concierto de Webern**, y la Biblioteca y **Archivo > Demostraciones > Micromodos**
+tienen un estilo construido sobre ella, **Los tricordios de Webern**: la serie
 como melodía saltando por tres octavas, con cada grupo de tres como
 acorde debajo. El ritmo es de Ferrous Lineup, no de Webern.
 
@@ -276,9 +276,9 @@ es qué forma viene después. Ferrous Lineup ofrece dos respuestas, en
 ### Mover cada nota la misma distancia
 
 La más simple es una **secuencia**: mueve las tres notas hacia arriba el
-mismo intervalo cada vez. *Whole-tone haze* sube Mayor 1 un tono en cada
+mismo intervalo cada vez. *Bruma de tonos enteros* sube Mayor 1 un tono en cada
 compás: Do Re Mi, Re Mi Fa♯, Mi Fa♯ Sol♯... No sale nunca de una escala de tonos
-enteros, el sonido de *Voiles* de Debussy. *Augmented drift* desliza la
+enteros, el sonido de *Voiles* de Debussy. *Deriva aumentada* desliza la
 tríada aumentada un semitono hacia abajo cada vez; tras cuatro acordes,
 el quinto tiene las notas del primero, porque solo hay cuatro tríadas
 aumentadas.
@@ -366,21 +366,21 @@ Los siete estilos:
 
 | estilo | micromodo | recorrido | sonido |
 |-------|-----------|------|-------|
-| Menor 3 colour | Menor 3 | mantiene dos notas | acordes, melodía y bajo en un solo color |
-| Viennese points | Menor 5 | mantiene dos notas | notas sueltas saltando por tres octavas sobre acordes suaves |
-| Cluster pulse | Menor 1 | mantiene dos notas | clusters que suben un semitono cada vez, sobre un pulso techno |
-| Whole-tone haze | Mayor 1 | sube un tono | arpegios en 3/4 |
-| Fourths groove | Mayor 4 | mantiene dos notas | acordes sus sobre un pulso neo-soul |
-| Triads, two notes kept | menor-mayor | mantiene dos notas | movimientos P, L y R |
-| Augmented drift | aumentado | baja un semitono | cuatro tríadas aumentadas, una y otra vez |
+| Color Menor 3 | Menor 3 | mantiene dos notas | acordes, melodía y bajo en un solo color |
+| Puntos vieneses | Menor 5 | mantiene dos notas | notas sueltas saltando por tres octavas sobre acordes suaves |
+| Pulso de clusters | Menor 1 | mantiene dos notas | clusters que suben un semitono cada vez, sobre un pulso techno |
+| Bruma de tonos enteros | Mayor 1 | sube un tono | arpegios en 3/4 |
+| Groove de cuartas | Mayor 4 | mantiene dos notas | acordes sus sobre un pulso neo-soul |
+| Tríadas, dos notas fijas | menor-mayor | mantiene dos notas | movimientos P, L y R |
+| Deriva aumentada | aumentado | baja un semitono | cuatro tríadas aumentadas, una y otra vez |
 
 Un demo toca una pasada desde el micromodo en Do, luego al revés, luego
 desde un tritono de distancia (Fa♯), luego al revés desde ahí, y la
-primera pasada otra vez. Haz clic en un estilo de la Library mientras la
+primera pasada otra vez. Haz clic en un estilo de la Biblioteca mientras la
 canción suena y toda la canción se pasa a él: sus acordes y su bajo se
 reemplazan por el recorrido, los patrones empiezan desde esos cuatro
 lugares por turno, y la tonalidad se convierte en el propio micromodo,
-un conjunto de clases de alturas, así que las harmony keys tocan sus
+un conjunto de clases de alturas, así que las teclas de armonía tocan sus
 formas.
 
 ## Los micromodos en Rust: una tabla en un `static`
@@ -456,7 +456,7 @@ desde tres direcciones, ninguna de las cuales se fía de la tabla:
 - **Contra Forte.** Las clases de conjuntos del capítulo anterior,
   filtradas a tres notas, deben ser las doce formas primas en el mismo
   orden, nombradas 3-1 a 3-12.
-- **Contra el conteo.** Un loop sobre los 4096 conjuntos (cada `u16` de
+- **Contra el conteo.** Un bucle sobre los 4096 conjuntos (cada `u16` de
   0 a 4095) comprueba que exactamente los conjuntos de tres notas tienen
   un micromodo, que hay 220 de ellos, y que las formas de cada micromodo
   coinciden con la frecuencia con la que se encontró.
@@ -532,7 +532,7 @@ perfect fourths or fifths», no «two perfect fourth or fifths».
 ### Contar grupos de tres
 
 `trichords` lista cada grupo de tres notas de un conjunto, con tres
-loops anidados cuyos índices siempre suben, así que ningún grupo se
+bucles anidados cuyos índices siempre suben, así que ningún grupo se
 lista dos veces:
 
 ```rust
@@ -706,7 +706,7 @@ closure en cada llamada.
 Los demos reutilizan el arreglo de los demos dodecafónicos. El código
 que hacía las cinco secciones de un demo de serie se dividió en
 `section_patterns` (un patrón por sección, rellenado por una closure) y
-`arrange_sections` (el playlist, con la batería entrando tras la primera
+`arrange_sections` (la lista de reproducción, con la batería entrando tras la primera
 sección), y `micromode_demo` usa ambos con su propia closure.
 
 ## La ventana: un reloj dibujado con el painter de egui
@@ -762,16 +762,16 @@ pub enum MicroAction {
 }
 ```
 
-La ventana Sets recibió dos acciones nuevas propias, `ShowMicromode` y
+La ventana Conjuntos recibió dos acciones nuevas propias, `ShowMicromode` y
 `OpenMicromodes`. El piano roll es dueño de ambas ventanas, así que
-maneja las acciones: `ShowSet` llama al `pick` de la ventana Sets y la
-abre; `ShowMicromode` llama al `pick` de la ventana Micromodes. Cada
+maneja las acciones: `ShowSet` llama al `pick` de la ventana Conjuntos y la
+abre; `ShowMicromode` llama al `pick` de la ventana Micromodos. Cada
 ventana solo sabe mostrar un conjunto que se le da, y el piano roll las
 conecta.
 
 `pick` muestra no solo el micromodo, sino la forma exacta en la que se
 hizo clic. Si haces clic en Menor 3 bajo la serie de Webern en la
-ventana Sets, la ventana Micromodes se abre en Si Si♭ Re, no en Do Do♯ Mi:
+ventana Conjuntos, la ventana Micromodos se abre en Si Si♭ Re, no en Do Do♯ Mi:
 
 ```rust
 pub fn pick(&mut self, form: PitchSet) {
@@ -799,7 +799,7 @@ if std::mem::take(&mut self.raise) {
 }
 ```
 
-La ventana Sets hace lo mismo con una bandera `reveal`, y además
+La ventana Conjuntos hace lo mismo con una bandera `reveal`, y además
 desplaza su lista larga hasta la clase que le pidieron mostrar:
 `response.scroll_to_me(Some(egui::Align::Center))` en la línea de esa
 clase, solo durante un frame.
@@ -896,37 +896,37 @@ copian, salvo las doce notas de la serie de Webern.
   grafía de los acordes (Do Mi♭ Sol♭), *Hear it* (comprobado grabando el
   sonido y encontrando sus alturas), los micromodos de la selección, los
   enlaces entre las dos ventanas en ambas direcciones y por delante, los
-  estilos de la Library tanto parados como con la canción sonando, y los
+  estilos de la Biblioteca tanto parados como con la canción sonando, y los
   demos, de nuevo con sus alturas comprobadas desde el sonido.
 
 ## Pruébalo
 
-1. Abre el piano roll (**F7**) en el patrón **Chords** de la canción
+1. Abre el piano roll (**F7**) en el patrón **Acordes** de la canción
    inicial, haz clic en la barra de título del piano roll, pulsa
-   **Ctrl+A** y haz clic en **Micromodes…**. Lee los colores de Do mayor:
+   **Ctrl+A** y haz clic en **Micromodos…**. Lee los colores de Do mayor:
    ocho Mayor 2, seis tríadas, una disminuida.
-2. Haz clic en **Menor 3** y luego en **▶ Hear it**. Prueba
-   **Inverted (I)** y **Move it up**, y mira cómo el triángulo gira y se
+2. Haz clic en **Menor 3** y luego en **▶ Escucharlo**. Prueba
+   **Invertido (I)** y **Transportarlo**, y mira cómo el triángulo gira y se
    voltea en el reloj.
-3. Haz clic en **3-3 in Sets →**. La ventana Sets se abre en 3-3, al que
+3. Haz clic en **3-3 en Conjuntos →**. La ventana Conjuntos se abre en 3-3, al que
    llama Menor 3 en su lista. Elige **7-35** y haz clic en uno de los
    micromodos que hay debajo para volver.
-4. Abre **File > Demos > Micromodes > Triads, two notes kept** y pulsa
-   Space. Escucha la única nota que se mueve en cada acorde.
-5. Haz clic en **Webern's trichords** bajo **Twelve-tone rows** en la
-   Library. La tonalidad se convierte en la serie de Webern, y con
-   **3 notes** elegido bajo la tonalidad, las harmony keys tocan sus
+4. Abre **Archivo > Demostraciones > Micromodos > Tríadas, dos notas fijas** y pulsa
+   Espacio. Escucha la única nota que se mueve en cada acorde.
+5. Haz clic en **Los tricordios de Webern** bajo **Series dodecafónicas** en la
+   Biblioteca. La tonalidad se convierte en la serie de Webern, y con
+   **3 notas** elegido bajo la tonalidad, las teclas de armonía tocan sus
    cuatro grupos de tres: cada uno está etiquetado 3-3. Ahora cambia el
-   menú de tonalidad de **twelve-tone row** a **pitch-class set**: la
+   menú de tonalidad de **serie dodecafónica** a **conjunto de clases de alturas**: la
    tonalidad se convierte en el primer grupo de la serie, Do Si Mi♭, y las
-   harmony keys tocan sus formas, todas 3-3. (Antes de arreglarse esto,
+   teclas de armonía tocan sus formas, todas 3-3. (Antes de arreglarse esto,
    el cambio daba el acorde de séptima disminuida, el conjunto por
-   defecto del menú, y las teclas mostraban 3-10: las harmony keys
+   defecto del menú, y las teclas mostraban 3-10: las teclas de armonía
    siempre tocan acordes de la *tonalidad*, no de las notas del patrón.
    La función `set_key` de `twelve_tone.rs` ahora toma en su lugar el
    primer grupo de tres de una serie.)
 6. De vuelta en la canción inicial, mientras suena, haz clic en
-   **Fourths groove** en la Library: la canción sigue en acordes sus.
+   **Groove de cuartas** en la Biblioteca: la canción sigue en acordes sus.
 
 ## Ejercicios
 
@@ -936,7 +936,7 @@ copian, salvo las doce notas de la serie de Webern.
    notas 1–3, 2–4, 3–5 y así (busca `windows` en el glosario). ¿Por qué
    la respuesta es `None` para algunas ventanas? Pruébalo con la serie
    de Webern: ¿qué ventanas, además de los cuatro grupos, son Menor 3?
-2. **Todos los colores a la vez (lineup-core, pequeño).** Haz un loop
+2. **Todos los colores a la vez (lineup-core, pequeño).** Haz un bucle
    sobre `SetClass::all()` y encuentra los conjuntos más pequeños cuyo
    contenido de micromodos no tiene ceros: conjuntos que contienen los
    doce micromodos. ¿Cuántas notas necesitan, y cuáles son? (Una pista
@@ -958,7 +958,7 @@ copian, salvo las doce notas de la serie de Webern.
    notas» visitar cada forma exactamente una vez? Es una pregunta sobre
    caminos en un grafo.)
 5. **Oír la familia (lineup-app, pequeño).** Añade un botón **▶** junto
-   al nombre de cada familia en la ventana Micromodes que toque sus
+   al nombre de cada familia en la ventana Micromodos que toque sus
    micromodos uno tras otro, desde el Do central. `MicroAction::Hear`
    toca notas juntas; ¿qué añadirías para tocarlas por turno? Mira cómo
    se detiene la vista previa de un acorde del piano roll.
