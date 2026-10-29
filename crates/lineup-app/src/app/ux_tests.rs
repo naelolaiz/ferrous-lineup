@@ -1479,6 +1479,27 @@ fn the_first_play_offers_real_instrument_sounds_once() {
 }
 
 #[test]
+fn a_demo_asks_for_real_instrument_sounds_in_front_of_its_chord_sheet() {
+    let mut screen = Screen::new();
+    screen.app.sounds.offer_on_first_play(true);
+    screen.app.rack_open = false;
+    let demo =
+        super::library::Demo::Song(lineup_core::library::Song::named("Jingle Bells").unwrap());
+    screen.app.open_demo(demo);
+    assert!(screen.app.playing && screen.app.chord_sheet.open);
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let offer = text_rect(&output, "Real instrument sounds")
+        .unwrap()
+        .center();
+    let top = screen.ctx.layer_id_at(offer).unwrap();
+    assert_eq!(top.id, egui::Id::unique("real-instrument-sounds"));
+    // Its buttons take the click.
+    screen.click("Not now");
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+}
+
+#[test]
 fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
     let mut screen = Screen::new();
     crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
