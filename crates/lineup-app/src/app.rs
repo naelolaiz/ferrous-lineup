@@ -2034,7 +2034,7 @@ impl LineupApp {
         settings::minor_numerals(ctx).set();
         self.start_frame_for_undo(ctx);
         self.check_audio();
-        self.autosave();
+        self.autosave(ctx);
         self.keyboard_shortcuts(ctx);
         self.keep_over_song();
         self.live_input(ctx);

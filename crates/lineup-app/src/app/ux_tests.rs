@@ -1519,6 +1519,28 @@ fn edit_style_copies_the_whole_band_of_a_new_song() {
 }
 
 #[test]
+fn unsaved_work_wakes_a_window_left_alone_to_write_its_recovery_copy() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    let delay = |output: &FullOutput| output.viewport_output[&egui::ViewportId::ROOT].repaint_delay;
+    // Once the windows have found their places, nothing asks for a frame.
+    let settled = |screen: &mut Screen| {
+        for _ in 0..4 {
+            screen.draw(vec![]);
+        }
+        delay(&screen.draw(vec![]))
+    };
+    assert_eq!(settled(&mut screen), std::time::Duration::MAX);
+    // Unsaved work asks for one when its copy is due, every 30 seconds.
+    screen.app.edit("change tempo", |project| {
+        project.scale_tempo(Tempo::new(100.0))
+    });
+    let wait = settled(&mut screen);
+    assert!(wait > std::time::Duration::from_secs(25), "{wait:?}");
+    assert!(wait <= std::time::Duration::from_secs(30), "{wait:?}");
+}
+
+#[test]
 fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
     let mut screen = Screen::new();
     crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
