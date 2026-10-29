@@ -4633,6 +4633,48 @@ mod section_styles {
         screen.app.undo();
         assert_eq!(screen.app.project.section_style_at(64), bossa);
     }
+
+    #[test]
+    fn a_sections_menu_names_sections_in_spanish_and_files_keep_english() {
+        let mut screen = song();
+        crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+        screen.app.chord_sheet.open = false;
+        screen.click("Estribillo");
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        for chip in [
+            "Introducción",
+            "Estrofa",
+            "Puente",
+            "Coda",
+            "Preestribillo",
+            "Solo",
+            "Corte",
+            "Drop",
+        ] {
+            assert!(text_rect(&output, chip).is_some(), "{chip}");
+        }
+        for english in ["Intro", "Verse", "Chorus", "Bridge", "Outro", "Break"] {
+            assert!(text_rect(&output, english).is_none(), "{english}");
+        }
+        // A chip names the section; the file keeps the English name.
+        screen.click("Puente");
+        let names = |screen: &Screen| -> Vec<String> {
+            let sections = screen.app.project.playlist().sections().iter();
+            sections.map(|section| section.name.clone()).collect()
+        };
+        assert_eq!(names(&screen), ["Verse", "Bridge"]);
+        // A name typed in stays as typed, even one the app knows.
+        screen.draw(Vec::new());
+        let label = text_rect(&screen.draw(Vec::new()), "Nombre").unwrap();
+        screen.click_at(label.right_center() + vec2(60.0, 0.0), Modifiers::NONE);
+        screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+        screen.draw(vec![Event::Text("Verse".into())]);
+        assert_eq!(names(&screen), ["Verse", "Verse"]);
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "Verse").is_some());
+        crate::i18n::Language::English.set();
+    }
 }
 
 #[test]
