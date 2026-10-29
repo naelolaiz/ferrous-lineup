@@ -18,8 +18,8 @@ that hid the playlist.
 Two changes, both at the top of the sheet, next to **Show**:
 
 - **Bars per line.** By default, **Fit the names**: as many bars as fit
-  on a line with every name and every word under it at its full size,
-  never shrunk. The menu says how many that is now, as in **Fit (4)**.
+  on a line with every name, and the numeral or notes under it, at its
+  full size, never shrunk. The menu says how many that is now, as in **Fit (4)**.
   Or pick a number from 1 to 16; then the line holds that many, and
   names that don't fit are written smaller.
 - **⛶ Fill the window.** The sheet takes the playlist's place in the
@@ -46,7 +46,11 @@ where it was, in the main window or in its own.
 4. Pick **Bars per line > 16**. The names that don't fit in a
    sixteenth of the width get smaller, all the names of a bar at the
    same size.
-5. Pick **Fit the names** again, and **Back to the playlist**.
+5. With the sheet still in the main window, press **Ctrl+−** with the
+   pointer over it, twice. The names get smaller, as everything else
+   does, and the lines get longer, as the menu's **Fit (N)** says.
+   **Ctrl+0** takes them back.
+6. Pick **Fit the names** again, and **Back to the playlist**.
 
 ![The Bars per line menu: Fit the names, or a number of bars from 1 to 16 (the list scrolls to 15 and 16).](../images/step-9-chord-sheet-bars-per-line.png)
 
@@ -146,33 +150,110 @@ phrases together, so it is two.
 ## How wide a bar must be
 
 Before drawing, the sheet asks every bar of the song how wide it must
-be, and takes the widest. A bar's names don't share its width equally:
-**each name has the part of the bar from its beat to the next name's**,
-because that is where the sheet draws it. In a 4/4 bar of "C A7", C
-has beats 1 and 2, half the bar, and so does A7. In "C / / A7", C has
-three quarters and A7 one.
-
-So a name that is 30 pixels wide and has a quarter of the bar needs a
-bar of 120 pixels:
+be, and takes the widest. What must fit is each **name**, and the
+**first word under it**: the Roman numeral of a chord, or the notes of
+a set ("C E G"), which is often the wider of the two. The words after
+the numeral, such as "borrowed" in "bVII7 · borrowed", "pivot", "in A
+harmonic minor" or "rest", are written only where there is room for
+them. The numeral's colour already says "borrowed", and holding the
+mouse on the name says all of it. Counting those words would let one
+borrowed chord on the last beat of one bar halve the bars of every line.
 
 ```rust
-let share = (end - starts[index]) as f32 / length;
-let text = width(&item.text, NAME_SIZE);
-let caption = item
-    .caption
-    .as_deref()
-    .map_or(0.0, |caption| width(caption, CAPTION_SIZE));
-(text.max(caption) + gap) / share
+fn first_word(caption: &str) -> &str {
+    caption.split(" · ").next().unwrap_or(caption)
+}
 ```
 
-`width` measures the text with the painter's fonts (`layout_no_wrap`),
-the same way it will be drawn. The **caption** is the line under the
-name: the Roman numeral of a chord, or the notes of a set ("C E G"),
-which is often the wider of the two. `as_deref` turns the
-`Option<String>` into an `Option<&str>`, and `map_or` gives 0 when there
-is no caption. A name followed by another keeps a gap of 4 pixels from
-it, and the padding on both sides of the bar and any repeat signs are
-added at the end.
+`split` gives the pieces between the separators, one at a time, and
+`next` takes the first. It returns an `Option`, because an iterator
+can be empty; `split` never is, but the type doesn't know that, and
+`unwrap_or` says what to use if it were. When the sheet draws a
+caption, `words_that_fit` tries all the words, then one fewer, down to
+the first, and writes the first that fits.
+
+Each name is then placed **on its beat, or just after the name before
+it** when that one needs the room. In a 4/4 bar of "C A7", C starts on
+beat 1 and A7 on beat 3. But in a bar where Dm7/C lasts a sixteenth and
+G7 the rest, Dm7/C has room for one letter before G7's beat: G7 is
+written just after it, a little late, as a printed chart does when
+chords crowd. A name never starts before its beat, so the order of
+the names is always the order of the chords.
+
+A `Row` holds, for each name of a bar, its beat (from 0 at the start
+of the bar towards 1 at its end) and its width. The widths are
+measured with the painter's fonts (`layout_no_wrap`), the same way the
+names will be drawn:
+
+```rust
+struct Row {
+    names: Vec<(f32, f32)>,
+}
+```
+
+How narrow can the inside of the bar be? Since no name starts before
+its beat, **each name, with all the names after it, must fit between
+its beat and the end of the bar**:
+
+```rust
+fn packed_width(&self) -> f32 {
+    (0..self.names.len())
+        .map(|first| {
+            let (beat, _) = self.names[first];
+            let from = &self.names[first..];
+            let widths: f32 = from.iter().map(|(_, width)| width).sum();
+            let gaps = NAME_GAP * (from.len() - 1) as f32;
+            (widths + gaps) / (1.0 - beat)
+        })
+        .fold(0.0, f32::max)
+}
+```
+
+In "C / / A7", A7 starts on beat 4 and has the last quarter of the bar:
+an A7 30 pixels wide needs a bar of 120. C starts on beat 1 and needs
+the two names, with the gap between them, in the whole bar. The bar
+needs the larger of the two. For the sixteenth of Dm7/C, it is the two
+names side by side, not a bar sixteen times as wide as "Dm7/C".
+
+`&self.names[first..]` is a **slice**: a view of the vector from
+`first` to its end, without copying it. `sum` has to be told what it
+adds up to, `f32` here, because many types can be summed from the same
+items.
+
+The same `Row` places the names when the bar is drawn:
+
+```rust
+fn lefts(&self, left: f32, right: f32) -> Vec<f32> {
+    let on_beat = |beat: f32| left + (right - left) * beat;
+    let mut free = left;
+    let packed: Vec<f32> = self
+        .names
+        .iter()
+        .map(|&(beat, width)| {
+            let start = on_beat(beat).max(free);
+            free = start + width + NAME_GAP;
+            start
+        })
+        .collect();
+    if free - NAME_GAP <= right + 0.5 {
+        packed
+    } else {
+        self.names.iter().map(|&(beat, _)| on_beat(beat)).collect()
+    }
+}
+```
+
+The closure given to `map` changes `free`, a variable outside it, each
+time it is called: it is an `FnMut`. `map` accepts one because it calls
+it once per item, in order. When the names don't all fit that way, on
+a line of a number of bars you picked, each starts on its beat instead,
+and `draw_names` makes them smaller (below). Measuring and drawing
+share one `Row`, so the sheet never makes room for something it
+doesn't draw. A harmony going on from an earlier bar, for instance, is
+drawn without the words under it, and is measured without them.
+
+The padding on both sides of the bar and any repeat signs are added at
+the end.
 
 The widest of them all is a **fold**:
 
@@ -242,6 +323,24 @@ The app then applies both lists the same way, whichever was drawn.
 the same rows of buttons, the same bars, the same keys. Only the frame
 around them changes. So everything the sheet does in its window it
 does in the main window, without a second copy of the code.
+
+With the sheet there, the zoom keys over it change the interface size,
+as they do over the sheet's own window. A window shrinks with
+everything else, but the sheet in the main window keeps the room it
+has, so smaller names fit more bars to a line. The zoom keys find what is under the pointer by looking at the
+playlist's area, which is where the sheet now is. So while the sheet
+fills the window, that area counts as nothing, and the keys don't zoom
+a playlist nobody sees:
+
+```rust
+let playlist = match self.chord_sheet.fills_window() {
+    true => egui::Rect::NOTHING,
+    false => self.playlist.area(),
+};
+```
+
+`Rect::NOTHING` is a rectangle that contains no point at all, so the
+test "is the pointer over the playlist?" is always false.
 
 `remember` is called **before** `fills_window`. It reads the choices
 saved by the last run, the first time it is called. Called after, the
@@ -328,6 +427,21 @@ bar. It checks that the sheet holds fewer than four bars to a line and
 that every name is drawn at its full size, 20 points. Then it picks 8:
 the menu no longer says "Fit (8)", and "Dm7/C" is smaller. Then **Fit
 the names** again brings back the first count and the full size.
+
+`the_words_after_a_numeral_are_written_where_there_is_room` writes "C
+Am F Fm" in bar 1 and "Fm" in bar 2. Fm is borrowed from C minor, so
+its caption is "iv · borrowed". The sheet still holds four bars to a
+line, with "iv" alone on the last beat of bar 1 and "iv · borrowed"
+whole in bar 2. `a_short_chord_keeps_its_name_whole_with_the_next_just_after_it`
+writes Dm7/C for a sixteenth and G7 for the rest of the bar: four bars
+to a line, both names at 20 points, and G7 starting right of Dm7/C.
+
+`the_zoom_keys_over_the_sheet_in_the_main_window_zoom_the_sheet` puts
+the sheet in the main window and presses Ctrl+− over it twice. The
+interface size is smaller, the playlist's zoom is still 100%, and the
+lines hold more bars. The test window does what eframe does for the
+app's real one: at a smaller zoom, the same window on the screen is
+more points wide.
 
 `the_sheet_fills_the_main_window_and_goes_back` clicks **⛶ Fill the
 window** and checks that the word "Playlist" is gone, "Patterns" is

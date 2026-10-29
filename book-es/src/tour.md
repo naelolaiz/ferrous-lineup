@@ -283,8 +283,8 @@ abiertos y los controles de configuración conservan sus propias teclas.
 **F5**, o el primer botón de ventana de la barra de herramientas (una
 página de nombres de acordes), abre la **hoja de acordes**: la armonía de la
 canción compás a compás, cada sección bajo su nombre, como lo escribe una partitura guía. **Compases por línea** pone en una línea tantos compases como
-muestran todos los nombres completos, a su tamaño completo (1, 2, 4, 8,
-12 o 16, de modo que las líneas empiecen donde empiezan las frases), o
+muestran todos los nombres, y el numeral de debajo, a su tamaño
+completo (1, 2, 4, 8, 12 o 16, de modo que las líneas empiecen donde empiezan las frases), o
 el número que elijas. Haz clic en un compás y escribe su armonía:
 acordes (`Am7 D7`, `G7/B`, `F#m7b5`), números romanos en la tonalidad
 (`ii7 V7`), conjuntos de clases de alturas (`3-11 T2`, `{0,1,4}`),
@@ -540,8 +540,9 @@ en un Mac) hace los compases y los pasos más anchos o más estrechos, y
 teclas más altas o más bajas, alrededor de lo que esté bajo el puntero.
 Sobre el rack de canales hacen zoom de su único tamaño. En cualquier otro
 sitio (las barras de herramientas, las teclas de armonía, la barra de estado,
-el panel Patrones y Biblioteca) hacen más grandes o más pequeños el texto,
-los botones y los menús de todas partes, como hace **Ajustes > Apariencia > Tamaño de la interfaz**. **Ctrl+0** devuelve al 100% lo que esté
+el panel Patrones y Biblioteca, la hoja de acordes) hacen más grandes o más pequeños el texto,
+los botones y los menús de todas partes, como hace **Ajustes > Apariencia > Tamaño de la interfaz**;
+en la hoja de acordes en la ventana principal, con nombres más pequeños caben más compases por línea. **Ctrl+0** devuelve al 100% lo que esté
 bajo el puntero. Los dos zooms de la lista de reproducción también están en el extremo
 derecho de la barra de estado. **Edición > Ajustes…** separa las
 preferencias en las categorías **Apariencia**, **Armonía**, **Biblioteca**,

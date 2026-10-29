@@ -171,11 +171,16 @@ Arriba de la hoja:
   las tonalidades](sets-rows-micromodes.md#una-armonía-cuatro-nombres)
   explica qué dice cada uno.
 - **Compases por línea**: **Ajustar a los nombres** pone en una línea
-  tantos compases como quepan con cada nombre a tamaño completo: 1, 2,
-  4, 8, 12 o 16, para que las líneas empiecen donde empiezan las frases
-  de cuatro compases. El menú muestra cuántos caben ahora, como
-  **Ajustar (4)**. O elige un número, y los nombres que no quepan se
-  achican.
+  tantos compases como quepan con cada nombre, y el numeral de debajo, a
+  tamaño completo: 1, 2, 4, 8, 12 o 16, para que las líneas empiecen
+  donde empiezan las frases de cuatro compases. Un nombre puede quedar
+  justo después de su pulso cuando el anterior necesita el sitio, y las
+  palabras después del numeral, como "prestado", se escriben donde
+  caben (el color del numeral y la pista del nombre dicen lo mismo). El
+  menú muestra cuántos caben ahora, como **Ajustar (4)**. Con la hoja en
+  la ventana principal, las teclas de zoom sobre ella cambian el tamaño
+  de todo, así que al alejar caben más compases. O elige un número, y
+  los nombres que no quepan se achican.
 - **⛶ Llenar la ventana** pone la hoja en el lugar de la lista de
   reproducción en la ventana principal, donde una línea tiene más
   compases. **Volver a la lista de reproducción** la devuelve a su
