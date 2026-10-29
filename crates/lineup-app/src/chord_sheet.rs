@@ -56,7 +56,7 @@ pub(crate) mod layout;
 mod notation;
 mod practice;
 
-use crate::i18n::{tr, tr_name, tr_str, tr_string, trf};
+use crate::i18n::{tr, tr_name, tr_str, tr_string, trc, trf};
 pub use form::FormAction;
 use layout::LayoutView;
 use notation::{NotationView, Shown};
@@ -1551,9 +1551,11 @@ impl ChordSheet {
             // The parts of the band's form, when it has more than one.
             let part = form.and_then(|form| match chorus {
                 _ if form.intro > 0 && bar.start == 0 => Some(tr("Intro").to_string()),
+                // A chorus here is a pass through the tune, as in jazz,
+                // not the part of a pop song that comes back.
                 Some((start, _)) if start == bar.start => Some(match form.choruses {
-                    1 => tr("Chorus").to_string(),
-                    choruses => format!("{} ×{choruses}", tr("Chorus")),
+                    1 => trc("form", "Chorus").to_string(),
+                    choruses => format!("{} ×{choruses}", trc("form", "Chorus")),
                 }),
                 _ => marks
                     .ending
