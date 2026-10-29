@@ -16,8 +16,12 @@ Two settings change how Ferrous Lineup talks to you:
   Fa#, Sib major, Lam7).
 
 They are separate, so you can have Spanish menus with letters, or
-English menus with solfège. Both change only what you see. A song saved
-with one choice opens exactly the same for someone with the other.
+English menus with solfège. Until you choose a note naming, though, it
+follows the language: Spanish menus name notes in solfège, as Spanish
+schools do, and English menus with letters. Once you choose one, it
+stays, whatever language you pick after. Both settings change only what
+you see. A song saved with one choice opens exactly the same for someone
+with the other.
 
 ![Settings > Appearance: the language, written in its own language so anyone can find theirs.](../images/step-9-languages-settings.png)
 
@@ -147,6 +151,34 @@ pub fn apply_settings(ctx: &egui::Context) {
 A video export draws its views on a thread of its own, which starts
 with the defaults, so it takes the language and the naming along, as it
 already took the numerals setting.
+
+### Solfège until you choose
+
+egui keeps the window's preferences as values under an `Id`, and
+`get_persisted` gives `None` for an `Id` nothing was stored under. That
+`None` is what tells "never chosen" apart from a choice, so the naming
+falls back on the language only then:
+
+```rust
+pub fn note_naming(ctx: &egui::Context) -> NoteNaming {
+    ctx.data_mut(|data| data.get_persisted(note_naming_id()))
+        .unwrap_or_else(|| language_naming(language(ctx)))
+}
+
+/// How notes are named where `language` is spoken.
+fn language_naming(language: Language) -> NoteNaming {
+    match language {
+        Language::English => NoteNaming::Letters,
+        Language::Spanish => NoteNaming::Solfege,
+    }
+}
+```
+
+Reading never stores anything; only `set_note_naming`, called when you
+click a naming in Settings, does. So until that click, every frame asks
+the language again, and switching to Spanish switches the notes to
+solfège. The `match` has no `_` arm on purpose: a third language would
+not compile until someone says how it names notes.
 
 ### Translating: the English text is the key
 
@@ -320,6 +352,14 @@ a bar on the chord sheet, presses L with solfège chosen and types
 `Lam7`, then checks that the mode stayed and the bar holds A minor 7;
 with letters, L switches the mode and leaves the bar alone.
 
+`spanish_names_notes_in_solfege_until_a_naming_is_chosen` switches the
+language back and forth with no naming chosen, and the naming follows
+it; then it chooses a naming and switches the language again, and the
+naming stays. `spanish_names_notes_in_solfege_and_keeps_letters_once_chosen`
+does it the way you would: Spanish menus, **Armonía**, **Letras (C, D,
+E…)**, and a restart of the app, after which the notes are still
+letters.
+
 ## Exercises
 
 1. With solfège chosen, type `Do` in an empty bar. Then choose letters
@@ -335,3 +375,7 @@ with letters, L switches the mode and leaves the bar alone.
    one of the two. The tests pass again: why, and why keep both?
 4. `with_notes` leaves `{0,1,4}` alone. Find the line in `with_notes`
    that decides this, and say what it would do with `{Do}`.
+5. `note_naming` could store the language's naming the first time it
+   reads none, with `insert_persisted`, so the next read finds it. It
+   would look tidier. What would then go wrong for someone who starts
+   the app in English and switches it to Spanish a week later?

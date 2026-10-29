@@ -19,11 +19,12 @@ con un **SoundFont**.
 
 ## Qué ves
 
-Hay una página nueva en **Edición > Ajustes… > Audio**. Marca
-**Instrumentos del SoundFont**. La primera vez, una ventana explica qué es
-un SoundFont y se ofrece a descargar uno:
+La primera vez que pulsas ▶ (o **Espacio**), una ventana explica qué es
+un SoundFont y se ofrece a descargar uno, mientras la canción sigue
+sonando. Marcar **Instrumentos del SoundFont** en **Edición > Ajustes… >
+Audio** también la abre:
 
-![La ventana «Real instrument sounds»: GeneralUser GS, unos 30 MB, guardado en ~/.local/share/ferrouslineup/soundfonts, con Download, Choose a file… y Not now.](../images/step-9-soundfont-offer.png)
+![La primera reproducción: la canción de inicio sigue sonando, con el cursor de reproducción en el compás 7, mientras la ventana «Real instrument sounds» ofrece GeneralUser GS, unos 30 MB, guardado en ~/.local/share/ferrouslineup/soundfonts, con Download, Choose a file… y Not now.](../images/step-9-soundfont-offer.png)
 
 **Descargar** trae GeneralUser GS, un SoundFont General MIDI libre hecho
 por S. Christian Collins, desde su página de GitHub. La ventana y la
@@ -57,6 +58,10 @@ archivo `.sf2`; **Usar GeneralUser GS** vuelve atrás.
 Dos cosas más usan el SoundFont sin que se les diga: **Archivo > Exportar WAV** escribe la canción tal como la oyes, SoundFont incluido, y el
 teclado de la computadora y un teclado MIDI también lo tocan. **MIDI > Enviar todos los canales** sigue enviando las notas al sintetizador externo, como
 antes.
+
+**Ahora no** cierra la ventana y se queda con el Lineup Osc. Reproducir
+no vuelve a preguntar: la marca de **Edición > Ajustes… > Audio** está
+ahí para cuando cambies de idea.
 
 Si la descarga falla (sin red, un firewall), la ventana dice por qué.
 Puedes descargar `GeneralUser-GS.sf2` de
@@ -372,12 +377,57 @@ struct Settings {
     on: bool,
     drums: bool,
     file: Option<PathBuf>,
+    /// Whether the first Play has offered the SoundFont: it does once.
+    offered: bool,
 }
 ```
 
 `#[serde(default)]` deja que una versión futura añada un campo: los
 ajustes guardados antes reciben el valor por defecto del campo en lugar
-de fallar al cargar.
+de fallar al cargar. `offered` llegó así: los ajustes guardados antes se
+leen como «nunca preguntado», así que a quien ya tenía la app también se
+le pregunta en su próxima reproducción, salvo que ya tenga los sonidos
+configurados.
+
+## Se pregunta en la primera reproducción
+
+El Lineup Osc hace cada instrumento con unas pocas ondas simples, y no
+es así como debería sonar una banda la primera vez que la oyes. Así que
+la app no espera a que encuentres el ajuste: `set_playing`, por donde
+pasa toda manera de empezar a reproducir (el botón ▶, **Espacio**, el
+**Tocar patrón** del rack, una escucha de la Biblioteca), termina con
+
+```rust
+self.playing = true;
+self.offer_sound_font_on_first_play();
+```
+
+y eso pregunta una vez:
+
+```rust
+pub(super) fn offer_sound_font_on_first_play(&mut self) {
+    let sounds = &mut self.sounds;
+    if sounds.settings.offered {
+        return;
+    }
+    sounds.settings.offered = true;
+    sounds.changed = true;
+    let missing = sounds.wanted_path().is_some_and(|path| !path.is_file());
+    if !sounds.settings.on && sounds.settings.file.is_none() && missing {
+        self.set_sound_font(true);
+    }
+}
+```
+
+`offered` se marca antes que nada, así que respondas lo que respondas,
+reproducir no vuelve a preguntar. La oferta es la misma que la del
+ajuste: activa los sonidos, y `prepare_sound_font` abre la ventana
+porque falta el archivo; **Ahora no** los vuelve a desactivar. No se
+pregunta nada cuando los sonidos ya están activados, cuando elegiste un
+archivo propio, o cuando GeneralUser GS ya está en el disco: entonces
+los sonidos se desactivaron a propósito. La reproducción sigue mientras
+la ventana pregunta, así que una pregunta nunca retrasa el primer sonido
+que oyes.
 
 ## La banda recibe instrumentos
 
@@ -461,6 +511,17 @@ El programa 33 es el instrumento una octava arriba, así que La4 sale a
 bloque, termina al acabar su duración, suena más fuerte con la
 velocidad, que un tambor toca su propia tecla esté escrita en la nota
 que esté, y qué canales toma el SoundFont.
+
+Las pruebas de UX no deben depender de si la computadora que las ejecuta
+descargó GeneralUser GS. Así que cada app de prueba lo busca en una ruta
+que nunca existe, `keep_general_user_in(no_sound_font())`, y arranca como
+si la primera reproducción ya hubiera preguntado. La única prueba sobre
+la oferta, `the_first_play_offers_real_instrument_sounds_once`, deshace
+eso: pulsa **Espacio** y comprueba que la ventana se abre y los sonidos
+están activados, hace clic en **Ahora no**, vuelve a reproducir, y
+comprueba que no se pregunta nada, tampoco tras un reinicio. Luego pone
+un archivo vacío donde va GeneralUser GS y comprueba que reproducir no
+pregunta nada.
 
 ## Builds de debug
 
