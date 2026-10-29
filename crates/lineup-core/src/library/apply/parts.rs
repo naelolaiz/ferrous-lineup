@@ -219,13 +219,13 @@ fn accent_song_chords(
     ) else {
         return;
     };
-    let voicings = voice_progression(&chords.iter().map(|chord| chord.0).collect::<Vec<_>>());
     let line = bass_line(
         &chords
             .iter()
             .map(|chord| (chord.1, chord.2))
             .collect::<Vec<_>>(),
     );
+    let voicings = voice_progression(&chords.iter().map(|chord| chord.0).collect::<Vec<_>>());
     let mut comping = Vec::new();
     let mut bass_notes = Vec::new();
     for (at, &(chord, _, _, start, length)) in chords.iter().enumerate() {

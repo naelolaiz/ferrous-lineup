@@ -19,7 +19,7 @@ use crate::TimeSignature;
 use crate::general_midi;
 use crate::harmony::{Chord, ChordQuality, Scale};
 use crate::pattern::NoteEvent;
-use crate::pitch::PitchClass;
+use crate::pitch::{Note, PitchClass};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 use crate::remeter::remeter;
 
@@ -446,7 +446,9 @@ pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bas
         Bass::None => find_synth(project, BASS),
         _ => synth_named(project, BASS),
     };
-    let voicings = voice_progression(&played.iter().map(|(chord, _)| *chord).collect::<Vec<_>>());
+    let chords: Vec<Chord> = played.iter().map(|(chord, _)| *chord).collect();
+    let roots: Vec<Note> = chords.iter().map(|&chord| bass_root(chord)).collect();
+    let voicings = comping.voicings(&chords, &roots);
     let mut new_chords = Vec::new();
     let mut new_bass = Vec::new();
     for (index, (chord, stretch)) in played.iter().enumerate() {

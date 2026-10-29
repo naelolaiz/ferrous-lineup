@@ -33,7 +33,7 @@ use crate::i18n::{tr, trf};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
 use crate::library::interpret::{self, Role};
-use crate::library::voicing::{bass_line, voice_progression};
+use crate::library::voicing::bass_line;
 use crate::library::{Genre, RHYTHMS, Rhythm, Style};
 use crate::meter::{Bar, TimeSignature};
 use crate::pattern::{MAX_STEPS, NoteEvent};
@@ -1038,7 +1038,7 @@ impl Project {
             .collect();
         let keys = self.key_map();
         let overs: Vec<Over> = self
-            .played_harmonies(&markers, band.end)
+            .played_harmonies(&markers, band.end, band.style.comping)
             .iter()
             .filter_map(|played| Over::of(played, keys.key_at(played.start)))
             .collect();
@@ -2037,7 +2037,7 @@ impl Project {
         if let Some(ending) = ending {
             markers.push(ChordMarker::new(ending.start, ending.harmony));
         }
-        let harmonies = self.played_harmonies(&markers, parts_end);
+        let harmonies = self.played_harmonies(&markers, parts_end, band.style.comping);
         let keys = self.key_map();
         let breaks = stops::Breaks::of(&markers, parts_end);
         // The last bar of an ending is one chord, struck and held.
@@ -2396,14 +2396,19 @@ impl Project {
     /// with the notes the piano plays them with and what the bass plays
     /// under them.
     ///
-    /// Chords are voiced each from the one before (see
-    /// [`voice_progression`]), and their bass notes make a line (see
-    /// [`bass_line`]). A pitch-class set or a micromode is played from
+    /// Chords are voiced each from the one before, as the band comps
+    /// (see [`Comping::voicings`]), over the line their bass notes make
+    /// (see [`bass_line`]). A pitch-class set or a micromode is played from
     /// middle C in its normal form, over its first note. A row form is a
     /// line of twelve notes, not a chord: its four groups of three notes,
     /// in the row's order, are played one after another, each over its
     /// first note. No chord plays nothing.
-    fn played_harmonies(&self, markers: &[ChordMarker], end: usize) -> Vec<Played> {
+    fn played_harmonies(
+        &self,
+        markers: &[ChordMarker],
+        end: usize,
+        comping: Comping,
+    ) -> Vec<Played> {
         let keys = self.key_map();
         let spans: Vec<(usize, usize, HarmonyName)> = markers
             .iter()
@@ -2424,13 +2429,15 @@ impl Project {
                 _ => None,
             })
             .collect();
-        let voicings =
-            voice_progression(&chords.iter().map(|(chord, ..)| *chord).collect::<Vec<_>>());
         let line = bass_line(
             &chords
                 .iter()
                 .map(|&(_, bass, slash)| (bass, slash))
                 .collect::<Vec<_>>(),
+        );
+        let voicings = comping.voicings(
+            &chords.iter().map(|(chord, ..)| *chord).collect::<Vec<_>>(),
+            &line,
         );
         // The note each harmony has in the bass, to lead into it.
         let bass_of = |harmony: HarmonyName, start: usize| -> Option<PitchClass> {

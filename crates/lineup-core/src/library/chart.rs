@@ -569,7 +569,7 @@ fn play_style(
         .map(|span| (span.chord.bass_in_key(tonic), span.chord.bass.is_some()))
         .collect();
     let line = bass_line(&basses);
-    let voicings = voice_progression(&chords);
+    let voicings = comping.voicings(&chords, &line);
     let mut backing = Backing::default();
     for (index, span) in spans.iter().enumerate() {
         let (next, _) = basses[(index + 1) % basses.len()];
@@ -617,7 +617,11 @@ pub fn accompany_in_bars(
 ) -> Backing {
     let mut backing = play_style(spans, tonic, time, comping, bass);
     let chords: Vec<Chord> = spans.iter().map(|span| span.chord.in_key(tonic)).collect();
-    let voicings = voice_progression(&chords);
+    let basses: Vec<(PitchClass, bool)> = spans
+        .iter()
+        .map(|span| (span.chord.bass_in_key(tonic), span.chord.bass.is_some()))
+        .collect();
+    let voicings = comping.voicings(&chords, &bass_line(&basses));
     let harmonies: Vec<Played> = spans
         .iter()
         .zip(voicings)
@@ -695,6 +699,45 @@ fn play_breaks(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A style that holds its chords, as a choir sings them, moves no two
+    /// parts in parallel fifths or octaves, by its own voice-leading
+    /// check: the piano's three parts and the bass.
+    #[test]
+    fn held_styles_sing_in_parts() {
+        use crate::harmony::Scale;
+        use crate::harmony::voice_leading::{self, SlipKind};
+        let mut checked = 0;
+        for style in super::super::STYLES
+            .iter()
+            .filter(|style| style.comping == Comping::Held && style.bass == Bass::Held)
+        {
+            let backing = style.render(PitchClass::C);
+            let mut voices = voice_leading::voices_of(0, &backing.chords);
+            voices.extend(voice_leading::voices_of(1, &backing.bass));
+            let beats = voice_leading::beats(style.time, style.length());
+            let scale = Scale::new(PitchClass::C, style.mode);
+            let check = voice_leading::check(voices, &beats, |_| scale);
+            let parallels: Vec<_> = check
+                .slips
+                .iter()
+                .filter(|slip| {
+                    matches!(
+                        slip.kind,
+                        SlipKind::ParallelFifths
+                            | SlipKind::ParallelOctaves
+                            | SlipKind::ParallelUnisons
+                            | SlipKind::ContraryFifths
+                            | SlipKind::ContraryOctaves
+                    )
+                })
+                .map(|slip| (slip.kind, slip.steps()))
+                .collect();
+            assert!(parallels.is_empty(), "{}: {parallels:?}", style.name);
+            checked += 1;
+        }
+        assert!(checked >= 2, "Hymn and Chorale at least");
+    }
     use crate::harmony::ChordQuality;
 
     fn spans(text: &str, bar: usize) -> Vec<(u8, usize, usize)> {
