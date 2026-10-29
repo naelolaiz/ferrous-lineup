@@ -101,10 +101,12 @@ sexto y séptimo: bIII bVI bVII, contados desde la escala mayor como
 hacen los libros de pop y jazz, o III VI VII, contados desde la escala
 menor como hacen los libros clásicos. **Armonía > Nomenclatura de notas** nombra
 las notas, las tonalidades y los acordes con letras (C, Am7) o en solfeo
-(Do, Lam7), y **Apariencia > Idioma** muestra la app en inglés o en
+(Do, Lam7); mientras no elijas, siguen al idioma: solfeo en español y
+letras en inglés. **Apariencia > Idioma** muestra la app en inglés o en
 español (ver [La app en español, y las notas en letras o en
-solfeo](step-9/languages.md)). La pestaña **Biblioteca**, junto a la
-lista de patrones, contiene una lista alfabética de **Preajustes** que
+solfeo](step-9/languages.md)). La **Biblioteca**, la pestaña que está
+delante a la izquierda al abrir la app (la pestaña **Patrones**, a su
+lado, enumera los patrones de la canción), contiene una lista alfabética de **Preajustes** que
 combina los 177 preajustes de armonía, los 112 preajustes de ritmo y tus
 estilos guardados. **Edición > Ajustes… > Biblioteca > Lista de estilos** puede, en
 su lugar, agruparlos por género, con un grupo aparte de **Estilos de usuario**.
@@ -496,10 +498,12 @@ piano roll y las teclas de armonía ponen nombre a los acordes mientras suena.
 grabaciones de instrumentos reales en lugar del Lineup Osc: cada canal
 con un instrumento General MIDI (las voces de las demos, el piano y el
 bajo de la Biblioteca, los acordes de la canción de demostración) y, con
-**Batería del SoundFont**, la batería. La primera vez, se ofrece a descargar
+**Batería del SoundFont**, la batería. La primera vez que reproduces, o
+que lo marcas, la app se ofrece a descargar
 [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS), un
 SoundFont General MIDI gratuito de S. Christian Collins (unos 30 MB,
-guardado para la próxima vez). **Elegir SoundFont…** reproduce cualquier
+guardado para la próxima vez). **Descargar** lo activa; **Ahora no** se
+queda con el Lineup Osc, y reproducir no vuelve a preguntar. **Elegir SoundFont…** reproduce cualquier
 otro archivo `.sf2` en su lugar. La exportación WAV también lo usa. La
 categoría Audio también muestra el dispositivo de salida activo, la
 frecuencia de muestreo y el número de canales.
