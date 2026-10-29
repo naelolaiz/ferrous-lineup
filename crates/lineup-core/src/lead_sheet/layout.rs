@@ -141,6 +141,8 @@ enum Run {
 
 /// The pieces of a chord symbol: the root large, the quality a little
 /// smaller, and real ♭ and ♯ signs for the accidentals: "B♭m7♭5/A♭".
+/// The roots are letters whatever the note naming, as printed lead
+/// sheets write them in every language.
 fn chord_runs(harmony: HarmonyName) -> Vec<Run> {
     let HarmonyName::Chord(symbol) = harmony else {
         // N.C., sets, micromodes and row forms are written as they are
@@ -1431,7 +1433,7 @@ mod tests {
     use crate::chord_sheet::ChordMarker;
     use crate::lead_sheet::{Paper, score};
     use crate::pattern::NoteEvent;
-    use crate::pitch::Note;
+    use crate::pitch::{Note, NoteNaming};
     use crate::playlist::{Clip, Section};
     use crate::project::Project;
 
@@ -1596,6 +1598,10 @@ mod tests {
             chord_runs(HarmonyName::NoChord),
             [Run::Text("N.C.".into(), CHORD_SIZE * 0.75)]
         );
+        // Solfège names notes elsewhere, not the lead sheet's chords.
+        let solfege =
+            NoteNaming::Solfege.with(|| chord_runs(HarmonyName::parse("Bbm7b5/Ab").unwrap()));
+        assert_eq!(solfege, runs);
     }
 
     #[test]
