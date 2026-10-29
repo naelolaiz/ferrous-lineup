@@ -98,6 +98,7 @@ fn texts() -> Vec<&'static str> {
     }
     texts.extend(Stop::ALL.map(Stop::name));
     texts.extend(SongPart::ALL.map(SongPart::name));
+    texts.extend(crate::SECTION_NAMES);
     texts.extend(Register::ALL.map(Register::about));
     texts.extend(Chain::ALL.map(Chain::name));
     texts.extend(ArpeggioOrder::ALL.map(ArpeggioOrder::name));
