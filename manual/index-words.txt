@@ -15,44 +15,103 @@
 # sends the reader to another entry.
 
 About window: main-window.md#keys-that-work-everywhere
+Another solo: soloist.md#trying-it
+Anticipation: see Push
 AppImage: installing.md#linux
-Band: first-song.md#1-a-new-chord-sheet, first-song.md#4-pick-a-style
+Band: first-song.md#1-a-new-chord-sheet, first-song.md#4-pick-a-style, bigger-band.md#the-band-menu
+Barre chord: bigger-band.md#how-the-guitar-plays
 Bars, inserting and deleting: chord-sheet.md#changing-the-bars
+Bebop: soloist.md#notes-between-the-beats
+Break: stops.md#the-music
 Channel rack: main-window.md#the-windows
+Chop: bigger-band.md#how-the-guitar-plays
+Chord scale: soloist.md#chord-scales
 Chord sheet: chord-sheet.md, first-song.md#2-type-the-chords
 Chord sheet as text: chord-sheet.md#chord-sheets-as-text
-Choruses: first-song.md#6-give-it-a-form
+Chord tones: soloist.md#chord-tones-on-the-beat
+Choruses: first-song.md#6-give-it-a-form, song-form.md#the-form-row
+Chromatic approach: soloist.md#notes-between-the-beats
+Close harmony: bigger-band.md#close-harmony
+Comping: styles.md
+Cross-stick: song-form.md#variations-a-and-b
 Demos: first-song.md#where-to-go-from-here
-Ending: first-song.md#6-give-it-a-form
+End the song here: song-form.md#the-ending-home-and-held
+Ending: first-song.md#6-give-it-a-form, song-form.md#the-ending-home-and-held
+Fermata: stops.md#the-music
+Fills: styles.md#finding-a-style, song-form.md#variations-a-and-b
 Find the key: keys-and-modes.md#finding-the-key-experimental
 General MIDI: sounds.md#an-instrument-for-each-channel
 GeneralUser GS: sounds.md#the-first-play
+Guide tones: soloist.md#chord-tones-on-the-beat
+Guitar: bigger-band.md#how-the-guitar-plays
 Harmony keys: main-window.md#the-windows
+Hi-hat: song-form.md#variations-a-and-b
+Hold: stops.md
+Horn section: bigger-band.md#the-horn-section
 Installing: installing.md
 Instrument: sounds.md#an-instrument-for-each-channel
+Instrument lineup: bigger-band.md#the-band-menu
 Interval: notes-and-scales.md#intervals
-Intro: first-song.md#6-give-it-a-form
+Intro: first-song.md#6-give-it-a-form, song-form.md#the-intro-a-turnaround
 Key: keys-and-modes.md#the-key-of-a-song, first-song.md#5-the-tempo-and-the-key
 Key change: keys-and-modes.md#key-changes-in-a-song
 Keys with two names: keys-and-modes.md#keys-with-two-names
 Language: installing.md#the-first-start
-Library: main-window.md#the-patterns-and-library-panel, first-song.md#4-pick-a-style
+Leading note: song-form.md#the-intro-a-turnaround
+Library: main-window.md#the-patterns-and-library-panel, first-song.md#4-pick-a-style, styles.md
+Library settings: styles.md#the-library-settings
 Lineup Osc: sounds.md
+Lock: locks.md#locking-a-track
+Loose: swing.md#loose-timing
 Menus: main-window.md#the-menus
 Mode: keys-and-modes.md#the-modes
+Neighbour note: soloist.md#notes-between-the-beats
+No band: bigger-band.md#the-band-menu
+Non-chord tones: soloist.md#notes-between-the-beats
+Organ: bigger-band.md#strings-and-organ
+Pad: bigger-band.md#strings-and-organ
 Parallel key: keys-and-modes.md#major-and-minor-keys
+Passing note: soloist.md#notes-between-the-beats
 Piano roll: main-window.md#the-windows, notes-and-scales.md#seeing-and-hearing-it-in-the-app
+Pickup: soloist.md#notes-between-the-beats
+Plain accents: styles.md#trying-a-style
+Play it again: locks.md#a-part-you-edit-stays-yours
 Playlist: main-window.md#the-playlist
+Power chord: bigger-band.md#how-the-guitar-plays
+Progression: styles.md#progressions-from-the-library
+Push: stops.md
 Relative key: keys-and-modes.md#major-and-minor-keys
+Rest: stops.md
+Ride cymbal: song-form.md#variations-a-and-b
 Roman numeral: chord-sheet.md#reading-the-sheet
 Saving: first-song.md#7-save-it
 Scale: notes-and-scales.md#scales
+Sections: song-form.md#sections
+Shot: stops.md
+Shuffle: swing.md#where-swing-doesnt-apply
 Solfège: notes-and-scales.md#letters-or-solfège
+Soloist: soloist.md
 SoundFont: sounds.md
 Spelling: notes-and-scales.md#sharps-flats-and-spelling
 Status bar: main-window.md#the-status-bar
-Style: first-song.md#4-pick-a-style
+Stop-time: stops.md#the-music
+Strings: bigger-band.md#strings-and-organ
+Strum: bigger-band.md#how-the-guitar-plays
+Style: first-song.md#4-pick-a-style, styles.md
+Style editor: style-editor.md
+Style for some bars: song-form.md#a-style-for-some-bars
+Styles folder: style-editor.md#saving-and-using-your-styles
+Swing: swing.md, styles.md#trying-a-style
+Syncopation: stops.md#the-music
 Tempo: first-song.md#5-the-tempo-and-the-key, main-window.md#the-toolbar
 Toolbar: main-window.md#the-toolbar
+Tresillo: bigger-band.md#the-horn-section
+Trial pattern: styles.md#where-a-style-goes
+Triplet: swing.md#the-swing-control
+Tumbao: stops.md#the-music
+Turnaround: song-form.md#the-intro-a-turnaround
 Typing chords: chord-sheet.md#typing-chords
+Vamp: song-form.md#the-intro-a-turnaround
+Variations a and b: song-form.md#variations-a-and-b
 Write the chords the song plays: chord-sheet.md#writing-what-the-song-plays
+You play: locks.md#you-play
