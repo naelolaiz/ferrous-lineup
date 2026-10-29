@@ -1,0 +1,60 @@
+# El índice al final del PDF del manual (lo hace book-es/print-pdf.py).
+#
+# Cada palabra del glosario musical está en el índice, con la página a la
+# que lleva su enlace «Se explica en», en negrita, y cada página donde un
+# capítulo la presenta en negrita. Este archivo añade el resto: las partes
+# de la aplicación y algunas palabras más, cada una con los capítulos que
+# la explican.
+#
+#     Palabra: capitulo.md, capitulo.md#seccion, ...
+#
+# Un lugar es un capítulo como lo nombra SUMMARY.md, o una de sus
+# secciones por el id de su título.
+#
+#     Palabra: véase Otra palabra
+#
+# envía al lector a otra entrada.
+
+Acerca de: main-window.md#teclas-que-funcionan-en-todas-partes
+AppImage: installing.md#linux
+Banda: first-song.md#1-una-hoja-de-acordes-nueva, first-song.md#4-elige-un-estilo
+Barra de estado: main-window.md#la-barra-de-estado
+Barra de herramientas: main-window.md#la-barra-de-herramientas
+Biblioteca: main-window.md#el-panel-patrones-y-biblioteca, first-song.md#4-elige-un-estilo
+Buscar la tonalidad: keys-and-modes.md#buscar-la-tonalidad-experimental
+Cambio de tonalidad: keys-and-modes.md#cambios-de-tonalidad-en-una-canción
+Compases, insertar y eliminar: chord-sheet.md#cambiar-los-compases
+Demostraciones: first-song.md#por-dónde-seguir
+Escala: notes-and-scales.md#escalas
+Escribir acordes: chord-sheet.md#escribir-acordes
+Escribir los acordes que toca la canción: chord-sheet.md#escribir-lo-que-toca-la-canción
+Estilo: first-song.md#4-elige-un-estilo
+Final: first-song.md#6-dale-una-forma
+General MIDI: sounds.md#un-instrumento-para-cada-canal
+GeneralUser GS: sounds.md#la-primera-reproducción
+Guardar: first-song.md#7-guárdala
+Hoja de acordes: chord-sheet.md, first-song.md#2-escribe-los-acordes
+Hoja de acordes como texto: chord-sheet.md#hojas-de-acordes-como-texto
+Homónima: keys-and-modes.md#tonalidades-mayores-y-menores
+Idioma: installing.md#el-primer-arranque
+Instalar: installing.md
+Instrumento: sounds.md#un-instrumento-para-cada-canal
+Intervalo: notes-and-scales.md#intervalos
+Introducción: first-song.md#6-dale-una-forma
+Letras: notes-and-scales.md#solfeo-o-letras
+Lineup Osc: sounds.md
+Lista de reproducción: main-window.md#la-lista-de-reproducción
+Menús: main-window.md#los-menús
+Modo: keys-and-modes.md#los-modos
+Número romano: chord-sheet.md#leer-la-hoja
+Ortografía: notes-and-scales.md#sostenidos-bemoles-y-ortografía
+Piano roll: main-window.md#las-ventanas, notes-and-scales.md#verlo-y-oírlo-en-la-aplicación
+Rack de canales: main-window.md#las-ventanas
+Relativa: keys-and-modes.md#tonalidades-mayores-y-menores
+Solfeo: notes-and-scales.md#solfeo-o-letras
+SoundFont: sounds.md
+Teclas de armonía: main-window.md#las-ventanas
+Tempo: first-song.md#5-el-tempo-y-la-tonalidad, main-window.md#la-barra-de-herramientas
+Tonalidad: keys-and-modes.md#la-tonalidad-de-una-canción, first-song.md#5-el-tempo-y-la-tonalidad
+Tonalidades con dos nombres: keys-and-modes.md#tonalidades-con-dos-nombres
+Vueltas: first-song.md#6-dale-una-forma

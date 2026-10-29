@@ -1,23 +1,29 @@
 name: Book
 
-# Builds the books in book/ (English) and book-es/ (Spanish) with mdBook,
-# prints each to one PDF, and publishes them on GitHub Pages: the English
-# book at the root, as always, and the Spanish one under /es/. Every pull
-# request that changes a book builds it too, whichever branch it goes into
-# (a book page stacked on the pull request of the change it describes
-# included), so a change can be checked before it is merged; only a push
-# to main, or a run by hand, publishes.
+# Builds the books in book/ (English) and book-es/ (Spanish), and the user
+# manuals in manual/ and manual-es/, with mdBook, prints each to one PDF,
+# and publishes them on GitHub Pages: the English book at the root, as
+# always, the Spanish one under /es/, and each manual under manual/ next
+# to its book. Every pull request that changes a book or a manual builds
+# it too, whichever branch it goes into (a book page stacked on the pull
+# request of the change it describes included), so a change can be
+# checked before it is merged; only a push to main, or a run by hand,
+# publishes.
 on:
   push:
     branches: [main]
     paths:
       - "book/**"
       - "book-es/**"
+      - "manual/**"
+      - "manual-es/**"
       - ".github/workflows/book.yml"
   pull_request:
     paths:
       - "book/**"
       - "book-es/**"
+      - "manual/**"
+      - "manual-es/**"
       - ".github/workflows/book.yml"
   # Actions > Book > Run workflow publishes the book again by hand.
   workflow_dispatch:
@@ -42,6 +48,8 @@ jobs:
         run: |
           (cd book && mdbook build)
           (cd book-es && mdbook build)
+          (cd manual && mdbook build)
+          (cd manual-es && mdbook build)
 
       # The book uses music symbols (𝄾, ♩) and a few emoji. FreeSerif has
       # the symbols and Noto Color Emoji the emoji, so the PDF shows them
@@ -69,7 +77,8 @@ jobs:
       # bookmarks. print.css sets the paper size and the page numbers.
       # Each book has its own print-pdf.py, which reads the book.toml
       # next to it, so the Spanish PDF's title page and index are in
-      # Spanish.
+      # Spanish. A manual is printed by its language's script, with the
+      # manual's folder named after the PDF.
       - name: Print the PDFs
         env:
           MDBOOK_OUTPUT__HTML__DEFAULT_THEME: light
@@ -79,8 +88,14 @@ jobs:
           "$RUNNER_TEMP/pdf-tools/bin/python" book/print-pdf.py book/pdf book/book/ferrous-lineup-book.pdf
           (cd book-es && mdbook build --dest-dir pdf)
           "$RUNNER_TEMP/pdf-tools/bin/python" book-es/print-pdf.py book-es/pdf book-es/book/ferrous-lineup-book-es.pdf
+          (cd manual && mdbook build --dest-dir pdf)
+          "$RUNNER_TEMP/pdf-tools/bin/python" book/print-pdf.py manual/pdf manual/book/ferrous-lineup-manual.pdf manual
+          (cd manual-es && mdbook build --dest-dir pdf)
+          "$RUNNER_TEMP/pdf-tools/bin/python" book-es/print-pdf.py manual-es/pdf manual-es/book/ferrous-lineup-manual-es.pdf manual-es
           test -s book/book/ferrous-lineup-book.pdf
           test -s book-es/book/ferrous-lineup-book-es.pdf
+          test -s manual/book/ferrous-lineup-manual.pdf
+          test -s manual-es/book/ferrous-lineup-manual-es.pdf
 
       # The PDFs are a download on every run, pull requests included. They
       # are also part of the website, next to their pages. One artifact
@@ -99,13 +114,27 @@ jobs:
           archive: false
           if-no-files-found: error
 
+      - uses: actions/upload-artifact@v7
+        with:
+          path: manual/book/ferrous-lineup-manual.pdf
+          archive: false
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: manual-es/book/ferrous-lineup-manual-es.pdf
+          archive: false
+          if-no-files-found: error
+
       # One site: the English book at the root (as today), the Spanish
-      # book under /es/.
+      # book under /es/, and each manual under manual/ in its language.
       - name: Assemble the site
         run: |
           mkdir -p site
           cp -r book/book/. site/
           cp -r book-es/book/. site/es/
+          cp -r manual/book/. site/manual/
+          cp -r manual-es/book/. site/es/manual/
 
       - uses: actions/upload-pages-artifact@v5
         with:

@@ -1,0 +1,58 @@
+# The index at the back of the manual's PDF (book/print-pdf.py makes it).
+#
+# Every word of the music glossary is in the index, with the page its
+# "Explained in" link goes to, in bold, and every page where a chapter
+# introduces it in bold. This file adds the rest: the app's parts and a
+# few more words, each with the chapters that explain it.
+#
+#     Word: chapter.md, chapter.md#section, ...
+#
+# A place is a chapter as SUMMARY.md names it, or one of its sections by
+# the id of its heading.
+#
+#     Word: see Another word
+#
+# sends the reader to another entry.
+
+About window: main-window.md#keys-that-work-everywhere
+AppImage: installing.md#linux
+Band: first-song.md#1-a-new-chord-sheet, first-song.md#4-pick-a-style
+Bars, inserting and deleting: chord-sheet.md#changing-the-bars
+Channel rack: main-window.md#the-windows
+Chord sheet: chord-sheet.md, first-song.md#2-type-the-chords
+Chord sheet as text: chord-sheet.md#chord-sheets-as-text
+Choruses: first-song.md#6-give-it-a-form
+Demos: first-song.md#where-to-go-from-here
+Ending: first-song.md#6-give-it-a-form
+Find the key: keys-and-modes.md#finding-the-key-experimental
+General MIDI: sounds.md#an-instrument-for-each-channel
+GeneralUser GS: sounds.md#the-first-play
+Harmony keys: main-window.md#the-windows
+Installing: installing.md
+Instrument: sounds.md#an-instrument-for-each-channel
+Interval: notes-and-scales.md#intervals
+Intro: first-song.md#6-give-it-a-form
+Key: keys-and-modes.md#the-key-of-a-song, first-song.md#5-the-tempo-and-the-key
+Key change: keys-and-modes.md#key-changes-in-a-song
+Keys with two names: keys-and-modes.md#keys-with-two-names
+Language: installing.md#the-first-start
+Library: main-window.md#the-patterns-and-library-panel, first-song.md#4-pick-a-style
+Lineup Osc: sounds.md
+Menus: main-window.md#the-menus
+Mode: keys-and-modes.md#the-modes
+Parallel key: keys-and-modes.md#major-and-minor-keys
+Piano roll: main-window.md#the-windows, notes-and-scales.md#seeing-and-hearing-it-in-the-app
+Playlist: main-window.md#the-playlist
+Relative key: keys-and-modes.md#major-and-minor-keys
+Roman numeral: chord-sheet.md#reading-the-sheet
+Saving: first-song.md#7-save-it
+Scale: notes-and-scales.md#scales
+Solfège: notes-and-scales.md#letters-or-solfège
+SoundFont: sounds.md
+Spelling: notes-and-scales.md#sharps-flats-and-spelling
+Status bar: main-window.md#the-status-bar
+Style: first-song.md#4-pick-a-style
+Tempo: first-song.md#5-the-tempo-and-the-key, main-window.md#the-toolbar
+Toolbar: main-window.md#the-toolbar
+Typing chords: chord-sheet.md#typing-chords
+Write the chords the song plays: chord-sheet.md#writing-what-the-song-plays
