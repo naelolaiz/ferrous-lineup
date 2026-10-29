@@ -11,7 +11,7 @@ Biblioteca junto a los demás.
 ## Abrirlo
 
 - En el **rack de canales**, **Editar estilo…** abre una copia del
-  estilo que toca la canción, y **Nuevo estilo…** empieza uno vacío.
+  estilo que toca la canción, con cada parte que toca su banda, y **Nuevo estilo…** empieza uno vacío.
   **Nuevo estilo…** también está arriba en la Biblioteca.
 - **Ver > Editor de estilos…** abre el editor, o lo trae al frente.
 - En la **Biblioteca**, haz clic derecho en un estilo: uno de los que

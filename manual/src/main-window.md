@@ -25,7 +25,7 @@ From top to bottom, the window has:
 | **Edit** | **Undo** and **Redo**, which name what they undo, and **Settings…** |
 | **View** | each window and the panel, shown or hidden; **Chord sheet in the main window**, the **Lead sheet**, the **Style editor…** and **Ear training** |
 | **MIDI** | **Typing keyboard to piano**, **Accompaniment follows chords**, a keyboard to play with (**Input**) and a synth to play on (**Output**) |
-| **Help** | **Keyboard shortcuts** and **About Ferrous Lineup** |
+| **Help** | **Keyboard shortcuts**, **User manual** and **About Ferrous Lineup** |
 
 ## The toolbar
 
@@ -123,6 +123,9 @@ are (↔) and how tall the tracks are (↕).
 answers to, window by window; the same list is in [Keyboard
 shortcuts](shortcuts.md).
 
+**Help > User manual** opens this manual in your web browser, in the
+language the app speaks.
+
 **Help > About Ferrous Lineup** shows the version you are running, the
-license, and links to this manual, the book, the source code and the
-list of known problems.
+license, and links to this manual (on the web and as one PDF file), the
+book, the source code and the list of known problems.

@@ -32,6 +32,10 @@ batería.
   azul marca cada nota de la tonalidad y uno naranja la nota de la
   tonalidad. **Haz clic en una tecla** para oírla.
 - Las barras de compás son más marcadas que las líneas de pulso.
+- Una nota lo bastante ancha en la pantalla lleva su nombre. Una nota
+  del acorde que se oye donde empieza se escribe como la escribe ese
+  acorde: en Do mayor, la quinta de Do disminuido se lee Sol♭, no Fa♯.
+  Las demás notas se escriben como las escribe la tonalidad.
 - Sobre la cuadrícula, dos filas nombran los acordes: la primera, el
   acorde que toca este canal; la segunda, **Todo**, el acorde que forman
   todos los canales juntos.

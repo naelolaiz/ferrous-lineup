@@ -26,7 +26,7 @@ De arriba abajo, la ventana tiene:
 | **Edición** | **Deshacer** y **Rehacer**, que nombran lo que deshacen, y **Ajustes…** |
 | **Ver** | cada ventana y el panel, mostrados u ocultos; **Hoja de acordes en la ventana principal**, la **Partitura guía**, el **Editor de estilos…** y el **Entrenamiento auditivo** |
 | **MIDI** | **Teclado del equipo como piano**, **El acompañamiento sigue los acordes**, un teclado con el que tocar (**Entrada**) y un sintetizador en el que tocar (**Salida**) |
-| **Ayuda** | **Atajos de teclado** y **Acerca de Ferrous Lineup** |
+| **Ayuda** | **Atajos de teclado**, **Manual de usuario** y **Acerca de Ferrous Lineup** |
 
 ## La barra de herramientas
 
@@ -129,6 +129,10 @@ pistas (↕).
 responde la aplicación, ventana por ventana; la misma lista está en
 [Atajos de teclado](shortcuts.md).
 
+**Ayuda > Manual de usuario** abre este manual en tu navegador, en el
+idioma en que habla la aplicación.
+
 **Ayuda > Acerca de Ferrous Lineup** muestra la versión que estás
-usando, la licencia y enlaces a este manual, al libro, al código fuente
-y a la lista de problemas conocidos.
+usando, la licencia y enlaces a este manual (en la web y como un solo
+archivo PDF), al libro, al código fuente y a la lista de problemas
+conocidos.
