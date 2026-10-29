@@ -266,7 +266,7 @@ impl StyleEditor {
                                     let copy = match preset {
                                         Preset::Style(style) => UserStyle::from_builtin(style),
                                         Preset::Rhythm(rhythm) => UserStyle::from_rhythm(rhythm),
-                                        Preset::User(_, style) => { let mut copy = style.clone(); copy.name.push_str(" copy"); copy },
+                                        Preset::User(_, style) => { let mut copy = style.clone(); copy.name = lineup_core::library::user_style::copy_name(&style.name); copy },
                                     };
                                     events.push(EditorEvent::StartFrom(copy)); ui.close();
                                 }
