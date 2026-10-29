@@ -9,8 +9,8 @@ so this script adds what a printed book needs to find things in it:
 - a title page, then the contents: every chapter of SUMMARY.md with the
   page it starts on;
 - the page number at the bottom of every page (print.css);
-- an index at the back: the words of the music and Rust glossaries and of
-  index-words.txt, with the pages that explain them;
+- an index at the back: the words of the glossaries (music, and Rust in
+  the book) and of index-words.txt, with the pages that explain them;
 - bookmarks, the outline a PDF reader shows beside the pages: parts,
   chapters and their sections.
 
@@ -24,6 +24,11 @@ Run it in book/, after a build in the light theme into pdf/ (see
 .github/workflows/book.yml):
 
     python3 print-pdf.py pdf book/ferrous-lineup-book.pdf
+
+The user manual is printed by the same script, with the manual's folder
+as a third argument, run in that folder:
+
+    python3 ../book/print-pdf.py pdf book/ferrous-lineup-manual.pdf .
 
 It needs pypdf (pip install pypdf) and Chrome; CHROME names another
 Chrome or Chromium program than google-chrome.
@@ -299,7 +304,7 @@ def contents_html(chapters: list[Chapter], pages: dict[str, int]) -> str:
 def index_html(entries: list[Entry], pages: dict[str, int]) -> str:
     lines = [
         heading("pdf-index", "Index"),
-        "<p>The words of the music and Rust glossaries, the parts of the app "
+        "<p>The words of the glossaries, the parts of the app "
         "and the chapters that explain them. A number in <strong>bold</strong> "
         "is the page the glossary sends you to for that word; the others are "
         "where a chapter introduces it or is about it.</p>",
@@ -439,11 +444,15 @@ def point_links_at_pages(writer: PdfWriter) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         sys.exit(__doc__)
     # Chrome opens the page by its full address, file:///...
     built, out = Path(sys.argv[1]).resolve(), Path(sys.argv[2])
-    here = Path(__file__).resolve().parent
+    # The book's folder, with its book.toml and index-words.txt: this
+    # script's own, or the one named after the PDF (the manual's).
+    here = Path(sys.argv[3] if len(sys.argv) == 4 else __file__).resolve()
+    if here.is_file():
+        here = here.parent
     chrome = os.environ.get("CHROME", "google-chrome")
     # Chrome's PDFs make pypdf warn that they have more objects than they
     # say; they read fine.
