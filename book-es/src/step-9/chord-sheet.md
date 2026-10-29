@@ -1,4 +1,4 @@
-# El chord sheet: escribir una canción compás a compás
+# La hoja de acordes: escribir una canción compás a compás
 
 Archivos: [`crates/lineup-core/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/chord_sheet.rs),
 [`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/project.rs),
@@ -8,30 +8,30 @@ y [`crates/lineup-app/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-
 
 En un programa de banda de acompañamiento, lo primero que ves es una
 cuadrícula de compases, y en ella escribes una canción: "C", Tab,
-"Am7 D7", Tab. Este cambio le da a Ferrous Lineup esa cuadrícula, el
-**chord sheet**. Se abre con **F5**, el botón **📝 Chords** de la barra
-de herramientas o **View > Chord sheet**, como una ventana sobre la
-playlist, que se queda como estaba.
+"Am7 D7", Tab. Este cambio le da a Ferrous Lineup esa cuadrícula, la
+**hoja de acordes**. Se abre con **F5**, el botón **📝 Acordes** de la barra
+de herramientas o **Ver > Hoja de acordes**, como una ventana sobre la
+lista de reproducción, que se queda como estaba.
 
 ![El chord sheet con la demo de Rhythm changes: dos choruses de ocho compases, C A7 | Dm7 G7 y así, con números romanos bajo cada acorde](../images/step-9-chord-sheet.png)
 
-En este cambio el sheet es algo para leer y escribir; el cambio
-siguiente, [La banda toca el chord sheet](band.md), pone una banda
+En este cambio la hoja es algo para leer y escribir; el cambio
+siguiente, [La banda toca la hoja de acordes](band.md), pone una banda
 detrás. Lo que ya hace es contener la armonía de la canción, nombrarla
 de todas las maneras que conoce la app, seguir a la canción cuando
 cambia y escribirse a partir de lo que toca la canción.
 
-## Leer el sheet
+## Leer la hoja
 
-El sheet se organiza como un chart impreso:
+La hoja se organiza como un chart impreso:
 
 - **Cuatro compases por línea.** Cada compás muestra su número en la
   esquina, y la indicación de compás donde cambia (el "4/4" del compás
-  1). (Más tarde el sheet aprendió a poner en una línea tantos compases
-  como permiten sus nombres: véase [El chord sheet llena la
+  1). (Más tarde la hoja aprendió a poner en una línea tantos compases
+  como permiten sus nombres: véase [La hoja de acordes llena la
   ventana](chord-sheet-layout.md).)
-- **Cada sección empieza una línea nueva**, bajo su nombre: «Chorus 1»,
-  «Chorus 2». Una sección tocada tres veces se encabeza «Verse ×3». Una
+- **Cada sección empieza una línea nueva**, bajo su nombre: «Estribillo 1»,
+  «Estribillo 2». Una sección tocada tres veces se encabeza «Estrofa ×3». Una
   doble línea de compás marca dónde empieza una sección, y la línea de
   compás final (fina y después gruesa) dónde acaba la canción.
 - **Cada armonía se sienta donde cae su pulso.** "C A7" en un compás de
@@ -46,18 +46,18 @@ El sheet se organiza como un chart impreso:
 - **Un compás sin nada escrito sigue con la armonía anterior**, que se
   muestra tenue para que el compás no parezca vacío.
 - **Un cambio de tonalidad** se escribe arriba a la derecha del compás
-  donde ocurre, «→ G major», en naranja como los nombres de las
+  donde ocurre, «→ Sol mayor», en naranja como los nombres de las
   secciones.
 
 Señalar una armonía dice qué es, con las mismas palabras que las
-harmony keys: «A7: séptima de dominante de La, V7/ii en Do mayor: una
+teclas de armonía: «A7: séptima de dominante de La, V7/ii en Do mayor: una
 dominante secundaria, la dominante de Dm. Sus notas: La Do♯ Mi Sol».
 Mantener pulsado el botón del ratón sobre ella la toca, con su nota de
 bajo debajo.
 
 Mientras suena la canción, el compás que suena recibe un marco blanco,
-como la harmony key que suena, y el acorde que suena es el nombre más
-brillante del sheet; los demás se atenúan. El sheet se desplaza con la
+como la tecla de armonía que suena, y el acorde que suena es el nombre más
+brillante de la hoja; los demás se atenúan. La hoja se desplaza con la
 canción.
 
 ![El mismo sheet mientras suena la canción: el compás 9 enmarcado en blanco, su Do brillante, el resto atenuado](../images/step-9-chord-sheet-playing.png)
@@ -66,16 +66,16 @@ canción.
 
 Haz clic en un compás para seleccionarlo (un marco naranja) y escribe.
 La primera tecla que pulsas abre un campo de texto sobre el compás con
-esa letra dentro; Enter acepta el texto y selecciona el compás
+esa letra dentro; Intro acepta el texto y selecciona el compás
 siguiente, Tab lo acepta y sigue escribiendo directamente en el compás
-siguiente, Shift+Tab vuelve uno atrás, y Escape deja el compás como
-estaba. Un doble clic, Enter o F2 en un compás seleccionado lo abre con
-lo que contiene, para cambiarlo. Delete lo vacía. Las flechas se mueven
+siguiente, Mayús+Tab vuelve uno atrás, y Esc deja el compás como
+estaba. Un doble clic, Intro o F2 en un compás seleccionado lo abre con
+lo que contiene, para cambiarlo. Supr lo vacía. Las flechas se mueven
 de compás en compás, arriba y abajo por líneas.
 
 Con el teclado de escritura activado (las letras tocan notas), una
 letra no puede empezar a escribir en un compás; haz doble clic en el
-compás o pulsa Enter primero.
+compás o pulsa Intro primero.
 
 Un compás puede contener cualquiera de estos, separados por espacios:
 
@@ -89,7 +89,7 @@ Un compás puede contener cualquiera de estos, separados por espacios:
 | Un micromodo | uno de los doce de Kröpfl, movido de la misma manera | `Menor 3`, `Menor 3 T4I` |
 | Una forma de serie | una forma de la serie dodecafónica de la tonalidad | `P0`, `I5`, `R3`, `RI7` |
 | Sin acorde | nada toca la armonía | `N.C.` o `NC` |
-| Un hold | la armonía anterior sigue un pulso más | `/` o `.` |
+| Un sostenido | la armonía anterior sigue un pulso más | `/` o `.` |
 | El compás anterior | el compás sigue con la armonía anterior | `%`, o nada |
 
 Dos acordes a la vez llegaron más tarde, con el formato 25: `Eb7|Fb` es
@@ -100,13 +100,13 @@ pleca ([Oír acordes](chord-hearing.md)).
 Lo que escribes se anota de una sola manera. Un número romano se
 convierte en el acorde que es en la tonalidad, de modo que "V7" escrito
 en Si♭ mayor se anota como F7, y un acorde se escribe como lo escriben
-las harmony keys: "CM7" se convierte en Cmaj7. Un conjunto escrito por
+las teclas de armonía: "CM7" se convierte en Cmaj7. Un conjunto escrito por
 sus notas se convierte en su nombre de Forte: `{D F A}` es 3-11 T2.
 
 ### Dónde caen las armonías
 
-Los lead sheets tienen una convención para varios acordes en un compás,
-y el sheet la sigue:
+Las partituras guía tienen una convención para varios acordes en un compás,
+y la hoja la sigue:
 
 | Escrito en 4/4 | Pulsos |
 |----------------|--------|
@@ -166,13 +166,13 @@ Una serie nunca pasa de un `/` que está solo (`holds_at` es dónde está
 el siguiente), porque esa barra es un pulso: "A E / B" es A, E
 sostenido dos pulsos, luego B, no A y el acorde con barra E/B. Esa
 regla llegó más tarde, cuando leer charts como texto encontró el error
-([Chord sheets como texto](text-chord-sheets.md#dos-errores-viejos-encontrados-por-un-viaje-de-ida-y-vuelta)).
+([Hojas de acordes como texto](text-chord-sheets.md#dos-errores-viejos-encontrados-por-un-viaje-de-ida-y-vuelta)).
 
 ### Cuando el texto no se puede leer
 
 Si una palabra no es una armonía, o hay más armonías que pulsos, el
 campo sigue abierto con el cursor al final, y el motivo se escribe
-encima del sheet en rojo:
+encima de la hoja en rojo:
 
 > Compás 3: "Hm7" no es un acorde (Am7, G/B), un conjunto (3-11 T2,
 > {0,4,7}), un micromodo (Menor 3), una forma de serie (P0, RI7) ni
@@ -183,13 +183,13 @@ encima del sheet en rojo:
 
 No se escribe nada en la canción hasta que el compás entero se lee.
 
-## El mismo sheet en conjuntos y micromodos
+## La misma hoja en conjuntos y micromodos
 
 Ferrous Lineup no es solo para canciones en tonalidades mayores y
 menores. Las demos de micromodos están en una tonalidad que es un
 conjunto de clases de alturas (el conjunto 3-3 sobre Do), y allí el
-sheet escribe micromodos, cada uno con sus notas debajo, en el morado
-con el que las harmony keys dibujan los grupos de notas sin función en
+hoja escribe micromodos, cada uno con sus notas debajo, en el morado
+con el que las teclas de armonía dibujan los grupos de notas sin función en
 una tonalidad:
 
 ![El chord sheet de una demo de micromodos: Menor 3, Menor 3 T4I, Menor 3 T3 y así, con sus notas debajo](../images/step-9-chord-sheet-micromodes.png)
@@ -197,23 +197,23 @@ una tonalidad:
 Menor 3 es el nombre de Kröpfl para las notas do, do♯, mi: Do Do♯ Mi, el
 3-3 de Forte. `T4I` lo pone del revés (Do Si La♭) y mueve eso cuatro
 semitonos hacia arriba (Mi Mi♭ Do), de modo que Menor 3 T4I es Do Mi♭ Mi. Son
-los mismos nombres que usan las ventanas Micromodes y Sets (véase
+los mismos nombres que usan las ventanas Micromodos y Conjuntos (véase
 [Micromodos](../step-8/micromodes.md)).
 
 ## Escribir lo que toca la canción
 
-Una canción se abre con sus acordes ya en el sheet, de modo que el
-sheet nunca está vacío para una canción que toca acordes. De dónde
+Una canción se abre con sus acordes ya en la hoja, de modo que el
+hoja nunca está vacía para una canción que toca acordes. De dónde
 salen depende de la canción:
 
 - **Una demo construida a partir de un chart** (las canciones y estilos
-  del menú Demos) escribe su propio chart en el sheet, parte a parte,
+  del menú Demostraciones) escribe su propio chart en la hoja, parte a parte,
   cada parte en su propia tonalidad. La tercera sección de El Choclo,
   en La mayor, dice A E7 | E7 A | F#7 Bm | B7 E7: el VI7 ii | II7 V7
   del chart nombrado en La mayor. El acorde sostenido del final
   también se escribe.
 - **Cualquier otra canción** (la canción inicial, un archivo que
-  guardaste antes de que existiera el sheet, un archivo MIDI importado
+  guardaste antes de que existiera la hoja, un archivo MIDI importado
   o una grabación) recibe los acordes que la app oye en ella, como se
   describe abajo.
 
@@ -221,11 +221,11 @@ Escribirlos cuando la canción se abre, antes de que la app recuerde el
 proyecto como guardado, hace que una demo no aparezca como modificada
 (sin `*` en el título).
 
-Unas pocas piezas tienen su acompañamiento escrito nota a nota (Für
-Elise, Air on the G String, el Preludio en do sostenido menor de
+Unas pocas piezas tienen su acompañamiento escrito nota a nota (Para
+Elisa, Aria en la cuerda de Sol, el Preludio en do sostenido menor de
 Rachmaninoff, Shchedryk). No tienen chart, y sus arpegios juntan
 demasiado pocas notas a la vez para que se oiga un acorde pulso a
-pulso, así que sus sheets se abren aún casi vacíos.
+pulso, así que sus hojas se abren aún casi vacías.
 
 ```rust
 fn write_chart(project: &mut Project, at: usize, spans: &[ChordSpan], key: Scale) {
@@ -242,35 +242,35 @@ fn write_chart(project: &mut Project, at: usize, spans: &[ChordSpan], key: Scale
 
 `let ... else` toma el final del último span, o vuelve enseguida cuando
 el chart está vacío (`spans.last()` es `None`). `symbol_in(key)` es la
-misma función que usa el menú Progression para nombrar "V7" como A7 en
-Re menor, de modo que el sheet escribe los acordes de una demo
+misma función que usa el menú Progresión para nombrar "V7" como A7 en
+Re menor, de modo que la hoja escribe los acordes de una demo
 exactamente como los leería la banda.
 
-El botón **Write the chords the song plays**, arriba del sheet, las
+El botón **Escribir los acordes que toca la canción**, arriba de la hoja, las
 escribe otra vez a partir de lo que la canción toca ahora, en lugar de
-lo que dice el sheet: úsalo después de cambiar las notas. Recorre la
+lo que dice la hoja: úsalo después de cambiar las notas. Recorre la
 canción pulso a pulso, pregunta qué acorde toca allí la banda y escribe
 una armonía donde eso cambia. Un deshacer lo revierte todo. Mientras
-una banda toca desde el sheet, el botón está oculto, ya que las notas
-de la banda salen del sheet para empezar.
+una banda toca desde la hoja, el botón está oculto, ya que las notas
+de la banda salen de la hoja para empezar.
 
 Tres detalles hacen que el resultado se lea como un chart y no como un
 análisis:
 
-1. **El bajo sale de la línea de bajo.** Las harmony keys oyen los
+1. **El bajo sale de la línea de bajo.** Las teclas de armonía oyen los
    canales que contienen acordes, y un voicing de piano de La menor como
-   Do Mi La sería "Am/C". Un lead sheet escribe la nota que toda la banda
+   Do Mi La sería "Am/C". Una partitura guía escribe la nota que toda la banda
    tiene abajo del todo, así que el bajo después de la barra es la nota
    más grave de todos los canales, incluida la línea de bajo, cuando
    esa nota está en el acorde. Una nota de paso del bajo que no está en
    el acorde se omite, y el acorde se escribe sobre su fundamental.
-   "Four chords" sale como C G Am F, sin las inversiones del piano como
+   "Cuatro acordes" sale como C G Am F, sin las inversiones del piano como
    G/B y Am/C.
 2. **Una sección empieza con su acorde escrito otra vez.** Rhythm
    changes acaba sus ocho compases en Do y empieza los ocho siguientes
    en Do. Sin una regla, el segundo chorus se abriría con un compás
    vacío que sigue al primero. Los charts escriben el acorde otra vez
-   al principio de cada parte, y el sheet hace lo mismo.
+   al principio de cada parte, y la hoja hace lo mismo.
 3. **En un conjunto o una serie, escribe conjuntos.** En una tonalidad
    que es un conjunto o una serie dodecafónica, un nombre de acorde
    como "C#m(maj7)/B#" no dice nada verdadero sobre la música. Allí las
@@ -300,14 +300,14 @@ if section_starts || markers.last().is_none_or(|last| last.harmony != harmony) {
 }
 ```
 
-`continue` salta al pulso siguiente del loop `for`: un pulso sin
+`continue` salta al pulso siguiente del bucle `for`: un pulso sin
 acorde, o con notas que no forman un acorde que la app conozca, sigue
 con el acorde anterior. `is_none_or` es true para una lista vacía, así
 que la primera armonía siempre se escribe.
 
-## Cómo se guarda el sheet
+## Cómo se guarda la hoja
 
-El sheet no es una cuadrícula de compases en memoria. Es una lista de
+La hoja no es una cuadrícula de compases en memoria. Es una lista de
 **marcadores de acordes**, cada uno diciendo «de este paso en adelante,
 la armonía es esta», como los marcadores de compás, tempo y tonalidad
 que lo preceden:
@@ -333,11 +333,10 @@ pub enum HarmonyName {
 
 `Polychord` llegó después de este capítulo, con el formato 25. Los
 acordes que escribe este capítulo se guardan como formato 12; un
-proyecto con `Eb7|Fb` en su sheet necesita al menos el formato 25
+proyecto con `Eb7|Fb` en su hoja necesita al menos el formato 25
 ([Oír acordes](chord-hearing.md)).
 
-Una armonía dura hasta el marcador siguiente, igual que un acorde en un
-lead sheet dura hasta que se escribe el acorde siguiente. Por eso un
+Una armonía dura hasta el marcador siguiente, igual que un acorde en una partitura guía dura hasta que se escribe el acorde siguiente. Por eso un
 compás sin nada no necesita guardar nada, y por eso «la armonía en el
 paso 200» es una búsqueda del último marcador en el 200 o antes:
 
@@ -355,9 +354,9 @@ antes de ese índice es la respuesta. `checked_sub(1)` es `None` cuando
 no hay ninguno, antes del primer acorde.
 
 Mantener los marcadores en el timeline, y no una lista de compases,
-deja que el sheet comparta el código que ya mueve los demás marcadores:
+deja que la hoja comparta el código que ya mueve los demás marcadores:
 cuando una herramienta desplaza todo lo que hay después de un paso, los
-marcadores de acordes se desplazan en el mismo loop que los marcadores
+marcadores de acordes se desplazan en el mismo bucle que los marcadores
 de compás, tempo y tonalidad (véase «Seguir la canción», más abajo). En
 qué compás cae un marcador se calcula cuando se dibuja.
 
@@ -391,17 +390,17 @@ el texto no se puede leer, el archivo se rechaza con el motivo, como
 cualquier otro archivo roto.
 
 El formato de archivo es ahora el 12. Un proyecto con acordes en su
-sheet se guarda como formato 12; uno sin ellos se queda en el formato
+hoja se guarda como formato 12; uno sin ellos se queda en el formato
 que necesitaba antes, de modo que sigue abriéndose en la versión
 anterior a esta. El número importa porque una versión antigua, al leer
 el archivo, saltaría los `chord_markers` que no conoce y perdería el
-sheet la próxima vez que guardara. En su lugar, rechaza cualquier
+hoja la próxima vez que guardara. En su lugar, rechaza cualquier
 archivo cuyo formato sea más nuevo que el suyo, con un mensaje que lo
 dice (la prueba `files_from_the_future_are_refused`).
 
 ### Escribir un compás
 
-Todo cambio en el sheet pasa por un método, que escribe las armonías de
+Todo cambio en la hoja pasa por un método, que escribe las armonías de
 un tramo de la canción, normalmente un compás:
 
 ```rust
@@ -411,17 +410,17 @@ pub fn set_chords(&mut self, start: usize, end: usize, markers: &[ChordMarker]) 
 Los marcadores que ya están entre `start` y `end` se van, y `markers`
 ocupan su lugar. Escribir un compás entero de una vez, en lugar de
 añadir o mover marcadores sueltos, coincide con lo que haces en el
-sheet: escribes un compás, y lo que escribiste es lo que el compás
+hoja: escribes un compás, y lo que escribiste es lo que el compás
 contiene. Deshacer no necesita nada nuevo: el `edit` de la app guarda
 una copia del proyecto de antes de cada cambio, así que «escribir
 acordes» es un paso que deshacer como cualquier otro.
 
 ## Seguir la canción
 
-Como los marcadores están en el timeline de la playlist, toda
+Como los marcadores están en el timeline de la lista de reproducción, toda
 herramienta que mueve cosas en el timeline los mueve también:
 
-- **Duplicar una sección** (⧉ Duplicate en el menú de la sección) o
+- **Duplicar una sección** (⧉ Duplicar en el menú de la sección) o
   **desplegar sus repeticiones**: todo lo que viene después se mueve, y
   cada copia recibe los acordes de la sección, empezando por el acorde
   con el que se abre la sección, aunque ese acorde estuviera escrito en
@@ -433,7 +432,7 @@ herramienta que mueve cosas en el timeline los mueve también:
   4/4, a mitad de camino, cae a mitad del compás de 3/4, pulso y medio
   dentro, y va al pulso 3: en una ligadura, gana el pulso posterior.
 - **Cambiar la tonalidad** ([Cambiar de
-  tonalidad](../step-8/changing-key.md)): el sheet se mueve como lo
+  tonalidad](../step-8/changing-key.md)): la hoja se mueve como lo
   hacen las notas, de modo que sigue nombrando lo que suena. Una
   fundamental nueva mueve cada acorde, contando nombres de nota: G7/B en Do
   mayor es A7/C# en Re mayor. Un modo nuevo mueve cada nota de un
@@ -443,7 +442,7 @@ herramienta que mueve cosas en el timeline los mueve también:
   micromodos conservan su forma y se mueven con la fundamental.
 
 Cada una de estas cosas tiene una prueba en `project.rs` o `remeter.rs`
-que escribe un sheet, hace el cambio y comprueba adónde fue cada
+que escribe una hoja, hace el cambio y comprueba adónde fue cada
 marcador.
 
 ## La ventana
@@ -453,7 +452,7 @@ partes merecen un vistazo.
 
 ### Un rectángulo por compás
 
-El sheet no está hecho de botones. La ventana toma el espacio que
+La hoja no está hecho de botones. La ventana toma el espacio que
 necesitan todas las líneas con `ui.allocate_exact_size`, calcula un
 `Rect` para cada compás (un `Cell`) y le pregunta a egui por cada uno:
 
@@ -481,7 +480,7 @@ Escribir ocurre en un `TextEdit` normal, colocado sobre el compás con
 `ui.put(rect, field)`. Dos cosas requirieron cuidado:
 
 - **La primera letra.** Seleccionas un compás y escribes "A": el campo
-  se abre en ese frame, así que la "A" ya la ha leído el sheet. El
+  se abre en ese frame, así que la "A" ya la ha leído la hoja. El
   campo se abre con la "A" dentro y el cursor detrás, escribiendo el
   cursor en el estado guardado del campo antes de dibujarlo:
 
@@ -493,10 +492,10 @@ Escribir ocurre en un `TextEdit` normal, colocado sobre el compás con
   ```
 
 - **Tab y las flechas.** egui usa Tab para moverse entre widgets, y un
-  campo de texto suelta el teclado con él. En el sheet, Tab significa
+  campo de texto suelta el teclado con él. En la hoja, Tab significa
   «compás siguiente», así que el campo saca Tab de la entrada antes de
   que egui lo vea (`input.consume_key(Modifiers::NONE, Key::Tab)`) y le
-  dice a egui qué teclas conserva el sheet mientras tiene el teclado:
+  dice a egui qué teclas conserva la hoja mientras tiene el teclado:
 
   ```rust
   const KEEP_KEYS: egui::EventFilter = egui::EventFilter {
@@ -508,10 +507,10 @@ Escribir ocurre en un `TextEdit` normal, colocado sobre el compás con
   ui.memory_mut(|memory| memory.set_focus_lock_filter(id, KEEP_KEYS));
   ```
 
-Una más: el Enter que cierra el campo sigue «pulsado» en ese frame, y
-las propias teclas del sheet leen Enter como «abrir este compás». Sin
-una protección, Enter cerraría un compás y abriría el siguiente a la
-vez. El sheet recuerda si se estaba escribiendo en un compás cuando
+Una más: el Intro que cierra el campo sigue «pulsado» en ese frame, y
+las propias teclas de la hoja leen Intro como «abrir este compás». Sin
+una protección, Intro cerraría un compás y abriría el siguiente a la
+vez. La hoja recuerda si se estaba escribiendo en un compás cuando
 empezó el frame, y lee sus propias teclas solo si no:
 
 ```rust
@@ -523,17 +522,16 @@ if has_keyboard && self.editing.is_none() && !was_editing {
 }
 ```
 
-### Los dígitos pertenecen al sheet mientras escribes
+### Los dígitos pertenecen a la hoja mientras escribes
 
-Las harmony keys tocan un acorde cuando pulsas del 1 al 7. En el chord
-sheet, los dígitos son parte de lo que escribes: "3-11 T2", "{0,1,4}",
-"C6/9". Así que mientras el sheet tiene el teclado,
-`ChordSheet::has_keyboard()` es true y las harmony keys dejan en paz a
+Las teclas de armonía tocan un acorde cuando pulsas del 1 al 7. En la hoja de acordes, los dígitos son parte de lo que escribes: "3-11 T2", "{0,1,4}",
+"C6/9". Así que mientras la hoja tiene el teclado,
+`ChordSheet::has_keyboard()` es true y las teclas de armonía dejan en paz a
 los dígitos.
 
 ### Acciones, no cambios
 
-Como el channel rack y el piano roll, el sheet nunca cambia el proyecto
+Como el rack de canales y el piano roll, la hoja nunca cambia el proyecto
 por sí mismo. Dibuja desde `&Project` (un préstamo compartido y de solo
 lectura) y devuelve una lista de lo que se hizo:
 
@@ -548,8 +546,8 @@ pub enum SheetAction {
 ```
 
 `LineupApp::apply_sheet` hace después cada una: `SetChords` a través de
-`edit`, para que se pueda deshacer, `Seek` moviendo el playhead, y las
-notas por el mismo camino que las harmony keys. La ventana no puede
+`edit`, para que se pueda deshacer, `Seek` moviendo el cursor de reproducción, y las
+notas por el mismo camino que las teclas de armonía. La ventana no puede
 olvidarse de registrar un paso de deshacer, porque no tiene ninguna
 manera de cambiar el proyecto; el borrow checker se lo negaría.
 
@@ -570,8 +568,7 @@ manera de cambiar el proyecto; el borrow checker se lo negaría.
    ventana, con una opción de 2, 4 u 8. ¿Dónde se usa, y las flechas
    arriba y abajo siguen cayendo en la columna correcta? (La app ya lo
    hace; pruébalo antes de leer [cómo](chord-sheet-layout.md).)
-4. **Releer lo que toca la canción.** Después de «Write the chords the
-   song plays», cambia unas pocas notas en el piano roll. Escribe un
-   método que compare el sheet con lo que se oye ahora, compás a
+4. **Releer lo que toca la canción.** Después de «Escribir los acordes que toca la canción», cambia unas pocas notas en el piano roll. Escribe un
+   método que compare la hoja con lo que se oye ahora, compás a
    compás, y devuelva los compases que difieren. ¿Cómo los mostrarías
-   en el sheet?
+   en la hoja?

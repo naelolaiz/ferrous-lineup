@@ -9,10 +9,10 @@ Archivos: [`crates/lineup-core/src/band/form.rs`](https://github.com/naelolaiz/f
 y [`crates/lineup-app/src/playlist/sections.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/playlist/sections.rs)
 
 Una banda no toca una melodía una vez y se detiene en seco. Toca unos
-cuantos compases para asentar la tonalidad y el groove (la **intro**),
+cuantos compases para asentar la tonalidad y el groove (la **introducción**),
 luego la melodía, luego la melodía otra vez, quizá varias veces, y
 entonces **termina**: aterriza en el acorde de tónica y lo sostiene.
-Hasta ahora la banda de Ferrous Lineup tocaba los compases del sheet una
+Hasta ahora la banda de Ferrous Lineup tocaba los compases de la hoja una
 vez y se detenía en el último, en cualquier acorde que hubiera allí.
 Este cambio le da la forma de una actuación real.
 
@@ -20,31 +20,30 @@ Este cambio le da la forma de una actuación real.
 
 ## Probarlo
 
-Escribe unos cuantos compases de acordes en el sheet (**F5**), o elige
-una progresión. Debajo de los botones Band y Progression hay una fila
-nueva, **Form**:
+Escribe unos cuantos compases de acordes en la hoja (**F5**), o elige
+una progresión. Debajo de los botones Banda y Progresión hay una fila
+nueva, **Forma**:
 
-- **Intro**: No intro, 2, 4 u 8 compases. La banda pone esa cantidad de
+- **Introducción**: Sin introducción, 2, 4 u 8 compases. La banda pone esa cantidad de
   compases delante de la canción, con acordes que llevan a su primer
-  acorde. Están escritos en el sheet bajo el encabezado **Intro**, así
+  acorde. Están escritos en la hoja bajo el encabezado **Introducción**, así
   que puedes leerlos, oírlos (mantén uno pulsado con el ratón) y
-  cambiarlos. Elegir una longitud otra vez los escribe de nuevo; **No
-  intro** los quita. El resto de la canción, melodía incluida, se mueve
+  cambiarlos. Elegir una longitud otra vez los escribe de nuevo; **Sin introducción** los quita. El resto de la canción, melodía incluida, se mueve
   para hacer sitio.
-- **Choruses**: cuántas veces toca la banda la melodía. El sheet la
-  muestra una vez, bajo **Chorus ×3**, entre los signos de repetición de
+- **Vueltas**: cuántas veces toca la banda la melodía. La hoja la
+  muestra una vez, bajo **Vuelta ×3**, entre los signos de repetición de
   la música impresa: ‖: al principio, :‖ al final. Mientras suena, la
-  fila Form muestra por qué pasada va, «▶ 2 de 3».
-- **Ending**: dos compases después del último chorus. La banda va al
+  fila Forma muestra por qué pasada va, «▶ 2 de 3».
+- **Final**: dos compases después de la última vuelta. La banda va al
   acorde de tónica de la tonalidad, toca un compás de él en el estilo, y
   luego lo golpea una vez y lo sostiene durante todo el último compás,
   con un golpe del crash. Los dos compases se muestran en gris bajo
-  **Ending**, el último marcado con «held», con la doble barra final
+  **Final**, el último marcado con «sostenido», con la doble barra final
   después.
 
-El playlist muestra la repetición también: a lo largo de la parte
+La lista de reproducción muestra la repetición también: a lo largo de la parte
 inferior de la tira de secciones, los mismos signos de repetición en los
-dos extremos del chorus, y «×3».
+dos extremos de la vuelta, y «×3».
 
 ![El playlist: las pistas Piano, Bass y Drums de la banda sobre los compases 1 a 10, con signos de repetición en la tira de secciones alrededor de los compases 5 a 8 y «×3»](../images/step-9-song-form-playlist.png)
 
@@ -57,10 +56,12 @@ músicos de jazz usan la palabra de otra manera: un **chorus** es una
 pasada por toda la melodía, desde el principio del chart hasta su último
 compás. Un solista «toma dos choruses»; la banda toca «the head» (la
 melodía) durante un chorus, luego solos durante varios, y luego el head
-otra vez. La fila Form usa la palabra en ese sentido: un chorus es cada
-compás del sheet después de la intro. Las estrofas y los estribillos de
-una canción pop están todos dentro de un chorus aquí. Si tu canción
-tiene secciones propias (Verse ×2, Chorus) en el playlist, se repiten
+otra vez. La fila Forma usa la palabra en ese sentido, y en español la llama
+**vuelta**: una vuelta es cada compás de la hoja después de la intro,
+**Vueltas** dice cuántas toca la banda, y la hoja encabeza la
+repetición «Vuelta ×3». Las estrofas y los estribillos de
+una canción pop están todos dentro de una vuelta. Si tu canción
+tiene secciones propias (Estrofa ×2, Estribillo) en la lista de reproducción, se repiten
 como siempre lo hicieron, dentro de cada pasada.
 
 ## La intro: un turnaround
@@ -78,7 +79,7 @@ por encima de Sol, Re menor, lleva a Sol de la misma manera que Sol lleva a Do:
 las fundamentales que caen por quintas (La → Re → Sol → Do) son la manera más
 fuerte en que pueden moverse los acordes.
 
-| Intro | Hacia Do mayor | Hacia La menor |
+| Introducción | Hacia Do mayor | Hacia La menor |
 |---|---|---|
 | 2 compases | Dm7, G7 (ii7 V7) | Bm7b5, E7 (iiø7 V7) |
 | 4 compases | C, Am7, Dm7, G7 (I vi7 ii7 V7) | Am, Fmaj7, Bm7b5, E7 (i bVImaj7 iiø7 V7) |
@@ -118,13 +119,13 @@ una serie no tiene tónica; termina donde empezó, en su primera armonía.
 
 El último compás se toca distinto de todos los demás: el piano golpea el
 acorde una vez y lo sostiene, el bajo sostiene la fundamental, y la
-batería toca un kick con el platillo crash. Ese es el «Crash ending» de
-los fills de la Library, que la banda nunca había usado. El último
+batería toca un kick con el platillo crash. Ese es el «Final con crash» de
+los fills de la Biblioteca, que la banda nunca había usado. El último
 compás del chorus ya recibe un fill de batería (lleva a la siguiente
 pasada o al final), así que el primer compás del final es groove simple,
 y la canción no termina con dos fills seguidos.
 
-El final no está escrito en el sheet: sus acordes son de la banda,
+El final no está escrito en la hoja: sus acordes son de la banda,
 calculados cada vez desde la tonalidad. Escribe un acorde en un compás
 del final y se convierte en un compás de la melodía: el chorus crece
 para incluirlo, y el final se mueve después de él.
@@ -172,7 +173,7 @@ sin nada que mantener a paso. El final se calcula de la misma manera
 
 Poner compases delante de una canción significa mover todo lo demás más
 tarde: clips, secciones, marcadores de tiempo, tempo, tonalidad y
-acordes, la región de loop. `Project::make_room` ya hacía esto para
+acordes, la región de bucle. `Project::make_room` ya hacía esto para
 copiar una sección. Quitar la intro necesita lo contrario,
 `Project::cut_start`, que también tiene que conservar cómo suena la
 canción donde termina el corte: la canción entonces *empieza* en el
@@ -192,7 +193,7 @@ pensaría que los editaste: cada parte quedaría congelada.
 
 ### Tocar el chorus otra vez: el arreglo
 
-El playlist es la canción *como se dibuja*; el arreglo ([La estructura
+La lista de reproducción es la canción *como se dibuja*; el arreglo ([La estructura
 de la canción](../step-8/song-structure.md)) es la canción *como se
 toca*, con cada repetición desplegada. Ya tocaba dos veces una sección
 marcada ×2. El chorus es una capa más alrededor de eso:
@@ -211,14 +212,14 @@ played.extend(once(end, to));
 
 Las piezas de la intro una vez, las piezas del chorus `choruses` veces,
 y luego el final una vez. Cada pasada recuerda por cuál va en su campo
-nuevo, `Pass::chorus`, que la fila Form y el playlist leen para «▶ 2 de
+nuevo, `Pass::chorus`, que la fila Forma y la lista de reproducción leen para «▶ 2 de
 3».
 
 Como todo lo que toca lee el arreglo (el hilo de audio, las
 exportaciones WAV y MIDI, los clics del metrónomo, el tempo de cada
 paso), nada de eso tuvo que cambiar para tocar tres choruses. Una región
-de loop dentro del chorus no lo abarca entero, así que el chorus no se
-repite allí: hacer loop en los compases 3 a 4 toca los compases 3 a 4.
+de bucle dentro del chorus no lo abarca entero, así que el chorus no se
+repite allí: repetir en bucle los compases 3 a 4 toca los compases 3 a 4.
 
 ### El último compás: una closure, dos maneras de tocar
 
@@ -247,7 +248,7 @@ armonías a su tramo con `cut`, que también impide que una armonía
 cortada antes «lleve» a ninguna parte: un bajo caminante si no caminaría
 hacia el siguiente acorde antes de que llegue.
 
-La armonía del final no está en el sheet, así que la banda la añade a la
+La armonía del final no está en la hoja, así que la banda la añade a la
 lista de marcadores desde la que toca, como si estuviera escrita allí:
 
 ```rust
@@ -264,12 +265,12 @@ otro, así que el piano se mueve suavemente al último acorde.
 1. Escribe | Dm7 | G7 | Cmaj7 | Cmaj7 |, un ii–V–I en Do, y dale una
    intro de 2 compases. ¿Qué acordes escribe la intro? No llevan a Do:
    ¿a qué llevan, y por qué?
-2. Pon la tonalidad en La menor (la caja Key de abajo a la izquierda),
+2. Pon la tonalidad en La menor (la caja Tonalidad de abajo a la izquierda),
    escribe una canción que empiece en Am, y enciende el final. ¿En qué
    acorde termina? Ahora cambia el primer acorde a Fa: ¿en qué acorde
    termina ahora, y por qué sigue estando bien?
 3. Exporta como archivo WAV una canción con una intro de 4 compases,
-   tres choruses y un final (File > Export WAV…). ¿Cuántos compases
+   tres choruses y un final (Archivo > Exportar WAV…). ¿Cuántos compases
    dura? Comprueba tu respuesta contra la longitud del archivo y el
    tempo.
 4. Dale a una canción una intro de 8 compases, y cámbiala luego a 2
@@ -280,5 +281,5 @@ otro, así que el piano se mueve suavemente al último acorde.
 6. (Rust) `Form` es `Copy`; `Band` no lo es. ¿Por qué `Band` no podría
    ser `Copy`? Mira sus campos.
 7. (Rust) En `played_pieces`, el chorus se repite solo `if from <= start
-   && end <= to`. Escribe qué tocaría una región de loop desde la mitad
+   && end <= to`. Escribe qué tocaría una región de bucle desde la mitad
    de la intro hasta la mitad del chorus si esa prueba se dejara fuera.

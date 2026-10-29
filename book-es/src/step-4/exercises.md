@@ -14,8 +14,7 @@ pista y sus clips, y sube uno los clips de las pistas de debajo, igual que
 hace `remove_pattern` con los patrones.
 
 Lo que falta es una forma de quitar *todas* las pistas vacías a la vez.
-`remove_unused_tracks` solo descarta las pistas vacías del fondo del
-playlist. Añade `remove_empty_tracks`, que quita una pista esté donde esté
+`remove_unused_tracks` solo descarta las pistas vacías del fondo de la lista de reproducción. Añade `remove_empty_tracks`, que quita una pista esté donde esté
 si no tiene clips, y un comando en el menú de la pista. ¿Qué índices debes
 visitar, y en qué orden, para que los clips sigan apuntando a las pistas
 correctas? ¿Qué debería pasar si eso no dejara ninguna pista? Escribe
@@ -31,7 +30,7 @@ pulsado lo copia en lugar de moverlo. `Ctrl+D` ya duplica los clips
 seleccionados, pero arrastrar una copia es más rápido cuando la quieres en
 otro sitio.
 
-Shift está ocupado: Shift-clic añade un clip a la selección. Usa Alt para
+Mayús está ocupado: Mayús-clic añade un clip a la selección. Usa Alt para
 la copia. En `PlaylistView::handle_input`, lee las teclas modificadoras
 con `ui.input(|input| input.modifiers.alt)`. El plan obvio es añadir una
 copia al pulsar y arrastrar la copia. Pero `add_clip` rechaza un duplicado
@@ -61,7 +60,7 @@ encaminar un cambio de UI a través de `edit`.
 
 ## 4. Olvidar un proyecto reciente (lineup-app, medio)
 
-File > Open recent ya recuerda los últimos diez proyectos, en los
+Archivo > Abrir recientes ya recuerda los últimos diez proyectos, en los
 datos persistidos de egui, y se mantiene correcto cuando un archivo se ha
 movido o borrado (la apertura falla y la ruta se retira). Lee
 `app/recent.rs`.
@@ -77,17 +76,16 @@ UTF-8.
 
 ## 5. Buscar sin el ratón (lineup-app, medio)
 
-Hacer clic en la regla del playlist ya mueve el playhead: envía
+Hacer clic en la regla de la lista de reproducción ya mueve el cursor de reproducción: envía
 `PlaylistAction::Seek`, la app lo convierte en `Command::Seek(step)`, y el
 motor mueve allí el step sequencer. Lee `Command::Seek` y
 `LineupApp::seek`.
 
-Añade las teclas que suele tener un transport: Home va al principio, End
-al final de la canción, y Page Up / Page Down mueven un compás. Después
+Añade las teclas que suele tener un transporte: Inicio va al principio, Fin al final de la canción, y RePág / AvPág mueven un compás. Después
 añade una pequeña caja de «compás» junto al indicador de posición, donde
-escribir un número de compás y pulsar Enter busca allí. ¿Qué ventana
+escribir un número de compás y pulsar Intro busca allí. ¿Qué ventana
 debería ser dueña de estas teclas, y cómo evitas que se disparen mientras
-un campo de texto tiene el teclado? ¿Qué debería hacer Play tras una
+un campo de texto tiene el teclado? ¿Qué debería hacer ▶ tras una
 búsqueda: empezar desde la posición buscada, o desde el principio?
 
 *Prácticas:* atajos de teclado, convertir compases en pasos, decidir el
@@ -102,7 +100,7 @@ tu diseño con él.*
 
 Las pruebas del motor ya reproducen canciones sin tarjeta de sonido: crean
 un `AudioThread`, le envían comandos y llaman a `process` sobre un búfer.
-Usa la misma idea para File > Export WAV. Construye un `AudioThread`
+Usa la misma idea para Archivo > Exportar WAV. Construye un `AudioThread`
 separado en el hilo de UI (nunca se acerca al real), envíale el proyecto
 entero como hace `send_whole_project`, después `SetMode(Song)` y `Play`, y
 llama a `process` bloque a bloque durante `song_length` pasos, escribiendo

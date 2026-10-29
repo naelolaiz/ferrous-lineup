@@ -9,22 +9,21 @@ y [`crates/lineup-core/src/band.rs`](https://github.com/naelolaiz/ferrous-lineup
 La [biblioteca](../step-8/library.md) es conocimiento escrito como
 datos: un estilo es un chart, un patrón de comping, una línea de bajo y
 un ritmo, cada uno unas pocas líneas en una tabla. El **editor de
-estilos** escribe el groove que esas tablas no tienen, con el channel
-rack y el piano roll que conoces.
+estilos** escribe el groove que esas tablas no tienen, con el rack de canales y el piano roll que conoces.
 
 ## Dónde está
 
-- En el **channel rack**, **Edit style…** abre el estilo que toca la
-  canción; **New style…** empieza uno vacío.
-- **View > Style editor…** abre el editor, o lo trae al frente.
-- En la **Library**, haz clic derecho en un estilo o un ritmo. Uno
-  integrado dice **Edit a copy in channel rack…**; uno guardado dice
-  **Edit in channel rack…**.
+- En el **rack de canales**, **Editar estilo…** abre el estilo que toca la
+  canción; **Nuevo estilo…** empieza uno vacío.
+- **Ver > Editor de estilos…** abre el editor, o lo trae al frente.
+- En la **Biblioteca**, haz clic derecho en un estilo o un ritmo. Uno
+  integrado dice **Editar una copia en el rack de canales…**; uno guardado dice
+  **Editar en el rack de canales…**.
 
-**Edit style…** empieza desde el estilo de la canción. Un estilo
-guardado se abre como sí mismo, así que **Save style** escribe de
+**Editar estilo…** empieza desde el estilo de la canción. Un estilo
+guardado se abre como sí mismo, así que **Guardar estilo** escribe de
 vuelta a su archivo. Un estilo o ritmo integrado se abre como una copia
-editable, llamada «… copy». Sin banda, el editor empieza vacío.
+editable, llamada «… (copia)». Sin banda, el editor empieza vacío.
 
 ## Qué edita
 
@@ -32,71 +31,67 @@ Un estilo de usuario es **un patrón que se repite**, de uno a dieciséis
 compases. Puede contener carriles de batería, un carril de piano u otro
 carril de acordes, un carril de bajo, y carriles para la guitarra, las
 cuerdas, el órgano y el solista que usa una banda más grande. La fila
-de arriba tiene **Start from…**, **Save style**, **Save as…**,
-**Undo**, **Redo**, **Preview ×4** y **Stop preview**. Debajo están
-**Name**, **BPM**, el compás, **Bars**, **Swing**, **Progression**,
-**Description** y **Part assignments**.
+de arriba tiene **Empezar desde…**, **Guardar estilo**, **Guardar como…**,
+**Deshacer**, **Rehacer**, **Escuchar ×4** y **Detener la escucha**. Debajo están
+**Nombre**, **BPM**, el compás, **Compases**, **Swing**, **Progresión**,
+**Descripción** y **Asignación de partes**.
 
 El rack es el mismo widget, con las filas del borrador: haz clic en los
 pasos para escribir la batería. Haz clic en una vista previa de nota
-para abrir el piano roll, donde dibujar, mover, estirar y el menú Tools
+para abrir el piano roll, donde dibujar, mover, estirar y el menú Herramientas
 funcionan como en un patrón. El roll del editor tiene su propio id de
 instancia, ventana y teclas, y nunca edita el roll de la canción.
 
 Las partes con altura se escriben **sobre Do mayor**. Cuando se aplica
 el estilo, cada nota se mueve al acorde del momento: un Do toca la
 fundamental, un Mi la tercera, un Sol la quinta, y las demás notas siguen
-la tonalidad o conservan su color. Los campos dicen: «Write pitched
-parts over C major. They follow the song's chords when applied.»
+la tonalidad o conservan su color. Los campos dicen: «Escribe las partes con altura sobre Do mayor. Siguen los acordes de la canción al aplicarlas.»
 
-**Preview ×4** toca el patrón cuatro veces y se detiene. **Space** lo
+**Escuchar ×4** toca el patrón cuatro veces y se detiene. **Espacio** lo
 arranca o lo para mientras el editor tiene el teclado. La vista previa
-es una frase en el hilo de audio; la canción se pausa. **Stop preview**
+es una frase en el hilo de audio; la canción se pausa. **Detener la escucha**
 la termina antes.
 
-Su historial es propio. **Ctrl+Z**, **Ctrl+Shift+Z** y **Ctrl+Y**
+Su historial es propio. **Ctrl+Z**, **Ctrl+Mayús+Z** y **Ctrl+Y**
 deshacen y rehacen el borrador sin tocar el historial de la canción.
 Nada llega a la canción hasta que aplicas el estilo guardado; entonces
 aplicarlo es una edición deshacible.
 
 ## Estilos de usuario
 
-**Save style** escribe en el archivo del que vino el estilo. **Save
-as…** pide uno nuevo. Ambos usan **`.lineup-style`**, un archivo RON
+**Guardar estilo** escribe en el archivo del que vino el estilo. **Guardar como…** pide uno nuevo. Ambos usan **`.lineup-style`**, un archivo RON
 con el nombre del estilo, su métrica, tempo, swing, chart, compases y
 carriles, cada carril con su instrumento y sus notas. Si escribes otra
 extensión, se sustituye: `my groove.txt` se convierte en `my
 groove.lineup-style`.
 
 Los estilos viven en una **carpeta de estilos**, por defecto una
-subcarpeta `styles` de la carpeta de datos de la app. **Edit >
-Settings… > Library > Your styles > Styles folder…** elige otra. Un
-estilo guardado fuera de ella no se lista; el aviso dice que la Library
+subcarpeta `styles` de la carpeta de datos de la app. **Edición > Ajustes… > Biblioteca > Tus estilos > Carpeta de estilos…** elige otra. Un
+estilo guardado fuera de ella no se lista; el aviso dice que la Biblioteca
 lista la carpeta, no el archivo que elegiste.
 
-La Library lee cada archivo `.lineup-style` al arrancar, y otra vez
+La Biblioteca lee cada archivo `.lineup-style` al arrancar, y otra vez
 después de un guardado o un cambio de carpeta. Los ordena por nombre y
 avisa de un archivo dañado. Guardar escribe un archivo temporal y lo
 renombra, así que un cierre inesperado deja el estilo antiguo entero.
 
-Los estilos guardados en esa carpeta se unen a **Presets**, junto a los
-estilos y ritmos integrados. No tienen género, así que **Group by
-genre** los pone bajo **User styles (N)**; el número del encabezado los
-incluye. Un estilo con chart dice **+ chords**; uno sin él dice
-**keeps chords**. **Start from…** muestra la misma lista y búsqueda,
-con **Empty style**; elegir uno lo copia al borrador.
+Los estilos guardados en esa carpeta se unen a **Preajustes**, junto a los
+estilos y ritmos integrados. No tienen género, así que **Agrupar por género** los pone bajo **Estilos de usuario (N)**; el número del encabezado los
+incluye. Un estilo con chart dice **+ acordes**; uno sin él dice
+**conserva los acordes**. **Empezar desde…** muestra la misma lista y búsqueda,
+con **Estilo vacío**; elegir uno lo copia al borrador.
 
-Aplicar un estilo guardado funciona como cualquier otro preset.
-**Playing patterns** trae sus carriles, **Voices / instruments** sus
-sonidos, **Time signature**, **Tempo** y **Swing** los suyos, y
-**Chord progression** su chart. Deja la progresión sin marcar para
+Aplicar un estilo guardado funciona como cualquier otro preajuste.
+**Patrones de ejecución** trae sus carriles, **Voces / instrumentos** sus
+sonidos, **Compás**, **Tempo** y **Swing** los suyos, y
+**Progresión de acordes** su chart. Deja la progresión sin marcar para
 conservar los acordes de la canción. Mira [el capítulo de la
 biblioteca](../step-8/library.md#estilos) y [Trabajar más
 rápido](workflow.md).
 
 ### El estilo viaja con la canción
 
-Cuando se aplica **Playing patterns**, el `UserStyle` entero se guarda
+Cuando se aplica **Patrones de ejecución**, el `UserStyle` entero se guarda
 en la banda:
 
 ```rust
@@ -112,7 +107,7 @@ proyecto](../appendix-project-format.md)); un proyecto así se escribe
 como 22, o más alto si también usa una función posterior. Las versiones
 antiguas no pueden leer un proyecto así.
 
-Por eso un estilo puede desaparecer de **Presets** sin romper una
+Por eso un estilo puede desaparecer de **Preajustes** sin romper una
 canción que lo usa: la canción conserva su propia copia.
 
 ## Cómo funciona
@@ -144,8 +139,8 @@ de ese canal, recortadas a la longitud del patrón.
 aplicarlo: de uno a dieciséis compases, como mucho 256 pasos, un carril
 por músico con altura, y cada nota dentro del patrón.
 
-Aplicar usa los mismos `StyleParts` que un preset integrado
-(`library/apply.rs`), así que las casillas de la Library significan lo
+Aplicar usa los mismos `StyleParts` que un preajuste integrado
+(`library/apply.rs`), así que las casillas de la Biblioteca significan lo
 mismo para ambos. `Band::apply_user_style` clona primero el proyecto,
 valida el estilo, y solo entonces cambia la banda. Guarda el estilo en
 `custom_rhythm` o `custom_instruments`, escribe los patrones de la
@@ -154,20 +149,19 @@ cada altura al acorde que hay debajo.
 
 ## Probarlo
 
-1. Ejecuta `cargo run --release` y abre **File > New**. Pulsa **F6**
-   para el channel rack y haz clic en **Edit style…**. El editor se
-   abre con el estilo actual como borrador, título **Style editor ·
-   channel rack**.
-2. Abre **Start from…**, escribe `bossa` en **Search presets**, y elige
-   un estilo. Prueba **Preview ×4**.
+1. Ejecuta `cargo run --release` y abre **Archivo > Nuevo**. Pulsa **F6**
+   para el rack de canales y haz clic en **Editar estilo…**. El editor se
+   abre con el estilo actual como borrador, título **Editor de estilos · rack de canales**.
+2. Abre **Empezar desde…**, escribe `bossa` en **Buscar preajustes**, y elige
+   un estilo. Prueba **Escuchar ×4**.
 3. Haz clic en unos cuantos pasos de kick y snare. Haz clic en una
    vista previa de nota de piano para abrir el piano roll del editor;
-   dibuja una figura de acordes, y luego pulsa **Space**.
-4. Haz clic en **Save as…**, nómbralo `My groove`, y guárdalo en la
-   carpeta de estilos. Cierra el editor, abre la Library, y encuentra
-   **My groove** bajo **Presets** (o **User styles** cuando está
+   dibuja una figura de acordes, y luego pulsa **Espacio**.
+4. Haz clic en **Guardar como…**, nómbralo `My groove`, y guárdalo en la
+   carpeta de estilos. Cierra el editor, abre la Biblioteca, y encuentra
+   **My groove** bajo **Preajustes** (o **Estilos de usuario** cuando está
    agrupado).
-5. Aplícalo con **Playing patterns** marcado y **Chord progression** sin
+5. Aplícalo con **Patrones de ejecución** marcado y **Progresión de acordes** sin
    marcar. La canción conserva sus acordes y la banda toca tu patrón.
    Guarda el proyecto, cierra la app, luego aparta el archivo
    `.lineup-style` y abre el proyecto otra vez: la banda lo sigue

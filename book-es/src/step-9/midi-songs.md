@@ -18,38 +18,37 @@ clase necesitó su propia manera de encontrar el pulso:
 | `tango_played` | Uno, Sur, Soledad, Nostalgias, Pasional, Patotero sentimental, Qué falta que me hacés, Qué me van a hablar de amor, Marionetas, Tiempos viejos, Yira yira, Los mareados, Mano a mano, La casita de mis viejos, Lluvia de estrellas, La pulpera de Santa Lucía, Malena | un pianista tocando libremente, sin clic |
 
 La melodía, la línea que canta el cantante, está siempre en el canal
-**Lead**. En los arreglos de banda, cada instrumento restante tiene un
+**Melodía**. En los arreglos de banda, cada instrumento restante tiene un
 canal propio, con su programa de General MIDI, y el bombo o la
 percusión toca en la batería. En el piano, todo lo que hay bajo la
-melodía es la mano izquierda, en las Keys.
+melodía es la mano izquierda, en los Teclados.
 
-Los chord sheets se leyeron desde las notas con un script. Para once de
-las canciones de piano, la lectura se comprobó después contra un lead
-sheet, y esas canciones están cortadas en sus estrofas y estribillos,
+Las hojas de acordes se leyeron desde las notas con un script. Para once de
+las canciones de piano, la lectura se comprobó después contra una partitura guía, y esas canciones están cortadas en sus estrofas y estribillos,
 cada una en su propia tonalidad. Las otras seis, y los arreglos de
 banda, siguen siendo una lectura solo de las notas, así que
 trata sus acordes como un borrador.
 
 ## Probarlo
 
-1. Abre **File > Demos**, escribe `Uno` y elige **Uno**. Pulsa Play y
-   mira el tempo en el transport: cambia casi cada compás, entre 78 y
+1. Abre **Archivo > Demostraciones**, escribe `Uno` y elige **Uno**. Pulsa ▶ y
+   mira el tempo en el transporte: cambia casi cada compás, entre 78 y
    98 por negra, porque el pianista se frena y se apura con la letra.
    Eso es **rubato**, tiempo «robado».
-2. Abre **Malena** y el **mixer**. Lead es la melodía del pianista;
-   Bandoneón, Guitar, Contrabass y Strings son los otros instrumentos
+2. Abre **Malena** y el **mezclador**. Melodía es la melodía del pianista;
+   Bandoneón, Guitarra, Contrabajo y Cuerdas son los otros instrumentos
    del arreglo, cada uno en una franja propia.
 3. Abre **Balderrama** y mira la tonalidad en la barra de armonía:
-   **Mi menor**. Después abre el piano roll del canal Lead en los
+   **Mi menor**. Después abre el piano roll del canal Melodía en los
    compases 21 y 22 y encuentra los do sostenidos.
-4. Abre **Acuarela del río**. Pon en solo **Double bass**, luego
-   **Keys**, luego la batería, y escucha dónde golpea cada uno en el
+4. Abre **Acuarela del río**. Pon en solo **Contrabajo**, luego
+   **Teclados**, luego la batería, y escucha dónde golpea cada uno en el
    compás.
-5. Abre **Zamba de mi esperanza** y silencia **Lead**. El canal
-   **Second voice** canta la nota grave allí donde la melodía se canta
+5. Abre **Zamba de mi esperanza** y silencia **Melodía**. El canal
+   **Segunda voz** canta la nota grave allí donde la melodía se canta
    a dos voces.
-6. Abre **Yira, yira** y mira pasar las partes en la playlist: Verse
-   1a, Verse 1b, Refrain 1, y otra vez la canción. La barra de armonía
+6. Abre **Yira, yira** y mira pasar las partes en la lista de reproducción: Estrofa
+   1a, Estrofa 1b, Estribillo 1, y otra vez la canción. La barra de armonía
    muestra **Si menor** en las estrofas y **Re mayor** en los
    estribillos.
 
@@ -178,7 +177,7 @@ pub(super) const BALDERRAMA: Song = Song {
 };
 ```
 
-`Band::new` nombra los programas del Lead, las Keys y el Bass. Es un
+`Band::new` nombra los programas de la Melodía, los Teclados y el Bajo. Es un
 `const fn`, así que se ejecuta mientras se compila el programa y la
 banda puede vivir dentro de una constante. `gm::TANGO_ACCORDION` es el
 programa 23 de General MIDI, lo más cercano que tiene el estándar a un
@@ -326,25 +325,25 @@ acorde propio: una sexta que añade el pianista convierte Bm en Bm6, una
 nota de la melodía de paso añade una novena bemol a F#7, y una nota de
 paso puede crear un acorde que no está en absoluto.
 
-### Comprobar los acordes contra un lead sheet
+### Comprobar los acordes contra una partitura guía
 
-Un **lead sheet** es la melodía con los nombres de los acordes encima,
+Una **partitura guía** es la melodía con los nombres de los acordes encima,
 la página desde la que tocan un cantante y una banda. Sus acordes son
 los que la canción debería tener, pero sus compases no se alinean con
 una interpretación libre: el pianista añade una introducción, toca una
-sección dos veces, estira un compás. Así que los acordes del sheet no
-se pusieron sobre los compases uno a uno. En su lugar, el sheet le da
+sección dos veces, estira un compás. Así que los acordes de la partitura no
+se pusieron sobre los compases uno a uno. En su lugar, la partitura le da
 al lector su **vocabulario**: solo se pueden elegir los acordes que usa
-el sheet.
+la partitura.
 
-El sheet suele estar en otra tonalidad que el pianista. El sheet de Uno
+La partitura suele estar en otra tonalidad que el pianista. La partitura de Uno
 está en Sol y el pianista toca en Do, cinco semitonos más agudo, así
-que cada acorde del sheet se mueve una cuarta hacia arriba antes de
+que cada acorde de la partitura se mueve una cuarta hacia arriba antes de
 usarse: G se convierte en C, D7 en G7, Em en Am. Mover todos los
 acordes por el mismo intervalo es **transportar**. Conserva el papel de
 cada acorde en la tonalidad, así que la canción es la misma canción.
 
-Yira, yira muestra lo que hace el vocabulario. Su sheet usa Bm, F#7,
+Yira, yira muestra lo que hace el vocabulario. Su partitura usa Bm, F#7,
 A7, D, G, B7 y Em. Los compases 38 a 40, leídos solo desde las notas,
 eran
 
@@ -352,7 +351,7 @@ eran
 Bm6 F#7b9 | Bm F#7 | Bm A7
 ```
 
-y limitados a los acordes del sheet son
+y limitados a los acordes de la partitura son
 
 ```text
 Bm F#7 | Bm F#7 | Bm A7
@@ -361,7 +360,7 @@ Bm F#7 | Bm F#7 | Bm A7
 La mano izquierda del pianista colorea el Si menor con un sol
 sostenido, su sexta, y la melodía toca sol al final del compás, una
 novena bemol sobre F#7. Bajo esos colores están los acordes sobre los
-que está construida la canción, los que nombra el sheet: Bm y F#7, **i**
+que está construida la canción, los que nombra la partitura: Bm y F#7, **i**
 y **V7** de Si menor, la tónica y la séptima de dominante.
 
 Cinco canciones se cortaron también donde cambia su forma: Yira, yira,
@@ -377,7 +376,7 @@ compases se arreglaron a mano, como los cuatro primeros compases de
 Yira, yira, donde la mano izquierda entra tarde en cada compás y la
 lectura la perdía.
 
-Para las canciones sin lead sheet, las notas se comprobaron una a una.
+Para las canciones sin partitura guía, las notas se comprobaron una a una.
 Tiempos viejos acaba en Re, Fa, La y Si. El script lo había llamado
 **Bm7b5** (Si Re Fa La), y son las mismas cuatro notas, pero el bajo
 toca Re debajo y llega después de A7, la dominante de Re menor, así que
@@ -434,7 +433,7 @@ del río perdió 10 notas de 2408.
 ## Ejercicios
 
 1. Toca **Uno** y apunta el tempo de sus ocho primeros compases desde
-   el transport. ¿Dónde se frena el pianista? ¿Qué pasa en la letra
+   el transporte. ¿Dónde se frena el pianista? ¿Qué pasa en la letra
    allí?
 2. Da palmadas con las dos agrupaciones de seis corcheas, 3+3 y 2+2+2,
    y después ambas a la vez con un amigo. Luego toca **Acuarela del
@@ -442,10 +441,10 @@ del río perdió 10 notas de 2408.
 3. Escribe las escalas de Mi menor natural, Mi menor armónica y Mi
    dórica. ¿Qué nota difiere en cada una? Después toca los compases 21
    a 23 de Balderrama y nombra el acorde bajo los do sostenidos.
-4. Elige una de las seis canciones de piano sin lead sheet aún
+4. Elige una de las seis canciones de piano sin partitura guía aún
    (Patotero sentimental, Qué falta que me hacés, Qué me van a hablar
    de amor, Tiempos viejos, La casita de mis viejos, Lluvia de
-   estrellas), encuentra un lead sheet y comprueba una parte contra él.
+   estrellas), encuentra una partitura guía y comprueba una parte contra ella.
    ¿Qué acordes fallaron las notas solas?
 5. En Do mayor, nombra la tecla negra entre Fa y Sol: sobre un acorde
    D7; en la línea Sol, ?, Fa; y sobre un Ab7 que va a G. Después

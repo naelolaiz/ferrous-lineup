@@ -11,7 +11,7 @@ propósito, porque la melodía no debía moverse. Eso funciona mientras
 el ritmo esté en el mismo compás que la canción. Sale mal cuando no lo
 está.
 
-Elige «Jazz waltz» (3/4) mientras suena «Oda a la alegría» (4/4). Un
+Elige «Vals de jazz» (3/4) mientras suena «Oda a la alegría» (4/4). Un
 compás de vals dura doce pasos, uno de 4/4 dieciséis. Colocado en
 compases de 4/4, el vals toca su «un dos tres» y luego un pulso de
 silencio, en cada compás: la batería cambia, pero el compás sigue
@@ -54,7 +54,7 @@ Así que el tempo baja en la misma proporción que el compás: 4/4 a 112
 se convierte en 3/4 a 84. Un compás de 3/4 a 84 dura exactamente lo
 mismo que un compás de 4/4 a 112 (2.14 segundos), y la canción tarda
 exactamente lo mismo que antes. Los cambios de tempo dentro de la
-canción (un ritardando al final) se escalan igual. «Use their tempo»
+canción (un ritardando al final) se escalan igual. «Tempo»
 no se aplica cuando el compás cambia: el tempo propio del ritmo
 precipitaría o arrastraría la canción.
 
@@ -90,15 +90,15 @@ en 4/4 con una última línea en 3/4, sale en un único compás: cada
 compás, fuera lo que fuera, se convierte en un compás del nuevo, y los
 marcadores de tiempo se van.
 
-## El cuadro Time lo hace también
+## El cuadro Compás lo hace también
 
 Al principio solo la biblioteca cambiaba el compás de la canción.
-Elegir 3/4 en el Time de las harmony keys (o en el menú sobre el
-compás 1 del playlist) hacía lo de siempre: cambiaba el compás y nada
+Elegir 3/4 en el Compás de las teclas de armonía (o en el menú sobre el
+compás 1 de la lista de reproducción) hacía lo de siempre: cambiaba el compás y nada
 más. Cada nota se quedaba en su paso, y solo las líneas de compás se
 dibujaban en otros sitios.
 
-El primer arreglo hizo que el Time comprimiera cada compás, como hace
+El primer arreglo hizo que el Compás comprimiera cada compás, como hace
 un ritmo. Seguía sonando exactamente igual, y vale la pena ver por
 qué. La compresión mete cuatro negras en tres pulsos, y el tempo baja
 para que el compás dure lo mismo que antes (ver arriba). Las dos cosas
@@ -204,7 +204,7 @@ Esa línea vive en `Remap::tick`. Un `Remap` guarda el
 [`Meter`](time-markers.md) viejo de la canción (dónde empieza cada
 compás viejo y cuánto dura) y la longitud de un compás nuevo. Todo lo
 colocado en la canción le pregunta adónde va: notas, clips, secciones,
-el loop, marcadores de tempo y de tonalidad. El glide de un marcador
+el bucle, marcadores de tempo y de tonalidad. El glide de un marcador
 de tempo se mapea por sus dos extremos, así que un ritardando a lo
 largo de dos compases de 4/4 dura dos compases de 3/4.
 
@@ -213,9 +213,9 @@ largo de dos compases de 4/4 dura dos compases de 3/4.
 Un patrón contiene como mucho 256 pasos. Dieciséis compases de 4/4 son
 justo eso, pero dieciséis compases de 12/8 son 384 pasos. En lugar de
 soltar notas, el patrón se corta en trozos que caben (diez compases de
-12/8, luego seis), llamados «Theme», «Theme (2)» y así, y cada clip
+12/8, luego seis), llamados «Tema», «Tema (2)» y así, y cada clip
 suyo se convierte en clips de los trozos, uno tras otro. La canción
-suena igual; solo el playlist muestra un clip más.
+suena igual; solo la lista de reproducción muestra un clip más.
 
 ## El original sigue siendo la referencia
 
@@ -237,7 +237,7 @@ sigue sin cambios ([La biblioteca](library.md)): guarda pares de
 (canción que hizo la biblioteca, canción desde la que empezó) y
 compara el proyecto con ellos. Si cambias una nota, el proyecto no
 coincide con ninguno, así que se convierte en el nuevo original: tu
-edición se conserva. Undo y redo traen de vuelta versiones que hizo la
+edición se conserva. Deshacer y Rehacer traen de vuelta versiones que hizo la
 biblioteca, que sí coinciden, así que la referencia sobrevive a
 Ctrl+Z.
 
@@ -270,8 +270,8 @@ Mientras la canción suena, tú estás en algún sitio: compás 13, pulso
 reproducción con la canción: construye un `Remap` a partir del compás
 de la canción *tal como se reprodujo* (repeticiones incluidas) y envía
 el hilo de audio al sitio nuevo. La canción continúa desde el compás
-13, pulso 2, en 3/4. Lo mismo pasa con dónde empieza Play y adónde
-vuelve Stop, y después de Ctrl+Z y Ctrl+Y, que también cambian el
+13, pulso 2, en 3/4. Lo mismo pasa con dónde empieza ▶ y adónde
+vuelve ⏹, y después de Ctrl+Z y Ctrl+Y, que también cambian el
 compás de un lado a otro. Ese caso no usa `Remap` (la canción a la que
 deshaces puede tener marcadores de tiempo propios): encuentra en qué
 compás está el cabezal de reproducción, y a qué altura de él, y va al
@@ -280,7 +280,7 @@ mismo compás y a la misma fracción de él.
 ## Rincón de Rust
 
 - **`pub(crate)`.** `remeter` reescribe los clips y marcadores del
-  playlist directamente, así que los campos `patterns` y `playlist` de
+  lista de reproducción directamente, así que los campos `patterns` y `playlist` de
   `Project` pasaron a ser `pub(crate)`: visibles para todos los
   módulos de `lineup-core`, todavía ocultos para la app. Las reglas
   del proyecto (cada clip apunta a un patrón que existe) las mantiene
@@ -299,12 +299,12 @@ mismo compás y a la misma fracción de él.
 
 ## Pruébalo
 
-1. Abre «Oda a la alegría» desde File > Demos y reprodúcela. En la
-   Library, busca «jazz waltz» y haz clic en el ritmo. El Time dice
+1. Abre «Oda a la alegría» desde Archivo > Demostraciones y reprodúcela. En la
+   Biblioteca, busca «vals de jazz» y haz clic en el ritmo. El Compás dice
    3/4, el tempo pasa de 124 a 93, la canción continúa desde el mismo
    compás, y la melodía suena igual que antes: solo cambian la batería
    y los acordes.
-2. Haz clic en «Zamba» (6/8), luego en «Pop beat» (4/4). El último
+2. Haz clic en «Zamba» (6/8), luego en «Ritmo pop» (4/4). El último
    devuelve exactamente la canción en 4/4. Ctrl+Z retrocede por cada
    uno de ellos.
 3. Cambia una nota en el piano roll, luego elige un ritmo en 3/4,
@@ -313,7 +313,7 @@ mismo compás y a la misma fracción de él.
 4. Pausa a mitad de la canción, elige un vals, y luego pulsa Ctrl+Z y
    Ctrl+Y. El cabezal de reproducción se queda en el mismo compás cada
    vez, y el tempo va y viene entre los dos.
-5. Abre El Choclo y elige 3/4 en el Time. La barra de estado dice que
+5. Abre El Choclo y elige 3/4 en el Compás. La barra de estado dice que
    la canción ahora toca Tango vals en 3/4, y oyes tres pulsos por
    compás. Elige 5/4: un pulso básico en cinco. Elige 4/4: El Choclo
    como era.

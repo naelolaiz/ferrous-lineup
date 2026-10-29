@@ -25,7 +25,7 @@ ese camino como está. Los músicos usan estos números todo el tiempo
 
 *Practica:* `Option` en código de dibujo, `painter.text`.
 
-## 3. Velocity desde el teclado (lineup-app, medio)
+## 3. Velocidad desde el teclado (lineup-app, medio)
 
 La velocity ya está en la aplicación: `NoteEvent` tiene un `velocity`,
 el `velocity_lane` del piano roll lo edita con el ratón, y el
@@ -45,7 +45,7 @@ egui, aritmética de `u8`.
 ## 4. Inversiones, y un drop-2 (lineup-core, medio)
 
 `tools::inversion(pitches, times)` y `tools::invert(notes, up)` ya están
-en la aplicación: la lista de inversiones del menú Draw usa `inversion`
+en la aplicación: la lista de inversiones del menú Dibujar usa `inversion`
 para los acordes estampados, y `Tool::Invert { up }` llama a `invert`.
 Lee `chords`, `above`/`below` e `invert`.
 
@@ -61,13 +61,13 @@ que comprueban tu propia salida.
 ## 5. Ajustar a la escala, con una dirección (lineup-core y lineup-app, medio)
 
 `tools::nearest_in_key` y `tools::snap_to_scale` ya están en la
-aplicación, y la casilla «Snap to scale» del piano roll los usa. Lee
+aplicación, y la casilla «Ajustar a la escala» del piano roll los usa. Lee
 `nearest_in_key`: prueba un semitono por debajo, luego por encima, luego
 dos, así que en caso de empate gana la nota más grave.
 
 Luego amplíalo con `nearest_in_key_towards(note, scale, direction)`, que
 rompe el empate en la dirección en la que se mueve la melodía. Llámalo
-desde una segunda casilla o un elemento de Tools, y escribe pruebas para
+desde una segunda casilla o un elemento de Herramientas, y escribe pruebas para
 notas exactamente a mitad de camino entre dos notas de la escala, en
 ambas direcciones. ¿Qué prueba existente en `tools.rs` fija la regla del
 empate, y la función nueva cambiaría su respuesta?

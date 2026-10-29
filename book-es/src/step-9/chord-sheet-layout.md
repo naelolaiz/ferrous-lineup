@@ -1,54 +1,54 @@
-# El chord sheet llena la ventana, con líneas que se ajustan a los nombres
+# La hoja de acordes llena la ventana, con líneas que se ajustan a los nombres
 
 Archivos: [`crates/lineup-app/src/chord_sheet/layout.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet/layout.rs),
 [`crates/lineup-app/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet.rs),
 [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs)
 y [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
-[El chord sheet](chord-sheet.md) ponía cuatro compases en cada línea,
-en una ventana sobre la playlist. Cuatro compases es lo que suele tener
-un chart impreso, pero el sheet ahora escribe nombres mucho más largos
+[La hoja de acordes](chord-sheet.md) ponía cuatro compases en cada línea,
+en una ventana sobre la lista de reproducción. Cuatro compases es lo que suele tener
+un chart impreso, pero la hoja ahora escribe nombres mucho más largos
 que "C" y "G7": poliacordes como "Eb7|Fb", conjuntos como "3-11 T7I",
 micromodos como "Acorde menor-mayor T7I", cada uno con un numeral o sus
 notas debajo. Con cuatro de esos en un compás y cuatro compases por
-línea, los nombres no cabían, y el sheet los hacía más pequeños hasta
+línea, los nombres no cabían, y la hoja los hacía más pequeños hasta
 que cupieran. En una pantalla ancha era al revés: una canción corta en
-cajas vacías grandes, y una ventana que tapaba la playlist.
+cajas vacías grandes, y una ventana que tapaba la lista de reproducción.
 
-Dos cambios, ambos arriba del sheet, junto a **Show**:
+Dos cambios, ambos arriba de la hoja, junto a **Mostrar**:
 
-- **Bars per line.** Por defecto, **Fit the names**: tantos compases
+- **Compases por línea.** Por defecto, **Ajustar a los nombres**: tantos compases
   como quepan en una línea con cada nombre y cada palabra debajo a su
   tamaño completo, nunca encogidos. El menú dice cuántos son ahora, como
-  en **Fit (4)**. O elige un número de 1 a 16; entonces la línea
+  en **Ajustar (4)**. O elige un número de 1 a 16; entonces la línea
   contiene ese número, y los nombres que no caben se escriben más
   pequeños.
-- **⛶ Fill the window.** El sheet ocupa el lugar de la playlist en la
-  ventana principal, junto a los patrones y la Library. Con todo el
-  ancho, una línea contiene más compases. **Back to the playlist** lo
-  devuelve a su ventana. El mismo interruptor está en el menú **View**
-  como **Chord sheet in the main window**.
+- **⛶ Llenar la ventana.** La hoja ocupa el lugar de la lista de reproducción en la
+  ventana principal, junto a los patrones y la Biblioteca. Con todo el
+  ancho, una línea contiene más compases. **Volver a la lista de reproducción** lo
+  devuelve a su ventana. El mismo interruptor está en el menú **Ver**
+  como **Hoja de acordes en la ventana principal**.
 
 Ambos se recuerdan de una ejecución de la app a la siguiente. Y **F5**
-sigue abriendo y cerrando el sheet: cerrado y abierto de nuevo, vuelve a
+sigue abriendo y cerrando la hoja: cerrada y abierta de nuevo, vuelve a
 donde estaba, en la ventana principal o en la suya.
 
 ![Embraceable You en el chord sheet, llenando la ventana principal junto a los patrones: cuatro compases por línea, donde su ventana tenía sitio para dos, y cada nombre y numeral a su tamaño completo.](../images/step-9-chord-sheet-fills-window.png)
 
 ## Pruébalo
 
-1. Abre una canción desde **File > Demos**. Las canciones se abren en el
-   chord sheet.
-2. Haz la ventana del sheet más estrecha y más ancha por su esquina. Con
-   **Fit the names**, las líneas contienen 1, 2, 4, 8, 12 o 16 compases,
-   y el **Fit (N)** del menú lo sigue. Los nombres conservan su tamaño.
-3. Haz clic en **⛶ Fill the window**. La playlist deja sitio al sheet, y
-   las líneas se alargan. El channel rack, el piano roll y el mixer
+1. Abre una canción desde **Archivo > Demostraciones**. Las canciones se abren en el
+   hoja de acordes.
+2. Haz la ventana de la hoja más estrecha y más ancha por su esquina. Con
+   **Ajustar a los nombres**, las líneas contienen 1, 2, 4, 8, 12 o 16 compases,
+   y el **Ajustar (N)** del menú lo sigue. Los nombres conservan su tamaño.
+3. Haz clic en **⛶ Llenar la ventana**. La lista de reproducción deja sitio a la hoja, y
+   las líneas se alargan. El rack de canales, el piano roll y el mezclador
    siguen abriéndose encima con F6, F7 y F9.
-4. Elige **Bars per line > 16**. Los nombres que no caben en un
+4. Elige **Compases por línea > 16**. Los nombres que no caben en un
    dieciseisavo del ancho se hacen más pequeños, todos los nombres de un
    compás al mismo tamaño.
-5. Elige otra vez **Fit the names**, y **Back to the playlist**.
+5. Elige otra vez **Ajustar a los nombres**, y **Volver a la lista de reproducción**.
 
 ![El menú Bars per line: Fit the names, o un número de compases de 1 a 16 (la lista se desplaza hasta 15 y 16).](../images/step-9-chord-sheet-bars-per-line.png)
 
@@ -77,7 +77,7 @@ const FITS: [usize; 6] = [16, 12, 8, 4, 2, 1];
 const NARROWEST_BAR: f32 = 110.0;
 ```
 
-`NARROWEST_BAR` está para las canciones de nombres cortos. Un sheet de
+`NARROWEST_BAR` está para las canciones de nombres cortos. Una hoja de
 "C" y "G" si no cabría dieciséis compases en una ventana que muestra
 cuatro con holgura, y un compás demasiado estrecho para hacer clic o
 teclear en él.
@@ -150,11 +150,11 @@ número que mantenga juntas las frases, así que son dos.
 
 ## Cuánto de ancho debe ser un compás
 
-Antes de dibujar, el sheet pregunta a cada compás de la canción cuánto
+Antes de dibujar, la hoja pregunta a cada compás de la canción cuánto
 debe medir de ancho, y se queda con el más ancho. Los nombres de un
 compás no comparten su anchura a partes iguales: **cada nombre tiene la
 parte del compás que va de su pulso al del siguiente nombre**, porque
-ahí es donde lo dibuja el sheet. En un compás de 4/4 de "C A7", C tiene
+ahí es donde lo dibuja la hoja. En un compás de 4/4 de "C A7", C tiene
 los pulsos 1 y 2, la mitad del compás, y A7 lo mismo. En "C / / A7", C
 tiene tres cuartos y A7 uno.
 
@@ -216,11 +216,11 @@ tres reglas:
   T8I"), y donde ni eso cabe, "…": un nombre cortado se leería como otro
   nombre.
 
-## Ocupar el lugar de la playlist
+## Ocupar el lugar de la lista de reproducción
 
 La ventana principal tiene un panel central, donde se dibuja la
-playlist. Cuando el sheet llena la ventana, ese panel dibuja el sheet en
-su lugar, siempre junto a la lista de Patterns y la Library:
+lista de reproducción. Cuando la hoja llena la ventana, ese panel dibuja la hoja en
+su lugar, siempre junto a la lista de Patrones y la Biblioteca:
 
 ```rust
 // The chord sheet can take the playlist's place, beside the
@@ -241,22 +241,22 @@ let playlist = egui::CentralPanel::default_margins().show(ui, |ui| {
 ```
 
 Ambas ramas devuelven un par de listas de acciones: lo que pide la
-playlist (o el browser junto al sheet) y lo que pide el sheet. El `if`
+lista de reproducción (o el browser junto a la hoja) y lo que pide la hoja. El `if`
 es una expresión, así que las dos ramas deben tener el mismo tipo; la
-rama de la playlist devuelve un `Vec` vacío para las acciones del sheet.
+rama de la lista de reproducción devuelve un `Vec` vacío para las acciones de la hoja.
 La app aplica luego ambas listas de la misma manera, se haya dibujado lo
 que se haya dibujado.
 
-`ChordSheet::main` dibuja el mismo contenido que la ventana del sheet:
+`ChordSheet::main` dibuja el mismo contenido que la ventana de la hoja:
 las mismas filas de botones, los mismos compases, las mismas
 tonalidades. Solo cambia el marco que los rodea. Así que todo lo que el
-sheet hace en su ventana lo hace en la ventana principal, sin una
+hoja hace en su ventana lo hace en la ventana principal, sin una
 segunda copia del código.
 
 `remember` se llama **antes** que `fills_window`. Lee las elecciones
 guardadas por la última ejecución, la primera vez que se llama. Si se
-llamara después, el primer fotograma dibujaría la playlist y el segundo
-el sheet: un destello de la vista equivocada cada vez que arranca la
+llamara después, el primer fotograma dibujaría la lista de reproducción y el segundo
+la hoja: un destello de la vista equivocada cada vez que arranca la
 app.
 
 ## Recordar las elecciones
@@ -308,10 +308,10 @@ fotogramas.
 
 ## Las flechas siguen cayendo en la columna correcta
 
-El primer capítulo del chord sheet terminaba con un ejercicio: hacer del
+El primer capítulo de la hoja de acordes terminaba con un ejercicio: hacer del
 número de compases por línea un ajuste, y comprobar que las flechas
 arriba y abajo siguen cayendo en la columna correcta. Lo hacen, porque
-nunca contaron compases. El sheet guarda cada compás dibujado como una
+nunca contaron compases. La hoja guarda cada compás dibujado como una
 celda con su **línea** y su **columna**, y la flecha abajo busca la
 celda de la línea siguiente cuya columna esté más cerca de la
 seleccionada:
@@ -338,25 +338,24 @@ comprueba `count` con los números de arriba.
 
 En la app, `lines_hold_as_many_bars_as_show_every_name_in_full` abre una
 canción cuyo primer compás es "Dm7/C F/C G7/D C/E", cuatro armonías en
-un compás. Comprueba que el sheet contiene menos de cuatro compases por
+un compás. Comprueba que la hoja contiene menos de cuatro compases por
 línea y que cada nombre se dibuja a su tamaño completo, 20 puntos. Luego
 elige 8: el menú ya no dice "Fit (8)", y "Dm7/C" es más pequeño. Elegir
-otra vez **Fit the names** devuelve el primer número y el tamaño
+otra vez **Ajustar a los nombres** devuelve el primer número y el tamaño
 completo.
 
-`the_sheet_fills_the_main_window_and_goes_back` hace clic en **⛶ Fill
-the window** y comprueba que la palabra "Playlist" ha desaparecido, que
-"Patterns" sigue ahí, que las líneas contienen más compases que en la
-ventana y que los nombres están enteros. Cierra y abre el sheet con F5,
-reinicia la app y encuentra el sheet en la ventana principal cada vez.
-**Back to the playlist** y el elemento del menú View lo rematan.
+`the_sheet_fills_the_main_window_and_goes_back` hace clic en **⛶ Llenar la ventana** y comprueba que la palabra "Lista de reproducción" ha desaparecido, que
+"Patrones" sigue ahí, que las líneas contienen más compases que en la
+ventana y que los nombres están enteros. Cierra y abre la hoja con F5,
+reinicia la app y encuentra la hoja en la ventana principal cada vez.
+**Volver a la lista de reproducción** y el elemento del menú Ver lo rematan.
 
 ## Ejercicios
 
 1. Una canción en 3/4 a menudo se escribe en chart con ocho compases por
    línea, un vals incluso dieciséis. ¿Debería `FITS` depender del
    compás? ¿Qué le pasarías a `count`?
-2. `needed_width` hace que el compás más ancho decida por todo el sheet.
+2. `needed_width` hace que el compás más ancho decida por toda la hoja.
    Haz que decida por **sección**, para que una estrofa de acordes
    cortos pueda tener más compases por línea que un puente de
    poliacordes. ¿Qué les pasa a las flechas arriba y abajo entre

@@ -9,7 +9,7 @@ canción que te guste, escrita en numerales. Por ejemplo la progresión
 antes de abrir la app: si un numeral está mal escrito, o un compás no
 puede compartirse entre sus acordes, una prueba nombra el estilo.
 
-Luego pruébalo en otra tonalidad desde la pestaña Library, y mira su
+Luego pruébalo en otra tonalidad desde la pestaña Biblioteca, y mira su
 tooltip. ¿Qué acordes cambian de nombre, y qué numerales se quedan
 igual?
 
@@ -18,7 +18,7 @@ pruebas.
 
 ## 2. Una segunda chacarera (lineup-core, fácil)
 
-La Library ya tiene `Chacarera` y `Chacarera trunca` en `STYLES` y
+La Biblioteca ya tiene `Chacarera` y `Chacarera trunca` en `STYLES` y
 `RHYTHMS`, y *Chacarera del patio* en `SONGS`. Lee primero los dos
 ritmos: `Chacarera` en 6/8 pone la cabeza del bombo contra su aro, y
 `Chacarera trunca` en 3/4 corta sus frases antes. Luego añade un tercer
@@ -40,9 +40,8 @@ ritmos, compases `const`.
 
 ## 3. Latch (lineup-app, fácil)
 
-Para grabar un acorde largo, tienes que mantener pulsada la harmony key
-durante todo el acorde. Añade un interruptor **Latch** junto a Triads,
-7ths y 9ths: mientras está encendido, una harmony key sigue sonando
+Para grabar un acorde largo, tienes que mantener pulsada la tecla de armonía
+durante todo el acorde. Añade un interruptor **Retener** junto a Tríadas, Séptimas y Novenas: mientras está encendido, una tecla de armonía sigue sonando
 después de soltar, hasta que se pulsa otra tecla o se apaga Latch.
 
 Mira `Down` y `Holder`. ¿Podría un acorde con Latch ser un tercer tipo
@@ -57,12 +56,11 @@ la tonalidad menor con la misma tónica: iv (Fa menor en Do), bVI (La♭),
 bVII (Si♭) y bIII (Mi♭). Esto se llama *mixtura modal*, y está detrás de
 muchos de los momentos agridulces del pop.
 
-Añade una segunda fila de teclas, más pequeña, debajo de las harmony
-keys con estos cuatro acordes, construidos a partir de numerales con
+Añade una segunda fila de teclas, más pequeña, debajo de las teclas de armonía con estos cuatro acordes, construidos a partir de numerales con
 `library::numeral::parse` y `RomanChord::in_key`. Dales su propio color,
 y un tooltip que diga qué acorde de la tonalidad menor es cada uno.
 
-*Prácticas:* reutilizar los numerales de la Library, maquetación de egui.
+*Prácticas:* reutilizar los numerales de la Biblioteca, maquetación de egui.
 
 ## 5. Ampliar una canción que ya está ahí (lineup-core, medio)
 
@@ -76,7 +74,7 @@ a compás con `|` entre compases, dale un chart de acordes, y añádela al
 `form` de la canción.
 
 Deja que las pruebas te digan qué compases no cuadran. Luego ábrela
-desde **File > Demos**. ¿Encuentra `analyze` los acordes que escribiste
+desde **Archivo > Demostraciones**. ¿Encuentra `analyze` los acordes que escribiste
 mientras suena? Si no, ¿qué notas lo confunden?
 
 *Prácticas:* la notación de melodías, leer datos existentes, las pruebas
@@ -98,7 +96,7 @@ pasos, y un compás ya no es un número fijo de ellos, así que:
   `Meter::bar_at` por un patrón necesitaría preguntar en su lugar al mapa
   del patrón: las herramientas de notas, `Project::pattern_clicks`, las
   líneas de compás del piano roll?
-- ¿Qué deberían preguntar el playlist y el piano roll cuando un clip
+- ¿Qué deberían preguntar la lista de reproducción y el piano roll cuando un clip
   empieza a mitad de un patrón?
 - ¿Cómo lo tendría en cuenta `format_for`, para que un patrón en un solo
   compás se escriba exactamente como ahora?
@@ -113,7 +111,7 @@ aritmética de compases, mantener compatibles los archivos.
 
 ## 7. Recordar el nivel de ayuda (lineup-app, medio)
 
-El nivel de ayuda vuelve a Short cada vez que la app arranca. eframe ya
+El nivel de ayuda vuelve a Breve cada vez que la app arranca. eframe ya
 guarda la memoria propia de egui entre ejecuciones (el zoom y las
 posiciones de las ventanas, ver [Adaptarse a cualquier ventana](fitting-the-window.md)),
 porque su feature `persistence` está encendida. Los ajustes propios de
@@ -121,18 +119,18 @@ la app necesitan un poco más: da a `HintLevel` los `Serialize` y
 `Deserialize` de serde, guárdalo en `App::save` con `eframe::set_value`,
 y léelo de vuelta con `eframe::get_value` desde
 `CreationContext::storage` cuando la app arranque. ¿Qué otros ajustes
-recordarías de la misma forma? Si el channel rack está abierto es uno.
+recordarías de la misma forma? Si el rack de canales está abierto es uno.
 
 *Prácticas:* features de Cargo, derives de serde, el trait `eframe::App`.
 
 ## 8. Haz zoom de los popups también (lineup-app, pequeño)
 
-Haz zoom del channel rack al 150% y haz clic derecho en el nombre de un
+Haz zoom del rack de canales al 150% y haz clic derecho en el nombre de un
 canal: el menú se dibuja al tamaño normal. Un popup es una capa propia,
 así que nunca ve el estilo que cambió el contenido de la ventana (ver
 [Encontrar tus notas](finding-your-notes.md)). Encuentra dónde deja egui
 cambiar el estilo de un popup o de un combo box, y dale la escala de la
-ventana. (El playlist y el piano roll ya no escalan su texto al hacer
+ventana. (La lista de reproducción y el piano roll ya no escalan su texto al hacer
 zoom: ver [Una cacería de errores](bug-hunt.md).)
 
 *Prácticas:* leer el código fuente de una biblioteca, las capas y los
@@ -140,9 +138,8 @@ estilos de egui.
 
 ## 9. Ayudas en todas partes (lineup-app, pequeño)
 
-Solo la barra de herramientas y las harmony keys dan algo que decir a la
-barra de ayuda (ver [Un aspecto más claro](look-and-transport.md)). El
-channel rack, el playlist y el piano roll siguen usando `on_hover_text`
+Solo la barra de herramientas y las teclas de armonía dan algo que decir a la
+barra de ayuda (ver [Un aspecto más claro](look-and-transport.md)). El rack de canales, la lista de reproducción y el piano roll siguen usando `on_hover_text`
 a secas. Cámbialos a `theme::hint`, y haz que la barra de ayuda muestre
 el zoom actual o el nombre del patrón cuando no haya nada bajo el ratón.
 ¿Por qué `theme::hint` recibe el `Response` por valor y lo devuelve, en
@@ -153,7 +150,7 @@ egui, leer el módulo de otro antes de cambiarlo.
 
 ## 10. Escuchar mejor (lineup-core, medio)
 
-Oír acordes acierta cerca del 91% de la Library cuando cada estilo se
+Oír acordes acierta cerca del 91% de la Biblioteca cuando cada estilo se
 toca de todas las formas (ver [Un ritmo nuevo para una canción](new-rhythm.md)).
 Escribe esa comprobación como una prueba propia: recorre `STYLES` en
 bucle, toca cada chart con cada `Comping` y unas cuantas líneas de
@@ -171,9 +168,8 @@ con pruebas.
 
 ## 11. Un cambio de tempo en un patrón (lineup-core, pequeño)
 
-`TempoMark` pone las marcas de una demo en el playlist (ver [Cambios de
-tempo, y tocar como una persona](tempo-and-feel.md)). La Toccata in D
-minor tiene seis fermatas en los compases que toca su demo, dejadas
+`TempoMark` pone las marcas de una demo en la lista de reproducción (ver [Cambios de
+tempo, y tocar como una persona](tempo-and-feel.md)). La Tocata en Re menor tiene seis fermatas en los compases que toca su demo, dejadas
 fuera porque la demo ya escribe esas notas largas. Acorta las notas a lo
 que escribió Bach, añade las fermatas con `.with_tempo`, y escucha las
 dos versiones. Cuenta el paso de cada fermata desde el principio de la

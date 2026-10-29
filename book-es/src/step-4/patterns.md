@@ -1,4 +1,4 @@
-# Muchos patrones, y un playlist para ordenarlos
+# Muchos patrones, y una lista de reproducción para ordenarlos
 
 Archivos: [`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/project.rs),
 [`crates/lineup-core/src/playlist.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/playlist.rs)
@@ -7,7 +7,7 @@ y [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-lin
 ## La forma de un proyecto
 
 En el paso 3 un proyecto tenía un patrón. Ahora tiene una lista de ellos,
-y un playlist que dice dónde suena cada uno:
+y una lista de reproducción que dice dónde suena cada uno:
 
 ```rust
 pub struct Project {
@@ -25,7 +25,7 @@ basados en patrones funcionan así: un patrón es «lo que toca cada
 instrumento durante estos compases», así que el patrón de batería tiene
 filas vacías para el sintetizador.
 
-El playlist son dos listas:
+La lista de reproducción son dos listas:
 
 ```rust
 pub struct Track {
@@ -91,7 +91,7 @@ El comentario de `Project` enumera las reglas que mantiene:
 
 - cada patrón tiene una fila de notas por canal, en el mismo orden;
 - siempre hay al menos un patrón;
-- cada clip del playlist se refiere a un patrón y a una pista que existen.
+- cada clip de la lista de reproducción se refiere a un patrón y a una pista que existen.
 
 Cada regla trata de dos listas a la vez, así que ninguna lista puede
 mantenerla por sí sola. El `Project` las posee todas, mantiene los campos
@@ -141,8 +141,8 @@ pub fn remove_pattern(&mut self, index: usize) -> Option<Pattern> {
   comprobar que la eliminación llegó a ocurrir.
 
 La prueba `removing_a_pattern_renumbers_its_followers` comprueba toda la
-historia: tras borrar «Beat», los cinco clips de Beat desaparecen,
-«Chords» es el patrón 0, y el fill sigue sonando en el compás 8.
+historia: tras borrar «Ritmo», los cinco clips de Ritmo desaparecen,
+«Acordes» es el patrón 0, y el fill sigue sonando en el compás 8.
 
 ¿Por qué usar posiciones, en lugar de dar a cada patrón un id permanente?
 Los ids harían más simple la eliminación (nada que renumerar) pero todo lo
@@ -202,7 +202,7 @@ RackAction::ToggleStep { channel, step } => {
   un patrón y diga si cambió algo. `FnOnce` es el más permisivo de los tres
   traits de closures: el closure solo tiene que poder llamarse una vez, así
   que puede incluso mover valores que capturó (el closure de `AddNotes`
-  del piano roll mueve su vector `notes` al loop).
+  del piano roll mueve su vector `notes` al bucle).
 - `is_some_and(edit)` llama a `edit` sobre el patrón si hay uno, y da
   `false` si no lo hay.
 
@@ -299,8 +299,7 @@ la canción termina donde termina su última pieza, en una línea de compás.
 
 ## ¿Dónde está un patrón mientras suena la canción?
 
-En modo canción, el hilo de audio informa de un paso de la *canción*. El
-channel rack y el piano roll muestran un patrón, así que necesitan saber
+En modo canción, el hilo de audio informa de un paso de la *canción*. El rack de canales y el piano roll muestran un patrón, así que necesitan saber
 qué paso de *ese* patrón está sonando, si es que hay alguno:
 
 ```rust
@@ -340,7 +339,7 @@ pub fn audible_clips(&self) -> impl Iterator<Item = Clip> + '_ {
 
 `.copied()` convierte un iterador de `&Clip` en uno de `Clip`. Funciona
 porque `Clip` es `Copy` (tres números), y significa que quien llama recibe
-valores simples en lugar de referencias al playlist.
+valores simples en lugar de referencias a la lista de reproducción.
 
 ## La canción de demostración
 
@@ -358,6 +357,6 @@ project.add_clip(Clip::new(fill, drum_track, 7 * 16));
 
 `2..7` es un rango de 2 hasta, pero sin incluir, el 7: compases 3 a 7
 contando desde 1, como hace la regla. El fill ocupa el lugar del beat en el
-compás 8. Un proyecto nuevo (File > New) empieza desde
+compás 8. Un proyecto nuevo (Archivo > Nuevo) empieza desde
 `Project::template` en su lugar: los mismos cinco canales, un patrón vacío
-y un playlist vacío.
+y una lista de reproducción vacía.

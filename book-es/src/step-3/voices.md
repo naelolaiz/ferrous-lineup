@@ -82,7 +82,7 @@ fn start_notes(&mut self, step: usize) {
 }
 ```
 
-El loop interior lee `channel.notes` mientras cambia
+El bucle interior lee `channel.notes` mientras cambia
 `channel.instrument`. Un préstamo compartido y un préstamo mutable al
 mismo tiempo normalmente se rechazarían, pero estos son préstamos de
 **dos campos distintos** del mismo struct, y el compilador puede ver que
@@ -255,7 +255,7 @@ if matches!(self.stage, Stage::Attack | Stage::Decay) {
   y se queda ahí, así que una etapa aparte no haría nada.
 
 `Instrument::release_all` mueve a `Release` todas las voces sostenidas.
-El motor lo llama en Stop, así que las notas largas se desvanecen en
+El motor lo llama al detener la reproducción, así que las notas largas se desvanecen en
 lugar de seguir sonando después de que la música se detuvo.
 
 ## Los samplers también tocan alturas
@@ -274,7 +274,7 @@ increment: rate_ratio * pitch_ratio,
 ```
 
 En `STEP_NOTE` (Do4), la proporción es 1, así que los pasos suenan
-exactamente igual que antes. Abre el piano roll en el Kick y dibuja una
+exactamente igual que antes. Abre el piano roll en el Bombo y dibuja una
 melodía para escuchar una batería con altura. Los samplers ignoran el
 gate: como una caja de ritmos, reproducen el sonido completo cada vez.
 Como ahora tienen voces, un golpe nuevo ya no corta el anterior; los dos

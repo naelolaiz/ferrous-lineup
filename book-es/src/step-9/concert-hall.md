@@ -23,17 +23,16 @@ su armonía no se parecen a las canciones del resto de la biblioteca:
 
 ## Probarlo
 
-Abre **File > Demos > Songs > Classical and film > Boléro** y pulsa
-Play. La caja toca los mismos dos compases, en 3/4, del principio al
+Abre **Archivo > Demostraciones > Canciones > Clásica y de cine > Boléro** y pulsa ▶. La caja toca los mismos dos compases, en 3/4, del principio al
 final. Cuéntalo: **1** (y un tresillo) **2** (y un tresillo) **3 y**.
-Mira el mixer mientras suena: un instrumento tras otro toma la melodía,
+Mira el mezclador mientras suena: un instrumento tras otro toma la melodía,
 y a la caja se le une cada vez más orquesta.
 
-Abre luego **The Rite of Spring, Ritual of Abduction** y mira el compás
+Abre luego **La consagración de la primavera, Juego del rapto** y mira el compás
 en la regla. Cambia casi en cada compás: 9/8, 6/8, 7/8, 3/4, y cerca
 del final 5/8, 3/8 y 2/8, un compás de un solo golpe.
 
-Por último, abre **Petrushka, Petrushka's Room** y escucha los dos
+Por último, abre **Petrushka, La habitación de Petrushka** y escucha los dos
 clarinetes después del redoble y del golpe que abre la habitación. Uno
 toca un arpegio de Do mayor y el otro uno de Fa sostenido mayor, a la
 vez.
@@ -78,7 +77,7 @@ contrabajos y los timbales sostienen un **Si** grave, un **pedal**, y
 por encima las arpas y los violonchelos se mecen entre Fa sostenido y Sol
 sostenido, notas de una escala pentatónica sobre Si. La armadura es la
 de Si menor, pero el Sol sostenido la hace **Si dórico**: el modo menor con
-la sexta elevada. El chord sheet se queda vacío, porque ningún símbolo
+la sexta elevada. La hoja de acordes se queda vacía, porque ningún símbolo
 de acorde dice lo que está pasando.
 
 ### La consagración de la primavera: dos acordes a la vez, y acentos fuera de sitio
@@ -117,8 +116,8 @@ mixolidio** sobre un **bordón** en Mi.
 
 ### Modos sobre bordones, y el buscador de tonalidad
 
-El buscador de tonalidad de la app (la opción **Find the key** bajo las
-harmony keys) mira qué notas se tocan y durante cuánto, y elige la
+El buscador de tonalidad de la app (la opción **Buscar la tonalidad** bajo las
+teclas de armonía) mira qué notas se tocan y durante cuánto, y elige la
 tonalidad mayor o menor que mejor les encaja. Las melodías modales le
 cuestan: Mi mixolidio tiene las mismas notas que La mayor, y el buscador
 suele elegir La mayor. La tónica de Mi mayor escrita solo se ve en el
@@ -148,7 +147,7 @@ Part::new(
 ```
 
 Aquí dos clarinetes tocan el acorde de Petrushka. Un instrumento toca el
-arpegio de Do mayor, y la mano izquierda, en el canal Keys, toca el de Fa
+arpegio de Do mayor, y la mano izquierda, en el canal Teclados, toca el de Fa
 sostenido mayor. `played_by` recibe una lista de parejas
 `(program, semitones)`: cada instrumento toca la melodía, desplazada
 esos semitonos, así que una lista con varias entradas dobla la melodía a
@@ -239,7 +238,7 @@ estas demos vienen de versiones legibles por máquina:
 
 Los scripts que leen esos archivos mantienen la melodía delante, la
 siguen de instrumento en instrumento con `played_by`, y escriben en el
-canal Keys todo lo demás que importa. Las líneas dobladas al unísono o
+canal Teclados todo lo demás que importa. Las líneas dobladas al unísono o
 a la octava se escriben una vez. Las notas de adorno, los trinos, los
 trémolos y los glissandos se simplifican, y el comentario `// Source:`
 de cada canción dice cómo.
@@ -259,7 +258,7 @@ países.
 1. Toca **Boléro** y apunta, para cada aparición de la melodía, qué
    instrumento la toca. ¿Cuántas apariciones hay antes de que la música
    abandone Do mayor?
-2. Abre **The Rite of Spring, The Augurs of Spring** y, en el teclado,
+2. Abre **La consagración de la primavera, Augurios primaverales** y, en el teclado,
    toca Mi, Sol sostenido, Si con la mano izquierda y Mi bemol, Sol, Si bemol,
    Re bemol con la derecha. ¿Qué notas de los dos acordes están a un
    semitono de distancia?
@@ -267,8 +266,8 @@ países.
    acorde de Petrushka. Toca ahora la escala octatónica Do, Re bemol, Mi
    bemol, Mi, Fa sostenido, Sol, La, Si bemol. ¿Qué notas de la escala no
    están en el acorde?
-4. Abre **Petrushka, The Shrovetide Fair in the Evening**, activa
-   **Find the key** y toca la Danza de los cocheros. ¿Qué tonalidad
+4. Abre **Petrushka, La feria de carnaval al atardecer**, activa
+   **Buscar la tonalidad** y toca la Danza de los cocheros. ¿Qué tonalidad
    muestra el buscador, y por qué se oye así Mi mixolidio?
 5. Imprime el informe de búsqueda de tonalidad con
    `cargo test -p lineup-core --test key_finding -- --ignored --nocapture`

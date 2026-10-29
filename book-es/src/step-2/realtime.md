@@ -7,7 +7,7 @@ La regla de oro del paso 1 sigue en pie: el hilo de audio nunca debe
 esperar, bloquear, reservar ni liberar memoria. El paso 2 hace más
 difícil mantener esa regla, porque los comandos ahora transportan
 instrumentos enteros, los canales van y vienen, y la interfaz necesita
-saber dónde está el playhead.
+saber dónde está el cursor de reproducción.
 
 ## Comandos que transportan datos
 
@@ -85,7 +85,7 @@ pub fn collect_garbage(&mut self) {
 deja que el valor salga de ámbito. Escribirla explícitamente documenta
 la intención: aquí es donde se libera la memoria.
 
-## El playhead: un entero atómico
+## El cursor de reproducción: un entero atómico
 
 La interfaz quiere resaltar el paso que se está reproduciendo. El hilo
 de audio lo sabe. Compartirlo con un `Mutex` significaría que el hilo de

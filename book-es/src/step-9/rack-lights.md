@@ -1,11 +1,11 @@
-# Luces de paso en el channel rack
+# Luces de paso en el rack de canales
 
 Archivos: [`crates/lineup-app/src/widgets.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/widgets.rs)
 y [`crates/lineup-app/src/channel_rack.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/channel_rack.rs)
 
 Un step sequencer de hardware (una caja de ritmos) tiene una fila de
 luces pequeñas, una sobre cada paso, y la luz del paso que se toca
-corre con la música. El channel rack ya sabía qué paso estaba sonando,
+corre con la música. El rack de canales ya sabía qué paso estaba sonando,
 pero solo dibujaba un contorno naranja fino alrededor de los botones de
 ese paso, que era fácil de perder.
 
@@ -20,14 +20,14 @@ por igual.
 ## Probarlo
 
 1. Abre la canción inicial y muestra el rack con **F6**. Muestra el
-   patrón **Beat**.
-2. Pulsa **L** para el modo patrón (**PAT** se enciende) y **Space**. La
+   patrón **Ritmo**.
+2. Pulsa **L** para el modo patrón (**PAT** se enciende) y **Espacio**. La
    luz corre por los dieciséis pasos, una y otra vez.
-3. Pulsa **Space** para parar, **L** para el modo canción (**SONG**) y
-   **Space** otra vez. Los compases 1 y 2 no tienen clip de Beat, así
+3. Pulsa **Espacio** para parar, **L** para el modo canción (**CANC**) y
+   **Espacio** otra vez. Los compases 1 y 2 no tienen clip de Ritmo, así
    que no hay ninguna luz encendida; desde el compás 3 la luz corre con
-   los clips de Beat en el playlist.
-4. Elige **Chords** en la lista de patrones del rack. Su fila de Lineup
+   los clips de Ritmo en la lista de reproducción.
+4. Elige **Acordes** en la lista de patrones del rack. Su fila de Lineup
    Osc es una vista previa de los acordes, y la columna que suena
    brilla sobre ella también.
 

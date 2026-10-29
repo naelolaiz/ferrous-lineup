@@ -20,7 +20,7 @@ egui::Window::new(format!("Piano roll · {}", channel.name))
 
 Un `egui::Window` flota sobre los paneles; puedes moverlo,
 redimensionarlo, plegarlo con el triángulo y cerrarlo con la ×. Los
-estudios basados en patrones funcionan igual: el channel rack y el piano
+estudios basados en patrones funcionan igual: el rack de canales y el piano
 roll son ventanas dentro de la ventana principal.
 
 - El título cambia con el canal, y egui normalmente identifica una
@@ -47,7 +47,7 @@ Copiar el `bool` hacia fuera y de vuelta evita la superposición.
 
 ## Estado que perdura: un struct en lugar de una función
 
-El channel rack es una función: todo lo que muestra viene del proyecto.
+El rack de canales es una función: todo lo que muestra viene del proyecto.
 El piano roll necesita recordar cosas que el proyecto no conoce, de un
 frame al siguiente:
 
@@ -237,7 +237,7 @@ tramos: ocho `Some("C")`, ocho `Some("Am")`, ocho `Some("F")`, ocho
 copia nada.
 
 Ejecutar `analyze` para cada paso en cada frame suena a mucho, pero son
-como mucho 64 loops pequeños sobre unas pocas notas. Mide antes de
+como mucho 64 bucles pequeños sobre unas pocas notas. Mide antes de
 optimizar: aquí no se nota en absoluto.
 
 ## Resaltado de escala

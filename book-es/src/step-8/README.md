@@ -1,4 +1,4 @@
-# Paso 8: Harmony keys, una biblioteca de estilos y demos
+# Paso 8: Teclas de armonía, una biblioteca de estilos y demos
 
 Los estudios basados en patrones te dan una fila de teclas de acordes
 grandes: una por cada acorde de la tonalidad en la que estás, para que
@@ -13,38 +13,36 @@ acompañe:
   según lo que *hace* el acorde: azul para casa (tónica), verde para
   salir de casa (subdominante), naranja para tensión (dominante).
   Mantén una pulsada, con el ratón o las teclas de número **1** a
-  **7**, y toca su acorde en el canal seleccionado; con **● Rec**
+  **7**, y toca su acorde en el canal seleccionado; con **⏺** (grabar)
   activado, se graba. Los acordes que suelen venir después se iluminan
   con un contorno amarillo, y la línea de abajo dice por qué. A la
   derecha, un teclado muestra las notas de la escala y las notas que
   suenan,
 - **los acordes seguidos mientras suena la música**: mientras un patrón
-  o la canción suena, la harmony key del acorde que suena se ilumina, y
-  el teclado muestra sus notas en azul. Pulsa Play en cualquier demo y
+  o la canción suena, la tecla de armonía del acorde que suena se ilumina, y
+  el teclado muestra sus notas en azul. Pulsa ▶ en cualquier demo y
   mira la progresión moverse entre casa, salida y tensión,
 - **los compases**: diez habituales — 2/4, 3/4, 4/4, 5/4, 3/8, 5/8,
   6/8, 7/8, 9/8 y 12/8 — más cualquier otro número de arriba y de abajo
   que escribas, incluidos agrupamientos irregulares como 2+2+3/8
   ([Cualquier compás, y métricas irregulares](any-time-signature.md)).
-  Los compases del playlist, el snap, los colores de pulso del channel
-  rack, las líneas del piano roll y la longitud de los patrones lo
+  Los compases de la lista de reproducción, el snap, los colores de pulso del rack de canales, las líneas del piano roll y la longitud de los patrones lo
   siguen todos, y va a los archivos de proyecto y a los archivos MIDI,
-- **una biblioteca** en una pestaña **Library** nueva junto a la lista
+- **una biblioteca** en una pestaña **Biblioteca** nueva junto a la lista
   de patrones: **78 estilos de armonía** y **49 ritmos** de 13 géneros,
   del pop y el blues a la bossa nova, el flamenco, el reggae y, por
   supuesto, el **tango** (marcato, síncopa, milonga, habanera y el tango
   vals). Haz clic en un estilo para oírlo en tu tonalidad, clic en otro
   para cambiarlo, y **Ctrl+Z** lo deshace. Pasa el ratón por encima de
   un estilo para ver sus acordes en tu tonalidad,
-- **demos** bajo **File > Demos**: **62 canciones**, ordenadas por
-  género, de *Ode to Joy* y *Für Elise* a *Korobeiniki*, la *Habanera*
+- **demostraciones** bajo **Archivo > Demostraciones**: **62 canciones**, ordenadas por
+  género, de *Oda a la alegría* y *Para Elisa* a *Korobeiniki*, la *Habanera*
   y *When the Saints Go Marching In*, cada una con su melodía, acordes,
   bajo y batería. La mayoría son de dominio público; los géneros con
   pocos clásicos libres, como el tango y el flamenco, reciben melodías
   nuevas escritas para ellos ([Más demos](more-demos.md)). Y cada estilo
   de armonía como una canción corta,
-- **una grabación, oída y seguida (experimental)**: **File > Import
-  recording…** abre un archivo MP3, WAV, FLAC u Ogg y le pone una pista
+- **una grabación, oída y seguida (experimental)**: **Archivo > Importar grabación…** abre un archivo MP3, WAV, FLAC u Ogg y le pone una pista
   de armonía, a partir de los pulsos, tonalidades, acordes y métrica que
   oye ([Importar una grabación](../spike-listen/README.md)). Los
   resultados son aproximados,
@@ -59,9 +57,9 @@ acompañe:
   de escritura se vuelve el acorde del acompañamiento, como en un
   teclado arreglador ([El acompañamiento sigue a tus
   acordes](chord-follow.md)),
-- **MIDI Out para cada canal**: elige un sintetizador en MIDI > Output y
+- **Salida MIDI para cada canal**: elige un sintetizador en MIDI > Salida y
   la canción entera suena en él, la batería en el canal 10, sin añadir
-  antes canales MIDI Out ([MIDI Out para cada
+  antes canales de salida MIDI ([Salida MIDI para cada
   canal](midi-out-every-channel.md)),
 - **música sin tonalidad**: una serie dodecafónica o un conjunto de
   clases de alturas como tonalidad, una ventana que muestra la matriz de
@@ -73,7 +71,7 @@ acompañe:
 - **micromodos**: los doce grupos de tres notas de Francisco Kröpfl en
   sus tres familias, dibujados en un reloj, oídos, dibujados con ellos o
   usados como tonalidad; los micromodos dentro de las notas que
-  selecciones; las ventanas Sets y Micromodes enlazadas en ambos
+  selecciones; las ventanas Conjuntos y Micromodos enlazadas en ambos
   sentidos; y estilos y demos de micromodos, con la serie del Concerto
   de Webern, hecha de un solo micromodo
   ([Micromodos](micromodes.md)),
@@ -82,10 +80,10 @@ acompañe:
   cencerro, shaker y conga,
 - **patrones de hasta dieciséis compases de largo**, para que un blues
   entero de doce compases quepa en un patrón.
-- **una cacería de errores**: el playlist y el piano roll hacen zoom
+- **una cacería de errores**: la lista de reproducción y el piano roll hacen zoom
   horizontal y vertical por su cuenta; las notas, escalas y acordes se
   escriben con los nombres correctos (Mi♯ en Fa♯ mayor, E#dim); los
-  hints y las harmony keys aplican bien su teoría en tonalidades
+  hints y las teclas de armonía aplican bien su teoría en tonalidades
   menores, modos y conjuntos; las notas mantenidas sobreviven a los
   bordes de sección, al silenciado y a los cambios de tempo; y muchos
   pequeños fallos han desaparecido ([Una cacería de
@@ -101,28 +99,28 @@ acompañe:
 
 | Haz esto | Para |
 |----------|------|
-| mantén una harmony key, o **1** a **7** | tocar su acorde en el canal seleccionado |
-| Triads, 7ths, 9ths (bajo la tonalidad) | tocar acordes de tres, cuatro o cinco notas |
-| Key, Time (a la izquierda de las harmony keys) | cambiar la tonalidad del proyecto (que mueve la canción a ella) y el compás |
-| **F8**, o el botón 🎼 Harmony | mostrar u ocultar las harmony keys |
-| ● Rec, Espacio, luego mantén harmony keys | grabar acordes en el patrón |
-| pestaña Library, clic en un estilo | tocarlo en un patrón nuevo, en tu tonalidad |
+| mantén una tecla de armonía, o **1** a **7** | tocar su acorde en el canal seleccionado |
+| Tríadas, Séptimas, Novenas (bajo la tonalidad) | tocar acordes de tres, cuatro o cinco notas |
+| Tonalidad, Compás (a la izquierda de las teclas de armonía) | cambiar la tonalidad del proyecto (que mueve la canción a ella) y el compás |
+| **F8**, o el botón 🎼 Armonía | mostrar u ocultar las teclas de armonía |
+| ● Rec, Espacio, luego mantén teclas de armonía | grabar acordes en el patrón |
+| pestaña Biblioteca, clic en un estilo | tocarlo en un patrón nuevo, en tu tonalidad |
 | clic en otro estilo o ritmo | cambiarlo en el mismo patrón |
 | Ctrl+Z | deshacerlo |
-| Use their tempo (pestaña Library) | poner también el tempo habitual del estilo |
+| Tempo (pestaña Biblioteca) | poner también el tempo habitual del estilo |
 | clic en un ritmo después de un estilo | tocar los acordes y el bajo del estilo a la manera del ritmo |
-| clic derecho en un ritmo, Play the whole song in this rhythm | dar batería nueva a la canción entera, y volver a tocar sus acordes y su bajo a juego |
-| MIDI > Accompaniment follows chords, luego mantén un acorde mientras tocas | tocar los acordes y el bajo en el acorde que mantienes |
-| MIDI > Output, elige un sintetizador (Send every channel está activado) | tocar también cada canal en el sintetizador externo, la batería en el canal 10 |
-| File > Demos | abrir una canción o un estilo como proyecto entero, y tocarlo |
-| menú Key > twelve-tone row, o Row… en el piano roll | hacer de una serie la tonalidad, ver su matriz, escribir sus formas |
-| Sets… en el piano roll | buscar cualquier conjunto, dibujar con él o usarlo como tonalidad |
-| Micromodes… en el piano roll | ver los doce micromodos de Kröpfl y los que hay en las notas seleccionadas; oír uno, dibujar con él o usarlo como tonalidad |
+| clic derecho en un ritmo, Tocar toda la canción con este ritmo | dar batería nueva a la canción entera, y volver a tocar sus acordes y su bajo a juego |
+| MIDI > El acompañamiento sigue los acordes, luego mantén un acorde mientras tocas | tocar los acordes y el bajo en el acorde que mantienes |
+| MIDI > Salida, elige un sintetizador (Enviar todos los canales está activado) | tocar también cada canal en el sintetizador externo, la batería en el canal 10 |
+| Archivo > Demostraciones | abrir una canción o un estilo como proyecto entero, y tocarlo |
+| menú Tonalidad > Serie dodecafónica…, o Serie… en el piano roll | hacer de una serie la tonalidad, ver su matriz, escribir sus formas |
+| Conjuntos… en el piano roll | buscar cualquier conjunto, dibujar con él o usarlo como tonalidad |
+| Micromodos… en el piano roll | ver los doce micromodos de Kröpfl y los que hay en las notas seleccionadas; oír uno, dibujar con él o usarlo como tonalidad |
 | Ctrl+rueda, Alt+rueda (o Ctrl y Alt con + y −), los zooms abajo a la derecha | hacer compases y pasos más anchos, o pistas y teclas más altas; Ctrl+0 para volver al 100% ([Una cacería de errores](bug-hunt.md)) |
-| View > Interface size | hacer textos, botones y menús más grandes o más pequeños en todas partes |
-| menú View, o **Alt+F8** | mostrar u ocultar cada ventana, y el panel Patterns y Library |
+| Ver > Tamaño de la interfaz | hacer textos, botones y menús más grandes o más pequeños en todas partes |
+| menú Ver, o **Alt+F8** | mostrar u ocultar cada ventana, y el panel Patrones y Biblioteca |
 
-Las teclas de número tocan las harmony keys solo mientras el teclado de
+Las teclas de número tocan las teclas de armonía solo mientras el teclado de
 escritura está apagado, porque el teclado de escritura las usa para las
 teclas negras.
 
@@ -141,10 +139,10 @@ patrón nuevo en lugar de reemplazarlo.
   renderizó en offline, con el mismo código de audio que la exportación
   WAV, y se midió: ninguna recorta, y los picos más fuertes están en
   0,96 de la escala completa.
-- En la app en marcha: las harmony keys con el ratón y las teclas de
-  número, las sugerencias, la pestaña Library (probar, cambiar,
-  deshacer), el menú Demos con su pregunta "Save changes?", y los
-  compases en el playlist, el rack y el piano roll.
+- En la app en marcha: las teclas de armonía con el ratón y las teclas de
+  número, las sugerencias, la pestaña Biblioteca (probar, cambiar,
+  deshacer), el menú Demostraciones con su pregunta "¿Guardar cambios?", y los
+  compases en la lista de reproducción, el rack y el piano roll.
 - El compás en los archivos MIDI exportados lo comprueba una prueba.
 
 ## Qué cambió en la arquitectura
@@ -212,7 +210,7 @@ crates/lineup-app/src/harmony_keys.rs         la barra de harmony keys (nuevo)
 crates/lineup-app/src/library_browser.rs      la pestaña Library (nuevo)
 crates/lineup-app/src/app/library.rs          audiciones y demos (nuevo)
 crates/lineup-app/src/app.rs                  la barra, el acorde que suena, F8
-crates/lineup-app/src/app/files.rs            File > Demos
+crates/lineup-app/src/app/files.rs            Archivo > Demostraciones
 crates/lineup-app/src/app/live.rs             play_typed se comparte con las harmony keys
 crates/lineup-app/src/playlist.rs             la pestaña Library, compases de cualquier longitud
 crates/lineup-core/src/midi_file/read.rs      leer archivos MIDI (nuevo)
@@ -230,12 +228,11 @@ devolviendo 3 para un proyecto que solo necesita esas cosas, como un
 patrón largo o un 3/4 simple; una característica posterior, o un compás
 agrupado, necesita un número más alto.
 
-Hacia dónde va este paso, en el orden de los capítulos: las harmony
-keys; los compases; la biblioteca y las demos que construye; adaptarse a
+Hacia dónde va este paso, en el orden de los capítulos: las teclas de armonía; los compases; la biblioteca y las demos que construye; adaptarse a
 la ventana y encontrar tus notas; la estructura de la canción, el
 transporte y más demos; oír acordes y usar solo las pistas que una
 canción necesita; los marcadores de tiempo y los cambios de tonalidad;
-el acompañamiento y MIDI Out en cada canal; el folclore sudamericano;
+el acompañamiento y la salida MIDI en cada canal; el folclore sudamericano;
 las series dodecafónicas y los micromodos; la cacería de errores, el
 tempo y el feel, y la Marcha turca; la importación MIDI; las voces y los
 instrumentos; encontrar la tonalidad; cualquier compás y cambiar la

@@ -5,7 +5,7 @@ y [`crates/lineup-core/src/pattern.rs`](https://github.com/naelolaiz/ferrous-lin
 
 ## Notas que entran, notas que salen
 
-Cada herramienta del menú Tools del piano roll es una función de
+Cada herramienta del menú Herramientas del piano roll es una función de
 `lineup_core::tools` con la misma forma: toma prestadas unas notas y
 devuelve otras nuevas.
 
@@ -183,7 +183,7 @@ pub fn quantize(notes: &[NoteEvent], pattern_length: usize) -> Vec<NoteEvent> {
 
 El `..quantized` lleva la altura y la velocidad; `start` y `length` se
 recalculan para que una nota situada justo al final no se salga del
-patrón. Tools > Quantize to the steps llama a esto sobre la
+patrón. Herramientas > Cuantizar a los pasos llama a esto sobre la
 selección, o sobre todo el canal cuando no hay nada seleccionado.
 
 ## Mantenerse en la tonalidad
@@ -291,7 +291,7 @@ pub fn inversion(pitches: &[Note], times: usize) -> Vec<Note> {
   vuelve a donde empezó, una octava más arriba. En lugar de subir
   octavas, la función invierte `times` módulo el número de notas. El
   `.max(1)` está ahí porque `% 0` hace panic en Rust, y un acorde vacío
-  no debe hacer caer nada: `0..0` simplemente no hace ningún loop.
+  no debe hacer caer nada: `0..0` simplemente no hace ningún bucle.
 - `let (Some(&lowest), Some(&highest)) = (...) else { break; }` pone dos
   `Option`s en una tupla y hace match de ambos a la vez: «si hay una
   primera y una última nota». El `&` del patrón copia cada `Note` fuera

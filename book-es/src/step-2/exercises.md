@@ -67,7 +67,7 @@ el archivo de proyecto, el control, la exportación MIDI?
 *Practica:* aritmética con ticks, pruebas unitarias con números exactos,
 mantener separadas la reproducción y la edición.
 
-## 5. Velocity, ya incorporada (lineup-core y lineup-app, más difícil)
+## 5. Velocidad, ya incorporada (lineup-core y lineup-app, más difícil)
 
 Las notas ya llevan velocity: `NoteEvent` tiene `velocity: u8`, y el
 `velocity_lane` del piano roll la edita (`piano_roll.rs`). Lee cómo el

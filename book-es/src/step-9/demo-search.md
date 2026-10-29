@@ -3,7 +3,7 @@
 Archivos: [`crates/lineup-app/src/app/demo_menu.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/demo_menu.rs)
 y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
-Ahora hay más de doscientas demos, y **File > Demos** las listaba en el
+Ahora hay más de doscientas demos, y **Archivo > Demostraciones** las listaba en el
 orden en que se escribieron en la biblioteca: London Bridge antes que
 Deck the Halls, Tango antes que Blues. Para encontrar una abrías
 submenús hasta que aparecía. Ahora cada lista del menú está en orden
@@ -15,9 +15,9 @@ tonalidad o su compás.
 
 ## Probarlo
 
-Abre **File > Demos**. Los géneros bajo **Songs** y **Styles** van de
+Abre **Archivo > Demostraciones**. Los géneros bajo **Canciones** y **Estilos** van de
 Blues a Tango, y las canciones y los estilos de cada género están en
-orden alfabético, igual que las piezas **Twelve-tone** y **Micromodes**.
+orden alfabético, igual que las piezas **Dodecafónico** y **Micromodos**.
 
 Sin hacer clic en nada, escribe **tango**. La caja encima de los
 submenús tiene el teclado en cuanto el menú se abre, así que las letras
@@ -26,22 +26,22 @@ cada demo con «tango» en su título, luego las canciones tocadas como
 tango o milonga, luego los estilos de tango, y al final, más apagadas,
 las demos cuyas notas solo mencionan el tango, como Candombe y *St.
 Louis Blues*, que abre con una introducción de tango. A la derecha, cada
-línea dice dónde vive la demo en el menú, como **Songs ▸ Tango**.
+línea dice dónde vive la demo en el menú, como **Canciones ▸ Tango**.
 
 ![El menú Demos con «tango» escrito en la caja de búsqueda. Tango, Tango de salón, Tango del telar, Tango nuevo, Tango síncopa, Tango vals y Tangos flamencos van primero; luego El Choclo, Gallo ciego, Habanera, La Cumparsita, La Paloma, Milonga, Milonga del río, Vals del puerto y Vals in minor; al final, más apagadas, Candombe y St. Louis Blues. La la derecha de cada una, «Songs ▸ Tango» o «Styles ▸ Tango».](../images/step-9-demo-search.png)
 
-Pulsa **Enter** para abrir la primera, o la **flecha abajo** para
-recorrer la lista y **Enter** en la que quieras. Un clic también
+Pulsa **Intro** para abrir la primera, o la **flecha abajo** para
+recorrer la lista y **Intro** en la que quieras. Un clic también
 funciona. Como antes, la demo se abre y suena desde el principio, con su
-estilo y su ritmo seleccionados en la Library.
+estilo y su ritmo seleccionados en la Biblioteca.
 
 Algunas búsquedas para probar:
 
 | Escribe | Encuentra |
 |---|---|
 | `choclo` | El Choclo: vale cualquier palabra del título |
-| `fur elise` | Für Elise: no hace falta escribir los acentos ni las mayúsculas |
-| `bach` | las piezas de Bach, por compositor, después de Bachata, cuyo título empieza con «bach»; no el Can-can de Offenbach |
+| `fur elise` | Para Elisa, por su título original *Für Elise*: no hace falta escribir los acentos ni las mayúsculas |
+| `bach` | las piezas de Bach, por compositor, después de Bachata, cuyo título empieza con «bach»; no el Cancán de Offenbach |
 | `d minor` | primero las canciones en Re menor, luego, más apagadas, las demás que tienen una palabra que empieza con «d» y un «minor» |
 | `3/4` | cada demo en compás de tres por cuatro |
 | `menor 3` | las piezas de micromodos construidas sobre Menor 3 |
@@ -73,8 +73,7 @@ saber.
 
 Por eso el menú ordena por una copia **plegada** de cada título: solo
 minúsculas, acentos quitados, puntuación descartada, un guion convertido
-en espacio. «Für Elise» se ordena como «fur elise», justo después de
-«Funeral March»; «St. James Infirmary» como «st james infirmary»;
+en espacio. «Funiculì, funiculà» se ordena como «funiculi funicula»; «St. James Infirmary» como «st james infirmary»;
 «Tico-Tico» como «tico tico». El menú sigue mostrando el título real.
 
 Los catálogos de bibliotecas van un paso más allá y se saltan un «The»,
@@ -246,7 +245,7 @@ nota se eleva para dar un tirón fuerte de vuelta a la tónica. Una
 canción en Re menor armónica sigue estando en la tonalidad de Re menor,
 así que sus detalles buscables dicen ambas cosas, «D harmonic minor» y
 «D minor», y `d minor` encuentra el Dies irae del Réquiem de Mozart
-además de la Toccata in D minor.
+además de la Tocata en Re menor.
 
 Derivar `Ord` en un enum ordena sus variantes tal como están escritas,
 así que `Rank::TitleStart < Rank::About`, y ordenar las coincidencias
@@ -273,10 +272,10 @@ Tres detalles de egui, la biblioteca de GUI, necesitaron cuidado:
 
 - **Un clic dentro no debe cerrar el menú.** Los menús de egui se
   cierran con cualquier clic, dentro o fuera, para que hacer clic en un
-  elemento los cierre. El submenú Demos se hace con `SubMenuButton` y un
+  elemento los cierre. El submenú Demostraciones se hace con `SubMenuButton` y un
   `MenuConfig` cuyo `close_behavior` es
   `PopupCloseBehavior::CloseOnClickOutside`. Hacer clic en una demo
-  sigue cerrando todo el menú File, porque el código llama a `ui.close()`
+  sigue cerrando todo el menú Archivo, porque el código llama a `ui.close()`
   cuando se elige una.
 - **La caja toma el teclado cuando el menú se abre.** egui llama al
   código del menú cada frame en que se muestra, y le da a cada pasada un

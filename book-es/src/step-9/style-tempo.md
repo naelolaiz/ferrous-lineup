@@ -6,7 +6,7 @@ Archivos: [`crates/lineup-core/src/library/apply.rs`](https://github.com/naelola
 [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 y [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
-Abre El Choclo (112 BPM), aplica **Tango de salón** desde la Library y
+Abre El Choclo (112 BPM), aplica **Tango de salón** desde la Biblioteca y
 luego **Tango nuevo**. Ambos son tangos en 4/4, y nada del compás de la
 canción cambia, sin embargo la casilla del tempo pasó de 112 a 132.
 Cada nota de la canción se acortó: la melodía que conoces se aceleró,
@@ -22,23 +22,23 @@ en segundos, pruebes el estilo que pruebes.
 
 ## Probarlo
 
-1. Abre **File > Demos > El Choclo**. La casilla del tempo dice
+1. Abre **Archivo > Demostraciones > El Choclo**. La casilla del tempo dice
    **112.0**.
-2. En la **Library**, haz clic en **Tango de salón** y luego en
-   **Apply**. Haz clic en **Tango nuevo** y luego en **Apply**. El
+2. En la **Biblioteca**, haz clic en **Tango de salón** y luego en
+   **Aplicar**. Haz clic en **Tango nuevo** y luego en **Aplicar**. El
    tempo se queda en 112.
-3. Haz clic en **Tango vals (3/4)** y en **Apply**. La canción está
+3. Haz clic en **Tango vals (3/4)** y en **Aplicar**. La canción está
    ahora en 3/4 y la casilla del tempo dice **84.0** (más abajo, por
    qué es la misma velocidad).
 4. Aplica **Tango nuevo** otra vez: 4/4 y **112.0**, exactamente donde
    empezaste.
 
 Si *quieres* el tempo propio de un estilo, marca **Tempo** en sus
-opciones antes de **Apply**. Se usa cuando el compás no cambia.
+opciones antes de **Aplicar**. Se usa cuando el compás no cambia.
 
 ## De dónde venían los saltos
 
-Cada elección de la Library tiene una lista de partes que puede traer:
+Cada elección de la Biblioteca tiene una lista de partes que puede traer:
 los patrones que toca, los instrumentos, el compás, los acordes, el
 tempo y el swing. Son los campos de `StyleParts` en `apply.rs`, y las
 casillas de las opciones de cada estilo. `tempo` empezaba **marcado**,
@@ -136,13 +136,12 @@ Aquí trabajan dos piezas de Rust. `Option::or_else` ejecuta su closure
 solo cuando la primera búsqueda no encontró nada. `StyleParts { tempo:
 false, ..parts }` es *sintaxis de actualización de structs*: una copia
 de `parts` con un campo cambiado. Cualquier otra elección que hicieras
-(Plain accents, los acordes, el swing) se conserva. Si vuelves a marcar
+(Acentos simples, los acordes, el swing) se conserva. Si vuelves a marcar
 Tempo, se guarda bajo la clave nueva y se queda marcado.
 
 ### El modo patrón sigue la misma regla
 
-La casilla de Tempo dice: «Use the preset's usual tempo when the meter
-stays the same». En modo canción eso ya era cierto. En modo patrón,
+La casilla de Tempo dice: «Usa el tempo habitual del preajuste cuando la métrica no cambia». En modo canción eso ya era cierto. En modo patrón,
 un estilo probado en un patrón de prueba tomaba su tempo incluso cuando
 el patrón pasaba a otra métrica. Ahora el código compara el compás del
 patrón antes y después de escribirlo, y toma el tempo solo si es el
@@ -180,8 +179,8 @@ a su tempo. Una prueba lo comprueba para varios tempos y métricas.
 ## Las pruebas
 
 `styles_tried_one_after_another_keep_the_songs_tempo` lleva a El Choclo
-por siete cambios: Four chords, Emotional pop, Tango vals, Ranchera,
-Six-eight ballad, el selector Time (7/8) y Four chords otra vez. Lo
+por siete cambios: Cuatro acordes, Pop emotivo, Tango vals, Ranchera,
+Balada en seis por ocho, el selector Compás (7/8) y Cuatro acordes otra vez. Lo
 hace tres veces: en modo patrón, en modo canción detenida y en modo
 canción en reproducción. Después de cada clic, el BPM debe quedar igual
 si la métrica no cambia, y ser el BPM propio de la canción siempre que

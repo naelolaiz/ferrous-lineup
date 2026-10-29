@@ -9,25 +9,24 @@ orquestas de salsa, las bandas de ska y las brass bands de los Balcanes:
 una **sección de vientos**, trompetas, saxofones y trombones tocando los
 acordes juntos. Hasta ahora solo las [canciones de big
 band](big-band-songs.md) tenían vientos, escritos en cada canción. Ahora
-la banda puede llevar una sección de vientos a cualquier estilo. Toca el
-chord sheet con una parte que le va al estilo, moviéndose cada viento lo
+la banda puede llevar una sección de vientos a cualquier estilo. Toca la hoja de acordes con una parte que le va al estilo, moviéndose cada viento lo
 menos posible de acorde a acorde.
 
 ![El menú Band con Horn section marcado, y su ayuda: «A horn section plays the chords in close harmony, each horn moving as little as it can from chord to chord. In Motown, the horns (Brass Section) play short punches in 3 + 3 + 2.»](../images/step-9-horns-menu.png)
 
 ## Probarlo
 
-1. Abre el chord sheet (**F5**), elige un estilo en la Library, como
+1. Abre la hoja de acordes (**F5**), elige un estilo en la Biblioteca, como
    **Motown**, y escribe unos acordes: `C Am7 Dm7 G7 C Ab G7 C`.
-2. Abre **Band** y marca **Horn section**. La ayuda dice qué tocarán los
-   vientos en este estilo. Entra una pista **Horns** con la banda, y la
-   barra de estado dice «The horns play the chords with the band».
+2. Abre **Banda** y marca **Sección de vientos**. La ayuda dice qué tocarán los
+   vientos en este estilo. Entra una pista **Vientos** con la banda, y la
+   barra de estado dice «Los vientos tocan los acordes con la banda».
 3. Reproduce. Prueba luego otros estilos con los vientos activos:
-   **Swing**, **Pop ballad**, **Funk**, **March**, **Reggaeton**.
+   **Swing**, **Balada pop**, **Funk**, **Marcha**, **Reguetón**.
 
-Desmarca **Horn section** para mandarlos a casa («No horns»). La línea
-**Horns** que hay encima en el menú Band es el player, como Piano o
-Bass: haz clic en su instrumento para cambiar el sonido. Los vientos se
+Desmarca **Sección de vientos** para mandarlos a casa («Sin vientos»). La línea
+**Vientos** que hay encima en el menú Banda es el player, como Piano o
+Bajo: haz clic en su instrumento para cambiar el sonido. Los vientos se
 pueden bloquear y editar como cualquier otro player.
 
 ## Qué tocan los vientos en cada estilo
@@ -37,12 +36,12 @@ viene del estilo:
 
 | Estilo | Qué tocan los vientos |
 |---|---|
-| Baladas (Pop ballad, Jazz ballad, Slow blues, Neo soul, R&Si, Bossa nova, Bolero…) | notas largas sostenidas bajo la banda |
+| Baladas (Balada pop, Balada de jazz, Blues lento, Neo soul, R&B, Bossa nova, Bolero…) | notas largas sostenidas bajo la banda |
 | Swing, shuffle, blues, rock and roll | kicks de big band en el pulso 1 y justo antes del pulso 3 (el ritmo de Charleston) |
 | Pop, rock, soul, hip hop, latino, second line | punches cortos en 3 + 3 + 2 (el tresillo) |
 | Funk | stabs de funk ajustados en semicorcheas |
 | House y otros estilos electrónicos | stabs sincopados, como en la música house |
-| Reggaeton, moombahton | acordes cortos en el 3 + 3 + 2 del dembow |
+| Reguetón, moombahton | acordes cortos en el 3 + 3 + 2 del dembow |
 | Ska | acordes cortos entre los pulsos |
 | Marcha, vals, polca, danzas balcánicas | afterbeats, el «pah» del oom-pah de una brass band |
 | Tango, folk, clásica, reggae | notas largas |
@@ -63,9 +62,9 @@ y 3.
 Un estilo sin batería, como un coral o una balada de piano, recibe
 también notas largas: no hay groove que golpear.
 
-El instrumento viene de los instrumentos del estilo: **Brass Section**
-(General MIDI 61) para la mayoría de los estilos, **French Horn** para
-los clásicos y **Synth Brass** para los electrónicos.
+El instrumento viene de los instrumentos del estilo: **Sección de metales**
+(General MIDI 61) para la mayoría de los estilos, **Corno francés** para
+los clásicos y **Metales sintetizados 1** para los electrónicos.
 
 Si un compás está en otra métrica que la del ritmo del estilo (un compás
 de 3/4 en una canción de funk en 4/4, digamos), los vientos golpean los
@@ -114,7 +113,7 @@ pareja de vientos que se movería en quintas paralelas cuenta como 24
 semitonos de movimiento, más que cualquier otro camino al acorde
 siguiente, y los vientos eligen otro voicing.
 
-Con **Voice leading** marcado en el piano roll, puedes ver moverse a
+Con **Conducción de voces** marcado en el piano roll, puedes ver moverse a
 cada viento, como describe [Cómo se mueve cada parte](part-motion.md).
 
 ## En el código
@@ -218,8 +217,7 @@ vuelven a entrar donde lo dejaron.
   una progresión larga que los tienta a hacerlo. C13 se toca Mi, Si♭, Re,
   La. Swing recibe kicks, Motown punches, una balada de jazz, una zamba y
   un coral notas largas, una rachenitsa afterbeats y un estilo de rock
-  en 5/4 un punch en cada pulso. Un coral recibe French Horns y Techno
-  synth brass.
+  en 5/4 un punch en cada pulso. Un coral recibe corno francés, y Techno metales sintetizados.
 - **Pruebas de banda** en `band.rs` llevan los vientos a seis estilos:
   Motown, Swing, un coral, Techno, una zamba y una rachenitsa en 7/8.
   Cada nota de viento es una nota de su acorde, cada voicing está en
@@ -233,7 +231,7 @@ vuelven a entrar donde lo dejaron.
 
 ## Ejercicios
 
-1. Activa los vientos en **Swing** y en **Pop ballad**. Señala las notas
+1. Activa los vientos en **Swing** y en **Balada pop**. Señala las notas
    de los vientos en el piano roll. ¿Qué vientos de estilo se mueven
    más? ¿Por qué las notas largas necesitan un voice leading suave
    incluso más que las cortas?

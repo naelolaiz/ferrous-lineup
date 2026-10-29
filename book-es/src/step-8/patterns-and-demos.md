@@ -6,7 +6,7 @@ Archivos: [`crates/lineup-core/src/library/apply.rs`](https://github.com/naelola
 y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
 Las tablas del capítulo anterior no saben nada de canales, patrones ni
-playlists. Este capítulo las conecta: primero con un patrón, luego con
+listas de reproducción. Este capítulo las conecta: primero con un patrón, luego con
 un proyecto entero, y por último con los botones en los que haces clic.
 
 ## Qué canal toca qué
@@ -32,10 +32,10 @@ pub fn chords_channel(project: &mut Project, selected: Option<usize>) -> Option<
 ```
 
 Los acordes van al canal que seleccionaste, si puede tocar notas y no
-es el bajo ni el lead; si no, a un sintetizador llamado "Keys"; si no,
+es el bajo ni el lead; si no, a un sintetizador llamado "Keys" («Teclados» en la app en español); si no,
 al primer sintetizador distinto; y si no hay ninguno, se añade un
 sintetizador "Keys" nuevo. Cada `or_else` solo corre si todo lo
-anterior no encontró nada. El bajo va a un sintetizador llamado "Bass",
+anterior no encontró nada. El bajo va a un sintetizador llamado "Bass" («Bajo»),
 y cada tambor al canal que lo toca, añadido si falta.
 
 `free` es una closure guardada en una variable, para poder usarla dos
@@ -51,7 +51,7 @@ todas las notas de un canal de una vez.
 
 `demo.rs`
 
-Un patrón es un loop. Una canción son loops *arreglados*: algo solo
+Un patrón es un bucle. Una canción son bucles *arreglados*: algo solo
 primero, luego entra más, un fill de vez en cuando para marcar una
 sección, y un final. `style_demo` hace eso con cualquier estilo:
 
@@ -73,7 +73,7 @@ let passes = (DEMO_BARS / bars).clamp(2, 6);
 `song_demo` hace lo mismo con una canción: un patrón por parte, con la
 melodía en un sintetizador "Lead", los acordes en "Keys" y el bajo en
 "Bass"; un patrón de batería por parte; y las partes colocadas en el
-orden de la forma de la canción. *Für Elise* no tiene batería en
+orden de la forma de la canción. *Para Elisa* no tiene batería en
 absoluto, y su mano izquierda está escrita nota a nota en lugar de
 hacerse a partir de acordes, porque la mano izquierda de Beethoven *es*
 el acompañamiento.
@@ -84,7 +84,7 @@ Ambas devuelven un `Project` normal. Una demo no es especial en ningún
 sentido: puedes cambiarla, guardarla y desmontarla como cualquier cosa
 que hayas hecho.
 
-## La pestaña Library
+## La pestaña Biblioteca
 
 `library_browser.rs`
 
@@ -190,9 +190,9 @@ sitio para otro patrón, `add_pattern` da `None`, la closure se detiene
 ahí, y `edit` devuelve el `None`. Nada cambió, así que tampoco se
 registra nada para deshacer.
 
-## File > Demos
+## Archivo > Demostraciones
 
-Abrir una demo tira el proyecto actual, igual que **File > Open**,
+Abrir una demo tira el proyecto actual, igual que **Archivo > Abrir**,
 así que primero debe preguntar por los cambios sin guardar. El paso 4
 construyó esa pregunta alrededor de un enum de cosas que esperan
 respuesta; una demo es una más:

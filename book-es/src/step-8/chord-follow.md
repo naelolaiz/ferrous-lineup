@@ -20,9 +20,9 @@ cualquier canción.
 
 ## Cómo usarlo
 
-1. Abre el menú **MIDI** y activa **Accompaniment follows chords**.
+1. Abre el menú **MIDI** y activa **El acompañamiento sigue los acordes**.
    Para tocar con las teclas de letras en lugar de un teclado MIDI,
-   activa también **Typing keyboard to piano**.
+   activa también **Teclado del equipo como piano**.
 2. Reproduce un patrón o la canción (una demo, o un estilo de la
    biblioteca).
 3. Mantén un acorde. Desde la siguiente nota que toquen, los acordes y
@@ -167,10 +167,10 @@ if !std::mem::take(&mut self.live.follow.key_went_down) {
 - En la app en marcha, con el teclado de escritura (la máquina de
   pruebas no tiene dispositivo MIDI, y ambos teclados pasan por
   `key_played`), se grabó el sonido y se midieron las notas: el estilo
-  "Four chords" pasó de C, G, Am y F a solo Re, Fa♯ y La tras mantener Re;
+  "Cuatro acordes" pasó de C, G, Am y F a solo Re, Fa♯ y La tras mantener Re;
   a La, Do y Mi tras mantener La y Do, y se quedó ahí tras soltar; London
-  Bridge en modo canción pasó a Fa♯, La♯ y Do♯ tras mantener Fa♯; y Stop y
-  luego Play devolvieron los acordes escritos.
+  Bridge en modo canción pasó a Fa♯, La♯ y Do♯ tras mantener Fa♯; y ⏹ y
+  luego ▶ devolvieron los acordes escritos.
 
 ## Ejercicios
 

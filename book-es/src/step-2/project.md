@@ -7,7 +7,7 @@ y
 
 ## La música
 
-Un **patrón** es un loop corto, normalmente de un compás. En compás de
+Un **patrón** es un bucle corto, normalmente de un compás. En compás de
 4/4, un compás tiene cuatro **pulsos**, y el step sequencer divide cada
 pulso en cuatro **pasos** (semicorcheas), de modo que un patrón de 16
 pasos es un compás. El ritmo de demostración es el groove de baile

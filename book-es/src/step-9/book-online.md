@@ -62,7 +62,7 @@ siguen empezando en la raíz, así que dicen `book/book`.
    Luego `print-pdf.py` añade a esa página una portada, el índice de
    contenidos y un índice de términos, y hace que Chrome, que las
    máquinas de GitHub ya tienen, la abra sin ventana (`--headless`) y la
-   imprima en un archivo (`--print-to-pdf`), como hace **Print** en un
+   imprima en un archivo (`--print-to-pdf`), como hace **Imprimir** en un
    navegador, sin la fecha y la dirección de arriba y abajo de cada
    página (`--no-pdf-header-footer`). Por último, añade los marcadores
    ([Orientarte en el PDF](#orientarte-en-el-pdf) más abajo).
@@ -83,7 +83,7 @@ siguen empezando en la raíz, así que dicen `book/book`.
    de los pull requests no esperan.
 
 `book/print.css` es el único estilo propio del libro en el sitio web.
-Dice qué es una página impresa, La4 con un margen alrededor del texto y
+Dice qué es una página impresa, A4 con un margen alrededor del texto y
 el número de página abajo, para que el PDF y el botón de impresión del
 sitio web hagan las mismas páginas:
 
@@ -131,9 +131,8 @@ para la primera página.
 
 ### El índice de contenidos: imprimir dos veces
 
-El índice de contenidos tiene que decir "Step 9 empieza en la página
-543" antes de que se imprima la página, pero solo la impresión decide
-dónde cae Step 9: la longitud de cada capítulo anterior depende de las
+El índice de contenidos tiene que decir "Paso 9 empieza en la página 543" antes de que se imprima la página, pero solo la impresión decide
+dónde cae el Paso 9: la longitud de cada capítulo anterior depende de las
 fuentes, las imágenes y dónde se parte cada línea. El script hace lo que
 hace LaTeX, el programa de composición tipográfica con el que están
 escritos muchos libros: imprime dos veces.
@@ -152,10 +151,10 @@ escritos muchos libros: imprime dos veces.
 mdBook da a cada encabezado un `id` y un enlace a sí mismo:
 
 ```html
-<h1 id="step-9-the-band"><a class="header" href="#step-9-the-band">Step 9: The band</a></h1>
+<h1 id="paso-9-la-banda"><a class="header" href="#paso-9-la-banda">Paso 9: La banda</a></h1>
 ```
 
-Cuando Chrome imprime una página con un enlace a `#step-9-the-band`,
+Cuando Chrome imprime una página con un enlace a `#paso-9-la-banda`,
 escribe un *destino con nombre* en el PDF: el nombre, la página y en qué
 punto de la página. Así es como un clic en un enlace de un PDF sabe
 adónde ir, y pypdf, una biblioteca de Python para archivos PDF, los
@@ -170,7 +169,7 @@ def destinations(reader: PdfReader) -> dict[str, tuple[int, object]]:
     return found
 ```
 
-Los nombres vuelven como `/step-9-the-band`, y con cada letra fuera de
+Los nombres vuelven como `/paso-9-la-banda`, y con cada letra fuera de
 ASCII escrita como código `%` (la `ö` de `kröpfls` es `%C3%B6`), así que
 `unquote` los convierte de nuevo en los `id` del HTML.
 
@@ -195,7 +194,7 @@ El script las lee de `print.html` y da a cada palabra:
   Cada una de esas palabras en negrita recibe un `id`, como
   `pdf-ix-17`, para que el índice de términos enlace a ella.
 
-El plural también cuenta: una "inversions" en negrita es un lugar para
+El plural también cuenta: una "inversiones" en negrita es un lugar para
 "Inversion". Una palabra que es todo código solo coincide con código: el
 `windows` del glosario, un método de Rust, no es el Windows en negrita
 de "Linux, macOS y Windows".
@@ -247,7 +246,7 @@ el PDF.
 ### Enlaces que sigue cualquier lector
 
 Un enlace de PDF puede decir adónde va de dos maneras. Chrome escribe la
-primera: "ve al lugar llamado `step-9-the-band`", y el PDF guarda una
+primera: "ve al lugar llamado `paso-9-la-banda`", y el PDF guarda una
 tabla de nombres al final (`/Dests`) que da una página a cada uno. La
 otra manera es más antigua y más simple: "ve a la página 543, hasta aquí
 abajo". Los lectores de Chrome y Firefox buscan un nombre en la tabla;
@@ -323,7 +322,7 @@ mdbook serve --open
 ```
 
 construye el sitio web y lo abre, y lo vuelve a construir cada vez que
-guardas un capítulo. **Print** en el navegador, en cualquier página, o
+guardas un capítulo. **Imprimir** en el navegador, en cualquier página, o
 en el botón de impresión, muestra las páginas del PDF tal y como se
 verán.
 
@@ -355,7 +354,7 @@ Si en tu sistema Chrome no se llama `google-chrome`, di dónde está:
    workflows se ejecutan, y qué línea de `book.yml` impide que se
    ejecute el workflow Book?
 4. Añade `Metronome: step-9/practice.md#de-dónde-salen-los-clics` a
-   `index-words.txt` e imprime el PDF. ¿Dónde cae "Metronome" en el
+   `index-words.txt` e imprime el PDF. ¿Dónde cae "Metrónomo" en el
    índice de términos, y su número de página te lleva a la sección?
    Luego escribe mal la sección e imprime otra vez: ¿qué dice el script?
 5. Cambia `BLANK` en `print-pdf.py` de `"0000"` a `"0"`. ¿Cuántas veces

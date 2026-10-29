@@ -1,14 +1,13 @@
-# La ventana del playlist
+# La ventana de la lista de reproducción
 
 Archivos: [`crates/lineup-app/src/playlist.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/playlist.rs)
 y [`crates/lineup-app/src/app.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app.rs)
 
 ## Un diseño nuevo
 
-Los estudios basados en patrones ponen la canción en el centro: el
-playlist llena la ventana principal, y el channel rack y el piano roll
+Los estudios basados en patrones ponen la canción en el centro: la lista de reproducción llena la ventana principal, y el rack de canales y el piano roll
 flotan encima de él, apareciendo y desapareciendo con F6 y F7. Ferrous
-Lineup ahora hace lo mismo. El panel central muestra el playlist, y el
+Lineup ahora hace lo mismo. El panel central muestra la lista de reproducción, y el
 rack se mudó a una `egui::Window`, como el piano roll en el paso 3:
 
 ```rust
@@ -61,9 +60,9 @@ Es un campo de la app, no del proyecto: es *hacia dónde miras*, no parte
 de la canción, así que no se guarda y seleccionar un patrón no cuenta
 como un cambio sin guardar. El rack y el piano roll lo reciben como
 argumento (`channel_rack::show(ui, &self.project, self.pattern,
-playhead)`), así que siguen siendo funciones de lo que se les da.
+cursor de reproducción)`), así que siguen siendo funciones de lo que se les da.
 
-El playhead que reciben depende del modo. En modo patrón, el paso del hilo
+El cursor de reproducción que reciben depende del modo. En modo patrón, el paso del hilo
 de audio *es* un paso del patrón seleccionado. En modo canción es un paso
 de la canción, y la app le pregunta al proyecto dónde está el patrón
 seleccionado en ese momento:
@@ -78,13 +77,13 @@ fn pattern_playhead(&self) -> Option<usize> {
 }
 ```
 
-Así que mientras suena la canción, el playhead naranja del rack corre
+Así que mientras suena la canción, el cursor de reproducción naranja del rack corre
 siempre que un clip del patrón seleccionado está sonando, y desaparece en
 los compases donde no lo está, como en la captura del inicio de este paso.
 
 ## Dibujar una rejilla grande: `show_viewport`
 
-El playlist puede ser mucho más grande que la ventana: 16 pistas de 36
+La lista de reproducción puede ser mucho más grande que la ventana: 16 pistas de 36
 píxeles, y al menos 32 compases de 72 píxeles, más de 2300 píxeles de
 ancho. Va en un área de scroll. Pero dos partes *no* deben desaparecer al
 hacer scroll: los nombres de las pistas a la izquierda, y los números de
@@ -172,7 +171,7 @@ if ui.put(name_rect, field).changed() {
   implementa su trait `Widget` para cualquier closure así. Así es como un
   widget con estilo de función como `mute_light` se puede pasar a `put`.
 - El campo de texto edita una *copia* del nombre. Si cambió, la copia va a
-  una acción `RenameTrack`, y la app cambia el proyecto. El playlist
+  una acción `RenameTrack`, y la app cambia el proyecto. La lista de reproducción
   mantiene la regla de que él nunca cambia el proyecto.
 - `Frame::NONE` quita el borde del campo, para que parezca una etiqueta
   hasta que haces clic en él.
@@ -192,7 +191,7 @@ struct ClipDrag {
 
 Probar con `xdotool` (un programa que mueve el ratón por ti) encontró un
 bug. Un script pulsó sobre un clip y bajó una pista en unos pocos
-milisegundos, y el playlist *añadió un clip nuevo* debajo en lugar de
+milisegundos, y la lista de reproducción *añadió un clip nuevo* debajo en lugar de
 mover el viejo. egui informa de la posición del puntero en el momento en
 que se dibuja el frame. Cuando la pulsación y el movimiento llegan en el
 mismo frame, «dónde está ahora el puntero» ya está una pista más abajo,
@@ -232,7 +231,7 @@ fn floor(self, step: usize) -> usize {
 ```
 
 La división de enteros tira el resto, así que `step / 16 * 16` es «la
-línea de compás en este paso o antes». Con Snap en Beat usa 4, y con Step
+línea de compás en este paso o antes». Con Ajuste en Pulso usa 4, y con Paso
 usa 1 (sin ajuste).
 
 ## Dibujar las notas de un clip: `Box<dyn Fn>`
@@ -273,16 +272,16 @@ importaría.
 
 ## Teclas que llegan al widget equivocado
 
-Space arrancaba y paraba la música en el paso 3 comprobando si algún
+Espacio arrancaba y paraba la música en el paso 3 comprobando si algún
 widget tenía el foco del teclado:
 
 ```rust
 let typing = ctx.memory(|memory| memory.focused().is_some());
 ```
 
-Con botones por todas partes, eso se rompió. Hacer clic en ▶ Play le da el
-foco al botón, y egui deja que un botón con foco se pulse con Space. Así
-que Space hacía dos cosas a la vez: el atajo alternaba la reproducción, y
+Con botones por todas partes, eso se rompió. Hacer clic en ▶ le da el
+foco al botón, y egui deja que un botón con foco se pulse con Espacio. Así
+que Espacio hacía dos cosas a la vez: el atajo alternaba la reproducción, y
 el botón la volvía a alternar. La versión nueva hace una pregunta más
 estrecha, y le quita la tecla a los widgets una vez que la ha usado:
 
@@ -296,7 +295,7 @@ if !typing && pressed(egui::Key::Space) {
 ```
 
 Los atajos corren antes de que se dibuje ningún panel, así que una vez que
-`consume_key` se ha llevado la pulsación de Space, el botón con foco nunca
+`consume_key` se ha llevado la pulsación de Espacio, el botón con foco nunca
 la ve.
 
 Una sorpresa más: el menú ⋯ de patrones tiene un campo de texto para el

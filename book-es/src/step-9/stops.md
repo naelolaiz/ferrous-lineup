@@ -1,4 +1,4 @@
-# Shots, holds, silencios y pushes: la banda rompe el groove
+# Golpes, sostenidos, silencios y anticipaciones: la banda rompe el groove
 
 Archivos: [`crates/lineup-core/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/chord_sheet.rs),
 [`crates/lineup-core/src/band/stops.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/band/stops.rs),
@@ -13,13 +13,13 @@ sostienen un acorde bajo quien canta, o dejan de tocar un compás para
 que el baterista o el solista quede solo, o entran con el acorde
 siguiente un poco antes del pulso. Los arreglistas escriben estos
 momentos en el chart, y son lo que hace que una banda suene arreglada
-en lugar de en loop. Ahora el chord sheet tiene marcas para ellos.
+en lugar de en bucle. Ahora la hoja de acordes tiene marcas para ellos.
 
 ![El chord sheet con C, ^F, G7., Am.. en la primera fila y F G7..., ^^C, Dm7, G7 en la segunda. Bajo cada armonía, su numeral y su marca: «IV · push», «V7 · shot», «vi · hold», «V7 · rest». El compás 3 está con clic derecho, y el menú «Band on G7» está abierto: «As the style goes», «Shot (.)» (elegido), «Hold (..)», «Rest (...)», luego «On the beat» (elegido), «Push (^)» y «Push a sixteenth (^^)»](../images/step-9-stops-menu.png)
 
 ## Pruébalo
 
-Pulsa **Ctrl+N** para un chord sheet nuevo y teclea estos compases, uno
+Pulsa **Ctrl+N** para una hoja de acordes nueva y teclea estos compases, uno
 en cada compás:
 
 ```text
@@ -27,9 +27,9 @@ en cada compás:
 ```
 
 Bajo cada armonía marcada, una palabra dice lo que la banda hace ahí:
-**push**, **shot**, **hold** o **rest**. Pasa el ratón por encima de
-una para la frase completa, como en «Hold: la banda lo golpea y lo
-sostiene hasta la siguiente armonía». Pulsa Space y escucha:
+**anticipación**, **golpe**, **sostenido** o **silencio**. Pasa el ratón por encima de
+una para la frase completa, como en «Am: la banda lo golpea y lo
+sostiene hasta la siguiente armonía». Pulsa Espacio y escucha:
 
 - compás 2: la banda toca F en el «y» del pulso 4 del compás 1, una
   corchea antes, y lo deja sonar sobre la línea de compás, donde está
@@ -41,17 +41,16 @@ sostiene hasta la siguiente armonía». Pulsa Space y escucha:
 - compás 6: C una semicorchea antes;
 - compases 7 y 8: el estilo otra vez.
 
-El playlist muestra lo mismo: las partes de la banda tienen huecos y
+La lista de reproducción muestra lo mismo: las partes de la banda tienen huecos y
 notas largas donde están las marcas.
 
 ![El playlist con las pistas Piano, Bass, Drums y Guitar a lo largo de ocho compases. Cada pista está ocupada en los compases 1, 2, 7 y 8. En el compás 3 cada pista tiene un golpe corto al principio y luego nada; en el compás 4 una nota larga o un golpe; el compás 5 está vacío en su segunda mitad, y las notas del compás 6 empiezan justo antes de su línea de compás](../images/step-9-stops-playlist.png)
 
 Las marcas también se pueden poner sin teclear: haz clic derecho en un
-compás y elige **Band on G7** (un elemento por cada armonía del
-compás), luego una parada o un push. **As the style goes** y **On the
-beat** quitan las marcas. Como todo cambio del chord sheet, la banda
+compás y elige **Banda en G7** (un elemento por cada armonía del
+compás), luego una parada o una anticipación. **Según el estilo** y **En el pulso** quitan las marcas. Como todo cambio de la hoja de acordes, la banda
 vuelve a tocar, el undo lo deshace, y las marcas se copian con los
-compases, también como texto ([Chord sheets como
+compases, también como texto ([Hojas de acordes como
 texto](text-chord-sheets.md)):
 
 ```text
@@ -64,21 +63,21 @@ abriendo.
 
 ## La música: romper el groove
 
-### Shots
+### Golpes
 
-Un **shot** (también llamado hit, stab o kick) es un acorde que toda
+Un **golpe** (también llamado hit, stab o kick) es un acorde que toda
 la banda toca a la vez, corto y acentuado, seguido de silencio. Los
 charts de big band están llenos de ellos: los vientos golpean un
 acorde, y el baterista lo toca con la banda en el platillo y el bombo,
 a menudo con un fill corto antes para «prepararlo». Una tanda de
-shots, uno al principio de cada compás o de cada dos, se llama
+golpes, uno al principio de cada compás o de cada dos, se llama
 **stop-time**: la banda toca solo los golpes y deja el resto del
 compás a quien canta, al solista o a un bailarín de claqué. En las
 estrofas de «Hoochie Coochie Man» de Muddy Waters la banda toca solo
 un riff corto al principio de cada compás y la voz llena el silencio;
 es uno de los grooves de stop-time más conocidos del blues.
 
-Aquí un shot es una corchea. Cada instrumentista golpea el acorde a su
+Aquí un golpe es una corchea. Cada instrumentista golpea el acorde a su
 manera (el piano su voicing, el bajo la nota grave, la guitarra un
 rasgueo), un poco más fuerte que el estilo, y la batería toca un bombo
 y un platillo. Luego la banda queda en silencio hasta la siguiente
@@ -86,32 +85,32 @@ armonía. Así funciona el final del compás 3 de arriba: el silencio es
 parte de la música, y la armonía sigue siendo G7 para quien toque
 sobre ella.
 
-### Holds
+### Sostenidos
 
-Un **hold** es un acorde golpeado y sostenido. Las bandas lo usan al
+Un **sostenido** es un acorde golpeado y sostenido. Las bandas lo usan al
 final de una frase, para un acorde grande bajo la última palabra de
 una línea, o para dejar que un solista toque libre sobre una armonía.
 No es un calderón: un calderón detiene el pulso, y la banda espera al
-director, mientras que un hold dura exactamente hasta la siguiente
+director, mientras que un sostenido dura exactamente hasta la siguiente
 armonía, y el pulso sigue por debajo. Cada instrumentista golpea el
-acorde con un bombo y un platillo, como en un shot, y lo deja sonar.
+acorde con un bombo y un platillo, como en un golpe, y lo deja sonar.
 Una forma de serie, que la banda toca como tricordos uno tras otro, se
 sostiene de a un tricordo: cada uno se golpea al llegar y se sostiene
 hasta el siguiente.
 
-### Rests
+### Silencios
 
-Un **rest** es la banda dejando de tocar. Los arreglistas lo llaman un
-**break**: en el jazz, la banda se detiene un compás o dos y el
+Un **silencio** es la banda dejando de tocar. Los arreglistas lo llaman un
+**corte**: en el jazz, la banda se detiene un compás o dos y el
 solista toca solo (el famoso «break» al final del primer chorus de un
 tema), y en el funk y el hip hop los compases donde solo toca el
 baterista dieron nombre al «breakbeat». Aquí descansa toda la banda,
 también la batería; teclea tú el break de la batería en el piano roll,
-o tócalo con **You play**.
+o tócalo con **Tocas tú**.
 
-### Pushes
+### Anticipaciones
 
-Un **push** (o **anticipación**) es un acorde tocado antes del pulso
+Una **anticipación** (en inglés, *push*) es un acorde tocado antes del pulso
 al que pertenece y sostenido sobre él. En Do | ^Fa, Fa está escrito en el
 pulso 1 del compás 2 pero se toca en el «y» del pulso 4 del compás 1,
 y la banda no vuelve a golpear en el pulso 1. Un chart lo escribe como
@@ -124,34 +123,34 @@ una corchea ligada sobre la línea de compás:
                ^ aquí se golpea la F, y se sostiene sobre el pulso 1
 ```
 
-Sin el push, el tiempo fuerte es el momento más fuerte del compás, y
+Sin la anticipación, el tiempo fuerte es el momento más fuerte del compás, y
 todo el mundo lo espera. Con él, el acorde llega antes y el pulso 1
 queda en silencio: la música se inclina hacia delante, como si no
 pudiera esperar. Eso es **síncopa**, un acento fuera del pulso, y los
-pushes están por todas partes en el pop, el rock, el funk y la música
+anticipaciones están por todas partes en el pop, el rock, el funk y la música
 latina. Los bajistas de salsa anticipan casi cada acorde: en el
 **tumbao**, el bajo toca la fundamental del acorde siguiente en el
-pulso 4, sostenida sobre la línea de compás. Un push de semicorchea
+pulso 4, sostenida sobre la línea de compás. Una anticipación de semicorchea
 (`^^C`) es más sutil, el tirón del funk y de la música latina rápida.
 
-Un push puede combinarse con una parada: `^G7.` es un shot una corchea
+Una anticipación puede combinarse con una parada: `^G7.` es un golpe una corchea
 antes.
 
 ### Por qué puntos y signos de intercalación
 
 Los puntos después de una armonía y los signos de intercalación antes
 son una manera corta de escribir las marcas sin soltar el teclado: un
-punto para el más corto (un shot), tres para el silencio más largo (un
-rest). El signo de intercalación `^` se parece al **marcato**, el
+punto para el más corto (un golpe), tres para el silencio más largo (un
+silencio). El signo de intercalación `^` se parece al **marcato**, el
 signo de acento que los músicos escriben sobre una nota para tocarla
-con fuerza, y un push se toca con acento. `N.C.` (sin acorde) conserva
+con fuerza, y una anticipación se toca con acento. `N.C.` (sin acorde) conserva
 sus propios puntos: son parte de su nombre.
 
 ## Cómo funciona
 
 ### Dos marcas opcionales en un marker
 
-Una armonía del chord sheet es un `ChordMarker`: dónde empieza y qué
+Una armonía de la hoja de acordes es un `ChordMarker`: dónde empieza y qué
 es. Gana dos campos más, cada uno un `Option`, `None` cuando no está
 marcada:
 
@@ -199,7 +198,7 @@ llamadas pueden encadenarse: `.pushed(...).stopped(...)`.
 
 ### Leer las marcas
 
-Teclear `^^Am7/G..` debe dar un push, la armonía `Am7/G` y una parada.
+Teclear `^^Am7/G..` debe dar una anticipación, la armonía `Am7/G` y una parada.
 `read_marks` pela las marcas de los dos extremos y las cuenta:
 
 ```rust
@@ -221,7 +220,7 @@ dos longitudes es cuántos quitó. Un signo de intercalación y un punto
 son un byte cada uno en UTF-8, así que contar bytes cuenta marcas. El
 resto, `bare`, va al parser que ya leía acordes, numerales, conjuntos
 y series. Antes de todo esto, se reconoce `N.C.` y se deja entero, o
-su último punto se convertiría en un shot.
+su último punto se convertiría en un golpe.
 
 Escribir un marker de vuelta es lo mismo al revés, `format!` con las
 marcas en los dos lados:
@@ -245,10 +244,10 @@ escribe su parte exactamente como antes, y luego un paso nuevo,
 `Breaks::apply` en `band/stops.rs`, la reescribe. Primero `Breaks::of`
 convierte los markers en tramos de la canción:
 
-- una **parada** dura desde su armonía (antes si también tiene push)
-  hasta donde entra la armonía siguiente (antes si esa tiene push);
-- un **push** dura desde donde se toca hasta la armonía siguiente. Un
-  push nunca se remonta a la armonía anterior: si Fa está escrito un
+- una **parada** dura desde su armonía (antes si también tiene anticipación)
+  hasta donde entra la armonía siguiente (antes si esa tiene anticipación);
+- una **anticipación** dura desde donde se toca hasta la armonía siguiente. Una
+  anticipación nunca se remonta a la armonía anterior: si Fa está escrito un
   paso después de Do, no puede entrar antes que Do.
 
 Luego, para cada instrumentista:
@@ -267,14 +266,14 @@ for stop in &self.stops {
 ```
 
 `clear` quita las notas que empiezan en el tramo, y acorta las que
-empezaron antes y seguirían sonando, para que a un shot le siga
+empezaron antes y seguirían sonando, para que a un golpe le siga
 silencio de verdad. Un `continue` dentro de un brazo de un `match`
-salta a la siguiente parada: un rest no golpea nada.
+salta a la siguiente parada: un silencio no golpea nada.
 
-Un push limpia el pulso en el que está escrito y golpea la armonía
+Una anticipación limpia el pulso en el que está escrito y golpea la armonía
 antes. Cuánto se sostiene depende del estilo: hasta donde continúe la
 parte de ese instrumentista. Un piano que toca en cada pulso sostiene
-el acorde con push hasta el pulso 2; un bajo que toca blancas lo
+el acorde con anticipación hasta el pulso 2; un bajo que toca blancas lo
 sostiene hasta el pulso 3.
 
 ### Cada instrumentista golpea a su manera
@@ -294,7 +293,7 @@ pub(super) fn apply(
 El piano pasa sus acordes sostenidos, el bajo una función que toca una
 nota, y la guitarra y las cuerdas comprueban primero si están tocando
 en esta variación (las cuerdas que solo entran en la variación b no
-deberían golpear de pronto un shot en la variación a):
+deberían golpear de pronto un golpe en la variación a):
 
 ```rust
 breaks.apply(notes, &harmonies, |played| {
@@ -320,7 +319,7 @@ closure que se le pase.
 uno, `&[Played]`, sin copiarlo, porque `guitar::play` toma un slice.
 
 ¿Por qué el bajo no usa su propio estilo sostenido, `Bass::Held`?
-Porque ese golpea otra vez en cada línea de compás, y un hold de dos
+Porque ese golpea otra vez en cada línea de compás, y un sostenido de dos
 compases se golpearía dos veces. El bajo recibe una función propia,
 `bass_struck`, que toca una nota durante todo el tramo.
 
@@ -334,10 +333,10 @@ añade los golpes, en los canales del bombo y del platillo:
 notes.retain(|(_, note)| !(stop.start..stop.end).contains(&note.start));
 ```
 
-`(a..b).contains(&x)` se lee mejor que `a <= x && x < b`, y para un
-push, `(start..=written)` con `..=` incluye el paso en el que está
+`(a..b).contains(&x)` se lee mejor que `a <= x && x < b`, y para una
+anticipación, `(start..=written)` con `..=` incluye el paso en el que está
 escrito. El bombo y el platillo deben tener canales antes de poder
-tocar: un estilo sin platillo recibe uno, solo cuando el chord sheet
+tocar: un estilo sin platillo recibe uno, solo cuando la hoja de acordes
 tiene una marca, mediante
 
 ```rust
@@ -354,38 +353,38 @@ estilo crece solo cuando hace falta.
 Para eso no hubo que escribir nada. La banda recuerda una huella de
 todo desde lo que tocó, incluidos los chord markers, hecha con su
 texto `Debug`. El texto `Debug` de un marker ahora incluye sus marcas,
-así que cambiar un shot por un hold cambia la huella, y la banda
+así que cambiar un golpe por un sostenido cambia la huella, y la banda
 vuelve a tocar. Las partes que editaste a mano siguen congeladas hasta
-**Play it again**, como siempre.
+**Volver a tocarla**, como siempre.
 
 ## Ejercicios
 
-1. **Stop-time.** Teclea un blues de doce compases en Fa con shots en
+1. **Stop-time.** Teclea un blues de doce compases en Fa con golpes en
    los cuatro primeros compases:
    `| F7. | F7. | F7. | F7. | Bb7 | Bb7 | F7 | F7 | C7 | Bb7 | F7 | C7 |`
    y elige el estilo **Shuffle**. Toca en los huecos con la escala de
    blues de Fa (Fa La♭ Si♭ Si Do Mi♭). ¿Qué cambia en el aire cuando la banda
    vuelve en el compás 5?
-2. **Pushes.** Teclea `| C | Am | F | G |` en **Pop beat** y escucha.
-   Luego ponle push a cada acorde después del primero:
+2. **Anticipaciones.** Teclea `| C | Am | F | G |` en **Ritmo pop** y escucha.
+   Luego ponle anticipación a cada acorde después del primero:
    `| C | ^Am | ^F | ^G |`. Marca el ritmo del piano con las palmas de
    las dos maneras. ¿Qué pulso desaparece?
 3. En el piano roll, compara el piano y el bajo del ejercicio 2.
-   ¿Cuánto dura cada acorde con push en el piano, y cada nota con push
+   ¿Cuánto dura cada acorde con anticipación en el piano, y cada nota con anticipación
    en el bajo? ¿Por qué pueden diferir?
 4. Teclea `C..` en el compás 1, nada en el compás 2 y `G7` en el
-   compás 3, para que el hold dure dos compases. Mira el bajo en el
+   compás 3, para que el sostenido dure dos compases. Mira el bajo en el
    piano roll: una nota. Ahora reemplaza `bass_struck` en `write_band`
    por una closure que llame a `Bass::Held.play_in_bars`. ¿Qué toca
    ahora el bajo, y qué prueba lo atrapa?
-5. (Rust) Haz que un shot dure una negra. ¿Qué constante cambias, y
+5. (Rust) Haz que un golpe dure una negra. ¿Qué constante cambias, y
    qué pruebas fallan? Arréglalas.
-6. (Rust) Añade `^^^C`, un push de una negra. Añade una variante a
+6. (Rust) Añade `^^^C`, una anticipación de una negra. Añade una variante a
    `Push` y deja que el compilador te muestre cada `match` que debe
    aprenderla. ¿Qué otros lugares la necesitan (pista: `read_marks` y
    el menú)?
 7. (Rust, más difícil) En la variación b la batería toca un fill en el
-   compás anterior al cambio. ¿Deberían un shot o un rest de ese
+   compás anterior al cambio. ¿Deberían un golpe o un silencio de ese
    compás conservar el fill? Encuentra dónde añade `drum_part` el fill
    y dónde quita `apply_to_drums` el groove, decide, y escribe una
    prueba para lo que elijas.

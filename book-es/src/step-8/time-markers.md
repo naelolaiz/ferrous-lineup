@@ -16,7 +16,7 @@ también.
 Haz clic derecho en los números de compás y elige un compás. Desde ese
 compás en adelante, los compases se cuentan en él. La regla escribe el
 compás en el compás 1 y dondequiera que cambie, y el mismo menú tiene
-**Remove this change**.
+**Quitar este cambio**.
 
 ![La demo con 3/4 desde el compás 5 y 6/8 desde el compás 7. Los compases 5 y 6 miden 12 pasos de ancho, así que sus líneas de compás están más juntas.](../images/step-8-time-markers.png)
 
@@ -39,7 +39,7 @@ pub struct TimeMarker {
 ```
 
 El proyecto guarda su propio `time_signature` para el comienzo de la
-canción, y el playlist guarda una lista ordenada de marcadores después
+canción, y la lista de reproducción guarda una lista ordenada de marcadores después
 de él, como guarda sus secciones. Un marcador siempre empieza un compás
 nuevo. Pon uno en mitad de un compás y ese compás se queda corto, que
 es como una partitura muestra un compás al que le falta un pulso.
@@ -90,7 +90,7 @@ primer compás, luego cada marcador) se `zip`ean con los finales (cada
 marcador, luego `usize::MAX` para "nunca").
 
 `bars()` da todos los compases sin fin, hecho con `std::iter::from_fn`,
-que convierte una closure en un iterador. El playlist dibuja su
+que convierte una closure en un iterador. La lista de reproducción dibuja su
 cuadrícula con `meter.bars().take_while(|bar| bar.start <= steps)`: el
 iterador nunca se detiene solo, `take_while` decide cuánto de él usar.
 
@@ -99,16 +99,15 @@ iterador nunca se detiene solo, `take_while` decide cuánto de él usar.
 Todo lo que antes preguntaba `project.time_signature` sobre compases
 pregunta ahora `project.meter()`:
 
-- la cuadrícula del playlist, los números de compás y el ajuste, a
+- la cuadrícula de la lista de reproducción, los números de compás y el ajuste, a
   través de `Snap::floor` y `Snap::next` (el final del compás o pulso
   en el que está el puntero, que es lo que necesita arrastrar una
-  sección o un loop);
-- los conteos de compases de las secciones y la etiqueta "Looping
-  bars";
+  sección o un bucle);
+- los conteos de compases de las secciones y la etiqueta "Repitiendo compases";
 - la longitud de la canción, que se redondea hacia arriba a la
   siguiente línea de compás.
 
-El channel rack y el piano roll muestran un patrón, no la canción.
+El rack de canales y el piano roll muestran un patrón, no la canción.
 Preguntan `project.pattern_time(pattern)`: el compás donde empieza el
 primer clip del patrón. Un patrón usado en el tramo en 3/4 se dibuja en
 compases de tres. Los ritmos, los fills y la escucha de acordes de la
@@ -119,7 +118,7 @@ lo coloca en compases de 3/4.
 
 Las secciones pueden repetirse ([la estructura de la
 canción](song-structure.md)). Si una sección en 3/4 suena dos veces, la
-canción oída tiene dos tramos en 3/4, pero el playlist dibuja uno. Las
+canción oída tiene dos tramos en 3/4, pero la lista de reproducción dibuja uno. Las
 *pasadas* del arreglo ya dicen qué parte de la línea de tiempo suena
 cuándo, así que `Project::played_meter` construye un segundo `Meter` en
 pasos de canción: al comienzo de cada pasada, el compás en el que está
@@ -127,8 +126,7 @@ esa parte de la línea de tiempo, más los marcadores dentro de ella.
 Luego `tidy()` descarta los marcadores que no cambian nada, como una
 pasada en 4/4 que sigue a otra pasada en 4/4 sobre una línea de compás.
 
-El transporte usa ese metro para la pantalla de posición y para Page
-Up/Page Down, así que "compás siguiente" significa el siguiente compás
+El transporte usa ese metro para la pantalla de posición y para RePág/AvPág, así que "compás siguiente" significa el siguiente compás
 que oyes. La exportación MIDI lo usa para escribir un meta evento de
 compás en cada cambio, los mismos cuatro bytes de antes, ahora en el
 tick de cada cambio en lugar de solo en el tick 0.
@@ -140,7 +138,7 @@ copiada en una canción en 4/4 no añade ninguno.
 
 ## En los archivos
 
-Los marcadores se guardan como `time_markers` tras la región de loop.
+Los marcadores se guardan como `time_markers` tras la región de bucle.
 Un proyecto con marcadores es **formato 5**: un Ferrous Lineup viejo se
 saltaría el campo que no conoce y dibujaría todo en el primer compás,
 así que debe rechazar el archivo en su lugar. Un proyecto sin

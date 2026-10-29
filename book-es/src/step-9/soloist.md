@@ -9,7 +9,7 @@ y [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-l
 
 La banda acompaña: toca los acordes para que otra persona pueda tocar
 la melodía o improvisar sobre ellos. Esta página añade a esa otra
-persona, un **solista** que improvisa una línea sobre el chord sheet.
+persona, un **solista** que improvisa una línea sobre la hoja de acordes.
 Es experimental y está apagado hasta que lo enciendes, porque un solo
 hecho a base de reglas es un estudio, no una actuación. Pero es un
 estudio útil: cada nota que toca tiene una razón, y el piano roll
@@ -20,26 +20,26 @@ improvisada y probar las mismas reglas en tu propio instrumento.
 
 ## Probarlo
 
-Pulsa **Ctrl+N** para un chord sheet nuevo y escribe estos compases, un
+Pulsa **Ctrl+N** para una hoja de acordes nueva y escribe estos compases, un
 acorde por compás:
 
 ```text
 | Dm7 | G7 | Cmaj7 | A7 | Dm7 | G7 | C6 | C6 |
 ```
 
-En el menú **Band** elige **Jazz > Swing**, y al final del mismo menú
-marca **Soloist (experimental)**. Pasa el ratón por encima primero: la
+En el menú **Banda** elige **Jazz > Swing**, y al final del mismo menú
+marca **Solista (experimental)**. Pasa el ratón por encima primero: la
 sugerencia dice quién es el solista en este estilo, un saxo tenor. Una
-pista **Soloist** aparece en el playlist, y el channel rack recibe un
-canal Soloist con el saxo tenor. Pulsa Space: sobre la banda, el saxo
+pista **Solista** aparece en la lista de reproducción, y el rack de canales recibe un
+canal Solista con el saxo tenor. Pulsa Espacio: sobre la banda, el saxo
 toca frases de dos compases en corcheas con swing, con una respiración
 entre ellas.
 
-**Another solo** en el mismo menú toca uno distinto; deshacer trae de
+**Otro solo** en el mismo menú toca uno distinto; deshacer trae de
 vuelta el último. Desmarca el solista y la pista y el canal se van.
 Como toda parte de la banda, el solo se toca de nuevo cuando cambia el
-sheet, y si editas sus notas se queda como lo dejaste hasta que pulsas
-**Play it again** (o **Another solo**).
+hoja, y si editas sus notas se queda como lo dejaste hasta que pulsas
+**Volver a tocarla** (o **Otro solo**).
 
 Ahora haz doble clic en el clip del solista para abrir su parte en el
 piano roll. Sus notas están coloreadas por lo que son:
@@ -204,8 +204,7 @@ como alguien hablando. Luego las corcheas llevan swing como la banda
 da forma a su volumen, como hace con las melodías de las demos.
 
 El solista toca sobre el estribillo, no sobre la introducción ni el
-final ([La forma de la canción](song-form.md)), y sigue tocando a
-través de los shots y los silencios ([Shots, holds, silencios y
+final ([La forma de la canción](song-form.md)), y sigue tocando a través de los golpes y los silencios ([Golpes, sostenidos, silencios y
 pushes](stops.md)): la banda se detiene precisamente para que un
 solista se oiga solo. Sobre «no chord» se queda callado. Sobre un
 conjunto de clases de alturas, un micromodo o una forma de la serie no
@@ -223,10 +222,10 @@ y con el registro en el que toca:
 | Rock                  | guitarra saturada | La3 a Do6   |
 | Blues                 | armónica          | Do4 a Do6   |
 | Jazz                  | saxo tenor        | Re3 a Fa5   |
-| Soul, funk y R&Si      | saxo alto         | Sol3 a Sol5   |
+| Soul, funk y R&B      | saxo alto         | Sol3 a Sol5   |
 | Hip hop y lo-fi       | vibráfono         | Do4 a Do6   |
 | Electrónica           | lead de sierra    | Do4 a Do6   |
-| Latin                 | trompeta          | Si♭3 a La5  |
+| Latina                | trompeta          | Si♭3 a La5  |
 | Tango                 | acordeón de tango | Sol3 a Do6   |
 | Folclore sudamericano | flauta de pan     | Mi4 a Mi6   |
 | Flamenco              | guitarra de nailon| Mi3 a La5   |
@@ -437,7 +436,7 @@ verde en la tonalidad, rojo fuera de ella.
 Un solo improvisado necesita azar: qué nota del acorde, si saltar, si
 empezar tarde. Pero la banda debe tocar las mismas notas cada vez que
 se abre la canción, o las partes que congelaste ya no encajarían con el
-sheet. Así que el solista rueda dados **pseudoaleatorios**: una función
+hoja. Así que el solista rueda dados **pseudoaleatorios**: una función
 pequeña que convierte un número, la **semilla**, en un flujo de números
 que parecen aleatorios pero que son siempre los mismos desde la misma
 semilla.
@@ -475,7 +474,7 @@ significa que lo único que puedes hacer con él es `next`, `chance` y
 `below`.
 
 La semilla se guarda en el proyecto (`Band.solo: Option<u64>`, `None`
-sin solista), forma parte de la huella de la banda, y **Another solo**
+sin solista), forma parte de la huella de la banda, y **Otro solo**
 le suma uno. Una huella nueva significa que la banda toca de nuevo,
 así que una semilla nueva toca un solo nuevo, y deshacer, que trae de
 vuelta la semilla vieja, trae de vuelta el solo viejo.
@@ -566,10 +565,10 @@ pub fn players(&self) -> Vec<Player> {
 
 Todo lo que la banda más grande dio a cada player vino gratis: su
 propio canal con su programa General MIDI, su pista y su patrón, ser
-congelado al editarlo, **You play** para silenciarlo y tocar tú el
+congelado al editarlo, **Tocas tú** para silenciarlo y tocar tú el
 solo. Dos cosas son distintas. Las notas del solista pasan por el
 fraseo de **melodía** de la biblioteca en lugar del fraseo del
-acompañamiento, y los shots, holds y silencios no lo tocan.
+acompañamiento, y los golpes, sostenidos y silencios no lo tocan.
 
 Una canción con solista se guarda como **formato 19**. Sin uno, los
 campos nuevos se dejan fuera y el archivo es como antes.
@@ -595,7 +594,7 @@ campos nuevos se dejan fuera y el archivo es como antes.
    Si♭? (Pista: ¿qué armonía suena cuando empieza el Si♭?)
 5. (Rust) El solista salta a la segunda nota del acorde una de cada
    cinco veces (`dice.chance(20)` en `target`). Ponlo a 60 y toca unos
-   cuantos solos con **Another solo**. ¿Cómo cambia la línea? ¿Qué
+   cuantos solos con **Otro solo**. ¿Cómo cambia la línea? ¿Qué
    pruebas siguen pasando, y por qué?
 6. (Rust) Añade un **enclosure**, una figura favorita del bebop: antes
    de un objetivo, una nota de la escala por encima y luego la nota un
@@ -603,7 +602,7 @@ campos nuevos se dejan fuera y el archivo es como antes.
    deja que el compilador te muestre cada `match` que debe aprenderlo,
    y escribe una prueba al estilo de
    `roles_name_what_each_note_does`.
-7. (Rust, más difícil) Con **Choruses** a 3, la banda repite el
+7. (Rust, más difícil) Con **Vueltas** a 3, la banda repite el
    estribillo, y el solista toca el mismo solo tres veces. Haz que cada
    estribillo sea un solo nuevo. ¿Dónde se repite el estribillo (busca
    `repeated_chorus`), y cómo podría recibir cada repetición su propia
