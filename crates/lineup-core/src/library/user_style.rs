@@ -73,11 +73,19 @@ impl UserStyle {
     }
 
     pub fn from_builtin(style: &'static Style) -> Self {
-        let mut project = Project::with_band();
         let band = crate::BandStyle::of_style(style).expect("built-in style has a band");
+        Self::from_band(band, Some(style))
+    }
+
+    /// A copy of what a band in `band` plays, comping and walking the
+    /// bass as the library style `harmony` does, if given, with all its
+    /// players: what Edit style… opens for a song whose band plays it.
+    pub fn from_band(band: &'static crate::BandStyle, harmony: Option<&'static Style>) -> Self {
+        let time = harmony.map_or(band.time, |style| style.time);
+        let mut project = Project::with_band();
         project.apply_band_parts(
             band,
-            Some(style),
+            harmony,
             StyleParts {
                 progression: false,
                 ..StyleParts::default()
@@ -85,12 +93,12 @@ impl UserStyle {
         );
         project.set_chords(
             0,
-            style.time.steps_per_bar() * 2,
+            time.steps_per_bar() * 2,
             &[ChordMarker::new(0, HarmonyName::parse("C").unwrap())],
         );
         project.end_song_at(1);
         let bars = 2;
-        let length = bars * style.time.steps_per_bar();
+        let length = bars * time.steps_per_bar();
         let mut lanes = Vec::new();
         for player in Player::ALL {
             for (channel, state) in project.channels().iter().enumerate() {
@@ -110,15 +118,18 @@ impl UserStyle {
                 }
             }
         }
+        let (name, about) =
+            harmony.map_or((band.name, band.about), |style| (style.name, style.about));
         Self {
             format: 1,
-            name: copy_name(&tr_name(style.name)),
-            about: tr(style.about).into(),
-            time: style.time,
-            tempo: Tempo::new(style.tempo),
+            name: copy_name(&tr_name(name)),
+            about: tr(about).into(),
+            time,
+            tempo: Tempo::new(harmony.map_or(band.tempo, |style| style.tempo)),
             swing: project.swing,
-            mode: style.mode,
-            chart: style.chart.into(),
+            mode: harmony.map_or(ScaleKind::Major, |style| style.mode),
+            // A band of its own plays the song's chords.
+            chart: harmony.map_or("", |style| style.chart).into(),
             bars,
             lanes,
         }
@@ -474,6 +485,23 @@ mod tests {
             );
         }
     }
+    #[test]
+    fn every_band_style_can_be_copied_with_all_its_players() {
+        for band in crate::band_styles() {
+            let copy = UserStyle::from_band(band, None);
+            copy.validate()
+                .unwrap_or_else(|error| panic!("{}: {error}", band.name));
+            let plays = |player| copy.lanes.iter().any(|lane| lane.player == player);
+            assert!(plays(Player::Piano) && plays(Player::Bass), "{}", band.name);
+            assert_eq!(plays(Player::Drums), band.rhythm.is_some(), "{}", band.name);
+            assert!(
+                copy.chart.is_empty(),
+                "{} plays the song's chords",
+                band.name
+            );
+        }
+    }
+
     #[test]
     fn a_copy_is_named_and_described_in_the_apps_language() {
         let bossa = super::super::Style::named("Bossa nova").unwrap();
