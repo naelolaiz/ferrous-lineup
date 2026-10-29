@@ -93,10 +93,15 @@ development you can drop it to build faster.
 
 You should see this window:
 
-![Ferrous Lineup as it opens: the demo song on the playlist, the channel rack over it with Kick, Clap, Hat, Snare and the Lineup Osc, and the harmony keys of C major along the bottom.](images/getting-started-window.png)
+![Ferrous Lineup as it opens: the Library on the left, the demo song on the playlist, the channel rack over it with Kick, Clap, Hat, Snare and the Lineup Osc, and the harmony keys of C major along the bottom.](images/getting-started-window.png)
 
 Press **Space** or click **▶ Play** to hear the demo song: two bars of
 chords, then a beat comes in, and a drum fill ends it before it loops.
+The first time, a window offers to download a free **SoundFont**,
+recordings of real instruments: the app's own synth only comes close to
+a piano or a drum kit. **Download** fetches it (about 30 MB, once) and
+plays the instruments from it; **Not now** keeps the synth ([Real
+instrument sounds: a SoundFont](step-9/soundfont.md) tells more).
 The playlist fills the window; **F6** shows and hides the channel rack,
 **F7** the piano roll, and **L** switches between playing the song and
 looping the selected pattern. **Ctrl+S** (⌘S on a Mac) saves the
@@ -119,9 +124,10 @@ works.
 
 Above the status bar are the **harmony keys**: the key and the time
 signature, and a big key for each chord of the key. Hold one down, or
-press **1** to **7**, to play its chord. The **Library** tab next to the
-pattern list holds the styles and rhythms: click one, then **Apply**, to
-hear the song played that way. **File > Demos** opens whole songs: try *Für Elise* or
+press **1** to **7**, to play its chord. The **Library**, on the left,
+holds the styles and rhythms: click one, then **Apply**, to hear the
+song played that way; the **Patterns** tab next to it lists the song's
+patterns. **File > Demos** opens whole songs: try *Für Elise* or
 *Frère Jacques*, press nothing, and watch the harmony keys follow the
 chords.
 
