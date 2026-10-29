@@ -1541,6 +1541,33 @@ fn unsaved_work_wakes_a_window_left_alone_to_write_its_recovery_copy() {
 }
 
 #[test]
+fn the_key_on_the_bar_numbers_is_never_crossed_by_a_bar_line() {
+    // Süsserl starts in 2/4 and changes to 3/4 at bar 3: at 100%, "Bb
+    // major" after "1 2/4" has no room before it, and bar 2's line ran
+    // through its B.
+    let mut screen = Screen::new();
+    let song = lineup_core::library::Song::named("Süsserl").unwrap();
+    screen.app.open_demo(super::library::Demo::Song(song));
+    screen.app.set_playing(false);
+    screen.app.chord_sheet.open = false;
+    screen.app.rack_open = false;
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Bb major").is_none());
+    let key = text_rect(&output, "Bb").expect("the key, written short");
+    let crossed = output.shapes.iter().any(|shape| match &shape.shape {
+        Shape::LineSegment { points, .. } => {
+            points[0].x == points[1].x
+                && key.x_range().contains(points[0].x)
+                && points[0].y.min(points[1].y) < key.center().y
+                && points[0].y.max(points[1].y) > key.center().y
+        }
+        _ => false,
+    });
+    assert!(!crossed);
+}
+
+#[test]
 fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
     let mut screen = Screen::new();
     crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
