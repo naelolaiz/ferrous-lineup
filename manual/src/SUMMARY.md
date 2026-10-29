@@ -50,3 +50,12 @@
 - [Beyond keys: sets, rows and micromodes](sets-rows-micromodes.md)
 - [Practising](practising.md)
 - [Lead sheets, also for B♭, E♭ and F instruments](lead-sheets.md)
+
+# Part 6: The demos, a listening guide
+
+- [Finding a demo](finding-a-demo.md)
+- [Folk music of South America, and the Misa Criolla](folk-and-misa-criolla.md)
+- [Tango and Latin America](tango-and-latin-america.md)
+- [Jazz, blues, gospel and pop](jazz-and-pop.md)
+- [The concert hall](concert-hall.md)
+- [Odd meters and the Balkans](odd-meters-and-balkans.md)

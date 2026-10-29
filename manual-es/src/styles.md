@@ -45,8 +45,8 @@ Debajo de los estilos hay tres grupos que se pueden abrir:
 - **Series dodecafónicas** y **Micromodos (Kröpfl)**: estilos que tocan
   una serie dodecafónica o un micromodo en lugar de acordes. La
   tonalidad se convierte en la serie o el micromodo, empezando en la
-  tónica; ver [Conjuntos de clases de alturas, series y
-  micromodos](sets-rows-micromodes.md).
+  tónica; ver [Más allá de las tonalidades:
+  conjuntos, series y micromodos](sets-rows-micromodes.md).
 - **Rellenos**: un compás de batería cada uno: Redoble de caja, Relleno
   de toms, Subida de house, Relleno latino, Relleno de hip hop y Final
   con crash. Mientras suena la canción, un clic pone el relleno en el

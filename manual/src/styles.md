@@ -41,7 +41,7 @@ Under the styles are three groups you can open:
 
 - **Twelve-tone rows** and **Micromodes (Kröpfl)**: styles that play a
   twelve-tone row or a micromode instead of chords. The key becomes the
-  row or the micromode, starting on the key note; see [Pitch-class
+  row or the micromode, starting on the key note; see [Beyond keys:
   sets, rows and micromodes](sets-rows-micromodes.md).
 - **Fills**: one bar of drums each: Snare roll, Tom fill, House build,
   Latin fill, Hip hop fill and Crash ending. While the song plays, a
