@@ -44,6 +44,8 @@ mod ux_tests;
 mod video;
 mod view;
 
+pub(crate) use demo_menu::fold;
+
 pub use trace::{TRACE_SAMPLE_RATE, demo_names, trace_table};
 
 use std::path::PathBuf;
