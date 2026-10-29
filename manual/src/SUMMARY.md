@@ -42,3 +42,11 @@
 
 - [Notes, intervals and scales](notes-and-scales.md)
 - [Keys and modes](keys-and-modes.md)
+- [Chords and their names](chords.md)
+- [What chords do: numerals and functions](chord-functions.md)
+- [Chords from outside the key](outside-the-key.md)
+- [Voice leading and how parts move](voice-leading.md)
+- [Rhythm and meter](rhythm-and-meter.md)
+- [Beyond keys: sets, rows and micromodes](sets-rows-micromodes.md)
+- [Practising](practising.md)
+- [Lead sheets, also for B♭, E♭ and F instruments](lead-sheets.md)

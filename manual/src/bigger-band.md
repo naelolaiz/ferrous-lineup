@@ -158,7 +158,7 @@ horns sound like one big instrument.
 - From one chord to the next, each horn goes to the nearest note it can.
   C to A♭ is E4 G4 C5 to E♭4 A♭4 C5: two horns move a semitone, and the
   lead holds C. From G7 to C, B rises to C and F falls to E, as the
-  leading note and the seventh of a dominant do.
+  leading tone and the seventh of a dominant do.
 - The horns avoid **parallel fifths**: two horns a fifth apart that move
   to another fifth sound like one horn, and a line is lost.
 

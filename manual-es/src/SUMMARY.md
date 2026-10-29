@@ -42,3 +42,11 @@
 
 - [Notas, intervalos y escalas](notes-and-scales.md)
 - [Tonalidades y modos](keys-and-modes.md)
+- [Los acordes y sus nombres](chords.md)
+- [Qué hacen los acordes: números romanos y funciones](chord-functions.md)
+- [Acordes de fuera de la tonalidad](outside-the-key.md)
+- [La conducción de voces y cómo se mueven las partes](voice-leading.md)
+- [Ritmo y métrica](rhythm-and-meter.md)
+- [Más allá de las tonalidades: conjuntos, series y micromodos](sets-rows-micromodes.md)
+- [Practicar](practising.md)
+- [Partituras guía, también para instrumentos en Si♭, Mi♭ y Fa](lead-sheets.md)

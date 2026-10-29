@@ -57,7 +57,7 @@ strongest way chords move. See [What chords do](chord-functions.md).
 
 Into a minor chord, the ii is **half-diminished** (B D F A before Am),
 the chord that really sits on the second note of A minor, and the V is
-still a dominant seventh, E7, with G♯: the **leading note**, a semitone
+still a dominant seventh, E7, with G♯: the **leading tone**, a semitone
 under A, which pulls to it much harder than the G of E minor would.
 
 The numerals are counted from the chord the intro leads to. Most songs
