@@ -1576,32 +1576,53 @@ fn paint_ruler(
         .into_iter()
         .find(|&every| bar_width * every as f32 >= BAR_NUMBER_WIDTH)
         .unwrap_or(64);
+    // What is written at each bar: the time signature where the song
+    // starts and where it changes, the key where it starts and where it
+    // modulates, and the band's variation where it changes.
+    let bars: Vec<_> = meter
+        .bars()
+        .take_while(|bar| bar.end() <= steps)
+        .map(|bar| {
+            let change = bar.start == 0 || changes.contains(&bar.start);
+            let key_change = bar.start == 0 || keys.markers().iter().any(|m| m.start == bar.start);
+            let variation = variations
+                .iter()
+                .find(|marker| marker.start == bar.start)
+                .map(|marker| marker.variation);
+            (bar, change, key_change, variation)
+        })
+        .collect();
+    let marked = |index: usize| {
+        let (_, change, key_change, variation) = bars[index];
+        change || key_change || variation.is_some()
+    };
     // Where the last text written ends: a long key name runs over the
-    // next bars, whose numbers are then left out.
+    // next bars, whose numbers and lines are then left out.
     let mut covered = f32::NEG_INFINITY;
-    for bar in meter.bars().take_while(|bar| bar.end() <= steps) {
+    for (index, &(bar, change, key_change, variation)) in bars.iter().enumerate() {
         let x = layout.x(bar.start);
         let color = if bar.start < song_length {
             HEADER_TEXT
         } else {
             RULER_TEXT
         };
-        let change = bar.start == 0 || changes.contains(&bar.start);
-        // So is the key, where the song starts and where it modulates.
-        let key_change = bar.start == 0 || keys.markers().iter().any(|m| m.start == bar.start);
-        // And the band's variation, where it changes.
-        let variation = variations
-            .iter()
-            .find(|marker| marker.start == bar.start)
-            .map(|marker| marker.variation);
-        let marked = change || key_change || variation.is_some();
-        if bar.number % every != 0 && !marked {
+        if bar.number % every != 0 && !marked(index) {
+            continue;
+        }
+        if x < covered && !marked(index) {
             continue;
         }
         ruler_painter.vline(x, ruler.y_range(), Stroke::new(1.0, BAR_LINE));
-        if x < covered && !marked {
-            continue;
-        }
+        // The text stops short of the next bar with something to say,
+        // whose number and line must be read.
+        let room = (index + 1..bars.len())
+            .find(|&next| marked(next))
+            .map_or(ruler.right(), |next| layout.x(bars[next].0.start) - 3.0);
+        let ruler_painter = ruler_painter.with_clip_rect(
+            ruler_painter
+                .clip_rect()
+                .intersect(Rect::everything_left_of(room)),
+        );
         let number = ruler_painter.text(
             pos2(x + 3.0, ruler.center().y),
             Align2::LEFT_CENTER,
@@ -1622,15 +1643,33 @@ fn paint_ruler(
                 .right();
         }
         if key_change {
-            right = ruler_painter
-                .text(
-                    pos2(right + 4.0, ruler.center().y),
-                    Align2::LEFT_CENTER,
-                    crate::i18n::key_name(keys.key_at(bar.start)),
-                    FontId::proportional(10.0),
-                    KEY_TEXT,
-                )
-                .right();
+            // A key name too long for the room is written short, as the
+            // chord of its tonic: Bb for Bb major, Gm for G minor; or
+            // left out.
+            let key = keys.key_at(bar.start);
+            let font = FontId::proportional(10.0);
+            let width = |name: &String| {
+                ruler_painter
+                    .layout_no_wrap(name.clone(), font.clone(), KEY_TEXT)
+                    .size()
+                    .x
+            };
+            let short = key.triad(0).map(|tonic| key.chord_name(tonic));
+            let name = [Some(crate::i18n::key_name(key)), short]
+                .into_iter()
+                .flatten()
+                .find(|name| right + 4.0 + width(name) <= room);
+            if let Some(name) = name {
+                right = ruler_painter
+                    .text(
+                        pos2(right + 4.0, ruler.center().y),
+                        Align2::LEFT_CENTER,
+                        name,
+                        font,
+                        KEY_TEXT,
+                    )
+                    .right();
+            }
         }
         if let Some(variation) = variation {
             let letter = ruler_painter.text(
@@ -1648,7 +1687,7 @@ fn paint_ruler(
             );
             right = letter.right() + 3.0;
         }
-        covered = right + 4.0;
+        covered = right.min(room) + 4.0;
     }
     if let Some(step) = playhead {
         let x = layout.x(step);
