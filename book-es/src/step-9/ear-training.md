@@ -6,7 +6,7 @@ Archivos: [`crates/lineup-core/src/ear_training.rs`](https://github.com/naelolai
 y [`crates/lineup-app/src/app/ear.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ear.rs)
 
 Todo lo de hasta ahora te ayuda a *ver* la armonía: nombres de acordes
-en el sheet, numerales y colores en las harmony keys, nombres de
+en la hoja, numerales y colores en las teclas de armonía, nombres de
 conjuntos en la ventana dodecafónica. Los músicos también necesitan
 *oírla*: distinguir una tercera menor de una mayor, un acorde
 disminuido de uno menor, y el V de una canción de su IV, sin mirar. Es
@@ -20,19 +20,19 @@ nada ni en la canción ni en el archivo.
 
 ## Lo que ves
 
-**View > Ear training** abre la ventana. Tres pestañas están arriba:
-**Intervals**, **Chords** y **Progressions**. Debajo, un cuadro dice
-qué preguntar; luego **Start** hace la primera pregunta, y la toca. Si
+**Ver > Entrenamiento auditivo** abre la ventana. Tres pestañas están arriba:
+**Intervalos**, **Acordes** y **Progresiones**. Debajo, un cuadro dice
+qué preguntar; luego **Empezar** hace la primera pregunta, y la toca. Si
 la canción estaba sonando, se pausa, para que la pregunta se oiga
 sola.
 
-![La pestaña Intervals: m3, M3, P4, P5 y P8 elegidos, tocados Up. La respuesta P5 está en verde, y el texto explica: «Si♭3 hasta Fa4: una quinta justa, 7 semitonos. Abierta y estable: la fundamental y la quinta de todo acorde mayor y menor. Como Twinkle, Twinkle, Little Star, en su primer salto».](../images/step-9-ear-intervals.png)
+![La pestaña Intervals: m3, M3, P4, P5 y P8 elegidos, tocados Up. La respuesta P5 está en verde, y el texto explica: «Si♭3 hasta Fa4: una quinta justa, 7 semitonos. Abierta y estable: la fundamental y la quinta de todo acorde mayor y menor. Como Estrellita, ¿dónde estás?, en su primer salto».](../images/step-9-ear-intervals.png)
 
-**Intervals.** Suenan dos notas, y los botones grandes son las
+**Intervalos.** Suenan dos notas, y los botones grandes son las
 respuestas. El cuadro de arriba elige qué intervalos se pueden
 preguntar (una tercera menor, una tercera mayor, una cuarta, una quinta
-y la octava para empezar), y cómo se tocan: **Up** (primero la nota
-grave), **Down** (primero la aguda) o **Together**. Menos opciones lo
+y la octava para empezar), y cómo se tocan: **↑** (primero la nota
+grave), **↓** (primero la aguda) o **Juntas**. Menos opciones lo
 hacen más fácil; empieza con unas pocas que suenen muy distintas, y
 añade las demás de una en una.
 
@@ -41,55 +41,54 @@ pone verde, y un cuadro explica la respuesta: las dos notas con sus
 octavas, el nombre completo del intervalo, cuántos semitonos abarca,
 qué le da su sonido y, hacia arriba, una melodía que empieza con él.
 Luego cada botón de respuesta toca *su propio* intervalo desde la misma
-nota, para que oigas el que has dicho junto al correcto. **Play again**
+nota, para que oigas el que has dicho junto al correcto. **Volver a tocar**
 toca la pregunta tantas veces como quieras, antes o después de
-responder; **Next** pregunta otra (es **Skip** antes de responder, y una
+responder; **Siguiente** pregunta otra (es **Saltar** antes de responder, y una
 pregunta saltada no cuenta).
 
 ![La pestaña Chords con los nueve tipos y Inversions marcado. La respuesta «maj» está en rojo, «dim7» en verde, y el texto: «Ddim7: séptima disminuida de Re, en posición fundamental. Re Fa La♭ Do♭: una tercera menor, una tercera menor y una tercera menor apiladas desde Re. Do♭ es la tecla Si, escrito Do♭ porque es la séptima del acorde...»](../images/step-9-ear-chords.png)
 
-**Chords.** Suena un acorde, y tú nombras su tipo: mayor, menor,
+**Acordes.** Suena un acorde, y tú nombras su tipo: mayor, menor,
 disminuido, aumentado, o uno de cinco acordes de séptima. La
 fundamental cambia de pregunta a pregunta; solo cuenta el tipo.
-**Note by note** toca el acorde nota a nota desde el bajo hacia
+**Nota por nota** toca el acorde nota a nota desde el bajo hacia
 arriba, cada una mantenida, de modo que acaba como el acorde entero.
-Con **Inversions** marcado, la nota más grave no es siempre la
+Con **Inversiones** marcado, la nota más grave no es siempre la
 fundamental (más sobre eso abajo).
 
 ![La pestaña Progressions mientras toca la banda: cuatro casillas, la primera mostrando I, la segunda enmarcada en blanco porque su acorde está sonando, y debajo siete harmony keys que muestran solo I ii iii IV V vi vii° y hogar/lejos/tensión, con iii y vii° atenuados.](../images/step-9-ear-progression-playing.png)
 
-**Progressions.** Este es el ejercicio que pedía el plan: la banda
+**Progresiones.** Este es el ejercicio que pedía el plan: la banda
 toca unos cuantos acordes en una tonalidad, un compás cada uno, y tú
-los nombras por sus numerales. La pregunta dice la tonalidad («In F
-major») y el primer acorde es siempre I, el hogar, así que sabes dónde
-empiezas. Las respuestas son las harmony keys que conoces de la barra
+los nombras por sus numerales. La pregunta dice la tonalidad («En Fa mayor») y el primer acorde es siempre I, el hogar, así que sabes dónde
+empiezas. Las respuestas son las teclas de armonía que conoces de la barra
 de abajo de la ventana, con sus colores y su trabajo (hogar, lejos,
 tensión) pero con los nombres de los acordes ocultos. Las teclas de
 acordes que no se pueden preguntar están atenuadas. Mientras toca la
 banda, un marco blanco camina por las casillas, como hace en las
-harmony keys, para que sepas qué compás estás oyendo.
+teclas de armonía, para que sepas qué compás estás oyendo.
 
 Haz clic en las teclas en orden, una por cada acorde después de I.
 Luego cada casilla se pone verde o roja, una roja dice cuál era el
 acorde («era IV»), y el cuadro explica los acordes, sus numerales y por
 qué cada uno sigue al anterior, con las palabras de las sugerencias de
-las harmony keys:
+las teclas de armonía:
 
 ![La progresión contestada: casillas I, vi (era IV), IV (era V), V (era I) y el texto «F – Bb – C – F: I IV V I en Fa mayor. De I a IV: alejarse del hogar, hacia la dominante. De IV a V: un paso hacia la dominante, listo para volver al hogar. De V a I: el final más fuerte. La sensible sube a la fundamental».](../images/step-9-ear-progression.png)
 
 Después de responder, cada casilla y cada tecla tocan su acorde en el
-piano, y **Hear the key** toca I, IV, V e I: una cadencia que dice
+piano, y **Escuchar la tonalidad** toca I, IV, V e I: una cadencia que dice
 dónde está el hogar, lo que ayuda cuando te pierdes.
 
-El cuadro de arriba elige las **Keys** (mayor, menor o ambas), los
-**Chords** que pueden salir (I IV V; o I ii IV V vi; o los siete), si
-son **Sevenths** (V7, ii7, Imaj7...), quién los toca (**Piano**,
-**Piano and bass** o la **Band** con batería), cuántos acordes (4 u 8)
+El cuadro de arriba elige las **Tonalidades** (mayor, menor o ambas), los
+**Acordes** que pueden salir (I IV V; o I ii IV V vi; o los siete), si
+son **Séptimas** (V7, ii7, Imaj7...), quién los toca (**Piano**,
+**Piano y bajo** o la **Banda** con batería), cuántos acordes (4 u 8)
 y el **Tempo**.
 
 **El marcador.** La línea de abajo cuenta las respuestas correctas, el
 porcentaje y cuántas seguidas. Cada pestaña lleva el suyo, y en una
-progresión cada acorde cuenta como una respuesta. **Start again** lo
+progresión cada acorde cuenta como una respuesta. **Empezar de nuevo** lo
 pone de nuevo a cero. El marcador se olvida cuando se cierra la app;
 las opciones de los cuadros se recuerdan.
 
@@ -118,18 +117,18 @@ justo, *disminuido*.
 
 | Botón | Nombre | Semitonos | Desde Do | Una melodía que empieza con él |
 |-------|--------|-----------|---------|--------------------------------|
-| m2 | segunda menor | 1 | Do–Re♭ | Jaws, las dos notas del tiburón |
-| M2 | segunda mayor | 2 | Do–Re | Happy Birthday, en su primer paso hacia arriba |
-| m3 | tercera menor | 3 | Do–Mi♭ | Greensleeves |
-| M3 | tercera mayor | 4 | Do–Mi | When the Saints Go Marching In |
-| P4 | cuarta justa | 5 | Do–Fa | Here Comes the Bride |
+| 2m | segunda menor | 1 | Do–Re♭ | Jaws, las dos notas del tiburón |
+| 2M | segunda mayor | 2 | Do–Re | Happy Birthday, en su primer paso hacia arriba |
+| 3m | tercera menor | 3 | Do–Mi♭ | Greensleeves |
+| 3M | tercera mayor | 4 | Do–Mi | When the Saints Go Marching In |
+| 4J | cuarta justa | 5 | Do–Fa | Here Comes the Bride |
 | TT | tritono (cuarta aumentada) | 6 | Do–Fa♯ | Maria, de West Side Story |
-| P5 | quinta justa | 7 | Do–Sol | Twinkle, Twinkle, Little Star, en su primer salto |
-| m6 | sexta menor | 8 | Do–La♭ | The Entertainer, en su primer salto hacia arriba |
-| M6 | sexta mayor | 9 | Do–La | My Bonnie Lies over the Ocean |
-| m7 | séptima menor | 10 | Do–Si♭ | Somewhere, de West Side Story |
-| M7 | séptima mayor | 11 | Do–Si | |
-| P8 | octava | 12 | Do–Do | Over the Rainbow |
+| 5J | quinta justa | 7 | Do–Sol | Estrellita, ¿dónde estás?, en su primer salto |
+| 6m | sexta menor | 8 | Do–La♭ | The Entertainer, en su primer salto hacia arriba |
+| 6M | sexta mayor | 9 | Do–La | My Bonnie Lies over the Ocean |
+| 7m | séptima menor | 10 | Do–Si♭ | Somewhere, de West Side Story |
+| 7M | séptima mayor | 11 | Do–Si | |
+| 8J | octava | 12 | Do–Do | Over the Rainbow |
 
 Las melodías empiezan con el intervalo hacia arriba, así que la app
 nombra una solo cuando la pregunta fue hacia arriba. La séptima mayor
@@ -197,7 +196,7 @@ nombra el bajo tras una barra: C/E es Do mayor con Mi como nota más grave
 ([Nombres de acordes](chord-names.md), [Inversiones](inversions.md)).
 Un acorde invertido conserva su tipo, así que la respuesta no cambia,
 pero suena menos asentado y es más difícil de nombrar; para eso está la
-casilla **Inversions**.
+casilla **Inversiones**.
 
 Dos tipos son especiales. Las notas del acorde aumentado están
 espaciadas por igual (a una tercera mayor, y a una tercera mayor desde
@@ -212,8 +211,7 @@ así que la pregunta sigue siendo justa.
 
 ### Progresiones
 
-Los numerales y sus colores vienen de las harmony keys ([Las harmony
-keys](../step-8/harmony-keys.md)): mayúsculas para los acordes mayores,
+Los numerales y sus colores vienen de las teclas de armonía ([Las teclas de armonía](../step-8/harmony-keys.md)): mayúsculas para los acordes mayores,
 minúsculas para los menores, ° para los disminuidos, y tres trabajos,
 hogar (azul), lejos (verde) y tensión (naranja). En Do mayor:
 
@@ -227,11 +225,11 @@ cuentan a lo largo de la escala *mayor* desde la misma tónica, así que
 los acordes sobre las notas tercera, sexta y séptima rebajadas reciben
 un bemol: en La menor, Do es bIII. Y V es mayor, como en casi toda la
 música en tonalidades menores: Mi mayor en La menor, con Sol♯ tirando hacia
-La. Con **Sevenths**, las teclas pasan a `Imaj7 ii7 iii7 IVmaj7 V7 vi7
+La. Con **Séptimas**, las teclas pasan a `Imaj7 ii7 iii7 IVmaj7 V7 vi7
 viiø7` en mayor y `i7 iiø7 bIIImaj7 iv7 V7 bVImaj7 bVII7` en menor.
 
 **Cómo se hace una progresión.** Empieza en I. Cada acorde siguiente es
-normalmente uno de los movimientos que las harmony keys sugieren
+normalmente uno de los movimientos que las teclas de armonía sugieren
 después del acorde anterior (la misma lista detrás de sus sugerencias
 amarillas tenues, [Ahora y
 después](../step-8/harmony-keys.md#ahora-y-después)), el movimiento más
@@ -266,7 +264,7 @@ acorde: sin bajo, un voicing cerrado podría oírse como una inversión.
 - **vi es un hogar triste.** Comparte dos notas con I (Do Mi Sol y La Do Mi),
   e iii también (Mi Sol Si). Si un acorde suena a hogar pero menor,
   probablemente es vi.
-- Pulsa **Hear the key** siempre que pierdas la pista de dónde está el
+- Pulsa **Escuchar la tonalidad** siempre que pierdas la pista de dónde está el
   hogar.
 
 ## Cómo está construido
@@ -411,7 +409,7 @@ pub fn next_sample(&mut self) -> f32 {
 
 Las notas están ordenadas por comienzo, así que `next` solo avanza:
 una comparación por muestra cuando no empieza nada. `while let ... &&
-...` es una let chain en un loop: sigue mientras *hay* una nota
+...` es una let chain en un bucle: sigue mientras *hay* una nota
 siguiente *y* le toca. A cada nota se le da su longitud (`gate`) cuando
 empieza, y el instrumento la suelta por sí mismo, así que la frase no
 necesita una lista de notas que detener.
@@ -419,14 +417,13 @@ necesita una lista de notas que detener.
 Cuando llega una frase nueva, la vieja vuelve al hilo de la UI por la
 cola de basura para ser liberada. Una frase que ha tocado su última
 nota espera dos segundos, para que el sonido resuene, y luego va por el
-mismo camino. **Stop** (cerrar la ventana) suelta todas las notas y
+mismo camino. **Detener** (cerrar la ventana) suelta todas las notas y
 descarta las que aún no han empezado.
 
 Los instrumentos vienen de `build_instrument`, la misma función que
 usan los canales ([app/ear.rs](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ear.rs)):
 el piano es un canal con el programa General MIDI 0, el bajo el
-programa 33, la batería el kit incorporado. Así que con **Edit >
-Settings… > Audio > SoundFont instruments** activado, las preguntas
+programa 33, la batería el kit incorporado. Así que con **Edición > Ajustes… > Audio > Instrumentos del SoundFont** activado, las preguntas
 tocan el piano, el bajo y la batería del SoundFont, como la banda
 ([Sonidos de instrumentos reales](soundfont.md)).
 
@@ -488,7 +485,7 @@ El core tiene 21 pruebas. Las que protegen la teoría:
   sobre 2.000 semillas con las inversiones activadas.
 - **Explicaciones escritas**: Bdim7, Ebmaj7/G, Fdim/Cb, el Si♭♭ de
   Cdim7, Caug/E (también Eaug), Ddim7/Cb (también Bdim7).
-- Los **numerales** coinciden con las harmony keys en mayor y menor,
+- Los **numerales** coinciden con las teclas de armonía en mayor y menor,
   tríadas y séptimas.
 - Las **progresiones** empiezan en I, nunca repiten un acorde, vuelven
   a I solo al final, acaban en I o en V, y usan cada acorde elegido;
@@ -499,7 +496,7 @@ El core tiene 21 pruebas. Las que protegen la teoría:
 Tres pruebas en el motor de audio comprueban que una frase suena sin
 canción cargada y se tira después de resonar, que una frase nueva ocupa
 el lugar de la última, y que una frase detenida no toca nada más. En la
-app corriendo, una grabación de la salida tras **Start** contenía dos
+app corriendo, una grabación de la salida tras **Empezar** contenía dos
 notas, Re4 y luego Fa4: la tercera menor que preguntaba la ventana.
 
 ## Ejercicios
@@ -523,5 +520,5 @@ notas, Re4 y luego Fa4: la tercera menor que preguntaba la ventana.
    conteos, y cómo los usaría `IntervalQuestion::new` sin perder la
    regla de «misma semilla, misma pregunta»?
 5. **Tu propia progresión.** Que el ejercicio de progresiones toque los
-   acordes del chord sheet de la canción, con los nombres ocultos, en
+   acordes de la hoja de acordes de la canción, con los nombres ocultos, en
    lugar de uno inventado. ¿Qué necesitaría de `chord_sheet.rs`?

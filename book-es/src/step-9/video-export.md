@@ -5,24 +5,23 @@ Archivos: [`crates/lineup-video/`](https://github.com/naelolaiz/ferrous-lineup/t
 [`crates/lineup-app/src/app/video.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/video.rs)
 
 Un archivo WAV lleva la canción, pero no la armonía que ves mientras
-suena. **File › Export video…** guarda un archivo MP4 con el sonido y
+suena. **Archivo > Exportar video…** guarda un archivo MP4 con el sonido y
 las vistas que eliges siguiendo la música: el compás que suena
-enmarcado en el chord sheet, el acorde iluminado en las harmony keys, el
-playhead moviéndose por el playlist y el piano roll, y cada cambio de
+enmarcado en la hoja de acordes, el acorde iluminado en las teclas de armonía, el cursor de reproducción moviéndose por la lista de reproducción y el piano roll, y cada cambio de
 tonalidad mostrado cuando llega.
 
 ![Un frame de El Choclo al minuto: el compás 29 enmarcado, E7 iluminado como V7](../images/step-9-video-chord-sheet.png)
 
 ## Usarlo
 
-1. Abre una canción (o una demo) y elige **File › Export video…**.
+1. Abre una canción (o una demo) y elige **Archivo > Exportar video…**.
 2. Marca las vistas que mostrar:
-   - **Chord sheet**: la armonía compás a compás.
-   - **Lead sheet**: la melodía en un pentagrama.
-   - **Playlist**: las pistas y sus clips.
+   - **Hoja de acordes**: la armonía compás a compás.
+   - **Partitura guía**: la melodía en un pentagrama.
+   - **Lista de reproducción**: las pistas y sus clips.
    - **Piano roll**: las notas del canal que tiene seleccionado, o la
      melodía.
-   - **Harmony keys**: los acordes de la tonalidad y el piano pequeño.
+   - **Teclas de armonía**: los acordes de la tonalidad y el piano pequeño.
 
    Las vistas marcadas comparten la imagen, una encima de otra. Una
    barra de título arriba nombra la canción, el compás y el pulso, la
@@ -31,10 +30,10 @@ tonalidad mostrado cuando llega.
 4. Elige un tamaño: **1280×720** (HD) o **1920×1080** (Full HD). Full HD
    dibuja el mismo layout una vez y media más grande, así que el texto
    es más nítido pero no cabe nada más.
-5. Haz clic en **Export…** y elige dónde guardar el archivo `.mp4`.
+5. Haz clic en **Exportar…** y elige dónde guardar el archivo `.mp4`.
 
 La exportación corre en segundo plano, con su progreso en la barra de
-estado y un botón **Stop** al lado. Cerrar la ventana mientras una
+estado y un botón **Detener** al lado. Cerrar la ventana mientras una
 exportación WAV o de video corre pregunta primero, y la ventana se
 cierra solo cuando la exportación se ha detenido. Una exportación
 detenida borra su archivo temporal, y una fallida nunca reemplaza un
@@ -46,7 +45,7 @@ está completo. El diálogo recuerda tus elecciones para la próxima vez.
 ## Organizar las vistas
 
 El diálogo muestra una vista previa: la imagen que tendrá el video en el
-compás que eliges con **Preview at**. Cada vista en ella tiene un marco
+compás que eliges con **Vista previa en**. Cada vista en ella tiene un marco
 con su nombre y su zoom:
 
 - **Arrastra una vista** para mover su caja.
@@ -54,18 +53,18 @@ con su nombre y su zoom:
   de la caja.
 - **Haz scroll sobre ella** para acercar o alejar, de 50% a 250%. El
   slider junto a la marca de cada vista hace lo mismo.
-- **Stack** vuelve a poner las vistas una encima de otra, compartiendo
+- **Apilar** vuelve a poner las vistas una encima de otra, compartiendo
   la imagen. Marcar o desmarcar una vista también las apila.
 
 Las cajas pueden superponerse: la vista más abajo en la lista se dibuja
-encima. El lead sheet no tiene zoom: siempre llena el ancho de su caja,
+encima. La partitura guía no tiene zoom: siempre llena el ancho de su caja,
 así que una caja más ancha lo dibuja más grande. El diálogo recuerda el
 layout para el próximo video.
 
 ![El diálogo Export video: el chord sheet movido a la derecha y con zoom al 250%](../images/step-9-video-layout.png)
 
-Aquí el chord sheet, con zoom al 140%, se sienta junto al lead sheet,
-con las harmony keys al 120% debajo:
+Aquí la hoja de acordes, con zoom al 140%, se sienta junto a la partitura guía,
+con las teclas de armonía al 120% debajo:
 
 ![El Choclo a 1920×1080: chord sheet y lead sheet lado a lado](../images/step-9-video-side-by-side.png)
 
@@ -181,8 +180,7 @@ los 1.0, 2.5 y 4.0 s, y los destellos en las imágenes 30, 75 y 120.
 
 ## Dibujar la aplicación sin ventana
 
-Las vistas son código egui normal. El chord sheet en el video *es* el
-chord sheet en la aplicación, a través de pequeñas funciones `video` que
+Las vistas son código egui normal. La hoja de acordes en el video *es* la hoja de acordes en la aplicación, a través de pequeñas funciones `video` que
 llaman al mismo código de dibujo sin los menús. egui no dibuja píxeles
 él mismo. Cada frame, convierte la interfaz en una lista de
 **triángulos** con colores y coordenadas de textura (la textura guarda
@@ -274,7 +272,7 @@ Dos detalles mantienen las vistas en el pulso:
 ### Imágenes que no cambiaron
 
 Cuando una canción suena, la mayoría de los frames se parecen al
-anterior: el chord sheet solo se mueve cuando cambia el compás.
+anterior: la hoja de acordes solo se mueve cuando cambia el compás.
 `Canvas::paint` guarda los triángulos del último frame. Si los nuevos
 son iguales (un `Vec` de meshes comparado con `==`), no pinta, el
 codificador no corre, y la última imagen simplemente dura más. Eso, y el
@@ -289,7 +287,7 @@ muestras por imagen. Las imágenes deben mostrar *dónde está la música*,
 y con cambios de tempo, ritardandos y fermatas eso no es una suma
 simple. Así que el renderer lo informa. Después de cada bloque de
 sonido, el secuenciador guarda su posición en pasos, el mismo número que
-lee el playhead de la aplicación, y `Renderer::position` la devuelve:
+lee el cursor de reproducción de la aplicación, y `Renderer::position` la devuelve:
 
 ```rust
 for picture in 0..pictures {
@@ -304,21 +302,21 @@ for picture in 0..pictures {
 ```
 
 La posición cuenta los pasos *como se tocaron*. Con una repetición o un
-estribillo de la forma de la canción, ese no es el lugar en el playlist.
+estribillo de la forma de la canción, ese no es el lugar en la lista de reproducción.
 `Scene::draw` lo devuelve con el arreglo de la canción (`pass_at`), como
-hace la aplicación con su playhead.
+hace la aplicación con su cursor de reproducción.
 
 Para comprobarlo, se exportó El Choclo y se midió el volumen cada 10 ms.
 A 112 BPM en 4/4, el compás 15 empieza a los 30.0 s, el compás 29 a los
 60.0 s y el compás 43 a los 90.0 s. Las notas empiezan exactamente en
-esos tiempos, y las imágenes allí muestran «Bar 15, beat 1», «Bar 29,
-beat 1» y «Bar 43, beat 1».
+esos tiempos, y las imágenes allí muestran «Compás 15, pulso 1», «Compás 29,
+pulso 1» y «Compás 43, pulso 1».
 
 ## Qué probar
 
-- Exporta una demo solo con el **chord sheet** y las **harmony keys**. Es
+- Exporta una demo solo con la **hoja de acordes** y las **teclas de armonía**. Es
   un video para tocar encima y practicar los cambios.
-- Exporta con el **lead sheet** para ver la melodía mientras se canta o
+- Exporta con la **partitura guía** para ver la melodía mientras se canta o
   se toca.
 - Abre el archivo en cualquier reproductor y salta de un lado a otro.
   Una imagen clave cada dos segundos significa que empieza a dibujar

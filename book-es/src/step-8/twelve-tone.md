@@ -9,31 +9,30 @@ Archivos: [`crates/lineup-core/src/harmony/row.rs`](https://github.com/naelolaiz
 y [`crates/lineup-app/src/twelve_tone.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/twelve_tone.rs)
 
 Todo en Ferrous Lineup hasta ahora suponía música en una tonalidad: una
-nota base, acordes que tiran hacia ella, harmony keys numeradas de I a
+nota base, acordes que tiran hacia ella, teclas de armonía numeradas de I a
 vii°. Gran parte de la música del siglo XX no tiene tonalidad alguna.
 Este capítulo añade las dos herramientas principales que los músicos
 usan para pensar en ella:
 
 - **series dodecafónicas** (también llamadas *series*): las doce notas
   en un orden del que está hecha toda la pieza. Los menús de tonalidad
-  ahora ofrecen **twelve-tone row** después de las escalas, y **Row…**
+  ahora ofrecen **serie dodecafónica** después de las escalas, y **Serie…**
   en el piano roll abre una ventana para teclear, dibujar o elegir una
   serie, ver su **matriz** con las 48 formas y escribir cualquier forma
   en el patrón, como melodía o como acordes, con las duraciones,
   dinámicas y octavas siguiendo también la serie si quieres
   (**serialismo**);
 - **conjuntos de clases de alturas**: un nombre para cada grupo de
-  notas, acorde o no. **Sets…** lista los 224 por **número de Forte**,
+  notas, acorde o no. **Conjuntos…** lista los 224 por **número de Forte**,
   para dibujar con ellos o usarlos como escala, y el piano roll ahora
   nombra el conjunto de las notas que seleccionas y el de las notas
   bajo el puntero.
 
-La Library tiene un grupo de estilos **Twelve-tone rows**, y **File >
-Demos > Twelve-tone** toca cada uno como una pieza corta.
+La Biblioteca tiene un grupo de estilos **Series dodecafónicas**, y **Archivo > Demostraciones > Dodecafónico** toca cada uno como una pieza corta.
 
-![La ventana Row junto al piano roll. La serie es Do Mi Sol Re Fa♯ La La♯ Do♯ Fa Si Re♯ Sol♯, cuatro tríadas en fila; la matriz muestra sus 48 formas, con P0 seleccionada. El piano roll numera sus notas del 1 al 12 sobre las teclas, y las harmony keys tocan sus cuatro tricordos.](../images/step-8-twelve-tone-row.png)
+![La ventana Serie junto al piano roll. La serie es Do Mi Sol Re Fa♯ La La♯ Do♯ Fa Si Re♯ Sol♯, cuatro tríadas en fila; la matriz muestra sus 48 formas, con P0 seleccionada. El piano roll numera sus notas del 1 al 12 sobre las teclas, y las harmony keys tocan sus cuatro tricordos.](../images/step-8-twelve-tone-row.png)
 
-![La ventana Sets, buscando «octatonic»: el conjunto 8-28, su forma prima, su vector de intervalos y cuál es su complemento. Bajo la barra de herramientas del piano roll, las notas del paso bajo el puntero se nombran como conjunto 3-11.](../images/step-8-pitch-class-sets.png)
+![La ventana Conjuntos, buscando «octatonic»: el conjunto 8-28, su forma prima, su vector de intervalos y cuál es su complemento. Bajo la barra de herramientas del piano roll, las notas del paso bajo el puntero se nombran como conjunto 3-11.](../images/step-8-pitch-class-sets.png)
 
 ## Música sin nota base
 
@@ -99,7 +98,7 @@ Lee una línea de izquierda a derecha y es una forma P; de derecha a
 izquierda, una forma R. Lee una columna de arriba abajo y es una forma
 I; de abajo arriba, una forma RI. Las etiquetas alrededor del cuadrado
 dicen cuál: P a la izquierda, R a la derecha, I arriba, RI abajo. En la
-ventana Row, haz clic en cualquier etiqueta para elegir esa forma, y su
+ventana Serie, haz clic en cualquier etiqueta para elegir esa forma, y su
 línea o columna se ilumina.
 
 La diagonal de arriba a la izquierda a abajo a la derecha es la misma
@@ -162,14 +161,14 @@ escrita dos veces se rechaza con un mensaje, en lugar de producir una
 serie rota. `PitchSet` recibe el mismo par, así que un conjunto se
 guarda como `"0 3 6 9"`.
 
-`parse` es también lo que lee la caja de arriba de la ventana Row.
+`parse` es también lo que lee la caja de arriba de la ventana Serie.
 Acepta nombres de notas (`E F G Db Gb Eb Ab D B C A Bb`), números
 (`4 5 7 1 …`) o la forma compacta que usan los libros de dodecafonismo,
 un carácter por nota con **T** y **Mi** para diez y once
 (`45716382E09T`). Cuando falta una nota dice cuál, y cuál vino dos
 veces en su lugar.
 
-**From the notes** lee una serie del piano roll: las primeras doce
+**Desde las notas** lee una serie del piano roll: las primeras doce
 clases de alturas distintas entre las notas seleccionadas (o todas
 ellas), en el orden en que empiezan. `ToneRow::from_notes` se salta una
 nota cuya clase de alturas ya está en la serie, así que puedes dibujar
@@ -238,7 +237,7 @@ pub fn label_of(self, other: ToneRow) -> Option<RowLabel> {
 
 ## Qué hace interesante a una serie
 
-La ventana Row lista qué tiene de especial la serie que estás mirando.
+La ventana Serie lista qué tiene de especial la serie que estás mirando.
 Cada línea es una función corta.
 
 **Los pasos.** `intervals()` da los once pasos de nota a nota, en
@@ -258,7 +257,7 @@ aparece exactamente una vez. La Suite lírica de Alban Berg (1927)
 empieza con una serie así: Fa Mi Do La Sol Re Sol♯ Do♯ Re♯ Fa♯ La♯ Si, con el tritono
 justo en el medio. Son raras: de las 39,916,800 series que empiezan en
 Do, solo 3,856 tienen todos los intervalos. Así que el botón
-**All-interval** no puede limitarse a barajar notas hasta encontrar una;
+**Todos los intervalos** no puede limitarse a barajar notas hasta encontrar una;
 construye la serie nota a nota:
 
 ```rust
@@ -293,7 +292,7 @@ funciona, devuelve `None` para que quien la llamó retire *su* nota.
 `windows(2)` entrega cada par de vecinos, `[a, b]`, que es exactamente
 lo que es un paso.
 
-**Series aleatorias.** El botón **Random** baraja las doce notas con la
+**Series aleatorias.** El botón **Al azar** baraja las doce notas con la
 barajación de Fisher-Yates: recorre del último lugar al primero e
 intercambia cada uno con un lugar elegido al azar entre los que aún no
 están hechos. Todos los órdenes quedan entonces igual de probables. Los
@@ -320,7 +319,7 @@ cuatro tricordos (tres notas cada uno), tres tetracordos, dos
 hexacordos. `segments(size)` corta la serie con `chunks_exact`, y la
 ventana nombra la clase de conjuntos de cada grupo (mira la segunda
 mitad de este capítulo). Los grupos de la serie de Schoenberg son tres
-tetracordos distintos, 4-12, 4-Z15 y 4-1; la serie Four triads son
+tetracordos distintos, 4-12, 4-Z15 y 4-1; la serie Cuatro tríadas son
 cuatro grupos de 3-11, las tríadas mayor y menor.
 
 **Combinatorialidad.** Toma las seis primeras notas de una serie. Alguna
@@ -344,7 +343,7 @@ pub fn combinatorial_forms(self) -> Vec<RowLabel> {
 La retrógrada se deja fuera porque siempre funciona (su primera mitad es
 la segunda mitad de la serie), así que no dice nada sobre la serie. La
 serie del Op. 25 de Schoenberg es combinatoria con I11; la serie Lineup,
-escrita para este capítulo, con I3. El estilo **Hexachord pads** toca
+escrita para este capítulo, con I3. El estilo **Pads de hexacordios** toca
 exactamente eso: una mitad de la serie como acorde, y las otras seis
 notas de I3 como melodía encima.
 
@@ -355,7 +354,7 @@ que está a punto de desaparecer.
 
 ### Las series para empezar
 
-El menú **Famous and example rows** contiene siete series. Tres vienen
+El menú **Series famosas y de ejemplo** contiene siete series. Tres vienen
 de piezas famosas, y cuatro se escribieron para Ferrous Lineup para
 mostrar lo que puede hacer una serie: una combinatoria, una de cuatro
 tríadas, un palíndromo y una de todos los intervalos.
@@ -400,10 +399,10 @@ pub struct RowWriting {
 
 Los tres **registros** deciden las octavas cuando la serie no lo hace:
 
-- **Close** pone cada nota en la octava por encima de la nota más grave;
-- **Smooth** pone cada nota tan cerca como puede de la anterior, lo que
+- **Cerrar** pone cada nota en la octava por encima de la nota más grave;
+- **Suave** pone cada nota tan cerca como puede de la anterior, lo que
   hace una línea cantable (un tritono, justo a la mitad, sube);
-- **Wide** manda las notas grave, aguda, media, grave, aguda, media a lo
+- **Amplio** manda las notas grave, aguda, media, grave, aguda, media a lo
   largo de tres octavas, las líneas saltarinas de Anton Webern.
 
 ### Serialismo integral
@@ -416,13 +415,13 @@ dinámicas de muchas maneras; Ferrous Lineup usa tres simples, cada una
 leyendo una forma distinta de la serie para que las cuatro series no
 avancen al unísono:
 
-- **Durations**: los números de la serie (la distancia de cada nota por
+- **Duraciones**: los números de la serie (la distancia de cada nota por
   encima de la primera, de 0 a 11) se convierten en longitudes. La nota
   *k*-ésima dura tantos pasos como el número *k*-ésimo, más uno, así que
   de 1 a 12 semicorcheas.
-- **Dynamics**: los números de la inversión se convierten en doce
+- **Dinámicas**: los números de la inversión se convierten en doce
   velocidades, de muy suave a muy fuerte: `28 + 9 * level`.
-- **Octaves**: los números de la retrógrada, contados de tres en tres
+- **Octavas**: los números de la retrógrada, contados de tres en tres
   (`% 3`), eligen una de tres octavas.
 
 Dentro de `write_row`, cada nota hace esas preguntas por turno:
@@ -460,14 +459,14 @@ siguiente en lugar de empezar de nuevo.
 longitud de patrón; sale una lista de `NoteEvent`. La ventana la llama
 en cada frame para mostrar un aviso cuando el patrón es demasiado corto
 para la serie completa («El patrón solo tiene espacio para 9 de las 12
-notas»), y el botón **Write** envía las mismas notas al piano roll, que
+notas»), y el botón **Escribir… en el patrón actual** envía las mismas notas al piano roll, que
 reemplaza las notas del canal mediante la edición habitual, así que
 **Ctrl+Z** trae de vuelta las anteriores.
 
 ## Una serie como tonalidad
 
 Los menús de tonalidad ahora listan dos tipos más de tonalidad bajo las
-escalas: **twelve-tone row** y **pitch-class set**. En el código, son
+escalas: **serie dodecafónica** y **conjunto de clases de alturas**. En el código, son
 dos variantes nuevas de `ScaleKind` y, a diferencia de las otras, llevan
 datos:
 
@@ -522,10 +521,10 @@ la serie siguiendo los números. `degree_of` ya daba el lugar de una nota
 en una escala; para una serie, la «escala» es la serie en su propio
 orden, así que el lugar en la serie sale gratis.
 
-Las harmony keys tocan los grupos de la serie en lugar de acordes:
+Las teclas de armonía tocan los grupos de la serie en lugar de acordes:
 cuatro teclas para los tricordos (**1–3**, **4–6**, **7–9**, **10–12**),
 o tres para tetracordos, o dos para hexacordos. La opción **3 notes / 4
-notes / 6 notes** ocupa el lugar de Triads, 7ths y 9ths. Para un
+notes / 6 notes** ocupa el lugar de Tríadas, Séptimas y Novenas. Para un
 conjunto, cada tecla apila una de cada dos notas del conjunto desde una
 de sus notas, igual que los acordes de una tonalidad apilan una de cada
 dos notas de la escala.
@@ -738,7 +737,7 @@ pequeño es la forma prima. Sin ordenar, sin listas de intervalos: unas
 pocas comparaciones de enteros.
 
 El vector de intervalos es el único lugar que cuenta pares por el camino
-lento, un loop dentro de otro loop, y con doce notas como máximo son
+lento, un bucle dentro de otro bucle, y con doce notas como máximo son
 como mucho 66 pares:
 
 ```rust
@@ -818,26 +817,25 @@ llaman pueden quedársela todo lo que quieran.
 
 ## El navegador de conjuntos, y nombrar lo que tocas
 
-**Sets…** en el piano roll abre una lista de cada clase del tamaño que
+**Conjuntos…** en el piano roll abre una lista de cada clase del tamaño que
 elijas (de 2 a 10 notas), cada una con su número de Forte, forma prima,
 vector de intervalos y, para las famosas, un nombre: «3-11 [037]
 <001110> tríada mayor o menor», «6-35 [02468T] <060603> escala de tonos
 enteros». La caja de búsqueda encuentra una clase por su número de Forte
-o por su nombre («triad», «octatonic», «4-Z15»), y **Show it** encuentra
+o por su nombre («triad», «octatonic», «4-Z15»), y **Mostrarlo** encuentra
 la clase de las notas seleccionadas en el piano roll. Al elegir una se
 ve su complemento, su pareja Z si la tiene, y si es **symmetric** (al
-revés es solo una transposición, como en la séptima disminuida). **Move
-it up** e **Inverted** eligen qué miembro de la clase usar: T3 es el
+revés es solo una transposición, como en la séptima disminuida). **Transportarlo** e **Invertido** eligen qué miembro de la clase usar: T3 es el
 conjunto tres semitonos arriba, T3I su inversión movida tres arriba.
 Luego puedes:
 
-- **Draw with it**: el conjunto se convierte en el sello de acordes del
+- **Dibujar con él**: el conjunto se convierte en el sello de acordes del
   piano roll, así que cada clic coloca el conjunto entero por encima de
   la nota en la que hiciste clic. Es una variante nueva,
   `ChordStamp::Set(PitchSet)`, junto a los sellos de acordes del
   [paso 6](../step-6/tools.md);
-- **Use as the key**: el conjunto se convierte en la escala, así que el
-  piano roll resalta sus notas y las harmony keys tocan acordes
+- **Usar como tonalidad**: el conjunto se convierte en la escala, así que el
+  piano roll resalta sus notas y las teclas de armonía tocan acordes
   apilados desde él.
 
 Y el piano roll ahora nombra cualquier grupo de notas. Bajo la barra de
@@ -856,16 +854,16 @@ espacios, `<12 12 12 12 12 6>`, para que no pueda leerse mal.
 
 ## Estilos y demos dodecafónicos
 
-La Library tiene un grupo nuevo, **Twelve-tone rows**, con seis estilos:
+La Biblioteca tiene un grupo nuevo, **Series dodecafónicas**, con seis estilos:
 
 | estilo | qué hace |
 |-------|--------------|
-| Row melody | la serie Lineup como melodía en corcheas, a través de P, R, I y RI |
-| Triad chorale | la serie Four triads como acordes, sobre su retrógrada en el bajo: música dodecafónica que suena casi tonal |
-| Hexachord pads | media serie como acorde, y las otras seis notas de I3 como melodía: combinatorialidad hexacordal |
-| Pointillism | notas sueltas saltando a lo largo de tres octavas, duraciones y dinámicas de la serie, como en Webern |
-| Total serialism | alturas, duraciones, dinámicas y octavas, todas de la serie de todos los intervalos |
-| Twelve-tone lo-fi | los tricordos de la serie sobre un pulso lo-fi: una serie también puede tener groove |
+| Melodía de la serie | la serie Lineup como melodía en corcheas, a través de P, R, I y RI |
+| Coral de tríadas | la serie Cuatro tríadas como acordes, sobre su retrógrada en el bajo: música dodecafónica que suena casi tonal |
+| Pads de hexacordios | media serie como acorde, y las otras seis notas de I3 como melodía: combinatorialidad hexacordal |
+| Puntillismo | notas sueltas saltando a lo largo de tres octavas, duraciones y dinámicas de la serie, como en Webern |
+| Serialismo integral | alturas, duraciones, dinámicas y octavas, todas de la serie de todos los intervalos |
+| Lo-fi dodecafónico | los tricordos de la serie sobre un pulso lo-fi: una serie también puede tener groove |
 
 Un estilo de armonía era una progresión de acordes y una manera de
 tocarla. Un estilo de serie no tiene progresión, así que es una serie y
@@ -917,9 +915,8 @@ al arrancar.
 ### Aritmética de formas
 
 Los demos tocan cada estilo cuatro veces, como las secciones de una
-canción: **P: the row**, **R: backwards**, **I: upside down** y **RI:
-both**, y luego P una vez más. Pero las voces de un estilo ya usan
-formas distintas: el bajo del Triad chorale toca R. ¿Qué toca el bajo en
+canción: **P: la serie**, **R: al revés**, **I: dada vuelta** y **RI: las dos**, y luego P una vez más. Pero las voces de un estilo ya usan
+formas distintas: el bajo del Coral de tríadas toca R. ¿Qué toca el bajo en
 la sección R? R de R, que es la serie hacia delante otra vez: P.
 
 Las cuatro formas se comportan como dos interruptores, «al revés» y
@@ -948,7 +945,7 @@ pub fn combine(section: RowForm, voice: RowForm) -> RowForm {
 exactamente uno es verdadero. Los matemáticos llaman a este pequeño
 sistema el *grupo de Klein de cuatro elementos*: cada forma se deshace a
 sí misma (I de I es P), y el orden no importa. Un detalle más: la
-melodía de Hexachord pads toca I3, tres semitonos *por encima* de la
+melodía de Pads de hexacordios toca I3, tres semitonos *por encima* de la
 primera nota de la serie. Al revés, «tres por encima» se convierte en
 «tres por debajo», así que en las secciones I y RI ese desplazamiento se
 convierte en 12 − 3 = 9.
@@ -962,11 +959,11 @@ cada patrón que tiene acordes, una línea de bajo o una melodía, y
 escribe allí el estilo, leyendo los patrones por turno como P, R, I y RI
 para que la canción no se repita.
 
-Probarlo en la app en marcha encontró dos problemas. **Row melody** no
+Probarlo en la app en marcha encontró dos problemas. **Melodía de la serie** no
 cambiaba nada: la primera versión escribía los acordes y el bajo de un
 estilo en la canción y conservaba la melodía propia de la canción, así
 que un estilo que solo es una melodía no tenía nada que escribir. Y el
-**Triad chorale** escribía sus acordes en un canal Keys propio mientras
+**Coral de tríadas** escribía sus acordes en un canal Teclados propio mientras
 los acordes de la canción seguían sonando en el suyo: tríadas de Do mayor
 debajo de una serie solo chocan. El arreglo sigue una regla: el estilo
 se apodera de la armonía. Los canales de acordes y de bajo que el estilo
@@ -996,13 +993,13 @@ compara al final. `as_ref()` convierte la copia de nuevo en un
 
 ## Mantener delante una ventana nueva
 
-Un bug no tenía nada que ver con la música. Al hacer clic en **Row…**,
-la ventana Row se abría *detrás* del piano roll, donde no se podía ver.
+Un bug no tenía nada que ver con la música. Al hacer clic en **Serie…**,
+la ventana Serie se abría *detrás* del piano roll, donde no se podía ver.
 
 egui mantiene sus ventanas en capas y dibuja en último lugar a la que
 «quiere estar encima». Dos ventanas querían eso en el mismo frame: la
-ventana Row nueva, que egui eleva cuando aparece por primera vez, y el
-piano roll, porque acababan de hacer clic en su botón **Row…**, y un
+ventana Serie nueva, que egui eleva cuando aparece por primera vez, y el
+piano roll, porque acababan de hacer clic en su botón **Serie…**, y un
 clic eleva la ventana en la que cae. egui ordena las ventanas que
 quieren la parte superior con una ordenación *estable*, que conserva su
 orden cuando empatan, y el piano roll iba primero. Así que el arreglo
@@ -1042,7 +1039,7 @@ creado con `egui::Id::unique`. (egui 0.37 lo llama *unique* para dejar
 claro que nombra una sola cosa en todo el programa, como debe hacerlo el
 id de una ventana.)
 
-La ventana Row también quedó más alta que algunas pantallas. Ahora se
+La ventana Serie también quedó más alta que algunas pantallas. Ahora se
 desplaza (`.vscroll(true)`), puede hacerse más alta o más baja pero no
 más ancha (`.resizable([false, true])`) y se queda dentro de la ventana
 principal (`.constrain_to(area)`).
@@ -1053,7 +1050,7 @@ principal (`.constrain_to(area)`).
   contra las publicadas; cada una de las 48 formas de la serie Lineup
   vuelve a nombrarse con `label_of`; cada línea de la matriz de Berg es
   una forma P y cada columna una forma I; la serie de Webern es un
-  palíndromo (R9 es P3); la serie de Berg, la serie All the intervals y
+  palíndromo (R9 es P3); la serie de Berg, la serie Todos los intervalos y
   cincuenta series aleatorias de todos los intervalos tienen todos los
   intervalos; la serie Lineup es combinatoria solo con I3; las series se
   leen desde nombres, números y la forma compacta, y las equivocadas dan
@@ -1067,35 +1064,33 @@ principal (`.constrain_to(area)`).
 - **Serialismo**: una melodía en corcheas, las cuatro formas llenando el
   patrón por turno, tricordos como acordes, las tres series, y notas que
   nunca pasan del final del patrón.
-- **Estilos y demos**: cada estilo usa una serie de los presets y escribe
-  sus voces en cualquier tonalidad; combinar formas; Hexachord pads tiene
+- **Estilos y demos**: cada estilo usa una serie de los preajustes y escribe
+  sus voces en cualquier tonalidad; combinar formas; Pads de hexacordios tiene
   las doce notas en cada compás; una canción recibe un estilo de serie, y
-  el Triad chorale reemplaza los acordes de la canción en su propio canal
+  el Coral de tríadas reemplaza los acordes de la canción en su propio canal
   en lugar de tocar por encima de ellos; cada estilo hace un demo con
   cinco secciones que se guarda como formato 6.
 - **En la app en marcha**: los menús de tonalidad, los números sobre las
-  teclas, las harmony keys de una serie, la matriz y la escritura de
+  teclas, las teclas de armonía de una serie, la matriz y la escritura de
   cada forma, las propiedades de la serie de Schoenberg, conjuntos
   encontrados por nombre, usados como tonalidad y para dibujar, el
-  conjunto de la selección, los estilos de la Library tanto parados como
+  conjunto de la selección, los estilos de la Biblioteca tanto parados como
   con la canción sonando, los demos, y las ventanas abriéndose delante,
   también a 1280×800.
 
 ## Pruébalo
 
-1. Abre **File > Demos > Twelve-tone > Triad chorale** y pulsa Space.
-   Mira los nombres de las secciones en el playlist: la misma música,
+1. Abre **Archivo > Demostraciones > Dodecafónico > Coral de tríadas** y pulsa Espacio.
+   Mira los nombres de las secciones en la lista de reproducción: la misma música,
    luego al revés, de cabeza, y ambas cosas.
-2. Abre el piano roll (**F7**) y haz clic en **Row…**. Elige **Famous and
-   example rows > Schoenberg's Suite**. La ventana dice que sus
+2. Abre el piano roll (**F7**) y haz clic en **Serie…**. Elige **Series famosas y de ejemplo > Suite de Schoenberg**. La ventana dice que sus
    tetracordos son 4-12, 4-Z15 y 4-1, y que es combinatoria con I11.
-3. Haz clic en **I11** encima de la matriz, pon **Together** en 6 y haz
-   clic en **Write I11 into the pattern**: dos hexacordos como acordes.
+3. Haz clic en **I11** encima de la matriz, pon **Juntas** en 6 y haz
+   clic en **Escribir I11 en el patrón actual**: dos hexacordos como acordes.
    Pulsa **Ctrl+Z** para deshacerlo.
-4. Marca las tres casillas de **Serialism**, pon **Octaves** en **Wide**,
+4. Marca las tres casillas de **Serialismo**, pon **Octavas** en **Amplio**,
    y escribe P4 de nuevo: puntos de sonido al estilo de Webern.
-5. Haz clic en **Sets…**, escribe `octatonic`, y haz clic en **Use as
-   the key**. Las harmony keys ahora tocan acordes apilados desde la
+5. Haz clic en **Conjuntos…**, escribe `octatonic`, y haz clic en **Usar como tonalidad**. Las teclas de armonía ahora tocan acordes apilados desde la
    escala octatónica.
 6. Selecciona unas cuantas notas en el piano roll y lee su conjunto bajo
    la barra de herramientas.

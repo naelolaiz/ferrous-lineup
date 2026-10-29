@@ -223,16 +223,18 @@ impl Keys {
         match self {
             Keys::Any(keys) => keys
                 .iter()
-                .map(|key| ctx.format_shortcut(key))
+                .map(|key| crate::i18n::shortcut(ctx, key))
                 .collect::<Vec<_>>()
-                .join(" or "),
+                .join(crate::i18n::tr(" or ")),
             Keys::Pair(first, second) => format!(
                 "{} / {}",
-                ctx.format_shortcut(first),
-                ctx.format_shortcut(second)
+                crate::i18n::shortcut(ctx, first),
+                crate::i18n::shortcut(ctx, second)
             ),
-            Keys::Wheel(modifiers) => format!("{}+wheel", ctx.format_modifiers(*modifiers)),
-            Keys::Written(text) => (*text).to_owned(),
+            Keys::Wheel(modifiers) => {
+                crate::i18n::trf("{}+wheel", &[&ctx.format_modifiers(*modifiers)])
+            }
+            Keys::Written(text) => crate::i18n::tr(text).to_owned(),
         }
     }
 }
@@ -241,7 +243,7 @@ impl LineupApp {
     /// Help, at the right of the menus: the keyboard shortcuts and About.
     pub(super) fn help_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button(crate::i18n::tr("Help"), |ui| {
-            let shortcut = ui.ctx().format_shortcut(&view::HELP);
+            let shortcut = crate::i18n::shortcut(ui.ctx(), &view::HELP);
             let item = egui::Button::selectable(
                 self.shortcuts_open,
                 crate::i18n::tr("Keyboard shortcuts"),

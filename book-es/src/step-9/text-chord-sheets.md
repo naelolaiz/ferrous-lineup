@@ -1,9 +1,9 @@
-# Chord sheets como texto: para pegar y compartir
+# Hojas de acordes como texto: para pegar y compartir
 
 Archivos: [`crates/lineup-core/src/chord_sheet/text.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/chord_sheet/text.rs),
 y en la app
 [`crates/lineup-app/src/app/chord_text.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/chord_text.rs)
-(menú File) y
+(menú Archivo) y
 [`crates/lineup-app/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet.rs)
 (copiar y pegar)
 
@@ -31,8 +31,8 @@ Style: Bossa nova
 ```
 
 Este es el punto 10 del plan. Ferrous Lineup lee un chart así y hace
-una canción con banda, escribe el chord sheet de cualquier canción de
-la misma manera, y copia y pega compases del chord sheet como texto.
+una canción con banda, escribe la hoja de acordes de cualquier canción de
+la misma manera, y copia y pega compases de la hoja de acordes como texto.
 Nada nuevo se guarda en la canción, así que el formato de archivo
 sigue como estaba.
 
@@ -40,14 +40,14 @@ sigue como estaba.
 
 ![El menú File con Import chord sheet… bajo Import MIDI file… y Export chord sheet… bajo Export pattern as MIDI…](../images/step-9-text-file-menu.png)
 
-**File > Import chord sheet…** abre un archivo `.txt` (o suelta uno
+**Archivo > Importar hoja de acordes…** abre un archivo `.txt` (o suelta uno
 sobre la ventana) y hace una canción nueva con él: la banda toca los
 acordes en la tonalidad, el compás, el tempo y el estilo del chart,
-las secciones están en el playlist, y el chord sheet se abre para que
+las secciones están en la lista de reproducción, y la hoja de acordes se abre para que
 veas lo que se leyó. Si la canción abierta tiene cambios sin guardar,
-primero se te pregunta, como con **Open**. La canción nueva se llama
+primero se te pregunta, como con **Abrir**. La canción nueva se llama
 por el título del chart (o el nombre del archivo) hasta que la
-guardas, y **Save as…** sugiere ese nombre. Una canción importada
+guardas, y **Guardar como…** sugiere ese nombre. Una canción importada
 desde un archivo MIDI ahora conserva igual el nombre de su archivo.
 
 ![Autumn Leaves importado desde texto: el chord sheet muestra el estilo de la banda (Swing), la tonalidad Sol mayor, 132 BPM, la sección A ×2 sobre los compases 1 a 8 y la sección B desde el compás 9, cada acorde con su numeral; la barra de estado dice «Importado autumn.txt: 24 compases»](../images/step-9-text-chart-imported.png)
@@ -59,17 +59,16 @@ estado dice dónde:
 > (Am7, G/B), un conjunto (3-11 T2, {0,4,7}), un micromodo (Menor 3),
 > una forma de serie (P0, RI7) ni N.C.
 
-**File > Export chord sheet…** escribe el chord sheet de la canción en
+**Archivo > Exportar hoja de acordes…** escribe la hoja de acordes de la canción en
 un archivo de texto, en el formato de arriba, con los compases
 alineados en columnas para que el texto se lea como la ventana.
 
-En la propia ventana del chord sheet:
+En la propia ventana de la hoja de acordes:
 
 - **Ctrl+C** copia los compases seleccionados (haz clic en uno,
-  Shift+clic en otro para seleccionar varios) como texto, «| Am7 | D7 |
+  Mayús+clic en otro para seleccionar varios) como texto, «| Am7 | D7 |
   Gmaj7 | Cmaj7 |». Con todos los compases seleccionados, o ninguno,
-  copia todo el chord sheet con sus ajustes y secciones, como lo
-  escribe Export.
+  copia toda la hoja de acordes con sus ajustes y secciones, como lo escribe **Exportar hoja de acordes…**.
 - **Ctrl+A** selecciona todos los compases.
 - **Ctrl+V** escribe el texto del portapapeles desde el compás
   seleccionado en adelante, y selecciona los compases que escribió.
@@ -77,7 +76,7 @@ En la propia ventana del chord sheet:
   tecleado ahí, así que «Dm7 G7» copiado de un mensaje va directo a un
   compás.
 
-Un pegado es un solo cambio del chord sheet, así que **Ctrl+Z** lo
+Un pegado es un solo cambio de la hoja de acordes, así que **Ctrl+Z** lo
 deshace de una vez. El mensaje sobre los compases dice qué se copió o
 pegó, y desaparece cuando haces clic en otro compás.
 
@@ -104,8 +103,7 @@ Todo es opcional salvo los compases.
 | `\| C \| Am7 \| Dm7 G7 \|` | Compases. Una línea puede tener cualquier número de ellos. |
 | `# Ask Ana about the bridge` | Una nota para las personas, que se salta. |
 
-Dentro de un compás va exactamente lo que tecleas en un compás del
-chord sheet ([Escribir en un compás](chord-sheet.md#escribir-en-un-compás)):
+Dentro de un compás va exactamente lo que tecleas en un compás de la hoja de acordes ([Escribir en un compás](chord-sheet.md#escribir-en-un-compás)):
 acordes, numerales romanos, conjuntos, micromodos, formas de serie o
 `N.C.`, repartidos por los pulsos con la misma regla, y `/` para un
 pulso que sostiene la armonía anterior. Dos signos más vienen de los
@@ -117,17 +115,17 @@ charts impresos:
 - **`||`**, **`|:`** y **`:|`** son una doble barra de compás y signos
   de repetición. Se leen como líneas de compás normales; las
   repeticiones se escriben con `×2` en una sección, que es como las
-  guarda el playlist.
+  guarda la lista de reproducción.
 
 Cuando no hay una línea `Style:`, la banda toca un estilo del compás
 del chart, así que un chart en 3/4 recibe el jazz waltz, y sin compás
 tampoco, el estilo con el que empieza una canción nueva. Cuando no hay
 ningún estilo del compás del chart (5/4, por ejemplo), la banda toca
 el estilo con el que empieza una canción nueva, en el compás del
-chart, y la barra de estado lo dice: «La banda toca Pop beat, un
+chart, y la barra de estado lo dice: «La banda toca Ritmo pop, un
 estilo en 4/4, en 5/4». Una línea `Key:` o `Time:` entre compases
 cambia la tonalidad o el compás desde el siguiente compás en adelante,
-como lo hace un marcador de tonalidad o de compás en el playlist.
+como lo hace un marcador de tonalidad o de compás en la lista de reproducción.
 
 Los numerales romanos se leen en la tonalidad del chart. Este chart
 
@@ -189,7 +187,7 @@ for (index, line) in text.lines().enumerate() {
 ```
 
 El error es un struct pequeño con la línea y el mensaje, y
-`impl fmt::Display` dice cómo se imprime, «line 4: …». Toda función
+`impl fmt::Display` dice cómo se imprime, «línea 4: …». Toda función
 que puede fallar devuelve `Result<_, TextError>`, y `?` sube el error
 de inmediato. `map_err` convierte otro error en este por el camino:
 
@@ -264,7 +262,7 @@ así que «C | G» son dos compases.
 ## Hacer la canción
 
 `text::import` parte de `Project::with_band()`, la canción que hace
-**File > New**, y fija lo que dice el chart, en el orden en que la
+**Archivo > Nuevo**, y fija lo que dice el chart, en el orden en que la
 banda lo necesita: primero el estilo (que puede cambiar la métrica de
 la canción vacía a su propio compás), luego encima el compás, la
 tonalidad y el tempo del chart. Luego recorre los items una vez,
@@ -293,12 +291,11 @@ le dice a la banda que escriba sus partes.
 `text::paste` hace la misma lectura en una canción existente, desde un
 compás en adelante, y devuelve los marcadores en lugar de escribirlos.
 La ventana los convierte en un solo `SheetAction::SetChords`, la misma
-acción que teclear en un compás, así que el undo, la banda y el
-playlist no necesitan nada nuevo.
+acción que teclear en un compás, así que el undo, la banda y la lista de reproducción no necesitan nada nuevo.
 
 ## Escribir el texto
 
-`text::write` recorre los compases del chord sheet con `write_bar` (la
+`text::write` recorre los compases de la hoja de acordes con `write_bar` (la
 función que llena el campo de texto de un compás cuando haces clic en
 él) y junta líneas: palabras («[Verse ×2]», «Key: D minor») o una fila
 de hasta cuatro compases. Una sección, un cambio de tonalidad o de
@@ -333,7 +330,7 @@ leyéndose y nadie se engañe.
 egui convierte Ctrl+C y Ctrl+V en eventos propios,
 `egui::Event::Copy` y `egui::Event::Paste(text)`, con el texto ya
 tomado del portapapeles del sistema. Es igual en Linux, macOS (donde
-las teclas son Cmd+Do y Cmd+V) y Windows. El chord sheet los busca
+las teclas son Cmd+Do y Cmd+V) y Windows. La hoja de acordes los busca
 entre los eventos del frame mientras tiene el teclado y no se está
 tecleando en un compás; mientras se teclea en un compás, van al campo
 de texto como siempre.
@@ -356,12 +353,12 @@ final del frame.
 La mejor prueba de un par de funciones como `write` y `read` es un
 **viaje de ida y vuelta**: escribir algo, volver a leerlo y comprobar
 que obtuviste lo mismo. La prueba `every_song_demo_comes_back_from_its_text`
-hace eso con cada demo de canción: el chord sheet de cada una se
+hace eso con cada demo de canción: la hoja de acordes de cada una se
 escribe como texto, se importa, y sus acordes, tonalidades y compases
 se comparan con los de la demo.
 
-Encontró dos errores que ya estaban en la ventana del chord sheet
-([El chord sheet](chord-sheet.md)), ambos en compases raros:
+Encontró dos errores que ya estaban en la ventana de la hoja de acordes
+([La hoja de acordes](chord-sheet.md)), ambos en compases raros:
 
 1. **«C G7 C /»**, tres acordes en los tres primeros pulsos y el
    último pulso sosteniendo el tercero. `write_bar` descartaba las
@@ -378,14 +375,14 @@ Encontró dos errores que ya estaban en la ventana del chord sheet
    «E/B» escrito junto sigue siendo el acorde con barra.
 
 Unas pocas demos tienen un acorde entre dos pulsos (Happy Birthday,
-por ejemplo), algo que un chord sheet no puede escribir, así que la
+por ejemplo), algo que una hoja de acordes no puede escribir, así que la
 prueba compara los acordes colocados en los pulsos, y comprueba que
 menos de una demo de cada diez tiene un acorde así.
 
 ## Ejercicios
 
-1. **Acordes a contratiempo.** Algunos charts de texto escriben un
-   push, un acorde que llega medio pulso antes, con un signo como `>`
+1. **Acordes a contratiempo.** Algunos charts de texto escriben una
+   anticipación, un acorde que llega medio pulso antes, con un signo como `>`
    o `^`. ¿Qué función lo leería, y qué tendría que guardar
    `ChordMarker::start`?
 2. **El título al exportar.** Una canción guardada como

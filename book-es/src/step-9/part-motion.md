@@ -9,7 +9,7 @@ dice nada cuando las partes se mueven bien, y la buena escritura de
 partes es casi todo lo que hay que aprender: cada parte moviéndose lo
 menos posible, las partes externas yendo en direcciones opuestas, la
 sensible subiendo y la séptima bajando. Ahora el piano roll muestra
-cada movimiento, bueno o no. Marca **Voice leading**, apunta a un
+cada movimiento, bueno o no. Marca **Conducción de voces**, apunta a un
 cambio de acorde, y cada parte se nombra con adónde va.
 
 ![Los dieciséis compases del ejemplo de funciones de acordes en el piano roll, cuatro partes en una pista Piano. Las notas de cada parte se unen con una línea de su propio color, y los movimientos del compás 5, donde G7 va a C, van en negrita. La línea sobre los nombres de los acordes dice «Piano: superior Re5→Do5 · 2.ª Fa4→Mi4 · 3.ª Si3→Sol3 · inferior Sol2→Do3; partes externas en movimiento contrario».](../images/step-9-part-motion.png)
@@ -18,7 +18,7 @@ El ejemplo son los dieciséis compases de [Acordes prestados,
 dominantes secundarias y acordes
 pivote](chord-functions.md), escritos como cuatro partes en una pista
 Piano: un bajo en la mano izquierda y tres partes en la derecha. La
-comprobación no encuentra nada que marcar: «Voice leading, 4 partes:
+comprobación no encuentra nada que marcar: «Conducción de voces, 4 partes:
 nada de lo que la escritura de partes clásica evita».
 
 ## Lo que ves
@@ -74,7 +74,7 @@ Dos partes que se mueven a la vez van juntas de una de cuatro maneras:
 | Movimiento | Las dos partes | Ejemplo |
 |---|---|---|
 | **Paralelo** | se mueven igual y mantienen el mismo intervalo | terceras que van a terceras |
-| **Similar** | se mueven igual, a otro intervalo | una sexta que va a una quinta, ambas hacia abajo |
+| **Directo** | se mueven igual, a otro intervalo | una sexta que va a una quinta, ambas hacia abajo |
 | **Contrario** | se mueven en direcciones opuestas | el bajo hacia arriba, la voz superior hacia abajo |
 | **Oblicuo** | una se mueve, la otra mantiene | una nota mantenida bajo una que se mueve |
 

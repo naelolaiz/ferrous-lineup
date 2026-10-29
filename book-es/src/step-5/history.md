@@ -12,7 +12,7 @@ revertirse a sí misma: "add note Do4 at step 3" se deshace con "remove
 note Do4 at step 3". El historial es una lista de instrucciones. Usa muy
 poca memoria, pero cada tipo de cambio necesita su propia operación
 inversa, escrita a mano, y cada una es un lugar nuevo para equivocarse.
-Piensa en lo que necesitaría deshacer "delete pattern": volver a poner el
+Piensa en lo que necesitaría deshacer "eliminar patrón": volver a poner el
 patrón en su antigua posición, con su nombre y su longitud y las notas de
 cada canal, volver a poner cada clip que lo usaba y renumerar de nuevo
 los clips de los patrones que van detrás. Si se olvida un detalle,
@@ -105,7 +105,7 @@ se usa (esto es la **monomorfización**, del paso 1), así que un
 
 ### Las etiquetas `&'static str`
 
-Cada paso tiene una etiqueta, como `"move clip"`, para el menú Edit. Su
+Cada paso tiene una etiqueta, como `"move clip"`, para el menú Edición. Su
 tipo es `&'static str`: una referencia a texto que vive durante todo el
 programa. Cada string literal escrito en el código tiene este tipo,
 porque el texto se guarda dentro del propio archivo del programa. Así que
@@ -207,7 +207,7 @@ valores sin comprobar nada.
 
 ## ¿Cuándo termina un paso?
 
-Arrastrar un clip por el playlist lo mueve un poco en muchos fotogramas,
+Arrastrar un clip por la lista de reproducción lo mueve un poco en muchos fotogramas,
 y cada movimiento es una edición. Si cada uno fuera su propio paso,
 deshacer el arrastre necesitaría tantas pulsaciones de Ctrl+Z como
 fotogramas hubiera. Así que el historial mantiene el paso más nuevo
@@ -318,13 +318,13 @@ pub(super) fn edit_shortcuts(&mut self, ctx: &egui::Context) {
 
 `Modifiers::COMMAND` es Ctrl en Linux y Windows y ⌘ en un Mac, como en el
 paso 4. El `consume_shortcut` de egui es indulgente con las teclas de
-más: un atajo sin Shift también encaja cuando Shift está pulsado.
+más: un atajo sin Mayús también encaja cuando Mayús está pulsado.
 Normalmente eso es lo que quieres (en muchos teclados `+` necesita
-Shift, y Ctrl++ debería seguir funcionando), pero aquí significa que
-Ctrl+Shift+Z contaría también como Ctrl+Z. Comprobar primero redo, y usar
+Mayús, y Ctrl++ debería seguir funcionando), pero aquí significa que
+Ctrl+Mayús+Z contaría también como Ctrl+Z. Comprobar primero redo, y usar
 `else if`, lo resuelve.
 
-`||` se detiene en el primer `true`, así que si se pulsó Ctrl+Shift+Z,
+`||` se detiene en el primer `true`, así que si se pulsó Ctrl+Mayús+Z,
 Ctrl+Y ni siquiera se mira. "Consume" significa que la pulsación se saca
 de la entrada de egui, para que nada más en el mismo fotograma reaccione
 a ella.
@@ -334,7 +334,7 @@ campos de texto de egui tienen su propio deshacer para escribir, y allí
 Ctrl+Z debe deshacer las últimas letras, no el último cambio de la
 canción.
 
-El menú Edit muestra los mismos atajos, escritos como los escribe el
+El menú Edición muestra los mismos atajos, escritos como los escribe el
 sistema, con `ctx.format_shortcut(&UNDO)` ("Ctrl+Z" en Linux, "⌘Z" en un
 Mac), y pone la etiqueta en el elemento: `format!("Undo {label}")`.
 
@@ -349,6 +349,6 @@ porque el proyecto vuelve a ser igual que el guardado. Un simple
 `dirty: bool` puesto en cada edición habría mantenido la estrella
 después de deshacer.
 
-Abrir un archivo, o File > New, sustituye todo el proyecto y vacía el
+Abrir un archivo, o Archivo > Nuevo, sustituye todo el proyecto y vacía el
 historial. Deshacer metiéndote en otra canción sería desconcertante, y la
-pregunta "Save changes?" ya protege lo que dejas atrás.
+pregunta "¿Guardar cambios?" ya protege lo que dejas atrás.

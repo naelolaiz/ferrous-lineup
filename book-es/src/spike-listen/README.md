@@ -7,13 +7,13 @@ y sigue siendo experimental: el tempo, los cambios de tonalidad, los
 acordes y el primer tiempo fuerte son estimaciones, no una partitura
 leída del sonido.
 
-Puede, lo bastante bien como para ser útil. **File > Import recording…**
+Puede, lo bastante bien como para ser útil. **Archivo > Importar grabación…**
 (o soltar el archivo sobre la ventana, o `ferrous-lineup song.mp3`) abre
 la grabación como un proyecto nuevo: la propia grabación en un canal
-sampler, y un canal **Harmony** con el acorde oído en cada pulso. El
+sampler, y un canal **Armonía** con el acorde oído en cada pulso. El
 tempo, el compás y la tonalidad se fijan a partir de lo oído, de modo
 que las líneas de compás caen sobre los compases de la grabación y las
-harmony keys se iluminan con el acorde que está sonando.
+teclas de armonía se iluminan con el acorde que está sonando.
 
 ![Vibe Ace importado, con las harmony keys siguiendo sus acordes](../images/spike-listen-vibe-ace.png)
 
@@ -28,19 +28,19 @@ del crate tiene los números detallados de probar las alternativas.
 Escuchar son seis etapas, cada una con su módulo, cada una una función
 normal de un tipo de datos al siguiente:
 
-1. **Decode** (`decode.rs`): el archivo se convierte en muestras, con el
+1. **Decodificar** (`decode.rs`): el archivo se convierte en muestras, con el
    crate [Symphonia](https://crates.io/crates/symphonia).
-2. **Beats** (`beats.rs`): cuándo cae cada pulso, en segundos, y el
+2. **Pulsos** (`beats.rs`): cuándo cae cada pulso, en segundos, y el
    tempo. La primera versión usaba aquí el crate `beat-track-rs`; una
    vez publicada la importación, el crate fue reemplazado por nuestro
    propio port (mira abajo).
-3. **Key** (con el crate `bpm-key`): la tonalidad en la que está la
-   grabación en conjunto, y la primera suposición para las harmony keys.
-4. **Chords** (`chroma.rs` y `chords.rs`, propios): qué acorde suena de
+3. **Tonalidad** (con el crate `bpm-key`): la tonalidad en la que está la
+   grabación en conjunto, y la primera suposición para las teclas de armonía.
+4. **Acordes** (`chroma.rs` y `chords.rs`, propios): qué acorde suena de
    cada pulso al siguiente.
-5. **Meter** (`meter.rs`, propio): tres o cuatro pulsos por compás, y
+5. **Métrica** (`meter.rs`, propio): tres o cuatro pulsos por compás, y
    qué pulso es el primer tiempo fuerte.
-6. **Key changes** (`keys.rs`, propio): la tonalidad de cada compás,
+6. **Cambios de tonalidad** (`keys.rs`, propio): la tonalidad de cada compás,
    encontrada con `lineup_core::harmony::key_finding` a partir del
    chroma de los compases. El resultado es un `Vec<KeySpan>` en
    `Analysis.keys`, con `start` y `end` contados en pulsos.
@@ -49,7 +49,7 @@ Luego `arrange.rs` convierte el resultado en un `Project`, con los
 mismos tipos que usa el resto de Ferrous Lineup: `Channel`, `Pattern`,
 `NoteEvent`, `Clip`. `arrange::key_spans` mueve los tramos de tonalidad
 de pulsos a pasos de canción, para que el buscador de tonalidades pueda
-marcarlos en el playlist. Nada aguas abajo sabe que las notas vinieron
+marcarlos en la lista de reproducción. Nada aguas abajo sabe que las notas vinieron
 de una grabación.
 
 ### Decodificar con Symphonia
@@ -216,7 +216,7 @@ el 3/4 del 4/4 en las 29 demos y encontró el tiempo fuerte correcto en
 pulsos de canción, con las voces puestas por el mismo
 `library::voicing::voice` que usan los estilos, de modo que cada acorde
 se mueve lo menos posible desde el anterior. Van a patrones de 16
-compases, colocados uno tras otro en una pista "Harmony"; un tramo que
+compases, colocados uno tras otro en una pista «Armonía»; un tramo que
 cruza el límite de un patrón se corta en dos.
 
 La grabación es un canal sampler con una sola nota, en el primer paso de
@@ -244,9 +244,9 @@ al hilo para obtener su resultado, un
 resumen de lo oído, y los cambios de tonalidad en pasos de canción. El
 hilo de la interfaz nunca se bloquea, así que la música sigue sonando
 mientras se escucha una grabación nueva. El proyecto se intercambia con
-el mismo `replace_project` que usa File > Open, y
+el mismo `replace_project` que usa Archivo > Abrir, y
 `key_finder.new_project` conserva los tramos de tonalidad para
-**Find the key**.
+**Buscar la tonalidad**.
 
 Abrir un archivo de audio desde la línea de comandos o soltándolo sobre
 la ventana pasa por el mismo sitio que un archivo `.lineup`, `open_now`,

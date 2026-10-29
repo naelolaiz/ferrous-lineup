@@ -36,7 +36,7 @@ pub(crate) fn process(&mut self, output: &mut [f32])
 
 No sabe ni le importa que sea cpal quien pregunta. Con una tarjeta de
 sonido, cpal pide unos cientos de fotogramas cada vez, tan rápido como se
-reproducen. Para hacer un archivo, un loop los pide tan rápido como la
+reproducen. Para hacer un archivo, un bucle los pide tan rápido como la
 computadora puede producirlos, y los escribe. Es el mismo código
 produciendo el mismo sonido, así que una exportación suena exactamente
 como la reproducción: no hay un segundo motor que mantener de acuerdo con
@@ -244,7 +244,7 @@ la reverberación activada, la cola también espera su decay y su
 pre-delay, para que la sala pueda apagarse en lugar de cortarse.
 
 La cola deja que las últimas notas resuenen. Pero hay una trampa: en el
-modo canción el hilo de audio hace *loop*. Cuando el playhead llega al
+modo canción el hilo de audio hace *bucle*. Cuando el cursor de reproducción llega al
 final de la canción, empieza otra vez desde el compás 1, así que la cola
 terminaría con el primer acorde de la canción empezando de nuevo. La
 solución es decirle a este renderer, y solo a este, que la canción es más
@@ -266,7 +266,7 @@ Para la demo eso es 17.33, redondeado hacia arriba a 18, más uno: 19
 pasos en silencio. ¿Por qué el extra? Un paso no es un número entero de
 fotogramas, así que el secuenciador empieza algunos pasos un fotograma
 antes o después de la fracción exacta. El paso extra significa que el
-final del archivo queda siempre a un paso entero del loop, redondee como
+final del archivo queda siempre a un paso entero del bucle, redondee como
 redondee.
 
 ## Un hilo propio
@@ -330,8 +330,7 @@ dejando el `done` exterior para la interfaz. Lo mismo vale para `path`.
 
 El hilo escribe cuántos fotogramas están hechos en un **`AtomicUsize`**,
 y la ventana lo lee cuando dibuja la barra de progreso. Un atómico se
-puede leer y escribir desde dos hilos a la vez sin cerrojo, como el
-playhead desde el paso 2.
+puede leer y escribir desde dos hilos a la vez sin cerrojo, como el cursor de reproducción desde el paso 2.
 
 `Ordering::Relaxed` es la promesa más débil (y barata) sobre cómo ven
 este escrito los demás hilos: el propio número nunca se parte ni se
@@ -363,7 +362,7 @@ se convierte en un `String` en el hilo de exportación
 estado es todo lo
 que necesita la ventana. Una exportación cancelada también vuelve como
 `Err`, con el string especial `CANCELLED`; la barra de estado lo
-convierte en "Stopped exporting song.wav" en lugar de mostrarlo como un
+convierte en "Se detuvo la exportación de song.wav" en lugar de mostrarlo como un
 fallo.
 
 Cada fotograma, la aplicación lo comprueba:
@@ -415,7 +414,7 @@ Unas cuantas cosas que notar:
 
 ### Detener una exportación
 
-La barra de estado dibuja un pequeño botón Stop mientras
+La barra de estado dibuja un pequeño botón ⏹ mientras
 `Export::can_cancel()` es true. Llama a `export.cancel()`, que pone un
 `AtomicBool`; el hilo de exportación comprueba ese flag entre bloques:
 
@@ -438,8 +437,7 @@ para que un WAV a medio escribir no quede nunca donde debería estar uno
 terminado. La aplicación convierte `Cancelled` en el mensaje `CANCELLED`
 de arriba.
 
-Cerrar la ventana mientras corre una exportación pregunta primero: "Stop
-it and quit?" o "Keep exporting". Es un segundo uso del mismo flag, y le
+Cerrar la ventana mientras corre una exportación pregunta primero: "¿Detener la exportación y salir?" o "Continuar exportando". Es un segundo uso del mismo flag, y le
 da al hilo de exportación tiempo para quitar su archivo temporal antes de
 que termine el proceso.
 
@@ -476,7 +474,7 @@ no se lee ningún archivo.
 El renderer posee sus propios instrumentos y su propia copia de cada
 nota. Es una instantánea, como las copias del historial de deshacer:
 puedes seguir reproduciendo y editando mientras corre, y la exportación
-continúa con la canción tal como estaba cuando elegiste Export WAV.
+continúa con la canción tal como estaba cuando elegiste Exportar WAV.
 
 El nombre del archivo viene del del proyecto: `FileState::export_name`
 convierte `song.lineup` en `song.wav`, o sugiere `Untitled.wav` para un

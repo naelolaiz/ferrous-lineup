@@ -22,31 +22,31 @@ insertar un compás después del compás 2:
 después: | C    | F    | %    | G7   | C    |
 ```
 
-Haz clic derecho en un compás del **chord sheet**, o en un número de
-compás de la **regla de la playlist**, y el menú tiene:
+Haz clic derecho en un compás de la **hoja de acordes**, o en un número de
+compás de la **regla de la lista de reproducción**, y el menú tiene:
 
-- **Insert a bar before**
-- **Insert a bar after**
-- **Delete this bar**, o **Delete bars 5–8** cuando hay varios compases
-  seleccionados en el sheet.
+- **Insertar un compás antes**
+- **Insertar un compás después**
+- **Eliminar este compás**, o **Eliminar los compases 5–8** cuando hay varios compases
+  seleccionados en la hoja.
 
-Cada uno es un único paso para deshacer ("Undo insert bar").
+Cada uno es un único paso para deshacer ("Deshacer: insertar compás").
 
 ![El menú sobre el compás 3 de Embraceable You: escribir en él, vaciarlo, mover allí el cabezal de reproducción, insertar un compás antes o después, o borrarlo.](../images/step-9-insert-bar-menu.png)
 
 ## Pruébalo
 
-1. Abre **File > New**, que da un chord sheet vacío con una banda, y
+1. Abre **Archivo > Nuevo**, que da una hoja de acordes vacía con una banda, y
    teclea `C`, `F`, `G7` y `C` en los cuatro primeros compases.
-2. Haz clic derecho en el Fa y elige **Insert a bar after**. Aparece un
+2. Haz clic derecho en el Fa y elige **Insertar un compás después**. Aparece un
    compás 3 nuevo, con el Fa escrito tenue dentro: el Fa continúa a través
    del compás vacío, como hace `%` en un chart impreso. El G7 ahora está
    en el compás 4.
 3. Teclea `D7` en el compás nuevo. La banda toca C, F, D7, G7, C.
-4. Haz clic derecho en el D7 y elige **Delete this bar**. La canción
+4. Haz clic derecho en el D7 y elige **Eliminar este compás**. La canción
    queda como estaba.
-5. En la playlist, haz clic derecho en el número de compás **2** de la
-   regla y elige **Insert a bar before**. Los clips, las secciones y los
+5. En la lista de reproducción, haz clic derecho en el número de compás **2** de la
+   regla y elige **Insertar un compás antes**. Los clips, las secciones y los
    marcadores posteriores al compás 1 se mueven todos un compás más
    tarde.
 
@@ -66,7 +66,7 @@ sección de vals es un compás de vals, aunque el compás anterior esté en
 4/4: estabas mirando el compás de vals cuando pediste uno más como él.
 
 **Todo lo que hay después se mueve un compás más tarde**: clips,
-secciones, el loop, los marcadores de compás, tempo, tonalidad y
+secciones, el bucle, los marcadores de compás, tempo, tonalidad y
 acordes, y las variaciones de la banda y los estilos de sección.
 
 ## Qué se lleva un compás borrado
@@ -145,7 +145,7 @@ se mueven `steps` antes; los de dentro aterrizan donde estaban los
 compases. Luego se aplica a todo lo que tiene un lugar en la canción. El
 final de una sección también pasa por `place`, así que una sección que
 contenía los compases se acorta, y una hecha solo de ellos queda con
-longitud 0 y se elimina. El loop se conserva solo si queda algo de él:
+longitud 0 y se elimina. El bucle se conserva solo si queda algo de él:
 
 ```rust
 playlist.loop_region = playlist.loop_region.and_then(|region| {
@@ -155,7 +155,7 @@ playlist.loop_region = playlist.loop_region.and_then(|region| {
 ```
 
 `bool::then_some` convierte `true` en `Some(value)` y `false` en `None`:
-aquí, "el loop si todavía tiene longitud".
+aquí, "el bucle si todavía tiene longitud".
 
 ## Las notas: abrir el patrón, o cortar el clip
 
@@ -232,7 +232,7 @@ antes sería una sorpresa. `NoteEvent { start: …, ..*note }` es
 `start` cambiado. Funciona con `*note` porque `NoteEvent` es `Copy`.
 
 Las mitades de un patrón cortado conservan su **color**, para que los
-clips se vean como se veían en la playlist, y una mitad cortada solo
+clips se vean como se veían en la lista de reproducción, y una mitad cortada solo
 para ser borrada se elimina de nuevo al final, de modo que un borrado no
 deja patrones vacíos detrás.
 
@@ -254,9 +254,7 @@ if !self.open_clips(at, steps) || !self.make_room(at, steps) {
 ```
 
 y la devuelven si algo falla. `*self = before` reemplaza el proyecto
-entero, moviendo `before` dentro de él. La app dice entonces "There is
-no room for another bar in the song" o "There is no room for the
-patterns the cut needs", y nada ha cambiado.
+entero, moviendo `before` dentro de él. La app dice entonces "No hay lugar para otro compás en la canción" o "No hay lugar para los patrones que necesita el corte", y nada ha cambiado.
 
 `||` se detiene en el primer `true`, así que `make_room` se ejecuta solo
 si `open_clips` tuvo éxito. `make_room` comprueba antes de mover nada,
@@ -265,11 +263,10 @@ dos primeros; la copia cubre eso.
 
 ## La banda sigue
 
-Las partes de la banda (piano, bajo, batería) se escriben a partir del
-chord sheet. Mover todo un compás mueve también sus notas, y la app no
+Las partes de la banda (piano, bajo, batería) se escriben a partir de la hoja de acordes. Mover todo un compás mueve también sus notas, y la app no
 debe confundir eso con una edición tuya: una parte que editas queda
 **congelada**, conservada tal como la dejaste, y deja de seguir el
-sheet. Así que ambos métodos se ejecutan dentro de `moving_the_band`,
+hoja. Así que ambos métodos se ejecutan dentro de `moving_the_band`,
 que también usan las herramientas que transponen o cambian el compás de
 toda la canción:
 
@@ -283,7 +280,7 @@ pub fn insert_bars(&mut self, bar: usize, after: bool, count: usize) -> bool {
 R` y lo ejecuta sobre el proyecto, y luego adopta las partes movidas
 como propias de la banda. En la app, la edición pasa por el mismo método
 `edit` que cualquier otro cambio: guarda el proyecto como estaba para
-deshacer, ejecuta el cambio, deja que la banda toque el sheet nuevo y
+deshacer, ejecuta el cambio, deja que la banda toque la hoja nueva y
 dice al hilo de audio qué ha cambiado.
 
 ## El menú, en dos sitios
@@ -309,10 +306,10 @@ pub enum BarEdit {
 }
 ```
 
-El chord sheet lo envuelve en su propia action, `SheetAction::Bars`, y
-la playlist en `PlaylistAction::Bars`. Ninguno cambia el proyecto
+La hoja de acordes lo envuelve en su propia action, `SheetAction::Bars`, y
+la lista de reproducción en `PlaylistAction::Bars`. Ninguno cambia el proyecto
 mientras dibuja; la app aplica la acción después con `edit_bars`, que
-además selecciona el compás nuevo en el sheet para que puedas teclear en
+además selecciona el compás nuevo en la hoja para que puedas teclear en
 él de inmediato. La mayoría de las vistas de la app funcionan así:
 dibujar, recoger acciones, aplicarlas después.
 
@@ -320,12 +317,12 @@ dibujar, recoger acciones, aplicarlas después.
 
 Las pruebas de `bars.rs` trabajan sobre una canción pequeña: un patrón
 de cuatro compases que toca C, F, G7, C, una estrofa sobre todo él, un
-loop sobre los compases 2 y 3, la tonalidad de Sol desde el compás 3 y 90
+bucle sobre los compases 2 y 3, la tonalidad de Sol desde el compás 3 y 90
 BPM desde el compás 4.
 
 - `an_inserted_bar_moves_everything_after_it` inserta después del compás
   2 y comprueba cada nota, acorde, tonalidad, tempo, la estrofa y el
-  loop: la nota mantenida hasta el compás nuevo ahora termina donde este
+  bucle: la nota mantenida hasta el compás nuevo ahora termina donde este
   empieza.
 - `a_bar_inserted_before_a_change_of_time_takes_the_new_time` hace del
   compás 3 un compás de vals e inserta antes de él: el compás nuevo
@@ -343,7 +340,7 @@ BPM desde el compás 4.
 En la app, `a_bars_menu_inserts_a_bar_and_deletes_it` hace clic derecho
 en el G de C, G, Am, F, inserta un compás después, teclea D7 dentro y lo
 borra otra vez; `the_bar_numbers_insert_and_delete_bars_too` lo hace
-desde la regla de la playlist y lo deshace con Ctrl+Z.
+desde la regla de la lista de reproducción y lo deshace con Ctrl+Z.
 
 Las pruebas comprueban los datos de la canción. Para oír que nada más se
 movió, la [traza de reproducción](playback-trace.md) de una demo antes y
@@ -353,7 +350,7 @@ instante, y cada nota posterior exactamente un compás después.
 ## Ejercicios
 
 1. `insert_bars` recibe un `count`, pero el menú siempre inserta un
-   compás. Añade **Insert bars…** con un número. ¿Qué parte de
+   compás. Añade **Insertar compases…** con un número. ¿Qué parte de
    `open_bars` ya maneja más de uno?
 2. Escribe una prueba que inserte un compás en mitad de la segunda
    repetición de un clip repetido tres veces. Antes de ejecutarla,

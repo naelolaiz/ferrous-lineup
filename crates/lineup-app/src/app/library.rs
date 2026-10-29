@@ -32,6 +32,7 @@ use lineup_core::{
 };
 
 use super::LineupApp;
+use crate::i18n::{list, tr, tr_name, trf};
 use crate::library_browser::{LibraryAction, Tried};
 
 /// How many of the patterns the library wrote are remembered.
@@ -83,7 +84,8 @@ pub(super) fn kept(project: &Project) -> String {
     if names.is_empty() {
         String::new()
     } else {
-        format!(" 🔒 Kept: {}.", names.join(", "))
+        let names: Vec<_> = names.iter().map(|name| tr_name(name)).collect();
+        trf(" 🔒 Kept: {}.", &[&names.join(", ")])
     }
 }
 
@@ -320,8 +322,10 @@ impl LineupApp {
         }
         let name = before.channels()[channel].name.clone();
         if !before.channels()[channel].muted && self.project.channels()[channel].muted {
-            self.notice = Some(format!(
-                "{name} unlocked: the band plays its part again, so {name} is muted."
+            let name = tr_name(&name);
+            self.notice = Some(trf(
+                "{} unlocked: the band plays its part again, so {} is muted.",
+                &[&name, &name],
             ));
         }
         let Some(mut source) = self
@@ -435,7 +439,8 @@ impl LineupApp {
             || parts.tempo
             || parts.swing)
         {
-            self.notice = Some("Choose a component to apply in the Library options.".to_string());
+            self.notice =
+                Some(tr("Choose a component to apply in the Library options.").to_string());
             return;
         }
         // With a band, a style or a rhythm is the band's new way of
@@ -560,17 +565,21 @@ impl LineupApp {
             })
         });
         let Some((pattern, written)) = written else {
-            self.message = Some("There is no room for another pattern.".to_string());
+            self.message = Some(tr("There is no room for another pattern.").to_string());
             return;
         };
         if own_pattern && self.project == before {
             let why = if parts.instruments {
-                format!(
-                    "{name} changed nothing: its instruments go to the channels named \
-                     Keys and Bass, or to the channel chosen in the rack."
+                trf(
+                    "{} changed nothing: its instruments go to the channels named \
+                     Keys and Bass, or to the channel chosen in the rack.",
+                    &[&tr_name(name)],
                 )
             } else {
-                format!("{name} changed nothing: the song already goes that way.")
+                trf(
+                    "{} changed nothing: the song already goes that way.",
+                    &[&tr_name(name)],
+                )
             };
             self.notice = Some(why + &kept(&self.project));
             return;
@@ -731,12 +740,12 @@ impl LineupApp {
         let new_time =
             (self.project.meter() != before.meter()).then_some(self.project.time_signature);
         let patterns = |count: usize| match count {
-            1 => "1 pattern".to_string(),
-            count => format!("{count} patterns"),
+            1 => tr("1 pattern").to_string(),
+            count => trf("{} patterns", &[&count]),
         };
         let mut descriptions = Vec::new();
         if change.drums > 0 {
-            descriptions.push(format!("new drums in {}", patterns(change.drums)));
+            descriptions.push(trf("new drums in {}", &[&patterns(change.drums)]));
         }
         if change.harmony > 0 {
             let what = match action {
@@ -744,8 +753,9 @@ impl LineupApp {
                 LibraryAction::MicromodeStyle(_) => "the micromode instead of the chords",
                 _ => "chords and bass played again",
             };
-            descriptions.push(format!("{what} in {}", patterns(change.harmony)));
+            descriptions.push(trf("{} in {}", &[&tr(what), &patterns(change.harmony)]));
         }
+        let name = tr_name(name);
         let fill = fill_picked(action);
         // The song now plays what was picked, so the library shows it.
         if self.project != before || change != apply::RhythmChange::default() {
@@ -791,26 +801,27 @@ impl LineupApp {
             self.remember_song_version(self.project.clone(), self.song_library);
         }
         let notice = if fill && change.drums > 0 {
-            format!(
-                "{name} now plays in the last bar of {}. Ctrl+Z takes it back.",
-                patterns(change.drums)
+            trf(
+                "{} now plays in the last bar of {}. Ctrl+Z takes it back.",
+                &[&name, &patterns(change.drums)],
             )
         } else if let Some(time) = new_time {
             let what = if descriptions.is_empty() {
                 String::new()
             } else {
-                format!(": {}", descriptions.join(", "))
+                format!(": {}", list(&descriptions))
             };
-            format!(
-                "The song now plays {name} in {time}, every bar squeezed or stretched into a \
-                 {time} bar{what}. Ctrl+Z takes it back."
+            trf(
+                "The song now plays {} in {}, every bar squeezed or stretched into a \
+                 {} bar{}. Ctrl+Z takes it back.",
+                &[&name, &time, &time, &what],
             )
         } else if descriptions.is_empty() {
-            format!("Applied selected parts of {name}.")
+            trf("Applied selected parts of {}.", &[&name])
         } else {
-            format!(
-                "The song now plays {name}: {}. Ctrl+Z takes it back.",
-                descriptions.join(", ")
+            trf(
+                "The song now plays {}: {}. Ctrl+Z takes it back.",
+                &[&name, &list(&descriptions)],
             )
         };
         self.notice = Some(notice + &kept(&self.project));
@@ -846,8 +857,9 @@ impl LineupApp {
             self.keep_place_in_song(&before);
             self.remember_song_version(before, previous);
             self.remember_song_version(self.project.clone(), self.song_library);
-            self.notice = Some(format!(
-                "The song is back in {time}, as it was. Ctrl+Z takes it back."
+            self.notice = Some(trf(
+                "The song is back in {}, as it was. Ctrl+Z takes it back.",
+                &[&time],
             ));
             return;
         }
@@ -990,7 +1002,7 @@ impl LineupApp {
             })
         });
         if written.is_none() {
-            self.message = Some("There is no room for another pattern.".to_string());
+            self.message = Some(tr("There is no room for another pattern.").to_string());
         }
         written
     }
@@ -1110,11 +1122,10 @@ impl LineupApp {
                 self.keep_place_in_song(&before);
                 self.remember_song_version(before, previous);
                 self.remember_song_version(self.project.clone(), self.song_library);
-                self.notice = Some(format!(
-                    "Applied selected parts of {}.{}",
-                    rhythm.name,
-                    kept(&self.project)
-                ));
+                self.notice = Some(
+                    trf("Applied selected parts of {}.", &[&tr_name(rhythm.name)])
+                        + &kept(&self.project),
+                );
                 return true;
             }
             return false;
@@ -1155,11 +1166,12 @@ impl LineupApp {
         self.keep_place_in_song(&before);
         self.remember_song_version(before, previous);
         self.remember_song_version(self.project.clone(), self.song_library);
-        self.notice = Some(format!(
-            "Applied selected parts of {}.{}",
-            harmony.map_or(style.name, |s| s.name),
-            kept(&self.project)
-        ));
+        self.notice = Some(
+            trf(
+                "Applied selected parts of {}.",
+                &[&tr_name(harmony.map_or(style.name, |s| s.name))],
+            ) + &kept(&self.project),
+        );
         true
     }
 }

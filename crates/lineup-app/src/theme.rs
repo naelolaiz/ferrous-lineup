@@ -215,14 +215,17 @@ pub fn lcd_frame(
             .corner_radius(3)
             .inner_margin(Margin::symmetric(6, 1))
             .show(ui, |ui| {
-                ui.set_width(width);
+                // A longer label, as in Spanish, widens the frame rather
+                // than wrapping onto a second line.
+                let label = ui.painter().layout_no_wrap(
+                    label.to_string(),
+                    FontId::proportional(9.0),
+                    LCD_LABEL,
+                );
+                ui.set_width(width.max(label.size().x));
                 ui.spacing_mut().item_spacing.y = 0.0;
                 ui.vertical(|ui| {
-                    ui.label(
-                        RichText::new(label)
-                            .font(FontId::proportional(9.0))
-                            .color(LCD_LABEL),
-                    );
+                    ui.label(label);
                     let visuals = &mut ui.visuals_mut().widgets;
                     for state in [
                         &mut visuals.inactive,
@@ -266,10 +269,9 @@ pub fn light_button(ui: &mut Ui, text: &str, on: bool, color: Option<Color32>) -
 }
 
 /// Gives a widget a hint for the hint bar, and the same text as a tooltip
-/// for those who wait.
+/// for those who wait. The text is shown as given: translate it first.
 pub fn hint(response: Response, text: impl Into<String>) -> Response {
     let text = text.into();
-    let text = crate::i18n::tr_str(&text).to_string();
     if response.hovered() {
         response
             .ctx

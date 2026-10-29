@@ -49,7 +49,7 @@ de La menor.
 
 ## Un marcador de tonalidad
 
-Un cambio de tonalidad es un marcador más en el playlist, junto a los
+Un cambio de tonalidad es un marcador más en la lista de reproducción, junto a los
 marcadores de compás y de tempo:
 
 ```rust
@@ -67,7 +67,7 @@ por turno. `Project::key_at(step)` se lo pregunta, y
 clip de un patrón, como hace `pattern_time` para el compás.
 
 Un marcador de tonalidad nunca mueve una nota. Esa es la diferencia con
-los menús Key (véase [Cambiar de tonalidad](changing-key.md)), que
+los menús Tonalidad (véase [Cambiar de tonalidad](changing-key.md)), que
 transponen la canción entera. Cambiar la tonalidad de la canción ahora
 también mueve cada marcador de tonalidad el mismo intervalo, y cada
 patrón se mueve de la tonalidad en la que se toca a donde fue esa
@@ -89,15 +89,15 @@ Ferrous Lineup pueden seguir abriéndola.
 - La regla escribe la tonalidad tras el número de compás en el compás 1
   y dondequiera que cambie, en azul.
 - Haz clic derecho en los números de compás: bajo los compases ahora
-  está **Key from bar N**, con una fundamental y una escala que elegir,
-  y **Remove this key change**. El compás 1 es la tonalidad propia de
-  la canción, que cambian los menús Key.
-- En modo canción, las harmony keys siguen la tonalidad en el playhead
-  (o donde vaya a empezar Play). Cuando no es la tonalidad en la que
-  empieza la canción, *Now in A major* aparece bajo los menús Key, y
+  está **Tonalidad desde el compás N**, con una fundamental y una escala que elegir,
+  y **Quitar este cambio de tonalidad**. El compás 1 es la tonalidad propia de
+  la canción, que cambian los menús Tonalidad.
+- En modo canción, las teclas de armonía siguen la tonalidad en el cursor de reproducción
+  (o donde vaya a empezar ▶). Cuando no es la tonalidad en la que
+  empieza la canción, *Now in A major* aparece bajo los menús Tonalidad, y
   las siete teclas de acorde son los acordes de esa tonalidad.
 - El piano roll resalta las notas de un patrón en la tonalidad en la
-  que se toca, y dice *This pattern: A major* junto a los menús Key.
+  que se toca, y dice *This pattern: A major* junto a los menús Tonalidad.
 
 ![La Marcha turca en el compás 27, en la marcha: la regla dice A major en el compás 26 y F# harmonic minor en el compás 34, y las harmony keys son las de La mayor.](../images/step-8-key-change-march.png)
 

@@ -19,30 +19,30 @@ con un **SoundFont**.
 
 ## Qué ves
 
-Hay una página nueva en **Edit > Settings… > Audio**. Marca
-**SoundFont instruments**. La primera vez, una ventana explica qué es
+Hay una página nueva en **Edición > Ajustes… > Audio**. Marca
+**Instrumentos del SoundFont**. La primera vez, una ventana explica qué es
 un SoundFont y se ofrece a descargar uno:
 
 ![La ventana «Real instrument sounds»: GeneralUser GS, unos 30 MB, guardado en ~/.local/share/ferrouslineup/soundfonts, con Download, Choose a file… y Not now.](../images/step-9-soundfont-offer.png)
 
-**Download** trae GeneralUser GS, un SoundFont General MIDI libre hecho
+**Descargar** trae GeneralUser GS, un SoundFont General MIDI libre hecho
 por S. Christian Collins, desde su página de GitHub. La ventana y la
-barra de estado muestran cuánto lleva; **Stop** abandona. Cuando
+barra de estado muestran cuánto lleva; **Detener** abandona. Cuando
 termina, la barra de estado dice «Los instrumentos suenan desde
 GeneralUser GS», y a partir de entonces:
 
 - todo canal con un instrumento reproduce una grabación de él. Son los
-  acordes de la canción de inicio (ahora un piano), las Keys y el Bass
-  de cada estilo de la Library (un piano y un bajo), y cada voz de cada
+  acordes de la canción de inicio (ahora un piano), los Teclados y el Bajo
+  de cada estilo de la Biblioteca (un piano y un bajo), y cada voz de cada
   demo: los violines y el violonchelo del Canon, el coro y el órgano de
   las canciones de gospel, el bandoneón de los tangos (un acordeón, en
   General MIDI);
-- con **SoundFont drums** marcado (viene marcado por defecto), la
+- con **Batería del SoundFont** marcado (viene marcado por defecto), la
   batería integrada toca la batería del SoundFont: un kick, una snare y
   un hi-hat grabados;
-- un canal en **None (el sonido propio del Lineup Osc)** se queda con el
+- un canal en **Ninguno (el sonido propio del Lineup Osc)** se queda con el
   Lineup Osc. Haz clic derecho en el nombre de un canal y elige un
-  instrumento bajo **Instrument** para pasarlo al SoundFont.
+  instrumento bajo **Instrumento** para pasarlo al SoundFont.
 
 ![El viejo menú Sounds, con el texto al pasar el ratón de SoundFont instruments. La captura es anterior al traslado a Edit > Settings… > Audio.](../images/step-9-sounds-menu.png)
 
@@ -51,19 +51,17 @@ de datos (`~/.local/share/ferrouslineup/soundfonts` en Linux,
 `~/Library/Application Support/Ferrous-Lineup/soundfonts` en macOS,
 `AppData\Roaming\Ferrous Lineup\data\soundfonts` en Windows) y recuerda
 las marcas de los ajustes: la próxima vez arranca con los sonidos
-activados. **Choose SoundFont…** reproduce en su lugar cualquier otro
-archivo `.sf2`; **Use GeneralUser GS** vuelve atrás.
+activados. **Elegir SoundFont…** reproduce en su lugar cualquier otro
+archivo `.sf2`; **Usar GeneralUser GS** vuelve atrás.
 
-Dos cosas más usan el SoundFont sin que se les diga: **File > Export
-WAV** escribe la canción tal como la oyes, SoundFont incluido, y el
-teclado de la computadora y un teclado MIDI también lo tocan. **MIDI > Send
-every channel** sigue enviando las notas al sintetizador externo, como
+Dos cosas más usan el SoundFont sin que se les diga: **Archivo > Exportar WAV** escribe la canción tal como la oyes, SoundFont incluido, y el
+teclado de la computadora y un teclado MIDI también lo tocan. **MIDI > Enviar todos los canales** sigue enviando las notas al sintetizador externo, como
 antes.
 
 Si la descarga falla (sin red, un firewall), la ventana dice por qué.
 Puedes descargar `GeneralUser-GS.sf2` de
 [su página](https://github.com/mrbumpy409/GeneralUser-GS) tú mismo y
-elegirlo con **Choose a file…**.
+elegirlo con **Elegir un archivo…**.
 
 ![Descargando: una barra de progreso, «2.5 de 6.0 MB», y lo mismo en la barra de estado.](../images/step-9-soundfont-download.png)
 
@@ -86,7 +84,7 @@ archivo:
 
 - **muestras**: grabaciones cortas, el Do, Mi, Sol♯ de un piano y así cada
   pocas notas, cada una con la nota en la que fue grabada. Los sonidos
-  que duran, como un órgano o unas cuerdas, tienen un **loop**: una vez
+  que duran, como un órgano o unas cuerdas, tienen un **bucle**: una vez
   que el ataque ha sonado, el centro de la grabación se repite mientras
   la tecla siga pulsada;
 - **instrumentos**: qué muestra tocar para qué teclas y velocidades (una
@@ -111,7 +109,7 @@ rápido: 494 Hz.
 ## Quién hace el trabajo: rustysynth
 
 Leer un archivo `.sf2` y tocarlo es mucho código: parsear el archivo,
-las regiones, las envolventes, los filtros, los loops, mezclar hasta
+las regiones, las envolventes, los filtros, los bucles, mezclar hasta
 cientos de voces. El crate `rustysynth` lo hace todo, en Rust puro sin
 bibliotecas de C, bajo la licencia MIT (que un programa GPL puede
 usar). Su interfaz es pequeña:
@@ -124,11 +122,11 @@ synthesizer.note_on(0, 40, 100);                  // E2, velocity 100
 synthesizer.render(&mut left, &mut right);        // the next block of sound
 ```
 
-Habla MIDI. Y la app ya tiene un canal que habla MIDI: el **MIDI Out**
-([el paso 7](../step-7/README.md)). Un MIDI Out lleva la cuenta de qué
+Habla MIDI. Y la app ya tiene un canal que habla MIDI: el **Salida MIDI**
+([el paso 7](../step-7/README.md)). Una salida MIDI lleva la cuenta de qué
 notas suenan y cuándo debe terminar cada una, y reúne mensajes de
 note-on, note-off y cambio de programa para un sintetizador externo.
-Así que el instrumento nuevo es un MIDI Out cuyos mensajes van a un
+Así que el instrumento nuevo es una salida MIDI cuyos mensajes van a un
 sintetizador dentro de la app:
 
 ```rust
@@ -177,7 +175,7 @@ como mucho 64 frames tarde, 1.3 ms a 48 kHz, muy por debajo de lo que
 cualquiera oye. Los sonidos del SoundFont son estéreo; cada canal de la
 app es mono, así que los dos lados se suman y se dividen a la mitad.
 
-`flush` es el mismo método que entrega los mensajes de un MIDI Out al
+`flush` es el mismo método que entrega los mensajes de una salida MIDI al
 puerto MIDI, y `play` convierte cada `MidiMessage` en la llamada del
 sintetizador:
 
@@ -196,14 +194,13 @@ fn play(synthesizer: &mut Synthesizer, message: MidiMessage) {
 }
 ```
 
-Así que todo lo que un MIDI Out ya hace bien viene gratis: notas que
+Así que todo lo que una salida MIDI ya hace bien viene gratis: notas que
 terminan al acabar su duración, teclas sostenidas, notas que se
 detienen cuando su pista se mutea, duraciones de nota que se estiran
 con un cambio de tempo.
 
-Un tambor es un MIDI Out en el canal 10 que toca una misma nota sea
-cual sea la nota que reciba (`playing_as`), exactamente como **Send
-every channel** ya envía la batería integrada ([MIDI Out para cada
+Un tambor es una salida MIDI en el canal 10 que toca una misma nota sea
+cual sea la nota que reciba (`playing_as`), exactamente como **Enviar todos los canales** ya envía la batería integrada ([Salida MIDI para cada
 canal](../step-8/midi-out-every-channel.md)):
 
 ```rust
@@ -262,8 +259,8 @@ pub fn from_sound_font(
 
 El `?` después de `channel.program` devuelve `None` desde toda la
 función cuando el canal no tiene instrumento: eso es lo que mantiene a
-un canal del Lineup Osc en el Lineup Osc. Un archivo de muestra y un
-MIDI Out tampoco son cosa del SoundFont. El `build_instrument` de la
+un canal del Lineup Osc en el Lineup Osc. Un archivo de muestra y una
+salida MIDI tampoco son cosa del SoundFont. El `build_instrument` de la
 app pregunta esto primero y cae a `for_channel` cuando la respuesta es
 `None`.
 
@@ -279,7 +276,7 @@ devuelve al tamaño de antes.
 La regla de [El hilo de audio, ya crecido](../step-2/realtime.md) sigue
 en pie: el hilo de audio nunca pide memoria. Un sintetizador reserva
 todo lo que necesita cuando se crea: sus voces (aquí 128 por canal),
-sus búferes, la tabla de presets. `Synthesizer::new` se ejecuta en el
+sus búferes, la tabla de preajustes. `Synthesizer::new` se ejecuta en el
 hilo de UI, dentro de `build_instrument`, y el instrumento terminado se
 envía al otro lado. Antes de elegir rustysynth, se leyeron su `note_on`
 y su `render` para comprobar que solo reutilizan esas voces y búferes.
@@ -319,7 +316,7 @@ struct Progress {
 
 Los *atomics* son números que dos hilos pueden leer y escribir a la vez
 sin un lock: la descarga guarda cuántos bytes lleva, la ventana los lee
-para dibujar la barra, y **Stop** guarda `true` en `cancel`, que la
+para dibujar la barra, y **Detener** guarda `true` en `cancel`, que la
 descarga comprueba antes de cada trozo que lee.
 
 La petición HTTP se hace con `ureq`, un cliente HTTP pequeño, usando
@@ -351,7 +348,7 @@ vez que la app arranca.
 
 Cuando el hilo termina, la app tiene un `Arc<SoundFont>`, y cada canal
 necesita un instrumento nuevo hecho de él. La app ya sabe hacerlo:
-cuando cambia **Send every channel**, reconstruye los instrumentos cuya
+cuando cambia **Enviar todos los canales**, reconstruye los instrumentos cuya
 ruta cambió. Olvidar todas las rutas hace que reconstruya todos y cada
 uno en el siguiente frame:
 
@@ -384,7 +381,7 @@ de fallar al cargar.
 
 ## La banda recibe instrumentos
 
-La Library creaba sus canales **Keys** y **Bass** sin instrumento, así
+La Biblioteca creaba sus canales **Teclados** y **Bajo** sin instrumento, así
 que se quedaban con el sonido propio del Lineup Osc, y enviados a un
 sintetizador MIDI tocaban lo que tuviera (a menudo un piano para
 ambos). Ahora `synth_named` les da uno:
@@ -404,7 +401,7 @@ de las demos.
 Un proyecto con un instrumento en cualquier canal se guarda en formato
 de archivo 9 ([Cada voz en su propio canal, con un instrumento
 real](../step-8/voices-and-instruments.md)), así que una canción
-empezada desde un estilo de la Library necesita ahora el formato 9. Las
+empezada desde un estilo de la Biblioteca necesita ahora el formato 9. Las
 pruebas que comprueban qué funciones necesitan qué formato parten de la
 canción de inicio sin su piano (`plain_demo`), de modo que cada una
 sigue viendo solo la función que prueba.
@@ -414,8 +411,8 @@ sigue viendo solo la función que prueba.
 Las pruebas no deberían necesitar una descarga de 30 MB, y el
 repositorio no debería guardar una. Así que el módulo de pruebas
 escribe un SoundFont byte a byte: una muestra, una onda senoidal a 440
-Hz que hace loop, dos instrumentos (uno toca la muestra tal como se
-grabó, otro una octava más arriba) y tres presets (el programa 0, el
+Hz que se repite en bucle, dos instrumentos (uno toca la muestra tal como se
+grabó, otro una octava más arriba) y tres preajustes (el programa 0, el
 programa 33 y la batería en el banco 128).
 
 Un archivo `.sf2` es un archivo RIFF, el mismo contenedor que un
@@ -443,8 +440,7 @@ fn list(kind: &[u8; 4], chunks: &[Vec<u8>]) -> Vec<u8> {
 ```
 
 El archivo es una lista de tres listas: `INFO` (una versión y un
-nombre), `sdta` (las muestras, como números de 16 bits) y `pdta` (los
-presets, los instrumentos y las cabeceras de las muestras, en nueve
+nombre), `sdta` (las muestras, como números de 16 bits) y `pdta` (los preajustes, los instrumentos y las cabeceras de las muestras, en nueve
 tablas de tamaño fijo). Las pruebas lo tocan luego y escuchan como lo
 haría un osciloscopio: una onda senoidal cruza el cero dos veces por
 periodo, así que contar los cruces en un cuarto de segundo da su
@@ -482,20 +478,20 @@ opt-level = 3
 
 1. **Otro SoundFont.** Descarga otro SoundFont General MIDI en formato
    `.sf2` (*FluidR3_GM*, o el pequeño *TimGM6mb*), elígelo con
-   **Choose SoundFont…** y toca el Canon in D. (Los archivos `.sf3`,
+   **Elegir SoundFont…** y toca el Canon en Re. (Los archivos `.sf3`,
    que comprimen sus muestras, no están soportados.) ¿Qué cuerdas
    prefieres? ¿Suena una mucho más alta que la otra? ¿Dónde pondrías un
    ajuste de volumen para el SoundFont entero?
-2. **El Lead.** Las series dodecafónicas y los micromodos escriben su
-   melodía en un canal llamado Lead, que no tiene instrumento y se queda
+2. **La Melodía.** Las series dodecafónicas y los micromodos escriben su
+   melodía en un canal llamado Melodía, que no tiene instrumento y se queda
    con el Lineup Osc. Elige un instrumento para él en el rack. ¿Qué
-   instrumento General MIDI le darías al Lead por defecto, y dónde iría
+   instrumento General MIDI le darías a la Melodía por defecto, y dónde iría
    en `synth_named`?
 3. **Estéreo.** Cada canal es mono, así que el piano estéreo del
    SoundFont se pliega en un lado. ¿Qué haría falta para dar a los
    canales un mando de paneo, y para mantener separados el izquierdo y
    el derecho de un SoundFont? (Mira cómo mezcla el motor `next_sample`
    en los frames de salida.)
-4. **Reverb.** Activa `enable_reverb_and_chorus` y escucha. Cuesta una
+4. **Reverberación.** Activa `enable_reverb_and_chorus` y escucha. Cuesta una
    reverb por canal; ¿cómo podrían todos los canales compartir una sola
    reverb, como hace el envío de una mesa de mezclas?

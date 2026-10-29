@@ -19,6 +19,7 @@ use std::borrow::Cow;
 
 use super::{Chord, ChordFamily, ChordQuality, HintLevel, Scale, ScaleKind};
 use crate::PitchClass;
+use crate::i18n::tr;
 use crate::library::numeral;
 
 /// A chord that often follows another one, and why.
@@ -472,8 +473,8 @@ pub fn next_chords(scale: Scale, current: Chord) -> Vec<Suggestion> {
         Some(Suggestion {
             degree: scale.degree_of(root)?,
             chord: Chord::new(root, quality),
-            reason: written(reason),
-            short: written(short),
+            reason: written(tr(reason)),
+            short: written(tr(short)),
         })
     };
     let root = scale.root.semitones_up_to(current.root);
@@ -535,8 +536,8 @@ pub fn next_chords_over(scale: Scale, current: Chord, bass: PitchClass) -> Vec<S
         Some(degree) => vec![Suggestion {
             degree,
             chord: Chord::new(dominant, ChordQuality::Major),
-            reason: Cow::Borrowed(CADENTIAL_SIX_FOUR),
-            short: Cow::Borrowed(CADENTIAL_SIX_FOUR_SHORT),
+            reason: Cow::Borrowed(tr(CADENTIAL_SIX_FOUR)),
+            short: Cow::Borrowed(tr(CADENTIAL_SIX_FOUR_SHORT)),
         }],
         None => next_chords(scale, current),
     }

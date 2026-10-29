@@ -13,34 +13,32 @@ elegirlas una a una. Este capítulo trata de las pequeñas, cada una un
 cambio propio sobre `main`. Ninguna añade nada a la música. Cada una
 quita un paso entre tú y la música:
 
-- una canción se abre en su **chord sheet**, y un beat en el **channel
-  rack**;
+- una canción se abre en su **hoja de acordes**, y un beat en el **rack de canales**;
 - la **barra de herramientas** vuelve a caber en una fila, con pequeños
   dibujos pintados para las ventanas;
-- **Help > Keyboard shortcuts** (F1) enumera todas las teclas a las que
+- **Ayuda > Atajos de teclado** (F1) enumera todas las teclas a las que
   responde la aplicación;
-- **Help > About Ferrous Lineup** dice qué versión usas, con qué
+- **Ayuda > Acerca de Ferrous Lineup** dice qué versión usas, con qué
   licencia, y dónde están este libro y el código;
 - cada ventana se abre **al tamaño de lo que muestra**, no a un tamaño
   que egui recordó de otro día.
 
 ## Probarlo
 
-1. Abre **File > Demos > El Choclo**. El chord sheet está delante y el
-   channel rack está cerrado. **F6** devuelve el rack.
-2. Abre **File > New beat**. Ahora el rack está delante y el chord sheet
+1. Abre **Archivo > Demostraciones > El Choclo**. La hoja de acordes está delante y el
+   rack de canales está cerrado. **F6** devuelve el rack.
+2. Abre **Archivo > Nuevo ritmo**. Ahora el rack está delante y la hoja de acordes
    está cerrado.
 3. Mantén el ratón sobre los cinco botones cuadrados del centro de la
    barra de herramientas. Cada uno dice su nombre, lo que muestra y su
-   tecla, de **F5** (Chord sheet) a **F9** (Mixer). Un botón se ilumina
+   tecla, de **F5** (Hoja de acordes) a **F9** (Mezclador). Un botón se ilumina
    mientras su ventana está abierta.
 4. Pulsa **F1**. Una ventana enumera todas las teclas, por secciones:
-   las teclas que funcionan en cualquier sitio, las ventanas, File y
-   Edit, el zoom, y luego las teclas propias de cada ventana.
-5. Abre el mixer (**F9**), arrastra su esquina para hacerlo mucho más
+   las teclas que funcionan en cualquier sitio, las ventanas, Archivo y Edición, el zoom, y luego las teclas propias de cada ventana.
+5. Abre el mezclador (**F9**), arrastra su esquina para hacerlo mucho más
    grande, ciérralo y ábrelo otra vez. Vuelve tan grande como sus
    canales.
-6. Abre **Help > About Ferrous Lineup** (**Ayuda > Acerca de Ferrous
+6. Abre **Ayuda > Acerca de Ferrous Lineup** (**Ayuda > Acerca de Ferrous
    Lineup** con la interfaz en español). Muestra la versión, la licencia
    y enlaces a este libro, a su PDF, al código fuente y a la lista de
    problemas conocidos.
@@ -49,7 +47,7 @@ quita un paso entre tú y la música:
 
 ## Una canción se abre en sus acordes
 
-Una demo de canción solía abrirse con el channel rack sobre el playlist.
+Una demo de canción solía abrirse con el rack de canales sobre la lista de reproducción.
 El rack muestra los pasos de un patrón, que es lo que editas en un beat.
 En una canción, lo que estudias son los compases y sus acordes. Así que
 ahora la aplicación decide qué mostrar según lo que se abrió:
@@ -71,11 +69,10 @@ fn show_beat(&mut self) {
 }
 ```
 
-Las demos de canciones, **File > New** (con los acordes que escribes) y
-un chord sheet importado llaman a `show_chord_sheet`; **File > New
-beat** llama a `show_beat`. Abrir un archivo guardado deja las ventanas
+Las demos de canciones, **Archivo > Nuevo** (con los acordes que escribes) y
+una hoja de acordes importada llaman a `show_chord_sheet`; **Archivo > Nuevo ritmo** llama a `show_beat`. Abrir un archivo guardado deja las ventanas
 como están, ya que las elegiste tú mismo. Una demo es una canción o un
-estilo, un `enum`, y solo las canciones se abren en el sheet:
+estilo, un `enum`, y solo las canciones se abren en la hoja:
 
 ```rust
 if let Demo::Song(_) = demo {
@@ -89,14 +86,14 @@ if let Demo::Song(_) = demo {
 ## La barra de herramientas en una fila
 
 A lo largo de los pasos de este libro la barra de herramientas no dejó
-de crecer: se le unieron Follow playhead, Count-in y el Metronome. En
+de crecer: se le unieron Seguir el cursor de reproducción, Cuenta de entrada y el Metrónomo. En
 una ventana de 1280 píxeles de ancho había empezado a pasar a una
 segunda fila, mientras que un comentario en el código seguía diciendo
 que cabía en una.
 
 Los cinco botones de ventana eran palabras, la mayoría con un emoji
-delante («📝 Chords», «🎹 Piano roll», «🎼 Harmony»), y Follow playhead,
-Count-in y Metronome también eran palabras. Los ocho son ahora botones
+delante («📝 Acordes», «🎹 Piano roll», «🎼 Armonía»), y Seguir el cursor de reproducción,
+Cuenta de entrada y Metrónomo también eran palabras. Los ocho son ahora botones
 cuadrados de 30 píxeles de ancho, cada uno con un dibujo. Su nombre, y
 en el caso de una ventana lo que muestra y su tecla, aparecen cuando el
 ratón está encima. Los botones de ventana van en el orden de sus teclas,
@@ -144,9 +141,9 @@ pub fn mixer(painter: &Painter, rect: Rect, color: Color32) {
 }
 ```
 
-El chord sheet es una página con nombres de acordes a dos por línea, el
+La hoja de acordes es una página con nombres de acordes a dos por línea, el
 rack tres filas de pasos con algunos encendidos, el piano roll un
-teclado con tres notas, las harmony keys un teclado con dos teclas
+teclado con tres notas, las teclas de armonía un teclado con dos teclas
 negras, el metrónomo su cuerpo y su brazo.
 
 ### Cinco botones de una sola tabla
@@ -181,7 +178,7 @@ de modo que los préstamos mutables de campos distintos no chocan. Dos
 ### Las pruebas
 
 `the_toolbar_fits_on_one_row_at_1280_points` dibuja toda la aplicación
-en una ventana de 1280 × 800 y comprueba que PAT, SONG, TEMPO, la
+en una ventana de 1280 × 800 y comprueba que PAT, CANC, TEMPO, la
 posición, la caja del patrón, VOL y los ocho botones de dibujo están en
 la misma fila, y que el último termina antes de 1280.
 `the_window_buttons_open_and_close_their_windows` hace clic en cada uno
@@ -213,7 +210,7 @@ compilaciones de debug, y una biblioteca puede tener muchas.
 
 Los atajos de la aplicación estaban en los tooltips, en los elementos de
 los menús y en la línea de ayuda, pero en ningún sitio todos juntos.
-**Help > Keyboard shortcuts**, o **F1**, abre una ventana con todos
+**Ayuda > Atajos de teclado**, o **F1**, abre una ventana con todos
 ellos, ventana por ventana.
 
 ![Help > Keyboard shortcuts: cada sección dice cuándo funcionan sus teclas.](../images/step-9-workflow-shortcuts.png)
@@ -240,18 +237,18 @@ Dondequiera que la aplicación ya tenía una constante para un atajo, la
 lista usa esa misma constante: `files::SAVE`, `edit::UNDO`,
 `piano_roll::OCTAVE_UP`, `view::MIXER`. Así, si una tecla cambia, la
 lista cambia con ella. Convertir un `Keys` en texto usa
-`format_shortcut` de egui, que escribe «Ctrl+Shift+Z» en Linux y Windows
+`format_shortcut` de egui, que escribe «Ctrl+Mayús+Z» en Linux y Windows
 y «⇧⌘Z» en un Mac, igual que los menús.
 
 Como la lista es datos, también puede probarse como datos.
 `no_two_global_shortcuts_share_a_key` reúne las teclas de las secciones
-que funcionan en cualquier sitio (Anywhere, Windows, File and Edit,
+que funcionan en cualquier sitio (En cualquier lugar, Ventanas, Archivo y Edición,
 Zoom) y falla si alguna tecla aparece dos veces, ya que esa tecla haría
 dos cosas a la vez.
 
 ## Quién la hizo, y qué versión
 
-**Help > About Ferrous Lineup** dice qué versión estás usando, con qué
+**Ayuda > Acerca de Ferrous Lineup** dice qué versión estás usando, con qué
 licencia, y dónde encontrar este libro, el código y la lista de
 problemas conocidos. Es lo primero que conviene mirar antes de informar
 de uno.
@@ -336,8 +333,8 @@ el navegador directamente: egui añade un `OutputCommand::OpenUrl` a lo
 que devuelve el fotograma, y eframe pide al sistema que abra la
 dirección. Eso hace que el clic sea fácil de probar.
 `help_about_shows_the_version_the_license_and_where_the_book_is` abre
-**Help > About**, comprueba que la línea de la versión y cada enlace se
-dibujan, pulsa **The book** y comprueba que el fotograma pidió la
+**Ayuda > Acerca de Ferrous Lineup**, comprueba que la línea de la versión y cada enlace se
+dibujan, pulsa **El libro** y comprueba que el fotograma pidió la
 dirección del libro, sin que se abra ningún navegador.
 
 ## Ventanas del tamaño de lo que muestran
@@ -346,9 +343,9 @@ egui recuerda el tamaño de cada ventana y lo guarda con el resto del
 estado de la aplicación cuando esta se cierra. Eso está bien para una
 ventana en la que trabajas, como el piano roll: la hiciste grande porque
 la querías grande. Está mal para una ventana que es tan grande como lo
-que muestra. Arrastra el mixer a lo ancho una vez, y todas las veces
-siguientes se abrió por todo el playlist, con sus canales en una
-esquina. El channel rack tenía el mismo problema: ajustado una vez a un
+que muestra. Arrastra el mezclador a lo ancho una vez, y todas las veces
+siguientes se abrió por toda la lista de reproducción, con sus canales en una
+esquina. El rack de canales tenía el mismo problema: ajustado una vez a un
 patrón largo, se abría a ese tamaño sobre los 16 pasos del siguiente
 beat.
 
@@ -364,10 +361,10 @@ pub enum Opening {
 }
 ```
 
-El mixer, la lista de atajos, el ear training, la serie dodecafónica,
+El mezclador, la lista de atajos, el ear training, la serie dodecafónica,
 los conjuntos de clases de alturas y los micromodos se abren **cada
-vez** al tamaño de su contenido, hasta la altura del playlist, y hacen
-scroll más allá. El piano roll, el chord sheet, el lead sheet y Settings
+vez** al tamaño de su contenido, hasta la altura de la lista de reproducción, y hacen
+scroll más allá. El piano roll, la hoja de acordes, la partitura guía y Ajustes
 se abren a su propio tamaño la **primera vez** después de que la
 aplicación arranca, y conservan el tamaño que les des mientras se
 ejecuta.
@@ -406,7 +403,7 @@ Tres cosas en él merecen una mirada:
   el espacio que se le da, como un área de scroll que no se encoge hasta
   su contenido.
 
-Una ventana cuyo contenido cambia mientras está abierta, como el mixer
+Una ventana cuyo contenido cambia mientras está abierta, como el mezclador
 cuando se añade un canal, se ajusta otra vez con `fit_when_changed`.
 Calcula el hash de un resumen del contenido (el nombre y el instrumento
 de cada canal) y ajusta la ventana otra vez cuando el hash cambia.
@@ -431,7 +428,7 @@ let windows: [(&str, egui::Id, Open); 7] = [
 
 Estas closures no capturan nada, así que cada una puede convertirse en
 un puntero `fn` sencillo, como los dibujos de arriba.
-`the_mixer_is_as_big_as_its_channels` comprueba que el mixer termina
+`the_mixer_is_as_big_as_its_channels` comprueba que el mezclador termina
 justo después de su columna Solo y su último canal, y
 `the_rack_fits_its_rows_again_when_the_app_starts` hace el rack ancho
 con un patrón de 64 pasos, arranca la aplicación otra vez con uno corto
@@ -441,23 +438,23 @@ y comprueba que el rack se ajusta al corto.
 
 Estos cambios tratan de la manera de entrar, no de perder trabajo. Si la
 aplicación se cierra de forma inesperada, ofrece la copia de
-recuperación que escribió; **File > Open recent** devuelve los últimos
-diez proyectos; y **Settings > Audio > Restart audio** arranca la
+recuperación que escribió; **Archivo > Abrir recientes** devuelve los últimos
+diez proyectos; y **Ajustes > Audio > Reiniciar audio** arranca la
 tarjeta de sonido otra vez sin reabrir la aplicación. [Recuperación,
 proyectos recientes y reiniciar el audio](recovery.md) tiene los
 detalles.
 
 ## Ejercicios
 
-1. Añade un dibujo a `icons.rs` para **Follow playhead** en otro estilo:
-   un playhead con dos flechas. ¿Qué prueba te dice cuándo una línea se
+1. Añade un dibujo a `icons.rs` para **Seguir el cursor de reproducción** en otro estilo:
+   un cursor de reproducción con dos flechas. ¿Qué prueba te dice cuándo una línea se
    sale de su cuadrado?
-2. En `shortcuts.rs`, la sección «Harmony keys» usa `Written("1 to 7")`.
+2. En `shortcuts.rs`, la sección «Teclas de armonía» usa `Written("1 to 7")`.
    ¿Por qué no siete `KeyboardShortcut`s en un `Any`? ¿Qué mostraría
    entonces la lista?
-3. El lead sheet se abre con `Opening::FirstTime`. ¿Qué cambiaría para
+3. La partitura guía se abre con `Opening::FirstTime`. ¿Qué cambiaría para
    ti si usara `EveryTime`? Pruébalo y di cuál prefieres.
-4. Añade a la ventana About un botón **Copy version** que ponga
+4. Añade a la ventana Acerca de Ferrous Lineup un botón **Copiar versión** que ponga
    «Ferrous Lineup 0.3.0» (con la versión real) en el portapapeles con
    `ctx.copy_text`. ¿Puede el texto ser una `const`, construida con
    `concat!`?

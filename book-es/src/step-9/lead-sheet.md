@@ -1,4 +1,4 @@
-# El lead sheet: la melodía en notación
+# La partitura guía: la melodía en notación
 
 Archivos: [`crates/lineup-core/src/lead_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/lead_sheet.rs)
 y los módulos de [`crates/lineup-core/src/lead_sheet/`](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-core/src/lead_sheet)
@@ -8,7 +8,7 @@ y los módulos de [`crates/lineup-core/src/lead_sheet/`](https://github.com/nael
 con [`fonts.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/lead_sheet/fonts.rs)
 y [`pdf.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/lead_sheet/pdf.rs)
 
-Un **lead sheet** es lo que lee una banda. Tiene un pentagrama con la
+Una **partitura guía** es lo que lee una banda. Tiene un pentagrama con la
 melodía (la «lead»), la armonía escrita encima como símbolos de acorde,
 y la tonalidad, el compás, las secciones y las repeticiones de la
 canción. Deja fuera todo lo demás: la línea de bajo, la batería y cómo
@@ -16,17 +16,17 @@ dispone el piano las voces de sus acordes son cosa de los músicos, según
 el estilo de la noche. Los músicos de jazz, pop y folk llevan libros
 enteros de ellos.
 
-Ferrous Lineup ya contiene todo lo que necesita un lead sheet: la
-melodía son las notas de un canal, y los acordes son los del chord sheet
-([El chord sheet](chord-sheet.md)). Es el punto 11 del plan: una ventana
-que los escribe como un lead sheet, en páginas que puedes imprimir.
+Ferrous Lineup ya contiene todo lo que necesita una partitura guía: la
+melodía son las notas de un canal, y los acordes son las de la hoja de acordes
+([La hoja de acordes](chord-sheet.md)). Es el punto 11 del plan: una ventana
+que los escribe como una partitura guía, en páginas que puedes imprimir.
 
 La ventana solo lee la canción. No cambia nada en ella ni en el archivo,
 así que el formato de archivo se queda como estaba.
 
 ## Lo que ves
 
-**View > Lead sheet** abre la ventana. El sheet se organiza en páginas,
+**Ver > Partitura guía** abre la ventana. La partitura se organiza en páginas,
 tal como se imprimirá, y el compás que suena se ilumina mientras suena
 la canción. Cuando el compás que suena queda fuera de la vista, la
 ventana se desplaza hasta él.
@@ -35,34 +35,34 @@ ventana se desplaza hasta él.
 
 Arriba del todo:
 
-- **Melody** elige el canal cuyas notas son la melodía. **Auto** toma el
-  canal llamado Lead, que tienen todas las demos de canciones, o si no
+- **Melodía** elige el canal cuyas notas son la melodía. **Automático** toma el
+  canal llamado Melodía, que tienen todas las demos de canciones, o si no
   el canal cuyas notas son de media las más agudas, que es donde suele
   estar una melodía. Se puede elegir en su lugar cualquier canal con
-  notas, el bajo para la parte de un bajista. **None: chords only** no
+  notas, el bajo para la parte de un bajista. **Ninguna: solo acordes** no
   escribe melodía ninguna: cada compás recibe una barra por cada pulso,
   bajo los símbolos de acorde, como lee su parte una sección rítmica.
-- **Clef**: **Auto** escribe una melodía grave en clave de fa y las
-  demás en clave de sol; **Treble** y **Bass** eligen una.
-- **For** escribe el sheet para músicos de instrumentos en Si♭, Mi♭ o Fa
+- **Clave**: **Automático** escribe una melodía grave en clave de fa y las
+  demás en clave de sol; **Sol** y **Fa** eligen una.
+- **Para** escribe la partitura para músicos de instrumentos en Si♭, Mi♭ o Fa
   (trompeta, saxofones, trompa), en la tonalidad en la que leen
-  ([Lead sheets para instrumentos en Si♭, Mi♭ y Fa](transposing-instruments.md)).
-  **Concert pitch** lo escribe tal como suena.
-- **Paper**: La4 (usado en casi todas partes) o Letter (en Estados Unidos
+  ([Partituras guía para instrumentos en Si♭, Mi♭ y Fa](transposing-instruments.md)).
+  **Altura real** lo escribe tal como suena.
+- **Papel**: A4 (usado en casi todas partes) o Carta (en Estados Unidos
   y Canadá).
 - **−** y **+** amplían las páginas del 50% al 200%.
-- **Export PDF…** guarda el sheet como un archivo PDF.
-- **Print…** escribe el PDF en la carpeta temporal de la computadora y lo
+- **Exportar PDF…** guarda la partitura como un archivo PDF.
+- **Imprimir…** escribe el PDF en la carpeta temporal de la computadora y lo
   abre en tu visor de PDF, para imprimir desde allí. Imprimir así
   funciona igual en Linux, macOS y Windows, y el visor muestra los
   ajustes propios de la impresora.
 
 ![La misma canción con None: chords only: cuatro barras en cada compás bajo los símbolos de acorde](../images/step-9-lead-sheet-chords.png)
 
-El papel, el zoom y los instrumentos bajo **For** se recuerdan para la
+El papel, el zoom y los instrumentos bajo **Para** se recuerdan para la
 próxima vez.
 
-## Leer un lead sheet
+## Leer una partitura guía
 
 Aquí está la primera página de La Cumparsita tal como la imprime el
 PDF:
@@ -89,10 +89,10 @@ cuando cambia; sigue sonando hasta el siguiente. El número pequeño al
 principio de cada línea es el **número de compás** de su primer compás,
 para que una banda pueda decir «desde el compás 21».
 
-Más adelante, un lead sheet puede contener:
+Más adelante, una partitura guía puede contener:
 
-- **marcas de ensayo**: el nombre de una sección («A», «Verse»,
-  «Chorus») en una caja, donde empieza la sección. Cada sección empieza
+- **marcas de ensayo**: el nombre de una sección («A», «Estrofa»,
+  «Estribillo») en una caja, donde empieza la sección. Cada sección empieza
   una línea nueva, de modo que la forma de la canción se ve de un
   vistazo;
 - **signos de repetición**: una línea de compás gruesa y una fina con
@@ -117,8 +117,8 @@ PDF.
 
 ### La melodía, nota a nota (`melody.rs`)
 
-Las notas del canal de la melodía se leen a lo largo de la playlist,
-clip a clip, tal como suenan. Un lead sheet tiene una nota cada vez,
+Las notas del canal de la melodía se leen a lo largo de la lista de reproducción,
+clip a clip, tal como suenan. Una partitura guía tiene una nota cada vez,
 así que donde varias notas empiezan juntas se conserva la más aguda (la
 regla del «skyline»: una melodía armonizada por terceras se lee como su
 voz superior), y una nota que sigue sonando cuando empieza la siguiente
@@ -126,7 +126,7 @@ se corta ahí.
 
 Las notas tocadas un poco antes o después (grabadas desde un teclado, o
 importadas desde un archivo MIDI) se mueven a la semicorchea más
-cercana. Un lead sheet muestra lo que se quiere decir, no cada matiz de
+cercana. Una partitura guía muestra lo que se quiere decir, no cada matiz de
 una interpretación.
 
 ### Qué nombre de nota (`spelling.rs`)
@@ -250,7 +250,7 @@ toca sola se lea como «toca estos acordes».
 
 Después todo se coloca en la página, en puntos (1/72 de pulgada). El
 pentagrama mide 21,2 puntos de alto (7,5 mm), cuatro **espacios de
-pentagrama** de 5,3 puntos, el tamaño habitual para un lead sheet. Toda
+pentagrama** de 5,3 puntos, el tamaño habitual para una partitura guía. Toda
 medida del layout se cuenta en espacios de pentagrama.
 
 Las notas reciben espacio según cuánto duran, pero no en proporción:
@@ -340,7 +340,7 @@ pentagrama. La app usa **Bravura**, la fuente con la que se diseñó
 SMuFL, de Steinberg. Las palabras y los símbolos de acorde van en
 **Inter**, una fuente hecha para pantallas que también imprime con
 limpieza. Ambas son libres, bajo la SIL Open Font License, y van
-integradas en el programa con `include_bytes!`, de modo que el sheet se
+integradas en el programa con `include_bytes!`, de modo que la partitura se
 ve igual en todas las computadoras:
 
 ```rust
@@ -372,7 +372,7 @@ implementan con una regla simple (cada letra, la mitad de ancha que el
 tamaño de la fuente). El layout recibe un `&dyn TextWidth` y funciona
 con cualquiera de los dos.
 
-Los símbolos de acorde siguen la costumbre de los lead sheets: la letra
+Los símbolos de acorde siguen la costumbre de las partituras guía: la letra
 de la fundamental grande, el resto un poco más pequeño («Am7», «G7»), y
 signos ♯ y ♭ de verdad de la fuente musical, elevados, en lugar de "#"
 y "b".
@@ -405,12 +405,12 @@ fuente a puntos y la mueve a su sitio. Observa `height - at.y`: el PDF
 cuenta la y hacia arriba desde el fondo de la página, el layout la
 cuenta hacia abajo desde arriba, así que toda y se da la vuelta.
 
-Un lead sheet de dos páginas ocupa unos 130 KB, y se ve igual en
+Una partitura guía de dos páginas ocupa unos 130 KB, y se ve igual en
 cualquier visor de PDF, sin nada que instalar.
 
 ## Cómo se probó
 
-`lineup-core` tiene 41 pruebas para el lead sheet. Entre ellas:
+`lineup-core` tiene 41 pruebas para la partitura guía. Entre ellas:
 
 - **spelling**: los nombres de la tonalidad; los nombres de un acorde
   (Sol♯ sobre E7 y La♭ sobre Fm en Do mayor); vecinas cromáticas según la
@@ -436,9 +436,9 @@ tamaño que cree el layout, el texto se mide con la fuente, y El Choclo
 se convierte en un PDF con un objeto de página por página y sus formas
 escritas una vez cada una.
 
-Después los sheets se leyeron, como los lee un músico, para Ode to Joy,
-Für Elise, Minuet in G, Careless Love, Korobeiniki, Funiculì,
-funiculà, The Entertainer, la Moonlight Sonata, El Choclo,
+Después las partituras se leyeron, como los lee un músico, para Oda a la alegría,
+Para Elisa, Minué en Sol, Careless Love, Korobéiniki, Funiculì,
+funiculà, The Entertainer, la Sonata Claro de luna, El Choclo,
 Greensleeves, La Cumparsita, When the Saints Go Marching In e I Got
 Rhythm. Esa lectura encontró las reglas de arriba que las pruebas aún
 no tenían: la escritura Do – Si – Si♭, la síncopa «♪ ♩ ♪», más espacio
@@ -449,22 +449,22 @@ cambio de tonalidad.
 
 1. **Alteraciones de cortesía.** Cuando un compás tiene un Fa♯ y el
    compás siguiente un Fa (becuadro, por la armadura de clave), muchos
-   lead sheets imprimen un becuadro entre paréntesis como recordatorio.
+   partituras guía imprimen un becuadro entre paréntesis como recordatorio.
    ¿Dónde necesitaría `BarAccidentals` saber del compás anterior?
 2. **Para instrumentos en Si♭.** Una trompeta o un saxofón tenor leen la
    música una segunda mayor más aguda de lo que suena. Añade una opción
    que lo escriba todo, también la armadura de clave y los símbolos de
    acorde, una segunda mayor hacia arriba. ¿Qué módulo cambia, y cuáles
-   no? (La app ya lo hace: véase [Lead sheets para instrumentos en Si♭,
+   no? (La app ya lo hace: véase [Partituras guía para instrumentos en Si♭,
    Mi♭ y Fa](transposing-instruments.md) para una respuesta.)
 3. **Finales.** Cuando el último compás de una sección repetida difiere
-   la segunda vez, los lead sheets usan finales primero y segundo: un
+   la segunda vez, las partituras guía usan finales primero y segundo: un
    corchete «1.» sobre un compás, «2.» sobre el otro. ¿Qué tendría que
-   decirle la playlist a `score.rs`?
+   decirle la lista de reproducción a `score.rs`?
 4. **Compases de silencio.** Una melodía que calla durante ocho
    compases podría mostrar un compás con una línea gruesa y un «8»
    encima. ¿Dónde iría en `systems`, y cómo cambia los números de
    compás de la línea siguiente?
-5. **Semidisminuido.** Algunos lead sheets escriben Em7♭5 como Eø7.
+5. **Semidisminuido.** Algunos partituras guía escriben Em7♭5 como Eø7.
    Añade una opción para ello. ¿Es una opción de `layout.rs` o del
    nombre del acorde?

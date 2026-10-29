@@ -27,6 +27,7 @@ use std::io::BufReader;
 use std::path::Path;
 use std::sync::Arc;
 
+use lineup_core::i18n::trf;
 use lineup_core::{MidiMessage, Note};
 use rustysynth::{Synthesizer, SynthesizerSettings};
 
@@ -68,8 +69,10 @@ pub enum SoundFontError {
 impl fmt::Display for SoundFontError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SoundFontError::Io(err) => write!(f, "could not read the SoundFont: {err}"),
-            SoundFontError::Invalid(why) => write!(f, "not a SoundFont file ({why})"),
+            SoundFontError::Io(err) => {
+                f.write_str(&trf("could not read the SoundFont: {}", &[err]))
+            }
+            SoundFontError::Invalid(why) => f.write_str(&trf("not a SoundFont file ({})", &[why])),
         }
     }
 }

@@ -34,6 +34,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use super::PitchSet;
+use crate::i18n::{tr, trf};
 use crate::{Note, NoteName, PitchClass, Spelling};
 
 /// A twelve-tone row: the twelve pitch classes, each once, in order.
@@ -136,8 +137,8 @@ impl TryFrom<Vec<u8>> for ToneRow {
     fn try_from(semitones: Vec<u8>) -> Result<Self, String> {
         let array: [u8; 12] = semitones
             .try_into()
-            .map_err(|v: Vec<u8>| format!("a row has 12 notes, not {}", v.len()))?;
-        ToneRow::new(array).ok_or_else(|| "a row has each of the 12 notes once".to_string())
+            .map_err(|v: Vec<u8>| trf("a row has 12 notes, not {}", &[&v.len()]))?;
+        ToneRow::new(array).ok_or_else(|| tr("a row has each of the 12 notes once").to_string())
     }
 }
 
@@ -303,10 +304,9 @@ impl ToneRow {
                 .iter()
                 .map(|p| NoteName::chromatic(p).to_string())
                 .collect();
-            return Err(format!(
+            return Err(trf(
                 "A row needs all twelve notes; these have {}. Missing: {}.",
-                order.len(),
-                missing.join(" ")
+                &[&order.len(), &(missing.join(" "))],
             ));
         }
         ToneRow::try_from(order[..12].to_vec())
@@ -344,9 +344,9 @@ impl ToneRow {
                 .collect::<Result<_, _>>()?
         };
         if notes.len() != 12 {
-            return Err(format!(
+            return Err(trf(
                 "A row has twelve notes, and this has {}.",
-                notes.len()
+                &[&notes.len()],
             ));
         }
         let mut seen = PitchSet::EMPTY;
@@ -358,10 +358,9 @@ impl ToneRow {
                     .iter()
                     .map(|p| NoteName::chromatic(p).to_string())
                     .collect();
-                return Err(format!(
+                return Err(trf(
                     "{} comes twice, and {} is missing: each note once.",
-                    NoteName::chromatic(pitch_class),
-                    missing.join(" ")
+                    &[&NoteName::chromatic(pitch_class), &(missing.join(" "))],
                 ));
             }
             seen.insert(pitch_class);
@@ -448,8 +447,9 @@ fn parse_number(token: &str) -> Result<u8, String> {
         "e" | "E" | "b" | "B" => Ok(11),
         _ => match token.parse::<u8>() {
             Ok(n) if n < 12 => Ok(n),
-            _ => Err(format!(
-                "\"{token}\" is not a note number: use 0 (C) to 11 (B), or T and E."
+            _ => Err(trf(
+                "\"{}\" is not a note number: use 0 (C) to 11 (B), or T and E.",
+                &[&token],
             )),
         },
     }
@@ -468,8 +468,9 @@ fn parse_name(token: &str) -> Result<u8, String> {
         Some('A') => 9,
         Some('B') => 11,
         _ => {
-            return Err(format!(
-                "\"{token}\" is not a note: use names like C, F# or Bb."
+            return Err(trf(
+                "\"{}\" is not a note: use names like C, F# or Bb.",
+                &[&token],
             ));
         }
     };
@@ -479,8 +480,9 @@ fn parse_name(token: &str) -> Result<u8, String> {
             '#' | '♯' | 's' => 1,
             'b' | '♭' => -1,
             _ => {
-                return Err(format!(
-                    "\"{token}\" is not a note: use names like C, F# or Bb."
+                return Err(trf(
+                    "\"{}\" is not a note: use names like C, F# or Bb.",
+                    &[&token],
                 ));
             }
         };

@@ -21,7 +21,8 @@
 //! them two lines and not one.
 
 use super::voice_leading::Voice;
-use super::{Scale, spelled_interval_name};
+use super::{Scale, interval_with_article, spelled_interval_name};
+use crate::i18n::{tr, trf};
 use crate::{Note, NoteEvent, TICKS_PER_STEP};
 
 /// A rest this long or longer ends a part's line, as the voice-leading
@@ -96,7 +97,7 @@ impl Move {
     pub fn short(&self, key: Scale) -> String {
         let (from, to) = (key.note_name(self.from.pitch), key.note_name(self.to.pitch));
         match self.size() {
-            Size::Held => format!("{from} held"),
+            Size::Held => trf("{} held", &[&from]),
             _ => format!("{from}→{to}"),
         }
     }
@@ -106,20 +107,22 @@ impl Move {
         let (from, to) = (key.note_name(self.from.pitch), key.note_name(self.to.pitch));
         if self.size() == Size::Held {
             return match self.from == self.to {
-                true => format!("holds {from}"),
-                false => format!("strikes {from} again"),
+                true => trf("holds {}", &[&from]),
+                false => trf("strikes {} again", &[&from]),
             };
         }
-        let way = if self.semitones() > 0 { "up" } else { "down" };
         let kind = match self.size() {
             Size::Step => "a step",
             Size::Skip => "a skip",
             _ => "a leap",
         };
-        format!(
-            "{way} {} from {from} to {to}, {kind}",
-            interval(key, self.from.pitch, self.to.pitch)
-        )
+        let interval = interval(key, self.from.pitch, self.to.pitch);
+        let way = if self.semitones() > 0 {
+            "up {} from {} to {}, {}"
+        } else {
+            "down {} from {} to {}, {}"
+        };
+        trf(way, &[&interval, &from, &to, &tr(kind)])
     }
 }
 
@@ -131,19 +134,15 @@ fn interval(key: Scale, a: Note, b: Note) -> String {
     let span = high.midi() - low.midi();
     let name = match span {
         12 => "octave".to_string(),
-        24 => "two octaves".to_string(),
+        24 => return tr("two octaves").to_string(),
         _ => spelled_interval_name(key.spell(low.pitch_class()), key.spell(high.pitch_class())),
     };
-    let article = match name.chars().next() {
-        Some('a' | 'e' | 'i' | 'o' | 'u') => "an",
-        _ => "a",
-    };
     let more = match span {
-        13..=23 => " and an octave",
-        25.. => " and two octaves",
+        13..=23 => tr(" and an octave"),
+        25.. => tr(" and two octaves"),
         _ => "",
     };
-    format!("{article} {name}{more}")
+    format!("{}{more}", interval_with_article(&name))
 }
 
 /// How two moves, `upper` above `lower`, go against each other in
@@ -207,7 +206,7 @@ impl Change {
             .collect();
         let mut text = moves.join(" · ");
         if let Some(outer) = self.outer(key) {
-            text.push_str(&format!("; outer parts in {}", outer.name()));
+            text.push_str(&trf("; outer parts in {}", &[&tr(outer.name())]));
         }
         text
     }
@@ -221,17 +220,19 @@ impl Change {
             .map(|part| format!("{}: {}.", name(part.voice), part.describe(key)))
             .collect();
         for pair in self.moves.windows(2) {
-            lines.push(format!(
+            lines.push(trf(
                 "{} and {}: {}.",
-                name(pair[0].voice),
-                name(pair[1].voice),
-                motion(&pair[0], &pair[1], key).name()
+                &[
+                    &name(pair[0].voice),
+                    &name(pair[1].voice),
+                    &tr(motion(&pair[0], &pair[1], key).name()),
+                ],
             ));
         }
         if self.moves.len() > 2
             && let Some(outer) = self.outer(key)
         {
-            lines.push(format!("Outer parts: {}.", outer.name()));
+            lines.push(trf("Outer parts: {}.", &[&tr(outer.name())]));
         }
         lines.join("\n")
     }

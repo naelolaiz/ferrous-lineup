@@ -3,7 +3,7 @@
 Archivos: [`crates/lineup-core/src/library/song/pop.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song/pop.rs)
 y [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
 
-El menú **File > Demos** recibe el tema de apertura de la serie de
+El menú **Archivo > Demostraciones** recibe el tema de apertura de la serie de
 televisión *The Big Bang Theory*, escrito por Ed Robertson y tocado por
 Barenaked Ladies en 2007. Es la versión de televisión, entera: doce
 compases, unos veinte segundos. La canción sigue bajo copyright, y
@@ -11,11 +11,11 @@ el comentario sobre ella en el código lo dice.
 
 ## Probarlo
 
-Abre **File > Demos > Songs > Pop > The Big Bang Theory theme** (o
-escribe «bang» en el cuadro de búsqueda de arriba del menú Demos) y
-pulsa Play.
+Abre **Archivo > Demostraciones > Canciones > Pop > Tema de The Big Bang Theory** (o
+escribe «bang» en el cuadro de búsqueda de arriba del menú Demostraciones) y
+pulsa ▶.
 
-- La **tempo strip** muestra dos tempos: 130 pulsos por minuto durante
+- La **franja de tempo** muestra dos tempos: 130 pulsos por minuto durante
   los primeros cuatro compases, luego 159 desde el compás 5. La banda
   no acelera poco a poco: salta.
 - La **hoja de acordes** muestra cuatro acordes en círculo, dos pulsos
@@ -47,8 +47,8 @@ ahí.
 ### Cuatro acordes, dos pulsos cada uno
 
 En Sol mayor los cuatro acordes son **IV, V, I y vi**: Do, Re, Sol y Mi
-menor. Son los mismos cuatro acordes que el estilo «four chords» de la
-Library (I V vi IV), en otro orden. Aquí el orden cuenta una pequeña
+menor. Son los mismos cuatro acordes que el estilo «Cuatro acordes» de la
+Biblioteca (I V vi IV), en otro orden. Aquí el orden cuenta una pequeña
 historia cada dos compases: Do y Re, los dos acordes que llevan a casa,
 luego Sol, casa, luego Mi menor, el **relativo menor**, que comparte
 dos notas con Sol (Sol y Si) y vuelve a Do para empezar de nuevo.
@@ -102,13 +102,13 @@ Part::new(
 de una partitura; `glide` lo cambiaría poco a poco, como hace un
 accelerando.
 
-### El silencio y el shot
+### El silencio y el golpe
 
 La hoja del último compás es `I... I. I... I...`: cuatro acordes
 repartiéndose el compás, un pulso cada uno. Tres puntos son un
-**silencio**, la banda callada; un punto es un **shot**, toda la banda
+**silencio**, la banda callada; un punto es un **golpe**, toda la banda
 tocando el acorde una vez, corto, con un kick y un crash (mira [Shots,
-holds, silencios y pushes](stops.md)). O sea: silencio en el pulso 1,
+sostenidos, silencios y anticipaciones](stops.md)). O sea: silencio en el pulso 1,
 Sol tocado en el pulso 2, silencio hasta el final. El primer pulso se
 escribe `I...` y no `V...` porque la melodía canta Sol ahí: la armonía
 ya está en casa, aunque nadie la toque.
@@ -120,10 +120,9 @@ partitura no tiene: el acorde de tónica mantenido, con un crash, para
 que una hoja que simplemente se acaba suene terminada. Los géneros que
 terminan despacio (tangos, canciones folclóricas, soul, piezas
 clásicas) también ensanchan su último compás, un pequeño ritardando.
-Una canción cuya hoja ya termina en una parada (un shot, un hold o un
-silencio) no recibe ninguno: la partitura dice cómo se detiene la
+Una canción cuya hoja ya termina en una parada (un golpe, un sostenido o un silencio) no recibe ninguno: la partitura dice cómo se detiene la
 banda, y esa parada va a tempo. El último «chan-chan» de un tango es
-el mismo caso que este shot.
+el mismo caso que este golpe.
 
 `song_demo`, en
 [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs),
@@ -156,12 +155,12 @@ demo, pero sí una **transcripción**. En el sitio *TheoryTab* de
 Hooktheory, la gente escribe canciones tal como las lee una clase de
 teoría musical: cada nota como un **grado de la escala** en la
 tonalidad (1 es la tónica, 5 la quinta...), cada acorde como un numeral
-romano. Un proyecto de investigación, Sheet Sage (Chris Donahue y
+romano. Un proyecto de investigación, Partitura Sage (Chris Donahue y
 otros, 2022), empaquetó unas 26.000 de estas transcripciones en un
 archivo en GitHub, y el propio sitio de Hooktheory da las mismas
 secciones de una en una.
 
-El tema tiene allí dos secciones, «Intro» y «Verse». Una nota se
+El tema tiene allí dos secciones, «Introducción» y «Estrofa». Una nota se
 escribe así:
 
 ```json
@@ -173,7 +172,7 @@ pulso 1, de un pulso de duración. En Sol mayor el grado 6 es Mi, y con
 la tónica como Sol4, la octava que va de Sol4 hacia arriba contiene Mi5:
 una negra `E5:4`. El grado 6 en la octava -1 es Mi4, y el grado 1 en la
 octava 1 es Sol5. Con Sol4 como tónica, la melodía va de Re4 a Sol5, el
-registro en el que una lead sheet la escribe; un hombre la canta una
+registro en el que una partitura guía la escribe; un hombre la canta una
 octava más grave.
 
 | Escrito allí | En Sol | Aquí |

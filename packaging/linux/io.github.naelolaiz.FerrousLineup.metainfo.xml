@@ -102,6 +102,22 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.4.0" date="2026-10-28">
+      <description>
+        <p>Speaks Spanish, names notes in solfège, and has an About window.</p>
+        <p xml:lang="es">Habla español, nombra las notas en solfeo y tiene una ventana Acerca de.</p>
+        <ul>
+          <li>The interface can be shown in Spanish, from Edit > Settings > Appearance > Language. Text not translated yet stays in English.</li>
+          <li xml:lang="es">La interfaz puede mostrarse en español, desde Edición > Ajustes > Apariencia > Idioma. El texto que aún no está traducido queda en inglés.</li>
+          <li>Notes, keys and chords can be named with letters or in solfège (Do, Re, Mi; Sib major; Lam7, Sol7/Si), in either language. Chords can be typed either way, and files always keep letters, so a song opens the same for everyone.</li>
+          <li xml:lang="es">Las notas, las tonalidades y los acordes pueden nombrarse con letras o en solfeo (Do, Re, Mi; Sib mayor; Lam7, Sol7/Si), en cualquiera de los dos idiomas. Los acordes se pueden escribir de las dos maneras, y los archivos siempre guardan letras, así que una canción se abre igual para todos.</li>
+          <li>Help > About Ferrous Lineup shows the version and the license, with links to the book, the source code and a page to report an issue.</li>
+          <li xml:lang="es">Ayuda > Acerca de Ferrous Lineup muestra la versión y la licencia, con enlaces al libro, al código fuente y a una página para informar de un problema.</li>
+          <li>The book about the app is now in Spanish too, and its PDF has contents, page numbers, an index and bookmarks.</li>
+          <li xml:lang="es">El libro sobre la aplicación ahora también está en español, y su PDF tiene índice general, números de página, índice alfabético y marcadores.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.3.0" date="2026-10-27">
       <description>
         <p>Adds practice and theory tools, a horn section and channel effects, and makes the app sturdier.</p>

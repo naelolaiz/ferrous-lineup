@@ -24,6 +24,7 @@ pub mod file;
 pub mod general_midi;
 pub mod harmony;
 pub mod history;
+pub mod i18n;
 pub mod key_map;
 pub mod lead_sheet;
 pub mod library;

@@ -1,11 +1,11 @@
-# Lead sheets para instrumentos en Si♭, Mi♭ y Fa
+# Partituras guía para instrumentos en Si♭, Mi♭ y Fa
 
 Archivos: [`crates/lineup-core/src/lead_sheet/transpose.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/lead_sheet/transpose.rs),
 [`crates/lineup-core/src/lead_sheet/score.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/lead_sheet/score.rs),
 [`crates/lineup-core/src/lead_sheet/layout.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/lead_sheet/layout.rs)
 y, en la app, [`crates/lineup-app/src/lead_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/lead_sheet.rs)
 
-Pon un [lead sheet](lead-sheet.md) de una canción en Do delante de un
+Pon un [partitura guía](lead-sheet.md) de una canción en Do delante de un
 trompetista y un pianista, pídeles que toquen juntos la primera nota, y
 no se pondrán de acuerdo. El pianista toca Do; la trompeta, leyendo el
 mismo Do, suena el Si♭ un tono entero más grave. La trompeta es un
@@ -13,8 +13,8 @@ mismo Do, suena el Si♭ un tono entero más grave. La trompeta es un
 suena. Para tocar con la banda, el trompetista necesita una hoja
 escrita un tono entero más agudo, en Re.
 
-Este capítulo añade esa hoja. La ventana Lead sheet gana una elección
-**For**, y la misma canción se puede escribir para instrumentos en Si♭,
+Este capítulo añade esa hoja. La ventana Partitura guía gana una elección
+**Para**, y la misma canción se puede escribir para instrumentos en Si♭,
 Mi♭ y Fa, cada uno en la tonalidad que sus músicos leen.
 
 ## Por qué algunos instrumentos leen en otras tonalidades
@@ -49,21 +49,21 @@ todo instrumento en Mi♭ y en Sol para todo instrumento en Fa.
 
 ## Cómo usarlo
 
-Abre **View > Lead sheet**. Junto a **Clef** está ahora **For**:
+Abre **Ver > Partitura guía**. Junto a **Clave** está ahora **Para**:
 
 ![La barra de herramientas de la ventana Lead sheet con el menú For abierto: Concert pitch, B♭ instruments, E♭ instruments y F instruments.](../images/step-9-transposing-for-menu.png)
 
-- **Concert pitch** escribe la canción como suena, como antes.
-- **B♭ instruments**: trompeta, clarinete, saxofones soprano y tenor.
-- **E♭ instruments**: saxofones alto y barítono.
-- **F instruments**: trompa y corno inglés.
+- **Altura real** escribe la canción como suena, como antes.
+- **Instrumentos en Si♭**: trompeta, clarinete, saxofones soprano y tenor.
+- **Instrumentos en Mi♭**: saxofones alto y barítono.
+- **Instrumentos en Fa**: trompa y corno inglés.
 
 Pasa el ratón sobre una elección para ver para qué instrumentos es y
 cuánto más aguda está escrita. La hoja cambia al momento: la armadura,
 la melodía y los símbolos de acorde se mueven juntos, y la esquina
 superior izquierda de la primera página dice para quién es la parte,
-«B♭ instruments», donde las partes impresas nombran su instrumento.
-**Export PDF…** ofrece el nombre del archivo con los instrumentos
+«Instrumentos en Si♭», donde las partes impresas nombran su instrumento.
+**Exportar PDF…** ofrece el nombre del archivo con los instrumentos
 dentro, `I Got Rhythm (Bb instruments).pdf`, para que las partes de una
 misma canción no se pisen unas a otras. La elección se recuerda, como
 el papel y el zoom: un saxofonista que abre otra canción se la
@@ -143,7 +143,7 @@ cada instrumento y comprueba que ninguna parte tiene más de seis.
 Un acorde debe conservar su lugar en la tonalidad: el V7 de la canción
 es el V7 de la parte. [Nombres de acordes](chord-names.md) mostró cómo
 se mueve un chart a otra tonalidad, contando nombres de nota además de
-semitonos, y el chord sheet ya lo usa cuando la canción cambia de
+semitonos, y la hoja de acordes ya lo usa cuando la canción cambia de
 tonalidad (`HarmonyName::moved`). La parte usa la misma función, de la
 tonalidad de la canción a la de la parte:
 
@@ -165,8 +165,8 @@ E♭7 E♭m7 D7 son B♭maj7 C7 Cm7 B7.
 La melodía se mueve los mismos semitonos, pero sus notas necesitan
 nombres también, y aquí un atajo saldría mal. La manera obvia es mover
 cada nota hacia arriba y luego volver a escribirla en la tonalidad
-nueva con las reglas del [lead sheet](lead-sheet.md#qué-nombre-de-nota-spellingrs).
-El Turkish March de Mozart, en La menor, muestra el problema. Su melodía
+nueva con las reglas del [partitura guía](lead-sheet.md#qué-nombre-de-nota-spellingrs).
+La Marcha turca de Mozart, en La menor, muestra el problema. Su melodía
 se apoya en Mi desde el semitono de abajo, Re♯–Mi. En Si menor, la
 tonalidad de la trompeta, los mismos sonidos se reescribirían como
 Fa–Fa♯: las reglas dejan llana una tecla blanca del piano fuera de la
@@ -202,7 +202,7 @@ pub fn name(self, name: NoteName, key: Scale) -> NoteName {
 
 `NoteName::above` es la misma función que mueve las fundamentales de
 los acordes, así que las notas y los acordes se mueven exactamente
-igual. El Re♯–Mi del Turkish March es Mi♯–Fa♯ para una trompeta,
+igual. El Re♯–Mi de la Marcha turca es Mi♯–Fa♯ para una trompeta,
 Si♯–Do♯ para un saxofón alto y La♯–Si para una trompa: una segunda menor en
 cada caso, como lo escribió Mozart.
 
@@ -227,7 +227,7 @@ antes de este cambio.
 
 El intervalo dice qué notas escribir, no en qué octava. Un saxofón
 tenor suena una novena por debajo de sus notas escritas, una octava más
-grave que una trompeta, y sin embargo en los libros de lead sheets para
+grave que una trompeta, y sin embargo en los libros de partituras guía para
 instrumentos en Si♭ ambos leen la misma página: el tenor simplemente la
 suena una octava más grave. Lo que importa en la página es que la
 melodía se asiente en el pentagrama, no en una escalera de líneas
@@ -258,7 +258,7 @@ una voz el resultado es el propio intervalo del instrumento: una
 segunda mayor arriba para los instrumentos en Si♭, una sexta mayor
 arriba para los instrumentos en Mi♭, una quinta arriba para los
 instrumentos en Fa, de modo que trompeta, saxofón alto y trompa suenan
-la melodía donde está. El Turkish March sube hasta Do6, y para los
+la melodía donde está. La Marcha turca sube hasta Do6, y para los
 instrumentos en Si♭ sale una séptima menor *más grave*, los mismos
 nombres una octava abajo, donde una trompeta puede tocarla.
 
@@ -270,12 +270,12 @@ distancia a la línea central, y cuando dos octavas quedan igual de
 cerca, gana la más cercana al propio intervalo del instrumento.
 
 Las partes para instrumentos transpositores usan la clave de sol, que
-todos ellos leen; **Clef** puede elegir aún la clave de fa, y entonces
+todos ellos leen; **Clave** puede elegir aún la clave de fa, y entonces
 la melodía se centra en la línea central de ese pentagrama, Re3.
 
 ## Qué cambió y dónde
 
-El lead sheet ya estaba dividido en pasos (mira [De las notas a la
+La partitura guía ya estaba dividido en pasos (mira [De las notas a la
 notación](lead-sheet.md#de-las-notas-a-la-notación)). Un paso es nuevo, y
 solo dos de los viejos necesitaban saber de los instrumentos:
 
@@ -293,7 +293,7 @@ solo dos de los viejos necesitaban saber de los instrumentos:
   Un **closure** es una función pequeña escrita en el sitio. Estos dos
   toman prestados `keys` y `transposition` de la función que los rodea,
   así que cada llamada solo dice qué paso o qué marcador.
-- `layout.rs` escribe «B♭ instruments» arriba a la izquierda de la
+- `layout.rs` escribe «Instrumentos en Si♭» arriba a la izquierda de la
   primera página, con el bemol de la fuente musical como en los
   símbolos de acorde. Cuando el título es demasiado ancho para dejar
   sitio a su lado, las palabras pasan a una línea debajo.
@@ -359,8 +359,7 @@ Trece pruebas nuevas en `lineup-core` y una en la app:
   debajo del título;
 - el nombre del archivo del PDF, `Op. 24 (Bb instruments).pdf`.
 
-Luego se miraron las partes en la app para I Got Rhythm, el Turkish
-March, con sus muchos cambios de tonalidad, y Garota de Ipanema.
+Luego se miraron las partes en la app para I Got Rhythm, la Marcha turca, con sus muchos cambios de tonalidad, y Garota de Ipanema.
 
 ![El Turkish March para instrumentos en Mi♭: «E♭ instruments» arriba a la izquierda, Fa♯ menor con tres sostenidos, Do♯ menor con cuatro desde el compás 4, Fa♯ menor otra vez desde el compás 6, y los acordes F♯m, C♯m, G♯ y C♯.](../images/step-9-transposing-key-changes.png)
 
@@ -371,7 +370,7 @@ March, con sus muchos cambios de tonalidad, y Garota de Ipanema.
    saxofón tenor, una octava y una sexta arriba para el barítono. ¿Qué
    función cambia? Pruébalo con una melodía alrededor de Do5 para el
    tenor: ¿cuántas líneas adicionales necesita, y por qué no hacen esto
-   los libros de lead sheets?
+   los libros de partituras guía?
 2. **El clarinete en Mi♭** suena una tercera menor *más aguda* de lo que
    lee, así que su parte se escribe una tercera menor más grave. ¿Es
    eso un `Transposition` nuevo, o las mismas notas que la parte del
@@ -381,7 +380,7 @@ March, con sus muchos cambios de tonalidad, y Garota de Ipanema.
    más agudo de lo escrito, una flauta alta en Sol una cuarta más grave.
    Añádelos. ¿Qué devuelven `note()` y `semitones()`, y qué más de la
    ventana y la etiqueta tiene que saber de ellos?
-4. **Un chord sheet transpuesto como texto.** [Chord sheets como
+4. **Una hoja de acordes transpuesta como texto.** [Hojas de acordes como
    texto](text-chord-sheets.md) escribe los acordes para pegar. Dale la
    misma elección de instrumentos. ¿Qué única función hace el trabajo
    para cada acorde?

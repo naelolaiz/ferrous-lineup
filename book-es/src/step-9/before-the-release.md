@@ -9,7 +9,7 @@ y [`crates/lineup-core/tests/damaged_files.rs`](https://github.com/naelolaiz/fer
 
 Antes de un release es buen momento para buscar puntos débiles. La
 búsqueda encontró tres: unas pocas tonalidades tenían solo uno de sus
-dos nombres, **Restart audio** dejaba notas sonando en un sintetizador
+dos nombres, **Reiniciar audio** dejaba notas sonando en un sintetizador
 externo, y nada probaba lo que un archivo dañado le hace a la app. Esta
 página cubre los tres. El primero es de teoría musical, y los otros dos
 son de endurecimiento.
@@ -65,7 +65,7 @@ siempre se escribe Mi♭ mayor.
 
 ### En la app
 
-Los menús de tonalidad del piano roll y bajo las harmony keys ahora
+Los menús de tonalidad del piano roll y bajo las teclas de armonía ahora
 listan las quince tonalidades para el tipo de escala que elegiste: para
 mayor, Do, Do♯, Re♭, Re, Mi♭, Mi, Fa, Fa♯, Sol♭, Sol, La♭, La, Si♭, Si y Do♭. Para
 menor, la lista tiene Re♯ y Mi♭, y La♯ y Si♭.
@@ -73,10 +73,10 @@ menor, la lista tiene Re♯ y Mi♭, y La♯ y Si♭.
 ![El menú de tonalidad para mayor, en dos mitades: Do, Do♯, Re♭, Re, Mi♭, Mi, Fa, Fa♯, luego Sol♭, Sol, La♭, La, Si♭, Si y Do♭.](../images/step-9-fifteen-keys.png)
 
 Elegir el otro nombre de la misma tonalidad **la renombra y no mueve
-ninguna nota**. El chord sheet se vuelve a escribir con el nombre nuevo:
+ninguna nota**. La hoja de acordes se vuelve a escribir con el nombre nuevo:
 F#, D#m7, B y C#7 en Fa♯ mayor se convierten en G♭, E♭m7, C♭ y D♭7 en Sol♭
 mayor. El menú de cambio de tonalidad en los números de compás de la
-playlist ofrece también los dos nombres.
+lista de reproducción ofrece también los dos nombres.
 
 Golliwogg's Cakewalk muestra ahora su sección media en Sol♭ mayor, con
 los acordes de esa tonalidad:
@@ -89,7 +89,7 @@ nombre:
 - **Archivos MIDI.** Una armadura de seis bemoles se abre como Sol♭ mayor,
   y seis sostenidos como Fa♯ mayor. Guardar escribe la armadura a partir
   de la tonalidad, así que Sol♭ mayor sale con seis bemoles.
-- **Chord sheets como texto.** `Key: Gb major` se queda en Sol♭ mayor, y el
+- **Hojas de acordes como texto.** `Key: Gb major` se queda en Sol♭ mayor, y el
   texto que escribe la app vuelve a decir `Key: Gb major`. Un nombre que
   ninguna armadura tiene, como `Gb minor` (necesitaría un doble bemol),
   se lee como la tonalidad habitual, Fa♯ menor.
@@ -221,14 +221,14 @@ Sol♭ mayor escribe Sol♭ La♭ Si♭ Do♭ Re♭ Mi♭ Fa, seis bemoles, y su
 tiene la armadura +6. Si el nombre, los nombres de nota o la armadura estuvieran
 mal en algún sitio, las sumas no coincidirían.
 
-## Restart audio: notas que se detienen, y una traza que continúa
+## Reiniciar audio: notas que se detienen, y una traza que continúa
 
-**Edit > Settings… > Audio > Restart audio** vuelve a abrir la tarjeta
+**Edición > Ajustes… > Audio > Reiniciar audio** vuelve a abrir la tarjeta
 de sonido ([Sin perder nada](recovery.md#audio-que-vuelve)). Dos
 cosas salían mal cuando lo hacía.
 
 **Las notas seguían sonando en un sintetizador externo.** Una nota
-enviada por MIDI Out recibe su note-off del hilo de audio que la tocó.
+enviada por la salida MIDI recibe su note-off del hilo de audio que la tocó.
 Reiniciar descarta ese hilo de audio, y los note-offs que aún debía se
 van con él. Una nota larga en un sintetizador de hardware sonaría hasta
 que la detuvieras allí.
@@ -264,7 +264,7 @@ alrededor de un milisegundo, porque el motor viejo ya no está. No llama
 a `join()`, que podría esperar para siempre en un puerto MIDI que se
 cuelga. La ventana no debe congelarse nunca por un puerto.
 
-**La traza de reproducción se detenía.** Edit > Settings… > Playback > Trace
+**La traza de reproducción se detenía.** Edición > Ajustes… > Reproducción > Registro
 escribe las notas que toca el hilo de audio ([Una traza de
 reproducción](playback-trace.md)). El hilo de audio se las pasa a través
 de una cola, y el hilo de audio nuevo no tenía ninguna. Ahora
@@ -300,7 +300,7 @@ impl Damage {
 Empieza desde una semilla fija, así que cada ejecución daña los archivos
 de la misma manera, y un fallo vuelve a aparecer en la siguiente
 ejecución. No necesita una dependencia nueva. Para los archivos de
-proyecto y los chord sheets, sustituye números por otros extremos
+proyecto y las hojas de acordes, sustituye números por otros extremos
 (`-1`, `65535`, `18446744073709551615`, `NaN`), corta trozos y repite
 trozos. Para los archivos MIDI, cambia, corta y repite bytes. Cada
 prueba lee 600 copias dañadas. Un proyecto que se lee también debe
@@ -332,20 +332,19 @@ desbordarse. Por esto mismo CI ejecuta las pruebas en modo debug
 
 ## Pruébalo
 
-1. Abre la demo **Golliwogg's Cakewalk**, elige el patrón **Sol flat** y
-   abre el piano roll (F7). Dice "This pattern: Gb major" y lista los
+1. Abre la demo **Golliwogg's Cakewalk**, elige el patrón **Sol♭** y
+   abre el piano roll (F7). Dice "Este patrón: Sol♭ mayor" y lista los
    acordes G♭, A♭m, B♭m, C♭, D♭, E♭m y Fdim.
 2. Abre **Take Five**. Los menús de tonalidad dicen Mi♭ menor.
-3. En una canción nueva, abre el menú de tonalidad bajo las harmony keys
+3. En una canción nueva, abre el menú de tonalidad bajo las teclas de armonía
    y elige **Fa♯**. La canción sube a Fa♯ mayor. Ahora elige **Sol♭**: no se
-   mueve ninguna nota, pero las harmony keys dicen G♭, A♭m, B♭m, C♭…, y
-   los acordes que haya en el chord sheet se renombran.
-4. Guarda la canción con **File > Export song as MIDI…** y abre el
-   archivo con **File > Import MIDI file…**: sigue en Sol♭ mayor.
-5. Activa **Edit > Settings… > Playback > Trace**, reproduce una canción
-   y pulsa **Restart audio** mientras suena. El archivo de traza
-   continúa después del reinicio. Con un sintetizador externo en MIDI
-   Out, una nota larga se detiene al reiniciar (esto necesita hardware
+   mueve ninguna nota, pero las teclas de armonía dicen G♭, A♭m, B♭m, C♭…, y
+   los acordes que haya en la hoja de acordes se renombran.
+4. Guarda la canción con **Archivo > Exportar canción como MIDI…** y abre el
+   archivo con **Archivo > Importar archivo MIDI…**: sigue en Sol♭ mayor.
+5. Activa **Edición > Ajustes… > Reproducción > Registro**, reproduce una canción
+   y pulsa **Reiniciar audio** mientras suena. El archivo de traza
+   continúa después del reinicio. Con un sintetizador externo en Salida MIDI, una nota larga se detiene al reiniciar (esto necesita hardware
    MIDI real).
 6. Ejecuta las pruebas de archivos dañados:
 
@@ -357,7 +356,7 @@ desbordarse. Por esto mismo CI ejecuta las pruebas en modo debug
 
 1. Elige **La♯ menor** y luego **menor armónica** en el menú de
    tonalidad. La séptima elevada se escribe **Sol♯♯**, un doble sostenido,
-   y las harmony keys muestran su acorde como G##dim. ¿Por qué la menor
+   y las teclas de armonía muestran su acorde como G##dim. ¿Por qué la menor
    armónica de Si♭, sobre las mismas teclas del piano, no necesita doble
    sostenido ni bemol? ¿Con qué nombre escribirías una pieza?
 2. `written_as_tune` conserva el nombre habitual cuando una melodía

@@ -38,6 +38,7 @@ use crate::harmony::{
     Chord, ChordQuality, ChordSymbol, Micromode, MinorNumerals, PitchSet, RowLabel, Scale,
     ScaleKind, SetClass, describe_chord, pc_digit,
 };
+use crate::i18n::{key_name, tr, trf};
 use crate::library::numeral;
 use crate::meter::{Bar, TimeSignature};
 use crate::pitch::{Note, NoteName, NoteNaming, PitchClass};
@@ -155,11 +156,11 @@ impl Stop {
 
     /// What the band does, for hints.
     pub fn describe(self) -> &'static str {
-        match self {
+        tr(match self {
             Stop::Shot => "the band strikes it once, short, and stops until the next harmony",
             Stop::Hold => "the band strikes it and holds it until the next harmony",
             Stop::Rest => "the band stops until the next harmony",
-        }
+        })
     }
 }
 
@@ -193,10 +194,10 @@ impl Push {
 
     /// What the band does, for hints.
     pub fn describe(self) -> &'static str {
-        match self {
+        tr(match self {
             Push::Eighth => "the band plays it an eighth note early, held over the beat",
             Push::Sixteenth => "the band plays it a sixteenth note early, held over the beat",
-        }
+        })
     }
 }
 
@@ -209,7 +210,11 @@ pub(crate) fn read_marks(text: &str) -> Result<(Option<Push>, &str, Option<Stop>
         0 => None,
         1 => Some(Push::Eighth),
         2 => Some(Push::Sixteenth),
-        _ => return Err("a push is written ^ (an eighth early) or ^^ (a sixteenth).".to_string()),
+        _ => {
+            return Err(
+                tr("a push is written ^ (an eighth early) or ^^ (a sixteenth).").to_string(),
+            );
+        }
     };
     if is_no_chord(name) {
         return Ok((push, name, None));
@@ -221,9 +226,10 @@ pub(crate) fn read_marks(text: &str) -> Result<(Option<Push>, &str, Option<Stop>
         2 => Some(Stop::Hold),
         3 => Some(Stop::Rest),
         _ => {
-            return Err(
-                "after a harmony, . is a shot, .. a hold and ... a rest: no more dots.".to_string(),
-            );
+            return Err(tr(
+                "after a harmony, . is a shot, .. a hold and ... a rest: no more dots.",
+            )
+            .to_string());
         }
     };
     Ok((push, bare, stop))
@@ -313,15 +319,16 @@ fn read_notes(text: &str) -> Option<Result<PitchSet, String>> {
         match pitch_class {
             Some(pitch_class) => set.insert(pitch_class),
             None => {
-                return Some(Err(format!(
-                    "\"{item}\" is not a note: write pitch classes as 0 to 11 (or T and E), or \
-                     as note names, like {{0,4,7}} or {{C E G}}."
+                return Some(Err(trf(
+                    "\"{}\" is not a note: write pitch classes as 0 to 11 (or T and E), or as \
+                     note names, like {0,4,7} or {C E G}.",
+                    &[item],
                 )));
             }
         }
     }
     if set.is_empty() {
-        return Some(Err("the brackets have no notes in them.".to_string()));
+        return Some(Err(tr("the brackets have no notes in them.").to_string()));
     }
     Some(Ok(set))
 }
@@ -351,7 +358,7 @@ fn read_forte(text: &str) -> Option<Result<&'static SetClass, String>> {
     let found = SetClass::all()
         .iter()
         .find(|class| class.name().eq_ignore_ascii_case(text));
-    Some(found.ok_or_else(|| format!("\"{text}\" is not one of Forte's set classes.")))
+    Some(found.ok_or_else(|| trf("\"{}\" is not one of Forte's set classes.", &[&text])))
 }
 
 impl HarmonyName {
@@ -361,7 +368,7 @@ impl HarmonyName {
     pub fn parse(text: &str) -> Result<HarmonyName, String> {
         let text = text.trim();
         if text.is_empty() {
-            return Err("nothing is written.".to_string());
+            return Err(tr("nothing is written.").to_string());
         }
         if is_no_chord(text) {
             return Ok(HarmonyName::NoChord);
@@ -387,9 +394,10 @@ impl HarmonyName {
         if NoteName::read_either(text, |_| true).is_some() {
             return ChordSymbol::parse(text).map(HarmonyName::Chord);
         }
-        Err(format!(
-            "\"{text}\" is not a chord (Am7, G/B), two chords at once (Eb7|Fb), a set (3-11 T2, \
-             {{0,4,7}}), a micromode (Menor 3), a row form (P0, RI7) or N.C."
+        Err(trf(
+            "\"{}\" is not a chord (Am7, G/B), two chords at once (Eb7|Fb), a set (3-11 T2, \
+             {0,4,7}), a micromode (Menor 3), a row form (P0, RI7) or N.C.",
+            &[&text],
         ))
     }
 
@@ -487,7 +495,7 @@ impl HarmonyName {
             HarmonyName::Polychord(upper, lower) => {
                 let upper = numeral_with_figures(upper, key)?;
                 let lower = numeral_with_figures(lower, key)?;
-                Some(format!("{upper} over {lower}"))
+                Some(trf("{} over {}", &[&upper, &lower]))
             }
             HarmonyName::Set(set) | HarmonyName::Micromode(set) => Some(spell_set(set, key)),
             HarmonyName::Row(label) => match key.kind {
@@ -526,7 +534,7 @@ impl HarmonyName {
                     symbol.root,
                     numeral_with_figures(symbol, key),
                 );
-                format!("{symbol}: {about} Its notes: {notes}.")
+                format!("{symbol}: {about}{}", trf(" Its notes: {}.", &[&notes]))
             }
             HarmonyName::Polychord(upper, lower) => {
                 let notes = |symbol: ChordSymbol| {
@@ -534,41 +542,46 @@ impl HarmonyName {
                         symbol.notes().iter().map(NoteName::to_string).collect();
                     notes.join(" ")
                 };
-                let mut lower_name = format!("{} {}", lower.root, lower.quality.name());
+                let mut lower_name = format!("{} {}", lower.root, tr(lower.quality.name()));
                 if let Some(bass) = lower.bass {
-                    lower_name += &format!(" with {bass} in the bass");
+                    lower_name += &trf(" with {} in the bass", &[&bass]);
                 }
                 let numerals = match self.caption(key) {
-                    Some(numerals) => format!(" In {}: {numerals}.", key.name()),
+                    Some(numerals) => trf(" In {}: {}.", &[&key_name(key), &numerals]),
                     None => String::new(),
                 };
                 format!(
-                    "{self}: {} {} over {lower_name}, two chords at once: a polychord. Upper: {}. \
-                     Lower: {}.{numerals}",
-                    upper.root,
-                    upper.quality.name(),
-                    notes(upper),
-                    notes(lower),
+                    "{self}: {}{numerals}",
+                    trf(
+                        "{} {} over {}, two chords at once: a polychord. Upper: {}. Lower: {}.",
+                        &[
+                            &upper.root,
+                            &tr(upper.quality.name()),
+                            &lower_name,
+                            &notes(upper),
+                            &notes(lower),
+                        ],
+                    )
                 )
             }
-            HarmonyName::NoChord => "No chord: nothing plays the harmony here.".to_string(),
+            HarmonyName::NoChord => tr("No chord: nothing plays the harmony here.").to_string(),
             HarmonyName::Set(set) => {
                 let class = set.set_class();
-                format!(
+                trf(
                     "{}: {}. Set class {}.",
-                    self,
-                    spell_set(set, key),
-                    class.describe()
+                    &[&self, &spell_set(set, key), &class.describe()],
                 )
             }
             HarmonyName::Micromode(set) => match Micromode::of(set) {
-                Some(micromode) => format!(
+                Some(micromode) => trf(
                     "{}: {}. Micromode {}, Forte's {}; {}.",
-                    self,
-                    spell_set(set, key),
-                    micromode.full_name(),
-                    micromode.set_class().name(),
-                    micromode.about
+                    &[
+                        &self,
+                        &spell_set(set, key),
+                        &micromode.full_name(),
+                        &micromode.set_class().name(),
+                        &tr(micromode.about),
+                    ],
                 ),
                 None => format!("{self}: {}.", spell_set(set, key)),
             },
@@ -580,12 +593,12 @@ impl HarmonyName {
                         .iter()
                         .map(|&pitch_class| key.spell(pitch_class).to_string())
                         .collect();
-                    format!("{label} of the row: {}.", notes.join(" "))
+                    trf("{} of the row: {}.", &[&label, &notes.join(" ")])
                 }
-                _ => format!(
-                    "{label} is a form of a twelve-tone row, but the key here is {}: pick a row \
-                     as the key to hear which notes it means.",
-                    key.name()
+                _ => trf(
+                    "{} is a form of a twelve-tone row, but the key here is {}: pick a row as \
+                     the key to hear which notes it means.",
+                    &[&label, &key_name(key)],
                 ),
             },
         }
@@ -703,7 +716,7 @@ fn read_marked(
 ) -> Result<(HarmonyName, Option<Push>, Option<Stop>), String> {
     let (push, name, stop) = read_marks(text)?;
     if name.is_empty() {
-        return Err(format!("\"{text}\" has marks but no harmony."));
+        return Err(trf("\"{}\" has marks but no harmony.", &[&text]));
     }
     let harmony = HarmonyName::parse_counting(name, key, numerals)?;
     Ok((harmony, push, stop))
@@ -790,11 +803,12 @@ fn read_bar_counting(
     let holds = items.len() > harmonies;
     let written = if holds { items.len() } else { harmonies };
     if written > beats.len() {
-        let what = if holds { "beats are" } else { "harmonies are" };
-        return Err(format!(
-            "this bar has {} beats, and {written} {what} written in it.",
-            beats.len()
-        ));
+        let template = if holds {
+            "this bar has {} beats, and {} beats are written in it."
+        } else {
+            "this bar has {} beats, and {} harmonies are written in it."
+        };
+        return Err(trf(template, &[&beats.len(), &written]));
     }
     let mut markers = Vec::new();
     let mut harmony_count = 0;

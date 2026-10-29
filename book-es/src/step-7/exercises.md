@@ -22,12 +22,12 @@ Las teclas escritas siempre tocan a `DEFAULT_VELOCITY`, así que las
 tomas grabadas desde el teclado de escritura tienen todas la misma
 velocidad, mientras que las de un teclado MIDI conservan con qué fuerza
 se pulsó cada tecla. Añade un deslizador «Velocidad de escritura» al
-menú MIDI (`egui::Slider::new(&mut value, 1..=127)`), y haz que Shift
+menú MIDI (`egui::Slider::new(&mut value, 1..=127)`), y haz que Mayús
 toque a 127 mientras se mantiene.
 
-Shift no cambia `physical_key`, así que el piano sigue funcionando.
-Pero mira el filtro de `typing_keyboard`: ¿una tecla que bajó con Shift
-sube bien si se suelta Shift primero?
+Mayús no cambia `physical_key`, así que el piano sigue funcionando.
+Pero mira el filtro de `typing_keyboard`: ¿una tecla que bajó con Mayús
+sube bien si se suelta Mayús primero?
 
 *Prácticas:* deslizadores de egui, modificadores del teclado.
 
@@ -51,21 +51,21 @@ viviera en un canal?
 *Prácticas:* un ajuste nuevo de punta a punta, sonido en tiempo real sin
 reservar memoria.
 
-## 4. Notas a través del loop (lineup-core, medio)
+## 4. Notas a través del bucle (lineup-core, medio)
 
 [`recorded_note`](recording.md#lo-que-no-puede-saber) tiene dos límites.
-Una nota mantenida a través del final del loop se corta allí, y una
-tecla mantenida más de un loop entero se graba como una nota corta.
+Una nota mantenida a través del final del bucle se corta allí, y una
+tecla mantenida más de un bucle entero se graba como una nota corta.
 
-- Haz que una tecla mantenida a través del final del loop grabe **dos**
+- Haz que una tecla mantenida a través del final del bucle grabe **dos**
   notas: una hasta el final del patrón, y otra desde el paso 0 para el
   resto. La función devuelve entonces un `Vec<NoteEvent>` (o un array y
   una cuenta). Escribe primero las pruebas: (14, 2) en un patrón de 16
   pasos da (14, 2) y (0, 2).
 - Para las notas largas, la posición sola no basta. Haz que el hilo de
-  audio cuente también cuántas veces ha dado la vuelta el loop, o que
-  publique el número de pasos tocados desde Play en lugar de la
-  posición en el loop. ¿Cuál es más sencillo de compartir a través de
+  audio cuente también cuántas veces ha dado la vuelta el bucle, o que
+  publique el número de pasos tocados desde ▶ en lugar de la
+  posición en el bucle. ¿Cuál es más sencillo de compartir a través de
   un solo `AtomicU64`? ¿Cuál puede seguir usando `finish_recording`?
 
 *Prácticas:* cambiar el tipo de retorno de una función y sus llamadores,
@@ -85,15 +85,14 @@ varias veces en la canción: grabar en una copia los cambia todos,
 porque son el mismo patrón. ¿Es eso lo que querrías? ¿Cómo lo manejan
 los otros estudios que conoces?
 
-*Prácticas:* diseñar el comportamiento antes que el código, la playlist
+*Prácticas:* diseñar el comportamiento antes que el código, la lista de reproducción
 del paso 4.
 
 ## 6. Las otras piezas de un archivo de formato 2 (lineup-core, más difícil)
 
 Abrir archivos MIDI, que una vez pedía este ejercicio, ya existe:
 `midi_file::read::read` convierte los bytes en eventos, y
-`midi_file::import::import` crea el proyecto detrás de **File >
-Import MIDI file…**. Quedan dos rincones.
+`midi_file::import::import` crea el proyecto detrás de **Archivo > Importar archivo MIDI…**. Quedan dos rincones.
 
 Un archivo de **formato 2** no es una canción, sino varias piezas
 independientes, una por pista. `import` conserva solo la primera pista
@@ -127,9 +126,9 @@ en `build_stream`). Pasa la latencia al hilo de audio, publícala como
 un número de pasos en otro atómico, y réstala de la posición de cada
 tecla antes de que `recorded_note` la redondee. Recuerda que una
 posición justo después del paso 0 menos la latencia debe dar la vuelta
-hasta el final del loop, no quedarse por debajo de cero.
+hasta el final del bucle, no quedarse por debajo de cero.
 
-Luego piensa en la otra dirección. Los mensajes MIDI Out salen cuando
+Luego piensa en la otra dirección. Los mensajes de salida MIDI salen cuando
 se hace su bloque, pero el sonido de ese mismo bloque de los
 instrumentos integrados se oye unos 21 ms más tarde. Así que un
 sintetizador externo toca un poco *antes* que el resto. ¿Cómo podría el
@@ -147,7 +146,7 @@ el tiempo como dato.
   perder un key-up, por ejemplo compartiendo *qué teclas están
   pulsadas* (128 bits) en lugar de enviar eventos?
 - El hilo de envío se despierta mil veces por segundo, incluso cuando
-  no existe ningún canal MIDI Out. ¿Podría dormir más cuando no hay
+  no existe ningún canal de salida MIDI. ¿Podría dormir más cuando no hay
   nada que enviar? ¿Qué costaría un sueño más largo cuando sí lo hay?
 - `release_live_keys` suelta todas las teclas cuando se inserta o se
   quita un canal. La otra manera sería renumerar `live_keys` para que
@@ -158,10 +157,10 @@ el tiempo como dato.
   sería más precisa la marca de tiempo de midir? ¿Por qué no se pueden
   comparar sin más los dos relojes?
 - Sin la comprobación de formato, una versión de formato 1 de Ferrous
-  Lineup abriendo un archivo con un canal MIDI Out fallaría igualmente:
+  Lineup abriendo un archivo con un canal de salida MIDI fallaría igualmente:
   serde jamás ha oído hablar de `MidiOut`. Entonces, ¿por qué subir el
   formato? Compara los dos mensajes de error que vería el usuario.
-- Un patrón tocado por un canal MIDI Out y exportado como archivo
+- Un patrón tocado por un canal de salida MIDI y exportado como archivo
   `.mid` envía las mismas notas en ambos casos. ¿Podrían la exportación
   y el hilo de audio compartir más código? ¿Qué necesitaría saber ese
   código sobre el tiempo?

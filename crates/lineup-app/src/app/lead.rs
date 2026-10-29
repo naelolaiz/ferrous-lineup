@@ -11,7 +11,7 @@ impl LineupApp {
             .song_position()
             .filter(|_| self.playing)
             .map(|(step, _)| step);
-        let title = self.file.stem();
+        let title = crate::i18n::tr_name(&self.file.stem()).into_owned();
         let file_name = self.file.export_name("pdf");
         self.lead_sheet
             .show(ctx, area, &self.project, &title, &file_name, playing);

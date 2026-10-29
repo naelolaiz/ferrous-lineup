@@ -44,7 +44,7 @@ const LOCRIAN: &[u8] = &[0, 1, 3, 5, 6, 8, 10];
 
 /// The names of the scales a chord scale can be, by their notes above
 /// the chord's root.
-const NAMES: &[(&[u8], &str)] = &[
+pub(crate) const NAMES: &[(&[u8], &str)] = &[
     (IONIAN, "major (Ionian)"),
     (DORIAN, "Dorian"),
     (&[0, 1, 3, 5, 7, 8, 10], "Phrygian"),

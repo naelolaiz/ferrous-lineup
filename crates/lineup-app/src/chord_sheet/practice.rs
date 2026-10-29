@@ -9,6 +9,7 @@ use lineup_core::{LoopRegion, Player, Project};
 use serde::{Deserialize, Serialize};
 
 use super::SheetAction;
+use crate::i18n::{tr, tr_string, trf};
 use crate::theme;
 
 /// The slowest and the fastest practice speeds, in percent.
@@ -115,7 +116,7 @@ pub(super) fn row(
             theme::light_button(ui, crate::i18n::tr("Count-in"), practice.count_in, None);
         if theme::hint(
             count_in,
-            "A bar of clicks before the music starts, so you come in on time",
+            crate::i18n::tr("A bar of clicks before the music starts, so you come in on time"),
         )
         .clicked()
         {
@@ -123,7 +124,7 @@ pub(super) fn row(
         }
         let metronome =
             theme::light_button(ui, crate::i18n::tr("Metronome"), practice.metronome, None);
-        if theme::hint(metronome, "A click on every beat while the music plays").clicked() {
+        if theme::hint(metronome, tr("A click on every beat while the music plays")).clicked() {
             act(PracticeAction::Metronome(!practice.metronome));
         }
 
@@ -133,9 +134,11 @@ pub(super) fn row(
         let drag = ui.add(egui::DragValue::new(&mut speed).range(SPEEDS).suffix("%"));
         if theme::hint(
             drag,
-            "Practise slower (or faster): the band plays at this percentage of the song's \
+            crate::i18n::tr(
+                "Practise slower (or faster): the band plays at this percentage of the song's \
              tempo. The song keeps its own tempo, in saved files and WAV exports too. Drag, \
              or double-click to type",
+            ),
         )
         .changed()
         {
@@ -144,7 +147,7 @@ pub(super) fn row(
         let tap = ui.button(crate::i18n::tr("Tap"));
         if theme::hint(
             tap,
-            "Click on every beat, a few times, to set the song's tempo to yours",
+            crate::i18n::tr("Click on every beat, a few times, to set the song's tempo to yours"),
         )
         .clicked()
         {
@@ -165,7 +168,7 @@ pub(super) fn row(
              loop, the whole song, or the pattern in pattern mode), the band plays a \
              little faster, up to the speed you aim for"
         };
-        if theme::hint(trainer, hint).clicked() {
+        if theme::hint(trainer, tr(hint)).clicked() {
             act(PracticeAction::Training(!practice.training));
         }
         if practice.training
@@ -185,19 +188,23 @@ pub(super) fn row(
             for player in players {
                 let has_part = project.player_track(player).is_some();
                 let you = project.you_play(player);
-                let button = ui.add_enabled(has_part, egui::Button::selectable(you, player.name()));
+                let button =
+                    ui.add_enabled(has_part, egui::Button::selectable(you, tr(player.name())));
                 let name = player.name().to_lowercase();
-                let hint = match (has_part, you) {
+                // Whole sentences, as a Spanish article goes with its noun.
+                let hint = tr_string(match (has_part, you) {
                     (false, _) => format!("The band has no {name} part yet: write some chords"),
-                    (true, false) => format!(
-                        "Leave the {name} out of the band, to play it yourself{}",
-                        match player {
-                            Player::Drums => String::new(),
-                            _ => format!(": your keyboard plays the {name}'s sound"),
+                    (true, false) => match player {
+                        Player::Drums => {
+                            format!("Leave the {name} out of the band, to play it yourself")
                         }
-                    ),
+                        _ => format!(
+                            "Leave the {name} out of the band, to play it yourself: your \
+                             keyboard plays the {name}'s sound"
+                        ),
+                    },
                     (true, true) => format!("Have the band play the {name} again"),
-                };
+                });
                 if theme::hint(button, hint).clicked() {
                     act(PracticeAction::YouPlay(player, !you));
                 }
@@ -221,7 +228,7 @@ pub fn trainer_controls(ui: &mut Ui, trainer: Trainer) -> Option<Trainer> {
     );
     theme::hint(
         from,
-        "The speed Play starts at, in percent of the song's tempo",
+        crate::i18n::tr("The speed Play starts at, in percent of the song's tempo"),
     );
     ui.label(crate::i18n::tr("to"));
     let to = ui.add(
@@ -231,7 +238,9 @@ pub fn trainer_controls(ui: &mut Ui, trainer: Trainer) -> Option<Trainer> {
     );
     theme::hint(
         to,
-        "The speed to get to: 100% is the song's own tempo. Once there, the speed stays",
+        crate::i18n::tr(
+            "The speed to get to: 100% is the song's own tempo. Once there, the speed stays",
+        ),
     );
     ui.label(crate::i18n::tr("by"));
     let by = ui.add(
@@ -239,7 +248,7 @@ pub fn trainer_controls(ui: &mut Ui, trainer: Trainer) -> Option<Trainer> {
             .range(TRAINER_STEPS)
             .suffix("%"),
     );
-    theme::hint(by, "How much faster each new speed is");
+    theme::hint(by, tr("How much faster each new speed is"));
     ui.label(crate::i18n::tr("every"));
     let passes = if changed.every == 1 {
         format!(" {}", crate::i18n::tr("pass"))
@@ -253,7 +262,7 @@ pub fn trainer_controls(ui: &mut Ui, trainer: Trainer) -> Option<Trainer> {
     );
     theme::hint(
         every,
-        "How many times the loop plays at each speed before the next one",
+        crate::i18n::tr("How many times the loop plays at each speed before the next one"),
     );
     (changed != trainer).then_some(changed)
 }
@@ -275,20 +284,9 @@ fn loop_buttons(
         .filter(|&(start, end)| start < end)
         .map(|(start, end)| LoopRegion::new(start, end));
     let text = match selected {
-        Some((first, last)) if first == last => format!(
-            "🔁 {} {} {}",
-            crate::i18n::tr("Loop"),
-            crate::i18n::tr("bar"),
-            first + 1
-        ),
-        Some((first, last)) => format!(
-            "🔁 {} {} {}–{}",
-            crate::i18n::tr("Loop"),
-            crate::i18n::tr("bars"),
-            first + 1,
-            last + 1
-        ),
-        None => crate::i18n::tr("🔁 Loop").to_string(),
+        Some((first, last)) if first == last => trf("🔁 Loop bar {}", &[&(first + 1)]),
+        Some((first, last)) => trf("🔁 Loop bars {}–{}", &[&(first + 1), &(last + 1)]),
+        None => tr("🔁 Loop").to_string(),
     };
     let on = wanted.is_some() && wanted == looping;
     let button = ui.add_enabled(wanted.is_some(), egui::Button::selectable(on, text));
@@ -300,15 +298,18 @@ fn loop_buttons(
         (None, Some(_)) => "The song does not reach these bars: there is nothing to loop",
         (None, None) => "Click a bar, then Shift+click another, to choose the bars to loop",
     };
-    if theme::hint(button, hint).clicked() && !on {
+    if theme::hint(button, tr(hint)).clicked() && !on {
         act(PracticeAction::Loop(wanted));
     }
     if let Some(region) = looping {
         let first = meter.bar_at(region.start).number + 1;
         let last = meter.bar_at(region.end.saturating_sub(1)).number + 1;
-        let text = egui::RichText::new("✖ Stop looping").color(theme::LOOP);
+        let text = egui::RichText::new(tr("✖ Stop looping")).color(theme::LOOP);
         let stop = ui.button(text);
-        let hint = format!("Bars {first}–{last} loop. Click to play the whole song again");
+        let hint = trf(
+            "Bars {}–{} loop. Click to play the whole song again",
+            &[&first, &last],
+        );
         if theme::hint(stop, hint).clicked() {
             act(PracticeAction::Loop(None));
         }

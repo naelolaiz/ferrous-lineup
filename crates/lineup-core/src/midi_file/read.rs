@@ -125,8 +125,8 @@ pub enum ReadError {
 impl fmt::Display for ReadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ReadError::NotMidi => write!(f, "it is not a MIDI file"),
-            ReadError::BadHeader => write!(f, "its header is damaged"),
+            ReadError::NotMidi => f.write_str(crate::i18n::tr("it is not a MIDI file")),
+            ReadError::BadHeader => f.write_str(crate::i18n::tr("its header is damaged")),
         }
     }
 }

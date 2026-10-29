@@ -15,6 +15,7 @@ use lineup_core::{DEFAULT_VELOCITY, MidiMessage, Note, Pattern, Scale, tools};
 
 use super::follow::Follow;
 use super::{Audio, LineupApp};
+use crate::i18n::tr;
 use crate::midi::{self, Midi, Played, Port, Route};
 use crate::{channel_rack, theme};
 
@@ -370,8 +371,10 @@ impl LineupApp {
     /// The Rec button, next to Play. It turns red while recording is armed.
     pub(super) fn record_button(&mut self, ui: &mut egui::Ui) {
         let button = theme::light_button(ui, "⏺", self.live.recording, Some(theme::RED));
-        let hover = "Record what you play on a MIDI or typing keyboard into the channel the \
-                     piano roll shows, while the pattern plays. Switches to pattern mode.";
+        let hover = crate::i18n::tr(
+            "Record what you play on a MIDI or typing keyboard into the channel the \
+             piano roll shows, while the pattern plays. Switches to pattern mode.",
+        );
         if theme::hint(button, hover).clicked() {
             self.toggle_recording();
         }
@@ -413,7 +416,7 @@ impl LineupApp {
     /// Sends every channel sent over MIDI to `port`, or to none.
     pub(super) fn connect_midi_output(&mut self, port: Option<&Port>) {
         if let Err(err) = self.live.midi.connect_output(port) {
-            self.message = Some(format!("Could not connect: {err}"));
+            self.message = Some(crate::i18n::trf("Could not connect: {}", &[&err]));
         }
     }
 
@@ -439,7 +442,7 @@ impl LineupApp {
                 Some(reason) => {
                     ui.colored_label(
                         ui.visuals().warn_fg_color,
-                        format!("MIDI unavailable: {reason}"),
+                        crate::i18n::trf("MIDI unavailable: {}", &[&crate::i18n::tr_str(reason)]),
                     )
                     .on_hover_text(crate::i18n::tr(
                         "On Linux, MIDI needs the ALSA sequencer (the snd-seq kernel module, \
@@ -481,7 +484,7 @@ impl LineupApp {
         if let Some(choice) = pick_port(ui, self.live.midi.inputs(), current.as_ref()) {
             self.release_all_keys();
             if let Err(err) = self.live.midi.connect_input(choice.as_ref()) {
-                self.message = Some(format!("Could not connect: {err}"));
+                self.message = Some(crate::i18n::trf("Could not connect: {}", &[&err]));
             }
             ui.close();
         }
@@ -518,10 +521,9 @@ impl LineupApp {
         let key = self.key_here();
         let described = harmony.describe(key);
         let text = match self.live.follow.chord() {
-            Some(chord) => format!(
+            Some(chord) => crate::i18n::trf(
                 "🎹 {} · accompaniment in {}",
-                described.trim_end_matches('.'),
-                key.chord_name(chord)
+                &[&described.trim_end_matches('.'), &key.chord_name(chord)],
             ),
             None => format!("🎹 {described}"),
         };
@@ -533,11 +535,11 @@ impl LineupApp {
 /// `Some(None)` for "None".
 fn pick_port(ui: &mut egui::Ui, ports: &[Port], current: Option<&Port>) -> Option<Option<Port>> {
     let mut choice = None;
-    if ui.selectable_label(current.is_none(), "None").clicked() {
+    if ui.selectable_label(current.is_none(), tr("None")).clicked() {
         choice = Some(None);
     }
     if ports.is_empty() {
-        ui.weak("No ports found");
+        ui.weak(tr("No ports found"));
     }
     for port in ports {
         if ui

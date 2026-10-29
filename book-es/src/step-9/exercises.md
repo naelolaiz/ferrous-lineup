@@ -1,6 +1,6 @@
 # Ejercicios
 
-Estos son para después del Step 9: la banda toca, las ventanas están en
+Estos son para después del paso 9: la banda toca, las ventanas están en
 su sitio y el código es tuyo para cambiarlo. Cada uno es un pequeño
 trabajo con un final claro. Algunos son sobre todo de la app, otros
 sobre todo de Rust, y unos pocos tocan ambos. Hazlos en cualquier orden.
@@ -26,8 +26,7 @@ cubre el camino feliz. Añade los infelices.
 **Pasos.**
 
 1. Míralo a mano: abre una demo, teclea un acorde en el primer compás,
-   espera un momento y fuerza la salida de la app. No uses **File >
-   Quit**. Arranca de nuevo y elige **Recover it**. Cierra la canción
+   espera un momento y fuerza la salida de la app. No uses **Archivo > Salir**. Arranca de nuevo y elige **Recuperarlo**. Cierra la canción
    recuperada sin guardarla.
 2. Lee `Files`, `load` y `write`, y las pruebas existentes al final del
    archivo.
@@ -38,7 +37,7 @@ cubre el camino feliz. Añade los infelices.
 4. Añade una segunda prueba que cree la carpeta, escriba un proyecto
    válido en `files.project` con `file::save`, pero deje fuera el
    archivo info. Comprueba que `load` sigue devolviendo el proyecto, sin
-   ruta y sin nombre, para que el diálogo pueda llamarlo "Untitled".
+   ruta y sin nombre, para que el diálogo pueda llamarlo "Sin título".
 5. Limpia la carpeta temporal al final de cada prueba, como hace la
    existente.
 
@@ -50,9 +49,9 @@ borra la llamada `files.remove()` de la rama de error de `load`.
 ## 2. Trazar un compás insertado y borrado (app, fácil)
 
 **Objetivo.** Ver con tus propios ojos que insertar un compás mueve todo
-lo que viene después, y que borrarlo lo devuelve todo. El chord sheet y
-la playlist ya tienen **Insert a bar before**, **Insert a bar after** y
-**Delete this bar**; `--trace` ya escribe cada nota que toca el player.
+lo que viene después, y que borrarlo lo devuelve todo. La hoja de acordes y
+la lista de reproducción ya tienen **Insertar un compás antes**, **Insertar un compás después** y
+**Eliminar este compás**; `--trace` ya escribe cada nota que toca el player.
 
 **Archivos.** `crates/lineup-core/src/bars.rs`,
 `crates/lineup-core/src/project.rs`,
@@ -67,10 +66,9 @@ la playlist ya tienen **Insert a bar before**, **Insert a bar after** y
    cargo run --release -- --trace "El Choclo" --out before.tsv
    ```
 
-2. Abre la misma demo, elige **File > Save as…** y guárdala como
+2. Abre la misma demo, elige **Archivo > Guardar como…** y guárdala como
    `inserted.lineup`.
-3. Haz clic derecho en el compás 3 del chord sheet y elige **Insert a
-   bar after**. Guarda. Traza el archivo guardado:
+3. Haz clic derecho en el compás 3 de la hoja de acordes y elige **Insertar un compás después**. Guarda. Traza el archivo guardado:
 
    ```sh
    cargo run --release -- --trace inserted.lineup --out after.tsv
@@ -96,7 +94,7 @@ marcadores y secciones.
 
 ## 3. Construir un estilo, guardarlo y encontrarlo en una canción (app y Rust, medio)
 
-**Objetivo.** Usar el editor de estilos que ya está en el channel rack
+**Objetivo.** Usar el editor de estilos que ya está en el rack de canales
 ([El editor de estilos](style-editor.md)), y luego leer los dos archivos
 que produce: el archivo `.lineup-style` reutilizable y la canción que lo
 incrusta.
@@ -109,23 +107,23 @@ incrusta.
 
 **Pasos.**
 
-1. Abre el channel rack (**F6**) y haz clic en **New style…**.
+1. Abre el rack de canales (**F6**) y haz clic en **Nuevo estilo…**.
 2. Dale un nombre, dos compases, un tempo y una progresión como
    `I | vi | ii7 | V7`. Añade un kick y una snare en el rack, y luego
-   una nota de bajo en el piano roll. Pulsa **Space** para oírlo.
-3. Haz clic en **Save as…** y déjalo en la carpeta de estilos en la que
+   una nota de bajo en el piano roll. Pulsa **Espacio** para oírlo.
+3. Haz clic en **Guardar como…** y déjalo en la carpeta de estilos en la que
    se abre el diálogo. Es la carpeta de datos de la app bajo `styles/`;
    en Linux es `~/.local/share/ferrouslineup/styles/`. Un estilo
-   guardado fuera de esa carpeta no aparece en la Library.
+   guardado fuera de esa carpeta no aparece en la Biblioteca.
 4. Abre el archivo guardado en un editor de texto. Es RON. Encuentra el
    `format: 1` propio del estilo, sus `bars`, su `chart` y los `lanes`
    que guardan cada canal y sus notas.
-5. Abre una demo, elige el estilo en la Library y guarda la canción.
+5. Abre una demo, elige el estilo en la Biblioteca y guarda la canción.
    Abre el archivo de la canción y busca `custom_rhythm`: el estilo
    entero está dentro de la canción, porque la canción ya no puede
    depender de un archivo de tu carpeta de datos. Su formato ahora es al
    menos el 22, y mayor si la canción usa también una función posterior
-   como un mixer guardado (formato 26).
+   como un mezclador guardado (formato 26).
 
 **Ejecución.** `cargo test -p lineup-core user_style`, y luego
 `cargo test -p lineup-app styles`.
@@ -168,8 +166,8 @@ cargo test -p lineup-core library
 cargo run --release -- --demos
 ```
 
-**Terminado cuando.** Las pruebas pasan, la demo aparece bajo **File >
-Demos > Songs >** su género, y se abre en el chord sheet y suena.
+**Terminado cuando.** Las pruebas pasan, la demo aparece bajo **Archivo >
+Demostraciones > Canciones >** su género, y se abre en la hoja de acordes y suena.
 
 ## 5. Un ritmo con cowbell y un fill (lineup-core, fácil)
 
@@ -191,7 +189,7 @@ comprueban la longitud y los caracteres de cada línea.
    son solo para leer.
 3. Pon el cowbell en un contratiempo o una clave, no en cada step; la
    idea es oírlo como un color distinto.
-4. Abre la Library, encuentra el ritmo en su género, haz clic en él y
+4. Abre la Biblioteca, encuentra el ritmo en su género, haz clic en él y
    reprodúcelo. Luego haz un cambio de sección para que se use el fill.
 
 **Ejecución.** `cargo test -p lineup-core rhythm`.
@@ -202,13 +200,13 @@ su tooltip, y el fill suena hacia la siguiente sección.
 
 ## 6. Un segundo envío: delay (lineup-core, lineup-audio y lineup-app, difícil)
 
-**Objetivo.** El mixer ya tiene un envío **Reverb** por canal y una
+**Objetivo.** El mezclador ya tiene un envío **Reverberación** por canal y una
 reverberación maestra. Añade un envío **Delay** junto a él, para que un
 canal pueda entrar en un eco sin perder su sonido seco. Cada canal ya
 tiene su propio delay entre sus [efectos](channel-effects.md); este es
 compartido, como la reverberación, para que varios canales hagan eco
 juntos en un solo delay. Es un capstone: cruza el archivo de proyecto,
-el hilo de audio y la ventana del mixer.
+el hilo de audio y la ventana del mezclador.
 
 **Archivos.** `crates/lineup-core/src/project.rs`,
 `crates/lineup-core/src/mixer.rs`, `crates/lineup-core/src/file.rs`,
@@ -229,8 +227,8 @@ nuevo), `crates/lineup-app/src/app/mixer.rs`.
    `crates/lineup-audio/src/effects.rs` muestra cómo leer el eco. Sigue
    el patrón de la reverberación: saca del dry mix la `amount` del
    sample como `send`, y vuelve a añadir la señal con delay.
-4. Añade un deslizador **Delay** a cada línea del mixer, junto a
-   **Reverb**, y una pequeña sección de delay junto a los controles de
+4. Añade un deslizador **Delay** a cada línea del mezclador, junto a
+   **Reverberación**, y una pequeña sección de delay junto a los controles de
    reverberación. Envía el comando por el mismo camino que
    `SetReverbSend`.
 5. Sube `FORMAT_VERSION` a 29, enseña a `format_for` que un envío de
@@ -258,7 +256,7 @@ una canción sin delay se sigue escribiendo en el formato que tenía.
 ## 7. F10 para el metrónomo, y su línea del F1 (lineup-app, fácil)
 
 **Objetivo.** El metrónomo ya es un interruptor en la barra de
-herramientas y en **Edit > Settings… > Playback**. Dale una tecla y
+herramientas y en **Edición > Ajustes… > Reproducción**. Dale una tecla y
 añade la tecla a la lista del F1. F10 está libre; no uses la **M** sola,
 que toca una nota cuando el teclado de escritura está activo.
 
@@ -271,9 +269,9 @@ que toca una nota cuando el teclado de escritura está activo.
 
 1. En `practice.rs`, añade una constante `KeyboardShortcut` para F10.
 2. En `LineupApp::keyboard_shortcuts`, léela en el mismo sitio protegido
-   que Space: no mientras un campo de texto tiene el teclado, y no
+   que Espacio: no mientras un campo de texto tiene el teclado, y no
    mientras un modal está abierto. Llama a `set_metronome(!metronome)`.
-3. Añade una línea a la sección **Anywhere** de `shortcuts.rs`:
+3. Añade una línea a la sección **En cualquier lugar** de `shortcuts.rs`:
    "Metronome on or off". Importa la constante en lugar de escribir la
    tecla dos veces.
 4. Añade una prueba headless en `ux_tests.rs`: pulsa F10, comprueba con
@@ -288,7 +286,7 @@ cargo test -p lineup-app metronome
 ```
 
 **Terminado cuando.** F10 alterna el botón de la barra de herramientas,
-F1 lo lista bajo "Anywhere", y la prueba existente
+F1 lo lista bajo "En cualquier lugar", y la prueba existente
 `no_two_global_shortcuts_share_a_key` sigue pasando.
 
 ## 8. Un campo de proyecto nuevo y su prueba de formato (lineup-core, medio)
@@ -325,8 +323,7 @@ nombra el 29 solo para una canción que lo necesita.
 ## 9. Dos vistas en un vídeo, y una comprobación de sincronía (app, medio)
 
 **Objetivo.** Exportar un vídeo con dos vistas y comprobar que la imagen
-y el sonido coinciden. La exportación de vídeo ya existe, con chord
-sheet, lead sheet, playlist, piano roll y harmony keys; estás probando
+y el sonido coinciden. La exportación de vídeo ya existe, con hoja de acordes, partitura guía, lista de reproducción, piano roll y teclas de armonía; estás probando
 la sincronía, no construyendo una vista.
 
 **Archivos.** `crates/lineup-app/src/app/video.rs`,
@@ -336,8 +333,8 @@ la sincronía, no construyendo una vista.
 
 1. Abre una demo con un cambio de métrica o de tonalidad, como **El
    Choclo**.
-2. Elige **File > Export WAV…** y guarda `el-choclo.wav`.
-3. Elige **File > Export video…**, marca **Chord sheet** y **Piano
+2. Elige **Archivo > Exportar WAV…** y guarda `el-choclo.wav`.
+3. Elige **Archivo > Exportar video…**, marca **Hoja de acordes** y **Piano
    roll**, ponlas lado a lado en la vista previa, elige **1280×720** y
    exporta `el-choclo.mp4`.
 4. Si `ffprobe` está instalado, compara las duraciones. La imagen va a
@@ -350,7 +347,7 @@ la sincronía, no construyendo una vista.
    ```
 
 5. Mira el compás donde cambia la tonalidad o la métrica. El compás
-   enmarcado del chord sheet, el cabezal de reproducción del piano roll
+   enmarcado de la hoja de acordes, el cabezal de reproducción del piano roll
    y el sonido deberían coincidir allí. Comprueba un segundo punto, como
    el primer compás después de una repetición.
 
@@ -361,10 +358,10 @@ imagen **antes** que el sonido en cada fotograma.
 
 ## 10. Una prueba de regresión de note-off MIDI (lineup-audio, medio)
 
-**Objetivo.** Demostrar que **Stop** envía note-offs para las notas que
-el secuenciador empezó en un canal MIDI Out. El motor ya guarda
+**Objetivo.** Demostrar que **Detener** envía note-offs para las notas que
+el secuenciador empezó en un canal de salida MIDI. El motor ya guarda
 note-offs cuando la cola MIDI está llena, y ya envía All Notes Off antes
-de cerrar una salida; esta prueba fija el camino de Stop.
+de cerrar una salida; esta prueba fija el camino de la detención.
 
 **Archivos.** `crates/lineup-audio/src/engine.rs` (el módulo
 `#[cfg(test)]`).
@@ -376,7 +373,7 @@ de cerrar una salida; esta prueba fija el camino de Stop.
    `note_off` del módulo de pruebas.
 2. Añade `stopping_releases_midi_out_notes`: una nota larga en el canal
    MIDI 3, **Play**, renderiza un step y comprueba con assert el
-   NoteOn; envía **Stop**, renderiza unos cuantos fotogramas y
+   NoteOn; envía **Detener**, renderiza unos cuantos fotogramas y
    comprueba con assert el NoteOff.
 3. Haz la nota lo bastante larga como para que no pueda haber terminado
    por su propio gate.

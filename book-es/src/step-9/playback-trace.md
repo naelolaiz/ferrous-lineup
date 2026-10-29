@@ -16,7 +16,7 @@ Una **traza** es una lista de cada nota que toca el reproductor, escrita
 por el hilo de audio en el momento en que la toca. No se vuelve a
 calcular a partir del proyecto: es lo que reciben los altavoces, después
 del swing, los cambios de tempo, los nudges y la temporización suelta,
-con la canción desplegada como la toca el playlist y las pistas
+con la canción desplegada como la toca la lista de reproducción y las pistas
 silenciadas fuera. Así que una traza puede leerse en lugar de
 escucharse, por ti o por una prueba.
 
@@ -30,7 +30,7 @@ ferrous-lineup --trace "Twelve-bar blues"
 ferrous-lineup --demos
 ```
 
-`--trace` toca la canción como lo hace **File > Export WAV**, de
+`--trace` toca la canción como lo hace **Archivo > Exportar WAV**, de
 principio a fin, pero sin ventana, tarjeta de sonido ni archivo de
 sonido: obtienes las notas de la exportación, frame a frame, en uno o
 dos segundos. `--out` las escribe en un archivo; sin él van a la
@@ -38,9 +38,9 @@ terminal. `--demos` lista los nombres que `--trace` entiende. Las
 mayúsculas no importan, y una parte del nombre basta cuando solo una
 demo lo tiene.
 
-En la aplicación, **Settings > Playback > Trace** tiene una caja,
-**Write a trace while playing**. Mientras está marcada, cada
-reproducción, de Play a Stop, añade una tabla al archivo nombrado
+En la aplicación, **Ajustes > Reproducción > Registro** tiene una caja,
+**Escribir un registro mientras suena**. Mientras está marcada, cada
+reproducción, de ▶ a ⏹, añade una tabla al archivo nombrado
 debajo, en la carpeta donde la aplicación guarda sus ajustes. Empieza
 sin marcar cada vez que la aplicación se abre, para que una traza que
 olvidaste nunca llene tu disco.
@@ -66,7 +66,7 @@ listan el tempo y el compás de cada parte de la canción:
 
 Luego viene una línea por cada nota, en el orden en que empiezan, con un
 tab entre columnas. Estas son las primeras notas del bajo y el hi-hat en
-la demo **Twelve-bar blues**, con algunas columnas fuera:
+la demo **Blues de doce compases**, con algunas columnas fuera:
 
 ```text
 start   length  bar beat into_beat step   steps bpm    name pitch note velocity late_ms end
@@ -91,11 +91,11 @@ en lugar de 2, largo antes que corto.
 | `into_beat` | Cuántos pasos después del inicio de su pulso empieza |
 | `step`, `steps` | El paso en el que empieza (contado desde 0, con la fracción de retraso) y cuántos pasos se sostiene |
 | `bpm`, `time` | El tempo de su paso y el compás de su compás |
-| `channel`, `name`, `program`, `instrument` | Su fila en el channel rack (desde 1), el nombre del canal, su program de General MIDI y qué lo toca |
+| `channel`, `name`, `program`, `instrument` | Su fila en el rack de canales (desde 1), el nombre del canal, su program de General MIDI y qué lo toca |
 | `pitch`, `note` | El número de nota MIDI y su nombre, escrito en la tonalidad del momento |
 | `velocity` | Con qué fuerza se toca, de 1 a 127 |
 | `late_ms` | Cuánto después de su paso empieza: su nudge, el swing y la temporización suelta |
-| `end` | Por qué terminó: `gate` cuando su duración se acabó, `cut` cuando se detuvo antes (Stop, un salto, su pista silenciada, su clip quitado), `again` cuando la misma nota volvió a empezar en un MIDI Out o un SoundFont, que tocan una de cada nota a la vez |
+| `end` | Por qué terminó: `gate` cuando su duración se acabó, `cut` cuando se detuvo antes (⏹, un salto, su pista silenciada, su clip quitado), `again` cuando la misma nota volvió a empezar en una salida MIDI o un SoundFont, que tocan una de cada nota a la vez |
 | `pattern` | Su patrón y el paso del patrón del que viene |
 
 Las tablas como esta están hechas para `grep` y `awk`. Las notas de bajo
@@ -139,7 +139,7 @@ cuenta lo que hace la aplicación cuando algo sí sale mal.
 El hilo de audio tiene reglas estrictas, que el paso 2 explicó: nunca
 debe esperar, nunca reservar memoria, nunca escribir a un archivo.
 Escribir una traza es exactamente lo que no puede hacer. Así que hace lo
-que ya hace para MIDI Out: entrega mensajes pequeños a un ring buffer
+que ya hace para la salida MIDI: entrega mensajes pequeños a un ring buffer
 del crate `rtrb`, y otro hilo, que puede tomarse su tiempo, los lee.
 
 Los mensajes son un enum `Copy`, así que empujar uno copia unos pocos
@@ -194,7 +194,7 @@ frames, el gate. Si el tempo cambia mientras suena, cada instrumento
 estira los gates de sus notas con la misma función, `stretched`, para
 que la nota siga terminando en su paso. El tracer guarda su propia lista
 de las notas que suenan y las estira con esa misma función. También oye
-todo lo que termina notas antes: Stop, un salto, una pista silenciada,
+todo lo que termina notas antes: ⏹, un salto, una pista silenciada,
 una canción enviada mientras suena que ya no tiene un clip, un canal
 quitado.
 
@@ -241,10 +241,10 @@ después de `frame`; el anterior a él es el paso que se está tocando. La
 fracción es cuánto está `frame` entre ese paso y el siguiente.
 
 Cada paso también tiene una cuenta de los pasos tocados antes que él,
-que sigue creciendo cuando un patrón hace loop o el playhead salta. La
+que sigue creciendo cuando un patrón se repite en bucle o el cursor de reproducción salta. La
 duración de una nota en pasos es la diferencia de esas cuentas: se mide
 a lo largo de los pasos realmente tocados, sean cuales sean los números
-que el loop les da.
+que el bucle les da.
 
 ### La línea de comandos
 
@@ -283,7 +283,7 @@ Las pruebas usan las trazas como lo haría una persona. Entre ellas:
 
 1. Traza una demo con un ritardando (una marca de tempo que hace glide)
    y lee las líneas `# tempo`: ¿cuántas hay, y por qué una por paso?
-2. Sube **Loose timing** en una canción, trázala y usa `awk` para
+2. Sube **Soltura** en una canción, trázala y usa `awk` para
    encontrar la nota más tardía. ¿Llega alguna vez más tarde que el
    ajuste?
 3. Con la traza encendida en la aplicación, toca un patrón, silencia su

@@ -43,6 +43,7 @@ use std::sync::{Arc, Mutex};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
+use lineup_core::i18n::{tr, trf};
 use lineup_core::{
     Click, DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, MidiMessage, Note, NoteEvent, Play,
     STEP_NOTE, STEPS_PER_BAR, STEPS_PER_BEAT, Sequencer, TICKS_PER_STEP, Tempo,
@@ -383,13 +384,19 @@ pub enum EngineError {
 impl fmt::Display for EngineError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EngineError::NoOutputDevice => write!(f, "no audio output device found"),
-            EngineError::Config(err) => write!(f, "could not read the device settings: {err}"),
-            EngineError::UnsupportedFormat(format) => {
-                write!(f, "unsupported sample format: {format}")
+            EngineError::NoOutputDevice => f.write_str(tr("no audio output device found")),
+            EngineError::Config(err) => {
+                f.write_str(&trf("could not read the device settings: {}", &[err]))
             }
-            EngineError::BuildStream(err) => write!(f, "could not open the audio stream: {err}"),
-            EngineError::Play(err) => write!(f, "could not start the audio stream: {err}"),
+            EngineError::UnsupportedFormat(format) => {
+                f.write_str(&trf("unsupported sample format: {}", &[format]))
+            }
+            EngineError::BuildStream(err) => {
+                f.write_str(&trf("could not open the audio stream: {}", &[err]))
+            }
+            EngineError::Play(err) => {
+                f.write_str(&trf("could not start the audio stream: {}", &[err]))
+            }
         }
     }
 }

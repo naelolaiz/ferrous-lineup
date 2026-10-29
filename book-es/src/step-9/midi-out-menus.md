@@ -8,17 +8,17 @@ Archivos: [`crates/lineup-app/src/channel_rack.rs`](https://github.com/naelolaiz
 [`crates/lineup-core/src/midi_file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/midi_file.rs)
 y [`crates/lineup-audio/src/instrument.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/instrument.rs)
 
-[MIDI Out para cada canal](../step-8/midi-out-every-channel.md) dio al
-menú MIDI un interruptor, **Send every channel**: la canción entera va
+[Salida MIDI para cada canal](../step-8/midi-out-every-channel.md) dio al
+menú MIDI un interruptor, **Enviar todos los canales**: la canción entera va
 a un sintetizador externo, o no va nada de ella. A menudo quieres algo
 intermedio. El bajo en un sintetizador de hardware y el resto de la
 banda en la app, o la batería en una caja de ritmos. Cada una de esas
-cosas solía significar añadir un canal MIDI Out en el rack y mover las
+cosas solía significar añadir un canal de salida MIDI en el rack y mover las
 notas a él.
 
 Ahora el lugar donde eliges qué toca un canal es también donde lo
-envías. El **menú de instrumento**, en el mixer y en el channel rack,
-empieza con **Send over MIDI**. Elige un canal MIDI del 1 al 16 y la
+envías. El **menú de instrumento**, en el mezclador y en el rack de canales,
+empieza con **Enviar por MIDI**. Elige un canal MIDI del 1 al 16 y la
 salida, y ese canal solo va al sintetizador. La batería integrada tiene
 el mismo menú.
 
@@ -29,24 +29,20 @@ el mismo menú.
 1. Conecta un sintetizador, o en Linux arranca uno por software como
    FluidSynth o Qsynth. Sin uno, puedes seguir los menús igualmente;
    las notas simplemente no van a ninguna parte.
-2. Abre una demo y el mixer (**F9**). Haz clic en el instrumento de un
-   canal, por ejemplo «Acoustic Grand Piano», luego en **Send over
-   MIDI**, luego en **3**. Abre el menú otra vez y, bajo **Output, for
-   every channel sent over MIDI**, elige tu sintetizador. Es la misma
+2. Abre una demo y el mezclador (**F9**). Haz clic en el instrumento de un
+   canal, por ejemplo «Piano de cola acústico», luego en **Enviar por MIDI**, luego en **3**. Abre el menú otra vez y, bajo **Salida, para todos los canales enviados por MIDI**, elige tu sintetizador. Es la misma
    salida que en el menú MIDI.
-3. El mixer dice ahora **Acoustic Grand Piano · MIDI 3**. Reproduce:
+3. El mezclador dice ahora **Piano de cola acústico · MIDI 3**. Reproduce:
    ese canal suena en el sintetizador, como un piano, ya que su
    instrumento sale como un *program change*. Todo lo demás suena en la
    app.
-4. Haz clic en el **Built-in drum** de un tambor, luego en **Send over
-   MIDI** y en **10**. El mixer dice **Bass Drum 1 · MIDI 10** para el
+4. Haz clic en el **Percusión incorporada** de un tambor, luego en **Enviar por MIDI** y en **10**. El mezclador dice **Bombo 1 · MIDI 10** para el
    kick: la nota del set de batería de General MIDI como la que se
    envía.
-5. Haz clic de nuevo en el instrumento del canal y elige **Play it
-   here instead** para recuperar el propio sonido de la app.
+5. Haz clic de nuevo en el instrumento del canal y elige **Tocarlo aquí en su lugar** para recuperar el propio sonido de la app.
 
-En el channel rack el mismo menú está en el menú de clic derecho de un
-canal: bajo **Instrument** para un sintetizador, directamente para un
+En el rack de canales el mismo menú está en el menú de clic derecho de un
+canal: bajo **Instrumento** para un sintetizador, directamente para un
 tambor.
 
 ## Qué viaja por el cable
@@ -75,7 +71,7 @@ que están escritos sus pasos: el kick envía siempre 36, el clap 39.
 Puedes enviarlo por cualquier canal, no solo el 10, para una caja de
 ritmos que escuche en otro sitio.
 
-El mixer nombra el tambor que envía, a partir de la tabla de General
+El mezclador nombra el tambor que envía, a partir de la tabla de General
 MIDI en `general_midi.rs`:
 
 ```rust
@@ -97,7 +93,7 @@ en un `Option<&str>`.
 
 ## Un canal que cambia de tipo, y un tambor que no
 
-Un sintetizador enviado por MIDI **se convierte en** un canal MIDI Out,
+Un sintetizador enviado por MIDI **se convierte en** un canal de salida MIDI,
 conservando su instrumento:
 
 ```rust
@@ -125,19 +121,17 @@ pub fn send_over_midi(&mut self, midi_channel: u8) {
 }
 ```
 
-Un nombre que solo decía qué lo tocaba, «Lineup Osc» o «MIDI Out 2»,
-sigue al cambio y se vuelve «MIDI Out 3». Un nombre que tú le diste,
-como «Bass», se queda. `play_here` hace lo contrario.
+Un nombre que solo decía qué lo tocaba, «Lineup Osc» o «Salida MIDI 2»,
+sigue al cambio y se vuelve «Salida MIDI 3». Un nombre que tú le diste,
+como «Bajo», se queda. `play_here` hace lo contrario.
 
 Un **tambor** no cambia de tipo. Recibe un campo nuevo, `sent_on`, con
 el canal MIDI, y sigue siendo un `Sampler` que toca su tambor
 integrado. Eso le importa a la banda: los estilos encuentran el kick,
 la caja y los hats por lo que son (`Sampler(Builtin(Drum::Kick))`),
-para escribir sus ritmos sobre ellos. Un kick convertido en canal MIDI
-Out ya no se encontraría, y el siguiente estilo añadiría un segundo
-kick. Por la misma razón, los estilos encuentran ahora un «Bass» o unas
-«Keys» enviados por MIDI como el bajo y las teclas: antes, aplicar un
-estilo después de enviar el bajo añadía un segundo canal Bass.
+para escribir sus ritmos sobre ellos. Un kick convertido en canal de salida MIDI ya no se encontraría, y el siguiente estilo añadiría un segundo
+kick. Por la misma razón, los estilos encuentran ahora un «Bajo» o unos «Teclados» enviados por MIDI como el bajo y los teclados: antes, aplicar un
+estilo después de enviar el bajo añadía un segundo canal Bajo.
 
 En el hilo de audio, `Instrument::for_channel` construye lo que toca
 cada canal. Para un tambor, ahora mira `sent_on`:
@@ -153,12 +147,12 @@ ChannelKind::Sampler(SampleSource::Builtin(drum)) => match channel.sent_on {
 },
 ```
 
-`playing_as` hace que el MIDI Out envíe esa única nota por cada nota
+`playing_as` hace que la salida MIDI envíe esa única nota por cada nota
 que se le pida tocar. Así que la parte del tambor, la banda y los
 estilos se quedan exactamente como estaban; solo el sonido va a otra
 parte.
 
-**File > Export song as MIDI** pone un tambor enviado por MIDI en su
+**Archivo > Exportar canción como MIDI** pone un tambor enviado por MIDI en su
 propio canal, y da a los demás canales los libres de alrededor, y el
 [trace de reproducción](playback-trace.md) lo nombra. Una canción con
 un tambor enviado por MIDI necesita al menos el formato 27 ([el formato
@@ -170,7 +164,7 @@ fuera del archivo cuando es `None`.
 
 Los menús de instrumento los dibujan funciones de `channel_rack.rs`,
 que conocen un canal y nada de las conexiones MIDI de la app. Pasar
-esas conexiones hacia abajo por el rack, el mixer y el style editor
+esas conexiones hacia abajo por el rack, el mezclador y el style editor
 habría añadido un parámetro a muchas funciones. En su lugar, la app
 pone la lista de salidas en la memoria de egui una vez por frame, y el
 menú la lee allí:
@@ -199,7 +193,7 @@ puertos que mañana puede ser distinta.
 ## Una prueba que pasaba en todas partes menos en Windows
 
 La primera versión de la prueba
-`the_mixer_sends_a_channel_over_midi_and_back` abría **Send over MIDI**
+`the_mixer_sends_a_channel_over_midi_and_back` abría **Enviar por MIDI**
 y esperaba que el menú dijera «No outputs found». En las máquinas de CI
 de Linux y macOS no hay salida MIDI, así que pasaba. En Windows
 fallaba: Windows siempre tiene una, su integrado «Microsoft GS
@@ -225,13 +219,13 @@ que envía allí la nota 39.
 archivo MIDI con él, y
 `drums_sent_over_midi_need_format_twenty_seven`, en `file.rs`, guarda
 uno. En la app, `the_mixer_and_the_rack_send_a_drum_over_midi_and_back`
-lo hace con clics: el kick desde el mixer, la caja desde el menú de
+lo hace con clics: el kick desde el mezclador, la caja desde el menú de
 clic derecho del rack.
 
 ## Ejercicios
 
-1. Envía el Bass de una demo de banda por MIDI en el canal 2, y luego
-   aplica otro estilo de la Library. ¿Cuántos canales Bass hay después?
+1. Envía el Bajo de una demo de banda por MIDI en el canal 2, y luego
+   aplica otro estilo de la Biblioteca. ¿Cuántos canales Bajo hay después?
    Lee `find_synth` en `library/apply.rs` para ver por qué.
 2. ¿Qué tambor de General MIDI es la nota 60? Un tambor escrito en Do4 y
    enviado tal como está escrito, en lugar de como su propia nota, lo

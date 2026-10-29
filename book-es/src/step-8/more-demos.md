@@ -6,8 +6,7 @@ y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-
 
 Las primeras demos eran 16 canciones. Se oían bien, pero la mayoría de
 los géneros de la biblioteca no tenían ninguna canción: había un *estilo*
-de tango, pero ningún tango con melodía del que aprender. Ahora **File >
-Demos > Songs** tiene 62 canciones, con un submenú para cada género y al
+de tango, pero ningún tango con melodía del que aprender. Ahora **Archivo > Demostraciones > Canciones** tiene 62 canciones, con un submenú para cada género y al
 menos dos canciones en cada uno.
 
 ## De dónde salen las canciones
@@ -18,20 +17,20 @@ género tenga algo que escuchar:
 | Género | Canciones |
 |---|---|
 | Pop | Auld Lang Syne, London Bridge, Old MacDonald, Deck the Halls |
-| Rock | Drunken Sailor, Bella Ciao, Beethoven's Fifth, Yankee Doodle |
+| Rock | Drunken Sailor, Bella Ciao, La Quinta de Beethoven, Yankee Doodle |
 | Blues | Midnight Shuffle\*, Rolling Boogie\*, Minor Mood Blues\* |
-| Jazz | Jingle Bells, When the Saints, The Entertainer, Happy Birthday, Two-Five Walk\* |
-| Soul, funk y R&Si | Amazing Grace, Joy to the World, Dorian Strut\*, Sunday Seventh\* |
-| Hip hop y lo-fi | Twinkle Twinkle, Gymnopédie, Prelude in C, Sakura Sakura, Dies Irae |
-| Electrónica | Ode to Joy, Korobeiniki, Symphony No. 40, Eine kleine Nachtmusik, Toccata in D minor, Turkish March |
-| Latina | La Cucaracha, Rio Afternoon\*, Carnival Morning\* |
+| Jazz | Jingle Bells, When the Saints, The Entertainer, Happy Birthday, Paseo ii-V\* |
+| Soul, funk y R&B | Amazing Grace, Al mundo paz, Dorian Strut\*, Sunday Seventh\* |
+| Hip hop y lo-fi | Twinkle Twinkle, Gymnopédie, Preludio en Do, Sakura Sakura, Dies Irae |
+| Electrónica | Oda a la alegría, Korobéiniki, Sinfonía n.º 40, Eine kleine Nachtmusik, Tocata en Re menor, Marcha turca |
+| Latina | La Cucaracha, Tarde en Río\*, Mañana de carnaval\* |
 | Tango | Habanera, Tango del telar\*, Milonga del río\*, Vals del puerto\* |
 | Flamenco | Rumba del sur\*, Noche frigia\* |
 | Reggae y ska | Mary Had a Little Lamb, This Old Man, Valley Dub\* |
-| Country y folk | Frère Jacques, Greensleeves, Oh! Susanna, Scarborough Fair, Clementine, Camptown Races, Row Row Row Your Boat, Silent Night, We Wish You a Merry Christmas |
-| Clásica y cine | Canon in D, Für Elise, Mountain King, Minuet in G, The Blue Danube, Brahms' Lullaby, Morning Mood, New World Largo, Shchedryk, Funeral March |
+| Country y folk | Frère Jacques, Greensleeves, Oh! Susanna, Scarborough Fair, Clementine, Camptown Races, Row Row Row Your Boat, Noche de paz, We Wish You a Merry Christmas |
+| Clásica y cine | Canon en Re, Para Elisa, Mountain King, Minué en Sol, El Danubio azul, Canción de cuna de Brahms, La mañana, Largo del Nuevo Mundo, Shchedryk, Marcha fúnebre |
 
-Las marcadas con \* dicen "Written for Ferrous Lineup" en su tooltip.
+Las marcadas con \* dicen "Escrita para Ferrous Lineup" en su tooltip.
 Algunos géneros tienen muy pocas melodías famosas lo bastante antiguas
 para ser libres: los grandes tangos, bossa novas y canciones de blues
 datan en su mayoría de los años 1910 en adelante, y sus compositores
@@ -40,8 +39,7 @@ recibieron melodías nuevas, escritas como las escriben esos géneros:
 
 - **Sobre los propios acordes del estilo.** *Tango del telar* usa la
   tabla del estilo «Tango», `i | V7 | V7 | i | iv | i | V7 | i`,
-  *Dorian Strut* la del «Funk vamp», *Noche frigia* la del «Phrygian
-  flamenco». Abre la canción y el estilo uno al lado del otro: la
+  *Dorian Strut* la del «Vamp de funk», *Noche frigia* la del «Flamenco frigio». Abre la canción y el estilo uno al lado del otro: la
   armonía es la misma, la canción añade una melodía.
 - **Notas del acorde en los pulsos fuertes.** Una melodía suena «bien»
   cuando las notas que caen en el pulso pertenecen al acorde que hay
@@ -141,8 +139,8 @@ Genre::Blues`, y `mode: Blues` significa la escala.
 
 ## El menú, por género
 
-Cada canción lleva ahora su `genre`, así que el menú Songs hace lo que
-ya hacía el menú Styles: un submenú por género, con las canciones de ese
+Cada canción lleva ahora su `genre`, así que el menú Canciones hace lo que
+ya hacía el menú Estilos: un submenú por género, con las canciones de ese
 género dentro.
 
 ```rust
@@ -298,10 +296,10 @@ escala en lugar de la de la canción.
 ### Cancelar significa quedarse
 
 Cargar una demo mientras el proyecto actual tiene cambios sin guardar
-pregunta "Save changes?", con Save, Don't save y Cancel. Cancel, Escape
+pregunta "¿Guardar cambios?", con Guardar, No guardar y Cancelar. Cancelar, Esc
 y un clic fuera del diálogo no hacían nada, lo cual era correcto, y
 silencioso. Sin nada que mirar, era fácil creer que la demo se había
-cargado y conservaba el ritmo antiguo. Ahora Cancel lo dice en la barra
+cargado y conservaba el ritmo antiguo. Ahora Cancelar lo dice en la barra
 de avisos:
 
 ```rust

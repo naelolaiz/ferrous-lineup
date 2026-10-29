@@ -27,7 +27,7 @@ La app corrió en una pantalla virtual (`Xvfb`) y se manejó con
 distinta:
 
 - la banda: ¿toca cada estilo todo tipo de compás, incluidos N.C.,
-  pushes y métricas irregulares?
+  anticipaciones y métricas irregulares?
 - la teoría: ¿es cada nombre que la app escribe (notas, acordes,
   numerales, armaduras) el que escribiría un músico?
 - la reproducción: ¿deja cada edición hecha mientras suena el sonido y
@@ -45,7 +45,7 @@ su alrededor.
 
 ### N.C. cerraba la app
 
-Teclea N.C. en un compás con la banda **Pop ballad**, y la ventana se
+Teclea N.C. en un compás con la banda **Balada pop**, y la ventana se
 cerraba. Lo hacían dieciséis estilos: todos aquellos cuyo piano o bajo
 toca el acorde **una nota cada vez** (arpegios, el bajo Alberti, el
 montuno de la salsa). Esos patrones piden «la nota número *n* del
@@ -106,13 +106,13 @@ deja una «b». Una prueba escribe ahora cada letra con cada alteración
 de bb a \#\# dentro de un nombre de acorde, con bajos con barra, y lo
 vuelve a leer.
 
-### Las teclas del chord sheet movían las notas del piano roll
+### Las teclas de la hoja de acordes movían las notas del piano roll
 
-Con el chord sheet abierto sobre el piano roll, la flecha derecha
+Con la hoja de acordes abierta sobre el piano roll, la flecha derecha
 movía cada nota del piano roll un paso, y el compás seleccionado no se
-movía. Ambas ventanas escuchan las flechas, Delete y Ctrl+A, y el
+movía. Ambas ventanas escuchan las flechas, Supr y Ctrl+A, y el
 piano roll decidía que tenía el teclado comprobando si el clic estaba
-dentro de su propio rectángulo. Un clic en el chord sheet *encima* de
+dentro de su propio rectángulo. Un clic en la hoja de acordes *encima* de
 él también está dentro de ese rectángulo.
 
 egui dibuja en **capas**, y puede decir cuál está encima en un punto:
@@ -142,12 +142,12 @@ parte que escribió: un hash de cada nota, incluido el número del canal
 en el que está. Una parte cuyas notas ya no coinciden fue editada por
 ti, y se deja en paz («congelada»). Pero borrar un canal numera cada
 canal posterior uno más abajo, así que cada parte posterior ya no
-coincidía, y toda la banda dejaba de seguir el chord sheet.
+coincidía, y toda la banda dejaba de seguir la hoja de acordes.
 
 El proyecto ya tenía una manera de decir «este cambio mueve las notas
 de la banda, pero no es una edición»: `moving_the_band`, usado cuando
 la canción cambia de tonalidad o de compás. Anota qué partes seguían
-el chord sheet, ejecuta el cambio y toma las huellas nuevas como
+la hoja de acordes, ejecuta el cambio y toma las huellas nuevas como
 propias de la banda. Borrar un canal pasa ahora por un primo suyo,
 `removing_channel`, que hace lo mismo con cada parte **que no tocaba
 nada en el canal borrado**. La parte que sí tocaba ahí perdió esas
@@ -161,10 +161,10 @@ como estaban.
 
 ### Otra canción recibía el compás en el que tecleabas
 
-Teclear en un compás del chord sheet y pulsar **Ctrl+N** (o abrir un
+Teclear en un compás de la hoja de acordes y pulsar **Ctrl+N** (o abrir un
 archivo, una demo o una importación) dejaba el campo de texto abierto
-sobre la canción nueva, y Enter escribía entonces el texto viejo en
-ella. Cuando se reemplaza el proyecto, el chord sheet olvida ahora su
+sobre la canción nueva, y Intro escribía entonces el texto viejo en
+ella. Cuando se reemplaza el proyecto, la hoja de acordes olvida ahora su
 selección y lo que se estaba tecleando (`ChordSheet::new_song`), como
 ya hacía el piano roll.
 
@@ -194,7 +194,7 @@ acordes distintos en la música:
 - **Db7** (Re♭ Fa La♭ Do♭) es **bII7**: el «sustituto tritonal» de G7, que
   se desliza un semitono abajo hasta Do.
 
-Los rótulos del chord sheet leían el grado desde el sonido, así que
+Los rótulos de la hoja de acordes leían el grado desde el sonido, así que
 ambos salían en el segundo grado («bii°7», «bII7»). El grado es
 cuestión de **nombres de nota**: Do♯ lleva el nombre Do, el primer grado,
 elevado; Re♭ lleva el nombre Re, el segundo, bajado. `Scale::spelled_numeral`
@@ -275,12 +275,12 @@ En una tonalidad menor, las preguntas de progresión también decían
 es menor, escrito en minúscula, **i**; la pregunta nombra ahora la
 tónica como la tonalidad.
 
-### El tap tempo cuenta los clics
+### Marcar el tempo cuenta los clics
 
 En 6/8 el metrónomo hace clic en la **negra con puntillo**, dos clics
-por compás, pero el tap tempo tomaba cada toque como una negra. Marcar
+por compás, pero marcar el tempo tomaba cada toque como una negra. Marcar
 el ritmo con los clics de una canción a ♩ = 120 (una negra con
-puntillo a 80 por minuto) fijaba el tempo en 80. El tap tempo toma
+puntillo a 80 por minuto) fijaba el tempo en 80. Marcar el tempo toma
 ahora la longitud del pulso en el que hace clic el metrónomo, en
 negras:
 
@@ -301,14 +301,14 @@ compás compuesto un pulso es una negra con puntillo, tres corcheas, y
 la regla del grabado es que la notación muestre dónde están los
 tercios de cada pulso. Un silencio de negra puede cubrir las **dos
 primeras** corcheas de un pulso, pero no las dos últimas, así que la
-escritura correcta es «♪ 𝄾 𝄾», dos silencios de corchea. El lead sheet
+escritura correcta es «♪ 𝄾 𝄾», dos silencios de corchea. La partitura guía
 sigue ahora esa regla en 6/8, 9/8 y 12/8.
 
 ## Reproducción
 
 ### El slow blues toca cuatro pulsos de tres
 
-El slow blues en 12/8 («Trouble in Mind», y el estilo Slow blues)
+El slow blues en 12/8 («Trouble in Mind», y el estilo Blues lento)
 tiene cuatro pulsos por compás, cada uno una negra con puntillo
 partida en tres corcheas: el aire de tresillo de la balada de blues.
 Su bajo tocaba seis notas por compás, una cada negra: tres notas
@@ -324,30 +324,30 @@ Esto se comprobó de oído: el bajo solo se renderizó a audio, y sus
 notas empiezan en cada pulso y en el último tercio de cada pulso, ocho
 por compás.
 
-### Cambiar entre modo pattern y modo song no soltaba ninguna nota
+### Cambiar entre modo patrón y modo canción no soltaba ninguna nota
 
-Cambiar entre modo pattern y modo song mientras sonaba reiniciaba el
+Cambiar entre modo patrón y modo canción mientras sonaba reiniciaba el
 secuenciador, pero no enviaba note-offs, así que un pad o una nota
 enviada a un sintetizador MIDI seguía sonando. El motor suelta ahora
 cada nota sostenida cuando cambia el modo mientras toca, como ya hacía
 tras un seek.
 
-### Quitar un loop conservaba el lugar del cabezal de reproducción
+### Quitar un bucle conservaba el lugar del cabezal de reproducción
 
-Mientras el modo song repite en loop los compases 5 a 8, el cabezal de
-reproducción cuenta desde el inicio del loop. Quitar el loop con su
-botón **Looping bars 5–8 ✖** ponía el cabezal en esa cuenta desde el
+Mientras el modo canción repite en bucle los compases 5 a 8, el cabezal de
+reproducción cuenta desde el inicio del bucle. Quitar el bucle con su
+botón **Repitiendo los compases 5–8 ✖** ponía el cabezal en esa cuenta desde el
 compás 1: detenido en el compás 7, se iba al compás 3. La casilla de
-loop de la barra de práctica ya volvía a sumar el inicio del loop; el
-botón del playlist ahora hace lo mismo.
+bucle de la barra de práctica ya volvía a sumar el inicio del bucle; el
+botón de la lista de reproducción ahora hace lo mismo.
 
-### Un N.C. con push ganaba un punto
+### Un N.C. con anticipación ganaba un punto
 
 «N.C.» tiene puntos en su nombre, y los puntos después de una armonía
-son una parada (C. es un shot). El lector lo sabía para N.C., pero no
-para un **^N.C.** con push: leía el último punto como un shot, y lo
+son una parada (C. es un golpe). El lector lo sabía para N.C., pero no
+para un **^N.C.** con anticipación: leía el último punto como un golpe, y lo
 escribía de vuelta como «^N.C..». Cada copia y pegado añadía un punto.
-Los signos de intercalación de un push ahora se quitan primero, y lo
+Los signos de intercalación de una anticipación ahora se quitan primero, y lo
 que queda se comprueba como N.C. antes de leer ningún punto.
 
 ## Ejercicios
@@ -362,5 +362,5 @@ que queda se comprueba como N.C. antes de leer ningún punto.
    Cuenta los nombres de nota desde Re♭.
 4. Escribe I, bVII, IV, I, la cadencia doble plagal, en Sol mayor y en Mi
    mayor.
-5. Tap tempo en 9/8: ¿cuántas negras es un pulso, y qué tempo dan
+5. Marcar el tempo en 9/8: ¿cuántas negras es un pulso, y qué tempo dan
    toques separados un segundo?

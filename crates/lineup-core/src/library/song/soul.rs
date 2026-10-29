@@ -125,7 +125,7 @@ pub(super) const SUNDAY_SEVENTH: Song = Song {
     ],
     form: &["Call", "Answer", "Call", "Answer"],
     drums_from: 0,
-    about: "Lush seventh chords with two borrowed dominants: E7 pulls toward A minor and C7 \
+    about: "Lush seventh chords with two secondary dominants: E7 pulls toward A minor and C7 \
             toward F. The tune follows them, with a G sharp over E7 and a B flat over C7.",
 };
 
@@ -371,8 +371,8 @@ pub(super) const MOTHERLESS_CHILD: Song = Song {
     ],
     form: &["Verse", "Refrain", "True believer"],
     drums_from: 0,
-    about: "The verse rocks between B flat and D over the home chord and its relative major, \
-            E flat. \"A long ways from home\" falls to the low D and climbs back through C \
+    about: "The verse rocks between B flat and D over the home chord, G minor, and E flat, \
+            the bVI. \"A long ways from home\" falls to the low D and climbs back through C \
             minor and a C sharp diminished chord, the passing chord church pianists love.",
 };
 
@@ -836,7 +836,7 @@ pub(super) const NEED_OF_PRAYER: Song = Song {
     ],
     form: &["Pickup", "Chorus", "Verse", "Chorus"],
     drums_from: 1,
-    about: "\"It's me, it's me, O Lord\" is three notes, E D C, the top of the major scale \
-            coming down. The verse, \"not my brother, nor my sister\", trills between E and D \
+    about: "\"It's me, it's me, O Lord\" is three notes, E D C, falling from the third of \
+            the scale to the tonic. The verse, \"not my brother, nor my sister\", trills between E and D \
             sharp, a half step below it, before the same fall.",
 };

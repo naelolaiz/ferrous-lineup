@@ -7,6 +7,7 @@
 //! mouse for that space and paints into it. It returns a [`Response`] so
 //! the caller can ask whether it was clicked, dragged or changed.
 
+use crate::i18n::tr;
 use eframe::egui::{self, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use lineup_core::NoteEvent;
 
@@ -153,10 +154,10 @@ pub fn follow_playback(ctx: &egui::Context) -> bool {
 pub fn follow_control(ui: &mut Ui) {
     let mut follow = follow_playback(ui.ctx());
     if ui
-        .checkbox(&mut follow, "Follow playhead")
-        .on_hover_text(
+        .checkbox(&mut follow, tr("Follow playhead"))
+        .on_hover_text(tr(
             "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
-        )
+        ))
         .changed()
     {
         ui.ctx()
@@ -170,8 +171,10 @@ pub fn follow_button(ui: &mut Ui) {
     let button = crate::icons::toggle(ui, "Follow playhead", follow, crate::icons::follow);
     if crate::theme::hint(
         button,
-        "Follow playhead: keep the playing bar or step visible in the playlist, chord sheet \
+        crate::i18n::tr(
+            "Follow playhead: keep the playing bar or step visible in the playlist, chord sheet \
          and piano roll",
+        ),
     )
     .clicked()
     {

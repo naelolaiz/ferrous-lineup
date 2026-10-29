@@ -27,6 +27,7 @@
 //! bars played so far: a new key takes over once it has been ahead for
 //! a couple of bars.
 
+use crate::i18n::{key_name, tr, trf};
 use crate::pitch::{Note, PitchClass};
 
 use super::keys::Function;
@@ -421,7 +422,7 @@ impl ChordReading {
         match (&self.role, self.function) {
             (Some(role), _) if role.starts_with('V') => format!("{} = {role}", self.numeral),
             (Some(role), _) => format!("{}, {role}", self.numeral),
-            (None, Some(function)) => format!("{}, {}", self.numeral, function.name()),
+            (None, Some(function)) => format!("{}, {}", self.numeral, tr(function.name())),
             (None, None) => self.numeral.clone(),
         }
     }
@@ -468,14 +469,14 @@ pub fn read_chord(chord: Chord, key: Scale) -> Option<ChordReading> {
         });
     }
     let role = if let Some(parallel) = key.borrowed_from(chord) {
-        format!("borrowed from {}", parallel.name())
+        trf("borrowed from {}", &[&key_name(parallel)])
     } else if let Some(target) = key.secondary_dominant_target(chord) {
         format!(
             "V{suffix}/{}",
             key.roman_numeral(target).unwrap_or_default()
         )
     } else {
-        "outside the key".to_string()
+        tr("outside the key").to_string()
     };
     Some(ChordReading {
         numeral,

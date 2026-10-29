@@ -232,7 +232,7 @@ impl SetClass {
             self.vector_text()
         );
         if let Some(nickname) = self.nickname() {
-            text += &format!(" {nickname}");
+            text += &format!(" {}", crate::i18n::tr(nickname));
         }
         text
     }

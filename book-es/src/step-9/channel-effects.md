@@ -5,38 +5,38 @@ Archivos: [`crates/lineup-core/src/effects.rs`](https://github.com/naelolaiz/fer
 [`crates/lineup-audio/src/engine.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/engine.rs)
 y [`crates/lineup-app/src/app/mixer.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/mixer.rs)
 
-El [mixer](mixer.md) pone a toda la banda en una misma sala con su
+El [mezclador](mixer.md) pone a toda la banda en una misma sala con su
 reverberación, y coloca cada canal entre los altavoces con su pan. Pero
 en una mesa de mezclas real cada tira de canal también tiene sus propios
 **efectos**, que dan forma a un instrumento antes de que se una a los
-demás. Ahora cada canal del mixer tiene tres, en el orden en que los
+demás. Ahora cada canal del mezclador tiene tres, en el orden en que los
 tienen la mayoría de las mesas: un **ecualizador**, un **compresor** y
 un **delay**.
 
-![El mixer de una canción Motown con trompas. El botón Effects de la línea Horns dice "EQ, delay", y su menú está abierto: Equalizer con Low a -4.0 dB, Mid y High a 0 dB; Compressor con Threshold a -18.0 dB, Ratio 1.0:1 y Gain a 0.0 dB; Delay con Time dotted 1/8, Feedback al 35% y Mix al 30%; y un botón No effects.](../images/step-9-effects.png)
+![El mixer de una canción Motown con trompas. El botón Efectos de la línea Horns dice "EQ, delay", y su menú está abierto: Equalizer con Low a -4.0 dB, Mid y High a 0 dB; Compressor con Threshold a -18.0 dB, Ratio 1.0:1 y Gain a 0.0 dB; Delay con Time dotted 1/8, Feedback al 35% y Mix al 30%; y un botón No effects.](../images/step-9-effects.png)
 
 ## Pruébalo
 
-1. Abre una demo desde **File > Demos**, pulsa **F9** para el mixer y
-   **Space** para reproducir.
-2. La columna **Effects** dice "none" en todas las líneas. Haz clic en
+1. Abre una demo desde **Archivo > Demostraciones**, pulsa **F9** para el mezclador y
+   **Espacio** para reproducir.
+2. La columna **Efectos** dice "ninguno" en todas las líneas. Haz clic en
    ella en la línea del Piano: se abre un menú con los tres efectos. Se
    queda abierto mientras los cambias, hasta que haces clic en otro
    sitio.
-3. Arrastra el deslizador **Low** del **Equalizer** hasta −6 dB. El
+3. Arrastra el deslizador **Graves** del **Ecualizador** hasta −6 dB. El
    piano se vuelve más delgado, y el bajo se oye mejor debajo de él. El
-   botón ahora dice "EQ". **Flat** devuelve todas las bandas a 0 dB, y
+   botón ahora dice "EQ". **Plano** devuelve todas las bandas a 0 dB, y
    un doble clic en un deslizador devuelve ese.
-4. En la línea del Bass, pon el **Ratio** del **Compressor** a 4:1 y su
-   **Threshold** a −24 dB. Las notas fuertes bajan. Sube su **Gain**
+4. En la línea del Bajo, pon el **Relación** del **Compresor** a 4:1 y su
+   **Umbral** a −24 dB. Las notas fuertes bajan. Sube su **Ganancia**
    unos decibelios para devolver toda la parte a su nivel.
-5. En la línea del Lead, pon el **Mix** del **Delay** al 30% y elige
-   **dotted 1/8**. Cada nota vuelve tres semicorcheas después, y otra
+5. En la línea de la Melodía, pon el **Mezcla** del **Delay** al 30% y elige
+   **1/8 con puntillo**. Cada nota vuelve tres semicorcheas después, y otra
    vez, más suave cada vez. Cambia el tempo de la canción: los ecos lo
    siguen.
 
-**No effects** al final del menú los apaga todos para ese canal, y
-**Reset mix** los apaga en todos los canales. Cada cambio es un paso
+**Sin efectos** al final del menú los apaga todos para ese canal, y
+**Restablecer mezcla** los apaga en todos los canales. Cada cambio es un paso
 para deshacer. Los efectos también suenan en un WAV exportado, y la
 canción los guarda.
 
@@ -45,13 +45,13 @@ canción los guarda.
 Todo sonido es una mezcla de frecuencias: la fundamental de una nota
 grave, y sus armónicos por encima. Un **ecualizador** (EQ) sube o baja
 rangos de ellas. No añade notas. Cambia el color de las que hay. El EQ
-del mixer tiene tres bandas:
+del mezclador tiene tres bandas:
 
 | Banda | Dónde | Forma | Qué vive allí |
 |---|---|---|---|
-| **Low** | por debajo de 200 Hz | una shelf | el peso de un bajo, un bombo, la mano izquierda de un piano |
-| **Mid** | alrededor de 1 kHz | una campana, de una octava y media de ancha | el cuerpo de la mayoría de los instrumentos, y de las voces |
-| **High** | por encima de 4 kHz | una shelf | el aire y el brillo: platillos, una voz con aire, un arco sobre una cuerda |
+| **Graves** | por debajo de 200 Hz | una shelf | el peso de un bajo, un bombo, la mano izquierda de un piano |
+| **Medios** | alrededor de 1 kHz | una campana, de una octava y media de ancha | el cuerpo de la mayoría de los instrumentos, y de las voces |
+| **Agudos** | por encima de 4 kHz | una shelf | el aire y el brillo: platillos, una voz con aire, un arco sobre una cuerda |
 
 Una **shelf** sube o baja todo lo que pasa de su frecuencia en la misma
 cantidad, como un escalón. Una **campana** sube o baja su frecuencia al
@@ -72,13 +72,13 @@ Algunas partes salen desiguales: una línea de bajo donde unas notas
 saltan y otras se pierden. Un **compresor** baja un sonido cuando se
 hace fuerte:
 
-- Por debajo de su **threshold** no hace nada.
-- Por encima, baja el sonido en la cantidad que fija su **ratio**. La
+- Por debajo de su **umbral** no hace nada.
+- Por encima, baja el sonido en la cantidad que fija su **relación**. La
   4:1, un sonido 8 dB por encima del threshold sale solo 2 dB por
   encima: 4 decibelios de entrada por cada decibelio de salida. A 1:1 no
   baja nada, así que el compresor está apagado. A 20:1 casi nada pasa
   del threshold.
-- Su **gain** (el "make-up gain") sube toda la parte después, ya que las
+- Su **ganancia** (el "make-up gain") sube toda la parte después, ya que las
   notas fuertes han bajado. La parte ahora suena tan fuerte como antes,
   pero más constante.
 
@@ -91,7 +91,7 @@ cada onda, doblaría la forma de la onda y añadiría un zumbido.
 ## El delay: ecos a tiempo con la canción
 
 Un **delay** reproduce el sonido otra vez un poco después, y otra vez,
-cada eco más suave que el anterior. Su **time** es un valor de nota de
+cada eco más suave que el anterior. Su **tiempo** es un valor de nota de
 la canción: una semicorchea, una corchea, una corchea con puntillo, una
 negra, una negra con puntillo o una blanca. Los ecos caen sobre el ritmo
 de la canción, y siguen el tempo cuando cambia. La **corchea con
@@ -99,10 +99,10 @@ puntillo** es la favorita: sus ecos caen entre los pulsos, tres
 semicorcheas después de cada nota. Una guitarra o una voz que toca
 corcheas suena como si tocara semicorcheas.
 
-- **Feedback** dice cuánto de cada eco vuelve como el siguiente. Al 50%,
+- **Realimentación** dice cuánto de cada eco vuelve como el siguiente. Al 50%,
   cada eco suena la mitad que el anterior. Al 0% hay un solo eco. Se
   detiene en el 90%, para que los ecos siempre se apaguen.
-- **Mix** dice lo fuertes que suenan los ecos junto al propio sonido. 0%
+- **Mezcla** dice lo fuertes que suenan los ecos junto al propio sonido. 0%
   apaga el delay, 100% hace el primer eco tan fuerte como la nota.
 
 Un eco llega como mucho 2 segundos después del sonido. Una blanca a 40
@@ -282,8 +282,8 @@ cada canal, para que los ecos se muevan con él.
 
 - **Pruebas de DSP** en `lineup-audio/src/effects.rs` reproducen ondas
   seno a través de los efectos y miden lo que sale:
-  - El EQ sube 50 Hz en 6 dB con Low a +6, baja 1 kHz en 6 dB con Mid a
-    −6 y sube 15 kHz en 9 dB con High a +9, y cada uno deja el extremo
+  - El EQ sube 50 Hz en 6 dB con Graves a +6, baja 1 kHz en 6 dB con Medios a
+    −6 y sube 15 kHz en 9 dB con Agudos a +9, y cada uno deja el extremo
     lejano del rango como estaba.
   - Un compresor a −20 dB y 4:1 baja una onda a escala completa, 20 dB
     por encima, en 15 dB, y deja pasar una suave.
@@ -299,9 +299,9 @@ cada canal, para que los ecos se muevan con él.
 - **Una prueba de render** reproduce un clic con un delay y encuentra su
   eco una corchea después, a la mitad de su nivel, en el centro como el
   canal.
-- **Pruebas de la app** hacen clic en el botón Effects del mixer,
-  comprueban que el menú tiene los tres efectos, eligen "dotted 1/4" y
-  "No effects", y exportan una canción con todas las bandas bajadas para
+- **Pruebas de la app** hacen clic en el botón Efectos del mezclador,
+  comprueban que el menú tiene los tres efectos, eligen "1/4 con puntillo" y
+  "Sin efectos", y exportan una canción con todas las bandas bajadas para
   comprobar que sale más suave.
 - **Una prueba de archivo**: una canción con efectos se guarda en el
   formato 28 y vuelve igual, un efecto apagado se queda fuera del texto,
@@ -310,11 +310,11 @@ cada canal, para que los ecos se muevan con él.
 
 ## Ejercicios
 
-1. Pon un delay de corchea con puntillo con 30% de mix en el Lead de una
+1. Pon un delay de corchea con puntillo con 30% de mix en la Melodía de una
    demo, y reprodúcela a 60 BPM y a 140 BPM. ¿A cuántos milisegundos de
    distancia están los ecos en cada caso? Compruébalo con
    `Delay::seconds`.
-2. Pon un compresor a −30 dB y 10:1 en la batería. Luego sube su Gain
+2. Pon un compresor a −30 dB y 10:1 en la batería. Luego sube su Ganancia
    hasta que la batería suene tan fuerte como antes. ¿Qué le ha pasado a
    la diferencia entre los golpes fuertes y los suaves? ¿Por qué una
    batería con un compresor fuerte suena "aplastada"?

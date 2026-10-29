@@ -24,12 +24,12 @@ Las palabras no están en las demos: las voces cantan sin ellas.
 
 ## Probarlo
 
-1. Abre **File > Demos**, escribe `Misa` en la caja de búsqueda y elige
-   **Misa Criolla: Kyrie**. Pulsa Play.
-2. Abre el **mixer**. Lead, Soloist 2, Choir y Low tom tienen una tira
-   cada uno. Lead es el primer solista donde cantan los solistas, y la
-   voz superior del coro donde no lo hacen; Choir tiene las otras voces.
-   Silencia Choir y escucha a los dos solistas solos: casi siempre a una
+1. Abre **Archivo > Demostraciones**, escribe `Misa` en la caja de búsqueda y elige
+   **Misa Criolla: Kyrie**. Pulsa ▶.
+2. Abre el **mezclador**. Melodía, Solista 2, Coro y Tom grave tienen una tira
+   cada uno. Melodía es el primer solista donde cantan los solistas, y la
+   voz superior del coro donde no lo hacen; Coro tiene las otras voces.
+   Silencia Coro y escucha a los dos solistas solos: casi siempre a una
    tercera de distancia, el segundo debajo del primero.
 3. Abre **Misa Criolla: Gloria** y mira el compás en la regla: 3/4 para
    la introducción, 2/4 para la danza, 3/4 otra vez para el yaraví lento
@@ -37,7 +37,7 @@ Las palabras no están en las demos: las voces cantan sin ellas.
 4. Abre **Misa Criolla: Credo** y mira la tonalidad en la barra de
    armonía: La menor, luego La mayor desde el compás 78 y Mi mayor desde el
    compás 122.
-5. En la **Library**, los estilos nuevos están iluminados para sus
+5. En la **Biblioteca**, los estilos nuevos están iluminados para sus
    demos: **Carnavalito (2/4)**, **Yaraví**, **Chacarera trunca**,
    **Carnaval cochabambino** y **Estilo**. Prueba uno en una canción
    tuya.
@@ -52,7 +52,7 @@ primer y el tercer pulso de cada compás de 3/4 y nada más.
 
 El coro canta solo primero, suavemente, seis compases que son una
 pequeña lección de armonía. Sigue el bajo en el piano roll del canal
-Choir: La, Si, Do, Do sostenido, Re, Re sostenido, Mi. Sube de la tónica a la
+Coro: La, Si, Do, Do sostenido, Re, Re sostenido, Mi. Sube de la tónica a la
 dominante, por semitonos desde Do. Encima:
 
 | Compás | Bajo | Acorde | Qué hace |
@@ -83,7 +83,7 @@ a Do mayor, la **relativa mayor** (la tonalidad mayor con las mismas
 notas que La menor), a través de F, G y C: IV, V y I de Do, o bVI, bVII y
 bIII contados desde La.
 
-La Library ya tenía un carnavalito, escrito como pares de compases de
+La Biblioteca ya tenía un carnavalito, escrito como pares de compases de
 2/4 en un compás de 4/4. **Carnavalito (2/4)** conserva los compases
 como los escribe el Gloria, para que una canción en 2/4 pueda usarlo.
 
@@ -148,7 +148,7 @@ son muy suaves, y el coro cierra de Re menor a La menor: iv a i, un
 ### Líneas: los demás instrumentos, escritos
 
 Hasta ahora una parte de demo tenía una melodía, un cuadro de acordes, a
-veces una mano izquierda para las Keys, y rounds para las voces extra.
+veces una mano izquierda para los Teclados, y rounds para las voces extra.
 La Misa Criolla tiene solistas, un coro de cuatro voces, guitarras, un
 clavecín y un bajo a la vez. Así que un [`Part`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
 recibe una lista de **líneas**: la parte de cada instrumento escrita,
@@ -199,7 +199,7 @@ líneas está **escrita**: el comping y los vientos del estilo se callan
 en ella, porque la partitura ya dice lo que toca cada uno.
 
 Una canción cuyas partes están todas escritas, sin mano izquierda, nunca
-toca acordes en las Keys, así que no recibe ningún canal Keys:
+toca acordes en los Teclados, así que no recibe ningún canal Teclados:
 
 ```rust
 let keys_play = song.parts.iter().any(|part| {
@@ -210,7 +210,7 @@ let keys = keys_play
     .flatten();
 ```
 
-`any` pregunta si alguna parte necesita las Keys. `bool::then` convierte
+`any` pregunta si alguna parte necesita los Teclados. `bool::then` convierte
 `true` en el `Some(...)` de lo que devuelve la closure y `false` en
 `None`; `synth_named` devuelve a su vez un `Option`, así que `flatten`
 convierte el `Option<Option<usize>>` en un `Option<usize>`.
@@ -273,9 +273,9 @@ vez.
 
 ## Ejercicios
 
-1. En el Kyrie, silencia todos los canales menos Choir y toca los
+1. En el Kyrie, silencia todos los canales menos Coro y toca los
    compases 3 a 9. Canta o toca el bajo solo, de La a Mi. Luego toca los
-   acordes de la tabla de arriba en el chord sheet, uno por compás, y
+   acordes de la tabla de arriba en la hoja de acordes, uno por compás, y
    escucha cómo la sexta alemana se abre hacia el Mi.
 2. Aplica **Estilo** a una canción tuya en una tonalidad menor, en 3/4.
    Luego escribe un compás de tres acordes a un pulso cada uno, iv, i y

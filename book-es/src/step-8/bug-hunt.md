@@ -19,7 +19,7 @@ porque Ferrous Lineup está pensada para aprender música. Vinieron con
 él dos ejemplos: el piano roll «se volvió loco» con un conjunto de
 clases de alturas como tonalidad y con el zoom, y el zoom de la
 ventana principal hacía *todo* más grande, en vez de hacer zoom sobre
-el playlist en horizontal o en vertical, como suelen hacer los
+la lista de reproducción en horizontal o en vertical, como suelen hacer los
 programas de música.
 
 Este capítulo es un recorrido por lo que se encontró y por cómo se
@@ -32,14 +32,14 @@ Un bug solo queda arreglado cuando el flujo que lo mostró se ha vuelto
 a reproducir y ahora funciona. Así que la app corrió en una pantalla
 virtual (`Xvfb`), manejada por `xdotool` (que mueve el ratón, hace
 clic y escribe) y fotografiada con el `import` de ImageMagick. Cada
-flujo reportado se reprodujo clic a clic: abrir el patrón Chords,
+flujo reportado se reprodujo clic a clic: abrir el patrón Acordes,
 elegir *conjunto de clases de alturas* como tonalidad, elegir un
 conjunto, hacer zoom con Ctrl+rueda y Alt+rueda, arrastrar notas,
 cambiar el conjunto, volver a hacer zoom.
 
 ## Zoom en dos direcciones
 
-En la mayoría de los programas de música, el playlist y el piano roll
+En la mayoría de los programas de música, la lista de reproducción y el piano roll
 hacen zoom en cada dirección por su cuenta: **Ctrl y la rueda** hace
 los compases y los pasos más anchos (menos tiempo en pantalla, con más
 detalle), **Alt y la rueda** hace las pistas y las teclas más altas.
@@ -48,14 +48,14 @@ mismo:
 
 | Haz esto | Para |
 |----------|------|
-| Ctrl+rueda sobre el playlist, el piano roll o el rack | más ancho o más estrecho, alrededor del paso que está bajo el puntero |
+| Ctrl+rueda sobre la lista de reproducción, el piano roll o el rack | más ancho o más estrecho, alrededor del paso que está bajo el puntero |
 | Alt+rueda (o Ctrl+Alt+rueda) | más alto o más bajo |
 | Ctrl y + o −, Alt y + o − | lo mismo, en la ventana en la que se hizo clic por última vez |
 | Ctrl+0 | ambos de vuelta al 100 % |
-| ↔ y ↕ abajo a la derecha | los dos zooms del playlist |
-| View > Interface size | lo grandes que son el texto, los botones y los menús en todas partes |
+| ↔ y ↕ abajo a la derecha | los dos zooms de la lista de reproducción |
+| Ver > Tamaño de la interfaz | lo grandes que son el texto, los botones y los menús en todas partes |
 
-El channel rack mantiene un único zoom, ya que sus pasos son botones
+El rack de canales mantiene un único zoom, ya que sus pasos son botones
 cuadrados.
 
 ![El piano roll con zoom más ancho (compases el doble de largos) y más alto, y luego desplazado hacia un lado. El teclado se queda a la izquierda, y el carril de acordes y el carril de velocidad siguen alineados con la cuadrícula.](../images/step-8-two-way-zoom.png)
@@ -302,7 +302,7 @@ egui crecen para acomodar su contenido, y **un solo frame de contenido
 demasiado ancho basta para ensanchar la ventana para siempre**. La
 barra de herramientas es una fila que se envuelve
 (`horizontal_wrapped`), que debería mover lo que no cabe a una segunda
-fila. Pero solo envuelve *widgets sueltos*: un grupo como «Length» y
+fila. Pero solo envuelve *widgets sueltos*: un grupo como «Duración» y
 su lista, unidos con `ui.horizontal`, se coloca en lo que queda de la
 fila y solo se mide después. Si es demasiado ancho, se pasa del borde.
 La escala de Fa♯ mayor, «Fa♯ Sol♯ La♯ Si Do♯ Re♯ Mi♯», es más larga que
@@ -324,7 +324,7 @@ haya dibujado nunca, porque en una ventana incluso ese primer frame
 cuenta. El checkbox del final de la fila es un widget suelto, así que
 simplemente usa `ui.add_enabled` en lugar de un grupo.
 
-El channel rack tenía el mismo problema al revés: elegir un patrón con
+El rack de canales tenía el mismo problema al revés: elegir un patrón con
 menos canales dejaba la ventana tan alta como antes, con un espacio
 vacío. A su ventana se le da su tamaño natural durante un frame
 (`fixed_size`) cada vez que cambian sus filas, y luego se la deja
@@ -466,7 +466,7 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   menor y escriben III y VI; ambos dicen lo mismo.)
 - **Funciones solo donde existen.** Tónica, subdominante y dominante
   son ideas de las tonalidades mayor y menor. Un modo (dórico, lidio...)
-  ya no etiqueta sus acordes con ellas, y sus harmony keys se dibujan
+  ya no etiqueta sus acordes con ellas, y sus teclas de armonía se dibujan
   en un color neutro.
 - **Las sugerencias del acorde siguiente** siguen los acordes que de
   verdad tienen los menores armónico y melódico, y nunca sugieren un
@@ -485,13 +485,13 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   `ChordQuality::is_dominant`, en lugar de dos listas que podían
   separarse.
 - **Las tonalidades de conjunto se nombran por su acorde.** Con un
-  conjunto de clases de alturas como tonalidad, las harmony keys apilan
+  conjunto de clases de alturas como tonalidad, las teclas de armonía apilan
   las notas del conjunto en acordes y los nombran: el conjunto 3-11 en
   Do da Cm, Cm/Eb y Cm/G, no tres copias de «3-11». Ninguna tonalidad
   ofrece un acorde con más notas de las que tiene el conjunto.
 - La nota extra de la **escala de blues** se escribe como quinta bemol:
   Sol♭ en el blues de Do, Fa♭ en el blues de Si♭.
-- El preset de fila **Four triads** conserva sus notas originales
+- El preajuste de fila **Cuatro tríadas** conserva sus notas originales
   (Do Mi Sol Re Fa♯ La Si♭ Do♯ Fa Si Mi♭ La♭): Do mayor, Re mayor, Si♭ menor y Sol♯
   menor, con cada nota una vez. Las series construidas a partir de
   tríadas, como la del Concierto para violín de Berg, pueden sonar
@@ -548,10 +548,10 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   una voz silenciosa, si no la más vieja que se desvanece, si no la más
   vieja de todas.
 - **Canales MIDI**: los canales que se reparten para la exportación
-  MIDI y para *Send every channel* se saltan los que ya usan los
-  canales de MIDI Out, de modo que un Lineup Osc ya no comparte el
-  canal 1 con un MIDI Out en el canal 1.
-- **Write out the repeats** se rechaza, con una explicación, cuando un
+  MIDI y para *Enviar todos los canales* se saltan los que ya usan los
+  canales de salida MIDI, de modo que un Lineup Osc ya no comparte el
+  canal 1 con una salida MIDI en el canal 1.
+- **Escribir las repeticiones** se rechaza, con una explicación, cuando un
   clip queda en parte dentro de la sección: un clip siempre empieza al
   principio de su patrón, de modo que las copias de la sección no
   podrían sonar como las repeticiones.
@@ -572,14 +572,14 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   lo dice. En una canción vacía sigue poniendo la tonalidad y el
   compás, como antes.
 - **Cambiar de tonalidad** movía todas las notas excepto los «Do4 de un
-  paso», que es como el channel rack escribe los pasos de un
+  paso», que es como el rack de canales escribe los pasos de un
   sintetizador. Pero un Do4 corto en medio de una melodía no es un
   paso: ahora solo se queda quieto un canal cuyas notas son *todas*
   pasos así.
 - **Los compases de la región de loop** en el indicador de posición de
-  la canción se contaban desde el inicio del loop; ahora muestran los
+  la canción se contaban desde el inicio del bucle; ahora muestran los
   números de compás de la regla.
-- **Un compás atrás** (Page Up) mientras suena solo iba al inicio del
+- **Un compás atrás** (RePág) mientras suena solo iba al inicio del
   compás en el que estaba: el cabezal de reproducción nunca está
   exactamente en una línea de compás, así que pulsar otra vez volvía
   al mismo compás. Dentro del primer pulso de un compás ahora cuenta
@@ -587,10 +587,10 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   retroceden dos compases, como en una grabadora.
 - **Quitar el canal que muestra el piano roll** lo dejaba apuntando a
   un canal que ya no existía, y no volvía a abrirse.
-- **File > New** conservaba el último acorde tocado en las sugerencias.
+- **Archivo > Nuevo** conservaba el último acorde tocado en las sugerencias.
 - **Ventanas pequeñas**: a 900 × 640 el piano roll esconde sus líneas
   de ayuda (se mueven al tooltip de la línea que queda), el teclado de
-  las harmony keys se encoge para caber junto a los acordes, y la
+  las teclas de armonía se encoge para caber junto a los acordes, y la
   lista de patrones de la barra de herramientas tiene un ancho fijo,
   con los nombres largos acortados.
 
@@ -617,11 +617,11 @@ La parte de teoría pasó por todas las sugerencias y etiquetas:
   conjunto como tonalidad, zoom en ambos sentidos, arrastrar y
   redimensionar notas, cambiar el conjunto, volver a hacer zoom),
   toques rápidos, la primera nota después de abrir, clics que cierran
-  menús sobre el playlist y el piano roll, el botón «Todavía no hay
+  menús sobre la lista de reproducción y el piano roll, el botón «Todavía no hay
   notas aquí», el rack reajustando sus filas, Fa♯ mayor y E#dim, las
-  harmony keys de menor armónica y dórico, tonalidades de conjunto
+  teclas de armonía de menor armónica y dórico, tonalidades de conjunto
   nombradas por sus acordes, la prueba de la biblioteca conservando la
   canción en Do mayor 4/4, borrar un patrón conservando los colores, el
-  piano roll después de quitar un canal, File > New, los números de
-  compás del loop, Page Up mientras suena, el piano roll conservando
+  piano roll después de quitar un canal, Archivo > Nuevo, los números de
+  compás del bucle, Page Up mientras suena, el piano roll conservando
   su ancho en Fa♯ mayor, y la distribución a 900 × 640.

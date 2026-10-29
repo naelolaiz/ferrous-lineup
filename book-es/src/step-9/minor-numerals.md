@@ -12,7 +12,7 @@ Si estudias con un libro clásico, todo número romano de tonalidad menor
 que la app te mostraba en el tercer, sexto o séptimo grado parecía
 equivocado, aunque no lo estuviera.
 
-**Edit > Settings… > Harmony > Roman numerals in minor keys** te deja
+**Edición > Ajustes… > Armonía > Números romanos en tonalidades menores** te deja
 elegir ahora. Los acordes no cambian, solo cómo se escriben.
 
 ![Settings > Harmony: dos maneras de contar los grados de una tonalidad menor, con La menor como ejemplo.](../images/step-9-minor-numerals-setting.png)
@@ -108,18 +108,17 @@ conserva su bII.
 ## Qué cambia el ajuste, y qué no
 
 El ajuste cambia cómo se **escriben** y **leen** los números romanos: en
-las harmony keys, debajo de los acordes del chord sheet, en el piano
+las teclas de armonía, debajo de los acordes de la hoja de acordes, en el piano
 roll, en las ayudas, en el entrenamiento auditivo, en los tooltips de
 estilo y en un vídeo exportado. Los números romanos que escribes o pegas
-en el chord sheet se leen de la misma manera, así que con «desde la
+en la hoja de acordes se leen de la misma manera, así que con «desde la
 escala menor» elegido, escribir `VII` en La menor da Sol mayor.
 
 No cambia ningún acorde. Lo que una canción guarda es el acorde en sí (Sol
 mayor), nunca su número romano, así que una canción se lee igual elijas
 lo que elijas, y alternar entre una opción y otra no cambia nada en
 ella. Las progresiones de la biblioteca se leen siempre contadas desde
-la escala mayor, porque así es como están escritas: el cuadro
-Progression de un estilo muestra `i | bVII | bVI | V`, por ejemplo, y
+la escala mayor, porque así es como están escritas: el cuadro Progresión de un estilo muestra `i | bVII | bVI | V`, por ejemplo, y
 toca los mismos acordes para todo el mundo.
 
 ![El Choclo, en La menor armónica, contado desde la escala menor: G7 y C son VII7 y III en el chord sheet, y las harmony keys dicen III+, VI y vii°.](../images/step-9-minor-numerals-keys.png)
@@ -143,8 +142,8 @@ pub enum MinorNumerals {
 
 `#[default]` en una variante dice a `#[derive(Default)]` qué variante es
 `MinorNumerals::default()`. `Serialize` y `Deserialize` permiten que la
-ventana de Settings lo guarde con `insert_persisted` de egui, igual que
-se guardan las opciones de la Library.
+ventana de Ajustes lo guarde con `insert_persisted` de egui, igual que
+se guardan las opciones de la Biblioteca.
 
 ### Qué nota nombra un número romano sin alteración
 
@@ -216,8 +215,7 @@ Leer un número romano escrito (`numeral::parse_in`) usa el mismo
 
 ### Un ajuste que toda función puede ver, uno por hilo
 
-Los números romanos se escriben en muchos lugares: las harmony keys, el
-chord sheet, el piano roll, las ayudas, una exportación de vídeo. Todos
+Los números romanos se escriben en muchos lugares: las teclas de armonía, la hoja de acordes, el piano roll, las ayudas, una exportación de vídeo. Todos
 acaban en `Scale::roman_numeral`. Pasar el ajuste hacia abajo como
 parámetro habría cambiado la firma de cada función del camino, docenas
 de ellas, por una elección que cambia de vez en cuando. Así que el
@@ -317,16 +315,15 @@ acorde: las dos maneras de contar, cuatro clases de tonalidad, doce
 tónicas, un acorde sobre cada una de las doce notas y nueve cualidades.
 Son 10.368 números romanos, escritos y leídos.
 
-`minor_key_numerals_follow_the_harmony_setting` muestra las harmony keys
-de La menor (bIII, bVI, bVII), hace clic en **Harmony** y en la segunda
-opción de la ventana de Settings, y comprueba que las teclas dicen ahora
+`minor_key_numerals_follow_the_harmony_setting` muestra las teclas de armonía
+de La menor (bIII, bVI, bVII), hace clic en **Armonía** y en la segunda
+opción de la ventana de Ajustes, y comprueba que las teclas dicen ahora
 III, VI y VII, y que la elección se guardó.
 
 ## Ejercicios
 
 1. En La menor armónica, ¿qué escribe cada manera para Do aumentado
-   (Do Mi Sol♯)? ¿Y para Mi menor? Compruébalo en la app con las harmony
-   keys.
+   (Do Mi Sol♯)? ¿Y para Mi menor? Compruébalo en la app con las teclas de armonía.
 2. Dórico también es un modo menor, pero la app lo cuenta desde la
    escala mayor elijas lo que elijas (`is_minor_key` es false para él).
    Re dórico es Re Mi Fa Sol La Si Do. ¿Cuáles de sus números romanos cambiarían

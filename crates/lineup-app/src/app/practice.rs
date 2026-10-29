@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{Audio, LineupApp};
 use crate::chord_sheet::{PracticeAction, PracticeView, SPEEDS, Trainer};
+use crate::i18n::{tr, tr_string, trf};
 use crate::icons;
 
 /// The practice speed that plays the song at its own tempo, in percent.
@@ -309,7 +310,7 @@ impl LineupApp {
         let count_in = icons::toggle(ui, "Count-in", practice.count_in, icons::count_in);
         if crate::theme::hint(
             count_in,
-            "Count-in: one bar of clicks before playback starts",
+            tr("Count-in: one bar of clicks before playback starts"),
         )
         .clicked()
         {
@@ -318,7 +319,7 @@ impl LineupApp {
         let metronome = icons::toggle(ui, "Metronome", practice.metronome, icons::metronome);
         if crate::theme::hint(
             metronome,
-            "Metronome: a click on every beat during playback",
+            tr("Metronome: a click on every beat during playback"),
         )
         .clicked()
         {
@@ -343,22 +344,22 @@ impl LineupApp {
         if on {
             self.play_at_speed(trainer.from);
             let every = match trainer.every {
-                1 => "each time".to_string(),
-                passes => format!("every {passes} times"),
+                1 => tr("each time").to_string(),
+                passes => trf("every {} times", &[&passes]),
             };
-            let (way, until) = if trainer.to < trainer.from {
-                ("slower", "down to")
+            let template = if trainer.to < trainer.from {
+                "Speed trainer: {}%, then {}% slower {} the loop comes round, down to {}%"
             } else {
-                ("faster", "up to")
+                "Speed trainer: {}%, then {}% faster {} the loop comes round, up to {}%"
             };
-            self.notice = Some(format!(
-                "Speed trainer: {}%, then {}% {way} {every} the loop comes round, {until} {}%",
-                trainer.from, trainer.by, trainer.to
+            self.notice = Some(trf(
+                template,
+                &[&trainer.from, &trainer.by, &every, &trainer.to],
             ));
         } else {
-            self.notice = Some(format!(
+            self.notice = Some(trf(
                 "Speed trainer off: the band stays at {}%",
-                self.practice.speed
+                &[&self.practice.speed],
             ));
         }
     }
@@ -386,9 +387,9 @@ impl LineupApp {
         self.play_at_speed(speed);
         let target = self.practice.settings.trainer.to;
         self.notice = Some(if speed == target {
-            format!("Speed trainer: {speed}%, the speed you aimed for")
+            trf("Speed trainer: {}%, the speed you aimed for", &[&speed])
         } else {
-            format!("Speed trainer: {speed}%, on the way to {target}%")
+            trf("Speed trainer: {}%, on the way to {}%", &[&speed, &target])
         });
     }
 
@@ -437,14 +438,14 @@ impl LineupApp {
         let beats = time.beat_starts().len().max(1);
         let quarters = time.steps_per_bar() as f64 / beats as f64 / f64::from(STEPS_PER_BEAT);
         let Some((tempo, carries_on)) = self.practice.tap(now, quarters) else {
-            self.notice = Some("Tap again on every beat to set the tempo".to_string());
+            self.notice = Some(tr("Tap again on every beat to set the tempo").to_string());
             return;
         };
         if carries_on {
             self.history.reopen(TAP_STEP);
         }
         self.edit(TAP_STEP, |project| project.scale_tempo(tempo));
-        self.notice = Some(format!("Tempo {} BPM, tapped", tempo.bpm()));
+        self.notice = Some(trf("Tempo {} BPM, tapped", &[&tempo.bpm()]));
     }
 
     /// Leaves `player`'s part to you, or gives it back to the band. For
@@ -460,19 +461,24 @@ impl LineupApp {
             return;
         }
         let name = player.name().to_lowercase();
+        // Whole sentences, as a Spanish article goes with its noun.
         if !you {
-            self.notice = Some(format!("The band plays the {name} again"));
+            self.notice = Some(tr_string(format!("The band plays the {name} again")));
             return;
         }
         match self.project.player_channel(player) {
             Some(channel) => {
                 self.piano_roll.select(channel);
-                self.notice = Some(format!(
+                self.notice = Some(tr_string(format!(
                     "You play the {name}: the band leaves it out, and your keyboard plays \
                      its sound"
-                ));
+                )));
             }
-            None => self.notice = Some(format!("You play the {name}: the band leaves it out")),
+            None => {
+                self.notice = Some(tr_string(format!(
+                    "You play the {name}: the band leaves it out"
+                )));
+            }
         }
     }
 }

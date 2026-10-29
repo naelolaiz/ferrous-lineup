@@ -53,7 +53,7 @@ Todos los campos son `Copy`, así que `NoteEvent` también deriva `Copy`:
 las notas se pasan de un lado a otro como números, lo que mantiene el
 código libre de rompecabezas de préstamos.
 
-La **velocity** es la fuerza con la que se pulsa una tecla, de 1 a 127,
+La **velocidad** es la fuerza con la que se pulsa una tecla, de 1 a 127,
 como en MIDI. El motor de audio la convierte en volumen. El piano roll
 todavía no la edita (un ejercicio al final de este paso lo hace).
 
@@ -205,8 +205,7 @@ pub fn is_step_row(&self, channel: usize) -> bool {
 `all` es verdadero si el closure es verdadero para cada elemento (y
 también para una lista vacía). En lugar de un closure, se le pasa el
 propio método, `NoteEvent::is_step`, una función que recibe
-`&NoteEvent`, que es exactamente lo que produce `iter()`. El channel
-rack dibuja una fila como botones de paso cuando esto es verdadero, y
+`&NoteEvent`, que es exactamente lo que produce `iter()`. El rack de canales dibuja una fila como botones de paso cuando esto es verdadero, y
 como una imagen pequeña de piano roll cuando no.
 
 ## El proyecto: una tonalidad y una progresión de acordes

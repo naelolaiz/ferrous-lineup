@@ -16,22 +16,22 @@ cada parte de una canción puede tener un estilo propio.
 
 ## Probarlo
 
-1. Abre el chord sheet con **F5**, con una banda tocando (cualquier
-   demo, o un estilo de la Library).
-2. Haz clic derecho en el nombre de una sección en el sheet, por ejemplo
-   **Chorus**. Se seleccionan los compases de la sección, y el menú
-   tiene **Variación a**, **Variación b** y **Style: …**, que nombra el
+1. Abre la hoja de acordes con **F5**, con una banda tocando (cualquier
+   demo, o un estilo de la Biblioteca).
+2. Haz clic derecho en el nombre de una sección en la hoja, por ejemplo
+   **Estribillo**. Se seleccionan los compases de la sección, y el menú
+   tiene **Variación a**, **Variación b** y **Estilo: …**, que nombra el
    estilo que suena ahí ahora.
-3. Abre **Style**, luego un género, y elige un estilo, por ejemplo
-   **Latin** › **Bossa nova**. Los compases de esa sección se tocan
-   ahora como bossa nova. El sheet escribe «Bossa nova» después del
+3. Abre **Estilo**, luego un género, y elige un estilo, por ejemplo
+   **Latina** › **Bossa nova**. Los compases de esa sección se tocan
+   ahora como bossa nova. La hoja escribe «Bossa nova» después del
    número del primer compás, y el aviso dice qué compases cambiaron.
-4. El mismo menú **Style** está en el menú de clic derecho de cada
+4. El mismo menú **Estilo** está en el menú de clic derecho de cada
    compás. Sin una selección cambia el estilo desde ese compás en
    adelante; con compases seleccionados (haz clic en el primero,
-   Shift+clic en el último) cambia solo esos compases, y los que vienen
+   Mayús+clic en el último) cambia solo esos compases, y los que vienen
    después conservan lo que tocaban.
-5. **The song's style**, arriba del menú, vuelve al estilo propio de la
+5. **El estilo de la canción**, arriba del menú, vuelve al estilo propio de la
    banda.
 
 ![El menú del compás 3: Variación a, Variación b y "Style: Pop beat" abiertos, con "The song's style: Pop beat" arriba del todo, luego una entrada por género (Pop, Rock, Blues, Jazz, Soul, funk y R&Si, … Classical and film). Classical and film está abierto: Epic toms, March, Chorale, Alberti bass, Arpeggios.](../images/step-9-section-styles-menu.png)
@@ -58,7 +58,7 @@ El estilo de una sección cambia **cómo** toca la banda:
 No cambia **quién** toca ni los sonidos con los que toca. La banda
 conserva sus instrumentos, así que el mismo piano y el mismo bajo pasan
 de la estrofa bossa nova al puente swing, como haría una banda real.
-Para cambiar los instrumentos, usa el **Instrument lineup** de la banda.
+Para cambiar los instrumentos, usa el **Formación de instrumentos** de la banda.
 
 La batería le avisa al oyente de que se acerca un cambio, como hace con
 una variación: el compás anterior al cambio toca el relleno del estilo
@@ -82,7 +82,7 @@ Un marcador con `style: None` vuelve al estilo propio de la banda. Los
 marcadores viven en el `Band`, junto a los marcadores de variación, y
 siguen las mismas reglas: `tidy` conserva solo los marcadores que
 cambian algo, y todo lo que mueve la canción (una intro añadida, un
-corte, una sección copiada, un compás nuevo, «End the song here») los
+corte, una sección copiada, un compás nuevo, «Terminar la canción aquí») los
 mueve a ellos también.
 
 `&'static BandStyle` es una referencia que vive durante todo el
@@ -165,7 +165,7 @@ sección, y dos tramos con las mismas notas pero distinto swing nunca
 comparten patrón, así que cada patrón hace swing de una sola manera.
 
 La [traza de la reproducción](playback-trace.md) lo muestra: en una
-canción Pop beat *straight* cuya segunda mitad es Swing, el ride y las
+canción Ritmo pop *straight* cuya segunda mitad es Swing, el ride y las
 notas a contratiempo del piano en el compás 5 empiezan a 2,667
 dieciseisavos dentro del pulso, el último tercio de un tresillo,
 mientras que en los compases 1 a 4 están en la cuadrícula.
@@ -175,13 +175,13 @@ formato de archivo de proyecto](../appendix-project-format.md)).
 
 ## Ejercicios
 
-1. Escribe | C | Am | F | G | dos veces en **Pop beat**, y pon los
+1. Escribe | C | Am | F | G | dos veces en **Ritmo pop**, y pon los
    compases 5 a 8 en **Bossa nova**. Abre los patrones del bajo en el
    piano roll. ¿Dónde empieza la línea de bajo de la bossa nova, y en
    qué se diferencia de la del pop?
 2. Pon solo el compás 3 de la misma canción en **Swing**. ¿Qué compases
    tienen relleno, y dónde caen los crash?
-3. Toca una sección en **Chorale**, que no tiene batería. ¿Qué toca ahí
+3. Toca una sección en **Coral**, que no tiene batería. ¿Qué toca ahí
    la batería, y qué toca en el compás anterior?
 4. (Rust) `where_it_plays` devuelve `impl Iterator`. ¿Qué cambiaría si
    devolviera un `Vec`? ¿Por qué `notes.extend(...)` acepta ambos?

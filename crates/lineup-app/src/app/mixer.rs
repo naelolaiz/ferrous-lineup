@@ -11,6 +11,7 @@ use lineup_core::{
 };
 
 use super::{Audio, LineupApp};
+use crate::i18n::{tr, trf};
 use crate::meters::{self, Meters};
 use crate::widgets::{self, Opening};
 use crate::{channel_rack, theme};
@@ -73,10 +74,10 @@ impl LineupApp {
                 percent_slider(ui, &mut mix.master);
                 if ui
                     .button(crate::i18n::tr("Reset mix"))
-                    .on_hover_text(
+                    .on_hover_text(tr(
                         "Reset master, reverb, solo, levels, pans, reverb sends, effects and \
                          mutes (the band's mutes stay); Undo restores them",
-                    )
+                    ))
                     .clicked()
                 {
                     let mut reset = self.project.clone();
@@ -87,21 +88,21 @@ impl LineupApp {
             });
             ui.separator();
             ui.horizontal(|ui| {
-                ui.checkbox(&mut mix.reverb.enabled, "Reverb");
-                ui.weak("Stereo room · SoundFont + Lineup Osc + samples");
+                ui.checkbox(&mut mix.reverb.enabled, tr("Reverb"));
+                ui.weak(tr("Stereo room · SoundFont + Lineup Osc + samples"));
             });
             ui.add_enabled_ui(mix.reverb.enabled, |ui| {
                 egui::Grid::new("reverb-controls")
                     .num_columns(4)
                     .show(ui, |ui| {
-                        ui.label("Wet / dry");
+                        ui.label(tr("Wet / dry"));
                         percent_slider(ui, &mut mix.reverb.mix);
-                        ui.label("Decay");
+                        ui.label(tr("Decay"));
                         ui.add(egui::Slider::new(&mut mix.reverb.decay, 0.1..=10.0).suffix(" s"));
                         ui.end_row();
-                        ui.label("Damping");
+                        ui.label(tr("Damping"));
                         percent_slider(ui, &mut mix.reverb.damping);
-                        ui.label("Pre-delay");
+                        ui.label(tr("Pre-delay"));
                         ui.add(
                             egui::Slider::new(&mut mix.reverb.pre_delay_ms, 0.0..=200.0)
                                 .suffix(" ms"),
@@ -115,28 +116,28 @@ impl LineupApp {
                     .striped(true)
                     .min_col_width(45.0)
                     .show(ui, |ui| {
-                        ui.strong("Channel");
-                        ui.strong("Instrument");
-                        ui.strong("Level");
-                        ui.strong("Volume");
-                        ui.strong("Pan");
-                        ui.strong("Reverb");
-                        ui.strong("Effects");
-                        ui.strong("Mute");
-                        ui.strong("Solo");
+                        ui.strong(tr("Channel"));
+                        ui.strong(tr("Instrument"));
+                        ui.strong(tr("Level"));
+                        ui.strong(tr("Volume"));
+                        ui.strong(tr("Pan"));
+                        ui.strong(tr("Reverb"));
+                        ui.strong(tr("Effects"));
+                        ui.strong(tr("Mute"));
+                        ui.strong(tr("Solo"));
                         ui.end_row();
                         for (section, indices) in score_order(&levels) {
-                            ui.label(egui::RichText::new(section.name()).color(theme::ACCENT));
+                            ui.label(egui::RichText::new(tr(section.name())).color(theme::ACCENT));
                             ui.end_row();
                             for index in indices {
                                 let channel = &mut levels[index];
                                 ui.horizontal(|ui| {
                                     ui.add_space(INDENT);
-                                    ui.label(&channel.name);
+                                    ui.label(crate::i18n::tr_name(&channel.name));
                                     if locked.contains(index) {
-                                        ui.label("🔒").on_hover_text(
+                                        ui.label("🔒").on_hover_text(tr(
                                             "Locked: styles keep its notes and sound",
-                                        );
+                                        ));
                                     }
                                 });
                                 // A synth's instrument is picked here as in
@@ -155,21 +156,21 @@ impl LineupApp {
                                         );
                                     })
                                     .response
-                                    .on_hover_text("Choose the instrument it plays");
+                                    .on_hover_text(tr("Choose the instrument it plays"));
                                 } else if channel.can_go_over_midi() {
                                     ui.menu_button(instrument(channel), |ui| {
                                         channel_rack::midi_part(ui, index, channel, &mut picked);
                                     })
                                     .response
-                                    .on_hover_text(
+                                    .on_hover_text(tr(
                                         "Send it over MIDI, to a synth or a drum machine, as \
                                          its drum of a General MIDI drum set",
-                                    );
+                                    ));
                                 } else {
                                     ui.label(instrument(channel));
                                 }
                                 meters::meter(ui, meters.channel(index), METER)
-                                    .on_hover_text(METER_HELP);
+                                    .on_hover_text(tr(METER_HELP));
                                 percent_slider(ui, &mut channel.volume);
                                 pan_slider(ui, &mut channel.pan);
                                 ui.scope(|ui| {
@@ -177,22 +178,22 @@ impl LineupApp {
                                     percent_slider(ui, &mut channel.reverb_send);
                                 })
                                 .response
-                                .on_hover_text(
+                                .on_hover_text(tr(
                                     if mix.reverb.enabled {
                                         "How much of it goes into the reverb: none plays it dry"
                                     } else {
                                         "How much of it goes into the reverb, once the Reverb \
                                      above is on"
                                     },
-                                );
+                                ));
                                 effects_menu(ui, &mut channel.effects);
                                 ui.checkbox(&mut channel.muted, "")
-                                    .on_hover_text("Mute this channel");
+                                    .on_hover_text(tr("Mute this channel"));
                                 if ui
-                                    .selectable_label(mix.solo == Some(index), "S")
-                                    .on_hover_text(
+                                    .selectable_label(mix.solo == Some(index), tr("S"))
+                                    .on_hover_text(tr(
                                         "Hear only this channel; click again to clear solo",
-                                    )
+                                    ))
                                     .clicked()
                                 {
                                     mix.solo = if mix.solo == Some(index) {
@@ -206,7 +207,7 @@ impl LineupApp {
                         }
                     });
                 if levels.is_empty() {
-                    ui.weak("Add an instrument in the channel rack to mix it here.");
+                    ui.weak(tr("Add an instrument in the channel rack to mix it here."));
                 }
             });
         });
@@ -254,21 +255,21 @@ fn instrument(channel: &Channel) -> String {
     match channel.kind {
         ChannelKind::Synth => channel
             .program
-            .map_or("Lineup Osc", general_midi::name)
+            .map_or("Lineup Osc", |program| tr(general_midi::name(program)))
             .to_string(),
         ChannelKind::MidiOut { channel: midi } => match channel.program {
-            Some(program) => format!("{} · MIDI {}", general_midi::name(program), midi + 1),
-            None => format!("MIDI Out {}", midi + 1),
+            Some(program) => format!("{} · MIDI {}", tr(general_midi::name(program)), midi + 1),
+            None => trf("MIDI Out {}", &[&(midi + 1)]),
         },
         ChannelKind::Sampler(SampleSource::Builtin(drum)) => match channel.sent_on {
             Some(midi) => {
                 let note = lineup_core::general_midi_drum(drum).midi();
-                let name = general_midi::drum_name(note).unwrap_or("Drum");
+                let name = tr(general_midi::drum_name(note).unwrap_or("Drum"));
                 format!("{name} · MIDI {}", midi + 1)
             }
-            None => "Built-in drum".to_string(),
+            None => tr("Built-in drum").to_string(),
         },
-        ChannelKind::Sampler(SampleSource::File(_)) => "Sample".to_string(),
+        ChannelKind::Sampler(SampleSource::File(_)) => tr("Sample").to_string(),
     }
 }
 
@@ -278,8 +279,8 @@ fn master_meter(ui: &mut egui::Ui, meters: &Meters) {
     ui.vertical(|ui| {
         ui.spacing_mut().item_spacing.y = 2.0;
         let size = egui::vec2(METER.x, 4.0);
-        meters::meter(ui, left, size).on_hover_text(METER_HELP);
-        meters::meter(ui, right, size).on_hover_text(METER_HELP);
+        meters::meter(ui, left, size).on_hover_text(tr(METER_HELP));
+        meters::meter(ui, right, size).on_hover_text(tr(METER_HELP));
     });
 }
 
@@ -300,7 +301,9 @@ fn pan_slider(ui: &mut egui::Ui, pan: &mut f32) {
             )
         })
         .inner
-        .on_hover_text("Where it sits between the speakers. Double-click for the middle.");
+        .on_hover_text(tr(
+            "Where it sits between the speakers. Double-click for the middle.",
+        ));
     // A slider senses drags, not clicks, so the double-click is read from
     // the pointer.
     let double_click = ui.input(|input| {
@@ -316,23 +319,24 @@ fn pan_slider(ui: &mut egui::Ui, pan: &mut f32) {
 fn pan_text(pan: f32) -> String {
     let percent = (pan * 100.0).round();
     if percent < 0.0 {
-        format!("L{:.0}", -percent)
+        // "I30" and "D30" in Spanish: izquierda, derecha.
+        trf("L{}", &[&-percent])
     } else if percent > 0.0 {
-        format!("R{percent:.0}")
+        trf("R{}", &[&percent])
     } else {
         "C".to_string()
     }
 }
 
 /// What a typed pan means: "L30", "R100", "C", or a number from -100
-/// (left) to 100 (right).
+/// (left) to 100 (right). The Spanish "I30" and "D100" work too.
 fn pan_value(text: &str) -> Option<f64> {
     let text = text.trim().to_uppercase();
     let percent = if text == "C" {
         0.0
-    } else if let Some(left) = text.strip_prefix('L') {
+    } else if let Some(left) = text.strip_prefix(['L', 'I']) {
         -left.trim().parse::<f64>().ok()?
-    } else if let Some(right) = text.strip_prefix('R') {
+    } else if let Some(right) = text.strip_prefix(['R', 'D']) {
         right.trim().parse::<f64>().ok()?
     } else {
         text.parse::<f64>().ok()?
@@ -345,7 +349,7 @@ fn pan_value(text: &str) -> Option<f64> {
 fn effects_menu(ui: &mut egui::Ui, effects: &mut Effects) {
     let summary = effects.summary();
     let label = if summary.is_empty() {
-        egui::RichText::new("none").weak()
+        egui::RichText::new(tr("none")).weak()
     } else {
         egui::RichText::new(summary)
     };
@@ -358,10 +362,10 @@ fn effects_menu(ui: &mut egui::Ui, effects: &mut Effects) {
         ui.set_min_width(340.0);
         effects_settings(ui, effects);
     });
-    response.on_hover_text(
+    response.on_hover_text(tr(
         "Its own equalizer, compressor and delay, which shape its sound before it joins \
          the others",
-    );
+    ));
 }
 
 const EQ_HELP: &str = "Turns bands of frequencies up or down. The lows are the weight of a bass \
@@ -379,10 +383,10 @@ const DELAY_HELP: &str = "Plays it again a little later, in time with the song, 
 /// The settings of the equalizer, the compressor and the delay.
 fn effects_settings(ui: &mut egui::Ui, effects: &mut Effects) {
     ui.horizontal(|ui| {
-        ui.strong("Equalizer").on_hover_text(EQ_HELP);
+        ui.strong(tr("Equalizer")).on_hover_text(tr(EQ_HELP));
         if ui
-            .add_enabled(!effects.eq.is_flat(), egui::Button::new("Flat"))
-            .on_hover_text("Every band back to 0 dB")
+            .add_enabled(!effects.eq.is_flat(), egui::Button::new(tr("Flat")))
+            .on_hover_text(tr("Every band back to 0 dB"))
             .clicked()
         {
             effects.eq = Equalizer::default();
@@ -395,17 +399,19 @@ fn effects_settings(ui: &mut egui::Ui, effects: &mut Effects) {
             ("High", "above 4 kHz", &mut effects.eq.high),
         ];
         for (name, band, gain) in bands {
+            let (name, band) = (tr(name), tr(band));
             ui.label(name).on_hover_text(band);
             decibel_slider(ui, gain, -Equalizer::RANGE..=Equalizer::RANGE)
-                .on_hover_text(format!("{name}: {band}. Double-click for 0 dB."));
+                .on_hover_text(trf("{}: {}. Double-click for 0 dB.", &[&name, &band]));
             ui.end_row();
         }
     });
     ui.separator();
-    ui.strong("Compressor").on_hover_text(COMPRESSOR_HELP);
+    ui.strong(tr("Compressor"))
+        .on_hover_text(tr(COMPRESSOR_HELP));
     let compressor = &mut effects.compressor;
     egui::Grid::new("compressor").num_columns(2).show(ui, |ui| {
-        ui.label("Threshold");
+        ui.label(tr("Threshold"));
         ui.add(
             egui::Slider::new(
                 &mut compressor.threshold,
@@ -413,51 +419,51 @@ fn effects_settings(ui: &mut egui::Ui, effects: &mut Effects) {
             )
             .suffix(" dB"),
         )
-        .on_hover_text("The level it starts turning down at");
+        .on_hover_text(tr("The level it starts turning down at"));
         ui.end_row();
-        ui.label("Ratio");
+        ui.label(tr("Ratio"));
         ui.add(
             egui::Slider::new(&mut compressor.ratio, 1.0..=Compressor::MOST_RATIO)
                 .logarithmic(true)
                 .custom_formatter(|ratio, _| format!("{ratio:.1}:1"))
                 .custom_parser(|text| text.trim().trim_end_matches(":1").parse().ok()),
         )
-        .on_hover_text("How much it turns down over the threshold: 1:1 is off");
+        .on_hover_text(tr("How much it turns down over the threshold: 1:1 is off"));
         ui.end_row();
-        ui.label("Gain");
+        ui.label(tr("Gain"));
         ui.add(egui::Slider::new(&mut compressor.gain, 0.0..=Compressor::MOST_GAIN).suffix(" dB"))
-            .on_hover_text("How much it turns the whole part up afterwards");
+            .on_hover_text(tr("How much it turns the whole part up afterwards"));
         ui.end_row();
     });
     ui.separator();
-    ui.strong("Delay").on_hover_text(DELAY_HELP);
+    ui.strong(tr("Delay")).on_hover_text(tr(DELAY_HELP));
     let delay = &mut effects.delay;
     egui::Grid::new("delay").num_columns(2).show(ui, |ui| {
-        ui.label("Time");
+        ui.label(tr("Time"));
         ui.horizontal(|ui| {
             for (steps, name) in Delay::TIMES {
-                ui.selectable_value(&mut delay.steps, steps, name)
-                    .on_hover_text(
+                ui.selectable_value(&mut delay.steps, steps, tr(name))
+                    .on_hover_text(tr(
                         "How long after the sound each echo comes, in notes of the song",
-                    );
+                    ));
             }
         });
         ui.end_row();
-        ui.label("Feedback");
+        ui.label(tr("Feedback"));
         ui.add(
             egui::Slider::new(&mut delay.feedback, 0.0..=Delay::MOST_FEEDBACK)
                 .custom_formatter(|value, _| format!("{:.0}%", value * 100.0)),
         )
-        .on_hover_text("How loud each echo is next to the one before");
+        .on_hover_text(tr("How loud each echo is next to the one before"));
         ui.end_row();
-        ui.label("Mix");
+        ui.label(tr("Mix"));
         percent_slider(ui, &mut delay.mix);
         ui.end_row();
     });
     ui.separator();
     if ui
-        .add_enabled(!effects.is_plain(), egui::Button::new("No effects"))
-        .on_hover_text("Turn every effect of this channel off")
+        .add_enabled(!effects.is_plain(), egui::Button::new(tr("No effects")))
+        .on_hover_text(tr("Turn every effect of this channel off"))
         .clicked()
     {
         *effects = Effects::default();

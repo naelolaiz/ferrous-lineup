@@ -26,6 +26,7 @@ use serde::{Deserialize, Serialize};
 use lineup_core::{Project, file};
 
 use super::LineupApp;
+use crate::i18n::tr;
 
 /// How often unsaved work is written while it keeps changing.
 const INTERVAL: Duration = Duration::from_secs(30);
@@ -280,21 +281,22 @@ impl LineupApp {
             .and_then(Path::file_name)
             .map(|name| name.to_string_lossy().into_owned())
             .or_else(|| recovered.info.name.clone())
-            .unwrap_or_else(|| "Untitled".to_string());
+            .unwrap_or_else(|| tr("Untitled").to_string());
         let mut choice = None;
         egui::Modal::new(egui::Id::unique("recover-unsaved-work")).show(ctx, |ui| {
             ui.set_width(340.0);
-            ui.heading("Recover unsaved work?");
+            ui.heading(tr("Recover unsaved work?"));
             ui.add_space(4.0);
-            ui.label(format!(
-                "\"{name}\" was not saved when Ferrous Lineup last closed."
+            ui.label(crate::i18n::trf(
+                "\"{}\" was not saved when Ferrous Lineup last closed.",
+                &[&name],
             ));
             ui.add_space(8.0);
             ui.horizontal(|ui| {
-                if ui.button("Recover it").clicked() {
+                if ui.button(tr("Recover it")).clicked() {
                     choice = Some(true);
                 }
-                if ui.button("Discard it").clicked() {
+                if ui.button(tr("Discard it")).clicked() {
                     choice = Some(false);
                 }
             });
@@ -321,7 +323,7 @@ impl LineupApp {
             // The work is this run's now: its own copy is written at once.
             self.recovery.remove_copy();
             self.recovery.due = None;
-            self.notice = Some("Recovered unsaved work.".to_string());
+            self.notice = Some(tr("Recovered unsaved work.").to_string());
         }
         recovered.remove();
     }

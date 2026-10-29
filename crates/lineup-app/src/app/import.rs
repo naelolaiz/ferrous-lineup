@@ -45,7 +45,7 @@ fn listen(path: &Path) -> Outcome {
     let recording = decode_file(path).map_err(|err| err.to_string())?;
     let analysis = lineup_listen::analyze(&recording);
     if analysis.beats.len() < 2 {
-        return Err("no beat could be heard in it".to_string());
+        return Err(crate::i18n::tr("no beat could be heard in it").to_string());
     }
     let lead_in = arrange::lead_in(&analysis);
 
@@ -60,15 +60,21 @@ fn listen(path: &Path) -> Outcome {
         .map_or_else(|| "Recording".into(), |stem| stem.to_string_lossy());
     let project = arrange::follow(&analysis, lead_in, wav, &title);
     let keys = arrange::key_spans(&analysis, lead_in);
-    let key = analysis
-        .scale
-        .map_or_else(|| "no clear key".to_string(), crate::i18n::key_name);
+    let key = analysis.scale.map_or_else(
+        || crate::i18n::tr("no clear key").to_string(),
+        crate::i18n::key_name,
+    );
     let chords = analysis.chords.iter().filter(|c| c.is_some()).count();
-    let summary = format!(
-        "{title}: {:.1} BPM, {}/4, {key}, chords on {chords} of {} beats",
-        analysis.bpm,
-        analysis.beats_per_bar,
-        analysis.beats.len()
+    let summary = crate::i18n::trf(
+        "{}: {} BPM, {}/4, {}, chords on {} of {} beats",
+        &[
+            &title,
+            &format!("{:.1}", analysis.bpm),
+            &analysis.beats_per_bar,
+            &key,
+            &chords,
+            &analysis.beats.len(),
+        ],
     );
     Ok((project, summary, keys))
 }
@@ -80,7 +86,7 @@ impl LineupApp {
             return;
         }
         if let Some(path) = rfd::FileDialog::new()
-            .add_filter("Audio", &lineup_listen::AUDIO_EXTENSIONS)
+            .add_filter(crate::i18n::tr("Audio"), &lineup_listen::AUDIO_EXTENSIONS)
             .pick_file()
         {
             self.import_path(path);
@@ -96,10 +102,18 @@ impl LineupApp {
         let name = path
             .file_name()
             .map_or_else(String::new, |name| name.to_string_lossy().into_owned());
-        self.notice = Some(format!("Listening to {name}…"));
+        self.notice = Some(crate::i18n::trf("Listening to {}…", &[&name]));
         self.message = None;
+        // The summary is written on the worker's thread, in the language
+        // and with the note names chosen.
+        let language = crate::i18n::Language::current();
+        let naming = lineup_core::NoteNaming::current();
         self.import = Some(Import {
-            worker: thread::spawn(move || listen(&path)),
+            worker: thread::spawn(move || {
+                language.set();
+                naming.set();
+                listen(&path)
+            }),
         });
     }
 
@@ -122,11 +136,11 @@ impl LineupApp {
                 }
                 Ok(Err(err)) => {
                     self.notice = None;
-                    self.message = Some(format!("Could not import: {err}"));
+                    self.message = Some(crate::i18n::trf("Could not import: {}", &[&err]));
                 }
                 Err(_) => {
                     self.notice = None;
-                    self.message = Some("Importing failed".to_string());
+                    self.message = Some(crate::i18n::tr("Importing failed").to_string());
                 }
             }
         }
@@ -139,7 +153,7 @@ impl LineupApp {
     /// Asks for a MIDI file, then imports it.
     pub(super) fn import_midi(&mut self) {
         if let Some(path) = rfd::FileDialog::new()
-            .add_filter("MIDI file", &midi_file::EXTENSIONS)
+            .add_filter(crate::i18n::tr("MIDI file"), &midi_file::EXTENSIONS)
             .pick_file()
         {
             self.import_midi_path(&path);
@@ -168,7 +182,10 @@ impl LineupApp {
                 self.notice = Some(summary);
             }
             Err(err) => {
-                self.message = Some(format!("Could not import {}: {err}", path.display()));
+                self.message = Some(crate::i18n::trf(
+                    "Could not import {}: {}",
+                    &[&path.display(), &err],
+                ));
             }
         }
     }

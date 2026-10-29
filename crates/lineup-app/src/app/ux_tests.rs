@@ -4372,6 +4372,25 @@ mod bars {
         screen.key_with_modifiers(Key::Z, Modifiers::COMMAND);
         assert_eq!(chords(&screen), before);
     }
+
+    #[test]
+    fn in_spanish_the_loop_button_and_the_bands_choruses_read_as_spanish() {
+        let mut screen = song();
+        crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+        assert!(screen.app.project.set_choruses(3));
+        // Bars 2 and 3 selected, with a click and a Shift+click.
+        screen.click("G");
+        screen.draw(vec![]);
+        let am = text_rect(&screen.draw(vec![]), "Am").unwrap().center();
+        screen.click_at(am, Modifiers::SHIFT);
+        assert_eq!(screen.app.chord_sheet.selected_bars(), Some((1, 2)));
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        assert!(text_rect(&output, "🔁 Repetir los compases 2–3").is_some());
+        // A chorus here is a pass through the tune, not a pop chorus.
+        assert!(text_rect(&output, "Vuelta ×3").is_some());
+        assert!(text_rect(&output, "Estribillo ×3").is_none());
+    }
 }
 
 mod section_styles {
@@ -4657,4 +4676,86 @@ mod chord_sheet_layout {
         screen.click("Chord sheet in the main window");
         assert!(screen.app.chord_sheet.fills_window());
     }
+}
+
+/// With Spanish chosen, every window, menu and settings page writes in
+/// Spanish: nothing it asks to translate is missing from the catalog,
+/// and no text it draws is an English one the catalog has Spanish for.
+#[test]
+fn every_window_writes_in_spanish() {
+    use lineup_core::i18n::{note_missed, spanish, take_missed};
+    use lineup_core::library::{MICROMODE_STYLES, ROW_STYLES, STYLES, Song};
+    use std::collections::BTreeSet;
+
+    fn english(output: &FullOutput, found: &mut BTreeSet<String>) {
+        for shape in &output.shapes {
+            if let Shape::Text(text) = &shape.shape {
+                let shown = text.galley.text();
+                if spanish(shown).is_some_and(|spanish| spanish != shown) {
+                    found.insert(shown.to_string());
+                }
+            }
+        }
+    }
+
+    let mut screen = Screen::new();
+    crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+    note_missed();
+    let mut found = BTreeSet::new();
+    let demos = [
+        library::Demo::Start,
+        library::Demo::Song(Song::named("El Choclo").unwrap()),
+        library::Demo::Song(Song::named("Ode to Joy").unwrap()),
+        library::Demo::Style(&STYLES[0]),
+        library::Demo::Row(&ROW_STYLES[0]),
+        library::Demo::Micromode(&MICROMODE_STYLES[0]),
+    ];
+    for demo in demos {
+        screen.app.open_demo(demo);
+        screen.app.set_playing(false);
+        screen.app.rack_open = true;
+        screen.app.piano_roll.open = true;
+        screen.app.harmony_keys.open = true;
+        screen.app.chord_sheet.open = true;
+        screen.app.mixer_open = true;
+        screen.app.playlist.browser_open = true;
+        screen.app.ear_training.open = true;
+        screen.app.lead_sheet.open = true;
+        for _ in 0..3 {
+            english(&screen.draw(vec![]), &mut found);
+        }
+    }
+    for open in [
+        |app: &mut LineupApp| app.shortcuts_open = true,
+        |app: &mut LineupApp| app.about_open = true,
+        |app: &mut LineupApp| app.ask_for_video(),
+        |app: &mut LineupApp| {
+            app.start_style_editor(lineup_core::library::UserStyle::blank(), None)
+        },
+    ] {
+        open(&mut screen.app);
+        english(&screen.draw(vec![]), &mut found);
+        english(&screen.draw(vec![]), &mut found);
+        screen.key(Key::Escape);
+    }
+    screen.app.settings_open = true;
+    for page in ["Appearance", "Harmony", "Library", "Audio", "Playback"] {
+        screen.click(tr(page));
+        english(&screen.draw(vec![]), &mut found);
+    }
+    screen.app.settings_open = false;
+    for menu in ["File", "Edit", "View", "MIDI", "Help"] {
+        screen.click(tr(menu));
+        english(&screen.draw(vec![]), &mut found);
+        screen.key(Key::Escape);
+    }
+    let missed = take_missed();
+    assert!(
+        missed.is_empty() && found.is_empty(),
+        "{} texts have no Spanish:\n{}\n\n{} are drawn in English:\n{}",
+        missed.len(),
+        missed.into_iter().collect::<Vec<_>>().join("\n"),
+        found.len(),
+        found.into_iter().collect::<Vec<_>>().join("\n"),
+    );
 }

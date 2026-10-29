@@ -1,11 +1,11 @@
-# Una armonía, cuatro nombres: acordes, conjuntos y micromodos en el chord sheet
+# Una armonía, cuatro nombres: acordes, conjuntos y micromodos en la hoja de acordes
 
 Archivos: [`crates/lineup-core/src/chord_sheet/notation.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/chord_sheet/notation.rs),
 [`crates/lineup-app/src/chord_sheet/notation.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet/notation.rs),
 [`crates/lineup-app/src/chord_sheet.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/chord_sheet.rs)
 y [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
-El chord sheet ya podía guardar acordes, conjuntos de clases de alturas,
+La hoja de acordes ya podía guardar acordes, conjuntos de clases de alturas,
 micromodos y formas de serie ([Series dodecafónicas y conjuntos de
 clases de alturas](../step-8/twelve-tone.md),
 [Micromodos](../step-8/micromodes.md)), pero escribía cada armonía de
@@ -20,18 +20,18 @@ notas que suenan juntas o las que vienen una tras otra.
 
 Lo que gana Ferrous Lineup:
 
-- Un menú **Show** en la fila superior del chord sheet: **As written**,
-  **Chords**, **Pitch-class sets** o **Micromodes**. Las notas siguen
+- Un menú **Mostrar** en la fila superior de la hoja de acordes: **Como está escrito**,
+  **Acordes**, **Conjuntos de clases de alturas** o **Micromodos**. Las notas siguen
   igual, solo cambian sus nombres, y nada de la canción cambia.
 - Para conjuntos y micromodos, un segundo menú dice qué notas forman
-  cada grupo: **The sheet's harmonies**, **Notes together (vertical)** o
-  **Notes in a line (serial)**.
+  cada grupo: **Las armonías de la hoja**, **Notas a la vez (vertical)** o
+  **Notas en línea (serial)**.
 - Cuando se leen las notas, puedes elegir **cuántas notas** tiene un
   grupo (de 2 a 12, o todas las notas que suenan juntas) y **qué
   pista** leer.
 - Las elecciones se recuerdan la próxima vez que la app arranca.
 
-![La fila superior del chord sheet con el menú Show abierto: As written, Chords, Pitch-class sets y Micromodes. Detrás, la demo Webern's trichords, sus compases escritos como los conjuntos con los que se tecleó: 3-3 T11, 3-3 T8I y así.](../images/step-9-notation-show-menu.png)
+![La fila superior del chord sheet con el menú Mostrar abierto: As written, Chords, Pitch-class sets y Micromodes. Detrás, la demo Webern's trichords, sus compases escritos como los conjuntos con los que se tecleó: 3-3 T11, 3-3 T8I y así.](../images/step-9-notation-show-menu.png)
 
 ## Una armonía, cuatro nombres
 
@@ -39,10 +39,10 @@ La regla viene de [Una tonalidad como conjunto de clases de
 alturas](../step-8/key-as-a-set.md): un conjunto de clases de alturas
 es otra **notación**, no otra armonía. Mostrar Do mayor como conjunto no
 cambia sus notas; escribe las mismas tres notas, Do, Mi y Sol, como su
-clase de conjunto. Así que cada armonía del chord sheet tiene cuatro
+clase de conjunto. Así que cada armonía de la hoja de acordes tiene cuatro
 nombres:
 
-| Written | Chords | Pitch-class sets | Micromodes |
+| Como está escrito | Acordes | Conjuntos de clases de alturas | Micromodos |
 |---------|--------|------------------|------------|
 | C | C | 3-11 T7I | Acorde menor-mayor T7I |
 | Dm | Dm | 3-11 T2 | Acorde menor-mayor T2 |
@@ -70,10 +70,10 @@ Algunas cosas que notar:
   Kröpfl son las doce clases de tres notas, 3-1 a 3-12. El micromodo
   3-11 es **Acorde menor-mayor**, el acorde menor-mayor, porque las
   tríadas mayor y menor son una sola clase. G7 tiene cuatro notas, así
-  que no es un micromodo: en la vista Micromodes se escribe como su
+  que no es un micromodo: en la vista Micromodos se escribe como su
   conjunto, 4-27.
-- **Chords** convierte conjuntos en acordes **cuando sus notas forman
-  uno**. El conjunto 3-11 T2 es Re Fa La, así que la vista Chords escribe
+- **Acordes** convierte conjuntos en acordes **cuando sus notas forman
+  uno**. El conjunto 3-11 T2 es Re Fa La, así que la vista Acordes escribe
   Dm, con la fundamental escrita como la tonalidad la escribe. Do Mi Sol La
   se escribe **Am7**: esas cuatro notas también son C6, y la app toma
   la primera calidad de acorde de su lista que encaje, donde los
@@ -104,7 +104,7 @@ Do♭».
 ### En Rust: un `match` decide
 
 `Notation` es un enum de cuatro variantes. `#[derive(Default)]` con
-`#[default]` en `Written` hace que el chord sheet empiece como siempre:
+`#[default]` en `Written` hace que la hoja de acordes empiece como siempre:
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
@@ -119,7 +119,7 @@ pub enum Notation {
 
 Renombrar una armonía es un solo `match` sobre una **tupla** de la
 notación y la armonía. Rust prueba los brazos desde arriba, así que su
-orden es la regla: primero lo que nunca cambia, luego la vista Chords,
+orden es la regla: primero lo que nunca cambia, luego la vista Acordes,
 luego dos acordes a la vez, luego todo lo demás.
 
 ```rust
@@ -181,7 +181,7 @@ menor sobre La antes de poder encontrarse como sexta sobre Do.
 
 ## Leer las notas mismas
 
-Nombrar las armonías del chord sheet es solo la mitad de lo que hace
+Nombrar las armonías de la hoja de acordes es solo la mitad de lo que hace
 un analista con los conjuntos. La música sin símbolos de acorde, un
 concierto de Webern o una página de la Consagración de la primavera,
 se corta en conjuntos **desde sus notas**, y hay dos maneras de
@@ -192,21 +192,20 @@ cortarla:
 - **Horizontalmente**: las notas una tras otra, en línea. Así se corta
   una serie dodecafónica en sus tricordos o hexacordos.
 
-Con **Pitch-class sets** o **Micromodes** elegidos, el segundo menú
-elige una de las dos, y el chord sheet muestra entonces los grupos que
-encuentra en la canción, cada uno donde empieza. Lo escrito en el
-chord sheet no se toca: teclear en un compás sigue escribiendo su
-armonía, y **As written** la muestra de nuevo.
+Con **Conjuntos de clases de alturas** o **Micromodos** elegidos, el segundo menú
+elige una de las dos, y la hoja de acordes muestra entonces los grupos que
+encuentra en la canción, cada uno donde empieza. Lo escrito en la hoja de acordes no se toca: teclear en un compás sigue escribiendo su
+armonía, y **Como está escrito** la muestra de nuevo.
 
 ![Los Augurs of Spring como conjuntos de clases de alturas de las notas que suenan juntas, en grupos de tres. Cada compás del acorde de las cuerdas lee 4-27 T3I|3-11 T11I, y la ayuda lo explica: las notas de cada pista sonando juntas, en grupos desde la más grave hacia arriba, escritos primero el de arriba; 4-27 T3I es Sol Si♭ Re♭ Mi♭, un acorde de séptima de dominante, y debajo 3-11 T11I es Fa♭ La♭ Do♭, una tríada mayor.](../images/step-9-notation-augurs.png)
 
 ### Notas juntas
 
-Dondequiera que empiece una nota, el chord sheet toma **todas las
+Dondequiera que empiece una nota, la hoja de acordes toma **todas las
 notas sostenidas en ese momento**, de la más grave hacia arriba,
 conserva una de cada clase de alturas (un doblado de octava es la
 misma nota en un conjunto) y las corta en grupos del tamaño elegido:
-tres notas, cuatro, y así, o **All notes** en un solo grupo.
+tres notas, cuatro, y así, o **Todas las notas** en un solo grupo.
 
 Dos reglas pequeñas mantienen los grupos musicales:
 
@@ -217,14 +216,13 @@ Dos reglas pequeñas mantienen los grupos musicales:
   distintas.** Una nota sola, o una nota doblada en octavas, no nombra
   ningún conjunto.
 
-El acorde de los Augurs muestra por qué importa la primera regla. De
+El acorde de los Augurios muestra por qué importa la primera regla. De
 abajo arriba las cuerdas tocan Fa♭ La♭ Do♭, luego Sol Si♭ Re♭, luego Mi♭
 arriba. En grupos de tres eso es Fa♭ La♭ Do♭ | Sol Si♭ Re♭ | Mi♭, y el Mi♭
-solitario se une al grupo de debajo: Sol Si♭ Re♭ Mi♭, que es E♭7. El chord
-sheet escribe **4-27 T3I|3-11 T11I**, los dos acordes que Stravinsky
+solitario se une al grupo de debajo: Sol Si♭ Re♭ Mi♭, que es E♭7. La hoja de acordes escribe **4-27 T3I|3-11 T11I**, los dos acordes que Stravinsky
 puso juntos, encontrados solo desde las notas.
 
-Con **All notes**, las siete notas son un solo conjunto, **7-32 T7**.
+Con **Todas las notas**, las siete notas son un solo conjunto, **7-32 T7**.
 Esa es la clase de la escala menor armónica, y las siete notas son de
 hecho exactamente la menor armónica de La♭: La♭ Si♭ Do♭ Re♭ Mi♭ Fa♭ Sol. Dos
 maneras de mirar el mismo acorde: dos acordes conocidos apilados, o
@@ -254,7 +252,7 @@ La serie del *Concerto* de Webern, Op. 24, es el ejemplo clásico:
 B B♭ D | E♭ G F♯ | A♭ E F | C C♯ A
 ```
 
-La demo Webern's trichords la toca un semitono más arriba, desde Do:
+La demo Los tricordios de Webern la toca un semitono más arriba, desde Do:
 Do Si Mi♭ | Mi La♭ Sol | La Fa Fa♯ | Do♯ Re Si♭.
 
 En grupos de tres, cada grupo es **Menor 3** (3-3, [0 1 4]): Webern
@@ -267,21 +265,20 @@ La♭ Mi Fa Do Do♯ La. Las doce en un solo grupo son el agregado, 12-1.
 
 ### Qué notas
 
-Un cuarto menú elige la pista. **Auto** lee la melodía para una línea
-(la pista llamada Lead, o si no la más aguda, como la elige el lead
-sheet), porque una línea a través de todos los instrumentos a la vez
+Un cuarto menú elige la pista. **Automático** lee la melodía para una línea
+(la pista llamada Melodía, o si no la más aguda, como la elige la partitura guía), porque una línea a través de todos los instrumentos a la vez
 mezcla la melodía con los acordes del acompañamiento. Para las notas
-juntas, Auto lee **cada pista**, porque un acorde suele repartirse
-entre instrumentos. También puedes elegir **All tracks** o un canal por
+juntas, Automático lee **cada pista**, porque un acorde suele repartirse
+entre instrumentos. También puedes elegir **Todas las pistas** o un canal por
 su nombre.
 
 Un grupo que es otra vez el anterior se escribe una vez, donde
-empieza, igual que el chord sheet escribe un acorde solo donde cambia.
+empieza, igual que la hoja de acordes escribe un acorde solo donde cambia.
 
 ## Cuando el nombre no cabe
 
 Los nombres de micromodo son largos: «Acorde menor-mayor T9» no cabe
-en un cuarto de compás. El chord sheet ya encoge los nombres para que
+en un cuarto de compás. La hoja de acordes ya encoge los nombres para que
 quepan ([Una tercera cacería de errores](bug-hunt-3.md)), pero solo
 hasta un tamaño que aún se puede leer. Más allá, un conjunto o un
 micromodo se escribe **solo por su clase**: «Acorde menor-mayor» o
@@ -316,7 +313,7 @@ cambio de tonalidad.
 El resultado es un **`Rc<[Shown]>`**: un puntero con contador de
 referencias a un slice. `Rc` es el primo de un solo hilo de `Arc`
 ([Instrumentos](../step-2/instruments.md)). Clonarlo no copia los
-nombres, solo suma uno a un contador. La ventana del chord sheet lo
+nombres, solo suma uno a un contador. La ventana de la hoja de acordes lo
 clona en cada frame para dibujar los compases, mientras la caché
 conserva su propia copia, y los nombres siguen en un solo lugar de la
 memoria. `Rc` encaja aquí porque toda la interfaz de usuario corre en
@@ -326,7 +323,7 @@ hilos que no hace falta.
 ### Encontrar los grupos de un compás con `partition_point`
 
 Los grupos están ordenados por el paso en el que empiezan. Para
-dibujar un compás, el chord sheet necesita los grupos que empiezan
+dibujar un compás, la hoja de acordes necesita los grupos que empiezan
 dentro de él, y para enmarcar el que suena, el último que empieza en
 el cabezal de reproducción o antes. `partition_point` responde a ambos
 con una **búsqueda binaria**:
@@ -377,14 +374,14 @@ El módulo core tiene diez pruebas, entre ellas:
   4-27 T3I|3-11 T11I.
 - **el acorde de Petrushka leído verticalmente en grupos de tres**, y
   como 6-30 todo junto.
-- **el acorde de los Augurs en grupos de tres es F♭ bajo E♭7**, y
+- **el acorde de los Augurios en grupos de tres es F♭ bajo E♭7**, y
   7-32 T7 todo junto.
 - **la serie de Webern en línea son cuatro grupos de Menor 3**, con
   6-20 para cada mitad y el agregado para las doce, y la **demo de
-  Webern** lee igual desde el Lead y desde sus acordes.
+  Webern** lee igual desde la Melodía y desde sus acordes.
 - **toda nota de una línea cuenta salvo una repetida**.
 
-Una prueba de la ventana (`ux_tests.rs`) abre Four chords, recorre el
-menú Show haciendo clic y comprueba los nombres (3-11 T7I, 3-11 T2I,
+Una prueba de la ventana (`ux_tests.rs`) abre Cuatro acordes, recorre el
+menú Mostrar haciendo clic y comprueba los nombres (3-11 T7I, 3-11 T2I,
 3-11 T9, Acorde menor-mayor T7I…), luego vuelve atrás y comprueba que
 el proyecto es exactamente como era.

@@ -157,7 +157,13 @@ impl Micromode {
 
     /// "Menor 3 (minor 3)".
     pub fn full_name(&self) -> String {
-        format!("{} ({})", self.name, self.english.to_lowercase())
+        // Its name is Spanish already: in Spanish, it needs no other.
+        match crate::i18n::Language::current() {
+            crate::i18n::Language::English => {
+                format!("{} ({})", self.name, self.english.to_lowercase())
+            }
+            crate::i18n::Language::Spanish => self.name.to_string(),
+        }
     }
 
     /// Its hour on Peter Schat's Tone Clock, in Roman numerals: "III".
@@ -185,18 +191,15 @@ impl Micromode {
         let mut parts = Vec::new();
         for (class, &count) in vector.iter().enumerate() {
             let (one, many) = NAMES[class];
+            // Whole phrases, as a Spanish number goes with its noun.
             match count {
                 0 => {}
-                1 => parts.push(format!("a {one}")),
-                2 => parts.push(format!("two {many}")),
-                _ => parts.push(format!("three {many}")),
+                1 => parts.push(crate::i18n::tr_string(format!("a {one}"))),
+                2 => parts.push(crate::i18n::tr_string(format!("two {many}"))),
+                _ => parts.push(crate::i18n::tr_string(format!("three {many}"))),
             }
         }
-        match parts.as_slice() {
-            [one] => one.clone(),
-            [first @ .., last] => format!("{} and {last}", first.join(", ")),
-            [] => String::new(),
-        }
+        crate::i18n::list(&parts)
     }
 
     /// Every group of three notes that is this micromode: its prime form

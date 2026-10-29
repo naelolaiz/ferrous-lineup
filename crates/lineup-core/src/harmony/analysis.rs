@@ -1,6 +1,7 @@
 //! Naming what is being played: a note, an interval or a chord.
 
 use super::{Chord, ChordQuality, PitchSet, Scale, with_figures};
+use crate::i18n::{Language, key_name, tr, trf};
 use crate::{Note, NoteName, PitchClass, Spelling};
 
 /// The names of the intervals within one octave, by size in semitones.
@@ -94,6 +95,66 @@ fn article(word: &str) -> &'static str {
         "an"
     } else {
         "a"
+    }
+}
+
+/// The name of an interval, named in English by [`interval_name`] or
+/// [`spelled_interval_name`], in the current language: "minor third" is
+/// "tercera menor" in Spanish, where the number comes first and the
+/// quality agrees with it.
+pub fn shown_interval(name: &str) -> String {
+    if Language::current() == Language::English {
+        return name.to_string();
+    }
+    let (quality, number) = name.rsplit_once(' ').unwrap_or(("", name));
+    let (number, masculine) = match number {
+        "unison" => ("unísono", true),
+        "second" => ("segunda", false),
+        "third" => ("tercera", false),
+        "fourth" => ("cuarta", false),
+        "fifth" => ("quinta", false),
+        "sixth" => ("sexta", false),
+        "seventh" => ("séptima", false),
+        "octave" => ("octava", false),
+        "tritone" => ("tritono", true),
+        _ => return crate::i18n::tr_str(name).to_string(),
+    };
+    let quality = match (quality, masculine) {
+        ("", _) => "",
+        ("perfect", false) => "justa",
+        ("perfect", true) => "justo",
+        ("major", _) => "mayor",
+        ("minor", _) => "menor",
+        ("augmented", false) => "aumentada",
+        ("augmented", true) => "aumentado",
+        ("diminished", false) => "disminuida",
+        ("diminished", true) => "disminuido",
+        ("doubly augmented", false) => "doblemente aumentada",
+        ("doubly augmented", true) => "doblemente aumentado",
+        ("doubly diminished", false) => "doblemente disminuida",
+        (_, _) => "doblemente disminuido",
+    };
+    if quality.is_empty() {
+        number.to_string()
+    } else {
+        format!("{number} {quality}")
+    }
+}
+
+/// An interval named in English, with "a" or "an" before it, in the
+/// current language: "a minor third", "una tercera menor".
+pub fn interval_with_article(name: &str) -> String {
+    match Language::current() {
+        Language::English => format!("{} {name}", article(name)),
+        Language::Spanish => {
+            let shown = shown_interval(name);
+            let article = if shown.starts_with("unísono") || shown.starts_with("tritono") {
+                "un"
+            } else {
+                "una"
+            };
+            format!("{article} {shown}")
+        }
     }
 }
 
@@ -289,24 +350,27 @@ impl Harmony {
     /// (E major in C major is the V of Am, "V/vi"), or simply a chord
     /// from outside the key.
     pub fn describe(&self, scale: Scale) -> String {
-        let key = scale.name();
+        let key = key_name(scale);
         match *self {
-            Harmony::Silence => "Nothing is playing here.".to_string(),
+            Harmony::Silence => tr("Nothing is playing here.").to_string(),
             Harmony::Single(pitch_class) => {
                 let name = scale.spell(pitch_class);
                 match scale.degree_of(pitch_class) {
-                    Some(degree) => format!("{name}: note {} of {key}.", degree + 1),
-                    None => format!("{name}: not in {key}."),
+                    Some(degree) => trf("{}: note {} of {}.", &[&name, &(degree + 1), &key]),
+                    None => trf("{}: not in {}.", &[&name, &key]),
                 }
             }
             Harmony::Interval { low, high, .. } => {
                 let (low, high, name) = spell_interval(scale, low, high);
                 let tritone = if matches!(name.as_str(), "augmented fourth" | "diminished fifth") {
-                    ", a tritone"
+                    tr(", a tritone")
                 } else {
                     ""
                 };
-                format!("{low} up to {high}: {} {name}{tritone}.", article(&name))
+                trf(
+                    "{} up to {}: {}{}.",
+                    &[&low, &high, &interval_with_article(&name), &tritone],
+                )
             }
             Harmony::Chord { chord, bass } => format!(
                 "{}: {}",
@@ -323,15 +387,18 @@ impl Harmony {
                 let numerals = scale
                     .figured_numeral(upper, upper.root)
                     .zip(scale.figured_numeral(lower, bass))
-                    .map(|(upper, lower)| format!(" ({upper} over {lower} in {key})"))
+                    .map(|(upper, lower)| trf(" ({} over {} in {})", &[&upper, &lower, &key]))
                     .unwrap_or_default();
-                format!(
-                    "{}: {} {} over {} {}, two chords at once: a polychord{numerals}.",
-                    self.label_in(scale).unwrap_or_default(),
-                    scale.spell_root(upper),
-                    upper.quality.name(),
-                    scale.spell_root(lower),
-                    lower.quality.name(),
+                trf(
+                    "{}: {} {} over {} {}, two chords at once: a polychord{}.",
+                    &[
+                        &self.label_in(scale).unwrap_or_default(),
+                        &scale.spell_root(upper),
+                        &tr(upper.quality.name()),
+                        &scale.spell_root(lower),
+                        &tr(lower.quality.name()),
+                        &numerals,
+                    ],
                 )
             }
             Harmony::Unknown(pitch_set) => {
@@ -343,13 +410,16 @@ impl Harmony {
                 let class = pitch_set.set_class();
                 let nickname = class
                     .nickname()
-                    .map(|name| format!(", {name}"))
+                    .map(|name| format!(", {}", tr(name)))
                     .unwrap_or_default();
-                format!(
-                    "{}: no chord name for these notes; set class {} {}{nickname}.",
-                    names.join(" "),
-                    class.name(),
-                    class.prime_text()
+                trf(
+                    "{}: no chord name for these notes; set class {} {}{}.",
+                    &[
+                        &names.join(" "),
+                        &class.name(),
+                        &class.prime_text(),
+                        &nickname,
+                    ],
                 )
             }
         }
@@ -367,47 +437,47 @@ pub fn describe_chord(
     root: NoteName,
     numeral: Option<String>,
 ) -> String {
-    let key = scale.name();
-    let mut text = format!("{root} {}", chord.quality.name());
+    let key = key_name(scale);
+    let mut text = format!("{root} {}", tr(chord.quality.name()));
     if bass != chord.root
         && let Some(bass) = chord.spell_note(root, bass)
     {
-        text += &format!(" with {bass} in the bass");
+        text += &trf(" with {} in the bass", &[&bass]);
     }
     let figures = chord.inversion_figures(bass);
     text += &match numeral {
-        Some(numeral) if scale.is_diatonic(chord) => {
-            format!(", chord {numeral} of {key}.")
-        }
+        Some(numeral) if scale.is_diatonic(chord) => trf(", chord {} of {}.", &[&numeral, &key]),
         Some(numeral) if scale.uses_raised_seventh(chord) => {
             let leading = scale.spell(scale.root.transpose(11));
-            format!(
-                ", chord {numeral} of {key}, with the raised seventh ({leading}) of harmonic minor."
+            trf(
+                ", chord {} of {}, with the raised seventh ({}) of harmonic minor.",
+                &[&numeral, &key, &leading],
             )
         }
         Some(numeral) => match (
             scale.borrowed_from(chord),
             scale.secondary_dominant_target(chord),
         ) {
-            (Some(parallel), _) => {
-                format!(", {numeral} borrowed from {}.", parallel.name())
-            }
-            (None, Some(target)) => format!(
-                ", {} in {key}: a secondary dominant, the dominant of {}.",
-                with_figures(
-                    &format!(
-                        "V{}/{}",
-                        chord.quality.numeral_suffix(),
-                        scale.roman_numeral(target).unwrap_or_default()
+            (Some(parallel), _) => trf(", {} borrowed from {}.", &[&numeral, &key_name(parallel)]),
+            (None, Some(target)) => trf(
+                ", {} in {}: a secondary dominant, the dominant of {}.",
+                &[
+                    &with_figures(
+                        &format!(
+                            "V{}/{}",
+                            chord.quality.numeral_suffix(),
+                            scale.roman_numeral(target).unwrap_or_default()
+                        ),
+                        figures,
                     ),
-                    figures
-                ),
-                scale.chord_name(target)
+                    &key,
+                    &scale.chord_name(target),
+                ],
             ),
-            (None, None) => format!(", {numeral}, from outside {key}."),
+            (None, None) => trf(", {}, from outside {}.", &[&numeral, &key]),
         },
-        None if scale.is_diatonic(chord) => format!(", in {key}."),
-        None => format!(", outside {key}."),
+        None if scale.is_diatonic(chord) => trf(", in {}.", &[&key]),
+        None => trf(", outside {}.", &[&key]),
     };
     text
 }
