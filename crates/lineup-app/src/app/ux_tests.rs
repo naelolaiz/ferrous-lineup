@@ -1500,6 +1500,25 @@ fn a_demo_asks_for_real_instrument_sounds_in_front_of_its_chord_sheet() {
 }
 
 #[test]
+fn edit_style_copies_the_whole_band_of_a_new_song() {
+    let mut screen = Screen::new();
+    screen.app.replace_project(Project::with_band(), None);
+    screen.app.edit_current_style();
+    assert!(screen.app.style_editor.open);
+    let style = screen.app.style_editor.current_style();
+    assert_eq!(style.name, "Pop beat copy");
+    let players: Vec<lineup_core::Player> = style.lanes.iter().map(|lane| lane.player).collect();
+    for player in [
+        lineup_core::Player::Piano,
+        lineup_core::Player::Bass,
+        lineup_core::Player::Drums,
+        lineup_core::Player::Guitar,
+    ] {
+        assert!(players.contains(&player), "{player:?}");
+    }
+}
+
+#[test]
 fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
     let mut screen = Screen::new();
     crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
