@@ -41,7 +41,7 @@ From left to right:
 | ● | records what you play on a MIDI keyboard or the computer keyboard into the pattern (see [MIDI keyboards and synths](midi.md#recording)) |
 | **Follow playhead** | keeps the bar playing in sight in the playlist, the chord sheet and the piano roll. Off, you can scroll freely while the song plays. |
 | **Count-in** | one bar of clicks before the music starts |
-| **Metronome** | a click on every beat (**Ctrl+M**) |
+| **Metronome** | a click on every beat |
 | **TEMPO** | the tempo in beats per minute: drag up or down to change it, double-click to type it |
 | **BAR : BEAT : STEP** | where the playhead is: in the pattern (PAT) or in the song (SONG) |
 | **PATTERN** | the selected pattern, which the channel rack and the piano roll show; **+** adds a new one, **⋯** renames, clones or deletes it, and the last menu sets its length |

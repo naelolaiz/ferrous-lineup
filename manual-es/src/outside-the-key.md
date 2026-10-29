@@ -61,7 +61,7 @@ y tira hacia arriba, hacia él, y eso hace que Do suene a casa. Cualquier
 acorde mayor o menor de la tonalidad puede tener su propia dominante.
 **Re7** es la dominante de Sol: su Fa♯ está un semitono debajo de Sol y
 tira hacia él. Fa♯ no está en Do mayor, así que por un momento Sol suena
-como una casa propia. Esto es una **tonicalización**, y Re7 en Do mayor
+como una casa propia. Esto es una **tonicización**, y Re7 en Do mayor
 se escribe **V7/V**, «cinco siete de cinco».
 
 | Acorde | Su dominante | Se escribe | La nota de fuera |

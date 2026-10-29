@@ -16,7 +16,7 @@ auditivo** te entrena después para oír la armonía sin mirar.
   de clics, y la música empieza en el «uno» siguiente. Si empiezas en
   medio de un compás, la cuenta sigue hasta donde empiezas, así que el
   pulso nunca salta.
-- **Metrónomo** (**Ctrl+M**): un clic en cada pulso mientras suena la
+- **Metrónomo**: un clic en cada pulso mientras suena la
   música. El primer pulso de cada compás es más agudo, así que siempre
   sabes dónde está el «uno».
 

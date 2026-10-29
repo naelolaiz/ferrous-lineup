@@ -59,3 +59,9 @@
 - [Jazz, blues, gospel and pop](jazz-and-pop.md)
 - [The concert hall](concert-hall.md)
 - [Odd meters and the Balkans](odd-meters-and-balkans.md)
+
+# Reference
+
+- [Keyboard shortcuts](shortcuts.md)
+- [Troubleshooting](troubleshooting.md)
+- [Music glossary](music-glossary.md)

@@ -13,7 +13,12 @@
 #
 #     Palabra: véase Otra palabra
 #
-# envía al lector a otra entrada.
+# envía al lector a otra entrada, y
+#
+#     Palabra: no capitulo.md
+#
+# deja fuera las negritas de ese capítulo, donde la palabra nombra otra
+# cosa (un menú, un patrón).
 
 Abrir recientes: saving.md#el-menú-archivo
 Accelerando: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino
@@ -178,7 +183,7 @@ Métrica compuesta: rhythm-and-meter.md#dos-y-tres
 Métrica irregular: rhythm-and-meter.md#métricas-irregulares, odd-meters-and-balkans.md
 Metrónomo: practising.md#cuenta-de-entrada-y-metrónomo
 Mezclador: mixer.md
-Micromodo: sets-rows-micromodes.md#micromodos
+Micromodo: sets-rows-micromodes.md#micromodos, no finding-a-demo.md
 MIDI: midi.md
 Milonga: tango-and-latin-america.md#el-tango
 Misa Criolla: folk-and-misa-criolla.md#la-misa-criolla
@@ -222,18 +227,18 @@ Power chord: bigger-band.md#cómo-toca-la-guitarra
 Predelay: mixer.md#la-reverberación
 Progresión: styles.md#progresiones-de-la-biblioteca
 Pulsar (tempo): tempo-meter-key.md#el-tempo, practising.md#velocidad-y-tempo-con-pulsaciones
-Pulso: rhythm-and-meter.md#pulsos-y-compases
+Pulso: rhythm-and-meter.md#pulsos-y-compases, no patterns-and-playlist.md
 Pulsos agrupados: rhythm-and-meter.md#métricas-irregulares
 Qué suele venir después: chord-functions.md#qué-suele-venir-después
 Quintas y octavas paralelas: voice-leading.md#ni-quintas-ni-octavas-paralelas
 Rack de canales: main-window.md#las-ventanas, channel-rack.md
-Ragtime: jazz-and-pop.md#el-ragtime
+Ragtime: jazz-and-pop.md#el-ragtime, no finding-a-demo.md
 Rasgueo: bigger-band.md#cómo-toca-la-guitarra
 Reconocimiento de acordes: chords.md#cómo-oye-los-acordes-la-aplicación
 Recuperar el trabajo sin guardar: saving.md#recuperar-el-trabajo-sin-guardar
 Registro: settings.md#reproducción
 Relativa: keys-and-modes.md#tonalidades-mayores-y-menores
-Rellenos: styles.md#buscar-un-estilo, song-form.md#variaciones-a-y-b
+Relleno: no patterns-and-playlist.md, styles.md#buscar-un-estilo, song-form.md#variaciones-a-y-b
 Repetir compases: practising.md#repetir-compases
 Restablecer mezcla: mixer.md#las-líneas
 Reverberación: mixer.md#la-reverberación
@@ -270,7 +275,7 @@ Stop-time: stops.md#la-música
 Subdominante: harmony-keys.md#las-teclas, chord-functions.md#casa-alejarse-y-tensión
 Swing: swing.md, styles.md#probar-un-estilo
 Tamaño de la interfaz: settings.md#apariencia
-Tango: tango-and-latin-america.md#el-tango
+Tango: tango-and-latin-america.md#el-tango, no finding-a-demo.md
 Teclado arreglador: harmony-keys.md#tocar-acordes-para-la-banda
 Teclado arreglista: midi.md#tocar-acordes-para-la-banda
 Teclado del equipo como piano: midi.md#el-teclado-del-equipo
@@ -303,8 +308,8 @@ Ventanas: settings.md#ventanas
 Video: exporting.md#un-video
 Volumen principal: mixer.md#las-líneas
 Volver a tocarla: locks.md#una-parte-que-editas-queda-tuya
-Vueltas: first-song.md#6-dale-una-forma, song-form.md#la-fila-forma
+Vuelta: first-song.md#6-dale-una-forma, song-form.md#la-fila-forma
 WAV: channel-rack.md#tus-propios-sonidos, exporting.md#un-archivo-de-sonido
-Zamba: folk-and-misa-criolla.md#zambas
+Zamba: folk-and-misa-criolla.md#zambas, no finding-a-demo.md
 Zoom: settings.md#zoom, patterns-and-playlist.md#moverse
 Zwiefacher: odd-meters-and-balkans.md#métricas-que-cambian

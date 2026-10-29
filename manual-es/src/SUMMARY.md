@@ -59,3 +59,9 @@
 - [Jazz, blues, gospel y pop](jazz-and-pop.md)
 - [La sala de conciertos](concert-hall.md)
 - [Métricas irregulares y los Balcanes](odd-meters-and-balkans.md)
+
+# Referencia
+
+- [Atajos de teclado](shortcuts.md)
+- [Solución de problemas](troubleshooting.md)
+- [Glosario de música](music-glossary.md)

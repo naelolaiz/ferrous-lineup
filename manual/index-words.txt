@@ -12,7 +12,12 @@
 #
 #     Word: see Another word
 #
-# sends the reader to another entry.
+# sends the reader to another entry, and
+#
+#     Word: not chapter.md
+#
+# leaves out that chapter's bold words, where the word names something
+# else (a menu, a pattern).
 
 About window: main-window.md#keys-that-work-everywhere
 Accelerando: tempo-meter-key.md#changing-tempo-partway-through
@@ -29,10 +34,10 @@ Augmented second: odd-meters-and-balkans.md#makam-hicaz
 Autosave: see Recovering unsaved work
 Backbeat: channel-rack.md#writing-drums, rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation
 Band: first-song.md#1-a-new-chord-sheet, first-song.md#4-pick-a-style, bigger-band.md#the-band-menu
-Bar: rhythm-and-meter.md#beats-and-bars
+Bar: rhythm-and-meter.md#beats-and-bars, not main-window.md, not patterns-and-playlist.md, not style-editor.md
 Barre chord: bigger-band.md#how-the-guitar-plays
 Bars, inserting and deleting: chord-sheet.md#changing-the-bars, tempo-meter-key.md#inserting-and-deleting-bars
-Beat: rhythm-and-meter.md#beats-and-bars
+Beat: rhythm-and-meter.md#beats-and-bars, not patterns-and-playlist.md
 Bebop: soloist.md#notes-between-the-beats
 Big band: jazz-and-pop.md#the-standards-and-the-big-bands
 Blue notes: jazz-and-pop.md#the-blues
@@ -57,7 +62,7 @@ Chord sheet: chord-sheet.md, first-song.md#2-type-the-chords
 Chord sheet as text: chord-sheet.md#chord-sheets-as-text
 Chord tones: soloist.md#chord-tones-on-the-beat
 Choro: tango-and-latin-america.md#brazil
-Choruses: first-song.md#6-give-it-a-form, song-form.md#the-form-row
+Chorus: first-song.md#6-give-it-a-form, song-form.md#the-form-row
 Chromatic approach: soloist.md#notes-between-the-beats
 Circle of fifths: chord-functions.md#roots-that-fall-a-fifth
 Clave: rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation
@@ -94,7 +99,7 @@ Export video: exporting.md#a-video
 Export WAV: exporting.md#a-sound-file
 Fermata: stops.md#the-music
 File menu: saving.md#the-file-menu
-Fills: styles.md#finding-a-style, song-form.md#variations-a-and-b
+Fill: not patterns-and-playlist.md, styles.md#finding-a-style, song-form.md#variations-a-and-b
 Find the key: keys-and-modes.md#finding-the-key-experimental
 Follow playhead: patterns-and-playlist.md#moving-around, settings.md#playback
 Forte number: sets-rows-micromodes.md#pitch-class-sets
@@ -151,7 +156,7 @@ Matrix: sets-rows-micromodes.md#the-row-window
 Menus: main-window.md#the-menus
 Meter: rhythm-and-meter.md
 Metronome: practising.md#count-in-and-metronome
-Micromode: sets-rows-micromodes.md#micromodes
+Micromode: sets-rows-micromodes.md#micromodes, not finding-a-demo.md
 MIDI: midi.md
 MIDI channel: midi.md#sending-to-a-synthesizer
 MIDI file: importing.md#midi-files, exporting.md#a-midi-file
@@ -180,7 +185,7 @@ Organ: bigger-band.md#strings-and-organ
 Pad: bigger-band.md#strings-and-organ
 Pan: mixer.md#the-lines, mixer.md#placing-the-band
 Parallel fifths and octaves: voice-leading.md#no-parallel-fifths-or-octaves
-Parallel key: keys-and-modes.md#major-and-minor-keys
+Parallel keys: keys-and-modes.md#major-and-minor-keys
 Passing note: soloist.md#notes-between-the-beats
 Pattern mode: patterns-and-playlist.md#pattern-mode-and-song-mode
 Patterns: patterns-and-playlist.md#patterns
@@ -204,7 +209,7 @@ Prime form: sets-rows-micromodes.md#pitch-class-sets
 Progression: styles.md#progressions-from-the-library
 Push: stops.md
 Quantize: piano-roll.md#tools, midi.md#recording
-Ragtime: jazz-and-pop.md#ragtime
+Ragtime: jazz-and-pop.md#ragtime, not finding-a-demo.md
 Recording: midi.md#recording
 Recording import: importing.md#recordings-experimental
 Recovering unsaved work: saving.md#recovering-unsaved-work
@@ -264,7 +269,7 @@ Suspended chord: chords.md#suspended-chords
 Swing: swing.md, styles.md#trying-a-style
 Syncopation: stops.md#the-music, rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation, jazz-and-pop.md#ragtime
 Synthesizer: midi.md#sending-to-a-synthesizer
-Tango: tango-and-latin-america.md#tango
+Tango: tango-and-latin-america.md#tango, not finding-a-demo.md
 Tap tempo: tempo-meter-key.md#tempo, practising.md#speed-and-tap-tempo
 Tempo: first-song.md#5-the-tempo-and-the-key, main-window.md#the-toolbar, tempo-meter-key.md#tempo
 Tempo change: tempo-meter-key.md#changing-tempo-partway-through
@@ -303,6 +308,6 @@ What often comes next: chord-functions.md#what-often-comes-next
 Windows: settings.md#windows
 Write the chords the song plays: chord-sheet.md#writing-what-the-song-plays
 You play: locks.md#you-play
-Zamba: folk-and-misa-criolla.md#zambas
+Zamba: folk-and-misa-criolla.md#zambas, not finding-a-demo.md
 Zoom: settings.md#zoom, patterns-and-playlist.md#moving-around
 Zwiefacher: odd-meters-and-balkans.md#meters-that-change

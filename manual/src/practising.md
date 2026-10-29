@@ -14,7 +14,7 @@ training** window then trains you to hear harmony without looking.
 - **Count-in**: when you press Play, one bar of clicks comes first, and
   the music starts on the next "one". Start in the middle of a bar and
   the count runs on to where you start, so the beat never jumps.
-- **Metronome** (**Ctrl+M**): a click on every beat while the music
+- **Metronome**: a click on every beat while the music
   plays. The first beat of each bar is higher, so you always know where
   "one" is.
 

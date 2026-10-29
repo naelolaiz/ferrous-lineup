@@ -42,7 +42,7 @@ De izquierda a derecha:
 | ● | graba en el patrón lo que tocas en un teclado MIDI o en el teclado del equipo (ver [Teclados y sintetizadores MIDI](midi.md#grabar)) |
 | **Seguir el cursor de reproducción** | mantiene a la vista el compás que suena en la lista de reproducción, la hoja de acordes y el piano roll. Apagado, puedes desplazarte libremente mientras suena la canción. |
 | **Cuenta de entrada** | un compás de clics antes de que empiece la música |
-| **Metrónomo** | un clic en cada pulso (**Ctrl+M**) |
+| **Metrónomo** | un clic en cada pulso |
 | **TEMPO** | el tempo en pulsos por minuto: arrastra hacia arriba o abajo para cambiarlo, doble clic para escribirlo |
 | **COMPÁS : PULSO : PASO** | dónde está el cursor de reproducción: en el patrón (PAT) o en la canción (CANC) |
 | **PATRÓN** | el patrón seleccionado, el que muestran el rack de canales y el piano roll; **+** añade uno nuevo, **⋯** lo renombra, duplica o elimina, y el último menú fija su duración |
