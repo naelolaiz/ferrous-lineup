@@ -24,6 +24,10 @@ impl Screen {
         app.playlist.browser_open = false;
         // Never read or remove a real recovery copy while testing.
         app.recovery = super::recovery::Recovery::new(None);
+        // Never download or read a real SoundFont either, nor offer one
+        // on the first Play.
+        app.sounds.keep_general_user_in(no_sound_font());
+        app.sounds.offer_on_first_play(false);
         Self {
             ctx,
             app,
@@ -93,6 +97,7 @@ impl Screen {
         self.app.harmony_keys.open = false;
         self.app.playlist.browser_open = false;
         self.app.recovery = super::recovery::Recovery::new(None);
+        self.app.sounds.keep_general_user_in(no_sound_font());
     }
 
     fn click(&mut self, label: &str) {
@@ -162,6 +167,16 @@ impl Screen {
     }
 
     fn scroll_to_at(&mut self, label: &str, pos: Pos2) {
+        self.scroll_until(label, pos, -160.0);
+    }
+
+    /// Scrolls back up at `pos`, a long way at a time, until `label` is
+    /// drawn.
+    fn scroll_back_to_at(&mut self, label: &str, pos: Pos2) {
+        self.scroll_until(label, pos, 1000.0);
+    }
+
+    fn scroll_until(&mut self, label: &str, pos: Pos2, delta: f32) {
         for _ in 0..12 {
             let output = self.draw(vec![]);
             if text_rect(&output, label).is_some() {
@@ -171,7 +186,7 @@ impl Screen {
                 Event::PointerMoved(pos),
                 Event::MouseWheel {
                     unit: egui::MouseWheelUnit::Point,
-                    delta: vec2(0.0, -160.0),
+                    delta: vec2(0.0, delta),
                     phase: egui::TouchPhase::Move,
                     source: egui::MouseWheelSource::Wheel,
                     modifiers: Modifiers::NONE,
@@ -180,6 +195,13 @@ impl Screen {
         }
         panic!("Could not scroll to {label}");
     }
+}
+
+/// Where the tests keep GeneralUser GS: a file that is not there.
+fn no_sound_font() -> std::path::PathBuf {
+    std::env::temp_dir()
+        .join("ferrous-lineup-tests")
+        .join("no-such-soundfont.sf2")
 }
 
 fn text_rect(output: &FullOutput, label: &str) -> Option<Rect> {
@@ -1397,6 +1419,79 @@ fn f1_and_the_help_menu_show_the_keyboard_shortcuts() {
     screen.click("Help");
     screen.click("Keyboard shortcuts");
     assert!(screen.app.shortcuts_open);
+}
+
+#[test]
+fn the_library_is_in_front_when_the_app_starts() {
+    let mut screen = Screen::new();
+    screen.app.playlist.browser_open = true;
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "🔍 Search: bossa, 6/8, tango…").is_some());
+    // The other tab, beside it.
+    let library = text_rect(&output, "📚 Library").unwrap();
+    let patterns = text_rect_in_row(&output, "Patterns", library.center().y).unwrap();
+    screen.click_at(patterns.center(), Modifiers::NONE);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "🔍 Search: bossa, 6/8, tango…").is_none());
+}
+
+#[test]
+fn the_first_play_offers_real_instrument_sounds_once() {
+    let mut screen = Screen::new();
+    screen.app.sounds.offer_on_first_play(true);
+    screen.app.rack_open = false;
+    screen.key(Key::Space);
+    assert!(screen.app.playing, "it plays while it asks");
+    assert_eq!(screen.app.sounds.offered_and_on(), (true, true));
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Real instrument sounds").is_some());
+    assert!(text_rect(&output, "Download").is_some());
+    // Not now: the Lineup Osc plays on, and Play asks nothing again.
+    screen.click("Not now");
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+    screen.key(Key::Space);
+    screen.key(Key::Space);
+    assert!(screen.app.playing);
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+    // Nor once the app starts again.
+    screen.restart();
+    screen.app.rack_open = false;
+    screen.key(Key::Space);
+    assert!(screen.app.playing);
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+
+    // A SoundFont already on disk was turned off on purpose: nothing is
+    // asked, and the sounds stay off.
+    let on_disk = std::env::temp_dir().join(format!(
+        "ferrous-lineup-test-soundfont-{}.sf2",
+        std::process::id()
+    ));
+    std::fs::write(&on_disk, b"").unwrap();
+    let mut screen = Screen::new();
+    screen.app.sounds.keep_general_user_in(on_disk.clone());
+    screen.app.sounds.offer_on_first_play(true);
+    screen.app.rack_open = false;
+    screen.key(Key::Space);
+    assert!(screen.app.playing);
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+    std::fs::remove_file(on_disk).unwrap();
+}
+
+#[test]
+fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
+    let mut screen = Screen::new();
+    crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+    let naming = crate::i18n::note_naming(&screen.ctx);
+    assert_eq!(naming, lineup_core::NoteNaming::Solfege);
+    screen.app.settings_open = true;
+    screen.click("Armonía");
+    screen.click("Letras (C, D, E…)");
+    screen.restart();
+    let naming = crate::i18n::note_naming(&screen.ctx);
+    assert_eq!(naming, lineup_core::NoteNaming::Letters);
+    lineup_core::NoteNaming::Letters.set();
+    crate::i18n::Language::English.set();
 }
 
 #[test]
@@ -3994,11 +4089,14 @@ mod part_sources {
             .app
             .try_from_library(LibraryAction::Style(Style::named("Doo-wop").unwrap()));
         screen.click("📚 Library");
-        let output = screen.draw(Vec::new());
         let tempo = format!(
             "{:.0} BPM · Doo-wop (style)",
             screen.app.project.tempo.bpm()
         );
+        // The list shows the style just applied; where each part comes
+        // from is above it.
+        screen.scroll_back_to_at(&tempo, Pos2::new(100.0, 300.0));
+        let output = screen.draw(Vec::new());
         assert!(text_rect(&output, &tempo).is_some(), "{tempo}");
         assert!(text_rect(&output, "El Choclo (demo)").is_some());
         screen.click("🔍 Search: bossa, 6/8, tango…");
@@ -4184,8 +4282,7 @@ mod locks {
         screen.app.rack_open = false;
         screen.app.playlist.browser_open = true;
         screen.click("📚 Library");
-        let output = screen.draw(Vec::new());
-        assert!(text_rect(&output, "🔒 Keys").is_some());
+        screen.scroll_back_to_at("🔒 Keys", Pos2::new(100.0, 300.0));
         screen.app.playlist.browser_open = false;
         screen.app.chord_sheet.open = true;
         screen.draw(Vec::new());
@@ -4379,9 +4476,10 @@ mod bars {
         crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
         assert!(screen.app.project.set_choruses(3));
         // Bars 2 and 3 selected, with a click and a Shift+click.
-        screen.click("G");
+        // Spanish names notes in solfège: G is Sol.
+        screen.click("Sol");
         screen.draw(vec![]);
-        let am = text_rect(&screen.draw(vec![]), "Am").unwrap().center();
+        let am = text_rect(&screen.draw(vec![]), "Lam").unwrap().center();
         screen.click_at(am, Modifiers::SHIFT);
         assert_eq!(screen.app.chord_sheet.selected_bars(), Some((1, 2)));
         screen.draw(vec![]);

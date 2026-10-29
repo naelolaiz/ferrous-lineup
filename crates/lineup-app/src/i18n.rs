@@ -31,9 +31,20 @@ pub fn set_language(ctx: &egui::Context, language: Language) {
     ctx.data_mut(|data| data.insert_persisted(language_id(), language));
 }
 
-/// The note naming chosen in Settings > Harmony.
+/// The note naming chosen in Settings > Harmony. Until one is chosen,
+/// notes are named the way the interface language names them: solfège
+/// in Spanish, letters in English.
 pub fn note_naming(ctx: &egui::Context) -> NoteNaming {
-    ctx.data_mut(|data| data.get_persisted(note_naming_id()).unwrap_or_default())
+    ctx.data_mut(|data| data.get_persisted(note_naming_id()))
+        .unwrap_or_else(|| language_naming(language(ctx)))
+}
+
+/// How notes are named where `language` is spoken.
+fn language_naming(language: Language) -> NoteNaming {
+    match language {
+        Language::English => NoteNaming::Letters,
+        Language::Spanish => NoteNaming::Solfege,
+    }
 }
 
 /// Chooses how notes and keys are named, from this frame on.
@@ -148,6 +159,25 @@ mod tests {
         apply_settings(&ctx);
         assert_eq!(Language::current(), Language::Spanish);
         assert_eq!(NoteNaming::current(), NoteNaming::Solfege);
+        // This thread only: put it back for the next test it runs.
+        Language::English.set();
+        NoteNaming::Letters.set();
+    }
+
+    #[test]
+    fn spanish_names_notes_in_solfege_until_a_naming_is_chosen() {
+        let ctx = egui::Context::default();
+        set_language(&ctx, Language::Spanish);
+        assert_eq!(note_naming(&ctx), NoteNaming::Solfege);
+        set_language(&ctx, Language::English);
+        assert_eq!(note_naming(&ctx), NoteNaming::Letters);
+        // A naming chosen in Settings stays, whatever the language.
+        set_language(&ctx, Language::Spanish);
+        set_note_naming(&ctx, NoteNaming::Letters);
+        assert_eq!(note_naming(&ctx), NoteNaming::Letters);
+        set_language(&ctx, Language::English);
+        set_note_naming(&ctx, NoteNaming::Solfege);
+        assert_eq!(note_naming(&ctx), NoteNaming::Solfege);
         // This thread only: put it back for the next test it runs.
         Language::English.set();
         NoteNaming::Letters.set();
