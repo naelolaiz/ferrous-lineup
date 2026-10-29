@@ -21,6 +21,15 @@
 - [El solista (experimental)](soloist.md)
 - [Tus propios estilos](style-editor.md)
 
+# Parte 3: Editar notas
+
+- [Los patrones y la lista de reproducción](patterns-and-playlist.md)
+- [El rack de canales](channel-rack.md)
+- [El piano roll](piano-roll.md)
+- [Las teclas de armonía](harmony-keys.md)
+- [Tempo, compases y cambios de tonalidad](tempo-meter-key.md)
+- [Deshacer, zoom, ventanas y ajustes](settings.md)
+
 # Parte 5: Aprender armonía
 
 - [Notas, intervalos y escalas](notes-and-scales.md)

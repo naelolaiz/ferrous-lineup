@@ -169,5 +169,5 @@ crash on its first beat.
 
 The menu lists only the styles in the time signature of those bars. To
 play a waltz in the middle of a song in 4/4, change the time signature
-of those bars first (see [Tempo, time signature and
-key](tempo-meter-key.md)).
+of those bars first (see [Tempo, time signatures and key
+changes](tempo-meter-key.md)).
