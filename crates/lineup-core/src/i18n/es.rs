@@ -165,6 +165,7 @@ fn main_texts(text: &str) -> Option<&'static str> {
         "Source code" => "Código fuente",
         "The book" => "El libro",
         "The book (PDF)" => "El libro (PDF)",
+        "User manual (PDF)" => "Manual de usuario (PDF)",
 
         // --- Transport Bar & Status Bar Hints ---
         "Pattern mode: loop the selected pattern (L)" => {
@@ -192,7 +193,6 @@ fn main_texts(text: &str) -> Option<&'static str> {
         }
         "Time signature" => "Compás",
         "Metronome" => "Metrónomo",
-        "Metronome (Ctrl+M)" => "Metrónomo (Ctrl+M)",
         "Count-in" => "Cuenta de entrada",
         "Count-in: one bar before recording starts" => {
             "Cuenta de entrada: un compás antes de empezar a grabar"

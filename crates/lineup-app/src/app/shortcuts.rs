@@ -240,7 +240,8 @@ impl Keys {
 }
 
 impl LineupApp {
-    /// Help, at the right of the menus: the keyboard shortcuts and About.
+    /// Help, at the right of the menus: the keyboard shortcuts, the user
+    /// manual on the web, and About.
     pub(super) fn help_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button(crate::i18n::tr("Help"), |ui| {
             let shortcut = crate::i18n::shortcut(ui.ctx(), &view::HELP);
@@ -251,6 +252,11 @@ impl LineupApp {
             .shortcut_text(shortcut);
             if ui.add(item).clicked() {
                 self.shortcuts_open = !self.shortcuts_open;
+                ui.close();
+            }
+            if ui.button(crate::i18n::tr("User manual")).clicked() {
+                ui.ctx()
+                    .open_url(egui::OpenUrl::new_tab(super::about::manual()));
                 ui.close();
             }
             ui.separator();
