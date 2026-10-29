@@ -6,7 +6,7 @@ use super::{
     apply::StyleParts,
     comping::{BassPart, Played},
 };
-use crate::i18n::{tr, trf};
+use crate::i18n::{tr, tr_name, trf};
 use crate::{
     Bar, Channel, ChordMarker, HarmonyName, KeyMap, MAX_CHANNELS, MAX_STEPS, Note, NoteEvent,
     NoteNaming, Player, Project, Scale, ScaleKind, Tempo, TimeSignature,
@@ -14,6 +14,13 @@ use crate::{
 use serde::{Deserialize, Serialize};
 
 pub const EXTENSION: &str = "lineup-style";
+
+/// The name of a copy of the style called `name`, in the app's language:
+/// "Bossa nova copy", or "Bossa nova (copia)" in Spanish. The copy is a
+/// style of your own, so it keeps the name it was given.
+pub fn copy_name(name: &str) -> String {
+    trf("{} copy", &[&name])
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StyleLane {
@@ -105,8 +112,8 @@ impl UserStyle {
         }
         Self {
             format: 1,
-            name: format!("{} copy", style.name),
-            about: style.about.into(),
+            name: copy_name(&tr_name(style.name)),
+            about: tr(style.about).into(),
             time: style.time,
             tempo: Tempo::new(style.tempo),
             swing: project.swing,
@@ -125,8 +132,8 @@ impl UserStyle {
         let mut style = Self::blank();
         // A rhythm has no chords of its own to bring.
         style.chart.clear();
-        style.name = format!("{} copy", rhythm.name);
-        style.about = rhythm.about.into();
+        style.name = copy_name(&tr_name(rhythm.name));
+        style.about = tr(rhythm.about).into();
         style.time = rhythm.time;
         style.tempo = Tempo::new(rhythm.tempo);
         style.swing = rhythm.swing;
@@ -467,6 +474,24 @@ mod tests {
             );
         }
     }
+    #[test]
+    fn a_copy_is_named_and_described_in_the_apps_language() {
+        let bossa = super::super::Style::named("Bossa nova").unwrap();
+        let copy = UserStyle::from_builtin(bossa);
+        assert_eq!(copy.name, "Bossa nova copy");
+        assert_eq!(copy.about, bossa.about);
+        crate::i18n::Language::Spanish.with(|| {
+            let copy = UserStyle::from_builtin(bossa);
+            assert_eq!(copy.name, "Bossa nova (copia)");
+            assert_eq!(copy.about, tr(bossa.about));
+            assert_ne!(copy.about, bossa.about);
+            let rhythm = &super::super::RHYTHMS[0];
+            let copy = UserStyle::from_rhythm(rhythm);
+            assert_eq!(copy.name, format!("{} (copia)", tr_name(rhythm.name)));
+            assert_eq!(copy.about, tr(rhythm.about));
+        });
+    }
+
     #[test]
     fn user_parts_follow_chords_and_survive_a_project_round_trip() {
         let mut style = UserStyle::blank();
