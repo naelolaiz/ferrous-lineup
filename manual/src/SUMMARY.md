@@ -30,6 +30,14 @@
 - [Tempo, time signatures and key changes](tempo-meter-key.md)
 - [Undo, zoom, windows and settings](settings.md)
 
+# Part 4: Sound, MIDI and files
+
+- [The mixer](mixer.md)
+- [MIDI keyboards and synths](midi.md)
+- [Saving, opening and recovering](saving.md)
+- [Opening MIDI files and recordings](importing.md)
+- [Exporting](exporting.md)
+
 # Part 5: Learning harmony
 
 - [Notes, intervals and scales](notes-and-scales.md)

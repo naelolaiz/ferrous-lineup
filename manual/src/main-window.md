@@ -38,7 +38,7 @@ From left to right:
 | ⏪ ⏩ | go back or forward a bar (**Page Up**, **Page Down**) |
 | ▶ | plays from the playhead (**Space**). While playing, the same button is ❚❚ **Pause**: it stops there, and ▶ carries on from there. |
 | ⏹ | stops, and goes back to where you last put the playhead (**Space** while playing) |
-| ● | records notes from a MIDI keyboard or the computer keyboard (**R**) |
+| ● | records what you play on a MIDI keyboard or the computer keyboard into the pattern (see [MIDI keyboards and synths](midi.md#recording)) |
 | **Follow playhead** | keeps the bar playing in sight in the playlist, the chord sheet and the piano roll. Off, you can scroll freely while the song plays. |
 | **Count-in** | one bar of clicks before the music starts |
 | **Metronome** | a click on every beat (**Ctrl+M**) |
