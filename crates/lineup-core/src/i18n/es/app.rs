@@ -147,7 +147,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     (
         "A {} improvises over the chorus: chord tones on the beats, scale and chromatic notes between them. The piano roll says what each of its notes is",
-        "{} improvisa sobre el estribillo: notas del acorde en los pulsos, notas de la escala y cromáticas entre ellos. El piano roll dice qué es cada una de sus notas",
+        "{} improvisa sobre las vueltas: notas del acorde en los pulsos, notas de la escala y cromáticas entre ellos. El piano roll dice qué es cada una de sus notas",
     ),
     ("A {}-bar intro", "Una introducción de {} compases"),
     (
@@ -310,7 +310,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Bar {}, beat {}, step {}", "Compás {}, pulso {}, paso {}"),
     (
         "Bar {}, the band's ending: a bar on the key's tonic, then the chord struck once and held. Type a chord here, and the chorus takes this bar in",
-        "Compás {}, el final de la banda: un compás sobre la tónica de la tonalidad, y luego el acorde tocado una vez y sostenido. Escribe un acorde aquí, y el estribillo incorpora este compás",
+        "Compás {}, el final de la banda: un compás sobre la tónica de la tonalidad, y luego el acorde tocado una vez y sostenido. Escribe un acorde aquí, y la vuelta incorpora este compás",
     ),
     (
         "Bar {}: click it and type its harmony, or double-click to change it. Right-click for more",
@@ -320,7 +320,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Bars", "Compases"),
     (
         "Bars the band plays before the chorus, with chords that lead into its first one: a turnaround, ii–V or I–vi–ii–V. They are written on the sheet, so you can change them; picking a length again writes them anew",
-        "Compases que la banda toca antes del estribillo, con acordes que llevan a su primero: un turnaround, ii–V o I–vi–ii–V. Se escriben en la hoja, así que puedes cambiarlos; elegir otra vez una duración los vuelve a escribir",
+        "Compases que la banda toca antes de las vueltas, con acordes que llevan a la primera: un turnaround, ii–V o I–vi–ii–V. Se escriben en la hoja, así que puedes cambiarlos; elegir otra vez una duración los vuelve a escribir",
     ),
     (
         "Bars {}–{} loop. Click to play the whole song again",
@@ -852,7 +852,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     (
         "How many times the band plays the chorus: every bar written on the sheet after the intro, one time through the tune, as jazz musicians say. The sheet shows it once, between repeat signs. Drag, or double-click to type",
-        "Cuántas veces toca la banda el estribillo: cada compás escrito en la hoja después de la introducción, una vuelta completa al tema, como dicen los músicos de jazz. La hoja lo muestra una vez, entre signos de repetición. Arrastra, o haz doble clic para escribir",
+        "Cuántas vueltas toca la banda: una vuelta es cada compás escrito en la hoja después de la introducción, una vez el tema completo, como dicen los músicos de jazz. La hoja la muestra una vez, entre signos de repetición. Arrastra, o haz doble clic para escribir",
     ),
     (
         "How many times the loop plays at each speed before the next one",
@@ -1145,7 +1145,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("No intro", "Sin introducción"),
     (
         "No intro: the band starts with the chorus",
-        "Sin introducción: la banda empieza con el estribillo",
+        "Sin introducción: la banda empieza con la primera vuelta",
     ),
     ("no notes here", "no hay notas aquí"),
     (
@@ -1890,7 +1890,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     (
         "The band stops at the end of the last chorus",
-        "La banda se detiene al final del último estribillo",
+        "La banda se detiene al final de la última vuelta",
     ),
     (
         "The beat and chords Ferrous Lineup opens with",
@@ -2047,7 +2047,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     (
         "The soloist improvises over the chorus",
-        "El solista improvisa sobre el estribillo",
+        "El solista improvisa sobre las vueltas",
     ),
     (
         "The soloist is locked: unlock it in the rack first.",
@@ -2268,7 +2268,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     (
         "Two bars after the last chorus: the band goes to the key's tonic, then strikes it once and holds it, with a crash of the cymbal. Type a chord in them, and the chorus takes that bar in",
-        "Dos compases después del último estribillo: la banda va a la tónica de la tonalidad, y luego la toca una vez y la sostiene, con un golpe de platillo. Escribe un acorde en ellos, y el estribillo incorpora ese compás",
+        "Dos compases después de la última vuelta: la banda va a la tónica de la tonalidad, y luego la toca una vez y la sostiene, con un golpe de platillo. Escribe un acorde en ellos, y la vuelta incorpora ese compás",
     ),
     (
         "Two notes play. How far apart are they?",
