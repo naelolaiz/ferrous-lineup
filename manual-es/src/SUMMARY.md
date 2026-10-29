@@ -30,6 +30,14 @@
 - [Tempo, compases y cambios de tonalidad](tempo-meter-key.md)
 - [Deshacer, zoom, ventanas y ajustes](settings.md)
 
+# Parte 4: Sonido, MIDI y archivos
+
+- [El mezclador](mixer.md)
+- [Teclados y sintetizadores MIDI](midi.md)
+- [Guardar, abrir y recuperar](saving.md)
+- [Abrir archivos MIDI y grabaciones](importing.md)
+- [Exportar](exporting.md)
+
 # Parte 5: Aprender armonía
 
 - [Notas, intervalos y escalas](notes-and-scales.md)

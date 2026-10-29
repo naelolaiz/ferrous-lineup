@@ -39,7 +39,7 @@ De izquierda a derecha:
 | ⏪ ⏩ | un compás hacia atrás o hacia adelante (**RePág**, **AvPág**) |
 | ▶ | toca desde el cursor de reproducción (**Espacio**). Mientras suena, el mismo botón es ❚❚ **Pausa**: se detiene ahí, y ▶ sigue desde ahí. |
 | ⏹ | detiene, y vuelve a donde pusiste el cursor de reproducción por última vez (**Espacio** mientras suena) |
-| ● | graba notas desde un teclado MIDI o el teclado del equipo (**R**) |
+| ● | graba en el patrón lo que tocas en un teclado MIDI o en el teclado del equipo (ver [Teclados y sintetizadores MIDI](midi.md#grabar)) |
 | **Seguir el cursor de reproducción** | mantiene a la vista el compás que suena en la lista de reproducción, la hoja de acordes y el piano roll. Apagado, puedes desplazarte libremente mientras suena la canción. |
 | **Cuenta de entrada** | un compás de clics antes de que empiece la música |
 | **Metrónomo** | un clic en cada pulso (**Ctrl+M**) |
