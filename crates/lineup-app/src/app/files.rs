@@ -16,6 +16,7 @@ use super::LineupApp;
 use super::export::MidiExport;
 use super::library::Demo;
 use crate::channel_rack::is_project_file;
+use crate::i18n::{tr, tr_name, trf};
 use crate::library_browser::Tried;
 use crate::piano_roll::PianoRoll;
 use crate::theme;
@@ -150,7 +151,10 @@ impl FileState {
     fn display_name(&self) -> String {
         match &self.path {
             Some(path) => file_name(path, Path::file_name),
-            None => self.song_name().unwrap_or_else(|| "Untitled".to_string()),
+            None => self.song_name().map_or_else(
+                || tr("Untitled").to_string(),
+                |name| tr_name(&name).into_owned(),
+            ),
         }
     }
 
@@ -169,7 +173,7 @@ impl FileState {
     pub(super) fn stem(&self) -> String {
         // A name such as "AC/DC" would be read as a folder.
         self.song_name().map_or_else(
-            || "Untitled".to_string(),
+            || tr("Untitled").to_string(),
             |name| name.replace(['/', '\\'], "-"),
         )
     }
@@ -185,7 +189,7 @@ impl FileState {
     fn title(&self, changed: bool) -> String {
         let star = if changed { "*" } else { "" };
         let demo = if self.path.is_none() && self.demo.is_some() {
-            " (demo, read-only)"
+            tr(" (demo, read-only)")
         } else {
             ""
         };
@@ -198,7 +202,7 @@ impl FileState {
 /// "/" has no name; "Untitled" stands in then.
 fn file_name(path: &Path, part: fn(&Path) -> Option<&std::ffi::OsStr>) -> String {
     part(path).map_or_else(
-        || "Untitled".to_string(),
+        || tr("Untitled").to_string(),
         |name| name.to_string_lossy().into_owned(),
     )
 }
@@ -215,7 +219,7 @@ pub(super) fn fill_chord_sheet(project: &mut Project) {
 
 /// A file dialog that shows project files.
 fn project_dialog() -> rfd::FileDialog {
-    rfd::FileDialog::new().add_filter("Ferrous Lineup project", &[file::EXTENSION])
+    rfd::FileDialog::new().add_filter(tr("Ferrous Lineup project"), &[file::EXTENSION])
 }
 
 /// `path` with a project extension, replacing any other. A project saved
@@ -244,16 +248,17 @@ impl LineupApp {
     pub(super) fn file_menu(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         let item = |text, shortcut: KeyboardShortcut| {
-            egui::Button::new(crate::i18n::tr(text)).shortcut_text(ctx.format_shortcut(&shortcut))
+            egui::Button::new(crate::i18n::tr(text))
+                .shortcut_text(crate::i18n::shortcut(&ctx, &shortcut))
         };
         ui.menu_button(crate::i18n::tr("File"), |ui| {
             let new = ui.add(item("New", NEW));
-            if theme::hint(new, "An empty chord sheet with a band to play it").clicked() {
+            if theme::hint(new, tr("An empty chord sheet with a band to play it")).clicked() {
                 self.request(&ctx, Pending::New);
                 ui.close();
             }
             let beat = ui.button(crate::i18n::tr("New beat"));
-            if theme::hint(beat, "An empty pattern and a drum kit").clicked() {
+            if theme::hint(beat, tr("An empty pattern and a drum kit")).clicked() {
                 self.request(&ctx, Pending::NewBeat);
                 ui.close();
             }
@@ -496,7 +501,7 @@ impl LineupApp {
             }
             Err(err) => {
                 self.recent.remove(&path);
-                self.message = Some(format!("Could not open {}: {err}", path.display()));
+                self.message = Some(trf("Could not open {}: {}", &[&path.display(), &err]));
             }
         }
     }
@@ -531,7 +536,7 @@ impl LineupApp {
         self.harmony_keys.forget_chords();
         self.key_finder.new_project(&self.project, Vec::new());
         self.message = None;
-        self.notice = stopped_import.then_some("Stopped importing the recording.".to_string());
+        self.notice = stopped_import.then(|| tr("Stopped importing the recording.").to_string());
         // Undo cannot go back into another file, and its samples may
         // not be needed any more.
         self.history = History::new(super::edit::undo_limit_for(&self.project));
@@ -587,7 +592,7 @@ impl LineupApp {
                 true
             }
             Err(err) => {
-                self.message = Some(format!("Could not save {}: {err}", path.display()));
+                self.message = Some(trf("Could not save {}: {}", &[&path.display(), &err]));
                 false
             }
         }
@@ -613,7 +618,7 @@ impl LineupApp {
                 // Opening one after another would throw each away before
                 // it could be seen; ask for one at a time instead.
                 self.message =
-                    Some("Drop one project file at a time: none was opened.".to_string());
+                    Some(tr("Drop one project file at a time: none was opened.").to_string());
             } else {
                 self.open_path(ctx, path);
             }
@@ -649,16 +654,16 @@ impl LineupApp {
             let mut choice = None;
             let modal =
                 egui::Modal::new(egui::Id::unique("unsaved-style-on-quit")).show(ctx, |ui| {
-                    ui.heading("Save style changes?");
-                    ui.label("The style draft has unsaved edits.");
+                    ui.heading(tr("Save style changes?"));
+                    ui.label(tr("The style draft has unsaved edits."));
                     ui.horizontal(|ui| {
-                        if ui.button("Save style").clicked() {
+                        if ui.button(tr("Save style")).clicked() {
                             choice = Some(Choice::Save);
                         }
-                        if ui.button("Don't save style").clicked() {
+                        if ui.button(tr("Don't save style")).clicked() {
                             choice = Some(Choice::Discard);
                         }
-                        if ui.button("Cancel").clicked() {
+                        if ui.button(tr("Cancel")).clicked() {
                             choice = Some(Choice::Cancel);
                         }
                     });
@@ -695,12 +700,7 @@ impl LineupApp {
             ui.set_width(320.0);
             ui.heading(crate::i18n::tr("Save changes?"));
             ui.add_space(4.0);
-            let msg = if crate::i18n::current_language() == crate::i18n::Language::Spanish {
-                format!("\"{name}\" tiene cambios que aún no se han guardado.")
-            } else {
-                format!("\"{name}\" has changes that are not saved yet.")
-            };
-            ui.label(msg);
+            ui.label(trf("\"{}\" has changes that are not saved yet.", &[&name]));
             ui.add_space(8.0);
             ui.horizontal(|ui| {
                 if ui.button(crate::i18n::tr("Save")).clicked() {
@@ -733,7 +733,7 @@ impl LineupApp {
             // Nothing happens, which is easy to miss: say so.
             Some(Choice::Cancel) => {
                 self.file.pending = None;
-                self.notice = Some(format!("Cancelled: \"{name}\" stays open as it is."));
+                self.notice = Some(trf("Cancelled: \"{}\" stays open as it is.", &[&name]));
             }
             None => {}
         }

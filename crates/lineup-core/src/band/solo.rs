@@ -16,6 +16,7 @@
 
 use crate::general_midi as gm;
 use crate::harmony::{Chord, PitchSet, Scale, chord_scale, chord_scale_name};
+use crate::i18n::{tr, trc, trf};
 use crate::library::Genre;
 use crate::library::comping::{BassPart, Played};
 use crate::meter::Bar;
@@ -69,7 +70,7 @@ impl Over {
     pub fn scale_name(&self, key: Scale) -> Option<String> {
         let chord = self.chord?;
         let name = chord_scale_name(self.scale, chord.root)?;
-        Some(format!("{} {name}", key.spell_root(chord)))
+        Some(format!("{} {}", key.spell_root(chord), tr(name)))
     }
 }
 
@@ -123,28 +124,28 @@ impl NoteRole {
     pub fn short(self) -> String {
         match self {
             NoteRole::ChordTone(Some(degree)) => degree_name(degree),
-            NoteRole::ChordTone(None) => "a note of the harmony".to_string(),
-            NoteRole::Passing => "passing note".to_string(),
-            NoteRole::Neighbour => "neighbour note".to_string(),
-            NoteRole::ChromaticPassing => "chromatic passing note".to_string(),
-            NoteRole::Approach => "chromatic approach".to_string(),
-            NoteRole::ScaleTone => "scale note".to_string(),
-            NoteRole::Outside => "outside the scale".to_string(),
+            NoteRole::ChordTone(None) => tr("a note of the harmony").to_string(),
+            NoteRole::Passing => tr("passing note").to_string(),
+            NoteRole::Neighbour => tr("neighbour note").to_string(),
+            NoteRole::ChromaticPassing => tr("chromatic passing note").to_string(),
+            NoteRole::Approach => tr("chromatic approach").to_string(),
+            NoteRole::ScaleTone => tr("scale note").to_string(),
+            NoteRole::Outside => tr("outside the scale").to_string(),
         }
     }
 
     /// One or two characters to write on the note: "3", "p", "n".
     pub fn mark(self) -> String {
         match self {
-            NoteRole::ChordTone(Some(1)) => "R".to_string(),
+            NoteRole::ChordTone(Some(1)) => trc("mark", "R").to_string(),
             NoteRole::ChordTone(Some(degree)) => degree.to_string(),
             NoteRole::ChordTone(None) => "•".to_string(),
-            NoteRole::Passing => "p".to_string(),
-            NoteRole::Neighbour => "n".to_string(),
-            NoteRole::ChromaticPassing => "cp".to_string(),
-            NoteRole::Approach => "a".to_string(),
-            NoteRole::ScaleTone => "s".to_string(),
-            NoteRole::Outside => "x".to_string(),
+            NoteRole::Passing => trc("mark", "p").to_string(),
+            NoteRole::Neighbour => trc("mark", "n").to_string(),
+            NoteRole::ChromaticPassing => trc("mark", "cp").to_string(),
+            NoteRole::Approach => trc("mark", "a").to_string(),
+            NoteRole::ScaleTone => trc("mark", "s").to_string(),
+            NoteRole::Outside => trc("mark", "x").to_string(),
         }
     }
 
@@ -156,13 +157,11 @@ impl NoteRole {
             NoteRole::ChordTone(degree) => {
                 let chord = over.chord.map(|chord| key.chord_name(chord));
                 return match (degree, chord) {
-                    (Some(degree), Some(chord)) => {
-                        format!(
-                            "{name}, the {} of {chord}: a chord tone.",
-                            degree_name(degree)
-                        )
-                    }
-                    _ => format!("{name}: a note of the harmony."),
+                    (Some(degree), Some(chord)) => trf(
+                        "{}, the {} of {}: a chord tone.",
+                        &[&name, &degree_name(degree), &chord],
+                    ),
+                    _ => trf("{}: a note of the harmony.", &[&name]),
                 };
             }
             NoteRole::Passing => "a passing note, a step between the notes either side",
@@ -174,13 +173,19 @@ impl NoteRole {
             NoteRole::ScaleTone => "a note of the scale",
             NoteRole::Outside => "a note from outside the scale",
         };
+        let what = tr(what);
         match (over.chord, over.scale_name(key)) {
-            (Some(chord), Some(scale)) => format!(
-                "{name}: {what}. Over {} the scale is {scale}: {}.",
-                key.chord_name(chord),
-                spell_set(over.scale, over.chord, key)
+            (Some(chord), Some(scale)) => trf(
+                "{}: {}. Over {} the scale is {}: {}.",
+                &[
+                    &name,
+                    &what,
+                    &key.chord_name(chord),
+                    &scale,
+                    &spell_set(over.scale, over.chord, key),
+                ],
             ),
-            _ => format!("{name}: {what}."),
+            _ => trf("{}: {}.", &[&name, &what]),
         }
     }
 }
@@ -188,10 +193,10 @@ impl NoteRole {
 /// "the root", "3rd", "♭9"...: which note of a chord a degree is.
 fn degree_name(degree: u8) -> String {
     match degree {
-        1 => "root".to_string(),
-        2 => "2nd".to_string(),
-        3 => "3rd".to_string(),
-        _ => format!("{degree}th"),
+        1 => tr("root").to_string(),
+        2 => tr("2nd").to_string(),
+        3 => tr("3rd").to_string(),
+        _ => trf("{}th", &[&degree]),
     }
 }
 

@@ -4,14 +4,13 @@ La segunda tanda de demos hace dos cosas. Añade un género que faltaba,
 el folclore de Sudamérica, con sus propios patrones de batería y estilos
 de armonía, y más que duplica el número de canciones, de 62 a 130, cada
 una nueva transcrita de una fuente escrita en lugar de memoria. De paso,
-una demo aprendió a mostrar, en la pestaña Library, qué estilo y qué
+una demo aprendió a mostrar, en la pestaña Biblioteca, qué estilo y qué
 ritmo está tocando. Esta página trata de lo que tuvo que cambiar para
 hacerle sitio a todo eso, y de lo que se aprendió por el camino.
 
 ## Un género nuevo
 
-`Genre` es un enum, y toda la biblioteca cuelga de él: los menús Styles,
-Rhythms y Songs tienen un submenú por género, en el orden de
+`Genre` es un enum, y toda la biblioteca cuelga de él: los menús Estilos, Ritmos y Canciones tienen un submenú por género, en el orden de
 `Genre::ALL`. Añadir `Folklore` entre `Tango` y `Flamenco` tocó tres
 lugares:
 
@@ -171,7 +170,7 @@ const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
 ```
 
 Una melodía en 12/8 escribe una corchea como 2 pasos y un compás como
-24. El piano roll y el playlist no saben nada nuevo: un compás dura lo
+24. El piano roll y la lista de reproducción no saben nada nuevo: un compás dura lo
 que dice el compás.
 
 ## Transcritas, no recordadas
@@ -213,7 +212,7 @@ ritmo y la armonía de la danza.
 
 ## Las canciones
 
-Las demos nuevas, por género en el menú Songs:
+Las demos nuevas, por género en el menú Canciones:
 
 - **Folclore sudamericano**: El cóndor pasa y Dos palomitas (huayno),
   Alma llanera (joropo) y las once melodías de danza nuevas.
@@ -225,10 +224,9 @@ Las demos nuevas, por género en el menú Songs:
   Lomond, Waltzing Matilda, Soldier's Joy, Cotton-Eyed Joe y más.
 - **Rock y pop**: unas cuantas melodías antiguas tocadas a la manera
   moderna: Whiskey in the Jar, When Johnny Comes Marching Home, la
-  Toreador Song de Bizet como marcha rock.
-- **Clásica y cine**: La donna è mobile, Ave Maria, el Hallelujah
-  Chorus, la Wedding March, The Great Gate of Kiev, Anitra's Dance, el
-  Prelude in C-sharp minor de Rachmaninoff, el himno Jupiter de Holst y
+  Canción del torero de Bizet como marcha rock.
+- **Clásica y cine**: La donna è mobile, Ave Maria, el Coro del Aleluya, la Marcha nupcial, La gran puerta de Kiev, La danza de Anitra, el
+  Preludio en Do♯ menor de Rachmaninoff, el himno Jupiter de Holst y
   el Dies irae de Mozart; la Rêverie de Debussy aparece como lo-fi hip
   hop y su Golliwogg's Cakewalk como jazz.
 
@@ -239,7 +237,7 @@ qué acorde está prestado, dónde cae la hemiola.
 
 En un buen navegador, lo que cargues se queda resaltado, para que puedas
 ver de dónde vino y probar el de al lado. Aquí, abrir una demo solía
-dejar la pestaña Library sin nada seleccionado. La biblioteca solo
+dejar la pestaña Biblioteca sin nada seleccionado. La biblioteca solo
 resaltaba lo que ella misma había escrito en el patrón seleccionado, y
 una demo la construye `song_demo`, no un clic en la biblioteca.
 

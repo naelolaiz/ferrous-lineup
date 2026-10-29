@@ -82,7 +82,7 @@ todo acorde.
 
 `chart.rs`
 
-Un **lead sheet**, la página que lee un músico en activo, tiene la
+Una **partitura guía**, la página que lee un músico en activo, tiene la
 melodía con los nombres de los acordes encima, compás a compás. La
 biblioteca escribe los acordes igual, con `|` entre compases:
 
@@ -298,8 +298,8 @@ una quinta de distancia.
 Las demos necesitaban canciones que todo el mundo conozca, y tenían que
 ser libres de usar. Una canción es libre cuando está en el **dominio
 público**: canciones folclóricas que no son de nadie, y música de
-compositores que murieron hace mucho. *Ode to Joy* (Beethoven, 1824),
-*Für Elise*, *Canon in D*, *Greensleeves*, *Frère Jacques*,
+compositores que murieron hace mucho. *Oda a la alegría* (Beethoven, 1824),
+*Para Elisa*, *Canon en Re*, *Greensleeves*, *Frère Jacques*,
 *Korobeiniki* y las demás lo están todas. Algunas melodías antiguas
 famosas no, o no en todas partes, porque un arreglo más nuevo o la letra
 siguen protegidos; esas se dejaron fuera.
@@ -320,7 +320,7 @@ suma lo que marca su compás.
 Una canción tiene **partes** (una estrofa, un estribillo, una sección
 "A" y una "B"), cada una con su melodía y su tabla de acordes, y una
 **forma**: el orden en que se tocan las partes. Cada canción se viste de
-un estilo con su comping, su bajo y su ritmo: *Ode to Joy* como pista de
+un estilo con su comping, su bajo y su ritmo: *Oda a la alegría* como pista de
 house, *Twinkle, Twinkle* como lo-fi, *When the Saints* como dixieland,
 *Drunken Sailor* como folk punk.
 
@@ -351,8 +351,8 @@ Part::new("Round again", FRERE_JACQUES_TUNE, FRERE_JACQUES_CHORDS).with_voices(&
 
 Cada pareja es `(voice, bar)`: qué voz canta, y el compás de la parte en
 el que entra. El primer campo también elige el canal: la voz 1 es el
-canal Lead, y las voces 2, 3 y 4 reciben "Voice 2", "Voice 3" y "Voice
-4". En "Round again", las copias que empezaron en la parte anterior
+canal Melodía, y las voces 2, 3 y 4 reciben "Voz 2", "Voz 3" y "Voz
+4". En "Canon otra vez", las copias que empezaron en la parte anterior
 siguen: la voz 2 en -6 empezó seis compases antes, así que en esta parte
 oyes sus dos últimos compases. Las notas que caen fuera de la parte se
 descartan:
@@ -381,7 +381,7 @@ negativos, así que las sumas se hacen en `isize`, un entero con signo
 del tamaño de `usize`. Solo se conservan los comienzos dentro de la
 parte, `0..length`, así que la conversión de vuelta a `usize` no puede
 salir mal. `..*note` es otra vez sintaxis de actualización de struct:
-una copia de la nota con un comienzo nuevo. *Canon in D* usa el mismo
+una copia de la nota con un comienzo nuevo. *Canon en Re* usa el mismo
 truco para sus tres violines.
 
 ## ¿Está bien?
@@ -398,7 +398,7 @@ leen la biblioteca entera:
 - las primeras notas de cada canción son las que la gente conoce,
 - al menos el 80% de las notas de cada melodía están en la tonalidad de
   la canción. El resto son notas de paso y giros cromáticos, como el
-  Re♯ de *Für Elise*; una melodía con menos notas en su tonalidad casi
+  Re♯ de *Para Elisa*; una melodía con menos notas en su tonalidad casi
   seguro está escrita en la tonalidad equivocada.
 
 Una primera versión de esa última prueba comprobaba que cada nota

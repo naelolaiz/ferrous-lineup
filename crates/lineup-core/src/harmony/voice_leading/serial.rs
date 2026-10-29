@@ -50,6 +50,7 @@ use super::{PartNote, RowPlace, RowStatement, Slip, SlipKind, Voice, VoiceLeadin
 use crate::harmony::{
     ChordQuality, Harmony, PitchSet, RowForm, RowLabel, Scale, ScaleKind, ToneRow, analyze,
 };
+use crate::i18n::{list, tr, trf};
 use crate::{Note, NoteEvent, PitchClass};
 
 /// The most groups of notes one form of the row is tried on: twelve, and
@@ -679,17 +680,17 @@ impl RowStatement {
         let start = self.key.spell(PitchClass::from_semitone(self.label.number));
         let number = self.label.number;
         let what = match self.label.form {
-            RowForm::Prime => format!("the row starting on {start}"),
-            RowForm::Inversion => format!("the row upside down, starting on {start}"),
-            RowForm::Retrograde => format!("P{number} backwards"),
-            RowForm::RetrogradeInversion => format!("I{number} backwards"),
+            RowForm::Prime => trf("the row starting on {}", &[&start]),
+            RowForm::Inversion => trf("the row upside down, starting on {}", &[&start]),
+            RowForm::Retrograde => trf("P{} backwards", &[&number]),
+            RowForm::RetrogradeInversion => trf("I{} backwards", &[&number]),
         };
         let carried = match self.before {
             0 => String::new(),
-            before => format!(
+            before => trf(
                 " The pattern starts at its note {}: the notes before it come in the pattern \
                  before.",
-                before + 1
+                &[&(before + 1)],
             ),
         };
         format!("{}: {what}: {}.{carried}", self.label, notes.join(" "))
@@ -706,36 +707,44 @@ pub(super) fn what(slip: &Slip, voice_name: impl Fn(usize) -> String) -> String 
             let wanted = place
                 .wanted
                 .map(|(pitch_class, order)| {
-                    format!(
-                        " where {} wants {}, its note {order}",
-                        place.label,
-                        class(pitch_class)
+                    trf(
+                        " where {} wants {}, its note {}",
+                        &[&place.label, &class(pitch_class), &order],
                     )
                 })
                 .unwrap_or_default();
-            format!(
-                "Out of row order: {} plays {}{wanted}; {} is note {} of {}.",
-                voice_name(played.voice),
-                note(played.note.pitch),
-                class(played.note.pitch.pitch_class()),
-                place.order,
-                place.label,
+            trf(
+                "Out of row order: {} plays {}{}; {} is note {} of {}.",
+                &[
+                    &voice_name(played.voice),
+                    &note(played.note.pitch),
+                    &wanted,
+                    &class(played.note.pitch.pitch_class()),
+                    &place.order,
+                    &place.label,
+                ],
             )
         }
         (SlipKind::EarlyRepeat, [played], Some(place)) => {
             let wanted = place
                 .wanted
                 .map(|(pitch_class, order)| {
-                    format!("; the row wants {}, its note {order}", class(pitch_class))
+                    trf(
+                        "; the row wants {}, its note {}",
+                        &[&class(pitch_class), &order],
+                    )
                 })
                 .unwrap_or_default();
-            format!(
+            trf(
                 "Note repeated early: {} plays {} again before {} has sounded all twelve notes \
-                 ({} so far){wanted}.",
-                voice_name(played.voice),
-                note(played.note.pitch),
-                place.label,
-                place.heard,
+                 ({} so far){}.",
+                &[
+                    &voice_name(played.voice),
+                    &note(played.note.pitch),
+                    &place.label,
+                    &place.heard,
+                    &wanted,
+                ],
             )
         }
         (SlipKind::RowUnfinished, [played], Some(place)) => {
@@ -750,46 +759,53 @@ pub(super) fn what(slip: &Slip, voice_name: impl Fn(usize) -> String) -> String 
                 .map(class)
                 .collect();
             let never = match missing.as_slice() {
-                [one] => format!("{one} never sounds"),
-                [some @ .., last] => format!("{} and {last} never sound", some.join(", ")),
+                [one] => trf("{} never sounds", &[one]),
                 [] => String::new(),
+                some => trf("{} never sound", &[&list(some)]),
             };
-            format!(
-                "Row left unfinished: {} stops after {} of its 12 notes, with {}'s {}; {never} \
+            trf(
+                "Row left unfinished: {} stops after {} of its 12 notes, with {}'s {}; {} \
                  before the next form starts.",
-                place.label,
-                place.heard,
-                voice_name(played.voice),
-                note(played.note.pitch),
+                &[
+                    &place.label,
+                    &place.heard,
+                    &voice_name(played.voice),
+                    &note(played.note.pitch),
+                    &never,
+                ],
             )
         }
         (SlipKind::OctaveDoubling, [first, second], _) => {
             let (a, b) = (first.note.pitch, second.note.pitch);
             let notes = if a == b {
-                format!("{} in both", note(a))
+                trf("{} in both", &[&note(a)])
             } else {
-                format!("{} and {}", note(a.max(b)), note(a.min(b)))
+                trf("{} and {}", &[&note(a.max(b)), &note(a.min(b))])
             };
             if slip.doubled {
-                format!(
-                    "Octave doubling: {} and {} play one line in octaves, from {notes} on.",
-                    voice_name(first.voice),
-                    voice_name(second.voice),
+                trf(
+                    "Octave doubling: {} and {} play one line in octaves, from {} on.",
+                    &[&voice_name(first.voice), &voice_name(second.voice), &notes],
                 )
             } else if first.note.start_tick() < second.note.start_tick() {
-                format!(
+                trf(
                     "Octave doubling: {} plays {} while {} still holds {}.",
-                    voice_name(second.voice),
-                    note(b),
-                    voice_name(first.voice),
-                    note(a),
+                    &[
+                        &voice_name(second.voice),
+                        &note(b),
+                        &voice_name(first.voice),
+                        &note(a),
+                    ],
                 )
             } else {
-                format!(
-                    "Octave doubling: {} and {} both play {} ({notes}).",
-                    voice_name(first.voice),
-                    voice_name(second.voice),
-                    class(a.pitch_class()),
+                trf(
+                    "Octave doubling: {} and {} both play {} ({}).",
+                    &[
+                        &voice_name(first.voice),
+                        &voice_name(second.voice),
+                        &class(a.pitch_class()),
+                        &notes,
+                    ],
                 )
             }
         }
@@ -818,15 +834,14 @@ pub(super) fn what(slip: &Slip, voice_name: impl Fn(usize) -> String) -> String 
                     ChordQuality::Minor => "a minor triad",
                     _ => "a dominant seventh",
                 };
-                format!("{name}, {kind}")
+                format!("{name}, {}", tr(kind))
             });
-            format!(
+            trf(
                 "Sounds tonal: {} make {}, a chord of tonal harmony.",
-                names.join(" "),
-                chord.unwrap_or_default(),
+                &[&names.join(" "), &chord.unwrap_or_default()],
             )
         }
-        _ => format!("{}.", slip.kind.name()),
+        _ => format!("{}.", tr(slip.kind.name())),
     }
 }
 
@@ -873,28 +888,28 @@ pub(super) fn summary(check: &VoiceLeading) -> String {
         .iter()
         .map(|row| match row.before {
             0 => row.label.to_string(),
-            before => format!("{} from note {}", row.label, before + 1),
+            before => trf("{} from note {}", &[&row.label, &(before + 1)]),
         })
         .collect();
     let mut channels: Vec<usize> = check.voices.iter().map(|voice| voice.channel).collect();
     channels.sort_unstable();
     channels.dedup();
     let how = if check.rows.iter().any(|row| row.channel.is_some()) {
-        ", each track playing forms of its own"
+        tr(", each track playing forms of its own")
     } else if channels.len() > 1 {
-        ", through all the tracks together"
+        tr(", through all the tracks together")
     } else {
         ""
     };
     let read = match labels.len() {
-        0 => "no notes of the row yet".to_string(),
+        0 => tr("no notes of the row yet").to_string(),
         1..=8 => format!("{}{how}", labels.join(", ")),
-        n => format!("{} … ({n} forms){how}", labels[..8].join(", ")),
+        n => trf("{} … ({} forms){}", &[&labels[..8].join(", "), &n, &how]),
     };
     let found = check
         .counts()
-        .unwrap_or_else(|| "nothing twelve-tone writing avoids".to_string());
-    format!("Twelve-tone rules, {read}: {found}.")
+        .unwrap_or_else(|| tr("nothing twelve-tone writing avoids").to_string());
+    trf("Twelve-tone rules, {}: {}.", &[&read, &found])
 }
 
 #[cfg(test)]

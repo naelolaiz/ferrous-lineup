@@ -198,7 +198,7 @@ piano roll tuvo que saber ninguno de los dos detalles.
 
 ### Quién recibe las teclas
 
-Las teclas de flecha y Delete son útiles en el piano roll, pero Ferrous
+Las teclas de flecha y Supr son útiles en el piano roll, pero Ferrous
 Lineup tiene otras ventanas, y una tecla que cambie notas en una ventana
 que no estás mirando sería una sorpresa desagradable. Así que el piano
 roll solo toma las teclas después de un clic dentro de su ventana, hasta
@@ -251,9 +251,9 @@ El piano roll le pregunta a egui si cada una se pulsó con
 `input.consume_shortcut(&shortcut)`. Eso devuelve `true` una vez y
 «consume» la pulsación para que nada más reaccione a ella. Aquí importa
 un detalle de egui: empareja los atajos de forma *lógica*, lo que
-significa que las teclas Shift o Alt de más no impiden un
-emparejamiento. Shift+↑ cuenta también como una pulsación de ↑.
-Comprobados en el orden equivocado, Shift+↑ sería devorado por el atajo
+significa que las teclas Mayús o Alt de más no impiden un
+emparejamiento. Mayús+↑ cuenta también como una pulsación de ↑.
+Comprobados en el orden equivocado, Mayús+↑ sería devorado por el atajo
 de «subir un semitono» antes de que el de «subir una octava» llegara a
 verlo. Así que la lista va de lo más específico a lo menos:
 
@@ -279,7 +279,7 @@ cortos, ni siquiera se les pregunta.
 
 ### Un enum para el menú y las teclas
 
-El menú Tools y las teclas producen ambos un `Tool`:
+El menú Herramientas y las teclas producen ambos un `Tool`:
 
 ```rust
 enum Tool {
@@ -312,7 +312,7 @@ sustituye la selección por un `new` vacío mediante `ReplaceNotes`.
 ### Un menú que se queda abierto
 
 Los menús de egui se cierran con cualquier clic dentro de ellos, lo cual
-está bien para una lista de comandos. Pero el menú Tools también
+está bien para una lista de comandos. Pero el menú Herramientas también
 contiene opciones: el orden y la velocidad del arpegio. Que el menú se
 cerrara al elegir «arriba y abajo» te obligaría a abrirlo otra vez para
 pulsar «Arpegiar acordes». Así que a este menú se le dice que se cierre
@@ -513,7 +513,7 @@ roll solo puede probarse usándolo. Ejecutar la app y probar cada función
 encontró tres problemas que ninguna prueba unitaria habría encontrado:
 
 - la ventana que crecía en cada frame (arriba),
-- el menú Tools que se cerraba al elegir un orden de arpegio
+- el menú Herramientas que se cerraba al elegir un orden de arpegio
   (arreglado con `CloseOnClickOutside`),
 - las inversiones estampadas que caían por encima del puntero en lugar
   de a su alrededor (`stamp_notes` bajando el acorde de nuevo).

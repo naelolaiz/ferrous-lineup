@@ -14,8 +14,8 @@ y [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrou
 
 La app ya se podía poner a 5/4 o 7/8 a mano (mira [Cualquier compás, y
 métricas irregulares](../step-8/any-time-signature.md#cómo-usarlo)),
-pero la biblioteca no tenía nada que tocar en ellos: cambiar el Time de
-una canción a 7/8 le daba un simple «basic beat», y ninguna demo estaba
+pero la biblioteca no tenía nada que tocar en ellos: cambiar el Compás de
+una canción a 7/8 le daba un simple «ritmo básico», y ninguna demo estaba
 en un compás irregular. Este cambio añade **once ritmos y estilos de
 armonía** en compases irregulares, una manera de que la banda los
 **toque**, y canciones para oírlos: **Take Five** en 5/4; **Ajde Jano**,
@@ -26,19 +26,18 @@ benziyor** en 9/8; **Gankino horo** en 11/8; **Bučimiš** en 15/8; y la
 siguiente.
 
 Una segunda ronda añadió más, con siete ritmos y estilos más: el
-**Mission: Impossible theme** en 5/4; **Yerakina** y **Milo mou
-kokkino**, dos kalamatianos griegos en 7/8; **Tsakonikos** en 5/8; dos
+**Tema de Misión: Imposible** en 5/4; **Yerakina** y **Milo mou
+kokkino**, dos kalamatianos griegos en 7/8; **Tsakonikós** en 5/8; dos
 danzas rumanas, **Geamparaua de la Murfatlar** en 7/8 y **Mândrele** en
 5/4; tres canciones populares turcas, **Sarı gelin** en 10/8,
 **İzmir'in kavakları** en 9/8 y **Çayeli'nden öteye** en 7/8;
 **Süsserl**, una danza bávara cuyos compases pasan de dos pulsos a tres
-y vuelta; y el **waltz in five** de Chaikovski, el segundo movimiento de
+y vuelta; y el **vals en cinco** de Chaikovski, el segundo movimiento de
 su Sinfonía *Patética*.
 
 ## Cómo probarlo
 
-Abre **File > Demos > Songs > Balkan and Turkish > Ajde Jano** y pulsa
-Play. Cuenta con la batería: **1 2 3, 1 2, 1 2**. El compás tiene siete
+Abre **Archivo > Demostraciones > Canciones > Balcánica y turca > Ajde Jano** y pulsa ▶. Cuenta con la batería: **1 2 3, 1 2, 1 2**. El compás tiene siete
 corcheas, pero no cuentas siete: sientes tres pulsos, uno largo y dos
 cortos. El big drum golpea el pulso largo; el bajo toca una nota en
 cada pulso y el acordeón toca su acorde en las corcheas de en medio,
@@ -49,9 +48,9 @@ vamp del piano las agrupa **1 2 3, 1 2**: Mi♭ menor durante tres pulsos,
 Si♭ menor séptima durante dos.
 
 Luego abre cualquier canción en 4/4, por ejemplo **Old MacDonald Had a
-Farm**, abre la lista **Time**, deja marcado **Use matching style** y
+Farm**, abre la lista **Compás**, deja marcado **Usar el estilo correspondiente** y
 haz clic en **7/8**. Antes, la canción recibía un basic beat; ahora
-recibe una **rachenitsa**, y la lista Time muestra `2+2+3/8`: la manera
+recibe una **rachenitsa**, y la lista Compás muestra `2+2+3/8`: la manera
 búlgara de contar siete.
 
 ## La música
@@ -86,16 +85,15 @@ acordes siguen todos la agrupación.
 El jazz llevó la idea más lejos en 1959, en el álbum *Time Out* del
 Dave Brubeck Quartet: **Take Five** está en 5/4, contado 3 + 2, y
 Brubeck escribió **Blue Rondo à la Turk** en un 9/8 que oyó tocar a
-músicos callejeros turcos. El **Mission: Impossible theme** de Lalo
+músicos callejeros turcos. El **Tema de Misión: Imposible** de Lalo
 Schifrin (1966) también está en 5/4, pero reparte las diez corcheas del
 compás en **3 + 3 + 2 + 2**: largo, largo, corto, corto. El ostinato
-del piano lo dice, Sol, Sol, luego Si♭ y Do, y el nuevo ritmo **Five-four
-spy** pone el bombo y una conga aguda en cada uno de esos cuatro
+del piano lo dice, Sol, Sol, luego Si♭ y Do, y el nuevo ritmo **Espías en cinco por cuatro** pone el bombo y una conga aguda en cada uno de esos cuatro
 arranques.
 
 5/4 no siempre es 3 + 2. **Mândrele**, una danza rumana, se mueve en
 las tres primeras negras de cada compás y sostiene una blanca en las
-dos últimas, 3 + 2 como Take Five; el **waltz in five** de Chaikovski
+dos últimas, 3 + 2 como Take Five; el **vals en cinco** de Chaikovski
 va al revés, **2 + 3**: un pulso corto se cuela antes de cada tres de
 vals, así que la danza cojea con gracia, siempre inclinándose hacia el
 pulso largo.
@@ -111,8 +109,8 @@ oboe. El acompañamiento marca solo los dos pulsos sentidos, el 1 y el
 los contrabajos sostienen **Re** desde su primer compás hasta el último:
 una **nota pedal**, una nota de bajo que no se mueve mientras los
 acordes por encima cambian, Si menor sobre Re, luego la séptima
-disminuida La♯, Do♯, Mi, Sol sobre Re. En un lead sheet eso se escribe `Bm/D`
-y `A#°7/D`, y el chord sheet lo muestra así.
+disminuida La♯, Do♯, Mi, Sol sobre Re. En una partitura guía eso se escribe `Bm/D`
+y `A#°7/D`, y la hoja de acordes lo muestra así.
 
 ### Métricas que cambian de un compás al siguiente
 
@@ -285,7 +283,7 @@ El `Part` de una canción recibe una lista de metros, uno por compás, y
 `Song::part_runs` corta la parte en **tramos** de compases en un mismo
 metro, cada uno con su parte de la melodía y de los acordes. Un patrón
 tiene un solo compás, así que la demo crea un patrón por tramo,
-llamado «Promenade, bar 2» y así, y pone un time marker donde empieza
+llamado «Promenade, compás 2» y así, y pone un time marker donde empieza
 cada uno.
 
 ### Tresillos en la melodía
@@ -295,7 +293,7 @@ por paso, así que una corchea de tresillo dura 32 ticks (el valor de
 dos pasos, 48, por dos tercios). Una nota se crea con
 `NoteEvent::exact`, que la coloca en cualquier tick.
 
-### La lista Time elige un ritmo que cojea
+### La lista Compás elige un ritmo que cojea
 
 `Rhythm::for_time` busca un ritmo en el compás nuevo. Un 7/8 escrito
 sin agrupación no encajaba con ninguno, así que la canción recibía un
@@ -368,7 +366,7 @@ la que salen sus notas: archivos ABC de las colecciones de danzas
 populares de John Chambers y Henrik Norbeck, la parte de saxo alto de
 Paul Desmond para Take Five, la edición en LilyPond del Mutopia Project
 de Cuadros de una exposición, el corpus SymbTr de música makam turca,
-un lead sheet de Wikifonia para el Mission: Impossible theme y la
+una partitura guía de Wikifonia para el Tema de Misión: Imposible y la
 partitura completa y el análisis armónico del MCTL de la sinfonía de
 Chaikovski, donde las notas ganan siempre que el análisis discrepa de
 ellas. Donde una fuente no tiene acordes, el comentario dice que los
@@ -381,23 +379,21 @@ dado.
 
 Las canciones y danzas populares son tradicionales, y la música de
 Músorgski lleva mucho tiempo en el dominio público. **Take Five** (Paul
-Desmond, 1959) y el **Mission: Impossible theme** (Lalo Schifrin, 1966)
+Desmond, 1959) y el **Tema de Misión: Imposible** (Lalo Schifrin, 1966)
 siguen bajo derechos de autor, y un comentario encima de cada uno lo
 dice.
 
 ## Ejercicios
 
-1. Abre **Ajde Jano** y, en la lista Time, escribe `7` sobre `8`
-   agrupado como `2+2+3` y haz clic en **Use 2+2+3/8**. La melodía
+1. Abre **Ajde Jano** y, en la lista Compás, escribe `7` sobre `8`
+   agrupado como `2+2+3` y haz clic en **Usar 2+2+3/8**. La melodía
    conserva sus notas, pero la banda se apoya ahora en otras corcheas.
    ¿Qué pulsos de la melodía caen ahora entre las notas del bajo?
-2. En la Library, reproduce los ritmos **Kalamatianos** y
+2. En la Biblioteca, reproduce los ritmos **Kalamatianós** y
    **Rachenitsa** uno detrás de otro. Aplaude con ellos: ¿dónde está el
    pulso largo en cada uno?
-3. Elige `5/8` en la lista Time de una canción en 4/4, con **Use
-   matching style** marcado. ¿Qué ritmo recibe, y cómo escribe la lista
-   Time el compás?
-4. Abre el **Mission: Impossible theme** y aplaude el ostinato del
+3. Elige `5/8` en la lista Compás de una canción en 4/4, con **Usar el estilo correspondiente** marcado. ¿Qué ritmo recibe, y cómo escribe la lista Compás el compás?
+4. Abre el **Tema de Misión: Imposible** y aplaude el ostinato del
    piano: largo, largo, corto, corto. Luego abre **Take Five**. Ambos
    están en 5/4: ¿dónde caen sus pulsos largos?
 5. Abre **Süsserl** y mira la regla mientras suena. Cuenta los compases

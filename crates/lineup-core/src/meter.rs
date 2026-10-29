@@ -22,6 +22,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
+use crate::i18n::{tr, trf};
 use crate::pattern::MAX_STEPS;
 
 /// How beats are grouped into bars, such as 4/4, 6/8, or 7/8 counted
@@ -355,9 +356,9 @@ impl TimeSignature {
     pub fn describe_length(self, steps: usize) -> String {
         let bar = self.steps_per_bar();
         match (steps / bar, steps % bar) {
-            (1, 0) => "1 bar".to_string(),
-            (bars, 0) => format!("{bars} bars"),
-            _ => format!("{steps} steps"),
+            (1, 0) => tr("1 bar").to_string(),
+            (bars, 0) => trf("{} bars", &[&bars]),
+            _ => trf("{} steps", &[&steps]),
         }
     }
 
@@ -394,35 +395,35 @@ impl FromStr for TimeSignature {
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         let (top, bottom) = text
             .split_once('/')
-            .ok_or("write it as two numbers, like 7/8")?;
+            .ok_or(tr("write it as two numbers, like 7/8"))?;
         let unit: u8 = bottom
             .trim()
             .parse()
-            .map_err(|_| "the bottom number must be a number")?;
+            .map_err(|_| tr("the bottom number must be a number"))?;
         if !Self::UNITS.contains(&unit) {
-            return Err("the bottom number must be 1, 2, 4, 8 or 16".to_string());
+            return Err(tr("the bottom number must be 1, 2, 4, 8 or 16").to_string());
         }
         let top = top.trim().trim_start_matches('(').trim_end_matches(')');
         let groups: Vec<u8> = top
             .split('+')
             .map(|group| group.trim().parse::<u8>())
             .collect::<Result<_, _>>()
-            .map_err(|_| "the top number must be a number, or numbers joined by +")?;
+            .map_err(|_| tr("the top number must be a number, or numbers joined by +"))?;
         if groups.contains(&0) {
-            return Err("the top number must be 1 or more".to_string());
+            return Err(tr("the top number must be 1 or more").to_string());
         }
         let time = if let [beats] = groups[..] {
             TimeSignature::new(beats, unit)
         } else {
-            TimeSignature::grouped(&groups, unit).ok_or(format!(
+            TimeSignature::grouped(&groups, unit).ok_or(trf(
                 "a grouped bar can have at most {} notes",
-                Self::MAX_GROUPED_BEATS
+                &[&Self::MAX_GROUPED_BEATS],
             ))?
         };
         if time.steps_per_bar() > MAX_STEPS {
-            return Err(format!(
-                "a bar of {time} would not fit in a pattern (at most {}/{unit})",
-                Self::max_beats(unit)
+            return Err(trf(
+                "a bar of {} would not fit in a pattern (at most {}/{})",
+                &[&time, &Self::max_beats(unit), &unit],
             ));
         }
         Ok(time)

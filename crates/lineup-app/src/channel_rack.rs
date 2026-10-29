@@ -15,6 +15,7 @@ use lineup_core::{
     general_midi,
 };
 
+use crate::i18n::{tr, tr_name, trf};
 use crate::midi::Port;
 use crate::widgets;
 
@@ -115,15 +116,15 @@ pub fn set_midi_outputs(ctx: &egui::Context, outputs: MidiOutputs) {
 /// The "Instrument" submenu (see [`instrument_choices`]).
 fn instrument_menu(ui: &mut Ui, channel: usize, state: &Channel, actions: &mut Vec<RackAction>) {
     let label = match state.program {
-        Some(program) => format!("Instrument: {}", general_midi::name(program)),
-        None => "Instrument".to_string(),
+        Some(program) => trf("Instrument: {}", &[&tr(general_midi::name(program))]),
+        None => tr("Instrument").to_string(),
     };
     ui.menu_button(label, |ui| instrument_choices(ui, channel, state, actions))
         .response
-        .on_hover_text(
+        .on_hover_text(tr(
             "The General MIDI instrument this channel plays: sent to a MIDI synth as a \
              program change, written in exported MIDI files, and imitated by the Lineup Osc",
-        );
+        ));
 }
 
 /// The instruments a synth or MIDI Out channel (`state`, number
@@ -149,8 +150,10 @@ pub fn instrument_choices(
             "None (the Lineup Osc's own sound)"
         };
         let none = ui
-            .selectable_label(current.is_none(), none)
-            .on_hover_text("No General MIDI program: nothing is sent to a MIDI synth");
+            .selectable_label(current.is_none(), tr(none))
+            .on_hover_text(tr(
+                "No General MIDI program: nothing is sent to a MIDI synth",
+            ));
         if none.clicked() {
             actions.push(RackAction::SetProgram {
                 channel,
@@ -162,14 +165,17 @@ pub fn instrument_choices(
         for (family, family_name) in general_midi::FAMILIES.iter().enumerate() {
             let here = current.is_some_and(|program| general_midi::family(program) == family);
             let family_label = if here {
-                format!("● {family_name}")
+                format!("● {}", tr(family_name))
             } else {
-                family_name.to_string()
+                tr(family_name).to_string()
             };
             widgets::scroll_menu_button(ui, family_label, |ui| {
                 for program in (family * 8..family * 8 + 8).map(|p| p as u8) {
-                    let text =
-                        format!("{} {}", u16::from(program) + 1, general_midi::name(program));
+                    let text = format!(
+                        "{} {}",
+                        u16::from(program) + 1,
+                        tr(general_midi::name(program))
+                    );
                     if ui
                         .selectable_label(current == Some(program), text)
                         .clicked()
@@ -195,8 +201,10 @@ pub fn midi_part(ui: &mut Ui, channel: usize, state: &Channel, actions: &mut Vec
     midi_choices(ui, channel, sent_on, actions);
     if sent_on.is_some()
         && ui
-            .button("Play it here instead")
-            .on_hover_text("Stop sending it over MIDI, and play it with the built-in sound")
+            .button(tr("Play it here instead"))
+            .on_hover_text(tr(
+                "Stop sending it over MIDI, and play it with the built-in sound",
+            ))
             .clicked()
     {
         actions.push(RackAction::PlayHere(channel));
@@ -209,11 +217,11 @@ pub fn midi_part(ui: &mut Ui, channel: usize, state: &Channel, actions: &mut Vec
 /// sent over MIDI goes to.
 fn midi_choices(ui: &mut Ui, channel: usize, sent_on: Option<u8>, actions: &mut Vec<RackAction>) {
     let label = match sent_on {
-        Some(midi_channel) => format!("● Sent over MIDI, channel {}", midi_channel + 1),
-        None => "Send over MIDI".to_string(),
+        Some(midi_channel) => trf("● Sent over MIDI, channel {}", &[&(midi_channel + 1)]),
+        None => tr("Send over MIDI").to_string(),
     };
     ui.menu_button(label, |ui| {
-        ui.label("MIDI channel");
+        ui.label(tr("MIDI channel"));
         egui::Grid::new("midi-channels").show(ui, |ui| {
             for midi_channel in 0..16 {
                 let mut response = ui.selectable_label(
@@ -222,7 +230,7 @@ fn midi_choices(ui: &mut Ui, channel: usize, sent_on: Option<u8>, actions: &mut 
                 );
                 if midi_channel == DRUM_CHANNEL {
                     response =
-                        response.on_hover_text("General MIDI synths play drums on channel 10");
+                        response.on_hover_text(tr("General MIDI synths play drums on channel 10"));
                 }
                 if response.clicked() {
                     actions.push(RackAction::SetMidiChannel {
@@ -237,20 +245,20 @@ fn midi_choices(ui: &mut Ui, channel: usize, sent_on: Option<u8>, actions: &mut 
             }
         });
         ui.separator();
-        ui.label("Output, for every channel sent over MIDI");
+        ui.label(tr("Output, for every channel sent over MIDI"));
         let outputs: MidiOutputs = ui
             .ctx()
             .data(|data| data.get_temp(midi_outputs_id()))
             .unwrap_or_default();
         if ui
-            .selectable_label(outputs.connected.is_none(), "None")
+            .selectable_label(outputs.connected.is_none(), tr("None"))
             .clicked()
         {
             actions.push(RackAction::ConnectMidiOutput(None));
             ui.close();
         }
         if outputs.ports.is_empty() {
-            ui.weak("No outputs found (the MIDI menu looks again)");
+            ui.weak(tr("No outputs found (the MIDI menu looks again)"));
         }
         for port in &outputs.ports {
             if ui
@@ -297,7 +305,7 @@ pub fn show(
             &mut actions,
         );
     }
-    ui.weak("Click a channel to select and hear it; click it again or empty space to deselect. Double-click for the piano roll.");
+    ui.weak(tr("Click a channel to select and hear it; click it again or empty space to deselect. Double-click for the piano roll."));
 
     drums_elsewhere(ui, project, pattern, &mut actions);
 
@@ -360,25 +368,27 @@ fn playback_row(
     ui.horizontal_wrapped(|ui| {
         if playback.song_playing {
             if ui
-                .add(egui::Button::new("▶ Play over the song").selected(playback.over_song))
-                .on_hover_text(
+                .add(egui::Button::new(tr("▶ Play over the song")).selected(playback.over_song))
+                .on_hover_text(tr(
                     "Play this pattern on top of the song from its next bar, in time with \
                      it, to try it out with the rest. Click again to stop it.",
-                )
+                ))
                 .clicked()
                 && !dismissing
             {
                 actions.push(RackAction::PlayOverSong(!playback.over_song));
             }
         } else {
-            let play = if playback.playing {
+            let play = tr(if playback.playing {
                 "⏸ Pause pattern"
             } else {
                 "▶ Play pattern"
-            };
+            });
             if ui
                 .button(play)
-                .on_hover_text("Play every channel in this pattern with its current instruments")
+                .on_hover_text(tr(
+                    "Play every channel in this pattern with its current instruments",
+                ))
                 .clicked()
                 && !dismissing
             {
@@ -390,18 +400,18 @@ fn playback_row(
             }
         }
         if ui
-            .add_enabled(playback.can_stop, egui::Button::new("■ Stop pattern"))
+            .add_enabled(playback.can_stop, egui::Button::new(tr("■ Stop pattern")))
             .clicked()
             && !dismissing
         {
             actions.push(RackAction::StopPattern);
         }
         egui::ComboBox::from_id_salt("rack-pattern")
-            .selected_text(&project.patterns()[pattern_index].name)
+            .selected_text(tr_name(&project.patterns()[pattern_index].name))
             .show_ui(ui, |ui| {
                 for (index, choice) in project.patterns().iter().enumerate() {
                     if ui
-                        .selectable_label(index == pattern_index, &choice.name)
+                        .selectable_label(index == pattern_index, tr_name(&choice.name))
                         .clicked()
                     {
                         actions.push(RackAction::SelectPattern(index));
@@ -516,7 +526,7 @@ impl Rows<'_> {
             "Click to mute or unmute"
         };
         if widgets::mute_light(ui, !project.channel_muted(index))
-            .on_hover_text(hint)
+            .on_hover_text(tr(hint))
             .clicked()
             && !dismissing
         {
@@ -525,7 +535,7 @@ impl Rows<'_> {
 
         let mut volume = channel.volume;
         let knob = widgets::knob(ui, &mut volume, 0.8)
-            .on_hover_text(format!("Volume {:.0}%", volume * 100.0));
+            .on_hover_text(trf("Volume {}%", &[&format!("{:.0}", volume * 100.0)]));
         if knob.changed() && !dismissing {
             actions.push(RackAction::SetVolume {
                 channel: index,
@@ -536,11 +546,11 @@ impl Rows<'_> {
         let locked = project.is_locked(index);
         if self.locks
             && widgets::lock_light(ui, locked)
-                .on_hover_text(if locked {
+                .on_hover_text(tr(if locked {
                     "Locked: styles keep its notes and sound. Click to unlock"
                 } else {
                     "Lock: styles keep its notes and sound"
-                })
+                }))
                 .clicked()
             && !dismissing
         {
@@ -563,24 +573,28 @@ impl Rows<'_> {
         actions: &mut Vec<RackAction>,
     ) {
         let selected = self.selected;
-        let name = egui::Button::new(&channel.name)
+        let name = egui::Button::new(tr_name(&channel.name))
             .min_size(egui::vec2(NAME_WIDTH, widgets::STEP_SIZE.y) * widgets::zoom(ui))
             .selected(selected == Some(index))
             .truncate();
-        let hover = "Click to select and hear this channel; click again to deselect. \
+        let hover = tr(
+            "Click to select and hear this channel; click again to deselect. \
                      Double-click to open its piano roll. Keyboards play the selected \
                      channel. Delete removes the selected channel. Right-click for options. \
-                     Drop a WAV file here to load it.";
+                     Drop a WAV file here to load it.",
+        );
         let hover = if self.locks && locked {
-            format!("🔒 Locked\n\n{hover}")
+            format!("{}\n\n{hover}", tr("🔒 Locked"))
         } else {
             hover.to_string()
         };
         let name = match channel.program {
             Some(program) => ui.add(name).on_hover_text(format!(
-                "Plays: {} (General MIDI {})\n\n{hover}",
-                general_midi::name(program),
-                u16::from(program) + 1
+                "{}\n\n{hover}",
+                trf(
+                    "Plays: {} (General MIDI {})",
+                    &[&tr(general_midi::name(program)), &(u16::from(program) + 1)],
+                ),
             )),
             None => ui.add(name).on_hover_text(hover),
         };
@@ -608,7 +622,7 @@ impl Rows<'_> {
         locked: bool,
         actions: &mut Vec<RackAction>,
     ) {
-        if ui.button("Piano roll").clicked() {
+        if ui.button(tr("Piano roll")).clicked() {
             actions.push(RackAction::OpenPianoRoll(index));
             ui.close();
         }
@@ -620,14 +634,18 @@ impl Rows<'_> {
         } else if channel.can_go_over_midi() {
             midi_part(ui, index, channel, actions);
         }
-        if self.locks && ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
+        if self.locks
+            && ui
+                .button(tr(if locked { "Unlock" } else { "Lock" }))
+                .clicked()
+        {
             actions.push(RackAction::SetLocked {
                 channel: index,
                 locked: !locked,
             });
             ui.close();
         }
-        if ui.button("Remove channel").clicked() {
+        if ui.button(tr("Remove channel")).clicked() {
             actions.push(RackAction::Remove(index));
             ui.close();
         }
@@ -660,7 +678,7 @@ impl Rows<'_> {
             }
         } else {
             let preview = widgets::mini_roll(ui, pattern.notes(index), length, playhead)
-                .on_hover_text("Click to open the piano roll");
+                .on_hover_text(tr("Click to open the piano roll"));
             if preview.clicked() && !self.dismissing {
                 actions.push(RackAction::OpenPianoRoll(index));
             }
@@ -690,25 +708,25 @@ fn step_marks(time: TimeSignature, length: usize) -> Vec<widgets::StepMark> {
 fn add_channel_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<RackAction>) {
     let rack_full = project.channels().len() >= MAX_CHANNELS;
     ui.add_enabled_ui(!rack_full, |ui| {
-        ui.menu_button("➕ Add channel", |ui| {
+        ui.menu_button(tr("➕ Add channel"), |ui| {
             widgets::scroll_menu(ui, |ui| {
                 for drum in Drum::ALL {
-                    if ui.button(drum.name()).clicked() {
+                    if ui.button(tr(drum.name())).clicked() {
                         actions.push(RackAction::AddDrum(drum));
                         ui.close();
                     }
                 }
                 ui.separator();
-                if ui.button("Lineup Osc (synth)").clicked() {
+                if ui.button(tr("Lineup Osc (synth)")).clicked() {
                     actions.push(RackAction::AddSynth);
                     ui.close();
                 }
                 if ui
-                    .button("MIDI Out (external synth)")
-                    .on_hover_text(
+                    .button(tr("MIDI Out (external synth)"))
+                    .on_hover_text(tr(
                         "Plays its notes on a synth outside Ferrous Lineup: pick where in \
                      MIDI > Output.",
-                    )
+                    ))
                     .clicked()
                 {
                     actions.push(RackAction::AddMidiOut);
@@ -753,12 +771,12 @@ fn drums_elsewhere(
         return;
     }
     ui.horizontal_wrapped(|ui| {
-        ui.label(format!(
+        ui.label(trf(
             "No drum steps in \"{}\": click a step to add one. Drums are in:",
-            pattern.name
+            &[&tr_name(&pattern.name)],
         ));
         for (index, name) in with_drums {
-            if ui.button(name).clicked() {
+            if ui.button(tr_name(name)).clicked() {
                 actions.push(RackAction::SelectPattern(index));
             }
         }

@@ -26,8 +26,10 @@ use lineup_core::ear_training::{
     ProgressionQuestion, Score, duration, next_seed,
 };
 use lineup_core::harmony::keys::ChordKey;
+use lineup_core::harmony::shown_interval;
 
 use crate::harmony_keys::{KEY_TEXT, KEY_TEXT_DIM, function_color, paint_playing};
+use crate::i18n::{tr, trf};
 use crate::theme;
 use crate::twelve_tone::Front;
 use crate::widgets::{self, Opening};
@@ -259,7 +261,7 @@ impl EarTraining {
         ui.horizontal(|ui| {
             for exercise in Exercise::ALL {
                 let on = self.settings.exercise == exercise;
-                if theme::light_button(ui, exercise.name(), on, None).clicked() && !on {
+                if theme::light_button(ui, tr(exercise.name()), on, None).clicked() && !on {
                     self.settings.exercise = exercise;
                     self.asked = None;
                     actions.push(EarAction::Stop);
@@ -267,7 +269,7 @@ impl EarTraining {
                 }
             }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.weak("Experimental");
+                ui.weak(tr("Experimental"));
             });
         });
         ui.add_space(4.0);
@@ -304,16 +306,19 @@ impl EarTraining {
         let score = *self.score();
         ui.horizontal(|ui| {
             let text = match score.asked {
-                0 => "Nothing answered yet".to_string(),
-                asked => format!(
-                    "Right {} of {asked} ({}%) · {} in a row",
-                    score.right,
-                    score.right * 100 / asked,
-                    score.streak
+                0 => tr("Nothing answered yet").to_string(),
+                asked => trf(
+                    "Right {} of {} ({}%) · {} in a row",
+                    &[
+                        &score.right,
+                        &asked,
+                        &(score.right * 100 / asked),
+                        &score.streak,
+                    ],
                 ),
             };
             ui.label(RichText::new(text).color(theme::TEXT_DIM));
-            if score.asked > 0 && ui.small_button("Start again").clicked() {
+            if score.asked > 0 && ui.small_button(tr("Start again")).clicked() {
                 *self.score() = Score::default();
             }
         });
@@ -339,17 +344,17 @@ impl EarTraining {
     fn interval_settings(&mut self, ui: &mut Ui) {
         let settings = &mut self.settings.intervals;
         ui.horizontal_wrapped(|ui| {
-            ui.label("Intervals");
+            ui.label(tr("Intervals"));
             for interval in Interval::ALL {
                 let on = settings.intervals.has(interval.place());
-                let chip = ui.add(egui::Button::selectable(on, interval.short()));
-                if theme::hint(chip, interval.name()).clicked() {
+                let chip = ui.add(egui::Button::selectable(on, tr(interval.short())));
+                if theme::hint(chip, shown_interval(interval.name())).clicked() {
                     settings.intervals.toggle(interval.place());
                 }
             }
         });
         ui.horizontal_wrapped(|ui| {
-            ui.label("Played");
+            ui.label(tr("Played"));
             for (place, direction) in Direction::ALL.into_iter().enumerate() {
                 let on = settings.directions.has(place);
                 let text = match direction {
@@ -357,8 +362,8 @@ impl EarTraining {
                     Direction::Down => "the higher note first, going down",
                     Direction::Together => "both notes at once",
                 };
-                let chip = ui.add(egui::Button::selectable(on, direction.name()));
-                if theme::hint(chip, text).clicked() {
+                let chip = ui.add(egui::Button::selectable(on, tr(direction.name())));
+                if theme::hint(chip, tr(text)).clicked() {
                     settings.directions.toggle(place);
                 }
             }
@@ -368,60 +373,62 @@ impl EarTraining {
     fn chord_settings(&mut self, ui: &mut Ui) {
         let settings = &mut self.settings.chords;
         ui.horizontal_wrapped(|ui| {
-            ui.label("Chords");
+            ui.label(tr("Chords"));
             for (place, quality) in CHORD_QUALITIES.into_iter().enumerate() {
                 let on = settings.qualities.has(place);
                 let chip = ui.add(egui::Button::selectable(on, short_name(quality)));
-                if theme::hint(chip, quality.name()).clicked() {
+                if theme::hint(chip, tr(quality.name())).clicked() {
                     settings.qualities.toggle(place);
                 }
             }
         });
-        let inversions = ui.checkbox(&mut settings.inversions, "Inversions");
+        let inversions = ui.checkbox(&mut settings.inversions, tr("Inversions"));
         theme::hint(
             inversions,
-            "Any note of the chord in the bass, not only the root: C/E is C major with E lowest",
+            tr(
+                "Any note of the chord in the bass, not only the root: C/E is C major with E lowest",
+            ),
         );
     }
 
     fn progression_settings(&mut self, ui: &mut Ui) {
         let settings = &mut self.settings.progressions;
         ui.horizontal_wrapped(|ui| {
-            ui.label("Keys");
+            ui.label(tr("Keys"));
             for keys in KeyChoice::ALL {
-                ui.selectable_value(&mut settings.keys, keys, keys.name());
+                ui.selectable_value(&mut settings.keys, keys, tr(keys.name()));
             }
             ui.separator();
-            ui.label("Chords");
+            ui.label(tr("Chords"));
             for pool in ChordPool::ALL {
-                let chip = ui.selectable_value(&mut settings.chords, pool, pool.name());
+                let chip = ui.selectable_value(&mut settings.chords, pool, tr(pool.name()));
                 theme::hint(
                     chip,
-                    match pool {
+                    tr(match pool {
                         ChordPool::Three => {
                             "Home, away and tension: I, IV and V (i, iv and V in minor)"
                         }
                         ChordPool::Five => "Those and ii and vi (ii° and bVI in minor)",
                         ChordPool::Seven => "Every chord of the key",
-                    },
+                    }),
                 );
             }
-            let sevenths = ui.checkbox(&mut settings.sevenths, "Sevenths");
-            theme::hint(sevenths, "Seventh chords: V7, ii7, Imaj7...");
+            let sevenths = ui.checkbox(&mut settings.sevenths, tr("Sevenths"));
+            theme::hint(sevenths, tr("Seventh chords: V7, ii7, Imaj7..."));
         });
         ui.horizontal_wrapped(|ui| {
-            ui.label("Players");
+            ui.label(tr("Players"));
             for players in Players::ALL {
-                ui.selectable_value(&mut settings.players, players, players.name());
+                ui.selectable_value(&mut settings.players, players, tr(players.name()));
             }
             ui.separator();
-            ui.label("Length");
+            ui.label(tr("Length"));
             for length in PROGRESSION_LENGTHS {
-                ui.selectable_value(&mut settings.length, length, format!("{length} chords"));
+                ui.selectable_value(&mut settings.length, length, trf("{} chords", &[&length]));
             }
         });
         ui.horizontal(|ui| {
-            ui.label("Tempo");
+            ui.label(tr("Tempo"));
             ui.add(egui::Slider::new(&mut settings.tempo, PROGRESSION_TEMPOS).suffix(" BPM"));
         });
     }
@@ -438,15 +445,17 @@ impl EarTraining {
                      a minor key). What are the others?"
                 }
             };
-            ui.label(RichText::new(text).size(15.0));
+            ui.label(RichText::new(tr(text)).size(15.0));
             ui.add_space(8.0);
-            let start = egui::Button::new(RichText::new("▶  Start").size(16.0).strong())
+            let start = egui::Button::new(RichText::new(tr("▶  Start")).size(16.0).strong())
                 .min_size(vec2(140.0, 36.0));
             if ui.add(start).clicked() {
                 self.ask(actions);
             }
             ui.add_space(4.0);
-            ui.weak("Play a question again as often as you like before answering.");
+            ui.weak(tr(
+                "Play a question again as often as you like before answering.",
+            ));
         });
     }
 
@@ -454,12 +463,14 @@ impl EarTraining {
         let answered = self.asked.as_ref().is_some_and(Asked::is_answered);
         ui.horizontal(|ui| {
             let prompt = match &self.asked {
-                Some(Asked::Interval { .. }) => "What interval is this?".to_string(),
-                Some(Asked::Chord { .. }) => "What kind of chord is this?".to_string(),
-                Some(Asked::Progression { question, .. }) => format!(
+                Some(Asked::Interval { .. }) => tr("What interval is this?").to_string(),
+                Some(Asked::Chord { .. }) => tr("What kind of chord is this?").to_string(),
+                Some(Asked::Progression { question, .. }) => trf(
                     "In {}: what are the chords after {}?",
-                    crate::i18n::key_name(question.scale),
-                    question.keys[0].numeral
+                    &[
+                        &crate::i18n::key_name(question.scale),
+                        &question.keys[0].numeral,
+                    ],
                 ),
                 None => String::new(),
             };
@@ -467,13 +478,13 @@ impl EarTraining {
         });
         ui.add_space(4.0);
         ui.horizontal(|ui| {
-            if theme::light_button(ui, "▶ Play again", false, None).clicked() {
+            if theme::light_button(ui, tr("▶ Play again"), false, None).clicked() {
                 self.replay(actions);
             }
             match &self.asked {
                 Some(Asked::Chord { question, .. }) => {
-                    let broken = theme::light_button(ui, "Note by note", false, None);
-                    if theme::hint(broken, "The chord one note at a time, from the bass up")
+                    let broken = theme::light_button(ui, tr("Note by note"), false, None);
+                    if theme::hint(broken, tr("The chord one note at a time, from the bass up"))
                         .clicked()
                     {
                         let cues = question.broken();
@@ -481,10 +492,13 @@ impl EarTraining {
                     }
                 }
                 Some(Asked::Progression { question, .. }) => {
-                    let key = theme::light_button(ui, "Hear the key", false, None);
+                    let key = theme::light_button(ui, tr("Hear the key"), false, None);
                     // I, IV, V and I; in a minor key i, iv, V and i.
                     let [home, four, five] = [0, 3, 4].map(|degree| &question.keys[degree].numeral);
-                    let hint = format!("{home}, {four}, {five} and {home}: where home is");
+                    let hint = trf(
+                        "{}, {}, {} and {}: where home is",
+                        &[home, four, five, home],
+                    );
                     if theme::hint(key, hint).clicked() {
                         let cues = question.key_cues();
                         self.play(cues, None, actions);
@@ -492,7 +506,7 @@ impl EarTraining {
                 }
                 _ => {}
             }
-            let next = if answered { "Next ▸" } else { "Skip ▸" };
+            let next = tr(if answered { "Next ▸" } else { "Skip ▸" });
             let next = theme::light_button(ui, next, answered, Some(theme::GREEN));
             if next.clicked() {
                 self.ask(actions);
@@ -544,7 +558,12 @@ impl EarTraining {
                     interval == question.interval,
                     answer.is_some(),
                 );
-                let button = answer_button(ui, interval.short(), interval.name(), mark);
+                let button = answer_button(
+                    ui,
+                    tr(interval.short()),
+                    &shown_interval(interval.name()),
+                    mark,
+                );
                 if button.clicked() {
                     if answer.is_none() {
                         *answer = Some(interval);
@@ -556,7 +575,8 @@ impl EarTraining {
             }
         });
         if let Some(given) = *answer {
-            let wrong = (given != question.interval).then(|| format!("You said {}.", given.name()));
+            let wrong = (given != question.interval)
+                .then(|| trf("You said {}.", &[&shown_interval(given.name())]));
             feedback(ui, given == question.interval, wrong, &question.explain());
         }
     }
@@ -576,7 +596,7 @@ impl EarTraining {
                     continue;
                 }
                 let mark = Mark::of(*answer == Some(quality), quality == right, answer.is_some());
-                let button = answer_button(ui, short_name(quality), quality.name(), mark);
+                let button = answer_button(ui, short_name(quality), tr(quality.name()), mark);
                 if button.clicked() {
                     if answer.is_none() {
                         *answer = Some(quality);
@@ -588,7 +608,7 @@ impl EarTraining {
             }
         });
         if let Some(given) = *answer {
-            let wrong = (given != right).then(|| format!("You said {}.", given.name()));
+            let wrong = (given != right).then(|| trf("You said {}.", &[&tr(given.name())]));
             feedback(ui, given == right, wrong, &question.explain());
         }
     }
@@ -662,10 +682,13 @@ impl EarTraining {
             let numerals: Vec<&str> = (0..question.degrees.len())
                 .map(|place| question.chord(place).numeral.as_str())
                 .collect();
-            let mut text = format!(
-                "{names}: {} in {}.",
-                numerals.join(" "),
-                crate::i18n::key_name(question.scale)
+            let mut text = trf(
+                "{}: {} in {}.",
+                &[
+                    &names,
+                    &numerals.join(" "),
+                    &crate::i18n::key_name(question.scale),
+                ],
             );
             for line in question.moves() {
                 text += "\n• ";
@@ -673,13 +696,15 @@ impl EarTraining {
             }
             let summary = match wrong {
                 0 => None,
-                1 => Some("One chord was not what you said.".to_string()),
-                n => Some(format!("{n} chords were not what you said.")),
+                1 => Some(tr("One chord was not what you said.").to_string()),
+                n => Some(trf("{} chords were not what you said.", &[&n])),
             };
             feedback(ui, wrong == 0, summary, &text);
         } else {
             ui.add_space(4.0);
-            ui.weak("Pick the chords in order. Colours: blue is home, green away, orange tension.");
+            ui.weak(tr(
+                "Pick the chords in order. Colours: blue is home, green away, orange tension.",
+            ));
         }
     }
 }
@@ -793,7 +818,7 @@ impl Slot<'_> {
             painter.text(
                 rect.center_bottom() - vec2(0.0, 11.0),
                 Align2::CENTER_CENTER,
-                format!("was {}", self.right),
+                trf("was {}", &[&self.right]),
                 FontId::proportional(11.0),
                 KEY_TEXT,
             );
@@ -861,9 +886,9 @@ fn feedback(ui: &mut Ui, right: bool, wrong: Option<String>, explanation: &str) 
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
             let (title, color) = if right {
-                ("✔ Right", theme::GREEN)
+                (tr("✔ Right"), theme::GREEN)
             } else {
-                ("✘ Not quite", theme::RED)
+                (tr("✘ Not quite"), theme::RED)
             };
             ui.horizontal_wrapped(|ui| {
                 ui.label(RichText::new(title).size(16.0).strong().color(color));
@@ -874,6 +899,6 @@ fn feedback(ui: &mut Ui, right: bool, wrong: Option<String>, explanation: &str) 
             ui.add_space(2.0);
             ui.label(RichText::new(explanation).size(14.0).color(theme::TEXT));
             ui.add_space(4.0);
-            ui.weak("Click any answer to hear it.");
+            ui.weak(tr("Click any answer to hear it."));
         });
 }

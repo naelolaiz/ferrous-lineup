@@ -14,6 +14,7 @@ use eframe::egui::{self, Color32, Pos2, RichText, Sense, Stroke, Ui, Vec2};
 use lineup_core::harmony::{Micromode, MicromodeFamily, SetClass, digits, micromodes_in};
 use lineup_core::{ChordStamp, Note, NoteName, PitchClass, PitchSet, Scale};
 
+use crate::i18n::{tr, trf};
 use crate::theme;
 use crate::twelve_tone::{Front, NoteNames};
 use crate::widgets::{self, Opening};
@@ -148,18 +149,18 @@ impl MicromodeWindow {
         drawing: &mut ChordStamp,
         actions: &mut Vec<MicroAction>,
     ) {
-        ui.weak(
+        ui.weak(tr(
             "Francisco Kröpfl's twelve groups of three notes. Any three notes, in any order, \
              octave or spelling (C# and Db are one note here), moved or upside down, are one \
              of them, as they are one of Forte's twelve trichords, 3-1 to 3-12. Larger sets \
              are made of them.",
-        );
+        ));
         self.selection(ui, names, selected, actions);
         ui.separator();
         for family in MicromodeFamily::ALL {
             ui.horizontal_wrapped(|ui| {
-                ui.label(RichText::new(family.name()).strong());
-                ui.weak(family.rule());
+                ui.label(RichText::new(tr(family.name())).strong());
+                ui.weak(tr(family.rule()));
             });
             ui.horizontal_wrapped(|ui| {
                 for micromode in Micromode::all().iter().filter(|m| m.family == family) {
@@ -192,12 +193,12 @@ impl MicromodeWindow {
         actions: &mut Vec<MicroAction>,
     ) {
         ui.horizontal_wrapped(|ui| {
-            ui.label(RichText::new("Selected notes:").strong());
+            ui.label(RichText::new(tr("Selected notes:")).strong());
             match selected.len() {
                 0..=2 => {
-                    ui.weak(
+                    ui.weak(tr(
                         "select three notes or more in the piano roll to see their micromodes.",
-                    );
+                    ));
                 }
                 3 => {
                     let notes: Vec<String> = form_names(selected, names)
@@ -205,22 +206,20 @@ impl MicromodeWindow {
                         .map(|n| n.to_string())
                         .collect();
                     if let Some(micromode) = Micromode::of(selected) {
-                        ui.label(format!(
+                        ui.label(trf(
                             "{} are {}.",
-                            notes.join(" "),
-                            micromode.full_name()
+                            &[&notes.join(" "), &micromode.full_name()],
                         ));
                     }
-                    if ui.button("Show it").clicked() {
+                    if ui.button(tr("Show it")).clicked() {
                         self.pick(selected);
                     }
                 }
                 n => {
                     let class = selected.set_class();
-                    ui.label(format!(
-                        "{n} notes, set {}, hold {} groups of three:",
-                        class.name(),
-                        n * (n - 1) * (n - 2) / 6
+                    ui.label(trf(
+                        "{} notes, set {}, hold {} groups of three:",
+                        &[&n, &class.name(), &(n * (n - 1) * (n - 2) / 6)],
                     ));
                     for (micromode, count) in micromodes_in(selected) {
                         let text = found_text(micromode, count);
@@ -233,8 +232,8 @@ impl MicromodeWindow {
                         }
                     }
                     if ui
-                        .small_button("In Sets →")
-                        .on_hover_text("Show this set in the pitch-class set browser")
+                        .small_button(tr("In Sets →"))
+                        .on_hover_text(tr("Show this set in the pitch-class set browser"))
                         .clicked()
                     {
                         actions.push(MicroAction::ShowSet(selected));
@@ -258,37 +257,37 @@ impl MicromodeWindow {
             clock(ui, form, &notes, 170.0);
             ui.vertical(|ui| {
                 ui.label(RichText::new(micromode.full_name()).strong().size(16.0));
-                ui.label(format!("Prime form: {}", micromode.solfege));
-                ui.label(format!("Intervals: {}.", micromode.intervals()));
+                ui.label(trf("Prime form: {}", &[&micromode.solfege]));
+                ui.label(trf("Intervals: {}.", &[&micromode.intervals()]));
                 let class = micromode.set_class();
                 ui.horizontal_wrapped(|ui| {
-                    ui.label(format!(
+                    ui.label(trf(
                         "Pitch-class set {} {} {}",
-                        class.name(),
-                        class.prime_text(),
-                        class.vector_text()
+                        &[&class.name(), &class.prime_text(), &class.vector_text()],
                     ));
                     if ui
-                        .small_button(format!("{} in Sets →", class.name()))
-                        .on_hover_text("Show this set class in the pitch-class set browser")
+                        .small_button(trf("{} in Sets →", &[&class.name()]))
+                        .on_hover_text(tr("Show this set class in the pitch-class set browser"))
                         .clicked()
                     {
                         actions.push(MicroAction::ShowSet(form));
                     }
                 });
-                ui.weak(format!(
+                ui.weak(trf(
                     "{} forms: {}. Hour {} of Peter Schat's Tone Clock.",
-                    micromode.members().len(),
-                    forms_text(micromode),
-                    micromode.hour()
+                    &[
+                        &micromode.members().len(),
+                        &tr(forms_text(micromode)),
+                        &micromode.hour(),
+                    ],
                 ));
                 ui.add_space(4.0);
-                ui.label(micromode.about);
+                ui.label(tr(micromode.about));
             });
         });
         ui.add_space(4.0);
         ui.horizontal_wrapped(|ui| {
-            ui.label("Move it up");
+            ui.label(tr("Move it up"));
             egui::ComboBox::from_id_salt("micromode-transposition")
                 .width(48.0)
                 .selected_text(format!("T{}", self.transposition))
@@ -298,9 +297,9 @@ impl MicromodeWindow {
                     }
                 })
                 .response
-                .on_hover_text("Transpose: move every note up this many semitones");
-            ui.checkbox(&mut self.inverted, "Inverted (I)")
-                .on_hover_text("Turn every interval upside down first");
+                .on_hover_text(tr("Transpose: move every note up this many semitones"));
+            ui.checkbox(&mut self.inverted, tr("Inverted (I)"))
+                .on_hover_text(tr("Turn every interval upside down first"));
             let label = if self.inverted {
                 format!("T{}I", self.transposition)
             } else {
@@ -313,16 +312,18 @@ impl MicromodeWindow {
         });
         ui.horizontal_wrapped(|ui| {
             if ui
-                .button("▶ Hear it")
-                .on_hover_text("Play the three notes together, from middle C")
+                .button(tr("▶ Hear it"))
+                .on_hover_text(tr("Play the three notes together, from middle C"))
                 .clicked()
             {
                 actions.push(MicroAction::Hear(voiced(form, &notes)));
             }
             crate::twelve_tone::draw_set_control(ui, form, drawing);
             if ui
-                .button("Use as the key")
-                .on_hover_text("The piano roll highlights these three notes and snaps to them")
+                .button(tr("Use as the key"))
+                .on_hover_text(tr(
+                    "The piano roll highlights these three notes and snaps to them",
+                ))
                 .clicked()
                 && let Some(root) = notes.first()
             {
@@ -348,22 +349,20 @@ impl MicromodeWindow {
             })
             .filter(|(_, count)| *count > 0)
             .collect();
-        ui.label(RichText::new("Inside larger sets").strong());
+        ui.label(RichText::new(tr("Inside larger sets")).strong());
         if found.is_empty() {
-            ui.weak("None of the sets with a name holds it.");
+            ui.weak(tr("None of the sets with a name holds it."));
             return;
         }
         ui.horizontal_wrapped(|ui| {
             for (class, count) in found {
-                let nickname = class.nickname().unwrap_or_default();
+                let nickname = class.nickname().map(tr).unwrap_or_default();
                 let text = format!("{nickname} ×{count}");
                 if ui
                     .small_button(text)
-                    .on_hover_text(format!(
+                    .on_hover_text(trf(
                         "{}: {} of its groups of three are {}. Click to see it in Sets.",
-                        class.describe(),
-                        count,
-                        self.micromode.name
+                        &[&class.describe(), &count, &self.micromode.name],
                     ))
                     .clicked()
                 {

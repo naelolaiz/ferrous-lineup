@@ -34,17 +34,17 @@ dice.
 
 Una partitura escribe la agrupación en el propio compás, como número
 de arriba: (2+2+3)/8. Ferrous Lineup hace lo mismo, y lo muestra en la
-regla del playlist:
+regla de la lista de reproducción:
 
 ![Los números de compás del playlist: el compás 5 empieza un cambio a 3+3+3+2/16, once pasos por compás.](../images/step-8-irregular-ruler.png)
 
 ## Cómo usarlo
 
-- **Harmony keys > Time**, o **clic derecho en un número de compás** del
-  playlist para un cambio desde ese compás en adelante.
-- Haz clic en uno de los compases habituales, o bajo **Any other** pon
+- **Teclas de armonía > Compás**, o **clic derecho en un número de compás** del
+  lista de reproducción para un cambio desde ese compás en adelante.
+- Haz clic en uno de los compases habituales, o bajo **Otro** pon
   el número de arriba, haz clic en el de abajo (1, 2, 4, 8 o 16) y,
-  si quieres, escribe cómo se agrupan los pulsos. **Use …** lo aplica.
+  si quieres, escribe cómo se agrupan los pulsos. **Usar …** lo aplica.
 - Si algo no encaja, el menú lo dice en rojo, por ejemplo "los grupos
   suman 8, no 11".
 
@@ -114,8 +114,8 @@ assert_eq!(balkan.beat_at(9), Beat { index: 2, start: 8, length: 6 });
 ```
 
 Eliminar la función vieja fue a propósito: el compilador enumeró
-entonces cada sitio que seguía llamándola (las líneas del playlist, los
-colores de los pulsos del channel rack, la pantalla BAR:BEAT:STEP, el
+entonces cada sitio que seguía llamándola (las líneas de la lista de reproducción, los
+colores de los pulsos del rack de canales, la pantalla BAR:BEAT:STEP, el
 ajuste a pulsos, los tempo glides y la escucha de acordes de la
 biblioteca), y cada uno se cambió para preguntar por el pulso real.
 Borrar una función para que el compilador encuentre a sus usuarios es
@@ -178,10 +178,10 @@ se guardaron tal cual.
 
 ## Pruébalo
 
-1. Pon el Time de las harmony keys en 7/8, luego en 2+2+3/8, y mira el
-   channel rack: los colores de los botones de paso cambian de siete
+1. Pon el Compás de las teclas de armonía en 7/8, luego en 2+2+3/8, y mira el
+   rack de canales: los colores de los botones de paso cambian de siete
    parejas a dos, dos, tres.
-2. Haz clic derecho en el compás 5 del playlist y ponlo en 3+3+2/8.
+2. Haz clic derecho en el compás 5 de la lista de reproducción y ponlo en 3+3+2/8.
    Sus compases miden 16 pasos como 4/4, pero las líneas de pulso caen
    en otro sitio.
 3. En una prueba, comprueba que `"3+3/8".parse::<TimeSignature>()` es

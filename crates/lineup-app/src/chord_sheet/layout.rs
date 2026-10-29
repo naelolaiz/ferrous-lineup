@@ -132,8 +132,10 @@ impl LayoutView {
                 );
                 theme::hint(
                     fit,
-                    "As many bars as fit with every name in full at its normal size: 1, 2, 4, \
+                    crate::i18n::tr(
+                        "As many bars as fit with every name in full at its normal size: 1, 2, 4, \
                      8, 12 or 16, so lines start where four-bar phrases do",
+                    ),
                 );
                 // The numbers in rows of four: in one column, seventeen
                 // choices are taller than egui lets a menu be (400 points
@@ -150,8 +152,10 @@ impl LayoutView {
             });
         theme::hint(
             combo.response,
-            "How many bars a line of the sheet holds. With a number, names that don't fit \
+            crate::i18n::tr(
+                "How many bars a line of the sheet holds. With a number, names that don't fit \
              are written smaller",
+            ),
         );
         ui.separator();
         let (text, hint) = match self.choices.fills {
@@ -165,7 +169,7 @@ impl LayoutView {
                 "Show the playlist in the main window again, and the sheet over it",
             ),
         };
-        if theme::hint(ui.button(text), hint).clicked() {
+        if theme::hint(ui.button(text), crate::i18n::tr(hint)).clicked() {
             self.choices.fills = !self.choices.fills;
         }
     }

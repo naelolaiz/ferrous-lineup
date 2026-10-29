@@ -17,40 +17,38 @@ estilo puede traer hasta tres músicos más: una **guitarra**, unas
 
 ## Cómo probarlo
 
-Pulsa **Ctrl+N** para un chord sheet nuevo (la banda toca **Pop beat**)
-y luego **Progression > Pop > Four chords**. Junto al piano, el bajo y
-la batería, el playlist tiene una cuarta pista, **Guitar**, y el
-channel rack un canal **Guitar** en la guitarra acústica de cuerdas de
-acero. Con **Edit > Settings… > Audio > SoundFont instruments**
+Pulsa **Ctrl+N** para una hoja de acordes nueva (la banda toca **Ritmo pop**)
+y luego **Progresión > Pop > Cuatro acordes**. Junto al piano, el bajo y
+la batería, la lista de reproducción tiene una cuarta pista, **Guitarra**, y el rack de canales un canal **Guitarra** en la guitarra acústica de cuerdas de
+acero. Con **Edición > Ajustes… > Audio > Instrumentos del SoundFont**
 activado, suena como una.
 
-Pasa el ratón sobre un estilo en el menú **Band**: su pista termina
+Pasa el ratón sobre un estilo en el menú **Banda**: su pista termina
 ahora con quién más toca, como en «Con una guitarra rasgueada y cuerdas
 en la variación b». Cuerdas en la variación b significa que esperan al
-estribillo: haz clic derecho en un compás, elige **Variation b**, y
+estribillo: haz clic derecho en un compás, elige **Variación b**, y
 desde ahí entran las cuerdas, sosteniendo los acordes una octava por
-encima del piano. En la fila **You play**, un músico que aún no toca
+encima del piano. En la fila **Tocas tú**, un músico que aún no toca
 aparece en gris.
 
 Prueba unos cuantos estilos sobre los mismos acordes:
 
 | Estilo | Quién entra | Qué tocan |
 |---|---|---|
-| Pop beat | guitarra de cuerdas de acero, cuerdas en b | acordes rasgueados, cuerdas sostenidas |
-| Rock beat | guitarra saturada, órgano de rock en b | power chords en corcheas |
+| Ritmo pop | guitarra de cuerdas de acero, cuerdas en b | acordes rasgueados, cuerdas sostenidas |
+| Ritmo de rock | guitarra saturada, órgano de rock en b | power chords en corcheas |
 | Shuffle, Rock and roll | guitarra eléctrica limpia | el boogie shuffle |
 | Swing | guitarra de jazz | el four to the bar |
 | Funk, Disco | guitarra muteada, y cuerdas en disco | semicorcheas, scratching |
 | One drop, Steppers, Rocksteady | guitarra limpia, órgano | el chop en 2 y 4, la burbuja del órgano |
 | Bossa nova | guitarra de cuerdas de nailon | el ritmo de bossa |
 | Tangos | cuerdas | acordes sostenidos |
-| Chorale | órgano de iglesia | acordes sostenidos |
+| Coral | órgano de iglesia | acordes sostenidos |
 | Hip hop, la mayoría de los estilos electrónicos | nadie | |
 
 Cambia a un estilo sin guitarra y la pista y el canal de la guitarra
 desaparecen; deshacer los trae de vuelta. Una parte que editaste en el
-piano roll se queda, como siempre, hasta que haces clic en **Play it
-again**. Las canciones guardadas con estos músicos son de formato 17;
+piano roll se queda, como siempre, hasta que haces clic en **Volver a tocarla**. Las canciones guardadas con estos músicos son de formato 17;
 una canción con solo el piano, el bajo y la batería se guarda aún como
 formato 16, así que las versiones anteriores siguen abriéndola.
 
@@ -181,7 +179,7 @@ se detiene el hit.
 
 Las **cuerdas** sostienen cada acorde mientras dure, una octava por
 encima del piano, suavemente: un **pad**, un cojín de sonido bajo la
-banda. El pop las usa para levantar el estribillo, así que en Pop beat
+banda. El pop las usa para levantar el estribillo, así que en Ritmo pop
 y Motown solo tocan en la variación b. Las baladas usan las cuerdas de
 arranque más lento, y los estilos de sintetizador, las de sintetizador.
 
@@ -206,7 +204,7 @@ desde 0, así que el código dice 24 para la guitarra de nailon:
 | 27 | Guitarra eléctrica (limpia) | shuffle, rock and roll, surf, Motown, reggae, ska |
 | 28 | Guitarra eléctrica (muteada) | funk, disco |
 | 29, 30 | Guitarra saturada, con distorsión | rock, punk, metal |
-| 48, 49, 50 | Cuerdas, cuerdas lentas, cuerdas de sintetizador | pop, tango, baladas, R&Si, trance |
+| 48, 49, 50 | Cuerdas, cuerdas lentas, cuerdas de sintetizador | pop, tango, baladas, R&B, trance |
 | 16, 17, 18, 19 | Órgano drawbar, percusivo, de rock, de iglesia | blues, reggae, rock, chorale |
 
 ## Cómo funciona
@@ -425,17 +423,17 @@ un mensaje en lugar de dejar caer en silencio el canal de la guitarra.
 
 ## Ejercicios
 
-1. Crea un chord sheet con **C Am F G** y prueba **Pop beat**, **Folk**,
-   **Rock beat** y **Swing**. Haz clic en **Piano**, **Bass** y
-   **Drums** en la fila **You play**, de modo que solo quede la
+1. Crea una hoja de acordes con **C Am F G** y prueba **Ritmo pop**, **Folk**,
+   **Ritmo de rock** y **Swing**. Haz clic en **Piano**, **Bajo** y
+   **Batería** en la fila **Tocas tú**, de modo que solo quede la
    guitarra. ¿Cómo toca cada guitarrista los mismos cuatro acordes?
 2. Mira las notas de la guitarra en el piano roll para Sol y para Fa en
-   Pop beat. Escribe sus formas como hacen los libros de acordes
+   Ritmo pop. Escribe sus formas como hacen los libros de acordes
    (`320003`). ¿Por qué la forma de Fa no tiene cuerdas al aire?
 3. ¿Qué forma tocarías para **E7**, y qué notas del acorde dobla?
    Comprueba tu respuesta con la prueba
    `open_chords_are_the_ones_in_chord_books`.
-4. En `extras.rs`, cambia la guitarra de Rock beat de
+4. En `extras.rs`, cambia la guitarra de Ritmo de rock de
    `GuitarPart::Power(Comping::Pulse)` a
    `GuitarPart::Strum(Comping::Pulse)`: formas completas a través de la
    guitarra saturada. Escucha con un SoundFont. ¿Por qué los
@@ -452,6 +450,6 @@ un mensaje en lugar de dejar caer en silencio el canal de la guitarra.
    sobre la llamada recursiva, y por qué?
 8. (Rust, más difícil) Añade un **segundo teclado**: un piano eléctrico
    (programa 4) que toca el comping del estilo una octava arriba en los
-   estilos R&Si y Neo soul. ¿Qué partes de `band.rs` y `file.rs` deben
+   estilos R&B y Neo soul. ¿Qué partes de `band.rs` y `file.rs` deben
    cambiar? Comprueba que una canción con solo tres músicos se sigue
    guardando como formato 16.

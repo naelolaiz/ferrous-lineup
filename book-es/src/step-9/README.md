@@ -1,10 +1,10 @@
 # Paso 9: La banda
 
-Los pasos 1 a 8 construyeron las partes: loops en un step sequencer y
-un piano roll, ordenados en las pistas de un playlist, con una
+Los pasos 1 a 8 construyeron las partes: bucles en un step sequencer y
+un piano roll, ordenados en las pistas de una lista de reproducción, con una
 biblioteca de estilos detrás. Lo que el proyecto estaba destinado a ser
 desde el principio es una **banda de acompañamiento**. Escribes los
-acordes de una canción compás a compás, eliges un estilo, pulsas Play,
+acordes de una canción compás a compás, eliges un estilo, pulsas ▶,
 y una banda (bajo, batería, piano, guitarra, cuerdas) toca la canción
 en ese estilo. Cambia el estilo, la tonalidad o el tempo, y la banda la
 toca otra vez de la manera nueva.
@@ -18,51 +18,44 @@ crecido, hasta 177 estilos y 112 ritmos. Lo que faltaba es el frente:
 un sitio donde escribes los acordes, que la banda luego toca. El paso 9
 lo trae al frente, un cambio a la vez:
 
-1. **Nombres de acordes**: leer acordes como los escriben los lead
-   sheets, "Am7", "F#m7b5", "G/B" ([Nombres de acordes: leer un lead
-   sheet](chord-names.md)),
-2. **un chord sheet**: una ventana de compases donde escribes los
+1. **Nombres de acordes**: leer acordes como los escriben las partituras guía, "Am7", "F#m7b5", "G/B" ([Nombres de acordes: leer una partitura guía](chord-names.md)),
+2. **una hoja de acordes**: una ventana de compases donde escribes los
    acordes, guardados en el proyecto. Un compás también puede contener
    un conjunto de clases de alturas, un micromodo, una forma de la
    serie, o dos acordes a la vez, un poliacorde (`Eb7|Fb`), las otras
-   maneras que tiene Ferrous Lineup de nombrar la armonía ([El chord
-   sheet: escribir una canción compás a compás](chord-sheet.md),
+   maneras que tiene Ferrous Lineup de nombrar la armonía ([La hoja de acordes: escribir una canción compás a compás](chord-sheet.md),
    [oír acordes](chord-hearing.md)),
-3. **la banda toca el chord sheet**: los estilos se dividen en «band
-   styles» (cómo tocar) y «progressions» (qué tocar) ([La banda toca el
-   chord sheet](band.md)),
+3. **la banda toca la hoja de acordes**: los estilos se dividen en «estilos de banda» (cómo tocar) y «progresiones» (qué tocar) ([La banda toca la hoja de acordes](band.md)),
 4. **una barra de práctica**: cuenta de entrada, metrónomo, tempo como
-   porcentaje, tap tempo, un interruptor para tocar tú una parte, y
-   hacer loop de los compases que elijas ([Practicar con la
+   porcentaje, marcar el tempo, un interruptor para tocar tú una parte, y
+   repetir en bucle los compases que elijas ([Practicar con la
    banda](practice.md)),
 5. **la forma de la canción**: una intro, estribillos y un final ([La
    forma de la canción: una intro, estribillos y un final](song-form.md)),
    y una segunda variación del estilo para las partes que necesitan más
    energía ([Variaciones a y b: la banda entra en faena](variations.md)),
-6. **swing**, desde straight hasta tresillo ([Swing: corcheas tocadas
+6. **swing**, desde parejo hasta tresillo ([Swing: corcheas tocadas
    largo-corto](swing.md)),
 7. **sonidos de instrumentos reales** desde un SoundFont, y la banda
-   por MIDI out hacia un sintetizador externo ([Sonidos de instrumentos
+   por la salida MIDI hacia un sintetizador externo ([Sonidos de instrumentos
    reales: un SoundFont](soundfont.md)),
 8. **una banda más grande**: una guitarra, cuerdas y un órgano, cada
    uno donde el estilo los tiene ([Una banda más grande: guitarra,
    cuerdas y órgano](bigger-band.md)),
-9. **silencios, shots, holds y pushes** escritos en el chord sheet
-   ([Shots, holds, silencios y pushes](stops.md)),
-10. **chord sheets como texto plano**, para pegar y compartir ([Chord
-    sheets como texto: para pegar y compartir](text-chord-sheets.md)),
-11. **un lead sheet**: la melodía en notación, los acordes encima,
-    listo para imprimir ([El lead sheet: la melodía en
+9. **silencios, golpes, sostenidos y anticipaciones** escritos en la hoja de acordes
+   ([Golpes, sostenidos, silencios y anticipaciones](stops.md)),
+10. **hojas de acordes como texto plano**, para pegar y compartir ([Hojas de acordes como texto: para pegar y compartir](text-chord-sheets.md)),
+11. **una partitura guía**: la melodía en notación, los acordes encima,
+    listo para imprimir ([La partitura guía: la melodía en
     notación](lead-sheet.md)),
 12. **un solista** y 13. **entrenamiento auditivo**, ambos
     experimentales y apagados por defecto ([El solista: una línea
     improvisada sobre los acordes](soloist.md), [Entrenamiento
     auditivo](ear-training.md)).
 
-Nada desaparece. El playlist con sus pistas, el channel rack, el piano
-roll, las harmony keys, las series dodecafónicas, los conjuntos de
-clases de alturas y los micromodos se quedan todos como están; el chord
-sheet es una ventana más junto a ellos.
+Nada desaparece. La lista de reproducción con sus pistas, el rack de canales, el piano
+roll, las teclas de armonía, las series dodecafónicas, los conjuntos de
+clases de alturas y los micromodos se quedan todos como están; la hoja de acordes es una ventana más junto a ellos.
 
 ## Después del plan
 
@@ -85,20 +78,20 @@ avanzando:
   estilo](horn-section.md);
 - **Armonía y el sheet**: [oír acordes](chord-hearing.md), [una armonía,
   cuatro nombres](harmony-notations.md), [numerales en tonalidades
-  menores](minor-numerals.md), un [sheet que llena la
+  menores](minor-numerals.md), un [hoja que llena la
   ventana](chord-sheet-layout.md), [compases insertados y
-  borrados](insert-delete-bars.md), [lead sheets para instrumentos en
+  borrados](insert-delete-bars.md), [partituras guía para instrumentos en
   Si♭, Mi♭ y Fa](transposing-instruments.md), [acordes prestados,
   dominantes secundarias y acordes pivote](chord-functions.md) y [cómo
   se mueve cada parte de un acorde a otro](part-motion.md);
-- **El sonido y la pantalla**: [el mixer en orden de
-  partitura](mixer-score-order.md), [un mixer con paneo, reverb y
+- **El sonido y la pantalla**: [el mezclador en orden de
+  partitura](mixer-score-order.md), [un mezclador con paneo, reverb y
   medidores](mixer.md), [EQ, compresión y delay en cada
   canal](channel-effects.md), [cualquier canal enviado por
   MIDI](midi-out-menus.md), [exportar vídeo](video-export.md), [una
   traza de la reproducción](playback-trace.md), [luces de paso en el
-  channel rack](rack-lights.md), [casillas de la
-  Library](library-filters.md) y [trabajar más rápido](workflow.md);
+  rack de canales](rack-lights.md), [casillas de la
+  Biblioteca](library-filters.md) y [trabajar más rápido](workflow.md);
 - **Cuando algo sale mal**: [recuperación, proyectos recientes y
   reiniciar el audio](recovery.md), [una segunda cacería de
   errores](bug-hunt.md) y [una tercera](bug-hunt-3.md);

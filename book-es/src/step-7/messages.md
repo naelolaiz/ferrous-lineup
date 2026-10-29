@@ -343,7 +343,7 @@ fn midi_channels(channels: &[Channel]) -> Vec<u8> {
 ```
 
 La batería integrada comparte el canal 10, y sus notas se sustituyen
-por las de General MIDI (`general_midi_drum`). Un canal MIDI Out
+por las de General MIDI (`general_midi_drum`). Un canal de salida MIDI
 conserva el canal que se le dio. Los demás canales toman el siguiente
 de `melodic`: los números 0 a 15 sin el 9, repetidos sin fin con
 `cycle` (que el [paso 6](../step-6/tools.md) usó para los arpegios). El

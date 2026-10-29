@@ -36,7 +36,7 @@ impl LineupApp {
                 ui.horizontal(|ui| {
                     ui.add(egui::Image::new(&icon(ctx)).fit_to_exact_size(egui::vec2(64.0, 64.0)));
                     ui.vertical(|ui| {
-                        ui.heading("Ferrous Lineup");
+                        ui.heading(tr("Ferrous Lineup"));
                         ui.label(format!("{} {}", tr("Version"), env!("CARGO_PKG_VERSION")));
                         ui.weak(tr(env!("CARGO_PKG_DESCRIPTION")));
                     });

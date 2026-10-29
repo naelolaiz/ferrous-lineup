@@ -19,15 +19,15 @@ demasiado entrecortado. Ahora una canción tiene una cantidad de **Swing**
 
 ## Probarlo
 
-Abre **File > Demos > Songs > Blues > Midnight Shuffle**. El playlist
-dice **Swing 100%** junto a **Loose**. Arrastra el número hacia abajo
+Abre **Archivo > Demostraciones > Canciones > Blues > Midnight Shuffle**. La lista de reproducción
+dice **Swing 100%** junto a **Soltura**. Arrastra el número hacia abajo
 hasta *straight* mientras suena, y luego hacia arriba: la batería, el
 piano, el bajo y la armónica cambian todos su sensación a la vez, pero
 ni una sola nota se mueve en el piano roll. Con una banda, el mismo
-control está junto al tempo en el chord sheet.
+control está junto al tempo en la hoja de acordes.
 
-Cada estilo de banda trae su propio swing: **Swing**, **Jazz ballad**,
-**Jazz waltz** y **Shuffle** al 100%, **Rock and roll** al 50%, y todos
+Cada estilo de banda trae su propio swing: **Swing**, **Balada de jazz**,
+**Vals de jazz** y **Shuffle** al 100%, **Rock and roll** al 50%, y todos
 los demás estilos straight. Cámbialo, y el estilo lo recuerda: la
 próxima vez que lo elijas, en cualquier canción, toca con tu cantidad.
 La cantidad también forma parte de la canción, así que se guarda con
@@ -123,7 +123,7 @@ El `'_` de `Cow<'_, ...>` dice que el caso prestado toma el préstamo de
 El hilo de audio obtiene sus notas de `played_notes` (cuando se carga un
 proyecto y cada vez que cambian las notas), y lo mismo hacen la
 exportación MIDI y el acompañamiento que sigue los acordes que tocas. El
-piano roll, los botones de step y el chord sheet leen las notas
+piano roll, los botones de step y la hoja de acordes leen las notas
 escritas, de modo que la cuadrícula que editas sigue siendo una
 cuadrícula.
 
@@ -282,7 +282,7 @@ cantidad recordada, si la hay, en el mismo paso de deshacer.
    pareja se mueve? Muchos músicos de jazz leen las dos de la misma
    manera, como un tresillo. ¿Qué necesitaría saber Ferrous Lineup para
    hacer eso, y por qué podría salir mal en una marcha?
-4. Pon una canción con swing en 6/8 con el cuadro Time. ¿Qué les pasa al
+4. Pon una canción con swing en 6/8 con el cuadro Compás. ¿Qué les pasa al
    control Swing y al sonido? Escribe el mismo groove en 12/8 a mano:
    ¿dónde van las notas largas y las cortas?
 5. (Rust) `played_notes` devuelve un `Cow`. ¿Qué cambiaría si devolviera

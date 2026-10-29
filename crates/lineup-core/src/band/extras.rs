@@ -8,6 +8,7 @@
 //! styles add one, some none. A player can also wait for variation b,
 //! coming in to lift a chorus, as strings often do in pop.
 
+use crate::i18n::{list, tr};
 use crate::library::comping::{Comping, Played};
 use crate::meter::Bar;
 use crate::pattern::NoteEvent;
@@ -425,39 +426,32 @@ impl Extras {
     /// variation b". Empty if there are none.
     pub fn describe(&self) -> String {
         let in_b = |only_in_b: bool| match only_in_b {
-            true => " in variation b",
+            true => tr(" in variation b"),
             false => "",
         };
         let mut players: Vec<String> = Vec::new();
         if let Some(guitar) = self.guitar {
             players.push(format!(
                 "{}{}",
-                guitar.part.describe(),
+                tr(guitar.part.describe()),
                 in_b(guitar.only_in_b)
             ));
         }
         if let Some(strings) = self.strings {
             players.push(format!(
                 "{}{}",
-                strings.part.describe(false),
+                tr(strings.part.describe(false)),
                 in_b(strings.only_in_b)
             ));
         }
         if let Some(organ) = self.organ {
             players.push(format!(
                 "{}{}",
-                organ.part.describe(true),
+                tr(organ.part.describe(true)),
                 in_b(organ.only_in_b)
             ));
         }
-        match players.len() {
-            0 => String::new(),
-            1 => players.remove(0),
-            _ => {
-                let last = players.pop().unwrap_or_default();
-                format!("{} and {last}", players.join(", "))
-            }
-        }
+        list(&players)
     }
 }
 

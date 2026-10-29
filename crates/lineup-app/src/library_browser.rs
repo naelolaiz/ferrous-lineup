@@ -15,6 +15,7 @@ use lineup_core::library::{
 use lineup_core::{Band, Project, SongPart, SourceKind, TimeSignature};
 
 pub(crate) mod catalogue;
+use crate::i18n::{tr, tr_name, tr_str, trf};
 use catalogue::{Preset, alphabetical, matches};
 
 /// Something picked in the library.
@@ -205,19 +206,19 @@ impl LibraryBrowser {
         tried: Tried,
         purpose: LibraryPurpose,
     ) -> Option<LibraryAction> {
-        if ui.small_button("New style…").clicked() {
+        if ui.small_button(tr("New style…")).clicked() {
             self.editor_request = Some(StyleEditorRequest::New);
         }
         ui.horizontal(|ui| {
             let width = (ui.available_width() - 28.0).max(80.0);
             ui.add(
                 egui::TextEdit::singleline(&mut self.filter)
-                    .hint_text("🔍 Search: bossa, 6/8, tango…")
+                    .hint_text(tr("🔍 Search: bossa, 6/8, tango…"))
                     .desired_width(width),
             );
             if ui
                 .add_enabled(!self.filter.is_empty(), egui::Button::new("×"))
-                .on_hover_text("Clear search")
+                .on_hover_text(tr("Clear search"))
                 .clicked()
             {
                 self.filter.clear();
@@ -229,21 +230,21 @@ impl LibraryBrowser {
             .unwrap_or_default();
         let mut filters = saved;
         ui.horizontal_wrapped(|ui| {
-            ui.checkbox(&mut filters.time, format!("In {}", project.time_signature))
-                .on_hover_text(
+            ui.checkbox(&mut filters.time, trf("In {}", &[&project.time_signature]))
+                .on_hover_text(tr(
                     "Only presets in the song's time signature, and those that play every bar \
                      in its own meter",
-                );
+                ));
             ui.checkbox(
                 &mut filters.speed,
-                format!("Near {:.0} BPM", project.tempo.bpm()),
+                trf("Near {} BPM", &[&format!("{:.0}", project.tempo.bpm())]),
             )
-            .on_hover_text(
+            .on_hover_text(tr(
                 "Only presets made for about the song's speed: 15% faster or slower at most",
-            );
+            ));
             if purpose != LibraryPurpose::Progression {
-                ui.checkbox(&mut filters.chords, "With chords")
-                    .on_hover_text("Only presets that bring a chord progression");
+                ui.checkbox(&mut filters.chords, tr("With chords"))
+                    .on_hover_text(tr("Only presets that bring a chord progression"));
             }
         });
         if filters != saved {
@@ -270,21 +271,26 @@ impl LibraryBrowser {
     ) -> Option<LibraryAction> {
         let mut picked = None;
         let sources = SongPart::ALL.map(|part| part_source_text(project, part));
-        let locked = project.locked_names().join(", ");
+        let locked = project
+            .locked_names()
+            .iter()
+            .map(|name| tr_name(name))
+            .collect::<Vec<_>>()
+            .join(", ");
         if purpose != LibraryPurpose::Progression {
             part_sources(ui, project, &sources, &locked);
             if project.band().is_some_and(|band| band.accents_only) {
-                ui.weak("Plain accents with current instruments");
+                ui.weak(tr("Plain accents with current instruments"));
             }
         }
         ui.weak(match purpose {
-            LibraryPurpose::Play => {
+            LibraryPurpose::Play => tr(
                 "Click a preset to choose what to copy, then Apply. Ctrl-click applies the \
                  previous options immediately. While the song plays, it carries on with the \
-                 new preset. Right-click to apply to the whole song while stopped. Ctrl+Z undoes it."
-            }
+                 new preset. Right-click to apply to the whole song while stopped. Ctrl+Z undoes it.",
+            ),
             LibraryPurpose::Progression => {
-                "Choose a preset’s chord progression to write from the selected bar."
+                tr("Choose a preset’s chord progression to write from the selected bar.")
             }
         });
         ui.add_space(2.0);
@@ -340,22 +346,24 @@ impl LibraryBrowser {
             && !anything_else_matches(&filter, narrowing, purpose)
         {
             if searching {
-                ui.label(format!(
+                ui.label(trf(
                     "Nothing in the library matches \"{}\".",
-                    self.filter.trim()
+                    &[&self.filter.trim()],
                 ));
             } else {
-                ui.label("Nothing in the library matches the ticked boxes.");
+                ui.label(tr("Nothing in the library matches the ticked boxes."));
             }
             if narrowing.any() {
-                ui.weak("Untick a box to see more.");
+                ui.weak(tr("Untick a box to see more."));
             }
-            ui.weak("Songs with melodies are in File ▸ Demos ▸ Songs.");
+            ui.weak(tr("Songs with melodies are in File ▸ Demos ▸ Songs."));
         }
         ui.scope(|ui| {
-            ui.label(format!("Presets ({})", presets.len()));
+            ui.label(trf("Presets ({})", &[&presets.len()]));
             if purpose != LibraryPurpose::Progression {
-                ui.weak("+ chords: includes a progression. Other presets keep your chords.");
+                ui.weak(tr(
+                    "+ chords: includes a progression. Other presets keep your chords.",
+                ));
             }
             let mut draw = |ui: &mut Ui, preset| {
                 if let Some(action) = preset_label(
@@ -403,13 +411,13 @@ impl LibraryBrowser {
                 let fills = alphabetical(
                     FILLS.iter().filter(|r| {
                         (matches(&filter, r.name, r.genre, r.time, r.about)
-                            || names_a_word(&filter, "fill fills"))
+                            || names_a_word(&filter, "fill fills relleno rellenos"))
                             && narrowing.keeps(r.time, r.tempo, r.follows_the_meter, false)
                     }),
                     |rhythm| rhythm.name,
                 );
                 if !fills.is_empty() {
-                    let header = egui::CollapsingHeader::new(format!("Fills ({})", fills.len()))
+                    let header = egui::CollapsingHeader::new(trf("Fills ({})", &[&fills.len()]))
                         .id_salt("rhythms-fills");
                     let open = searching
                         || (new_rhythm && tried.rhythm.is_some_and(|r| FILLS.contains(r)));
@@ -486,7 +494,7 @@ fn grouped_results<'a>(
     if !users.is_empty() {
         let open =
             searching || (reveal && users.iter().any(|&preset| preset_selected(preset, tried)));
-        let header = egui::CollapsingHeader::new(format!("User styles ({})", users.len()))
+        let header = egui::CollapsingHeader::new(trf("User styles ({})", &[&users.len()]))
             .id_salt("preset-users");
         let header = if open {
             header.open(Some(true))
@@ -500,7 +508,7 @@ fn grouped_results<'a>(
         });
     }
     let mut genres = Genre::ALL;
-    genres.sort_by_key(|genre| genre.name());
+    genres.sort_by_key(|genre| tr(genre.name()));
     for genre in genres {
         let group: Vec<_> = presets
             .iter()
@@ -512,7 +520,7 @@ fn grouped_results<'a>(
         }
         let open =
             searching || (reveal && group.iter().any(|&preset| preset_selected(preset, tried)));
-        let header = egui::CollapsingHeader::new(format!("{} ({})", genre.name(), group.len()))
+        let header = egui::CollapsingHeader::new(format!("{} ({})", tr(genre.name()), group.len()))
             .id_salt(("preset-genre", genre));
         let header = if open {
             header.open(Some(true))
@@ -545,17 +553,17 @@ struct PresetView<'a> {
 /// came from a demo or a style.
 pub(crate) fn part_source_text(project: &Project, part: SongPart) -> String {
     match project.part_source(part) {
-        Some(origin) if origin.edited => format!("edited, was {}", origin.source.name),
+        Some(origin) if origin.edited => trf("edited, was {}", &[&tr_name(&origin.source.name)]),
         Some(origin) => {
             let kind = match origin.source.kind {
-                SourceKind::Demo => "demo",
-                SourceKind::Style => "style",
-                SourceKind::Rhythm => "rhythm",
-                SourceKind::SavedStyle => "saved style",
+                SourceKind::Demo => tr("demo"),
+                SourceKind::Style => tr("style"),
+                SourceKind::Rhythm => tr("rhythm"),
+                SourceKind::SavedStyle => tr("saved style"),
             };
-            format!("{} ({kind})", origin.source.name)
+            format!("{} ({kind})", tr_name(&origin.source.name))
         }
-        None => "yours".to_string(),
+        None => tr("yours").to_string(),
     }
 }
 
@@ -568,12 +576,12 @@ fn part_value(project: &Project, part: SongPart) -> Option<String> {
             Some(format!(
                 "{}{}",
                 project.time_signature,
-                if changes { " and others" } else { "" }
+                if changes { tr(" and others") } else { "" }
             ))
         }
         SongPart::Tempo => Some(format!("{:.0} BPM", project.tempo.bpm())),
         SongPart::Swing => Some(match project.swing {
-            0 => "even".to_string(),
+            0 => tr("even").to_string(),
             swing => format!("{swing}%"),
         }),
         SongPart::Patterns | SongPart::Instruments | SongPart::Chords => None,
@@ -591,17 +599,18 @@ fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6], locked: &str)
         .spacing([10.0, 2.0])
         .show(ui, |ui| {
             for (part, source) in SongPart::ALL.into_iter().zip(now) {
-                ui.weak(part.name());
+                ui.weak(tr(part.name()));
                 let text = match part_value(project, part) {
                     Some(value) => format!("{value} · {source}"),
                     None => source.clone(),
                 };
                 let hover = match project.part_source(part) {
-                    Some(origin) if origin.edited => {
-                        format!("You changed it since it came from {}.", origin.source.name)
-                    }
-                    Some(origin) => format!("As it came from {}.", origin.source.name),
-                    None => "Your own: it did not come from a demo or a style.".to_string(),
+                    Some(origin) if origin.edited => trf(
+                        "You changed it since it came from {}.",
+                        &[&tr_name(&origin.source.name)],
+                    ),
+                    Some(origin) => trf("As it came from {}.", &[&tr_name(&origin.source.name)]),
+                    None => tr("Your own: it did not come from a demo or a style.").to_string(),
                 };
                 value(ui, text).on_hover_text(hover);
                 ui.end_row();
@@ -611,27 +620,29 @@ fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6], locked: &str)
                 .section_styles()
                 .iter()
                 .map(|marker| {
-                    format!(
+                    trf(
                         "bar {}: {}",
-                        meter.bar_at(marker.start).number + 1,
-                        project.style_name_at(marker.start)
+                        &[
+                            &(meter.bar_at(marker.start).number + 1),
+                            &tr_name(project.style_name_at(marker.start)),
+                        ],
                     )
                 })
                 .collect();
             if !sections.is_empty() {
-                ui.weak("Sections");
-                value(ui, sections.join(", ")).on_hover_text(
+                ui.weak(tr("Sections"));
+                value(ui, sections.join(", ")).on_hover_text(tr(
                     "Where the band plays another style. Right-click a bar or a section on \
                      the chord sheet to change it.",
-                );
+                ));
                 ui.end_row();
             }
             if !locked.is_empty() {
-                ui.weak("Locked");
-                value(ui, format!("🔒 {locked}")).on_hover_text(
+                ui.weak(tr("Locked"));
+                value(ui, format!("🔒 {locked}")).on_hover_text(tr(
                     "Styles and the band keep their notes and sound. Unlock them in the \
                      channel rack.",
-                );
+                ));
                 ui.end_row();
             }
         });
@@ -648,18 +659,21 @@ fn preset_label(
     let hover = match preset {
         Preset::Style(style) => describe_style(style, view.tonic),
         Preset::Rhythm(rhythm) => format!(
-            "{}\n\n{} · {} BPM · {} bars\nNo chord progression; keeps your chords.",
-            rhythm.about,
-            rhythm.time,
-            rhythm.tempo,
-            rhythm.bars(),
+            "{}\n\n{}\n{}",
+            tr_str(rhythm.about),
+            trf(
+                "{} · {} BPM · {} bars",
+                &[&rhythm.time, &rhythm.tempo, &rhythm.bars()],
+            ),
+            tr("No chord progression; keeps your chords."),
         ),
         Preset::User(_, style) => format!(
-            "{}\n\n{} · {} BPM · {} bars\n{}",
+            "{}\n\n{}\n{}",
             style.about,
-            style.time,
-            style.tempo.bpm(),
-            style.bars,
+            trf(
+                "{} · {} BPM · {} bars",
+                &[&style.time, &style.tempo.bpm(), &style.bars],
+            ),
             style.chart,
         ),
     };
@@ -678,16 +692,16 @@ fn preset_label(
         let response = ui
             .horizontal_wrapped(|ui| {
                 let name = if preset.follows_the_song() {
-                    format!("{}  (any meter)", preset.name())
+                    trf("{}  (any meter)", &[&tr_name(preset.name())])
                 } else {
                     label(preset.name(), preset.time())
                 };
                 let response = ui.selectable_label(selected, name);
                 if view.purpose != LibraryPurpose::Progression {
                     ui.weak(if preset.has_progression() {
-                        "+ chords"
+                        tr("+ chords")
                     } else {
-                        "keeps chords"
+                        tr("keeps chords")
                     });
                 }
                 response
@@ -725,7 +739,7 @@ fn preset_label(
             .width(300.0);
         let popup = popup.open_memory(opening.then_some(egui::SetOpenCommand::Bool(true)));
         popup.show(|ui| {
-            ui.strong(preset.name());
+            ui.strong(tr_name(preset.name()));
             let height = (ui.ctx().content_rect().height() - 110.0).max(80.0);
             egui::ScrollArea::vertical()
                 .max_height(height)
@@ -749,14 +763,14 @@ fn preset_label(
                     || effective.swing
                     || (effective.progression && preset.has_progression());
                 if ui
-                    .add_enabled(can_apply, egui::Button::new("Apply"))
+                    .add_enabled(can_apply, egui::Button::new(tr("Apply")))
                     .clicked()
                 {
                     *parts = draft;
                     picked = Some(action);
                     ui.close();
                 }
-                if ui.button("Cancel").clicked() {
+                if ui.button(tr("Cancel")).clicked() {
                     ui.close();
                 }
             });
@@ -764,9 +778,9 @@ fn preset_label(
         ui.ctx().data_mut(|data| data.insert_temp(popup_id, draft));
         response.context_menu(|ui| {
             let edit_label = if matches!(preset, Preset::User(_, _)) {
-                "Edit in channel rack…"
+                tr("Edit in channel rack…")
             } else {
-                "Edit a copy in channel rack…"
+                tr("Edit a copy in channel rack…")
             };
             if ui.button(edit_label).clicked() {
                 *editor = Some(match preset {
@@ -777,7 +791,9 @@ fn preset_label(
                 ui.close();
             }
             if view.purpose == LibraryPurpose::Play
-                && ui.button("Play the whole song with this preset").clicked()
+                && ui
+                    .button(tr("Play the whole song with this preset"))
+                    .clicked()
             {
                 picked = Some(match preset {
                     Preset::Style(style) => LibraryAction::StyleInSong(style),
@@ -811,12 +827,12 @@ fn style_parts_editor(
 ) {
     ui.spacing_mut().item_spacing.y = 8.0;
     ui.add_space(4.0);
-    ui.weak("Playing style");
+    ui.weak(tr("Playing style"));
     style_mode_ui(ui, parts);
     ui.separator();
-    ui.strong("Accompaniment");
+    ui.strong(tr("Accompaniment"));
     if !locked.is_empty() {
-        ui.weak(format!("🔒 Kept: {locked}"));
+        ui.weak(trf("🔒 Kept: {}", &[&locked]));
     }
     copy_parts_ui(ui, parts, has_progression, follows, now);
 }
@@ -835,7 +851,7 @@ fn with_source(
     };
     ui.horizontal(|ui| {
         option(ui);
-        let text = RichText::new(format!("now: {}", now[part as usize]))
+        let text = RichText::new(trf("now: {}", &[&now[part as usize]]))
             .small()
             .weak();
         ui.add(egui::Label::new(text).truncate());
@@ -844,13 +860,13 @@ fn with_source(
 
 pub(crate) fn style_mode_ui(ui: &mut Ui, parts: &mut StyleParts) {
     ui.horizontal_wrapped(|ui| {
-        ui.selectable_value(&mut parts.matching_style, true, "Preset patterns");
-        ui.selectable_value(&mut parts.matching_style, false, "Plain accents");
+        ui.selectable_value(&mut parts.matching_style, true, tr("Preset patterns"));
+        ui.selectable_value(&mut parts.matching_style, false, tr("Plain accents"));
     });
     ui.weak(if parts.matching_style {
-        "Use the preset’s playing patterns and choose whether to copy its instruments."
+        tr("Use the preset’s playing patterns and choose whether to copy its instruments.")
     } else {
-        "Simple chord and bass accents on the meter’s beat groups. Drum patterns still come from the preset. Your current instruments and chords are kept."
+        tr("Simple chord and bass accents on the meter’s beat groups. Drum patterns still come from the preset. Your current instruments and chords are kept.")
     });
 }
 
@@ -863,13 +879,17 @@ fn copy_parts_ui(
 ) {
     let (label, hint) = if parts.matching_style {
         (
-            "Playing patterns",
-            "Copy the preset’s drum, chord, bass and other accompaniment patterns. Existing chords are kept unless Chord progression is checked.",
+            tr("Playing patterns"),
+            tr(
+                "Copy the preset’s drum, chord, bass and other accompaniment patterns. Existing chords are kept unless Chord progression is checked.",
+            ),
         )
     } else {
         (
-            "Drums and plain accents",
-            "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups, over the song’s own chords and instruments.",
+            tr("Drums and plain accents"),
+            tr(
+                "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups, over the song’s own chords and instruments.",
+            ),
         )
     };
     with_source(ui, now, SongPart::Patterns, |ui| {
@@ -877,22 +897,22 @@ fn copy_parts_ui(
     });
     if parts.matching_style {
         with_source(ui, now, SongPart::Instruments, |ui| {
-            instrument_option(ui, parts, "Voices / instruments");
+            instrument_option(ui, parts, tr("Voices / instruments"));
         });
     }
     ui.add_space(2.0);
-    ui.strong("Harmony");
+    ui.strong(tr("Harmony"));
     if parts.matching_style {
         let mut progression = has_progression && parts.progression;
         with_source(ui, now, SongPart::Chords, |ui| {
             if ui
                 .add_enabled(
                     has_progression,
-                    egui::Checkbox::new(&mut progression, "Chord progression"),
+                    egui::Checkbox::new(&mut progression, tr("Chord progression")),
                 )
-                .on_hover_text("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried.")
+                .on_hover_text(tr("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried."))
                 .on_disabled_hover_text(
-                    "This preset has no chord progression. Your current chords are kept.",
+                    tr("This preset has no chord progression. Your current chords are kept."),
                 )
                 .changed()
             {
@@ -900,47 +920,47 @@ fn copy_parts_ui(
             }
         });
         if has_progression && parts.progression {
-            ui.weak("Replaces existing chords. The melody is kept.");
+            ui.weak(tr("Replaces existing chords. The melody is kept."));
         }
     } else {
         // Plain accents play the song's own chords. Whether to copy a
         // progression is kept for when preset patterns are picked again.
         with_source(ui, now, SongPart::Chords, |ui| {
-            ui.weak("Keeps the song’s chords");
+            ui.weak(tr("Keeps the song’s chords"));
         });
     }
     ui.add_space(2.0);
-    ui.strong("Timing");
+    ui.strong(tr("Timing"));
     if follows {
         // The ticks stay as they are for the other presets.
-        ui.weak(
+        ui.weak(tr(
             "Keeps the song’s time signatures and tempo: this preset plays every bar in \
              that bar’s meter.",
-        );
+        ));
     } else {
         with_source(ui, now, SongPart::TimeSignature, |ui| {
-            ui.checkbox(&mut parts.time_signature, "Time signature")
+            ui.checkbox(&mut parts.time_signature, tr("Time signature"))
                 .on_hover_text(
-                    "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
+                    tr("Put each bar in the chosen meter. Turn off to fit the pattern into the current meter."),
                 );
         });
         with_source(ui, now, SongPart::Tempo, |ui| {
-            ui.checkbox(&mut parts.tempo, "Tempo").on_hover_text(
-                "Use the preset’s usual tempo when the meter stays the same. Off, the song keeps its tempo. Changing meter keeps each bar's duration.",
+            ui.checkbox(&mut parts.tempo, tr("Tempo")).on_hover_text(
+                tr("Use the preset’s usual tempo when the meter stays the same. Off, the song keeps its tempo. Changing meter keeps each bar's duration."),
             );
         });
     }
     with_source(ui, now, SongPart::Swing, |ui| {
-        ui.checkbox(&mut parts.swing, "Swing")
-            .on_hover_text("Use the preset’s swing amount.");
+        ui.checkbox(&mut parts.swing, tr("Swing"))
+            .on_hover_text(tr("Use the preset’s swing amount."));
     });
 }
 
 /// Display the effective option while preserving the preference for preset patterns.
 pub(crate) fn instrument_option(ui: &mut Ui, parts: &mut StyleParts, label: &str) {
     if parts.matching_style {
-        ui.checkbox(&mut parts.instruments, label)
-            .on_hover_text("Copy the preset’s sounds and band players.");
+        ui.checkbox(&mut parts.instruments, tr_str(label))
+            .on_hover_text(tr("Copy the preset’s sounds and band players."));
     }
 }
 
@@ -965,7 +985,8 @@ fn row_styles(
         return None;
     }
     let mut picked = None;
-    let header = egui::CollapsingHeader::new(RichText::new("Twelve-tone rows").strong());
+    let header = egui::CollapsingHeader::new(RichText::new(tr("Twelve-tone rows")).strong())
+        .id_salt("preset-rows");
     let header = if open {
         header.open(Some(true))
     } else {
@@ -975,12 +996,19 @@ fn row_styles(
         for style in styles {
             let rhythm = match style.rhythm {
                 "" => String::new(),
-                rhythm => format!(" · drums: {rhythm}"),
+                rhythm => trf(" · drums: {}", &[&tr_name(rhythm)]),
             };
             let hover = format!(
-                "{}\n\nRow: {}{rhythm} · {} · {} BPM\n\nThe key becomes the row, starting on the \
-                 key note. While the song plays, a click plays the whole song this way.",
-                style.about, style.row, style.time, style.tempo
+                "{}\n\n{}\n\n{}",
+                tr_str(style.about),
+                trf(
+                    "Row: {}{} · {} · {} BPM",
+                    &[&style.row, &rhythm, &style.time, &style.tempo],
+                ),
+                tr(
+                    "The key becomes the row, starting on the key note. While the song plays, \
+                    a click plays the whole song this way."
+                ),
             );
             let selected = tried.row_style == Some(style);
             let response = ui
@@ -1018,7 +1046,8 @@ fn micromode_styles(
         return None;
     }
     let mut picked = None;
-    let header = egui::CollapsingHeader::new(RichText::new("Micromodes (Kröpfl)").strong());
+    let header = egui::CollapsingHeader::new(RichText::new(tr("Micromodes (Kröpfl)")).strong())
+        .id_salt("preset-micromodes");
     let header = if open {
         header.open(Some(true))
     } else {
@@ -1029,18 +1058,26 @@ fn micromode_styles(
             let micromode = style.micromode();
             let rhythm = match style.rhythm {
                 "" => String::new(),
-                rhythm => format!(" · drums: {rhythm}"),
+                rhythm => trf(" · drums: {}", &[&tr_name(rhythm)]),
             };
             let hover = format!(
-                "{}\n\nMicromode: {} (set {}) · {}{rhythm} · {} · {} BPM\n\nThe key becomes the \
-                 micromode, starting on the key note. While the song plays, a click plays the \
-                 whole song this way.",
-                style.about,
-                micromode.full_name(),
-                micromode.set_class().name(),
-                style.walk.name(),
-                style.time,
-                style.tempo
+                "{}\n\n{}\n\n{}",
+                tr_str(style.about),
+                trf(
+                    "Micromode: {} (set {}) · {}{} · {} · {} BPM",
+                    &[
+                        &micromode.full_name(),
+                        &micromode.set_class().name(),
+                        &style.walk.name(),
+                        &rhythm,
+                        &style.time,
+                        &style.tempo,
+                    ],
+                ),
+                tr(
+                    "The key becomes the micromode, starting on the key note. While the song \
+                    plays, a click plays the whole song this way."
+                ),
             );
             let selected = tried.micromode_style == Some(style);
             let response = ui
@@ -1070,18 +1107,24 @@ fn rhythm_label(
 ) -> Option<LibraryAction> {
     let selected = tried.rhythm == Some(rhythm);
     let is_fill = FILLS.contains(rhythm);
+    let length = if rhythm.bars() == 1 {
+        trf("{} · {} BPM · 1 bar", &[&rhythm.time, &rhythm.tempo])
+    } else {
+        trf(
+            "{} · {} BPM · {} bars",
+            &[&rhythm.time, &rhythm.tempo, &rhythm.bars()],
+        )
+    };
     let hover = format!(
-        "{}\n\n{} · {} BPM · {} bar{}{}",
-        rhythm.about,
-        rhythm.time,
-        rhythm.tempo,
-        rhythm.bars(),
-        if rhythm.bars() == 1 { "" } else { "s" },
+        "{}\n\n{length}\n\n{}",
+        tr_str(rhythm.about),
         if is_fill {
-            "\n\nWhile the song plays, a click puts this fill in the last bar of its drums."
+            tr("While the song plays, a click puts this fill in the last bar of its drums.")
         } else {
-            "\n\nRight-click to play the whole song in this rhythm. While the song plays, \
-             a click does that too."
+            tr(
+                "Right-click to play the whole song in this rhythm. While the song plays, \
+             a click does that too.",
+            )
         }
     );
     let response = ui
@@ -1092,19 +1135,19 @@ fn rhythm_label(
     }
     let mut picked = response.clicked().then_some(LibraryAction::Rhythm(rhythm));
     response.context_menu(|ui| {
-        if ui.button("Edit a copy in channel rack…").clicked() {
+        if ui.button(tr("Edit a copy in channel rack…")).clicked() {
             *editor = Some(StyleEditorRequest::Rhythm(rhythm));
             ui.close();
         }
         if !is_fill
             && purpose == LibraryPurpose::Play
             && ui
-                .button("Play the whole song in this rhythm")
-                .on_hover_text(
+                .button(tr("Play the whole song in this rhythm"))
+                .on_hover_text(tr(
                     "Every pattern with drums gets this rhythm, and the chords and bass \
                      are played the way it goes, keeping the same chords. A rhythm in \
                      another time signature puts the song in it, bar for bar.",
-                )
+                ))
                 .clicked()
         {
             picked = Some(LibraryAction::RhythmInSong(rhythm));
@@ -1115,9 +1158,12 @@ fn rhythm_label(
 }
 
 /// The name, with the time signature after it unless it is 4/4.
+/// A preset's name as the lists show it, in the language chosen, with
+/// its time signature when that is not 4/4.
 pub(crate) fn label(name: &str, time: TimeSignature) -> String {
+    let name = tr_name(name);
     if time.is_common() {
-        name.to_string()
+        name.into_owned()
     } else {
         format!("{name}  ({time})")
     }
@@ -1132,6 +1178,13 @@ fn row_style_matches(filter: &str, style: &RowStyle) -> bool {
         )
         || style.name.to_lowercase().contains(filter)
         || style.about.to_lowercase().contains(filter)
+        || in_spanish(style.name, filter)
+        || in_spanish(style.about, filter)
+}
+
+/// Whether the Spanish for `text` has `filter` in it.
+fn in_spanish(text: &str, filter: &str) -> bool {
+    lineup_core::i18n::spanish(text).is_some_and(|text| text.to_lowercase().contains(filter))
 }
 
 /// Whether a micromode style matches the search: by its name, what it
@@ -1142,6 +1195,8 @@ fn micromode_style_matches(filter: &str, style: &MicromodeStyle) -> bool {
         || names_a_word(filter, "micromodes micromodos kröpfl kropfl trichords")
         || style.name.to_lowercase().contains(filter)
         || style.about.to_lowercase().contains(filter)
+        || in_spanish(style.name, filter)
+        || in_spanish(style.about, filter)
         || micromode.name.to_lowercase().contains(filter)
         || micromode.english.to_lowercase().contains(filter)
 }
@@ -1150,7 +1205,7 @@ fn micromode_style_matches(filter: &str, style: &MicromodeStyle) -> bool {
 fn anything_else_matches(filter: &str, narrowing: Narrowing, purpose: LibraryPurpose) -> bool {
     purpose == LibraryPurpose::Play
         && (FILLS.iter().any(|r| {
-            (names_a_word(filter, "fill fills")
+            (names_a_word(filter, "fill fills relleno rellenos")
                 || matches(filter, r.name, r.genre, r.time, r.about))
                 && narrowing.keeps(r.time, r.tempo, r.follows_the_meter, false)
         }) || ROW_STYLES.iter().any(|style| {
@@ -1179,23 +1234,25 @@ fn describe_style(style: &Style, tonic: lineup_core::PitchClass) -> String {
     let rhythm = if style.rhythm.is_empty() {
         String::new()
     } else {
-        format!(" · drums: {}", style.rhythm)
+        trf(" · drums: {}", &[&tr_name(style.rhythm)])
     };
     let timing = if style.follows_the_song() {
-        format!(
+        trf(
             "Any meter, at the song's tempo (on its own: {}, {} BPM)",
-            style.time, style.tempo
+            &[&style.time, &style.tempo],
         )
     } else {
         format!("{} · {} BPM", style.time, style.tempo)
     };
     format!(
-        "{}\n\nIn {}: {}\n{}\n\n{timing} · {} bars{rhythm}",
-        style.about,
-        crate::i18n::key_name(scale),
-        style.chord_names(tonic),
+        "{}\n\n{}\n{}\n\n{timing} · {}{rhythm}",
+        tr_str(style.about),
+        trf(
+            "In {}: {}",
+            &[&crate::i18n::key_name(scale), &style.chord_names(tonic)],
+        ),
         numerals,
-        style.bars(),
+        trf("{} bars", &[&style.bars()]),
     )
 }
 

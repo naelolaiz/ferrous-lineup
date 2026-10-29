@@ -22,6 +22,7 @@ use lineup_core::sequencer::frames_per_step;
 use lineup_core::{pattern_to_midi, song_to_midi};
 
 use super::LineupApp;
+use crate::i18n::{tr, trf};
 
 /// CD quality: 44 100 frames per second, in stereo.
 pub(super) const EXPORT_SAMPLE_RATE: u32 = 44_100;
@@ -131,7 +132,7 @@ impl LineupApp {
             return;
         }
         let Some(mut path) = rfd::FileDialog::new()
-            .add_filter("WAV audio", &["wav"])
+            .add_filter(tr("WAV audio"), &["wav"])
             .set_file_name(self.file.export_name("wav"))
             .save_file()
         else {
@@ -242,7 +243,7 @@ impl LineupApp {
             }
         };
         let Some(mut path) = rfd::FileDialog::new()
-            .add_filter("MIDI file", &["mid", "midi"])
+            .add_filter(tr("MIDI file"), &["mid", "midi"])
             .set_file_name(name)
             .save_file()
         else {
@@ -254,10 +255,10 @@ impl LineupApp {
         let name = file_name(&path);
         match std::fs::write(&path, bytes) {
             Ok(()) => {
-                self.notice = Some(format!("Exported {name}"));
+                self.notice = Some(trf("Exported {}", &[&name]));
                 self.message = None;
             }
-            Err(err) => self.message = Some(format!("Could not export {name}: {err}")),
+            Err(err) => self.message = Some(trf("Could not export {}: {}", &[&name, &err])),
         }
     }
 
@@ -276,13 +277,15 @@ impl LineupApp {
         if let Some(export) = self.export.take() {
             let name = export.file_name();
             match export.worker.join() {
-                Ok(Ok(())) => self.notice = Some(format!("Exported {name}")),
+                Ok(Ok(())) => self.notice = Some(trf("Exported {}", &[&name])),
                 Ok(Err(err)) if err == CANCELLED => {
-                    self.notice = Some(format!("Stopped exporting {name}"));
+                    self.notice = Some(trf("Stopped exporting {}", &[&name]));
                 }
-                Ok(Err(err)) => self.message = Some(format!("Could not export {name}: {err}")),
+                Ok(Err(err)) => {
+                    self.message = Some(trf("Could not export {}: {}", &[&name, &err]));
+                }
                 // `join` fails only if the thread panicked.
-                Err(_) => self.message = Some(format!("Exporting {name} failed")),
+                Err(_) => self.message = Some(trf("Exporting {} failed", &[&name])),
             }
         }
         // The user asked to quit while it ran: the export is done, so
@@ -337,12 +340,7 @@ impl LineupApp {
             ui.set_width(320.0);
             ui.heading(crate::i18n::tr("An export is still running"));
             ui.add_space(4.0);
-            let msg = if crate::i18n::current_language() == crate::i18n::Language::Spanish {
-                format!("\"{name}\" aún se está escribiendo.")
-            } else {
-                format!("\"{name}\" is still being written.")
-            };
-            ui.label(msg);
+            ui.label(trf("\"{}\" is still being written.", &[&name]));
             ui.add_space(8.0);
             ui.horizontal(|ui| {
                 if ui.button(crate::i18n::tr("Stop it and quit")).clicked() {

@@ -10,58 +10,57 @@ Un pasaje que no puedes tocar a toda velocidad se aprende igual en todo
 instrumento: despacio, hasta que sale bien, luego un poco más rápido, y
 otra vez, hasta llegar al tempo. Con un metrónomo eso significa parar
 cada pocas vueltas para girar una rueda. [Practicar con la
-banda](practice.md) dio a la banda un **Speed** y un **Loop**; el
-**speed trainer** gira la rueda por ti. Cada vez que el loop da una
+banda](practice.md) dio a la banda un **Velocidad** y un **Bucle**; el
+**entrenador de velocidad** gira la rueda por ti. Cada vez que el bucle da una
 vuelta, la banda toca un pequeño porcentaje más rápido, hasta alcanzar
 la velocidad a la que apuntas.
 
-![La fila de práctica del chord sheet mientras los compases 3–4 se repiten en loop: Speed 80%, el Speed trainer encendido, «from 70% to 100% by 5% every 1 pass» a su lado, y el cuadro TEMPO diciendo 80%. El compás 3 está enmarcado en blanco mientras suena, y la barra de estado dice «Speed trainer: 80%, on the way to 100%»](../images/step-9-speed-trainer-sheet.png)
+![La fila de práctica del chord sheet mientras los compases 3–4 se repiten en loop: Speed 80%, el Speed trainer encendido, «desde 70% hasta 100% por 5% cada 1 pasada» a su lado, y el cuadro TEMPO diciendo 80%. El compás 3 está enmarcado en blanco mientras suena, y la barra de estado dice «Speed trainer: 80%, on the way to 100%»](../images/step-9-speed-trainer-sheet.png)
 
 ## Probarlo
 
-1. Abre el chord sheet (**F5**). Haz clic en el compás 3, Shift+clic en
-   el compás 4 y haz clic en **Loop bars 3–4**.
-2. Haz clic en **Speed trainer**. La velocidad baja al **70%**, y
-   aparecen cuatro cuadros junto al botón: **from 70% to 100% by 5%
-   every 1 pass**.
-3. Pulsa Play. La canción inicial está a 130 BPM, así que la banda
+1. Abre la hoja de acordes (**F5**). Haz clic en el compás 3, Mayús+clic en
+   el compás 4 y haz clic en **Repetir los compases 3–4**.
+2. Haz clic en **Entrenador de velocidad**. La velocidad baja al **70%**, y
+   aparecen cuatro cuadros junto al botón: **desde 70% hasta 100% por 5% cada 1 pasada**.
+3. Pulsa ▶. La canción inicial está a 130 BPM, así que la banda
    empieza al 70% de ellos, 91 BPM. Cada vez que acaba el compás 4 y
    vuelve el compás 3, la velocidad sube un 5% del tempo de la canción:
    75%, 80%, 85%… En la séptima vuelta toca al 100%, el tempo propio de
    la canción, y se queda ahí.
-4. Pulsa **Stop** (■). La velocidad vuelve al 70%, lista para empezar la
-   siguiente pasada despacio otra vez. **Pause** (❚❚) conserva la
-   velocidad, así que Play continúa desde donde estabas, a la velocidad
+4. Pulsa **Detener** (■). La velocidad vuelve al 70%, lista para empezar la
+   siguiente pasada despacio otra vez. **Pausa** (❚❚) conserva la
+   velocidad, así que ▶ continúa desde donde estabas, a la velocidad
    a la que habías llegado.
 
 Los cuatro cuadros se arrastran, o se hace doble clic para escribir:
 
-- **from**: la velocidad a la que empieza Play.
-- **to**: la velocidad a la que llegar. El 100% es el tempo de la
+- **desde**: la velocidad a la que empieza ▶.
+- **hasta**: la velocidad a la que llegar. El 100% es el tempo de la
   canción; el 110% va más allá, para tener margen de sobra cuando la
   toques de verdad.
-- **by**: cuánto más rápido es cada velocidad nueva, del 1% al 25% del
+- **por**: cuánto más rápido es cada velocidad nueva, del 1% al 25% del
   tempo de la canción.
-- **every**: cuántas veces toca el loop en cada velocidad antes de la
+- **cada**: cuántas veces toca el bucle en cada velocidad antes de la
   siguiente. Con **every 2 passes** tocas cada velocidad dos veces: una
   para conseguirla, una para comprobar que la tienes.
 
-Una velocidad que fijas a mano en el cuadro **Speed**, durante una
+Una velocidad que fijas a mano en el cuadro **Velocidad**, durante una
 pasada, es desde donde continúa el entrenador. Hacer clic otra vez en
-**Speed trainer** lo apaga y deja la velocidad donde había llegado.
+**Entrenador de velocidad** lo apaga y deja la velocidad donde había llegado.
 
-«El loop» es lo que sea que repite la reproducción: los compases que
-pones en loop, la canción entera cuando no hay nada en loop (vuelve a
+«El bucle» es lo que sea que repite la reproducción: los compases que
+pones en bucle, la canción entera cuando no hay nada en bucle (vuelve a
 empezar desde el compás 1 al acabar), o el patrón, en modo patrón. El
 entrenador funciona con los tres.
 
-Los cuatro números se recuerdan para la próxima vez, como el count-in y
+Los cuatro números se recuerdan para la próxima vez, como la cuenta de entrada y
 el metrónomo. El entrenador en sí está apagado cada vez que arranca la
 app, igual que la velocidad está al 100%: una canción nunca va lenta por
-sorpresa. Los mismos controles están en **Edit > Settings… > Playback**,
+sorpresa. Los mismos controles están en **Edición > Ajustes… > Reproducción**,
 bajo la velocidad de práctica:
 
-![Settings, Playback, Practice: Count-in, Metronome, Practice speed 100% con Reset, y Speed trainer con «from 70% to 100% by 5% every 1 pass»](../images/step-9-speed-trainer-settings.png)
+![Settings, Playback, Practice: Count-in, Metronome, Practice speed 100% con Reset, y Speed trainer con «desde 70% hasta 100% por 5% cada 1 pasada»](../images/step-9-speed-trainer-settings.png)
 
 Como con la velocidad, nada de esto forma parte de la canción: una
 canción guardada y una exportación WAV conservan el tempo propio de la
@@ -69,8 +68,8 @@ canción.
 
 ## Contar las vueltas
 
-Para ir más rápido «cada vez que el loop da una vuelta», la app tiene
-que saber cuándo ocurre eso. La ventana podría vigilar el playhead y
+Para ir más rápido «cada vez que el bucle da una vuelta», la app tiene
+que saber cuándo ocurre eso. La ventana podría vigilar el cursor de reproducción y
 llamarlo vuelta cada vez que el número de step baja, del último step al
 primero. Pero el número de step también baja cuando haces clic en un
 compás anterior mientras suena la música, y eso no es una vuelta: el
@@ -103,14 +102,14 @@ pub fn tick(&mut self) -> Option<usize> {
 
 `coming_round` se fija cuando dispara el último step, y la vuelta se
 cuenta cuando dispara el step 0 después de él. Un salto (`start_at`, que
-envía un clic en un compás), un reinicio (`reset`) y un loop acortado
+envía un clic en un compás), un reinicio (`reset`) y un bucle acortado
 más allá de donde había llegado la reproducción (`set_length`) limpian
 todos `coming_round`, de modo que ninguno cuenta. La prueba
-`laps_count_the_loops_played_to_the_end` toca un loop de 4 steps y
+`laps_count_the_loops_played_to_the_end` toca un bucle de 4 steps y
 comprueba cada uno de estos.
 
 El hilo de audio guarda el conteo después de cada step en un entero
-atómico, como hace con el playhead, y `AudioEngine::laps()` lo lee. La
+atómico, como hace con el cursor de reproducción, y `AudioEngine::laps()` lo lee. La
 ventana lo mira una vez por frame:
 
 ```rust
@@ -134,7 +133,7 @@ vueltas nuevas a la vez y avanza la velocidad una vez por cada una.
 > `Option`, `value?` significa «el valor de dentro, o devolver `None`
 > desde aquí». `seen?` devuelve `None` la primera vez, cuando aún no se
 > había visto nada. `checked_sub` es una resta que da `None` en lugar de
-> bajar de cero: después de **Restart audio**, un hilo de audio nuevo
+> bajar de cero: después de **Reiniciar audio**, un hilo de audio nuevo
 > cuenta desde 0 otra vez, `laps` es menor que `seen`, y el entrenador
 > espera a la siguiente vuelta en lugar de calcular un número enorme de
 > ellas. Un simple `laps - seen` haría panic ahí en una compilación de
@@ -166,7 +165,7 @@ pub struct LapTempos {
 Command::SetLapTempos(Option<LapTempos>)
 ```
 
-El hilo de audio los guarda hasta que el loop da la vuelta. Justo antes
+El hilo de audio los guarda hasta que el bucle da la vuelta. Justo antes
 de que dispare un step ya pregunta en qué tempo está ese step; ahora
 pregunta primero si este es el step 0 que vuelve, y si es así, toma los
 tempos que esperan:
@@ -196,7 +195,7 @@ Cuando la ventana ve después la vuelta, envía los mismos tempos otra vez
 con los `SetTempo` y `SetSongTempos` habituales. Si llegaron a tiempo,
 eso no cambia nada: son exactamente los mismos números. Importa cuando
 no llegaron: si la petición alcanzó el hilo de audio después de que el
-loop ya hubiera dado la vuelta, el reenvío fija la velocidad nueva un
+bucle ya hubiera dado la vuelta, el reenvío fija la velocidad nueva un
 step tarde, y la petición siguiente sustituye a la antigua antes de que
 pueda tocarse una vuelta tarde.
 
@@ -238,7 +237,7 @@ if self.practice.lap_change != Some((change, sent)) {
 objetivo, o antes de la última pasada de una velocidad cuando toca cada
 velocidad más de una vez; entonces la ventana envía
 `SetLapTempos(None)`, que retira cualquier tempo que siga esperando.
-Stop, una velocidad escrita a mano o números nuevos del entrenador
+⏹, una velocidad escrita a mano o números nuevos del entrenador
 cambian todos `next_change`, así que la petición los sigue también.
 
 ## Comprobarlo en una traza
@@ -259,8 +258,8 @@ valores por defecto:
 # tempo: 27.1463 s, step 0, bar 1: 130.00 BPM
 ```
 
-Cada cambio está en el step 0, el primer step del loop (la traza cuenta
-los compases y los steps de lo que se toca, el loop, así que el compás 3
+Cada cambio está en el step 0, el primer step del bucle (la traza cuenta
+los compases y los steps de lo que se toca, el bucle, así que el compás 3
 de la canción es su compás 1). Y los tiempos cuadran: dos compases de
 4/4 son 8 pulsos, que a 91 BPM duran 8 × 60 ÷ 91 = 5.2747 segundos,
 justo donde está la segunda línea. A 97.5 BPM los 8 pulsos siguientes
@@ -268,20 +267,20 @@ duran 4.9231 segundos, y 5.2747 + 4.9231 = 10.1978.
 
 ## Ejercicios
 
-1. Con los valores por defecto (from 70% to 100% by 5% every 1 pass),
+1. Con los valores por defecto (desde 70% hasta 100% por 5% cada 1 pasada),
    ¿en qué vuelta toca la banda por primera vez a toda velocidad?
    ¿Cuánto tarda, en segundos, en llegar ahí con los compases 3–4 de la
    canción inicial? Comprueba tu respuesta contra la traza de arriba.
-2. Fija **from 50% to 100% by 10% every 2 passes**. Apunta la velocidad
+2. Fija **desde 50% hasta 100% por 10% cada 2 pasadas**. Apunta la velocidad
    de cada una de las ocho primeras vueltas, y luego tócalo con la traza
    activa y compruébalo.
-3. Fija **from 100% to 60%**. ¿Qué hace el entrenador ahora? Piensa un
+3. Fija **desde 100% hasta 60%**. ¿Qué hace el entrenador ahora? Piensa un
    uso para ello (pista: un pasaje que puedes tocar rápido, pero
    todavía no parejo).
-4. Empieza una pasada, haz Pause a mitad, y luego pulsa Play. Después
-   Stop y Play. ¿Cuál es la velocidad cada vez, y por qué es útil que
+4. Empieza una pasada, pulsa ❚❚ a mitad, y luego pulsa ▶. Después
+   ⏹ y ▶. ¿Cuál es la velocidad cada vez, y por qué es útil que
    los dos botones hagan cosas distintas?
-5. Con el entrenador encendido y nada en loop, toca la canción inicial
+5. Con el entrenador encendido y nada en bucle, toca la canción inicial
    entera. ¿Cuándo sube la velocidad?
 6. (Rust) En `came_round`, `self.laps_seen.replace(laps)` se ejecuta
    antes de la comprobación de `self.training`. ¿Qué saldría mal al
@@ -293,6 +292,6 @@ duran 4.9231 segundos, y 5.2747 + 4.9231 = 10.1978.
    `Command::SetLapTempos(tempos) => self.lap_tempos = tempos`, y por
    qué importa en el hilo de audio en particular?
 8. (Rust) Quita la llamada `self.practice.tempos_sent()` de `send` y
-   añade un cambio de tempo dentro del loop mientras corre el
-   entrenador. ¿Qué toca la banda cuando el loop da la vuelta, y por
+   añade un cambio de tempo dentro del bucle mientras corre el
+   entrenador. ¿Qué toca la banda cuando el bucle da la vuelta, y por
    qué?

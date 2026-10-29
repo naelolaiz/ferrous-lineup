@@ -185,9 +185,11 @@ impl LineupApp {
         if done {
             self.chord_sheet.select(selected);
         } else if label == "insert bar" {
-            self.message = Some("There is no room for another bar in the song.".into());
+            self.message =
+                Some(crate::i18n::tr("There is no room for another bar in the song.").into());
         } else {
-            self.message = Some("There is no room for the patterns the cut needs.".into());
+            self.message =
+                Some(crate::i18n::tr("There is no room for the patterns the cut needs.").into());
         }
     }
 
@@ -370,18 +372,18 @@ impl LineupApp {
         ui.menu_button(crate::i18n::tr("Edit"), |ui| {
             let text = undo.map_or_else(
                 || crate::i18n::tr("Undo").to_string(),
-                |label| format!("{} {}", crate::i18n::tr("Undo"), crate::i18n::tr_str(label)),
+                |label| crate::i18n::trf("Undo {}", &[&crate::i18n::tr_str(label)]),
             );
-            let button = egui::Button::new(text).shortcut_text(ctx.format_shortcut(&UNDO));
+            let button = egui::Button::new(text).shortcut_text(crate::i18n::shortcut(&ctx, &UNDO));
             if ui.add_enabled(undo.is_some(), button).clicked() {
                 self.undo();
                 ui.close();
             }
             let text = redo.map_or_else(
                 || crate::i18n::tr("Redo").to_string(),
-                |label| format!("{} {}", crate::i18n::tr("Redo"), crate::i18n::tr_str(label)),
+                |label| crate::i18n::trf("Redo {}", &[&crate::i18n::tr_str(label)]),
             );
-            let button = egui::Button::new(text).shortcut_text(ctx.format_shortcut(&REDO));
+            let button = egui::Button::new(text).shortcut_text(crate::i18n::shortcut(&ctx, &REDO));
             if ui.add_enabled(redo.is_some(), button).clicked() {
                 self.redo();
                 ui.close();

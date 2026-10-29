@@ -22,9 +22,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::harmony::keys::{self, ChordKey, ChordSize};
 use crate::harmony::{
-    Chord, ChordQuality, Random, Scale, ScaleKind, interval_name, next_chords,
-    spelled_interval_name,
+    Chord, ChordQuality, Random, Scale, ScaleKind, interval_name, interval_with_article,
+    next_chords, spelled_interval_name,
 };
+use crate::i18n::{list, tr, trf};
 use crate::library::voicing::bass_root;
 use crate::project::Drum;
 use crate::{Note, NoteName, PitchClass, Spelling};
@@ -145,24 +146,6 @@ impl Choices {
         } else {
             chosen
         }
-    }
-}
-
-/// "a" or "an", whichever goes before `word`.
-fn article(word: &str) -> &'static str {
-    if word.starts_with(['a', 'e', 'i', 'o', 'u']) {
-        "an"
-    } else {
-        "a"
-    }
-}
-
-/// A word list as in a sentence: "a, b and c".
-fn listed(words: &[String]) -> String {
-    match words.split_last() {
-        Some((last, [])) => last.clone(),
-        Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
-        None => String::new(),
     }
 }
 
@@ -451,25 +434,28 @@ impl IntervalQuestion {
         let low = low.name_as(low_name);
         let high = high.name_as(high_name);
         let notes = match self.direction {
-            Direction::Up => format!("{low} up to {high}"),
-            Direction::Down => format!("{high} down to {low}"),
-            Direction::Together => format!("{low} and {high} together"),
+            Direction::Up => trf("{} up to {}", &[&low, &high]),
+            Direction::Down => trf("{} down to {}", &[&high, &low]),
+            Direction::Together => trf("{} and {} together", &[&low, &high]),
         };
-        let name = self.interval.spelled_name(low_name, high_name);
+        let name = interval_with_article(&self.interval.spelled_name(low_name, high_name));
         let name = if self.interval.0 == 6 {
-            format!("a tritone ({} {name})", article(&name))
+            trf("a tritone ({})", &[&name])
         } else {
-            format!("{} {name}", article(&name))
+            name
         };
         let size = match self.interval.0 {
-            1 => "1 semitone".to_string(),
-            n => format!("{n} semitones"),
+            1 => tr("1 semitone").to_string(),
+            n => trf("{} semitones", &[&n]),
         };
-        let mut text = format!("{notes}: {name}, {size}. {}", self.interval.sound());
+        let mut text = trf(
+            "{}: {}, {}. {}",
+            &[&notes, &name, &size, &tr(self.interval.sound())],
+        );
         if self.direction == Direction::Up
             && let Some(tune) = self.interval.tune()
         {
-            text += &format!(" Like {tune}.");
+            text += &trf(" Like {}.", &[&tr(tune)]);
         }
         text
     }
@@ -668,8 +654,11 @@ impl ChordQuestion {
         let root = self.chord.root_name();
         let names = self.chord.spell(root);
         let position = match self.inversion {
-            0 => "root position".to_string(),
-            bass => format!("{}, with {} in the bass", INVERSIONS[bass], names[bass]),
+            0 => tr("root position").to_string(),
+            bass => trf(
+                "{}, with {} in the bass",
+                &[&tr(INVERSIONS[bass]), &names[bass]],
+            ),
         };
         let notes: Vec<String> = names.iter().map(NoteName::to_string).collect();
         // A note written with another letter than its key's usual names
@@ -684,36 +673,39 @@ impl ChordQuestion {
             })
             .map(|(name, &tone)| {
                 let letters: Vec<String> = (0..tone)
-                    .map(|up| root.letter.up(i32::from(up)).as_char().to_string())
+                    .map(|up| root.letter.up(i32::from(up)).shown())
                     .collect();
-                format!(
-                    "{name} is the {} key, written {name} because it is the chord's {}: \
+                trf(
+                    "{} is the {} key, written {} because it is the chord's {}: \
                      {} letters from {} ({}).",
-                    NoteName::chromatic(name.pitch_class()),
-                    ORDINALS[usize::from(tone)],
-                    NUMBERS[usize::from(tone)],
-                    root.letter.as_char(),
-                    letters.join(" ")
+                    &[
+                        name,
+                        &NoteName::chromatic(name.pitch_class()),
+                        name,
+                        &tr(ORDINALS[usize::from(tone)]),
+                        &tr(NUMBERS[usize::from(tone)]),
+                        &root.letter.shown(),
+                        &letters.join(" "),
+                    ],
                 )
             })
             .collect();
         let thirds: Vec<String> = quality
             .intervals()
             .windows(2)
-            .map(|pair| {
-                format!(
-                    "{} {}",
-                    article(interval_name(pair[1] - pair[0])),
-                    interval_name(pair[1] - pair[0])
-                )
-            })
+            .map(|pair| interval_with_article(interval_name(pair[1] - pair[0])))
             .collect();
-        let mut text = format!(
-            "{}: {root} {}, {position}. {}: {} stacked up from {root}. ",
-            self.symbol(),
-            quality.name(),
-            notes.join(" "),
-            listed(&thirds),
+        let mut text = trf(
+            "{}: {} {}, {}. {}: {} stacked up from {}. ",
+            &[
+                &self.symbol(),
+                &root,
+                &tr(quality.name()),
+                &position,
+                &notes.join(" "),
+                &list(&thirds),
+                &root,
+            ],
         );
         for line in odd {
             text += &line;
@@ -727,12 +719,13 @@ impl ChordQuestion {
         {
             let bass = NoteName::chromatic(names[self.inversion].pitch_class());
             let same = Chord::new(bass.pitch_class(), quality).name_from(bass);
-            text += &format!(
-                "By ear it is also {same} in root position: its notes are evenly spaced \
-                 around the octave, so any of them can be heard as the root. "
+            text += &trf(
+                "By ear it is also {} in root position: its notes are evenly spaced \
+                 around the octave, so any of them can be heard as the root. ",
+                &[&same],
             );
         }
-        text + chord_sound(quality)
+        text + tr(chord_sound(quality))
     }
 }
 
@@ -1067,9 +1060,9 @@ impl ProgressionQuestion {
                     .find(|suggestion| suggestion.degree == pair[1])
                     .map_or_else(
                         || {
-                            format!(
+                            trf(
                                 "{} to {}.",
-                                triads[pair[0]].numeral, triads[pair[1]].numeral
+                                &[&triads[pair[0]].numeral, &triads[pair[1]].numeral],
                             )
                         },
                         |suggestion| suggestion.reason.to_string(),

@@ -1,4 +1,4 @@
-# Paso 2: El channel rack
+# Paso 2: El rack de canales
 
 > El código que muestran los capítulos del paso 2 es el código tal como
 > era al final del paso 2. El paso 3 cambió parte de él: los patrones
@@ -11,11 +11,11 @@
 El paso 2 convierte el tono de prueba en una caja de ritmos real, aunque
 pequeña:
 
-- un **channel rack** con una fila por instrumento, cada una con una luz
+- un **rack de canales** con una fila por instrumento, cada una con una luz
   de silencio, una perilla de volumen, un botón de nombre y una fila de
   **pasos**,
-- un **step sequencer** que reproduce el patrón en loop al tempo del
-  proyecto, con temporización exacta a la muestra y un playhead en
+- un **step sequencer** que reproduce el patrón en bucle al tempo del
+  proyecto, con temporización exacta a la muestra y un cursor de reproducción en
   movimiento,
 - una **batería incorporada** (bombo, caja, palmas, hi-hat) sintetizada
   desde cero, para que no haya que distribuir archivos de sonido,
@@ -32,14 +32,14 @@ pequeña:
 |----------|------|
 | Haz clic en un paso | encenderlo o apagarlo |
 | Haz clic derecho en un paso | apagarlo |
-| Space o ▶ Play | iniciar y detener el patrón |
+| Espacio o ▶ | iniciar y detener el patrón |
 | Haz clic en el nombre de un canal | oír ese canal una vez |
 | Haz clic derecho en el nombre de un canal | eliminar el canal |
 | Arrastra la perilla arriba o abajo | cambiar el volumen del canal (el doble clic lo restablece) |
 | Haz clic en la luz verde | silenciar o activar el canal |
 | Suelta un archivo `.wav` sobre un canal | sustituir su sonido por el archivo |
 | Suelta un archivo `.wav` debajo de las filas | añadir un canal nuevo que lo reproduzca |
-| ➕ Add channel | añadir un tambor o un Lineup Osc |
+| ➕ Añadir canal | añadir un tambor o un Lineup Osc |
 
 ## Qué cambió en la arquitectura
 

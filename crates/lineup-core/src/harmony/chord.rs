@@ -1,6 +1,7 @@
 //! Chords: what they are made of, what they are called, and how to place them.
 
 use super::{PitchSet, Scale};
+use crate::i18n::{tr, trf};
 use crate::{Note, NoteName, PitchClass, Spelling};
 
 /// The "shape" of a chord, independent of its root: major, minor seventh...
@@ -478,14 +479,15 @@ impl ChordStamp {
     /// A name for menus.
     pub fn label(self) -> String {
         match self {
-            ChordStamp::Single => "Single note".to_string(),
-            ChordStamp::ScaleTriad => "Chord in key (triad)".to_string(),
-            ChordStamp::ScaleSeventh => "Chord in key (seventh)".to_string(),
-            ChordStamp::Set(set) => {
-                format!("Set {} [{}]", set.set_class().name(), super::digits(set))
-            }
+            ChordStamp::Single => tr("Single note").to_string(),
+            ChordStamp::ScaleTriad => tr("Chord in key (triad)").to_string(),
+            ChordStamp::ScaleSeventh => tr("Chord in key (seventh)").to_string(),
+            ChordStamp::Set(set) => trf(
+                "Set {} [{}]",
+                &[&set.set_class().name(), &super::digits(set)],
+            ),
             ChordStamp::Fixed(quality) => {
-                let name = quality.name();
+                let name = tr(quality.name());
                 // Capitalize the first letter: "minor" becomes "Minor".
                 let mut letters = name.chars();
                 match letters.next() {

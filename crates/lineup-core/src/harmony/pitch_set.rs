@@ -104,7 +104,10 @@ impl TryFrom<String> for PitchSet {
         text.split_whitespace()
             .map(|number| match number.parse::<u8>() {
                 Ok(semitone) if semitone < 12 => Ok(PitchClass::from_semitone(semitone)),
-                _ => Err(format!("\"{number}\" is not a pitch class from 0 to 11")),
+                _ => Err(crate::i18n::trf(
+                    "\"{}\" is not a pitch class from 0 to 11",
+                    &[&number],
+                )),
             })
             .collect()
     }

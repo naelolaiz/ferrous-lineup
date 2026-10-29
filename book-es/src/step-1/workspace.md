@@ -21,7 +21,7 @@ programa. En este paso, Ferrous Lineup estaba dividido en tres crates:
 
 > **En este paso / hoy:** el workspace tenía estos tres crates y la
 > versión 0.1.0. Hoy hay cinco: se unieron `lineup-listen` (decodifica y
-> analiza una grabación para **File > Import recording**) y
+> analiza una grabación para **Archivo > Importar grabación**) y
 > `lineup-video` (pinta imágenes de egui en un MP4). Los enlaces al
 > código de este capítulo van a `main`, de modo que los archivos que
 > abren son los finales, no la instantánea del paso 1.

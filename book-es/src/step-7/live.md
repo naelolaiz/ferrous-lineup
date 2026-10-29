@@ -10,7 +10,7 @@ audio y conoce la longitud de cada nota antes de que empiece. Una tecla
 de un teclado es distinta en dos cosas: viene de fuera, en un hilo que
 Ferrous Lineup no posee, y nadie sabe cuánto tiempo se mantendrá
 pulsada. Este capítulo sigue a una tecla desde el cable hasta el
-altavoz, y a una nota MIDI Out desde el patrón hasta el cable.
+altavoz, y a una nota de salida MIDI desde el patrón hasta el cable.
 
 ## Por qué las teclas se saltan la UI
 
@@ -72,7 +72,7 @@ pub fn take_live_input(&mut self) -> Option<LiveInput> {
 hilo de exportación), así que la segunda llamada no recibe nada. El
 sistema de tipos hace imposible romper la regla de «un solo emisor»:
 `LiveInput` no implementa `Clone`, así que no puede copiarse, solo
-moverse. `MidiOutput`, la salida de los canales MIDI Out, funciona
+moverse. `MidiOutput`, la salida de los canales de salida MIDI, funciona
 igual desde el otro extremo: guarda el `Consumer` de la cola.
 
 En el hilo de audio, el receptor también es un `Option`, porque la
@@ -96,7 +96,7 @@ receptor *y* tenga una tecla.
 ## Compartir un float: la posición en un `AtomicU64`
 
 La grabación necesita saber *cuándo* llegó cada tecla, como un lugar
-del patrón: «a mitad del paso 4». El playhead del paso 2 es un paso
+del patrón: «a mitad del paso 4». El cursor de reproducción del paso 2 es un paso
 entero, un `AtomicUsize`. La posición es un `f64`, y Rust no tiene
 floats atómicos.
 
@@ -117,8 +117,7 @@ fn load_position(position: &AtomicU64) -> Option<f64> {
 }
 ```
 
-«Detenido» es `NO_POSITION = u64::MAX`, igual que `NO_STEP` para el
-playhead. Como float, esos bits son un NaN («not a number»), que
+«Detenido» es `NO_POSITION = u64::MAX`, igual que `NO_STEP` para el cursor de reproducción. Como float, esos bits son un NaN («not a number»), que
 ninguna posición es nunca, así que los dos no pueden confundirse.
 
 La posición en sí viene del sequencer, que cuenta hacia atrás los
@@ -139,7 +138,7 @@ pub fn position(&self) -> f64 {
 sonando es el anterior. `next_step - 1` se iría por debajo de cero en
 el paso 0, cosa que un `usize` no puede hacer (entraría en pánico en
 una build de depuración). Sumar `length` primero y quedarse con el
-resto retrocede un paso *dando la vuelta al loop*: del paso 0 al último
+resto retrocede un paso *dando la vuelta al bucle*: del paso 0 al último
 paso. `passed` es cuánto de ese paso ha pasado, de 0 a 1.
 
 La posición se guarda una vez por bloque, así que cuando llega una
@@ -223,9 +222,9 @@ prueba `removing_channels_lets_go_of_their_keys` quita el canal 0 con
 una tecla pulsada en el canal 1, que entonces *se convierte en* el
 canal 0.
 
-## MIDI Out: un instrumento con bandeja de salida
+## Salida MIDI: un instrumento con bandeja de salida
 
-Un canal MIDI Out no suena. Su instrumento convierte las notas en
+Un canal de salida MIDI no suena. Su instrumento convierte las notas en
 mensajes MIDI para otro sintetizador. Es un tercer tipo de
 `Instrument`, junto al sampler y al sintetizador, así que todo lo demás
 (el sequencer, las live keys, el volumen, el silencio) funciona con él
@@ -324,7 +323,7 @@ envía antes un note-off en ese caso
 (`midi_out_ends_a_repeated_note_before_starting_it_again`).
 
 Dos detalles finales evitan que las notas se queden colgadas en el
-sintetizador externo. Cuando se quita un canal MIDI Out, o se sustituye
+sintetizador externo. Cuando se quita un canal de salida MIDI, o se sustituye
 su instrumento, o se carga un proyecto nuevo, `silence` envía sus
 note-off antes de desechar el instrumento:
 
@@ -476,7 +475,7 @@ pensadas para usarse desde ellos.
 
 ## El hilo de envío
 
-Los mensajes que los canales MIDI Out dejan en la cola `MidiOutput` los
+Los mensajes que los canales de salida MIDI dejan en la cola `MidiOutput` los
 envía un hilo propio, llamado `midi-out`:
 
 ```rust
@@ -517,7 +516,7 @@ detenga.
 nombre al hilo, que se ve en los depuradores y en herramientas como
 `top -H`. Y su `spawn` devuelve un `Result` donde `thread::spawn`
 entraría en pánico si el sistema se negara. Si eso llegara a pasar,
-MIDI Out se queda en silencio y todo lo demás funciona, lo que es mejor
+la salida MIDI se queda en silencio y todo lo demás funciona, lo que es mejor
 que un cierre inesperado al arrancar.
 
 ### Cambiar de puerto sin notas colgadas

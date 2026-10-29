@@ -27,7 +27,7 @@ queda solo con el correcto al compilar. La app llama a
 `cpal::default_host()`, dibuja con egui y abre un `rfd::FileDialog`; nada
 de eso nombra un sistema operativo. El código propio del workspace tiene
 solo dos comprobaciones de `target_os`, en el comando de previsualización
-del lead sheet, que elige `cmd`, `open` o `xdg-open` para mostrar un PDF.
+de la partitura guía, que elige `cmd`, `open` o `xdg-open` para mostrar un PDF.
 El código de audio, ventanas y diálogos nunca nombra un sistema.
 
 Fue una elección hecha en el paso 1, cuando se eligió cada librería:

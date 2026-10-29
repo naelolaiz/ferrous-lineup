@@ -7,25 +7,24 @@ enseña a Ferrous Lineup a hablarlo, en ambas direcciones:
 
 - **tocar desde un teclado MIDI**: elígelo en **MIDI > Entrada**, y sus
   teclas tocan el *canal seleccionado*. Es el canal que muestra el piano
-  roll, resaltado en el channel rack; haz clic en el nombre de un canal
+  roll, resaltado en el rack de canales; haz clic en el nombre de un canal
   para seleccionarlo,
 - **el teclado de escritura**: ¿no tienes un teclado MIDI a mano?
-  Activa **MIDI > Teclado de escritura como piano**, y las teclas de
+  Activa **MIDI > Teclado del equipo como piano**, y las teclas de
   letras tocan notas, dispuestas como un piano (más abajo),
 - **acordes nombrados mientras tocas**: mantén pulsadas algunas teclas,
   y la barra de estado nombra el acorde («Am: La menor, acorde vi de Do
   mayor»). En el piano roll, las teclas se iluminan en el teclado, y los
   botones de acordes se iluminan con los acordes que suelen venir
   *después del que estás manteniendo*,
-- **grabación**: haz clic en **● Rec**, pulsa Play y toca. Cada tecla
+- **grabación**: haz clic en **⏺** (grabar), pulsa **▶** y toca. Cada tecla
   se convierte en una nota en el paso más cercano del patrón
   seleccionado, y una toma entera es un solo paso de deshacer,
-- **canales MIDI Out**: **Añadir canal > MIDI Out (sintetizador
-  externo)** crea un canal que no suena por sí mismo. Sus notas van a
+- **canales de salida MIDI**: **Añadir canal > Salida MIDI (sintetizador externo)** crea un canal que no suena por sí mismo. Sus notas van a
   otro sintetizador, uno de hardware u otro programa, elegido en **MIDI
   > Salida**. Haz clic derecho para elegir su canal MIDI, del 1 al 16,
-- **archivos MIDI**: **File > Export song as MIDI…** y
-  **Export pattern as MIDI…** escriben un archivo `.mid` con las
+- **archivos MIDI**: **Archivo > Exportar canción como MIDI…** y
+  **Exportar patrón como MIDI…** escriben un archivo `.mid` con las
   notas, que cualquier otro estudio puede abrir. La batería integrada va
   en el canal 10 con las notas que esperan las baterías de General MIDI,
   así que allí también salen como batería.
@@ -34,23 +33,23 @@ enseña a Ferrous Lineup a hablarlo, en ambas direcciones:
 
 ![Una toma de Do, La menor, Fa y Sol, un acorde por pulso, grabada con el teclado de escritura mientras un patrón de un compás se repetía. Los acordes entraron un poco tarde, y el Sol se pasó a la siguiente vuelta, así que aparece en los dos extremos: la grabación mueve cada nota al paso más cercano, no a donde la querías.](../images/step-7-take.png)
 
-![Un canal MIDI Out en el channel rack, y su menú de canal MIDI](../images/step-7-midi-out.png)
+![Un canal de salida MIDI en el channel rack, y su menú de canal MIDI](../images/step-7-midi-out.png)
 
 ## Cómo usarlo
 
 | Haz esto | Para |
 |----------|------|
 | MIDI > Entrada > un puerto | tocar el canal seleccionado desde un teclado MIDI |
-| MIDI > Salida > un puerto | enviar los canales MIDI Out a un sintetizador |
+| MIDI > Salida > un puerto | enviar los canales de salida MIDI a un sintetizador |
 | MIDI > Teclado de escritura como piano | tocar notas con las teclas de letras |
 | clic en el nombre de un canal | oírlo, y seleccionarlo para los teclados y el piano roll |
 | ● Rec, luego Espacio | grabar en el patrón seleccionado mientras se repite |
 | Espacio de nuevo | detener; las teclas que siguen pulsadas terminan ahí |
 | Ctrl+Z | deshacer toda la toma |
-| Añadir canal > MIDI Out | añadir un canal para un sintetizador externo |
-| clic derecho en un canal MIDI Out > Canal MIDI | elegir su canal, del 1 al 16 |
-| File > Export song as MIDI… | guardar las notas de la canción en un archivo `.mid` |
-| File > Export pattern as MIDI… | guardar las notas del patrón seleccionado |
+| Añadir canal > Salida MIDI | añadir un canal para un sintetizador externo |
+| clic derecho en un canal de salida MIDI > Canal MIDI | elegir su canal, del 1 al 16 |
+| Archivo > Exportar canción como MIDI… | guardar las notas de la canción en un archivo `.mid` |
+| Archivo > Exportar patrón como MIDI… | guardar las notas del patrón seleccionado |
 
 El teclado de escritura usa dos filas de letras para las teclas
 blancas, y la fila de encima de cada una para las teclas negras, como
@@ -70,7 +69,7 @@ antes, así que nada se pierde mientras el teclado de escritura está
 activo: Espacio, L, F6, F7, las teclas de flecha y todos los atajos con
 Ctrl siguen funcionando como antes.
 
-**Rec** cambia a modo patrón, porque una toma va al patrón que se
+**⏺** (grabar) cambia a modo patrón, porque una toma va al patrón que se
 repite. Grabar en modo canción es el [ejercicio 5](exercises.md).
 
 ## Cómo se probó
@@ -89,7 +88,7 @@ Qué se probó en la aplicación en marcha:
   aplicación), y el acorde se nombra,
 - grabar tomas, una tecla aún pulsada cuando se detiene la
   reproducción, y deshacer una toma,
-- canales MIDI Out: añadir uno, cambiar su canal MIDI, y los mensajes
+- canales de salida MIDI: añadir uno, cambiar su canal MIDI, y los mensajes
   que el hilo de audio genera para él (en las pruebas),
 - archivos MIDI: los archivos exportados se leyeron de vuelta con un
   programa aparte, la librería `mido` de Python, que encontró las
@@ -162,7 +161,7 @@ Cuatro ideas sostienen este paso:
    el patrón, con fracciones de paso. Cada tecla se marca con ello al
    llegar, y la grabación solo tiene que redondear.
 4. **El formato del archivo solo se mueve cuando hace falta.** Un
-   proyecto con un canal MIDI Out se escribe como formato 2, que las
+   proyecto con un canal de salida MIDI se escribe como formato 2, que las
    versiones antiguas de la aplicación rechazan. Cualquier otro
    proyecto se sigue escribiendo como formato 1, para que puedan
    abrirlo.

@@ -340,7 +340,7 @@ impl Midi {
         midi_in.ignore(Ignore::All);
         let found = midi_in
             .find_port_by_id(&port.id)
-            .ok_or_else(|| format!("{} is not connected any more", port.name))?;
+            .ok_or_else(|| crate::i18n::trf("{} is not connected any more", &[&port.name]))?;
         let link = InputLink {
             live: self.live.clone(),
             to_ui: self.to_ui.clone(),
@@ -363,9 +363,9 @@ impl Midi {
             Some(port) => {
                 let midi_out =
                     midir::MidiOutput::new(CLIENT_NAME).map_err(|err| err.to_string())?;
-                let found = midi_out
-                    .find_port_by_id(&port.id)
-                    .ok_or_else(|| format!("{} is not connected any more", port.name))?;
+                let found = midi_out.find_port_by_id(&port.id).ok_or_else(|| {
+                    crate::i18n::trf("{} is not connected any more", &[&port.name])
+                })?;
                 Some(
                     midi_out
                         .connect(&found, "output")

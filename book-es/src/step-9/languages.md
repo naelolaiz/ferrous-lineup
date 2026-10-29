@@ -9,11 +9,11 @@ y [`crates/lineup-app/src/app/settings.rs`](https://github.com/naelolaiz/ferrous
 
 Dos ajustes cambian cómo te habla Ferrous Lineup:
 
-- **Edit > Settings… > Appearance > Language** (en español, **Edición >
-  Ajustes… > Apariencia > Idioma**) escribe los menús, las ventanas y
-  los ajustes en **English** o en **Español**.
-- **Edit > Settings… > Harmony > Note naming** (**Armonía >
-  Nomenclatura de notas**) nombra las notas, las tonalidades y los
+- **Edición > Ajustes… > Apariencia > Idioma** (con la app en inglés,
+  **Edit > Settings… > Appearance > Language**) escribe los menús, las
+  ventanas y los ajustes en **English** o en **Español**.
+- **Edición > Ajustes… > Armonía > Nomenclatura de notas** (en inglés,
+  **Harmony > Note naming**) nombra las notas, las tonalidades y los
   acordes con **letras** (C, F#, Bb major, Am7) o en **solfeo** (Do,
   Fa#, Sib mayor, Lam7).
 
@@ -22,9 +22,15 @@ menús en inglés con solfeo. Los dos cambian solo lo que ves. Una canción
 guardada con una elección se abre exactamente igual para quien tenga la
 otra.
 
-Lo que todavía no tiene traducción se sigue mostrando en inglés. Por
-eso este libro nombra los menús y las ventanas como los escribe la app
-en inglés, y aquí, donde importa, también en español.
+Con el español elegido, todo lo que escribe la app está en español:
+los menús, las ventanas, las ayudas, los avisos y los nombres de las
+demos, los estilos, los instrumentos y los canales. En inglés solo
+quedan los mensajes que llegan del sistema operativo o de una biblioteca
+(por ejemplo, por qué no se pudo abrir un dispositivo de audio) y los
+nombres de géneros que el español usa tal cual, como swing o funk. Este
+libro nombra los menús, las ventanas y los botones como los escribe la
+app en español. Las capturas de los demás capítulos se hicieron con la
+app en inglés.
 
 ![Ajustes > Apariencia: el idioma, escrito en su propio idioma para que cada cual encuentre el suyo.](../images/step-9-languages-settings.png)
 
@@ -74,16 +80,16 @@ A la primera manera se le llama *cifrado americano* y a la segunda
 *cifrado latino*. Las partituras de jazz y de pop suelen ir en cifrado
 americano, también en español, y por eso este libro escribe así los
 cifrados; muchos profesores y cancioneros usan el latino. Con el solfeo
-elegido, el chord sheet, las harmony keys, el piano roll, los cambios de
-tonalidad del playlist y los ejemplos de las ayudas escriben las
+elegido, la hoja de acordes, las teclas de armonía, el piano roll, los cambios de
+tonalidad de la lista de reproducción y los ejemplos de las ayudas escriben las
 notas, las tonalidades y los acordes de la segunda manera.
 
-![El chord sheet en solfeo: Lam7 y Re7 en el compás 9, y Sol7/Si, escrito como G7/B, en el compás 10.](../images/step-9-languages-chord-sheet.png)
+![La hoja de acordes en solfeo: Lam7 y Re7 en el compás 9, y Sol7/Si, escrito como G7/B, en el compás 10.](../images/step-9-languages-chord-sheet.png)
 
 ### Escribir un acorde de las dos maneras
 
 Puedes escribir un acorde de cualquiera de las dos maneras, esté elegida
-la que esté: `Am7` y `Lam7` son el mismo acorde. Al pulsar **Enter**, el
+la que esté: `Am7` y `Lam7` son el mismo acorde. Al pulsar **Intro**, el
 compás lo muestra como el ajuste nombra las notas.
 
 Unos pocos nombres se pueden leer de las dos maneras. `o` es una forma
@@ -98,7 +104,7 @@ menor aunque estén elegidas las letras.
 La cualidad se escribe igual en los dos: Fa aumentado es `Faaug` en
 solfeo. Se lee bien, pero `Fa+` se ve mejor, y la app también lo lee.
 
-En el chord sheet, escribir sobre un compás seleccionado empieza a
+En la hoja de acordes, escribir sobre un compás seleccionado empieza a
 escribir en él, pero **L** es la tecla que cambia entre patrón y
 canción. Con el solfeo elegido, los acordes de La empiezan por L, así
 que ahí L empieza a escribir. Con las letras elegidas, ningún acorde
@@ -106,7 +112,7 @@ empieza por L, y L cambia de modo como siempre.
 
 ## Qué se guarda
 
-Los proyectos, los estilos guardados, el texto del chord sheet que copia
+Los proyectos, los estilos guardados, el texto de la hoja de acordes que copia
 **Ctrl+C** y las trazas de reproducción se escriben siempre con letras.
 El ajuste no llega nunca a ellos. Así que una canción que guardaste
 viendo Lam7 contiene `Am7`, y se abre con Am7 o con Lam7 según los
@@ -228,7 +234,7 @@ impl From<HarmonyName> for String {
 }
 ```
 
-Los estilos guardados, el texto del chord sheet y la traza de
+Los estilos guardados, el texto de la hoja de acordes y la traza de
 reproducción hacen lo mismo. Los cifrados de la propia biblioteca están
 escritos con letras en el código fuente, así que también se leen con
 letras.
@@ -287,7 +293,7 @@ con letras, F con «aug», y se queda esa.
 
 ### Ejemplos que siguen el ajuste
 
-Las ayudas del chord sheet y de los ajustes dan acordes de ejemplo. Se
+Las ayudas de la hoja de acordes y de los ajustes dan acordes de ejemplo. Se
 escriben con las notas entre llaves, `{A}m7 {D}7`, y `with_notes` nombra
 cada una como dice el ajuste, así que con el solfeo elegido la ayuda
 dice «Lam7 Re7». Las llaves alrededor de algo que no es un nombre de
@@ -322,7 +328,7 @@ comprueba.
 
 `solfege_changes_how_names_look_not_what_is_saved` construye cada
 canción de demostración dos veces, una con letras y otra con solfeo, y
-comprueba que el archivo guardado y el texto del chord sheet son
+comprueba que el archivo guardado y el texto de la hoja de acordes son
 idénticos, y que cada acorde, escrito como lo muestra la hoja en solfeo,
 se lee de vuelta como el mismo acorde.
 
@@ -333,7 +339,7 @@ por Do con el solfeo. `solfege_is_a_way_of_showing_names` comprueba que
 mayor, y que `Lam7` y `Am7` son el mismo acorde.
 
 `in_solfege_l_types_la_chords_and_in_letters_it_switches_mode`
-selecciona un compás del chord sheet, pulsa L con el solfeo elegido y
+selecciona un compás de la hoja de acordes, pulsa L con el solfeo elegido y
 escribe `Lam7`, y comprueba que el modo no cambió y que el compás tiene
 La menor séptima; con las letras, L cambia el modo y deja el compás como
 estaba.
@@ -344,7 +350,7 @@ estaba.
    las letras y escribe `Do` en el compás siguiente. ¿Qué tiene cada
    compás, y por qué son distintos?
 2. Escribe en solfeo los siete acordes de Sib mayor, y compruébalos en
-   las harmony keys. ¿Cuál es disminuido?
+   las teclas de armonía. ¿Cuál es disminuido?
 3. Un proyecto se guarda con letras por partida doble: `file::to_text`
    trabaja con letras, y también `From<HarmonyName> for String`. Quita
    `NoteNaming::Letters.with` de los dos, dejando lo que hay dentro, y

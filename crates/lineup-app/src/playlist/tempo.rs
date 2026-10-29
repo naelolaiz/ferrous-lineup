@@ -16,6 +16,7 @@ use eframe::egui::{
 use lineup_core::{Meter, Project, Tempo, TempoMap, TempoMarker};
 
 use super::{Layout, PlaylistAction, Snap};
+use crate::i18n::{tr, trf};
 
 const STRIP: Color32 = Color32::from_rgb(26, 30, 36);
 const LINE: Color32 = Color32::from_rgb(110, 186, 236);
@@ -63,10 +64,10 @@ impl TempoStrip {
 
         let response = ui
             .interact(strip, ui.scope_id().with("tempo-strip"), Sense::click())
-            .on_hover_text(
+            .on_hover_text(tr(
                 "The tempo. Click to change it from here on: at once, or gradually, \
                  to slow down (a ritardando) or speed up (an accelerando)",
-            );
+            ));
         if (response.clicked() || response.secondary_clicked())
             && let Some(pos) = response.interact_pointer_pos()
         {
@@ -181,9 +182,12 @@ fn tempo_menu(
         (_, None) => TempoMarker::new(at, map.tempo_at(at).bpm()),
     };
     if beat == 1 {
-        ui.label(format!("Tempo from bar {}", bar.number + 1));
+        ui.label(trf("Tempo from bar {}", &[&(bar.number + 1)]));
     } else {
-        ui.label(format!("Tempo from bar {}, beat {beat}", bar.number + 1));
+        ui.label(trf(
+            "Tempo from bar {}, beat {}",
+            &[&(bar.number + 1), &beat],
+        ));
     }
 
     let mut bpm = current.tempo.bpm();
@@ -204,20 +208,20 @@ fn tempo_menu(
         }
     });
     if at == 0 {
-        ui.weak("Bar 1 sets the tempo the song starts at.");
+        ui.weak(tr("Bar 1 sets the tempo the song starts at."));
         return;
     }
 
     if marker.is_none() {
-        ui.weak("No change here yet: a new tempo adds one.");
+        ui.weak(tr("No change here yet: a new tempo adds one."));
     }
     ui.separator();
-    ui.label("Get there");
+    ui.label(tr("Get there"));
     ui.horizontal_wrapped(|ui| {
         ui.set_max_width(250.0);
         if ui
-            .selectable_label(marker.is_some() && current.glide == 0, "At once")
-            .on_hover_text("A sudden change, as after a pause or a new section")
+            .selectable_label(marker.is_some() && current.glide == 0, tr("At once"))
+            .on_hover_text(tr("A sudden change, as after a pause or a new section"))
             .clicked()
         {
             actions.push(PlaylistAction::SetTempoMarker(TempoMarker {
@@ -234,7 +238,7 @@ fn tempo_menu(
             if ui
                 .selectable_label(
                     marker.is_some() && current.glide == glide,
-                    format!("over {label}"),
+                    trf("over {}", &[&tr(label)]),
                 )
                 .clicked()
             {
@@ -252,19 +256,18 @@ fn tempo_menu(
         } else {
             "Speeding up bit by bit is an accelerando (accel.)."
         };
-        ui.weak(format!(
-            "From {} to {} BPM. {what}",
-            bpm_text(before),
-            bpm_text(current.tempo)
+        ui.weak(trf(
+            "From {} to {} BPM. {}",
+            &[&bpm_text(before), &bpm_text(current.tempo), &tr(what)],
         ));
     }
 
     if marker.is_some() {
         ui.separator();
         if ui
-            .button(format!(
+            .button(trf(
                 "Remove this change (back to {} BPM)",
-                bpm_text(before)
+                &[&bpm_text(before)],
             ))
             .clicked()
         {

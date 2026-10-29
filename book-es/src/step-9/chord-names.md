@@ -1,4 +1,4 @@
-# Nombres de acordes: leer un lead sheet
+# Nombres de acordes: leer una partitura guía
 
 Archivos: [`crates/lineup-core/src/harmony/symbol.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/harmony/symbol.rs),
 [`crates/lineup-core/src/pitch.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/pitch.rs),
@@ -10,9 +10,8 @@ y [`crates/lineup-core/src/library/comping.rs`](https://github.com/naelolaiz/fer
 Hasta ahora, todo chart de Ferrous Lineup estaba escrito en números
 romanos: «I | V | vi | IV». Así guarda las progresiones la biblioteca,
 porque un chart sirve entonces en toda tonalidad. Pero una canción que
-quieras que toque la banda viene en un **lead sheet**, y un lead sheet
-nombra sus acordes: «C | G/B | Am | Am/G». Antes de que pueda haber un
-chord sheet donde escribir (el próximo cambio), Ferrous Lineup tiene que
+quieras que toque la banda viene en una **partitura guía**, y una partitura guía
+nombra sus acordes: «C | G/B | Am | Am/G». Antes de que pueda haber una hoja de acordes donde escribir (el próximo cambio), Ferrous Lineup tiene que
 leer los nombres de acordes como los escriben los músicos. Eso es todo
 lo que hace este cambio; en pantalla no hay nada nuevo todavía.
 
@@ -49,7 +48,7 @@ sostenido ♭ y ♯ funcionan igual que `b` y `#`. Las mayúsculas y las
 minúsculas importan en un solo lugar, pero es uno importante: **CM7** es
 una séptima mayor (Do Mi Sol Si) y **Cm7** una séptima menor (Do Mi♭ Sol Si♭).
 Cuando Ferrous Lineup escribe un acorde de vuelta, usa una manera para
-cada uno, la que ya usan el piano roll y las harmony keys: Cmaj7, Cm7,
+cada uno, la que ya usan el piano roll y las teclas de armonía: Cmaj7, Cm7,
 Cm7b5, Cdim7.
 
 La fundamental es siempre una letra mayúscula, porque una «b» minúscula
@@ -95,8 +94,7 @@ séptima seis.
 La séptima de Db7 es Do♭, no Si: seis nombres por encima de Re está Do, y la
 nota a una séptima menor por encima de Re♭, escrita como un Do, es Do
 bemol. `ChordSymbol` conserva la fundamental exactamente como se
-escribió, así que `notes()` deletrea el acorde como lo entiende el lead
-sheet. Para tocar, los dos se vuelven el mismo `Chord`, una clase de
+escribió, así que `notes()` deletrea el acorde como lo entiende la partitura guía. Para tocar, los dos se vuelven el mismo `Chord`, una clase de
 alturas y una cualidad.
 
 ## Transponer un chart
@@ -125,7 +123,7 @@ nueva, como semitonos y nombres de nota, se suma a la fundamental y al bajo con
 Una cosa se hace distinta de una partitura. Un símbolo de acorde nunca
 lleva un doble sostenido ni un doble bemol en su fundamental: D#°7 en Mi
 menor movido a Sol♯ menor sería en rigor F##°7, y Ferrous Lineup lo
-escribe G°7, las mismas teclas, como hacen los lead sheets. En una
+escribe G°7, las mismas teclas, como hacen las partituras guía. En una
 partitura, donde cada nota del acorde está escrita, F##°7 sería lo
 correcto.
 
@@ -174,7 +172,7 @@ antes: toda fundamental entre Do2 y Si2. En este paso, una prueba lo
 comprueba, y cada uno de los 145 estilos se oye todavía como su propio
 chart.
 
-En la app no se puede oír todavía; el chord sheet viene a continuación.
+En la app no se puede oír todavía; la hoja de acordes viene a continuación.
 Hasta entonces, las pruebas lo muestran funcionando:
 
 ```sh
@@ -304,7 +302,7 @@ viene después hace `None` el chart entero.
    ¿Qué se pierde al leerlo como `Add9`?
 2. **Do5** es un «power chord»: solo Do y Sol, sin tercera. No está en
    `ChordQuality`. ¿Qué más de Ferrous Lineup tendría que saber de él
-   (mira `ChordQuality::family`, las harmony keys e `is_minor`)?
+   (mira `ChordQuality::family`, las teclas de armonía e `is_minor`)?
 3. El **line cliché** mantiene un acorde mientras una sola voz baja por
    semitonos: «Am | Am/G♯ | Am/G | Am/F♯». Léelo con `parse_chart_in`,
    tócalo con `accompany` y `Bass::Held`, y comprueba las notas del

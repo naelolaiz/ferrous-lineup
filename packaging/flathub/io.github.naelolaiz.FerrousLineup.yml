@@ -40,6 +40,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/naelolaiz/ferrous-lineup.git
-        tag: v0.3.0
-        commit: b945846a373c8fbb30e8483921647767a80b03f1
+        tag: v0.4.0
+        # Pin the commit too when the tag is made:
+        # commit: <sha of v0.4.0>
       - cargo-sources.json

@@ -1,6 +1,6 @@
 # Atajos de teclado
 
-La lista propia de la aplicación es **Help > Keyboard shortcuts**, o
+La lista propia de la aplicación es **Ayuda > Atajos de teclado**, o
 **F1**. Se construye a partir de las mismas constantes de teclas que
 leen las ventanas, en
 [`crates/lineup-app/src/app/shortcuts.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/shortcuts.rs),
@@ -21,10 +21,10 @@ un campo de texto.
 
 | Tecla | Qué hace |
 |---|---|
-| **Space** | Reproduce o detiene. En el channel rack o en el piano roll reproduce o detiene el patrón. |
-| **Home** | Ir al principio. |
-| **End** | Ir al final. |
-| **PageUp** / **PageDown** | Un compás atrás / adelante. |
+| **Espacio** | Reproduce o detiene. En el rack de canales o en el piano roll reproduce o detiene el patrón. |
+| **Inicio** | Ir al principio. |
+| **Fin** | Ir al final. |
+| **RePág** / **AvPág** | Un compás atrás / adelante. |
 | **L** | Alternar entre el modo patrón y el modo canción. |
 | **F1** | Abrir o cerrar la lista de atajos de teclado. |
 
@@ -34,36 +34,36 @@ Muestran u ocultan cada ventana o panel.
 
 | Tecla | Qué muestra |
 |---|---|
-| **F5** | Chord sheet |
-| **F6** | Channel rack |
+| **F5** | Hoja de acordes |
+| **F6** | Rack de canales |
 | **F7** | Piano roll |
-| **F8** | Harmony keys |
-| **Alt+F8** | Panel Patterns y Library |
-| **F9** | Mixer |
+| **F8** | Teclas de armonía |
+| **Alt+F8** | Panel Patrones y Biblioteca |
+| **F9** | Mezclador |
 
-## File y Edit
+## Archivo y Edición
 
-**File**
+**Archivo**
 
 | Tecla | Qué hace |
 |---|---|
 | **Ctrl+N** | Nuevo |
 | **Ctrl+O** | Abrir |
 | **Ctrl+S** | Guardar |
-| **Ctrl+Shift+S** | Guardar como |
+| **Ctrl+Mayús+S** | Guardar como |
 | **Ctrl+Q** | Salir |
 
-**Edit**
+**Edición**
 
 | Tecla | Qué hace |
 |---|---|
 | **Ctrl+Z** | Deshacer |
-| **Ctrl+Shift+Z** o **Ctrl+Y** | Rehacer |
+| **Ctrl+Mayús+Z** o **Ctrl+Y** | Rehacer |
 
 ## Zoom
 
-Las teclas hacen zoom sobre lo que esté bajo el puntero: el playlist, el
-piano roll, el channel rack, o toda la interfaz en cualquier otro sitio.
+Las teclas hacen zoom sobre lo que esté bajo el puntero: la lista de reproducción, el
+piano roll, el rack de canales, o toda la interfaz en cualquier otro sitio.
 El paso que está bajo el puntero se queda bajo el puntero.
 
 | Tecla | Qué hace |
@@ -71,27 +71,27 @@ El paso que está bajo el puntero se queda bajo el puntero.
 | **Ctrl++** / **Ctrl+−** | Más ancho / más estrecho |
 | **Alt++** / **Alt+−** | Más alto / más bajo |
 | **Ctrl+0** | Volver al 100% |
-| **Ctrl+wheel** | Más ancho o más estrecho |
-| **Alt+wheel** | Más alto o más bajo |
+| **Ctrl+rueda** | Más ancho o más estrecho |
+| **Alt+rueda** | Más alto o más bajo |
 
-En la mayoría de los teclados, `=` es la tecla `+` sin pulsar Shift, y
+En la mayoría de los teclados, `=` es la tecla `+` sin pulsar Mayús, y
 **Ctrl+=** y **Alt+=** hacen zoom de la misma manera. La lista de F1
 nombra las formas con `+`.
 
-## Chord sheet
+## Hoja de acordes
 
 Estas funcionan después de hacer clic en un compás.
 
 | Tecla | Qué hace |
 |---|---|
-| **Flechas**, **Tab**, **Shift+Tab** | Moverse entre compases. Con Shift, selecciona los compases por los que pasas. |
-| **Enter** o **F2** | Escribir en el compás. Empezar a teclear hace lo mismo. |
-| **Delete** o **Backspace** | Vaciar los compases seleccionados. |
+| **Flechas**, **Tab**, **Mayús+Tab** | Moverse entre compases. Con Mayús, selecciona los compases por los que pasas. |
+| **Intro** o **F2** | Escribir en el compás. Empezar a teclear hace lo mismo. |
+| **Supr** o **Retroceso** | Vaciar los compases seleccionados. |
 | **Ctrl+A** | Seleccionar todos los compases. |
 | **Ctrl+C** | Copiar los compases como texto. |
 | **Ctrl+X** | Cortar los compases. |
 | **Ctrl+V** | Pegar compases, o un cuadro de acordes entero. |
-| **Escape** | No seleccionar nada. |
+| **Esc** | No seleccionar nada. |
 
 ## Piano roll
 
@@ -101,19 +101,19 @@ canal cuando no hay ninguna seleccionada.
 | Tecla | Qué hace |
 |---|---|
 | **↑** / **↓** | Un semitono arriba / abajo |
-| **Shift+↑** / **Shift+↓** | Una octava arriba / abajo |
+| **Mayús+↑** / **Mayús+↓** | Una octava arriba / abajo |
 | **Alt+↑** / **Alt+↓** | Una nota de la tonalidad arriba / abajo |
 | **←** / **→** | Un paso antes / después |
-| **Shift+←** / **Shift+→** | Un pulso antes / después |
+| **Mayús+←** / **Mayús+→** | Un pulso antes / después |
 | **Ctrl+C** | Copiar |
 | **Ctrl+X** | Cortar |
 | **Ctrl+V** | Pegar |
 | **Ctrl+D** | Duplicar |
-| **Delete** o **Backspace** | Borrar |
+| **Supr** o **Retroceso** | Borrar |
 | **Ctrl+A** | Seleccionar todas las notas |
-| **Escape** | No seleccionar nada |
+| **Esc** | No seleccionar nada |
 
-## Playlist
+## Lista de reproducción
 
 Estas actúan sobre los clips seleccionados.
 
@@ -123,20 +123,20 @@ Estas actúan sobre los clips seleccionados.
 | **Ctrl+X** | Cortar |
 | **Ctrl+V** | Pegar |
 | **Ctrl+D** | Duplicar |
-| **Delete** o **Backspace** | Borrar |
+| **Supr** o **Retroceso** | Borrar |
 | **Ctrl+A** | Seleccionar todos los clips |
-| **Escape** | No seleccionar nada |
+| **Esc** | No seleccionar nada |
 
-## Channel rack
+## Rack de canales
 
 Estas funcionan después de hacer clic en el nombre de un canal.
 
 | Tecla | Qué hace |
 |---|---|
-| **Delete** o **Backspace** | Borrar el canal. |
-| **Escape** | No seleccionar ningún canal. |
+| **Supr** o **Retroceso** | Borrar el canal. |
+| **Esc** | No seleccionar ningún canal. |
 
-## Harmony keys
+## Teclas de armonía
 
 | Tecla | Qué hace |
 |---|---|
@@ -144,7 +144,7 @@ Estas funcionan después de hacer clic en el nombre de un canal.
 
 ## Teclado de escritura
 
-Estas tocan notas cuando **MIDI > Typing keyboard to piano** está
+Estas tocan notas cuando **MIDI > Teclado del equipo como piano** está
 activado.
 
 | Tecla | Qué toca |
@@ -158,12 +158,12 @@ activado.
 
 | Tecla | Qué hace |
 |---|---|
-| **Space** | Reproducir el estilo. |
+| **Espacio** | Reproducir el estilo. |
 | **Ctrl+S** | Guardar el estilo. |
-| **Ctrl+Shift+S** | Guardar el estilo como. |
+| **Ctrl+Mayús+S** | Guardar el estilo como. |
 | **Ctrl+Z** | Deshacer. |
-| **Ctrl+Shift+Z** o **Ctrl+Y** | Rehacer. |
-| **Escape** | No seleccionar ningún canal. |
+| **Ctrl+Mayús+Z** o **Ctrl+Y** | Rehacer. |
+| **Esc** | No seleccionar ningún canal. |
 
 El editor de estilos tiene su propio historial, separado del de la
 canción; mira [El editor de estilos](step-9/style-editor.md).

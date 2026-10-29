@@ -58,7 +58,7 @@ significa «exacto a la muestra».
 
 El secuenciador no tiene nada que ver con tarjetas de sonido. Solo
 cuenta. Ponerlo en `lineup-core` significa que se prueba en milisegundos,
-sin audio, y la playlist del paso 4 puede reutilizarlo.
+sin audio, y la lista de reproducción del paso 4 puede reutilizarlo.
 
 ## Probar con iteradores
 

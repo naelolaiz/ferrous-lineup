@@ -12,28 +12,28 @@ un canal propio:
 | Demo | Qué es | Compás y tonalidad | Quién toca |
 |---|---|---|---|
 | **Alfonsina y el mar** | la zamba de Ariel Ramírez y Félix Luna, 1969 | 6/8, Do menor | un coro a cuatro voces |
-| **Die Forelle** | la canción «La trucha» de Franz Schubert, D 550, 1817 | 2/4, Re bemol mayor | voz y piano |
-| **Sheep May Safely Graze** | un aria de la Cantata de la caza de Johann Sebastian Bach, BWV 208, 1713 | 4/4, Si bemol mayor | soprano, dos flautas dulces, continuo |
-| **For Unto Us a Child Is Born** | un coro del Mesías de George Frideric Handel, 1741 | 4/4, Sol mayor | coro, cuerdas, oboes, continuo |
+| **Die Forelle (La trucha)** | la canción «La trucha» de Franz Schubert, D 550, 1817 | 2/4, Re bemol mayor | voz y piano |
+| **Las ovejas pueden pastar tranquilas** | un aria de la Cantata de la caza de Johann Sebastian Bach, BWV 208, 1713 | 4/4, Si bemol mayor | soprano, dos flautas dulces, continuo |
+| **Porque un niño nos ha nacido** | un coro del Mesías de George Frideric Handel, 1741 | 4/4, Sol mayor | coro, cuerdas, oboes, continuo |
 
 Como en la Misa Criolla, las voces cantan sin las palabras.
 
 ## Pruébalo
 
-1. Abre **File > Demos**, busca `Forelle` y pulsa Play. Mira el piano
-   roll del canal Keys: la mano derecha del piano sube disparada en
+1. Abre **Archivo > Demostraciones**, busca `Forelle` y pulsa ▶. Mira el piano
+   roll del canal Teclados: la mano derecha del piano sube disparada en
    grupos rápidos de seis, y la izquierda toca una nota grave y luego
    un acorde.
-2. Abre **Sheep May Safely Graze** y pon en solo los dos canales
-   **Recorder**. Tocan en terceras, y cada frase tiene eco, primero
+2. Abre **Las ovejas pueden pastar tranquilas** y pon en solo los dos canales
+   **Flauta dulce**. Tocan en terceras, y cada frase tiene eco, primero
    forte y luego piano.
-3. Abre **For Unto Us a Child Is Born** y abre el **mixer**: Lead (las
-   sopranos), Altos, Tenors, Basses, Violins I, Violins II, Violas,
-   Oboes y Keys (los bassi, tocados por violonchelos). Silencia todo
+3. Abre **Porque un niño nos ha nacido** y abre el **mezclador**: Melodía (las
+   sopranos), Contraltos, Tenores, Bajos, Violines I, Violines II, Violas,
+   Oboes y Teclados (los bassi, tocados por violonchelos). Silencia todo
    menos las cuatro voces y escúchalas entrar una tras otra: las
    sopranos en el compás 7, los tenores en el compás 12, las
    contraltos en el compás 18 y los bajos en el compás 19.
-4. En la misma demo, mira la tonalidad en la barra de harmony keys: Sol
+4. En la misma demo, mira la tonalidad en la barra de teclas de armonía: Sol
    mayor, Re mayor desde el compás 18, Sol otra vez desde el compás 38, Do
    mayor desde el compás 56, y Sol desde el compás 71 hasta el final.
 5. Abre **Alfonsina y el mar** y mira la regla: el primer compás dura
@@ -99,7 +99,7 @@ que la canción es **estrófica modificada**:
 Luego vuelven las últimas líneas y la canción termina como terminó la
 primera estrofa.
 
-### Sheep May Safely Graze: un aria en tres partes
+### Las ovejas pueden pastar tranquilas: un aria en tres partes
 
 Bach escribió la Cantata de la caza para el cumpleaños de un duque. En
 esta aria Pales, la diosa de los pastores, canta sobre dos flautas
@@ -221,7 +221,7 @@ Misa Criolla:
   paso, `D5:1/2`, así que el script las escribe así.
 
 Algunas partituras dejan cosas fuera, y el comentario de la demo sobre
-cada canción dice qué se añadió. Sheep May Safely Graze marca solo los
+cada canción dice qué se añadió. Las ovejas pueden pastar tranquilas marca solo los
 ecos en piano de las flautas dulces, así que las frases anteriores son
 forte. La edición del Mesías imprime sus fortes solo en los primeros
 violines y no da dinámicas a las voces, así que el forte vale para
@@ -249,14 +249,14 @@ Part::new("Pickup", "!mf F#4:2", "")
 
 `TimeSignature::new` es un `const fn`, una función que Rust puede
 ejecutar mientras compila, así que el compás puede ser un `const`.
-Sheep May Safely Graze usa la misma idea al final: el da capo se
+Las ovejas pueden pastar tranquilas usa la misma idea al final: el da capo se
 detiene en el primer pulso del compás 21, así que la última parte es
 un compás de 1/4 con un calderón.
 
 ### Por qué cada voz del coro tiene su propio canal
 
 La primera versión de la demo de Handel tenía las contraltos, los
-tenores y los bajos en un solo canal Choir, como hace la Misa Criolla.
+tenores y los bajos en un solo canal Coro, como hace la Misa Criolla.
 La traza de la reproducción mostró 11 notas perdidas, algunas de ellas
 notas sostenidas.
 
@@ -305,15 +305,15 @@ Cada demo se tocó con la [traza de la reproducción](playback-trace.md)
 y se comparó con el archivo MIDI de su partitura, nota por nota: el
 paso de inicio, la altura y el canal de cada nota, y su duración.
 
-- **For Unto Us a Child Is Born:** coinciden las 3975 notas. Las
+- **Porque un niño nos ha nacido:** coinciden las 3975 notas. Las
   únicas duraciones que difieren son las 14 notas en staccato del
   compás 37, la mitad de largas de lo escrito.
-- **Sheep May Safely Graze:** coinciden las 1646 notas y sus
+- **Las ovejas pueden pastar tranquilas:** coinciden las 1646 notas y sus
   duraciones, a través del da capo.
 - **Die Forelle:** coinciden 1452 de 1460 notas. Dos son los Re bemoles
   de los compases 43 y 44. Las otras seis son Mi bemoles que la mano
   derecha dobla al unísono con el acorde de la mano izquierda en el
-  compás 66: ambas manos están en el canal Keys, así que cada una
+  compás 66: ambas manos están en el canal Teclados, así que cada una
   suena una vez.
 - **Alfonsina y el mar** se comprobó en sus dos mitades contra el
   arreglo, con las voces intercambiadas en los canales correctos.
@@ -324,14 +324,14 @@ paso de inicio, la altura y el canal de cada nota, y su duración.
    la tercera estrofa. ¿Qué acorde viene después de ellos, y de qué es
    dominante?
 2. En For Unto Us a Child Is Born, toca los compases 41 y 42 con solo
-   el canal Keys sin silenciar. Apunta las notas del bajo desde el Si
+   el canal Teclados sin silenciar. Apunta las notas del bajo desde el Si
    del segundo pulso del compás 41, y comprueba que cada una está una
    quinta por debajo de la anterior.
 3. Encuentra otro acorde 4/2 en el coro de Handel (el compás 45 tiene
    uno) y el acorde al que resuelve. ¿Está la siguiente nota del bajo
    un paso más abajo?
-4. En Sheep May Safely Graze, encuentra los compases de la sección
-   media en Do menor en el chord sheet. ¿Qué acorde trae el Si natural,
+4. En Las ovejas pueden pastar tranquilas, encuentra los compases de la sección
+   media en Do menor en la hoja de acordes. ¿Qué acorde trae el Si natural,
    y por qué lo necesita Do menor?
 5. Rust: escribe una función que tome un slice de `NoteEvent`s y
    devuelva cuántos descartaría `tidy_notes`, usando `iter`,

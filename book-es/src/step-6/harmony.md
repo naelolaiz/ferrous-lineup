@@ -246,7 +246,7 @@ quinta»), para una pequeña línea de ayuda; `reason` es la frase
 completa. Son `Cow<'static, str>`, «clonar al escribir»: normalmente
 `Cow::Borrowed`, que apunta directamente al `&'static str` de la tabla,
 sin reservar memoria. Pero el motivo puede *reescribirse* en tiempo de
-ejecución: el paso 9 deja que el chord sheet escriba los numerales
+ejecución: el paso 9 deja que la hoja de acordes escriba los numerales
 romanos de las tonalidades menores de una manera o de otra, y entonces
 una frase como «I a IV» tiene que convertirse en texto propio. `Cow`
 admite ambos casos.

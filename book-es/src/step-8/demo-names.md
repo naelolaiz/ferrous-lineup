@@ -3,10 +3,10 @@
 Archivos: [`crates/lineup-app/src/app/files.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/files.rs)
 y [`crates/lineup-app/src/app/library.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/library.rs)
 
-Abre "Für Elise" desde **File > Demos** y, hasta ahora, el título de
-la ventana decía "Untitled". La app solo conocía dos clases de
+Abre "Para Elisa" desde **Archivo > Demostraciones** y, hasta ahora, el título de
+la ventana decía "Sin título". La app solo conocía dos clases de
 proyecto: uno que venía de un archivo (mostrado por su nombre de
-archivo) y uno que no ("Untitled"). Una demo no viene de ningún
+archivo) y uno que no ("Sin título"). Una demo no viene de ningún
 archivo, así que caía en el segundo grupo, igual que un proyecto vacío
 recién creado.
 
@@ -21,7 +21,7 @@ programas los cambios sin guardar:
 ![Tras un cambio: "Für Elise*". Pasar el ratón sobre Guardar explica lo que hará.](../images/step-8-demo-changed.png)
 
 La estrella reemplaza al punto que solía ir delante del nombre
-(["En la app: menú File, atajos de teclado y barra de título"](../step-4/saving.md#en-la-app-menú-file-atajos-de-teclado-y-barra-de-título)),
+(["En la app: menú Archivo, atajos de teclado y barra de título"](../step-4/saving.md#en-la-app-menú-archivo-atajos-de-teclado-y-barra-de-título)),
 también para los archivos: "song.lineup*".
 
 ## Por qué una demo es de solo lectura
@@ -33,21 +33,19 @@ vez que lo abres. No hay nada donde escribir tus cambios, y si lo
 hubiera, la siguiente versión de la app traería su propia copia de
 todas formas.
 
-Así que **Save** en una demo hace lo que hace **Save as…**:
-pide un archivo nuevo. El diálogo ya lleva el nombre de la demo: en
-Für Elise sugiere "Für Elise.lineup".
+Así que **Guardar** en una demo hace lo que hace **Guardar como…**:
+pide un archivo nuevo. El diálogo ya lleva el nombre de la demo: en Para Elisa sugiere "Für Elise.lineup", con el título original de la demo.
 
 Una vez guardado, el proyecto es ese archivo: el título muestra "Für
-Elise.lineup", lo de "(demo, read-only)" desaparece, y el siguiente
+Elise.lineup", lo de "(demostración, solo lectura)" desaparece, y el siguiente
 Guardar escribe en el archivo sin preguntar. La demo del menú sigue
 como estaba. Las exportaciones (WAV, MIDI) sugieren también el nombre
 de la demo: "Für Elise.wav".
 
-La app empieza con "The starting song", que también es una demo (es la
-primera entrada de **File > Demos**), así que muestra ese nombre
-desde el principio. **File > New** y una grabación importada
-siguen empezando como "Untitled"; un archivo MIDI importado o un chord
-sheet recibe el nombre de su archivo (`name_imported`), hasta que se
+La app empieza con "La canción inicial", que también es una demo (es la
+primera entrada de **Archivo > Demostraciones**), así que muestra ese nombre
+desde el principio. **Archivo > Nuevo** y una grabación importada
+siguen empezando como "Sin título"; un archivo MIDI importado o una hoja de acordes recibe el nombre de su archivo (`name_imported`), hasta que se
 guarda.
 
 ## El código
@@ -121,7 +119,7 @@ Los brazos se prueban de arriba abajo. `_` significa "cualquier cosa",
 así que un archivo gana a un nombre de demo; el compilador comprueba
 que los tres brazos juntos cubren todos los casos, y se negaría a
 compilar si faltara uno. El último brazo es el nombre dado a un archivo
-MIDI importado o un chord sheet (`name_imported`), que es un `String` y
+MIDI importado o una hoja de acordes (`name_imported`), que es un `String` y
 se clona.
 
 `&self.path` presta la ruta: hacer match sobre `self.path` en sí
@@ -130,7 +128,7 @@ solo tiene `&self` no puede hacer. `self.demo` está bien tal cual,
 porque un `Option<&str>` es `Copy`: hacer match sobre él lo copia.
 
 `display_name` mantiene entonces la extensión para un archivo, y dice
-"Untitled" cuando no hay nombre en absoluto:
+"Sin título" cuando no hay nombre en absoluto:
 
 ```rust
 fn display_name(&self) -> String {
@@ -199,12 +197,11 @@ sin cambios, y comprueban el nombre de archivo sugerido.
 
 ## Cómo se comprobó
 
-En la app en marcha: el título al arrancar ("The starting song (demo,
-read-only)"), un paso cambiado (estrella), **File > Demos >
-Canciones > Clásica y cine > Für Elise** (el diálogo "¿Guardar los
-cambios?" nombra "The starting song"), No guardar, el título "Für Elise
+En la app en marcha: el título al arrancar ("La canción inicial (demo,
+read-only)"), un paso cambiado (estrella), **Archivo > Demostraciones > Canciones > Clásica y de cine > Für Elise** (el diálogo "¿Guardar los
+cambios?" nombra "La canción inicial"), No guardar, el título "Für Elise
 (demo, read-only)" mientras suena, un paso cambiado (estrella),
-**File > Save** abriendo el diálogo de guardar del sistema con
+**Archivo > Guardar** abriendo el diálogo de guardar del sistema con
 "Für Elise.lineup", guardar, el título volviéndose el nombre del
 archivo sin estrella, y un segundo Guardar escribiendo el archivo sin
 diálogo.

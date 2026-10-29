@@ -37,6 +37,7 @@ use std::ops::Range;
 use super::{ChordMarker, read_typed_bar, write_bar};
 use crate::band::band_styles;
 use crate::harmony::{Scale, ScaleKind};
+use crate::i18n::{Language, tr, trf};
 use crate::key_map::KeyMarker;
 use crate::meter::{TimeMarker, TimeSignature};
 use crate::pitch::{NoteName, NoteNaming};
@@ -106,7 +107,7 @@ pub struct TextError {
 
 impl fmt::Display for TextError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "line {}: {}", self.line, self.message)
+        write!(f, "{}", trf("line {}: {}", &[&self.line, &self.message]))
     }
 }
 
@@ -155,7 +156,7 @@ pub fn read(text: &str) -> Result<TextSheet, TextError> {
                     let time: TimeSignature = value.parse().map_err(|message| {
                         error(
                             number,
-                            format!("\"{value}\" is not a time signature: {message}."),
+                            trf("\"{}\" is not a time signature: {}.", &[&value, &message]),
                         )
                     })?;
                     if started {
@@ -188,9 +189,10 @@ pub fn read(text: &str) -> Result<TextSheet, TextError> {
         } else {
             return Err(error(
                 number,
-                format!(
-                    "\"{line}\" is not a line of bars. Write each bar between | signs, as in \
-                     | C | Am7 | Dm7 G7 |."
+                trf(
+                    "\"{}\" is not a line of bars. Write each bar between | signs, as in \
+                     | C | Am7 | Dm7 G7 |.",
+                    &[&line],
                 ),
             ));
         }
@@ -229,8 +231,9 @@ fn read_key(text: &str) -> Result<Scale, String> {
         None => match first.strip_suffix('m').and_then(NoteName::parse) {
             Some(root) if rest.is_empty() => (root, "minor"),
             _ => {
-                return Err(format!(
-                    "\"{text}\" is not a key: write it as C major or A minor."
+                return Err(trf(
+                    "\"{}\" is not a key: write it as C major or A minor.",
+                    &[&text],
                 ));
             }
         },
@@ -242,10 +245,11 @@ fn read_key(text: &str) -> Result<Scale, String> {
             .into_iter()
             .find(|kind| kind.name().eq_ignore_ascii_case(name))
             .ok_or_else(|| {
-                format!(
-                    "\"{text}\" is not a key the text can say. Keys are major, minor, harmonic \
+                trf(
+                    "\"{}\" is not a key the text can say. Keys are major, minor, harmonic \
                      or melodic minor, the modes (Dorian…), pentatonic or blues; a row or a set \
-                     is chosen in the app."
+                     is chosen in the app.",
+                    &[&text],
                 )
             })?,
     };
@@ -259,12 +263,11 @@ fn read_tempo(text: &str) -> Result<f32, String> {
         .trim();
     match number.parse::<f32>() {
         Ok(bpm) if (Tempo::MIN..=Tempo::MAX).contains(&bpm) => Ok(bpm),
-        Ok(_) => Err(format!(
+        Ok(_) => Err(trf(
             "a tempo goes from {} to {} BPM.",
-            Tempo::MIN,
-            Tempo::MAX
+            &[&Tempo::MIN, &Tempo::MAX],
         )),
-        Err(_) => Err(format!("\"{text}\" is not a tempo: write it as 120.")),
+        Err(_) => Err(trf("\"{}\" is not a tempo: write it as 120.", &[&text])),
     }
 }
 
@@ -272,7 +275,7 @@ fn read_tempo(text: &str) -> Result<f32, String> {
 fn read_heading(line: &str) -> Result<(String, usize), String> {
     let (inside, after) = line[1..]
         .split_once(']')
-        .ok_or("a section's name goes between [ and ], as in [Verse].")?;
+        .ok_or(tr("a section's name goes between [ and ], as in [Verse]."))?;
     let mut name = inside.trim().to_string();
     let mut repeats = read_times(after.trim());
     if repeats.is_none()
@@ -283,18 +286,18 @@ fn read_heading(line: &str) -> Result<(String, usize), String> {
         name = first.trim().to_string();
     }
     if name.is_empty() {
-        return Err("a section needs a name, as in [Verse].".to_string());
+        return Err(tr("a section needs a name, as in [Verse].").to_string());
     }
     let repeats = match repeats {
         Some(Some(times)) => times,
         Some(None) => {
-            return Err(format!("a section is played 1 to {MAX_REPEATS} times."));
+            return Err(trf("a section is played 1 to {} times.", &[&MAX_REPEATS]));
         }
         None if after.trim().is_empty() => 1,
         None => {
-            return Err(format!(
+            return Err(trf(
                 "\"{}\" after a section's name is not read: write [Chorus ×2] to play it twice.",
-                after.trim()
+                &[&after.trim()],
             ));
         }
     };
@@ -353,10 +356,10 @@ pub fn paste(
                 let bar = bars
                     .next()
                     .filter(|bar| bar.end() <= MAX_SONG_STEPS)
-                    .ok_or_else(|| error(*line, "the song cannot be this long."))?;
+                    .ok_or_else(|| error(*line, tr("the song cannot be this long.")))?;
                 let key = text_key.unwrap_or_else(|| keys.key_at(bar.start));
                 let written = read_typed_bar(text, &bar, key).map_err(|message| {
-                    error(*line, format!("bar {}: {message}", bar.number + 1))
+                    error(*line, trf("bar {}: {}", &[&(bar.number + 1), &message]))
                 })?;
                 markers.extend(written);
                 let start = range.as_ref().map_or(bar.start, |range| range.start);
@@ -390,7 +393,10 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
             .iter()
             .find(|style| style.name.eq_ignore_ascii_case(name.trim()));
         if style.is_none() {
-            notes.push(format!("Line {line}: no band style is called \"{name}\"."));
+            notes.push(trf(
+                "Line {}: no band style is called \"{}\".",
+                &[line, name],
+            ));
         }
         style
     });
@@ -407,9 +413,9 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
     {
         project.set_time_marker(TimeMarker::new(0, time));
         if let Some(band) = project.band() {
-            notes.push(format!(
-                "The band plays {}, a style in {}, in {time}.",
-                band.style.name, band.style.time
+            notes.push(trf(
+                "The band plays {}, a style in {}, in {}.",
+                &[&tr(band.style.name), &band.style.time, &time],
             ));
         }
     }
@@ -429,7 +435,7 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
         match item {
             Item::Bar { text, line } => {
                 if step + time.steps_per_bar() > MAX_SONG_STEPS {
-                    return Err(error(*line, "the song cannot be this long."));
+                    return Err(error(*line, tr("the song cannot be this long.")));
                 }
                 bars.push((step, text, *line));
                 step += time.steps_per_bar();
@@ -460,7 +466,7 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
     for (start, text, line) in bars {
         let bar = meter.bar_at(start);
         let written = read_typed_bar(text, &bar, keys.key_at(start))
-            .map_err(|message| error(line, format!("bar {}: {message}", bar.number + 1)))?;
+            .map_err(|message| error(line, trf("bar {}: {}", &[&(bar.number + 1), &message])))?;
         markers.extend(written);
     }
     project.set_chords(0, end, &markers);
@@ -475,7 +481,7 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
 /// Chords and keys are written in letters, whichever way the app shows
 /// them, so the text reads the same anywhere it is pasted.
 pub fn write(project: &Project, title: Option<&str>) -> String {
-    NoteNaming::Letters.with(|| write_sheet(project, title))
+    Language::English.with(|| NoteNaming::Letters.with(|| write_sheet(project, title)))
 }
 
 fn write_sheet(project: &Project, title: Option<&str>) -> String {
@@ -503,7 +509,7 @@ fn write_sheet(project: &Project, title: Option<&str>) -> String {
 /// The bars `bars` (by number) of `project`, four to a line, without
 /// settings or sections: for copying some bars to paste them elsewhere.
 pub fn write_bars(project: &Project, bars: Range<usize>) -> String {
-    NoteNaming::Letters.with(|| layout(&lines(project, bars, false)))
+    Language::English.with(|| NoteNaming::Letters.with(|| layout(&lines(project, bars, false))))
 }
 
 /// How many bars the chord sheet has: as many as the song plays, or the

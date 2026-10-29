@@ -15,22 +15,22 @@ tónica, así que esas reglas no significan nada ahí.
 La música dodecafónica tiene sus propias reglas. Schoenberg escribía
 con ellas, y también sus alumnos Berg y Webern. Los cursos de
 composición aún las enseñan. Así que cuando la tonalidad es una
-**serie dodecafónica**, la casilla **Voice leading** comprueba ahora
+**serie dodecafónica**, la casilla **Conducción de voces** comprueba ahora
 esas reglas en su lugar.
 
-![La serie de Schoenberg de su Suite, Op. 25, como tonalidad (P4, sobre Mi). Una melodía y una parte de teclado comparten dos formas de la serie, P4 y P10, nombradas en la línea Row. La línea Voices marca una nota fuera del orden de la serie, un acorde fuera de orden que además es una tríada de La menor, y un Re doblado en octavas. Las notas están perfiladas, y perfiles discontinuos muestran las notas que la serie quería.](../images/step-9-twelve-tone-rules.png)
+![La serie de Schoenberg de su Suite, Op. 25, como tonalidad (P4, sobre Mi). Una melodía y una parte de teclado comparten dos formas de la serie, P4 y P10, nombradas en la línea Serie. La línea Voces marca una nota fuera del orden de la serie, un acorde fuera de orden que además es una tríada de La menor, y un Re doblado en octavas. Las notas están perfiladas, y perfiles discontinuos muestran las notas que la serie quería.](../images/step-9-twelve-tone-rules.png)
 
 ## Lo que ves
 
-- **Una línea Row** bajo los nombres de acorde. Nombra cada forma de
+- **Una línea Serie** bajo los nombres de acorde. Nombra cada forma de
   la serie que la comprobación encuentra en las notas, como **P4** o
   **P10**, sobre las notas que la tocan. Señálala para leer las notas
   de la forma: «P4: la serie que empieza en Mi: Mi Fa Sol Do♯ Fa♯ Mi♭ La♭ Re Si Do
   La Si♭».
-- **La línea Voices** debajo marca lo que la escritura dodecafónica
-  evita: **order** para una nota fuera del orden de la serie, **rep**
-  para una nota repetida demasiado pronto, **gap** para una forma
-  dejada sin terminar, **8ve** para una nota doblada en octavas,
+- **La línea Voces** debajo marca lo que la escritura dodecafónica
+  evita: **orden** para una nota fuera del orden de la serie, **rep.**
+  para una nota repetida demasiado pronto, **hueco** para una forma
+  dejada sin terminar, **8va** para una nota doblada en octavas,
   **tonal** para un acorde que suena como armonía tonal.
 - **Perfiles** alrededor de las notas implicadas. Dos notas dobladas
   se unen con una línea, y también las notas de un acorde tonal. Un
@@ -66,7 +66,7 @@ trinarse con la nota anterior. Sigue siendo la misma nota de la serie.
 Dos errores se parecen pero se cuentan distinto. Si **intercambias**
 dos notas, o **dejas una fuera**, es una nota fuera de lugar, no todas
 las que le siguen. En la imagen, la melodía toca Si antes de Re. La
-comprobación marca el Si («Melody toca Si4 donde P4 quiere Re, su nota
+comprobación marca el Si («Melodía toca Si4 donde P4 quiere Re, su nota
 8») y encuentra el resto de la serie otra vez en orden.
 
 ### Ninguna nota vuelve pronto
@@ -75,14 +75,14 @@ Antes de que una nota vuelva, suenan las otras once. La serie se hizo
 para eso: ninguna nota se oye más a menudo que las demás, así que
 ninguna se convierte en tónica. Una nota tocada otra vez inmediatamente
 está bien. Una nota que vuelve después de otras notas, antes de que la
-forma haya hecho sonar las doce, se marca **rep**.
+forma haya hecho sonar las doce, se marca **rep.**.
 
 ### Una forma se toca entera
 
 Cuando una forma se corta y empieza la siguiente, las notas que dejó
 fuera faltan de las doce. La comprobación marca la última nota de una
-forma así con **gap** y nombra lo que nunca sonó: «Serie sin terminar:
-P4 se detiene tras 8 de sus 12 notas, con el Re5 de Melody; Si, Do, La y
+forma así con **hueco** y nombra lo que nunca sonó: «Serie sin terminar:
+P4 se detiene tras 8 de sus 12 notas, con el Re5 de Melodía; Si, Do, La y
 Si♭ nunca suenan antes de que empiece la siguiente forma».
 
 ### Sin doblados de octava
@@ -140,7 +140,7 @@ de verdad:
 - **Los patrones se unen.** Cada patrón se comprueba por su cuenta,
   pero una serie puede continuar de un patrón al siguiente. Así que la
   primera forma puede haber empezado en el patrón anterior, mientras
-  sus notas aquí estén en orden. La línea Row dice entonces «…P4», y
+  sus notas aquí estén en orden. La línea Serie dice entonces «…P4», y
   su tooltip dice en qué nota empieza el patrón. La última forma puede
   continuar en el siguiente patrón, así que nunca se marca como sin
   terminar.
@@ -150,8 +150,7 @@ de verdad:
   R, RI. Los acordes pueden hacer imposible distinguir dos formas. La
   serie de Webern para su Concerto, Op. 24, está construida con cuatro
   grupos de tres notas, todos relacionados entre sí, y sus formas R0 e
-  I1 tienen las mismas tres notas en cada grupo. En el estilo Webern's
-  trichords de la biblioteca, la comprobación lee la segunda forma de
+  I1 tienen las mismas tres notas en cada grupo. En el estilo «Los tricordios de Webern» de la biblioteca, la comprobación lee la segunda forma de
   la melodía como R0, y los acordes debajo como I1. Cualquiera de los
   dos nombres es correcto.
 
@@ -167,7 +166,7 @@ Schoenberg. No juzga:
   dinámicas o los registros siguen también una serie, como en la
   música de Boulez y Babbitt;
 - **la combinatorialidad** y otras maneras de emparejar formas. En el
-  estilo [Hexachord pads](../step-8/twelve-tone.md#estilos-y-demos-dodecafónicos),
+  estilo [Pads de hexacordios](../step-8/twelve-tone.md#estilos-y-demos-dodecafónicos),
   los acordes sostienen la mitad de P0 mientras la melodía toca las
   otras seis notas de I3. La comprobación lee ahí la forma propia de
   cada pista, lo cual es correcto, pero no te dice que las dos mitades
@@ -189,10 +188,10 @@ Schoenberg. No juzga:
   desde sus series, así que la comprobación debe leer cada uno como
   las formas con las que fue construido. Una prueba escribe los siete,
   sobre Do y sobre Fa♯, y hace assert de que ninguna nota está fuera de
-  orden. Los demás hallazgos son reales. Las tríadas de Triad chorale
-  suenan tonales, como promete su descripción. En Twelve-tone lo-fi,
+  orden. Los demás hallazgos son reales. Las tríadas de Coral de tríadas
+  suenan tonales, como promete su descripción. En Lo-fi dodecafónico,
   el bajo dobla la primera nota de los acordes al principio. En
-  Webern's trichords, la melodía dobla los acordes debajo de ella de
+  Los tricordios de Webern, la melodía dobla los acordes debajo de ella de
   principio a fin. Ese es el arreglo de la biblioteca: el estilo dice
   que su ritmo es de Ferrous Lineup, no de Webern.
 
@@ -341,9 +340,8 @@ grupo», sin copiar nada.
 
 ## Ejercicios
 
-1. Elige **twelve-tone row** como tonalidad, elige **Schoenberg's
-   Suite** en **Row…** con Mi como nota de la tonalidad, y escribe P4
-   (Mi Fa Sol Do♯ Fa♯ Mi♭ La♭ Re Si Do La Si♭) como melodía. Marca Voice leading.
+1. Elige **serie dodecafónica** como tonalidad, elige **Suite de Schoenberg** en **Serie…** con Mi como nota de la tonalidad, y escribe P4
+   (Mi Fa Sol Do♯ Fa♯ Mi♭ La♭ Re Si Do La Si♭) como melodía. Marca Conducción de voces.
    Luego intercambia dos notas, y luego deja una fuera. ¿Cuántas notas
    marca la comprobación cada vez, y adónde va el perfil discontinuo?
 2. Escribe las tres primeras notas de P4 como un acorde, y luego el

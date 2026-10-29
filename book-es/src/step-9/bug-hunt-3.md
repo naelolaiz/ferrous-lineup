@@ -8,7 +8,7 @@ Archivos: [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrou
 y [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
 Tras la [segunda caza de bugs](bug-hunt.md), la app ganó piezas
-orquestales enteras (Boléro, The Rite of Spring, Petrushka), una traza
+orquestales enteras (Boléro, La consagración de la primavera, Petrushka), una traza
 de la reproducción, pistas bloqueadas y un estilo por sección. Cada
 trabajo nuevo se probaba por su cuenta; esta caza preguntó otra vez qué
 se rompe cuando se usan **juntos**, de la manera en que usas la app.
@@ -24,8 +24,8 @@ La build de release se ejecutaba en una pantalla virtual (`Xvfb`),
 manejada con `xdotool`, como en las cazas anteriores. Esta vez las
 preguntas eran sobre el flujo de trabajo completo, no sobre una parte:
 
-- abrir una demo de una canción, estudiarla en el chord sheet, probar
-  en ella un estilo de la Library, guardarla y abrirla otra vez;
+- abrir una demo de una canción, estudiarla en la hoja de acordes, probar
+  en ella un estilo de la Biblioteca, guardarla y abrirla otra vez;
 - ¿sigue cada ventana mostrando lo que mostraba antes, después de cada
   paso?
 - ¿se lee todo lo que la app escribe en pantalla con el zoom habitual?
@@ -38,8 +38,7 @@ falla sin él.
 
 Guarda Boléro como archivo `.lineup`, ábrelo otra vez y la ventana se
 congelaba: 85 segundos antes de responder. «Shrovetide Fair in the
-Evening» de Petrushka tardaba 29 segundos, «Augurs of Spring» de The
-Rite of Spring, 4.5. Guardar las mismas canciones tardaba una centésima
+Evening» de Petrushka tardaba 29 segundos, «Augurios primaverales» de La consagración de la primavera, 4.5. Guardar las mismas canciones tardaba una centésima
 de segundo, así que el trabajo no estaba en el tamaño del archivo como
 tal.
 
@@ -122,7 +121,7 @@ un disco lento), y solo las piezas más largas lo hicieron evidente.
 Fíjate en que ninguna línea está mal por sí sola. `find` es la
 herramienta correcta, solo mira más texto del que necesita, y el coste
 viene de llamarlo una vez por cada número. Cuando un programa es lento
-en proporción al *cuadrado* de su entrada, busca un loop que, por
+en proporción al *cuadrado* de su entrada, busca un bucle que, por
 dentro, haga algo proporcional a toda la entrada.
 
 ### El arreglo: leer el archivo entero primero
@@ -198,10 +197,10 @@ depende de ello: simplemente ya no le pide a RON que se salte campos.
 
 ## Probar un estilo te llevaba a otro patrón
 
-Abre El Choclo, selecciona su patrón «Pickup» en la caja de patrones y
-aplica un estilo de la Library en modo canción (Tango nuevo, por
+Abre El Choclo, selecciona su patrón «Anacrusa» en la caja de patrones y
+aplica un estilo de la Biblioteca en modo canción (Tango nuevo, por
 ejemplo). La banda toca la canción, y la caja de patrones dice ahora
-**«Ending»**. Siempre.
+**«Final»**. Siempre.
 
 ### Cómo se entera la app de los cambios
 
@@ -218,7 +217,7 @@ patrón en medio da «igual, igual, *nuevo*, igual, igual».
 
 Cuando ve un patrón insertado, `sync_audio` (en `app/edit.rs`) lo
 selecciona, porque un patrón que acabas de añadir, clonar o traer de
-vuelta con Undo es el que quieres ver:
+vuelta con Deshacer es el que quieres ver:
 
 ```rust
 Change::InsertPattern(index) => {
@@ -243,7 +242,7 @@ añadir tres canales da a *todo* patrón tres filas nuevas. El
 ningún patrón era ya igual a sí mismo. Así que el diff decía: todo
 patrón se quitó, y todo patrón se insertó otra vez. `sync_audio`
 seleccionaba cada patrón de la canción según lo «insertaban», y el
-último, «Ending», ganaba. Al hilo de audio también se le enviaba la
+último, «Final», ganaba. Al hilo de audio también se le enviaba la
 canción entera otra vez, que sonaba bien pero hacía mucho más trabajo
 del necesario.
 
@@ -294,23 +293,22 @@ suene mal; solo decide qué cuenta como *nuevo*.
 
 Dos pruebas lo comprueban: una en `diff.rs`, donde un canal nuevo y un
 patrón nuevo dan exactamente un «insertar patrón», y otra en las pruebas
-de la app, que aplica Tango nuevo a El Choclo con «Pickup» seleccionado
-y comprueba que «Pickup» sigue seleccionado después.
+de la app, que aplica Tango nuevo a El Choclo con «Anacrusa» seleccionado
+y comprueba que «Anacrusa» sigue seleccionado después.
 
-## Seguir el playhead escondía el compás 1
+## Seguir el cursor de reproducción escondía el compás 1
 
-Con **Follow playhead** activado, el playlist se desplaza para mantener
-el playhead a la vista. Cuando una canción llega al final y vuelve a
-empezar, o un loop vuelve a su principio, el playhead salta a la
+Con **Seguir el cursor de reproducción** activado, la lista de reproducción se desplaza para mantener
+el cursor de reproducción a la vista. Cuando una canción llega al final y vuelve a
+empezar, o un bucle vuelve a su principio, el cursor de reproducción salta a la
 izquierda y la vista lo sigue. Pero se detenía con el compás 1 medio
-escondido, bajo los nombres de las pistas, y el playhead con él.
+escondido, bajo los nombres de las pistas, y el cursor de reproducción con él.
 
 Los nombres de las pistas a la izquierda son **fijos** (sticky): se
 dibujan sobre los compases, en el borde izquierdo de la vista, y se
 quedan ahí mientras los compases se desplazan por debajo. Para el área
-de scroll no están ahí en absoluto. Cuando el playhead se movía,
-`follow_x` le pedía revelar un rectángulo pequeño alrededor del
-playhead:
+de scroll no están ahí en absoluto. Cuando el cursor de reproducción se movía,
+`follow_x` le pedía revelar un rectángulo pequeño alrededor del cursor de reproducción:
 
 ```rust
 let margin = (view.width() * 0.1).min(60.0);
@@ -322,9 +320,8 @@ ui.scroll_to_rect(
 
 `scroll_to_rect` se desplaza lo menos que puede para que el rectángulo
 quede dentro de la vista. Yendo a la izquierda, eso deja el borde
-izquierdo del rectángulo en el borde izquierdo de la vista: el playhead
-a 60 puntos de él. Los nombres miden 116 puntos de ancho, así que el
-playhead quedaba debajo. La tecla Home ya tenía en cuenta los nombres;
+izquierdo del rectángulo en el borde izquierdo de la vista: el cursor de reproducción
+a 60 puntos de él. Los nombres miden 116 puntos de ancho, así que el cursor de reproducción quedaba debajo. La tecla Inicio ya tenía en cuenta los nombres;
 el seguimiento no.
 
 El arreglo le dice a `follow_x` cuánto mide de ancho la parte fija, y
@@ -343,12 +340,12 @@ pub fn follow_x(ui: &Ui, step: Option<usize>, x: f32, view: Rect, covered: f32) 
     );
 ```
 
-El playlist pasa `HEADER_WIDTH` (sus nombres), y el piano roll
+La lista de reproducción pasa `HEADER_WIDTH` (sus nombres), y el piano roll
 `KEY_WIDTH` (su teclado), que tenía el mismo problema. Yendo a la
 derecha, nada cambia: el borde derecho del rectángulo está donde
 estaba. Una prueba ejecuta un área de scroll de 800 puntos de ancho con
 116 puntos de nombres, avanza muy a la derecha, salta de vuelta y
-comprueba que el playhead acaba a la derecha de los nombres.
+comprueba que el cursor de reproducción acaba a la derecha de los nombres.
 
 ## El piano roll imprimía trozos de nombres
 
@@ -393,7 +390,7 @@ misma galera; nada se compone dos veces. `galley` recibe la esquina
 superior izquierda del texto, así que el centro se mueve hacia atrás la
 mitad del tamaño. Si no cabe, no se dibuja nada; señalar el bloque
 sigue nombrando el acorde completo en la línea bajo la barra de
-herramientas («Step 12: E7/B»).
+herramientas («Paso 12: E7/B»).
 
 La prueba abre «A» en el piano roll, encuentra cada trozo de texto
 pintado en el color del carril y comprueba que ninguno es más ancho que

@@ -1,4 +1,4 @@
-# El mixer: paneo, un envío de reverb, medidores de nivel y el instrumento en cada línea
+# El mezclador: paneo, un envío de reverb, medidores de nivel y el instrumento en cada línea
 
 Archivos: [`crates/lineup-app/src/app/mixer.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/mixer.rs),
 [`crates/lineup-app/src/meters.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/meters.rs),
@@ -8,19 +8,19 @@ Archivos: [`crates/lineup-app/src/app/mixer.rs`](https://github.com/naelolaiz/fe
 [`crates/lineup-core/src/project.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/project.rs)
 y [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs)
 
-El mixer tenía un volumen, un silencio y un solo para cada canal, y una
+El mezclador tenía un volumen, un silencio y un solo para cada canal, y una
 reverberación para todo. Cada canal sonaba en el medio, desde ambos
 altavoces por igual, y cada canal iba a la misma sala. Con una banda de
 cinco o seis músicos, y orquestas enteras en las demos, no es mucho con
 lo que dar forma a un sonido.
 
-Ahora cada línea del mixer también tiene:
+Ahora cada línea del mezclador también tiene:
 
-- **Instrument**: qué toca el canal. Haz clic en él para elegir otro,
-  como en el channel rack.
-- **Level**: un medidor de cuán fuerte está sonando.
-- **Pan**: dónde se sienta entre los altavoces, de L100 a R100.
-- **Reverb**: cuánto de él entra en la reverberación.
+- **Instrumento**: qué toca el canal. Haz clic en él para elegir otro,
+  como en el rack de canales.
+- **Nivel**: un medidor de cuán fuerte está sonando.
+- **Balance**: dónde se sienta entre los altavoces, de L100 a R100.
+- **Reverberación**: cuánto de él entra en la reverberación.
 
 El master tiene un medidor para cada altavoz.
 
@@ -28,22 +28,21 @@ El master tiene un medidor para cada altavoz.
 
 ## Probarlo
 
-1. Abre **File > Demos > El Choclo**, pulsa **F9** para el mixer y
-   **Space** para tocar. Los medidores se mueven con cada canal.
-2. Arrastra el **Pan** de un canal a la izquierda: sale solo del altavoz
+1. Abre **Archivo > Demostraciones > El Choclo**, pulsa **F9** para el mezclador y
+   **Espacio** para tocar. Los medidores se mueven con cada canal.
+2. Arrastra el **Balance** de un canal a la izquierda: sale solo del altavoz
    izquierdo en L100. **Doble clic** en el slider para devolverlo al
    medio (**Do**). También puedes escribir en él: `L30`, `R100`, `C`.
-3. Marca **Reverb** arriba y pon **Wet / dry** al 50%. Luego arrastra el
-   **Reverb** del Bass al 0%: suena dry, cerca, mientras el resto de la
+3. Marca **Reverberación** arriba y pon **Húmedo / seco** al 50%. Luego arrastra el
+   **Reverberación** del Bajo al 0%: suena seco, cerca, mientras el resto de la
    banda se queda en la sala.
-4. Haz clic en el **Instrument** del canal Keys, por ejemplo «Acoustic
-   Grand Piano», y elige otro de su lista de familias. Es un paso de
-   deshacer, como cualquier cambio en el mixer.
+4. Haz clic en el **Instrumento** del canal Teclados, por ejemplo «Piano de cola acústico», y elige otro de su lista de familias. Es un paso de
+   deshacer, como cualquier cambio en el mezclador.
 
-## Pan: dos altavoces, un canal
+## Balance: dos altavoces, un canal
 
 El pan es un número de −1 (todo a la izquierda) a 1 (todo a la
-derecha), con 0 en el medio. El mixer lo convierte en una ganancia para
+derecha), con 0 en el medio. El mezclador lo convierte en una ganancia para
 cada altavoz:
 
 ```rust
@@ -78,7 +77,7 @@ siempre fue; un ejercicio de abajo prueba la otra ley.
 
 Una reverberación imita una sala: el sonido vuelve de sus paredes, más
 tarde y más suave, durante un segundo o más. Antes, toda la canción
-entraba en la reverberación, y su control **Wet / dry** mezclaba la sala
+entraba en la reverberación, y su control **Húmedo / seco** mezclaba la sala
 (wet) con la canción tal cual era (dry). Ahora cada canal tiene un
 **envío**, de 0 a 1, que dice cuánto de él entra en la sala.
 
@@ -104,14 +103,13 @@ let stereo = self.reverb.next(dry, send, wet);
 ```
 
 La suma `send` entra en la reverberación, que ahora devuelve solo la
-sala, añadida al sonido dry. La línea que hay que mirar es `kept`: lo
-que entra en la sala se quita del sonido dry, en la misma proporción que
+sala, añadida al sonido seco. La línea que hay que mirar es `kept`: lo
+que entra en la sala se quita del sonido seco, en la misma proporción que
 antes. Comprueba los dos extremos:
 
 - **Envío 1** (todo él, como cada canal nuevo): `kept = sample × (1 −
-  wet)`, y la muestra entera va a la sala. Es exactamente la mezcla wet /
-  dry de antes, así que la canción suena como antes.
-- **Envío 0**: `kept = sample`, y nada va a la sala. El canal suena dry,
+  wet)`, y la muestra entera va a la sala. Es exactamente la mezcla húmedo / seco de antes, así que la canción suena como antes.
+- **Envío 0**: `kept = sample`, y nada va a la sala. El canal suena seco,
   como con la reverberación apagada, incluso mientras los demás están en
   la sala.
 
@@ -219,23 +217,23 @@ sea la tasa de frames. Medio segundo después de un pico, el medidor lo
 muestra 12 dB más abajo, a un cuarto aproximado.
 
 egui solo dibuja un frame cuando pasa algo. Mientras un medidor sigue
-cayendo, el mixer pide el siguiente frame enseguida (`request_repaint`);
+cayendo, el mezclador pide el siguiente frame enseguida (`request_repaint`);
 cuando todos los medidores están oscuros, mira otra vez cada décima de
 segundo (`request_repaint_after`), lo que basta para cazar las notas de
 un teclado MIDI tocado con la canción detenida.
 
 ## La columna del instrumento
 
-La columna Instrument solía ser un label. Para un canal de sintetizador
-o de MIDI Out ahora es un menú con las mismas opciones que el menú
-**Instrument** del rack: «None» para el sonido propio del Lineup Osc, y
+La columna Instrumento solía ser un label. Para un canal de sintetizador
+o de salida MIDI ahora es un menú con las mismas opciones que el menú
+**Instrumento** del rack: «Ninguno» para el sonido propio del Lineup Osc, y
 luego los 128 instrumentos de General MIDI en sus dieciséis familias. El
-rack y el mixer llaman a la misma función,
+rack y el mezclador llaman a la misma función,
 `channel_rack::instrument_choices`. Una batería integrada no tiene
 instrumento que elegir, pero puede enviarse por MIDI desde su menú (mira
 el [próximo capítulo](midi-out-menus.md)).
 
-El mixer dibuja sus líneas dentro de closures que egui llama, y esas
+El mezclador dibuja sus líneas dentro de closures que egui llama, y esas
 closures ya toman prestadas partes de la aplicación. Así que el menú no
 puede cambiar el proyecto mientras se dibuja. En su lugar empuja lo que
 elegiste a una lista, y la aplicación lo aplica cuando la ventana
@@ -253,7 +251,7 @@ for action in picked {
 }
 ```
 
-Es el mismo patrón que usan el channel rack y el chord sheet: el código
+Es el mismo patrón que usan el rack de canales y la hoja de acordes: el código
 de interfaz dice **qué** hiciste, como un valor (`RackAction::SetProgram
 { channel, program }`), y un lugar de la aplicación lo hace, como un
 paso de deshacer.
@@ -293,16 +291,16 @@ un clic a volumen 0.5, con pan a la izquierda, con el master a 0.8: el
 medidor del canal lee 0.25 y el izquierdo del master 0.2, el derecho 0.
 
 En la aplicación, `the_mixer_pans_a_channel_and_sets_its_reverb_send`
-hace clic en el extremo izquierdo de los sliders de Pan y Reverb de un
+hace clic en el extremo izquierdo de los sliders de Balance y Reverberación de un
 canal y comprueba que ahora está todo a la izquierda sin nada enviado.
 `an_exported_song_keeps_each_channel_where_the_mixer_put_it` renderiza
-los primeros dos segundos de la canción como hace Export WAV: ambos
+los primeros dos segundos de la canción como hace Exportar WAV: ambos
 altavoces igual de fuertes al principio, y solo el izquierdo después de
 que cada canal se panea a la izquierda.
 `a_click_on_an_instrument_in_the_mixer_changes_it` hace clic en
-«Acoustic Grand Piano», luego **Strings** y **41 Violin**, comprueba que
-el canal ahora toca un violín, que el mixer se hizo más estrecho por el
-nombre más corto, y que un Undo devuelve el piano.
+«Piano de cola acústico», luego **Cuerdas** y **41 Violín**, comprueba que
+el canal ahora toca un violín, que el mezclador se hizo más estrecho por el
+nombre más corto, y que deshacer devuelve el piano.
 
 ## Ejercicios
 

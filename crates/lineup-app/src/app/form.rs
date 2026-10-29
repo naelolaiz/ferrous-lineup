@@ -9,6 +9,7 @@ use lineup_core::band::Variation;
 
 use super::LineupApp;
 use crate::chord_sheet::FormAction;
+use crate::i18n::{tr, tr_name, trf};
 
 /// The undo step of the number of choruses. Changes in a row, as the
 /// number is dragged, join one step.
@@ -26,12 +27,14 @@ impl LineupApp {
             FormAction::Ending(on) => {
                 self.edit("ending", |project| project.set_ending(on));
                 self.notice = Some(match (on, self.project.ending()) {
-                    (true, Some(ending)) => format!(
+                    (true, Some(ending)) => trf(
                         "The band ends the song on {}, struck once and held",
-                        ending.harmony
+                        &[&ending.harmony],
                     ),
-                    (true, None) => "The band plays an ending once there are chords".to_string(),
-                    (false, _) => "The band stops at the end of the last chorus".to_string(),
+                    (true, None) => {
+                        tr("The band plays an ending once there are chords").to_string()
+                    }
+                    (false, _) => tr("The band stops at the end of the last chorus").to_string(),
                 });
             }
             FormAction::Variation {
@@ -44,9 +47,12 @@ impl LineupApp {
                 });
                 let bars = bars_from(&self.project, start, end);
                 self.notice = Some(match variation {
-                    Variation::A => format!("{bars} plays the style as it is"),
+                    Variation::A => format!("{bars} {}", tr("plays the style as it is")),
                     Variation::B => {
-                        format!("{bars} plays the style fuller, with a fill before it")
+                        format!(
+                            "{bars} {}",
+                            tr("plays the style fuller, with a fill before it")
+                        )
                     }
                 });
             }
@@ -56,13 +62,13 @@ impl LineupApp {
                 });
                 let bars = bars_from(&self.project, start, end);
                 self.notice = Some(match style {
-                    Some(style) => format!(
-                        "{bars} plays {}, with a fill before it; the instruments stay",
-                        style.name
+                    Some(style) => trf(
+                        "{} plays {}, with a fill before it; the instruments stay",
+                        &[&bars, &tr_name(style.name)],
                     ),
-                    None => format!(
-                        "{bars} plays its own style, {}",
-                        self.project.style_name_at(start)
+                    None => trf(
+                        "{} plays its own style, {}",
+                        &[&bars, &tr_name(self.project.style_name_at(start))],
                     ),
                 });
             }
@@ -76,8 +82,9 @@ impl LineupApp {
             "intro"
         };
         if !self.edit(label, |project| project.set_intro(bars)) {
-            self.message =
-                Some("There is no room for that intro: the song would be too long.".to_string());
+            self.message = Some(
+                tr("There is no room for that intro: the song would be too long.").to_string(),
+            );
             return;
         }
         // The chorus moved; play from the top, intro and all.
@@ -87,11 +94,12 @@ impl LineupApp {
             .chorus()
             .and_then(|(start, _)| self.project.chord_at(start));
         self.notice = Some(match (bars, into) {
-            (0, _) => "No intro: the band starts with the chorus".to_string(),
-            (bars, Some(marker)) => {
-                format!("A {bars}-bar intro that leads into {}", marker.harmony)
-            }
-            (bars, None) => format!("A {bars}-bar intro"),
+            (0, _) => tr("No intro: the band starts with the chorus").to_string(),
+            (bars, Some(marker)) => trf(
+                "A {}-bar intro that leads into {}",
+                &[&bars, &marker.harmony],
+            ),
+            (bars, None) => trf("A {}-bar intro", &[&bars]),
         });
     }
 }
@@ -101,10 +109,10 @@ fn bars_from(project: &lineup_core::Project, start: usize, end: Option<usize>) -
     let meter = project.meter();
     let first = meter.bar_at(start).number + 1;
     match end {
-        Some(end) => format!(
-            "Bars {first}–{}: the band",
-            meter.bar_at(end - 1).number + 1
+        Some(end) => trf(
+            "Bars {}–{}: the band",
+            &[&first, &(meter.bar_at(end - 1).number + 1)],
         ),
-        None => format!("From bar {first} on, the band"),
+        None => trf("From bar {} on, the band", &[&first]),
     }
 }

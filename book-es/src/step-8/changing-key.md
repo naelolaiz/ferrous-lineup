@@ -6,9 +6,9 @@ Archivos: [`crates/lineup-core/src/tools.rs`](https://github.com/naelolaiz/ferro
 [`crates/lineup-app/src/midi.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/midi.rs)
 y [`crates/lineup-app/src/app/live.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/live.rs)
 
-Hasta ahora, los menús de **Key** y de modo (a la izquierda de las
-harmony keys, y arriba del piano roll) solo cambiaban lo que *veías*:
-qué filas resalta el piano roll y cómo se llaman las harmony keys. La
+Hasta ahora, los menús de **Tonalidad** y de modo (a la izquierda de las
+teclas de armonía, y arriba del piano roll) solo cambiaban lo que *veías*:
+qué filas resalta el piano roll y cómo se llaman las teclas de armonía. La
 canción seguía sonando en su tonalidad vieja, así que elegir Re menor
 mientras Frère Jacques sonaba en Do mayor no cambiaba nada que pudieras
 oír.
@@ -29,7 +29,7 @@ roll no mueve nunca una nota: solo resalta la escala y hace que las
 notas que dibujas o arrastras se *ajusten* a ella. Para mover una
 canción entera, transpones tú mismo sus patrones. El menú de tonalidad
 de Ferrous Lineup es la tonalidad de toda la canción, la que usan las
-harmony keys, las ayudas y la banda, así que también mueve la canción,
+teclas de armonía, las ayudas y la banda, así que también mueve la canción,
 como una banda toca la misma canción en otra tonalidad cuando se lo
 pides; y el piano roll recibe encima el ajuste (abajo).
 
@@ -140,7 +140,7 @@ pub fn change_key(&mut self, scale: Scale) {
 `Vec<bool>` pequeño antes del bucle termina ese préstamo pronto.
 
 `Channel::is_pitched` es un `matches!` sobre el tipo de canal: la
-batería integrada y un canal MIDI Out en el canal de batería de General
+batería integrada y un canal de salida MIDI en el canal de batería de General
 MIDI (10) no se mueven. Los pasos del step sequencer (`is_step`) tampoco
 se mueven, porque su altura solo significa «toca el sample».
 
@@ -155,10 +155,10 @@ antes, así que un Ctrl+Z devuelve la tonalidad *y* cada nota. El hilo de
 audio recibe los patrones nuevos por el camino de siempre, así que una
 canción que está sonando sigue, ahora en la tonalidad nueva.
 
-## Snap to scale
+## Ajustar a la escala
 
 Junto a las notas de la tonalidad, el piano roll tiene ahora un botón
-**Snap to scale**. Mientras está encendido:
+**Ajustar a la escala**. Mientras está encendido:
 
 - una nota que dibujas cae en la nota más cercana de la tonalidad (el
   contorno que sigue al puntero muestra adónde irá);
@@ -167,8 +167,7 @@ Junto a las notas de la tonalidad, el piano roll tiene ahora un botón
   notas que ya están se dejan en paz hasta que las tocas: selecciónalas
   y arrástralas un semitono arriba y de vuelta para ajustarlas todas.
 
-Haz clic derecho en el botón para ver su menú, que también tiene **Snap
-notes you play**: las teclas tocadas en el teclado de escritura o en un
+Haz clic derecho en el botón para ver su menú, que también tiene **Ajustar las notas que tocas**: las teclas tocadas en el teclado de escritura o en un
 teclado MIDI suenan, y se graban, como la nota más cercana de la
 tonalidad.
 
@@ -215,11 +214,11 @@ para el Note Off.
 
 ## Pruébalo
 
-1. Abre **File > Demos > Songs > Country and folk > Frère Jacques**.
+1. Abre **Archivo > Demostraciones > Canciones > Country y folk > Frère Jacques**.
    Empieza a sonar.
-2. En la barra de harmony keys, elige **Re** como tonalidad: la canción
-   sigue un tono más alta. Elige **minor**: se vuelve oscura.
+2. En la barra de teclas de armonía, elige **Re** como tonalidad: la canción
+   sigue un tono más alta. Elige **menor**: se vuelve oscura.
 3. Pulsa **Ctrl+Z**: de vuelta a Re mayor.
-4. Abre el piano roll, enciende **Snap to scale** y mueve el puntero
+4. Abre el piano roll, enciende **Ajustar a la escala** y mueve el puntero
    sobre una fila oscura (fuera de la tonalidad): el contorno se sienta
    en la fila de al lado.

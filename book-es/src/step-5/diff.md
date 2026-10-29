@@ -173,14 +173,14 @@ de pista y la tonalidad no dan ningún cambio, porque el hilo de audio
 nunca los ve. Silenciar una pista sí da uno: saca los clips de esa pista
 de la canción, así que los clips que reproduce el hilo de audio cambian.
 
-El mixer también se oye. Mover un canal entre los altavoces da `Pan`,
+El mezclador también se oye. Mover un canal entre los altavoces da `Pan`,
 cambiar cuánto va de él a la reverberación da `ReverbSend`, y cambiar el
 volumen maestro o la propia reverberación da `Mixer`. Poner un canal en
-solo es un cambio de mixer *y* cambia qué canales se oyen, así que `diff`
+solo es un cambio de mezclador *y* cambia qué canales se oyen, así que `diff`
 también informa de `Muted` para cada canal cuyo mute efectivo cambió. El
-Loose timing da `LooseTiming`: decide cuánto puede adelantarse una nota
+Soltura da `LooseTiming`: decide cuánto puede adelantarse una nota
 respecto a la cuadrícula. Ninguno de estos estaba en la primera versión
-de `Change`; se añadieron cuando llegaron el mixer y los controles de
+de `Change`; se añadieron cuando llegaron el mezclador y los controles de
 feel.
 
 ### Alinear dos listas
@@ -188,9 +188,9 @@ feel.
 La parte difícil son las listas. Digamos que los patrones eran
 `[Beat, Chords, Fill]` y ahora son `[Beat, Fill]`. Comparar elemento a
 elemento
-diría que el patrón 1 cambió de Chords a Fill y que el patrón 2
+diría que el patrón 1 cambió de Acordes a Relleno y que el patrón 2
 desapareció, lo cual es cierto pero torpe: enviaría otra vez todas las
-notas de Fill. Lo que pasó de verdad es que "se quitó el patrón 1".
+notas de Relleno. Lo que pasó de verdad es que "se quitó el patrón 1".
 
 `Alignment` lo encuentra. Cuenta cuántos elementos son iguales al
 principio de ambas listas, y cuántos al final. Lo que queda en medio se
@@ -375,7 +375,7 @@ for (index, channel) in after.channels().iter().enumerate() {
 ```
 
 `channel_muted` no es simplemente la casilla `muted` del canal: también
-tiene en cuenta el solo del mixer. Por eso un cambio de solo aparece como
+tiene en cuenta el solo del mezclador. Por eso un cambio de solo aparece como
 un cambio `Muted` en los demás canales, además de un cambio `Mixer`.
 
 `let ... else` (del paso 2) o saca el valor del `Some`, o ejecuta el
@@ -412,7 +412,7 @@ Un patrón nuevo se compara con "sin notas", que es exactamente lo que el
 hilo de audio tiene para él, así que un cambio `Notes` se envía solo para
 los canales que tienen notas en él.
 
-Por último vienen el tempo, el timing suelto, el mixer y la canción. La
+Por último vienen el tempo, el timing suelto, el mezclador y la canción. La
 canción se compara a través del arrangement que el modo canción
 reproduce de verdad:
 
@@ -427,9 +427,9 @@ if old_song.plays != new_song.plays
 ```
 
 Un `Arrangement` son los clips con sus repeticiones y las repeticiones de
-las secciones ya desenrolladas, recortado a la región de loop si la hay.
+las secciones ya desenrolladas, recortado a la región de bucle si la hay.
 Compararlo detecta un clip movido, un mute, un número de repeticiones, un
-loop cambiado y un marcador de tempo en un solo cambio `Song`. Los
+bucle cambiado y un marcador de tempo en un solo cambio `Song`. Los
 marcadores de tempo forman parte de la canción porque la longitud de un
 paso cambia a mitad de camino; el hilo de audio los recibe con
 `SetSongTempos`.
@@ -622,7 +622,7 @@ un comando nunca las lleva todas.
 
 ## Los instrumentos vuelven de una caché
 
-Deshacer "load sample" le devuelve a un canal su instrumento antiguo, y
+Deshacer "cargar muestra" le devuelve a un canal su instrumento antiguo, y
 puede que sea un archivo de muestra. Antes de este paso, construir un
 sampler siempre leía su archivo. Leer un archivo en el hilo de la
 interfaz para un deshacer haría tartamudear a la ventana, y el archivo

@@ -12,7 +12,7 @@ Las notas que se tocan todas exactamente con la misma fuerza suenan
 mecánicas. Añade `tools::humanize(notes, amount, seed) -> Vec<NoteEvent>`,
 que mueve cada velocidad hacia arriba o hacia abajo una cantidad
 aleatoria de como mucho `amount`, mantenida dentro de 1..=127, y una
-opción «Humanize velocity» en el menú Tools.
+opción «Humanize velocity» en el menú Herramientas.
 
 Ferrous Lineup no tiene ningún crate de números aleatorios, y no
 necesita ninguno: un generador minúsculo como *xorshift* son tres líneas
@@ -41,7 +41,7 @@ Averigua qué significa «reflejado» para una nota de longitud 2 en un
 tramo de 16 steps: ¿se refleja su *inicio*, su *final*, o ambos? ¿Qué
 elección mantiene la frase dentro del tramo y suena más como la original
 tocada al revés? ¿Qué pasa con `nudge` y `trim`? Añade una opción
-«Retrograde» al menú Tools, con una prueba sobre una frase de
+«Retrograde» al menú Herramientas, con una prueba sobre una frase de
 cuatro notas que puedas cantar. El resultado pasa por `replace` como el
 de cualquier otra herramienta.
 
@@ -55,7 +55,7 @@ nombra cada step por su cuenta: «A», «A+C», «A5»... Puedes verlo en la
 captura del arpegio de este paso. Tu oído oye La menor, porque recuerda
 las notas del último pulso.
 
-La fila «All» ya hace algo parecido: `heard_by_beat` reúne cada nota que
+La fila «Todo» ya hace algo parecido: `heard_by_beat` reúne cada nota que
 suena durante un pulso y nombra la armonía una vez por pulso. Lo que
 falta es la misma opción para la fila de la pista. Añade un pequeño
 conmutador «por step / por pulso», y en el modo «por pulso» nombra cada
@@ -111,7 +111,7 @@ herramientas:
 ticks antes del final de su último step se detiene. Una nota acortada a
 un step debe mantener su `trim` por debajo de un step; una nota más
 larga que se acorta debe limpiar cualquier `trim` que ya no quepa.
-Añade ambas al menú Tools, y comprueba qué pasa cuando dos notas
+Añade ambas al menú Herramientas, y comprueba qué pasa cuando dos notas
 se solaparían entonces en el mismo canal. ¿Por qué `set_note_length` no
 es simplemente `note.length = steps`?
 
@@ -175,6 +175,6 @@ archivo, planificación con precisión de muestra.
   lo llama por cada nota, en cada frame. ¿La qué tamaño de patrón
   merecería la pena un `HashSet<NoteEvent>`? ¿Cómo lo medirías, en lugar
   de adivinar? (Busca `std::time::Instant`.)
-- egui empareja Shift+↑ como ↑. ¿Por qué podría una librería elegir eso
-  a propósito? Piensa en teclas que necesitan Shift en algunas
+- egui empareja Mayús+↑ como ↑. ¿Por qué podría una librería elegir eso
+  a propósito? Piensa en teclas que necesitan Mayús en algunas
   disposiciones de teclado, como `+` o `?`.

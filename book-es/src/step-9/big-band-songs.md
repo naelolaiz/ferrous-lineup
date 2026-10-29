@@ -5,7 +5,7 @@ Archivos: [`crates/lineup-core/src/library/song/jazz.rs`](https://github.com/nae
 [`crates/lineup-core/src/library/song.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/song.rs)
 y [`crates/lineup-core/src/library/demo.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/library/demo.rs)
 
-El menú **File > Demos** tenía diecisiete canciones de jazz, la mayoría
+El menú **Archivo > Demostraciones** tenía diecisiete canciones de jazz, la mayoría
 ragtime, y varias tocaban solo parte de su pieza: un strain de The
 Entertainer, el estribillo de Bill Bailey sin su final propio. Este
 cambio añade **33 canciones de swing, big band y jazz temprano**, cada
@@ -15,12 +15,12 @@ una **sección de vientos** detrás de la melodía.
 
 ## Probarlo
 
-Abre **File > Demos > Songs > Jazz > Tea for Two** (o escribe «tea» en
-el cuadro de búsqueda de la parte de arriba del menú Demos). Además de
-Lead, Keys y Bass, el channel rack tiene ahora un cuarto canal,
-**Horns**. Con **Edit > Settings… > Audio > SoundFont instruments**
-activado, la melodía es una trompeta y el canal Horns son los saxofones,
-sosteniendo cada acorde mientras dura. Silencia Horns (haz clic en su
+Abre **Archivo > Demostraciones > Canciones > Jazz > Tea for Two** (o escribe «tea» en
+el cuadro de búsqueda de la parte de arriba del menú Demostraciones). Además de
+Melodía, Teclados y Bajo, el rack de canales tiene ahora un cuarto canal,
+**Vientos**. Con **Edición > Ajustes… > Audio > Instrumentos del SoundFont**
+activado, la melodía es una trompeta y el canal Vientos son los saxofones,
+sosteniendo cada acorde mientras dura. Silencia Vientos (haz clic en su
 luz del rack) y toca otra vez: la banda suena como un grupo pequeño.
 Actívalo otra vez, y es una big band.
 
@@ -82,7 +82,7 @@ La mayoría de estas canciones se escribieron para espectáculos de
 Broadway o para partituras impresas, y tienen dos partes: una **estrofa**
 (verse), que prepara la escena, y un **estribillo** (refrain, o chorus),
 la parte que todo el mundo conoce. Las bandas conservaban el estribillo
-y soltaban la estrofa, y muchos lead sheets hacen lo mismo. Donde se
+y soltaban la estrofa, y muchas partituras guía hacen lo mismo. Donde se
 pudo encontrar una estrofa escrita, la demo la toca una vez (I Got
 Rhythm, Liza, It Had to Be You, If I Could Be with You); luego el
 estribillo dos veces, como una banda toca de nuevo el «head» después de
@@ -98,7 +98,7 @@ Vienen en dos formas:
 - **AABA**: una frase, la misma frase otra vez, un **puente**
   contrastante y la frase una última vez. Oh, Lady Be Good!, Honeysuckle
   Rose, Ain't Misbehavin', Take the "A" Train, Sing, Sing, Sing e I Got
-  Rhythm son AABA. Mira el playlist de una: la sección A es un patrón,
+  Rhythm son AABA. Mira la lista de reproducción de una: la sección A es un patrón,
   usado tres veces, y el final de la segunda A es un patrón propio.
 - **ABAC**: dos mitades que empiezan igual y acaban distinto, la primera
   mitad abierta, la segunda cerrando en la tónica. Indiana, Rose Room,
@@ -114,7 +114,7 @@ el **trío**, en otra tonalidad.
 
 Cada cambio de tonalidad de estas partituras es un marcador de tonalidad
 en la regla (mira [Cambios de tonalidad](../step-8/key-changes.md)), así
-que puedes ver moverse las harmony keys:
+que puedes ver moverse las teclas de armonía:
 
 - **Tea for Two** está en La bemol, y su segunda frase es la primera una
   tercera mayor más aguda, en Do. El último acorde de esa frase, Mi bemol
@@ -148,9 +148,9 @@ Escucha esto:
   «rhythm changes».
 - **Hit the Road Jack** son cuatro acordes una y otra vez, i, bVII, bVI,
   V7, bajando paso a paso en el bajo: la **cadencia andaluza** (está en
-  la Library con ese nombre).
+  la Biblioteca con ese nombre).
 - **Love Me or Leave Me** está en menor, con la sexta elevada: la
-  melodía se apoya en Fa sostenido, y el lead sheet escribe su acorde de
+  melodía se apoya en Fa sostenido, y la partitura guía escribe su acorde de
   casa como La menor 6 (La, Do, Mi, Fa sostenido). Así que la tonalidad de la
   demo es La **dórico**, la escala menor con esa sexta, en lugar de menor
   natural.
@@ -206,7 +206,7 @@ lo que el estilo builder funciona aquí.
 ### Escribir la parte de los vientos
 
 `song_demo` ya convertía el chart de acordes de cada parte en las notas
-de Keys y Bass con `accompany(spans, tonic, comping, bass)`. Los vientos
+de Teclados y Bajo con `accompany(spans, tonic, comping, bass)`. Los vientos
 son una llamada más a la misma función, con el comping de los vientos y
 sin línea de bajo:
 
@@ -228,20 +228,20 @@ central: el registro de los saxofones y los trombones, debajo de la
 melodía.
 
 La prueba `a_big_band_has_its_horns` abre cada canción con sección de
-vientos y comprueba que su demo tiene un canal Horns con el instrumento
+vientos y comprueba que su demo tiene un canal Vientos con el instrumento
 correcto, con notas en cada parte que tiene chart.
 
 ### Cómo se escribieron las canciones
 
 Cada canción tiene un comentario `// Source:` con la transcripción
-escrita de la que vienen sus notas. La mayoría son **lead sheets** en
+escrita de la que vienen sus notas. La mayoría son **partituras guía** en
 MusicXML de OpenEWLD, la parte de dominio público del archivo Wikifonia,
 convertidos a la notación de esta app por un conversor pequeño; los
 acordes se comprobaron contra los charts de acordes que usan los músicos
-de jazz, y cuando el acorde de un lead sheet chocaba con su propia
+de jazz, y cuando el acorde de una partitura guía chocaba con su propia
 melodía, se usó el acorde más común, con una nota en el comentario. Los
 tresillos se convirtieron en las semicorcheas más cercanas, de la manera
-en que el [lead sheet](lead-sheet.md) los redondea.
+en que el [partitura guía](lead-sheet.md) los redondea.
 
 ### Derechos de autor
 
@@ -261,7 +261,7 @@ cada una dice de qué caso se trata.
    empieza la segunda frase. ¿Qué acorde de La bemol es Do mayor? (Pista:
    cuenta desde La bemol: Do es la tercera, así que Do mayor es III, un
    acorde que la tonalidad de La bemol no contiene.)
-2. En **Oh, Lady Be Good!**, silencia el canal Lead y toca encima en el
+2. En **Oh, Lady Be Good!**, silencia el canal Melodía y toca encima en el
    teclado del piano roll. ¿Qué compases de la sección A cambian de
    acorde dos veces?
 3. Da a **Rose Room** una sección de vientos: cambia su `band:` de

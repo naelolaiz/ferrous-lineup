@@ -56,6 +56,7 @@ pub(crate) mod layout;
 mod notation;
 mod practice;
 
+use crate::i18n::{tr, tr_name, tr_str, tr_string, trc, trf};
 pub use form::FormAction;
 use layout::LayoutView;
 use notation::{NotationView, Shown};
@@ -173,21 +174,23 @@ pub enum BarEdit {
 /// delete the bars of `selection` when it holds more than one.
 pub fn bar_edits(ui: &mut Ui, bar: usize, selection: Option<(usize, usize)>) -> Option<BarEdit> {
     let mut edit = None;
-    let moves = "everything after it moves a bar later. The harmony before it goes on \
-                 through it until you write one";
-    let before = ui.button("Insert a bar before");
+    let moves = tr(
+        "everything after it moves a bar later. The harmony before it goes on \
+                 through it until you write one",
+    );
+    let before = ui.button(tr("Insert a bar before"));
     if theme::hint(
         before,
-        format!("An empty bar before bar {}: {moves}", bar + 1),
+        trf("An empty bar before bar {}: {}", &[&(bar + 1), &moves]),
     )
     .clicked()
     {
         edit = Some(BarEdit::Insert { bar, after: false });
     }
-    let after = ui.button("Insert a bar after");
+    let after = ui.button(tr("Insert a bar after"));
     if theme::hint(
         after,
-        format!("An empty bar after bar {}: {moves}", bar + 1),
+        trf("An empty bar after bar {}: {}", &[&(bar + 1), &moves]),
     )
     .clicked()
     {
@@ -196,14 +199,18 @@ pub fn bar_edits(ui: &mut Ui, bar: usize, selection: Option<(usize, usize)>) -> 
     let (first, last) = selection.unwrap_or((bar, bar));
     let (text, hint) = match first == last {
         true => (
-            "Delete this bar".to_string(),
-            "Takes the bar out with its chords and notes; everything after it moves a bar \
+            tr("Delete this bar").to_string(),
+            tr(
+                "Takes the bar out with its chords and notes; everything after it moves a bar \
              earlier. Undo puts it back",
+            ),
         ),
         false => (
-            format!("Delete bars {}–{}", first + 1, last + 1),
-            "Takes the bars out with their chords and notes; everything after them moves \
+            trf("Delete bars {}–{}", &[&(first + 1), &(last + 1)]),
+            tr(
+                "Takes the bars out with their chords and notes; everything after them moves \
              earlier. Undo puts them back",
+            ),
         ),
     };
     if theme::hint(ui.button(text), hint).clicked() {
@@ -366,7 +373,7 @@ impl BarView<'_> {
             theme::TEXT_DIM,
         );
         let number = ui.interact(number_rect.expand(3.0), id.with("number"), Sense::click());
-        if theme::hint(number, "Move the playhead to this bar").clicked() {
+        if theme::hint(number, tr("Move the playhead to this bar")).clicked() {
             actions.push(SheetAction::Seek(bar.start));
         }
         let previous = (bar.number > 0).then(|| self.meter.bar(bar.number - 1));
@@ -412,7 +419,7 @@ impl BarView<'_> {
             painter.text(
                 pos2(marks_right + 9.0, number_rect.top()),
                 Align2::LEFT_TOP,
-                project.style_name_at(bar.start),
+                tr_name(project.style_name_at(bar.start)),
                 FontId::proportional(SMALL_SIZE),
                 theme::ACCENT,
             );
@@ -440,7 +447,7 @@ impl BarView<'_> {
             painter.text(
                 rect.right_top() + vec2(-PADDING - 6.0, 2.0),
                 Align2::RIGHT_TOP,
-                "held",
+                tr("held"),
                 FontId::proportional(SMALL_SIZE),
                 ENDING,
             );
@@ -458,10 +465,10 @@ impl BarView<'_> {
         actions: &mut Vec<SheetAction>,
     ) {
         let (project, meter, bar) = (self.project, self.meter, self.bar);
-        if ui.button("Type in this bar").clicked() {
+        if ui.button(tr("Type in this bar")).clicked() {
             clicks.start_typing = Some((bar.number, write_bar(here, &bar)));
         }
-        let clear = ui.add_enabled(!here.is_empty(), egui::Button::new("Clear this bar"));
+        let clear = ui.add_enabled(!here.is_empty(), egui::Button::new(tr("Clear this bar")));
         if clear.clicked() {
             actions.push(SheetAction::SetChords {
                 start: bar.start,
@@ -469,7 +476,7 @@ impl BarView<'_> {
                 markers: Vec::new(),
             });
         }
-        if ui.button("Move the playhead here").clicked() {
+        if ui.button(tr("Move the playhead here")).clicked() {
             actions.push(SheetAction::Seek(bar.start));
         }
         ui.separator();
@@ -484,16 +491,16 @@ impl BarView<'_> {
                 .iter()
                 .filter(|marker| marker.harmony != HarmonyName::NoChord)
             {
-                ui.menu_button(format!("Band on {}", marker.harmony), |ui| {
+                ui.menu_button(trf("Band on {}", &[&marker.harmony]), |ui| {
                     breaks_menu(ui, &bar, here, *marker, actions);
                 });
             }
         }
         if project.band().is_some() && self.ending.is_none() {
-            let end = ui.button("End the song here");
+            let end = ui.button(tr("End the song here"));
             if theme::hint(
                 end,
-                "The band stops after this bar; chords after it are cleared",
+                tr("The band stops after this bar; chords after it are cleared"),
             )
             .clicked()
             {
@@ -736,10 +743,12 @@ impl ChordSheet {
                 let button = ui.button(crate::i18n::tr("Write the chords the song plays"));
                 if theme::hint(
                     button,
-                    "Fill the sheet with the chords heard in the song, in place of what it \
+                    tr(
+                        "Fill the sheet with the chords heard in the song, in place of what it \
                      says now: an arpeggio counts as its chord, two chords at once are \
                      written Eb7|Fb, notes that make no chord as their set; in a set or a \
                      row, the sets or micromodes heard. Undo brings the sheet back",
+                    ),
                 )
                 .clicked()
                 {
@@ -768,25 +777,32 @@ impl ChordSheet {
             if project.plays_locked(player) {
                 ui.colored_label(
                     ui.visuals().warn_fg_color,
-                    format!("🔒 The {name} is locked: it keeps its notes, not new chords."),
+                    tr_string(format!(
+                        "🔒 The {name} is locked: it keeps its notes, not new chords."
+                    )),
                 );
             } else if project.song_keeps(player) {
                 let channel = match player {
                     Player::Piano => lineup_core::library::apply::KEYS,
                     _ => lineup_core::library::apply::BASS,
                 };
-                ui.weak(format!(
+                ui.weak(tr_string(format!(
                     "🔒 {channel} is locked: the band leaves the {name} to it."
-                ));
+                )));
             } else if project.is_frozen(player) {
                 ui.horizontal_wrapped(|ui| {
                     ui.colored_label(
                         ui.visuals().warn_fg_color,
-                        format!("✎ You edited the {name}: the band keeps it as you left it."),
+                        tr_string(format!(
+                            "✎ You edited the {name}: the band keeps it as you left it."
+                        )),
                     );
-                    let again = ui.small_button("Play it again");
-                    if theme::hint(again, "Have the band play this part from the sheet again")
-                        .clicked()
+                    let again = ui.small_button(tr("Play it again"));
+                    if theme::hint(
+                        again,
+                        tr("Have the band play this part from the sheet again"),
+                    )
+                    .clicked()
                     {
                         actions.push(SheetAction::PlayAgain(player));
                     }
@@ -797,7 +813,7 @@ impl ChordSheet {
             (Some((bar, error)), _) => {
                 ui.colored_label(
                     ui.visuals().error_fg_color,
-                    format!("Bar {}: {error}", bar + 1),
+                    trf("Bar {}: {}", &[&(bar + 1), error]),
                 );
             }
             (None, Some((problem, true))) => {
@@ -874,12 +890,12 @@ impl ChordSheet {
         for (index, line) in lines.iter().enumerate() {
             if let Some(heading) = &line.heading {
                 let hint = match project.band() {
-                    Some(_) => {
-                        "Click to select this section’s bars; click again or press Escape to clear the selection. Right-click to have the band play it another way"
-                    }
-                    None => {
-                        "Click to select this section’s bars; click again or press Escape to clear the selection"
-                    }
+                    Some(_) => tr(
+                        "Click to select this section’s bars; click again or press Escape to clear the selection. Right-click to have the band play it another way",
+                    ),
+                    None => tr(
+                        "Click to select this section’s bars; click again or press Escape to clear the selection",
+                    ),
                 };
                 let response = ui
                     .interact(
@@ -1407,16 +1423,16 @@ impl ChordSheet {
             clicks.start_typing = Some((bar.number, write_bar(&here, &bar)));
         }
         let hint = match (under(response.hover_pos()), ending) {
-            (_, Some(_)) => format!(
+            (_, Some(_)) => trf(
                 "Bar {}, the band's ending: a bar on the key's tonic, then the chord struck \
                  once and held. Type a chord here, and the chorus takes this bar in",
-                bar.number + 1
+                &[&(bar.number + 1)],
             ),
             (Some(name), None) => name.shown.about.clone(),
-            (None, None) => format!(
+            (None, None) => trf(
                 "Bar {}: click it and type its harmony, or double-click to change it. \
                  Right-click for more",
-                bar.number + 1
+                &[&(bar.number + 1)],
             ),
         };
         let selection = self
@@ -1529,20 +1545,22 @@ impl ChordSheet {
                 .iter()
                 .find(|section| meter.bar_at(section.start).number == bar.number);
             let section = section.map(|section| match section.repeats {
-                1 => section.name.clone(),
-                repeats => format!("{} ×{repeats}", section.name),
+                1 => tr_name(&section.name).into_owned(),
+                repeats => format!("{} ×{repeats}", tr_name(&section.name)),
             });
             // The parts of the band's form, when it has more than one.
             let part = form.and_then(|form| match chorus {
-                _ if form.intro > 0 && bar.start == 0 => Some("Intro".to_string()),
+                _ if form.intro > 0 && bar.start == 0 => Some(tr("Intro").to_string()),
+                // A chorus here is a pass through the tune, as in jazz,
+                // not the part of a pop song that comes back.
                 Some((start, _)) if start == bar.start => Some(match form.choruses {
-                    1 => "Chorus".to_string(),
-                    choruses => format!("Chorus ×{choruses}"),
+                    1 => trc("form", "Chorus").to_string(),
+                    choruses => format!("{} ×{choruses}", trc("form", "Chorus")),
                 }),
                 _ => marks
                     .ending
                     .filter(|ending| ending.start == bar.start)
-                    .map(|_| "Ending".to_string()),
+                    .map(|_| tr("Ending").to_string()),
             });
             let heading = match (part, section) {
                 (Some(part), Some(section)) => Some(format!("{part} · {section}")),
@@ -1874,10 +1892,11 @@ impl ChordSheet {
         let count = if whole { bars } else { last + 1 - first };
         self.error = None;
         self.clipboard = Some((
-            format!(
-                "Copied {count} bar{} as text.",
-                if count == 1 { "" } else { "s" }
-            ),
+            if count == 1 {
+                tr("Copied 1 bar as text.").to_string()
+            } else {
+                trf("Copied {} bars as text.", &[&count])
+            },
             false,
         ));
     }
@@ -1891,12 +1910,12 @@ impl ChordSheet {
         let written = if pasted.contains('|') || pasted.trim().lines().count() > 1 {
             text::read(pasted)
                 .and_then(|sheet| text::paste(&sheet, project, first))
-                .map_err(|err| format!("The text pasted could not be read, {err}"))
+                .map_err(|err| trf("The text pasted could not be read, {}", &[&err]))
         } else {
             let bar = project.meter().bar(first);
             read_typed_bar(pasted, &bar, project.key_map().key_at(bar.start))
                 .map(|markers| (bar.start..bar.end(), markers))
-                .map_err(|err| format!("Bar {}: {err}", first + 1))
+                .map_err(|err| trf("Bar {}: {}", &[&(first + 1), &err]))
         };
         match written {
             Ok((steps, markers)) if !steps.is_empty() => {
@@ -1912,12 +1931,16 @@ impl ChordSheet {
                 self.selected = Some(last);
                 self.reveal = true;
                 self.clipboard = Some((
-                    format!("Pasted {count} bar{}.", if count == 1 { "" } else { "s" }),
+                    if count == 1 {
+                        tr("Pasted 1 bar.").to_string()
+                    } else {
+                        trf("Pasted {} bars.", &[&count])
+                    },
                     false,
                 ));
             }
             Ok(_) => {
-                self.clipboard = Some(("The text pasted has no bars.".to_string(), true));
+                self.clipboard = Some((tr("The text pasted has no bars.").to_string(), true));
             }
             Err(problem) => self.clipboard = Some((problem, true)),
         }
@@ -1936,19 +1959,25 @@ const KEEP_KEYS: egui::EventFilter = egui::EventFilter {
 /// The experimental soloist: on or off, and another solo.
 fn soloist_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
     let soloist = Soloist::of(band.style.genre);
-    let instrument = general_midi::NAMES[usize::from(soloist.program)].to_lowercase();
+    let instrument = tr_str(general_midi::NAMES[usize::from(soloist.program)]).to_lowercase();
     let mut on = band.has_soloist();
-    let check = ui.checkbox(&mut on, "Soloist (experimental)");
-    let hint = format!(
-        "A {instrument} improvises over the chorus: chord tones on the beats, scale and \
-         chromatic notes between them. The piano roll says what each of its notes is"
+    let check = ui.checkbox(&mut on, tr("Soloist (experimental)"));
+    let hint = trf(
+        "A {} improvises over the chorus: chord tones on the beats, scale and \
+         chromatic notes between them. The piano roll says what each of its notes is",
+        &[&instrument],
     );
     if theme::hint(check, hint).clicked() {
         actions.push(SheetAction::SetSoloist(on));
         ui.close();
     }
-    let again = ui.add_enabled(band.has_soloist(), egui::Button::new("Another solo"));
-    if theme::hint(again, "Have the soloist improvise again, a different solo").clicked() {
+    let again = ui.add_enabled(band.has_soloist(), egui::Button::new(tr("Another solo")));
+    if theme::hint(
+        again,
+        tr("Have the soloist improvise again, a different solo"),
+    )
+    .clicked()
+    {
         actions.push(SheetAction::AnotherSolo);
         ui.close();
     }
@@ -1957,12 +1986,11 @@ fn soloist_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
 /// The horn section: on or off, and what it plays in this style.
 fn horns_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
     let mut on = band.has_horns();
-    let check = ui.checkbox(&mut on, "Horn section");
-    let hint = format!(
+    let check = ui.checkbox(&mut on, tr("Horn section"));
+    let hint = trf(
         "A horn section plays the chords in close harmony, each horn moving as little as it \
          can from chord to chord. In {}, {}.",
-        band.style.name,
-        band.horn_section().describe()
+        &[&tr_name(band.style.name), &band.horn_section().describe()],
     );
     if theme::hint(check, hint).clicked() {
         actions.push(SheetAction::SetHorns(on));
@@ -2005,9 +2033,14 @@ fn progression_menu(
         });
         theme::hint(
             response,
-            format!("Write a style's chord progression from bar {} on", from + 1),
+            trf(
+                "Write a style's chord progression from bar {} on",
+                &[&(from + 1)],
+            ),
         )
-        .on_disabled_hover_text("Progressions are chords in a key; this song is in a set or a row");
+        .on_disabled_hover_text(tr(
+            "Progressions are chords in a key; this song is in a set or a row",
+        ));
     });
 }
 
@@ -2028,21 +2061,21 @@ fn variation_menu(
     };
     let playing = project.variation_at(start);
     let bars = match selection {
-        Some((first, last)) => format!("Bars {}–{}: the band", first + 1, last + 1),
-        None => format!("From bar {} on, the band", number + 1),
+        Some((first, last)) => trf("Bars {}–{}: the band", &[&(first + 1), &(last + 1)]),
+        None => trf("From bar {} on, the band", &[&(number + 1)]),
     };
     for variation in [Variation::A, Variation::B] {
         let about = match variation {
-            Variation::A => "plays the style as it is",
-            Variation::B => {
+            Variation::A => tr("plays the style as it is"),
+            Variation::B => tr(
                 "plays the style fuller: the drums on the ride cymbal, a busier bass, \
                  piano or guitar, strings or an organ joining in where the style has them, \
-                 a little louder. The drums fill into it"
-            }
+                 a little louder. The drums fill into it",
+            ),
         };
         let item = ui.radio(
             playing == variation,
-            format!("Variation {}", variation.letter()),
+            trf("Variation {}", &[&variation.letter()]),
         );
         if theme::hint(item, format!("{bars} {about}")).clicked() {
             actions.push(SheetAction::Form(FormAction::Variation {
@@ -2076,8 +2109,8 @@ fn style_menu(
         None => (meter.bar(number).start, None),
     };
     let bars = match selection {
-        Some((first, last)) => format!("Bars {}–{}: the band", first + 1, last + 1),
-        None => format!("From bar {} on, the band", number + 1),
+        Some((first, last)) => trf("Bars {}–{}: the band", &[&(first + 1), &(last + 1)]),
+        None => trf("From bar {} on, the band", &[&(number + 1)]),
     };
     let time = meter.bar_at(start).time;
     let playing = project.section_style_at(start);
@@ -2089,14 +2122,15 @@ fn style_menu(
         }));
         ui.close();
     };
-    let menu = ui.menu_button(format!("Style: {}", project.style_name_at(start)), |ui| {
+    let style_name = tr_name(project.style_name_at(start)).into_owned();
+    let menu = ui.menu_button(trf("Style: {}", &[&style_name]), |ui| {
         ui.set_min_width(220.0);
         crate::widgets::scroll_menu(ui, |ui| {
             let own = ui.radio(
                 playing.is_none(),
-                format!("The song's style: {}", band.name()),
+                trf("The song's style: {}", &[&tr_name(band.name())]),
             );
-            if theme::hint(own, format!("{bars} plays the band's own style")).clicked() {
+            if theme::hint(own, trf("{} plays the band's own style", &[&bars])).clicked() {
                 choose(ui, None);
             }
             ui.separator();
@@ -2112,15 +2146,15 @@ fn style_menu(
                 }
                 let here = playing.is_some_and(|playing| styles.contains(&playing));
                 let name = match here {
-                    true => format!("{} •", genre.name()),
-                    false => genre.name().to_string(),
+                    true => format!("{} •", tr(genre.name())),
+                    false => tr(genre.name()).to_string(),
                 };
                 crate::widgets::scroll_menu_button(ui, name, |ui| {
                     for style in styles {
-                        let item = ui.radio(playing == Some(style), style.name);
-                        let about = format!(
-                            "{bars} plays {}: {} The drums fill into it",
-                            style.name, style.about
+                        let item = ui.radio(playing == Some(style), tr_name(style.name));
+                        let about = trf(
+                            "{} plays {}: {} The drums fill into it",
+                            &[&bars, &tr_name(style.name), &tr_str(style.about)],
                         );
                         if theme::hint(item, about).clicked() {
                             choose(ui, Some(style));
@@ -2132,9 +2166,10 @@ fn style_menu(
     });
     theme::hint(
         menu.response,
-        format!(
-            "Have the band play these bars in another style, in {time}: its piano, bass, \
-             drums and swing, on the band's instruments"
+        trf(
+            "Have the band play these bars in another style, in {}: its piano, bass, \
+             drums and swing, on the band's instruments",
+            &[&time],
         ),
     );
 }
@@ -2297,8 +2332,8 @@ fn caption(
     };
     let words: Vec<String> = numeral
         .into_iter()
-        .chain(marker.push.map(|_| "push".to_string()))
-        .chain(marker.stop.map(|stop| stop.name().to_string()))
+        .chain(marker.push.map(|_| tr("push").to_string()))
+        .chain(marker.stop.map(|stop| tr(stop.name()).to_string()))
         .collect();
     (!words.is_empty()).then(|| words.join(" · "))
 }
@@ -2312,12 +2347,12 @@ fn describe(marker: &ChordMarker, key: lineup_core::Scale, function: Option<&Fun
         None => marker.harmony.describe(key),
     };
     if let Some(push) = marker.push {
-        text.push_str(&format!(" Push: {}.", push.describe()));
+        text.push_str(&format!(" {}: {}.", tr("Push"), push.describe()));
     }
     if let Some(stop) = marker.stop {
         text.push_str(&format!(
             " {}: {}.",
-            capitalized(stop.name()),
+            capitalized(tr(stop.name())),
             stop.describe()
         ));
     }
@@ -2334,27 +2369,32 @@ fn breaks_menu(
     actions: &mut Vec<SheetAction>,
 ) {
     let mut chosen = None;
-    let style = ui.radio(marker.stop.is_none(), "As the style goes");
-    if theme::hint(style, "The band plays its style through this harmony").clicked() {
+    let style = ui.radio(marker.stop.is_none(), tr("As the style goes"));
+    if theme::hint(style, tr("The band plays its style through this harmony")).clicked() {
         chosen = Some(marker.stopped(None));
     }
     for stop in Stop::ALL {
-        let label = format!("{} ({})", capitalized(stop.name()), stop.marks());
+        let label = format!("{} ({})", capitalized(tr(stop.name())), stop.marks());
         let item = ui.radio(marker.stop == Some(stop), label);
         if theme::hint(item, format!("{}: {}", marker.harmony, stop.describe())).clicked() {
             chosen = Some(marker.stopped(Some(stop)));
         }
     }
     ui.separator();
-    let on_time = ui.radio(marker.push.is_none(), "On the beat");
-    if theme::hint(on_time, "The band plays it on the beat it is written on").clicked() {
+    let on_time = ui.radio(marker.push.is_none(), tr("On the beat"));
+    if theme::hint(
+        on_time,
+        tr("The band plays it on the beat it is written on"),
+    )
+    .clicked()
+    {
         chosen = Some(marker.pushed(None));
     }
     for (push, label) in [
         (Push::Eighth, "Push (^)"),
         (Push::Sixteenth, "Push a sixteenth (^^)"),
     ] {
-        let item = ui.radio(marker.push == Some(push), label);
+        let item = ui.radio(marker.push == Some(push), tr(label));
         if theme::hint(item, format!("{}: {}", marker.harmony, push.describe())).clicked() {
             chosen = Some(marker.pushed(Some(push)));
         }

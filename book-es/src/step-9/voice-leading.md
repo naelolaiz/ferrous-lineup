@@ -17,26 +17,26 @@ a cuatro partes: soprano, alto, tenor y bajo, como en los corales de
 Bach. Dan unas pocas reglas que mantienen cada parte como una línea
 propia. Cuando escribes un ejercicio, un profesor marca dónde las
 rompiste. El piano roll ahora puede hacer esas marcas. Marca
-**Conducción de voces** junto a Ghost notes.
+**Conducción de voces** junto a Notas fantasma.
 
-![Cuatro partes en Do mayor con la conducción de voces comprobada. La fila Voices bajo los nombres de acordes marca quintas paralelas, una séptima que sube, octavas paralelas y una sensible que baja. Las líneas magenta muestran los movimientos, y los contornos discontinuos muestran adónde deberían haber ido la séptima y la sensible.](../images/step-9-voice-leading.png)
+![Cuatro partes en Do mayor con la conducción de voces comprobada. La fila Voces bajo los nombres de acordes marca quintas paralelas, una séptima que sube, octavas paralelas y una sensible que baja. Las líneas magenta muestran los movimientos, y los contornos discontinuos muestran adónde deberían haber ido la séptima y la sensible.](../images/step-9-voice-leading.png)
 
 ## Qué ves
 
-- **Una fila Voices** debajo de las dos filas de nombres de acordes.
+- **Una fila Voces** debajo de las dos filas de nombres de acordes.
   Cada hallazgo es un bloque sobre el acorde al que llegan las partes,
-  nombrado con unas pocas letras: **5ths** y **8ves** para quintas y
-  octavas paralelas, **1sns** para unísonos, **LT** para una sensible
-  que no sube, **7th** para una séptima que no baja.
+  nombrado con unas pocas letras: **5as** y **8vas** para quintas y
+  octavas paralelas, **unís.** para unísonos, **sens.** para una sensible
+  que no sube, **7.ª** para una séptima que no baja.
 - **Líneas magenta sobre la cuadrícula**, desde la nota que una parte
   deja hasta la nota a la que va. Los movimientos del step al que
   apuntas se dibujan más gruesos.
 - **Un contorno discontinuo** donde una sensible o una séptima debería
   haber ido.
 - **Una línea bajo los nombres de acordes.** Resume la comprobación
-  ("Voice leading, 4 parts: parallel fifths (1), …"). Cuando apuntas a
+  ("Conducción de voces, 4 parts: parallel fifths (1), …"). Cuando apuntas a
   un step con un hallazgo, dice en su lugar qué pasa allí. Pasa el
-  cursor sobre la línea, o sobre un bloque de la fila Voices, para leer
+  cursor sobre la línea, o sobre un bloque de la fila Voces, para leer
   por qué la escritura clásica a partes lo evita.
 
 ![Apuntando al bloque 7th: la séptima Fa de G7 sube a Sol en lugar de bajar a Mi.](../images/step-9-voice-leading-tooltip.png)
@@ -50,10 +50,10 @@ varias partes. La app la divide como leerías una partitura: la nota de
 arriba de cada acorde va a la parte de arriba, la nota siguiente a la
 parte siguiente, y cada nota se une a la parte cuya última nota estaba
 más cerca. En la imagen, la pista Right hand contiene la soprano y el
-alto. Los mensajes las llaman "Right hand (upper voice)" y "Right hand
-(lower voice)".
+alto. Los mensajes las llaman "Right hand (voz superior)" y "Right hand
+(voz inferior)".
 
-Con **Ghost notes** activado, las demás pistas también se comprueban.
+Con **Notas fantasma** activado, las demás pistas también se comprueban.
 Las pistas de batería se dejan fuera.
 
 Un silencio de un pulso o más termina una línea, así que las notas a

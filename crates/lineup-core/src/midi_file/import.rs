@@ -30,6 +30,7 @@ use std::collections::BTreeMap;
 use super::read::{EventKind, MidiFile, Timing, Track};
 use crate::general_midi;
 use crate::harmony::{Scale, ScaleKind, key_fits};
+use crate::i18n::{tr, trf};
 use crate::key_map::{KeyMap, KeyMarker};
 use crate::meter::{Meter, TimeMarker, TimeSignature};
 use crate::pattern::{MAX_STEPS, NoteEvent, STEP_NOTE, TICKS_PER_STEP};
@@ -91,61 +92,51 @@ impl Report {
     /// notes, 38 bars, 4/4, 120 BPM, C major".
     pub fn summary(&self, title: &str, project: &Project) -> String {
         let mut text = format!(
-            "{title}: {} channel{}, {} note{}, {} bar{}, {}",
-            self.channels,
-            plural(self.channels),
-            self.notes,
-            plural(self.notes),
-            self.bars,
-            plural(self.bars),
+            "{title}: {}, {}, {}, {}",
+            counted(self.channels, "{} channel", "{} channels"),
+            counted(self.notes, "{} note", "{} notes"),
+            counted(self.bars, "{} bar", "{} bars"),
             project.time_signature,
         );
         if self.time_changes > 0 {
-            text += &format!(
-                " (changes {} time{})",
+            text += &counted(
                 self.time_changes,
-                plural(self.time_changes)
+                " (changes {} time)",
+                " (changes {} times)",
             );
         }
         text += &format!(", {:.0} BPM", project.tempo.bpm());
         if self.tempo_changes > 0 {
-            text += &format!(
-                " ({} tempo change{})",
+            text += &counted(
                 self.tempo_changes,
-                plural(self.tempo_changes)
+                " ({} tempo change)",
+                " ({} tempo changes)",
             );
         }
-        text += &format!(", {}", project.scale.name());
+        text += &format!(", {}", crate::i18n::key_name(project.scale));
         if self.key_from_notes {
-            text += " (worked out from the notes)";
+            text += tr(" (worked out from the notes)");
         }
         if self.key_changes > 0 {
-            text += &format!(
-                " ({} key change{})",
-                self.key_changes,
-                plural(self.key_changes)
-            );
+            text += &counted(self.key_changes, " ({} key change)", " ({} key changes)");
         }
         if self.notes_left_out > 0 {
-            text += &format!(
-                ". {} note{} left out",
+            text += &counted(
                 self.notes_left_out,
-                if self.notes_left_out == 1 {
-                    " was"
-                } else {
-                    "s were"
-                }
+                ". {} note was left out",
+                ". {} notes were left out",
             );
         }
         if self.damaged {
-            text += ". The file is damaged: everything before the damage was read";
+            text += tr(". The file is damaged: everything before the damage was read");
         }
         text
     }
 }
 
-fn plural(count: usize) -> &'static str {
-    if count == 1 { "" } else { "s" }
+/// `count` in `one` or `many`, as it takes: "1 note", "2 notes".
+fn counted(count: usize, one: &'static str, many: &'static str) -> String {
+    trf(if count == 1 { one } else { many }, &[&count])
 }
 
 /// Why a MIDI file could not become a project.
@@ -158,7 +149,7 @@ pub enum ImportError {
 impl std::fmt::Display for ImportError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ImportError::NoNotes => write!(f, "it has no notes"),
+            ImportError::NoNotes => write!(f, "{}", tr("it has no notes")),
         }
     }
 }

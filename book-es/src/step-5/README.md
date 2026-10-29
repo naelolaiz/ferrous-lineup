@@ -5,17 +5,17 @@ en cuanto has escrito algo que te gusta:
 
 - **deshacer y rehacer** para cada cambio del proyecto: pasos, notas,
   acordes, clips, pistas, canales, muestras, patrones, el tempo, los
-  nombres y la tonalidad. El menú Edit dice qué se va a deshacer ("Undo
-  move clip"). Un arrastre es un solo paso, dure los fotogramas que dure,
+  nombres y la tonalidad. El menú Edición dice qué se va a deshacer ("Deshacer:
+  mover clip"). Un arrastre es un solo paso, dure los fotogramas que dure,
   y escribir un nombre también es un solo paso. El historial guarda entre
   10 y 100 pasos, según la canción: las canciones pequeñas guardan 100, y
   una grande guarda menos para mantenerse cerca de un presupuesto de
   256 MiB, pero nunca menos de 10,
-- **Export WAV**: File > Export WAV… guarda la canción como un archivo de
+- **Exportar WAV**: Archivo > Exportar WAV… guarda la canción como un archivo de
   sonido que cualquier reproductor de música, editor de vídeo u otro
   estudio puede abrir: estéreo de 16 bits a 44,100 fotogramas por
   segundo, como un CD. La exportación se ejecuta en segundo plano, con
-  una barra de progreso en la barra de estado y un botón Stop. Puedes
+  una barra de progreso en la barra de estado y un botón ⏹. Puedes
   seguir reproduciendo y editando mientras se ejecuta, y nada de lo que
   hagas cambia el archivo que se está escribiendo.
 
@@ -29,9 +29,9 @@ en cuanto has escrito algo que te gusta:
 
 | Haz esto | Para |
 |---------|----|
-| Ctrl+Z, o Edit > Undo | deshacer el último cambio |
-| Ctrl+Shift+Z o Ctrl+Y, o Edit > Redo | rehacer lo deshecho |
-| File > Export WAV… | guardar la canción como archivo `.wav` |
+| Ctrl+Z, o Edición > Deshacer | deshacer el último cambio |
+| Ctrl+Mayús+Z o Ctrl+Y, o Edición > Rehacer | rehacer lo deshecho |
+| Archivo > Exportar WAV… | guardar la canción como archivo `.wav` |
 
 En un Mac, usa ⌘ en lugar de Ctrl. Mientras escribes en un campo de
 texto (un nombre de patrón o de pista), Ctrl+Z deshace lo que escribes
@@ -48,7 +48,7 @@ La exportación reproduce la canción una vez, desde el primer compás
 hasta el final del último clip, y luego una cola para que las últimas
 notas puedan resonar: dos segundos, más la caída de la reverberación
 cuando esta está activada. El archivo toma el nombre del proyecto
-("song.lineup" sugiere "song.wav"). Export WAV aparece atenuado cuando la
+("song.lineup" sugiere "song.wav"). Exportar WAV aparece atenuado cuando la
 canción no tiene longitud (ni clips ni secciones).
 
 ## Qué cambió en la arquitectura
@@ -60,7 +60,7 @@ canción no tiene longitud (ni clips ni secciones).
 
   lineup-app
     app/edit.rs (nuevo):   edit(), undo(), redo(), sync_audio(), el menú Edit
-    app/export.rs (nuevo): File > Export WAV, en un hilo propio
+    app/export.rs (nuevo): Archivo > Exportar WAV, en un hilo propio
 
   lineup-audio
     render.rs (nuevo): Renderer y export_wav: el hilo de audio, sin tarjeta de sonido
@@ -125,7 +125,7 @@ crates/lineup-audio/src/sample.rs        SampleCache
 crates/lineup-audio/src/instrument.rs    Instrument::for_channel recibe la caché
 crates/lineup-audio/src/dsp.rs           Smoothed::settle
 crates/lineup-app/src/app/edit.rs        edit, undo, redo, el menú Edit (nuevo)
-crates/lineup-app/src/app/export.rs      File > Export WAV (nuevo)
+crates/lineup-app/src/app/export.rs      Archivo > Exportar WAV (nuevo)
 crates/lineup-app/src/app.rs             cada cambio pasa por edit()
 crates/lineup-app/src/app/files.rs       el elemento de menú Export WAV; abrir un archivo borra el historial
 crates/lineup-app/src/piano_roll.rs      sigue a su canal cuando se inserta uno por encima

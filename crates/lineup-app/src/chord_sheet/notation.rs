@@ -15,6 +15,7 @@ use lineup_core::lead_sheet::default_melody_channel;
 use lineup_core::{ChordMarker, HarmonyName, KeyMap, Note, Project, Scale};
 use serde::{Deserialize, Serialize};
 
+use crate::i18n::{tr, tr_name, trf};
 use crate::theme;
 
 fn choices_id() -> egui::Id {
@@ -183,13 +184,15 @@ impl NotationView {
                         choice,
                         crate::i18n::tr(choice.name()),
                     );
-                    theme::hint(item, choice.describe());
+                    theme::hint(item, tr(choice.describe()));
                 }
             });
         theme::hint(
             combo.response,
-            "How the sheet names its harmony. The notes stay as they are: a set or a \
+            tr(
+                "How the sheet names its harmony. The notes stay as they are: a set or a \
              micromode is another way to write the same chord",
+            ),
         );
         if !self.notation().groups() {
             return;
@@ -197,19 +200,19 @@ impl NotationView {
         ui.separator();
         let grouping = self.choices.grouping;
         let combo = egui::ComboBox::from_id_salt("chord-sheet-grouping")
-            .selected_text(grouping.name())
+            .selected_text(tr(grouping.name()))
             .show_ui(ui, |ui| {
                 for choice in Grouping::ALL {
                     let item =
-                        ui.selectable_value(&mut self.choices.grouping, choice, choice.name());
-                    theme::hint(item, choice.describe());
+                        ui.selectable_value(&mut self.choices.grouping, choice, tr(choice.name()));
+                    theme::hint(item, tr(choice.describe()));
                 }
             });
         theme::hint(
             combo.response,
-            format!(
+            trf(
                 "{}. Typing in a bar still writes its harmony",
-                self.choices.grouping.describe()
+                &[&tr(self.choices.grouping.describe())],
             ),
         );
         if self.reads_notes() {
@@ -221,19 +224,19 @@ impl NotationView {
     /// How many notes a group holds: in a micromode, always three.
     fn size_choice(&mut self, ui: &mut Ui) {
         if self.notation().fixed_size().is_some() {
-            let label = ui.weak("3 notes");
-            theme::hint(label, "A micromode is a group of three notes");
+            let label = ui.weak(tr("3 notes"));
+            theme::hint(label, tr("A micromode is a group of three notes"));
             return;
         }
         let together = self.choices.grouping == Grouping::Together;
         let shown = |size: Option<usize>| match size {
-            None => "All notes".to_string(),
-            Some(2) => "2 notes (dyads)".to_string(),
-            Some(3) => "3 notes (trichords)".to_string(),
-            Some(4) => "4 notes (tetrachords)".to_string(),
-            Some(5) => "5 notes (pentachords)".to_string(),
-            Some(6) => "6 notes (hexachords)".to_string(),
-            Some(size) => format!("{size} notes"),
+            None => tr("All notes").to_string(),
+            Some(2) => tr("2 notes (dyads)").to_string(),
+            Some(3) => tr("3 notes (trichords)").to_string(),
+            Some(4) => tr("4 notes (tetrachords)").to_string(),
+            Some(5) => tr("5 notes (pentachords)").to_string(),
+            Some(6) => tr("6 notes (hexachords)").to_string(),
+            Some(size) => trf("{} notes", &[&size]),
         };
         let size = self.size();
         let combo = egui::ComboBox::from_id_salt("chord-sheet-group-size")
@@ -241,7 +244,7 @@ impl NotationView {
             .show_ui(ui, |ui| {
                 if together {
                     let all = ui.selectable_label(size.is_none(), shown(None));
-                    if theme::hint(all, "Every note sounding at once is one set").clicked() {
+                    if theme::hint(all, tr("Every note sounding at once is one set")).clicked() {
                         self.choices.together = None;
                     }
                 }
@@ -268,7 +271,7 @@ impl NotationView {
                  into four trichords, 6 into its two halves"
             }
         };
-        theme::hint(combo.response, hint);
+        theme::hint(combo.response, tr(hint));
     }
 
     /// Which track's notes are grouped: every track, or one.
@@ -281,35 +284,39 @@ impl NotationView {
             project
                 .channels()
                 .get(channel)
-                .map_or_else(String::new, |channel| channel.name.clone())
+                .map_or_else(String::new, |channel| tr_name(&channel.name).into_owned())
         };
         let in_line = self.choices.grouping == Grouping::InLine;
         let auto = match (in_line, default_melody_channel(project)) {
-            (true, Some(tune)) => format!("Auto ({})", name(tune)),
-            _ => "All tracks".to_string(),
+            (true, Some(tune)) => trf("Auto ({})", &[&name(tune)]),
+            _ => tr("All tracks").to_string(),
         };
         let shown = match self.track {
             Track::Auto => auto.clone(),
-            Track::All => "All tracks".to_string(),
+            Track::All => tr("All tracks").to_string(),
             Track::Channel(channel) => name(channel),
         };
-        ui.label("of");
+        ui.label(tr("of"));
         let combo = egui::ComboBox::from_id_salt("chord-sheet-group-track")
             .selected_text(shown)
             .show_ui(ui, |ui| {
                 if in_line {
                     ui.selectable_value(&mut self.track, Track::Auto, auto)
-                        .on_hover_text("The tune: the track called Lead, or else the highest one");
+                        .on_hover_text(tr(
+                            "The tune: the track called Lead, or else the highest one",
+                        ));
                 }
-                ui.selectable_value(&mut self.track, Track::All, "All tracks");
+                ui.selectable_value(&mut self.track, Track::All, tr("All tracks"));
                 for &channel in &tracks {
                     ui.selectable_value(&mut self.track, Track::Channel(channel), name(channel));
                 }
             });
         theme::hint(
             combo.response,
-            "Whose notes are grouped: every track that plays notes together, or one, \
+            tr(
+                "Whose notes are grouped: every track that plays notes together, or one, \
              such as the tune or a chord part",
+            ),
         );
     }
 
@@ -382,9 +389,18 @@ impl NotationView {
         let channel = self
             .channel(project)
             .and_then(|channel| project.channels().get(channel));
-        let whose = channel.map_or("every track".to_string(), |channel| {
-            format!("the {}", channel.name)
-        });
+        let what = |in_line: bool| match (in_line, channel) {
+            (true, None) => tr("Notes of every track one after another").to_string(),
+            (false, None) => tr("Notes of every track sounding together").to_string(),
+            (true, Some(channel)) => trf(
+                "Notes of the {} one after another",
+                &[&tr_name(&channel.name)],
+            ),
+            (false, Some(channel)) => trf(
+                "Notes of the {} sounding together",
+                &[&tr_name(&channel.name)],
+            ),
+        };
         groups
             .iter()
             .map(|heard| {
@@ -401,18 +417,15 @@ impl NotationView {
                     .collect();
                 notes.sort();
                 notes.dedup();
-                let what = match grouping {
-                    Grouping::InLine => format!("Notes of {whose} one after another"),
-                    _ => format!("Notes of {whose} sounding together"),
-                };
+                let what = what(grouping == Grouping::InLine);
                 let about = match names.as_slice() {
                     [name] => format!("{what}. {}", name.describe(key)),
                     _ => {
                         let groups: Vec<String> =
                             names.iter().rev().map(|name| name.describe(key)).collect();
-                        format!(
-                            "{what}, in groups from the lowest up, written upper first. {}",
-                            groups.join(" Under it, ")
+                        trf(
+                            "{}, in groups from the lowest up, written upper first. {}",
+                            &[&what, &groups.join(tr(" Under it, "))],
                         )
                     }
                 };
@@ -455,7 +468,7 @@ impl NotationView {
             };
             let about = match *name == marker.harmony {
                 true => describe(marker),
-                false => format!("{} Written as {}.", describe(&shown), marker.harmony),
+                false => trf("{} Written as {}.", &[&describe(&shown), &marker.harmony]),
             };
             let marks = |text: String| {
                 let carets = marker.push.map_or("", |push| push.marks());
@@ -487,8 +500,8 @@ impl NotationView {
             .collect::<Vec<String>>()
             .join(" | ")]
         .into_iter()
-        .chain(marker.push.map(|_| "push".to_string()))
-        .chain(marker.stop.map(|stop| stop.name().to_string()))
+        .chain(marker.push.map(|_| tr("push").to_string()))
+        .chain(marker.stop.map(|stop| tr(stop.name()).to_string()))
         .collect();
         let groups: Vec<String> = names.iter().rev().map(|name| name.describe(key)).collect();
         Shown {
@@ -500,11 +513,13 @@ impl NotationView {
             group,
             no_chord,
             notes,
-            about: format!(
+            about: trf(
                 "{} Under it, {} Written as {}, two chords at once.",
-                groups[0],
-                groups[1..].join(" Under it, "),
-                marker.harmony
+                &[
+                    &groups[0],
+                    &groups[1..].join(tr(" Under it, ")),
+                    &marker.harmony,
+                ],
             ),
         }
     }

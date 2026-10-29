@@ -21,7 +21,7 @@ pub enum PlayMode {
 ```
 
 El step sequencer del paso 2 no cambia en absoluto. Sigue contando pasos
-de 0 hasta una cierta duración y haciendo loop. Solo cambia la duración:
+de 0 hasta una cierta duración y repitiéndose en bucle. Solo cambia la duración:
 la del patrón seleccionado en modo patrón, la de la canción en modo
 canción.
 
@@ -36,7 +36,7 @@ fn update_loop_length(&mut self) {
 }
 ```
 
-Una canción vacía tendría duración 0, y un loop de cero pasos no tiene
+Una canción vacía tendría duración 0, y un bucle de cero pasos no tiene
 sentido, así que se convierte en un compás en silencio.
 
 ## Notas para cada patrón: `ChannelNotes`
@@ -149,10 +149,10 @@ Command::RemovePattern(pattern) => {
 }
 ```
 
-El loop cuenta con un índice en lugar de `for channel in &mut
+El bucle cuenta con un índice en lugar de `for channel in &mut
 self.channels`, porque el cuerpo llama a `self.throw_away`, que necesita
-`&mut self`. Un loop `for` sobre `&mut self.channels` mantendría un
-préstamo mutable de una parte de `self` durante todo el loop, y
+`&mut self`. Un bucle `for` sobre `&mut self.channels` mantendría un
+préstamo mutable de una parte de `self` durante todo el bucle, y
 `self.throw_away` necesitaría otro. Con un índice, cada préstamo de
 `self.channels[index]` termina en la misma línea.
 
@@ -167,7 +167,7 @@ mismos (`SetSong { clips }`) y calculaba él mismo el paso del patrón de
 cada clip. El paso 8 añadió clips que se repiten y secciones que se
 repiten, así que `Project::playback_arrangement` desenrolla todo eso
 *antes* de enviar. Las piezas son `Play`s: un patrón, un inicio en la
-canción, cuánto adentrarse en el clip para empezar (`skip`, para un loop
+canción, cuánto adentrarse en el clip para empezar (`skip`, para un bucle
 que empieza a mitad del clip) y una duración. El hilo de audio sigue sin
 saber nada de repeticiones ni secciones; simplemente recorre las piezas
 que le dan.
@@ -233,8 +233,7 @@ PlayMode::Song => {
 ```
 
 Un clip que empieza en el paso 32 de la canción reproduce el paso 2 de su
-patrón en el paso 34 de la canción. Si dos clips se solapan (el clip de
-Chords y un clip de Beat, en dos pistas), ambos arrancan sus notas. Un clip
+patrón en el paso 34 de la canción. Si dos clips se solapan (el clip de Acordes y un clip de Ritmo, en dos pistas), ambos arrancan sus notas. Un clip
 que repite su patrón es un `Play` largo, y `pattern_step` toma el paso de
 la canción módulo la duración del patrón, de modo que el patrón vuelve a
 pasar una y otra vez dentro de él.
@@ -257,7 +256,7 @@ patrón, el paso del patrón y el paso de la canción. Los dos argumentos
 extra son para el timing suelto (las notas que empiezan un poco tarde
 esperan en `pending`) y para el trace. Si esto fuera un método que recibe
 `&mut self`, llamarlo dentro de `for play in &self.plays` no compilaría: el
-loop presta `self.plays` para leer, y la llamada prestaría *todo* `self`
+bucle presta `self.plays` para leer, y la llamada prestaría *todo* `self`
 para cambiar. Como función que recibe `&mut self.channels`, presta solo ese
 campo, que no se solapa con `self.plays`. Es la misma regla de «campos
 disjuntos» del paso 3, usada a propósito: da forma a los argumentos de la
@@ -320,7 +319,7 @@ fn song_mode_plays_the_clips() {
 }
 ```
 
-La primera versión de esta prueba esperaba el playhead en 39 y fallaba:
+La primera versión de esta prueba esperaba el cursor de reproducción en 39 y fallaba:
 después de 40 pasos de una canción de 32, el step sequencer está en su
 segunda vuelta. La que estaba mal era la prueba, no el código, y el arreglo
 fue decir por qué en el mensaje del assert. Una prueba que falla es una
@@ -334,4 +333,4 @@ compases 1 y 2 casi no tenían energía por encima de 6 kHz (solo el
 sintetizador), los compases 3 a 7 tenían unas cuatro veces más (llegaban
 los hats y las palmas), el compás 8 tenía golpes en los pasos 12 a 15 (el
 redoble de la caja), y el compás 9 sonaba otra vez como el compás 1: la
-canción había hecho loop.
+canción había hecho bucle.

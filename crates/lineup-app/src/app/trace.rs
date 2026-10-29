@@ -79,10 +79,12 @@ impl LiveTrace {
         } else {
             Labels::pattern(&playing.title, &playing.project, playing.pattern)
         };
-        // The same table as `--trace` writes: names in letters, whichever
-        // way the window shows them.
+        // The same table as `--trace` writes: names in letters and words
+        // in English, whichever way the window shows them.
         let mut table = Vec::new();
-        lineup_core::NoteNaming::Letters.with(|| write_table(&mut table, trace, &labels))?;
+        lineup_core::i18n::Language::English.with(|| {
+            lineup_core::NoteNaming::Letters.with(|| write_table(&mut table, trace, &labels))
+        })?;
         table.push(b'\n');
         self.file.write_all(&table)?;
         self.file.flush()
@@ -132,7 +134,10 @@ impl LineupApp {
         let mut file = match file {
             Ok(file) => file,
             Err(err) => {
-                self.message = Some(format!("Could not write {}: {err}", path.display()));
+                self.message = Some(crate::i18n::trf(
+                    "Could not write {}: {}",
+                    &[&path.display(), &err],
+                ));
                 return;
             }
         };
@@ -170,7 +175,10 @@ impl LineupApp {
         let (tracer, reader) = trace_queue();
         live.reader = reader;
         if let Err(err) = written {
-            self.message = Some(format!("Could not write {}: {err}", live.path.display()));
+            self.message = Some(crate::i18n::trf(
+                "Could not write {}: {}",
+                &[&live.path.display(), &err],
+            ));
         }
         self.send(Command::SetTrace(Some(Box::new(tracer))));
     }
@@ -197,7 +205,10 @@ impl LineupApp {
             }
         }
         if let Err(err) = live.write_finished() {
-            self.message = Some(format!("Could not write {}: {err}", live.path.display()));
+            self.message = Some(crate::i18n::trf(
+                "Could not write {}: {}",
+                &[&live.path.display(), &err],
+            ));
         }
     }
 }
