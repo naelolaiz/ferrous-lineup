@@ -15,36 +15,55 @@
 #
 # envía al lector a otra entrada.
 
+Accelerando: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino
 Acentos simples: styles.md#probar-un-estilo
 Acerca de: main-window.md#teclas-que-funcionan-en-todas-partes
 Acompañamiento: styles.md
+Ajustar a la escala: piano-roll.md#escribir-notas
+Ajuste (lista de reproducción): patterns-and-playlist.md#colocar-y-mover-clips
+Ajustes: settings.md#ajustes
 Ajustes de la Biblioteca: styles.md#los-ajustes-de-la-biblioteca
 Anacrusa: soloist.md#notas-entre-los-pulsos
 Anticipación: stops.md
 AppImage: installing.md#linux
 Aproximación cromática: soloist.md#notas-entre-los-pulsos
 Armonía cerrada: bigger-band.md#armonía-cerrada
+Arpegio: piano-roll.md#herramientas
 Banda: first-song.md#1-una-hoja-de-acordes-nueva, first-song.md#4-elige-un-estilo, bigger-band.md#el-menú-banda
 Barra de estado: main-window.md#la-barra-de-estado
 Barra de herramientas: main-window.md#la-barra-de-herramientas
+Batería, escribir: channel-rack.md#escribir-la-batería
 Bebop: soloist.md#notas-entre-los-pulsos
 Biblioteca: main-window.md#el-panel-patrones-y-biblioteca, first-song.md#4-elige-un-estilo, styles.md
 Bloquear: locks.md#bloquear-una-pista
 Bordadura: soloist.md#notas-entre-los-pulsos
+BPM: tempo-meter-key.md#el-tempo
 Break: stops.md#la-música
+Bucle: patterns-and-playlist.md#las-franjas-sobre-las-pistas
 Buscar la tonalidad: keys-and-modes.md#buscar-la-tonalidad-experimental
 Calderón: stops.md#la-música
-Cambio de tonalidad: keys-and-modes.md#cambios-de-tonalidad-en-una-canción
+Cambio de compás: tempo-meter-key.md#cambiar-de-compás-a-mitad-de-camino
+Cambio de tempo: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino
+Cambio de tonalidad: keys-and-modes.md#cambios-de-tonalidad-en-una-canción, tempo-meter-key.md#cambios-de-tonalidad
 Carpeta de estilos: style-editor.md#guardar-y-usar-tus-estilos
 Cejilla: bigger-band.md#cómo-toca-la-guitarra
 Chop: bigger-band.md#cómo-toca-la-guitarra
+Clip: patterns-and-playlist.md#colocar-y-mover-clips
 Colchón: bigger-band.md#cuerdas-y-órgano
-Compases, insertar y eliminar: chord-sheet.md#cambiar-los-compases
+Compás (indicación de compás): tempo-meter-key.md#los-compases
+Compases, insertar y eliminar: chord-sheet.md#cambiar-los-compases, tempo-meter-key.md#insertar-y-eliminar-compases
 Comping: véase Acompañamiento
+Conducción de voces: piano-roll.md#ver-las-otras-partes
+Contratiempo: channel-rack.md#escribir-la-batería
 Cross-stick: song-form.md#variaciones-a-y-b
+Cuantizar: piano-roll.md#herramientas
 Cuerdas: bigger-band.md#cuerdas-y-órgano
 Demostraciones: first-song.md#por-dónde-seguir
+Deshacer: settings.md#deshacer-y-rehacer
+Dibujar: piano-roll.md#escribir-notas
+Dominante: harmony-keys.md#las-teclas
 Editor de estilos: style-editor.md
+El acompañamiento sigue los acordes: harmony-keys.md#tocar-acordes-para-la-banda
 Escala: notes-and-scales.md#escalas
 Escala de acorde: soloist.md#escalas-de-acorde
 Escribir acordes: chord-sheet.md#escribir-acordes
@@ -58,41 +77,60 @@ GeneralUser GS: sounds.md#la-primera-reproducción
 Golpe: stops.md
 Guardar: first-song.md#7-guárdala
 Guitarra: bigger-band.md#cómo-toca-la-guitarra
+Herramientas: piano-roll.md#herramientas
 Hi-hat: song-form.md#variaciones-a-y-b
 Hoja de acordes: chord-sheet.md, first-song.md#2-escribe-los-acordes
 Hoja de acordes como texto: chord-sheet.md#hojas-de-acordes-como-texto
 Homónima: keys-and-modes.md#tonalidades-mayores-y-menores
-Idioma: installing.md#el-primer-arranque
+Idioma: installing.md#el-primer-arranque, settings.md#apariencia
 Instalar: installing.md
 Instrumento: sounds.md#un-instrumento-para-cada-canal
 Intervalo: notes-and-scales.md#intervalos
 Introducción: first-song.md#6-dale-una-forma, song-form.md#la-introducción-un-turnaround
+Inversión: piano-roll.md#escribir-notas
 Letras: notes-and-scales.md#solfeo-o-letras
 Lineup Osc: sounds.md
-Lista de reproducción: main-window.md#la-lista-de-reproducción
+Lista de reproducción: main-window.md#la-lista-de-reproducción, patterns-and-playlist.md
 Menús: main-window.md#los-menús
 Modo: keys-and-modes.md#los-modos
+Modo canción: patterns-and-playlist.md#modo-patrón-y-modo-canción
+Modo patrón: patterns-and-playlist.md#modo-patrón-y-modo-canción
+Muestra: channel-rack.md#tus-propios-sonidos
+Nomenclatura de notas: settings.md#armonía
 Nota de paso: soloist.md#notas-entre-los-pulsos
 Notas del acorde: soloist.md#notas-del-acorde-en-el-pulso
 Notas extrañas: soloist.md#notas-entre-los-pulsos
+Notas fantasma: piano-roll.md#ver-las-otras-partes
 Notas guía: soloist.md#notas-del-acorde-en-el-pulso
 Número romano: chord-sheet.md#leer-la-hoja
+Números romanos en tonalidades menores: settings.md#armonía
 Órgano: bigger-band.md#cuerdas-y-órgano
 Ortografía: notes-and-scales.md#sostenidos-bemoles-y-ortografía
 Otro solo: soloist.md#probarlo
+Pasos: channel-rack.md#leerlo
 Patrón de prueba: styles.md#adónde-va-un-estilo
-Piano roll: main-window.md#las-ventanas, notes-and-scales.md#verlo-y-oírlo-en-la-aplicación
+Patrones: patterns-and-playlist.md#los-patrones
+Piano roll: main-window.md#las-ventanas, notes-and-scales.md#verlo-y-oírlo-en-la-aplicación, piano-roll.md
+Pistas: patterns-and-playlist.md#las-pistas
+Pistas (explicaciones): harmony-keys.md#los-controles-de-la-izquierda
 Power chord: bigger-band.md#cómo-toca-la-guitarra
 Progresión: styles.md#progresiones-de-la-biblioteca
-Rack de canales: main-window.md#las-ventanas
+Pulsar (tempo): tempo-meter-key.md#el-tempo
+Rack de canales: main-window.md#las-ventanas, channel-rack.md
 Rasgueo: bigger-band.md#cómo-toca-la-guitarra
+Registro: settings.md#reproducción
 Relativa: keys-and-modes.md#tonalidades-mayores-y-menores
 Rellenos: styles.md#buscar-un-estilo, song-form.md#variaciones-a-y-b
 Ride: song-form.md#variaciones-a-y-b
+Ritardando: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino
+Salida de audio: settings.md#audio
+Salida MIDI: channel-rack.md#los-canales
 Sección de vientos: bigger-band.md#la-sección-de-vientos
 Secciones: song-form.md#secciones
+Seguir el cursor de reproducción: patterns-and-playlist.md#moverse, settings.md#reproducción
 Sensible: song-form.md#la-introducción-un-turnaround
 Shuffle: swing.md#dónde-no-se-aplica-el-swing
+Silenciar: channel-rack.md#leerlo, patterns-and-playlist.md#las-pistas
 Silencio: stops.md
 Sin banda: bigger-band.md#el-menú-banda
 Síncopa: stops.md#la-música
@@ -102,17 +140,27 @@ Soltura: swing.md#tiempo-suelto
 Sostenido (marca de la banda): stops.md
 SoundFont: sounds.md
 Stop-time: stops.md#la-música
+Subdominante: harmony-keys.md#las-teclas
 Swing: swing.md, styles.md#probar-un-estilo
-Teclas de armonía: main-window.md#las-ventanas
-Tempo: first-song.md#5-el-tempo-y-la-tonalidad, main-window.md#la-barra-de-herramientas
+Tamaño de la interfaz: settings.md#apariencia
+Teclado arreglador: harmony-keys.md#tocar-acordes-para-la-banda
+Teclas de armonía: main-window.md#las-ventanas, harmony-keys.md
+Tempo: first-song.md#5-el-tempo-y-la-tonalidad, main-window.md#la-barra-de-herramientas, tempo-meter-key.md#el-tempo
 Terminar la canción aquí: song-form.md#el-final-a-casa-y-sostenido
 Tocas tú: locks.md#tocas-tú
 Tonalidad: keys-and-modes.md#la-tonalidad-de-una-canción, first-song.md#5-el-tempo-y-la-tonalidad
 Tonalidades con dos nombres: keys-and-modes.md#tonalidades-con-dos-nombres
+Tónica: harmony-keys.md#las-teclas
+Transportar: piano-roll.md#herramientas
 Tresillo: swing.md#el-control-swing, bigger-band.md#la-sección-de-vientos
+Tríadas, séptimas y novenas: harmony-keys.md#los-controles-de-la-izquierda
 Tumbao: stops.md#la-música
 Turnaround: song-form.md#la-introducción-un-turnaround
 Vamp: song-form.md#la-introducción-un-turnaround
 Variaciones a y b: song-form.md#variaciones-a-y-b
+Velocidad: piano-roll.md#velocidad
+Ventanas: settings.md#ventanas
 Volver a tocarla: locks.md#una-parte-que-editas-queda-tuya
 Vueltas: first-song.md#6-dale-una-forma, song-form.md#la-fila-forma
+WAV: channel-rack.md#tus-propios-sonidos
+Zoom: settings.md#zoom, patterns-and-playlist.md#moverse

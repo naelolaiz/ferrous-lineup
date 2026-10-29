@@ -21,6 +21,15 @@
 - [The soloist (experimental)](soloist.md)
 - [Your own styles](style-editor.md)
 
+# Part 3: Editing notes
+
+- [Patterns and the playlist](patterns-and-playlist.md)
+- [The channel rack](channel-rack.md)
+- [The piano roll](piano-roll.md)
+- [The harmony keys](harmony-keys.md)
+- [Tempo, time signatures and key changes](tempo-meter-key.md)
+- [Undo, zoom, windows and settings](settings.md)
+
 # Part 5: Learning harmony
 
 - [Notes, intervals and scales](notes-and-scales.md)

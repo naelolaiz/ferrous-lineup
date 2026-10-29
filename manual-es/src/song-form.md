@@ -183,5 +183,5 @@ pulso.
 
 El menú lista solo los estilos de la misma métrica que esos compases,
 como 4/4 o 3/4. Para tocar un vals en medio de una canción en 4/4,
-cambia antes la métrica de esos compases (ver [Tempo, compás y
-tonalidad](tempo-meter-key.md)).
+cambia antes la métrica de esos compases (ver [Tempo, compases y
+cambios de tonalidad](tempo-meter-key.md)).

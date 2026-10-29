@@ -15,15 +15,22 @@
 # sends the reader to another entry.
 
 About window: main-window.md#keys-that-work-everywhere
+Accelerando: tempo-meter-key.md#changing-tempo-partway-through
+Accompaniment follows chords: harmony-keys.md#playing-chords-to-the-band
 Another solo: soloist.md#trying-it
 Anticipation: see Push
 AppImage: installing.md#linux
+Arpeggio: piano-roll.md#tools
+Arranger keyboard: harmony-keys.md#playing-chords-to-the-band
+Audio output: settings.md#audio
+Backbeat: channel-rack.md#writing-drums
 Band: first-song.md#1-a-new-chord-sheet, first-song.md#4-pick-a-style, bigger-band.md#the-band-menu
 Barre chord: bigger-band.md#how-the-guitar-plays
-Bars, inserting and deleting: chord-sheet.md#changing-the-bars
+Bars, inserting and deleting: chord-sheet.md#changing-the-bars, tempo-meter-key.md#inserting-and-deleting-bars
 Bebop: soloist.md#notes-between-the-beats
+BPM: tempo-meter-key.md#tempo
 Break: stops.md#the-music
-Channel rack: main-window.md#the-windows
+Channel rack: main-window.md#the-windows, channel-rack.md
 Chop: bigger-band.md#how-the-guitar-plays
 Chord scale: soloist.md#chord-scales
 Chord sheet: chord-sheet.md, first-song.md#2-type-the-chords
@@ -31,69 +38,93 @@ Chord sheet as text: chord-sheet.md#chord-sheets-as-text
 Chord tones: soloist.md#chord-tones-on-the-beat
 Choruses: first-song.md#6-give-it-a-form, song-form.md#the-form-row
 Chromatic approach: soloist.md#notes-between-the-beats
+Clip: patterns-and-playlist.md#placing-and-moving-clips
 Close harmony: bigger-band.md#close-harmony
 Comping: styles.md
 Cross-stick: song-form.md#variations-a-and-b
 Demos: first-song.md#where-to-go-from-here
+Dominant: harmony-keys.md#the-keys
+Draw: piano-roll.md#writing-notes
+Drums, writing: channel-rack.md#writing-drums
 End the song here: song-form.md#the-ending-home-and-held
 Ending: first-song.md#6-give-it-a-form, song-form.md#the-ending-home-and-held
 Fermata: stops.md#the-music
 Fills: styles.md#finding-a-style, song-form.md#variations-a-and-b
 Find the key: keys-and-modes.md#finding-the-key-experimental
+Follow playhead: patterns-and-playlist.md#moving-around, settings.md#playback
 General MIDI: sounds.md#an-instrument-for-each-channel
 GeneralUser GS: sounds.md#the-first-play
+Ghost notes: piano-roll.md#seeing-the-other-parts
 Guide tones: soloist.md#chord-tones-on-the-beat
 Guitar: bigger-band.md#how-the-guitar-plays
-Harmony keys: main-window.md#the-windows
+Harmony keys: main-window.md#the-windows, harmony-keys.md
 Hi-hat: song-form.md#variations-a-and-b
+Hints: harmony-keys.md#the-controls-at-the-left
 Hold: stops.md
 Horn section: bigger-band.md#the-horn-section
 Installing: installing.md
 Instrument: sounds.md#an-instrument-for-each-channel
 Instrument lineup: bigger-band.md#the-band-menu
+Interface size: settings.md#appearance
 Interval: notes-and-scales.md#intervals
 Intro: first-song.md#6-give-it-a-form, song-form.md#the-intro-a-turnaround
+Inversion: piano-roll.md#writing-notes
 Key: keys-and-modes.md#the-key-of-a-song, first-song.md#5-the-tempo-and-the-key
-Key change: keys-and-modes.md#key-changes-in-a-song
+Key change: keys-and-modes.md#key-changes-in-a-song, tempo-meter-key.md#key-changes
 Keys with two names: keys-and-modes.md#keys-with-two-names
-Language: installing.md#the-first-start
+Language: installing.md#the-first-start, settings.md#appearance
 Leading note: song-form.md#the-intro-a-turnaround
 Library: main-window.md#the-patterns-and-library-panel, first-song.md#4-pick-a-style, styles.md
 Library settings: styles.md#the-library-settings
 Lineup Osc: sounds.md
 Lock: locks.md#locking-a-track
+Loop: patterns-and-playlist.md#the-strips-above-the-tracks
 Loose: swing.md#loose-timing
 Menus: main-window.md#the-menus
+MIDI Out: channel-rack.md#channels
 Mode: keys-and-modes.md#the-modes
+Mute: channel-rack.md#reading-it, patterns-and-playlist.md#tracks
 Neighbour note: soloist.md#notes-between-the-beats
 No band: bigger-band.md#the-band-menu
 Non-chord tones: soloist.md#notes-between-the-beats
+Note naming: settings.md#harmony
 Organ: bigger-band.md#strings-and-organ
 Pad: bigger-band.md#strings-and-organ
 Parallel key: keys-and-modes.md#major-and-minor-keys
 Passing note: soloist.md#notes-between-the-beats
-Piano roll: main-window.md#the-windows, notes-and-scales.md#seeing-and-hearing-it-in-the-app
+Pattern mode: patterns-and-playlist.md#pattern-mode-and-song-mode
+Patterns: patterns-and-playlist.md#patterns
+Piano roll: main-window.md#the-windows, notes-and-scales.md#seeing-and-hearing-it-in-the-app, piano-roll.md
 Pickup: soloist.md#notes-between-the-beats
 Plain accents: styles.md#trying-a-style
 Play it again: locks.md#a-part-you-edit-stays-yours
-Playlist: main-window.md#the-playlist
+Playlist: main-window.md#the-playlist, patterns-and-playlist.md
 Power chord: bigger-band.md#how-the-guitar-plays
 Progression: styles.md#progressions-from-the-library
 Push: stops.md
+Quantize: piano-roll.md#tools
 Relative key: keys-and-modes.md#major-and-minor-keys
 Rest: stops.md
 Ride cymbal: song-form.md#variations-a-and-b
+Ritardando: tempo-meter-key.md#changing-tempo-partway-through
 Roman numeral: chord-sheet.md#reading-the-sheet
+Roman numerals in minor keys: settings.md#harmony
+Sample: channel-rack.md#your-own-sounds
 Saving: first-song.md#7-save-it
 Scale: notes-and-scales.md#scales
 Sections: song-form.md#sections
+Settings: settings.md#settings
 Shot: stops.md
 Shuffle: swing.md#where-swing-doesnt-apply
+Snap: patterns-and-playlist.md#placing-and-moving-clips
+Snap to scale: piano-roll.md#writing-notes
 Solfège: notes-and-scales.md#letters-or-solfège
 Soloist: soloist.md
+Song mode: patterns-and-playlist.md#pattern-mode-and-song-mode
 SoundFont: sounds.md
 Spelling: notes-and-scales.md#sharps-flats-and-spelling
 Status bar: main-window.md#the-status-bar
+Steps: channel-rack.md#reading-it
 Stop-time: stops.md#the-music
 Strings: bigger-band.md#strings-and-organ
 Strum: bigger-band.md#how-the-guitar-plays
@@ -101,17 +132,34 @@ Style: first-song.md#4-pick-a-style, styles.md
 Style editor: style-editor.md
 Style for some bars: song-form.md#a-style-for-some-bars
 Styles folder: style-editor.md#saving-and-using-your-styles
+Subdominant: harmony-keys.md#the-keys
 Swing: swing.md, styles.md#trying-a-style
 Syncopation: stops.md#the-music
-Tempo: first-song.md#5-the-tempo-and-the-key, main-window.md#the-toolbar
+Tap tempo: tempo-meter-key.md#tempo
+Tempo: first-song.md#5-the-tempo-and-the-key, main-window.md#the-toolbar, tempo-meter-key.md#tempo
+Tempo change: tempo-meter-key.md#changing-tempo-partway-through
+Time signature: tempo-meter-key.md#time-signatures
+Time signature change: tempo-meter-key.md#changing-time-signature-partway-through
+Tonic: harmony-keys.md#the-keys
 Toolbar: main-window.md#the-toolbar
+Tools: piano-roll.md#tools
+Trace: settings.md#playback
+Tracks: patterns-and-playlist.md#tracks
+Transposing: piano-roll.md#tools
 Tresillo: bigger-band.md#the-horn-section
+Triads, sevenths and ninths: harmony-keys.md#the-controls-at-the-left
 Trial pattern: styles.md#where-a-style-goes
 Triplet: swing.md#the-swing-control
 Tumbao: stops.md#the-music
 Turnaround: song-form.md#the-intro-a-turnaround
 Typing chords: chord-sheet.md#typing-chords
+Undo: settings.md#undo-and-redo
 Vamp: song-form.md#the-intro-a-turnaround
 Variations a and b: song-form.md#variations-a-and-b
+Velocity: piano-roll.md#velocity
+Voice leading: piano-roll.md#seeing-the-other-parts
+WAV: channel-rack.md#your-own-sounds
+Windows: settings.md#windows
 Write the chords the song plays: chord-sheet.md#writing-what-the-song-plays
 You play: locks.md#you-play
+Zoom: settings.md#zoom, patterns-and-playlist.md#moving-around

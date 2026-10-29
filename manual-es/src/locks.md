@@ -55,7 +55,7 @@ siempre puedes editar a mano una pista bloqueada.
 Abre una parte de la banda en el piano roll (doble clic en su clip en la
 lista de reproducción) y cambia una nota: desde ahí la banda deja esa
 parte como la dejaste, aunque cambien los acordes. La hoja de acordes lo
-dice: «✎ Editaste el bajo: la banda lo conserva como lo dejaste.», con
+dice: «✎ Editaste el bajo: la banda lo conserva como lo dejaste», con
 un botón **Volver a tocarla** que le devuelve la parte a la banda,
 escrita a partir de la hoja tal como está ahora.
 
