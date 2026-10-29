@@ -132,6 +132,16 @@ one style, the hymns and chorales of the 1700s and the harmony
 exercises built on them, not of all music: jazz, pop and Debussy move
 in parallel fifths on purpose.
 
+The band keeps the first rule where it holds long chords, as a choir
+sings them: in styles such as **Hymn**, **Romanesca** or **Ambient**,
+each chord takes, of the voicings nearest the last one, the first that
+moves no two parts, the bass among them, in parallel fifths or octaves
+or in fifths or octaves by contrary motion, when there is one. From
+C E G over C, D minor comes as A D F, the upper parts going down while
+the bass goes up.
+Styles that play their chords in rhythm take the nearest voicing, as a
+pianist's hands do.
+
 Where the key is a **twelve-tone row**, the check uses the rules of
 twelve-tone writing instead, and a Row line shows the forms of the row
 it reads in the notes: see [Beyond keys: sets, rows and

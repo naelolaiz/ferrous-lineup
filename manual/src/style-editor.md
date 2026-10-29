@@ -10,7 +10,7 @@ save them as a style that sits in the Library next to the others.
 ## Opening it
 
 - In the **channel rack**, **Edit style…** opens a copy of the style the
-  song plays, and **New style…** starts an empty one. **New style…** is
+  song plays, with every part its band plays, and **New style…** starts an empty one. **New style…** is
   also at the top of the Library.
 - **View > Style editor…** opens the editor, or brings it to the front.
 - In the **Library**, right-click a style: a built-in one says **Edit a

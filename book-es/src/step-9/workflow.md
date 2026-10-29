@@ -18,8 +18,10 @@ quita un paso entre tú y la música:
   dibujos pintados para las ventanas;
 - **Ayuda > Atajos de teclado** (F1) enumera todas las teclas a las que
   responde la aplicación;
+- **Ayuda > Manual de usuario** abre el manual de usuario en el idioma
+  de la aplicación;
 - **Ayuda > Acerca de Ferrous Lineup** dice qué versión usas, con qué
-  licencia, y dónde están este libro y el código;
+  licencia, y dónde están el manual, este libro y el código;
 - cada ventana se abre **al tamaño de lo que muestra**, no a un tamaño
   que egui recordó de otro día.
 
@@ -40,8 +42,8 @@ quita un paso entre tú y la música:
    canales.
 6. Abre **Ayuda > Acerca de Ferrous Lineup** (**Ayuda > Acerca de Ferrous
    Lineup** con la interfaz en español). Muestra la versión, la licencia
-   y enlaces a este libro, a su PDF, al código fuente y a la lista de
-   problemas conocidos.
+   y enlaces al manual de usuario y a este libro, cada uno también en
+   PDF, al código fuente y a la lista de problemas conocidos.
 
 ![La barra de herramientas en una fila: los cinco botones de ventana y los conmutadores Count-in y Metronome son dibujos.](../images/step-9-workflow-toolbar.png)
 
@@ -284,18 +286,47 @@ Las [compilaciones de lanzamiento](releases.md) comparan la etiqueta
 con ese mismo número.
 
 Los textos pasan por `tr`, como los menús, así que con la interfaz en
-español la ventana está en español. Los enlaces al libro cambian también:
+español la ventana está en español. Los enlaces al manual y al libro
+cambian también:
 
 ```rust
-let (book, book_pdf) = match i18n::current_language() {
-    Language::English => (BOOK, BOOK_PDF),
-    Language::Spanish => (BOOK_ES, BOOK_ES_PDF),
+let (manual_pdf, book, book_pdf) = match i18n::current_language() {
+    Language::English => (MANUAL_PDF, BOOK, BOOK_PDF),
+    Language::Spanish => (MANUAL_ES_PDF, BOOK_ES, BOOK_ES_PDF),
 };
 ```
 
 El `match` no tiene brazo `_` a propósito. Añade un tercer idioma y el
 compilador se detiene aquí hasta que decidas qué libro reciben sus
 lectores.
+
+**Ayuda > Manual de usuario** abre las páginas web del manual sin la
+ventana Acerca de, así que la dirección que necesita vive en una función
+de `about.rs`, y el menú Ayuda y la ventana Acerca de se la piden a ella:
+
+```rust
+pub(super) fn manual() -> &'static str {
+    match i18n::current_language() {
+        Language::English => MANUAL,
+        Language::Spanish => MANUAL_ES,
+    }
+}
+```
+
+En el menú, el botón le pide a egui que abra esa dirección en una
+pestaña nueva del navegador:
+
+```rust
+if ui.button(crate::i18n::tr("User manual")).clicked() {
+    ui.ctx()
+        .open_url(egui::OpenUrl::new_tab(super::about::manual()));
+    ui.close();
+}
+```
+
+`pub(super)` hace que `manual` se vea desde `app.rs` y desde los módulos
+que tiene dentro, como `shortcuts.rs`, donde está el menú Ayuda, y desde
+ningún otro lado.
 
 ### El dibujo y los enlaces
 

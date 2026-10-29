@@ -105,8 +105,9 @@ compás:
 - Arrastra una sección para moverla, o su borde derecho para alargarla o
   acortarla.
 - Haz clic en una sección para ver su menú: **Seleccionar los clips de
-  esta sección**, su **Nombre** (escribe uno o haz clic en uno de los
-  nombres habituales), **Tocarla** un número de veces (una sección se
+  esta sección**, su **Nombre** (escribe uno o haz clic en
+  Introducción, Estrofa, Estribillo, Puente, Coda, Preestribillo, Solo,
+  Corte o Drop), **Tocarla** un número de veces (una sección se
   dibuja una vez y se toca esas veces), **🔁 Repetir esta sección**,
   **⧉ Duplicar** (una copia, con sus clips, justo después),
   **⇶ Escribir las repeticiones** (convierte «×3» en tres copias, para

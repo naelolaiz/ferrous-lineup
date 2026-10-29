@@ -17,8 +17,9 @@ you and the music:
 - the **toolbar** fits on one row again, with small painted pictures for
   the windows;
 - **Help > Keyboard shortcuts** (F1) lists every key the app answers to;
+- **Help > User manual** opens the user manual in the app's language;
 - **Help > About Ferrous Lineup** says which version you run, under which
-  license, and where this book and the code are;
+  license, and where the manual, this book and the code are;
 - every window opens **at the size of what it shows**, not at a size
   egui remembered from another day.
 
@@ -38,8 +39,8 @@ you and the music:
 5. Open the mixer (**F9**), drag its corner to make it much bigger,
    close it and open it again. It comes back as big as its channels.
 6. Open **Help > About Ferrous Lineup**. It shows the version, the
-   license, and links to this book, its PDF, the source code and the
-   list of known problems.
+   license, and links to the user manual and this book, each also as a
+   PDF, the source code and the list of known problems.
 
 ![The toolbar on one row: the five window buttons and the Count-in and Metronome toggles are pictures.](../images/step-9-workflow-toolbar.png)
 
@@ -240,8 +241,8 @@ any key is listed twice, since that key would do two things at once.
 ## Who made it, and which version
 
 **Help > About Ferrous Lineup** says which version you are running,
-under which license, and where to find this book, the code and the list
-of known problems. It is the first thing to look at before reporting
+under which license, and where to find the user manual, this book, the
+code and the list of known problems. It is the first thing to look at before reporting
 one.
 
 ![Help > About: the version, the license and the links.](../images/step-9-about.png)
@@ -273,17 +274,46 @@ changes with it, and nobody has to remember a second place. The
 [release builds](releases.md) compare the tag with this same number.
 
 The words go through `tr`, like the menus, so with the Spanish
-interface the window is in Spanish. The book links change too:
+interface the window is in Spanish. The links to the manual and the
+book change too:
 
 ```rust
-let (book, book_pdf) = match i18n::current_language() {
-    Language::English => (BOOK, BOOK_PDF),
-    Language::Spanish => (BOOK_ES, BOOK_ES_PDF),
+let (manual_pdf, book, book_pdf) = match i18n::current_language() {
+    Language::English => (MANUAL_PDF, BOOK, BOOK_PDF),
+    Language::Spanish => (MANUAL_ES_PDF, BOOK_ES, BOOK_ES_PDF),
 };
 ```
 
 The `match` has no `_` arm on purpose. Add a third language, and the
 compiler stops here until you decide which book its readers get.
+
+**Help > User manual** opens the manual's web pages without the About
+window, so the address it needs lives in a function of `about.rs`, and
+the Help menu and the About window both ask it:
+
+```rust
+pub(super) fn manual() -> &'static str {
+    match i18n::current_language() {
+        Language::English => MANUAL,
+        Language::Spanish => MANUAL_ES,
+    }
+}
+```
+
+In the menu, the button asks egui to open that address in a new tab of
+the web browser:
+
+```rust
+if ui.button(crate::i18n::tr("User manual")).clicked() {
+    ui.ctx()
+        .open_url(egui::OpenUrl::new_tab(super::about::manual()));
+    ui.close();
+}
+```
+
+`pub(super)` makes `manual` visible to `app.rs` and to the modules
+inside it, such as `shortcuts.rs`, where the Help menu is, and to
+nothing else.
 
 ### The picture and the links
 
@@ -324,6 +354,8 @@ the click easy to test.
 **Help > About**, checks that the version line and every link are
 drawn, clicks **The book**, and checks that the frame asked for the
 book's address, without any browser opening.
+`help_user_manual_opens_the_manual_in_the_apps_language` does the same
+for **Help > User manual**, in English and in Spanish.
 
 ## Windows the size of what they show
 

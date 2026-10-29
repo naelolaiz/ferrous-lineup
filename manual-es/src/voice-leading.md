@@ -142,6 +142,16 @@ estas son las reglas de un estilo, los himnos y corales del siglo XVIII
 y los ejercicios de armonía basados en ellos, no de toda la música: el
 jazz, el pop y Debussy se mueven en quintas paralelas a propósito.
 
+La banda cumple la primera regla donde sostiene acordes largos, como los
+canta un coro: en estilos como **Himno**, **Romanesca** o **Ambient**,
+cada acorde toma, de las disposiciones más cercanas a la anterior, la
+primera que no mueve dos partes, el bajo incluido, en quintas u octavas
+paralelas ni en quintas u octavas por movimiento contrario, cuando la
+hay. Desde Do Mi Sol sobre Do, Re menor llega como La Re Fa: las partes
+de arriba bajan mientras el bajo sube. Los estilos que tocan sus acordes
+con ritmo toman la disposición más cercana, como lo hacen las manos de
+un pianista.
+
 Donde la tonalidad es una **serie dodecafónica**, la revisión usa en
 cambio las reglas de la escritura dodecafónica, y una línea Serie
 muestra las formas de la serie que lee en las notas: ver [Más allá de
