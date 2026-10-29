@@ -18,9 +18,12 @@ Dos ajustes cambian cómo te habla Ferrous Lineup:
   Fa#, Sib mayor, Lam7).
 
 Son independientes: puedes tener los menús en español con letras, o los
-menús en inglés con solfeo. Los dos cambian solo lo que ves. Una canción
-guardada con una elección se abre exactamente igual para quien tenga la
-otra.
+menús en inglés con solfeo. Pero mientras no elijas una nomenclatura,
+sigue al idioma: con los menús en español las notas se nombran en
+solfeo, como en las escuelas de habla hispana, y con los menús en inglés,
+con letras. Cuando eliges una, se queda, cambies después al idioma que
+cambies. Los dos ajustes cambian solo lo que ves. Una canción guardada
+con una elección se abre exactamente igual para quien tenga la otra.
 
 Con el español elegido, todo lo que escribe la app está en español:
 los menús, las ventanas, las ayudas, los avisos y los nombres de las
@@ -166,6 +169,34 @@ pub fn apply_settings(ctx: &egui::Context) {
 Una exportación de vídeo dibuja sus vistas en un hilo propio, que empieza
 con los valores por defecto, así que se lleva el idioma y la nomenclatura
 consigo, como ya se llevaba el ajuste de los números romanos.
+
+### Solfeo hasta que elijas
+
+egui guarda las preferencias de la ventana como valores bajo un `Id`, y
+`get_persisted` da `None` para un `Id` bajo el que no se guardó nada.
+Ese `None` es lo que distingue «nunca elegido» de una elección, así que
+la nomenclatura recurre al idioma solo entonces:
+
+```rust
+pub fn note_naming(ctx: &egui::Context) -> NoteNaming {
+    ctx.data_mut(|data| data.get_persisted(note_naming_id()))
+        .unwrap_or_else(|| language_naming(language(ctx)))
+}
+
+/// How notes are named where `language` is spoken.
+fn language_naming(language: Language) -> NoteNaming {
+    match language {
+        Language::English => NoteNaming::Letters,
+        Language::Spanish => NoteNaming::Solfege,
+    }
+}
+```
+
+Leer nunca guarda nada; solo lo hace `set_note_naming`, que se llama
+cuando haces clic en una nomenclatura en los Ajustes. Así que hasta ese
+clic cada fotograma vuelve a preguntar al idioma, y pasar al español pasa
+las notas al solfeo. El `match` no tiene un brazo `_` a propósito: un
+tercer idioma no compilaría hasta que alguien diga cómo nombra las notas.
 
 ### Traducir: la clave es el texto en inglés
 
@@ -344,6 +375,14 @@ escribe `Lam7`, y comprueba que el modo no cambió y que el compás tiene
 La menor séptima; con las letras, L cambia el modo y deja el compás como
 estaba.
 
+`spanish_names_notes_in_solfege_until_a_naming_is_chosen` cambia el
+idioma de un lado a otro sin nomenclatura elegida, y la nomenclatura lo
+sigue; luego elige una nomenclatura y vuelve a cambiar el idioma, y la
+nomenclatura se queda. `spanish_names_notes_in_solfege_and_keeps_letters_once_chosen`
+lo hace como lo harías tú: menús en español, **Armonía**, **Letras (C,
+D, E…)** y un reinicio de la app, tras el cual las notas siguen en
+letras.
+
 ## Ejercicios
 
 1. Con el solfeo elegido, escribe `Do` en un compás vacío. Luego elige
@@ -360,3 +399,8 @@ estaba.
    por qué conservar los dos?
 4. `with_notes` deja `{0,1,4}` como está. Busca la línea de `with_notes`
    que lo decide, y di qué haría con `{Do}`.
+5. `note_naming` podría guardar la nomenclatura del idioma la primera vez
+   que no lee ninguna, con `insert_persisted`, para que la próxima
+   lectura la encuentre. Quedaría más ordenado. ¿Qué saldría mal entonces
+   para alguien que abre la app en inglés y la pasa al español una
+   semana después?

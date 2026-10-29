@@ -31,7 +31,7 @@ Promenade, el vals *Pathétique* en cinco, Boléro, La Mer, los Augurios primave
 1. Abre **Archivo > Demostraciones**, escribe `augurios` en el cuadro de búsqueda y
    pulsa Intro: **La consagración de la primavera, Augurios primaverales** se abre y
    suena. Detenlo.
-2. Haz clic en **Biblioteca**, encima de la lista de patrones.
+2. Mira la **Biblioteca**, a la izquierda.
    **Orquesta (cualquier métrica)** está iluminado, como lo está siempre un
    estilo que encaja. «Cualquier métrica» dice que el estilo no está en ningún
    compás propio.

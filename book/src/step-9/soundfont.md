@@ -19,11 +19,11 @@ lets Ferrous Lineup do the same, with a **SoundFont**.
 
 ## What you see
 
-There is a new page in **Edit > Settings… > Audio**. Tick
-**SoundFont instruments**. The first time, a window explains what a
-SoundFont is and offers to download one:
+The first time you press Play, a window explains what a SoundFont is
+and offers to download one, while the song goes on playing. Ticking
+**SoundFont instruments** in **Edit > Settings… > Audio** opens it too:
 
-![The "Real instrument sounds" window: GeneralUser GS, about 30 MB, kept in ~/.local/share/ferrouslineup/soundfonts, with Download, Choose a file… and Not now](../images/step-9-soundfont-offer.png)
+![The first Play: the starting song plays on, its playhead in bar 7, while the "Real instrument sounds" window offers GeneralUser GS, about 30 MB, kept in ~/.local/share/ferrouslineup/soundfonts, with Download, Choose a file… and Not now](../images/step-9-soundfont-offer.png)
 
 **Download** fetches GeneralUser GS, a free General MIDI SoundFont made
 by S. Christian Collins, from its GitHub page. The window and the
@@ -56,6 +56,10 @@ Two more things use the SoundFont without being told: **File > Export
 WAV** writes the song as you hear it, SoundFont included, and the
 typing keyboard and a MIDI keyboard play it too. **MIDI > Send every
 channel** still sends the notes to the external synth, as before.
+
+**Not now** closes the window and keeps the Lineup Osc. Play does not
+ask again: the tick in **Edit > Settings… > Audio** is there for when
+you change your mind.
 
 If the download fails (no network, a firewall), the window says why.
 You can download `GeneralUser-GS.sf2` from
@@ -361,11 +365,55 @@ struct Settings {
     on: bool,
     drums: bool,
     file: Option<PathBuf>,
+    /// Whether the first Play has offered the SoundFont: it does once.
+    offered: bool,
 }
 ```
 
 `#[serde(default)]` lets a future version add a field: settings saved
-before it get the field's default instead of failing to load.
+before it get the field's default instead of failing to load. `offered`
+came that way: settings saved before it read as never asked, so someone
+who had the app already is asked on their next Play too, unless their
+sounds are set up.
+
+## Asked on the first Play
+
+The Lineup Osc makes every instrument out of a few simple waves, which
+is not how a band should sound the first time you hear it. So the app
+does not wait for you to find the setting: `set_playing`, which every
+way of starting to play goes through (the ▶ button, **Space**, the
+rack's **Play pattern**, a Library preview), ends with
+
+```rust
+self.playing = true;
+self.offer_sound_font_on_first_play();
+```
+
+and that asks once:
+
+```rust
+pub(super) fn offer_sound_font_on_first_play(&mut self) {
+    let sounds = &mut self.sounds;
+    if sounds.settings.offered {
+        return;
+    }
+    sounds.settings.offered = true;
+    sounds.changed = true;
+    let missing = sounds.wanted_path().is_some_and(|path| !path.is_file());
+    if !sounds.settings.on && sounds.settings.file.is_none() && missing {
+        self.set_sound_font(true);
+    }
+}
+```
+
+`offered` is set before anything else, so whatever you answer, Play
+never asks again. The offer itself is the same as the setting's: it
+turns the sounds on, and `prepare_sound_font` opens the window because
+the file is missing; **Not now** turns them off again. Nothing is asked
+when the sounds are on already, when you chose a file of your own, or
+when GeneralUser GS is already on disk: then the sounds were turned off
+on purpose. Playing goes on while the window asks, so the first sound
+you hear is never held up by a question.
 
 ## The band gets instruments
 
@@ -445,6 +493,16 @@ Program 33 is the instrument an octave up, so A4 comes out at 880 Hz.
 Other tests check that a note starts within one block, ends after its
 length, gets louder with velocity, that a drum plays its own key
 whatever note it is written on, and which channels the SoundFont takes.
+
+The UX tests must not depend on whether the computer running them has
+downloaded GeneralUser GS. So every test app looks for it at a path
+that never exists, `keep_general_user_in(no_sound_font())`, and starts
+as if the first Play had asked already. The one test about the offer,
+`the_first_play_offers_real_instrument_sounds_once`, undoes that: it
+presses **Space** and checks that the window opens and the sounds are
+on, clicks **Not now**, presses Play again, and checks that nothing is
+asked, even after a restart. Then it puts an empty file where
+GeneralUser GS goes and checks that Play asks nothing.
 
 ## Debug builds
 

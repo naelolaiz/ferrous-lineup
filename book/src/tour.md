@@ -91,10 +91,12 @@ on the third, sixth and seventh degrees are written: bIII bVI bVII,
 counted from the major scale as pop and jazz books do, or III VI VII,
 counted from the minor scale as classical books do. **Harmony > Note
 naming** names notes, keys and chords with letters (C, Am7) or in
-solfège (Do, Lam7), and **Appearance > Language** shows the app in
-English or Spanish (see [The app in Spanish, and notes in letters or
-solfège](step-9/languages.md)).
-The **Library** tab next to the pattern list holds an alphabetical
+solfège (Do, Lam7); until you choose one, they follow the language,
+solfège in Spanish and letters in English. **Appearance > Language**
+shows the app in English or Spanish (see [The app in Spanish, and notes
+in letters or solfège](step-9/languages.md)).
+The **Library**, the tab in front on the left when the app starts (the
+**Patterns** tab next to it lists the song's patterns), holds an alphabetical
 **Presets** list, combining all 177 harmony presets, 112 rhythm presets
 and your saved styles. **Edit > Settings… > Library > Style list** can instead group
 them by genre, with a separate **User styles** group. Equivalent
@@ -456,10 +458,11 @@ harmony keys then name the chords as it plays.
 **Edit > Settings… > Audio > SoundFont instruments** plays recordings of real instruments
 instead of the Lineup Osc: every channel with a General MIDI instrument
 (the demos' voices, the Library's piano and bass, the demo song's
-chords) and, with **SoundFont drums**, the drum kit. The first time, it
-offers to download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS),
+chords) and, with **SoundFont drums**, the drum kit. The first time you
+press Play, or tick it, the app offers to download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS),
 a free General MIDI SoundFont by S. Christian Collins (about 30 MB, kept
-for next time). **Choose SoundFont…** plays any other `.sf2` file
+for next time). **Download** turns it on; **Not now** keeps the Lineup
+Osc, and Play does not ask again. **Choose SoundFont…** plays any other `.sf2` file
 instead. WAV export uses it too. The Audio category also shows the active
 output device, sample rate and channel count.
 

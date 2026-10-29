@@ -97,11 +97,17 @@ para compilar más rápido.
 
 Deberías ver esta ventana:
 
-![Ferrous Lineup al abrirse: la canción de demostración en el playlist, el channel rack encima con Kick, Clap, Hat, Snare y el Lineup Osc, y las harmony keys de do mayor en la parte de abajo.](images/getting-started-window.png)
+![Ferrous Lineup al abrirse: la Library a la izquierda, la canción de demostración en el playlist, el channel rack encima con Kick, Clap, Hat, Snare y el Lineup Osc, y las harmony keys de do mayor en la parte de abajo.](images/getting-started-window.png)
 
 Pulsa **Espacio** o haz clic en **▶** para oír la canción de
 demostración: dos compases de acordes, luego entra un pulso, y un
-relleno de batería la termina antes de que se repita en bucle. La lista de reproducción llena
+relleno de batería la termina antes de que se repita en bucle. La
+primera vez, una ventana se ofrece a descargar un **SoundFont** gratuito,
+grabaciones de instrumentos reales: el sintetizador propio de la app
+solo se parece de lejos a un piano o a una batería. **Descargar** lo
+trae (unos 30 MB, una sola vez) y toca los instrumentos con él; **Ahora
+no** se queda con el sintetizador ([Sonidos de instrumentos reales: un
+SoundFont](step-9/soundfont.md) cuenta más). La lista de reproducción llena
 la ventana; **F6** muestra y oculta el rack de canales, **F7** el piano
 roll, y **L** alterna entre reproducir la canción y repetir en bucle el
 patrón seleccionado. **Ctrl+S** (⌘S en un Mac) guarda el proyecto,
@@ -126,10 +132,11 @@ banda.
 
 Encima de la barra de estado están las **teclas de armonía**: la tonalidad y
 el compás, y una tecla grande para cada acorde de la tonalidad. Mantén
-una pulsada, o pulsa de **1** a **7**, para tocar su acorde. La pestaña
-**Biblioteca**, junto a la lista de patrones, contiene los estilos y los
-ritmos: haz clic en uno y luego en **Aplicar** para oír la canción tocada
-de esa manera. **Archivo > Demostraciones** abre canciones enteras: prueba *Para Elisa* o *Frère Jacques*, no pulses nada y mira cómo las teclas de armonía
+una pulsada, o pulsa de **1** a **7**, para tocar su acorde. La
+**Biblioteca**, a la izquierda, contiene los estilos y los ritmos: haz
+clic en uno y luego en **Aplicar** para oír la canción tocada de esa
+manera; la pestaña **Patrones**, a su lado, enumera los patrones de la
+canción. **Archivo > Demostraciones** abre canciones enteras: prueba *Para Elisa* o *Frère Jacques*, no pulses nada y mira cómo las teclas de armonía
 siguen a los acordes.
 
 [Un recorrido por la aplicación](tour.md) pasa por cada ventana, menú y

@@ -32,7 +32,7 @@ Ritual of Abduction and the five Petrushka demos.
 1. Open **File > Demos**, type `Augurs` in the search box and press
    Enter: **The Rite of Spring, The Augurs of Spring** opens and plays.
    Stop it.
-2. Click **Library** above the pattern list. **Orchestra (any meter)**
+2. Look at the **Library**, on the left. **Orchestra (any meter)**
    is lit, the way a matching style always is. "Any meter" says the
    style is in no time signature of its own.
 
