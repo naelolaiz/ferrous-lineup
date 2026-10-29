@@ -54,6 +54,7 @@ Las teclas de zoom agrandan lo que está bajo el puntero:
 | la lista de reproducción | compases más anchos o más estrechos | pistas más altas o más bajas |
 | el piano roll | pasos más anchos o más estrechos | filas más altas o más bajas |
 | el rack de canales | todo el rack más grande o más chico | |
+| la hoja de acordes en la ventana principal | texto, botones y menús más grandes o más chicos, en todas partes: con nombres más chicos caben más compases por línea | |
 | cualquier otra cosa | texto, botones y menús más grandes o más chicos, en todas partes | |
 
 El paso bajo el puntero se queda bajo el puntero. **Ctrl+0** devuelve al

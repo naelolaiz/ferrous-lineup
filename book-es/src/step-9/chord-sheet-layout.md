@@ -18,8 +18,8 @@ cajas vacías grandes, y una ventana que tapaba la lista de reproducción.
 Dos cambios, ambos arriba de la hoja, junto a **Mostrar**:
 
 - **Compases por línea.** Por defecto, **Ajustar a los nombres**: tantos compases
-  como quepan en una línea con cada nombre y cada palabra debajo a su
-  tamaño completo, nunca encogidos. El menú dice cuántos son ahora, como
+  como quepan en una línea con cada nombre, y el numeral o las notas
+  debajo, a su tamaño completo, nunca encogidos. El menú dice cuántos son ahora, como
   en **Ajustar (4)**. O elige un número de 1 a 16; entonces la línea
   contiene ese número, y los nombres que no caben se escriben más
   pequeños.
@@ -48,7 +48,11 @@ donde estaba, en la ventana principal o en la suya.
 4. Elige **Compases por línea > 16**. Los nombres que no caben en un
    dieciseisavo del ancho se hacen más pequeños, todos los nombres de un
    compás al mismo tamaño.
-5. Elige otra vez **Ajustar a los nombres**, y **Volver a la lista de reproducción**.
+5. Con la hoja todavía en la ventana principal, pulsa **Ctrl+−** dos
+   veces con el puntero encima. Los nombres se achican, como todo lo
+   demás, y las líneas se alargan, como dice el **Ajustar (N)** del
+   menú. **Ctrl+0** los devuelve a su tamaño.
+6. Elige otra vez **Ajustar a los nombres**, y **Volver a la lista de reproducción**.
 
 ![El menú Bars per line: Fit the names, o un número de compases de 1 a 16 (la lista se desplaza hasta 15 y 16).](../images/step-9-chord-sheet-bars-per-line.png)
 
@@ -151,34 +155,114 @@ número que mantenga juntas las frases, así que son dos.
 ## Cuánto de ancho debe ser un compás
 
 Antes de dibujar, la hoja pregunta a cada compás de la canción cuánto
-debe medir de ancho, y se queda con el más ancho. Los nombres de un
-compás no comparten su anchura a partes iguales: **cada nombre tiene la
-parte del compás que va de su pulso al del siguiente nombre**, porque
-ahí es donde lo dibuja la hoja. En un compás de 4/4 de "C A7", C tiene
-los pulsos 1 y 2, la mitad del compás, y A7 lo mismo. En "C / / A7", C
-tiene tres cuartos y A7 uno.
-
-Así que un nombre de 30 píxeles de ancho que ocupa un cuarto del compás
-necesita un compás de 120 píxeles:
+debe medir de ancho, y se queda con el más ancho. Lo que tiene que
+caber es cada **nombre** y la **primera palabra debajo**: el numeral
+romano de un acorde, o las notas de un conjunto ("Do Mi Sol"), que a
+menudo es la más ancha de las dos. Las palabras después del numeral,
+como "prestado" en "bVII7 · prestado", "pivote", "en la menor armónica"
+o "silencio", se escriben solo donde hay sitio para ellas. El color del
+numeral ya dice "prestado", y mantener el ratón sobre el nombre lo dice
+todo. Contar esas palabras haría que un solo acorde prestado en el
+último pulso de un compás partiera por la mitad los compases de cada
+línea.
 
 ```rust
-let share = (end - starts[index]) as f32 / length;
-let text = width(&item.text, NAME_SIZE);
-let caption = item
-    .caption
-    .as_deref()
-    .map_or(0.0, |caption| width(caption, CAPTION_SIZE));
-(text.max(caption) + gap) / share
+fn first_word(caption: &str) -> &str {
+    caption.split(" · ").next().unwrap_or(caption)
+}
 ```
 
-`width` mide el texto con las fuentes del painter (`layout_no_wrap`),
-igual que se dibujará. La **caption** es la línea bajo el nombre: el
-numeral romano de un acorde, o las notas de un conjunto ("C E G"), que a
-menudo es la más ancha de las dos. `as_deref` convierte el
-`Option<String>` en un `Option<&str>`, y `map_or` da 0 cuando no hay
-caption. Un nombre seguido de otro guarda con él un hueco de 4 píxeles,
-y el relleno a ambos lados del compás y cualquier signo de repetición se
-añaden al final.
+`split` da los trozos entre los separadores, uno a uno, y `next` toma
+el primero. Devuelve un `Option`, porque un iterador puede estar
+vacío; el de `split` nunca lo está, pero el tipo no lo sabe, y
+`unwrap_or` dice qué usar si lo estuviera. Cuando la hoja dibuja un
+subtítulo, `words_that_fit` prueba todas las palabras, luego una menos,
+hasta la primera, y escribe la primera combinación que cabe.
+
+Después, cada nombre se coloca **en su pulso, o justo después del nombre
+anterior** cuando ese necesita el sitio. En un compás de 4/4 de "C A7",
+C empieza en el pulso 1 y A7 en el 3. Pero en un compás donde Dm7/C
+dura una semicorchea y G7 el resto, Dm7/C tiene sitio para una letra
+antes del pulso de G7: G7 se escribe justo después, un poco tarde, como
+hace una partitura impresa cuando los acordes se amontonan. Un nombre
+nunca empieza antes de su pulso, así que el orden de los nombres es
+siempre el de los acordes.
+
+Una `Row` guarda, para cada nombre de un compás, su pulso (de 0 al
+principio del compás hacia 1 al final) y su ancho. Los anchos se miden
+con las fuentes del painter (`layout_no_wrap`), igual que se dibujarán
+los nombres:
+
+```rust
+struct Row {
+    names: Vec<(f32, f32)>,
+}
+```
+
+¿Cuánto puede estrecharse el interior del compás? Como ningún nombre
+empieza antes de su pulso, **cada nombre, con todos los que vienen
+después, tiene que caber entre su pulso y el final del compás**:
+
+```rust
+fn packed_width(&self) -> f32 {
+    (0..self.names.len())
+        .map(|first| {
+            let (beat, _) = self.names[first];
+            let from = &self.names[first..];
+            let widths: f32 = from.iter().map(|(_, width)| width).sum();
+            let gaps = NAME_GAP * (from.len() - 1) as f32;
+            (widths + gaps) / (1.0 - beat)
+        })
+        .fold(0.0, f32::max)
+}
+```
+
+En "C / / A7", A7 empieza en el pulso 4 y tiene el último cuarto del
+compás: un A7 de 30 píxeles necesita un compás de 120. C empieza en el
+pulso 1 y necesita los dos nombres, con el espacio entre ellos, en todo
+el compás. El compás necesita el mayor de los dos. Para la semicorchea
+de Dm7/C, son los dos nombres uno al lado del otro, no un compás
+dieciséis veces más ancho que "Dm7/C".
+
+`&self.names[first..]` es un **slice**: una vista del vector desde
+`first` hasta el final, sin copiarlo. A `sum` hay que decirle qué suma,
+`f32` aquí, porque muchos tipos se pueden sumar a partir de los mismos
+elementos.
+
+La misma `Row` coloca los nombres cuando se dibuja el compás:
+
+```rust
+fn lefts(&self, left: f32, right: f32) -> Vec<f32> {
+    let on_beat = |beat: f32| left + (right - left) * beat;
+    let mut free = left;
+    let packed: Vec<f32> = self
+        .names
+        .iter()
+        .map(|&(beat, width)| {
+            let start = on_beat(beat).max(free);
+            free = start + width + NAME_GAP;
+            start
+        })
+        .collect();
+    if free - NAME_GAP <= right + 0.5 {
+        packed
+    } else {
+        self.names.iter().map(|&(beat, _)| on_beat(beat)).collect()
+    }
+}
+```
+
+El closure que recibe `map` cambia `free`, una variable de fuera, cada
+vez que se lo llama: es un `FnMut`. `map` lo acepta porque lo llama una
+vez por elemento, en orden. Cuando los nombres no caben todos así, en
+una línea con un número de compases que elegiste, cada uno empieza en
+su pulso, y `draw_names` los achica (más abajo). Medir y dibujar
+comparten una `Row`, así que la hoja nunca hace sitio para algo que no
+dibuja. Una armonía que sigue de un compás anterior, por ejemplo, se
+dibuja sin las palabras de debajo, y se mide sin ellas.
+
+El relleno a ambos lados del compás y los signos de repetición, si los
+hay, se suman al final.
 
 El más ancho de todos se saca con un **fold**:
 
@@ -252,6 +336,27 @@ las mismas filas de botones, los mismos compases, las mismas
 tonalidades. Solo cambia el marco que los rodea. Así que todo lo que el
 hoja hace en su ventana lo hace en la ventana principal, sin una
 segunda copia del código.
+
+Con la hoja ahí, las teclas de zoom sobre ella cambian el tamaño de la
+interfaz, como lo hacen sobre la ventana propia de la hoja. Una ventana
+se achica con todo lo demás, pero la hoja en la ventana principal
+conserva el sitio que tiene, así que con nombres más pequeños caben más
+compases por línea. Las teclas de zoom averiguan qué hay
+bajo el puntero mirando el área de la lista de reproducción, que es
+donde ahora está la hoja. Así que mientras la hoja llena la ventana,
+esa área no cuenta, y las teclas no hacen zoom de una lista de
+reproducción que nadie ve:
+
+```rust
+let playlist = match self.chord_sheet.fills_window() {
+    true => egui::Rect::NOTHING,
+    false => self.playlist.area(),
+};
+```
+
+`Rect::NOTHING` es un rectángulo que no contiene ningún punto, así que
+la pregunta "¿está el puntero sobre la lista de reproducción?" siempre
+da falso.
 
 `remember` se llama **antes** que `fills_window`. Lee las elecciones
 guardadas por la última ejecución, la primera vez que se llama. Si se
@@ -343,6 +448,23 @@ línea y que cada nombre se dibuja a su tamaño completo, 20 puntos. Luego
 elige 8: el menú ya no dice "Fit (8)", y "Dm7/C" es más pequeño. Elegir
 otra vez **Ajustar a los nombres** devuelve el primer número y el tamaño
 completo.
+
+`the_words_after_a_numeral_are_written_where_there_is_room` escribe
+"C Am F Fm" en el compás 1 y "Fm" en el compás 2. Fm es prestado de do
+menor, así que su subtítulo es "iv · prestado". La hoja sigue teniendo
+cuatro compases por línea, con "iv" solo en el último pulso del compás 1
+e "iv · prestado" entero en el compás 2.
+`a_short_chord_keeps_its_name_whole_with_the_next_just_after_it`
+escribe Dm7/C durante una semicorchea y G7 durante el resto del
+compás: cuatro compases por línea, los dos nombres a 20 puntos, y G7
+empezando a la derecha de Dm7/C.
+
+`the_zoom_keys_over_the_sheet_in_the_main_window_zoom_the_sheet` pone
+la hoja en la ventana principal y pulsa Ctrl+− dos veces sobre ella. El
+tamaño de la interfaz es menor, el zoom de la lista de reproducción
+sigue al 100% y las líneas tienen más compases. La ventana de la prueba
+hace lo que eframe hace con la de verdad: con un zoom menor, la misma
+ventana en la pantalla mide más puntos de ancho.
 
 `the_sheet_fills_the_main_window_and_goes_back` hace clic en **⛶ Llenar la ventana** y comprueba que la palabra "Lista de reproducción" ha desaparecido, que
 "Patrones" sigue ahí, que las líneas contienen más compases que en la

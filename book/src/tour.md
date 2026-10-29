@@ -257,8 +257,8 @@ are deleted. Open popups and configuration controls keep their own keys.
 names), opens the **chord sheet**: the
 song's harmony bar by bar, each section under its name, as a lead sheet
 writes it. **Bars per line** puts as many bars on a line as show every
-name in full, at its full size (1, 2, 4, 8, 12 or 16, so that lines
-start where phrases do), or the number you pick. Click a bar and type its harmony:
+name, and the numeral under it, at its full size (1, 2, 4, 8, 12 or 16,
+so that lines start where phrases do), or the number you pick. Click a bar and type its harmony:
 chords (`Am7 D7`, `G7/B`, `F#m7b5`), Roman numerals in the key
 (`ii7 V7`), pitch-class sets (`3-11 T2`, `{0,1,4}`), micromodes
 (`Menor 3`), twelve-tone row forms (`P0`, `RI7`) or `N.C.`; a `/` holds
@@ -496,9 +496,10 @@ mouse wheel (⌘ instead of Ctrl on a Mac) makes bars and steps wider or
 narrower, and **Alt** with the same keys or the wheel makes tracks and
 keys taller or shorter, around what is under the pointer. Over the
 channel rack they zoom its one size. Anywhere else (the toolbars, the
-harmony keys, the status bar, the Patterns and Library panel) they make
-the text, buttons and menus bigger or smaller everywhere, as **Settings > Appearance >
-Interface size** does. **Ctrl+0** takes what is under the pointer back
+harmony keys, the status bar, the Patterns and Library panel, the chord
+sheet) they make the text, buttons and menus bigger or smaller
+everywhere, as **Settings > Appearance > Interface size** does; on the
+chord sheet in the main window, smaller names fit more bars on a line. **Ctrl+0** takes what is under the pointer back
 to 100%. The playlist's two zooms are also at the right end of the
 status bar.
 **Edit > Settings…** separates preferences into **Appearance**, **Harmony**,
