@@ -276,7 +276,7 @@ fn all_entries() -> Vec<Entry> {
 /// found by typing "fur", and "St. James" by "st james". A hyphen is a
 /// space, so "Tico-Tico" is found by "tico". Sharps ("F#"),
 /// time signatures ("3/4") and grouped beats ("2+2+3/8") keep their marks.
-fn fold(text: &str) -> String {
+pub(crate) fn fold(text: &str) -> String {
     let mut folded = String::with_capacity(text.len());
     for c in text.chars().flat_map(char::to_lowercase) {
         match c {
