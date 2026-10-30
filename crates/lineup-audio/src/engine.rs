@@ -1990,9 +1990,6 @@ fn delay(loose_frames: f64, channel: usize, song_step: usize, pitch: Note) -> f6
     loose_frames * (0.8 * together + 0.2 * apart)
 }
 
-/// Whether an instrument plays one of each note at a time, so that a note
-/// starting again ends the one sounding: a MIDI Out, and a SoundFont,
-/// which plays its notes the same way.
 /// How many frames the steps of the loop from `from` up to `to` last, at
 /// `timing`'s tempos: the song's, one a step and the last going on, or
 /// else its single tempo, at its sample rate. A step before the loop
@@ -2005,6 +2002,9 @@ fn frames_between(timing: (&[Tempo], Tempo, u32), from: isize, to: usize) -> f64
         .sum()
 }
 
+/// Whether an instrument plays one of each note at a time, so that a note
+/// starting again ends the one sounding: a MIDI Out, and a SoundFont,
+/// which plays its notes the same way.
 fn one_per_pitch(instrument: &Instrument) -> bool {
     matches!(
         instrument,
@@ -2858,7 +2858,6 @@ mod tests {
         assert!(loudness(short) < 0.6 * loudness(long));
     }
 
-    /// All 16 steps of a pattern, once, from song step `start`.
     /// A song of one 256-step pattern whose only note, on its first
     /// step, plays a recording: 12 seconds (96 steps) of a sound that
     /// rises steadily from 0 to 1, so where in it playback is can be
@@ -2947,6 +2946,7 @@ mod tests {
         assert!((again - first).abs() < 0.001, "{first} then {again}");
     }
 
+    /// All 16 steps of a pattern, once, from song step `start`.
     fn whole(pattern: usize, start: usize) -> Play {
         Play {
             pattern,

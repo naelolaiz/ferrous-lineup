@@ -146,10 +146,36 @@ broken row. `PitchSet` has the same pair, so a set is saved as
 `"0 3 6 9"`.
 
 `parse` also reads the box at the top of the Row window. It takes note
-names (`E F G Db Gb Eb Ab D B C A Bb`), numbers (`4 5 7 1 …`) or the
+names in letters (`E F G Db Gb Eb Ab D B C A Bb`) or in solfège (`Mi
+Fa Sol Reb Solb Mib Lab Re Si Do La Sib`), numbers (`4 5 7 1 …`) or the
 compact form twelve-tone books use, one character a note with **T**
 and **E** for ten and eleven (`45716382E09T`). When a note comes twice
 it says which, and which note is missing instead.
+
+A name is read in letters first, and in solfège when that fails. No
+syllable is also a letter name, since none starts with A to G but
+`Do`, `Fa`, whose second letter is no sharp or flat, so the two never
+clash. Before reading solfège, `parse_name` writes the name with a
+capital and the rest in small letters, so `SOL#` and `sib` read as
+`Sol#` and `Sib`, where the small `b` is a flat:
+
+```rust
+fn parse_name(token: &str) -> Result<u8, String> {
+    parse_letters(token).or_else(|error| {
+        let mut chars = token.chars();
+        let first = chars.next().map(|c| c.to_uppercase().collect::<String>());
+        let written = first.unwrap_or_default() + &chars.as_str().to_lowercase();
+        NoteName::read_as(&written, NoteNaming::Solfege)
+            .filter(|(_, rest)| rest.is_empty())
+            .map(|(name, _)| name.pitch_class().semitone())
+            .ok_or(error)
+    })
+}
+```
+
+`or_else` runs its closure only on an error, and `ok_or(error)` gives
+back the letters' error when solfège fails too, so a wrong name is
+explained in the terms most people type.
 
 **From the notes** reads a row from the piano roll: the first twelve
 different pitch classes among the selected notes (or all of them), in

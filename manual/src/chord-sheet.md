@@ -75,7 +75,8 @@ Several harmonies go in one bar, separated by spaces:
 | A row form | a form of the song's twelve-tone row | `P0`, `I5`, `R3`, `RI7` |
 | No chord | the band plays no harmony | `N.C.` |
 | A held beat | the harmony before goes on one more beat | `/` |
-| The bar before again | the bar goes on with what was playing | `%`, or nothing at all |
+| Nothing | the bar goes on with what was playing | an empty bar |
+| The bar before again | plays the bar before once more: after `C G`, C G again | `%` |
 
 [Chords and their names](chords.md) lists the ways a chord can be
 written: `Cmaj7`, `CM7` and `CΔ` are all read, `Cm7` and `C-7` too. What
@@ -210,9 +211,10 @@ Everything but the bars is optional:
 | `\| C \| Am7 \| Dm7 G7 \|` | Bars, as many on a line as you like. |
 | `# a note` | A note for people, skipped. |
 
-In a bar goes exactly what you would type in a bar of the sheet. `%`,
-or an empty bar `| |`, repeats the bar before; `||`, `|:` and `:|` are
-read as plain bar lines. A `Key:` or `Time:` line between bars changes
+In a bar goes exactly what you would type in a bar of the sheet: `%`
+plays the bar before again, and an empty bar `| |` goes on with the
+chord that was playing; `||`, `|:` and `:|` are read as plain bar
+lines. A `Key:` or `Time:` line between bars changes
 the key or the time from the next bar on.
 
 Roman numerals are read in the chart's key, so this chart:
