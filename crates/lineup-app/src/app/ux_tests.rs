@@ -2355,7 +2355,7 @@ fn a_ticked_tempo_comes_with_a_style_only_in_the_same_meter() {
 }
 
 #[test]
-fn the_time_picker_routes_unchecked_matching_style_to_plain_accents() {
+fn the_time_picker_routes_unticked_chord_parts_to_simple_chords() {
     let mut screen = meter_test_screen(true, true);
     screen.app.rack_open = false;
     screen.app.harmony_keys.open = true;
@@ -2378,7 +2378,7 @@ fn the_time_picker_routes_unchecked_matching_style_to_plain_accents() {
         })
         .unwrap();
     screen.click_at(time_button, Modifiers::NONE);
-    screen.click("Use matching style");
+    screen.click("Its chord and bass parts");
     screen.click("7/8");
     assert!(!screen.app.playlist.library_parts().matching_style);
     assert_eq!(

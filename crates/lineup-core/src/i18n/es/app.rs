@@ -251,10 +251,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Aplica un preajuste de la Biblioteca para añadir acompañamiento. Las voces que ya tiene la canción se pueden cambiar aquí.",
     ),
     ("Apply by default", "Aplicar por defecto"),
-    (
-        "Apply rhythm patterns / accents",
-        "Aplicar patrones rítmicos / acentos",
-    ),
     ("apply user style", "aplicar estilo de usuario"),
     ("around 1 kHz", "alrededor de 1 kHz"),
     ("Arpeggiate chords", "Arpegiar los acordes"),
@@ -2258,16 +2254,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Dar vuelta primero cada intervalo",
     ),
     (
-        "Turn off to change the meter while keeping the current playing patterns",
-        "Desactívalo para cambiar la métrica conservando los patrones de ejecución actuales",
-    ),
-    (
         "Turn off to keep the current swing amount",
         "Desactívalo para conservar la cantidad de swing actual",
-    ),
-    (
-        "Turn off to mark the new meter's accents with your current instruments, even when the library has a matching style.",
-        "Desactívalo para marcar los acentos de la nueva métrica con tus instrumentos actuales, aunque la biblioteca tenga un estilo correspondiente.",
     ),
     (
         "Turns bands of frequencies up or down. The lows are the weight of a bass or a kick drum, the middle the body of most instruments, the highs the air and sparkle of cymbals. Turn a piano's lows down to leave the bass room.",
@@ -2332,7 +2320,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Use", "Usar"),
     ("Use as the key", "Usar como tonalidad"),
-    ("Use matching style", "Usar el estilo correspondiente"),
     (
         "Use recorded instruments from a SoundFont, or the built-in Lineup Osc.",
         "Usa instrumentos grabados de un SoundFont, o el Lineup Osc incorporado.",
