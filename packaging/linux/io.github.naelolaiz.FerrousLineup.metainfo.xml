@@ -102,13 +102,35 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
-    <release version="0.4.0" date="2026-10-28">
+    <release version="0.4.1" date="2026-10-30">
+      <description>
+        <p>Adds a user manual, offers real instrument sounds as the app opens, and fixes and improves the band, the chord sheet and importing.</p>
+        <p xml:lang="es">Añade un manual de usuario, ofrece sonidos de instrumentos reales al abrir la aplicación, y corrige y mejora la banda, la hoja de acordes y la importación.</p>
+        <ul>
+          <li>A user manual in English and Spanish, without code, opened from Help > User manual and linked from Help > About.</li>
+          <li xml:lang="es">Un manual de usuario en inglés y en español, sin código, que se abre desde Ayuda > Manual de usuario y está enlazado desde Ayuda > Acerca de.</li>
+          <li>The app offers to download real instrument sounds (the GeneralUser GS SoundFont) as it opens, and the sound settings now survive updates.</li>
+          <li xml:lang="es">La aplicación ofrece descargar sonidos de instrumentos reales (el SoundFont GeneralUser GS) al abrirse, y los ajustes de sonido ahora se conservan al actualizar.</li>
+          <li>New defaults: the Library is in front, and notes are named in solfège when the interface is in Spanish, until a naming is chosen.</li>
+          <li xml:lang="es">Nuevos valores por defecto: la Biblioteca está delante, y las notas se nombran en solfeo cuando la interfaz está en español, hasta que se elija una nomenclatura.</li>
+          <li>The chord sheet fits more bars to a line, its zoom keys zoom it, and "%" repeats the whole bar before.</li>
+          <li xml:lang="es">En la hoja de acordes caben más compases por línea, sus teclas de zoom la amplían, y «%» repite el compás anterior entero.</li>
+          <li>A recording dropped on the window is imported, plays from wherever playback starts, and gets the key of its longest stretch.</li>
+          <li xml:lang="es">Una grabación soltada sobre la ventana se importa, suena desde donde empiece la reproducción, y recibe la tonalidad de su tramo más largo.</li>
+          <li>The walking bass leads into the next chord by a semitone, and styles that hold chords, as a choir does, move without parallel fifths or octaves.</li>
+          <li xml:lang="es">El walking bass llega al acorde siguiente por semitono, y los estilos que sostienen los acordes, como un coro, se mueven sin quintas ni octavas paralelas.</li>
+          <li>On macOS, .lineup files open from Finder.</li>
+          <li xml:lang="es">En macOS, los archivos .lineup se abren desde el Finder.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.4.0" date="2026-10-29">
       <description>
         <p>Speaks Spanish, names notes in solfège, and has an About window.</p>
         <p xml:lang="es">Habla español, nombra las notas en solfeo y tiene una ventana Acerca de.</p>
         <ul>
-          <li>The interface can be shown in Spanish, from Edit > Settings > Appearance > Language. Text not translated yet stays in English.</li>
-          <li xml:lang="es">La interfaz puede mostrarse en español, desde Edición > Ajustes > Apariencia > Idioma. El texto que aún no está traducido queda en inglés.</li>
+          <li>The interface can be shown in Spanish, from Edit > Settings > Appearance > Language: every menu, window, setting and message.</li>
+          <li xml:lang="es">La interfaz puede mostrarse en español, desde Edición > Ajustes > Apariencia > Idioma: cada menú, ventana, ajuste y mensaje.</li>
           <li>Notes, keys and chords can be named with letters or in solfège (Do, Re, Mi; Sib major; Lam7, Sol7/Si), in either language. Chords can be typed either way, and files always keep letters, so a song opens the same for everyone.</li>
           <li xml:lang="es">Las notas, las tonalidades y los acordes pueden nombrarse con letras o en solfeo (Do, Re, Mi; Sib mayor; Lam7, Sol7/Si), en cualquiera de los dos idiomas. Los acordes se pueden escribir de las dos maneras, y los archivos siempre guardan letras, así que una canción se abre igual para todos.</li>
           <li>Help > About Ferrous Lineup shows the version and the license, with links to the book, the source code and a page to report an issue.</li>
