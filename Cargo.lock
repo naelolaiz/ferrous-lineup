@@ -2038,7 +2038,7 @@ checksum = "d4a5ff6bcca6c4867b1c4fd4ef63e4db7436ef363e0ad7531d1558856bae64f4"
 
 [[package]]
 name = "lineup-app"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "eframe",
  "egui_system_font_provider",
@@ -2061,7 +2061,7 @@ dependencies = [
 
 [[package]]
 name = "lineup-audio"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "cpal",
  "hound",
@@ -2072,7 +2072,7 @@ dependencies = [
 
 [[package]]
 name = "lineup-core"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "ron",
  "serde",
@@ -2080,7 +2080,7 @@ dependencies = [
 
 [[package]]
 name = "lineup-listen"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "bpm-key",
  "hound",
@@ -2092,7 +2092,7 @@ dependencies = [
 
 [[package]]
 name = "lineup-video"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "epaint",
  "mp3lame-encoder",
