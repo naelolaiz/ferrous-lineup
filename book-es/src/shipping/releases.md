@@ -216,6 +216,64 @@ firma **ad hoc** (`codesign --force --sign -`), lo pone en una carpeta
 con un enlace a `/Applications`, y `hdiutil` hace el `.dmg`, así la gente
 arrastra la aplicación a Aplicaciones.
 
+El plist declara además el **tipo de documento** `.lineup`: una entrada
+`CFBundleDocumentTypes` que nombra el tipo que abre la aplicación, y
+una entrada `UTExportedTypeDeclarations` que define ese tipo,
+`io.github.naelolaiz.FerrousLineup.project`, como los archivos que
+terminan en `.lineup`. Con las dos, el Finder abre un proyecto con la
+aplicación. En Linux y Windows el gestor de archivos arranca el
+programa con la ruta del archivo en la línea de comandos, que lee
+`main`. macOS lo arranca sin argumentos y manda los archivos en un
+evento de Apple, «abrir documentos» (`aevt`/`odoc`), que llega también
+a una aplicación que ya está abierta. El manejador propio de AppKit
+para ese evento le pide al delegado de la aplicación que abra los
+archivos; el delegado es de winit, la biblioteca de ventanas, y no abre
+nada. Así que `open_files.rs` pone su propio manejador, en el momento
+que dan las reglas de Apple, cuando la aplicación está por terminar de
+arrancar (después de que AppKit pone el suyo, antes de que llegue el
+evento del arranque). El manejador solo junta las rutas:
+
+```rust
+#[unsafe(method(openDocuments:withReplyEvent:))]
+fn open_documents(
+    &self,
+    event: &NSAppleEventDescriptor,
+    _reply: &NSAppleEventDescriptor,
+) {
+    // SAFETY: `paramDescriptorForKeyword:` takes a four-letter
+    // code and gives a descriptor or nil.
+    let files: Option<Retained<NSAppleEventDescriptor>> =
+        unsafe { msg_send![event, paramDescriptorForKeyword: DIRECT_OBJECT] };
+    let Some(files) = files else {
+        return;
+    };
+    // A list of files, counted from 1, or a single one.
+    let count = files.numberOfItems();
+    let items: Vec<Retained<NSAppleEventDescriptor>> = if count == 0 {
+        vec![files]
+    } else {
+        (1..=count)
+            .filter_map(|index| files.descriptorAtIndex(index))
+            .collect()
+    };
+    super::arrived(
+        items
+            .iter()
+            .filter_map(|item| item.fileURLValue())
+            .filter_map(|url| url.to_file_path()),
+    );
+}
+```
+
+`objc2` llama a Objective-C desde Rust: `define_class!` crea una clase
+cuyos métodos AppKit puede llamar, y `msg_send!` manda un mensaje por
+su nombre, que el compilador no puede comprobar, de ahí el `unsafe`.
+`arrived` guarda las rutas en un `Mutex<Vec<PathBuf>>` y le pide a la
+ventana que se vuelva a dibujar; `handle_dropped_files` las toma en el
+cuadro siguiente y abre el archivo como si lo hubieran soltado sobre la
+ventana. Todo está bajo `#[cfg(target_os = "macos")]`, así que en Linux
+y Windows `listen` no hace nada.
+
 Cada paquete se sube con `archive: false`:
 
 ```yaml
@@ -428,7 +486,3 @@ publicarlas.
   firmados, así que SmartScreen avisa.
   [Instalarlo](https://naelolaiz.github.io/ferrous-lineup/es/manual/installing.html),
   en el manual, muestra cómo pasar cada aviso.
-- El `Info.plist` de la aplicación de macOS no declara el tipo de
-  documento `.lineup`, así que hacer doble clic en un proyecto en macOS
-  puede no abrirlo en Ferrous Lineup. El instalador de Windows y los
-  paquetes de Linux sí lo registran.

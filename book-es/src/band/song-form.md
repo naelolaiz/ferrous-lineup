@@ -524,7 +524,7 @@ de una canción puede tener un estilo propio.
 5. **El estilo de la canción**, arriba del todo en el menú, vuelve al
    estilo propio de la banda.
 
-![El menú del compás 3: Variation a, Variation b y «Style: Pop beat» abierto, con «The song's style: Pop beat» arriba, y luego una entrada por género (Pop, Rock, Blues, Jazz, Soul, funk and R&B, ... Classical and film). Classical and film está abierto: Epic toms, March, Chorale, Alberti bass, Arpeggios.](../images/step-9-section-styles-menu.png)
+![El menú del compás 3: Type in this bar, Clear this bar, Move the playhead here, Insert a bar before, Insert a bar after, Delete this bar, Variation a, Variation b y «Style: Pop beat» abierto, con «The song's style: Pop beat» arriba, y luego una entrada por género (Pop, Rock, Blues, Jazz, Soul, funk and R&B, ... Classical and film). Latin está abierto: Bossa nova, Samba, Salsa, Cumbia, Reggaeton, Bolero, Bachata, Merengue, Cha-cha-chá, Son, Choro, Maxixe, Marchinha.](../images/step-9-section-styles-menu.png)
 
 El menú solo lista estilos en el compás de esos compases, y la
 [Orquesta](orchestra.md), que toca en cualquiera. Un vals en

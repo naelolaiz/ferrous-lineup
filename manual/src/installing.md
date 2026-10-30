@@ -77,8 +77,8 @@ cannot check it for malicious software. Try to open it once, then open
 **System Settings > Privacy & Security** and allow it there. On older
 versions of macOS, right-click the app and choose **Open** instead.
 
-Double-clicking a `.lineup` file in the Finder does not open it on a
-Mac; open your songs with **File > Open…** in the app.
+Once the app is in Applications, double-clicking a `.lineup` file in
+the Finder opens it in Ferrous Lineup.
 
 ## The first start
 
