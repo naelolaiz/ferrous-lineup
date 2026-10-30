@@ -18,82 +18,82 @@
 # negrita con otro significado (la «función» de Rust para la de música)
 # se deja fuera de ese capítulo con «no»:
 #
-#     Función: no step-5/diff.md
-Ajustar a la escala: step-8/changing-key.md#ajustar-a-la-escala
-Archivo de proyecto: step-4/saving.md, appendix-project-format.md
-Archivo MIDI: step-7/messages.md#un-archivo-midi, step-8/midi-import.md, step-9/midi-songs.md
-Arpegio: step-6/tools.md#arpegios-cycle-step_by-y-zip
-Atajos de teclado: step-5/history.md#atajos-de-teclado, step-6/piano-roll.md#el-teclado, appendix-shortcuts.md
-Batería: step-2/instruments.md#sintetizar-una-batería, step-8/library.md#ritmos-una-línea-por-tambor, step-9/mixer-score-order.md
-Biblioteca: step-8/library.md, step-8/patterns-and-demos.md#la-pestaña-biblioteca, step-9/library-filters.md
-Cambio de tonalidad: step-8/changing-key.md, step-8/key-changes.md
-Clase de alturas: step-3/theory.md
-Clip: step-4/playlist-ui.md
-Compás: step-8/time-signatures.md, step-8/time-markers.md, step-8/any-time-signature.md, step-8/re-metering.md
-Compases irregulares: step-8/any-time-signature.md, step-9/odd-meters.md
-Compilaciones de lanzamiento: step-9/releases.md
-Conducción de voces: step-9/voice-leading.md
-Conjunto de clases de alturas: step-8/key-as-a-set.md, step-9/harmony-notations.md
-Demo: step-8/patterns-and-demos.md#demos-arreglar-como-un-productor, step-8/more-demos.md, step-8/demo-names.md, step-9/demo-search.md
-Deshacer: step-5/history.md
-Editor de estilos: step-9/style-editor.md
-Encontrar la tonalidad: step-8/finding-the-key.md
-Entrenador de velocidad: step-9/speed-trainer.md
-Entrenamiento auditivo: step-9/ear-training.md
-Envolvente: step-3/voices.md#la-envolvente-una-máquina-de-estados
-Escala: step-3/theory.md#escalas, step-8/changing-key.md#ajustar-a-la-escala
-Estilo: step-8/library.md#estilos, step-9/band.md#cambiar-el-estilo, step-9/bigger-band.md, step-9/section-styles.md, step-9/style-tempo.md
-Estilo por sección: step-9/section-styles.md
-Estructura de la canción: step-8/song-structure.md
-Exportación: véase Exportación WAV, Exportación de vídeo
-Exportación de vídeo: step-9/video-export.md
-Exportación WAV: step-5/export.md
-Forma de la canción: step-9/song-form.md
-Grabar desde un teclado MIDI: step-7/recording.md
-Guardado automático: step-9/recovery.md
-Hilo de audio: step-1/audio-engine.md, step-2/realtime.md, step-4/song-playback.md, step-5/diff.md
-Hoja de acordes: step-9/chord-sheet.md, step-9/text-chord-sheets.md, step-9/harmony-notations.md, step-9/chord-sheet-layout.md, step-9/insert-delete-bars.md
-Idioma: step-9/languages.md
-Importar una grabación: spike-listen/README.md
-Integración continua: step-1/ci.md, step-4/platforms.md#demostrarlo-la-matriz-de-ci
-Lineup Osc: step-2/instruments.md#el-lineup-osc
-Lista de reproducción: step-4/patterns.md, step-4/playlist-ui.md
-Marcador de tonalidad: step-8/key-changes.md#un-marcador-de-tonalidad
-Métrica: véase Compás
-Mezclador: step-9/mixer-score-order.md, step-9/mixer.md, step-9/channel-effects.md
-Modulación: véase Cambio de tonalidad
-Música latinoamericana: step-8/folklore.md, step-9/latin-american-songs.md, step-9/misa-criolla.md, step-9/midi-songs.md
-Nombres de acordes: step-3/chords.md, step-9/chord-names.md
-Nomenclatura de notas: step-9/languages.md
-Número romano: step-9/minor-numerals.md
-Oír acordes: step-9/chord-hearing.md
-Orquesta: step-9/concert-hall.md, step-9/orchestra.md
-Partitura guía: step-9/lead-sheet.md, step-9/transposing-instruments.md
-Patrón: step-2/project.md, step-4/patterns.md
-Piano roll: step-3/piano-roll-ui.md, step-6/piano-roll.md
-Pista: step-8/look-and-transport.md#insertar-mover-y-borrar-pistas, step-8/only-the-tracks-you-use.md
-Pista bloqueada: step-9/locks.md
-Práctica: step-9/practice.md, step-9/speed-trainer.md
-Rack de canales: step-2/README.md, step-2/channel-rack-ui.md, step-9/rack-lights.md
-Reconocimiento de acordes: véase Oír acordes
-Salida MIDI: step-7/live.md#salida-midi-un-instrumento-con-bandeja-de-salida, step-8/midi-out-every-channel.md, step-9/midi-out-menus.md
-Sampler: step-2/instruments.md#el-sampler
-Sección de vientos: step-9/big-band-songs.md, step-9/horn-section.md
-Serie dodecafónica: step-9/twelve-tone-rules.md
-Solista: step-9/soloist.md
-SoundFont: step-9/soundfont.md
-Tango: step-9/midi-songs.md
-Teclado MIDI: step-7/live.md, step-7/recording.md
-Teclas de armonía: step-8/harmony-keys.md, step-8/key-as-a-set.md
-Tempo: step-1/lineup-core.md#tempo-mantener-válido-un-valor, step-8/tempo-and-feel.md, step-9/style-tempo.md
-Traducción: véase Idioma
-Transporte: step-8/look-and-transport.md#el-transporte-dónde-empieza-la-reproducción
-Traza de reproducción: step-9/playback-trace.md
-Variaciones: step-9/variations.md
-Velocidad: step-6/piano-roll.md#el-carril-de-velocidad, step-8/tempo-and-feel.md#velocidades-la-forma-de-una-frase
-Ventana Acerca de: step-9/workflow.md#quién-la-hizo-y-qué-versión
-Versión: step-9/releases.md, step-9/workflow.md#quién-la-hizo-y-qué-versión
-Zoom: step-8/fitting-the-window.md#zoom, step-8/zoom-follows-the-pointer.md
+#     Función: no program/sync.md
 
-Array: no step-9/releases.md
-Función: no step-5/diff.md
+Ajustar a la escala: theory/scales.md#ajustar-a-la-escala
+Archivo de proyecto: program/saving.md, reference/project-format.md
+Archivo MIDI: sound/midi.md#escribir-un-archivo-midi, sound/midi.md#leer-un-archivo-midi, songs/from-midi-and-scores.md
+Arpegio: theory/tools.md#arpegios-cycle-step_by-y-zip
+Atajos de teclado: program/undo.md#atajos-de-teclado, program/editors.md#el-orden-de-los-atajos-de-teclado, program/egui.md#todas-las-teclas-en-una-lista
+Batería: sound/instruments.md#una-batería-hecha-con-unas-líneas-de-matemáticas, band/library.md#ritmos-una-línea-por-tambor, sound/mixer.md#orden-de-partitura-la-batería-junta
+Biblioteca: band/library.md
+Cambio de tonalidad: theory/scales.md#cambiar-de-tonalidad-mover-la-canción, theory/scales.md#cambios-de-tonalidad-a-mitad-de-camino-marcas-de-tonalidad, theory/hearing.md#dónde-cambia-la-tonalidad
+Clase de altura: theory/pitch.md
+Clip: program/project.md, program/editors.md#la-lista-de-reproducción
+Compás: sound/tempo.md
+Compases irregulares: sound/tempo.md#pulsos-de-distinta-longitud, band/orchestra.md
+Conducción de voces: theory/voice-leading.md
+Conjunto de clases de alturas: theory/sets.md
+Demo: songs/demos.md, songs/from-midi-and-scores.md
+Deshacer: program/undo.md
+Editor de estilos: band/style-editor.md
+Encontrar la tonalidad: theory/hearing.md#encontrar-la-tonalidad
+Entrenador de velocidad: band/practice.md
+Entrenamiento auditivo: band/practice.md
+Envolvente: sound/instruments.md#la-envolvente-una-máquina-de-estados
+Escala: theory/scales.md
+Estilo por sección: band/song-form.md#un-estilo-para-cada-sección
+Estilo: band/library.md#estilos-una-tabla-en-un-static, band/band.md, band/song-form.md#un-estilo-para-cada-sección
+Estructura de la canción: program/project.md#secciones-repeticiones-y-bucles
+Exportación de video: sound/export.md
+Exportación WAV: sound/export.md
+Exportación: véase Exportación WAV, Exportación de video
+Forma de la canción: band/song-form.md
+Grabar desde un teclado MIDI: sound/midi.md#grabar-de-una-tecla-a-una-nota
+Guardado automático: program/saving.md#una-copia-del-trabajo-sin-guardar
+Hilo de audio: program/threads.md, program/sync.md, sound/sequencer.md
+Hoja de acordes: band/chord-sheet.md, theory/sets.md#una-armonía-cuatro-nombres
+Idioma: program/languages.md
+Importar una grabación: theory/listen.md
+Integración continua: shipping/ci.md
+Lineup Osc: sound/instruments.md#el-lineup-osc
+Lista de reproducción: program/project.md, program/editors.md#la-lista-de-reproducción
+Marca de tonalidad: theory/scales.md#cambios-de-tonalidad-a-mitad-de-camino-marcas-de-tonalidad
+Métrica: véase Compás
+Mezclador: sound/mixer.md
+Modulación: véase Cambio de tonalidad
+Música latinoamericana: songs/demos.md, songs/from-midi-and-scores.md
+Nombres de acordes: theory/chords.md
+Nomenclatura de notas: program/languages.md
+Número romano: theory/numerals.md
+Oír acordes: theory/hearing.md
+Orquesta: band/orchestra.md
+Paquetes de cada versión: shipping/releases.md
+Partitura guía: band/lead-sheet.md
+Patrón: program/project.md
+Piano roll: program/editors.md
+Pista bloqueada: band/song-form.md#bloquear-una-pista-los-estilos-tocan-a-su-alrededor
+Pista: program/editors.md#la-lista-de-reproducción
+Práctica: band/practice.md
+Rack de canales: program/editors.md
+Reconocimiento de acordes: véase Oír acordes
+Salida MIDI: sound/midi.md#salida-midi-un-instrumento-con-bandeja-de-salida, sound/midi.md#enviar-canales-por-midi
+Sampler: sound/instruments.md#el-sampler
+Sección de vientos: band/band.md#una-sección-de-vientos
+Serie dodecafónica: theory/twelve-tone.md
+Solista: band/soloist.md
+SoundFont: sound/soundfonts.md
+Tango: songs/demos.md, songs/from-midi-and-scores.md
+Teclado MIDI: sound/midi.md#el-camino-de-entrada-de-una-tecla
+Teclas de armonía: theory/numerals.md#las-teclas-de-armonía, theory/sets.md#una-tonalidad-como-conjunto-las-mismas-notas-otro-nombre
+Tempo: sound/tempo.md
+Traducción: véase Idioma
+Transporte: sound/sequencer.md#saltar-y-cambiar-de-modo, sound/tempo.md#no-perder-el-sitio
+Traza de reproducción: sound/trace.md
+Variaciones: band/song-form.md#variaciones-a-y-b-la-banda-aprieta
+Velocidad: program/editors.md#el-carril-de-velocidad, songs/demos.md#tocar-como-una-persona
+Ventana Acerca de: program/egui.md#ayuda-el-manual-y-acerca-de
+Versión: shipping/releases.md, program/egui.md#ayuda-el-manual-y-acerca-de
+Zoom: program/egui.md#zoom
+
+Función: no program/sync.md

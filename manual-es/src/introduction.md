@@ -89,6 +89,6 @@ glosario musical y un índice.
 
 La aplicación también está en inglés, y este manual también: el [user
 manual](https://naelolaiz.github.io/ferrous-lineup/manual/). Cómo está
-hecho el programa, y por qué, está en un libro aparte, el [libro de
-Ferrous Lineup](https://naelolaiz.github.io/ferrous-lineup/es/), escrito
+hecho el programa, y por qué, está en un libro aparte, [Ferrous Lineup
+por dentro](https://naelolaiz.github.io/ferrous-lineup/es/), escrito
 para quienes quieren leer o cambiar su código.

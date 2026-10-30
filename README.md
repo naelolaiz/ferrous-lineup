@@ -24,22 +24,21 @@ Its sources are in [`manual/`](manual/) and [`manual-es/`](manual-es/).
 
 ## The book
 
-Everything the app does, and how it was built, is in the book
-**Ferrous Lineup: Building a Music Studio in Rust**:
+How the code is organized and designed, and why, and how the music
+theory the app knows is written in Rust, is in the book **Inside
+Ferrous Lineup**:
 
 - **[Read it online](https://naelolaiz.github.io/ferrous-lineup/)**, or download it as **[one PDF](https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf)**.
-- **[A tour of the app](https://naelolaiz.github.io/ferrous-lineup/tour.html)**: every window, menu and key on one page.
-- **[Getting started](https://naelolaiz.github.io/ferrous-lineup/getting-started.html)**: installing Rust, building, and a first song with the band.
+- **[Building it from source](https://naelolaiz.github.io/ferrous-lineup/building.html)**: installing Rust, building, and running the tests.
 
-The book is also available in Spanish as **Ferrous Lineup: Construyendo
-un estudio de música en Rust**:
+The book is also available in Spanish as **Ferrous Lineup por dentro**:
 [read it online](https://naelolaiz.github.io/ferrous-lineup/es/) or as
 [a PDF](https://naelolaiz.github.io/ferrous-lineup/es/ferrous-lineup-book-es.pdf).
 Its sources are in [`book-es/`](book-es/).
 
-It is also a Rust course: each step of the project has a chapter on what
-was built, why, and which Rust it uses. Its sources are in
-[`book/`](book/), next to the code they describe.
+It is also a Rust course: each chapter explains the Rust its part of
+the program uses, with exercises at the end of each part. Its sources
+are in [`book/`](book/), next to the code they describe.
 
 ## What it does
 
@@ -110,7 +109,7 @@ cargo run --release
 Press **Space** to play the demo song, or **File > New** to start a song
 of your own with the band. `cargo test` runs the tests, and
 `ferrous-lineup --trace song.lineup` lists every note a song plays
-([Checking playback with a trace](https://naelolaiz.github.io/ferrous-lineup/tour.html#checking-playback-with-a-trace)).
+([The playback trace](https://naelolaiz.github.io/ferrous-lineup/sound/trace.html)).
 On macOS the program is inside the app bundle:
 `"/Applications/Ferrous Lineup.app/Contents/MacOS/ferrous-lineup" --trace song.lineup`.
 
