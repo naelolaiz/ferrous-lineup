@@ -12,8 +12,9 @@ bigger, and each would make a good project for a reader of this book:
   records into the pattern that loops ([exercise 22 of Part
   II](../sound/exercises.md#22-record-in-song-mode-all-three-crates-harder)).
 - **Audio clips** on the tracks, next to the patterns, placed and moved
-  like any clip. An imported recording now plays as one long note from
-  the start of the song, so it cannot start partway through ([Importing
-  a recording](../theory/listen.md#rough-edges)).
+  like any clip. An imported recording now plays as one long sampler
+  note on the first step of the song, which the engine starts partway
+  when playback starts later ([Starting
+  partway](../sound/instruments.md#starting-partway)).
 - **Automation**: knob movements recorded or drawn over time, on the
   tracks.

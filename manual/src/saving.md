@@ -53,10 +53,12 @@ quit** or **Keep exporting**.
 ## Opening files in other ways
 
 - **Drop a file on the window** from your file manager. A .lineup file
-  opens; a MIDI file or a text chord sheet is imported. Drop one at a
-  time: with several, none is opened. A WAV file becomes a channel that
-  plays it, or, dropped on a channel of the rack, that channel's sound
-  (see [The channel rack](channel-rack.md)).
+  opens; a MIDI file, a text chord sheet or a
+  [recording](importing.md#recordings-experimental) (MP3, FLAC, Ogg,
+  or a WAV longer than ten seconds) is imported. Drop one at a time:
+  with several, none is opened. A shorter WAV file is a sound: it
+  becomes a channel that plays it, or, dropped on a channel of the
+  rack, that channel's sound (see [The channel rack](channel-rack.md)).
 - **Open a file with Ferrous Lineup** from your file manager, or give
   it to the program on the command line, as in `ferrous-lineup
   song.lineup`. A .lineup file opens, a MIDI file is imported, a text
