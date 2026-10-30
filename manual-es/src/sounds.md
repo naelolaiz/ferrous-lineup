@@ -14,10 +14,10 @@ Ferrous Lineup puede tocar sus instrumentos de dos maneras:
 La primera vez que algo suena, al pulsar ▶ o al abrir una demostración
 (que empieza a sonar enseguida), una ventana llamada **Sonidos de
 instrumentos reales** ofrece descargar **GeneralUser GS**, un SoundFont
-libre de S. Christian Collins, de unos 30 MB. La canción sigue sonando
-mientras pregunta.
+libre de S. Christian Collins, de unos 30 MB, y pregunta «¿Tocar los
+instrumentos con él?». La canción sigue sonando mientras pregunta.
 
-![La primera reproducción: la canción sigue sonando mientras la ventana Sonidos de instrumentos reales ofrece GeneralUser GS, con Descargar, Elegir un archivo… y Ahora no](images/soundfont-offer.png)
+![La primera reproducción: una demostración sigue sonando mientras la ventana Sonidos de instrumentos reales ofrece GeneralUser GS y pregunta «¿Tocar los instrumentos con él?», con Descargar, Elegir un archivo… y Ahora no](images/soundfont-offer.png)
 
 - **Descargar** lo baja una vez y lo guarda en tu computadora. Una barra
   muestra cuánto falta, y **Detener** abandona la descarga. Al terminar,
@@ -28,6 +28,13 @@ mientras pregunta.
   archivo `.sf2` hecho para General MIDI.
 - **Ahora no** se queda con el Lineup Osc. Reproducir no vuelve a
   preguntar; el ajuste de abajo está ahí para cuando cambies de idea.
+
+Si GeneralUser GS ya está en tu computadora, descargado por una versión
+anterior por ejemplo, la ventana lo dice y ofrece **Usarlo** en lugar de
+**Descargar**: un momento después los instrumentos suenan con él. Si
+cierras la aplicación sin responder, vuelve a preguntar la próxima vez
+que algo suene. Tu respuesta y los ajustes de sonido de abajo se
+conservan cuando actualizas Ferrous Lineup.
 
 Si la descarga falla (sin red, un cortafuegos), la ventana dice por qué.
 Puedes descargar `GeneralUser-GS.sf2` desde [su

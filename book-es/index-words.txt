@@ -75,6 +75,7 @@ Piano roll: program/editors.md
 Pista bloqueada: band/song-form.md#bloquear-una-pista-los-estilos-tocan-a-su-alrededor
 Pista: program/editors.md#la-lista-de-reproducción
 Práctica: band/practice.md
+Preferencias: program/egui.md#guardado-por-nombre-no-por-tipo, sound/soundfonts.md#se-pregunta-hasta-que-se-responde
 Rack de canales: program/editors.md
 Reconocimiento de acordes: véase Oír acordes
 Salida MIDI: sound/midi.md#salida-midi-un-instrumento-con-bandeja-de-salida, sound/midi.md#enviar-canales-por-midi
