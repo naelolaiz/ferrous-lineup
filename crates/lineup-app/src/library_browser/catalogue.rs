@@ -1,7 +1,42 @@
 //! Shared names, searches and ordering for the Library and chord sheet menus.
 
-use lineup_core::TimeSignature;
 use lineup_core::library::{Genre, RHYTHMS, Rhythm, STYLES, Style, UserStyle};
+use lineup_core::{BandStyle, Player, TimeSignature, general_midi};
+
+/// An instrument a preset brings: a General MIDI program, or the drums.
+/// In this order, the instruments come family by family, as General MIDI
+/// numbers them, and the drums last.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
+pub enum Instrument {
+    Program(u8),
+    Drums,
+}
+
+impl Instrument {
+    /// Its name, in the language chosen.
+    pub fn name(self) -> &'static str {
+        match self {
+            Instrument::Program(program) => crate::i18n::tr(general_midi::name(program)),
+            Instrument::Drums => crate::i18n::tr("Drums"),
+        }
+    }
+}
+
+/// The instruments `band` brings: its players', and the drums if it has
+/// a rhythm.
+fn band_instruments(band: Option<&BandStyle>) -> Vec<Instrument> {
+    let Some(band) = band else {
+        return Vec::new();
+    };
+    let drums = band.rhythm.map(|_| Instrument::Drums);
+    band.programs()
+        .into_iter()
+        .map(Instrument::Program)
+        .chain(drums)
+        .collect()
+}
 
 /// One catalogue, regardless of whether a preset supplies a chord chart.
 #[derive(Clone, Copy)]
@@ -55,6 +90,34 @@ impl<'a> Preset<'a> {
         }
     }
 
+    /// The instruments it brings when its instruments are copied: those
+    /// of the band that plays it, or of a style of your own's lanes.
+    pub fn instruments(self) -> Vec<Instrument> {
+        match self {
+            Self::Style(style) => band_instruments(BandStyle::of_style(style)),
+            Self::Rhythm(rhythm) => band_instruments(BandStyle::named(rhythm.name)),
+            Self::User(_, style) => style
+                .lanes
+                .iter()
+                .filter_map(|lane| match lane.player {
+                    Player::Drums => Some(Instrument::Drums),
+                    _ => lane.channel.program.map(Instrument::Program),
+                })
+                .collect(),
+        }
+    }
+
+    /// Whether its drums swing (see [`lineup_core::swing`]).
+    pub fn swings(self) -> bool {
+        match self {
+            Self::Style(style) => {
+                Rhythm::named(style.rhythm).is_some_and(|rhythm| rhythm.swing > 0)
+            }
+            Self::Rhythm(rhythm) => rhythm.swing > 0,
+            Self::User(_, style) => style.swing > 0,
+        }
+    }
+
     pub fn has_progression(self) -> bool {
         match self {
             Self::Style(style) => !style.chart.trim().is_empty(),
@@ -69,20 +132,24 @@ pub fn presets<'a>(
     users: &'a [UserStyle],
     progressions_only: bool,
 ) -> Vec<Preset<'a>> {
-    let mut presets: Vec<_> = harmony_styles(query, None)
-        .into_iter()
-        .map(Preset::Style)
-        .chain(
-            rhythms(query, None).into_iter().map(|rhythm| {
+    let mut presets: Vec<_> =
+        harmony_styles(query, None)
+            .into_iter()
+            .map(Preset::Style)
+            .chain(rhythms(query, None).into_iter().map(|rhythm| {
                 equivalent_style(rhythm).map_or(Preset::Rhythm(rhythm), Preset::Style)
-            }),
-        )
-        .chain(users.iter().enumerate().filter_map(|(index, style)| {
-            let text = format!("{} {} {} user", style.name, style.about, style.time).to_lowercase();
-            matches_text(query, &text).then_some(Preset::User(index, style))
-        }))
-        .filter(|preset| !progressions_only || preset.has_progression())
-        .collect();
+            }))
+            .chain(users.iter().enumerate().filter_map(|(index, style)| {
+                let instruments = instrument_names(query, Preset::User(index, style));
+                let text = format!(
+                    "{} {} {} user {instruments}",
+                    style.name, style.about, style.time
+                )
+                .to_lowercase();
+                matches_text(query, &text).then_some(Preset::User(index, style))
+            }))
+            .filter(|preset| !progressions_only || preset.has_progression())
+            .collect();
     presets.sort_by_cached_key(|preset| {
         let shown = lineup_core::i18n::tr_name(preset.name());
         (shown.to_lowercase(), preset.name().to_string())
@@ -93,6 +160,18 @@ pub fn presets<'a>(
         )
     });
     presets
+}
+
+/// Every instrument the presets bring, in [`Instrument`]'s order, each
+/// once: the choices of the Library's instrument filter.
+pub fn instruments(users: &[UserStyle]) -> Vec<Instrument> {
+    let mut instruments: Vec<_> = presets("", users, false)
+        .into_iter()
+        .flat_map(Preset::instruments)
+        .collect();
+    instruments.sort_unstable();
+    instruments.dedup();
+    instruments
 }
 
 /// Prefer the entry with optional chords when both sources play the same groove.
@@ -160,10 +239,11 @@ pub fn harmony_styles(query: &str, genre: Option<Genre>) -> Vec<&'static Style> 
                     style.genre,
                     style.time,
                     &format!(
-                        "{} {} {}",
+                        "{} {} {} {}",
                         style.about,
                         lineup_core::i18n::spanish(style.about).unwrap_or_default(),
-                        style.rhythm
+                        style.rhythm,
+                        instrument_names(query, Preset::Style(style)),
                     ),
                 )
         }),
@@ -175,10 +255,43 @@ pub fn rhythms(query: &str, genre: Option<Genre>) -> Vec<&'static Rhythm> {
     alphabetical(
         RHYTHMS.iter().filter(|rhythm| {
             genre.is_none_or(|genre| rhythm.genre == genre)
-                && matches(query, rhythm.name, rhythm.genre, rhythm.time, rhythm.about)
+                && matches(
+                    query,
+                    rhythm.name,
+                    rhythm.genre,
+                    rhythm.time,
+                    &format!(
+                        "{} {}",
+                        rhythm.about,
+                        instrument_names(query, Preset::Rhythm(rhythm))
+                    ),
+                )
         }),
         |rhythm| rhythm.name,
     )
+}
+
+/// The names of the instruments `preset` brings, in English and in
+/// Spanish, so that searching for "accordion" finds the styles with one.
+/// Nothing while there is no `query` to look for them.
+fn instrument_names(query: &str, preset: Preset) -> String {
+    if query.trim().is_empty() {
+        return String::new();
+    }
+    let english = |instrument| match instrument {
+        Instrument::Program(program) => general_midi::name(program),
+        Instrument::Drums => "Drums",
+    };
+    preset
+        .instruments()
+        .into_iter()
+        .map(|instrument| {
+            let name = english(instrument);
+            let spanish = lineup_core::i18n::spanish(name).unwrap_or_default();
+            format!("{name} {spanish}")
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 #[cfg(test)]
@@ -310,6 +423,27 @@ mod tests {
                 .all(|style| style.genre == Genre::Balkan && style.time.beats == 7)
         );
         assert!(harmony_styles("no such style xyz", None).is_empty());
+    }
+
+    #[test]
+    fn searches_find_presets_by_the_instruments_they_bring() {
+        let program = (0..128).find(|&program| general_midi::name(program) == "Accordion");
+        let accordion = Instrument::Program(program.unwrap());
+        let with_one: Vec<_> = presets("", &[], false)
+            .into_iter()
+            .filter(|preset| preset.instruments().contains(&accordion))
+            .map(Preset::name)
+            .collect();
+        assert!(!with_one.is_empty());
+        for query in ["accordion", "ACORDEÓN"] {
+            let found: Vec<_> = presets(query, &[], false)
+                .into_iter()
+                .map(Preset::name)
+                .collect();
+            assert!(with_one.iter().all(|name| found.contains(name)), "{query}");
+        }
+        let bossa = presets("bossa nylon", &[], false);
+        assert!(bossa.iter().any(|preset| preset.name() == "Bossa nova"));
     }
 
     #[test]

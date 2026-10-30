@@ -28,7 +28,7 @@ use super::comping::{Bass, Comping};
 use super::listen::hear_chords;
 use super::rhythm::Rhythm;
 use super::style::{STYLES, Style};
-use super::voicing::{bass_root, voice, voice_progression};
+use super::voicing::{bass_root, voice};
 
 mod parts;
 pub use parts::{style_instruments, write_rhythm_parts, write_style_parts};
@@ -51,9 +51,9 @@ pub struct StyleParts {
     /// long as before.
     pub tempo: bool,
     pub swing: bool,
-    /// Copy accompaniment patterns from the preset (or a rhythm's matching
-    /// style). Off uses plain accents and keeps the current instruments
-    /// and chords.
+    /// Copy the preset's chord, bass and other accompaniment parts (a
+    /// rhythm's are those of its matching style). Off, the song's own
+    /// stay, as its drums do with `rhythm` off.
     pub matching_style: bool,
 }
 
@@ -72,18 +72,10 @@ impl Default for StyleParts {
 }
 
 impl StyleParts {
-    /// Plain accents always keep the current sounds and chords, for every
-    /// preset source: they bring no chord progression.
-    pub fn for_preset(mut self) -> Self {
-        self.instruments &= self.matching_style;
-        self.progression &= self.matching_style;
-        self
-    }
-
     /// Rhythm-only choices never supply a chord progression.
     pub fn for_rhythm(mut self) -> Self {
         self.progression = false;
-        self.for_preset()
+        self
     }
 
     /// A style that follows the song (see [`Style::follows_the_song`])
@@ -540,14 +532,9 @@ pub fn use_rhythm(project: &mut Project, rhythm: &Rhythm) -> RhythmChange {
 
 pub fn use_rhythm_parts(project: &mut Project, rhythm: &Rhythm, parts: StyleParts) -> RhythmChange {
     let parts = parts.following(rhythm.follows_the_meter);
-    let (comping, bass) = if parts.matching_style {
-        feel(rhythm)
-    } else {
-        (Comping::Accents, Bass::Accents)
-    };
+    let (comping, bass) = feel(rhythm);
     let change = play_song(project, Some(rhythm), rhythm.time, comping, bass, parts);
     if parts.instruments
-        && parts.matching_style
         && let Some(style) = STYLES.iter().find(|style| style.rhythm == rhythm.name)
     {
         style_instruments(project, style, None);
@@ -565,18 +552,13 @@ pub fn use_style(project: &mut Project, style: &Style) -> RhythmChange {
 }
 
 pub fn use_style_parts(project: &mut Project, style: &Style, parts: StyleParts) -> RhythmChange {
-    let parts = parts.for_preset().following(style.follows_the_song());
-    let (comping, bass) = if parts.matching_style {
-        (style.comping, style.bass)
-    } else {
-        (Comping::Accents, Bass::Accents)
-    };
+    let parts = parts.following(style.follows_the_song());
     let mut change = play_song(
         project,
         Rhythm::named(style.rhythm),
         style.time,
-        comping,
-        bass,
+        style.comping,
+        style.bass,
         parts,
     );
     if parts.progression {
@@ -687,7 +669,7 @@ fn play_song(
                 .all(|start| drums_in(project, pattern, start, bar) != last)
         };
         let has_chords = heard_chords_channel(project, pattern).is_some();
-        if parts.rhythm && recomp(project, pattern, comping, bass) {
+        if parts.matching_style && recomp(project, pattern, comping, bass) {
             change.harmony += 1;
         } else if !drums && !has_chords {
             continue;

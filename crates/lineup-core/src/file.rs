@@ -169,7 +169,10 @@ pub fn is_project(path: &Path) -> bool {
 /// equalizer, compressor and delay of each channel (see
 /// [`Channel::effects`]). Older versions know neither, so a song with
 /// horns, or with a channel going through any of its effects, needs
-/// format 28.
+/// format 28. Format 29 lets a band play the drums of another style
+/// than its chord and bass parts, or leave the drums to the song (see
+/// [`crate::band::BandDrums`]): older versions would play the wrong
+/// drums.
 ///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
@@ -177,7 +180,7 @@ pub fn is_project(path: &Path) -> bool {
 /// other way round, Gb major rather than F# major (see
 /// [`Scale::other_spelling`]): older versions name it the usual way and
 /// play the same notes.
-pub const FORMAT_VERSION: u32 = 28;
+pub const FORMAT_VERSION: u32 = 29;
 
 /// The oldest format that can hold `project`.
 ///
@@ -279,7 +282,12 @@ pub fn format_for(project: &Project) -> u32 {
         .channels()
         .iter()
         .any(|channel| !channel.has_plain_effects());
-    if has_horns || has_effects {
+    let has_other_drums = project
+        .band()
+        .is_some_and(|band| band.drums != crate::band::BandDrums::Style);
+    if has_other_drums {
+        29
+    } else if has_horns || has_effects {
         28
     } else if sends_drums {
         27
@@ -387,6 +395,13 @@ struct ProjectFile {
     /// all yours.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     sources: Vec<SourceFile>,
+    /// Where the parts that older versions do not know came from: the
+    /// drums, the melody and the key (see [`SongPart::FIRST`]). They have
+    /// a field of their own, which those versions skip. It is written
+    /// whenever a part came from somewhere, even empty, so a file without
+    /// it is from before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    more_sources: Option<Vec<SourceFile>>,
     /// The locked channels, by number. Left out when there are none.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     locked: Vec<usize>,
@@ -501,6 +516,21 @@ impl From<ron::Error> for FileError {
 impl From<&Project> for ProjectFile {
     fn from(project: &Project) -> Self {
         let channels = project.channels().len();
+        let origins: Vec<SourceFile> = SongPart::ALL
+            .into_iter()
+            .filter_map(|part| {
+                let origin = project.part_source(part)?;
+                Some(SourceFile {
+                    part,
+                    from: origin.source.clone(),
+                    edited: origin.edited,
+                })
+            })
+            .collect();
+        let brought = !origins.is_empty();
+        let (sources, more_sources): (Vec<_>, Vec<_>) = origins
+            .into_iter()
+            .partition(|came| SongPart::FIRST.contains(&came.part));
         ProjectFile {
             format: format_for(project),
             mixer: project.mixer,
@@ -534,17 +564,8 @@ impl From<&Project> for ProjectFile {
             swing: project.swing,
             chord_markers: project.playlist().chord_markers().to_vec(),
             band: project.band().map(BandFile::from),
-            sources: SongPart::ALL
-                .into_iter()
-                .filter_map(|part| {
-                    let origin = project.part_source(part)?;
-                    Some(SourceFile {
-                        part,
-                        from: origin.source.clone(),
-                        edited: origin.edited,
-                    })
-                })
-                .collect(),
+            sources,
+            more_sources: (!more_sources.is_empty() || brought).then_some(more_sources),
             locked: project.locked().to_vec(),
         }
     }
@@ -725,13 +746,21 @@ impl TryFrom<ProjectFile> for Project {
         project.loose_timing = file.loose_timing.min(MAX_LOOSE_TIMING);
         project.swing = file.swing.min(MAX_SWING);
         project.remove_blank_tracks();
-        for came in file.sources {
+        let older = file.more_sources.is_none();
+        for came in file
+            .sources
+            .into_iter()
+            .chain(file.more_sources.into_iter().flatten())
+        {
             let print = (!came.edited).then(|| project.part_fingerprint(came.part));
             let source = PartSource {
                 source: came.from,
                 print,
             };
             project.sources.set(came.part, Some(source));
+        }
+        if older {
+            project.sources_of_an_older_file();
         }
         Ok(project)
     }
@@ -1118,6 +1147,41 @@ mod tests {
         let mut read = read;
         read.swing = 0;
         assert!(read.part_source(SongPart::Swing).unwrap().edited);
+    }
+
+    #[test]
+    fn a_file_from_before_has_its_drums_melody_and_key_come_with_the_other_parts() {
+        use crate::{SongPart, Source, SourceKind};
+        let mut project = Project::demo();
+        project.bring_in_all(&Source::new(SourceKind::Demo, "El Choclo"));
+        project.swing = 30;
+        let mut file = ProjectFile::from(&project);
+        let more = file.more_sources.take().unwrap();
+        assert_eq!(more.len(), 3, "the drums, the melody and the key");
+        assert_eq!(file.sources.len(), 6);
+        let older = ron::ser::to_string(&file).unwrap();
+        let read = from_text(&older).unwrap();
+        for part in SongPart::ALL {
+            let origin = read.part_source(part).unwrap();
+            assert_eq!(origin.source.name, "El Choclo", "{part:?}");
+            assert_eq!(origin.edited, part == SongPart::Swing, "{part:?}");
+        }
+        // A style's patterns bring no melody, and the key comes with the
+        // chords.
+        let style = Source::new(SourceKind::Style, "Bossa nova");
+        let mut project = Project::demo();
+        project.bring_in(
+            &style,
+            crate::sources::PartSet::of(&[SongPart::Patterns]),
+            crate::sources::PartSet::NONE,
+            |_| (),
+        );
+        let mut file = ProjectFile::from(&project);
+        file.more_sources = None;
+        let read = from_text(&ron::ser::to_string(&file).unwrap()).unwrap();
+        assert_eq!(read.part_source(SongPart::Drums).unwrap().source, &style);
+        assert!(read.part_source(SongPart::Melody).is_none());
+        assert!(read.part_source(SongPart::Key).is_none());
     }
 
     #[test]

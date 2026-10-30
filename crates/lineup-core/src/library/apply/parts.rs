@@ -2,9 +2,8 @@
 
 use super::*;
 use crate::library::chart::parse_chart;
-use crate::library::voicing::bass_line;
 use crate::pattern::{MAX_STEPS, TICKS_PER_STEP};
-use crate::{BandStyle, HarmonyName, Meter, Note};
+use crate::{BandStyle, Meter, Note};
 
 fn meter(project: &mut Project, index: usize, time: TimeSignature) {
     let old = project.pattern_time(index);
@@ -45,15 +44,23 @@ fn meter(project: &mut Project, index: usize, time: TimeSignature) {
     }
 }
 
-/// Change the sounds of the existing chord and bass voices. Locked
-/// channels keep theirs, and a locked `selected` channel counts as none.
+/// Change the sounds of the existing chord and bass voices: the channels
+/// named Keys (or `selected`) and Bass. A song with neither, such as an
+/// imported MIDI file, has players of its own, who take the style's
+/// sounds by family (see [`own_players_instruments`]). Locked channels
+/// keep theirs, and a locked `selected` channel counts as none.
 pub fn style_instruments(project: &mut Project, style: &Style, selected: Option<usize>) {
     let Some(band) = BandStyle::of_style(style) else {
         return;
     };
-    let chords = selected
-        .filter(|&index| !project.is_locked(index))
-        .or_else(|| find_synth(project, KEYS));
+    let keys = find_synth(project, KEYS);
+    if keys.is_none()
+        && find_synth(project, BASS).is_none()
+        && own_players_instruments(project, band)
+    {
+        return;
+    }
+    let chords = selected.filter(|&index| !project.is_locked(index)).or(keys);
     if let Some(index) = chords
         && project.channels().get(index).is_some_and(plays_notes)
     {
@@ -62,6 +69,60 @@ pub fn style_instruments(project: &mut Project, style: &Style, selected: Option<
     if let Some(index) = find_synth(project, BASS) {
         project.set_sound(index, None, Some(band.bass_program()));
     }
+}
+
+/// Gives every channel of the song's own players but the melody the
+/// sound `band` has for it: a bass (a double bass too) its bass, a piano
+/// its piano, a guitar its guitar and an organ or an accordion its organ
+/// (or its piano, without one), and bowed strings its strings. Other
+/// instruments, and channels without a General MIDI sound, keep theirs.
+/// Returns whether the song has players like that.
+fn own_players_instruments(project: &mut Project, band: &BandStyle) -> bool {
+    // The tune: on the channels named for it, as a MIDI file's tracks
+    // often are, or else where the lead sheet looks for it.
+    let mut tune: Vec<usize> = (project.channels().iter().enumerate())
+        .filter(|(_, channel)| plays_the_tune(&channel.name))
+        .map(|(index, _)| index)
+        .collect();
+    if tune.is_empty() {
+        tune.extend(crate::lead_sheet::default_melody_channel(project));
+    }
+    let extras = band.extras();
+    let piano = band.piano_program();
+    let played: Vec<(usize, u8)> = (project.channels().iter().enumerate())
+        .filter(|&(index, channel)| !tune.contains(&index) && plays_notes(channel))
+        .filter_map(|(index, channel)| {
+            let program = match channel.program? {
+                general_midi::CONTRABASS => band.bass_program(),
+                // Violins to tremolo strings, and the string ensembles.
+                40..=44 | 48..=51 => extras.strings.as_ref()?.program,
+                program => match general_midi::FAMILIES[general_midi::family(program)] {
+                    "Piano" => piano,
+                    "Organ" => extras.organ.as_ref().map_or(piano, |organ| organ.program),
+                    "Guitar" => extras
+                        .guitar
+                        .as_ref()
+                        .map_or(piano, |guitar| guitar.program),
+                    "Bass" => band.bass_program(),
+                    _ => return None,
+                },
+            };
+            Some((index, program))
+        })
+        .collect();
+    for &(index, program) in &played {
+        project.set_sound(index, None, Some(program));
+    }
+    !played.is_empty()
+}
+
+/// Whether a channel called `name` plays the tune, as "Lead", "Melody",
+/// "Melodía", "Voice" or "Voz" say.
+fn plays_the_tune(name: &str) -> bool {
+    let name = name.to_lowercase();
+    ["lead", "melod", "voice", "vocal", "voz", "canto", "tune"]
+        .iter()
+        .any(|word| name.contains(word))
 }
 
 /// Put new chords under an existing performance, keeping its attacks,
@@ -154,100 +215,6 @@ pub(super) fn progression(project: &mut Project, index: usize, style: &Style) ->
     true
 }
 
-/// A chord plain accents play in an empty pattern: the chord, its bass
-/// note and whether that is written after a slash, the step it starts
-/// on and how many steps it lasts.
-type SongChord = (Chord, PitchClass, bool, usize, usize);
-
-/// The chords plain accents play in an empty pattern: those of the first
-/// `bars` bars of the chord sheet, each bar fitted into a bar of `time`.
-/// Without chords on the sheet, the tonic chord of the key, held for all
-/// the bars: plain accents bring no progression of their own.
-fn song_chords(project: &Project, bars: usize, time: TimeSignature) -> Vec<SongChord> {
-    let meter = project.meter();
-    let remap = crate::remeter::Remap::new(meter.clone(), time);
-    let markers = project.playlist().chord_markers();
-    // The sheet ends with the bar of its last chord.
-    let sheet_end = markers
-        .last()
-        .map_or(0, |last| meter.bar_at(last.start).end());
-    let end = meter.bar(bars).start.min(sheet_end);
-    let markers: Vec<_> = markers.iter().filter(|marker| marker.start < end).collect();
-    let mut chords: Vec<SongChord> = Vec::new();
-    for (index, marker) in markers.iter().enumerate() {
-        let start = remap.step(marker.start);
-        let stop = remap.step(markers.get(index + 1).map_or(end, |next| next.start));
-        let HarmonyName::Chord(symbol) = marker.harmony else {
-            continue;
-        };
-        let chord = (
-            symbol.chord(),
-            symbol.bass_pitch_class(),
-            symbol.bass.is_some(),
-        );
-        match chords.last_mut() {
-            // The same chord again is held on, as in a chart.
-            Some(last) if (last.0, last.1, last.2) == chord && last.3 + last.4 == start => {
-                last.4 = stop - last.3;
-            }
-            _ if stop > start => chords.push((chord.0, chord.1, chord.2, start, stop - start)),
-            _ => {}
-        }
-    }
-    if chords.is_empty()
-        && let Some(tonic) = project.scale.triad(0)
-    {
-        chords.push((tonic, tonic.root, false, 0, bars * time.steps_per_bar()));
-    }
-    chords
-}
-
-/// Writes plain accents of the song's own chords (see [`song_chords`])
-/// in the empty pattern `index`, `bars` bars of `time` long: the chords
-/// to the channel they go to, and the bass line to the bass.
-fn accent_song_chords(
-    project: &mut Project,
-    index: usize,
-    bars: usize,
-    time: TimeSignature,
-    selected: Option<usize>,
-) {
-    let chords = song_chords(project, bars, time);
-    let (Some(keys), Some(bass)) = (
-        chords_channel(project, selected),
-        synth_named(project, BASS),
-    ) else {
-        return;
-    };
-    let line = bass_line(
-        &chords
-            .iter()
-            .map(|chord| (chord.1, chord.2))
-            .collect::<Vec<_>>(),
-    );
-    let voicings = voice_progression(&chords.iter().map(|chord| chord.0).collect::<Vec<_>>());
-    let mut comping = Vec::new();
-    let mut bass_notes = Vec::new();
-    for (at, &(chord, _, _, start, length)) in chords.iter().enumerate() {
-        let next = line[(at + 1) % line.len()];
-        comping.extend(Comping::Accents.play(time, &voicings[at], start, length));
-        bass_notes.extend(Bass::Accents.play_over(time, chord, line[at], next, start, length));
-    }
-    // As with a style, a song with music of its own keeps its time
-    // signature, and the pattern has the new one for itself.
-    let song_has_music = song_has_music(project, index);
-    if !song_has_music {
-        project.time_signature = time;
-    }
-    let Some(pattern) = project.pattern_mut(index) else {
-        return;
-    };
-    pattern.time = song_has_music.then_some(time);
-    pattern.set_length((bars * time.steps_per_bar()).min(MAX_STEPS));
-    pattern.set_notes(keys, comping);
-    pattern.set_notes(bass, bass_notes);
-}
-
 /// Apply only the checked components to the selected audition pattern.
 pub fn write_style_parts(
     project: &mut Project,
@@ -256,48 +223,49 @@ pub fn write_style_parts(
     selected: Option<usize>,
     parts: StyleParts,
 ) {
-    let parts = parts.for_preset().following(style.follows_the_song());
-    let (comping, bass) = if parts.matching_style {
-        (style.comping, style.bass)
-    } else {
-        (Comping::Accents, Bass::Accents)
-    };
+    let parts = parts.following(style.follows_the_song());
     let empty = project
         .pattern(index)
         .is_some_and(|pattern| pattern.is_empty());
-    if empty && parts.rhythm && !parts.matching_style {
-        let time = if parts.time_signature {
-            style.time
-        } else {
-            project.pattern_time(index)
-        };
-        accent_song_chords(project, index, style.bars(), time, selected);
-    } else if empty && (parts.rhythm || parts.progression) {
-        // An empty audition needs some harmony to demonstrate the style.
+    let time = if parts.time_signature {
+        style.time
+    } else {
+        project.pattern_time(index)
+    };
+    if empty && (parts.matching_style || parts.progression) {
+        // An empty audition needs some harmony to demonstrate the style:
+        // its chart, played its way, or held without its chord parts.
         let scale = project.scale;
         let old_time = project.time_signature;
-        let own_time = project.pattern_time(index);
-        let seed = Style {
-            comping,
-            bass,
-            time: if parts.time_signature {
-                style.time
-            } else {
-                own_time
+        let seed = match parts.matching_style {
+            true => Style { time, ..*style },
+            false => Style {
+                time,
+                comping: Comping::Held,
+                bass: Bass::Held,
+                ..*style
             },
-            ..*style
         };
         write_style(project, index, &seed, scale.root, selected);
         project.scale = scale;
         if !parts.time_signature {
             project.time_signature = old_time;
         }
+    } else if empty && parts.rhythm {
+        // The drums alone, as long as the style.
+        if !song_has_music(project, index) {
+            project.time_signature = time;
+        }
+        if let Some(pattern) = project.pattern_mut(index) {
+            pattern.set_length((style.bars() * time.steps_per_bar()).min(MAX_STEPS));
+            pattern.time = Some(time);
+        }
     } else {
         if parts.time_signature {
             meter(project, index, style.time);
         }
-        if parts.rhythm {
-            recomp(project, index, comping, bass);
+        if parts.matching_style {
+            recomp(project, index, style.comping, style.bass);
         }
         if parts.progression {
             progression(project, index, style);
@@ -336,17 +304,14 @@ pub fn write_rhythm_parts(project: &mut Project, index: usize, rhythm: &Rhythm, 
     if parts.time_signature {
         meter(project, index, rhythm.time);
     }
-    if parts.rhythm {
-        let (comping, bass) = if parts.matching_style {
-            feel(rhythm)
-        } else {
-            (Comping::Accents, Bass::Accents)
-        };
+    if parts.matching_style {
+        let (comping, bass) = feel(rhythm);
         recomp(project, index, comping, bass);
+    }
+    if parts.rhythm {
         write_rhythm(project, index, rhythm);
     }
     if parts.instruments
-        && parts.matching_style
         && let Some(style) = STYLES.iter().find(|style| style.rhythm == rhythm.name)
     {
         style_instruments(project, style, None);
@@ -359,6 +324,8 @@ pub fn write_rhythm_parts(project: &mut Project, index: usize, rhythm: &Rhythm, 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::project::Channel;
+    use crate::{HarmonyName, NoteEvent};
 
     fn no_parts() -> StyleParts {
         StyleParts {
@@ -368,7 +335,7 @@ mod tests {
             progression: false,
             tempo: false,
             swing: false,
-            matching_style: true,
+            matching_style: false,
         }
     }
 
@@ -383,6 +350,112 @@ mod tests {
         );
         write_rhythm(&mut project, 0, Rhythm::named("Pop beat").unwrap());
         project
+    }
+
+    /// A song as a MIDI file brings it: its players named by the file,
+    /// none of them Keys or Bass, the tune on a piano high above them.
+    fn imported() -> Project {
+        let mut project = Project::empty();
+        for (name, program, pitch) in [
+            ("PIANO MELODIA", 0, 79),
+            ("BANDONEON", 23, 64),
+            ("GUITARRA", 24, 60),
+            ("CONTRABAJO", 43, 40),
+            ("CUERDAS", 49, 67),
+            ("CORO", 52, 65),
+            ("Melodía", 26, 55),
+        ] {
+            let channel = project
+                .add_channel(Channel {
+                    name: name.into(),
+                    program: Some(program),
+                    ..Channel::synth()
+                })
+                .unwrap();
+            project
+                .pattern_mut(0)
+                .unwrap()
+                .set_notes(channel, [NoteEvent::exact(Note::new(pitch), 0, 100)]);
+        }
+        project
+            .add_clip(crate::playlist::Clip::new(0, 0, 0))
+            .unwrap();
+        project
+    }
+
+    fn program_of(project: &Project, name: &str) -> Option<u8> {
+        let channel = project
+            .channels()
+            .iter()
+            .find(|channel| channel.name == name);
+        channel.and_then(|channel| channel.program)
+    }
+
+    #[test]
+    fn a_styles_sounds_go_to_an_imported_songs_players_by_family_but_the_tune() {
+        let mut project = imported();
+        style_instruments(&mut project, Style::named("Tango").unwrap(), Some(0));
+        // The tune keeps its piano, and the choir has no match.
+        assert_eq!(program_of(&project, "PIANO MELODIA"), Some(0));
+        assert_eq!(
+            program_of(&project, "Melodía"),
+            Some(26),
+            "named for the tune"
+        );
+        assert_eq!(program_of(&project, "CORO"), Some(52));
+        let tango = BandStyle::of_style(Style::named("Tango").unwrap()).unwrap();
+        assert_eq!(
+            program_of(&project, "CONTRABAJO"),
+            Some(tango.bass_program())
+        );
+        // No organ nor guitar in a tango band: the piano plays those.
+        assert_eq!(
+            program_of(&project, "BANDONEON"),
+            Some(tango.piano_program())
+        );
+        assert_eq!(
+            program_of(&project, "GUITARRA"),
+            Some(tango.piano_program())
+        );
+        let strings = tango.extras().strings.unwrap().program;
+        assert_eq!(program_of(&project, "CUERDAS"), Some(strings));
+
+        let mut project = imported();
+        let bossa = Style::named("Bossa nova").unwrap();
+        style_instruments(&mut project, bossa, None);
+        let band = BandStyle::of_style(bossa).unwrap();
+        let guitar = band.extras().guitar.unwrap().program;
+        assert_eq!(program_of(&project, "GUITARRA"), Some(guitar));
+        assert_eq!(
+            program_of(&project, "CONTRABAJO"),
+            Some(band.bass_program())
+        );
+        assert_eq!(
+            program_of(&project, "CUERDAS"),
+            Some(49),
+            "no strings in it"
+        );
+    }
+
+    #[test]
+    fn a_songs_keys_and_bass_still_take_a_styles_sounds_alone() {
+        let mut project = audition();
+        let lead = project
+            .add_channel(Channel {
+                name: LEAD.into(),
+                program: Some(general_midi::ELECTRIC_PIANO),
+                ..Channel::synth()
+            })
+            .unwrap();
+        let style = Style::named("Tango").unwrap();
+        style_instruments(&mut project, style, None);
+        let band = BandStyle::of_style(style).unwrap();
+        let keys = find_synth(&project, KEYS).unwrap();
+        assert_eq!(project.channels()[keys].program, Some(band.piano_program()));
+        assert_eq!(
+            project.channels()[lead].program,
+            Some(general_midi::ELECTRIC_PIANO)
+        );
     }
 
     #[test]
@@ -400,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn an_accent_rhythm_preserves_sounds_and_can_keep_the_meter() {
+    fn a_rhythms_drums_alone_keep_the_chords_sounds_and_meter() {
         let mut project = audition();
         let keys = find_synth(&project, KEYS).unwrap();
         project.channel_mut(keys).unwrap().program = Some(80);
@@ -411,7 +484,6 @@ mod tests {
             Rhythm::named("Rachenitsa").unwrap(),
             StyleParts {
                 rhythm: true,
-                matching_style: false,
                 ..no_parts()
             },
         );
@@ -419,17 +491,15 @@ mod tests {
         assert_eq!(project.pattern_time(0), before.pattern_time(0));
         assert_eq!(project.scale, before.scale);
         assert_eq!(project.channels()[keys].program, Some(80));
-        let notes = project.pattern(0).unwrap().notes(keys);
-        let starts: std::collections::BTreeSet<_> = notes
-            .iter()
-            .filter(|n| n.start < 16)
-            .map(|n| n.start)
-            .collect();
-        assert_eq!(starts, [0, 8].into_iter().collect());
+        assert_eq!(
+            project.pattern(0).unwrap().notes(keys),
+            before.pattern(0).unwrap().notes(keys)
+        );
+        assert_ne!(project.pattern(0), before.pattern(0), "the drums came");
     }
 
     #[test]
-    fn a_style_preset_can_use_plain_accents_and_keep_its_current_sounds() {
+    fn a_styles_drums_alone_keep_the_patterns_chords_and_sounds() {
         for empty in [false, true] {
             let mut project = audition();
             let keys = find_synth(&project, KEYS).unwrap();
@@ -440,68 +510,40 @@ mod tests {
                     pattern.set_notes(channel, []);
                 }
             }
+            let before = project.clone();
+            let style = Style::named("Emotional pop").unwrap();
             write_style_parts(
                 &mut project,
                 0,
-                Style::named("Emotional pop").unwrap(),
+                style,
                 None,
                 StyleParts {
                     rhythm: true,
-                    instruments: true,
-                    matching_style: false,
                     ..no_parts()
                 },
             );
             assert_eq!(project.channels()[keys].program, Some(80));
-            let starts: std::collections::BTreeSet<_> = project
-                .pattern(0)
-                .unwrap()
-                .notes(keys)
-                .iter()
-                .filter(|note| note.start < 16)
-                .map(|note| note.start)
-                .collect();
-            assert_eq!(starts, [0, 8].into_iter().collect());
+            assert_eq!(
+                project.pattern(0).unwrap().notes(keys),
+                before.pattern(0).unwrap().notes(keys)
+            );
+            let drums = drums_in(&project, 0, 0, project.pattern(0).unwrap().length());
+            assert!(!drums.is_empty());
+            if empty {
+                assert_eq!(project.pattern(0).unwrap().length(), style.length());
+            }
         }
     }
 
-    /// The pitch classes pattern `index` plays on `channel` from step
-    /// `from` to step `to`.
-    fn pitch_classes(
-        project: &Project,
-        index: usize,
-        channel: usize,
-        from: usize,
-        to: usize,
-    ) -> std::collections::BTreeSet<PitchClass> {
-        project
-            .pattern(index)
-            .unwrap()
-            .notes(channel)
-            .iter()
-            .filter(|note| (from..to).contains(&note.start))
-            .map(|note| note.pitch.pitch_class())
-            .collect()
-    }
-
     #[test]
-    fn plain_accents_in_an_empty_pattern_play_the_songs_chords_not_the_styles() {
+    fn an_empty_pattern_takes_a_styles_drums_alone_in_its_meter() {
         use crate::{ChordMarker, Clip};
-        use PitchClass::*;
-        // A song of its own in 4/4 whose sheet has two bars, C and G/B,
-        // and an empty pattern to try a style in 3/4: Imaj7 | vi7 | ii7 | V7.
+        // A song of its own in 4/4, and an empty pattern to try a waltz.
         let mut project = Project::empty();
         project.pattern_mut(0).unwrap().set_length(32);
         project.add_clip(Clip::new(0, 0, 0));
         let chord = |text| HarmonyName::parse(text).unwrap();
-        project.set_chords(
-            0,
-            32,
-            &[
-                ChordMarker::new(0, chord("C")),
-                ChordMarker::new(16, chord("G/B")),
-            ],
-        );
+        project.set_chords(0, 32, &[ChordMarker::new(0, chord("C"))]);
         let trial = project.add_pattern().unwrap();
         let before = project.playlist().chord_markers().to_vec();
         write_style_parts(
@@ -512,8 +554,6 @@ mod tests {
             StyleParts {
                 rhythm: true,
                 time_signature: true,
-                progression: true,
-                matching_style: false,
                 ..no_parts()
             },
         );
@@ -522,54 +562,8 @@ mod tests {
         let pattern = project.pattern(trial).unwrap();
         assert_eq!(pattern.time, Some(TimeSignature::new(3, 4)));
         assert_eq!(pattern.length(), 48);
-        let keys = find_synth(&project, KEYS).unwrap();
-        let bass = find_synth(&project, BASS).unwrap();
-        // Bar for bar, as the sheet has them, and nothing after it ends.
-        assert_eq!(
-            pitch_classes(&project, trial, keys, 0, 12),
-            [C, E, G].into()
-        );
-        assert_eq!(
-            pitch_classes(&project, trial, keys, 12, 24),
-            [D, G, B].into()
-        );
-        assert!(pitch_classes(&project, trial, keys, 24, 48).is_empty());
-        let lowest = project
-            .pattern(trial)
-            .unwrap()
-            .notes(bass)
-            .iter()
-            .filter(|note| (12..24).contains(&note.start))
-            .map(|note| note.pitch)
-            .min()
-            .unwrap();
-        assert_eq!(lowest.pitch_class(), B, "G/B has B in the bass");
-    }
-
-    #[test]
-    fn plain_accents_with_no_chords_on_the_sheet_play_the_tonic_chord() {
-        use PitchClass::*;
-        let mut project = Project::empty();
-        project.scale = crate::harmony::Scale::new(D, crate::harmony::ScaleKind::NaturalMinor);
-        write_style_parts(
-            &mut project,
-            0,
-            Style::named("Royal road").unwrap(),
-            None,
-            StyleParts {
-                rhythm: true,
-                matching_style: false,
-                ..no_parts()
-            },
-        );
-        let keys = find_synth(&project, KEYS).unwrap();
-        let length = project.pattern(0).unwrap().length();
-        assert_eq!(length, Style::named("Royal road").unwrap().length());
-        assert_eq!(
-            pitch_classes(&project, 0, keys, 0, length),
-            [D, F, A].into()
-        );
-        assert_eq!(project.scale.root, D, "the song keeps its key");
+        assert!(heard_chords_channel(&project, trial).is_none());
+        assert!(!drums_in(&project, trial, 0, 48).is_empty());
     }
 
     #[test]

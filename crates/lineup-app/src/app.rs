@@ -44,6 +44,7 @@ mod trace;
 mod ux_tests;
 mod video;
 mod view;
+mod windows;
 
 pub(crate) use demo_menu::fold;
 
@@ -246,16 +247,11 @@ impl LineupApp {
             Ok(engine) => Audio::Running(Box::new(engine)),
             Err(err) => Audio::Unavailable(err.to_string()),
         };
-        let starting_song = path.is_none();
         let mut app = Self::with_audio(&cc.egui_ctx, path, audio);
         // Only the real window recovers work: tracing and rendering a
         // video use `with_audio` too and must not touch that copy.
         app.recovery = recovery::Recovery::new(eframe::storage_dir(APP_NAME));
-        // The starting song opens on the playlist and the Library, with no
-        // window over them: F6 shows its beat in the channel rack.
-        if starting_song {
-            app.rack_open = false;
-        }
+        app.restore_windows(&cc.egui_ctx);
         // Real instrument sounds are offered as soon as the window opens,
         // before anything plays.
         app.offer_sound_font();
@@ -1074,7 +1070,7 @@ impl LineupApp {
                             progression: false,
                             tempo: false,
                             swing: false,
-                            matching_style: true,
+                            matching_style: false,
                         },
                     );
                 });
@@ -2379,8 +2375,10 @@ impl eframe::App for LineupApp {
     }
 
     /// Called by eframe every 30 seconds and when the window closes, to
-    /// write what is kept between runs. egui's memory is saved with it.
+    /// write what is kept between runs, the open windows among it. egui's
+    /// memory is saved with it.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        self.preferences.put(windows::NAME, &self.open_windows());
         self.preferences.save(storage);
     }
 

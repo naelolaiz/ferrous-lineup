@@ -1,7 +1,8 @@
 //! Where the parts of a song come from.
 //!
-//! Opening a demo brings in every part of the song from it: its
-//! patterns, instruments, time signature, chords, tempo and swing.
+//! Opening a demo brings in every part of the song from it: its drums,
+//! its chord and bass parts, its melody, instruments, time signature,
+//! key, chords, tempo and swing.
 //! Applying a style with only some of its parts ticked brings in only
 //! those, and the rest stay as they were. So a song can end up with its
 //! patterns from one style, its tempo from another and its chords from
@@ -18,16 +19,26 @@ use serde::{Deserialize, Serialize};
 
 use crate::Project;
 use crate::library::apply::StyleParts;
+use crate::project::{Channel, ChannelKind, SampleSource};
 
-/// A part of a song that a demo or a style can bring in.
+/// A part of a song that a demo or a style can bring in, in the order
+/// the app lists them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SongPart {
-    /// What the accompaniment plays: the band's style, or the song's own
-    /// patterns when it has no band.
+    /// What the drums play: the band's rhythm, or the song's own drum
+    /// notes when it has no band.
+    Drums,
+    /// How the chords and the bass are played: the band's style, or the
+    /// song's own patterns, but for the drums and the melody, when it has
+    /// no band.
     Patterns,
+    /// The tune: the notes of the channels called Lead.
+    Melody,
     /// The sounds of the channels and the band's players.
     Instruments,
     TimeSignature,
+    /// The key, and where it changes.
+    Key,
     /// The chord sheet.
     Chords,
     Tempo,
@@ -35,7 +46,22 @@ pub enum SongPart {
 }
 
 impl SongPart {
-    pub const ALL: [SongPart; 6] = [
+    pub const ALL: [SongPart; 9] = [
+        SongPart::Drums,
+        SongPart::Patterns,
+        SongPart::Melody,
+        SongPart::Instruments,
+        SongPart::TimeSignature,
+        SongPart::Key,
+        SongPart::Chords,
+        SongPart::Tempo,
+        SongPart::Swing,
+    ];
+
+    /// The parts that files written before the others came kept: the
+    /// others are written where those versions do not look (see
+    /// [`crate::file`]).
+    pub const FIRST: [SongPart; 6] = [
         SongPart::Patterns,
         SongPart::Instruments,
         SongPart::TimeSignature,
@@ -47,27 +73,30 @@ impl SongPart {
     /// Its name, such as "Time signature".
     pub fn name(self) -> &'static str {
         match self {
-            SongPart::Patterns => "Patterns",
+            SongPart::Drums => "Drums",
+            SongPart::Patterns => "Chord and bass parts",
+            SongPart::Melody => "Melody",
             SongPart::Instruments => "Instruments",
             SongPart::TimeSignature => "Time signature",
+            SongPart::Key => "Key",
             SongPart::Chords => "Chords",
             SongPart::Tempo => "Tempo",
             SongPart::Swing => "Swing",
         }
     }
 
-    fn bit(self) -> u8 {
-        1 << self as u8
+    fn bit(self) -> u16 {
+        1 << self as u16
     }
 }
 
 /// A set of parts, such as those ticked when a style is applied.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct PartSet(u8);
+pub struct PartSet(u16);
 
 impl PartSet {
     pub const NONE: PartSet = PartSet(0);
-    pub const ALL: PartSet = PartSet((1u8 << SongPart::ALL.len()) - 1);
+    pub const ALL: PartSet = PartSet((1u16 << SongPart::ALL.len()) - 1);
 
     pub fn of(parts: &[SongPart]) -> Self {
         PartSet(parts.iter().fold(0, |bits, part| bits | part.bit()))
@@ -76,7 +105,8 @@ impl PartSet {
     /// The parts ticked in a style's options.
     pub fn ticked(parts: StyleParts) -> Self {
         let ticked = [
-            (parts.rhythm, SongPart::Patterns),
+            (parts.rhythm, SongPart::Drums),
+            (parts.matching_style, SongPart::Patterns),
             (parts.instruments, SongPart::Instruments),
             (parts.time_signature, SongPart::TimeSignature),
             (parts.progression, SongPart::Chords),
@@ -148,7 +178,7 @@ pub(crate) struct PartSource {
 /// the same song, although a part edited before saving no longer
 /// remembers what it was like when it came, only that it was edited.
 #[derive(Debug, Clone, Default)]
-pub(crate) struct Sources([Option<PartSource>; 6]);
+pub(crate) struct Sources([Option<PartSource>; SongPart::ALL.len()]);
 
 impl PartialEq for Sources {
     fn eq(&self, _: &Self) -> bool {
@@ -203,6 +233,7 @@ impl Project {
     /// `source`. The parts in `taken` come from `source` from now on,
     /// even those that were already as `source` has them: a 4/4 style
     /// applied to a song in 4/4 gives it its time signature all the same.
+    /// So does the key, if it changed with what was taken.
     /// Of the other parts it changes, those in `edited` are your edits, as
     /// a time signature picked in the Time box: they still came from
     /// where they came from, and are edited now. Any other part it changes
@@ -219,7 +250,12 @@ impl Project {
         let result = change(self);
         for (part, before) in SongPart::ALL.into_iter().zip(before) {
             let now = self.part_fingerprint(part);
-            if taken.contains(part) && !edited.contains(part) {
+            // A key that changed with what was taken came with it: a
+            // minor progression puts the song in minor, a row style puts
+            // it in its row.
+            let came = taken.contains(part)
+                || (part == SongPart::Key && now != before && taken != PartSet::NONE);
+            if came && !edited.contains(part) {
                 self.sources.set(
                     part,
                     Some(PartSource {
@@ -249,6 +285,28 @@ impl Project {
         result
     }
 
+    /// Where the drums, the melody and the key of a file from before they
+    /// had sources of their own came from: the drums with the patterns, a
+    /// demo's melody with the demo, and the key with the chords.
+    pub(crate) fn sources_of_an_older_file(&mut self) {
+        let patterns = self.sources.get(SongPart::Patterns).cloned();
+        let demo = patterns
+            .clone()
+            .filter(|came| came.source.kind == SourceKind::Demo);
+        let chords = self.sources.get(SongPart::Chords).cloned();
+        for (part, came) in [
+            (SongPart::Drums, patterns),
+            (SongPart::Melody, demo),
+            (SongPart::Key, chords),
+        ] {
+            let came = came.map(|came| PartSource {
+                source: came.source,
+                print: came.print.map(|_| self.part_fingerprint(part)),
+            });
+            self.sources.set(part, came);
+        }
+    }
+
     /// A part changed from `before` to `now` along with others: if it was
     /// as it came, it still is. If you had edited it, it stays edited.
     fn follow_part(&mut self, part: SongPart, before: u64, now: u64) {
@@ -273,6 +331,18 @@ impl Project {
     pub fn part_fingerprint(&self, part: SongPart) -> u64 {
         let mut hasher = DefaultHasher::new();
         match part {
+            SongPart::Drums => match self.band() {
+                // The band plays a style's drums, or a saved style's, or
+                // none and the song's own play.
+                Some(band) => {
+                    band.drums_name().hash(&mut hasher);
+                    band.saved_drums().map(|style| style.id()).hash(&mut hasher);
+                    if band.drums == crate::band::BandDrums::Song {
+                        self.hash_notes(&mut hasher, is_drum);
+                    }
+                }
+                None => self.hash_notes(&mut hasher, is_drum),
+            },
             SongPart::Patterns => match self.band() {
                 // The band plays its style, whatever the chords make of it.
                 Some(band) => {
@@ -283,26 +353,11 @@ impl Project {
                         .map(|style| style.id())
                         .hash(&mut hasher);
                 }
-                None => {
-                    for pattern in &self.patterns {
-                        pattern.length().hash(&mut hasher);
-                        for channel in 0..self.channels.len() {
-                            for note in pattern.notes(channel) {
-                                (
-                                    channel,
-                                    note.pitch.midi(),
-                                    note.start,
-                                    note.length,
-                                    note.velocity,
-                                    note.nudge,
-                                    note.trim,
-                                )
-                                    .hash(&mut hasher);
-                            }
-                        }
-                    }
-                }
+                None => self.hash_notes(&mut hasher, |channel| {
+                    !is_drum(channel) && !is_lead(channel)
+                }),
             },
+            SongPart::Melody => self.hash_notes(&mut hasher, is_lead),
             SongPart::Instruments => {
                 for channel in &self.channels {
                     format!("{:?}", channel.kind).hash(&mut hasher);
@@ -320,6 +375,10 @@ impl Project {
                 format!("{:?}", self.time_signature).hash(&mut hasher);
                 format!("{:?}", self.playlist.time_markers()).hash(&mut hasher);
             }
+            SongPart::Key => {
+                format!("{:?}", self.scale).hash(&mut hasher);
+                format!("{:?}", self.playlist.key_markers()).hash(&mut hasher);
+            }
             SongPart::Chords => {
                 format!("{:?}", self.playlist.chord_markers()).hash(&mut hasher);
             }
@@ -331,6 +390,42 @@ impl Project {
         }
         hasher.finish()
     }
+
+    /// Adds to `hasher` the length of every pattern and the notes of the
+    /// channels `counted` picks.
+    fn hash_notes(&self, hasher: &mut DefaultHasher, counted: impl Fn(&Channel) -> bool) {
+        for pattern in &self.patterns {
+            pattern.length().hash(hasher);
+            for (index, channel) in self.channels.iter().enumerate() {
+                if !counted(channel) {
+                    continue;
+                }
+                for note in pattern.notes(index) {
+                    (
+                        index,
+                        note.pitch.midi(),
+                        note.start,
+                        note.length,
+                        note.velocity,
+                        note.nudge,
+                        note.trim,
+                    )
+                        .hash(hasher);
+                }
+            }
+        }
+    }
+}
+
+/// Whether `channel` is one of the built-in drums.
+fn is_drum(channel: &Channel) -> bool {
+    matches!(channel.kind, ChannelKind::Sampler(SampleSource::Builtin(_)))
+}
+
+/// Whether `channel` plays the tune, as the Lead channel of every song
+/// demo does.
+fn is_lead(channel: &Channel) -> bool {
+    channel.name == crate::library::apply::LEAD
 }
 
 #[cfg(test)]

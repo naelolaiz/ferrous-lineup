@@ -149,6 +149,7 @@ impl Band {
             band.custom_rhythm = None;
             band.harmony_style = None;
             band.accents_only = false;
+            band.drums = super::BandDrums::Style;
         }
         band
     }
