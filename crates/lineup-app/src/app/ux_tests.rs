@@ -827,7 +827,7 @@ fn applying_a_library_preset_to_a_demo_creates_all_its_players() {
         let before = screen.app.project.clone();
         screen.click("Emotional pop");
         for label in [
-            "Playing patterns",
+            "Drums",
             "Voices / instruments",
             "Time signature",
             "Tempo",
@@ -905,7 +905,7 @@ fn copying_only_the_voices_or_the_patterns_brings_the_band_and_leaves_the_song_a
         (
             "The Rite of Spring, Ritual of Abduction",
             "Orchestra  (any meter)",
-            "Playing patterns",
+            "Drums",
         ),
         (
             "Petrushka, Petrushka's Room",
@@ -944,9 +944,11 @@ fn copying_only_the_voices_or_the_patterns_brings_the_band_and_leaves_the_song_a
         screen.click("Apply");
         let changed = &screen.app.project;
         let band = changed.band().expect("the band comes in");
+        assert!(!band.accents_only, "{song}");
+        // Without its drums, the band leaves them to the song.
         assert_eq!(
-            band.accents_only,
-            !preset.contains("any meter") && part != "Playing patterns",
+            band.drums == lineup_core::BandDrums::Song,
+            !preset.contains("any meter"),
             "{song}"
         );
         // The band plays on tracks of its own ...
@@ -1169,7 +1171,7 @@ fn trying_row_and_micromode_styles_rewrites_one_pattern_while_it_is_unchanged() 
 }
 
 #[test]
-fn plain_accents_popup_hides_instruments_and_chords_and_restores_their_saved_choices() {
+fn the_drums_chord_parts_and_voices_boxes_go_on_their_own() {
     use lineup_core::library::apply::StyleParts;
     for saved in [false, true] {
         let mut screen = Screen::new();
@@ -1187,84 +1189,124 @@ fn plain_accents_popup_hides_instruments_and_chords_and_restores_their_saved_cho
         screen.click("🔍 Search: bossa, 6/8, tango…");
         screen.draw(vec![Event::Text("Royal road".into())]);
         screen.click("Royal road");
-        screen.click("Plain accents");
+        screen.click("Chord and bass parts");
         let output = screen.draw(vec![]);
-        assert!(text_rect(&output, "Drums and plain accents").is_some());
-        assert!(text_rect(&output, "Playing patterns").is_none());
-        assert!(text_rect(&output, "Voices / instruments").is_none());
-        assert!(text_rect(&output, "Chord progression").is_none());
-        assert!(text_rect(&output, "Keeps the song’s chords").is_some());
-        screen.click("Preset patterns");
-        let output = screen.draw(vec![]);
+        assert!(checkbox_checked(&output, "Drums"));
+        assert!(!checkbox_checked(&output, "Chord and bass parts"));
         assert_eq!(checkbox_checked(&output, "Voices / instruments"), saved);
         assert_eq!(checkbox_checked(&output, "Chord progression"), saved);
-        screen.click("Plain accents");
+        screen.click("Drums");
+        let output = screen.draw(vec![]);
+        assert!(!checkbox_checked(&output, "Drums"));
+        assert!(!checkbox_checked(&output, "Chord and bass parts"));
+        assert_eq!(checkbox_checked(&output, "Voices / instruments"), saved);
+        screen.click("Drums");
         let before = screen.app.project.clone();
         screen.click("Apply");
-        assert_eq!(
-            screen.app.project.playlist().chord_markers(),
-            before.playlist().chord_markers()
-        );
-        for (index, original) in before.channels().iter().enumerate() {
-            assert_eq!(screen.app.project.channels()[index], *original);
+        if !saved {
+            assert_eq!(
+                screen.app.project.playlist().chord_markers(),
+                before.playlist().chord_markers()
+            );
+            for (index, original) in before.channels().iter().enumerate() {
+                assert_eq!(screen.app.project.channels()[index], *original);
+            }
         }
-        let remembered = *screen.app.playlist.library_parts_mut();
-        assert_eq!(
-            (remembered.instruments, remembered.progression),
-            (saved, saved)
-        );
         let parts = screen.app.playlist.library_parts();
-        assert!(!parts.instruments && !parts.progression && !parts.matching_style);
+        assert!(parts.rhythm && !parts.matching_style);
+        assert_eq!((parts.instruments, parts.progression), (saved, saved));
     }
 }
 
-/// The chords a trial pattern plays, as heard from its notes.
-fn heard_chords(project: &Project, pattern: usize) -> Vec<String> {
-    let target = project.pattern(pattern).unwrap();
-    let channel = (0..project.channels().len())
-        .find(|&channel| {
-            let it = &project.channels()[channel];
-            it.kind == lineup_core::ChannelKind::Synth
-                && it.name != lineup_core::library::apply::BASS
-                && !target.notes(channel).is_empty()
-        })
-        .expect("a channel plays the chords");
-    lineup_core::library::listen::hear_chords(
-        target.notes(channel),
-        &[],
-        target.length(),
-        project.pattern_time(pattern),
-    )
-    .iter()
-    .filter_map(|stretch| stretch.chord)
-    .map(|chord| chord.name(lineup_core::Spelling::Flats))
-    .collect()
+#[test]
+fn without_its_drums_a_style_keeps_the_other_boxes_as_they_are() {
+    use lineup_core::library::apply::StyleParts;
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.playlist.browser_open = true;
+    *screen.app.playlist.library_parts_mut() = StyleParts {
+        rhythm: false,
+        matching_style: false,
+        ..Default::default()
+    };
+    screen.click("📚 Library");
+    screen.click("🔍 Search: bossa, 6/8, tango…");
+    screen.draw(vec![Event::Text("Royal road".into())]);
+    screen.click("Royal road");
+    let output = screen.draw(vec![]);
+    assert!(!checkbox_checked(&output, "Drums"));
+    assert!(!checkbox_checked(&output, "Chord and bass parts"));
+    assert!(checkbox_checked(&output, "Voices / instruments"));
+    screen.click("Cancel");
+    let parts = screen.app.playlist.library_parts();
+    assert!(parts.instruments && !parts.matching_style);
 }
 
 #[test]
-fn a_style_tried_with_plain_accents_plays_the_songs_chords_not_its_own() {
+fn a_styles_time_signature_alone_leaves_a_pattern_the_song_plays_in_the_songs() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::{Style, apply::StyleParts};
+    let mut screen = Screen::new();
+    assert!(screen.app.project.band().is_none());
+    screen.app.set_mode(PlayMode::Pattern);
+    *screen.app.playlist.library_parts_mut() = StyleParts {
+        rhythm: false,
+        instruments: false,
+        time_signature: true,
+        progression: false,
+        tempo: false,
+        swing: false,
+        matching_style: false,
+    };
+    let before = screen.app.project.clone();
+    let pattern = screen.app.pattern;
+    assert!(
+        (before.playlist().clips().iter()).any(|clip| clip.pattern == pattern),
+        "the song plays the pattern"
+    );
+    let waltz = Style::named("Waltz").unwrap();
+    screen.app.try_from_library(LibraryAction::Style(waltz));
+    assert_eq!(screen.app.project, before);
+    assert!(
+        (screen.app.notice.as_deref())
+            .is_some_and(|notice| notice.contains("keeps the song's time signature")),
+        "{:?}",
+        screen.app.notice
+    );
+}
+
+#[test]
+fn a_style_tried_without_its_chord_parts_plays_only_its_drums() {
     for progression in [false, true] {
         let mut screen = Screen::new();
         screen.app.rack_open = false;
         screen.app.playlist.browser_open = true;
         screen.app.playlist.library_parts_mut().progression = progression;
-        let chords = screen.app.project.playlist().chord_markers().to_vec();
+        screen.app.playlist.library_parts_mut().instruments = false;
         screen.click("📚 Library");
         screen.click("🔍 Search: bossa, 6/8, tango…");
         // Its chart is bVI | bVII | i | i: in C, Ab Bb Cm.
         screen.draw(vec![Event::Text("Aeolian climb".into())]);
         screen.click("Aeolian climb");
-        screen.click("Plain accents");
+        screen.click("Chord and bass parts");
         screen.click("Apply");
         let project = &screen.app.project;
-        assert_eq!(project.playlist().chord_markers(), chords);
         let trial = screen.app.pattern;
-        assert_eq!(project.pattern(trial).unwrap().name, "Aeolian climb");
-        // The starting song plays C Am F G, two chords a bar.
-        assert_eq!(
-            heard_chords(project, trial),
-            ["C", "Am", "F", "G"].repeat(2)
-        );
+        let pattern = project.pattern(trial).unwrap();
+        assert_eq!(pattern.name, "Aeolian climb");
+        let drums = (0..project.channels().len())
+            .filter(|&channel| {
+                matches!(
+                    project.channels()[channel].kind,
+                    lineup_core::ChannelKind::Sampler(_)
+                )
+            })
+            .any(|channel| !pattern.notes(channel).is_empty());
+        assert!(drums, "the drums play");
+        let chords = (0..project.channels().len())
+            .filter(|&channel| project.channels()[channel].kind == lineup_core::ChannelKind::Synth)
+            .any(|channel| !pattern.notes(channel).is_empty());
+        assert_eq!(chords, progression, "chords only with the progression");
     }
 }
 
@@ -1282,8 +1324,9 @@ fn preset_workflows_keep_their_apply_buttons_visible_in_small_windows() {
     // list starts below the window's edge.
     screen.scroll_to_at("Aeolian climb", Pos2::new(100.0, 300.0));
     screen.click("Aeolian climb");
-    for mode in ["Plain accents", "Preset patterns"] {
-        screen.click(mode);
+    // With and without its chord and bass parts.
+    for _ in 0..2 {
+        screen.click("Chord and bass parts");
         let output = screen.draw(vec![]);
         for label in ["Apply", "Cancel"] {
             let rect = text_rect(&output, label).expect("Action stays visible");
@@ -1452,6 +1495,31 @@ fn the_library_is_in_front_when_the_app_starts() {
     screen.click_at(patterns.center(), Modifiers::NONE);
     let output = screen.draw(vec![]);
     assert!(text_rect(&output, "🔍 Search: bossa, 6/8, tango…").is_none());
+}
+
+#[test]
+fn the_app_first_opens_on_the_chord_sheet_then_with_the_windows_left_open() {
+    let mut screen = Screen::new();
+    // What `LineupApp::new` does as the app starts, with nothing kept yet.
+    screen.app.restore_windows(&screen.ctx);
+    let app = &screen.app;
+    assert!(app.chord_sheet.open && app.playlist.browser_open && app.harmony_keys.open);
+    assert!(!app.rack_open && !app.mixer_open && !app.piano_roll.open);
+    let output = screen.draw(vec![]);
+    assert!(
+        text_rect(&output, "Bars per line").is_some(),
+        "the sheet shows"
+    );
+
+    // The sheet closed and the mixer opened, then a newer version starts:
+    // they are kept by name, so even the update finds them.
+    screen.key(Key::F5);
+    screen.key(Key::F9);
+    screen.update();
+    screen.app.restore_windows(&screen.ctx);
+    let app = &screen.app;
+    assert!(!app.chord_sheet.open && app.mixer_open);
+    assert!(app.playlist.browser_open && app.harmony_keys.open && !app.rack_open);
 }
 
 #[test]
@@ -1885,13 +1953,14 @@ fn the_window_buttons_open_and_close_their_windows() {
 }
 
 #[test]
-fn settings_style_controls_toggle_and_plain_accents_hides_instruments() {
+fn settings_style_controls_toggle_each_on_its_own() {
     let mut screen = Screen::new();
     screen.app.settings_open = true;
     let project = screen.app.project.clone();
     screen.click("Library");
     for label in [
-        "Patterns",
+        "Drums",
+        "Chord and bass parts",
         "Instruments",
         "Chords",
         "Meter",
@@ -1908,19 +1977,16 @@ fn settings_style_controls_toggle_and_plain_accents_hides_instruments() {
         screen.click(label);
         assert_eq!(*screen.app.playlist.library_parts_mut(), before);
     }
-    screen.click("Plain accents");
+    // Each on its own: none hides another.
+    screen.click("Chord and bass parts");
     let output = screen.draw(vec![]);
     assert!(!screen.app.playlist.library_parts().matching_style);
-    assert!(!screen.app.playlist.library_parts().instruments);
-    assert!(text_rect(&output, "Instruments").is_none());
-    assert!(text_rect(&output, "Accents + drums").is_some());
+    assert!(screen.app.playlist.library_parts().instruments);
+    assert!(text_rect(&output, "Instruments").is_some());
     screen.scroll_to("Edit defaults…");
     screen.click("Edit defaults…");
     let output = screen.draw(vec![]);
-    assert!(text_rect(&output, "Voices / instruments").is_none());
-    assert!(text_rect(&output, "Drums and plain accents").is_some());
-    screen.click("Preset patterns");
-    let output = screen.draw(vec![]);
+    assert!(!checkbox_checked(&output, "Chord and bass parts"));
     assert!(checkbox_checked(&output, "Voices / instruments"));
     screen.click("Cancel");
     assert!(!screen.app.playlist.library_parts().matching_style);
@@ -2051,11 +2117,8 @@ fn melody(project: &Project) -> Vec<lineup_core::NoteEvent> {
 }
 
 #[test]
-fn meter_changes_without_matching_style_use_plain_drums_and_keep_the_requested_meter() {
-    use lineup_core::{
-        Player, TimeSignature,
-        library::{Rhythm, UserStyle, apply},
-    };
+fn meter_changes_without_the_chord_parts_bring_the_meters_drums_alone() {
+    use lineup_core::{TimeSignature, library::apply};
     for live_band in [false, true] {
         for time in [
             TimeSignature::new(3, 4),
@@ -2066,37 +2129,28 @@ fn meter_changes_without_matching_style_use_plain_drums_and_keep_the_requested_m
             let mut screen = meter_test_screen(live_band, true);
             let before = screen.app.project.clone();
             screen.app.set_song_time(time);
-            assert_eq!(screen.app.project.time_signature, time);
+            // An odd meter can come grouped as its drums play it: 7/8 as
+            // 2+2+3/8.
+            let now = screen.app.project.time_signature;
+            assert_eq!((now.beats, now.unit), (time.beats, time.unit));
             for channel in before.channels() {
                 assert!(
                     screen.app.project.channels().contains(channel),
                     "Keep the original instruments"
                 );
             }
-            let rhythm = Rhythm::basic(time);
             if live_band {
+                // The band's own chord and bass parts, and the drums of
+                // a rhythm in the new meter.
                 let band = screen.app.project.band().unwrap();
-                assert!(band.accents_only);
-                assert_eq!(
-                    band.instrument_style,
-                    before.band().unwrap().instrument_style
-                );
-                assert_eq!(band.custom_rhythm.as_ref().unwrap().name, "Basic beat");
-                let mut expected = before.clone();
-                lineup_core::remeter::remeter(&mut expected, time);
-                expected
-                    .apply_user_style(
-                        &UserStyle::from_rhythm(rhythm),
-                        screen.app.playlist.library_parts(),
-                    )
-                    .unwrap();
-                expected.follow_chord_sheet();
-                assert_eq!(
-                    band_notes(&screen.app.project, Player::Drums),
-                    band_notes(&expected, Player::Drums)
-                );
+                let was = before.band().unwrap();
+                assert!(!band.accents_only);
+                assert_eq!(band.style, was.style);
+                assert_eq!(band.instrument_style, was.instrument_style);
+                assert_ne!(band.drums_name(), was.drums_name(), "{time}");
             } else {
-                assert_eq!(screen.app.song_library.rhythm, Some(rhythm));
+                let rhythm = screen.app.song_library.rhythm.expect("the meter's rhythm");
+                assert_eq!(rhythm.time, now);
                 let mut expected = before.clone();
                 apply::use_rhythm_parts(&mut expected, rhythm, screen.app.playlist.library_parts());
                 assert_eq!(screen.app.project, expected);
@@ -2185,6 +2239,44 @@ fn played_melody(app: &mut LineupApp) -> Vec<(f64, f64)> {
 }
 
 #[test]
+fn the_same_style_brings_the_same_tempo_whatever_was_tried_before() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::Style;
+    use lineup_core::library::apply::StyleParts;
+    use lineup_core::{Tempo, TempoMarker, TimeSignature};
+    for time in [TimeSignature::new(2, 4), TimeSignature::COMMON] {
+        // A few slow notes before the song's own tempo, as some MIDI
+        // files start.
+        let mut project = Project::demo();
+        project.time_signature = time;
+        project.tempo = Tempo::new(37.0);
+        project.set_tempo_marker(TempoMarker::new(4, 121.0));
+        let mut screen = Screen::new();
+        screen.app.replace_project(project, None);
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            progression: false,
+            tempo: true,
+            ..StyleParts::default()
+        };
+        let mut tempos = Vec::new();
+        for name in ["Bluegrass", "Celtic", "Bluegrass", "Celtic"] {
+            screen
+                .app
+                .try_from_library(LibraryAction::Style(Style::named(name).unwrap()));
+            assert_eq!(screen.app.project.time_signature, TimeSignature::COMMON);
+            tempos.push(screen.app.project.main_tempo().bpm().round());
+        }
+        if time == TimeSignature::COMMON {
+            assert_eq!(tempos, [180.0, 112.0, 180.0, 112.0]);
+        } else {
+            // In another meter the song keeps its pace, each bar as long
+            // as before: the styles' tempos are for songs in 4/4.
+            assert_eq!(tempos, [242.0; 4]);
+        }
+    }
+}
+
+#[test]
 fn styles_tried_one_after_another_keep_the_songs_tempo() {
     use crate::library_browser::LibraryAction;
     use lineup_core::TimeSignature;
@@ -2196,6 +2288,8 @@ fn styles_tried_one_after_another_keep_the_songs_tempo() {
         (PlayMode::Song, true),
     ] {
         let mut screen = Screen::new();
+        // Without the styles' tempos.
+        screen.app.playlist.library_parts_mut().tempo = false;
         screen.app.open_demo(library::Demo::Song(el_choclo));
         screen.app.set_mode(mode);
         screen.app.set_playing(playing);
@@ -2270,11 +2364,12 @@ fn a_ticked_tempo_comes_with_a_style_only_in_the_same_meter() {
 }
 
 #[test]
-fn the_time_picker_routes_unchecked_matching_style_to_plain_accents() {
+fn the_time_picker_without_the_chord_parts_keeps_the_bands_own() {
     let mut screen = meter_test_screen(true, true);
     screen.app.rack_open = false;
     screen.app.harmony_keys.open = true;
     screen.app.playlist.library_parts_mut().matching_style = true;
+    let style = screen.app.project.band().unwrap().style;
     screen.draw(vec![]);
     let output = screen.draw(vec![]);
     let time_label = text_rect(&output, "Time").unwrap().center();
@@ -2293,16 +2388,15 @@ fn the_time_picker_routes_unchecked_matching_style_to_plain_accents() {
         })
         .unwrap();
     screen.click_at(time_button, Modifiers::NONE);
-    screen.click("Use matching style");
+    screen.click("Chord and bass parts");
     screen.click("7/8");
     assert!(!screen.app.playlist.library_parts().matching_style);
-    assert_eq!(
-        screen.app.project.time_signature,
-        lineup_core::TimeSignature::new(7, 8)
-    );
+    let time = screen.app.project.time_signature;
+    assert_eq!((time.beats, time.unit), (7, 8));
     let band = screen.app.project.band().unwrap();
-    assert!(band.accents_only);
-    assert_eq!(band.custom_rhythm.as_ref().unwrap().name, "Basic beat");
+    assert!(!band.accents_only);
+    assert_eq!(band.style, style);
+    assert_ne!(band.drums_name(), Some(style.name));
 }
 
 #[test]
@@ -2341,6 +2435,7 @@ fn later_meter_changes_keep_unchecked_voices_and_generated_beats_play_the_whole_
     let instrument_style = screen.app.project.band().unwrap().instrument_style;
     assert_eq!(instrument_style.name, "Rachenitsa");
     screen.app.playlist.library_parts_mut().matching_style = false;
+    screen.app.playlist.library_parts_mut().instruments = false;
     screen.app.set_song_time(TimeSignature::new(5, 4));
     assert_eq!(
         screen.app.project.band().unwrap().instrument_style,
@@ -2507,7 +2602,7 @@ fn library_presets_open_their_options_and_apply_in_the_full_app() {
             egui::Popup::is_any_open(&screen.ctx),
             "Preset popup stays open after clicking"
         );
-        assert!(text_rect(&output, "Playing patterns").is_some());
+        assert!(text_rect(&output, "Chord and bass parts").is_some());
         screen.click("Apply");
         assert_ne!(screen.app.project, before);
     }
@@ -2533,7 +2628,7 @@ fn settings_owns_preferences_and_view_keeps_window_actions() {
     let output = screen.draw(vec![]);
     assert!(text_rect(&output, "Editor zoom").is_some());
     assert!(text_rect(&output, "SoundFont instruments").is_none());
-    assert!(text_rect(&output, "Playing patterns").is_none());
+    assert!(text_rect(&output, "Chord and bass parts").is_none());
     screen.click("Audio");
     let output = screen.draw(vec![]);
     assert!(text_rect(&output, "SoundFont instruments").is_some());
@@ -2609,11 +2704,12 @@ fn style_defaults_edit_separately_and_only_save_on_confirmation() {
     let project = screen.app.project.clone();
     let original = *screen.app.playlist.library_parts_mut();
     screen.click("Library");
-    screen.click("Group by genre");
     assert!(crate::library_browser::grouped_presets(&screen.ctx));
+    screen.click("Alphabetical list");
+    assert!(!crate::library_browser::grouped_presets(&screen.ctx));
     let output = screen.draw(vec![]);
     assert!(text_rect(&output, "Style application defaults").is_some());
-    assert!(text_rect(&output, "Playing patterns").is_none());
+    assert!(text_rect(&output, "Voices / instruments").is_none());
     screen.click("Edit defaults…");
     screen.click("Tempo");
     screen.click("Cancel");
@@ -2630,7 +2726,7 @@ fn style_defaults_edit_separately_and_only_save_on_confirmation() {
     assert_eq!(
         screen.ctx.data_mut(
             |data| data.get_persisted::<lineup_core::library::apply::StyleParts>(egui::Id::unique(
-                "library-options"
+                "apply-options"
             ))
         ),
         Some(saved)
@@ -3628,7 +3724,7 @@ mod library_parts {
         progression: false,
         tempo: false,
         swing: false,
-        matching_style: true,
+        matching_style: false,
     };
 
     fn el_choclo() -> Screen {
@@ -3808,6 +3904,7 @@ mod library_parts {
         );
         screen.app.chord_sheet.open = true;
         screen.app.rack_open = false;
+        crate::library_browser::set_grouped_presets(&screen.ctx, false);
         screen.click("Progression");
         let menu = text_rect(&screen.draw(vec![]), "Progression").unwrap();
         screen.scroll_to_at("Doo-wop", menu.center() + vec2(0.0, 120.0));
@@ -3844,7 +3941,7 @@ mod library_parts {
                 .app
                 .notice
                 .as_deref()
-                .is_some_and(|notice| notice.contains("Playing patterns")),
+                .is_some_and(|notice| notice.contains("tick Chord and bass parts too")),
             "{:?}",
             screen.app.notice
         );
@@ -4183,7 +4280,7 @@ mod part_sources {
         progression: false,
         tempo: true,
         swing: false,
-        matching_style: true,
+        matching_style: false,
     };
 
     fn source(screen: &Screen, part: SongPart) -> String {

@@ -8,7 +8,7 @@ use lineup_core::library::apply::StyleParts;
 use super::{LineupApp, view};
 use crate::i18n::{self, Language, tr, tr_str, trf};
 use crate::library_browser::{
-    StyleEditorRequest, grouped_presets, set_grouped_presets, style_mode_ui, style_parts_checkboxes,
+    StyleEditorRequest, grouped_presets, set_grouped_presets, style_parts_checkboxes,
 };
 use crate::theme;
 use crate::widgets::{self, Opening};
@@ -305,10 +305,13 @@ impl LineupApp {
             "Style list",
             "Presentation in the Library and Progression browsers.",
             |ui| {
-                let mut grouped = grouped_presets(ui.ctx());
-                ui.radio_value(&mut grouped, false, tr("Alphabetical list"));
-                ui.radio_value(&mut grouped, true, tr("Group by genre"));
-                set_grouped_presets(ui.ctx(), grouped);
+                let grouped = grouped_presets(ui.ctx());
+                let mut choice = grouped;
+                ui.radio_value(&mut choice, true, tr("Group by genre"));
+                ui.radio_value(&mut choice, false, tr("Alphabetical list"));
+                if choice != grouped {
+                    set_grouped_presets(ui.ctx(), choice);
+                }
             },
         );
         card(
@@ -317,27 +320,19 @@ impl LineupApp {
             "Start each style’s popup with your last confirmed options.",
             |ui| {
                 let parts = self.playlist.library_parts_mut();
-                style_mode_ui(ui, parts);
                 ui.strong(tr("Apply by default"));
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing = vec2(6.0, 6.0);
-                    for (label, value, visible) in [
-                        (
-                            if parts.matching_style {
-                                "Patterns"
-                            } else {
-                                "Accents + drums"
-                            },
-                            &mut parts.rhythm,
-                            true,
-                        ),
-                        ("Instruments", &mut parts.instruments, parts.matching_style),
-                        ("Chords", &mut parts.progression, parts.matching_style),
-                        ("Meter", &mut parts.time_signature, true),
-                        ("Tempo", &mut parts.tempo, true),
-                        ("Swing", &mut parts.swing, true),
+                    for (label, value) in [
+                        ("Drums", &mut parts.rhythm),
+                        ("Chord and bass parts", &mut parts.matching_style),
+                        ("Instruments", &mut parts.instruments),
+                        ("Chords", &mut parts.progression),
+                        ("Meter", &mut parts.time_signature),
+                        ("Tempo", &mut parts.tempo),
+                        ("Swing", &mut parts.swing),
                     ] {
-                        if visible && theme::light_button(ui, tr(label), *value, None).clicked() {
+                        if theme::light_button(ui, tr(label), *value, None).clicked() {
                             *value = !*value;
                         }
                     }

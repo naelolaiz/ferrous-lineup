@@ -312,6 +312,7 @@ impl LineupApp {
         parts.progression &= !style.chart.trim().is_empty();
         if progression_from.is_none()
             && !(parts.rhythm
+                || parts.matching_style
                 || parts.instruments
                 || parts.time_signature
                 || parts.progression
@@ -330,7 +331,6 @@ impl LineupApp {
         let taken = match progression_from {
             Some(_) => apply::StyleParts {
                 progression: true,
-                matching_style: true,
                 ..parts
             },
             None => parts,
@@ -363,17 +363,18 @@ impl LineupApp {
         if progression_from.is_none() {
             self.set_mode(lineup_audio::PlayMode::Song);
         }
-        if self.project.band().is_none() && parts.instruments && !parts.rhythm {
+        if self.project.band().is_none()
+            && (parts.instruments || parts.rhythm)
+            && !parts.matching_style
+        {
             self.notice = Some(crate::i18n::trf(
-                "{}'s instruments play in a band: tick Playing patterns too.",
+                "{}'s drums and instruments play in its band: tick Chord and bass parts too.",
                 &[&style.name],
             ));
         } else if self.project.playlist().chord_markers().is_empty() {
-            self.notice = Some(crate::i18n::tr(if parts.matching_style {
-                "Style applied. Write chords on the sheet or enable Chord progression when applying it."
-            } else {
-                "Style applied. Plain accents play the chords on the sheet: write some there."
-            }).into());
+            self.notice = Some(crate::i18n::tr(
+                "Style applied. Write chords on the sheet or enable Chord progression when applying it.",
+            ).into());
         } else {
             self.notice = Some(crate::i18n::trf("Applied {}", &[&style.name]));
         }

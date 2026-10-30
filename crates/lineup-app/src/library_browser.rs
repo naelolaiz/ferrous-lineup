@@ -1,7 +1,8 @@
-//! The Library tab: searchable accompaniment presets, shown alphabetically
-//! or grouped by family, with tick boxes that keep only the presets like
-//! the song (its time signature, its speed, bringing chords), and the
-//! choice of what a preset copies into the song.
+//! The Library tab: searchable accompaniment presets, grouped by family
+//! or shown alphabetically, with filters that keep only the presets like
+//! the song (its time signature, its speed) or with what is wanted
+//! (chords, swing, an instrument), and the choice of what a preset copies
+//! into the song.
 //!
 //! Like the other views, it only draws and reads the mouse. A click
 //! returns a [`LibraryAction`], and the app writes the style or rhythm
@@ -10,13 +11,13 @@
 use eframe::egui::{self, RichText, Ui};
 use lineup_core::library::apply::StyleParts;
 use lineup_core::library::{
-    FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, Style,
+    FILLS, Genre, MICROMODE_STYLES, MicromodeStyle, ROW_STYLES, Rhythm, RowStyle, Style, UserStyle,
 };
 use lineup_core::{Band, Project, SongPart, SourceKind, TimeSignature};
 
 pub(crate) mod catalogue;
 use crate::i18n::{tr, tr_name, tr_str, trf};
-use catalogue::{Preset, alphabetical, matches};
+use catalogue::{Instrument, Preset, alphabetical, matches};
 
 /// Something picked in the library.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -63,7 +64,7 @@ impl Tried {
         Self {
             user_style: band.custom_rhythm.as_ref().map(|style| style.id()),
             style: band.harmony_style.filter(|_| band.custom_rhythm.is_none()),
-            rhythm: band.style.rhythm.filter(|_| band.custom_rhythm.is_none()),
+            rhythm: band.drums_style().and_then(|style| style.rhythm),
             ..Self::default()
         }
     }
@@ -78,15 +79,27 @@ pub enum StyleEditorRequest {
     Folder,
 }
 
-/// Where the Library options are saved between runs.
-const OPTIONS: &str = "library-options";
+/// Where the Library options are saved between runs. Options saved
+/// under earlier names are left behind, so everyone starts once from
+/// [`FIRST_OPTIONS`].
+const OPTIONS: &str = "apply-options";
 
-/// Where they were saved while the Tempo option started ticked.
-const OPTIONS_TEMPO_ON: &str = "preset-copy-options";
+/// What a preset copies until other options are confirmed: everything
+/// but its chord progression, so the song keeps its own chords.
+const FIRST_OPTIONS: StyleParts = StyleParts {
+    rhythm: true,
+    instruments: true,
+    time_signature: true,
+    progression: false,
+    tempo: true,
+    swing: true,
+    matching_style: true,
+};
 
-/// The tick boxes under the search, which keep only the presets like
-/// the song. Saved with the app's state.
+/// The filters under the search, which keep only the presets like the
+/// song or with what is wanted. Saved with the app's state.
 #[derive(Clone, Copy, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 struct Filters {
     /// In the song's time signature.
     time: bool,
@@ -94,6 +107,22 @@ struct Filters {
     speed: bool,
     /// Bringing a chord progression.
     chords: bool,
+    /// Whose drums swing.
+    swing: bool,
+    /// Bringing this instrument.
+    instrument: Option<Instrument>,
+}
+
+impl Filters {
+    /// The filters that mean something when a chord progression is
+    /// chosen: the time signature and the speed. The others are left out.
+    fn for_progressions(self) -> Self {
+        Filters {
+            time: self.time,
+            speed: self.speed,
+            ..Filters::default()
+        }
+    }
 }
 
 /// How far a preset's own speed may be from the song's for "Near the
@@ -101,7 +130,52 @@ struct Filters {
 /// 149.5 BPM for a song at 130.
 const NEAR_SPEED: f32 = 1.15;
 
-/// The [`Filters`] ticked, with what they compare against.
+/// What the filters look at in a preset.
+#[derive(Clone, Copy)]
+struct Traits {
+    time: TimeSignature,
+    /// The speed it was made for, in beats a minute.
+    tempo: f32,
+    /// Whether it plays every bar in its own meter, so it fits any time
+    /// signature.
+    any_meter: bool,
+    /// Whether it brings a chord progression.
+    chords: bool,
+    /// Whether its drums swing.
+    swing: bool,
+}
+
+impl Traits {
+    fn of(preset: Preset<'_>) -> Self {
+        Traits {
+            time: preset.time(),
+            tempo: preset.tempo(),
+            any_meter: preset.follows_the_song(),
+            chords: preset.has_progression(),
+            swing: preset.swings(),
+        }
+    }
+
+    /// A fill, or a style that plays the song's own channels and the
+    /// drums of `rhythm`, if any.
+    fn plain(time: TimeSignature, tempo: f32, rhythm: Option<&Rhythm>) -> Self {
+        Traits {
+            time,
+            tempo,
+            any_meter: false,
+            chords: false,
+            swing: rhythm.is_some_and(|rhythm| rhythm.swing > 0),
+        }
+    }
+}
+
+/// The instruments of a style that brings only the drums of `rhythm`, if
+/// any.
+fn drums_of(rhythm: Option<&Rhythm>) -> Vec<Instrument> {
+    rhythm.map(|_| Instrument::Drums).into_iter().collect()
+}
+
+/// The [`Filters`] chosen, with what they compare against.
 #[derive(Clone, Copy)]
 struct Narrowing {
     filters: Filters,
@@ -120,16 +194,21 @@ impl Narrowing {
         }
     }
 
-    /// Whether a preset in `time`, made for `tempo`, is kept. One that
-    /// plays every bar in its own meter (`any_meter`) fits any time
-    /// signature; `chords` says whether it brings a progression.
-    fn keeps(self, time: TimeSignature, tempo: f32, any_meter: bool, chords: bool) -> bool {
+    /// Whether a preset with these `traits` is kept. Its `instruments`
+    /// are only asked for when an instrument is chosen.
+    fn keeps(self, traits: Traits, instruments: impl FnOnce() -> Vec<Instrument>) -> bool {
         let filters = self.filters;
         // 7/8 as 2+2+3 is still 7/8.
-        let same_time = any_meter || time.ungrouped() == self.time.ungrouped();
-        let ratio = tempo / self.tempo;
+        let same_time = traits.any_meter || traits.time.ungrouped() == self.time.ungrouped();
+        let ratio = traits.tempo / self.tempo;
         let near = ratio.max(1.0 / ratio) <= NEAR_SPEED;
-        (!filters.time || same_time) && (!filters.speed || near) && (!filters.chords || chords)
+        (!filters.time || same_time)
+            && (!filters.speed || near)
+            && (!filters.chords || traits.chords)
+            && (!filters.swing || traits.swing)
+            && filters
+                .instrument
+                .is_none_or(|instrument| instruments().contains(&instrument))
     }
 
     fn any(self) -> bool {
@@ -164,7 +243,7 @@ impl LibraryBrowser {
             user_styles: Vec::new(),
             editor_request: None,
             filter: String::new(),
-            parts: StyleParts::default(),
+            parts: FIRST_OPTIONS,
             shown: Tried::default(),
             reveal_until: 0.0,
             reveal_rhythm: false,
@@ -174,19 +253,8 @@ impl LibraryBrowser {
 
     pub fn restore_preferences(&mut self, ctx: &egui::Context) {
         self.parts = ctx
-            .data_mut(|data| {
-                data.get_persisted(egui::Id::unique(OPTIONS)).or_else(|| {
-                    // Options saved while Tempo started ticked: it was
-                    // ticked for everyone, so it starts off now like a new
-                    // one, and the other choices stay.
-                    data.get_persisted(egui::Id::unique(OPTIONS_TEMPO_ON))
-                        .map(|parts| StyleParts {
-                            tempo: false,
-                            ..parts
-                        })
-                })
-            })
-            .unwrap_or_default();
+            .data_mut(|data| data.get_persisted(egui::Id::unique(OPTIONS)))
+            .unwrap_or(FIRST_OPTIONS);
     }
 
     pub fn store_preferences(&self, ctx: &egui::Context) {
@@ -245,6 +313,9 @@ impl LibraryBrowser {
             if purpose != LibraryPurpose::Progression {
                 ui.checkbox(&mut filters.chords, tr("With chords"))
                     .on_hover_text(tr("Only presets that bring a chord progression"));
+                ui.checkbox(&mut filters.swing, tr("Swing"))
+                    .on_hover_text(tr("Only presets whose drums swing"));
+                instrument_filter(ui, &mut filters.instrument, &self.user_styles);
             }
         });
         if filters != saved {
@@ -279,9 +350,6 @@ impl LibraryBrowser {
             .join(", ");
         if purpose != LibraryPurpose::Progression {
             part_sources(ui, project, &sources, &locked);
-            if project.band().is_some_and(|band| band.accents_only) {
-                ui.weak(tr("Plain accents with current instruments"));
-            }
         }
         ui.weak(match purpose {
             LibraryPurpose::Play => tr(
@@ -322,10 +390,15 @@ impl LibraryBrowser {
         }
         let scroll_row = revealing && self.reveal_row;
         let scroll_rhythm = revealing && self.reveal_rhythm;
+        let filters: Filters = ui
+            .ctx()
+            .data_mut(|data| data.get_persisted(filters_id()))
+            .unwrap_or_default();
         let narrowing = Narrowing::of(
-            ui.ctx()
-                .data_mut(|data| data.get_persisted(filters_id()))
-                .unwrap_or_default(),
+            match purpose {
+                LibraryPurpose::Play => filters,
+                LibraryPurpose::Progression => filters.for_progressions(),
+            },
             project,
         );
         let mut presets = catalogue::presets(
@@ -333,14 +406,7 @@ impl LibraryBrowser {
             &self.user_styles,
             purpose == LibraryPurpose::Progression,
         );
-        presets.retain(|preset| {
-            narrowing.keeps(
-                preset.time(),
-                preset.tempo(),
-                preset.follows_the_song(),
-                preset.has_progression(),
-            )
-        });
+        presets.retain(|&preset| narrowing.keeps(Traits::of(preset), || preset.instruments()));
         if (searching || narrowing.any())
             && presets.is_empty()
             && !anything_else_matches(&filter, narrowing, purpose)
@@ -353,18 +419,15 @@ impl LibraryBrowser {
             } else {
                 ui.label(tr("Nothing in the library matches the ticked boxes."));
             }
-            if narrowing.any() {
+            if narrowing.filters.instrument.is_some() {
+                ui.weak(tr("Choose Any instrument or untick a box to see more."));
+            } else if narrowing.any() {
                 ui.weak(tr("Untick a box to see more."));
             }
             ui.weak(tr("Songs with melodies are in File ▸ Demos ▸ Songs."));
         }
         ui.scope(|ui| {
             ui.label(trf("Presets ({})", &[&presets.len()]));
-            if purpose != LibraryPurpose::Progression {
-                ui.weak(tr(
-                    "+ chords: includes a progression. Other presets keep your chords.",
-                ));
-            }
             let mut draw = |ui: &mut Ui, preset| {
                 if let Some(action) = preset_label(
                     ui,
@@ -412,7 +475,7 @@ impl LibraryBrowser {
                     FILLS.iter().filter(|r| {
                         (matches(&filter, r.name, r.genre, r.time, r.about)
                             || names_a_word(&filter, "fill fills relleno rellenos"))
-                            && narrowing.keeps(r.time, r.tempo, r.follows_the_meter, false)
+                            && keeps_fill(narrowing, r)
                     }),
                     |rhythm| rhythm.name,
                 );
@@ -445,16 +508,40 @@ impl LibraryBrowser {
     }
 }
 
-/// The presentation preference is shared by every preset browser.
+/// Where the choice between groups and a list is kept. One kept under
+/// an earlier name, from when the list came first, is left behind, so
+/// everyone starts once with the groups.
+fn grouped_id() -> egui::Id {
+    egui::Id::unique("presets-grouped")
+}
+
+/// Whether the presets are grouped by genre, rather than in one
+/// alphabetical list: they are, until the list is chosen. Every preset
+/// browser shows them the same way.
 pub fn grouped_presets(ctx: &egui::Context) -> bool {
-    ctx.data_mut(|data| {
-        data.get_persisted(egui::Id::unique("group-presets"))
-            .unwrap_or(false)
-    })
+    ctx.data_mut(|data| data.get_persisted(grouped_id()).unwrap_or(true))
 }
 
 pub fn set_grouped_presets(ctx: &egui::Context, grouped: bool) {
-    ctx.data_mut(|data| data.insert_persisted(egui::Id::unique("group-presets"), grouped));
+    ctx.data_mut(|data| data.insert_persisted(grouped_id(), grouped));
+}
+
+/// The instrument filter: any instrument, or one of those the presets
+/// bring, listed only while the menu is open.
+fn instrument_filter(ui: &mut Ui, chosen: &mut Option<Instrument>, users: &[UserStyle]) {
+    let any = tr("Any instrument");
+    egui::ComboBox::from_id_salt("library-instrument")
+        .selected_text(chosen.map_or(any, Instrument::name))
+        .show_ui(ui, |ui| {
+            ui.selectable_value(chosen, None, any);
+            for instrument in catalogue::instruments(users) {
+                ui.selectable_value(chosen, Some(instrument), instrument.name());
+            }
+        })
+        .response
+        .on_hover_text(tr(
+            "Only presets that bring this instrument when their instruments are copied",
+        ));
 }
 
 fn preset_selected(preset: Preset<'_>, tried: Tried) -> bool {
@@ -543,7 +630,7 @@ struct PresetView<'a> {
     purpose: LibraryPurpose,
     /// Where each part of the song comes from now, in [`SongPart::ALL`]'s
     /// order (see [`part_source_text`]).
-    now: &'a [String; 6],
+    now: &'a [String; SongPart::ALL.len()],
     /// The names of the locked channels, "Bass, Keys", or nothing.
     locked: &'a str,
 }
@@ -584,7 +671,19 @@ fn part_value(project: &Project, part: SongPart) -> Option<String> {
             0 => tr("even").to_string(),
             swing => format!("{swing}%"),
         }),
-        SongPart::Patterns | SongPart::Instruments | SongPart::Chords => None,
+        SongPart::Patterns => project
+            .band()
+            .is_some_and(|band| band.accents_only)
+            .then(|| tr("simple chords").to_string()),
+        SongPart::Key => {
+            let changes = !project.playlist().key_markers().is_empty();
+            Some(format!(
+                "{}{}",
+                crate::i18n::key_name(project.scale),
+                if changes { tr(" and others") } else { "" }
+            ))
+        }
+        SongPart::Drums | SongPart::Melody | SongPart::Instruments | SongPart::Chords => None,
     }
 }
 
@@ -592,7 +691,7 @@ fn part_value(project: &Project, part: SongPart) -> Option<String> {
 /// And the channels styles leave alone, if any are `locked`. A line too
 /// long for the side panel is cut short, with all of it on hover: in
 /// full, it would widen the panel, and the panel would stay that wide.
-fn part_sources(ui: &mut Ui, project: &Project, now: &[String; 6], locked: &str) {
+fn part_sources(ui: &mut Ui, project: &Project, now: &[String; SongPart::ALL.len()], locked: &str) {
     let value = |ui: &mut Ui, text: String| ui.add(egui::Label::new(text).truncate());
     egui::Grid::new("part-sources")
         .num_columns(2)
@@ -689,25 +788,12 @@ fn preset_label(
         },
     );
     ui.push_id(identity, |ui| {
-        let response = ui
-            .horizontal_wrapped(|ui| {
-                let name = if preset.follows_the_song() {
-                    trf("{}  (any meter)", &[&tr_name(preset.name())])
-                } else {
-                    label(preset.name(), preset.time())
-                };
-                let response = ui.selectable_label(selected, name);
-                if view.purpose != LibraryPurpose::Progression {
-                    ui.weak(if preset.has_progression() {
-                        tr("+ chords")
-                    } else {
-                        tr("keeps chords")
-                    });
-                }
-                response
-            })
-            .inner
-            .on_hover_text(hover);
+        let name = if preset.follows_the_song() {
+            trf("{}  (any meter)", &[&tr_name(preset.name())])
+        } else {
+            label(preset.name(), preset.time())
+        };
+        let response = ui.selectable_label(selected, name).on_hover_text(hover);
         if selected && view.reveal {
             response.scroll_to_me(None);
         }
@@ -755,13 +841,13 @@ fn preset_label(
                 });
             ui.separator();
             ui.horizontal(|ui| {
-                let effective = draft.for_preset();
-                let can_apply = effective.rhythm
-                    || effective.instruments
-                    || effective.time_signature
-                    || effective.tempo
-                    || effective.swing
-                    || (effective.progression && preset.has_progression());
+                let can_apply = draft.rhythm
+                    || draft.matching_style
+                    || draft.instruments
+                    || draft.time_signature
+                    || draft.tempo
+                    || draft.swing
+                    || (draft.progression && preset.has_progression());
                 if ui
                     .add_enabled(can_apply, egui::Button::new(tr("Apply")))
                     .clicked()
@@ -822,14 +908,11 @@ fn style_parts_editor(
     parts: &mut StyleParts,
     has_progression: bool,
     follows: bool,
-    now: Option<&[String; 6]>,
+    now: Option<&[String; SongPart::ALL.len()]>,
     locked: &str,
 ) {
     ui.spacing_mut().item_spacing.y = 8.0;
     ui.add_space(4.0);
-    ui.weak(tr("Playing style"));
-    style_mode_ui(ui, parts);
-    ui.separator();
     ui.strong(tr("Accompaniment"));
     if !locked.is_empty() {
         ui.weak(trf("🔒 Kept: {}", &[&locked]));
@@ -841,7 +924,7 @@ fn style_parts_editor(
 /// known.
 fn with_source(
     ui: &mut Ui,
-    now: Option<&[String; 6]>,
+    now: Option<&[String; SongPart::ALL.len()]>,
     part: SongPart,
     option: impl FnOnce(&mut Ui),
 ) {
@@ -858,15 +941,28 @@ fn with_source(
     });
 }
 
-pub(crate) fn style_mode_ui(ui: &mut Ui, parts: &mut StyleParts) {
-    ui.horizontal_wrapped(|ui| {
-        ui.selectable_value(&mut parts.matching_style, true, tr("Preset patterns"));
-        ui.selectable_value(&mut parts.matching_style, false, tr("Plain accents"));
+/// The preset's drums, its chord and bass parts and its sounds, each
+/// taken on its own: unticked, the song keeps its own. `instruments` is
+/// what the sounds' box says.
+pub(crate) fn playing_ui(
+    ui: &mut Ui,
+    parts: &mut StyleParts,
+    now: Option<&[String; SongPart::ALL.len()]>,
+    instruments: &str,
+) {
+    with_source(ui, now, SongPart::Drums, |ui| {
+        ui.checkbox(&mut parts.rhythm, tr("Drums"))
+            .on_hover_text(tr("Copy the preset’s drums. Off, the song keeps its own."));
     });
-    ui.weak(if parts.matching_style {
-        tr("Use the preset’s playing patterns and choose whether to copy its instruments.")
-    } else {
-        tr("Simple chord and bass accents on the meter’s beat groups. Drum patterns still come from the preset. Your current instruments and chords are kept.")
+    with_source(ui, now, SongPart::Patterns, |ui| {
+        ui.checkbox(&mut parts.matching_style, tr("Chord and bass parts"))
+            .on_hover_text(tr(
+                "Copy how the preset plays the chords and the bass: its piano, bass, guitar and other parts. Off, the song keeps its own.",
+            ));
+    });
+    with_source(ui, now, SongPart::Instruments, |ui| {
+        ui.checkbox(&mut parts.instruments, tr_str(instruments))
+            .on_hover_text(tr("Copy the preset’s sounds and band players."));
     });
 }
 
@@ -875,59 +971,29 @@ fn copy_parts_ui(
     parts: &mut StyleParts,
     has_progression: bool,
     follows: bool,
-    now: Option<&[String; 6]>,
+    now: Option<&[String; SongPart::ALL.len()]>,
 ) {
-    let (label, hint) = if parts.matching_style {
-        (
-            tr("Playing patterns"),
-            tr(
-                "Copy the preset’s drum, chord, bass and other accompaniment patterns. Existing chords are kept unless Chord progression is checked.",
-            ),
-        )
-    } else {
-        (
-            tr("Drums and plain accents"),
-            tr(
-                "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups, over the song’s own chords and instruments.",
-            ),
-        )
-    };
-    with_source(ui, now, SongPart::Patterns, |ui| {
-        ui.checkbox(&mut parts.rhythm, label).on_hover_text(hint);
-    });
-    if parts.matching_style {
-        with_source(ui, now, SongPart::Instruments, |ui| {
-            instrument_option(ui, parts, tr("Voices / instruments"));
-        });
-    }
+    playing_ui(ui, parts, now, "Voices / instruments");
     ui.add_space(2.0);
     ui.strong(tr("Harmony"));
-    if parts.matching_style {
-        let mut progression = has_progression && parts.progression;
-        with_source(ui, now, SongPart::Chords, |ui| {
-            if ui
-                .add_enabled(
-                    has_progression,
-                    egui::Checkbox::new(&mut progression, tr("Chord progression")),
-                )
-                .on_hover_text(tr("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried."))
-                .on_disabled_hover_text(
-                    tr("This preset has no chord progression. Your current chords are kept."),
-                )
-                .changed()
-            {
-                parts.progression = progression;
-            }
-        });
-        if has_progression && parts.progression {
-            ui.weak(tr("Replaces existing chords. The melody is kept."));
+    // Whether to copy a progression is kept for a preset that has one.
+    let mut progression = has_progression && parts.progression;
+    with_source(ui, now, SongPart::Chords, |ui| {
+        let response = ui
+            .add_enabled(
+                has_progression,
+                egui::Checkbox::new(&mut progression, tr("Chord progression")),
+            )
+            .on_hover_text(tr("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried."))
+            .on_disabled_hover_text(tr(
+                "This preset has no chord progression. Your current chords are kept.",
+            ));
+        if response.changed() {
+            parts.progression = progression;
         }
-    } else {
-        // Plain accents play the song's own chords. Whether to copy a
-        // progression is kept for when preset patterns are picked again.
-        with_source(ui, now, SongPart::Chords, |ui| {
-            ui.weak(tr("Keeps the song’s chords"));
-        });
+    });
+    if progression {
+        ui.weak(tr("Replaces existing chords. The melody is kept."));
     }
     ui.add_space(2.0);
     ui.strong(tr("Timing"));
@@ -956,14 +1022,6 @@ fn copy_parts_ui(
     });
 }
 
-/// Display the effective option while preserving the preference for preset patterns.
-pub(crate) fn instrument_option(ui: &mut Ui, parts: &mut StyleParts, label: &str) {
-    if parts.matching_style {
-        ui.checkbox(&mut parts.instruments, tr_str(label))
-            .on_hover_text(tr("Copy the preset’s sounds and band players."));
-    }
-}
-
 /// The twelve-tone styles, under the harmony styles, opened when `open`
 /// is true. Returns the one clicked, if any.
 fn row_styles(
@@ -978,7 +1036,7 @@ fn row_styles(
         ROW_STYLES
             .iter()
             .filter(|style| row_style_matches(filter, style))
-            .filter(|style| narrowing.keeps(style.time, style.tempo, false, false)),
+            .filter(|style| keeps_row_style(narrowing, style)),
         |style| style.name,
     );
     if styles.is_empty() {
@@ -1039,7 +1097,7 @@ fn micromode_styles(
         MICROMODE_STYLES
             .iter()
             .filter(|style| micromode_style_matches(filter, style))
-            .filter(|style| narrowing.keeps(style.time, style.tempo, false, false)),
+            .filter(|style| keeps_micromode_style(narrowing, style)),
         |style| style.name,
     );
     if styles.is_empty() {
@@ -1207,14 +1265,40 @@ fn anything_else_matches(filter: &str, narrowing: Narrowing, purpose: LibraryPur
         && (FILLS.iter().any(|r| {
             (names_a_word(filter, "fill fills relleno rellenos")
                 || matches(filter, r.name, r.genre, r.time, r.about))
-                && narrowing.keeps(r.time, r.tempo, r.follows_the_meter, false)
-        }) || ROW_STYLES.iter().any(|style| {
-            row_style_matches(filter, style)
-                && narrowing.keeps(style.time, style.tempo, false, false)
-        }) || MICROMODE_STYLES.iter().any(|style| {
-            micromode_style_matches(filter, style)
-                && narrowing.keeps(style.time, style.tempo, false, false)
-        }))
+                && keeps_fill(narrowing, r)
+        }) || ROW_STYLES
+            .iter()
+            .any(|style| row_style_matches(filter, style) && keeps_row_style(narrowing, style))
+            || MICROMODE_STYLES.iter().any(|style| {
+                micromode_style_matches(filter, style) && keeps_micromode_style(narrowing, style)
+            }))
+}
+
+/// Whether a twelve-tone style is kept. It plays the song's own channels,
+/// so the only instrument it brings is the drums of its rhythm, if any.
+fn keeps_row_style(narrowing: Narrowing, style: &RowStyle) -> bool {
+    let rhythm = style.rhythm();
+    narrowing.keeps(Traits::plain(style.time, style.tempo, rhythm), || {
+        drums_of(rhythm)
+    })
+}
+
+/// Whether a fill is kept. One that follows the meter fits any time
+/// signature.
+fn keeps_fill(narrowing: Narrowing, fill: &Rhythm) -> bool {
+    let traits = Traits {
+        any_meter: fill.follows_the_meter,
+        ..Traits::plain(fill.time, fill.tempo, Some(fill))
+    };
+    narrowing.keeps(traits, || vec![Instrument::Drums])
+}
+
+/// Whether a micromode style is kept, as a twelve-tone style is.
+fn keeps_micromode_style(narrowing: Narrowing, style: &MicromodeStyle) -> bool {
+    let rhythm = style.rhythm();
+    narrowing.keeps(Traits::plain(style.time, style.tempo, rhythm), || {
+        drums_of(rhythm)
+    })
 }
 
 /// Whether `filter` is the start of one of `words` (at least three
@@ -1270,7 +1354,7 @@ mod tests {
         browser.parts.progression = true;
         browser.parts.matching_style = false;
         browser.store_preferences(&ctx);
-        set_grouped_presets(&ctx, true);
+        set_grouped_presets(&ctx, false);
 
         // eframe writes the context's persisted data to disk between runs.
         let data = ctx.data(|data| ron::to_string(data).unwrap());
@@ -1279,36 +1363,69 @@ mod tests {
         let mut next = LibraryBrowser::new();
         next.restore_preferences(&restored);
         assert_eq!(next.parts, browser.parts);
-        assert!(grouped_presets(&restored));
-        assert!(!grouped_presets(&egui::Context::default()));
+        assert!(!grouped_presets(&restored));
+        assert!(grouped_presets(&egui::Context::default()));
     }
 
     #[test]
-    fn options_saved_while_tempo_started_ticked_come_back_with_tempo_off() {
+    fn a_preset_first_copies_everything_but_its_chord_progression() {
         let ctx = egui::Context::default();
-        let saved = StyleParts {
-            tempo: true,
-            progression: true,
-            matching_style: false,
-            ..StyleParts::default()
-        };
-        ctx.data_mut(|data| data.insert_persisted(egui::Id::unique(OPTIONS_TEMPO_ON), saved));
         let mut browser = LibraryBrowser::new();
         browser.restore_preferences(&ctx);
-        assert_eq!(
-            browser.parts,
-            StyleParts {
-                tempo: false,
-                ..saved
-            }
+        let parts = browser.parts;
+        assert!(parts.rhythm && parts.matching_style && parts.instruments);
+        assert!(parts.time_signature && parts.tempo && parts.swing);
+        assert!(!parts.progression);
+        // Options kept under the earlier name are left behind.
+        let earlier = StyleParts {
+            tempo: false,
+            ..StyleParts::default()
+        };
+        ctx.data_mut(|data| data.insert_persisted(egui::Id::unique("library-options"), earlier));
+        browser.restore_preferences(&ctx);
+        assert_eq!(browser.parts, FIRST_OPTIONS);
+    }
+
+    #[test]
+    fn the_swing_and_instrument_filters_keep_the_presets_with_them() {
+        let project = Project::default();
+        let kept = |filters: Filters| -> Vec<Preset<'static>> {
+            let narrowing = Narrowing::of(filters, &project);
+            catalogue::presets("", &[], false)
+                .into_iter()
+                .filter(|&preset| narrowing.keeps(Traits::of(preset), || preset.instruments()))
+                .collect()
+        };
+        let all = kept(Filters::default()).len();
+        let swinging = kept(Filters {
+            swing: true,
+            ..Filters::default()
+        });
+        assert!(!swinging.is_empty() && swinging.len() < all);
+        assert!(swinging.iter().all(|preset| preset.swings()));
+        assert!(!swinging.iter().any(|preset| preset.name() == "Bossa nova"));
+
+        // Bossa nova's nylon-string guitar.
+        let guitar = Instrument::Program(24);
+        let bossa = catalogue::presets("bossa nova", &[], false)[0];
+        assert!(bossa.instruments().contains(&guitar));
+        let with_guitar = kept(Filters {
+            instrument: Some(guitar),
+            ..Filters::default()
+        });
+        assert!(with_guitar.len() < all);
+        assert!(
+            with_guitar
+                .iter()
+                .any(|preset| preset.name() == "Bossa nova")
         );
-        // Ticked again since, it stays ticked.
-        browser.parts.tempo = true;
-        browser.store_preferences(&ctx);
-        let mut next = LibraryBrowser::new();
-        next.restore_preferences(&ctx);
-        assert!(next.parts.tempo);
-        assert!(!LibraryBrowser::new().parts.tempo);
+        assert!(
+            with_guitar
+                .iter()
+                .all(|preset| preset.instruments().contains(&guitar))
+        );
+        assert!(catalogue::instruments(&[]).contains(&guitar));
+        assert!(catalogue::instruments(&[]).contains(&Instrument::Drums));
     }
 
     #[test]
