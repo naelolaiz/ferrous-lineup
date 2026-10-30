@@ -1,0 +1,52 @@
+# Music glossary
+
+This book uses the words musicians use. This page gives
+each one a short meaning and the chapter that shows it at work. The
+[Rust glossary](rust-glossary.md) is separate: it explains the language, not
+the music.
+
+| Term | Meaning | Explained in |
+|---|---|---|
+| **Comping** | The chords a pianist or guitarist plays under the tune, and the rhythm and voicings they use. As a verb, to comp is to play those chords. | [How the band plays a chord sheet](../band/band.md) |
+| **Voicing** | Which notes of a chord sound, in which octaves, and how they are spread. A good voicing keeps common notes and leaves the melody room. | [How the band plays a chord sheet](../band/band.md) |
+| **Voice leading** | Moving each voice of a chord to the nearest voice of the next, so the harmony joins smoothly instead of jumping. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#playing-a-key) |
+| **Changes** | The chord progression of a song, bar by bar. "The changes" are what the chord sheet holds. | [How the band plays a chord sheet](../band/band.md) |
+| **Head** | The written tune, played at the start and again after the solos. In a jazz performance, the head is the melody everyone knows. | [Song form, sections, variations and locks](../band/song-form.md#chorus-means-one-time-through) |
+| **Chorus** | In jazz, one complete pass through the form, from the top of the chart to the last bar. In a pop song, the repeated part that comes after each verse. | [Song form, sections, variations and locks](../band/song-form.md#chorus-means-one-time-through) |
+| **Turnaround** | The chords at the end of a section that lead back to its beginning, such as I–vi–ii–V. | [Song form, sections, variations and locks](../band/song-form.md#the-intro-a-turnaround) |
+| **Walking bass** | A bass line of one note per beat: the root, notes of the chord, and a step into the next chord's root. | [How the band plays a chord sheet](../band/band.md) |
+| **Slash chord** | A chord symbol with a bass note after a slash, such as `C/E`. The bass may be a note of the chord (an inversion) or a note outside it. | [Chords](../theory/chords.md#slash-chords-and-the-six-nine-chord) |
+| **Inversion** | A chord with a note other than its root in the bass. In a triad, the first inversion has the third lowest and the second the fifth; in a seventh chord, the third inversion has the seventh. | [Chords](../theory/chords.md#inversions) |
+| **Figured bass** | A continuo shorthand: numbers above or below the bass note name the intervals to play above it, such as 6, 6/4 or 6/5. Ferrous Lineup writes the figures after the Roman numeral, as `I⁶` and `V⁶₅`. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#figures) |
+| **Roman numeral** | A chord named by the degree of the key it is built on: upper case for major, lower case for minor. In C major, G7 is V7. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#writing-a-numeral) |
+| **Enharmonic keys** | Two names for the same keys of the piano, such as F# major (six sharps) and G♭ major (six flats). They sound the same; the composer picks the name that fits the music around it. | [Scales, modes and keys](../theory/scales.md#keys-that-can-be-written-two-ways) |
+| **Function** | What a chord does in the key: tonic is home, subdominant is away, dominant is tension that pulls home. The harmony keys colour them blue, green and orange. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#the-harmony-keys) |
+| **Borrowed chord** | A chord taken from the parallel key, the major or minor on the same tonic, such as A♭ (♭VI) in C major, borrowed from C minor. Also called **modal mixture**. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#what-a-chord-does-the-chord-sheets-functions) |
+| **Picardy third** | A major tonic chord at the end of a piece in a minor key: the major third borrowed from the major. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#what-a-chord-does-the-chord-sheets-functions) |
+| **Secondary dominant** | The dominant of a chord of the key other than the tonic, written V/V ("five of five"), V7/vi and so on. D7 in C major is V7/V, the dominant of G. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#what-a-chord-does-the-chord-sheets-functions) |
+| **Tonicization** | Making a chord of the key sound for a moment like a tonic, by playing its own dominant or leading-tone chord before it, without changing key. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#what-a-chord-does-the-chord-sheets-functions) |
+| **Cadential six-four** | The tonic triad in second inversion over the dominant's bass, such as C/G before G7 in C major. It sounds like the dominant held back, and moves on to V. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#the-bass-matters-the-cadential-six-four) |
+| **Neapolitan sixth** | A major chord on the lowered second degree, usually in first inversion: D♭/F in C major, written N⁶. It mostly goes to the dominant. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#what-a-chord-does-the-chord-sheets-functions) |
+| **Pivot chord** | A chord that belongs to both the old and the new key in a modulation, heard in the first and then reread in the second: Am in C major is vi, and ii in G major. | [Roman numerals, the harmony keys and chord functions](../theory/numerals.md#finding-the-pivot) |
+| **Step, skip, leap** | How far one part moves: a second is a step, a third a skip, a fourth or more a leap. | [Voice leading and part motion](../theory/voice-leading.md#steps-skips-and-leaps) |
+| **Contrary motion** | Two parts moving opposite ways. Between the top line and the bass it keeps them two independent lines. | [Voice leading and part motion](../theory/voice-leading.md#motion-between-two-parts) |
+| **Oblique motion** | One part holds its note while the other moves. | [Voice leading and part motion](../theory/voice-leading.md#motion-between-two-parts) |
+| **Parallel motion** | Two parts moving the same way and keeping the same interval number, such as sixths going to sixths. Parallel fifths and octaves are what classical part writing avoids. | [Voice leading and part motion](../theory/voice-leading.md#motion-between-two-parts) |
+| **Close position** | A chord voiced with its notes as near together as they go, all within an octave, as a horn section plays it. | [How the band plays a chord sheet](../band/band.md#close-harmony-moving-as-little-as-possible) |
+| **Equalizer (EQ)** | A filter that turns ranges of frequencies up or down, such as a channel's lows, middle and highs. It changes a sound's colour, not its notes. | [The mixer](../sound/mixer.md#the-equalizer-turning-frequencies-up-or-down) |
+| **Compressor** | An effect that turns a sound down when it goes over a threshold, by a ratio, so a part plays at a steadier level. | [The mixer](../sound/mixer.md#the-compressor-evening-out-how-loud-a-part-is) |
+| **Delay** | An effect that plays a sound again a little later, and again, each echo quieter; in the app, in time with the song. | [The mixer](../sound/mixer.md#the-delay-echoes-in-time-with-the-song) |
+| **Polychord** | Two chords sounded at once, written one above the other, such as `Eb7` over `Fb`. The ear hears both chords, not one large chord. | [Hearing harmony](../theory/hearing.md) |
+| **Pitch-class set** | A group of notes named by pitch class, ignoring octave and order. Every chord is one, but the term also covers groups that have no chord name. | [Pitch-class sets, and one harmony with four names](../theory/sets.md#the-music-briefly) |
+| **Prime form** | The most compact transposition or inversion of a pitch-class set, used to compare sets. Forte's catalogue lists each set class with its prime form and interval vector. | [Pitch-class sets, and one harmony with four names](../theory/sets.md#the-music-briefly) |
+| **Twelve-tone row** | An ordering of all twelve pitch classes used as the material of a piece. Its forms are prime, inversion, retrograde and retrograde inversion. | [Twelve-tone rows and their rules](../theory/twelve-tone.md#the-music-briefly) |
+| **Micromode** | One of Francisco Kröpfl's twelve three-note groups, classified by interval content and heard as a colour. The app can use one as a scale or draw with it. | [Micromodes](../theory/micromodes.md) |
+| **Swing** | Playing the second eighth note of each beat late, so pairs go long-short. A full swing, 100%, is a triplet: two thirds and one third. | [Tempo, meter, swing and feel](../sound/tempo.md#swing) |
+| **Shot** | A short, accented chord hit by the whole band, followed by silence. Also called a stab, a hit or a kick. | [Shots, holds, rests and pushes](../band/stops.md#shots) |
+| **Push** | A chord struck before its beat and held over it, written `^F`; also called an anticipation. It makes the music lean forward. | [Shots, holds, rests and pushes](../band/stops.md#pushes) |
+| **Hold** | A chord struck and held until the next harmony, with the beat going on underneath. It is not a fermata. | [Shots, holds, rests and pushes](../band/stops.md#holds) |
+| **Rest** | The band dropping out for a bar or more; in jazz, a break. In the app a rest also leaves the drums silent. | [Shots, holds, rests and pushes](../band/stops.md#rests) |
+| **Concert pitch** | Music written as it sounds, "in C": what piano, guitar, bass, voice, flute and violin read. A song's concert key is the key the band hears. | [The lead sheet](../band/lead-sheet.md) |
+| **Transposing instrument** | An instrument whose written notes are not the notes it sounds, named after the note a written C sounds: a trumpet in B♭, an alto saxophone in E♭, a horn in F. Its music is written higher by that distance, so a song in C is in D for a trumpet. | [The lead sheet](../band/lead-sheet.md) |
+| **Solfège** | Naming the notes with syllables, Do Re Mi Fa Sol La Si, instead of the letters C D E F G A B, as in Spanish, Italian, French and Portuguese. A chord is named the same way: Am7 is Lam7. | [Two languages](../program/languages.md#notes-named-do-re-mi) |
+| **Fixed do** | Solfège in which Do is always C, whatever the key, as the app and Spanish and Italian schools use. In **movable do**, used by some ear-training methods, *do* is the tonic of the key. | [Two languages](../program/languages.md#notes-named-do-re-mi) |
