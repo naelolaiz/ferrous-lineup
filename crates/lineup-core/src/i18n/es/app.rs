@@ -147,7 +147,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     (
         "A {} improvises over the chorus: chord tones on the beats, scale and chromatic notes between them. The piano roll says what each of its notes is",
-        "{} improvisa sobre las vueltas: notas del acorde en los pulsos, notas de la escala y cromáticas entre ellos. El piano roll dice qué es cada una de sus notas",
+        "El solista ({}) improvisa sobre las vueltas: notas del acorde en los pulsos, notas de la escala y cromáticas entre ellos. El piano roll dice qué es cada una de sus notas",
     ),
     ("A {}-bar intro", "Una introducción de {} compases"),
     (
