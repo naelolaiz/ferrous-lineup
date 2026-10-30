@@ -93,7 +93,10 @@ de un canal, y ese canal lo toca en cada paso que enciendas, como una
 caja de ritmos toca sus muestras. Soltado en cualquier otro lugar del
 rack, recibe un canal propio. La canción guarda dónde está el archivo,
 no el sonido mismo, así que deja el WAV donde está: si se mueve o se
-borra, el canal no tiene nada que tocar.
+borra, el canal no tiene nada que tocar. Un WAV de más de diez segundos
+se toma como una grabación entera y se
+[importa](importing.md#grabaciones-experimental) como una canción
+nueva.
 
 ## Zoom
 

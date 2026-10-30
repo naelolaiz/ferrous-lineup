@@ -36,7 +36,7 @@ pub fn analyze(recording: &Recording) -> Analysis {
     let beats = beats::track(&recording.samples, recording.sample_rate).times;
     let bpm = tempo_of(&beats);
 
-    let scale = bpm_key::analyze(
+    let whole = bpm_key::analyze(
         &recording.samples,
         1,
         recording.sample_rate,
@@ -63,9 +63,10 @@ pub fn analyze(recording: &Recording) -> Analysis {
             chroma::average(&frames, start, end)
         })
         .collect();
-    let chords = chords::chords_per_beat(&beat_chromas, scale);
+    let chords = chords::chords_per_beat(&beat_chromas, whole);
     let (beats_per_bar, first_downbeat) = meter::guess(&chords);
     let keys = keys::key_spans(&beat_chromas, beats_per_bar, first_downbeat);
+    let scale = keys::main_key(&keys).or(whole);
 
     Analysis {
         beats,
@@ -83,15 +84,18 @@ In order:
 
 1. **Beats** (`beats.rs`): when each beat falls, in seconds, and from
    them the tempo.
-2. **Key** (the `bpm-key` crate): the key of the whole recording, which
-   helps name the chords and becomes the project's key.
+2. **Key** (the `bpm-key` crate): the key of the whole recording,
+   which helps name the chords.
 3. **Chroma** (`chroma.rs`): how strongly each of the twelve pitch
    classes sounds, frame by frame, then averaged over each beat.
 4. **Chords** (`chords.rs`): the chord of each beat.
 5. **Meter** (`meter.rs`): three or four beats to the bar, and which
    beat is the first downbeat.
 6. **Key changes** (`keys.rs`): the key of each bar, found by the same
-   code that finds the key of a song's notes.
+   code that finds the key of a song's notes. The key of the longest
+   stretch in one key, `keys::main_key`, becomes the project's key;
+   `or(whole)` keeps the whole recording's key for a recording where
+   nothing sounds long enough to have one.
 
 Then `arrange.rs` turns the `Analysis` into a `Project`, with the types
 the rest of Ferrous Lineup uses: `Channel`, `Pattern`, `NoteEvent`,
@@ -102,7 +106,7 @@ returns a `Result`; `.ok()` turns it into an `Option`, dropping the
 error, since a recording without a clear key is not a failure.
 `and_then` goes on only if there is a value, and the features may have
 no key (`features.key` is itself an `Option`). `map` turns the crate's
-key into one of ours. If any step has nothing, `scale` is `None`, with
+key into one of ours. If any step has nothing, `whole` is `None`, with
 no `if` and no `match`. The last beat has no next beat to end at, so
 `unwrap_or` gives it one beat's length.
 
@@ -615,6 +619,24 @@ beat. `windows(2)` walks it two at a time, overlapping, `[0, 2]`, `[2,
 `KeySpan` with these two fields, and every other field (the keys
 ranked, how sure) taken from `span`.
 
+The song's key, the one the project gets, is the key of the longest
+of these stretches:
+
+```rust
+pub fn main_key(spans: &[KeySpan]) -> Option<Scale> {
+    spans
+        .iter()
+        .max_by_key(|span| span.end - span.start)
+        .and_then(KeySpan::key)
+}
+```
+
+`max_by_key` gives the item with the biggest key, here the most beats.
+It is right more often than `bpm-key`'s single key (see [How well it
+works](#how-well-it-works)): a song that modulates, or opens in another
+key, pulls the notes of the whole recording away from its home key, and
+the home key is usually where the song spends longest.
+
 ### Arranging
 
 `arrange.rs` builds the project. The recording becomes a sampler
@@ -775,13 +797,44 @@ does not stop its thread; it **detaches** it. The thread listens on to
 the end, and its result is thrown away, which is what is wanted: the
 new project stays, and nothing has to interrupt the analysis halfway.
 
-A recording reaches the import from the menu or from the command
-line. A file named on the command line goes through `open_now`, which
-opens projects too, and which asks `lineup_listen::is_audio_file`
-first: an extension in `AUDIO_EXTENSIONS`, `["mp3", "wav", "flac",
-"ogg"]`, in any case. A file dropped on the window is not imported: a
-sound dropped there is a sample for the channel rack (see [The
-sampler](../sound/instruments.md#the-sampler)).
+### From the menu, the command line or a drop
+
+A recording reaches the import from the menu, from the command line or
+dropped on the window. A file named on the command line goes through
+`open_now`, which opens projects too, and which asks
+`lineup_listen::is_audio_file` first: an extension in
+`AUDIO_EXTENSIONS`, `["mp3", "wav", "flac", "ogg"]`, in any case.
+
+A dropped file is harder to place, because a sound dropped on the
+window can also be a sample for the channel rack (see [The
+sampler](../sound/instruments.md#the-sampler)): a WAV of a drum hit is
+a sound, a WAV of a whole song is a recording. `sample::is_recording`
+decides by what the sampler can play and for how long:
+
+```rust
+pub fn is_recording(path: &Path) -> bool {
+    let is_wav = path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("wav"));
+    if !is_wav {
+        return true;
+    }
+    hound::WavReader::open(path).is_ok_and(|reader| {
+        let rate = u64::from(reader.spec().sample_rate);
+        u64::from(reader.duration()) > rate * crate::instrument::LONG_SAMPLE_SECONDS
+    })
+}
+```
+
+The sampler plays only WAV, so an MP3, FLAC or Ogg file can only be a
+recording. A WAV is one when it lasts longer than ten seconds
+(`LONG_SAMPLE_SECONDS`), the same line past which a sampler voice fades
+out when playback stops: past it, a sound is treated as a piece of
+music rather than a hit. `reader.duration()` is the number of samples
+per channel, read from the file's header without decoding it.
+`is_project_file`, which tells the window and the channel rack which
+dropped files are not sounds, counts a recording in.
 
 ## Why these crates
 
@@ -843,8 +896,7 @@ when its tonic and its major or minor are:
 | Keys, from a recording | |
 |---|---|
 | Beats in the right key | 73.7% of 36,306 |
-| The song's main key (its longest stretch in one key) | 91 of 136 |
-| The one key `bpm-key` gives | 82 of 136 |
+| The song's key (its longest stretch in one key) | 91 of 136 |
 | Key changes in the scores found within two beats | 63 of 315 |
 | Songs in one key where a change is found anyway | 3 of 52 |
 
@@ -856,18 +908,17 @@ blurrier than notes, and a new key has to hold long enough to pay for
 its change. Many are found a bar or two late, as in *Maple Leaf Rag*,
 where the move to D♭ major at 120 s is heard at 123 s. The report lists
 every song with its keys and where they change, true and found: the
-place to look next.
+place to look next. On the same songs, the one key `bpm-key` hears in
+the whole recording was right for 82, which is why the project takes
+the longest stretch's key instead.
 
 ## Rough edges
 
 - **A copy of the recording.** The WAV copy with its lead-in exists
-  only because the sampler always plays a sound from its first sample.
-  A sampler that could start a sound partway through would make it
-  unnecessary.
-- **Playing from the start only.** The recording is one note on the
-  first step of the song, and a note sounds only when playback reaches
-  the step it starts on. Started from anywhere else, the song plays the
-  chords without the recording, and a jump while playing stops it.
+  only because a sampler note plays its sound from the first sample.
+  The sampler can start a long sound partway through (see [Starting
+  partway](../sound/instruments.md#starting-partway)), so an offset
+  saved with the channel could take the copy's place.
 - **Stopping.** A sampler plays its whole sound whatever happens, which
   is right for a drum hit and wrong for a song, so voices of a sound
   longer than ten seconds fade out when playback stops (see [The

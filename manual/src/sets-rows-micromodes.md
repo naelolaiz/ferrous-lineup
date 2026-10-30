@@ -147,7 +147,7 @@ numbers move.)
 ### The Row window
 
 **Row…** in the piano roll opens it. Type a row in the box at the top,
-as note names or numbers, and click **Use**; or draw twelve notes in the
+as note names (in letters or in solfège) or numbers, and click **Use**; or draw twelve notes in the
 piano roll and click **From the notes**; or take one from **🎲 Random**,
 **🎲 All-interval** or **Famous and example rows**: Schoenberg's Suite,
 Berg's Lyric Suite, Webern's Symphony and Concerto, and four rows

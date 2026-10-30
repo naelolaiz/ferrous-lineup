@@ -89,6 +89,9 @@ that channel plays it on every step you light, as a drum machine plays
 its samples. Dropped anywhere else on the rack, it gets a channel of its
 own. The song keeps where the file is, not the sound itself, so leave
 the WAV where it is: moved or deleted, the channel has nothing to play.
+A WAV longer than ten seconds is taken for a whole recording and
+[imported](importing.md#recordings-experimental) as a new song
+instead.
 
 ## Zoom
 

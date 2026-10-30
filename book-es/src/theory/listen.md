@@ -38,7 +38,7 @@ pub fn analyze(recording: &Recording) -> Analysis {
     let beats = beats::track(&recording.samples, recording.sample_rate).times;
     let bpm = tempo_of(&beats);
 
-    let scale = bpm_key::analyze(
+    let whole = bpm_key::analyze(
         &recording.samples,
         1,
         recording.sample_rate,
@@ -65,9 +65,10 @@ pub fn analyze(recording: &Recording) -> Analysis {
             chroma::average(&frames, start, end)
         })
         .collect();
-    let chords = chords::chords_per_beat(&beat_chromas, scale);
+    let chords = chords::chords_per_beat(&beat_chromas, whole);
     let (beats_per_bar, first_downbeat) = meter::guess(&chords);
     let keys = keys::key_spans(&beat_chromas, beats_per_bar, first_downbeat);
+    let scale = keys::main_key(&keys).or(whole);
 
     Analysis {
         beats,
@@ -86,8 +87,7 @@ En orden:
 1. **Pulsos** (`beats.rs`): cuándo cae cada pulso, en segundos, y a
    partir de ellos el tempo.
 2. **Tonalidad** (el crate `bpm-key`): la tonalidad de toda la
-   grabación, que ayuda a nombrar los acordes y pasa a ser la
-   tonalidad del proyecto.
+   grabación, que ayuda a nombrar los acordes.
 3. **Chroma** (`chroma.rs`): con qué fuerza suena cada una de las doce
    clases de altura, ventana a ventana, y luego promediado en cada
    pulso.
@@ -96,7 +96,10 @@ En orden:
    es el primer tiempo fuerte.
 6. **Cambios de tonalidad** (`keys.rs`): la tonalidad de cada compás,
    encontrada por el mismo código que encuentra la tonalidad de las
-   notas de una canción.
+   notas de una canción. La tonalidad del tramo más largo en una sola
+   tonalidad, `keys::main_key`, pasa a ser la tonalidad del proyecto;
+   `or(whole)` se queda con la tonalidad de toda la grabación cuando
+   nada suena lo bastante como para tener una.
 
 Luego `arrange.rs` convierte el `Analysis` en un `Project`, con los tipos
 que usa el resto de Ferrous Lineup: `Channel`, `Pattern`, `NoteEvent`,
@@ -109,7 +112,7 @@ descarta el error, ya que una grabación sin una tonalidad clara no es un
 fallo. `and_then` sigue solo si hay un valor, y las características
 pueden no tener tonalidad (`features.key` es a su vez un `Option`).
 `map` convierte la tonalidad del crate en una de las nuestras. Si algún
-paso no tiene nada, `scale` es `None`, sin ningún `if` ni ningún
+paso no tiene nada, `whole` es `None`, sin ningún `if` ni ningún
 `match`. El último pulso no tiene un pulso siguiente donde terminar, así
 que `unwrap_or` le da la duración de un pulso.
 
@@ -648,6 +651,25 @@ el del compás siguiente. `KeySpan { start, end, ..span }` es la
 dos campos, y todos los demás (las tonalidades en orden, qué tan
 seguro) tomados de `span`.
 
+La tonalidad de la canción, la que recibe el proyecto, es la del más
+largo de estos tramos:
+
+```rust
+pub fn main_key(spans: &[KeySpan]) -> Option<Scale> {
+    spans
+        .iter()
+        .max_by_key(|span| span.end - span.start)
+        .and_then(KeySpan::key)
+}
+```
+
+`max_by_key` da el elemento con la clave más grande, aquí el de más
+pulsos. Acierta más a menudo que la tonalidad única de `bpm-key` (ver
+[Qué tan bien funciona](#qué-tan-bien-funciona)): una canción que
+modula, o que empieza en otra tonalidad, aleja las notas de toda la
+grabación de su tonalidad principal, y la tonalidad principal suele ser
+donde la canción pasa más tiempo.
+
 ### El arreglo
 
 `arrange.rs` construye el proyecto. La grabación pasa a ser un canal
@@ -814,14 +836,47 @@ hasta el final, y su resultado se tira, que es lo que se quiere: el
 proyecto nuevo se queda, y nada tiene que interrumpir el análisis a
 medias.
 
-Una grabación llega a la importación desde el menú o desde la línea de
-comandos. Un archivo nombrado en la línea de comandos pasa por
-`open_now`, que también abre proyectos, y que pregunta primero a
-`lineup_listen::is_audio_file`: una extensión de `AUDIO_EXTENSIONS`,
-`["mp3", "wav", "flac", "ogg"]`, en mayúsculas o minúsculas. Un archivo
-soltado sobre la ventana no se importa: un sonido soltado ahí es una
-muestra para el rack de canales (mira [El
-sampler](../sound/instruments.md#el-sampler)).
+### Desde el menú, la línea de comandos o soltada
+
+Una grabación llega a la importación desde el menú, desde la línea de
+comandos o soltada sobre la ventana. Un archivo nombrado en la línea de
+comandos pasa por `open_now`, que también abre proyectos, y que
+pregunta primero a `lineup_listen::is_audio_file`: una extensión de
+`AUDIO_EXTENSIONS`, `["mp3", "wav", "flac", "ogg"]`, en mayúsculas o
+minúsculas.
+
+Un archivo soltado es más difícil de ubicar, porque un sonido soltado
+sobre la ventana también puede ser una muestra para el rack de canales
+(mira [El sampler](../sound/instruments.md#el-sampler)): un WAV de un
+golpe de batería es un sonido, un WAV de una canción entera es una
+grabación. `sample::is_recording` decide por lo que el sampler puede
+tocar y durante cuánto tiempo:
+
+```rust
+pub fn is_recording(path: &Path) -> bool {
+    let is_wav = path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("wav"));
+    if !is_wav {
+        return true;
+    }
+    hound::WavReader::open(path).is_ok_and(|reader| {
+        let rate = u64::from(reader.spec().sample_rate);
+        u64::from(reader.duration()) > rate * crate::instrument::LONG_SAMPLE_SECONDS
+    })
+}
+```
+
+El sampler solo toca WAV, así que un archivo MP3, FLAC u Ogg solo puede
+ser una grabación. Un WAV lo es cuando dura más de diez segundos
+(`LONG_SAMPLE_SECONDS`), la misma línea a partir de la cual una voz del
+sampler se desvanece cuando se detiene la reproducción: pasada esa
+línea, un sonido se trata como un trozo de música y no como un golpe.
+`reader.duration()` es la cantidad de muestras por canal, leída de la
+cabecera del archivo sin decodificarlo. `is_project_file`, que le dice
+a la ventana y al rack de canales qué archivos soltados no son
+sonidos, cuenta una grabación entre ellos.
 
 ## Por qué estos crates
 
@@ -888,8 +943,7 @@ tonalidad como correcta cuando lo son su tónica y su mayor o menor:
 | Tonalidades, desde una grabación | |
 |---|---|
 | Pulsos en la tonalidad correcta | 73,7% de 36.306 |
-| La tonalidad principal de la canción (su tramo más largo en una tonalidad) | 91 de 136 |
-| La única tonalidad que da `bpm-key` | 82 de 136 |
+| La tonalidad de la canción (su tramo más largo en una tonalidad) | 91 de 136 |
 | Cambios de tonalidad de las partituras encontrados a menos de dos pulsos | 63 de 315 |
 | Canciones en una sola tonalidad donde igual se encuentra un cambio | 3 de 52 |
 
@@ -903,19 +957,18 @@ tiene que durar lo bastante para pagar su cambio. Muchos se encuentran
 uno o dos compases tarde, como en *Maple Leaf Rag*, donde el paso a Re♭
 mayor a los 120 s se oye a los 123 s. El informe lista cada canción con
 sus tonalidades y dónde cambian, las verdaderas y las encontradas: el
-lugar donde mirar después.
+lugar donde mirar después. En las mismas canciones, la única tonalidad
+que `bpm-key` oye en toda la grabación acertó en 82, y por eso el
+proyecto toma en su lugar la tonalidad del tramo más largo.
 
 ## Asperezas
 
 - **Una copia de la grabación.** La copia WAV con su entrada existe solo
-  porque el sampler siempre toca un sonido desde su primera muestra. Un
-  sampler que pudiera empezar un sonido por la mitad la haría
-  innecesaria.
-- **Tocar solo desde el principio.** La grabación es una nota en el
-  primer paso de la canción, y una nota solo suena cuando la
-  reproducción llega al paso en que empieza. Si se empieza desde
-  cualquier otro lugar, la canción toca los acordes sin la grabación, y
-  un salto mientras toca la detiene.
+  porque una nota del sampler toca su sonido desde la primera muestra.
+  El sampler puede empezar un sonido largo por la mitad (mira [Empezar
+  por la mitad](../sound/instruments.md#empezar-por-la-mitad)), así que
+  un desplazamiento guardado con el canal podría ocupar el lugar de la
+  copia.
 - **Detener.** Un sampler toca su sonido entero pase lo que pase, lo que
   está bien para un golpe de batería y mal para una canción, así que las
   voces de un sonido de más de diez segundos se apagan cuando se detiene

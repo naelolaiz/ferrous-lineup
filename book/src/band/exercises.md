@@ -131,17 +131,18 @@ takes with it](chord-sheet.md#what-a-deleted-bar-takes-with-it)).
 What would it read if it asked afterwards, and what would the song
 sound like?
 
-### 11. The simile sign (lineup-core, medium)
+### 11. Two bars again (lineup-core, medium)
 
-Today `%` in a bar means "the harmony before goes on", so after
-`| C G |`, a `| % |` holds G, while a musician reading a chart plays
-C G again. Make `%` repeat the whole bar before. `read_bar` sees only
-its own bar: what must it be given? What must `write_bar` and
-`text::write` write for a bar that holds the chord before, and for one
-that repeats a bar of two chords? Projects store the chords, not the
-text: which files could change their meaning, and which can't?
+`%` plays the bar before again (`repeat_bar`). Charts have a sign for
+the two bars before as well, a `%` with two slashes, drawn across the
+bar line of the two bars it fills. Let `%%` typed in a bar repeat the
+two bars before it, in that bar and the next, which must be empty.
+`read_typed_bar_after` reads one bar and is given one bar before: what
+must it be given now, and how does the sheet window learn that typing
+in one bar wrote two? What should `text::write` write for two bars that
+repeat the two before?
 
-*Practises:* changing what a notation means, and who reads it.
+*Practises:* a notation that spans more than the place it is typed in.
 
 ### 12. A title in the song (lineup-core and lineup-app, medium)
 

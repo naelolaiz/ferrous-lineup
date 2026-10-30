@@ -492,7 +492,7 @@ rock song. So each part of a song can have a style of its own.
 5. **The song's style**, at the top of the menu, goes back to the
    band's own style.
 
-![The menu of bar 3: Variation a, Variation b, and "Style: Pop beat" opened, with "The song's style: Pop beat" at the top, then one entry per genre (Pop, Rock, Blues, Jazz, Soul, funk and R&B, ... Classical and film). Classical and film is open: Epic toms, March, Chorale, Alberti bass, Arpeggios.](../images/step-9-section-styles-menu.png)
+![The menu of bar 3: Type in this bar, Clear this bar, Move the playhead here, Insert a bar before, Insert a bar after, Delete this bar, Variation a, Variation b, and "Style: Pop beat" opened, with "The song's style: Pop beat" at the top, then one entry per genre (Pop, Rock, Blues, Jazz, Soul, funk and R&B, ... Classical and film). Latin is open: Bossa nova, Samba, Salsa, Cumbia, Reggaeton, Bolero, Bachata, Merengue, Cha-cha-chá, Son, Choro, Maxixe, Marchinha.](../images/step-9-section-styles-menu.png)
 
 The menu only lists styles in the time signature of those bars, and
 the [Orchestra](orchestra.md), which plays in any. A waltz in

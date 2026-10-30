@@ -667,33 +667,33 @@ acordes: ¿qué otra cosa podría distinguirlos?)
 
 *Practica:* los límites de un método.
 
-### 44. Un sampler que empieza por la mitad (lineup-audio, lineup-core y lineup-listen, más difícil)
+### 44. Una grabación sin copia (lineup-audio, lineup-core y lineup-listen, más difícil)
 
-La importación guarda una copia de la grabación con una entrada, y la
-grabación solo suena cuando la canción empieza desde su primer paso
-(mira [Asperezas](listen.md#asperezas)). Las dos cosas
-vienen de que el sampler siempre toca un sonido desde su primera
-muestra. Dale a `SampleSource::File` un desplazamiento de comienzo en
-segundos, y deja que una voz empiece en una `position` distinta de 0 en
-el `note_on` del sampler. Luego:
-
-- borra `write_wav`, y usa la entrada como desplazamiento;
-- cuando la reproducción empieza en un paso posterior a la nota de un
-  sonido largo, empieza ese sonido en el lugar justo. ¿Qué parte del
-  motor sabe dónde está la canción, y qué notas ya están sonando?
+La importación guarda una copia de la grabación con una entrada de
+silencio (mira [Asperezas](listen.md#asperezas)), solo porque una nota
+del sampler toca su sonido desde la primera muestra. El sampler ya
+puede empezar una voz por la mitad (`start_at`, que usa `resume`, mira
+[Empezar por la mitad](../sound/instruments.md#empezar-por-la-mitad)).
+Dale a `SampleSource::File` un desplazamiento de comienzo en segundos,
+negativo para un silencio antes del sonido, y deja que el `note_on` del
+sampler empiece ahí. Luego borra `write_wav`, y usa la entrada como
+desplazamiento. ¿Qué tiene que sumarle `resume` a `elapsed`? Y
+`SampleSource` se guarda en los archivos de proyecto: ¿qué número de
+formato necesita el cambio, y cómo se lee un archivo más viejo?
 
 *Practica:* cambiar un tipo que se guarda en archivos, el hilo de
 audio.
 
-### 45. La tonalidad del tramo más largo (lineup-listen, fácil)
+### 45. Una tonalidad clara, o la de toda la grabación (lineup-listen, fácil)
 
-El proyecto recibe la tonalidad que `bpm-key` oyó en toda la grabación.
-El informe de [Qué tan bien
-funciona](listen.md#qué-tan-bien-funciona) dice que la
-tonalidad del tramo más largo de `Analysis.keys` acierta más a menudo.
-Úsala en `arrange::follow` y en el resumen, conserva la tonalidad de
-`bpm-key` para las grabaciones donde ningún tramo es claro, y vuelve a
-ejecutar el informe.
+`keys::main_key` toma la tonalidad del tramo más largo, aunque la
+tonalidad de ese tramo no sea clara (`KeySpan::is_clear`, mira
+[Los cambios de tonalidad](listen.md#los-cambios-de-tonalidad)). Prueba otras
+dos reglas: la tonalidad del tramo *claro* más largo, y la tonalidad de
+toda la grabación que da `bpm-key` (`whole` en `analyze`) cuando el
+tramo más largo no es claro. Ejecuta el informe de
+`tests/key_changes.rs` para cada una. ¿Qué regla acierta más canciones,
+y son las mismas las canciones en que falla?
 
 *Practica:* dejar que decida una medición.
 
