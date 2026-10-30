@@ -71,16 +71,11 @@ pub fn time_picker(
     let mut chosen = None;
     if let Some(parts) = parts {
         ui.weak(tr("Shared with the Library options"));
-        ui.checkbox(&mut parts.matching_style, tr("Use matching style"))
-            .on_hover_text(tr(
-                "Turn off to mark the new meter's accents with your current instruments, \
-                 even when the library has a matching style.",
-            ));
-        ui.checkbox(&mut parts.rhythm, tr("Apply rhythm patterns / accents"))
-            .on_hover_text(tr(
-                "Turn off to change the meter while keeping the current playing patterns",
-            ));
-        crate::library_browser::instrument_option(ui, parts, "Use style instruments");
+        // Those of the Library's style for the new meter, as a waltz's
+        // for 3/4.
+        crate::library_browser::playing_ui(ui, parts, None);
+        let enabled = !crate::library_browser::simple_chords(parts);
+        crate::library_browser::instrument_option(ui, parts, "Use style instruments", enabled);
         ui.checkbox(&mut parts.swing, tr("Use rhythm's swing"))
             .on_hover_text(tr("Turn off to keep the current swing amount"));
         ui.separator();
@@ -300,8 +295,9 @@ mod tests {
         let mut parts = StyleParts::default();
         frame(&ctx, &mut parts, vec![]);
         let (output, _) = frame(&ctx, &mut parts, vec![]);
-        assert!(label_rect(&output, "Use matching style").top() < label_rect(&output, "7/8").top());
-        let (output, _) = click(&ctx, &mut parts, &output, "Use matching style");
+        let chord_parts = "Its chord and bass parts";
+        assert!(label_rect(&output, chord_parts).top() < label_rect(&output, "7/8").top());
+        let (output, _) = click(&ctx, &mut parts, &output, chord_parts);
         assert!(!parts.matching_style);
         let (_, chosen) = click(&ctx, &mut parts, &output, "7/8");
         let time = chosen.expect("clicking the meter should apply it");
