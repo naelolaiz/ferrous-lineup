@@ -188,7 +188,7 @@ to run, on which machines, and when. Ferrous Lineup has three:
 | Workflow | Runs on | Does |
 |---|---|---|
 | **CI** (`ci.yml`) | every pull request and every push to main | formats, lints, tests and builds on Linux, macOS and Windows |
-| **Release** (`release.yml`) | every pull request, push to main and `v` tag | builds the downloads for every system, and publishes them for a tag (see [Release packages](releases.md)) |
+| **Release** (`release.yml`) | every pull request, push to main and `v` tag, and by hand | builds the downloads for every system, and publishes them for a tag, pushed or written in a run by hand (see [Release packages](releases.md)) |
 | **Book** (`book.yml`) | changes to the books and manuals | builds the websites and PDFs, and publishes them from main (see [How the books are built](books.md)) |
 
 A pull request shows a check for each job, green when it passed and

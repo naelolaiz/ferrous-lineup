@@ -200,7 +200,7 @@ y cuándo. Ferrous Lineup tiene tres:
 | Flujo de trabajo | Se ejecuta en | Hace |
 |---|---|---|
 | **CI** (`ci.yml`) | cada pull request y cada push a main | revisa el formato y los lints, prueba y compila en Linux, macOS y Windows |
-| **Release** (`release.yml`) | cada pull request, push a main y etiqueta `v` | compila las descargas para cada sistema, y las publica para una etiqueta (ver [Paquetes de cada versión](releases.md)) |
+| **Release** (`release.yml`) | cada pull request, push a main y etiqueta `v`, y a mano | compila las descargas para cada sistema, y las publica para una etiqueta, subida con push o escrita en una ejecución a mano (ver [Paquetes de cada versión](releases.md)) |
 | **Book** (`book.yml`) | los cambios en los libros y los manuales | compila los sitios web y los PDF, y los publica desde main (ver [Cómo se construyen los libros](books.md)) |
 
 Un pull request muestra una marca para cada trabajo, verde si pasó y
