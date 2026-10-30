@@ -196,6 +196,84 @@ mod tests {
     use super::super::Audio;
     use super::*;
 
+    /// The song's sound from `step` on, for `frames` frames, as song mode
+    /// plays it: what the app sends the audio thread, then a jump to
+    /// `step` and Play.
+    fn played_from(app: &mut LineupApp, step: usize, frames: usize) -> Vec<f32> {
+        use lineup_audio::{Command, PlayMode, Renderer};
+        let rate = 44_100;
+        let mut renderer = Renderer::new(rate, 1);
+        for command in app.project_commands(rate, 1.0) {
+            renderer.send(command);
+        }
+        let song = app.project.playback_arrangement();
+        renderer.send(Command::SetSongTempos(app.project.played_tempos(&song)));
+        renderer.send(Command::SetSong {
+            plays: song.plays,
+            length: song.length,
+        });
+        renderer.send(Command::SetMode(PlayMode::Song));
+        renderer.send(Command::Seek(step));
+        renderer.send(Command::Play);
+        let mut out = vec![0.0; frames];
+        renderer.render(&mut out);
+        out
+    }
+
+    fn loudness(sound: &[f32]) -> f32 {
+        (sound.iter().map(|s| s * s).sum::<f32>() / sound.len() as f32).sqrt()
+    }
+
+    #[test]
+    fn an_imported_recording_plays_from_wherever_playback_starts() {
+        // Twenty seconds of a C major chord, with a click on every beat at
+        // 120 BPM.
+        let rate = 44_100;
+        let samples = (0..20 * rate)
+            .map(|frame| {
+                let t = frame as f32 / rate as f32;
+                let click = if (t * 2.0).fract() < 0.01 { 0.5 } else { 0.0 };
+                let chord: f32 = [261.63_f32, 329.63, 392.0]
+                    .iter()
+                    .map(|hz| (t * hz * std::f32::consts::TAU).sin() * 0.1)
+                    .sum();
+                click + chord
+            })
+            .collect();
+        let dir = std::env::temp_dir().join(format!("lineup-resume-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("clicks.wav");
+        let recording = lineup_listen::Recording {
+            samples,
+            sample_rate: rate,
+        };
+        arrange::write_wav(&recording, 0.0, &path).unwrap();
+        let (mut project, ..) = listen(&path).unwrap();
+        // Only the recording sounds: the harmony track is muted.
+        project.channel_mut(1).unwrap().muted = true;
+
+        let ctx = egui::Context::default();
+        let mut app = LineupApp::with_audio(&ctx, None, Audio::Unavailable("test".into()));
+        app.replace_project(project, None);
+        // Bar 5, step 64: a second of it, from the start and from there.
+        let song = app.project.playback_arrangement();
+        let tempos = app.project.played_tempos(&song);
+        let before = lineup_core::tempo::seconds(64, |step| {
+            tempos.get(step).copied().unwrap_or(app.project.tempo)
+        });
+        let at = (before * f64::from(rate)) as usize;
+        let whole = played_from(&mut app, 0, at + rate as usize);
+        let from_bar_5 = played_from(&mut app, 64, rate as usize);
+        let heard = loudness(&whole[at..]);
+        assert!(heard > 0.05, "{heard}");
+        let resumed = loudness(&from_bar_5);
+        assert!(
+            (resumed - heard).abs() < heard * 0.2,
+            "{resumed} against {heard}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
     #[test]
     fn opening_another_project_stops_the_import_that_was_listening() {
         let ctx = egui::Context::default();

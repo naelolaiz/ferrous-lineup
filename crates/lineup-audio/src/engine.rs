@@ -44,6 +44,7 @@ use std::sync::{Arc, Mutex};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
 use lineup_core::i18n::{tr, trf};
+use lineup_core::sequencer::frames_per_step;
 use lineup_core::{
     Click, DEFAULT_VELOCITY, MAX_CHANNELS, MAX_PATTERNS, MidiMessage, Note, NoteEvent, Play,
     STEP_NOTE, STEPS_PER_BAR, STEPS_PER_BEAT, Sequencer, TICKS_PER_STEP, Tempo,
@@ -1146,6 +1147,68 @@ impl AudioThread {
                 trace.jumped(self.now, step);
             }
             self.sequencer.start_at(step);
+            self.resume_long_sounds(step);
+        }
+    }
+
+    /// Starts the long sounds of the song that began before `step` and
+    /// still sound there, partway through, as they would be had playback
+    /// started earlier (see [`Instrument::resume`]): a recording plays
+    /// from wherever playback starts, jumps to, or a loop region begins.
+    /// A note on a step before the loop region, in the part of a clip
+    /// the region leaves out, counts too, its steps as long as the
+    /// region's first.
+    fn resume_long_sounds(&mut self, step: usize) {
+        if self.mode != PlayMode::Song {
+            return;
+        }
+        let timing = (&self.song_tempos[..], self.tempo, self.sample_rate);
+        for play in self.plays.iter().filter(|play| play.start <= step) {
+            let length = self.pattern_lengths.get(play.pattern).copied().unwrap_or(0);
+            if length == 0 {
+                continue;
+            }
+            for (index, channel) in self.channels.iter_mut().enumerate() {
+                if channel.muted {
+                    continue;
+                }
+                for note in channel.notes.get(play.pattern) {
+                    // Every time the piece played the note before
+                    // `step`, counted from the piece's start, which is
+                    // below zero for a time in the part of the clip the
+                    // piece skips.
+                    let first = play.start as isize - play.skip as isize + note.start as isize;
+                    let times = (first..play.end().min(step) as isize).step_by(length);
+                    for at in times.filter(|&at| at < step as isize) {
+                        let origin = Origin {
+                            pattern: play.pattern,
+                            pattern_step: note.start,
+                            song_step: at.max(0) as usize,
+                            over_song: false,
+                        };
+                        let elapsed = frames_between(timing, at, step);
+                        let started = channel.instrument.resume(
+                            origin,
+                            note.pitch,
+                            note.velocity,
+                            self.sample_rate,
+                            elapsed,
+                        );
+                        if started && let Some(trace) = self.trace.as_deref_mut() {
+                            trace.note_on(
+                                self.now,
+                                index,
+                                origin,
+                                note.pitch,
+                                note.velocity,
+                                0,
+                                0,
+                                false,
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1506,6 +1569,7 @@ impl AudioThread {
             self.sequencer.start_at(self.start);
             self.playing = true;
             self.trace_play(self.start);
+            self.resume_long_sounds(self.start);
             return;
         }
         if self.playing {
@@ -1544,6 +1608,7 @@ impl AudioThread {
             self.sequencer.start_at(self.start);
             self.playing = true;
             self.trace_play(self.start);
+            self.resume_long_sounds(self.start);
             return;
         }
         let step = count.bar + count.counted % count.length;
@@ -1737,6 +1802,7 @@ impl AudioThread {
                 self.count_in_frame(count);
             }
             if self.playing {
+                let lap = self.sequencer.due().is_some() && self.sequencer.comes_round();
                 // A step about to start plays at its own tempo, which is
                 // set before it starts, so it lasts as long as it should.
                 if let Some(step) = self.sequencer.due() {
@@ -1758,7 +1824,16 @@ impl AudioThread {
                     if let Some(trace) = &mut self.trace {
                         trace.step(self.now, step, self.tempo_now);
                     }
+                    // Round again, a recording starts again with the loop.
+                    if lap && self.mode == PlayMode::Song {
+                        for channel in &mut self.channels {
+                            channel.instrument.release_long();
+                        }
+                    }
                     self.start_notes(step);
+                    if lap {
+                        self.resume_long_sounds(step);
+                    }
                     if self.metronome {
                         self.click.strike(click_at(self.loop_clicks(), step));
                     }
@@ -1918,6 +1993,18 @@ fn delay(loose_frames: f64, channel: usize, song_step: usize, pitch: Note) -> f6
 /// Whether an instrument plays one of each note at a time, so that a note
 /// starting again ends the one sounding: a MIDI Out, and a SoundFont,
 /// which plays its notes the same way.
+/// How many frames the steps of the loop from `from` up to `to` last, at
+/// `timing`'s tempos: the song's, one a step and the last going on, or
+/// else its single tempo, at its sample rate. A step before the loop
+/// (below zero) lasts as long as the loop's first.
+fn frames_between(timing: (&[Tempo], Tempo, u32), from: isize, to: usize) -> f64 {
+    let (tempos, tempo, sample_rate) = timing;
+    let tempo_at = |step: usize| tempos.get(step).or(tempos.last()).copied().unwrap_or(tempo);
+    (from..to as isize)
+        .map(|step| frames_per_step(tempo_at(step.max(0) as usize), sample_rate))
+        .sum()
+}
+
 fn one_per_pitch(instrument: &Instrument) -> bool {
     matches!(
         instrument,
@@ -2772,6 +2859,94 @@ mod tests {
     }
 
     /// All 16 steps of a pattern, once, from song step `start`.
+    /// A song of one 256-step pattern whose only note, on its first
+    /// step, plays a recording: 12 seconds (96 steps) of a sound that
+    /// rises steadily from 0 to 1, so where in it playback is can be
+    /// read from its level. The song plays `plays` of it, in song mode.
+    fn recording_song(plays: Vec<Play>, length: usize) -> Harness {
+        let mut h = harness();
+        send(
+            &mut h,
+            Command::InsertPattern {
+                index: 1,
+                length: 256,
+            },
+        );
+        let frames = 12 * RATE as usize;
+        let ramp = (0..frames).map(|i| i as f32 / frames as f32).collect();
+        send(
+            &mut h,
+            Command::InsertChannel {
+                index: AT_END,
+                instrument: Instrument::Sampler(Sampler::new(Arc::new(SampleData::new(
+                    ramp, RATE,
+                )))),
+                notes: ChannelNotes::new([Vec::new(), steps(&[0])]),
+                volume: 1.0,
+                muted: false,
+            },
+        );
+        // Dry, so the level is the recording's own.
+        send(
+            &mut h,
+            Command::SetReverbSend {
+                channel: 0,
+                send: 0.0,
+            },
+        );
+        send(&mut h, Command::SetSong { plays, length });
+        send(&mut h, Command::SetMode(PlayMode::Song));
+        render(&mut h, STEP);
+        h
+    }
+
+    #[test]
+    fn a_recording_plays_from_wherever_playback_starts() {
+        let piece = Play {
+            pattern: 1,
+            start: 0,
+            skip: 0,
+            length: 256,
+        };
+        // Played from the start, as far as step 64 and a little more.
+        let mut h = recording_song(vec![piece], 256);
+        send(&mut h, Command::Play);
+        let whole = render(&mut h, 64 * STEP + 1_000);
+        // Played from step 32, it sounds at once, as it did there.
+        let mut h = recording_song(vec![piece], 256);
+        send(&mut h, Command::Seek(32));
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 1_000);
+        assert!(out[0] > 0.0, "the recording sounds at once");
+        assert_eq!(out, whole[32 * STEP..32 * STEP + 1_000]);
+        // A jump while playing goes on from the new place, once the
+        // sound from before has faded.
+        send(&mut h, Command::Seek(64));
+        let out = render(&mut h, 1_000);
+        assert!((out[999] - whole[64 * STEP + 999]).abs() < 0.001);
+    }
+
+    #[test]
+    fn a_recording_loops_with_a_loop_region_inside_it() {
+        // The loop region is steps 32 to 48 of the song: one piece of the
+        // recording's clip, 32 steps into it.
+        let piece = Play {
+            pattern: 1,
+            start: 0,
+            skip: 32,
+            length: 16,
+        };
+        let mut h = recording_song(vec![piece], 16);
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 17 * STEP);
+        let first = out[2_000];
+        assert!(first > 0.2, "{first}: the recording from 4 s on");
+        // Round again, it starts again from the region's start, not on
+        // from where the last lap ended.
+        let again = out[16 * STEP + 2_000];
+        assert!((again - first).abs() < 0.001, "{first} then {again}");
+    }
+
     fn whole(pattern: usize, start: usize) -> Play {
         Play {
             pattern,

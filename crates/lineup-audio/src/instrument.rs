@@ -200,6 +200,39 @@ impl Instrument {
         }
     }
 
+    /// Starts a long sound of the song partway through, `elapsed` output
+    /// frames after its note began, as when playback starts or jumps past
+    /// the note's step: a whole song imported as a recording plays from
+    /// wherever playback starts. Only a sampler playing a long sound (one
+    /// that stops with the transport, see [`Instrument::release_all`])
+    /// does this; every other note waits for its own step, and a sound
+    /// already over is not started. Returns whether it started.
+    pub fn resume(
+        &mut self,
+        origin: Origin,
+        pitch: Note,
+        velocity: u8,
+        output_rate: u32,
+        elapsed: f64,
+    ) -> bool {
+        match self {
+            Instrument::Sampler(sampler) => {
+                sampler.resume(pitch, velocity, output_rate, origin, elapsed)
+            }
+            _ => false,
+        }
+    }
+
+    /// Fades out the long sounds a sampler is playing (see
+    /// [`Instrument::release_all`]), and nothing else: when the song
+    /// comes round to the start of the loop, a recording still playing
+    /// from the lap before would go on out of time with it.
+    pub fn release_long(&mut self) {
+        if let Instrument::Sampler(sampler) = self {
+            sampler.release_all();
+        }
+    }
+
     /// Lets go of every held note, as when playback stops.
     pub fn release_all(&mut self) {
         match self {
@@ -415,15 +448,25 @@ impl Sampler {
     }
 
     fn start(&mut self, pitch: Note, velocity: u8, output_rate: u32, origin: Option<Origin>) {
+        let increment = self.increment(pitch, output_rate);
+        self.start_at(0.0, increment, velocity, origin);
+    }
+
+    /// How many sample frames `pitch` moves on per output frame.
+    fn increment(&self, pitch: Note, output_rate: u32) -> f64 {
         // Every semitone up plays the sample 2^(1/12) times faster.
         let semitones = pitch.midi() as f64 - STEP_NOTE.midi() as f64;
         let pitch_ratio = 2.0_f64.powf(semitones / 12.0);
         let rate_ratio = self.sample.sample_rate() as f64 / output_rate as f64;
+        rate_ratio * pitch_ratio
+    }
 
+    /// Starts a voice `position` sample frames into the sound.
+    fn start_at(&mut self, position: f64, increment: f64, velocity: u8, origin: Option<Origin>) {
         self.notes_started += 1;
         *pick_voice(&mut self.voices[..]) = SamplerVoice {
-            position: Some(0.0),
-            increment: rate_ratio * pitch_ratio,
+            position: Some(position),
+            increment,
             gain: velocity_gain(velocity),
             started: self.notes_started,
             fading: None,
@@ -431,13 +474,37 @@ impl Sampler {
         };
     }
 
+    /// Starts a long sound `elapsed` output frames into it, if it is long
+    /// and lasts that long (see [`Instrument::resume`]).
+    fn resume(
+        &mut self,
+        pitch: Note,
+        velocity: u8,
+        output_rate: u32,
+        origin: Origin,
+        elapsed: f64,
+    ) -> bool {
+        let increment = self.increment(pitch, output_rate);
+        let position = elapsed * increment;
+        if !self.is_long() || position + 1.0 >= self.sample.frames().len() as f64 {
+            return false;
+        }
+        self.start_at(position, increment, velocity, Some(origin));
+        true
+    }
+
+    /// Whether the sound is long, such as a whole song imported as a
+    /// recording: longer than [`LONG_SAMPLE_SECONDS`].
+    fn is_long(&self) -> bool {
+        self.sample.frames().len() as u64
+            > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS
+    }
+
     /// Fades out the voices playing a long sound, such as a whole song
     /// imported as a recording, so that it stops with the transport.
     /// Short sounds (drum hits) still ring out.
     pub fn release_all(&mut self) {
-        let long = self.sample.frames().len() as u64
-            > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS;
-        if long {
+        if self.is_long() {
             for voice in self.voices.iter_mut().filter(|voice| !voice.is_idle()) {
                 voice.fading.get_or_insert(1.0);
             }
