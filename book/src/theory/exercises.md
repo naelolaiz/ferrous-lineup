@@ -618,30 +618,31 @@ tell them apart?)
 
 *Practises:* the limits of a method.
 
-### 44. A sampler that starts partway (lineup-audio, lineup-core and lineup-listen, harder)
+### 44. A recording without a copy (lineup-audio, lineup-core and lineup-listen, harder)
 
-The import saves a copy of the recording with a lead-in, and the
-recording plays only when the song starts from its first step (see
-[Rough edges](listen.md#rough-edges)). Both come from the
-sampler always playing a sound from its first sample. Give
-`SampleSource::File` a start offset in seconds, and let a voice start
-at a `position` other than 0 in the sampler's `note_on`. Then:
-
-- delete `write_wav`, and set the offset to the lead-in instead;
-- when playback starts at a step after a long sound's note, start that
-  sound at the right place. Which part of the engine knows where the
-  song is, and which notes are already sounding?
+The import saves a copy of the recording with a lead-in of silence (see
+[Rough edges](listen.md#rough-edges)), only because a sampler note
+plays its sound from the first sample. The sampler can already start a
+voice partway (`start_at`, used by `resume`, see [Starting
+partway](../sound/instruments.md#starting-partway)). Give
+`SampleSource::File` a start offset in seconds, negative for silence
+before the sound, and let the sampler's `note_on` start there. Then
+delete `write_wav`, and set the offset from the lead-in instead. What
+must `resume` add to `elapsed`? And `SampleSource` is saved in project
+files: which format number does the change need, and what does an older
+file read as?
 
 *Practises:* changing a type that is saved in files, the audio thread.
 
-### 45. The key from the longest stretch (lineup-listen, easy)
+### 45. A clear key, or the whole recording's (lineup-listen, easy)
 
-The project gets the key `bpm-key` heard in the whole recording. The
-report in [How well it works](listen.md#how-well-it-works)
-says that the key of the longest stretch in `Analysis.keys` is right
-more often. Use it in `arrange::follow` and in the summary, keep
-`bpm-key`'s key for recordings where no stretch is clear, and run the
-report again.
+`keys::main_key` takes the key of the longest stretch, even when that
+stretch's key is not clear (`KeySpan::is_clear`, see [Key
+changes](listen.md#key-changes)). Try two other rules: the key of the
+longest *clear* stretch, and `bpm-key`'s key of the whole recording
+(`whole` in `analyze`) whenever the longest stretch is not clear. Run
+the report in `tests/key_changes.rs` for each. Which rule gets the most
+songs right, and are the songs it gets wrong the same?
 
 *Practises:* letting a measurement decide.
 

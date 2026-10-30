@@ -82,8 +82,8 @@ Intenta abrirla una vez, luego abre **Ajustes del Sistema > Privacidad
 y seguridad** y permítela allí. En versiones más antiguas de macOS, haz
 clic derecho en la aplicación y elige **Abrir**.
 
-En un Mac, un doble clic en un archivo `.lineup` en el Finder no lo
-abre; abre tus canciones con **Archivo > Abrir…** en la aplicación.
+Con la aplicación en Aplicaciones, un doble clic en un archivo
+`.lineup` en el Finder lo abre en Ferrous Lineup.
 
 ## El primer arranque
 

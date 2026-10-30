@@ -58,6 +58,7 @@ What an instrument can be asked:
 | `note_off` | Lets go of a note held with the gate `HELD` |
 | `release_all` | Lets go of every held note, when playback stops |
 | `release_unless` | Lets go of the song's notes that the song no longer plays |
+| `resume` | Starts a long sound partway through, where it would be had playback started earlier (the sampler only) |
 | `tempo_changed` | Stretches held notes after a change of tempo ([Tempo, meter, swing and feel](tempo.md)) |
 | `next_sample` | The next frame of sound: the sum of every voice |
 
@@ -320,6 +321,79 @@ pub fn release_all(&mut self) {
 
 `release_unless`, for a clip taken away or a track muted while it plays,
 fades the song's sounds whatever their length.
+
+### Starting partway
+
+A note sounds when playback reaches the step it starts on. For a drum
+hit that is all there is to it, but a recording is one note on the
+first step of a song: started from bar 20, the song would play without
+it. So when playback starts, jumps, or comes round to the start of the
+loop, the engine's `resume_long_sounds` looks back over the song for
+the notes that started before the playhead, and asks each instrument
+to `resume` them:
+
+```rust
+fn resume(
+    &mut self,
+    pitch: Note,
+    velocity: u8,
+    output_rate: u32,
+    origin: Origin,
+    elapsed: f64,
+) -> bool {
+    let increment = self.increment(pitch, output_rate);
+    let position = elapsed * increment;
+    if !self.is_long() || position + 1.0 >= self.sample.frames().len() as f64 {
+        return false;
+    }
+    self.start_at(position, increment, velocity, Some(origin));
+    true
+}
+```
+
+`elapsed` is how many output frames ago the note started, and a voice
+moves `increment` frames of the sound for each output frame, so the
+voice starts `elapsed * increment` frames in, as far as it would have
+got. Only a long sound, over ten seconds, is started this way, and only
+if it lasts that long: a drum hit from two bars ago has long finished,
+and other instruments answer `false`. `resume_long_sounds` goes through
+every piece of a clip that starts at or before the step, and every time
+the piece played each note:
+
+```rust
+for note in channel.notes.get(play.pattern) {
+    // Every time the piece played the note before
+    // `step`, counted from the piece's start, which is
+    // below zero for a time in the part of the clip the
+    // piece skips.
+    let first = play.start as isize - play.skip as isize + note.start as isize;
+    let times = (first..play.end().min(step) as isize).step_by(length);
+    for at in times.filter(|&at| at < step as isize) {
+        let origin = Origin {
+            pattern: play.pattern,
+            pattern_step: note.start,
+            song_step: at.max(0) as usize,
+            over_song: false,
+        };
+        let elapsed = frames_between(timing, at, step);
+        let started = channel.instrument.resume(
+            origin,
+            note.pitch,
+            note.velocity,
+            self.sample_rate,
+            elapsed,
+        );
+        // ...
+    }
+}
+```
+
+`first` is where the note falls if the piece started at its own first
+step; it is below zero when the clip leaves out its start (`skip`), and
+`step_by(length)` gives each repeat of the pattern within the piece.
+`frames_between` adds up the frames of the steps from there to the
+playhead at the song's tempo on each step, so a recording under a
+tempo change starts at the right place too.
 
 ### Loading a WAV file
 
