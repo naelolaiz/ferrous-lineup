@@ -107,15 +107,16 @@ fn source_of(action: LibraryAction) -> Option<Source> {
 
 /// The parts a library choice has for the song: a fill has only its bar
 /// of drums, a rhythm no chords, and a row or micromode style writes its
-/// patterns and brings its tempo.
+/// drums and patterns and brings its tempo (and its key, see
+/// [`Project::bring_in`]).
 fn parts_of(action: LibraryAction) -> PartSet {
     match action {
-        _ if fill_picked(action) => PartSet::of(&[SongPart::Patterns]),
+        _ if fill_picked(action) => PartSet::of(&[SongPart::Drums]),
         LibraryAction::Rhythm(_) | LibraryAction::RhythmInSong(_) => {
             PartSet::ALL.minus(PartSet::of(&[SongPart::Chords]))
         }
         LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => {
-            PartSet::of(&[SongPart::Patterns, SongPart::Tempo])
+            PartSet::of(&[SongPart::Drums, SongPart::Patterns, SongPart::Tempo])
         }
         LibraryAction::Style(_) | LibraryAction::StyleInSong(_) | LibraryAction::UserStyle(_) => {
             PartSet::ALL
@@ -491,7 +492,7 @@ impl LineupApp {
             _ => self.playlist.library_parts(),
         };
         let mut tried = previous;
-        let (name, tempo) = match action {
+        let (name, tempo, meter) = match action {
             LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                 if parts.rhythm || parts.progression {
                     tried.style = Some(style);
@@ -501,14 +502,14 @@ impl LineupApp {
                 if parts.rhythm {
                     tried.rhythm = Rhythm::named(style.rhythm);
                 }
-                (style.name, style.tempo)
+                (style.name, style.tempo, style.time)
             }
             LibraryAction::Rhythm(rhythm) => {
                 if parts.rhythm {
                     tried.rhythm = Some(rhythm);
                     tried.style = None;
                 }
-                (rhythm.name, rhythm.tempo)
+                (rhythm.name, rhythm.tempo, rhythm.time)
             }
             _ => return,
         };
@@ -516,6 +517,18 @@ impl LineupApp {
         // or the swing of your own pattern change: it stays yours, keeps
         // its name, and the next click does not write over it.
         let own_pattern = reuse.is_none() && !parts.rhythm && !parts.progression;
+        // Where the song plays your own pattern, it keeps the song's time
+        // signature: in another, its bars would no longer fit the song's.
+        // A style's time signature comes with its drums, in a pattern of
+        // its own.
+        let played = own_pattern
+            && (self.project.playlist().clips().iter()).any(|clip| clip.pattern == self.pattern);
+        let meter_left =
+            played && parts.time_signature && self.project.pattern_time(self.pattern) != meter;
+        let parts = apply::StyleParts {
+            time_signature: parts.time_signature && !played,
+            ..parts
+        };
         let target = reuse
             .as_ref()
             .map(|a| a.pattern)
@@ -529,6 +542,7 @@ impl LineupApp {
         // where it came from. The sounds, the tempo and the swing are the
         // song's.
         let pattern_parts = PartSet::of(&[
+            SongPart::Drums,
             SongPart::Patterns,
             SongPart::Chords,
             SongPart::TimeSignature,
@@ -569,7 +583,13 @@ impl LineupApp {
             return;
         };
         if own_pattern && self.project == before {
-            let why = if parts.instruments {
+            let why = if meter_left {
+                trf(
+                    "{} changed nothing: a pattern the song plays keeps the song's time \
+                     signature. Tick Drums to try the style in a pattern of its own.",
+                    &[&tr_name(name)],
+                )
+            } else if parts.instruments {
                 trf(
                     "{} changed nothing: its instruments go to the channels named \
                      Keys and Bass, or to the channel chosen in the rack.",

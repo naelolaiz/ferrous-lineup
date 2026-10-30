@@ -30,7 +30,7 @@ pub(super) fn menu(ui: &mut Ui, project: &Project, actions: &mut Vec<SheetAction
         ui.set_width(320.0);
         widgets::scroll_menu(ui, |ui| {
             ui.strong(tr("Voices and players"));
-            ui.weak(tr("Choose who plays and their sounds. Playing patterns are chosen in the Library."));
+            ui.weak(tr("Choose who plays and their sounds. How they play is chosen in the Library."));
             ui.separator();
             if let Some(band) = project.band() {
                 widgets::scroll_menu_button(ui, tr("Instrument lineup"), |ui| {

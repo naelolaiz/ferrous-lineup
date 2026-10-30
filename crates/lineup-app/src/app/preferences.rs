@@ -48,6 +48,13 @@ impl Preferences {
         eframe::set_value(storage, STORAGE_KEY, &*self.map());
     }
 
+    /// Keeps `value` as the preference `name`.
+    pub(super) fn put<T: Serialize>(&self, name: &str, value: &T) {
+        if let Ok(text) = ron::to_string(value) {
+            self.map().insert(name.to_string(), text);
+        }
+    }
+
     fn map(&self) -> MutexGuard<'_, BTreeMap<String, String>> {
         self.0.lock().unwrap_or_else(PoisonError::into_inner)
     }
@@ -61,9 +68,7 @@ pub(super) fn get<T: DeserializeOwned>(ctx: &egui::Context, name: &str) -> Optio
 
 /// Keeps `value` as the preference `name`.
 pub(super) fn set<T: Serialize>(ctx: &egui::Context, name: &str, value: &T) {
-    if let Ok(text) = ron::to_string(value) {
-        Preferences::of(ctx).map().insert(name.to_string(), text);
-    }
+    Preferences::of(ctx).put(name, value);
 }
 
 /// For the tests: eframe's storage, kept in memory instead of `app.ron`.
