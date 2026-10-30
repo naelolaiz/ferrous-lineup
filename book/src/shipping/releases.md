@@ -17,7 +17,7 @@ packs seven downloads:
 | `ferrous-lineup-…-macos-arm64.dmg` | Macs with Apple Silicon (M1 and later) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Macs with an Intel processor |
 
-The `…` is the version for a release (`v0.4.0`), or the first seven
+The `…` is the version for a release (`v0.4.1`), or the first seven
 characters of the commit for any other build (`1a2b3c4`), so a download
 always says what it is. How to open each one on its system is in the
 manual's [Installing
@@ -34,7 +34,9 @@ this chapter is about how they are made.
   Mac or on Windows before it is merged.
 - **A tag** that starts with `v` also publishes the packages on the
   repository's **Releases** page, with a `SHA256SUMS.txt` beside them. A
-  release stays there for good, and anyone can download it.
+  release stays there for good, and anyone can download it. The tag can
+  be pushed, or the workflow can make it itself in a run by hand (see
+  below).
 
 ## Cutting a release
 
@@ -52,9 +54,12 @@ takes a pull request and a tag.
   English and Spanish, which software centres show;
 - the default version in the Windows installer's script,
   `packaging/windows/ferrous-lineup.iss`;
-- the version in the AUR recipes and the tag in the Flathub manifest.
+- the version in the AUR recipes and the tag in the Flathub manifest;
+- if the release should open with a few words of its own, a file
+  `packaging/release-notes/v0.5.0.md` holding them, in Markdown.
 
-**The tag**, once that is merged:
+**The tag**, once that is merged, comes one of two ways. From a clone,
+push it:
 
 ```sh
 git fetch origin
@@ -62,22 +67,33 @@ git tag -a v0.5.0 -m "Ferrous Lineup 0.5.0" origin/main
 git push origin v0.5.0
 ```
 
-The push starts the workflow. When all its build jobs have passed, the
-release appears, called "Ferrous Lineup v0.5.0", with notes that list
-the pull requests merged since the last release; the notes can then be
-edited on GitHub. A last small pull request pins what only exists once
-the tag does: the checksum of GitHub's archive of the tag in the AUR
-recipe, and the tag's commit in the Flathub manifest.
+Or, on GitHub, open **Actions > Release > Run workflow**, keep the
+branch on `main`, write `v0.5.0` in the **tag** field and run it. This
+needs only the right to run workflows, not to push to the repository,
+and the workflow makes the tag itself, on the commit it built.
 
-Two details:
+Either way, when all the build jobs have passed, the release appears,
+called "Ferrous Lineup v0.5.0". Its notes are the release-notes file, if
+there is one, followed by the list of pull requests merged since the
+last release that GitHub writes; they can be edited on GitHub
+afterwards. A last small pull request pins what only exists once the tag
+does: the checksum of GitHub's archive of the tag in the AUR recipe, and
+the tag's commit in the Flathub manifest.
+
+Three details:
 
 - A tag with a dash, such as `v0.5.0-beta.1`, makes a **pre-release**,
   never shown as the latest. That is how [semantic
   versioning](https://semver.org) writes a version that is not final
   yet, and Cargo reads versions the same way.
-- If the tag and `Cargo.toml` disagree, the release is still made, with a
-  warning on the run's page. The tag decides the file names, but the
-  program's own **Help > About** says what `Cargo.toml` said.
+- If a pushed tag and `Cargo.toml` disagree, the release is still made,
+  with a warning on the run's page: the tag exists already, and stopping
+  would only leave it without downloads. The tag decides the file names,
+  but the program's own **Help > About** says what `Cargo.toml` said.
+- A run by hand checks before it makes anything: if the tag asked for is
+  not `v` plus the version in `Cargo.toml`, or the run is on a branch
+  other than main, the release job stops with an error, and no tag is
+  made.
 
 ## Targets: which computer a program is for
 
@@ -180,13 +196,26 @@ For Linux and Windows, a **Package** step copies the program, the README
 and the licence into a folder named after the label, and packs it:
 
 ```bash
-if [[ "$GITHUB_REF_TYPE" == tag ]]; then
-  label="$GITHUB_REF_NAME"
+if [[ -n "$RELEASE_TAG" ]]; then
+  label="$RELEASE_TAG"
 else
   label="${COMMIT::7}"
 fi
 name="ferrous-lineup-$label-${{ matrix.platform }}"
 ```
+
+`RELEASE_TAG` is set once, for every job, at the top of the file:
+
+```yaml
+env:
+  RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+```
+
+GitHub's expressions have no "if … else", so `a && b || c` stands in for
+it: when the run is for a pushed tag, the value is the tag's name;
+otherwise it is the **tag** field of a run by hand, which is empty in
+every other run (`inputs` holds nothing when nobody filled a form). `-n`
+in Bash is true for a string that isn't empty.
 
 `${COMMIT::7}` is Bash for "the first seven characters". `COMMIT` is
 `${{ github.event.pull_request.head.sha || github.sha }}`: for a pull
@@ -370,14 +399,26 @@ desktop shortcut, an uninstaller and the `.lineup` file association.
 
 ## Publishing: a job that waits for the others
 
-The second job, `release`, runs only for tags, and only once every build
-job has passed:
+The second job, `release`, runs only for a pushed tag or a run by hand
+with a tag, and only once every build job has passed:
 
 ```yaml
 release:
   name: Publish the release
-  if: github.ref_type == 'tag'
+  if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
   needs: build
+```
+
+`workflow_dispatch` is the name GitHub gives a run by hand. The form it
+shows comes from the trigger at the top of the file:
+
+```yaml
+workflow_dispatch:
+  inputs:
+    tag:
+      description: "Publish a release with this tag (v0.4.1), made on the commit built. Empty: only build."
+      required: false
+      default: ""
 ```
 
 `needs: build` waits for every line of the matrix. If one build fails,
@@ -402,9 +443,20 @@ else
   the website or by an earlier run. Then the files are uploaded to it,
   and `--clobber` replaces files of the same name.
 - Otherwise `gh release create` makes it, with `--generate-notes` for
-  the notes and `--verify-tag`, which stops if the tag isn't on GitHub
-  instead of creating a new tag on the newest commit.
+  the notes. For a pushed tag it adds `--verify-tag`, which stops if the
+  tag isn't on GitHub instead of creating a new tag on the newest
+  commit. For a run by hand it adds `--target "$GITHUB_SHA"`, and GitHub
+  makes the tag on exactly the commit the packages were built from, even
+  if main has moved on since.
+- `--notes-file packaging/release-notes/<tag>.md` is added when that file
+  exists; `gh` puts its text before the generated notes.
 - `--prerelease` is added when the tag has a dash.
+
+A tag made with the run's own `GITHUB_TOKEN` starts no other workflow:
+what a run does with its own token starts no new runs (only an explicit
+"run by hand" through GitHub's API is let through), so that a workflow
+can't set itself off forever. That is why the run that makes the tag is
+the one that publishes it; nothing else will.
 
 A **checksum** is a 64-character fingerprint of a file's bytes: change
 one byte and the fingerprint is completely different. `SHA256SUMS.txt`
@@ -428,8 +480,19 @@ moment to find a typo. Two things catch mistakes earlier:
   ```
 
 `concurrency` keeps one run per branch: when a pull request gets a new
-push, the older run is cancelled, since the newer one contains it. Tags
-are never cancelled.
+push, the older run is cancelled, since the newer one contains it.
+Releases are never cancelled, neither for a tag pushed nor for a run by
+hand with a tag:
+
+```yaml
+concurrency:
+  group: release-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' && !inputs.tag }}
+```
+
+The tag is part of the group's name, so a push to main while a release
+is being built from main starts a run of its own instead of waiting
+behind it. `!inputs.tag` is true when the field is empty.
 
 ## Other ways in: the AUR and Flathub
 
