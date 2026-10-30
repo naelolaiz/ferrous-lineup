@@ -11,7 +11,7 @@ pattern. None of it is code. It is *knowledge*, and the best way to put
 knowledge into a program is to write it down as data, in a form a
 person can read and check, and to keep the code that uses it small.
 
-The library does that: 177 harmony styles, 112 rhythms and 6 fills,
+The library does that: 217 harmony styles, 141 rhythms and 6 fills,
 each a few lines in a table, plus the twelve-tone and micromode styles
 of the theory chapters and the songs of [How a demo is
 written](../songs/demos.md). This chapter goes through the notations,

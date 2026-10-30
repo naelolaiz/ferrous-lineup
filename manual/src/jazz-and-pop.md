@@ -24,6 +24,11 @@ third strain, the **trio**, in the key of IV.
   the opening of Wagner's *Tristan und Isolde*, marked "with great
   emotion", and the cakewalk's chords answer it each time.
 
+To play your own chords this way, pick **Ragtime** in the Library's Jazz
+group: the pianist's left hand alone, a bass note on each beat and the
+chord after it. **Ragtime band** adds drums, a banjo and a tuba, and
+**Stride piano** is the faster Harlem piano that grew out of ragtime.
+
 ## New Orleans and the twenties
 
 - *When the Saints Go Marching In*: the brass band classic, the tuba on
@@ -64,7 +69,11 @@ bars. Then hear how the songwriters played with it:
 
 The big-band demos have a horn section behind the saxophone's tune, a
 brass section punching the chords in the Charleston rhythm (see [A
-bigger band and the horns](bigger-band.md#the-horn-section)).
+bigger band and the horns](bigger-band.md#the-horn-section)). For your
+own chords, the Library's **Big band** style brings the whole band: a
+walking bass, the guitar four to the bar, and the horns riffing together
+over a jazz blues. **Big band ballad** holds the chords on the
+saxophones.
 
 ## The blues
 

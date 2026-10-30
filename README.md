@@ -57,8 +57,8 @@ are in [`book/`](book/), next to the code they describe.
 - **Writing by hand**: a playlist of tracks, a channel rack with a step
   sequencer, a piano roll, a style editor and a mixer.
 - **Songs**: over 340 demos, from folk songs and hymns to tangos, jazz
-  standards and whole orchestral pieces, plus a library of 177 styles
-  and 112 rhythms.
+  standards and whole orchestral pieces, plus a library of 217 styles
+  and 141 rhythms.
 - **In and out**: MIDI keyboards and synths, MIDI files, recordings
   (tempo, key and chords heard from an MP3 or WAV), chord charts as
   text, lead sheets as PDF, and WAV, MIDI and MP4 video export.
@@ -118,7 +118,7 @@ On macOS the program is inside the app bundle:
 | | |
 |---|---|
 | ![The piano roll on the chords of the demo song, with the chord names above the grid and the chords that often come next lit up](screenshots/piano-roll.png) | ![The Library tab: Bossa nova has just been tried, and its tooltip shows its chords in C major](screenshots/library.png) |
-| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 171 harmony styles and 107 rhythms to try in your key. |
+| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 217 harmony styles and 141 rhythms to try in your key. |
 | ![A recording imported with File > Import recording: the chords heard on every beat in the piano roll](screenshots/import-recording.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
 | An imported recording, with the chords heard on every beat. | Right-click a track's name to insert, move or delete tracks. |
 | ![The twelve-tone window beside the piano roll: the matrix of a row with all its forms, and the piano roll numbering the notes of the row](screenshots/twelve-tone-row.png) | ![The pitch-class set browser showing the octatonic scale, 8-28, beside the piano roll](screenshots/pitch-class-sets.png) |
