@@ -1,6 +1,6 @@
 # Maintainer: naelolaiz <naelolaiz@users.noreply.github.com>
 pkgname=ferrous-lineup
-pkgver=0.4.0
+pkgver=0.4.1
 pkgrel=1
 pkgdesc="Play songs with a backing band and learn harmony"
 arch=('x86_64' 'aarch64')
