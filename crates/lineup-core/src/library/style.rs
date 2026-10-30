@@ -4,7 +4,7 @@
 //! it works in any key), a way of playing the chords ([`Comping`]) and a
 //! bass line ([`Bass`]). Playing "I V vi IV" as held piano chords makes a
 //! ballad; playing it as offbeat stabs over a bass on the offbeats makes
-//! house music. The tables below are the library: 177 styles,
+//! house music. The tables below are the library: 217 styles,
 //! each with a sentence on what makes it sound the way it does.
 
 use crate::harmony::{Chord, Scale, ScaleKind};
@@ -150,6 +150,8 @@ const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
+/// Flamenco's twelve beats, counted from 12: 12 1 2, 3 4 5, 6 7, 8 9, 10 11.
+const COMPAS: TimeSignature = TimeSignature::of_groups(&[3, 3, 2, 2, 2], 8);
 
 use Genre::*;
 use ScaleKind::{Dorian, HarmonicMinor, Lydian, Major, Mixolydian, NaturalMinor, Phrygian};
@@ -335,6 +337,43 @@ pub static STYLES: &[Style] = &[
         112.0,
         "Dance pop",
         "Japan's 1980s city pop: major sevenths and borrowed dominants. III7 leads to vi7, and v7 I7 leads back to IVmaj7.",
+    ),
+    style(
+        "Highlife",
+        Pop,
+        Major,
+        "I | IV | I | V7",
+        Comping::ArpUp,
+        Bass::Tresillo,
+        116.0,
+        "Highlife",
+        "Ghana's highlife, from the dance bands and guitar bands of the 1950s: picked guitar \
+         lines ringing over I, IV and V7, the bell's time line, and a bass in 3 + 3 + 2.",
+    ),
+    style(
+        "Soukous",
+        Pop,
+        Major,
+        "I | IV | V | IV",
+        Comping::Arp16,
+        Bass::Octaves,
+        132.0,
+        "Soukous",
+        "Congolese soukous, the rumba of Kinshasa sped up: in the sebene, its dance section, \
+         the lead guitar picks bright sixteenth notes over I, IV and V while the snare gallops.",
+    ),
+    style(
+        "Kizomba",
+        Pop,
+        NaturalMinor,
+        "i | bVI | bIII | bVII",
+        Comping::Held,
+        Bass::Tresillo,
+        92.0,
+        "Kizomba",
+        "Angola's slow, close dance, grown in the 1980s out of semba and the zouk of the \
+         French Antilles: soft synth pads hold a minor-key loop, i, flat VI, flat III and flat \
+         VII, while the synth bass rolls in 3 + 3 + 2.",
     ),
     // ----- Rock -----
     style(
@@ -527,6 +566,19 @@ pub static STYLES: &[Style] = &[
         160.0,
         "Swing",
         "The blues as a 1940s swing band played it: sixth chords, and a turnaround through VI7, ii7 and V7.",
+    ),
+    style(
+        "Boogie-woogie",
+        Blues,
+        Mixolydian,
+        "I7 | IV7 | I7 | I7 | IV7 | IV7 | I7 | I7 | V7 | IV7 | I7 | V7",
+        Comping::Shuffle,
+        Bass::Boogie,
+        132.0,
+        "Boogie-woogie",
+        "The piano blues of 1930s Chicago and Kansas City: the left hand rolls up and down \
+         each chord eight to the bar while the right plays the chord in long-short pairs. The \
+         twelve bars take the quick change, IV7 in bar 2.",
     ),
     // ----- Jazz -----
     style(
@@ -724,6 +776,77 @@ pub static STYLES: &[Style] = &[
          a blues does, then bVI and the V with the leading note bring it home.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    style(
+        "Ragtime",
+        Jazz,
+        Major,
+        "I | V7 | V7 | I | I7 | IV iv | I VI7 | II7 V7",
+        Comping::Afterbeat,
+        Bass::Alternating,
+        96.0,
+        "",
+        "Scott Joplin's piano music, straight and not fast: the left hand plays a bass note on \
+         every beat, the root and the fifth below by turns, and the chord between them. I7 \
+         turns towards IV, the minor iv is borrowed from the minor key, and the strain comes \
+         home round the circle of dominants, VI7, II7, V7. Ragtime is written in 2/4; each bar \
+         here lasts two.",
+    ),
+    style(
+        "Ragtime band",
+        Jazz,
+        Major,
+        "I | III7 | VI7 | VI7 | II7 | V7 | I | V7",
+        Comping::Afterbeat,
+        Bass::Alternating,
+        104.0,
+        "Cakewalk",
+        "The ragtime progression, a chain of dominant sevenths round the circle of fifths, \
+         E7, A7, D7, G7 and home to C, each the V7 of the next. A ragtime band plays it: the \
+         tuba on the beats, the piano's chords between them, and a banjo strumming across \
+         them. Ragtime is written in 2/4; each bar here lasts two.",
+    ),
+    style(
+        "Stride piano",
+        Jazz,
+        Major,
+        "I | I7 | IV | #iv°7 | I | VI7 | II7 | V7",
+        Comping::Stride,
+        Bass::RootFifth,
+        176.0,
+        "Stride",
+        "Harlem stride, the piano of James P. Johnson and Fats Waller: fast and swung, the left \
+         hand leaping from a bass note on 1 and 3 to a chord on 2 and 4. I7 leads to IV, the \
+         diminished seventh on the raised fourth (F sharp diminished in C) climbs back to I, \
+         and the dominants circle home.",
+    ),
+    style(
+        "Big band",
+        Jazz,
+        Major,
+        "I7 | IV7 | I7 | I7 | IV7 | #iv°7 | I7 | VI7 | ii7 | V7 | I7 VI7 | ii7 V7",
+        Comping::Charleston,
+        Bass::Walking,
+        160.0,
+        "Big band swing",
+        "A swing orchestra of the 1930s and 1940s, such as Count Basie's: a walking bass, the \
+         guitar strumming four to the bar, a sparse piano, and the horns (trumpets, saxophones \
+         and trombones) riffing together over a jazz blues. The diminished seventh on the \
+         raised fourth (F sharp diminished in C) leads from IV back to I, and VI7, ii7 and V7 \
+         turn the form around.",
+    ),
+    style(
+        "Big band ballad",
+        Jazz,
+        Major,
+        "Imaj7 | #i°7 | ii7 | V7 | iii7 | biii°7 | ii7 | V7",
+        Comping::Ballad,
+        Bass::RootFifth,
+        66.0,
+        "Big band ballad",
+        "A slow number for a big band: the saxophones hold the chords under the melody, and \
+         two diminished sevenths fill in the bass's steps by semitones, C sharp between C and \
+         D on the way up, E flat between E and D on the way down.",
+    ),
     // ----- Soul, funk and R&B -----
     style(
         "Neo-soul",
@@ -845,6 +968,18 @@ pub static STYLES: &[Style] = &[
         92.0,
         "R&B",
         "Church piano, three chords and a lot of feeling: Memphis in the 1960s.",
+    ),
+    style(
+        "Afrobeat",
+        Soul,
+        Dorian,
+        "i7 | i7 | i7 | IV7",
+        Comping::Funk,
+        Bass::Funk,
+        108.0,
+        "Afrobeat",
+        "Fela Kuti's Afrobeat, from 1970s Lagos: a long Dorian vamp on i7 and IV7, guitars \
+         locked in short repeating riffs, a funky bass, horns, and Tony Allen's drums.",
     ),
     // ----- Hip hop and lo-fi -----
     style(
@@ -1301,6 +1436,72 @@ pub static STYLES: &[Style] = &[
          and violins singing over them.",
     )
     .in_time(THREE_FOUR),
+    style(
+        "Mambo",
+        Latin,
+        Major,
+        "I | IV | V7 | IV",
+        Comping::Montuno,
+        Bass::Tumbao,
+        104.0,
+        "Mambo",
+        "The big-band mambo of Pérez Prado and Tito Puente, grown from the son's last and \
+         wildest section: the piano repeats its montuno and the bass its tumbao over the \
+         son's vamp, I, IV, V7, IV, while the horns riff.",
+    ),
+    style(
+        "Guaguancó",
+        Latin,
+        Major,
+        "I | V7 | V7 | I",
+        Comping::Held,
+        Bass::Held,
+        100.0,
+        "Guaguancó",
+        "The Cuban street rumba, for voices and drums: the rumba clave and three conga drums \
+         talking to each other, the lowest keeping time and the highest, the quinto, \
+         improvising. Its chorus, the coro, sings over I and V7, held here.",
+    ),
+    style(
+        "Afro-Cuban 6/8",
+        Latin,
+        Dorian,
+        "i7 ii7 | i7 ii7 | bVIImaj7 | i7",
+        Comping::Arp3,
+        Bass::LongShort,
+        150.0,
+        "Afro-Cuban 6/8",
+        "The 6/8 of Cuba's drums of African origin, which Afro-Cuban jazz took up: the bell's \
+         seven strokes over twelve eighths and four slow beats, under a Dorian minor rocking \
+         between i7 and ii7 before the major chord a tone below the tonic.",
+    )
+    .in_time(TWELVE_EIGHT),
+    style(
+        "Baião",
+        Latin,
+        Major,
+        "I | IV | I | V7 | I | IV | V7 | I",
+        Comping::Dembow,
+        Bass::Baiao,
+        104.0,
+        "Baião",
+        "The baião of Brazil's northeast, Luiz Gonzaga's dance: the accordion and the bass in \
+         3 + 3 + 2 sixteenths, the zabumba drum's long-short on the beat, and a triangle. The \
+         baião is in 2/4; each bar here lasts two.",
+    ),
+    style(
+        "Vallenato",
+        Latin,
+        Major,
+        "I | V7 | V7 | I | I | IV | V7 | I",
+        Comping::Afterbeat,
+        Bass::Alternating,
+        100.0,
+        "Vallenato",
+        "Colombia's vallenato, from the Caribbean coast, in its paseo rhythm: the accordion \
+         over the caja and the guacharaca, three chords, the bass on the beats. The paseo is \
+         in 2/4; each bar here lasts two.",
+    ),
     // ----- Tango -----
     style(
         "Tango",
@@ -1666,6 +1867,72 @@ pub static STYLES: &[Style] = &[
          swing between 6/8 and 3/4.",
     )
     .in_time(SIX_EIGHT),
+    style(
+        "Peruvian waltz",
+        Folklore,
+        HarmonicMinor,
+        "i | V7 | V7 | i | I7 | iv | V7 | i",
+        Comping::Waltz,
+        Bass::Waltz,
+        156.0,
+        "Peruvian waltz",
+        "The vals criollo of Lima, quick and syncopated, for two guitars and a cajón. In a \
+         minor key the tonic turns into a dominant seventh (A7 in A minor) to lead to iv, as \
+         Latin American waltzes love to do.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Festejo",
+        Folklore,
+        Major,
+        "I | V7 | I | V7 | IV | I | V7 | I",
+        Comping::Waltz,
+        Bass::Waltz,
+        165.0,
+        "Festejo",
+        "The Afro-Peruvian festejo, a fast dance of the coast: the cajón plays 6/8 while the \
+         guitar's chords fall in 3/4, three against two, over I, IV and V7.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Bailecito",
+        Folklore,
+        Major,
+        "I | IV | I | V7 | I | IV | V7 | I",
+        Comping::Waltz,
+        Bass::Waltz,
+        120.0,
+        "Bailecito",
+        "The bailecito of the Argentine northwest and Bolivia, a lively handkerchief dance in \
+         6/8 that also sways in 3/4, its tune often sung in parallel thirds, over I, IV and V7.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Rasguido doble",
+        Folklore,
+        Major,
+        "I | V7 | V7 | I | IV | I | V7 | I",
+        Comping::Habanera,
+        Bass::Habanera,
+        100.0,
+        "Rasguido doble",
+        "The rasguido doble of Corrientes and Chaco, made popular by \"El rancho 'e la \
+         Cambicha\": accordion and guitar in a lively two, the guitar strumming the \
+         habanera's long, short, long, long that it shares with the milonga. Each bar here \
+         lasts two bars of 2/4.",
+    ),
+    style(
+        "Murga",
+        Folklore,
+        Major,
+        "I | V7 | V7 | I | IV | I | V7 | I",
+        Comping::Held,
+        Bass::Held,
+        116.0,
+        "Murga",
+        "The murga of Montevideo's carnival: a choir singing in parts, often in satire, over \
+         the marcha camión of bombo, platillo and redoblante.",
+    ),
     // ----- Flamenco -----
     style(
         "Andalusian cadence",
@@ -1723,6 +1990,61 @@ pub static STYLES: &[Style] = &[
         "Rumba flamenca",
         "The harmonic minor's E7 makes A minor sound Spanish: its G sharp and F sit a step and a half apart.",
     ),
+    style(
+        "Pasodoble",
+        Flamenco,
+        HarmonicMinor,
+        "i | bVII | bVI | V7 | i | iv | V7 | i",
+        Comping::Afterbeat,
+        Bass::Alternating,
+        120.0,
+        "Pasodoble",
+        "The pasodoble of bullfights and Spanish village bands: a march in 2/4, the tuba on \
+         the beats and the band's chords between them, in a minor key that walks down the \
+         Andalusian cadence, Am G F E7.",
+    )
+    .in_time(TWO_FOUR),
+    style(
+        "Bulerías",
+        Flamenco,
+        Phrygian,
+        "I | bII | bIII bII | I",
+        Comping::Accents,
+        Bass::Accents,
+        116.0,
+        "Twelve-beat compás",
+        "Bulerías, the fastest and most playful of the twelve-beat forms: the guitar strikes \
+         the compás's accents, 12, 3, 6, 8 and 10, and its chords step down to the Phrygian \
+         tonic, G, F, E.",
+    )
+    .in_time(COMPAS),
+    style(
+        "Soleá",
+        Flamenco,
+        Phrygian,
+        "iv | bIII | bII | I",
+        Comping::Accents,
+        Bass::Accents,
+        66.0,
+        "Twelve-beat compás",
+        "Soleá, the mother of flamenco's songs: slow and solemn, in the twelve-beat compás, \
+         a compás for each chord of the Andalusian cadence down to the Phrygian tonic, A minor, \
+         G, F, E.",
+    )
+    .in_time(COMPAS),
+    style(
+        "Alegrías",
+        Flamenco,
+        Major,
+        "I | V7 | V7 | I",
+        Comping::Accents,
+        Bass::Accents,
+        90.0,
+        "Twelve-beat compás",
+        "The alegrías of Cádiz, the bright one among the twelve-beat forms: a major key, I and \
+         V7 a compás each, at a lively pace.",
+    )
+    .in_time(COMPAS),
     // ----- Balkan and Turkish -----
     // One chord to the bar: the bass on each beat, short or long, and
     // the chord on the eighths between (see `Comping::Aksak`).
@@ -1909,6 +2231,20 @@ pub static STYLES: &[Style] = &[
          F sharp, G, the Dorian mode, over A minor, E minor 7 and D7.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2, 2, 3], 8)),
+    style(
+        "Freylekhs",
+        Balkan,
+        Phrygian,
+        "I | iv | I | bvii | I | iv | bII | I",
+        Comping::Tresillo,
+        Bass::Tresillo,
+        136.0,
+        "Freylekhs",
+        "The freylekhs, the joyful circle dance of klezmer weddings, in freygish, the mode \
+         of the Ahava Rabbah prayer: Phrygian with a major third, so the tonic chord is major \
+         and the chord a semitone above it (F over E) leads home. The band leans on the \
+         bulgar's 3 + 3 + 2.",
+    ),
     // ----- Reggae and ska -----
     style(
         "Reggae",
@@ -1975,6 +2311,30 @@ pub static STYLES: &[Style] = &[
         74.0,
         "One drop",
         "Romantic reggae from 1970s London: soft major seventh chords on the offbeats.",
+    ),
+    style(
+        "Calypso",
+        Reggae,
+        Major,
+        "I | IV | V7 | I",
+        Comping::Strum,
+        Bass::Tresillo,
+        108.0,
+        "Calypso",
+        "Trinidad's calypso, the song of Lord Kitchener and the Mighty Sparrow: three bright \
+         chords, a strummed guitar, and a bass in 3 + 3 + 2 bouncing between root and fifth.",
+    ),
+    style(
+        "Soca",
+        Reggae,
+        Major,
+        "I | IV | I | V",
+        Comping::Stabs,
+        Bass::Octaves,
+        128.0,
+        "Soca",
+        "Soca, the \"soul of calypso\" from 1970s Trinidad: calypso with the drive of soul and \
+         disco, a kick on every beat, octaves in the bass and stabbed chords, for carnival.",
     ),
     // ----- Country and folk -----
     style(
@@ -2082,6 +2442,83 @@ pub static STYLES: &[Style] = &[
         "A whirling southern Italian dance in fast 6/8, with a tambourine.",
     )
     .in_time(SIX_EIGHT),
+    style(
+        "Musette waltz",
+        Folk,
+        Major,
+        "I | #i°7 | ii | V7 | I | VI7 | ii | V7",
+        Comping::Waltz,
+        Bass::Waltz,
+        184.0,
+        "Musette",
+        "The valse musette of the Paris dance halls, on the accordion: a fast waltz felt in \
+         one, its chords linked by a chromatic passing chord, C, C sharp diminished, D minor.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Fado",
+        Folk,
+        HarmonicMinor,
+        "i | V7 | V7 | i | iv | i | V7 | i",
+        Comping::Afterbeat,
+        Bass::Alternating,
+        76.0,
+        "",
+        "Lisbon's fado, the song of saudade, in the fado menor: a minor key with only i, iv and \
+         V7. The classical guitar (the viola) plays the bass on each beat and the chord between, \
+         and the Portuguese guitar answers the singer. Each bar here lasts two bars of 2/4.",
+    ),
+    style(
+        "Western swing",
+        Folk,
+        Major,
+        "I6 | I6 | VI7 | VI7 | II7 | II7 | V7 | V7",
+        Comping::Stride,
+        Bass::RootFifth,
+        176.0,
+        "Western swing",
+        "The Texas dance-hall swing of Bob Wills and his Texas Playboys: a two-beat bass, a \
+         swing guitar, and sixth chords that come home through the dominants, VI7, II7, V7.",
+    ),
+    style(
+        "Honky-tonk",
+        Folk,
+        Major,
+        "I | I7 | IV | I | I | V7 | V7 | I",
+        Comping::Shuffle,
+        Bass::RootFifth,
+        116.0,
+        "Honky-tonk shuffle",
+        "The shuffle of 1950s honky-tonk bars, Hank Williams's country: a shuffling piano, the \
+         bass on 1 and 3, and three chords, I7 turning towards IV.",
+    ),
+    style(
+        "Travis picking",
+        Folk,
+        Major,
+        "I | I | V7 | V7 | V7 | V7 | I | I | III7 | III7 | IV | IV | I | V7 | I | I",
+        Comping::Travis,
+        Bass::Alternating,
+        100.0,
+        "",
+        "Fingerpicking as Merle Travis played it: the thumb keeps an alternating bass, root \
+         and fifth by turns on every beat (here on the bass), while the fingers pick chord \
+         notes between them. III7, E7 in C, a dominant that does not go to its own tonic, \
+         moves to IV instead.",
+    ),
+    style(
+        "Cajun two-step",
+        Folk,
+        Major,
+        "I | IV | I | V7 | I | IV | V7 | I",
+        Comping::Afterbeat,
+        Bass::Alternating,
+        120.0,
+        "Cajun two-step",
+        "The Cajun two-step of Louisiana: an accordion and a fiddle over the triangle, the bass \
+         on the beats and the chords between, I, IV and V7 as the accordion's buttons give \
+         them. The dance is in 2/4; each bar here lasts two.",
+    ),
     style(
         "Circle of fifths",
         Classical,
@@ -2216,6 +2653,100 @@ pub static STYLES: &[Style] = &[
         70.0,
         "",
         "The minor iv borrowed from the minor key, like a sigh: film music's favourite way to say \"long ago\".",
+    ),
+    style(
+        "March",
+        Classical,
+        Major,
+        "I | V7 | I | IV | I | II7 | V7 | I",
+        Comping::Stride,
+        Bass::RootFifth,
+        116.0,
+        "March",
+        "A military march in cut time, two strong beats to the bar: the tuba on 1 and 3, the \
+         horns' afterbeats on 2 and 4. II7, the dominant of the dominant, pushes the cadence.",
+    ),
+    style(
+        "Six-eight march",
+        Classical,
+        Major,
+        "I | V7 | V7 | I | IV | I | II7 V7 | I",
+        Comping::Afterbeat,
+        Bass::Alternating,
+        180.0,
+        "Six-eight march",
+        "A march in 6/8, the meter of Sousa's Washington Post and of the two-step it was \
+         danced to: two beats to the bar, the tuba on each and the horns' afterbeat on the \
+         last eighth of each, in a long-short lilt.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Minuet",
+        Classical,
+        Major,
+        "I | IV | I | V | I | IV | V7 | I",
+        Comping::Minuet,
+        Bass::Held,
+        108.0,
+        "",
+        "The court dance of the 1700s, stately in 3/4, a chord on every beat. Its phrases come \
+         in fours: the first ends on V, a half cadence like a question, and the second answers \
+         with V7 to I.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Mazurka",
+        Classical,
+        HarmonicMinor,
+        "i | iv | V7 | i | VI | iv | V7 | i",
+        Comping::Mazurka,
+        Bass::Waltz,
+        132.0,
+        "",
+        "The Polish dance Chopin wrote dozens of: in 3/4, the bass on beat 1 but the weight on \
+         beat 3, where the chord is held. A minor key turns to VI, its brightest chord, before \
+         iv and V7 bring it home.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Polonaise",
+        Classical,
+        Major,
+        "I | IV | I | V7 | I | vi | V7 | I",
+        Comping::Polonaise,
+        Bass::Held,
+        96.0,
+        "",
+        "The proud Polish processional dance in 3/4, as in Chopin's Military Polonaise: every \
+         bar keeps the polonaise rhythm, an eighth and two sixteenths, then four eighths.",
+    )
+    .in_time(THREE_FOUR),
+    style(
+        "Siciliano",
+        Classical,
+        HarmonicMinor,
+        "i | iv | V7 | i | VI | bII | V7 | i",
+        Comping::Siciliano,
+        Bass::Held,
+        76.0,
+        "",
+        "A slow, rocking Baroque dance in 6/8, loved by Bach and Handel: each beat long, short, \
+         short. In a minor key, with the Neapolitan chord, the major chord on the flat second \
+         (B flat in A minor), on its way to V7.",
+    )
+    .in_time(SIX_EIGHT),
+    style(
+        "Baroque continuo",
+        Classical,
+        Major,
+        "I | vi | ii | V7 | I | III7 | vi | II7 V7",
+        Comping::Held,
+        Bass::Octaves,
+        80.0,
+        "",
+        "The basso continuo of Baroque music: a harpsichord fills in the chords, in parts that \
+         never move in parallel fifths or octaves, over a cello leaping in octaves in eighth \
+         notes, as in Bach's Air. III7 and II7 are secondary dominants, the V7 of vi and of V.",
     ),
     style(
         "Orchestra",

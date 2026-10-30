@@ -85,7 +85,7 @@ pub(super) const ENTERTAINER: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     band: PIANO,
-    style: "New Orleans",
+    style: "Ragtime",
     parts: &[
         // The introduction is in octaves, without chords: the line alone.
         Part::new(
@@ -276,7 +276,7 @@ pub(super) const GOLLIWOGGS_CAKEWALK: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     band: PIANO,
-    style: "New Orleans",
+    style: "Ragtime",
     parts: &[
         // The run down three octaves, a bar's silence, and the vamp.
         Part::new(
@@ -475,7 +475,7 @@ pub(super) const MAPLE_LEAF_RAG: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     band: PIANO,
-    style: "New Orleans",
+    style: "Ragtime",
     parts: &[
         Part::new(
             "A",
@@ -891,7 +891,7 @@ pub(super) const TWELFTH_STREET_RAG: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     band: PIANO,
-    style: "New Orleans",
+    style: "Ragtime",
     parts: &[
         Part::new(
             "Intro",
@@ -1001,7 +1001,7 @@ pub(super) const DILL_PICKLES: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     band: PIANO,
-    style: "New Orleans",
+    style: "Ragtime",
     parts: &[
         Part::new("Pickup", "-:4 B4:4 C5 C#5", "V7"),
         Part::new(
@@ -1083,7 +1083,7 @@ pub(super) const PINE_APPLE_RAG: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     band: PIANO,
-    style: "New Orleans",
+    style: "Ragtime",
     parts: &[
         // The introduction is in octaves, without chords: the line alone.
         Part::new(
@@ -1206,7 +1206,7 @@ pub(super) const ELITE_SYNCOPATIONS: Song = Song {
     bass: Bass::RootFifth,
     rhythm: "Two-step",
     band: PIANO,
-    style: "New Orleans",
+    style: "Ragtime",
     parts: &[
         // The introduction is in octaves, without chords: the line alone.
         Part::new(

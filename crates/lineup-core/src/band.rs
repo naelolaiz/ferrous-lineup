@@ -138,8 +138,9 @@ pub const DEFAULT_STYLE: &str = "Pop beat";
 const ORCHESTRA: &str = "Orchestra";
 
 /// The styles with no drums: the ways of playing of the library's
-/// classical and ambient styles, which have no rhythm of their own.
-const WITHOUT_DRUMS: [BandStyle; 4] = [
+/// classical and ambient styles, which have no rhythm of their own, and
+/// of the styles for a solo piano or guitar.
+const WITHOUT_DRUMS: [BandStyle; 12] = [
     BandStyle {
         name: "Chorale",
         genre: Genre::Classical,
@@ -183,7 +184,128 @@ const WITHOUT_DRUMS: [BandStyle; 4] = [
         about: "No drums: a slow dance in 3/4 whose chord falls on beat 2 and is held, the \
                 weight of the sarabande and of La folia.",
     },
+    BandStyle {
+        name: "Ragtime",
+        genre: Genre::Jazz,
+        time: TimeSignature::COMMON,
+        tempo: 96.0,
+        comping: Comping::Afterbeat,
+        bass: Bass::Alternating,
+        rhythm: None,
+        about: "No drums: a ragtime pianist alone, the left hand striding from a bass note on \
+                each beat to a chord after it.",
+    },
+    BandStyle {
+        name: "Minuet",
+        genre: Genre::Classical,
+        time: TimeSignature::new(3, 4),
+        tempo: 108.0,
+        comping: Comping::Minuet,
+        bass: Bass::Held,
+        rhythm: None,
+        about: "No drums: a chord on every beat of a stately 3/4, the first the strongest.",
+    },
+    BandStyle {
+        name: "Mazurka",
+        genre: Genre::Classical,
+        time: TimeSignature::new(3, 4),
+        tempo: 132.0,
+        comping: Comping::Mazurka,
+        bass: Bass::Waltz,
+        rhythm: None,
+        about: "No drums: the bass on beat 1 and the weight on beat 3, as in Chopin's mazurkas.",
+    },
+    BandStyle {
+        name: "Polonaise",
+        genre: Genre::Classical,
+        time: TimeSignature::new(3, 4),
+        tempo: 96.0,
+        comping: Comping::Polonaise,
+        bass: Bass::Held,
+        rhythm: None,
+        about: "No drums: every bar in the polonaise rhythm, an eighth and two sixteenths, then \
+                four eighths.",
+    },
+    BandStyle {
+        name: "Siciliano",
+        genre: Genre::Classical,
+        time: TimeSignature::new(6, 8),
+        tempo: 76.0,
+        comping: Comping::Siciliano,
+        bass: Bass::Held,
+        rhythm: None,
+        about: "No drums: a slow 6/8, each beat long, short, short.",
+    },
+    BandStyle {
+        name: "Baroque continuo",
+        genre: Genre::Classical,
+        time: TimeSignature::COMMON,
+        tempo: 80.0,
+        comping: Comping::Held,
+        bass: Bass::Octaves,
+        rhythm: None,
+        about: "No drums: a harpsichord's chords over a cello leaping in octaves in eighth notes.",
+    },
+    BandStyle {
+        name: "Fado",
+        genre: Genre::Folk,
+        time: TimeSignature::COMMON,
+        tempo: 76.0,
+        comping: Comping::Afterbeat,
+        bass: Bass::Alternating,
+        rhythm: None,
+        about: "No drums: the fado's guitars, the bass on each beat and the chord between, with \
+                the Portuguese guitar picking above them.",
+    },
+    BandStyle {
+        name: "Travis picking",
+        genre: Genre::Folk,
+        time: TimeSignature::COMMON,
+        tempo: 100.0,
+        comping: Comping::Travis,
+        bass: Bass::Alternating,
+        rhythm: None,
+        about: "No drums: a fingerpicking guitar, the fingers between the thumb's alternating \
+                bass notes, which the bass doubles.",
+    },
 ];
+
+/// The band styles whose bass is the piano's own left hand, for the
+/// piano styles: ragtime, stride and boogie-woogie.
+const LEFT_HAND: [&str; 3] = ["Ragtime", "Stride", "Boogie-woogie"];
+
+/// The band styles whose bass is a tuba: a ragtime band, the marches and
+/// the pasodoble.
+const TUBA: [&str; 4] = ["Cakewalk", "March", "Six-eight march", "Pasodoble"];
+
+/// The band styles whose chords are an accordion's.
+const ACCORDION: [&str; 5] = [
+    "Musette",
+    "Cajun two-step",
+    "Vallenato",
+    "Baião",
+    "Rasguido doble",
+];
+
+/// The band styles whose chords are a guitar's.
+const GUITAR: [(&str, u8); 5] = [
+    ("Fado", general_midi::NYLON_GUITAR),
+    ("Twelve-beat compás", general_midi::NYLON_GUITAR),
+    ("Travis picking", general_midi::STEEL_GUITAR),
+    ("Highlife", general_midi::CLEAN_GUITAR),
+    ("Soukous", general_midi::CLEAN_GUITAR),
+];
+
+/// The band styles whose chords a choir sings: the street rumba's coro
+/// and the murga.
+const CHOIR: [&str; 2] = ["Guaguancó", "Murga"];
+
+/// The band styles whose chords are synth pads over a synth bass.
+const SYNTHS: [&str; 1] = ["Kizomba"];
+
+/// The band styles that bring their horn section with them: a big band
+/// is its horns.
+const HORN_BANDS: [&str; 2] = ["Big band swing", "Big band ballad"];
 
 /// Every band style: one for each rhythm of the library, played the way
 /// the library's styles with that rhythm play (see [`apply::feel`]), and
@@ -267,6 +389,12 @@ impl BandStyle {
         self.rhythm.is_some_and(|rhythm| rhythm.follows_the_meter)
     }
 
+    /// Whether the horn section comes in with the style's instruments:
+    /// it does in a big band, and the Band menu can still send it away.
+    pub fn brings_horns(&self) -> bool {
+        HORN_BANDS.contains(&self.name)
+    }
+
     /// The band style called `name`, if there is one.
     pub fn named(name: &str) -> Option<&'static BandStyle> {
         band_styles().iter().find(|style| style.name == name)
@@ -276,22 +404,42 @@ impl BandStyle {
     /// of its rhythm, or for a style without drums, the one without
     /// drums that comps and plays the bass as it does.
     pub fn of_style(style: &Style) -> Option<&'static BandStyle> {
-        BandStyle::named(style.rhythm).or_else(|| {
-            band_styles().iter().find(|band| {
-                band.rhythm.is_none()
-                    && band.comping == style.comping
-                    && band.bass == style.bass
-                    && band.time == style.time
+        let without_drums = |band: &&BandStyle| band.rhythm.is_none();
+        BandStyle::named(style.rhythm)
+            .or_else(|| {
+                band_styles()
+                    .iter()
+                    .filter(without_drums)
+                    .find(|band| band.name == style.name)
             })
-        })
+            .or_else(|| {
+                band_styles().iter().find(|band| {
+                    band.rhythm.is_none()
+                        && band.comping == style.comping
+                        && band.bass == style.bass
+                        && band.time == style.time
+                })
+            })
     }
 
     /// The General MIDI instrument of the piano: the horns of the
     /// orchestra, an electric piano in the electronic, hip hop and soul
     /// styles, an accordion in the Balkan ones, a grand piano elsewhere.
+    /// Some styles have their own: an accordion, a guitar, a choir, the
+    /// harpsichord of Baroque music, the honky-tonk piano of country bars,
+    /// the synth pads of kizomba.
     pub(crate) fn piano_program(&self) -> u8 {
+        let name = self.name;
+        if let Some(&(_, guitar)) = GUITAR.iter().find(|(style, _)| *style == name) {
+            return guitar;
+        }
         match self.genre {
-            _ if self.name == ORCHESTRA => general_midi::FRENCH_HORN,
+            _ if name == ORCHESTRA => general_midi::FRENCH_HORN,
+            _ if ACCORDION.contains(&name) => general_midi::ACCORDION,
+            _ if CHOIR.contains(&name) => general_midi::CHOIR_AAHS,
+            _ if name == "Baroque continuo" => general_midi::HARPSICHORD,
+            _ if name == "Honky-tonk shuffle" => general_midi::HONKY_TONK_PIANO,
+            _ if SYNTHS.contains(&name) => general_midi::WARM_PAD,
             Genre::Electronic | Genre::HipHop | Genre::Soul => 4,
             Genre::Balkan => 21,
             _ => 0,
@@ -299,12 +447,18 @@ impl BandStyle {
     }
 
     /// The General MIDI instrument of the bass: the orchestra's timpani,
-    /// a double bass in jazz, tango, folklore and the acoustic styles, a
-    /// synth bass in electronic music and hip hop, and a bass guitar
+    /// the pianist's own left hand in the piano styles, a tuba in a
+    /// ragtime band and a march, a cello under Baroque music, a double
+    /// bass in jazz, tango, folklore and the acoustic styles, a synth
+    /// bass in electronic music, hip hop and kizomba, and a bass guitar
     /// elsewhere.
     pub(crate) fn bass_program(&self) -> u8 {
         match self.genre {
             _ if self.name == ORCHESTRA => general_midi::TIMPANI,
+            _ if LEFT_HAND.contains(&self.name) => general_midi::ACOUSTIC_GRAND_PIANO,
+            _ if TUBA.contains(&self.name) => general_midi::TUBA,
+            _ if self.name == "Baroque continuo" => general_midi::CELLO,
+            _ if SYNTHS.contains(&self.name) => general_midi::SYNTH_BASS,
             Genre::Jazz
             | Genre::Tango
             | Genre::Folklore
@@ -412,8 +566,23 @@ impl Band {
             variations: Vec::new(),
             styles: Vec::new(),
             solo: None,
-            horns: false,
+            horns: style.brings_horns(),
         }
+    }
+
+    /// Plays the instruments of `style`. A style that brings its horns
+    /// (see [`BandStyle::brings_horns`]) has them play; the horns the
+    /// instruments before it brought leave with them, and horns switched
+    /// on in the Band menu stay, as do horns on a locked channel.
+    fn take_instruments(&mut self, style: &'static BandStyle, horns_locked: bool) {
+        let brought = self.custom_instruments.is_none() && self.instrument_style.brings_horns();
+        let horns = style.brings_horns() || (self.horns && !brought);
+        if horns != self.horns && !horns_locked {
+            self.horns = horns;
+            self.written[Player::Horns.index()] = None;
+        }
+        self.custom_instruments = None;
+        self.instrument_style = style;
     }
 
     pub fn end(&self) -> usize {
@@ -1236,11 +1405,12 @@ impl Project {
                 band.muted = self.mute_the_songs_own(true);
             }
             self.band = Some(band);
-        } else if let Some(band) = &mut self.band {
+        } else {
+            let horns_locked = self.plays_locked(Player::Horns);
+            let Some(band) = &mut self.band else { return };
             band.custom_rhythm = None;
-            band.custom_instruments = None;
             band.style = style;
-            band.instrument_style = style;
+            band.take_instruments(style, horns_locked);
             band.harmony_style = None;
             band.accents_only = false;
             band.drums = BandDrums::Style;
@@ -1301,6 +1471,7 @@ impl Project {
             }
             self.band = Some(band);
         }
+        let horns_locked = self.plays_locked(Player::Horns);
         let Some(band) = &mut self.band else { return };
         if parts.matching_style {
             // The drums the band played stay.
@@ -1322,8 +1493,7 @@ impl Project {
         }
         band.tidy_drums();
         if parts.instruments {
-            band.custom_instruments = None;
-            band.instrument_style = style;
+            band.take_instruments(style, horns_locked);
         }
         self.drums_come(drums_come);
         let time = self.meter();
@@ -3850,6 +4020,55 @@ mod tests {
         assert_eq!(&starts("Swing")[..4], [0, 6, 16, 22]);
         // A march's afterbeats, on 2 and 4.
         assert_eq!(&starts("March")[..4], [4, 12, 20, 28]);
+        // A big band's two-bar riff: 1 and the "and" of 2, then 2, its
+        // "and" and 4.
+        assert_eq!(&starts("Big band swing")[..5], [0, 6, 20, 22, 28]);
+    }
+
+    #[test]
+    fn a_big_band_brings_its_horns() {
+        let chords = ["C7", "F7", "C7", "G7"];
+        let horns = |project: &Project| {
+            project
+                .player_channel(Player::Horns)
+                .and_then(|channel| project.channels()[channel].program)
+        };
+        // Whether the band arrives in the style or changes to it.
+        let mut arriving = Project::empty();
+        arriving.set_band_style(BandStyle::named("Big band swing"));
+        assert!(arriving.band().unwrap().has_horns());
+        let mut project = band("Big band swing", &chords);
+        assert!(!part(&project, Player::Horns).is_empty());
+        assert_eq!(horns(&project), Some(general_midi::BRASS_SECTION));
+        // Its saxophones in a ballad.
+        project.set_band_style(BandStyle::named("Big band ballad"));
+        assert_eq!(horns(&project), Some(general_midi::ALTO_SAX));
+        // They leave with the big band's instruments.
+        project.set_band_style(BandStyle::named("Swing"));
+        assert!(part(&project, Player::Horns).is_empty());
+        assert_eq!(horns(&project), None);
+        // Horns asked for in the Band menu stay.
+        assert!(project.set_horns(true));
+        project.set_band_style(BandStyle::named("Pop ballad"));
+        assert!(!part(&project, Player::Horns).is_empty());
+        // And the big band's can be sent away.
+        project.set_band_style(BandStyle::named("Big band swing"));
+        assert!(project.set_horns(false));
+        assert!(part(&project, Player::Horns).is_empty());
+        // Its drums alone, without its instruments, bring no horns.
+        let mut project = band("Swing", &chords);
+        let parts = apply::StyleParts {
+            instruments: false,
+            ..apply::StyleParts::default()
+        };
+        project.apply_band_parts(BandStyle::named("Big band swing").unwrap(), None, parts);
+        assert!(!project.band().unwrap().has_horns());
+        project.apply_band_parts(
+            BandStyle::named("Big band swing").unwrap(),
+            None,
+            apply::StyleParts::default(),
+        );
+        assert!(project.band().unwrap().has_horns());
     }
 
     #[test]
