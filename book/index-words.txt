@@ -17,83 +17,82 @@
 # bold with another meaning (the Rust "function" for the music one) is
 # left out of that chapter with "not":
 #
-#     Function: not step-5/diff.md
+#     Function: not program/sync.md
 
-About window: step-9/workflow.md#who-made-it-and-which-version
-Arpeggio: step-6/tools.md#arpeggios-cycle-step_by-and-zip
-Audio thread: step-1/audio-engine.md, step-2/realtime.md, step-4/song-playback.md, step-5/diff.md
-Autosave: step-9/recovery.md
-Channel rack: step-2/README.md, step-2/channel-rack-ui.md, step-9/rack-lights.md
-Chord names: step-3/chords.md, step-9/chord-names.md
+About window: program/egui.md#help-the-manual-and-about
+Arpeggio: theory/tools.md#arpeggios-cycle-step_by-and-zip
+Audio thread: program/threads.md, program/sync.md, sound/sequencer.md
+Autosave: program/saving.md#a-copy-of-unsaved-work
+Channel rack: program/editors.md
+Chord names: theory/chords.md
 Chord recognition: see Hearing chords
-Chord sheet: step-9/chord-sheet.md, step-9/text-chord-sheets.md, step-9/harmony-notations.md, step-9/chord-sheet-layout.md, step-9/insert-delete-bars.md
-Clip: step-4/playlist-ui.md
-Continuous integration: step-1/ci.md, step-4/platforms.md#proving-it-the-ci-matrix
-Demo: step-8/patterns-and-demos.md#demos-arranging-like-a-producer, step-8/more-demos.md, step-8/demo-names.md, step-9/demo-search.md
-Drum kit: step-2/instruments.md#synthesizing-a-drum-kit, step-8/library.md#rhythms-one-line-per-drum, step-9/mixer-score-order.md
-Ear training: step-9/ear-training.md
-Envelope: step-3/voices.md#the-envelope-a-state-machine
+Chord sheet: band/chord-sheet.md, theory/sets.md#one-harmony-four-names
+Clip: program/project.md, program/editors.md#the-playlist
+Continuous integration: shipping/ci.md
+Demo: songs/demos.md, songs/from-midi-and-scores.md
+Drum kit: sound/instruments.md#drums-from-a-few-lines-of-math, band/library.md#rhythms-one-line-per-drum, sound/mixer.md#score-order-the-drums-together
+Ear training: band/practice.md
+Envelope: sound/instruments.md#the-envelope-a-state-machine
 Export: see WAV export, Video export
-Finding the key: step-8/finding-the-key.md
-Harmony keys: step-8/harmony-keys.md, step-8/key-as-a-set.md
-Hearing chords: step-9/chord-hearing.md
-Horn section: step-9/big-band-songs.md, step-9/horn-section.md
-Importing a recording: spike-listen/README.md
-Key change: step-8/changing-key.md, step-8/key-changes.md
-Key marker: step-8/key-changes.md#a-key-marker
-Keyboard shortcuts: step-5/history.md#keyboard-shortcuts, step-6/piano-roll.md#the-keyboard, appendix-shortcuts.md
-Language: step-9/languages.md
-Latin American music: step-8/folklore.md, step-9/latin-american-songs.md, step-9/misa-criolla.md, step-9/midi-songs.md
-Lead sheet: step-9/lead-sheet.md, step-9/transposing-instruments.md
-Library: step-8/library.md, step-8/patterns-and-demos.md#the-library-tab, step-9/library-filters.md
-Lineup Osc: step-2/instruments.md#the-lineup-osc
-Locked track: step-9/locks.md
+Finding the key: theory/hearing.md#finding-the-key
+Harmony keys: theory/numerals.md#the-harmony-keys, theory/sets.md#a-key-as-a-set-the-same-notes-another-name
+Hearing chords: theory/hearing.md
+Horn section: band/band.md#a-horn-section
+Importing a recording: theory/listen.md
+Key change: theory/scales.md#changing-key-moving-the-song, theory/scales.md#key-changes-partway-through-key-markers, theory/hearing.md#where-the-key-changes
+Key marker: theory/scales.md#key-changes-partway-through-key-markers
+Keyboard shortcuts: program/undo.md#keyboard-shortcuts, program/editors.md#the-order-of-the-shortcuts, program/egui.md#every-key-in-a-list
+Language: program/languages.md
+Latin American music: songs/demos.md, songs/from-midi-and-scores.md
+Lead sheet: band/lead-sheet.md
+Library: band/library.md
+Lineup Osc: sound/instruments.md#the-lineup-osc
+Locked track: band/song-form.md#locking-a-track-styles-play-around-it
 Meter: see Time signature
-MIDI file: step-7/messages.md#a-midi-file, step-8/midi-import.md, step-9/midi-songs.md
-MIDI keyboard: step-7/live.md, step-7/recording.md
-MIDI Out: step-7/live.md#midi-out-an-instrument-with-an-outbox, step-8/midi-out-every-channel.md, step-9/midi-out-menus.md
-Mixer: step-9/mixer-score-order.md, step-9/mixer.md, step-9/channel-effects.md
+MIDI file: sound/midi.md#writing-a-midi-file, sound/midi.md#reading-a-midi-file, songs/from-midi-and-scores.md
+MIDI keyboard: sound/midi.md#a-keys-way-in
+MIDI Out: sound/midi.md#midi-out-an-instrument-with-an-outbox, sound/midi.md#sending-channels-over-midi
+Mixer: sound/mixer.md
 Modulation: see Key change
-Note naming: step-9/languages.md
-Odd meter: step-8/any-time-signature.md, step-9/odd-meters.md
-Orchestra: step-9/concert-hall.md, step-9/orchestra.md
-Pattern: step-2/project.md, step-4/patterns.md
-Piano roll: step-3/piano-roll-ui.md, step-6/piano-roll.md
-Pitch class: step-3/theory.md
-Pitch-class set: step-8/key-as-a-set.md, step-9/harmony-notations.md
-Playback trace: step-9/playback-trace.md
-Playlist: step-4/patterns.md, step-4/playlist-ui.md
-Practice: step-9/practice.md, step-9/speed-trainer.md
-Project file: step-4/saving.md, appendix-project-format.md
-Recording MIDI keys: step-7/recording.md
-Release builds: step-9/releases.md
-Roman numeral: step-9/minor-numerals.md
-Sampler: step-2/instruments.md#the-sampler
-Scale: step-3/theory.md#scales, step-8/changing-key.md#snap-to-scale
-Section style: step-9/section-styles.md
-Snap to scale: step-8/changing-key.md#snap-to-scale
-Soloist: step-9/soloist.md
-Song form: step-9/song-form.md
-Song structure: step-8/song-structure.md
-SoundFont: step-9/soundfont.md
-Speed trainer: step-9/speed-trainer.md
-Style editor: step-9/style-editor.md
-Style: step-8/library.md#styles, step-9/band.md#changing-the-style, step-9/bigger-band.md, step-9/section-styles.md, step-9/style-tempo.md
-Tango: step-9/midi-songs.md
-Tempo: step-1/lineup-core.md#tempo-keeping-a-value-valid, step-8/tempo-and-feel.md, step-9/style-tempo.md
-Time signature: step-8/time-signatures.md, step-8/time-markers.md, step-8/any-time-signature.md, step-8/re-metering.md
-Track: step-8/look-and-transport.md#inserting-moving-and-deleting-tracks, step-8/only-the-tracks-you-use.md
+Note naming: program/languages.md
+Odd meter: sound/tempo.md#beats-of-different-lengths, band/orchestra.md
+Orchestra: band/orchestra.md
+Pattern: program/project.md
+Piano roll: program/editors.md
+Pitch class: theory/pitch.md
+Pitch-class set: theory/sets.md
+Playback trace: sound/trace.md
+Playlist: program/project.md, program/editors.md#the-playlist
+Practice: band/practice.md
+Project file: program/saving.md, reference/project-format.md
+Recording MIDI keys: sound/midi.md#recording-from-a-key-to-a-note
+Release packages: shipping/releases.md
+Roman numeral: theory/numerals.md
+Sampler: sound/instruments.md#the-sampler
+Scale: theory/scales.md
+Section style: band/song-form.md#a-style-for-each-section
+Snap to scale: theory/scales.md#snap-to-scale
+Soloist: band/soloist.md
+Song form: band/song-form.md
+Song structure: program/project.md#sections-repeats-and-loops
+SoundFont: sound/soundfonts.md
+Speed trainer: band/practice.md
+Style editor: band/style-editor.md
+Style: band/library.md#styles-a-table-in-a-static, band/band.md, band/song-form.md#a-style-for-each-section
+Tango: songs/demos.md, songs/from-midi-and-scores.md
+Tempo: sound/tempo.md
+Time signature: sound/tempo.md
+Track: program/editors.md#the-playlist
 Translation: see Language
-Transport: step-8/look-and-transport.md#the-transport-where-does-play-start
-Twelve-tone row: step-9/twelve-tone-rules.md
-Undo: step-5/history.md
-Variations: step-9/variations.md
-Velocity: step-6/piano-roll.md#the-velocity-lane, step-8/tempo-and-feel.md#velocities-the-shape-of-a-phrase
-Version: step-9/releases.md, step-9/workflow.md#who-made-it-and-which-version
-Video export: step-9/video-export.md
-Voice leading: step-9/voice-leading.md
-WAV export: step-5/export.md
-Zoom: step-8/fitting-the-window.md#zoom, step-8/zoom-follows-the-pointer.md
+Transport: sound/sequencer.md#seeking-and-switching-mode, sound/tempo.md#keeping-your-place
+Twelve-tone row: theory/twelve-tone.md
+Undo: program/undo.md
+Variations: band/song-form.md#variations-a-and-b-the-band-digs-in
+Velocity: program/editors.md#the-velocity-lane, songs/demos.md#playing-like-a-person
+Version: shipping/releases.md, program/egui.md#help-the-manual-and-about
+Video export: sound/export.md
+Voice leading: theory/voice-leading.md
+WAV export: sound/export.md
+Zoom: program/egui.md#zoom
 
-Array: not step-9/releases.md
-Function: not step-5/diff.md
+Function: not program/sync.md
