@@ -60,10 +60,11 @@ que hacen el piano y el bajo con cada acorde. Para probar otro:
 1. Haz clic en la caja **Buscar** de arriba de la Biblioteca y escribe
    `bossa`.
 2. Haz clic en **Bossa nova**. Una ventanita pregunta qué tomar de él:
-   sus **patrones de ejecución**, sus **instrumentos**, su **compás**,
-   su **swing** y, en un estilo marcado **+ acordes**, su progresión de
-   acordes. Lo que viene marcado conserva tus acordes y tu tempo, así
-   que pulsa **Aplicar**.
+   su **batería** y **sus partes de acordes y bajo**, sus
+   **instrumentos**, su **compás**, su **tempo**, su **swing** y su
+   progresión de acordes. Lo que viene marcado conserva tus acordes, así
+   que pulsa **Aplicar**. El tempo pasa a ser el de la bossa nova, 130
+   pulsos por minuto.
 3. Pulsa **Espacio**. Los mismos cuatro acordes, ahora como una bossa
    nova.
 

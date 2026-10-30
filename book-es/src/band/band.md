@@ -158,10 +158,11 @@ A partir de ahí, tres lugares dan forma a la banda:
 
 - **La Biblioteca.** Un clic en un estilo o un ritmo lo convierte en la
   manera de tocar de la banda, con las partes marcadas en su ventana:
-  los patrones de ejecución, las voces, la progresión de acordes, el
-  compás, el tempo y el swing (ver [Qué partes
-  tomar](library.md#qué-partes-tomar)). Una canción con música
-  propia pero sin banda recibe una cuando se toman las voces.
+  la batería, las partes de acordes y bajo, las voces, la progresión de
+  acordes, el compás, el tempo y el swing (ver [Qué partes
+  tomar](library.md#qué-partes-tomar)). Una canción con música propia
+  pero sin banda recibe una cuando se toman las partes de acordes y bajo
+  con las voces.
 - **El menú 🎷 Banda de la hoja** elige quién toca y con qué sonido:
   una **Formación de instrumentos** («Piano, guitarra acústica +
   cuerdas», «Cornos, timbales + cuerdas» y seis más), una casilla y un
@@ -188,19 +189,44 @@ pub struct Band {
     pub instrument_style: &'static BandStyle,
     /// The exact library style supplying the comping, when one was picked.
     pub harmony_style: Option<&'static Style>,
+    /// The chords and the bass played as plain accents on the beats: how
+    /// songs saved so play. The Library no longer chooses it.
     pub accents_only: bool,
+    /// Whose drums play, when not those of `style` or `custom_rhythm`.
+    pub drums: BandDrums,
     // ...
+}
+
+pub enum BandDrums {
+    /// Those of the style the band plays the chords and the bass in, or
+    /// of the saved style it plays them from.
+    Style,
+    /// Those of another style.
+    Of(&'static BandStyle),
+    /// Those of a saved style.
+    Saved(Box<crate::library::UserStyle>),
+    /// None: the song's own drums play.
+    Song,
 }
 ```
 
-`style` toca la batería y dice cómo tocan los demás;
-`instrument_style` dice quién toca y con qué; `harmony_style` es el
-estilo de la biblioteca elegido, cuando su comping difiere del de su
-ritmo; y `accents_only` es la opción **Acentos simples**, que toca los
-acordes y el bajo en los pulsos en que se siente el compás, sea cual
-sea el estilo. Los dos campos `custom_` guardan estilos tuyos (ver
-[Tus propios estilos](style-editor.md)). Cada músico le
-pregunta a la banda, no al estilo, cómo tocar:
+`style` dice cómo se tocan los acordes y el bajo; `drums` dice de quién
+es la batería que toca con ellos; `instrument_style` dice quién toca y
+con qué; y `harmony_style` es el estilo de la biblioteca elegido, cuando
+su comping difiere del de su ritmo. Los dos campos `custom_` guardan
+estilos tuyos (ver [Tus propios estilos](style-editor.md)).
+`accents_only` toca los acordes y el bajo en los pulsos en que se
+siente el compás, sea cual sea el estilo; solo las canciones guardadas
+así siguen tocando de ese modo.
+
+Tomar las partes de acordes y bajo de un estilo pero no su batería
+conserva la batería que tocaba la banda: `drums` pasa de `Style` a
+`Of` el estilo anterior, así que deja de seguir a `style`. Tomar solo
+la batería pone `Of` el nuevo. Cuando las dos vuelven a ser la misma,
+`tidy_drums` convierte `Of` otra vez en `Style`, así que una banda
+tiene una sola manera de decir «la batería de este estilo», y su
+archivo sigue siendo uno que una versión anterior puede leer. Cada
+músico le pregunta a la banda, no al estilo, cómo tocar:
 
 ```rust
 fn comping_in(&self, variation: Variation) -> Comping {
@@ -341,11 +367,12 @@ par.
 ### Pulsos para cualquier compás
 
 La mayoría de los patrones de comping son una tabla fija de golpes. Dos
-no: los **Acentos simples**, un acorde en cada pulso en que se siente
-el compás, y el **aksak** de los estilos balcánicos, los contratiempos
-dentro de cada pulso. En 7/8 sentido como 2+2+3 caen en un lugar, en
-5/4 sentido como 2+3 en otro, así que sus golpes se construyen a partir
-de los `felt_groups` del compás (ver [Pulsos de distinta
+no: los **acentos simples** (`Comping::Accents`), un acorde en cada
+pulso en que se siente el compás, y el **aksak** de los estilos
+balcánicos, los contratiempos dentro de cada pulso. En 7/8 sentido como
+2+2+3 caen en un lugar, en 5/4 sentido como 2+3 en otro, así que sus
+golpes se construyen a partir de los `felt_groups` del compás (ver
+[Pulsos de distinta
 longitud](../sound/tempo.md#pulsos-de-distinta-longitud)):
 
 ```rust
@@ -682,20 +709,22 @@ queda congelada.
 
 ## Una banda sobre una canción con música propia
 
-Abre una demostración, como el **Canon en Re**, y toma las voces de un
-estilo de la Biblioteca. Una demostración ya toca su propio
-acompañamiento, así que primero la banda:
+Abre una demostración, como el **Canon en Re**, y toma las partes de
+acordes y bajo y las voces de un estilo de la Biblioteca. Una
+demostración ya toca su propio acompañamiento, así que primero la banda:
 
 1. escribe en la hoja los acordes que toca la canción, si está vacía
    (ver [De dónde vienen los
    acordes](chord-sheet.md#de-dónde-vienen-los-acordes)), y
 2. **silencia** los canales de acordes y de bajo de la propia canción
    (la biblioteca los llama «Keys» y «Bass», que la interfaz en español
-   muestra como Teclados y Bajo) y sus pistas que solo
-   tienen batería,
+   muestra como Teclados y Bajo) y, cuando también llega la batería
+   del estilo, sus pistas que solo tienen batería,
 
 para que las dos no toquen una encima de la otra. La melodía sigue
-sonando, ahora con la banda detrás. Un estilo que sigue a la canción,
+sonando, ahora con la banda detrás. Sin la batería del estilo, la
+banda entra con `drums: BandDrums::Song`, y la batería propia de la
+canción sigue sonando. Un estilo que sigue a la canción,
 como la orquesta, entra junto a las partes de la canción en lugar de
 silenciarlas (ver [Una orquesta para música que cambia de
 compás](orchestra.md)).
@@ -1376,7 +1405,9 @@ Un patrón de array desarma un array en nombres, uno por elemento, y el
 compilador comprueba que sean exactamente ocho. Así una banda de tres se
 escribe exactamente como antes, y su canción conserva el formato que
 necesitaba; una banda necesita el formato 13, una banda más grande el
-17, un solista el 19 y una sección de vientos el 28 (ver [El número de
+17, un solista el 19, una sección de vientos el 28 y la batería de otro
+estilo el 29, guardada como `drums: Some(Of("Bluegrass"))` o `drums:
+Some(Song)` (ver [El número de
 versión](../program/saving.md#el-número-de-versión)), y una versión
 anterior los rechaza con un mensaje en lugar de perder un músico sin
 decir nada. Un archivo cuya banda toca un estilo que esta versión no

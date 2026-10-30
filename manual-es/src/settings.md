@@ -42,8 +42,10 @@ mientras está abierto:
   acordes en el lugar de la lista de reproducción, con más compases por
   línea.
 
-La aplicación recuerda el tamaño de su propia ventana, y dónde estaban
-sus ventanas, para la próxima vez.
+La aplicación recuerda el tamaño de su propia ventana, qué ventanas
+estaban abiertas y dónde estaban, y empieza con ellas la próxima vez. La
+primera vez empieza con la hoja de acordes, la Biblioteca y las teclas
+de armonía.
 
 ## Zoom
 

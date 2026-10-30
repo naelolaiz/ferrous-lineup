@@ -775,18 +775,58 @@ if let Demo::Song(_) = demo {
 }
 ```
 
-La aplicación misma no se abre en ninguna de las dos. Su canción
-inicial es un ritmo, pero lo primero que hay que ver es la lista de
-reproducción y la biblioteca, así que `LineupApp::new` cierra el rack
-cuando no se nombró ningún archivo en la línea de comandos:
+La aplicación misma se abre con las ventanas que estaban abiertas la
+última vez que se cerró. `app/windows.rs` las guarda como un struct
+pequeño de `bool`, uno por cada ventana del menú Ver:
 
 ```rust
-// The starting song opens on the playlist and the Library, with no
-// window over them: F6 shows its beat in the channel rack.
-if starting_song {
-    app.rack_open = false;
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub(super) struct OpenWindows {
+    chord_sheet: bool,
+    lead_sheet: bool,
+    rack: bool,
+    piano_roll: bool,
+    harmony_keys: bool,
+    /// The Patterns and Library panel.
+    browser: bool,
+    mixer: bool,
+    ear_training: bool,
 }
 ```
+
+Su `Default` es la primera vez: la hoja de acordes, las teclas de
+armonía y la Biblioteca sobre la lista de reproducción, sin rack.
+`#[serde(default)]` en el struct rellena una ventana añadida más tarde a
+la lista con su valor en `Default`, así que una copia guardada más
+antigua se sigue leyendo. El editor de estilos y los diálogos quedan
+fuera: cada uno se abre para algo, un estilo o una pregunta, que la
+siguiente ejecución no tiene.
+
+`App::save`, a la que eframe llama cada 30 segundos y cuando se cierra
+la ventana, escribe el struct entre las preferencias guardadas por
+nombre (ver [Guardado por nombre, no por
+tipo](#guardado-por-nombre-no-por-tipo)), y `LineupApp::new` lo vuelve
+a leer:
+
+```rust
+fn save(&mut self, storage: &mut dyn eframe::Storage) {
+    self.preferences.put(windows::NAME, &self.open_windows());
+    self.preferences.save(storage);
+}
+```
+
+```rust
+let windows: OpenWindows = preferences::get(ctx, NAME).unwrap_or_default();
+```
+
+Escribirlas solo al guardar, en lugar de a cada clic en un botón de
+ventana, libra de esa tarea a los muchos lugares que abren y cierran
+ventanas.
+`the_app_first_opens_on_the_chord_sheet_then_with_the_windows_left_open`
+comprueba las dos ejecuciones: la primera se abre en la hoja, y después
+de cerrarla con F5 y abrir el mezclador con F9, el siguiente arranque
+encuentra el mezclador abierto y la hoja cerrada.
 
 ### Ventanas del tamaño de lo que muestran
 
@@ -1016,7 +1056,8 @@ guardó una versión anterior, con `#[serde(default)]` para los campos
 que todavía no existían.
 
 Los ajustes de sonido ([SoundFonts y General
-MIDI](../sound/soundfonts.md)) se guardan así, como `"sound-font"`. Las
+MIDI](../sound/soundfonts.md)) se guardan así, como `"sound-font"`, y
+también las ventanas abiertas, como `"open-windows"`. Las
 demás elecciones de arriba siguen en la memoria de egui, así que una
 actualización puede olvidarlas; pasar una al nuevo sistema es cuestión
 de llamar a `preferences::get` y `preferences::set` con un nombre en

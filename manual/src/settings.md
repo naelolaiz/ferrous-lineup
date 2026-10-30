@@ -38,8 +38,9 @@ while it is open:
 - **View > Chord sheet in the main window** puts the chord sheet in the
   playlist's place, with more bars to a line.
 
-The app remembers the size of its own window, and where its windows
-were, for the next time.
+The app remembers the size of its own window, which windows were open
+and where they were, and starts with them the next time. The first time,
+it starts with the chord sheet, the Library and the harmony keys.
 
 ## Zoom
 

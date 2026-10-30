@@ -32,19 +32,19 @@ primaverales, el Juego del rapto y cinco escenas de Petrushka.
    de búsqueda y pulsa Intro: **La consagración de la primavera,
    Augurios primaverales** se abre y suena. Detenla.
 2. Mira la pestaña **Biblioteca**. **Orquesta (cualquier métrica)**
-   está iluminado, como lo está siempre un estilo que encaja.
-   «Cualquier métrica» dice que el estilo no está en ningún compás
-   propio.
+   está iluminado en el grupo **Clásica y de cine**, como lo está
+   siempre un estilo que encaja. «Cualquier métrica» dice que el estilo
+   no está en ningún compás propio.
 
-   ![La Library con «Orchestra (any meter)» iluminado, entre «One drop» y «Paidushko (2+3/8)».](../images/step-9-orchestra-library.png)
+   ![La Library con el grupo Classical and film abierto y «Orchestra (any meter)» iluminado, entre «Neapolitan» y «Picardy third».](../images/step-9-orchestra-library.png)
 
-3. Hazle clic. Bajo **Acompañamiento**, **Patrones de ejecución** y
-   **Voces / instrumentos** están los dos marcados; bajo **Armonía**,
-   **Progresión de acordes** no lo está. Bajo **Tiempo** no hay
+3. Hazle clic. Bajo **Acompañamiento**, **Batería**, **Partes de
+   acordes y bajo** y **Voces / instrumentos** están marcadas; bajo
+   **Armonía**, **Progresión de acordes** no lo está. Bajo **Tiempo** no hay
    casillas Compás ni Tempo, solo una línea que dice que el preajuste
    conserva los compases y el tempo de la canción.
 
-   ![El popup de Orchestra: Playing patterns y Voices / instruments marcados, Chord progression sin marcar, y bajo Timing: «Keeps the song's time signatures and tempo: this preset plays every bar in that bar's meter.»](../images/step-9-orchestra-popup.png)
+   ![El popup de Orchestra: Drums, Chord and bass parts y Voices / instruments marcados, Chord progression sin marcar, y bajo Timing: «Keeps the song's time signatures and tempo: this preset plays every bar in that bar's meter.»](../images/step-9-orchestra-popup.png)
 
 4. Haz clic en **Aplicar**. Aparecen cuatro pistas bajo la canción:
    **Piano**, **Bajo**, **Batería** y **Cuerdas**. La pista Canción
@@ -82,19 +82,22 @@ acordes de la canción.
 
 ### Solo las voces
 
-Desmarca **Patrones de ejecución** antes de **Aplicar**, de modo que
-solo **Voces / instrumentos** quede marcado, y entran las mismas cuatro
-pistas. Desmarca las voces y deja los patrones, y también entran: una
-orquesta que sigue a la canción siempre trae sus propios músicos y sus
-propios patrones, en pistas propias, y los canales de la partitura
-conservan sus instrumentos y sus notas.
+Desmarca **Batería** y **Partes de acordes y bajo** antes de
+**Aplicar**, de modo que solo **Voces / instrumentos** quede marcado, y
+entran las mismas cuatro pistas. Marca solo la batería, o solo las
+partes de acordes y bajo, y también entran: una orquesta que sigue a la
+canción siempre trae sus propios músicos y sus propios patrones, en
+pistas propias, y los canales de la partitura conservan sus
+instrumentos y sus notas.
 
 Los demás estilos tratan una sola casilla de otra manera (ver [Qué
-partes tomar](library.md#qué-partes-tomar)). Elegido con sus
-voces pero no con sus patrones, un estilo trae su banda en pistas
-propias tocando **Acentos simples**: sus instrumentos golpean los
-acordes de la canción, sin los grooves del estilo. Elegido solo con sus
-patrones, se abre en un patrón de prueba para que lo escuches primero.
+partes tomar](library.md#qué-partes-tomar)). Elegido con sus partes de
+acordes y bajo y sus voces pero sin su batería, un estilo trae su banda
+en pistas propias, y la batería propia de la canción sigue sonando.
+Elegido solo con sus voces, no trae banda: sus sonidos van a los
+músicos propios de la canción. Elegido solo con su batería o solo con
+sus partes de acordes y bajo, se abre en un patrón de prueba para que
+lo escuches primero.
 
 ## La música
 
@@ -340,10 +343,18 @@ let has_music = !self.project.playlist().chord_markers().is_empty()
             .pattern(clip.pattern)
             .is_some_and(|pattern| !pattern.is_empty())
     });
+// A beat made up in the library has no chord and bass parts of its
+// own: it brings no band, only its drums.
+let made_up = match action {
+    LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
+        BandStyle::named(rhythm.name).is_none()
+    }
+    _ => false,
+};
 let joins = if follows {
-    parts.rhythm || parts.for_preset().instruments
+    parts.rhythm || parts.matching_style || parts.instruments
 } else {
-    parts.for_preset().instruments && has_music
+    parts.instruments && parts.matching_style && has_music && !made_up
 };
 if self.project.band().is_none() && !joins {
     return false;
@@ -354,17 +365,22 @@ if self.project.band().is_none() && !joins {
 y `_ => false` cubre cualquier otro tipo de elemento de la Biblioteca.
 `has_music` es verdadero cuando la canción tiene acordes en la hoja de
 acordes, o notas cuyos acordes la banda puede oír; `Iterator::any` se
-detiene en el primer clip cuyo patrón tiene una nota. Cuando
+detiene en el primer clip cuyo patrón tiene una nota. Una banda toca
+las partes de acordes y bajo de un estilo, así que solo entra cuando se
+toman, con las voces en que las toca; la batería sola es cosa de los
+canales de batería de la propia canción. Cuando
 `band_plays_parts` devuelve `false`, quien la llamó sigue por el camino
 de siempre: abre el estilo en un patrón de prueba o, mientras la
 canción suena, lo aplica a los patrones propios de la canción.
 
 La misma regla está en `Project::apply_band_parts`, en `band.rs`, que
-construye la banda, con una línea más: una banda que entró solo por sus
-voces toca acentos simples.
+construye la banda, con una línea más: una banda que entró sin la
+batería del estilo se la deja a la canción.
 
 ```rust
-band.accents_only = !parts.rhythm && !follows;
+if !parts.rhythm && !follows {
+    band.drums = BandDrums::Song;
+}
 ```
 
 ### Escuchar la partitura
@@ -525,11 +541,16 @@ Los tests de `band.rs`:
 - `with_no_score_to_follow_the_orchestra_plays_as_written` la aplica a
   una hoja de acordes sin notas, y comprueba que todos los músicos
   tocan.
-- `copying_only_the_voices_brings_a_band_that_plays_plain_accents`
-  copia solo las voces de un estilo que no sigue a la canción, Pop
-  emotivo, sobre el tango El Choclo, y comprueba que su banda entra
-  tocando acentos simples mientras la canción conserva sus sonidos y
-  sus notas.
+- `a_band_brought_without_drums_leaves_them_to_the_song` copia las
+  partes de acordes y bajo y las voces de un estilo que no sigue a la
+  canción, Pop emotivo, sobre el tango El Choclo, sin su batería, y
+  comprueba que su banda entra sin batería propia mientras la canción
+  conserva sus sonidos, sus notas y su batería; tomar la batería
+  después la trae en lugar de la de la canción.
+- `copying_only_the_voices_brings_no_band` pasa solo las voces de Pop
+  emotivo a `apply_band_parts` sobre El Choclo, y comprueba que deja la
+  canción como estaba: las voces solas van a los canales propios de la
+  canción, por el camino de la Biblioteca, no a través de una banda.
 - `picking_the_orchestra_keeps_the_meters_of_the_song` hace de la
   Orquesta el estilo de la banda en los Augurios, con
   `set_band_style`, y después de **Ritmo pop**: la primera conserva el

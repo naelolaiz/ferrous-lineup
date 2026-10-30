@@ -7,7 +7,7 @@ with the extension `.lineup`.
 
 ```text
 (
-    format: 28,
+    format: 29,
     tempo: 130.0,
     scale: (root: C, kind: Major),
     channels: [
@@ -18,10 +18,9 @@ with the extension `.lineup`.
 )
 ```
 
-[Saving](../program/saving.md) explains RON, serde and the
-`ProjectFile` struct that stands between the file and the live
-`Project`. This page is the reference for the number at the top:
-`FORMAT_VERSION` is **28** in
+[Saving](../program/saving.md) explains RON, serde and the `ProjectFile`
+struct that stands between the file and the live `Project`. This page is
+the reference for the number at the top: `FORMAT_VERSION` is **29** in
 [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs).
 
 ## The format number
@@ -30,7 +29,7 @@ The number says which features a file may contain. It is not the app's
 version.
 
 `format_for` writes the **lowest** format that can hold the project, not
-always 28. A plain project stays format 1, so any version of Ferrous
+always 29. A plain project stays format 1, so any version of Ferrous
 Lineup can open it. A song with a chord sheet but no band is format 12;
 a band is format 13; a locked channel is at least format 23. The number
 is that of the highest feature the song uses, and each format can hold
@@ -72,6 +71,7 @@ what it uses.
 | 26 | A pan and a reverb send on each channel. | It would play every channel in the middle with all of it in the reverb. | [The mixer](../sound/mixer.md#pan-two-speakers-one-channel) |
 | 27 | Sending a built-in drum over MIDI. | It would play the drum itself instead of sending it to the external synth. | [MIDI](../sound/midi.md#one-channel-from-its-instrument-menu) |
 | 28 | A horn section in the band, and EQ, compression and delay on a channel. | It would play no horns, and every channel without its effects. | [How the band plays](../band/band.md#a-horn-section), [The mixer](../sound/mixer.md#each-channels-effects) |
+| 29 | A band playing the drums of another style than its chord and bass parts, or leaving the drums to the song. | It would play the drums of the band's own style. | [How the band plays](../band/band.md#a-band-in-the-song), [The library](../band/library.md#which-parts-to-take) |
 
 Two records can be in a file of any format, because a version that
 skips them still plays the song exactly. One says where each part of the
@@ -90,7 +90,7 @@ if it reads, their meaning may have changed. So the reader checks the
 format number and refuses anything above `FORMAT_VERSION`:
 
 ```text
-this file uses format 29, made by a newer version of Ferrous Lineup (this one reads up to format 28)
+this file uses format 30, made by a newer version of Ferrous Lineup (this one reads up to format 29)
 ```
 
 The whole file is read first, and the number checked after. When the

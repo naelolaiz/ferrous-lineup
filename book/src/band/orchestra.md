@@ -29,19 +29,19 @@ the Ritual of Abduction and five scenes from Petrushka.
 1. Open **File > Demos**, type `Augurs` in the search box and press
    Enter: **The Rite of Spring, The Augurs of Spring** opens and plays.
    Stop it.
-2. Look at the **Library** tab. **Orchestra (any meter)** is lit, the
-   way a matching style always is. "Any meter" says the style is in no
-   time signature of its own.
+2. Look at the **Library** tab. **Orchestra (any meter)** is lit in
+   the **Classical and film** group, the way a matching style always
+   is. "Any meter" says the style is in no time signature of its own.
 
-   ![The Library with "Orchestra (any meter)" lit, between "One drop" and "Paidushko (2+3/8)".](../images/step-9-orchestra-library.png)
+   ![The Library with the Classical and film group open and "Orchestra (any meter)" lit, between "Neapolitan" and "Picardy third".](../images/step-9-orchestra-library.png)
 
-3. Click it. Under **Accompaniment**, **Playing patterns** and
-   **Voices / instruments** are both ticked; under **Harmony**,
+3. Click it. Under **Accompaniment**, **Drums**, **Chord and bass
+   parts** and **Voices / instruments** are ticked; under **Harmony**,
    **Chord progression** is not. Under **Timing** there are no Time
    signature and Tempo boxes, only a line that says the preset keeps
    the song's time signatures and tempo.
 
-   ![The Orchestra popup: Playing patterns and Voices / instruments ticked, Chord progression not ticked, and under Timing: "Keeps the song's time signatures and tempo: this preset plays every bar in that bar's meter."](../images/step-9-orchestra-popup.png)
+   ![The Orchestra popup: Drums, Chord and bass parts and Voices / instruments ticked, Chord progression not ticked, and under Timing: "Keeps the song's time signatures and tempo: this preset plays every bar in that bar's meter."](../images/step-9-orchestra-popup.png)
 
 4. Click **Apply**. Four tracks appear under the song: **Piano**,
    **Bass**, **Drums** and **Strings**. The Song track stays on, the
@@ -76,18 +76,19 @@ way a style's progression always replaces the song's chords.
 
 ### Voices alone
 
-Untick **Playing patterns** before **Apply**, so that only **Voices /
-instruments** is ticked, and the same four tracks come in. Untick the
-voices and keep the patterns, and they come in as well: an orchestra
-that follows the song always brings its own players and its own
-patterns, on tracks of its own, and the score's channels keep their
-instruments and their notes.
+Untick **Drums** and **Chord and bass parts** before **Apply**, so
+that only **Voices / instruments** is ticked, and the same four tracks
+come in. Tick only the drums, or only the chord and bass parts, and
+they come in as well: an orchestra that follows the song always brings
+its own players and its own patterns, on tracks of its own, and the
+score's channels keep their instruments and their notes.
 
 Other styles treat a single box differently (see [Which parts to
-take](library.md#which-parts-to-take)). Picked with its
-voices but not its patterns, a style brings its band in on tracks of
-its own playing **Plain accents**: its instruments strike the song's
-chords, without the style's grooves. Picked with its patterns alone, it
+take](library.md#which-parts-to-take)). Picked with its chord and bass
+parts and its voices but not its drums, a style brings its band in on
+tracks of its own, and the song's own drums play on. Picked with its
+voices alone, it brings no band: its sounds go to the song's own
+players. Picked with its drums or its chord and bass parts alone, it
 opens in a trial pattern so you can hear it first.
 
 ## The music
@@ -328,10 +329,18 @@ let has_music = !self.project.playlist().chord_markers().is_empty()
             .pattern(clip.pattern)
             .is_some_and(|pattern| !pattern.is_empty())
     });
+// A beat made up in the library has no chord and bass parts of its
+// own: it brings no band, only its drums.
+let made_up = match action {
+    LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
+        BandStyle::named(rhythm.name).is_none()
+    }
+    _ => false,
+};
 let joins = if follows {
-    parts.rhythm || parts.for_preset().instruments
+    parts.rhythm || parts.matching_style || parts.instruments
 } else {
-    parts.for_preset().instruments && has_music
+    parts.instruments && parts.matching_style && has_music && !made_up
 };
 if self.project.band().is_none() && !joins {
     return false;
@@ -342,16 +351,21 @@ if self.project.band().is_none() && !joins {
 `_ => false` covers every other kind of Library item. `has_music` is
 true when the song has chords on the chord sheet, or any notes whose
 chords the band can hear; `Iterator::any` stops at the first clip whose
-pattern has a note. When `band_plays_parts` returns `false`, the caller
+pattern has a note. A band plays the chord and bass parts of a style,
+so it comes in only when they are taken, with the voices it plays them
+on; the drums alone are a matter for the song's own drum channels.
+When `band_plays_parts` returns `false`, the caller
 goes on the usual way: it opens the style in a trial pattern, or, while
 the song plays, applies it to the song's own patterns.
 
 The same rule is in `Project::apply_band_parts` in `band.rs`, which
-builds the band, with one more line: a band that came in for its voices
-alone plays plain accents.
+builds the band, with one more line: a band that came in without the
+style's drums leaves them to the song.
 
 ```rust
-band.accents_only = !parts.rhythm && !follows;
+if !parts.rhythm && !follows {
+    band.drums = BandDrums::Song;
+}
 ```
 
 ### Listening to the score
@@ -506,10 +520,16 @@ The tests in `band.rs`:
   first eight bars.
 - `with_no_score_to_follow_the_orchestra_plays_as_written` applies it
   to a chord sheet with no notes, and checks every player plays.
-- `copying_only_the_voices_brings_a_band_that_plays_plain_accents`
-  copies only the voices of a style that does not follow the song,
-  Emotional pop, onto the tango El Choclo, and checks its band comes in
-  playing plain accents while the song keeps its sounds and its notes.
+- `a_band_brought_without_drums_leaves_them_to_the_song` copies the
+  chord and bass parts and the voices of a style that does not follow
+  the song, Emotional pop, onto the tango El Choclo, without its drums,
+  and checks its band comes in with no drums of its own while the song
+  keeps its sounds, its notes and its drums; taking the drums later
+  brings them in place of the song's.
+- `copying_only_the_voices_brings_no_band` hands only the voices of
+  Emotional pop to `apply_band_parts` on El Choclo, and checks it
+  leaves the song as it was: voices alone go to the song's own
+  channels, by the Library's own route, not through a band.
 - `picking_the_orchestra_keeps_the_meters_of_the_song` makes the
   Orchestra the band's style in the Augurs, with `set_band_style`, and
   then **Pop beat**: the first keeps 2/4, the second puts the song in

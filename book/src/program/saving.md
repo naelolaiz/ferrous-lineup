@@ -299,7 +299,7 @@ copies the data out with `to_vec()` and `map`. It cannot fail, so it is a
 ## The version number
 
 ```rust
-pub const FORMAT_VERSION: u32 = 28;
+pub const FORMAT_VERSION: u32 = 29;
 ```
 
 `FORMAT_VERSION` is the newest layout this program can read. A file does
@@ -308,10 +308,11 @@ hold the project. A project that uses nothing new stays format 1, so an
 older Ferrous Lineup can still open it. The starting song needs format
 9, because its synth channel plays a General MIDI program; a song with a
 chord sheet needs at least format 12; one with a horn section or a
-channel effect needs 28. The long comment above `FORMAT_VERSION` says,
-for every number, what it added and what an older program would get
-wrong without it; [Project file format](../reference/project-format.md)
-has the same list as a table.
+channel effect needs 28, and a band playing another style's drums 29.
+The long comment above `FORMAT_VERSION` says, for every number, what it
+added and what an older program would get wrong without it; [Project
+file format](../reference/project-format.md) has the same list as a
+table.
 
 A file from a **newer** version must be refused with a clear message,
 not read wrongly. The obvious way is to read a tiny struct first:
@@ -374,10 +375,10 @@ the start (some text editors add one) is stripped first, so it cannot
 hide the `(`.
 
 The test `files_from_the_future_are_refused` reads a file one format
-newer than this version, `(format: 29, sparkles: true)` today, and
-expects `NewerFormat(29)`, and the message "this file uses format 29,
+newer than this version, `(format: 30, sparkles: true)` today, and
+expects `NewerFormat(30)`, and the message "this file uses format 30,
 made by a newer version of Ferrous Lineup (this one reads up to format
-28)".
+29)".
 
 ## Errors as an enum
 
