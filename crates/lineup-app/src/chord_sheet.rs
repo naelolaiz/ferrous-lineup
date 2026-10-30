@@ -2963,15 +2963,14 @@ mod tests {
             let (mut output, _) = screen.frame(vec![]);
             let before = screen.library.parts;
             // The chord progression gets ticked, so there is still
-            // something to apply. Its chord and bass parts are unticked
-            // last, as they grey out the instruments and the chords.
+            // something to apply.
             for label in [
                 "Voices / instruments",
                 "Time signature",
                 "Chord progression",
                 "Tempo",
                 "Swing",
-                "Its chord and bass parts",
+                "Chord and bass parts",
                 "Drums",
             ] {
                 let (_, actions) = screen.click(&output, label);
@@ -3121,7 +3120,7 @@ mod tests {
                 assert_eq!(screen.picked, None);
                 let (output, _) = screen.frame(vec![]);
                 assert!(
-                    has_text(&output, "Its chord and bass parts"),
+                    has_text(&output, "Voices / instruments"),
                     "missing copy popup for {name}, grouped={grouped}"
                 );
                 // Ticked at first, and unticked here.
@@ -3192,7 +3191,7 @@ mod tests {
         let (output, _) = screen.frame(vec![]);
         assert!(has_text(&output, "Voices and players"));
         assert!(!has_text(&output, "Copy from preset"));
-        assert!(!has_text(&output, "Its chord and bass parts"));
+        assert!(!has_text(&output, "Voices / instruments"));
         screen.click(&output, "Instrument lineup");
         let (output, _) = screen.frame(vec![]);
         let (_, actions) = screen.click(&output, "Electric piano + synth bass");

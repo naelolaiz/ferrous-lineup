@@ -914,6 +914,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "su banda toca más allá del final de la canción",
     ),
     (
+        "its band plays the drums of \"{}\", a style this version does not know",
+        "su banda toca la batería de «{}», un estilo que esta versión no conoce",
+    ),
+    (
         "its change to {} at step {} is too late or on the first step",
         "su cambio a {} en el paso {} llega demasiado tarde o está en el primer paso",
     ),

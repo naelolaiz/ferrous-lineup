@@ -1070,7 +1070,7 @@ impl LineupApp {
                             progression: false,
                             tempo: false,
                             swing: false,
-                            matching_style: true,
+                            matching_style: false,
                         },
                     );
                 });

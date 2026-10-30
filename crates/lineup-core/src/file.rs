@@ -169,7 +169,10 @@ pub fn is_project(path: &Path) -> bool {
 /// equalizer, compressor and delay of each channel (see
 /// [`Channel::effects`]). Older versions know neither, so a song with
 /// horns, or with a channel going through any of its effects, needs
-/// format 28.
+/// format 28. Format 29 lets a band play the drums of another style
+/// than its chord and bass parts, or leave the drums to the song (see
+/// [`crate::band::BandDrums`]): older versions would play the wrong
+/// drums.
 ///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
@@ -177,7 +180,7 @@ pub fn is_project(path: &Path) -> bool {
 /// other way round, Gb major rather than F# major (see
 /// [`Scale::other_spelling`]): older versions name it the usual way and
 /// play the same notes.
-pub const FORMAT_VERSION: u32 = 28;
+pub const FORMAT_VERSION: u32 = 29;
 
 /// The oldest format that can hold `project`.
 ///
@@ -279,7 +282,12 @@ pub fn format_for(project: &Project) -> u32 {
         .channels()
         .iter()
         .any(|channel| !channel.has_plain_effects());
-    if has_horns || has_effects {
+    let has_other_drums = project
+        .band()
+        .is_some_and(|band| band.drums != crate::band::BandDrums::Style);
+    if has_other_drums {
+        29
+    } else if has_horns || has_effects {
         28
     } else if sends_drums {
         27
