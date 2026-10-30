@@ -237,6 +237,22 @@ impl BandStyle {
             .collect()
     }
 
+    /// The General MIDI instruments its players play, the drums left out:
+    /// what it brings to a song with its instruments, piano first.
+    pub fn programs(&self) -> Vec<u8> {
+        let extras = self.extras();
+        [
+            Some(self.piano_program()),
+            Some(self.bass_program()),
+            extras.guitar.map(|guitar| guitar.program),
+            extras.strings.map(|strings| strings.program),
+            extras.organ.map(|organ| organ.program),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    }
+
     /// How much it swings when it is picked (see [`crate::swing`]): as
     /// much as its drums do, and not at all without drums.
     pub fn swing(&self) -> u8 {
@@ -3959,6 +3975,37 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn a_band_style_names_the_instruments_it_brings() {
+        for harmony in crate::library::STYLES {
+            let mut project = Project::empty();
+            project.set_chords(
+                0,
+                16,
+                &[ChordMarker::new(0, HarmonyName::parse("Cm").unwrap())],
+            );
+            let style = BandStyle::of_style(harmony).unwrap();
+            project.apply_band_parts(
+                style,
+                Some(harmony),
+                apply::StyleParts {
+                    rhythm: true,
+                    instruments: true,
+                    ..no_parts()
+                },
+            );
+            let brought: Vec<u8> = style
+                .players()
+                .into_iter()
+                .filter_map(|player| project.player_channel(player))
+                .filter_map(|channel| project.channels()[channel].program)
+                .collect();
+            assert_eq!(brought, style.programs(), "{}", harmony.name);
+        }
+        let tango = BandStyle::of_style(Style::named("Tango").unwrap()).unwrap();
+        assert!(tango.programs().contains(&32), "a double bass");
     }
 
     /// Where each beat a bar is felt in starts, bar by bar up to `end`,

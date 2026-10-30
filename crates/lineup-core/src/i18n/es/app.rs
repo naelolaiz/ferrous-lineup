@@ -31,11 +31,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "«{}» no se había guardado cuando Ferrous Lineup se cerró la última vez.",
     ),
     ("({} each time)", "({} cada vez)"),
-    ("+ chords", "+ acordes"),
-    (
-        "+ chords: includes a progression. Other presets keep your chords.",
-        "+ acordes: incluye una progresión. Los demás preajustes conservan tus acordes.",
-    ),
     (", played as {}", ", tocado como {}"),
     (", the chord {}", ", el acorde {}"),
     (
@@ -157,7 +152,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("About {} and its licence", "Acerca de {} y su licencia"),
     ("above 4 kHz", "por encima de 4 kHz"),
     ("accel. → 140", "accel. → 140"),
-    ("Accents + drums", "Acentos + batería"),
     ("Accompaniment", "Acompañamiento"),
     ("Accordion + acoustic bass", "Acordeón + bajo acústico"),
     (
@@ -232,6 +226,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Any group of notes as a scale, such as the octatonic scale or a chord with no name. Notes already written stay as they are: from a key, the set is the key's own notes (C major is 7-35), so the harmony keys still match the song.",
         "Cualquier grupo de notas como escala, como la escala octatónica o un acorde sin nombre. Las notas que ya están escritas se quedan como están: desde una tonalidad, el conjunto son las notas propias de la tonalidad ({C} mayor es 7-35), así que las teclas de armonía siguen coincidiendo con la canción.",
     ),
+    ("Any instrument", "Cualquier instrumento"),
     (
         "Any meter, at the song's tempo (on its own: {}, {} BPM)",
         "Cualquier métrica, al tempo de la canción (solo: {}, {} BPM)",
@@ -397,6 +392,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Choose a preset’s chord progression to write from the selected bar.",
         "Elige la progresión de acordes de un preajuste para escribirla desde el compás seleccionado.",
     ),
+    (
+        "Choose Any instrument or untick a box to see more.",
+        "Elige Cualquier instrumento o desmarca una casilla para ver más.",
+    ),
     ("Choose SoundFont…", "Elegir SoundFont…"),
     (
         "Choose the band’s voices and players. Rhythms and playing patterns are in the Library.",
@@ -411,10 +410,11 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Elige dónde se guardan tus estilos.",
     ),
     (
-        "Choose who plays and their sounds. Playing patterns are chosen in the Library.",
-        "Elige quién toca y con qué sonidos. Los patrones de ejecución se eligen en la Biblioteca.",
+        "Choose who plays and their sounds. How they play is chosen in the Library.",
+        "Elige quién toca y con qué sonidos. Cómo tocan se elige en la Biblioteca.",
     ),
     ("Chorale", "Coral"),
+    ("Chord and bass parts", "Partes de acordes y bajo"),
     ("Chord progression", "Progresión de acordes"),
     ("Chord sheet as text", "Hoja de acordes como texto"),
     (
@@ -517,10 +517,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Copied {} bars as text.",
         "Se copiaron {} compases como texto.",
     ),
+    (
+        "Copy how the preset plays the chords and the bass: its piano, bass, guitar and other parts. Unticked, the piano and bass play each chord simply on the beats, and your instruments and chords stay.",
+        "Copia cómo toca el preajuste los acordes y el bajo: su piano, su bajo, su guitarra y sus otras partes. Sin marcar, el piano y el bajo tocan cada acorde de forma simple en los pulsos, y se conservan tus instrumentos y tus acordes.",
+    ),
     ("Copy the bars, as text", "Copiar los compases, como texto"),
     (
-        "Copy the preset’s drum, chord, bass and other accompaniment patterns. Existing chords are kept unless Chord progression is checked.",
-        "Copia los patrones de batería, acordes, bajo y demás acompañamiento del preajuste. Los acordes que ya hay se conservan, salvo que esté marcada Progresión de acordes.",
+        "Copy the preset’s drums, and with the box below, how it plays the chords and the bass.",
+        "Copia la batería del preajuste y, con la casilla de abajo, cómo toca los acordes y el bajo.",
     ),
     (
         "Copy the preset’s sounds and band players.",
@@ -611,7 +615,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Suelta un archivo de proyecto a la vez: no se abrió ninguno.",
     ),
     ("Drum", "Tambor"),
-    ("Drums and plain accents", "Batería y acentos simples"),
     ("duplicate section", "duplicar sección"),
     ("Durations", "Duraciones"),
     ("Dynamics", "Dinámicas"),
@@ -951,6 +954,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "It is well ahead of every other key.",
         "Está muy por delante de todas las demás tonalidades.",
     ),
+    ("Its chord and bass parts", "Sus partes de acordes y bajo"),
     (
         "Its own equalizer, compressor and delay, which shape its sound before it joins the others",
         "Su propio ecualizador, compresor y delay, que dan forma a su sonido antes de que se una a los demás",
@@ -964,11 +968,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Keep the playing bar or step visible in the playlist, chord sheet and piano roll",
         "Mantener visible el compás o el paso que suena en la lista de reproducción, la hoja de acordes y el piano roll",
-    ),
-    ("keeps chords", "conserva los acordes"),
-    (
-        "Keeps the song’s chords",
-        "Conserva los acordes de la canción",
     ),
     (
         "Keeps the song’s time signatures and tempo: this preset plays every bar in that bar’s meter.",
@@ -1272,6 +1271,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Only presets that bring a chord progression",
         "Solo los preajustes que traen una progresión de acordes",
     ),
+    (
+        "Only presets whose drums swing",
+        "Solo los preajustes cuya batería tiene swing",
+    ),
+    (
+        "Only presets that bring this instrument when their instruments are copied",
+        "Solo los preajustes que traen este instrumento cuando se copian sus instrumentos",
+    ),
     ("Open", "Abrir"),
     (
         "Open the lead sheet in your PDF viewer, to print it from there",
@@ -1331,11 +1338,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Pitch-class sets: every group of notes there is, by Forte number, to draw with or use as a scale",
         "Conjuntos de clases de alturas: todos los grupos de notas que existen, por número de Forte, para dibujar con ellos o usarlos como escala",
     ),
-    ("Plain accents", "Acentos simples"),
-    (
-        "Plain accents with current instruments",
-        "Acentos simples con los instrumentos actuales",
-    ),
     ("play a part yourself", "tocar una parte tú mismo"),
     (
         "Play a question again as often as you like before answering.",
@@ -1392,8 +1394,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Played", "Tocados"),
     ("Players", "Músicos"),
     ("Playhead", "Cursor de reproducción"),
-    ("Playing patterns", "Patrones de ejecución"),
-    ("Playing style", "Estilo de ejecución"),
     ("Playlist zoom", "Zoom de la lista de reproducción"),
     (
         "Plays it again a little later, in time with the song, and again, each echo quieter: the feedback says how much of each echo comes back. A mix of 0% turns it off.",
@@ -1436,7 +1436,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Presentation in the Library and Progression browsers.",
         "Presentación en los exploradores de Biblioteca y Progresión.",
     ),
-    ("Preset patterns", "Patrones del preajuste"),
     ("Presets ({})", "Preajustes ({})"),
     ("Preview ×4", "Escuchar ×4"),
     (
@@ -1685,9 +1684,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Silent while another channel plays solo (see the Mixer). Click to mute or unmute",
         "En silencio mientras otro canal suena en solo (mira el Mezclador). Haz clic para silenciarlo o devolverle el sonido",
     ),
+    ("simple chords", "acordes simples"),
     (
-        "Simple chord and bass accents on the meter’s beat groups. Drum patterns still come from the preset. Your current instruments and chords are kept.",
-        "Acentos simples de acordes y bajo en los grupos de pulsos del compás. Los patrones de batería siguen viniendo del preajuste. Se conservan tus instrumentos y acordes actuales.",
+        "Simple chords on the beats, with your instruments and chords.",
+        "Acordes simples en los pulsos, con tus instrumentos y tus acordes.",
+    ),
+    (
+        "Simple chords play the song’s own chords.",
+        "Los acordes simples tocan los acordes de la canción.",
+    ),
+    (
+        "Simple chords keep your instruments.",
+        "Los acordes simples conservan tus instrumentos.",
     ),
     ("Sixteenth notes", "semicorcheas"),
     ("Skip ▸", "Saltar ▸"),
@@ -1791,8 +1799,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Valores por defecto al aplicar estilos",
     ),
     (
-        "Style applied. Plain accents play the chords on the sheet: write some there.",
-        "Estilo aplicado. Los acentos simples tocan los acordes de la hoja: escribe algunos allí.",
+        "Style applied. Simple chords play the chords on the sheet: write some there.",
+        "Estilo aplicado. Los acordes simples tocan los acordes de la hoja: escribe algunos allí.",
     ),
     (
         "Style applied. Write chords on the sheet or enable Chord progression when applying it.",
@@ -2190,6 +2198,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "There is no room for the patterns the cut needs.",
         "No hay lugar para los patrones que necesita el corte.",
     ),
+    (
+        "They come with the drums: tick Drums to copy them.",
+        "Vienen con la batería: marca Batería para copiarlas.",
+    ),
     ("This channel", "Este canal"),
     (
         "This is Kröpfl's micromode",
@@ -2327,14 +2339,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Use rhythm's swing", "Usar el swing del ritmo"),
     ("Use style instruments", "Usar los instrumentos del estilo"),
-    (
-        "Use the preset’s drums with simple chord and bass accents on the meter’s beat groups, over the song’s own chords and instruments.",
-        "Usa la batería del preajuste con acentos simples de acordes y bajo en los grupos de pulsos del compás, sobre los acordes y los instrumentos propios de la canción.",
-    ),
-    (
-        "Use the preset’s playing patterns and choose whether to copy its instruments.",
-        "Usa los patrones de ejecución del preajuste y elige si copiar sus instrumentos.",
-    ),
     (
         "Use the preset’s swing amount.",
         "Usa la cantidad de swing del preajuste.",
@@ -2485,6 +2489,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("{}  (any meter)", "{}  (cualquier métrica)"),
     ("{} are {}.", "{} son {}."),
     (
+        "{} changed nothing: a pattern the song plays keeps the song's time signature. Tick Drums to try the style in a pattern of its own.",
+        "{} no cambió nada: un patrón que la canción toca conserva el compás de la canción. Marca Batería para probar el estilo en un patrón propio.",
+    ),
+    (
         "{} changed nothing: its instruments go to the channels named Keys and Bass, or to the channel chosen in the rack.",
         "{} no cambió nada: sus instrumentos van a los canales llamados Teclados y Bajo, o al canal elegido en el rack.",
     ),
@@ -2575,8 +2583,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("{} · {} BPM · 1 bar", "{} · {} BPM · 1 compás"),
     ("{} · {} BPM · {} bars", "{} · {} BPM · {} compases"),
     (
-        "{}'s instruments play in a band: tick Playing patterns too.",
-        "Los instrumentos de {} tocan en una banda: marca también Patrones de ejecución.",
+        "{}'s instruments play in a band: tick Drums too.",
+        "Los instrumentos de {} tocan en una banda: marca también Batería.",
     ),
     ("{}+wheel", "{}+rueda"),
     (

@@ -365,14 +365,14 @@ impl LineupApp {
         }
         if self.project.band().is_none() && parts.instruments && !parts.rhythm {
             self.notice = Some(crate::i18n::trf(
-                "{}'s instruments play in a band: tick Playing patterns too.",
+                "{}'s instruments play in a band: tick Drums too.",
                 &[&style.name],
             ));
         } else if self.project.playlist().chord_markers().is_empty() {
-            self.notice = Some(crate::i18n::tr(if parts.matching_style {
+            self.notice = Some(crate::i18n::tr(if !crate::library_browser::simple_chords(&parts) {
                 "Style applied. Write chords on the sheet or enable Chord progression when applying it."
             } else {
-                "Style applied. Plain accents play the chords on the sheet: write some there."
+                "Style applied. Simple chords play the chords on the sheet: write some there."
             }).into());
         } else {
             self.notice = Some(crate::i18n::trf("Applied {}", &[&style.name]));
