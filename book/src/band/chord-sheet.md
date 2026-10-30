@@ -38,7 +38,8 @@ Click a bar and type. A bar holds any of these, separated by spaces:
 | A row form | a form of the key's twelve-tone row | `P0`, `I5`, `R3`, `RI7` |
 | No chord | nothing plays the harmony | `N.C.` or `NC` |
 | A hold | the harmony before goes on one more beat | `/` or `.` |
-| Nothing, or `%` | the bar goes on with the harmony before | |
+| Nothing | the bar goes on with the harmony before | |
+| `%` | the bar before, again | `| C G | % |` is C G, C G |
 
 A slash after a chord means a bass note, so the two layers of a
 polychord are joined by a pipe instead: `Eb7|Fb` is E♭7 over F♭ major,
@@ -1218,10 +1219,47 @@ D, Bm, Em7 A7, D: one progression in any key. With no `Style:` line,
 the band plays a style in the chart's time signature, and with no time
 signature either, the style a new song starts with.
 
-An empty bar, or `%`, reads as on the sheet: the harmony before goes on
-through it. That is what the simile sign means after a bar of one
-chord. After a bar of two chords, "| C G | % |", a musician plays C G
-again, while the app holds the G.
+An empty bar reads as on the sheet: the harmony before goes on through
+it. `%`, the simile sign, plays the bar before again, as a musician
+reads it: after a bar of two chords, "| C G | % |" is C G twice, and
+after a bar of one chord it is the same as an empty bar.
+
+`read_bar` sees only its own bar, so the sign is read by
+`read_typed_bar_after`, which is also given the bar before and its
+markers. `repeat_bar` copies those markers into the new bar, each as
+many steps into it, with its shot, hold, rest or push. A first marker that
+would only go on with the harmony already sounding, as in "| C | % |",
+is left out, so that bar stores exactly what an empty one does:
+
+```rust
+pub fn repeat_bar(before: &[ChordMarker], before_bar: &Bar, bar: &Bar) -> Vec<ChordMarker> {
+    let in_bar: Vec<&ChordMarker> = before
+        .iter()
+        .filter(|marker| (before_bar.start..before_bar.end()).contains(&marker.start))
+        .collect();
+    let sounding = in_bar.last().map(|marker| marker.harmony);
+    let mut markers: Vec<ChordMarker> = in_bar
+        .iter()
+        .map(|marker| ChordMarker {
+            start: bar.start + (marker.start - before_bar.start),
+            ..**marker
+        })
+        .filter(|marker| marker.start < bar.end())
+        .collect();
+    if let Some(first) = markers.first()
+        && first.start == bar.start
+        && Some(first.harmony) == sounding
+        && first.push.is_none()
+        && first.stop.is_none()
+    {
+        markers.remove(0);
+    }
+    markers
+}
+```
+
+The song stores the chords, not the text: once read, the bar holds a C
+and a G of its own, and clicking it shows "C G".
 
 ### Reading the text
 
@@ -1377,8 +1415,11 @@ and the band need nothing new.
 fills a bar's text field when you click it, and collects lines: words
 ("[Verse ×2]", "Key: D minor") or a row of up to four bars. A section,
 a change of key or of time signature starts a new row, and an empty bar
-is written `%`. It writes in letters and English, whatever the app
-shows, so the text reads the same wherever it is pasted:
+is written `%` when playing the bar before again sounds the same, as
+after "| C |". After "| C G |" a held bar is written `/ / / /`, a `/`
+for each beat, since `%` would read back as C G again. It writes in
+letters and English, whatever the app shows, so the text reads the
+same wherever it is pasted:
 
 ```rust
 pub fn write(project: &Project, title: Option<&str>) -> String {

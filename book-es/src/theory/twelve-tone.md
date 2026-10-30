@@ -155,10 +155,37 @@ así que un conjunto se guarda como `"0 3 6 9"`.
 
 `parse` también lee el cuadro de arriba de la ventana Serie
 dodecafónica. Acepta nombres de notas en letras
-(`E F G Db Gb Eb Ab D B C A Bb`), números (`4 5 7 1 …`) o la forma
-compacta de los libros de dodecafonismo, un carácter por nota con
-**T** y **E** para diez y once (`45716382E09T`). Cuando una nota viene
-dos veces, dice cuál, y qué nota falta en su lugar.
+(`E F G Db Gb Eb Ab D B C A Bb`) o en solfeo (`Mi Fa Sol Reb Solb Mib
+Lab Re Si Do La Sib`), números (`4 5 7 1 …`) o la forma compacta de los
+libros de dodecafonismo, un carácter por nota con **T** y **E** para
+diez y once (`45716382E09T`). Cuando una nota viene dos veces, dice
+cuál, y qué nota falta en su lugar.
+
+Un nombre se lee primero en letras, y en solfeo cuando eso falla.
+Ninguna sílaba es también un nombre en letras, porque ninguna empieza
+con una letra de la A a la G salvo `Do` y `Fa`, cuya segunda letra no
+es un sostenido ni un bemol, así que las dos nunca chocan. Antes de
+leer solfeo, `parse_name` escribe el nombre con una mayúscula y el
+resto en minúsculas, así que `SOL#` y `sib` se leen como `Sol#` y
+`Sib`, donde la `b` minúscula es un bemol:
+
+```rust
+fn parse_name(token: &str) -> Result<u8, String> {
+    parse_letters(token).or_else(|error| {
+        let mut chars = token.chars();
+        let first = chars.next().map(|c| c.to_uppercase().collect::<String>());
+        let written = first.unwrap_or_default() + &chars.as_str().to_lowercase();
+        NoteName::read_as(&written, NoteNaming::Solfege)
+            .filter(|(_, rest)| rest.is_empty())
+            .map(|(name, _)| name.pitch_class().semitone())
+            .ok_or(error)
+    })
+}
+```
+
+`or_else` corre su closure solo ante un error, y `ok_or(error)`
+devuelve el error de las letras cuando también falla el solfeo, así que
+un nombre equivocado se explica en los términos que más gente escribe.
 
 **Desde las notas** lee una serie del piano roll: las doce primeras
 clases de altura distintas entre las notas seleccionadas (o todas), en

@@ -13,7 +13,7 @@ and drums play those chords, with a guitar, strings, an organ or a horn
 section where the style has them. Change the style, the key or a chord,
 and the band plays it again the new way.
 
-![The chord sheet with the band: "Band: Pop beat", a Progression button, "Key: C major · 4/4 · 110 BPM", and the bars C | Am | F | G7 with their numerals](../images/step-9-band-sheet.png)
+![The chord sheet of a song with the Pop beat band: the Band and Progression buttons, "Key: C major · 4/4 · 110 BPM", the band's rows (Form, Choruses, Ending, and You play Piano, Bass, Drums, Guitar), and the bars C | Am | F | G7 with their numerals](../images/step-9-band-sheet.png)
 
 The band's parts are ordinary patterns on tracks of their own, called
 "Piano 1", "Bass 1", "Drums 1". Double-click one and the piano roll
@@ -243,11 +243,12 @@ pub struct Played {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BassPart {
     /// A chord: its line goes over the chord's notes from `note` (its
-    /// root, or a slash chord's bass), and may lead into `next`.
+    /// root, or a slash chord's bass), and may lead into `next`, the
+    /// bass note of the harmony after it.
     Chord {
         chord: Chord,
         note: Note,
-        next: PitchClass,
+        next: Note,
     },
     /// A group of notes with no root, such as a pitch-class set: the
     /// bass keeps the rhythm of its line on this one note and its octave.
@@ -378,14 +379,22 @@ into one long walk. Only the last piece of a harmony leads into the
 next. A walking bass plays one note per beat:
 
 ```rust
-fn walk(span: usize) -> Vec<(usize, Tone)> {
-    const MIDDLE: [Tone; 6] = [
+fn walk(span: usize, down: bool) -> Vec<(usize, Tone)> {
+    const UP: [Tone; 6] = [
         Tone::Third,
         Tone::Fifth,
         Tone::Seventh,
         Tone::Octave,
         Tone::Fifth,
         Tone::Third,
+    ];
+    const DOWN: [Tone; 6] = [
+        Tone::LowSeventh,
+        Tone::LowFifth,
+        Tone::LowThird,
+        Tone::LowFifth,
+        Tone::LowSeventh,
+        Tone::Root,
     ];
     let beats = span.div_ceil(4);
     (0..beats)
@@ -395,9 +404,11 @@ fn walk(span: usize) -> Vec<(usize, Tone)> {
             } else if beat == beats - 1 {
                 Tone::Approach
             } else if beats == 3 {
-                Tone::Fifth
+                if down { Tone::LowFifth } else { Tone::Fifth }
+            } else if down {
+                DOWN[(beat - 1) % DOWN.len()]
             } else {
-                MIDDLE[(beat - 1) % MIDDLE.len()]
+                UP[(beat - 1) % UP.len()]
             };
             (beat * 4, tone)
         })
@@ -406,11 +417,24 @@ fn walk(span: usize) -> Vec<(usize, Tone)> {
 ```
 
 The root on 1, chord notes in the middle, and on the last beat the
-**approach**, a note a half step above or below the next root. In 4/4
-over C7 going to F that is C E G E: E is a half step under F. In a bar
-of three, root, third, approach would give C E E, because the third of
-C *is* the half step below F; so the walk in three goes root, fifth,
-approach instead: C G E.
+**approach**, a note a half step above or below the next chord's bass
+note. The line is given that note itself, not just its name: a root
+is played between C2 and B2 (see [The harmonies, as
+notes](#the-harmonies-as-notes)), so from G7 to C the next note is C2,
+and the approach is the half step on the side nearer the note before
+it, D♭2 coming down from D2. Knowing only "C", the line could pick B2
+and then fall a seventh to the C2 that follows.
+
+The middle notes go up the chord (`UP`) or down it (`DOWN`, the
+chord's notes below the root). `Bass::play` makes both lines and keeps
+the one that reaches the next chord in smaller steps, the line down
+only while it stays above E1 (`BASS_FLOOR`), the lowest string of a
+bass guitar.
+So over C going to Am the walk goes up, C2 E2 G2 G♯2, into A2, and over
+G7 going to C it comes down, G2 F2 D2 D♭2, into C2. In a bar of three
+the walk goes root, fifth, approach: over C7 going to F, C2 G2 F♯2,
+into F2. The third is left out there because the third of C *is* the
+half step below F: the line would reach its lead-in a beat early.
 
 ### The drums
 
@@ -647,7 +671,7 @@ orchestra, comes in alongside the song's parts instead of muting them
 (see [An orchestra for music that changes
 meter](orchestra.md)).
 
-![The chord sheet of Canon in D with a Pop ballad band: D A Bm F#m | G D G A, the progression of Pachelbel's Canon, written bar by bar](../images/step-9-band-demo.png)
+![The chord sheet of Canon in D after the Pop ballad preset: the band's rows (Form, Choruses, Ending, and You play Piano, Bass, Drums, Guitar, Strings) over D A Bm F#m | G D G A, the progression of Pachelbel's Canon, written bar by bar](../images/step-9-band-demo.png)
 
 **No band** removes the band's patterns, its tracks and its channels
 (only the ones it added, and only if nothing else plays on them), and
@@ -1310,6 +1334,8 @@ than opened wrong.
 `sets_micromodes_and_rows_are_played_by_their_notes`,
 `no_chord_silences_every_style`,
 `a_style_in_three_puts_the_song_in_three`,
+`a_walking_bass_leads_into_each_chord_by_a_semitone` (in Swing and in a
+jazz waltz),
 `a_band_in_a_demo_mutes_the_songs_own_accompaniment`,
 `deleting_a_players_channel_freezes_only_that_part`,
 `long_songs_are_cut_into_patterns_and_repeats_share_one`, and for the
@@ -1318,7 +1344,10 @@ style parts `instruments_can_change_without_changing_the_performance`,
 `separate_style_components_survive_saving_and_undo`.
 `every_rhythm_is_a_band_style_and_names_are_unique` reads the whole
 list. In `comping.rs`, `a_walking_line_leads_into_the_next_chord`
-checks C2, E2, G2, E2 over C7 going to F, and
+checks C2, E2, G2, F♯2 over C7 going to F,
+`a_walking_line_goes_the_way_of_the_next_chord` the four lines of C,
+Am, F, G7 and that, from every chord to every root, the last step is a
+half step and no step is wider than a sixth, and
 `plain_accents_follow_the_grouping_without_a_styled_bass_line` the beats
 of an odd meter.
 

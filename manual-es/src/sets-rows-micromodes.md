@@ -156,7 +156,8 @@ formas son las mismas; solo cambian sus números.)
 ### La ventana Serie dodecafónica
 
 **Serie…**, en el piano roll, la abre. Escribe una serie en el cuadro de
-arriba, con nombres de notas o con números, y haz clic en **Usar**; o
+arriba, con nombres de notas (en letras o en solfeo) o con números, y
+haz clic en **Usar**; o
 dibuja doce notas en el piano roll y haz clic en **Desde las notas**; o
 toma una de **🎲 Al azar**, **🎲 Todos los intervalos** o **Series
 famosas y de ejemplo**: la Suite de Schoenberg, la Suite lírica de Berg,
