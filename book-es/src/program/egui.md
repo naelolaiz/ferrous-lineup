@@ -925,12 +925,89 @@ sistema guarda los datos de las apps (en Linux,
 `~/.local/share/ferrouslineup/`), cada 30 segundos y cuando se cierra la
 ventana.
 
-La app guarda sus propias elecciones duraderas en la misma memoria, con
-`insert_persisted` en lugar de `insert_temp`: los zooms de las áreas,
-los ajustes, los archivos recientes, los filtros de la biblioteca, el
-SoundFont. Cada módulo guarda lo suyo bajo un `Id` propio, y eframe los
-guarda todos juntos. Lo que se guarda con `insert_temp` se olvida al
-cerrar la app.
+La app guarda la mayoría de sus propias elecciones duraderas en la
+misma memoria, con `insert_persisted` en lugar de `insert_temp`: los
+zooms de las áreas, los ajustes, los archivos recientes, los filtros de
+la biblioteca. Cada módulo guarda lo suyo bajo un `Id` propio, y eframe
+los guarda todos juntos. Lo que se guarda con `insert_temp` se olvida
+al cerrar la app.
+
+### Guardado por nombre, no por tipo
+
+egui encuentra un valor en su memoria por dos cosas: el `Id` bajo el que
+se guardó y su tipo de Rust, a través del `TypeId` del tipo. Un `TypeId`
+es un número que el compilador calcula a partir de la ruta del tipo, sus
+campos y el crate en el que está, y la parte del crate cambia con la
+versión del crate y con la versión del compilador. Así que después de
+una actualización de la app, o de compilar con un Rust más nuevo, o de
+añadir un campo al tipo, `get_persisted` busca bajo un número nuevo y no
+encuentra nada: el ajuste vuelve a su valor por defecto, y el valor
+viejo queda sin leer en `app.ron`. El SoundFont lo mostró: con el mismo
+`app.ron`, la versión 0.4.0 tocaba con GeneralUser GS y una compilación
+numerada 0.4.1 lo tenía desactivado.
+
+eframe tiene un almacenamiento propio, el mismo `app.ron`, que encuentra
+los valores por un nombre: un `&str` que no cambia sea cual sea la
+versión. eframe se lo da a la app solo dos veces: como `cc.storage`
+cuando la app arranca, y a `App::save`, cada 30 segundos y al cerrar la
+ventana. El módulo `app/preferences.rs` une las dos cosas. Guarda cada
+preferencia por nombre, escrita como texto RON, en un único mapa:
+
+```rust
+/// Each preference by name, written as RON. egui's context holds one
+/// handle to the map and the app another, to save it.
+#[derive(Clone, Default)]
+pub(super) struct Preferences(Arc<Mutex<BTreeMap<String, String>>>);
+```
+
+Un acceso al mapa vive en la memoria temporal de egui, así que cualquier
+código con el `Context` llega a él, como a cualquier otro valor guardado
+ahí:
+
+```rust
+/// The preference kept as `name`, if there is one and it can be read.
+pub(super) fn get<T: DeserializeOwned>(ctx: &egui::Context, name: &str) -> Option<T> {
+    let text = Preferences::of(ctx).map().get(name).cloned()?;
+    ron::from_str(&text).ok()
+}
+
+/// Keeps `value` as the preference `name`.
+pub(super) fn set<T: Serialize>(ctx: &egui::Context, name: &str, value: &T) {
+    if let Ok(text) = ron::to_string(value) {
+        Preferences::of(ctx).map().insert(name.to_string(), text);
+    }
+}
+```
+
+La app lee el mapa del almacenamiento de eframe antes de crear nada más,
+
+```rust
+if let Some(storage) = cc.storage {
+    preferences::Preferences::of(&cc.egui_ctx).load(storage);
+}
+```
+
+guarda otro acceso a él, y se lo devuelve a eframe para que lo escriba:
+
+```rust
+fn save(&mut self, storage: &mut dyn eframe::Storage) {
+    self.preferences.save(storage);
+}
+```
+
+El `Arc<Mutex<…>>` deja que los dos accesos compartan un mismo mapa. El
+bloqueo se mantiene solo mientras se lee o se escribe una línea, y solo
+lo toma el hilo de la ventana. Como los valores son texto RON hasta que
+se piden, un tipo puede cambiar sus campos y seguir leyendo lo que
+guardó una versión anterior, con `#[serde(default)]` para los campos
+que todavía no existían.
+
+Los ajustes de sonido ([SoundFonts y General
+MIDI](../sound/soundfonts.md)) se guardan así, como `"sound-font"`. Las
+demás elecciones de arriba siguen en la memoria de egui, así que una
+actualización puede olvidarlas; pasar una al nuevo sistema es cuestión
+de llamar a `preferences::get` y `preferences::set` con un nombre en
+lugar de `get_persisted` e `insert_persisted` con un `Id`.
 
 ### Features de Cargo
 
