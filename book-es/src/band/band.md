@@ -14,7 +14,7 @@ cuerdas, un órgano o una sección de vientos donde el estilo los tiene.
 Cambia el estilo, la tonalidad o un acorde, y la banda lo vuelve a tocar
 de la manera nueva.
 
-![La hoja de acordes con la banda: «Band: Pop beat», un botón Progression, «Key: C major · 4/4 · 110 BPM», y los compases C | Am | F | G7 con sus números romanos](../images/step-9-band-sheet.png)
+![La hoja de acordes de una canción con la banda de Pop beat: los botones Band y Progression, «Key: C major · 4/4 · 110 BPM», las filas de la banda (Form, Choruses, Ending, y You play Piano, Bass, Drums, Guitar), y los compases C | Am | F | G7 con sus números romanos](../images/step-9-band-sheet.png)
 
 Las partes de la banda son patrones corrientes en pistas propias,
 llamados «Piano 1», «Bajo 1», «Batería 1». Haz doble clic en uno y el
@@ -253,11 +253,12 @@ pub struct Played {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BassPart {
     /// A chord: its line goes over the chord's notes from `note` (its
-    /// root, or a slash chord's bass), and may lead into `next`.
+    /// root, or a slash chord's bass), and may lead into `next`, the
+    /// bass note of the harmony after it.
     Chord {
         chord: Chord,
         note: Note,
-        next: PitchClass,
+        next: Note,
     },
     /// A group of notes with no root, such as a pitch-class set: the
     /// bass keeps the rhythm of its line on this one note and its octave.
@@ -394,14 +395,22 @@ Solo el último trozo de una armonía conduce a la siguiente. Un bajo
 caminante toca una nota por pulso:
 
 ```rust
-fn walk(span: usize) -> Vec<(usize, Tone)> {
-    const MIDDLE: [Tone; 6] = [
+fn walk(span: usize, down: bool) -> Vec<(usize, Tone)> {
+    const UP: [Tone; 6] = [
         Tone::Third,
         Tone::Fifth,
         Tone::Seventh,
         Tone::Octave,
         Tone::Fifth,
         Tone::Third,
+    ];
+    const DOWN: [Tone; 6] = [
+        Tone::LowSeventh,
+        Tone::LowFifth,
+        Tone::LowThird,
+        Tone::LowFifth,
+        Tone::LowSeventh,
+        Tone::Root,
     ];
     let beats = span.div_ceil(4);
     (0..beats)
@@ -411,9 +420,11 @@ fn walk(span: usize) -> Vec<(usize, Tone)> {
             } else if beat == beats - 1 {
                 Tone::Approach
             } else if beats == 3 {
-                Tone::Fifth
+                if down { Tone::LowFifth } else { Tone::Fifth }
+            } else if down {
+                DOWN[(beat - 1) % DOWN.len()]
             } else {
-                MIDDLE[(beat - 1) % MIDDLE.len()]
+                UP[(beat - 1) % UP.len()]
             };
             (beat * 4, tone)
         })
@@ -423,11 +434,25 @@ fn walk(span: usize) -> Vec<(usize, Tone)> {
 
 La fundamental en el 1, notas del acorde en el medio, y en el último
 pulso la **aproximación**, una nota medio tono por encima o por debajo
-de la fundamental siguiente. En 4/4 sobre C7 yendo a F eso es Do Mi Sol
-Mi: Mi está medio tono por debajo de Fa. En un compás de tres,
-fundamental, tercera, aproximación daría Do Mi Mi, porque la tercera de
-Do *es* el medio tono bajo Fa; así que la caminata en tres va
-fundamental, quinta, aproximación: Do Sol Mi.
+de la nota del bajo del acorde siguiente. La línea recibe esa nota
+misma, no solo su nombre: una fundamental se toca entre Do2 y Si2 (ver
+[Las armonías, como notas](#las-armonías-como-notas)), así que de G7 a
+C la nota siguiente es Do2, y la aproximación es el medio tono del lado
+más cercano a la nota anterior, Re♭2 bajando desde Re2. Sabiendo solo
+«Do», la línea podría elegir Si2 y después caer una séptima al Do2 que
+sigue.
+
+Las notas del medio suben por el acorde (`UP`) o bajan por él (`DOWN`,
+las notas del acorde por debajo de la fundamental). `Bass::play` arma
+las dos líneas y se queda con la que llega al acorde siguiente con
+pasos más chicos, la que baja solo mientras se mantenga por encima de
+Mi1 (`BASS_FLOOR`), la cuerda más grave de un bajo eléctrico. Así,
+sobre C yendo a Am la caminata sube, Do2 Mi2 Sol2 Sol♯2, hacia La2, y
+sobre G7 yendo a C baja, Sol2 Fa2 Re2 Re♭2, hacia Do2. En un compás de
+tres la caminata va fundamental, quinta, aproximación: sobre C7 yendo a
+F, Do2 Sol2 Fa♯2, hacia Fa2. La tercera queda fuera porque la tercera
+de Do *es* el medio tono bajo Fa: la línea llegaría a su aproximación
+un pulso antes.
 
 ### La batería
 
@@ -675,7 +700,7 @@ como la orquesta, entra junto a las partes de la canción en lugar de
 silenciarlas (ver [Una orquesta para música que cambia de
 compás](orchestra.md)).
 
-![La hoja de acordes del Canon en Re con una banda de Pop ballad: D A Bm F#m | G D G A, la progresión del Canon de Pachelbel, escrita compás por compás](../images/step-9-band-demo.png)
+![La hoja de acordes del Canon en Re después del preajuste Pop ballad: las filas de la banda (Form, Choruses, Ending, y You play Piano, Bass, Drums, Guitar, Strings) sobre D A Bm F#m | G D G A, la progresión del Canon de Pachelbel, escrita compás por compás](../images/step-9-band-demo.png)
 
 **Sin banda** quita los patrones, las pistas y los canales de la banda
 (solo los que añadió, y solo si nada más toca en ellos), y vuelve a
@@ -1369,6 +1394,8 @@ de abrirse mal.
 `sets_micromodes_and_rows_are_played_by_their_notes`,
 `no_chord_silences_every_style`,
 `a_style_in_three_puts_the_song_in_three`,
+`a_walking_bass_leads_into_each_chord_by_a_semitone` (en Swing y en un
+vals de jazz),
 `a_band_in_a_demo_mutes_the_songs_own_accompaniment`,
 `deleting_a_players_channel_freezes_only_that_part`,
 `long_songs_are_cut_into_patterns_and_repeats_share_one`, y para las
@@ -1377,7 +1404,10 @@ partes del estilo `instruments_can_change_without_changing_the_performance`,
 `separate_style_components_survive_saving_and_undo`.
 `every_rhythm_is_a_band_style_and_names_are_unique` lee la lista
 entera. En `comping.rs`, `a_walking_line_leads_into_the_next_chord`
-comprueba Do2, Mi2, Sol2, Mi2 sobre C7 yendo a F, y
+comprueba Do2, Mi2, Sol2, Fa♯2 sobre C7 yendo a F,
+`a_walking_line_goes_the_way_of_the_next_chord` las cuatro líneas de
+C, Am, F, G7 y que, de cada acorde a cada fundamental, el último paso
+sea de medio tono y ningún paso más ancho que una sexta, y
 `plain_accents_follow_the_grouping_without_a_styled_bass_line` los
 pulsos de un compás irregular.
 

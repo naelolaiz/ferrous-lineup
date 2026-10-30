@@ -60,6 +60,7 @@ Lo que se le puede pedir a un instrumento:
 | `note_off` | Suelta una nota sostenida con el gate `HELD` |
 | `release_all` | Suelta todas las notas sostenidas, cuando se detiene la reproducción |
 | `release_unless` | Suelta las notas de la canción que la canción ya no toca |
+| `resume` | Empieza un sonido largo por la mitad, donde estaría si la reproducción hubiera empezado antes (solo el sampler) |
 | `tempo_changed` | Estira las notas sostenidas después de un cambio de tempo ([Tempo, compás, swing y sensación](tempo.md)) |
 | `next_sample` | El siguiente frame de sonido: la suma de todas las voces |
 
@@ -329,6 +330,79 @@ pub fn release_all(&mut self) {
 `release_unless`, para un clip que se quita o una pista que se silencia
 mientras suena, apaga los sonidos de la canción sea cual sea su
 longitud.
+
+### Empezar por la mitad
+
+Una nota suena cuando la reproducción llega al paso en que empieza.
+Para un golpe de batería eso es todo, pero una grabación es una nota en
+el primer paso de una canción: empezada desde el compás 20, la canción
+sonaría sin ella. Así que cuando la reproducción empieza, salta o
+vuelve al comienzo del bucle, `resume_long_sounds`, en el motor, mira
+hacia atrás en la canción las notas que empezaron antes del cursor de
+reproducción, y le pide a cada instrumento que las retome con `resume`:
+
+```rust
+fn resume(
+    &mut self,
+    pitch: Note,
+    velocity: u8,
+    output_rate: u32,
+    origin: Origin,
+    elapsed: f64,
+) -> bool {
+    let increment = self.increment(pitch, output_rate);
+    let position = elapsed * increment;
+    if !self.is_long() || position + 1.0 >= self.sample.frames().len() as f64 {
+        return false;
+    }
+    self.start_at(position, increment, velocity, Some(origin));
+    true
+}
+```
+
+`elapsed` es cuántos frames de salida hace que empezó la nota, y una
+voz avanza `increment` frames del sonido por cada frame de salida, así
+que la voz empieza `elapsed * increment` frames adentro, tan lejos como
+habría llegado. Solo un sonido largo, de más de diez segundos, empieza
+así, y solo si dura tanto: un golpe de batería de hace dos compases ya
+terminó hace rato, y los demás instrumentos responden `false`.
+`resume_long_sounds` recorre cada trozo de un clip que empieza en el
+paso o antes, y cada vez que el trozo tocó cada nota:
+
+```rust
+for note in channel.notes.get(play.pattern) {
+    // Every time the piece played the note before
+    // `step`, counted from the piece's start, which is
+    // below zero for a time in the part of the clip the
+    // piece skips.
+    let first = play.start as isize - play.skip as isize + note.start as isize;
+    let times = (first..play.end().min(step) as isize).step_by(length);
+    for at in times.filter(|&at| at < step as isize) {
+        let origin = Origin {
+            pattern: play.pattern,
+            pattern_step: note.start,
+            song_step: at.max(0) as usize,
+            over_song: false,
+        };
+        let elapsed = frames_between(timing, at, step);
+        let started = channel.instrument.resume(
+            origin,
+            note.pitch,
+            note.velocity,
+            self.sample_rate,
+            elapsed,
+        );
+        // ...
+    }
+}
+```
+
+`first` es donde cae la nota si el trozo empezara en su propio primer
+paso; es menor que cero cuando el clip deja fuera su comienzo (`skip`),
+y `step_by(length)` da cada repetición del patrón dentro del trozo.
+`frames_between` suma los frames de los pasos desde ahí hasta el cursor
+de reproducción, al tempo de la canción en cada paso, así que una
+grabación bajo un cambio de tempo también empieza en el lugar justo.
 
 ### Cargar un archivo WAV
 

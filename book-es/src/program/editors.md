@@ -246,8 +246,8 @@ es verdadero, o `None`. Un archivo WAV soltado sobre una fila sustituye
 el sonido de ese canal; un archivo soltado en cualquier otro sitio se
 convierte en un canal nuevo con el nombre del archivo
 (`path.file_stem()` es el nombre del archivo sin su extensión). Un
-archivo de proyecto, MIDI o de hoja de acordes se deja para la app, que
-lo abre.
+archivo de proyecto, MIDI o de hoja de acordes, o una grabación, se
+deja para la app, que lo abre o lo importa.
 
 La carga ocurre en `LineupApp::load_sample`, en el hilo de la ventana,
 porque leer archivos es lento y nunca debe ocurrir en el hilo de audio.
