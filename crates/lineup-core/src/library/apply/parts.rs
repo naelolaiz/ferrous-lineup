@@ -44,15 +44,23 @@ fn meter(project: &mut Project, index: usize, time: TimeSignature) {
     }
 }
 
-/// Change the sounds of the existing chord and bass voices. Locked
-/// channels keep theirs, and a locked `selected` channel counts as none.
+/// Change the sounds of the existing chord and bass voices: the channels
+/// named Keys (or `selected`) and Bass. A song with neither, such as an
+/// imported MIDI file, has players of its own, who take the style's
+/// sounds by family (see [`own_players_instruments`]). Locked channels
+/// keep theirs, and a locked `selected` channel counts as none.
 pub fn style_instruments(project: &mut Project, style: &Style, selected: Option<usize>) {
     let Some(band) = BandStyle::of_style(style) else {
         return;
     };
-    let chords = selected
-        .filter(|&index| !project.is_locked(index))
-        .or_else(|| find_synth(project, KEYS));
+    let keys = find_synth(project, KEYS);
+    if keys.is_none()
+        && find_synth(project, BASS).is_none()
+        && own_players_instruments(project, band)
+    {
+        return;
+    }
+    let chords = selected.filter(|&index| !project.is_locked(index)).or(keys);
     if let Some(index) = chords
         && project.channels().get(index).is_some_and(plays_notes)
     {
@@ -61,6 +69,60 @@ pub fn style_instruments(project: &mut Project, style: &Style, selected: Option<
     if let Some(index) = find_synth(project, BASS) {
         project.set_sound(index, None, Some(band.bass_program()));
     }
+}
+
+/// Gives every channel of the song's own players but the melody the
+/// sound `band` has for it: a bass (a double bass too) its bass, a piano
+/// its piano, a guitar its guitar and an organ or an accordion its organ
+/// (or its piano, without one), and bowed strings its strings. Other
+/// instruments, and channels without a General MIDI sound, keep theirs.
+/// Returns whether the song has players like that.
+fn own_players_instruments(project: &mut Project, band: &BandStyle) -> bool {
+    // The tune: on the channels named for it, as a MIDI file's tracks
+    // often are, or else where the lead sheet looks for it.
+    let mut tune: Vec<usize> = (project.channels().iter().enumerate())
+        .filter(|(_, channel)| plays_the_tune(&channel.name))
+        .map(|(index, _)| index)
+        .collect();
+    if tune.is_empty() {
+        tune.extend(crate::lead_sheet::default_melody_channel(project));
+    }
+    let extras = band.extras();
+    let piano = band.piano_program();
+    let played: Vec<(usize, u8)> = (project.channels().iter().enumerate())
+        .filter(|&(index, channel)| !tune.contains(&index) && plays_notes(channel))
+        .filter_map(|(index, channel)| {
+            let program = match channel.program? {
+                general_midi::CONTRABASS => band.bass_program(),
+                // Violins to tremolo strings, and the string ensembles.
+                40..=44 | 48..=51 => extras.strings.as_ref()?.program,
+                program => match general_midi::FAMILIES[general_midi::family(program)] {
+                    "Piano" => piano,
+                    "Organ" => extras.organ.as_ref().map_or(piano, |organ| organ.program),
+                    "Guitar" => extras
+                        .guitar
+                        .as_ref()
+                        .map_or(piano, |guitar| guitar.program),
+                    "Bass" => band.bass_program(),
+                    _ => return None,
+                },
+            };
+            Some((index, program))
+        })
+        .collect();
+    for &(index, program) in &played {
+        project.set_sound(index, None, Some(program));
+    }
+    !played.is_empty()
+}
+
+/// Whether a channel called `name` plays the tune, as "Lead", "Melody",
+/// "Melodía", "Voice" or "Voz" say.
+fn plays_the_tune(name: &str) -> bool {
+    let name = name.to_lowercase();
+    ["lead", "melod", "voice", "vocal", "voz", "canto", "tune"]
+        .iter()
+        .any(|word| name.contains(word))
 }
 
 /// Put new chords under an existing performance, keeping its attacks,
@@ -262,7 +324,8 @@ pub fn write_rhythm_parts(project: &mut Project, index: usize, rhythm: &Rhythm, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::HarmonyName;
+    use crate::project::Channel;
+    use crate::{HarmonyName, NoteEvent};
 
     fn no_parts() -> StyleParts {
         StyleParts {
@@ -287,6 +350,112 @@ mod tests {
         );
         write_rhythm(&mut project, 0, Rhythm::named("Pop beat").unwrap());
         project
+    }
+
+    /// A song as a MIDI file brings it: its players named by the file,
+    /// none of them Keys or Bass, the tune on a piano high above them.
+    fn imported() -> Project {
+        let mut project = Project::empty();
+        for (name, program, pitch) in [
+            ("PIANO MELODIA", 0, 79),
+            ("BANDONEON", 23, 64),
+            ("GUITARRA", 24, 60),
+            ("CONTRABAJO", 43, 40),
+            ("CUERDAS", 49, 67),
+            ("CORO", 52, 65),
+            ("Melodía", 26, 55),
+        ] {
+            let channel = project
+                .add_channel(Channel {
+                    name: name.into(),
+                    program: Some(program),
+                    ..Channel::synth()
+                })
+                .unwrap();
+            project
+                .pattern_mut(0)
+                .unwrap()
+                .set_notes(channel, [NoteEvent::exact(Note::new(pitch), 0, 100)]);
+        }
+        project
+            .add_clip(crate::playlist::Clip::new(0, 0, 0))
+            .unwrap();
+        project
+    }
+
+    fn program_of(project: &Project, name: &str) -> Option<u8> {
+        let channel = project
+            .channels()
+            .iter()
+            .find(|channel| channel.name == name);
+        channel.and_then(|channel| channel.program)
+    }
+
+    #[test]
+    fn a_styles_sounds_go_to_an_imported_songs_players_by_family_but_the_tune() {
+        let mut project = imported();
+        style_instruments(&mut project, Style::named("Tango").unwrap(), Some(0));
+        // The tune keeps its piano, and the choir has no match.
+        assert_eq!(program_of(&project, "PIANO MELODIA"), Some(0));
+        assert_eq!(
+            program_of(&project, "Melodía"),
+            Some(26),
+            "named for the tune"
+        );
+        assert_eq!(program_of(&project, "CORO"), Some(52));
+        let tango = BandStyle::of_style(Style::named("Tango").unwrap()).unwrap();
+        assert_eq!(
+            program_of(&project, "CONTRABAJO"),
+            Some(tango.bass_program())
+        );
+        // No organ nor guitar in a tango band: the piano plays those.
+        assert_eq!(
+            program_of(&project, "BANDONEON"),
+            Some(tango.piano_program())
+        );
+        assert_eq!(
+            program_of(&project, "GUITARRA"),
+            Some(tango.piano_program())
+        );
+        let strings = tango.extras().strings.unwrap().program;
+        assert_eq!(program_of(&project, "CUERDAS"), Some(strings));
+
+        let mut project = imported();
+        let bossa = Style::named("Bossa nova").unwrap();
+        style_instruments(&mut project, bossa, None);
+        let band = BandStyle::of_style(bossa).unwrap();
+        let guitar = band.extras().guitar.unwrap().program;
+        assert_eq!(program_of(&project, "GUITARRA"), Some(guitar));
+        assert_eq!(
+            program_of(&project, "CONTRABAJO"),
+            Some(band.bass_program())
+        );
+        assert_eq!(
+            program_of(&project, "CUERDAS"),
+            Some(49),
+            "no strings in it"
+        );
+    }
+
+    #[test]
+    fn a_songs_keys_and_bass_still_take_a_styles_sounds_alone() {
+        let mut project = audition();
+        let lead = project
+            .add_channel(Channel {
+                name: LEAD.into(),
+                program: Some(general_midi::ELECTRIC_PIANO),
+                ..Channel::synth()
+            })
+            .unwrap();
+        let style = Style::named("Tango").unwrap();
+        style_instruments(&mut project, style, None);
+        let band = BandStyle::of_style(style).unwrap();
+        let keys = find_synth(&project, KEYS).unwrap();
+        assert_eq!(project.channels()[keys].program, Some(band.piano_program()));
+        assert_eq!(
+            project.channels()[lead].program,
+            Some(general_midi::ELECTRIC_PIANO)
+        );
     }
 
     #[test]

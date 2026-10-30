@@ -2459,8 +2459,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "{} no cambió nada: un patrón que la canción toca conserva el compás de la canción. Marca Batería para probar el estilo en un patrón propio.",
     ),
     (
-        "{} changed nothing: its instruments go to the channels named Keys and Bass, or to the channel chosen in the rack.",
-        "{} no cambió nada: sus instrumentos van a los canales llamados Teclados y Bajo, o al canal elegido en el rack.",
+        "{} changed nothing: the channels that take its instruments (Keys and Bass, the channel chosen in the rack, or else every player but the tune) already sound like that.",
+        "{} no cambió nada: los canales que toman sus instrumentos (Teclados y Bajo, el canal elegido en el rack, o si no todos menos el de la melodía) ya suenan así.",
     ),
     (
         "{} changed nothing: the song already goes that way.",

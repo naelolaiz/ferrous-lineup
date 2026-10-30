@@ -593,8 +593,9 @@ impl LineupApp {
                 )
             } else if parts.instruments {
                 trf(
-                    "{} changed nothing: its instruments go to the channels named \
-                     Keys and Bass, or to the channel chosen in the rack.",
+                    "{} changed nothing: the channels that take its instruments \
+                     (Keys and Bass, the channel chosen in the rack, or else every \
+                     player but the tune) already sound like that.",
                     &[&tr_name(name)],
                 )
             } else {
