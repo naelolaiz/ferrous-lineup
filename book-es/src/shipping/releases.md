@@ -17,7 +17,7 @@ computadora y prepara siete descargas:
 | `ferrous-lineup-…-macos-arm64.dmg` | Mac con Apple Silicon (M1 y posteriores) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Mac con procesador Intel |
 
-Los `…` son la versión en una publicación (`v0.4.0`), o los siete
+Los `…` son la versión en una publicación (`v0.4.1`), o los siete
 primeros caracteres del commit en cualquier otra compilación
 (`1a2b3c4`), así una descarga siempre dice qué es. Cómo abrir cada una en
 su sistema está en [Instalarlo](https://naelolaiz.github.io/ferrous-lineup/es/manual/installing.html),
@@ -35,7 +35,9 @@ en el manual; este capítulo trata de cómo se hacen.
 - **Una etiqueta** que empieza con `v` también publica los paquetes en
   la página **Releases** del repositorio, con un `SHA256SUMS.txt` al
   lado. Una publicación se queda ahí para siempre, y cualquiera puede
-  descargarla.
+  descargarla. La etiqueta se puede subir con un push, o el flujo de
+  trabajo puede crearla él mismo en una ejecución a mano (ver más
+  abajo).
 
 ## Publicar una versión
 
@@ -54,9 +56,12 @@ versión 0.5.0 lleva un pull request y una etiqueta.
 - la versión por defecto en el script del instalador de Windows,
   `packaging/windows/ferrous-lineup.iss`;
 - la versión en las recetas de AUR y la etiqueta en el manifiesto de
-  Flathub.
+  Flathub;
+- si la publicación debe empezar con unas palabras propias, un archivo
+  `packaging/release-notes/v0.5.0.md` que las contenga, en Markdown.
 
-**La etiqueta**, una vez fusionado eso:
+**La etiqueta**, una vez fusionado eso, llega de una de dos maneras.
+Desde un clon, con un push:
 
 ```sh
 git fetch origin
@@ -64,26 +69,37 @@ git tag -a v0.5.0 -m "Ferrous Lineup 0.5.0" origin/main
 git push origin v0.5.0
 ```
 
-El push pone en marcha el flujo de trabajo. Cuando todos sus trabajos de
-compilación pasaron, aparece la publicación, llamada «Ferrous Lineup
-v0.5.0», con notas que listan los pull requests fusionados desde la
-versión anterior; después las notas se pueden editar en GitHub. Un
-último pull request pequeño fija lo que solo existe una vez que existe
-la etiqueta: la suma de comprobación del archivo de la etiqueta que hace
-GitHub, en la receta de AUR, y el commit de la etiqueta en el manifiesto
-de Flathub.
+O, en GitHub, se abre **Actions > Release > Run workflow**, se deja la
+rama en `main`, se escribe `v0.5.0` en el campo **tag** y se ejecuta.
+Esto solo necesita el permiso de ejecutar flujos de trabajo, no el de
+hacer push al repositorio, y el flujo de trabajo crea la etiqueta él
+mismo, en el commit que compiló.
 
-Dos detalles:
+De cualquiera de las dos maneras, cuando todos los trabajos de
+compilación pasaron, aparece la publicación, llamada «Ferrous Lineup
+v0.5.0». Sus notas son el archivo de notas, si lo hay, seguido de la
+lista de pull requests fusionados desde la versión anterior que escribe
+GitHub; después se pueden editar en GitHub. Un último pull request
+pequeño fija lo que solo existe una vez que existe la etiqueta: la suma
+de comprobación del archivo de la etiqueta que hace GitHub, en la receta
+de AUR, y el commit de la etiqueta en el manifiesto de Flathub.
+
+Tres detalles:
 
 - Una etiqueta con un guion, como `v0.5.0-beta.1`, hace una
   **prepublicación** (pre-release), que nunca se muestra como la última.
   Así escribe el [versionado semántico](https://semver.org) una versión
   que todavía no es definitiva, y Cargo lee las versiones de la misma
   manera.
-- Si la etiqueta y `Cargo.toml` no coinciden, la publicación se hace
-  igual, con un aviso en la página de la ejecución. La etiqueta decide
-  los nombres de los archivos, pero **Ayuda > Acerca de Ferrous Lineup**
-  dice lo que decía `Cargo.toml`.
+- Si una etiqueta subida con push y `Cargo.toml` no coinciden, la
+  publicación se hace igual, con un aviso en la página de la ejecución:
+  la etiqueta ya existe, y detenerse solo la dejaría sin descargas. La
+  etiqueta decide los nombres de los archivos, pero **Ayuda > Acerca de
+  Ferrous Lineup** dice lo que decía `Cargo.toml`.
+- Una ejecución a mano comprueba antes de crear nada: si la etiqueta
+  pedida no es `v` más la versión de `Cargo.toml`, o la ejecución está
+  en otra rama que main, el trabajo de publicación se detiene con un
+  error, y no se crea ninguna etiqueta.
 
 ## Targets: para qué computadora es un programa
 
@@ -193,13 +209,28 @@ Para Linux y Windows, un paso **Package** copia el programa, el README y
 la licencia en una carpeta con el nombre de la etiqueta, y la empaqueta:
 
 ```bash
-if [[ "$GITHUB_REF_TYPE" == tag ]]; then
-  label="$GITHUB_REF_NAME"
+if [[ -n "$RELEASE_TAG" ]]; then
+  label="$RELEASE_TAG"
 else
   label="${COMMIT::7}"
 fi
 name="ferrous-lineup-$label-${{ matrix.platform }}"
 ```
+
+`RELEASE_TAG` se define una vez, para todos los trabajos, al principio
+del archivo:
+
+```yaml
+env:
+  RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+```
+
+Las expresiones de GitHub no tienen «si … si no», así que `a && b || c`
+hace sus veces: cuando la ejecución es por una etiqueta subida con push,
+el valor es el nombre de la etiqueta; si no, es el campo **tag** de una
+ejecución a mano, que está vacío en cualquier otra ejecución (`inputs`
+no tiene nada cuando nadie llenó un formulario). En Bash, `-n` es
+verdadero para un texto que no está vacío.
 
 `${COMMIT::7}` es Bash para «los primeros siete caracteres». `COMMIT` es
 `${{ github.event.pull_request.head.sha || github.sha }}`: para un pull
@@ -392,14 +423,28 @@ asociación de archivos `.lineup`.
 
 ## Publicar: un trabajo que espera a los demás
 
-El segundo trabajo, `release`, se ejecuta solo para etiquetas, y solo
-cuando todos los trabajos de compilación pasaron:
+El segundo trabajo, `release`, se ejecuta solo para una etiqueta subida
+con push o una ejecución a mano con etiqueta, y solo cuando todos los
+trabajos de compilación pasaron:
 
 ```yaml
 release:
   name: Publish the release
-  if: github.ref_type == 'tag'
+  if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
   needs: build
+```
+
+`workflow_dispatch` es el nombre que GitHub le da a una ejecución a
+mano. El formulario que muestra sale del disparador al principio del
+archivo:
+
+```yaml
+workflow_dispatch:
+  inputs:
+    tag:
+      description: "Publish a release with this tag (v0.4.1), made on the commit built. Empty: only build."
+      required: false
+      default: ""
 ```
 
 `needs: build` espera a cada línea de la matriz. Si una compilación
@@ -427,9 +472,22 @@ else
   en el sitio web o por una ejecución anterior. Entonces los archivos se
   suben a ella, y `--clobber` reemplaza los que tengan el mismo nombre.
 - Si no, `gh release create` la crea, con `--generate-notes` para las
-  notas y `--verify-tag`, que se detiene si la etiqueta no está en
-  GitHub en lugar de crear una etiqueta nueva en el commit más reciente.
+  notas. Para una etiqueta subida con push agrega `--verify-tag`, que se
+  detiene si la etiqueta no está en GitHub en lugar de crear una
+  etiqueta nueva en el commit más reciente. Para una ejecución a mano
+  agrega `--target "$GITHUB_SHA"`, y GitHub crea la etiqueta justo en el
+  commit con que se compilaron los paquetes, aunque main haya avanzado
+  desde entonces.
+- `--notes-file packaging/release-notes/<etiqueta>.md` se agrega cuando
+  ese archivo existe; `gh` pone su texto antes de las notas generadas.
 - `--prerelease` se agrega cuando la etiqueta tiene un guion.
+
+Una etiqueta creada con el propio `GITHUB_TOKEN` de la ejecución no pone
+en marcha ningún otro flujo de trabajo: lo que una ejecución hace con su
+propio token no inicia ejecuciones nuevas (solo pasa una «ejecución a
+mano» pedida explícitamente por la API de GitHub), para que un flujo de
+trabajo no pueda dispararse a sí mismo sin fin. Por eso la ejecución que
+crea la etiqueta es la que la publica; ninguna otra lo hará.
 
 Una **suma de comprobación** (checksum) es una huella de 64 caracteres
 de los bytes de un archivo: cambia un byte y la huella es completamente
@@ -456,7 +514,19 @@ Dos cosas atrapan los errores antes:
 
 `concurrency` deja una sola ejecución por rama: cuando un pull request
 recibe un push nuevo, se cancela la ejecución anterior, porque la nueva
-la contiene. Las etiquetas nunca se cancelan.
+la contiene. Las publicaciones nunca se cancelan, ni por una etiqueta
+subida con push ni por una ejecución a mano con etiqueta:
+
+```yaml
+concurrency:
+  group: release-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' && !inputs.tag }}
+```
+
+La etiqueta forma parte del nombre del grupo, así un push a main
+mientras se compila una publicación desde main pone en marcha su propia
+ejecución en lugar de esperar detrás de ella. `!inputs.tag` es verdadero
+cuando el campo está vacío.
 
 ## Otras puertas de entrada: AUR y Flathub
 

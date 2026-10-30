@@ -16,7 +16,7 @@ video encoder come with the app.
 | `ferrous-lineup-…-macos-arm64.dmg` | Macs with Apple Silicon (M1 and later) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Macs with an Intel processor |
 
-The `…` is the version, such as `v0.4.0`. **Help > About Ferrous
+The `…` is the version, such as `v0.4.1`. **Help > About Ferrous
 Lineup** in the app shows the version you are running.
 
 ## Linux
@@ -27,8 +27,8 @@ so. In a file manager, open the file's **Properties**, and under
 double-click it. In a terminal:
 
 ```sh
-chmod +x ferrous-lineup-v0.4.0-linux-x86_64.AppImage
-./ferrous-lineup-v0.4.0-linux-x86_64.AppImage
+chmod +x ferrous-lineup-v0.4.1-linux-x86_64.AppImage
+./ferrous-lineup-v0.4.1-linux-x86_64.AppImage
 ```
 
 If it does not start and mentions FUSE, install the FUSE 2 library
@@ -48,8 +48,8 @@ your songs stay where you saved them.
 **The `.tar.gz`.** Unpack it and start `ferrous-lineup` in the folder:
 
 ```sh
-tar -xzf ferrous-lineup-v0.4.0-linux-x86_64.tar.gz
-./ferrous-lineup-v0.4.0-linux-x86_64/ferrous-lineup
+tar -xzf ferrous-lineup-v0.4.1-linux-x86_64.tar.gz
+./ferrous-lineup-v0.4.1-linux-x86_64/ferrous-lineup
 ```
 
 Every desktop Linux has the sound and window libraries the app needs.

@@ -16,7 +16,7 @@ y el codificador de video vienen con la aplicación.
 | `ferrous-lineup-…-macos-arm64.dmg` | Mac con Apple Silicon (M1 y posteriores) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Mac con procesador Intel |
 
-Los `…` son la versión, por ejemplo `v0.4.0`. **Ayuda > Acerca de
+Los `…` son la versión, por ejemplo `v0.4.1`. **Ayuda > Acerca de
 Ferrous Lineup** muestra en la aplicación la versión que estás usando.
 
 ## Linux
@@ -27,8 +27,8 @@ archivo y, en **Permisos**, marca **Permitir ejecutar el archivo como
 un programa**; después haz doble clic en él. En una terminal:
 
 ```sh
-chmod +x ferrous-lineup-v0.4.0-linux-x86_64.AppImage
-./ferrous-lineup-v0.4.0-linux-x86_64.AppImage
+chmod +x ferrous-lineup-v0.4.1-linux-x86_64.AppImage
+./ferrous-lineup-v0.4.1-linux-x86_64.AppImage
 ```
 
 Si no arranca y menciona FUSE, instala la biblioteca FUSE 2 (`libfuse2`,
@@ -49,8 +49,8 @@ lo quita; tus canciones se quedan donde las guardaste.
 carpeta:
 
 ```sh
-tar -xzf ferrous-lineup-v0.4.0-linux-x86_64.tar.gz
-./ferrous-lineup-v0.4.0-linux-x86_64/ferrous-lineup
+tar -xzf ferrous-lineup-v0.4.1-linux-x86_64.tar.gz
+./ferrous-lineup-v0.4.1-linux-x86_64/ferrous-lineup
 ```
 
 Todo Linux de escritorio tiene las bibliotecas de sonido y de ventanas
