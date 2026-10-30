@@ -483,12 +483,13 @@ the Lineup Osc holds its notes, so the two never match exactly, and
 another SoundFont may be louder or softer; each channel's volume does
 the rest.
 
-## The offer on Play, and the download
+## The offer, and the download
 
 The app does not come with a SoundFont, because a good one is tens of
-megabytes. When anything plays on the Lineup Osc, a window offers one:
+megabytes. As soon as the app opens with its instruments on the Lineup
+Osc, before anything plays, a window offers one:
 
-![Play: the song plays on while the "Real instrument sounds" window offers GeneralUser GS, about 30 MB, asks "Play the instruments with it?" and has Download, Choose a file… and Not now](../images/step-9-soundfont-offer.png)
+![The app as it opens: over the starting song, the "Real instrument sounds" window offers GeneralUser GS, about 30 MB, asks "Play the instruments with it?" and has Download, Choose a file… and Not now](../images/step-9-soundfont-offer.png)
 
 **Download** fetches GeneralUser GS, a free General MIDI SoundFont by
 S. Christian Collins, from its own repository, and keeps it in the app's
@@ -507,49 +508,72 @@ offers **Use it** instead:
 
 ### Asked until answered
 
-Every way of starting to play (the ▶ button, **Space**, a Library
-preview, opening a demo) goes through
-`set_playing`, which ends with
+One method decides whether to ask:
 
 ```rust
-self.playing = true;
-self.offer_sound_font_on_play();
-```
-
-and that opens the window whenever the instruments play on the Lineup
-Osc and the offer was not turned down:
-
-```rust
-pub(super) fn offer_sound_font_on_play(&mut self) {
+pub(super) fn offer_sound_font(&mut self) {
     let sounds = &mut self.sounds;
-    if !sounds.settings.on && !sounds.settings.declined && sounds.general_user.is_some() {
+    if !sounds.settings.on && !sounds.settings.turned_down && sounds.general_user.is_some() {
         sounds.offer_open = true;
     }
 }
 ```
 
-Nothing is asked while the sounds are on, even if their SoundFont is
-still being read, nor on a system with no folder for app data
-(`general_user` is `None` there). Playing goes on while the window
-asks, so the first sound is never held up by a question.
+It opens the window whenever the instruments play on the Lineup Osc and
+the offer was not turned down. Nothing is asked while the sounds are
+on, even if their SoundFont is still being read, nor on a system with no
+folder for app data (`general_user` is `None` there).
+
+It is called in two places. `LineupApp::new` calls it once the app is
+made, so the question is the first thing the window shows:
+
+```rust
+// Real instrument sounds are offered as soon as the window opens,
+// before anything plays.
+app.offer_sound_font();
+```
+
+and every way of starting to play (the ▶ button, **Space**, a Library
+preview, opening a demo) goes through `set_playing`, which ends with
+
+```rust
+self.playing = true;
+self.offer_sound_font();
+```
+
+so an offer that was closed unanswered comes back on Play. Playing goes
+on while the window asks, so the sound is never held up by a question.
+
+A run that did not close cleanly has a question of its own at the
+start: whether to bring back the unsaved work (see [A copy of unsaved
+work](../program/saving.md#a-copy-of-unsaved-work)). The two would cover each other, so
+the sounds wait for it:
+
+```rust
+// Unsaved work from a run that did not close cleanly is offered
+// first.
+if !self.sounds.offer_open || !self.recovery.pending.is_empty() {
+    return;
+}
+```
 
 Opening the window answers nothing. A run that closes before the
-question is answered asks again the next time anything plays, and so
-does a run whose SoundFont has gone missing. Only a "no" ends the offer:
+question is answered asks again as the app next opens, and so does a
+run whose SoundFont has gone missing. Only a "no" ends the offer:
 
 ```rust
 fn decline_sound_font(&mut self) {
     let sounds = &mut self.sounds;
     sounds.offer_open = false;
-    sounds.settings.declined = true;
+    sounds.settings.turned_down = true;
     sounds.turn_off();
 }
 ```
 
 **Not now** calls it, and so do closing the window before a download
 and **Stop** during one. Turning **SoundFont instruments** off in
-Settings sets `declined` too, and turning it on clears it. A "yes" turns
-the sounds on and clears `declined`:
+Settings sets `turned_down` too, and turning it on clears it. A "yes"
+turns the sounds on and clears `turned_down`:
 
 ```rust
 // Yes: GeneralUser GS, even in place of a chosen file that is
@@ -559,7 +583,7 @@ if (download || use_it)
 {
     let sounds = &mut self.sounds;
     sounds.settings.file = None;
-    sounds.settings.declined = false;
+    sounds.settings.turned_down = false;
     if download {
         sounds.settings.on = true;
         sounds.changed = true;
@@ -596,8 +620,8 @@ struct Settings {
     file: Option<PathBuf>,
     /// Whether the offer of real instrument sounds was turned down, with
     /// "Not now", or the sounds were turned off in Settings. Until then,
-    /// Play offers them whenever they are off.
-    declined: bool,
+    /// the app offers them as it opens and on Play whenever they are off.
+    turned_down: bool,
 }
 ```
 
@@ -611,14 +635,15 @@ settings: preferences::get(ctx, SETTINGS_NAME).unwrap_or_default(),
 
 when the app starts, and `preferences::set(ctx, SETTINGS_NAME,
 &self.sounds.settings)` whenever they change. Kept by name, they survive
-an update of the app. In egui's own memory they did not: an update
-turned the sounds off, and with GeneralUser GS still on disk, nothing
-offered them again.
+an update of the app. In egui's own memory they would not: an update
+would turn the sounds off, and with GeneralUser GS still on disk the
+app would be back on the Lineup Osc.
 
 `#[serde(default)]` on the struct fills any field missing from the saved
 data with its value from `Default`, so a field can be added without
-losing everyone's settings, and a field that is gone (like `offered`,
-which an earlier version kept) is skipped. `Default` is written by hand
+losing everyone's settings, and a field the struct no longer has is
+skipped. Renaming a field therefore forgets only that field: a renamed
+`turned_down` starts as `false`, and everyone is asked again. `Default` is written by hand
 rather than derived, because `drums` starts as `true`.
 
 ### Downloading on a thread of its own
@@ -783,7 +808,11 @@ SoundFont is refused, and which channels the SoundFont takes
 The window tests must not depend on whether the computer running them
 has downloaded GeneralUser GS. So every test app looks for it at a path
 that never exists, `keep_general_user_in(no_sound_font())`, and starts
-as if the offer had been turned down. Three tests undo that.
+as if the offer had been turned down. Four tests undo that.
+`the_app_offers_real_instrument_sounds_as_it_opens` does what
+`LineupApp::new` does and checks that the window opens before anything
+plays, with **Download**, and that after **Not now** it does not come
+back, even after a restart and an update.
 `play_offers_real_instrument_sounds_until_the_offer_is_answered`
 presses **Space** and checks that the window opens while the song plays,
 with **Download**. It starts the app again without answering and checks

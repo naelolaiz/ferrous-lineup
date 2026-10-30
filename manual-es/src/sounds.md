@@ -9,15 +9,16 @@ Ferrous Lineup puede tocar sus instrumentos de dos maneras:
   reales: un piano, un contrabajo, un bandoneón, un coro, una batería.
   Así es como debería sonar la banda.
 
-## La primera reproducción
+## Al abrir la aplicación
 
-La primera vez que algo suena, al pulsar ▶ o al abrir una demostración
-(que empieza a sonar enseguida), una ventana llamada **Sonidos de
-instrumentos reales** ofrece descargar **GeneralUser GS**, un SoundFont
-libre de S. Christian Collins, de unos 30 MB, y pregunta «¿Tocar los
-instrumentos con él?». La canción sigue sonando mientras pregunta.
+La primera vez que abres Ferrous Lineup, antes de que nada suene, una
+ventana llamada **Sonidos de instrumentos reales** ofrece descargar
+**GeneralUser GS**, un SoundFont libre de S. Christian Collins, de unos
+30 MB, y pregunta «¿Tocar los instrumentos con él?». Si la aplicación
+ofrece antes recuperar trabajo sin guardar, los sonidos vienen justo
+después.
 
-![La primera reproducción: una demostración sigue sonando mientras la ventana Sonidos de instrumentos reales ofrece GeneralUser GS y pregunta «¿Tocar los instrumentos con él?», con Descargar, Elegir un archivo… y Ahora no](images/soundfont-offer.png)
+![La aplicación al abrirse por primera vez: la ventana Sonidos de instrumentos reales, sobre la canción inicial, ofrece GeneralUser GS y pregunta «¿Tocar los instrumentos con él?», con Descargar, Elegir un archivo… y Ahora no](images/soundfont-offer.png)
 
 - **Descargar** lo baja una vez y lo guarda en tu computadora. Una barra
   muestra cuánto falta, y **Detener** abandona la descarga. Al terminar,
@@ -26,15 +27,17 @@ instrumentos con él?». La canción sigue sonando mientras pregunta.
   próxima vez.
 - **Elegir un archivo…** usa otro SoundFont que ya tengas, cualquier
   archivo `.sf2` hecho para General MIDI.
-- **Ahora no** se queda con el Lineup Osc. Reproducir no vuelve a
-  preguntar; el ajuste de abajo está ahí para cuando cambies de idea.
+- **Ahora no**, o cerrar la ventana, se queda con el Lineup Osc. La
+  aplicación no vuelve a preguntar; el ajuste de abajo está ahí para
+  cuando cambies de idea.
 
 Si GeneralUser GS ya está en tu computadora, descargado por una versión
 anterior por ejemplo, la ventana lo dice y ofrece **Usarlo** en lugar de
-**Descargar**: un momento después los instrumentos suenan con él. Si
-cierras la aplicación sin responder, vuelve a preguntar la próxima vez
-que algo suene. Tu respuesta y los ajustes de sonido de abajo se
-conservan cuando actualizas Ferrous Lineup.
+**Descargar**: un momento después los instrumentos suenan con él.
+Hasta que respondas, vuelve a preguntar cada vez que se abre la
+aplicación, y al pulsar ▶ o abrir una demostración. Tu respuesta y los
+ajustes de sonido de abajo se conservan cuando actualizas Ferrous
+Lineup.
 
 Si la descarga falla (sin red, un cortafuegos), la ventana dice por qué.
 Puedes descargar `GeneralUser-GS.sf2` desde [su

@@ -498,12 +498,13 @@ mientras el Lineup Osc sostiene sus notas, así que los dos nunca
 coinciden del todo, y otro SoundFont puede sonar más fuerte o más
 suave; el volumen de cada canal hace el resto.
 
-## La oferta al reproducir, y la descarga
+## La oferta, y la descarga
 
 La aplicación no trae un SoundFont, porque uno bueno ocupa decenas de
-megabytes. Cuando algo suena con el Lineup Osc, una ventana ofrece uno:
+megabytes. Apenas la aplicación se abre con sus instrumentos en el
+Lineup Osc, antes de que nada suene, una ventana ofrece uno:
 
-![Reproducir: la canción sigue sonando mientras la ventana «Sonidos de instrumentos reales» ofrece GeneralUser GS, unos 30 MB, pregunta «¿Tocar los instrumentos con él?» y tiene Descargar, Elegir un archivo… y Ahora no](../images/step-9-soundfont-offer.png)
+![La aplicación al abrirse: sobre la canción inicial, la ventana «Sonidos de instrumentos reales» ofrece GeneralUser GS, unos 30 MB, pregunta «¿Tocar los instrumentos con él?» y tiene Descargar, Elegir un archivo… y Ahora no](../images/step-9-soundfont-offer.png)
 
 **Descargar** baja GeneralUser GS, un SoundFont General MIDI gratuito de
 S. Christian Collins, desde su propio repositorio, y lo guarda en la
@@ -523,50 +524,76 @@ o una versión anterior, no hay nada que descargar, y la ventana ofrece
 
 ### Se pregunta hasta que se responde
 
-Todas las formas de empezar a tocar (el botón ▶, **Espacio**, una
-escucha previa de la biblioteca, abrir una demostración) pasan por
-`set_playing`, que termina con
+Un solo método decide si preguntar:
 
 ```rust
-self.playing = true;
-self.offer_sound_font_on_play();
-```
-
-y eso abre la ventana siempre que los instrumentos suenan con el Lineup
-Osc y la oferta no fue rechazada:
-
-```rust
-pub(super) fn offer_sound_font_on_play(&mut self) {
+pub(super) fn offer_sound_font(&mut self) {
     let sounds = &mut self.sounds;
-    if !sounds.settings.on && !sounds.settings.declined && sounds.general_user.is_some() {
+    if !sounds.settings.on && !sounds.settings.turned_down && sounds.general_user.is_some() {
         sounds.offer_open = true;
     }
 }
 ```
 
-No se pregunta nada mientras los sonidos están activados, aunque su
-SoundFont todavía se esté leyendo, ni en un sistema sin carpeta para
-datos de aplicaciones (ahí `general_user` es `None`). La reproducción
-sigue mientras la ventana pregunta, así que el primer sonido nunca
+Abre la ventana siempre que los instrumentos suenan con el Lineup Osc y
+la oferta no fue rechazada. No se pregunta nada mientras los sonidos
+están activados, aunque su SoundFont todavía se esté leyendo, ni en un
+sistema sin carpeta para datos de aplicaciones (ahí `general_user` es
+`None`).
+
+Se llama en dos lugares. `LineupApp::new` lo llama una vez creada la
+aplicación, así que la pregunta es lo primero que muestra la ventana:
+
+```rust
+// Real instrument sounds are offered as soon as the window opens,
+// before anything plays.
+app.offer_sound_font();
+```
+
+y todas las formas de empezar a tocar (el botón ▶, **Espacio**, una
+escucha previa de la biblioteca, abrir una demostración) pasan por
+`set_playing`, que termina con
+
+```rust
+self.playing = true;
+self.offer_sound_font();
+```
+
+así que una oferta cerrada sin responder vuelve al reproducir. La
+reproducción sigue mientras la ventana pregunta, así que el sonido nunca
 espera a una pregunta.
 
+Una ejecución que no se cerró bien tiene su propia pregunta al arrancar:
+si recuperar el trabajo sin guardar (ver [Una copia del trabajo sin
+guardar](../program/saving.md#una-copia-del-trabajo-sin-guardar)). Las dos se taparían, así que los
+sonidos esperan a esa:
+
+```rust
+// Unsaved work from a run that did not close cleanly is offered
+// first.
+if !self.sounds.offer_open || !self.recovery.pending.is_empty() {
+    return;
+}
+```
+
 Abrir la ventana no responde nada. Una ejecución que se cierra antes de
-responder vuelve a preguntar la próxima vez que algo suena, y lo mismo
-pasa si su SoundFont desapareció. Solo un «no» termina la oferta:
+responder vuelve a preguntar la próxima vez que se abre la aplicación, y
+lo mismo pasa si su SoundFont desapareció. Solo un «no» termina la
+oferta:
 
 ```rust
 fn decline_sound_font(&mut self) {
     let sounds = &mut self.sounds;
     sounds.offer_open = false;
-    sounds.settings.declined = true;
+    sounds.settings.turned_down = true;
     sounds.turn_off();
 }
 ```
 
 **Ahora no** la llama, y también cerrar la ventana antes de una
 descarga y **Detener** durante una. Desmarcar **Instrumentos del
-SoundFont** en los ajustes también marca `declined`, y marcarlo lo
-borra. Un «sí» activa los sonidos y borra `declined`:
+SoundFont** en los ajustes también marca `turned_down`, y marcarlo lo
+borra. Un «sí» activa los sonidos y borra `turned_down`:
 
 ```rust
 // Yes: GeneralUser GS, even in place of a chosen file that is
@@ -576,7 +603,7 @@ if (download || use_it)
 {
     let sounds = &mut self.sounds;
     sounds.settings.file = None;
-    sounds.settings.declined = false;
+    sounds.settings.turned_down = false;
     if download {
         sounds.settings.on = true;
         sounds.changed = true;
@@ -613,8 +640,8 @@ struct Settings {
     file: Option<PathBuf>,
     /// Whether the offer of real instrument sounds was turned down, with
     /// "Not now", or the sounds were turned off in Settings. Until then,
-    /// Play offers them whenever they are off.
-    declined: bool,
+    /// the app offers them as it opens and on Play whenever they are off.
+    turned_down: bool,
 }
 ```
 
@@ -629,13 +656,16 @@ settings: preferences::get(ctx, SETTINGS_NAME).unwrap_or_default(),
 al arrancar la aplicación, y `preferences::set(ctx, SETTINGS_NAME,
 &self.sounds.settings)` cada vez que cambian. Guardados por nombre,
 sobreviven a una actualización de la aplicación. En la memoria propia
-de egui no sobrevivían: una actualización desactivaba los sonidos y,
-con GeneralUser GS todavía en el disco, nada volvía a ofrecerlos.
+de egui no sobrevivirían: una actualización desactivaría los sonidos y,
+con GeneralUser GS todavía en el disco, la aplicación volvería al
+Lineup Osc.
 
 `#[serde(default)]` sobre la struct rellena cualquier campo que falte en
 los datos guardados con su valor de `Default`, de modo que se puede
-añadir un campo sin perder los ajustes de nadie, y un campo que ya no
-existe (como `offered`, que guardaba una versión anterior) se salta.
+añadir un campo sin perder los ajustes de nadie, y un campo que la
+struct ya no tiene se salta. Por eso renombrar un campo olvida solo ese
+campo: un `turned_down` renombrado empieza en `false`, y se vuelve a
+preguntar a todos.
 `Default` está escrito a mano en lugar de derivado, porque `drums`
 empieza en `true`.
 
@@ -806,7 +836,11 @@ Los tests de ventana no deben depender de si el ordenador que los
 ejecuta ha descargado GeneralUser GS. Así que cada aplicación de prueba
 lo busca en una ruta que nunca existe,
 `keep_general_user_in(no_sound_font())`, y arranca como si la oferta ya
-se hubiera rechazado. Tres tests deshacen eso.
+se hubiera rechazado. Cuatro tests deshacen eso.
+`the_app_offers_real_instrument_sounds_as_it_opens` hace lo que hace
+`LineupApp::new` y comprueba que la ventana se abre antes de que nada
+suene, con **Descargar**, y que tras **Ahora no** no vuelve, ni tras
+reiniciar ni tras una actualización.
 `play_offers_real_instrument_sounds_until_the_offer_is_answered` pulsa
 **Espacio** y comprueba que la ventana se abre mientras la canción
 suena, con **Descargar**. Vuelve a arrancar la aplicación sin responder

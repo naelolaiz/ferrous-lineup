@@ -137,7 +137,7 @@ Forma prima: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
 Formación de instrumentos: bigger-band.md#el-menú-banda
 Función: chord-functions.md#casa-alejarse-y-tensión
 General MIDI: sounds.md#un-instrumento-para-cada-canal, midi.md#enviar-a-un-sintetizador, exporting.md#un-archivo-midi
-GeneralUser GS: sounds.md#la-primera-reproducción
+GeneralUser GS: sounds.md#al-abrir-la-aplicación
 Golpe: stops.md
 Grabar: midi.md#grabar
 Guardar: first-song.md#7-guárdala, saving.md#el-menú-archivo

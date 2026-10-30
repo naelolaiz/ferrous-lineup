@@ -37,10 +37,10 @@ starts again from the top until you press **Space** once more. The bar
 playing is framed in white on the sheet, and the harmony keys along the
 bottom light the chord sounding.
 
-The first time you play, Ferrous Lineup offers to download a SoundFont,
-the recordings of real instruments that make the band sound like one.
-Say **Download** (about 30 MB, once); [Sounds](sounds.md) tells the
-whole story.
+If you have not answered it yet, Ferrous Lineup offers to download a
+SoundFont, the recordings of real instruments that make the band sound
+like one. Say **Download** (about 30 MB, once); [Sounds](sounds.md)
+tells the whole story.
 
 To go round only some of the bars, click one, **Shift+click** another,
 and press **Loop** in the sheet's practice row.
