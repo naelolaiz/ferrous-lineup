@@ -18,7 +18,7 @@ ventana llamada **Sonidos de instrumentos reales** ofrece descargar
 ofrece antes recuperar trabajo sin guardar, los sonidos vienen justo
 después.
 
-![La aplicación al abrirse por primera vez: la ventana Sonidos de instrumentos reales, sobre la canción inicial, ofrece GeneralUser GS y pregunta «¿Tocar los instrumentos con él?», con Descargar, Elegir un archivo… y Ahora no](images/soundfont-offer.png)
+![La aplicación al abrirse por primera vez: la ventana Sonidos de instrumentos reales, sobre la hoja de acordes de la canción inicial, ofrece GeneralUser GS y pregunta «¿Tocar los instrumentos con él?», con Descargar, Elegir un archivo… y Ahora no](images/soundfont-offer.png)
 
 - **Descargar** lo baja una vez y lo guarda en tu computadora. Una barra
   muestra cuánto falta, y **Detener** abandona la descarga. Al terminar,

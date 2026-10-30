@@ -82,8 +82,8 @@ the Finder opens it in Ferrous Lineup.
 
 ## The first start
 
-Ferrous Lineup opens with a short song, ready to play: press
-**Space**. The first time, it offers to download a set of real
+Ferrous Lineup opens with a short song and its chord sheet, ready to
+play: press **Space**. The first time, it offers to download a set of real
 instrument sounds, about 30 MB, as soon as it opens; [Sounds](sounds.md)
 says what that is. Then go on with [The main window](main-window.md) and [Your
 first song](first-song.md).

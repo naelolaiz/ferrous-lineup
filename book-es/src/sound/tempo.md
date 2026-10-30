@@ -578,6 +578,43 @@ lento también. Mientras suena una canción cuyo tempo cambia, el cuadro
 muestra TEMPO AHORA: `tempo_at` del lugar del cabezal en la línea de
 tiempo.
 
+Un estilo de la Biblioteca trae un tempo propio, y ese tiene que caer
+donde la canción toca de verdad, no en su primera nota: un archivo MIDI
+empieza a menudo con unas pocas notas lentas antes de su tempo real.
+Así que `main_tempo` busca el tempo que la canción mantiene durante más
+pasos, y `take_tempo` escala toda la canción para que ese se convierta
+en el del estilo:
+
+```rust
+pub fn take_tempo(&mut self, tempo: Tempo) {
+    let ratio = tempo.bpm() / self.main_tempo().bpm();
+    self.scale_tempo(Tempo::new(self.tempo.bpm() * ratio));
+}
+```
+
+`main_tempo` suma, para cada tempo, los pasos que dura: desde el
+principio hasta la primera marca con el tempo inicial, y luego desde
+cada marca hasta la siguiente. Un tempo que vuelve más tarde se suma a
+lo que ya duraba. De los que duran más, gana el primero, así que una
+canción con un único tempo constante obtiene ese, y un empate va al
+tempo anterior:
+
+```rust
+let (mut tempo, mut from) = (self.tempo, 0);
+for marker in &self.playlist.tempo_markers {
+    let start = marker.start.clamp(from, end.max(from));
+    hold(tempo, start - from);
+    (tempo, from) = (marker.tempo, start);
+}
+hold(tempo, end.saturating_sub(from));
+```
+
+`hold` es un cierre que toma prestada la lista `held` de forma
+mutable, así que se declara `let mut hold`: llamar a un cierre que
+cambia lo que capturó cambia el estado del propio cierre.
+`(tempo, from) = (…, …)` asigna dos variables a la vez, una
+*asignación por desestructuración*.
+
 ### Cada paso a su propio tempo
 
 `Project::played_tempos` da el tempo de cada paso de la canción *tal como

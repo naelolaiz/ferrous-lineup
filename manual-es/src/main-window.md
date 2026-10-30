@@ -1,6 +1,6 @@
 # La ventana principal
 
-![La ventana principal al arrancar la aplicación: los menús y la barra de herramientas arriba, la Biblioteca a la izquierda, la canción inicial en la lista de reproducción en el centro, y las teclas de armonía abajo](images/main-window-start.png)
+![La ventana principal la primera vez que arranca la aplicación: los menús y la barra de herramientas arriba, la Biblioteca a la izquierda, la hoja de acordes de la canción inicial sobre la lista de reproducción, y las teclas de armonía abajo](images/main-window-start.png)
 
 De arriba abajo, la ventana tiene:
 
@@ -102,9 +102,12 @@ botón de ventana o con su tecla.
 **Ver** abre también la **Partitura guía**, el **Editor de estilos…** y
 el **Entrenamiento auditivo**.
 
-Lo que se abre primero depende de lo que abras: una canción se abre con
-la hoja de acordes delante, un ritmo (**Archivo > Nuevo ritmo**) con el
-rack de canales.
+La primera vez, la aplicación empieza con la hoja de acordes, la
+Biblioteca y las teclas de armonía abiertas. Después, empieza con las
+ventanas que estaban abiertas cuando la cerraste. Lo que queda delante
+depende entonces de lo que abras: una canción se abre con la hoja de
+acordes delante, un ritmo (**Archivo > Nuevo ritmo**) con el rack de
+canales.
 
 ## La barra de estado
 

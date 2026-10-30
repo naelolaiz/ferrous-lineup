@@ -17,7 +17,7 @@ GS**, a free SoundFont by S. Christian Collins, of about 30 MB, and
 asks "Play the instruments with it?". If the app first offers to bring
 back unsaved work, the sounds come right after.
 
-![The app as it opens for the first time: the Real instrument sounds window over the starting song offers GeneralUser GS and asks "Play the instruments with it?", with Download, Choose a file… and Not now](images/soundfont-offer.png)
+![The app as it opens for the first time: the Real instrument sounds window over the starting song's chord sheet offers GeneralUser GS and asks "Play the instruments with it?", with Download, Choose a file… and Not now](images/soundfont-offer.png)
 
 - **Download** fetches it once and keeps it on your computer. A bar
   shows how far it is, and **Stop** gives up. When it is done, the

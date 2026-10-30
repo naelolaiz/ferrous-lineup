@@ -13,32 +13,37 @@ jazz, soul y funk, hip hop, electrónica, latina, tango, folclore
 latinoamericano, flamenco, reggae, country y folk, música clásica y de
 cine, danzas en métricas irregulares, y los estilos que hagas tú.
 
-![La demostración Tea for Two con Bossa nova pulsado en la Biblioteca: su ventana lista lo que puede traer, Patrones de ejecución, Voces / instrumentos, Progresión de acordes, Compás, Tempo y Swing, y junto a cada uno ahora: Tea for Two (demostración)](images/library.png)
+![La canción inicial con Bossa nova pulsado en la Biblioteca: su ventana lista lo que puede traer, bajo Acompañamiento Batería, Partes de acordes y bajo y Voces / instrumentos, bajo Armonía Progresión de acordes, y bajo Tiempo Compás, Tempo y Swing, y junto a cada uno ahora: La canción inicial (demostración)](images/library.png)
 
 ## Buscar un estilo
 
-- **Buscar**: escribe un nombre, un tipo de música o un compás, como
-  `bossa`, `tango` o `6/8`. **×** borra la búsqueda.
+- **Buscar**: escribe un nombre, un tipo de música, un compás o un
+  instrumento, como `bossa`, `tango`, `6/8` o `acordeón`. **×** borra
+  la búsqueda.
 - **En 4/4** deja solo los estilos en el compás de la canción.
 - **Cerca de 110 BPM** deja solo los estilos hechos para un tempo
   parecido al de la canción, como mucho 1,15 veces más rápido o más
   lento.
 - **Con acordes** deja solo los estilos que traen una progresión de
   acordes.
+- **Swing** deja solo los estilos cuya batería tiene swing.
+- **Cualquier instrumento** abre la lista de los instrumentos que traen
+  los estilos, y la batería. Elige uno, como **Acordeón**, para dejar
+  solo los estilos que lo traen.
 
-Las casillas nombran el compás y el tempo de la canción, y se recuerdan
-para la próxima vez. Cuando no queda nada, la Biblioteca dice si fue por
-la búsqueda o por las casillas.
+Las casillas nombran el compás y el tempo de la canción, y los filtros
+se recuerdan para la próxima vez. Cuando no queda nada, la Biblioteca
+dice si fue por la búsqueda o por los filtros.
 
-Cada estilo muestra su compás cuando no es 4/4, como en **Vals (3/4)**,
-y o bien **+ acordes**, cuando trae una progresión de acordes, o bien
-**conserva los acordes**, cuando solo toca los tuyos. Señala uno para
-leer qué es: qué escuchar, su progresión en Do como acordes y como
-números romanos, su compás, su tempo, su largo en compases y su batería.
+Los estilos están agrupados por género, con tus propios estilos en un
+grupo aparte, y una búsqueda abre los grupos en los que encuentra algo.
+**Edición > Ajustes… > Biblioteca > Lista de estilos > Lista
+alfabética** los muestra todos en una sola lista.
 
-**Edición > Ajustes… > Biblioteca > Lista de estilos** muestra los
-estilos en orden alfabético, como empieza la aplicación, o **agrupados
-por género**, con tus propios estilos en un grupo aparte.
+Cada estilo muestra su compás cuando no es 4/4, como en **Vals (3/4)**.
+Señala uno para leer qué es: qué escuchar, su progresión en Do como
+acordes y como números romanos, su compás, su tempo, su largo en
+compases y su batería.
 
 Debajo de los estilos hay tres grupos que se pueden abrir:
 
@@ -54,15 +59,18 @@ Debajo de los estilos hay tres grupos que se pueden abrir:
 
 ## Probar un estilo
 
-Haz clic en un estilo. Una ventanita pregunta qué tomar de él:
+Haz clic en un estilo. Una ventanita pregunta qué tomar de él. Cada
+opción trae una parte del estilo; sin marcar, la canción conserva la
+suya:
 
 | Opción | Qué trae | Marcada al principio |
 |---|---|---|
-| **Patrones de ejecución** | la batería, y la manera en que el piano, el bajo y los demás músicos tocan los acordes | sí |
+| **Batería** | la batería del estilo | sí |
+| **Partes de acordes y bajo** | la manera en que el piano, el bajo y los demás músicos del estilo tocan los acordes | sí |
 | **Voces / instrumentos** | los músicos y los sonidos del estilo: una guitarra de nailon para una bossa nova, cuerdas para un tango | sí |
 | **Progresión de acordes** | la progresión del estilo, en lugar de los acordes de la canción; la melodía se queda | no |
 | **Compás** | el compás del estilo: un vals pone la canción en 3/4 | sí |
-| **Tempo** | el tempo habitual del estilo | no |
+| **Tempo** | el tempo habitual del estilo | sí |
 | **Swing** | el swing del estilo (ver [Swing y sensación](swing.md)) | sí |
 
 Junto a cada opción, **ahora:** dice lo que tiene la canción y de dónde
@@ -75,23 +83,38 @@ abras la aplicación.
 las últimas elecciones. **Ctrl+Z** deshace un estilo, se haya aplicado
 como se haya aplicado.
 
-Lo que conservan las elecciones del principio:
+Lo que hacen las elecciones del principio:
 
-- **Tus acordes.** Con **Progresión de acordes** desmarcada, cada estilo
-  que pruebas toca los acordes que ya están en la hoja. Un estilo
-  marcado **conserva los acordes** no tiene progresión, y su opción
-  aparece en gris.
-- **Tu tempo.** Con **Tempo** desmarcado, la canción conserva su tempo.
-  Un estilo en otro compás cambia los compases, y cada compás dura lo
-  mismo que antes: una canción a 112 pulsos por minuto en 4/4 pasa a 84
-  en 3/4, la misma marcha contada en tres, y vuelve a 112 cuando vuelve
-  un estilo en 4/4.
+- **Tus acordes se quedan.** Con **Progresión de acordes** desmarcada,
+  cada estilo que pruebas toca los acordes que ya están en la hoja. Un
+  estilo sin progresión tiene su opción en gris.
+- **El tempo viene.** Con **Tempo** marcado, un estilo en el compás
+  propio de la canción trae su tempo habitual, donde suena la mayor
+  parte de la canción, y los cambios de tempo se mueven con él.
+  Desmárcalo para que la canción conserve su tempo mientras pruebas
+  estilos. Un estilo en otro compás, en cambio, cambia los compases, y
+  cada compás dura lo mismo que antes: una canción a 112 pulsos por
+  minuto en 4/4 pasa a 84 en 3/4, la misma marcha contada en tres, y
+  vuelve a 112 cuando vuelve un estilo en 4/4. El compás propio de la
+  canción es el que traía, así que un estilo trae el mismo tempo sean
+  cuales sean los estilos que probaste antes.
 
-Arriba en la ventana, **Estilo de ejecución** tiene una segunda opción,
-**Acentos simples**: la batería del estilo, con el piano y el bajo
-tocando los acordes en los pulsos principales de cada compás, con tus
-propios instrumentos y sobre tus propios acordes. Es una manera sencilla
-de oír un compás sin los patrones de un estilo.
+Las tres opciones de acompañamiento se combinan como quieras:
+
+- **Batería** sola: la batería del estilo bajo tus propias partes de
+  acordes y bajo, tocada en el compás del estilo si está marcado.
+- **Partes de acordes y bajo** solas: la manera del estilo de tocar los
+  acordes y el bajo, con la batería que tenías.
+- **Voces / instrumentos** sola: tus propias partes con los sonidos del
+  estilo. Las pistas llamadas Teclados y Bajo, o la elegida en el rack,
+  toman su piano y su bajo. En una canción sin ellas, como un archivo
+  MIDI importado, cada pista menos la de la melodía toma el sonido del
+  estilo para su familia: un bajo su bajo, un piano su piano, una
+  guitarra su guitarra, un órgano o un acordeón su órgano (o su piano),
+  y unas cuerdas sus cuerdas.
+
+Así puedes tomar la batería de un estilo y las partes de acordes y bajo
+de otro.
 
 ## Adónde va un estilo
 
@@ -117,11 +140,17 @@ Haz clic derecho en un estilo para dos opciones más:
 
 ## De dónde vino cada parte
 
-Arriba en la Biblioteca, seis líneas dicen de dónde viene cada parte de
-la canción: **Patrones**, **Instrumentos**, **Compás**, **Acordes**,
-**Tempo** y **Swing**. Cada una nombra la demostración o el estilo del
-que vino, dice **editado, era …** cuando cambias esa parte tú, o
-**tuyo** cuando nada la trajo. Una línea **Secciones** lista las
+Arriba en la Biblioteca, nueve líneas dicen de dónde viene cada parte
+de la canción: **Batería**, **Partes de acordes y bajo**, **Melodía**,
+**Instrumentos**, **Compás**, **Tonalidad**, **Acordes**, **Tempo** y
+**Swing**. Cada una nombra la demostración o el estilo del que vino,
+dice **editado, era …** cuando cambias esa parte tú, o **tuyo** cuando
+nada la trajo. Una melodía solo viene de una demostración: los estilos
+no traen ninguna. Algunas líneas dicen también qué es la parte, como
+**4/4**, **Do mayor**, **130 BPM** o **sin swing**. **Batería** y
+**Partes de acordes y bajo** nombran dos estilos cuando los tomaste de
+dos. Una línea demasiado larga para el panel se corta; señálala
+para leerla entera. Una línea **Secciones** lista las
 secciones que se tocan en otros estilos (ver [Forma de la canción y
 secciones](song-form.md)), y una línea **Bloqueado** las pistas que los
 estilos dejan en paz (ver [Bloquear una pista y tocar tu
@@ -142,12 +171,13 @@ acordes** te da I V vi IV, la progresión de mil canciones pop.
 
 **Edición > Ajustes… > Biblioteca** tiene:
 
-- **Lista de estilos**: **Lista alfabética** o **Agrupar por género**.
+- **Lista de estilos**: **Agrupar por género**, como empieza la
+  aplicación, o **Lista alfabética**.
 - **Valores por defecto al aplicar estilos**: las elecciones con las que
   empieza la ventana de cada estilo, como botones que se encienden y se
-  apagan (**Patrones**, **Instrumentos**, **Acordes**, **Métrica**,
-  **Tempo**, **Swing**), y **Patrones del preajuste** o **Acentos
-  simples**. **Editar valores por defecto…** los abre como lo hace la
+  apagan (**Batería**, **Partes de acordes y bajo**, **Instrumentos**,
+  **Acordes**, **Métrica**, **Tempo**, **Swing**). **Editar valores por
+  defecto…** los abre como lo hace la
   ventana de un estilo. Cambiarlos cambia el próximo estilo que apliques,
   no la canción.
 - **Tus estilos**: **Carpeta de estilos…** elige la carpeta de la que se

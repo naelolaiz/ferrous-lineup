@@ -507,8 +507,10 @@ el compás de toda la canción, compás por compás, así que una canción en
 ### Qué partes tomar
 
 La ventana que abre un estilo en la aplicación pregunta qué partes
-tomar: «Patrones de ejecución», «Voces / instrumentos», «Progresión de
-acordes», «Compás», «Tempo» y «Swing». Son un struct pequeño:
+tomar, en tres grupos: bajo **Acompañamiento**, **Batería**, **Partes
+de acordes y bajo** y **Voces / instrumentos**; bajo **Armonía**,
+**Progresión de acordes**; bajo **Tiempo**, **Compás**, **Tempo** y
+**Swing**. Son un struct pequeño:
 
 ```rust
 pub struct StyleParts {
@@ -521,56 +523,168 @@ pub struct StyleParts {
     /// long as before.
     pub tempo: bool,
     pub swing: bool,
-    /// Copy accompaniment patterns from the preset (or a rhythm's matching
-    /// style). Off uses plain accents and keeps the current instruments
-    /// and chords.
+    /// Copy the preset's chord, bass and other accompaniment parts (a
+    /// rhythm's are those of its matching style). Off, the song's own
+    /// stay, as its drums do with `rhythm` off.
     pub matching_style: bool,
 }
 ```
 
-Tres métodos pequeños corrigen la elección según el tipo de preajuste,
+`rhythm` es la casilla **Batería** y `matching_style` la casilla
+**Partes de acordes y bajo**. Cada casilla va por su cuenta: lo que
+queda sin marcar, la canción lo conserva. En un patrón, cada casilla es
+un paso de `write_style_parts`, y cada paso toca solo sus propias
+notas:
+
+```rust
+if parts.time_signature {
+    meter(project, index, style.time);
+}
+if parts.matching_style {
+    recomp(project, index, style.comping, style.bass);
+}
+if parts.progression {
+    progression(project, index, style);
+}
+// ...
+if parts.rhythm
+    && let Some(rhythm) = Rhythm::named(style.rhythm)
+{
+    write_rhythm(project, index, rhythm);
+}
+if parts.instruments {
+    style_instruments(project, style, selected);
+}
+```
+
+`recomp` vuelve a tocar los canales de acordes y de bajo y deja la
+batería; `write_rhythm` escribe los carriles de batería y deja el
+resto. Así una canción puede tomar la batería de un estilo y las partes
+de acordes y bajo de otro, en cualquier orden. Una banda guarda esa
+misma separación en un campo propio, `drums` (ver [Cómo toca la banda
+un cifrado](band.md)). La línea `if parts.rhythm && let Some(rhythm) =
+...` es una *cadena de let* (*let chain*): el bloque se ejecuta solo
+cuando la casilla está marcada *y* se encuentra el ritmo del estilo,
+con `rhythm` ligado dentro de él.
+
+**Voces / instrumentos** da los sonidos del estilo a los canales que
+tocan sus partes: Teclados y Bajo, o el canal elegido en el rack. Una
+canción importada de un archivo MIDI no tiene ninguno de los dos; sus
+canales llevan los nombres que les dio el archivo, como «PIANO
+MELODIA», «BANDONEON» o «CONTRABAJO». Entonces `own_players_instruments`
+da los sonidos del estilo a los músicos propios de la canción, a cada
+uno según la familia del instrumento que tenía, y deja la melodía en
+paz:
+
+```rust
+let program = match channel.program? {
+    general_midi::CONTRABASS => band.bass_program(),
+    // Violins to tremolo strings, and the string ensembles.
+    40..=44 | 48..=51 => extras.strings.as_ref()?.program,
+    program => match general_midi::FAMILIES[general_midi::family(program)] {
+        "Piano" => piano,
+        "Organ" => extras.organ.as_ref().map_or(piano, |organ| organ.program),
+        "Guitar" => extras
+            .guitar
+            .as_ref()
+            .map_or(piano, |guitar| guitar.program),
+        "Bass" => band.bass_program(),
+        _ => return None,
+    },
+};
+```
+
+El código está dentro de un cierre que se pasa a `filter_map`, que
+devuelve un `Option`, así que cada `?` y el `return None` significan
+«este canal conserva su sonido»: un canal sin programa General MIDI,
+las cuerdas cuando el estilo no tiene, un coro o un bandoneón, que
+ningún estilo tiene. Un contrabajo está en la familia de las cuerdas de
+General MIDI, así que se reconoce primero, por su número, y toma el
+bajo. La melodía es cualquier canal cuyo nombre lo diga (Lead, Melody,
+Melodía, Voice, Voz, Canto), o si no el que mostraría la partitura de
+melodía.
+
+Dos métodos pequeños corrigen la elección según el tipo de preajuste,
 cada uno tomando `self` por valor y devolviendo una copia cambiada:
-`for_rhythm` apaga la progresión, que un ritmo no tiene; `for_preset`
-mantiene tus sonidos y tus acordes con acentos simples; y `following`
+`for_rhythm` apaga la progresión, que un ritmo no tiene; y `following`
 mantiene los compases y el tempo de la canción para un estilo que toca
 cada compás en su propio compás. Se encadenan:
 `parts.for_rhythm().following(rhythm.follows_the_meter)`.
 
-El struct se guarda entre ejecuciones, en la memoria de egui, con
-`#[serde(default)]`, así que un campo añadido más tarde se lee con su
-valor por defecto desde una copia guardada más antigua. Su valor por
-defecto tuvo una vez el tempo marcado. Para dar a todos el nuevo valor
-por defecto sin perder sus otras elecciones, las opciones se guardan
-ahora con una clave nueva, y una copia antigua se lee una vez, con el
-tempo apagado:
+La elección se guarda entre ejecuciones, en la memoria de egui, con el
+nombre `apply-options`. Hasta que la cambies, es todo menos la
+progresión de acordes, así que la canción conserva sus propios
+acordes:
 
 ```rust
-data.get_persisted(egui::Id::unique(OPTIONS)).or_else(|| {
-    // Options saved while Tempo started ticked: it was
-    // ticked for everyone, so it starts off now like a new
-    // one, and the other choices stay.
-    data.get_persisted(egui::Id::unique(OPTIONS_TEMPO_ON))
-        .map(|parts| StyleParts {
-            tempo: false,
-            ..parts
-        })
-})
+const FIRST_OPTIONS: StyleParts = StyleParts {
+    rhythm: true,
+    instruments: true,
+    time_signature: true,
+    progression: false,
+    tempo: true,
+    swing: true,
+    matching_style: true,
+};
 ```
+
+`#[serde(default)]` en el struct hace que un campo añadido más tarde se
+lea con su valor por defecto desde una copia guardada más antigua. Una
+`const` de un struct se escribe entera allí donde se usa, así que
+`FIRST_OPTIONS` no cuesta nada al ejecutarse.
+
+### El mismo estilo, la misma canción
+
+Prueba Bluegrass, después Celtic, después Bluegrass otra vez: la
+tercera vez debería sonar exactamente como la primera. Un estilo no
+debe aplicarse encima del anterior, con el compás y el tempo del
+anterior, o cada clic alejaría un poco más la canción de sí misma. Así
+que la aplicación guarda, junto a cada versión de la canción que hizo
+la Biblioteca, la canción tal como vino, en su propio compás:
+
+```rust
+pub(super) struct SongSource {
+    original: Project,
+    library: Tried,
+    /// Latest preset components, applied without changing the source meter.
+    reference: Project,
+}
+```
+
+Cada clic vuelve a empezar desde `reference`, y pregunta si el compás
+del estilo es distinto del de *esa* canción, no del que le dejó el
+último estilo:
+
+```rust
+let changes_meter = !lineup_core::remeter::is_in(&source.reference, time);
+```
+
+El tempo sigue la misma idea. **Tempo** pone el tempo del estilo donde
+suena la mayor parte de la canción, con `take_tempo` (ver [La franja
+de tempo](../sound/tempo.md#la-franja-de-tempo)): una canción que
+empieza con un compás lento y luego toca a 121 BPM, con un estilo hecho
+para 180, toca a 180 donde tocaba a 121, y su compás lento sigue siendo
+igual de más lento que antes. Dar el tempo del estilo al primer compás
+de la canción haría que un archivo MIDI con una entrada lenta se
+disparara.
 
 ## De dónde vino cada parte
 
-Tomar solo algunas partes significa que una canción puede tener sus
-patrones de un estilo, su tempo de otro y sus acordes de la
-demostración con la que empezó. La Biblioteca lo muestra, una línea por
-parte: Tempo «Tango marcato (estilo)», Acordes «El Choclo
-(demostración)», y **editado, era …** en cuanto cambias tú esa parte.
-`sources.rs` lleva ese registro.
+Tomar solo algunas partes significa que una canción puede tener su
+batería de un estilo, sus partes de acordes y bajo de otro, su tempo de
+un tercero y sus acordes de la demostración con la que empezó. La
+Biblioteca lo muestra, una línea por parte: Tempo «Tango marcato
+(estilo)», Acordes «El Choclo (demostración)», y **editado, era …** en
+cuanto cambias tú esa parte. `sources.rs` lleva ese registro.
 
-Las seis partes son un enum, y un conjunto de ellas son seis bits de un
-`u8`:
+Las nueve partes son un enum, en el orden en que las lista la
+Biblioteca: la batería, las partes de acordes y bajo, la melodía, los
+instrumentos, el compás, la tonalidad, los acordes, el tempo y el
+swing. Un conjunto de ellas son nueve bits de un `u16`, un bit por
+parte:
 
 ```rust
-pub struct PartSet(u8);
+pub struct PartSet(u16);
 ```
 
 ```rust
@@ -594,7 +708,12 @@ pub fn bring_in<R>(
     let result = change(self);
     for (part, before) in SongPart::ALL.into_iter().zip(before) {
         let now = self.part_fingerprint(part);
-        if taken.contains(part) && !edited.contains(part) {
+        // A key that changed with what was taken came with it: a
+        // minor progression puts the song in minor, a row style puts
+        // it in its row.
+        let came = taken.contains(part)
+            || (part == SongPart::Key && now != before && taken != PartSet::NONE);
+        if came && !edited.contains(part) {
             self.sources.set(
                 part,
                 Some(PartSource {
@@ -614,7 +733,9 @@ Las partes tomadas ahora vienen de `source`, aunque no hayan cambiado:
 un estilo en 4/4 aplicado a una canción que ya está en 4/4 le da igual
 su compás. Una parte que cambió solo junto con ellas, como unos acordes
 movidos a un compás nuevo, *las sigue*: sigue viniendo de donde venía,
-y está como vino si lo estaba antes.
+y está como vino si lo estaba antes. La tonalidad es la única parte que
+ninguna casilla nombra: viene con lo que la trajo, así que la tonalidad
+de una progresión menor viene de su estilo.
 
 El `print` es una **huella**: un hash `u64` de la parte tal como vino,
 hecho con `std::hash::DefaultHasher` a partir de sus notas, su tempo,
@@ -633,6 +754,30 @@ indicador `edited`, nunca el hash: `DefaultHasher` puede cambiar de
 algoritmo en otra versión de Rust, y un hash guardado llamaría entonces
 editada a cada parte de cada archivo antiguo. Al cargar, la huella se
 vuelve a calcular a partir de la parte tal como está.
+
+Tres de las partes son notas de los mismos patrones: la batería, la
+melodía y las partes de acordes y bajo, que son todo lo demás. Se
+distinguen por canal, con un único ayudante que calcula el hash de las
+notas de los canales que elige un cierre:
+
+```rust
+SongPart::Melody => self.hash_notes(&mut hasher, is_lead),
+```
+
+y las partes de acordes y bajo pasan `|channel| !is_drum(channel) &&
+!is_lead(channel)`. Con una banda, la batería y las partes de acordes y
+bajo son lo que toca la banda, así que sus huellas calculan en cambio
+el hash de los nombres de los estilos de los que vienen.
+
+Las versiones anteriores conocían solo seis de las partes, y
+rechazarían un archivo que nombrara una que no conocen. Así que la
+batería, la melodía y la tonalidad se guardan en un campo propio,
+`more_sources`, que esas versiones se saltan. Se escribe siempre que
+alguna parte vino de algún sitio, aunque esté vacío, así que un archivo
+sin él es de antes; para un archivo así, `sources_of_an_older_file`
+deduce de dónde vinieron esas tres: la batería con los patrones, la
+melodía de una demostración con la demostración, y la tonalidad con los
+acordes.
 
 Un detalle más. El registro de fuentes no es la música, y dos
 canciones que suenan igual deberían ser iguales: la aplicación compara
@@ -673,22 +818,48 @@ compás, el tempo, si trae una progresión) es un método con un único
 Un ritmo que es justo la batería de un estilo con el mismo nombre,
 tempo y aire se lista una sola vez, como el estilo.
 
-Tres casillas dejan solo los preajustes parecidos a la canción: «En
-4/4» (en su compás), «Cerca de 120 BPM» (cerca de su tempo) y «Con
-acordes». La decisión es un único método:
+Las casillas bajo la búsqueda dejan solo los preajustes parecidos a la
+canción, «En 4/4» (en su compás) o «Cerca de 120 BPM» (cerca de su
+tempo), o los que tienen lo que buscas: «Con acordes» (una progresión),
+«Swing» (una batería con swing) o un instrumento elegido en un menú,
+«Cualquier instrumento». Lo que miran en un preajuste es un struct
+`Copy` pequeño,
 
 ```rust
-fn keeps(self, time: TimeSignature, tempo: f32, any_meter: bool, chords: bool) -> bool {
-    let filters = self.filters;
-    // 7/8 as 2+2+3 is still 7/8.
-    let same_time = any_meter || time.ungrouped() == self.time.ungrouped();
-    let ratio = tempo / self.tempo;
-    let near = ratio.max(1.0 / ratio) <= NEAR_SPEED;
-    (!filters.time || same_time) && (!filters.speed || near) && (!filters.chords || chords)
+struct Traits {
+    time: TimeSignature,
+    /// The speed it was made for, in beats a minute.
+    tempo: f32,
+    /// Whether it plays every bar in its own meter, so it fits any time
+    /// signature.
+    any_meter: bool,
+    /// Whether it brings a chord progression.
+    chords: bool,
+    /// Whether its drums swing.
+    swing: bool,
 }
 ```
 
-La última línea se lee como tres reglas unidas por «y»:
+y la decisión es un único método:
+
+```rust
+fn keeps(self, traits: Traits, instruments: impl FnOnce() -> Vec<Instrument>) -> bool {
+    let filters = self.filters;
+    // 7/8 as 2+2+3 is still 7/8.
+    let same_time = traits.any_meter || traits.time.ungrouped() == self.time.ungrouped();
+    let ratio = traits.tempo / self.tempo;
+    let near = ratio.max(1.0 / ratio) <= NEAR_SPEED;
+    (!filters.time || same_time)
+        && (!filters.speed || near)
+        && (!filters.chords || traits.chords)
+        && (!filters.swing || traits.swing)
+        && filters
+            .instrument
+            .is_none_or(|instrument| instruments().contains(&instrument))
+}
+```
+
+Las líneas se leen como reglas unidas por «y»:
 `!filters.time || same_time` es «o la casilla no está marcada, o el
 compás es el mismo». `ratio.max(1.0 / ratio)` convierte «la mitad de
 rápido» (0,5) y «el doble de rápido» (2,0) en el mismo número, 2, así
@@ -698,6 +869,23 @@ Comparar proporciones en lugar de una diferencia en BPM trata igual las
 canciones lentas y las rápidas: ±15 BPM sería mucho a 60 y poco a 180.
 `keeps` toma `self` por valor: el struct es `Copy` y ocupa unos pocos
 bytes, así que no cuesta más que una referencia.
+
+Los instrumentos son la única pregunta que cuesta algo: los de un
+preajuste son los de la banda que lo tocaría, calculados a partir de su
+estilo. Así que llegan como un cierre, `instruments`, al que se llama
+solo al final, cuando hay un instrumento elegido. `Option::is_none_or`
+es `true` para `None`, ningún instrumento elegido, y si no pregunta al
+cierre por el que hay dentro. `&&` se detiene en el primer `false`, así
+que un preajuste que una casilla anterior ya dejó fuera nunca llega a
+calcular sus instrumentos.
+
+La lista se agrupa por género, un `egui::CollapsingHeader` por género
+con su cuenta y tus propios estilos primero bajo **Estilos de
+usuario**, salvo que **Ajustes > Biblioteca de estilos** diga **Lista
+alfabética**. Una búsqueda abre cada grupo que tiene una coincidencia.
+Cuando la canción cambia de estilo, el grupo del nuevo se abre durante
+medio segundo, lo justo para que egui desplace su fila iluminada hasta
+la vista, y luego deja los grupos como los tenías.
 
 ### Probar, cambiar y deshacer
 
@@ -809,8 +997,30 @@ fn a_part_brought_in_is_edited_once_changed_and_not_after_undoing_it() {
 }
 ```
 
+Para las casillas,
+`a_styles_sounds_go_to_an_imported_songs_players_by_family_but_the_tune`
+arma una canción como un tango importado, con un «PIANO MELODIA», un
+bandoneón, una guitarra, un contrabajo, cuerdas y un coro, y comprueba
+qué canales toman los sonidos de Tango y de Bossa nova y cuáles
+conservan los suyos;
+`a_songs_keys_and_bass_still_take_a_styles_sounds_alone` comprueba que
+una canción con Teclados y Bajo cambia solo ahí. En `band.rs`,
+`drums_and_chord_parts_come_on_their_own_from_builtin_and_saved_styles`
+da a una banda de Rock ride primero la batería de Bossa nova, del estilo
+incorporado y de una copia guardada de él, y comprueba que el piano y el
+bajo quedan como estaban, que el archivo se vuelve a leer igual y que,
+cuando llegan también las partes de acordes y bajo, la banda vuelve a
+ser simplemente Bossa nova, en el formato que necesitaba antes;
+`a_styles_chord_parts_can_come_without_its_drums` toma las partes de
+acordes y bajo de Bossa nova sobre la batería de Rock ride, lo que
+necesita el formato 29. `a_style_tempo_goes_where_most_of_the_song_is`
+comprueba `take_tempo` en una canción con un primer compás lento.
+
 En la aplicación, `the_library_tick_boxes_keep_only_presets_like_the_song`
-cuenta los preajustes listados a medida que se marcan las casillas, y
+cuenta los preajustes listados a medida que se marcan las casillas;
+`the_same_style_brings_the_same_tempo_whatever_was_tried_before` pulsa
+Bluegrass, Celtic, Bluegrass y Celtic en una canción en 2/4 y en 4/4, y
+comprueba que cada estilo trae el mismo tempo cada vez; y
 `trying_row_and_micromode_styles_rewrites_one_pattern_while_it_is_unchanged`
 comprueba que las pruebas caen en un único patrón y que cada una es un
 solo paso de deshacer.

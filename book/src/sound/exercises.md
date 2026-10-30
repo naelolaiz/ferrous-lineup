@@ -92,9 +92,9 @@ keeping playback and editing apart.
 - In the Library, play the **Kalamatianos** and the **Rachenitsa**
   rhythms one after the other. Clap along: where is the long beat in
   each?
-- Pick `5/8` in the Time list of a song in 4/4, with **Use matching
-  style** ticked. Which rhythm does it get, and how does the list write
-  the meter?
+- Pick `5/8` in the Time list of a song in 4/4, with **Drums** and
+  **Chord and bass parts** ticked. Which rhythm does it get, and how
+  does the list write the meter?
 - Open **Süsserl** and watch the ruler while it plays. Count the bars
   of two and the bars of three in the first strain: do they match
   2 2 3, 2 2 3, 2 2 3 3?

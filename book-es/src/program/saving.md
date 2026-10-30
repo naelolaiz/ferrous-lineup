@@ -308,7 +308,7 @@ fallar, así que es un `From`, no un `TryFrom`.
 ## El número de versión
 
 ```rust
-pub const FORMAT_VERSION: u32 = 28;
+pub const FORMAT_VERSION: u32 = 29;
 ```
 
 `FORMAT_VERSION` es la disposición más nueva que este programa puede
@@ -318,7 +318,8 @@ nuevo se queda en formato 1, para que un Ferrous Lineup más viejo pueda
 seguir abriéndolo. La canción de inicio necesita el formato 9, porque
 su canal de sintetizador toca un programa General MIDI; una canción con
 hoja de acordes necesita al menos el formato 12; una con sección de
-vientos o con un efecto en un canal necesita el 28. El largo comentario
+vientos o con un efecto en un canal necesita el 28, y una banda que
+toca la batería de otro estilo, el 29. El largo comentario
 encima de `FORMAT_VERSION` dice, para cada número, qué añadió y qué
 haría mal un programa más viejo sin él; [Formato del archivo de
 proyecto](../reference/project-format.md) tiene la misma lista como
@@ -387,10 +388,10 @@ bytes al principio (algunos editores de texto añaden una) se elimina
 antes, para que no pueda esconder el `(`.
 
 La prueba `files_from_the_future_are_refused` lee un archivo un formato
-más nuevo que esta versión, hoy `(format: 29, sparkles: true)`, y espera
-`NewerFormat(29)`, con el mensaje «este archivo usa el formato 29, hecho
+más nuevo que esta versión, hoy `(format: 30, sparkles: true)`, y espera
+`NewerFormat(30)`, con el mensaje «este archivo usa el formato 30, hecho
 por una versión más nueva de Ferrous Lineup (esta lee hasta el formato
-28)».
+29)».
 
 ## Errores como enum
 
