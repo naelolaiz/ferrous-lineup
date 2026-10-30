@@ -13,7 +13,7 @@ use crate::meter::{Bar, TimeSignature};
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
 
-use super::voicing::bass_root;
+use super::voicing::{bass_root, voice_parts, voice_progression};
 
 /// Which notes of a chord voicing a hit plays.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -133,6 +133,18 @@ pub enum Comping {
 }
 
 impl Comping {
+    /// The voicings of `chords` over the bass line `bass`, for comping
+    /// this way. Held chords are sung in parts, as by a church choir, so
+    /// no two parts move in parallel fifths or octaves (see
+    /// [`voice_parts`]); the others take the nearest voicing each time
+    /// (see [`voice_progression`]), as a pianist's hands do.
+    pub fn voicings(self, chords: &[Chord], bass: &[Note]) -> Vec<Vec<Note>> {
+        match self {
+            Comping::Held => voice_parts(chords, bass),
+            _ => voice_progression(chords),
+        }
+    }
+
     /// How many steps the pattern lasts before it repeats, and its hits,
     /// in bars of `time`. Only [`Comping::Aksak`] depends on the time
     /// signature: its pattern is a bar long.

@@ -1479,6 +1479,95 @@ fn the_first_play_offers_real_instrument_sounds_once() {
 }
 
 #[test]
+fn a_demo_asks_for_real_instrument_sounds_in_front_of_its_chord_sheet() {
+    let mut screen = Screen::new();
+    screen.app.sounds.offer_on_first_play(true);
+    screen.app.rack_open = false;
+    let demo =
+        super::library::Demo::Song(lineup_core::library::Song::named("Jingle Bells").unwrap());
+    screen.app.open_demo(demo);
+    assert!(screen.app.playing && screen.app.chord_sheet.open);
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let offer = text_rect(&output, "Real instrument sounds")
+        .unwrap()
+        .center();
+    let top = screen.ctx.layer_id_at(offer).unwrap();
+    assert_eq!(top.id, egui::Id::unique("real-instrument-sounds"));
+    // Its buttons take the click.
+    screen.click("Not now");
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+}
+
+#[test]
+fn edit_style_copies_the_whole_band_of_a_new_song() {
+    let mut screen = Screen::new();
+    screen.app.replace_project(Project::with_band(), None);
+    screen.app.edit_current_style();
+    assert!(screen.app.style_editor.open);
+    let style = screen.app.style_editor.current_style();
+    assert_eq!(style.name, "Pop beat copy");
+    let players: Vec<lineup_core::Player> = style.lanes.iter().map(|lane| lane.player).collect();
+    for player in [
+        lineup_core::Player::Piano,
+        lineup_core::Player::Bass,
+        lineup_core::Player::Drums,
+        lineup_core::Player::Guitar,
+    ] {
+        assert!(players.contains(&player), "{player:?}");
+    }
+}
+
+#[test]
+fn unsaved_work_wakes_a_window_left_alone_to_write_its_recovery_copy() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    let delay = |output: &FullOutput| output.viewport_output[&egui::ViewportId::ROOT].repaint_delay;
+    // Once the windows have found their places, nothing asks for a frame.
+    let settled = |screen: &mut Screen| {
+        for _ in 0..4 {
+            screen.draw(vec![]);
+        }
+        delay(&screen.draw(vec![]))
+    };
+    assert_eq!(settled(&mut screen), std::time::Duration::MAX);
+    // Unsaved work asks for one when its copy is due, every 30 seconds.
+    screen.app.edit("change tempo", |project| {
+        project.scale_tempo(Tempo::new(100.0))
+    });
+    let wait = settled(&mut screen);
+    assert!(wait > std::time::Duration::from_secs(25), "{wait:?}");
+    assert!(wait <= std::time::Duration::from_secs(30), "{wait:?}");
+}
+
+#[test]
+fn the_key_on_the_bar_numbers_is_never_crossed_by_a_bar_line() {
+    // Süsserl starts in 2/4 and changes to 3/4 at bar 3: at 100%, "Bb
+    // major" after "1 2/4" has no room before it, and bar 2's line ran
+    // through its B.
+    let mut screen = Screen::new();
+    let song = lineup_core::library::Song::named("Süsserl").unwrap();
+    screen.app.open_demo(super::library::Demo::Song(song));
+    screen.app.set_playing(false);
+    screen.app.chord_sheet.open = false;
+    screen.app.rack_open = false;
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Bb major").is_none());
+    let key = text_rect(&output, "Bb").expect("the key, written short");
+    let crossed = output.shapes.iter().any(|shape| match &shape.shape {
+        Shape::LineSegment { points, .. } => {
+            points[0].x == points[1].x
+                && key.x_range().contains(points[0].x)
+                && points[0].y.min(points[1].y) < key.center().y
+                && points[0].y.max(points[1].y) > key.center().y
+        }
+        _ => false,
+    });
+    assert!(!crossed);
+}
+
+#[test]
 fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
     let mut screen = Screen::new();
     crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
@@ -1494,6 +1583,40 @@ fn spanish_names_notes_in_solfege_and_keeps_letters_once_chosen() {
     crate::i18n::Language::English.set();
 }
 
+/// Clicks the link or button labelled `label` and gives the pages the
+/// click opened in the browser.
+fn opened_by(screen: &mut Screen, label: &str) -> Vec<String> {
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let pos = text_rect(&output, label)
+        .unwrap_or_else(|| panic!("Missing control: {label}"))
+        .center();
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+    let output = screen.draw(vec![Event::PointerButton {
+        pos,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+    output
+        .platform_output
+        .commands
+        .iter()
+        .filter_map(|command| match command {
+            egui::OutputCommand::OpenUrl(open) => Some(open.url.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
 #[test]
 fn help_about_shows_the_version_the_license_and_where_the_book_is() {
     let mut screen = Screen::new();
@@ -1507,6 +1630,8 @@ fn help_about_shows_the_version_the_license_and_where_the_book_is() {
         "Ferrous Lineup",
         &version,
         "Read the license",
+        "User manual",
+        "User manual (PDF)",
         "The book",
         "The book (PDF)",
         "Source code",
@@ -1515,32 +1640,39 @@ fn help_about_shows_the_version_the_license_and_where_the_book_is() {
         assert!(text_rect(&output, text).is_some(), "{text}");
     }
     // A link opens its page in the browser.
-    let book = text_rect(&output, "The book").unwrap().center();
-    screen.draw(vec![
-        Event::PointerMoved(book),
-        Event::PointerButton {
-            pos: book,
-            button: PointerButton::Primary,
-            pressed: true,
-            modifiers: Modifiers::NONE,
-        },
-    ]);
-    let output = screen.draw(vec![Event::PointerButton {
-        pos: book,
-        button: PointerButton::Primary,
-        pressed: false,
-        modifiers: Modifiers::NONE,
-    }]);
-    let opened: Vec<&str> = output
-        .platform_output
-        .commands
-        .iter()
-        .filter_map(|command| match command {
-            egui::OutputCommand::OpenUrl(open) => Some(open.url.as_str()),
-            _ => None,
-        })
-        .collect();
-    assert_eq!(opened, ["https://naelolaiz.github.io/ferrous-lineup/"]);
+    assert_eq!(
+        opened_by(&mut screen, "The book"),
+        ["https://naelolaiz.github.io/ferrous-lineup/"]
+    );
+    assert_eq!(
+        opened_by(&mut screen, "User manual (PDF)"),
+        ["https://naelolaiz.github.io/ferrous-lineup/manual/ferrous-lineup-manual.pdf"]
+    );
+}
+
+#[test]
+fn help_user_manual_opens_the_manual_in_the_apps_language() {
+    for (language, help, manual, url) in [
+        (
+            crate::i18n::Language::English,
+            "Help",
+            "User manual",
+            "https://naelolaiz.github.io/ferrous-lineup/manual/",
+        ),
+        (
+            crate::i18n::Language::Spanish,
+            "Ayuda",
+            "Manual de usuario",
+            "https://naelolaiz.github.io/ferrous-lineup/es/manual/",
+        ),
+    ] {
+        let mut screen = Screen::new();
+        crate::i18n::set_language(&screen.ctx, language);
+        screen.app.rack_open = false;
+        screen.click(help);
+        assert_eq!(opened_by(&mut screen, manual), [url]);
+    }
+    crate::i18n::Language::English.set();
 }
 
 #[test]
@@ -1583,38 +1715,78 @@ fn main_transport_toggles_are_visible_reversible_and_saved() {
 
 #[test]
 fn the_toolbar_fits_on_one_row_at_1280_points() {
-    let mut screen = Screen::new();
-    screen.size = vec2(1280.0, 800.0);
-    screen.draw(vec![]);
-    let output = screen.draw(vec![]);
-    let row = text_rect(&output, "PAT").unwrap().center().y;
-    let mut right: f32 = 0.0;
-    for label in ["SONG", "TEMPO", "BAR : BEAT : STEP", "PATTERN", "VOL"] {
-        let rect = text_rect(&output, label).unwrap_or_else(|| panic!("{label} missing"));
-        assert!(
-            (rect.center().y - row).abs() < 16.0,
-            "{label} is on another row"
-        );
-        right = right.max(rect.right());
-    }
-    for name in [
-        "Follow playhead",
-        "Count-in",
-        "Metronome",
-        "Chord sheet",
-        "Channel rack",
-        "Piano roll",
-        "Harmony keys",
-        "Mixer",
+    use crate::i18n::Language;
+    // In both languages, with the longest pattern and a long name.
+    for (language, labels) in [
+        (
+            Language::English,
+            [
+                "PAT",
+                "SONG",
+                "TEMPO",
+                "BAR : BEAT : STEP",
+                "PATTERN",
+                "VOL",
+            ],
+        ),
+        (
+            Language::Spanish,
+            [
+                "PAT",
+                "CANC",
+                "TEMPO",
+                "COMPÁS : PULSO : PASO",
+                "PATRÓN",
+                "VOL",
+            ],
+        ),
     ] {
-        let rect = icon_rect(&screen, name);
-        assert!(
-            (rect.center().y - row).abs() < 16.0,
-            "{name} is on another row"
-        );
-        right = right.max(rect.right());
+        let mut screen = Screen::new();
+        crate::i18n::set_language(&screen.ctx, language);
+        screen.size = vec2(1280.0, 800.0);
+        let pattern = screen.app.project.pattern_mut(0).unwrap();
+        pattern.set_length(lineup_core::MAX_STEPS);
+        pattern.name = "Introduction and first verse".into();
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        let row = text_rect(&output, "PAT").unwrap().center().y;
+        let mut right: f32 = 0.0;
+        for label in labels {
+            let rect = text_rect(&output, label).unwrap_or_else(|| panic!("{label} missing"));
+            assert!(
+                (rect.center().y - row).abs() < 16.0,
+                "{language:?}: {label} is on another row"
+            );
+            right = right.max(rect.right());
+        }
+        for name in [
+            "Follow playhead",
+            "Count-in",
+            "Metronome",
+            "Chord sheet",
+            "Channel rack",
+            "Piano roll",
+            "Harmony keys",
+            "Mixer",
+        ] {
+            let rect = icon_rect(&screen, name);
+            assert!(
+                (rect.center().y - row).abs() < 16.0,
+                "{language:?}: {name} is on another row"
+            );
+            right = right.max(rect.right());
+        }
+        // Everything drawn on the row, the volume slider too, ends with
+        // room to spare, as a song's numbers change while it plays.
+        for shape in &output.shapes {
+            let rect = shape.shape.visual_bounding_rect();
+            if rect.is_finite() && rect.height() < 40.0 && (rect.center().y - row).abs() < 14.0 {
+                right = right.max(rect.right());
+            }
+        }
+        assert!(right < 1280.0 - 24.0, "{language:?}: {right}");
     }
-    assert!(right < 1280.0);
+    crate::i18n::Language::English.set();
 }
 
 #[test]
@@ -4590,6 +4762,48 @@ mod section_styles {
         screen.app.undo();
         assert_eq!(screen.app.project.section_style_at(64), bossa);
     }
+
+    #[test]
+    fn a_sections_menu_names_sections_in_spanish_and_files_keep_english() {
+        let mut screen = song();
+        crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+        screen.app.chord_sheet.open = false;
+        screen.click("Estribillo");
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        for chip in [
+            "Introducción",
+            "Estrofa",
+            "Puente",
+            "Coda",
+            "Preestribillo",
+            "Solo",
+            "Corte",
+            "Drop",
+        ] {
+            assert!(text_rect(&output, chip).is_some(), "{chip}");
+        }
+        for english in ["Intro", "Verse", "Chorus", "Bridge", "Outro", "Break"] {
+            assert!(text_rect(&output, english).is_none(), "{english}");
+        }
+        // A chip names the section; the file keeps the English name.
+        screen.click("Puente");
+        let names = |screen: &Screen| -> Vec<String> {
+            let sections = screen.app.project.playlist().sections().iter();
+            sections.map(|section| section.name.clone()).collect()
+        };
+        assert_eq!(names(&screen), ["Verse", "Bridge"]);
+        // A name typed in stays as typed, even one the app knows.
+        screen.draw(Vec::new());
+        let label = text_rect(&screen.draw(Vec::new()), "Nombre").unwrap();
+        screen.click_at(label.right_center() + vec2(60.0, 0.0), Modifiers::NONE);
+        screen.key_with_modifiers(Key::A, Modifiers::COMMAND);
+        screen.draw(vec![Event::Text("Verse".into())]);
+        assert_eq!(names(&screen), ["Verse", "Verse"]);
+        let output = screen.draw(Vec::new());
+        assert!(text_rect(&output, "Verse").is_some());
+        crate::i18n::Language::English.set();
+    }
 }
 
 #[test]
@@ -4644,16 +4858,28 @@ mod chord_sheet_layout {
     /// A song of four chords whose first bar changes harmony on every
     /// beat, with the chord sheet open in its window.
     fn busy_song() -> Screen {
-        let mut screen = Screen::new();
+        song_starting(&["Dm7/C F/C G7/D C/E"])
+    }
+
+    /// A song of four chords in C major whose first bars are `bars`, as
+    /// typed on the sheet, with the chord sheet open in its window.
+    fn song_starting(bars: &[&str]) -> Screen {
         let mut project = Project::with_band();
         project.write_progression(
             lineup_core::library::Style::named("Four chords").unwrap(),
             0,
         );
-        let bar = project.meter().bar(0);
-        let markers =
-            lineup_core::chord_sheet::read_bar("Dm7/C F/C G7/D C/E", &bar, project.scale).unwrap();
-        assert!(project.set_chords(bar.start, bar.end(), &markers));
+        for (number, text) in bars.iter().enumerate() {
+            let bar = project.meter().bar(number);
+            let markers = lineup_core::chord_sheet::read_bar(text, &bar, project.scale).unwrap();
+            assert!(project.set_chords(bar.start, bar.end(), &markers));
+        }
+        sheet_of(project)
+    }
+
+    /// `project` with the chord sheet open in its window.
+    fn sheet_of(mut project: Project) -> Screen {
+        let mut screen = Screen::new();
         project.follow_chord_sheet();
         screen.app.replace_project(project, None);
         screen.app.rack_open = false;
@@ -4728,6 +4954,85 @@ mod chord_sheet_layout {
         screen.click("Fit the names");
         let output = screen.draw(Vec::new());
         assert_eq!(fit(&output), fits);
+        assert_eq!(size(&output, "Dm7/C"), 20.0);
+    }
+
+    #[test]
+    fn the_words_after_a_numeral_are_written_where_there_is_room() {
+        // Fm is borrowed from C minor: "iv · borrowed" under it. On the
+        // last beat of bar 1 there is room for "iv" only; bar 2 has room
+        // for all of it.
+        let mut screen = song_starting(&["C Am F Fm", "Fm"]);
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        // The lines are as long as the names and numerals allow, not as
+        // short as the words of one beat would make them.
+        assert_eq!(fit(&output), 4);
+        for name in ["C", "Am", "F", "Fm"] {
+            assert_eq!(size(&output, name), 20.0, "{name}");
+        }
+        let numeral = text_rect(&output, "iv").expect("iv alone in bar 1");
+        let whole = text_rect(&output, "iv · borrowed").expect("all of it in bar 2");
+        assert!(numeral.left() < whole.left());
+    }
+
+    #[test]
+    fn a_short_chord_keeps_its_name_whole_with_the_next_just_after_it() {
+        // Dm7/C for a sixteenth, then G7 to the end of the bar.
+        let mut project = Project::with_band();
+        project.write_progression(
+            lineup_core::library::Style::named("Four chords").unwrap(),
+            0,
+        );
+        let bar = project.meter().bar(0);
+        let chord = |step, text| {
+            lineup_core::chord_sheet::ChordMarker::new(
+                step,
+                lineup_core::chord_sheet::HarmonyName::parse(text).unwrap(),
+            )
+        };
+        let markers = [chord(bar.start, "Dm7/C"), chord(bar.start + 1, "G7")];
+        assert!(project.set_chords(bar.start, bar.end(), &markers));
+        let mut screen = sheet_of(project);
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        // One sixteenth of a bar would need a bar sixteen names wide;
+        // written one after the other, the two fit four bars to a line.
+        assert_eq!(fit(&output), 4);
+        assert_eq!(size(&output, "Dm7/C"), 20.0);
+        assert_eq!(size(&output, "G7"), 20.0);
+        let short = text_rect(&output, "Dm7/C").unwrap();
+        let next = text_rect(&output, "G7").unwrap();
+        assert!(next.left() > short.right(), "{short:?} {next:?}");
+    }
+
+    #[test]
+    fn the_zoom_keys_over_the_sheet_in_the_main_window_zoom_the_sheet() {
+        let mut screen = busy_song();
+        screen.draw(Vec::new());
+        screen.click("⛶ Fill the window");
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        let before = fit(&output);
+        let bar = text_rect(&output, "Dm7/C").unwrap().center();
+        // Smaller, twice: the names get smaller and more bars fit on a
+        // line. The playlist, out of sight, keeps its zoom.
+        screen.draw(vec![Event::PointerMoved(bar)]);
+        screen.key_with_modifiers(Key::Minus, Modifiers::COMMAND);
+        screen.draw(vec![Event::PointerMoved(bar)]);
+        screen.key_with_modifiers(Key::Minus, Modifiers::COMMAND);
+        assert!(screen.ctx.zoom_factor() < 1.0);
+        let playlist = super::view::Area::Main;
+        assert_eq!(
+            playlist.zoom(&screen.ctx, super::view::Axis::Horizontal),
+            1.0
+        );
+        // The app's window keeps its size on the screen, which is more
+        // points at a smaller zoom: eframe tells egui so.
+        screen.size /= screen.ctx.zoom_factor();
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        assert!(fit(&output) > before, "{} {before}", fit(&output));
         assert_eq!(size(&output, "Dm7/C"), 20.0);
     }
 

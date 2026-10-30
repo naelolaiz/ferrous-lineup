@@ -66,8 +66,8 @@ quit** or **Keep exporting**.
 ## Recovering unsaved work
 
 While a song has unsaved changes, Ferrous Lineup keeps a copy of it on
-the side, written again about every half minute while you work. The
-copy is not your file, which only **Save** changes, and it is removed
+the side, brought up to date within about half a minute of each change,
+even if you then leave the app alone. The copy is not your file, which only **Save** changes, and it is removed
 once the song is saved or the app closes normally.
 
 If the computer crashes or the app is closed without the chance to ask,

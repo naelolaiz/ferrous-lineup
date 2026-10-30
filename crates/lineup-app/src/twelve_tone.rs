@@ -20,7 +20,7 @@ use lineup_core::{
     Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
 };
 
-use crate::i18n::{tr, tr_name, trf};
+use crate::i18n::{tr, tr_name, trc, trf};
 use crate::widgets::{self, Opening};
 
 /// Where the row and set last used are remembered.
@@ -695,11 +695,15 @@ impl RowWindow {
         ui.horizontal_wrapped(|ui| {
             ui.label(tr("Octaves"));
             egui::ComboBox::from_id_salt("row-register")
-                .selected_text(tr(writing.register.name()))
+                .selected_text(trc("register", writing.register.name()))
                 .show_ui(ui, |ui| {
                     for register in Register::ALL {
-                        ui.selectable_value(&mut writing.register, register, tr(register.name()))
-                            .on_hover_text(tr(register.about()));
+                        ui.selectable_value(
+                            &mut writing.register,
+                            register,
+                            trc("register", register.name()),
+                        )
+                        .on_hover_text(tr(register.about()));
                     }
                 });
             ui.label(tr("from"));
@@ -921,25 +925,7 @@ impl SetWindow {
                 actions.push(SetAction::OpenMicromodes);
             }
         });
-        let search = self.search.trim().to_lowercase();
-        let classes: Vec<&'static SetClass> = SetClass::all()
-            .iter()
-            .filter(|class| {
-                if search.is_empty() {
-                    class.cardinality as usize == self.size
-                } else {
-                    class.name().to_lowercase().contains(&search)
-                        || class
-                            .nickname()
-                            .is_some_and(|n| n.to_lowercase().contains(&search))
-                        || Micromode::of(class.prime).is_some_and(|m| {
-                            m.name.to_lowercase().contains(&search)
-                                || m.english.to_lowercase().contains(&search)
-                                || "micromodes micromodos".contains(&search)
-                        })
-                }
-            })
-            .collect();
+        let classes = listed(self.size, &self.search);
         egui::ScrollArea::vertical()
             .max_height(220.0)
             .auto_shrink([false, true])
@@ -1118,6 +1104,35 @@ pub(crate) fn draw_set_control(ui: &mut Ui, set: PitchSet, drawing: &mut ChordSt
     }
 }
 
+/// The sets the window lists: those of `size` notes, or, while something
+/// is searched, those whose name, nickname or micromode has it. Nicknames
+/// are found in English and in the app's language, with or without
+/// accents: "octatonic", "octatónica" or "octatonica".
+fn listed(size: usize, search: &str) -> Vec<&'static SetClass> {
+    let search = search.trim().to_lowercase();
+    let words = crate::app::fold(&search);
+    SetClass::all()
+        .iter()
+        .filter(|class| {
+            if search.is_empty() {
+                class.cardinality as usize == size
+            } else {
+                class.name().to_lowercase().contains(&search)
+                    || class.nickname().is_some_and(|n| {
+                        !words.is_empty()
+                            && (crate::app::fold(n).contains(&words)
+                                || crate::app::fold(tr(n)).contains(&words))
+                    })
+                    || Micromode::of(class.prime).is_some_and(|m| {
+                        m.name.to_lowercase().contains(&search)
+                            || m.english.to_lowercase().contains(&search)
+                            || "micromodes micromodos".contains(&search)
+                    })
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1197,6 +1212,21 @@ mod tests {
         assert!(pitches.windows(2).all(|notes| notes[0] < notes[1]));
         assert!(pitches[0] >= Note::C4);
         assert_eq!(drawing, ChordStamp::Single);
+    }
+
+    #[test]
+    fn sets_are_found_by_their_nickname_in_either_language() {
+        let names = |search| -> Vec<String> {
+            listed(3, search).iter().map(|class| class.name()).collect()
+        };
+        assert_eq!(names("octatonic"), ["8-28"]);
+        crate::i18n::Language::Spanish.with(|| {
+            assert_eq!(names("octatónica"), ["8-28"]);
+            assert_eq!(names("Octatonica"), ["8-28"]);
+            assert_eq!(names("octatonic"), ["8-28"]);
+        });
+        assert_eq!(names("3-11"), ["3-11"]);
+        assert_eq!(listed(3, "").len(), 12);
     }
 
     #[test]

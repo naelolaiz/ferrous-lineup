@@ -110,6 +110,10 @@ impl LineupApp {
                 .position(|user| user.id() == style.id())
                 .and_then(|index| self.style_files.paths.get(index).cloned());
             self.start_style_editor(style, path);
+        } else if let Some(band) = self.project.band() {
+            // The whole band the song plays, not only its drums.
+            let style = UserStyle::from_band(band.style, band.harmony_style);
+            self.start_style_editor(style, None);
         } else if let Some(style) = self.tried().style {
             self.start_style_editor(UserStyle::from_builtin(style), None);
         } else if let Some(rhythm) = self.tried().rhythm {

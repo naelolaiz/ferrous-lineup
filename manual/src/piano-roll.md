@@ -29,6 +29,10 @@ are written.
   each note of the key and an orange one the key note. **Click a key**
   to hear it.
 - Bar lines are stronger than beat lines.
+- A note wide enough on screen carries its name. A note of the chord
+  heard where it starts is spelled as that chord spells it: in C major,
+  the fifth of C diminished reads G♭, not F♯. Other notes are spelled
+  as the key spells them.
 - Over the grid, two rows name the chords: the first the chord this
   channel plays, the second, **All**, the chord all the channels make
   together.

@@ -531,8 +531,11 @@ impl LineupApp {
         let mut download = false;
         let mut choose = false;
         let mut stop = false;
+        // In front of every window: a demo opens on the chord sheet,
+        // brought to the front, as it starts to play and asks this.
         egui::Window::new(tr("Real instrument sounds"))
             .id(egui::Id::unique("real-instrument-sounds"))
+            .order(egui::Order::Foreground)
             .open(&mut open)
             .collapsible(false)
             .resizable(false)

@@ -230,9 +230,14 @@ impl Drop for Recovery {
 impl LineupApp {
     /// Writes unsaved work when its time comes, and removes the copy once
     /// the work is saved or discarded.
-    pub(super) fn autosave(&mut self) {
+    pub(super) fn autosave(&mut self, ctx: &egui::Context) {
         let now = Instant::now();
-        if self.recovery.due.is_some_and(|due| now < due) {
+        if let Some(due) = self.recovery.due.filter(|due| now < *due) {
+            // A window left alone draws no frames, so it is woken up when
+            // the copy is due.
+            if self.has_unsaved_changes() || self.recovery.written {
+                ctx.request_repaint_after(due - now);
+            }
             return;
         }
         self.recovery.due = Some(now + INTERVAL);

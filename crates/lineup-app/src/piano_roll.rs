@@ -7,6 +7,7 @@
 //! a drag in progress), so it is a struct with methods instead of a
 //! single function.
 
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use eframe::egui::{
@@ -2363,7 +2364,14 @@ impl PianoRoll {
                 );
             }
         }
-        self.paint_notes(&painter, grid, notes, scale, roles);
+        let mut heard = vec![self.channel];
+        heard.extend(ghosts);
+        let chords = Chords {
+            pattern,
+            heard: &heard,
+            scale,
+        };
+        self.paint_notes(&painter, grid, notes, chords, roles);
         if let Some(check) = voices {
             paint_parts(&painter, grid, check, self.hovered_step.or(playhead));
             paint_slips(&painter, grid, check, self.hovered_step.or(playhead));
@@ -3002,9 +3010,11 @@ impl PianoRoll {
         painter: &Painter,
         grid: Grid,
         notes: &[NoteEvent],
-        scale: Scale,
+        chords: Chords,
         roles: Option<&[Option<(NoteRole, Over)>]>,
     ) {
+        let scale = chords.scale;
+        let mut heard_at = HashMap::new();
         let visible = notes
             .iter()
             .enumerate()
@@ -3038,7 +3048,7 @@ impl PianoRoll {
             // The name stays in view when the start of the note is
             // scrolled away under the keyboard.
             let shown = rect.intersect(grid.cells());
-            let name = scale.note_name(note.pitch);
+            let name = chords.note_name(note, &mut heard_at);
             let text = match role {
                 Some(role) if shown.width() > 44.0 => Some(format!("{name} {}", role.mark())),
                 Some(role) if shown.width() > 12.0 => Some(role.mark()),
@@ -3253,6 +3263,43 @@ fn heard_by_beat(project: &Project, pattern: usize, length: usize) -> Vec<Harmon
 }
 
 /// The pitches held during `step` on any of `channels`.
+/// What the notes of a pattern are named by: the chord heard as each
+/// starts, or else the key.
+#[derive(Clone, Copy)]
+struct Chords<'a> {
+    pattern: &'a Pattern,
+    /// The channels heard together: this one, and those shown behind it.
+    heard: &'a [usize],
+    scale: Scale,
+}
+
+impl Chords<'_> {
+    /// The name of `note`. A note of the chord heard as it starts is
+    /// written as that chord spells it: the fifth of C diminished is G
+    /// flat, where C major writes that key F sharp. Other notes, and
+    /// those of rows and sets, are written as the key writes them.
+    /// `heard_at` keeps the chord of each step already looked at.
+    fn note_name(&self, note: &NoteEvent, heard_at: &mut HashMap<usize, Option<Chord>>) -> String {
+        let scale = self.scale;
+        let pitch_class = note.pitch.pitch_class();
+        let chord = scale.kind.is_tonal().then(|| {
+            *heard_at.entry(note.start).or_insert_with(|| {
+                match analyze(sounding(self.pattern, self.heard, note.start)) {
+                    Harmony::Chord { chord, .. } => Some(chord),
+                    _ => None,
+                }
+            })
+        });
+        chord
+            .flatten()
+            .and_then(|chord| chord.spell_note(scale.spell_root(chord), pitch_class))
+            .map_or_else(
+                || scale.note_name(note.pitch),
+                |name| note.pitch.name_as(name),
+            )
+    }
+}
+
 fn sounding<'a>(
     pattern: &'a Pattern,
     channels: &'a [usize],
@@ -3404,6 +3451,43 @@ pub fn busiest_channel(pattern: &Pattern) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn notes_of_a_chord_are_spelled_as_the_chord_spells_them() {
+        let mut pattern = Pattern::new("Test", 1, 16);
+        // C diminished, then F sharp alone, in C major.
+        for midi in [60, 63, 66] {
+            pattern.add_note(0, NoteEvent::new(Note::new(midi), 0, 4));
+        }
+        pattern.add_note(0, NoteEvent::new(Note::new(66), 8, 4));
+        let chords = Chords {
+            pattern: &pattern,
+            heard: &[0],
+            scale: Scale::new(PitchClass::C, ScaleKind::Major),
+        };
+        let mut heard_at = HashMap::new();
+        let names: Vec<String> = pattern
+            .notes(0)
+            .iter()
+            .map(|note| chords.note_name(note, &mut heard_at))
+            .collect();
+        assert_eq!(names, ["C4", "Eb4", "Gb4", "F#4"]);
+        // D major in C major: its F sharp is F sharp.
+        let mut pattern = Pattern::new("Test", 1, 16);
+        for midi in [62, 66, 69] {
+            pattern.add_note(0, NoteEvent::new(Note::new(midi), 0, 4));
+        }
+        let chords = Chords {
+            pattern: &pattern,
+            ..chords
+        };
+        let names: Vec<String> = pattern
+            .notes(0)
+            .iter()
+            .map(|note| chords.note_name(note, &mut HashMap::new()))
+            .collect();
+        assert_eq!(names, ["D4", "F#4", "A4"]);
+    }
 
     #[test]
     fn native_clipboard_events_copy_paste_and_cut_notes_between_rolls() {

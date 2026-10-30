@@ -2,8 +2,8 @@
 //! and whether the sheet fills the main window in the playlist's place.
 //!
 //! A line holds as many bars as you choose, or, by default, as many as
-//! fit: every harmony's name and the words under it at their full size,
-//! never shrunk. The count is kept to 1, 2, 4, 8, 12 or 16, so a line
+//! fit: every harmony's name and the numeral or notes under it at their
+//! full size, never shrunk. The count is kept to 1, 2, 4, 8, 12 or 16, so a line
 //! starts on every fourth bar where printed music puts its phrases.
 
 use eframe::egui::{self, Ui};

@@ -120,6 +120,62 @@ pub fn voice_progression(chords: &[Chord]) -> Vec<Vec<Note>> {
     voicings
 }
 
+/// Voices a progression in parts, as a choir sings it, over its bass
+/// line (see [`bass_line`]): of the voicings nearest the last, the first
+/// that moves no two parts, the bass among them, in parallel fifths or
+/// octaves. From C E G over C, D minor over D is A D F, the hands going
+/// down as the bass goes up, rather than D F A, a fifth and an octave
+/// moving with it. Without a bass line, as [`voice_progression`].
+pub fn voice_parts(chords: &[Chord], bass: &[Note]) -> Vec<Vec<Note>> {
+    if bass.len() != chords.len() {
+        return voice_progression(chords);
+    }
+    let mut voicings: Vec<Vec<Note>> = Vec::with_capacity(chords.len());
+    for (index, &chord) in chords.iter().enumerate() {
+        let voicing = match voicings.last() {
+            Some(previous) => {
+                let mut candidates = inversions(chord);
+                candidates.sort_by_key(|notes| distance(notes, previous));
+                let parallel = |notes: &&Vec<Note>| {
+                    parallels((bass[index - 1], previous), (bass[index], notes))
+                };
+                let free = candidates.iter().find(|notes| !parallel(notes));
+                free.or(candidates.first()).cloned().unwrap_or_default()
+            }
+            None => voice(chord, None),
+        };
+        voicings.push(voicing);
+    }
+    voicings
+}
+
+/// Whether going from one chord to the next, each a bass note and the
+/// notes above it, moves two parts in fifths, octaves or unisons to the
+/// same interval again: parallel (or contrary) fifths and octaves, which
+/// the voice-leading check marks. The bass is one part, and the notes
+/// above it are paired from the top down, as the check pairs them.
+fn parallels(before: (Note, &[Note]), after: (Note, &[Note])) -> bool {
+    let mut parts: Vec<(Note, Note)> = vec![(before.0, after.0)];
+    parts.extend(
+        before
+            .1
+            .iter()
+            .rev()
+            .copied()
+            .zip(after.1.iter().rev().copied()),
+    );
+    let interval =
+        |low: Note, high: Note| (i32::from(high.midi()) - i32::from(low.midi())).rem_euclid(12);
+    parts.iter().enumerate().any(|(index, &(a_from, a_to))| {
+        parts[index + 1..].iter().any(|&(b_from, b_to)| {
+            let moves = a_from != a_to && b_from != b_to;
+            let from = interval(a_from.min(b_from), a_from.max(b_from));
+            let to = interval(a_to.min(b_to), a_to.max(b_to));
+            moves && from == to && matches!(from, 0 | 7)
+        })
+    })
+}
+
 /// The root of `chord` in the bass, between C2 and B2.
 pub fn bass_root(chord: Chord) -> Note {
     Note::new(BASS_LOWEST + chord.root.semitone())
@@ -244,6 +300,37 @@ mod tests {
         assert_eq!(midi(&voicings[1]), [60, 65, 69]); // C4 F4 A4
         assert_eq!(midi(&voicings[2]), [59, 62, 67]); // B3 D4 G4
         assert_eq!(midi(&voicings[3]), [60, 64, 67]);
+    }
+
+    #[test]
+    fn parts_move_in_no_parallel_fifths_or_octaves() {
+        // A hymn's I vi IV V I ii V I in C major over its roots.
+        let chords = [
+            Chord::new(C, Major),
+            Chord::new(A, Minor),
+            Chord::new(F, Major),
+            Chord::new(G, Major),
+            Chord::new(C, Major),
+            Chord::new(D, Minor),
+            Chord::new(G, Major),
+            Chord::new(C, Major),
+        ];
+        let roots: Vec<(PitchClass, bool)> =
+            chords.iter().map(|chord| (chord.root, false)).collect();
+        let bass = bass_line(&roots);
+        let voicings = voice_parts(&chords, &bass);
+        // From C E G over C, D minor over D goes down to A D F as the
+        // bass goes up, not up to D F A in fifths and octaves with it.
+        assert_eq!(midi(&voicings[4]), [60, 64, 67]);
+        assert_eq!(midi(&voicings[5]), [57, 62, 65]);
+        for at in 1..chords.len() {
+            assert!(
+                !parallels((bass[at - 1], &voicings[at - 1]), (bass[at], &voicings[at])),
+                "chord {at}"
+            );
+        }
+        // Voiced for the nearest notes alone, D minor is D F A.
+        assert_eq!(midi(&voice_progression(&chords)[5]), [62, 65, 69]);
     }
 
     #[test]

@@ -154,9 +154,15 @@ At the top of the sheet:
   **Micromodes**. [Beyond keys](sets-rows-micromodes.md#one-harmony-four-names)
   tells what each says.
 - **Bars per line**: **Fit the names** puts as many bars on a line as
-  show every name at its full size: 1, 2, 4, 8, 12 or 16, so that lines
-  start where four-bar phrases do. The menu shows how many fit now, as
-  **Fit (4)**. Or pick a number, and names that don't fit get smaller.
+  show every name, and the numeral under it, at its full size: 1, 2, 4,
+  8, 12 or 16, so that lines start where four-bar phrases do. A name may
+  sit just after its beat when the one before needs the room, and words
+  after the numeral, such as "borrowed", are written where they fit
+  (the numeral's colour and the name's hint say the same). The menu
+  shows how many fit now, as **Fit (4)**. With the sheet in the main
+  window, the zoom keys over it change the size of everything, so
+  zooming out fits more bars. Or pick a number, and names that don't fit
+  get smaller.
 - **⛶ Fill the window** puts the sheet in the playlist's place in the
   main window, where a line holds more bars. **Back to the playlist**
   puts it back in its own window. The same switch is **View > Chord

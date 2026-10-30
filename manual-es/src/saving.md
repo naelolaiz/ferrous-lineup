@@ -70,8 +70,9 @@ pregunta si **Detener y salir** o **Continuar exportando**.
 ## Recuperar el trabajo sin guardar
 
 Mientras una canción tiene cambios sin guardar, Ferrous Lineup guarda
-una copia aparte, que vuelve a escribir más o menos cada medio minuto
-mientras trabajas. La copia no es tu archivo, que solo cambia con
+una copia aparte, que pone al día más o menos medio minuto después de
+cada cambio, aunque después dejes la aplicación sin tocar. La copia no
+es tu archivo, que solo cambia con
 **Guardar**, y se borra en cuanto se guarda la canción o la aplicación
 se cierra normalmente.
 
