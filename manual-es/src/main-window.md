@@ -1,6 +1,6 @@
 # La ventana principal
 
-![La ventana principal al arrancar la aplicación: los menús y la barra de herramientas arriba, la Biblioteca a la izquierda, la lista de reproducción en el centro con el rack de canales abierto encima, y las teclas de armonía abajo](images/main-window-start.png)
+![La ventana principal al arrancar la aplicación: los menús y la barra de herramientas arriba, la Biblioteca a la izquierda, la canción inicial en la lista de reproducción en el centro, y las teclas de armonía abajo](images/main-window-start.png)
 
 De arriba abajo, la ventana tiene:
 

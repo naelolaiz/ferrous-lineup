@@ -90,7 +90,11 @@ a tiempo. Mientras trabajas en el código, `cargo run` solo compila más
 rápido, y conserva la consola donde aparecen los mensajes y los
 pánicos.
 
-![Ferrous Lineup al abrirse, en inglés: la Library a la izquierda, la canción de demostración en la lista de reproducción, el rack de canales encima con Kick, Clap, Hat, Snare y el Lineup Osc, y las teclas de armonía de do mayor abajo.](images/getting-started-window.png)
+![Ferrous Lineup al abrirse, en inglés: la Library a la izquierda, la canción de demostración en la lista de reproducción, y las teclas de armonía de do mayor abajo.](images/getting-started-window.png)
+
+La primera vez, una ventana encima ofrece sonidos de instrumentos
+reales; [SoundFonts y General MIDI](sound/soundfonts.md#la-oferta-y-la-descarga)
+dice qué hace.
 
 [La ventana
 principal](https://naelolaiz.github.io/ferrous-lineup/es/manual/main-window.html),

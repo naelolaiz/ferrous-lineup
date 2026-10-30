@@ -44,7 +44,7 @@ cuatro compases y vuelve a empezar desde arriba hasta que pulsas
 en la hoja, y las teclas de armonía de abajo encienden el acorde que
 suena.
 
-La primera vez que algo suena, Ferrous Lineup ofrece descargar un
+Si todavía no respondiste, Ferrous Lineup ofrece descargar un
 SoundFont, las grabaciones de instrumentos reales que hacen que la banda
 suene como una banda. Elige **Descargar** (unos 30 MB, una sola vez);
 [Sonidos](sounds.md) cuenta toda la historia.

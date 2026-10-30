@@ -775,6 +775,19 @@ if let Demo::Song(_) = demo {
 }
 ```
 
+La aplicación misma no se abre en ninguna de las dos. Su canción
+inicial es un ritmo, pero lo primero que hay que ver es la lista de
+reproducción y la biblioteca, así que `LineupApp::new` cierra el rack
+cuando no se nombró ningún archivo en la línea de comandos:
+
+```rust
+// The starting song opens on the playlist and the Library, with no
+// window over them: F6 shows its beat in the channel rack.
+if starting_song {
+    app.rack_open = false;
+}
+```
+
 ### Ventanas del tamaño de lo que muestran
 
 egui recuerda el tamaño de cada ventana y lo guarda con el resto de su
