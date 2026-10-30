@@ -1093,6 +1093,7 @@ impl LineupApp {
             if let LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) = action {
                 let mut style = lineup_core::library::UserStyle::from_rhythm(rhythm);
                 style.name = rhythm.name.into();
+                style.about = rhythm.about.into();
                 style.chart.clear();
                 let parts = apply::StyleParts {
                     matching_style: false,

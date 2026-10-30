@@ -13,8 +13,8 @@
 //!   roll or channel rack under the pointer. The step under the pointer stays
 //!   under the pointer. Ctrl+0 takes both back to 100%.
 //! - Anywhere else (the toolbars, the harmony keys, the status bar, the
-//!   Patterns and Library panel) the same keys change the interface
-//!   size: how big the text, buttons and menus are everywhere, for big or
+//!   Patterns and Library panel, the chord sheet, in its window or in the
+//!   playlist's place) the same keys change the interface size: how big the text, buttons and menus are everywhere, for big or
 //!   very sharp screens. That is egui's own zoom.
 //! - The channel rack and the interface have one zoom for both
 //!   directions, so Ctrl and Alt do the same there.
@@ -99,8 +99,8 @@ impl Target {
     /// What is zoomed at a point of the screen: the channel rack or the
     /// piano roll over their windows, the playlist over the playlist, and
     /// the interface over everything else (the toolbars, the harmony keys,
-    /// the status bar, the Patterns and Library panel, the row and set
-    /// windows, menus).
+    /// the status bar, the Patterns and Library panel, the chord sheet,
+    /// the row and set windows, menus).
     fn at(ctx: &egui::Context, pos: egui::Pos2, playlist: egui::Rect) -> Target {
         match ctx.layer_id_at(pos) {
             Some(layer) if layer.id == super::rack_id() => Target::Area(Area::Rack),
@@ -387,7 +387,13 @@ impl LineupApp {
     /// the app's window, the keys zoom what was clicked last.
     /// Called at the start of each frame, before anything is drawn.
     pub(super) fn zoom_shortcuts(&mut self, ctx: &egui::Context) {
-        let playlist = self.playlist.area();
+        // With the chord sheet in its place, the playlist is not on
+        // screen: the keys zoom the sheet, as the interface size, and not
+        // a playlist nobody sees.
+        let playlist = match self.chord_sheet.fills_window() {
+            true => egui::Rect::NOTHING,
+            false => self.playlist.area(),
+        };
         let pressed_at = ctx.input(|input| crate::widgets::press_pos(input, None));
         if let Some(pos) = pressed_at {
             self.zoom_target = Target::at(ctx, pos, playlist);

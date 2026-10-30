@@ -234,6 +234,12 @@ impl GroupKey {
     fn new(scale: Scale, label: Option<String>, notes: Vec<PitchClass>) -> GroupKey {
         let harmony = analyze(stacked(&notes));
         let names = match harmony {
+            // A row's notes keep the names the row writes them by: its
+            // group A F F# is not written A E# F#, as the chord F#m(maj7)
+            // it sounds like would be.
+            Harmony::Chord { .. } if matches!(scale.kind, ScaleKind::Row(_)) => {
+                notes.iter().map(|&p| scale.spell(p)).collect()
+            }
             Harmony::Chord { chord, .. } => {
                 let root = scale.spell_root(chord);
                 notes
@@ -389,6 +395,26 @@ pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
 mod tests {
     use super::*;
     use crate::{ChordQuality, PitchClass, Spelling};
+
+    #[test]
+    fn a_rows_groups_keep_the_rows_names() {
+        let webern = crate::harmony::RowPreset::named("Webern's Concerto")
+            .unwrap()
+            .row;
+        let row = Scale::row(webern.starting_on(PitchClass::C));
+        let groups: Vec<String> = group_keys(row, ChordSize::Triads)
+            .unwrap()
+            .iter()
+            .map(|key| {
+                key.names
+                    .iter()
+                    .map(|name| name.to_string())
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            })
+            .collect();
+        assert_eq!(groups, ["C B Eb", "E Ab G", "A F F#", "C# D Bb"]);
+    }
 
     fn names(scale: Scale, size: ChordSize) -> Vec<String> {
         chord_keys(scale, size)

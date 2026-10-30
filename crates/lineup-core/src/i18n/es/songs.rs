@@ -1085,6 +1085,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Down by the Riverside", "Down by the Riverside"),
     ("Dream", "Sueño"),
     ("Dream again", "Sueño otra vez"),
+    ("Drop", "Drop"),
     ("Drum roll", "Redoble"),
     ("Drum roll again", "Redoble otra vez"),
     ("Drunken Sailor", "Drunken Sailor"),

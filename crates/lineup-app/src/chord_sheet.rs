@@ -80,6 +80,8 @@ const CAPTION_SIZE: f32 = 13.0;
 const SMALL_SIZE: f32 = 10.0;
 /// Inside a bar: room for the bar number above the harmonies.
 const PADDING: f32 = 6.0;
+/// The room kept between a name and the next.
+const NAME_GAP: f32 = 4.0;
 const TOP: f32 = 15.0;
 
 const PAPER: Color32 = Color32::from_rgb(38, 44, 49);
@@ -1160,9 +1162,8 @@ impl ChordSheet {
         )
     }
 
-    /// How wide bar `bar` must be to show its harmonies and the words
-    /// under them in full, at their own size: each name has the part of
-    /// the bar from its beat to the next name's.
+    /// How wide bar `bar` must be to show its harmonies in full, at their
+    /// own size, each with the first word under it (see [`Row`]).
     #[allow(clippy::too_many_arguments)]
     fn needed_width(
         &self,
@@ -1175,36 +1176,7 @@ impl ChordSheet {
         heard: &[Shown],
     ) -> f32 {
         let (going_on, shown) = self.harmonies(project, meter, keys, bar, marks, heard);
-        let width = |text: &str, size: f32| {
-            painter
-                .layout_no_wrap(text.to_string(), FontId::proportional(size), theme::TEXT)
-                .size()
-                .x
-        };
-        let length = bar.length.max(1) as f32;
-        let starts: Vec<usize> = going_on
-            .iter()
-            .map(|_| bar.start)
-            .chain(shown.iter().map(|item| item.start.max(bar.start)))
-            .collect();
-        let inner = going_on
-            .iter()
-            .chain(&shown)
-            .enumerate()
-            .map(|(index, item)| {
-                let end = starts.get(index + 1).copied();
-                // A name before another keeps a gap from it.
-                let gap = if end.is_some() { 4.0 } else { 0.0 };
-                let end = end.unwrap_or(bar.end()).max(starts[index] + 1);
-                let share = (end - starts[index]) as f32 / length;
-                let text = width(&item.text, NAME_SIZE);
-                let caption = item
-                    .caption
-                    .as_deref()
-                    .map_or(0.0, |caption| width(caption, CAPTION_SIZE));
-                (text.max(caption) + gap) / share
-            })
-            .fold(0.0, f32::max);
+        let inner = Row::of(painter, bar, going_on.as_ref(), &shown).packed_width();
         let repeats = marks.repeat.map_or(0.0, |(start, end)| {
             let from = if start == bar.start { 8.0 } else { 0.0 };
             let to = if end == bar.end() { 8.0 } else { 0.0 };
@@ -1245,18 +1217,19 @@ impl ChordSheet {
         view.bar_lines(painter, response.hovered(), starts_section, ends_line);
         view.changes(ui, painter, id, actions);
         let playing_here = playing.is_some_and(|step| (bar.start..bar.end()).contains(&step));
-        let names = self.names(view, (playing, heard), playing_here);
+        let names = self.names(painter, view, (playing, heard), playing_here);
         draw_names(painter, &names);
         self.highlight(painter, view, playing_here);
         self.read_mouse(ui, view, response, &names, actions)
     }
 
-    /// The harmonies of a bar, each where its beat falls, in the
-    /// notation chosen: what is written, or the groups of notes the song
+    /// The harmonies of a bar, each on its beat or just after the name
+    /// before it (see [`Row`]), in the notation chosen: what is written, or the groups of notes the song
     /// plays. While the song plays, the one sounding is the brightest
     /// thing on the sheet.
     fn names(
         &self,
+        painter: &egui::Painter,
         view: BarView,
         (playing, heard): (Option<usize>, &[Shown]),
         playing_here: bool,
@@ -1282,29 +1255,30 @@ impl ChordSheet {
         });
         let inner_left = rect.left() + PADDING + if view.repeat_from() { 8.0 } else { 0.0 };
         let inner_right = rect.right() - PADDING - if view.repeat_to() { 8.0 } else { 0.0 };
-        let x_of = |step: usize| {
-            let along = (step - bar.start) as f32 / bar.length.max(1) as f32;
-            inner_left + (inner_right - inner_left) * along
-        };
-        let slot = |left: f32, right: f32| {
+        let (going_on, shown) = self.harmonies(project, view.meter, view.keys, &bar, marks, heard);
+        let lefts =
+            Row::of(painter, &bar, going_on.as_ref(), &shown).lefts(inner_left, inner_right);
+        // Each name has the room up to the next one's.
+        let slot = |index: usize| {
+            let left = lefts[index];
+            let right = lefts
+                .get(index + 1)
+                .map_or(inner_right, |next| next - NAME_GAP);
             Rect::from_x_y_ranges(
                 left..=right.max(left + 1.0),
                 rect.top() + TOP..=rect.bottom(),
             )
         };
-        let (going_on, shown) = self.harmonies(project, view.meter, view.keys, &bar, marks, heard);
+        let first_own = usize::from(going_on.is_some());
         let mut names: Vec<Name> = Vec::new();
         if let Some(item) = going_on {
-            let right = shown
-                .first()
-                .map_or(inner_right, |next| x_of(next.start) - 4.0);
             let color = if playing_here && sounding == Some(item.start) {
                 PLAYING
             } else {
                 GOING_ON
             };
             names.push(Name {
-                place: slot(inner_left, right),
+                place: slot(0),
                 shown: Shown {
                     caption: None,
                     ..item
@@ -1314,9 +1288,6 @@ impl ChordSheet {
             });
         }
         for (index, item) in shown.iter().enumerate() {
-            let right = shown
-                .get(index + 1)
-                .map_or(inner_right, |next| x_of(next.start) - 4.0);
             let color = match (playing.is_some(), sounding == Some(item.start)) {
                 (true, true) => PLAYING,
                 (true, false) => theme::TEXT_DIM,
@@ -1326,7 +1297,7 @@ impl ChordSheet {
                 _ => theme::TEXT,
             };
             names.push(Name {
-                place: slot(x_of(item.start), right),
+                place: slot(first_own + index),
                 shown: item.clone(),
                 color,
                 going_on: false,
@@ -2220,8 +2191,116 @@ struct Name {
     going_on: bool,
 }
 
-/// Draws the harmonies of a bar, each with its caption under it. The
-/// bar's own names are all drawn at one size, as big as the most crowded
+/// The names of a bar, in order: where each one's beat falls, and how
+/// wide it must be to be read whole at its own size. That is the name,
+/// or the first word under it if that is wider: the numeral, or the
+/// notes. The words after it ("borrowed", "pivot", "in A minor",
+/// "rest") are written where there is room for them; where there is
+/// not, the numeral's colour and the name's hint say the same.
+///
+/// A name never starts before its beat, but it may start after it when
+/// the name before needs the room: a chord held for a sixteenth still
+/// has its name written whole, with the next one just after it, as a
+/// printed chart does.
+struct Row {
+    /// For each name, its beat, from 0 at the start of the bar towards 1
+    /// at its end, and its width.
+    names: Vec<(f32, f32)>,
+}
+
+impl Row {
+    fn of(painter: &egui::Painter, bar: &Bar, going_on: Option<&Shown>, shown: &[Shown]) -> Row {
+        let width = |text: &str, size: f32| {
+            painter
+                .layout_no_wrap(text.to_string(), FontId::proportional(size), theme::TEXT)
+                .size()
+                .x
+        };
+        let length = bar.length.max(1);
+        // A name going on from before is written without the words under
+        // it.
+        let going_on = going_on.map(|item| (0.0, width(&item.text, NAME_SIZE)));
+        let own = shown.iter().map(|item| {
+            let step = (item.start.max(bar.start) - bar.start).min(length - 1);
+            let first = item
+                .caption
+                .as_deref()
+                .map_or(0.0, |caption| width(first_word(caption), CAPTION_SIZE));
+            (
+                step as f32 / length as f32,
+                width(&item.text, NAME_SIZE).max(first),
+            )
+        });
+        Row {
+            names: going_on.into_iter().chain(own).collect(),
+        }
+    }
+
+    /// The narrowest the inside of the bar can be with every name whole:
+    /// each name, and all the names after it, must fit between its beat
+    /// and the end of the bar.
+    fn packed_width(&self) -> f32 {
+        (0..self.names.len())
+            .map(|first| {
+                let (beat, _) = self.names[first];
+                let from = &self.names[first..];
+                let widths: f32 = from.iter().map(|(_, width)| width).sum();
+                let gaps = NAME_GAP * (from.len() - 1) as f32;
+                (widths + gaps) / (1.0 - beat)
+            })
+            .fold(0.0, f32::max)
+    }
+
+    /// Where each name starts inside a bar from `left` to `right`: on its
+    /// beat, or just after the name before it. When they don't all fit
+    /// so, on a line of a length chosen, each starts on its beat, and
+    /// [`draw_names`] makes them smaller.
+    fn lefts(&self, left: f32, right: f32) -> Vec<f32> {
+        let on_beat = |beat: f32| left + (right - left) * beat;
+        let mut free = left;
+        let packed: Vec<f32> = self
+            .names
+            .iter()
+            .map(|&(beat, width)| {
+                let start = on_beat(beat).max(free);
+                free = start + width + NAME_GAP;
+                start
+            })
+            .collect();
+        if free - NAME_GAP <= right + 0.5 {
+            packed
+        } else {
+            self.names.iter().map(|&(beat, _)| on_beat(beat)).collect()
+        }
+    }
+}
+
+/// The first of the words under a harmony, which is always written: its
+/// numeral, or its notes.
+fn first_word(caption: &str) -> &str {
+    caption.split(" · ").next().unwrap_or(caption)
+}
+
+/// As many of the words of `caption` as fit in `room`, from the first,
+/// which is always there.
+fn words_that_fit(painter: &egui::Painter, caption: &str, room: f32) -> String {
+    let words: Vec<&str> = caption.split(" · ").collect();
+    (1..=words.len())
+        .rev()
+        .map(|count| words[..count].join(" · "))
+        .find(|text| {
+            let font = FontId::proportional(CAPTION_SIZE);
+            painter
+                .layout_no_wrap(text.clone(), font, theme::TEXT)
+                .size()
+                .x
+                <= room
+        })
+        .unwrap_or_else(|| words[0].to_string())
+}
+
+/// Draws the harmonies of a bar, each with as many of the words under it
+/// as fit, the first always (see [`Row`]). The bar's own names are all drawn at one size, as big as the most crowded
 /// one allows, so a bar does not mix big and small names; a name going
 /// on from before only shrinks itself.
 ///
@@ -2276,7 +2355,7 @@ fn draw_names(painter: &egui::Painter, names: &[Name]) {
             clipped.text(
                 pos2(name.place.left(), name.place.top() + NAME_SIZE + 4.0),
                 Align2::LEFT_TOP,
-                caption,
+                words_that_fit(painter, caption, name.place.width()),
                 FontId::proportional(CAPTION_SIZE),
                 name.shown.tint.unwrap_or(theme::TEXT_DIM),
             );

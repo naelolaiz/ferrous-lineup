@@ -4,7 +4,7 @@
 
 use std::collections::BTreeSet;
 
-use super::{Language, note_missed, spanish_name, take_missed, tr};
+use super::{Language, note_missed, spanish_name, take_missed, tr, trc};
 use crate::PitchClass;
 use crate::band::horns::Horns;
 use crate::band::{Player, band_styles};
@@ -98,9 +98,8 @@ fn texts() -> Vec<&'static str> {
     }
     texts.extend(Stop::ALL.map(Stop::name));
     texts.extend(SongPart::ALL.map(SongPart::name));
-    for register in Register::ALL {
-        texts.extend([register.name(), register.about()]);
-    }
+    texts.extend(crate::SECTION_NAMES);
+    texts.extend(Register::ALL.map(Register::about));
     texts.extend(Chain::ALL.map(Chain::name));
     texts.extend(ArpeggioOrder::ALL.map(ArpeggioOrder::name));
     texts.extend(Section::ALL.map(Section::name));
@@ -204,6 +203,9 @@ fn written() {
     }
     for stop in Stop::ALL {
         stop.describe();
+    }
+    for register in Register::ALL {
+        trc("register", register.name());
     }
     for push in [Push::Eighth, Push::Sixteenth] {
         push.describe();

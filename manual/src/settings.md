@@ -50,6 +50,7 @@ The zoom keys zoom what is under the pointer:
 | the playlist | bars wider or narrower | tracks taller or shorter |
 | the piano roll | steps wider or narrower | rows taller or shorter |
 | the channel rack | the whole rack bigger or smaller | |
+| the chord sheet in the main window | text, buttons and menus bigger or smaller, everywhere: smaller names fit more bars on a line | |
 | anything else | text, buttons and menus bigger or smaller, everywhere | |
 
 The step under the pointer stays under the pointer. **Ctrl+0** takes

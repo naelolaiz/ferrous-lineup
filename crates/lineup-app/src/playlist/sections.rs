@@ -66,12 +66,18 @@ const COLORS: [Color32; 9] = [
 ];
 
 /// The colour of a section called `name`. "Chorus 2", a copy made by
-/// Duplicate, is coloured like "Chorus".
+/// Duplicate, is coloured like "Chorus", and so is "Estribillo", its
+/// Spanish name typed in.
 pub(super) fn section_color(name: &str) -> Color32 {
-    let base = name.trim_end_matches(|c: char| c.is_ascii_digit() || c == ' ');
+    let base = name
+        .trim_end_matches(|c: char| c.is_ascii_digit() || c == ' ')
+        .to_lowercase();
     SECTION_NAMES
         .iter()
-        .position(|known| known.eq_ignore_ascii_case(base))
+        .position(|known| {
+            known.to_lowercase() == base
+                || lineup_core::i18n::spanish(known).is_some_and(|es| es.to_lowercase() == base)
+        })
         .map_or(COLORS[base.len() % COLORS.len()], |index| COLORS[index])
 }
 
@@ -619,19 +625,32 @@ fn section_menu(
                 ))));
                 ui.close();
             }
-            let mut name = section.name.clone();
+            // The name as the strip shows it, "Estribillo" for "Chorus" in
+            // Spanish. While it is being typed, the field keeps what was
+            // typed, so a word the app knows doesn't turn into its
+            // translation halfway through.
+            let typing = egui::Id::unique(("section-name", index));
+            let mut name = ui
+                .data(|data| data.get_temp::<String>(typing))
+                .unwrap_or_else(|| tr_name(&section.name).into_owned());
             ui.horizontal(|ui| {
                 ui.label(tr("Name"));
-                if ui.text_edit_singleline(&mut name).changed() {
+                let field = ui.text_edit_singleline(&mut name);
+                if field.changed() {
                     actions.push(set(Section {
-                        name,
+                        name: name.clone(),
                         ..section.clone()
                     }));
+                }
+                if field.has_focus() {
+                    ui.data_mut(|data| data.insert_temp(typing, name));
+                } else {
+                    ui.data_mut(|data| data.remove::<String>(typing));
                 }
             });
             ui.horizontal_wrapped(|ui| {
                 for preset in SECTION_NAMES {
-                    let chip = egui::Button::new(egui::RichText::new(preset).small())
+                    let chip = egui::Button::new(egui::RichText::new(tr(preset)).small())
                         .fill(section_color(preset).gamma_multiply(0.5));
                     if ui.add(chip).clicked() {
                         actions.push(set(Section {
