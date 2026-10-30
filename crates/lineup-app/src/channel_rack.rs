@@ -839,10 +839,12 @@ pub fn natural_size(
     egui::vec2(width + bar, 2.0 * line + hint + rows + add_channel + bar)
 }
 
-/// Whether a path opens as a project: a `.lineup` file, or a
-/// MIDI file or a chord sheet saved as text, which are imported.
+/// Whether a path opens as a project: a `.lineup` file, or a MIDI
+/// file, a chord sheet saved as text or a recording, which are imported.
+/// Other audio files are sounds for the sampler.
 pub fn is_project_file(path: &std::path::Path) -> bool {
     file::is_project(path)
         || lineup_core::midi_file::is_midi_file(path)
         || lineup_core::chord_sheet::text::is_text_file(path)
+        || (lineup_listen::is_audio_file(path) && lineup_audio::sample::is_recording(path))
 }

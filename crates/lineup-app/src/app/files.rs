@@ -598,9 +598,11 @@ impl LineupApp {
         }
     }
 
-    /// A project file dropped on the window is opened. While the channel
-    /// rack is closed, dropped samples become new channels (when it is
-    /// open, the rack handles them, so they can land on a row).
+    /// A project file dropped on the window is opened, and a MIDI file,
+    /// a chord sheet or a recording imported (see [`is_project_file`]).
+    /// While the channel rack is closed, dropped sounds become new
+    /// sampler channels (when it is open, the rack handles them, so they
+    /// can land on a row).
     pub(super) fn handle_dropped_files(&mut self, ctx: &egui::Context) {
         let dropped: Vec<PathBuf> = ctx.input(|input| {
             input
