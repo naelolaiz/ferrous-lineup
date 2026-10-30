@@ -2239,6 +2239,44 @@ fn played_melody(app: &mut LineupApp) -> Vec<(f64, f64)> {
 }
 
 #[test]
+fn the_same_style_brings_the_same_tempo_whatever_was_tried_before() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::Style;
+    use lineup_core::library::apply::StyleParts;
+    use lineup_core::{Tempo, TempoMarker, TimeSignature};
+    for time in [TimeSignature::new(2, 4), TimeSignature::COMMON] {
+        // A few slow notes before the song's own tempo, as some MIDI
+        // files start.
+        let mut project = Project::demo();
+        project.time_signature = time;
+        project.tempo = Tempo::new(37.0);
+        project.set_tempo_marker(TempoMarker::new(4, 121.0));
+        let mut screen = Screen::new();
+        screen.app.replace_project(project, None);
+        *screen.app.playlist.library_parts_mut() = StyleParts {
+            progression: false,
+            tempo: true,
+            ..StyleParts::default()
+        };
+        let mut tempos = Vec::new();
+        for name in ["Bluegrass", "Celtic", "Bluegrass", "Celtic"] {
+            screen
+                .app
+                .try_from_library(LibraryAction::Style(Style::named(name).unwrap()));
+            assert_eq!(screen.app.project.time_signature, TimeSignature::COMMON);
+            tempos.push(screen.app.project.main_tempo().bpm().round());
+        }
+        if time == TimeSignature::COMMON {
+            assert_eq!(tempos, [180.0, 112.0, 180.0, 112.0]);
+        } else {
+            // In another meter the song keeps its pace, each bar as long
+            // as before: the styles' tempos are for songs in 4/4.
+            assert_eq!(tempos, [242.0; 4]);
+        }
+    }
+}
+
+#[test]
 fn styles_tried_one_after_another_keep_the_songs_tempo() {
     use crate::library_browser::LibraryAction;
     use lineup_core::TimeSignature;

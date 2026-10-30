@@ -1493,6 +1493,39 @@ impl Project {
         }
     }
 
+    /// The tempo most of the song goes at: of the one it starts at and
+    /// those it changes to, the one it keeps for the most steps. A MIDI
+    /// file may start with a few slow notes before its real tempo.
+    pub fn main_tempo(&self) -> Tempo {
+        let end = self.song_length();
+        let mut held: Vec<(Tempo, usize)> = Vec::new();
+        let mut hold = |tempo: Tempo, steps: usize| match held.iter_mut().find(|(t, _)| *t == tempo)
+        {
+            Some((_, total)) => *total += steps,
+            None => held.push((tempo, steps)),
+        };
+        let (mut tempo, mut from) = (self.tempo, 0);
+        for marker in &self.playlist.tempo_markers {
+            let start = marker.start.clamp(from, end.max(from));
+            hold(tempo, start - from);
+            (tempo, from) = (marker.tempo, start);
+        }
+        hold(tempo, end.saturating_sub(from));
+        // The first of those kept longest.
+        let longest = held.iter().map(|&(_, steps)| steps).max().unwrap_or(0);
+        held.into_iter()
+            .find(|&(_, steps)| steps == longest)
+            .map_or(self.tempo, |(tempo, _)| tempo)
+    }
+
+    /// Makes the song go at `tempo` where it goes at its main tempo (see
+    /// [`Self::main_tempo`]), and everywhere else as much faster or slower
+    /// as before: a style's usual tempo, taken by a song.
+    pub fn take_tempo(&mut self, tempo: Tempo) {
+        let ratio = tempo.bpm() / self.main_tempo().bpm();
+        self.scale_tempo(Tempo::new(self.tempo.bpm() * ratio));
+    }
+
     // ----- Sections and the loop region -----
 
     /// Whether `section` could be in the playlist, next to every section
@@ -3038,6 +3071,24 @@ mod tests {
         assert_eq!(project.playlist().tempo_markers().len(), 1);
         assert!(project.remove_tempo_marker(32).is_some());
         assert!(project.tempo_map().is_steady());
+    }
+
+    #[test]
+    fn a_style_tempo_goes_where_most_of_the_song_is() {
+        // A few slow notes before the song's own tempo, as some MIDI
+        // files start.
+        let mut project = Project::demo();
+        project.tempo = Tempo::new(37.0);
+        project.set_tempo_marker(TempoMarker::new(4, 121.0));
+        assert_eq!(project.main_tempo().bpm(), 121.0);
+        project.take_tempo(Tempo::new(180.0));
+        let map = project.tempo_map();
+        assert_eq!(map.tempo_at(4).bpm(), 180.0);
+        assert!((map.tempo_at(0).bpm() - 37.0 * 180.0 / 121.0).abs() < 0.01);
+        // Without changes, it is the song's tempo.
+        let mut project = Project::demo();
+        project.take_tempo(Tempo::new(90.0));
+        assert_eq!(project.tempo.bpm(), 90.0);
     }
 
     #[test]
