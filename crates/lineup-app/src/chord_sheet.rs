@@ -2962,16 +2962,17 @@ mod tests {
             assert!(actions.is_empty(), "a normal click must only open options");
             let (mut output, _) = screen.frame(vec![]);
             let before = screen.library.parts;
-            // Tempo gets ticked: plain accents bring no chord progression,
-            // so without it there would be nothing to apply.
+            // The chord progression gets ticked, so there is still
+            // something to apply. Its chord and bass parts are unticked
+            // last, as they grey out the instruments and the chords.
             for label in [
-                "Playing patterns",
                 "Voices / instruments",
                 "Time signature",
                 "Chord progression",
                 "Tempo",
                 "Swing",
-                "Plain accents",
+                "Its chord and bass parts",
+                "Drums",
             ] {
                 let (_, actions) = screen.click(&output, label);
                 assert!(actions.is_empty());
@@ -2992,7 +2993,7 @@ mod tests {
             );
             let parts = screen.library.parts;
             assert!(!parts.rhythm && !parts.instruments && !parts.time_signature);
-            assert!(parts.progression && parts.tempo);
+            assert!(parts.progression && !parts.tempo);
             assert!(!parts.swing && !parts.matching_style);
             let (output, _) = screen.frame(vec![]);
             assert!(!has_text(&output, "Apply"));
@@ -3120,18 +3121,19 @@ mod tests {
                 assert_eq!(screen.picked, None);
                 let (output, _) = screen.frame(vec![]);
                 assert!(
-                    has_text(&output, "Playing patterns"),
+                    has_text(&output, "Its chord and bass parts"),
                     "missing copy popup for {name}, grouped={grouped}"
                 );
+                // Ticked at first, and unticked here.
                 screen.click(&output, "Tempo");
                 let (output, _) = screen.frame(vec![]);
                 screen.click(&output, "Apply");
                 assert_eq!(screen.picked, Some(expected));
-                assert!(screen.library.parts.tempo);
+                assert!(!screen.library.parts.tempo);
                 let (output, _) = screen.frame(vec![]);
                 screen.click_with_modifiers(&output, name, Modifiers::CTRL);
                 assert_eq!(screen.picked, Some(expected));
-                assert!(screen.library.parts.tempo);
+                assert!(!screen.library.parts.tempo);
                 let (output, _) = screen.frame(vec![]);
                 assert!(!has_text(&output, "Apply"));
             }
@@ -3139,7 +3141,7 @@ mod tests {
     }
 
     #[test]
-    fn the_sidebar_groups_all_presets_by_genre_with_optional_chords() {
+    fn the_sidebar_groups_all_presets_by_genre_with_and_without_chords() {
         for grouped in [false, true] {
             let mut screen = MenuScreen::new();
             screen.sidebar = true;
@@ -3166,10 +3168,6 @@ mod tests {
                 has(if grouped { "Bossa nova" } else { "Pop beat" }),
                 "the pattern preset must be in the same list"
             );
-            assert!(has("+ chords"));
-            if !grouped {
-                assert!(has("keeps chords"));
-            }
             assert!(
                 !has("Copy from preset"),
                 "copy options belong to the preset popup"
@@ -3194,7 +3192,7 @@ mod tests {
         let (output, _) = screen.frame(vec![]);
         assert!(has_text(&output, "Voices and players"));
         assert!(!has_text(&output, "Copy from preset"));
-        assert!(!has_text(&output, "Playing patterns"));
+        assert!(!has_text(&output, "Its chord and bass parts"));
         screen.click(&output, "Instrument lineup");
         let (output, _) = screen.frame(vec![]);
         let (_, actions) = screen.click(&output, "Electric piano + synth bass");
