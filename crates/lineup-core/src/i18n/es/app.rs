@@ -514,13 +514,13 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Se copiaron {} compases como texto.",
     ),
     (
-        "Copy how the preset plays the chords and the bass: its piano, bass, guitar and other parts. Unticked, the piano and bass play each chord simply on the beats, and your instruments and chords stay.",
-        "Copia cómo toca el preajuste los acordes y el bajo: su piano, su bajo, su guitarra y sus otras partes. Sin marcar, el piano y el bajo tocan cada acorde de forma simple en los pulsos, y se conservan tus instrumentos y tus acordes.",
+        "Copy how the preset plays the chords and the bass: its piano, bass, guitar and other parts. Off, the song keeps its own.",
+        "Copia cómo el preajuste toca los acordes y el bajo: su piano, su bajo, su guitarra y sus demás partes. Sin marcar, la canción conserva las suyas.",
     ),
     ("Copy the bars, as text", "Copiar los compases, como texto"),
     (
-        "Copy the preset’s drums, and with the box below, how it plays the chords and the bass.",
-        "Copia la batería del preajuste y, con la casilla de abajo, cómo toca los acordes y el bajo.",
+        "Copy the preset’s drums. Off, the song keeps its own.",
+        "Copia la batería del preajuste. Sin marcar, la canción conserva la suya.",
     ),
     (
         "Copy the preset’s sounds and band players.",
@@ -950,7 +950,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "It is well ahead of every other key.",
         "Está muy por delante de todas las demás tonalidades.",
     ),
-    ("Its chord and bass parts", "Sus partes de acordes y bajo"),
     (
         "Its own equalizer, compressor and delay, which shape its sound before it joins the others",
         "Su propio ecualizador, compresor y delay, que dan forma a su sonido antes de que se una a los demás",
@@ -1681,18 +1680,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "En silencio mientras otro canal suena en solo (mira el Mezclador). Haz clic para silenciarlo o devolverle el sonido",
     ),
     ("simple chords", "acordes simples"),
-    (
-        "Simple chords on the beats, with your instruments and chords.",
-        "Acordes simples en los pulsos, con tus instrumentos y tus acordes.",
-    ),
-    (
-        "Simple chords play the song’s own chords.",
-        "Los acordes simples tocan los acordes de la canción.",
-    ),
-    (
-        "Simple chords keep your instruments.",
-        "Los acordes simples conservan tus instrumentos.",
-    ),
     ("Sixteenth notes", "semicorcheas"),
     ("Skip ▸", "Saltar ▸"),
     (
@@ -1793,10 +1780,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Style application defaults",
         "Valores por defecto al aplicar estilos",
-    ),
-    (
-        "Style applied. Simple chords play the chords on the sheet: write some there.",
-        "Estilo aplicado. Los acordes simples tocan los acordes de la hoja: escribe algunos allí.",
     ),
     (
         "Style applied. Write chords on the sheet or enable Chord progression when applying it.",
@@ -2194,10 +2177,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "There is no room for the patterns the cut needs.",
         "No hay lugar para los patrones que necesita el corte.",
     ),
-    (
-        "They come with the drums: tick Drums to copy them.",
-        "Vienen con la batería: marca Batería para copiarlas.",
-    ),
     ("This channel", "Este canal"),
     (
         "This is Kröpfl's micromode",
@@ -2480,8 +2459,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "{} no cambió nada: un patrón que la canción toca conserva el compás de la canción. Marca Batería para probar el estilo en un patrón propio.",
     ),
     (
-        "{} changed nothing: its instruments go to the channels named Keys and Bass, or to the channel chosen in the rack.",
-        "{} no cambió nada: sus instrumentos van a los canales llamados Teclados y Bajo, o al canal elegido en el rack.",
+        "{} changed nothing: the channels that take its instruments (Keys and Bass, the channel chosen in the rack, or else every player but the tune) already sound like that.",
+        "{} no cambió nada: los canales que toman sus instrumentos (Teclados y Bajo, el canal elegido en el rack, o si no todos menos el de la melodía) ya suenan así.",
     ),
     (
         "{} changed nothing: the song already goes that way.",
@@ -2570,8 +2549,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("{} · {} BPM · 1 bar", "{} · {} BPM · 1 compás"),
     ("{} · {} BPM · {} bars", "{} · {} BPM · {} compases"),
     (
-        "{}'s instruments play in a band: tick Drums too.",
-        "Los instrumentos de {} tocan en una banda: marca también Batería.",
+        "{}'s drums and instruments play in its band: tick Chord and bass parts too.",
+        "La batería y los instrumentos de {} tocan en su banda: marca también Partes de acordes y bajo.",
     ),
     ("{}+wheel", "{}+rueda"),
     (

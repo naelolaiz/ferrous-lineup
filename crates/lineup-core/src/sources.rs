@@ -102,13 +102,11 @@ impl PartSet {
         PartSet(parts.iter().fold(0, |bits, part| bits | part.bit()))
     }
 
-    /// The parts ticked in a style's options. Its chord and bass parts
-    /// come with its drums, played as the style plays them or as simple
-    /// chords.
+    /// The parts ticked in a style's options.
     pub fn ticked(parts: StyleParts) -> Self {
         let ticked = [
             (parts.rhythm, SongPart::Drums),
-            (parts.rhythm, SongPart::Patterns),
+            (parts.matching_style, SongPart::Patterns),
             (parts.instruments, SongPart::Instruments),
             (parts.time_signature, SongPart::TimeSignature),
             (parts.progression, SongPart::Chords),
@@ -334,13 +332,14 @@ impl Project {
         let mut hasher = DefaultHasher::new();
         match part {
             SongPart::Drums => match self.band() {
-                // The band plays its rhythm, or a style of your own's drums.
+                // The band plays a style's drums, or a saved style's, or
+                // none and the song's own play.
                 Some(band) => {
-                    band.style.name.hash(&mut hasher);
-                    band.custom_rhythm
-                        .as_ref()
-                        .map(|style| style.id())
-                        .hash(&mut hasher);
+                    band.drums_name().hash(&mut hasher);
+                    band.saved_drums().map(|style| style.id()).hash(&mut hasher);
+                    if band.drums == crate::band::BandDrums::Song {
+                        self.hash_notes(&mut hasher, is_drum);
+                    }
                 }
                 None => self.hash_notes(&mut hasher, is_drum),
             },

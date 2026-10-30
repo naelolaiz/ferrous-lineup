@@ -69,7 +69,7 @@ fn bring<R>(
 ) -> R {
     match bringing {
         Some(bringing) => {
-            let taken = PartSet::ticked(parts.for_preset())
+            let taken = PartSet::ticked(parts)
                 .and(bringing.has)
                 .minus(bringing.edited);
             project.bring_in(bringing.from, taken, bringing.edited, change)
@@ -255,7 +255,10 @@ impl LineupApp {
         }
         let before = self.project.clone();
         let mut source = self.song_source();
-        let changes_meter = !lineup_core::remeter::is_in(&before, time);
+        // Whether the meter changes from the song's own, as it came: not
+        // from the one the last style put it in, so the same style with
+        // the same options plays the same, whatever was tried before it.
+        let changes_meter = !lineup_core::remeter::is_in(&source.reference, time);
         let effective = apply::StyleParts {
             // Built-in meter changes preserve bar duration; saved styles
             // can explicitly supply their tempo along with their meter.
@@ -434,6 +437,7 @@ impl LineupApp {
             _ => self.playlist.library_parts(),
         };
         if !(parts.rhythm
+            || parts.matching_style
             || parts.instruments
             || parts.time_signature
             || parts.progression
@@ -494,7 +498,7 @@ impl LineupApp {
         let mut tried = previous;
         let (name, tempo, meter) = match action {
             LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
-                if parts.rhythm || parts.progression {
+                if parts.rhythm || parts.matching_style || parts.progression {
                     tried.style = Some(style);
                     tried.row_style = None;
                     tried.micromode_style = None;
@@ -516,7 +520,8 @@ impl LineupApp {
         // Without patterns or chords to write, only the sounds, the tempo
         // or the swing of your own pattern change: it stays yours, keeps
         // its name, and the next click does not write over it.
-        let own_pattern = reuse.is_none() && !parts.rhythm && !parts.progression;
+        let own_pattern =
+            reuse.is_none() && !parts.rhythm && !parts.matching_style && !parts.progression;
         // Where the song plays your own pattern, it keeps the song's time
         // signature: in another, its bars would no longer fit the song's.
         // A style's time signature comes with its drums, in a pattern of
@@ -529,6 +534,7 @@ impl LineupApp {
             time_signature: parts.time_signature && !played,
             ..parts
         };
+        let reused = reuse.is_some();
         let target = reuse
             .as_ref()
             .map(|a| a.pattern)
@@ -547,12 +553,17 @@ impl LineupApp {
             SongPart::Chords,
             SongPart::TimeSignature,
         ]);
-        let taken = PartSet::ticked(parts.for_preset()).minus(pattern_parts);
+        let taken = PartSet::ticked(parts).minus(pattern_parts);
         let written = self.edit("try from the library", |project| {
             let source = source.as_ref()?;
             project.bring_in(source, taken, PartSet::NONE, |project| {
                 let index = target.or_else(|| project.add_pattern_around_locked(from))?;
-                let time = project.pattern_time(index);
+                // The meter it is tried against: the song's, not the one
+                // the style tried before put the same pattern in.
+                let time = match reused {
+                    true => project.time_signature,
+                    false => project.pattern_time(index),
+                };
                 match action {
                     LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                         apply::write_style_parts(project, index, style, selected, parts)
@@ -570,7 +581,7 @@ impl LineupApp {
                 // As in the song: a pattern put in another meter keeps
                 // the song's tempo.
                 if parts.tempo && project.pattern_time(index) == time {
-                    project.scale_tempo(Tempo::new(tempo));
+                    project.take_tempo(Tempo::new(tempo));
                 }
                 if !own_pattern {
                     project.pattern_mut(index)?.name = name.to_string();
@@ -591,8 +602,9 @@ impl LineupApp {
                 )
             } else if parts.instruments {
                 trf(
-                    "{} changed nothing: its instruments go to the channels named \
-                     Keys and Bass, or to the channel chosen in the rack.",
+                    "{} changed nothing: the channels that take its instruments \
+                     (Keys and Bass, the channel chosen in the rack, or else every \
+                     player but the tune) already sound like that.",
                     &[&tr_name(name)],
                 )
             } else {
@@ -748,7 +760,7 @@ impl LineupApp {
                 && change.time.is_none()
                 && let Some(bpm) = tempo
             {
-                project.scale_tempo(Tempo::new(bpm));
+                project.take_tempo(Tempo::new(bpm));
             }
             change
         });
@@ -781,7 +793,7 @@ impl LineupApp {
         if self.project != before || change != apply::RhythmChange::default() {
             self.song_library = match action {
                 LibraryAction::Style(style) | LibraryAction::StyleInSong(style)
-                    if parts.rhythm || parts.progression =>
+                    if parts.rhythm || parts.matching_style || parts.progression =>
                 {
                     Tried {
                         user_style: None,
@@ -856,9 +868,10 @@ impl LineupApp {
     /// sound like 3/4 is the drums and the way the chords are played, so
     /// the song plays a rhythm in `time`, as if it were picked in the
     /// library: one of the kind the song plays if there is one (see
-    /// [`Rhythm::for_time`]). With matching style off, a plain beat and
-    /// accents use the requested meter and current instruments. Returning
-    /// to the source meter restores the original performance exactly.
+    /// [`Rhythm::for_time`]). Its drums, its chord and bass parts and its
+    /// instruments come as the Library options say; what is left out
+    /// stays the song's own, in the new meter. Returning to the source
+    /// meter restores the original performance exactly.
     pub(super) fn set_song_time(&mut self, time: TimeSignature) {
         if self.project.patterns().iter().all(Pattern::is_empty) {
             self.edit("change time signature", |project| {
@@ -901,11 +914,7 @@ impl LineupApp {
         if self.mode == PlayMode::Pattern && self.project.band().is_none() {
             parts.instruments = false;
         }
-        let rhythm = if parts.matching_style {
-            Rhythm::for_time(time, playing)
-        } else {
-            Rhythm::basic(time)
-        };
+        let rhythm = Rhythm::for_time(time, playing);
         // The time signature is the one you picked, not the rhythm's.
         let edited = PartSet::of(&[SongPart::TimeSignature]);
         self.use_in_song_parts(LibraryAction::RhythmInSong(rhythm), parts, edited);
@@ -1016,7 +1025,7 @@ impl LineupApp {
                     apply::write_rhythm(project, index, rhythm);
                 }
                 if use_tempo && project.pattern_time(index) == time {
-                    project.scale_tempo(Tempo::new(tempo));
+                    project.take_tempo(Tempo::new(tempo));
                 }
                 Some((index, project.pattern(index)?.clone()))
             })
@@ -1063,10 +1072,10 @@ impl LineupApp {
         edited: PartSet,
     ) -> bool {
         // A demo has a written accompaniment but no live band yet. Copying
-        // its voices must bring in the preset lineup on tracks of their own,
-        // just as changing an existing band does, not give the song's own
-        // parts other instruments; without the patterns, the band plays
-        // plain accents. Copying a chart is optional.
+        // a style's chord and bass parts with its voices brings in the
+        // preset lineup on tracks of their own, just as changing an
+        // existing band does; without them, the song's own parts change
+        // in place. Copying a chart is optional.
         // A style that follows the song (an orchestra) comes in alongside
         // the song with its patterns or its instruments, either: copying
         // them into the song's own parts would rewrite the score.
@@ -1087,10 +1096,18 @@ impl LineupApp {
                     .pattern(clip.pattern)
                     .is_some_and(|pattern| !pattern.is_empty())
             });
+        // A beat made up in the library has no chord and bass parts of its
+        // own: it brings no band, only its drums.
+        let made_up = match action {
+            LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm) => {
+                BandStyle::named(rhythm.name).is_none()
+            }
+            _ => false,
+        };
         let joins = if follows {
-            parts.rhythm || parts.for_preset().instruments
+            parts.rhythm || parts.matching_style || parts.instruments
         } else {
-            parts.for_preset().instruments && has_music
+            parts.instruments && parts.matching_style && has_music && !made_up
         };
         if self.project.band().is_none() && !joins {
             return false;
@@ -1118,8 +1135,7 @@ impl LineupApp {
                 let parts = apply::StyleParts {
                     matching_style: false,
                     ..parts
-                }
-                .for_preset();
+                };
                 let before = self.project.clone();
                 let previous = self.tried();
                 let source = Source::new(SourceKind::Rhythm, rhythm.name);

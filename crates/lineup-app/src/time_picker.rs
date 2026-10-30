@@ -73,10 +73,7 @@ pub fn time_picker(
         ui.weak(tr("Shared with the Library options"));
         // Those of the Library's style for the new meter, as a waltz's
         // for 3/4.
-        crate::library_browser::playing_ui(ui, parts, None, |ui, parts| {
-            let enabled = !crate::library_browser::simple_chords(parts);
-            crate::library_browser::instrument_option(ui, parts, "Use style instruments", enabled);
-        });
+        crate::library_browser::playing_ui(ui, parts, None, "Use style instruments");
         ui.checkbox(&mut parts.swing, tr("Use rhythm's swing"))
             .on_hover_text(tr("Turn off to keep the current swing amount"));
         ui.separator();
@@ -296,10 +293,12 @@ mod tests {
         let mut parts = StyleParts::default();
         frame(&ctx, &mut parts, vec![]);
         let (output, _) = frame(&ctx, &mut parts, vec![]);
-        let chord_parts = "Its chord and bass parts";
+        let chord_parts = "Chord and bass parts";
         assert!(label_rect(&output, chord_parts).top() < label_rect(&output, "7/8").top());
         let (output, _) = click(&ctx, &mut parts, &output, chord_parts);
         assert!(!parts.matching_style);
+        let (output, _) = click(&ctx, &mut parts, &output, "Use style instruments");
+        assert!(!parts.instruments);
         let (_, chosen) = click(&ctx, &mut parts, &output, "7/8");
         let time = chosen.expect("clicking the meter should apply it");
         assert_eq!(time, TimeSignature::new(7, 8));
@@ -309,15 +308,20 @@ mod tests {
         project.follow_chord_sheet();
         let piano = project.player_channel(Player::Piano).unwrap();
         project.channel_mut(piano).unwrap().program = Some(80);
-        let instruments = project.band().unwrap().instrument_style;
-        let rhythm = Rhythm::for_time(time, project.band().unwrap().style.rhythm);
+        let band = project.band().unwrap();
+        let (style, instruments) = (band.style, band.instrument_style);
+        let rhythm = Rhythm::for_time(time, band.style.rhythm);
         let parts = StyleParts {
             time_signature: true,
             ..parts.for_rhythm()
         };
         project.apply_band_parts(BandStyle::named(rhythm.name).unwrap(), None, parts);
-        assert!(project.band().unwrap().accents_only);
-        assert_eq!(project.band().unwrap().instrument_style, instruments);
+        // The meter's drums, and the band's own chord and bass parts.
+        let band = project.band().unwrap();
+        assert!(!band.accents_only);
+        assert_eq!(band.style, style);
+        assert_eq!(band.drums_name(), Some(rhythm.name));
+        assert_eq!(band.instrument_style, instruments);
         assert_eq!(project.channels()[piano].program, Some(80));
     }
 
