@@ -5162,3 +5162,67 @@ fn every_window_writes_in_spanish() {
         found.into_iter().collect::<Vec<_>>().join("\n"),
     );
 }
+
+/// A WAV file of `seconds` of silence, in a folder of its own.
+fn silent_wav(name: &str, seconds: u32) -> std::path::PathBuf {
+    let folder = std::env::temp_dir().join(format!("lineup-drop-{}", std::process::id()));
+    std::fs::create_dir_all(&folder).unwrap();
+    let path = folder.join(name);
+    let recording = lineup_listen::Recording {
+        samples: vec![0.0; seconds as usize * 8_000],
+        sample_rate: 8_000,
+    };
+    lineup_listen::arrange::write_wav(&recording, 0.0, &path).unwrap();
+    path
+}
+
+/// A file dropped on the window, as the windowing system hands it over.
+#[derive(Debug)]
+struct Dropped(std::path::PathBuf);
+
+impl egui::DroppedFile for Dropped {
+    fn path(&self) -> &std::path::Path {
+        &self.0
+    }
+
+    fn bytes(&self) -> Result<Vec<u8>, String> {
+        std::fs::read(&self.0).map_err(|err| err.to_string())
+    }
+}
+
+#[test]
+fn a_recording_dropped_on_the_window_is_imported_and_a_short_sound_goes_to_the_sampler() {
+    let drop = |screen: &mut Screen, path: &std::path::Path| {
+        let raw = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen.size)),
+            dropped_files: vec![std::sync::Arc::new(Dropped(path.to_path_buf()))],
+            ..Default::default()
+        };
+        screen.run(raw);
+    };
+    let recording = silent_wav("song.wav", 12);
+    let hit = silent_wav("hit.wav", 1);
+    for rack_open in [false, true] {
+        let mut screen = Screen::new();
+        screen.app.rack_open = rack_open;
+        screen.draw(vec![]);
+        let channels = screen.app.project.channels().len();
+        // A song-long WAV is listened to, as File > Import does.
+        drop(&mut screen, &recording);
+        assert!(screen.app.import.is_some(), "rack open: {rack_open}");
+        assert_eq!(screen.app.project.channels().len(), channels);
+        // A short one is a new sampler channel.
+        let mut screen = Screen::new();
+        screen.app.rack_open = rack_open;
+        screen.draw(vec![]);
+        drop(&mut screen, &hit);
+        screen.draw(vec![]);
+        assert!(screen.app.import.is_none());
+        assert_eq!(
+            screen.app.project.channels().len(),
+            channels + 1,
+            "rack open: {rack_open}"
+        );
+    }
+    std::fs::remove_dir_all(recording.parent().unwrap()).ok();
+}

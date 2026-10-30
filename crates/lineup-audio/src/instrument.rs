@@ -23,7 +23,7 @@ use crate::timbre::{Timbre, Wave};
 /// How many notes the Lineup Osc can play at once.
 pub const SYNTH_VOICES: usize = 16;
 /// Sounds longer than this, in seconds, stop when playback stops.
-const LONG_SAMPLE_SECONDS: u64 = 10;
+pub(crate) const LONG_SAMPLE_SECONDS: u64 = 10;
 
 /// How fast a stopped long sound fades out: its level is multiplied by
 /// this every frame, which takes it to silence in about 15 ms.
