@@ -859,7 +859,7 @@ fn cut(played: &[Played], start: usize, end: usize) -> Vec<Played> {
             if harmony.end > end
                 && let BassPart::Chord { note, next, .. } = &mut harmony.bass
             {
-                *next = note.pitch_class();
+                *next = *note;
             }
             harmony.start = harmony.start.max(start);
             harmony.end = harmony.end.min(end);
@@ -2439,16 +2439,17 @@ impl Project {
             &chords.iter().map(|(chord, ..)| *chord).collect::<Vec<_>>(),
             &line,
         );
-        // The note each harmony has in the bass, to lead into it.
-        let bass_of = |harmony: HarmonyName, start: usize| -> Option<PitchClass> {
+        // The note each harmony has in the bass, as the bass plays it, to
+        // lead into it. A chord's is the next one on the line.
+        let bass_of = |harmony: HarmonyName, start: usize, chord_index: usize| -> Option<Note> {
             match harmony {
-                HarmonyName::Chord(symbol) => Some(symbol.bass_pitch_class()),
-                HarmonyName::Polychord(_, lower) => Some(lower.bass_pitch_class()),
-                HarmonyName::Set(set) | HarmonyName::Micromode(set) => {
-                    Some(group_bass(set).pitch_class())
+                HarmonyName::Chord(_) => line.get(chord_index).copied(),
+                HarmonyName::Polychord(_, lower) => {
+                    Some(Note::new(36 + lower.bass_pitch_class().semitone()))
                 }
+                HarmonyName::Set(set) | HarmonyName::Micromode(set) => Some(group_bass(set)),
                 HarmonyName::Row(label) => match keys.key_at(start).kind {
-                    ScaleKind::Row(row) => Some(row.form(label).first()),
+                    ScaleKind::Row(row) => Some(Note::new(36 + row.form(label).first().semitone())),
                     _ => None,
                 },
                 HarmonyName::NoChord => None,
@@ -2464,8 +2465,10 @@ impl Project {
                     let next = spans
                         .get(index + 1)
                         .filter(|(next_start, ..)| *next_start == stop)
-                        .and_then(|&(next_start, _, next)| bass_of(next, next_start))
-                        .unwrap_or(note.pitch_class());
+                        .and_then(|&(next_start, _, next)| {
+                            bass_of(next, next_start, chord_index + 1)
+                        })
+                        .unwrap_or(note);
                     played.push(Played {
                         start,
                         end: stop,
@@ -3139,6 +3142,30 @@ mod tests {
         assert_eq!(project.time_signature, TimeSignature::new(3, 4));
         assert_eq!(project.song_length(), 48, "four bars of three beats");
         assert_eq!(pitch_classes_at(&project, Player::Bass, 12), [7]);
+    }
+
+    #[test]
+    fn a_walking_bass_leads_into_each_chord_by_a_semitone() {
+        for (style, bar) in [("Swing", 16), ("Jazz waltz", 12)] {
+            let mut project = Project::with_band();
+            project.set_band_style(BandStyle::named(style));
+            write(&mut project, &["C", "Am", "F", "G7", "C"]);
+            let bass: Vec<(usize, u8)> = part(&project, Player::Bass)
+                .into_iter()
+                .map(|(at, _, midi)| (at, midi))
+                .collect();
+            for change in 1..5 {
+                let at = change * bar;
+                let before = bass.iter().rev().find(|(start, _)| *start < at).unwrap();
+                let root = bass.iter().find(|(start, _)| *start == at).unwrap();
+                assert_eq!(
+                    before.1.abs_diff(root.1),
+                    1,
+                    "{style}, bar {}: {bass:?}",
+                    change + 1
+                );
+            }
+        }
     }
 
     #[test]

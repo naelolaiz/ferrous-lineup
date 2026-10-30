@@ -428,7 +428,7 @@ mod tests {
                 bass: BassPart::Chord {
                     chord,
                     note: Note::new(48 + chord.root.semitone()),
-                    next: chord.root,
+                    next: Note::new(48 + chord.root.semitone()),
                 },
             };
             let source = Note::new(60 + template.semitone());
