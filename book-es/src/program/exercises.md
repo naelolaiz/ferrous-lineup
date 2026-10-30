@@ -226,7 +226,7 @@ completo más pequeño para hacer crecer el formato.
 2. Añade `notes: String` a `ProjectFile`, con
    `#[serde(default, skip_serializing_if = "String::is_empty")]`, y
    cópialo en los dos sentidos.
-3. Sube `FORMAT_VERSION` en uno, a 29 (si otro ejercicio ya tomó el 29,
+3. Sube `FORMAT_VERSION` en uno, a 30 (si otro ejercicio ya tomó el 30,
    usa el siguiente número libre). En `format_for`, devuelve el número
    nuevo en primer lugar cuando `!project.notes.is_empty()`; deja todo lo
    demás como está.

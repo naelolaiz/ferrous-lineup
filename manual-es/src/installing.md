@@ -87,10 +87,10 @@ Con la aplicación en Aplicaciones, un doble clic en un archivo
 
 ## El primer arranque
 
-Ferrous Lineup se abre con una canción corta, lista para sonar: pulsa
-**Espacio**. La primera vez, apenas se abre, ofrece descargar un juego
-de sonidos de instrumentos reales, de unos 30 MB; [Sonidos](sounds.md)
-explica qué es. Después sigue con [La ventana
+Ferrous Lineup se abre con una canción corta y su hoja de acordes, lista
+para sonar: pulsa **Espacio**. La primera vez, apenas se abre, ofrece
+descargar un juego de sonidos de instrumentos reales, de unos 30 MB;
+[Sonidos](sounds.md) explica qué es. Después sigue con [La ventana
 principal](main-window.md) y [Tu primera canción](first-song.md).
 
 La primera vez, la aplicación arranca en inglés. Para pasarla al

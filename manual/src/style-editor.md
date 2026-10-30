@@ -74,11 +74,13 @@ The Library lists the styles in that folder; one saved elsewhere is not
 listed, and the app says so.
 
 Your saved styles join the Library's list, next to the built-in ones,
-with **+ chords** if they bring a progression and **keeps chords** if
-not. With **Group by genre** they have a group of their own, **User
-styles**. Applying one works as for any style: **Playing patterns**
-brings its lanes, **Voices / instruments** their sounds, and so on (see
-[Styles and the Library](styles.md)).
+in a group of their own, **User styles** (or among the others in the
+alphabetical list). Applying one works as for any style: **Drums**
+brings its drum lanes, **Chord and bass parts** its other lanes,
+**Voices / instruments** their sounds, and so on (see [Styles and the
+Library](styles.md)). A style of your own plays in the band, so its
+drums and its sounds come only with its chord and bass parts: with
+those unticked, the Library says to tick them.
 
 A song keeps its own copy of the style it plays, inside its `.lineup`
 file. Delete or move the style file, or open the song on another

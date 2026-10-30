@@ -1,6 +1,6 @@
 # The main window
 
-![The main window when the app starts: the menus and the toolbar at the top, the Library on the left, the starting song on the playlist in the middle, and the harmony keys along the bottom](images/main-window-start.png)
+![The main window when the app starts for the first time: the menus and the toolbar at the top, the Library on the left, the chord sheet of the starting song over the playlist, and the harmony keys along the bottom](images/main-window-start.png)
 
 From top to bottom, the window has:
 
@@ -98,8 +98,11 @@ button, or its key.
 **View** also opens the **Lead sheet**, the **Style editor…** and
 **Ear training**.
 
-What opens first depends on what you open: a song opens with the chord
-sheet in front, a beat (**File > New beat**) with the channel rack.
+The first time, the app starts with the chord sheet, the Library and
+the harmony keys open. After that, it starts with the windows that were
+open when you closed it. What comes to the front then depends on what
+you open: a song opens with the chord sheet in front, a beat (**File >
+New beat**) with the channel rack.
 
 ## The status bar
 

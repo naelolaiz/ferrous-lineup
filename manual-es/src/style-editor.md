@@ -81,11 +81,14 @@ estilos…**. La Biblioteca lista los estilos de esa carpeta; uno guardado
 en otro lugar no aparece, y la aplicación lo dice.
 
 Tus estilos guardados se suman a la lista de la Biblioteca, junto a los
-de la aplicación, con **+ acordes** si traen una progresión y **conserva
-los acordes** si no. Con **Agrupar por género** tienen un grupo propio,
-**Estilos de usuario**. Aplicar uno funciona como con cualquier estilo:
-**Patrones de ejecución** trae sus canales, **Voces / instrumentos** sus
-sonidos, etc. (ver [Los estilos y la Biblioteca](styles.md)).
+de la aplicación, en un grupo propio, **Estilos de usuario** (o entre
+los demás en la lista alfabética). Aplicar uno funciona como con
+cualquier estilo: **Batería** trae sus carriles de batería, **Partes
+de acordes y bajo** sus otros carriles, **Voces / instrumentos** sus
+sonidos, etc. (ver [Los estilos y la Biblioteca](styles.md)). Un
+estilo tuyo toca en la banda, así que su batería y sus sonidos solo
+llegan con sus partes de acordes y bajo: si están sin marcar, la
+Biblioteca te dice que las marques.
 
 Una canción guarda su propia copia del estilo que toca, dentro de su
 archivo `.lineup`. Borra o mueve el archivo del estilo, o abre la

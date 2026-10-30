@@ -149,11 +149,12 @@ pub fn with_band() -> Self {
 From there, three places shape the band:
 
 - **The Library.** A click on a style or a rhythm makes it the band's
-  way of playing, with the parts ticked in its window: the playing
-  patterns, the voices, the chord progression, the time signature, the
-  tempo and the swing (see [Which parts to
-  take](library.md#which-parts-to-take)). A song with music
-  of its own but no band gets one when the voices are taken.
+  way of playing, with the parts ticked in its window: the drums, the
+  chord and bass parts, the voices, the chord progression, the time
+  signature, the tempo and the swing (see [Which parts to
+  take](library.md#which-parts-to-take)). A song with music of its own
+  but no band gets one when the chord and bass parts are taken with the
+  voices.
 - **The sheet's 🎷 Band menu** chooses who plays and on which sound: an
   **Instrument lineup** ("Piano, acoustic guitar + strings", "Horns,
   timpani + strings" and six more), a tick box and an instrument for
@@ -179,19 +180,42 @@ pub struct Band {
     pub instrument_style: &'static BandStyle,
     /// The exact library style supplying the comping, when one was picked.
     pub harmony_style: Option<&'static Style>,
+    /// The chords and the bass played as plain accents on the beats: how
+    /// songs saved so play. The Library no longer chooses it.
     pub accents_only: bool,
+    /// Whose drums play, when not those of `style` or `custom_rhythm`.
+    pub drums: BandDrums,
     // ...
+}
+
+pub enum BandDrums {
+    /// Those of the style the band plays the chords and the bass in, or
+    /// of the saved style it plays them from.
+    Style,
+    /// Those of another style.
+    Of(&'static BandStyle),
+    /// Those of a saved style.
+    Saved(Box<crate::library::UserStyle>),
+    /// None: the song's own drums play.
+    Song,
 }
 ```
 
-`style` plays the drums and says how the others play; `instrument_style`
-says who plays and on what; `harmony_style` is the library style picked,
-when its comping differs from its rhythm's; and `accents_only` is the
-**Plain accents** choice, which plays the chords and the bass on the
-beats the bar is felt in, whatever the style. The two `custom_` fields
-hold styles of your own (see [Your own
-styles](style-editor.md)). Each player asks the band, not the
-style, how to play:
+`style` says how the chords and the bass are played; `drums` says whose
+drums play with them; `instrument_style` says who plays and on what;
+and `harmony_style` is the library style picked, when its comping
+differs from its rhythm's. The two `custom_` fields hold styles of
+your own (see [Your own styles](style-editor.md)). `accents_only` plays
+the chords and the bass on the beats the bar is felt in, whatever the
+style; only songs saved that way still play so.
+
+Taking a style's chord and bass parts but not its drums keeps the drums
+the band played: `drums` turns from `Style` into `Of` the old style,
+so they no longer follow `style`. Taking the drums alone sets `Of` the
+new one. When the two end up the same again, `tidy_drums` turns `Of`
+back into `Style`, so a band has one way to say "this style's drums",
+and its file stays one an older version can read. Each player asks the
+band, not the style, how to play:
 
 ```rust
 fn comping_in(&self, variation: Variation) -> Comping {
@@ -327,9 +351,10 @@ two" across the pair.
 
 ### Beats for any meter
 
-Most comping patterns are a fixed table of hits. Two are not: **Plain
-accents**, a chord on each beat the bar is felt in, and the **aksak**
-of the Balkan styles, the afterbeats inside each beat. In 7/8 felt as
+Most comping patterns are a fixed table of hits. Two are not: **plain
+accents** (`Comping::Accents`), a chord on each beat the bar is felt
+in, and the **aksak** of the Balkan styles, the afterbeats inside each
+beat. In 7/8 felt as
 2+2+3 they fall in one place, in 5/4 felt as 2+3 in another, so their
 hits are built from the bar's `felt_groups` (see [Beats of different
 lengths](../sound/tempo.md#beats-of-different-lengths)):
@@ -656,19 +681,22 @@ frozen.
 
 ## A band over a song of its own
 
-Open a demo, such as **Canon in D**, and take a style's voices from the
-Library. A demo already plays its own accompaniment, so first the band:
+Open a demo, such as **Canon in D**, and take a style's chord and bass
+parts and its voices from the Library. A demo already plays its own
+accompaniment, so first the band:
 
 1. writes the chords the song plays on the sheet, if it is empty (see
    [Where the chords come
    from](chord-sheet.md#where-the-chords-come-from)), and
 2. **mutes** the song's own chord and bass channels (the library calls
-   them "Keys" and "Bass") and its tracks that hold only drums,
+   them "Keys" and "Bass") and, when the style's drums come too, its
+   tracks that hold only drums,
 
 so the two do not play over each other. The melody plays on, now with
-the band behind it. A style that follows the song, such as the
-orchestra, comes in alongside the song's parts instead of muting them
-(see [An orchestra for music that changes
+the band behind it. Without the style's drums, the band comes in with
+`drums: BandDrums::Song`, and the song's own drums play on. A style that
+follows the song, such as the orchestra, comes in alongside the song's
+parts instead of muting them (see [An orchestra for music that changes
 meter](orchestra.md)).
 
 ![The chord sheet of Canon in D after the Pop ballad preset: the band's rows (Form, Choruses, Ending, and You play Piano, Bass, Drums, Guitar, Strings) over D A Bm F#m | G D G A, the progression of Pachelbel's Canon, written bar by bar](../images/step-9-band-demo.png)
@@ -1315,8 +1343,9 @@ let [piano, bass, drums, guitar, strings, organ, soloist, horns] = band.written;
 An array pattern takes an array apart into names, one per element, and
 the compiler checks that there are exactly eight. So a band of three is
 written exactly as before, and its song keeps the format it needed; a
-band needs format 13, a bigger band 17, a soloist 19 and a horn section
-28 (see [The version
+band needs format 13, a bigger band 17, a soloist 19, a horn section
+28 and another style's drums 29, saved as `drums: Some(Of("Bluegrass"))`
+or `drums: Some(Song)` (see [The version
 number](../program/saving.md#the-version-number)), and an older
 version refuses those with a message instead of silently dropping a
 player. A file whose band plays a style this version does not know, or

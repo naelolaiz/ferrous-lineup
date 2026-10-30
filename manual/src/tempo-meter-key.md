@@ -69,11 +69,10 @@ bar of the new kind, and **each bar lasts as long as before**: a song at
 The tempo changes move with it. The options at the top of the list,
 shared with the Library, say what else comes in:
 
-- **Use matching style**: the Library's style for that meter, such as a
-  waltz for 3/4. Off, your own instruments mark the accents of the new
-  meter.
-- **Apply rhythm patterns / accents**: the style's playing patterns. Off,
-  only the meter changes.
+- **Drums**: the drums of the Library's style for that meter, such as a
+  waltz for 3/4. Off, the song keeps its own drums, in the new meter.
+- **Chord and bass parts**: how that style plays the chords and the
+  bass. Off, the song keeps its own, in the new meter.
 - **Use style instruments** and **Use rhythm's swing**: the style's
   sounds and its swing.
 

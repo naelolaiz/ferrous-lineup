@@ -10,9 +10,9 @@ vientos**.
 ## El menú Banda
 
 **🎷 Banda**, arriba a la izquierda de la hoja de acordes, elige quién
-toca y con qué sonidos. Los patrones de ejecución vienen de la
-Biblioteca (ver [Los estilos y la Biblioteca](styles.md)); este menú no
-los toca.
+toca y con qué sonidos. Lo que tocan, la batería y las partes de
+acordes y bajo, viene de la Biblioteca (ver [Los estilos y la
+Biblioteca](styles.md)); este menú no lo toca.
 
 ![El menú Banda de una bossa nova: Formación de instrumentos, luego Piano, Bajo, Batería y Guitarra marcados con sus instrumentos, Sección de vientos, Solista (experimental), Otro solo y Sin banda](images/band-menu.png)
 

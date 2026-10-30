@@ -557,6 +557,41 @@ Practising a piece more slowly keeps its ritardando, only slower too.
 While a song whose tempo changes is playing, the box shows TEMPO NOW
 instead: `tempo_at` the playhead's place on the timeline.
 
+A style from the Library brings a tempo of its own, and that one should
+land where the song really plays, not on its first note: a MIDI file
+often starts with a few slow notes before its real tempo. So
+`main_tempo` finds the tempo the song keeps for the most steps, and
+`take_tempo` scales the whole song so that that one becomes the
+style's:
+
+```rust
+pub fn take_tempo(&mut self, tempo: Tempo) {
+    let ratio = tempo.bpm() / self.main_tempo().bpm();
+    self.scale_tempo(Tempo::new(self.tempo.bpm() * ratio));
+}
+```
+
+`main_tempo` adds up, for each tempo, the steps it holds: from the
+start to the first marker at the starting tempo, then from each marker
+to the next. A tempo that comes back later adds to what it held
+before. Of those held longest, the first wins, so a song with one
+steady tempo gets that one, and a tie goes to the earlier tempo:
+
+```rust
+let (mut tempo, mut from) = (self.tempo, 0);
+for marker in &self.playlist.tempo_markers {
+    let start = marker.start.clamp(from, end.max(from));
+    hold(tempo, start - from);
+    (tempo, from) = (marker.tempo, start);
+}
+hold(tempo, end.saturating_sub(from));
+```
+
+`hold` is a closure that borrows the list `held` mutably, so it is
+declared `let mut hold`: calling a closure that changes what it
+captured changes the closure's own state. `(tempo, from) = (…, …)` sets
+two variables at once, a *destructuring assignment*.
+
 ### Every step at its own tempo
 
 `Project::played_tempos` gives the tempo of every step of the song *as
